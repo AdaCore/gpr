@@ -54,7 +54,7 @@ procedure Main is
            (Name,
             With_Defaults => False,
             With_Config   => False);
-      elsif Tree.Root_Project.Has_Packages (Pack, With_Defaults => False) then
+      elsif Tree.Root_Project.Has_Package (Pack, With_Defaults => False) then
          Attributes := Tree.Root_Project.Attributes
            (Pack,
             Name,

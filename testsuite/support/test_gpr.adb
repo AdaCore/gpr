@@ -115,7 +115,11 @@ package body Test_GPR is
           Index  => Attr_Index,
           At_Pos => At_Pos);
       A.Assert (Attr_Value.Is_Defined,
-                "expect the attribute '" & Name & "' to be defined");
+                "expect the attribute '" & Name &
+                  (if Index'Length > 0
+                   then " (" & Index & ") "
+                   else "") &
+                  "' to be defined");
       if Attr_Value.Is_Defined then
          A.Assert (Attr_Value.Kind = PRA.Single,
                    "expect a single value attribute");

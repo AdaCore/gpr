@@ -4,3 +4,4 @@ Messages found:
 demo2.gpr:4:30: error: "T2" has duplicate value "one"
 All good, no message.
 Type : Whatever - one two ONE
+All good, no message.

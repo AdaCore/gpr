@@ -1,0 +1,7 @@
+project In_Pack is
+
+   package Naming is
+      Var := Naming.Var2;
+   end Naming;
+
+end In_Pack;

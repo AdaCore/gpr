@@ -32,36 +32,6 @@ package body GPR2.Project.Attr_Values is
       Case_Sensitive : Boolean) return Containers.Value_Source_Reference;
    --  Returns a set with the value in values
 
-   ------------
-   -- Append --
-   ------------
-
-   procedure Append
-     (Self : in out Object; Item : Source_Reference.Value.Object) is
-   begin
-      Self.Values.Append (Item);
-      Self.V_Map.Include
-        ((if Self.Value_Case_Sensitive
-          then Item.Text
-          else Ada.Characters.Handling.To_Lower (Item.Text)),
-         Item);
-   end Append;
-
-   -------------------
-   -- Append_Vector --
-   -------------------
-
-   procedure Append_Vector
-     (Self : in out Object; Other : Object) is
-   begin
-      Self.Values.Append_Vector (Other.Values);
-      for C in Other.V_Map.Iterate loop
-         Self.V_Map.Include
-           (GPR2.Containers.Value_Source_Reference_Package.Key (C),
-            Containers.Value_Source_Reference_Package.Element (C));
-      end loop;
-   end Append_Vector;
-
    ---------------
    -- Build_Set --
    ---------------
@@ -172,27 +142,6 @@ package body GPR2.Project.Attr_Values is
          else Characters.Handling.To_Lower (Value));
    end Has_Value;
 
-   -----------
-   -- Image --
-   -----------
-
-   function Image (Self : Object; Name_Len : Natural := 0) return String is
-      Result : Unbounded_String :=
-                 To_Unbounded_String (Image (Self.Name.Id));
-   begin
-      if Name_Len > 0 and then Length (Result) < Name_Len then
-         Append (Result, (Name_Len - Integer (Length (Result))) * ' ');
-      end if;
-
-      Append (Result, " :");
-
-      for V of Self.Values loop
-         Append (Result, ' ' & V.Text);
-      end loop;
-
-      return To_String (Result);
-   end Image;
-
    ----------
    -- Kind --
    ----------
@@ -210,21 +159,6 @@ package body GPR2.Project.Attr_Values is
    begin
       return Source_Reference.Attribute.Object (Self);
    end Name;
-
-   -------------
-   -- Prepend --
-   -------------
-
-   procedure Prepend
-     (Self : in out Object; Item : Source_Reference.Value.Object) is
-   begin
-      Self.Values.Prepend (Item);
-      Self.V_Map.Include
-        ((if Self.Value_Case_Sensitive
-          then Item.Text
-          else Ada.Characters.Handling.To_Lower (Item.Text)),
-         Item);
-   end Prepend;
 
    --------------------
    -- Prepend_Vector --
@@ -277,15 +211,6 @@ package body GPR2.Project.Attr_Values is
    -----------
    -- Value --
    -----------
-
-   function Value
-     (Self  : Object;
-      Value : Value_Type) return Source_Reference.Value.Object is
-   begin
-      return Self.V_Map ((if Self.Value_Case_Sensitive
-                          then Value
-                          else Characters.Handling.To_Lower (Value)));
-   end Value;
 
    function Value (Self : Object) return Source_Reference.Value.Object is
    begin

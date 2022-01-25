@@ -1,4 +1,3 @@
-with "abst";
 aggregate project agg is
 for Project_Files use ("aggregated.gpr");
 end agg;

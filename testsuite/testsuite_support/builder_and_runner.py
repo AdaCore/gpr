@@ -119,8 +119,12 @@ class BuilderAndRunner(object):
             ] + vars
             self.simple_run(gnatcov_cmd, env=env, analyze_output=False)
 
+            # to do coverage, we use the repo's gpr2 project file instead of
+            # the installed one from libgpr2. This means we need to ensure
+            # that some scenario variables are properly set.
             gprbuild_cmd = (
-                ["gprbuild", "-P", project]
+                ["gprbuild", "-P", project,
+                 "-XBUILD=gnatcov", "-XXMLADA_BUILD=static"]
                 + vars
                 + ["--src-subdirs=gnatcov-instr", "--implicit-with=gnatcov_rts_full"]
                 + args

@@ -35,6 +35,7 @@ with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Definition;
 with GPR2.Project.Import.Set;
+with GPR2.Project.Parser;
 with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Value;
@@ -235,7 +236,7 @@ package body GPR2.Project.Tree is
          package PRA renames Project.Registry.Attribute;
       begin
          if View.Is_Defined
-           and then View.Has_Packages (PRP.Compiler)
+           and then View.Has_Package (PRP.Compiler)
            and then View.Has_Languages
          then
             for Language of View.Languages loop
@@ -1996,7 +1997,7 @@ package body GPR2.Project.Tree is
          --  messages issued during configuration are relevant, together with
          --  already computed search paths
 
-         Self.Unload;
+         Self.Unload (False);
          Self.Messages := Old_Messages;
          Self.Search_Paths := Old_Paths;
       end if;
@@ -2058,7 +2059,7 @@ package body GPR2.Project.Tree is
          Self.Root.Path_Name,
          Self.Base);
 
-      Self.Unload;
+      Self.Unload (False);
       Self.Messages := Old_Messages;
       Self.Search_Paths := Old_Paths;
 
@@ -2446,6 +2447,59 @@ package body GPR2.Project.Tree is
                end if;
             end;
 
+            --  At this stage the view is complete. Update mappings
+            --  (i.e effective view for extends and extends all) and DAG to
+            --  order the views.
+
+            declare
+               use IDS;
+               Unique_ID   : constant View_Id := View.Id;
+            begin
+               pragma Assert (Is_Defined (Unique_ID));
+
+               --  Finally update the DAG structure that will define the
+               --  processing order for the views.
+
+               declare
+                  Predecessors : GPR2.View_Ids.Set.Object;
+               begin
+                  for Import of View.Imports loop
+                     Predecessors.Include (Import.Id);
+                  end loop;
+
+                  View.Tree.View_DAG.Update_Vertex
+                    (Vertex       => Unique_ID,
+                     Predecessors => Predecessors);
+               end;
+
+               --  Add aggregate dependency
+
+               if Status = Aggregated then
+                  --  inclusion of a project by an aggregate/aggregate library
+                  --  project
+
+                  if Parent.Is_Defined then
+                     View.Tree.View_DAG.Update_Vertex
+                       (Vertex      => Parent.Id,
+                        Predecessor => Unique_ID);
+                  else
+                     --  Inclusion from the root aggregate project
+
+                     View.Tree.View_DAG.Update_Vertex
+                       (Vertex      => Aggregate.Id,
+                        Predecessor => Unique_ID);
+                  end if;
+               end if;
+
+               --  Add dependency on extended if not a "extends all"
+
+               if View.Is_Extending then
+                  View.Tree.View_DAG.Update_Vertex
+                    (Vertex      => Unique_ID,
+                     Predecessor => View.Extended_Root.Id);
+               end if;
+            end;
+
          elsif Parent.Is_Defined
            and then Parent.Kind = K_Aggregate_Library
          then
@@ -2454,59 +2508,6 @@ package body GPR2.Project.Tree is
 
             Propagate_Aggregate_Library (View, Parent.Id);
          end if;
-
-         --  At this stage the view is complete. Update mappings
-         --  (i.e effective view for extends and extends all) and DAG to
-         --  order the views.
-
-         declare
-            use IDS;
-            Unique_ID   : constant View_Id := View.Id;
-         begin
-            pragma Assert (Is_Defined (Unique_ID));
-
-            --  Finally update the DAG structure that will define the
-            --  processing order for the views.
-
-            declare
-               Predecessors : GPR2.View_Ids.Set.Object;
-            begin
-               for Import of View.Imports loop
-                  Predecessors.Include (Import.Id);
-               end loop;
-
-               View.Tree.View_DAG.Update_Vertex
-                 (Vertex       => Unique_ID,
-                  Predecessors => Predecessors);
-            end;
-
-            --  Add aggregate dependency
-
-            if Status = Aggregated then
-               --  inclusion of a project by an aggregate/aggregate library
-               --  project
-
-               if Parent.Is_Defined then
-                  View.Tree.View_DAG.Update_Vertex
-                    (Vertex      => Parent.Id,
-                     Predecessor => Unique_ID);
-               else
-                  --  Inclusion from the root aggregate project
-
-                  View.Tree.View_DAG.Update_Vertex
-                    (Vertex      => Aggregate.Id,
-                     Predecessor => Unique_ID);
-               end if;
-            end if;
-
-            --  Add dependency on extended if not a "extends all"
-
-            if View.Is_Extending then
-               View.Tree.View_DAG.Update_Vertex
-                  (Vertex      => Unique_ID,
-                   Predecessor => View.Extended_Root.Id);
-            end if;
-         end;
 
          return View;
       end Internal;
@@ -3223,6 +3224,10 @@ package body GPR2.Project.Tree is
             View,
             Self.Pre_Conf_Mode);
 
+         if Self.Messages.Has_Error then
+            return;
+         end if;
+
          if View.Qualifier not in Aggregate_Kind then
             New_Signature := View.Context.Signature (P_Data.Externals);
 
@@ -3810,6 +3815,12 @@ package body GPR2.Project.Tree is
       end Validity_Check;
 
    begin
+      --  Clear attribute value cache
+
+      for V of Self.Views_Set loop
+         Definition.Get (V).Clear_Cache;
+      end loop;
+
       --  Now the first step is to set the configuration project view if any
       --  and to create the runtime project if possible.
 
@@ -3818,11 +3829,6 @@ package body GPR2.Project.Tree is
 
          Self.Runtime := Create_Runtime_View (Self);
       end if;
-
-      --  Clear attribute value cache
-      for V of Self.Views_Set loop
-         Definition.Get (V).Clear_Cache;
-      end loop;
 
       declare
          Closure_Found : Boolean := True;
@@ -3840,24 +3846,30 @@ package body GPR2.Project.Tree is
             if not View.Has_Aggregate_Context then
                Set_View (View);
                Closure.Insert (View.Id);
+
+               exit when Has_Error;
             end if;
          end loop;
 
          --  Now evaluate the remaining views
 
-         loop
-            for View of Self.Ordered_Views loop
-               Closure.Insert (View.Id, Position, Inserted);
+         if not Has_Error then
+            Closure_Loop :
+            loop
+               for View of Self.Ordered_Views loop
+                  Closure.Insert (View.Id, Position, Inserted);
 
-               if Inserted then
-                  Closure_Found := False;
-                  Set_View (View);
-               end if;
-            end loop;
+                  if Inserted then
+                     Closure_Found := False;
+                     Set_View (View);
+                     exit Closure_Loop when Has_Error;
+                  end if;
+               end loop;
 
-            exit when Closure_Found;
-            Closure_Found := True;
-         end loop;
+               exit Closure_Loop when Closure_Found;
+               Closure_Found := True;
+            end loop Closure_Loop;
+         end if;
       end;
 
       if not Has_Error and then not Self.Pre_Conf_Mode then
@@ -3974,8 +3986,16 @@ package body GPR2.Project.Tree is
    -- Unload --
    ------------
 
-   procedure Unload (Self : in out Object) is
+   procedure Unload
+     (Self : in out Object;
+      Full : Boolean := True) is
    begin
+      if Full then
+         for V of Self.Views_Set loop
+            GPR2.Project.Parser.Clear_Cache (V.Path_Name);
+         end loop;
+      end if;
+
       Self.Self             := Undefined.Self;
       Self.Root             := Undefined.Root;
       Self.Conf             := Undefined.Conf;
@@ -4077,7 +4097,7 @@ package body GPR2.Project.Tree is
       end Is_Bin_Path;
 
    begin
-      if not Conf.Corresponding_View.Has_Packages (Registry.Pack.Compiler) then
+      if not Conf.Corresponding_View.Has_Package (Registry.Pack.Compiler) then
          return;
       end if;
 

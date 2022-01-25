@@ -1,0 +1,7 @@
+project Empty_Warning is
+
+   package Builder is
+      for Executable ("myadaunit.ads") use "";
+   end Builder;
+
+end Empty_Warning;

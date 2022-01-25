@@ -1,5 +1,6 @@
 with "extending";
 with "import7";
+with "import8";
 with "import9";
 project Aggregated is
     package Naming is

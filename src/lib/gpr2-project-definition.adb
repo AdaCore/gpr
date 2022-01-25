@@ -232,13 +232,7 @@ package body GPR2.Project.Definition is
             --  It cannot contain a dot '.' unless the entire string is "."
             --  It cannot include a space or a char that is not printable ASCII
 
-            if Value = No_Value then
-               Log_Error
-                 (Message.Error,
-                  "Dot_Replacement cannot be empty",
-                  Dot_Replacement);
-
-            elsif ACH.Is_Alphanumeric (Value (Value'First))
+            if ACH.Is_Alphanumeric (Value (Value'First))
               or else ACH.Is_Alphanumeric (Value (Value'Last))
               or else (Value (Value'First) = '_'
                        and then (Value'Length = 1
@@ -281,14 +275,7 @@ package body GPR2.Project.Definition is
                          View.Attribute
                            (PRA.Dot_Replacement, PRP.Naming).Value.Text;
          begin
-            if Value'Length = 0 then
-               if Attribute_Name = PRA.Separate_Suffix then
-                  Log_Error
-                    (Message.Error,
-                     "Separate_Suffix cannot be empty",
-                     Attribute);
-               end if;
-            elsif ASF.Index (Value, ".") = 0 then
+            if Value /= No_Value and then ASF.Index (Value, ".") = 0 then
                Log_Error
                  (Message.Error,
                   """" & Value & """ is illegal for "
@@ -380,7 +367,7 @@ package body GPR2.Project.Definition is
          end Log_Error;
 
       begin
-         if View.Has_Packages (PRP.Naming) then
+         if View.Has_Package (PRP.Naming) then
             Check_Casing;
             Check_Dot_Replacement;
 
@@ -1849,7 +1836,7 @@ package body GPR2.Project.Definition is
          function Check_View (View : Project.View.Object) return Boolean is
             Att : Project.Attribute.Object;
          begin
-            if View.Has_Packages (PRP.Compiler) then
+            if View.Has_Package (PRP.Compiler) then
                if View.Check_Attribute
                  (PRP.Compiler,
                   PRA.Driver,
@@ -2421,7 +2408,7 @@ package body GPR2.Project.Definition is
             end loop;
          end if;
 
-         if View.Has_Packages (PRP.Naming,
+         if View.Has_Package (PRP.Naming,
                                Check_Extended => False,
                                With_Defaults  => False,
                                With_Config    => False)

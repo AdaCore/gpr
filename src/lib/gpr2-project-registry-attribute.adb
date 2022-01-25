@@ -1250,6 +1250,7 @@ begin
       Index_Case_Sensitive => False,
       Value                => Single,
       Value_Case_Sensitive => True,
+      Empty_Value          => Error,
       Is_Allowed_In        => Everywhere,
       Default              => Create (Body_Suffix));
 
@@ -1270,6 +1271,7 @@ begin
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
+      Empty_Value          => Error,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,

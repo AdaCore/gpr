@@ -65,7 +65,10 @@ package body GPR2.Project.View is
    --  Convert definition to view
 
    function Apply_Root_And_Subdirs
-     (Self : Object; Dir_Attr : Attribute_Id) return GPR2.Path_Name.Object;
+     (Self : Object; Dir_Attr : Attribute_Id) return GPR2.Path_Name.Object
+     with Pre => Dir_Attr in PRA.Object_Dir | PRA.Library_Ali_Dir |
+                             PRA.Library_Dir | PRA.Exec_Dir |
+                             PRA.Library_Src_Dir;
    --  Apply project path and subdir option for library, object and executable
    --  directories defined in attribute Dir_Attr.
 
@@ -176,10 +179,6 @@ package body GPR2.Project.View is
          Def_Attr := Definition.Exec_Dir;
       elsif Dir_Attr = PRA.Library_Src_Dir then
          Def_Attr := Definition.Library_Src_Dir;
-      else
-         raise Constraint_Error with
-           "Unexpected call to Apply_Root_And_Subdirs with Attr " &
-           Image (Dir_Attr);
       end if;
 
       if not Def.Dir_Cache (Def_Attr).Is_Set then
@@ -304,9 +303,6 @@ package body GPR2.Project.View is
                Result := Pattern;
             end if;
          end if;
-      exception
-         when Error_In_Regexp =>
-            null;
       end Check_Matching_Index;
 
       -----------
@@ -770,13 +766,11 @@ package body GPR2.Project.View is
             --  value in Result.
 
             declare
-               Own_Attr : constant Project.Attribute.Object :=
+               New_Attr : Project.Attribute.Object :=
                             Project.Attribute.Set.Element (Cursor);
-               Res_Attr : Project.Attribute.Object;
             begin
-               Res_Attr := Attr;
-               Res_Attr.Append_Vector (Own_Attr);
-               Result.Include (Res_Attr);
+               New_Attr.Prepend_Vector (Attr);
+               Result.Include (New_Attr);
             end;
          end if;
       end Add_Attr;
@@ -871,8 +865,7 @@ package body GPR2.Project.View is
                   null;
 
                when PRA.D_Attribute_Reference =>
-                  for Attr of Self.Attributes_Internal (Pack,
-                                                              Def.Default.Attr)
+                  for Attr of Self.Attributes_Internal (Pack, Def.Default.Attr)
                   loop
                      Cursor := Result.Find (Name, Attr.Index);
 
@@ -1421,13 +1414,13 @@ package body GPR2.Project.View is
       end if;
    end Has_Mains;
 
-   ------------------
-   -- Has_Packages --
-   ------------------
+   -----------------
+   -- Has_Package --
+   -----------------
 
-   function Has_Packages
+   function Has_Package
      (Self           : Object;
-      Name           : Optional_Package_Id := No_Package;
+      Name           : Package_Id;
       Check_Extended : Boolean := True;
       With_Defaults  : Boolean := True;
       With_Config    : Boolean := True) return Boolean
@@ -1435,7 +1428,6 @@ package body GPR2.Project.View is
       View        : Object := Self;
       Def         : GPR2.Project.Registry.Attribute.Default_Rules;
       Has_Default : Boolean := False;
-      Packages    : GPR2.Containers.Package_Id_List;
 
       procedure For_Rule (Attribute : Attribute_Id; Definition : PRA.Def);
       --  Check if the definition applies to Name in Self's context
@@ -1467,22 +1459,14 @@ package body GPR2.Project.View is
 
       --  Check if the package has default values
       if With_Defaults then
-         if Name = No_Package then
-            Packages := PRA.Get_Packages_With_Default;
-         else
-            Packages.Include (Name);
+         Def := PRA.Get_Default_Rules (Name);
+
+         --  Check if we can create a default value for package Name
+         PRA.For_Each_Default (Def, For_Rule'Access);
+
+         if Has_Default then
+            return True;
          end if;
-
-         for Pkg_Name of Packages loop
-            Def := PRA.Get_Default_Rules (Name);
-
-            --  Check if we can create a default value for package Name
-            PRA.For_Each_Default (Def, For_Rule'Access);
-
-            if Has_Default then
-               return True;
-            end if;
-         end loop;
       end if;
 
       --  Finally, check extended
@@ -1499,7 +1483,7 @@ package body GPR2.Project.View is
       --  Should also check configuration ???
 
       return False;
-   end Has_Packages;
+   end Has_Package;
 
    ----------------
    -- Has_Source --
@@ -1555,9 +1539,9 @@ package body GPR2.Project.View is
       Pack : Package_Id;
       Name : Optional_Name_Type := No_Name) return Boolean is
    begin
-      if not Self.Has_Packages (Pack,
-                                With_Defaults => False,
-                                With_Config   => False)
+      if not Self.Has_Package (Pack,
+                               With_Defaults => False,
+                               With_Config   => False)
       then
          return False;
       end if;
@@ -2055,10 +2039,10 @@ package body GPR2.Project.View is
             --  the package apply to Self.Kind.
 
             if not Result.Contains (Pack)
-              and then Self.Has_Packages (Pack,
-                                          Check_Extended => False,
-                                          With_Defaults  => True,
-                                          With_Config    => False)
+              and then Self.Has_Package (Pack,
+                                         Check_Extended => False,
+                                         With_Defaults  => True,
+                                         With_Config    => False)
             then
                Result.Include (Pack);
             end if;

@@ -50,6 +50,8 @@ procedure Main is
          for V of T.Values loop
             Text_IO.Put (' ' & V.Text);
          end loop;
+
+         Text_IO.New_Line;
       end loop;
 
    exception
@@ -80,4 +82,5 @@ begin
    Load ("demo.gpr");
    Load ("demo2.gpr");
    Load ("demo3.gpr");
+   Load ("demo4-child.gpr");
 end Main;

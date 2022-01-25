@@ -1,0 +1,7 @@
+with "demo4";
+
+project Demo4.Child is
+
+   Var : Bool := "False";
+
+end Demo4.Child;

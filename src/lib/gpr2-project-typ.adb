@@ -30,7 +30,7 @@ package body GPR2.Project.Typ is
    -- Image --
    -----------
 
-   overriding function Image
+   function Image
      (Self     : Object;
       Name_Len : Natural := 0) return String
    is

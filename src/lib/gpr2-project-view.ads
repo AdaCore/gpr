@@ -358,9 +358,9 @@ package GPR2.Project.View is
 
    --  Packages
 
-   function Has_Packages
+   function Has_Package
      (Self           : Object;
-      Name           : Optional_Package_Id := No_Package;
+      Name           : Package_Id;
       Check_Extended : Boolean := True;
       With_Defaults  : Boolean := True;
       With_Config    : Boolean := True) return Boolean
@@ -377,9 +377,6 @@ package GPR2.Project.View is
       With_Defaults : Boolean := True;
       With_Config   : Boolean := True) return GPR2.Containers.Package_Id_List
      with Pre  => Self.Is_Defined,
-          Post => (if Self.Has_Packages (With_Defaults => With_Defaults,
-                                         With_Config   => With_Config)
-                   then not Packages'Result.Is_Empty),
           Inline;
    --  Get the list of packages defined in the project or inherited from the
    --  extended view.

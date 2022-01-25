@@ -1,0 +1,5 @@
+project Builtin is
+
+   for Name use "builtin2";
+
+end Builtin;

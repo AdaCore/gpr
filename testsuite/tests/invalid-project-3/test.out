@@ -1,0 +1,46 @@
+** builtins: external
+
+empty.gpr:3:11: error: missing parameter for external built-in
+non_string.gpr:3:21: error: external first parameter must be a simple string
+non_string2.gpr:3:21: error: external default parameter must be a simple string
+empty_string.gpr:3:21: error: external variable name must not be empty
+three_arg.gpr:3:21: error: external built-in accepts at most two parameters.
+
+** builtins: external_as_list
+
+empty.gpr:3:11: error: missing parameters for external_as_list built-in
+non_string.gpr:3:29: error: external_as_list first parameter must be a simple string
+non_string2.gpr:3:36: error: external_as_list second parameter must be a simple string
+empty_string.gpr:3:29: error: external_as_list variable name must not be empty
+empty_string2.gpr:3:36: error: external_as_list separator must not be empty
+one_arg.gpr:3:29: error: external_as_list requires two parameters
+three_arg.gpr:3:29: error: external_as_list accepts only two parameters
+
+** builtins: split
+
+empty.gpr:3:11: error: missing parameters for split built-in
+non_string.gpr:3:18: error: Split first parameter must be a string
+non_string2.gpr:3:25: error: Split separator parameter must be a string
+empty_string2.gpr:3:25: error: Split separator parameter must not be empty
+one_arg.gpr:3:18: error: split requires a second parameter
+three_arg.gpr:3:18: error: split accepts only two parameters
+
+** packages:
+
+extends_nonexist.gpr:3:20: error: undefined project "Foo"
+extends_nonexist2.gpr:5:20: error: undefined package "Empty.Metrics"
+renames_nonexist.gpr:5:20: warning: undefined package "Empty.Metrics"
+
+** attributes:
+
+conf.gpr:3:08: error: Cannot set configuration attribute "Target" after it is referenced.
+builtin.gpr:3:04: error: builtin attribute "Name" is read-only
+empty_warning.gpr:4:07: warning: empty attribute Builder'Executable ignored
+empty_error.gpr:4:07: error: attribute Naming'Dot_Replacement cannot be empty
+no_package.gpr:3:19: error: unknown package or project "Unknown"
+no_package2.gpr:3:15: error: package "Ide" not declared in project "No_Package2"
+
+** variables:
+
+undef_project_ref.gpr:3:11: error: undefined project Undef"
+in_pack.gpr:4:14: error: undefined variable "Naming.Var2"

@@ -1,0 +1,5 @@
+project Non_String is
+
+   Var := external_as_list ("VAR", Project'Languages);
+
+end Non_String;

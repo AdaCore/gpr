@@ -168,6 +168,11 @@ endif
 build-tools: build-static coverage-instrument
 	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
 		-XLANGKIT_SUPPORT_BUILD=static ${GPR2TOOLS}
+ifeq (${BUILD},gnatcov)
+# ignore the gpr_parser during coverage
+	rm ${BUILD_ROOT}/${BUILD}/obj-static/gpr_parser*.sid
+	rm ${BUILD_ROOT}/${BUILD}/lib-static/gpr_parser*.sid
+endif
 
 # Gnatcov instrumentation
 coverage-instrument:
@@ -206,21 +211,6 @@ install-tools: uninstall-tools
 	${INSTALLER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
 		-XLANGKIT_SUPPORT_BUILD=static --build-name=static \
 		--mode=usage ${GPR2TOOLS}
-
-ifeq (${BUILD},gnatcov)
-install-instrumented: install-static
-	mkdir -p ${prefix}/share/gpr2/sids || true
-# copy gpr2 & gpr2-tools sid files
-	cp ${BUILD_ROOT}/${BUILD}/obj-*/*.sid ${prefix}/share/gpr2/sids/
-# exclude generated code from test coverage statistics
-	-rm ${prefix}/share/gpr2/sids/gpr_parser*
-# copy instrumented gpr2 source files
-	cp ${BUILD_ROOT}/${BUILD}/obj-static/gpr2-gnatcov-instr/*.ad? \
-		${prefix}/include/gpr2.static/.
-# copy instrumented gpr2 ali files
-	cp ${BUILD_ROOT}/${BUILD}/lib-static/*.ali \
-		${prefix}/lib/gpr2.static/.
-endif
 
 #########
 # setup #

@@ -1,0 +1,5 @@
+project Empty_String is
+
+   Var := split ("", ",");
+
+end Empty_String;

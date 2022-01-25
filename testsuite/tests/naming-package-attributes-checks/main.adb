@@ -53,5 +53,7 @@ procedure Main is
    end Test;
 
 begin
+   Test ("abst.gpr");
+   Test ("abst2.gpr");
    Test ("agg.gpr");
 end Main;

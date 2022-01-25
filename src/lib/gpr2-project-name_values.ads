@@ -80,58 +80,17 @@ package GPR2.Project.Name_Values is
           Post => Values'Result.Length = Self.Count_Values;
    --  Returns the values for the Name/Values pair object
 
-   function Has_Value (Self : Object; Value : Value_Type) return Boolean
-     with Pre => Self.Is_Defined and then Self.Kind = List;
-   --  Returns true whether the list of value contains Value
-
-   function Value
-     (Self : Object; Value : Value_Type) return Source_Reference.Value.Object
-     with Pre => Self.Is_Defined
-     and then Self.Kind = List
-     and then Self.Has_Value (Value);
-   --  Returns the (source reference) value for the Name/Values pair object,
-   --  selected by its (text) value.
-
    function Value (Self : Object) return Source_Reference.Value.Object
      with Pre => Self.Is_Defined and then Self.Kind = Single;
    --  Returns the value for the Name/Values pair object
 
-   function Value_Equal (Self : Object; Value : Value_Type) return Boolean
-     with Pre => Self.Kind = Single;
-   --  Returns True if the attribute's value is equal to Value taking into
-   --  account the case-sensitivity of the value.
-
-   function Image (Self : Object; Name_Len : Natural := 0) return String
-     with Pre => Self.Is_Defined;
-   --  Returns a string representation. Name_Len represents the length in
-   --  character than the Name should take, so possibly some space padding
-   --  are added.
-
-   procedure Set_Case
-     (Self                    : in out Object;
-      Value_Is_Case_Sensitive : Boolean);
-   --  Sets values case sensitivity which is by default it is case-sensitive
-
-   function Rename
-     (Self : Object;
-      Name : Source_Reference.Identifier.Object) return Object
-     with Pre => Self.Is_Defined;
-   --  Returns the object with another name
-
-   procedure Append
-     (Self : in out Object; Item : Source_Reference.Value.Object)
-     with Pre => Self.Is_Defined
-                 and then Item.Is_Defined and then Self.Kind = List;
-   --  Append one item to the list values of the object
-
 private
 
    type Object is new Source_Reference.Object with record
-      Kind                 : Registry.Attribute.Value_Kind := List;
-      Name                 : Source_Reference.Identifier.Object;
-      Values               : Containers.Source_Value_List;
-      Value_Case_Sensitive : Boolean := True;
-      V_Map                : Containers.Value_Source_Reference;  -- fast check
+      Kind   : Registry.Attribute.Value_Kind := List;
+      Name   : Source_Reference.Identifier.Object;
+      Values : Containers.Source_Value_List;
+      V_Map  : Containers.Value_Source_Reference;  -- fast check
    end record;
 
    Undefined : constant Object :=

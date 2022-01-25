@@ -76,15 +76,13 @@ procedure Main is
          Display (A);
       end loop;
 
-      if Prj.Has_Packages then
-         for Pck of Prj.Packages (With_Defaults => False) loop
-            Text_IO.Put_Line (" " & Image (Pck));
+      for Pck of Prj.Packages (With_Defaults => False) loop
+         Text_IO.Put_Line (" " & Image (Pck));
 
-            for A of Prj.Attributes (Pack => Pck, With_Defaults => False) loop
-               Display (A);
-            end loop;
+         for A of Prj.Attributes (Pack => Pck, With_Defaults => False) loop
+            Display (A);
          end loop;
-      end if;
+      end loop;
    end Display;
 
    Prj : Project.Tree.Object;

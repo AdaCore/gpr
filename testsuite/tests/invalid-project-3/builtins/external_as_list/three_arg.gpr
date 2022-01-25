@@ -1,0 +1,5 @@
+project Three_Arg is
+
+   Var := external_as_list ("EXT", ",", "whatever");
+
+end Three_Arg;

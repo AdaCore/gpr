@@ -64,7 +64,7 @@ package body GPR2.Project.Variable is
    -- Image --
    -----------
 
-   overriding function Image
+   function Image
      (Self     : Object;
       Name_Len : Natural := 0) return String
    is
@@ -113,17 +113,5 @@ package body GPR2.Project.Variable is
 
       return To_String (Result);
    end Image;
-
-   ------------
-   -- Rename --
-   ------------
-
-   overriding function Rename
-     (Self : Object;
-      Name : Source_Reference.Identifier.Object) return Object is
-   begin
-      return Object'
-        (Name_Values.Rename (Name_Values.Object (Self), Name) with Self.Typ);
-   end Rename;
 
 end GPR2.Project.Variable;

@@ -1,0 +1,6 @@
+project Demo4 is
+
+   type Bool is ("True", "False");
+
+
+end Demo4;

@@ -59,12 +59,6 @@ class GNATcov(object):
     def report(self, formats=['dhtml', 'xcov']):
         """Generate coverage reports for all given output formats."""
 
-        # Get the list of all SID files
-        sid_list = os.path.join(self.temp_dir, 'sid_files.txt')
-        with open(sid_list, 'w') as f:
-            for s in glob.glob(os.path.join(self.sid_dir, '*.sid')):
-                f.write(s + '\n')
-
         # Get the list of all trace files
         traces_list = os.path.join(self.temp_dir, 'traces.txt')
         with open(traces_list, 'w') as f:
@@ -75,7 +69,9 @@ class GNATcov(object):
         logging.info('Consolidating coverage results')
         ckpt_file = os.path.join(self.temp_dir, 'report.ckpt')
         self.checked_run(['gnatcov', 'coverage', '--level', self.covlevel,
-                          '--sid', '@' + sid_list,
+                          '-P', 'gpr2-tools',
+                          '-XBUILD=gnatcov',
+                          '--externally-built-projects',
                           '--save-checkpoint', ckpt_file,
                           '@' + traces_list])
 
@@ -90,6 +86,9 @@ class GNATcov(object):
                 '--annotate', fmt,
                 '--level', self.covlevel,
                 '--output-dir', report_dir,
+                '-P', 'gpr2-tools',
+                '--externally-built-projects',
+                '-XBUILD=gnatcov',
                 '--checkpoint', ckpt_file])
 
     @property

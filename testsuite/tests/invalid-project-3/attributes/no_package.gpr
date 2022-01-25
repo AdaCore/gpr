@@ -1,0 +1,6 @@
+project No_Package is
+
+   Var := Unknown'Runtime;
+   --  Undefined package (so undefined attribute)
+
+end No_Package;

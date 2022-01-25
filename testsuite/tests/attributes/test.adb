@@ -14,6 +14,7 @@ function Test return Integer is
    Tree          : GPR2.Project.Tree.Object;
    Comp_Switches : Name_List;
    Languages     : Name_List;
+   File_List     : Name_List;
 begin
    TGPR.Load_With_No_Errors
       (Tree,
@@ -33,6 +34,10 @@ begin
    TGPR.Assert_Attribute
       (Tree.Root_Project, "library_name", Value => "mylib");
 
+   IO.Put_Line ("Check default value for Library_Kind");
+   TGPR.Assert_Attribute
+     (Tree.Root_Project, "library_kind", Value => "static");
+
    IO.Put_Line
       ("Check that archive_suffix is not inherited and that default is used");
    TGPR.Assert_Attribute
@@ -48,15 +53,59 @@ begin
       (Tree.Root_Project, "mode", Pkg => "install");
 
    IO.Put_Line ("Check languages (inherited and concatenated from extended)");
-   Languages.Append("ada");
    Languages.Append("C");
+   Languages.Append("Ada");
    TGPR.Assert_Attribute
       (Tree.Root_Project,
        Name  => "Languages",
        Value => Languages);
 
+   IO.Put_Line ("Check multi value assignment");
+   --  full associative array in pkg
+   Comp_Switches.Clear;
+   Comp_Switches.Append ("ada_switch");
+   TGPR.Assert_Attribute
+     (Tree.Root_Project,
+      Name  => "Default_Switches",
+      Pkg   => "Compiler",
+      Index => "ada",
+      Value => Comp_Switches);
+   Comp_Switches.Clear;
+   Comp_Switches.Append ("c_switch");
+   TGPR.Assert_Attribute
+     (Tree.Root_Project,
+      Name  => "Default_Switches",
+      Pkg   => "Compiler",
+      Index => "c",
+      Value => Comp_Switches);
+   --  full associative array at top level
+   TGPR.Assert_Attribute
+     (Tree.Root_Project,
+      Name  => "Runtime",
+      Index => "c",
+      Value => "foo");
+   TGPR.Assert_Attribute
+     (Tree.Root_Project,
+      Name  => "Runtime",
+      Index => "ada",
+      Value => "bar");
+   --  full associative array concatenation from config
+   TGPR.Assert_Attribute
+     (Tree.Root_Project,
+      Name  => "Runtime",
+      Index => "c++",
+      Value => "baz");
+
+   IO.Put_Line ("test default value for config attributes");
+   TGPR.Assert_Attribute
+     (Tree.Root_Project,
+      Name  => "Target",
+      Value => "x86_64-pc-linux-gnu2");
+
+
    IO.Put_Line ("test pattern matching");
-   Name_Type_List.Append (Comp_Switches, "-Ospecial");
+   Comp_Switches.Clear;
+   Comp_Switches.Append ("-Ospecial");
 
    TGPR.Assert_Attribute
       (Tree.Root_Project,
@@ -91,6 +140,31 @@ begin
      (Tree.Root_Project,
       Name => "Inexistent_Attribute",
       Pkg  => "Inexistent_Package");
+
+   IO.Put_Line ("test attribute alias names");
+   TGPR.Assert_Attribute
+     (Tree.Root_Project,
+      Name  => "Spec",
+      Pkg   => "Naming",
+      Index => "myadaunit",
+      Value => "myadaunit.ads");
+   TGPR.Assert_Attribute
+     (Tree.Root_Project,
+      Name  => "Specification",
+      Pkg   => "Naming",
+      Index => "myadaunit",
+      Value => "myadaunit.ads");
+
+   File_List.Append("file.adb");
+   File_List.Append("file.ads");
+   TGPR.Assert_Attribute
+     (Tree.Root_Project,
+      Name  => "Locally_Removed_Files",
+      Value => File_List);
+   TGPR.Assert_Attribute
+     (Tree.Root_Project,
+      Name  => "Excluded_Source_Files",
+      Value => File_List);
 
    return A.Report;
 end Test;

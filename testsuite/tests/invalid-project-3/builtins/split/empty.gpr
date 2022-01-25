@@ -1,0 +1,5 @@
+project Empty is
+
+   Var := split ();
+
+end Empty;

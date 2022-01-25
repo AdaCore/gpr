@@ -174,6 +174,18 @@ package body GPR2.Project.Parser is
       Messages      : out Log.Object) return Object;
    --  Analyzes the project, recording all external references and imports
 
+   -----------------
+   -- Clear_Cache --
+   -----------------
+
+   procedure Clear_Cache
+     (Filename : GPR2.Path_Name.Object) is
+   begin
+      if Registry.Exists (Filename) then
+         Registry.Unregister (Filename);
+      end if;
+   end Clear_Cache;
+
    --------------
    -- Extended --
    --------------
@@ -469,7 +481,7 @@ package body GPR2.Project.Parser is
 
          if Filename.Is_Directory then
             Unit := Get_From_Buffer
-                      (Context, Filename.Value, Buffer => Empty_Project);
+              (Context, Filename.Value, Buffer => Empty_Project);
          else
             Unit := Get_From_File (Context, Filename.Value);
          end if;
@@ -602,7 +614,7 @@ package body GPR2.Project.Parser is
                --  as an external_as_list result cannot be used in a
                --  case statement.
 
-               if Exprs.Is_Null then
+               if Exprs.Is_Null or else Exprs.Children_Count = 0 then
                   Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
@@ -610,6 +622,26 @@ package body GPR2.Project.Parser is
                         Message =>
                           "missing parameters for external_as_list"
                         & " built-in"));
+
+               elsif Exprs.Children_Count < 2 then
+                     Messages.Append
+                       (GPR2.Message.Create
+                          (Level   => Message.Error,
+                           Sloc    =>
+                             Get_Source_Reference (Filename, Exprs),
+                           Message =>
+                             "external_as_list requires two "
+                           & "parameters"));
+
+               elsif Exprs.Children_Count > 2 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference
+                            (Filename, Exprs),
+                        Message =>
+                          "external_as_list accepts only two parameters"));
 
                else
                   --  We have External_As_List ("VAR", "SEP"), check the
@@ -646,47 +678,36 @@ package body GPR2.Project.Parser is
 
                   --  Check that the second parameter exists and is a string
 
-                  if Child (Exprs, 2).Is_Null then
-                     Messages.Append
-                       (GPR2.Message.Create
-                          (Level   => Message.Error,
-                           Sloc    =>
-                             Get_Source_Reference (Filename, Exprs),
-                           Message =>
-                             "external_as_list requires a second "
-                           & "parameter"));
-                  else
-                     declare
-                        Sep_Node : constant Term_List :=
-                                     Child (Exprs, 2).As_Term_List;
-                        Error    : Boolean;
-                        Sep      : constant Value_Type :=
-                                     Get_String_Literal (Sep_Node, Error);
-                     begin
-                        if Error then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    =>
-                                   Get_Source_Reference
-                                     (Filename, Sep_Node),
-                                 Message =>
-                                   "external_as_list second parameter must "
-                                 & "be a simple string"));
+                  declare
+                     Sep_Node : constant Term_List :=
+                                  Child (Exprs, 2).As_Term_List;
+                     Error    : Boolean;
+                     Sep      : constant Value_Type :=
+                                  Get_String_Literal (Sep_Node, Error);
+                  begin
+                     if Error then
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference
+                                  (Filename, Sep_Node),
+                              Message =>
+                                "external_as_list second parameter must "
+                                & "be a simple string"));
 
-                        elsif Sep = "" then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    =>
-                                   Get_Source_Reference
-                                     (Filename, Sep_Node),
-                                 Message =>
-                                   "external_as_list separator must not "
-                                 & "be empty"));
-                        end if;
-                     end;
-                  end if;
+                     elsif Sep = "" then
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference
+                                  (Filename, Sep_Node),
+                              Message =>
+                                "external_as_list separator must not "
+                              & "be empty"));
+                     end if;
+                  end;
                end if;
             end Parse_External_As_List_Reference;
 
@@ -699,13 +720,23 @@ package body GPR2.Project.Parser is
             is
                Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
             begin
-               if Exprs.Is_Null then
+               if Exprs.Is_Null or else Exprs.Children_Count = 0 then
                   Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, N),
                         Message =>
                           "missing parameter for external built-in"));
+
+               elsif Exprs.Children_Count > 2 then
+                     Messages.Append
+                       (GPR2.Message.Create
+                          (Level   => Message.Error,
+                           Sloc    =>
+                             Get_Source_Reference (Filename, Exprs),
+                           Message =>
+                             "external built-in accepts at most two "
+                             & "parameters."));
 
                else
                   --  We have External ("VAR" [, "VALUE"]), get the
@@ -768,7 +799,7 @@ package body GPR2.Project.Parser is
                --  Note that this routine is only validating the syntax
                --  of the split built-in.
 
-               if Exprs.Is_Null then
+               if Exprs.Is_Null or else Exprs.Children_Count = 0 then
                   Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
@@ -777,12 +808,23 @@ package body GPR2.Project.Parser is
 
                --  Check that the second parameter exists
 
-               elsif Child (Exprs, 2).Is_Null then
+               elsif Exprs.Children_Count = 1 then
                   Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message => "split requires a second parameter"));
+
+               --  Check that we don't have more than two parameters
+
+               elsif Exprs.Children_Count > 2 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference (Filename, Exprs),
+                        Message =>
+                          "split accepts only two parameters"));
                end if;
             end Parse_Split_Reference;
 
@@ -1210,8 +1252,6 @@ package body GPR2.Project.Parser is
       --  set and Pack_Name contains the name of the package and Pack_Ref
       --  will point to the view's package object.
 
-      Undefined_Attribute_Count : Natural :=  0;
-
       function Is_Open return Boolean is
         (Case_Values.Is_Empty
          or else (for all CV of Case_Values => CV (1) = '+'));
@@ -1411,19 +1451,6 @@ package body GPR2.Project.Parser is
             return Empty_Item_Values;
          end if;
 
-         if Present (F_Attribute_Index (Node)) and then Index = PAI.Undefined
-         then
-            --  Empty index found in attribute reference.
-
-            Tree.Log_Messages.Append
-              (Message.Create
-                 (Message.Error,
-                  "empty index not allowed here",
-                  Get_Source_Reference (Self.File, Node)));
-
-            return Empty_Item_Values;
-         end if;
-
          --  If the attribute is not found or not yet resolved we need
          --  to ensure that the Values list respect the post
          --  condition. That is, a Single result must contain a single
@@ -1491,19 +1518,6 @@ package body GPR2.Project.Parser is
                      Indexed_Values.Attribute_Name := Name;
                      Indexed_Values.Attribute_Pack := No_Package;
                      Indexed_Values.Filled         := True;
-
-                     if Tree.Has_Configuration then
-                        for Attr of
-                          Tree.Configuration.
-                            Corresponding_View.Attributes
-                              (Name, With_Config => False)
-                        loop
-                           Indexed_Values.Values.Append
-                             ((Index  => Attr.Index,
-                               Values => Attr.Values,
-                               Single => Attr.Kind = PRA.Single), 1);
-                        end loop;
-                     end if;
                   end if;
                end if;
             end if;
@@ -1526,7 +1540,7 @@ package body GPR2.Project.Parser is
 
             if not Attr.Is_Defined then
                if Pack /= No_Package
-                 and then not Project_View.Has_Packages (Pack)
+                 and then not Project_View.Has_Package (Pack)
                then
                   Tree.Log_Messages.Append
                     (Message.Create
@@ -1572,11 +1586,8 @@ package body GPR2.Project.Parser is
                Result.Values := Ensure_Source_Loc (Attr.Values, Sloc);
                Result.Single := Attr.Kind = PRA.Single;
             else
-               if PRA.Exists (Q_Name) then
-                  Result.Single := PRA.Get (Q_Name).Value = PRA.Single;
-               else
-                  Result.Single := False;
-               end if;
+               Result.Single := PRA.Get (Q_Name).Value = PRA.Single;
+
                if Result.Single then
                   Result.Values :=
                     GPR2.Containers.Source_Value_Type_List.To_Vector
@@ -2213,7 +2224,7 @@ package body GPR2.Project.Parser is
                else
                   --  Otherwise search into the already parsed packages
 
-                  if View.Has_Packages (Pack) then
+                  if View.Has_Package (Pack) then
                      return Get_Pack_Var (View, Pack, Variable);
                   else
                      Error
@@ -2242,7 +2253,7 @@ package body GPR2.Project.Parser is
                   return Try_Visible_In (From_View);
                end if;
 
-            elsif From_View.Has_Packages (Pack) then
+            elsif From_View.Has_Package (Pack) then
                return Get_Pack_Var (From_View, Pack, Variable);
             else
                Error ("undefined package """ & Image (Pack) & '"');
@@ -2584,7 +2595,7 @@ package body GPR2.Project.Parser is
                                 (Message.Create
                                    (Level   => Message.Warning,
                                     Sloc    => Sloc,
-                                    Message => "Empty attribute "
+                                    Message => "empty attribute "
                                       & PRA.Image (Q_Name)
                                       & " ignored"));
                               Is_Valid := False;
@@ -2594,9 +2605,9 @@ package body GPR2.Project.Parser is
                                 (Message.Create
                                    (Level   => Message.Error,
                                     Sloc    => Sloc,
-                                    Message => "Attribute "
+                                    Message => "attribute "
                                       & PRA.Image (Q_Name)
-                                      & " can't be empty"));
+                                      & " cannot be empty"));
                         end case;
                      end if;
 
@@ -2754,7 +2765,7 @@ package body GPR2.Project.Parser is
                   end loop;
                end if;
 
-            else
+            elsif Values /= Empty_Item_Values or else not Values.Single then
                Create_And_Register_Attribute
                 (Index  => I_Sloc,
                  Values => Values.Values,
@@ -2959,7 +2970,7 @@ package body GPR2.Project.Parser is
                      Message =>
                        "undefined project """ & String (Project) & '"'));
 
-            elsif not View.Has_Packages (P_Name) then
+            elsif not View.Has_Package (P_Name) then
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Message.Error,
@@ -3032,7 +3043,7 @@ package body GPR2.Project.Parser is
                      Message =>
                        "undefined project """ & String (Project) & '"'));
 
-            elsif not View.Has_Packages (P_Name) then
+            elsif not View.Has_Package (P_Name) then
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Message.Warning,
@@ -3332,12 +3343,7 @@ package body GPR2.Project.Parser is
       is
          Include : Boolean := True;
       begin
-         if not A.Is_Defined then
-            Undefined_Attribute_Count := Undefined_Attribute_Count + 1;
-            Include := False;
-         end if;
-
-         if Include and then Set.Contains (A) then
+         if Set.Contains (A) then
             declare
                Old : constant PA.Object := Set.Element (A.Name.Id, A.Index);
             begin

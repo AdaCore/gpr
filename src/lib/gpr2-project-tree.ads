@@ -138,9 +138,12 @@ package GPR2.Project.Tree is
    --  Base is the knowledge base object used to configure the toolchain for
    --  the project.
 
-   procedure Unload (Self : in out Object);
+   procedure Unload (Self : in out Object;
+                     Full : Boolean := True);
    --  Unloads the tree and free all associated objects (projects, sources,
    --  etc...).
+   --  If Full is set, then the cached parsed projects objects will also be
+   --  unloaded.
 
    function Root_Project (Self : Object) return View.Object
      with Pre  => Self.Is_Defined,

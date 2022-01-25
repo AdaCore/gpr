@@ -84,13 +84,7 @@ package GPR2.Project.Variable is
      with Pre => Self.Is_Defined and then Self.Has_Type;
    --  Returns the type for the variable Self
 
-   overriding function Rename
-     (Self : Object;
-      Name : Source_Reference.Identifier.Object) return Object
-     with Pre => Self.Is_Defined;
-   --  Returns the object with another name
-
-   overriding function Image
+   function Image
      (Self : Object; Name_Len : Natural := 0) return String
      with Pre => Self.Is_Defined;
    --  Returns a string representation

@@ -1,0 +1,5 @@
+project Empty_String is
+
+   Var := external ("");
+
+end Empty_String;
