@@ -68,6 +68,10 @@ package GPR2.Project.Parser is
    --  This is mostly intended to load configuration projects created in memory
    --  to be used during autoconfiguration step.
 
+   procedure Clear_Cache
+     (Filename : GPR2.Path_Name.Object);
+   --  Clears the parsed objects cache for Filename
+
    procedure Process
      (Self          : in out Object;
       Tree          : GPR2.Project.Tree.Object;

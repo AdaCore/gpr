@@ -174,6 +174,18 @@ package body GPR2.Project.Parser is
       Messages      : out Log.Object) return Object;
    --  Analyzes the project, recording all external references and imports
 
+   -----------------
+   -- Clear_Cache --
+   -----------------
+
+   procedure Clear_Cache
+     (Filename : GPR2.Path_Name.Object) is
+   begin
+      if Registry.Exists (Filename) then
+         Registry.Unregister (Filename);
+      end if;
+   end Clear_Cache;
+
    --------------
    -- Extended --
    --------------
