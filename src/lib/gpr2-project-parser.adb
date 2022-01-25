@@ -602,7 +602,7 @@ package body GPR2.Project.Parser is
                --  as an external_as_list result cannot be used in a
                --  case statement.
 
-               if Exprs.Is_Null then
+               if Exprs.Is_Null or else Exprs.Children_Count = 0 then
                   Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
@@ -610,6 +610,26 @@ package body GPR2.Project.Parser is
                         Message =>
                           "missing parameters for external_as_list"
                         & " built-in"));
+
+               elsif Exprs.Children_Count < 2 then
+                     Messages.Append
+                       (GPR2.Message.Create
+                          (Level   => Message.Error,
+                           Sloc    =>
+                             Get_Source_Reference (Filename, Exprs),
+                           Message =>
+                             "external_as_list requires two "
+                           & "parameters"));
+
+               elsif Exprs.Children_Count > 2 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference
+                            (Filename, Exprs),
+                        Message =>
+                          "external_as_list accepts only two parameters"));
 
                else
                   --  We have External_As_List ("VAR", "SEP"), check the
@@ -646,47 +666,36 @@ package body GPR2.Project.Parser is
 
                   --  Check that the second parameter exists and is a string
 
-                  if Child (Exprs, 2).Is_Null then
-                     Messages.Append
-                       (GPR2.Message.Create
-                          (Level   => Message.Error,
-                           Sloc    =>
-                             Get_Source_Reference (Filename, Exprs),
-                           Message =>
-                             "external_as_list requires a second "
-                           & "parameter"));
-                  else
-                     declare
-                        Sep_Node : constant Term_List :=
-                                     Child (Exprs, 2).As_Term_List;
-                        Error    : Boolean;
-                        Sep      : constant Value_Type :=
-                                     Get_String_Literal (Sep_Node, Error);
-                     begin
-                        if Error then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    =>
-                                   Get_Source_Reference
-                                     (Filename, Sep_Node),
-                                 Message =>
-                                   "external_as_list second parameter must "
-                                 & "be a simple string"));
+                  declare
+                     Sep_Node : constant Term_List :=
+                                  Child (Exprs, 2).As_Term_List;
+                     Error    : Boolean;
+                     Sep      : constant Value_Type :=
+                                  Get_String_Literal (Sep_Node, Error);
+                  begin
+                     if Error then
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference
+                                  (Filename, Sep_Node),
+                              Message =>
+                                "external_as_list second parameter must "
+                                & "be a simple string"));
 
-                        elsif Sep = "" then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    =>
-                                   Get_Source_Reference
-                                     (Filename, Sep_Node),
-                                 Message =>
-                                   "external_as_list separator must not "
-                                 & "be empty"));
-                        end if;
-                     end;
-                  end if;
+                     elsif Sep = "" then
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference
+                                  (Filename, Sep_Node),
+                              Message =>
+                                "external_as_list separator must not "
+                              & "be empty"));
+                     end if;
+                  end;
                end if;
             end Parse_External_As_List_Reference;
 
@@ -699,13 +708,23 @@ package body GPR2.Project.Parser is
             is
                Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
             begin
-               if Exprs.Is_Null then
+               if Exprs.Is_Null or else Exprs.Children_Count = 0 then
                   Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, N),
                         Message =>
                           "missing parameter for external built-in"));
+
+               elsif Exprs.Children_Count > 2 then
+                     Messages.Append
+                       (GPR2.Message.Create
+                          (Level   => Message.Error,
+                           Sloc    =>
+                             Get_Source_Reference (Filename, Exprs),
+                           Message =>
+                             "external built-in accepts at most two "
+                             & "parameters."));
 
                else
                   --  We have External ("VAR" [, "VALUE"]), get the
@@ -768,7 +787,7 @@ package body GPR2.Project.Parser is
                --  Note that this routine is only validating the syntax
                --  of the split built-in.
 
-               if Exprs.Is_Null then
+               if Exprs.Is_Null or else Exprs.Children_Count = 0 then
                   Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
@@ -777,12 +796,23 @@ package body GPR2.Project.Parser is
 
                --  Check that the second parameter exists
 
-               elsif Child (Exprs, 2).Is_Null then
+               elsif Exprs.Children_Count = 1 then
                   Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message => "split requires a second parameter"));
+
+               --  Check that we don't have more than two parameters
+
+               elsif Exprs.Children_Count > 2 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference (Filename, Exprs),
+                        Message =>
+                          "split accepts only two parameters"));
                end if;
             end Parse_Split_Reference;
 
