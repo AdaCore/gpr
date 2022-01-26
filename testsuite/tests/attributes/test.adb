@@ -4,6 +4,7 @@ with GPR2.Project.Tree;
 with GPR2.Containers; use GPR2.Containers;
 with GPR2.Source_Reference.Value;
 with GNAT.IO;
+with System.OS_Constants;
 
 function Test return Integer is
 
@@ -11,6 +12,7 @@ function Test return Integer is
    package A renames Test_Assert;
    package IO renames GNAT.IO;
 
+   This_Target  : constant String := System.OS_Constants.Target_Name;
    Tree          : GPR2.Project.Tree.Object;
    Comp_Switches : Name_List;
    Languages     : Name_List;
@@ -100,7 +102,7 @@ begin
    TGPR.Assert_Attribute
      (Tree.Root_Project,
       Name  => "Target",
-      Value => "x86_64-pc-linux-gnu2");
+      Value => This_Target & "2");
 
 
    IO.Put_Line ("test pattern matching");
