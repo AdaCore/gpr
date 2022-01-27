@@ -1,5 +1,5 @@
 project Conf is
 
-   for Target use Project'Target & "-elf";
+   for Target use Project'Target & "-something";
 
 end Conf;
