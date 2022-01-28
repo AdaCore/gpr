@@ -1719,11 +1719,7 @@ package body GPR2.KB is
                             & To_String (Tmp_Result) & """");
                   exception
                      when Invalid_Process =>
-                        Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              "Spawn failed for " & Command,
-                              Sloc => Error_Sloc));
+                        Trace (Main_Trace, "Spawn failed for " & Command);
                   end;
 
                when Value_Directory =>
