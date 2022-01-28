@@ -1,9 +1,9 @@
 from langkit.dsl import Field, T
 
-from language.parser import A, GPRNode
+from language.parser import A, GprNode
 
 
-class CompilationUnit(GPRNode):
+class CompilationUnit(GprNode):
     project = Field(type=T.Project)
 
 

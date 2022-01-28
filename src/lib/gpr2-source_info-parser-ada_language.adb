@@ -20,8 +20,8 @@ with Ada.Directories;
 
 with Langkit_Support.Text;
 
-with GPR_Parser.Analysis;
-with GPR_Parser.Common;
+with Gpr_Parser.Analysis;
+with Gpr_Parser.Common;
 
 with GPR2.Project.Source;
 with GPR2.Source_Info.Parser.Registry;
@@ -41,8 +41,8 @@ package body GPR2.Source_Info.Parser.Ada_Language is
       Data   : in out Source_Info.Object'Class;
       Source : Project.Source.Object)
    is
-      use GPR_Parser.Analysis;
-      use GPR_Parser.Common;
+      use Gpr_Parser.Analysis;
+      use Gpr_Parser.Common;
       use Langkit_Support.Text;
 
       Index : Unit_Index := No_Index;
@@ -55,18 +55,18 @@ package body GPR2.Source_Info.Parser.Ada_Language is
       --  If something has been parsed on this source file, then Parsed is set
       --  to True and New_Data will replace Data parameter.
 
-      function Callback (Node : GPR_Node'Class) return Visit_Status;
+      function Callback (Node : Gpr_Node'Class) return Visit_Status;
       --  LibAdaLang parser's callback
 
       --------------
       -- Callback --
       --------------
 
-      function Callback (Node : GPR_Node'Class) return Visit_Status is
+      function Callback (Node : Gpr_Node'Class) return Visit_Status is
          use all type GPR2.Unit.Flag;
 
          function Process_Defining_Name
-           (N     : GPR_Node'Class;
+           (N     : Gpr_Node'Class;
             Index : Natural := 0;
             Count : Positive := 1) return Unbounded_String;
 
@@ -75,13 +75,13 @@ package body GPR2.Source_Info.Parser.Ada_Language is
          ---------------------------
 
          function Process_Defining_Name
-           (N     : GPR_Node'Class;
+           (N     : Gpr_Node'Class;
             Index : Natural := 0;
             Count : Positive := 1) return Unbounded_String
          is
          begin
             case N.Kind is
-               when GPR_Prefix =>
+               when Gpr_Prefix =>
                   declare
                      P : constant Prefix := N.As_Prefix;
                   begin
@@ -89,10 +89,10 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                        & "." & Process_Defining_Name (P.F_Suffix);
                   end;
 
-               when GPR_Identifier =>
+               when Gpr_Identifier =>
                   return +To_UTF8 (N.Text);
 
-               when GPR_Expr_List =>
+               when Gpr_Expr_List =>
                   pragma Assert (N.As_Expr_List.Children_Count = Count);
                   pragma Assert (N.As_Expr_List.Children_Count > Index);
 
@@ -107,12 +107,12 @@ package body GPR2.Source_Info.Parser.Ada_Language is
          end Process_Defining_Name;
 
       begin
-         if Node = No_GPR_Node then
+         if Node = No_Gpr_Node then
             return Over;
          end if;
 
          case Node.Kind is
-            when GPR_Ada_With =>
+            when Gpr_Ada_With =>
                declare
                   N    : constant Ada_With := Node.As_Ada_With;
                   Sloc : constant Source_Reference.Object :=
@@ -165,7 +165,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
 
                return Over;
 
-            when GPR_Ada_Library_Item =>
+            when Gpr_Ada_Library_Item =>
                --  As the parser only support a single unit per file the
                --  index should always be 1.
                pragma Assert (Index = No_Index);
@@ -187,19 +187,19 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                   --  Check Spec/Body
 
                   case N.F_Main.Kind is
-                     when GPR_Ada_Pkg =>
+                     when Gpr_Ada_Pkg =>
                         L_Type := GPR2.Unit.Is_Package;
                         U_Name := Process_Defining_Name
                           (N.F_Main.As_Ada_Pkg.F_Name);
                         U_Kind := GPR2.Unit.S_Spec;
 
-                     when GPR_Ada_Pkg_Body =>
+                     when Gpr_Ada_Pkg_Body =>
                         L_Type := GPR2.Unit.Is_Package;
                         U_Name := Process_Defining_Name
                           (N.F_Main.As_Ada_Pkg_Body.F_Name);
                         U_Kind := GPR2.Unit.S_Body;
 
-                     when GPR_Ada_Subp =>
+                     when Gpr_Ada_Subp =>
                         --  Keep the unit kind information. Indeed,
                         --  the Ada parser do not make the difference
                         --  between the a procedure spec or body but

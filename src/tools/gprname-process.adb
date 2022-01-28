@@ -33,9 +33,9 @@ with GNAT.Regpat;
 
 with GNATCOLL.OS.Constants;
 
-with GPR_Parser.Analysis;
-with GPR_Parser.Common;
-with GPR_Parser.Rewriting;
+with Gpr_Parser.Analysis;
+with Gpr_Parser.Common;
+with Gpr_Parser.Rewriting;
 
 with GPR2.Containers;
 with GPR2.Context;
@@ -69,9 +69,9 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
 
    use GNAT;
 
-   use GPR_Parser.Analysis;
-   use GPR_Parser.Common;
-   use GPR_Parser.Rewriting;
+   use Gpr_Parser.Analysis;
+   use Gpr_Parser.Common;
+   use Gpr_Parser.Rewriting;
 
    use GPR2;
    use GPR2.Project;
@@ -669,7 +669,7 @@ begin
                                (Quote (Source_List_File_Basename)) & ";",
                              (1 .. 0 => <>), Attribute_Decl_Rule);
 
-      function Rewrite_Main (N : GPR_Node'Class) return Visit_Status;
+      function Rewrite_Main (N : Gpr_Node'Class) return Visit_Status;
       --  Our rewriting callback for the main project:
       --     - Add a with clause for the naming project, if not already present
       --     - Add the attributes: Source_List_File, Source_Dirs, Languages.
@@ -680,11 +680,11 @@ begin
       -- Rewrite_Main --
       ------------------
 
-      function Rewrite_Main (N : GPR_Node'Class) return Visit_Status is
+      function Rewrite_Main (N : Gpr_Node'Class) return Visit_Status is
       begin
          case Kind (N) is
 
-            when GPR_With_Decl_List =>
+            when Gpr_With_Decl_List =>
                if not Tree.Root_Project.Has_Imports or else
                  not (for some Imported of Tree.Root_Project.Imports =>
                         String (Imported.Path_Name.Base_Name) =
@@ -702,14 +702,14 @@ begin
                end if;
                return Into;
 
-            when GPR_Project_Declaration =>
+            when Gpr_Project_Declaration =>
                declare
-                  Children        : constant GPR_Node_List :=
+                  Children        : constant Gpr_Node_List :=
                                       F_Decls (As_Project_Declaration (N));
                   Children_Handle : constant Node_Rewriting_Handle :=
                                       Handle (Children);
 
-                  Child     : GPR_Node;
+                  Child     : Gpr_Node;
                   In_Bounds : Boolean;
 
                begin
@@ -718,7 +718,7 @@ begin
                                 I, In_Bounds, Child);
 
                      if not Child.Is_Null then
-                        if Kind (Child) = GPR_Attribute_Decl then
+                        if Kind (Child) = Gpr_Attribute_Decl then
                            declare
                               Attr_Name : constant Attribute_Id :=
                                 +Get_Name_Type
@@ -734,7 +734,7 @@ begin
                               end if;
                            end;
 
-                        elsif Kind (Child) = GPR_Package_Decl then
+                        elsif Kind (Child) = Gpr_Package_Decl then
                            declare
                               Pack_Name : constant Package_Id := +Get_Name_Type
                                 (F_Pkg_Name (Child.As_Package_Decl).

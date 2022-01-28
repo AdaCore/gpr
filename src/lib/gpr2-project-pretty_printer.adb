@@ -25,7 +25,7 @@
 with Ada.Characters.Conversions;
 with Ada.Characters.Handling;
 
-with GPR_Parser.Common;
+with Gpr_Parser.Common;
 
 with Langkit_Support.Text;
 
@@ -70,7 +70,7 @@ package body GPR2.Project.Pretty_Printer is
    is
       use Ada.Characters.Handling;
 
-      use GPR_Parser.Common;
+      use Gpr_Parser.Common;
 
       Last_Line_Is_Empty : Boolean := False;
       --  Used to avoid two consecutive empty lines
@@ -83,7 +83,7 @@ package body GPR2.Project.Pretty_Printer is
       --  Column number of the last character in the line. Used to avoid
       --  outputting lines longer than Max_Line_Length.
 
-      procedure Print (Node : GPR_Node'Class; Indent : Natural);
+      procedure Print (Node : Gpr_Node'Class; Indent : Natural);
       --  The recursive printer
 
       procedure Write_Indentation (Indent : Natural);
@@ -141,25 +141,25 @@ package body GPR2.Project.Pretty_Printer is
       -- Print --
       -----------
 
-      procedure Print (Node : GPR_Node'Class; Indent : Natural) is
+      procedure Print (Node : Gpr_Node'Class; Indent : Natural) is
       begin
-         if Node = No_GPR_Node then
+         if Node = No_Gpr_Node then
             return;
          end if;
 
          case Kind (Node) is
-            when GPR_Compilation_Unit =>
+            when Gpr_Compilation_Unit =>
                --  Top level node
 
                Print (F_Project (Node.As_Compilation_Unit), Indent);
 
-            when GPR_Project =>
+            when Gpr_Project =>
                --  Context & project nodes
 
                Print (F_Context_Clauses (Node.As_Project), Indent);
                Print (F_Project_Decl (Node.As_Project), Indent);
 
-            when GPR_With_Decl_List =>
+            when Gpr_With_Decl_List =>
                --  The list of "with" declarations
 
                if Node.Children_Count > 0 then
@@ -169,11 +169,11 @@ package body GPR2.Project.Pretty_Printer is
                   Write_Empty_Line;
                end if;
 
-            when GPR_With_Decl =>
+            when Gpr_With_Decl =>
                --  [limited] with <name>
 
                case Kind (F_Is_Limited (Node.As_With_Decl)) is
-                  when GPR_Limited_Present =>
+                  when Gpr_Limited_Present =>
                      Write_Token ("limited ", Indent);
                   when others =>
                      null;
@@ -185,7 +185,7 @@ package body GPR2.Project.Pretty_Printer is
                No_Split_String_Lit := False;
                Write_Token (";", Indent, End_Line => True);
 
-            when GPR_String_Literal_List =>
+            when Gpr_String_Literal_List =>
                --  List of string literals (e.g. from F_Path_Names)
 
                declare
@@ -202,12 +202,12 @@ package body GPR2.Project.Pretty_Printer is
                   end loop;
                end;
 
-            when GPR_Project_Declaration =>
+            when Gpr_Project_Declaration =>
                --  [qualifier] project [extends] <name> is
                --     ..
                --  end <name>;
 
-               if F_Qualifier (Node.As_Project_Declaration) /= No_GPR_Node then
+               if F_Qualifier (Node.As_Project_Declaration) /= No_Gpr_Node then
                   Print (F_Qualifier (Node.As_Project_Declaration), Indent);
                   Write_Token (" ", Indent);
                end if;
@@ -216,7 +216,7 @@ package body GPR2.Project.Pretty_Printer is
                Print (F_Project_Name (Node.As_Project_Declaration), Indent);
                Write_Token (" ", Indent);
 
-               if F_Extension (Node.As_Project_Declaration) /= No_GPR_Node then
+               if F_Extension (Node.As_Project_Declaration) /= No_Gpr_Node then
                   Print (F_Extension (Node.As_Project_Declaration), Indent);
                   Write_Token (" ", Indent);
                end if;
@@ -233,24 +233,24 @@ package body GPR2.Project.Pretty_Printer is
                Print (F_End_Name (Node.As_Project_Declaration), Indent);
                Write_Token (";", Indent, End_Line => True);
 
-            when GPR_Project_Qualifier_Abstract =>
+            when Gpr_Project_Qualifier_Abstract =>
                Write_Token ("abstract", Indent);
 
-            when GPR_Project_Qualifier_Library =>
+            when Gpr_Project_Qualifier_Library =>
                Write_Token ("library", Indent);
 
-            when GPR_Project_Qualifier_Aggregate =>
+            when Gpr_Project_Qualifier_Aggregate =>
                Write_Token ("aggregate", Indent);
 
-            when GPR_Project_Qualifier_Aggregate_Library =>
+            when Gpr_Project_Qualifier_Aggregate_Library =>
                Write_Token ("aggregate", Indent);
                Write_Token (" ", Indent);
                Write_Token ("library", Indent);
 
-            when GPR_Project_Qualifier_Configuration =>
+            when Gpr_Project_Qualifier_Configuration =>
                Write_Token ("configuration", Indent);
 
-            when GPR_Prefix =>
+            when Gpr_Prefix =>
                --  prefix[.suffix] (e.g. parent/child projects)
 
                Write_Name
@@ -258,7 +258,7 @@ package body GPR2.Project.Pretty_Printer is
                     (String'(To_UTF8 (F_Prefix (Node.As_Prefix).Text))),
                   Indent);
 
-               if F_Suffix (Node.As_Prefix) /= No_GPR_Node then
+               if F_Suffix (Node.As_Prefix) /= No_Gpr_Node then
                   Write_Token (".", Indent);
                   Write_Name
                     (Name_Type
@@ -266,18 +266,18 @@ package body GPR2.Project.Pretty_Printer is
                      Indent);
                end if;
 
-            when GPR_Identifier =>
+            when Gpr_Identifier =>
                --  Any identifier in the project
 
                Write_Name (Name_Type (String'(To_UTF8 (Node.Text))), Indent);
 
-            when GPR_Project_Extension =>
+            when Gpr_Project_Extension =>
                --  extends [all "<extended_proj>"]
 
                Write_Token ("extends ", Indent);
 
                if Kind (F_Is_All (Node.As_Project_Extension)) =
-                 GPR_All_Qualifier_Present
+                 Gpr_All_Qualifier_Present
                then
                   Write_Token ("all ", Indent);
                end if;
@@ -286,7 +286,7 @@ package body GPR2.Project.Pretty_Printer is
                  (To_UTF8 (F_Path_Name (Node.As_Project_Extension).Text),
                   Indent);
 
-            when GPR_Attribute_Decl =>
+            when Gpr_Attribute_Decl =>
                --  Attribute declaration node
 
                Write_Token ("for ", Indent);
@@ -295,7 +295,7 @@ package body GPR2.Project.Pretty_Printer is
                   (Node.As_Attribute_Decl).Text))),
                   Indent);
 
-               if F_Attr_Index (Node.As_Attribute_Decl) /= No_GPR_Node then
+               if F_Attr_Index (Node.As_Attribute_Decl) /= No_Gpr_Node then
                   Write_Token (" (", Indent);
                   No_Split_String_Lit := True;
                   Print (F_Attr_Index (Node.As_Attribute_Decl), Indent);
@@ -307,10 +307,10 @@ package body GPR2.Project.Pretty_Printer is
                Print (F_Expr (Node.As_Attribute_Decl), Indent);
                Write_Token (";", Indent, End_Line => True);
 
-            when GPR_Others_Designator =>
+            when Gpr_Others_Designator =>
                Write_Token ("others", Indent);
 
-            when GPR_String_Literal =>
+            when Gpr_String_Literal =>
                --  GPR string literal "..."
                --  Depending on the current value of No_Split_String_Lit (set
                --  by a parent call to Print) we will enable string splitting
@@ -322,7 +322,7 @@ package body GPR2.Project.Pretty_Printer is
                   Indent,
                   Splittable => not No_Split_String_Lit);
 
-            when GPR_String_Literal_At =>
+            when Gpr_String_Literal_At =>
                --  Same as above, followed by the "at ..." construct used by
                --  some attributes (Body/Spec in package Naming).
 
@@ -331,14 +331,14 @@ package body GPR2.Project.Pretty_Printer is
                   Indent,
                   Splittable => not No_Split_String_Lit);
 
-               if F_At_Lit (Node.As_String_Literal_At) /= No_GPR_Node then
+               if F_At_Lit (Node.As_String_Literal_At) /= No_Gpr_Node then
                   Write_Token (" at ", Indent);
                   Write_Token
                     (To_UTF8 (F_At_Lit (Node.As_String_Literal_At).Text),
                      Indent);
                end if;
 
-            when GPR_Term_List =>
+            when Gpr_Term_List =>
                --  List of terms separated by "&", forming an expression
 
                declare
@@ -354,7 +354,7 @@ package body GPR2.Project.Pretty_Printer is
                   end loop;
                end;
 
-            when GPR_Terms =>
+            when Gpr_Terms =>
                --  List of expressions, enclosed with parenthesis and separated
                --  by commas.
 
@@ -375,7 +375,7 @@ package body GPR2.Project.Pretty_Printer is
                   Write_Token (")", Indent, Auto_EOL => False);
                end;
 
-            when GPR_Builtin_Function_Call =>
+            when Gpr_Builtin_Function_Call =>
                --  Builtin call term, e.g. external ("VAR", "default")
 
                Write_Name
@@ -388,7 +388,7 @@ package body GPR2.Project.Pretty_Printer is
                Print (F_Parameters (Node.As_Builtin_Function_Call), Indent);
                No_Split_String_Lit := False;
 
-            when GPR_Variable_Reference =>
+            when Gpr_Variable_Reference =>
                --  Variable reference term.
                --  In the current grammar, this also covers attribute
                --  reference. The format is A[.B[.C]]['Attr].
@@ -399,13 +399,13 @@ package body GPR2.Project.Pretty_Printer is
                  (F_Variable_Name (Node.As_Variable_Reference), Indent);
 
                if F_Attribute_Ref
-                 (Node.As_Variable_Reference) /= No_GPR_Node
+                 (Node.As_Variable_Reference) /= No_Gpr_Node
                then
                   Write_Token ("'", Indent);
                   Print (F_Attribute_Ref (Node.As_Variable_Reference), Indent);
                end if;
 
-            when GPR_Attribute_Reference =>
+            when Gpr_Attribute_Reference =>
                --  Attribute reference node, possibly with an index.
                --  Write_Attribute_Name takes care of compatibility with former
                --  GPR versions for atttribute names (e.g. replace Spec with
@@ -417,7 +417,7 @@ package body GPR2.Project.Pretty_Printer is
                   Indent);
 
                if F_Attribute_Index
-                 (Node.As_Attribute_Reference) /= No_GPR_Node
+                 (Node.As_Attribute_Reference) /= No_Gpr_Node
                then
                   Write_Token ("(", Indent);
                   No_Split_String_Lit := True;
@@ -428,7 +428,7 @@ package body GPR2.Project.Pretty_Printer is
                   Write_Token (")", Indent);
                end if;
 
-            when GPR_Project_Reference =>
+            when Gpr_Project_Reference =>
                --  Node for the Project'... construct
 
                Write_Token ("Project'", Indent);
@@ -438,7 +438,7 @@ package body GPR2.Project.Pretty_Printer is
                      (Node.As_Project_Reference).Text))),
                   Indent);
 
-            when GPR_Variable_Decl =>
+            when Gpr_Variable_Decl =>
                --  <var>[ : <type>] := <value>;
 
                Write_Name
@@ -447,7 +447,7 @@ package body GPR2.Project.Pretty_Printer is
                      (Node.As_Variable_Decl).Text))),
                   Indent);
 
-               if F_Var_Type (Node.As_Variable_Decl) /= No_GPR_Node then
+               if F_Var_Type (Node.As_Variable_Decl) /= No_Gpr_Node then
                   Write_Token (" : ", Indent);
                   Print (F_Var_Type (Node.As_Variable_Decl), Indent);
                end if;
@@ -456,13 +456,13 @@ package body GPR2.Project.Pretty_Printer is
                Print (F_Expr (Node.As_Variable_Decl), Indent);
                Write_Token (";", Indent, End_Line => True);
 
-            when GPR_Type_Reference =>
+            when Gpr_Type_Reference =>
                --  CF above
 
                Write_Identifier_List
                  (F_Var_Type_Name (Node.As_Type_Reference), Indent);
 
-            when GPR_Package_Decl =>
+            when Gpr_Package_Decl =>
                --  Package declaration node (either renaming, or with a spec)
 
                Write_Empty_Line;
@@ -476,7 +476,7 @@ package body GPR2.Project.Pretty_Printer is
                Print (F_Pkg_Spec (Node.As_Package_Decl), Indent);
                Write_Empty_Line;
 
-            when GPR_Package_Renaming =>
+            when Gpr_Package_Renaming =>
                --  Case of a package renaming
 
                Write_Token ("renames ", Indent);
@@ -486,10 +486,10 @@ package body GPR2.Project.Pretty_Printer is
 
                Write_Token (";", Indent, End_Line => True);
 
-            when GPR_Package_Spec =>
+            when Gpr_Package_Spec =>
                --  Case of a package spec (may be an extending package)
 
-               if F_Extension (Node.As_Package_Spec) /= No_GPR_Node then
+               if F_Extension (Node.As_Package_Spec) /= No_Gpr_Node then
                   Print (F_Extension (Node.As_Package_Spec), Indent);
                   Write_Token (" ", Indent);
                end if;
@@ -507,7 +507,7 @@ package body GPR2.Project.Pretty_Printer is
                   Indent);
                Write_Token (";", Indent, End_Line => True);
 
-            when GPR_Package_Extension =>
+            when Gpr_Package_Extension =>
                --  Package extension
 
                Write_Token ("extends ", Indent);
@@ -515,10 +515,10 @@ package body GPR2.Project.Pretty_Printer is
                Write_Identifier_List
                  (F_Extended_Name (Node.As_Package_Extension), Indent);
 
-            when GPR_Empty_Decl =>
+            when Gpr_Empty_Decl =>
                Write_Token ("null;", Indent, End_Line => True);
 
-            when GPR_Typed_String_Decl =>
+            when Gpr_Typed_String_Decl =>
                --  Node for a typed string declaration
 
                Write_Token ("type ", Indent);
@@ -530,7 +530,7 @@ package body GPR2.Project.Pretty_Printer is
                Print (F_String_Literals (Node.As_Typed_String_Decl), Indent);
                Write_Token (");", Indent, End_Line => True);
 
-            when GPR_Case_Construction =>
+            when Gpr_Case_Construction =>
                Write_Empty_Line;
                Write_Token ("case ", Indent);
                Print (F_Var_Ref (Node.As_Case_Construction), Indent);
@@ -543,7 +543,7 @@ package body GPR2.Project.Pretty_Printer is
                Write_Token ("end case;", Indent, End_Line => True);
                Write_Empty_Line;
 
-            when GPR_Case_Item =>
+            when Gpr_Case_Item =>
                Write_Token ("when ", Indent);
                Print (F_Choice (Node.As_Case_Item), Indent);
                Write_Token (" => ", Indent);
@@ -552,7 +552,7 @@ package body GPR2.Project.Pretty_Printer is
                   Print (C, Indent + Self.Increment);
                end loop;
 
-            when GPR_Choices =>
+            when Gpr_Choices =>
                --  Value_1 | ... | Value_N
 
                declare
@@ -676,7 +676,7 @@ package body GPR2.Project.Pretty_Printer is
             Write_Name
               (Name_Type
                  (Ada.Characters.Conversions.To_String
-                      (GPR_Parser.Analysis.Text (Child (List, C)))),
+                      (Gpr_Parser.Analysis.Text (Child (List, C)))),
                Indent);
          end loop;
       end Write_Identifier_List;

@@ -1,12 +1,12 @@
 from langkit.parsers import Opt, List, Or, Pick
 from langkit.dsl import Annotations, Field, T, abstract
 
-from language.parser import A, GPRNode
+from language.parser import A, GprNode
 from language.parser.lexer import Token, gpr_lexer as Lex
 
 
 @abstract
-class Expr(GPRNode):
+class Expr(GprNode):
     pass
 
 
@@ -32,39 +32,39 @@ class Prefix(Expr):
     suffix = Field(type=T.Identifier)
 
 
-class TermList(GPRNode.list):
+class TermList(GprNode.list):
     pass
 
 
-class Terms(GPRNode):
+class Terms(GprNode):
     terms = Field(type=T.TermList.list)
 
 
-class StringLiteralAt(GPRNode):
+class StringLiteralAt(GprNode):
     str_lit = Field(type=T.StringLiteral)
     at_lit = Field(type=T.NumLiteral)
 
 
-class AttributeReference(GPRNode):
+class AttributeReference(GprNode):
     attribute_name = Field(type=T.Identifier)
-    attribute_index = Field(type=T.GPRNode)
+    attribute_index = Field(type=T.GprNode)
 
 
-class BuiltinFunctionCall(GPRNode):
+class BuiltinFunctionCall(GprNode):
     function_name = Field(type=T.Identifier)
     parameters = Field(type=Terms)
 
 
-class VariableReference(GPRNode):
+class VariableReference(GprNode):
     variable_name = Field(type=T.Identifier.list)
     attribute_ref = Field(type=T.AttributeReference)
 
 
-class TypeReference(GPRNode):
+class TypeReference(GprNode):
     var_type_name = Field(type=T.Identifier.list)
 
 
-class ProjectReference(GPRNode):
+class ProjectReference(GprNode):
     attr_ref = Field(type=T.AttributeReference)
 
 

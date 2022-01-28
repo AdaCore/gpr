@@ -50,11 +50,11 @@ with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Pack;
 with GPR2.Source_Reference.Value;
 
-with GPR_Parser.Common;
+with Gpr_Parser.Common;
 
 package body GPR2.Project.Parser is
 
-   use GPR_Parser.Common;
+   use Gpr_Parser.Common;
    use Langkit_Support.Text;
 
    package PA renames GPR2.Project.Attribute;
@@ -79,7 +79,7 @@ package body GPR2.Project.Parser is
    --  Returns the Name for the given node
 
    function Get_Name_Type
-     (Node  : GPR_Node'Class;
+     (Node  : Gpr_Node'Class;
       First : Positive := 1;
       Last  : Positive;
       Sep   : String := ".") return Name_Type
@@ -92,7 +92,7 @@ package body GPR2.Project.Parser is
      (Filename_Type (Get_Value_Type (Node)));
    --  Returns the Name for the given node
 
-   function Present (Node : GPR_Node'Class) return Boolean is
+   function Present (Node : Gpr_Node'Class) return Boolean is
      (not Node.Is_Null);
    --  Returns True if the Node is present (not null)
 
@@ -109,7 +109,7 @@ package body GPR2.Project.Parser is
 
    function Get_Source_Reference
      (Path_Name : GPR2.Path_Name.Object;
-      Node      : GPR_Node'Class) return Source_Reference.Object
+      Node      : Gpr_Node'Class) return Source_Reference.Object
    is
      (Get_Source_Reference (Path_Name, Sloc_Range (Node)));
 
@@ -161,7 +161,7 @@ package body GPR2.Project.Parser is
    --  Creates project Path_Name.Object not checked for location
 
    function Get_String_Literal
-     (N     : GPR_Node'Class;
+     (N     : Gpr_Node'Class;
       Error : out Boolean) return Value_Type;
    --  Returns the first string literal found under this node. This is an
    --  helper routine to get strings out of built-in parameters for example.
@@ -209,7 +209,7 @@ package body GPR2.Project.Parser is
    -------------------
 
    function Get_Name_Type
-     (Node  : GPR_Node'Class;
+     (Node  : Gpr_Node'Class;
       First : Positive := 1;
       Last  : Positive;
       Sep   : String := ".") return Name_Type
@@ -233,10 +233,10 @@ package body GPR2.Project.Parser is
    ------------------------
 
    function Get_String_Literal
-     (N     : GPR_Node'Class;
+     (N     : Gpr_Node'Class;
       Error : out Boolean) return Value_Type
    is
-      function Parser (Node : GPR_Node'Class) return Visit_Status;
+      function Parser (Node : Gpr_Node'Class) return Visit_Status;
       --  Parser for the string-literal tree
 
       Result : Unbounded_String;
@@ -245,7 +245,7 @@ package body GPR2.Project.Parser is
       -- Parser --
       ------------
 
-      function Parser (Node : GPR_Node'Class) return Visit_Status is
+      function Parser (Node : Gpr_Node'Class) return Visit_Status is
 
          Status : Visit_Status := Into;
 
@@ -265,10 +265,10 @@ package body GPR2.Project.Parser is
 
       begin
          case Kind (Node) is
-            when GPR_String_Literal =>
+            when Gpr_String_Literal =>
                Handle_String (Node.As_String_Literal);
 
-            when GPR_String_Literal_At | GPR_Base_List =>
+            when Gpr_String_Literal_At | Gpr_Base_List =>
                null;
 
             when others =>
@@ -559,14 +559,14 @@ package body GPR2.Project.Parser is
       Project : Object;
       --  The project being constructed
 
-      function Parser (Node : GPR_Node'Class) return Visit_Status;
+      function Parser (Node : Gpr_Node'Class) return Visit_Status;
       --  Actual parser callabck for the project
 
       ------------
       -- Parser --
       ------------
 
-      function Parser (Node : GPR_Node'Class) return Visit_Status is
+      function Parser (Node : Gpr_Node'Class) return Visit_Status is
 
          Status : Visit_Status := Into;
 
@@ -773,12 +773,12 @@ package body GPR2.Project.Parser is
                         Project.Externals.Append (Optional_Name_Type (Var));
 
                         declare
-                           Node : GPR_Node := Exprs.Child (2);
+                           Node : Gpr_Node := Exprs.Child (2);
                         begin
                            if not Node.Is_Null then
                               Node := Node.Child (1);
                               if not Node.Is_Null
-                                and then Node.Kind = GPR_Builtin_Function_Call
+                                and then Node.Kind = Gpr_Builtin_Function_Call
                               then
                                  Parse_Builtin (Node.As_Builtin_Function_Call);
                               end if;
@@ -882,17 +882,17 @@ package body GPR2.Project.Parser is
                Project.Expl_Qual := True;
                Project.Qualifier :=
                  (case Kind (Qual) is
-                     when GPR_Project_Qualifier_Abstract
+                     when Gpr_Project_Qualifier_Abstract
                        => K_Abstract,
-                     when GPR_Project_Qualifier_Standard
+                     when Gpr_Project_Qualifier_Standard
                        => K_Standard,
-                     when GPR_Project_Qualifier_Library
+                     when Gpr_Project_Qualifier_Library
                        => K_Library,
-                     when GPR_Project_Qualifier_Aggregate
+                     when Gpr_Project_Qualifier_Aggregate
                        => K_Aggregate,
-                     when GPR_Project_Qualifier_Aggregate_Library
+                     when Gpr_Project_Qualifier_Aggregate_Library
                        => K_Aggregate_Library,
-                     when GPR_Project_Qualifier_Configuration
+                     when Gpr_Project_Qualifier_Configuration
                        => K_Configuration,
                      when others
                        => raise Program_Error with "Unreachable");
@@ -920,7 +920,7 @@ package body GPR2.Project.Parser is
             Values     : constant String_Literal_List :=
                            F_String_Literals (N);
             Num_Childs : constant Natural := Children_Count (Values);
-            Cur_Child  : GPR_Node;
+            Cur_Child  : Gpr_Node;
             Set        : Containers.Value_Set;
             List       : Containers.Source_Value_List;
          begin
@@ -935,7 +935,7 @@ package body GPR2.Project.Parser is
 
             else
                for J in 1 .. Num_Childs loop
-                  Cur_Child := Child (GPR_Node (Values), J);
+                  Cur_Child := Child (Gpr_Node (Values), J);
 
                   if not Cur_Child.Is_Null then
                      declare
@@ -980,10 +980,10 @@ package body GPR2.Project.Parser is
             Path_Names : constant String_Literal_List :=
                            F_Path_Names (N);
             Num_Childs : constant Natural := Children_Count (N);
-            Cur_Child  : GPR_Node;
+            Cur_Child  : Gpr_Node;
          begin
             for J in 1 .. Num_Childs loop
-               Cur_Child := Child (GPR_Node (Path_Names), J);
+               Cur_Child := Child (Gpr_Node (Path_Names), J);
 
                if not Cur_Child.Is_Null then
                   declare
@@ -1039,18 +1039,18 @@ package body GPR2.Project.Parser is
 
       begin
          case Kind (Node) is
-            when GPR_Project_Declaration =>
+            when Gpr_Project_Declaration =>
                Parse_Project_Declaration (Node.As_Project_Declaration);
 
-            when GPR_Builtin_Function_Call =>
+            when Gpr_Builtin_Function_Call =>
                Parse_Builtin (Node.As_Builtin_Function_Call);
                Status := Over;
 
-            when GPR_With_Decl =>
+            when Gpr_With_Decl =>
                Parse_With_Decl (Node.As_With_Decl);
                Status := Over;
 
-            when GPR_Typed_String_Decl =>
+            when Gpr_Typed_String_Decl =>
                Parse_Typed_String_Decl (Node.As_Typed_String_Decl);
                Status := Over;
 
@@ -1151,7 +1151,7 @@ package body GPR2.Project.Parser is
             return Containers.Source_Value_List;
       --  Ensure the values have the proper Source_Loc
 
-      function Parser (Node : GPR_Node'Class) return Visit_Status;
+      function Parser (Node : Gpr_Node'Class) return Visit_Status;
       --  Actual parser callabck for the project
 
       function Get_Variable_Values
@@ -1295,14 +1295,14 @@ package body GPR2.Project.Parser is
       is
          Name   : constant Attribute_Id :=
                     +Get_Name_Type (Single_Tok_Node (F_Attribute_Name (Node)));
-         I_Node : constant GPR_Node := F_Attribute_Index (Node);
+         I_Node : constant Gpr_Node := F_Attribute_Index (Node);
          Q_Name : constant PRA.Qualified_Name := PRA.Create (Name, Pack);
       begin
          if not Present (I_Node) then
             return PAI.Undefined;
          end if;
 
-         if I_Node.Kind in GPR_Others_Designator_Range then
+         if I_Node.Kind in Gpr_Others_Designator_Range then
             return PAI.I_Others;
          end if;
 
@@ -1614,7 +1614,7 @@ package body GPR2.Project.Parser is
          Force_Append : Boolean := False;
          --  When True new value are always added to list
 
-         function Parser (Node : GPR_Node'Class) return Visit_Status;
+         function Parser (Node : Gpr_Node'Class) return Visit_Status;
 
          procedure Record_Value (Value : Source_Reference.Value.Object)
            with Post => Result.Values.Length'Old <= Result.Values.Length;
@@ -1628,7 +1628,7 @@ package body GPR2.Project.Parser is
          -- Parser --
          ------------
 
-         function Parser (Node : GPR_Node'Class) return Visit_Status is
+         function Parser (Node : Gpr_Node'Class) return Visit_Status is
             Status : Visit_Status := Into;
 
             procedure Handle_String (Node : String_Literal)
@@ -1885,7 +1885,7 @@ package body GPR2.Project.Parser is
                     (Unquote (Value_Type (To_UTF8 (Node.F_Str_Lit.Text))),
                      Get_Source_Reference (Self.File, Sloc_Range (Node)),
                      At_Pos =>
-                       (if At_Lit = No_GPR_Node then 0
+                       (if At_Lit = No_Gpr_Node then 0
                         else Unit_Index'Wide_Wide_Value (At_Lit.Text))));
                Status := Over;
                --  Stop here to avoid parsing into the String_Literal child
@@ -1903,7 +1903,7 @@ package body GPR2.Project.Parser is
             end Handle_Variable;
 
             function Terms_Parser
-              (Node : GPR_Node'Class) return Visit_Status;
+              (Node : Gpr_Node'Class) return Visit_Status;
             --  Parser for the terms tree
 
             ------------------
@@ -1911,11 +1911,11 @@ package body GPR2.Project.Parser is
             ------------------
 
             function Terms_Parser
-              (Node : GPR_Node'Class) return Visit_Status
+              (Node : Gpr_Node'Class) return Visit_Status
             is
             begin
                case Kind (Node) is
-                  when GPR_Terms =>
+                  when Gpr_Terms =>
                      null;
 
                   when others =>
@@ -1927,7 +1927,7 @@ package body GPR2.Project.Parser is
 
          begin
             case Kind (Node) is
-               when GPR_Terms =>
+               when Gpr_Terms =>
                   if Result.Values.Length /= 0 and then Result.Single then
                      Tree.Log_Messages.Append
                        (Message.Create
@@ -1944,7 +1944,7 @@ package body GPR2.Project.Parser is
                   Force_Append := False;
 
                   --  Parse Terms tree
-                  Traverse (GPR_Node (Node), Terms_Parser'Access);
+                  Traverse (Gpr_Node (Node), Terms_Parser'Access);
 
                   --  Handle '&' found in () & "A as values list append
 
@@ -1952,20 +1952,20 @@ package body GPR2.Project.Parser is
 
                   Status := Over;
 
-               when GPR_Term_List =>
+               when Gpr_Term_List =>
                   --  A new value parsing is starting
                   New_Item := True;
 
-               when GPR_String_Literal =>
+               when Gpr_String_Literal =>
                   Handle_String (Node.As_String_Literal);
 
-               when GPR_String_Literal_At =>
+               when Gpr_String_Literal_At =>
                   Handle_String_At (Node.As_String_Literal_At);
 
-               when GPR_Variable_Reference =>
+               when Gpr_Variable_Reference =>
                   Handle_Variable (Node.As_Variable_Reference);
 
-               when GPR_Builtin_Function_Call =>
+               when Gpr_Builtin_Function_Call =>
                   Handle_Builtin (Node.As_Builtin_Function_Call);
 
                when others =>
@@ -2030,7 +2030,7 @@ package body GPR2.Project.Parser is
       begin
          Result.Single := True;
 
-         Traverse (GPR_Node (Node), Parser'Access);
+         Traverse (Gpr_Node (Node), Parser'Access);
 
          if Result.Values.Is_Empty
            and then Result.Indexed_Values = Unfilled_Indexed_Values
@@ -2460,7 +2460,7 @@ package body GPR2.Project.Parser is
       -- Parser --
       ------------
 
-      function Parser (Node : GPR_Node'Class) return Visit_Status is
+      function Parser (Node : Gpr_Node'Class) return Visit_Status is
          Status : Visit_Status := Into;
 
          procedure Parse_Attribute_Decl (Node : Attribute_Decl);
@@ -2491,7 +2491,7 @@ package body GPR2.Project.Parser is
            with Pre => not Case_Values.Is_Empty;
          --  Set Is_Open to True or False depending on the item
 
-         procedure Visit_Child (Child : GPR_Node);
+         procedure Visit_Child (Child : Gpr_Node);
          --  Recursive call to the Parser if the Child is not null
 
          --------------------------
@@ -2500,7 +2500,7 @@ package body GPR2.Project.Parser is
 
          procedure Parse_Attribute_Decl (Node : Attribute_Decl) is
             Name  : constant Identifier := F_Attr_Name (Node);
-            Index : constant GPR_Node := F_Attr_Index (Node);
+            Index : constant Gpr_Node := F_Attr_Index (Node);
             Expr  : constant Term_List := F_Expr (Node);
             N_Str : constant Name_Type :=
                       Get_Name_Type (Name.As_Single_Tok_Node);
@@ -2696,7 +2696,7 @@ package body GPR2.Project.Parser is
                Str_Lit : String_Literal_At;
                At_Lit  : Num_Literal;
             begin
-               if Index.Kind = GPR_Others_Designator then
+               if Index.Kind = Gpr_Others_Designator then
                   return PAI.Create
                     (Get_Value_Reference
                        (Self.Path_Name, Sloc_Range (Index), "others"),
@@ -2712,7 +2712,7 @@ package body GPR2.Project.Parser is
                        (Self.Path_Name, Sloc_Range (Index),
                         Get_Value_Type (Str_Lit.F_Str_Lit),
                         At_Pos => -- Ati),
-                          (if At_Lit = No_GPR_Node
+                          (if At_Lit = No_Gpr_Node
                            then 0
                            else Unit_Index'Wide_Wide_Value
                              (At_Lit.Text))),
@@ -2835,7 +2835,7 @@ package body GPR2.Project.Parser is
 
          procedure Parse_Case_Item (Node : Case_Item) is
 
-            function Parser (Node : GPR_Node'Class) return Visit_Status;
+            function Parser (Node : Gpr_Node'Class) return Visit_Status;
 
             Case_Value   : constant String := Case_Values.Last_Element;
             Is_That_Case : Boolean := False;
@@ -2844,15 +2844,15 @@ package body GPR2.Project.Parser is
             -- Parser --
             ------------
 
-            function Parser (Node : GPR_Node'Class) return Visit_Status is
+            function Parser (Node : Gpr_Node'Class) return Visit_Status is
             begin
                case Kind (Node) is
-                  when GPR_String_Literal =>
+                  when Gpr_String_Literal =>
                      Is_That_Case :=
                        Unquote (To_UTF8 (Node.Text))
                          = Case_Value (2 .. Case_Value'Last);
 
-                  when GPR_Others_Designator =>
+                  when Gpr_Others_Designator =>
                      Is_That_Case := True;
 
                   when others =>
@@ -3270,7 +3270,7 @@ package body GPR2.Project.Parser is
          -- Visit_Child --
          -----------------
 
-         procedure Visit_Child (Child : GPR_Node) is
+         procedure Visit_Child (Child : Gpr_Node) is
          begin
             if Present (Child) then
                Status := Traverse (Node => Child, Visit => Parser'Access);
@@ -3282,25 +3282,25 @@ package body GPR2.Project.Parser is
             --  Handle all kind of nodes when the parsing is open
 
             case Kind (Node) is
-               when GPR_Attribute_Decl =>
+               when Gpr_Attribute_Decl =>
                   Parse_Attribute_Decl (Node.As_Attribute_Decl);
 
-               when GPR_Variable_Decl =>
+               when Gpr_Variable_Decl =>
                   Parse_Variable_Decl (Node.As_Variable_Decl);
 
-               when GPR_Package_Decl =>
+               when Gpr_Package_Decl =>
                   Parse_Package_Decl (Node.As_Package_Decl);
 
-               when GPR_Package_Renaming =>
+               when Gpr_Package_Renaming =>
                   Parse_Package_Renaming (Node.As_Package_Renaming);
 
-               when GPR_Package_Extension =>
+               when Gpr_Package_Extension =>
                   Parse_Package_Extension (Node.As_Package_Extension);
 
-               when GPR_Case_Construction =>
+               when Gpr_Case_Construction =>
                   Parse_Case_Construction (Node.As_Case_Construction);
 
-               when GPR_Case_Item =>
+               when Gpr_Case_Item =>
                   Parse_Case_Item (Node.As_Case_Item);
 
                when others =>
@@ -3312,13 +3312,13 @@ package body GPR2.Project.Parser is
             --  and Spec and Body attributes
 
             case Kind (Node) is
-               when GPR_Case_Construction =>
+               when Gpr_Case_Construction =>
                   Parse_Case_Construction (Node.As_Case_Construction);
 
-               when GPR_Case_Item =>
+               when Gpr_Case_Item =>
                   Parse_Case_Item (Node.As_Case_Item);
 
-               when GPR_Attribute_Decl =>
+               when Gpr_Attribute_Decl =>
                   Parse_Attribute_Decl (Node.As_Attribute_Decl);
 
                when others =>
