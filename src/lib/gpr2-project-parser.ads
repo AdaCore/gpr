@@ -35,11 +35,11 @@ with GPR2.Project.View;
 
 limited with GPR2.Project.Tree;
 
-with GPR_Parser.Analysis;
+with Gpr_Parser.Analysis;
 
 package GPR2.Project.Parser is
 
-   use GPR_Parser.Analysis;
+   use Gpr_Parser.Analysis;
 
    type Object is tagged private;
 
@@ -137,7 +137,7 @@ package GPR2.Project.Parser is
 
    function Unit (Self : Object) return Analysis_Unit
      with Pre => Self.Is_Defined;
-   --  Returns the GPR_Parser analysis unit
+   --  Returns the Gpr_Parser analysis unit
 
    function Skip_Sources
      (Self : Object) return Containers.Filename_Source_Reference;

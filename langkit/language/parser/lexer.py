@@ -34,7 +34,7 @@ class Token(LexerToken):
     When = WithSymbol()
     With = WithSymbol()
 
-    # GPR Keywords
+    # Gpr Keywords
     Extends = WithSymbol()
 
     # Punctuation

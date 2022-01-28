@@ -24,10 +24,10 @@ class Manage(ManageScript):
         from language.parser import gpr_grammar
         from language.parser.lexer import gpr_lexer
 
-        return CompileCtx(lang_name='GPR',
+        return CompileCtx(lang_name='Gpr',
                           lexer=gpr_lexer,
                           grammar=gpr_grammar,
-                          lib_name='GPR_Parser',
+                          lib_name='Gpr_Parser',
                           default_charset='iso-8859-1',
                           verbosity=args.verbosity,
                           case_insensitive=True)

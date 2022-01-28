@@ -6,7 +6,7 @@ A = gpr_grammar
 
 
 @abstract
-class GPRNode(ASTNode):
+class GprNode(ASTNode):
     annotations = Annotations(generic_list_type="BaseList")
 
 

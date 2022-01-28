@@ -1,10 +1,10 @@
 from langkit.parsers import List
 from langkit.dsl import Field, T
 
-from language.parser import A, GPRNode
+from language.parser import A, GprNode
 
 
-class TypedStringDecl(GPRNode):
+class TypedStringDecl(GprNode):
     type_id = Field(type=T.Identifier)
     string_literals = Field(type=T.StringLiteral.list)
 

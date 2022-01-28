@@ -24,14 +24,14 @@
 
 --  Pretty Printer for a GPR2 project
 
-with GPR_Parser.Analysis;
+with Gpr_Parser.Analysis;
 
 with GPR2.Project.View;
 
 package GPR2.Project.Pretty_Printer is
 
-   use GPR_Parser;
-   use GPR_Parser.Analysis;
+   use Gpr_Parser;
+   use Gpr_Parser.Analysis;
 
    type Object is tagged private;
 

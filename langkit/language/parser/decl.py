@@ -2,31 +2,31 @@ from language.parser import A
 from langkit.parsers import Opt, List, Or, Pick, Skip
 from langkit.dsl import AbstractField, Field, T, abstract
 
-from language.parser import GPRNode
+from language.parser import GprNode
 from language.parser.lexer import gpr_lexer as Lex
 
 
-class AllQualifier(GPRNode):
+class AllQualifier(GprNode):
     enum_node = True
     qualifier = True
 
 
-class Private(GPRNode):
+class Private(GprNode):
     enum_node = True
     qualifier = True
 
 
-class Limited(GPRNode):
+class Limited(GprNode):
     enum_node = True
     qualifier = True
 
 
-class WithDecl(GPRNode):
+class WithDecl(GprNode):
     is_limited = Field(type=T.Limited)
     path_names = Field(T.Expr.list)
 
 
-class ProjectQualifier(GPRNode):
+class ProjectQualifier(GprNode):
     enum_node = True
     alternatives = [
         "abstract",  "standard", "library",
@@ -35,79 +35,79 @@ class ProjectQualifier(GPRNode):
     ]
 
 
-class ProjectExtension(GPRNode):
+class ProjectExtension(GprNode):
     is_all = Field(type=T.AllQualifier)
     path_name = Field(type=T.StringLiteral)
 
 
-class ProjectDeclaration(GPRNode):
+class ProjectDeclaration(GprNode):
     qualifier = Field(type=T.ProjectQualifier)
     project_name = Field(type=T.Expr)
     extension = Field(type=T.ProjectExtension)
-    decls = Field(type=T.GPRNode.list)
+    decls = Field(type=T.GprNode.list)
     end_name = Field(type=T.Expr)
 
 
-class Project(GPRNode):
+class Project(GprNode):
     context_clauses = Field(type=T.WithDecl.list)
     project_decl = Field(type=T.ProjectDeclaration)
 
 
-class VariableDecl(GPRNode):
+class VariableDecl(GprNode):
     var_name = Field(type=T.Identifier)
     var_type = Field(type=T.TypeReference)
     expr = Field(type=T.TermList)
 
 
-class AttributeDecl(GPRNode):
+class AttributeDecl(GprNode):
     attr_name = Field(type=T.Identifier)
-    attr_index = Field(type=T.GPRNode)
+    attr_index = Field(type=T.GprNode)
     expr = Field(type=T.TermList)
 
 
-class PackageExtension(GPRNode):
+class PackageExtension(GprNode):
     extended_name = Field(type=T.Identifier.list)
 
 
-class PackageDecl(GPRNode):
+class PackageDecl(GprNode):
     pkg_name = Field(type=T.Identifier)
-    pkg_spec = Field(type=T.GPRNode)
+    pkg_spec = Field(type=T.GprNode)
 
 
-class PackageRenaming(GPRNode):
+class PackageRenaming(GprNode):
     renamed_name = Field(type=T.Identifier.list)
 
 
-class PackageSpec(GPRNode):
+class PackageSpec(GprNode):
     extension = Field(type=T.PackageExtension)
-    decls = Field(type=T.GPRNode.list)
+    decls = Field(type=T.GprNode.list)
     end_name = Field(type=T.Identifier)
 
 
-class EmptyDecl(GPRNode):
+class EmptyDecl(GprNode):
     pass
 
 
-class CaseConstruction(GPRNode):
+class CaseConstruction(GprNode):
     var_ref = Field(type=T.VariableReference)
     items = Field(type=T.CaseItem.list)
 
 
-class CaseItem(GPRNode):
+class CaseItem(GprNode):
     choice = Field(type=T.Choices)
-    decls = Field(type=T.GPRNode.list)
+    decls = Field(type=T.GprNode.list)
 
 
-class OthersDesignator(GPRNode):
+class OthersDesignator(GprNode):
     pass
 
 
-class Choices(GPRNode.list):
+class Choices(GprNode.list):
     pass
 
 
 @abstract
-class AdaPreludeNode(GPRNode):
+class AdaPreludeNode(GprNode):
     pass
 
 
@@ -169,7 +169,7 @@ class AdaSeparate(AdaPreludeNode):
 
 
 class AdaGeneric(AdaPreludeNode):
-    skips = Field(type=T.GPRNode)
+    skips = Field(type=T.GprNode)
 
 
 class AdaWithFormal(AdaPreludeNode):
