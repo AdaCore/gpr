@@ -385,6 +385,10 @@ package GPR2.Project.View is
 
    --  Sources
 
+   function Has_Language (Self : Object; Name : Name_Type) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Whether Name is a language used by Self.
+
    function Has_Languages (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns true if the project view has languages attribute defined or has
