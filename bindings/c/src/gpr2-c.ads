@@ -19,59 +19,6 @@
 --  This package provides a low-level API that can be used to creates bindings
 --  to the GPR2 library.
 --
---  Each function declared in this package has the same signature and follows
---  the same protocol.
---
---  -- C signature --
---
---  The C equivalent signature is always:
---      status NAME (char *request, char **answer);
---
---  -- Protocol --
---
---  Request is a JSON string containing one JSON object. The structure of the
---  object depends on the called method (see documentation of each method).
---
---  Answer is a JSON string containing on JSON object with the following
---  structure:
---
---    {'result': Dict,
---     'status': int,
---     'error_msg': str,
---     'error_name': str}
---
---  If status is set to 0 (OK), then the 'result' member contains the return
---  value. The structure of the returned value is described in each function
---  If status is set to another value, the call failed. In that case, the
---  answer object contains the error name and message in 'error_msg' and
---  'error_name'.
---
---  In the documentation Python type hinting annotations are used. Note that
---  in a request, if a JSON object member type is set to Optional it means
---  that the member is not mandatory in the request and that the default value
---  is used. For answers optional members are always set. If no default value
---  is provided then the value of the member is set to null.
---
---  -- Memory management --
---
---  Memory allocation/deallocation of the request is managed by the caller.
---  Caller should call gpr2_free_answer to release memory allocated for the
---  answer.
---
---  -- Complex structure JSON formats --
---
---  Message: represents GPR2 log messages
---
---     {'level':   str,
---      'message': str,
---      'sloc':    Sloc}
---
---  Sloc: represents a reference to/in a file
---
---     {'filename': str,
---      'line':     Optional[int],
---      'column':   Optional[int]}
---
 --  Variable: represents a project variable
 --
 --     {'name': str,
@@ -93,6 +40,23 @@ with Interfaces.C.Strings;
 
 package GPR2.C is
 
+   type C_Function is new Integer;
+   --  Function to invoke
+
+   --  Tree functions
+   TREE_LOAD                   : constant C_Function := 1;
+   TREE_UNLOAD                 : constant C_Function := 2;
+   TREE_LOG_MESSAGES           : constant C_Function := 3;
+   TREE_INVALIDATE_SOURCE_LIST : constant C_Function := 4;
+   TREE_UPDATE_SOURCE_LIST     : constant C_Function := 5;
+   TREE_UPDATE_SOURCE_INFOS    : constant C_Function := 6;
+   VIEW_LOAD                   : constant C_Function := 7;
+   VIEW_ATTRIBUTE              : constant C_Function := 8;
+   VIEW_SOURCES                : constant C_Function := 9;
+   VIEW_UNITS                  : constant C_Function := 10;
+   SOURCE_DEPENDENCIES         : constant C_Function := 11;
+   SOURCE_UPDATE_SOURCE_INFOS  : constant C_Function := 12;
+
    type C_Request is new Interfaces.C.Strings.chars_ptr;
    --  Request C null terminated string
 
@@ -112,8 +76,17 @@ package GPR2.C is
    procedure GPR2_Free_Answer (Answer : C_Answer);
    --  Releases the memory held by an answer
 
+   function GPR2_Request
+      (Fun : C_Function; Request : C_Request; Answer : out C_Answer)
+      return C_Status;
+   --  Emits a GPR2 request.
+   --
+   --  Fun is the function to invoke.
+   --  Request contains the function request.
+
 private
 
    pragma Export (C, GPR2_Free_Answer, "gpr2_free_answer");
+   pragma Export (C, GPR2_Request, "gpr2_request");
 
 end GPR2.C;

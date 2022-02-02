@@ -2,6 +2,8 @@ from gpr2.tree import ProjectTree
 from gpr2.view import ProjectView
 from gpr2 import GPR2Error
 from e3.fs import mkdir
+from e3.sys import interpreter
+from e3.os.process import Run
 import os
 import pytest
 import logging
@@ -26,8 +28,6 @@ def test_load_simple_project():
 
     with ProjectTree("p.gpr") as tree:
         assert tree.id is not None
-
-        assert tree.language_properties("ada").dependency_ext == ".ali"
     assert tree.id is None
 
 
@@ -112,5 +112,65 @@ def test_target2():
 def test_project_dir():
     mkdir("working_dir")
     with ProjectTree("p.gpr", project_dir="working_dir") as tree:
+        assert tree.project_dir != os.path.dirname(tree.root_view.path)
         assert tree.project_dir == tree.root_view.dir
         assert tree.project_dir == os.path.abspath("working_dir")
+
+
+@pytest.mark.data_dir("simple_project")
+def test_source_list():
+    with ProjectTree("p.gpr") as tree:
+        source_list = tree.root_view.sources()
+        assert len(source_list) == 1
+        assert os.path.basename(source_list[0].path) == "main.adb"
+
+        # adding a source in the current directory
+        with open("ada_pkg.ads", "w") as fd:
+            fd.write("package ada_pkg is null; end ada_pkg;")
+
+        # Project sources should not update automatically
+        source_list = tree.root_view.sources()
+        assert len(source_list) == 1
+
+        # A call to invalidate will cause an update on next
+        # call to sources
+        tree.invalidate_source_list()
+        source_list = tree.root_view.sources()
+        assert len(source_list) == 2
+
+        with open("ada_pkg2.ads", "w") as fd:
+            fd.write("package ada_pkg2 is null; end ada_pkg2;")
+
+        # Call to update_source_list should update the list of
+        # sources
+        tree.update_source_list()
+        source_list = tree.root_view.sources()
+        assert len(source_list) == 3
+
+    with ProjectTree("p.gpr") as tree:
+        source_list = tree.root_view.sources()
+        assert len(source_list) == 3
+
+
+@pytest.mark.data_dir("simple_project")
+def test_cli():
+    p = Run(
+        [
+            interpreter(),
+            "-c",
+            "\n".join(
+                [
+                    "from gpr2.tree import ProjectTree",
+                    "import argparse",
+                    "from gpr2.main import add_project_options",
+                    "arg_parser = argparse.ArgumentParser()",
+                    "add_project_options(arg_parser)",
+                    "args = arg_parser.parse_args()",
+                    "ProjectTree.cli_load(args)",
+                ]
+            ),
+            "-P",
+            "p.gpr",
+        ]
+    )
+    assert p.status == 0, p.out

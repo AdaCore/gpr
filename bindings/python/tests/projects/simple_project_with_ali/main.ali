@@ -1,0 +1,31 @@
+V "GNAT Lib v23.20220107"
+M P W=b
+A -gnatA
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U main%b		main.adb		6dd57c3d NE OO SU
+W ada_pkg1%s		ada_pkg1.adb		ada_pkg1.ali
+W ada_pkg2%s		ada_pkg2.ads		ada_pkg2.ali
+
+D ada_pkg1.ads		20220223171043 d7e03284 ada_pkg1%s
+D ada_pkg2.ads		20220223095649 0c9a8e66 ada_pkg2%s
+D ada_pkg3.ads		20220223171400 d4cb6f86 ada_pkg3%s
+D main.adb		20220223095649 b6afc0df main%b
+D system.ads		20220104011323 a2da961d system%s
+G a e
+G c Z b b [main standard 4 11 none]
+G r c none [main standard 4 11 none] [method1 ada_pkg1 4 14 none]
+X 1 ada_pkg1.ads
+3K9*Ada_Pkg1 5e13 4|1w6 6r4
+4U14*Method1 4|6s13
+X 2 ada_pkg2.ads
+1K9*Ada_Pkg2 3e13 4|2w6 6r22
+2a4*Name1{string} 4|6r31
+X 4 main.adb
+4U11*Main 4b11 7l5 7t9
+

@@ -1,0 +1,17 @@
+V "GNAT Lib v23.20220107"
+A -gnatA
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U ada_pkg3%s		ada_pkg3.ads		d4cb6f86 NE OO PK
+
+D ada_pkg3.ads		20220223171400 d4cb6f86 ada_pkg3%s
+D system.ads		20220104011323 a2da961d system%s
+G a e
+X 1 ada_pkg3.ads
+1K9*Ada_Pkg3 3l5 3e13
+
