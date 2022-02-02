@@ -1282,7 +1282,9 @@ package body GPR2.Project.Tree is
             Project.Parser.Process
               (P_Data.Trees.Project,
                Self,
-               Root_Context,
+               (if not Self.Context (Aggregate).Is_Empty then
+                     Self.Context (Aggregate)
+                else Root_Context),
                C_View);
 
             if Self.Conf.Is_Defined then
@@ -3220,7 +3222,10 @@ package body GPR2.Project.Tree is
          GPR2.Project.Parser.Process
            (P_Data.Trees.Project,
             Self,
-            View.Context,
+            (if View.Kind = K_Configuration
+               and then Self.Root.Kind in Aggregate_Kind
+             then Self.Context (Aggregate)
+             else View.Context),
             View,
             Self.Pre_Conf_Mode);
 
