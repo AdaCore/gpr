@@ -1,0 +1,5 @@
+aggregate project Agg is
+    for Project_Files use ("prj.gpr");
+    for External ("VSB_DIR") use "foo";
+    for Target use "x86_64-wrs-vxworks7";
+end Agg;

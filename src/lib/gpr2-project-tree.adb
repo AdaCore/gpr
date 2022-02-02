@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2021, AdaCore                      --
+--                    Copyright (C) 2019-2022, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -1281,7 +1281,9 @@ package body GPR2.Project.Tree is
             Project.Parser.Process
               (P_Data.Trees.Project,
                Self,
-               Root_Context,
+               (if not Self.Context (Aggregate).Is_Empty then
+                     Self.Context (Aggregate)
+                else Root_Context),
                C_View);
 
             if Self.Conf.Is_Defined then
@@ -3219,7 +3221,10 @@ package body GPR2.Project.Tree is
          GPR2.Project.Parser.Process
            (P_Data.Trees.Project,
             Self,
-            View.Context,
+            (if View.Kind = K_Configuration
+               and then Self.Root.Kind in Aggregate_Kind
+             then Self.Context (Aggregate)
+             else View.Context),
             View,
             Self.Pre_Conf_Mode);
 
