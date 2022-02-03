@@ -389,7 +389,8 @@ package body GPR2.Project.View is
 
          if not Found (Result) and then Index /= Attribute_Index.Undefined then
             if PRA_Def.Index_Type = PRA.FileGlob_Index or else
-               PRA_Def.Index_Type = PRA.FileGlob_Or_Language_Index
+               (PRA_Def.Index_Type = PRA.FileGlob_Or_Language_Index
+                and then not Self.Has_Language (Name_Type (Index.Value)))
             then
                --  The index might match a globbing pattern. In that case
                --  iterate other the statements to find one that match the
@@ -1388,6 +1389,25 @@ package body GPR2.Project.View is
    begin
       return not Definition.Get_RO (Self).Trees.Imports.Is_Empty;
    end Has_Imports;
+
+   ------------------
+   -- Has_Language --
+   ------------------
+
+   function Has_Language (Self : Object; Name : Name_Type) return Boolean is
+      Lang_Attr : GPR2.Project.Attribute.Object;
+   begin
+      Lang_Attr := Self.Attribute (PRA.Languages);
+      if Lang_Attr.Is_Defined then
+         for Val of Lang_Attr.Values loop
+            if Name_Type (Val.Text) = Name then
+               return True;
+            end if;
+         end loop;
+      end if;
+
+      return False;
+   end Has_Language;
 
    -------------------
    -- Has_Languages --

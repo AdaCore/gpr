@@ -30,13 +30,15 @@ procedure Main is
 
    procedure Print_Messages is
    begin
-      if Tree.Has_Messages then
-         for C in Tree.Log_Messages.Iterate
-           (False, True, True, True, True)
-         loop
-            Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-         end loop;
-      end if;
+      for C in Tree.Log_Messages.Iterate
+        (Information => False,
+         Warning     => not Tree.Log_Messages.Has_Error, --  Show warning only when no error
+         Error       => True,
+         Read        => False,
+         Unread      => True)
+      loop
+         Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
+      end loop;
    end Print_Messages;
 
    procedure Test (Project_Name : GPR2.Filename_Type) is

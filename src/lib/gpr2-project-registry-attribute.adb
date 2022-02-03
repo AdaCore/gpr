@@ -450,7 +450,7 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
-      Index_Type           => FileGlob_Or_Language_Index);
+      Index_Type           => FileGlob_Index);
 
    --  externally_built
    Add
@@ -2130,7 +2130,7 @@ begin
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
       Config_Concatenable  => True,
-      Index_Type           => FileGlob_Or_Language_Index);
+      Index_Type           => FileGlob_Index);
 
    --  finder.default_switches
    Add
@@ -2154,7 +2154,7 @@ begin
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
       Config_Concatenable  => True,
-      Index_Type           => FileGlob_Or_Language_Index);
+      Index_Type           => FileGlob_Index);
 
    --  pretty_printer.default_switches
    Add
@@ -2178,7 +2178,7 @@ begin
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
       Config_Concatenable  => True,
-      Index_Type           => FileGlob_Or_Language_Index);
+      Index_Type           => FileGlob_Index);
 
    --  gnatstub.default_switches
    Add
@@ -2202,7 +2202,7 @@ begin
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
       Config_Concatenable  => True,
-      Index_Type           => FileGlob_Or_Language_Index);
+      Index_Type           => FileGlob_Index);
 
    --  check.default_switches
    Add
@@ -2226,7 +2226,7 @@ begin
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
       Config_Concatenable  => True,
-      Index_Type           => FileGlob_Or_Language_Index);
+      Index_Type           => FileGlob_Index);
 
    --  eliminate.default_switches
    Add
@@ -2250,7 +2250,7 @@ begin
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
       Config_Concatenable  => True,
-      Index_Type           => FileGlob_Or_Language_Index);
+      Index_Type           => FileGlob_Index);
 
    --  metrics.default_switches
    Add
@@ -2274,7 +2274,7 @@ begin
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
       Config_Concatenable  => True,
-      Index_Type           => FileGlob_Or_Language_Index);
+      Index_Type           => FileGlob_Index);
 
    --  ide.default_switches
    Add

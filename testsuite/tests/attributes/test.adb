@@ -116,6 +116,17 @@ begin
        Index => "myadaunit.ads",
        Value => Comp_Switches);
 
+   IO.Put_Line ("test pattern matching vs. language index");
+   Comp_Switches.Clear;
+   Comp_Switches.Append ("-g");
+
+   TGPR.Assert_Attribute
+     (Tree.Root_Project,
+       Name  => "Switches",
+       Pkg   => "Compiler",
+       Index => "c",
+       Value => Comp_Switches);
+
    IO.Put_Line ("test config concatenation");
    Comp_Switches.Clear;
    Comp_Switches.Append ("-config-ada");
@@ -124,7 +135,7 @@ begin
       (Tree.Root_Project,
        Name  => "Switches",
        Pkg   => "Compiler",
-       Index => "Ada",
+       Index => "ada",
        Value => Comp_Switches);
 
 

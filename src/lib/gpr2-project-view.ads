@@ -52,8 +52,6 @@ package GPR2.Project.View is
 
    use GPR2.Context;
 
-   use type Context.Object;
-
    type Object is tagged private;
 
    Undefined : constant Object;
@@ -384,6 +382,10 @@ package GPR2.Project.View is
    --  attributes default values are taken into account.
 
    --  Sources
+
+   function Has_Language (Self : Object; Name : Name_Type) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Whether Name is a language used by Self.
 
    function Has_Languages (Self : Object) return Boolean
      with Pre => Self.Is_Defined;

@@ -23,6 +23,9 @@ library project Root extends "extended.gpr" is
       for Switches ("m*.ads") use ("-Owrongspecial");
       for Switches ("my*.ads") use ("-Ospecial");
       for Default_Switches use Shared.Compiler'Default_Switches;
+      for Switches ("c*") use ("-Cstar");
+      for Switches ("c") use ("-g") & Compiler'Switches ("c");
+      --  should not match switches ("c*")
    end Compiler;
 
    package Naming is
