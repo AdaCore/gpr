@@ -52,8 +52,6 @@ package GPR2.Project.View is
 
    use GPR2.Context;
 
-   use type Context.Object;
-
    type Object is tagged private;
 
    Undefined : constant Object;

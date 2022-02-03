@@ -53,7 +53,6 @@ package GPR2.Project.Tree is
 
    use GPR2.Context;
 
-   use type GPR2.Context.Object;
    use type GPR2.Project.View.Object;
 
    type Object is tagged limited private
