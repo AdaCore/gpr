@@ -3465,7 +3465,7 @@ package body GPR2.Project.Tree is
       --------------------
 
       procedure Validity_Check (View : Project.View.Object) is
-         use type PRA.Index_Kind;
+         use type PRA.Index_Value_Type;
          use type PRA.Value_Kind;
 
          Check_Object_Dir_Exists : Boolean := True;
@@ -3483,7 +3483,7 @@ package body GPR2.Project.Tree is
 
          procedure Check_Def (Def : PRA.Def; A : Attribute.Object) is
          begin
-            if Def.Index = PRA.No and then A.Has_Index then
+            if Def.Index_Type = PRA.No_Index and then A.Has_Index then
                Self.Error
                   ("attribute """ & Image (A.Name.Id)
                    & """ cannot have index", A);
@@ -3546,6 +3546,23 @@ package body GPR2.Project.Tree is
                         end if;
 
                         Check_Def (Def, A);
+
+                        --  In aggregate project, the Builder package only
+                        --  accepts the index "others" for file globs.
+
+                        if P_Data.Kind in Aggregate_Kind
+                          and then P.Id = PRP.Builder
+                          and then Def.Index_Type in
+                            PRA.FileGlob_Index | PRA.FileGlob_Or_Language_Index
+                          and then A.Index.Is_Defined
+                          and then not A.Index.Is_Others
+                        then
+                           Self.Warning
+                             ("attribute """ & PRA.Image (Q_Name)
+                              & """ only supports index ""others"""
+                              & " in aggregate projects",
+                              A);
+                        end if;
 
                      elsif PRP.Attributes_Are_Checked (P.Id) then
                         Self.Warning

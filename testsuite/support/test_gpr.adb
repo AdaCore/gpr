@@ -57,38 +57,68 @@ package body Test_GPR is
    is
       use GPR2.Containers.Source_Value_Type_List;
       use GPR2.Containers.Name_Type_List;
+      use GPR2;
       Attr_Index  : GPR2.Project.Attribute_Index.Object;
       Attr_Value  : GPR2.Project.Attribute.Object;
       Attr_Values : GPR2.Containers.Source_Value_List;
+      Q_Name      : constant GPR2.Project.Registry.Attribute.Qualified_Name :=
+                      GPR2.Project.Registry.Attribute.Create
+                        (+Name_Type (Name),
+                         +Optional_Name_Type (Pkg));
+      PRA_Def     : constant GPR2.Project.Registry.Attribute.Def :=
+                      GPR2.Project.Registry.Attribute.Get (Q_Name);
    begin
       if Index'Length > 0 then
          Attr_Index := GPR2.Project.Attribute_Index.Create
             (Value          => Index,
-             Case_Sensitive => True);
+             Case_Sensitive => PRA.Is_Case_Sensitive
+                                 (Index, PRA_Def.Index_Type));
       end if;
+
       Attr_Value := View.Attribute
-         (Name   => GPR2."+" (GPR2.Optional_Name_Type (Name)),
-          Pack   => GPR2."+" (GPR2.Optional_Name_Type (Pkg)),
+         (Name   => Q_Name.Attr,
+          Pack   => Q_Name.Pack,
           Index  => Attr_Index,
           At_Pos => At_Pos);
-      A.Assert (Attr_Value.Is_Defined,
-                "expect the attribute " & Name & " to be defined");
-      if Attr_Value.Is_Defined then
-         A.Assert (Attr_Value.Kind = PRA.List,
+
+      if not Attr_Value.Is_Defined then
+         A.Assert (False,
+                   "attribute " & Name & " is undefined");
+         return;
+      end if;
+
+      if Attr_Value.Kind /= PRA.List then
+         A.Assert (False,
                    "expect a list value attribute");
-         Attr_Values := Attr_Value.Values;
+         return;
+      end if;
+
+      Attr_Values := Attr_Value.Values;
+
+      if Length (Attr_Values) = Length (Value) then
+         for J in First_Index (Attr_Values) .. Last_Index (Attr_Values) loop
+            A.Assert
+              (Element (Attr_Values, J).Text,
+               String (Element (Value, J)),
+               "comparing element" & J'Img);
+         end loop;
+
+      else
          A.Assert
            (Integer (Length (Attr_Values)), Integer (Length (Value)),
             "expect the proper number of items in the list");
+         GNAT.IO.Put ("values are:");
 
-         if Length (Attr_Values) = Length (Value) then
-            for J in First_Index (Attr_Values) .. Last_Index (Attr_Values) loop
-               A.Assert
-                  (Element (Attr_Values, J).Text,
-                   String (Element (Value, J)),
-                   "comparing element" & J'Img);
-            end loop;
-         end if;
+         for J in First_Index (Attr_Values) .. Last_Index (Attr_Values) loop
+            if J = First_Index (Attr_Values) then
+               GNAT.IO.Put (" ");
+            else
+               GNAT.IO.Put (", ");
+            end if;
+            GNAT.IO.Put (String (Element (Attr_Values, J).Text));
+         end loop;
+
+         GNAT.IO.New_Line;
       end if;
    end Assert_Attribute;
 

@@ -95,20 +95,18 @@ package body GPR2.Project.Registry.Attribute is
 
    procedure Add
      (Name                  : Qualified_Name;
-      Index                 : Index_Kind;
-      Others_Allowed        : Boolean;
-      Index_Case_Sensitive  : Boolean;
+      Index_Type            : Index_Value_Type;
       Value                 : Value_Kind;
       Value_Case_Sensitive  : Boolean;
       Is_Allowed_In         : Allowed_In;
       Is_Builtin            : Boolean                    := False;
+      Index_Optional        : Boolean                    := False;
       Empty_Value           : Empty_Value_Status         := Allow;
       Default               : Default_Value              := No_Default_Value;
       Has_Default_In        : Allowed_In                 := Nowhere;
       Is_Toolchain_Config   : Boolean                    := False;
       Config_Concatenable   : Boolean                    := False;
       Inherit_From_Extended : Inherit_From_Extended_Type := Inherited;
-      Index_Type            : Index_Value_Type           := Name_Index;
       Is_Set                : Boolean                    := False)
    is
       procedure Index_Default;
@@ -129,9 +127,8 @@ package body GPR2.Project.Registry.Attribute is
    begin
       Store.Insert
         (Name,
-         Def'(Index                 => Index,
-              Others_Allowed        => Others_Allowed,
-              Index_Case_Sensitive  => Index_Case_Sensitive,
+         Def'(Index_Type            => Index_Type,
+              Index_Optional        => Index_Optional,
               Value                 => Value,
               Value_Case_Sensitive  => Value_Case_Sensitive,
               Empty_Value           => Empty_Value,
@@ -145,8 +142,9 @@ package body GPR2.Project.Registry.Attribute is
                                           else Has_Default_In)),
               Is_Toolchain_Config   => Is_Toolchain_Config,
               Config_Concatenable   => Config_Concatenable,
-              Inherit_From_Extended => Inherit_From_Extended,
-              Index_Type            => Index_Type,
+              Inherit_From_Extended => (if Name.Pack = No_Package
+                                        then Inherit_From_Extended
+                                        else Not_Inherited),
               Value_Is_Set          => Is_Set));
 
       if Default /= No_Default_Value then
@@ -358,9 +356,10 @@ package body GPR2.Project.Registry.Attribute is
      (Attr_Def : Def; Key : Value_Type) return Value_Type
    is
       Index : constant Value_Type :=
-                (if Attr_Def.Index_Case_Sensitive or else Key'Length = 0
+                (if Is_Case_Sensitive (Key, Attr_Def.Index_Type)
+                      or else Key'Length = 0
                  then Key
-                 else To_Lower (Optional_Name_Type (Key)));
+                 else To_Lower (Name_Type (Key)));
    begin
       return Get (Attr_Def.Default.Values, Index);
    end Get_Default_Value;
@@ -392,13 +391,60 @@ package body GPR2.Project.Registry.Attribute is
       return Aliases.Contains (Name);
    end Has_Alias;
 
+   -----------------------
+   -- Is_Case_Sensitive --
+   -----------------------
+
+   function Is_Case_Sensitive
+     (Index_Value : Value_Type;
+      Index_Type  : Index_Value_Type) return Boolean is
+   begin
+      case Index_Type is
+         when No_Index =>
+            return False; -- Don't care
+
+         when Unit_Index =>
+            return False;
+
+         when Env_Var_Name_Index =>
+            return True; --  ??? to be checked
+
+         when File_Index | FileGlob_Index =>
+            return GPR2.File_Names_Case_Sensitive;
+
+         when FileGlob_Or_Language_Index =>
+            --  If host is case insensitive, return False whatever the
+            --  index value
+            if not GPR2.File_Names_Case_Sensitive then
+               return False;
+            end if;
+
+            for J in Index_Value'Range loop
+               if J > Index_Value'First
+                 and then Index_Value (J) = '.'
+               then
+                  --  file extension
+                  return GPR2.File_Names_Case_Sensitive;
+
+               elsif Index_Value (J) in '[' | ']' | '*' | '?' then
+                  --  glob pattern
+                  return GPR2.File_Names_Case_Sensitive;
+               end if;
+            end loop;
+
+            --  No dots or glob pattern: consider it a language
+            return False;
+
+         when Language_Index =>
+            return False;
+      end case;
+   end Is_Case_Sensitive;
+
 begin
    --  name
    Add
      (Create (Name),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -408,9 +454,7 @@ begin
    --  project_dir
    Add
      (Create (Project_Dir),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -420,9 +464,7 @@ begin
    --  main
    Add
      (Create (Main),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates);
@@ -430,9 +472,7 @@ begin
    --  languages
    Add
      (Create (Languages),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => False,
       Is_Allowed_In         => No_Aggregates,
@@ -444,20 +484,15 @@ begin
    --  roots
    Add
      (Create (Roots),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => File_Names_Case_Sensitive,
+      Index_Type           => FileGlob_Index,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => No_Aggregates,
-      Index_Type           => FileGlob_Index);
+      Is_Allowed_In        => No_Aggregates);
 
    --  externally_built
    Add
      (Create (Externally_Built),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => False,
       Is_Allowed_In         => No_Aggregates,
@@ -468,9 +503,7 @@ begin
    --  object_dir
    Add
      (Create (Object_Dir),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -480,9 +513,7 @@ begin
    --  exec_dir
    Add
      (Create (Exec_Dir),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type            => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
@@ -492,9 +523,7 @@ begin
    --  source_dirs
    Add
      (Create (Source_Dirs),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => No_Aggregates,
@@ -505,20 +534,15 @@ begin
    --  inherit_source_path
    Add
      (Create (Inherit_Source_Path),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => No_Aggregates,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => No_Aggregates);
 
    --  excluded_source_dirs
    Add
      (Create (Excluded_Source_Dirs),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -527,9 +551,7 @@ begin
    --  ignore_source_sub_dirs
    Add
      (Create (Ignore_Source_Sub_Dirs),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -538,9 +560,7 @@ begin
    --  source_files
    Add
      (Create (Source_Files),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => No_Aggregates,
@@ -549,9 +569,7 @@ begin
    --  excluded_source_files, Locally_Removed_Files
    Add
      (Create (Excluded_Source_Files),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
@@ -561,9 +579,7 @@ begin
    --  source_list_file
    Add
      (Create (Source_List_File),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => No_Aggregates,
@@ -572,9 +588,7 @@ begin
    --  excluded_source_list_file
    Add
      (Create (Excluded_Source_List_File),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => No_Aggregates,
@@ -583,9 +597,7 @@ begin
    --  interfaces
    Add
      (Create (Interfaces),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -594,9 +606,7 @@ begin
    --  project_files
    Add
      (Create (Project_Files),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => In_Aggregates,
@@ -605,9 +615,7 @@ begin
    --  project_path
    Add
      (Create (Project_Path),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => In_Aggregates,
@@ -616,20 +624,15 @@ begin
    --  external
    Add
      (Create (External),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => True,
+      Index_Type           => Env_Var_Name_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => (K_Aggregate => True, others => False),
-      Index_Type           => Name_Index);
+      Is_Allowed_In        => (K_Aggregate => True, others => False));
 
    --  library_dir
    Add
      (Create (Library_Dir),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => In_Library);
@@ -637,9 +640,7 @@ begin
    --  library_name
    Add
      (Create (Library_Name),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => In_Library);
@@ -647,9 +648,7 @@ begin
    --  library_kind
    Add
      (Create (Library_Kind),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => False,
       Is_Allowed_In         => In_Library,
@@ -659,9 +658,7 @@ begin
    --  library_version
    Add
      (Create (Library_Version),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => In_Library,
@@ -670,9 +667,7 @@ begin
    --  library_interface
    Add
      (Create (Library_Interface),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => In_Library,
@@ -682,9 +677,7 @@ begin
    --  library_standalone
    Add
      (Create (Library_Standalone),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => False,
       Is_Allowed_In         => In_Library,
@@ -694,9 +687,7 @@ begin
    --  library_encapsulated_options
    Add
      (Create (Library_Encapsulated_Options),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -706,9 +697,7 @@ begin
    --  library_encapsulated_supported
    Add
      (Create (Library_Encapsulated_Supported),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => In_Configuration,
@@ -718,9 +707,7 @@ begin
    --  library_auto_init
    Add
      (Create (Library_Auto_Init),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => In_Library,
@@ -730,9 +717,7 @@ begin
    --  leading_library_options
    Add
      (Create (Leading_Library_Options),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -742,9 +727,7 @@ begin
    --  library_options
    Add
      (Create (Library_Options),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => In_Library,
@@ -754,21 +737,16 @@ begin
    --  library_rpath_options
    Add
      (Create (Library_Rpath_Options),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  library_src_dir
    Add
      (Create (Library_Src_Dir),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => In_Library,
@@ -778,9 +756,7 @@ begin
    --  library_ali_dir
    Add
      (Create (Library_Ali_Dir),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => In_Library,
@@ -790,9 +766,7 @@ begin
    --  library_gcc
    Add
      (Create (Library_Gcc),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -801,9 +775,7 @@ begin
    --  library_symbol_file
    Add
      (Create (Library_Symbol_File),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => In_Library,
@@ -812,9 +784,7 @@ begin
    --  library_symbol_policy
    Add
      (Create (Library_Symbol_Policy),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => In_Library,
@@ -823,9 +793,7 @@ begin
    --  library_reference_symbol_file
    Add
      (Create (Library_Reference_Symbol_File),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -834,9 +802,7 @@ begin
    --  default_language
    Add
      (Create (Default_Language),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -845,9 +811,7 @@ begin
    --  run_path_option
    Add
      (Create (Run_Path_Option),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -856,9 +820,7 @@ begin
    --  run_path_origin
    Add
      (Create (Run_Path_Origin),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -867,9 +829,7 @@ begin
    --  separate_run_path_options
    Add
      (Create (Separate_Run_Path_Options),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -878,90 +838,67 @@ begin
    --  toolchain_version
    Add
      (Create (Toolchain_Version),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Is_Toolchain_Config  => True,
-      Index_Type           => Language_Index);
+      Is_Toolchain_Config  => True);
 
    --  toolchain_name
    Add
      (Create (Toolchain_Name),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Is_Toolchain_Config  => True,
-      Index_Type           => Language_Index);
+      Is_Toolchain_Config  => True);
 
    --  toolchain_path
    Add
      (Create (Toolchain_Path),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Is_Toolchain_Config  => True,
-      Index_Type           => Language_Index);
+      Is_Toolchain_Config  => True);
 
    --  required_toolchain_version
    Add
      (Create (Required_Toolchain_Version),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Is_Toolchain_Config  => True,
-      Index_Type           => Language_Index);
+      Is_Toolchain_Config  => True);
 
    --  toolchain_description
    Add
      (Create (Toolchain_Description),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  object_generated
    Add
      (Create (Object_Generated),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  objects_linked
    Add
      (Create (Objects_Linked),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  target
    Add
      (Create (Target),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -971,21 +908,16 @@ begin
    --  runtime
    Add
      (Create (Runtime),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Is_Toolchain_Config  => True,
-      Index_Type           => Language_Index);
+      Is_Toolchain_Config  => True);
 
    --  library_builder
    Add
      (Create (Library_Builder),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -994,9 +926,7 @@ begin
    --  library_support
    Add
      (Create (Library_Support),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -1005,9 +935,7 @@ begin
    --  archive_builder
    Add
      (Create (Archive_Builder),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -1016,9 +944,7 @@ begin
    --  archive_builder_append_option
    Add
      (Create (Archive_Builder_Append_Option),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -1027,9 +953,7 @@ begin
    --  archive_indexer
    Add
      (Create (Archive_Indexer),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -1038,9 +962,7 @@ begin
    --  archive_suffix
    Add
      (Create (Archive_Suffix),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -1050,9 +972,7 @@ begin
    --  library_partial_linker
    Add
      (Create (Library_Partial_Linker),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -1061,9 +981,7 @@ begin
    --  object_lister
    Add
      (Create (Object_Lister),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -1071,9 +989,7 @@ begin
    --  object_lister_matcher
    Add
      (Create (Object_Lister_Matcher),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -1081,9 +997,7 @@ begin
    --  shared_library_prefix
    Add
      (Create (Shared_Library_Prefix),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -1093,9 +1007,7 @@ begin
    --  shared_library_suffix
    Add
      (Create (Shared_Library_Suffix),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -1105,9 +1017,7 @@ begin
    --  symbolic_link_supported
    Add
      (Create (Symbolic_Link_Supported),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -1116,9 +1026,7 @@ begin
    --  library_major_minor_id_supported
    Add
      (Create (Library_Major_Minor_Id_Supported),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -1127,9 +1035,7 @@ begin
    --  library_auto_init_supported
    Add
      (Create (Library_Auto_Init_Supported),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -1138,9 +1044,7 @@ begin
    --  shared_library_minimum_switches
    Add
      (Create (Shared_Library_Minimum_Switches),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -1149,9 +1053,7 @@ begin
    --  library_version_switches
    Add
      (Create (Library_Version_Switches),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -1161,9 +1063,7 @@ begin
    --  library_install_name_option
    Add
      (Create (Library_Install_Name_Option),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -1172,82 +1072,62 @@ begin
    --  runtime_dir
    Add
      (Create (Runtime_Dir),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  runtime_library_dir
    Add
      (Create (Runtime_Library_Dir),
-      Index                 => Yes,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => Language_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
-      Index_Type            => Language_Index,
       Inherit_From_Extended => Not_Inherited);
 
    --  runtime_source_dir
    Add
      (Create (Runtime_Source_Dir),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  runtime_source_dirs
    Add
      (Create (Runtime_Source_Dirs),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  naming.spec_suffix & specification_suffix
    Add
      (Create (Spec_Suffix, Pack.Naming),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create ("ada", ".ads") + Create ("c", ".h"),
-      Index_Type           => Language_Index);
+      Default              => Create ("ada", ".ads") + Create ("c", ".h"));
    Add_Alias (Create (Spec_Suffix, Pack.Naming),
               Create (Specification_Suffix, Pack.Naming));
 
    --  naming.body_suffix & implementation_suffix
    Add
      (Create (Body_Suffix, Pack.Naming),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create ("ada", ".adb") + Create ("c", ".c"),
-      Index_Type           => Language_Index);
+      Default              => Create ("ada", ".adb") + Create ("c", ".c"));
    Add_Alias (Create (Body_Suffix, Pack.Naming),
               Create (Implementation_Suffix, Pack.Naming));
 
    --  naming.separate_suffix
    Add
      (Create (Separate_Suffix, Pack.Naming),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Empty_Value          => Error,
@@ -1257,9 +1137,7 @@ begin
    --  naming.casing
    Add
      (Create (Casing, Pack.Naming),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => False,
       Is_Allowed_In        => Everywhere,
@@ -1268,9 +1146,7 @@ begin
    --  naming.dot_replacement
    Add
      (Create (Dot_Replacement, Pack.Naming),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Empty_Value          => Error,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1280,81 +1156,56 @@ begin
    --  naming.spec & specification
    Add
      (Create (Spec, Pack.Naming),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Unit_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Name_Index);
+      Is_Allowed_In        => Everywhere);
    Add_Alias (Create (Spec, Pack.Naming),
               Create (Specification, Pack.Naming));
 
    --  naming.body & implementation
    Add
      (Create (Body_N, Pack.Naming),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Unit_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Name_Index);
+      Is_Allowed_In        => Everywhere);
    Add_Alias (Create (Body_N, Pack.Naming),
               Create (Implementation, Pack.Naming));
 
    --  naming.specification_exceptions
    Add
      (Create (Specification_Exceptions, Pack.Naming),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  naming.implementation_exceptions
    Add
      (Create (Implementation_Exceptions, Pack.Naming),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.default_switches
-   Add
-     (Create (Default_Switches, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
-
    --  compiler.switches
    Add
      (Create (Switches, Pack.Compiler),
-      Index                => Optional,
-      Others_Allowed       => True,
-      Index_Case_Sensitive => File_Names_Case_Sensitive,
+      Index_Type           => FileGlob_Or_Language_Index,
+      Index_Optional       => True,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => FileGlob_Or_Language_Index);
+      Is_Allowed_In        => No_Aggregates,
+      Config_Concatenable  => True);
+   Add_Alias (Create (Default_Switches, Pack.Compiler),
+              Create (Switches, Pack.Compiler));
 
    --  compiler.local_configuration_pragmas
    Add
      (Create (Local_Configuration_Pragmas, Pack.Compiler),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -1362,100 +1213,74 @@ begin
    --  compiler.local_config_file
    Add
      (Create (Local_Config_File, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.driver
    Add
      (Create (Driver, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.language_kind
    Add
      (Create (Language_Kind, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.dependency_kind
    Add
      (Create (Dependency_Kind, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.required_switches
    Add
      (Create (Required_Switches, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  compiler.leading_required_switches
    Add
      (Create (Leading_Required_Switches, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  compiler.trailing_required_switches
    Add
      (Create (Trailing_Required_Switches, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  compiler.pic_option
    Add
      (Create (Pic_Option, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.path_syntax
    Add
      (Create (Path_Syntax, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -1463,259 +1288,191 @@ begin
    --  compiler.source_file_switches
    Add
      (Create (Source_File_Switches, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  compiler.object_file_suffix
    Add
      (Create (Object_File_Suffix, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create (".o"),
-      Index_Type           => Language_Index);
+      Default              => Create (".o"));
 
    --  compiler.object_file_switches
    Add
      (Create (Object_File_Switches, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  compiler.multi_unit_switches
    Add
      (Create (Multi_Unit_Switches, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.multi_unit_object_separator
    Add
      (Create (Multi_Unit_Object_Separator, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.mapping_file_switches
    Add
      (Create (Mapping_File_Switches, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  compiler.mapping_spec_suffix
    Add
      (Create (Mapping_Spec_Suffix, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.mapping_body_suffix
    Add
      (Create (Mapping_Body_Suffix, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.config_file_switches
    Add
      (Create (Config_File_Switches, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  compiler.config_body_file_name
    Add
      (Create (Config_Body_File_Name, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.config_body_file_name_index
    Add
      (Create (Config_Body_File_Name_Index, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.config_body_file_name_pattern
    Add
      (Create (Config_Body_File_Name_Pattern, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.config_spec_file_name
    Add
      (Create (Config_Spec_File_Name, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.config_spec_file_name_index
    Add
      (Create (Config_Spec_File_Name_Index, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.config_spec_file_name_pattern
    Add
      (Create (Config_Spec_File_Name_Pattern, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.config_file_unique
    Add
      (Create (Config_File_Unique, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.dependency_switches
    Add
      (Create (Dependency_Switches, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  compiler.dependency_driver
    Add
      (Create (Dependency_Driver, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.include_switches
    Add
      (Create (Include_Switches, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  compiler.include_path
    Add
      (Create (Include_Path, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.include_path_file
    Add
      (Create (Include_Path_File, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.object_path_switches
    Add
      (Create (Object_Path_Switches, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  compiler.max_command_line_length
    Add
      (Create (Max_Command_Line_Length, Pack.Compiler),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -1723,80 +1480,55 @@ begin
    --  compiler.response_file_format
    Add
      (Create (Response_File_Format, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.response_file_switches
    Add
      (Create (Response_File_Switches, Pack.Compiler),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
-   --  builder.default_switches
-   Add
-     (Create (Default_Switches, Pack.Builder),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
-
-   --  builder.switches
+   --  builder.switches, builder.default_switches
    Add
      (Create (Switches, Pack.Builder),
-      Index                => Optional,
-      Others_Allowed       => True,
-      Index_Case_Sensitive => File_Names_Case_Sensitive,
+      Index_Type           => FileGlob_Or_Language_Index,
+      Index_Optional       => True,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => FileGlob_Or_Language_Index);
+      Config_Concatenable  => True);
+   Add_Alias (Create (Default_Switches, Pack.Builder),
+              Create (Switches, Pack.Builder));
 
    --  builder.global_compilation_switches
    Add
      (Create (Global_Compilation_Switches, Pack.Builder),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  builder.executable
    Add
      (Create (Executable, Pack.Builder),
-      Index                => Optional,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => File_Names_Case_Sensitive,
+      Index_Type           => File_Index,
+      Index_Optional       => True,
       Value                => Single,
       Value_Case_Sensitive => True,
       Empty_Value          => Ignore,
-      Is_Allowed_In        => No_Aggregates,
-      Index_Type           => File_Index);
+      Is_Allowed_In        => No_Aggregates);
 
    --  builder.executable_suffix
    Add
      (Create (Executable_Suffix, Pack.Builder),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
@@ -1805,9 +1537,7 @@ begin
    --  builder.global_configuration_pragmas
    Add
      (Create (Global_Configuration_Pragmas, Pack.Builder),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -1815,169 +1545,118 @@ begin
    --  builder.global_config_file
    Add
      (Create (Global_Config_File, Pack.Builder),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  gnatls.switches
    Add
      (Create (Switches, Pack.Gnatls),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
 
-   --  binder.default_switches
+   --  binder.switches, binder.default_switches
    Add
-     (Create (Default_Switches, Pack.Binder),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+     (Create (Switches, Pack.Binder),
+      Index_Type           => FileGlob_Or_Language_Index,
+      Index_Optional       => True,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
-
-   --  binder.switches
-   Add
-     (Create (Switches, Pack.Binder),
-      Index                => Optional,
-      Others_Allowed       => True,
-      Index_Case_Sensitive => File_Names_Case_Sensitive,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => FileGlob_Or_Language_Index);
+      Config_Concatenable  => True);
+   Add_Alias (Create (Default_Switches, Pack.Binder),
+              Create (Switches, Pack.Binder));
 
    --  binder.driver
    Add
      (Create (Driver, Pack.Binder),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  binder.required_switches
    Add
      (Create (Required_Switches, Pack.Binder),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
-
-   --  binder.prefix
-   Add
-     (Create (Prefix, Pack.Binder),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Default              => Create (""),
-      Index_Type           => Language_Index);
-
-   --  binder.objects_path
-   Add
-     (Create (Objects_Path, Pack.Binder),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
-
-   --  binder.objects_path_file
-   Add
-     (Create (Objects_Path_File, Pack.Binder),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
-
-   --  linker.required_switches
-   Add
-     (Create (Required_Switches, Pack.Linker),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
       Config_Concatenable  => True);
 
-   --  linker.default_switches
+   --  binder.prefix
    Add
-     (Create (Default_Switches, Pack.Linker),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+     (Create (Prefix, Pack.Binder),
+      Index_Type           => Language_Index,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Is_Allowed_In        => Everywhere,
+      Default              => Create (""));
+
+   --  binder.objects_path
+   Add
+     (Create (Objects_Path, Pack.Binder),
+      Index_Type           => Language_Index,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Is_Allowed_In        => Everywhere);
+
+   --  binder.objects_path_file
+   Add
+     (Create (Objects_Path_File, Pack.Binder),
+      Index_Type           => Language_Index,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Is_Allowed_In        => Everywhere);
+
+   --  linker.required_switches
+   Add
+     (Create (Required_Switches, Pack.Linker),
+      Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  linker.leading_switches
    Add
      (Create (Leading_Switches, Pack.Linker),
-      Index                => Optional,
-      Others_Allowed       => True,
-      Index_Case_Sensitive => File_Names_Case_Sensitive,
+      Index_Type           => FileGlob_Or_Language_Index,
+      Index_Optional       => True,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => FileGlob_Or_Language_Index);
+      Config_Concatenable  => True);
 
-   --  linker.switches
+   --  linker.switches, linker.default_switches
    Add
      (Create (Switches, Pack.Linker),
-      Index                => Optional,
-      Others_Allowed       => True,
-      Index_Case_Sensitive => File_Names_Case_Sensitive,
+      Index_Type           => FileGlob_Or_Language_Index,
+      Index_Optional       => True,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => FileGlob_Or_Language_Index);
+      Is_Allowed_In        => No_Aggregates,
+      Config_Concatenable  => True);
+   Add_Alias (Create (Default_Switches, Pack.Linker),
+              Create (Switches, Pack.Linker));
 
    --  linker.trailing_switches
    Add
      (Create (Trailing_Switches, Pack.Linker),
-      Index                => Optional,
-      Others_Allowed       => True,
-      Index_Case_Sensitive => File_Names_Case_Sensitive,
+      Index_Type           => FileGlob_Or_Language_Index,
+      Index_Optional       => True,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Index_Type           => FileGlob_Or_Language_Index);
+      Config_Concatenable  => True);
 
    --  linker.linker_options
    Add
      (Create (Linker_Options, Pack.Linker),
-      Index                 => No,
-      Others_Allowed        => False,
-      Index_Case_Sensitive  => False,
+      Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
@@ -1987,9 +1666,7 @@ begin
    --  linker.map_file_option
    Add
      (Create (Map_File_Option, Pack.Linker),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -1997,9 +1674,7 @@ begin
    --  linker.driver
    Add
      (Create (Driver, Pack.Linker),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2007,9 +1682,7 @@ begin
    --  linker.max_command_line_length
    Add
      (Create (Max_Command_Line_Length, Pack.Linker),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2017,9 +1690,7 @@ begin
    --  linker.response_file_format
    Add
      (Create (Response_File_Format, Pack.Linker),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2027,9 +1698,7 @@ begin
    --  linker.response_file_switches
    Add
      (Create (Response_File_Switches, Pack.Linker),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
@@ -2038,9 +1707,7 @@ begin
    --  linker.export_file_format
    Add
      (Create (Export_File_Format, Pack.Linker),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2048,9 +1715,7 @@ begin
    --  linker.export_file_switch
    Add
      (Create (Export_File_Switch, Pack.Linker),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2058,9 +1723,7 @@ begin
    --  clean.switches
    Add
      (Create (Switches, Pack.Clean),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
@@ -2069,31 +1732,23 @@ begin
    --  clean.source_artifact_extensions
    Add
      (Create (Source_Artifact_Extensions, Pack.Clean),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  clean.object_artifact_extensions
    Add
      (Create (Object_Artifact_Extensions, Pack.Clean),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  clean.artifacts_in_exec_dir
    Add
      (Create (Artifacts_In_Exec_Dir, Pack.Clean),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2101,9 +1756,7 @@ begin
    --  clean.artifacts_in_object_dir
    Add
      (Create (Artifacts_In_Object_Dir, Pack.Clean),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2111,177 +1764,133 @@ begin
    --  cross_reference.default_switches
    Add
      (Create (Default_Switches, Pack.Cross_Reference),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  cross_reference.switches
    Add
      (Create (Switches, Pack.Cross_Reference),
-      Index                => Yes,
-      Others_Allowed       => True,
-      Index_Case_Sensitive => File_Names_Case_Sensitive,
+      Index_Type           => FileGlob_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => FileGlob_Index);
+      Config_Concatenable  => True);
 
    --  finder.default_switches
    Add
      (Create (Default_Switches, Pack.Finder),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  finder.switches
    Add
      (Create (Switches, Pack.Finder),
-      Index                => Yes,
-      Others_Allowed       => True,
-      Index_Case_Sensitive => File_Names_Case_Sensitive,
+      Index_Type           => FileGlob_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => FileGlob_Index);
+      Config_Concatenable  => True);
 
    --  pretty_printer.default_switches
    Add
      (Create (Default_Switches, Pack.Pretty_Printer),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  pretty_printer.switches
    Add
      (Create (Switches, Pack.Pretty_Printer),
-      Index                => Yes,
-      Others_Allowed       => True,
-      Index_Case_Sensitive => File_Names_Case_Sensitive,
+      Index_Type           => FileGlob_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => FileGlob_Index);
+      Config_Concatenable  => True);
 
    --  gnatstub.default_switches
    Add
      (Create (Default_Switches, Pack.Gnatstub),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  gnatstub.switches
    Add
      (Create (Switches, Pack.Gnatstub),
-      Index                => Yes,
-      Others_Allowed       => True,
-      Index_Case_Sensitive => File_Names_Case_Sensitive,
+      Index_Type           => FileGlob_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => FileGlob_Index);
+      Config_Concatenable  => True);
 
    --  check.default_switches
    Add
      (Create (Default_Switches, Pack.Check),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  check.switches
    Add
      (Create (Switches, Pack.Check),
-      Index                => Yes,
-      Others_Allowed       => True,
-      Index_Case_Sensitive => File_Names_Case_Sensitive,
+      Index_Type           => FileGlob_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => FileGlob_Index);
+      Config_Concatenable  => True);
 
    --  eliminate.default_switches
    Add
      (Create (Default_Switches, Pack.Eliminate),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  eliminate.switches
    Add
      (Create (Switches, Pack.Eliminate),
-      Index                => Yes,
-      Others_Allowed       => True,
-      Index_Case_Sensitive => File_Names_Case_Sensitive,
+      Index_Type           => FileGlob_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => FileGlob_Index);
+      Config_Concatenable  => True);
 
    --  metrics.default_switches
    Add
      (Create (Default_Switches, Pack.Metrics),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True,
-      Index_Type           => Language_Index);
+      Config_Concatenable  => True);
 
    --  metrics.switches
    Add
      (Create (Switches, Pack.Metrics),
-      Index                => Yes,
-      Others_Allowed       => True,
-      Index_Case_Sensitive => File_Names_Case_Sensitive,
+      Index_Type           => FileGlob_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True,
-      Index_Type           => FileGlob_Index);
+      Config_Concatenable  => True);
 
    --  ide.default_switches
    Add
      (Create (Default_Switches, Pack.Ide),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates);
@@ -2289,9 +1898,7 @@ begin
    --  ide.remote_host
    Add
      (Create (Remote_Host, Pack.Ide),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2299,9 +1906,7 @@ begin
    --  ide.program_host
    Add
      (Create (Program_Host, Pack.Ide),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2309,9 +1914,7 @@ begin
    --  ide.communication_protocol
    Add
      (Create (Communication_Protocol, Pack.Ide),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2319,9 +1922,7 @@ begin
    --  ide.compiler_command
    Add
      (Create (Compiler_Command, Pack.Ide),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2329,9 +1930,7 @@ begin
    --  ide.debugger_command
    Add
      (Create (Debugger_Command, Pack.Ide),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2339,9 +1938,7 @@ begin
    --  ide.gnatlist
    Add
      (Create (Gnatlist, Pack.Ide),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2349,9 +1946,7 @@ begin
    --  ide.vcs_kind
    Add
      (Create (Vcs_Kind, Pack.Ide),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2359,9 +1954,7 @@ begin
    --  ide.vcs_file_check
    Add
      (Create (Vcs_File_Check, Pack.Ide),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2369,9 +1962,7 @@ begin
    --  ide.vcs_log_check
    Add
      (Create (Vcs_Log_Check, Pack.Ide),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2379,9 +1970,7 @@ begin
    --  ide.documentation_dir
    Add
      (Create (Documentation_Dir, Pack.Ide),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2389,9 +1978,7 @@ begin
    --  install.prefix
    Add
      (Create (Prefix, Pack.Install),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2399,9 +1986,7 @@ begin
    --  install.sources_subdir
    Add
      (Create (Sources_Subdir, Pack.Install),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2409,9 +1994,7 @@ begin
    --  install.exec_subdir
    Add
      (Create (Exec_Subdir, Pack.Install),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2419,9 +2002,7 @@ begin
    --  install.lib_subdir
    Add
      (Create (Lib_Subdir, Pack.Install),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2429,9 +2010,7 @@ begin
    --  install.lib_subdir
    Add
      (Create (ALI_Subdir, Pack.Install),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2439,9 +2018,7 @@ begin
    --  install.project_subdir
    Add
      (Create (Project_Subdir, Pack.Install),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2449,9 +2026,7 @@ begin
    --  install.active
    Add
      (Create (Active, Pack.Install),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2459,31 +2034,23 @@ begin
    --  install.artifacts
    Add
      (Create (Artifacts, Pack.Install),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => True,
+      Index_Type           => File_Index,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => File_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  install.required_artifacts
    Add
      (Create (Required_Artifacts, Pack.Install),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => True,
+      Index_Type           => File_Index,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => File_Index);
+      Is_Allowed_In        => Everywhere);
 
    --  install.mode
    Add
      (Create (Mode, Pack.Install),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2491,9 +2058,7 @@ begin
    --  install.install_name
    Add
      (Create (Install_Name, Pack.Install),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2501,9 +2066,7 @@ begin
    --  remote.root_dir
    Add
      (Create (Root_Dir, Pack.Remote),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2511,9 +2074,7 @@ begin
    --  remote.excluded_patterns
    Add
      (Create (Excluded_Patterns, Pack.Remote),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2521,9 +2082,7 @@ begin
    --  remote.included_patterns
    Add
      (Create (Included_Patterns, Pack.Remote),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2531,9 +2090,7 @@ begin
    --  remote.included_artifact_patterns
    Add
      (Create (Included_Artifact_Patterns, Pack.Remote),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2541,9 +2098,7 @@ begin
    --  stack.switches
    Add
      (Create (Switches, Pack.Stack),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
@@ -2552,9 +2107,7 @@ begin
    --  origin_project
    Add
      (Create (Origin_Project),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2562,9 +2115,7 @@ begin
    --  install'side_debug
    Add
      (Create (Side_Debug, Pack.Install),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => False,
       Is_Allowed_In        => Everywhere);
@@ -2572,9 +2123,7 @@ begin
    --  include_switches_via_spec
    Add
      (Create (Include_Switches_Via_Spec),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2582,9 +2131,7 @@ begin
    --  only_dirs_with_sources
    Add
      (Create (Only_Dirs_With_Sources),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2592,9 +2139,7 @@ begin
    --  warning_message
    Add
      (Create (Warning_Message),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2602,9 +2147,7 @@ begin
    --  canonical_target
    Add
      (Create (Canonical_Target),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
@@ -2613,9 +2156,7 @@ begin
    --  create_missing_dirs
    Add
      (Create (Create_Missing_Dirs),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
@@ -2623,9 +2164,7 @@ begin
    --  install_project
    Add
      (Create (Install_Project, Pack.Install),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
+      Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => False,
       Is_Allowed_In        => Everywhere);

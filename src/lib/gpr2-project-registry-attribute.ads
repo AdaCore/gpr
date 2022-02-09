@@ -33,19 +33,10 @@ limited with GPR2.Project.View;
 
 package GPR2.Project.Registry.Attribute is
 
-   type Index_Kind is (No, Yes, Optional);
-
-   type Index_Value_Type is
-      (Name_Index,
-       File_Index,
-       FileGlob_Index,
-       Language_Index,
-       FileGlob_Or_Language_Index);
-
    type Inherit_From_Extended_Type is
-      (Inherited,
-       Concatenated,
-       Not_Inherited);
+     (Inherited,
+      Concatenated,
+      Not_Inherited);
    --  Inherited means that if the attribute can be inherited from the extended
    --  project.
    --  Concatenated is like inherited, but the final value is the concatenation
@@ -53,7 +44,45 @@ package GPR2.Project.Registry.Attribute is
    --  Not_Inherited means that the value from the extended project is never
    --  inherited.
 
-   subtype Index_Allowed is Index_Kind range Yes .. Optional;
+   ------------------------
+   --  Attribute Indexes --
+   ------------------------
+
+   type Index_Value_Type is
+     (No_Index,
+      Unit_Index,
+      Env_Var_Name_Index,
+      File_Index,
+      FileGlob_Index,
+      Language_Index,
+      FileGlob_Or_Language_Index);
+   --  No_Index: attribute does not accept indexes
+   --  Unit_Index: the attribute expects a unit name as index.
+   --    Case insensitive.
+   --  Env_Var_Name_Index: the attribute expects an environment variable
+   --    name as index. Case sensitive.
+   --  FileGlob_Index: accepts a source file simple name, or a glob pattern
+   --    as index. Case sensitivity depends on the host, 'others' keyword
+   --    is accepted.
+   --  Language_Index: accepts a language identifier as index. Case
+   --    insensitive.
+   --  FileGlob_Or_Language_Index: accepts both FileGlob and Language as index.
+   --    To determine case sensitivity, indexes with dots, and glob-specific
+   --    characters (*?[]) are considered filenames, other indexes are
+   --    considered language identifiers. The 'others' keyword is accepted.
+
+   function Is_Case_Sensitive
+     (Index_Value : Value_Type;
+      Index_Type  : Index_Value_Type) return Boolean;
+   --  Whether a give index value should be considered case sensitive or not
+
+   function Is_Others_Allowed
+     (Index_Type : Index_Value_Type) return Boolean;
+   --  Whether "others" is allowed as index value
+
+   -----------------------
+   --  Attribute values --
+   -----------------------
 
    type Value_Kind is (Single, List);
 
@@ -130,9 +159,8 @@ package GPR2.Project.Registry.Attribute is
       (Kind => D_Attribute_Reference, Attr => No_Attribute);
 
    type Def is record
-      Index                 : Index_Kind         := Optional;
-      Others_Allowed        : Boolean            := False;
-      Index_Case_Sensitive  : Boolean            := False;
+      Index_Type            : Index_Value_Type   := No_Index;
+      Index_Optional        : Boolean            := False;
       Value                 : Value_Kind         := Single;
       Value_Case_Sensitive  : Boolean            := False;
       Value_Is_Set          : Boolean            := False;
@@ -161,17 +189,8 @@ package GPR2.Project.Registry.Attribute is
       Inherit_From_Extended : Inherit_From_Extended_Type := Inherited;
       --  Whether an attribute is inherited from an extended project or not
       --  See Inherited_From_Extended_Type definition for available behaviours.
-
-      Index_Type            : Index_Value_Type := Name_Index;
-      --  Set the type for the index value
-
    end record
      with Dynamic_Predicate =>
-       --  Either Index is allowed or the other parts are default
-       (Def.Index in Index_Allowed
-        or else (not Def.Others_Allowed
-                 and then not Def.Index_Case_Sensitive))
-     and then
        --  Must be usable somewhere
        Def.Is_Allowed_In /= (Project_Kind => False);
 
@@ -212,26 +231,50 @@ package GPR2.Project.Registry.Attribute is
 
    procedure Add
      (Name                  : Qualified_Name;
-      Index                 : Index_Kind;
-      Others_Allowed        : Boolean;
-      Index_Case_Sensitive  : Boolean;
+      Index_Type            : Index_Value_Type;
       Value                 : Value_Kind;
       Value_Case_Sensitive  : Boolean;
       Is_Allowed_In         : Allowed_In;
       Is_Builtin            : Boolean                    := False;
+      Index_Optional        : Boolean                    := False;
       Empty_Value           : Empty_Value_Status         := Allow;
       Default               : Default_Value              := No_Default_Value;
       Has_Default_In        : Allowed_In                 := Nowhere;
       Is_Toolchain_Config   : Boolean                    := False;
       Config_Concatenable   : Boolean                    := False;
       Inherit_From_Extended : Inherit_From_Extended_Type := Inherited;
-      Index_Type            : Index_Value_Type           := Name_Index;
       Is_Set                : Boolean                    := False)
      with Pre => (if Is_Set
                      or else Config_Concatenable
                      or else Inherit_From_Extended = Concatenated
                     then Value = List);
-   --  add package/attribute definition in database for attribute checks
+   --  Add package/attribute definition in database for attribute checks.
+   --  Name: qualified name of the attribute.
+   --  Index_Type: the kind of index expected.
+   --  Value: whether the attribute holds a single value or a list.
+   --  Value_Case_Sensitive: whether the value(s) are considered case
+   --    sensitive.
+   --  Is_Allowed_In: list of project kind where the attribute is valid.
+   --  Is_Builtin: if set, denotes an attribute that is read-only and set
+   --    automatically by libgpr.
+   --  Index_Optional: whether the attribute's index is mandatory or optional.
+   --    Ignored if Index_Type is No_Index.
+   --  Empty_Value: whether empty values are allowed for the attribute.
+   --  Default: the description of the default value taken by the attribute,
+   --    if any.
+   --  Has_Default_In: lists of project kind where this attribute has a
+   --    default value. Ignored if no default value is defined.
+   --  Is_Toolchain_Config: flags the attribute as being relevant when
+   --    automatically configuring the project. Such attribute can't be
+   --    written after being read to prevent bootstraping issues.
+   --  Config_Concatenable: if set, the final values hold by the attribute
+   --    will be the concatenation of the user-defined attribute and the
+   --    configuration project value.
+   --  Inherit_From_Extended: Whether the attribute is inherited from extended
+   --    projects, its values concatenated or not inherited. Only relevant
+   --    for toplevel attributes.
+   --  Is_Set: if set, the attribute values is considered a set, so won't
+   --    hold duplicated values.
 
    procedure Add_Alias
      (Name     : Qualified_Name;
@@ -528,4 +571,7 @@ private
      (Qualified_Name, Qualified_Name);
    --  Keeps track of Attributes that are aliased
 
+   function Is_Others_Allowed
+     (Index_Type : Index_Value_Type) return Boolean is
+     (Index_Type in FileGlob_Index | FileGlob_Or_Language_Index);
 end GPR2.Project.Registry.Attribute;
