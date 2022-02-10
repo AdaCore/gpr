@@ -1,0 +1,10 @@
+description:
+    A test for external set in aggregate project
+    affecting configuration project
+    # requires x86_64-vx7-linux64/gnat/install/bin on PATH
+driver: build_and_run
+project_file: agg_conf
+main: main
+fake_ada_target:
+  - x86_64-wrs-vxworks7
+  - native
