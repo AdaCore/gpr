@@ -1,0 +1,4 @@
+aggregate project Agg2 is
+    for Project_Files use ("prj.gpr");
+    for Target use "x86_64-wrs-vxworks7";
+end Agg2;
