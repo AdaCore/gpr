@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2021, AdaCore                      --
+--                    Copyright (C) 2019-2022, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -1058,7 +1058,8 @@ package body GPR2.Project.Parser is
       Tree          : GPR2.Project.Tree.Object;
       Context       : GPR2.Context.Object;
       View          : GPR2.Project.View.Object;
-      Pre_Conf_Mode : Boolean := False)
+      Pre_Conf_Mode : Boolean := False;
+      Ext_Conf_Mode : Boolean := False)
    is
 
       type Indexed_Values is record
@@ -1745,12 +1746,14 @@ package body GPR2.Project.Parser is
 
                exception
                   when E : Project_Error =>
-                     Tree.Log_Messages.Append
-                       (GPR2.Message.Create
-                          (Level   => Message.Error,
-                           Sloc    =>
-                              Get_Source_Reference (Self.File, Parameters),
-                           Message => Exception_Message (E)));
+                     if not Ext_Conf_Mode then
+                        Tree.Log_Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Self.File, Parameters),
+                              Message => Exception_Message (E)));
+                     end if;
                      Record_Value
                        (Get_Value_Reference
                           ("", Get_Source_Reference (Self.File, Parameters)));

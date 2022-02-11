@@ -1281,10 +1281,9 @@ package body GPR2.Project.Tree is
             Project.Parser.Process
               (P_Data.Trees.Project,
                Self,
-               (if not Self.Context (Aggregate).Is_Empty then
-                     Self.Context (Aggregate)
-                else Root_Context),
-               C_View);
+               Root_Context,
+               C_View,
+               Ext_Conf_Mode => True);
 
             if Self.Conf.Is_Defined then
                Update_Project_Search_Path_From_Config (Self, Self.Conf);
@@ -1387,6 +1386,12 @@ package body GPR2.Project.Tree is
                end if;
             end loop;
          end loop;
+
+         if Config.Is_Defined and then Config.Has_Externals
+           and then Self.Root.Kind in Aggregate_Kind
+         then
+            Update_Context (Self.Context (Aggregate), Config.Externals);
+         end if;
 
          Set_Context (Self, Context);
 

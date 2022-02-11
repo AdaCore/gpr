@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2021, AdaCore                      --
+--                    Copyright (C) 2019-2022, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -73,10 +73,15 @@ package GPR2.Project.Parser is
       Tree          : GPR2.Project.Tree.Object;
       Context       : GPR2.Context.Object;
       View          : GPR2.Project.View.Object;
-      Pre_Conf_Mode : Boolean := False)
+      Pre_Conf_Mode : Boolean := False;
+      Ext_Conf_Mode : Boolean := False)
      with Pre => Self.Is_Defined;
    --  Phase-2: semantic analysis, parse tree using a specific context. This
    --  step is to be done every time a context is changed.
+   --  Pre_Conf_Mode indicates that processing errors related to missing
+   --  projects should be treated as warnings.
+   --  Ext_Conf_Mode indicates that undefined externals should be ignored,
+   --  this mode should only be used when processing configuration project.
 
    function Qualifier (Self : Object) return Project_Kind
      with Pre => Self.Is_Defined;
