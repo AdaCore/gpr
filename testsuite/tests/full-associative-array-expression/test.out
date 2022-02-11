@@ -1,8 +1,8 @@
 check1.gpr
 Runtime(C)="text1"
 Runtime(C++)="text2"
-Compiler.Switches(Ada)=("text3")
-Compiler.Switches(C)=("text4","text5")
+Compiler.Switches(Ada)=("text3","text6")
+Compiler.Switches(C)=("text4","text5","text7","text8")
 Compiler.Switches(C++)=()
 check2a.gpr
 /check2a.gpr semantic error

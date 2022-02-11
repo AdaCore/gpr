@@ -3,9 +3,9 @@ project Shared is
    for Runtime ("C") use "foo";
    for Runtime ("Ada") use "bar";
 
-   package Compiler is
+   package Linker is
       for Default_Switches ("C") use ("c_switch");
       for Default_Switches ("Ada") use ("ada_switch");
-   end Compiler;
+   end Linker;
 
 end Shared;

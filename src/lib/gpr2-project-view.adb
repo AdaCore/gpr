@@ -256,7 +256,6 @@ package body GPR2.Project.View is
       return Project.Attribute.Object
    is
       use type Project.Attribute_Index.Object;
-      use type PRA.Index_Kind;
       use type PRA.Index_Value_Type;
       use type PRA.Inherit_From_Extended_Type;
 
@@ -384,36 +383,67 @@ package body GPR2.Project.View is
             Result := Attrs.Element (Alias, Index, At_Pos);
          end if;
 
-         --  If the attribute has not been found, first handle the case in
-         --  which an index is used and pattern matching might apply.
+         --  Checks for special index matching
 
-         if not Found (Result) and then Index /= Attribute_Index.Undefined then
-            if PRA_Def.Index_Type = PRA.FileGlob_Index or else
-               (PRA_Def.Index_Type = PRA.FileGlob_Or_Language_Index
-                and then not Self.Has_Language (Name_Type (Index.Value)))
+         if not Found (Result)
+           and then Index.Is_Defined
+           and then Index.Value'Length > 0
+         then
+            if PRA_Def.Index_Type = PRA.FileGlob_Index
+              or else
+                (PRA_Def.Index_Type = PRA.FileGlob_Or_Language_Index
+                 and then not Self.Has_Language (Name_Type (Index.Value)))
             then
                --  The index might match a globbing pattern. In that case
-               --  iterate other the statements to find one that match the
+               --  iterate over the attributes to find one that match the
                --  index.
 
-               for Cursor in Attrs.Iterate (Name => Name) loop
-                  --  Note: we need to keep going here as last match will be
-                  --  the one to take into account.
-                  Check_Matching_Index
-                     (Pattern => Project.Attribute.Set.Element (Cursor),
-                      Result  => Result);
-               end loop;
+               for Attr of Attrs loop
+                  if Attr.Name.Id = Name
+                    or else (Alias /= No_Attribute
+                             and then Attr.Name.Id = Alias)
+                  then
+                     --  We should have a file name. Let's do pattern
+                     --  matching.
 
-               if not Found (Result) and then Alias /= No_Attribute then
-                  for Cursor in Attrs.Iterate (Name => Alias) loop
                      Check_Matching_Index
-                       (Pattern => Project.Attribute.Set.Element (Cursor),
+                       (Pattern => Attr,
                         Result  => Result);
-                  end loop;
-               end if;
+
+                     --  Note: we need to keep going here as last
+                     --  match will be the one to take into account.
+                  end if;
+               end loop;
             end if;
 
-            if not Found (Result) and then PRA_Def.Others_Allowed then
+            --  Now if we have a source as index, and haven't found any result
+            --  and the attribute is defined for the source's language, let's
+            --  return it.
+            --  Depending on when this is called, be careful that the view may
+            --  not be fully loaded yet (so of course no source available, but
+            --  worse: check for source will blow because Root_View is not
+            --  set at parse time but a bit later).
+
+            if not Found (Result)
+              and then PRA_Def.Index_Type = PRA.FileGlob_Or_Language_Index
+              and then not Get_RO (Self).Root_View.Was_Freed
+              and then Self.Has_Source (GPR2.Simple_Name (Index.Value))
+            then
+               declare
+                  Src : Project.Source.Object renames
+                          Self.Source (GPR2.Simple_Name (Index.Value));
+               begin
+                  Result :=
+                    Attribute (View, Name, Pack, PAI.Create (Src.Language));
+               end;
+            end if;
+
+            --  Finally, check if an attribute with the "others" index is
+            --  defined.
+
+            if not Found (Result)
+              and then PRA.Is_Others_Allowed (PRA_Def.Index_Type)
+            then
                Result :=
                  Attrs.Element (Name, Project.Attribute_Index.I_Others);
 
@@ -489,7 +519,7 @@ package body GPR2.Project.View is
 
       --  Check if index is used correctly
 
-      if PRA_Def.Index = PRA.No and then Has_Index then
+      if PRA_Def.Index_Type = PRA.No_Index and then Has_Index then
          raise Attribute_Error
             with PRA.Image (PRA_Name) & " attribute does not accept index";
       end if;
@@ -601,6 +631,7 @@ package body GPR2.Project.View is
                            Source  => Self.Path_Name,
                            Default => PRA.Get (Default.Values, Def_Index),
                            As_List => PRA_Def.Value /= PRA.Single);
+                        Result.Set_Case (PRA_Def.Value_Case_Sensitive);
                      end if;
                   end;
 
@@ -614,6 +645,7 @@ package body GPR2.Project.View is
                      Source  => Self.Path_Name,
                      Default => Default.Callback (Self),
                      As_List => PRA_Def.Value /= PRA.Single);
+                  Result.Set_Case (PRA_Def.Value_Case_Sensitive);
             end case;
          end;
       end if;
@@ -737,7 +769,7 @@ package body GPR2.Project.View is
       Def    : constant PRA.Def               := PRA.Get (Q_Name);
 
       use type PRA.Inherit_From_Extended_Type;
-      use type PRA.Index_Kind;
+      use type PRA.Index_Value_Type;
 
       procedure Add_Attr (Attr   : Project.Attribute.Object;
                           Concat : Boolean);
@@ -780,7 +812,7 @@ package body GPR2.Project.View is
       --  If the attribute has no index, then just call Attribute, as at most
       --  one result can be returned,
 
-      if Def.Index = PRA.No then
+      if Def.Index_Type = PRA.No_Index then
          declare
             Attr : constant Project.Attribute.Object :=
                      Self.Attribute (Name, Pack);
@@ -891,7 +923,9 @@ package body GPR2.Project.View is
                           and then Val_Index'Length > 0
                         then
                            Attr_Index := Attribute_Index.Create (Val_Index);
-                           Attr_Index.Set_Case (Def.Index_Case_Sensitive);
+                           Attr_Index.Set_Case
+                             (PRA.Is_Case_Sensitive
+                                (Val_Index, Def.Index_Type));
 
                            Cursor := Result.Find (Name, Attr_Index);
 
@@ -908,6 +942,7 @@ package body GPR2.Project.View is
                                                 (Source_Reference.Builtin,
                                                  PRA.Value_Map.Element (C))),
                                  Default => True);
+                              Attr.Set_Case (Def.Value_Case_Sensitive);
                               Result.Insert (Attr);
                            end if;
                         end if;

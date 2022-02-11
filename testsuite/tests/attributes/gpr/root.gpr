@@ -22,11 +22,14 @@ library project Root extends "extended.gpr" is
       for Switches ("Ada") use ("-test-switch");
       for Switches ("m*.ads") use ("-Owrongspecial");
       for Switches ("my*.ads") use ("-Ospecial");
-      for Default_Switches use Shared.Compiler'Default_Switches;
       for Switches ("c*") use ("-Cstar");
       for Switches ("c") use ("-g") & Compiler'Switches ("c");
       --  should not match switches ("c*")
    end Compiler;
+
+   package Linker is
+      for Default_Switches use Shared.Linker'Default_Switches;
+   end Linker;
 
    package Naming is
       for Spec ("MyAdaUnit") use "my";

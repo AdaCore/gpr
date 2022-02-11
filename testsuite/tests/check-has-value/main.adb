@@ -47,7 +47,7 @@ procedure Main is
       Text_IO.Set_Col (10);
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
-      Att := Prj.Attributes.Element (A.Languages);
+      Att := Prj.Attribute (A.Languages);
       Text_IO.Put_Line (Att.Image);
 
       Text_IO.Put_Line ("ada " & Att.Has_Value ("ada")'Img);

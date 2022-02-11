@@ -470,11 +470,12 @@ package body GPR2_GNATCOLL_Projects is
         (Name                 => GPR2.Project.Registry.Attribute.Create
            (Name => Name,
             Pack => Pkg),
-         Index                => (if Indexed
-                                  then GPR2.Project.Registry.Attribute.Yes
-                                  else GPR2.Project.Registry.Attribute.No),
-         Others_Allowed       => False,
-         Index_Case_Sensitive => Case_Sensitive_Index,
+         Index_Type           =>
+           (if not Indexed
+              then GPR2.Project.Registry.Attribute.No_Index
+              elsif Case_Sensitive_Index
+              then GPR2.Project.Registry.Attribute.Env_Var_Name_Index
+              else GPR2.Project.Registry.Attribute.Unit_Index),
          Value                =>
            (if Is_List
             then GPR2.Project.Registry.Attribute.List

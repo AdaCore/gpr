@@ -1282,10 +1282,9 @@ package body GPR2.Project.Tree is
             Project.Parser.Process
               (P_Data.Trees.Project,
                Self,
-               (if not Self.Context (Aggregate).Is_Empty then
-                     Self.Context (Aggregate)
-                else Root_Context),
-               C_View);
+               Root_Context,
+               C_View,
+               Ext_Conf_Mode => True);
 
             if Self.Conf.Is_Defined then
                Update_Project_Search_Path_From_Config (Self, Self.Conf);
@@ -1388,6 +1387,12 @@ package body GPR2.Project.Tree is
                end if;
             end loop;
          end loop;
+
+         if Config.Is_Defined and then Config.Has_Externals
+           and then Self.Root.Kind in Aggregate_Kind
+         then
+            Update_Context (Self.Context (Aggregate), Config.Externals);
+         end if;
 
          Set_Context (Self, Context);
 
@@ -3460,7 +3465,7 @@ package body GPR2.Project.Tree is
       --------------------
 
       procedure Validity_Check (View : Project.View.Object) is
-         use type PRA.Index_Kind;
+         use type PRA.Index_Value_Type;
          use type PRA.Value_Kind;
 
          Check_Object_Dir_Exists : Boolean := True;
@@ -3478,7 +3483,7 @@ package body GPR2.Project.Tree is
 
          procedure Check_Def (Def : PRA.Def; A : Attribute.Object) is
          begin
-            if Def.Index = PRA.No and then A.Has_Index then
+            if Def.Index_Type = PRA.No_Index and then A.Has_Index then
                Self.Error
                   ("attribute """ & Image (A.Name.Id)
                    & """ cannot have index", A);
@@ -3541,6 +3546,23 @@ package body GPR2.Project.Tree is
                         end if;
 
                         Check_Def (Def, A);
+
+                        --  In aggregate project, the Builder package only
+                        --  accepts the index "others" for file globs.
+
+                        if P_Data.Kind in Aggregate_Kind
+                          and then P.Id = PRP.Builder
+                          and then Def.Index_Type in
+                            PRA.FileGlob_Index | PRA.FileGlob_Or_Language_Index
+                          and then A.Index.Is_Defined
+                          and then not A.Index.Is_Others
+                        then
+                           Self.Warning
+                             ("attribute """ & PRA.Image (Q_Name)
+                              & """ only supports index ""others"""
+                              & " in aggregate projects",
+                              A);
+                        end if;
 
                      elsif PRP.Attributes_Are_Checked (P.Id) then
                         Self.Warning

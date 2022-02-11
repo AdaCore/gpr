@@ -68,16 +68,16 @@ begin
    Comp_Switches.Append ("ada_switch");
    TGPR.Assert_Attribute
      (Tree.Root_Project,
-      Name  => "Default_Switches",
-      Pkg   => "Compiler",
+      Name  => "Switches",
+      Pkg   => "Linker",
       Index => "ada",
       Value => Comp_Switches);
    Comp_Switches.Clear;
    Comp_Switches.Append ("c_switch");
    TGPR.Assert_Attribute
      (Tree.Root_Project,
-      Name  => "Default_Switches",
-      Pkg   => "Compiler",
+      Name  => "Switches",
+      Pkg   => "Linker",
       Index => "c",
       Value => Comp_Switches);
    --  full associative array at top level
@@ -107,6 +107,9 @@ begin
 
    IO.Put_Line ("test pattern matching");
    Comp_Switches.Clear;
+   --  Ada switch from config
+   Comp_Switches.Append ("-config-ada");
+   --  File-specific switch from project
    Comp_Switches.Append ("-Ospecial");
 
    TGPR.Assert_Attribute

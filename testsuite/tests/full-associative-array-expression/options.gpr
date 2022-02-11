@@ -5,14 +5,14 @@ project Options is
       for Switches ("Ada") use ("text3");
       for Switches ("C") use ("text4", "text5");
       for Switches ("C++") use ();
-      for Default_Switches ("Ada") use ("text6");
-      for Default_Switches ("C") use ("text7", "text8");
+      for Default_Switches ("Ada") use Compiler'Default_Switches ("ada") & ("text6");
+      for Default_Switches ("C") use Compiler'Default_Switches ("C") & ("text7", "text8");
    end Compiler;
    package Linker is
-      for Switches ("Ada") use ("text9");
-      for Switches ("C") use ("text10", "text11");
       for Default_Switches ("Ada") use ("text12");
       for Default_Switches ("C") use ("text13", "text14");
+      for Switches ("Ada") use Linker'Switches ("ada") & ("text9");
+      for Switches ("C") use Linker'Switches ("c") & ("text10", "text11");
    end Linker;
    for Object_Generated ("C") use "text15";
 end Options;
