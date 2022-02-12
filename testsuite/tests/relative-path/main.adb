@@ -50,6 +50,26 @@ procedure Main is
           GPR2.Path_Name.Create_Directory
             ("/gnatmail/gpr2/x86-windows/gpr2-test/src/testsuite/tests/m");
 
+   W1 : constant Path_Name.Object :=
+          Path_Name.Create_Directory ("C:\dir1\dir2\toto");
+   W2 : constant Path_Name.Object :=
+          Path_Name.Create_Directory ("c:\Dir1\Dir2\toto");
+   W3 : constant Path_Name.Object :=
+          Path_Name.Create_Directory ("D:\dir1\dir2\toto");
+
+   procedure Assert (Actual, Expected : String);
+
+   ------------
+   -- Assert --
+   ------------
+
+   procedure Assert (Actual, Expected : String) is
+   begin
+      if Expected /= Actual then
+         Text_IO.Put_Line ("Expected: " & Expected & " Actual: " & Actual);
+      end if;
+   end Assert;
+
 begin
    Text_IO.Put_Line ("1: " & String (Path_Name.Relative_Path (P1, P2).Name));
    Text_IO.Put_Line ("2: " & String (Path_Name.Relative_Path (P3, P2).Name));
@@ -58,16 +78,17 @@ begin
    Text_IO.Put_Line ("5: " & String (Path_Name.Relative_Path (P4, P3).Name));
    Text_IO.Put_Line ("6: " & String (Path_Name.Relative_Path (P1, P1).Name));
    Text_IO.Put_Line ("7: " & String (Path_Name.Relative_Path (P4, P4).Name));
-   Text_IO.Put_Line ("8: " & String (C2.Relative_Path(C1).Name));
-   Text_IO.Put_Line ("9: " & String (C1.Relative_Path(C2).Name));
+   Text_IO.Put_Line ("8: " & String (C2.Relative_Path (C1).Name));
+   Text_IO.Put_Line ("9: " & String (C1.Relative_Path (C2).Name));
    Text_IO.Put_Line ("A: " & String (Path_Name.Relative_Path (P6, P5).Name));
+
    --  on windows current drive is added to absolute GPR2.Path_Name.
    --  use Ada.Directories.Full_Name to get normalized path.
    --  /dir1/dir2 on linux, C:/dir1/dir2 on windows
-   if P5.Containing_Directory.Value /= Ada.Directories.Full_Name ("/dir1/dir2") then
-      Text_IO.Put_Line ("Expected: " & Ada.Directories.Full_Name ("/dir1/dir2") &
-                          " Actual: " & P5.Containing_Directory.Value);
-   end if;
+
+   Assert
+     (P5.Containing_Directory.Value, Directories.Full_Name ("/dir1/dir2"));
+
    PV := C2.Change_Extension ("");
    Text_IO.Put_Line ("B: " & String (PV.Name));
    PV := C2.Change_Extension (".");
@@ -81,4 +102,9 @@ begin
    PV := PV.Change_Extension ("ef");
    Text_IO.Put_Line ("G: " & String (PV.Name));
    Text_IO.Put_Line ("H: " & String (Path_Name.Relative_Path (FH, TH).Name));
+
+   if On_Windows then
+      Assert (String (W1.Relative_Path (W2).Name), "./");
+      Assert (String (W1.Relative_Path (W3).Name), W1.Value);
+   end if;
 end Main;
