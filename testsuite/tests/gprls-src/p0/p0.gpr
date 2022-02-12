@@ -1,5 +1,5 @@
 with "../p1/p1";
 project p0 is
-for Main use ("p0");
+for Main use ("p0.adb");
 for Object_Dir use "obj";
 end p0;
