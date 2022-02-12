@@ -180,6 +180,7 @@ package GPR2 is
    type Word is mod 2 ** 32;
 
    File_Names_Case_Sensitive : constant Boolean;
+   On_Windows                : constant Boolean;
 
    function Hash (Fname : Filename_Type) return Ada.Containers.Hash_Type;
 
