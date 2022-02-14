@@ -592,6 +592,14 @@ package body GPR2.Path_Name is
             Pi := Ti;
 
          elsif To_OS_Case (P (Ti)) /= To_OS_Case (T (Ti)) then
+            if Ti = P'First then
+               --  First character differ, it can be only on Windows because
+               --  unix path started from directory separator.
+               --  "To" path is on another drive, returns original path.
+
+               return Self;
+            end if;
+
             exit;
          end if;
 
