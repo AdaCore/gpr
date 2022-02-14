@@ -146,7 +146,7 @@ all: ${LIBGPR2_TYPES:%=build-%} build-tools
 ${KB_BUILD_DIR}:
 	mkdir -p ${KB_BUILD_DIR}
 
-${KB_BUILD_DIR}/config.kb: ${KB_BUILD_DIR} $(wildcard $(GPR2KBDIR)/**/*)
+${KB_BUILD_DIR}/config.kb: ${KB_BUILD_DIR} $(wildcard $(GPR2KBDIR)/*)
 	gprbuild -p -P ${GPR2KB} -XKB_BUILD_DIR=${KB_BUILD_DIR} --relocate-build-tree
 	${KB_BUILD_DIR}/collect_kb -o $@ ${GPR2KBDIR}
 
