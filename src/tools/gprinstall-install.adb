@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2021, AdaCore                     --
+--                     Copyright (C) 2019-2022, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -49,6 +49,7 @@ pragma Warnings (Off, "* is not referenced");
 --  So let's just kill the warning.
 with GPR2.Project.Source.Part_Set;
 pragma Warnings (On, "* is not referenced");
+with GPR2.Project.Typ;
 with GPR2.Project.Variable;
 with GPR2.Project.View.Set;
 with GPR2.Project.Source.Set;
@@ -1493,21 +1494,56 @@ package body GPRinstall.Install is
 
          procedure Create_Variables is
             Max_Len : Natural := 0;
+
+            --  List of output types to avoid duplicate
+            T       : GPR2.Containers.Name_Set;
+
+            procedure Create_Type (Typ : GPR2.Project.Typ.Object);
+            --  Output type definition if not already created
+
+            -----------------
+            -- Create_Type --
+            -----------------
+
+            procedure Create_Type (Typ : GPR2.Project.Typ.Object) is
+               T_Name : constant Name_Type := Typ.Name.Text;
+            begin
+               if not T.Contains (T_Name) then
+                  Write_Str ("   " & Typ.Image);
+                  Write_Eol;
+
+                  T.Insert (T_Name);
+               end if;
+            end Create_Type;
+
+            Var_Has_Type : Boolean := False;
+
          begin
             --  Output types if any
 
             if Project.Has_Types then
                for Typ of Project.Types loop
-                  Write_Str ("   " & Typ.Image);
-                  Write_Eol;
+                  Create_Type (Typ);
                end loop;
             end if;
 
             if Project.Has_Variables then
-               --  Compute variable max length
                for Var of Project.Variables loop
+                  --  Compute variable max length
+
                   Max_Len := Natural'Max (Max_Len, Var.Name.Text'Length);
+
+                  --  Output types used in variable if any
+
+                  if Var.Has_Type then
+                     Create_Type (Var.Typ);
+                     Var_Has_Type := True;
+                  end if;
                end loop;
+
+               if Var_Has_Type then
+                  Write_Eol;
+               end if;
 
                --  Finally output variables
 

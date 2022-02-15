@@ -1,0 +1,3 @@
+abstract project Config is
+   type Library_Type_Type is ("static", "relocatable");
+end Config;
