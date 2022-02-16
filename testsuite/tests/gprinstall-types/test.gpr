@@ -1,0 +1,4 @@
+with "inst/share/gpr/xyz";
+project Test is
+   for main use ("main.adb");
+end Test;
