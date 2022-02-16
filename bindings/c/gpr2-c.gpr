@@ -21,12 +21,13 @@ with "gpr2";
 library project GPR2.C is
 
    type Build_Type is ("debug", "release");
-   Build : Build_Type := external ("BUILD", "debug");
+   Build : Build_Type := external ("GPR2_BUILD", "debug");
 
    Processors := external ("PROCESSORS", "0");
 
    type Library_Kind is ("static", "relocatable", "static-pic");
-   Library_Type : Library_Kind := external ("LIBRARY_TYPE", "relocatable");
+   Library_Type : Library_Kind :=
+     external ("GPR2_LIBRARY_TYPE", external ("LIBRARY_TYPE", "static"));
 
    for Languages use ("Ada");
    for Source_Dirs use ("src");
