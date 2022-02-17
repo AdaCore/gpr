@@ -12,8 +12,7 @@ begin
    TGPR.Load_With_No_Errors (Tree, "./data/main2.gpr");
 
    TGPR.Assert_Variable
-      (Tree     => Tree,
-       View     => "Main2",
+      (View     => Tree.Root_Project,
        Variable => "Variable",
        Value    => "main2-shared2");
 

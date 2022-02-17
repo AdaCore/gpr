@@ -1,0 +1,9 @@
+project Dot_Repl_Is_Dot is
+
+   package Naming is
+      for Dot_Replacement use ".";
+      for Spec_Suffix ("Ada") use ".s.ada";
+      for Body_Suffix ("Ada") use ".b.ada";
+   end Naming;
+
+end Dot_Repl_Is_Dot;

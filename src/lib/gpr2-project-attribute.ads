@@ -217,11 +217,6 @@ private
       Default_At_Pos : Unit_Index := No_Index) return Value_At_Pos;
    --  Create the key Value_At_Pos for the given index
 
-   function Create
-     (Value  : Value_Type;
-      At_Pos : Unit_Index) return Value_At_Pos
-     is (Value'Length, Value, At_Pos);
-
    type Object is new Attr_Values.Object with record
       Index       : Attribute_Index.Object;
       Default     : Boolean := False;

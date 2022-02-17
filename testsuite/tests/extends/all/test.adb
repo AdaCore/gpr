@@ -14,23 +14,20 @@ begin
 
    --  Variable1 definition starts in B, then amended by C, then A
    TGPR.Assert_Variable
-      (Tree     => Tree,
-       View     => "Root",
+      (View     => Tree.Root_Project,
        Variable => "A_Variable1",
        Value    => "A extall C with D with ExtB.Var2");
 
    --  Variant of previous test in which C is referenced instead of A.
    TGPR.Assert_Variable
-      (Tree     => Tree,
-       View     => "Root",
+      (View     => Tree.Root_Project,
        Variable => "A_Variable2",
        Value    => "A with ExtB.Var2");
 
    --  Variant of previous test in which C is referenced instead of A, but
    --  variable value is not modified in the extension
    TGPR.Assert_Variable
-      (Tree     => Tree,
-       View     => "Root",
+      (View     => Tree.Root_Project,
        Variable => "B_Variable2",
        Value    => "B.Var2");
 

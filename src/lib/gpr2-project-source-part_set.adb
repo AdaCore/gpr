@@ -24,20 +24,9 @@
 
 package body GPR2.Project.Source.Part_Set is
 
-   -------------
-   -- Include --
-   -------------
-
-   procedure Include
-     (Self    : in out Object;
-      Element : Source_Part) is
-   begin
-      Source_Part_Sets.Include (Self.S, Element);
-   end Include;
-
-   -------------
-   -- Include --
-   -------------
+   ------------
+   -- Insert --
+   ------------
 
    procedure Insert
      (Self    : in out Object;

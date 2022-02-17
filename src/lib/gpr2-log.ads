@@ -70,12 +70,6 @@ package GPR2.Log is
      with Post => Self.Count = 0;
    --  Removes all message from the log
 
-   function Element
-     (Self     : Object;
-      Position : Positive) return GPR2.Message.Object
-     with Pre => Containers.Count_Type (Position) <= Self.Count;
-   --  Returns the message at the given position
-
    function Has_Element
      (Self        : Object;
       Information : Boolean := True;

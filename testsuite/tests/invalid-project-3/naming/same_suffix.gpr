@@ -1,0 +1,8 @@
+project Same_Suffix is
+
+   package Naming is
+      for Body_Suffix ("Ada") use ".ada";
+      for Spec_Suffix ("Ada") use ".ada";
+   end Naming;
+
+end Same_Suffix;

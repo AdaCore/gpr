@@ -1,6 +1,10 @@
 project Prj2 extends "prj1" is
    for Source_Dirs use ("p2");
 
+   --  Check that source from extended project can be excluded.
+
+   for Excluded_Source_Files use ("pck11.ads");
+
    --  Check that we can refer to Prj0 from here through extension
    --  transitivity (we extend prj1 and prj1 extends prj0).
 

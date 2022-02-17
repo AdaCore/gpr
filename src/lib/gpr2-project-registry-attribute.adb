@@ -348,22 +348,6 @@ package body GPR2.Project.Registry.Attribute is
       end if;
    end Get_Default_Rules;
 
-   ---------------
-   -- Get_Value --
-   ---------------
-
-   function Get_Default_Value
-     (Attr_Def : Def; Key : Value_Type) return Value_Type
-   is
-      Index : constant Value_Type :=
-                (if Is_Case_Sensitive (Key, Attr_Def.Index_Type)
-                      or else Key'Length = 0
-                 then Key
-                 else To_Lower (Name_Type (Key)));
-   begin
-      return Get (Attr_Def.Default.Values, Index);
-   end Get_Default_Value;
-
    -------------------------------
    -- Get_Packages_With_Default --
    -------------------------------
@@ -414,7 +398,8 @@ package body GPR2.Project.Registry.Attribute is
 
          when FileGlob_Or_Language_Index =>
             --  If host is case insensitive, return False whatever the
-            --  index value
+            --  index value.
+
             if not GPR2.File_Names_Case_Sensitive then
                return False;
             end if;
@@ -423,7 +408,8 @@ package body GPR2.Project.Registry.Attribute is
                if J > Index_Value'First
                  and then Index_Value (J) = '.'
                then
-                  --  file extension
+                  --  most probably a file extension
+
                   return GPR2.File_Names_Case_Sensitive;
 
                elsif Index_Value (J) in '[' | ']' | '*' | '?' then
@@ -433,6 +419,7 @@ package body GPR2.Project.Registry.Attribute is
             end loop;
 
             --  No dots or glob pattern: consider it a language
+
             return False;
 
          when Language_Index =>

@@ -427,7 +427,7 @@ begin
                   --  If no dependencies, use only this one because without ALI
                   --  file we don't know dependency even on itself.
 
-                  Closures.Include (S);
+                  Closures.Insert (S);
                else
                   Closures.Union (Deps);
                end if;

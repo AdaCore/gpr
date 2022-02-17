@@ -49,6 +49,7 @@ procedure Main is
            (GPR2.Project.Ensure_Extension (Project_Name),
             GPR2.Path_Name.No_Resolution),
          Context  => Context);
+      Tree.Update_Sources;
       Print_Messages;
    exception
       when Project_Error =>
@@ -105,4 +106,20 @@ begin
    Ada.Text_IO.New_Line;
    Test ("variables/undef_project_ref.gpr");
    Test ("variables/in_pack.gpr");
+   Ada.Text_IO.New_Line;
+   Ada.Text_IO.Put_Line ("** projects:");
+   Ada.Text_IO.New_Line;
+   Test ("projects/no_lang.gpr");
+   Test ("projects/autoconf.gpr");
+   Test ("projects/autoconf2.gpr");
+   Test ("projects/agg_lib_shared_libdir.gpr");
+   Test ("projects/agg_lib_shared_libdir2.gpr");
+   Ada.Text_IO.New_Line;
+   Ada.Text_IO.Put_Line ("** naming convention:");
+   Ada.Text_IO.New_Line;
+   Test ("naming/dot_repl_is_dot.gpr");
+   Test ("naming/name_except.gpr");
+   Test ("naming/same_suffix.gpr");
+   Test ("naming/same_suffix2.gpr");
+   Test ("naming/same_suffix3.gpr");
 end Main;

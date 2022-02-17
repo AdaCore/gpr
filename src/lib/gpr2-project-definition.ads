@@ -25,7 +25,6 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
 with GPR2.Context;
 with GPR2.Project.Attribute_Cache;
-with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Configuration;
 with GPR2.Project.Pack;
@@ -45,7 +44,6 @@ limited with GPR2.Project.Tree;
 
 private package GPR2.Project.Definition is
 
-   use type Attribute_Index.Object;
    use type View.Object;
    use type Path_Name.Object;
 
@@ -242,18 +240,6 @@ private package GPR2.Project.Definition is
      (if Name = No_Name
       then not Def.Types.Is_Empty
       else Def.Types.Contains (Name));
-
-   function Has_Attributes
-     (Def   : Data;
-      Name  : Optional_Attribute_Id;
-      Index : Attribute_Index.Object := Attribute_Index.Undefined)
-      return Boolean
-   is
-     (if Name = No_Attribute and then Index = Attribute_Index.Undefined
-      then not Def.Attrs.Is_Empty
-      elsif Index = Attribute_Index.Undefined
-      then Def.Attrs.Contains (Name)
-      else not Def.Attrs.Filter (Name, Index).Is_Empty);
 
    procedure Update_Sources
      (Def           : in out Data;

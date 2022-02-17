@@ -58,7 +58,7 @@ package GPR2.View_Ids is
       return View_Id
      with Pre  => Project_File.Is_Defined
                     and then Project_File.Has_Dir_Name,
-         Post => Is_Defined (Create'Result);
+          Post => Is_Defined (Create'Result);
    --  Creates an Id for the view associated with Project_File, possibly
    --  extended by Extending_View, either using the root aggregate project
    --  context or the root context.
@@ -76,16 +76,8 @@ package GPR2.View_Ids is
    --  Returns a string image of a view id. The resulting string can be used
    --  to rebuild the View_Id object (see Import).
 
-   function Import (Name : Optional_Name_Type) return View_Id
-     with Pre => Is_Valid_Image (Name);
-   --  Returns the View_Id object V for which Image (V) = Str. View_Id_Error
-   --  is raised in case Str is not a valid view id image.
-
    function Is_Defined (Id : View_Id) return Boolean;
    --  Returns False if the Id is Null_Id.
-
-   function Is_Valid_Image (Name : Optional_Name_Type) return Boolean;
-   --  Returns True if Str may correspond to a View_Id image.
 
    overriding function "=" (Self : View_Id; Other : View_Id) return Boolean;
    --  Return True if Self = Other
@@ -103,6 +95,8 @@ private
        Project_Id);
    --  The distinct View_Id kinds (null, configuration project, runtime project
    --  and view corresponding to a project file).
+
+   subtype Defined_Id_Kind is View_Id_Kind range Config_Id .. Project_Id;
 
    type View_Id (Kind : View_Id_Kind := Null_Id) is record
       case Kind is

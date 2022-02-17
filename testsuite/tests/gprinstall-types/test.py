@@ -13,7 +13,7 @@ bnr.check_output(
     [GPRINSTALL, '-p', '-r', '--prefix=' + os.getcwd() + '/inst',  'xyz/xyz.gpr'])
 
 # build test checker
-bnr.build('test.gpr')
+bnr.check_output(['gprbuild', '-p', '-q', '-Ptest.gpr'])
 
 # run test checker
 bnr.run(['./main'], output=None)

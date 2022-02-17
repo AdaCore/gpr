@@ -178,24 +178,6 @@ package GPR2.Project.Tree is
    function Ordered_Views (Self : Object) return View.Vector.Object
      with Pre => Self.Is_Defined;
 
-   function Has_View_For
-     (Self    : Object;
-      Name    : Name_Type;
-      Context : Context_Kind) return Boolean;
-   --  Returns True if the project Name is found on the tree (see below).
-   --  Context paramter defines where the view going to be looked up in the
-   --  root or in the aggregate context.
-
-   function View_For
-     (Self    : Object;
-      Name    : Name_Type;
-      Context : Context_Kind) return View.Object
-     with Pre => Self.Is_Defined and then Self.Has_View_For (Name, Context);
-   --  Returns the project's view in the tree which corresponds to project name
-   --  and that is matching the Aggregated context.
-   --  Context paramter defines is the view going to be taken from the root
-   --  context or from the aggregate context.
-
    function Has_Messages (Self : Object) return Boolean;
    --  Returns whether some messages are present for this project tree
 

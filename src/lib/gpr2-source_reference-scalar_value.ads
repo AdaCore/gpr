@@ -27,12 +27,9 @@
 generic
    type Scalar_Type is private;
    No_Value : Scalar_Type;
-   with function "<" (Left, Right : Scalar_Type) return Boolean is <>;
 package GPR2.Source_Reference.Scalar_Value is
 
    type Object is new GPR2.Source_Reference.Object with private;
-
-   overriding function "<" (Left, Right : Object) return Boolean;
 
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
@@ -62,13 +59,6 @@ private
    type Object is new GPR2.Source_Reference.Object with record
       Id : Scalar_Type := No_Value;
    end record;
-
-   overriding function "<" (Left, Right : Object) return Boolean is
-     (if GPR2.Source_Reference.Object (Left) /=
-          GPR2.Source_Reference.Object (Right)
-      then GPR2.Source_Reference.Object (Left) <
-          GPR2.Source_Reference.Object (Right)
-      else Left.Id < Right.Id);
 
    Undefined : constant Object :=
                  (GPR2.Source_Reference.Undefined with others => <>);
