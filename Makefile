@@ -33,7 +33,7 @@
 #
 #   prefix        : root install directory
 #   ENABLE_SHARED : yes / no (or empty)
-#   BUILD         : debug / release / release_checks / gnatcov
+#   GPR2_BUILD    : debug / release / release_checks / gnatcov
 #   PROCESSORS    : nb parallel compilations (0 to use all cores)
 #   PROFILER      : Include gprof support instrumentation (yes / no)
 #   TARGET        : target triplet for cross-compilation
@@ -51,7 +51,7 @@ MFILE         := $(shell realpath --relative-to=. "$(firstword ${MAKEFILE_LIST})
 SOURCE_DIR    := $(shell dirname "${MFILE}")
 
 prefix	      := $(dir $(shell which gnatls))..
-BUILD          = release
+GPR2_BUILD     = release
 PROCESSORS     = 0
 PROFILER       = no
 GPRINSTALL     = gprinstall
@@ -101,20 +101,20 @@ endif
 
 LIBGPR2_TYPES=static
 ifeq (${ENABLE_SHARED},yes)
-ifneq (${BUILD},gnatcov)
+ifneq (${GPR2_BUILD},gnatcov)
    LIBGPR2_TYPES=static relocatable static-pic
 endif
 endif
 
 BUILD_TYPES=debug release release_checks gnatcov
 
-ifneq (${BUILD},gnatcov)
+ifneq (${GPR2_BUILD},gnatcov)
    COVERAGE_BUILD_FLAGS=
 else
    COVERAGE_BUILD_FLAGS= \
            --implicit-with=gnatcov_rts_full \
            --src-subdirs=gnatcov-instr
-   COVERAGE_INSTR_FLAGS= -XBUILD=${BUILD} \
+   COVERAGE_INSTR_FLAGS= -XGPR2_BUILD=${GPR2_BUILD} \
            -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}" \
            -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
            -XLANGKIT_SUPPORT_BUILD=static
@@ -123,14 +123,14 @@ else
             ${COVERAGE_INSTR_FLAGS}
 endif
 
-GPR_OPTIONS=${GTARGET} -XBUILD=${BUILD} \
+GPR_OPTIONS=${GTARGET} -XGPR2_BUILD=${GPR2_BUILD} \
         -XGPR2_TOOLS_PREFIX=${GPR2_TOOLS_PREFIX} \
         -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}"
 
 BUILDER=gprbuild -p -m -j${PROCESSORS} ${GPR_OPTIONS} ${GPRBUILD_OPTIONS} \
              -XPROFILER=${PROFILER} ${COVERAGE_BUILD_FLAGS}
 INSTALLER=${GPRINSTALL} -p -f ${GPR_OPTIONS} --prefix='${prefix}'
-CLEANER=gprclean -eL -p ${RBD} -XBUILD=${BUILD} \
+CLEANER=gprclean -eL -p ${RBD} -XGPR2_BUILD=${GPR2_BUILD} \
         -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}"
 UNINSTALLER=${INSTALLER} -p -f --uninstall
 
@@ -157,7 +157,7 @@ ${LANGKIT_GENERATED_SRC}: $(wildcard ${SOURCE_DIR}/langkit/language/**/*.py) ${F
 
 # Libgpr2
 build-%: ${KB_BUILD_DIR}/config.kb ${LANGKIT_GENERATED_SRC}
-ifneq (${BUILD},gnatcov)
+ifneq (${GPR2_BUILD},gnatcov)
 	${BUILDER} -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		-XLANGKIT_SUPPORT_BUILD=$* ${GPR2}
 else
@@ -168,19 +168,19 @@ endif
 build-tools: build-static coverage-instrument
 	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
 		-XLANGKIT_SUPPORT_BUILD=static ${GPR2TOOLS}
-ifeq (${BUILD},gnatcov)
+ifeq (${GPR2_BUILD},gnatcov)
 # ignore the gpr_parser during coverage
-	rm ${BUILD_ROOT}/${BUILD}/obj-static/gpr_parser*.sid
-	rm ${BUILD_ROOT}/${BUILD}/lib-static/gpr_parser*.sid
+	rm ${BUILD_ROOT}/${GPR2_BUILD}/obj-static/gpr_parser*.sid
+	rm ${BUILD_ROOT}/${GPR2_BUILD}/lib-static/gpr_parser*.sid
 endif
 
 # Gnatcov instrumentation
 coverage-instrument:
-ifeq (${BUILD},gnatcov)
+ifeq (${GPR2_BUILD},gnatcov)
 # Remove artifacts from previous instrumentations, so that stale units
 # that are not overriden by new ones don't get in our way.
-	rm -rf "${BUILD_ROOT}/${BUILD}/obj-*/*gnatcov-instr"
-	mkdir -p "${BUILD_ROOT}/${BUILD}"
+	rm -rf "${BUILD_ROOT}/${GPR2_BUILD}/obj-*/*gnatcov-instr"
+	mkdir -p "${BUILD_ROOT}/${GPR2_BUILD}"
 
 	${COVERAGE_INSTR} -P ${GPR2TOOLS}
 endif
@@ -221,7 +221,7 @@ install-tools: uninstall-tools
 setup:
 	echo "prefix=${prefix}" > makefile.setup
 	echo "ENABLE_SHARED=${ENABLE_SHARED}" >> makefile.setup
-	echo "BUILD=${BUILD}" >> makefile.setup
+	echo "GPR2_BUILD=${GPR2_BUILD}" >> makefile.setup
 	echo "PROCESSORS=${PROCESSORS}" >> makefile.setup
 	echo "PROFILER=${PROFILER}" >> makefile.setup
 ifneq (${HOST},${TARGET})
@@ -232,7 +232,7 @@ endif
 	echo "PYTHON=${PYTHON}" >> makefile.setup
 
 setup2: setup
-	echo "GPRINSTALL=\"${BUILD_ROOT}/${BUILD}/obj-tools/${GPR2_TOOLS_PREFIX}install\"" >> makefile.setup
+	echo "GPRINSTALL=\"${BUILD_ROOT}/${GPR2_BUILD}/obj-tools/${GPR2_TOOLS_PREFIX}install\"" >> makefile.setup
 
 ###########
 # Cleanup #

@@ -24,7 +24,7 @@ with "langkit_support";
 library project GPR2 is
 
    type Build_Type is ("debug", "release", "release_checks", "gnatcov");
-   Build : Build_Type := external ("BUILD", "debug");
+   Build : Build_Type := external ("GPR2_BUILD", "debug");
 
    type Profiler_Flag is ("yes", "no");
    Profiler : Profiler_Flag := External ("PROFILER", "no");
@@ -39,7 +39,8 @@ library project GPR2 is
    KB_Build              := Build_Root & "/kb";
 
    type Library_Kind is ("static", "relocatable", "static-pic");
-   Library_Type : Library_Kind := external ("LIBRARY_TYPE", "static");
+   Library_Type : Library_Kind :=
+     external ("GPR2_LIBRARY_TYPE", external ("LIBRARY_TYPE", "static"));
 
    for Languages use ("Ada", "C", "Asm_Cpp");
    for Source_Dirs use ("src/lib",

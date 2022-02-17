@@ -34,7 +34,7 @@ The following variables can be used to configure the libGPR2 library:
 * `prefix`: Location of the installation, the default is the running GNAT
   installation root.
 
-* `BUILD`: Control the build options: `release` (default) or `debug`.
+* `GPR2_BUILD`: Control the build options: `release` (default) or `debug`.
 
 * `PROCESSORS`: Parallel compilation (default is 0, depends on the number of
    cores).
@@ -55,7 +55,7 @@ $ make setup
 For example, to setup LibGPR2 to install a debug version on `/opt/libgpr2`:
 
 ```sh
-$ make setup prefix=/opt/libgpr2 BUILD=debug install
+$ make setup prefix=/opt/libgpr2 GPR2_BUILD=debug install
 ```
 
 To point out the location of the Knowledge Base (assuming it has been checked
