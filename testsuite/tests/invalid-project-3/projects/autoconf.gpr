@@ -1,0 +1,14 @@
+project Autoconf is
+
+   for Object_Dir use Project'Runtime ("Ada");
+   Var := Config'Runtime ("Ada");
+
+   case Var is
+      when "sjlj" =>
+         for Languages use ("C");
+      when others =>
+         for Languages use ("Ada");
+         for Runtime ("Ada") use "sjlj";
+   end case;
+
+end Autoconf;

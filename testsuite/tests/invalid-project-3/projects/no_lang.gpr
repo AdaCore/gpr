@@ -1,0 +1,10 @@
+library project No_Lang is
+
+   for Languages use ();
+   for Source_Dirs use (".");
+
+   for Library_Name use "no_lang";
+   for Library_Type use "static";
+   for Library_Dir use "lib";
+
+end No_Lang;

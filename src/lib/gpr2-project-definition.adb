@@ -39,6 +39,7 @@ with GPR2.Containers;
 with GPR2.Unit.List;
 with GPR2.Message;
 with GPR2.Project.Attribute;
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
@@ -322,10 +323,9 @@ package body GPR2.Project.Definition is
                Index           : constant Attribute_Index.Object :=
                                    Attribute_Index.Create (Ada_Language);
             begin
-               if Suffix_Lang_Maps.Has_Element (Associated_Lang) and then
-                 Suffix_Lang_Maps.Element (Associated_Lang) /= Language
-               then
-                  if Attribute_Name = PRA.Separate_Suffix
+               if Suffix_Lang_Maps.Has_Element (Associated_Lang) then
+                  if Suffix_Lang_Maps.Element (Associated_Lang) = Ada_Language
+                    and then Attribute_Name = PRA.Separate_Suffix
                     and then View.Has_Attribute (PRA.Body_Suffix,
                                                  Pack  => PRP.Naming,
                                                  Index => Index)
@@ -335,13 +335,20 @@ package body GPR2.Project.Definition is
                      return;
                   end if;
 
-                  Log_Error
-                    (Message.Error,
-                     Image (Attribute_Name) & "(""" & String (Value)
-                     & """) for language " & Image (Language)
-                     & " is also defined for language "
-                     & Image (Suffix_Lang_Maps.Element (Associated_Lang)),
-                     Attribute);
+                  if Language = Suffix_Lang_Maps.Element (Associated_Lang) then
+                     Log_Error
+                       (Message.Error,
+                          Image (Attribute_Name) & " (" & Image (Language) &
+                          ") value already used for this language",
+                        Attribute);
+                  else
+                     Log_Error
+                       (Message.Error,
+                        Image (Attribute_Name) & " (" & Image (Language) &
+                          ") value is already used for language " &
+                          Image (Suffix_Lang_Maps.Element (Associated_Lang)),
+                        Attribute);
+                  end if;
                else
                   Suffix_Lang_Map.Include (Value, Language);
                end if;
@@ -1695,7 +1702,9 @@ package body GPR2.Project.Definition is
          procedure Source_Message (Src : Project.Source.Object);
 
          procedure Exclude_Recursively
-           (View : in out Project.View.Object; Source : Project.Source.Object);
+           (View      : in out Project.View.Object;
+            Source    : Project.Source.Object;
+            From_Tree : Boolean := True);
 
          ----------------
          -- Add_Source --
@@ -1751,17 +1760,23 @@ package body GPR2.Project.Definition is
          -------------------------
 
          procedure Exclude_Recursively
-           (View : in out Project.View.Object; Source : Project.Source.Object)
+           (View      : in out Project.View.Object;
+            Source    : Project.Source.Object;
+            From_Tree : Boolean := True)
          is
             Def : constant Ref := Get_RW (View);
          begin
-            Def.Sources.Delete (Source);
-            Def.Sources_Map.Delete (Source.Path_Name.Simple_Name);
+            if Def.Sources.Contains (Source) then
+               Def.Sources.Delete (Source);
+               Def.Sources_Map.Delete (Source.Path_Name.Simple_Name);
 
-            Remove_Source (Source);
+               if From_Tree then
+                  Remove_Source (Source);
+               end if;
 
-            if Def.Extended_Root.Is_Defined then
-               Exclude_Recursively (Def.Extended_Root, Source);
+               if Def.Extended_Root.Is_Defined then
+                  Exclude_Recursively (Def.Extended_Root, Source, False);
+               end if;
             end if;
          end Exclude_Recursively;
 

@@ -4,7 +4,7 @@ testing abst2.gpr
 abst2.gpr:6:08: error: attribute Naming'Separate_Suffix cannot be empty
 testing agg.gpr
 import9.gpr:5:13: error: "- -" is illegal for Dot_Replacement
-import9.gpr:6:13: error: Spec_Suffix(".ada") for language C is also defined for language Ada
+import9.gpr:6:13: error: Spec_Suffix (C) value is already used for language Ada
 import10.gpr:3:12: error: ".." is illegal for Dot_Replacement
 extended.gpr:6:12: error: "--0" is illegal for Dot_Replacement
 extending.gpr:6:12: error: "a" is illegal for Dot_Replacement

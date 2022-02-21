@@ -5,6 +5,15 @@ project A is
 
    for Target use external ("target");
 
+   Var := Config'Runtime ("Ada");
+
+   case Var is
+      when "light" =>
+         --  Change the list of languages during autoconf
+         for Languages use ("Ada", "C");
+      when others =>
+   end case;
+
    for Runtime ("Ada") use "light";
    for Runtime ("C") use "rts_cpp/";
 end A;

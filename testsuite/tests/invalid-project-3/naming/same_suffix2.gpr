@@ -1,0 +1,10 @@
+project Same_Suffix is
+
+   for Languages use ("C", "C++");
+
+   package Naming is
+      for Spec_Suffix ("C") use ".h";
+      for Spec_Suffix ("C++") use ".h";
+   end Naming;
+
+end Same_Suffix;

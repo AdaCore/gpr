@@ -75,6 +75,9 @@ procedure Main is
       Canonical_Target : constant String :=
                            Config_View.Attribute
                              (PRA.Canonical_Target).Value.Text;
+      Languages        : constant GPR2.Containers.Source_Value_List :=
+                           Project_Tree.Root_Project.Languages;
+
    begin
       Text_IO.Put_Line ("target = "
                         & (if Target = This_Target
@@ -101,6 +104,16 @@ procedure Main is
            ("runtime dir = "
             & RT_Dir_Str (Sec_To_Last_Sep + 1 .. RT_Dir_Str'Last - 1));
       end;
+
+      --  Check languages list change during autoconf
+      if not Languages.Is_Empty then
+         Text_IO.Put ("languages =");
+         for Value of Languages loop
+            Text_IO.Put (" ");
+            Text_IO.Put (Value.Text);
+         end loop;
+         Text_IO.New_Line;
+      end if;
    end Print_Config_Info;
 
 begin

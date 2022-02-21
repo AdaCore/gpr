@@ -1,0 +1,10 @@
+project Name_Except is
+
+   for Languages use ("C", "C++");
+
+   package Naming is
+      for Specification_Exceptions ("C") use ("foo.1");
+      for Specification_Exceptions ("C++") use ("foo.1");
+   end Naming;
+
+end Name_Except;

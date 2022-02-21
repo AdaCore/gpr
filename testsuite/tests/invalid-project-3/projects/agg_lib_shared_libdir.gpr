@@ -1,0 +1,7 @@
+aggregate library project Agg_Lib_Shared_Libdir is
+
+   for Library_Name use "agg";
+   for Library_Dir use "lib";
+   for Project_Files use ("some_lib.gpr");
+
+end Agg_Lib_Shared_Libdir;

@@ -194,10 +194,6 @@ package GPR2.Project.Registry.Attribute is
        --  Must be usable somewhere
        Def.Is_Allowed_In /= (Project_Kind => False);
 
-   function Get_Default_Value
-     (Attr_Def : Def; Key : Value_Type) return Value_Type
-     with Pre => Attr_Def.Default.Kind = D_Value;
-
    type Default_Rules is private;
 
    function All_Attributes

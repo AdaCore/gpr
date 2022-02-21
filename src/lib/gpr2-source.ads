@@ -60,11 +60,6 @@ package GPR2.Source is
    --  Returns last modification time for this source
    --  If Ali is True then timestamp returned as it is rounded in ALI files.
 
-   function Check_Timestamp (Self : Object) return Boolean
-     with Pre => Self.Is_Defined;
-   --  Check is the timestamp kept in the object corresponds to source filename
-   --  timestamp.
-
    function Create
      (Filename : GPR2.Path_Name.Object;
       Language : Language_Id;

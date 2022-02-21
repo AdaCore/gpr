@@ -37,11 +37,9 @@ package Test_GPR is
    --  Config_Filename: Config file filename to load
 
    procedure Assert_Variable
-      (Tree     : GPR2.Project.Tree.Object;
-       View     : String;
+      (View     : GPR2.Project.View.Object;
        Variable : String;
-       Value    : String;
-       Aggregate_Context : Boolean := False);
+       Value    : String);
    --  Check if variable Variable in project View of Tree has the right value.
    --  If the project has been loaded inside an aggregate set Aggregate_Context
    --  to True.

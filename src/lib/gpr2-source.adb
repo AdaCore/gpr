@@ -57,16 +57,6 @@ package body GPR2.Source is
       end if;
    end "=";
 
-   ---------------------
-   -- Check_Timestamp --
-   ---------------------
-
-   function Check_Timestamp (Self : Object) return Boolean is
-      use type Ada.Calendar.Time;
-   begin
-      return Self.Timestamp = Self.Path_Name.Modification_Time;
-   end Check_Timestamp;
-
    ------------
    -- Create --
    ------------

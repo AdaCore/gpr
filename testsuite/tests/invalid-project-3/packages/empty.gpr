@@ -1,3 +1,3 @@
-project Empty is
+abstract project Empty is
 
 end Empty;

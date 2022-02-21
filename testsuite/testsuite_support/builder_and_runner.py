@@ -124,7 +124,7 @@ class BuilderAndRunner(object):
             # that some scenario variables are properly set.
             gprbuild_cmd = (
                 ["gprbuild", "-P", project,
-                 "-XBUILD=gnatcov", "-XXMLADA_BUILD=static"]
+                 "-XGPR2_BUILD=gnatcov", "-XXMLADA_BUILD=static"]
                 + vars
                 + ["--src-subdirs=gnatcov-instr", "--implicit-with=gnatcov_rts_full"]
                 + args

@@ -1,0 +1,19 @@
+project Autoconf is
+
+   for Object_Dir use Project'Runtime ("Ada");
+   Var := Config'Runtime ("Ada");
+
+   case Var is
+      when "sjlj" =>
+         for Runtime ("Ada") use "native";
+         for Required_Toolchain_Version ("Ada") use "22.0";
+         for Toolchain_Path ("Ada") use "/path1/bin";
+         for Toolchain_Name ("Ada") use "GNATPro";
+      when others =>
+         for Runtime ("Ada") use "sjlj";
+         for Required_Toolchain_Version ("Ada") use "23.0";
+         for Toolchain_Path ("Ada") use "/path2/bin";
+         for Toolchain_Name ("Ada") use "GNATGPL";
+   end case;
+
+end Autoconf;

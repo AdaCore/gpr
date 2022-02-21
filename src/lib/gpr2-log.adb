@@ -122,13 +122,6 @@ package body GPR2.Log is
       return Position.Store.all (Position.P);
    end Element;
 
-   function Element
-     (Self     : Object;
-      Position : Positive) return Message.Object is
-   begin
-      return Self.Store (Position);
-   end Element;
-
    -----------
    -- First --
    -----------

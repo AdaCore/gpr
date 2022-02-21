@@ -225,39 +225,31 @@ package body Test_GPR is
    ---------------------
 
    procedure Assert_Variable
-      (Tree     : GPR2.Project.Tree.Object;
-       View     : String;
+      (View     : GPR2.Project.View.Object;
        Variable : String;
-       Value    : String;
-       Aggregate_Context : Boolean := False)
+       Value    : String)
    is
-      V : GPR2.Project.View.Object;
-      Context : GPR2.Context.Context_Kind := GPR2.Context.Root;
       use all type GPR2.Context.Context_Kind;
       use all type GPR2.Project.Name_Values.Value_Kind;
    begin
-      if Aggregate_Context then
-         Context := GPR2.Context.Aggregate;
-      end if;
-      IO.Put ("assess if " & View & "." & Variable & "=" & Value);
-      if Context = GPR2.Context.Aggregate then
+      IO.Put ("assess if " & String (View.Name) & "." & Variable &
+                "=" & Value);
+
+      if View.Context = GPR2.Context.Aggregate then
          IO.Put_Line (" (aggregate context)");
       else
          IO.New_Line;
       end if;
-      A.Assert
-         (Tree.Has_View_For
-            (GPR2.Optional_Name_Type (View), Context),
-         "tree should have view " & View);
-      V := Tree.View_For (GPR2.Optional_Name_Type (View), Context);
-      A.Assert (V.Has_Variables (Name => GPR2.Optional_Name_Type (Variable)),
-                "view " & View & " should have variable " &
+
+      A.Assert (View.Has_Variables
+                  (Name => GPR2.Optional_Name_Type (Variable)),
+                "view " & String (View.Name) & " should have variable " &
                 Variable & " defined");
 
       declare
          Var : GPR2.Project.Variable.Object;
       begin
-         Var := V.Variable (GPR2.Optional_Name_Type (Variable));
+         Var := View.Variable (GPR2.Optional_Name_Type (Variable));
          A.Assert (Var.Is_Defined, "expect the variable to be defined");
          IO.Put_Line (Variable & " (image): " & Var.Image);
          if Var.Kind = Single then

@@ -157,14 +157,6 @@ package body GPR2.Project.Tree is
                  and then Self.Has_Configuration;
    --  Create the runtime view given the configuration project
 
-   function Get
-     (Tree    : Project.Tree.Object;
-      Name    : Name_Type;
-      Context : Context_Kind) return Project.View.Object;
-   --  Returns the project view corresponding to Name.
-   --  If Aggregated is True then view should be taken from aggregated subtree.
-   --  Returns Undefined if project view is not found.
-
    function Get_View
       (Tree : Project.Tree.Object;
        Id   : IDS.View_Id)
@@ -617,35 +609,6 @@ package body GPR2.Project.Tree is
       end if;
    end First;
 
-   ---------
-   -- Get --
-   ---------
-
-   function Get
-     (Tree    : Project.Tree.Object;
-      Name    : Name_Type;
-      Context : Context_Kind) return Project.View.Object
-   is
-      Position : constant View_Maps.Cursor :=
-                   Tree.Views.Find (To_Lower (Name));
-   begin
-      if View_Maps.Has_Element (Position) then
-         for V of View_Maps.Element (Position) loop
-            declare
-               Defs : constant Definition.Const_Ref := Definition.Get_RO (V);
-            begin
-               pragma Assert (Defs.Tree.all = Tree);
-
-               if Defs.Context = Context then
-                  return V;
-               end if;
-            end;
-         end loop;
-      end if;
-
-      return Project.View.Undefined;
-   end Get;
-
    --------------
    -- Get_File --
    --------------
@@ -958,45 +921,6 @@ package body GPR2.Project.Tree is
    begin
       return Self.Runtime.Is_Defined;
    end Has_Runtime_Project;
-
-   ------------------
-   -- Has_View_For --
-   ------------------
-
-   function Has_View_For
-     (Self    : Object;
-      Name    : Name_Type;
-      Context : Context_Kind) return Boolean
-   is
-      View : constant Project.View.Object := Self.Get (Name, Context);
-   begin
-      if not View.Is_Defined then
-         declare
-            CV : constant Project.View.Object :=
-                   (if Self.Has_Configuration
-                    then Self.Conf.Corresponding_View
-                    else Project.View.Undefined);
-         begin
-            --  If not found let's check if it is the configuration or runtime
-            --  project. Note that this means that any Runtime or Config user's
-            --  project name will have precedence.
-
-            if CV.Is_Defined and then CV.Name = Name then
-               return True;
-
-            elsif Self.Has_Runtime_Project
-              and then Self.Runtime.Name = Name
-            then
-               return True;
-            end if;
-         end;
-
-         return False;
-
-      else
-         return True;
-      end if;
-   end Has_View_For;
 
    -----------------
    -- Instance_Of --
@@ -1659,7 +1583,8 @@ package body GPR2.Project.Tree is
                           (Level   => Message.Error,
                            Message => Error (Descr_B, Descr_A),
                            Sloc    => Source_Reference.Create
-                             (Self.Root.Path_Name.Value, 0, 0)));
+                             (Self.Root.Path_Name.Value, 0, 0),
+                           Raw     => True));
 
                      Result := Incompatible;
 
@@ -4476,42 +4401,6 @@ package body GPR2.Project.Tree is
          end if;
       end if;
    end Update_Sources;
-
-   --------------
-   -- View_For --
-   --------------
-
-   function View_For
-     (Self    : Object;
-      Name    : Name_Type;
-      Context : Context_Kind) return View.Object
-   is
-      View : Project.View.Object := Self.Get (Name, Context);
-   begin
-      if not View.Is_Defined then
-         declare
-            CV : constant Project.View.Object :=
-                   (if Self.Has_Configuration
-                    then Self.Conf.Corresponding_View
-                    else Project.View.Undefined);
-         begin
-            --  If not found let's check if it is the configuration or runtime
-            --  project. Note that this means that any Runtime or Config user's
-            --  project name will have precedence.
-
-            if CV.Is_Defined and then CV.Name = Name then
-               View := CV;
-
-            elsif Self.Has_Runtime_Project
-              and then Self.Runtime.Name = Name
-            then
-               View := Self.Runtime;
-            end if;
-         end;
-      end if;
-
-      return View;
-   end View_For;
 
    -------------
    -- Warning --

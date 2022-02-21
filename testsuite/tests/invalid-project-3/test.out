@@ -30,12 +30,14 @@ three_arg.gpr:3:18: error: split accepts only two parameters
 extends_nonexist.gpr:3:20: error: undefined project "Foo"
 extends_nonexist2.gpr:5:20: error: undefined package "Empty.Metrics"
 renames_nonexist.gpr:5:20: warning: undefined package "Empty.Metrics"
+renames_nonexist.gpr: warning: there are no sources of language "Ada" in this project
 
 ** attributes:
 
 conf.gpr:3:08: error: Cannot set configuration attribute "Target" after it is referenced.
 builtin.gpr:3:04: error: builtin attribute "Name" is read-only
 empty_warning.gpr:4:07: warning: empty attribute Builder'Executable ignored
+empty_warning.gpr: warning: there are no sources of language "Ada" in this project
 empty_error.gpr:4:07: error: attribute Naming'Dot_Replacement cannot be empty
 no_package.gpr:3:19: error: unknown package or project "Unknown"
 no_package2.gpr:3:15: error: package "Ide" not declared in project "No_Package2"
@@ -44,3 +46,22 @@ no_package2.gpr:3:15: error: package "Ide" not declared in project "No_Package2"
 
 undef_project_ref.gpr:3:11: error: undefined project Undef"
 in_pack.gpr:4:14: error: undefined variable "Naming.Var2"
+
+** projects:
+
+no_lang.gpr:3:08: warning: no language for the project No_Lang
+no_lang.gpr:3:08: warning: no language for the projects tree: configuration skipped
+autoconf.gpr: error: language Ada missing for reconfiguration
+autoconf2.gpr: error: incompatible change for language Ada during reconfiguration
+version "23.0" changed to "22.0"; runtime "sjlj" changed to "native"; path "/path2/bin" changed to "/path1/bin"; name "GNATGPL" changed to "GNATPro"
+agg_lib_shared_libdir.gpr: error: aggregate library ALI directory cannot be shared with library directory of aggregated project "some_lib"
+agg_lib_shared_libdir2.gpr: error: aggregate library directory cannot be shared with library directory of aggregated project "some_lib"
+
+** naming convention:
+
+dot_repl_is_dot.gpr:5:11: error: ".s.ada" is illegal for Spec_Suffix: ambiguous prefix when Dot_Replacement is a dot
+dot_repl_is_dot.gpr:6:11: error: ".b.ada" is illegal for Body_Suffix: ambiguous prefix when Dot_Replacement is a dot
+name_except.gpr:7:49: error: File "foo.1" specified in naming exception more than once
+same_suffix.gpr:4:11: error: Body_Suffix (Ada) value already used for this language
+same_suffix2.gpr:7:11: error: Spec_Suffix (C++) value is already used for language C
+same_suffix3.gpr:4:11: error: Body_Suffix (Ada) value already used for this language
