@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2021, AdaCore                     --
+--                     Copyright (C) 2019-2022, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -477,8 +477,8 @@ begin
 
          if Config.Has_Error then
             Util.Output_Messages (Options, Config.Log_Messages);
-            GPRtools.Util.Fail_Program ('"' & Options.Config_Project.all
-                          & """ processing failed");
+            GPRtools.Util.Fail_Program
+              ('"' & Options.Config_Project.all & """ processing failed");
          end if;
       end if;
 
@@ -527,7 +527,7 @@ begin
 
          if Options.Verbose then
             for M of Tree.Log_Messages.all loop
-               Text_IO.Put_Line (M.Format);
+               M.Output;
             end loop;
          end if;
 

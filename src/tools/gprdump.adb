@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2021, AdaCore                     --
+--                     Copyright (C) 2019-2022, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -287,7 +287,7 @@ begin
    end;
 
    for M of Project_Tree.Log_Messages.all loop
-      Text_IO.Put_Line (M.Format);
+      M.Output;
    end loop;
 
 exception

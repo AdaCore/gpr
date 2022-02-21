@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2021, AdaCore                      --
+--                    Copyright (C) 2019-2022, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -69,12 +69,16 @@ package body GPR2.Log is
    ------------
 
    procedure Append (Self : in out Object; Message : GPR2.Message.Object) is
-      Index : constant String := Message.Format;
+      Index : constant String :=
+                Message.Format (Levels => (others => GPR2.Message.Short));
+      Position : Containers.Value_Type_Set.Cursor;
+      Inserted : Boolean;
    begin
-      if not Self.Index.Contains (Index) then
+      Self.Index.Insert (Index, Position, Inserted);
+
+      if Inserted then
          Self.Store.Append (Message);
          Self.Store (Self.Store.Last).Set_Status (GPR2.Message.Unread);
-         Self.Index.Insert (Index);
       end if;
    end Append;
 

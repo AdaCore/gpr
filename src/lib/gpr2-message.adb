@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2022, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -23,6 +23,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Directories;
+with Ada.Text_IO;
 with GNAT.Formatted_String;
 
 package body GPR2.Message is
@@ -123,6 +124,24 @@ package body GPR2.Message is
    begin
       return To_String (Self.Message);
    end Message;
+
+   ------------
+   -- Output --
+   ------------
+
+   procedure Output
+     (Self           : Object;
+      Full_Path_Name : Boolean := False;
+      Levels         : Level_Output := (Long, Long, Long))
+   is
+      use Ada.Text_IO;
+   begin
+      Put_Line
+        ((case Self.Level is
+            when Information     => Current_Output,
+            when Error | Warning => Current_Error),
+         Self.Format (Full_Path_Name, Levels));
+   end Output;
 
    ----------------
    -- Set_Status --

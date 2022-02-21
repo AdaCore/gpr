@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2021, AdaCore                      --
+--                    Copyright (C) 2019-2022, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -168,7 +168,8 @@ private
    function Contains
      (Self : Object; Message : GPR2.Message.Object) return Boolean
    is
-     (Self.Index.Contains (Message.Format));
+     (Self.Index.Contains
+        (Message.Format (Levels => (others => GPR2.Message.Short))));
 
    function Has_Error (Self : Object) return Boolean is
      (Self.Has_Element

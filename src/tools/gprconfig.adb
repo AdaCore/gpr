@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2021, AdaCore                        --
+--                     Copyright (C) 2021-2022, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -808,8 +808,9 @@ begin
      (Information => Opt_Verbosity = Verbose,
       Warning     => Opt_Verbosity = Verbose)
    loop
-      Ada.Text_IO.Put_Line (Log.Element (Msg_Cur).Format);
+      Log.Element (Msg_Cur).Output;
    end loop;
+
    if Knowledge_Base.Has_Error then
       Ada.Text_IO.Put_Line
         (Ada.Text_IO.Standard_Error,
@@ -871,7 +872,7 @@ begin
               (Information => Opt_Verbosity > Quiet,
                Warning     => Opt_Verbosity > Quiet)
             loop
-               Ada.Text_IO.Put_Line (Log.Element (Msg_Cur).Format);
+               Log.Element (Msg_Cur).Output;
             end loop;
 
             Ada.Text_IO.Put_Line
@@ -950,7 +951,7 @@ begin
          Warning     => Opt_Verbosity > Quiet,
          Read        => False)
       loop
-         Ada.Text_IO.Put_Line (Log.Element (Msg_Cur).Format);
+         Log.Element (Msg_Cur).Output;
       end loop;
 
       Ada.Text_IO.Put_Line
@@ -964,7 +965,7 @@ begin
         (Information => Opt_Verbosity > Quiet,
          Warning     => Opt_Verbosity > Quiet)
       loop
-         Ada.Text_IO.Put_Line (Log.Element (Msg_Cur).Format);
+         Log.Element (Msg_Cur).Output;
       end loop;
 
       Ada.Text_IO.Put_Line
@@ -977,7 +978,7 @@ begin
       for Msg_Cur in Config_Log.Iterate
         (Information => Opt_Verbosity > Quiet)
       loop
-         Ada.Text_IO.Put_Line (Log.Element (Msg_Cur).Format);
+         Log.Element (Msg_Cur).Output;
       end loop;
    end if;
 
