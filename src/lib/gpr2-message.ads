@@ -91,6 +91,18 @@ package GPR2.Message is
    --  <filename> format controlled by Full_Path_Name parameter. Default False
    --  is for simple file name, True is for full path name format.
 
+   procedure Output
+     (Self           : Object;
+      Full_Path_Name : Boolean := False;
+      Levels         : Level_Output := (Long, Long, Long))
+     with Pre => Self.Is_Defined;
+   --  Outputs the message to console as expected by compiler
+   --  tools: <filename>:<line>:<col>: <message>
+   --  <filename> format controlled by Full_Path_Name parameter. Default False
+   --  is for simple file name, True is for full path name format.
+   --  Errors and Warnings messages are printed to standard error output,
+   --  informational messages are printed to standard output.
+
    procedure Set_Status (Self : in out Object; Status : Status_Type)
      with Pre  => Self.Is_Defined,
           Post => Self.Status = Status;

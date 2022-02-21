@@ -287,7 +287,7 @@ begin
    end;
 
    for M of Project_Tree.Log_Messages.all loop
-      Text_IO.Put_Line (M.Format);
+      M.Output;
    end loop;
 
 exception

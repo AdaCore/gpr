@@ -162,7 +162,8 @@ private
    function Contains
      (Self : Object; Message : GPR2.Message.Object) return Boolean
    is
-     (Self.Index.Contains (Message.Format));
+     (Self.Index.Contains
+        (Message.Format (Levels => (others => GPR2.Message.Short))));
 
    function Has_Error (Self : Object) return Boolean is
      (Self.Has_Element

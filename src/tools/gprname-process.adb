@@ -148,14 +148,13 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
    begin
       if Opt.Verbosity > None then
          for M of Tree.Log_Messages.all loop
-            Text_IO.Put_Line (M.Format);
+            M.Output;
          end loop;
 
       else
-         for C in Tree.Log_Messages.Iterate
-           (False, False, True, True, True)
+         for C in Tree.Log_Messages.Iterate (False, False, True, True, True)
          loop
-            Text_IO.Put_Line (GPR2.Log.Element (C).Format);
+            GPR2.Log.Element (C).Output;
          end loop;
       end if;
    end Show_Tree_Load_Errors;

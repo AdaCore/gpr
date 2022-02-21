@@ -26,7 +26,6 @@ with GNAT.Case_Util;
 with GNAT.OS_Lib;
 with GNATCOLL.Utils;
 
-with GPR2.Containers;
 with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
@@ -274,13 +273,11 @@ package body GPRtools.Util is
      (Options : GPRtools.Options.Object'Class;
       Log     : GPR2.Log.Object := GPR2.Log.Undefined)
    is
-      use Ada.Text_IO;
       use GPR2.Log;
-      Displayed : GPR2.Containers.Value_Set;
-      Used_Log  : constant GPR2.Log.Object :=
-                    (if not Log.Is_Defined and then Options.Tree /= null
-                     then Options.Tree.Log_Messages.all
-                     else Log);
+      Used_Log : constant GPR2.Log.Object :=
+                   (if not Log.Is_Defined and then Options.Tree /= null
+                    then Options.Tree.Log_Messages.all
+                    else Log);
    begin
       for C in Used_Log.Iterate
         (Information => Options.Verbosity = Very_Verbose,
@@ -289,27 +286,7 @@ package body GPRtools.Util is
          Read        => True,
          Unread      => True)
       loop
-         declare
-            use GPR2.Message;
-
-            Msg      : constant GPR2.Log.Constant_Reference_Type :=
-                         Used_Log.Constant_Reference (C);
-            Text     : constant String :=
-                         Msg.Format (Options.Full_Path_Name_For_Brief);
-            Dummy    : GPR2.Containers.Value_Type_Set.Cursor;
-            Inserted : Boolean;
-         begin
-            Displayed.Insert (Text, Dummy, Inserted);
-
-            if Inserted then
-               Put_Line
-                 (File_Access'
-                    (case Msg.Level is
-                        when Information     => Current_Output,
-                        when Warning | Error => Current_Error).all,
-                  Text);
-            end if;
-         end;
+         Used_Log (C).Output (Options.Full_Path_Name_For_Brief);
       end loop;
    end Output_Messages;
 
