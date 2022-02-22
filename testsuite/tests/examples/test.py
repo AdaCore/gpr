@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+from e3.fs import cp
 from testsuite_support.builder_and_runner import BuilderAndRunner
 
 
@@ -11,6 +12,9 @@ def filter(file):
 
 
 bnr = BuilderAndRunner()
+
+# copy GPR2 examples here
+cp(os.path.join(os.environ["root_dir"], "../examples/*"), ".", recursive=True)
 
 os.chdir("casestmt")
 bnr.build("casestmt", args=["-p"])

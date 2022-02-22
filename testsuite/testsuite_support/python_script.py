@@ -33,4 +33,6 @@ class PythonScriptDriver(BaseDriver):
                                 os.path.pathsep + os.environ['PYTHONPATH']
         builder_and_runner.insert_build_and_runner_parameters(env)
 
+        env["root_dir"] = self.env.root_dir
+
         self.shell(cmd, env=env)
