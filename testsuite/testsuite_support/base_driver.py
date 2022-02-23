@@ -150,10 +150,11 @@ class BaseDriver(DiffTestDriver):
     def output_refiners(self):
         # Remove working directory from output and
         # make all filenames look like Unix ones (forward slashes for directory
-        # separators).
+        # separators, no drive letter).
         return super().output_refiners + [
             ReplacePath(self.working_dir(), replacement=""),
-            Substitute('\\', '/')
+            Substitute('\\', '/'),
+            Substitute('C:/', '/'),
         ]
 
     # Convenience path builders
