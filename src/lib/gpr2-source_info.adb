@@ -322,15 +322,6 @@ package body GPR2.Source_Info is
       return Self.CU_List (Index).Name;
    end Unit_Name;
 
-   ------------
-   -- Update --
-   ------------
-
-   procedure Update (Self : in out Object) is
-   begin
-      null;
-   end Update;
-
    ----------------------------
    -- Update_Build_Timestamp --
    ----------------------------

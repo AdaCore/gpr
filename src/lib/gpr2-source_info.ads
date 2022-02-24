@@ -224,11 +224,6 @@ package GPR2.Source_Info is
                     and then not Self.Has_Index and then Self.Has_Single_Unit;
    --  Set Ada-specific info for a single-unit source
 
-   procedure Update (Self : in out Object) with Pre'Class => Self.Is_Defined;
-   --  Update source information. The default implementation does nothing. The
-   --  actual work must be done for Source or Project.Source object and depends
-   --  on different parser (language or LI based).
-
    procedure Update_Kind
      (Self  : in out Object;
       Kind  : GPR2.Unit.Library_Unit_Type;
