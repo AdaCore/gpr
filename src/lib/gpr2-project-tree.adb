@@ -4194,15 +4194,11 @@ package body GPR2.Project.Tree is
       With_Runtime  : Boolean := False;
       Backends      : Source_Info.Backend_Set := Source_Info.All_Backends)
    is
-      use type Source_Info.Backend_Set;
-      Internal : constant Boolean := Backends = Source_Info.No_Backends;
-      Has_RT   : Boolean := False;
-      Views    : View.Vector.Object renames Self.Ordered_Views;
+      Has_RT : Boolean := False;
+      Views  : View.Vector.Object renames Self.Ordered_Views;
    begin
-      if not Internal then
-         Self.Self.Rooted_Sources.Clear;
-         Self.Self.Sources_Loaded := True;
-      end if;
+      Self.Self.Rooted_Sources.Clear;
+      Self.Self.Sources_Loaded := True;
 
       for V of reverse Views loop
          Definition.Get (V).Update_Sources_List (V, Stop_On_Error);
@@ -4236,7 +4232,7 @@ package body GPR2.Project.Tree is
          end if;
       end loop;
 
-      if not Internal and then Self.Check_Shared_Lib then
+      if Self.Check_Shared_Lib then
          for View of Self.Views_Set loop
             declare
                procedure Check_Shared_Lib (PV : Project.View.Object);
