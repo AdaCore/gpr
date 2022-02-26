@@ -159,8 +159,9 @@ package GPR2.Project.Attribute is
    procedure Set_Default_Flag
      (Self       : in out Object;
       Is_Default : Boolean)
-     with Pre => Self.Is_Defined;
-   --  Set the default flag.
+     with Pre  => Self.Is_Defined,
+          Post => Self.Is_Default = Is_Default;
+   --  Set the default flag
 
    function Is_Default (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -168,8 +169,9 @@ package GPR2.Project.Attribute is
    --  value.
 
    procedure Freeze (Self : in out Object)
-     with Pre => Self.Is_Defined;
-   --  Set the freeze state of the attribute.
+     with Pre  => Self.Is_Defined,
+          Post => Self.Is_Frozen;
+   --  Set the freeze state of the attribute
 
    function Is_Frozen (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
