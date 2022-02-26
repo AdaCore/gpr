@@ -194,8 +194,8 @@ package GPR2.Project.Attribute is
      with Pre => Self.Is_Defined;
    --  Sets the From_Config flag
 
-   function From_Config (Self : Object) return Boolean;
-   --  Whether the attribute comes from the configuration project.
+   function Is_From_Config (Self : Object) return Boolean;
+   --  Whether the attribute comes from the configuration project
 
    overriding function Rename
      (Self : Object;
@@ -245,6 +245,7 @@ private
 
    function Is_Alias (Self : Object) return Boolean is (Self.Is_Alias);
 
-   function From_Config (Self : Object) return Boolean is (Self.From_Config);
+   function Is_From_Config
+     (Self : Object) return Boolean is (Self.From_Config);
 
 end GPR2.Project.Attribute;
