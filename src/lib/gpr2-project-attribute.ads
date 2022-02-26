@@ -180,11 +180,11 @@ package GPR2.Project.Attribute is
      (Self     : Object;
       New_Name : Attribute_Id) return Object
      with Pre => Self.Is_Defined;
-   --  Indicate that this attribute is another name for an existing attribute.
+   --  Indicate that this attribute is another name for an existing attribute
 
    function Is_Alias (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
-   --  Indicates whether this attribute is an alias of another attribute.
+   --  Indicates whether this attribute is an alias of another attribute
 
    procedure Set_From_Config
      (Self        : in out Object;
@@ -199,7 +199,7 @@ package GPR2.Project.Attribute is
      (Self : Object;
       Name : Source_Reference.Attribute.Object) return Object
      with Pre => Self.Is_Defined;
-   --  Returns object with the new name Name, and the is_default flag set.
+   --  Returns object with the new name Name, and the is_default flag set
 
 private
 
