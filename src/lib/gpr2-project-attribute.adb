@@ -274,8 +274,7 @@ package body GPR2.Project.Attribute is
 
    overriding function Rename
      (Self     : Object;
-      Name     : Source_Reference.Attribute.Object) return Object
-   is
+      Name     : Source_Reference.Attribute.Object) return Object is
    begin
       return (Attr_Values.Object (Self).Rename (Name) with
               Default     => True,

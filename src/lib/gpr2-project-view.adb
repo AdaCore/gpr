@@ -819,7 +819,7 @@ package body GPR2.Project.View is
          begin
             if Attr.Is_Defined
               and then (With_Defaults or else not Attr.Is_Default)
-              and then (With_Config or else not Attr.From_Config)
+              and then (With_Config or else not Attr.Is_From_Config)
             then
                Result.Include (Attr);
             end if;
