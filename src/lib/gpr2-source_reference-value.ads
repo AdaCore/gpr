@@ -48,7 +48,7 @@ package GPR2.Source_Reference.Value is
      (Sloc         : GPR2.Source_Reference.Object;
       Text         : Value_Type;
       At_Pos       : Unit_Index := No_Index;
-      From_Default : Boolean := False) return Text_Values.Object'Class
+      From_Default : Boolean := False) return Object'Class
      with Post => Create'Result.Is_Defined;
 
    function Has_At_Pos (Self : Object) return Boolean
@@ -87,7 +87,7 @@ private
      (Sloc         : GPR2.Source_Reference.Object;
       Text         : Value_Type;
       At_Pos       : Unit_Index := No_Index;
-      From_Default : Boolean := False) return Text_Values.Object'Class
+      From_Default : Boolean := False) return Object'Class
    is
      (Object'
         (Text_Values.Object
