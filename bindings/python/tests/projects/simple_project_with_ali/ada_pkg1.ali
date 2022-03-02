@@ -1,0 +1,67 @@
+V "GNAT Lib v23.20220107"
+A -gnatA
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_IO
+RV NO_DYNAMIC_SIZED_OBJECTS
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U ada_pkg1%b		ada_pkg1.adb		e4f34c97 NE OO PK
+W ada%s			ada.ads			ada.ali
+Z ada.strings.text_buffers%s  a-sttebu.adb	a-sttebu.ali
+W ada.text_io%s		a-textio.adb		a-textio.ali
+Z system.concat_3%s	s-conca3.adb		s-conca3.ali
+
+U ada_pkg1%s		ada_pkg1.ads		032b5d02 EE NE OO PK
+Z ada.strings.text_buffers%s  a-sttebu.adb	a-sttebu.ali
+W ada_pkg3%s		ada_pkg3.ads		ada_pkg3.ali
+
+D ada.ads		20211211011003 76789da1 ada%s
+D a-except.ads		20220104011323 2a7d8d70 ada.exceptions%s
+D a-ioexce.ads		20211211011003 40018c65 ada.io_exceptions%s
+D a-stream.ads		20220104011323 119b8fb3 ada.streams%s
+D a-string.ads		20211211011003 90ac6797 ada.strings%s
+D a-sttebu.ads		20211211011003 18209c64 ada.strings.text_buffers%s
+D a-stuten.ads		20211211011003 33c54060 ada.strings.utf_encoding%s
+D a-tags.ads		20220104011323 9eaa38c6 ada.tags%s
+D a-textio.ads		20220104011323 deada98a ada.text_io%s
+D a-unccon.ads		20211211011003 0e9b276f ada.unchecked_conversion%s
+D ada_pkg1.ads		20220223171043 d7e03284 ada_pkg1%s
+D ada_pkg1.adb		20220223095649 edbed799 ada_pkg1%b
+D ada_pkg3.ads		20220223171400 d4cb6f86 ada_pkg3%s
+D interfac.ads		20220104011323 edec285f interfaces%s
+D i-cstrea.ads		20220104011323 e53d8b8e interfaces.c_streams%s
+D system.ads		20220104011323 a2da961d system%s
+D s-conca3.ads		20220104011323 9078e860 system.concat_3%s
+D s-crtl.ads		20220104011323 8a0692f8 system.crtl%s
+D s-exctab.ads		20220104011323 91bef6ef system.exception_table%s
+D s-ficobl.ads		20220104011323 dc5161d4 system.file_control_block%s
+D s-parame.ads		20220104011323 d494a4a6 system.parameters%s
+D s-putima.ads		20220104011323 4e095881 system.put_images%s
+D s-secsta.ads		20220104011323 62cd9202 system.secondary_stack%s
+D s-soflin.ads		20220104011323 df77073e system.soft_links%s
+D s-stache.ads		20220104011323 0b81c1fe system.stack_checking%s
+D s-stalib.ads		20220104011323 1c9580f6 system.standard_library%s
+D s-stoele.ads		20220104011323 6d8e1ff4 system.storage_elements%s
+D s-stoele.adb		20220104011323 8f5a9db6 system.storage_elements%b
+D s-traent.ads		20220104011323 c81cbf8c system.traceback_entries%s
+D s-unstyp.ads		20220104011323 fa2a7f59 system.unsigned_types%s
+D s-wchcon.ads		20220104011323 d9032363 system.wch_con%s
+D unchconv.ads		20211211011004 ca2f9e18 unchecked_conversion%s
+G a e
+G c Z s b [method1 ada_pkg1 4 14 none]
+X 1 ada.ads
+16K9*Ada 20e8 12|1r6 5r7
+X 9 a-textio.ads
+58K13*Text_IO 727e16 12|1w10 5r11
+507U14*Put_Line 12|5s19
+X 11 ada_pkg1.ads
+3K9*Ada_Pkg1 5l5 5e13 12|2b14 7l5 7t13
+4U14*Method1 4>23 12|3b14 6l8 6t15
+4a23 Name{string} 12|3b23 5r40
+X 13 ada_pkg3.ads
+1K9*Ada_Pkg3 11|1w6 13|3e13
+

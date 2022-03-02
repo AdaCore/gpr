@@ -10,30 +10,6 @@ import os
 if TYPE_CHECKING:
     from types import TracebackType
     from typing import Dict, Optional, Type, List
-    from gpr2.config import ProjectConfig
-
-
-class LanguageProperties:
-    def __init__(
-        self,
-        language: str,
-        runtime: Optional[str],
-        object_ext: str,
-        dependency_ext: str,
-    ):
-        self.language = language
-        self.runtime = runtime
-        self.object_ext = object_ext
-        self.dependency_ext = dependency_ext
-
-    @classmethod
-    def from_dict(cls, language, data):
-        return LanguageProperties(
-            language=language,
-            runtime=data.get("runtime"),
-            object_ext=data["object_suffix"],
-            dependency_ext=data["dependency_suffix"],
-        )
 
 
 class ProjectTree:
@@ -43,7 +19,7 @@ class ProjectTree:
         self,
         project: str,
         context: Optional[Dict[str, str]] = None,
-        config: Optional[ProjectConfig] = None,
+        config: Optional[str] = None,
         build_path: Optional[str] = None,
         subdirs: Optional[str] = None,
         src_subdirs: Optional[str] = None,
@@ -59,7 +35,10 @@ class ProjectTree:
         :param project: the root project file to load
         :param context: the external variables values. The key is the variable
             name. If None no external variables are passed.
-        :param configuration: a gpr configuration
+        :param config: path to a GPR configuration project
+        :param build_path: object dir for the tree. This parameter can be used for
+            out-of-tree builds.
+        :param subdirs:
         """
         # Project existence should be handled by the GPR2 load function. But
         # currently the API returns a syntax error. Remove check when this is
@@ -78,43 +57,61 @@ class ProjectTree:
         self.implicit_with = implicit_with
         self.target = target
         self.language_runtimes = language_runtimes
+
         if project_dir is not None:
             self.project_dir = os.path.abspath(project_dir)
         else:
             self.project_dir = None
 
-        self.id = LibGPR2.gpr2_prj_tree_load(
+        self._project_data = LibGPR2.tree_load(
             request={
                 "filename": project,
                 "context": self._context,
-                "configuration_id": self.config.id if self.config is not None else None,
                 "build_path": self.build_path,
                 "subdirs": self.subdirs,
                 "src_subdirs": self.src_subdirs,
-                "check_shared_lib": self.check_shared_lib,
-                "implicit_with": self.implicit_with,
-                "target": self.target,
-                "language_runtime": self.language_runtimes,
                 "project_dir": self.project_dir,
+                "check_shared_lib": self.check_shared_lib,
+                "absent_dir_error": self.absent_dir_error,
+                "implicit_with": self.implicit_with,
+                "config": self.config,
+                "target": self.target,
+                "runtimes": self.language_runtimes,
             }
-        )["tree_id"]
+        )
+
+        self.id = self._project_data["id"]
 
         self.messages = []
         self.properties_for_languages = {}
-        self._update_properties()
+        self.target = self._project_data["target"]
+        self.search_paths = self._project_data["search_paths"]
+        self._context = self._project_data["context"]
 
-    def _update_properties(self):
-        properties = LibGPR2.gpr2_prj_tree_properties({"tree_id": self.id})
-        self.target = properties["target"]
-        self.archive_suffix = properties["archive_suffix"]
+        # If False it means the source list has not been computed or has been
+        # invalidated. This attribute is used in gpr2.view module to control
+        # how source list is loaded whenever we ask for sources from a view.
+        # This is mainly used to avoid triggering parsing of all the sources
+        # on call to ProjectView.sources. This should be eliminated in case
+        # GPR2 behaviour changes.
+        self.have_source_list = False
 
-    def language_properties(self, language: str):
-        return LanguageProperties.from_dict(
-            language,
-            LibGPR2.gpr2_prj_tree_language_properties(
-                {"tree_id": self.id, "language": language}
-            ),
-        )
+    def invalidate_source_list(self) -> None:
+        """Invalidate current list of sources."""
+        LibGPR2.tree_invalidate_source_list({"tree_id": self.id})
+        self.have_source_list = False
+
+    def update_source_list(self) -> None:
+        """Populate/Update the list of sources associated with the tree."""
+        # Invalidate all sources before recomputing (GPR2 bug?)
+        self.invalidate_source_list()
+        LibGPR2.tree_update_source_list({"tree_id": self.id})
+        self.have_source_list = True
+
+    @property
+    def views(self) -> list[ProjectView]:
+        """Return the list of views sorted in topological order."""
+        return [ProjectView(tree=self, id=id) for id in self._project_data["views"]]
 
     @property
     def context(self):
@@ -126,9 +123,8 @@ class ProjectTree:
 
     @context.setter
     def context(self, value: Dict[str, str]):
-        LibGPR2.gpr2_prj_tree_set_context({"tree_id": self.id, "context": value})
+        LibGPR2.tree_set_context({"tree_id": self.id, "context": value})
         self._context = value
-        self._update_properties()
 
     @property
     def root_view(self) -> ProjectView:
@@ -136,8 +132,7 @@ class ProjectTree:
 
         :return: the root project view
         """
-        answer = LibGPR2.gpr2_prj_tree_root_project({"tree_id": self.id})
-        return ProjectView(id=answer["view_id"])
+        return ProjectView(tree=self, id=self._project_data["root_view"])
 
     def fetch_messages(self) -> List[Message]:
         """Fetch new messages.
@@ -146,7 +141,7 @@ class ProjectTree:
 
         :return: unread messages
         """
-        answer = LibGPR2.gpr2_prj_tree_log_messages(
+        answer = LibGPR2.tree_log_messages(
             {
                 "tree_id": self.id,
                 "information": True,
@@ -162,7 +157,7 @@ class ProjectTree:
 
     def close(self) -> None:
         """Unload a project tree."""
-        LibGPR2.gpr2_prj_tree_unload({"tree_id": self.id})
+        LibGPR2.tree_unload({"tree_id": self.id})
         self.id = None
 
     def __enter__(self) -> ProjectTree:
@@ -175,3 +170,20 @@ class ProjectTree:
         _tb: Optional[TracebackType],
     ) -> None:
         self.close()
+
+    @classmethod
+    def cli_load(cls, args) -> ProjectTree:
+        """Load a project using arguments passed on the CLI."""
+        if args.context is not None:
+            context = dict(k.split("=", 1) for k in args.context)
+        else:
+            context = None
+        return cls(
+            project=args.project,
+            context=context,
+            config=args.config,
+            subdirs=args.subdirs,
+            src_subdirs=args.src_subdirs,
+            implicit_with=args.implicit_with,
+            target=args.target,
+        )

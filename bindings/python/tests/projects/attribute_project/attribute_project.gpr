@@ -1,0 +1,13 @@
+project Attribute_Project is
+   for Source_Dirs use (".");
+
+   package Compiler is
+      for Switches("Ada") use ("-fada");
+      for Switches("ada_pkg.ads") use ("-fada_pkg");
+      for Switches(others) use ("-fothers");
+
+      for Switches("c*") use Compiler'Switches("b.ads");
+      for Switches("b.ads") use ("-fb");
+
+   end Compiler;
+end Attribute_Project;

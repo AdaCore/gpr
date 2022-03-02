@@ -8,22 +8,20 @@ import os
 
 class LibGPR2:
 
-    METHOD_LIST = [
-        "gpr2_prj_tree_context",
-        "gpr2_prj_tree_language_properties",
-        "gpr2_prj_tree_load",
-        "gpr2_prj_tree_log_messages",
-        "gpr2_prj_tree_properties",
-        "gpr2_prj_tree_root_project",
-        "gpr2_prj_tree_unload",
-        "gpr2_prj_tree_get_view",
-        "gpr2_prj_tree_set_context",
-        "gpr2_prj_view_attributes",
-        "gpr2_prj_view_properties",
-        "gpr2_prj_view_unload",
-        "gpr2_prj_view_sources",
-        "gpr2_prj_view_variables",
-    ]
+    METHOD_LIST = {
+        "tree_load": 1,
+        "tree_unload": 2,
+        "tree_log_messages": 3,
+        "tree_invalidate_source_list": 4,
+        "tree_update_source_list": 5,
+        "tree_update_source_infos": 6,
+        "view_load": 7,
+        "view_attribute": 8,
+        "view_sources": 9,
+        "view_units": 10,
+        "source_dependencies": 11,
+        "source_update_source_infos": 12,
+    }
 
     # ??? not portable ???
     LIBNAME = "libgpr2c.so"
@@ -41,24 +39,26 @@ class LibGPR2:
         return cls.LIB
 
     @classmethod
-    def cfun(cls, name):
-        result = getattr(cls.lib(), name)
-        result.argtypes = [c_char_p, POINTER(c_char_p)]
+    def gpr2_request(cls):
+        result = cls.lib().gpr2_request
+        result.argtypes = [c_int, c_char_p, POINTER(c_char_p)]
         result.restype = c_int
         return result
 
     @classmethod
     def load_api(cls) -> None:
 
-        for method in cls.METHOD_LIST:
-            c_fun = cls.cfun(method)
+        for method_name, method_id in cls.METHOD_LIST.items():
+            c_fun = cls.gpr2_request()
 
             # Create a function that will serialize request and unserialize answers
             # The function also ensure a Python exception is raised whenever an
             # exception occurs.
-            def fun(c_fun, request):
+            def fun(c_fun, method_id, request):
                 answer = c_char_p()
-                status = c_fun(json.dumps(request).encode("utf-8"), byref(answer))
+                status = c_fun(
+                    method_id, json.dumps(request).encode("utf-8"), byref(answer)
+                )
                 result = json.loads(answer.value.decode("utf-8"))
                 if status != 0:
                     raise GPR2Error(
@@ -66,7 +66,7 @@ class LibGPR2:
                     )
                 return result["result"]
 
-            setattr(cls, method, partial(fun, c_fun))
+            setattr(cls, method_name, partial(fun, c_fun, method_id))
 
 
 LibGPR2.load_api()
