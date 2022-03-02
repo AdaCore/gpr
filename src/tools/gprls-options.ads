@@ -31,9 +31,6 @@ package GPRls.Options is
 
    use GPR2;
 
-   Usage_Error : exception;
-   --  Raised when a wrong usage is detected
-
    type Object is new GPRtools.Options.Base_Options with private;
    --  Options for gprls
 
