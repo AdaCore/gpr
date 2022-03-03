@@ -1,0 +1,5 @@
+project Unexpected_Index2 is
+
+   Var := Project'Object_Dir ("Ada");
+
+end Unexpected_Index2;
