@@ -1,16 +1,17 @@
 Demo     K_STANDARD
-A:   Archive_Suffix ~> .a
 A:   Exec_Dir ~> 
 A:   Externally_Built ~> false
 A:   Languages ~> Ada
 A:   Name ~> demo
 A:   Object_Dir -> 
 A:   Project_Dir ~> {Current_Directory}
-A:   Shared_Library_Prefix ~> lib
-A:   Shared_Library_Suffix ~> .so
 A:   Source_Dirs ~> .
 A2:  Object_Dir -> 
 A3:  Object_Dir
 V:   Dir -> 
+Binder
+Clean
 Compiler
 A:   Switches [Capital.adb] -> -g -gnata
+Linker
+Naming

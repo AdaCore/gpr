@@ -429,6 +429,22 @@ package GPR2.Project.Tree is
    procedure Reindex_Unit (Self : in out Object; From, To : Name_Type);
    --  Change name of unit in view index used to get view by unit name
 
+   function Target_From_Command_Line
+     (Self       : Object;
+      Normalized : Boolean := False) return Name_Type
+     with Pre => Self.Is_Defined;
+   --  Returns the target specified via --target. If not specified, then
+   --  return "all";
+
+   function Runtime_From_Command_Line
+     (Self : Object; Language : Language_Id) return Optional_Name_Type
+     with Pre => Self.Is_Defined;
+   --  Returns the runtime selected for the given language by the command
+   --  line via --RTS:lang. Returns No_Name if not specified.
+
+   function Get_KB (Self : Object) return GPR2.KB.Object
+     with Pre => Self.Is_Defined;
+
 private
 
    package Name_View is
@@ -481,33 +497,36 @@ private
    --  Root and Aggregate contexts
 
    type Object is tagged limited record
-      Self             : access Object := null;
-      Root             : View.Object;
-      Conf             : Project.Configuration.Object;
-      Base             : GPR2.KB.Object;
-      Runtime          : View.Object;
-      Units            : Name_View.Map;
-      Sources          : Filename_View.Map;
-      Rooted_Sources   : Source_Maps.Map;
-      Messages         : aliased Log.Object;
-      Search_Paths     : Path_Name.Set.Object :=
-                           Default_Search_Paths (True);
-      Implicit_With    : Path_Name.Set.Object;
-      Project_Dir      : Path_Name.Object;
-      Build_Path       : Path_Name.Object;
-      Subdirs          : Unbounded_String;
-      Src_Subdirs      : Unbounded_String;
-      Check_Shared_Lib : Boolean := True;
-      Absent_Dir_Error : Boolean := False;
-      Pre_Conf_Mode    : Boolean := True;
-      Views            : aliased View_Maps.Map;
-      Views_Set        : View.Set.Object;
+      Self              : access Object := null;
+      Root              : View.Object;
+      Conf              : Project.Configuration.Object;
+      Base              : GPR2.KB.Object;
+      Runtime           : View.Object;
+      Units             : Name_View.Map;
+      Sources           : Filename_View.Map;
+      Rooted_Sources    : Source_Maps.Map;
+      Messages          : aliased Log.Object;
+      Search_Paths      : Path_Name.Set.Object :=
+                            Default_Search_Paths (True);
+      Implicit_With     : Path_Name.Set.Object;
+      Project_Dir       : Path_Name.Object;
+      Build_Path        : Path_Name.Object;
+      Subdirs           : Unbounded_String;
+      Src_Subdirs       : Unbounded_String;
+      Check_Shared_Lib  : Boolean := True;
+      Absent_Dir_Error  : Boolean := False;
+      Pre_Conf_Mode     : Boolean := True;
+      Views             : aliased View_Maps.Map;
+      Views_Set         : View.Set.Object;
       --  All projects in registration order
-      Context          : Two_Contexts;
+      Context           : Two_Contexts;
       --  Root and aggregate contexts
-      View_Ids         : aliased Id_Maps.Map;
-      View_DAG         : GPR2.View_Ids.DAGs.DAG;
-      Sources_Loaded   : Boolean := False;
+      View_Ids          : aliased Id_Maps.Map;
+      View_DAG          : GPR2.View_Ids.DAGs.DAG;
+      Sources_Loaded    : Boolean := False;
+      --  Configuration items from command line
+      Explicit_Target   : Unbounded_String;
+      Explicit_Runtimes : Containers.Lang_Value_Map;
    end record;
 
    function "=" (Left, Right : Object) return Boolean
@@ -584,4 +603,12 @@ private
    function Build_Path (Tree : Object) return Path_Name.Object is
      (Tree.Build_Path);
 
+   function Runtime_From_Command_Line
+     (Self : Object; Language : Language_Id) return Optional_Name_Type is
+     (if Self.Explicit_Runtimes.Contains (Language)
+      then Optional_Name_Type (Self.Explicit_Runtimes.Element (Language))
+      else No_Name);
+
+   function Get_KB (Self : Object) return GPR2.KB.Object is
+     (Self.Base);
 end GPR2.Project.Tree;

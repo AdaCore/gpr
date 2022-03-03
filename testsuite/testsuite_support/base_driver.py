@@ -155,6 +155,14 @@ class BaseDriver(DiffTestDriver):
             ReplacePath(self.working_dir(), replacement=""),
             Substitute('\\', '/'),
             Substitute('C:/', '/'),
+            Substitute('x86_64-pc-linux-gnu', replacement='(host)'),
+            Substitute('i686-pc-linux-gnu', replacement='(host)'),
+            Substitute('x86_64-w64-mingw32', replacement='(host)'),
+            Substitute('i686-pc-mingw32', replacement='(host)'),
+            Substitute('x86_64-linux', replacement='(host)'),
+            Substitute('x86-linux', replacement='(host)'),
+            Substitute('x86_64-windows', replacement='(host)'),
+            Substitute('x86-windows', replacement='(host)'),
         ]
 
     # Convenience path builders

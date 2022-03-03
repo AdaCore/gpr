@@ -1227,8 +1227,7 @@ package body GPR2.Project.Tree is
       Self.Check_Shared_Lib := Check_Shared_Lib;
       Self.Implicit_With    := Implicit_With;
       Self.Absent_Dir_Error := Absent_Dir_Error;
-
-      Self.Pre_Conf_Mode := Pre_Conf_Mode;
+      Self.Pre_Conf_Mode    := Pre_Conf_Mode;
 
       if Filename.Is_Implicit_Project then
          Project_Path := Project_Dir;
@@ -1446,8 +1445,9 @@ package body GPR2.Project.Tree is
             --  Check if the project explicitly defines the attribute or if
             --  this comes from a default value.
 
-            if not Tmp_Attr.Is_Default and then
-              not Tmp_Attr.Value.Is_From_Default
+            if not Tmp_Attr.Is_Default
+              and then not Tmp_Attr.Value.Is_From_Default
+              and then Tmp_Attr.Value.Text'Length > 0
             then
                return Name_Type (Tmp_Attr.Value.Text);
             end if;
@@ -1846,6 +1846,10 @@ package body GPR2.Project.Tree is
       if Base.Is_Defined then
          Self.Base := Base;
       end if;
+
+      Self.Explicit_Target   :=
+        +String ((if Target = No_Name then "all" else Target));
+      Self.Explicit_Runtimes := Language_Runtimes;
 
       if not Conf.Is_Defined then
          --  Default configuration file does not exists. Generate configuration
@@ -2847,12 +2851,7 @@ package body GPR2.Project.Tree is
       TA : Attribute.Object;
 
    begin
-      if Self.Has_Configuration
-        and then Self.Conf.Runtime (Language) /= No_Name
-      then
-         return Self.Conf.Runtime (Language);
-
-      elsif Self.Root.Is_Defined then
+      if Self.Root.Is_Defined then
          TA := Self.Root.Attribute
           (PRA.Runtime,
            Index => Attribute_Index.Create (Language));
@@ -3934,6 +3933,35 @@ package body GPR2.Project.Tree is
          return Target_Name;
       end if;
    end Target;
+
+   ------------------------------
+   -- Target_From_Command_Line --
+   ------------------------------
+
+   function Target_From_Command_Line
+     (Self       : Object;
+      Normalized : Boolean := False) return Name_Type
+   is
+      Target : constant Optional_Name_Type :=
+                 Optional_Name_Type (-Self.Explicit_Target);
+   begin
+      if Target = No_Name then
+         return "all";
+      end if;
+
+      if Normalized and then Self.Base.Is_Defined then
+         declare
+            Ret : constant Name_Type :=
+                    Self.Base.Normalized_Target (Target);
+         begin
+            if Ret /= "unknown" then
+               return Ret;
+            end if;
+         end;
+      end if;
+
+      return Target;
+   end Target_From_Command_Line;
 
    ------------
    -- Unload --

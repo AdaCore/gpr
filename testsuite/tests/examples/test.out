@@ -10,6 +10,7 @@ Demo     K_STANDARD
    Shared_Library_Prefix -> lib 
    Shared_Library_Suffix -> .so 
    Source_Dirs -> . src-lnx 
+   Target -> all 
 
 Demo     K_STANDARD
    Archive_Suffix -> .a 
@@ -23,6 +24,7 @@ Demo     K_STANDARD
    Shared_Library_Prefix -> lib 
    Shared_Library_Suffix -> .so 
    Source_Dirs -> . src-win 
+   Target -> all 
 
 >>> Changed_Callback for /simple/demo.gpr
 >>> Changed_Callback for /simple/demo.gpr
@@ -38,6 +40,7 @@ A:   Project_Dir -> /simple/
 A:   Shared_Library_Prefix -> lib 
 A:   Shared_Library_Suffix -> .so 
 A:   Source_Dirs -> . 
+A:   Target -> all 
 V:   Dir1 -> toto
 V:   Dir2 -> Linux
 V:   Dir3 -> one
@@ -54,6 +57,7 @@ A:   Project_Dir -> /simple/
 A:   Shared_Library_Prefix -> lib 
 A:   Shared_Library_Suffix -> .so 
 A:   Source_Dirs -> . 
+A:   Target -> all 
 V:   Dir1 -> toto
 V:   Dir2 -> Windows
 V:   Dir3 -> one
@@ -71,6 +75,7 @@ A:   Project_Dir -> /simple/
 A:   Shared_Library_Prefix -> lib 
 A:   Shared_Library_Suffix -> .so 
 A:   Source_Dirs -> . 
+A:   Target -> all 
 V:   Dir1 -> toto
 V:   Dir2 -> Linux-2
 V:   Dir3 -> one
@@ -117,6 +122,7 @@ Demo     K_STANDARD
    Shared_Library_Prefix -> lib
    Shared_Library_Suffix -> .so
    Source_Dirs -> src
+   Target -> all
  Binder
    Default_Switches (Ada) -> -Es
  Builder

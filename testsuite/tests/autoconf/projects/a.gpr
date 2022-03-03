@@ -2,18 +2,17 @@ with "b.gpr";
 
 project A is
    for Languages use ("Ada");
-
    for Target use external ("target");
 
-   Var := Config'Runtime ("Ada");
+   for Runtime ("Ada") use "light";
+   for Runtime ("C") use "rts_cpp/";
+   Var := Project'Target;
 
    case Var is
-      when "light" =>
+      when "x86_64-wrs-vxworks7" =>
          --  Change the list of languages during autoconf
          for Languages use ("Ada", "C");
       when others =>
    end case;
 
-   for Runtime ("Ada") use "light";
-   for Runtime ("C") use "rts_cpp/";
 end A;

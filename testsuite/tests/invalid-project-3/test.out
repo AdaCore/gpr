@@ -53,9 +53,6 @@ in_pack.gpr:4:14: error: undefined variable "Naming.Var2"
 
 no_lang.gpr:3:08: warning: no language for the project No_Lang
 no_lang.gpr:3:08: warning: no language for the projects tree: configuration skipped
-autoconf.gpr: error: language Ada missing for reconfiguration
-autoconf2.gpr: error: incompatible change for language Ada during reconfiguration
-version "23.0" changed to "22.0"; runtime "sjlj" changed to "native"; path "/path2/bin" changed to "/path1/bin"; name "GNATGPL" changed to "GNATPro"
 agg_lib_shared_libdir.gpr: error: aggregate library ALI directory cannot be shared with library directory of aggregated project "some_lib"
 agg_lib_shared_libdir2.gpr: error: aggregate library directory cannot be shared with library directory of aggregated project "some_lib"
 

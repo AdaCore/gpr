@@ -1481,19 +1481,8 @@ package body GPR2.Project.Parser is
                   --  create.
                   null;
 
-               --  Special case for Target & Runtime, that always default
-               --  to the configuration value
-               elsif Name = PRA.Target then
-                  --  Undefined Project'Target case
-                  Attr := PA.Create
-                    (Get_Attribute_Reference
-                       (Self.Path_Name, Sloc_Range (Node), Name),
-                     Value   => Get_Value_Reference
-                       (Value_Not_Empty (Tree.Target), Sloc,
-                        From_Default => True),
-                     Default => True,
-                     Frozen  => True);
-
+                  --  Special case for built-in Canonical_Target and for
+                  --  Runtime, that is at the minimum empty
                elsif Name = PRA.Canonical_Target then
                   --  Project'Target case
                   Attr := PA.Create
@@ -1512,9 +1501,7 @@ package body GPR2.Project.Parser is
                        (Get_Attribute_Reference
                           (Self.Path_Name, Sloc_Range (Node), Name),
                         Index   => Index,
-                        Value   => Get_Value_Reference
-                          (Value_Type (Tree.Runtime (+Name_Type (Index.Text))),
-                           Sloc),
+                        Value   => Get_Value_Reference ("", Sloc),
                         Default => True,
                         Frozen  => True);
                   else

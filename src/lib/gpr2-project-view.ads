@@ -842,6 +842,7 @@ private
 
    --  Naming package accessor
 
+   package PA  renames Project.Attribute;
    package PRA renames Project.Registry.Attribute;
    package PRP renames Project.Registry.Pack;
    package PAI renames Project.Attribute_Index;
