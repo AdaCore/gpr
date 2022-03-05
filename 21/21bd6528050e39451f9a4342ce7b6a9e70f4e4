@@ -1,0 +1,7 @@
+Code-Review-1: CI Builder <ci-builder@adacore.com>
+Code-Review+2: Vasiliy Fofanov <fofanov@adacore.com>
+Submitted-by: Pascal Obry <obry@adacore.com>
+Submitted-at: Sat, 05 Mar 2022 07:11:11 +0000
+Reviewed-on: https://git.adacore-it.com/c/gpr/+/112170
+Project: gpr
+Branch: refs/heads/master
