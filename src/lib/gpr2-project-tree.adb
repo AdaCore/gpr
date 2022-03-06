@@ -1333,7 +1333,8 @@ package body GPR2.Project.Tree is
       end if;
 
       if not Self.Pre_Conf_Mode and then Self.Messages.Has_Error then
-         raise Project_Error with Project_Path.Value & " syntax error";
+         raise Project_Error with Project_Path.Value &
+           ": fatal error, cannot load the project tree";
       end if;
    end Load;
 

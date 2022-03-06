@@ -1324,6 +1324,7 @@ package body GPR2.Project.Parser is
          Pack    : Optional_Package_Id := No_Package) return Item_Values
       is
          use type GPR2.Project.View.Object;
+         use type PRA.Index_Value_Type;
          use type PRA.Value_Kind;
          use PAI;
 
@@ -1439,6 +1440,16 @@ package body GPR2.Project.Parser is
                         Get_Source_Reference (Self.File, Node)));
                end if;
             end if;
+
+            return Empty_Item_Values;
+         end if;
+
+         if Index.Is_Defined and then Def.Index_Type = PRA.No_Index then
+            Tree.Log_Messages.Append
+              (Message.Create
+                 (Message.Error,
+                  "attribute """ & PRA.Image (Q_Name) & """ cannot have index",
+                  Get_Source_Reference (Self.File, Node)));
 
             return Empty_Item_Values;
          end if;

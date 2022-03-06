@@ -101,6 +101,8 @@ begin
    Test ("attributes/empty_error.gpr");
    Test ("attributes/no_package.gpr");
    Test ("attributes/no_package2.gpr");
+   Test ("attributes/unexpected_index.gpr");
+   Test ("attributes/unexpected_index2.gpr");
    Ada.Text_IO.New_Line;
    Ada.Text_IO.Put_Line ("** variables:");
    Ada.Text_IO.New_Line;

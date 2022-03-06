@@ -1,0 +1,5 @@
+project Unexpected_Index is
+
+   for Object_Dir ("Ada") use "foo";
+
+end Unexpected_Index;
