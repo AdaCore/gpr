@@ -112,8 +112,6 @@ begin
    Ada.Text_IO.Put_Line ("** projects:");
    Ada.Text_IO.New_Line;
    Test ("projects/no_lang.gpr");
-   Test ("projects/autoconf.gpr");
-   Test ("projects/autoconf2.gpr");
    Test ("projects/agg_lib_shared_libdir.gpr");
    Test ("projects/agg_lib_shared_libdir2.gpr");
    Ada.Text_IO.New_Line;

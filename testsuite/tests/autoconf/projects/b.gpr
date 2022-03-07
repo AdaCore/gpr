@@ -2,6 +2,8 @@ project B is
    --  Should not be taken into account in configuration: only those attributes
    --  from the root project are.
 
+   for Languages use ("Ada", "C");
+
    for Runtime ("Ada") use "bar";
    for Runtime ("C") use "foo";
 end B;

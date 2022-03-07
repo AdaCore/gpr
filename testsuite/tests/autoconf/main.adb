@@ -19,6 +19,7 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
@@ -57,19 +58,10 @@ procedure Main is
                           Project.Attribute_Index.Create (GPR2.Ada_Language);
       Config_View     : constant Project.View.Object :=
                           Project_Tree.Configuration.Corresponding_View;
-      Compiler_Driver : constant Path_Name.Object :=
-                          Path_Name.Create_File
-                            (Filename_Type
-                               (Config_View.Attribute
-                                  (Name  => PRA.Driver,
-                                   Pack  => PRP.Compiler,
-                                   Index => Ada_I).Value.Text));
-      Runtime_Dir     : constant Path_Name.Object :=
-                          Path_Name.Create_Directory
-                            (Filename_Type (Config_View.Attribute
-                                          (Name  => PRA.Runtime_Dir,
-                                           Index => Ada_I).Value.Text));
-
+      Var              : constant String :=
+                           String
+                             (Project_Tree.Root_Project.Variable
+                                ("Var").Value.Text);
       Target           : constant String :=
                            Config_View.Attribute (PRA.Target).Value.Text;
       Canonical_Target : constant String :=
@@ -77,6 +69,7 @@ procedure Main is
                              (PRA.Canonical_Target).Value.Text;
       Languages        : constant GPR2.Containers.Source_Value_List :=
                            Project_Tree.Root_Project.Languages;
+      Has_C            : Boolean := False;
 
    begin
       Text_IO.Put_Line ("target = "
@@ -86,41 +79,83 @@ procedure Main is
       if Target /= This_Target then
          Text_IO.Put_Line ("canonical_target = " & Canonical_Target);
       end if;
-
-      Text_IO.Put_Line ("compiler driver = "
-                        & String (Compiler_Driver.Base_Name));
-
-      declare
-         use Strings.Fixed;
-
-         RT_Dir_Str      : constant String := String (Runtime_Dir.Dir_Name);
-         Sec_To_Last_Sep : constant Integer :=
-                             Index (Source  => RT_Dir_Str,
-                                    Pattern => Tail (RT_Dir_Str, 1),
-                                    From    => RT_Dir_Str'Last - 1,
-                                    Going   => Strings.Backward);
-      begin
+      if Var /= Target then
          Text_IO.Put_Line
-           ("runtime dir = "
-            & RT_Dir_Str (Sec_To_Last_Sep + 1 .. RT_Dir_Str'Last - 1));
-      end;
+           ("!!! Error: Var is different from actual target value");
+         Text_IO.Put_Line ("Var = " & Var);
+      end if;
 
       --  Check languages list change during autoconf
       if not Languages.Is_Empty then
-         Text_IO.Put ("languages =");
          for Value of Languages loop
-            Text_IO.Put (" ");
-            Text_IO.Put (Value.Text);
+            Text_IO.Put_Line ("language: " & Value.Text);
+            declare
+               package PAI renames Project.Attribute_Index;
+               Driver_Attr     : constant Project.Attribute.Object :=
+                                   Config_View.Attribute
+                                     (Name  => PRA.Driver,
+                                      Pack  => PRP.Compiler,
+                                      Index => PAI.Create
+                                                 (+Name_Type (Value.Text)));
+               Compiler_Driver : constant Path_Name.Object :=
+                                   Path_Name.Create_File
+                                     (Filename_Type (Driver_Attr.Value.Text));
+               Runtime_Dir     : constant Path_Name.Object :=
+                                   (if Value.Text = "Ada"
+                                    then Path_Name.Create_Directory
+                                      (Filename_Type (Config_View.Attribute
+                                       (Name  => PRA.Runtime_Dir,
+                                        Index => Ada_I).Value.Text))
+                                    else Path_Name.Undefined);
+            begin
+               Text_IO.Put_Line ("- compiler driver = "
+                                 & String (Compiler_Driver.Base_Name));
+
+               if Runtime_Dir.Is_Defined then
+                  declare
+                     use Strings.Fixed;
+
+                     RT_Dir_Str      : constant String :=
+                                         String (Runtime_Dir.Dir_Name);
+                     Sec_To_Last_Sep : constant Integer :=
+                                         Index (Source  => RT_Dir_Str,
+                                                Pattern => Tail (RT_Dir_Str, 1),
+                                                From    => RT_Dir_Str'Last - 1,
+                                                Going   => Strings.Backward);
+                  begin
+                     Text_IO.Put_Line
+                       ("- runtime dir = "
+                        & RT_Dir_Str (Sec_To_Last_Sep + 1 .. RT_Dir_Str'Last - 1));
+                  end;
+               end if;
+            end;
          end loop;
-         Text_IO.New_Line;
       end if;
    end Print_Config_Info;
 
 begin
    --  Equivalent to command line options:
-   --     --RTS=zfp target=x86-linux
+   --     --RTS=rtp -Xtarget=x86_64-wrs-vxworks7
 
    RTS.Insert (Ada_Language, "rtp");
+   Ctx.Insert ("VSB_DIR", ".");
+   Ctx.Insert ("target", "x86_64-wrs-vxworks7");
+
+   Project_Tree.Load_Autoconf
+     (Filename          => Project.Create ("projects/a.gpr"),
+      Context           => Ctx,
+      Language_Runtimes => RTS);
+
+   Print_Config_Info;
+
+   Project_Tree.Unload;
+
+   Text_IO.New_Line;
+
+   --  --RTS=rtp -Xtarget=x86-linux --target=x86_64-wrs-vxworks7
+   --  --target will take precedence over Target definition in the project
+
+   Ctx.Clear;
    Ctx.Insert ("VSB_DIR", ".");
    Ctx.Insert ("target", This_Target);
 

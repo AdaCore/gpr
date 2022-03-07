@@ -1,10 +1,20 @@
 target = x86_64-wrs-vxworks7
 canonical_target = x86_64-vx7
-compiler driver = x86_64-wrs-vxworks7-gcc
-runtime dir = rts-rtp
-languages = Ada
+language: Ada
+- compiler driver = x86_64-wrs-vxworks7-gcc
+- runtime dir = rts-rtp
+language: C
+- compiler driver = x86_64-wrs-vxworks7-gcc
+
+target = x86_64-wrs-vxworks7
+canonical_target = x86_64-vx7
+language: Ada
+- compiler driver = x86_64-wrs-vxworks7-gcc
+- runtime dir = rts-rtp
+language: C
+- compiler driver = x86_64-wrs-vxworks7-gcc
 
 target = this-target
-compiler driver = gcc
-runtime dir = rts-light
-languages = Ada C
+language: Ada
+- compiler driver = gcc
+- runtime dir = rts-light

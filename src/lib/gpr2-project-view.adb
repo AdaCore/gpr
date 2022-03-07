@@ -277,6 +277,10 @@ package body GPR2.Project.View is
          (Pattern : Project.Attribute.Object;
           Result  : in out Project.Attribute.Object);
 
+      procedure Get_Config_Attribute;
+      --  Returns the config attribute value for Name if given on the command
+      --  line.
+
       function Get_Default_Index return Value_Type;
 
       --------------------------
@@ -479,6 +483,107 @@ package body GPR2.Project.View is
          return Result;
       end Get_Attribute_From_View;
 
+      --------------------------
+      -- Get_Config_Attribute --
+      --------------------------
+
+      procedure Get_Config_Attribute
+      is
+         package SR renames Source_Reference;
+         package SRA renames Source_Reference.Attribute;
+         package SRV renames Source_Reference.Value;
+
+         function From_Command_Line return Value_Type;
+
+         function From_Command_Line return Value_Type is
+         begin
+            if Name = PRA.Target
+              or else Name = PRA.Canonical_Target
+            then
+               if Self.Tree.Target_From_Command_Line /= "all"
+                 and then Self.Tree.Target_From_Command_Line /= ""
+               then
+                  return Value_Type
+                    (Self.Tree.Target_From_Command_Line
+                       (Normalized => Name = PRA.Canonical_Target));
+               end if;
+
+            elsif Name = PRA.Runtime
+              and then Index.Is_Defined
+            then
+               declare
+                  Lang : constant Language_Id :=
+                           +Optional_Name_Type (Index.Value);
+               begin
+                  return
+                    Value_Type (Self.Tree.Runtime_From_Command_Line (Lang));
+               end;
+            end if;
+
+            return "";
+         end From_Command_Line;
+
+         Cmd_Line : constant Value_Type := From_Command_Line;
+
+      begin
+         if Cmd_Line'Length > 0 then
+            --  Value from command line always have priority over all other
+            --  considerations.
+
+            Result := PA.Create
+              (Name  => SRA.Object (SRA.Create (SR.Builtin, Name)),
+               Index => Index,
+               Value => SRV.Object (SRV.Create (SR.Builtin, Cmd_Line)));
+
+            return;
+         end if;
+
+         --  Return the value from the configuration project when it exists.
+         --  It takes priority over any explicitly defined value for the
+         --  view: the user may override such value from the command line
+         --  (--RTS) or via an explicit config project.
+
+         if Self.Tree.Has_Configuration
+           and then Self.Tree.Configuration.Corresponding_View /= Self
+         then
+            Result := Get_Attribute_From_View
+                        (Self.Tree.Configuration.Corresponding_View);
+
+            if Result.Is_Defined and then not Result.Is_Default then
+               --  Set the From_Config flag for the attribute
+               Result.Set_From_Config (True);
+            end if;
+
+            if not Result.Is_Defined
+              and then Name = PRA.Runtime
+              and then Index.Is_Defined
+            then
+               --  Runtime names are not defined in the configuration project.
+               --  However, we have them in our config parameters when run in
+               --  autoconfig mode. Let's use that.
+
+               declare
+                  Value : constant Value_Type :=
+                            Value_Type
+                              (Self.Tree.Configuration.Runtime
+                                 (+Optional_Name_Type (Index.Value)));
+               begin
+                  if Value'Length > 0 then
+                     Result := PA.Create
+                       (Name  => SRA.Object (SRA.Create (SR.Builtin, Name)),
+                        Index => Index,
+                        Value => SRV.Object (SRV.Create (SR.Builtin, Value)));
+                     Result.Set_From_Config (True);
+                  end if;
+               end;
+            end if;
+         end if;
+
+         --  At this point, if Result is undefined, we are in autoconf mode
+         --  and don't have config yet. Let's use the regular attribute
+         --  resolution.
+      end Get_Config_Attribute;
+
       -----------------------
       -- Get_Default_Index --
       -----------------------
@@ -522,6 +627,14 @@ package body GPR2.Project.View is
       if PRA_Def.Index_Type = PRA.No_Index and then Has_Index then
          raise Attribute_Error
             with PRA.Image (PRA_Name) & " attribute does not accept index";
+      end if;
+
+      --  Attributes that denote toolchain configuration need special
+      --  handling: in particular they may be overwritten by the command
+      --  line, via --target or --RTS switches.
+
+      if PRA_Def.Is_Toolchain_Config then
+         Get_Config_Attribute;
       end if;
 
       --  Try to fetch the attribute from the view

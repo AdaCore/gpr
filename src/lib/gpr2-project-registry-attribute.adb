@@ -71,9 +71,9 @@ package body GPR2.Project.Registry.Attribute is
    --  Concatenate 2 default values for different indexes into one container
 
    function Default_Library_Standalone
-     (View : Project.View.Object) return Value_Type
-   is (if View.Is_Library and then View.Has_Any_Interfaces
-       then "standard" else "no");
+     (View : Project.View.Object) return Value_Type is
+     (if View.Is_Library and then View.Has_Any_Interfaces
+      then "standard" else "no");
 
    ---------
    -- "+" --
@@ -890,7 +890,8 @@ begin
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
       Is_Toolchain_Config   => True,
-      Inherit_From_Extended => Inherited);
+      Inherit_From_Extended => Inherited,
+      Default               => Create ("all"));
 
    --  runtime
    Add

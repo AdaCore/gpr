@@ -1,4 +1,4 @@
 testing data/var.gpr
 var.gpr:3:23: warning: object directory "inc" not found
 testing data/attr.gpr
-attr.gpr:3:27: warning: object directory "inc" not found
+attr.gpr:3:27: warning: object directory "(host)" not found
