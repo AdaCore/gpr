@@ -1848,7 +1848,7 @@ package body GPR2.Project.Tree is
       end if;
 
       Self.Explicit_Target   :=
-        +String ((if Target = No_Name then "all" else Target));
+        +((if Target = No_Name then "all" else String (Target)));
       Self.Explicit_Runtimes := Language_Runtimes;
 
       if not Conf.Is_Defined then
