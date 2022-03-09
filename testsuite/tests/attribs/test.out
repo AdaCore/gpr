@@ -9,9 +9,5 @@ A:   Source_Dirs ~> .
 A2:  Object_Dir -> 
 A3:  Object_Dir
 V:   Dir -> 
-Binder
-Clean
 Compiler
 A:   Switches [Capital.adb] -> -g -gnata
-Linker
-Naming
