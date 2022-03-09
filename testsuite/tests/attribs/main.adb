@@ -128,7 +128,9 @@ procedure Main is
             end loop;
          end if;
 
-         for P of Prj.Packages (With_Defaults => False) loop
+         for P of Prj.Packages (With_Defaults => False,
+	                        With_Config => False)
+         loop
             Text_IO.Put_Line (Image (P));
             Put_Attributes (Prj.Attributes (Pack          => P,
                                             With_Defaults => False,
