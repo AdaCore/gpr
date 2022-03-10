@@ -31,7 +31,7 @@ package body GPR2.View_Ids is
    ROOT_VIEWS_PREFIX    : constant Character          := '<';
    AGGR_VIEWS_PREFIX    : constant Character          := '$';
    SPECIAL_VIEWS_PREFIX : constant Character          := '!';
-   EXTENDED_PREFIX      : constant Character          := ':';
+   EXTENDED_PREFIX      : constant Character          := '>';
 
    UNDEFINED_IMAGE      : constant Optional_Name_Type := "";
    RUNTIME_IMAGE        : constant Name_Type          := "runtime";
