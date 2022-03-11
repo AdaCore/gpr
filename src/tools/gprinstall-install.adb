@@ -2189,7 +2189,7 @@ package body GPRinstall.Install is
 
             --  Do merging for new build, we need to add an entry into the
             --  BUILD_KIND type and a corresponding case entry in the naming
-            --  and Linker package.
+            --  and Linker package. The variables need also to be updated.
 
             Parse_Content : while String_Vector.Has_Element (Pos) loop
                declare
@@ -2349,6 +2349,31 @@ package body GPRinstall.Install is
 
                         Pos := Content.To_Cursor (I);
                      end Count_And_Delete;
+
+                  else
+                     Check_Vars : declare
+                        Assign : constant Natural :=
+                                   Fixed.Index (Line, " := ");
+                     begin
+                        --  Check if line is a variable definition, and if so
+                        --  update the value.
+
+                        if Assign > 0 then
+                           for V of Project.Variables loop
+                              declare
+                                 Name : constant String :=
+                                          String (V.Name.Text);
+                              begin
+                                 if Fixed.Index
+                                   (Line, ' ' & Name & ' ') in 1 .. Assign - 1
+                                 then
+                                    Content.Replace_Element
+                                      (Pos, "   " & V.Image);
+                                 end if;
+                              end;
+                           end loop;
+                        end if;
+                     end Check_Vars;
                   end if;
                end;
 
