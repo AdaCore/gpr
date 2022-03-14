@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2021, AdaCore                      --
+--                    Copyright (C) 2019-2022, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -642,7 +642,6 @@ package body GPR2.Source_Info.Parser.ALI is
                      IO.Get_Token (A_Handle, Stop_At_LF => True);
             Tok2 : constant String :=
                      IO.Get_Token (A_Handle, Stop_At_LF => True);
-            use Ada.Characters.Handling;
          begin
             --  At least "?%(b|s)"
 
