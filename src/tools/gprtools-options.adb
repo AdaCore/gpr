@@ -18,11 +18,15 @@
 
 with Ada.Directories;
 with Ada.Strings.Fixed;
-with Ada.Task_Attributes;
+with Ada.Text_IO;
 
+with GNAT.Directory_Operations;
 with GNAT.OS_Lib;
 
 with GPR2.Compilation.Registry;
+with GPR2.KB;
+with GPR2.Log;
+with GPR2.Project.Configuration;
 with GPR2.Project.Registry.Pack;
 
 pragma Warnings (Off);
@@ -35,177 +39,778 @@ with GPRtools.Util;
 
 package body GPRtools.Options is
 
-   type Object_Class is access all Object'Class;
-
-   package TLS is new Ada.Task_Attributes (Object_Class, null);
-
    package PRP renames GPR2.Project.Registry.Pack;
 
-   procedure Value_Callback (Switch, Value : String);
-   --  Used for the command-line options parsing
+   procedure Get_Opt_Internal
+     (Parser : Command_Line_Parser;
+      Result : in out Base_Options'Class);
+
+   procedure On_Switch
+     (Parser : GPRtools.Command_Line.Command_Line_Parser'Class;
+      Res    : not null access GPRtools.Command_Line.Command_Line_Result'Class;
+      Arg    : GPRtools.Command_Line.Switch_Type;
+      Index  : String;
+      Param  : String);
 
    ------------
-   -- Append --
+   -- Create --
    ------------
 
-   procedure Append (Self : in out Object; Next : Object) is
-   begin
-      Self.Verbosity := Verbosity_Level'Max (Self.Verbosity, Next.Verbosity);
-   end Append;
-
-   ----------------------
-   -- Clean_Build_Path --
-   ----------------------
-
-   procedure Clean_Build_Path
-     (Self : in out Object; Project : GPR2.Path_Name.Object)
+   function Create
+     (Initial_Year           : String;
+      Cmd_Line               : String := "";
+      Tool_Name              : String := "";
+      Help                   : String := "";
+      Allow_No_Project       : Boolean := True;
+      Allow_Autoconf         : Boolean := False;
+      Allow_Distributed      : Boolean := False;
+      Allow_Quiet            : Boolean := True;
+      No_Project_Support     : Boolean := False;
+      Allow_Implicit_Project : Boolean := True) return Command_Line_Parser
    is
-      use GPR2, GPR2.Path_Name;
-
-      function Project_Dir return GPR2.Path_Name.Object is
-        (Create_Directory (Filename_Type (Project.Dir_Name)));
+      use GPRtools.Command_Line;
+      Parser            : Command_Line_Parser;
+      Project_Group     : GPRtools.Command_Line.Argument_Group;
+      Config_Group      : GPRtools.Command_Line.Argument_Group;
+      Verbosity_Group   : GPRtools.Command_Line.Argument_Group;
+      Distributed_Group : GPRtools.Command_Line.Argument_Group;
+      Hidden_Group      : GPRtools.Command_Line.Argument_Group;
 
    begin
-      if not Self.Build_Path.Is_Defined then
-         --  Check consistency of out-of-tree build options
+      Parser := Command_Line_Parser'
+        (GPRtools.Command_Line.Command_Line_Parser
+           (GPRtools.Command_Line.Create
+                (Initial_Year,
+                 Cmd_Line  => Cmd_Line,
+                 Tool_Name => Tool_Name,
+                 Help      => Help))
+         with Find_Implicit_Project => Allow_Implicit_Project);
 
-         if Self.Root_Path.Is_Defined then
-            raise Usage_Error with
-              "cannot use --root-dir without --relocate-build-tree option";
+      if not No_Project_Support then
+         Project_Group :=
+           Parser.Add_Argument_Group
+             ("Project",
+              On_Switch'Access,
+              "Project file handling switches",
+              Last => True);
+
+         Parser.Add_Argument
+           (Project_Group,
+            Create (Name           =>  "-P",
+                    Help           =>  "Use project file ""proj.gpr""",
+                    In_Switch_Attr => False,
+                    Delimiter      =>  Optional_Space,
+                    Parameter      =>  "proj.gpr"));
+         Parser.Add_Argument
+           (Project_Group,
+            Create (Name           =>  "-aP",
+                    Help           =>  "Add directory ""dir"" to project" &
+                                       " search path",
+                    In_Switch_Attr => False,
+                    Delimiter      =>  Optional_Space,
+                    Parameter      =>  "dir"));
+         Parser.Add_Argument
+           (Project_Group,
+            Create (Name           =>  "-X",
+                    Help           =>  "Set the project external reference" &
+                                       " ""NAME"" to ""Value""",
+                    In_Switch_Attr => False,
+                    Delimiter      => Optional_Space,
+                    Parameter      => "NAME=Value"));
+         --  -eL not used ???
+         Parser.Add_Argument
+           (Project_Group,
+            Create (Name           => "-eL",
+                    Help           => "Follow sybolic links when processing" &
+                                      " project files",
+                    In_Switch_Attr => False,
+                    Hidden         => True));
+
+         if Allow_No_Project then
+            Parser.Add_Argument
+              (Project_Group,
+               Create (Name           => "--no-project",
+                       Help           => "Do not use project file",
+                       In_Switch_Attr => False));
          end if;
 
-         Self.Build_Path := Project_Dir;
+         Parser.Add_Argument
+           (Project_Group,
+            Create (Name           => "--implicit-with",
+                    Help           => "Add the given  project as a " &
+                                      "dependency of all loaded projects",
+                    In_Switch_Attr => False,
+                    Delimiter      => Equal,
+                    Parameter      => "proj.gpr"));
+         Parser.Add_Argument
+           (Project_Group,
+            Create (Name           => "--unchecked-shared-lib-imports",
+                    Help           => "Shared lib projects may import any" &
+                                      " project",
+                    In_Switch_Attr => False));
+         Parser.Add_Argument
+           (Project_Group,
+            Create (Name           => "--relocate-build-tree",
+                    Help           => "Root obj/lib/exec dirs are current" &
+                                      " directory or ""dir""",
+                    In_Switch_Attr => False,
+                    Delimiter      => Equal,
+                    Parameter      => "dir",
+                    Default        =>
+                      GNAT.Directory_Operations.Get_Current_Dir));
+         Parser.Add_Argument
+           (Project_Group,
+            Create (Name           => "--root-dir",
+                    Help           => "Root directory of obj/lib/exec to" &
+                                      " relocate",
+                    In_Switch_Attr => False,
+                    Delimiter      => Equal,
+                    Parameter      => "dir"));
+         Parser.Add_Argument
+           (Project_Group,
+            Create (Name           => "--src-subdirs",
+                    Help           => "Prepend <obj>/dir to the list of" &
+                                      " source dirs for each project",
+                    In_Switch_Attr => False,
+                    Delimiter      => Equal,
+                    Parameter      => "dir"));
+         Parser.Add_Argument
+           (Project_Group,
+            Create (Name           => "--subdirs",
+                    Help           => "Use ""dir"" as suffix to obj/lib/exec" &
+                                      " directories",
+                    In_Switch_Attr => False,
+                    Delimiter      => Equal,
+                    Parameter      => "dir"));
 
-      elsif Self.Root_Path.Is_Defined then
-         Self.Build_Path := Create_Directory
-           (Project_Dir.Relative_Path (Self.Root_Path).Name,
-            Filename_Type (Self.Build_Path.Value));
+         --  CONFIG/AUTOCONF
+
+         Config_Group :=
+           Parser.Add_Argument_Group
+             ("Project configuration",
+              On_Switch'Access,
+              "Switches used to set or modify the way the " &
+                "project configuration is done",
+              Last => True);
+
+         Parser.Add_Argument
+           (Config_Group,
+            Create (Name           => "--config",
+                    Help           => "Specify the main config project file" &
+                                      " name",
+                    In_Switch_Attr => False,
+                    Delimiter      => Equal,
+                    Parameter      => "file.cgpr"));
+
+         if Allow_Autoconf then
+            Parser.Add_Argument
+              (Config_Group,
+               Create (Name           => "--autoconf",
+                       Help           => "Specify/create the main config" &
+                                         " project file name",
+                       In_Switch_Attr => False,
+                       Delimiter      => Equal,
+                       Parameter      => "file.cgpr"));
+         end if;
+
+         Parser.Add_Argument
+           (Config_Group,
+            Create (Name           => "--target",
+                    Help           => "Specify a target for cross platforms",
+                    In_Switch_Attr => False,
+                    Delimiter      => Equal,
+                    Parameter      => "targetname"));
+         Parser.Add_Argument
+           (Config_Group,
+            Create (Name           =>  "--RTS",
+                    Help           =>  "Specify a runtime for <lang> or Ada" &
+                                       " (default)",
+                    In_Switch_Attr => False,
+                    Delimiter      =>  Equal,
+                    Parameter      =>  "runtime",
+                    Index          => "<lang>"));
+         Parser.Add_Argument
+           (Config_Group,
+            Create (Name           => "--db",
+                    Help           => "Parse ""dir"" as an additional " &
+                                      " knowledge base",
+                    In_Switch_Attr => False,
+                    Delimiter      => Space,
+                    Parameter      => "dir"));
+         Parser.Add_Argument
+           (Config_Group,
+            Create (Name           => "--db-",
+                    Help           => "Do not load the standard knowledge" &
+                                      " base",
+                    In_Switch_Attr => False));
       end if;
-   end Clean_Build_Path;
 
-   ------------------------------
-   -- Read_Remaining_Arguments --
-   ------------------------------
+      if Allow_Distributed then
+         Distributed_Group :=
+           Parser.Add_Argument_Group
+             ("distributed", On_Switch'Access,
+              Help => "Distributed compilation mode switches.",
+              Last => True);
 
-   procedure Read_Remaining_Arguments (Self : in out Object; Tool : Which) is
-      use GNATCOLL;
-      use GPR2;
+         Parser.Add_Argument
+           (Distributed_Group,
+            Create (Name           => "--distributed",
+                    Help           => "Activate the remote mode on specified" &
+                                      " nodes",
+                    In_Switch_Attr => False,
+                    Delimiter      => Equal,
+                    Parameter      => "node1[,node2]",
+                    Default        => "@auto@"));
+         Parser.Add_Argument
+           (Distributed_Group,
+            Create (Name           => "--slave-env",
+                    Help           => "Use a specific slave's environment",
+                    In_Switch_Attr => False,
+                    Delimiter      => Equal,
+                    Parameter      => "name",
+                    Default        => "@auto@"));
+         Parser.Add_Argument
+           (Distributed_Group,
+            Create (Name           => "--hash",
+                    Help           => "Set a hash string to identified" &
+                                      " environment",
+                    In_Switch_Attr => False,
+                    Delimiter      => Equal,
+                    Parameter      => "<string>"));
+      end if;
 
-      Got_Prj : Boolean := False;
+      --  Verbosity
 
-      function Get_Next_Argument return String;
-      --  Returns the next non-empty and non-switch argument from the command
-      --  line.
-      --  Due to a limitation of GNAT.Command_Line functionality there is no
-      --  way to distinguish between the end of arguments and an empty
-      --  argument; we work around this by skipping over four empty arguments
-      --  before giving up and returning an empty argument
-      --  (we assume that this means we are really at the end).
-      --  ??? We should remove this code and use GMAT.Command_Line.Get_Argument
-      --  with Boolean out parameter instead once this routine is working
-      --  correctly in the oldest compiler GPR2 should be compatible with.
+      Verbosity_Group :=
+        Parser.Add_Argument_Group
+          ("Verbosity", On_Switch'Access, Last => True);
 
-      -----------------------
-      -- Get_Next_Argument --
-      -----------------------
+      Parser.Add_Argument
+        (Verbosity_Group,
+         Create (Name           => "-F",
+                 Help           => "Full project path name in brief error" &
+                                   " messages",
+                 In_Switch_Attr => False));
 
-      function Get_Next_Argument return String is
-      begin
-         for J in 1 .. 4 loop
-            declare
-               Next : constant String := Get_Argument;
-            begin
-               if Next /= "" then
-                  return Next;
-               end if;
-            end;
-         end loop;
+      if Allow_Quiet then
+         Parser.Add_Argument
+           (Verbosity_Group,
+            Create (Name   => "-q",
+                    Help   => "Be quiet/terse"));
+      end if;
 
-         return "";
-      end Get_Next_Argument;
+      Parser.Add_Argument
+        (Verbosity_Group,
+         Create (Name   => "-v",
+                 Help   => "Verbose output"));
 
+      --  Internal switch
+
+      Hidden_Group :=
+        Parser.Add_Argument_Group
+          ("_internal_gprtools_switches",
+           On_Switch'Access,
+           Last => True);
+      Parser.Add_Argument
+        (Hidden_Group,
+         Create (Name      => "--debug",
+                 Help      => "",
+                 Delimiter => None,
+                 Parameter => "flags",
+                 Default   => "*",
+                 Hidden    => True));
+
+      return Parser;
+   end Create;
+
+   -------------
+   -- Get_Opt --
+   -------------
+
+   overriding procedure Get_Opt
+     (Parser : Command_Line_Parser;
+      Result : in out GPRtools.Command_Line.Command_Line_Result'Class)
+   is
    begin
-      Read_Arguments : loop
-         declare
-            Arg : constant String := Get_Next_Argument;
-         begin
-            exit Read_Arguments when Arg = "";
+      Get_Opt_Internal (Parser, Base_Options'Class (Result));
+   end Get_Opt;
 
-            if Utils.Ends_With (GPR2.Path_Name.To_OS_Case (Arg), ".gpr") then
-               if not Self.Project_File.Is_Defined then
-                  Value_Callback ("-P", Arg);
-                  Got_Prj := True;
+   ----------------------
+   -- Get_Opt_Internal --
+   ----------------------
 
-               elsif not Got_Prj then
-                  raise Usage_Error with
-                    "cannot have -P<proj> and <proj> on the same command line";
+   procedure Get_Opt_Internal
+     (Parser : Command_Line_Parser;
+      Result : in out Base_Options'Class)
+   is
+      use GPR2;
+      Got_Prj : Boolean := False;
+   begin
+      GPRtools.Command_Line.Command_Line_Parser (Parser).Get_Opt (Result);
 
-               else
-                  raise Usage_Error with
-                    "cannot have multiple <proj> on the same command line";
-               end if;
+      for Arg of Result.Remaining_Arguments loop
+         if GNATCOLL.Utils.Ends_With
+           (GPR2.Path_Name.To_OS_Case (Arg),
+            String (GPR2.Project.Project_File_Extension))
+         then
+            if not Result.Project_File.Is_Defined then
+               On_Switch
+                 (Parser, Result'Access,
+                  Arg   => "-P",
+                  Index => "",
+                  Param => Arg);
+               Got_Prj := True;
+
+            elsif not Got_Prj then
+               raise GPRtools.Usage_Error with
+                 "cannot have -P<prj> and <prj> on the same command line";
 
             else
-               Self.Args.Include (Arg);
+               raise GPRtools.Usage_Error with
+                 "cannot have multiple <proj> on the same command line";
             end if;
-         end;
-      end loop Read_Arguments;
 
-      if Self.Project_File.Is_Defined
-        and then not Self.Project_File.Has_Dir_Name
-        and then Self.Root_Path.Is_Defined
+         else
+            Result.Args.Include (Arg);
+         end if;
+      end loop;
+
+      if Result.Project_File.Is_Defined
+        and then not Result.Project_File.Has_Dir_Name
+        and then Result.Root_Path.Is_Defined
       then
          --  We have to resolve the project directory without target specific
          --  directories in search path because --root-dir exists in command
          --  line parameters.
 
-         Self.Project_File := GPR2.Project.Create
-           (Self.Project_File.Name, Self.Tree.Project_Search_Paths);
+         Result.Project_File := GPR2.Project.Create
+           (Result.Project_File.Name, Result.Tree.Project_Search_Paths);
       end if;
 
-      Self.Project_Is_Defined := Self.Project_File.Is_Defined;
+      Result.Project_Is_Defined := Result.Project_File.Is_Defined;
 
-      if Tool /= Install then
-         if not Self.Project_File.Is_Defined then
-            if Self.No_Project then
-               Self.Project_File := Path_Name.Implicit_Project;
-               Self.Project_Base :=
-                 Path_Name.Create_Directory
-                   (Filename_Type (Ada.Directories.Current_Directory));
-            else
-               Util.Check_For_Default_Project (Self);
+      if not Result.Project_File.Is_Defined then
+         if Result.No_Project then
+            Result.Project_File := GPR2.Path_Name.Implicit_Project;
+            Result.Project_Base :=
+              GPR2.Path_Name.Create_Directory
+                (GPR2.Filename_Type (Ada.Directories.Current_Directory));
+
+         elsif Parser.Find_Implicit_Project then
+            Result.Project_File := GPRtools.Util.Check_For_Default_Project;
+
+            if Result.Project_File.Is_Implicit_Project then
+               Result.Project_Base :=
+                 GPR2.Path_Name.Create_Directory
+                   (GPR2.Filename_Type (Ada.Directories.Current_Directory));
+
+               if not Result.Quiet then
+                  Ada.Text_IO.Put_Line
+                    ("use implicit project in " & Result.Project_Base.Value);
+               end if;
+
+            elsif not Result.Quiet
+              and then Result.Project_File.Simple_Name /= "default.gpr"
+            then
+               Ada.Text_IO.Put_Line
+                 ("using project file " & Result.Project_File.Value);
+            end if;
+         end if;
+
+         if not Result.Project_File.Is_Defined
+           and then Parser.Find_Implicit_Project
+         then
+            Parser.Usage;
+         end if;
+
+      elsif Result.No_Project then
+         raise GPRtools.Usage_Error with
+           "cannot specify --no-project with a project file";
+      end if;
+
+      if not Result.Build_Path.Is_Defined
+        and then Result.Root_Path.Is_Defined
+      then
+         raise GPRtools.Usage_Error with
+           "cannot use --root-dir without --relocate-build-tree option";
+      end if;
+
+      declare
+         Project_Dir : constant GPR2.Path_Name.Object :=
+                         (if Result.Project_Base.Is_Defined
+                          then GPR2.Path_Name.Create_Directory
+                            (Filename_Type (Result.Project_Base.Dir_Name))
+                          elsif Result.Project_File.Is_Defined
+                            and then Result.Project_File.Has_Dir_Name
+                          then GPR2.Path_Name.Create_Directory
+                            (Filename_Type (Result.Project_File.Dir_Name))
+                          else
+                             GPR2.Path_Name.Undefined);
+      begin
+         if Project_Dir.Is_Defined then
+            if not Result.Build_Path.Is_Defined then
+               Result.Build_Path := Project_Dir;
+            elsif Result.Root_Path.Is_Defined then
+               Result.Build_Path := GPR2.Path_Name.Create_Directory
+                 (Project_Dir.Relative_Path (Result.Root_Path).Name,
+                  Filename_Type (Result.Build_Path.Value));
+            end if;
+         end if;
+      end;
+   end Get_Opt_Internal;
+
+   ------------------
+   -- Load_Project --
+   ------------------
+
+   function Load_Project
+     (Opt              : in out Base_Options'Class;
+      Absent_Dir_Error : Boolean;
+      Handle_Errors    : Boolean := True)
+     return Boolean
+   is
+      procedure Display (Logs : GPR2.Log.Object);
+
+      -------------
+      -- Display --
+      -------------
+
+      procedure Display (Logs : GPR2.Log.Object) is
+      begin
+         if Logs.Has_Error then
+            --  If there are errors, just display them: any warning may just
+            --  be a consequence of the initial error and thus be false
+            --  negatives.
+
+            for C in Logs.Iterate
+              (Information =>  False,
+               Warning     =>  False,
+               Error       =>  True,
+               Read        =>  False,
+               Unread      =>  True)
+            loop
+               GPR2.Log.Element (C).Output
+                 (Full_Path_Name => Opt.Full_Path_Name_For_Brief);
+            end loop;
+
+         elsif not Opt.Quiet then
+            for C in Logs.Iterate
+              (Information =>  Opt.Verbose,
+               Warning     =>  True,
+               Error       =>  True,
+               Read        =>  False,
+               Unread      =>  True)
+            loop
+               GPR2.Log.Element (C).Output
+                 (Full_Path_Name => Opt.Full_Path_Name_For_Brief);
+            end loop;
+         end if;
+      end Display;
+
+      Conf        : GPR2.Project.Configuration.Object;
+      Create_Cgpr : Boolean := False;
+
+   begin
+      if Opt.Config_Project.Is_Defined
+        and then (not Opt.Create_Missing_Config
+                  or else Opt.Config_Project.Exists)
+      then
+         Conf := GPR2.Project.Configuration.Load
+           (Opt.Config_Project,
+            Opt.Get_Target);
+
+         Display (Conf.Log_Messages);
+
+         if Conf.Has_Error then
+            if Handle_Errors then
+               GPRtools.Util.Finish_Program
+                 (GPRtools.Util.E_Fatal,
+                    '"'
+                  & String (Opt.Config_Project.Simple_Name)
+                  & """ processing failed");
             end if;
 
-            if not Self.Project_File.Is_Defined then
-               Display_Help (Self.Config);
-               raise GPRtools.Usage_Error with
-                 "Can't determine project file to work with";
+            return False;
+         end if;
+
+         Opt.Tree.Load
+           (Filename         =>  Opt.Project_File,
+            Context          =>  Opt.Context,
+            Config           =>  Conf,
+            Project_Dir      =>  Opt.Project_Base,
+            Build_Path       =>  Opt.Build_Path,
+            Subdirs          =>  Opt.Get_Subdirs,
+            Src_Subdirs      =>  Opt.Get_Src_Subdirs,
+            Check_Shared_Lib =>  not Opt.Unchecked_Shared_Lib,
+            Absent_Dir_Error =>  Absent_Dir_Error,
+            Implicit_With    =>  Opt.Implicit_With);
+
+      else
+         if Opt.Create_Missing_Config
+           and then not Opt.Config_Project.Exists
+         then
+            if not Opt.Quiet then
+               Ada.Text_IO.Put_Line
+                 ("creating configuration project " &
+                    String (Opt.Config_Project.Name));
             end if;
 
-         elsif Self.No_Project then
+            Create_Cgpr := True;
+         end if;
+
+         Opt.Tree.Load_Autoconf
+           (Filename          =>  Opt.Project_File,
+            Context           =>  Opt.Context,
+            Project_Dir       =>  Opt.Project_Base,
+            Build_Path        =>  Opt.Build_Path,
+            Subdirs           =>  Opt.Get_Subdirs,
+            Src_Subdirs       =>  Opt.Get_Src_Subdirs,
+            Check_Shared_Lib  =>  not Opt.Unchecked_Shared_Lib,
+            Absent_Dir_Error  =>  Absent_Dir_Error,
+            Implicit_With     =>  Opt.Implicit_With,
+            Target            =>  Opt.Get_Target,
+            Language_Runtimes =>  Opt.RTS_Map,
+            Base              =>  GPR2.KB.Create
+              (Flags      => GPR2.KB.Default_Flags,
+               Default_KB => not Opt.Skip_Default_KB,
+               Custom_KB  => Opt.KB_Locations),
+            Config_Project    => (if Create_Cgpr then Opt.Config_Project
+                                  else GPR2.Path_Name.Undefined));
+      end if;
+
+      if Handle_Errors then
+         Display (Opt.Tree.Log_Messages.all);
+      end if;
+
+      if Opt.Tree.Log_Messages.Has_Error then
+         if Handle_Errors then
+            GPRtools.Util.Finish_Program
+              (GPRtools.Util.E_Fatal,
+                 '"'
+               & (if Opt.Project_File.Is_Defined
+                 then String (Opt.Config_Project.Simple_Name)
+                 else Opt.Project_Base.Value)
+               & """ processing failed");
+         end if;
+      end if;
+
+      return True;
+
+   exception
+      when GPR2.Project_Error =>
+         if not Handle_Errors then
+            return False;
+         end if;
+
+         if Opt.Tree.Is_Defined
+           and then Opt.Tree.Has_Messages
+         then
+            Display (Opt.Tree.Log_Messages.all);
+         else
+            raise;
+         end if;
+
+         return False;
+   end Load_Project;
+
+   ---------------
+   -- On_Switch --
+   ---------------
+
+   procedure On_Switch
+     (Parser : GPRtools.Command_Line.Command_Line_Parser'Class;
+      Res    : not null access GPRtools.Command_Line.Command_Line_Result'Class;
+      Arg    : GPRtools.Command_Line.Switch_Type;
+      Index  : String;
+      Param  : String)
+   is
+      pragma Unreferenced (Parser);
+      use type GPR2.Language_Id;
+      use type GPRtools.Command_Line.Switch_Type;
+
+      Result   : constant access Base_Options := Base_Options (Res.all)'Access;
+      Lang_Idx : constant GPR2.Language_Id :=
+                   (if Index'Length > 0
+                    then GPR2."+" (GPR2.Name_Type (Index))
+                    else GPR2.No_Language);
+
+   begin
+      if Arg = "-P" then
+         if not Result.Project_File.Is_Defined then
+            Result.Project_File :=
+              GPR2.Path_Name.Create_File
+                (GPR2.Project.Ensure_Extension (GPR2.Filename_Type (Param)),
+                 GPR2.Path_Name.No_Resolution);
+         else
             raise GPRtools.Usage_Error with
-              "cannot specify --no-project with a project file";
+              '"' & String (Arg) & """, project already """
+              & (if Result.Project_File.Has_Dir_Name
+                 then Result.Project_File.Value
+                 else String (Result.Project_File.Name)) & '"';
          end if;
 
-         if Self.Project_Base.Is_Defined then
-            Self.Clean_Build_Path (Self.Project_Base);
+      elsif Arg = "-aP" then
+         Result.Tree.Register_Project_Search_Path
+           (GPR2.Path_Name.Create_Directory (GPR2.Filename_Type (Param)));
 
-         elsif Self.Project_File.Has_Dir_Name then
-            Self.Clean_Build_Path (Self.Project_File);
+      elsif Arg = "-X" then
+         declare
+            Idx : constant Natural := Ada.Strings.Fixed.Index (Param, "=");
+         begin
+            if Idx = 0 then
+               raise GPRtools.Usage_Error with
+                 "Can't split '" & Param & "' to name and value";
+            end if;
+
+            Result.Context.Include
+              (GPR2.Name_Type (Param (Param'First .. Idx - 1)),
+               Param (Idx + 1 .. Param'Last));
+         end;
+
+      elsif Arg = "-eL" then
+         --  ??? TODO
+         null;
+
+      elsif Arg = "--no-project" then
+         Result.No_Project := True;
+
+      elsif Arg = "--implicit-with" then
+         Result.Implicit_With.Append
+           (GPR2.Path_Name.Create_File
+              (GPR2.Project.Ensure_Extension (GPR2.Filename_Type (Param))));
+
+      elsif Arg = "--unchecked-shared-lib-imports" then
+         Result.Unchecked_Shared_Lib := True;
+
+      elsif Arg = "--relocate-build-tree" then
+         Result.Build_Path :=
+           GPR2.Path_Name.Create_Directory (GPR2.Filename_Type (Param));
+
+      elsif Arg = "--root-dir" then
+         Result.Root_Path :=
+           GPR2.Path_Name.Create_Directory (GPR2.Filename_Type (Param));
+
+      elsif Arg = "--src-subdirs" then
+         Result.Src_Subdirs := To_Unbounded_String (Param);
+
+      elsif Arg = "--subdirs" then
+         Result.Subdirs := To_Unbounded_String (Param);
+
+      elsif Arg = "--config" then
+         Result.Config_Project :=
+           GPR2.Path_Name.Create_File
+             (GPR2.Project.Ensure_Extension
+                (GPR2.Filename_Type (Param), True));
+         Result.Create_Missing_Config := False;
+
+      elsif Arg = "--autoconf" then
+         Result.Config_Project :=
+           GPR2.Path_Name.Create_File
+             (GPR2.Project.Ensure_Extension
+                (GPR2.Filename_Type (Param), True));
+         Result.Create_Missing_Config := True;
+
+      elsif Arg = "--target" then
+         Result.Target := To_Unbounded_String (Param);
+
+      elsif Arg = "--RTS" then
+         if Lang_Idx = GPR2.No_Language then
+            Result.RTS_Map.Include (GPR2.Ada_Language, Param);
+         else
+            Result.RTS_Map.Include (Lang_Idx, Param);
          end if;
+
+      elsif Arg = "--db" then
+         declare
+            KB_Norm : constant String :=
+                        GNAT.OS_Lib.Normalize_Pathname (Param);
+            KB_Path : GPR2.Path_Name.Object;
+         begin
+            if GNAT.OS_Lib.Is_Directory (KB_Norm) then
+               KB_Path :=
+                 GPR2.Path_Name.Create_Directory
+                   (GPR2.Filename_Type (KB_Norm));
+            elsif GNAT.OS_Lib.Is_Regular_File (KB_Norm) then
+               KB_Path :=
+                 GPR2.Path_Name.Create_File (GPR2.Filename_Type (KB_Norm));
+            else
+               raise GPRtools.Usage_Error with
+                 KB_Norm & " is not a file or directory";
+            end if;
+
+            Result.KB_Locations.Append (KB_Path);
+         end;
+
+      elsif Arg = "--db-" then
+         Result.Skip_Default_KB := True;
+
+      elsif Arg = "--distributed" then
+         declare
+            use type GPR2.Containers.Count_Type;
+
+            --  If Value is set, the first character is a =, we remove it
+
+            Hosts : constant GPR2.Containers.Name_List :=
+                      (if Param = "@auto@"
+                       then GPR2.Compilation.Registry.Get_Hosts
+                       else GPR2.Containers.Create
+                              (GPR2.Name_Type (Param),
+                               Separator => ","));
+         begin
+            if Hosts.Length = 0 then
+               raise Usage_Error with
+                 "missing hosts for distributed mode compilation";
+            else
+               GPR2.Compilation.Registry.Record_Slaves (Hosts);
+               Result.Distributed_Mode := True;
+            end if;
+         end;
+
+      elsif Arg = "--slave-env" then
+         if Param = "@auto@" then
+            Result.Slave_Env_Auto := True;
+         else
+            Result.Slave_Env := To_Unbounded_String (Param);
+         end if;
+
+      elsif Arg = "--hash" then
+         Result.Hash_Value := To_Unbounded_String (Param);
+
+      elsif Arg = "-F" then
+         Result.Full_Path_Name_For_Brief := True;
+
+      elsif Arg = "-q" then
+         Result.Verbosity := Quiet;
+
+      elsif Arg = "-v" then
+         case Result.Verbosity is
+            when Very_Verbose =>
+               null;
+            when Verbose =>
+               Result.Verbosity := Very_Verbose;
+            when others =>
+               Result.Verbosity := Verbose;
+         end case;
+
+      elsif Arg = "--debug" then
+         for C of Param loop
+            GPR2.Set_Debug (C);
+         end loop;
+
+      else
+         raise GPRtools.Command_Line.Command_Line_Definition_Error
+           with "unexpected switch " & String (Arg);
       end if;
-   end Read_Remaining_Arguments;
+   end On_Switch;
 
    -----------
    -- Setup --
    -----------
 
-   procedure Setup
-     (Self : aliased in out Object'Class;
-      Tool : Which) is
+   procedure Setup (Tool : Which)
+   is
    begin
       PRP.Check_Attributes (PRP.Naming);
-      Self.Tool := Tool;
 
       case Tool is
          when Build   =>
@@ -223,315 +828,14 @@ package body GPRtools.Options is
          when Remote =>
             PRP.Check_Attributes (PRP.Remote);
 
-         when Ls | Name | Inspect  => null;
+         when Ls | Name | Inspect => null;
       end case;
+      --  GPR tree handling
 
-      TLS.Set_Value (Self'Unchecked_Access);
-
-      Define_Switch
-        (Self.Config, Self.Help'Access,
-         "-h", Long_Switch => "--help",
-         Help              => "Display this help message and exit");
-
-      Define_Switch
-        (Self.Config, Self.Version'Access,
-         Long_Switch => "--version",
-         Help        => "Display version and exit");
-
-      Define_Switch
-        (Self.Config, Value_Callback'Access,
-         "-v", "--verbose",
-         Help => "Verbose output");
-
-      Define_Switch
-        (Self.Config, Self.Unchecked_Shared_Lib'Access,
-         Long_Switch => "--unchecked-shared-lib-imports",
-         Help => "Shared lib projects may import any project");
-
-      Define_Switch
-        (Self.Config, Value_Callback'Access,
-         Long_Switch => "--debug?",
-         Help        => "Debug mode");
-
-      if Tool not in Remote | Ls | Inspect then
-         Define_Switch
-           (Self.Config, Value_Callback'Access,
-            "-q", "--quiet",
-            Help => "Be quiet/terse");
-
-         --  The code below should be uncommented when we will be able to give
-         --  a name for the hiding warnings switch.
-         --
-         --  Define_Switch
-         --    (Self.Config, Self.Warnings'Unrestricted_Access,
-         --     Switch => "-ws",
-         --     Help   => "Suppress all warnings",
-         --     Value  => False);
-
-         Define_Switch
-           (Self.Config, Self.Full_Path_Name_For_Brief'Access,
-            Switch => "-F",
-            Help   => "Full project path name in brief log messages");
-
-         Define_Switch
-           (Self.Config, Value_Callback'Access,
-            Long_Switch => "--root-dir:",
-            Help        => "Root directory of obj/lib/exec to relocate",
-            Argument    => "<dir>");
-
-         Define_Switch
-           (Self.Config, Value_Callback'Access,
-            Long_Switch => "--relocate-build-tree?",
-            Help        =>
-              "Root obj/lib/exec dirs are current-directory or dir",
-            Argument    => "<dir>");
-      end if;
-
-      if Tool in Build | Clean | Install | Ls | Inspect then
-         Define_Switch
-           (Self.Config, Value_Callback'Access, "-P:",
-            Help => "Project file to "
-            & (case Tool is
-                 when Build   => "build",
-                 when Install => "install",
-                 when Clean   => "cleanup",
-                 when Ls      => "browse",
-                 when Inspect => "inspect",
-                 when others => ""));
-
-         if Tool not in Ls | Inspect then
-            Define_Switch
-              (Self.Config, Self.No_Project'Access,
-               Long_Switch => "--no-project",
-               Help        => "Do not "
-                              & (if Tool = Install
-                                 then "install"
-                                 else "use") & " project file");
-         end if;
-
-         Define_Switch
-           (Self.Config, Value_Callback'Access,
-            "-aP:",
-            Help     => "Add directory <dir> to project search path",
-            Argument => "<dir>");
-
-         Define_Switch
-           (Self.Config, Value_Callback'Access,
-            Long_Switch => "--target=",
-            Help        => "Specify a target for cross platforms",
-            Argument    => "<name>");
-
-         Define_Switch
-           (Self.Config, Value_Callback'Access,
-            Long_Switch => "--RTS:",
-            Help        => "Use runtime <runtime> for language Ada",
-            Argument    => "<runtime>");
-
-         Define_Switch
-           (Self.Config, Value_Callback'Access,
-            "-X:",
-            Help     => "Specify an external reference for Project Files",
-            Argument => "<NAME>=<VALUE>");
-
-         Define_Switch
-           (Self.Config, Self.Skip_Default_KB'Access,
-            Long_Switch => "--db-",
-            Help        => "Do not load the standard knowledge base");
-
-         Define_Switch
-           (Self.Config, Value_Callback'Access,
-            Long_Switch => "--db:",
-            Help        => "Parse dir as an additional knowledge base");
-      end if;
-
-      if Tool in Build | Clean then
-         Define_Switch
-           (Self.Config, Value_Callback'Access,
-            Long_Switch => "--implicit-with:",
-            Help        =>
-              "Add the given projects as a dependency on all loaded"
-            & " projects",
-            Argument    => "<filename>");
-
-         Define_Switch
-           (Self.Config, Value_Callback'Access,
-            Long_Switch => "--distributed?",
-            Help        =>
-              "Activate the distributed mode for the given slaves",
-            Argument    => "<host>[,<host>]");
-
-         Define_Switch
-           (Self.Config, Value_Callback'Access,
-            Long_Switch => "--slave-env?",
-            Help        => "Use a specific slave's environment",
-            Argument    => "<name>");
-      end if;
-
-      if Tool in Build | Clean | Install then
-         Define_Switch
-           (Self.Config, Value_Callback'Access,
-            Long_Switch => "--src-subdirs:",
-            Help        => "Prepend <obj>/dir to the list of source"
-                           & " dirs for each project",
-            Argument    => "<dir>");
+      if Tool = Name then
+         --  GPRName doesn't need any project-related argument
+         return;
       end if;
    end Setup;
-
-   --------------------
-   -- Value_Callback --
-   --------------------
-
-   procedure Value_Callback (Switch, Value : String) is
-
-      Self : constant not null access Object'Class := TLS.Reference.all;
-
-      function Normalize_Value (Default : String := "") return String is
-        (if Value in "" | "=" | ":" then Default
-         elsif Value (Value'First) in '=' | ':'
-         then Value (Value'First + 1 .. Value'Last)
-         else Value);
-      --  Remove leading '=' symbol from value for options like
-      --  --config=file.cgrp
-
-   begin
-      if Switch = "-P" then
-         if not Self.Project_File.Is_Defined then
-            Self.Project_File :=
-              GPR2.Path_Name.Create_File
-                (GPR2.Project.Ensure_Extension
-                   (GPR2.Filename_Type (Normalize_Value)),
-                 GPR2.Path_Name.No_Resolution);
-         else
-            raise GPRtools.Usage_Error with
-              '"' & Normalize_Value & """, project already """
-              & (if Self.Project_File.Has_Dir_Name
-                 then Self.Project_File.Value
-                 else String (Self.Project_File.Name)) & '"';
-         end if;
-
-      elsif Switch = "--relocate-build-tree" then
-         Self.Build_Path :=
-           GPR2.Path_Name.Create_Directory
-             (GPR2.Filename_Type (Normalize_Value (".")));
-
-      elsif Switch = "--root-dir" then
-         Self.Root_Path :=
-           GPR2.Path_Name.Create_Directory
-             (GPR2.Filename_Type (Normalize_Value));
-
-      elsif Switch = "-q" or else Switch = "--quiet" then
-         if Self.Verbosity = Regular then
-            Self.Verbosity := Quiet;
-         end if;
-
-      elsif Switch = "-v" or else Switch = "--verbose" then
-         Self.Verbosity := (if Self.Verbosity = Verbose then Very_Verbose
-                            else Verbose);
-
-      elsif Switch = "--implicit-with" then
-         Self.Implicit_With.Append
-           (GPR2.Path_Name.Create_File
-              (GPR2.Project.Ensure_Extension
-                   (GPR2.Filename_Type (Normalize_Value))));
-
-      elsif Switch = "--target" then
-         Self.Target := To_Unbounded_String (Normalize_Value);
-
-      elsif Switch = "--RTS" then
-         declare
-            Value : constant String  := Normalize_Value;
-            Del   : constant Natural := Ada.Strings.Fixed.Index (Value, "=");
-         begin
-            if Del = 0 then
-               Self.RTS_Map.Insert (GPR2.Ada_Language, Value);
-            else
-               Self.RTS_Map.Insert
-                 (GPR2."+" (GPR2.Name_Type (Value (Value'First .. Del - 1))),
-                  Value (Del + 1 .. Value'Last));
-            end if;
-         end;
-
-      elsif Switch = "-X" then
-         declare
-            Idx : constant Natural := Ada.Strings.Fixed.Index (Value, "=");
-         begin
-            if Idx = 0 then
-               raise GPRtools.Usage_Error with
-                 "Can't split '" & Value & "' to name and value";
-            end if;
-
-            Self.Context.Include
-              (GPR2.Name_Type (Value (Value'First .. Idx - 1)),
-               Value (Idx + 1 .. Value'Last));
-         end;
-
-      elsif Switch = "-aP" then
-         Self.Tree.Register_Project_Search_Path
-           (GPR2.Path_Name.Create_Directory (GPR2.Filename_Type (Value)));
-
-      elsif Switch = "--distributed" then
-         declare
-            use type GPR2.Containers.Count_Type;
-
-            --  If Value is set, the first character is a =, we remove it
-
-            Hosts : constant GPR2.Containers.Name_List :=
-                      (if Value = ""
-                       then GPR2.Compilation.Registry.Get_Hosts
-                       else GPR2.Containers.Create
-                              (GPR2.Name_Type (Normalize_Value),
-                               Separator => ","));
-         begin
-            if Hosts.Length = 0 then
-               Util.Fail_Program
-                 ("missing hosts for distributed mode compilation");
-
-            else
-               GPR2.Compilation.Registry.Record_Slaves (Hosts);
-               Self.Distributed_Mode := True;
-            end if;
-         end;
-
-      elsif Switch = "--slave-env" then
-         if Value = "" then
-            Self.Slave_Env_Auto := True;
-         else
-            Self.Slave_Env := To_Unbounded_String (Normalize_Value);
-         end if;
-
-      elsif Switch = "--src-subdirs" then
-         Self.Src_Subdirs := To_Unbounded_String (Normalize_Value);
-
-      elsif Switch = "--db" then
-         declare
-            KB_Norm : constant String :=
-                        GNAT.OS_Lib.Normalize_Pathname (Normalize_Value);
-            KB_Path : GPR2.Path_Name.Object;
-         begin
-            if GNAT.OS_Lib.Is_Directory (KB_Norm) then
-               KB_Path :=
-                 GPR2.Path_Name.Create_Directory
-                   (GPR2.Filename_Type (KB_Norm));
-            elsif GNAT.OS_Lib.Is_Regular_File (KB_Norm) then
-               KB_Path :=
-                 GPR2.Path_Name.Create_File (GPR2.Filename_Type (KB_Norm));
-            else
-               raise GPRtools.Usage_Error with
-                 KB_Norm & " is not a file or directory";
-            end if;
-
-            Self.KB_Locations.Append (KB_Path);
-         end;
-
-      elsif Switch = "--debug" then
-         if Value = "" then
-            GPR2.Set_Debug ('*');
-         else
-            for V of Value loop
-               GPR2.Set_Debug (V);
-            end loop;
-         end if;
-      end if;
-   end Value_Callback;
 
 end GPRtools.Options;

@@ -61,7 +61,7 @@ package body GPRinstall.Uninstall is
 
       procedure Delete_Empty_Directory (Dir_Name : String) is
       begin
-         Delete_Empty_Directory (Options.Global_Prefix_Dir.V.all, Dir_Name);
+         Delete_Empty_Directory (-Options.Global_Prefix_Dir.V, Dir_Name);
       end Delete_Empty_Directory;
 
       -----------------
@@ -185,7 +185,7 @@ package body GPRinstall.Uninstall is
       Text_IO.Close (Man);
 
       if Prefix.Is_Defined then
-         Options.Global_Prefix_Dir := (new String'(Prefix.Value), False);
+         Options.Global_Prefix_Dir := (-Prefix.Value, False);
       end if;
 
       --  Delete files

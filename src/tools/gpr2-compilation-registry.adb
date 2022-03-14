@@ -76,7 +76,7 @@ package body GPR2.Compilation.Registry is
       S_Data                     : Slave.Object;
       Project_Name               : Name_Type;
       Sync                       : Boolean;
-      Options                    : GPRtools.Options.Object'Class;
+      Options                    : GPRtools.Options.Base_Options'Class;
       Sloc                       : Source_Reference.Object'Class;
       Included_Artifact_Patterns : String := "") return Slave_Data;
    --  Connect to the slave and return the corresponding object
@@ -85,14 +85,14 @@ package body GPR2.Compilation.Registry is
    --  Parse a host[:port] string and returns corresponding Slave_Data record
 
    procedure Register_Remote_Slave
-     (Tree                       : not null access GPR2.Project.Tree.Object;
+     (Tree                       : not null access Project.Tree.Object;
       S_Data                     : Slave.Object;
       Project_Name               : Name_Type;
       Excluded_Patterns          : Containers.Value_List;
       Included_Patterns          : Containers.Value_List;
       Included_Artifact_Patterns : Containers.Value_List;
       Synchronize                : Boolean;
-      Options                    : GPRtools.Options.Object'Class);
+      Options                    : GPRtools.Options.Base_Options'Class);
    --  Register a slave living on Host for the given project name. User is
    --  used when calling rsync, it is the remote machine user name, if empty
    --  the local user name is used.
@@ -185,7 +185,7 @@ package body GPR2.Compilation.Registry is
 
    procedure Clean_Up_Remote_Slaves
      (Project : GPR2.Project.View.Object;
-      Options : GPRtools.Options.Object'Class)
+      Options : GPRtools.Options.Base_Options'Class)
    is
       Tree : constant not null access GPR2.Project.Tree.Object := Project.Tree;
 
@@ -364,7 +364,7 @@ package body GPR2.Compilation.Registry is
       S_Data                     : Slave.Object;
       Project_Name               : Name_Type;
       Sync                       : Boolean;
-      Options                    : GPRtools.Options.Object'Class;
+      Options                    : GPRtools.Options.Base_Options'Class;
       Sloc                       : Source_Reference.Object'Class;
       Included_Artifact_Patterns : String := "") return Slave_Data
    is
@@ -599,7 +599,7 @@ package body GPR2.Compilation.Registry is
       Included_Patterns          : Containers.Value_List;
       Included_Artifact_Patterns : Containers.Value_List;
       Synchronize                : Boolean;
-      Options                    : GPRtools.Options.Object'Class)
+      Options                    : GPRtools.Options.Base_Options'Class)
    is
       S    : Slave_Data;
       IAP  : Unbounded_String;
@@ -689,7 +689,7 @@ package body GPR2.Compilation.Registry is
 
    procedure Register_Remote_Slaves
      (Tree        : GPR2.Project.Tree.Object;
-      Options     : GPRtools.Options.Object'Class;
+      Options     : GPRtools.Options.Base_Options'Class;
       Synchronize : Boolean)
    is
       use Ada.Directories;
@@ -1250,7 +1250,7 @@ package body GPR2.Compilation.Registry is
 
    procedure Unregister_Remote_Slaves
      (Tree        : GPR2.Project.Tree.Object;
-      Options     : GPRtools.Options.Object'Class;
+      Options     : GPRtools.Options.Base_Options'Class;
       From_Signal : Boolean := False)
    is
       use type Ada.Calendar.Time;

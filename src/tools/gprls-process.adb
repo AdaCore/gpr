@@ -17,6 +17,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Calendar;
+with Ada.Command_Line;
 with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Directories;
 with Ada.Text_IO;
@@ -25,7 +26,6 @@ with GNAT.OS_Lib;
 
 with GNATCOLL.Utils;
 
-with GPR2.KB;
 with GPR2.Unit;
 with GPR2.Containers;
 with GPR2.Log;
@@ -41,13 +41,16 @@ with GPR2.Project.View;
 with GPR2.Source_Info.Parser.Registry;
 with GPR2.Version;
 
+with GPRtools.Options;
 with GPRtools.Util;
 
 with GPRls.Common;
 with GPRls.Gnatdist;
 with GPRls.Options;
 
-procedure GPRls.Process (Opt : GPRls.Options.Object) is
+function GPRls.Process
+  (Opt : in out GPRls.Options.Object) return Ada.Command_Line.Exit_Status
+is
 
    use Ada;
 
@@ -281,37 +284,30 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    end Show_Tree_Load_Errors;
 
 begin
-   --  Load the project (if defined) and its configuration
+   --  Load the project tree
 
-   Tree.Load_Autoconf
-     (Filename          => Opt.Project_File,
-      Project_Dir       => Opt.Project_Base,
-      Context           => Opt.Project_Context,
-      Absent_Dir_Error  => False,
-      Target            => Opt.Get_Target,
-      Language_Runtimes => Opt.RTS_Map,
-      Check_Shared_Lib  => not Opt.Unchecked_Shared_Lib,
-      Base              => GPR2.KB.Create
-        (Flags             => KB.Default_Flags,
-         Default_KB        => not Opt.Skip_Default_KB,
-         Custom_KB         => Opt.KB_Locations));
+   if not GPRtools.Options.Load_Project (Opt,
+                                         Absent_Dir_Error => False)
+   then
+      if Opt.Project_File.Is_Defined then
+         Text_IO.Put_Line ("gprls: unable to process project file " &
+                             String (Opt.Project_File.Name));
+      else
+         Text_IO.Put_Line ("gprls: unable to process project file " &
+                             String (Opt.Project_Base.Name));
+      end if;
+
+      return Ada.Command_Line.Failure;
+   end if;
 
    if Opt.Only_Display_Paths then
       --  For the "gprls -v" usage
 
       Display_Paths;
-      return;
+      return Ada.Command_Line.Success;
    end if;
-
-   --  Show errors and warnings from the load stage
 
    Show_Tree_Load_Errors;
-
-   --  Terminate process if error was printed
-
-   if Tree.Log_Messages.Has_Error then
-      return;
-   end if;
 
    pragma Assert
      (not Opt.Source_Parser
@@ -1082,7 +1078,7 @@ begin
       --  Do nothing if no source was found
 
       if Sources.Is_Empty then
-         return;
+         return Ada.Command_Line.Success;
       end if;
 
       --  Check all sources and notify when no ALI file is present
@@ -1151,6 +1147,8 @@ begin
       end if;
    end;
 
+   return Ada.Command_Line.Success;
+
 exception
    when Project_Error | Processing_Error =>
       Show_Tree_Load_Errors;
@@ -1158,4 +1156,6 @@ exception
       Finish_Program
         (E_Errors,
          "unable to process project file " & String (Opt.Project_File.Name));
+
+      return Ada.Command_Line.Failure;
 end GPRls.Process;

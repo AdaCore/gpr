@@ -21,10 +21,6 @@
 
 with GNAT.OS_Lib;
 
-with GPRtools.Options;
-
-with GPR2.Containers;
-with GPR2.Path_Name;
 with GPR2.Project.View;
 
 package GPR2.Compilation.Process is
@@ -43,30 +39,24 @@ package GPR2.Compilation.Process is
    --  Record an environment variable to set when spawning a compilation. This
    --  is for example to set CPATH if needed for the compilation of C sources.
 
-   function Run
-     (Executable    : Name_Type;
-      Options       : Containers.Value_List;
-      Project       : GPR2.Project.View.Object;
-      GPR_Options   : GPRtools.Options.Object;
-      Obj_Name      : Name_Type;
-      Source        : String := "";
-      Language      : Language_Id := No_Language;
-      Dep_Name      : String := "";
-      Output_File   : String := "";
-      Err_To_Out    : Boolean := False;
-      Force_Local   : Boolean := False;
-      Response_File : Path_Name.Object := Path_Name.Undefined) return Id;
+   --  function Run
+   --    (Executable    : Name_Type;
+   --     Options       : Containers.Value_List;
+   --     Project       : GPR2.Project.View.Object;
+   --     GPR_Options   : GPRtools.Options.Object;
+   --     Obj_Name      : Name_Type;
+   --     Source        : String := "";
+   --     Language      : Language_Id := No_Language;
+   --     Dep_Name      : String := "";
+   --     Output_File   : String := "";
+   --     Err_To_Out    : Boolean := False;
+   --     Force_Local   : Boolean := False;
+   --     Response_File : Path_Name.Object := Path_Name.Undefined) return Id;
    --  Run Executable with the given options locally or on a remote slave.
    --  Dep_File name is the name of the file that is expected to be generated
    --  if the compilation is successful. If Force_Local is set then the
    --  compilation will happen on the local machine. If Response_File is
    --  not No_Path, use it to invoke the compiler, instead of the Options.
-
-   function Get_Maximum_Processes
-     (Options : GPRtools.Options.Object) return Positive;
-   --  The maximum number of simultaneous compilation supported. This is the
-   --  sum of the local parallelism and the sum of remote slaves supported
-   --  processes.
 
    --  For the hash table of jobs
 
@@ -84,7 +74,7 @@ package GPR2.Compilation.Process is
       Slave   : Optional_Name_Type := "");
    --  Add process Id with the given status into the list of results
 
-   procedure Wait_Result (Process : out Id; Status : out Boolean);
+   --  procedure Wait_Result (Process : out Id; Status : out Boolean);
    --  Wait for a process to terminate (so a compilation process result) to be
    --  available and returns the process Id and the corresponding status.
 

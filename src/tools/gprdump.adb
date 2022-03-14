@@ -22,17 +22,15 @@ with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.Command_Line;
-with GNAT.OS_Lib;
-with GNAT.Strings;
 
 with GNATCOLL.Traces;
 with GNATCOLL.Tribooleans;
 
+with GPRtools.Command_Line;
 with GPRtools.Util;
 with GPRtools.Options;
 
 with GPR2.Containers;
-with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Project.Source.Artifact;
 pragma Warnings (Off, "*is not referenced");
@@ -43,7 +41,6 @@ with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Project.Unit_Info;
 with GPR2.Unit;
-with GPR2.Version;
 
 procedure GPRdump is
 
@@ -55,6 +52,22 @@ procedure GPRdump is
 
    use GPR2;
 
+   type GPRdump_Options is new GPRtools.Options.Base_Options with record
+      Display_Sources     : Boolean := False;
+      Display_All_Sources : Boolean := False;
+      Display_Artifacts   : Boolean := False;
+      Display_Units       : Boolean := False;
+      All_Projects        : Boolean := False;
+      Source              : Unbounded_String;
+   end record;
+
+   procedure On_Switch
+     (Parser : GPRtools.Command_Line.Command_Line_Parser'Class;
+      Res    : not null access GPRtools.Command_Line.Command_Line_Result'Class;
+      Arg    : GPRtools.Command_Line.Switch_Type;
+      Index  : String;
+      Param  : String);
+
    procedure Sources (View : Project.View.Object);
    --  Display view sources
 
@@ -63,16 +76,8 @@ procedure GPRdump is
    procedure Parse_Command_Line;
    --  Parse command line parameters
 
-   Help                : aliased Boolean := False;
-   Version             : aliased Boolean := False;
-   Display_Sources     : aliased Boolean := False;
-   Display_All_Sources : aliased Boolean := False;
-   Display_Artifacts   : aliased Boolean := False;
-   Display_Units       : aliased Boolean := False;
-   All_Projects        : aliased Boolean := False;
-   Source              : aliased GNAT.Strings.String_Access;
-   Project_Path        : Unbounded_String;
-   Project_Tree        : GPR2.Project.Tree.Object;
+   Project_Tree : GPR2.Project.Tree.Object;
+   Options      : GPRdump_Options;
 
    ------------------
    -- Full_Closure --
@@ -108,87 +113,108 @@ procedure GPRdump is
       end if;
    end Full_Closure;
 
+   ---------------
+   -- On_Switch --
+   ---------------
+
+   procedure On_Switch
+     (Parser : GPRtools.Command_Line.Command_Line_Parser'Class;
+      Res    : not null access GPRtools.Command_Line.Command_Line_Result'Class;
+      Arg    : GPRtools.Command_Line.Switch_Type;
+      Index  : String;
+      Param  : String)
+   is
+      pragma Unreferenced (Parser, Index);
+      use type GPRtools.Command_Line.Switch_Type;
+      Result : constant access GPRdump_Options :=
+                 GPRdump_Options (Res.all)'Access;
+   begin
+      if Arg = "-s" then
+         Result.Display_Sources := True;
+
+      elsif Arg = "-a" then
+         Result.Display_All_Sources := True;
+
+      elsif Arg = "-u" then
+         Result.Display_Units := True;
+
+      elsif Arg = "-r" then
+         Result.All_Projects := True;
+
+      elsif Arg = "--artifacts" then
+         Result.Display_Artifacts := True;
+
+      elsif Arg = "-d" then
+         Result.Source := To_Unbounded_String (Param);
+
+      end if;
+   end On_Switch;
    ------------------------
    -- Parse_Command_Line --
    ------------------------
 
    procedure Parse_Command_Line is
       use GNAT.Command_Line;
+      use GPRtools.Command_Line;
 
-      Options : GPRtools.Options.Object;
+      Parser     : GPRtools.Options.Command_Line_Parser :=
+                     GPRtools.Options.Create
+                       ("2019",
+                        Allow_Autoconf    => True,
+                        Allow_Distributed => False);
+      Dump_Group : constant GPRtools.Command_Line.Argument_Group :=
+                     Parser.Add_Argument_Group ("dump",
+                                                On_Switch'Unrestricted_Access);
 
    begin
-      Define_Switch
-        (Options.Config, Help'Access,
-         "-h", Long_Switch => "--help",
-         Help => "display this help message and exit");
+      GPRtools.Options.Setup (GPRtools.Ls);
 
-      Define_Switch
-        (Options.Config, Version'Access,
-         Long_Switch => "--version",
-         Help        => "Display version and exit");
+      Parser.Add_Argument
+        (Dump_Group,
+         Create ("-s", "--sources",
+                 Help => "display sources"));
+      Parser.Add_Argument
+        (Dump_Group,
+         Create ("-a", "--all-sources",
+                 Help => "display all sources"));
+      Parser.Add_Argument
+        (Dump_Group,
+         Create ("-u", "--units",
+                 Help => "display units"));
+      Parser.Add_Argument
+        (Dump_Group,
+         Create ("-r", "--recursive",
+                 Help => "all non externally built project recursively"));
+      Parser.Add_Argument
+        (Dump_Group,
+         Create ("--artifacts",
+                 Help => "display compilation artifacts"));
+      Parser.Add_Argument
+        (Dump_Group,
+         Create
+           ("-d", "--depth",
+            Delimiter => Space,
+            Parameter => "<source>",
+            Help      => "display the full closure of 'source'"));
 
-      Define_Switch
-        (Options.Config, Display_Sources'Access,
-         "-s", Long_Switch => "--sources",
-         Help => "display sources");
-
-      Define_Switch
-        (Options.Config, Display_All_Sources'Access,
-         "-a", Long_Switch => "--all-sources",
-         Help => "display sources");
-
-      Define_Switch
-        (Options.Config, Display_Units'Access,
-         "-u", Long_Switch => "--units",
-         Help => "display units");
-
-      Define_Switch
-        (Options.Config, All_Projects'Access,
-         "-r", Long_Switch => "--recursive",
-         Help => "All none external projects recursively");
-
-      Define_Switch
-        (Options.Config, Display_Artifacts'Access,
-         Long_Switch => "--artifacts",
-         Help => "display artifacts");
-
-      Define_Switch
-        (Options.Config, Source'Access,
-         "-d:", Long_Switch => "--deps:",
-         Help => "display full closure");
-
-      GPRtools.Util.Set_Program_Name ("gprdump");
-
-      Getopt (Options.Config);
-
-      if Version then
-         GPR2.Version.Display
-           ("GPRDUMP", "2019", Version_String => GPR2.Version.Long_Value);
-
-         GPR2.Version.Display_Free_Software;
-         GNAT.OS_Lib.OS_Exit (0);
-         return;
-      end if;
+      Options.Tree := Project_Tree.Reference;
+      Parser.Get_Opt (Options);
 
       --  Now read arguments
 
-      Read_Arguments : loop
-         declare
-            Arg : constant String := Get_Argument;
-         begin
-            exit Read_Arguments when Arg = "";
+      for Arg of Options.Args loop
+         if not Options.Project_File.Is_Defined then
+            Options.Project_File :=
+              GPR2.Path_Name.Create_File (Filename_Type (Arg));
+         else
+            raise Invalid_Switch;
+         end if;
+      end loop;
 
-            if Project_Path = Null_Unbounded_String then
-               Project_Path := To_Unbounded_String (Arg);
-            else
-               raise Invalid_Switch;
-            end if;
-         end;
-      end loop Read_Arguments;
-
-      if Project_Path = Null_Unbounded_String then
-         raise Invalid_Switch;
+      if not GPRtools.Options.Load_Project
+        (Options, Absent_Dir_Error => False)
+      then
+         GPRtools.Command_Line.Try_Help;
       end if;
    end Parse_Command_Line;
 
@@ -205,16 +231,18 @@ procedure GPRdump is
 
       else
          for C in Sources_Set.Iterate
-           (Filter => (if Display_All_Sources
+           (Filter => (if Options.Display_All_Sources
                        then GPR2.Project.Source.Set.S_All
                        else GPR2.Project.Source.Set.S_Compilable))
          loop
             declare
                S : constant Project.Source.Object := Sources_Set (C);
             begin
-               if Display_Sources or Display_All_Sources then
+               if Options.Display_Sources
+                 or else Options.Display_All_Sources
+               then
                   Text_IO.Put_Line (S.Path_Name.Value);
-                  if Display_Units and then S.Has_Units then
+                  if Options.Display_Units and then S.Has_Units then
                      for U of S.Units loop
                         Text_IO.Put_Line
                           (ASCII.HT & String (U.Name)
@@ -224,7 +252,7 @@ procedure GPRdump is
 
                end if;
 
-               if Display_Artifacts then
+               if Options.Display_Artifacts then
                   for A of S.Artifacts.List loop
                      Text_IO.Put_Line (A.Value);
                   end loop;
@@ -232,7 +260,7 @@ procedure GPRdump is
             end;
          end loop;
 
-         if Display_Units then
+         if Options.Display_Units then
             for U of View.Units loop
                Text_IO.Put_Line
                  (String (U.Name) & ' '
@@ -251,51 +279,33 @@ begin
    GPRtools.Util.Set_Program_Name ("gprdump");
    Parse_Command_Line;
 
-   declare
-      use type GNAT.Strings.String_Access;
+   if Options.Display_Sources
+     or else Options.Display_All_Sources
+     or else Options.Display_Artifacts
+     or else Options.Display_Units
+   then
+      for V in Project_Tree.Iterate
+        (Kind   => (Project.I_Recursive  => Options.All_Projects,
+                    Project.I_Imported   => Options.All_Projects,
+                    Project.I_Aggregated => Options.All_Projects,
+                    others               => True),
+         Status => (Project.S_Externally_Built => False),
+         Filter => (Project.F_Abstract | Project.F_Aggregate => False,
+                    others                                   => True))
+      loop
+         Sources (Project.Tree.Element (V));
+      end loop;
+   end if;
 
-      Pathname : constant GPR2.Path_Name.Object :=
-                   GPR2.Project.Create
-                     (GPR2.Filename_Type (To_String (Project_Path)));
-      Context  : GPR2.Context.Object;
-   begin
-      Project_Tree.Load (Pathname, Context, Check_Shared_Lib => False);
-
-      if Display_Sources or else Display_All_Sources or else Display_Artifacts
-        or else Display_Units
-      then
-         for V in Project_Tree.Iterate
-           (Kind   => (Project.I_Recursive  => All_Projects,
-                       Project.I_Imported   => All_Projects,
-                       Project.I_Aggregated => All_Projects, others => True),
-            Status => (Project.S_Externally_Built => False),
-            Filter => (Project.F_Abstract | Project.F_Aggregate => False,
-                       others => True))
-         loop
-            Sources (Project.Tree.Element (V));
-         end loop;
-      end if;
-
-      if Source /= null and then Source.all /= "" then
-         Full_Closure (Project_Tree, Source.all);
-      end if;
-
-   exception
-      when E : others =>
-         Text_IO.Put_Line
-           ("error while parsing..." & Exception_Information (E));
-   end;
+   if Options.Source /= Null_Unbounded_String then
+      Full_Closure (Project_Tree, To_String (Options.Source));
+   end if;
 
    for M of Project_Tree.Log_Messages.all loop
       M.Output;
    end loop;
 
 exception
-   when GNAT.Command_Line.Invalid_Switch
-      | GNAT.Command_Line.Exit_From_Command_Line
-      =>
-      Command_Line.Set_Exit_Status (Command_Line.Failure);
-
    when E : others =>
       Text_IO.Put_Line ("cannot parse project: " & Exception_Information (E));
       Command_Line.Set_Exit_Status (Command_Line.Failure);

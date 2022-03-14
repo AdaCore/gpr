@@ -16,119 +16,117 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GNAT.OS_Lib;
+with Ada.Strings.Unbounded;
 
 with GPRtools.Options;
 
+with GPR2.Project.Tree;
+
 package GPRinstall.Options is
 
+   use Ada.Strings.Unbounded;
    use GNAT;
 
    --  A Param, track if it is set on the command line or if it is the default
    --  value.
 
    type Param is record
-      V       : OS_Lib.String_Access;
+      V       : Unbounded_String;
       Default : Boolean := False;
    end record;
 
-   function Dup (P : Param) return Param;
-   --  Return a copy of P
+   type Object is new GPRtools.Options.Base_Options with record
+      List_Mode        : Boolean := False;
+      Uninstall_Mode   : Boolean := False;
+      Install_Manifest : Boolean := True;
 
-   procedure Free (P : in out Param);
-   --  Free P
-
-   type Object is new GPRtools.Options.Object with record
-      List_Mode        : aliased Boolean := False;
-      Uninstall_Mode   : aliased Boolean := False;
-      Install_Manifest : aliased Boolean := True;
-
-      Config_Project      : aliased OS_Lib.String_Access;
-      Auto_Config_Project : aliased OS_Lib.String_Access;
-
-      Install_Name        : aliased OS_Lib.String_Access;
-      Mode                : aliased OS_Lib.String_Access;
-
-      Force_Installations : aliased Boolean := False;
+      Force_Installations : Boolean := False;
       --  True if gprinstall is allowed to overwrite existing files
 
-      Global_Prefix_Dir : Param := (null, True);
+      Global_Prefix_Dir : Param := (Null_Unbounded_String, True);
       --  Root installation directory
 
-      Global_Exec_Subdir : Param := (new String'("bin" & DS), True);
+      Global_Exec_Subdir : Param := (To_Unbounded_String ("bin" & DS), True);
       --  Subdirectory for executable
 
-      Global_Lib_Subdir : Param := (new String'("lib" & DS), True);
+      Global_Lib_Subdir : Param := (To_Unbounded_String ("lib" & DS), True);
       --  Subdirectory for libraries
 
-      Global_ALI_Subdir : Param := (new String'("lib" & DS), True);
+      Global_ALI_Subdir : Param := (To_Unbounded_String ("lib" & DS), True);
       --  Subdirectory for libraries' .ali file
 
-      Global_Link_Lib_Subdir : Param := (new String'("lib" & DS), True);
+      Global_Link_Lib_Subdir : Param := (To_Unbounded_String ("lib" & DS),
+                                         True);
       --  Subdirectory for libraries sym links (on UNIX)
 
-      Global_Sources_Subdir : Param := (new String'("include" & DS), True);
+      Global_Sources_Subdir : Param := (To_Unbounded_String ("include" & DS),
+                                        True);
       --  Subdirectory for sources
 
       Global_Project_Subdir : Param :=
-                                (new String'("share" & DS & "gpr" & DS), True);
+                                (To_Unbounded_String ("share" & DS &
+                                                      "gpr" & DS),
+                                 True);
       --  Subdirectory used for the installed generated project file
 
-      Global_Install_Mode : Param := (new String'("dev"), True);
+      Global_Install_Mode : Param := (To_Unbounded_String ("dev"), True);
       --  Either dev or usage.
       --  "dev" if the installation is for developers (source of the libraries
       --  are also installed). If set to "usage" only the shared libraries are
       --  installed and/or the main executables.
 
-      Global_Install_Name : Param := (new String'("default"), True);
+      Global_Install_Name : Param := (To_Unbounded_String ("default"), True);
       --  The installation name, the default value is the project name without
       --  extension.
 
-      Build_Vars        : OS_Lib.String_Access;
+      Build_Vars        : Unbounded_String;
       --  Name of the build variables for the installed project file
 
-      No_Build_Var      : aliased Boolean := False;
+      No_Build_Var      : Boolean := False;
       --  Whether a build variable is to be generated
 
-      Build_Name        : aliased OS_Lib.String_Access :=
-                              new String'("default");
+      Build_Name        : Unbounded_String := To_Unbounded_String ("default");
       --  Name of the current build
 
-      Recursive         : aliased Boolean := False;
+      Recursive         : Boolean := False;
       --  Installation will recurse into all imported projects
 
-      Dry_Run           : aliased Boolean := False;
+      Dry_Run           : Boolean := False;
       --  Whether the actual installation takes place or not. If Dry_Run is set
       --  to True then the action will be displayed on the console but actually
       --  not performed.
 
-      Output_Stats      : aliased Boolean := False;
+      Output_Stats      : Boolean := False;
       --  Whether the stats are to be displayed when listing installed packages
 
-      All_Sources       : aliased Boolean := True;
+      All_Sources       : Boolean := True;
       --  By default install all the sources. If set to False install only
       --  the sources needed to use the project (the interface for a SAL).
 
-      No_Lib_Link       : aliased Boolean := False;
+      No_Lib_Link       : Boolean := False;
       --  Whether to copy the shared library into the executable directory on
       --  Windows or create a link into the lib directory on UNIX.
 
-      Create_Dest_Dir   : aliased Boolean := False;
+      Create_Dest_Dir   : Boolean := False;
       --  Whether to create the missing directories in the destination point
 
-      Sources_Only      : aliased Boolean := False;
+      Sources_Only      : Boolean := False;
       --  Whether to copy only the projects sources. This means that the
       --  object, library, executable files are not to be copied.
 
-      Side_Debug        : aliased Boolean := False;
+      No_GPR_Install    : Boolean := False;
+      --  Do not install a project file.
+
+      Side_Debug        : Boolean := False;
       --  Whether the debug symbols are kept into the main executable (default)
       --  or written into a side debug file.
-
-      Subdirs           : aliased OS_Lib.String_Access;
-      --  Make obj/lib/exec dirs as subdirs
    end record;
 
    function Project_Dir (Self : Object) return String;
    --  Returns the full pathname to the destination project directory
+
+   procedure Parse_Command_Line
+     (Options : in out Object;
+      Tree    : in out GPR2.Project.Tree.Object);
 
 end GPRinstall.Options;

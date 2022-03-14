@@ -20,8 +20,6 @@ with Ada.Command_Line;
 with Ada.Exceptions;
 with Ada.Text_IO;
 
-with GNAT.Command_Line;
-
 with GPR2.Interrupt_Handler;
 with GPR2.Project.Tree;
 
@@ -31,12 +29,12 @@ with GPRls.Process;
 with GPRtools.Sigint;
 with GPRtools.Util;
 
-procedure GPRls.Main is
+function GPRls.Main return Ada.Command_Line.Exit_Status is
 
    use Ada;
    use Ada.Exceptions;
-
    use GPR2;
+   use GPRtools.Util;
 
    Opt  : Options.Object;
    Tree : Project.Tree.Object;
@@ -50,27 +48,19 @@ begin
 
    GPRtools.Util.Set_Program_Name ("gprls");
 
-   --  Parse arguments
+   --  Parse arguments and load the project tree
 
    Opt.Tree := Tree.Reference;
-   Opt.Build_From_Command_Line;
+   if not Opt.Build_From_Command_Line then
+      return GPRtools.Util.Exit_Code (E_Fatal);
+   end if;
 
    --  Run the gprls main procedure
 
-   GPRls.Process (Opt);
+   return GPRls.Process (Opt);
 
 exception
-   when GNAT.Command_Line.Exit_From_Command_Line
-      | GNAT.Command_Line.Invalid_Switch
-      | GNAT.Command_Line.Invalid_Parameter
-      =>
-      Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
-
-   when E : Options.Usage_Error =>
-      Text_IO.Put_Line ("gprls: " & Exception_Message (E));
-      GNAT.Command_Line.Try_Help;
-
    when E : others =>
       Text_IO.Put_Line ("error: " & Exception_Information (E));
-      Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
+      return GPRtools.Util.Exit_Code (E_Errors);
 end GPRls.Main;

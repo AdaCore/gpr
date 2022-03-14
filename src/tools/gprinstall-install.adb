@@ -161,8 +161,6 @@ package body GPRinstall.Install is
 
       subtype Param is GPRinstall.Options.Param;
 
-      function Dup (P : Param) return Param renames GPRinstall.Options.Dup;
-
       Target_Name  : constant String := To_String (Options.Target);
 
       Objcopy_Exec : constant String :=
@@ -195,16 +193,16 @@ package body GPRinstall.Install is
       --  Whether to extract debug symbols from executables and shared
       --  libraries. Default to global value.
 
-      Prefix_Dir      : Param   := Dup (Options.Global_Prefix_Dir);
-      Exec_Subdir     : Param   := Dup (Options.Global_Exec_Subdir);
-      Lib_Subdir      : Param   := Dup (Options.Global_Lib_Subdir);
-      ALI_Subdir      : Param   := Dup (Options.Global_ALI_Subdir);
-      Link_Lib_Subdir : Param   := Dup (Options.Global_Link_Lib_Subdir);
-      Sources_Subdir  : Param   := Dup (Options.Global_Sources_Subdir);
-      Project_Subdir  : Param   := Dup (Options.Global_Project_Subdir);
-      Install_Mode    : Param   := Dup (Options.Global_Install_Mode);
-      Install_Name    : Param   := Dup (Options.Global_Install_Name);
-      Install_Project : Boolean := not Options.No_Project;
+      Prefix_Dir      : Param   := Options.Global_Prefix_Dir;
+      Exec_Subdir     : Param   := Options.Global_Exec_Subdir;
+      Lib_Subdir      : Param   := Options.Global_Lib_Subdir;
+      ALI_Subdir      : Param   := Options.Global_ALI_Subdir;
+      Link_Lib_Subdir : Param   := Options.Global_Link_Lib_Subdir;
+      Sources_Subdir  : Param   := Options.Global_Sources_Subdir;
+      Project_Subdir  : Param   := Options.Global_Project_Subdir;
+      Install_Mode    : Param   := Options.Global_Install_Mode;
+      Install_Name    : Param   := Options.Global_Install_Name;
+      Install_Project : Boolean := not Options.No_GPR_Install;
 
       type Items is (Source, Object, Dependency, Library, Executable);
 
@@ -270,7 +268,7 @@ package body GPRinstall.Install is
            (Filename_Type (Name),
             (if OS_Lib.Is_Absolute_Path (Name)
              then No_Filename
-             else Filename_Optional (Prefix_Dir.V.all))));
+             else Filename_Optional (-Prefix_Dir.V))));
       --  Returns directory as Path_Name.Object prefixed with Prefix_Dir.V.all
       --  if not absote.
 
@@ -323,7 +321,7 @@ package body GPRinstall.Install is
       procedure Rollback_Manifests;
       --  Rollback manifest files (for current project or/and aggregate one)
 
-      function For_Dev return Boolean is (Install_Mode.V.all = "dev");
+      function For_Dev return Boolean is (-Install_Mode.V = "dev");
 
       function Build_Subdir
         (Subdir     : Param;
@@ -405,19 +403,19 @@ package body GPRinstall.Install is
          Install_Name_Dir : constant Filename_Type :=
                               (if Install_Name.Default
                                then "."
-                               else Filename_Type (Install_Name.V.all));
+                               else Filename_Type (-Install_Name.V));
       begin
-         if OS_Lib.Is_Absolute_Path (Subdir.V.all) then
+         if OS_Lib.Is_Absolute_Path (-Subdir.V) then
             return Path_Name.Create_Directory
-              (Install_Name_Dir, Filename_Optional (Subdir.V.all));
+              (Install_Name_Dir, Filename_Optional (-Subdir.V));
 
          elsif not Subdir.Default or else not Build_Name then
             return Path_Name.Create_Directory
               (Install_Name_Dir,
                Filename_Type
                  (Path_Name.Create_Directory
-                      (Filename_Type (Subdir.V.all),
-                       Filename_Optional (Prefix_Dir.V.all)).Value));
+                      (Filename_Type (-Subdir.V),
+                       Filename_Optional (-Prefix_Dir.V)).Value));
 
          else
             return Path_Name.Create_Directory
@@ -427,8 +425,8 @@ package body GPRinstall.Install is
                       (Install_Name_Dir,
                        Filename_Type
                          (Path_Name.Create_Directory
-                            (Filename_Type (Subdir.V.all),
-                             Filename_Optional (Prefix_Dir.V.all)).Value))
+                            (Filename_Type (-Subdir.V),
+                             Filename_Optional (-Prefix_Dir.V)).Value))
                   .Value));
          end if;
       end Build_Subdir;
@@ -457,8 +455,7 @@ package body GPRinstall.Install is
             Normalize : Boolean := False) is
          begin
             if Val /= "" then
-               OS_Lib.Free (P.V);
-               P := (new String'
+               P := (To_Unbounded_String
                        ((if Is_Dir
                         then (if Normalize
                               then OS_Lib.Normalize_Pathname (Val)
@@ -487,7 +484,7 @@ package body GPRinstall.Install is
                      else
                         Replace
                           (Prefix_Dir,
-                           Options.Global_Prefix_Dir.V.all & "/" &
+                           -Options.Global_Prefix_Dir.V & "/" &
                              V.Value.Text,
                            Normalize => True);
                      end if;
@@ -596,7 +593,7 @@ package body GPRinstall.Install is
          if not Lib_Subdir.Default
            and then ALI_Subdir.Default
          then
-            ALI_Subdir := Dup (Lib_Subdir);
+            ALI_Subdir := Lib_Subdir;
          end if;
       end Check_Install_Package;
 
@@ -900,7 +897,7 @@ package body GPRinstall.Install is
                Dest_Dir : constant Path_Name.Object :=
                             Path_Name.Create_Directory
                               (Filename_Type (Destination.Value),
-                               Filename_Optional (Prefix_Dir.V.all));
+                               Filename_Optional (-Prefix_Dir.V));
             begin
                if Kind (E) = Directory
                  and then Directories.Simple_Name (E) /= "."
@@ -1341,7 +1338,7 @@ package body GPRinstall.Install is
                  (Path_Name.Compose (Project.Dir_Name, Filename),
                   Path_Name.Create_Directory
                     (Destination,
-                     Filename_Optional (Prefix_Dir.V.all)),
+                     Filename_Optional (-Prefix_Dir.V)),
                   E.Required);
             end;
          end loop;
@@ -1577,8 +1574,8 @@ package body GPRinstall.Install is
 
                   --  Furthermore, if the build name is "default" do not output
 
-                  if Options.Build_Name.all /= "default" then
-                     Line := Line & "." & Options.Build_Name.all;
+                  if -Options.Build_Name /= "default" then
+                     Line := Line & "." & (-Options.Build_Name);
                   end if;
                end if;
             end Gen_Dir_Name;
@@ -1590,7 +1587,7 @@ package body GPRinstall.Install is
             use type GPR2.Project.Standalone_Library_Kind;
 
          begin
-            V.Append ("      when """ & Options.Build_Name.all & """ =>");
+            V.Append ("      when """ & (-Options.Build_Name) & """ =>");
 
             --  Project sources
 
@@ -1914,7 +1911,7 @@ package body GPRinstall.Install is
             end Opts_Append;
 
          begin
-            R.Append ("         when """ & Options.Build_Name.all & """ =>");
+            R.Append ("         when """ & (-Options.Build_Name) & """ =>");
 
             Linker_For (Project);
 
@@ -2038,7 +2035,7 @@ package body GPRinstall.Install is
             end Naming_For;
 
          begin
-            V.Append ("         when """ & Options.Build_Name.all & """ =>");
+            V.Append ("         when """ & (-Options.Build_Name) & """ =>");
 
             Naming_For (Project);
 
@@ -2220,7 +2217,7 @@ package body GPRinstall.Install is
                        (P + String_Vector.Extended_Index (C));
                   end Insert_Move_After;
 
-                  BN   : constant String := Options.Build_Name.all;
+                  BN   : constant String := -Options.Build_Name;
                   Line : constant String := String_Vector.Element (Pos);
                   P, L : Natural;
                begin
@@ -2266,9 +2263,7 @@ package body GPRinstall.Install is
                         Content.Replace_Element
                           (Pos,
                            Get_Build_Line
-                             ((if Options.Build_Vars = null
-                              then ""
-                              else Options.Build_Vars.all), -Default));
+                             (-Options.Build_Vars, -Default));
                      end;
 
                   elsif Fixed.Index (Line, "package Naming is") /= 0 then
@@ -2439,14 +2434,11 @@ package body GPRinstall.Install is
 
                Content.Append
                  ("   type BUILD_KIND is ("""
-                  & Options.Build_Name.all & """);");
+                  & (-Options.Build_Name) & """);");
 
                Line := +Get_Build_Line
-                 (Vars    =>
-                    (if Options.Build_Vars = null
-                     then ""
-                     else Options.Build_Vars.all),
-                  Default => Options.Build_Name.all);
+                 (Vars    => -Options.Build_Vars,
+                  Default => -Options.Build_Name);
 
                Content.Append (-Line);
 
@@ -2576,8 +2568,8 @@ package body GPRinstall.Install is
          begin
             --  .default is always omitted from the directory name
 
-            if Suffix and then Options.Build_Name.all /= "default" then
-               return Filename_Type ('.' & Options.Build_Name.all);
+            if Suffix and then -Options.Build_Name /= "default" then
+               return Filename_Type ('.' & (-Options.Build_Name));
             else
                return No_Filename;
             end if;
@@ -2592,7 +2584,7 @@ package body GPRinstall.Install is
       --------------
 
       function Exec_Dir return Path_Name.Object is
-        (Prefix_For_Dir (Exec_Subdir.V.all));
+        (Prefix_For_Dir (-Exec_Subdir.V));
 
       -----------------
       -- Has_Sources --
@@ -2641,7 +2633,7 @@ package body GPRinstall.Install is
       ------------------
 
       function Link_Lib_Dir return Path_Name.Object is
-         (Prefix_For_Dir (Link_Lib_Subdir.V.all));
+         (Prefix_For_Dir (-Link_Lib_Subdir.V));
 
       -------------------------
       -- Open_Check_Manifest --
@@ -2655,7 +2647,7 @@ package body GPRinstall.Install is
                      Path_Name.Compose (Project_Dir, "manifests");
          M_File  : constant Path_Name.Object :=
                      Path_Name.Create_File
-                       (Filename_Type (Install_Name.V.all),
+                       (Filename_Type (-Install_Name.V),
                         Filename_Optional (Dir.Value));
          Name    : constant String := String (M_File.Value);
          Prj_Sig : constant String := Project.Path_Name.Content_MD5;
@@ -2699,7 +2691,7 @@ package body GPRinstall.Install is
                        ("   - install under another name, use --install-name");
                      Put_Line
                        ("   - force installation under the same name, "
-                        & "use --install-name=" & Install_Name.V.all);
+                        & "use --install-name=" & (-Install_Name.V));
                      raise GPRinstall_Error_No_Message;
                   end if;
                end if;
@@ -2721,7 +2713,7 @@ package body GPRinstall.Install is
          when Text_IO.Use_Error =>
             raise GPRinstall_Error with
               "cannot open or create the manifest file "
-              & Project_Subdir.V.all & Install_Name.V.all
+              & (-Project_Subdir.V) & (-Install_Name.V)
               & ", check permissions on this location";
       end Open_Check_Manifest;
 
@@ -2730,7 +2722,7 @@ package body GPRinstall.Install is
       -----------------
 
       function Project_Dir return Path_Name.Object is
-         (Prefix_For_Dir (Project_Subdir.V.all));
+         (Prefix_For_Dir (-Project_Subdir.V));
 
       ------------------------
       -- Rollback_Manifests --
@@ -2782,7 +2774,7 @@ package body GPRinstall.Install is
                      OS_Lib.Delete_File (Filename, Unused);
 
                      Delete_Empty_Directory
-                       (Prefix_Dir.V.all,
+                       (-Prefix_Dir.V,
                         Directories.Containing_Directory (Filename));
                   end;
                end if;
@@ -2801,7 +2793,7 @@ package body GPRinstall.Install is
                   --  Delete manifest directories if empty
 
                   Delete_Empty_Directory
-                    (Prefix_Dir.V.all,
+                    (-Prefix_Dir.V,
                      Directories.Containing_Directory (Manifest_Filename));
                end;
 
@@ -2855,7 +2847,8 @@ package body GPRinstall.Install is
       --  extension.
 
       if Install_Name.Default then
-         Install_Name.V := new String'(String (Project.Path_Name.Base_Name));
+         Install_Name.V :=
+           To_Unbounded_String (String (Project.Path_Name.Base_Name));
       end if;
 
       --  Skip non-active project, note that externally built project must be
@@ -2901,8 +2894,8 @@ package body GPRinstall.Install is
 
             if Is_Project_To_Install or else Options.Verbose then
                Put (" project " & String (Project.Name));
-               if Options.Build_Name.all /= "default" then
-                  Put (" - " & Options.Build_Name.all);
+               if -Options.Build_Name /= "default" then
+                  Put (" - " & (-Options.Build_Name));
                end if;
             end if;
 
@@ -2978,12 +2971,6 @@ package body GPRinstall.Install is
             end loop;
          end if;
       end if;
-
-      GPRinstall.Options.Free (Prefix_Dir);
-      GPRinstall.Options.Free (Sources_Subdir);
-      GPRinstall.Options.Free (Lib_Subdir);
-      GPRinstall.Options.Free (Exec_Subdir);
-      GPRinstall.Options.Free (Project_Subdir);
    end Process;
 
    procedure Process

@@ -30,7 +30,7 @@ package GPR2.Compilation.Registry is
 
    procedure Register_Remote_Slaves
      (Tree        : GPR2.Project.Tree.Object;
-      Options     : GPRtools.Options.Object'Class;
+      Options     : GPRtools.Options.Base_Options'Class;
       Synchronize : Boolean);
    --  Initialize the remotes slaves. That is, the comunication channel between
    --  the recorded slaves and the remote hosts is setup. Synchronize is set to
@@ -38,7 +38,7 @@ package GPR2.Compilation.Registry is
 
    procedure Unregister_Remote_Slaves
      (Tree        : GPR2.Project.Tree.Object;
-      Options     : GPRtools.Options.Object'Class;
+      Options     : GPRtools.Options.Base_Options'Class;
       From_Signal : Boolean := False);
    --  Unregister all slaves, send them notification about the end of the
    --  current build. This routine must be called after the compilation phase
@@ -72,7 +72,7 @@ package GPR2.Compilation.Registry is
 
    procedure Clean_Up_Remote_Slaves
      (Project : GPR2.Project.View.Object;
-      Options : GPRtools.Options.Object'Class);
+      Options : GPRtools.Options.Base_Options'Class);
    --  Send a clean-up request to all remote slaves. The slaves are then asked
    --  to remove all the sources and build artifacts for the given project.
 

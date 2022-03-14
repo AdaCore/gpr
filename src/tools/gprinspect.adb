@@ -20,7 +20,6 @@ with Ada.Calendar.Formatting;
 with Ada.Command_Line;
 with Ada.Containers.Ordered_Maps;
 with Ada.Directories;
-with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.Command_Line;
@@ -31,11 +30,11 @@ with GNATCOLL.Traces;
 with GNATCOLL.JSON;
 with GNATCOLL.Utils;
 
+with GPRtools.Command_Line;
 with GPRtools.Util;
 with GPRtools.Options;
 
 with GPR2.Containers;
-with GPR2.KB;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Registry.Attribute;
@@ -49,7 +48,6 @@ with GPR2.View_Ids;
 procedure GPRinspect is
 
    use Ada;
-   use Ada.Strings.Unbounded;
 
    use GNATCOLL;
    use GNATCOLL.JSON;
@@ -60,6 +58,13 @@ procedure GPRinspect is
 
    procedure Inspect_Project (Tree : Project.Tree.Object);
    --  Inspect project and possibly recursively all imports
+
+   procedure On_Switch
+     (Parser : GPRtools.Command_Line.Command_Line_Parser'Class;
+      Res    : not null access GPRtools.Command_Line.Command_Line_Result'Class;
+      Arg    : GPRtools.Command_Line.Switch_Type;
+      Index  : String;
+      Param  : String);
 
    package Imported_By_Map is new
      Ada.Containers.Ordered_Maps
@@ -73,14 +78,17 @@ procedure GPRinspect is
 
    --  Variables for tool's options
 
-   JSON_Output               : aliased Boolean := False;
-   All_Projects              : aliased Boolean := False;
-   Display_Everything        : aliased Boolean := False;
-   Display_Attributes        : aliased Boolean := False;
-   Display_Config_Attributes : aliased Boolean := False;
-   Display_Packages          : aliased Boolean := False;
-   Display_Variables         : aliased Boolean := False;
    Project_Tree              : aliased GPR2.Project.Tree.Object;
+
+   type GPRinspect_Options is new GPRtools.Options.Base_Options with record
+      JSON_Output               : Boolean := False;
+      All_Projects              : Boolean := False;
+      Display_Everything        : Boolean := False;
+      Display_Attributes        : Boolean := False;
+      Display_Config_Attributes : Boolean := False;
+      Display_Packages          : Boolean := False;
+      Display_Variables         : Boolean := False;
+   end record;
 
    J_Res   : constant JSON_Value := Create_Object;
    --  The JSON response
@@ -92,7 +100,7 @@ procedure GPRinspect is
    --  Sources search-paths, global array with all project's sources
    --  directories.
 
-   Options : GPRtools.Options.Object;
+   Options : GPRinspect_Options;
 
    ---------------------
    -- Inspect_Project --
@@ -258,7 +266,9 @@ procedure GPRinspect is
             A_Array : JSON_Array;
          begin
             for A of Atts loop
-               if not A.Is_From_Config or else Display_Config_Attributes then
+               if not A.Is_From_Config
+                 or else Options.Display_Config_Attributes
+               then
                   declare
                      Att : constant JSON_Value := Create_Object;
                   begin
@@ -470,7 +480,7 @@ procedure GPRinspect is
             for I of View.Imports loop
                Append (C_Array, Create (View_Id (I)));
 
-               if All_Projects then
+               if Options.All_Projects then
                   Parse_Project (Prjs, I, View);
                end if;
             end loop;
@@ -484,7 +494,7 @@ procedure GPRinspect is
             for A of View.Aggregated loop
                Append (A_Array, Create (View_Id (A)));
 
-               if All_Projects then
+               if Options.All_Projects then
                   Parse_Project (Prjs, A, View);
                end if;
             end loop;
@@ -494,7 +504,7 @@ procedure GPRinspect is
 
          --  Package
 
-         if Display_Packages or else Display_Everything then
+         if Options.Display_Packages or else Options.Display_Everything then
             declare
                P_Array : JSON_Array := Empty_Array;
             begin
@@ -504,7 +514,9 @@ procedure GPRinspect is
                   begin
                      Set_Field (Pck, "name", Image (P));
 
-                     if Display_Attributes or else Display_Everything then
+                     if Options.Display_Attributes
+                       or else Options.Display_Everything
+                     then
                         declare
                            Atts : constant Project.Attribute.Set.Object :=
                                     View.Attributes (P);
@@ -527,7 +539,7 @@ procedure GPRinspect is
 
          --  Attributes
 
-         if Display_Attributes or else Display_Everything then
+         if Options.Display_Attributes or else Options.Display_Everything then
             declare
                Atts : constant Project.Attribute.Set.Object := View.Attributes;
             begin
@@ -539,7 +551,7 @@ procedure GPRinspect is
 
          --  Variables
 
-         if Display_Variables or else Display_Everything then
+         if Options.Display_Variables or else Options.Display_Everything then
             declare
                Vars : constant Project.Variable.Set.Object := View.Variables;
             begin
@@ -551,7 +563,7 @@ procedure GPRinspect is
 
          --  Types
 
-         if Display_Variables or else Display_Everything then
+         if Options.Display_Variables or else Options.Display_Everything then
             declare
                Typs : constant Project.Typ.Set.Object := View.Types;
             begin
@@ -652,11 +664,11 @@ procedure GPRinspect is
       --  Optimize the parsing when in non JSON format.
       --  ??? TO BE REMOVED when text output will be enhanced
 
-      if not JSON_Output then
-         Display_Attributes := False;
-         Display_Everything := False;
-         Display_Packages   := False;
-         Display_Variables  := False;
+      if not Options.JSON_Output then
+         Options.Display_Attributes := False;
+         Options.Display_Everything := False;
+         Options.Display_Packages   := False;
+         Options.Display_Variables  := False;
       end if;
 
       Parse_Project (P_Array, Tree.Root_Project, Project.View.Undefined);
@@ -664,7 +676,7 @@ procedure GPRinspect is
       declare
          T : constant JSON_Value := Tree_Object;
       begin
-         if JSON_Output then
+         if Options.JSON_Output then
             Set_Field (J_Res, "info", Info_Object);
 
             Set_Field (J_Res, "tree", T);
@@ -695,68 +707,91 @@ procedure GPRinspect is
       end;
    end Inspect_Project;
 
+   ---------------
+   -- On_Switch --
+   ---------------
+
+   procedure On_Switch
+     (Parser : GPRtools.Command_Line.Command_Line_Parser'Class;
+      Res    : not null access GPRtools.Command_Line.Command_Line_Result'Class;
+      Arg    : GPRtools.Command_Line.Switch_Type;
+      Index  : String;
+      Param  : String)
+   is
+      pragma Unreferenced (Parser, Index, Param);
+      use type GPRtools.Command_Line.Switch_Type;
+      Result : constant access GPRinspect_Options :=
+                 GPRinspect_Options (Res.all)'Access;
+   begin
+      if Arg = "-j" then
+         Result.JSON_Output := True;
+      elsif Arg = "-r" then
+         Result.All_Projects := True;
+      elsif Arg = "--all" then
+         Result.Display_Everything := True;
+      elsif Arg = "--attributes" then
+         Result.Display_Attributes := True;
+      elsif Arg = "-c" then
+         Result.Display_Config_Attributes := True;
+      elsif Arg = "--packages" then
+         Result.Display_Packages := True;
+      elsif Arg = "--variables" then
+         Result.Display_Variables := True;
+      end if;
+   end On_Switch;
+
    ------------------------
    -- Parse_Command_Line --
    ------------------------
 
-   procedure Parse_Command_Line is
-      use GNAT.Command_Line;
+   procedure Parse_Command_Line
+   is
+      use GPRtools.Command_Line;
+      use GPRtools.Options;
+      Parser : GPRtools.Options.Command_Line_Parser :=
+                 Create
+                   (Initial_Year => "2022",
+                    Allow_No_Project => False,
+                    Allow_Quiet      => False);
+      Group  : constant GPRtools.Command_Line.Argument_Group :=
+                 Parser.Add_Argument_Group
+                   ("gprinspect", On_Switch'Unrestricted_Access);
+
    begin
       Options.Tree := Project_Tree.Reference;
 
-      Options.Setup (Tool => GPRtools.Inspect);
+      Setup (Tool => GPRtools.Inspect);
 
-      Define_Switch
-        (Options.Config, JSON_Output'Access,
-         "-j", Long_Switch => "--json",
-         Help        => "output JSON format");
+      Parser.Add_Argument
+        (Group,
+         Create ("-j", "--json",
+                 Help => "output JSON format"));
+      Parser.Add_Argument
+        (Group,
+         Create ("-r", "--recursive",
+           Help => "All none external projects recursively"));
+      Parser.Add_Argument
+        (Group,
+         Create ("--all",
+           Help => "Display everything"));
+      Parser.Add_Argument
+        (Group,
+         Create ("--attributes",
+           Help => "Display attributes"));
+      Parser.Add_Argument
+        (Group,
+         Create ("-c", "--from-config",
+           Help => "Display attributes inherited from configuration"));
+      Parser.Add_Argument
+        (Group,
+         Create ("--packages",
+           Help => "Display packages"));
+      Parser.Add_Argument
+        (Group,
+         Create ("--variables",
+           Help => "Display variables & types"));
 
-      Define_Switch
-        (Options.Config, All_Projects'Access,
-         "-r", Long_Switch => "--recursive",
-         Help => "All none external projects recursively");
-
-      Define_Switch
-        (Options.Config, Display_Everything'Access,
-         Long_Switch => "--all",
-         Help => "Display everything");
-
-      Define_Switch
-        (Options.Config, Display_Attributes'Access,
-         Long_Switch => "--attributes",
-         Help => "Display attributes");
-
-      Define_Switch
-        (Options.Config, Display_Config_Attributes'Access,
-         "-c", Long_Switch => "--from-config",
-         Help => "Display attributes inherited from configuration");
-
-      Define_Switch
-        (Options.Config, Display_Packages'Access,
-         Long_Switch => "--packages",
-         Help => "Display attributes");
-
-      Define_Switch
-        (Options.Config, Display_Variables'Access,
-         Long_Switch => "--variables",
-         Help => "Display variables & types");
-
-      GPRtools.Util.Set_Program_Name ("gprinspect");
-
-      Getopt (Options.Config);
-
-      if Options.Version then
-         GPR2.Version.Display
-           ("GPRINSPECT", "2022", Version_String => GPR2.Version.Long_Value);
-
-         GPR2.Version.Display_Free_Software;
-         GNAT.OS_Lib.OS_Exit (0);
-         return;
-      end if;
-
-      --  Now read the specified files from which we will browse, if any
-
-      Options.Read_Remaining_Arguments (Tool => GPRtools.Inspect);
+      Parser.Get_Opt (Options);
    end Parse_Command_Line;
 
 begin
@@ -764,20 +799,12 @@ begin
    GPRtools.Util.Set_Program_Name ("gprinspect");
    Parse_Command_Line;
 
-   --  Load the project (if defined) and its configuration
-
-   Options.Tree.Load_Autoconf
-     (Filename          => Options.Project_File,
-      Project_Dir       => Options.Project_Base,
-      Context           => Options.Context,
-      Absent_Dir_Error  => False,
-      Target            => Optional_Name_Type (To_String (Options.Target)),
-      Language_Runtimes => Options.RTS_Map,
-      Check_Shared_Lib  => not Options.Unchecked_Shared_Lib,
-      Base              => GPR2.KB.Create
-        (Flags             => KB.Default_Flags,
-         Default_KB        => not Options.Skip_Default_KB,
-         Custom_KB         => Options.KB_Locations));
+   if not
+     GPRtools.Options.Load_Project (Options, Absent_Dir_Error => False)
+   then
+      Command_Line.Set_Exit_Status (Command_Line.Failure);
+      return;
+   end if;
 
    --  Build list of imported-by projects
 
@@ -806,7 +833,7 @@ begin
 
    Inspect_Project (Project_Tree);
 
-   if JSON_Output then
+   if Options.JSON_Output then
       Text_IO.Put_Line (String'(JSON.Write (J_Res)));
    end if;
 

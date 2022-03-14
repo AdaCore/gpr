@@ -34,17 +34,15 @@ package GPRls.Options is
    Usage_Error : exception;
    --  Raised when a wrong usage is detected
 
-   type Object is new GPRtools.Options.Object with private;
+   type Object is new GPRtools.Options.Base_Options with private;
    --  Options for gprls
 
-   procedure Build_From_Command_Line (Self : in out Object);
+   function Build_From_Command_Line (Self : in out Object) return Boolean;
    --  Fill out a gprls options object from the command line
 
    function Files (Self : Object) return Containers.Value_Set;
 
    function Project_Context (Self : Object) return Context.Object;
-
-   function Get_Target (Self : Object) return Optional_Name_Type;
 
    function List_File (Self : Object) return Path_Name.Object;
 
@@ -78,14 +76,14 @@ package GPRls.Options is
 
 private
 
-   type Object is new GPRtools.Options.Object with record
+   type Selective_Output_Type is
+     (All_Outputs, Units, Sources, Objects);
+
+   type Object is new GPRtools.Options.Base_Options with record
       List_File             : Path_Name.Object;
       With_Predefined_Units : Boolean := False;
       Hide_Predefined_Path  : Boolean := False;
-      Print_Units           : Boolean := True;
-      Print_Sources         : Boolean := True;
-      Print_Object_Files    : Boolean := True;
-      Selective_Output      : Boolean := False;
+      Selective_Output      : Selective_Output_Type := All_Outputs;
       Dependency_Mode       : Boolean := False;
       Closure_Mode          : Boolean := False;
       All_Projects          : Boolean := False;
@@ -104,9 +102,6 @@ private
    function Project_Context (Self : Object) return Context.Object is
      (Self.Context);
 
-   function Get_Target (Self : Object) return Optional_Name_Type is
-     (Optional_Name_Type (To_String (Self.Target)));
-
    function List_File (Self : Object) return Path_Name.Object is
      (Self.List_File);
 
@@ -117,13 +112,13 @@ private
      (Self.Hide_Predefined_Path);
 
    function Print_Units (Self : Object) return Boolean is
-     (Self.Print_Units);
+     (Self.Selective_Output in All_Outputs | Units);
 
    function Print_Sources (Self : Object) return Boolean is
-     (Self.Print_Sources);
+     (Self.Selective_Output in All_Outputs | Sources);
 
    function Print_Object_Files (Self : Object) return Boolean is
-     (Self.Print_Object_Files);
+     (Self.Selective_Output in All_Outputs | Objects);
 
    function Source_Parser (Self : Object) return Boolean is
      (Self.Source_Parser);
@@ -138,7 +133,7 @@ private
      (Self.All_Projects);
 
    function Selective_Output (Self : Object) return Boolean is
-     (Self.Selective_Output);
+     (Self.Selective_Output /= All_Outputs);
 
    function Verbose_Parsing (Self : Object) return Integer is
      (Self.Verbose_Parsing);

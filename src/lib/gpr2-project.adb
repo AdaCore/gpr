@@ -206,7 +206,10 @@ package body GPR2.Project is
    -- Ensure_Extension --
    ----------------------
 
-   function Ensure_Extension (Name : Filename_Type) return Filename_Type is
+   function Ensure_Extension
+     (Name        : Filename_Type;
+      Config_File : Boolean := False) return Filename_Type
+   is
       use Ada.Characters.Handling;
    begin
       if To_Lower (Directories.Extension (String (Name))) in
@@ -214,9 +217,10 @@ package body GPR2.Project is
            | String (Config_File_Extension_No_Dot)
       then
          return Name;
+      elsif Config_File then
+         return Name & Config_File_Extension;
       else
-         --  The default is the .gpr extension, i.e. configuration project file
-         --  name have to be provided with extension.
+         --  The default is the .gpr extension.
 
          return Name & Project_File_Extension;
       end if;

@@ -101,11 +101,13 @@ package GPR2.Project.Configuration is
      (Settings   : Description_Set;
       Target     : Name_Type;
       Project    : GPR2.Path_Name.Object;
-      Base       : in out GPR2.KB.Object)
+      Base       : in out GPR2.KB.Object;
+      Save_Name  : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined)
       return Object
    with Pre => Settings'Length > 0;
    --  Creates a configuration based on the settings requested.
    --  Project parameter need to log error if happen.
+   --  If Save_Name is defined, the configuration project is saved there.
 
    function Load
      (Filename : Path_Name.Object;

@@ -98,9 +98,12 @@ package GPR2.Project is
           Post => not Search_Paths'Result.Is_Empty;
    --  Returns the project search path for the given project and the given tree
 
-   function Ensure_Extension (Name : Filename_Type) return Filename_Type;
+   function Ensure_Extension
+     (Name        : Filename_Type;
+      Config_File : Boolean := False) return Filename_Type;
    --  If Name ending with ".gpr" or ".cgpr" the function returns it unchanged,
-   --  otherwise returns Name appended with ".gpr" suffix.
+   --  otherwise returns Name appended with ".gpr" suffix or ".cgpr" if
+   --  Config_File is set.
 
    function Default_Search_Paths
      (Current_Directory : Boolean) return Path_Name.Set.Object

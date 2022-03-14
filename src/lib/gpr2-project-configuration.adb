@@ -23,6 +23,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Environment_Variables;
+with Ada.Text_IO;
 
 with GNAT.OS_Lib;
 with GNAT.String_Split;
@@ -107,7 +108,8 @@ package body GPR2.Project.Configuration is
      (Settings   : Description_Set;
       Target     : Name_Type;
       Project    : GPR2.Path_Name.Object;
-      Base       : in out GPR2.KB.Object)
+      Base       : in out GPR2.KB.Object;
+      Save_Name  : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined)
       return Object
    is
 
@@ -279,6 +281,17 @@ package body GPR2.Project.Configuration is
       end if;
 
       if Configuration_String /= Null_Unbounded_String then
+         if Save_Name.Is_Defined then
+            declare
+               Output : Ada.Text_IO.File_Type;
+            begin
+               Ada.Text_IO.Create (Output, Ada.Text_IO.Out_File,
+                                   String (Save_Name.Value));
+               Ada.Text_IO.Put_Line
+                 (Output, To_String (Configuration_String));
+               Ada.Text_IO.Close (Output);
+            end;
+         end if;
 
          if Path_Name.Temporary_Directory.Is_Defined then
             Result.Project :=
