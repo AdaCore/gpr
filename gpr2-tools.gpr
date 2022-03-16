@@ -39,7 +39,7 @@ project GPR2.Tools is
 
    for Main use ("gprremote.adb", "gprdump.adb", "gprinstall-main.adb",
                  "gprclean-main.adb", "gprname-main.adb", "gprls-main.adb",
-                 "gprconfig.adb");
+                 "gprconfig.adb", "gprinspect.adb");
 
    --------------
    -- Compiler --
@@ -96,6 +96,7 @@ project GPR2.Tools is
       for Executable ("gprname-main.adb") use Tools_Prefix & "name";
       for Executable ("gprls-main.adb") use Tools_Prefix & "ls";
       for Executable ("gprconfig.adb") use Tools_Prefix & "config";
+      for Executable ("gprinspect.adb") use Tools_Prefix & "inspect";
 
       for Switches (others) use ("-m", "-j" & Processors);
    end Builder;

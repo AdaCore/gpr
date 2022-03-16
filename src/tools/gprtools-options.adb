@@ -223,7 +223,7 @@ package body GPRtools.Options is
          when Remote =>
             PRP.Check_Attributes (PRP.Remote);
 
-         when Ls | Name => null;
+         when Ls | Name | Inspect  => null;
       end case;
 
       TLS.Set_Value (Self'Unchecked_Access);
@@ -253,7 +253,7 @@ package body GPRtools.Options is
          Long_Switch => "--debug?",
          Help        => "Debug mode");
 
-      if Tool not in Remote | Ls then
+      if Tool not in Remote | Ls | Inspect then
          Define_Switch
            (Self.Config, Value_Callback'Access,
             "-q", "--quiet",
@@ -287,7 +287,7 @@ package body GPRtools.Options is
             Argument    => "<dir>");
       end if;
 
-      if Tool in Build | Clean | Install | Ls then
+      if Tool in Build | Clean | Install | Ls | Inspect then
          Define_Switch
            (Self.Config, Value_Callback'Access, "-P:",
             Help => "Project file to "
@@ -296,9 +296,10 @@ package body GPRtools.Options is
                  when Install => "install",
                  when Clean   => "cleanup",
                  when Ls      => "browse",
+                 when Inspect => "inspect",
                  when others => ""));
 
-         if Tool /= Ls then
+         if Tool not in Ls | Inspect then
             Define_Switch
               (Self.Config, Self.No_Project'Access,
                Long_Switch => "--no-project",

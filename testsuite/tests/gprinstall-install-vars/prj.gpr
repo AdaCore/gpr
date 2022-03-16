@@ -1,0 +1,7 @@
+project Prj is
+
+   for Object_Dir use "obj";
+   Param := external ("PARAM", "");
+   Param2 := external ("PARAM2", "");
+
+end Prj;

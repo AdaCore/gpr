@@ -2189,11 +2189,36 @@ package body GPRinstall.Install is
 
             --  Do merging for new build, we need to add an entry into the
             --  BUILD_KIND type and a corresponding case entry in the naming
-            --  and Linker package.
+            --  and Linker package. The variables need also to be updated.
 
             Parse_Content : while String_Vector.Has_Element (Pos) loop
                declare
                   use Ada.Strings;
+
+                  procedure Insert_Move_After
+                    (Pos : in out String_Vector.Cursor;
+                     V   : String_Vector.Vector);
+                  --  Insert V into Content before Pos and return Post to be
+                  --  the item after the last inserted.
+
+                  -----------------------
+                  -- Insert_Move_After --
+                  -----------------------
+
+                  procedure Insert_Move_After
+                    (Pos : in out String_Vector.Cursor;
+                     V   : String_Vector.Vector)
+                  is
+                     C : constant Ada.Containers.Count_Type := V.Length;
+                     P : constant String_Vector.Extended_Index :=
+                           String_Vector.To_Index (Pos);
+                  begin
+                     String_Vector.Next (Pos);
+                     Content.Insert_Vector (Pos, V);
+
+                     Pos := Content.To_Cursor
+                       (P + String_Vector.Extended_Index (C));
+                  end Insert_Move_After;
 
                   BN   : constant String := Options.Build_Name.all;
                   Line : constant String := String_Vector.Element (Pos);
@@ -2258,19 +2283,16 @@ package body GPRinstall.Install is
 
                      case Current_Section is
                         when Naming =>
-                           String_Vector.Next (Pos);
-                           Content.Insert_Vector
+                           Insert_Move_After
                              (Pos, Naming_Case_Alternative (Project));
 
                         when Linker =>
-                           String_Vector.Next (Pos);
-                           Content.Insert_Vector
+                           Insert_Move_After
                              (Pos, Linker_Case_Alternative (Project));
 
                         when Top =>
                            --  For the Sources/Lib attributes
-                           String_Vector.Next (Pos);
-                           Content.Insert_Vector (Pos, Data_Attributes);
+                           Insert_Move_After (Pos, Data_Attributes);
                      end case;
 
                   elsif Fixed.Index (Line, "when """ & BN & """ =>") /= 0 then
@@ -2294,7 +2316,7 @@ package body GPRinstall.Install is
                         function End_When (L : String) return Boolean is
                            P   : constant Natural :=
                                    Strings.Fixed.Index_Non_Blank (L);
-                           Len : constant Natural := L'Length;
+                           Len : constant Natural := L'Last;
                         begin
                            return P > 0
                              and then
@@ -2305,21 +2327,53 @@ package body GPRinstall.Install is
                                    and then L (P .. P + 8) = "end case;"));
                         end End_When;
 
+                        I : constant String_Vector.Extended_Index :=
+                              String_Vector.To_Index (Pos);
+                        P : String_Vector.Extended_Index :=
+                              String_Vector.To_Index (Pos);
                         N : Ada.Containers.Count_Type := 0;
-                        P : String_Vector.Cursor := Pos;
                      begin
                         --  The number of line to delete are from Pos to the
                         --  first line starting with a "when".
 
                         loop
-                           String_Vector.Next (P);
                            N := N + 1;
+                           P := P + 1;
 
-                           exit when End_When (String_Vector.Element (P));
+                           exit when End_When (Content.Element (P));
                         end loop;
 
                         Content.Delete (Pos, N);
+
+                        --  Then reset Pos to I (previous Pos index)
+
+                        Pos := Content.To_Cursor (I);
                      end Count_And_Delete;
+
+                  else
+                     Check_Vars : declare
+                        Assign : constant Natural :=
+                                   Fixed.Index (Line, " := ");
+                     begin
+                        --  Check if line is a variable definition, and if so
+                        --  update the value.
+
+                        if Assign > 0 then
+                           for V of Project.Variables loop
+                              declare
+                                 Name : constant String :=
+                                          String (V.Name.Text);
+                              begin
+                                 if Fixed.Index
+                                   (Line, ' ' & Name & ' ') in 1 .. Assign - 1
+                                 then
+                                    Content.Replace_Element
+                                      (Pos, "   " & V.Image);
+                                 end if;
+                              end;
+                           end loop;
+                        end if;
+                     end Check_Vars;
                   end if;
                end;
 
