@@ -39,6 +39,7 @@ with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.Unit_Info.Set;
 with GPR2.Source_Reference.Value;
+with GPR2.Unit;
 with GPR2.View_Ids;
 
 limited with GPR2.Project.Source.Set;
@@ -514,9 +515,14 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns true if the project has some mains defined
 
-   function Mains (Self : Object) return GPR2.Path_Name.Set.Object
-     with Pre  => Self.Is_Defined and then Self.Has_Mains,
-          Post => Mains'Result.Length > 0;
+   function Mains (Self : Object) return GPR2.Unit.Source_Unit_Vectors.Vector
+     with Pre  => Self.Is_Defined,
+          Post => not Self.Has_Mains or else Mains'Result.Length > 0;
+   --  returns the list of main bodies.
+
+   function Executables (Self : Object) return GPR2.Path_Name.Set.Object
+     with Pre  => Self.Is_Defined,
+          Post => not Self.Has_Mains or else Executables'Result.Length > 0;
    --  Returns the mains's binary full pathname
 
    function Library_Name (Self : Object) return Simple_Name
@@ -687,6 +693,11 @@ package GPR2.Project.View is
       Source  : Simple_Name;
       At_Pos  : Unit_Index) return GPR2.Path_Name.Object;
    --  Returns the full pathname of the main executable for the given main
+
+   function Main
+     (Self       : Object;
+      Executable : Simple_Name) return GPR2.Unit.Source_Unit_Identifier;
+   --  Returns the body unit corresponding to the given executable result
 
    procedure Reindex_Unit (Self : Object; From, To : Name_Type);
    --  Change name of unit in unit index used to get unit info by unit name

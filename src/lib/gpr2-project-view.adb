@@ -1342,6 +1342,23 @@ package body GPR2.Project.View is
         (PRA.Executable_Suffix, Pack => PRP.Builder).Value.Text);
    end Executable_Suffix;
 
+   -----------------
+   -- Executables --
+   -----------------
+
+   function Executables (Self : Object) return GPR2.Path_Name.Set.Object is
+      Attr : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
+   begin
+      return Set : GPR2.Path_Name.Set.Object do
+         if Attr.Is_Defined then
+            for Main of Attr.Values loop
+               Set.Append (Self.Executable (Simple_Name (Main.Text),
+                           At_Pos_Or (Main, 0)));
+            end loop;
+         end if;
+      end return;
+   end Executables;
+
    --------------
    -- Extended --
    --------------
@@ -2097,18 +2114,63 @@ package body GPR2.Project.View is
          Directory => Filename_Optional (Self.Library_Directory.Dir_Name));
    end Library_Version_Filename;
 
+   ----------
+   -- Main --
+   ----------
+
+   function Main
+     (Self       : Object;
+      Executable : Simple_Name) return GPR2.Unit.Source_Unit_Identifier
+   is
+      Path : GPR2.Path_Name.Object;
+   begin
+      --  Check executable attribute
+      for Attr of Self.Attributes (PRP.Builder, PRA.Executable) loop
+         if Simple_Name (Attr.Value.Text) = Executable then
+            return (Source => Self.Tree.Get_File
+                                (Simple_Name (Attr.Index.Value)),
+                    Index  => Attr.Index.At_Pos);
+         end if;
+      end loop;
+
+      --  Try the Project'Main attributes
+      if Self.Has_Attribute (PRA.Main) then
+         for Value of Self.Attribute (PRA.Main).Values loop
+            Path := Self.Executable (Simple_Name (Value.Text), Value.At_Pos);
+
+            if Path.Simple_Name = Executable then
+               return (Self.Tree.Get_File (Simple_Name (Value.Text)),
+                       Value.At_Pos);
+            end if;
+         end loop;
+      end if;
+
+      return (GPR2.Path_Name.Undefined, 0);
+   end Main;
+
    -----------
    -- Mains --
    -----------
 
-   function Mains (Self : Object) return GPR2.Path_Name.Set.Object is
+   function Mains (Self : Object) return GPR2.Unit.Source_Unit_Vectors.Vector
+   is
       Attr : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
+      Path : GPR2.Path_Name.Object;
    begin
-      return Set : GPR2.Path_Name.Set.Object do
+      return Set : GPR2.Unit.Source_Unit_Vectors.Vector do
          if Attr.Is_Defined then
             for Main of Attr.Values loop
-               Set.Append (Self.Executable (Simple_Name (Main.Text),
-                           At_Pos_Or (Main, 0)));
+               Path := Self.Tree.Get_File
+                 (Simple_Name (Main.Text),
+                  Self);
+
+               if Path.Is_Defined then
+                  if Main.Has_At_Pos then
+                     Set.Append ((Path, Main.At_Pos));
+                  else
+                     Set.Append ((Path, No_Index));
+                  end if;
+               end if;
             end loop;
          end if;
       end return;
