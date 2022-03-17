@@ -1498,6 +1498,7 @@ begin
    Add
      (Create (Global_Compilation_Switches, Pack.Builder),
       Index_Type           => Language_Index,
+      Index_Optional       => True,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
@@ -1507,7 +1508,6 @@ begin
    Add
      (Create (Executable, Pack.Builder),
       Index_Type           => File_Index,
-      Index_Optional       => True,
       Value                => Single,
       Value_Case_Sensitive => True,
       Empty_Value          => Ignore,
@@ -1870,6 +1870,7 @@ begin
    Add
      (Create (Switches, Pack.Metrics),
       Index_Type           => FileGlob_Index,
+      Index_Optional       => True,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,

@@ -446,7 +446,7 @@ package body GPR2.Project.View is
             --  defined.
 
             if not Found (Result)
-              and then PRA.Is_Others_Allowed (PRA_Def.Index_Type)
+              and then PRA_Def.Index_Optional
             then
                Result :=
                  Attrs.Element (Name, Project.Attribute_Index.I_Others);
