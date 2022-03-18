@@ -75,10 +75,7 @@ begin
      and then (not Options.Create_Missing_Config
                or else Options.Config_Project.Exists)
    then
-      Config := Project.Configuration.Load
-        (Options.Config_Project,
-         Target => Name_Type
-           (Strings.Unbounded.To_String (Options.Target)));
+      Config := Project.Configuration.Load (Options.Config_Project);
 
       if Config.Has_Error then
          Util.Output_Messages (Options, Config.Log_Messages);

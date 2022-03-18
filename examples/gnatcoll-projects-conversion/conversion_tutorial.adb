@@ -184,12 +184,7 @@ procedure Conversion_Tutorial is
                                      (To_String (Args.Runtime.Get)));
 
          if Args.Config_File.Is_Defined then
-            if Args.Target = GPR2.No_Name then
-               Config := GPR2.Project.Configuration.Load (Args.Config_File);
-            else
-               Config := Project.Configuration.Load
-                 (Args.Config_File, Args.Target);
-            end if;
+            Config := GPR2.Project.Configuration.Load (Args.Config_File);
 
             if Config.Has_Error then
                Output_Messages (Config.Log_Messages);

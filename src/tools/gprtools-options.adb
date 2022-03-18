@@ -26,7 +26,10 @@ with GNAT.OS_Lib;
 with GPR2.Compilation.Registry;
 with GPR2.KB;
 with GPR2.Log;
+with GPR2.Message;
+with GPR2.Project.Attribute;
 with GPR2.Project.Configuration;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 
 pragma Warnings (Off);
@@ -515,9 +518,7 @@ package body GPRtools.Options is
         and then (not Opt.Create_Missing_Config
                   or else Opt.Config_Project.Exists)
       then
-         Conf := GPR2.Project.Configuration.Load
-           (Opt.Config_Project,
-            Opt.Get_Target);
+         Conf := GPR2.Project.Configuration.Load (Opt.Config_Project);
 
          Display (Conf.Log_Messages);
 
@@ -544,6 +545,50 @@ package body GPRtools.Options is
             Check_Shared_Lib =>  not Opt.Unchecked_Shared_Lib,
             Absent_Dir_Error =>  Absent_Dir_Error,
             Implicit_With    =>  Opt.Implicit_With);
+
+         if To_String (Opt.Target) /= "all" then
+            --  if target is defined on the command line, and a config
+            --  file is specified, issue an error if the target of the config
+            --  is different from the command line.
+
+            declare
+               use GPR2;
+               package PRA renames GPR2.Project.Registry.Attribute;
+               Target_Attr : constant GPR2.Project.Attribute.Object :=
+                               Opt.Tree.Configuration.Corresponding_View.
+                                 Attribute (PRA.Target);
+               Conf_Target : constant Value_Type := Target_Attr.Value.Text;
+               Base        : constant GPR2.KB.Object :=
+                               (if Opt.Tree.Get_KB.Is_Defined
+                                then Opt.Tree.Get_KB
+                                else GPR2.KB.Create_Default
+                                  (GPR2.KB.Targetset_Only_Flags));
+               Conf_Norm   : constant Name_Type :=
+                               Base.Normalized_Target
+                                 (Name_Type (Conf_Target));
+               Opt_Norm    : constant Name_Type :=
+                               Base.Normalized_Target
+                                 (Name_Type (To_String (Opt.Target)));
+            begin
+               if Conf_Norm /= Opt_Norm then
+                  Opt.Tree.Log_Messages.Append
+                    (GPR2.Message.Create
+                       (Level   =>  GPR2.Message.Error,
+                        Message =>  "--target: '" & To_String (Opt.Target) &
+                          "' is different from the target value in the" &
+                          " configuration project '" &
+                          String (Conf_Norm) & "'",
+                        Sloc    => Target_Attr.Value));
+               else
+                  Opt.Tree.Log_Messages.Append
+                    (GPR2.Message.Create
+                       (Level   =>  GPR2.Message.Warning,
+                        Message =>  "--target is not used when a " &
+                          "configuration project is specified.",
+                        Sloc    => Target_Attr.Value));
+               end if;
+            end;
+         end if;
 
       else
          if Opt.Create_Missing_Config

@@ -1840,8 +1840,7 @@ package body GPR2.Project.Tree is
       end if;
 
       if Default_Cfg.Exists then
-         Conf := Project.Configuration.Load
-           (Default_Cfg, (if Target = No_Name then "all" else Target));
+         Conf := Project.Configuration.Load (Default_Cfg);
       end if;
 
       if Base.Is_Defined then

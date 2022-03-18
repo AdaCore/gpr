@@ -311,16 +311,6 @@ package body GPR2.Project.Configuration is
                     Filename_Type (Project_Path.Dir_Name)));
          end if;
 
-         --  Continue only if there is no parsing error on the configuration
-         --  project.
-
-         if Result.Project.Is_Defined then
-            Result.Target :=
-              (if Target = "all"
-               then Null_Unbounded_String
-               else To_Unbounded_String (String (Target)));
-         end if;
-
          for S of Settings loop
             Result.Descriptions.Append (S);
          end loop;
@@ -393,8 +383,7 @@ package body GPR2.Project.Configuration is
    ----------
 
    function Load
-     (Filename : Path_Name.Object;
-      Target   : Name_Type := "all") return Object
+     (Filename : Path_Name.Object) return Object
    is
       Result : Object;
    begin
@@ -404,13 +393,6 @@ package body GPR2.Project.Configuration is
 
       --  Continue only if there is no parsing error on the configuration
       --  project.
-
-      if Result.Project.Is_Defined then
-         Result.Target :=
-           (if Target = "all"
-            then Null_Unbounded_String
-            else To_Unbounded_String (String (Target)));
-      end if;
 
       Result.Cache.Set (Config_Cache_Object'(others => <>));
 
@@ -462,15 +444,6 @@ package body GPR2.Project.Configuration is
 
       return "";
    end Runtime;
-
-   ------------
-   -- Target --
-   ------------
-
-   function Target (Self : Object) return Optional_Name_Type is
-   begin
-      return Optional_Name_Type (To_String (Self.Target));
-   end Target;
 
 begin
    Definition.Bind_Configuration_To_Tree := Bind_To_Tree'Access;
