@@ -1319,7 +1319,7 @@ package body GPRinstall.Install is
          --  Copy executable(s)
 
          if Copy (Executable) and then not Options.Sources_Only then
-            for Main of Project.Mains loop
+            for Main of Project.Executables loop
                Copy_File
                  (From          => Main,
                   To            => Exec_Dir,

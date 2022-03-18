@@ -466,7 +466,7 @@ procedure GPRclean.Main is
         and then View.Has_Mains
         and then not Opts.Arg_Mains
       then
-         for M of View.Mains loop
+         for M of View.Executables loop
             Delete_File (M.Value);
          end loop;
       end if;

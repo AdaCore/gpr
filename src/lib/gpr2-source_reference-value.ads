@@ -55,7 +55,7 @@ package GPR2.Source_Reference.Value is
      with Pre => Self.Is_Defined;
 
    function At_Pos (Self : Object) return Unit_Index
-     with Pre => Self.Is_Defined and then Self.Has_At_Pos;
+     with Pre => Self.Is_Defined;
 
    function Is_From_Default (Self : Object) return Boolean
      with Pre => Self.Is_Defined;

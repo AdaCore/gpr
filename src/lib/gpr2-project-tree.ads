@@ -379,7 +379,6 @@ package GPR2.Project.Tree is
       Predefined_Only  : Boolean := False;
       Return_Ambiguous : Boolean := True) return Path_Name.Object
      with Pre => Self.Is_Defined;
-
    --  Return absolute path of source/object/project file found in Self or in
    --  View when defined.
    --
