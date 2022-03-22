@@ -293,7 +293,9 @@ package body GPR2.Source_Info.Parser.Ada_Language is
    begin
       Data.Dependencies.Clear;
 
-      Traverse (A_Unit.Root, Callback'Access);
+      if not A_Unit.Root.Is_Null then
+         Traverse (A_Unit.Root, Callback'Access);
+      end if;
 
       if Parsed then
          Data.Parsed := Source_Info.Source;
