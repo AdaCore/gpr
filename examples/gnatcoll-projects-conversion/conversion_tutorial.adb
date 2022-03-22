@@ -30,7 +30,6 @@ with GNATCOLL.VFS;
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name;
-with GPR2.Path_Name.GNATCOLL;
 with GPR2.Project.Configuration;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
@@ -297,10 +296,10 @@ begin
                   (Last_Source.Simple_Name)).Display_Full_Name);
       --  To_Pathname functions
       Put_Line ("To_Pathnane:" & String
-                (GPR2.Path_Name.GNATCOLL.To_Pathname
+                (GPR2.Path_Name.Create
                    (GNATCOLL.VFS.Filesystem_String (Last_Source.Value)).Name));
       Put_Line ("To_Pathname:" & String
-                (GPR2.Path_Name.GNATCOLL.To_Pathname (GNATCOLL.VFS.Create
+                (GPR2.Path_Name.Create (GNATCOLL.VFS.Create
                    (GNATCOLL.VFS.Filesystem_String
                       (Last_Source.Value))).Name));
    end if;

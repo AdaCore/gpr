@@ -34,6 +34,8 @@
 
 with Ada.Calendar;
 with GNAT.MD5;
+with GNATCOLL;  use GNATCOLL;
+with GNATCOLL.VFS;
 
 private with Ada.Directories;
 
@@ -205,6 +207,25 @@ package GPR2.Path_Name is
      with Pre => Self.Exists;
    --  Returns Self's modification time
 
+   function Filesystem_String
+     (Path : GPR2.Path_Name.Object) return VFS.Filesystem_String;
+   --  GPR2.Path_Name.Object to GNATCOLL.VFS.Filesystem_String conversion
+
+   function Virtual_File
+     (Path : GPR2.Path_Name.Object) return VFS.Virtual_File is
+     (if Path.Is_Defined
+      then VFS.Create (Filesystem_String (Path))
+      else VFS.No_File);
+   --  GPR2.Path_Name.Object to GNATCOLL.VFS.Virtual_File conversion
+
+   function Create (Filename : VFS.Filesystem_String)
+                         return GPR2.Path_Name.Object;
+   --  GNATCOLL.VFS.Filesystem_String to GPR2.Path_Name.Object conversion
+
+   function Create (File : VFS.Virtual_File)
+                         return GPR2.Path_Name.Object;
+   --  GNATCOLL.VFS.Virtual_File to GPR2.Path_Name.Object to conversion
+
 private
 
    type Object is tagged record
@@ -252,5 +273,29 @@ private
 
    function Modification_Time (Self : Object) return Ada.Calendar.Time is
      (Ada.Directories.Modification_Time (To_String (Self.Value)));
+
+   function Filesystem_String
+     (Path : GPR2.Path_Name.Object) return VFS.Filesystem_String is
+     (if Path.Is_Defined
+      then
+        (if Path.Has_Dir_Name
+         then VFS.Filesystem_String (Value (Path))
+         else VFS.Filesystem_String (Simple_Name (Path)))
+      else ""
+     );
+
+   function Create (Filename : VFS.Filesystem_String)
+                       return GPR2.Path_Name.Object is
+     (if Filename'Length > 1
+      then GPR2.Path_Name.Create
+        (GPR2.Filename_Type (Filename), GPR2.Filename_Type (Filename))
+      else GPR2.Path_Name.Undefined);
+
+   function Create (File : VFS.Virtual_File)
+                    return GPR2.Path_Name.Object is
+     (if VFS."/=" (File, VFS.No_File)
+      then GPR2.Path_Name.Create (GPR2.Filename_Type (File.Display_Full_Name),
+        GPR2.Filename_Type (File.Display_Full_Name))
+      else GPR2.Path_Name.Undefined);
 
 end GPR2.Path_Name;

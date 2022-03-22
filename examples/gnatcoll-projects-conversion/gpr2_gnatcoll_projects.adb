@@ -50,13 +50,13 @@ package body GPR2_GNATCOLL_Projects is
          if Project.Kind not in K_Configuration | K_Abstract
            and then Project.Object_Directory.Is_Defined
          then
-            return GPR2.Path_Name.GNATCOLL.To_Virtual_File
+            return GPR2.Path_Name.Virtual_File
               (Project.Object_Directory);
          elsif Project.Tree.Subdirs /= GPR2.No_Filename then
-            return GPR2.Path_Name.GNATCOLL.To_Virtual_File
+            return GPR2.Path_Name.Virtual_File
               (Project.Dir_Name.Compose (Project.Tree.Subdirs));
          else
-            return GPR2.Path_Name.GNATCOLL.To_Virtual_File (Project.Dir_Name);
+            return GPR2.Path_Name.Virtual_File (Project.Dir_Name);
          end if;
       else
          return GNATCOLL.VFS.No_File;
