@@ -1,0 +1,693 @@
+-------------------------
+gprls -h
+-------------------------
+Usage:
+  gprls [-P<proj>|<proj.gpr>] [opts] [object files]
+
+ -h, --help
+           Display usage and exit
+ --version
+           Display version and exit
+
+list switches:
+   gprls specific switches.
+
+ -a[0]     Include predefined units. Use -a0 to hide predefined sources
+           directory
+ -d        Print source dependencies with status
+ -files=<file>
+           File to list are contained in <file>
+ -o        Print object files
+ -s        Print sources
+ -U        Browse the entire project tree
+ -u        Print unit names
+ -vP<level>
+           Use <level> verbosity (0 .. 2) for the project parsing
+ --closure
+           Closure mode
+ --source-parser
+           Use gprls's Ada source parser to retrieve the dependencies
+
+Project switches:
+   Project file handling switches
+
+ -aP dir   Add directory "dir" to project search path
+ -P proj.gpr
+           Use project file "proj.gpr"
+ -X NAME=Value
+           Set the project external reference "NAME" to "Value"
+ --implicit-with=proj.gpr
+           Add the given  project as a dependency of all loaded projects
+ --relocate-build-tree[=dir]
+           Root obj/lib/exec dirs are current directory or "dir"
+ --root-dir=dir
+           Root directory of obj/lib/exec to relocate
+ --src-subdirs=dir
+           Prepend <obj>/dir to the list of source dirs for each project
+ --subdirs=dir
+           Use "dir" as suffix to obj/lib/exec directories
+ --unchecked-shared-lib-imports
+           Shared lib projects may import any project
+
+Project configuration switches:
+   Switches used to set or modify the way the project configuration is done
+
+ --config=file.cgpr
+           Specify the main config project file name
+ --db dir  Parse "dir" as an additional  knowledge base
+ --db-     Do not load the standard knowledge base
+ --RTS[:<lang>]=runtime
+           Specify a runtime for <lang> or Ada (default)
+ --target=targetname
+           Specify a target for cross platforms
+
+Verbosity switches:
+ -F        Full project path name in brief error messages
+ -v        Verbose output
+
+-------------------------
+gprclean -h
+-------------------------
+Usage:
+  gprclean [-P<proj>|<proj.gpr>] [opts] [mains]
+
+ -h, --help
+           Display usage and exit
+ --version
+           Display version and exit
+
+clean switches:
+   gprclean specific switches.
+
+ -c        Only delete compiler generated files
+ -f        Force deletions of unwritable files
+ -n        Nothing to do: only list files to delete
+ -p        Remove empty build directories
+ -r        Clean all projects recursively
+ --autoconf=file.cgpr
+           Specify generated config project file name
+
+Project switches:
+   Project file handling switches
+
+ -aP dir   Add directory "dir" to project search path
+ -P proj.gpr
+           Use project file "proj.gpr"
+ -X NAME=Value
+           Set the project external reference "NAME" to "Value"
+ --implicit-with=proj.gpr
+           Add the given  project as a dependency of all loaded projects
+ --no-project
+           Do not use project file
+ --relocate-build-tree[=dir]
+           Root obj/lib/exec dirs are current directory or "dir"
+ --root-dir=dir
+           Root directory of obj/lib/exec to relocate
+ --src-subdirs=dir
+           Prepend <obj>/dir to the list of source dirs for each project
+ --subdirs=dir
+           Use "dir" as suffix to obj/lib/exec directories
+ --unchecked-shared-lib-imports
+           Shared lib projects may import any project
+
+Project configuration switches:
+   Switches used to set or modify the way the project configuration is done
+
+ --config=file.cgpr
+           Specify the main config project file name
+ --db dir  Parse "dir" as an additional  knowledge base
+ --db-     Do not load the standard knowledge base
+ --RTS[:<lang>]=runtime
+           Specify a runtime for <lang> or Ada (default)
+ --target=targetname
+           Specify a target for cross platforms
+
+distributed switches:
+   Distributed compilation mode switches.
+
+ --distributed[=node1[,node2]]
+           Activate the remote mode on specified nodes
+ --hash=<string>
+           Set a hash string to identified environment
+ --slave-env[=name]
+           Use a specific slave's environment
+
+Verbosity switches:
+ -F        Full project path name in brief error messages
+ -q        Be quiet/terse
+ -v        Verbose output
+
+-------------------------
+gprinstall -h
+-------------------------
+Usage:
+
+ -h, --help
+           Display usage and exit
+ --version
+           Display version and exit
+
+install switches:
+   gprinstall options
+
+ -d, --dry-run
+           Execute nothing, display commands
+ -f, --force
+           Force installation, overwrite files
+ -m        Minimal copy of sources (only those needed)
+ -p, --create-missing-dirs
+           Create directories when missing
+ -r        Recursive
+ --ali-subdir=<dir>
+           The ALI directory/sub-directory
+ --build-name=<name>
+           Build name value (default is "Default")
+ --build-var=<name>
+           Name of the variable which identify a build)
+ --exec-subdir=<dir>
+           The executable directory/sub-directory
+ --install-name=<name>
+           The name of the installation (manifest)
+ --lib-subdir=<dir>
+           The library directory/sub-directory
+ --link-lib-subdir=<dir>
+           The symlib directory/sub-directory to libraries
+ --list    List all installed projects
+ --mode=dev|usage
+           Kind of installation (default is "dev")
+ --no-build-var
+           Do not generate external build variable
+ --no-lib-link
+           Do not copy shared lib in exec/lib directory
+ --no-manifest
+           Do not generate the manifest file
+ --no-project
+           Do not install project file
+ --prefix=<dir>
+           Install destination directory
+ --project-subdir=<dir>
+           The project directory/sub-directory
+ --side-debug
+           Write debug information into a separate file
+ --sources-only
+           Copy project sources only
+ --sources-subdir=<dir>
+           The sources directory/sub-directory
+ --stat    Display stats about installed projects, must be used with --list
+ --uninstall
+           Remove all previously installed files
+
+Project switches:
+   Project file handling switches
+
+ -aP dir   Add directory "dir" to project search path
+ -P proj.gpr
+           Use project file "proj.gpr"
+ -X NAME=Value
+           Set the project external reference "NAME" to "Value"
+ --implicit-with=proj.gpr
+           Add the given  project as a dependency of all loaded projects
+ --relocate-build-tree[=dir]
+           Root obj/lib/exec dirs are current directory or "dir"
+ --root-dir=dir
+           Root directory of obj/lib/exec to relocate
+ --src-subdirs=dir
+           Prepend <obj>/dir to the list of source dirs for each project
+ --subdirs=dir
+           Use "dir" as suffix to obj/lib/exec directories
+ --unchecked-shared-lib-imports
+           Shared lib projects may import any project
+
+Project configuration switches:
+   Switches used to set or modify the way the project configuration is done
+
+ --config=file.cgpr
+           Specify the main config project file name
+ --db dir  Parse "dir" as an additional  knowledge base
+ --db-     Do not load the standard knowledge base
+ --RTS[:<lang>]=runtime
+           Specify a runtime for <lang> or Ada (default)
+ --target=targetname
+           Specify a target for cross platforms
+
+Verbosity switches:
+ -F        Full project path name in brief error messages
+ -q        Be quiet/terse
+ -v        Verbose output
+
+-------------------------
+gprname -h
+-------------------------
+Usage: gprname [switches] naming-pattern [naming-patterns]
+   {--and [switches] naming-pattern [naming-patterns]}
+
+general switches:
+  --version   Display version and exit
+  -h, --help  Display usage and exit
+
+  -eL             For backwards compatibility, has no effect
+  -P[ ]<proj>     Update or create project file <proj>
+
+  --ignore-duplicate-files    Ignore duplicate file names
+  --ignore-predefined-units   Ignore predefined units
+
+  --no-backup     Do not create backup of project file
+  --target=<targ> Indicates the target of the GNAT compiler
+  --RTS=<dir>     Specify the Ada runtime
+
+  -gnateD<sym>=<val> Preprocess with symbol definition
+  -gnatep=<data>     Preprocess files with data file
+
+  --minimal-dirs  Keep as Source_Dirs only the directories that contain at least one source.
+                  This will also expand any /** suffix to an explicit list of directories.
+
+  -v           Verbose output
+  -v -v        Very verbose output
+  -vP<x>       Specify verbosity when parsing Project Files (x = 0/1/2)
+
+switches for naming pattern sections:
+  --and                Begin a new naming patterns section
+  -d[ ]<dir>           Use <dir> as one of the source directories for the current section
+  -D[ ]<file>          Get source directories from <file>
+   [-x][ ]<pat>        [exclude] pattern <pat> for Ada source
+  -[x]f[ ]<pat>        [exclude] pattern <pat> for C source
+  -[x]f:<lang>[ ]<pat> [exclude] pattern <pat> for source of language <lang>
+
+
+-------------------------
+gprls --help
+-------------------------
+Usage:
+  gprls [-P<proj>|<proj.gpr>] [opts] [object files]
+
+ -h, --help
+           Display usage and exit
+ --version
+           Display version and exit
+
+list switches:
+   gprls specific switches.
+
+ -a[0]     Include predefined units. Use -a0 to hide predefined sources
+           directory
+ -d        Print source dependencies with status
+ -files=<file>
+           File to list are contained in <file>
+ -o        Print object files
+ -s        Print sources
+ -U        Browse the entire project tree
+ -u        Print unit names
+ -vP<level>
+           Use <level> verbosity (0 .. 2) for the project parsing
+ --closure
+           Closure mode
+ --source-parser
+           Use gprls's Ada source parser to retrieve the dependencies
+
+Project switches:
+   Project file handling switches
+
+ -aP dir   Add directory "dir" to project search path
+ -P proj.gpr
+           Use project file "proj.gpr"
+ -X NAME=Value
+           Set the project external reference "NAME" to "Value"
+ --implicit-with=proj.gpr
+           Add the given  project as a dependency of all loaded projects
+ --relocate-build-tree[=dir]
+           Root obj/lib/exec dirs are current directory or "dir"
+ --root-dir=dir
+           Root directory of obj/lib/exec to relocate
+ --src-subdirs=dir
+           Prepend <obj>/dir to the list of source dirs for each project
+ --subdirs=dir
+           Use "dir" as suffix to obj/lib/exec directories
+ --unchecked-shared-lib-imports
+           Shared lib projects may import any project
+
+Project configuration switches:
+   Switches used to set or modify the way the project configuration is done
+
+ --config=file.cgpr
+           Specify the main config project file name
+ --db dir  Parse "dir" as an additional  knowledge base
+ --db-     Do not load the standard knowledge base
+ --RTS[:<lang>]=runtime
+           Specify a runtime for <lang> or Ada (default)
+ --target=targetname
+           Specify a target for cross platforms
+
+Verbosity switches:
+ -F        Full project path name in brief error messages
+ -v        Verbose output
+
+-------------------------
+gprclean --help
+-------------------------
+Usage:
+  gprclean [-P<proj>|<proj.gpr>] [opts] [mains]
+
+ -h, --help
+           Display usage and exit
+ --version
+           Display version and exit
+
+clean switches:
+   gprclean specific switches.
+
+ -c        Only delete compiler generated files
+ -f        Force deletions of unwritable files
+ -n        Nothing to do: only list files to delete
+ -p        Remove empty build directories
+ -r        Clean all projects recursively
+ --autoconf=file.cgpr
+           Specify generated config project file name
+
+Project switches:
+   Project file handling switches
+
+ -aP dir   Add directory "dir" to project search path
+ -P proj.gpr
+           Use project file "proj.gpr"
+ -X NAME=Value
+           Set the project external reference "NAME" to "Value"
+ --implicit-with=proj.gpr
+           Add the given  project as a dependency of all loaded projects
+ --no-project
+           Do not use project file
+ --relocate-build-tree[=dir]
+           Root obj/lib/exec dirs are current directory or "dir"
+ --root-dir=dir
+           Root directory of obj/lib/exec to relocate
+ --src-subdirs=dir
+           Prepend <obj>/dir to the list of source dirs for each project
+ --subdirs=dir
+           Use "dir" as suffix to obj/lib/exec directories
+ --unchecked-shared-lib-imports
+           Shared lib projects may import any project
+
+Project configuration switches:
+   Switches used to set or modify the way the project configuration is done
+
+ --config=file.cgpr
+           Specify the main config project file name
+ --db dir  Parse "dir" as an additional  knowledge base
+ --db-     Do not load the standard knowledge base
+ --RTS[:<lang>]=runtime
+           Specify a runtime for <lang> or Ada (default)
+ --target=targetname
+           Specify a target for cross platforms
+
+distributed switches:
+   Distributed compilation mode switches.
+
+ --distributed[=node1[,node2]]
+           Activate the remote mode on specified nodes
+ --hash=<string>
+           Set a hash string to identified environment
+ --slave-env[=name]
+           Use a specific slave's environment
+
+Verbosity switches:
+ -F        Full project path name in brief error messages
+ -q        Be quiet/terse
+ -v        Verbose output
+
+-------------------------
+gprinstall --help
+-------------------------
+Usage:
+
+ -h, --help
+           Display usage and exit
+ --version
+           Display version and exit
+
+install switches:
+   gprinstall options
+
+ -d, --dry-run
+           Execute nothing, display commands
+ -f, --force
+           Force installation, overwrite files
+ -m        Minimal copy of sources (only those needed)
+ -p, --create-missing-dirs
+           Create directories when missing
+ -r        Recursive
+ --ali-subdir=<dir>
+           The ALI directory/sub-directory
+ --build-name=<name>
+           Build name value (default is "Default")
+ --build-var=<name>
+           Name of the variable which identify a build)
+ --exec-subdir=<dir>
+           The executable directory/sub-directory
+ --install-name=<name>
+           The name of the installation (manifest)
+ --lib-subdir=<dir>
+           The library directory/sub-directory
+ --link-lib-subdir=<dir>
+           The symlib directory/sub-directory to libraries
+ --list    List all installed projects
+ --mode=dev|usage
+           Kind of installation (default is "dev")
+ --no-build-var
+           Do not generate external build variable
+ --no-lib-link
+           Do not copy shared lib in exec/lib directory
+ --no-manifest
+           Do not generate the manifest file
+ --no-project
+           Do not install project file
+ --prefix=<dir>
+           Install destination directory
+ --project-subdir=<dir>
+           The project directory/sub-directory
+ --side-debug
+           Write debug information into a separate file
+ --sources-only
+           Copy project sources only
+ --sources-subdir=<dir>
+           The sources directory/sub-directory
+ --stat    Display stats about installed projects, must be used with --list
+ --uninstall
+           Remove all previously installed files
+
+Project switches:
+   Project file handling switches
+
+ -aP dir   Add directory "dir" to project search path
+ -P proj.gpr
+           Use project file "proj.gpr"
+ -X NAME=Value
+           Set the project external reference "NAME" to "Value"
+ --implicit-with=proj.gpr
+           Add the given  project as a dependency of all loaded projects
+ --relocate-build-tree[=dir]
+           Root obj/lib/exec dirs are current directory or "dir"
+ --root-dir=dir
+           Root directory of obj/lib/exec to relocate
+ --src-subdirs=dir
+           Prepend <obj>/dir to the list of source dirs for each project
+ --subdirs=dir
+           Use "dir" as suffix to obj/lib/exec directories
+ --unchecked-shared-lib-imports
+           Shared lib projects may import any project
+
+Project configuration switches:
+   Switches used to set or modify the way the project configuration is done
+
+ --config=file.cgpr
+           Specify the main config project file name
+ --db dir  Parse "dir" as an additional  knowledge base
+ --db-     Do not load the standard knowledge base
+ --RTS[:<lang>]=runtime
+           Specify a runtime for <lang> or Ada (default)
+ --target=targetname
+           Specify a target for cross platforms
+
+Verbosity switches:
+ -F        Full project path name in brief error messages
+ -q        Be quiet/terse
+ -v        Verbose output
+
+-------------------------
+gprname --help
+-------------------------
+Usage: gprname [switches] naming-pattern [naming-patterns]
+   {--and [switches] naming-pattern [naming-patterns]}
+
+general switches:
+  --version   Display version and exit
+  -h, --help  Display usage and exit
+
+  -eL             For backwards compatibility, has no effect
+  -P[ ]<proj>     Update or create project file <proj>
+
+  --ignore-duplicate-files    Ignore duplicate file names
+  --ignore-predefined-units   Ignore predefined units
+
+  --no-backup     Do not create backup of project file
+  --target=<targ> Indicates the target of the GNAT compiler
+  --RTS=<dir>     Specify the Ada runtime
+
+  -gnateD<sym>=<val> Preprocess with symbol definition
+  -gnatep=<data>     Preprocess files with data file
+
+  --minimal-dirs  Keep as Source_Dirs only the directories that contain at least one source.
+                  This will also expand any /** suffix to an explicit list of directories.
+
+  -v           Verbose output
+  -v -v        Very verbose output
+  -vP<x>       Specify verbosity when parsing Project Files (x = 0/1/2)
+
+switches for naming pattern sections:
+  --and                Begin a new naming patterns section
+  -d[ ]<dir>           Use <dir> as one of the source directories for the current section
+  -D[ ]<file>          Get source directories from <file>
+   [-x][ ]<pat>        [exclude] pattern <pat> for Ada source
+  -[x]f[ ]<pat>        [exclude] pattern <pat> for C source
+  -[x]f:<lang>[ ]<pat> [exclude] pattern <pat> for source of language <lang>
+
+
+-------------------------
+gprls --no-such-switch
+-------------------------
+gprls: unrecognized option '--no-such-switch'
+try "gprls --help" for more information.
+STATUS: 4
+
+-------------------------
+gprclean --no-such-switch
+-------------------------
+gprclean: unrecognized option '--no-such-switch'
+try "gprclean --help" for more information.
+STATUS: 4
+
+-------------------------
+gprinstall --no-such-switch
+-------------------------
+gprinstall: unrecognized option '--no-such-switch'
+try "gprinstall --help" for more information.
+STATUS: 4
+
+-------------------------
+gprname --no-such-switch
+-------------------------
+gprname: wrong switch: --no-such-switch
+STATUS: 4
+
+-------------------------
+gprls --config:conf.cgpr
+-------------------------
+gprls: unexpected index for '--config:conf.cgpr'
+try "gprls --help" for more information.
+STATUS: 4
+
+-------------------------
+gprclean --config:conf.cgpr
+-------------------------
+gprclean: unexpected index for '--config:conf.cgpr'
+try "gprclean --help" for more information.
+STATUS: 4
+
+-------------------------
+gprinstall --config:conf.cgpr
+-------------------------
+gprinstall: unexpected index for '--config:conf.cgpr'
+try "gprinstall --help" for more information.
+STATUS: 4
+
+-------------------------
+gprname -gnatep:foo
+-------------------------
+gprname: project file name missing
+STATUS: 4
+
+-------------------------
+gprls -P
+-------------------------
+gprls: parameter expected for argument '-P'
+try "gprls --help" for more information.
+STATUS: 4
+
+-------------------------
+gprclean -P
+-------------------------
+gprclean: parameter expected for argument '-P'
+try "gprclean --help" for more information.
+STATUS: 4
+
+-------------------------
+gprinstall -P
+-------------------------
+gprinstall: parameter expected for argument '-P'
+try "gprinstall --help" for more information.
+STATUS: 4
+
+-------------------------
+gprname -P
+-------------------------
+gprname: project file name missing
+STATUS: 4
+
+-------------------------
+gprls -s
+-------------------------
+using project file /demo.gpr
+/src/pkg2.adb
+/src/pkg.ads
+
+-------------------------
+gprls demo.gpr pkg.ads -s
+-------------------------
+/src/pkg.ads
+
+-------------------------
+gprls -P demo.gpr demo2.gpr
+-------------------------
+gprls: cannot have -P<prj> and <prj> on the same command line
+try "gprls --help" for more information.
+STATUS: 4
+
+-------------------------
+gprls demo.gpr demo2.gpr
+-------------------------
+gprls: cannot have multiple <proj> on the same command line
+try "gprls --help" for more information.
+STATUS: 4
+
+-------------------------
+gprls -Pdemo -s
+-------------------------
+/src/pkg2.adb
+/src/pkg.ads
+
+-------------------------
+gprls --RTS:ada default -s demo.gpr
+-------------------------
+demo.gpr:4:31: warning: object directory "default" not found
+/src/pkg2.adb
+/src/pkg.ads
+
+-------------------------
+gprls --RTS:ada=default -s demo.gpr
+-------------------------
+demo.gpr:4:31: warning: object directory "default" not found
+/src/pkg2.adb
+/src/pkg.ads
+
+-------------------------
+gprls --RTS default -s demo.gpr
+-------------------------
+demo.gpr:4:31: warning: object directory "default" not found
+/src/pkg2.adb
+/src/pkg.ads
+
+-------------------------
+gprls --RTS=default -s demo.gpr
+-------------------------
+demo.gpr:4:31: warning: object directory "default" not found
+/src/pkg2.adb
+/src/pkg.ads
+

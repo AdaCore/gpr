@@ -76,10 +76,6 @@ package GPR2.Project.Registry.Attribute is
       Index_Type  : Index_Value_Type) return Boolean;
    --  Whether a give index value should be considered case sensitive or not
 
-   function Is_Others_Allowed
-     (Index_Type : Index_Value_Type) return Boolean;
-   --  Whether "others" is allowed as index value
-
    -----------------------
    --  Attribute values --
    -----------------------
@@ -567,7 +563,4 @@ private
      (Qualified_Name, Qualified_Name);
    --  Keeps track of Attributes that are aliased
 
-   function Is_Others_Allowed
-     (Index_Type : Index_Value_Type) return Boolean is
-     (Index_Type in FileGlob_Index | FileGlob_Or_Language_Index);
 end GPR2.Project.Registry.Attribute;

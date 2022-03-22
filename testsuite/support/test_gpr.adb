@@ -299,7 +299,7 @@ package body Test_GPR is
       if Config_Filename'Length > 0 then
          Config_Project := GPR2.Project.Configuration.Load
             (GPR2.Path_Name.Create_File
-               (GPR2.Filename_Optional (Config_Filename)), "all");
+               (GPR2.Filename_Optional (Config_Filename)));
       end if;
 
       begin

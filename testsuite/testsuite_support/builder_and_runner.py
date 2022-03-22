@@ -159,6 +159,14 @@ class BuilderAndRunner(object):
         print(p.out, end="")
         return p
 
+    def check_call(self, cmd):
+        """subprocess.call wrapper handling coverage & valgrind
+        modes.
+        """
+        p = self.run(cmd, catch_error=True)
+        print(p.out, end="")
+        return p
+
     def insert_build_and_runner_parameters(self, env):
         """The BuildAndRunner initialization parameters to allow a
         BuilderAndRunner() call in the python test script.

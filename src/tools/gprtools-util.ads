@@ -18,7 +18,10 @@
 
 --  Common utilities for all gpr tools
 
+with Ada.Command_Line;
+
 with GPR2.Log;
+with GPR2.Path_Name;
 
 with GPRtools.Options;
 
@@ -38,7 +41,7 @@ package GPRtools.Util is
    procedure Set_Program_Name (Name : String);
 
    procedure Output_Messages
-     (Options : GPRtools.Options.Object'Class;
+     (Options : GPRtools.Options.Base_Options'Class;
       Log     : GPR2.Log.Object := GPR2.Log.Undefined);
    --  Output errors and if Verbose is True other messages from Log.
    --  Options Tree's log is used when Log is undefined.
@@ -60,21 +63,31 @@ package GPRtools.Util is
    --  Terminate program with a message and a fatal status code
 
    procedure Project_Processing_Failed
-     (Options : GPRtools.Options.Object'Class);
+     (Options : GPRtools.Options.Base_Options'Class);
    --  Output or not project processing error messages depend on Verbose
    --  parameters. Output error message '"proj.gpr" processing failed' at the
    --  end if not Quiet.
 
-   procedure Check_For_Default_Project
-     (Options : in out GPRtools.Options.Object'Class);
-   --  Look for default project in the current directory, set Project_File
-   --  to Implicit_Project if no projects in the current directory.
+   function Check_For_Default_Project return GPR2.Path_Name.Object;
+   --  Look for default project in the current directory,
+   --  return Implicit_Project if no or several projects are in the current
+   --  directory.
 
    procedure Finish_Program
      (Exit_Code : Exit_Code_Type := E_Success;
       Message   : String := "");
    --  Terminate program, with or without a message, setting the status code
    --  according to Exit_Code.
+
+   procedure Exit_Program (Exit_Code : Exit_Code_Type);
+   pragma No_Return (Exit_Program);
+   --  A call to Exit_Program terminates execution with the given status.
+   --  A status of zero indicates normal completion, a non-zero status
+   --  indicates abnormal termination.
+
+   function Exit_Code
+     (Code : Exit_Code_Type) return Ada.Command_Line.Exit_Status;
+   --  Translate Code as Exit_Status
 
    function Partial_Name
      (Lib_Name      : Simple_Name;

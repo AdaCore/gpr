@@ -101,25 +101,22 @@ package GPR2.Project.Configuration is
      (Settings   : Description_Set;
       Target     : Name_Type;
       Project    : GPR2.Path_Name.Object;
-      Base       : in out GPR2.KB.Object)
+      Base       : in out GPR2.KB.Object;
+      Save_Name  : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined)
       return Object
    with Pre => Settings'Length > 0;
    --  Creates a configuration based on the settings requested.
    --  Project parameter need to log error if happen.
+   --  If Save_Name is defined, the configuration project is saved there.
 
    function Load
-     (Filename : Path_Name.Object;
-      Target   : Name_Type := "all") return Object;
+     (Filename : Path_Name.Object) return Object;
    --  Creates a configuration object for the given configuration file
 
    function Corresponding_View (Self : Object) return Project.View.Object
      with Pre  => Self.Is_Defined,
           Post => Corresponding_View'Result.Is_Defined;
    --  Gets project for the given configuration object
-
-   function Target (Self : Object) return Optional_Name_Type
-     with Pre => Self.Is_Defined;
-   --  Returns the target used for the configuration
 
    function Runtime
      (Self : Object; Language : Language_Id) return Optional_Name_Type
@@ -209,7 +206,6 @@ private
 
    type Object is tagged record
       Messages           : Log.Object;
-      Target             : Unbounded_String;
       Project            : GPR2.Project.Parser.Object;
       Conf               : GPR2.Project.View.Object;
       Descriptions       : Configuration.Descriptions.Vector;

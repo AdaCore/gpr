@@ -71,9 +71,9 @@ package body GPR2.Project.Registry.Attribute is
    --  Concatenate 2 default values for different indexes into one container
 
    function Default_Library_Standalone
-     (View : Project.View.Object) return Value_Type is
-     (if View.Is_Library and then View.Has_Any_Interfaces
-      then "standard" else "no");
+     (View : Project.View.Object) return Value_Type
+   is (if View.Is_Library and then View.Has_Any_Interfaces
+       then "standard" else "no");
 
    ---------
    -- "+" --
@@ -1498,6 +1498,7 @@ begin
    Add
      (Create (Global_Compilation_Switches, Pack.Builder),
       Index_Type           => Language_Index,
+      Index_Optional       => True,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
@@ -1507,7 +1508,6 @@ begin
    Add
      (Create (Executable, Pack.Builder),
       Index_Type           => File_Index,
-      Index_Optional       => True,
       Value                => Single,
       Value_Case_Sensitive => True,
       Empty_Value          => Ignore,
@@ -1870,6 +1870,7 @@ begin
    Add
      (Create (Switches, Pack.Metrics),
       Index_Type           => FileGlob_Index,
+      Index_Optional       => True,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,

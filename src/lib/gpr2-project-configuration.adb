@@ -23,6 +23,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Environment_Variables;
+with Ada.Text_IO;
 
 with GNAT.OS_Lib;
 with GNAT.String_Split;
@@ -107,7 +108,8 @@ package body GPR2.Project.Configuration is
      (Settings   : Description_Set;
       Target     : Name_Type;
       Project    : GPR2.Path_Name.Object;
-      Base       : in out GPR2.KB.Object)
+      Base       : in out GPR2.KB.Object;
+      Save_Name  : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined)
       return Object
    is
 
@@ -279,6 +281,17 @@ package body GPR2.Project.Configuration is
       end if;
 
       if Configuration_String /= Null_Unbounded_String then
+         if Save_Name.Is_Defined then
+            declare
+               Output : Ada.Text_IO.File_Type;
+            begin
+               Ada.Text_IO.Create (Output, Ada.Text_IO.Out_File,
+                                   String (Save_Name.Value));
+               Ada.Text_IO.Put_Line
+                 (Output, To_String (Configuration_String));
+               Ada.Text_IO.Close (Output);
+            end;
+         end if;
 
          if Path_Name.Temporary_Directory.Is_Defined then
             Result.Project :=
@@ -296,16 +309,6 @@ package body GPR2.Project.Configuration is
                  Pseudo_Filename => Path_Name.Create_File
                    ("autoconf.cgpr",
                     Filename_Type (Project_Path.Dir_Name)));
-         end if;
-
-         --  Continue only if there is no parsing error on the configuration
-         --  project.
-
-         if Result.Project.Is_Defined then
-            Result.Target :=
-              (if Target = "all"
-               then Null_Unbounded_String
-               else To_Unbounded_String (String (Target)));
          end if;
 
          for S of Settings loop
@@ -380,8 +383,7 @@ package body GPR2.Project.Configuration is
    ----------
 
    function Load
-     (Filename : Path_Name.Object;
-      Target   : Name_Type := "all") return Object
+     (Filename : Path_Name.Object) return Object
    is
       Result : Object;
    begin
@@ -391,13 +393,6 @@ package body GPR2.Project.Configuration is
 
       --  Continue only if there is no parsing error on the configuration
       --  project.
-
-      if Result.Project.Is_Defined then
-         Result.Target :=
-           (if Target = "all"
-            then Null_Unbounded_String
-            else To_Unbounded_String (String (Target)));
-      end if;
 
       Result.Cache.Set (Config_Cache_Object'(others => <>));
 
@@ -449,15 +444,6 @@ package body GPR2.Project.Configuration is
 
       return "";
    end Runtime;
-
-   ------------
-   -- Target --
-   ------------
-
-   function Target (Self : Object) return Optional_Name_Type is
-   begin
-      return Optional_Name_Type (To_String (Self.Target));
-   end Target;
 
 begin
    Definition.Bind_Configuration_To_Tree := Bind_To_Tree'Access;

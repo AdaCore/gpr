@@ -18,6 +18,7 @@
 
 with GNAT.OS_Lib;
 
+private with Ada.Strings.Unbounded;
 private with GPR2.Path_Name.Set;
 
 package GPRinstall is
@@ -42,5 +43,10 @@ private
    GPRinstall_Error_No_Message : exception;
    --  Special exception for cases that require multiple line diagnostics
    --  that are supposed to be printed before raising the exception.
+
+   function "-" (S : Ada.Strings.Unbounded.Unbounded_String) return String
+                 renames Ada.Strings.Unbounded.To_String;
+   function "-" (S : String) return Ada.Strings.Unbounded.Unbounded_String
+                 renames Ada.Strings.Unbounded.To_Unbounded_String;
 
 end GPRinstall;

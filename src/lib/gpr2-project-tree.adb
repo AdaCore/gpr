@@ -1345,18 +1345,19 @@ package body GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
-      Project_Dir       : Path_Name.Object          := Path_Name.Undefined;
-      Build_Path        : Path_Name.Object          := Path_Name.Undefined;
-      Subdirs           : Optional_Name_Type        := No_Name;
-      Src_Subdirs       : Optional_Name_Type        := No_Name;
-      Check_Shared_Lib  : Boolean                   := True;
-      Absent_Dir_Error  : Boolean                   := False;
+      Project_Dir       : Path_Name.Object        := Path_Name.Undefined;
+      Build_Path        : Path_Name.Object        := Path_Name.Undefined;
+      Subdirs           : Optional_Name_Type      := No_Name;
+      Src_Subdirs       : Optional_Name_Type      := No_Name;
+      Check_Shared_Lib  : Boolean                 := True;
+      Absent_Dir_Error  : Boolean                 := False;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
-      Target            : Optional_Name_Type        := No_Name;
+      Target            : Optional_Name_Type      := No_Name;
       Language_Runtimes : Containers.Lang_Value_Map :=
                             Containers.Lang_Value_Maps.Empty_Map;
-      Base              : GPR2.KB.Object            := GPR2.KB.Undefined)
+      Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
+      Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined)
    is
       Languages   : Containers.Language_Set;
       Conf        : Project.Configuration.Object;
@@ -1839,8 +1840,7 @@ package body GPR2.Project.Tree is
       end if;
 
       if Default_Cfg.Exists then
-         Conf := Project.Configuration.Load
-           (Default_Cfg, (if Target = No_Name then "all" else Target));
+         Conf := Project.Configuration.Load (Default_Cfg);
       end if;
 
       if Base.Is_Defined then
@@ -1927,7 +1927,8 @@ package body GPR2.Project.Tree is
            (Pre_Conf_Description.Element,
             Actual_Target,
             (if Self.Root.Is_Defined then Self.Root.Path_Name else Filename),
-            Self.Base);
+            Self.Base,
+            Save_Name => Config_Project);
 
          --  Unload the project that was loaded without configuration.
          --  We need to backup the messages and default search path:
@@ -1994,7 +1995,8 @@ package body GPR2.Project.Tree is
         (Post_Conf_Description.Element,
          Actual_Target,
          Self.Root.Path_Name,
-         Self.Base);
+         Self.Base,
+         Save_Name => Config_Project);
 
       Self.Unload (False);
       Self.Messages := Old_Messages;

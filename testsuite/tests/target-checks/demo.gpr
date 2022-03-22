@@ -1,0 +1,7 @@
+project Demo is
+
+   The_Target := external("TARGET", "all");
+   for Target use The_Target;
+   for Source_Dirs use ("src");
+
+end Demo;

@@ -108,18 +108,19 @@ package GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
-      Project_Dir       : Path_Name.Object          := Path_Name.Undefined;
-      Build_Path        : Path_Name.Object          := Path_Name.Undefined;
-      Subdirs           : Optional_Name_Type        := No_Name;
-      Src_Subdirs       : Optional_Name_Type        := No_Name;
-      Check_Shared_Lib  : Boolean                   := True;
-      Absent_Dir_Error  : Boolean                   := False;
+      Project_Dir       : Path_Name.Object        := Path_Name.Undefined;
+      Build_Path        : Path_Name.Object        := Path_Name.Undefined;
+      Subdirs           : Optional_Name_Type      := No_Name;
+      Src_Subdirs       : Optional_Name_Type      := No_Name;
+      Check_Shared_Lib  : Boolean                 := True;
+      Absent_Dir_Error  : Boolean                 := False;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
-      Target            : Optional_Name_Type        := No_Name;
+      Target            : Optional_Name_Type      := No_Name;
       Language_Runtimes : Containers.Lang_Value_Map :=
                             Containers.Lang_Value_Maps.Empty_Map;
-      Base              : GPR2.KB.Object            := GPR2.KB.Undefined)
+      Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
+      Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined)
        with Pre => Filename.Is_Defined;
    --  Loads a tree in autoconf mode.
    --  If Target is specified, then we use it directly instead of fetching

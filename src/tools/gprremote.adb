@@ -16,8 +16,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Characters.Handling;
 with Ada.Command_Line;
+with Ada.Characters.Handling;
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
@@ -70,14 +70,14 @@ procedure GPRremote is
    Arg_Project      : constant := 3;
    Arg_First_Option : constant := 4;
 
-   Args : array (1 .. Command_Line.Argument_Count) of Unbounded_String;
+   Args : array (1 .. Ada.Command_Line.Argument_Count) of Unbounded_String;
    Last : Natural := 0;
 
    Exit_Status : Natural := 0;
    --  GPRremote's exit status
 
    Project     : GPR2.Project.Tree.Object;
-   Options     : GPRtools.Options.Object;
+   Options     : GPRtools.Options.Base_Options;
 
    type Command_Kind is (Info, Exec, Syncto, Syncfrom, Syncexec);
 
@@ -321,25 +321,24 @@ procedure GPRremote is
    procedure Parse_Command_Line is
       use GNAT.Command_Line;
       use GNAT.OS_Lib;
+      Parser : constant GPRtools.Options.Command_Line_Parser :=
+                 GPRtools.Options.Create
+                   (Initial_Year       => "2017",
+                    No_Project_Support => True,
+                    Allow_Quiet        => False);
 
    begin
-      Options.Tree := Project.Reference;
-      GPRtools.Options.Setup (Options, GPRtools.Remote);
+      GPRtools.Options.Setup (GPRtools.Remote);
 
-      Getopt (Options.Config);
+      Options.Tree := Project.Reference;
+      Parser.Get_Opt (Options);
 
       --  Now read arguments
 
-      Read_Arguments : loop
-         declare
-            Arg : constant String := Get_Argument;
-         begin
-            exit Read_Arguments when Arg = "";
-
-            Last := Last + 1;
-            Args (Last) := To_Unbounded_String (Arg);
-         end;
-      end loop Read_Arguments;
+      for Arg of Options.Args loop
+         Last := Last + 1;
+         Args (Last) := To_Unbounded_String (Arg);
+      end loop;
 
    exception
       when Invalid_Switch =>
@@ -409,13 +408,9 @@ begin
 
    Activate_Symbolic_Traceback;
 
-   if Args'Last < Arg_Cmd or else Options.Version then
+   if Args'Last < Arg_Cmd then
       Version.Display
         ("GPRREMOTE", "2017", Version_String => Version.Long_Value);
-
-      if Options.Version then
-         Version.Display_Free_Software;
-      end if;
 
       return;
    end if;

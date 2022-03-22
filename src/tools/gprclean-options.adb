@@ -16,169 +16,85 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GPR2.Compilation.Registry;
-with GPR2.Version;
+with GPR2.Path_Name;
+with GPR2.Project.Registry.Pack;
+
+with GPRtools.Command_Line;
 
 package body GPRclean.Options is
 
-   Dummy : aliased Boolean;
-   --  Just to support obsolete options
+   procedure On_Switch
+     (Parser : GPRtools.Command_Line.Command_Line_Parser'Class;
+      Res    : not null access GPRtools.Command_Line.Command_Line_Result'Class;
+      Arg    : GPRtools.Command_Line.Switch_Type;
+      Index  : String;
+      Param  : String);
 
-   ------------
-   -- Append --
-   ------------
+   ---------------
+   -- On_Switch --
+   ---------------
 
-   overriding procedure Append (Self : in out Object; Next : Object) is
-      package GTO renames GPRtools.Options;
-
-      procedure Add (Left : in out Boolean; Right : Boolean) with Inline;
-      --  Logically add Right to Left
-
-      ---------
-      -- Add --
-      ---------
-
-      procedure Add (Left : in out Boolean; Right : Boolean) is
-      begin
-         Left := Left or else Right;
-      end Add;
-
+   procedure On_Switch
+     (Parser : GPRtools.Command_Line.Command_Line_Parser'Class;
+      Res    : not null access GPRtools.Command_Line.Command_Line_Result'Class;
+      Arg    : GPRtools.Command_Line.Switch_Type;
+      Index  : String;
+      Param  : String)
+   is
+      pragma Unreferenced (Parser, Index);
+      use type GPRtools.Command_Line.Switch_Type;
+      Result : constant access Object := Object (Res.all)'Access;
    begin
-      GTO.Append (GTO.Object (Self), GTO.Object (Next));
+      if Arg = "-r" then
+         Result.All_Projects := True;
+      elsif Arg = "-n" then
+         Result.Dry_Run := True;
+      elsif Arg = "--autoconf" then
+         Result.Config_Project :=
+           GPR2.Path_Name.Create_File (GPR2.Filename_Type (Param));
+         Result.Remove_Config  := True;
+      elsif Arg = "-c" then
+         Result.Remain_Useful := True;
+      elsif Arg = "-p" then
+         Result.Remove_Empty_Dirs := True;
+      elsif Arg = "-f" then
+         Result.Force_Deletions := True;
+      end if;
+   end On_Switch;
 
-      Add (Self.Dry_Run,                  Next.Dry_Run);
-      Add (Self.All_Projects,             Next.All_Projects);
-      Add (Self.Remain_Useful,            Next.Remain_Useful);
-      Add (Self.No_Project,               Next.No_Project);
-      Add (Self.Full_Path_Name_For_Brief, Next.Full_Path_Name_For_Brief);
-      Add (Self.Remove_Empty_Dirs,        Next.Remove_Empty_Dirs);
-      Add (Self.Unchecked_Shared_Lib,     Next.Unchecked_Shared_Lib);
+   ------------------------------
+   -- Parse_Attribute_Switches --
+   ------------------------------
 
-      Self.Mains.Union (Next.Mains);
-      Self.Arg_Mains := not Self.Mains.Is_Empty;
-   end Append;
+   procedure Parse_Attribute_Switches
+     (Parser  : GPRtools.Options.Command_Line_Parser;
+      Options : in out Object;
+      Values  : GPR2.Containers.Source_Value_List)
+   is
+      package PRP renames GPR2.Project.Registry.Pack;
+   begin
+      Parser.Get_Opt
+        (From_Pack => PRP.Clean, Values => Values, Result => Options);
+   end Parse_Attribute_Switches;
 
    ------------------------
    -- Parse_Command_Line --
    ------------------------
 
    procedure Parse_Command_Line
-     (Options      : in out Object;
-      Project_Tree : in out Project.Tree.Object;
-      Parser       : Opt_Parser := Command_Line_Parser)
+     (Parser       : GPRtools.Options.Command_Line_Parser;
+      Options      : in out Object)
    is
-      use Ada;
-
-      Config : Command_Line_Configuration renames Options.Config;
-
-      Additional : constant Boolean := Parser /= Command_Line_Parser;
-      --  Parsed from package Clean attribute Switches
-
-      procedure Value_Callback (Switch, Value : String);
-      --  Accept string swithces
-
-      --------------------
-      -- Value_Callback --
-      --------------------
-
-      procedure Value_Callback (Switch, Value : String) is
-
-         function Normalize_Value return String is
-           (if Value /= "" and then Value (Value'First) = '='
-            then Value (Value'First + 1 .. Value'Last) else Value);
-         --  Remove leading '=' symbol from value for options like
-         --  --config=file.cgrp
-
-      begin
-         if Switch = "--config" then
-            Options.Config_File :=
-              Path_Name.Create_File (Filename_Type (Normalize_Value));
-
-         elsif Switch = "--autoconf" then
-            --  --autoconf option for gprbuild mean that the file have to be
-            --  generated if absent. The gprclean have to remove all gprbuild
-            --  generated files.
-
-            Options.Remove_Config := True;
-
-            Options.Config_File :=
-              Path_Name.Create_File (Filename_Type (Normalize_Value));
-
-         elsif Switch = "--subdirs" then
-            Options.Subdirs := To_Unbounded_String (Normalize_Value);
-         end if;
-      end Value_Callback;
+      use Ada.Strings.Unbounded;
 
    begin
-      Options.Tree := Project_Tree.Reference;
-      GPRtools.Options.Setup
-        (GPRtools.Options.Object (Options), GPRtools.Clean);
-
-      Define_Switch
-        (Config, Options.All_Projects'Access, "-r",
-         Help => "Clean all projects recursively");
-
-      Define_Switch
-        (Options.Config, Value_Callback'Unrestricted_Access,
-         Long_Switch => "--subdirs:",
-         Help        => "Real obj/lib/exec dirs are subdirs",
-         Argument    => "<dir>");
-
-      Define_Switch
-        (Config, Options.Dry_Run'Access, "-n",
-         Help => "Nothing to do: only list files to delete");
-
-      Define_Switch
-        (Config, Value_Callback'Unrestricted_Access,
-         Long_Switch => "--config:",
-         Help => "Specify the configuration project file name");
-
-      Define_Switch
-        (Config, Value_Callback'Unrestricted_Access,
-         Long_Switch => "--autoconf:",
-         Help => "Specify generated config project file name");
-
-      Define_Switch
-        (Config, Options.Remain_Useful'Access, "-c",
-         Help => "Only delete compiler generated files");
-
-      Define_Switch
-        (Config, Dummy'Access, "-eL",
-         Help => "For backwards compatibility, has no effect");
-
-      Define_Switch
-        (Config, Options.Remove_Empty_Dirs'Access,
-         Switch => "-p",
-         Help   => "Remove empty build directories");
-
-      Define_Switch
-        (Config, Options.Force_Deletions'Access,
-         Switch => "-f",
-         Help => "Force deletions of unwritable files");
-
-      Getopt
-        (Config, Parser => Parser, Quiet => Additional, Concatenate => False);
-
-      if Additional then
-         --  Next options should be parsed only from command line
-         return;
-      end if;
-
-      if Options.Version or else Options.Verbose then
-         GPR2.Version.Display
-           ("GPRCLEAN", "2018", Version_String => GPR2.Version.Long_Value);
-
-         if Options.Version then
-            GPR2.Version.Display_Free_Software;
-            return;
-         end if;
-      end if;
+      Parser.Get_Opt (Options);
 
       --  Now read arguments
-
-      Options.Read_Remaining_Arguments (GPRtools.Clean);
 
       for Arg of Options.Args loop
          Options.Mains.Insert (Filename_Type (Arg));
@@ -191,13 +107,72 @@ package body GPRclean.Options is
       then
          Options.Slave_Env := To_Unbounded_String
            (GPR2.Compilation.Registry.Compute_Env
-              (Project_Tree, Options.Slave_Env_Auto));
+              (Options.Tree.all, Options.Slave_Env_Auto));
 
          if Options.Slave_Env_Auto and then Options.Verbose then
-            Text_IO.Put_Line
+            Ada.Text_IO.Put_Line
               ("slave environment is " & To_String (Options.Slave_Env));
          end if;
       end if;
    end Parse_Command_Line;
+
+   -----------
+   -- Setup --
+   -----------
+
+   procedure Setup
+     (Parser : out GPRtools.Options.Command_Line_Parser)
+   is
+      use GPRtools.Command_Line;
+      Clean_Group : GPRtools.Command_Line.Argument_Group;
+   begin
+      GPRtools.Options.Setup (GPRtools.Clean);
+
+      Parser := GPRtools.Options.Create
+        ("2018",
+         Cmd_Line          => "[-P<proj>|<proj.gpr>] [opts] [mains]",
+         Help              => "'mains' being zero or more file names",
+         Allow_Distributed => True,
+         Allow_Autoconf    => False);
+
+      Clean_Group := Parser.Add_Argument_Group
+        ("clean",
+         Callback => On_Switch'Access,
+         Help     => "gprclean specific switches.");
+
+      Parser.Add_Argument
+        (Clean_Group,
+         Create
+           ("-r",
+            Help      => "Clean all projects recursively"));
+      Parser.Add_Argument
+        (Clean_Group,
+         Create
+           ("-n",
+            Help      => "Nothing to do: only list files to delete"));
+      Parser.Add_Argument
+        (Clean_Group,
+         Create
+           (Name           =>  "--autoconf",
+            Help           =>  "Specify generated config project file name",
+            In_Switch_Attr => False,
+            Delimiter      =>  Equal,
+            Parameter      =>  "file.cgpr"));
+      Parser.Add_Argument
+        (Clean_Group,
+         Create
+           ("-c",
+            Help      => "Only delete compiler generated files"));
+      Parser.Add_Argument
+        (Clean_Group,
+         Create
+           ("-p",
+            Help      => "Remove empty build directories"));
+      Parser.Add_Argument
+        (Clean_Group,
+         Create
+           ("-f",
+            Help      => "Force deletions of unwritable files"));
+   end Setup;
 
 end GPRclean.Options;

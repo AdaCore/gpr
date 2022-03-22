@@ -16,7 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Command_Line;
 with Ada.Directories;
 with Ada.Environment_Variables;
 with Ada.Strings.Unbounded;
@@ -27,7 +26,6 @@ with GNAT.OS_Lib;
 with GNATCOLL.Utils;
 
 with GPR2.Message;
-with GPR2.Path_Name;
 with GPR2.Project.Tree;
 
 package body GPRtools.Util is
@@ -39,19 +37,11 @@ package body GPRtools.Util is
 
    Keep_Program_Name : Unbounded_String;
 
-   procedure Exit_Program (Exit_Code : Exit_Code_Type);
-   pragma No_Return (Exit_Program);
-   --  A call to Exit_Program terminates execution with the given status.
-   --  A status of zero indicates normal completion, a non-zero status
-   --  indicates abnormal termination.
-
    -------------------------------
    -- Check_For_Default_Project --
    -------------------------------
 
-   procedure Check_For_Default_Project
-     (Options : in out GPRtools.Options.Object'Class)
-   is
+   function Check_For_Default_Project return GPR2.Path_Name.Object is
       use Directories;
       Default_Name : constant String := "default.gpr";
       Search       : Search_Type;
@@ -61,9 +51,7 @@ package body GPRtools.Util is
       if Exists (Default_Name)
         and then Kind (Default_Name) = Ordinary_File
       then
-         Options.Project_File :=
-           Path_Name.Create_File (Filename_Type (Default_Name));
-         return;
+         return Path_Name.Create_File (Filename_Type (Default_Name));
       end if;
 
       Start_Search
@@ -75,25 +63,11 @@ package body GPRtools.Util is
          if not More_Entries (Search) then
             --  Only one project in current directory can be default one
 
-            Options.Project_File :=
-              Path_Name.Create_File (Filename_Type (Full_Name (Item)));
-
-            if not Options.Quiet then
-               Text_IO.Put_Line
-                 ("using project file " & Options.Project_File.Value);
-            end if;
-         end if;
-
-      else
-         Options.Project_File := Path_Name.Implicit_Project;
-         Options.Project_Base :=
-           Path_Name.Create_Directory (Filename_Type (Current_Directory));
-
-         if not Options.Quiet then
-            Text_IO.Put_Line
-              ("use implicit project in " & Options.Project_Base.Value);
+            return Path_Name.Create_File (Filename_Type (Full_Name (Item)));
          end if;
       end if;
+
+      return Path_Name.Implicit_Project;
    end Check_For_Default_Project;
 
    ----------------------------
@@ -175,6 +149,24 @@ package body GPRtools.Util is
          end if;
       end;
    end Executable_Prefix_Path;
+
+   ---------------
+   -- Exit_Code --
+   ---------------
+
+   function Exit_Code
+     (Code : Exit_Code_Type) return Ada.Command_Line.Exit_Status is
+   begin
+      case Code is
+         when E_Success    => return 0;
+         when E_Warnings   => return 0;
+         when E_No_Compile => return 1;
+         when E_Fatal      => return 4;
+         when E_Errors     => return 5;
+         when E_No_Code    => return 6;
+         when E_Abort      => return 16#FF#;
+      end case;
+   end Exit_Code;
 
    ------------------
    -- Exit_Program --
@@ -270,12 +262,13 @@ package body GPRtools.Util is
    ---------------------
 
    procedure Output_Messages
-     (Options : GPRtools.Options.Object'Class;
+     (Options : GPRtools.Options.Base_Options'Class;
       Log     : GPR2.Log.Object := GPR2.Log.Undefined)
    is
       use GPR2.Log;
       Used_Log : constant GPR2.Log.Object :=
-                   (if not Log.Is_Defined and then Options.Tree /= null
+                   (if not Log.Is_Defined
+                      and then Options.Tree /= null
                     then Options.Tree.Log_Messages.all
                     else Log);
    begin
@@ -283,7 +276,7 @@ package body GPRtools.Util is
         (Information => Options.Verbosity = Very_Verbose,
          Warning     => Options.Warnings,
          Error       => True,
-         Read        => True,
+         Read        => False,
          Unread      => True)
       loop
          Used_Log (C).Output (Options.Full_Path_Name_For_Brief);
@@ -309,7 +302,7 @@ package body GPRtools.Util is
    -------------------------------
 
    procedure Project_Processing_Failed
-     (Options : GPRtools.Options.Object'Class) is
+     (Options : GPRtools.Options.Base_Options'Class) is
    begin
       Output_Messages (Options);
       Fail_Program

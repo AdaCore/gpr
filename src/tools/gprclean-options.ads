@@ -16,46 +16,37 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Unbounded;
-
 with GPR2.Containers;
-with GPR2.Path_Name;
-with GPR2.Project.Tree;
 
 with GPRtools.Options;
 
-with GNAT.Command_Line;
-
 package GPRclean.Options is
 
-   use Ada.Strings.Unbounded;
-   use GNAT.Command_Line;
    use GPR2;
 
-   type Object is new GPRtools.Options.Object with record
-      Dry_Run                     : aliased Boolean := False;
-      All_Projects                : aliased Boolean := False;
-      Remain_Useful               : aliased Boolean := False;
-      Remove_Empty_Dirs           : aliased Boolean := False;
-      Force_Deletions             : aliased Boolean := False;
+   type Object is new GPRtools.Options.Base_Options with record
+      Dry_Run           : aliased Boolean := False;
+      All_Projects      : aliased Boolean := False;
+      Remain_Useful     : aliased Boolean := False;
+      Remove_Empty_Dirs : aliased Boolean := False;
+      Force_Deletions   : aliased Boolean := False;
 
-      Arg_Mains     : Boolean;
-      Mains         : GPR2.Containers.Filename_Set;
+      Arg_Mains         : Boolean := False;
+      Mains             : GPR2.Containers.Filename_Set;
       --  As soon as main found in a project, it is removed from Mains_In_Cmd
       --  and Mains is updated if extension added.
-      Config_File   : Path_Name.Object;
-      Remove_Config : Boolean := False;
-      Subdirs       : Unbounded_String;
+      Remove_Config     : Boolean := False;
    end record;
 
-   procedure Parse_Command_Line
-     (Options      : in out Object;
-      Project_Tree : in out Project.Tree.Object;
-      Parser       : Opt_Parser := Command_Line_Parser);
+   procedure Setup (Parser : out GPRtools.Options.Command_Line_Parser);
 
-   overriding procedure Append (Self : in out Object; Next : Object);
-   --  Append options values from Next to Self. Could be used to concatenate
-   --  additional switches from Clean project package with command line taken
-   --  switches.
+   procedure Parse_Command_Line
+     (Parser       : GPRtools.Options.Command_Line_Parser;
+      Options      : in out Object);
+
+   procedure Parse_Attribute_Switches
+     (Parser  : GPRtools.Options.Command_Line_Parser;
+      Options : in out Object;
+      Values  : GPR2.Containers.Source_Value_List);
 
 end GPRclean.Options;

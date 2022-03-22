@@ -28,6 +28,7 @@ with Ada.Containers;
 with Ada.Containers.Vectors;
 with Ada.Exceptions;
 with Ada.Strings.Wide_Wide_Unbounded;
+with GPR2.KB;
 
 with Langkit_Support.Slocs;
 with Langkit_Support.Text;
@@ -2580,6 +2581,48 @@ package body GPR2.Project.Parser is
 
                if Is_Valid then
                   if Is_Open then
+                     if View_Def.Is_Root
+                       and then View_Def.Kind /= K_Configuration
+                       and then A.Name.Id = PRA.Target
+                       and then Tree.Has_Configuration
+                       and then A.Value.Text /= "all"
+                     then
+                        --  Check if defined target in the project is the
+                        --  same as configuration. Else issue a warning.
+
+                        declare
+                           C_View : Project.View.Object renames
+                                      Tree.Configuration.Corresponding_View;
+                           T_Conf : constant Name_Type :=
+                                      Name_Type
+                                        (C_View.Attribute
+                                           (PRA.Target).Value.Text);
+                           T_Attr : constant Name_Type :=
+                                      Name_Type (A.Value.Text);
+                           Base   : GPR2.KB.Object := Tree.Get_KB;
+
+                        begin
+                           if not Base.Is_Defined then
+                              Base := GPR2.KB.Create_Default
+                                (GPR2.KB.Targetset_Only_Flags);
+                           end if;
+
+                           if Base.Normalized_Target (T_Conf) /=
+                             Base.Normalized_Target (T_Attr)
+                           then
+                              Tree.Log_Messages.Append
+                                (Message.Create
+                                   (Level   => Message.Warning,
+                                    Sloc    => Sloc,
+                                    Message => "target attribute '"
+                                      & String (T_Attr)
+                                      & "' not used, overriden by the "
+                                      & "configuration's target: "
+                                      & String (T_Conf)));
+                           end if;
+                        end;
+                     end if;
+
                      declare
                         Alias : constant Optional_Attribute_Id :=
                                   PRA.Alias (Q_Name).Attr;

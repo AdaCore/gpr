@@ -1,0 +1,31 @@
+-------------------------
+gprconfig --batch --config=Ada -o config.cgpr
+-------------------------
+
+-------------------------
+gprls --config config.cgpr --target=aarch64-elf -s
+-------------------------
+using project file /demo.gpr
+config.cgpr:6:19: error: --target: 'aarch64-elf' is different from the target value in the configuration project '(host)'
+/src/pkg.ads
+
+-------------------------
+gprls --config config.cgpr -XTARGET=aarch64-elf -s
+-------------------------
+using project file /demo.gpr
+demo.gpr:4:04: warning: target attribute 'aarch64-elf' not used, overriden by the configuration's target: (host)
+/src/pkg.ads
+
+-------------------------
+gprls --config config.cgpr --target=(host) -s
+-------------------------
+using project file /demo.gpr
+config.cgpr:6:19: warning: --target is not used when a configuration project is specified.
+/src/pkg.ads
+
+-------------------------
+gprls --config config.cgpr -XTARGET=(host) -s
+-------------------------
+using project file /demo.gpr
+/src/pkg.ads
+

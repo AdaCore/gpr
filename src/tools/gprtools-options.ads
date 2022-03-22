@@ -18,107 +18,152 @@
 
 with Ada.Strings.Unbounded;
 
-with GNAT.Command_Line;
-
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Tree;
 
+with GPRtools.Command_Line;
+
 package GPRtools.Options is
 
    use Ada.Strings.Unbounded;
-   use GNAT.Command_Line;
 
-   type Object is tagged record
-      Tool    : Which;
-      Config  : Command_Line_Configuration;
+   type Command_Line_Parser is
+     new Command_Line.Command_Line_Parser with private;
 
-      Help    : aliased Boolean := False;
-      --  Set by switch -h: usage will be displayed after all command line
-      --  switches have been scanned.
+   type Base_Options is new Command_Line.Command_Line_Result with record
+      --  Project file and context:
 
-      Project_File : GPR2.Path_Name.Object;
-      --  The project to be processed
-
-      Project_Base : GPR2.Path_Name.Object;
+      Context                  : GPR2.Context.Object;
+      Project_File             : GPR2.Path_Name.Object;
+      Project_Is_Defined       : Boolean := False;
+      No_Project               : aliased Boolean := False;
+      Project_Base             : GPR2.Path_Name.Object;
       --  If defined, then process Project_File like it is located in the
       --  Project_Base.
 
-      Tree : access GPR2.Project.Tree.Object;
+      --  Project tree modifiers
 
-      Args : GPR2.Containers.Value_Set;
-      --  Another arguments from command line except project.
-      --  It is mains for gprclean and gprbuild.
-      --  It is install name for gprinstall --uninstall.
-      --  It could be object or dependency files for gprls.
+      Root_Path                : GPR2.Path_Name.Object;
+      Build_Path               : GPR2.Path_Name.Object;
+      Src_Subdirs              : Ada.Strings.Unbounded.Unbounded_String;
+      Subdirs                  : Ada.Strings.Unbounded.Unbounded_String;
+      Implicit_With            : GPR2.Path_Name.Set.Object;
+      Unchecked_Shared_Lib     : Boolean := False;
 
-      Project_Is_Defined : Boolean := False;
-      --  The project is defined in command line
+      --  Conf/Autoconf
 
-      No_Project               : aliased Boolean := False;
-      Unchecked_Shared_Lib     : aliased Boolean := False;
-      Full_Path_Name_For_Brief : aliased Boolean := False;
-      Version                  : aliased Boolean := False;
-      Warnings                 : aliased Boolean := True;
-      Target                   : Unbounded_String :=
-                                   To_Unbounded_String ("all");
+      Config_Project           : GPR2.Path_Name.Object;
+      Create_Missing_Config    : Boolean := False;
+      Target                   : Ada.Strings.Unbounded.Unbounded_String :=
+                                   Ada.Strings.Unbounded.To_Unbounded_String
+                                     ("all");
       RTS_Map                  : GPR2.Containers.Lang_Value_Map;
-      Context                  : GPR2.Context.Object;
+      Skip_Default_KB          : aliased Boolean := False;
+      KB_Locations             : GPR2.Path_Name.Set.Object;
+
+      --  Non-switch arguments
+
+      Args                     : GPR2.Containers.Value_Set;
+
+      --  The project tree once loaded
+
+      Tree                     : access GPR2.Project.Tree.Object;
+
+      --  Verbosity control
+
+      Verbosity                : GPRtools.Verbosity_Level := GPRtools.Regular;
+      Full_Path_Name_For_Brief : aliased Boolean := False;
+      Warnings                 : aliased Boolean := True;
+
+      --  Distributed mode
+
       Distributed_Mode         : Boolean := False;
       Slaves                   : Unbounded_String;
       Slave_Env                : Unbounded_String;
       Slave_Env_Auto           : Boolean := False;
       Hash_Value               : Unbounded_String;
+   end record;
+   --  Options common to most gpr tools
 
-      Verbosity                : Verbosity_Level := Regular;
-      Root_Path                : GPR2.Path_Name.Object;
-      Build_Path               : GPR2.Path_Name.Object;
-      Src_Subdirs              : Unbounded_String;
-      Implicit_With            : GPR2.Path_Name.Set.Object;
-      Maximum_Processes        : Natural := 0;
+   procedure Setup (Tool : Which);
+   --  Setup the GPR2 library options to properly handle the tool's attributes
 
-      Skip_Default_KB          : aliased Boolean := False;
-      KB_Locations             : GPR2.Path_Name.Set.Object;
+   overriding procedure Get_Opt
+     (Parser : Command_Line_Parser;
+      Result : in out GPRtools.Command_Line.Command_Line_Result'Class);
+
+   function Create
+     (Initial_Year           : String;
+      Cmd_Line               : String := "";
+      Tool_Name              : String := "";
+      Help                   : String := "";
+      Allow_No_Project       : Boolean := True;
+      Allow_Autoconf         : Boolean := False;
+      Allow_Distributed      : Boolean := False;
+      Allow_Quiet            : Boolean := True;
+      No_Project_Support     : Boolean := False;
+      Allow_Implicit_Project : Boolean := True) return Command_Line_Parser;
+   --  Defines the common switches to handle configuration and project tree
+   --  load.
+   --  Allow_No_Project: enables working without project files via --no-project
+   --  Allow_Autoconf: enables the --autoconf switch that generates the
+   --   configuration project if it does not exists.
+   --  Allow_Distributed : enables the distributed compilation options
+   --  Allow_Quiet: allows the quiet mode of the tool (-q)
+   --  No_Project_Support: deactivate most switches, keeping only the
+   --   distributed mode group.
+   --  Allow_Implicit_Project: allow to specify the project file without
+   --   the -P switch, or to use the project of the current directory if
+   --   one exist, or the empty project.
+
+   function Load_Project
+     (Opt              : in out Base_Options'Class;
+      Absent_Dir_Error : Boolean;
+      Handle_Errors    : Boolean := True) return Boolean;
+
+   function Quiet (Self : Base_Options) return Boolean;
+
+   function Verbose (Self : Base_Options) return Boolean;
+
+   function Very_Verbose (Self : Base_Options) return Boolean;
+
+   function Get_Target (Self : Base_Options) return GPR2.Name_Type;
+
+   function Get_Subdirs
+     (Self : Base_Options) return GPR2.Optional_Name_Type;
+
+   function Get_Src_Subdirs
+     (Self : Base_Options) return GPR2.Optional_Name_Type;
+
+private
+
+   type Command_Line_Parser is new Command_Line.Command_Line_Parser with record
+      Find_Implicit_Project : Boolean := True;
    end record;
 
-   procedure Setup
-     (Self : aliased in out Object'Class;
-      Tool : Which);
-   --  Setup command line parsing options
+   function Quiet (Self : Base_Options) return Boolean is
+     (Self.Verbosity = GPRtools.Quiet);
 
-   procedure Read_Remaining_Arguments (Self : in out Object; Tool : Which);
-   --  This is called after processing all the switches, to read all remaining
-   --  parameters from the command line. This is intended for gprclean,
-   --  gprbuild and gprinstall.
-   --
-   --  Strings ending with a gpr file name extension are interpreted as a
-   --  project file name. All the other strings are recorded as arguments
-   --  (in Self.Args), which each specific tool processes on its own.
+   function Verbose (Self : Base_Options) return Boolean is
+     (Self.Verbosity = GPRtools.Verbose
+      or else Self.Verbosity = GPRtools.Very_Verbose);
 
-   procedure Clean_Build_Path
-     (Self : in out Object; Project : GPR2.Path_Name.Object)
-     with Pre  => Project.Is_Defined,
-          Post => Self.Build_Path.Is_Defined;
-   --  If Self.Build_Path is not defined, set it to the Project directory and
-   --  return. If Self.Root_Path is not defined, Self.Build_Path is kept as is,
-   --  otherwise add to Self.Build_Path the relative path offset between
-   --  Project and Self.Root_Path.
-   --  For example, if Build is /one/two/three, the project is in the
-   --  /four/five/six, the Root is /four, the difference between project
-   --  directory and Root is five/six, then the resulting build directory is
-   --  /one/two/three plus five/six, i.e /one/two/three/five/six.
+   function Very_Verbose (Self : Base_Options) return Boolean is
+     (Self.Verbosity = GPRtools.Very_Verbose);
 
-   function Verbose (Self : Object) return Boolean is
-     (Self.Verbosity = Verbose);
+   function Get_Target
+     (Self : Base_Options) return GPR2.Name_Type
+   is (GPR2.Name_Type (To_String (Self.Target)));
 
-   function Quiet (Self : Object) return Boolean is
-     (Self.Verbosity = Quiet);
+   function Get_Subdirs
+     (Self : Base_Options) return GPR2.Optional_Name_Type
+   is (GPR2.Optional_Name_Type (To_String (Self.Subdirs)));
 
-   procedure Append (Self : in out Object; Next : Object);
-   --  Append options values from Next to Self. Could be used to concatenate
-   --  additional switches from GPR tools related project packages with command
-   --  line taken switches.
+   function Get_Src_Subdirs
+     (Self : Base_Options) return GPR2.Optional_Name_Type
+   is (GPR2.Optional_Name_Type (To_String (Self.Src_Subdirs)));
 
 end GPRtools.Options;
