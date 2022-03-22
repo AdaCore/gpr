@@ -470,7 +470,7 @@ package body GPRtools.Options is
      (Opt              : in out Base_Options'Class;
       Absent_Dir_Error : Boolean;
       Handle_Errors    : Boolean := True)
-     return Boolean
+      return Boolean
    is
       procedure Display (Logs : GPR2.Log.Object);
 
@@ -486,11 +486,11 @@ package body GPRtools.Options is
             --  negatives.
 
             for C in Logs.Iterate
-              (Information =>  False,
-               Warning     =>  False,
-               Error       =>  True,
-               Read        =>  False,
-               Unread      =>  True)
+              (Information => False,
+               Warning     => False,
+               Error       => True,
+               Read        => False,
+               Unread      => True)
             loop
                GPR2.Log.Element (C).Output
                  (Full_Path_Name => Opt.Full_Path_Name_For_Brief);
@@ -498,11 +498,11 @@ package body GPRtools.Options is
 
          elsif not Opt.Quiet then
             for C in Logs.Iterate
-              (Information =>  Opt.Verbose,
-               Warning     =>  True,
-               Error       =>  True,
-               Read        =>  False,
-               Unread      =>  True)
+              (Information => Opt.Verbose,
+               Warning     => True,
+               Error       => True,
+               Read        => False,
+               Unread      => True)
             loop
                GPR2.Log.Element (C).Output
                  (Full_Path_Name => Opt.Full_Path_Name_For_Brief);
@@ -515,8 +515,8 @@ package body GPRtools.Options is
 
    begin
       if Opt.Config_Project.Is_Defined
-        and then (not Opt.Create_Missing_Config
-                  or else Opt.Config_Project.Exists)
+           and then
+         (not Opt.Create_Missing_Config or else Opt.Config_Project.Exists)
       then
          Conf := GPR2.Project.Configuration.Load (Opt.Config_Project);
 
@@ -554,6 +554,7 @@ package body GPRtools.Options is
             declare
                use GPR2;
                package PRA renames GPR2.Project.Registry.Attribute;
+
                Target_Attr : constant GPR2.Project.Attribute.Object :=
                                Opt.Tree.Configuration.Corresponding_View.
                                  Attribute (PRA.Target);
@@ -616,10 +617,11 @@ package body GPRtools.Options is
             Target            =>  Opt.Get_Target,
             Language_Runtimes =>  Opt.RTS_Map,
             Base              =>  GPR2.KB.Create
-              (Flags      => GPR2.KB.Default_Flags,
-               Default_KB => not Opt.Skip_Default_KB,
-               Custom_KB  => Opt.KB_Locations),
-            Config_Project    => (if Create_Cgpr then Opt.Config_Project
+                                    (Flags      => GPR2.KB.Default_Flags,
+                                     Default_KB => not Opt.Skip_Default_KB,
+                                     Custom_KB  => Opt.KB_Locations),
+            Config_Project    => (if Create_Cgpr
+                                  then Opt.Config_Project
                                   else GPR2.Path_Name.Undefined));
       end if;
 
@@ -775,9 +777,11 @@ package body GPRtools.Options is
                KB_Path :=
                  GPR2.Path_Name.Create_Directory
                    (GPR2.Filename_Type (KB_Norm));
+
             elsif GNAT.OS_Lib.Is_Regular_File (KB_Norm) then
                KB_Path :=
                  GPR2.Path_Name.Create_File (GPR2.Filename_Type (KB_Norm));
+
             else
                raise GPRtools.Usage_Error with
                  KB_Norm & " is not a file or directory";
@@ -852,8 +856,7 @@ package body GPRtools.Options is
    -- Setup --
    -----------
 
-   procedure Setup (Tool : Which)
-   is
+   procedure Setup (Tool : Which) is
    begin
       PRP.Check_Attributes (PRP.Naming);
 
@@ -873,7 +876,8 @@ package body GPRtools.Options is
          when Remote =>
             PRP.Check_Attributes (PRP.Remote);
 
-         when Ls | Name | Inspect => null;
+         when Ls | Name | Inspect =>
+            null;
       end case;
       --  GPR tree handling
 

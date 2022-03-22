@@ -155,8 +155,7 @@ package body GPRtools.Util is
    ---------------
 
    function Exit_Code
-     (Code : Exit_Code_Type) return Ada.Command_Line.Exit_Status
-   is
+     (Code : Exit_Code_Type) return Ada.Command_Line.Exit_Status is
    begin
       case Code is
          when E_Success    => return 0;

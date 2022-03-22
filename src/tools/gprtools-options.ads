@@ -18,23 +18,22 @@
 
 with Ada.Strings.Unbounded;
 
-with GPRtools.Command_Line;
-
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Tree;
 
+with GPRtools.Command_Line;
+
 package GPRtools.Options is
 
    use Ada.Strings.Unbounded;
 
-   type Command_Line_Parser is new GPRtools.Command_Line.Command_Line_Parser
-   with private;
+   type Command_Line_Parser is
+     new Command_Line.Command_Line_Parser with private;
 
-   type Base_Options is new GPRtools.Command_Line.Command_Line_Result
-     with record
+   type Base_Options is new Command_Line.Command_Line_Result with record
       --  Project file and context:
 
       Context                  : GPR2.Context.Object;
@@ -89,7 +88,7 @@ package GPRtools.Options is
    end record;
    --  Options common to most gpr tools
 
-   procedure Setup (Tool   : Which);
+   procedure Setup (Tool : Which);
    --  Setup the GPR2 library options to properly handle the tool's attributes
 
    overriding procedure Get_Opt
@@ -126,40 +125,45 @@ package GPRtools.Options is
       Handle_Errors    : Boolean := True) return Boolean;
 
    function Quiet (Self : Base_Options) return Boolean;
+
    function Verbose (Self : Base_Options) return Boolean;
+
    function Very_Verbose (Self : Base_Options) return Boolean;
 
    function Get_Target (Self : Base_Options) return GPR2.Name_Type;
-   function Get_Subdirs (Self : Base_Options)
-                         return GPR2.Optional_Name_Type;
-   function Get_Src_Subdirs (Self : Base_Options)
-                             return GPR2.Optional_Name_Type;
+
+   function Get_Subdirs
+     (Self : Base_Options) return GPR2.Optional_Name_Type;
+
+   function Get_Src_Subdirs
+     (Self : Base_Options) return GPR2.Optional_Name_Type;
 
 private
 
-   type Command_Line_Parser is new GPRtools.Command_Line.Command_Line_Parser
-   with record
+   type Command_Line_Parser is new Command_Line.Command_Line_Parser with record
       Find_Implicit_Project : Boolean := True;
    end record;
 
    function Quiet (Self : Base_Options) return Boolean is
-      (Self.Verbosity = GPRtools.Quiet);
+     (Self.Verbosity = GPRtools.Quiet);
+
    function Verbose (Self : Base_Options) return Boolean is
      (Self.Verbosity = GPRtools.Verbose
       or else Self.Verbosity = GPRtools.Very_Verbose);
+
    function Very_Verbose (Self : Base_Options) return Boolean is
-      (Self.Verbosity = GPRtools.Very_Verbose);
+     (Self.Verbosity = GPRtools.Very_Verbose);
 
    function Get_Target
      (Self : Base_Options) return GPR2.Name_Type
    is (GPR2.Name_Type (To_String (Self.Target)));
+
    function Get_Subdirs
      (Self : Base_Options) return GPR2.Optional_Name_Type
-   is (GPR2.Optional_Name_Type
-       (To_String (Self.Subdirs)));
+   is (GPR2.Optional_Name_Type (To_String (Self.Subdirs)));
+
    function Get_Src_Subdirs
      (Self : Base_Options) return GPR2.Optional_Name_Type
-   is (GPR2.Optional_Name_Type
-       (To_String (Self.Src_Subdirs)));
+   is (GPR2.Optional_Name_Type (To_String (Self.Src_Subdirs)));
 
 end GPRtools.Options;
