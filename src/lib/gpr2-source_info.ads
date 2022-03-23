@@ -184,15 +184,6 @@ package GPR2.Source_Info is
                  and then Self.Has_Unit_At (Index);
    --  Returns the list of withed unit for Self's source at Index (default = 1)
 
-   function Context_Clause_Dependencies
-     (Self : Object;
-      Unit : Name_Type) return Source_Reference.Identifier.Set.Object
-     with Pre => Self.Is_Defined
-                 and then Self.Has_Units
-                 and then Self.Has_Unit (Unit);
-   --  Returns the dependencies in Self associated with all the compilation
-   --  units for the given Unit. The result may be empty.
-
    procedure Dependencies
      (Self   : Object;
       Index  : Unit_Index;

@@ -171,6 +171,7 @@ main.adb
     kind         = S_BODY_ONLY
     withed units = { Pkg1 Pkg2 }
     object file  = main.ali
+    dependency unit MAIN S_BODY_ONLY in main.adb
     dependency unit PKG1 S_SPEC in pkg1.ads
     dependency unit PKG1 S_BODY in pkg1.adb
     dependency unit PKG2 S_SPEC in pkg2.ads
@@ -193,6 +194,8 @@ pkg1.adb
     unit name    = PKG1
     kind         = S_BODY
     object file  = pkg1.ali
+    dependency unit PKG1 S_SPEC in pkg1.ads
+    dependency unit PKG1 S_BODY in pkg1.adb
 pkg1.ads
   single-unit          = TRUE
   has naming exception = FALSE
@@ -206,6 +209,8 @@ pkg2.adb
     unit name    = PKG2
     kind         = S_BODY
     object file  = pkg2.ali
+    dependency unit PKG2 S_SPEC in pkg2.ads
+    dependency unit PKG2 S_BODY in pkg2.adb
 pkg2.ads
   single-unit          = TRUE
   has naming exception = FALSE
