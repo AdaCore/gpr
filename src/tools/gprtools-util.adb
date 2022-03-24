@@ -327,7 +327,7 @@ package body GPRtools.Util is
          Set
            (GPR_Tool,
             (if Name in "gprclean" | "gprbuild" | "gprls" | "gprname"
-                 | "gprinstall" | "gprdump"
+                 | "gprinstall" | "gprdump" | "gprdoc"
              then "gprbuild"
              else Name));
       end if;

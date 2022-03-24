@@ -45,6 +45,24 @@ package body GPR2.Project.Registry.Pack is
       Store.Insert (Name, (Projects, False));
    end Add;
 
+   ------------------
+   -- All_Packages --
+   ------------------
+
+   function All_Packages return Containers.Package_Id_List is
+      Result : Containers.Package_Id_List;
+   begin
+      for P in Store.Iterate loop
+         declare
+            Name : constant Optional_Package_Id := Pack_Definition.Key (P);
+         begin
+            Result.Insert (Name);
+         end;
+      end loop;
+
+      return Result;
+   end All_Packages;
+
    ----------------------------
    -- Attributes_Are_Checked --
    ----------------------------
