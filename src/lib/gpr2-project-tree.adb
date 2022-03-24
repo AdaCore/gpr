@@ -62,8 +62,8 @@ package body GPR2.Project.Tree is
                        GNATCOLL.OS.Constants.OS = GNATCOLL.OS.Windows
                          with Warnings => Off;
 
-   Wildcards       : constant Ada.Strings.Maps.Character_Set :=
-                       Ada.Strings.Maps.To_Set ("?*");
+   Wildcards       : constant Strings.Maps.Character_Set :=
+                       Strings.Maps.To_Set ("?*");
    --  Wild chars for filename pattern
 
    procedure Error
@@ -254,7 +254,7 @@ package body GPR2.Project.Tree is
                           Driver'Last - 2 .. Driver'Last;
                         Last_3_Chars : constant String :=
                                          (if Is_Windows_Host
-                                          then Ada.Characters.Handling.To_Lower
+                                          then Characters.Handling.To_Lower
                                                  (Driver (Last_3_Chars_Range))
                                           else Driver (Last_3_Chars_Range));
                      begin
@@ -1653,7 +1653,7 @@ package body GPR2.Project.Tree is
          Ada_RTS     : constant Filename_Optional :=
                          (if Ada_RTS_Val = No_Value then No_Filename
                           else Filename_Optional
-                            (Ada.Directories.Simple_Name (Ada_RTS_Val)));
+                            (Directories.Simple_Name (Ada_RTS_Val)));
       begin
          if Target not in No_Name | "all" then
             return Filename_Type (Target)
@@ -1814,13 +1814,13 @@ package body GPR2.Project.Tree is
       package Description_Set_Holders is new Ada.Containers.Indefinite_Holders
         (Project.Configuration.Description_Set,
          Project.Configuration."=");
+
       Pre_Conf_Description   : Description_Set_Holders.Holder;
       Post_Conf_Description  : Description_Set_Holders.Holder;
       Has_Errors             : Boolean;
       use Description_Set_Holders;
 
    begin
-
       if GNAT_Prefix = "" then
          --  No GNAT, use default config only in current directory
 
@@ -1882,7 +1882,8 @@ package body GPR2.Project.Tree is
 
          --  Ignore messages issued with this initial load: as we don't have
          --  a valid configuration here, we can't really know whether they
-         --  are meaningful or not
+         --  are meaningful or not.
+
          Self.Messages.Clear;
 
          if not Has_Errors then
@@ -1965,8 +1966,8 @@ package body GPR2.Project.Tree is
       Languages.Clear;
 
       for C in Self.Iterate
-        (Filter =>
-           (F_Aggregate | F_Aggregate_Library => False, others => True))
+        (Filter => (F_Aggregate | F_Aggregate_Library => False,
+                    others                            => True))
       loop
          Add_Languages (Element (C));
       end loop;
@@ -2064,6 +2065,7 @@ package body GPR2.Project.Tree is
    function Ordered_Views (Self : Object) return View.Vector.Object is
       use GPR2.View_Ids;
       use GPR2.View_Ids.DAGs;
+
       Result : View.Vector.Object;
 
    begin
@@ -2166,11 +2168,11 @@ package body GPR2.Project.Tree is
       --------------
 
       function Internal
-        (Filename        : Path_Name.Object;
-         Aggregate       : View.Object;
-         Status          : Relation_Status;
-         Parent          : View.Object;
-         Extends_Ctx     : View.Vector.Object) return View.Object
+        (Filename    : Path_Name.Object;
+         Aggregate   : View.Object;
+         Status      : Relation_Status;
+         Parent      : View.Object;
+         Extends_Ctx : View.Vector.Object) return View.Object
       is
          Extending : constant IDS.View_Id :=
                        (if Status = Extended then Parent.Id
@@ -2301,10 +2303,8 @@ package body GPR2.Project.Tree is
                      --  extending project to see if we need to substitute
                      --  regular imports with their extended view.
 
-                     Extends_Loop :
-                     for Ext of New_Extends_Ctx loop
-                        Import_Loop :
-                        for Imp of Ext.Imports loop
+                     Extends_Loop : for Ext of New_Extends_Ctx loop
+                        Import_Loop : for Imp of Ext.Imports loop
                            if Imp.Is_Extending
                              and then
                                Imp.Extended_Root.Path_Name = Project.Path_Name
@@ -2319,8 +2319,7 @@ package body GPR2.Project.Tree is
                         Imported_View :=
                           Internal
                             (Project.Path_Name,
-                             Aggregate   =>
-                               GPR2.Project.View.Undefined,
+                             Aggregate   => GPR2.Project.View.Undefined,
                              Status      => Simple,
                              Parent      => View,
                              Extends_Ctx => Extends_Ctx);
@@ -2392,7 +2391,7 @@ package body GPR2.Project.Tree is
 
             declare
                use IDS;
-               Unique_ID   : constant View_Id := View.Id;
+               Unique_ID : constant View_Id := View.Id;
             begin
                pragma Assert (Is_Defined (Unique_ID));
 
@@ -2415,7 +2414,7 @@ package body GPR2.Project.Tree is
 
                if Status = Aggregated then
                   --  inclusion of a project by an aggregate/aggregate library
-                  --  project
+                  --  project.
 
                   if Parent.Is_Defined then
                      View.Tree.View_DAG.Update_Vertex
@@ -2556,8 +2555,8 @@ package body GPR2.Project.Tree is
         (View        : in out GPR2.Project.View.Object;
          Agg_Library : GPR2.View_Ids.View_Id)
       is
-         Data : constant GPR2.Project.Definition.Ref :=
-                  Definition.Get_RW (View);
+         Data     : constant GPR2.Project.Definition.Ref :=
+                      Definition.Get_RW (View);
          Position : GPR2.View_Ids.Set.Set.Cursor;
          Inserted : Boolean;
       begin
@@ -2593,6 +2592,7 @@ package body GPR2.Project.Tree is
             for P of PP.Values loop
                if P.Text = "-" then
                   Prepend := True;
+
                else
                   Path := Path_Name.Create_Directory
                     (Filename_Type (P.Text),
@@ -2635,7 +2635,7 @@ package body GPR2.Project.Tree is
                --  we retrieve the Aggregate from the parent view, or
                --  inclusion from an aggregate context
 
-               Parent    := Starting_From;
+               Parent := Starting_From;
 
                if Parent.Kind in Aggregate_Kind then
                   Aggregate := Parent;
@@ -2694,6 +2694,7 @@ package body GPR2.Project.Tree is
 
             if Circularity then
                Cycle := Self.View_DAG.Shortest_Circle;
+
                Self.Messages.Append
                  (Message.Create
                     (Message.Error, "circular dependency detected",
@@ -2762,12 +2763,14 @@ package body GPR2.Project.Tree is
 
    begin
       --  Is the Id actually needed here?
+
       Def.Id := Natural (Def.Tree.Views_Set.Length) + 1;
 
       --  Populate the view with its definitions
       Definition.Set (View, Def);
 
       --  Ensure Views_Set and View_Ids know about it
+
       Def.Tree.Views_Set.Insert (View);
 
       pragma Assert (Definition.Refcount (View) = 2);
@@ -2851,7 +2854,6 @@ package body GPR2.Project.Tree is
      (Self : Object; Language : Language_Id) return Optional_Name_Type
    is
       TA : Attribute.Object;
-
    begin
       if Self.Root.Is_Defined then
          TA := Self.Root.Attribute
@@ -3002,10 +3004,10 @@ package body GPR2.Project.Tree is
                --  The filename pattern of matching files
 
                Filename        : constant Filename_Optional :=
-                                   (if Ada.Strings.Fixed.Index
+                                   (if Strings.Fixed.Index
                                       (String (Filename_Part),
                                        Wildcards,
-                                       Going => Ada.Strings.Backward) = 0
+                                       Going => Strings.Backward) = 0
                                     then Filename_Part
                                     else "");
                --  "" if Filename part is a regular expression otherwise the
@@ -3017,6 +3019,7 @@ package body GPR2.Project.Tree is
 
                procedure Handle_File
                  (File : GPR2.Path_Name.Object);
+
                procedure Is_Directory_Handled
                  (Directory       : GPR2.Path_Name.Object;
                   Is_Root_Dir     : Boolean;
@@ -3027,8 +3030,7 @@ package body GPR2.Project.Tree is
                -- Handle_File --
                -----------------
 
-               procedure Handle_File
-                 (File : GPR2.Path_Name.Object) is
+               procedure Handle_File (File : GPR2.Path_Name.Object) is
                begin
                   if GNAT.Regexp.Match (String (File.Simple_Name),
                                         Filename_Regexp)
@@ -3043,10 +3045,11 @@ package body GPR2.Project.Tree is
                --------------------------
 
                procedure Is_Directory_Handled
-                 (Directory : GPR2.Path_Name.Object;
+                 (Directory       : GPR2.Path_Name.Object;
                   Is_Root_Dir     : Boolean;
                   Do_Dir_Visit    : in out Boolean;
-                  Do_Subdir_Visit : in out Boolean) is
+                  Do_Subdir_Visit : in out Boolean)
+               is
                   pragma Unreferenced (Is_Root_Dir, Do_Subdir_Visit);
                begin
                   if Filename /= "" then
@@ -3094,7 +3097,7 @@ package body GPR2.Project.Tree is
 
             return Files;
          exception
-            when Ada.IO_Exceptions.Name_Error =>
+            when IO_Exceptions.Name_Error =>
                Log (Message.Error,
                     Projects.Text & " contains an invalid directory");
                return Files;
@@ -3155,7 +3158,7 @@ package body GPR2.Project.Tree is
            (P_Data.Trees.Project,
             Self,
             (if View.Kind = K_Configuration
-               and then Self.Root.Kind in Aggregate_Kind
+                  and then Self.Root.Kind in Aggregate_Kind
              then Self.Context (Aggregate)
              else View.Context),
             View,
@@ -3507,8 +3510,7 @@ package body GPR2.Project.Tree is
 
          for A of P_Data.Attrs loop
             declare
-               Q_Name : constant PRA.Qualified_Name :=
-                          PRA.Create (A.Name.Id);
+               Q_Name : constant PRA.Qualified_Name := PRA.Create (A.Name.Id);
             begin
                if not PRA.Exists (Q_Name) then
                   Self.Messages.Append
@@ -3522,8 +3524,8 @@ package body GPR2.Project.Tree is
                   declare
                      Allowed : constant PRA.Allowed_In :=
                                  PRA.Get (Q_Name).Is_Allowed_In;
-                     Found : Natural := 0;
-                     Allow : Project_Kind;
+                     Found   : Natural := 0;
+                     Allow   : Project_Kind;
                   begin
                      if not Allowed (P_Kind) then
                         for A in Allowed'Range loop
@@ -3570,7 +3572,8 @@ package body GPR2.Project.Tree is
               (Attr_Name     : Attribute_Id;
                Human_Name    : String;
                Get_Directory : not null access function
-                 (Self : Project.View.Object) return Path_Name.Object;
+                                 (Self : Project.View.Object)
+                                  return Path_Name.Object;
                Mandatory     : Boolean := False;
                Must_Exist    : Boolean := True);
             --  Check is directory exists and warn if there is try to relocate
@@ -3591,7 +3594,8 @@ package body GPR2.Project.Tree is
               (Attr_Name     : Attribute_Id;
                Human_Name    : String;
                Get_Directory : not null access function
-                 (Self : Project.View.Object) return Path_Name.Object;
+                                 (Self : Project.View.Object)
+                                  return Path_Name.Object;
                Mandatory     : Boolean := False;
                Must_Exist    : Boolean := True) is
             begin
@@ -4012,8 +4016,8 @@ package body GPR2.Project.Tree is
             External_Value : constant String :=
                                Environment_Variables.Value
                                  (String (External), "");
-            Position : GPR2.Context.Key_Value.Cursor;
-            Inserted : Boolean;
+            Position       : GPR2.Context.Key_Value.Cursor;
+            Inserted       : Boolean;
          begin
             if External_Value /= "" then
                --  The external is not present in the current context. Try to
@@ -4075,7 +4079,7 @@ package body GPR2.Project.Tree is
       begin
          return Directories.Simple_Name (T_Path) = "bin";
       exception
-         when Ada.IO_Exceptions.Name_Error =>
+         when IO_Exceptions.Name_Error =>
             return False;
       end Is_Bin_Path;
 
@@ -4309,6 +4313,10 @@ package body GPR2.Project.Tree is
 
                      return False;
                   end Has_Essential_Sources;
+
+                  ----------------
+                  -- Source_Loc --
+                  ----------------
 
                   function Source_Loc
                     (Imp : Project.View.Object)
