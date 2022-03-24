@@ -1,0 +1,8 @@
+p.gpr:
+/src
+/src/src1
+/src/src1/src_a
+/src/src2
+/src/src3
+q.gpr:
+
