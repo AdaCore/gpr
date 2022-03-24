@@ -406,6 +406,11 @@ package GPR2.Project.View is
    --  project having sources. If not defined in the project itself, the view
    --  does have the project directory has source dir.
 
+   function Source_Directories (Self : Object) return GPR2.Path_Name.Set.Object
+     with Pre => Self.Is_Defined
+                 and then Self.Qualifier not in K_Aggregate | K_Abstract;
+   --  Returns the source dir paths for a given project
+
    function Has_Sources (Self : Object) return Boolean
      with Pre  => Self.Is_Defined,
           Post => (if Self.Kind = K_Abstract then not Has_Sources'Result);
