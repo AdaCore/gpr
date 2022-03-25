@@ -35,6 +35,8 @@ with GPRtools.Util;
 with GPRtools.Options;
 
 with GPR2.Containers;
+with GPR2.Log;
+with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Registry.Attribute;
@@ -601,7 +603,29 @@ procedure GPRinspect is
          R       : constant JSON_Value := Create_Object;
          Stat    : constant JSON_Value := Create_Object;
          P_Array : JSON_Array;
+         M_Array : JSON_Array;
       begin
+         --  Messages
+
+         if Project_Tree.Has_Messages then
+            for C in Project_Tree.Log_Messages.Iterate
+              (Information => False,
+               Warning     => False,
+               Error       => False,
+               Lint        => True,
+               Read        => False,
+               Unread      => True)
+            loop
+               declare
+                  M : constant Message.Object := GPR2.Log.Element (C);
+               begin
+                  Append (M_Array, Create (M.Format));
+               end;
+            end loop;
+
+            Set_Field (T, "messages", M_Array);
+         end if;
+
          --  Some stats about the tree
 
          Set_Field (Stat, "project-count", Create (Integer (Handled.Length)));
@@ -684,6 +708,14 @@ procedure GPRinspect is
             Set_Field (J_Res, "projects", P_Array);
 
          else
+            --  Check for possible warnings, display them now. Note that the
+            --  warnings have already been parsed (so tagged as read) and
+            --  placed into T.
+
+            for V of JSON_Array'(JSON.Get (T, "messages")) loop
+               Text_IO.Put_Line (Get (V));
+            end loop;
+
             --  No JSON output, in this mode we just output the search-paths
 
             Text_IO.Put_Line ("project-search-paths");
