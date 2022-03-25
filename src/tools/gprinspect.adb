@@ -799,7 +799,10 @@ begin
    Parse_Command_Line;
 
    if not
-     GPRtools.Options.Load_Project (Options, Absent_Dir_Error => False)
+     GPRtools.Options.Load_Project
+       (Options,
+        Absent_Dir_Error   => False,
+        Handle_Information => Options.Verbose)
    then
       Command_Line.Set_Exit_Status (Command_Line.Failure);
       return;

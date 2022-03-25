@@ -227,6 +227,11 @@ package body GPRls.Options is
                  "-vP accepts a value in the range 0 .. 2";
             end if;
 
+            Result.Verbosity := (case Result.Verbose_Parsing is
+                                    when 0      => GPRtools.Regular,
+                                    when 1      => GPRtools.Verbose,
+                                    when 2      => GPRtools.Very_Verbose,
+                                    when others => GPRtools.Very_Verbose);
          exception
             when Constraint_Error =>
                raise GPRtools.Usage_Error with

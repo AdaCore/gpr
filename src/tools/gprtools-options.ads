@@ -120,9 +120,13 @@ package GPRtools.Options is
    --   one exist, or the empty project.
 
    function Load_Project
-     (Opt              : in out Base_Options'Class;
-      Absent_Dir_Error : Boolean;
-      Handle_Errors    : Boolean := True) return Boolean;
+     (Opt                : in out Base_Options'Class;
+      Absent_Dir_Error   : Boolean;
+      Handle_Information : Boolean := False;
+      Handle_Errors      : Boolean := True;
+      Handle_Lint        : Boolean := False) return Boolean;
+   --  Load project giiven in the options and display errors based on the
+   --  selection given by Handle_{Error|Lint|Information).
 
    function Quiet (Self : Base_Options) return Boolean;
 

@@ -668,7 +668,10 @@ begin
 
    GPRclean.Options.Parse_Command_Line (Parser, Options);
 
-   if not Options.Load_Project (Absent_Dir_Error => False)
+   if not Options.Load_Project
+     (Absent_Dir_Error   => False,
+      Handle_Information => Options.Verbose,
+      Handle_Lint        => Options.Verbose)
    then
       GPRtools.Util.Fail_Program
         ('"'

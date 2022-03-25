@@ -287,7 +287,10 @@ begin
    --  Load the project tree
 
    if not GPRtools.Options.Load_Project
-     (Opt, Absent_Dir_Error => False)
+     (Opt,
+      Absent_Dir_Error   => False,
+      Handle_Information => Opt.Verbose,
+      Handle_Lint        => Opt.Verbose)
    then
       if Opt.Project_File.Is_Defined then
          Text_IO.Put_Line
