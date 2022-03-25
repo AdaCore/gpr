@@ -78,6 +78,12 @@ package body GPR2.Project.Tree is
        Sloc : Source_Reference.Object'Class);
    --  Append a warning to Self.Messages
 
+   procedure Lint
+      (Self : in out Object;
+       Msg  : String;
+       Sloc : Source_Reference.Object'Class);
+   --  Append a lint message to Self.Messages
+
    function Register_View
      (Def : in out Definition.Data) return Project.View.Object
      with Post => Register_View'Result.Is_Defined;
@@ -1135,6 +1141,18 @@ package body GPR2.Project.Tree is
 
       return Iter;
    end Iterate;
+
+   ----------
+   -- Lint --
+   ----------
+
+   procedure Lint
+     (Self : in out Object;
+      Msg  : String;
+      Sloc : Source_Reference.Object'Class) is
+   begin
+      Self.Messages.Append (Message.Create (Message.Lint, Msg, Sloc));
+   end Lint;
 
    ----------
    -- Load --
@@ -3443,6 +3461,15 @@ package body GPR2.Project.Tree is
          P_Data : constant Definition.Const_Ref := Definition.Get_RO (View);
 
       begin
+         --  Check global properties
+
+         if View.Kind /= View.Qualifier then
+            Self.Lint
+              ("project qualifier could be explicitly set to "
+               & Image (View.Kind),
+               Source_Reference.Create (View.Path_Name.Value, 0, 0));
+         end if;
+
          --  Check packages
 
          for P of P_Data.Packs loop

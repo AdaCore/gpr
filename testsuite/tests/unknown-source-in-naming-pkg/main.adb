@@ -31,7 +31,7 @@ procedure Main is
    begin
       if Tree.Has_Messages then
          for C in Tree.Log_Messages.Iterate
-           (False, True, True, True, True)
+           (False, True, True, False, True, True)
          loop
             Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
          end loop;
