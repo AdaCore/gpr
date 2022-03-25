@@ -84,21 +84,6 @@ package body GPR2.Source_Info is
       return Self.CU_List (Index).Dependencies;
    end Context_Clause_Dependencies;
 
-   function Context_Clause_Dependencies
-     (Self : Object;
-      Unit : Name_Type) return Source_Reference.Identifier.Set.Object
-   is
-      Result : Source_Reference.Identifier.Set.Object;
-   begin
-      for CU of Self.CU_List loop
-         if CU.Name = Unit then
-            Result.Union (CU.Dependencies);
-         end if;
-      end loop;
-
-      return Result;
-   end Context_Clause_Dependencies;
-
    ------------------
    -- Dependencies --
    ------------------

@@ -493,8 +493,8 @@ package GPR2.Project.View is
 
    function Units (Self : Object) return Unit_Info.Set.Object
      with Pre => Self.Is_Defined;
-   --  Returns all the units for the view, note that this routine ensure that
-   --  the current sources and units are up-to-date by calling Update_Sources.
+   --  Returns all the known units for the view. Note that the list of units
+   --  is populated only when Update_Sources is called.
 
    function Unit
      (Self : Object; Name : Name_Type) return Unit_Info.Object

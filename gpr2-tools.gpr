@@ -39,7 +39,7 @@ project GPR2.Tools is
 
    for Main use ("gprremote.adb", "gprdump.adb", "gprinstall-main.adb",
                  "gprclean-main.adb", "gprname-main.adb", "gprls-main.adb",
-                 "gprconfig.adb", "gprinspect.adb");
+                 "gprconfig.adb", "gprinspect.adb", "gprdoc-main.adb");
 
    --------------
    -- Compiler --
@@ -76,6 +76,9 @@ project GPR2.Tools is
             for Default_Switches ("Ada") use Common_Options & Release_Options;
       end case;
 
+      for Switches ("gprdoc-*.adb") use ("-gnat2022");
+      --  Add the -gnat2022 compilation option for gprdoc and scalars printout
+
    end Compiler;
 
    ------------
@@ -97,6 +100,7 @@ project GPR2.Tools is
       for Executable ("gprls-main.adb") use Tools_Prefix & "ls";
       for Executable ("gprconfig.adb") use Tools_Prefix & "config";
       for Executable ("gprinspect.adb") use Tools_Prefix & "inspect";
+      for Executable ("gprdoc-main.adb") use Tools_Prefix & "doc";
 
       for Switches (others) use ("-m", "-j" & Processors);
    end Builder;

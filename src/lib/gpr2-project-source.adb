@@ -114,6 +114,7 @@ package body GPR2.Project.Source is
       Closure  : Boolean := False;
       Index    : Unit_Index := No_Index)
    is
+      use GPR2.Unit;
       Tree   : constant not null access Project.Tree.Object :=
                  View (Self).Tree;
       U_Done : Containers.Name_Set;
@@ -124,7 +125,8 @@ package body GPR2.Project.Source is
       --  Fast look-up tables to avoid analysing the same unit/file multiple
       --  time and more specifically avoid circularities.
 
-      procedure Output (Unit : Unit_Info.Object)
+      procedure Output (Unit     : Unit_Info.Object;
+                        Add_Body : Boolean := False)
         with Inline, Pre => Unit.Is_Defined;
       --  Call For_Each for each part of the Unit
 
@@ -140,7 +142,8 @@ package body GPR2.Project.Source is
       -- Output --
       ------------
 
-      procedure Output (Unit : Unit_Info.Object) is
+      procedure Output (Unit     : Unit_Info.Object;
+                        Add_Body : Boolean := False) is
 
          procedure Outp (Item : GPR2.Unit.Source_Unit_Identifier);
 
@@ -167,13 +170,13 @@ package body GPR2.Project.Source is
             Outp (Unit.Spec);
          end if;
 
-         if Unit.Has_Body then
+         if Unit.Has_Body and then (Add_Body or else not Unit.Has_Spec) then
             Outp (Unit.Main_Body);
-         end if;
 
-         for Sep of Unit.Separates loop
-            Outp (Sep);
-         end loop;
+            for Sep of Unit.Separates loop
+               Outp (Sep);
+            end loop;
+         end if;
       end Output;
 
       Buf  : Source_Reference.Identifier.Set.Object;
@@ -200,11 +203,28 @@ package body GPR2.Project.Source is
       end To_Analyze;
 
    begin
-      if Self.Has_Other_Part (Index) then
-         To_Analyze (Self.Other_Part (Index));
+      --  Self is part of the context clause dependencies, so add it first...
+      --  except when it is a separate.
+
+      if not Self.Has_Units
+        or else Self.Unit (Index).Kind /= S_Separate
+      then
+         declare
+            Self_Ref : constant Source_Reference.Identifier.Object'Class :=
+                         Source_Reference.Identifier.Create
+                           (Self.Path_Name.Value, 0, 0,
+                            Self.Unit (Index).Name);
+         begin
+            U_Done.Insert (Self_Ref.Text);
+            Buf.Insert (Self_Ref);
+         end;
       end if;
 
       To_Analyze ((Self, Index));
+
+      if Self.Has_Other_Part (Index) then
+         To_Analyze (Self.Other_Part (Index));
+      end if;
 
       For_Every_Unit : while not Buf.Is_Empty loop
          declare
@@ -236,10 +256,12 @@ package body GPR2.Project.Source is
                   if Unit_Info.Set.Set.Has_Element (CU) then
                      SU := Unit_Info.Set.Set.Element (CU);
 
-                     --  At least the dependencies are the spec and body of
+                     --  At least the dependencies are the spec of
                      --  the withed unit.
 
-                     Output (SU);
+                     Output (SU,
+                             Add_Body => Closure
+                               or else W.Text = Self.Unit (Index).Name);
 
                      --  Finally, for the Closure mode add the dependencies
                      --  of withed unit from the direct withed spec and
@@ -340,6 +362,8 @@ package body GPR2.Project.Source is
                    (Source : Object; Unit : GPR2.Unit.Object);
       Closure  : Boolean := False)
    is
+      use type GPR2.Source_Info.Backend;
+
       Done      : Part_Set.Object;
 
       procedure Action
@@ -402,7 +426,11 @@ package body GPR2.Project.Source is
    begin
       Self.Dependencies (Index, Action'Access);
 
-      if Done.Is_Empty and then Self.Has_Units then
+      if Done.Is_Empty
+        and then Self.Has_Units
+        and then Self.Is_Parsed (Index)
+        and then Self.Used_Backend (Index) = GPR2.Source_Info.Source
+      then
          --  It mean that we do not have ALI file parsed, try to get "with"
          --  dependencies from Ada parser.
 

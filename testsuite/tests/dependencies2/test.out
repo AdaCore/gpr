@@ -2,9 +2,14 @@ Project: Demo
 
  > /src/abc-plop.ads   unit: ABC.PLOP
 ..... DIRECT
-   > /src/api.adb
+   > /src/abc-plop.ads
+   > /src/abc.ads
    > /src/api.ads
 ..... CLOSURE
+   > /src/abc-plop.ads
+   > /src/abc.adb
+   > /src/abc.ads
+   > /src/api-call.adb
    > /src/api.adb
    > /src/api.ads
    > /src2/toto.adb
@@ -12,15 +17,22 @@ Project: Demo
 
  > /src/abc.adb   unit: ABC
 ..... DIRECT
+   > /src/abc.adb
+   > /src/abc.ads
 ..... CLOSURE
+   > /src/abc.adb
+   > /src/abc.ads
 
  > /src/abc.ads   unit: ABC
 ..... DIRECT
+   > /src/abc.adb
+   > /src/abc.ads
 ..... CLOSURE
+   > /src/abc.adb
+   > /src/abc.ads
 
  > /src/api-call.adb   unit: API.CALL
 ..... DIRECT
-   > /src2/toto.adb
    > /src2/toto.ads
 api.ads:3:01: warning: withed unit titi not found
 ..... CLOSURE
@@ -29,32 +41,44 @@ api.ads:3:01: warning: withed unit titi not found
 
  > /src/api.adb   unit: API
 ..... DIRECT
-   > /src2/toto.adb
+   > /src/api-call.adb
+   > /src/api.adb
+   > /src/api.ads
    > /src2/toto.ads
 api.ads:3:01: warning: withed unit titi not found
 ..... CLOSURE
+   > /src/api-call.adb
+   > /src/api.adb
+   > /src/api.ads
    > /src2/toto.adb
    > /src2/toto.ads
 
  > /src/api.ads   unit: API
 ..... DIRECT
-   > /src2/toto.adb
+   > /src/api-call.adb
+   > /src/api.adb
+   > /src/api.ads
    > /src2/toto.ads
 api.ads:3:01: warning: withed unit titi not found
 ..... CLOSURE
+   > /src/api-call.adb
+   > /src/api.adb
+   > /src/api.ads
    > /src2/toto.adb
    > /src2/toto.ads
 
  > /src/call.adb   unit: CALL
 ..... DIRECT
-   > /src/tst.adb
+   > /src/call.adb
    > /src/tst.ads
 ..... CLOSURE
    > /src/abc-plop.ads
    > /src/abc.adb
    > /src/abc.ads
+   > /src/api-call.adb
    > /src/api.adb
    > /src/api.ads
+   > /src/call.adb
    > /src2/toto.adb
    > /src2/toto.ads
    > /src/tst.adb
@@ -63,31 +87,37 @@ api.ads:3:01: warning: withed unit titi not found
  > /src/tst.adb   unit: TST
 ..... DIRECT
    > /src/abc-plop.ads
-   > /src/abc.adb
    > /src/abc.ads
-   > /src/api.adb
    > /src/api.ads
+   > /src/tst.adb
+   > /src/tst.ads
 ..... CLOSURE
    > /src/abc-plop.ads
    > /src/abc.adb
    > /src/abc.ads
+   > /src/api-call.adb
    > /src/api.adb
    > /src/api.ads
    > /src2/toto.adb
    > /src2/toto.ads
+   > /src/tst.adb
+   > /src/tst.ads
 
  > /src/tst.ads   unit: TST
 ..... DIRECT
    > /src/abc-plop.ads
-   > /src/abc.adb
    > /src/abc.ads
-   > /src/api.adb
    > /src/api.ads
+   > /src/tst.adb
+   > /src/tst.ads
 ..... CLOSURE
    > /src/abc-plop.ads
    > /src/abc.adb
    > /src/abc.ads
+   > /src/api-call.adb
    > /src/api.adb
    > /src/api.ads
    > /src2/toto.adb
    > /src2/toto.ads
+   > /src/tst.adb
+   > /src/tst.ads

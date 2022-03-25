@@ -1,3 +1,6 @@
+------------------
+gprls -d -P pa.gpr p0
+
 p3.gpr:5:20: warning: object directory "obj" not found
 p3.gpr:4:21: warning: library directory "lib" not found
 p7.gpr:5:20: warning: object directory "obj" not found
@@ -14,6 +17,9 @@ p5.gpr:5:21: warning: library directory "lib" not found
 p0.gpr:4:20: warning: object directory "obj" not found
 p4.gpr:4:20: warning: object directory "obj" not found
 Can't find ALI file for /p0/p0.adb
+------------------
+gprls -s -d -P pa.gpr p0
+
 p3.gpr:5:20: warning: object directory "obj" not found
 p3.gpr:4:21: warning: library directory "lib" not found
 p7.gpr:5:20: warning: object directory "obj" not found
@@ -29,12 +35,19 @@ p5.gpr:6:20: warning: object directory "obj" not found
 p5.gpr:5:21: warning: library directory "lib" not found
 p0.gpr:4:20: warning: object directory "obj" not found
 p4.gpr:4:20: warning: object directory "obj" not found
+   /p0/p0.adb
    /p0/p0_0.ads
-   /p0/p0_0.adb
+building...
+------------------
+gprls -d -P pa.gpr p0
+
 /p0/obj/p0.o
    P0
          OK /p0/p0.adb
          OK /p0/p0_0.ads
+------------------
+gprls -d -a0 --debugF -P pa.gpr p0
+
 /p0/obj/p0.o
    P0
          OK ada.ads
@@ -60,11 +73,21 @@ p4.gpr:4:20: warning: object directory "obj" not found
          OK s-valueu.ads
          OK s-widuns.ads
          OK s-widthu.ads
+cleaning...
+------------------
+gprls -d -P pa.gpr p5_1
+
 Can't find ALI file for /p5/p5_1.adb
+------------------
+gprls -s -d -P pa.gpr p5_1
+
+   /p5/p5_1.ads
+   /p5/p5_1.adb
    /p5/p5_2.ads
-   /p5/p5_2.adb
    /p6/p6_1.ads
-   /p6/p6_1.adb
+------------------
+gprls -s --closure -P pa.gpr p6_2
+
 
 Closure:
 
@@ -85,8 +108,15 @@ Closure:
   /p7/p7_3.adb
   /p7/p7_3.ads
 
+------------------
+gprls -s -d -P pa.gpr p7_3
+
+   /p7/p7_3.ads
+   /p7/p7_3.adb
    /p7/p7_0.ads
-   /p7/p7_0.adb
+------------------
+gprls --source-parser -U -P pa.gpr
+
 <no_obj>
    P0
      DIF /p0/p0.adb

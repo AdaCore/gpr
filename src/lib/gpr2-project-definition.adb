@@ -2577,6 +2577,8 @@ package body GPR2.Project.Definition is
       ---------------
 
       procedure Insert_SW (C : Project.Source.Set.Cursor) is
+         use GPR2.Unit;
+         CUnits : GPR2.Project.Unit_Info.Set.Cursor;
       begin
          Def.Sources.Replace (C, SW);
 
@@ -2587,6 +2589,27 @@ package body GPR2.Project.Definition is
             pragma Assert
               (SW.Language /= Ada_Language,
                String (SW.Path_Name.Simple_Name) & " duplicated");
+         end if;
+
+         if SW.Has_Units then
+            --  Check newly found separates and update Unit_Info
+            for Unit of SW.Units loop
+               if Unit.Kind = S_Separate then
+                  CUnits := Def.Units.Find (Unit.Separate_From);
+                  if GPR2.Project.Unit_Info.Set.Set.Has_Element (CUnits) then
+                     declare
+                        Ref : constant Unit_Info.Set.Set.Reference_Type :=
+                                Def.Units.Reference (CUnits);
+                        SUI : constant GPR2.Unit.Source_Unit_Identifier :=
+                                (SW.Path_Name, Unit.Index);
+                     begin
+                        if not Ref.Separates.Contains (SUI) then
+                           Ref.Update_Separates (SUI);
+                        end if;
+                     end;
+                  end if;
+               end if;
+            end loop;
          end if;
 
          Set_Source (SW);

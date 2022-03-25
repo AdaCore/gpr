@@ -2,6 +2,7 @@ Project: Demo
 
  > src/abc-plop.ads   unit: ABC.PLOP
    API
+   ABC
 
  > src/abc.adb   unit: ABC
 

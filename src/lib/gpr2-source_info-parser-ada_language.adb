@@ -70,6 +70,12 @@ package body GPR2.Source_Info.Parser.Ada_Language is
             Index : Natural := 0;
             Count : Positive := 1) return Unbounded_String;
 
+         procedure Register
+           (Name         : String;
+            Sloc         : Source_Reference.Object;
+            Parents_Only : Boolean := False);
+         --  Register Name and parent if any
+
          ---------------------------
          -- Process_Defining_Name --
          ---------------------------
@@ -106,6 +112,39 @@ package body GPR2.Source_Info.Parser.Ada_Language is
             end case;
          end Process_Defining_Name;
 
+         --------------
+         -- Register --
+         --------------
+
+         procedure Register
+           (Name         : String;
+            Sloc         : Source_Reference.Object;
+            Parents_Only : Boolean := False)
+         is
+            subtype O is Source_Reference.Identifier.Object;
+
+            N      : constant Name_Type := Name_Type (Name);
+            B_Name : constant String :=
+                       Directories.Base_Name (Name);
+            Item   : constant O :=
+                       O (Source_Reference.Identifier.Create
+                          (Sloc, Name_Type (Name)));
+            Position : Containers.Name_Type_Set.Cursor;
+            Inserted : Boolean;
+         begin
+            if not Parents_Only then
+               W_Found.Insert (N, Position, Inserted);
+
+               if Inserted then
+                  U_Withed.Insert (Item);
+               end if;
+            end if;
+
+            if B_Name /= Name then
+               Register (B_Name, Sloc);
+            end if;
+         end Register;
+
       begin
          if Node = No_Gpr_Node then
             return Over;
@@ -124,41 +163,12 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                                  Column   => Natural
                                    (Node.Sloc_Range.Start_Column)));
 
-                  procedure Register (Name : String);
-                  --  Register Name and parent if any
-
-                  --------------
-                  -- Register --
-                  --------------
-
-                  procedure Register (Name : String) is
-                     subtype O is Source_Reference.Identifier.Object;
-
-                     N      : constant Name_Type := Name_Type (Name);
-                     B_Name : constant String :=
-                                Directories.Base_Name (Name);
-                     Item   : constant O :=
-                                O (Source_Reference.Identifier.Create
-                                   (Sloc, Name_Type (Name)));
-                     Position : Containers.Name_Type_Set.Cursor;
-                     Inserted : Boolean;
-                  begin
-                     W_Found.Insert (N, Position, Inserted);
-
-                     if Inserted then
-                        U_Withed.Insert (Item);
-                     end if;
-
-                     if B_Name /= Name then
-                        Register (B_Name);
-                     end if;
-                  end Register;
-
                begin
                   for I in 0 .. N.F_Packages.As_Expr_List.Children_Count - 1
                   loop
                      Register (-(Process_Defining_Name (N.F_Packages, I,
-                               N.F_Packages.As_Expr_List.Children_Count)));
+                               N.F_Packages.As_Expr_List.Children_Count)),
+                               Sloc);
 
                   end loop;
                end;
@@ -173,6 +183,14 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                declare
                   N          : constant Ada_Library_Item :=
                                  Node.As_Ada_Library_Item;
+                  Sloc       : constant Source_Reference.Object :=
+                                 Source_Reference.Object
+                                   (Source_Reference.Create
+                                      (Filename => Source.Path_Name.Value,
+                                       Line     => Natural
+                                         (Node.Sloc_Range.Start_Line),
+                                       Column   => Natural
+                                         (Node.Sloc_Range.Start_Column)));
                   U_Main     : constant GPR2.Unit.Main_Type := GPR2.Unit.None;
                   U_Name     : Unbounded_String;
                   U_Sep_From : Unbounded_String;
@@ -224,6 +242,13 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                      when others =>
                         pragma Assert (False);
                   end case;
+
+                  --  If this is a child package, we register the
+                  --  parent package(s) as visible.
+
+                  if N.F_Separate.Is_Null then
+                     Register (-U_Name, Sloc, True);
+                  end if;
 
                   --  Check separate
 

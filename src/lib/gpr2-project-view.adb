@@ -27,6 +27,7 @@ with Ada.IO_Exceptions;
 with Ada.Streams;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
+with System.Assertions;
 
 with GNAT.OS_Lib;
 with GNATCOLL.Utils;
@@ -42,7 +43,6 @@ with GPR2.Source_Info;
 with GPR2.Project.Unit_Info;
 with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Pack;
-with System.Assertions;
 
 package body GPR2.Project.View is
 
@@ -133,12 +133,16 @@ package body GPR2.Project.View is
    is
       function Compute return GPR2.Path_Name.Object;
 
+      -------------
+      -- Compute --
+      -------------
+
       function Compute return GPR2.Path_Name.Object is
          Dir      : constant Value_Type :=
-           Self.Attribute (Dir_Attr).Value.Text;
+                      Self.Attribute (Dir_Attr).Value.Text;
          Subdirs  : constant Filename_Optional := Self.Tree.Subdirs;
          Dir_Name : constant Filename_Type :=
-           (if Dir = "" then "." else Filename_Type (Dir));
+                      (if Dir = "" then "." else Filename_Type (Dir));
          Result   : GPR2.Path_Name.Object;
       begin
          if OS_Lib.Is_Absolute_Path (Dir) then
@@ -168,6 +172,7 @@ package body GPR2.Project.View is
 
       Def      : Definition.Ref renames Self.Get_Ref;
       Def_Attr : Definition.Cacheable_Dir_Attrs;
+
    begin
       if Dir_Attr = PRA.Object_Dir then
          Def_Attr := Definition.Object_Dir;
@@ -236,6 +241,7 @@ package body GPR2.Project.View is
 
    begin
       Result_Append (Self.Object_Directory, PRA.Artifacts_In_Object_Dir);
+
       if Self.Kind = K_Standard then
          Result_Append (Self.Executable_Directory, PRA.Artifacts_In_Exec_Dir);
       end if;
@@ -259,12 +265,13 @@ package body GPR2.Project.View is
       use type PRA.Index_Value_Type;
       use type PRA.Inherit_From_Extended_Type;
 
-      --  Compute the attribute qualified name.
+      --  Compute the attribute qualified name
+
       PRA_Name  : constant PRA.Qualified_Name := PRA.Create (Name, Pack);
       Alias     : constant Optional_Attribute_Id := PRA.Alias (PRA_Name).Attr;
+      Has_Index : constant Boolean := Index /= Attribute_Index.Undefined;
       PRA_Def   : PRA.Def;
       Result    : Project.Attribute.Object;
-      Has_Index : constant Boolean := Index /= Attribute_Index.Undefined;
 
       function Found (Attribute : Project.Attribute.Object) return Boolean
          with Inline => True;
@@ -288,8 +295,8 @@ package body GPR2.Project.View is
       --------------------------
 
       procedure Check_Matching_Index
-         (Pattern : Project.Attribute.Object;
-          Result  : in out Project.Attribute.Object)
+        (Pattern : Project.Attribute.Object;
+         Result  : in out Project.Attribute.Object)
       is
          use type Source_Reference.Object;
       begin
@@ -300,8 +307,9 @@ package body GPR2.Project.View is
                       Case_Sensitive => Pattern.Index.Is_Case_Sensitive))
          then
             if not Found (Result)
-              or else Source_Reference.Object (Result) <
-                        Source_Reference.Object (Pattern)
+              or else
+                Source_Reference.Object (Result)
+                  < Source_Reference.Object (Pattern)
             then
                Result := Pattern;
             end if;
@@ -312,8 +320,7 @@ package body GPR2.Project.View is
       -- Found --
       -----------
 
-      function Found (Attribute : Project.Attribute.Object) return Boolean
-      is
+      function Found (Attribute : Project.Attribute.Object) return Boolean is
       begin
          --  Found if attribute is defined and not a default value, or is
          --  read_only (builtin value).
@@ -357,8 +364,7 @@ package body GPR2.Project.View is
          -- Get_Pack --
          --------------
 
-         function Get_Pack return Project.Pack.Set.Cursor
-         is
+         function Get_Pack return Project.Pack.Set.Cursor is
             Def    : Definition.Const_Ref := View.Get_RO;
             Result : Project.Pack.Set.Cursor;
          begin
@@ -381,6 +387,7 @@ package body GPR2.Project.View is
 
       begin
          --  First try to find an exact match
+
          Result := Attrs.Element (Name, Index, At_Pos);
 
          if not Found (Result) and then Alias /= No_Attribute then
@@ -473,6 +480,7 @@ package body GPR2.Project.View is
                   Result2 : Project.Attribute.Object;
                begin
                   Result2 := Get_Attribute_From_View (View.Extended_Root);
+
                   if Found (Result2) then
                      Result.Prepend_Vector (Result2);
                   end if;
@@ -487,13 +495,17 @@ package body GPR2.Project.View is
       -- Get_Config_Attribute --
       --------------------------
 
-      procedure Get_Config_Attribute
-      is
+      procedure Get_Config_Attribute is
+
          package SR renames Source_Reference;
          package SRA renames Source_Reference.Attribute;
          package SRV renames Source_Reference.Value;
 
          function From_Command_Line return Value_Type;
+
+         -----------------------
+         -- From_Command_Line --
+         -----------------------
 
          function From_Command_Line return Value_Type is
          begin
@@ -588,8 +600,7 @@ package body GPR2.Project.View is
       -- Get_Default_Index --
       -----------------------
 
-      function Get_Default_Index return Value_Type
-      is
+      function Get_Default_Index return Value_Type is
       begin
          if not Has_Index then
             return Registry.Attribute.Any_Index;
@@ -611,7 +622,7 @@ package body GPR2.Project.View is
 
       Definition.Get_RO (Self).Cache.Schedule_Update_Cache;
 
-      --  First check if the attribute is defined in the registry.
+      --  First check if the attribute is defined in the registry
 
       if not PRA.Exists (PRA_Name) then
          raise Attribute_Error
@@ -817,8 +828,7 @@ package body GPR2.Project.View is
       Name          : Attribute_Id;
       With_Defaults : Boolean := True;
       With_Config   : Boolean := True)
-      return Project.Attribute.Set.Object
-   is
+      return Project.Attribute.Set.Object is
    begin
       return Attributes_Internal
         (Self, No_Package, Name, With_Defaults, With_Config);
@@ -830,8 +840,7 @@ package body GPR2.Project.View is
       Name          : Attribute_Id;
       With_Defaults : Boolean := True;
       With_Config   : Boolean := True)
-      return Project.Attribute.Set.Object
-   is
+      return Project.Attribute.Set.Object is
    begin
       return Attributes_Internal
         (Self, Pack, Name, With_Defaults, With_Config);
@@ -876,10 +885,10 @@ package body GPR2.Project.View is
       With_Config   : Boolean := True)
       return Project.Attribute.Set.Object
    is
-      Result : Project.Attribute.Set.Object;
       Q_Name : constant PRA.Qualified_Name    := PRA.Create (Name, Pack);
       Alias  : constant Optional_Attribute_Id := PRA.Alias (Q_Name).Attr;
       Def    : constant PRA.Def               := PRA.Get (Q_Name);
+      Result : Project.Attribute.Set.Object;
 
       use type PRA.Inherit_From_Extended_Type;
       use type PRA.Index_Value_Type;
@@ -895,8 +904,9 @@ package body GPR2.Project.View is
       -- Add_Attr --
       --------------
 
-      procedure Add_Attr (Attr   : Project.Attribute.Object;
-                          Concat : Boolean)
+      procedure Add_Attr
+        (Attr   : Project.Attribute.Object;
+         Concat : Boolean)
       is
          Cursor : constant GPR2.Project.Attribute.Set.Cursor :=
                     Result.Find (Name, Attr.Index);
@@ -947,6 +957,7 @@ package body GPR2.Project.View is
          if Alias /= No_Attribute then
             for Attr of Get_RO (Self).Attrs.Filter (Alias) loop
                --  Return the attributes with the requested name
+
                if not Result.Contains (Name, Attr.Index) then
                   Result.Include (Attr.Get_Alias (Name));
                end if;
@@ -967,7 +978,7 @@ package body GPR2.Project.View is
 
       else
          declare
-            --  Self.Pack resolves inheritance.
+            --  Self.Pack resolves inheritance
             Pack_Inst : Project.Pack.Object renames Self.Pack (Pack);
          begin
             if not Pack_Inst.Attrs.Is_Empty then
@@ -989,8 +1000,8 @@ package body GPR2.Project.View is
       if With_Config
         and then Self.Tree.Has_Configuration
       then
-         for Attr of Config.Attributes_Internal
-                       (Pack, Name, False, False)
+         for Attr of
+           Config.Attributes_Internal (Pack, Name, False, False)
          loop
             Add_Attr (Attr, Def.Config_Concatenable);
          end loop;
@@ -1002,9 +1013,10 @@ package body GPR2.Project.View is
         and then Def.Has_Default_In (Self.Kind)
       then
          declare
-            Cursor  : GPR2.Project.Attribute.Set.Cursor;
-            Attr    : Project.Attribute.Object;
             use GPR2.Project.Attribute.Set;
+
+            Cursor : GPR2.Project.Attribute.Set.Cursor;
+            Attr   : Project.Attribute.Object;
          begin
             case Def.Default.Kind is
                when PRA.D_Callback =>
@@ -1168,8 +1180,8 @@ package body GPR2.Project.View is
    function Binder_Prefix
      (Self : Object; Language : Language_Id) return Filename_Optional
    is
-      Index  : constant Attribute_Index.Object :=
-                 Attribute_Index.Create (Value_Type (Name (Language)));
+      Index : constant Attribute_Index.Object :=
+                Attribute_Index.Create (Value_Type (Name (Language)));
    begin
       return Filename_Optional
         (Self.Attribute (PRA.Prefix, PRP.Binder, Index).Value.Text);
@@ -1180,11 +1192,11 @@ package body GPR2.Project.View is
    ---------------------
 
    function Check_Attribute
-     (Self           : Object;
-      Name           : Attribute_Id;
-      Index          : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos         : Unit_Index             := No_Index;
-      Result         : out Project.Attribute.Object) return Boolean is
+     (Self   : Object;
+      Name   : Attribute_Id;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index             := No_Index;
+      Result : out Project.Attribute.Object) return Boolean is
    begin
       Result := Self.Attribute (Name, No_Package, Index, At_Pos);
       return Result.Is_Defined;
@@ -1195,12 +1207,12 @@ package body GPR2.Project.View is
    end Check_Attribute;
 
    function Check_Attribute
-     (Self           : Object;
-      Pack           : Package_Id;
-      Name           : Attribute_Id;
-      Index          : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos         : Unit_Index             := No_Index;
-      Result         : out Project.Attribute.Object) return Boolean is
+     (Self   : Object;
+      Pack   : Package_Id;
+      Name   : Attribute_Id;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index             := No_Index;
+      Result : out Project.Attribute.Object) return Boolean is
    begin
       Result := Self.Attribute (Name, Pack, Index, At_Pos);
       return Result.Is_Defined;
@@ -1288,9 +1300,9 @@ package body GPR2.Project.View is
    ----------------
 
    function Executable
-     (Self    : Object;
-      Source  : Simple_Name;
-      At_Pos  : Unit_Index) return GPR2.Path_Name.Object
+     (Self   : Object;
+      Source : Simple_Name;
+      At_Pos : Unit_Index) return GPR2.Path_Name.Object
    is
       BN       : constant  Value_Not_Empty :=
                    Remove_Body_Suffix (Self, Source);
@@ -1305,15 +1317,15 @@ package body GPR2.Project.View is
       is (GPR2.Path_Name.Create_File
           (Filename_Type (Base_Name) & Self.Executable_Suffix,
            Filename_Optional (Self.Executable_Directory.Dir_Name)));
-      --  Full executable path for base name.
+      --  Full executable path for base name
 
    begin
       if (Self.Check_Attribute
-                 (PRP.Builder, PRA.Executable, Index, At_Pos, Attr)
-           or else
-             (Source /= Simple_Name (BN)
-              and then Self.Check_Attribute
-                (PRP.Builder, PRA.Executable, BN_Index, At_Pos, Attr)))
+            (PRP.Builder, PRA.Executable, Index, At_Pos, Attr)
+          or else
+            (Source /= Simple_Name (BN)
+             and then Self.Check_Attribute
+               (PRP.Builder, PRA.Executable, BN_Index, At_Pos, Attr)))
         and then At_Pos = At_Pos_Or (Attr.Index, 0)
       then
          return Executable (Attr.Value.Text);
@@ -1395,12 +1407,12 @@ package body GPR2.Project.View is
       Directory_Pattern : GPR2.Filename_Optional;
       Source            : GPR2.Source_Reference.Value.Object;
       File_CB           : not null access procedure
-        (File : GPR2.Path_Name.Object);
+                            (File : GPR2.Path_Name.Object);
       Directory_CB      : access procedure
-        (Directory       : GPR2.Path_Name.Object;
-         Is_Root_Dir     : Boolean;
-         Do_Dir_Visit    : in out Boolean;
-         Do_Subdir_Visit : in out Boolean) := null)
+                            (Directory       : GPR2.Path_Name.Object;
+                             Is_Root_Dir     : Boolean;
+                             Do_Dir_Visit    : in out Boolean;
+                             Do_Subdir_Visit : in out Boolean) := null)
    is
       use GNAT.OS_Lib;
       use GNATCOLL.Utils;
@@ -1528,8 +1540,7 @@ package body GPR2.Project.View is
         Name   : Attribute_Id;
         Pack   : Optional_Package_Id    := No_Package;
         Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-        At_Pos : Unit_Index             := No_Index) return Boolean
-   is
+        At_Pos : Unit_Index             := No_Index) return Boolean is
    begin
       return Self.Attribute (Name, Pack, Index, At_Pos).Is_Defined;
    exception
@@ -1587,8 +1598,7 @@ package body GPR2.Project.View is
    -- Has_Mains --
    ---------------
 
-   function Has_Mains (Self : Object) return Boolean
-   is
+   function Has_Mains (Self : Object) return Boolean is
       Attr : constant Project.Attribute.Object :=
                Self.Attribute (PRA.Main);
    begin
@@ -1617,8 +1627,11 @@ package body GPR2.Project.View is
       procedure For_Rule (Attribute : Attribute_Id; Definition : PRA.Def);
       --  Check if the definition applies to Name in Self's context
 
-      procedure For_Rule (Attribute : Attribute_Id; Definition : PRA.Def)
-      is
+      --------------
+      -- For_Rule --
+      --------------
+
+      procedure For_Rule (Attribute : Attribute_Id; Definition : PRA.Def) is
          pragma Unreferenced (Attribute);
       begin
          if not Has_Default
@@ -1643,10 +1656,12 @@ package body GPR2.Project.View is
       end if;
 
       --  Check if the package has default values
+
       if With_Defaults then
          Def := PRA.Get_Default_Rules (Name);
 
          --  Check if we can create a default value for package Name
+
          PRA.For_Each_Default (Def, For_Rule'Access);
 
          if Has_Default then
@@ -1655,6 +1670,7 @@ package body GPR2.Project.View is
       end if;
 
       --  Finally, check extended
+
       loop
          exit when not Check_Extended or else not View.Is_Extending;
 
@@ -1841,9 +1857,9 @@ package body GPR2.Project.View is
    function Is_Extending
      (Self : Object; Parent : Object'Class := Undefined) return Boolean
    is
-      This : constant Definition.Const_Ref := Definition.Get_RO (Self);
+      Def : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
-      if not This.Extended_Root.Is_Defined then
+      if not Def.Extended_Root.Is_Defined then
          return False;
       end if;
 
@@ -1966,7 +1982,6 @@ package body GPR2.Project.View is
    function Languages (Self : Object) return Containers.Source_Value_List is
       Attr : constant GPR2.Project.Attribute.Object :=
                Self.Attribute (PRA.Languages);
-
    begin
       if Attr.Is_Defined then
          return Attr.Values;
@@ -1980,8 +1995,7 @@ package body GPR2.Project.View is
    ---------------------------
 
    function Library_Ali_Directory
-     (Self : Object) return GPR2.Path_Name.Object
-   is
+     (Self : Object) return GPR2.Path_Name.Object is
    begin
       return Self.Apply_Root_And_Subdirs (PRA.Library_Ali_Dir);
    end Library_Ali_Directory;
@@ -2001,7 +2015,6 @@ package body GPR2.Project.View is
 
    function Library_Filename (Self : Object) return GPR2.Path_Name.Object is
       File_Name : Unbounded_String;
-
    begin
       --  Library prefix
 
@@ -2152,7 +2165,8 @@ package body GPR2.Project.View is
    -- Mains --
    -----------
 
-   function Mains (Self : Object) return GPR2.Unit.Source_Unit_Vectors.Vector
+   function Mains
+     (Self : Object) return GPR2.Unit.Source_Unit_Vectors.Vector
    is
       Attr : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
       Path : GPR2.Path_Name.Object;
@@ -2208,10 +2222,10 @@ package body GPR2.Project.View is
    ----------
 
    function Pack
-     (Self           : Object;
-      Name           : Package_Id) return Project.Pack.Object
+     (Self : Object;
+      Name : Package_Id) return Project.Pack.Object
    is
-      View : Object := Self;
+      View   : Object := Self;
       Cursor : Project.Pack.Set.Cursor;
    begin
       loop
@@ -2238,7 +2252,7 @@ package body GPR2.Project.View is
    --------------
 
    function Packages
-     (Self : Object;
+     (Self          : Object;
       With_Defaults : Boolean := True;
       With_Config   : Boolean := True) return GPR2.Containers.Package_Id_List
    is
@@ -2263,6 +2277,7 @@ package body GPR2.Project.View is
       end if;
 
       --  Check packages with default values
+
       if With_Defaults then
          for Pack of PRA.Get_Packages_With_Default loop
             --  Self.Has_Packages will check if the default values defined in
@@ -2338,8 +2353,8 @@ package body GPR2.Project.View is
       if Suffix'Length > 0
         and then Name'Length > Suffix'Length
         and then GPR2.Path_Name.To_OS_Case (Suffix) =
-        GPR2.Path_Name.To_OS_Case
-          (Ada.Strings.Fixed.Tail (String (Name), Suffix'Length))
+                   GPR2.Path_Name.To_OS_Case
+                     (Strings.Fixed.Tail (String (Name), Suffix'Length))
       then
          Last := Name'Last - Suffix'Length;
       else
@@ -2421,7 +2436,8 @@ package body GPR2.Project.View is
    -- Source_Directories --
    ------------------------
 
-   function Source_Directories (Self : Object) return GPR2.Path_Name.Set.Object
+   function Source_Directories
+     (Self : Object) return GPR2.Path_Name.Set.Object
    is
       Src_Dir_Attr : constant Project.Attribute.Object :=
                        Self.Source_Directories;
@@ -2501,6 +2517,7 @@ package body GPR2.Project.View is
               (GPR2.Path_Name.Create_Directory (Filename_Type (Path)));
          end if;
       end Append_Source_Path;
+
    begin
       if not Src_Dir_Attr.Is_Defined then
          return GPR2.Path_Name.Set.To_Set (Self.Path_Name);
@@ -2541,6 +2558,7 @@ package body GPR2.Project.View is
    begin
       if Definition.Simple_Name_Source.Has_Element (CS) then
          return Definition.Simple_Name_Source.Element (CS).Path_Name;
+
       else
          if Allow_Unit_Name then
             declare
@@ -2568,6 +2586,7 @@ package body GPR2.Project.View is
                if BS /= No_Value then
                   CS := Definition.Get_RO (Self).Sources_Map.Find
                     (Name & Simple_Name (BS));
+
                   if Definition.Simple_Name_Source.Has_Element (CS) then
                      return Definition.Simple_Name_Source.Element
                        (CS).Path_Name;
@@ -2584,6 +2603,7 @@ package body GPR2.Project.View is
                      if SS /= No_Value then
                         CS := Definition.Get_RO (Self).Sources_Map.Find
                           (Name & Simple_Name (SS));
+
                         if Definition.Simple_Name_Source.Has_Element (CS) then
                            return Definition.Simple_Name_Source.Element
                              (CS).Path_Name;

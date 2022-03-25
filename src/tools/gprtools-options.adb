@@ -746,15 +746,13 @@ package body GPRtools.Options is
       elsif Arg = "--config" then
          Result.Config_Project :=
            GPR2.Path_Name.Create_File
-             (GPR2.Project.Ensure_Extension
-                (GPR2.Filename_Type (Param), True));
+             (GPR2.Filename_Type (Param));
          Result.Create_Missing_Config := False;
 
       elsif Arg = "--autoconf" then
          Result.Config_Project :=
            GPR2.Path_Name.Create_File
-             (GPR2.Project.Ensure_Extension
-                (GPR2.Filename_Type (Param), True));
+             (GPR2.Filename_Type (Param));
          Result.Create_Missing_Config := True;
 
       elsif Arg = "--target" then
