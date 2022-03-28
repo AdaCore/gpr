@@ -29,5 +29,6 @@ setup(
         "Topic :: Software Development :: Build Tools",
     ],
     packages=find_packages(where="src"),
+    package_data={"gpr2": ["lib/*"]},
     package_dir={"": "src"})
 
