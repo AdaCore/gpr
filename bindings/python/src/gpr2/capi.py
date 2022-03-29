@@ -4,6 +4,7 @@ from functools import partial
 from gpr2 import GPR2Error
 import json
 import os
+import sys
 
 
 class LibGPR2:
@@ -24,17 +25,17 @@ class LibGPR2:
     }
 
     # ??? not portable ???
-    LIBNAME = "libgpr2c.so"
+    LIBNAME = "libgpr2c.dll" if sys.platform == "win32" else "libgpr2c.so"
     LIB = None
 
     @classmethod
     def lib(cls):
         if cls.LIB is None:
             lib_file = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), "libgpr2c.so"
+                os.path.dirname(os.path.abspath(__file__)), "lib", cls.LIBNAME
             )
             if not os.path.isfile(lib_file):
-                lib_file = "libgpr2c.so"
+                lib_file = cls.LIBNAME
             cls.LIB = CDLL(lib_file)
         return cls.LIB
 
