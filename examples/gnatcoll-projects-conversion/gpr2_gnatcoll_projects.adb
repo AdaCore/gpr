@@ -435,8 +435,8 @@ package body GPR2_GNATCOLL_Projects is
                Put_Line
                  (File_Access'
                     (case Msg.Level is
-                        when Information     => Current_Output,
-                        when Warning | Error => Current_Error).all,
+                        when Information | Lint => Current_Output,
+                        when Warning | Error    => Current_Error).all,
                   Text);
             end if;
          end;

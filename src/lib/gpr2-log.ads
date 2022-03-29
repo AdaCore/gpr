@@ -75,6 +75,7 @@ package GPR2.Log is
       Information : Boolean := True;
       Warning     : Boolean := True;
       Error       : Boolean := True;
+      Lint        : Boolean := True;
       Read        : Boolean := True;
       Unread      : Boolean := True) return Boolean;
    --  Returns True if the log contains some information/warning/error
@@ -118,6 +119,7 @@ package GPR2.Log is
       Information : Boolean := True;
       Warning     : Boolean := True;
       Error       : Boolean := True;
+      Lint        : Boolean := False;
       Read        : Boolean := True;
       Unread      : Boolean := True)
       return Log_Iterator.Forward_Iterator'Class;
@@ -170,6 +172,7 @@ private
         (Information => False,
          Warning     => False,
          Error       => True,
+         Lint        => False,
          Read        => False,
          Unread      => True));
 

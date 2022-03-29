@@ -28,7 +28,7 @@ with GPR2.Source_Reference;
 
 package GPR2.Message is
 
-   type Level_Value is (Information, Warning, Error);
+   type Level_Value is (Information, Warning, Error, Lint);
 
    type Status_Type is (Read, Unread);
    --  Read/Unread status for the messages. This is used for example by the Log
@@ -84,7 +84,7 @@ package GPR2.Message is
    function Format
      (Self           : Object;
       Full_Path_Name : Boolean := False;
-      Levels         : Level_Output := (Long, Long, Long)) return String
+      Levels         : Level_Output := (Long, Long, Long, Long)) return String
      with Pre => Self.Is_Defined;
    --  Returns the message with a standard message as expected by compiler
    --  tools: <filename>:<line>:<col>: <message>
@@ -94,7 +94,7 @@ package GPR2.Message is
    procedure Output
      (Self           : Object;
       Full_Path_Name : Boolean := False;
-      Levels         : Level_Output := (Long, Long, Long))
+      Levels         : Level_Output := (Long, Long, Long, Long))
      with Pre => Self.Is_Defined;
    --  Outputs the message to console as expected by compiler
    --  tools: <filename>:<line>:<col>: <message>

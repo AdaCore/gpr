@@ -276,6 +276,7 @@ package body GPRtools.Util is
         (Information => Options.Verbosity = Very_Verbose,
          Warning     => Options.Warnings,
          Error       => True,
+         Lint        => Options.Verbosity = Very_Verbose,
          Read        => False,
          Unread      => True)
       loop
