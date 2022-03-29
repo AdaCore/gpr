@@ -19,6 +19,7 @@
 with Ada.Characters.Handling;
 with Ada.Command_Line;
 with Ada.Text_IO;
+
 with GNAT.Directory_Operations;
 with GNAT.OS_Lib;
 
@@ -87,8 +88,7 @@ package body GPRtools.Command_Line is
       Group : Argument_Group;
       Def   : Argument_Definition)
    is
-      Group_Ref : constant Group_Maps.Reference_Type :=
-                    Self.Get_RW (Group);
+      Group_Ref : constant Group_Maps.Reference_Type := Self.Get_RW (Group);
       Temp      : Argument_Definition := Def;
 
    begin
@@ -112,8 +112,7 @@ package body GPRtools.Command_Line is
       Name     : GPR2.Name_Type;
       Callback : Argument_Action;
       Help     : String := "";
-      Last     : Boolean := False) return Argument_Group
-   is
+      Last     : Boolean := False) return Argument_Group is
    begin
       Self.Groups.Insert
         (Name,
@@ -135,8 +134,7 @@ package body GPRtools.Command_Line is
       Name     : GPR2.Name_Type;
       Callback : Argument_Action;
       Help     : String := "";
-      Last     : Boolean := False) return Argument_Group
-   is
+      Last     : Boolean := False) return Argument_Group is
    begin
       return Add_Argument_Group
                (Self, Self.Main_Group, Name, Callback, Help, Last);
@@ -153,8 +151,7 @@ package body GPRtools.Command_Line is
       Help     : String := "";
       Required : Boolean := False) return Argument_Group
    is
-      Ref      : Group_Maps.Reference_Type renames
-                   Self.Get_RW (Group);
+      Ref : Group_Maps.Reference_Type renames Self.Get_RW (Group);
    begin
       Self.Groups.Insert
         (Name,
@@ -190,12 +187,15 @@ package body GPRtools.Command_Line is
       Callback       : Section_Action;
       Help           : String := "";
       Index          : String := "";
-      In_Switch_Attr : Boolean := True)
-   is
+      In_Switch_Attr : Boolean := True) is
    begin
       Self.Add_Section_Argument_Internal
         (Name, String (Alt_Name), Callback, Help, Index, In_Switch_Attr);
    end Add_Section_Argument;
+
+   -----------------------------------
+   -- Add_Section_Argument_Internal --
+   -----------------------------------
 
    procedure Add_Section_Argument_Internal
      (Self           : in out Command_Line_Parser;
@@ -223,6 +223,7 @@ package body GPRtools.Command_Line is
 
       --  Callback is null when the switch allows to go back to the default
       --  section.
+
       if Callback = null then
          if Length (Self.Default_Section) > 0 then
             raise Command_Line_Definition_Error with
@@ -266,7 +267,6 @@ package body GPRtools.Command_Line is
       Tool_Name    : String := "";
       Help         : String := "") return Command_Line_Parser'Class
    is
-      Parser      : Command_Line_Parser;
       Help_Arg    : constant Argument_Definition :=
                       Create ("-h",
                               Alt_Name       => "--help",
@@ -276,6 +276,7 @@ package body GPRtools.Command_Line is
                       Create ("--version",
                               "Display version and exit",
                               In_Switch_Attr => False);
+      Parser      : Command_Line_Parser;
 
    begin
       Parser.Initial_Year  := -Initial_Year;
@@ -389,6 +390,10 @@ package body GPRtools.Command_Line is
       use type GPR2.Optional_Package_Id;
 
       function Find_Def (Sw : Switch_Type) return Arg_Maps.Cursor;
+
+      --------------
+      -- Find_Def --
+      --------------
 
       function Find_Def (Sw : Switch_Type) return Arg_Maps.Cursor is
          Ret : Arg_Maps.Cursor;
@@ -635,8 +640,7 @@ package body GPRtools.Command_Line is
 
    function Get_RO
      (Self  : Command_Line_Parser;
-      Group : Argument_Group) return Group_Maps.Constant_Reference_Type
-   is
+      Group : Argument_Group) return Group_Maps.Constant_Reference_Type is
    begin
       return Self.Groups.Constant_Reference
         (GPR2.Name_Type (To_String (Group)));
@@ -648,8 +652,7 @@ package body GPRtools.Command_Line is
 
    function Get_RW
      (Self  : in out Command_Line_Parser;
-      Group : Argument_Group) return Group_Maps.Reference_Type
-   is
+      Group : Argument_Group) return Group_Maps.Reference_Type is
    begin
       return Self.Groups.Reference (GPR2.Name_Type (To_String (Group)));
    end Get_RW;
@@ -680,8 +683,9 @@ package body GPRtools.Command_Line is
       -- Short --
       -----------
 
-      function Short (Arg      : Argument_Definition;
-                      Alt_Name : Boolean := False) return String
+      function Short
+        (Arg      : Argument_Definition;
+         Alt_Name : Boolean := False) return String
       is
          Res : Unbounded_String := (if not Alt_Name
                                     then Arg.Name
@@ -721,8 +725,7 @@ package body GPRtools.Command_Line is
       -- Usage --
       -----------
 
-      procedure Usage (Arg : Argument_Definition)
-      is
+      procedure Usage (Arg : Argument_Definition) is
          Indent : constant String := "           ";
          Last   : Natural := 0;
 
@@ -741,7 +744,6 @@ package body GPRtools.Command_Line is
 
             if Length (Arg.Help) = 0 then
                Ada.Text_IO.New_Line;
-
                return;
             end if;
 
@@ -778,8 +780,7 @@ package body GPRtools.Command_Line is
          end loop;
       end Usage;
 
-      procedure Usage (Group : Argument_Group)
-      is
+      procedure Usage (Group : Argument_Group) is
          Ref       : constant Group_Maps.Constant_Reference_Type :=
                        Self.Get_RO (Group);
          Show_Name : constant Boolean := Element (Group, 1) /= '_';

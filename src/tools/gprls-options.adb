@@ -15,6 +15,7 @@
 -- see <http://www.gnu.org/licenses/>.                                      --
 --                                                                          --
 ------------------------------------------------------------------------------
+
 with Ada.Exceptions;
 with Ada.Text_IO;
 
@@ -40,8 +41,7 @@ package body GPRls.Options is
    -- Build_From_Command_Line --
    -----------------------------
 
-   function Build_From_Command_Line (Self : in out Object) return Boolean
-   is
+   function Build_From_Command_Line (Self : in out Object) return Boolean is
       use GPRtools.Command_Line;
 
       Parser : GPRtools.Options.Command_Line_Parser :=
@@ -212,6 +212,7 @@ package body GPRls.Options is
    is
       pragma Unreferenced (Parser, Index);
       use type GPRtools.Command_Line.Switch_Type;
+
       Result : constant access Object := Object (Res.all)'Access;
    begin
       if Arg = "-files" then
@@ -220,6 +221,7 @@ package body GPRls.Options is
       elsif Arg = "-vP" then
          begin
             Result.Verbose_Parsing := Natural'Value (Param);
+
             if Result.Verbose_Parsing not in 0 .. 2 then
                raise GPRtools.Usage_Error with
                  "-vP accepts a value in the range 0 .. 2";

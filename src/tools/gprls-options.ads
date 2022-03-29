@@ -76,8 +76,7 @@ package GPRls.Options is
 
 private
 
-   type Selective_Output_Type is
-     (All_Outputs, Units, Sources, Objects);
+   type Selective_Output_Type is (All_Outputs, Units, Sources, Objects);
 
    type Object is new GPRtools.Options.Base_Options with record
       List_File             : Path_Name.Object;

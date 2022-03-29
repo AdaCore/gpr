@@ -49,9 +49,13 @@ with System.OS_Constants;
 pragma Warnings (On);
 
 procedure GPRconfig is
+
+   use Ada;
    use Ada.Containers;
    use Ada.Strings.Unbounded;
+
    use GNAT.Command_Line;
+
    use GPR2;
    use GPR2.KB;
    use GPR2.Project.Configuration;
@@ -80,7 +84,7 @@ procedure GPRconfig is
 
    function "=" (L, R : Description) return Boolean is
      (Language (L) = Language (R));
-   --  Compares descriptions. Only one description per language is expected.
+   --  Compares descriptions. Only one description per language is expected
 
    package Description_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (Language_Id, Description);
@@ -128,8 +132,6 @@ procedure GPRconfig is
       Compilers  : in out Compiler_Array;
       For_Target : Name_Type)
    is
-      use Ada.Text_IO;
-
       Comp   : Compiler;
 
       function "&" (L : String; R : Optional_Name_Type) return String is
@@ -138,15 +140,20 @@ procedure GPRconfig is
       procedure Put_Rank (Comp : Compiler; Idx : Positive);
       --  Outputs prefix with rank and selection
 
+      --------------
+      -- Put_Rank --
+      --------------
+
       procedure Put_Rank (Comp : Compiler; Idx : Positive) is
       begin
          if Is_Selected (Comp) then
-            Put ("*");
-            Ada.Integer_Text_IO.Put (Idx, Width => 3);
+            Text_IO.Put ("*");
+            Integer_Text_IO.Put (Idx, Width => 3);
          else
-            Ada.Integer_Text_IO.Put (Idx, Width => 4);
+            Integer_Text_IO.Put (Idx, Width => 4);
          end if;
       end Put_Rank;
+
    begin
       Base.Filter_Compilers_List (Compilers, For_Target);
 
@@ -156,24 +163,24 @@ procedure GPRconfig is
 
          if Is_Selectable (Comp) and then Requires_Compiler (Comp) then
             Put_Rank (Comp, Idx);
-            Put_Line (" target:" & Target (Comp));
+            Text_IO.Put_Line (" target:" & Target (Comp));
             Put_Rank (Comp, Idx);
-            Put_Line
+            Text_IO.Put_Line
               (" normalized_target:" & Base.Normalized_Target (Target (Comp)));
             Put_Rank (Comp, Idx);
-            Put_Line (" executable:" & Executable (Comp));
+            Text_IO.Put_Line (" executable:" & Executable (Comp));
             Put_Rank (Comp, Idx);
-            Put_Line (" path:" & Path (Comp));
+            Text_IO.Put_Line (" path:" & Path (Comp));
             Put_Rank (Comp, Idx);
-            Put_Line (" lang:" & Image (Language (Comp)));
+            Text_IO.Put_Line (" lang:" & Image (Language (Comp)));
             Put_Rank (Comp, Idx);
-            Put_Line (" name:" & Name (Comp));
+            Text_IO.Put_Line (" name:" & Name (Comp));
             Put_Rank (Comp, Idx);
-            Put_Line (" version:" & KB.Version (Comp));
+            Text_IO.Put_Line (" version:" & KB.Version (Comp));
             Put_Rank (Comp, Idx);
-            Put_Line (" runtime:" & Runtime (Comp));
+            Text_IO.Put_Line (" runtime:" & Runtime (Comp));
             Put_Rank (Comp, Idx);
-            Put_Line
+            Text_IO.Put_Line
               (" native:"
                & Boolean'Image
                  (Base.Normalized_Target
@@ -183,24 +190,24 @@ procedure GPRconfig is
          elsif Is_Selectable (Comp) then
 
             Put_Rank (Comp, Idx);
-            Put_Line (" target:");
+            Text_IO.Put_Line (" target:");
             Put_Rank (Comp, Idx);
-            Put_Line
+            Text_IO.Put_Line
               (" normalized_target:unknown");
             Put_Rank (Comp, Idx);
-            Put_Line (" executable:");
+            Text_IO.Put_Line (" executable:");
             Put_Rank (Comp, Idx);
-            Put_Line (" path:");
+            Text_IO.Put_Line (" path:");
             Put_Rank (Comp, Idx);
-            Put_Line (" lang:" & String (Name (Language (Comp))));
+            Text_IO.Put_Line (" lang:" & String (Name (Language (Comp))));
             Put_Rank (Comp, Idx);
-            Put_Line (" name:");
+            Text_IO.Put_Line (" name:");
             Put_Rank (Comp, Idx);
-            Put_Line (" version:");
+            Text_IO.Put_Line (" version:");
             Put_Rank (Comp, Idx);
-            Put_Line (" runtime:");
+            Text_IO.Put_Line (" runtime:");
             Put_Rank (Comp, Idx);
-            Put_Line (" native:FALSE");
+            Text_IO.Put_Line (" native:FALSE");
          end if;
 
       end loop;
@@ -547,7 +554,7 @@ procedure GPRconfig is
 
    procedure Report_Error_And_Exit (Msg : String) is
    begin
-      Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error, Msg);
+      Text_IO.Put_Line (Text_IO.Standard_Error, Msg);
       raise Exit_From_Command_Line;
    end Report_Error_And_Exit;
 
@@ -560,18 +567,17 @@ procedure GPRconfig is
       Compilers  : in out Compiler_Array;
       For_Target : Name_Type)
    is
-      use Ada.Text_IO;
-
       Input : Unbounded_String;
       Comp  : Compiler;
    begin
       loop
          Base.Filter_Compilers_List (Compilers, For_Target);
 
-         Put_Line ("--------------------------------------------------");
-         Put_Line
+         Text_IO.Put_Line
+           ("--------------------------------------------------");
+         Text_IO.Put_Line
            ("gprconfig has found the following compilers on your PATH.");
-         Put_Line
+         Text_IO.Put_Line
            ("Only those matching the target and the selected compilers"
             & " are displayed.");
 
@@ -581,37 +587,40 @@ procedure GPRconfig is
             if Is_Selectable (Comp) then
 
                if Is_Selected (Comp) then
-                  Put ("*");
-                  Ada.Integer_Text_IO.Put (Idx, Width => 3);
+                  Text_IO.Put ("*");
+                  Integer_Text_IO.Put (Idx, Width => 3);
                else
-                  Ada.Integer_Text_IO. Put (Idx, Width => 4);
+                  Integer_Text_IO. Put (Idx, Width => 4);
                end if;
 
-               Put (". ");
+               Text_IO.Put (". ");
 
                if Requires_Compiler (Comp) then
-                  Put
+                  Text_IO.Put
                     (String (Name (Comp))
                      & " for "
                      & Image (Language (Comp))
                      & " in "
                      & String (Path (Comp)));
+
                   if For_Target = "all" then
-                     Put (" on " & String (Target (Comp)));
+                     Text_IO.Put (" on " & String (Target (Comp)));
                   end if;
-                  Put (" version "
-                     & String (KB.Version (Comp)));
+
+                  Text_IO.Put
+                    (" version " & String (KB.Version (Comp)));
+
                   if Runtime (Comp, True) = No_Name then
-                     New_Line;
+                     Text_IO.New_Line;
                   else
-                     Put_Line
+                     Text_IO.Put_Line
                        (" ("
                         & String (Runtime (Comp, True))
                         & " runtime)");
                   end if;
 
                else
-                  Put_Line
+                  Text_IO.Put_Line
                     (Image (Language (Comp)) &
                        " (no compiler required)");
                end if;
@@ -619,9 +628,9 @@ procedure GPRconfig is
             end if;
          end loop;
 
-         Put
+         Text_IO.Put
            ("Select or unselect the following compiler (or ""s"" to save): ");
-         Input := To_Unbounded_String (Get_Line);
+         Input := To_Unbounded_String (Text_IO.Get_Line);
 
          exit when To_String (Input) = "s";
 
@@ -631,10 +640,9 @@ procedure GPRconfig is
             Choice := Positive'Value (To_String (Input));
 
             if Choice > Compilers'Last then
-               Put_Line ("Unrecognized choice");
+               Text_IO.Put_Line ("Unrecognized choice");
 
             else
-
                if Is_Selected (Compilers (Choice)) then
                   Set_Selection (Compilers (Choice), False);
                else
@@ -645,7 +653,7 @@ procedure GPRconfig is
 
          exception
             when Constraint_Error =>
-               Put_Line ("Unrecognized choice");
+               Text_IO.Put_Line ("Unrecognized choice");
          end;
 
       end loop;
@@ -656,40 +664,39 @@ procedure GPRconfig is
    ------------------------------
 
    procedure Show_Command_Line_Config
-     (Compilers : Compiler_Array; Target : String)
-   is
-      use Ada.Text_IO;
+     (Compilers : Compiler_Array; Target : String) is
    begin
       if Compilers = No_Compilers then
          return;
       end if;
 
-      New_Line;
-      Put_Line ("You can regenerate the same config file in batch mode");
-      Put_Line (" with the following command line:");
-      Put ("gprconfig --batch");
-      Put (" --target=");
-      Put (Target);
+      Text_IO.New_Line;
+      Text_IO.Put_Line
+        ("You can regenerate the same config file in batch mode");
+      Text_IO.Put_Line (" with the following command line:");
+      Text_IO.Put ("gprconfig --batch");
+      Text_IO.Put (" --target=");
+      Text_IO.Put (Target);
 
       for Comp of Compilers loop
          if Is_Selected (Comp) then
-            Put (" --config=");
+            Text_IO.Put (" --config=");
 
             if Requires_Compiler (Comp) then
-               Put
+               Text_IO.Put
                  (Image (Language (Comp)) & ","
                   & String (KB.Version (Comp)) & ","
                   & String (Runtime (Comp)) & ","
                   & String (Path (Comp)) & ","
                   & String (Name (Comp)));
             else
-               Put (Image (Language (Comp)) & ",,,,");
+               Text_IO.Put (Image (Language (Comp)) & ",,,,");
             end if;
          end if;
       end loop;
 
-      New_Line;
-      New_Line;
+      Text_IO.New_Line;
+      Text_IO.New_Line;
    end Show_Command_Line_Config;
 
    --------------------
@@ -702,6 +709,7 @@ procedure GPRconfig is
       if Switch = "--db" then
          if Value = "-" then
             Opt_DB := True;
+
          else
             declare
                KB_Norm : constant String :=
@@ -720,7 +728,6 @@ procedure GPRconfig is
                else
                   Report_Error_And_Exit
                     (KB_Norm & " is not a file or directory");
-
                end if;
 
                KB_Locations.Append (KB_Path);
@@ -748,20 +755,20 @@ procedure GPRconfig is
    Selected_Target          : Unbounded_String;
    Output_File              : Unbounded_String;
    Config_Log               : Log.Object;
-   Output                   : Ada.Text_IO.File_Type;
+   Output                   : Text_IO.File_Type;
    Default_Config_File_Name : constant String := "default.cgpr";
-begin
 
+begin
    begin
       GNATCOLL.Traces.Parse_Config_File;
    exception
       when E : others =>
-         Ada.Text_IO.Put_Line
-           (Ada.Text_IO.Standard_Error,
+         Text_IO.Put_Line
+           (Text_IO.Standard_Error,
             "Cannot parse trace configuration file "
             & "(traces may work incorrectly):");
-         Ada.Text_IO.Put_Line
-           (Ada.Text_IO.Standard_Error,
+         Text_IO.Put_Line
+           (Text_IO.Standard_Error,
             Ada.Exceptions.Exception_Message (E));
    end;
    GPRtools.Util.Set_Program_Name ("gprconfig");
@@ -779,8 +786,8 @@ begin
 
    if Opt_Batch and then Opt_Target.all = "all" then
       if Opt_Verbosity > Quiet then
-         Ada.Text_IO.Put_Line
-           (Ada.Text_IO.Standard_Error,
+         Text_IO.Put_Line
+           (Text_IO.Standard_Error,
             "--target=all ignored in --batch mode");
       end if;
 
@@ -823,15 +830,15 @@ begin
    end loop;
 
    if Knowledge_Base.Has_Error then
-      Ada.Text_IO.Put_Line
-        (Ada.Text_IO.Standard_Error,
+      Text_IO.Put_Line
+        (Text_IO.Standard_Error,
          "Invalid setup of the gprconfig knowledge base");
       GNAT.OS_Lib.OS_Exit (1);
       return;
    end if;
 
    if Opt_Show_Known then
-      Ada.Text_IO.Put_Line
+      Text_IO.Put_Line
         ("The known compilers are: "
          & To_String (Knowledge_Base.Known_Compiler_Names));
       return;
@@ -864,6 +871,7 @@ begin
          Target   => Name_Type (To_String (Selected_Target)),
          Messages => Config_Log,
          Fallback => Opt_Fallback);
+
    else
       if Opt_Show_Targets then
          Selected_Target := To_Unbounded_String ("all");
@@ -877,7 +885,6 @@ begin
 
          Set_Of_Targets : GPR2.Containers.Name_Set;
       begin
-
          if Knowledge_Base.Has_Error then
             for Msg_Cur in Knowledge_Base.Log_Messages.Iterate
               (Information => Opt_Verbosity > Quiet,
@@ -886,8 +893,8 @@ begin
                Log.Element (Msg_Cur).Output;
             end loop;
 
-            Ada.Text_IO.Put_Line
-              (Ada.Text_IO.Standard_Error,
+            Text_IO.Put_Line
+              (Text_IO.Standard_Error,
                "Invalid setup of the gprconfig knowledge base");
             GNAT.OS_Lib.OS_Exit (1);
             return;
@@ -895,7 +902,7 @@ begin
 
          if Opt_Show_Targets or else Opt_Verbosity = Verbose then
 
-            Ada.Text_IO.Put_Line ("List of targets supported by a compiler:");
+            Text_IO.Put_Line ("List of targets supported by a compiler:");
 
             for Comp of Compilers loop
                Set_Of_Targets.Include
@@ -904,12 +911,12 @@ begin
 
             for Tgt of Set_Of_Targets loop
 
-               Ada.Text_IO.Put (String (Tgt));
+               Text_IO.Put (String (Tgt));
 
                if String (Tgt) = System.OS_Constants.Target_Name then
-                  Ada.Text_IO.Put_Line (" (native target)");
+                  Text_IO.Put_Line (" (native target)");
                else
-                  Ada.Text_IO.New_Line;
+                  Text_IO.New_Line;
                end if;
             end loop;
 
@@ -921,14 +928,13 @@ begin
 
          if Compilers'Length = 0 then
             if Selected_Target = Null_Unbounded_String then
-               Ada.Text_IO.Put_Line
-                 (Ada.Text_IO.Standard_Error,
+               Text_IO.Put_Line
+                 (Text_IO.Standard_Error,
                   "No compilers found for target "
                   & To_String (Selected_Target));
             else
-               Ada.Text_IO.Put_Line
-                 (Ada.Text_IO.Standard_Error,
-                  "No compilers found");
+               Text_IO.Put_Line
+                 (Text_IO.Standard_Error, "No compilers found");
             end if;
             GNAT.OS_Lib.OS_Exit (1);
             return;
@@ -956,7 +962,6 @@ begin
    end if;
 
    if Config_Log.Has_Error then
-
       for Msg_Cur in Config_Log.Iterate
         (Information => Opt_Verbosity > Quiet,
          Warning     => Opt_Verbosity > Quiet,
@@ -965,11 +970,13 @@ begin
          Log.Element (Msg_Cur).Output;
       end loop;
 
-      Ada.Text_IO.Put_Line
-        (Ada.Text_IO.Standard_Error,
+      Text_IO.Put_Line
+        (Text_IO.Standard_Error,
          "Generation of configuration files failed");
+
       GNAT.OS_Lib.OS_Exit (1);
       return;
+
    elsif Knowledge_Base.Has_Error then
 
       for Msg_Cur in Knowledge_Base.Log_Messages.Iterate
@@ -979,13 +986,14 @@ begin
          Log.Element (Msg_Cur).Output;
       end loop;
 
-      Ada.Text_IO.Put_Line
-        (Ada.Text_IO.Standard_Error,
+      Text_IO.Put_Line
+        (Text_IO.Standard_Error,
          "Invalid setup of the gprconfig knowledge base");
+
       GNAT.OS_Lib.OS_Exit (1);
       return;
-   else
 
+   else
       for Msg_Cur in Config_Log.Iterate
         (Information => Opt_Verbosity > Quiet)
       loop
@@ -994,46 +1002,48 @@ begin
    end if;
 
    if Config_Contents /= Null_Unbounded_String then
-      Ada.Text_IO.Create
-        (Output, Ada.Text_IO.Out_File, To_String (Output_File));
+      Text_IO.Create
+        (Output, Text_IO.Out_File, To_String (Output_File));
 
-      Ada.Text_IO.Put_Line
+      Text_IO.Put_Line
         (Output, "--  This gpr configuration file was generated by gprconfig");
-      Ada.Text_IO.Put_Line (Output, "--  using this command line:");
-      Ada.Text_IO.Put (Output, "--  " & Ada.Command_Line.Command_Name);
-      for I in 1 .. Ada.Command_Line.Argument_Count loop
-         Ada.Text_IO.Put (Output, ' ');
-         Ada.Text_IO.Put (Output, Ada.Command_Line.Argument (I));
-      end loop;
-      Ada.Text_IO.New_Line (Output);
-      Ada.Text_IO.Put (Output, "--  from ");
-      Ada.Text_IO.Put (Output, GNAT.Directory_Operations.Get_Current_Dir);
-      Ada.Text_IO.New_Line (Output);
+      Text_IO.Put_Line (Output, "--  using this command line:");
+      Text_IO.Put (Output, "--  " & Ada.Command_Line.Command_Name);
 
-      Ada.Text_IO.Put_Line (Output, To_String (Config_Contents));
-      Ada.Text_IO.Close (Output);
+      for I in 1 .. Ada.Command_Line.Argument_Count loop
+         Text_IO.Put (Output, ' ');
+         Text_IO.Put (Output, Ada.Command_Line.Argument (I));
+      end loop;
+
+      Text_IO.New_Line (Output);
+      Text_IO.Put (Output, "--  from ");
+      Text_IO.Put (Output, GNAT.Directory_Operations.Get_Current_Dir);
+      Text_IO.New_Line (Output);
+
+      Text_IO.Put_Line (Output, To_String (Config_Contents));
+      Text_IO.Close (Output);
    end if;
 
 exception
    when Ada.Directories.Name_Error | Ada.IO_Exceptions.Use_Error =>
-      Ada.Text_IO.Put_Line
-        (Ada.Text_IO.Standard_Error,
+      Text_IO.Put_Line
+        (Text_IO.Standard_Error,
          "Could not create the file " & To_String (Output_File));
 
    when Invalid_Switch | Exit_From_Command_Line =>
       GNAT.OS_Lib.OS_Exit (1);
 
    when Invalid_Parameter =>
-      Ada.Text_IO.Put_Line
-        (Ada.Text_IO.Standard_Error,
+      Text_IO.Put_Line
+        (Text_IO.Standard_Error,
          "Missing parameter for switch: -" & Full_Switch);
-      Ada.Text_IO.Put_Line
-        (Ada.Text_IO.Standard_Error,
+      Text_IO.Put_Line
+        (Text_IO.Standard_Error,
          "try ""gprconfig --help"" for more information.");
 
    when E : others =>
-      Ada.Text_IO.Put_Line
-        (Ada.Text_IO.Standard_Error,
+      Text_IO.Put_Line
+        (Text_IO.Standard_Error,
          "Unrecoverable error in GPRconfig: "
          & Ada.Exceptions.Exception_Information (E));
       GNAT.OS_Lib.OS_Exit (1);

@@ -76,7 +76,7 @@ is
    --  Call Ada.Text_IO.Put_Line (Str) if Opt.Verbosity is at least Lvl
 
    procedure Show_Tree_Load_Errors;
-   --  Print errors/warnings following a project tree load.
+   --  Print errors/warnings following a project tree load
 
    -------------------
    -- Display_Paths --
@@ -84,7 +84,7 @@ is
 
    procedure Display_Paths is
       Obj_Path : Path_Name.Set.Object;
-      Curr_Dir : constant String := Ada.Directories.Current_Directory;
+      Curr_Dir : constant String := Directories.Current_Directory;
 
       function Mask_Current (Dir : String) return String is
         (if Dir (Dir'First .. Dir'Last - 1) = Curr_Dir
@@ -144,7 +144,7 @@ is
 
          procedure Process (Item : Directory_Entry_Type) is
          begin
-            if Ada.Directories.Simple_Name (Item) not in "." | ".." then
+            if Directories.Simple_Name (Item) not in "." | ".." then
                Search_In (Full_Name (Item));
             end if;
          end Process;
@@ -158,7 +158,7 @@ is
             Output (Path);
             Search
               (Path, "",
-               Filter  => (Ada.Directories.Directory => True, others => False),
+               Filter  => (Directories.Directory => True, others => False),
                Process => Process'Access);
          end Search_In;
 
@@ -286,25 +286,27 @@ is
 begin
    --  Load the project tree
 
-   if not GPRtools.Options.Load_Project (Opt,
-                                         Absent_Dir_Error => False)
+   if not GPRtools.Options.Load_Project
+     (Opt, Absent_Dir_Error => False)
    then
       if Opt.Project_File.Is_Defined then
-         Text_IO.Put_Line ("gprls: unable to process project file " &
-                             String (Opt.Project_File.Name));
+         Text_IO.Put_Line
+           ("gprls: unable to process project file "
+            & String (Opt.Project_File.Name));
       else
-         Text_IO.Put_Line ("gprls: unable to process project file " &
-                             String (Opt.Project_Base.Name));
+         Text_IO.Put_Line
+           ("gprls: unable to process project file "
+            & String (Opt.Project_Base.Name));
       end if;
 
-      return Ada.Command_Line.Failure;
+      return Command_Line.Failure;
    end if;
 
    if Opt.Only_Display_Paths then
       --  For the "gprls -v" usage
 
       Display_Paths;
-      return Ada.Command_Line.Success;
+      return Command_Line.Success;
    end if;
 
    Show_Tree_Load_Errors;
@@ -321,8 +323,8 @@ begin
    --  Make sure the sources are up to date
 
    Tree.Update_Sources
-     (Backends => (Source_Info.Source => Opt.Source_Parser,
-                   Source_Info.LI     => True),
+     (Backends     => (Source_Info.Source => Opt.Source_Parser,
+                       Source_Info.LI     => True),
       With_Runtime => (Opt.Gnatdist or else Opt.With_Predefined_Units));
 
    --
@@ -346,16 +348,19 @@ begin
 
       type One_Type is range -1 .. 1;
 
-      function Compare (Left, Right : Project.View.Object) return One_Type
+      function Compare
+        (Left, Right : Project.View.Object) return One_Type
       is (if Left < Right then -1 elsif Left = Right then 0 else 1);
 
       --  function Compare (Left, Right : Path_Name.Full_Name) return One_Type
       --  is (if Left < Right then -1 elsif Left = Right then 0 else 1);
 
-      function Compare (Left, Right : Project.Source.Object) return One_Type
+      function Compare
+        (Left, Right : Project.Source.Object) return One_Type
       is (if Left < Right then -1 elsif Left = Right then 0 else 1);
 
-      function Compare (Left, Right : Unit_Index) return One_Type
+      function Compare
+        (Left, Right : Unit_Index) return One_Type
       is (if Left < Right then -1 elsif Left = Right then 0 else 1);
 
       function Path_Less
@@ -448,8 +453,9 @@ begin
                   if R.Index not in Multi_Unit_Index then
                      Output.Append ("  " & R.Source.Path_Name.Value);
                   else
-                     Output.Append ("  " & R.Source.Path_Name.Value & " @" &
-                                      R.Index'Image);
+                     Output.Append
+                       ("  " & R.Source.Path_Name.Value
+                        & " @" & R.Index'Image);
                   end if;
                end if;
             end loop;
@@ -457,8 +463,13 @@ begin
             String_Sorting.Sort (Output);
 
             Text_IO.Put_Line
-              ((if Full_Closure then "C" else "Incomplete c") & "losure"
-               & (if Sources.Length = 1 then "" else "s") & ":");
+              ((if Full_Closure
+               then "C"
+               else "Incomplete c") & "losure"
+               & (if Sources.Length = 1
+                 then ""
+                 else "s") & ":");
+
             Text_IO.New_Line;
 
             for O of Output loop
@@ -535,7 +546,7 @@ begin
             A   : Project.Source.Artifact.Object :=
                     Project.Source.Artifact.Undefined)
          is
-            use type Ada.Calendar.Time;
+            use type Calendar.Time;
 
             package SI renames GPR2.Source_Info;
 
@@ -681,7 +692,7 @@ begin
                                (S.Source,
                                 Filter => (Dependency_File_Artifact => True,
                                            Object_File_Artifact     => True,
-                                           others => False));
+                                           others                   => False));
                Main_Unit : Unit.Object;
 
                procedure Print_Unit_From
@@ -880,7 +891,7 @@ begin
 
       if not Opt.Files.Is_Empty then
          --  Fill the various caches to get the sources from simple filenames
-         --  and artefacts
+         --  and artefacts.
 
          for CV in
            Tree.Iterate ((Project.I_Extended => False, others => True))
@@ -888,6 +899,7 @@ begin
             for S of Project.Tree.Element (CV).Sources loop
                declare
                   use Project.Source.Artifact;
+
                   Artifacts : Project.Source.Artifact.Object;
                   Dismiss   : Boolean with Unreferenced;
 
@@ -1078,7 +1090,7 @@ begin
       --  Do nothing if no source was found
 
       if Sources.Is_Empty then
-         return Ada.Command_Line.Success;
+         return Command_Line.Success;
       end if;
 
       --  Check all sources and notify when no ALI file is present
@@ -1147,7 +1159,7 @@ begin
       end if;
    end;
 
-   return Ada.Command_Line.Success;
+   return Command_Line.Success;
 
 exception
    when Project_Error | Processing_Error =>
@@ -1157,5 +1169,5 @@ exception
         (E_Errors,
          "unable to process project file " & String (Opt.Project_File.Name));
 
-      return Ada.Command_Line.Failure;
+      return Command_Line.Failure;
 end GPRls.Process;

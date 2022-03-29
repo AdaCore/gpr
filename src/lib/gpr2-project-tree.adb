@@ -965,8 +965,7 @@ package body GPR2.Project.Tree is
    -- Is_Root --
    -------------
 
-   function Is_Root (Position : Cursor) return Boolean
-   is
+   function Is_Root (Position : Cursor) return Boolean is
       V : constant View.Object := Element (Position);
    begin
       return Position.Tree.Root = V;
