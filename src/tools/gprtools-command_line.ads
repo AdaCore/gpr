@@ -40,8 +40,6 @@
 --  when the tool is invoked with -h or --help, and a copyright/tool version
 --  string when invoked with --version.
 
-with Ada.Containers.Indefinite_Vectors;
-
 with GPR2.Containers;
 
 private with Ada.Strings.Equal_Case_Insensitive;
@@ -56,12 +54,10 @@ package GPRtools.Command_Line is
    --  Raised when there's issues with the definition of switches in the
    --  command line parser.
 
-   package String_Vectors is new Ada.Containers.Indefinite_Vectors
-     (Positive, String);
-
    type Switch_Type is new String
-     with Dynamic_Predicate => Switch_Type'Length > 0
-       and then Switch_Type (Switch_Type'First) = '-';
+     with Dynamic_Predicate =>
+            Switch_Type'Length > 0
+              and then Switch_Type (Switch_Type'First) = '-';
 
    ------------------------------------
    -- COMMAND LINE RESULT DEFINITION --
@@ -73,7 +69,7 @@ package GPRtools.Command_Line is
    Empty_Result : constant Command_Line_Result;
 
    function Remaining_Arguments
-     (Result : Command_Line_Result) return String_Vectors.Vector
+     (Result : Command_Line_Result) return GPR2.Containers.Value_List
      with Inline;
 
    --------------------------------------
@@ -476,13 +472,13 @@ private
                             Required   => Required));
 
    type Command_Line_Result is tagged record
-      Remaining : String_Vectors.Vector;
+      Remaining : GPR2.Containers.Value_List;
    end record;
 
    Empty_Result : constant Command_Line_Result := (others => <>);
 
    function Remaining_Arguments
-     (Result : Command_Line_Result) return String_Vectors.Vector
+     (Result : Command_Line_Result) return GPR2.Containers.Value_List
    is (Result.Remaining);
 
    function Dash_Dash
