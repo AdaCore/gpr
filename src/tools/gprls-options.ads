@@ -68,8 +68,6 @@ package GPRls.Options is
 
    function Only_Display_Paths (Self : Object) return Boolean;
 
-   function Verbose_Parsing (Self : Object) return Integer;
-
    function Gnatdist (Self : Object) return Boolean;
 
    procedure Print (Self : Object);
@@ -89,7 +87,6 @@ private
       Only_Display_Paths    : Boolean := False;
       Source_Parser         : Boolean := False;
       Gnatdist              : Boolean := False;
-      Verbose_Parsing       : Integer := 0;
    end record;
 
    function Files (Self : Object) return GPR2.Containers.Value_Set is
@@ -133,9 +130,6 @@ private
 
    function Selective_Output (Self : Object) return Boolean is
      (Self.Selective_Output /= All_Outputs);
-
-   function Verbose_Parsing (Self : Object) return Integer is
-     (Self.Verbose_Parsing);
 
    function Gnatdist (Self : Object) return Boolean is
      (Self.Gnatdist);

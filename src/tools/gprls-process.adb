@@ -272,7 +272,7 @@ is
          end loop;
       else
          for C in Tree.Log_Messages.Iterate
-           (Information => Opt.Verbose_Parsing >= 1,
+           (Information => Opt.Verbose,
             Warning     => True,
             Error       => False,
             Read        => False,
