@@ -23,6 +23,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Characters.Handling;
+with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Directories;
 with Ada.Environment_Variables;
 
@@ -41,6 +42,8 @@ package body GPR2.KB.Compiler_Iterator is
                   GNATCOLL.Traces.Create
                     ("KNOWLEDGE_BASE.COMPILER_ITERATOR",
                      GNATCOLL.Traces.Off);
+
+   package Exec_Sets is new Ada.Containers.Indefinite_Ordered_Sets (String);
 
    package CDM renames Compiler_Description_Maps;
 
@@ -91,6 +94,7 @@ package body GPR2.KB.Compiler_Iterator is
       Continue       : out Boolean)
    is
       use CDM;
+      use Exec_Sets;
       use Ada.Directories;
       use GNAT.Regpat;
       use GNATCOLL.Traces;
@@ -101,6 +105,7 @@ package body GPR2.KB.Compiler_Iterator is
       Dir                : Directory_Entry_Type;
       Exec_Suffix        : OS_Lib.String_Access :=
                              GNAT.OS_Lib.Get_Executable_Suffix;
+      Exec_Set           : Exec_Sets.Set;
    begin
       --  Since the name of an executable can be a regular expression, we need
       --  to look at all files in the directory to see if they match. This
@@ -137,98 +142,102 @@ package body GPR2.KB.Compiler_Iterator is
                return;
          end;
 
-         For_All_Files_In_Dir : loop
+         loop
+            exit when not More_Entries (Search);
             begin
-               exit For_All_Files_In_Dir when not More_Entries (Search);
                Get_Next_Entry (Search, Dir);
-               for C in Base.Compilers.Iterate loop
-                  declare
-                     Config  : constant CDM.Constant_Reference_Type :=
-                                 CDM.Constant_Reference (Base.Compilers, C);
-                     Simple  : constant String :=
-                                 Ada.Directories.Simple_Name (Dir);
-                     Matches : Match_Array
-                       (0 .. Integer'Max (0, Config.Prefix_Index));
-                     Matched : Boolean;
-                     Prefix  : Unbounded_String;
-                  begin
-                     --  A language with no expected compiler => always match
-                     if Config.Name = Null_Unbounded_String then
-                        Increase_Indent
-                          (Main_Trace,
-                           String (Key (C))
-                           & " requires no compiler");
-                        Continue := True;
-                        Foreach_Language_Runtime
-                          (Iterator       => Iterator,
-                           Base           => Base,
-                           Name           =>
-                             To_Unbounded_String (String (Key (C))),
-                           Executable     => Null_Unbounded_String,
-                           Directory      => "",
-                           On_Target      => Unknown_Targets_Set,
-                           Prefix         => Null_Unbounded_String,
-                           From_Extra_Dir => From_Extra_Dir,
-                           Descr          => Config,
-                           Path_Order     => Path_Order,
-                           Continue       => Continue);
-                        Decrease_Indent (Main_Trace);
-                        exit For_All_Files_In_Dir when not Continue;
-                        Matched := False;
-
-                     elsif not Config.Executable_Re.Is_Empty then
-                        Match
-                          (Config.Executable_Re.Element,
-                           Data       => Simple,
-                           Matches    => Matches);
-                        Matched := Matches (0) /= No_Match;
-                     else
-                        Matched :=
-                          (To_String (Config.Executable) & Exec_Suffix.all) =
-                            Simple;
-                     end if;
-
-                     if Matched then
-                        Increase_Indent
-                          (Main_Trace,
-                           String (Key (C))
-                           & " is candidate: filename=" & Simple);
-
-                        if not Config.Executable_Re.Is_Empty
-                          and then Config.Prefix_Index >= 0
-                          and then Matches (Config.Prefix_Index) /= No_Match
-                        then
-                           Prefix := To_Unbounded_String
-                             (Simple (Matches
-                              (Config.Prefix_Index).First ..
-                                Matches (Config.Prefix_Index).Last));
-                        end if;
-
-                        Continue := True;
-                        Foreach_Language_Runtime
-                          (Iterator       => Iterator,
-                           Base           => Base,
-                           Name           =>
-                             To_Unbounded_String (String (Key (C))),
-                           Executable     => To_Unbounded_String (Simple),
-                           Directory      => Directory,
-                           On_Target      => On_Target,
-                           Prefix         => Prefix,
-                           From_Extra_Dir => From_Extra_Dir,
-                           Descr          => Config,
-                           Path_Order     => Path_Order,
-                           Continue       => Continue);
-
-                        Decrease_Indent (Main_Trace);
-                        exit For_All_Files_In_Dir when not Continue;
-                     end if;
-                  end;
-               end loop;
+               Exec_Set.Include (Ada.Directories.Simple_Name (Dir));
             exception
                when Ada.Directories.Name_Error | Ada.Directories.Use_Error =>
                   null;
             end;
+         end loop;
+
+         For_All_Files_In_Dir : for Simple of Exec_Set loop
+            for C in Base.Compilers.Iterate loop
+               declare
+                  Config  : constant CDM.Constant_Reference_Type :=
+                              CDM.Constant_Reference (Base.Compilers, C);
+                  Matches : Match_Array
+                    (0 .. Integer'Max (0, Config.Prefix_Index));
+                  Matched : Boolean;
+                  Prefix  : Unbounded_String;
+               begin
+                  --  A language with no expected compiler => always match
+                  if Config.Name = Null_Unbounded_String then
+                     Increase_Indent
+                       (Main_Trace,
+                        String (Key (C))
+                        & " requires no compiler");
+                     Continue := True;
+                     Foreach_Language_Runtime
+                       (Iterator       => Iterator,
+                        Base           => Base,
+                        Name           =>
+                          To_Unbounded_String (String (Key (C))),
+                        Executable     => Null_Unbounded_String,
+                        Directory      => "",
+                        On_Target      => Unknown_Targets_Set,
+                        Prefix         => Null_Unbounded_String,
+                        From_Extra_Dir => From_Extra_Dir,
+                        Descr          => Config,
+                        Path_Order     => Path_Order,
+                        Continue       => Continue);
+                     Decrease_Indent (Main_Trace);
+                     exit For_All_Files_In_Dir when not Continue;
+                     Matched := False;
+
+                  elsif not Config.Executable_Re.Is_Empty then
+                     Match
+                       (Config.Executable_Re.Element,
+                        Data       => Simple,
+                        Matches    => Matches);
+                     Matched := Matches (0) /= No_Match;
+                  else
+                     Matched :=
+                       (To_String (Config.Executable) & Exec_Suffix.all) =
+                         Simple;
+                  end if;
+
+                  if Matched then
+                     Increase_Indent
+                       (Main_Trace,
+                        String (Key (C))
+                        & " is candidate: filename=" & Simple);
+
+                     if not Config.Executable_Re.Is_Empty
+                       and then Config.Prefix_Index >= 0
+                       and then Matches (Config.Prefix_Index) /= No_Match
+                     then
+                        Prefix := To_Unbounded_String
+                          (Simple (Matches
+                           (Config.Prefix_Index).First ..
+                             Matches (Config.Prefix_Index).Last));
+                     end if;
+
+                     Continue := True;
+                     Foreach_Language_Runtime
+                       (Iterator       => Iterator,
+                        Base           => Base,
+                        Name           =>
+                          To_Unbounded_String (String (Key (C))),
+                        Executable     => To_Unbounded_String (Simple),
+                        Directory      => Directory,
+                        On_Target      => On_Target,
+                        Prefix         => Prefix,
+                        From_Extra_Dir => From_Extra_Dir,
+                        Descr          => Config,
+                        Path_Order     => Path_Order,
+                        Continue       => Continue);
+
+                     Decrease_Indent (Main_Trace);
+                     exit For_All_Files_In_Dir when not Continue;
+                  end if;
+               end;
+            end loop;
+
          end loop For_All_Files_In_Dir;
+         Exec_Set.Clear;
       else
          --  Do not search all entries in the directory, but check explicitly
          --  for the compilers. This results in a lot less system calls, and
