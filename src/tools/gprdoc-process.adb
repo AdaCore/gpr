@@ -17,14 +17,20 @@
 ------------------------------------------------------------------------------
 
 with Ada.Text_IO;
+with Ada.Characters.Handling;
+
+with GNATCOLL;
+with GNATCOLL.JSON;
 
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Attribute.Description;
 with GPR2.Project.Registry.Pack;
 
-procedure GPRdoc.Process is
+procedure GPRdoc.Process (Display : Display_Kind) is
 
    use Ada;
+   use GNATCOLL;
+   use GNATCOLL.JSON;
    use GPR2;
    use GPR2.Project.Registry.Attribute;
 
@@ -32,65 +38,63 @@ procedure GPRdoc.Process is
    package PRP  renames GPR2.Project.Registry.Pack;
    package PRAD renames GPR2.Project.Registry.Attribute.Description;
 
-   type Display_Kind is
-     (K_Official_Documentation,
-      K_IO_Documentation);
-   --  Used to switch between 2 types of output
+   procedure Generate_IO_Textual_Documentation;
+   --  Format the attributes and package information to generate a textual
+   --  output.
 
-   procedure Display_Attributes
-     (Attr_Name : Qualified_Name;
-      Attr_Def  : Def);
-   --  Display the attributes as the same GNAT Project Manager Documentation
-   --  output. Useful in order to compare the actual code attributes
-   --  definitions to the existing documentation.
+   procedure Generate_JSON_Documentation (Compact : Boolean);
+   --  Format the attributes and package information to generate a JSON output
+   --  which will be used to generate the documentation.
 
-   procedure Generate_Package_Attributes
-     (Kind : Display_Kind;
-      Pack : Optional_Package_Id);
+   procedure Generate_IO_Textual_Documentation is
 
-   procedure Generate_Documentation
-     (Pack_Name : String;
-      Attr_Name : Qualified_Name;
-      Attr_Def  : Def);
-   --  Format the attributes and package information for generating the
-   --  documentation. #WIP.
+      procedure Display_Attributes
+        (Attr_Name : Qualified_Name;
+         Attr_Def  : Def);
+      --  Display the attributes as the same GNAT Project Manager Documentation
+      --  output. Useful in order to compare the actual code attributes
+      --  definitions to the existing documentation.
 
-   ------------------------
-   -- Display_Attributes --
-   ------------------------
+      procedure Generate_Package_Attributes
+        (Pack : Optional_Package_Id);
+      --  Look for all attributes for a given package
 
-   procedure Display_Attributes
-     (Attr_Name : Qualified_Name;
-      Attr_Def  : Def)
-   is
-      K_Separator : constant String := ", ";
-   begin
+      ------------------------
+      -- Display_Attributes --
+      ------------------------
 
-      Text_IO.Put (Item => Image (Attr_Name.Attr) & ": ");
+      procedure Display_Attributes
+        (Attr_Name : Qualified_Name;
+         Attr_Def  : Def)
+      is
+         K_Separator : constant String := ", ";
+      begin
 
-      if Attr_Def.Value = Single
-      then
-         Text_IO.Put (Item => "single");
-      else
-         Text_IO.Put (Item => "list");
-      end if;
+         Text_IO.Put (Item => Image (Attr_Name.Attr) & ": ");
 
-      if Attr_Def.Builtin
-      then
-         Text_IO.Put (Item => K_Separator & "read-only");
-      end if;
-
-      if Attr_Def.Index_Type /= PRA.No_Index
-      then
-         if Attr_Def.Index_Optional
+         if Attr_Def.Value = Single
          then
-            Text_IO.Put (Item => K_Separator & "optional index");
+            Text_IO.Put (Item => "single");
+         else
+            Text_IO.Put (Item => "list");
          end if;
 
-         Text_IO.Put (Item => K_Separator & "indexed");
-      end if;
+         if Attr_Def.Builtin
+         then
+            Text_IO.Put (Item => K_Separator & "read-only");
+         end if;
 
-      case Attr_Def.Index_Type is
+         if Attr_Def.Index_Type /= PRA.No_Index
+         then
+            if Attr_Def.Index_Optional
+            then
+               Text_IO.Put (Item => K_Separator & "optional index");
+            end if;
+
+            Text_IO.Put (Item => K_Separator & "indexed");
+         end if;
+
+         case Attr_Def.Index_Type is
          when PRA.No_Index | PRA.Env_Var_Name_Index =>
             null;
          when PRA.Unit_Index | PRA.Language_Index =>
@@ -102,194 +106,393 @@ procedure GPRdoc.Process is
             then
                Text_IO.Put (Item => K_Separator & "case-insensitive index");
             end if;
-      end case;
+         end case;
 
-      if  Attr_Def.Index_Type = PRA.File_Index
-        or else
-          Attr_Def.Index_Type = PRA.FileGlob_Index
-      then
-         Text_IO.Put (Item => K_Separator & "file name index");
-      end if;
+         if  Attr_Def.Index_Type = PRA.File_Index
+           or else
+             Attr_Def.Index_Type = PRA.FileGlob_Index
+         then
+            Text_IO.Put (Item => K_Separator & "file name index");
+         end if;
 
-      if Attr_Def.Index_Optional
-      then
-         Text_IO.Put (Item => K_Separator & "others allowed");
-      end if;
+         if Attr_Def.Index_Optional
+         then
+            Text_IO.Put (Item => K_Separator & "others allowed");
+         end if;
 
-      if Attr_Def.Config_Concatenable
-      then
-         Text_IO.Put (Item => K_Separator & "configuration concatenable");
-      end if;
+         if Attr_Def.Config_Concatenable
+         then
+            Text_IO.Put (Item => K_Separator & "configuration concatenable");
+         end if;
 
-      Text_IO.New_Line;
-      Text_IO.Put_Line
-        (Item => "Description: "
-         & PRAD.Get_Attribute_Description (Key => Attr_Name));
+         Text_IO.New_Line;
+         Text_IO.Put_Line
+           (Item => "Description: "
+            & PRAD.Get_Attribute_Description (Key => Attr_Name));
 
-      Text_IO.New_Line;
-   end Display_Attributes;
+         Text_IO.New_Line;
+      end Display_Attributes;
+
+      ---------------------------------
+      -- Generate_Package_Attributes --
+      ---------------------------------
+
+      procedure Generate_Package_Attributes
+        (Pack : Optional_Package_Id)
+      is
+         Package_Name         : constant String
+           := (if Pack /= No_Package then Image (Pack) else "Project_Level");
+         Package_Name_Shown : Boolean := False;
+         Attribute_Name       : Qualified_Name;
+         Attribute_Definition : Def;
+      begin
+
+         --  For every attributes of a given package
+
+         for Attr_Id of PRA.All_Attributes (Pack => Pack)
+         loop
+
+            --  Get the attribute informations
+
+            Attribute_Name       := Create (Name => Attr_Id, Pack => Pack);
+            Attribute_Definition := PRA.Get (Q_Name => Attribute_Name);
+
+            --  Display attribute and package informations
+
+            if not Package_Name_Shown then
+               Text_IO.Put_Line (Item => Package_Name);
+               Package_Name_Shown := True;
+            end if;
+
+            Display_Attributes
+              (Attr_Name => Attribute_Name,
+               Attr_Def  => Attribute_Definition);
+
+            Text_IO.New_Line;
+
+         end loop;
+
+      end Generate_Package_Attributes;
+
+   begin
+
+      --  First retrieve all attributes from the Top-Level package
+
+      Generate_Package_Attributes (Pack => No_Package);
+
+      --  Then retrieve all attributes from all registered packages
+
+      for Pack of PRP.All_Packages
+      loop
+         Generate_Package_Attributes (Pack => Pack);
+      end loop;
+
+   end Generate_IO_Textual_Documentation;
 
    ----------------------------
    -- Generate_Documentation --
    ----------------------------
 
-   procedure Generate_Documentation
-     (Pack_Name : String;
-      Attr_Name : Qualified_Name;
-      Attr_Def  : Def)
-   is
+   procedure Generate_JSON_Documentation (Compact : Boolean) is
+
+      function Attribute_Object (Attr_Name  : Qualified_Name;
+                                 Attr_Def   : Def;
+                                 Attr_Descr : String) return JSON_Value;
+      --  The attribute JSON object description
+
+      function Package_Object (Pack      : Optional_Package_Id;
+                               Descr     : String;
+                               Attr_List : JSON_Array) return JSON_Value;
+      --  The package JSON object description
+
+      ----------------------
+      -- Attribute_Object --
+      ----------------------
+
+      function Attribute_Object (Attr_Name  : Qualified_Name;
+                                 Attr_Def   : Def;
+                                 Attr_Descr : String) return JSON_Value
+      is
+
+         function Attribute_Def_Object (Attr_Def : Def) return JSON_Value;
+         --  The attribute definition JSON object description
+
+         --------------------------
+         -- Attribute_Def_Object --
+         --------------------------
+
+         function Attribute_Def_Object (Attr_Def : Def) return JSON_Value
+         is
+            function Array_Object (A : Allowed_In) return JSON_Value;
+            --  The array JSON object description
+
+            function Variant_Record (VR : Default_Value) return JSON_Value;
+            --  The variant record JSON object description
+
+            ------------------
+            -- Array_Object --
+            ------------------
+
+            function Array_Object (A : Allowed_In) return JSON_Value is
+               Obj : constant JSON_Value := Create_Object;
+            begin
+               for Elt in A'Range loop
+                  Set_Field
+                    (Val        => Obj,
+                     Field_Name => Ada.Characters.Handling.To_Lower
+                       (Elt'Img (3 .. Elt'Img'Last)), --  To get rid of "K_"
+                     Field      => A (Elt));
+               end loop;
+
+               return Obj;
+            end Array_Object;
+
+            --------------------
+            -- Variant_Record --
+            --------------------
+
+            function Variant_Record (VR : Default_Value) return JSON_Value is
+               Obj : constant JSON_Value := Create_Object;
+            begin
+
+               Set_Field
+                 (Val        => Obj,
+                  Field_Name => "default_value_kind",
+                  Field      => Ada.Characters.Handling.To_Lower
+                    (VR.Kind'Img (3 .. VR.Kind'Img'Last)));
+               --  To get rid of "D_"
+
+               case VR.Kind is
+                  when D_Attribute_Reference =>
+
+                     Set_Field (Val        => Obj,
+                                Field_Name => "attr",
+                                Field      => Image (VR.Attr));
+
+                  when D_Value =>
+
+                     for Elt in VR.Values.Iterate loop
+                        Set_Field
+                          (Val        => Obj,
+                           Field_Name => Value_Map.Key (Position => Elt),
+                           Field      => Value_Map.Element (Position => Elt));
+                     end loop;
+
+                  when D_Callback =>
+
+                     Set_Field (Val        => Obj,
+                                Field_Name => "callback",
+                                Field      => "special");
+
+               end case;
+
+               return Obj;
+            end Variant_Record;
+
+            Obj : constant JSON_Value := Create_Object;
+         begin
+            Set_Field (Val        => Obj,
+                       Field_Name => "index_type",
+                       Field      => Attr_Def.Index_Type'Img);
+            Set_Field (Val        => Obj,
+                       Field_Name => "index_optional",
+                       Field      => Attr_Def.Index_Optional);
+            Set_Field (Val        => Obj,
+                       Field_Name => "value",
+                       Field      => Attr_Def.Value'Img);
+            Set_Field (Val        => Obj,
+                       Field_Name => "value_case_sensitive",
+                       Field      => Attr_Def.Value_Case_Sensitive);
+            Set_Field (Val        => Obj,
+                       Field_Name => "value_is_set",
+                       Field      => Attr_Def.Value_Is_Set);
+            Set_Field (Val        => Obj,
+                       Field_Name => "empty_value",
+                       Field      => Attr_Def.Empty_Value'Img);
+            Set_Field (Val        => Obj,
+                       Field_Name => "builtin",
+                       Field      => Attr_Def.Builtin);
+            Set_Field (Val        => Obj,
+                       Field_Name => "is_allowed_in",
+                       Field      => Array_Object
+                         (A => Attr_Def.Is_Allowed_In));
+            Set_Field (Val        => Obj,
+                       Field_Name => "has_default_in",
+                       Field      => Array_Object
+                         (A =>  Attr_Def.Has_Default_In));
+
+            if Attr_Def.Has_Default_In /= Nowhere
+            then
+               Set_Field (Val        => Obj,
+                          Field_Name => "default",
+                          Field      => Variant_Record
+                            (VR => Attr_Def.Default));
+            end if;
+
+            Set_Field (Val        => Obj,
+                       Field_Name => "is_toolchain_config",
+                       Field      => Attr_Def.Is_Toolchain_Config);
+            Set_Field (Val        => Obj,
+                       Field_Name => "config_concatenable",
+                       Field      => Attr_Def.Config_Concatenable);
+            Set_Field (Val        => Obj,
+                       Field_Name => "inherit_from_extended",
+                       Field      => Attr_Def.Inherit_From_Extended'Img);
+
+            return Obj;
+         end Attribute_Def_Object;
+
+         Obj : constant JSON_Value := Create_Object;
+      begin
+         Set_Field (Val        => Obj,
+                    Field_Name => "attribute_name",
+                    Field      => Image (Attr_Name.Attr));
+         Set_Field (Val        => Obj,
+                    Field_Name => "attribute_def",
+                    Field      => Attribute_Def_Object (Attr_Def => Attr_Def));
+         Set_Field (Val        => Obj,
+                    Field_Name => "attribute_descr",
+                    Field      => Attr_Descr);
+
+         return Obj;
+      end Attribute_Object;
+
+      --------------------
+      -- Package_Object --
+      --------------------
+
+      function Package_Object (Pack      : Optional_Package_Id;
+                               Descr     : String;
+                               Attr_List : JSON_Array) return JSON_Value
+      is
+         Package_Name         : constant String
+           := (if Pack /= No_Package then Image (Pack) else "Project_Level");
+
+         Obj : constant JSON_Value := Create_Object;
+      begin
+         Set_Field (Val        => Obj,
+                    Field_Name => "package_name",
+                    Field      => Package_Name);
+         Set_Field (Val        => Obj,
+                    Field_Name => "package_descr",
+                    Field      => Descr);
+         Set_Field (Val        => Obj,
+                    Field_Name => "attributes",
+                    Field      => Attr_List);
+
+         return Obj;
+      end Package_Object;
+
+      J_Doc : constant JSON_Value := Create_Object;
+      --  The JSON doc
+
+      P_Array : JSON_Array;
    begin
-      Text_IO.Put_Line
-        (Item => Pack_Name & "." & Image (Attr_Name.Attr));
-      Text_IO.Put_Line
-        (Item => "Description: "
-         & PRAD.Get_Attribute_Description (Key => Attr_Name));
-      Text_IO.Put_Line (Item => "INDEX_TYPE            => "
-                        & Attr_Def.Index_Type'Img);
-      Text_IO.Put_Line (Item => "INDEX_OPTIONAL        => "
-                        & Attr_Def.Index_Optional'Img);
-      Text_IO.Put_Line (Item => "VALUE                 => "
-                        & Attr_Def.Value'Img);
-      Text_IO.Put_Line (Item => "VALUE_CASE_SENSITIVE  => "
-                        & Attr_Def.Value_Case_Sensitive'Img);
-      Text_IO.Put_Line (Item => "VALUE_IS_SET          => "
-                        & Attr_Def.Value_Is_Set'Img);
-      Text_IO.Put_Line (Item => "EMPTY_VALUE           => "
-                        & Attr_Def.Empty_Value'Img);
-      Text_IO.Put_Line (Item => "BUILTIN               => "
-                        & Attr_Def.Builtin'Img);
-      Text_IO.Put_Line (Item => "IS_ALLOWED_IN :");
-      Text_IO.Put_Line (Item => "   CONFIGURATION     - " &
-                          Attr_Def.Is_Allowed_In (K_Configuration)'Img
-                       );
-      Text_IO.Put_Line (Item => "   ABSTRACT          - " &
-                          Attr_Def.Is_Allowed_In (K_Abstract)'Img
-                       );
-      Text_IO.Put_Line (Item => "   STANDARD          - " &
-                          Attr_Def.Is_Allowed_In (K_Standard)'Img
-                       );
-      Text_IO.Put_Line (Item => "   LIBRARY           - " &
-                          Attr_Def.Is_Allowed_In (K_Library)'Img
-                       );
-      Text_IO.Put_Line (Item => "   AGGREGATE         - " &
-                          Attr_Def.Is_Allowed_In (K_Aggregate)'Img
-                       );
-      Text_IO.Put_Line (Item => "   AGGREGATE_LIBRARY - " &
-                          Attr_Def.Is_Allowed_In (K_Aggregate_Library)'Img
-                       );
-      Text_IO.Put_Line (Item => "DEFAULT               => ");
-      Text_IO.Put_Line (Item => "   KIND     -  " & Attr_Def.Default.Kind'Img);
-      case Attr_Def.Default.Kind is
-         when D_Attribute_Reference =>
-            Text_IO.Put_Line (Item => "   ATTR     - " &
-                                Attr_Def.Default.Attr'Img
-                             );
-         when D_Value =>
-            Text_IO.Put_Line (Item => "   VALUES   - " &
-                                Attr_Def.Default.Values'Img
-                             );
-         when D_Callback =>
-            Text_IO.Put_Line (Item => "   CALLBACK - " &
-                                Attr_Def.Default.Callback'Img
-                             );
-      end case;
-      Text_IO.Put_Line (Item => "HAS_DEFAULT_IN        => ");
-      Text_IO.Put_Line (Item => "   CONFIGURATION     - " &
-                          Attr_Def.Has_Default_In (K_Configuration)'Img
-                       );
-      Text_IO.Put_Line (Item => "   ABSTRACT          - " &
-                          Attr_Def.Has_Default_In (K_Abstract)'Img
-                       );
-      Text_IO.Put_Line (Item => "   STANDARD          - " &
-                          Attr_Def.Has_Default_In (K_Standard)'Img
-                       );
-      Text_IO.Put_Line (Item => "   LIBRARY           - " &
-                          Attr_Def.Has_Default_In (K_Library)'Img
-                       );
-      Text_IO.Put_Line (Item => "   AGGREGATE         - " &
-                          Attr_Def.Has_Default_In (K_Aggregate)'Img
-                       );
-      Text_IO.Put_Line (Item => "   AGGREGATE_LIBRARY - " &
-                          Attr_Def.Has_Default_In (K_Aggregate_Library)'Img
-                       );
-      Text_IO.Put_Line (Item => "IS_TOOLCHAIN_CONFIG   => "
-                        & Attr_Def.Is_Toolchain_Config'Img);
-      Text_IO.Put_Line (Item => "CONFIG_CONCATENABLE   => "
-                        & Attr_Def.Config_Concatenable'Img);
-      Text_IO.Put_Line (Item => "INHERIT_FROM_EXTENDED => "
-                        & Attr_Def.Inherit_From_Extended'Img);
-      Text_IO.New_Line;
 
-   end Generate_Documentation;
+      --  First retrieve all attributes from the Top-Level package
+      declare
+         Attr_Name : Qualified_Name;
+         Attr_Def  : Def;
+         A_Array   : JSON_Array;
+      begin
 
-   ---------------------------------
-   -- Generate_Package_Attributes --
-   ---------------------------------
+         for Attr_Id of PRA.All_Attributes (Pack => No_Package)
+         loop
 
-   procedure Generate_Package_Attributes
-     (Kind : Display_Kind;
-      Pack : Optional_Package_Id)
-   is
-      Package_Name         : constant String
-        := (if Pack /= No_Package then Image (Pack) else "Project_Level");
-      Package_Name_Shown : Boolean := False;
-      Attribute_Name       : Qualified_Name;
-      Attribute_Definition : Def;
-   begin
+            --  Get the attribute informations
 
-      --  For every attributes of a given package.
+            Attr_Name  := Create (Name => Attr_Id, Pack => No_Package);
+            Attr_Def   := PRA.Get (Q_Name => Attr_Name);
 
-      for Attr_Id of PRA.All_Attributes (Pack => Pack)
+            --  Create the JSON Attributes list
+
+            JSON.Append
+              (Arr => A_Array,
+               Val => Attribute_Object
+                 (Attr_Name  => Attr_Name,
+                  Attr_Def   => Attr_Def,
+                  Attr_Descr => PRAD.Get_Attribute_Description
+                    (Key => Attr_Name)));
+
+         end loop;
+
+         --  Create the JSON package with the attribute list
+
+         JSON.Append (Arr => P_Array,
+                      Val => Package_Object (Pack      => No_Package,
+                                             Descr     => "",
+                                             Attr_List => A_Array));
+      end;
+
+      --  Then retrieve all attributes from all registered packages
+
+      for Pack of PRP.All_Packages
       loop
+         declare
+            Attr_Name : Qualified_Name;
+            Attr_Def  : Def;
+            A_Array   : JSON_Array;
+         begin
+            for Attr_Id of PRA.All_Attributes (Pack => Pack)
+            loop
 
-         --  Get the attribute information.
+               --  Get the attribute informations
 
-         Attribute_Name       := Create (Name => Attr_Id, Pack => Pack);
-         Attribute_Definition := PRA.Get (Q_Name => Attribute_Name);
+               Attr_Name := Create (Name => Attr_Id, Pack => Pack);
+               Attr_Def  := PRA.Get (Q_Name => Attr_Name);
 
-         --  Display mode
+               --  Create the JSON Attributes list
 
-         case Kind is
-            when K_Official_Documentation =>
+               JSON.Append
+                 (Arr => A_Array,
+                  Val => Attribute_Object
+                    (Attr_Name  => Attr_Name,
+                     Attr_Def   => Attr_Def,
+                     Attr_Descr => PRAD.Get_Attribute_Description
+                       (Key => Attr_Name)));
 
-               Generate_Documentation
-                 (Pack_Name   => Package_Name,
-                  Attr_Name => Attribute_Name,
-                  Attr_Def  => Attribute_Definition);
+            end loop;
 
-            when K_IO_Documentation =>
+            --  Create the JSON package with the attribute list
 
-               if not Package_Name_Shown then
-                  Text_IO.Put_Line (Item => Package_Name);
-                  Package_Name_Shown := True;
-               end if;
-
-               Display_Attributes
-                 (Attr_Name => Attribute_Name,
-                  Attr_Def  => Attribute_Definition);
-         end case;
-
+            JSON.Append (Arr => P_Array,
+                         Val => Package_Object (Pack      => Pack,
+                                                Descr     => "",
+                                                Attr_List => A_Array));
+         end;
       end loop;
 
-      Text_IO.New_Line;
+      --  Create the whole JSON file
 
-   end Generate_Package_Attributes;
+      Set_Field (Val        => J_Doc,
+                 Field_Name => "packages",
+                 Field      => P_Array);
 
-   K_Kind_Of_Display : constant Display_Kind := K_Official_Documentation;
+      Text_IO.Put_Line
+        (Item => JSON.Write (Item => J_Doc, Compact => Compact));
+
+   end Generate_JSON_Documentation;
 
 begin
 
-   --  First retrieve all attributes from the Top-Level package
+   case Display is
 
-   Generate_Package_Attributes (Kind => K_Kind_Of_Display,
-                                Pack => No_Package);
+      when K_JSON_Compact =>
 
-   --  Then retrieve all attributes from all registered packages
+         Generate_JSON_Documentation (Compact => True);
 
-   for Pack of PRP.All_Packages
-   loop
-      Generate_Package_Attributes (Kind => K_Kind_Of_Display,
-                                   Pack => Pack);
-   end loop;
+      when K_JSON =>
+
+         Generate_JSON_Documentation (Compact => False);
+
+      when K_Textual_IO =>
+
+         Generate_IO_Textual_Documentation;
+
+      when K_Undefined =>
+
+         null;
+
+   end case;
 
 end GPRdoc.Process;

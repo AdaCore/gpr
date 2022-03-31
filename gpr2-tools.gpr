@@ -76,9 +76,6 @@ project GPR2.Tools is
             for Default_Switches ("Ada") use Common_Options & Release_Options;
       end case;
 
-      for Switches ("gprdoc-*.adb") use ("-gnat2022");
-      --  Add the -gnat2022 compilation option for gprdoc and scalars printout
-
    end Compiler;
 
    ------------

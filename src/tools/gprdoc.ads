@@ -18,4 +18,6 @@
 
 package GPRdoc with Pure is
 
+   type Display_Kind is (K_Undefined, K_JSON_Compact, K_JSON, K_Textual_IO);
+
 end GPRdoc;
