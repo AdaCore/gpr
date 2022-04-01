@@ -21,7 +21,6 @@ with Ada.Text_IO;
 with GNATCOLL.VFS;
 
 with GPR2.Path_Name;
-with GPR2.Path_Name.GNATCOLL;
 
 procedure Main is
 
@@ -35,11 +34,11 @@ procedure Main is
 
    procedure To_GNATCOLL_Projects_Test (Path : GPR2.Path_Name.Object) is
       VF : constant GNATCOLL.VFS.Filesystem_String :=
-        GPR2.Path_Name.GNATCOLL.To_Filesystem_String
-          (GPR2.Path_Name.GNATCOLL.To_Pathname
-             (GPR2.Path_Name.GNATCOLL.To_Virtual_File (Path)));
+        GPR2.Path_Name.Filesystem_String
+          (GPR2.Path_Name.Create
+             (GPR2.Path_Name.Virtual_File (Path)));
       S  : constant GNATCOLL.VFS.Filesystem_String :=
-        GPR2.Path_Name.GNATCOLL.To_Filesystem_String (Path);
+        GPR2.Path_Name.Filesystem_String (Path);
    begin
       Ada.Text_IO.Put_Line ("<" & String (VF) & ">");
       Ada.Text_IO.Put_Line ("<" & String (S) & ">");
@@ -53,7 +52,7 @@ procedure Main is
 
    procedure To_GPR2_Path_Name_Test (VF : GNATCOLL.VFS.Virtual_File) is
       Path : constant GPR2.Path_Name.Object :=
-        GPR2.Path_Name.GNATCOLL.To_Pathname (VF);
+        GPR2.Path_Name.Create (VF);
    begin
       Ada.Text_IO.Put ("<");
       if Path.Is_Defined then
@@ -77,7 +76,7 @@ procedure Main is
 
    procedure To_GPR2_Path_Name_Test (S : GNATCOLL.VFS.Filesystem_String) is
       Path : constant GPR2.Path_Name.Object :=
-        GPR2.Path_Name.GNATCOLL.To_Pathname (S);
+        GPR2.Path_Name.Create (S);
    begin
       Ada.Text_IO.Put ("<");
       if Path.Is_Defined then

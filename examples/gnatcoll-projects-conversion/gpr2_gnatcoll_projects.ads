@@ -40,7 +40,6 @@ with GNATCOLL.VFS;
 with GPR2; use GPR2;
 with GPR2.Log;
 with GPR2.Path_Name;
-with GPR2.Path_Name.GNATCOLL;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
@@ -54,7 +53,7 @@ package GPR2_GNATCOLL_Projects is
    function Object_Dir (Project : GPR2.Project.View.Object)
                         return GNATCOLL.VFS.Virtual_File is
      (if Project.Is_Defined
-      then GPR2.Path_Name.GNATCOLL.To_Virtual_File (Project.Object_Directory)
+      then GPR2.Path_Name.Virtual_File (Project.Object_Directory)
       else GNATCOLL.VFS.No_File);
    --  GNATCOLL.Projects.Object_Dir (Project : Project_Type) conversion
    --  WARNING: this function is handling subdirs.

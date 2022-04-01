@@ -42,13 +42,13 @@
 
 with Ada.Containers.Indefinite_Vectors;
 
+with GPR2.Containers;
+
 private with Ada.Strings.Equal_Case_Insensitive;
 private with Ada.Strings.Less_Case_Insensitive;
 private with Ada.Strings.Unbounded;
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Indefinite_Ordered_Sets;
-
-with GPR2.Containers;
 
 package GPRtools.Command_Line is
 
@@ -68,7 +68,7 @@ package GPRtools.Command_Line is
    ------------------------------------
 
    type Command_Line_Result is tagged private;
-   --  used to store the result of the command line parsing.
+   --  used to store the result of the command line parsing
 
    Empty_Result : constant Command_Line_Result;
 
@@ -247,8 +247,8 @@ package GPRtools.Command_Line is
      with
        Pre  => Self.Is_Defined,
        Post => (if Self.Has_Group (Name)
-                  then Group'Result /= No_Group
-                    else Group'Result = No_Group);
+                then Group'Result /= No_Group
+                else Group'Result = No_Group);
 
    procedure Version (Self : Command_Line_Parser)
      with Pre => Self.Is_Defined;
@@ -268,7 +268,7 @@ package GPRtools.Command_Line is
      (Self   : Command_Line_Parser;
       Result : in out Command_Line_Result'Class)
      with Pre => Self.Is_Defined;
-   --  Parse the command line from Ada.Command_Line.
+   --  Parse the command line from Ada.Command_Line
 
    procedure Get_Opt
      (Self      : Command_Line_Parser;
@@ -345,6 +345,7 @@ package GPRtools.Command_Line is
 
 private
 
+   use Ada;
    use Ada.Strings.Unbounded;
 
    function To_Unbounded_String (S : Switch_Type) return Unbounded_String
@@ -363,10 +364,11 @@ private
       Index    : Unbounded_String;
       In_Attr  : Boolean := True;
       Hidden   : Boolean := False;
+
       case With_Value is
          when False =>
-            Is_Section          : Boolean := False;
-            Section_Callback    : Section_Action;
+            Is_Section       : Boolean := False;
+            Section_Callback : Section_Action;
          when True =>
             Parameter : Unbounded_String;
             Delimiter : Argument_Parameter_Delimiter;
@@ -376,16 +378,16 @@ private
    end record;
 
    function Is_Defined (Def : Argument_Definition) return Boolean is
-      (Def /= Argument_Definition'(others => <>));
+     (Def /= Argument_Definition'(others => <>));
 
    function Name (Def : Argument_Definition) return Switch_Type is
-      (Switch_Type (To_String (Def.Name)));
+     (Switch_Type (To_String (Def.Name)));
 
    function Has_Alt_Name (Def : Argument_Definition) return Boolean is
-      (Length (Def.Alt_Name) > 0);
+     (Length (Def.Alt_Name) > 0);
 
    function Alt_Name (Def : Argument_Definition) return Switch_Type is
-      (Switch_Type (To_String (Def.Alt_Name)));
+     (Switch_Type (To_String (Def.Alt_Name)));
 
    ------------
    -- Create --
@@ -483,15 +485,16 @@ private
      (Result : Command_Line_Result) return String_Vectors.Vector
    is (Result.Remaining);
 
-   function Dash_Dash (S : Switch_Type) return Boolean
+   function Dash_Dash
+     (S : Switch_Type) return Boolean
    is (if S'Length > 2 then S (S'First .. S'First + 1) = "--" else False);
 
    function Arg_Less (S1, S2 : Switch_Type) return Boolean is
      (if Dash_Dash (S1) /= Dash_Dash (S2)
       then not Dash_Dash (S1)
-      elsif Ada.Strings.Equal_Case_Insensitive (String (S1), String (S2))
+      elsif Strings.Equal_Case_Insensitive (String (S1), String (S2))
       then S1 < S2
-      else Ada.Strings.Less_Case_Insensitive (String (S1), String (S2)));
+      else Strings.Less_Case_Insensitive (String (S1), String (S2)));
    --  We use case insensitive sort for displaying the switches in the
    --  usage string, but switch comparison is always case sensitive.
 
@@ -534,7 +537,7 @@ private
       Callback : Argument_Action;
       Help     : String := "";
       Last     : Boolean := False) return Argument_Group;
-   --  Add a subgroup to an existing group.
+   --  Add a subgroup to an existing group
 
    function Add_Mutually_Exclusive_Argument_Group
      (Self     : in out Command_Line_Parser;
@@ -544,7 +547,7 @@ private
       Required : Boolean := False) return Argument_Group;
 
    function Is_Defined (Self : Command_Line_Parser) return Boolean is
-      (Self /= Command_Line_Parser'(others => <>));
+     (Self /= Command_Line_Parser'(others => <>));
 
    function Has_Group
      (Self : Command_Line_Parser;

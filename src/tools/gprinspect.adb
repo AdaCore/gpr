@@ -744,8 +744,7 @@ procedure GPRinspect is
    -- Parse_Command_Line --
    ------------------------
 
-   procedure Parse_Command_Line
-   is
+   procedure Parse_Command_Line is
       use GPRtools.Command_Line;
       use GPRtools.Options;
       Parser : GPRtools.Options.Command_Line_Parser :=
