@@ -54,7 +54,7 @@ Project configuration switches:
 
  --config=file.cgpr
            Specify the main config project file name
- --db dir  Parse "dir" as an additional  knowledge base
+ --db dir  Parse "dir" as an additional knowledge base
  --db-     Do not load the standard knowledge base
  --RTS[:<lang>]=runtime
            Specify a runtime for <lang> or Ada (default)
@@ -115,21 +115,21 @@ Project configuration switches:
 
  --config=file.cgpr
            Specify the main config project file name
- --db dir  Parse "dir" as an additional  knowledge base
+ --db dir  Parse "dir" as an additional knowledge base
  --db-     Do not load the standard knowledge base
  --RTS[:<lang>]=runtime
            Specify a runtime for <lang> or Ada (default)
  --target=targetname
            Specify a target for cross platforms
 
-distributed switches:
+Distributed build switches:
    Distributed compilation mode switches.
 
  --distributed[=node1[,node2]]
-           Activate the remote mode on specified nodes
+           Activate the remote mode on specified node(s), or automatically.
  --hash=<string>
            Set a hash string to identified environment
- --slave-env[=name]
+ --slave-env[=node]
            Use a specific slave's environment
 
 Verbosity switches:
@@ -223,7 +223,7 @@ Project configuration switches:
 
  --config=file.cgpr
            Specify the main config project file name
- --db dir  Parse "dir" as an additional  knowledge base
+ --db dir  Parse "dir" as an additional knowledge base
  --db-     Do not load the standard knowledge base
  --RTS[:<lang>]=runtime
            Specify a runtime for <lang> or Ada (default)
@@ -330,7 +330,7 @@ Project configuration switches:
 
  --config=file.cgpr
            Specify the main config project file name
- --db dir  Parse "dir" as an additional  knowledge base
+ --db dir  Parse "dir" as an additional knowledge base
  --db-     Do not load the standard knowledge base
  --RTS[:<lang>]=runtime
            Specify a runtime for <lang> or Ada (default)
@@ -391,21 +391,21 @@ Project configuration switches:
 
  --config=file.cgpr
            Specify the main config project file name
- --db dir  Parse "dir" as an additional  knowledge base
+ --db dir  Parse "dir" as an additional knowledge base
  --db-     Do not load the standard knowledge base
  --RTS[:<lang>]=runtime
            Specify a runtime for <lang> or Ada (default)
  --target=targetname
            Specify a target for cross platforms
 
-distributed switches:
+Distributed build switches:
    Distributed compilation mode switches.
 
  --distributed[=node1[,node2]]
-           Activate the remote mode on specified nodes
+           Activate the remote mode on specified node(s), or automatically.
  --hash=<string>
            Set a hash string to identified environment
- --slave-env[=name]
+ --slave-env[=node]
            Use a specific slave's environment
 
 Verbosity switches:
@@ -499,7 +499,7 @@ Project configuration switches:
 
  --config=file.cgpr
            Specify the main config project file name
- --db dir  Parse "dir" as an additional  knowledge base
+ --db dir  Parse "dir" as an additional knowledge base
  --db-     Do not load the standard knowledge base
  --RTS[:<lang>]=runtime
            Specify a runtime for <lang> or Ada (default)
