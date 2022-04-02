@@ -31,6 +31,7 @@ package body GPR2.Log is
      (Information : Boolean;
       Warning     : Boolean;
       Error       : Boolean;
+      Lint        : Boolean;
       Read        : Boolean;
       Unread      : Boolean)
    is new Log_Iterator.Forward_Iterator with record
@@ -48,11 +49,13 @@ package body GPR2.Log is
       Information : Boolean;
       Warning     : Boolean;
       Error       : Boolean;
+      Lint        : Boolean;
       Read        : Boolean;
       Unread      : Boolean) return Boolean is
      (((Message.Level = GPR2.Message.Information and then Information)
        or else (Message.Level = GPR2.Message.Warning and then Warning)
-       or else (Message.Level = GPR2.Message.Error and then Error))
+       or else (Message.Level = GPR2.Message.Error and then Error)
+       or else (Message.Level = GPR2.Message.Lint and then Lint))
       and then
         ((Message.Status = GPR2.Message.Read and then Read)
          or else (Message.Status = GPR2.Message.Unread and then Unread)));
@@ -137,7 +140,7 @@ package body GPR2.Log is
         or else
           Match_Filter
             (Element (Position),
-             Iter.Information, Iter.Warning, Iter.Error,
+             Iter.Information, Iter.Warning, Iter.Error, Iter.Lint,
              Iter.Read, Iter.Unread)
       then
          Set_Read (Position);
@@ -162,11 +165,14 @@ package body GPR2.Log is
       Information : Boolean := True;
       Warning     : Boolean := True;
       Error       : Boolean := True;
+      Lint        : Boolean := True;
       Read        : Boolean := True;
       Unread      : Boolean := True) return Boolean is
    begin
       for M of Self.Store loop
-         if Match_Filter (M, Information, Warning, Error, Read, Unread) then
+         if Match_Filter
+           (M, Information, Warning, Error, Lint, Read, Unread)
+         then
             return True;
          end if;
       end loop;
@@ -192,6 +198,7 @@ package body GPR2.Log is
       Information : Boolean := True;
       Warning     : Boolean := True;
       Error       : Boolean := True;
+      Lint        : Boolean := False;
       Read        : Boolean := True;
       Unread      : Boolean := True)
       return Log_Iterator.Forward_Iterator'Class is
@@ -200,6 +207,7 @@ package body GPR2.Log is
         (Information => Information,
          Warning     => Warning,
          Error       => Error,
+         Lint        => Lint,
          Read        => Read,
          Unread      => Unread,
          Store       => Self.Store'Unrestricted_Access);
@@ -221,7 +229,7 @@ package body GPR2.Log is
            or else
              Match_Filter
                (Element (New_Position),
-                Iter.Information, Iter.Warning, Iter.Error,
+                Iter.Information, Iter.Warning, Iter.Error, Iter.Lint,
                 Iter.Read, Iter.Unread);
       end loop;
 

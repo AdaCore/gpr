@@ -843,9 +843,11 @@ exception
       Command_Line.Set_Exit_Status (Command_Line.Failure);
 
    when others =>
-      for M of Options.Tree.Log_Messages.all loop
-         Text_IO.Put_Line (M.Format);
-      end loop;
+      if Options.Tree.Has_Messages then
+         for M of Options.Tree.Log_Messages.all loop
+            Text_IO.Put_Line (M.Format);
+         end loop;
+      end if;
 
       Command_Line.Set_Exit_Status (Command_Line.Failure);
 end GPRinspect;

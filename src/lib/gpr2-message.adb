@@ -51,7 +51,7 @@ package body GPR2.Message is
    function Format
      (Self           : Object;
       Full_Path_Name : Boolean := False;
-      Levels         : Level_Output := (Long, Long, Long)) return String
+      Levels         : Level_Output := (Long, Long, Long, Long)) return String
    is
       use GNAT.Formatted_String;
 
@@ -63,12 +63,14 @@ package body GPR2.Message is
                (case Self.Level is
                    when Error       => "E",
                    when Warning     => "W",
-                   when Information => "I"),
-            when Long =>
+                   when Information => "I",
+                   when Lint        => "L"),
+           when Long =>
                (case Self.Level is
                    when Error       => "error",
                    when Warning     => "warning",
-                   when Information => "info"));
+                   when Information => "info",
+                   when Lint        => "lint"));
 
       Filename : constant String :=
                    (if Full_Path_Name
@@ -132,14 +134,14 @@ package body GPR2.Message is
    procedure Output
      (Self           : Object;
       Full_Path_Name : Boolean := False;
-      Levels         : Level_Output := (Long, Long, Long))
+      Levels         : Level_Output := (Long, Long, Long, Long))
    is
       use Ada.Text_IO;
    begin
       Put_Line
         ((case Self.Level is
-            when Information     => Current_Output,
-            when Error | Warning => Current_Error),
+            when Information | Lint => Current_Output,
+            when Error | Warning    => Current_Error),
          Self.Format (Full_Path_Name, Levels));
    end Output;
 
