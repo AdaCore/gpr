@@ -219,14 +219,18 @@ package body GPRls.Options is
          Result.List_File := Path_Name.Create_File (Filename_Type (Param));
 
       elsif Arg = "-vP" then
+         declare
+            Verbose_Parsing : Integer := 0;
          begin
-            Result.Verbose_Parsing := Natural'Value (Param);
+            Verbose_Parsing := Natural'Value (Param);
 
-            if Result.Verbose_Parsing not in 0 .. 2 then
-               raise GPRtools.Usage_Error with
-                 "-vP accepts a value in the range 0 .. 2";
-            end if;
-
+            Result.Verbosity :=
+              (case Verbose_Parsing is
+                  when 0      => GPRtools.Regular,
+                  when 1      => GPRtools.Verbose,
+                  when 2      => GPRtools.Very_Verbose,
+                  when others => raise GPRtools.Usage_Error with
+                                   "-vP accepts a value in the range 0 .. 2");
          exception
             when Constraint_Error =>
                raise GPRtools.Usage_Error with
@@ -334,7 +338,13 @@ package body GPRls.Options is
       Text_IO.Put_Line ("All projects: " & Self.All_Projects'Img);
 
       Text_IO.Put_Line ("Verbosity: " & Self.Verbosity'Img);
-      Text_IO.Put_Line ("Parsing verbosity: " & Self.Verbose_Parsing'Img);
+      Text_IO.Put_Line
+        ("Parsing verbosity: "
+         & (case Self.Verbosity is
+              when GPRtools.Quiet        => "0",
+              when GPRtools.Regular      => "0",
+              when GPRtools.Verbose      => "1",
+              when GPRtools.Very_Verbose => "2"));
    end Print;
 
 end GPRls.Options;

@@ -1,0 +1,38 @@
+project Leaf1 is
+  package Binder is
+     for Switches ("Ada") use ("Binder.Leaf1");
+     for Default_Switches ("Ada") use ("Binder.Leaf1");
+  end Binder;
+  package Linker is
+     for Switches ("Ada") use ("Linker.Leaf1");
+     for Default_Switches ("Ada") use ("Linker.Leaf1");
+  end Linker;
+  package Metrics is
+     for Switches ("Ada") use ("Metrics.Leaf1");
+     for Default_Switches ("Ada") use ("Metrics.Leaf1");
+  end Metrics;
+  package Check is
+     for Switches ("Ada") use ("Check.Leaf1");
+     for Default_Switches ("Ada") use ("Check.Leaf1");
+  end Check;
+  package Gnatstub is
+     for Switches ("Ada") use ("Gnatstub.Leaf1");
+     for Default_Switches ("Ada") use ("Gnatstub.Leaf1");
+  end Gnatstub;
+  package Pretty_Printer is
+     for Switches ("Ada") use ("Pretty_Printer.Leaf1");
+     for Default_Switches ("Ada") use ("Pretty_Printer.Leaf1");
+  end Pretty_Printer;
+  package Finder is
+     for Switches ("Ada") use ("Finder.Leaf1");
+     for Default_Switches ("Ada") use ("Finder.Leaf1");
+  end Finder;
+  package Cross_Reference is
+     for Switches ("Ada") use ("Cross_Reference.Leaf1");
+     for Default_Switches ("Ada") use ("Cross_Reference.Leaf1");
+  end Cross_Reference;
+  package Eliminate is
+     for Switches ("Ada") use ("Eliminate.Leaf1");
+     for Default_Switches ("Ada") use ("Eliminate.Leaf1");
+  end Eliminate;
+end Leaf1;

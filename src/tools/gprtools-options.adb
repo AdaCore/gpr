@@ -467,12 +467,18 @@ package body GPRtools.Options is
    ------------------
 
    function Load_Project
-     (Opt              : in out Base_Options'Class;
-      Absent_Dir_Error : Boolean;
-      Handle_Errors    : Boolean := True)
+     (Opt                : in out Base_Options'Class;
+      Absent_Dir_Error   : Boolean;
+      Handle_Information : Boolean := False;
+      Handle_Errors      : Boolean := True;
+      Handle_Lint        : Boolean := False)
       return Boolean
    is
+
       procedure Display (Logs : GPR2.Log.Object);
+      --  Display errors and/or warnings messages in Logs. Warnings are only
+      --  displayed if tool not run in quiet mode and Handle_Warnings is set
+      --  to True.
 
       -------------
       -- Display --
@@ -489,6 +495,7 @@ package body GPRtools.Options is
               (Information => False,
                Warning     => False,
                Error       => True,
+               Lint        => False,
                Read        => False,
                Unread      => True)
             loop
@@ -498,9 +505,10 @@ package body GPRtools.Options is
 
          elsif not Opt.Quiet then
             for C in Logs.Iterate
-              (Information => Opt.Verbose,
+              (Information => Handle_Information,
                Warning     => True,
-               Error       => True,
+               Error       => False,
+               Lint        => Handle_Lint,
                Read        => False,
                Unread      => True)
             loop

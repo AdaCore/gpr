@@ -131,7 +131,9 @@ procedure Main is
 
       procedure Print_Messages (Info : Boolean) is
       begin
-         if Prj.Log_Messages.Has_Element (Information => Info) then
+         if Prj.Log_Messages.Has_Element
+           (Information => Info, Lint => False)
+         then
             Text_IO.Put_Line ("Messages found:");
 
             for J in Prj.Log_Messages.Iterate (Information => Info) loop

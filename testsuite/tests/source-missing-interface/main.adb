@@ -57,7 +57,7 @@ procedure Main is
             Text_IO.Put_Line ("Messages found:");
 
             for C in Prj.Log_Messages.Iterate
-              (False, False, True, True, True)
+              (False, False, True, False, True, True)
             loop
                declare
                   M   : constant Message.Object := Log.Element (C);

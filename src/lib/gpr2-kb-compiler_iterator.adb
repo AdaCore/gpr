@@ -159,7 +159,7 @@ package body GPR2.KB.Compiler_Iterator is
                   Config  : constant CDM.Constant_Reference_Type :=
                               CDM.Constant_Reference (Base.Compilers, C);
                   Matches : Match_Array
-                    (0 .. Integer'Max (0, Config.Prefix_Index));
+                              (0 .. Integer'Max (0, Config.Prefix_Index));
                   Matched : Boolean;
                   Prefix  : Unbounded_String;
                begin
@@ -170,6 +170,7 @@ package body GPR2.KB.Compiler_Iterator is
                         String (Key (C))
                         & " requires no compiler");
                      Continue := True;
+
                      Foreach_Language_Runtime
                        (Iterator       => Iterator,
                         Base           => Base,
@@ -183,16 +184,20 @@ package body GPR2.KB.Compiler_Iterator is
                         Descr          => Config,
                         Path_Order     => Path_Order,
                         Continue       => Continue);
+
                      Decrease_Indent (Main_Trace);
+
                      exit For_All_Files_In_Dir when not Continue;
+
                      Matched := False;
 
                   elsif not Config.Executable_Re.Is_Empty then
                      Match
                        (Config.Executable_Re.Element,
-                        Data       => Simple,
-                        Matches    => Matches);
+                        Data    => Simple,
+                        Matches => Matches);
                      Matched := Matches (0) /= No_Match;
+
                   else
                      Matched :=
                        (To_String (Config.Executable) & Exec_Suffix.all) =
@@ -258,13 +263,13 @@ package body GPR2.KB.Compiler_Iterator is
                if Ada.Directories.Exists (F) then
                   Trace (Main_Trace, "--------------------------------------");
                   Trace (Main_Trace,
-                    "Processing "
-                     & To_String (Config.Name) & " in " & Directory);
+                         "Processing "
+                         & To_String (Config.Name) & " in " & Directory);
+
                   Foreach_Language_Runtime
                     (Iterator       => Iterator,
                      Base           => Base,
-                     Name           =>
-                       To_Unbounded_String (String (Key (C))),
+                     Name           => To_Unbounded_String (String (Key (C))),
                      Executable     => Config.Executable,
                      Prefix         => Null_Unbounded_String,
                      From_Extra_Dir => From_Extra_Dir,
@@ -297,15 +302,17 @@ package body GPR2.KB.Compiler_Iterator is
       Extra_Dirs : String := "")
    is
       use GNATCOLL.Traces;
-      Selected_Targets_Set : Targets_Set_Id;
 
-      Dirs : GPR2.Containers.Value_List;
-      Map  : GPR2.Containers.Value_Set;
+      Selected_Targets_Set : Targets_Set_Id;
+      Dirs                 : GPR2.Containers.Value_List;
+      Map                  : GPR2.Containers.Value_Set;
 
       use GPR2.Containers.Value_Type_List;
 
       procedure Process_Path
-        (Path : String; Prefix : Character; Prepend_To_List : Boolean);
+        (Path            : String;
+         Prefix          : Character;
+         Prepend_To_List : Boolean);
       --  Add a directory to the list of directories to examine
 
       ------------------
@@ -313,12 +320,16 @@ package body GPR2.KB.Compiler_Iterator is
       ------------------
 
       procedure Process_Path
-        (Path : String; Prefix : Character; Prepend_To_List : Boolean)
+        (Path            : String;
+         Prefix          : Character;
+         Prepend_To_List : Boolean)
       is
          use GPR2.Containers.Value_Type_Set;
+
          First, Last : Natural;
       begin
          First := Path'First;
+
          while First <= Path'Last loop
             --  Skip null entries on PATH
             if Path (First) = GNAT.OS_Lib.Path_Separator then
@@ -369,13 +380,14 @@ package body GPR2.KB.Compiler_Iterator is
                         if not On_Windows
                           or else
                             (Final_Path'Length > 10
-                             and then
-                             Ada.Characters.Handling.To_Lower (Final_Path
+                               and then
+                             Characters.Handling.To_Lower (Final_Path
                                (Final_Path'First .. Final_Path'First + 9)) /=
                                 "c:\windows")
                         then
-                           Trace (Main_Trace,
-                                  "Will examine " & Prefix & " " & Final_Path);
+                           Trace
+                             (Main_Trace,
+                              "Will examine " & Prefix & " " & Final_Path);
 
                            if Prepend_To_List then
                               Prepend (Dirs, Prefix & Final_Path);
@@ -395,6 +407,7 @@ package body GPR2.KB.Compiler_Iterator is
       Dir        : GPR2.Containers.Value_Type_List.Cursor;
       Path_Order : Positive := 1;
       Continue   : Boolean;
+
    begin
       --  Preprocess the list of directories that will be searched. When a
       --  directory appears both in Extra_Dirs and in Path, we prepend it to
@@ -412,7 +425,7 @@ package body GPR2.KB.Compiler_Iterator is
       --  set to 'E' if the dir comes from extra_dirs, or 'P' if it comes from
       --  PATH.
 
-      if Ada.Environment_Variables.Exists ("PATH") then
+      if Environment_Variables.Exists ("PATH") then
          Process_Path (Ada.Environment_Variables.Value ("PATH"), 'P', False);
       end if;
 
@@ -423,6 +436,7 @@ package body GPR2.KB.Compiler_Iterator is
       Get_Targets_Set (Base, String (On_Target), Selected_Targets_Set);
 
       Dir := First (Dirs);
+
       while Has_Element (Dir) loop
          declare
             P : constant String := Element (Dir);
@@ -460,6 +474,12 @@ package body GPR2.KB.Compiler_Iterator is
       Path_Order     : Integer;
       Continue       : out Boolean)
    is
+      use External_Value_Nodes;
+      use External_Value_Lists;
+
+      use GNATCOLL.Traces;
+
+      use GPR2.Containers.Value_Type_List;
 
       function Is_Windows_Executable (Filename : String) return Boolean;
       --  Verify that a given filename is indeed an executable
@@ -510,12 +530,6 @@ package body GPR2.KB.Compiler_Iterator is
 
       Drop_Compiler : Boolean := False;
 
-      use External_Value_Nodes;
-      use External_Value_Lists;
-
-      use GNATCOLL.Traces;
-
-      use GPR2.Containers.Value_Type_List;
    begin
       Continue := True;
 
@@ -526,9 +540,9 @@ package body GPR2.KB.Compiler_Iterator is
 
       pragma Warnings (Off, "this code can never be executed");
       if On_Windows
-        and then not Is_Windows_Executable
-          (Directory & GNAT.OS_Lib.Directory_Separator
-           & To_String (Executable))
+           and then
+         not Is_Windows_Executable
+           (Directory & OS_Lib.Directory_Separator & To_String (Executable))
       then
          Continue := True;
          return;
@@ -536,14 +550,16 @@ package body GPR2.KB.Compiler_Iterator is
       pragma Warnings (On, "this code can never be executed");
 
       Comp.Name       := Name;
-      Comp.Path       := GPR2.Path_Name.Create_Directory
-        (Filename_Type
-           (GNAT.OS_Lib.Normalize_Pathname
+      Comp.Path       :=
+        GPR2.Path_Name.Create_Directory
+          (Filename_Type
+             (GNAT.OS_Lib.Normalize_Pathname
                 (Directory, Case_Sensitive => False)));
       Exec_Suffix := GNAT.OS_Lib.Get_Executable_Suffix;
-      Comp.Base_Name := To_Unbounded_String
-        (GNAT.Directory_Operations.Base_Name
-           (To_String (Executable), Suffix => Exec_Suffix.all));
+      Comp.Base_Name :=
+        To_Unbounded_String
+          (GNAT.Directory_Operations.Base_Name
+             (To_String (Executable), Suffix => Exec_Suffix.all));
       GNAT.OS_Lib.Free (Exec_Suffix);
       Comp.Path_Order := Path_Order;
       Comp.Prefix     := Prefix;
@@ -563,6 +579,7 @@ package body GPR2.KB.Compiler_Iterator is
                Messages         => Base.Messages,
                Processed_Value  => Target,
                Ignore_Compiler  => Drop_Compiler);
+
             if Drop_Compiler then
                return;
             end if;
@@ -604,6 +621,7 @@ package body GPR2.KB.Compiler_Iterator is
             Messages         => Base.Messages,
             Processed_Value  => Version,
             Ignore_Compiler  => Drop_Compiler);
+
             if Drop_Compiler then
                return;
             end if;
@@ -627,11 +645,13 @@ package body GPR2.KB.Compiler_Iterator is
             Messages         => Base.Messages,
             Processed_Value  => Variables,
             Ignore_Compiler  => Drop_Compiler);
+
             if Drop_Compiler then
                return;
             end if;
 
          C := First (Variables);
+
          while Has_Element (C) loop
             declare
                Ext : constant External_Value_Item :=
@@ -674,6 +694,7 @@ package body GPR2.KB.Compiler_Iterator is
          Messages         => Base.Messages,
          Processed_Value  => Languages,
          Ignore_Compiler  => Drop_Compiler);
+
       if Drop_Compiler then
          return;
       end if;
@@ -697,6 +718,7 @@ package body GPR2.KB.Compiler_Iterator is
             Messages         => Base.Messages,
             Processed_Value  => Runtimes,
             Ignore_Compiler  => Drop_Compiler);
+
          if Drop_Compiler then
             return;
          end if;
@@ -713,8 +735,8 @@ package body GPR2.KB.Compiler_Iterator is
             Comp.Any_Runtime     := True;
 
             CS := First (Descr.Default_Runtimes);
-            Defaults_Loop :
-            while Has_Element (CS) loop
+
+            Defaults_Loop : while Has_Element (CS) loop
                C2 := First (Runtimes);
                while Has_Element (C2) loop
                   if To_String (External_Value_Lists.Element (C2).Value)
@@ -725,14 +747,17 @@ package body GPR2.KB.Compiler_Iterator is
                      Comp.Default_Runtime := True;
                      exit Defaults_Loop;
                   end if;
+
                   Next (C2);
                end loop;
+
                Next (CS);
             end loop Defaults_Loop;
          end if;
       end if;
 
       C := First (Languages);
+
       while Has_Element (C) loop
          declare
             L : constant String :=
@@ -770,6 +795,7 @@ package body GPR2.KB.Compiler_Iterator is
                   Runtime_Specified => False,
                   From_Extra_Dir    => From_Extra_Dir,
                   Continue          => Continue);
+
                if not Continue then
                   return;
                end if;
@@ -777,6 +803,7 @@ package body GPR2.KB.Compiler_Iterator is
 
          else
             C2 := First (Runtimes);
+
             while Has_Element (C2) loop
                Comp.Runtime     := External_Value_Lists.Element (C2).Value;
                Comp.Alt_Runtime :=
@@ -790,6 +817,7 @@ package body GPR2.KB.Compiler_Iterator is
                   Runtime_Specified => False,
                   From_Extra_Dir    => From_Extra_Dir,
                   Continue          => Continue);
+
                if not Continue then
                   return;
                end if;
@@ -800,7 +828,6 @@ package body GPR2.KB.Compiler_Iterator is
 
          Next (C);
       end loop;
-
    end Foreach_Language_Runtime;
 
    ----------------------
@@ -810,8 +837,7 @@ package body GPR2.KB.Compiler_Iterator is
    procedure Get_Targets_Set
      (Base   : in out KB.Object;
       Target : String;
-      Id     : out Targets_Set_Id)
-   is
+      Id     : out Targets_Set_Id) is
    begin
       Id := Query_Targets_Set (Base, Name_Type (Target));
 

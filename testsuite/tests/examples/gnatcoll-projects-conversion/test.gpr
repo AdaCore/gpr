@@ -1,0 +1,6 @@
+with "gpr2";
+with "gnatcoll";
+with "./files/prj1";
+project Test is
+   for main use ("main.adb");
+end Test;

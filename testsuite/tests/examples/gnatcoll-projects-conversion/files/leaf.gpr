@@ -1,0 +1,39 @@
+project Leaf is
+  for Locally_Removed_Files use ("Locally_Removed_Files.Leaf");
+  package Binder is
+     for Switches ("Ada") use ("Binder.Leaf");
+     for Default_Switches ("Ada") use ("Binder.Leaf");
+  end Binder;
+  package Linker is
+     for Switches ("Ada") use ("Linker.Leaf");
+     for Default_Switches ("Ada") use ("Linker.Leaf");
+  end Linker;
+  package Metrics is
+     for Switches ("Ada") use ("Metrics.Leaf");
+     for Default_Switches ("Ada") use ("Metrics.Leaf");
+  end Metrics;
+  package Check is
+     for Switches ("Ada") use ("Check.Leaf");
+     for Default_Switches ("Ada") use ("Check.Leaf");
+  end Check;
+  package Gnatstub is
+     for Switches ("Ada") use ("Gnatstub.Leaf");
+     for Default_Switches ("Ada") use ("Gnatstub.Leaf");
+  end Gnatstub;
+  package Pretty_Printer is
+     for Switches ("Ada") use ("Pretty_Printer.Leaf");
+     for Default_Switches ("Ada") use ("Pretty_Printer.Leaf");
+  end Pretty_Printer;
+  package Finder is
+     for Switches ("Ada") use ("Finder.Leaf");
+     for Default_Switches ("Ada") use ("Finder.Leaf");
+  end Finder;
+  package Cross_Reference is
+     for Switches ("Ada") use ("Cross_Reference.Leaf");
+     for Default_Switches ("Ada") use ("Cross_Reference.Leaf");
+  end Cross_Reference;
+  package Eliminate is
+     for Switches ("Ada") use ("Eliminate.Leaf");
+     for Default_Switches ("Ada") use ("Eliminate.Leaf");
+  end Eliminate;
+end Leaf;
