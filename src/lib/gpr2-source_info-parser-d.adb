@@ -54,19 +54,22 @@ package body GPR2.Source_Info.Parser.D is
    is
       use Ada.Text_IO;
       use Ada.Strings.Fixed;
+      use GNAT;
 
       Artifacts : constant Project.Source.Artifact.Object := Source.Artifacts;
       Dep_Name  : constant Path_Name.Object := Artifacts.Dependency (0);
       Obj_Dir   : constant String := Source.View.Object_Directory.Value;
       Dep_File  : File_Type;
 
-      Last_Obj    : Natural;
-      Start       : Natural;
-      Finish      : Natural;
-      Looping     : Boolean := False;
-      Buffer      : String (1 .. 1024);
-      Last        : Natural;
-      C_Dep       : Dependency_Vectors.Cursor;
+      Last_Obj  : Natural;
+      Start     : Natural;
+      Finish    : Natural;
+      Looping   : Boolean := False;
+      Buffer    : String (1 .. 1024);
+      Last      : Natural;
+      C_Dep     : Dependency_Vectors.Cursor;
+
+      OK        : Boolean;
 
       function Is_Time_Stamp (S : String) return Boolean;
       --  Return True iff S has the format of a Time_Stamp_Type
@@ -77,8 +80,6 @@ package body GPR2.Source_Info.Parser.D is
 
       procedure Wrong_Format;
       --  Print message that file has wrong format
-
-      OK : Boolean;
 
       function Is_Time_Stamp (S : String) return Boolean is
         (S'Length = Time_String'Length
@@ -377,13 +378,13 @@ package body GPR2.Source_Info.Parser.D is
                   else
                      declare
                         Src_Name : constant String :=
-                                     GNAT.OS_Lib.Normalize_Pathname
+                                     OS_Lib.Normalize_Pathname
                                        (Unescape (Line (Start .. Finish)),
                                         Directory      => Obj_Dir,
                                         Resolve_Links  => False,
                                         Case_Sensitive => False);
                         Src_Simple : constant String :=
-                                       Ada.Directories.Simple_Name (Src_Name);
+                                       Directories.Simple_Name (Src_Name);
                      begin
                         Dependencies.Insert
                           (Before   => Dependency_Vectors.No_Element,
@@ -438,8 +439,8 @@ package body GPR2.Source_Info.Parser.D is
    begin
       while Source <= Path'Last loop
          if Source < Path'Last
-           and then Path (Source .. Source + 1) in "\\" | "\#" | "\ " | "\:"
-                                                 | "$$"
+              and then
+            Path (Source .. Source + 1) in "\\" | "\#" | "\ " | "\:" | "$$"
          then
             Source := Source + 1;
          end if;
