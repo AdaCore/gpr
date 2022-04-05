@@ -19,7 +19,6 @@
 with "gnatcoll";
 with "gnatcoll_iconv";
 with "gnatcoll_gmp";
-with "langkit_support";
 
 library project GPR2 is
 
@@ -79,6 +78,8 @@ library project GPR2 is
    Release_Options :=
      ("-O2", "-gnatn");
 
+   Langkit_Parser_Options := ("-g");
+
    package Compiler is
 
       case Build is
@@ -86,33 +87,26 @@ library project GPR2 is
             for Default_Switches ("Ada") use Common_Options & Checks_Options &
                                              Debug_Options;
             for Default_Switches ("C") use ("-g");
-
-            --  Langkit
-            for Switches ("gpr_parser-*") use ("-g", "-O0");
-            for Switches ("gpr_parser.*") use ("-g", "-O0");
-            for Switches ("adalog*") use  ("-g", "-O0");
-
+            Langkit_Parser_Options := Langkit_Parser_Options & ("-O0");
             for Switches ("gnatcov*") use ("-g", "-O0");
 
          when "release_checks" =>
             for Default_Switches ("Ada") use Common_Options & Checks_Options &
                                              Release_Options;
             for Default_Switches ("C") use ("-O2");
-
-            --  Langkit
-            for Switches ("gpr_parser-*") use ("-g", "-Ofast");
-            for Switches ("gpr_parser.*") use ("-g", "-Ofast");
-            for Switches ("adalog*") use  ("-g", "-Ofast");
+            Langkit_Parser_Options := Langkit_Parser_Options & ("-Ofast");
 
          when "release" =>
             for Default_Switches ("Ada") use Common_Options & Release_Options;
             for Default_Switches ("C") use ("-O2");
-
-            --  Langkit
-            for Switches ("gpr_parser-*") use ("-g", "-Ofast");
-            for Switches ("gpr_parser.*") use ("-g", "-Ofast");
-            for Switches ("adalog*") use  ("-g", "-Ofast");
+            Langkit_Parser_Options := Langkit_Parser_Options & ("-Ofast");
       end case;
+
+      --  Langkit parser
+      for Switches ("gpr_parser-*") use Langkit_Parser_Options & ("-gnatws");
+      for Switches ("gpr_parser_*") use Langkit_Parser_Options & ("-gnatws");
+      for Switches ("gpr_parser.*") use Langkit_Parser_Options & ("-gnatws");
+      for Switches ("gpr_parser-gdb.c") use Langkit_Parser_Options;
 
    end Compiler;
 

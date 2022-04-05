@@ -27,7 +27,7 @@ with Ada.Characters.Handling;
 
 with Gpr_Parser.Common;
 
-with Langkit_Support.Text;
+with Gpr_Parser_Support.Text;
 
 with GPR2.Project.Definition;
 with GPR2.Project.Parser;
@@ -35,7 +35,7 @@ with GPR2.Project.Registry.Attribute;
 
 package body GPR2.Project.Pretty_Printer is
 
-   use Langkit_Support.Text;
+   use Gpr_Parser_Support.Text;
 
    ------------
    -- Create --
