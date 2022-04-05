@@ -38,7 +38,8 @@ package body GPR2.Project.Source.Artifact is
       Source       : Project.Source.Object;
       Filename     : Filename_Type;
       Dir_Attr     : Artifact_Dir;
-      Full_Closure : Boolean := False) return GPR2.Path_Name.Object;
+      Full_Closure : Boolean := False) return GPR2.Path_Name.Object
+     with Pre => View.Is_Defined and then Source.Is_Defined;
    --  Find Filename in directory defined in attribute Dir_Attr in this
    --  source view and in the extended views if the Source is inherited.
    --  If Full_Closure is set, then the full closure of the extended
@@ -91,7 +92,7 @@ package body GPR2.Project.Source.Artifact is
    function Create
      (Source     : Project.Source.Object;
       Force_Spec : Boolean := False;
-      Filter     : Artifact_Filter := All_Artifacts) return Artifact.Object
+      Filter     : Artifact.Filter := All_Artifacts) return Artifact.Object
    is
       procedure Get_Object_Artifacts
         (BN      : Filename_Type;
@@ -102,17 +103,17 @@ package body GPR2.Project.Source.Artifact is
       --  Retrieve preprocessed source, callgraph, coverage and switches
       --  artifacts
 
-      Lang  : constant Language_Id := Source.Language;
-      View  : constant Project.View.Object :=
-                Definition.Strong (Source.View);
+      Lang         : constant Language_Id := Source.Language;
+      View         : constant Project.View.Object :=
+                       Definition.Strong (Source.View);
 
-      O_Suffix   : constant Filename_Type := View.Tree.Object_Suffix (Lang);
-      D_Suffix   : constant Filename_Type :=
-                     View.Tree.Dependency_Suffix (Lang);
-      C_Suffix   : constant Filename_Type := ".ci";
-      P_Suffix   : constant Filename_Type := ".prep";
-      S_Suffix   : constant Filename_Type := ".cswi";
-      Cov_Suffix : constant Filename_Type := ".sid";
+      O_Suffix     : constant Filename_Type := View.Tree.Object_Suffix (Lang);
+      D_Suffix     : constant Filename_Type :=
+                       View.Tree.Dependency_Suffix (Lang);
+      C_Suffix     : constant Filename_Type := ".ci";
+      P_Suffix     : constant Filename_Type := ".prep";
+      S_Suffix     : constant Filename_Type := ".cswi";
+      Cov_Suffix   : constant Filename_Type := ".sid";
 
       Object_Files : Index_Path_Name_Map.Map;
       Deps_Lib     : Index_Path_Name_Map.Map;
@@ -128,11 +129,10 @@ package body GPR2.Project.Source.Artifact is
       --------------------------
 
       procedure Get_Object_Artifacts
-        (BN      : Filename_Type;
-         Index   : Unit_Index)
-      is
+        (BN    : Filename_Type;
+         Index : Unit_Index) is
       begin
-         if Filter (Dependency_File_Artifact) then
+         if Filter (Dependency_File) then
             if Force_Spec then
                Deps_Lib.Include
                  (Index, GPR2.Path_Name.Create_File (BN & D_Suffix));
@@ -146,7 +146,7 @@ package body GPR2.Project.Source.Artifact is
          end if;
 
          if View.Kind /= K_Aggregate_Library then
-            if Filter (Object_File_Artifact) then
+            if Filter (Object_File) then
                if Force_Spec then
                   Object_Files.Include
                     (Index, GPR2.Path_Name.Create_File (BN & O_Suffix));
@@ -159,7 +159,7 @@ package body GPR2.Project.Source.Artifact is
                end if;
             end if;
 
-            if Filter (Dependency_File_Artifact) then
+            if Filter (Dependency_File) then
                if Force_Spec then
                   Deps_Obj.Include
                     (Index, GPR2.Path_Name.Create_File (BN & D_Suffix));
@@ -172,7 +172,7 @@ package body GPR2.Project.Source.Artifact is
                end if;
             end if;
 
-            if Filter (Callgraph_Artifact) then
+            if Filter (Artifact.Callgraph) then
                Callgraph.Include
                  (Index,
                   GPR2.Path_Name.Create_File
@@ -180,7 +180,7 @@ package body GPR2.Project.Source.Artifact is
                      Filename_Type (View.Object_Directory.Value)));
             end if;
 
-            if Filter (Coverage_Artifact) then
+            if Filter (Artifact.Coverage) then
                Coverage.Include
                  (Index,
                   GPR2.Path_Name.Create_File
@@ -188,7 +188,7 @@ package body GPR2.Project.Source.Artifact is
                      Filename_Type (View.Object_Directory.Value)));
             end if;
 
-            if Filter (Switches_Artifact) then
+            if Filter (Artifact.Switches) then
                Switches.Include
                  (Index,
                   GPR2.Path_Name.Create_File
@@ -202,18 +202,16 @@ package body GPR2.Project.Source.Artifact is
       -- Get_Source_Artifacts --
       --------------------------
 
-      procedure Get_Source_Artifacts
-      is
+      procedure Get_Source_Artifacts is
       begin
-         if Filter (Preprocessed_Source_Artifact) then
+         if Filter (Preprocessed_Source) then
             Preprocessed := GPR2.Path_Name.Create_File
               (Source.Path_Name.Simple_Name & P_Suffix,
                Filename_Optional (View.Object_Directory.Value));
          end if;
       end Get_Source_Artifacts;
 
-      BN   : constant Filename_Type :=
-               Source.Path_Name.Base_Filename;
+      BN : constant Filename_Type := Source.Path_Name.Base_Filename;
 
    begin
       if Source.Has_Units then
@@ -279,8 +277,7 @@ package body GPR2.Project.Source.Artifact is
       -- Get_Dep --
       -------------
 
-      function Get_Dep (F : Filename_Type) return GPR2.Path_Name.Object
-      is
+      function Get_Dep (F : Filename_Type) return GPR2.Path_Name.Object is
          Candidate, Candidate2 : GPR2.Path_Name.Object;
       begin
          if Location in In_Both | In_Library then
@@ -327,6 +324,7 @@ package body GPR2.Project.Source.Artifact is
             end if;
          --  At this point, Location is In_Both, and no if Actual_File is set
          --  then no LI file exists.
+
          elsif Actual_File then
             if Candidate.Is_Defined and then Candidate.Exists then
                return Candidate;
@@ -335,6 +333,7 @@ package body GPR2.Project.Source.Artifact is
             else
                return GPR2.Path_Name.Undefined;
             end if;
+
          elsif not Candidate2.Is_Defined then
             return Candidate;
          elsif not Candidate.Is_Defined then
@@ -376,9 +375,9 @@ package body GPR2.Project.Source.Artifact is
    ----------------
 
    function Dependency
-     (Self        : Object;
-      Index       : Unit_Index          := No_Index;
-      Location    : Dependency_Location := In_Both)
+     (Self     : Object;
+      Index    : Unit_Index          := No_Index;
+      Location : Dependency_Location := In_Both)
       return GPR2.Path_Name.Object is
    begin
       if Index <= 1 then
@@ -576,10 +575,10 @@ package body GPR2.Project.Source.Artifact is
       Lang   : constant Language_Id := Source.Language;
       View   : constant Project.View.Object :=
                  Definition.Strong (Source.View);
-      Result : GPR2.Path_Name.Set.Object;
       Name   : constant Filename_Type := Source.Path_Name.Simple_Name;
       O_Dir  : constant Filename_Type :=
                  Filename_Type (View.Object_Directory.Value);
+      Result : GPR2.Path_Name.Set.Object;
 
       procedure Append_File (Name : Filename_Type);
       --  Append full filename constructed from Name and Object_Dir to result

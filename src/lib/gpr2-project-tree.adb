@@ -1265,6 +1265,7 @@ package body GPR2.Project.Tree is
       end if;
 
       --  Add full project path in the message log
+
       Self.Messages.Append
         (Message.Create
            (Message.Information,
@@ -1638,7 +1639,8 @@ package body GPR2.Project.Tree is
       -- Conf_Descriptions --
       -----------------------
 
-      function Conf_Descriptions return Project.Configuration.Description_Set
+      function Conf_Descriptions
+        return Project.Configuration.Description_Set
       is
          Descr_Index : Natural := 0;
          Result      : Project.Configuration.Description_Set
@@ -3300,8 +3302,7 @@ package body GPR2.Project.Tree is
                            --  of the aggregated project, just exit now.
 
                            if Self.Messages.Has_Error then
-                              raise Project_Error
-                                with Pathname.Value;
+                              raise Project_Error with Pathname.Value;
                            end if;
 
                            --  Record aggregated view into the aggregate's view

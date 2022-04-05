@@ -276,13 +276,13 @@ package body GPR2.Project.View is
       function Found (Attribute : Project.Attribute.Object) return Boolean
          with Inline => True;
 
-      function Get_Attribute_From_View (View : Object)
-         return Project.Attribute.Object;
+      function Get_Attribute_From_View
+        (View : Object) return Project.Attribute.Object;
       --  Internal function to get attribute from a view
 
       procedure Check_Matching_Index
-         (Pattern : Project.Attribute.Object;
-          Result  : in out Project.Attribute.Object);
+        (Pattern : Project.Attribute.Object;
+         Result  : in out Project.Attribute.Object);
 
       procedure Get_Config_Attribute;
       --  Returns the config attribute value for Name if given on the command
@@ -333,8 +333,8 @@ package body GPR2.Project.View is
       -- Get_Attribute_From_View --
       -----------------------------
 
-      function Get_Attribute_From_View (View : Object)
-         return Project.Attribute.Object
+      function Get_Attribute_From_View
+        (View : Object) return Project.Attribute.Object
       is
          function Get_Pack return Project.Pack.Set.Cursor with Inline;
          function Get_Attrs return Project.Attribute.Set.Object with Inline;
@@ -1536,11 +1536,11 @@ package body GPR2.Project.View is
    -------------------
 
    function Has_Attribute
-       (Self   : Object;
-        Name   : Attribute_Id;
-        Pack   : Optional_Package_Id    := No_Package;
-        Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-        At_Pos : Unit_Index             := No_Index) return Boolean is
+     (Self   : Object;
+      Name   : Attribute_Id;
+      Pack   : Optional_Package_Id    := No_Package;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index             := No_Index) return Boolean is
    begin
       return Self.Attribute (Name, Pack, Index, At_Pos).Is_Defined;
    exception

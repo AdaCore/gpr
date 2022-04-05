@@ -274,7 +274,7 @@ package GPR2.Project.View is
       With_Config   : Boolean := True)
       return Project.Attribute.Set.Object
      with Pre => Self.Is_Defined;
-   --  See above, but for packages.
+   --  See above, but for packages
 
    function Attributes
      (Self          : Object;
@@ -283,7 +283,7 @@ package GPR2.Project.View is
       With_Config   : Boolean                := True)
       return Project.Attribute.Set.Object
      with Pre => Self.Is_Defined;
-   --  Get the list of attributes.
+   --  Get the list of attributes
 
    function Attribute_Location
      (Self  : Object;
@@ -347,9 +347,10 @@ package GPR2.Project.View is
           Post => Variable'Result.Is_Defined;
    --  Returns the variable with the given name
 
-   function Variable (Self : Object;
-                      Pack : Package_Id;
-                      Name : Name_Type) return Project.Variable.Object
+   function Variable
+     (Self : Object;
+      Pack : Package_Id;
+      Name : Name_Type) return Project.Variable.Object
      with Pre  => Self.Is_Defined and then Self.Has_Variables (Pack, Name),
           Post => Variable'Result.Is_Defined;
 
@@ -391,7 +392,7 @@ package GPR2.Project.View is
 
    function Has_Language (Self : Object; Name : Name_Type) return Boolean
      with Pre => Self.Is_Defined;
-   --  Whether Name is a language used by Self.
+   --  Whether Name is a language used by Self
 
    function Has_Languages (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -402,7 +403,7 @@ package GPR2.Project.View is
 
    function Languages (Self : Object) return Containers.Source_Value_List
      with Pre  => Self.Is_Defined;
-   --  Returns the languages used on this project.
+   --  Returns the languages used on this project
 
    function Source_Directories (Self : Object) return Project.Attribute.Object
      with Pre => Self.Is_Defined
@@ -528,7 +529,7 @@ package GPR2.Project.View is
    function Mains (Self : Object) return GPR2.Unit.Source_Unit_Vectors.Vector
      with Pre  => Self.Is_Defined,
           Post => not Self.Has_Mains or else Mains'Result.Length > 0;
-   --  returns the list of main bodies.
+   --  returns the list of main bodies
 
    function Executables (Self : Object) return GPR2.Path_Name.Set.Object
      with Pre  => Self.Is_Defined,
@@ -634,9 +635,9 @@ package GPR2.Project.View is
    --  As above but for the Object_Dir attribute
 
    function Source_Subdirectory (Self : Object) return GPR2.Path_Name.Object
-     with Pre =>
-       Self.Is_Defined
-       and then Self.Kind not in K_Configuration | K_Abstract;
+     with Pre  => Self.Is_Defined
+                  and then Self.Kind not in K_Configuration | K_Abstract,
+          Post => Source_Subdirectory'Result.Is_Defined;
    --  Returns source subdirectory in object directory if parameter Src_Subdirs
    --  is defined on Tree.Load call.
 
@@ -666,9 +667,9 @@ package GPR2.Project.View is
       Language : Language_Id := No_Language)
       return GPR2.Path_Name.Set.Object
      with Pre => Self.Is_Defined
-       and then (not Self.Is_Library
-                 or else Self.Library_Name = Name
-                 or else Self.Is_Aggregated_In_Library);
+                 and then (not Self.Is_Library
+                           or else Self.Library_Name = Name
+                           or else Self.Is_Aggregated_In_Library);
    --  Returns binder artifact files from main procedure name for standard
    --  project or from library name for library project.
 
@@ -682,12 +683,12 @@ package GPR2.Project.View is
       Directory_Pattern : GPR2.Filename_Optional;
       Source            : GPR2.Source_Reference.Value.Object;
       File_CB           : not null access procedure
-        (File : GPR2.Path_Name.Object);
+                            (File : GPR2.Path_Name.Object);
       Directory_CB      : access procedure
-        (Directory       : GPR2.Path_Name.Object;
-         Is_Root_Dir     : Boolean;
-         Do_Dir_Visit    : in out Boolean;
-         Do_Subdir_Visit : in out Boolean) := null)
+                            (Directory       : GPR2.Path_Name.Object;
+                             Is_Root_Dir     : Boolean;
+                             Do_Dir_Visit    : in out Boolean;
+                             Do_Subdir_Visit : in out Boolean) := null)
       with Pre => Self.Is_Defined;
    --  Visit Directory_Pattern (recursive if "**" at end) calling callbacks
    --  on each directory/file visited.
@@ -699,20 +700,24 @@ package GPR2.Project.View is
    --  Source reference is used when messages added to Self.Tree's log
 
    function Executable
-     (Self    : Object;
-      Source  : Simple_Name;
-      At_Pos  : Unit_Index) return GPR2.Path_Name.Object;
+     (Self   : Object;
+      Source : Simple_Name;
+      At_Pos : Unit_Index) return GPR2.Path_Name.Object
+     with Pre  => Self.Is_Defined;
    --  Returns the full pathname of the main executable for the given main
 
    function Main
      (Self       : Object;
-      Executable : Simple_Name) return GPR2.Unit.Source_Unit_Identifier;
+      Executable : Simple_Name) return GPR2.Unit.Source_Unit_Identifier
+     with Pre  => Self.Is_Defined;
    --  Returns the body unit corresponding to the given executable result
 
-   procedure Reindex_Unit (Self : Object; From, To : Name_Type);
+   procedure Reindex_Unit (Self : Object; From, To : Name_Type)
+     with Pre  => Self.Is_Defined;
    --  Change name of unit in unit index used to get unit info by unit name
 
-   procedure Hide_Unit_Body (Self : Object; Unit : Name_Type);
+   procedure Hide_Unit_Body (Self : Object; Unit : Name_Type)
+     with Pre  => Self.Is_Defined;
    --  Remove unit body from unit info index
 
    --  To ease the use of some attributes (some have synonyms for example)
@@ -807,9 +812,9 @@ private
    --  configuration view, extending view if it exists and Self view.
 
    function Pack
-      (Self : Object;
-       Name : Package_Id) return Project.Pack.Object;
-   --  Get the package with the given Name.
+     (Self : Object;
+      Name : Package_Id) return Project.Pack.Object;
+   --  Get the package with the given Name
 
    Undefined : constant Object :=
                  (Definition_References.Null_Ref with null record);

@@ -31,16 +31,17 @@ with GPR2.Path_Name.Set;
 
 package GPR2.Project.Source.Artifact is
 
-   type Artifact_Category is
-     (Object_File_Artifact,
-      Dependency_File_Artifact,
-      Callgraph_Artifact,
-      Switches_Artifact,
-      Preprocessed_Source_Artifact,
-      Coverage_Artifact);
+   type Category is
+     (Object_File,
+      Dependency_File,
+      Callgraph,
+      Switches,
+      Preprocessed_Source,
+      Coverage);
 
-   type Artifact_Filter is array (Artifact_Category) of Boolean;
-   All_Artifacts : constant Artifact_Filter := (others => True);
+   type Filter is array (Category) of Boolean;
+
+   All_Artifacts : constant Filter;
 
    type Object is tagged private;
 
@@ -59,7 +60,7 @@ package GPR2.Project.Source.Artifact is
    function Create
      (Source     : Project.Source.Object;
       Force_Spec : Boolean := False;
-      Filter     : Artifact_Filter := All_Artifacts) return Artifact.Object
+      Filter     : Artifact.Filter := All_Artifacts) return Artifact.Object
      with Pre => Source.Is_Defined;
    --  Constructor for Object defining the artifacts for the given Source.
    --  Force_Spec is for the case when specification has implementation part
@@ -100,9 +101,10 @@ package GPR2.Project.Source.Artifact is
       Location      : Dependency_Location := In_Both;
       Actual_File   : Boolean             := False;
       Maybe_No_Body : Boolean             := False)
-      return GPR2.Path_Name.Object;
+      return GPR2.Path_Name.Object
+     with Pre => Source.Is_Defined;
    --  Retrieve just the dependency file (LI file) corresponding to the unit
-   --- in Source at Index (if any).
+   --  in Source at Index (if any).
    --  This file can be searched in Library_ALI_Dir or Object_Dir or in both,
    --  this is specified by the location parameter.
    --  If Actual_File is set, then only files that actually exist on the hard
@@ -135,8 +137,9 @@ package GPR2.Project.Source.Artifact is
      with Pre => Self.Is_Defined and then Self.Has_Preprocessed_Source;
    --  Returns the file containing the pre-processed source
 
-   function Has_Callgraph (Self  : Object;
-                           Index : Unit_Index := No_Index) return Boolean
+   function Has_Callgraph
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if a callgraph is defined
 
@@ -146,8 +149,9 @@ package GPR2.Project.Source.Artifact is
      with Pre => Self.Is_Defined and then Self.Has_Callgraph (Index);
    --  Returns the callgraph file
 
-   function Has_Coverage (Self : Object;
-                          Index : Unit_Index := No_Index) return Boolean
+   function Has_Coverage
+     (Self : Object;
+      Index : Unit_Index := No_Index) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if a coverage is defined
 
@@ -168,6 +172,8 @@ package GPR2.Project.Source.Artifact is
 private
 
    use type GPR2.Path_Name.Object;
+
+   All_Artifacts : constant Filter := (others => True);
 
    package Index_Path_Name_Map is new Ada.Containers.Ordered_Maps
      (Unit_Index, GPR2.Path_Name.Object);
@@ -198,12 +204,16 @@ private
    function Has_Preprocessed_Source (Self : Object) return Boolean is
      (Self.Preprocessed_Src.Is_Defined);
 
-   function Has_Callgraph (Self  : Object;
-                           Index : Unit_Index := No_Index) return Boolean is
+   function Has_Callgraph
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return Boolean
+   is
      (Self.Callgraph.Contains (Index));
 
-   function Has_Coverage (Self  : Object;
-                          Index : Unit_Index := No_Index) return Boolean is
+   function Has_Coverage
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return Boolean
+   is
      (Self.Coverage.Contains (Index));
 
 end GPR2.Project.Source.Artifact;
