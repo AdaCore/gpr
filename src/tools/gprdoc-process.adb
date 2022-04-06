@@ -95,7 +95,7 @@ procedure GPRdoc.Process (Display : Display_Kind) is
          end if;
 
          case Attr_Def.Index_Type is
-         when PRA.No_Index | PRA.Env_Var_Name_Index =>
+         when PRA.No_Index | PRA.String_Index | PRA.Env_Var_Name_Index =>
             null;
          when PRA.Unit_Index | PRA.Language_Index =>
             Text_IO.Put (Item => K_Separator & "case-insensitive index");
