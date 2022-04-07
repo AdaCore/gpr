@@ -387,6 +387,9 @@ package body GPR2.Project.Registry.Attribute is
          when No_Index =>
             return False; -- Don't care
 
+         when String_Index =>
+            return True;
+
          when Unit_Index =>
             return False;
 
@@ -1599,6 +1602,15 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
+
+   --  binder.bindfile_option_substitution
+   Add
+     (Create (Bindfile_Option_Substitution, Pack.Binder),
+      Index_Type           => String_Index,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Is_Allowed_In        => (K_Configuration | K_Abstract
+                               | K_Standard => True, others => False));
 
    --  linker.required_switches
    Add

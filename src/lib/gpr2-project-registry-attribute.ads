@@ -50,6 +50,7 @@ package GPR2.Project.Registry.Attribute is
 
    type Index_Value_Type is
      (No_Index,
+      String_Index,
       Unit_Index,
       Env_Var_Name_Index,
       File_Index,
@@ -57,6 +58,7 @@ package GPR2.Project.Registry.Attribute is
       Language_Index,
       FileGlob_Or_Language_Index);
    --  No_Index: attribute does not accept indexes
+   --  String_Index: case sensitive index.
    --  Unit_Index: the attribute expects a unit name as index.
    --    Case insensitive.
    --  Env_Var_Name_Index: the attribute expects an environment variable
@@ -294,6 +296,8 @@ package GPR2.Project.Registry.Attribute is
                                    +"artifacts_in_exec_dir";
    Artifacts_In_Object_Dir     : constant Attribute_Id :=
                                    +"artifacts_in_object_dir";
+   Bindfile_Option_Substitution : constant Attribute_Id :=
+                                   +"bindfile_option_substitution";
    Body_N                      : constant Attribute_Id := +"body";
    Body_Suffix                 : constant Attribute_Id := +"body_suffix";
    Casing                      : constant Attribute_Id := +"casing";
