@@ -25,7 +25,6 @@ with GNAT.Case_Util;
 with GNAT.OS_Lib;
 with GNATCOLL.Utils;
 
-with GPR2.Message;
 with GPR2.Project.Tree;
 
 package body GPRtools.Util is
@@ -272,16 +271,11 @@ package body GPRtools.Util is
                     then Options.Tree.Log_Messages.all
                     else Log);
    begin
-      for C in Used_Log.Iterate
-        (Information => Options.Verbosity = Very_Verbose,
-         Warning     => Options.Warnings,
-         Error       => True,
-         Lint        => Options.Verbosity = Very_Verbose,
-         Read        => False,
-         Unread      => True)
-      loop
-         Used_Log (C).Output (Options.Full_Path_Name_For_Brief);
-      end loop;
+      Used_Log.Output_Messages
+        (Information    => Options.Verbosity = Very_Verbose,
+         Warning        => Options.Warnings,
+         Lint           => Options.Verbosity = Very_Verbose,
+         Full_Path_Name => Options.Full_Path_Name_For_Brief);
    end Output_Messages;
 
    ------------------
