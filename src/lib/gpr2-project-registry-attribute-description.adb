@@ -1953,8 +1953,8 @@ begin
       New_Item  =>
         "Set of patterns to ignore when synchronizing sources from the build" &
         " master to the slaves. A set of predefined patterns are supported " &
-        "(e.g. *.o, *.ali, *.exe, etc.), this attributes make it possible to" &
-        " add some more patterns."
+        "(e.g. *.o, *.ali, *.exe, etc.), this attribute makes it possible" &
+        " to add some more patterns."
      );
 
    --  Remote.Root_Dir
