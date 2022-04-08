@@ -57,8 +57,8 @@ PROFILER       = no
 GPRINSTALL     = gprinstall
 PYTHON         = python
 
-# Whether to use gpr<name> or the alternate gpr2<name> tools names
-GPR2_TOOLS_PREFIX=gpr
+# Prefix to use for non-productized tools
+GPR2_EDGE_TOOLS_PREFIX=gpr2
 
 # Whether we want to force a (re-)generation of the langkit parser.
 # Set this to "force" to regenerate the parser.
@@ -124,7 +124,7 @@ else
 endif
 
 GPR_OPTIONS=${GTARGET} -XGPR2_BUILD=${GPR2_BUILD} \
-        -XGPR2_TOOLS_PREFIX=${GPR2_TOOLS_PREFIX} \
+        -XGPR2_EDGE_TOOLS_PREFIX=${GPR2_EDGE_TOOLS_PREFIX} \
         -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}"
 
 BUILDER=gprbuild -p -m -j${PROCESSORS} ${GPR_OPTIONS} ${GPRBUILD_OPTIONS} \
@@ -230,11 +230,11 @@ ifneq (${HOST},${TARGET})
 	echo "TARGET=${TARGET}" >> makefile.setup
 endif
 	echo "GPR2KBDIR=${GPR2KBDIR}" >> makefile.setup
-	echo "GPR2_TOOLS_PREFIX=${GPR2_TOOLS_PREFIX}" >> makefile.setup
+	echo "GPR2_EDGE_TOOLS_PREFIX=${GPR2_EDGE_TOOLS_PREFIX}" >> makefile.setup
 	echo "PYTHON=${PYTHON}" >> makefile.setup
 
 setup2: setup
-	echo "GPRINSTALL=\"${BUILD_ROOT}/${GPR2_BUILD}/obj-tools/${GPR2_TOOLS_PREFIX}install\"" >> makefile.setup
+	echo "GPRINSTALL=\"${BUILD_ROOT}/${GPR2_BUILD}/obj-tools/${GPR2_EDGE_TOOLS_PREFIX}install\"" >> makefile.setup
 
 ###########
 # Cleanup #
