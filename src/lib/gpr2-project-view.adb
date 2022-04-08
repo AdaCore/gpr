@@ -2127,6 +2127,40 @@ package body GPR2.Project.View is
          Directory => Filename_Optional (Self.Library_Directory.Dir_Name));
    end Library_Version_Filename;
 
+   ---------------------
+   -- Limited_Imports --
+   ---------------------
+
+   function Limited_Imports
+     (Self : Object; Recursive : Boolean := False) return Set.Object
+   is
+      Result : GPR2.Project.View.Set.Object;
+
+      procedure Add (Self : Object);
+      --  Add Self imported projects
+
+      ---------
+      -- Add --
+      ---------
+
+      procedure Add (Self : Object) is
+         Position : Set.Set.Cursor;
+         Inserted : Boolean;
+      begin
+         for Import of Definition.Get_RO (Self).Limited_Imports loop
+            Result.Insert (Import, Position, Inserted);
+
+            if Inserted and then Recursive then
+               Add (Import);
+            end if;
+         end loop;
+      end Add;
+
+   begin
+      Add (Self);
+      return Result;
+   end Limited_Imports;
+
    ----------
    -- Main --
    ----------

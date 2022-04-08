@@ -115,6 +115,11 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns all imported project views
 
+   function Limited_Imports
+     (Self : Object; Recursive : Boolean := False) return Set.Object
+     with Pre => Self.Is_Defined;
+   --  Returns all limited imported project views
+
    function Is_Extending
      (Self : Object; Parent : Object'Class := Undefined) return Boolean
      with Pre => Self.Is_Defined;
