@@ -634,6 +634,11 @@ package GPR2.Project.View is
        and then Self.Kind not in K_Configuration | K_Abstract;
    --  As above but for the Object_Dir attribute
 
+   function Has_Source_Subdirectory (Self : Object) return Boolean
+     with Pre => Self.Is_Defined
+                 and then Self.Kind not in K_Configuration | K_Abstract;
+   --  Returns True if a Src_Subdires is setup in the corresponding tree
+
    function Source_Subdirectory (Self : Object) return GPR2.Path_Name.Object
      with Pre  => Self.Is_Defined
                   and then Self.Kind not in K_Configuration | K_Abstract,

@@ -1696,6 +1696,15 @@ package body GPR2.Project.View is
       return Definition.Has_Source (Self, Filename);
    end Has_Source;
 
+   -----------------------------
+   -- Has_Source_Subdirectory --
+   -----------------------------
+
+   function Has_Source_Subdirectory (Self : Object) return Boolean is
+   begin
+      return Self.Tree.all.Has_Src_Subdirs;
+   end Has_Source_Subdirectory;
+
    -----------------
    -- Has_Sources --
    -----------------
