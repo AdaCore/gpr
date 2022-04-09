@@ -928,6 +928,15 @@ package body GPR2.Project.Tree is
       return Self.Runtime.Is_Defined;
    end Has_Runtime_Project;
 
+   ---------------------
+   -- Has_Src_Subdirs --
+   ---------------------
+
+   function Has_Src_Subdirs (Self : Object) return Boolean is
+   begin
+      return Self.Src_Subdirs /= Null_Unbounded_String;
+   end Has_Src_Subdirs;
+
    -----------------
    -- Instance_Of --
    -----------------

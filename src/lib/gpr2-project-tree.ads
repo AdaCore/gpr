@@ -363,6 +363,10 @@ package GPR2.Project.Tree is
    --  each project, the actual {executable,object,library} directories are
    --  {<exec>,<obj>,<lib>}/<sub>.
 
+   function Has_Src_Subdirs (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if the Src_Subdirs has been defined
+
    function Src_Subdirs (Self : Object) return Filename_Optional;
    --  Returns the src_subdirs parameter <sub> of the project tree such that,
    --  for each project, the actual source directories list will be prepended
