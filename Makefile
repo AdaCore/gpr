@@ -112,7 +112,7 @@ ifneq (${GPR2_BUILD},gnatcov)
    COVERAGE_BUILD_FLAGS=
 else
    COVERAGE_BUILD_FLAGS= \
-           --implicit-with=gnatcov_rts_full \
+           --implicit-with=gnatcov_rts \
            --src-subdirs=gnatcov-instr
    COVERAGE_INSTR_FLAGS= -XGPR2_BUILD=${GPR2_BUILD} \
            -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}" \

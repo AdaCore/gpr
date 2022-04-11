@@ -126,7 +126,7 @@ class BuilderAndRunner(object):
                 ["gprbuild", "-P", project,
                  "-XGPR2_BUILD=gnatcov", "-XXMLADA_BUILD=static"]
                 + vars
-                + ["--src-subdirs=gnatcov-instr", "--implicit-with=gnatcov_rts_full"]
+                + ["--src-subdirs=gnatcov-instr", "--implicit-with=gnatcov_rts"]
                 + args
             )
         else:
