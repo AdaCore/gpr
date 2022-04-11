@@ -168,11 +168,6 @@ endif
 build-tools: build-static coverage-instrument
 	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
 		-XLANGKIT_SUPPORT_BUILD=static ${GPR2TOOLS}
-ifeq (${GPR2_BUILD},gnatcov)
-# ignore the gpr_parser during coverage
-	rm ${BUILD_ROOT}/${GPR2_BUILD}/obj-static/gpr_parser*.sid
-	rm ${BUILD_ROOT}/${GPR2_BUILD}/lib-static/gpr_parser*.sid
-endif
 
 # Gnatcov instrumentation
 coverage-instrument:

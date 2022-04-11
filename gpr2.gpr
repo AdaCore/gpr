@@ -132,4 +132,12 @@ library project GPR2 is
       for Switches (others) use ("-m", "-j" & Processors);
    end Builder;
 
+   --------------
+   -- Coverage --
+   --------------
+
+   package Coverage is
+      for Excluded_Units use ("gpr_parser*");
+   end Coverage;
+
 end GPR2;
