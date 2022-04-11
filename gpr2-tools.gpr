@@ -45,35 +45,14 @@ project GPR2.Tools is
    -- Compiler --
    --------------
 
-   Common_Options := GPR2.Common_Options;
-   --  Common options used for the Debug and Release modes
-
-   Checks_Options :=
-     ("-gnata", "-gnatVa", "-gnato", "-fstack-check");
-   --  Common options used to enable checking for the Debug and Release_Checks
-   --  modes
-
-   Debug_Options :=
-     ("-g", "-gnatQ", "-gnatwe");
-
-   Release_Options :=
-     ("-O2", "-gnatn");
-
    package Compiler is
+      for Default_Switches ("Ada") use GPR2.Compiler'Default_Switches ("Ada");
 
       case Build is
-         when "debug" =>
-            for Default_Switches ("Ada") use Common_Options & Checks_Options
-            & Debug_Options;
+         when "gnatcov" =>
+            for Default_Switches ("gnatcov*") use GPR2.Debug_Options;
 
-            for Default_Switches ("gnatcov*") use Debug_Options;
-
-         when "release_checks" =>
-            for Default_Switches ("Ada") use Common_Options & Release_Options
-            & Checks_Options;
-
-         when "release" =>
-            for Default_Switches ("Ada") use Common_Options & Release_Options;
+         when others =>
       end case;
 
    end Compiler;
