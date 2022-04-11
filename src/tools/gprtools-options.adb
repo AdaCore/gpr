@@ -235,7 +235,7 @@ package body GPRtools.Options is
          Parser.Add_Argument
            (Config_Group,
             Create (Name           => "--db",
-                    Help           => "Parse ""dir"" as an additional " &
+                    Help           => "Parse ""dir"" as an additional" &
                                       " knowledge base",
                     In_Switch_Attr => False,
                     Delimiter      => Space,
@@ -251,7 +251,7 @@ package body GPRtools.Options is
       if Allow_Distributed then
          Distributed_Group :=
            Parser.Add_Argument_Group
-             ("distributed", On_Switch'Access,
+             ("Distributed build", On_Switch'Access,
               Help => "Distributed compilation mode switches.",
               Last => True);
 
@@ -259,7 +259,7 @@ package body GPRtools.Options is
            (Distributed_Group,
             Create (Name           => "--distributed",
                     Help           => "Activate the remote mode on specified" &
-                                      " nodes",
+                                      " node(s), or automatically.",
                     In_Switch_Attr => False,
                     Delimiter      => Equal,
                     Parameter      => "node1[,node2]",
@@ -270,7 +270,7 @@ package body GPRtools.Options is
                     Help           => "Use a specific slave's environment",
                     In_Switch_Attr => False,
                     Delimiter      => Equal,
-                    Parameter      => "name",
+                    Parameter      => "node",
                     Default        => "@auto@"));
          Parser.Add_Argument
            (Distributed_Group,
@@ -657,12 +657,8 @@ package body GPRtools.Options is
             return False;
          end if;
 
-         if Opt.Tree.Is_Defined
-           and then Opt.Tree.Has_Messages
-         then
+         if Opt.Tree.Has_Messages then
             Display (Opt.Tree.Log_Messages.all);
-         else
-            raise;
          end if;
 
          return False;

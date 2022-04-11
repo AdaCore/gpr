@@ -124,7 +124,8 @@ package GPRtools.Options is
       Absent_Dir_Error   : Boolean;
       Handle_Information : Boolean := False;
       Handle_Errors      : Boolean := True;
-      Handle_Lint        : Boolean := False) return Boolean;
+      Handle_Lint        : Boolean := False) return Boolean
+     with Pre => Opt.Tree /= null;
    --  Load project giiven in the options and display errors based on the
    --  selection given by Handle_{Error|Lint|Information).
 

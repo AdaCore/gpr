@@ -21,7 +21,6 @@ with Ada.Exceptions;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
-with GNAT.Command_Line;
 with GNAT.OS_Lib;
 
 with GNATCOLL.Traces;
@@ -777,12 +776,6 @@ begin
    Util.Output_Messages (Options);
 
 exception
-   when GNAT.Command_Line.Exit_From_Command_Line =>
-      null;
-
-   when GNAT.Command_Line.Invalid_Switch =>
-      GPRtools.Util.Fail_Program ("");
-
    when E : GPRtools.Usage_Error =>
       Text_IO.Put_Line
         (Text_IO.Standard_Error,
@@ -795,5 +788,5 @@ exception
 
    when E : others =>
       GPRtools.Util.Fail_Program
-        ("cannot parse project: " & Exception_Information (E));
+        ("Fatal error: " & Exception_Information (E));
 end GPRclean.Main;
