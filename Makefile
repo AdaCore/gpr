@@ -64,18 +64,16 @@ GPR2_EDGE_TOOLS_PREFIX=gpr2
 # Set this to "force" to regenerate the parser.
 FORCE_PARSER_GEN=
 
-# check for out-of-tree build
-ifeq (${SOURCE_DIR},.)
-GPR2=gpr2.gpr
-GPR2TOOLS=gpr2-tools.gpr
-GPR2KB=src/kb/collect_kb.gpr
-GPR2KBDIR=src/kb/gprconfig_kb
-BUILD_ROOT=.build
-else
 GPR2=${SOURCE_DIR}/gpr2.gpr
 GPR2TOOLS=${SOURCE_DIR}/gpr2-tools.gpr
+GPR2NAME=${SOURCE_DIR}/gpr2-name.gpr
 GPR2KB=${SOURCE_DIR}/src/kb/collect_kb.gpr
 GPR2KBDIR=${SOURCE_DIR}/src/kb/gprconfig_kb
+
+# check for out-of-tree build
+ifeq (${SOURCE_DIR},.)
+BUILD_ROOT=.build
+else
 BUILD_ROOT=.
 endif
 LANGKIT_GENERATED_SRC=${BUILD_ROOT}/lkparser
@@ -116,8 +114,7 @@ else
            --src-subdirs=gnatcov-instr
    COVERAGE_INSTR_FLAGS= -XGPR2_BUILD=${GPR2_BUILD} \
            -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}" \
-           -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-           -XLANGKIT_SUPPORT_BUILD=static
+           -XLIBRARY_TYPE=static -XXMLADA_BUILD=static
    COVERAGE_INSTR=gnatcov instrument --level $(GNATCOV_LEVEL) \
            --dump-trigger=atexit \
             ${COVERAGE_INSTR_FLAGS}
@@ -140,7 +137,7 @@ UNINSTALLER=${INSTALLER} -p -f --uninstall
 # build #
 #########
 
-all: ${LIBGPR2_TYPES:%=build-%} build-tools
+all: ${LIBGPR2_TYPES:%=build-%} build-tools build-gprname
 
 # Knowledge base
 ${KB_BUILD_DIR}:
@@ -159,7 +156,7 @@ ${LANGKIT_GENERATED_SRC}: $(wildcard ${SOURCE_DIR}/langkit/language/**/*.py) ${F
 build-%: ${KB_BUILD_DIR}/config.kb ${LANGKIT_GENERATED_SRC}
 ifneq (${GPR2_BUILD},gnatcov)
 	${BUILDER} -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
-		-XLANGKIT_SUPPORT_BUILD=$* ${GPR2}
+		${GPR2}
 else
 	echo "gpr2 library built from gpr2-tools in gnatcov mode"
 endif
@@ -167,7 +164,12 @@ endif
 # Gpr2 tools
 build-tools: build-static coverage-instrument
 	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-		-XLANGKIT_SUPPORT_BUILD=static ${GPR2TOOLS}
+		${GPR2TOOLS}
+
+# gprname is built separately: it requires libadalang
+build-gprname: build-static coverage-instrument
+	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
+	  -XLANGKIT_SUPPORT_BUILD=static ${GPR2NAME}
 
 # Gnatcov instrumentation
 coverage-instrument:
@@ -178,6 +180,7 @@ ifeq (${GPR2_BUILD},gnatcov)
 	mkdir -p "${BUILD_ROOT}/${GPR2_BUILD}"
 
 	${COVERAGE_INSTR} -P ${GPR2TOOLS}
+	${COVERAGE_INSTR} -P ${GPR2NAME}
 endif
 
 # Documentation
@@ -198,11 +201,16 @@ ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2-tools))
 	${UNINSTALLER} $(notdir ${GPR2TOOLS})
 endif
 
-install: uninstall-libs ${LIBGPR2_TYPES:%=install-%} install-tools
+uninstall-gprname:
+ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2-name))
+	${UNINSTALLER} $(notdir ${GPR2NAME})
+endif
+
+install: uninstall-libs ${LIBGPR2_TYPES:%=install-%} install-tools \
+           install-gprname
 
 install-%:
 	${INSTALLER} -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
-		-XLANGKIT_SUPPORT_BUILD=$* \
 		--build-name=$* \
 		--build-var=LIBRARY_TYPE \
 		--build-var=GPR2_LIBRARY_TYPE \
@@ -210,8 +218,12 @@ install-%:
 
 install-tools: uninstall-tools
 	${INSTALLER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-		-XLANGKIT_SUPPORT_BUILD=static --build-name=static \
-		--mode=usage ${GPR2TOOLS}
+		--build-name=static --mode=usage ${GPR2TOOLS}
+
+install-gprname: uninstall-gprname
+	${INSTALLER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
+	  -XLANGKIT_SUPPORT_BUILD=static --build-name=static \
+          --mode=usage ${GPR2NAME}
 
 #########
 # setup #
@@ -233,7 +245,7 @@ endif
 	echo "PYTHON=${PYTHON}" >> makefile.setup
 
 setup2: setup
-	echo "GPRINSTALL=\"${BUILD_ROOT}/${GPR2_BUILD}/obj-tools/${GPR2_EDGE_TOOLS_PREFIX}install\"" >> makefile.setup
+	echo "GPRINSTALL=\"${BUILD_ROOT}/${GPR2_BUILD}/obj-tools/gprinstall\"" >> makefile.setup
 
 ###########
 # Cleanup #
