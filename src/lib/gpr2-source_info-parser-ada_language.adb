@@ -23,7 +23,9 @@ with Gpr_Parser_Support.Text;
 with Gpr_Parser.Analysis;
 with Gpr_Parser.Common;
 
+with GPR2.File_Readers;
 with GPR2.Project.Source;
+with GPR2.Project.Tree;
 with GPR2.Source_Info.Parser.Registry;
 with GPR2.Source_Reference.Identifier.Set;
 with GPR2.Unit;
@@ -308,7 +310,10 @@ package body GPR2.Source_Info.Parser.Ada_Language is
          end case;
       end Callback;
 
-      Ctx    : constant Analysis_Context := Create_Context;
+      Ctx    : constant Analysis_Context :=
+                 Create_Context
+                   (File_Reader => GPR2.File_Readers.Convert
+                      (Source.View.Tree.File_Reader));
       A_Unit : constant Analysis_Unit    :=
                  Get_From_File
                    (Ctx, Source.Path_Name.Value,

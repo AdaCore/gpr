@@ -1,0 +1,5 @@
+description:
+    file_reader used when loading project's tree
+driver: build_and_run
+project_file: test
+main: main

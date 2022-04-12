@@ -451,12 +451,18 @@ package body GPR2.Project.Parser is
    function Parse
      (Filename      : GPR2.Path_Name.Object;
       Implicit_With : GPR2.Path_Name.Set.Object;
-      Messages      : in out Log.Object) return Object
+      Messages      : in out Log.Object;
+      File_Reader   : Gpr_Parser_Support.File_Readers.File_Reader_Reference :=
+                        Gpr_Parser_Support.File_Readers.
+                          No_File_Reader_Reference
+     ) return Object
    is
       use Ada.Characters.Conversions;
       use Ada.Strings.Wide_Wide_Unbounded;
 
-      Context : constant Analysis_Context := Create_Context ("UTF-8");
+      Context : constant Analysis_Context :=
+                  Create_Context (Charset     => "UTF-8",
+                                  File_Reader => File_Reader);
       Unit    : Analysis_Unit;
       Project : Object;
 
