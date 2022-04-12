@@ -238,6 +238,35 @@ package body GPR2.Log is
       return New_Position;
    end Next;
 
+   ---------------------
+   -- Output_Messages --
+   ---------------------
+
+   procedure Output_Messages
+     (Log            : GPR2.Log.Object;
+      Information    : Boolean := True;
+      Warning        : Boolean := True;
+      Error          : Boolean := True;
+      Lint           : Boolean := False;
+      Full_Path_Name : Boolean := False;
+      Output_Levels  : GPR2.Message.Level_Output :=
+                         (GPR2.Message.Long,
+                          GPR2.Message.Long,
+                          GPR2.Message.Long,
+                          GPR2.Message.Long)) is
+   begin
+      for C in Log.Iterate
+        (Information => Information,
+         Warning     => Warning,
+         Error       => Error,
+         Lint        => Lint,
+         Read        => False,
+         Unread      => True)
+      loop
+         Log (C).Output (Full_Path_Name, Output_Levels);
+      end loop;
+   end Output_Messages;
+
    ---------------
    -- Reference --
    ---------------
