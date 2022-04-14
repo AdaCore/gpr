@@ -44,10 +44,6 @@ with GPR2.Version;
 
 with GPRtools.Util;
 
-pragma Warnings (Off);
-with System.OS_Constants;
-pragma Warnings (On);
-
 procedure GPRconfig is
 
    use Ada;
@@ -183,9 +179,8 @@ procedure GPRconfig is
             Text_IO.Put_Line
               (" native:"
                & Boolean'Image
-                 (Base.Normalized_Target
-                      (Name_Type (System.OS_Constants.Target_Name)) =
-                        Base.Normalized_Target (Target (Comp))));
+                 (Base.Normalized_Target (Default_Target) =
+                      Base.Normalized_Target (Target (Comp))));
 
          elsif Is_Selectable (Comp) then
 
@@ -466,7 +461,7 @@ procedure GPRconfig is
          Help        =>
            "Select specified target or ""all"" for any target" & ASCII.LF
          & "   ("
-         & System.OS_Constants.Target_Name
+         & String (Default_Target)
          & " by default)",
          Argument    => "target");
       Define_Switch
@@ -849,7 +844,7 @@ begin
         To_Unbounded_String
           (String
              (Knowledge_Base.Normalized_Target
-                (Name_Type (System.OS_Constants.Target_Name))));
+                (Default_Target)));
    else
       Selected_Target := To_Unbounded_String (Opt_Target.all);
    end if;
@@ -913,7 +908,7 @@ begin
 
                Text_IO.Put (String (Tgt));
 
-               if String (Tgt) = System.OS_Constants.Target_Name then
+               if Tgt = Default_Target then
                   Text_IO.Put_Line (" (native target)");
                else
                   Text_IO.New_Line;

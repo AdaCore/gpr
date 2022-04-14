@@ -1,0 +1,5 @@
+description:
+    A test for substitution of default target
+driver: build_and_run
+project_file: test
+main: bin/gprtool

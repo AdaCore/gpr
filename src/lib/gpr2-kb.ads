@@ -199,6 +199,11 @@ package GPR2.KB is
    --  Returns the normalized name for given target. If a given target is not
    --  not found in any of the knowledge base target sets, returns "unknown".
 
+   function Default_Target return Name_Type;
+   --  Returns name of the default target which is either specified in
+   --  <gprtools directory>/share/gprconfig/default_target if it exists, or
+   --  default host name.
+
    function Fallback_List
      (Self   : Object;
       Target : Name_Type) return GPR2.Containers.Name_List

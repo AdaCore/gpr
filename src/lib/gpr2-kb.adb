@@ -249,6 +249,13 @@ package body GPR2.KB is
    --  When a directory is returned, it is guaranteed to end with a directory
    --  separator.
 
+   Default_Target_Parsed : Boolean := False;
+   Default_Target_Val    : Unbounded_String;
+
+   procedure Parse_Default_Target_Val;
+   --  Tries to parse <gprtools directory>/share/gprconfig/default_target
+   --  and sets Default_Target_Val.
+
    ---------
    -- Add --
    ---------
@@ -1242,6 +1249,23 @@ package body GPR2.KB is
       return GPR2.Path_Name.Create_Directory
                (Filename_Type (Dir.Display_Full_Name));
    end Default_Location;
+
+   --------------------
+   -- Default_Target --
+   --------------------
+
+   function Default_Target return Name_Type is
+   begin
+      if not Default_Target_Parsed then
+         Parse_Default_Target_Val;
+      end if;
+
+      if Default_Target_Val = Null_Unbounded_String then
+         return Name_Type (System.OS_Constants.Target_Name);
+      else
+         return Name_Type (To_String (Default_Target_Val));
+      end if;
+   end Default_Target;
 
    -----------------------------
    -- Extra_Dirs_From_Filters --
@@ -2953,6 +2977,44 @@ package body GPR2.KB is
          end if;
       end if;
    end Parse_All_Dirs;
+
+   ------------------------------
+   -- Parse_Default_Target_Val --
+   ------------------------------
+
+   procedure Parse_Default_Target_Val is
+      use GNATCOLL.Traces;
+      use GNAT.OS_Lib;
+
+      Tgt_File_Base : constant String := "default_target";
+      Tgt_File_Full : constant String :=
+                        GPR_Executable_Prefix_Path
+                        & "share" & Directory_Separator
+                        & "gprconfig" & Directory_Separator & Tgt_File_Base;
+
+      F : Ada.Text_IO.File_Type;
+   begin
+      Trace (Main_Trace, "Parsing default target");
+      Default_Target_Parsed := True;
+
+      if GPR_Executable_Prefix_Path = "" then
+         Trace (Main_Trace, "Gprtools installation not found");
+         return;
+      end if;
+
+      if not Is_Regular_File (Tgt_File_Full) then
+         Trace (Main_Trace, Tgt_File_Full & " not found");
+         return;
+      end if;
+
+      Ada.Text_IO.Open (F, Ada.Text_IO.In_File, Tgt_File_Full);
+      Default_Target_Val := To_Unbounded_String (Ada.Text_IO.Get_Line (F));
+      Ada.Text_IO.Close (F);
+   exception
+      when X : others =>
+         Trace (Main_Trace, "Cannot parse " & Tgt_File_Full);
+         Trace (Main_Trace, Ada.Exceptions.Exception_Information (X));
+   end Parse_Default_Target_Val;
 
    -----------------------
    -- Query_Targets_Set --

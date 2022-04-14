@@ -118,8 +118,6 @@ package body GPR2.Project.Configuration is
       Native_Target : constant Boolean := Target = "all";
 
       Result    : Object;
-      Host      : constant Name_Type :=
-                    Name_Type (System.OS_Constants.Target_Name);
 
       Configuration_String : Unbounded_String;
       Parsing_Messages     : Log.Object;
@@ -252,7 +250,8 @@ package body GPR2.Project.Configuration is
       if Native_Target then
          --  Normalize implicit target
          declare
-            Normalized : constant Name_Type := Base.Normalized_Target (Host);
+            Normalized : constant Name_Type :=
+                           Base.Normalized_Target (GPR2.KB.Default_Target);
          begin
             if Normalized = "unknown" then
                Configuration_String :=
