@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<!--  This file makes the gprbuild documentation available from GPS -->
+<GPS>
+  <doc_path>share/doc/gprbuild/html</doc_path>
+  <submenu before="About">
+    <title>/Help/Gprbuild</title>
+  </submenu>
+
+  <documentation_file>
+     <name>gprbuild_ug.html</name>
+     <descr>Gprbuild User's Guide</descr>
+     <category>GNAT</category>
+     <menu>/Help/Gprbuild/Gprbuild User's Guide</menu>
+  </documentation_file>
+
+</GPS>

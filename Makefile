@@ -2,7 +2,7 @@
 ##                                                                          ##
 ##                            GPR2 PROJECT LIBRARY                          ##
 ##                                                                          ##
-##          Copyright (C) 2016-2021, Free Software Foundation, Inc.         ##
+##          Copyright (C) 2016-2022, Free Software Foundation, Inc.         ##
 ##                                                                          ##
 ## This library is free software;  you can redistribute it and/or modify it ##
 ## under terms of the  GNU General Public License  as published by the Free ##
@@ -180,6 +180,10 @@ ifeq (${GPR2_BUILD},gnatcov)
 	${COVERAGE_INSTR} -P ${GPR2TOOLS}
 endif
 
+# Documentation
+doc:
+	make -C ${SOURCE_DIR}/doc
+
 ###########
 # Install #
 ###########
@@ -243,6 +247,7 @@ clean: clean-tools ${LIBGPR2_TYPES:%=clean-libtype-%}
 	rm -rf ${KB_BUILD_DIR}
 	rm -rf ${BUILD_ROOT}/autoconf
 	make -C ${SOURCE_DIR}/langkit clean DEST="${CURDIR}/${LANGKIT_GENERATED_SRC}"
+	make -C ${SOURCE_DIR}/doc clean
 
 clean-libtype-%:
 	-${CLEANER} -XLIBRARY_TYPE=$* -P ${GPR2}
