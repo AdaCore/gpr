@@ -118,7 +118,6 @@ package body GPR2.Project is
       if Environment_Variables.Exists ("ADA_PROJECT_PATH") then
          Add_List (Environment_Variables.Value ("ADA_PROJECT_PATH"));
       end if;
-
    end Append_Default_Search_Paths;
 
    ------------
@@ -220,7 +219,7 @@ package body GPR2.Project is
       elsif Config_File then
          return Name & Config_File_Extension;
       else
-         --  The default is the .gpr extension.
+         --  The default is the .gpr extension
 
          return Name & Project_File_Extension;
       end if;

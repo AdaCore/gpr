@@ -30,7 +30,8 @@ class Manage(ManageScript):
                           lib_name='Gpr_Parser',
                           default_charset='iso-8859-1',
                           verbosity=args.verbosity,
-                          case_insensitive=True)
+                          case_insensitive=True,
+                          standalone=True)
 
 
 ada_header = """

@@ -44,7 +44,6 @@ with GPR2.View_Ids.DAGs;
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Strings.Hash;
-private with Ada.Strings.Unbounded;
 
 private with GPR2.Project.Registry.Attribute;
 private with GPR2.Unit;
@@ -165,8 +164,9 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined and then Self.Has_Runtime_Project;
    --  Returns the runtime project for the given tree
 
-   function Target (Self      : Object;
-                    Canonical : Boolean := False) return Name_Type
+   function Target
+     (Self      : Object;
+      Canonical : Boolean := False) return Name_Type
      with Pre => Self.Is_Defined;
    --  Returns the target for the project tree
 
@@ -337,38 +337,42 @@ package GPR2.Project.Tree is
      with Pre => Dir.Is_Defined;
    --  Adds a project search path for this tree
 
-   function Project_Search_Paths (Self : Object) return Path_Name.Set.Object;
+   function Project_Search_Paths (Self : Object) return Path_Name.Set.Object
+     with Pre => Self.Is_Defined;
    --  Returns the Tree project search paths
 
-   function Archive_Suffix (Self : Object) return Filename_Type;
+   function Archive_Suffix (Self : Object) return Filename_Type
+     with Pre => Self.Is_Defined;
    --  Returns archive suffix for the project tree
 
    function Object_Suffix
      (Self     : Object;
-      Language : Language_Id := Ada_Language) return Filename_Type;
+      Language : Language_Id := Ada_Language) return Filename_Type
+     with Pre => Self.Is_Defined;
    --  Returns object suffix for language in project tree
 
    function Dependency_Suffix
      (Self     : Object;
-      Language : Language_Id := Ada_Language) return Filename_Type;
+      Language : Language_Id := Ada_Language) return Filename_Type
+     with Pre => Self.Is_Defined;
    --  Returns dependency suffix for language in project tree
 
-   function Subdirs (Tree : Object) return Filename_Optional
-     with Pre => Tree.Is_Defined;
+   function Subdirs (Self : Object) return Filename_Optional
+     with Pre => Self.Is_Defined;
    --  Returns the subdirs parameter <sub> of the project tree such that, for
    --  each project, the actual {executable,object,library} directories are
    --  {<exec>,<obj>,<lib>}/<sub>.
 
-   function Src_Subdirs (Tree : Object) return Filename_Optional;
+   function Src_Subdirs (Self : Object) return Filename_Optional;
    --  Returns the src_subdirs parameter <sub> of the project tree such that,
    --  for each project, the actual source directories list will be prepended
    --  with {object_dir}/<sub>.
 
-   function Build_Path (Tree : Object) return Path_Name.Object
-     with Pre => Tree.Is_Defined;
+   function Build_Path (Self : Object) return Path_Name.Object
+     with Pre => Self.Is_Defined;
    --  Path to build tree
 
-   function Reference (Tree : Object) return access Object;
+   function Reference (Self : Object) return access Object;
    --  Returns access to itself
 
    function Get_File
@@ -591,17 +595,17 @@ private
       then Self.Configuration.Dependency_File_Suffix (Language)
       elsif Language = Ada_Language then ".ali" else ".d");
 
-   function Reference (Tree : Object) return access Object is
-     (Tree'Unrestricted_Access);
+   function Reference (Self : Object) return access Object is
+     (Self'Unrestricted_Access);
 
-   function Subdirs (Tree : Object) return Filename_Optional is
-     (Filename_Optional (Ada.Strings.Unbounded.To_String (Tree.Subdirs)));
+   function Subdirs (Self : Object) return Filename_Optional is
+     (Filename_Optional (To_String (Self.Subdirs)));
 
-   function Src_Subdirs (Tree : Object) return Filename_Optional is
-     (Filename_Optional (Ada.Strings.Unbounded.To_String (Tree.Src_Subdirs)));
+   function Src_Subdirs (Self : Object) return Filename_Optional is
+     (Filename_Optional (To_String (Self.Src_Subdirs)));
 
-   function Build_Path (Tree : Object) return Path_Name.Object is
-     (Tree.Build_Path);
+   function Build_Path (Self : Object) return Path_Name.Object is
+     (Self.Build_Path);
 
    function Runtime_From_Command_Line
      (Self : Object; Language : Language_Id) return Optional_Name_Type is
@@ -611,4 +615,5 @@ private
 
    function Get_KB (Self : Object) return GPR2.KB.Object is
      (Self.Base);
+
 end GPR2.Project.Tree;

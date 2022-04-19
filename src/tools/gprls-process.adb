@@ -574,8 +574,8 @@ begin
                else
                   Artifacts := PSA.Create
                     (S,
-                     Filter => (PSA.Object_File_Artifact => True,
-                                others                   => False));
+                     Filter => (PSA.Object_File => True,
+                                others          => False));
                end if;
 
                return Artifacts.Has_Object_Code;
@@ -688,20 +688,20 @@ begin
       begin
          for S of Sources loop
             declare
-               use Project.Source.Artifact;
+               use Project.Source;
                View      : constant Project.View.Object := S.Source.View;
                Artifacts : constant Project.Source.Artifact.Object :=
                              Project.Source.Artifact.Create
                                (S.Source,
-                                Filter => (Dependency_File_Artifact => True,
-                                           Object_File_Artifact     => True,
+                                Filter => (Artifact.Dependency_File => True,
+                                           Artifact.Object_File     => True,
                                            others                   => False));
-               Main_Unit : Unit.Object;
+               Main_Unit : GPR2.Unit.Object;
 
                procedure Print_Unit_From
                  (Src : GPR2.Unit.Source_Unit_Identifier);
 
-               function  Print_Unit (U_Sec : Unit.Object) return Boolean;
+               function  Print_Unit (U_Sec : GPR2.Unit.Object) return Boolean;
 
                procedure Print_Object (Index : Unit_Index);
 
@@ -737,8 +737,8 @@ begin
                -- Print_Object --
                ------------------
 
-               procedure Print_Object (Index : Unit_Index) is
-                  Obj_File : Path_Name.Object;
+               procedure Print_Object (Index : GPR2.Unit_Index) is
+                  Obj_File : GPR2.Path_Name.Object;
                begin
                   if Opt.Print_Object_Files
                     and then not S.Source.Is_Aggregated
@@ -791,8 +791,10 @@ begin
                -- Print_Unit --
                ----------------
 
-               function  Print_Unit (U_Sec : Unit.Object) return Boolean is
-                  use type Unit.Object;
+               function  Print_Unit
+                 (U_Sec : GPR2.Unit.Object) return Boolean
+               is
+                  use type GPR2.Unit.Object;
                begin
                   if not Main_Unit.Is_Defined then
                      Main_Unit := U_Sec;
@@ -809,20 +811,20 @@ begin
                      Text_IO.Put_Line
                        ("     Kind   => "
                         & (case U_Sec.Library_Item_Kind is
-                             when Unit.Is_Package    => "package",
-                             when Unit.Is_Subprogram => "subprogram")
+                             when GPR2.Unit.Is_Package    => "package",
+                             when GPR2.Unit.Is_Subprogram => "subprogram")
                         & ' '
                         & (case U_Sec.Kind is
-                             when Unit.Spec_Kind  => "spec",
-                             when Unit.Body_Kind  => "body",
-                             when Unit.S_Separate => "separate"));
+                             when GPR2.Unit.Spec_Kind  => "spec",
+                             when GPR2.Unit.Body_Kind  => "body",
+                             when GPR2.Unit.S_Separate => "separate"));
 
                      if U_Sec.Is_Any_Flag_Set then
                         Text_IO.Put ("     Flags  =>");
 
-                        for Flag in Unit.Flag'Range loop
+                        for Flag in GPR2.Unit.Flag'Range loop
                            if U_Sec.Is_Flag_Set (Flag) then
-                              Text_IO.Put (' ' & Unit.Image (Flag));
+                              Text_IO.Put (' ' & GPR2.Unit.Image (Flag));
                            end if;
                         end loop;
 
@@ -965,13 +967,15 @@ begin
                           (Artifacts.Object_Code (Index).Simple_Name,
                            Kind, Index)));
 
+                  use GPR2.Project.Source;
+
                begin
                   if not Insert_Prefer_Body
                     (S.Path_Name.Simple_Name, GPR2.Unit.S_Body, No_Index)
                   then
                      Artifacts := GPR2.Project.Source.Artifact.Create
-                       (S, Filter => (Dependency_File_Artifact => True,
-                                      Object_File_Artifact     => True,
+                       (S, Filter => (Artifact.Dependency_File => True,
+                                      Artifact.Object_File     => True,
                                       others                   => False));
 
                      if S.Has_Units then

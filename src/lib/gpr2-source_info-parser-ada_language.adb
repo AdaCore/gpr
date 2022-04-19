@@ -18,7 +18,7 @@
 
 with Ada.Directories;
 
-with Langkit_Support.Text;
+with Gpr_Parser_Support.Text;
 
 with Gpr_Parser.Analysis;
 with Gpr_Parser.Common;
@@ -43,7 +43,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
    is
       use Gpr_Parser.Analysis;
       use Gpr_Parser.Common;
-      use Langkit_Support.Text;
+      use Gpr_Parser_Support.Text;
 
       Index : Unit_Index := No_Index;
       --  Source index, incremented every time we parse a compilation unit

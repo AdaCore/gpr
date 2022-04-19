@@ -30,8 +30,8 @@ with Ada.Exceptions;
 with Ada.Strings.Wide_Wide_Unbounded;
 with GPR2.KB;
 
-with Langkit_Support.Slocs;
-with Langkit_Support.Text;
+with Gpr_Parser_Support.Slocs;
+with Gpr_Parser_Support.Text;
 
 with GPR2.Builtin;
 with GPR2.Message;
@@ -54,7 +54,7 @@ with Gpr_Parser.Common;
 package body GPR2.Project.Parser is
 
    use Gpr_Parser.Common;
-   use Langkit_Support.Text;
+   use Gpr_Parser_Support.Text;
 
    package PA renames GPR2.Project.Attribute;
    package PRA renames GPR2.Project.Registry.Attribute;
@@ -97,7 +97,7 @@ package body GPR2.Project.Parser is
 
    function Get_Source_Reference
      (Path_Name : GPR2.Path_Name.Object;
-      Slr       : Langkit_Support.Slocs.Source_Location_Range)
+      Slr       : Gpr_Parser_Support.Slocs.Source_Location_Range)
       return Source_Reference.Object
    is
      (Source_Reference.Object
@@ -114,7 +114,7 @@ package body GPR2.Project.Parser is
 
    function Get_Value_Reference
      (Path_Name : GPR2.Path_Name.Object;
-      Slr       : Langkit_Support.Slocs.Source_Location_Range;
+      Slr       : Gpr_Parser_Support.Slocs.Source_Location_Range;
       Value     : Value_Type;
       At_Pos    : Unit_Index := No_Index) return Source_Reference.Value.Object
    is
@@ -133,7 +133,7 @@ package body GPR2.Project.Parser is
 
    function Get_Identifier_Reference
      (Path_Name  : GPR2.Path_Name.Object;
-      Slr        : Langkit_Support.Slocs.Source_Location_Range;
+      Slr        : Gpr_Parser_Support.Slocs.Source_Location_Range;
       Identifier : Name_Type)
       return Source_Reference.Identifier.Object
    is
@@ -143,7 +143,7 @@ package body GPR2.Project.Parser is
 
    function Get_Attribute_Reference
      (Path_Name  : GPR2.Path_Name.Object;
-      Slr        : Langkit_Support.Slocs.Source_Location_Range;
+      Slr        : Gpr_Parser_Support.Slocs.Source_Location_Range;
       Identifier : Attribute_Id)
       return Source_Reference.Attribute.Object
    is

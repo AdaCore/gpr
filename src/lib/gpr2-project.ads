@@ -72,13 +72,14 @@ package GPR2.Project is
 
    type Filter_Kind is
      (F_Standard, F_Library, F_Abstract, F_Aggregate, F_Aggregate_Library);
+
    type Filter_Control is array (Filter_Kind) of Boolean with Pack;
 
    Default_Filter : constant Filter_Control;
    Library_Filter : constant Filter_Control;
 
-   type Status_Kind is
-     (S_Externally_Built);
+   type Status_Kind is (S_Externally_Built);
+
    type Status_Control is array (Status_Kind) of Triboolean;
 
    Default_Status : constant Status_Control;
@@ -86,7 +87,8 @@ package GPR2.Project is
    function Create
      (Name  : Filename_Type;
       Paths : Path_Name.Set.Object := Path_Name.Set.Empty_Set)
-      return Path_Name.Object;
+      return Path_Name.Object
+     with Post => Create'Result.Is_Defined;
    --  Given a filename (possibly a full pathname) returns a Path_Name_Type. If
    --  Name is not an absolute path name it is looked into Paths.
 
@@ -107,7 +109,7 @@ package GPR2.Project is
 
    function Default_Search_Paths
      (Current_Directory : Boolean) return Path_Name.Set.Object
-   with Post => Default_Search_Paths'Result.Length > 0;
+     with Post => Default_Search_Paths'Result.Length > 0;
    --  Get the search paths common for all targets.
    --  If Current_Directory is True then the current directory is incuded at
    --  the first place in the result set.

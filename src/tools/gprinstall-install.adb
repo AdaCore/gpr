@@ -962,8 +962,8 @@ package body GPRinstall.Install is
             --  Returns True if Source is an Ada source
 
             procedure Install_Project_Source
-              (Source                : GPR2.Project.Source.Object;
-               Is_Interface_Closure  : Boolean := False);
+              (Source               : GPR2.Project.Source.Object;
+               Is_Interface_Closure : Boolean := False);
             --  Install the project source and possibly the corresponding
             --  artifacts.
 
@@ -1093,9 +1093,9 @@ package body GPRinstall.Install is
 
                      if Copy (Dependency) then
                         declare
+                           use GPR2.Project.Source.Artifact;
                            Proj : GPR2.Project.View.Object;
                            Satf : GPR2.Project.Source.Artifact.Object;
-                           use GPR2.Project.Source.Artifact;
                         begin
                            if Options.All_Sources
                              or else not Source.Has_Naming_Exception
