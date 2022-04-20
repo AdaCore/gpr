@@ -277,16 +277,6 @@ private
    function Modification_Time (Self : Object) return Ada.Calendar.Time is
      (Ada.Directories.Modification_Time (To_String (Self.Value)));
 
-   function Filesystem_String
-     (Path : GPR2.Path_Name.Object) return VFS.Filesystem_String
-   is
-     (if Path.Is_Defined
-      then
-        (if Path.Has_Dir_Name
-         then VFS.Filesystem_String (Value (Path))
-         else VFS.Filesystem_String (Simple_Name (Path)))
-      else "");
-
    function Create
      (Filename : VFS.Filesystem_String) return GPR2.Path_Name.Object
    is

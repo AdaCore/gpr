@@ -96,6 +96,10 @@ package body GPR2.Path_Name is
    --  This is Ada.Directories.Containing_Directory implementation with
    --  valid path name check removed to allow '*' chars.
 
+   function Unchecked_Value (Self : Object) return String;
+   --  Value function allowing call returning a value with no path separator
+   --  For path objects created using a Path_Name with no path separator.
+
    -------------------
    -- Make_Absolute --
    -------------------
@@ -537,6 +541,24 @@ package body GPR2.Path_Name is
       return Directories.Exists (To_String (Self.Value));
    end Exists;
 
+   -----------------------
+   -- Filesystem_String --
+   -----------------------
+
+   function Filesystem_String
+     (Path : GPR2.Path_Name.Object) return VFS.Filesystem_String is
+   begin
+      if Path.Is_Defined then
+         if Path.Has_Dir_Name then
+            return VFS.Filesystem_String (Unchecked_Value (Path));
+         else
+            return VFS.Filesystem_String (Simple_Name (Path));
+         end if;
+      else
+         return "";
+      end if;
+   end Filesystem_String;
+
    ----------
    -- Name --
    ----------
@@ -702,17 +724,26 @@ package body GPR2.Path_Name is
       return Temp_Directory;
    end Temporary_Directory;
 
-   -----------
-   -- Value --
-   -----------
+   ---------------------
+   -- Unchecked_Value --
+   ---------------------
 
-   function Value (Self : Object) return Full_Name is
+   function Unchecked_Value (Self : Object) return String is
    begin
       if Self.Is_Dir then
          return Remove_Last_DS (To_String (Self.Value));
       else
          return To_String (Self.Value);
       end if;
+   end Unchecked_Value;
+
+   -----------
+   -- Value --
+   -----------
+
+   function Value (Self : Object) return Full_Name is
+   begin
+      return Unchecked_Value (Self);
    end Value;
 
 begin
