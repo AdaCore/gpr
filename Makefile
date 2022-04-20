@@ -137,7 +137,7 @@ UNINSTALLER=${INSTALLER} -p -f --uninstall
 # build #
 #########
 
-all: ${LIBGPR2_TYPES:%=build-%} build-tools build-gprname
+all: ${LIBGPR2_TYPES:%=build-lib-%} build-tools build-gprname
 
 # Knowledge base
 ${KB_BUILD_DIR}:
@@ -153,7 +153,7 @@ ${LANGKIT_GENERATED_SRC}: $(wildcard ${SOURCE_DIR}/langkit/language/**/*.py) ${F
 	touch ${LANGKIT_GENERATED_SRC}
 
 # Libgpr2
-build-%: ${KB_BUILD_DIR}/config.kb ${LANGKIT_GENERATED_SRC}
+build-lib-%: ${KB_BUILD_DIR}/config.kb ${LANGKIT_GENERATED_SRC}
 ifneq (${GPR2_BUILD},gnatcov)
 	${BUILDER} -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		${GPR2}
@@ -162,12 +162,12 @@ else
 endif
 
 # Gpr2 tools
-build-tools: build-static coverage-instrument
+build-tools: build-lib-static coverage-instrument
 	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
 		${GPR2TOOLS}
 
 # gprname is built separately: it requires libadalang
-build-gprname: build-static coverage-instrument
+build-gprname: build-lib-static coverage-instrument
 	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
 	  -XLANGKIT_SUPPORT_BUILD=static ${GPR2NAME}
 
@@ -206,10 +206,10 @@ ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2-name))
 	${UNINSTALLER} $(notdir ${GPR2NAME})
 endif
 
-install: uninstall-libs ${LIBGPR2_TYPES:%=install-%} install-tools \
+install: uninstall-libs ${LIBGPR2_TYPES:%=install-lib-%} install-tools \
            install-gprname
 
-install-%:
+install-lib-%:
 	${INSTALLER} -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		--build-name=$* \
 		--build-var=LIBRARY_TYPE \
