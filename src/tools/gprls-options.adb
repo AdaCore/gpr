@@ -129,7 +129,7 @@ package body GPRls.Options is
 
       if Self.List_File.Is_Defined then
          if not Self.List_File.Exists then
-            raise Usage_Error with String (Self.List_File.Value) &
+            raise GPRtools.Usage_Error with String (Self.List_File.Value) &
               "does not exist";
          else
             Self.Args.Union (Get_Files_From_List_File (Self.List_File));
@@ -195,7 +195,7 @@ package body GPRls.Options is
       return Ret;
    exception
       when others =>
-         raise Usage_Error with
+         raise GPRtools.Usage_Error with
            "Could not read file '" & String (File.Name) & "'";
    end Get_Files_From_List_File;
 
