@@ -459,9 +459,6 @@ private
      new Ada.Containers.Indefinite_Ordered_Maps (Filename_Type, View.Object);
    --  Map to find in which view a unit/source is defined
 
-   package View_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Value_Not_Empty, View.Set.Object, "=" => View.Set."=");
-
    function Key
      (View : Project.View.Object; Source : Simple_Name) return String
    is
@@ -520,7 +517,6 @@ private
       Check_Shared_Lib  : Boolean := True;
       Absent_Dir_Error  : Boolean := False;
       Pre_Conf_Mode     : Boolean := True;
-      Views             : aliased View_Maps.Map;
       Views_Set         : View.Set.Object;
       --  All projects in registration order
       Context           : Two_Contexts;

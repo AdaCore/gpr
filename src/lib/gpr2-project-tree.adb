@@ -2764,22 +2764,6 @@ package body GPR2.Project.Tree is
    is
       View : Project.View.Object;
 
-      procedure Add_View (Key : Value_Not_Empty);
-      --  Add view to the Def.Tree.Views with the Key index
-
-      --------------
-      -- Add_View --
-      --------------
-
-      procedure Add_View (Key : Value_Not_Empty) is
-         Position : View_Maps.Cursor;
-         Inserted : Boolean;
-      begin
-         Def.Tree.Views.Insert
-           (Key, Project.View.Set.Empty_Set, Position, Inserted);
-         Def.Tree.Views (Position).Insert (View);
-      end Add_View;
-
    begin
       --  Is the Id actually needed here?
 
@@ -2797,14 +2781,6 @@ package body GPR2.Project.Tree is
       Def.Tree.View_Ids.Include (Def.Unique_Id, View);
 
       pragma Assert (Definition.Refcount (View) = 3);
-
-      Add_View (Path_Name.To_OS_Case (View.Path_Name.Value));
-
-      pragma Assert (Definition.Refcount (View) = 4);
-
-      Add_View (To_Lower (View.Name));
-
-      pragma Assert (Definition.Refcount (View) = 5);
 
       return View;
    end Register_View;
@@ -4024,7 +4000,6 @@ package body GPR2.Project.Tree is
       Self.Sources.Clear;
       Self.Rooted_Sources.Clear;
       Self.Messages.Clear;
-      Self.Views.Clear;
       Self.View_Ids.Clear;
       Self.View_DAG.Clear;
       Self.Views_Set.Clear;
