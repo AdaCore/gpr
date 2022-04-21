@@ -1,0 +1,12 @@
+------------------
+gprls -Pprj1 -s --src-subdirs=src2
+
+/obj/src2/instrumented.adb
+/pkg2.ads
+/obj/src2/pkg.ads
+------------------
+gprls -Pprj2 -s --src-subdirs=src2
+
+/obj/src2/instrumented.adb
+/src/pkg2.ads
+/obj/src2/pkg.ads

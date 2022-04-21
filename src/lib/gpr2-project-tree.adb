@@ -2891,6 +2891,8 @@ package body GPR2.Project.Tree is
       Changed : access procedure (Project : View.Object) := null)
    is
       Root : constant Definition.Ref := Definition.Get_RW (Self.Root);
+      Def  : Definition.Ref;
+
    begin
       --  Register the root context for this project tree
 
@@ -2903,26 +2905,31 @@ package body GPR2.Project.Tree is
       Set_Context (Self, Changed);
 
       for V of Self.Views_Set loop
-         Definition.Get (V).Clear_Cache;
+         Def := Definition.Get (V);
+         Def.Clear_Cache;
 
          if Self.Has_Src_Subdirs
-           and then V.Kind not in K_Configuration | K_Abstract
+           and then V.Kind not in K_Configuration | K_Abstract | Aggregate_Kind
            and then V /= Self.Runtime
          then
+            --  ensure we don't cache the value of Source_Dirs
+            Def.Disable_Cache;
+
             declare
-               Def : constant Definition.Ref := Definition.Get (V);
-               CS  : constant Attribute.Set.Cursor :=
-                       Def.Attrs.Find (PRA.Source_Dirs);
-               SD  : constant Attribute.Object    := Def.Attrs (CS);
+               SD  : constant Attribute.Object    :=
+                       V.Attribute (PRA.Source_Dirs);
                SV  : Containers.Source_Value_List := SD.Values;
             begin
                SV.Prepend
                  (Source_Reference.Value.Object
                     (Source_Reference.Value.Create
-                       (Source_Reference.Object (SD),
-                        V.Source_Subdirectory.Value)));
-               Def.Attrs (CS) := Attribute.Create (SD.Name, SV);
+                         (Source_Reference.Object (SD),
+                          V.Source_Subdirectory.Value)));
+
+               Def.Attrs.Include (Attribute.Create (SD.Name, SV));
             end;
+
+            Def.Enable_Cache;
          end if;
       end loop;
    end Set_Context;
