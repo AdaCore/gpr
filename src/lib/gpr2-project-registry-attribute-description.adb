@@ -958,27 +958,6 @@ begin
         "of the language in the project tree."
      );
 
-   --  Check.Default_Switches
-   Pack_Attribute_Description.Insert
-     (Container => Attribute_Description,
-      Key       => (Pack => PRP.Check,
-                    Attr => PRA.Default_Switches),
-      New_Item  =>
-        "Index is a language name. Value is a list of switches to be used " &
-        "when invoking gnatcheck for a source of the language, if there is " &
-        "no applicable attribute Switches."
-     );
-
-   --  Check.Switches
-   Pack_Attribute_Description.Insert
-     (Container => Attribute_Description,
-      Key       => (Pack => PRP.Check,
-                    Attr => PRA.Switches),
-      New_Item  =>
-        "Index is a source file name. Value is the list of switches to be " &
-        "used when invoking gnatcheck for the source."
-     );
-
    --  Clean.Switches
    Pack_Attribute_Description.Insert
      (Container => Attribute_Description,
@@ -1428,48 +1407,6 @@ begin
         "compiler. The index is the name of the language for the compiler."
      );
 
-   --  Cross_Reference.Default_Switches
-   Pack_Attribute_Description.Insert
-     (Container => Attribute_Description,
-      Key       => (Pack => PRP.Cross_Reference,
-                    Attr => PRA.Default_Switches),
-      New_Item  =>
-        "Index is a language name. Value is a list of switches to be used " &
-        "when invoking gnatxref for a source of the language, if there is no" &
-        " applicable attribute Switches."
-     );
-
-   --  Cross_Reference.Switches
-   Pack_Attribute_Description.Insert
-     (Container => Attribute_Description,
-      Key       => (Pack => PRP.Cross_Reference,
-                    Attr => PRA.Switches),
-      New_Item  =>
-        "Index is a source file name. Value is the list of switches to be " &
-        "used when invoking gnatxref for the source."
-     );
-
-   --  Finder.Default_Switches
-   Pack_Attribute_Description.Insert
-     (Container => Attribute_Description,
-      Key       => (Pack => PRP.Finder,
-                    Attr => PRA.Default_Switches),
-      New_Item  =>
-        "Index is a language name. Value is a list of switches to be used " &
-        "when invoking gnatfind for a source of the language, if there is no" &
-        " applicable attribute Switches."
-     );
-
-   --  Finder.Switches
-   Pack_Attribute_Description.Insert
-     (Container => Attribute_Description,
-      Key       => (Pack => PRP.Finder,
-                    Attr => PRA.Switches),
-      New_Item  =>
-        "Index is a source file name. Value is the list of switches to be " &
-        "used when invoking gnatfind for the source."
-     );
-
    --  Gnatls.Switches
    Pack_Attribute_Description.Insert
      (Container => Attribute_Description,
@@ -1478,27 +1415,6 @@ begin
       New_Item  =>
         "Taken into account only in the main project. Value is a list of " &
         "switches to be used when invoking gnatls."
-     );
-
-   --  gnatstub.Default_Switches
-   Pack_Attribute_Description.Insert
-     (Container => Attribute_Description,
-      Key       => (Pack => PRP.Gnatstub,
-                    Attr => PRA.Default_Switches),
-      New_Item  =>
-        "Index is a language name. Value is a list of switches to be used " &
-        "when invoking gnatstub for a source of the language, if there is no" &
-        " applicable attribute Switches."
-     );
-
-   --  gnatstub.Switches
-   Pack_Attribute_Description.Insert
-     (Container => Attribute_Description,
-      Key       => (Pack => PRP.Gnatstub,
-                    Attr => PRA.Switches),
-      New_Item  =>
-        "Index is a source file name. Value is the list of switches to be " &
-        "used when invoking gnatstub for the source."
      );
 
    --  Install.Artifacts
@@ -1761,27 +1677,6 @@ begin
         "linker."
      );
 
-   --  Metrics.Default_Switches
-   Pack_Attribute_Description.Insert
-     (Container => Attribute_Description,
-      Key       => (Pack => PRP.Metrics,
-                    Attr => PRA.Default_Switches),
-      New_Item  =>
-        "Index is a language name. Value is a list of switches to be used " &
-        "when invoking gnatmetric for a source of the language, if there is " &
-        "no applicable attribute Switches."
-     );
-
-   --  Metrics.Switches
-   Pack_Attribute_Description.Insert
-     (Container => Attribute_Description,
-      Key       => (Pack => PRP.Metrics,
-                    Attr => PRA.Switches),
-      New_Item  =>
-        "Index is a source file name. Value is the list of switches to be " &
-        "used when invoking gnatmetric for the source."
-     );
-
    --  Naming.Specification_Suffix
    Pack_Attribute_Description.Insert
      (Container => Attribute_Description,
@@ -1902,27 +1797,6 @@ begin
         " of the project."
      );
 
-   --  Pretty_Printer.Default_Switches
-   Pack_Attribute_Description.Insert
-     (Container => Attribute_Description,
-      Key       => (Pack => PRP.Pretty_Printer,
-                    Attr => PRA.Default_Switches),
-      New_Item  =>
-        "Index is a language name. Value is a list of switches to be used " &
-        "when invoking gnatpp for a source of the language, if there is no " &
-        "applicable attribute Switches."
-     );
-
-   --  Pretty_Printer.Switches
-   Pack_Attribute_Description.Insert
-     (Container => Attribute_Description,
-      Key       => (Pack => PRP.Pretty_Printer,
-                    Attr => PRA.Switches),
-      New_Item  =>
-        "Index is a source file name. Value is the list of switches to be " &
-        "used when invoking gnatpp for the source."
-     );
-
    --  Remote.Included_Patterns
    Pack_Attribute_Description.Insert
      (Container => Attribute_Description,
@@ -1964,16 +1838,6 @@ begin
                     Attr => PRA.Root_Dir),
       New_Item  =>
         "Value is the root directory used by the slave machines."
-     );
-
-   --  Stack.Switches
-   Pack_Attribute_Description.Insert
-     (Container => Attribute_Description,
-      Key       => (Pack => PRP.Stack,
-                    Attr => PRA.Switches),
-      New_Item  =>
-        "Taken into account only in the main project. Value is the list of " &
-        "switches to be used when invoking gnatstack."
      );
 
 end GPR2.Project.Registry.Attribute.Description;

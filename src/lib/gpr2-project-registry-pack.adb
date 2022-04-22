@@ -118,14 +118,5 @@ begin
    Add (Builder,         Everywhere);
    Add (Install,         (K_Aggregate => False, others => True));
    Add (Remote,          Everywhere);
-   Add (Ide,             Everywhere);
    Add (Gnatls,          Everywhere);
-   Add (Cross_Reference, Everywhere);
-   Add (Finder,          Everywhere);
-   Add (Eliminate,       Everywhere);
-   Add (Check,           Everywhere);
-   Add (Gnatstub,        Everywhere);
-   Add (Metrics,         Everywhere);
-   Add (Pretty_Printer,  Everywhere);
-   Add (Stack,           Everywhere);
 end GPR2.Project.Registry.Pack;

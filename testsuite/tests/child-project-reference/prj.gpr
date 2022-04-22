@@ -2,16 +2,16 @@ with "build-settings.gpr";
 project Prj is
    for Main use ("main.adb");
    package Install renames Build.Settings.Install;
-   package IDE extends Build.Settings.IDE is
-   end IDE;
+   package Remote extends Build.Settings.Remote is
+   end Remote;
    --  check prj.var ref
    V1 := Build.Settings.BS2;
    -- check prj.pack.var ref
-   V2 := Build.Settings.IDE.BS5;
+   V2 := Build.Settings.Remote.BS5;
    --  check prj'attribute
    V3 := Prj'Name;
    --  check prj.pack'attribute
    V4 := Prj.Install'Install_Name;
-   V5 := Prj.IDE'Documentation_Dir;
+   V5 := Prj.Remote'Root_Dir;
    V6 : Build.Settings.T := "BST2";
 end Prj;

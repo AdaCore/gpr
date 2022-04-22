@@ -14,11 +14,11 @@ abstract project Build.Settings extends "build.gpr" is
       BS4 := BS3 & "-5-";
    end Install;
 
-   package IDE is
-      for Documentation_Dir use "-documentation-dir-";
+   package Remote is
+      for Root_Dir use "-root-dir-";
       --  check package var ref outside package
       BS5 := Install.BS4 & "-6-";
-   end IDE;
+   end Remote;
 
    type T is ("BST1", "BST2");
 

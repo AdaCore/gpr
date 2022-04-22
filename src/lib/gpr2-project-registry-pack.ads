@@ -68,21 +68,12 @@ package GPR2.Project.Registry.Pack is
 
    Binder          : constant Package_Id := +"binder";
    Builder         : constant Package_Id := +"builder";
-   Check           : constant Package_Id := +"check";
    Clean           : constant Package_Id := +"clean";
    Compiler        : constant Package_Id := +"compiler";
-   Cross_Reference : constant Package_Id := +"cross_reference";
-   Eliminate       : constant Package_Id := +"eliminate";
-   Finder          : constant Package_Id := +"finder";
    Gnatls          : constant Package_Id := +"gnatls";
-   Gnatstub        : constant Package_Id := +"gnatstub";
-   Ide             : constant Package_Id := +"ide";
    Install         : constant Package_Id := +"install";
    Linker          : constant Package_Id := +"linker";
-   Metrics         : constant Package_Id := +"metrics";
    Naming          : constant Package_Id := +"naming";
-   Pretty_Printer  : constant Package_Id := +"pretty_printer";
    Remote          : constant Package_Id := +"remote";
-   Stack           : constant Package_Id := +"stack";
 
 end GPR2.Project.Registry.Pack;
