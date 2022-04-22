@@ -302,9 +302,6 @@ package GPR2.Project.Registry.Attribute is
    Body_Suffix                 : constant Attribute_Id := +"body_suffix";
    Casing                      : constant Attribute_Id := +"casing";
    Canonical_Target            : constant Attribute_Id := +"canonical_target";
-   Communication_Protocol      : constant Attribute_Id :=
-                                   +"communication_protocol";
-   Compiler_Command            : constant Attribute_Id := +"compiler_command";
    Config_Body_File_Name       : constant Attribute_Id :=
                                    +"config_body_file_name";
    Config_Body_File_Name_Index : constant Attribute_Id :=
@@ -325,14 +322,12 @@ package GPR2.Project.Registry.Attribute is
                                    +"create_missing_dirs";
    Database_Directory          : constant Attribute_Id :=
                                    +"database_directory";
-   Debugger_Command            : constant Attribute_Id := +"debugger_command";
    Default_Language            : constant Attribute_Id := +"default_language";
    Default_Switches            : constant Attribute_Id := +"default_switches";
    Dependency_Driver           : constant Attribute_Id := +"dependency_driver";
    Dependency_Kind             : constant Attribute_Id := +"dependency_kind";
    Dependency_Switches         : constant Attribute_Id :=
                                    +"dependency_switches";
-   Documentation_Dir           : constant Attribute_Id := +"documentation_dir";
    Dot_Replacement             : constant Attribute_Id := +"dot_replacement";
    Driver                      : constant Attribute_Id := +"driver";
    Excluded_Patterns           : constant Attribute_Id := +"excluded_patterns";
@@ -358,7 +353,6 @@ package GPR2.Project.Registry.Attribute is
                                    +"global_config_file";
    Global_Configuration_Pragmas : constant Attribute_Id :=
                                     +"global_configuration_pragmas";
-   Gnatlist                    : constant Attribute_Id := +"gnatlist";
    Ignore_Source_Sub_Dirs      : constant Attribute_Id :=
                                    +"ignore_source_sub_dirs";
    Implementation              : constant Attribute_Id := +"implementation";
@@ -472,14 +466,12 @@ package GPR2.Project.Registry.Attribute is
    Path_Syntax                 : constant Attribute_Id := +"path_syntax";
    Pic_Option                  : constant Attribute_Id := +"pic_option";
    Prefix                      : constant Attribute_Id := +"prefix";
-   Program_Host                : constant Attribute_Id := +"program_host";
    Project_Dir                 : constant Attribute_Id := +"project_dir";
    Project_Files               : constant Attribute_Id := +"project_files";
    Project_Path                : constant Attribute_Id := +"project_path";
    Project_Subdir              : constant Attribute_Id := +"project_subdir";
    Required_Artifacts          : constant Attribute_Id :=
                                    +"required_artifacts";
-   Remote_Host                 : constant Attribute_Id := +"remote_host";
    Required_Switches           : constant Attribute_Id := +"required_switches";
    Required_Toolchain_Version  : constant Attribute_Id :=
                                    +"required_toolchain_version";
@@ -536,9 +528,6 @@ package GPR2.Project.Registry.Attribute is
    Trailing_Required_Switches  : constant Attribute_Id :=
                                    +"trailing_required_switches";
    Trailing_Switches           : constant Attribute_Id := +"trailing_switches";
-   Vcs_File_Check              : constant Attribute_Id := +"vcs_file_check";
-   Vcs_Kind                    : constant Attribute_Id := +"vcs_kind";
-   Vcs_Log_Check               : constant Attribute_Id := +"vcs_log_check";
    Warning_Message             : constant Attribute_Id := +"warning_message";
 
 private

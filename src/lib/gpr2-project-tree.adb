@@ -928,6 +928,15 @@ package body GPR2.Project.Tree is
       return Self.Runtime.Is_Defined;
    end Has_Runtime_Project;
 
+   ---------------------
+   -- Has_Src_Subdirs --
+   ---------------------
+
+   function Has_Src_Subdirs (Self : Object) return Boolean is
+   begin
+      return Self.Src_Subdirs /= Null_Unbounded_String;
+   end Has_Src_Subdirs;
+
    -----------------
    -- Instance_Of --
    -----------------
@@ -2881,8 +2890,7 @@ package body GPR2.Project.Tree is
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)
    is
-      Root        : constant Definition.Ref := Definition.Get_RW (Self.Root);
-      Src_Subdirs : constant String         := To_String (Self.Src_Subdirs);
+      Root : constant Definition.Ref := Definition.Get_RW (Self.Root);
    begin
       --  Register the root context for this project tree
 
@@ -2897,7 +2905,7 @@ package body GPR2.Project.Tree is
       for V of Self.Views_Set loop
          Definition.Get (V).Clear_Cache;
 
-         if Src_Subdirs /= ""
+         if Self.Has_Src_Subdirs
            and then V.Kind not in K_Configuration | K_Abstract
            and then V /= Self.Runtime
          then

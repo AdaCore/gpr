@@ -221,11 +221,11 @@ package GPR2.Project.View is
    --  then Project.Attribute.Undefined is returned.
 
    function Check_Attribute
-     (Self           : Object;
-      Name           : Attribute_Id;
-      Index          : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos         : Unit_Index             := No_Index;
-      Result         : out Project.Attribute.Object) return Boolean
+     (Self   : Object;
+      Name   : Attribute_Id;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index             := No_Index;
+      Result : out Project.Attribute.Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True and set Result if the value of the attribute
    --  exists, after all resolutions are applied (inheritance, default value
@@ -233,12 +233,12 @@ package GPR2.Project.View is
    --  Returns whether the result is defined.
 
    function Check_Attribute
-     (Self           : Object;
-      Pack           : Package_Id;
-      Name           : Attribute_Id;
-      Index          : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos         : Unit_Index             := No_Index;
-      Result         : out Project.Attribute.Object) return Boolean
+     (Self   : Object;
+      Pack   : Package_Id;
+      Name   : Attribute_Id;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index             := No_Index;
+      Result : out Project.Attribute.Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True and set Result if the value of the package attribute
    --  exists, after all resolutions are applied (inheritance, default value
@@ -378,7 +378,7 @@ package GPR2.Project.View is
    --  via their default attribute values.
 
    function Packages
-     (Self : Object;
+     (Self          : Object;
       With_Defaults : Boolean := True;
       With_Config   : Boolean := True) return GPR2.Containers.Package_Id_List
      with Pre  => Self.Is_Defined,
@@ -703,7 +703,7 @@ package GPR2.Project.View is
      (Self   : Object;
       Source : Simple_Name;
       At_Pos : Unit_Index) return GPR2.Path_Name.Object
-     with Pre  => Self.Is_Defined;
+     with Pre => Self.Is_Defined;
    --  Returns the full pathname of the main executable for the given main
 
    function Main

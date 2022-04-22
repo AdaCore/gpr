@@ -40,7 +40,7 @@ empty_warning.gpr:4:07: warning: empty attribute Builder'Executable ignored
 empty_warning.gpr: warning: there are no sources of language "Ada" in this project
 empty_error.gpr:4:07: error: attribute Naming'Dot_Replacement cannot be empty
 no_package.gpr:3:19: error: unknown package or project "Unknown"
-no_package2.gpr:3:15: error: package "Ide" not declared in project "No_Package2"
+no_package2.gpr:3:18: error: package "Remote" not declared in project "No_Package2"
 unexpected_index.gpr:3:08: error: attribute "Object_Dir" cannot have index
 unexpected_index2.gpr:3:19: error: attribute "Object_Dir" cannot have index
 

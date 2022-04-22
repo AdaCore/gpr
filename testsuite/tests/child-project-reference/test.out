@@ -2,7 +2,7 @@ V1:SINGLE=-1-build.settings-2-
 V2:SINGLE=-1-build.settings-2--3--4--5--6-
 V3:SINGLE=prj
 V4:SINGLE=-1-build.settings-2--3-
-V5:SINGLE=-documentation-dir-
+V5:SINGLE=-root-dir-
 BST1
 testing bad1.gpr
 bad1.gpr:4:20: error: project_name.package_name reference is required
@@ -21,14 +21,14 @@ project Prj is
 
    package Install renames Build.Settings.Install;
 
-   package IDE extends Build.Settings.IDE is
-   end IDE;
+   package Remote extends Build.Settings.Remote is
+   end Remote;
 
    V1 := Build.Settings.BS2;
-   V2 := Build.Settings.IDE.BS5;
+   V2 := Build.Settings.Remote.BS5;
    V3 := Prj'Name;
    V4 := Prj.Install'Install_Name;
-   V5 := Prj.IDE'Documentation_Dir;
+   V5 := Prj.Remote'Root_Dir;
    V6 : Build.Settings.T := "BST2";
 
 end Prj;
@@ -46,10 +46,10 @@ abstract project Build.Settings extends "build.gpr" is
       BS4 := BS3 & "-5-";
    end Install;
 
-   package IDE is
-      for Documentation_Dir use "-documentation-dir-";
+   package Remote is
+      for Root_Dir use "-root-dir-";
       BS5 := Install.BS4 & "-6-";
-   end IDE;
+   end Remote;
 
    type T is ("BST1", "BST2");
 

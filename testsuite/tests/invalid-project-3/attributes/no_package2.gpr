@@ -1,6 +1,6 @@
 project No_Package2 is
 
-   Var := Ide'Remote_Host;
+   Var := Remote'Root_Dir;
    --  Defined but does not exist here
 
 end No_Package2;
