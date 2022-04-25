@@ -42,7 +42,7 @@ package body GPR2.Project.Registry.Attribute.Description is
             Key       => Key);
       end if;
 
-      return "Not available !";
+      return "";
 
    end Get_Attribute_Description;
 
@@ -1795,6 +1795,15 @@ begin
         "language that do not necessarily follow the naming scheme for the " &
         "language and that may or may not be found in the source directories" &
         " of the project."
+     );
+
+   --  Naming.Body
+   Pack_Attribute_Description.Insert
+     (Container => Attribute_Description,
+      Key       => (Pack => PRP.Naming,
+                    Attr => PRA.Body_N),
+      New_Item  =>
+        "Index is a unit name. Value is the file name of the body of the unit."
      );
 
    --  Remote.Included_Patterns

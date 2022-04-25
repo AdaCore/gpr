@@ -17,6 +17,7 @@ GPRINSTALL = GPR + "install"
 GPRNAME = GPR + "name"
 GPRCONFIG = GPR + "config"
 GPRREMOTE = GPR + "remote"
+GPRDOC = GPR + "doc"
 
 
 class BuilderAndRunner(object):

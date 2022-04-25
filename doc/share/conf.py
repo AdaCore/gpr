@@ -37,7 +37,8 @@ def get_copyright():
 
 
 def get_gpr_version():
-    m = re.search(r'Short_Value : constant String := "([^"]+)";',
+    m = re.search(r'Short_Value : ' +
+                  r'constant String := "([^"]+)";',
                   gpr_version_content)
     if m:
         return m.group(1).strip()

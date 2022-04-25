@@ -1,0 +1,371 @@
+{
+	"packages": [
+		{
+			"package_name": "Project_Level",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": []
+				},
+				{
+					"category_name": "General",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Name"},{"attribute_name": "Project_Dir"},{"attribute_name": "Main"},{"attribute_name": "Languages"},{"attribute_name": "Roots"},{"attribute_name": "Externally_Built"},{"attribute_name": "Warning_Message"}
+					]
+				},
+				{
+					"category_name": "Directories",
+					"category_to_display": true,
+					"attributes" : [{"attribute_name": "Object_Dir"},{"attribute_name": "Exec_Dir"},{"attribute_name": "Create_Missing_Dirs"},{"attribute_name": "Source_Dirs"},{"attribute_name": "Inherit_Source_Path"},{"attribute_name": "Exclude_Source_Dirs"},{"attribute_name": "Ignore_Source_Sub_Dirs"}]
+				},
+				{
+					"category_name": "Source Files",
+					"category_to_display": true,
+					"attributes" : [{"attribute_name": "Source_Files"},{"attribute_name": "Locally_Removed_Files"},{"attribute_name": "Excluded_Source_Files"},{"attribute_name": "Source_List_File"},{"attribute_name": "Excluded_Source_List_File"},{"attribute_name": "Interfaces"}]
+				},
+				{
+					"category_name": "Aggregate Projects",
+					"category_to_display": true,
+					"attributes" : [{"attribute_name": "Project_Files"},{"attribute_name": "Project_Path"},{"attribute_name": "External"}]
+				},
+				{
+					"category_name": "Libraries",
+					"category_to_display": true,
+					"attributes" : [{"attribute_name": "Library_Dir"},{"attribute_name": "Library_Name"},{"attribute_name": "Library_Kind"},{"attribute_name": "Library_Version"},{"attribute_name": "Library_Interface"},{"attribute_name": "Library_Standalone"},{"attribute_name": "Library_Encapsulated_Options"},{"attribute_name": "Library_Encapsulated_Supported"},{"attribute_name": "Library_Auto_Init"},{"attribute_name": "Leading_Library_Options"},{"attribute_name": "Library_Options"},{"attribute_name": "Library_Rpath_Options"},{"attribute_name": "Library_Src_Dir"},{"attribute_name": "Library_ALI_Dir"},{"attribute_name": "Library_gcc"},{"attribute_name": "Library_Symbol_File"},{"attribute_name": "Library_Symbol_Policy"},{"attribute_name": "Library_Reference_Symbol_File"}]
+				},
+				{
+					"category_name": "Configuration - General",
+					"category_to_display": true,
+					"attributes" : [{"attribute_name": "Default_Language"},{"attribute_name": "Run_Path_Option"},{"attribute_name": "Run_Path_Origin"},{"attribute_name": "Separate_Run_Path_Options"},{"attribute_name": "Toolchain_Version"},{"attribute_name": "Required_Toolchain_Version"},{"attribute_name": "Toolchain_Description"},{"attribute_name": "Object_Generated"},{"attribute_name": "Objects_Linked"},{"attribute_name": "Target"},{"attribute_name": "Runtime"},{"attribute_name": "Runtime_Dir"},{"attribute_name": "Runtime_Library_Dirs"},{"attribute_name": "Runtime_Library_Dir"},{"attribute_name": "Runtime_Source_Dirs"},{"attribute_name": "Runtime_Source_Dir"},{"attribute_name": "Runtime_Library_Version"},{"attribute_name": "Toolchain_Name"}]
+				},
+				{
+					"category_name": "Configuration - Libraries",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Library_Builder"},{"attribute_name": "Library_Support"}]
+				},
+				{
+					"category_name": "Configuration - Archives",
+					"category_to_display": true,
+					"attributes" : [{"attribute_name": "Archive_Builder"},{"attribute_name": "Archive_Builder_Append_Option"},{"attribute_name": "Archive_Indexer"},{"attribute_name": "Archive_Suffix"},{"attribute_name": "Library_Partial_Linker"}]
+				},
+				{
+					"category_name": "Configuration - Shared Libraries",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Shared_Library_Prefix"},{"attribute_name": "Shared_Library_Suffix"},{"attribute_name": "Symbolic_Link_Supported"},{"attribute_name": "Library_Major_Minor_Id_Supported"},{"attribute_name": "Library_Auto_Init_Supported"},{"attribute_name": "Shared_Library_Minimum_Switches"},{"attribute_name": "Library_Version_Switches"},{"attribute_name": "Library_Install_Name_Option"}]
+				},
+				{
+					"category_name": "Hidden",
+					"category_to_display": false,
+					"attributes": [{"attribute_name": "Canonical_Target"},{"attribute_name": "Excluded_Source_Dirs"},{"attribute_name": "Include_Switches_Via_Spec"},{"attribute_name": "Library_Ali_Dir"},{"attribute_name": "Library_Gcc"},{"attribute_name": "Object_Lister"},{"attribute_name": "Object_Lister_Matcher"},{"attribute_name": "Origin_Project"},{"attribute_name": "Only_Dirs_With_Sources"},{"attribute_name": "Toolchain_Path"}]
+				}
+			]
+		},
+		{
+			"package_name": "Binder",
+			"package_to_display": true,
+			"categories" : [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": []
+				},
+				{
+					"category_name": "General",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Default_Switches"},{"attribute_name": "Switches"}]
+				},
+				{
+					"category_name": "Configuration - Binding",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Driver"},{"attribute_name": "Required_Switches"},{"attribute_name": "Prefix"},{"attribute_name": "Objects_Path"},{"attribute_name": "Object_Path_File"}]
+				},
+				{
+					"category_name": "Hidden",
+					"category_to_display": false,
+					"attributes": [{"attribute_name": "Objects_Path_File"},{"attribute_name": "Bindfile_Option_Substitution"}]
+				}
+			]
+		},
+		{
+			"package_name": "Builder",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Default_Switches"},{"attribute_name": "Switches"},{"attribute_name": "Global_Compilation_Switches"},{"attribute_name": "Executable"},{"attribute_name": "Executable_Suffix"},{"attribute_name": "Global_Configuration_Pragmas"},{"attribute_name": "Global_Config_File"}]
+				}
+			]
+		},
+		{
+			"package_name": "Check",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Default_Switches"},{"attribute_name": "Switches"}]
+				}
+			]
+		},
+		{
+			"package_name": "Clean",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Switches"},{"attribute_name": "Source_Artifact_Extensions"},{"attribute_name": "Object_Artifact_Extensions"},{"attribute_name": "Artifacts_In_Object_Dir"},{"attribute_name": "Artifacts_In_Exec_Dir"}]
+				}
+			]
+		},
+		{
+			"package_name": "Compiler",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": []
+				},
+				{
+					"category_name": "General",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Default_Switches"},{"attribute_name": "Switches"},{"attribute_name": "Local_Configuration_Pragmas"},{"attribute_name": "Local_Config_File"}]
+				},
+				{
+					"category_name": "Configuration - Compiling",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Driver"},{"attribute_name": "Language_Kind"},{"attribute_name": "Dependency_Kind"},{"attribute_name": "Required_Switches"},{"attribute_name": "Leading_Required_Switches"},{"attribute_name": "Trailing_Required_Switches"},{"attribute_name": "PIC_Option"},{"attribute_name": "Source_File_Switches"},{"attribute_name": "Object_File_Suffix"},{"attribute_name": "Object_File_Switches"},{"attribute_name": "Multi_Unit_Switches"},{"attribute_name": "Multi_Unit_Object_Separator"}]
+				},
+				{
+					"category_name": "Configuration - Mapping Files",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Mapping_File_Switches"},{"attribute_name": "Mapping_Spec_Suffix"},{"attribute_name": "Mapping_Body_Suffix"}]
+				},
+				{
+					"category_name": "Configuration - Config Files",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Config_File_Switches"},{"attribute_name": "Config_Body_File_Name"},{"attribute_name": "Config_Body_File_Name_Index"},{"attribute_name": "Config_Body_File_Name_Pattern"},{"attribute_name": "Config_Spec_File_Name"},{"attribute_name": "Config_Spec_File_Name_Index"},{"attribute_name": "Config_Spec_File_Name_Pattern"},{"attribute_name": "Config_File_Unique"}]
+				},
+				{
+					"category_name": "Configuration - Dependencies",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Dependency_Switches"},{"attribute_name": "Dependency_Driver"}]
+				},
+				{
+					"category_name": "Configuration - Search Paths",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Include_Switches"},{"attribute_name": "Include_Path"},{"attribute_name": "Include_Path_File"},{"attribute_name": "Object_Path_Switches"}]
+				},
+				{
+					"category_name": "Configuration - Response Files",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Max_Command_Line_Length"},{"attribute_name": "Response_File_Format"},{"attribute_name": "Response_File_Switches"}]
+				},
+				{
+					"category_name": "Hidden",
+					"category_to_display": false,
+					"attributes": [{"attribute_name": "Path_Syntax"},{"attribute_name": "Pic_Option"}]
+				}
+			]
+		},
+		{
+			"package_name": "Cross_Reference",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Default_Switches"},{"attribute_name": "Switches"}]
+				}
+			]
+		},
+		{
+			"package_name": "Eliminate",
+			"package_to_display": false,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": false,
+					"attributes": [{"attribute_name": "Default_Switches"},{"attribute_name": "Switches"}]
+				}
+			]
+		},
+		{
+			"package_name": "Documentation",
+			"package_to_display": false,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": false,
+					"attributes": []
+				}
+			]
+		},
+		{
+			"package_name": "Finder",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Default_Switches"},{"attribute_name": "Switches"}]
+				}
+			]
+		},
+		{
+			"package_name": "Gnatls",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Switches"}]
+				}
+			]
+		},
+		{
+			"package_name": "Gnatstub",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Default_Switches"},{"attribute_name": "Switches"}]
+				}
+			]
+		},
+		{
+			"package_name": "Ide",
+			"package_to_display": false,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": false,
+					"attributes": []
+				},
+				{
+					"category_name": "Hidden",
+					"category_to_display": false,
+					"attributes": [{"attribute_name": "Communication_Protocol"},{"attribute_name": "Compiler_Command"},{"attribute_name": "Debugger_Command"},{"attribute_name": "Default_Switches"},{"attribute_name": "Documentation_Dir"},{"attribute_name": "Gnatlist"},{"attribute_name": "Program_Host"},{"attribute_name": "Remote_Host"},{"attribute_name": "Vcs_File_Check"},{"attribute_name": "Vcs_Kind"},{"attribute_name": "Vcs_Log_Check"}]
+				}
+			]
+		},
+		{
+			"package_name": "Install",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Artifacts"},{"attribute_name": "Required_Artifacts"},{"attribute_name": "Prefix"},{"attribute_name": "Sources_Subdir"},{"attribute_name": "Exec_Subdir"},{"attribute_name": "ALI_Subdir"},{"attribute_name": "Lib_Subdir"},{"attribute_name": "Project_Subdir"},{"attribute_name": "Active"},{"attribute_name": "Mode"},{"attribute_name": "Install_Name"},{"attribute_name": "Side_Debug"},{"attribute_name": "Install_Project"}]
+				},
+				{
+					"category_name": "Hidden",
+					"category_to_display": false,
+					"attributes": [{"attribute_name": "Ali_Subdir"}]
+				}
+			]
+		},
+		{
+			"package_name": "Linker",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": []
+				},
+				{
+					"category_name": "General",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Required_Switches"},{"attribute_name": "Default_Switches"},{"attribute_name": "Leading_Switches"},{"attribute_name": "Switches"},{"attribute_name": "Trailing_Switches"},{"attribute_name": "Linker_Options"},{"attribute_name": " Map_File_Option"},{"attribute_name": "Unconditionally_Linked"}]
+				},
+				{
+					"category_name": "Configuration - Linking",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Driver"}]
+				},
+				{
+					"category_name": "Configuration - Response Files",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Max_Command_Line_Length"},{"attribute_name": "Response_File_Format"},{"attribute_name": "Response_File_Switches"}]
+				},
+				{
+					"category_name": "Hidden",
+					"category_to_display": false,
+					"attributes": [{"attribute_name": "Export_File_Format"},{"attribute_name": "Export_File_Switch"},{"attribute_name": "Map_File_Option"}]
+				}
+			]
+		},
+		{
+			"package_name": "Metrics",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Default_Switches"},{"attribute_name": "Switches"}]
+				}
+			]
+		},
+		{
+			"package_name": "Naming",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Specification_Suffix"},{"attribute_name": "Spec_Suffix"},{"attribute_name": "Implementation_Suffix"},{"attribute_name": "Body_Suffix"},{"attribute_name": "Separate_Suffix"},{"attribute_name": "Casing"},{"attribute_name": "Dot_Replacement"},{"attribute_name": "Specification"},{"attribute_name": "Spec"},{"attribute_name": "Implementation"},{"attribute_name": "Body"},{"attribute_name": "Specification_Exceptions"},{"attribute_name": "Implementation_Exceptions"}]
+				}
+			]
+		},
+		{
+			"package_name": "Pretty_Printer",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Default_Switches"},{"attribute_name": "Switches"}]
+				}
+			]
+		},
+		{
+			"package_name": "Remote",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Included_Patterns"},{"attribute_name": "Included_Artifact_Patterns"},{"attribute_name": "Excluded_Patterns"},{"attribute_name": "Root_Dir"}]
+				}
+			]
+		},
+		{
+			"package_name": "Stack",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Switches"}]
+				}
+			]
+		},
+		{
+			"package_name": "Synchronize",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Default_Switches"},{"attribute_name": "Switches"}]
+				}
+			]
+		}
+	]
+}
