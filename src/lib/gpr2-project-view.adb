@@ -1696,6 +1696,15 @@ package body GPR2.Project.View is
       return Definition.Has_Source (Self, Filename);
    end Has_Source;
 
+   -----------------------------
+   -- Has_Source_Subdirectory --
+   -----------------------------
+
+   function Has_Source_Subdirectory (Self : Object) return Boolean is
+   begin
+      return Self.Tree.all.Has_Src_Subdirs;
+   end Has_Source_Subdirectory;
+
    -----------------
    -- Has_Sources --
    -----------------
@@ -2658,6 +2667,21 @@ package body GPR2.Project.View is
 
    function Source_Subdirectory (Self : Object) return GPR2.Path_Name.Object is
    begin
+      --  First check for <obj>/<project.lowercase_name>-<src_subdirs>
+
+      declare
+         P : constant GPR2.Path_Name.Object :=
+               Self.Object_Directory.Compose
+                 (Filename_Type (To_Lower (Self.Name))
+                  & "-" & Self.Tree.Src_Subdirs, Directory => True);
+      begin
+         if P.Exists then
+            return P;
+         end if;
+      end;
+
+      --  Then default to <obj>/<src_subdirs>
+
       return Self.Object_Directory.Compose
         (Self.Tree.Src_Subdirs, Directory => True);
    end Source_Subdirectory;
