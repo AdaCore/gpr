@@ -22,8 +22,8 @@ doc_name = 'gprbuild_ug'
 
 # Then retrieve the source directory
 root_source_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-gpr_version_spec = os.path.join(root_source_dir, '..', 'gpr', 'src',
-                                'gpr-version.ads')
+gpr_version_spec = os.path.join(root_source_dir, '..', 'src', 'tools',
+                                'gpr2-version.ads')
 texi_fsf = True  # Set to False when FSF doc is switched to sphinx by default
 
 numfig = True    # Allow automatic numbering of figures
@@ -37,8 +37,7 @@ def get_copyright():
 
 
 def get_gpr_version():
-    m = re.search(r'Gpr_Version : ' +
-                  r'constant String := "([^"]+)";',
+    m = re.search(r'Short_Value : constant String := "([^"]+)";',
                   gpr_version_content)
     if m:
         return m.group(1).strip()
