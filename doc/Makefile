@@ -14,9 +14,15 @@ ALLSPHINXOPTS   = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) \
 		  -c $(SOURCEDIR)/share \
 		  -d $(BUILDDIR)/$*/doctrees \
 		  $(SOURCEDIR)
-FMT_LIST=html txt info pdf
+FMT_LIST=generate html txt info pdf
 DOC_NAME=gprbuild_ug
 CP=cp
+
+WORK_DIR=__python__
+GPRDOC_FILE=${WORK_DIR}/metadata/gprdoc_output.json
+OUT_FILE=gprbuild_ug/attributes.rst
+
+-include ../makefile.setup
 
 .PHONY: help clean
 
@@ -39,6 +45,8 @@ clean:
 		$(BUILDDIR)/txt \
 		$(BUILDDIR)/info \
 		$(BUILDDIR)/doctrees \
+		${WORK_DIR}/metadata/__pycache__ \
+		${GPRDOC_FILE} \
 		share/__pycache__
 
 html: force
@@ -59,5 +67,13 @@ info: force
 
 texinfo:
 	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/$*/texinfo
+
+generate:
+	@if [ -f ${GPRDOC_FILE} ]; \
+	then \
+		${WORK_DIR}/generate_gpr2_documentation.py --input=${GPRDOC_FILE} --output=${OUT_FILE}; \
+	else \
+		echo "[Warning] No such file ${GPRDOC_FILE}, cannot generate ${OUT_FILE}. Generating documentation with existing files"; \
+	fi;
 
 force:

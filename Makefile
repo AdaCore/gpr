@@ -131,7 +131,7 @@ CLEANER=gprclean -eL -p ${RBD} -XGPR2_BUILD=${GPR2_BUILD} \
         -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}"
 UNINSTALLER=${INSTALLER} -p -f --uninstall
 
-.PHONY: force
+.PHONY: force doc
 
 #########
 # build #
@@ -182,10 +182,6 @@ ifeq (${GPR2_BUILD},gnatcov)
 	${COVERAGE_INSTR} -P ${GPR2TOOLS}
 	${COVERAGE_INSTR} -P ${GPR2NAME}
 endif
-
-# Documentation
-doc:
-	make -C ${SOURCE_DIR}/doc
 
 ###########
 # Install #
@@ -269,3 +265,12 @@ clean-buildtype-%:
 
 clean-tools:
 	-${CLEANER} -XLIBRARY_TYPE=static -P ${GPR2TOOLS}
+
+#################
+# Documentation #
+#################
+
+doc:
+	${BUILD_ROOT}/${GPR2_BUILD}/gprdoc --display=json-compact > ${SOURCE_DIR}/doc/__python__/metadata/gprdoc_output.json
+	${BUILD_ROOT}/${GPR2_BUILD}/gprdoc --display=json > ${SOURCE_DIR}/testsuite/tests/gprdoc/test.out
+	make -C ${SOURCE_DIR}/doc

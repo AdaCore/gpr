@@ -637,14 +637,14 @@ package GPR2.Project.View is
    function Has_Source_Subdirectory (Self : Object) return Boolean
      with Pre => Self.Is_Defined
                  and then Self.Kind
-                   not in K_Configuration | K_Abstract | K_Aggregate;
+                   not in K_Configuration | K_Abstract | Aggregate_Kind;
    --  Returns True if a Src_Subdires is setup in the corresponding tree
 
    function Source_Subdirectory (Self : Object) return GPR2.Path_Name.Object
      with Pre  => Self.Is_Defined
                   and then Self.Has_Source_Subdirectory
                   and then Self.Kind
-                    not in K_Configuration | K_Abstract | K_Aggregate,
+                    not in K_Configuration | K_Abstract | Aggregate_Kind,
           Post => Source_Subdirectory'Result.Is_Defined;
    --  Returns source subdirectory in object directory if parameter Src_Subdirs
    --  is defined on Tree.Load call.
