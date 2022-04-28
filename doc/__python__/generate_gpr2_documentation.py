@@ -131,9 +131,11 @@ def generate(data, file):
         # If the package is not in the map, it is not displayed already
         if not package.get_name() in displayed_pc:
             package_text_name = " ".join(package.get_name().split("_")) + " Attributes"
+            package_cat_name = f"_{package.get_name()}_Attributes"
             if package.get_name() != "Project_Level":
-                package_text_name = "package " + package_text_name
-            file.write(f".. _{package.get_name()}_Attributes:\n\n" +
+                package_text_name = "Package " + package_text_name
+                package_cat_name = "_Package" + package_cat_name
+            file.write(f".. {package_cat_name}:\n\n" +
                        f"{package_text_name}\n" +
                        "^" * len(package_text_name) + "\n\n")
             # Insert the package into the map, it will not be displayed anymore
