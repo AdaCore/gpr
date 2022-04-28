@@ -122,7 +122,10 @@ The characteristics of each attribute are indicated as follows:
 * **Type of value**
 
   The value of an attribute may be a single string, indicated by the word
-  "single", or a string list, indicated by the word "list".
+  "single value", a string list, indicated by the word "list value" or a
+  string set (list where the elements are unique), indicated by the word "set
+  value". In the case of a set, it is also indicated if the elements are
+  considered case sensitive or not.
 
 * **Read-only**
 
@@ -132,33 +135,38 @@ The characteristics of each attribute are indicated as follows:
 * **Optional index**
 
   If an optional index is allowed in the value of the attribute (both single
-  and list), this is indicated by the words "optional index".
+  and list), this is indicated by the words "others index allowed". Such
+  definition is used when no other index match.
 
 * **Indexed attribute**
 
-  An indexed attribute is indicated by the word "indexed".
+  An indexed attribute is indicated by the word "indexed by ..." followed by
+  the kind of index:
 
-* **Case-sensitivity of the index**
+  * *language*: the index is a language, case insensitive
+  * *file name*: the index is a simple file name (so without any directory
+    or subdirectory indication).
+  * *source glob*: the index is the simple file name of a source file, or
+    a glob pattern that matches simple file name of several source files. The
+    case sensitivity depends on the host.
+  * *source glob or language*: the index is either a source glob or a
+    language (see above the two kind of index).
+  * *unit*: the index is an Ada unit, case insensitive
+  * *string*: the index is a generic case sensitive string
+  * *external reference*: the index is an external reference
 
-  For an indexed attribute, if the index is case-insensitive, this is indicated
-  by the words "case-insensitive index".
-
-* **File name index**
-
-  For an indexed attribute, when the index is a file name, this is indicated by
-  the words "file name index". The index may or may not be case-sensitive,
-  depending on the platform.
-
-* **others allowed in index**
-
-  For an indexed attribute, if it is allowed to use **others** as the index,
-  this is indicated by the words "others allowed".
-
-  When **others** is used as the index of an indexed attribute, the value of
-  the attribute indexed by **others** is used when no other index would apply.
-
-* **configuration concatenable**
+* **Configuration concatenable**
 
   For a string list attribute, the final value if the attribute is declared
   in both the configuration project and the user project is the concatenation
   of the two value, configuration then user.
+
+* **Inheritance**
+
+  By default, top-level attribute values are inherited from extended projects
+  if any. If not, it is indicated:
+
+  * *not inherited from extended* when the value is not inherited
+  * *concatenated from extended* when the final value is the concatenation
+    of the list inherited from the extended project and the project's own
+    definition.

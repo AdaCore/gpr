@@ -95,17 +95,20 @@ procedure GPRdoc.Process (Display : Display_Kind) is
          end if;
 
          case Attr_Def.Index_Type is
-         when PRA.No_Index | PRA.String_Index | PRA.Env_Var_Name_Index =>
-            null;
-         when PRA.Unit_Index | PRA.Language_Index =>
-            Text_IO.Put (Item => K_Separator & "case-insensitive index");
-         when PRA.File_Index |
-              PRA.FileGlob_Index |
-              PRA.FileGlob_Or_Language_Index =>
-            if not GPR2.File_Names_Case_Sensitive
-            then
+            when PRA.No_Index | PRA.String_Index | PRA.Env_Var_Name_Index =>
+               null;
+
+            when PRA.Unit_Index | PRA.Language_Index =>
                Text_IO.Put (Item => K_Separator & "case-insensitive index");
-            end if;
+
+            when PRA.File_Index |
+                 PRA.FileGlob_Index |
+                 PRA.FileGlob_Or_Language_Index =>
+
+               if not GPR2.File_Names_Case_Sensitive
+               then
+                  Text_IO.Put (Item => K_Separator & "case-insensitive index");
+               end if;
          end case;
 
          if  Attr_Def.Index_Type = PRA.File_Index
@@ -476,23 +479,14 @@ procedure GPRdoc.Process (Display : Display_Kind) is
 begin
 
    case Display is
-
       when K_JSON_Compact =>
-
          Generate_JSON_Documentation (Compact => True);
 
       when K_JSON =>
-
          Generate_JSON_Documentation (Compact => False);
 
       when K_Textual_IO =>
-
          Generate_IO_Textual_Documentation;
-
-      when K_Undefined =>
-
-         null;
-
    end case;
 
 end GPRdoc.Process;

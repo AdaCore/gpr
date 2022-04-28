@@ -21,7 +21,6 @@ with Ada.Exceptions;
 with Ada.Text_IO;
 
 with GPR2.Interrupt_Handler;
-with GPR2.Project.Tree;
 
 with GPRdoc.Process;
 
@@ -37,10 +36,8 @@ procedure GPRdoc.Main is
 
    --  Variables for tool's options
 
-   Project_Tree              : aliased GPR2.Project.Tree.Object;
-
    type GPRdoc_Options is new GPRtools.Options.Base_Options with record
-      Kind_Of_Display : Display_Kind := K_Undefined;
+      Kind_Of_Display : Display_Kind := K_JSON_Compact;
    end record;
 
    Options : GPRdoc_Options;
@@ -99,16 +96,14 @@ procedure GPRdoc.Main is
       use GPRtools.Options;
       Parser : GPRtools.Options.Command_Line_Parser :=
         Create
-          (Initial_Year       => "2022",
-           No_Project_Support => True,
-           Allow_Quiet        => False);
+        (Initial_Year       => "2022",
+         No_Project_Support => True,
+         Allow_Quiet        => False);
       Group  : constant GPRtools.Command_Line.Argument_Group :=
         Parser.Add_Argument_Group
           ("gprdoc", On_Switch'Unrestricted_Access);
 
    begin
-      Options.Tree := Project_Tree.Reference;
-
       Setup (Tool => GPRtools.Inspect);
 
       Parser.Add_Argument
@@ -118,6 +113,7 @@ procedure GPRdoc.Main is
                  Delimiter  => Equal,
                  Parameter  => "json|json-compact|textual",
                  Default    => "json-compact"));
+      Options.No_Project := True;
 
       Parser.Get_Opt (Options);
    end Parse_Command_Line;

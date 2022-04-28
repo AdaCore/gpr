@@ -8,23 +8,24 @@ substrings_to_escape = ["*"]
 # Translation into text from an attribute key and value
 attribute_key_value_translation = {
     ("index_type", "NO_INDEX"): "",
-    ("index_type", "UNIT_INDEX"): "Indexed by an unit, case-insensitive index",
-    ("index_type", "ENV_VAR_NAME_INDEX"): "Index by an environment variable",
-    ("index_type", "FILE_INDEX"): "Indexed by a file",
-    ("index_type", "FILEGLOB_INDEX"): "Indexed by a source simple name or a glob"
-    + "pattern",
-    ("index_type", "LANGUAGE_INDEX"): "Indexed by a language, case-insensitive index",
+    ("index_type", "UNIT_INDEX"): "indexed by a unit",
+    ("index_type", "ENV_VAR_NAME_INDEX"): "indexed by an external reference",
     (
         "index_type",
-        "FILEGLOB_OR_LANGUAGE_INDEX",
-    ): "Indexed by a source simple name, a glob"
-    + "pattern to match a set of sources, or a language",
-    ("index_optional", True): 'The "others" index is allowed',
+        "FILE_INDEX",
+    ): "indexed by a file name",
+    ("index_type", "FILEGLOB_INDEX"): "indexed by a source glob",
+    ("index_type", "LANGUAGE_INDEX"): "indexed by a language",
+    ("index_type", "FILEGLOB_OR_LANGUAGE_INDEX"): (
+        "indexed by a source glob or language"
+    ),
+    ("index_optional", True): '"others" index allowed',
     ("index_optional", False): "",
-    ("value", "SINGLE"): "Single value",
-    ("value", "LIST"): "List value",
-    ("value_case_sensitive", True): "case-sensitive value",
-    ("value_case_sensitive", False): "case-insensitive value",
+    ("value", "SINGLE"): "single value",
+    ("value", "LIST"): "list value",
+    ("value", "SET"): "set value",
+    ("value_case_sensitive", True): "case-sensitive",
+    ("value_case_sensitive", False): "case-insensitive",
     ("value_is_set", True): "",
     ("value_is_set", False): "",
     ("empty_value", "ALLOW"): "",
@@ -40,8 +41,8 @@ attribute_key_value_translation = {
     ("config_concatenable", True): "configuration concatenable",
     ("config_concatenable", False): "",
     ("inherit_from_extended", "INHERITED"): "",
-    ("inherit_from_extended", "CONCATENATED"): "",
-    ("inherit_from_extended", "NOT_INHERITED"): "",
+    ("inherit_from_extended", "CONCATENATED"): "concatenated with extended value",
+    ("inherit_from_extended", "NOT_INHERITED"): "not inherited from extended project",
 }
 
 # Complementary files
