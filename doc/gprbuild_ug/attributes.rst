@@ -547,9 +547,9 @@ Project Level Attributes
     Indicates the level of support of libraries. Only authorized case-insensitive
     values are 'static_only', 'full' or 'none' (the default).
 
-.. _Binder_Attributes:
+.. _Package_Binder_Attributes:
 
-package Binder Attributes
+Package Binder Attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * **General**
@@ -588,9 +588,9 @@ package Binder Attributes
     Index is a language name. Value is the list of the required switches to be used
     when binding code of the language.
 
-.. _Builder_Attributes:
+.. _Package_Builder_Attributes:
 
-package Builder Attributes
+Package Builder Attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * **Default_Switches**: Indexed by a source simple name, a globpattern to match a set of sources, or a language, The "others" index is allowed, List value, configuration concatenable
@@ -632,9 +632,9 @@ package Builder Attributes
   builder switches to be used when building an executable. Index is either the
   source file name of the executable to be built or its language name.
 
-.. _Clean_Attributes:
+.. _Package_Clean_Attributes:
 
-package Clean Attributes
+Package Clean Attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 * **Artifacts_In_Exec_Dir**: List value
@@ -664,9 +664,9 @@ package Clean Attributes
   Taken into account only in the main project. Value is a list of switches to be
   used by the cleaning application.
 
-.. _Compiler_Attributes:
+.. _Package_Compiler_Attributes:
 
-package Compiler Attributes
+Package Compiler Attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * **Configuration - Config Files**
@@ -878,9 +878,9 @@ package Compiler Attributes
     Value is the list of switches to specify a response file for a compiler. The
     index is the name of the language for the compiler.
 
-.. _Gnatls_Attributes:
+.. _Package_Gnatls_Attributes:
 
-package Gnatls Attributes
+Package Gnatls Attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * **Switches**: List value
@@ -888,9 +888,9 @@ package Gnatls Attributes
   Taken into account only in the main project. Value is a list of switches to be
   used when invoking gnatls.
 
-.. _Install_Attributes:
+.. _Package_Install_Attributes:
 
-package Install Attributes
+Package Install Attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * **Active**: Single value
@@ -954,9 +954,9 @@ package Install Attributes
 
   Value is the sources directory or subdirectory of Prefix.
 
-.. _Linker_Attributes:
+.. _Package_Linker_Attributes:
 
-package Linker Attributes
+Package Linker Attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * **General**
@@ -1025,9 +1025,9 @@ package Linker Attributes
 
     Value is the list of switches to specify a response file to the linker.
 
-.. _Naming_Attributes:
+.. _Package_Naming_Attributes:
 
-package Naming Attributes
+Package Naming Attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * **Body**: Indexed by an unit, case-insensitive index, Single value
@@ -1090,9 +1090,9 @@ package Naming Attributes
 
   Equivalent to attribute Spec_Suffix.
 
-.. _Remote_Attributes:
+.. _Package_Remote_Attributes:
 
-package Remote Attributes
+Package Remote Attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * **Excluded_Patterns**: List value

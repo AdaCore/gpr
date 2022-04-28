@@ -18,7 +18,6 @@ in the section entitled :ref:`gnu_fdl`.
 
    gprbuild_ug/introduction
    gprbuild_ug/gnat_project_manager
-   gprbuild_ug/attributes
    gprbuild_ug/building_with_gprbuild
    gprbuild_ug/companion_tools
 
