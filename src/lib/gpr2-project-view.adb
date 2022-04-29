@@ -1448,6 +1448,11 @@ package body GPR2.Project.View is
       --  eventually call recursivelly Handle_Directory if a recursive read
       --  is specified.
 
+      function Is_Missing_Subdirectory
+        (Dir : GPR2.Path_Name.Full_Name) return Boolean;
+      --  Returns True is Path is a missing sub-directory (as specified by
+      --  --src-subdirs option) which should be filtered out.
+
       ----------------------
       -- Handle_Directory --
       ----------------------
@@ -1492,12 +1497,21 @@ package body GPR2.Project.View is
                            GPR2.Path_Name.No_Resolution));
 
                   when Directory =>
-                     if Directories.Simple_Name (Dir_Entry) not in "." | ".."
-                     then
-                        Handle_Directory
-                          (Filename_Type (Directories.Full_Name (Dir_Entry)),
-                           Do_Subdir_Visit);
-                     end if;
+                     --  Skip non existing sub-directories (option
+                     --  --src-subdirs as optional.
+                     declare
+                        New_Dir : constant Filename_Type :=
+                                    Filename_Type
+                                      (Directories.Full_Name (Dir_Entry));
+                     begin
+                        if Directories.Simple_Name (Dir_Entry)
+                             not in "." | ".."
+                          and then
+                             not Is_Missing_Subdirectory (String (New_Dir))
+                        then
+                           Handle_Directory (New_Dir, Do_Subdir_Visit);
+                        end if;
+                     end;
 
                   when Special_File =>
                      raise Program_Error;
@@ -1515,11 +1529,26 @@ package body GPR2.Project.View is
                   Source));
       end Handle_Directory;
 
+      -----------------------------
+      -- Is_Missing_Subdirectory --
+      -----------------------------
+
+      function Is_Missing_Subdirectory
+        (Dir : GPR2.Path_Name.Full_Name) return Boolean is
+      begin
+         return Self.Kind in K_Standard | K_Library
+           and then Self.Has_Source_Subdirectory
+           and then Dir = Self.Source_Subdirectory.Value
+           and then not Directories.Exists (Dir);
+      end Is_Missing_Subdirectory;
+
    begin
-      Handle_Directory
-        (Filename_Type (Root_Dir),
-         Recursive   => Recursive,
-         Is_Root_Dir => True);
+      if not Is_Missing_Subdirectory (Root_Dir) then
+         Handle_Directory
+           (Filename_Type (Root_Dir),
+            Recursive   => Recursive,
+            Is_Root_Dir => True);
+      end if;
    end Foreach;
 
    ---------------------------
