@@ -1427,7 +1427,7 @@ package body GPR2.Project.View is
                        (if Directory_Pattern = "**"
                         then "./**"
                         else String (Directory_Pattern)));
-      --  normalize dir part avoiding "" & "**"
+      --  Normalize dir part avoiding "" & "**"
       Recursive : constant Boolean :=
                     Dir'Length > 2
                     and then Dir (Dir'Last - 1 .. Dir'Last) = "**"
@@ -1507,10 +1507,10 @@ package body GPR2.Project.View is
             Directories.End_Search (Dir_Search);
          end if;
       exception
-         when Ada.IO_Exceptions.Name_Error =>
+         when IO_Exceptions.Name_Error =>
             Self.Tree.Append_Message
-              (GPR2.Message.Create
-                 (GPR2.Message.Error,
+              (Message.Create
+                 (Message.Error,
                   """" & String (Dir) & """ is not a valid directory",
                   Source));
       end Handle_Directory;
@@ -1574,6 +1574,7 @@ package body GPR2.Project.View is
       Lang_Attr : GPR2.Project.Attribute.Object;
    begin
       Lang_Attr := Self.Attribute (PRA.Languages);
+
       if Lang_Attr.Is_Defined then
          for Val of Lang_Attr.Values loop
             if Name_Type (Val.Text) = Name then
@@ -1599,8 +1600,7 @@ package body GPR2.Project.View is
    ---------------
 
    function Has_Mains (Self : Object) return Boolean is
-      Attr : constant Project.Attribute.Object :=
-               Self.Attribute (PRA.Main);
+      Attr : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
    begin
       if not Attr.Is_Defined then
          return False;
@@ -1836,7 +1836,6 @@ package body GPR2.Project.View is
    function Is_Aggregated_In_Library (Self : Object) return Boolean is
       Ref : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
-
       return not Ref.Agg_Libraries.Is_Empty;
    end Is_Aggregated_In_Library;
 
