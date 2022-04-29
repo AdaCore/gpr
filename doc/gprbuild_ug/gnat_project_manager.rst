@@ -3173,6 +3173,7 @@ between apostrophes.
 
    project_file_reference
    attributes
+   environment_variables
 
 
 .. _Project_File_Glossary:
