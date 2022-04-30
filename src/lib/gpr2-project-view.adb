@@ -1427,7 +1427,7 @@ package body GPR2.Project.View is
                        (if Directory_Pattern = "**"
                         then "./**"
                         else String (Directory_Pattern)));
-      --  normalize dir part avoiding "" & "**"
+      --  Normalize dir part avoiding "" & "**"
       Recursive : constant Boolean :=
                     Dir'Length > 2
                     and then Dir (Dir'Last - 1 .. Dir'Last) = "**"
@@ -1447,6 +1447,11 @@ package body GPR2.Project.View is
       --  Handle the specified directory, that is read all files in Dir and
       --  eventually call recursivelly Handle_Directory if a recursive read
       --  is specified.
+
+      function Is_Missing_Subdirectory
+        (Dir : GPR2.Path_Name.Full_Name) return Boolean;
+      --  Returns True is Path is a missing sub-directory (as specified by
+      --  --src-subdirs option) which should be filtered out.
 
       ----------------------
       -- Handle_Directory --
@@ -1492,12 +1497,21 @@ package body GPR2.Project.View is
                            GPR2.Path_Name.No_Resolution));
 
                   when Directory =>
-                     if Directories.Simple_Name (Dir_Entry) not in "." | ".."
-                     then
-                        Handle_Directory
-                          (Filename_Type (Directories.Full_Name (Dir_Entry)),
-                           Do_Subdir_Visit);
-                     end if;
+                     --  Skip non existing sub-directories (option
+                     --  --src-subdirs as optional.
+                     declare
+                        New_Dir : constant Filename_Type :=
+                                    Filename_Type
+                                      (Directories.Full_Name (Dir_Entry));
+                     begin
+                        if Directories.Simple_Name (Dir_Entry)
+                             not in "." | ".."
+                          and then
+                             not Is_Missing_Subdirectory (String (New_Dir))
+                        then
+                           Handle_Directory (New_Dir, Do_Subdir_Visit);
+                        end if;
+                     end;
 
                   when Special_File =>
                      raise Program_Error;
@@ -1507,19 +1521,34 @@ package body GPR2.Project.View is
             Directories.End_Search (Dir_Search);
          end if;
       exception
-         when Ada.IO_Exceptions.Name_Error =>
+         when IO_Exceptions.Name_Error =>
             Self.Tree.Append_Message
-              (GPR2.Message.Create
-                 (GPR2.Message.Error,
+              (Message.Create
+                 (Message.Error,
                   """" & String (Dir) & """ is not a valid directory",
                   Source));
       end Handle_Directory;
 
+      -----------------------------
+      -- Is_Missing_Subdirectory --
+      -----------------------------
+
+      function Is_Missing_Subdirectory
+        (Dir : GPR2.Path_Name.Full_Name) return Boolean is
+      begin
+         return Self.Kind in K_Standard | K_Library
+           and then Self.Has_Source_Subdirectory
+           and then Dir = Self.Source_Subdirectory.Value
+           and then not Directories.Exists (Dir);
+      end Is_Missing_Subdirectory;
+
    begin
-      Handle_Directory
-        (Filename_Type (Root_Dir),
-         Recursive   => Recursive,
-         Is_Root_Dir => True);
+      if not Is_Missing_Subdirectory (Root_Dir) then
+         Handle_Directory
+           (Filename_Type (Root_Dir),
+            Recursive   => Recursive,
+            Is_Root_Dir => True);
+      end if;
    end Foreach;
 
    ---------------------------
@@ -1574,6 +1603,7 @@ package body GPR2.Project.View is
       Lang_Attr : GPR2.Project.Attribute.Object;
    begin
       Lang_Attr := Self.Attribute (PRA.Languages);
+
       if Lang_Attr.Is_Defined then
          for Val of Lang_Attr.Values loop
             if Name_Type (Val.Text) = Name then
@@ -1599,8 +1629,7 @@ package body GPR2.Project.View is
    ---------------
 
    function Has_Mains (Self : Object) return Boolean is
-      Attr : constant Project.Attribute.Object :=
-               Self.Attribute (PRA.Main);
+      Attr : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
    begin
       if not Attr.Is_Defined then
          return False;
@@ -1836,7 +1865,6 @@ package body GPR2.Project.View is
    function Is_Aggregated_In_Library (Self : Object) return Boolean is
       Ref : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
-
       return not Ref.Agg_Libraries.Is_Empty;
    end Is_Aggregated_In_Library;
 

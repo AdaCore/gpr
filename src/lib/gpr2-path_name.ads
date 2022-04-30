@@ -221,12 +221,11 @@ package GPR2.Path_Name is
       else VFS.No_File);
    --  GPR2.Path_Name.Object to GNATCOLL.VFS.Virtual_File conversion
 
-   function Create (Filename : VFS.Filesystem_String)
-                         return GPR2.Path_Name.Object;
+   function Create
+     (Filename : VFS.Filesystem_String) return GPR2.Path_Name.Object;
    --  GNATCOLL.VFS.Filesystem_String to GPR2.Path_Name.Object conversion
 
-   function Create (File : VFS.Virtual_File)
-                         return GPR2.Path_Name.Object;
+   function Create (File : VFS.Virtual_File) return GPR2.Path_Name.Object;
    --  GNATCOLL.VFS.Virtual_File to GPR2.Path_Name.Object to conversion
 
 private
