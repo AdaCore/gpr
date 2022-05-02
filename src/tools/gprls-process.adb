@@ -895,6 +895,10 @@ begin
          end loop;
       end Display_Normal;
 
+      View   : GPR2.Project.View.Object;
+      Filter : GPR2.Project.Iterator_Control :=
+                 GPR2.Project.Default_Iterator;
+
    begin
       if Opt.Verbose then
          Display_Paths;
@@ -1028,7 +1032,11 @@ begin
          --  - Or we're not, and we will use all the compilable sources (from
          --    the root project or the entire tree, depending on All_Sources).
 
-         for View of Tree loop
+         Filter (GPR2.Project.I_Runtime) := Opt.With_Predefined_Units;
+
+         for C in Tree.Iterate (Kind => Filter) loop
+            View := GPR2.Project.Tree.Element (C);
+
             for S_Cur in View.Sources.Iterate (Filter => S_Compilable) loop
                declare
                   Src : GPR2.Project.Source.Object renames Element (S_Cur);

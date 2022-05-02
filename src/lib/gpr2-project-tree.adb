@@ -1148,6 +1148,14 @@ package body GPR2.Project.Tree is
       Iter := (Project_View_Store.Empty, Self.Self);
       For_Project (Self.Root);
 
+      if Self.Has_Runtime_Project and then Kind (I_Runtime) then
+         For_Project (Self.Runtime);
+      end if;
+
+      if Self.Has_Configuration and then Kind (I_Configuration) then
+         For_Project (Self.Configuration.Corresponding_View);
+      end if;
+
       return Iter;
    end Iterate;
 

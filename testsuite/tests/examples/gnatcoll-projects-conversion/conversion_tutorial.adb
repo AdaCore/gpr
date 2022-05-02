@@ -260,7 +260,10 @@ begin
    --  List the source files for project
    for Cursor in Project_Tree.Iterate
      (Kind =>
-        (GPR2.Project.I_Project => True, others => Args.Recursive.Get),
+        (GPR2.Project.I_Project => True,
+         GPR2.Project.I_Runtime => False,
+         GPR2.Project.I_Configuration => False,
+         others => Args.Recursive.Get),
       Status =>
         (GPR2.Project.S_Externally_Built => GNATCOLL.Tribooleans.False))
    loop
