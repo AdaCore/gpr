@@ -1,0 +1,5 @@
+with "gnatcoll";
+
+project P is
+   for Object_Dir use "obj";
+end P;
