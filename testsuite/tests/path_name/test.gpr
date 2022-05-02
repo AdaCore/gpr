@@ -1,0 +1,8 @@
+with "gpr2";
+project Test is
+   for main use ("main.adb");
+
+   package Compiler is
+      for Switches ("Ada") use ("-g", "-O2");
+   end Compiler;
+end Test;

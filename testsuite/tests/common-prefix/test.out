@@ -1,4 +1,5 @@
 1: /dir1/dir2
-2: /dir
-3: /dira/toto
-4: /
+2: /dir1
+3: /dir1/dira
+4: /dir1/dira/toto
+5: /

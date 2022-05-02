@@ -30,8 +30,10 @@ procedure Main is
    P2 : constant Path_Name.Object :=
           Path_Name.Create_File ("/dir1/dir2/dir3/toto");
    P3 : constant Path_Name.Object :=
-          Path_Name.Create_File ("/dira/toto");
+          Path_Name.Create_File ("/dir1/dira/toto");
    P4 : constant Path_Name.Object :=
+          Path_Name.Create_Directory ("/dir1/dira/toto");
+   P5 : constant Path_Name.Object :=
           Path_Name.Create_File ("/xyz");
 
    function Remove_Drive_Letter (Path : String) return String is
@@ -51,5 +53,7 @@ begin
    Text_IO.Put_Line
      ("3: " & Remove_Drive_Letter (P3.Common_Prefix (P3).Value));
    Text_IO.Put_Line
-     ("4: " & Remove_Drive_Letter (P3.Common_Prefix (P4).Value));
+     ("4: " & Remove_Drive_Letter (P4.Common_Prefix (P4).Value));
+   Text_IO.Put_Line
+     ("5: " & Remove_Drive_Letter (P3.Common_Prefix (P5).Value));
 end Main;
