@@ -128,7 +128,7 @@
             },
             "default": {
               "default_value_kind": "value",
-              "\u0000": ".a"
+              "value": ".a"
             },
             "is_toolchain_config": false,
             "config_concatenable": false,
@@ -424,7 +424,7 @@
             },
             "default": {
               "default_value_kind": "value",
-              "\u0000": "false"
+              "value": "false"
             },
             "is_toolchain_config": false,
             "config_concatenable": false,
@@ -588,7 +588,7 @@
             },
             "default": {
               "default_value_kind": "value",
-              "\u0000": "Ada"
+              "value": "Ada"
             },
             "is_toolchain_config": false,
             "config_concatenable": false,
@@ -692,7 +692,7 @@
             },
             "default": {
               "default_value_kind": "value",
-              "\u0000": "false"
+              "value": "false"
             },
             "is_toolchain_config": false,
             "config_concatenable": false,
@@ -984,7 +984,7 @@
             },
             "default": {
               "default_value_kind": "value",
-              "\u0000": "static"
+              "value": "static"
             },
             "is_toolchain_config": false,
             "config_concatenable": false,
@@ -1540,7 +1540,7 @@
             },
             "default": {
               "default_value_kind": "value",
-              "\u0000": "."
+              "value": "."
             },
             "is_toolchain_config": false,
             "config_concatenable": false,
@@ -2216,7 +2216,7 @@
             },
             "default": {
               "default_value_kind": "value",
-              "\u0000": "lib"
+              "value": "lib"
             },
             "is_toolchain_config": false,
             "config_concatenable": false,
@@ -2252,7 +2252,7 @@
             },
             "default": {
               "default_value_kind": "value",
-              "\u0000": ".so"
+              "value": ".so"
             },
             "is_toolchain_config": false,
             "config_concatenable": false,
@@ -2288,7 +2288,7 @@
             },
             "default": {
               "default_value_kind": "value",
-              "\u0000": "."
+              "value": "."
             },
             "is_toolchain_config": false,
             "config_concatenable": false,
@@ -2420,7 +2420,7 @@
             },
             "default": {
               "default_value_kind": "value",
-              "\u0000": "all"
+              "value": "all"
             },
             "is_toolchain_config": true,
             "config_concatenable": false,
@@ -2952,7 +2952,7 @@
             },
             "default": {
               "default_value_kind": "value",
-              "\u0000": ""
+              "value": ""
             },
             "is_toolchain_config": false,
             "config_concatenable": false,
@@ -5433,7 +5433,7 @@
             },
             "default": {
               "default_value_kind": "value",
-              "\u0000": "lowercase"
+              "value": "lowercase"
             },
             "is_toolchain_config": false,
             "config_concatenable": false,
@@ -5469,7 +5469,7 @@
             },
             "default": {
               "default_value_kind": "value",
-              "\u0000": "-"
+              "value": "-"
             },
             "is_toolchain_config": false,
             "config_concatenable": false,

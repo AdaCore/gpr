@@ -267,22 +267,27 @@ procedure GPRdoc.Process (Display : Display_Kind) is
 
                case VR.Kind is
                   when D_Attribute_Reference =>
-
                      Set_Field (Val        => Obj,
                                 Field_Name => "attr",
                                 Field      => Image (VR.Attr));
 
                   when D_Value =>
-
-                     for Elt in VR.Values.Iterate loop
-                        Set_Field
-                          (Val        => Obj,
-                           Field_Name => Value_Map.Key (Position => Elt),
-                           Field      => Value_Map.Element (Position => Elt));
-                     end loop;
+                     if Attr_Def.Index_Type =
+                       GPR2.Project.Registry.Attribute.No_Index
+                     then
+                        Set_Field (Val => Obj,
+                                   Field_Name => "value",
+                                   Field      => VR.Values.First_Element);
+                     else
+                        for Elt in VR.Values.Iterate loop
+                           Set_Field
+                             (Val        => Obj,
+                              Field_Name => Value_Map.Key (Elt),
+                              Field      => Value_Map.Element (Elt));
+                        end loop;
+                     end if;
 
                   when D_Callback =>
-
                      Set_Field (Val        => Obj,
                                 Field_Name => "callback",
                                 Field      => "special");

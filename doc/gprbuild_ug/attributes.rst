@@ -162,13 +162,13 @@ The characteristics of each attribute are indicated as follows:
   * *string*: the index is a generic case sensitive string
   * *external reference*: the index is an external reference
 
-* **configuration concatenable**
+* **Configuration concatenable**
 
   For a string list attribute, the final value if the attribute is declared
   in both the configuration project and the user project is the concatenation
   of the two value, configuration then user.
 
-* **inheritance**
+* **Inheritance**
 
   By default, top-level attribute values are inherited from extended projects
   if any. If not, it is indicated:
