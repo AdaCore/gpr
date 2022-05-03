@@ -14,7 +14,7 @@ ALLSPHINXOPTS   = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) \
 		  -c $(SOURCEDIR)/share \
 		  -d $(BUILDDIR)/$*/doctrees \
 		  $(SOURCEDIR)
-FMT_LIST=generate html txt info pdf
+FMT_LIST=html txt info pdf
 DOC_NAME=gprbuild_ug
 CP=cp
 
@@ -68,12 +68,10 @@ info: force
 texinfo:
 	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/$*/texinfo
 
-generate:
-	@if [ -f ${GPRDOC_FILE} ]; \
-	then \
-		${WORK_DIR}/generate_gpr2_documentation.py --input=${GPRDOC_FILE} --output=${OUT_FILE}; \
-	else \
-		echo "[Warning] No such file ${GPRDOC_FILE}, cannot generate ${OUT_FILE}. Generating documentation with existing files"; \
-	fi;
+${GPRDOC_FILE}: force
+	gprdoc > $@
+
+gen: ${GPRDOC_FILE}
+	python3 ${WORK_DIR}/generate_gpr2_documentation.py --input=${GPRDOC_FILE} --output=${OUT_FILE}
 
 force:

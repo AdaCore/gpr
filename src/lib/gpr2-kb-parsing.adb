@@ -1203,7 +1203,7 @@ package body GPR2.KB.Parsing is
          Negate           : Boolean;
          Filter           : Compiler_Filter;
 
-         Default_Hostname : constant String := String (Default_Target);
+         Default_Hostname : String renames System.OS_Constants.Target_Name;
 
       begin
          Config.Supported := True;

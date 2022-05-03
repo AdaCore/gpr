@@ -131,6 +131,11 @@ CLEANER=gprclean -eL -p ${RBD} -XGPR2_BUILD=${GPR2_BUILD} \
         -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}"
 UNINSTALLER=${INSTALLER} -p -f --uninstall
 
+# doc generation
+
+GPRDOC=${BUILD_ROOT}/${GPR2_BUILD}/gprdoc
+DOCOUT=${BUILD_ROOT}/attributes.json
+
 .PHONY: force doc
 
 #########
@@ -270,7 +275,9 @@ clean-tools:
 # Documentation #
 #################
 
-doc:
-	${BUILD_ROOT}/${GPR2_BUILD}/gprdoc --display=json-compact > ${SOURCE_DIR}/doc/__python__/metadata/gprdoc_output.json
-	${BUILD_ROOT}/${GPR2_BUILD}/gprdoc --display=json > ${SOURCE_DIR}/testsuite/tests/gprdoc/test.out
-	make -C ${SOURCE_DIR}/doc
+${DOCOUT}: force
+
+docgen:
+	${GPRDOC} > ${DOCOUT}
+	${GPRDOC} --display=json > ${SOURCE_DIR}/testsuite/tests/gprdoc/attrs.json
+	make -C ${SOURCE_DIR}/doc gen GPRDOC_FILE="../${DOCOUT}"

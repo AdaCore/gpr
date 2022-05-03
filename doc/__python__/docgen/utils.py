@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
-from metadata.conf import attribute_key_value_translation
+from docgen.conf import attribute_key_value_translation
 
 
 class obj_attribute:
-    def __init__(self, name, descr, defi):
+    def __init__(self, package, name, descr, defi):
+        self.package = package
         self.name = name
         self.descr = descr
         self.defi = defi
+        if self.defi["value"] == "LIST" and self.defi["value_is_set"]:
+            self.defi["value"] = "SET"
 
     def get_name(self):
         return self.name
@@ -19,49 +22,24 @@ class obj_attribute:
         return self.defi
 
     def get_def_str(self):
+        def append(field):
+            val = attribute_key_value_translation[field, self.defi[field]]
+            if val != "":
+                def_str.append(val)
 
         def_str = []
 
-        if attribute_key_value_translation["index_type", self.defi["index_type"]] != "":
-            def_str.append(
-                attribute_key_value_translation["index_type", self.defi["index_type"]]
-            )
+        append("value")
 
-        if (
-            attribute_key_value_translation[
-                "index_optional", self.defi["index_optional"]
-            ]
-            != ""
-        ):
-            def_str.append(
-                attribute_key_value_translation[
-                    "index_optional", self.defi["index_optional"]
-                ]
-            )
+        if self.defi["value"] == "SET":
+            append("value_case_sensitive")
 
-        def_str.append(attribute_key_value_translation["value", self.defi["value"]])
-
-        if self.defi["value"] == "LIST" and self.defi["value_is_set"]:
-            if (
-                attribute_key_value_translation[
-                    "value_case_sensitive", self.defi["value_case_sensitive"]
-                ]
-                != ""
-            ):
-                def_str.append(
-                    attribute_key_value_translation[
-                        "value_case_sensitive", self.defi["value_case_sensitive"]
-                    ]
-                )
-
-        if attribute_key_value_translation[
-            "config_concatenable", self.defi["config_concatenable"]
-        ]:
-            def_str.append(
-                attribute_key_value_translation[
-                    "config_concatenable", self.defi["config_concatenable"]
-                ]
-            )
+        append("index_type")
+        append("builtin")
+        append("index_optional")
+        append("config_concatenable")
+        if self.package == "Project_Level":
+            append("inherit_from_extended")
 
         return ", ".join(def_str)
 

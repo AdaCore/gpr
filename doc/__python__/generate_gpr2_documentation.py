@@ -7,15 +7,15 @@ import os.path
 import sys
 import time
 
-from metadata.conf import substrings_to_escape
-from metadata.conf import attribute_key_value_translation
-from metadata.conf import complementary_files
-from metadata.conf import display_options
-from metadata.conf import logging_options
-from metadata.utils import obj_package
-from metadata.utils import obj_category
-from metadata.utils import obj_attribute
-from metadata.utils import package_dict
+from docgen.conf import substrings_to_escape
+from docgen.conf import attribute_key_value_translation
+from docgen.conf import complementary_files
+from docgen.conf import display_options
+from docgen.conf import logging_options
+from docgen.utils import obj_package
+from docgen.utils import obj_category
+from docgen.utils import obj_attribute
+from docgen.utils import package_dict
 
 
 def process_jsons(json_def, json_conf, input_filename):
@@ -92,7 +92,10 @@ def process_jsons(json_def, json_conf, input_filename):
                 attribute_category[0]["category_to_display"],
             )
             my_attribute = obj_attribute(
-                a["attribute_name"], a["attribute_descr"], a["attribute_def"]
+                p["package_name"],
+                a["attribute_name"],
+                a["attribute_descr"],
+                a["attribute_def"],
             )
             # If the package and category is not meant to be displayed
             # there is no need to add the package/Category/Attribute
