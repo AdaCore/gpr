@@ -26,6 +26,24 @@ with GNAT.String_Split;
 
 package body GPR2.Builtin is
 
+   -----------------
+   -- Alternative --
+   -----------------
+
+   function Alternative (Value, Alternative : Value_Type) return Value_Type is
+   begin
+      return (if Value = "" then "" else Alternative);
+   end Alternative;
+
+   -------------
+   -- Default --
+   -------------
+
+   function Default (Value, Default : Value_Type) return Value_Type is
+   begin
+      return (if Value = "" then Default else Value);
+   end Default;
+
    --------------
    -- External --
    --------------

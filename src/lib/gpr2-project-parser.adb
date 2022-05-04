@@ -607,6 +607,45 @@ package body GPR2.Project.Parser is
                Name : Name_Type);
             --  Check that lower/upper parameters has the proper type
 
+            procedure Parse_Default_Alternative_Reference
+              (N    : Builtin_Function_Call;
+               Name : Name_Type);
+            --  Check that default/alternative parameters has the proper type
+
+            -----------------------------------------
+            -- Parse_Default_Alternative_Reference --
+            -----------------------------------------
+
+            procedure Parse_Default_Alternative_Reference
+              (N    : Builtin_Function_Call;
+               Name : Name_Type)
+            is
+               Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
+            begin
+               --  Note that this routine is only validating the syntax
+               --  of the split built-in.
+
+               if Exprs.Is_Null or else Exprs.Children_Count < 2 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, N),
+                        Message => "missing parameters for "
+                                    & String (Name) & "  built-in"));
+
+               --  Check that we don't have more than two parameters
+
+               elsif Exprs.Children_Count > 2 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference (Filename, Exprs),
+                        Message =>
+                          String (Name) & " accepts only two parameters"));
+               end if;
+            end Parse_Default_Alternative_Reference;
+
             --------------------------------------
             -- Parse_External_As_List_Reference --
             --------------------------------------
@@ -886,6 +925,12 @@ package body GPR2.Project.Parser is
 
             elsif Function_Name = "upper" then
                Parse_Lower_Upper_Reference (N, "upper");
+
+            elsif Function_Name = "default" then
+               Parse_Default_Alternative_Reference (N, "default");
+
+            elsif Function_Name = "alternative" then
+               Parse_Default_Alternative_Reference (N, "alternative");
 
             else
                Messages.Append
@@ -1712,6 +1757,13 @@ package body GPR2.Project.Parser is
                --  A generic procedure call Transform for the single value or
                --  for each values in a list.
 
+               generic
+                  with function Transform
+                    (Value1, Value2 : Value_Type) return Value_Type;
+               procedure Handle_Generic2 (Node : Builtin_Function_Call);
+               --  A generic procedure call Transform for the single value or
+               --  for each values in a list.
+
                --------------------------------------
                -- Handle_External_As_List_Variable --
                --------------------------------------
@@ -1871,6 +1923,54 @@ package body GPR2.Project.Parser is
                   Status := Over;
                end Handle_Generic1;
 
+               ---------------------
+               -- Handle_Generic2 --
+               ---------------------
+
+               procedure Handle_Generic2 (Node : Builtin_Function_Call) is
+                  Parameters  : constant Term_List_List :=
+                                 F_Terms (F_Parameters (Node));
+                  Value1_Node : constant Term_List :=
+                                  Child (Parameters, 1).As_Term_List;
+                  Value2_Node : constant Term_List :=
+                                  Child (Parameters, 2).As_Term_List;
+               begin
+                  declare
+                     Values : constant Item_Values :=
+                                Get_Term_List (Value1_Node);
+                     P      : constant Value_Type :=
+                                Get_Term_List
+                                  (Value2_Node).Values.First_Element.Text;
+                  begin
+                     if Values.Single then
+                        Record_Value
+                          (Get_Value_Reference
+                             (Transform
+                                  (Values.Values.First_Element.Text, P),
+                              Get_Source_Reference
+                                (Self.File, Parameters)));
+
+                     else
+                        for V of Values.Values loop
+                           New_Item := True;
+
+                           Record_Value
+                             (Get_Value_Reference
+                                (Transform (V.Text, P),
+                                 Get_Source_Reference
+                                   (Self.File, Parameters)));
+                        end loop;
+
+                        Result.Single := False;
+                     end if;
+                  end;
+
+                  --  Skip all child nodes, we do not want to parse a second
+                  --  time the string_literal.
+
+                  Status := Over;
+               end Handle_Generic2;
+
                ------------------
                -- Handle_Split --
                ------------------
@@ -1945,6 +2045,14 @@ package body GPR2.Project.Parser is
                  new Handle_Generic1 (Transform => Builtin.Lower);
                --  Handle the Lower built-in : Upper ("STR") or Upper (VAR)
 
+               procedure Handle_Default is
+                 new Handle_Generic2 (Transform => Builtin.Default);
+               --  Handle the Lower built-in : Default ("STR", "def")
+
+               procedure Handle_Alternative is
+                 new Handle_Generic2 (Transform => Builtin.Alternative);
+               --  Handle the Lower built-in : Alternative ("STR", "def")
+
                Function_Name : constant Name_Type :=
                                  Get_Name_Type (F_Function_Name (Node));
             begin
@@ -1964,6 +2072,12 @@ package body GPR2.Project.Parser is
 
                elsif Function_Name = "upper" then
                   Handle_Upper (Node);
+
+               elsif Function_Name = "default" then
+                  Handle_Default (Node);
+
+               elsif Function_Name = "alternative" then
+                  Handle_Alternative (Node);
                end if;
             end Handle_Builtin;
 

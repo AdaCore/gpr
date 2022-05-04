@@ -74,4 +74,14 @@ package GPR2.Builtin is
      with Post => Upper'Result = Characters.Handling.To_Upper (Value);
    --  Upper-case value
 
+   function Default (Value, Default : Value_Type) return Value_Type
+     with Post => Builtin.Default'Result
+                    = (if Value = "" then Default else Value);
+   --  The default built-in, returns Default is Value is empty
+
+   function Alternative (Value, Alternative : Value_Type) return Value_Type
+     with Post => Builtin.Alternative'Result
+                    = (if Value = "" then "" else Alternative);
+   --  The alternative built-in, returns Alternative is Value is not empty
+
 end GPR2.Builtin;
