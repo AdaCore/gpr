@@ -92,4 +92,24 @@ package body GPR2.Builtin is
       return Result;
    end External_As_List;
 
+   -----------
+   -- Lower --
+   -----------
+
+   function Lower
+     (Value : Value_Type) return Value_Type is
+   begin
+      return Characters.Handling.To_Lower (String (Value));
+   end Lower;
+
+   -----------
+   -- Upper --
+   -----------
+
+   function Upper
+     (Value : Value_Type) return Value_Type is
+   begin
+      return Characters.Handling.To_Upper (String (Value));
+   end Upper;
+
 end GPR2.Builtin;

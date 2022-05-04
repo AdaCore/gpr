@@ -602,6 +602,11 @@ package body GPR2.Project.Parser is
             procedure Parse_Split_Reference (N : Builtin_Function_Call);
             --  Check that split parameters has the proper type
 
+            procedure Parse_Lower_Upper_Reference
+              (N    : Builtin_Function_Call;
+               Name : Name_Type);
+            --  Check that lower/upper parameters has the proper type
+
             --------------------------------------
             -- Parse_External_As_List_Reference --
             --------------------------------------
@@ -791,6 +796,40 @@ package body GPR2.Project.Parser is
                end if;
             end Parse_External_Reference;
 
+            ---------------------------------
+            -- Parse_Lower_Upper_Reference --
+            ---------------------------------
+
+            procedure Parse_Lower_Upper_Reference
+              (N    : Builtin_Function_Call;
+               Name : Name_Type)
+            is
+               Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
+            begin
+               --  Note that this routine is only validating the syntax
+               --  of the split built-in.
+
+               if Exprs.Is_Null or else Exprs.Children_Count = 0 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, N),
+                        Message => "missing parameters for "
+                                    & String (Name) & "  built-in"));
+
+               --  Check that we don't have more than two parameters
+
+               elsif Exprs.Children_Count > 1 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference (Filename, Exprs),
+                        Message =>
+                          String (Name) & " accepts only one parameter"));
+               end if;
+            end Parse_Lower_Upper_Reference;
+
             ---------------------------
             -- Parse_Split_Reference --
             ---------------------------
@@ -841,6 +880,12 @@ package body GPR2.Project.Parser is
 
             elsif Function_Name = "split" then
                Parse_Split_Reference (N);
+
+            elsif Function_Name = "lower" then
+               Parse_Lower_Upper_Reference (N, "lower");
+
+            elsif Function_Name = "upper" then
+               Parse_Lower_Upper_Reference (N, "upper");
 
             else
                Messages.Append
@@ -1660,6 +1705,13 @@ package body GPR2.Project.Parser is
                procedure Handle_Split (Node : Builtin_Function_Call);
                --  Handle the Split built-in : Split ("STR1", "SEP")
 
+               generic
+                  with function Transform
+                    (Value : Value_Type) return Value_Type;
+               procedure Handle_Generic1 (Node : Builtin_Function_Call);
+               --  A generic procedure call Transform for the single value or
+               --  for each values in a list.
+
                --------------------------------------
                -- Handle_External_As_List_Variable --
                --------------------------------------
@@ -1777,6 +1829,48 @@ package body GPR2.Project.Parser is
                      Status := Over;
                end Handle_External_Variable;
 
+               ---------------------
+               -- Handle_Generic1 --
+               ---------------------
+
+               procedure Handle_Generic1 (Node : Builtin_Function_Call) is
+                  Parameters : constant Term_List_List :=
+                                 F_Terms (F_Parameters (Node));
+                  Value_Node : constant Term_List :=
+                                 Child (Parameters, 1).As_Term_List;
+               begin
+                  declare
+                     Values : constant Item_Values :=
+                                Get_Term_List (Value_Node);
+                  begin
+                     if Values.Single then
+                        Record_Value
+                          (Get_Value_Reference
+                             (Transform (Values.Values.First_Element.Text),
+                              Get_Source_Reference
+                                (Self.File, Parameters)));
+
+                     else
+                        for V of Values.Values loop
+                           New_Item := True;
+
+                           Record_Value
+                             (Get_Value_Reference
+                                (Transform (V.Text),
+                                 Get_Source_Reference
+                                   (Self.File, Parameters)));
+                        end loop;
+
+                        Result.Single := False;
+                     end if;
+                  end;
+
+                  --  Skip all child nodes, we do not want to parse a second
+                  --  time the string_literal.
+
+                  Status := Over;
+               end Handle_Generic1;
+
                ------------------
                -- Handle_Split --
                ------------------
@@ -1843,6 +1937,14 @@ package body GPR2.Project.Parser is
                   Status := Over;
                end Handle_Split;
 
+               procedure Handle_Upper is
+                 new Handle_Generic1 (Transform => Builtin.Upper);
+               --  Handle the Lower built-in : Lower ("STR") or Lower (VAR)
+
+               procedure Handle_Lower is
+                 new Handle_Generic1 (Transform => Builtin.Lower);
+               --  Handle the Lower built-in : Upper ("STR") or Upper (VAR)
+
                Function_Name : constant Name_Type :=
                                  Get_Name_Type (F_Function_Name (Node));
             begin
@@ -1856,6 +1958,12 @@ package body GPR2.Project.Parser is
                elsif Function_Name = "split" then
                   Result.Single := False;
                   Handle_Split (Node);
+
+               elsif Function_Name = "lower" then
+                  Handle_Lower (Node);
+
+               elsif Function_Name = "upper" then
+                  Handle_Upper (Node);
                end if;
             end Handle_Builtin;
 
