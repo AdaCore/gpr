@@ -19,7 +19,7 @@ DOC_NAME=gprbuild_ug
 CP=cp
 
 WORK_DIR=__python__
-GPRDOC_FILE=${WORK_DIR}/metadata/gprdoc_output.json
+GPRDOC_FILE=
 OUT_FILE=gprbuild_ug/attributes.rst
 
 -include ../makefile.setup
@@ -68,10 +68,7 @@ info: force
 texinfo:
 	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/$*/texinfo
 
-${GPRDOC_FILE}: force
-	gprdoc > $@
-
-gen: ${GPRDOC_FILE}
+gen:
 	python3 ${WORK_DIR}/generate_gpr2_documentation.py --input=${GPRDOC_FILE} --output=${OUT_FILE}
 
 force:

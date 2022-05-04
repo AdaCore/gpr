@@ -2958,7 +2958,7 @@
             "config_concatenable": false,
             "inherit_from_extended": "NOT_INHERITED"
           },
-          "attribute_descr": "Value is the extension of the file names of executable. When not specified, the extension is the default extension of executables on the platform."
+          "attribute_descr": "Value is the extension of the file name of executables. The actual default value for the extension depends on the host: .exe on windows, else an empty string."
         },
         {
           "attribute_name": "Global_Compilation_Switches",
