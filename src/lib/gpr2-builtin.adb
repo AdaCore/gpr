@@ -121,6 +121,75 @@ package body GPR2.Builtin is
    end Lower;
 
    -----------
+   -- Match --
+   -----------
+
+   function Match
+     (Value, Pattern : Value_Type;
+      Regex          : GNAT.Regpat.Pattern_Matcher;
+      Replacement    : Value_Type) return Value_Type
+   is
+      use GNAT;
+      use type GNAT.Regpat.Match_Location;
+
+      Matches : Regpat.Match_Array (0 .. Regpat.Paren_Count (Regex));
+      R       : Unbounded_String;
+      I       : Natural := Replacement'First;
+      Found   : Boolean := False;
+   begin
+      Regpat.Match (Regex, Value, Matches);
+
+      Found := Matches (0) /= Regpat.No_Match;
+
+      if Found then
+         if Replacement = "" then
+            if Matches'Last = 1 then
+               --  No replacement and a single match group, returns the
+               --  matching pattern.
+               return Value (Matches (1).First .. Matches (1).Last);
+            else
+               --  No replacement and no match group, just replace by the
+               --  pattern.
+               return Pattern;
+            end if;
+
+         else
+            --  Check for replacement pattern \n and replace them by the
+            --  corresponding matching group.
+
+            while I <= Replacement'Last loop
+               if Replacement (I) = '\'
+                 and then I < Replacement'Last
+                 and then Replacement (I + 1) in '0' .. '9'
+               then
+                  declare
+                     P : constant Natural :=
+                           Natural'Value (String'(1 => Replacement (I + 1)));
+                  begin
+                     if P <= Matches'Length
+                          and then
+                        Matches (P) /= Regpat.No_Match
+                     then
+                        Append
+                          (R,
+                           Value (Matches (P).First .. Matches (P).Last));
+                     end if;
+                  end;
+
+                  I := I + 1;
+               else
+                  Append (R, Replacement (I));
+               end if;
+
+               I := I + 1;
+            end loop;
+         end if;
+      end if;
+
+      return To_String (R);
+   end Match;
+
+   -----------
    -- Upper --
    -----------
 

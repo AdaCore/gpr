@@ -29,6 +29,8 @@ with Ada.Containers.Vectors;
 with Ada.Exceptions;
 with Ada.Strings.Wide_Wide_Unbounded;
 
+with GNAT.Regpat;
+
 with Gpr_Parser_Support.Slocs;
 with Gpr_Parser_Support.Text;
 with Gpr_Parser.Common;
@@ -51,6 +53,8 @@ with GPR2.Source_Reference.Pack;
 with GPR2.Source_Reference.Value;
 
 package body GPR2.Project.Parser is
+
+   use Ada.Exceptions;
 
    use Gpr_Parser.Common;
    use Gpr_Parser_Support.Text;
@@ -602,6 +606,9 @@ package body GPR2.Project.Parser is
             procedure Parse_Split_Reference (N : Builtin_Function_Call);
             --  Check that split parameters has the proper type
 
+            procedure Parse_Match_Reference (N : Builtin_Function_Call);
+            --  Check that split parameters has the proper type
+
             procedure Parse_Lower_Upper_Reference
               (N    : Builtin_Function_Call;
                Name : Name_Type);
@@ -870,6 +877,45 @@ package body GPR2.Project.Parser is
             end Parse_Lower_Upper_Reference;
 
             ---------------------------
+            -- Parse_Match_Reference --
+            ---------------------------
+
+            procedure Parse_Match_Reference (N : Builtin_Function_Call) is
+               Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
+            begin
+               --  Note that this routine is only validating the syntax
+               --  of the split built-in.
+
+               if Exprs.Is_Null or else Exprs.Children_Count = 0 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, N),
+                        Message => "missing parameters for match built-in"));
+
+               --  Check that the second parameter exists
+
+               elsif Exprs.Children_Count < 2 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, Exprs),
+                        Message => "match requires a second parameter"));
+
+               --  Check that we don't have more than two parameters
+
+               elsif Exprs.Children_Count > 3 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference (Filename, Exprs),
+                        Message =>
+                          "match accepts a maximum of three parameters"));
+               end if;
+            end Parse_Match_Reference;
+
+            ---------------------------
             -- Parse_Split_Reference --
             ---------------------------
 
@@ -925,6 +971,9 @@ package body GPR2.Project.Parser is
 
             elsif Function_Name = "upper" then
                Parse_Lower_Upper_Reference (N, "upper");
+
+            elsif Function_Name = "match" then
+               Parse_Match_Reference (N);
 
             elsif Function_Name = "default" then
                Parse_Default_Alternative_Reference (N, "default");
@@ -1764,6 +1813,10 @@ package body GPR2.Project.Parser is
                --  A generic procedure call Transform for the single value or
                --  for each values in a list.
 
+               procedure Handle_Match (Node : Builtin_Function_Call);
+               --  Handle the Match built-in :
+               --    Match ("STR", "PATTERN"[, "REPL"])
+
                --------------------------------------
                -- Handle_External_As_List_Variable --
                --------------------------------------
@@ -1814,8 +1867,6 @@ package body GPR2.Project.Parser is
                procedure Handle_External_Variable
                  (Node : Builtin_Function_Call)
                is
-                  use Ada.Exceptions;
-
                   Parameters : constant Term_List_List :=
                                  F_Terms (F_Parameters (Node));
                   Error      : Boolean;
@@ -1972,6 +2023,126 @@ package body GPR2.Project.Parser is
                end Handle_Generic2;
 
                ------------------
+               -- Handle_Match --
+               ------------------
+
+               procedure Handle_Match (Node : Builtin_Function_Call) is
+                  Parameters : constant Term_List_List :=
+                                 F_Terms (F_Parameters (Node));
+
+                  Str : constant Item_Values :=
+                          Get_Term_List (Child (Parameters, 1).As_Term_List);
+                  Pat : constant Item_Values :=
+                          Get_Term_List (Child (Parameters, 2).As_Term_List);
+                  Rep : constant Item_Values :=
+                          (if Parameters.Children_Count = 3
+                           then Get_Term_List
+                                  (Child (Parameters, 3).As_Term_List)
+                           else Empty_Item_Values);
+               begin
+                  if not Pat.Single then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level => Message.Error,
+                           Sloc  => Get_Source_Reference
+                                      (Self.File, Child (Parameters, 2)),
+                           Message => "Match pattern parameter must be a"
+                                    & " string"));
+
+                  elsif Rep /= Empty_Item_Values and then not Rep.Single then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level => Message.Error,
+                           Sloc  => Get_Source_Reference
+                                      (Self.File, Child (Parameters, 2)),
+                           Message => "Match replacement parameter must be a"
+                                    & " string"));
+
+                  else
+                     declare
+                        use GNAT;
+
+                        Pattern : constant Value_Type :=
+                                    Pat.Values.First_Element.Text;
+
+                        Regex   : constant Regpat.Pattern_Matcher :=
+                                    Regpat.Compile (Pattern);
+
+                        Repl    : constant Value_Type :=
+                                    (if Rep = Empty_Item_Values
+                                     then ""
+                                     else Rep.Values.First_Element.Text);
+                     begin
+                        if Str.Single then
+                           declare
+                              R : constant String :=
+                                    Builtin.Match
+                                      (Str.Values.First_Element.Text,
+                                       Pattern, Regex, Repl);
+                           begin
+                              if R = "" then
+                                 --  No match, result is an empty value
+                                 Record_Value
+                                   (Get_Value_Reference
+                                      ("",
+                                       Get_Source_Reference
+                                         (Self.File, Parameters)));
+                              else
+                                 Record_Value
+                                   (Get_Value_Reference
+                                      (R,
+                                       Source_Reference.Object
+                                         (Str.Values.First_Element)));
+                              end if;
+                           end;
+
+                        else
+                           --  First parameter is a list, do the match on all
+                           --  list items, if no match remove from the list.
+
+                           for V of Str.Values loop
+                              declare
+                                 R : constant String :=
+                                       Builtin.Match
+                                         (V.Text, Pattern, Regex, Repl);
+                              begin
+                                 New_Item := True;
+
+                                 if R /= "" then
+                                    Record_Value
+                                      (Get_Value_Reference
+                                         (R,
+                                          Source_Reference.Object
+                                            (Str.Values.First_Element)));
+                                 end if;
+                              end;
+                           end loop;
+
+                           Result.Single := False;
+                        end if;
+                     end;
+                  end if;
+
+                  Status := Over;
+
+               exception
+                  when E : GNAT.Regpat.Expression_Error =>
+                     if not Ext_Conf_Mode then
+                        Tree.Log_Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Self.File, Parameters),
+                              Message => Exception_Message (E)));
+                     end if;
+
+                     Record_Value
+                       (Get_Value_Reference
+                          ("", Get_Source_Reference (Self.File, Parameters)));
+                     Status := Over;
+               end Handle_Match;
+
+               ------------------
                -- Handle_Split --
                ------------------
 
@@ -2072,6 +2243,9 @@ package body GPR2.Project.Parser is
 
                elsif Function_Name = "upper" then
                   Handle_Upper (Node);
+
+               elsif Function_Name = "match" then
+                  Handle_Match (Node);
 
                elsif Function_Name = "default" then
                   Handle_Default (Node);

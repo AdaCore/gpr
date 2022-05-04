@@ -29,6 +29,8 @@
 
 with Ada.Characters.Handling;
 
+with GNAT.Regpat;
+
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Source_Reference.Value;
@@ -83,5 +85,10 @@ package GPR2.Builtin is
      with Post => Builtin.Alternative'Result
                     = (if Value = "" then "" else Alternative);
    --  The alternative built-in, returns Alternative is Value is not empty
+
+   function Match
+     (Value, Pattern : Value_Type;
+      Regex          : GNAT.Regpat.Pattern_Matcher;
+      Replacement    : Value_Type) return Value_Type;
 
 end GPR2.Builtin;

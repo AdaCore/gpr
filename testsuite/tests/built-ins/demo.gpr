@@ -1,0 +1,41 @@
+
+project Demo is
+   L    := ("value1", "or", "another", "one");
+   Var1 := Lower ("A Text");
+   Var2 := Upper (VAR1);
+   Var3 := Lower (Upper (VAR1));
+   Vl1  := Lower (L);
+   Vl2  := Upper (L);
+
+   Var5 := Match ("x86_64-linux-gnu", "linux");
+   Var6 := Match (L, "linux");
+   Var7 := Match (L, "(.*r)", "r:\1");
+
+   Var8 := Default ("", "def");
+   Var9 := Default ("val9", "def");
+
+   VarA := Alternative ("", "alt");
+   VarB := Alternative ("valB", "alt");
+
+   type OS_Kind is ("UNIX", "Windows");
+
+   Target1 := "i686-pc-mingw32";
+   Target2 := "x86_64-linux-gnu";
+
+   X1 := Match (Target1, "(mingw32|cygwin|windows)");
+   X2 := Match (Target1, "mingw32|cygwin|windows");
+   X3 := Match (Target2, "([^-]*)-([^-]*)-([^-]*)", "\3-\2-\1");
+
+   OS1 : OS_Kind := default
+                      (alternative
+                         (match (Target1, "(mingw32|cygwin|windows)"),
+                         "Windows"),
+                       "UNIX");
+
+   OS2 : OS_Kind := default
+                      (alternative
+                         (match (Target2, "(mingw32|cygwin|windows)"),
+                          "Windows"),
+                       "UNIX");
+
+end Demo;
