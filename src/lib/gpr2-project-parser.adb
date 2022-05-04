@@ -28,12 +28,13 @@ with Ada.Containers;
 with Ada.Containers.Vectors;
 with Ada.Exceptions;
 with Ada.Strings.Wide_Wide_Unbounded;
-with GPR2.KB;
 
 with Gpr_Parser_Support.Slocs;
 with Gpr_Parser_Support.Text;
+with Gpr_Parser.Common;
 
 with GPR2.Builtin;
+with GPR2.KB;
 with GPR2.Message;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Attribute_Index;
@@ -48,8 +49,6 @@ with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Pack;
 with GPR2.Source_Reference.Value;
-
-with Gpr_Parser.Common;
 
 package body GPR2.Project.Parser is
 
@@ -593,8 +592,7 @@ package body GPR2.Project.Parser is
 
          procedure Parse_Builtin (N : Builtin_Function_Call) is
 
-            procedure Parse_External_Reference
-              (N : Builtin_Function_Call);
+            procedure Parse_External_Reference (N : Builtin_Function_Call);
             --  Put the name of the external into the Externals list
 
             procedure Parse_External_As_List_Reference
@@ -720,9 +718,7 @@ package body GPR2.Project.Parser is
             -- Parse_External_Reference --
             ------------------------------
 
-            procedure Parse_External_Reference
-              (N : Builtin_Function_Call)
-            is
+            procedure Parse_External_Reference (N : Builtin_Function_Call) is
                Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
             begin
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
@@ -782,6 +778,7 @@ package body GPR2.Project.Parser is
                         begin
                            if not Node.Is_Null then
                               Node := Node.Child (1);
+
                               if not Node.Is_Null
                                 and then Node.Kind = Gpr_Builtin_Function_Call
                               then
@@ -1209,8 +1206,8 @@ package body GPR2.Project.Parser is
       --  list surrounded by parentheses.
 
       procedure Record_Attribute
-        (Set  : in out PA.Set.Object;
-         A    : PA.Object);
+        (Set : in out PA.Set.Object;
+         A   : PA.Object);
       --  Record an attribute into the given set. At the same time we increment
       --  the Empty_Attribute_Count if this attribute has an empty value. This
       --  is used to check whether we need to reparse the tree.
@@ -1680,7 +1677,8 @@ package body GPR2.Project.Parser is
                   -- Get_Parameter --
                   -------------------
 
-                  function Get_Parameter (Index : Positive) return Value_Type
+                  function Get_Parameter
+                    (Index : Positive) return Value_Type
                   is
                      Ignore : Boolean;
                   begin
@@ -1772,6 +1770,7 @@ package body GPR2.Project.Parser is
                                 Get_Source_Reference (Self.File, Parameters),
                               Message => Exception_Message (E)));
                      end if;
+
                      Record_Value
                        (Get_Value_Reference
                           ("", Get_Source_Reference (Self.File, Parameters)));
@@ -2292,7 +2291,7 @@ package body GPR2.Project.Parser is
             Last : constant Natural :=
                      Children_Count (List) -
                      (if Present (Att_Ref) then 0 else 1);
-            --  if not attribute reference last segment is variable name.
+            --  if not attribute reference last segment is variable name
 
             function Is_Valid_Project_Name (Name : Name_Type) return Boolean is
               (Process.View.View_For (Name).Is_Defined
@@ -3139,7 +3138,7 @@ package body GPR2.Project.Parser is
                         Get_Type_Def_From (Self.Extended);
                      end if;
 
-                     --  Type definition from "parent" project.
+                     --  Type definition from "parent" project
 
                      if not Type_Def.Is_Defined
                        and then Self.Has_Imports
