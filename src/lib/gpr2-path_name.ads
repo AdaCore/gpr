@@ -77,6 +77,9 @@ package GPR2.Path_Name is
      with Pre => Self.Is_Defined;
    --  Returns True if Self represent a directory
 
+   function Is_Root_Dir (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+
    function Create_File
      (Name      : Filename_Type;
       Directory : Filename_Optional := Resolve_On_Current) return Object
@@ -107,30 +110,40 @@ package GPR2.Path_Name is
 
    function Name
      (Self : Object; Extension : Boolean := True) return Filename_Type
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined and then not Self.Is_Implicit_Project;
    --  Returns the original, untouched name used to create the object. If
    --  Extension is set to False then the final extension is removed. Note that
    --  this is not the base-name as the leading directory information is not
    --  removed.
 
+   function Has_Value (Self : Object) return Boolean;
+   --  Whether Self is defined and has a full pathname.
+
    function Value (Self : Object) return Full_Name
-     with Pre => Self.Is_Defined;
-   --  Returns the full pathname for Self
+     with Pre => Self.Is_Defined and then Self.Has_Value;
+   --  Returns the full pathname for Self if defined, or the empty string if
+   --  the full path has not been resolved.
 
    function Base_Name (Self : Object) return Name_Type
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined
+                   and then not Self.Is_Directory
+                   and then not Self.Is_Implicit_Project;
    --  Returns the base name for Self (no extension).
    --  This routine should be used when base filename used to get unit name
    --  from filename.
 
    function Base_Filename (Self : Object) return GPR2.Simple_Name
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined
+                   and then not Self.Is_Directory
+                   and then not Self.Is_Implicit_Project;
    --  Returns the base name for Self (no extension).
    --  This routine should be used when base filename used as part of another
    --  source related filenames.
 
    function Simple_Name (Self : Object) return GPR2.Simple_Name
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined
+                   and then not Self.Is_Root_Dir
+                   and then not Self.Is_Implicit_Project;
    --  Returns the base name for Self (with extension)
 
    function Simple_Name (Path : String) return String;
@@ -172,12 +185,12 @@ package GPR2.Path_Name is
      with Pre => Self.Is_Defined and then To.Is_Defined;
    --  Creates a sym-link for Self as To
 
-   function Relative_Path (Self, To : Object) return Object
-     with Pre  => Self.Is_Defined and then To.Is_Defined,
+   function Relative_Path (Self, From : Object) return Object
+     with Pre  => Self.Is_Defined and then From.Is_Defined,
           Post => Relative_Path'Result.Is_Defined;
    --  Returns the relative pathname which corresponds to Self when
-   --  starting from directory To. Note that the relative pathname is actually
-   --  given by Relative_Path'Result.Name.
+   --  starting from directory From. Note that the relative pathname is
+   --  actually given by Relative_Path'Result.Name.
 
    function Common_Prefix (Self, Path : Object) return Object
      with Pre  => Self.Is_Defined and then Path.Is_Defined,
@@ -187,11 +200,14 @@ package GPR2.Path_Name is
          = Common_Prefix'Result.Value
         and then
           Path.Value (1 .. Common_Prefix'Result.Value'Length)
-         = Common_Prefix'Result.Value);
-   --  Returns the longest common prefix for Self and Path
+         = Common_Prefix'Result.Value
+        and then Common_Prefix'Result.Is_Directory);
+   --  Returns the longest common path for Self and Path
 
    function Containing_Directory (Self : Object) return Object
-     with Pre  => Self.Is_Defined,
+     with Pre  => Self.Is_Defined
+                    and then not Self.Is_Root_Dir
+                    and then not Self.Is_Implicit_Project,
           Post => Containing_Directory'Result.Is_Defined;
    --  Returns the containing directory of the directory information of Self
 
@@ -270,6 +286,9 @@ private
 
    function Has_Dir_Name (Self : Object) return Boolean is
      (Self.Dir_Name /= Null_Unbounded_String);
+
+   function Has_Value (Self : Object) return Boolean is
+     (Self.Value /= Null_Unbounded_String);
 
    function Is_Directory (Self : Object) return Boolean is (Self.Is_Dir);
 

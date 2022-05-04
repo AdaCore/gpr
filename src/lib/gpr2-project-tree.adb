@@ -1180,7 +1180,9 @@ package body GPR2.Project.Tree is
       Absent_Dir_Error : Boolean                   := False;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
-      Pre_Conf_Mode    : Boolean                   := False)
+      Pre_Conf_Mode    : Boolean                   := False;
+      File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
+                           GPR2.File_Readers.No_File_Reader_Reference)
    is
 
       Project_Path  : Path_Name.Object;
@@ -1189,6 +1191,9 @@ package body GPR2.Project.Tree is
 
    begin
       Self.Self := Self'Unchecked_Access;
+
+      --  Let ada or gpr parser use this reader.
+      Self.File_Reader_Ref := File_Reader;
 
       --  If re-loading, invalidate the views cache
       for V of Self.Views_Set loop
@@ -1384,7 +1389,9 @@ package body GPR2.Project.Tree is
       Language_Runtimes : Containers.Lang_Value_Map :=
                             Containers.Lang_Value_Maps.Empty_Map;
       Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
-      Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined)
+      Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined;
+      File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
+                            GPR2.File_Readers.No_File_Reader_Reference)
    is
       Languages   : Containers.Language_Set;
       Conf        : Project.Configuration.Object;
@@ -1895,6 +1902,7 @@ package body GPR2.Project.Tree is
 
          Self.Load
            (Filename, Context,
+            File_Reader      => File_Reader,
             Project_Dir      => Project_Dir,
             Build_Path       => Build_Path,
             Subdirs          => Subdirs,
@@ -1972,6 +1980,7 @@ package body GPR2.Project.Tree is
       Self.Load
         ((if Self.Root.Is_Defined then Self.Root.Path_Name else Filename),
          Context, Conf,
+         File_Reader      => File_Reader,
          Project_Dir      => Project_Dir,
          Build_Path       => Build_Path,
          Subdirs          => Subdirs,
@@ -2034,6 +2043,7 @@ package body GPR2.Project.Tree is
       Self.Load
         ((if Self.Root.Is_Defined then Self.Root.Path_Name else Filename),
          Context, Conf,
+         File_Reader      => File_Reader,
          Project_Dir      => Project_Dir,
          Build_Path       => Build_Path,
          Subdirs          => Subdirs,
@@ -2500,7 +2510,10 @@ package body GPR2.Project.Tree is
                      GPR2.Project.Search_Paths (Filename, Search_Path);
          Project : constant GPR2.Project.Parser.Object :=
                      GPR2.Project.Parser.Parse
-                       (Filename, Self.Implicit_With, Self.Messages);
+                       (Filename,
+                        Self.Implicit_With,
+                        Self.Messages,
+                        GPR2.File_Readers.Convert (Self.File_Reader));
          Data    : Definition.Data;
       begin
          Data.Trees.Project := Project;
@@ -2529,7 +2542,8 @@ package body GPR2.Project.Tree is
                         GPR2.Project.Parser.Parse
                           (Import_Filename,
                            Self.Implicit_With,
-                           Self.Messages));
+                           Self.Messages,
+                           GPR2.File_Readers.Convert (Self.File_Reader)));
 
                   else
                      Self.Messages.Append
@@ -2556,7 +2570,10 @@ package body GPR2.Project.Tree is
                begin
                   if Extended_Filename.Exists then
                      Data.Trees.Extended := GPR2.Project.Parser.Parse
-                        (Extended_Filename, Self.Implicit_With, Self.Messages);
+                       (Extended_Filename,
+                        Self.Implicit_With,
+                        Self.Messages,
+                        GPR2.File_Readers.Convert (Self.File_Reader));
                   else
                      Self.Messages.Append
                        (GPR2.Message.Create

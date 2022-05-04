@@ -1,0 +1,7 @@
+description:
+    check GPR2.Path_Name functionalities
+driver: build_and_run
+project_file: test
+main: main
+output:
+- ["test.out.win", "'windows' in env.host.platform"]

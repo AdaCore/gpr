@@ -614,8 +614,9 @@ Package Builder Attributes
 
 * **Executable_Suffix**: single value
 
-  Value is the extension of the file names of executable. When not specified, the
-  extension is the default extension of executables on the platform.
+  Value is the extension of the file name of executables. The actual default
+  value for the extension depends on the host: .exe on windows, else an empty
+  string.
 
 * **Global_Compilation_Switches**: list value, indexed by a language, "others" index allowed, configuration concatenable
 

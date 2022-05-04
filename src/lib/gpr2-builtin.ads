@@ -27,11 +27,17 @@
 --  the actual grammar so basically they take a set of string parameters and
 --  should return a single string or a list of string.
 
+with Ada.Characters.Handling;
+
+with GNAT.Regpat;
+
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Source_Reference.Value;
 
 package GPR2.Builtin is
+
+   use Ada;
 
    function External
      (Context       : GPR2.Context.Object;
@@ -61,5 +67,28 @@ package GPR2.Builtin is
      renames Containers.Create;
    --  The Split built-in. Returns a list of values corresponding
    --  to the string value split using the given separator.
+
+   function Lower (Value : Value_Type) return Value_Type
+     with Post => Lower'Result = Characters.Handling.To_Lower (Value);
+   --  Lower-case Value
+
+   function Upper (Value : Value_Type) return Value_Type
+     with Post => Upper'Result = Characters.Handling.To_Upper (Value);
+   --  Upper-case value
+
+   function Default (Value, Default : Value_Type) return Value_Type
+     with Post => Builtin.Default'Result
+                    = (if Value = "" then Default else Value);
+   --  The default built-in, returns Default is Value is empty
+
+   function Alternative (Value, Alternative : Value_Type) return Value_Type
+     with Post => Builtin.Alternative'Result
+                    = (if Value = "" then "" else Alternative);
+   --  The alternative built-in, returns Alternative is Value is not empty
+
+   function Match
+     (Value, Pattern : Value_Type;
+      Regex          : GNAT.Regpat.Pattern_Matcher;
+      Replacement    : Value_Type) return Value_Type;
 
 end GPR2.Builtin;

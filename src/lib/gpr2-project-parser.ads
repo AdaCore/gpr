@@ -36,6 +36,7 @@ with GPR2.Project.View;
 limited with GPR2.Project.Tree;
 
 with Gpr_Parser.Analysis;
+with Gpr_Parser_Support.File_Readers;
 
 package GPR2.Project.Parser is
 
@@ -53,9 +54,17 @@ package GPR2.Project.Parser is
    function Parse
      (Filename      : GPR2.Path_Name.Object;
       Implicit_With : GPR2.Path_Name.Set.Object;
-      Messages      : in out Log.Object) return Object;
+      Messages      : in out Log.Object;
+      File_Reader   : Gpr_Parser_Support.File_Readers.File_Reader_Reference :=
+                        Gpr_Parser_Support.File_Readers.
+                          No_File_Reader_Reference)
+      return Object;
    --  Phase-1: syntax parsing of the given project name. If an error occurs
    --  during the parsing the return object is Undefined.
+   --  File_Reader provides an interface to abstract away the action of reading
+   --  a source file to parse. Depending on use cases, it allows to override
+   --  bytes-to-text decoding and preprocess sources (before actual
+   --  lexing/parsing) or reading a source file from memory instead of disk.
 
    function Parse
      (Contents        : Ada.Strings.Unbounded.Unbounded_String;

@@ -26,6 +26,7 @@ with Ada.Iterator_Interfaces;
 
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.File_Readers;
 with GPR2.KB;
 with GPR2.Log;
 with GPR2.Message;
@@ -86,7 +87,10 @@ package GPR2.Project.Tree is
       Absent_Dir_Error : Boolean                   := False;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
-      Pre_Conf_Mode    : Boolean                   := False)
+      Pre_Conf_Mode    : Boolean                   := False;
+      File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
+                           GPR2.File_Readers.
+                             No_File_Reader_Reference)
      with Pre => Filename.Is_Defined
                  and then (not Filename.Is_Implicit_Project
                            or else Project_Dir.Is_Defined);
@@ -96,6 +100,8 @@ package GPR2.Project.Tree is
    --  defined when a gpr tool is invoked without a project file and is using
    --  an implicit project file that is virtually in the Project_Dir, but is
    --  physically in another directory.
+   --  If File_Reader is set, then it is used when parsing Ada sources or
+   --  GPR projects. Else default file reader is used.
 
    procedure Load_Configuration
      (Self     : in out Object;
@@ -119,7 +125,10 @@ package GPR2.Project.Tree is
       Language_Runtimes : Containers.Lang_Value_Map :=
                             Containers.Lang_Value_Maps.Empty_Map;
       Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
-      Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined)
+      Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined;
+      File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
+                            GPR2.File_Readers.
+                              No_File_Reader_Reference)
        with Pre => Filename.Is_Defined;
    --  Loads a tree in autoconf mode.
    --  If Target is specified, then we use it directly instead of fetching
@@ -136,6 +145,8 @@ package GPR2.Project.Tree is
    --  physically in another directory.
    --  Base is the knowledge base object used to configure the toolchain for
    --  the project.
+   --  If File_Reader is set, then it is used when parsing Ada sources or
+   --  GPR projects. Else default file reader is used.
 
    procedure Unload (Self : in out Object;
                      Full : Boolean := True);
@@ -454,6 +465,10 @@ package GPR2.Project.Tree is
    function Get_KB (Self : Object) return GPR2.KB.Object
      with Pre => Self.Is_Defined;
 
+   function File_Reader
+     (Self : Object) return GPR2.File_Readers.File_Reader_Reference
+     with Pre => Self.Is_Defined;
+
 private
 
    package Name_View is
@@ -532,6 +547,7 @@ private
       --  Configuration items from command line
       Explicit_Target   : Unbounded_String;
       Explicit_Runtimes : Containers.Lang_Value_Map;
+      File_Reader_Ref   : GPR2.File_Readers.File_Reader_Reference;
    end record;
 
    function "=" (Left, Right : Object) return Boolean
@@ -616,5 +632,10 @@ private
 
    function Get_KB (Self : Object) return GPR2.KB.Object is
      (Self.Base);
+
+   function File_Reader
+     (Self : Object)
+      return GPR2.File_Readers.File_Reader_Reference is
+     (Self.File_Reader_Ref);
 
 end GPR2.Project.Tree;

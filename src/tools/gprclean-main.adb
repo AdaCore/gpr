@@ -431,7 +431,8 @@ procedure GPRclean.Main is
          declare
             Main_Lib : constant Value_Type :=
                          Obj_Dir.Compose
-                           ("lib" & View.Path_Name.Base_Filename).Value;
+                           ("lib" &
+                             Filename_Type (To_Lower (View.Name))).Value;
          begin
             Delete_File (Main_Lib & String (Tree.Archive_Suffix));
             Delete_File (Main_Lib & ".deps");

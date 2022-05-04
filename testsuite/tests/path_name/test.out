@@ -1,0 +1,154 @@
+Root dir:
+- Is a directory
+- Root directory
+- Actually exists
+- Dir_Name: /
+- Name: /
+- Name (no extension): /
+- Value: /
+
+'.' dir:
+- Is a directory
+- Actually exists
+- Dir_Name: /files/subdir/
+- Name: /files/subdir/.
+- Name (no extension): /files/subdir/.
+- Value: /files/subdir
+- Simple_Name: .
+- Containing_Directory: /files
+
+'..' dir:
+- Is a directory
+- Actually exists
+- Dir_Name: /files/
+- Name: /files/subdir/..
+- Name (no extension): /files/subdir/..
+- Value: /files
+- Simple_Name: ..
+- Containing_Directory: 
+
+Implicit_Project constant:
+- Is a file
+- Is Implicit Project
+- Does not exist on disk
+
+Non existing file:
+- Is a file
+- Does not exist on disk
+- Dir_Name: /files/
+- Name: /files/foo.ext
+- Name (no extension): /files/foo
+- Value: /files/foo.ext
+- Base_Name: foo
+- Base_Filename: foo
+- Simple_Name: foo.ext
+- Containing_Directory: /files/
+
+existing file:
+- Is a file
+- Actually exists
+- Dir_Name: /files/subdir/
+- Name: /files/subdir/file.txt
+- Name (no extension): /files/subdir/file
+- Value: /files/subdir/file.txt
+- Base_Name: file
+- Base_Filename: file
+- Simple_Name: file.txt
+- Containing_Directory: /files/subdir/
+
+File with no extension:
+- Is a file
+- Does not exist on disk
+- Dir_Name: /files/
+- Name: /files/foo
+- Name (no extension): /files/foo
+- Value: /files/foo
+- Base_Name: foo
+- Base_Filename: foo
+- Simple_Name: foo
+- Containing_Directory: /files/
+
+Dir with extension:
+- Is a directory
+- Does not exist on disk
+- Dir_Name: /files/readme.foo/
+- Name: /files/readme.foo
+- Name (no extension): /files/readme.foo
+- Value: /files/readme.foo
+- Simple_Name: readme.foo
+- Containing_Directory: /files
+
+With white space:
+- Is a file
+- Actually exists
+- Dir_Name: /files/with white/
+- Name: /files/with white/space file.txt
+- Name (no extension): /files/with white/space file
+- Value: /files/with white/space file.txt
+- Base_Name: space file
+- Base_Filename: space file
+- Simple_Name: space file.txt
+- Containing_Directory: /files/with white/
+
+Common_Prefix (directory, file)
+- Is a directory
+- Actually exists
+- Dir_Name: /files/
+- Name: /files
+- Name (no extension): /files
+- Value: /files
+- Simple_Name: files
+- Containing_Directory: 
+
+Common_Prefix (file, directory)
+- Is a directory
+- Actually exists
+- Dir_Name: /files/
+- Name: /files
+- Name (no extension): /files
+- Value: /files
+- Simple_Name: files
+- Containing_Directory: 
+
+Common_Prefix (src, src/source.adb)
+- Is a directory
+- Does not exist on disk
+- Dir_Name: /src/
+- Name: /src
+- Name (no extension): /src
+- Value: /src
+- Simple_Name: src
+- Containing_Directory: 
+
+Common_Prefix (src/source.adb, src)
+- Is a directory
+- Does not exist on disk
+- Dir_Name: /src/
+- Name: /src
+- Name (no extension): /src
+- Value: /src
+- Simple_Name: src
+- Containing_Directory: 
+
+Common_Prefix with root common
+- Is a directory
+- Root directory
+- Actually exists
+- Dir_Name: /
+- Name: /
+- Name (no extension): /
+- Value: /
+
+File with no full path
+- Is a file
+- Does not exist on disk
+- Name: files/file.txt
+- Name (no extension): files/file
+- Base_Name: file
+- Base_Filename: file
+- Simple_Name: file.txt
+- Containing_Directory: files
+
+Check temp directory
+- Is a directory
+- Actually exists

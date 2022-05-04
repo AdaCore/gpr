@@ -28,12 +28,15 @@ with Ada.Containers;
 with Ada.Containers.Vectors;
 with Ada.Exceptions;
 with Ada.Strings.Wide_Wide_Unbounded;
-with GPR2.KB;
+
+with GNAT.Regpat;
 
 with Gpr_Parser_Support.Slocs;
 with Gpr_Parser_Support.Text;
+with Gpr_Parser.Common;
 
 with GPR2.Builtin;
+with GPR2.KB;
 with GPR2.Message;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Attribute_Index;
@@ -49,9 +52,9 @@ with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Pack;
 with GPR2.Source_Reference.Value;
 
-with Gpr_Parser.Common;
-
 package body GPR2.Project.Parser is
+
+   use Ada.Exceptions;
 
    use Gpr_Parser.Common;
    use Gpr_Parser_Support.Text;
@@ -451,12 +454,18 @@ package body GPR2.Project.Parser is
    function Parse
      (Filename      : GPR2.Path_Name.Object;
       Implicit_With : GPR2.Path_Name.Set.Object;
-      Messages      : in out Log.Object) return Object
+      Messages      : in out Log.Object;
+      File_Reader   : Gpr_Parser_Support.File_Readers.File_Reader_Reference :=
+                        Gpr_Parser_Support.File_Readers.
+                          No_File_Reader_Reference
+     ) return Object
    is
       use Ada.Characters.Conversions;
       use Ada.Strings.Wide_Wide_Unbounded;
 
-      Context : constant Analysis_Context := Create_Context ("UTF-8");
+      Context : constant Analysis_Context :=
+                  Create_Context (Charset     => "UTF-8",
+                                  File_Reader => File_Reader);
       Unit    : Analysis_Unit;
       Project : Object;
 
@@ -587,8 +596,7 @@ package body GPR2.Project.Parser is
 
          procedure Parse_Builtin (N : Builtin_Function_Call) is
 
-            procedure Parse_External_Reference
-              (N : Builtin_Function_Call);
+            procedure Parse_External_Reference (N : Builtin_Function_Call);
             --  Put the name of the external into the Externals list
 
             procedure Parse_External_As_List_Reference
@@ -597,6 +605,53 @@ package body GPR2.Project.Parser is
 
             procedure Parse_Split_Reference (N : Builtin_Function_Call);
             --  Check that split parameters has the proper type
+
+            procedure Parse_Match_Reference (N : Builtin_Function_Call);
+            --  Check that split parameters has the proper type
+
+            procedure Parse_Lower_Upper_Reference
+              (N    : Builtin_Function_Call;
+               Name : Name_Type);
+            --  Check that lower/upper parameters has the proper type
+
+            procedure Parse_Default_Alternative_Reference
+              (N    : Builtin_Function_Call;
+               Name : Name_Type);
+            --  Check that default/alternative parameters has the proper type
+
+            -----------------------------------------
+            -- Parse_Default_Alternative_Reference --
+            -----------------------------------------
+
+            procedure Parse_Default_Alternative_Reference
+              (N    : Builtin_Function_Call;
+               Name : Name_Type)
+            is
+               Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
+            begin
+               --  Note that this routine is only validating the syntax
+               --  of the split built-in.
+
+               if Exprs.Is_Null or else Exprs.Children_Count < 2 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, N),
+                        Message => "missing parameters for "
+                                    & String (Name) & "  built-in"));
+
+               --  Check that we don't have more than two parameters
+
+               elsif Exprs.Children_Count > 2 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference (Filename, Exprs),
+                        Message =>
+                          String (Name) & " accepts only two parameters"));
+               end if;
+            end Parse_Default_Alternative_Reference;
 
             --------------------------------------
             -- Parse_External_As_List_Reference --
@@ -714,9 +769,7 @@ package body GPR2.Project.Parser is
             -- Parse_External_Reference --
             ------------------------------
 
-            procedure Parse_External_Reference
-              (N : Builtin_Function_Call)
-            is
+            procedure Parse_External_Reference (N : Builtin_Function_Call) is
                Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
             begin
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
@@ -776,6 +829,7 @@ package body GPR2.Project.Parser is
                         begin
                            if not Node.Is_Null then
                               Node := Node.Child (1);
+
                               if not Node.Is_Null
                                 and then Node.Kind = Gpr_Builtin_Function_Call
                               then
@@ -787,6 +841,79 @@ package body GPR2.Project.Parser is
                   end;
                end if;
             end Parse_External_Reference;
+
+            ---------------------------------
+            -- Parse_Lower_Upper_Reference --
+            ---------------------------------
+
+            procedure Parse_Lower_Upper_Reference
+              (N    : Builtin_Function_Call;
+               Name : Name_Type)
+            is
+               Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
+            begin
+               --  Note that this routine is only validating the syntax
+               --  of the split built-in.
+
+               if Exprs.Is_Null or else Exprs.Children_Count = 0 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, N),
+                        Message => "missing parameters for "
+                                    & String (Name) & "  built-in"));
+
+               --  Check that we don't have more than two parameters
+
+               elsif Exprs.Children_Count > 1 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference (Filename, Exprs),
+                        Message =>
+                          String (Name) & " accepts only one parameter"));
+               end if;
+            end Parse_Lower_Upper_Reference;
+
+            ---------------------------
+            -- Parse_Match_Reference --
+            ---------------------------
+
+            procedure Parse_Match_Reference (N : Builtin_Function_Call) is
+               Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
+            begin
+               --  Note that this routine is only validating the syntax
+               --  of the split built-in.
+
+               if Exprs.Is_Null or else Exprs.Children_Count = 0 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, N),
+                        Message => "missing parameters for match built-in"));
+
+               --  Check that the second parameter exists
+
+               elsif Exprs.Children_Count < 2 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, Exprs),
+                        Message => "match requires a second parameter"));
+
+               --  Check that we don't have more than two parameters
+
+               elsif Exprs.Children_Count > 3 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference (Filename, Exprs),
+                        Message =>
+                          "match accepts a maximum of three parameters"));
+               end if;
+            end Parse_Match_Reference;
 
             ---------------------------
             -- Parse_Split_Reference --
@@ -838,6 +965,21 @@ package body GPR2.Project.Parser is
 
             elsif Function_Name = "split" then
                Parse_Split_Reference (N);
+
+            elsif Function_Name = "lower" then
+               Parse_Lower_Upper_Reference (N, "lower");
+
+            elsif Function_Name = "upper" then
+               Parse_Lower_Upper_Reference (N, "upper");
+
+            elsif Function_Name = "match" then
+               Parse_Match_Reference (N);
+
+            elsif Function_Name = "default" then
+               Parse_Default_Alternative_Reference (N, "default");
+
+            elsif Function_Name = "alternative" then
+               Parse_Default_Alternative_Reference (N, "alternative");
 
             else
                Messages.Append
@@ -1203,8 +1345,8 @@ package body GPR2.Project.Parser is
       --  list surrounded by parentheses.
 
       procedure Record_Attribute
-        (Set  : in out PA.Set.Object;
-         A    : PA.Object);
+        (Set : in out PA.Set.Object;
+         A   : PA.Object);
       --  Record an attribute into the given set. At the same time we increment
       --  the Empty_Attribute_Count if this attribute has an empty value. This
       --  is used to check whether we need to reparse the tree.
@@ -1657,6 +1799,24 @@ package body GPR2.Project.Parser is
                procedure Handle_Split (Node : Builtin_Function_Call);
                --  Handle the Split built-in : Split ("STR1", "SEP")
 
+               generic
+                  with function Transform
+                    (Value : Value_Type) return Value_Type;
+               procedure Handle_Generic1 (Node : Builtin_Function_Call);
+               --  A generic procedure call Transform for the single value or
+               --  for each values in a list.
+
+               generic
+                  with function Transform
+                    (Value1, Value2 : Value_Type) return Value_Type;
+               procedure Handle_Generic2 (Node : Builtin_Function_Call);
+               --  A generic procedure call Transform for the single value or
+               --  for each values in a list.
+
+               procedure Handle_Match (Node : Builtin_Function_Call);
+               --  Handle the Match built-in :
+               --    Match ("STR", "PATTERN"[, "REPL"])
+
                --------------------------------------
                -- Handle_External_As_List_Variable --
                --------------------------------------
@@ -1674,7 +1834,8 @@ package body GPR2.Project.Parser is
                   -- Get_Parameter --
                   -------------------
 
-                  function Get_Parameter (Index : Positive) return Value_Type
+                  function Get_Parameter
+                    (Index : Positive) return Value_Type
                   is
                      Ignore : Boolean;
                   begin
@@ -1706,8 +1867,6 @@ package body GPR2.Project.Parser is
                procedure Handle_External_Variable
                  (Node : Builtin_Function_Call)
                is
-                  use Ada.Exceptions;
-
                   Parameters : constant Term_List_List :=
                                  F_Terms (F_Parameters (Node));
                   Error      : Boolean;
@@ -1766,11 +1925,222 @@ package body GPR2.Project.Parser is
                                 Get_Source_Reference (Self.File, Parameters),
                               Message => Exception_Message (E)));
                      end if;
+
                      Record_Value
                        (Get_Value_Reference
                           ("", Get_Source_Reference (Self.File, Parameters)));
                      Status := Over;
                end Handle_External_Variable;
+
+               ---------------------
+               -- Handle_Generic1 --
+               ---------------------
+
+               procedure Handle_Generic1 (Node : Builtin_Function_Call) is
+                  Parameters : constant Term_List_List :=
+                                 F_Terms (F_Parameters (Node));
+                  Value_Node : constant Term_List :=
+                                 Child (Parameters, 1).As_Term_List;
+               begin
+                  declare
+                     Values : constant Item_Values :=
+                                Get_Term_List (Value_Node);
+                  begin
+                     if Values.Single then
+                        Record_Value
+                          (Get_Value_Reference
+                             (Transform (Values.Values.First_Element.Text),
+                              Get_Source_Reference
+                                (Self.File, Parameters)));
+
+                     else
+                        for V of Values.Values loop
+                           New_Item := True;
+
+                           Record_Value
+                             (Get_Value_Reference
+                                (Transform (V.Text),
+                                 Get_Source_Reference
+                                   (Self.File, Parameters)));
+                        end loop;
+
+                        Result.Single := False;
+                     end if;
+                  end;
+
+                  --  Skip all child nodes, we do not want to parse a second
+                  --  time the string_literal.
+
+                  Status := Over;
+               end Handle_Generic1;
+
+               ---------------------
+               -- Handle_Generic2 --
+               ---------------------
+
+               procedure Handle_Generic2 (Node : Builtin_Function_Call) is
+                  Parameters  : constant Term_List_List :=
+                                 F_Terms (F_Parameters (Node));
+                  Value1_Node : constant Term_List :=
+                                  Child (Parameters, 1).As_Term_List;
+                  Value2_Node : constant Term_List :=
+                                  Child (Parameters, 2).As_Term_List;
+               begin
+                  declare
+                     Values : constant Item_Values :=
+                                Get_Term_List (Value1_Node);
+                     P      : constant Value_Type :=
+                                Get_Term_List
+                                  (Value2_Node).Values.First_Element.Text;
+                  begin
+                     if Values.Single then
+                        Record_Value
+                          (Get_Value_Reference
+                             (Transform
+                                  (Values.Values.First_Element.Text, P),
+                              Get_Source_Reference
+                                (Self.File, Parameters)));
+
+                     else
+                        for V of Values.Values loop
+                           New_Item := True;
+
+                           Record_Value
+                             (Get_Value_Reference
+                                (Transform (V.Text, P),
+                                 Get_Source_Reference
+                                   (Self.File, Parameters)));
+                        end loop;
+
+                        Result.Single := False;
+                     end if;
+                  end;
+
+                  --  Skip all child nodes, we do not want to parse a second
+                  --  time the string_literal.
+
+                  Status := Over;
+               end Handle_Generic2;
+
+               ------------------
+               -- Handle_Match --
+               ------------------
+
+               procedure Handle_Match (Node : Builtin_Function_Call) is
+                  Parameters : constant Term_List_List :=
+                                 F_Terms (F_Parameters (Node));
+
+                  Str : constant Item_Values :=
+                          Get_Term_List (Child (Parameters, 1).As_Term_List);
+                  Pat : constant Item_Values :=
+                          Get_Term_List (Child (Parameters, 2).As_Term_List);
+                  Rep : constant Item_Values :=
+                          (if Parameters.Children_Count = 3
+                           then Get_Term_List
+                                  (Child (Parameters, 3).As_Term_List)
+                           else Empty_Item_Values);
+               begin
+                  if not Pat.Single then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level => Message.Error,
+                           Sloc  => Get_Source_Reference
+                                      (Self.File, Child (Parameters, 2)),
+                           Message => "Match pattern parameter must be a"
+                                    & " string"));
+
+                  elsif Rep /= Empty_Item_Values and then not Rep.Single then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level => Message.Error,
+                           Sloc  => Get_Source_Reference
+                                      (Self.File, Child (Parameters, 2)),
+                           Message => "Match replacement parameter must be a"
+                                    & " string"));
+
+                  else
+                     declare
+                        use GNAT;
+
+                        Pattern : constant Value_Type :=
+                                    Pat.Values.First_Element.Text;
+
+                        Regex   : constant Regpat.Pattern_Matcher :=
+                                    Regpat.Compile (Pattern);
+
+                        Repl    : constant Value_Type :=
+                                    (if Rep = Empty_Item_Values
+                                     then ""
+                                     else Rep.Values.First_Element.Text);
+                     begin
+                        if Str.Single then
+                           declare
+                              R : constant String :=
+                                    Builtin.Match
+                                      (Str.Values.First_Element.Text,
+                                       Pattern, Regex, Repl);
+                           begin
+                              if R = "" then
+                                 --  No match, result is an empty value
+                                 Record_Value
+                                   (Get_Value_Reference
+                                      ("",
+                                       Get_Source_Reference
+                                         (Self.File, Parameters)));
+                              else
+                                 Record_Value
+                                   (Get_Value_Reference
+                                      (R,
+                                       Source_Reference.Object
+                                         (Str.Values.First_Element)));
+                              end if;
+                           end;
+
+                        else
+                           --  First parameter is a list, do the match on all
+                           --  list items, if no match remove from the list.
+
+                           for V of Str.Values loop
+                              declare
+                                 R : constant String :=
+                                       Builtin.Match
+                                         (V.Text, Pattern, Regex, Repl);
+                              begin
+                                 New_Item := True;
+
+                                 if R /= "" then
+                                    Record_Value
+                                      (Get_Value_Reference
+                                         (R,
+                                          Source_Reference.Object
+                                            (Str.Values.First_Element)));
+                                 end if;
+                              end;
+                           end loop;
+
+                           Result.Single := False;
+                        end if;
+                     end;
+                  end if;
+
+                  Status := Over;
+
+               exception
+                  when E : GNAT.Regpat.Expression_Error =>
+                     if not Ext_Conf_Mode then
+                        Tree.Log_Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Self.File, Parameters),
+                              Message => Exception_Message (E)));
+                     end if;
+
+                     Record_Value
+                       (Get_Value_Reference
+                          ("", Get_Source_Reference (Self.File, Parameters)));
+                     Status := Over;
+               end Handle_Match;
 
                ------------------
                -- Handle_Split --
@@ -1838,6 +2208,22 @@ package body GPR2.Project.Parser is
                   Status := Over;
                end Handle_Split;
 
+               procedure Handle_Upper is
+                 new Handle_Generic1 (Transform => Builtin.Upper);
+               --  Handle the Lower built-in : Lower ("STR") or Lower (VAR)
+
+               procedure Handle_Lower is
+                 new Handle_Generic1 (Transform => Builtin.Lower);
+               --  Handle the Lower built-in : Upper ("STR") or Upper (VAR)
+
+               procedure Handle_Default is
+                 new Handle_Generic2 (Transform => Builtin.Default);
+               --  Handle the Lower built-in : Default ("STR", "def")
+
+               procedure Handle_Alternative is
+                 new Handle_Generic2 (Transform => Builtin.Alternative);
+               --  Handle the Lower built-in : Alternative ("STR", "def")
+
                Function_Name : constant Name_Type :=
                                  Get_Name_Type (F_Function_Name (Node));
             begin
@@ -1851,6 +2237,21 @@ package body GPR2.Project.Parser is
                elsif Function_Name = "split" then
                   Result.Single := False;
                   Handle_Split (Node);
+
+               elsif Function_Name = "lower" then
+                  Handle_Lower (Node);
+
+               elsif Function_Name = "upper" then
+                  Handle_Upper (Node);
+
+               elsif Function_Name = "match" then
+                  Handle_Match (Node);
+
+               elsif Function_Name = "default" then
+                  Handle_Default (Node);
+
+               elsif Function_Name = "alternative" then
+                  Handle_Alternative (Node);
                end if;
             end Handle_Builtin;
 
@@ -2286,7 +2687,7 @@ package body GPR2.Project.Parser is
             Last : constant Natural :=
                      Children_Count (List) -
                      (if Present (Att_Ref) then 0 else 1);
-            --  if not attribute reference last segment is variable name.
+            --  if not attribute reference last segment is variable name
 
             function Is_Valid_Project_Name (Name : Name_Type) return Boolean is
               (Process.View.View_For (Name).Is_Defined
@@ -3133,7 +3534,7 @@ package body GPR2.Project.Parser is
                         Get_Type_Def_From (Self.Extended);
                      end if;
 
-                     --  Type definition from "parent" project.
+                     --  Type definition from "parent" project
 
                      if not Type_Def.Is_Defined
                        and then Self.Has_Imports
