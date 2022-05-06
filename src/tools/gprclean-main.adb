@@ -676,6 +676,7 @@ begin
       GPRtools.Util.Fail_Program
         ('"'
          & (if Options.Project_File.Is_Defined
+               and then not Options.Project_File.Is_Implicit_Project
            then String (Options.Project_File.Simple_Name)
            else Options.Project_Base.Value)
          & """ processing failed");

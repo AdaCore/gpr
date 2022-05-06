@@ -1,0 +1,5 @@
+configuration project Default is
+
+   for Target use linux;
+
+end Default;

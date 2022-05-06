@@ -293,9 +293,15 @@ begin
       Handle_Lint        => Opt.Verbose)
    then
       if Opt.Project_File.Is_Defined then
-         Text_IO.Put_Line
-           ("gprls: unable to process project file "
-            & String (Opt.Project_File.Name));
+         if Opt.Project_File.Is_Implicit_Project then
+            Text_IO.Put_Line
+              ("gprls: unable to process default project file in "
+               & String (Opt.Project_Base.Name));
+         else
+            Text_IO.Put_Line
+              ("gprls: unable to process project file "
+               & String (Opt.Project_File.Name));
+         end if;
       else
          Text_IO.Put_Line
            ("gprls: unable to process project file "

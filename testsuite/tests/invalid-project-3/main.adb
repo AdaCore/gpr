@@ -18,6 +18,7 @@
 
 with Ada.Exceptions;
 with Ada.Text_IO;
+with GNAT.Directory_Operations;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;
@@ -41,22 +42,43 @@ procedure Main is
       end loop;
    end Print_Messages;
 
-   procedure Test (Project_Name : GPR2.Filename_Type) is
+   procedure Test (Project_Name : GPR2.Filename_Type;
+                   Implicit     : Boolean := False)
+   is
+      Old_Cwd  : constant GNAT.Directory_Operations.Dir_Name_Str :=
+                   GNAT.Directory_Operations.Get_Current_Dir;
+      Gpr_Path : constant GPR2.Path_Name.Object :=
+                   (if not Implicit
+                    then GPR2.Path_Name.Create_File (Project_Name)
+                    else GPR2.Path_Name.Create_Directory (Project_Name));
+      Gpr_Dir : constant GNAT.Directory_Operations.Dir_Name_Str :=
+                  String (Gpr_Path.Dir_Name);
    begin
       Tree.Unload;
-      Tree.Load_Autoconf
-        (Filename => GPR2.Path_Name.Create_File
-           (GPR2.Project.Ensure_Extension (Project_Name),
-            GPR2.Path_Name.No_Resolution),
-         Context  => Context);
+      GNAT.Directory_Operations.Change_Dir (Gpr_Dir);
+
+      if not Implicit then
+         Tree.Load_Autoconf
+           (Filename => Gpr_Path,
+            Context  => Context);
+      else
+         Tree.Load_Autoconf
+           (Filename    => GPR2.Path_Name.Implicit_Project,
+            Project_Dir => Gpr_Path,
+            Context     => Context);
+      end if;
       Tree.Update_Sources;
       Print_Messages;
+
+      GNAT.Directory_Operations.Change_Dir (Old_Cwd);
    exception
       when Project_Error =>
          Print_Messages;
+         GNAT.Directory_Operations.Change_Dir (Old_Cwd);
       when E : others =>
          Ada.Text_IO.Put_Line ("!!! Uncaught exception raised !!!");
          Ada.Text_IO.Put_Line (Ada.Exceptions.Exception_Information (E));
+         GNAT.Directory_Operations.Change_Dir (Old_Cwd);
    end Test;
 
 begin
@@ -122,4 +144,8 @@ begin
    Test ("naming/same_suffix.gpr");
    Test ("naming/same_suffix2.gpr");
    Test ("naming/same_suffix3.gpr");
+   Ada.Text_IO.New_Line;
+   Ada.Text_IO.Put_Line ("** configuration:");
+   Ada.Text_IO.New_Line;
+   Test ("config", True);
 end Main;

@@ -106,7 +106,8 @@ package GPR2.Project.Configuration is
       return Object
    with Pre => Settings'Length > 0;
    --  Creates a configuration based on the settings requested.
-   --  Project parameter need to log error if happen.
+   --  Project parameter is used as source reference for the potential
+   --  error messages reported.
    --  If Save_Name is defined, the configuration project is saved there.
 
    function Load

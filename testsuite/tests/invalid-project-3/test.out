@@ -64,3 +64,7 @@ name_except.gpr:7:49: error: File "foo.1" specified in naming exception more tha
 same_suffix.gpr:4:11: error: Body_Suffix (Ada) value already used for this language
 same_suffix2.gpr:7:11: error: Spec_Suffix (C++) value is already used for language C
 same_suffix3.gpr:4:11: error: Body_Suffix (Ada) value already used for this language
+
+** configuration:
+
+default.cgpr:3:19: error: undefined variable "linux"
