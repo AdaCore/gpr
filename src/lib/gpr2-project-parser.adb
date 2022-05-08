@@ -444,7 +444,6 @@ package body GPR2.Project.Parser is
       end if;
 
       return Project;
-
    end Parse;
 
    -----------
@@ -3459,12 +3458,12 @@ package body GPR2.Project.Parser is
             --  Use function instead of constant because Sloc need only in case
             --  of error logging and no more than once.
 
-            Name       : constant Identifier := F_Var_Name (Node);
-            Expr       : constant Term_List := F_Expr (Node);
-            Values     : constant Item_Values := Get_Term_List (Expr);
-            V_Type     : constant Type_Reference := F_Var_Type (Node);
-            V          : GPR2.Project.Variable.Object;
-            Type_Def   : GPR2.Project.Typ.Object;
+            Name     : constant Identifier := F_Var_Name (Node);
+            Expr     : constant Term_List := F_Expr (Node);
+            Values   : constant Item_Values := Get_Term_List (Expr);
+            V_Type   : constant Type_Reference := F_Var_Type (Node);
+            V        : GPR2.Project.Variable.Object;
+            Type_Def : GPR2.Project.Typ.Object;
          begin
             if not V_Type.Is_Null then
                declare
