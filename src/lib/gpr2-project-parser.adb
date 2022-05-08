@@ -1387,6 +1387,10 @@ package body GPR2.Project.Parser is
       --  set and Pack_Name contains the name of the package and Pack_Ref
       --  will point to the view's package object.
 
+      Non_Fatal_Error : GPR2.Log.Object;
+      --  Store non fatal errors that we record while parsing. This avoids
+      --  stoping the parsing at the first error.
+
       function Is_Open return Boolean is
         (Case_Values.Is_Empty
          or else (for all CV of Case_Values => CV (1) = '+'));
@@ -1993,7 +1997,7 @@ package body GPR2.Project.Parser is
                             Get_Term_List (Value2_Node);
                   begin
                      if P1.Single xor P2.Single then
-                        Tree.Log_Messages.Append
+                        Non_Fatal_Error.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
@@ -3812,6 +3816,12 @@ package body GPR2.Project.Parser is
       Definition.Get (View).Disable_Cache;
       Traverse (Root (Self.Unit), Parser'Access);
       Definition.Get (View).Enable_Cache;
+
+      --  Fill possible non-fatal errors into the tree now
+
+      for M of Non_Fatal_Error loop
+         Tree.Log_Messages.Append (M);
+      end loop;
 
       for F of Actual loop
          Self.Skip_Src.Exclude (F);
