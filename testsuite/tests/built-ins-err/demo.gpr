@@ -1,0 +1,11 @@
+
+project Demo is
+
+   L    := ("value1", "or", "another", "one");
+
+   V_MixedD1 := Default ("x", L);
+   V_MixedD2 := Default (L, "x");
+   V_MixedA1 := Alternative ("x", L);
+   V_MixedA2 := Alternative (L, "x");
+
+end Demo;

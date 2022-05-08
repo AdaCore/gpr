@@ -1,0 +1,2 @@
+Messages found:
+demo.gpr:6:17: error: parameters of Default built-in must be of the same type

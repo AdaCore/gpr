@@ -1806,6 +1806,7 @@ package body GPR2.Project.Parser is
                --  for each values in a list.
 
                generic
+                  Name : String;
                   with function Transform
                     (Value1, Value2 : Value_Type) return Value_Type;
                procedure Handle_Generic2 (Node : Builtin_Function_Call);
@@ -1986,27 +1987,39 @@ package body GPR2.Project.Parser is
                                   Child (Parameters, 2).As_Term_List;
                begin
                   declare
-                     Values : constant Item_Values :=
-                                Get_Term_List (Value1_Node);
-                     P      : constant Value_Type :=
-                                Get_Term_List
-                                  (Value2_Node).Values.First_Element.Text;
+                     P1 : constant Item_Values :=
+                            Get_Term_List (Value1_Node);
+                     P2 : constant Item_Values :=
+                            Get_Term_List (Value2_Node);
                   begin
-                     if Values.Single then
+                     if P1.Single xor P2.Single then
+                        Tree.Log_Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Self.File, Node),
+                              Message =>
+                                "parameters of " & Name
+                                & " built-in must be of the same type"));
+                     end if;
+
+                     if P1.Single then
                         Record_Value
                           (Get_Value_Reference
                              (Transform
-                                  (Values.Values.First_Element.Text, P),
+                                  (P1.Values.First_Element.Text,
+                                   P2.Values.First_Element.Text),
                               Get_Source_Reference
                                 (Self.File, Parameters)));
 
                      else
-                        for V of Values.Values loop
+                        for V of P1.Values loop
                            New_Item := True;
 
                            Record_Value
                              (Get_Value_Reference
-                                (Transform (V.Text, P),
+                                (Transform (V.Text,
+                                            P2.Values.First_Element.Text),
                                  Get_Source_Reference
                                    (Self.File, Parameters)));
                         end loop;
@@ -2215,12 +2228,12 @@ package body GPR2.Project.Parser is
                  new Handle_Generic1 (Transform => Builtin.Lower);
                --  Handle the Lower built-in : Upper ("STR") or Upper (VAR)
 
-               procedure Handle_Default is
-                 new Handle_Generic2 (Transform => Builtin.Default);
+               procedure Handle_Default is new Handle_Generic2
+                 ("Default", Transform => Builtin.Default);
                --  Handle the Lower built-in : Default ("STR", "def")
 
-               procedure Handle_Alternative is
-                 new Handle_Generic2 (Transform => Builtin.Alternative);
+               procedure Handle_Alternative is new Handle_Generic2
+                 ("Alternative", Transform => Builtin.Alternative);
                --  Handle the Lower built-in : Alternative ("STR", "def")
 
                Function_Name : constant Name_Type :=
