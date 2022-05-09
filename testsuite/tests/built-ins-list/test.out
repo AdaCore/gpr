@@ -1,0 +1,10 @@
+Demo     K_STANDARD
+V:   L1 -> "value" "or" "another" "one"
+V:   L2 ->
+V:   L3 -> "one"
+V:   LA1 ->
+V:   LA2 -> "value" "or" "another" "one"
+V:   LA3 ->
+V:   LD1 -> "value" "or" "another" "one"
+V:   LD2 -> "one"
+V:   LD3 ->

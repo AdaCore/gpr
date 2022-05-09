@@ -39,6 +39,8 @@ package GPR2.Builtin is
 
    use Ada;
 
+   use type GPR2.Containers.Source_Value_List;
+
    function External
      (Context       : GPR2.Context.Object;
       Variable      : Name_Type;
@@ -76,15 +78,32 @@ package GPR2.Builtin is
      with Post => Upper'Result = Characters.Handling.To_Upper (Value);
    --  Upper-case value
 
-   function Default (Value, Default : Value_Type) return Value_Type
-     with Post => Builtin.Default'Result
-                    = (if Value = "" then Default else Value);
-   --  The default built-in, returns Default is Value is empty
+   function Default (Value, Default_Value : Value_Type) return Value_Type
+     with Post => Default'Result
+                    = (if Value = "" then Default_Value else Value);
+   --  The default built-in, returns Default if Value is empty
 
-   function Alternative (Value, Alternative : Value_Type) return Value_Type
-     with Post => Builtin.Alternative'Result
-                    = (if Value = "" then "" else Alternative);
+   function Default
+     (List, Default : Containers.Source_Value_List)
+      return Containers.Source_Value_List
+     with Post => Builtin.Default'Result
+                    = (if List.Is_Empty then Default else List);
+   --  The default built-in, returns Default if List is empty
+
+   function Alternative
+     (Value, Alternative_Value : Value_Type) return Value_Type
+     with Post => Alternative'Result
+                    = (if Value = "" then "" else Alternative_Value);
    --  The alternative built-in, returns Alternative is Value is not empty
+
+   function Alternative
+     (List, Alternative : Containers.Source_Value_List)
+      return Containers.Source_Value_List
+     with Post => Builtin.Alternative'Result
+                    = (if List.Is_Empty
+                       then Containers.Source_Value_Type_List.Empty
+                       else Alternative);
+   --  The default built-in, returns Default if List is empty
 
    function Match
      (Value, Pattern : Value_Type;

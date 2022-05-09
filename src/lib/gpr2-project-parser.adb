@@ -1811,8 +1811,11 @@ package body GPR2.Project.Parser is
 
                generic
                   Name : String;
-                  with function Transform
+                  with function Transform_V
                     (Value1, Value2 : Value_Type) return Value_Type;
+                  with function Transform_L
+                    (List1, List2 : Containers.Source_Value_List)
+                     return Containers.Source_Value_List;
                procedure Handle_Generic2 (Node : Builtin_Function_Call);
                --  A generic procedure call Transform for the single value or
                --  for each values in a list.
@@ -2010,23 +2013,27 @@ package body GPR2.Project.Parser is
                      if P1.Single then
                         Record_Value
                           (Get_Value_Reference
-                             (Transform
+                             (Transform_V
                                   (P1.Values.First_Element.Text,
                                    P2.Values.First_Element.Text),
                               Get_Source_Reference
                                 (Self.File, Parameters)));
 
                      else
-                        for V of P1.Values loop
-                           New_Item := True;
+                        declare
+                           L : constant Containers.Source_Value_List :=
+                                 Transform_L (P1.Values, P2.Values);
+                        begin
+                           for V of L loop
+                              New_Item := True;
 
-                           Record_Value
-                             (Get_Value_Reference
-                                (Transform (V.Text,
-                                            P2.Values.First_Element.Text),
+                              Record_Value
+                                (Get_Value_Reference
+                                   (V.Text,
                                  Get_Source_Reference
                                    (Self.File, Parameters)));
-                        end loop;
+                           end loop;
+                        end;
 
                         Result.Single := False;
                      end if;
@@ -2233,11 +2240,15 @@ package body GPR2.Project.Parser is
                --  Handle the Lower built-in : Upper ("STR") or Upper (VAR)
 
                procedure Handle_Default is new Handle_Generic2
-                 ("Default", Transform => Builtin.Default);
+                 ("Default",
+                  Transform_V => Builtin.Default,
+                  Transform_L => Builtin.Default);
                --  Handle the Lower built-in : Default ("STR", "def")
 
                procedure Handle_Alternative is new Handle_Generic2
-                 ("Alternative", Transform => Builtin.Alternative);
+                 ("Alternative",
+                  Transform_V => Builtin.Alternative,
+                  Transform_L => Builtin.Alternative);
                --  Handle the Lower built-in : Alternative ("STR", "def")
 
                Function_Name : constant Name_Type :=
