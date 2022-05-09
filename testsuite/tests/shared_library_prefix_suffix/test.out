@@ -1,0 +1,7 @@
+Step 1 :
+Step 2 :
+GPRBuild failed : "gprbuild -p -q -Pfiles/test.gpr --config=files/alternative.cgpr"
+Step 3 :
+GPRBuild failed : "gprbuild -p -q -Pfiles/test2.gpr"
+Step 4 :
+GPRBuild failed : "gprbuild -p -q -Pfiles/test2.gpr --config=files/alternative.cgpr"
