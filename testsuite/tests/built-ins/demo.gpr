@@ -26,16 +26,15 @@ project Demo is
    X2 := Match (Target1, "mingw32|cygwin|windows");
    X3 := Match (Target2, "([^-]*)-([^-]*)-([^-]*)", "\3-\2-\1");
 
-   OS1 : OS_Kind := default
-                      (alternative
-                         (match (Target1, "(mingw32|cygwin|windows)"),
+   OS1 : OS_Kind := Default
+                      (Alternative
+                         (Match (Target1, "(mingw32|cygwin|windows)"),
                          "Windows"),
                        "UNIX");
 
-   OS2 : OS_Kind := default
-                      (alternative
-                         (match (Target2, "(mingw32|cygwin|windows)"),
+   OS2 : OS_Kind := Default
+                      (Alternative
+                         (Match (Target2, "(mingw32|cygwin|windows)"),
                           "Windows"),
                        "UNIX");
-
 end Demo;
