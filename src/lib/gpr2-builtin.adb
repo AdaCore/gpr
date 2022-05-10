@@ -30,18 +30,35 @@ package body GPR2.Builtin is
    -- Alternative --
    -----------------
 
-   function Alternative (Value, Alternative : Value_Type) return Value_Type is
+   function Alternative
+     (Value, Alternative_Value : Value_Type) return Value_Type is
    begin
-      return (if Value = "" then "" else Alternative);
+      return (if Value = "" then "" else Alternative_Value);
+   end Alternative;
+
+   function Alternative
+     (List, Alternative : Containers.Source_Value_List)
+      return Containers.Source_Value_List is
+   begin
+      return (if List.Is_Empty
+              then Containers.Source_Value_Type_List.Empty
+              else Alternative);
    end Alternative;
 
    -------------
    -- Default --
    -------------
 
-   function Default (Value, Default : Value_Type) return Value_Type is
+   function Default (Value, Default_Value : Value_Type) return Value_Type is
    begin
-      return (if Value = "" then Default else Value);
+      return (if Value = "" then Default_Value else Value);
+   end Default;
+
+   function Default
+     (List, Default : Containers.Source_Value_List)
+      return Containers.Source_Value_List is
+   begin
+      return (if List.Is_Empty then Default else List);
    end Default;
 
    --------------

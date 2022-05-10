@@ -1963,9 +1963,19 @@ package body GPR2.Project.Tree is
          Conf := Project.Configuration.Create
            (Pre_Conf_Description.Element,
             Actual_Target,
-            (if Self.Root.Is_Defined then Self.Root.Path_Name else Filename),
+            (if Self.Root.Is_Defined then Self.Root.Path_Name
+             elsif Filename.Is_Implicit_Project then Project_Dir
+             else Filename),
             Self.Base,
             Save_Name => Config_Project);
+
+         if Conf.Has_Error then
+            for M of Conf.Log_Messages loop
+               Self.Append_Message (M);
+            end loop;
+
+            raise Project_Error with "cannot create configuration";
+         end if;
 
          --  Unload the project that was loaded without configuration.
          --  We need to backup the messages and default search path:

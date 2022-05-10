@@ -1,0 +1,19 @@
+
+project Demo is
+
+   L := ("a", "list", "of", "items");
+   V := "me";
+
+   V_MixedD1 := Default ("x", L);
+   V_MixedD2 := Default (L, "x");
+   V_MixedD3 := Default (V, L);
+   V_MixedD4 := Default (L, V);
+   V_MixedD5 := Default (L, Lower(V));
+
+   V_MixedA1 := Alternative ("x", L);
+   V_MixedA2 := Alternative (L, "x");
+   V_MixedA3 := Alternative (V, L);
+   V_MixedA4 := Alternative (L, V);
+   V_MixedA5 := Alternative (L, Lower(V));
+
+end Demo;

@@ -310,6 +310,10 @@ package body GPR2.Project.Configuration is
                     Filename_Type (Project_Path.Dir_Name)));
          end if;
 
+         for M of Parsing_Messages loop
+            Result.Messages.Append (M);
+         end loop;
+
          for S of Settings loop
             Result.Descriptions.Append (S);
          end loop;

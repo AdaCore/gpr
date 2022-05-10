@@ -1,0 +1,16 @@
+
+project Demo is
+
+   L1 := ("value", "or", "another", "one");
+   L2 := ();
+   L3 := ("one");
+
+   LD1 := Default (L2, L1);
+   LD2 := Default (L3, L1);
+   LD3 := Default (L2, L2);
+
+   LA1 := Alternative (L2, L1);
+   LA2 := Alternative (L3, L1);
+   LA3 := Alternative (L2, L2);
+
+end Demo;

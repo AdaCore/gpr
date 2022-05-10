@@ -1387,6 +1387,10 @@ package body GPR2.Project.Parser is
       --  set and Pack_Name contains the name of the package and Pack_Ref
       --  will point to the view's package object.
 
+      Non_Fatal_Error : GPR2.Log.Object;
+      --  Store non fatal errors that we record while parsing. This avoids
+      --  stoping the parsing at the first error.
+
       function Is_Open return Boolean is
         (Case_Values.Is_Empty
          or else (for all CV of Case_Values => CV (1) = '+'));
@@ -1806,8 +1810,12 @@ package body GPR2.Project.Parser is
                --  for each values in a list.
 
                generic
-                  with function Transform
+                  Name : String;
+                  with function Transform_V
                     (Value1, Value2 : Value_Type) return Value_Type;
+                  with function Transform_L
+                    (List1, List2 : Containers.Source_Value_List)
+                     return Containers.Source_Value_List;
                procedure Handle_Generic2 (Node : Builtin_Function_Call);
                --  A generic procedure call Transform for the single value or
                --  for each values in a list.
@@ -1986,30 +1994,46 @@ package body GPR2.Project.Parser is
                                   Child (Parameters, 2).As_Term_List;
                begin
                   declare
-                     Values : constant Item_Values :=
-                                Get_Term_List (Value1_Node);
-                     P      : constant Value_Type :=
-                                Get_Term_List
-                                  (Value2_Node).Values.First_Element.Text;
+                     P1 : constant Item_Values :=
+                            Get_Term_List (Value1_Node);
+                     P2 : constant Item_Values :=
+                            Get_Term_List (Value2_Node);
                   begin
-                     if Values.Single then
+                     if P1.Single xor P2.Single then
+                        Non_Fatal_Error.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Self.File, Node),
+                              Message =>
+                                "parameters of " & Name
+                                & " built-in must be of the same type"));
+                     end if;
+
+                     if P1.Single then
                         Record_Value
                           (Get_Value_Reference
-                             (Transform
-                                  (Values.Values.First_Element.Text, P),
+                             (Transform_V
+                                  (P1.Values.First_Element.Text,
+                                   P2.Values.First_Element.Text),
                               Get_Source_Reference
                                 (Self.File, Parameters)));
 
                      else
-                        for V of Values.Values loop
-                           New_Item := True;
+                        declare
+                           L : constant Containers.Source_Value_List :=
+                                 Transform_L (P1.Values, P2.Values);
+                        begin
+                           for V of L loop
+                              New_Item := True;
 
-                           Record_Value
-                             (Get_Value_Reference
-                                (Transform (V.Text, P),
+                              Record_Value
+                                (Get_Value_Reference
+                                   (V.Text,
                                  Get_Source_Reference
                                    (Self.File, Parameters)));
-                        end loop;
+                           end loop;
+                        end;
 
                         Result.Single := False;
                      end if;
@@ -2215,12 +2239,16 @@ package body GPR2.Project.Parser is
                  new Handle_Generic1 (Transform => Builtin.Lower);
                --  Handle the Lower built-in : Upper ("STR") or Upper (VAR)
 
-               procedure Handle_Default is
-                 new Handle_Generic2 (Transform => Builtin.Default);
+               procedure Handle_Default is new Handle_Generic2
+                 ("Default",
+                  Transform_V => Builtin.Default,
+                  Transform_L => Builtin.Default);
                --  Handle the Lower built-in : Default ("STR", "def")
 
-               procedure Handle_Alternative is
-                 new Handle_Generic2 (Transform => Builtin.Alternative);
+               procedure Handle_Alternative is new Handle_Generic2
+                 ("Alternative",
+                  Transform_V => Builtin.Alternative,
+                  Transform_L => Builtin.Alternative);
                --  Handle the Lower built-in : Alternative ("STR", "def")
 
                Function_Name : constant Name_Type :=
@@ -3799,6 +3827,12 @@ package body GPR2.Project.Parser is
       Definition.Get (View).Disable_Cache;
       Traverse (Root (Self.Unit), Parser'Access);
       Definition.Get (View).Enable_Cache;
+
+      --  Fill possible non-fatal errors into the tree now
+
+      for M of Non_Fatal_Error loop
+         Tree.Log_Messages.Append (M);
+      end loop;
 
       for F of Actual loop
          Self.Skip_Src.Exclude (F);
