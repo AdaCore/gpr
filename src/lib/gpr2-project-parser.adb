@@ -1987,17 +1987,15 @@ package body GPR2.Project.Parser is
 
                procedure Handle_Generic2 (Node : Builtin_Function_Call) is
                   Parameters  : constant Term_List_List :=
-                                 F_Terms (F_Parameters (Node));
-                  Value1_Node : constant Term_List :=
+                                  F_Terms (F_Parameters (Node));
+                  P1_Node     : constant Term_List :=
                                   Child (Parameters, 1).As_Term_List;
-                  Value2_Node : constant Term_List :=
+                  P2_Node     : constant Term_List :=
                                   Child (Parameters, 2).As_Term_List;
                begin
                   declare
-                     P1 : constant Item_Values :=
-                            Get_Term_List (Value1_Node);
-                     P2 : constant Item_Values :=
-                            Get_Term_List (Value2_Node);
+                     P1 : constant Item_Values := Get_Term_List (P1_Node);
+                     P2 : constant Item_Values := Get_Term_List (P2_Node);
                   begin
                      if P1.Single xor P2.Single then
                         Non_Fatal_Error.Append
