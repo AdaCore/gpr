@@ -608,49 +608,15 @@ package body GPR2.Project.Parser is
             procedure Parse_Match_Reference (N : Builtin_Function_Call);
             --  Check that split parameters has the proper type
 
-            procedure Parse_Lower_Upper_Reference
+            procedure Parse_One_Parameter_Reference
               (N    : Builtin_Function_Call;
                Name : Name_Type);
             --  Check that lower/upper parameters has the proper type
 
-            procedure Parse_Default_Alternative_Reference
+            procedure Parse_Two_Parameter_Reference
               (N    : Builtin_Function_Call;
                Name : Name_Type);
             --  Check that default/alternative parameters has the proper type
-
-            -----------------------------------------
-            -- Parse_Default_Alternative_Reference --
-            -----------------------------------------
-
-            procedure Parse_Default_Alternative_Reference
-              (N    : Builtin_Function_Call;
-               Name : Name_Type)
-            is
-               Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
-            begin
-               --  Note that this routine is only validating the syntax
-               --  of the split built-in.
-
-               if Exprs.Is_Null or else Exprs.Children_Count < 2 then
-                  Messages.Append
-                    (GPR2.Message.Create
-                       (Level   => Message.Error,
-                        Sloc    => Get_Source_Reference (Filename, N),
-                        Message => "missing parameters for "
-                                    & String (Name) & "  built-in"));
-
-               --  Check that we don't have more than two parameters
-
-               elsif Exprs.Children_Count > 2 then
-                  Messages.Append
-                    (GPR2.Message.Create
-                       (Level   => Message.Error,
-                        Sloc    =>
-                          Get_Source_Reference (Filename, Exprs),
-                        Message =>
-                          String (Name) & " accepts only two parameters"));
-               end if;
-            end Parse_Default_Alternative_Reference;
 
             --------------------------------------
             -- Parse_External_As_List_Reference --
@@ -841,40 +807,6 @@ package body GPR2.Project.Parser is
                end if;
             end Parse_External_Reference;
 
-            ---------------------------------
-            -- Parse_Lower_Upper_Reference --
-            ---------------------------------
-
-            procedure Parse_Lower_Upper_Reference
-              (N    : Builtin_Function_Call;
-               Name : Name_Type)
-            is
-               Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
-            begin
-               --  Note that this routine is only validating the syntax
-               --  of the split built-in.
-
-               if Exprs.Is_Null or else Exprs.Children_Count = 0 then
-                  Messages.Append
-                    (GPR2.Message.Create
-                       (Level   => Message.Error,
-                        Sloc    => Get_Source_Reference (Filename, N),
-                        Message => "missing parameters for "
-                                    & String (Name) & "  built-in"));
-
-               --  Check that we don't have more than two parameters
-
-               elsif Exprs.Children_Count > 1 then
-                  Messages.Append
-                    (GPR2.Message.Create
-                       (Level   => Message.Error,
-                        Sloc    =>
-                          Get_Source_Reference (Filename, Exprs),
-                        Message =>
-                          String (Name) & " accepts only one parameter"));
-               end if;
-            end Parse_Lower_Upper_Reference;
-
             ---------------------------
             -- Parse_Match_Reference --
             ---------------------------
@@ -913,6 +845,40 @@ package body GPR2.Project.Parser is
                           "match accepts a maximum of three parameters"));
                end if;
             end Parse_Match_Reference;
+
+            -----------------------------------
+            -- Parse_One_Parameter_Reference --
+            -----------------------------------
+
+            procedure Parse_One_Parameter_Reference
+              (N    : Builtin_Function_Call;
+               Name : Name_Type)
+            is
+               Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
+            begin
+               --  Note that this routine is only validating the syntax
+               --  of the split built-in.
+
+               if Exprs.Is_Null or else Exprs.Children_Count = 0 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, N),
+                        Message => "missing parameters for "
+                                    & String (Name) & "  built-in"));
+
+               --  Check that we don't have more than two parameters
+
+               elsif Exprs.Children_Count > 1 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference (Filename, Exprs),
+                        Message =>
+                          String (Name) & " accepts only one parameter"));
+               end if;
+            end Parse_One_Parameter_Reference;
 
             ---------------------------
             -- Parse_Split_Reference --
@@ -953,6 +919,40 @@ package body GPR2.Project.Parser is
                end if;
             end Parse_Split_Reference;
 
+            -----------------------------------
+            -- Parse_Two_Parameter_Reference --
+            -----------------------------------
+
+            procedure Parse_Two_Parameter_Reference
+              (N    : Builtin_Function_Call;
+               Name : Name_Type)
+            is
+               Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
+            begin
+               --  Note that this routine is only validating the syntax
+               --  of the split built-in.
+
+               if Exprs.Is_Null or else Exprs.Children_Count < 2 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, N),
+                        Message => "missing parameters for "
+                                    & String (Name) & "  built-in"));
+
+               --  Check that we don't have more than two parameters
+
+               elsif Exprs.Children_Count > 2 then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference (Filename, Exprs),
+                        Message =>
+                          String (Name) & " accepts only two parameters"));
+               end if;
+            end Parse_Two_Parameter_Reference;
+
             Function_Name : constant Name_Type :=
                               Get_Name_Type (F_Function_Name (N));
          begin
@@ -966,19 +966,19 @@ package body GPR2.Project.Parser is
                Parse_Split_Reference (N);
 
             elsif Function_Name = "lower" then
-               Parse_Lower_Upper_Reference (N, "lower");
+               Parse_One_Parameter_Reference (N, "lower");
 
             elsif Function_Name = "upper" then
-               Parse_Lower_Upper_Reference (N, "upper");
+               Parse_One_Parameter_Reference (N, "upper");
 
             elsif Function_Name = "match" then
                Parse_Match_Reference (N);
 
             elsif Function_Name = "default" then
-               Parse_Default_Alternative_Reference (N, "default");
+               Parse_Two_Parameter_Reference (N, "default");
 
             elsif Function_Name = "alternative" then
-               Parse_Default_Alternative_Reference (N, "alternative");
+               Parse_Two_Parameter_Reference (N, "alternative");
 
             else
                Messages.Append
