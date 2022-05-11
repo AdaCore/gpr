@@ -45,6 +45,8 @@ dir_to_clean = [
 name = "undefined_name"
 prefix = "undefined_prefix_"
 suffix = ".undefined_suffix"
+default_prefix = "undefined_default_prefix_"
+default_suffix = ".undefined_default_suffix"
 with open("files/lib1.gpr", "r") as fp:
     for line in fp:
         if "library project" in line:
@@ -52,6 +54,16 @@ with open("files/lib1.gpr", "r") as fp:
 
 # Generate the alternative configuration project
 p = bnr.run(['gprconfig', '--batch', '--config=Ada', '-o', 'files/alternative.cgpr'])
+
+# Get the default attributes value from the configuration project
+with open("files/alternative.cgpr", "r") as fp:
+    for line in fp:
+        if "Shared_Library_Prefix" in line:
+            default_prefix = re.search('"(.*)"', line).group(1)
+        elif "Shared_Library_Suffix" in line:
+            default_suffix = re.search('"(.*)"', line).group(1)
+
+# Change attributes value into the configuration project
 replaced_content = ""
 with open("files/alternative.cgpr", "r") as fp:
     for line in fp:
@@ -77,7 +89,7 @@ build_and_clean(
     "Step 1 :",
     ['gprbuild', '-p', '-q', '-Pfiles/test.gpr'],
     [GPRCLEAN, '-r', '-p', '-q', '-Pfiles/test.gpr'],
-    f"lib{name}.so",
+    f"{default_prefix}{name}{default_suffix}",
     dir_to_clean
 )
 
