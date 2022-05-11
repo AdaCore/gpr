@@ -18,6 +18,8 @@
 
 with Ada.Text_IO;
 
+with GPR2.KB;
+
 package body GPR2.Version is
 
    use Ada.Text_IO;
@@ -97,7 +99,7 @@ package body GPR2.Version is
 
    function Long_Value (Host : Boolean := True) return String is
       Hostname       : constant String :=
-                         " (" & System.OS_Constants.Target_Name & ')';
+                         " (" & String (GPR2.KB.Default_Target) & ')';
       Version_String : constant String :=
                          Version.Short_Value & " (" & Date & ")"
                          & (if Host then Hostname else "");

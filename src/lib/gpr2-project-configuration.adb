@@ -257,7 +257,7 @@ package body GPR2.Project.Configuration is
                Configuration_String :=
                  Base.Configuration
                    (Settings => Settings_Local,
-                    Target   => Name_Type (System.OS_Constants.Target_Name),
+                    Target   => GPR2.KB.Default_Target,
                     Messages => Result.Messages,
                     Fallback => True);
             else

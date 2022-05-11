@@ -574,8 +574,7 @@ private
 
    Undefined : constant Object := (others => <>);
 
-   Target_Name : constant Name_Type :=
-                   Name_Type (System.OS_Constants.Target_Name);
+   Target_Name : constant Name_Type := KB.Default_Target;
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
