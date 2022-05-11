@@ -1,0 +1,15 @@
+
+project Demo is
+
+   L    := ("one", "two", "three", "last");
+
+   I1   := Item_At (L, "1");
+   I2   := Item_At (L, "2");
+   I3   := Item_At (L, "3");
+   I4   := Item_At (L, "4");
+
+   Iend  := Item_At (L, "-1");
+   Ibend := Item_At (L, "-2");
+   Ie1   := Item_At (L, "-4");
+
+end Demo;

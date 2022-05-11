@@ -127,6 +127,22 @@ package body GPR2.Builtin is
       return Result;
    end External_As_List;
 
+   -------------
+   -- Item_At --
+   -------------
+
+   function Item_At
+     (List  : Containers.Source_Value_List;
+      Index : Integer) return Value_Type
+   is
+      I : constant Positive :=
+            (if Index > 0
+             then Index
+             else Positive (List.Length) + Index + 1);
+   begin
+      return List (I).Text;
+   end Item_At;
+
    -----------
    -- Lower --
    -----------

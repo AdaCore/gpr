@@ -1,0 +1,14 @@
+Demo     K_STANDARD
+V:   I1 -> "one"
+V:   I2 -> "two"
+V:   I3 -> "three"
+V:   I4 -> "last"
+V:   Ibend -> "three"
+V:   Ie1 -> "one"
+V:   Iend -> "last"
+V:   L -> "one" "two" "three" "last"
+Messages found:
+demoe1.gpr:6:12: error: second parameter of Index_At built-in out of bound
+demoe1.gpr:7:12: error: second parameter of Index_At built-in out of bound
+demoe1.gpr:8:12: error: second parameter of Index_At built-in out of bound
+demoe1.gpr:9:12: error: second parameter of Index_At built-in out of bound

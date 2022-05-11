@@ -1,0 +1,11 @@
+
+project DemoE1 is
+
+   L    := ("one", "two", "three", "last");
+
+   I1   := Item_At (L, "0");
+   I2   := Item_At (L, "5");
+   I3   := Item_At (L, "8");
+   I4   := Item_At (L, "-6");
+
+end DemoE1;

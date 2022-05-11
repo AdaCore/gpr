@@ -40,6 +40,7 @@ package GPR2.Builtin is
    use Ada;
 
    use type GPR2.Containers.Source_Value_List;
+   use type GPR2.Containers.Count_Type;
 
    function External
      (Context       : GPR2.Context.Object;
@@ -104,6 +105,17 @@ package GPR2.Builtin is
                        then Containers.Source_Value_Type_List.Empty
                        else Alternative);
    --  The default built-in, returns Default if List is empty
+
+   function Item_At
+     (List  : Containers.Source_Value_List;
+      Index : Integer) return Value_Type
+     with Pre  => Containers.Count_Type (abs Index) <= List.Length
+                  and then Index /= 0,
+          Post => List (if Index > 0
+                        then Index
+                        else Integer (List.Length) + Index + 1).Text =
+                     Item_At'Result;
+   --  Returns the value at position Index in List
 
    function Match
      (Value, Pattern : Value_Type;

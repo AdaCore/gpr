@@ -27,6 +27,8 @@ with Ada.Characters.Handling;
 with Ada.Containers;
 with Ada.Containers.Vectors;
 with Ada.Exceptions;
+with Ada.Strings.Fixed;
+with Ada.Strings.Maps.Constants;
 with Ada.Strings.Wide_Wide_Unbounded;
 
 with GNAT.Regpat;
@@ -980,6 +982,9 @@ package body GPR2.Project.Parser is
             elsif Function_Name = "alternative" then
                Parse_Two_Parameter_Reference (N, "alternative");
 
+            elsif Function_Name = "item_at" then
+               Parse_Two_Parameter_Reference (N, "item_at");
+
             else
                Messages.Append
                  (GPR2.Message.Create
@@ -1802,6 +1807,9 @@ package body GPR2.Project.Parser is
                procedure Handle_Split (Node : Builtin_Function_Call);
                --  Handle the Split built-in : Split ("STR1", "SEP")
 
+               procedure Handle_Item_At (Node : Builtin_Function_Call);
+               --  Handle the Item_At build-in : Item_At (List, Index)
+
                generic
                   with function Transform
                     (Value : Value_Type) return Value_Type;
@@ -2043,6 +2051,85 @@ package body GPR2.Project.Parser is
                   Status := Over;
                end Handle_Generic2;
 
+               --------------------
+               -- Handle_Item_At --
+               --------------------
+
+               procedure Handle_Item_At (Node : Builtin_Function_Call) is
+                  use type Strings.Maps.Character_Set;
+
+                  Parameters : constant Term_List_List :=
+                                 F_Terms (F_Parameters (Node));
+                  P1_Node    : constant Term_List :=
+                                 Child (Parameters, 1).As_Term_List;
+                  P2_Node    : constant Term_List :=
+                                 Child (Parameters, 2).As_Term_List;
+               begin
+                  declare
+                     P1 : constant Item_Values := Get_Term_List (P1_Node);
+                     P2 : constant Item_Values := Get_Term_List (P2_Node);
+                  begin
+                     if P1.Single then
+                        Non_Fatal_Error.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Self.File, Node),
+                              Message =>
+                                "first parameter of Index_At"
+                                & " built-in must be a list"));
+                     end if;
+
+                     --  Check that 2nd parameter is a simple number
+
+                     if not P2.Single
+                       or else
+                         Strings.Fixed.Index
+                           (P2.Values.First_Element.Text,
+                            Strings.Maps.Constants.Decimal_Digit_Set
+                              or Strings.Maps.To_Set ("-"),
+                            Strings.Outside) /= 0
+                     then
+                        Non_Fatal_Error.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Self.File, Node),
+                              Message =>
+                                "second parameter of Index_At"
+                                & " built-in must be a number"));
+
+                     else
+                        declare
+                           Index : constant Integer :=
+                                     Integer'Value
+                                       (P2.Values.First_Element.Text);
+                        begin
+                           if abs (Index) > Positive (P1.Values.Length)
+                             or else Index = 0
+                           then
+                              Non_Fatal_Error.Append
+                                (GPR2.Message.Create
+                                   (Level   => Message.Error,
+                                    Sloc    =>
+                                      Get_Source_Reference (Self.File, Node),
+                                    Message =>
+                                      "second parameter of Index_At"
+                                      & " built-in out of bound"));
+                           else
+                              Record_Value
+                                (Get_Value_Reference
+                                   (Builtin.Item_At (P1.Values, Index),
+                                    Source_Reference.Object
+                                      (P1.Values.First_Element)));
+                           end if;
+                        end;
+                     end if;
+                  end;
+
+                  Status := Over;
+               end Handle_Item_At;
+
                ------------------
                -- Handle_Match --
                ------------------
@@ -2277,6 +2364,9 @@ package body GPR2.Project.Parser is
 
                elsif Function_Name = "alternative" then
                   Handle_Alternative (Node);
+
+               elsif Function_Name = "item_at" then
+                  Handle_Item_At (Node);
                end if;
             end Handle_Builtin;
 
