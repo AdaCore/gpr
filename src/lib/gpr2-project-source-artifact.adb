@@ -351,6 +351,7 @@ package body GPR2.Project.Source.Artifact is
       if Source.Has_Units and then Source.Has_Index then
          declare
             CU : GPR2.Unit.Object renames Source.Unit (Index);
+            Other : GPR2.Project.Source.Source_Part;
          begin
             if CU.Kind in GPR2.Unit.Body_Kind | GPR2.Unit.S_Spec_Only
               or else (Maybe_No_Body and then CU.Kind = GPR2.Unit.S_Spec)
@@ -361,6 +362,14 @@ package body GPR2.Project.Source.Artifact is
                begin
                   return Get_Dep (Base);
                end;
+            elsif Source.Has_Other_Part (Index) then
+               Other := Source.Other_Part (Index);
+               return Dependency
+                 (Other.Source,
+                  Other.Index,
+                  Location,
+                  Actual_File,
+                  Maybe_No_Body);
             else
                return GPR2.Path_Name.Undefined;
             end if;

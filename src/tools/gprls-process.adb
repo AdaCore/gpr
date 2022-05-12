@@ -932,14 +932,18 @@ begin
                      Kind  : GPR2.Unit.Library_Unit_Type;
                      Index : Unit_Index) return Boolean
                   is
-                     Position : Sources_By_Path.Cursor;
-                     Inserted : Boolean;
-                  begin
-                     if Kind /= GPR2.Unit.S_Spec
-                       and then Opt.Files.Contains (String (Key))
-                     then
-                        Remains.Exclude (String (Key));
+                     procedure Do_Insert (Index : Unit_Index);
 
+                     ---------------
+                     -- Do_Insert --
+                     ---------------
+
+                     procedure Do_Insert (Index : Unit_Index)
+                     is
+                        Position : Sources_By_Path.Cursor;
+                        Inserted : Boolean;
+
+                     begin
                         Sources.Insert ((S, Index), Position, Inserted);
 
                         if not Inserted
@@ -949,6 +953,26 @@ begin
                            --  Prefer none aggregated, more information there
 
                            Sources.Replace_Element (Position, (S, Index));
+                        end if;
+                     end Do_Insert;
+
+                  begin
+                     if Kind /= GPR2.Unit.S_Spec
+                       and then Opt.Files.Contains (String (Key))
+                     then
+                        Remains.Exclude (String (Key));
+
+                        if S.Has_Units and then Index = No_Index then
+                           for CU of S.Units loop
+                              if CU.Kind not in
+                                GPR2.Unit.S_Spec | GPR2.Unit.S_Separate
+                              then
+                                 Do_Insert (CU.Index);
+                              end if;
+                           end loop;
+
+                        else
+                           Do_Insert (Index);
                         end if;
 
                         return True;
