@@ -2,6 +2,7 @@ No build
 UNKNOWN status for unit PCK in /src/code.ada at index 1
 UNKNOWN status for unit CALL in /src/code.ada at index 2
 UNKNOWN status for unit MAIN in /src/code.ada at index 3
+
 With build
 /obj/code~1.o
    PCK
@@ -15,3 +16,4 @@ With build
          OK /src/code.ada at index 2
          OK /src/code.ada at index 3
          OK /src/code.ada at index 1
+
