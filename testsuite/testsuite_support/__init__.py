@@ -27,6 +27,11 @@ class Testsuite(e3.testsuite.Testsuite):
             help="Run test executable under valgrind.")
 
         parser.add_argument(
+            "--from-gnat",
+            action="store_true",
+            help="If provided, means gnat packages are available")
+
+        parser.add_argument(
             "--gnatcov",
             help="If provided, compute the source code coverage of testcases"
                  " on ALS. This requires GNATcoverage working with"
@@ -41,6 +46,7 @@ class Testsuite(e3.testsuite.Testsuite):
     def set_up(self):
         super(Testsuite, self).set_up()
         self.env.valgrind = self.main.args.valgrind
+        self.env.from_gnat = self.main.args.from_gnat
 
         # If code coverage is requested, initialize our helper and build
         # instrumented programs.

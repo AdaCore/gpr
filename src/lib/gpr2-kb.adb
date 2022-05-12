@@ -1980,7 +1980,7 @@ package body GPR2.KB is
       if Variables_Maps.Contains (Comp.Variables, N) then
          return To_String (Variables_Maps.Element (Comp.Variables, N));
       elsif Name = "HOST" then
-         return System.OS_Constants.Target_Name;
+         return String (Default_Target);
       elsif Name = "TARGET" then
          return To_String (Comp.Target);
       elsif Name = "RUNTIME_DIR" then

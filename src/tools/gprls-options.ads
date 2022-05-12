@@ -71,7 +71,11 @@ package GPRls.Options is
 
 private
 
-   type Selective_Output_Type is (All_Outputs, Units, Sources, Objects);
+   type Output_Type is (Units, Sources, Objects);
+   type Selective_Output_Type is array (Output_Type) of Boolean;
+
+   --  All_Outputs is the default, and corresponds to all values set to False
+   All_Outputs : constant Selective_Output_Type := (others => False);
 
    type Object is new GPRtools.Options.Base_Options with record
       List_File             : Path_Name.Object;
@@ -105,13 +109,16 @@ private
      (Self.Hide_Predefined_Path);
 
    function Print_Units (Self : Object) return Boolean is
-     (Self.Selective_Output in All_Outputs | Units);
+     (Self.Selective_Output = All_Outputs
+      or else Self.Selective_Output (Units));
 
    function Print_Sources (Self : Object) return Boolean is
-     (Self.Selective_Output in All_Outputs | Sources);
+     (Self.Selective_Output = All_Outputs
+      or else Self.Selective_Output (Sources));
 
    function Print_Object_Files (Self : Object) return Boolean is
-     (Self.Selective_Output in All_Outputs | Objects);
+     (Self.Selective_Output = All_Outputs
+      or else Self.Selective_Output (Objects));
 
    function Source_Parser (Self : Object) return Boolean is
      (Self.Source_Parser);
