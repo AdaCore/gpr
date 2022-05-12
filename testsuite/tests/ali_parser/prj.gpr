@@ -1,0 +1,15 @@
+project Prj is
+
+   Gnat_Version := external ("GNATVersion", "wave");
+
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj/" & Gnat_Version;
+   for Main use ("main.adb");
+
+   package Naming is
+      for Spec ("K") use "multi.ada" at 1;
+      for Body ("K") use "multi.ada" at 2;
+      for Spec ("Foo") use "this is foo with a long name.1.ada";
+      for Body ("Foo") use "this is foo with a long name.2.ada";
+   end Naming;
+end Prj;

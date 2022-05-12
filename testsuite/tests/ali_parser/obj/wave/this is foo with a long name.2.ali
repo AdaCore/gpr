@@ -1,0 +1,58 @@
+V "GNAT Lib v23.20220510"
+A -gnatA
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_IO
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U foo%b			"this is foo with a long name.2.ada"  b3f3a726 NE OO PK
+W ada%s			ada.ads			ada.ali
+Z ada.strings.text_buffers%s  a-sttebu.adb	a-sttebu.ali
+W ada.text_io%s		a-textio.adb		a-textio.ali
+
+U foo%s			"this is foo with a long name.1.ada"  bc4e36d2 EE NE OO PK
+Z ada.strings.text_buffers%s  a-sttebu.adb	a-sttebu.ali
+
+D ada.ads		20220511085109 76789da1 ada%s
+D a-except.ads		20220511085108 2a7d8d70 ada.exceptions%s
+D a-ioexce.ads		20220511085108 40018c65 ada.io_exceptions%s
+D a-stream.ads		20220511085109 119b8fb3 ada.streams%s
+D a-string.ads		20220511085109 90ac6797 ada.strings%s
+D a-sttebu.ads		20220511085109 18209c64 ada.strings.text_buffers%s
+D a-stuten.ads		20220511085109 c6ced0ae ada.strings.utf_encoding%s
+D a-tags.ads		20220511085109 9eaa38c6 ada.tags%s
+D a-textio.ads		20220511085109 deada98a ada.text_io%s
+D a-unccon.ads		20220511085109 0e9b276f ada.unchecked_conversion%s
+D "this is foo with a long name.1.ada"  20220509134732 bc4e36d2 foo%s
+D "this is foo with a long name.2.ada"  20220509134739 d110387e foo%b
+D interfac.ads		20220511085109 edec285f interfaces%s
+D i-cstrea.ads		20220511085109 e53d8b8e interfaces.c_streams%s
+D system.ads		20220511085110 426dafb8 system%s
+D s-crtl.ads		20220511085109 8a0692f8 system.crtl%s
+D s-exctab.ads		20220511085109 91bef6ef system.exception_table%s
+D s-ficobl.ads		20220511085109 dc5161d4 system.file_control_block%s
+D s-parame.ads		20220511085110 d494a4a6 system.parameters%s
+D s-putima.ads		20220511085110 4e095881 system.put_images%s
+D s-secsta.ads		20220511085110 62cd9202 system.secondary_stack%s
+D s-soflin.ads		20220511085110 df77073e system.soft_links%s
+D s-stache.ads		20220511085110 0b81c1fe system.stack_checking%s
+D s-stalib.ads		20220511085110 1c9580f6 system.standard_library%s
+D s-stoele.ads		20220511085110 6d8e1ff4 system.storage_elements%s
+D s-stoele.adb		20220511085110 8f5a9db6 system.storage_elements%b
+D s-traent.ads		20220511085110 c81cbf8c system.traceback_entries%s
+D s-unstyp.ads		20220511085110 fa2a7f59 system.unsigned_types%s
+D s-wchcon.ads		20220511085110 d9032363 system.wch_con%s
+G a e
+G c Z s b [bar foo 3 14 none]
+X 1 ada.ads
+16K9*Ada 20e8 12|1r6 6r7
+X 9 a-textio.ads
+58K13*Text_IO 727e16 12|1w10 6r11
+507U14*Put_Line 12|6s19
+X 11 this is foo with a long name.1.ada
+1K9*Foo 5l5 5e8 12|3b14 8l5 8t8
+3U14*Bar 12|4b14 7l8 7t11
+

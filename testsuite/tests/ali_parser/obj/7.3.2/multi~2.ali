@@ -1,0 +1,60 @@
+V "GNAT Lib v7.3"
+M P W=b
+A -gnatA
+A -gnateI2
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_IO
+RV NO_IMPLEMENTATION_PRAGMAS
+RV SPARK_05
+
+U k%b			multi.ada		3127a8a1 NE OO SU
+W ada%s			ada.ads			ada.ali
+W ada.text_io%s		a-textio.adb		a-textio.ali
+W pkg%s			pkg.adb			pkg.ali
+
+U k%s			multi.ada		7860a714 EE NE OO SU
+
+D ada.ads		20060709122605 3ffc8e18 ada%s
+D a-except.ads		20140415182720 5250cb69 ada.exceptions%s
+D a-finali.ads		20140118000943 69f99942 ada.finalization%s
+D a-ioexce.ads		20131225032402 e4a01f64 ada.io_exceptions%s
+D a-stream.ads		20140529074513 22b06827 ada.streams%s
+D a-tags.ads		20140415174600 dc4d0634 ada.tags%s
+D a-textio.ads		20140209021914 386df5d4 ada.text_io%s
+D a-unccon.ads		20060709122605 f9eb8f06 ada.unchecked_conversion%s
+D interfac.ads		20140531114601 ef8b39d4 interfaces%s
+D i-cstrea.ads		20140609063625 e53d8b8e interfaces.c_streams%s
+D multi.ada		20220509114040 7860a714 k%s
+D multi.ada		20220509114040 7860a714 k%b
+D pkg.ads		20220509132300 094a5d75 pkg%s
+D system.ads		20141014173800 1d274481 system%s
+D s-crtl.ads		20140609063625 ca3eb19d system.crtl%s
+D s-exctab.ads		20131225031849 54135002 system.exception_table%s
+D s-ficobl.ads		20140302165540 078245e4 system.file_control_block%s
+D s-finmas.ads		20131225031849 814daec4 system.finalization_masters%s
+D s-finroo.ads		20120402200032 4ff27390 system.finalization_root%s
+D s-parame.ads		20140604164142 7e2a0d7f system.parameters%s
+D s-pooglo.ads		20110224134916 542f33d0 system.pool_global%s
+D s-soflin.ads		20140608144523 aa763b52 system.soft_links%s
+D s-stache.ads		20131225031849 a37c21ec system.stack_checking%s
+D s-stalib.ads		20140607163943 fa0a3617 system.standard_library%s
+D s-stoele.ads		20131225031849 2dc34a04 system.storage_elements%s
+D s-stopoo.ads		20130510054206 b16154c2 system.storage_pools%s
+D s-traent.ads		20140412173246 005bf670 system.traceback_entries%s
+D s-unstyp.ads		20140526151417 9d58a4c0 system.unsigned_types%s
+D s-wchcon.ads		20140220135258 1b7d22d2 system.wch_con%s
+X 1 ada.ads
+16K9*Ada 19e8 12|3r6 9r4
+X 7 a-textio.ads
+49K13*Text_IO 471e16 12|3w10 9r8
+263U14*Put_Line 12|9s16
+X 11 multi.ada
+1U11*K 12|6b11 10l5 10t6
+X 13 pkg.ads
+1K9*Pkg 12|4w6 8r4 13|9e8
+7U14*P 12|8s8
+

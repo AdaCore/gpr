@@ -80,9 +80,10 @@ package body GPR2.Source_Info.Parser.ALI is
         with Post => not Stream_IO.Is_Open (File.FD);
 
       function Get_Token
-        (File          : in out Handle;
-         Stop_At_LF    : Boolean := False;
-         May_Be_Quoted : Boolean := False) return String
+        (File           : in out Handle;
+         Stop_At_LF     : Boolean := False;
+         May_Be_Quoted  : Boolean := False;
+         May_Have_Space : Boolean := False) return String
         with Pre => Stream_IO.Is_Open (File.FD);
       --  Get next token on the file.
       --  If Stop_At_LF is True, then no token will be read after the current
@@ -94,8 +95,6 @@ package body GPR2.Source_Info.Parser.ALI is
         with Pre => Stream_IO.Is_Open (File.FD);
       --  Skips to the next (non-empty) line and sets Header.
       --  If no such line exists, Header is set to NUL.
-
-      function At_LF (File : Handle) return Boolean;
 
    end IO;
 
@@ -109,13 +108,6 @@ package body GPR2.Source_Info.Parser.ALI is
         with Inline, Post => File.Current = 0;
       --  Read a chunk of data in the buffer or nothing if there is no more
       --  data to read.
-
-      -----------
-      -- At_LF --
-      -----------
-
-      function At_LF (File : Handle) return Boolean is
-        (File.At_LF);
 
       -----------
       -- Close --
@@ -143,9 +135,10 @@ package body GPR2.Source_Info.Parser.ALI is
       ---------------
 
       function Get_Token
-        (File          : in out Handle;
-         Stop_At_LF    : Boolean := False;
-         May_Be_Quoted : Boolean := False) return String
+        (File           : in out Handle;
+         Stop_At_LF     : Boolean := False;
+         May_Be_Quoted  : Boolean := False;
+         May_Have_Space : Boolean := False) return String
       is
          function Next_Char return Character with Inline;
          --  Get next char in buffer
@@ -153,12 +146,12 @@ package body GPR2.Source_Info.Parser.ALI is
          subtype Content_Index is Natural range 0 .. 1_024;
          subtype Content_Range is Content_Index range 1 .. Content_Index'Last;
 
-         Tok : String (Content_Range);
-         Cur : Content_Index := 0;
-         C   : Character     := ASCII.NUL;
+         Tok         : String (Content_Range);
+         Cur         : Content_Index := 0;
+         C           : Character     := ASCII.NUL;
 
-         Quoted : Boolean := False;
-         QN     : Natural := 0;
+         Quoted      : Boolean := False;
+         QN          : Natural := 0;
 
          procedure Get_Word with Inline;
          --  Read a word, result will be in Tok (Tok'First .. Cur)
@@ -166,16 +159,19 @@ package body GPR2.Source_Info.Parser.ALI is
          function Is_Separator return Boolean;
          --  The C character is separator
 
-         function Is_Space return Boolean is
-           (C in ' ' | ASCII.HT | ASCII.CR | ASCII.LF | ASCII.EOT);
-         --  The C character is space
-
          --------------
          -- Get_Word --
          --------------
 
          procedure Get_Word is
          begin
+            if May_Be_Quoted and then C = '"' then
+               Quoted := True;
+            else
+               Cur := Cur + 1;
+               Tok (Cur) := C;
+            end if;
+
             loop
                C := Next_Char;
 
@@ -194,18 +190,26 @@ package body GPR2.Source_Info.Parser.ALI is
          -- Is_Separator --
          ------------------
 
-         function Is_Separator return Boolean is
+         function Is_Separator return Boolean
+         is
+            function Is_Delimiter (With_Space : Boolean) return Boolean is
+              (C in ASCII.HT | ASCII.CR | ASCII.LF | ASCII.EOT
+               or else (With_Space and then C = ' '));
+
          begin
             if Quoted then
                if C = '"' then
                   QN := QN + 1;
                   if QN = 2 then
+                     --  Escaped quote: remove last one
                      Cur := Cur - 1;
                      QN := 0;
                   end if;
 
                elsif QN = 1 then
-                  if Is_Space then
+                  if Is_Delimiter (True) then
+                     --  ending quote: remove it
+                     Cur := Cur - 1;
                      return True;
                   else
                      Cur := Cur + 1;
@@ -219,8 +223,23 @@ package body GPR2.Source_Info.Parser.ALI is
 
                return False;
 
+            elsif May_Have_Space and then Cur > 0 then
+               if Is_Delimiter (With_Space => False) then
+                  return True;
+               end if;
+
+               --  file names contain potentially space characters. The
+               --  delimiter after such token is either HT (detected above)
+               --  or two consecutive space characters.
+               if C = ' ' and then Tok (Cur) = ' ' then
+                  Cur := Cur - 1;
+                  return True;
+               end if;
+
+               return False;
+
             else
-               return Is_Space;
+               return Is_Delimiter (With_Space => True);
             end if;
          end Is_Separator;
 
@@ -253,14 +272,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
             C := Next_Char;
 
-            Cur := 1;
-            Tok (Cur) := C;
-
-            if May_Be_Quoted and then C = '"' then
-               Quoted := True;
-            end if;
-
-            if not Is_Space then
+            if not Is_Separator then
                Get_Word;
                exit Read_Token;
 
@@ -412,7 +424,9 @@ package body GPR2.Source_Info.Parser.ALI is
 
          function Checksum (S : String) return Word;
 
-         function Get_Token (May_Be_Quoted : Boolean := False) return String;
+         function Get_Token
+           (May_Be_Quoted  : Boolean := False;
+            May_Have_Space : Boolean := False) return String;
 
          function To_Unit_Name return String;
          --  This routine is needed only on GNAT version 7.2.2 and older,
@@ -456,11 +470,15 @@ package body GPR2.Source_Info.Parser.ALI is
          -- Get_Token --
          ---------------
 
-         function Get_Token (May_Be_Quoted : Boolean := False) return String is
+         function Get_Token
+           (May_Be_Quoted  : Boolean := False;
+            May_Have_Space : Boolean := False) return String is
             Tok : constant String :=
                     IO.Get_Token
-                      (A_Handle, Stop_At_LF => True,
-                       May_Be_Quoted => May_Be_Quoted);
+                      (A_Handle,
+                       Stop_At_LF     => True,
+                       May_Be_Quoted  => May_Be_Quoted,
+                       May_Have_Space => May_Have_Space);
          begin
             if Tok = "" then
                raise Scan_ALI_Error with "Missed dependency field";
@@ -469,7 +487,7 @@ package body GPR2.Source_Info.Parser.ALI is
             end if;
          end Get_Token;
 
-         Sfile  : constant String            := Get_Token (True);
+         Sfile  : constant String            := Get_Token (True, True);
          Stamp  : constant Ada.Calendar.Time := To_Time (Get_Token);
          Chksum : constant Word              := Checksum (Get_Token);
          Forth  : constant String            :=
@@ -641,7 +659,10 @@ package body GPR2.Source_Info.Parser.ALI is
             Tok1 : constant String :=
                      IO.Get_Token (A_Handle, Stop_At_LF => True);
             Tok2 : constant String :=
-                     IO.Get_Token (A_Handle, Stop_At_LF => True);
+                     IO.Get_Token (A_Handle,
+                                   Stop_At_LF     => True,
+                                   May_Be_Quoted  => True,
+                                   May_Have_Space => True);
          begin
             --  At least "?%(b|s)"
 
@@ -761,9 +782,13 @@ package body GPR2.Source_Info.Parser.ALI is
 
       procedure Fill_With is
          N : constant String := IO.Get_Token (A_Handle, Stop_At_LF => True);
-         S : constant String := IO.Get_Token (A_Handle, Stop_At_LF => True)
+         S : constant String := IO.Get_Token (A_Handle,
+                                              Stop_At_LF     => True,
+                                              May_Have_Space => True)
                with Unreferenced;
-         A : constant String := IO.Get_Token (A_Handle, Stop_At_LF => True)
+         A : constant String := IO.Get_Token (A_Handle,
+                                              Stop_At_LF     => True,
+                                              May_Have_Space => True)
                with Unreferenced;
 
          U_Last : constant Integer := N'Last - 2; -- Unit last character in N

@@ -1,0 +1,3 @@
+description: check the ALI parser with various versions of GNAT, and with
+ quoted filenames.
+driver: python_script

@@ -1,0 +1,64 @@
+V "GNAT Lib v23.20220510"
+A -gnatA
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_IO
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U pkg%b			pkg.adb			99e66ed5 NE OO PK
+W ada%s			ada.ads			ada.ali
+W ada.text_io%s		a-textio.adb		a-textio.ali
+
+U pkg%s			pkg.ads			094a5d75 EE NE OO PK
+
+D ada.ads		20220511085109 76789da1 ada%s
+D a-except.ads		20220511085108 2a7d8d70 ada.exceptions%s
+D a-ioexce.ads		20220511085108 40018c65 ada.io_exceptions%s
+D a-stream.ads		20220511085109 119b8fb3 ada.streams%s
+D a-string.ads		20220511085109 90ac6797 ada.strings%s
+D a-sttebu.ads		20220511085109 18209c64 ada.strings.text_buffers%s
+D a-stuten.ads		20220511085109 c6ced0ae ada.strings.utf_encoding%s
+D a-tags.ads		20220511085109 9eaa38c6 ada.tags%s
+D a-textio.ads		20220511085109 deada98a ada.text_io%s
+D a-unccon.ads		20220511085109 0e9b276f ada.unchecked_conversion%s
+D interfac.ads		20220511085109 edec285f interfaces%s
+D i-cstrea.ads		20220511085109 e53d8b8e interfaces.c_streams%s
+D pkg.ads		20220509132300 094a5d75 pkg%s
+D pkg.adb		20220509132944 ca3348e5 pkg%b
+D pkg-p2.adb		20220509112931 5a9f7b45 pkg.p2
+D system.ads		20220511085110 426dafb8 system%s
+D s-crtl.ads		20220511085109 8a0692f8 system.crtl%s
+D s-exctab.ads		20220511085109 91bef6ef system.exception_table%s
+D s-ficobl.ads		20220511085109 dc5161d4 system.file_control_block%s
+D s-parame.ads		20220511085110 d494a4a6 system.parameters%s
+D s-putima.ads		20220511085110 4e095881 system.put_images%s
+D s-secsta.ads		20220511085110 62cd9202 system.secondary_stack%s
+D s-soflin.ads		20220511085110 df77073e system.soft_links%s
+D s-stache.ads		20220511085110 0b81c1fe system.stack_checking%s
+D s-stalib.ads		20220511085110 1c9580f6 system.standard_library%s
+D s-stoele.ads		20220511085110 6d8e1ff4 system.storage_elements%s
+D s-stoele.adb		20220511085110 8f5a9db6 system.storage_elements%b
+D s-traent.ads		20220511085110 c81cbf8c system.traceback_entries%s
+D s-unstyp.ads		20220511085110 fa2a7f59 system.unsigned_types%s
+D s-wchcon.ads		20220511085110 d9032363 system.wch_con%s
+G a e
+G c Z s b [Oadd pkg 5 13 none]
+G c Z s b [p pkg 7 14 none]
+X 1 ada.ads
+16K9*Ada 20e8 15|1r6 6r4
+X 9 a-textio.ads
+58K13*Text_IO 727e16 15|1w10 6r8
+507U14*Put_Line 15|6s16
+X 13 pkg.ads
+1K9*Pkg 9l5 9e8 14|1b14 15l5 15t8 15|3r11
+3I9*T<integer> 5r27 5r37 14|3r27 3r37 5r14
+5V14*"+"{3I9} 5>18 5>22 14|3b14 6l9 6t11
+5i18 T1{3I9} 14|3b18 5r26
+5i22 T2{3I9} 14|3b22 5r41
+7U14*P 14|10b14 13l8 13t9
+X 14 pkg.adb
+8U14 P2 12s7 15|4b11 7l5 7t7
+

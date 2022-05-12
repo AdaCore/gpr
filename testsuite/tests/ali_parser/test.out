@@ -1,0 +1,50 @@
+check ALI produced by GNAT 5.04a1:
+
+Closure:
+
+  /src/main.adb
+  /src/multi.ada @ 1
+  /src/pkg-p2.adb
+  /src/pkg.adb
+  /src/pkg.ads
+  /src/this is foo with a long name.1.ada
+  /src/this is foo with a long name.2.ada
+
+check ALI produced by GNAT 7.2.2:
+
+Closure:
+
+  /src/main.adb
+  /src/multi.ada @ 1
+  /src/pkg-p2.adb
+  /src/pkg.adb
+  /src/pkg.ads
+  /src/this is foo with a long name.1.ada
+  /src/this is foo with a long name.2.ada
+
+check ALI produced by GNAT 7.3.2:
+
+Closure:
+
+  /src/main.adb
+  /src/multi.ada @ 1
+  /src/multi.ada @ 2
+  /src/pkg-p2.adb
+  /src/pkg.adb
+  /src/pkg.ads
+  /src/this is foo with a long name.1.ada
+  /src/this is foo with a long name.2.ada
+
+check ALI produced by GNAT wave:
+
+Closure:
+
+  /src/main.adb
+  /src/multi.ada @ 1
+  /src/multi.ada @ 2
+  /src/pkg-p2.adb
+  /src/pkg.adb
+  /src/pkg.ads
+  /src/this is foo with a long name.1.ada
+  /src/this is foo with a long name.2.ada
+

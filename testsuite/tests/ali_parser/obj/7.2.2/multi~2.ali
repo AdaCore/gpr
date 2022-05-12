@@ -1,0 +1,61 @@
+V "GNAT Lib v7.2"
+M P W=b
+A -gnatA
+A -gnateI2
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_IO
+RV NO_IMPLEMENTATION_PRAGMAS
+RV SPARK_05
+
+U k%b			multi.ada		3127a8a1 NE OO SU
+W ada%s			ada.ads			ada.ali
+W ada.text_io%s		a-textio.adb		a-textio.ali
+W pkg%s			pkg.adb			pkg.ali
+
+U k%s			multi.ada		7860a714 EE NE OO SU
+
+D ada.ads		20060709122605 3ffc8e18
+D a-except.ads		20131014212419 f86a4103
+D a-finali.ads		20111103145731 52ecdc1b
+D a-ioexce.ads		20090919133921 8b9de6cd
+D a-stream.ads		20130909153055 1a984740
+D a-tags.ads		20111201172145 6c0509d0
+D a-textio.ads		20131014174830 386df5d4
+D a-unccon.ads		20060709122605 f9eb8f06
+D interfac.ads		20130317214846 cb4a8015
+D i-cstrea.ads		20130217161902 8128536b
+D multi.ada		20220509114040 7860a714
+D multi.ada		20220509114040 7860a714
+D pkg.ads		20220509132300 094a5d75
+D system.ads		20120706154652 90249111
+D s-crtl.ads		20130216180205 dfcfca61
+D s-exctab.ads		20101026134803 66e51330
+D s-ficobl.ads		20120526014244 55a71d43
+D s-finmas.ads		20111011182005 b95bb341
+D s-finroo.ads		20120402200032 4ff27390
+D s-parame.ads		20110802094037 b6e20cc0
+D s-pooglo.ads		20110224134916 542f33d0
+D s-soflin.ads		20120413115406 24c8153c
+D s-stache.ads		20101026134803 596fc1b4
+D s-stalib.ads		20131014174839 697c8682
+D s-stoele.ads		20131014174839 facd7d98
+D s-stoele.adb		20101026134803 afc5dc80
+D s-stopoo.ads		20130510054206 b16154c2
+D s-traent.ads		20101026134803 5221ee41
+D s-unstyp.ads		20101026134803 6ae15c76
+D s-wchcon.ads		20101026134803 bfeb2e3d
+X 1 ada.ads
+16K9*Ada 19e8 12|3r6 9r4
+X 7 a-textio.ads
+49K13*Text_IO 471e16 12|3w10 9r8
+263U14*Put_Line 12|9s16
+X 11 multi.ada
+1U11*K 12|6b11 10l5 10t6
+X 13 pkg.ads
+1K9*Pkg 12|4w6 8r4 13|9e8
+7U14*P 12|8s8
+

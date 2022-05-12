@@ -1,0 +1,65 @@
+V "GNAT Lib v23.20220510"
+M P W=b
+A -gnatA
+A -gnateI2
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_IO
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U k%b			multi.ada		d7e7f4ff NE OO SU
+W ada%s			ada.ads			ada.ali
+Z ada.strings.text_buffers%s  a-sttebu.adb	a-sttebu.ali
+W ada.text_io%s		a-textio.adb		a-textio.ali
+W pkg%s			pkg.adb			pkg.ali
+
+U k%s			multi.ada		7860a714 EE NE OO SU
+Z ada.strings.text_buffers%s  a-sttebu.adb	a-sttebu.ali
+
+D ada.ads		20220511085109 76789da1 ada%s
+D a-except.ads		20220511085108 2a7d8d70 ada.exceptions%s
+D a-ioexce.ads		20220511085108 40018c65 ada.io_exceptions%s
+D a-stream.ads		20220511085109 119b8fb3 ada.streams%s
+D a-string.ads		20220511085109 90ac6797 ada.strings%s
+D a-sttebu.ads		20220511085109 18209c64 ada.strings.text_buffers%s
+D a-stuten.ads		20220511085109 c6ced0ae ada.strings.utf_encoding%s
+D a-tags.ads		20220511085109 9eaa38c6 ada.tags%s
+D a-textio.ads		20220511085109 deada98a ada.text_io%s
+D a-unccon.ads		20220511085109 0e9b276f ada.unchecked_conversion%s
+D interfac.ads		20220511085109 edec285f interfaces%s
+D i-cstrea.ads		20220511085109 e53d8b8e interfaces.c_streams%s
+D multi.ada		20220509114040 7860a714 k%s
+D multi.ada		20220509114040 7860a714 k%b
+D pkg.ads		20220509132300 094a5d75 pkg%s
+D system.ads		20220511085110 426dafb8 system%s
+D s-crtl.ads		20220511085109 8a0692f8 system.crtl%s
+D s-exctab.ads		20220511085109 91bef6ef system.exception_table%s
+D s-ficobl.ads		20220511085109 dc5161d4 system.file_control_block%s
+D s-parame.ads		20220511085110 d494a4a6 system.parameters%s
+D s-putima.ads		20220511085110 4e095881 system.put_images%s
+D s-secsta.ads		20220511085110 62cd9202 system.secondary_stack%s
+D s-soflin.ads		20220511085110 df77073e system.soft_links%s
+D s-stache.ads		20220511085110 0b81c1fe system.stack_checking%s
+D s-stalib.ads		20220511085110 1c9580f6 system.standard_library%s
+D s-stoele.ads		20220511085110 6d8e1ff4 system.storage_elements%s
+D s-stoele.adb		20220511085110 8f5a9db6 system.storage_elements%b
+D s-traent.ads		20220511085110 c81cbf8c system.traceback_entries%s
+D s-unstyp.ads		20220511085110 fa2a7f59 system.unsigned_types%s
+D s-wchcon.ads		20220511085110 d9032363 system.wch_con%s
+G a e
+G c Z s b [k standard 1 11 none]
+G r c none [k standard 1 11 none] [p pkg 7 14 none]
+X 1 ada.ads
+16K9*Ada 20e8 14|3r6 9r4
+X 9 a-textio.ads
+58K13*Text_IO 727e16 14|3w10 9r8
+507U14*Put_Line 14|9s16
+X 13 multi.ada
+1U11*K 14|6b11 10l5 10t6
+X 15 pkg.ads
+1K9*Pkg 14|4w6 8r4 15|9e8
+7U14*P 14|8s8
+
