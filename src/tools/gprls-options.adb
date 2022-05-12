@@ -247,14 +247,14 @@ package body GPRls.Options is
          end if;
 
       elsif Arg = "-u" then
-         Result.Selective_Output := Units;
+         Result.Selective_Output (Units) := True;
 
       elsif Arg = "-s" then
-         Result.Selective_Output := Sources;
+         Result.Selective_Output (Sources) := True;
          Result.Source_Parser := True;
 
       elsif Arg = "-o" then
-         Result.Selective_Output := Objects;
+         Result.Selective_Output (Objects) := True;
 
       elsif Arg = "-d" then
          Result.Dependency_Mode := True;

@@ -1,0 +1,2 @@
+description: test gprls switches -o -s -u combination
+driver: python_script

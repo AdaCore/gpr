@@ -1,0 +1,21 @@
+/main.o
+   MAIN
+/p-child.o
+   P.CHILD
+/p.o
+   P
+
+   MAIN
+/src/main.adb
+   P.CHILD
+/src/p-child.adb
+   P
+/src/p.ads
+
+/main.o
+/src/main.adb
+/p-child.o
+/src/p-child.adb
+/p.o
+/src/p.ads
+
