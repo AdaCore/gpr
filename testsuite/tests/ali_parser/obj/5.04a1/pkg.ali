@@ -1,0 +1,61 @@
+V "GNAT Lib v5.04"
+A -gnatA
+A -mtune=k8
+P SS ZX
+R nnnnnnnnnnnnnnnnnnnnvnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnvnnnnnnnnnnnnnnnnnn
+
+U pkg%b			pkg.adb			34eab1a1 NE PK
+W ada%s			ada.ads			ada.ali
+W ada.text_io%s		a-textio.adb		a-textio.ali
+
+U pkg%s			pkg.ads			41544c45 EE NE PK
+
+D ada.ads		20050804144936 9c7dd3ea
+D a-except.ads		20051221004645 d9ccb28d
+D a-finali.ads		20051005034139 2f48e141
+D a-filico.ads		20051005034122 9299732a
+D a-ioexce.ads		20050804144935 be0900a0
+D a-stream.ads		20051005035747 246b88a6
+D a-tags.ads		20051221005414 81dd2f9c
+D a-tags.adb		20060623153201 2cbd2ff8
+D a-textio.ads		20051023021539 bc58c967
+D interfac.ads		20051127004913 a69cad5c
+D i-cstrea.ads		20051127004423 85085d90
+D pkg.ads		20220509132300 41544c45
+D pkg.adb		20220509132944 6d8dee03
+D pkg-p2.adb		20220509112931 183313e7 pkg.p2
+D system.ads		20051207171409 f14ecda8
+D s-crtl.ads		20050804144936 44c0e2c2
+D s-exctab.ads		20050804144936 e14b1567
+D s-ficobl.ads		20050704094654 ed792749
+D s-finimp.ads		20050804144937 33c39bf7
+D s-finroo.ads		20051111011222 78d634f7
+D s-htable.ads		20050804144937 9598cfa4
+D s-parame.ads		20050804144937 6bd7b874
+D s-secsta.ads		20050928023536 db466d0c
+D s-soflin.ads		20051128232645 677820d8
+D s-stache.ads		20050804144938 07e06d0a
+D s-stalib.ads		20050804144938 99eda53f
+D s-stoele.ads		20050804144938 f7e9ab3e
+D s-stoele.adb		20050918161305 a397f9ca
+D s-stratt.ads		20051110191250 9823065b
+D s-traent.ads		20050804144938 9950c76b
+D s-unstyp.ads		20050804144938 b399198a
+D s-wchcon.ads		20051207114433 1705b980
+D s-wchstw.ads		20050928021017 6b782940
+D unchconv.ads		20030417144940 34860a55
+X 1 ada.ads
+16K9*Ada 19e8 14|1r6 6r4
+X 9 a-textio.ads
+49K13*Text_IO 451e16 14|1w10 6r8
+264U14*Put_Line 14|6r16
+X 12 pkg.ads
+1K9*Pkg 9l5 9e8 13|1b14 15l5 15t8
+3I9*T<integer> 5r27 5r37 13|3r27 3r37 5r14
+5V13*"+"{3I9} 5>18 5>22 13|3b13 6l8 6t11
+5i18 T1{3I9} 13|3b18 5r26
+5i22 T2{3I9} 13|3b22 5r41
+7U14*P 13|10b14 13l8 13t9
+X 13 pkg.adb
+8U14 P2 12r7 14|4b11 7l5 7t7
+

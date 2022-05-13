@@ -49,10 +49,22 @@ package GPR2.Project is
    --
 
    type Iterator_Kind is
-     (I_Project, I_Extended, I_Imported, I_Aggregated, I_Recursive);
+     (I_Project,
+      I_Extended,
+      I_Imported,
+      I_Aggregated,
+      I_Recursive,
+      I_Runtime,
+      I_Configuration);
    type Iterator_Control is array (Iterator_Kind) of Boolean  with Pack;
 
    Default_Iterator : constant Iterator_Control;
+   --  By default iterate on the whole tree except runtime and configuration
+   --  views
+
+   Full_Iterator    : constant Iterator_Control;
+   --  Iterates on the whole project tree, including config and runtime views
+   --  if present.
 
    Config_File_Extension  : constant Filename_Type := ".cgpr";
    Project_File_Extension : constant Filename_Type := ".gpr";
@@ -142,7 +154,11 @@ private
 
    subtype Weak_Reference is Definition_References.Weak_Ref;
 
-   Default_Iterator : constant Iterator_Control := (others => True);
+   Default_Iterator : constant Iterator_Control := (I_Runtime       => False,
+                                                    I_Configuration => False,
+                                                    others          => True);
+
+   Full_Iterator    : constant Iterator_Control := (others => True);
 
    Default_Filter   : constant Filter_Control := (others => True);
 

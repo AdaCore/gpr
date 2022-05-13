@@ -895,6 +895,10 @@ begin
          end loop;
       end Display_Normal;
 
+      View   : GPR2.Project.View.Object;
+      Filter : GPR2.Project.Iterator_Control :=
+                 GPR2.Project.Default_Iterator;
+
    begin
       if Opt.Verbose then
          Display_Paths;
@@ -928,14 +932,18 @@ begin
                      Kind  : GPR2.Unit.Library_Unit_Type;
                      Index : Unit_Index) return Boolean
                   is
-                     Position : Sources_By_Path.Cursor;
-                     Inserted : Boolean;
-                  begin
-                     if Kind /= GPR2.Unit.S_Spec
-                       and then Opt.Files.Contains (String (Key))
-                     then
-                        Remains.Exclude (String (Key));
+                     procedure Do_Insert (Index : Unit_Index);
 
+                     ---------------
+                     -- Do_Insert --
+                     ---------------
+
+                     procedure Do_Insert (Index : Unit_Index)
+                     is
+                        Position : Sources_By_Path.Cursor;
+                        Inserted : Boolean;
+
+                     begin
                         Sources.Insert ((S, Index), Position, Inserted);
 
                         if not Inserted
@@ -945,6 +953,26 @@ begin
                            --  Prefer none aggregated, more information there
 
                            Sources.Replace_Element (Position, (S, Index));
+                        end if;
+                     end Do_Insert;
+
+                  begin
+                     if Kind /= GPR2.Unit.S_Spec
+                       and then Opt.Files.Contains (String (Key))
+                     then
+                        Remains.Exclude (String (Key));
+
+                        if S.Has_Units and then Index = No_Index then
+                           for CU of S.Units loop
+                              if CU.Kind not in
+                                GPR2.Unit.S_Spec | GPR2.Unit.S_Separate
+                              then
+                                 Do_Insert (CU.Index);
+                              end if;
+                           end loop;
+
+                        else
+                           Do_Insert (Index);
                         end if;
 
                         return True;
@@ -1028,7 +1056,11 @@ begin
          --  - Or we're not, and we will use all the compilable sources (from
          --    the root project or the entire tree, depending on All_Sources).
 
-         for View of Tree loop
+         Filter (GPR2.Project.I_Runtime) := Opt.With_Predefined_Units;
+
+         for C in Tree.Iterate (Kind => Filter) loop
+            View := GPR2.Project.Tree.Element (C);
+
             for S_Cur in View.Sources.Iterate (Filter => S_Compilable) loop
                declare
                   Src : GPR2.Project.Source.Object renames Element (S_Cur);

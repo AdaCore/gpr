@@ -1,0 +1,23 @@
+V "GNAT Lib v5.04"
+M F W=b
+A -gnatA
+A -mtune=k8
+P ZX
+R nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnvnnnnnnnnnnnnnnnnnn
+
+U main%b		main.adb		5a76d48e NE SU
+W foo%s			this is foo with a long name.2.ada  this is foo with a long name.2.ali
+W k%s			multi.ada		multi~2.ali
+
+D this is foo with a long name.1.ada  20220509134732 81725ddd
+D multi.ada		20220509114040 f5b7942d
+D main.adb		20220510114510 2eb31d7e
+D system.ads		20051207171409 f14ecda8
+X 1 this is foo with a long name.1.ada
+1K9*Foo 5e8 3|2w6 7r4
+3U14*Bar 3|7r8
+X 2 multi.ada
+1U11*K 3|1w6 6r4
+X 3 main.adb
+4V10*Main{integer} 4b10 9l5 9t9
+
