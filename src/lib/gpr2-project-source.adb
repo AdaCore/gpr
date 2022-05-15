@@ -414,9 +414,13 @@ package body GPR2.Project.Source is
             end if;
 
             if Closure then
-               for CU of S.Units loop
-                  S.Dependencies (CU.Index, Action'Access);
-               end loop;
+               if S.Has_Units then
+                  for CU of S.Units loop
+                     S.Dependencies (CU.Index, Action'Access);
+                  end loop;
+               else
+                  S.Dependencies (No_Index, Action'Access);
+               end if;
             end if;
 
             For_Each (S, CU);

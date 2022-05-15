@@ -148,7 +148,7 @@ package GPR2.Project.Source is
      (Self    : Object;
       Index   : Unit_Index := No_Index;
       Closure : Boolean    := False) return Part_Set.Object
-     with Pre => Self.Is_Defined and then Self.Has_Units;
+     with Pre => Self.Is_Defined;
    --  Returns the source files on which the current source file depends.
    --
    --  In case of unit-based sources, if index is No_Index, then dependencies

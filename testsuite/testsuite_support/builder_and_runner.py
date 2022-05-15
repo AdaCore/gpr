@@ -93,8 +93,10 @@ class BuilderAndRunner(object):
             p = Run(cmd, env=env, output=output, error=error, ignore_environ=False)
             if catch_error and p.status != 0:
                 print(str(cmd) + " returned " + str(p.status))
-                print("stdout\n" + p.out)
-                print("stderr\n" + p.err)
+                if p.out:
+                    print("stdout\n" + p.out)
+                if p.err:
+                    print("stderr\n" + p.err)
                 raise TestAbortWithFailure("non-zero exit status")
             else:
                 return p
