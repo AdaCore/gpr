@@ -405,16 +405,9 @@ package GPR2.Project.View is
      with Pre  => Self.Is_Defined;
    --  Returns the languages used on this project
 
-   function Source_Directories (Self : Object) return Project.Attribute.Object
-     with Pre => Self.Is_Defined
-                 and then Self.Qualifier not in K_Aggregate | K_Abstract;
-   --  Returns the sources dirs for the project view. This is only defined for
-   --  project having sources. If not defined in the project itself, the view
-   --  does have the project directory has source dir.
-
    function Source_Directories (Self : Object) return GPR2.Path_Name.Set.Object
      with Pre => Self.Is_Defined
-                 and then Self.Qualifier not in K_Aggregate | K_Abstract;
+                 and then Self.Qualifier in K_Standard | K_Library;
    --  Returns the source dir paths for a given project
 
    function Has_Sources (Self : Object) return Boolean
@@ -690,14 +683,15 @@ package GPR2.Project.View is
      (Self              : Object;
       Directory_Pattern : GPR2.Filename_Optional;
       Source            : GPR2.Source_Reference.Value.Object;
-      File_CB           : not null access procedure
+      File_CB           : access procedure
                             (File : GPR2.Path_Name.Object);
       Directory_CB      : access procedure
                             (Directory       : GPR2.Path_Name.Object;
                              Is_Root_Dir     : Boolean;
                              Do_Dir_Visit    : in out Boolean;
                              Do_Subdir_Visit : in out Boolean) := null)
-      with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined
+                   and then (File_CB /= null or else Directory_CB /= null);
    --  Visit Directory_Pattern (recursive if "**" at end) calling callbacks
    --  on each directory/file visited.
    --  When entering a Directory, Directory_CB callback can avoid Directory's

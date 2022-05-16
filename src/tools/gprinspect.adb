@@ -19,16 +19,13 @@
 with Ada.Calendar.Formatting;
 with Ada.Command_Line;
 with Ada.Containers.Ordered_Maps;
-with Ada.Directories;
 with Ada.Text_IO;
 
 with GNAT.Command_Line;
 with GNAT.MD5;
-with GNAT.OS_Lib;
 
 with GNATCOLL.Traces;
 with GNATCOLL.JSON;
-with GNATCOLL.Utils;
 
 with GPRtools.Command_Line;
 with GPRtools.Util;
@@ -129,81 +126,8 @@ procedure GPRinspect is
 
       function To_JSON_Array (A : GPR2.Containers.Value_Set) return JSON_Array;
 
-      procedure Append_Source_Path
-        (Set : in out GPR2.Containers.Value_Set; Value, Directory : String);
-      --  Append source path to Set. If Value is not absolute path, prefix it
-      --  with Directory. If Value ends with ** output all subdirectories.
-
       function Image (Kind : Project_Kind) return String;
       --  Returns the Kind only
-
-      ------------------------
-      -- Append_Source_Path --
-      ------------------------
-
-      procedure Append_Source_Path
-        (Set : in out GPR2.Containers.Value_Set; Value, Directory : String)
-      is
-         use Ada.Directories;
-         use GNATCOLL.Utils;
-         use GNAT.OS_Lib;
-
-         Recurse   : constant Boolean := Ends_With (Value, "**");
-         Base_Path : constant String :=
-                       Value (Value'First
-                              .. Value'Last - (if Recurse then 2 else 0));
-
-         function With_Last_DS (Path : String) return String is
-           (if Path /= "" and then Is_Directory_Separator (Path (Path'Last))
-            then Path else Path & Directory_Separator);
-
-         Path : constant String :=
-                  (if Is_Absolute_Path (Base_Path) then Base_Path
-                   elsif Base_Path (Base_Path'First) = '.'
-                     and then
-                     (Base_Path'Length = 1
-                      or else (Base_Path'Length = 2
-                               and then Is_Directory_Separator
-                                          (Base_Path (Base_Path'Last))))
-                   then Directory
-                   else With_Last_DS (Directory) & Base_Path);
-
-         procedure Search_In (Path : String);
-
-         procedure Process (Item : Directory_Entry_Type);
-
-         -------------
-         -- Process --
-         -------------
-
-         procedure Process (Item : Directory_Entry_Type) is
-         begin
-            if Ada.Directories.Simple_Name (Item) not in "." | ".." then
-               Search_In (Full_Name (Item));
-            end if;
-         end Process;
-
-         ---------------
-         -- Search_In --
-         ---------------
-
-         procedure Search_In (Path : String) is
-         begin
-            Set.Include (Path);
-
-            Search
-              (Path, "",
-               Filter  => (Ada.Directories.Directory => True, others => False),
-               Process => Process'Access);
-         end Search_In;
-
-      begin
-         if Recurse then
-            Search_In (Path);
-         else
-            Set.Include (Path);
-         end if;
-      end Append_Source_Path;
 
       -----------
       -- Image --
@@ -417,10 +341,9 @@ procedure GPRinspect is
                declare
                   Src_Array : GPR2.Containers.Value_Set;
                begin
-                  for S of View.Source_Directories.Values loop
-                     Append_Source_Path (S_Array, S.Text, View.Dir_Name.Value);
-                     Append_Source_Path
-                       (Src_Array, S.Text, View.Dir_Name.Value);
+                  for S of View.Source_Directories loop
+                     S_Array.Include (S.Value);
+                     Src_Array.Include (S.Value);
                   end loop;
 
                   Set_Field
@@ -642,8 +565,8 @@ procedure GPRinspect is
          if Tree.Has_Runtime_Project then
             O_Array.Include (Tree.Runtime_Project.Object_Directory.Dir_Name);
 
-            for S of Tree.Runtime_Project.Source_Directories.Values loop
-               S_Array.Include (S.Text);
+            for S of Tree.Runtime_Project.Source_Directories loop
+               S_Array.Include (S.Dir_Name);
             end loop;
          end if;
 

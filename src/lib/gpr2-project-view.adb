@@ -1406,7 +1406,7 @@ package body GPR2.Project.View is
      (Self              : Object;
       Directory_Pattern : GPR2.Filename_Optional;
       Source            : GPR2.Source_Reference.Value.Object;
-      File_CB           : not null access procedure
+      File_CB           : access procedure
                             (File : GPR2.Path_Name.Object);
       Directory_CB      : access procedure
                             (Directory       : GPR2.Path_Name.Object;
@@ -1466,7 +1466,7 @@ package body GPR2.Project.View is
 
          Dir_Search      : Directories.Search_Type;
          Dir_Entry       : Directories.Directory_Entry_Type;
-         Do_Dir_Visit    : Boolean := True;
+         Do_Dir_Visit    : Boolean := File_CB /= null;
          Do_Subdir_Visit : Boolean := Recursive;
       begin
          if Directory_CB /= null then
@@ -2498,104 +2498,38 @@ package body GPR2.Project.View is
    ------------------------
 
    function Source_Directories
-     (Self : Object) return Project.Attribute.Object is
-   begin
-      return Self.Attribute (PRA.Source_Dirs);
-   end Source_Directories;
-
-   ------------------------
-   -- Source_Directories --
-   ------------------------
-
-   function Source_Directories
      (Self : Object) return GPR2.Path_Name.Set.Object
    is
-      Src_Dir_Attr : constant Project.Attribute.Object :=
-                       Self.Source_Directories;
       Result : GPR2.Path_Name.Set.Object;
 
-      procedure Append_Source_Path
-        (Set : in out GPR2.Path_Name.Set.Object; Value, Directory : String);
-      --  Append source path to Set. If Value is not absolute path, prefix it
-      --  with Directory. If Value ends with ** output all subdirectories.
+      procedure On_Directory
+        (Directory       : GPR2.Path_Name.Object;
+         Is_Root_Dir     : Boolean;
+         Do_Dir_Visit    : in out Boolean;
+         Do_Subdir_Visit : in out Boolean);
 
-      ------------------------
-      -- Append_Source_Path --
-      ------------------------
+      ------------------
+      -- On_Directory --
+      ------------------
 
-      procedure Append_Source_Path
-        (Set : in out GPR2.Path_Name.Set.Object; Value, Directory : String)
+      procedure On_Directory
+        (Directory       : GPR2.Path_Name.Object;
+         Is_Root_Dir     : Boolean;
+         Do_Dir_Visit    : in out Boolean;
+         Do_Subdir_Visit : in out Boolean)
       is
-         use Ada.Directories;
-         use GNATCOLL.Utils;
-         use GNAT.OS_Lib;
-
-         Recurse   : constant Boolean := Ends_With (Value, "**");
-         Base_Path : constant String :=
-                       Value (Value'First
-                              .. Value'Last - (if Recurse then 2 else 0));
-
-         function With_Last_DS (Path : String) return String is
-           (if Path /= "" and then Is_Directory_Separator (Path (Path'Last))
-            then Path else Path & Directory_Separator);
-
-         Path : constant String :=
-                  (if Is_Absolute_Path (Base_Path) then Base_Path
-                   elsif Base_Path (Base_Path'First) = '.'
-                     and then
-                     (Base_Path'Length = 1
-                      or else (Base_Path'Length = 2
-                               and then Is_Directory_Separator
-                                          (Base_Path (Base_Path'Last))))
-                   then Directory
-                   else With_Last_DS (Directory) & Base_Path);
-
-         procedure Search_In (Path : String);
-
-         procedure Process (Item : Directory_Entry_Type);
-
-         -------------
-         -- Process --
-         -------------
-
-         procedure Process (Item : Directory_Entry_Type) is
-         begin
-            if Ada.Directories.Simple_Name (Item) not in "." | ".." then
-               Search_In (Full_Name (Item));
-            end if;
-         end Process;
-
-         ---------------
-         -- Search_In --
-         ---------------
-
-         procedure Search_In (Path : String) is
-         begin
-            Set.Append
-              (GPR2.Path_Name.Create_Directory (Filename_Type (Path)));
-
-            Search
-              (Path, "",
-               Filter  => (Ada.Directories.Directory => True, others => False),
-               Process => Process'Access);
-         end Search_In;
-
+         pragma Unreferenced (Is_Root_Dir, Do_Dir_Visit, Do_Subdir_Visit);
       begin
-         if Recurse then
-            Search_In (Path);
-         else
-            Set.Append
-              (GPR2.Path_Name.Create_Directory (Filename_Type (Path)));
-         end if;
-      end Append_Source_Path;
+         Result.Append (Directory);
+      end On_Directory;
 
    begin
-      if not Src_Dir_Attr.Is_Defined then
-         return GPR2.Path_Name.Set.To_Set (Self.Path_Name);
-      end if;
-
-      for S of Src_Dir_Attr.Values loop
-         Append_Source_Path (Result, S.Text, Self.Dir_Name.Value);
+      for S of Self.Attribute (PRA.Source_Dirs).Values loop
+         Self.Foreach
+           (Directory_Pattern =>  Filename_Optional (S.Text),
+            Source            =>  S,
+            File_CB           =>  null,
+            Directory_CB      =>  On_Directory'Unrestricted_Access);
       end loop;
 
       return Result;
