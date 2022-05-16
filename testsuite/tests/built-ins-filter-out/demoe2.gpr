@@ -1,0 +1,8 @@
+
+project DemoE2 is
+   L  := ("value1", "or", "another", "one");
+   V := "12";
+
+   R1 := Filter_Out (L, L);
+   R2 := Filter_Out (V, L);
+end DemoE2;

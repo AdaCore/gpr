@@ -117,6 +117,12 @@ package GPR2.Builtin is
                      Item_At'Result;
    --  Returns the value at position Index in List
 
+   function Filter_Out
+     (List  : Containers.Source_Value_List;
+      Regex : GNAT.Regexp.Regexp)
+      return Containers.Source_Value_List;
+   --  Returns a list containing only item matching the regex
+
    function Match
      (Value, Pattern : Value_Type;
       Regex          : GNAT.Regpat.Pattern_Matcher;

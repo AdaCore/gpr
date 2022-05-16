@@ -985,6 +985,9 @@ package body GPR2.Project.Parser is
             elsif Function_Name = "item_at" then
                Parse_Two_Parameter_Reference (N, "item_at");
 
+            elsif Function_Name = "filter_out" then
+               Parse_Two_Parameter_Reference (N, "filter_out");
+
             else
                Messages.Append
                  (GPR2.Message.Create
@@ -1810,6 +1813,9 @@ package body GPR2.Project.Parser is
                procedure Handle_Item_At (Node : Builtin_Function_Call);
                --  Handle the Item_At build-in : Item_At (List, Index)
 
+               procedure Handle_Filter_Out (Node : Builtin_Function_Call);
+               --  Handle the Filter_Out build-in : Filter_Out (List, "REGEX")
+
                generic
                   with function Transform
                     (Value : Value_Type) return Value_Type;
@@ -1946,6 +1952,76 @@ package body GPR2.Project.Parser is
                           ("", Get_Source_Reference (Self.File, Parameters)));
                      Status := Over;
                end Handle_External_Variable;
+
+               -----------------------
+               -- Handle_Filter_Out --
+               -----------------------
+
+               procedure Handle_Filter_Out (Node : Builtin_Function_Call) is
+                  Parameters : constant Term_List_List :=
+                                 F_Terms (F_Parameters (Node));
+                  P1_Node    : constant Term_List :=
+                                 Child (Parameters, 1).As_Term_List;
+                  P2_Node    : constant Term_List :=
+                                 Child (Parameters, 2).As_Term_List;
+               begin
+                  declare
+                     P1 : constant Item_Values := Get_Term_List (P1_Node);
+                     P2 : constant Item_Values := Get_Term_List (P2_Node);
+                  begin
+                     if P1.Single then
+                        Non_Fatal_Error.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Self.File, Node),
+                              Message =>
+                                "first parameter of Filter_Out"
+                                & " built-in must be a list"));
+                     end if;
+
+                     --  Check that 2nd parameter is a simple value
+
+                     if not P2.Single then
+                        Non_Fatal_Error.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Self.File, Node),
+                              Message =>
+                                "second parameter of Filter_Out"
+                                & " built-in must be a value"));
+
+                     else
+                        declare
+                           use GNAT;
+
+                           Pattern : constant Value_Type :=
+                                       P2.Values.First_Element.Text;
+
+                           Regex   : constant Regexp.Regexp :=
+                                       Regexp.Compile (Pattern);
+
+                           L       : constant Containers.Source_Value_List :=
+                                       Builtin.Filter_Out (P1.Values, Regex);
+                        begin
+                           for V of L loop
+                              New_Item := True;
+
+                              Record_Value
+                                (Get_Value_Reference
+                                   (V.Text,
+                                 Get_Source_Reference
+                                   (Self.File, Parameters)));
+                           end loop;
+
+                           Result.Single := False;
+                        end;
+                     end if;
+                  end;
+
+                  Status := Over;
+               end Handle_Filter_Out;
 
                ---------------------
                -- Handle_Generic1 --
@@ -2367,6 +2443,9 @@ package body GPR2.Project.Parser is
 
                elsif Function_Name = "item_at" then
                   Handle_Item_At (Node);
+
+               elsif Function_Name = "filter_out" then
+                  Handle_Filter_Out (Node);
                end if;
             end Handle_Builtin;
 

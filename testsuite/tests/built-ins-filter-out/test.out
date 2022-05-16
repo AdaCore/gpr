@@ -1,0 +1,12 @@
+Demo     K_STANDARD
+V:   L -> "value1" "or" "another" "one"
+V:   R1 -> "value1"
+V:   R2 ->
+V:   R3 -> "value1" "another" "one"
+Messages found:
+demoe1.gpr:5:10: error: first parameter of Filter_Out built-in must be a list
+demoe1.gpr:6:10: error: first parameter of Filter_Out built-in must be a list
+Messages found:
+demoe2.gpr:6:10: error: second parameter of Filter_Out built-in must be a value
+demoe2.gpr:7:10: error: first parameter of Filter_Out built-in must be a list
+demoe2.gpr:7:10: error: second parameter of Filter_Out built-in must be a value

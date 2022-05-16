@@ -127,6 +127,26 @@ package body GPR2.Builtin is
       return Result;
    end External_As_List;
 
+   ----------------
+   -- Filter_Out --
+   ----------------
+
+   function Filter_Out
+     (List  : Containers.Source_Value_List;
+      Regex : GNAT.Regexp.Regexp)
+      return Containers.Source_Value_List
+   is
+      R : Containers.Source_Value_List;
+   begin
+      for E of List loop
+         if not GNAT.Regexp.Match (E.Text, Regex) then
+            R.Append (E);
+         end if;
+      end loop;
+
+      return R;
+   end Filter_Out;
+
    -------------
    -- Item_At --
    -------------
