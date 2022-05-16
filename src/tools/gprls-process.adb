@@ -22,10 +22,6 @@ with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Directories;
 with Ada.Text_IO;
 
-with GNAT.OS_Lib;
-
-with GNATCOLL.Utils;
-
 with GPR2.Unit;
 with GPR2.Containers;
 with GPR2.Log;
@@ -90,86 +86,6 @@ is
         (if Dir (Dir'First .. Dir'Last - 1) = Curr_Dir
          then "<Current_Directory>" else Dir);
 
-      procedure Output_Source_Path (Value, Directory : String);
-      --  Output source path. If Value is not absolute path, prefix it with
-      --  Directory. If Value ends with ** output all subdirectories.
-
-      ------------------------
-      -- Output_Source_Path --
-      ------------------------
-
-      procedure Output_Source_Path (Value, Directory : String) is
-         use Ada.Directories;
-         use GNATCOLL.Utils;
-         use GNAT.OS_Lib;
-
-         Recurse   : constant Boolean := Ends_With (Value, "**");
-         Base_Path : constant String :=
-                       Value (Value'First
-                              .. Value'Last - (if Recurse then 2 else 0));
-
-         function With_Last_DS (Path : String) return String is
-           (if Path /= "" and then Is_Directory_Separator (Path (Path'Last))
-            then Path else Path & Directory_Separator);
-
-         Path : constant String :=
-                  (if Is_Absolute_Path (Base_Path) then Base_Path
-                   elsif Base_Path (Base_Path'First) = '.'
-                     and then
-                     (Base_Path'Length = 1
-                      or else (Base_Path'Length = 2
-                               and then Is_Directory_Separator
-                                          (Base_Path (Base_Path'Last))))
-                   then Directory
-                   else With_Last_DS (Directory) & Base_Path);
-
-         procedure Search_In (Path : String);
-
-         procedure Process (Item : Directory_Entry_Type);
-
-         procedure Output (Path : String);
-
-         ------------
-         -- Output --
-         ------------
-
-         procedure Output (Path : String) is
-         begin
-            Text_IO.Put_Line ("   " & With_Last_DS (Path));
-         end Output;
-
-         -------------
-         -- Process --
-         -------------
-
-         procedure Process (Item : Directory_Entry_Type) is
-         begin
-            if Directories.Simple_Name (Item) not in "." | ".." then
-               Search_In (Full_Name (Item));
-            end if;
-         end Process;
-
-         ---------------
-         -- Search_In --
-         ---------------
-
-         procedure Search_In (Path : String) is
-         begin
-            Output (Path);
-            Search
-              (Path, "",
-               Filter  => (Directories.Directory => True, others => False),
-               Process => Process'Access);
-         end Search_In;
-
-      begin
-         if Recurse then
-            Search_In (Path);
-         else
-            Output (Path);
-         end if;
-      end Output_Source_Path;
-
    begin
       Text_IO.New_Line;
       Version.Display ("GPRLS", "2018", Version_String => Version.Long_Value);
@@ -180,16 +96,14 @@ is
       Text_IO.Put_Line ("Source Search Path:");
 
       for V of Tree loop
-         if V.Kind not in K_Aggregate | K_Abstract then
-            for D of V.Source_Directories.Values loop
-               Output_Source_Path (D.Text, V.Path_Name.Dir_Name);
-            end loop;
-         end if;
+         for Src of V.Source_Directories loop
+            Text_IO.Put_Line ("   " & String (Src.Dir_Name));
+         end loop;
       end loop;
 
       if Tree.Has_Runtime_Project then
-         for D of Tree.Runtime_Project.Source_Directories.Values loop
-            Output_Source_Path (D.Text, "");
+         for Src of Tree.Runtime_Project.Source_Directories loop
+            Text_IO.Put_Line ("   " & String (Src.Dir_Name));
          end loop;
       end if;
 

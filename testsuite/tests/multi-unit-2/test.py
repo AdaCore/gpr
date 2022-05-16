@@ -6,12 +6,14 @@ def build():
     subprocess.check_call("gprbuild -p -q files/p.gpr", shell=True)
 
 
+bnr = BuilderAndRunner()
+
 build()
-BuilderAndRunner().build("p.gpr", args=['-p'])
-subprocess.check_call(["./main"])
+bnr.build("p.gpr", args=["-p"])
+bnr.check_call(["./main"])
 build()
-subprocess.check_call([GPRLS, "-Pfiles/p.gpr", "few_units~2.ali"])
-subprocess.check_call([GPRLS, "-Pfiles/p.gpr", "few_units~4.ali"])
-subprocess.check_call([GPRLS, "-Pfiles/p.gpr", "few_units~6.ali"])
-subprocess.check_call([GPRLS, "-Pfiles/p.gpr", "few_units~7.ali"])
-subprocess.check_call([GPRLS, "-Pfiles/p.gpr", "pkg.ali"])
+bnr.check_call([GPRLS, "-Pfiles/p.gpr", "few_units~2.ali"])
+bnr.check_call([GPRLS, "-Pfiles/p.gpr", "few_units~4.ali"])
+bnr.check_call([GPRLS, "-Pfiles/p.gpr", "few_units~6.ali"])
+bnr.check_call([GPRLS, "-Pfiles/p.gpr", "few_units~7.ali"])
+bnr.check_call([GPRLS, "-Pfiles/p.gpr", "pkg.ali"])

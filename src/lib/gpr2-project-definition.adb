@@ -2338,7 +2338,7 @@ package body GPR2.Project.Definition is
                end loop;
             end if;
 
-            for Dir of View.Source_Directories.Values loop
+            for Dir of View.Attribute (PRA.Source_Dirs).Values loop
                --  Keep reference for error messages
 
                Source_Dir_Ref := SR.Object (Dir);
