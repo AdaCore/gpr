@@ -48,6 +48,9 @@ package body GPR2.Project.View is
 
    use GNAT;
 
+   package Regexp_List is new Ada.Containers.Indefinite_Vectors
+     (Positive, GNAT.Regexp.Regexp, "=" => GNAT.Regexp."=");
+
    function Get_Ref (View : Object) return Definition.Ref is
      (Definition.Data (View.Get.Element.all)'Unchecked_Access);
 
@@ -96,6 +99,13 @@ package body GPR2.Project.View is
       With_Config   : Boolean := True)
       return Project.Attribute.Set.Object
    with Inline;
+
+   procedure Source_Directories_Internal
+     (Self      : Object;
+      Source_CB : access procedure
+                    (Dir_Reference : GPR2.Source_Reference.Value.Object;
+                     Source        : GPR2.Path_Name.Object);
+      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object));
 
    -------------------------
    -- Aggregate_Libraries --
@@ -2497,16 +2507,61 @@ package body GPR2.Project.View is
    -- Source_Directories --
    ------------------------
 
+   procedure Source_Directories
+     (Self      : Object;
+      Source_CB : not null access procedure
+        (Dir_Reference : GPR2.Source_Reference.Value.Object;
+         Source        : GPR2.Path_Name.Object))
+   is
+   begin
+      Self.Source_Directories_Internal (Source_CB, null);
+   end Source_Directories;
+
    function Source_Directories
      (Self : Object) return GPR2.Path_Name.Set.Object
    is
-      Result : GPR2.Path_Name.Set.Object;
+      procedure Dir_Cb (Dir_Name : GPR2.Path_Name.Object);
+
+      Result                   : GPR2.Path_Name.Set.Object;
+
+      procedure Dir_Cb (Dir_Name : GPR2.Path_Name.Object) is
+      begin
+         Result.Append (Dir_Name);
+      end Dir_Cb;
+
+   begin
+      Self.Source_Directories_Internal
+        (Source_CB => null,
+         Dir_CB    => Dir_Cb'Unrestricted_Access);
+
+      return Result;
+   end Source_Directories;
+
+   ---------------------------------
+   -- Source_Directories_Internal --
+   ---------------------------------
+
+   procedure Source_Directories_Internal
+     (Self      : Object;
+      Source_CB : access procedure
+                   (Dir_Reference : GPR2.Source_Reference.Value.Object;
+                    Source        : GPR2.Path_Name.Object);
+      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object))
+   is
+      Visited_Dirs             : GPR2.Containers.Filename_Set;
+      Dir_Ref                  : GPR2.Source_Reference.Value.Object;
+      Ignored_Sub_Dirs         : constant GPR2.Project.Attribute.Object :=
+                                   Self.Attribute (PRA.Ignore_Source_Sub_Dirs);
+      Ignored_Sub_Dirs_Regexps : Regexp_List.Vector;
+      --  Ignore_Source_Sub_Dirs attribute regexps
 
       procedure On_Directory
         (Directory       : GPR2.Path_Name.Object;
          Is_Root_Dir     : Boolean;
          Do_Dir_Visit    : in out Boolean;
          Do_Subdir_Visit : in out Boolean);
+
+      procedure On_File (File : GPR2.Path_Name.Object);
 
       ------------------
       -- On_Directory --
@@ -2518,22 +2573,67 @@ package body GPR2.Project.View is
          Do_Dir_Visit    : in out Boolean;
          Do_Subdir_Visit : in out Boolean)
       is
-         pragma Unreferenced (Is_Root_Dir, Do_Dir_Visit, Do_Subdir_Visit);
+         Position : GPR2.Containers.Filename_Type_Set.Cursor;
+         Inserted : Boolean;
       begin
-         Result.Append (Directory);
+         if not Is_Root_Dir then
+            for Ignored_Sub_Dir of Ignored_Sub_Dirs_Regexps loop
+               if GNAT.Regexp.Match
+                 (String (Directory.Simple_Name), Ignored_Sub_Dir)
+               then
+                  --  Ignore this matching sub dir tree.
+                  Do_Dir_Visit    := False;
+                  Do_Subdir_Visit := False;
+
+                  return;
+               end if;
+            end loop;
+         end if;
+
+         --  Do_Subdir_Visit is set to False if we already have visited
+         --  this source directory:
+
+         Visited_Dirs.Insert
+           (Directory.Name, Position, Inserted);
+
+         if not Inserted then
+            --  Already visited
+            Do_Dir_Visit    := False;
+
+         elsif Dir_CB /= null then
+            Dir_CB (Directory);
+         end if;
       end On_Directory;
 
+      -------------
+      -- On_File --
+      -------------
+
+      procedure On_File (File : GPR2.Path_Name.Object) is
+      begin
+         Source_CB (Dir_Ref, File);
+      end On_File;
+
    begin
+      if Ignored_Sub_Dirs.Is_Defined then
+         for V of Ignored_Sub_Dirs.Values loop
+            if V.Text /= "" then
+               Ignored_Sub_Dirs_Regexps.Append
+                 (GPR2.Compile_Regexp (Filename_Optional (V.Text)));
+            end if;
+         end loop;
+      end if;
+
       for S of Self.Attribute (PRA.Source_Dirs).Values loop
+         Dir_Ref := S;
          Self.Foreach
            (Directory_Pattern =>  Filename_Optional (S.Text),
             Source            =>  S,
-            File_CB           =>  null,
+            File_CB           =>  (if Source_CB = null then null
+                                   else On_File'Unrestricted_Access),
             Directory_CB      =>  On_Directory'Unrestricted_Access);
       end loop;
-
-      return Result;
-   end Source_Directories;
+   end Source_Directories_Internal;
 
    -----------------
    -- Source_Path --
