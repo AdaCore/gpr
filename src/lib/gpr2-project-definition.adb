@@ -25,7 +25,6 @@
 with Ada.Characters.Handling;
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Hashed_Maps;
-with Ada.Containers.Indefinite_Vectors;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
 with Ada.Strings.Maps.Constants;
@@ -33,7 +32,6 @@ with Ada.Text_IO;
 
 with GNAT.MD5;
 with GNAT.OS_Lib;
-with GNAT.Regexp;
 
 with GPR2.Containers;
 with GPR2.Unit.List;
@@ -60,9 +58,6 @@ package body GPR2.Project.Definition is
    package PRP renames Project.Registry.Pack;
    package SR  renames GPR2.Source_Reference;
    package SRI renames SR.Identifier;
-
-   package Regexp_List is new Ada.Containers.Indefinite_Vectors
-     (Positive, GNAT.Regexp.Regexp, "=" => GNAT.Regexp."=");
 
    ----------------------------------
    -- Check_Aggregate_Library_Dirs --
@@ -599,6 +594,12 @@ package body GPR2.Project.Definition is
 
       Root : constant GPR2.Path_Name.Object := Def.Path;
 
+      Current_Src_Dir_SR : GPR2.Source_Reference.Value.Object;
+      --  Identifies the Source_Dirs value being processed
+
+      Source_Name_Set    : GPR2.Containers.Filename_Set;
+      --  Collection of source simple names for a given Source_Dirs value
+
       package Lang_Boolean_Map is new Ada.Containers.Hashed_Maps
         (Language_Id, Boolean, Hash, "=");
 
@@ -661,7 +662,9 @@ package body GPR2.Project.Definition is
 
       package Source_Set renames Containers.Filename_Type_Set;
 
-      procedure Handle_File (File : GPR2.Path_Name.Object);
+      procedure Handle_File
+        (Dir_Ref : SR.Value.Object;
+         File    : GPR2.Path_Name.Object);
       --  Processes the given file: see if it should be added to the view's
       --  sources, and compute information such as language/unit(s)/...
 
@@ -729,8 +732,6 @@ package body GPR2.Project.Definition is
       --  This is to take into account shortened names like "Ada." (a-),
       --  "System." (s-) and so on.
 
-      Source_Dir_Ref    : SR.Object;
-
       Included_Sources  : Source_Set.Set;
       Excluded_Sources  : Source_Set.Set;
       Has_Source_List   : Boolean := False;
@@ -744,10 +745,6 @@ package body GPR2.Project.Definition is
       Interface_Sources     : Source_Path_To_Sloc.Map;
       Position_In_Sources   : Source_Path_To_Sloc.Cursor;
       Language_Compilable   : Lang_Boolean_Map.Map;
-      Src_Dir_Set           : Source.Set.Object;
-      --  Sources from one directory defined in one item of the Source_Dirs
-      --  attribute. Need to avoid source duplications in Source_Dirs items
-      --  containing '*' character.
       Has_Src_In_Lang       : Language_Set;
       --  Insert record there if the language has a source
 
@@ -759,10 +756,6 @@ package body GPR2.Project.Definition is
       Ada_Naming_Exceptions : Source_Path_To_Attribute_List.Map;
       Ada_Except_Usage      : Naming_Exceptions_Usage.Map;
       Other_Except_Usage    : Filename_Source_Reference;
-
-      Visited_Dirs          : GPR2.Containers.Filename_Set;
-      --  List of already visited directories to avoid looking twice at the
-      --  same one.
 
       procedure Mark_Language (Lang : Language_Id);
       --  Mark that language exists in sources
@@ -877,7 +870,10 @@ package body GPR2.Project.Definition is
       -- Handle_File --
       -----------------
 
-      procedure Handle_File (File : GPR2.Path_Name.Object) is
+      procedure Handle_File
+        (Dir_Ref : SR.Value.Object;
+         File    : GPR2.Path_Name.Object)
+      is
          use all type GPR2.Project.Source.Naming_Exception_Kind;
          use all type Unit.Library_Unit_Type;
 
@@ -1314,7 +1310,7 @@ package body GPR2.Project.Definition is
             procedure On_Error (Text : String) is
             begin
                Tree.Append_Message
-                 (Message.Create (Message.Error, Text, Source_Dir_Ref));
+                 (Message.Create (Message.Error, Text, Current_Src_Dir_SR));
             end On_Error;
 
          begin
@@ -1349,6 +1345,11 @@ package body GPR2.Project.Definition is
                     and then not Included_Sources.Contains (Basename))
          then
             return;
+         end if;
+
+         if Dir_Ref /= Current_Src_Dir_SR then
+            Current_Src_Dir_SR := Dir_Ref;
+            Source_Name_Set.Clear;
          end if;
 
          for L of Languages.Values loop
@@ -1605,48 +1606,52 @@ package body GPR2.Project.Definition is
                      --  replace if necessary.
 
                      CS             : constant Project.Source.Set.Cursor :=
-                                        Src_Dir_Set.Find (Project_Source);
+                                        Def.Sources.Find (Project_Source);
                   begin
                      if Project.Source.Set.Has_Element (CS) then
-                        if not Src_Dir_Set (CS).Has_Naming_Exception
+                        if not Def.Sources (CS).Has_Naming_Exception
                           and then Project_Source.Has_Naming_Exception
                         then
                            --  We are here only when
                            --  Src_Dir_Set (CS).Has_Naming_Exception is False
                            --  and Project_Source.Has_Naming_Exception is True.
-                           --  Module with naming exception has priority after
+                           --  Module with naming exception has priority over
                            --  default naming. Replace the old source with the
                            --  new one.
 
-                           Src_Dir_Set.Replace (Project_Source);
+                           Def.Sources.Replace (Project_Source);
 
-                        elsif Src_Dir_Set (CS).Has_Naming_Exception
-                          = Project_Source.Has_Naming_Exception
-                          and then not Def.Sources.Contains (Project_Source)
+                        elsif Def.Sources (CS).Has_Naming_Exception
+                          and then not Project_Source.Has_Naming_Exception
                         then
-                           --  We are here when duplicated sources have naming
-                           --  exception or does not have it both.
-                           --  and Project_Source not already in Def.Sources
+                           --  Old source has naming exception but new one
+                           --  does not have it. We don't need to do anything
+                           --  because of more priority source already in its
+                           --  place.
+
+                           return;
+
+                        elsif Source_Name_Set.Contains
+                          (Project_Source.Path_Name.Simple_Name)
+                        then
+                           --  Remaining case is when both sources have the
+                           --  same naming exception. If they also comme from
+                           --  the same base directory value (because of
+                           --  recursive search there), then we issue an error
+                           --  as the first source found is fs-dependent.
 
                            Tree.Append_Message
                              (Message.Create
                                 (Message.Error,
                                  '"' & String (File.Simple_Name) & '"'
                                  & " is found in several source directories",
-                                 Source_Dir_Ref));
-                           return;
-
-                        else
-                           --  Remains condition when old source has naming
-                           --  exception but new one does not have it. We don't
-                           --  need to do anything because of more priority
-                           --  source already in its place.
-
-                           return;
+                                 Current_Src_Dir_SR));
                         end if;
 
                      else
-                        Src_Dir_Set.Insert (Project_Source);
+                        Def.Sources.Insert (Project_Source);
+                        Source_Name_Set.Include
+                          (Project_Source.Path_Name.Simple_Name);
                      end if;
 
                      --  For Ada, register the Unit object into the view
@@ -2316,95 +2321,11 @@ package body GPR2.Project.Definition is
       else
          --  Handle Source_Dirs
 
-         declare
-            Ignored_Sub_Dirs_Values  : GPR2.Project.Attribute.Object;
-            --  Ignore_Source_Sub_Dirs attribute values
+         View.Source_Directories (Handle_File'Access);
 
-            Ignored_Sub_Dirs_Regexps : Regexp_List.Vector;
-            --  Ignore_Source_Sub_Dirs attribute regexps
-
-         begin
-            --  Fill Ignored_Sub_Dirs_Regexps vector. "" pattern is not added
-
-            if View.Check_Attribute
-              (Name   => PRA.Ignore_Source_Sub_Dirs,
-               Result => Ignored_Sub_Dirs_Values)
-            then
-               for V of Ignored_Sub_Dirs_Values.Values loop
-                  if V.Text /= "" then
-                     Ignored_Sub_Dirs_Regexps.Append
-                       (GPR2.Compile_Regexp (Filename_Optional (V.Text)));
-                  end if;
-               end loop;
-            end if;
-
-            for Dir of View.Attribute (PRA.Source_Dirs).Values loop
-               --  Keep reference for error messages
-
-               Source_Dir_Ref := SR.Object (Dir);
-
-               declare
-
-                  procedure Is_Directory_Handled
-                    (Directory       : GPR2.Path_Name.Object;
-                     Is_Root_Dir     : Boolean;
-                     Do_Dir_Visit    : in out Boolean;
-                     Do_Subdir_Visit : in out Boolean);
-
-                  --------------------------
-                  -- Is_Directory_Handled --
-                  --------------------------
-
-                  procedure Is_Directory_Handled
-                    (Directory       : GPR2.Path_Name.Object;
-                     Is_Root_Dir     : Boolean;
-                     Do_Dir_Visit    : in out Boolean;
-                     Do_Subdir_Visit : in out Boolean)
-                  is
-                     Position : GPR2.Containers.Filename_Type_Set.Cursor;
-                  begin
-                     --  Handle ignored source dirs
-
-                     if not Is_Root_Dir then
-                        for Ignored_Sub_Dir of Ignored_Sub_Dirs_Regexps loop
-                           if GNAT.Regexp.Match
-                             (String (Directory.Simple_Name), Ignored_Sub_Dir)
-                           then
-                              --  Ignore this matching sub dir tree.
-
-                              Do_Dir_Visit := False;
-                              Do_Subdir_Visit := False;
-                              return;
-                           end if;
-                        end loop;
-                     end if;
-
-                     --  If Directory already inserted in Visited_Dirs,
-                     --  Do_Dir_Visit is set to False.
-
-                     Visited_Dirs.Insert (New_Item => Directory.Name,
-                                          Position => Position,
-                                          Inserted => Do_Dir_Visit);
-                  end Is_Directory_Handled;
-
-               begin
-                  View.Foreach
-                    (Directory_Pattern  => GPR2.Filename_Optional (Dir.Text),
-                     Source             => Dir,
-                     File_CB            => Handle_File'Access,
-                     Directory_CB       => Is_Directory_Handled'Access);
-               end;
-
-               Def.Sources.Union (Src_Dir_Set);
-
-               for S of Src_Dir_Set loop
-                  Def.Sources_Map_Insert (S);
-               end loop;
-
-               Src_Dir_Set.Clear;
-            end loop;
-
-         end;
+         for S of Def.Sources loop
+            Def.Sources_Map_Insert (S);
+         end loop;
 
          if Has_Source_List then
             --  Check that we've found all the listed sources
@@ -2424,9 +2345,9 @@ package body GPR2.Project.Definition is
          end if;
 
          if View.Has_Package (PRP.Naming,
-                               Check_Extended => False,
-                               With_Defaults  => False,
-                               With_Config    => False)
+                              Check_Extended => False,
+                              With_Defaults  => False,
+                              With_Config    => False)
          then
             --  Check all naming exceptions is used only in the original
             --  project where Naming package is declared. If nameing package is

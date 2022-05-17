@@ -410,6 +410,16 @@ package GPR2.Project.View is
                  and then Self.Qualifier in K_Standard | K_Library;
    --  Returns the source dir paths for a given project
 
+   procedure Source_Directories
+     (Self      : Object;
+      Source_CB : not null access procedure
+                    (Dir_Reference : GPR2.Source_Reference.Value.Object;
+                     Source        : GPR2.Path_Name.Object))
+     with Pre => Self.Is_Defined
+                   and then Self.Qualifier in K_Standard | K_Library;
+   --  Calls Source_CB for each file contained in the view's source
+   --  directories.
+
    function Has_Sources (Self : Object) return Boolean
      with Pre  => Self.Is_Defined,
           Post => (if Self.Kind = K_Abstract then not Has_Sources'Result);
