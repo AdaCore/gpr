@@ -183,27 +183,6 @@ package body GPR2.Project.Tree is
      with Pre => Conf.Is_Defined;
    --  Update project search path with directories relevant to
 
-   procedure Get_File
-     (Self            : Object;
-      Base_Name       : Simple_Name;
-      Ambiguous       : out Boolean;
-      Full_Path       : out Path_Name.Object;
-      View            : Project.View.Object := Project.View.Undefined;
-      Use_Source_Path : Boolean := True;
-      Use_Object_Path : Boolean := True;
-      Predefined_Only : Boolean := False);
-   --  Return in Full_Path absolute path of source/object/project file found
-   --  in Self or in View when defined.
-   --
-   --  If no file found, Undefined is returned in Full_Path and Ambiguous is
-   --  set to False.
-   --
-   --  If file is part of the sources for several projects, Ambiguous is set
-   --  to True and all of them have same absolute path Full_Path is set to
-   --  the common source file, otherwise Undefined is returned in Full_Path.
-   --
-   --  see also function Get_File
-
    ---------------------
    -- Add_Tool_Prefix --
    ---------------------
@@ -619,17 +598,17 @@ package body GPR2.Project.Tree is
    -- Get_File --
    --------------
 
-   procedure Get_File
-     (Self            : Object;
-      Base_Name       : Simple_Name;
-      Ambiguous       : out Boolean;
-      Full_Path       : out Path_Name.Object;
-      View            : Project.View.Object := Project.View.Undefined;
-      Use_Source_Path : Boolean := True;
-      Use_Object_Path : Boolean := True;
-      Predefined_Only : Boolean := False)
+   function Get_File
+     (Self             : Object;
+      Base_Name        : Simple_Name;
+      View             : Project.View.Object := Project.View.Undefined;
+      Use_Source_Path  : Boolean := True;
+      Use_Object_Path  : Boolean := True;
+      Predefined_Only  : Boolean := False;
+      Return_Ambiguous : Boolean := True) return Path_Name.Object
    is
-
+      File_Name : Path_Name.Object;
+      Ambiguous : Boolean;
       Found_Count : Natural := 0;
       --  Found files so far
 
@@ -658,12 +637,12 @@ package body GPR2.Project.Tree is
             Found_Count := Found_Count + 1;
 
             if Found_Count = 1 then
-               Full_Path := Name;
+               File_Name := Name;
 
             else
                Ambiguous := True;
-               if Name /= Full_Path then
-                  Full_Path := Path_Name.Undefined;
+               if Name /= File_Name then
+                  File_Name := Path_Name.Undefined;
                end if;
             end if;
          end if;
@@ -734,7 +713,7 @@ package body GPR2.Project.Tree is
                View : constant Project.View.Object := Project.Tree.Element (V);
             begin
                if View.Path_Name.Simple_Name = Base_Name then
-                  Full_Path := View.Path_Name;
+                  File_Name := View.Path_Name;
                end if;
             end;
          end loop;
@@ -787,47 +766,25 @@ package body GPR2.Project.Tree is
       --  Initialize return values
 
       Ambiguous := False;
-      Full_Path := Path_Name.Undefined;
+      File_Name := Path_Name.Undefined;
 
       --  Handle project file
 
       if Project.Ensure_Extension (Base_Name) = Base_Name then
          Handle_Project_File;
-         return;
+      else
+         --  Handle source file
+
+         if Use_Source_Path then
+            Handle_Source_File;
+         end if;
+
+         --  Handle object file
+
+         if Found_Count = 0 and then Use_Object_Path then
+            Handle_Object_File;
+         end if;
       end if;
-
-      --  Handle source file
-
-      if Use_Source_Path then
-         Handle_Source_File;
-      end if;
-
-      --  Handle object file
-
-      if Found_Count = 0 and then Use_Object_Path then
-         Handle_Object_File;
-      end if;
-   end Get_File;
-
-   function Get_File
-     (Self             : Object;
-      Base_Name        : Simple_Name;
-      View             : Project.View.Object := Project.View.Undefined;
-      Use_Source_Path  : Boolean := True;
-      Use_Object_Path  : Boolean := True;
-      Predefined_Only  : Boolean := False;
-      Return_Ambiguous : Boolean := True) return Path_Name.Object
-   is
-      File_Name : Path_Name.Object;
-      Ambiguous : Boolean;
-   begin
-      Self.Get_File (Base_Name,
-                     Ambiguous,
-                     File_Name,
-                     View,
-                     Use_Source_Path,
-                     Use_Object_Path,
-                     Predefined_Only);
 
       if Ambiguous and then not Return_Ambiguous then
          return Path_Name.Undefined;
