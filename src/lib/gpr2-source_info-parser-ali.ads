@@ -103,7 +103,7 @@ private
      (Language => Ada_Language,
       Kind     => LI)
    with record
-      Cache    : Cache_Map.Map;
+      Cache     : Cache_Map.Map;
       Sep_Cache : Sep_Cache_Map.Map;
    end record;
 
