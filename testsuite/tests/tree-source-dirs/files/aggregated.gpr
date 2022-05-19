@@ -1,0 +1,16 @@
+with "imported1";
+with "imported3";
+limited with "limited1";
+
+project Aggregated extends "extended1" is
+
+   for Source_Dirs use ("aggregated-src");
+   for Main use ("aggregated.adb");
+   for Object_Dir use "aggregated-obj";
+
+   package Ide is
+      for Compiler_Command ("ada") use "gnatmake";
+      for Compiler_Command ("c") use "gcc";
+   end Ide;
+
+end Aggregated;

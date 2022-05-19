@@ -1,0 +1,4 @@
+project limited1 is
+   for Source_Dirs use ("limited1-src");
+   for Object_Dir use "limited1-obj";
+end limited1;

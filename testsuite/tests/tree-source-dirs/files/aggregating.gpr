@@ -1,0 +1,7 @@
+
+with "abstract1.gpr";
+
+aggregate project aggregating is
+   for External ("OS") use "Linux";
+   for Project_Files use ("aggregated.gpr");
+end aggregating;

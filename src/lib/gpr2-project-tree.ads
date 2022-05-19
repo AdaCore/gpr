@@ -469,6 +469,16 @@ package GPR2.Project.Tree is
      (Self : Object) return GPR2.File_Readers.File_Reader_Reference
      with Pre => Self.Is_Defined;
 
+   function Source_Directories
+     (Self             : Object;
+      View             : Project.View.Object := Project.View.Undefined;
+      Externally_Built : Boolean := False) return GPR2.Path_Name.Set.Object
+     with Pre => Self.Is_Defined;
+   --  Returns the source directories for a given View subtree
+   --  If View is undefined use root project.
+   --  If Externally_Built is False then source directories belonging
+   --  to project marked "Externally_Built" will not be returned.
+
 private
 
    package Name_View is
