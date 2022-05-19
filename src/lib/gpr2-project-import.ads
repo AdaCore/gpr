@@ -26,8 +26,6 @@ with GPR2.Source_Reference;
 
 package GPR2.Project.Import is
 
-   use type GPR2.Source_Reference.Object;
-
    type Object is new Source_Reference.Object with private;
 
    Undefined : constant Object;

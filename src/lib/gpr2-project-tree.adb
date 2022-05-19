@@ -263,35 +263,15 @@ package body GPR2.Project.Tree is
 
       Prefix_From_Root : constant Optional_Name_Type :=
                            GNAT_Compilers_Prefix (Self.Root);
-      --  Try to find prefix from root project compiler package
+      --  Try to find prefix from root project compiler package or from its
+      --  associated configuration project
 
    begin
       if Prefix_From_Root = Not_Defined then
-         if Self.Has_Configuration then
-            declare
-               Prefix_From_Config : constant Optional_Name_Type
-                 := GNAT_Compilers_Prefix
-                   (Self.Configuration.Corresponding_View);
-               --  Try to find prefix from config project compiler package
-            begin
-               if Prefix_From_Config = Not_Defined then
-                  --  Use Target as prefix if prefix not defined in project &
-                  --  configuration file.
+         --  Use Target as prefix if not defined in project and no
+         --  configution file was loaded.
 
-                  return Name_Type
-                    (String (Self.Target) & "-" & String (Tool_Name));
-               else
-                  return Name_Type
-                    (String (Prefix_From_Config) & String (Tool_Name));
-               end if;
-            end;
-
-         else
-            --  Use Target as prefix if not defined in project and no
-            --  configution file was loaded.
-
-            return Name_Type (String (Self.Target) & "-" & String (Tool_Name));
-         end if;
+         return Name_Type (String (Self.Target) & "-" & String (Tool_Name));
 
       else
          return Name_Type (String (Prefix_From_Root) & String (Tool_Name));

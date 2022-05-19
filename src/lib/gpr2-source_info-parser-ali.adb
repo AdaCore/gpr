@@ -109,6 +109,9 @@ package body GPR2.Source_Info.Parser.ALI is
       --  Read a chunk of data in the buffer or nothing if there is no more
       --  data to read.
 
+      function Next_Char (File : in out Handle) return Character
+        with Inline;
+
       -----------
       -- Close --
       -----------
@@ -140,24 +143,74 @@ package body GPR2.Source_Info.Parser.ALI is
          May_Be_Quoted  : Boolean := False;
          May_Have_Space : Boolean := False) return String
       is
-         function Next_Char return Character with Inline;
          --  Get next char in buffer
 
          subtype Content_Index is Natural range 0 .. 1_024;
          subtype Content_Range is Content_Index range 1 .. Content_Index'Last;
 
+         subtype Delimiter is Character
+           with Static_Predicate =>
+             Delimiter in ASCII.HT | ASCII.CR | ASCII.LF | ASCII.EOT;
+         subtype Delimiter_Or_Space is Character
+           with Static_Predicate =>
+             Delimiter_Or_Space in Delimiter | ' ';
+
          Tok         : String (Content_Range);
          Cur         : Content_Index := 0;
          C           : Character     := ASCII.NUL;
 
-         Quoted      : Boolean := False;
-         QN          : Natural := 0;
-
-         procedure Get_Word with Inline;
+         procedure Get_Quoted_Word;
+         procedure Get_Word_With_Space;
+         procedure Get_Word;
          --  Read a word, result will be in Tok (Tok'First .. Cur)
 
-         function Is_Separator return Boolean;
-         --  The C character is separator
+         ---------------------
+         -- Get_Quoted_Word --
+         ---------------------
+
+         procedure Get_Quoted_Word is
+            QN : Natural := 1;
+            --  Number of quotes seen
+         begin
+            loop
+               C := Next_Char (File);
+
+               if C = '"' then
+                  QN := QN + 1;
+
+                  if QN = 3 then
+                     --  Two quotes is escaped quote literal
+                     Cur := Cur + 1;
+                     Tok (Cur) := C;
+                     QN := 1;
+                  end if;
+
+               elsif QN = 2 then
+                  if C in Delimiter_Or_Space then
+                     --  Had an ending quote followed by a delimiter: done
+
+                     return;
+
+                  else
+                     --  Had an ending quote followed by regular characters:
+                     --  error !
+
+                     raise Scan_ALI_Error with
+                       "Wrong quoted format of '" & Tok (Tok'First .. Cur)
+                       & ''';
+                  end if;
+
+               elsif C in ASCII.LF | ASCII.EOT then
+                  raise Scan_ALI_Error with
+                    "Wrong quoted format of '" & Tok (Tok'First .. Cur)
+                    & ''';
+
+               else
+                  Cur := Cur + 1;
+                  Tok (Cur) := C;
+               end if;
+            end loop;
+         end Get_Quoted_Word;
 
          --------------
          -- Get_Word --
@@ -165,102 +218,46 @@ package body GPR2.Source_Info.Parser.ALI is
 
          procedure Get_Word is
          begin
-            if May_Be_Quoted and then C = '"' then
-               Quoted := True;
-            else
+            loop
                Cur := Cur + 1;
                Tok (Cur) := C;
-            end if;
 
-            loop
-               C := Next_Char;
+               C := Next_Char (File);
 
-               if Is_Separator then
-                  File.Current := File.Current - 1;
-                  exit;
-
-               else
-                  Cur := Cur + 1;
-                  Tok (Cur) := C;
-               end if;
+               exit when C in Delimiter_Or_Space;
             end loop;
          end Get_Word;
 
-         ------------------
-         -- Is_Separator --
-         ------------------
+         -------------------------
+         -- Get_Word_With_Space --
+         -------------------------
 
-         function Is_Separator return Boolean
-         is
-            function Is_Delimiter (With_Space : Boolean) return Boolean is
-              (C in ASCII.HT | ASCII.CR | ASCII.LF | ASCII.EOT
-               or else (With_Space and then C = ' '));
-
+         procedure Get_Word_With_Space is
+            Next_C : Character;
          begin
-            if Quoted then
-               if C = '"' then
-                  QN := QN + 1;
-                  if QN = 2 then
-                     --  Escaped quote: remove last one
-                     Cur := Cur - 1;
-                     QN := 0;
-                  end if;
+            loop
+               Cur := Cur + 1;
+               Tok (Cur) := C;
 
-               elsif QN = 1 then
-                  if Is_Delimiter (True) then
-                     --  ending quote: remove it
-                     Cur := Cur - 1;
-                     return True;
+               C := Next_Char (File);
+
+               if C = ' ' then
+                  Next_C := Next_Char (File);
+
+                  if Next_C = ' ' then
+                     --  Two consecutive space means end of token
+
+                     exit;
                   else
                      Cur := Cur + 1;
                      Tok (Cur) := C;
-
-                     raise Scan_ALI_Error with
-                       "Wrong quoted format of '" & Tok (Tok'First .. Cur)
-                       & ''';
+                     C := Next_C;
                   end if;
                end if;
 
-               return False;
-
-            elsif May_Have_Space and then Cur > 0 then
-               if Is_Delimiter (With_Space => False) then
-                  return True;
-               end if;
-
-               --  file names contain potentially space characters. The
-               --  delimiter after such token is either HT (detected above)
-               --  or two consecutive space characters.
-               if C = ' ' and then Tok (Cur) = ' ' then
-                  Cur := Cur - 1;
-                  return True;
-               end if;
-
-               return False;
-
-            else
-               return Is_Delimiter (With_Space => True);
-            end if;
-         end Is_Separator;
-
-         ---------------
-         -- Next_Char --
-         ---------------
-
-         function Next_Char return Character is
-         begin
-            if File.Current = File.Last then
-               if Stream_IO.End_Of_File (File.FD) then
-                  --  Nothing more to read
-                  return ASCII.EOT;
-               else
-                  Fill_Buffer (File);
-               end if;
-            end if;
-
-            File.Current := File.Current + 1;
-            return Character'Val (File.Buffer (File.Current));
-         end Next_Char;
+               exit when C in Delimiter;
+            end loop;
+         end Get_Word_With_Space;
 
       begin
          Read_Token : loop
@@ -268,21 +265,22 @@ package body GPR2.Source_Info.Parser.ALI is
                return "";
             end if;
 
-            File.At_LF := False;
+            C := Next_Char (File);
 
-            C := Next_Char;
+            if C not in Delimiter_Or_Space then
+               if May_Be_Quoted and then C = '"' then
+                  Get_Quoted_Word;
+               elsif May_Have_Space then
+                  Get_Word_With_Space;
+               else
+                  Get_Word;
+               end if;
 
-            if not Is_Separator then
-               Get_Word;
                exit Read_Token;
 
             elsif C = ASCII.EOT then
                Cur := 0;
                exit Read_Token;
-
-            elsif C = ASCII.LF then
-               File.At_LF := True;
-               File.Line := File.Line + 1;
             end if;
          end loop Read_Token;
 
@@ -290,35 +288,64 @@ package body GPR2.Source_Info.Parser.ALI is
       end Get_Token;
 
       ---------------
+      -- Next_Char --
+      ---------------
+
+      function Next_Char (File : in out Handle) return Character is
+      begin
+         if File.Current = File.Last then
+            Fill_Buffer (File);
+
+            if File.Last = 0 then
+               --  Nothing more to read
+               return ASCII.EOT;
+            end if;
+         end if;
+
+         File.Current := File.Current + 1;
+
+         declare
+            Result : constant Character :=
+                       Character'Val (File.Buffer (File.Current));
+         begin
+            if Result = ASCII.LF then
+               File.At_LF := True;
+               File.Line := File.Line + 1;
+            else
+               File.At_LF := False;
+            end if;
+
+            return Result;
+         end;
+      end Next_Char;
+
+      ---------------
       -- Next_Line --
       ---------------
 
       procedure Next_Line (File : in out Handle; Header : in out Character) is
-         Old_Line : constant Positive := File.Line;
-         At_LF    : constant Boolean  := File.At_LF;
-         Current  : constant Stream_Element_Offset := File.Current;
       begin
-         loop
+         while not File.At_LF loop
             declare
-               Tok : constant String := Get_Token (File);
+               C : constant Character := Next_Char (File);
             begin
-               if Tok = "" then
+               if C = ASCII.EOT then
                   Header := ASCII.NUL;
-                  return;
 
-               elsif File.Line > Old_Line
-                 or else (At_LF and then File.Line = Old_Line)
-                 --  This second condition is for the case we hit LF in a
-                 --  previous call to Get_Token, with Stop_At_LF => True.
-                 --  The line number will then be unchanged.
-                 or else (Current = 0 and then File.Line = 1)
-               --  This third condition is for the special case of the very
-               --  first read.
-               then
-                  Header := Tok (1);
                   return;
                end if;
             end;
+         end loop;
+
+         loop
+            Header := Next_Char (File);
+            if Header = ASCII.EOT then
+               Header := ASCII.NUL;
+
+               return;
+            end if;
+
+            exit when Header not in ASCII.CR | ASCII.LF;
          end loop;
       end Next_Line;
 
@@ -333,6 +360,7 @@ package body GPR2.Source_Info.Parser.ALI is
          Stream_IO.Open (File.FD, Stream_IO.In_File, Filename.Value);
          Fill_Buffer (File);
          File.Line := 1;
+         File.At_LF := True;
       end Open;
 
    end IO;
@@ -472,7 +500,8 @@ package body GPR2.Source_Info.Parser.ALI is
 
          function Get_Token
            (May_Be_Quoted  : Boolean := False;
-            May_Have_Space : Boolean := False) return String is
+            May_Have_Space : Boolean := False) return String
+         is
             Tok : constant String :=
                     IO.Get_Token
                       (A_Handle,
