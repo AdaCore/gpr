@@ -25,3 +25,17 @@ View:/files/aggregated.gpr
 /files/imported4-src
 /files/imported4-src/src
 /files/limited1-src
+files/agg_lib.gpr
+Externally_Built = FALSE
+View:Root_Project
+/files/imported2-src
+/files/imported3-src
+/files/imported4-src
+/files/imported4-src/src
+Externally_Built = TRUE
+View:Root_Project
+/files/imported1-src
+/files/imported2-src
+/files/imported3-src
+/files/imported4-src
+/files/imported4-src/src
