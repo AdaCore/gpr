@@ -1,0 +1,27 @@
+files/abstract1.gpr
+Externally_Built = FALSE
+View:Root_Project
+Externally_Built = TRUE
+View:Root_Project
+files/aggregating.gpr
+Externally_Built = FALSE
+View:Root_Project
+/files/aggregated-src
+/files/extended1-src
+/files/extended2-src
+/files/imported2-src
+/files/imported3-src
+/files/imported4-src
+/files/imported4-src/src
+/files/limited1-src
+Externally_Built = TRUE
+View:/files/aggregated.gpr
+/files/aggregated-src
+/files/extended1-src
+/files/extended2-src
+/files/imported1-src
+/files/imported2-src
+/files/imported3-src
+/files/imported4-src
+/files/imported4-src/src
+/files/limited1-src

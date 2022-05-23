@@ -1,0 +1,4 @@
+project extended2 extends "extended3" is
+   for Source_Dirs use ("extended2-src");
+   for Object_Dir use "extended2-obj";
+end extended2;

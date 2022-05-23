@@ -1,0 +1,5 @@
+with "imported4";
+project imported3 is
+   for Source_Dirs use ("imported3-src");
+   for Object_Dir use "imported3-obj";
+end imported3;

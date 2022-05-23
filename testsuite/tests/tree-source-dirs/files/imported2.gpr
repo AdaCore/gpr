@@ -1,0 +1,4 @@
+project imported2 is
+   for Source_Dirs use ("imported2-src");
+   for Object_Dir use "imported2-obj";
+end imported2;

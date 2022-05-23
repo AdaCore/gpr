@@ -3875,6 +3875,74 @@ package body GPR2.Project.Tree is
       end if;
    end Set_Source;
 
+   ------------------------
+   -- Source_Directories --
+   ------------------------
+
+   function Source_Directories
+     (Self             : Object;
+      View             : Project.View.Object := Project.View.Undefined;
+      Externally_Built : Boolean := False) return GPR2.Path_Name.Set.Object
+   is
+      Result    : GPR2.Path_Name.Set.Object;
+      Processed : GPR2.Project.View.Set.Object;
+
+      procedure Process (View : Project.View.Object)
+        with Pre => View.Is_Defined;
+      --  Insert in Result source directories found in View's subtree.
+
+      -------------
+      -- Process --
+      -------------
+
+      procedure Process (View : Project.View.Object) is
+      begin
+         if Processed.Contains (View) then
+            return;
+         end if;
+
+         Processed.Insert (View);
+
+         if Externally_Built or else not View.Is_Externally_Built then
+            if View.Qualifier in K_Standard | K_Library then
+               for Directory of View.Source_Directories loop
+                  if not Result.Contains (Directory) then
+                     Result.Append (Directory);
+                  end if;
+               end loop;
+            end if;
+         end if;
+
+         if View.Qualifier in Aggregate_Kind then
+            for Aggregated of View.Aggregated loop
+               Process (Aggregated);
+            end loop;
+
+         else
+            for Imported of View.Imports loop
+               Process (Imported);
+            end loop;
+
+            for Limited_Imported of View.Limited_Imports loop
+               Process (Limited_Imported);
+            end loop;
+
+            if View.Is_Extending then
+               Process (View.Extended_Root);
+            end if;
+         end if;
+      end Process;
+
+   begin
+      if View.Is_Defined then
+         Process (View);
+      else
+         Process (Self.Root_Project);
+      end if;
+
+      return Result;
+   end Source_Directories;
+
    ------------
    -- Target --
    ------------
