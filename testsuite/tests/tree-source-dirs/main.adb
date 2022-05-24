@@ -4,8 +4,6 @@ with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Tree;
---  with GNATCOLL.Projects;
---  with GNATCOLL.VFS;
 with GPR2.Project.View;
 
 procedure Main is
@@ -24,8 +22,6 @@ procedure Main is
       function "<" (L, R : GPR2.Path_Name.Object) return Boolean
       is (L.Value < R.Value);
       package Sort is new GPR2.Path_Name.Set.Set.Generic_Sorting;
-
---      Tree : GNATCOLL.Projects.Project_Tree;
 
       procedure Check (View : GPR2.Project.View.Object;
                        Externally_Built : Boolean);
@@ -51,19 +47,6 @@ procedure Main is
             Ada.Text_IO.Put_Line (Src_Dir.Value);
          end loop;
 
---           Ada.Text_IO.Put_Line ("GNATCOLL.Projects");
---
---           for Dir of Tree.Root_Project.Source_Dirs
---             (Recursive                => True,
---              Include_Externally_Built => Externally_Built) loop
---
---              declare
---                 Name : constant GNATCOLL.VFS.Filesystem_String :=
---                                   Dir.Full_Name;
---              begin
---                 Ada.Text_IO.Put_Line (String (Name));
---              end;
---           end loop;
       end Check;
 
       use GPR2.Log;
@@ -73,9 +56,6 @@ procedure Main is
       use GPR2.Path_Name;
    begin
       Ada.Text_IO.Put_Line (File);
-
---      Tree.Load
---        (GNATCOLL.VFS.Create (GNATCOLL.VFS.Filesystem_String (File)));
 
       Project_Tree.Load_Autoconf
         (Filename          => Project.Create (GPR2.Filename_Type (File)),
@@ -108,5 +88,6 @@ begin
    Test ("files/abstract1.gpr", GPR2.Path_Name.Undefined);
    Test ("files/aggregating.gpr",
          GPR2.Path_Name.Create_File ("files/aggregated.gpr"));
+   Test ("files/agg_lib.gpr", GPR2.Path_Name.Undefined);
 
 end Main;

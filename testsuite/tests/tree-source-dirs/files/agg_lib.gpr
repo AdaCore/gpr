@@ -1,0 +1,8 @@
+
+with "imported1.gpr";
+
+aggregate library project agg_lib is
+   for Library_Dir use "lib";
+   for Library_Name use "lib";
+   for Project_Files use ("imported3.gpr");
+end agg_lib;

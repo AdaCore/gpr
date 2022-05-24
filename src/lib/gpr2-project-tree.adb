@@ -3917,8 +3917,9 @@ package body GPR2.Project.Tree is
             for Aggregated of View.Aggregated loop
                Process (Aggregated);
             end loop;
+         end if;
 
-         else
+         if View.Qualifier /= K_Aggregate then
             for Imported of View.Imports loop
                Process (Imported);
             end loop;
