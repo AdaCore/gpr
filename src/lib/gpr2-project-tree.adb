@@ -4462,7 +4462,7 @@ package body GPR2.Project.Tree is
                           (Message.Create
                              (Message.Error,
                               "Library_Standalone valid only if library"
-                              & " has Ada interfaces",
+                              & " has interfaces",
                               PV.Attribute_Location
                                 (Registry.Attribute.Library_Standalone)));
                      end if;
@@ -4470,21 +4470,8 @@ package body GPR2.Project.Tree is
                end Check_Shared_Lib;
 
             begin
-               if View.Is_Library then
-                  if View.Is_Shared_Library then
-                     Check_Shared_Lib (View);
-
-                  elsif View.Library_Standalone = Encapsulated then
-                     --  Static standalone library is not possible
-                     Self.Self.Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "encapsulated library project """ &
-                             String (View.Name) &
-                             """ must be a shared library project",
-                           View.Attribute_Location
-                             (Registry.Attribute.Library_Standalone)));
-                  end if;
+               if View.Is_Library and then View.Is_Shared_Library then
+                  Check_Shared_Lib (View);
                end if;
             end;
          end loop;
