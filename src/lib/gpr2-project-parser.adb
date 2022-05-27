@@ -988,6 +988,12 @@ package body GPR2.Project.Parser is
             elsif Function_Name = "filter_out" then
                Parse_Two_Parameter_Reference (N, "filter_out");
 
+            elsif Function_Name = "remove_prefix" then
+               Parse_Two_Parameter_Reference (N, "remove_prefix");
+
+            elsif Function_Name = "remove_suffix" then
+               Parse_Two_Parameter_Reference (N, "remove_suffix");
+
             else
                Messages.Append
                  (GPR2.Message.Create
@@ -1832,6 +1838,14 @@ package body GPR2.Project.Parser is
                      return Containers.Source_Value_List;
                procedure Handle_Generic2 (Node : Builtin_Function_Call);
                --  A generic procedure call Transform for the single value or
+               --  a list.
+
+               generic
+                  Name : String;
+                  with function Transform
+                    (Value1, Pattern : Value_Type) return Value_Type;
+               procedure Handle_Generic2_LV (Node : Builtin_Function_Call);
+               --  A generic procedure call Transform for the single value or
                --  for each values in a list.
 
                procedure Handle_Match (Node : Builtin_Function_Call);
@@ -2070,12 +2084,12 @@ package body GPR2.Project.Parser is
                ---------------------
 
                procedure Handle_Generic2 (Node : Builtin_Function_Call) is
-                  Parameters  : constant Term_List_List :=
-                                  F_Terms (F_Parameters (Node));
-                  P1_Node     : constant Term_List :=
-                                  Child (Parameters, 1).As_Term_List;
-                  P2_Node     : constant Term_List :=
-                                  Child (Parameters, 2).As_Term_List;
+                  Parameters : constant Term_List_List :=
+                                 F_Terms (F_Parameters (Node));
+                  P1_Node    : constant Term_List :=
+                                 Child (Parameters, 1).As_Term_List;
+                  P2_Node    : constant Term_List :=
+                                 Child (Parameters, 2).As_Term_List;
                begin
                   declare
                      P1 : constant Item_Values := Get_Term_List (P1_Node);
@@ -2126,6 +2140,75 @@ package body GPR2.Project.Parser is
 
                   Status := Over;
                end Handle_Generic2;
+
+               ------------------------
+               -- Handle_Generic2_LV --
+               ------------------------
+
+               procedure Handle_Generic2_LV (Node : Builtin_Function_Call) is
+                  Parameters : constant Term_List_List :=
+                                 F_Terms (F_Parameters (Node));
+                  P1_Node    : constant Term_List :=
+                                 Child (Parameters, 1).As_Term_List;
+                  P2_Node    : constant Term_List :=
+                                 Child (Parameters, 2).As_Term_List;
+               begin
+                  declare
+                     P1 : constant Item_Values := Get_Term_List (P1_Node);
+                     P2 : constant Item_Values := Get_Term_List (P2_Node);
+                  begin
+                     if not P2.Single then
+                        Non_Fatal_Error.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Self.File, Node),
+                              Message =>
+                                "second parameters of " & Name
+                                & " built-in must be a simple value"));
+                     end if;
+
+                     if P1.Single then
+                        Record_Value
+                          (Get_Value_Reference
+                             (Transform
+                                  (P1.Values.First_Element.Text,
+                                   P2.Values.First_Element.Text),
+                              Get_Source_Reference
+                                (Self.File, Parameters)));
+
+                     else
+                        for V of P1.Values loop
+                           declare
+                              R : constant String :=
+                                    Transform
+                                      (V.Text, P2.Values.First_Element.Text);
+                           begin
+                              New_Item := True;
+
+                              --  The result is empty, remove from the list
+
+                              if R /= "" then
+                                 Record_Value
+                                   (Get_Value_Reference
+                                      (Transform
+                                           (V.Text,
+                                            P2.Values.First_Element.Text),
+                                       Get_Source_Reference
+                                         (Self.File, Parameters)));
+                              end if;
+                           end;
+                        end loop;
+
+                        Result.Single := False;
+                     end if;
+                  end;
+
+                  --  Skip all child nodes, we do not want to parse a second
+                  --  time the string_literal.
+
+                  Status := Over;
+               end Handle_Generic2_LV;
 
                --------------------
                -- Handle_Item_At --
@@ -2394,23 +2477,36 @@ package body GPR2.Project.Parser is
 
                procedure Handle_Upper is
                  new Handle_Generic1 (Transform => Builtin.Upper);
-               --  Handle the Lower built-in : Lower ("STR") or Lower (VAR)
+               --  Handle the Upper built-in : Upper ("STR") or Upper (VAR)
 
                procedure Handle_Lower is
                  new Handle_Generic1 (Transform => Builtin.Lower);
-               --  Handle the Lower built-in : Upper ("STR") or Upper (VAR)
+               --  Handle the Lower built-in : Lower ("STR") or Lower (VAR)
 
                procedure Handle_Default is new Handle_Generic2
                  ("Default",
                   Transform_V => Builtin.Default,
                   Transform_L => Builtin.Default);
-               --  Handle the Lower built-in : Default ("STR", "def")
+               --  Handle the Default built-in : Default ("STR", "def")
 
                procedure Handle_Alternative is new Handle_Generic2
                  ("Alternative",
                   Transform_V => Builtin.Alternative,
                   Transform_L => Builtin.Alternative);
-               --  Handle the Lower built-in : Alternative ("STR", "def")
+               --  Handle the Alternative built-in :
+               --    Alternative ("STR", "def")
+
+               procedure Handle_Remove_Prefix is new Handle_Generic2_LV
+                 ("Remove_Prefix",
+                  Transform => Builtin.Remove_Prefix);
+               --  Handle the Remove_Prefix built-in :
+               --    Remove_Prefix ("STR", "def")
+
+               procedure Handle_Remove_Suffix is new Handle_Generic2_LV
+                 ("Remove_Suffix",
+                  Transform => Builtin.Remove_Suffix);
+               --  Handle the Remove_Prefix built-in :
+               --    Remove_Suffix ("STR", "def")
 
                Function_Name : constant Name_Type :=
                                  Get_Name_Type (F_Function_Name (Node));
@@ -2446,6 +2542,12 @@ package body GPR2.Project.Parser is
 
                elsif Function_Name = "filter_out" then
                   Handle_Filter_Out (Node);
+
+               elsif Function_Name = "remove_prefix" then
+                  Handle_Remove_Prefix (Node);
+
+               elsif Function_Name = "remove_suffix" then
+                  Handle_Remove_Suffix (Node);
                end if;
             end Handle_Builtin;
 

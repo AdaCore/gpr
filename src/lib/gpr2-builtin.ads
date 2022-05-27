@@ -84,6 +84,16 @@ package GPR2.Builtin is
                     = (if Value = "" then Default_Value else Value);
    --  The default built-in, returns Default if Value is empty
 
+   function Remove_Prefix
+     (Value, Pattern : Value_Type) return Value_Type
+     with Post => Remove_Prefix'Result'Length <= Value'Length;
+   --  The Remove_Prefix built-in, returns Default if Value is empty
+
+   function Remove_Suffix
+     (Value, Pattern : Value_Type) return Value_Type
+     with Post => Remove_Suffix'Result'Length <= Value'Length;
+   --  The Remove_Suffix built-in, returns Default if Value is empty
+
    function Default
      (List, Default : Containers.Source_Value_List)
       return Containers.Source_Value_List

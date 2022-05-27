@@ -242,6 +242,40 @@ package body GPR2.Builtin is
       return To_String (R);
    end Match;
 
+   -------------------
+   -- Remove_Prefix --
+   -------------------
+
+   function Remove_Prefix
+     (Value, Pattern : Value_Type) return Value_Type is
+   begin
+      if Pattern'Length <= Value'Length
+           and then
+         Value (Value'First .. Value'First + Pattern'Length - 1) = Pattern
+      then
+         return Value (Value'First + Pattern'Length .. Value'Last);
+      else
+         return Value;
+      end if;
+   end Remove_Prefix;
+
+   -------------------
+   -- Remove_Suffix --
+   -------------------
+
+   function Remove_Suffix
+     (Value, Pattern : Value_Type) return Value_Type is
+   begin
+      if Pattern'Length <= Value'Length
+           and then
+         Value (Value'Last - Pattern'Length + 1 .. Value'Last) = Pattern
+      then
+         return Value (Value'First .. Value'Last - Pattern'Length);
+      else
+         return Value;
+      end if;
+   end Remove_Suffix;
+
    -----------
    -- Upper --
    -----------
