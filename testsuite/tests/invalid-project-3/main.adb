@@ -57,17 +57,11 @@ procedure Main is
       Tree.Unload;
       GNAT.Directory_Operations.Change_Dir (Gpr_Dir);
 
-      if not Implicit then
-         Tree.Load_Autoconf
-           (Filename => Gpr_Path,
-            Context  => Context);
-      else
-         Tree.Load_Autoconf
-           (Filename    => GPR2.Path_Name.Implicit_Project,
-            Project_Dir => Gpr_Path,
-            Context     => Context);
-      end if;
+      Tree.Load_Autoconf
+        (Filename => Gpr_Path,
+         Context  => Context);
       Tree.Update_Sources;
+
       Print_Messages;
 
       GNAT.Directory_Operations.Change_Dir (Old_Cwd);

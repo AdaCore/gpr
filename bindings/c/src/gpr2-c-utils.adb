@@ -201,8 +201,13 @@ is
       Target           : String       := Empty_String;
       Runtimes         : GPR_Runtimes := No_Runtimes)
    is
+      Project       : constant GPR2.Path_Name.Object :=
+                        (if Filename'Length > 0
+                         then GPR2.Path_Name.Create_File
+                                (Filename_Type (Filename))
+                         else To_Dir (Project_Dir));
       Build_Path_P  : constant GPR2.Path_Name.Object := To_Dir (Build_Path);
-      Project_Dir_P : constant GPR2.Path_Name.Object := To_Dir (Project_Dir);
+
    begin
       if Config /= Empty_String then
          declare
@@ -211,28 +216,25 @@ is
             Config_Project :=
               GPR2.Project.Configuration.Load
                 (GPR2.Path_Name.Create_File (Filename_Optional (Config)));
-            GPR2.Project.Tree.Load
-              (Self     => Tree,
-               Filename =>
-                 GPR2.Path_Name.Create_File (Filename_Optional (Filename)),
-               Context          => Context, Config => Config_Project,
+            Tree.Load
+              (Filename         => Project,
+               Context          => Context,
+               Config           => Config_Project,
                Build_Path       => Build_Path_P,
                Subdirs          => Optional_Name_Type (Subdirs),
                Src_Subdirs      => Optional_Name_Type (Src_Subdirs),
                Check_Shared_Lib => Check_Shared_Lib,
-               Project_Dir      => Project_Dir_P,
                Absent_Dir_Error => Absent_Dir_Error,
                Implicit_With    => Implicit_With);
          end;
       else
-         GPR2.Project.Tree.Load_Autoconf
-           (Self     => Tree,
-            Filename =>
-              GPR2.Path_Name.Create_File (Filename_Optional (Filename)),
-            Context           => Context, Build_Path => Build_Path_P,
+         Tree.Load_Autoconf
+           (Filename          => Project,
+            Context           => Context,
+            Build_Path        => Build_Path_P,
             Subdirs           => Optional_Name_Type (Subdirs),
             Src_Subdirs       => Optional_Name_Type (Src_Subdirs),
-            Check_Shared_Lib => Check_Shared_Lib, Project_Dir => Project_Dir_P,
+            Check_Shared_Lib  => Check_Shared_Lib,
             Absent_Dir_Error  => Absent_Dir_Error,
             Implicit_With     => Implicit_With,
             Target            => Optional_Name_Type (Target),

@@ -17,7 +17,7 @@ class ProjectTree:
 
     def __init__(
         self,
-        project: str,
+        project: Optional[str] = None,
         context: Optional[Dict[str, str]] = None,
         config: Optional[str] = None,
         build_path: Optional[str] = None,
@@ -43,7 +43,7 @@ class ProjectTree:
         # Project existence should be handled by the GPR2 load function. But
         # currently the API returns a syntax error. Remove check when this is
         # fixed.
-        if not os.path.isfile(project):
+        if project is not None and not os.path.isfile(project):
             raise GPR2Error(f"{project}: no such file")
 
         self.project = project
@@ -61,7 +61,7 @@ class ProjectTree:
         if project_dir is not None:
             self.project_dir = os.path.abspath(project_dir)
         else:
-            self.project_dir = None
+            self.project_dir = os.getcwd()
 
         self._project_data = LibGPR2.tree_load(
             request={

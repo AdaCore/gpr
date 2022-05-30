@@ -66,7 +66,7 @@ package body GPRtools.Util is
          end if;
       end if;
 
-      return Path_Name.Implicit_Project;
+      return Path_Name.Undefined;
    end Check_For_Default_Project;
 
    ----------------------------

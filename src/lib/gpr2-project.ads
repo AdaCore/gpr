@@ -78,10 +78,6 @@ package GPR2.Project is
 
    Default_Config_Name : constant Filename_Type := "default.cgpr";
 
-   Implicit_Project : Path_Name.Object renames Path_Name.Implicit_Project;
-   --  Means that an empty project has to be generated instead of parsed from
-   --  file.
-
    type Filter_Kind is
      (F_Standard, F_Library, F_Abstract, F_Aggregate, F_Aggregate_Library);
 

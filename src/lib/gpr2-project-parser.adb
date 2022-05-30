@@ -470,9 +470,6 @@ package body GPR2.Project.Parser is
       Unit    : Analysis_Unit;
       Project : Object;
 
-      Empty_Project : constant String :=
-                        "standard project Default is end Default;";
-
    begin
       if Registry.Check_Project (Filename, Project) then
          return Project;
@@ -488,12 +485,7 @@ package body GPR2.Project.Parser is
             return Undefined;
          end if;
 
-         if Filename.Is_Directory then
-            Unit := Get_From_Buffer
-              (Context, Filename.Value, Buffer => Empty_Project);
-         else
-            Unit := Get_From_File (Context, Filename.Value);
-         end if;
+         Unit := Get_From_File (Context, Filename.Value);
 
          if Root (Unit).Is_Null or else Has_Diagnostics (Unit) then
             if Has_Diagnostics (Unit) then
@@ -4057,10 +4049,14 @@ package body GPR2.Project.Parser is
          end return;
       end To_Set;
 
+      Is_Parsed_Project : constant Boolean := Self.Unit /= No_Analysis_Unit;
+
    begin
-      Attrs.Clear;
-      Vars.Clear;
-      Packs.Clear;
+      if Is_Parsed_Project then
+         Attrs.Clear;
+         Vars.Clear;
+         Packs.Clear;
+      end if;
 
       --  Insert intrinsic attributes Name and Project_Dir
 
@@ -4093,9 +4089,11 @@ package body GPR2.Project.Parser is
 
       Types := Self.Types;
 
-      Definition.Get (View).Disable_Cache;
-      Traverse (Root (Self.Unit), Parser'Access);
-      Definition.Get (View).Enable_Cache;
+      if Is_Parsed_Project then
+         Definition.Get (View).Disable_Cache;
+         Traverse (Root (Self.Unit), Parser'Access);
+         Definition.Get (View).Enable_Cache;
+      end if;
 
       --  Fill possible non-fatal errors into the tree now
 

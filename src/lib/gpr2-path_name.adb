@@ -536,8 +536,7 @@ package body GPR2.Path_Name is
 
    function Exists (Self : Object) return Boolean is
    begin
-      return (not Self.Is_Implicit_Project)
-        and then Length (Self.Value) > 0
+      return Length (Self.Value) > 0
         and then Directories.Exists (To_String (Self.Value));
    end Exists;
 

@@ -394,15 +394,13 @@ package body GPRtools.Options is
 
       if not Result.Project_File.Is_Defined then
          if Result.No_Project then
-            Result.Project_File := GPR2.Path_Name.Implicit_Project;
-            Result.Project_Base :=
-              GPR2.Path_Name.Create_Directory
-                (GPR2.Filename_Type (Ada.Directories.Current_Directory));
+            Result.Project_Base := GPR2.Path_Name.Create_Directory
+              (GPR2.Filename_Type (Ada.Directories.Current_Directory));
 
          elsif Parser.Find_Implicit_Project then
             Result.Project_File := GPRtools.Util.Check_For_Default_Project;
 
-            if Result.Project_File.Is_Implicit_Project then
+            if not Result.Project_File.Is_Defined then
                Result.Project_Base :=
                  GPR2.Path_Name.Create_Directory
                    (GPR2.Filename_Type (Ada.Directories.Current_Directory));
@@ -412,18 +410,10 @@ package body GPRtools.Options is
                     ("use implicit project in " & Result.Project_Base.Value);
                end if;
 
-            elsif not Result.Quiet
-              and then Result.Project_File.Simple_Name /= "default.gpr"
-            then
+            elsif not Result.Quiet then
                Ada.Text_IO.Put_Line
                  ("using project file " & Result.Project_File.Value);
             end if;
-         end if;
-
-         if not Result.Project_File.Is_Defined
-           and then Parser.Find_Implicit_Project
-         then
-            Parser.Usage;
          end if;
 
       elsif Result.No_Project then
@@ -441,8 +431,7 @@ package body GPRtools.Options is
       declare
          Project_Dir : constant GPR2.Path_Name.Object :=
                          (if Result.Project_Base.Is_Defined
-                          then GPR2.Path_Name.Create_Directory
-                            (Filename_Type (Result.Project_Base.Dir_Name))
+                          then Result.Project_Base
                           elsif Result.Project_File.Is_Defined
                             and then Result.Project_File.Has_Dir_Name
                           then GPR2.Path_Name.Create_Directory
@@ -543,10 +532,11 @@ package body GPRtools.Options is
          end if;
 
          Opt.Tree.Load
-           (Filename         =>  Opt.Project_File,
+           (Filename         =>  (if Opt.Project_File.Is_Defined
+                                  then Opt.Project_File
+                                  else Opt.Project_Base),
             Context          =>  Opt.Context,
             Config           =>  Conf,
-            Project_Dir      =>  Opt.Project_Base,
             Build_Path       =>  Opt.Build_Path,
             Subdirs          =>  Opt.Get_Subdirs,
             Src_Subdirs      =>  Opt.Get_Src_Subdirs,
@@ -613,9 +603,10 @@ package body GPRtools.Options is
          end if;
 
          Opt.Tree.Load_Autoconf
-           (Filename          =>  Opt.Project_File,
+           (Filename          =>  (if Opt.Project_File.Is_Defined
+                                   then Opt.Project_File
+                                   else Opt.Project_Base),
             Context           =>  Opt.Context,
-            Project_Dir       =>  Opt.Project_Base,
             Build_Path        =>  Opt.Build_Path,
             Subdirs           =>  Opt.Get_Subdirs,
             Src_Subdirs       =>  Opt.Get_Src_Subdirs,
