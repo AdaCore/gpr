@@ -1,0 +1,9 @@
+project Test_Unknown_Config is
+    for Object_Dir use "obj";
+    for Exec_Dir use Project'Object_Dir;
+    for Main use ("main.adb");
+
+    package Builder is
+        for Global_Config_File ("Ada") use "unknown.adc";
+    end Builder;
+end Test_Unknown_Config;

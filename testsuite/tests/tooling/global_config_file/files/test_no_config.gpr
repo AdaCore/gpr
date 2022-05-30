@@ -1,0 +1,5 @@
+project Test_No_Config is
+    for Object_Dir use "obj";
+    for Exec_Dir use Project'Object_Dir;
+    for Main use ("main.adb");
+end Test_No_Config;
