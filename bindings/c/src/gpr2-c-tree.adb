@@ -85,9 +85,13 @@ package body GPR2.C.Tree is
          Set
            (Result, "search_paths",
             From_GPR_Paths (Search_Paths (Tree.all)));
-         Set
-           (Result, "src_subdirs",
-            From_Filename (GPR2.Project.Tree.Src_Subdirs (Tree.all)));
+         if GPR2.Project.Tree.Has_Src_Subdirs (Tree.all) then
+            Set
+              (Result, "src_subdirs",
+               From_Filename (GPR2.Project.Tree.Src_Subdirs (Tree.all)));
+         else
+            Set (Result, "src_subdirs", GNATCOLL.JSON.JSON_Null);
+         end if;
          Set
            (Result, "subdirs",
             From_Filename (GPR2.Project.Tree.Subdirs (Tree.all)));
