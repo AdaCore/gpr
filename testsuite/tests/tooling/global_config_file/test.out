@@ -1,0 +1,9 @@
+Case 1 - no Global_Config_File attribute:
+gprbuild -c --build-script=build.log -Pfiles/test_no_config.gpr
+OK, compilation switches consistent with Global_Config_File attribute !
+Case 2 - Global_Config_File attribute of an existing file
+gprbuild -c --build-script=build.log -Pfiles/test_config.gpr
+OK, compilation switches consistent with Global_Config_File attribute !
+Case 3 - Global_Config_File attribute of an unknown file
+gprbuild -c --build-script=build.log -Pfiles/test_unknown_config.gpr
+OK, compilation switches consistent with Global_Config_File attribute !
