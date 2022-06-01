@@ -1,0 +1,9 @@
+
+project Demo is
+   L  := ("value1", "or", "another", "one");
+
+   R1 := Filter_Out (L, ".*o.*");
+   R2 := Filter_Out (L, ".*");
+   R3 := Filter_Out (L, "or");
+
+end Demo;

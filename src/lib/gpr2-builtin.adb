@@ -127,6 +127,42 @@ package body GPR2.Builtin is
       return Result;
    end External_As_List;
 
+   ----------------
+   -- Filter_Out --
+   ----------------
+
+   function Filter_Out
+     (List  : Containers.Source_Value_List;
+      Regex : GNAT.Regexp.Regexp)
+      return Containers.Source_Value_List
+   is
+      R : Containers.Source_Value_List;
+   begin
+      for E of List loop
+         if not GNAT.Regexp.Match (E.Text, Regex) then
+            R.Append (E);
+         end if;
+      end loop;
+
+      return R;
+   end Filter_Out;
+
+   -------------
+   -- Item_At --
+   -------------
+
+   function Item_At
+     (List  : Containers.Source_Value_List;
+      Index : Integer) return Value_Type
+   is
+      I : constant Positive :=
+            (if Index > 0
+             then Index
+             else Positive (List.Length) + Index + 1);
+   begin
+      return List (I).Text;
+   end Item_At;
+
    -----------
    -- Lower --
    -----------
@@ -205,6 +241,40 @@ package body GPR2.Builtin is
 
       return To_String (R);
    end Match;
+
+   -------------------
+   -- Remove_Prefix --
+   -------------------
+
+   function Remove_Prefix
+     (Value, Pattern : Value_Type) return Value_Type is
+   begin
+      if Pattern'Length <= Value'Length
+           and then
+         Value (Value'First .. Value'First + Pattern'Length - 1) = Pattern
+      then
+         return Value (Value'First + Pattern'Length .. Value'Last);
+      else
+         return Value;
+      end if;
+   end Remove_Prefix;
+
+   -------------------
+   -- Remove_Suffix --
+   -------------------
+
+   function Remove_Suffix
+     (Value, Pattern : Value_Type) return Value_Type is
+   begin
+      if Pattern'Length <= Value'Length
+           and then
+         Value (Value'Last - Pattern'Length + 1 .. Value'Last) = Pattern
+      then
+         return Value (Value'First .. Value'Last - Pattern'Length);
+      else
+         return Value;
+      end if;
+   end Remove_Suffix;
 
    -----------
    -- Upper --

@@ -1,0 +1,7 @@
+
+project DemoE1 is
+   V := "12";
+
+   R1 := Filter_Out ("L", ".*o.*");
+   R2 := Filter_Out (V, ".*o.*");
+end DemoE1;

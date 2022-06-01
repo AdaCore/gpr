@@ -1,0 +1,8 @@
+Demo     K_STANDARD
+V:   L -> "libone" "two" "libthree" "libee" "libazerty"
+V:   R1 -> "azerty"
+V:   R2 -> "one" "two" "three" "ee" "azerty"
+V:   R3 -> "lib"
+V:   R4 -> "libone" "two" "libthr" "lib" "libazerty"
+V:   R5 -> "one" "two" "thr" "azerty"
+V:   V -> "libazerty"

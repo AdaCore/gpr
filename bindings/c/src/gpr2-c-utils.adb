@@ -207,13 +207,10 @@ is
       if Config /= Empty_String then
          declare
             Config_Project : GPR2.Project.Configuration.Object;
-            Config_Target  : constant String :=
-              (if Target = Empty_String then "all" else Target);
          begin
             Config_Project :=
               GPR2.Project.Configuration.Load
-                (GPR2.Path_Name.Create_File (Filename_Optional (Config)),
-                 Optional_Name_Type (Config_Target));
+                (GPR2.Path_Name.Create_File (Filename_Optional (Config)));
             GPR2.Project.Tree.Load
               (Self     => Tree,
                Filename =>

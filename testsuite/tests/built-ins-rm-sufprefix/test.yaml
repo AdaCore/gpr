@@ -1,0 +1,5 @@
+description:
+    Check the Remove_Prefix and Remove_Suffix built-ins
+driver: build_and_run
+project_file: builtins
+main: main

@@ -1,0 +1,13 @@
+
+project Demo is
+   L := ("libone", "two", "libthree", "libee", "libazerty");
+   V := "libazerty";
+
+   R1 := Remove_Prefix (V, "lib");
+   R2 := Remove_Prefix (L, "lib");
+
+   R3 := Remove_Suffix (V, "azerty");
+   R4 := Remove_Suffix (L, "ee");
+
+   R5 := Remove_Suffix (Remove_Prefix (L, "lib"), "ee");
+end Demo;
