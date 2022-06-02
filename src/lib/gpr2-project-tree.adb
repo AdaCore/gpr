@@ -713,11 +713,13 @@ package body GPR2.Project.Tree is
          --------------------------------
 
          procedure Handle_Source_File_In_View (View : Project.View.Object) is
-            Full_Path : constant Path_Name.Object :=
-                          View.Source_Path (Base_Name);
+            Full_Path : constant Project.Source.Object :=
+                          View.Source
+                            (Path_Name.Create_File
+                               (Base_Name, Path_Name.No_Resolution));
          begin
-            if Full_Path.Is_Defined then
-               Add_File (Full_Path, False);
+            if Full_Path.Is_Defined and then not Full_Path.Is_Overriden then
+               Add_File (Full_Path.Path_Name, False);
             end if;
          end Handle_Source_File_In_View;
 

@@ -1,0 +1,3 @@
+project base is
+   for source_dirs use ("base_sources");
+end base;
