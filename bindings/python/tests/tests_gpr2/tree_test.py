@@ -44,7 +44,7 @@ def test_load_non_parsable_project():
     """Load a project with syntax errors."""
     with pytest.raises(GPR2Error) as exc_info:
         ProjectTree("invalid.gpr")
-    exc_info.match("syntax error")
+    exc_info.match("cannot load the project tree")
 
 
 @pytest.mark.data_dir("context_project")

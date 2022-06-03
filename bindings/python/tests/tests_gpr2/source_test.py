@@ -59,5 +59,5 @@ def test_source_dependencies():
         assert {os.path.basename(s.path) for s in main.dependencies} == {
             "ada_pkg1.ads",
             "ada_pkg2.ads",
-            "ada_pkg1.adb",
+            "main.adb",
         }
