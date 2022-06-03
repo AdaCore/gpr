@@ -70,7 +70,7 @@ package GPRtools.Util is
 
    function Check_For_Default_Project return GPR2.Path_Name.Object;
    --  Look for default project in the current directory,
-   --  return Implicit_Project if no or several projects are in the current
+   --  return Undefined if no or several projects are in the current
    --  directory.
 
    procedure Finish_Program

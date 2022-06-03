@@ -54,7 +54,7 @@ package body GPR2.C.Tree is
    begin
       Load_Project
         (Tree             => Tree.all,
-         Filename         => To_String (Get (Request, "filename")),
+         Filename         => To_String (Get (Request, "filename"), ""),
          Context          => To_Context (Get (Request, "context")),
          Build_Path       => To_String (Get (Request, "build_path"), ""),
          Subdirs          => To_String (Get (Request, "subdirs"), ""),

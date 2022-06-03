@@ -52,10 +52,6 @@ package GPR2.Path_Name is
    --  This constant is equal to any object declared without an explicit
    --  initializer.
 
-   Implicit_Project : constant Object;
-   --  Means that an empty project has to be generated instead of parsed from
-   --  file.
-
    Resolve_On_Current : constant Filename_Type := "./";
    --  Resolves relative path from current directory
    No_Resolution      : constant Filename_Optional := "";
@@ -63,9 +59,6 @@ package GPR2.Path_Name is
 
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
-
-   function Is_Implicit_Project (Self : Object) return Boolean;
-   --  Returns True if Self is implicit project
 
    overriding function "=" (Left, Right : Object) return Boolean;
    --  Returns True if Left and Right are referencing the same normalized path
@@ -110,7 +103,7 @@ package GPR2.Path_Name is
 
    function Name
      (Self : Object; Extension : Boolean := True) return Filename_Type
-     with Pre => Self.Is_Defined and then not Self.Is_Implicit_Project;
+     with Pre => Self.Is_Defined;
    --  Returns the original, untouched name used to create the object. If
    --  Extension is set to False then the final extension is removed. Note that
    --  this is not the base-name as the leading directory information is not
@@ -126,24 +119,21 @@ package GPR2.Path_Name is
 
    function Base_Name (Self : Object) return Name_Type
      with Pre => Self.Is_Defined
-                   and then not Self.Is_Directory
-                   and then not Self.Is_Implicit_Project;
+                   and then not Self.Is_Directory;
    --  Returns the base name for Self (no extension).
    --  This routine should be used when base filename used to get unit name
    --  from filename.
 
    function Base_Filename (Self : Object) return GPR2.Simple_Name
      with Pre => Self.Is_Defined
-                   and then not Self.Is_Directory
-                   and then not Self.Is_Implicit_Project;
+                   and then not Self.Is_Directory;
    --  Returns the base name for Self (no extension).
    --  This routine should be used when base filename used as part of another
    --  source related filenames.
 
    function Simple_Name (Self : Object) return GPR2.Simple_Name
      with Pre => Self.Is_Defined
-                   and then not Self.Is_Root_Dir
-                   and then not Self.Is_Implicit_Project;
+                   and then not Self.Is_Root_Dir;
    --  Returns the base name for Self (with extension)
 
    function Simple_Name (Path : String) return String;
@@ -206,8 +196,7 @@ package GPR2.Path_Name is
 
    function Containing_Directory (Self : Object) return Object
      with Pre  => Self.Is_Defined
-                    and then not Self.Is_Root_Dir
-                    and then not Self.Is_Implicit_Project,
+                    and then not Self.Is_Root_Dir,
           Post => Containing_Directory'Result.Is_Defined;
    --  Returns the containing directory of the directory information of Self
 
@@ -259,14 +248,8 @@ private
 
    Undefined : constant Object := (others => <>);
 
-   Implicit_Project : constant Object :=
-                        (Comparing => To_Unbounded_String ("^"), others => <>);
-
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
-
-   function Is_Implicit_Project (Self : Object) return Boolean is
-     (Self = Implicit_Project);
 
    overriding function "=" (Left, Right : Object) return Boolean is
      (Left.Comparing = Right.Comparing);

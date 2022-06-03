@@ -38,8 +38,7 @@ package body GPR2.C.JSON is
    function Has_Non_Null_Field
      (Obj : JSON_Value; Key : String) return Boolean
    is
-     (GNATCOLL.JSON.Has_Field (Val => Obj, Field => Key)
-        and then
+     (GNATCOLL.JSON.Has_Field (Val => Obj, Field => Key) and then
       GNATCOLL.JSON.Get (Val => Obj, Field => Key) /= GNATCOLL.JSON.JSON_Null);
    --  Return True if Obj contains a non null field named Key
 

@@ -32,10 +32,6 @@ procedure Main is
          Put_Line ("- Is a file");
       end if;
 
-      if Path.Is_Implicit_Project then
-         Put_Line ("- Is Implicit Project");
-      end if;
-
       if Path.Is_Root_Dir then
          Put_Line ("- Root directory");
       end if;
@@ -54,22 +50,20 @@ procedure Main is
          Put_Line ("- Dir_Name: " & String (Path.Dir_Name));
       end if;
 
-      if Path /= Implicit_Project then
-         Put_Line ("- Name: " & String (Path.Name));
-         Put_Line ("- Name (no extension): " & String (Path.Name (False)));
-         if Path.Has_Value then
-            Put_Line ("- Value: " & String (Path.Value));
-         end if;
+      Put_Line ("- Name: " & String (Path.Name));
+      Put_Line ("- Name (no extension): " & String (Path.Name (False)));
+      if Path.Has_Value then
+         Put_Line ("- Value: " & String (Path.Value));
+      end if;
 
-         if not Path.Is_Directory then
-            Put_Line ("- Base_Name: " & String (Path.Base_Name));
-            Put_Line ("- Base_Filename: " & String (Path.Base_Filename));
-         end if;
+      if not Path.Is_Directory then
+         Put_Line ("- Base_Name: " & String (Path.Base_Name));
+         Put_Line ("- Base_Filename: " & String (Path.Base_Filename));
+      end if;
 
-         if not Path.Is_Root_Dir then
-            Put_Line ("- Simple_Name: " & String (Path.Simple_Name));
-            Put_Line ("- Containing_Directory: " & String (Path.Containing_Directory.Name));
-         end if;
+      if not Path.Is_Root_Dir then
+         Put_Line ("- Simple_Name: " & String (Path.Simple_Name));
+         Put_Line ("- Containing_Directory: '" & String (Path.Containing_Directory.Name) & "'");
       end if;
    end Check_Path;
 
@@ -81,7 +75,6 @@ begin
    Check_Path ("Root dir:", Create_Directory ("/"));
    Check_Path ("'.' dir:", Subdir.Compose (".", True));
    Check_Path ("'..' dir:", Subdir.Compose ("..", True));
-   Check_Path ("Implicit_Project constant:", Implicit_Project);
    Check_Path ("Non existing file:", Base.Compose ("foo.ext"));
    Check_Path ("existing file:", Subdir.Compose ("file.txt"));
    Check_Path ("File with no extension:", Base.Compose ("foo"));

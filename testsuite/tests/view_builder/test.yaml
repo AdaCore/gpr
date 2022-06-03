@@ -1,0 +1,5 @@
+description:
+    Test for the view builder
+driver: build_and_run
+project_file: test
+main: main

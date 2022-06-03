@@ -34,10 +34,11 @@ with GPR2.Project.Configuration;
 pragma Elaborate (GPR2.Project.Configuration);
 --  Elaborate to avoid a circular dependency due to default Elaborate_Body
 
-with GPR2.Project.View.Set;
-with GPR2.Project.View.Vector;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Source;
 with GPR2.Project.Unit_Info;
+with GPR2.Project.View.Set;
+with GPR2.Project.View.Vector;
 with GPR2.Source_Info;
 with GPR2.View_Ids;
 with GPR2.View_Ids.DAGs;
@@ -46,7 +47,7 @@ private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Strings.Hash;
 
-private with GPR2.Project.Registry.Attribute;
+private with GPR2.Project.Definition;
 private with GPR2.Unit;
 
 package GPR2.Project.Tree is
@@ -79,7 +80,6 @@ package GPR2.Project.Tree is
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
       Config           : Configuration.Object      := Configuration.Undefined;
-      Project_Dir      : Path_Name.Object          := Path_Name.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;
@@ -89,18 +89,28 @@ package GPR2.Project.Tree is
                            GPR2.Path_Name.Set.Empty_Set;
       Pre_Conf_Mode    : Boolean                   := False;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.
-                             No_File_Reader_Reference)
-     with Pre => Filename.Is_Defined
-                 and then (not Filename.Is_Implicit_Project
-                           or else Project_Dir.Is_Defined);
+                           GPR2.File_Readers.No_File_Reader_Reference)
+     with Pre => Filename.Is_Defined;
    --  Loads a root project
-   --  If Project_Dir is defined, the main project file being parsed is deemed
-   --  to be in this directory, even if it is not the case. Project_Dir is
-   --  defined when a gpr tool is invoked without a project file and is using
-   --  an implicit project file that is virtually in the Project_Dir, but is
-   --  physically in another directory.
-   --  If File_Reader is set, then it is used when parsing Ada sources or
+   --  Filename: if Filename is a file path, then Load_Autoconf will use it as
+   --   root project. If Filename is a directory path, then implicit projects
+   --   are searched there. If not such implicit project is found, then the
+   --   tree is loaded with an empty project.
+   --  Context: list of values to use to fill externals.
+   --  Config: the configuration to use to load the tree.
+   --  Build_Path: if defined, indicate the directory to use to build the
+   --   project tree (out of tree build).
+   --  Subdirs: if specified, this value is used as subdirectory for
+   --   lib/obj/exec directories
+   --  Src_Subdirs: if specified, prepend obj/<project namne>_<value> or
+   --   obj/<value> to the list of source directories, if they exist.
+   --  Check_Shared_Lib: checks for shared library compatibilities
+   --  Absent_Dir_Error: whether a missing directory should be treated as an
+   --   error or a warning.
+   --  Implicit_With: a list of implicitly withed projects.
+   --  Pre_Conf_Mode: set in autoconf mode to disable most errors when trying
+   --   to load a tree without configuration.
+   --  File_Reader: if set, then it is used when parsing Ada sources or
    --  GPR projects. Else default file reader is used.
 
    procedure Load_Configuration
@@ -113,7 +123,6 @@ package GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
-      Project_Dir       : Path_Name.Object        := Path_Name.Undefined;
       Build_Path        : Path_Name.Object        := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type      := No_Name;
       Src_Subdirs       : Optional_Name_Type      := No_Name;
@@ -127,10 +136,13 @@ package GPR2.Project.Tree is
       Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
       Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined;
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
-                            GPR2.File_Readers.
-                              No_File_Reader_Reference)
+                            GPR2.File_Readers.No_File_Reader_Reference)
        with Pre => Filename.Is_Defined;
    --  Loads a tree in autoconf mode.
+   --  If Filename is a file path, then Load_Autoconf will use it as
+   --  root project. If Filename is a directory path, then implicit projects
+   --  are searched there. If not such implicit project is found, then the
+   --  tree is loaded with an empty project.
    --  If Target is specified, then we use it directly instead of fetching
    --  the root project attribute.
    --  Same with the Language_Runtime map: for each language Lang in the
@@ -481,6 +493,8 @@ package GPR2.Project.Tree is
 
 private
 
+   package PC renames Project.Configuration;
+
    package Name_View is
      new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, View.Object);
    --  Map to find in which view a unit/source is defined
@@ -527,6 +541,17 @@ private
    type Two_Contexts is array (Context_Kind) of GPR2.Context.Object;
    --  Root and Aggregate contexts
 
+   type Project_Descriptor_Kind is (Project_Path, Project_Definition);
+
+   type Project_Descriptor (Kind : Project_Descriptor_Kind) is record
+      case Kind is
+         when Project_Path =>
+            Path : GPR2.Path_Name.Object;
+         when Project_Definition =>
+            Data : GPR2.Project.Definition.Data;
+      end case;
+   end record;
+
    type Object is tagged limited record
       Self              : access Object := null;
       Root              : View.Object;
@@ -540,7 +565,6 @@ private
       Search_Paths      : Path_Name.Set.Object :=
                             Default_Search_Paths (True);
       Implicit_With     : Path_Name.Set.Object;
-      Project_Dir       : Path_Name.Object;
       Build_Path        : Path_Name.Object;
       Subdirs           : Unbounded_String;
       Src_Subdirs       : Unbounded_String;
@@ -559,6 +583,44 @@ private
       Explicit_Runtimes : Containers.Lang_Value_Map;
       File_Reader_Ref   : GPR2.File_Readers.File_Reader_Reference;
    end record;
+
+   procedure Load
+     (Self             : in out Object;
+      Root_Project     : Project_Descriptor;
+      Context          : GPR2.Context.Object;
+      Config           : PC.Object                 := PC.Undefined;
+      --  Project_Dir      : Path_Name.Object          := Path_Name.Undefined;
+      Build_Path       : Path_Name.Object          := Path_Name.Undefined;
+      Subdirs          : Optional_Name_Type        := No_Name;
+      Src_Subdirs      : Optional_Name_Type        := No_Name;
+      Check_Shared_Lib : Boolean                   := True;
+      Absent_Dir_Error : Boolean                   := False;
+      Implicit_With    : GPR2.Path_Name.Set.Object :=
+                           GPR2.Path_Name.Set.Empty_Set;
+      Pre_Conf_Mode    : Boolean                   := False;
+      File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
+                           GPR2.File_Readers.No_File_Reader_Reference);
+   --  Common implementation for loading a project either from an actual
+   --  file or from a manually built root project data.
+
+   procedure Load_Autoconf
+     (Self              : in out Object;
+      Root_Project      : Project_Descriptor;
+      Context           : GPR2.Context.Object;
+      Build_Path        : Path_Name.Object        := Path_Name.Undefined;
+      Subdirs           : Optional_Name_Type      := No_Name;
+      Src_Subdirs       : Optional_Name_Type      := No_Name;
+      Check_Shared_Lib  : Boolean                 := True;
+      Absent_Dir_Error  : Boolean                 := False;
+      Implicit_With     : GPR2.Path_Name.Set.Object :=
+                            GPR2.Path_Name.Set.Empty_Set;
+      Target            : Optional_Name_Type      := No_Name;
+      Language_Runtimes : Containers.Lang_Value_Map :=
+                            Containers.Lang_Value_Maps.Empty_Map;
+      Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
+      Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined;
+      File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
+                            GPR2.File_Readers.No_File_Reader_Reference);
 
    function "=" (Left, Right : Object) return Boolean
    is (Left.Self = Right.Self);
