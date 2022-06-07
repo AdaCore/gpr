@@ -15,7 +15,7 @@ Root dir:
 - Name (no extension): /files/subdir/.
 - Value: /files/subdir
 - Simple_Name: .
-- Containing_Directory: /files
+- Containing_Directory: '/files'
 
 '..' dir:
 - Is a directory
@@ -25,12 +25,7 @@ Root dir:
 - Name (no extension): /files/subdir/..
 - Value: /files
 - Simple_Name: ..
-- Containing_Directory: 
-
-Implicit_Project constant:
-- Is a file
-- Is Implicit Project
-- Does not exist on disk
+- Containing_Directory: ''
 
 Non existing file:
 - Is a file
@@ -42,7 +37,7 @@ Non existing file:
 - Base_Name: foo
 - Base_Filename: foo
 - Simple_Name: foo.ext
-- Containing_Directory: /files/
+- Containing_Directory: '/files/'
 
 existing file:
 - Is a file
@@ -54,7 +49,7 @@ existing file:
 - Base_Name: file
 - Base_Filename: file
 - Simple_Name: file.txt
-- Containing_Directory: /files/subdir/
+- Containing_Directory: '/files/subdir/'
 
 File with no extension:
 - Is a file
@@ -66,7 +61,7 @@ File with no extension:
 - Base_Name: foo
 - Base_Filename: foo
 - Simple_Name: foo
-- Containing_Directory: /files/
+- Containing_Directory: '/files/'
 
 Dir with extension:
 - Is a directory
@@ -76,7 +71,7 @@ Dir with extension:
 - Name (no extension): /files/readme.foo
 - Value: /files/readme.foo
 - Simple_Name: readme.foo
-- Containing_Directory: /files
+- Containing_Directory: '/files'
 
 With white space:
 - Is a file
@@ -88,7 +83,7 @@ With white space:
 - Base_Name: space file
 - Base_Filename: space file
 - Simple_Name: space file.txt
-- Containing_Directory: /files/with white/
+- Containing_Directory: '/files/with white/'
 
 Common_Prefix (directory, file)
 - Is a directory
@@ -98,7 +93,7 @@ Common_Prefix (directory, file)
 - Name (no extension): /files
 - Value: /files
 - Simple_Name: files
-- Containing_Directory: 
+- Containing_Directory: ''
 
 Common_Prefix (file, directory)
 - Is a directory
@@ -108,7 +103,7 @@ Common_Prefix (file, directory)
 - Name (no extension): /files
 - Value: /files
 - Simple_Name: files
-- Containing_Directory: 
+- Containing_Directory: ''
 
 Common_Prefix (src, src/source.adb)
 - Is a directory
@@ -118,7 +113,7 @@ Common_Prefix (src, src/source.adb)
 - Name (no extension): /src
 - Value: /src
 - Simple_Name: src
-- Containing_Directory: 
+- Containing_Directory: ''
 
 Common_Prefix (src/source.adb, src)
 - Is a directory
@@ -128,7 +123,7 @@ Common_Prefix (src/source.adb, src)
 - Name (no extension): /src
 - Value: /src
 - Simple_Name: src
-- Containing_Directory: 
+- Containing_Directory: ''
 
 Common_Prefix with root common
 - Is a directory
@@ -147,7 +142,7 @@ File with no full path
 - Base_Name: file
 - Base_Filename: file
 - Simple_Name: file.txt
-- Containing_Directory: files
+- Containing_Directory: 'files'
 
 Check temp directory
 - Is a directory
@@ -173,7 +168,7 @@ Relative_Path (D:/foo/, E:/bar/)
 - Name (no extension): D:/foo/
 - Value: D:/foo
 - Simple_Name: foo
-- Containing_Directory: D:/
+- Containing_Directory: 'D:/'
 
 Relative_Path (D:/Foo/Bar/, D:/foo/baz/)
 - Is a directory
@@ -183,4 +178,4 @@ Relative_Path (D:/Foo/Bar/, D:/foo/baz/)
 - Name (no extension): ../Bar/
 - Value: D:/foo/Bar
 - Simple_Name: Bar
-- Containing_Directory: D:/foo
+- Containing_Directory: 'D:/foo'
