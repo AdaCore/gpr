@@ -182,6 +182,15 @@ package body GPR2.Project.Tree is
      with Pre => Conf.Is_Defined;
    --  Update project search path with directories relevant to
 
+   procedure Process_Subtree
+     (Self             : Object;
+      View             : Project.View.Object := Project.View.Undefined;
+      Externally_Built : Boolean := False;
+      Do_Action        : not null access procedure
+                           (View : Project.View.Object))
+     with Pre => Self.Is_Defined;
+   --  Call Do_Action for View & View's subtree.
+
    ---------------------
    -- Add_Tool_Prefix --
    ---------------------
@@ -572,6 +581,38 @@ package body GPR2.Project.Tree is
                  Tree    => Iter.Tree);
       end if;
    end First;
+
+   ---------------------
+   -- For_Each_Source --
+   ---------------------
+
+   procedure For_Each_Source
+     (Self             : Object;
+      View             : Project.View.Object := Project.View.Undefined;
+      Action           : access procedure (Source : Project.Source.Object);
+      Language         : Language_Id := No_Language;
+      Externally_Built : Boolean := False) is
+
+      procedure Do_Action (View : Project.View.Object)
+        with Pre => View.Is_Defined;
+      --  Call Action for all View's source object having a valid language.
+
+      ---------------
+      -- Do_Action --
+      ---------------
+
+      procedure Do_Action (View : Project.View.Object) is
+      begin
+         for S of View.Sources loop
+            if Language = No_Language or else S.Language = Language then
+               Action (S);
+            end if;
+         end loop;
+      end Do_Action;
+
+   begin
+      Process_Subtree (Self, View, Externally_Built, Do_Action'Access);
+   end For_Each_Source;
 
    --------------
    -- Get_File --
@@ -1505,6 +1546,66 @@ package body GPR2.Project.Tree is
 
       return Result;
    end Ordered_Views;
+
+   ---------------------
+   -- Process_Subtree --
+   ---------------------
+
+   procedure Process_Subtree
+     (Self             : Object;
+      View             : Project.View.Object := Project.View.Undefined;
+      Externally_Built : Boolean := False;
+      Do_Action        : not null access procedure
+                           (View : Project.View.Object)) is
+
+      Processed : GPR2.Project.View.Set.Object;
+
+      procedure Process (View : Project.View.Object)
+        with Pre => View.Is_Defined;
+      --  If not yet processed, then Do_Action for view & parse View's subtree
+
+      -------------
+      -- Process --
+      -------------
+
+      procedure Process (View : Project.View.Object) is
+      begin
+         if Processed.Contains (View) then
+            return;
+         end if;
+
+         Processed.Insert (View);
+
+         if Externally_Built or else not View.Is_Externally_Built then
+            if View.Qualifier in K_Standard | K_Library then
+               Do_Action (View);
+            end if;
+         end if;
+
+         if View.Qualifier in Aggregate_Kind then
+            for Aggregated of View.Aggregated loop
+               Process (Aggregated);
+            end loop;
+         end if;
+
+         if View.Qualifier /= K_Aggregate then
+            for Imported of View.Imports loop
+               Process (Imported);
+            end loop;
+
+            for Limited_Imported of View.Limited_Imports loop
+               Process (Limited_Imported);
+            end loop;
+
+            if View.Is_Extending then
+               Process (View.Extended_Root);
+            end if;
+         end if;
+      end Process;
+
+   begin
+      Process ((if View.Is_Defined then View else Self.Root_Project));
+   end Process_Subtree;
 
    --------------------------
    -- Project_Search_Paths --
@@ -3328,63 +3429,27 @@ package body GPR2.Project.Tree is
       View             : Project.View.Object := Project.View.Undefined;
       Externally_Built : Boolean := False) return GPR2.Path_Name.Set.Object
    is
-      Result    : GPR2.Path_Name.Set.Object;
-      Processed : GPR2.Project.View.Set.Object;
+      Result : GPR2.Path_Name.Set.Object;
 
-      procedure Process (View : Project.View.Object)
+      procedure Do_Action (View : Project.View.Object)
         with Pre => View.Is_Defined;
-      --  Insert in Result source directories found in View's subtree.
+      --  Add to Result all view's source directories
 
-      -------------
-      -- Process --
-      -------------
+      ---------------
+      -- Do_Action --
+      ---------------
 
-      procedure Process (View : Project.View.Object) is
+      procedure Do_Action (View : Project.View.Object) is
       begin
-         if Processed.Contains (View) then
-            return;
-         end if;
-
-         Processed.Insert (View);
-
-         if Externally_Built or else not View.Is_Externally_Built then
-            if View.Qualifier in K_Standard | K_Library then
-               for Directory of View.Source_Directories loop
-                  if not Result.Contains (Directory) then
-                     Result.Append (Directory);
-                  end if;
-               end loop;
+         for Directory of View.Source_Directories loop
+            if not Result.Contains (Directory) then
+               Result.Append (Directory);
             end if;
-         end if;
-
-         if View.Qualifier in Aggregate_Kind then
-            for Aggregated of View.Aggregated loop
-               Process (Aggregated);
-            end loop;
-         end if;
-
-         if View.Qualifier /= K_Aggregate then
-            for Imported of View.Imports loop
-               Process (Imported);
-            end loop;
-
-            for Limited_Imported of View.Limited_Imports loop
-               Process (Limited_Imported);
-            end loop;
-
-            if View.Is_Extending then
-               Process (View.Extended_Root);
-            end if;
-         end if;
-      end Process;
+         end loop;
+      end Do_Action;
 
    begin
-      if View.Is_Defined then
-         Process (View);
-      else
-         Process (Self.Root_Project);
-      end if;
-
+      Process_Subtree (Self, View, Externally_Built, Do_Action'Access);
       return Result;
    end Source_Directories;
 

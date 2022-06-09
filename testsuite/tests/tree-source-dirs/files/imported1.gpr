@@ -1,5 +1,6 @@
 with "imported2";
 project imported1 is
+   for Languages use ("C", "Ada");
    for Source_Dirs use ("imported1-src");
    for Object_Dir use "imported1-obj";
    for Externally_Built use "true";
