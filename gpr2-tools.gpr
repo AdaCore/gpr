@@ -39,7 +39,7 @@ project GPR2.Tools is
       "gprconfig.adb",
       "gprdoc-main.adb",
       "gprdump.adb",
-      "gprinspect.adb",
+      "gprinspect-main.adb",
       "gprinstall-main.adb",
       "gprls-main.adb",
       "gprremote.adb");
@@ -77,7 +77,7 @@ project GPR2.Tools is
       for Executable ("gprconfig.adb")       use "gprconfig";
       for Executable ("gprclean-main.adb")   use "gprclean";
       for Executable ("gprdoc-main.adb")     use "gprdoc";
-      for Executable ("gprinspect.adb")      use "gprinspect";
+      for Executable ("gprinspect-main.adb") use "gprinspect";
       for Executable ("gprinstall-main.adb") use "gprinstall";
       for Executable ("gprls-main.adb")      use "gprls";
 

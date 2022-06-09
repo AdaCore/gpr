@@ -16,8 +16,13 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package GPRdoc with Pure is
+with GPRtools;
+with GPRtools.Options;
 
-   type Display_Kind is (K_JSON_Compact, K_JSON, K_Textual_IO);
+package GPRdoc is
+
+   type GPRdoc_Options is new GPRtools.Options.Base_Options with record
+      Kind_Of_Display : GPRtools.Display_Kind := GPRtools.K_JSON_Compact;
+   end record;
 
 end GPRdoc;

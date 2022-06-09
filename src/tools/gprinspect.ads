@@ -16,18 +16,20 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package GPRtools is
+with GPRtools;
+with GPRtools.Options;
 
-   Usage_Error : exception;
-   --  Raised when a wrong usage is detected
+package GPRinspect is
 
-   type Which is (Build, Clean, Ls, Install, Name, Remote, Inspect);
-   --  Names of the supported tools
+   type GPRinspect_Options is new GPRtools.Options.Base_Options with record
+      Kind_Of_Display           : GPRtools.Display_Kind
+        := GPRtools.K_Textual_IO;
+      All_Projects              : Boolean := False;
+      Display_Everything        : Boolean := False;
+      Display_Attributes        : Boolean := False;
+      Display_Config_Attributes : Boolean := False;
+      Display_Packages          : Boolean := False;
+      Display_Variables         : Boolean := False;
+   end record;
 
-   type Verbosity_Level is (Quiet, Regular, Verbose, Very_Verbose);
-   --  Verbosilty level of logging to standard and/or error/warning output
-
-   type Display_Kind is (K_JSON_Compact, K_JSON, K_Textual_IO);
-   --  Kind of display to be used by any tool that uses it.
-
-end GPRtools;
+end GPRinspect;

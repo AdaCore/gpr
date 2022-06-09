@@ -26,7 +26,7 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Attribute.Description;
 with GPR2.Project.Registry.Pack;
 
-procedure GPRdoc.Process (Display : Display_Kind) is
+procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
 
    use Ada;
    use GNATCOLL;
@@ -483,14 +483,14 @@ procedure GPRdoc.Process (Display : Display_Kind) is
 
 begin
 
-   case Display is
-      when K_JSON_Compact =>
+   case Options.Kind_Of_Display is
+      when GPRtools.K_JSON_Compact =>
          Generate_JSON_Documentation (Compact => True);
 
-      when K_JSON =>
+      when GPRtools.K_JSON =>
          Generate_JSON_Documentation (Compact => False);
 
-      when K_Textual_IO =>
+      when GPRtools.K_Textual_IO =>
          Generate_IO_Textual_Documentation;
    end case;
 
