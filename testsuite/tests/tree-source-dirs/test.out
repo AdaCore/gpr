@@ -1,11 +1,12 @@
-files/abstract1.gpr
-Externally_Built = FALSE
-View:Root_Project
-Externally_Built = TRUE
-View:Root_Project
-files/aggregating.gpr
-Externally_Built = FALSE
-View:Root_Project
+loading files/abstract1.gpr
+testing files/abstract1.gpr View=Root_Project Externally_Built= FALSE
+testing files/abstract1.gpr View=Root_Project Externally_Built= FALSE Language=All
+testing files/abstract1.gpr View=Root_Project Externally_Built= FALSE Language=C
+testing files/abstract1.gpr View=Root_Project Externally_Built= TRUE
+testing files/abstract1.gpr View=Root_Project Externally_Built= TRUE Language=All
+testing files/abstract1.gpr View=Root_Project Externally_Built= TRUE Language=C
+loading files/aggregating.gpr
+testing files/aggregating.gpr View=Root_Project Externally_Built= FALSE
 /files/aggregated-src
 /files/extended1-src
 /files/extended2-src
@@ -14,8 +15,19 @@ View:Root_Project
 /files/imported4-src
 /files/imported4-src/src
 /files/limited1-src
-Externally_Built = TRUE
-View:/files/aggregated.gpr
+testing files/aggregating.gpr View=Root_Project Externally_Built= FALSE Language=All
+/files/aggregated-src/aggregated.adb
+/files/extended1-src/test1.ads
+/files/extended1-src/test1.ads
+/files/extended2-src/test2.ads
+/files/extended2-src/test2.ads
+/files/extended2-src/test2.ads
+/files/imported2-src/test4.ads
+/files/imported3-src/test5.ads
+/files/imported4-src/src/test6.ads
+/files/limited1-src/test7.ads
+testing files/aggregating.gpr View=Root_Project Externally_Built= FALSE Language=C
+testing files/aggregating.gpr View=/files/aggregated.gpr Externally_Built= TRUE
 /files/aggregated-src
 /files/extended1-src
 /files/extended2-src
@@ -25,17 +37,43 @@ View:/files/aggregated.gpr
 /files/imported4-src
 /files/imported4-src/src
 /files/limited1-src
-files/agg_lib.gpr
-Externally_Built = FALSE
-View:Root_Project
+testing files/aggregating.gpr View=/files/aggregated.gpr Externally_Built= TRUE Language=All
+/files/aggregated-src/aggregated.adb
+/files/extended1-src/test1.ads
+/files/extended1-src/test1.ads
+/files/extended2-src/test2.ads
+/files/extended2-src/test2.ads
+/files/extended2-src/test2.ads
+/files/imported1-src/test.c
+/files/imported1-src/test3.ads
+/files/imported2-src/test4.ads
+/files/imported3-src/test5.ads
+/files/imported4-src/src/test6.ads
+/files/limited1-src/test7.ads
+testing files/aggregating.gpr View=/files/aggregated.gpr Externally_Built= TRUE Language=C
+/files/imported1-src/test.c
+loading files/agg_lib.gpr
+testing files/agg_lib.gpr View=Root_Project Externally_Built= FALSE
 /files/imported2-src
 /files/imported3-src
 /files/imported4-src
 /files/imported4-src/src
-Externally_Built = TRUE
-View:Root_Project
+testing files/agg_lib.gpr View=Root_Project Externally_Built= FALSE Language=All
+/files/imported2-src/test4.ads
+/files/imported3-src/test5.ads
+/files/imported4-src/src/test6.ads
+testing files/agg_lib.gpr View=Root_Project Externally_Built= FALSE Language=C
+testing files/agg_lib.gpr View=Root_Project Externally_Built= TRUE
 /files/imported1-src
 /files/imported2-src
 /files/imported3-src
 /files/imported4-src
 /files/imported4-src/src
+testing files/agg_lib.gpr View=Root_Project Externally_Built= TRUE Language=All
+/files/imported1-src/test.c
+/files/imported1-src/test3.ads
+/files/imported2-src/test4.ads
+/files/imported3-src/test5.ads
+/files/imported4-src/src/test6.ads
+testing files/agg_lib.gpr View=Root_Project Externally_Built= TRUE Language=C
+/files/imported1-src/test.c

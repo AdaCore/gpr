@@ -491,6 +491,20 @@ package GPR2.Project.Tree is
    --  If Externally_Built is False then source directories belonging
    --  to project marked "Externally_Built" will not be returned.
 
+   procedure For_Each_Source
+     (Self             : Object;
+      View             : Project.View.Object := Project.View.Undefined;
+      Action           : access procedure (Source : Project.Source.Object);
+      Language         : Language_Id := No_Language;
+      Externally_Built : Boolean := False)
+     with Pre => Self.Is_Defined;
+   --  Call Action for all the sources for a given View subtree.
+   --  If View is undefined use root project.
+   --  If Language is No_Language then all sources are returned.
+   --  If Externally_Built is False then source directories belonging
+   --  to project marked "Externally_Built" will not be returned.
+   --  Note that this routine ensure that the sources are loaded.
+
 private
 
    package PC renames Project.Configuration;
