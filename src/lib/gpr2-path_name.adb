@@ -549,7 +549,7 @@ package body GPR2.Path_Name is
    begin
       if Path.Is_Defined then
          if Path.Has_Dir_Name then
-            return VFS.Filesystem_String (Unchecked_Value (Path));
+            return VFS.Filesystem_String (To_String (Path.Value));
          else
             return VFS.Filesystem_String (Simple_Name (Path));
          end if;
