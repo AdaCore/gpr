@@ -36,6 +36,7 @@ with Ada.Calendar;
 with GNAT.MD5;
 
 with GNATCOLL;
+with GNATCOLL.Utils;
 with GNATCOLL.VFS;
 
 private with Ada.Directories;
@@ -282,16 +283,27 @@ private
      (Filename : VFS.Filesystem_String) return GPR2.Path_Name.Object
    is
      (if Filename'Length > 1
-      then GPR2.Path_Name.Create
-        (GPR2.Filename_Type (Filename), GPR2.Filename_Type (Filename))
+      then
+        (if GNATCOLL.Utils.Is_Directory_Separator (Filename (Filename'Last))
+         then (GPR2.Path_Name.Create_Directory (GPR2.Filename_Type (Filename)))
+         else GPR2.Path_Name.Create
+           (GPR2.Filename_Type (Filename), GPR2.Filename_Type (Filename)))
       else GPR2.Path_Name.Undefined);
 
    function Create
      (File : VFS.Virtual_File) return GPR2.Path_Name.Object
    is
      (if VFS."/=" (File, VFS.No_File)
-      then GPR2.Path_Name.Create (GPR2.Filename_Type (File.Display_Full_Name),
-        GPR2.Filename_Type (File.Display_Full_Name))
+      then
+        (if GNATCOLL.VFS.Is_Directory (File)
+         or else GNATCOLL.Utils.Is_Directory_Separator
+           (GNATCOLL.VFS.Full_Name (File).all
+            (GNATCOLL.VFS.Full_Name (File).all'Last))
+         then GPR2.Path_Name.Create_Directory
+           (GPR2.Filename_Type (File.Display_Full_Name))
+         else GPR2.Path_Name.Create
+           (GPR2.Filename_Type (File.Display_Full_Name),
+            GPR2.Filename_Type (File.Display_Full_Name)))
       else GPR2.Path_Name.Undefined);
 
 end GPR2.Path_Name;

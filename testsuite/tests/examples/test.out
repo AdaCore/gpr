@@ -101,8 +101,8 @@ Demo     K_STANDARD
 /gnatcoll-projects-conversion/gpr2_gnatcoll_projects.adb
 /gnatcoll-projects-conversion/gpr2_gnatcoll_projects.ads
 /gnatcoll-projects-conversion/main.adb
-Object_Dir:/gnatcoll-projects-conversion
-Artifacts_Dir:/gnatcoll-projects-conversion
+Object_Dir:/gnatcoll-projects-conversion/
+Artifacts_Dir:/gnatcoll-projects-conversion/
 Name:Conversion_Tutorial
 Runtime:
 Create:/gnatcoll-projects-conversion/main.adb

@@ -765,28 +765,11 @@ package body GPR2.KB.Parsing is
             External : Node);
          --  Parses an XML node that describes an external value
 
-         function Ends_With (Str, Suffix : String) return Boolean;
-         --  Whether the string ends with Suffix. Always True if Suffix
-         --  is an empty string.
-
          function Is_Number (Val : String) return Boolean is
             (Val /= "" and then (for all V of Val => V in '0' .. '9'));
          --  Checks that given value is a number. We are not expecting
          --  a full-blown integer like a based literal here. Simply check if
          --  Val is composed of digits or not.
-
-         ---------------
-         -- Ends_With --
-         ---------------
-
-         function Ends_With (Str, Suffix : String) return Boolean is
-         begin
-            return Suffix = ""
-              or else
-                (Str'Length >= Suffix'Length
-                 and then Str
-                   (Str'Last - Suffix'Length + 1 .. Str'Last) = Suffix);
-         end Ends_With;
 
          --------------------------
          -- Parse_External_Value --
@@ -989,6 +972,11 @@ package body GPR2.KB.Parsing is
 
             elsif Node_Name (N) = "executable" then
                declare
+                  function Ends_With (Str, Suffix : String) return Boolean
+                             renames GNATCOLL.Utils.Ends_With;
+                  --  Whether the string ends with Suffix. Always True if
+                  --  Suffix is an empty string.
+
                   Prefix : constant String :=
                              Get_Attribute (N, "prefix", "@@");
                   Val    : constant String := Node_Value_As_String (N);
@@ -1009,13 +997,11 @@ package body GPR2.KB.Parsing is
                         Compiler.Prefix_Index := -1;
                      end if;
 
-                     if not Ends_With (Val, Exec_Suffix.all) then
-                        Compiler.Executable_Re := To_Holder
-                          (Compile ("^" & Val & Exec_Suffix.all & "$"));
-                     else
-                        Compiler.Executable_Re := To_Holder
-                          (Compile ("^" & Val & "$"));
-                     end if;
+                     Compiler.Executable_Re := To_Holder
+                       (Compile
+                          ("^" & Val
+                           & (if Ends_With (Val, Exec_Suffix.all) then ""
+                              else Exec_Suffix.all) & "$"));
 
                      Base.Check_Executable_Regexp := True;
                   end if;
