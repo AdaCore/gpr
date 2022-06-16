@@ -67,7 +67,22 @@ The following JSON structure is used for GPR2 messages:
 
 ### Attribute
 
-TBD
+The following JSON structures are used for GPR2 attributes depending on
+the attribute type. Note that this list may be incomplete.
+
+Single values (e.g. `Library_Name`):
+
+    {
+     'value': Optional[str],
+     'is_default': bool
+    }
+
+List values (e.g. `Source_Dirs`):
+
+    {
+     'value': Optional[List[str]],
+     'is_default': bool
+    }
 
 ### Unit
 
