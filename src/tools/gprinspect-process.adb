@@ -19,6 +19,7 @@
 with Ada.Calendar.Formatting;
 with Ada.Command_Line;
 with Ada.Containers.Ordered_Maps;
+with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Text_IO;
 
 with GNAT.MD5;
@@ -1105,4 +1106,15 @@ begin
          Inspect_Project_Textual_Output (Tree => Project_Tree);
    end case;
 
+exception
+   when E : others =>
+      Text_IO.Put_Line ("error: " & Exception_Information (E));
+      if Options.Tree /= null
+      then
+         if Options.Tree.Has_Messages then
+            for M of Options.Tree.Log_Messages.all loop
+               Text_IO.Put_Line (M.Format);
+            end loop;
+         end if;
+      end if;
 end GPRinspect.Process;

@@ -18,6 +18,7 @@ GPRNAME = GPR + "name"
 GPRCONFIG = GPR + "config"
 GPRREMOTE = GPR + "remote"
 GPRDOC = GPR + "doc"
+GPRINSPECT = GPR + "inspect"
 
 
 class BuilderAndRunner(object):

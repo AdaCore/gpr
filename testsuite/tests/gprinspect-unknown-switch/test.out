@@ -1,0 +1,8 @@
+Testcase 1 - unknown switch
+gprinspect --unknown
+Expects : ["gprinspect: unrecognized option", "try "gprinspect --help" for more information."]
+OK !
+Testcase 2 - unknown display value
+gprinspect --display=unknown
+Expects : ["gprinspect: use --display=<value> with", "try "gprinspect --help" for more information."]
+OK !

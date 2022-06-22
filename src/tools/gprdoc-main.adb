@@ -128,6 +128,14 @@ begin
    GPRdoc.Process (Options => Options);
 
 exception
+   when E : GPRtools.Usage_Error =>
+      Text_IO.Put_Line
+        (Text_IO.Standard_Error,
+         "gprdoc: " & Exception_Message (E));
+      GPRtools.Command_Line.Try_Help;
+      GPRtools.Util.Exit_Program (GPRtools.Util.E_Fatal);
+
    when E : others =>
-      Text_IO.Put_Line ("error: " & Exception_Information (E));
+      GPRtools.Util.Fail_Program
+        ("Fatal error: " & Exception_Information (E));
 end GPRdoc.Main;
