@@ -829,7 +829,6 @@ begin
         (Text_IO.Standard_Error,
          "Invalid setup of the gprconfig knowledge base");
       GNAT.OS_Lib.OS_Exit (1);
-      return;
    end if;
 
    if Opt_Show_Known then
@@ -892,7 +891,6 @@ begin
               (Text_IO.Standard_Error,
                "Invalid setup of the gprconfig knowledge base");
             GNAT.OS_Lib.OS_Exit (1);
-            return;
          end if;
 
          if Opt_Show_Targets or else Opt_Verbosity = Verbose then
@@ -932,7 +930,6 @@ begin
                  (Text_IO.Standard_Error, "No compilers found");
             end if;
             GNAT.OS_Lib.OS_Exit (1);
-            return;
          end if;
 
          if Opt_Show_MI then
@@ -970,7 +967,6 @@ begin
          "Generation of configuration files failed");
 
       GNAT.OS_Lib.OS_Exit (1);
-      return;
 
    elsif Knowledge_Base.Has_Error then
 
@@ -986,7 +982,6 @@ begin
          "Invalid setup of the gprconfig knowledge base");
 
       GNAT.OS_Lib.OS_Exit (1);
-      return;
 
    else
       for Msg_Cur in Config_Log.Iterate

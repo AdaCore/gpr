@@ -22,12 +22,9 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Unit;
-
 package body GPR2.Project.Source.Set is
 
    type Iterator is new Source_Iterator.Forward_Iterator with record
-      Filter : Source_Filter;
       Root   : not null access constant Set.Set;
    end record;
 
@@ -36,11 +33,6 @@ package body GPR2.Project.Source.Set is
 
    overriding function Next
      (Iter : Iterator; Position : Cursor) return Cursor;
-
-   function Match_Filter
-     (Filter : Source_Filter; Source : Project.Source.Object) return Boolean
-   with Inline;
-   --  Returns True if Source matches the iterator Filter (see Source_Filter)
 
    -----------
    -- Clear --
@@ -101,16 +93,8 @@ package body GPR2.Project.Source.Set is
    -----------
 
    overriding function First (Iter : Iterator) return Cursor is
-      Position : constant Cursor :=
-                   Cursor'(Current => Iter.Root.First);
    begin
-      if not Has_Element (Position)
-        or else Match_Filter (Iter.Filter, Set.Element (Position.Current))
-      then
-         return Position;
-      else
-         return Next (Iter, Position);
-      end if;
+      return Cursor'(Current => Iter.Root.First);
    end First;
 
    -------------------
@@ -167,69 +151,10 @@ package body GPR2.Project.Source.Set is
    -------------
 
    function Iterate
-     (Self   : Object;
-      Filter : Source_Filter := S_All)
-      return Source_Iterator.Forward_Iterator'Class is
+     (Self   : Object) return Source_Iterator.Forward_Iterator'Class is
    begin
-      return Iterator'(Filter => Filter, Root => Self.S'Unrestricted_Access);
+      return Iterator'(Root => Self.S'Unrestricted_Access);
    end Iterate;
-
-   ------------------
-   -- Match_Filter --
-   ------------------
-
-   function Match_Filter
-     (Filter : Source_Filter;
-      Source : Project.Source.Object) return Boolean
-   is
-   begin
-      case Filter is
-         when S_Compilable =>
-            if Source.Has_Units then
-               for CU of Source.Units loop
-                  if Is_Compilable (Source, CU.Index) then
-                     --  At least one compilable unit
-                     return True;
-                  end if;
-               end loop;
-
-               return False;
-
-            elsif not Source.Is_Compilable then
-               return False;
-
-            else
-               return Source.Kind = GPR2.Unit.S_Body;
-            end if;
-
-         when S_Spec     =>
-            if Source.Has_Units then
-               return (for some CU of Source.Units =>
-                         CU.Kind in GPR2.Unit.Spec_Kind);
-            else
-               return Source.Kind in GPR2.Unit.Spec_Kind;
-            end if;
-
-         when S_Body     =>
-            if Source.Has_Units then
-               return (for some CU of Source.Units =>
-                         CU.Kind in GPR2.Unit.Body_Kind);
-            else
-               return Source.Kind in GPR2.Unit.Body_Kind;
-            end if;
-
-         when S_Separate =>
-            if Source.Has_Units then
-               return (for some CU of Source.Units =>
-                         CU.Kind in GPR2.Unit.S_Separate);
-            else
-               return Source.Kind = GPR2.Unit.S_Separate;
-            end if;
-
-         when S_All =>
-            return True;
-      end case;
-   end Match_Filter;
 
    ----------
    -- Next --
@@ -238,18 +163,8 @@ package body GPR2.Project.Source.Set is
    overriding function Next
      (Iter : Iterator; Position : Cursor) return Cursor
    is
-      Next : Set.Cursor := Set.Next (Position.Current);
+      Next : constant Set.Cursor := Set.Next (Position.Current);
    begin
-      if Iter.Filter = S_All then
-         return Cursor'(Current => Next);
-      end if;
-
-      loop
-         exit when not Set.Has_Element (Next);
-         exit when Match_Filter (Iter.Filter, Set.Element (Next));
-         Next := Set.Next (Next);
-      end loop;
-
       return Cursor'(Current => Next);
    end Next;
 

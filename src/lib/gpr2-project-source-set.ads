@@ -38,63 +38,63 @@ package GPR2.Project.Source.Set is
 
    No_Element : constant Cursor;
 
-   function Is_Empty (Self : Object) return Boolean;
+   function Is_Empty (Self : Object) return Boolean with Inline;
 
-   procedure Clear (Self : in out Object);
+   procedure Clear (Self : in out Object) with Inline;
 
-   function Length (Self : Object) return Containers.Count_Type;
+   function Length (Self : Object) return Containers.Count_Type with Inline;
 
    procedure Include (Self : in out Object; Source : Project.Source.Object)
-     with Pre => Source.Is_Defined;
+     with Pre => Source.Is_Defined, Inline;
 
    procedure Insert (Self : in out Object; Source : Project.Source.Object)
-     with Pre => Source.Is_Defined;
+     with Pre => Source.Is_Defined, Inline;
 
    procedure Insert
      (Self     : in out Object;
       Source   : Project.Source.Object;
       Position : out Cursor;
       Inserted : out Boolean)
-     with Pre => Source.Is_Defined;
+     with Pre => Source.Is_Defined, Inline;
    --  Checks if an element equivalent to Source is already present in Self.
    --  If a match is found, Inserted is set to False and Position designates
    --  the matching element. Otherwise, Insert adds Source to Container;
    --  Inserted is set to True and Position designates the newly-inserted
    --  element.
 
-   procedure Union (Self : in out Object; Sources : Object);
+   procedure Union (Self : in out Object; Sources : Object) with Inline;
    --  Inserts into Self the elements of Source that are not equivalent to some
    --  element already in Self.
 
    function Contains
      (Self   : Object;
       Source : Project.Source.Object) return Boolean
-     with Pre => Source.Is_Defined;
+     with Pre => Source.Is_Defined, Inline;
    --  Returns True if Self constains Source
 
    procedure Delete
      (Self : in out Object; Source : Project.Source.Object)
-     with Pre => Source.Is_Defined;
+     with Pre => Source.Is_Defined, Inline;
    --  Deletes source from set
 
    procedure Replace
      (Self   : in out Object;
       Source : Project.Source.Object)
-     with Pre => Source.Is_Defined and then Self.Contains (Source);
+     with Pre => Source.Is_Defined and then Self.Contains (Source), Inline;
    --  Replaces Source in Self
 
    procedure Replace
      (Self     : in out Object;
       Position : Cursor;
       Source   : Project.Source.Object)
-     with Pre => Source.Is_Defined;
+     with Pre => Source.Is_Defined, Inline;
    --  Replaces Source in Self at the given Position
 
    function First_Element (Self : Object) return Project.Source.Object;
 
    function Find
      (Self : Object; Source : Project.Source.Object) return Cursor
-     with Pre => Source.Is_Defined;
+     with Pre => Source.Is_Defined, Inline;
 
    function Element (Position : Cursor) return Project.Source.Object
      with Post =>
@@ -116,19 +116,8 @@ package GPR2.Project.Source.Set is
      (Self     : aliased Object;
       Position : Cursor) return Constant_Reference_Type with Inline;
 
-   Empty_Set : constant Object;
-
-   type Source_Filter is
-     (S_Compilable,  --  Compilable sources only
-      S_Spec,        --  Specs only
-      S_Body,        --  Body
-      S_Separate,    --  Separate
-      S_All);
-
    function Iterate
-     (Self   : Object;
-      Filter : Source_Filter := S_All)
-      return Source_Iterator.Forward_Iterator'Class;
+     (Self : Object) return Source_Iterator.Forward_Iterator'Class;
 
 private
 

@@ -27,7 +27,6 @@ with Ada.IO_Exceptions;
 with Ada.Streams;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
-with System.Assertions;
 
 with GNAT.OS_Lib;
 with GNATCOLL.Utils;
@@ -43,6 +42,7 @@ with GPR2.Source_Info;
 with GPR2.Project.Unit_Info;
 with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Pack;
+with GPR2.View_Ids.Set;
 
 package body GPR2.Project.View is
 
@@ -1258,10 +1258,78 @@ package body GPR2.Project.View is
    function Check_Source
      (Self     : Object;
       Filename : GPR2.Simple_Name;
-      Result   : in out Project.Source.Object) return Boolean is
+      Result   : in out Project.Source.Object) return Boolean
+   is
+      function Internal (V : Object) return Boolean;
+      Visited : GPR2.View_Ids.Set.Object;
+
+      --------------
+      -- Internal --
+      --------------
+
+      function Internal (V : Object) return Boolean is
+      begin
+         Result := V.Source (Filename);
+
+         if Result.Is_Defined then
+            return True;
+         end if;
+
+         Visited.Include (V.Id);
+
+         for Imported of V.Imports loop
+            if not Visited.Contains (Imported.Id) then
+               if Internal (Imported) then
+                  return True;
+               end if;
+            end if;
+         end loop;
+
+         for Imported of V.Limited_Imports loop
+            if not Visited.Contains (Imported.Id) then
+               if Internal (Imported) then
+                  return True;
+               end if;
+            end if;
+         end loop;
+
+         if V.Tree.Has_Runtime_Project
+           and then not Visited.Contains (View_Ids.Runtime_View_Id)
+           and then Internal (V.Tree.Runtime_Project)
+         then
+            return True;
+         end if;
+
+         return False;
+      end Internal;
+
    begin
-      return Definition.Check_Source (Self, Filename, Result);
+      return Internal (Self);
    end Check_Source;
+
+   -----------------------
+   -- Check_Source_Unit --
+   -----------------------
+
+   function Check_Source_Unit
+     (Self   : Object;
+      Unit   : GPR2.Unit.Object;
+      Result : in out Project.Source.Object) return Boolean
+   is
+      Def : constant Definition.Const_Ref := Get_RO (Self);
+      Pos : Definition.Unit_Source.Cursor;
+   begin
+      Pos := Def.Units_Map.Find (Definition.Key (Unit));
+
+      if Definition.Unit_Source.Has_Element (Pos) then
+         Result := Project.Source.Set.Element
+           (Definition.Unit_Source.Element (Pos));
+         return True;
+
+      else
+         return False;
+      end if;
+   end Check_Source_Unit;
 
    --------------------------
    -- Clean_Attribute_List --
@@ -1732,7 +1800,7 @@ package body GPR2.Project.View is
    function Has_Source
      (Self : Object; Filename : GPR2.Simple_Name) return Boolean is
    begin
-      return Definition.Has_Source (Self, Filename);
+      return Get_RO (Self).Sources_Map.Contains (Filename);
    end Has_Source;
 
    -----------------------------
@@ -2475,11 +2543,10 @@ package body GPR2.Project.View is
    function Source
      (Self : Object; File : GPR2.Path_Name.Object) return Project.Source.Object
    is
-      CS : constant Definition.Simple_Name_Source.Cursor :=
-             Definition.Get_RO (Self).Sources_Map.Find (File.Simple_Name);
+      Res : Project.Source.Object;
    begin
-      if Definition.Simple_Name_Source.Has_Element (CS) then
-         return Definition.Simple_Name_Source.Element (CS);
+      if Self.Check_Source (File.Simple_Name, Res) then
+         return Res;
       else
          return  Project.Source.Undefined;
       end if;
@@ -2493,14 +2560,17 @@ package body GPR2.Project.View is
      (Self     : Object;
       Filename : GPR2.Simple_Name) return Project.Source.Object
    is
-      Result : Project.Source.Object;
+      Def : constant Definition.Const_Ref := Get_RO (Self);
+      Pos : Definition.Simple_Name_Source.Cursor;
    begin
-      if Definition.Check_Source (Self, Filename, Result) then
-         return Result;
-      end if;
+      Pos := Def.Sources_Map.Find (Filename);
 
-      raise System.Assertions.Assert_Failure with
-        "Source " & String (Filename) & " not found";
+      if Definition.Simple_Name_Source.Has_Element (Pos) then
+         return Project.Source.Set.Element
+           (Definition.Simple_Name_Source.Element (Pos));
+      else
+         return Project.Source.Undefined;
+      end if;
    end Source;
 
    ------------------------
@@ -2646,7 +2716,8 @@ package body GPR2.Project.View is
              Definition.Get_RO (Self).Sources_Map.Find (Filename);
    begin
       if Definition.Simple_Name_Source.Has_Element (CS) then
-         return Definition.Simple_Name_Source.Element (CS).Path_Name;
+         return Project.Source.Set.Element
+           (Definition.Simple_Name_Source.Element (CS)).Path_Name;
       else
          return GPR2.Path_Name.Undefined;
       end if;
@@ -2662,7 +2733,8 @@ package body GPR2.Project.View is
              Definition.Get_RO (Self).Sources_Map.Find (Name);
    begin
       if Definition.Simple_Name_Source.Has_Element (CS) then
-         return Definition.Simple_Name_Source.Element (CS).Path_Name;
+         return Project.Source.Set.Element
+           (Definition.Simple_Name_Source.Element (CS)).Path_Name;
 
       else
          if Allow_Unit_Name then
@@ -2693,8 +2765,8 @@ package body GPR2.Project.View is
                     (Name & Simple_Name (BS));
 
                   if Definition.Simple_Name_Source.Has_Element (CS) then
-                     return Definition.Simple_Name_Source.Element
-                       (CS).Path_Name;
+                     return Project.Source.Set.Element
+                       (Definition.Simple_Name_Source.Element (CS)).Path_Name;
                   end if;
                end if;
 
@@ -2710,8 +2782,9 @@ package body GPR2.Project.View is
                           (Name & Simple_Name (SS));
 
                         if Definition.Simple_Name_Source.Has_Element (CS) then
-                           return Definition.Simple_Name_Source.Element
-                             (CS).Path_Name;
+                           return Project.Source.Set.Element
+                             (Definition.Simple_Name_Source.Element
+                                (CS)).Path_Name;
                         end if;
                      end if;
                   end;
@@ -2753,11 +2826,41 @@ package body GPR2.Project.View is
    -------------
 
    function Sources
-     (Self   : Object;
-      Filter : Source_Kind := K_All) return Project.Source.Set.Object
+     (Self            : Object;
+      Interface_Only  : Boolean := False;
+      Compilable_Only : Boolean := False) return Project.Source.Set.Object
    is
       use type Ada.Streams.Stream_Element_Array;
+
       Data : constant Project.Definition.Ref := Project.Definition.Get (Self);
+      Add  : Boolean;
+
+      function Is_Compilable (S : Project.Source.Object) return Boolean;
+
+      function Is_Interface (S : Project.Source.Object) return Boolean
+      is (S.Has_Units and then S.Has_Single_Unit
+          and then Data.Units.Contains (S.Unit_Name) and then S.Is_Interface);
+
+      -------------------
+      -- Is_Compilable --
+      -------------------
+
+      function Is_Compilable (S : Project.Source.Object) return Boolean is
+      begin
+         if S.Has_Units then
+            for CU of S.Units loop
+               if S.Is_Compilable (CU.Index) then
+                  return True;
+               end if;
+            end loop;
+
+            return False;
+
+         else
+            return S.Is_Compilable and then S.Kind in GPR2.Unit.Body_Kind;
+         end if;
+      end Is_Compilable;
+
    begin
       if not Definition.Are_Sources_Loaded (Data.Tree.all) then
          Data.Tree.Update_Sources (With_Runtime => Self.Is_Runtime);
@@ -2767,34 +2870,27 @@ package body GPR2.Project.View is
            (Self, Stop_On_Error => True, Backends => Source_Info.All_Backends);
       end if;
 
-      --  Compute and return the sources depending on the filtering
-
-      if Filter = K_All then
+      if not Interface_Only and then not Compilable_Only then
          return Data.Sources;
-
-      else
-         return S_Set : Project.Source.Set.Object do
-            for S of Data.Sources loop
-               declare
-                  Is_Interface : constant Boolean :=
-                                   S.Has_Units
-                                   and then S.Has_Single_Unit
-                                   and then Data.Units.Contains (S.Unit_Name)
-                                   and then S.Is_Interface;
-                  --  All sources related to an interface unit are also
-                  --  taken as interface (not only the spec)???
-
-               begin
-                  if (Filter = K_Interface_Only and then Is_Interface)
-                    or else
-                      (Filter = K_Not_Interface and then not Is_Interface)
-                  then
-                     S_Set.Insert (S);
-                  end if;
-               end;
-            end loop;
-         end return;
       end if;
+
+      return S_Set : Project.Source.Set.Object do
+         for S of Data.Sources loop
+            Add := True;
+
+            if Interface_Only and then not Is_Interface (S) then
+               Add := False;
+            end if;
+
+            if Compilable_Only and then not Is_Compilable (S) then
+               Add := False;
+            end if;
+
+            if Add then
+               S_Set.Insert (S);
+            end if;
+         end loop;
+      end return;
    end Sources;
 
    ------------

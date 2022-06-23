@@ -422,19 +422,20 @@ package GPR2.Project.View is
 
    function Has_Sources (Self : Object) return Boolean
      with Pre  => Self.Is_Defined,
-          Post => (if Self.Kind = K_Abstract then not Has_Sources'Result);
+          Post => (if Self.Kind in K_Abstract | K_Aggregate
+                   then not Has_Sources'Result);
    --  Returns true if the project view has some sources
 
-   type Source_Kind is (K_All, K_Interface_Only, K_Not_Interface);
-   --  K_Interface_Only will only return single unit sources. That is, a
-   --  source with multiple units is not counted as an interface.
-
    function Sources
-     (Self   : Object;
-      Filter : Source_Kind := K_All) return Project.Source.Set.Object
-     with Pre => Self.Is_Defined;
-   --  Returns all the sources for the view, note that this routine ensure that
+     (Self            : Object;
+      Interface_Only  : Boolean := False;
+      Compilable_Only : Boolean := False)
+      return Project.Source.Set.Object
+     with Pre => Self.Is_Defined, Inline;
+   --  Returns the sources for the view, note that this routine ensure that
    --  the sources are loaded.
+   --  Interface_Only: only sources part of a library interface are returned
+   --  Compilable_Only: only sources that can be compiled are returned
 
    function Source
      (Self : Object; File : GPR2.Path_Name.Object) return Project.Source.Object
@@ -466,22 +467,32 @@ package GPR2.Project.View is
 
    function Source
      (Self : Object; Filename : GPR2.Simple_Name) return Project.Source.Object
-     with Pre => Self.Is_Defined and then Self.Has_Source (Filename);
-   --  Returns source by simple filename. The search is performed in the same
-   --  namespace projects subtree where the Self is located.
-   --  If the source with such simple filename is not found in the subtree, the
-   --  exception Assert_Failure is raised.
+     with Pre => Self.Is_Defined;
+   --  Returns source by simple filename. The search is performed in the view
+   --  only.
+   --  If the source with such simple filename is not found in the subtree,
+   --  then GPR2.Project.Source.Undefined is returned.
 
    function Check_Source
      (Self     : Object;
       Filename : GPR2.Simple_Name;
       Result   : in out Project.Source.Object) return Boolean
      with Pre => Self.Is_Defined;
-   --  Get the source by simple filename from the same subtree with the View.
+   --  Get the source by simple filename from the subtree of the View.
    --  Return True on success and set Result.
-   --  Return False if source not found and remain Result untouched.
+   --  Return False if source not found and keep Result untouched.
    --  This routine is faster than using Has_Source and Source above as
    --  avoiding one access to the underlying structure.
+
+   function Check_Source_Unit
+     (Self   : Object;
+      Unit   : GPR2.Unit.Object;
+      Result : in out Project.Source.Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Get the source object by the unit from the same projects subtree where
+   --  the View is.
+   --  Return True on success and set Result.
+   --  Return False if source not found and remain Result untouched.
 
    function Check_Parent (Self : Object; Parent : out Object) return Boolean
      with Pre => Self.Is_Defined;

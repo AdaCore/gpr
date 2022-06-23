@@ -30,13 +30,11 @@ with GPRtools.Command_Line;
 with GPRtools.Util;
 with GPRtools.Options;
 
-with GPR2.Containers;
 with GPR2.Path_Name;
 with GPR2.Project.Source.Artifact;
 pragma Warnings (Off, "*is not referenced");
 with GPR2.Project.Source.Part_Set;
 pragma Warnings (On, "*is not referenced");
-with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Project.Unit_Info;
@@ -223,54 +221,48 @@ procedure GPRdump is
    -------------
 
    procedure Sources (View : Project.View.Object) is
-      use type GPR2.Containers.Count_Type;
-      Sources_Set : constant Project.Source.Set.Object := View.Sources;
+      Is_Empty : Boolean := True;
    begin
-      if Sources_Set.Length = 0 then
-         Text_IO.Put_Line ("no sources");
+      for S of View.Sources
+                 (Compilable_Only => not Options.Display_All_Sources)
+      loop
+         Is_Empty := False;
 
-      else
-         for C in Sources_Set.Iterate
-           (Filter => (if Options.Display_All_Sources
-                       then GPR2.Project.Source.Set.S_All
-                       else GPR2.Project.Source.Set.S_Compilable))
-         loop
-            declare
-               S : constant Project.Source.Object := Sources_Set (C);
-            begin
-               if Options.Display_Sources
-                 or else Options.Display_All_Sources
-               then
-                  Text_IO.Put_Line (S.Path_Name.Value);
-                  if Options.Display_Units and then S.Has_Units then
-                     for U of S.Units loop
-                        Text_IO.Put_Line
-                          (ASCII.HT & String (U.Name)
-                           & ASCII.HT & U.Kind'Img);
-                     end loop;
-                  end if;
+         if Options.Display_Sources
+           or else Options.Display_All_Sources
+         then
+            Text_IO.Put_Line (S.Path_Name.Value);
+            if Options.Display_Units and then S.Has_Units then
+               for U of S.Units loop
+                  Text_IO.Put_Line
+                    (ASCII.HT & String (U.Name)
+                     & ASCII.HT & U.Kind'Img);
+               end loop;
+            end if;
 
-               end if;
+         end if;
 
-               if Options.Display_Artifacts then
-                  for A of S.Artifacts.List loop
-                     Text_IO.Put_Line (A.Value);
-                  end loop;
-               end if;
-            end;
-         end loop;
-
-         if Options.Display_Units then
-            for U of View.Units loop
-               Text_IO.Put_Line
-                 (String (U.Name) & ' '
-                  & (if U.Has_Spec then U.Spec.Source.Value else "-")
-                  & ' '
-                  & (if U.Has_Body then U.Main_Body.Source.Value
-                     else "-")
-                 );
+         if Options.Display_Artifacts then
+            for A of S.Artifacts.List loop
+               Text_IO.Put_Line (A.Value);
             end loop;
          end if;
+      end loop;
+
+      if Is_Empty then
+         Text_IO.Put_Line ("no sources");
+      end if;
+
+      if Options.Display_Units then
+         for U of View.Units loop
+            Text_IO.Put_Line
+              (String (U.Name) & ' '
+               & (if U.Has_Spec then U.Spec.Source.Value else "-")
+               & ' '
+               & (if U.Has_Body then U.Main_Body.Source.Value
+                 else "-")
+              );
+         end loop;
       end if;
    end Sources;
 
