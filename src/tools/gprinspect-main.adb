@@ -16,10 +16,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Command_Line;
+with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Text_IO;
-
-with GNAT.Command_Line;
 
 with GNATCOLL.Traces;
 
@@ -28,15 +26,11 @@ with GPRtools.Command_Line;
 with GPRtools.Util;
 with GPRtools.Options;
 
-with GPR2.Message;
-with GPR2.Project.Tree;
-
 with GPRinspect.Process;
 
 procedure GPRinspect.Main is
 
    use Ada;
-   use GPR2;
 
    Options : GPRinspect.GPRinspect_Options;
 
@@ -160,17 +154,14 @@ begin
    GPRinspect.Process (Options => Options);
 
 exception
-   when GNAT.Command_Line.Invalid_Switch
-      | GNAT.Command_Line.Exit_From_Command_Line
-      =>
-      Command_Line.Set_Exit_Status (Command_Line.Failure);
+   when E : GPRtools.Usage_Error =>
+      Text_IO.Put_Line
+        (Text_IO.Standard_Error,
+         "gprinspect: " & Exception_Message (E));
+      GPRtools.Command_Line.Try_Help;
+      GPRtools.Util.Exit_Program (GPRtools.Util.E_Fatal);
 
-   when others =>
-      if Options.Tree.Has_Messages then
-         for M of Options.Tree.Log_Messages.all loop
-            Text_IO.Put_Line (M.Format);
-         end loop;
-      end if;
-
-      Command_Line.Set_Exit_Status (Command_Line.Failure);
+   when E : others =>
+      GPRtools.Util.Fail_Program
+        ("Fatal error: " & Exception_Information (E));
 end GPRinspect.Main;
