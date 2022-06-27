@@ -664,8 +664,9 @@ package body GPR2.Project.Definition is
       package Source_Set renames Containers.Filename_Type_Set;
 
       procedure Handle_File
-        (Dir_Ref : SR.Value.Object;
-         File    : GPR2.Path_Name.Object);
+        (Dir_Ref   : SR.Value.Object;
+         File      : GPR2.Path_Name.Object;
+         Timestamp : Ada.Calendar.Time);
       --  Processes the given file: see if it should be added to the view's
       --  sources, and compute information such as language/unit(s)/...
 
@@ -872,8 +873,9 @@ package body GPR2.Project.Definition is
       -----------------
 
       procedure Handle_File
-        (Dir_Ref : SR.Value.Object;
-         File    : GPR2.Path_Name.Object)
+        (Dir_Ref   : SR.Value.Object;
+         File      : GPR2.Path_Name.Object;
+         Timestamp : Ada.Calendar.Time)
       is
          use all type GPR2.Project.Source.Naming_Exception_Kind;
          use all type Unit.Library_Unit_Type;
@@ -1562,18 +1564,20 @@ package body GPR2.Project.Definition is
                         Source := GPR2.Source.Object
                           (GPR2.Source.Create_Ada
                              (Filename      => File,
-                              Units         => Units));
+                              Units         => Units,
+                              Timestamp     => Timestamp));
                      else
                         Source := GPR2.Source.Object
                           (GPR2.Source.Create_Ada
                              (Filename      => File,
                               Unit          => Units (No_Index),
-                              Is_RTS_Source => View.Is_Runtime));
+                              Is_RTS_Source => View.Is_Runtime,
+                              Timestamp     => Timestamp));
                      end if;
 
                   else
                      Source := GPR2.Source.Object
-                       (GPR2.Source.Create (File, Language, Kind));
+                       (GPR2.Source.Create (File, Language, Kind, Timestamp));
                   end if;
 
                   --  Final processing

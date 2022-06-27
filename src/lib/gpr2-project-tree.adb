@@ -2458,7 +2458,8 @@ package body GPR2.Project.Tree is
                --  regexp pattern for matching Filename
 
                procedure Handle_File
-                 (File : GPR2.Path_Name.Object);
+                 (File      : GPR2.Path_Name.Object;
+                  Timestamp : Ada.Calendar.Time);
 
                procedure Is_Directory_Handled
                  (Directory       : GPR2.Path_Name.Object;
@@ -2470,7 +2471,11 @@ package body GPR2.Project.Tree is
                -- Handle_File --
                -----------------
 
-               procedure Handle_File (File : GPR2.Path_Name.Object) is
+               procedure Handle_File
+                 (File      : GPR2.Path_Name.Object;
+                  Timestamp : Ada.Calendar.Time)
+               is
+                  pragma Unreferenced (Timestamp);
                begin
                   if GNAT.Regexp.Match (String (File.Simple_Name),
                                         Filename_Regexp)

@@ -23,12 +23,13 @@
 ------------------------------------------------------------------------------
 
 with Ada.Directories;
-with Ada.IO_Exceptions;
 with Ada.Streams;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GNAT.OS_Lib;
+with GNATCOLL.OS.Dir;
+with GNATCOLL.OS.Stat;
 with GNATCOLL.Utils;
 with GNAT.Regexp; use GNAT.Regexp;
 
@@ -104,7 +105,8 @@ package body GPR2.Project.View is
      (Self      : Object;
       Source_CB : access procedure
                     (Dir_Reference : GPR2.Source_Reference.Value.Object;
-                     Source        : GPR2.Path_Name.Object);
+                     Source        : GPR2.Path_Name.Object;
+                     Timestamp     : Ada.Calendar.Time);
       Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object));
 
    -------------------------
@@ -1485,7 +1487,8 @@ package body GPR2.Project.View is
       Directory_Pattern : GPR2.Filename_Optional;
       Source            : GPR2.Source_Reference.Value.Object;
       File_CB           : access procedure
-                            (File : GPR2.Path_Name.Object);
+                            (File      : GPR2.Path_Name.Object;
+                             Timestamp : Ada.Calendar.Time);
       Directory_CB      : access procedure
                             (Directory       : GPR2.Path_Name.Object;
                              Is_Root_Dir     : Boolean;
@@ -1519,7 +1522,7 @@ package body GPR2.Project.View is
                        (Filename_Optional (Dir (Dir'First .. Last))).Value);
 
       procedure Handle_Directory
-        (Dir         : Filename_Type;
+        (Dir         : GPR2.Path_Name.Object;
          Recursive   : Boolean;
          Is_Root_Dir : Boolean := False);
       --  Handle the specified directory, that is read all files in Dir and
@@ -1536,75 +1539,74 @@ package body GPR2.Project.View is
       ----------------------
 
       procedure Handle_Directory
-        (Dir         : Filename_Type;
+        (Dir         : GPR2.Path_Name.Object;
          Recursive   : Boolean;
          Is_Root_Dir : Boolean := False)
       is
-         use all type Directories.File_Kind;
+         use GNATCOLL.OS.Dir;
+         use GNATCOLL.OS.Stat;
 
-         Dir_Search      : Directories.Search_Type;
-         Dir_Entry       : Directories.Directory_Entry_Type;
          Do_Dir_Visit    : Boolean := File_CB /= null;
          Do_Subdir_Visit : Boolean := Recursive;
+         Handle          : Dir_Handle;
+         D_Entry         : Dir_Entry;
+         Stat            : File_Attributes;
+
       begin
          if Directory_CB /= null then
             Directory_CB
-              (GPR2.Path_Name.Create_Directory
-                 (Dir, GPR2.Path_Name.No_Resolution),
+              (Dir,
                Is_Root_Dir,
                Do_Dir_Visit,
                Do_Subdir_Visit);
          end if;
 
          if Do_Dir_Visit or else Do_Subdir_Visit then
-            Directories.Start_Search
-              (Dir_Search, String (Dir), "",
-               Filter => (Directory     => Do_Subdir_Visit,
-                          Ordinary_File => Do_Dir_Visit,
-                          Special_File  => False));
+            begin
+               Handle := Open (String (Dir.Value));
+            exception
+               when GNATCOLL.OS.OS_Error =>
+                  Self.Tree.Append_Message
+                    (Message.Create
+                       (Message.Error,
+                        """" & String (Dir.Name) &
+                          """ is not a valid directory",
+                        Source));
+                  return;
+            end;
 
-            while Directories.More_Entries (Dir_Search) loop
-               Directories.Get_Next_Entry (Dir_Search, Dir_Entry);
+            begin
+               loop
+                  D_Entry := Read (Handle);
 
-               case Directories.Kind (Dir_Entry) is
-                  when Ordinary_File =>
+                  exit when End_Of_Iteration (D_Entry);
+
+                  Stat := Attributes (D_Entry);
+
+                  if Do_Dir_Visit and then Is_File (Stat) then
                      File_CB
-                       (GPR2.Path_Name.Create_File
-                          (Filename_Optional
-                               (Directories.Full_Name (Dir_Entry)),
-                           GPR2.Path_Name.No_Resolution));
+                       (Dir.Compose (Filename_Type (Name (D_Entry))),
+                        Modification_Time (Stat));
 
-                  when Directory =>
-                     --  Skip non existing sub-directories (option
-                     --  --src-subdirs as optional.
-                     declare
-                        New_Dir : constant Filename_Type :=
-                                    Filename_Type
-                                      (Directories.Full_Name (Dir_Entry));
-                     begin
-                        if Directories.Simple_Name (Dir_Entry)
-                             not in "." | ".."
-                          and then
-                             not Is_Missing_Subdirectory (String (New_Dir))
-                        then
-                           Handle_Directory (New_Dir, Do_Subdir_Visit);
-                        end if;
-                     end;
+                  elsif Do_Subdir_Visit and then Is_Directory (Stat) then
+                     if Name (D_Entry) not in "." | ".." then
+                        Handle_Directory
+                          (Dir.Compose
+                             (Filename_Type (Name (D_Entry)),
+                              Directory => True),
+                           True);
+                     end if;
+                  end if;
+               end loop;
 
-                  when Special_File =>
-                     raise Program_Error;
-               end case;
-            end loop;
+               Close (Handle);
 
-            Directories.End_Search (Dir_Search);
+            exception
+               when others =>
+                  Close (Handle);
+                  raise;
+            end;
          end if;
-      exception
-         when IO_Exceptions.Name_Error =>
-            Self.Tree.Append_Message
-              (Message.Create
-                 (Message.Error,
-                  """" & String (Dir) & """ is not a valid directory",
-                  Source));
       end Handle_Directory;
 
       -----------------------------
@@ -1617,13 +1619,15 @@ package body GPR2.Project.View is
          return Self.Kind in K_Standard | K_Library
            and then Self.Has_Source_Subdirectory
            and then Dir = Self.Source_Subdirectory.Value
-           and then not Directories.Exists (Dir);
+           and then not Ada.Directories.Exists (Dir);
       end Is_Missing_Subdirectory;
 
    begin
       if not Is_Missing_Subdirectory (Root_Dir) then
          Handle_Directory
-           (Filename_Type (Root_Dir),
+           (GPR2.Path_Name.Create_Directory
+              (Filename_Type (Root_Dir),
+               GPR2.Path_Name.No_Resolution),
             Recursive   => Recursive,
             Is_Root_Dir => True);
       end if;
@@ -2581,7 +2585,8 @@ package body GPR2.Project.View is
      (Self      : Object;
       Source_CB : not null access procedure
         (Dir_Reference : GPR2.Source_Reference.Value.Object;
-         Source        : GPR2.Path_Name.Object))
+         Source        : GPR2.Path_Name.Object;
+         Timestamp     : Ada.Calendar.Time))
    is
    begin
       Self.Source_Directories_Internal (Source_CB, null);
@@ -2615,7 +2620,8 @@ package body GPR2.Project.View is
      (Self      : Object;
       Source_CB : access procedure
                    (Dir_Reference : GPR2.Source_Reference.Value.Object;
-                    Source        : GPR2.Path_Name.Object);
+                    Source        : GPR2.Path_Name.Object;
+                    Timestamp     : Ada.Calendar.Time);
       Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object))
    is
       Visited_Dirs             : GPR2.Containers.Filename_Set;
@@ -2631,7 +2637,9 @@ package body GPR2.Project.View is
          Do_Dir_Visit    : in out Boolean;
          Do_Subdir_Visit : in out Boolean);
 
-      procedure On_File (File : GPR2.Path_Name.Object);
+      procedure On_File
+        (File      : GPR2.Path_Name.Object;
+         Timestamp : Ada.Calendar.Time);
 
       ------------------
       -- On_Directory --
@@ -2679,9 +2687,12 @@ package body GPR2.Project.View is
       -- On_File --
       -------------
 
-      procedure On_File (File : GPR2.Path_Name.Object) is
+      procedure On_File
+        (File      : GPR2.Path_Name.Object;
+         Timestamp : Ada.Calendar.Time)
+      is
       begin
-         Source_CB (Dir_Ref, File);
+         Source_CB (Dir_Ref, File, Timestamp);
       end On_File;
 
    begin

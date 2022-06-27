@@ -61,16 +61,18 @@ package GPR2.Source is
    --  If Ali is True then timestamp returned as it is rounded in ALI files.
 
    function Create
-     (Filename : GPR2.Path_Name.Object;
-      Language : Language_Id;
-      Kind     : GPR2.Unit.Library_Unit_Type) return Object'Class
+     (Filename  : GPR2.Path_Name.Object;
+      Language  : Language_Id;
+      Kind      : GPR2.Unit.Library_Unit_Type;
+      Timestamp : Ada.Calendar.Time) return Object'Class
      with Pre  => Filename.Is_Defined and then Language /= Ada_Language,
           Post => Create'Result.Is_Defined;
    --  Constructor for a non-Ada source object
 
    function Create_Ada
      (Filename      : GPR2.Path_Name.Object;
-      Units         : GPR2.Unit.List.Object) return Object'Class
+      Units         : GPR2.Unit.List.Object;
+      Timestamp     : Ada.Calendar.Time) return Object'Class
      with Pre  => Filename.Is_Defined and then not Units.Is_Empty,
           Post => Create_Ada'Result.Is_Defined;
    --  Constructor for a multi-unit Ada source object.
@@ -82,7 +84,8 @@ package GPR2.Source is
    function Create_Ada
      (Filename      : GPR2.Path_Name.Object;
       Unit          : GPR2.Unit.Object;
-      Is_RTS_Source : Boolean) return Object'Class
+      Is_RTS_Source : Boolean;
+      Timestamp     : Ada.Calendar.Time) return Object'Class
      with Pre  => Filename.Is_Defined and then Unit.Is_Defined,
      Post => Create_Ada'Result.Is_Defined;
    --  Constructor for a single-unit Ada source object
