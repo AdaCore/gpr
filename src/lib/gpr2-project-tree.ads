@@ -574,7 +574,6 @@ private
       Runtime           : View.Object;
       Units             : Name_View.Map;
       Sources           : Filename_View.Map;
-      Rooted_Sources    : Source_Maps.Map;
       Messages          : aliased Log.Object;
       Search_Paths      : Path_Name.Set.Object :=
                             Default_Search_Paths (True);
@@ -603,7 +602,6 @@ private
       Root_Project     : Project_Descriptor;
       Context          : GPR2.Context.Object;
       Config           : PC.Object                 := PC.Undefined;
-      --  Project_Dir      : Path_Name.Object          := Path_Name.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;

@@ -60,8 +60,18 @@ private package GPR2.Project.Definition is
 
    package Simple_Name_Source is
      new Ada.Containers.Indefinite_Ordered_Maps
-       (Simple_Name, Project.Source.Object, "=" => Project.Source."=");
-   --  Map to find in which view a unit/source is defined
+       (Simple_Name, Project.Source.Set.Cursor, "=" => Project.Source.Set."=");
+   --  Map to find in which view a source is defined
+
+   package Unit_Source is
+     new Ada.Containers.Indefinite_Ordered_Maps
+       (String, Project.Source.Set.Cursor, "=" => Project.Source.Set."=");
+   --  Map to find in which view a unit is defined
+
+   function Key (Unit : GPR2.Unit.Object) return String is
+     ((if Unit.Kind in GPR2.Unit.Spec_Kind then 'S' else 'B')
+       & To_Lower (Unit.Name));
+   --  Key function used as index to Unit_Source
 
    package Project_View_Store is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, View.Object);
@@ -110,6 +120,7 @@ private package GPR2.Project.Definition is
       Types           : Project.Typ.Set.Object;
       Sources         : Project.Source.Set.Object;
       Sources_Map     : Simple_Name_Source.Map;
+      Units_Map       : Unit_Source.Map;
       Units           : Unit_Info.Set.Object;
       Unique_Id       : GPR2.View_Ids.View_Id;
       Root_View       : Weak_Reference;
@@ -140,37 +151,6 @@ private package GPR2.Project.Definition is
    Register : access function
      (Def : in out Definition.Data) return Project.View.Object;
    --  Register view definition in the project tree
-
-   Check_Source : access function
-     (View   : Project.View.Object;
-      Name   : Simple_Name;
-      Result : in out Project.Source.Object) return Boolean;
-   --  Get the source object by the simple filename from the same projects
-   --  subtree where the View is.
-   --  Return True on success and set Result.
-   --  Return False if source not found and remain Result untouched.
-
-   Check_Source_Unit : access function
-     (View   : Project.View.Object;
-      Unit   : GPR2.Unit.Object;
-      Result : in out Source.Object) return Boolean;
-   --  Get the source object by the unit from the same projects subtree where
-   --  the View is.
-   --  Return True on success and set Result.
-   --  Return False if source not found and remain Result untouched.
-
-   Has_Source : access function
-     (View : Project.View.Object; Name : Simple_Name) return Boolean;
-   --  Return True if source with such filename found in project namespace
-   --  subtree.
-
-   Set_Source : access procedure (Source : Project.Source.Object);
-   --  Insert source into internal Tree container indexed by Root of subtree
-   --  project name and simple source filename.
-
-   Remove_Source : access procedure (Source : Project.Source.Object);
-   --  Remove Source from internal Tree container indexed by Root of subtree
-   --  project name and simple source filename.
 
    Get_Context : access function
      (View : Project.View.Object) return Context.Object;
@@ -271,7 +251,8 @@ private package GPR2.Project.Definition is
 
    procedure Sources_Map_Insert
      (Def : in out Data;
-      Src : Project.Source.Object);
+      Src : Project.Source.Object;
+      C   : Project.Source.Set.Cursor);
    --  Insert source into simple filename index if it is not yet inserted
 
    function Is_Sources_Loaded (View : Project.View.Object) return Boolean

@@ -38,7 +38,8 @@ begin
    declare
       use Ada.Text_IO;
 
-      File : constant GPR2.Path_Name.Object := Tree.Get_File ("hello.adb");
+      File : constant GPR2.Path_Name.Object :=
+               Tree.Get_File ("hello.adb", Use_Object_Path => False);
    begin
       if not File.Is_Defined then
          Put_Line ("Overriding source not found");

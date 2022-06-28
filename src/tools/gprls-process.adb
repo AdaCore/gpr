@@ -969,13 +969,10 @@ begin
          for C in Tree.Iterate (Kind => Filter) loop
             View := GPR2.Project.Tree.Element (C);
 
-            for S_Cur in View.Sources.Iterate (Filter => S_Compilable) loop
-               declare
-                  Src : GPR2.Project.Source.Object renames Element (S_Cur);
-               begin
-                  if not Src.Is_Overriden
-                    and then (not GPR2.Is_Debug ('1')
-                              or else Src.Language = Ada_Language)
+            if not View.Is_Extended then
+               for Src of View.Sources (Compilable_Only => True) loop
+                  if not GPR2.Is_Debug ('1')
+                    or else Src.Language = Ada_Language
                   then
                      if Src.Has_Units then
                         for CU of Src.Units loop
@@ -996,47 +993,41 @@ begin
                      --  project and in the aggregating library project.
 
                      if not Inserted
-                       and then Element (S_Cur).Is_Aggregated
-                       < Sources_By_Path.Element
-                          (Position).Source.Is_Aggregated
+                       and then Src.Is_Aggregated
+                         < Sources_By_Path.Element
+                             (Position).Source.Is_Aggregated
                      then
                         --  We prefer Is_Aggregated = False because it
                         --  has object files.
                         if Src.Has_Units then
                            for CU of Src.Units loop
-                              if Src.Is_Compilable (CU.Index) then
-                                 Sources.Replace_Element
-                                   (Position, (Src, CU.Index));
-                              end if;
+                              Sources.Replace_Element
+                                (Position, (Src, CU.Index));
                            end loop;
                         else
                            Sources.Replace_Element (Position, (Src, No_Index));
                         end if;
                      end if;
                   end if;
-               end;
-            end loop;
+               end loop;
+            end if;
          end loop;
 
       else
-         for S_Cur in Tree.Root_Project.Sources.Iterate (S_Compilable) loop
-            declare
-               Src : GPR2.Project.Source.Object renames Element (S_Cur);
-            begin
-               if not GPR2.Is_Debug ('1')
-                 or else Src.Language = Ada_Language
-               then
-                  if Src.Has_Units then
-                     for CU of Src.Units loop
-                        if Src.Is_Compilable (CU.Index) then
-                           Sources.Insert ((Src, CU.Index));
-                        end if;
-                     end loop;
-                  else
-                     Sources.Insert ((Src, No_Index));
-                  end if;
+         for Src of Tree.Root_Project.Sources (Compilable_Only => True) loop
+            if not GPR2.Is_Debug ('1')
+              or else Src.Language = Ada_Language
+            then
+               if Src.Has_Units then
+                  for CU of Src.Units loop
+                     if Src.Is_Compilable (CU.Index) then
+                        Sources.Insert ((Src, CU.Index));
+                     end if;
+                  end loop;
+               else
+                  Sources.Insert ((Src, No_Index));
                end if;
-            end;
+            end if;
          end loop;
       end if;
 

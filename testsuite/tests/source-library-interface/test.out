@@ -10,6 +10,6 @@ Project: Demo
  > src/api.adb        Kind: S_BODY                         unit: API
  > src/api.ads        Kind: S_SPEC                         unit: API
 
----------- NOT INTERFACE
+---------- COMPILABLE ONLY
+ > src/api.adb        Kind: S_BODY                         unit: API
  > src/pck.adb        Kind: S_BODY                         unit: PCK
- > src/pck.ads        Kind: S_SPEC                         unit: PCK

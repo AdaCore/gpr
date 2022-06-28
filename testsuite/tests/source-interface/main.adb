@@ -23,7 +23,6 @@ with GPR2.Unit;
 with GPR2.Context;
 with GPR2.Message;
 with GPR2.Path_Name;
-with GPR2.Project.Source.Set;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 
@@ -81,9 +80,7 @@ procedure Main is
          Text_IO.New_Line;
          Text_IO.Put_Line ("---------- INTERFACE ONLY");
 
-         for Source of
-           View.Sources (Filter => Project.View.K_Interface_Only)
-         loop
+         for Source of View.Sources (Interface_Only => True) loop
             declare
                U : constant Optional_Name_Type := Source.Unit_Name;
             begin
@@ -102,11 +99,9 @@ procedure Main is
          end loop;
 
          Text_IO.New_Line;
-         Text_IO.Put_Line ("---------- NOT INTERFACE");
+         Text_IO.Put_Line ("---------- COMPILABLE ONLY");
 
-         for Source of
-           View.Sources (Filter => Project.View.K_Not_Interface)
-         loop
+         for Source of View.Sources (Compilable_Only => True) loop
             declare
                U : constant Optional_Name_Type := Source.Unit_Name;
             begin

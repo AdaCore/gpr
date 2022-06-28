@@ -40,6 +40,7 @@ with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Artifact;
+with GPR2.Project.Source.Set;
 pragma Warnings (Off, "* is not referenced");
 --  GPR2.Project.Source.Dependencies return a Part_Set but only has limited
 --  visibility on it. So in order to be able to manipulate the returned object
@@ -52,7 +53,6 @@ pragma Warnings (On, "* is not referenced");
 with GPR2.Project.Typ;
 with GPR2.Project.Variable;
 with GPR2.Project.View.Set;
-with GPR2.Project.Source.Set;
 with GPR2.Version;
 with GPR2.Source_Reference;
 with GPR2.Source_Reference.Value;
@@ -1655,7 +1655,6 @@ package body GPRinstall.Install is
                   --  And then generates the interfaces
 
                   declare
-                     use all type GPR2.Project.View.Source_Kind;
                      First : Boolean := True;
                   begin
                      if Project.Check_Attribute
@@ -1689,8 +1688,7 @@ package body GPRinstall.Install is
                      else
                         Line := +"         for library_Interfaces use (";
 
-                        for Source
-                          of Project.Sources (Filter => K_Interface_Only)
+                        for Source of Project.Sources (Interface_Only => True)
                         loop
                            if Source.Has_Units then
                               for CU of Source.Units loop

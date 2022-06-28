@@ -93,27 +93,6 @@ package body GPR2.Project.Tree is
       Changed : access procedure (Project : View.Object) := null);
    --  Update project tree with updated context
 
-   function Check_Source
-     (View   : Project.View.Object;
-      Name   : Simple_Name;
-      Result : in out Source.Object) return Boolean;
-   --  Get the source by simple filename from the same subtree with the View.
-   --  Return True on success and set Result.
-   --  Return False if source not found and remain Result untouched.
-
-   function Check_Source
-     (View   : Project.View.Object;
-      Unit   : GPR2.Unit.Object;
-      Result : in out Source.Object) return Boolean;
-   --  Get source by unit name and kind from the same subtree with the View
-
-   function Has_Source
-     (View : Project.View.Object; Name : Simple_Name) return Boolean
-   is
-     (View.Tree.Rooted_Sources.Contains (Key (View, Name)));
-   --  Return True if source with such filename found in project namespace
-   --  subtree.
-
    function Get_Context
      (View : Project.View.Object) return GPR2.Context.Object
    is
@@ -122,14 +101,6 @@ package body GPR2.Project.Tree is
 
    function Are_Sources_Loaded (Tree : Object) return Boolean is
      (Tree.Sources_Loaded);
-
-   procedure Set_Source (Source : Project.Source.Object);
-   --  Insert source into internal Tree container indexed by Root of subtree
-   --  project name and simple source filename.
-
-   procedure Remove_Source (Source : Project.Source.Object);
-   --  Remove Source from internal Tree container indexed by Root of subtree
-   --  project name and simple source filename.
 
    type Iterator is new Project_Iterator.Forward_Iterator with record
       Views : Project_View_Store.Vector;
@@ -296,52 +267,6 @@ package body GPR2.Project.Tree is
    begin
       Self.Messages.Append (Message);
    end Append_Message;
-
-   ------------------
-   -- Check_Source --
-   ------------------
-
-   function Check_Source
-     (View   : Project.View.Object;
-      Name   : Simple_Name;
-      Result : in out Source.Object) return Boolean
-   is
-      Position : constant Source_Maps.Cursor :=
-                   View.Tree.Rooted_Sources.Find (Key (View, Name));
-   begin
-      if Source_Maps.Has_Element (Position) then
-         Result := Source_Maps.Element (Position);
-         return True;
-
-      else
-         --  Search for runtime sources separately because runtime view does
-         --  not belong any naming roots.
-
-         return not View.Is_Runtime
-           and then View.Tree.Runtime.Is_Defined
-           and then View.Tree.Runtime.Check_Source (Name, Result);
-      end if;
-   end Check_Source;
-
-   ------------------
-   -- Check_Source --
-   ------------------
-
-   function Check_Source
-     (View   : Project.View.Object;
-      Unit   : GPR2.Unit.Object;
-      Result : in out Source.Object) return Boolean
-   is
-      Position : constant Source_Maps.Cursor :=
-                   View.Tree.Rooted_Sources.Find (Key (View, Unit));
-   begin
-      if Source_Maps.Has_Element (Position) then
-         Result := Source_Maps.Element (Position);
-         return True;
-      else
-         return False;
-      end if;
-   end Check_Source;
 
    ----------------
    -- Clear_View --
@@ -627,15 +552,17 @@ package body GPR2.Project.Tree is
       Predefined_Only  : Boolean := False;
       Return_Ambiguous : Boolean := True) return Path_Name.Object
    is
-      File_Name : Path_Name.Object;
-      Ambiguous : Boolean;
-      Found_Count : Natural := 0;
-      --  Found files so far
+      File_Name   : Path_Name.Object;
+      Source_Name : Project.Source.Object;
+      Ambiguous   : Boolean;
 
       procedure Add_File
         (Name : Path_Name.Object; Check_Exist : Boolean := True);
       --  Add Name to matching files, when Check_Exist is True file existence
       --  is checked before Path is added to matching files.
+
+      procedure Add_Source (Name : Project.Source.Object);
+      --  Add new candidate source and check for overriding
 
       procedure Handle_Object_File;
       --  Set Full_Path with matching object file
@@ -651,22 +578,41 @@ package body GPR2.Project.Tree is
       --------------
 
       procedure Add_File
-        (Name : Path_Name.Object; Check_Exist : Boolean := True) is
+        (Name : Path_Name.Object; Check_Exist : Boolean := True)
+      is
       begin
-         if not Check_Exist or else Name.Exists then
-            Found_Count := Found_Count + 1;
+         if Check_Exist and then not Name.Exists then
+            return;
+         end if;
 
-            if Found_Count = 1 then
-               File_Name := Name;
+         if not File_Name.Is_Defined then
+            File_Name := Name;
 
-            else
-               Ambiguous := True;
-               if Name /= File_Name then
-                  File_Name := Path_Name.Undefined;
-               end if;
-            end if;
+         else
+            Ambiguous := True;
          end if;
       end Add_File;
+
+      ----------------
+      -- Add_Source --
+      ----------------
+
+      procedure Add_Source (Name : Project.Source.Object) is
+      begin
+         if not Source_Name.Is_Defined then
+            Source_Name := Name;
+
+         elsif Source_Name.View.Is_Extending (Name.View) then
+            --  We already have the overriding source
+            return;
+
+         elsif Name.View.Is_Extending (Source_Name.View) then
+            Source_Name := Name;
+
+         else
+            Ambiguous := True;
+         end if;
+      end Add_Source;
 
       ------------------------
       -- Handle_Object_File --
@@ -686,11 +632,11 @@ package body GPR2.Project.Tree is
             if View.Is_Library then
                Add_File (View.Object_Directory.Compose (Base_Name));
 
-               if Found_Count = 0 then
+               if not File_Name.Is_Defined then
                   Add_File (View.Library_Directory.Compose (Base_Name));
                end if;
 
-               if Found_Count = 0 then
+               if not File_Name.Is_Defined then
                   Add_File (View.Library_Ali_Directory.Compose (Base_Name));
                end if;
 
@@ -713,7 +659,7 @@ package body GPR2.Project.Tree is
             end if;
          end if;
 
-         if Found_Count = 0 then
+         if not File_Name.Is_Defined then
             if Self.Has_Runtime_Project then
                Handle_Object_File_In_View (Self.Runtime_Project);
             end if;
@@ -754,12 +700,10 @@ package body GPR2.Project.Tree is
 
          procedure Handle_Source_File_In_View (View : Project.View.Object) is
             Full_Path : constant Project.Source.Object :=
-                          View.Source
-                            (Path_Name.Create_File
-                               (Base_Name, Path_Name.No_Resolution));
+                          View.Source (Base_Name);
          begin
-            if Full_Path.Is_Defined and then not Full_Path.Is_Overriden then
-               Add_File (Full_Path.Path_Name, False);
+            if Full_Path.Is_Defined then
+               Add_Source (Full_Path);
             end if;
          end Handle_Source_File_In_View;
 
@@ -777,7 +721,7 @@ package body GPR2.Project.Tree is
             end if;
          end if;
 
-         if Found_Count = 0 then
+         if not File_Name.Is_Defined then
             if Self.Has_Runtime_Project then
                Handle_Source_File_In_View (Self.Runtime_Project);
             end if;
@@ -799,11 +743,15 @@ package body GPR2.Project.Tree is
 
          if Use_Source_Path then
             Handle_Source_File;
+
+            if Source_Name.Is_Defined then
+               File_Name := Source_Name.Path_Name;
+            end if;
          end if;
 
          --  Handle object file
 
-         if Found_Count = 0 and then Use_Object_Path then
+         if not File_Name.Is_Defined and then Use_Object_Path then
             Handle_Object_File;
          end if;
       end if;
@@ -2323,40 +2271,6 @@ package body GPR2.Project.Tree is
       end if;
    end Reindex_Unit;
 
-   -------------------
-   -- Remove_Source --
-   -------------------
-
-   procedure Remove_Source (Source : Project.Source.Object) is
-
-      Self : constant access Object := Source.View.Tree;
-
-      procedure Remove_If_Proper (Key : String);
-
-      ----------------------
-      -- Remove_If_Proper --
-      ----------------------
-
-      procedure Remove_If_Proper (Key : String) is
-         Position : Source_Maps.Cursor := Self.Rooted_Sources.Find (Key);
-      begin
-         if Source_Maps.Has_Element (Position)
-           and then Self.Rooted_Sources (Position).View = Source.View
-         then
-            Self.Rooted_Sources.Delete (Position);
-         end if;
-      end Remove_If_Proper;
-
-   begin
-      Remove_If_Proper (Key (Source));
-
-      if Source.Has_Units then
-         for U of Source.Units loop
-            Remove_If_Proper (Key (Source.View, U));
-         end loop;
-      end if;
-   end Remove_Source;
-
    ------------------
    -- Root_Project --
    ------------------
@@ -3380,46 +3294,6 @@ package body GPR2.Project.Tree is
       end if;
    end Set_Context;
 
-   ----------------
-   -- Set_Source --
-   ----------------
-
-   procedure Set_Source (Source : Project.Source.Object) is
-
-      Self : constant access Object := Source.View.Tree;
-
-      procedure Insert_Or_Replace (Key : String);
-      --  Insert or replace the source into Rooted_Sources container with given
-      --  Key.
-
-      -----------------------
-      -- Insert_Or_Replace --
-      -----------------------
-
-      procedure Insert_Or_Replace (Key : String) is
-         Position : Source_Maps.Cursor;
-         Inserted : Boolean;
-      begin
-         Self.Rooted_Sources.Insert (Key, Source, Position, Inserted);
-
-         if not Inserted
-           and then Source.View.Is_Extending
-                      (Source_Maps.Element (Position).View)
-         then
-            Self.Rooted_Sources.Replace_Element (Position, Source);
-         end if;
-      end Insert_Or_Replace;
-
-   begin
-      Insert_Or_Replace (Key (Source));
-
-      if Source.Has_Units then
-         for U of Source.Units loop
-            Insert_Or_Replace (Key (Source.View, U));
-         end loop;
-      end if;
-   end Set_Source;
-
    ------------------------
    -- Source_Directories --
    ------------------------
@@ -3563,7 +3437,7 @@ package body GPR2.Project.Tree is
 
       Self.Units.Clear;
       Self.Sources.Clear;
-      Self.Rooted_Sources.Clear;
+      --  Self.Rooted_Sources.Clear;
       Self.Messages.Clear;
       Self.View_Ids.Clear;
       Self.View_DAG.Clear;
@@ -3799,7 +3673,6 @@ package body GPR2.Project.Tree is
       Has_RT : Boolean := False;
       Views  : View.Vector.Object renames Self.Ordered_Views;
    begin
-      Self.Self.Rooted_Sources.Clear;
       Self.Self.Sources_Loaded := True;
 
       for V of reverse Views loop
@@ -4007,11 +3880,6 @@ begin
    --  Export routines to Definitions to avoid cyclic dependencies
 
    Definition.Register           := Register_View'Access;
-   Definition.Check_Source       := Check_Source'Access;
-   Definition.Check_Source_Unit  := Check_Source'Access;
-   Definition.Has_Source         := Has_Source'Access;
-   Definition.Set_Source         := Set_Source'Access;
-   Definition.Remove_Source      := Remove_Source'Access;
    Definition.Get_Context        := Get_Context'Access;
    Definition.Are_Sources_Loaded := Are_Sources_Loaded'Access;
 end GPR2.Project.Tree;

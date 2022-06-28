@@ -550,13 +550,14 @@ package body GPR2.Project.Definition is
 
    procedure Sources_Map_Insert
      (Def : in out Data;
-      Src : Project.Source.Object)
+      Src : Project.Source.Object;
+      C   : Project.Source.Set.Cursor)
    is
       Position : Simple_Name_Source.Cursor;
       Inserted : Boolean;
    begin
       Def.Sources_Map.Insert
-        (Src.Path_Name.Simple_Name, Src, Position, Inserted);
+        (Src.Path_Name.Simple_Name, C, Position, Inserted);
    end Sources_Map_Insert;
 
    --------------------
@@ -1605,7 +1606,7 @@ package body GPR2.Project.Definition is
                      --  Check source duplication and insert if possible or
                      --  replace if necessary.
 
-                     CS             : constant Project.Source.Set.Cursor :=
+                     CS             : Project.Source.Set.Cursor :=
                                         Def.Sources.Find (Project_Source);
                   begin
                      if Project.Source.Set.Has_Element (CS) then
@@ -1649,7 +1650,8 @@ package body GPR2.Project.Definition is
                         end if;
 
                      else
-                        Def.Sources.Insert (Project_Source);
+                        Def.Sources.Insert (Project_Source, CS, Inserted);
+                        Def.Sources_Map_Insert (Project_Source, CS);
                         Source_Name_Set.Include
                           (Project_Source.Path_Name.Simple_Name);
                      end if;
@@ -1708,8 +1710,7 @@ package body GPR2.Project.Definition is
 
          procedure Exclude_Recursively
            (View      : in out Project.View.Object;
-            Source    : Project.Source.Object;
-            From_Tree : Boolean := True);
+            Source    : Project.Source.Object);
 
          ----------------
          -- Add_Source --
@@ -1750,9 +1751,14 @@ package body GPR2.Project.Definition is
                Interface_Sources.Exclude (Basename);
             end if;
 
-            Def.Sources.Insert (Src);
-            Def.Sources_Map_Insert (Src);
-
+            declare
+               Position : Project.Source.Set.Cursor;
+               Inserted : Boolean;
+            begin
+               Def.Sources.Insert (Src, Position, Inserted);
+               pragma Assert (Inserted);
+               Def.Sources_Map_Insert (Src, Position);
+            end;
             --  For Ada, register the Unit object into the view
 
             if Language = Ada_Language then
@@ -1766,8 +1772,7 @@ package body GPR2.Project.Definition is
 
          procedure Exclude_Recursively
            (View      : in out Project.View.Object;
-            Source    : Project.Source.Object;
-            From_Tree : Boolean := True)
+            Source    : Project.Source.Object)
          is
             Def : constant Ref := Get_RW (View);
          begin
@@ -1775,12 +1780,14 @@ package body GPR2.Project.Definition is
                Def.Sources.Delete (Source);
                Def.Sources_Map.Delete (Source.Path_Name.Simple_Name);
 
-               if From_Tree then
-                  Remove_Source (Source);
+               if Source.Has_Units then
+                  for U of Source.Units loop
+                     Def.Units_Map.Delete (Key (U));
+                  end loop;
                end if;
 
                if Def.Extended_Root.Is_Defined then
-                  Exclude_Recursively (Def.Extended_Root, Source, False);
+                  Exclude_Recursively (Def.Extended_Root, Source);
                end if;
             end if;
          end Exclude_Recursively;
@@ -2206,6 +2213,7 @@ package body GPR2.Project.Definition is
 
       Def.Sources.Clear;
       Def.Sources_Map.Clear;
+      Def.Units_Map.Clear;
 
       --  Clear the units record, note that we also want to record the
       --  unit_name -> view lookup table in the tree.
@@ -2323,8 +2331,8 @@ package body GPR2.Project.Definition is
 
          View.Source_Directories (Handle_File'Access);
 
-         for S of Def.Sources loop
-            Def.Sources_Map_Insert (S);
+         for C in Def.Sources.Iterate loop
+            Def.Sources_Map_Insert (Project.Source.Set.Element (C), C);
          end loop;
 
          if Has_Source_List then
@@ -2484,7 +2492,6 @@ package body GPR2.Project.Definition is
    procedure Update_Sources_Parse
      (Def : in out Data; Backends : Source_Info.Backend_Set)
    is
-      Def_Src_Map : Simple_Name_Source.Map;
       Repeat_Map  : Simple_Name_Source.Map; -- Second pass for subunits
       Position    : Simple_Name_Source.Cursor;
       Inserted    : Boolean;
@@ -2502,15 +2509,6 @@ package body GPR2.Project.Definition is
          CUnits : GPR2.Project.Unit_Info.Set.Cursor;
       begin
          Def.Sources.Replace (C, SW);
-
-         Def_Src_Map.Insert
-           (SW.Path_Name.Simple_Name, SW, Position, Inserted);
-
-         if not Inserted then
-            pragma Assert
-              (SW.Language /= Ada_Language,
-               String (SW.Path_Name.Simple_Name) & " duplicated");
-         end if;
 
          if SW.Has_Units then
             --  Check newly found separates and update Unit_Info
@@ -2530,14 +2528,15 @@ package body GPR2.Project.Definition is
                      end;
                   end if;
                end if;
+
+               Def.Units_Map.Include (Key (Unit), C);
             end loop;
          end if;
-
-         Set_Source (SW);
       end Insert_SW;
 
    begin
       Source_Info.Parser.Registry.Clear_Cache;
+      Def.Units_Map.Clear;
 
       for C in Def.Sources.Iterate loop
          SW := Project.Source.Set.Element (C);
@@ -2562,7 +2561,7 @@ package body GPR2.Project.Definition is
             --  to repeat after all .ali files parsed.
 
             Repeat_Map.Insert
-              (SW.Path_Name.Simple_Name, SW, Position, Inserted);
+              (SW.Path_Name.Simple_Name, C, Position, Inserted);
 
             pragma Assert
               (Inserted,
@@ -2570,18 +2569,11 @@ package body GPR2.Project.Definition is
          end if;
       end loop;
 
-      for C in Repeat_Map.Iterate loop
-         SW := Simple_Name_Source.Element (C);
-         declare
-            Cursor : constant Project.Source.Set.Cursor :=
-                       Def.Sources.Find (SW);
-         begin
-            SW.Update (Backends);
-            Insert_SW (Cursor);
-         end;
+      for C of Repeat_Map loop
+         SW := Project.Source.Set.Element (C);
+         SW.Update (Backends);
+         Insert_SW (C);
       end loop;
-
-      Def.Sources_Map := Def_Src_Map;
    end Update_Sources_Parse;
 
 end GPR2.Project.Definition;

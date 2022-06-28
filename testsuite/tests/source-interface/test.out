@@ -11,10 +11,10 @@ Project: Demo
  > /src/api.ads,Kind: S_SPEC,unit: API
  > /src/data.ads,Kind: S_SPEC_ONLY,unit: DATA
 
----------- NOT INTERFACE
+---------- COMPILABLE ONLY
  > /src/api.adb,Kind: S_BODY,unit: API
+ > /src/data.ads,Kind: S_SPEC_ONLY,unit: DATA
  > /src/pck.adb,Kind: S_BODY,unit: PCK
- > /src/pck.ads,Kind: S_SPEC,unit: PCK
 Messages found:
 demo.gpr:11:08: warning: duplicate source 'api.ads' in interfaces attribute
 Project: Demo2
@@ -31,6 +31,7 @@ Project: Demo2
  > /src/api.ads,Kind: S_SPEC,unit: API
  > /src/data.ads,Kind: S_SPEC_ONLY,unit: DATA
 
----------- NOT INTERFACE
+---------- COMPILABLE ONLY
+ > /src/api.adb,Kind: S_BODY,unit: API
+ > /src/data.ads,Kind: S_SPEC_ONLY,unit: DATA
  > /src/pck.adb,Kind: S_BODY,unit: PCK
- > /src/pck.ads,Kind: S_SPEC,unit: PCK
