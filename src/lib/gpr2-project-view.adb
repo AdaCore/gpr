@@ -2333,9 +2333,11 @@ package body GPR2.Project.View is
 
                if Path.Is_Defined then
                   if Main.Has_At_Pos then
-                     Set.Append ((Path, Main.At_Pos));
+                     Set.Append
+                       (GPR2.Unit.Source_Unit_Identifier'(Path, Main.At_Pos));
                   else
-                     Set.Append ((Path, No_Index));
+                     Set.Append
+                       (GPR2.Unit.Source_Unit_Identifier'(Path, No_Index));
                   end if;
                end if;
             end loop;
