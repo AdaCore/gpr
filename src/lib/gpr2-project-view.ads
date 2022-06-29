@@ -29,6 +29,8 @@
 --  for the corresponding tree. It also gives the sources for the views and
 --  this include sources from extended project or aggregated project if needed.
 
+with Ada.Calendar;
+
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name.Set;
@@ -414,7 +416,8 @@ package GPR2.Project.View is
      (Self      : Object;
       Source_CB : not null access procedure
                     (Dir_Reference : GPR2.Source_Reference.Value.Object;
-                     Source        : GPR2.Path_Name.Object))
+                     Source        : GPR2.Path_Name.Object;
+                     Timestamp     : Ada.Calendar.Time))
      with Pre => Self.Is_Defined
                    and then Self.Qualifier in K_Standard | K_Library;
    --  Calls Source_CB for each file contained in the view's source
@@ -705,7 +708,8 @@ package GPR2.Project.View is
       Directory_Pattern : GPR2.Filename_Optional;
       Source            : GPR2.Source_Reference.Value.Object;
       File_CB           : access procedure
-                            (File : GPR2.Path_Name.Object);
+                            (File      : GPR2.Path_Name.Object;
+                             Timestamp : Ada.Calendar.Time);
       Directory_CB      : access procedure
                             (Directory       : GPR2.Path_Name.Object;
                              Is_Root_Dir     : Boolean;

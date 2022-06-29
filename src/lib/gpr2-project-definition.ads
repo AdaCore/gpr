@@ -266,6 +266,9 @@ private package GPR2.Project.Definition is
    --  Report aggregate library (ALI)? directory cannot be shared with
    --  (object|library) directory of aggregated project errors
 
+   procedure Check_Excluded_Source_Dirs (View : Project.View.Object);
+   --  Check that excluded source dirs are actual directories.
+
    procedure Check_Package_Naming (View : Project.View.Object);
    --  For all tree's views check Casing, Dot_Replacement, Spec_Suffix,
    --  Body_Suffix and Separate_Suffix naming package attributes value.

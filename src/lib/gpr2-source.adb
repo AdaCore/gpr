@@ -62,13 +62,14 @@ package body GPR2.Source is
    ------------
 
    function Create
-     (Filename : GPR2.Path_Name.Object;
-      Language : Language_Id;
-      Kind     : GPR2.Unit.Library_Unit_Type) return Object'Class is
+     (Filename  : GPR2.Path_Name.Object;
+      Language  : Language_Id;
+      Kind      : GPR2.Unit.Library_Unit_Type;
+      Timestamp : Ada.Calendar.Time) return Object'Class is
    begin
       return Result : Object  do
          Result.Path_Name := Filename;
-         Result.Timestamp := Filename.Modification_Time;
+         Result.Timestamp := Timestamp;
 
          Set_Non_Ada (Result, Language, Kind);
       end return;
@@ -79,8 +80,9 @@ package body GPR2.Source is
    ----------------
 
    function Create_Ada
-     (Filename      : GPR2.Path_Name.Object;
-      Units         : GPR2.Unit.List.Object) return Object'Class
+     (Filename  : GPR2.Path_Name.Object;
+      Units     : GPR2.Unit.List.Object;
+      Timestamp : Ada.Calendar.Time) return Object'Class
    is
       use all type GPR2.Unit.Library_Unit_Type;
 
@@ -95,7 +97,7 @@ package body GPR2.Source is
 
       return Result : Object do
          Result.Path_Name := Filename;
-         Result.Timestamp := Filename.Modification_Time;
+         Result.Timestamp := Timestamp;
          Result.Ada_Key   := Key;
 
          Set_Ada (Result, Units);
@@ -105,12 +107,13 @@ package body GPR2.Source is
    function Create_Ada
      (Filename      : GPR2.Path_Name.Object;
       Unit          : GPR2.Unit.Object;
-      Is_RTS_Source : Boolean) return Object'Class  is
+      Is_RTS_Source : Boolean;
+      Timestamp     : Ada.Calendar.Time) return Object'Class  is
    begin
       pragma Assert (Unit.Index = No_Index);
       return Result : Object do
          Result.Path_Name := Filename;
-         Result.Timestamp := Filename.Modification_Time;
+         Result.Timestamp := Timestamp;
          Result.Ada_Key   := +(To_Lower (Unit.Name)
                                & (if Unit.Kind in GPR2.Unit.Spec_Kind
                                   then 'S' else 'B'));

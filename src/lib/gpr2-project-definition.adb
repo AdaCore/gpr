@@ -149,6 +149,39 @@ package body GPR2.Project.Definition is
       Process_Aggregate (View);
    end Check_Aggregate_Library_Dirs;
 
+   --------------------------------
+   -- Check_Excluded_Source_Dirs --
+   --------------------------------
+
+   procedure Check_Excluded_Source_Dirs (View : Project.View.Object) is
+   begin
+      for V of View.Tree.Ordered_Views loop
+         if V.Kind in With_Source_Dirs_Kind then
+            declare
+               V_Path : constant Path_Name.Object := V.Dir_Name;
+               Attr   : constant Project.Attribute.Object :=
+                          V.Attribute (PRA.Excluded_Source_Dirs);
+            begin
+               if Attr.Is_Defined then
+                  for Val of Attr.Values loop
+                     if not V_Path.Compose
+                       (Filename_Type (Val.Text)).Exists
+                     then
+                        View.Tree.Log_Messages.Append
+                          (Message.Create
+                             (Level   => Message.Error,
+                              Sloc    => Val,
+                              Message =>
+                                """" & Val.Text &
+                                """ is not a valid directory"));
+                     end if;
+                  end loop;
+               end if;
+            end;
+         end if;
+      end loop;
+   end Check_Excluded_Source_Dirs;
+
    --------------------------
    -- Check_Package_Naming --
    --------------------------
@@ -664,8 +697,9 @@ package body GPR2.Project.Definition is
       package Source_Set renames Containers.Filename_Type_Set;
 
       procedure Handle_File
-        (Dir_Ref : SR.Value.Object;
-         File    : GPR2.Path_Name.Object);
+        (Dir_Ref   : SR.Value.Object;
+         File      : GPR2.Path_Name.Object;
+         Timestamp : Ada.Calendar.Time);
       --  Processes the given file: see if it should be added to the view's
       --  sources, and compute information such as language/unit(s)/...
 
@@ -872,8 +906,9 @@ package body GPR2.Project.Definition is
       -----------------
 
       procedure Handle_File
-        (Dir_Ref : SR.Value.Object;
-         File    : GPR2.Path_Name.Object)
+        (Dir_Ref   : SR.Value.Object;
+         File      : GPR2.Path_Name.Object;
+         Timestamp : Ada.Calendar.Time)
       is
          use all type GPR2.Project.Source.Naming_Exception_Kind;
          use all type Unit.Library_Unit_Type;
@@ -1562,18 +1597,20 @@ package body GPR2.Project.Definition is
                         Source := GPR2.Source.Object
                           (GPR2.Source.Create_Ada
                              (Filename      => File,
-                              Units         => Units));
+                              Units         => Units,
+                              Timestamp     => Timestamp));
                      else
                         Source := GPR2.Source.Object
                           (GPR2.Source.Create_Ada
                              (Filename      => File,
                               Unit          => Units (No_Index),
-                              Is_RTS_Source => View.Is_Runtime));
+                              Is_RTS_Source => View.Is_Runtime,
+                              Timestamp     => Timestamp));
                      end if;
 
                   else
                      Source := GPR2.Source.Object
-                       (GPR2.Source.Create (File, Language, Kind));
+                       (GPR2.Source.Create (File, Language, Kind, Timestamp));
                   end if;
 
                   --  Final processing
