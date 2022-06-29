@@ -149,6 +149,39 @@ package body GPR2.Project.Definition is
       Process_Aggregate (View);
    end Check_Aggregate_Library_Dirs;
 
+   --------------------------------
+   -- Check_Excluded_Source_Dirs --
+   --------------------------------
+
+   procedure Check_Excluded_Source_Dirs (View : Project.View.Object) is
+   begin
+      for V of View.Tree.Ordered_Views loop
+         if V.Kind in With_Source_Dirs_Kind then
+            declare
+               V_Path : constant Path_Name.Object := V.Dir_Name;
+               Attr   : constant Project.Attribute.Object :=
+                          V.Attribute (PRA.Excluded_Source_Dirs);
+            begin
+               if Attr.Is_Defined then
+                  for Val of Attr.Values loop
+                     if not V_Path.Compose
+                       (Filename_Type (Val.Text)).Exists
+                     then
+                        View.Tree.Log_Messages.Append
+                          (Message.Create
+                             (Level   => Message.Error,
+                              Sloc    => Val,
+                              Message =>
+                                """" & Val.Text &
+                                """ is not a valid directory"));
+                     end if;
+                  end loop;
+               end if;
+            end;
+         end if;
+      end loop;
+   end Check_Excluded_Source_Dirs;
+
    --------------------------
    -- Check_Package_Naming --
    --------------------------

@@ -96,6 +96,13 @@ package GPR2 is
    subtype Aggregate_Kind
      is Project_Kind range K_Aggregate .. K_Aggregate_Library;
 
+   subtype With_Source_Dirs_Kind is Project_Kind range
+     K_Standard .. K_Library;
+
+   subtype With_Object_Dir_Kind is Project_Kind
+     with Static_Predicate =>
+       With_Object_Dir_Kind in With_Source_Dirs_Kind | K_Aggregate_Library;
+
    function Image (Kind : Project_Kind) return String;
    --  Returns a human representation of kind value
 

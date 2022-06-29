@@ -1,0 +1,7 @@
+project Prj is
+
+   for Source_Dirs use ("**");
+   for Excluded_Source_Dirs use ("src1/src11", "non_existing");
+   for Object_Dir use "obj";
+
+end Prj;

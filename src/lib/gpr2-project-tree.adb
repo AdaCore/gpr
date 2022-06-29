@@ -1294,6 +1294,7 @@ package body GPR2.Project.Tree is
             --  values default to empty ones.
             Definition.Check_Aggregate_Library_Dirs (Self.Root);
             Definition.Check_Package_Naming (Self.Root);
+            Definition.Check_Excluded_Source_Dirs (Self.Root);
          end if;
       end if;
 

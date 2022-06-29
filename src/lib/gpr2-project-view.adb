@@ -2631,6 +2631,9 @@ package body GPR2.Project.View is
       Ignored_Sub_Dirs         : constant GPR2.Project.Attribute.Object :=
                                    Self.Attribute (PRA.Ignore_Source_Sub_Dirs);
       Ignored_Sub_Dirs_Regexps : Regexp_List.Vector;
+      Excluded_Dirs            : constant GPR2.Project.Attribute.Object :=
+                                   Self.Attribute (PRA.Excluded_Source_Dirs);
+      Excluded_Dirs_List       : GPR2.Path_Name.Set.Object;
       --  Ignore_Source_Sub_Dirs attribute regexps
 
       procedure On_Directory
@@ -2656,6 +2659,13 @@ package body GPR2.Project.View is
          Position : GPR2.Containers.Filename_Type_Set.Cursor;
          Inserted : Boolean;
       begin
+         if Excluded_Dirs_List.Contains (Directory) then
+            Do_Dir_Visit := False;
+            Do_Subdir_Visit := False;
+
+            return;
+         end if;
+
          if not Is_Root_Dir then
             for Ignored_Sub_Dir of Ignored_Sub_Dirs_Regexps loop
                if GNAT.Regexp.Match
@@ -2704,6 +2714,13 @@ package body GPR2.Project.View is
                Ignored_Sub_Dirs_Regexps.Append
                  (GPR2.Compile_Regexp (Filename_Optional (V.Text)));
             end if;
+         end loop;
+      end if;
+
+      if Excluded_Dirs.Is_Defined then
+         for V of Excluded_Dirs.Values loop
+            Excluded_Dirs_List.Append
+              (Self.Dir_Name.Compose (Filename_Type (V.Text), True));
          end loop;
       end if;
 
