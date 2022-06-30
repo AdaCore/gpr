@@ -1,9 +1,14 @@
-Case 1 - no Global_Config_File attribute:
-gprbuild -c --build-script=build.log -Pfiles/test_no_config.gpr
-OK, compilation switches consistent with Global_Config_File attribute !
-Case 2 - Global_Config_File attribute of an existing file
-gprbuild -c --build-script=build.log -Pfiles/test_config.gpr
-OK, compilation switches consistent with Global_Config_File attribute !
-Case 3 - Global_Config_File attribute of an unknown file
-gprbuild -c --build-script=build.log -Pfiles/test_unknown_config.gpr
-OK, compilation switches consistent with Global_Config_File attribute !
+[INFO] - Creating a test for Builder.Global_Config_File attribute
+[INFO] - Running Builder.Global_Config_File attribute test
+[INFO] - [ Testcase 1 - SCN_CASE_VALUE_DEF - [] ]
+[INFO] - Launching : "gprbuild -c --build-script=output.log -Pfiles/test_config.gpr"
+[INFO] - Expects - [ SCN_RES_FOR_ALL - ['-gnatA', '-gnatec=gnat.adc'] ]
+[INFO] - Test OK !
+[INFO] - [ Testcase 2 - SCN_CASE_VALUE_UNDEF - [] ]
+[INFO] - Launching : "gprbuild -c --build-script=output.log -Pfiles/test_no_config.gpr"
+[INFO] - Expects - [ SCN_RES_FOR_ALL - ['-gnatA'] ]
+[INFO] - Test OK !
+[INFO] - [ Testcase 3 - SCN_CASE_VALUE_INVALID - [] ]
+[INFO] - Launching : "gprbuild -c --build-script=output.log -Pfiles/test_unknown_config.gpr"
+[INFO] - Expects - [ SCN_RES_FOR_ALL - ['-gnatA', '-gnatec=unknown.adc'] ]
+[INFO] - Test OK !
