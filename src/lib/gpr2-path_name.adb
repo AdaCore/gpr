@@ -25,6 +25,7 @@
 with Ada.Characters.Handling;
 with Ada.Directories.Hierarchical_File_Names;
 with Ada.Environment_Variables;
+with Ada.IO_Exceptions;
 with Ada.Streams.Stream_IO;
 
 with Ada.Strings.Fixed;
@@ -538,6 +539,9 @@ package body GPR2.Path_Name is
    begin
       return Length (Self.Value) > 0
         and then Directories.Exists (To_String (Self.Value));
+   exception
+      when Ada.IO_Exceptions.Name_Error =>
+         return False;
    end Exists;
 
    -----------------------
