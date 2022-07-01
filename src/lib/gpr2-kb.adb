@@ -30,9 +30,9 @@ with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
 with GNAT.Directory_Operations;
+with GNAT.Expect;
 with GNAT.OS_Lib;
 
-with GNATCOLL.OS.Process;
 with GNATCOLL.Traces;
 with GNATCOLL.VFS;
 with GNATCOLL.VFS_Utils;
@@ -1626,6 +1626,7 @@ package body GPR2.KB is
       Ignore_Compiler  : out Boolean)
    is
       use External_Value_Nodes;
+      use GNAT.Expect;
       use GNAT.Regpat;
 
       use GNATCOLL.Traces;
@@ -1655,24 +1656,21 @@ package body GPR2.KB is
                  Calls_Cache.Find (Key);
 
          Tmp_Result : Unbounded_String;
-
+         Status     : aliased Integer;
       begin
          if Cur = GPR2.Containers.Name_Value_Map_Package.No_Element then
             declare
-               Args        : Argument_List_Access :=
-                               Argument_String_To_List (Command);
-               Args_Vector : GNATCOLL.OS.Process.Argument_List;
-               Dummy       : Integer;
+               Args   : Argument_List_Access :=
+                          Argument_String_To_List (Command);
+               Output : constant String := Get_Command_Output
+                          (Command    => Args (Args'First).all,
+                           Arguments  => Args (Args'First + 1 .. Args'Last),
+                           Input      => "",
+                           Status     => Status'Unchecked_Access,
+                           Err_To_Out => True);
             begin
-               for J in Args'Range loop
-                  Args_Vector.Append (Args (J).all);
-               end loop;
                OS_Lib.Free (Args);
-               Tmp_Result := GNATCOLL.OS.Process.Run
-                 (Args_Vector,
-                  Stderr => GNATCOLL.OS.Process.FS.To_Stdout,
-                  Status => Dummy);
-               Args_Vector.Clear;
+               Tmp_Result := To_Unbounded_String (Output);
                Calls_Cache.Include (Key, To_String (Tmp_Result));
                return Tmp_Result;
             end;
@@ -1744,7 +1742,7 @@ package body GPR2.KB is
                             & """ output="""
                             & To_String (Tmp_Result) & """");
                   exception
-                     when GNATCOLL.OS.OS_Error =>
+                     when Invalid_Process =>
                         Trace (Main_Trace, "Spawn failed for " & Command);
                   end;
 
