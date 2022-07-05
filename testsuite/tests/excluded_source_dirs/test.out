@@ -5,6 +5,8 @@ gprls: unable to process project file bad.gpr
 /src1/a.ads
 * excluded explicitly defined dirs
 /src1/a.ads
+* excluded parent with visible subdir
+/src1/src11/b.ads
 * source search path reported by gprinspect
 <...lib/gcc/(host)/(version)/adainclude>
 /src1

@@ -11,6 +11,8 @@ print("* excluded dirs from a recursive search")
 bnr.call([GPRLS, "-Pprj.gpr", "-s", "--source-parser"])
 print("* excluded explicitly defined dirs")
 bnr.call([GPRLS, "-Pprj2.gpr", "-s", "--source-parser"])
+print("* excluded parent with visible subdir")
+bnr.call([GPRLS, "-Pprj3.gpr", "-s", "--source-parser"])
 print("* source search path reported by gprinspect")
 p = bnr.run([GPRINSPECT, "-Pprj2.gpr", "--display=json"])
 

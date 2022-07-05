@@ -2660,8 +2660,11 @@ package body GPR2.Project.View is
          Inserted : Boolean;
       begin
          if Excluded_Dirs_List.Contains (Directory) then
+
+            --  Do not visit this directory's files but still look for
+            --  subdirectories.
+
             Do_Dir_Visit := False;
-            Do_Subdir_Visit := False;
 
             return;
          end if;
