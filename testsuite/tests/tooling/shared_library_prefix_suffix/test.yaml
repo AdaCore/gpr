@@ -3,4 +3,3 @@ description:
 driver: python_script
 control:
 - [SKIP, "not env.from_gnat", "needs a gnat package"]
-- [XFAIL, "'windows' in env.host.platform", "Not working on windows for now"]

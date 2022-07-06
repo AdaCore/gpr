@@ -1,0 +1,5 @@
+library project Test_No_Src_Dirs is
+   for Library_Dir  use "lib";
+   for Library_Name use Project'Name;
+   for Object_Dir use "obj";
+end Test_No_Src_Dirs;

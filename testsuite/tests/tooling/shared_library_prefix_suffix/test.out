@@ -1,33 +1,31 @@
 [INFO] - Creating a test for Project_Level.Shared_Library_Prefix attribute
 [INFO] - Running Project_Level.Shared_Library_Prefix attribute test
-[INFO] - [ Testcase 1 - SCN_CASE_VALUE_DEFAULT - ['SCN_OPTION_USE_ALT_ATTR_VALUE'] ]
+[INFO] - [ Testcase 1 - SCN_CASE_VALUE_DEFAULT ]
 [INFO] - Launching : "gprbuild -b --build-script=output.log -Pfiles/test.gpr"
-[INFO] - Expects - [ SCN_RES_FOR_ANY - ['-o liblib1.so'] ]
 [INFO] - Test OK !
 [INFO] - Launching : "gprbuild -l --build-script=output.log -Pfiles/test.gpr"
-[INFO] - Expects - [ SCN_RES_FOR_ANY - ['-llib1'] ]
 [INFO] - Test OK !
-[INFO] - [ Testcase 2 - SCN_CASE_VALUE_DEF - ['SCN_OPTION_USE_CGPR', 'SCN_OPTION_USE_ALT_ATTR_VALUE'] ]
+[INFO] - [ Testcase 2 - SCN_CASE_VALUE_DEF ]
 [INFO] - Launching : "gprbuild -b --build-script=output.log -Pfiles/test.gpr --config=files/alternative.cgpr"
 [INFO] - Expects - [ SCN_RES_FOR_ANY - ['-o some_prefix_lib1.some_suffix'] ]
 [INFO] - Test OK !
 [INFO] - Launching : "gprbuild -l --build-script=output.log -Pfiles/test.gpr --config=files/alternative.cgpr"
 [INFO] - Expects - [ SCN_RES_FOR_NONE - ['-llib1'] ]
-[ERROR] - ['-llib1'] behavior found at least one time in the command line output
+[ERROR] - ['-llib1'] behavior found at least one time in the output
 [INFO] - Test KO !
-[INFO] - [ Testcase 3 - SCN_CASE_VALUE_DEF - ['SCN_OPTION_USE_ALT_ATTR_VALUE'] ]
+[INFO] - [ Testcase 3 - SCN_CASE_VALUE_DEF ]
 [INFO] - Launching : "gprbuild -b --build-script=output.log -Pfiles/test2.gpr"
 [INFO] - Expects - [ SCN_RES_FOR_ANY - ['-o some_other_prefix_lib2.some_other_suffix'] ]
 [INFO] - Test OK !
 [INFO] - Launching : "gprbuild -l --build-script=output.log -Pfiles/test2.gpr"
 [INFO] - Expects - [ SCN_RES_FOR_NONE - ['-llib2'] ]
-[ERROR] - ['-llib2'] behavior found at least one time in the command line output
+[ERROR] - ['-llib2'] behavior found at least one time in the output
 [INFO] - Test KO !
-[INFO] - [ Testcase 4 - SCN_CASE_VALUE_DEF - ['SCN_OPTION_USE_CGPR', 'SCN_OPTION_USE_ALT_ATTR_VALUE'] ]
+[INFO] - [ Testcase 4 - SCN_CASE_VALUE_DEF ]
 [INFO] - Launching : "gprbuild -b --build-script=output.log -Pfiles/test2.gpr --config=files/alternative.cgpr"
 [INFO] - Expects - [ SCN_RES_FOR_ANY - ['-o some_other_prefix_lib2.some_other_suffix'] ]
 [INFO] - Test OK !
 [INFO] - Launching : "gprbuild -l --build-script=output.log -Pfiles/test2.gpr --config=files/alternative.cgpr"
 [INFO] - Expects - [ SCN_RES_FOR_NONE - ['-llib2'] ]
-[ERROR] - ['-llib2'] behavior found at least one time in the command line output
+[ERROR] - ['-llib2'] behavior found at least one time in the output
 [INFO] - Test KO !

@@ -1,9 +1,16 @@
+from e3.env import Env
 from testsuite_support.driver.driver_imports import create_scenario, add_testcase, run
 from testsuite_support.driver.driver_imports import edit_custom_command
-from testsuite_support.driver.driver_constants import ObjOptions as opt
-from testsuite_support.driver.driver_constants import ObjScnCaseValue as ocv
+from testsuite_support.driver.driver_constants import ObjOptions as Opt
+from testsuite_support.driver.driver_constants import ObjScnCaseValue as Case
+from testsuite_support.driver.driver_constants import ObjScnRes as Res
 import re
-import logging
+
+
+if Env().host.platform.endswith("windows"):
+    default_suffix = ".dll"
+else:
+    default_suffix = ".so"
 
 
 def custom_cmd():
@@ -20,18 +27,36 @@ def custom_cmd():
         fp.write(replaced_content)
 
 
-create_scenario("Shared_Library_Prefix", log_level=logging.INFO)
+alt_values = {}
+create_scenario(
+    "Shared_Library_Prefix", common_options=Opt.SCN_OPTION_USE_ALT_ATTR_VALUE
+)
 edit_custom_command(custom_cmd=custom_cmd)
-add_testcase(file="files/test.gpr", type=ocv.SCN_CASE_VALUE_DEFAULT,
-             altvalue=[("lib", "lib1", ".so")],
-             options=opt.SCN_OPTION_USE_ALT_ATTR_VALUE)
-add_testcase(file="files/test.gpr", type=ocv.SCN_CASE_VALUE_DEF,
-             altvalue=[("some_prefix_", "lib1", ".some_suffix")],
-             options=opt.SCN_OPTION_USE_CGPR | opt.SCN_OPTION_USE_ALT_ATTR_VALUE)
-add_testcase(file="files/test2.gpr", type=ocv.SCN_CASE_VALUE_DEF,
-             altvalue=[("some_other_prefix_", "lib2", ".some_other_suffix")],
-             options=opt.SCN_OPTION_USE_ALT_ATTR_VALUE)
-add_testcase(file="files/test2.gpr", type=ocv.SCN_CASE_VALUE_DEF,
-             altvalue=[("some_other_prefix_", "lib2", ".some_other_suffix")],
-             options=opt.SCN_OPTION_USE_CGPR | opt.SCN_OPTION_USE_ALT_ATTR_VALUE)
+
+alt_values[Res.SCN_RES_FOR_ANY] = [("lib", "lib1", default_suffix)]
+add_testcase(
+    file="files/test.gpr", case_type=Case.SCN_CASE_VALUE_DEFAULT, alt_value=alt_values
+)
+
+alt_values[Res.SCN_RES_FOR_NONE] = [("", "lib1", "")]
+alt_values[Res.SCN_RES_FOR_ANY] = [("some_prefix_", "lib1", ".some_suffix")]
+add_testcase(
+    file="files/test.gpr",
+    case_type=Case.SCN_CASE_VALUE_DEF,
+    alt_value=alt_values,
+    options=Opt.SCN_OPTION_USE_CGPR,
+)
+
+alt_values[Res.SCN_RES_FOR_NONE] = [("", "lib2", "")]
+alt_values[Res.SCN_RES_FOR_ANY] = [("some_other_prefix_", "lib2", ".some_other_suffix")]
+add_testcase(
+    file="files/test2.gpr", case_type=Case.SCN_CASE_VALUE_DEF, alt_value=alt_values
+)
+
+add_testcase(
+    file="files/test2.gpr",
+    case_type=Case.SCN_CASE_VALUE_DEF,
+    alt_value=alt_values,
+    options=Opt.SCN_OPTION_USE_CGPR,
+)
 run()
