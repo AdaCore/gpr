@@ -28,14 +28,14 @@ package body GPR2.View_Ids is
 
    use type GPR2.Context.Context_Kind;
 
-   ROOT_VIEWS_PREFIX    : constant Character          := '<';
-   AGGR_VIEWS_PREFIX    : constant Character          := '$';
-   SPECIAL_VIEWS_PREFIX : constant Character          := '!';
-   EXTENDED_PREFIX      : constant Character          := '>';
+   ROOT_VIEWS_PREFIX    : constant Character  := '<';
+   AGGR_VIEWS_PREFIX    : constant Character  := '$';
+   SPECIAL_VIEWS_PREFIX : constant Character  := '!';
+   EXTENDED_PREFIX      : constant Character  := '>';
 
-   UNDEFINED_IMAGE      : constant Optional_Name_Type := "";
-   RUNTIME_IMAGE        : constant Name_Type          := "runtime";
-   CONFIG_IMAGE         : constant Name_Type          := "config";
+   UNDEFINED_IMAGE      : constant Value_Type := "";
+   RUNTIME_IMAGE        : constant Value_Type := "runtime";
+   CONFIG_IMAGE         : constant Value_Type := "config";
 
    -------
    -- < --
@@ -107,7 +107,7 @@ package body GPR2.View_Ids is
    -- Image --
    -----------
 
-   function Image (Self : View_Id) return Optional_Name_Type is
+   function Image (Self : View_Id) return Value_Type is
    begin
       case Self.Kind is
          when Null_Id    => return UNDEFINED_IMAGE;
@@ -115,19 +115,19 @@ package body GPR2.View_Ids is
          when Runtime_Id => return SPECIAL_VIEWS_PREFIX & RUNTIME_IMAGE;
          when Project_Id =>
             declare
-               Extending_Suffix : constant Optional_Name_Type :=
+               Extending_Suffix : constant Value_Type :=
                                     (if Length (Self.Extending) = 0
                                      then ""
                                      else EXTENDED_PREFIX &
-                                       Name_Type (To_String (Self.Extending)));
+                                      Value_Type (To_String (Self.Extending)));
             begin
                if Self.Context = Root then
                   return ROOT_VIEWS_PREFIX &
-                    Name_Type (To_String (Self.Id)) &
+                    Value_Type (To_String (Self.Id)) &
                     Extending_Suffix;
                else
                   return AGGR_VIEWS_PREFIX &
-                    Name_Type (To_String (Self.Id)) &
+                    Value_Type (To_String (Self.Id)) &
                     Extending_Suffix;
                end if;
             end;
@@ -138,10 +138,10 @@ package body GPR2.View_Ids is
    -- Import --
    ------------
 
-   function Import (Name : Optional_Name_Type) return View_Id
+   function Import (Name : Value_Type) return View_Id
    is
       Prefix        : Character;
-      Id            : Optional_Name_Type renames
+      Id            : Value_Type renames
                         Name (Name'First + 1 .. Name'Last);
       Ext_Delimiter : Natural;
       Context       : GPR2.Context.Context_Kind;
@@ -201,7 +201,7 @@ package body GPR2.View_Ids is
    -- Is_Valid_Image --
    --------------------
 
-   function Is_Valid_Image (Name : Optional_Name_Type) return Boolean is
+   function Is_Valid_Image (Name : Value_Type) return Boolean is
    begin
       if Name'Length = 0 then
          return True;

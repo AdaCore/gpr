@@ -112,6 +112,7 @@ private package GPR2.Project.Definition is
       Agg_Libraries   : GPR2.View_Ids.Set.Object;
       Imports         : Project_View_Store.Map;
       Limited_Imports : Project_View_Store.Map;
+      Closure         : Project_View_Store.Map;
       Is_Imported     : Boolean := False;
       Aggregated      : Project_View_Store.Map;
       Attrs           : Project.Attribute.Set.Object;

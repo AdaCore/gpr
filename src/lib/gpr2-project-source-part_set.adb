@@ -24,6 +24,15 @@
 
 package body GPR2.Project.Source.Part_Set is
 
+   -----------
+   -- Clear --
+   -----------
+
+   procedure Clear (Self : in out Object) is
+   begin
+      Source_Part_Sets.Clear (Self.S);
+   end Clear;
+
    ------------
    -- Insert --
    ------------
