@@ -1,0 +1,35 @@
+[INFO] - Creating a test for Project_Level.Source_Dirs attribute
+[INFO] - Running Project_Level.Source_Dirs attribute test
+[INFO] - [ Testcase 1 - SCN_CASE_VALUE_UNDEF ]
+[INFO] - Launching : "gprls --source-parser -s -Pfiles/test_no_src_dirs.gpr"
+[INFO] - Expects - [ SCN_RES_FOR_EMPTY - [] ]
+[INFO] - Test OK !
+[INFO] - [ Testcase 2 - SCN_CASE_VALUE_DEF ]
+[INFO] - Launching : "gprls --source-parser -s -Pfiles/test_src_dirs.gpr"
+[INFO] - Expects - [ SCN_RES_FOR_NONE - [] ]
+[INFO] - Expects - [ SCN_RES_FOR_ANY - ['src1', 'src1/src1', 'src1/src2', 'src2', 'src3'] ]
+[INFO] - Test OK !
+[INFO] - [ Testcase 3 - SCN_CASE_VALUE_DEF ]
+[INFO] - Launching : "gprls --source-parser -s -Pfiles/test_src_dirs_excluded_dirs.gpr"
+[INFO] - Expects - [ SCN_RES_FOR_NONE - ['src1/src1', 'src1/src2'] ]
+[INFO] - Expects - [ SCN_RES_FOR_ANY - ['src1', 'src2', 'src3'] ]
+[INFO] - Test OK !
+[INFO] - [ Testcase 4 - SCN_CASE_VALUE_DEF ]
+[INFO] - Launching : "gprls --source-parser -s -Pfiles/test_src_dirs_ignore_source_sub_dirs.gpr"
+[INFO] - Expects - [ SCN_RES_FOR_NONE - ['src1/src1', 'src1/src2'] ]
+[INFO] - Expects - [ SCN_RES_FOR_ANY - ['src1', 'src2', 'src3'] ]
+[INFO] - Test OK !
+[INFO] - [ Testcase 5 - SCN_CASE_VALUE_DEF ]
+[INFO] - Launching : "gprls --source-parser -s -Pfiles/test_src_dirs_excluded_and_ignore.gpr"
+[INFO] - Expects - [ SCN_RES_FOR_NONE - ['src1/src1', 'src1/src2'] ]
+[INFO] - Expects - [ SCN_RES_FOR_ANY - ['src1', 'src2', 'src3'] ]
+[INFO] - Test OK !
+[INFO] - [ Testcase 6 - SCN_CASE_VALUE_DEF ]
+[INFO] - Launching : "gprls --source-parser -s -Pfiles/test_src_dirs_excluded_dirs_2.gpr"
+[INFO] - Expects - [ SCN_RES_FOR_NONE - ['src1'] ]
+[INFO] - Expects - [ SCN_RES_FOR_ANY - ['src2', 'src3', 'src1/src1', 'src1/src2'] ]
+[INFO] - Test OK !
+[INFO] - [ Testcase 7 - SCN_CASE_VALUE_INVALID ]
+[INFO] - Launching : "gprls --source-parser -s -Pfiles/test_invalid_src_dirs.gpr"
+[INFO] - Expects - [ SCN_RES_FOR_ANY - ['is not a valid directory', 'gprls: unable to process project file'] ]
+[INFO] - Test OK !

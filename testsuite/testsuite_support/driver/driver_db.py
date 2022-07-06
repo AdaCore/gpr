@@ -1,9 +1,10 @@
-from testsuite_support.driver.driver_constants import ObjScnAttrValues as oav
-from testsuite_support.driver.driver_constants import ObjScnRes as osr
-from testsuite_support.driver.driver_constants import ObjScnCaseValue as ocv
-from testsuite_support.driver.driver_constants import ObjScnTool as ost
-from testsuite_support.driver.driver_constants import ObjScnPhase as osp
-from testsuite_support.driver.driver_constants import ObjScnAttrSubstPattern as osa
+from testsuite_support.driver.driver_constants import ObjScnAttrValues as Value
+from testsuite_support.driver.driver_constants import ObjScnRes as Res
+from testsuite_support.driver.driver_constants import ObjScnCaseValue as Case
+from testsuite_support.driver.driver_constants import ObjScnTool as Tool
+from testsuite_support.driver.driver_constants import ObjScnPhase as Phase
+from testsuite_support.driver.driver_constants import ObjScnAttrSubstPattern as Pattern
+from testsuite_support.driver.driver_constants import ObjScnExternalTool as ExtTool
 
 
 """ This structure describes every test that can be ran.
@@ -47,75 +48,100 @@ from testsuite_support.driver.driver_constants import ObjScnAttrSubstPattern as 
 """
 SCN_ATTRIBUTE_TEST_CONFIG = {
     "Builder.Global_Config_File": {
-        "value_kind": oav.SCN_ATTR_VALUES_UNIQUE,
-        "setup_cmd": [],
+        "value_kind": Value.SCN_ATTR_VALUES_UNIQUE,
         "test_cmd": [
             {
-                "tool": ost.SCN_TOOL_GPRBUILD,
-                "phase": osp.SCN_PHASE_GPRBUILD_COMPILATION,
-                "output_delimiter": "gcc -c",
+                "tool": Tool.SCN_TOOL_GPRBUILD,
+                "phase": Phase.SCN_PHASE_GPRBUILD_COMPILATION,
+                "output_delimiter": f"{ExtTool.SCN_CMD_GCC.value} -c",
                 "expected_behavior": {
-                    ocv.SCN_CASE_VALUE_DEF: {
-                        osr.SCN_RES_FOR_ALL:
+                    Case.SCN_CASE_VALUE_DEF: {
+                        Res.SCN_RES_FOR_ALL:
                             ["-gnatA",
-                             f"-gnatec={osa.SCN_ATTR_SUBSTITUTE_PATTERN.value}"]
+                             f"-gnatec={Pattern.SCN_ATTR_SUBSTITUTE_PATTERN.value}"]
                     },
-                    ocv.SCN_CASE_VALUE_UNDEF: {
-                        osr.SCN_RES_FOR_ALL: ["-gnatA"]
+                    Case.SCN_CASE_VALUE_UNDEF: {
+                        Res.SCN_RES_FOR_ALL: ["-gnatA"]
 
                     },
-                    ocv.SCN_CASE_VALUE_INVALID: {
-                        osr.SCN_RES_FOR_ALL:
+                    Case.SCN_CASE_VALUE_INVALID: {
+                        Res.SCN_RES_FOR_ALL:
                             ["-gnatA",
-                             f"-gnatec={osa.SCN_ATTR_SUBSTITUTE_PATTERN.value}"]
+                             f"-gnatec={Pattern.SCN_ATTR_SUBSTITUTE_PATTERN.value}"]
                     }
                 }
             }
         ],
         "cleanup_cmd": [
-            {"tool": ost.SCN_TOOL_GPRCLEAN}
+            {"tool": Tool.SCN_TOOL_GPRCLEAN}
         ]
     },
     "Project_Level.Shared_Library_Prefix": {
-        "value_kind": oav.SCN_ATTR_VALUES_UNIQUE,
+        "value_kind": Value.SCN_ATTR_VALUES_UNIQUE,
         "setup_cmd": [
-            {"tool": ost.SCN_TOOL_GPRCONFIG},
-            {"tool": ost.SCN_TOOL_CUSTOM, "phase": osp.SCN_PHASE_CUSTOM_SLOT_1},
-            {"tool": ost.SCN_TOOL_GPRBUILD, "phase": osp.SCN_PHASE_GPRBUILD_COMPILATION}
+            {"tool": Tool.SCN_TOOL_GPRCONFIG},
+            {"tool": Tool.SCN_TOOL_CUSTOM, "phase": Phase.SCN_PHASE_CUSTOM_SLOT_1},
+            {"tool": Tool.SCN_TOOL_GPRBUILD,
+             "phase": Phase.SCN_PHASE_GPRBUILD_COMPILATION}
         ],
         "test_cmd": [
             {
-                "tool": ost.SCN_TOOL_GPRBUILD, "phase": osp.SCN_PHASE_GPRBUILD_BIND,
-                "output_delimiter": "gcc -shared",
+                "tool": Tool.SCN_TOOL_GPRBUILD, "phase": Phase.SCN_PHASE_GPRBUILD_BIND,
+                "output_delimiter": f"{ExtTool.SCN_CMD_GCC.value} -shared",
                 "expected_behavior": {
-                    ocv.SCN_CASE_VALUE_DEF: {
-                        osr.SCN_RES_FOR_ANY:
-                            [f"-o {osa.SCN_ATTR_ALT_SUBST_PATTERN_ALL.value}"],
+                    Case.SCN_CASE_VALUE_DEF: {
+                        Res.SCN_RES_FOR_ANY:
+                            [f"-o {Pattern.SCN_ATTR_ALT_SUBST_PATTERN_ALL.value}"],
                     },
-                    ocv.SCN_CASE_VALUE_DEFAULT: {
-                        osr.SCN_RES_FOR_ANY:
-                            [f"-o {osa.SCN_ATTR_ALT_SUBST_PATTERN_ALL.value}"],
+                    Case.SCN_CASE_VALUE_DEFAULT: {
+                        Res.SCN_RES_FOR_ANY:
+                            [f"-o {Pattern.SCN_ATTR_ALT_SUBST_PATTERN_ALL.value}"],
                     },
                 }
             },
             {
-                "tool": ost.SCN_TOOL_GPRBUILD, "phase": osp.SCN_PHASE_GPRBUILD_LINK,
-                "output_delimiter": "gcc main.o",
+                "tool": Tool.SCN_TOOL_GPRBUILD, "phase": Phase.SCN_PHASE_GPRBUILD_LINK,
+                "output_delimiter": f"{ExtTool.SCN_CMD_GCC.value} main.o",
                 "expected_behavior": {
-                    ocv.SCN_CASE_VALUE_DEF: {
-                        osr.SCN_RES_FOR_NONE:
-                            [f"-l{osa.SCN_ATTR_ALT_SUBST_PATTERN_NAME.value}"],
+                    Case.SCN_CASE_VALUE_DEF: {
+                        Res.SCN_RES_FOR_NONE:
+                            [f"-l{Pattern.SCN_ATTR_ALT_SUBST_PATTERN_NAME.value}"],
                     },
-                    ocv.SCN_CASE_VALUE_DEFAULT: {
-                        osr.SCN_RES_FOR_ANY:
-                            [f"-l{osa.SCN_ATTR_ALT_SUBST_PATTERN_NAME.value}"],
+                    Case.SCN_CASE_VALUE_DEFAULT: {
+                        Res.SCN_RES_FOR_ANY:
+                            [f"-l{Pattern.SCN_ATTR_ALT_SUBST_PATTERN_NAME.value}"],
 
                     }
                 }
             }
         ],
         "cleanup_cmd": [
-            {"tool": ost.SCN_TOOL_GPRCLEAN}
+            {"tool": Tool.SCN_TOOL_GPRCLEAN}
         ]
-    }
+    },
+    "Project_Level.Source_Dirs": {
+        "value_kind": Value.SCN_ATTR_VALUES_DISTRIBUTED,
+        "test_cmd": [
+            {
+                "tool": Tool.SCN_TOOL_GPRLS,
+                "phase": Phase.SCN_PHASE_GPRLS_SOURCE_PARSING,
+                "output_delimiter": "",
+                "expected_behavior": {
+                    Case.SCN_CASE_VALUE_UNDEF: {
+                        Res.SCN_RES_FOR_EMPTY: [],
+                    },
+                    Case.SCN_CASE_VALUE_DEF: {
+                        Res.SCN_RES_FOR_NONE:
+                            [f"{Pattern.SCN_ATTR_ALT_SUBST_PATTERN_PREFIX.value}"],
+                        Res.SCN_RES_FOR_ANY:
+                            [f"{Pattern.SCN_ATTR_ALT_SUBST_PATTERN_PREFIX.value}"],
+                    },
+                    Case.SCN_CASE_VALUE_INVALID: {
+                        Res.SCN_RES_FOR_ANY: ["is not a valid directory",
+                                              "gprls: unable to process project file"],
+                    },
+                }
+            }
+        ]
+    },
 }
