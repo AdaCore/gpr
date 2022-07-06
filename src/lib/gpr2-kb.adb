@@ -30,9 +30,9 @@ with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
 with GNAT.Directory_Operations;
-with GNAT.Expect;
 with GNAT.OS_Lib;
 
+with GNATCOLL.OS.Process;
 with GNATCOLL.Traces;
 with GNATCOLL.VFS;
 with GNATCOLL.VFS_Utils;
@@ -1626,7 +1626,6 @@ package body GPR2.KB is
       Ignore_Compiler  : out Boolean)
    is
       use External_Value_Nodes;
-      use GNAT.Expect;
       use GNAT.Regpat;
 
       use GNATCOLL.Traces;
@@ -1651,26 +1650,32 @@ package body GPR2.KB is
          use GNAT.OS_Lib;
          use GPR2.Containers.Name_Value_Map_Package;
 
-         Key : constant Name_Type := Name_Type (Path & Command);
-         Cur : constant GPR2.Containers.Name_Value_Map_Package.Cursor :=
-                 Calls_Cache.Find (Key);
+         Path_Dir : constant String :=
+                      GPR2.Path_Name.Create_Directory
+                        (Filename_Type (Path)).Dir_Name;
+         Key      : constant Name_Type := Name_Type (Path_Dir & Command);
+         Cur      : constant GPR2.Containers.Name_Value_Map_Package.Cursor :=
+                      Calls_Cache.Find (Key);
 
          Tmp_Result : Unbounded_String;
-         Status     : aliased Integer;
       begin
          if Cur = GPR2.Containers.Name_Value_Map_Package.No_Element then
             declare
-               Args   : Argument_List_Access :=
-                          Argument_String_To_List (Command);
-               Output : constant String := Get_Command_Output
-                          (Command    => Args (Args'First).all,
-                           Arguments  => Args (Args'First + 1 .. Args'Last),
-                           Input      => "",
-                           Status     => Status'Unchecked_Access,
-                           Err_To_Out => True);
+               Args        : Argument_List_Access :=
+                               Argument_String_To_List (Command);
+               Args_Vector : GNATCOLL.OS.Process.Argument_List;
+               Dummy       : Integer;
             begin
+               Args_Vector.Append (Path_Dir & Args (Args'First).all);
+               for J in Args'First + 1 .. Args'Last loop
+                  Args_Vector.Append (Args (J).all);
+               end loop;
                OS_Lib.Free (Args);
-               Tmp_Result := To_Unbounded_String (Output);
+               Tmp_Result := GNATCOLL.OS.Process.Run
+                 (Args_Vector,
+                  Stderr => GNATCOLL.OS.Process.FS.To_Stdout,
+                  Status => Dummy);
+               Args_Vector.Clear;
                Calls_Cache.Include (Key, To_String (Tmp_Result));
                return Tmp_Result;
             end;
@@ -1742,7 +1747,7 @@ package body GPR2.KB is
                             & """ output="""
                             & To_String (Tmp_Result) & """");
                   exception
-                     when Invalid_Process =>
+                     when GNATCOLL.OS.OS_Error =>
                         Trace (Main_Trace, "Spawn failed for " & Command);
                   end;
 
