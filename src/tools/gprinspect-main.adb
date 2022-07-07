@@ -21,6 +21,8 @@ with Ada.Text_IO;
 
 with GNATCOLL.Traces;
 
+with GPR2.Containers;
+
 with GPRtools;
 with GPRtools.Command_Line;
 with GPRtools.Util;
@@ -83,6 +85,15 @@ procedure GPRinspect.Main is
          Result.Display_Packages := True;
       elsif Arg = "--variables" then
          Result.Display_Variables := True;
+      elsif Arg = "--views" then
+         declare
+            Scope : Restricted_Scope (Restrict => True);
+         begin
+            Scope.Views := GPR2.Containers.Create (GPR2.Name_Type (Param),
+                                                   Separator => ",");
+            Result.All_Projects := True;
+            Result.Restricted_Views := Scope;
+         end;
       end if;
    end On_Switch;
 
@@ -112,6 +123,15 @@ procedure GPRinspect.Main is
                  Delimiter  => Equal,
                  Parameter  => "json|json-compact|textual",
                  Default    => "textual"));
+      Parser.Add_Argument
+        (Group,
+         Create (Name           => "--views",
+                 Help           => "Select the view to display. Only "
+                 & "available when using [--display=textual].",
+                 In_Switch_Attr => False,
+                 Delimiter      => Equal,
+                 Parameter      => "view1[,view2]",
+                 Default        => ""));
       Parser.Add_Argument
         (Group,
          Create ("-r", "--recursive",

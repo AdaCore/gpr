@@ -16,10 +16,21 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GPR2.Containers;
+
 with GPRtools;
 with GPRtools.Options;
 
 package GPRinspect is
+
+   type Restricted_Scope (Restrict : Boolean := False) is record
+      case Restrict is
+         when True =>
+            Views : GPR2.Containers.Name_List;
+         when False =>
+            null;
+      end case;
+   end record;
 
    type GPRinspect_Options is new GPRtools.Options.Base_Options with record
       Kind_Of_Display           : GPRtools.Display_Kind
@@ -30,6 +41,7 @@ package GPRinspect is
       Display_Config_Attributes : Boolean := False;
       Display_Packages          : Boolean := False;
       Display_Variables         : Boolean := False;
+      Restricted_Views          : Restricted_Scope;
    end record;
 
 end GPRinspect;
