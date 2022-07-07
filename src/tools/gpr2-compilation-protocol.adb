@@ -29,7 +29,6 @@ with GNAT.Rewrite_Data;
 with GNAT.String_Split;
 
 with GPR2.Version;
-with Gpr_Build_Util;
 
 package body GPR2.Compilation.Protocol is
 
@@ -1170,17 +1169,19 @@ package body GPR2.Compilation.Protocol is
      (Channel : in out Communication_Channel; Path : String)
    is
       P : String := OS_Lib.Normalize_Pathname
-                      (Path, Case_Sensitive => not Gpr_Build_Util.On_Windows);
+                      (Path, Case_Sensitive => not On_Windows);
    begin
-      if Gpr_Build_Util.On_Windows then
+      if On_Windows then
          --  On Windows the mapping file contains non normalized pathname. The
          --  format is an upper-case driver letter, all the remaining of the
          --  path is lower-case and the directory separator is a slash. We
          --  ensure that the compiler path registered follows this format
          --  to properly rewrite the runtime path in the mapping file.
 
+         pragma Warnings (Off, "this code can never be executed and has been");
          P (P'First) := Characters.Handling.To_Upper (P (P'First));
          P := Strings.Fixed.Translate (P, Strings.Maps.To_Mapping ("\", "/"));
+         pragma Warnings (On);
       end if;
 
       Channel.CD_From := To_Unbounded_String (P);
