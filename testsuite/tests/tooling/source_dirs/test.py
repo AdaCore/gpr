@@ -12,11 +12,11 @@ create_scenario("Source_Dirs", common_options=Opt.SCN_OPTION_HIDE_PATH_TO_FILE)
 add_testcase(file="files/test_no_src_dirs.gpr", case_type=Case.SCN_CASE_VALUE_UNDEF)
 
 alt_values[Res.SCN_RES_FOR_ANY] = [
-    (os.getcwd() + "/files/", "src1", ""),
-    (os.getcwd() + "/files/", "src1/src1", ""),
-    (os.getcwd() + "/files/", "src1/src2", ""),
-    (os.getcwd() + "/files/", "src2", ""),
-    (os.getcwd() + "/files/", "src3", ""),
+    (os.getcwd(), "/files/src1", ""),
+    (os.getcwd(), "/files/src1/src1", ""),
+    (os.getcwd(), "/files/src1/src2", ""),
+    (os.getcwd(), "/files/src2", ""),
+    (os.getcwd(), "/files/src3", ""),
 ]
 add_testcase(
     file="files/test_src_dirs.gpr",
@@ -28,13 +28,13 @@ add_testcase(
 )
 
 alt_values[Res.SCN_RES_FOR_NONE] = [
-    (os.getcwd() + "/files/", "src1/src1", ""),
-    (os.getcwd() + "/files/", "src1/src2", ""),
+    (os.getcwd(), "/files/src1/src1", ""),
+    (os.getcwd(), "/files/src1/src2", ""),
 ]
 alt_values[Res.SCN_RES_FOR_ANY] = [
-    (os.getcwd() + "/files/", "src1", ""),
-    (os.getcwd() + "/files/", "src2", ""),
-    (os.getcwd() + "/files/", "src3", ""),
+    (os.getcwd(), "/files/src1", ""),
+    (os.getcwd(), "/files/src2", ""),
+    (os.getcwd(), "/files/src3", ""),
 ]
 add_testcase(
     file="files/test_src_dirs_excluded_dirs.gpr",
@@ -61,12 +61,12 @@ add_testcase(
     | Opt.SCN_OPTION_FULL_STRING_COMPARISION,
 )
 
-alt_values[Res.SCN_RES_FOR_NONE] = [(os.getcwd() + "/files/", "src1", "")]
+alt_values[Res.SCN_RES_FOR_NONE] = [(os.getcwd(), "/files/src1", "")]
 alt_values[Res.SCN_RES_FOR_ANY] = [
-    (os.getcwd() + "/files/", "src2", ""),
-    (os.getcwd() + "/files/", "src3", ""),
-    (os.getcwd() + "/files/", "src1/src1", ""),
-    (os.getcwd() + "/files/", "src1/src2", ""),
+    (os.getcwd(), "/files/src2", ""),
+    (os.getcwd(), "/files/src3", ""),
+    (os.getcwd(), "/files/src1/src1", ""),
+    (os.getcwd(), "/files/src1/src2", ""),
 ]
 add_testcase(
     file="files/test_src_dirs_excluded_dirs_2.gpr",
