@@ -55,6 +55,8 @@ package GPR2.Project.Source.Part_Set is
    function Is_Empty (Self : Object) return Boolean
      with Inline;
 
+   procedure Clear (Self : in out Object);
+
    procedure Insert
      (Self    : in out Object;
       Element : Source_Part)

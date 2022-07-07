@@ -43,7 +43,6 @@ with GPR2.Source_Info;
 with GPR2.Project.Unit_Info;
 with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Pack;
-with GPR2.View_Ids.Set;
 
 package body GPR2.Project.View is
 
@@ -1262,51 +1261,43 @@ package body GPR2.Project.View is
       Filename : GPR2.Simple_Name;
       Result   : in out Project.Source.Object) return Boolean
    is
-      function Internal (V : Object) return Boolean;
-      Visited : GPR2.View_Ids.Set.Object;
 
-      --------------
-      -- Internal --
-      --------------
+      function Check_View (V : Object) return Boolean with Inline;
 
-      function Internal (V : Object) return Boolean is
+      function Check_View (V : Object) return Boolean is
+         Def : constant Definition.Const_Ref := Get_RO (V);
+         Pos : Definition.Simple_Name_Source.Cursor;
       begin
-         Result := V.Source (Filename);
+         Pos := Def.Sources_Map.Find (Filename);
 
-         if Result.Is_Defined then
+         if Definition.Simple_Name_Source.Has_Element (Pos) then
+            Result := Project.Source.Set.Element
+              (Definition.Simple_Name_Source.Element (Pos));
+
             return True;
+         else
+            return False;
          end if;
-
-         Visited.Include (V.Id);
-
-         for Imported of V.Imports loop
-            if not Visited.Contains (Imported.Id) then
-               if Internal (Imported) then
-                  return True;
-               end if;
-            end if;
-         end loop;
-
-         for Imported of V.Limited_Imports loop
-            if not Visited.Contains (Imported.Id) then
-               if Internal (Imported) then
-                  return True;
-               end if;
-            end if;
-         end loop;
-
-         if V.Tree.Has_Runtime_Project
-           and then not Visited.Contains (View_Ids.Runtime_View_Id)
-           and then Internal (V.Tree.Runtime_Project)
-         then
-            return True;
-         end if;
-
-         return False;
-      end Internal;
+      end Check_View;
 
    begin
-      return Internal (Self);
+      if Check_View (Self) then
+         return True;
+      end if;
+
+      for V of Get_RO (Self).Closure loop
+         if Check_View (V) then
+            return True;
+         end if;
+      end loop;
+
+      if Self.Tree.Has_Runtime_Project
+        and then Check_View (Self.Tree.Runtime_Project)
+      then
+         return True;
+      end if;
+
+      return False;
    end Check_Source;
 
    -----------------------

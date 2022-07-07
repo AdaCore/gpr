@@ -6,22 +6,22 @@ main.adb
     kind         = S_BODY_ONLY
     withed units = { pkg1 pkg2 }
     object file  = main.ali
-    dependency unit PKG1.SEP S_SEPARATE in sub.adb at 1
-    dependency unit U3.P S_SEPARATE in few_units.ada at 8
-    dependency unit U3 S_BODY in few_units.ada at 6
-    dependency unit U3 S_SPEC in few_units.ada at 5
-    dependency unit U2 S_BODY in few_units.ada at 4
-    dependency unit U2 S_SPEC in few_units.ada at 3
-    dependency unit U1 S_BODY in few_units.ada at 2
-    dependency unit U1 S_SPEC in few_units.ada at 1
-    dependency unit U4 S_SPEC_ONLY in few_units.ada at 7
-    dependency unit PKG1 S_BODY in pkg1.adb
-    dependency unit PKG1 S_SPEC in pkg1.ads
-    dependency unit PKG S_SPEC_ONLY in pkg.ads
-    dependency unit PKG2.SEP S_SEPARATE in sub.adb at 2
-    dependency unit PKG2 S_BODY in pkg2.adb
-    dependency unit PKG2 S_SPEC in pkg2.ads
     dependency unit MAIN S_BODY_ONLY in main.adb
+    dependency unit PKG1 S_SPEC in pkg1.ads
+    dependency unit PKG2 S_SPEC in pkg2.ads
+    dependency unit PKG1 S_BODY in pkg1.adb
+    dependency unit PKG1.SEP S_SEPARATE in sub.adb at 1
+    dependency unit U4 S_SPEC_ONLY in few_units.ada at 7
+    dependency unit PKG S_SPEC_ONLY in pkg.ads
+    dependency unit PKG2 S_BODY in pkg2.adb
+    dependency unit PKG2.SEP S_SEPARATE in sub.adb at 2
+    dependency unit U1 S_SPEC in few_units.ada at 1
+    dependency unit U1 S_BODY in few_units.ada at 2
+    dependency unit U2 S_SPEC in few_units.ada at 3
+    dependency unit U2 S_BODY in few_units.ada at 4
+    dependency unit U3 S_SPEC in few_units.ada at 5
+    dependency unit U3 S_BODY in few_units.ada at 6
+    dependency unit U3.P S_SEPARATE in few_units.ada at 8
 sub.adb
   single-unit          = FALSE
   has naming exception = TRUE
@@ -39,17 +39,10 @@ pkg1.adb
     kind         = S_BODY
     withed units = { u4 }
     object file  = pkg1.ali
-    dependency unit PKG1.SEP S_SEPARATE in sub.adb at 1
-    dependency unit U3.P S_SEPARATE in few_units.ada at 8
-    dependency unit U3 S_BODY in few_units.ada at 6
-    dependency unit U3 S_SPEC in few_units.ada at 5
-    dependency unit U2 S_BODY in few_units.ada at 4
-    dependency unit U2 S_SPEC in few_units.ada at 3
-    dependency unit U1 S_BODY in few_units.ada at 2
-    dependency unit U1 S_SPEC in few_units.ada at 1
-    dependency unit U4 S_SPEC_ONLY in few_units.ada at 7
-    dependency unit PKG1 S_BODY in pkg1.adb
     dependency unit PKG1 S_SPEC in pkg1.ads
+    dependency unit PKG1 S_BODY in pkg1.adb
+    dependency unit PKG1.SEP S_SEPARATE in sub.adb at 1
+    dependency unit U4 S_SPEC_ONLY in few_units.ada at 7
 pkg1.ads
   single-unit          = TRUE
   has naming exception = FALSE
@@ -65,17 +58,16 @@ pkg2.adb
     withed units = { pkg u1 }
     object file  = pkg2.ali
     dependency unit PKG S_SPEC_ONLY in pkg.ads
-    dependency unit PKG2.SEP S_SEPARATE in sub.adb at 2
-    dependency unit U4 S_SPEC_ONLY in few_units.ada at 7
-    dependency unit U3.P S_SEPARATE in few_units.ada at 8
-    dependency unit U3 S_BODY in few_units.ada at 6
-    dependency unit U3 S_SPEC in few_units.ada at 5
-    dependency unit U2 S_BODY in few_units.ada at 4
-    dependency unit U2 S_SPEC in few_units.ada at 3
-    dependency unit U1 S_BODY in few_units.ada at 2
-    dependency unit U1 S_SPEC in few_units.ada at 1
-    dependency unit PKG2 S_BODY in pkg2.adb
     dependency unit PKG2 S_SPEC in pkg2.ads
+    dependency unit PKG2 S_BODY in pkg2.adb
+    dependency unit PKG2.SEP S_SEPARATE in sub.adb at 2
+    dependency unit U1 S_SPEC in few_units.ada at 1
+    dependency unit U1 S_BODY in few_units.ada at 2
+    dependency unit U2 S_SPEC in few_units.ada at 3
+    dependency unit U2 S_BODY in few_units.ada at 4
+    dependency unit U3 S_SPEC in few_units.ada at 5
+    dependency unit U3 S_BODY in few_units.ada at 6
+    dependency unit U3.P S_SEPARATE in few_units.ada at 8
 pkg2.ads
   single-unit          = TRUE
   has naming exception = FALSE
@@ -108,14 +100,13 @@ few_units.ada
     kind         = S_BODY
     withed units = { u2 }
     object file  = few_units~2.ali
-    dependency unit U4 S_SPEC_ONLY in few_units.ada at 7
-    dependency unit U3.P S_SEPARATE in few_units.ada at 8
-    dependency unit U3 S_BODY in few_units.ada at 6
-    dependency unit U3 S_SPEC in few_units.ada at 5
-    dependency unit U2 S_BODY in few_units.ada at 4
-    dependency unit U2 S_SPEC in few_units.ada at 3
-    dependency unit U1 S_BODY in few_units.ada at 2
     dependency unit U1 S_SPEC in few_units.ada at 1
+    dependency unit U1 S_BODY in few_units.ada at 2
+    dependency unit U2 S_SPEC in few_units.ada at 3
+    dependency unit U2 S_BODY in few_units.ada at 4
+    dependency unit U3 S_SPEC in few_units.ada at 5
+    dependency unit U3 S_BODY in few_units.ada at 6
+    dependency unit U3.P S_SEPARATE in few_units.ada at 8
   - compilation unit at 3
     unit name    = U2
     kind         = S_SPEC
@@ -124,14 +115,11 @@ few_units.ada
     kind         = S_BODY
     withed units = { u3 }
     object file  = few_units~4.ali
-    dependency unit U4 S_SPEC_ONLY in few_units.ada at 7
-    dependency unit U3.P S_SEPARATE in few_units.ada at 8
-    dependency unit U3 S_BODY in few_units.ada at 6
-    dependency unit U3 S_SPEC in few_units.ada at 5
-    dependency unit U2 S_BODY in few_units.ada at 4
-    dependency unit U1 S_BODY in few_units.ada at 2
-    dependency unit U1 S_SPEC in few_units.ada at 1
     dependency unit U2 S_SPEC in few_units.ada at 3
+    dependency unit U2 S_BODY in few_units.ada at 4
+    dependency unit U3 S_SPEC in few_units.ada at 5
+    dependency unit U3 S_BODY in few_units.ada at 6
+    dependency unit U3.P S_SEPARATE in few_units.ada at 8
   - compilation unit at 5
     unit name    = U3
     kind         = S_SPEC
@@ -140,25 +128,13 @@ few_units.ada
     kind         = S_BODY
     withed units = { gnat gnat.io }
     object file  = few_units~6.ali
-    dependency unit U4 S_SPEC_ONLY in few_units.ada at 7
-    dependency unit U3.P S_SEPARATE in few_units.ada at 8
-    dependency unit U3 S_BODY in few_units.ada at 6
-    dependency unit U2 S_BODY in few_units.ada at 4
-    dependency unit U2 S_SPEC in few_units.ada at 3
-    dependency unit U1 S_BODY in few_units.ada at 2
-    dependency unit U1 S_SPEC in few_units.ada at 1
     dependency unit U3 S_SPEC in few_units.ada at 5
+    dependency unit U3 S_BODY in few_units.ada at 6
+    dependency unit U3.P S_SEPARATE in few_units.ada at 8
   - compilation unit at 7
     unit name    = U4
     kind         = S_SPEC_ONLY
     object file  = few_units~7.ali
-    dependency unit U3.P S_SEPARATE in few_units.ada at 8
-    dependency unit U3 S_BODY in few_units.ada at 6
-    dependency unit U3 S_SPEC in few_units.ada at 5
-    dependency unit U2 S_BODY in few_units.ada at 4
-    dependency unit U2 S_SPEC in few_units.ada at 3
-    dependency unit U1 S_BODY in few_units.ada at 2
-    dependency unit U1 S_SPEC in few_units.ada at 1
     dependency unit U4 S_SPEC_ONLY in few_units.ada at 7
   - compilation unit at 8
     unit name    = U3.P

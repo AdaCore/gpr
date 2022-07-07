@@ -1833,6 +1833,12 @@ package body GPR2.Project.Tree is
                         Data.Imports.Insert
                           (Prj.Name, Imported_View);
                      end if;
+
+                     Data.Closure.Include (Imported_View.Name, Imported_View);
+
+                     for V of Definition.Get_RO (Imported_View).Closure loop
+                        Data.Closure.Include (V.Name, V);
+                     end loop;
                   end;
                end loop;
 

@@ -171,4 +171,9 @@ package GPR2.C.JSON is
 
    procedure Set (Obj : JSON_Value; Key : String; Value : JSON_Value);
 
+private
+
+   function To_Name (Obj : JSON_Value) return Optional_Name_Type is
+      (Optional_Name_Type (To_String (Obj)));
+
 end GPR2.C.JSON;

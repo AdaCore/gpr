@@ -365,6 +365,7 @@ package body GPR2.Project.Source is
       use type GPR2.Source_Info.Backend;
 
       Done      : Part_Set.Object;
+      Added     : Part_Set.Object;
 
       procedure Action
         (Unit_Name : Name_Type;
@@ -415,11 +416,9 @@ package body GPR2.Project.Source is
 
             if Closure then
                if S.Has_Units then
-                  for CU of S.Units loop
-                     S.Dependencies (CU.Index, Action'Access);
-                  end loop;
+                  Added.Insert ((S, CU.Index));
                else
-                  S.Dependencies (No_Index, Action'Access);
+                  Added.Insert ((S, No_Index));
                end if;
             end if;
 
@@ -429,6 +428,18 @@ package body GPR2.Project.Source is
 
    begin
       Self.Dependencies (Index, Action'Access);
+
+      while not Added.Is_Empty loop
+         declare
+            Set : constant Part_Set.Object := Added;
+         begin
+            Added.Clear;
+
+            for Src_Part of Set loop
+               Src_Part.Source.Dependencies (Src_Part.Index, Action'Access);
+            end loop;
+         end;
+      end loop;
 
       if Done.Is_Empty
         and then Self.Has_Units

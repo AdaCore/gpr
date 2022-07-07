@@ -159,7 +159,7 @@ is
 
    function Get_View (Tree : GPR_Tree; Id : String) return GPR_View is
       GPR2_Id : constant GPR2.View_Ids.View_Id :=
-        GPR2.View_Ids.Import (Name => GPR2.Optional_Name_Type (Id));
+        GPR2.View_Ids.Import (Name => GPR2.Value_Type (Id));
    begin
       return GPR2.Project.Tree.Instance_Of (Tree, GPR2_Id);
    end Get_View;

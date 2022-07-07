@@ -71,12 +71,12 @@ package GPR2.View_Ids is
    --  is not allowed. The reason is that the Hash function is mainly used
    --  when using containers such as Maps or Sets.
 
-   function Image (Self : View_Id) return Optional_Name_Type
+   function Image (Self : View_Id) return Value_Type
      with Pre => Is_Defined (Self);
    --  Returns a string image of a view id. The resulting string can be used
    --  to rebuild the View_Id object (see Import).
 
-   function Import (Name : Optional_Name_Type) return View_Id
+   function Import (Name : Value_Type) return View_Id
      with Pre => Is_Valid_Image (Name);
    --  Returns the View_Id object V for which Image (V) = Str. View_Id_Error
    --  is raised in case Str is not a valid view id image.
@@ -84,7 +84,7 @@ package GPR2.View_Ids is
    function Is_Defined (Id : View_Id) return Boolean;
    --  Returns False if the Id is Null_Id.
 
-   function Is_Valid_Image (Name : Optional_Name_Type) return Boolean;
+   function Is_Valid_Image (Name : Value_Type) return Boolean;
    --  Returns True if Str may correspond to a View_Id image.
 
    overriding function "=" (Self : View_Id; Other : View_Id) return Boolean;

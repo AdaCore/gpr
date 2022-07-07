@@ -367,7 +367,7 @@ package body GPR2.Source_Info.Parser.D is
                         Ref.Stamp := To_Time (Line (Start .. Finish));
 
                         if Filename_Type (Ref.Sfile)
-                          = Filename_Type (Source.Path_Name.Value)
+                          = Filename_Type (Source.Path_Name.Simple_Name)
                         then
                            Data.LI_Timestamp := Ref.Stamp;
                         end if;
@@ -391,10 +391,10 @@ package body GPR2.Source_Info.Parser.D is
                            New_Item => (Name_Length  => Src_Simple'Length,
                                         Unit_Name    => Src_Simple,
                                         Unit_Kind    => GPR2.Unit.S_Spec,
-                                        SFile_Length => Src_Name'Length,
+                                        SFile_Length => Src_Simple'Length,
                                         Stamp        => No_Time,
                                         Checksum     => 0,
-                                        Sfile        => Src_Name),
+                                        Sfile        => Src_Simple),
                            Position => C_Dep);
                      end;
                   end if;

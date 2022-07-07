@@ -368,7 +368,7 @@ package body GPR2.C.JSON is
    is
       Id : GPR2.View_Ids.View_Id;
    begin
-      Id := GPR2.View_Ids.Import (To_Name (Obj));
+      Id := GPR2.View_Ids.Import (Value_Type (To_Name (Obj)));
       return Tree.Instance_Of (Instance_Id => Id);
    end To_GPR_View;
 
@@ -419,14 +419,9 @@ package body GPR2.C.JSON is
       return GPR2."+" (To_Name (Obj));
    end To_Language;
 
-   -------------
-   -- To_Name --
-   -------------
-
-   function To_Name (Obj : JSON_Value) return Optional_Name_Type is
-   begin
-      return Optional_Name_Type (To_String (Obj));
-   end To_Name;
+   -----------------------
+   -- To_Name_Value_Map --
+   -----------------------
 
    function To_Name_Value_Map
       (Obj : JSON_Value) return GPR2.Containers.Name_Value_Map

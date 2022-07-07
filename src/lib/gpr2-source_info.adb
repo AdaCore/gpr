@@ -22,9 +22,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Fixed;
-with GNAT.OS_Lib;
-
 package body GPR2.Source_Info is
 
    ---------------------
@@ -114,22 +111,12 @@ package body GPR2.Source_Info is
 
       for C in U_Ref.Get.Iterate loop
          declare
-            use Ada.Strings;
-
             Ref   : constant Dependency_Vectors.Constant_Reference_Type :=
                       U_Ref.Get.Constant_Reference (C);
-            First : constant Natural :=
-                      Fixed.Index
-                        (Ref.Sfile, "" & GNAT.OS_Lib.Directory_Separator,
-                         Backward);
-            --  None Ada dependencied taken from .d files has full path name
          begin
             Action
               (Name_Type (Ref.Unit_Name),
-               Simple_Name
-                 (Ref.Sfile
-                      ((if First = 0 then Ref.Sfile'First else First + 1)
-                       .. Ref.Sfile'Last)),
+               Simple_Name (Ref.Sfile),
                Ref.Unit_Kind,
                Ref.Stamp);
          end;

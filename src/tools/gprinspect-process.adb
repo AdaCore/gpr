@@ -73,6 +73,11 @@ is
    function View_Id (View : Project.View.Object) return MD5.Message_Digest;
    --  Get the hash from the view ID
 
+   function No_View_Restriction (Views : Restricted_Scope;
+                                 VName : Name_Type)
+                                 return Boolean;
+   --  Return if the view must be processed and displayed or not.
+
    ---------------------------------
    -- Inspect_Project_JSON_Output --
    ---------------------------------
@@ -624,7 +629,10 @@ is
             declare
                View : constant Project.View.Object := Project.Tree.Element (V);
             begin
-               if Options.All_Projects
+               if (Options.All_Projects
+                   and then No_View_Restriction
+                     (Views => Options.Restricted_Views,
+                      VName => View.Name))
                  or else (View_Id (View) = View_Id (Tree.Root_Project))
                then
                   Text_IO.Put_Line (Item => "* "
@@ -922,7 +930,10 @@ is
                   View : constant Project.View.Object
                     := Project.Tree.Element (V);
                begin
-                  if Options.All_Projects
+                  if (Options.All_Projects
+                      and then No_View_Restriction
+                        (Views => Options.Restricted_Views,
+                         VName => View.Name))
                     or else (View_Id (View) = View_Id (Tree.Root_Project))
                   then
                      Project_Count := Project_Count + 1;
@@ -957,7 +968,10 @@ is
                      View : constant Project.View.Object
                        := Project.Tree.Element (V);
                   begin
-                     if Options.All_Projects
+                     if (Options.All_Projects
+                         and then No_View_Restriction
+                           (Views => Options.Restricted_Views,
+                            VName => View.Name))
                        or else (View_Id (View) = View_Id (Tree.Root_Project))
                      then
                         if View.Kind /= K_Abstract then
@@ -978,7 +992,10 @@ is
                      View : constant Project.View.Object
                        := Project.Tree.Element (V);
                   begin
-                     if Options.All_Projects
+                     if (Options.All_Projects
+                         and then No_View_Restriction
+                           (Views => Options.Restricted_Views,
+                            VName => View.Name))
                        or else (View_Id (View) = View_Id (Tree.Root_Project))
                      then
                         if View.Kind /= K_Abstract
@@ -1077,6 +1094,18 @@ is
          end;
       end loop;
    end Load_Project;
+
+   ----------------------
+   -- View_Restriction --
+   ----------------------
+
+   function No_View_Restriction (Views : Restricted_Scope;
+                                 VName : Name_Type)
+                                 return Boolean
+   is
+   begin
+      return (not Views.Restrict or else (Views.Views.Contains (VName)));
+   end No_View_Restriction;
 
    -------------
    -- View_Id --

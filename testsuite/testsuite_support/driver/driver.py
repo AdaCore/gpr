@@ -1,3 +1,4 @@
+from e3.env import Env
 from testsuite_support.builder_and_runner import BuilderAndRunner
 from testsuite_support.driver.driver_db import SCN_ATTRIBUTE_TEST_CONFIG
 from testsuite_support.driver.driver_constants import ObjOptions as Opt
@@ -47,7 +48,7 @@ class ObjRes:
 
     @staticmethod
     def __check_expected__(cmd_s, s):
-        if '=' in s or ' ' in s:
+        if "=" in s or " " in s:
             s, n = re.split("[= ]", s)
         else:
             s = s
@@ -66,7 +67,7 @@ class ObjRes:
 
     @staticmethod
     def __check_expected_strict__(cmd_s, s):
-        if '=' in s or ' ' in s:
+        if "=" in s or " " in s:
             s, n = re.split("[= ]", s)
         else:
             s = s
@@ -86,34 +87,43 @@ class ObjRes:
     @staticmethod
     def __substitute__(s, val):
         a_val_prefix, a_val_name, a_val_suffix = val
+        a_val_prefix = os.path.normpath(a_val_prefix)
+        a_val_name = os.path.normpath(a_val_name)
+        a_val_suffix = os.path.normpath(a_val_suffix)
+
         if Pattern.SCN_ATTR_ALT_SUBST_PATTERN_ALL.value in s:
-            return s.replace(Pattern.SCN_ATTR_ALT_SUBST_PATTERN_ALL.value,
-                             a_val_prefix + a_val_name + a_val_suffix)
+            return s.replace(
+                Pattern.SCN_ATTR_ALT_SUBST_PATTERN_ALL.value,
+                a_val_prefix + a_val_name + a_val_suffix,
+            )
         elif Pattern.SCN_ATTR_ALT_SUBST_PATTERN_PREFIX.value in s:
-            return s.replace(Pattern.SCN_ATTR_ALT_SUBST_PATTERN_PREFIX.value,
-                             a_val_prefix + a_val_name)
+            return s.replace(
+                Pattern.SCN_ATTR_ALT_SUBST_PATTERN_PREFIX.value,
+                a_val_prefix + a_val_name,
+            )
         elif Pattern.SCN_ATTR_ALT_SUBST_PATTERN_NAME.value in s:
-            return s.replace(Pattern.SCN_ATTR_ALT_SUBST_PATTERN_NAME.value,
-                             a_val_name)
+            return s.replace(Pattern.SCN_ATTR_ALT_SUBST_PATTERN_NAME.value, a_val_name)
         elif Pattern.SCN_ATTR_ALT_SUBST_PATTERN_SUFFIX.value in s:
-            return s.replace(Pattern.SCN_ATTR_ALT_SUBST_PATTERN_SUFFIX.value,
-                             a_val_name + a_val_suffix)
+            return s.replace(
+                Pattern.SCN_ATTR_ALT_SUBST_PATTERN_SUFFIX.value,
+                a_val_name + a_val_suffix,
+            )
 
     @staticmethod
     def __substitute_image__(s, val):
         a_val_prefix, a_val_name, a_val_suffix = val
         if Pattern.SCN_ATTR_ALT_SUBST_PATTERN_ALL.value in s:
-            return s.replace(Pattern.SCN_ATTR_ALT_SUBST_PATTERN_ALL.value,
-                             a_val_name)
+            return s.replace(Pattern.SCN_ATTR_ALT_SUBST_PATTERN_ALL.value, a_val_name)
         elif Pattern.SCN_ATTR_ALT_SUBST_PATTERN_PREFIX.value in s:
-            return s.replace(Pattern.SCN_ATTR_ALT_SUBST_PATTERN_PREFIX.value,
-                             a_val_name)
+            return s.replace(
+                Pattern.SCN_ATTR_ALT_SUBST_PATTERN_PREFIX.value, a_val_name
+            )
         elif Pattern.SCN_ATTR_ALT_SUBST_PATTERN_NAME.value in s:
-            return s.replace(Pattern.SCN_ATTR_ALT_SUBST_PATTERN_NAME.value,
-                             a_val_name)
+            return s.replace(Pattern.SCN_ATTR_ALT_SUBST_PATTERN_NAME.value, a_val_name)
         elif Pattern.SCN_ATTR_ALT_SUBST_PATTERN_SUFFIX.value in s:
-            return s.replace(Pattern.SCN_ATTR_ALT_SUBST_PATTERN_SUFFIX.value,
-                             a_val_name)
+            return s.replace(
+                Pattern.SCN_ATTR_ALT_SUBST_PATTERN_SUFFIX.value, a_val_name
+            )
 
     @staticmethod
     def __pattern_defined__(elt):
@@ -131,14 +141,13 @@ class ObjRes:
         if self.output is not None:
             if self.output_kind is not None:
                 for i, line in enumerate(self.output):
-                    if line == '':
+                    if line == "":
                         del self.output[i]
                 if self.output_kind == Output.SCN_OUTPUT_FILE_LIST:
                     if Opt.SCN_OPTION_CONVERT_FILE_TO_DIRNAME in opts:
-                        self.output = list(map(
-                            lambda x: x.replace(x, os.path.dirname(x)),
-                            self.output
-                        ))
+                        self.output = list(
+                            map(lambda x: x.replace(x, os.path.dirname(x)), self.output)
+                        )
             else:
                 logging.error("Attempt to exploit an output which is not defined")
 
@@ -150,14 +159,14 @@ class ObjRes:
         if Opt.SCN_OPTION_USE_ALT_ATTR_VALUE in o:
             if k in v:
                 if vk.unique():
-                    behavior = list(map(
-                        lambda x: self.__substitute__(x, v[k][0]), behavior
-                    ))
+                    behavior = list(
+                        map(lambda x: self.__substitute__(x, v[k][0]), behavior)
+                    )
                 elif vk.concatenated():
                     values = " ".join(v[k])
-                    behavior = list(map(
-                        lambda x: self.__substitute__(x, values), behavior
-                    ))
+                    behavior = list(
+                        map(lambda x: self.__substitute__(x, values), behavior)
+                    )
                 elif vk.distributed():
                     for i, elt in enumerate(behavior):
                         if self.__pattern_defined__(elt):
@@ -170,28 +179,37 @@ class ObjRes:
                         del behavior[i]
         else:
             if vk.unique() and v is not None:
-                behavior = list(map(
-                    lambda x: x.replace(Pattern.SCN_ATTR_SUBSTITUTE_PATTERN.value,
-                                        v[0]),
-                    behavior
-                ))
+                behavior = list(
+                    map(
+                        lambda x: x.replace(
+                            Pattern.SCN_ATTR_SUBSTITUTE_PATTERN.value, v[0]
+                        ),
+                        behavior,
+                    )
+                )
             elif vk.concatenated():
                 values = " ".join(v)
-                behavior = list(map(
-                    lambda x: x.replace(Pattern.SCN_ATTR_SUBSTITUTE_PATTERN.value,
-                                        values),
-                    behavior
-                ))
+                behavior = list(
+                    map(
+                        lambda x: x.replace(
+                            Pattern.SCN_ATTR_SUBSTITUTE_PATTERN.value, values
+                        ),
+                        behavior,
+                    )
+                )
             elif vk.distributed():
                 for i, elt in enumerate(behavior):
-                    if Pattern.SCN_ATTR_ALT_SUBST_PATTERN_ALL.value in elt \
-                            or Pattern.SCN_ATTR_ALT_SUBST_PATTERN_PREFIX.value in elt \
-                            or Pattern.SCN_ATTR_ALT_SUBST_PATTERN_NAME.value in elt \
-                            or Pattern.SCN_ATTR_ALT_SUBST_PATTERN_SUFFIX.value in elt:
+                    if (
+                        Pattern.SCN_ATTR_ALT_SUBST_PATTERN_ALL.value in elt
+                        or Pattern.SCN_ATTR_ALT_SUBST_PATTERN_PREFIX.value in elt
+                        or Pattern.SCN_ATTR_ALT_SUBST_PATTERN_NAME.value in elt
+                        or Pattern.SCN_ATTR_ALT_SUBST_PATTERN_SUFFIX.value in elt
+                    ):
                         for av in v:
                             behavior.append(
-                                elt.replace(Pattern.SCN_ATTR_SUBSTITUTE_PATTERN.value,
-                                            av)
+                                elt.replace(
+                                    Pattern.SCN_ATTR_SUBSTITUTE_PATTERN.value, av
+                                )
                             )
                         del behavior[i]
 
@@ -199,22 +217,27 @@ class ObjRes:
             if Opt.SCN_OPTION_USE_ALT_ATTR_VALUE in o:
                 if k in v:
                     if vk.unique():
-                        behavior_image = list(map(
-                            lambda x: self.__substitute_image__(x, v[k][0]),
-                            behavior_image
-                        ))
+                        behavior_image = list(
+                            map(
+                                lambda x: self.__substitute_image__(x, v[k][0]),
+                                behavior_image,
+                            )
+                        )
                     elif vk.concatenated():
                         values = " ".join(v[k])
-                        behavior_image = list(map(
-                            lambda x: self.__substitute_image__(x, v[k][0]),
-                            behavior_image
-                        ))
+                        behavior_image = list(
+                            map(
+                                lambda x: self.__substitute_image__(x, v[k][0]),
+                                behavior_image,
+                            )
+                        )
                     elif vk.distributed():
                         for i, elt in enumerate(behavior_image):
                             if self.__pattern_defined__(elt):
                                 for av in v[k]:
                                     behavior_image.append(
-                                        self.__substitute_image__(elt, av))
+                                        self.__substitute_image__(elt, av)
+                                    )
                                 del behavior_image[i]
                 else:
                     for i, elt in enumerate(behavior_image):
@@ -242,14 +265,22 @@ class ObjRes:
                 if Opt.SCN_OPTION_RES_AS_A_FULL_STRING in o:
                     sub_res = [s in cl for s in behavior]
                 else:
-                    cmd_switches = [re.split("[= ]", s) for s in shlex.split(cl)]
+                    if Env().host.platform.endswith("windows"):
+                        cmd_switches = [
+                            re.split("[= ]", s) for s in shlex.split(cl, posix=False)
+                        ]
+                    else:
+                        cmd_switches = [re.split("[= ]", s) for s in shlex.split(cl)]
                     logging.debug(f"{cmd_switches}")
                     if Opt.SCN_OPTION_FULL_STRING_COMPARISION in o:
-                        sub_res = [self.__check_expected_strict__(cmd_switches,
-                                                                  s) for s in behavior]
+                        sub_res = [
+                            self.__check_expected_strict__(cmd_switches, s)
+                            for s in behavior
+                        ]
                     else:
-                        sub_res = [self.__check_expected__(cmd_switches, s) for s in
-                                   behavior]
+                        sub_res = [
+                            self.__check_expected__(cmd_switches, s) for s in behavior
+                        ]
                 result.append(sub_res)
         else:
             if k.none():
@@ -270,14 +301,18 @@ class ObjRes:
                     self.res = not any(any(r) for r in result)
                     logging.debug(f"Testcase contribution : {self.res}")
                     if not self.res:
-                        logging.error(f"{behavior_image} behavior found at least one"
-                                      + " time in the output")
+                        logging.error(
+                            f"{behavior_image} behavior found at least one"
+                            + " time in the output"
+                        )
                 else:
                     condition = not any(any(r) for r in result)
                     logging.debug(f"Testcase contribution : {condition}")
                     if not condition:
-                        logging.error(f"{behavior_image} behavior found at least one"
-                                      + " time in the output")
+                        logging.error(
+                            f"{behavior_image} behavior found at least one"
+                            + " time in the output"
+                        )
                     self.res = self.res and condition
         elif k.any():
             if not self.output:
@@ -291,8 +326,10 @@ class ObjRes:
                         self.res = all(any(r) for r in result)
                     logging.debug(f"Testcase contribution : {self.res}")
                     if not self.res:
-                        logging.error(f"{behavior_image} behavior not found at least"
-                                      + "one time in the output")
+                        logging.error(
+                            f"{behavior_image} behavior not found at least"
+                            + "one time in the output"
+                        )
                 else:
                     condition = False
                     if vk.unique() or vk.concatenated():
@@ -301,8 +338,10 @@ class ObjRes:
                         condition = all(any(r) for r in result)
                     logging.debug(f"Testcase contribution : {condition}")
                     if not condition:
-                        logging.error(f"{behavior_image} behavior not found at least"
-                                      + " one time in the output")
+                        logging.error(
+                            f"{behavior_image} behavior not found at least"
+                            + " one time in the output"
+                        )
                     self.res = self.res and condition
         elif k.all():
             if not self.output:
@@ -313,14 +352,18 @@ class ObjRes:
                     self.res = all(all(r) for r in result)
                     logging.debug(f"Testcase contribution : {self.res}")
                     if not self.res:
-                        logging.error(f"{behavior_image} behavior not found"
-                                      + " in one of the output")
+                        logging.error(
+                            f"{behavior_image} behavior not found"
+                            + " in one of the output"
+                        )
                 else:
                     condition = all(all(r) for r in result)
                     logging.debug(f"Testcase contribution : {condition}")
                     if not condition:
-                        logging.error(f"{behavior_image} behavior not found"
-                                      + " in one of the output")
+                        logging.error(
+                            f"{behavior_image} behavior not found"
+                            + " in one of the output"
+                        )
                     self.res = self.res and condition
         elif k.empty():
             if not self.output:
@@ -341,16 +384,19 @@ class ObjProject:
             with open(self.filename, "r+") as fp:
                 pack, attr = attribute.split(".")
                 data = mmap.mmap(fp.fileno(), 0).read().decode()
-                regex = r'^ *(?:package (\w+) is[\w\s]*)?(?:(?!project|package|end))' \
-                        + rf'(.*(for|\')[ ]*{attr}.* use (.*);)'
+                regex = (
+                    r"^ *(?:package (\w+) is[\w\s]*)?(?:(?!project|package|end))"
+                    + rf"(.*(for|\')[ ]*{attr}.* use (.*);)"
+                )
                 pat = re.compile(regex, flags=re.MULTILINE | re.IGNORECASE)
                 results = pat.findall(data)
 
                 for match_p, match_a, x_, value in results:
                     if (match_p == pack) or (match_p == "" and pack == "Project_Level"):
-                        self.attribute_value = \
-                            [r.group(0).replace('"', '') for r in
-                             re.finditer('"(.*?)"', value)]
+                        self.attribute_value = [
+                            r.group(0).replace('"', "")
+                            for r in re.finditer('"(.*?)"', value)
+                        ]
 
     def get_attr_value(self):
         return self.attribute_value
@@ -370,11 +416,11 @@ class ObjTestCase:
         self.setup = []
         self.cleanup = []
         if "setup_cmd" in SCN_ATTRIBUTE_TEST_CONFIG[name]:
-            for s in SCN_ATTRIBUTE_TEST_CONFIG[name]['setup_cmd']:
+            for s in SCN_ATTRIBUTE_TEST_CONFIG[name]["setup_cmd"]:
                 new_setup_cmd = ObjCmd(s)
                 self.setup.append(new_setup_cmd)
         if "cleanup_cmd" in SCN_ATTRIBUTE_TEST_CONFIG[name]:
-            for c in SCN_ATTRIBUTE_TEST_CONFIG[name]['cleanup_cmd']:
+            for c in SCN_ATTRIBUTE_TEST_CONFIG[name]["cleanup_cmd"]:
                 new_cleanup_cmd = ObjCmd(c)
                 self.cleanup.append(new_cleanup_cmd)
 
@@ -398,14 +444,19 @@ class ObjTestCase:
     def __setup__(self):
         for s in self.setup:
             if type(s.get_cmd()) is list:
-                command = list(map(
-                    lambda x: x.replace(Pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value,
-                                        f"-P{self.file}"),
-                    s.get_cmd()
-                ))
+                command = list(
+                    map(
+                        lambda x: x.replace(
+                            Pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value, f"-P{self.file}"
+                        ),
+                        s.get_cmd(),
+                    )
+                )
                 if Opt.SCN_OPTION_USE_CGPR in self.options:
-                    if Tool.SCN_TOOL_GPRBUILD.name in command \
-                            or Tool.SCN_TOOL_GPRCLEAN.name in command:
+                    if (
+                        Tool.SCN_TOOL_GPRBUILD.name in command
+                        or Tool.SCN_TOOL_GPRCLEAN.name in command
+                    ):
                         command.append(f"--config={Cmd.SCN_CMD_CONFIG_FILE}")
                 logging.debug(f"Setting up : {' '.join(command)}")
                 bnr.run(command)
@@ -419,14 +470,19 @@ class ObjTestCase:
     def __destroy__(self):
         for c in self.cleanup:
             if type(c.get_cmd()) is list:
-                command = list(map(
-                    lambda x: x.replace(Pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value,
-                                        f"-P{self.file}"),
-                    c.get_cmd()
-                ))
+                command = list(
+                    map(
+                        lambda x: x.replace(
+                            Pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value, f"-P{self.file}"
+                        ),
+                        c.get_cmd(),
+                    )
+                )
                 if Opt.SCN_OPTION_USE_CGPR in self.options:
-                    if Tool.SCN_TOOL_GPRBUILD.name in command \
-                            or Tool.SCN_TOOL_GPRCLEAN.name in command:
+                    if (
+                        Tool.SCN_TOOL_GPRBUILD.name in command
+                        or Tool.SCN_TOOL_GPRCLEAN.name in command
+                    ):
                         command.append(f"--config={Cmd.SCN_CMD_CONFIG_FILE.name}")
                 logging.debug(f"Cleaning up : {' '.join(command)}")
                 bnr.run(command)
@@ -443,23 +499,29 @@ class ObjTestCase:
 
         for b in config.behavior_generator():
             if b.cmd() is not None:
-                command = list(map(
-                    lambda x: x.replace(Pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value,
-                                        f"-P{self.file}"),
-                    b.cmd()
-                ))
+                command = list(
+                    map(
+                        lambda x: x.replace(
+                            Pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value, f"-P{self.file}"
+                        ),
+                        b.cmd(),
+                    )
+                )
                 if Opt.SCN_OPTION_USE_CGPR in self.options:
-                    if Tool.SCN_TOOL_GPRBUILD.tool_name() in command \
-                            or Tool.SCN_TOOL_GPRCLEAN.tool_name() in command:
+                    if (
+                        Tool.SCN_TOOL_GPRBUILD.tool_name() in command
+                        or Tool.SCN_TOOL_GPRCLEAN.tool_name() in command
+                    ):
                         command.append(f"--config={Cmd.SCN_CMD_CONFIG_FILE.value}")
                 logging.info(f"Launching : \"{' '.join(command)}\"")
                 out = bnr.run(command)
                 if any(Cmd.SCN_CMD_OUTPUT_FILE.value in s for s in command):
-                    logging.debug("Checking output from "
-                                  + f"{Cmd.SCN_CMD_OUTPUT_FILE.value}")
-                    new_output = ObjRes(Cmd.SCN_CMD_OUTPUT_FILE.value,
-                                        b.output(),
-                                        self.options)
+                    logging.debug(
+                        "Checking output from " + f"{Cmd.SCN_CMD_OUTPUT_FILE.value}"
+                    )
+                    new_output = ObjRes(
+                        Cmd.SCN_CMD_OUTPUT_FILE.value, b.output(), self.options
+                    )
                     self.res = new_output
                 else:
                     logging.debug("Checking output directly from bnr.run()")
@@ -467,12 +529,14 @@ class ObjTestCase:
                     self.res = new_output
 
                 self.res.log()
-                self.res.compute(b.get_delimiter(),
-                                 b.get_expected_behavior(self.ttype),
-                                 config.get_value_kind(),
-                                 self.project.get_attr_value(),
-                                 self.options,
-                                 self.ttype)
+                self.res.compute(
+                    b.get_delimiter(),
+                    b.get_expected_behavior(self.ttype),
+                    config.get_value_kind(),
+                    self.project.get_attr_value(),
+                    self.options,
+                    self.ttype,
+                )
 
             if self.res.get() is None:
                 logging.info("No result available, something went wrong !")
@@ -499,19 +563,19 @@ class ObjTestCase:
 
 class ObjBehavior:
     def __init__(self, behavior):
-        self.tool = behavior['tool']
+        self.tool = behavior["tool"]
         if "phase" not in behavior:
             self.phase = Phase.SCN_PHASE_NONE
         else:
-            self.phase = behavior['phase']
+            self.phase = behavior["phase"]
         self.command = ObjCmd(behavior)
-        self.delimiter = behavior['output_delimiter']
+        self.delimiter = behavior["output_delimiter"]
         self.has_behavior = False
         self.scn_case_value = {}
         if "expected_behavior" in behavior:
             self.has_behavior = True
-            for b in behavior['expected_behavior']:
-                self.scn_case_value[b] = behavior['expected_behavior'][b]
+            for b in behavior["expected_behavior"]:
+                self.scn_case_value[b] = behavior["expected_behavior"][b]
 
     def cmd(self):
         return self.command.get_cmd()
@@ -532,7 +596,7 @@ class ObjBehavior:
         logging.debug(f"   Phase     -> {self.phase.name}")
         logging.debug(f"   Command   -> {' '.join(self.command.get_cmd())}")
         logging.debug(f"   Output    -> {self.command.get_cmd_output().name}")
-        logging.debug(f"   Delimiter -> \"{self.delimiter}\"")
+        logging.debug(f'   Delimiter -> "{self.delimiter}"')
         if self.has_behavior:
             for b, k in self.scn_case_value.items():
                 logging.debug(f"   {b.name} :")
@@ -546,11 +610,11 @@ class ObjCmd:
     def __init__(self, command):
         self.cmd = {}
         self.index = None
-        self.tool = command['tool']
+        self.tool = command["tool"]
         if "phase" not in command:
             tool_phase = Phase.SCN_PHASE_NONE
         else:
-            tool_phase = command['phase']
+            tool_phase = command["phase"]
         self.phase = tool_phase
         self.index = f"{self.tool}.{self.phase}"
 
@@ -580,11 +644,15 @@ class ObjCmd:
 
     def log(self):
         if self.index in self.cmd:
-            logging.debug(f"   - [ {self.tool.name} - {self.phase.name} ] "
-                          + f": {self.cmd[self.index]}")
+            logging.debug(
+                f"   - [ {self.tool.name} - {self.phase.name} ] "
+                + f": {self.cmd[self.index]}"
+            )
         else:
-            logging.error(f"   - [ {self.tool.name} - {self.phase.name} ] "
-                          + "index does not exist")
+            logging.error(
+                f"   - [ {self.tool.name} - {self.phase.name} ] "
+                + "index does not exist"
+            )
 
 
 class ObjConfig:
@@ -595,8 +663,8 @@ class ObjConfig:
         self.common_options = Opt(options)
         self.common_options_list = [f.name for f in Opt if f in self.common_options]
         if self.name in SCN_ATTRIBUTE_TEST_CONFIG:
-            self.value_kind = SCN_ATTRIBUTE_TEST_CONFIG[self.name]['value_kind']
-            for b in SCN_ATTRIBUTE_TEST_CONFIG[self.name]['test_cmd']:
+            self.value_kind = SCN_ATTRIBUTE_TEST_CONFIG[self.name]["value_kind"]
+            for b in SCN_ATTRIBUTE_TEST_CONFIG[self.name]["test_cmd"]:
                 new_behavior = ObjBehavior(b)
                 self.behaviors.append(new_behavior)
 
@@ -639,11 +707,9 @@ class ObjScn:
 
     def add_testcase(self, file, ttype, alt_value=None, options=0):
         all_options = self.config.get_common_options() + options
-        my_testcase = ObjTestCase(self.config.get_name(),
-                                  file,
-                                  alt_value,
-                                  ttype,
-                                  all_options)
+        my_testcase = ObjTestCase(
+            self.config.get_name(), file, alt_value, ttype, all_options
+        )
         my_testcase.compile(self.config.get_name())
         self.testcases.append(my_testcase)
         self.has_testcase = True
