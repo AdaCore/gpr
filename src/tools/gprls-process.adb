@@ -330,7 +330,7 @@ begin
       procedure Display_Closures is
          use type Ada.Containers.Count_Type;
 
-         Closures : Project.Source.Part_Set.Object;
+         Closures : Project.Source.Part_Set.Object (Sorted => True);
       begin
          if Sources.Is_Empty then
             Finish_Program (E_Errors, "no main specified for closure");
@@ -339,7 +339,8 @@ begin
          for S of Sources loop
             declare
                Deps : constant Project.Source.Part_Set.Object :=
-                        S.Source.Dependencies (Closure => True);
+                        S.Source.Dependencies (Closure => True,
+                                               Sorted  => False);
             begin
                if Deps.Is_Empty then
                   --  If no dependencies, use only this one because without ALI

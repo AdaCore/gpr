@@ -30,8 +30,24 @@ package body GPR2.Project.Source.Part_Set is
 
    procedure Clear (Self : in out Object) is
    begin
-      Source_Part_Sets.Clear (Self.S);
+      if Self.Sorted then
+         Self.SS.Clear;
+      else
+         Self.HS.Clear;
+      end if;
    end Clear;
+
+   function Constant_Reference
+     (Self     : aliased Object;
+      Position : Cursor) return Constant_Reference_Type
+   is
+   begin
+      if Self.Sorted then
+         return (Part => Self.SS.Constant_Reference (Position.SC).Element);
+      else
+         return (Part => Self.HS.Constant_Reference (Position.HC).Element);
+      end if;
+   end Constant_Reference;
 
    ------------
    -- Insert --
@@ -41,7 +57,11 @@ package body GPR2.Project.Source.Part_Set is
      (Self    : in out Object;
       Element : Source_Part) is
    begin
-      Source_Part_Sets.Insert (Self.S, Element);
+      if Self.Sorted then
+         Self.SS.Insert (Element);
+      else
+         Self.HS.Insert (Element);
+      end if;
    end Insert;
 
    procedure Insert
@@ -50,8 +70,30 @@ package body GPR2.Project.Source.Part_Set is
       Position : out Cursor;
       Inserted : out Boolean) is
    begin
-      Source_Part_Sets.Insert (Self.S, Element, Position.C, Inserted);
+      if Self.Sorted then
+         Position := (Sorted => True,
+                      SC     => Source_Part_Ordered_Sets.No_Element);
+         Self.SS.Insert (Element, Position.SC, Inserted);
+      else
+         Position := (Sorted => False,
+                      HC     => Source_Part_Hashed_Sets.No_Element);
+         Self.HS.Insert (Element, Position.HC, Inserted);
+      end if;
    end Insert;
+
+   -------------
+   -- Iterate --
+   -------------
+
+   function Iterate (Self : Object)
+                     return Source_Part_Iterator.Forward_Iterator'Class is
+   begin
+      if Self.Sorted then
+         return Iterator'(Sorted => True, SRoot => Self.SS'Unchecked_Access);
+      else
+         return Iterator'(Sorted => False, HRoot => Self.HS'Unchecked_Access);
+      end if;
+   end Iterate;
 
    -----------
    -- Union --
@@ -61,8 +103,20 @@ package body GPR2.Project.Source.Part_Set is
      (Self  : in out Object;
       Other : Object)
    is
+      C        : Cursor;
+      Inserted : Boolean;
    begin
-      Self.S.Union (Other.S);
+      if Self.Sorted /= Other.Sorted then
+         for Item of Other loop
+            Self.Insert (Item, C, Inserted);
+         end loop;
+
+      elsif Self.Sorted then
+         Self.SS.Union (Other.SS);
+
+      else
+         Self.HS.Union (Other.HS);
+      end if;
    end Union;
 
 end GPR2.Project.Source.Part_Set;

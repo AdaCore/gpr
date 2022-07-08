@@ -143,30 +143,39 @@ package GPR2.Project.Source is
    function Dependencies
      (Self    : Object;
       Index   : Unit_Index := No_Index;
-      Closure : Boolean    := False) return Part_Set.Object
+      Closure : Boolean    := False;
+      Sorted  : Boolean    := True) return Part_Set.Object
      with Pre => Self.Is_Defined;
    --  Returns the source files on which the current source file depends.
    --
    --  In case of unit-based sources, if index is No_Index, then dependencies
    --  of all the units in the source are returned.
+   --  Sorted: if set, the returned object is ordered to have consistent
+   --  result order across runs, else the returned set is a hashed set, that is
+   --  faster to compute.
 
    procedure Dependencies
      (Self     : Object;
       Index    : Unit_Index;
       For_Each : not null access procedure
                    (Source : Object; Index : Unit_Index);
-      Closure  : Boolean := False);
+      Closure  : Boolean := False;
+      Sorted   : Boolean := True);
    --  Call For_Each routine for each dependency unit with it's source
    --
    --  The following routines may be used for both unit-based and
    --  non-unit-based sources. In the latter case, Index is not used.
+   --  Sorted: if set, the returned object is ordered to have consistent
+   --  result order across runs, else the returned set is a hashed set, that is
+   --  faster to compute.
 
    procedure Dependencies
      (Self     : Object;
       Index    : Unit_Index;
       For_Each : not null access procedure
                    (Source : Object; Unit : GPR2.Unit.Object);
-      Closure  : Boolean := False);
+      Closure  : Boolean := False;
+      Sorted   : Boolean := True);
    --  Call For_Each routine for each dependency unit with it's source
    --
    --  The following routines may be used for both unit-based and

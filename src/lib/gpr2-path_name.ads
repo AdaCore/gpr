@@ -40,6 +40,7 @@ with GNATCOLL.Utils;
 with GNATCOLL.VFS;
 
 private with Ada.Directories;
+private with Ada.Strings.Unbounded.Hash;
 
 package GPR2.Path_Name is
 
@@ -234,6 +235,10 @@ package GPR2.Path_Name is
    function Create (File : VFS.Virtual_File) return GPR2.Path_Name.Object;
    --  GNATCOLL.VFS.Virtual_File to GPR2.Path_Name.Object to conversion
 
+   function Hash
+     (Path : GPR2.Path_Name.Object) return Ada.Containers.Hash_Type;
+   --  For use with Hashed containers
+
 private
 
    type Object is tagged record
@@ -305,5 +310,9 @@ private
            (GPR2.Filename_Type (File.Display_Full_Name),
             GPR2.Filename_Type (File.Display_Full_Name)))
       else GPR2.Path_Name.Undefined);
+
+   function Hash
+     (Path : GPR2.Path_Name.Object) return Ada.Containers.Hash_Type
+   is (Ada.Strings.Unbounded.Hash (Path.Comparing));
 
 end GPR2.Path_Name;

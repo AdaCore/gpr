@@ -26,11 +26,12 @@
 
 with Ada.Iterator_Interfaces;
 
+private with Ada.Containers.Hashed_Sets;
 private with Ada.Containers.Ordered_Sets;
 
 package GPR2.Project.Source.Part_Set is
 
-   type Object is tagged private
+   type Object (Sorted : Boolean) is tagged private
      with Constant_Indexing => Constant_Reference,
           Default_Iterator  => Iterate,
           Iterator_Element  => Source_Part;
@@ -42,7 +43,7 @@ package GPR2.Project.Source.Part_Set is
    function Element (Position : Cursor) return Source_Part;
 
    type Constant_Reference_Type
-     (Part : not null access constant Source_Part) is null record
+     (Part : not null access constant Source_Part) is private
      with Implicit_Dereference => Part;
 
    function Constant_Reference
@@ -86,42 +87,75 @@ package GPR2.Project.Source.Part_Set is
 
 private
 
-   package Source_Part_Sets is new Ada.Containers.Ordered_Sets (Source_Part);
+   use type Ada.Containers.Hash_Type;
 
-   type Object is tagged record
-      S : aliased Source_Part_Sets.Set;
+   function Hash (Object : Source_Part) return Ada.Containers.Hash_Type
+   is (Object.Source.Path_Name.Hash +
+         Ada.Containers.Hash_Type (Object.Index));
+
+   package Source_Part_Hashed_Sets is new Ada.Containers.Hashed_Sets
+     (Source_Part, Hash, "=");
+
+   package Source_Part_Ordered_Sets is new Ada.Containers.Ordered_Sets
+     (Source_Part);
+
+   type Object (Sorted : Boolean) is tagged record
+      case Sorted is
+         when True =>
+            SS : aliased Source_Part_Ordered_Sets.Set;
+         when False =>
+            HS : aliased Source_Part_Hashed_Sets.Set;
+      end case;
    end record;
 
-   type Cursor is record
-      C : Source_Part_Sets.Cursor;
+   type Cursor (Sorted : Boolean := True) is record
+      case Sorted is
+         when True =>
+            SC : Source_Part_Ordered_Sets.Cursor;
+         when False =>
+            HC : Source_Part_Hashed_Sets.Cursor;
+      end case;
    end record;
 
-   type Iterator is new Source_Part_Iterator.Forward_Iterator
+   type Iterator (Sorted : Boolean) is
+     new Source_Part_Iterator.Forward_Iterator
    with record
-      Root : not null access constant Source_Part_Sets.Set;
+      case Sorted is
+         when True =>
+            SRoot : not null access constant Source_Part_Ordered_Sets.Set;
+         when False =>
+            HRoot : not null access constant Source_Part_Hashed_Sets.Set;
+      end case;
    end record;
+
+   type Constant_Reference_Type
+     (Part   : not null access constant Source_Part)
+   is null record;
 
    overriding function First (Iter : Iterator) return Cursor is
-      ((C => Iter.Root.First));
+     (if Iter.Sorted
+      then (Sorted => True, SC => Iter.SRoot.First)
+      else (Sorted => False, HC => Iter.HRoot.First));
    overriding function Next (Iter : Iterator; Position : Cursor) return Cursor
-     is ((C => Source_Part_Sets.Next (Position.C)));
+   is (if Iter.Sorted
+       then (Sorted => True,
+             SC     => Source_Part_Ordered_Sets.Next (Position.SC))
+       else (Sorted => False,
+             HC     => Source_Part_Hashed_Sets.Next (Position.HC)));
 
    function Is_Empty (Self : Object) return Boolean is
-      (Source_Part_Sets.Is_Empty (Self.S));
+     (if Self.Sorted
+      then Self.SS.Is_Empty
+      else Self.HS.Is_Empty);
 
    function Has_Element (Position : Cursor) return Boolean is
-     (Source_Part_Sets.Has_Element (Position.C));
+     (if Position.Sorted
+      then Source_Part_Ordered_Sets.Has_Element (Position.SC)
+      else Source_Part_Hashed_Sets.Has_Element (Position.HC));
 
    function Element (Position : Cursor) return Source_Part is
-      (Source_Part_Sets.Element (Position.C));
-
-   function Constant_Reference
-     (Self     : aliased Object;
-      Position : Cursor) return Constant_Reference_Type is
-     ((Part => Self.S.Constant_Reference (Position.C).Element));
-
-   function Iterate (Self : Object)
-                     return Source_Part_Iterator.Forward_Iterator'Class is
-      (Iterator'(Root => Self.S'Unchecked_Access));
+     (if Position.Sorted
+      then Source_Part_Ordered_Sets.Element (Position.SC)
+      else Source_Part_Hashed_Sets.Element (Position.HC));
 
 end GPR2.Project.Source.Part_Set;
