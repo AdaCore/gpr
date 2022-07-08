@@ -330,9 +330,10 @@ package body GPR2.Project.Source is
    function Dependencies
      (Self    : Object;
       Index   : Unit_Index := No_Index;
-      Closure : Boolean    := False) return Part_Set.Object
+      Closure : Boolean    := False;
+      Sorted  : Boolean    := True) return Part_Set.Object
    is
-      Deps : Part_Set.Object;
+      Deps : Part_Set.Object (Sorted => Sorted);
 
       procedure Insert (Source : Object; Unit : GPR2.Unit.Object);
 
@@ -351,7 +352,7 @@ package body GPR2.Project.Source is
       end Insert;
 
    begin
-      Self.Dependencies (Index, Insert'Access, Closure);
+      Self.Dependencies (Index, Insert'Access, Closure, Sorted);
       return Deps;
    end Dependencies;
 
@@ -360,12 +361,13 @@ package body GPR2.Project.Source is
       Index    : Unit_Index;
       For_Each : not null access procedure
                    (Source : Object; Unit : GPR2.Unit.Object);
-      Closure  : Boolean := False)
+      Closure  : Boolean := False;
+      Sorted   : Boolean := True)
    is
       use type GPR2.Source_Info.Backend;
 
-      Done      : Part_Set.Object;
-      Added     : Part_Set.Object;
+      Done      : Part_Set.Object (Sorted => Sorted);
+      Added     : Part_Set.Object (Sorted => Sorted);
 
       procedure Action
         (Unit_Name : Name_Type;
@@ -459,7 +461,8 @@ package body GPR2.Project.Source is
       Index    : Unit_Index;
       For_Each : not null access procedure
                    (Source : Object; Index : Unit_Index);
-      Closure  : Boolean := False)
+      Closure  : Boolean := False;
+      Sorted   : Boolean := True)
    is
       procedure Action (Source : Object; Unit : GPR2.Unit.Object);
 
@@ -473,7 +476,7 @@ package body GPR2.Project.Source is
       end Action;
 
    begin
-      Self.Dependencies (Index, Action'Access);
+      Self.Dependencies (Index, Action'Access, Sorted => Sorted);
    end Dependencies;
 
    --------------------------

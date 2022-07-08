@@ -984,7 +984,9 @@ package body GPRinstall.Install is
                --  Note that we only install the interface from the same view
                --  to avoid installing the runtime file for example.
 
-               for D of Source.Dependencies (Index, Closure => True) loop
+               for D of Source.Dependencies
+                 (Index, Closure => True, Sorted => False)
+               loop
                   if not Source_Copied.Contains (D.Source)
                     and then (D.Source.Kind (D.Index) in Unit.Spec_Kind
                               or else Other_Part_Need_Body (D.Source, D.Index))
