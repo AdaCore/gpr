@@ -1673,6 +1673,7 @@ package body GPR2.KB is
                OS_Lib.Free (Args);
                Tmp_Result := GNATCOLL.OS.Process.Run
                  (Args_Vector,
+                  Stdin  => GNATCOLL.OS.Process.FS.Null_FD,
                   Stderr => GNATCOLL.OS.Process.FS.To_Stdout,
                   Status => Dummy);
                Args_Vector.Clear;

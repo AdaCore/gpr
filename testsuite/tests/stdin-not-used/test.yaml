@@ -1,0 +1,5 @@
+description:
+    Testing that stdin can be used in another task
+driver: build_and_run
+project_file: test
+main: main
