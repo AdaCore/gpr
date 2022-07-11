@@ -1834,10 +1834,14 @@ package body GPR2.Project.Tree is
                           (Prj.Name, Imported_View);
                      end if;
 
-                     Data.Closure.Include (Imported_View.Name, Imported_View);
+                     Data.Closure.Include (Prj.Name, Imported_View);
 
-                     for V of Definition.Get_RO (Imported_View).Closure loop
-                        Data.Closure.Include (V.Name, V);
+                     for C in
+                       Definition.Get_RO (Imported_View).Closure.Iterate
+                     loop
+                        Data.Closure.Include
+                          (Definition.Project_View_Store.Key (C),
+                           Definition.Project_View_Store.Element (C));
                      end loop;
                   end;
                end loop;
@@ -2393,6 +2397,7 @@ package body GPR2.Project.Tree is
          use type GPR2.Context.Binary_Signature;
 
          P_Data        : constant Definition.Ref := Definition.Get (View);
+         Agg_Paths     : GPR2.Containers.Filename_Set;
          Old_Signature : constant GPR2.Context.Binary_Signature :=
                            P_Data.Signature;
          New_Signature : GPR2.Context.Binary_Signature;
@@ -2687,6 +2692,7 @@ package body GPR2.Project.Tree is
             --  depending on the parsing of the imported projects.
 
             P_Data.Aggregated.Clear;
+            Agg_Paths.Clear;
 
             --  Pathname for Project_Files projects are relative to the
             --  aggregate project only.
@@ -2704,8 +2710,8 @@ package body GPR2.Project.Tree is
 
                         Found := True;
 
-                     elsif P_Data.Aggregated.Contains
-                       (Name_Type (Pathname.Value))
+                     elsif Agg_Paths.Contains
+                       (Filename_Type (Pathname.Value))
                      then
                         --  Duplicate in the project_files attribute
 
@@ -2741,8 +2747,8 @@ package body GPR2.Project.Tree is
 
                            --  Record aggregated view into the aggregate's view
 
-                           P_Data.Aggregated.Insert
-                             (Name_Type (Pathname.Value), A_View);
+                           P_Data.Aggregated.Append (A_View);
+                           Agg_Paths.Insert (Filename_Type (Pathname.Value));
                         end;
 
                         Found := True;

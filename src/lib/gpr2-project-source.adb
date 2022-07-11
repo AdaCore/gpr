@@ -22,7 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Ordered_Sets;
+with Ada.Containers.Hashed_Sets;
 with Ada.Strings.Fixed;
 
 with GPR2.Message;
@@ -40,6 +40,15 @@ package body GPR2.Project.Source is
 
    package PRA renames GPR2.Project.Registry.Attribute;
    package PRP renames GPR2.Project.Registry.Pack;
+   use type Ada.Containers.Hash_Type;
+
+   function Hash
+     (Id : GPR2.Unit.Source_Unit_Identifier) return Ada.Containers.Hash_Type
+   is (Ada.Strings.Hash (Id.Source.Value) +
+         Ada.Containers.Hash_Type (Id.Index));
+
+   package Source_Unit_Id_Sets is new Ada.Containers.Hashed_Sets
+     (GPR2.Unit.Source_Unit_Identifier, Hash, GPR2.Unit."=", GPR2.Unit."=");
 
    procedure Context_Clause_Dependencies
      (Self     : Object;
@@ -119,8 +128,6 @@ package body GPR2.Project.Source is
                  View (Self).Tree;
       U_Done : Containers.Name_Set;
 
-      package Source_Unit_Id_Sets is new Ada.Containers.Ordered_Sets
-        (GPR2.Unit.Source_Unit_Identifier, GPR2.Unit."<", GPR2.Unit."=");
       S_Done : Source_Unit_Id_Sets.Set;
       --  Fast look-up tables to avoid analysing the same unit/file multiple
       --  time and more specifically avoid circularities.
@@ -366,7 +373,7 @@ package body GPR2.Project.Source is
    is
       use type GPR2.Source_Info.Backend;
 
-      Done      : Part_Set.Object (Sorted => Sorted);
+      Done      : Source_Unit_Id_Sets.Set;
       Added     : Part_Set.Object (Sorted => Sorted);
 
       procedure Action
@@ -386,8 +393,8 @@ package body GPR2.Project.Source is
          Kind      : GPR2.Unit.Library_Unit_Type;
          Stamp     : Ada.Calendar.Time)
       is
-         S        : Project.Source.Object;
-         Position : Part_Set.Cursor;
+         S        : Project.Source.Constant_Access;
+         Position : Source_Unit_Id_Sets.Cursor;
          Inserted : Boolean;
          CU       : GPR2.Unit.Object;
 
@@ -400,31 +407,37 @@ package body GPR2.Project.Source is
            and then S.Check_Unit
              (Unit_Name, Spec => Kind in GPR2.Unit.Spec_Kind, Unit => CU)
          then
-            Done.Insert ((S, CU.Index), Position, Inserted);
+            Done.Insert ((S.Path_Name, CU.Index), Position, Inserted);
          else
-            Done.Insert ((S, No_Index), Position, Inserted);
+            Done.Insert ((S.Path_Name, No_Index), Position, Inserted);
          end if;
 
          if Inserted then
+            if Closure then
+               if S.Has_Units then
+                  Added.Insert ((S.all, CU.Index));
+               else
+                  Added.Insert ((S.all, No_Index));
+               end if;
+            end if;
+
             if not S.Is_Ada
               and then not S.Is_Parsed (No_Index)
-              and then S.Kind (No_Index) in GPR2.Unit.Spec_Kind
+              and then S.Kind in GPR2.Unit.Spec_Kind
             then
                --  Non-Ada spec build timestamp can be taken only from
                --  dependencies.
 
-               S.Update_Build_Timestamp (Stamp);
-            end if;
+               declare
+                  Src : Project.Source.Object := S.all;
+               begin
+                  Src.Update_Build_Timestamp (Stamp);
+                  For_Each (Src, CU);
+               end;
 
-            if Closure then
-               if S.Has_Units then
-                  Added.Insert ((S, CU.Index));
-               else
-                  Added.Insert ((S, No_Index));
-               end if;
+            else
+               For_Each (S.all, CU);
             end if;
-
-            For_Each (S, CU);
          end if;
       end Action;
 

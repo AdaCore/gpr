@@ -97,10 +97,7 @@ package GPR2.Project.Source.Set is
      with Pre => Source.Is_Defined, Inline;
 
    function Element (Position : Cursor) return Project.Source.Object
-     with Post =>
-       (if Has_Element (Position)
-        then Element'Result.Is_Defined
-        else not Element'Result.Is_Defined);
+     with Inline;
 
    function Has_Element (Position : Cursor) return Boolean
      with Inline;

@@ -22,12 +22,13 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Containers.Indefinite_Hashed_Maps;
 
 package GPR2.Project.Unit_Info.Set is
 
    package Set is
-     new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Unit_Info.Object);
+     new Ada.Containers.Indefinite_Hashed_Maps
+       (Name_Type, Unit_Info.Object, GPR2.Hash, GPR2."=");
 
    subtype Object is Set.Map;
 

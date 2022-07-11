@@ -1259,10 +1259,13 @@ package body GPR2.Project.View is
    function Check_Source
      (Self     : Object;
       Filename : GPR2.Simple_Name;
-      Result   : in out Project.Source.Object) return Boolean
+      Result   : out Project.Source.Constant_Access) return Boolean
    is
-
       function Check_View (V : Object) return Boolean with Inline;
+
+      ----------------
+      -- Check_View --
+      ----------------
 
       function Check_View (V : Object) return Boolean is
          Def : constant Definition.Const_Ref := Get_RO (V);
@@ -1271,8 +1274,13 @@ package body GPR2.Project.View is
          Pos := Def.Sources_Map.Find (Filename);
 
          if Definition.Simple_Name_Source.Has_Element (Pos) then
-            Result := Project.Source.Set.Element
-              (Definition.Simple_Name_Source.Element (Pos));
+            declare
+               Ref : constant Project.Source.Set.Constant_Reference_Type :=
+                       Def.Sources.Constant_Reference
+                         (Definition.Simple_Name_Source.Element (Pos));
+            begin
+               Result := Project.Source.Constant_Access'(Ref.Source);
+            end;
 
             return True;
          else
@@ -1281,23 +1289,43 @@ package body GPR2.Project.View is
       end Check_View;
 
    begin
+      --  look in self first
       if Check_View (Self) then
          return True;
       end if;
 
+      --  then search all visible views
       for V of Get_RO (Self).Closure loop
          if Check_View (V) then
             return True;
          end if;
       end loop;
 
+      --  finally look at the implicit runtime project
       if Self.Tree.Has_Runtime_Project
         and then Check_View (Self.Tree.Runtime_Project)
       then
          return True;
       end if;
 
+      --  No such simple name in the view's closure
+
       return False;
+   end Check_Source;
+
+   function Check_Source
+     (Self     : Object;
+      Filename : GPR2.Simple_Name;
+      Result   : in out Project.Source.Object) return Boolean
+   is
+      Res : Project.Source.Constant_Access;
+   begin
+      if Self.Check_Source (Filename, Res) then
+         Result := Res.all;
+         return True;
+      else
+         return False;
+      end if;
    end Check_Source;
 
    -----------------------
@@ -2280,13 +2308,14 @@ package body GPR2.Project.View is
       Executable : Simple_Name) return GPR2.Unit.Source_Unit_Identifier
    is
       Path : GPR2.Path_Name.Object;
+      Src  : GPR2.Project.Source.Object;
    begin
       --  Check executable attribute
       for Attr of Self.Attributes (PRP.Builder, PRA.Executable) loop
-         if Simple_Name (Attr.Value.Text) = Executable then
-            return (Source => Self.Tree.Get_File
-                                (Simple_Name (Attr.Index.Value)),
-                    Index  => Attr.Index.At_Pos);
+         if Simple_Name (Attr.Value.Text) = Executable
+           and then Self.Check_Source (Simple_Name (Attr.Index.Value), Src)
+         then
+            return (Src.Path_Name, Attr.Index.At_Pos);
          end if;
       end loop;
 
@@ -2295,9 +2324,10 @@ package body GPR2.Project.View is
          for Value of Self.Attribute (PRA.Main).Values loop
             Path := Self.Executable (Simple_Name (Value.Text), Value.At_Pos);
 
-            if Path.Simple_Name = Executable then
-               return (Self.Tree.Get_File (Simple_Name (Value.Text)),
-                       Value.At_Pos);
+            if Path.Simple_Name = Executable
+              and then Self.Check_Source (Simple_Name (Value.Text), Src)
+            then
+               return (Src.Path_Name, Value.At_Pos);
             end if;
          end loop;
       end if;
@@ -2313,22 +2343,20 @@ package body GPR2.Project.View is
      (Self : Object) return GPR2.Unit.Source_Unit_Vectors.Vector
    is
       Attr : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
-      Path : GPR2.Path_Name.Object;
+      Src  : GPR2.Project.Source.Object;
    begin
       return Set : GPR2.Unit.Source_Unit_Vectors.Vector do
          if Attr.Is_Defined then
             for Main of Attr.Values loop
-               Path := Self.Tree.Get_File
-                 (Simple_Name (Main.Text),
-                  Self);
-
-               if Path.Is_Defined then
+               if Self.Check_Source (Simple_Name (Main.Text), Src) then
                   if Main.Has_At_Pos then
                      Set.Append
-                       (GPR2.Unit.Source_Unit_Identifier'(Path, Main.At_Pos));
+                       (GPR2.Unit.Source_Unit_Identifier'
+                          (Src.Path_Name, Main.At_Pos));
                   else
                      Set.Append
-                       (GPR2.Unit.Source_Unit_Identifier'(Path, No_Index));
+                       (GPR2.Unit.Source_Unit_Identifier'
+                          (Src.Path_Name, No_Index));
                   end if;
                end if;
             end loop;
@@ -3018,6 +3046,7 @@ package body GPR2.Project.View is
    function View_For (Self : Object; Name : Name_Type) return View.Object is
       Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
       Dad  : Object := Data.Extended_Root;
+      C    : Definition.Project_View_Store.Cursor;
    begin
       --  Lookup in the ancestors first
 
@@ -3031,14 +3060,11 @@ package body GPR2.Project.View is
 
       --  Lookup in the imported next
 
-      declare
-         package DPV renames Definition.Project_View_Store;
-         Position : constant DPV.Cursor := Data.Imports.Find (Name);
-      begin
-         if DPV.Has_Element (Position) then
-            return DPV.Element (Position);
-         end if;
-      end;
+      C := Data.Imports.Find (Name);
+
+      if Definition.Project_View_Store.Has_Element (C) then
+         return Definition.Project_View_Store.Element (C);
+      end if;
 
       --  Try configuration project
 

@@ -23,6 +23,8 @@
 ------------------------------------------------------------------------------
 
 with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Containers.Vectors;
+
 with GPR2.Context;
 with GPR2.Project.Attribute_Cache;
 with GPR2.Project.Attribute.Set;
@@ -59,19 +61,24 @@ private package GPR2.Project.Definition is
    end record;
 
    package Simple_Name_Source is
-     new Ada.Containers.Indefinite_Ordered_Maps
-       (Simple_Name, Project.Source.Set.Cursor, "=" => Project.Source.Set."=");
+     new Ada.Containers.Indefinite_Hashed_Maps
+       (Simple_Name, Project.Source.Set.Cursor, GPR2.Hash, GPR2."=",
+        Project.Source.Set."=");
    --  Map to find in which view a source is defined
 
    package Unit_Source is
-     new Ada.Containers.Indefinite_Ordered_Maps
-       (String, Project.Source.Set.Cursor, "=" => Project.Source.Set."=");
+     new Ada.Containers.Indefinite_Hashed_Maps
+       (String, Project.Source.Set.Cursor, Ada.Strings.Hash, "=",
+        "=" => Project.Source.Set."=");
    --  Map to find in which view a unit is defined
 
    function Key (Unit : GPR2.Unit.Object) return String is
      ((if Unit.Kind in GPR2.Unit.Spec_Kind then 'S' else 'B')
        & To_Lower (Unit.Name));
    --  Key function used as index to Unit_Source
+
+   package Project_Vector is new Ada.Containers.Vectors
+     (Positive, View.Object);
 
    package Project_View_Store is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, View.Object);
@@ -114,7 +121,7 @@ private package GPR2.Project.Definition is
       Limited_Imports : Project_View_Store.Map;
       Closure         : Project_View_Store.Map;
       Is_Imported     : Boolean := False;
-      Aggregated      : Project_View_Store.Map;
+      Aggregated      : Project_Vector.Vector;
       Attrs           : Project.Attribute.Set.Object;
       Vars            : Project.Variable.Set.Object;
       Packs           : Project.Pack.Set.Map;

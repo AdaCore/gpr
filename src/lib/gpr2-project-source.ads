@@ -47,6 +47,8 @@ package GPR2.Project.Source is
    --  This constant is equal to any object declared without an explicit
    --  initializer.
 
+   type Constant_Access is access constant Object;
+
    type Source_Part is record
       Source : Object;
       Index  : Unit_Index;

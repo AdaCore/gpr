@@ -479,6 +479,11 @@ package GPR2.Project.View is
    function Check_Source
      (Self     : Object;
       Filename : GPR2.Simple_Name;
+      Result   : out Project.Source.Constant_Access) return Boolean
+     with Pre => Self.Is_Defined;
+   function Check_Source
+     (Self     : Object;
+      Filename : GPR2.Simple_Name;
       Result   : in out Project.Source.Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Get the source by simple filename from the subtree of the View.
