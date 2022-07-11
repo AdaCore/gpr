@@ -40,10 +40,11 @@ package GPR2.Project.Source.Part_Set is
    type Cursor is private;
 
    function Has_Element (Position : Cursor) return Boolean;
-   function Element (Position : Cursor) return Source_Part;
+   function Element (Position : Cursor) return Source_Part with Inline;
 
    type Constant_Reference_Type
-     (Part : not null access constant Source_Part) is private
+     (Part   : not null access constant Source_Part;
+      Sorted : Boolean) is private
      with Implicit_Dereference => Part;
 
    function Constant_Reference
@@ -129,8 +130,16 @@ private
    end record;
 
    type Constant_Reference_Type
-     (Part   : not null access constant Source_Part)
-   is null record;
+     (Part   : not null access constant Source_Part;
+      Sorted : Boolean)
+   is record
+      case Sorted is
+         when True =>
+            SRef : Source_Part_Ordered_Sets.Constant_Reference_Type (Part);
+         when False =>
+            HRef : Source_Part_Hashed_Sets.Constant_Reference_Type (Part);
+      end case;
+   end record;
 
    overriding function First (Iter : Iterator) return Cursor is
      (if Iter.Sorted
