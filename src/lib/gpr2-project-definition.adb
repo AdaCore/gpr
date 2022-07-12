@@ -198,8 +198,8 @@ package body GPR2.Project.Definition is
       procedure Check_View (View : Project.View.Object) is
 
          package Suffix_Lang_Maps is
-           new Ada.Containers.Indefinite_Ordered_Maps
-             (Value_Type, Language_Id);
+           new Ada.Containers.Indefinite_Hashed_Maps
+             (Value_Type, Language_Id, Ada.Strings.Hash, "=");
 
          Suffix_Lang_Map : Suffix_Lang_Maps.Map;
          --  key=suffix value; value=first language registering suffix use
@@ -638,13 +638,15 @@ package body GPR2.Project.Definition is
         (Language_Id, Boolean, Hash, "=");
 
       package Unit_Name_To_Sloc is new
-        Ada.Containers.Indefinite_Ordered_Maps (Name_Type, SR.Object);
+        Ada.Containers.Indefinite_Hashed_Maps
+          (Name_Type, SR.Object, GPR2.Hash, GPR2."=");
       --  Used for the Interface_Units container which will initially store all
       --  the units from the Library_Interface attribute, as a mapping from
       --  unit names to slocs.
 
       package Source_Path_To_Sloc is new
-        Ada.Containers.Indefinite_Ordered_Maps (Filename_Type, SR.Object);
+        Ada.Containers.Indefinite_Hashed_Maps
+          (Filename_Type, SR.Object, GPR2.Hash, GPR2."=");
       --  Same as above but for the Interfaces attribute, so here we are using
       --  Filename_Type instead of Name_Type since we're dealing with
       --  filenames.
@@ -654,10 +656,12 @@ package body GPR2.Project.Definition is
       --  Element type for Source_Path_To_Attribute_List below
 
       package Source_Path_To_Attribute_List is new
-        Ada.Containers.Indefinite_Ordered_Maps
-          (Key_Type     => Filename_Type,
-           Element_Type => Attribute_List.List,
-           "="          => Attribute_List."=");
+        Ada.Containers.Indefinite_Hashed_Maps
+          (Key_Type        => Filename_Type,
+           Element_Type    => Attribute_List.List,
+           Hash            => GPR2.Hash,
+           Equivalent_Keys => GPR2."=",
+           "="             => Attribute_List."=");
       --  Used for the Ada_Naming_Exceptions container which maps a filename to
       --  the list of naming attributes (Body/Spec) that reference it.
 
@@ -676,8 +680,8 @@ package body GPR2.Project.Definition is
          Sep_Suffix          : String (1 .. Separate_Suffix_Length);
       end record;
 
-      package Naming_Schema_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-        (Language_Id, Naming_Schema);
+      package Naming_Schema_Maps is new Ada.Containers.Indefinite_Hashed_Maps
+        (Language_Id, Naming_Schema, GPR2.Hash, GPR2."=");
 
       procedure Register_Units
         (Source : Project.Source.Object)

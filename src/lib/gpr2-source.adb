@@ -47,13 +47,25 @@ package body GPR2.Source is
 
    overriding function "=" (Left, Right : Object) return Boolean is
    begin
-      if not Left.Path_Name.Is_Defined
-        and then not Right.Path_Name.Is_Defined
-      then
+      --  Allows comparing with Undefined constant. Note: we can't call
+      --  Left.Is_Defined or Right.Is_Defined here, because the Is_Defined
+      --  function uses the "=" operator.
+
+      if Left.Path_Name.Is_Defined /= Right.Path_Name.Is_Defined then
+         return False;
+      end if;
+
+      if not Left.Path_Name.Is_Defined then
+         --  Both undefined
          return True;
+      end if;
+
+      if Left.Is_Ada then
+         return Right.Is_Ada and then Left.Ada_Key = Right.Ada_Key;
       else
-         return Left.Path_Name.Is_Defined = Right.Path_Name.Is_Defined
-           and then Key (Left) = Key (Right);
+         return not Right.Is_Ada
+           and then Filename_Optional (Left.Path_Name.Value) =
+                      Filename_Optional (Right.Path_Name.Value);
       end if;
    end "=";
 

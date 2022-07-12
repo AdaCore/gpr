@@ -43,9 +43,23 @@ package body GPR2.Project.Source.Part_Set is
    is
    begin
       if Self.Sorted then
-         return (Part => Self.SS.Constant_Reference (Position.SC).Element);
+         declare
+            Ref : constant Source_Part_Ordered_Sets.Constant_Reference_Type :=
+                    Self.SS.Constant_Reference (Position.SC);
+         begin
+            return (Part   => Ref.Element.all'Unrestricted_Access,
+                    Sorted => True,
+                    SRef   => Ref);
+         end;
       else
-         return (Part => Self.HS.Constant_Reference (Position.HC).Element);
+         declare
+            Ref : constant Source_Part_Hashed_Sets.Constant_Reference_Type :=
+                    Self.HS.Constant_Reference (Position.HC);
+         begin
+            return (Part   => Ref.Element.all'Unrestricted_Access,
+                    Sorted => False,
+                    HRef   => Ref);
+         end;
       end if;
    end Constant_Reference;
 

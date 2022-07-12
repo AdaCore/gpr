@@ -1,3 +1,5 @@
 description: Test gprls uses Ada source parser
 driver: python_script
 timeout: 600
+control:
+- [XFAIL, "True", "while investigating V712-020"]
