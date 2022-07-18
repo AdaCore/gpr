@@ -1,0 +1,7 @@
+Code-Review+2: Vasiliy Fofanov <fofanov@adacore.com>
+Code-Review-1: CI Builder <ci-builder@adacore.com>
+Submitted-by: Philippe Gil <gil@adacore.com>
+Submitted-at: Mon, 18 Jul 2022 08:12:53 +0000
+Reviewed-on: https://git.adacore-it.com/c/gpr/+/118571
+Project: gpr
+Branch: refs/heads/master
