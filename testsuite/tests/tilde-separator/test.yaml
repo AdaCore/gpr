@@ -1,0 +1,5 @@
+description:
+    ~ is supported as dot replacement if Standard GNAT Naming used.
+driver: build_and_run
+project_file: test
+main: main
