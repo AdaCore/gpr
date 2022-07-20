@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Directories;
 with Ada.Strings.Fixed;
 
 with GNAT.OS_Lib;
@@ -28,7 +29,8 @@ package body GPRname.Source_Dir is
 
    function Create
      (Name      : Filename_Type;
-      Directory : Filename_Optional := No_Filename) return Object
+      Directory : Filename_Optional := No_Filename)
+      return Dir_And_Optional_File
    is
       use Ada.Strings;
 
@@ -38,22 +40,68 @@ package body GPRname.Source_Dir is
       PN           : Path_Name.Object;
 
       Dir : constant Filename_Type :=
-            ((if Directory = No_Filename then ""
-             else Directory & GNAT.OS_Lib.Directory_Separator) & Name);
-
+        ((if Directory = No_Filename then ""
+         else Directory & GNAT.OS_Lib.Directory_Separator) & Name);
    begin
-      if Is_Recursive then
+
+      if Is_Recursive
+      then
          PN := Path_Name.Create_Directory
-           (Filename_Type (Fixed.Head (String (Dir), Dir'Length - 2)));
+           (Filename_Type (Fixed.Head
+            (String (Dir), Dir'Length - 2)));
+
+         if not PN.Exists then
+            raise GPRname_Exception with "invalid source directory: "
+              & PN.Value;
+         end if;
+
+         return Dir_And_Optional_File'
+           (Has_File => False,
+            Dir      => (PN, Is_Recursive, +String (Name)));
       else
-         PN := Path_Name.Create_Directory (Dir);
+         if Ada.Directories.Exists (Name => String (Dir))
+         then
+            if GNAT.OS_Lib.Is_Directory (Name => String (Dir))
+            then
+               PN := Path_Name.Create_Directory (Dir);
+
+               if not PN.Exists then
+                  raise GPRname_Exception with "invalid source directory: "
+                    & PN.Value;
+               end if;
+
+               return Dir_And_Optional_File'
+                 (Has_File => False,
+                  Dir      => (PN, Is_Recursive, +String (Name)));
+            else
+               declare
+                  Realdir  : constant Filename_Type :=
+                    Filename_Type (Ada.Directories.Containing_Directory
+                                   (String (Dir)));
+                  Realname : constant Filename_Type :=
+                    Filename_Type (Ada.Directories.Containing_Directory
+                                   (String (Name)));
+               begin
+                  PN := Path_Name.Create_Directory (Realdir);
+
+                  if not PN.Exists then
+                     raise GPRname_Exception with "invalid source directory: "
+                       & PN.Value;
+                  end if;
+
+                  return Dir_And_Optional_File'
+                    (Has_File => True,
+                     Dir      => (PN, Is_Recursive, +String (Realname)),
+                     File     => GPR2.Path_Name.Create_File
+                       (Name => Name)
+                    );
+               end;
+            end if;
+         else
+            raise GPRname_Exception with "invalid source: " & String (Dir);
+         end if;
       end if;
 
-      if not PN.Exists then
-         raise GPRname_Exception with "invalid source directory: " & PN.Value;
-      end if;
-
-      return (PN, Is_Recursive, +String (Name));
    end Create;
 
 end GPRname.Source_Dir;

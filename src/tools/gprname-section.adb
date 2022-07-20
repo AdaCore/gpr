@@ -43,10 +43,14 @@ package body GPRname.Section is
    procedure Add_Directory
      (Self      : in out Object;
       Directory : String;
-      Root_Dir  : String) is
+      Root_Dir  : String)
+   is
+      Dir_And_OFile : Source_Dir.Dir_And_Optional_File;
    begin
-      Self.Directories.Append
-        (Create (Filename_Type (Directory), Filename_Optional (Root_Dir)));
+      Dir_And_OFile :=
+        Create (Filename_Type (Directory),
+                Filename_Optional (Root_Dir));
+      Self.Directories.Append (Dir_And_OFile.Dir);
    end Add_Directory;
 
    -----------------------------------
@@ -102,48 +106,66 @@ package body GPRname.Section is
 
       use Ada.Text_IO;
 
-      function Get_Source_Dirs_From_File
-        (File : String) return Source_Dir.Vector.Object;
-      --  Add source directories from a file
+      procedure Get_Source_Dirs_And_Files_From_File (File : String);
+      --  Add source directories and source files from a file
 
-      -------------------------------
-      -- Get_Source_Dirs_From_File --
-      -------------------------------
+      -----------------------------------------
+      -- Get_Source_Dirs_And_Files_From_File --
+      -----------------------------------------
 
-      function Get_Source_Dirs_From_File
-        (File : String) return Source_Dir.Vector.Object
+      procedure Get_Source_Dirs_And_Files_From_File (File : String)
       is
-         F   : File_Type;
-         Ret : Source_Dir.Vector.Object;
+         F            : File_Type;
+         Source_Dirs  : Source_Dir.Vector.Object;
+         Source_Files : Source.Set.Object;
       begin
          Open (F, In_File, File);
 
          while not End_Of_File (F) loop
-            Ret.Append
-              (Create (Filename_Type (Get_Line (F)),
-               GPR2.Filename_Optional (Root)));
+            declare
+               Dir_And_OFile : constant Source_Dir.Dir_And_Optional_File
+                 := Create (Filename_Type (Get_Line (F)),
+                            GPR2.Filename_Optional (Root));
+            begin
+               if not Source_Dirs.Contains (Dir_And_OFile.Dir)
+               then
+                  Source_Dirs.Append (Dir_And_OFile.Dir);
+               end if;
+
+               if Dir_And_OFile.Has_File then
+                  Source_Files.Insert
+                    (New_Item => Source.Create
+                       (File => Dir_And_OFile.File,
+                        Language => "",
+                        Unit_Based => False));
+               end if;
+            end;
          end loop;
 
          Close (F);
 
-         return Ret;
+         Self.Directories.Append_Vector (Source_Dirs);
+         Self.Files := Source_Files;
+
       exception
+         when GPRname_Exception =>
+            raise;
          when others =>
             raise GPRname_Exception with "Could not read file '" & File & "'";
-      end Get_Source_Dirs_From_File;
+      end Get_Source_Dirs_And_Files_From_File;
 
    begin
       --  First, add the directories listed in the source dir files
 
       for File of Self.Directories_Files loop
-         Self.Directories.Append_Vector
-           (Get_Source_Dirs_From_File (File.Value));
+         Get_Source_Dirs_And_Files_From_File (File.Value);
       end loop;
 
       --  Second, add the default source dir (".") if there is none
 
       if Self.Directories.Is_Empty then
-         Self.Directories.Append (Create (".", GPR2.Filename_Optional (Root)));
+         Self.Directories.Append
+           (Create (".", GPR2.Filename_Optional (Root)).Dir);
       end if;
 
       --  Third, add the default pattern ("*") is there is none
@@ -161,6 +183,7 @@ package body GPRname.Section is
    procedure Reset (Self : in out Object) is
    begin
       Self.Directories.Clear;
+      Self.Files.Clear;
       Self.Directories_Files.Clear;
       Self.Patterns.Clear;
       Self.Excluded_Patterns.Clear;

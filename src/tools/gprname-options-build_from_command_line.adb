@@ -171,7 +171,8 @@ procedure Build_From_Command_Line (Self : in out Object) is
       Put_Line ("  --and                Begin a new naming patterns section");
       Put_Line ("  -d[ ]<dir>           Use <dir> as one of the source" &
                   " directories for the current section");
-      Put_Line ("  -D[ ]<file>          Get source directories from <file>");
+      Put_Line ("  -D[ ]<file>          Get source directories and "
+                & "files from <file>");
       Put_Line ("   [-x][ ]<pat>        [exclude] pattern <pat> " &
                   "for Ada source");
       Put_Line ("  -[x]f[ ]<pat>        [exclude] pattern <pat> " &

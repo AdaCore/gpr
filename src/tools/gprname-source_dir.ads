@@ -32,9 +32,21 @@ package GPRname.Source_Dir is
    --  A source directory as seen by GPR, which may be suffixed by "**" and
    --  thus searched recursively.
 
+   type Dir_And_Optional_File (Has_File : Boolean := False) is
+      record
+         Dir  : Object;
+         case Has_File is
+            when True =>
+               File : Path_Name.Object;
+            when False =>
+               null;
+         end case;
+      end record;
+
    function Create
      (Name      : Filename_Type;
-      Directory : Filename_Optional := No_Filename) return Object;
+      Directory : Filename_Optional := No_Filename)
+      return Dir_And_Optional_File;
    --  Creates a source directory, setting the Is_Recursive field according to
    --  whether Name has the "**" suffix or not.
 

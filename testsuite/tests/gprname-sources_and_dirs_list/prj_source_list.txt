@@ -1,0 +1,7 @@
+dir1
+dir2/**
+dir1/pack1.ads
+dir3/other_naming.ads
+dir3/other_naming.adb
+dir2/pack2.ads
+dir1/main.adb
