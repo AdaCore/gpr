@@ -18,6 +18,7 @@ print("building...")
 bnr.call(["gprbuild", "-q", "-P", "pa.gpr"])
 execute([GPRLS, "-d", "-P", "pa.gpr", "p0"])
 execute([GPRLS, "-d", "-a0", "--debugF", "-P", "pa.gpr", "p0"])
+execute([GPRLS, "-s", "--closure", "-P", "pa.gpr", "p6_2"])
 
 print("cleaning...")
 bnr.call([GPRCLEAN, "-r", "-P", "pa.gpr"])

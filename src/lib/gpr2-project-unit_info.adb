@@ -30,9 +30,10 @@ package body GPR2.Project.Unit_Info is
 
    function Create
      (Name      : Name_Type;
-      Spec      : Unit.Source_Unit_Identifier;
-      Main_Body : Unit.Source_Unit_Identifier;
-      Separates : Unit.Source_Unit_Vectors.Vector) return Object is
+      Spec      : Unit.Source_Unit_Identifier := Unit.Undefined_Id;
+      Main_Body : Unit.Source_Unit_Identifier := Unit.Undefined_Id;
+      Separates : Unit.Source_Unit_Vectors.Vector :=
+        Unit.Source_Unit_Vectors.Empty_Vector) return Object is
    begin
       return Object'(To_Unbounded_String (String (Name)),
                      Spec,

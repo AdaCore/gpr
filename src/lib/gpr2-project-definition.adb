@@ -613,47 +613,12 @@ package body GPR2.Project.Definition is
    procedure Update_Sources_Parse
      (Def : in out Data; Backends : Source_Info.Backend_Set)
    is
+      use type GPR2.Source_Info.Backend_Set;
+
       Repeat_Map  : Simple_Name_Source.Map; -- Second pass for subunits
       Position    : Simple_Name_Source.Cursor;
       Inserted    : Boolean;
       SW          : Project.Source.Object;
-
-      procedure Insert_SW (C : Project.Source.Set.Cursor);
-      --  Insert SW into Def_Sources and Def_Src_Map
-
-      ---------------
-      -- Insert_SW --
-      ---------------
-
-      procedure Insert_SW (C : Project.Source.Set.Cursor) is
-         use GPR2.Unit;
-         CUnits : GPR2.Project.Unit_Info.Set.Cursor;
-      begin
-         Def.Sources.Replace (C, SW);
-
-         if SW.Has_Units then
-            --  Check newly found separates and update Unit_Info
-            for Unit of SW.Units loop
-               if Unit.Kind = S_Separate then
-                  CUnits := Def.Units.Find (Unit.Separate_From);
-                  if GPR2.Project.Unit_Info.Set.Set.Has_Element (CUnits) then
-                     declare
-                        Ref : constant Unit_Info.Set.Set.Reference_Type :=
-                                Def.Units.Reference (CUnits);
-                        SUI : constant GPR2.Unit.Source_Unit_Identifier :=
-                                (SW.Path_Name, Unit.Index);
-                     begin
-                        if not Ref.Separates.Contains (SUI) then
-                           Ref.Update_Separates (SUI);
-                        end if;
-                     end;
-                  end if;
-               end if;
-
-               Def.Units_Map.Include (Key (Unit), C);
-            end loop;
-         end if;
-      end Insert_SW;
 
    begin
       Source_Info.Parser.Registry.Clear_Cache;
@@ -667,17 +632,16 @@ package body GPR2.Project.Definition is
          --  Spec/Spec_Only and Body/Body_Only units.
 
          SW.Update
-           (if Def.Extending.Was_Freed
-            then Backends
-            else Source_Info.No_Backends);
+           (C,
+            (if not Def.Is_Extended
+             then Backends
+             else Source_Info.No_Backends));
 
-         if SW.Is_Parsed (No_Index)
-           or else not Def.Extending.Was_Freed
-           or else SW.Language /= Ada_Language
+         if not SW.Is_Parsed (No_Index)
+           and then not Def.Is_Extended
+           and then SW.Language = Ada_Language
+           and then Backends /= Source_Info.No_Backends
          then
-            Insert_SW (C);
-
-         else
             --  It can be subunit case in runtime krunched source names, need
             --  to repeat after all .ali files parsed.
 
@@ -692,8 +656,7 @@ package body GPR2.Project.Definition is
 
       for C of Repeat_Map loop
          SW := Project.Source.Set.Element (C);
-         SW.Update (Backends);
-         Insert_SW (C);
+         SW.Update (C, Backends);
       end loop;
 
       --  Check unit-based interface attributes

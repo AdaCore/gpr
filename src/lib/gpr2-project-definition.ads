@@ -270,6 +270,9 @@ private package GPR2.Project.Definition is
       then not Def.Types.Is_Empty
       else Def.Types.Contains (Name));
 
+   function Is_Extended (Def : Data) return Boolean
+   is (not Def.Extending.Was_Freed);
+
    procedure Update_Sources
      (Def           : in out Data;
       View          : Project.View.Object;

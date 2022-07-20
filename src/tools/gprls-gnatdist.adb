@@ -22,6 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Calendar;
 with Ada.Text_IO;  use Ada.Text_IO;
 with GNAT.Strings; use GNAT.Strings;
 
@@ -147,17 +148,19 @@ package body GPRls.Gnatdist is
       Part : GPR2.Unit.Object;
       Main : constant GPR2.Unit.Main_Type := Unit.Main_Kind;
 
-      procedure Print_Dependency (Source : GPR2.Project.Source.Object;
-                                  Unit   : GPR2.Unit.Object);
+      procedure Print_Dependency (Source    : GPR2.Project.Source.Object;
+                                  Unit      : GPR2.Unit.Object;
+                                  Timestamp : Ada.Calendar.Time);
 
       ----------------------
       -- Print_Dependency --
       ----------------------
 
-      procedure Print_Dependency (Source : GPR2.Project.Source.Object;
-                                  Unit   : GPR2.Unit.Object)
+      procedure Print_Dependency (Source    : GPR2.Project.Source.Object;
+                                  Unit      : GPR2.Unit.Object;
+                                  Timestamp : Ada.Calendar.Time)
       is
-         pragma Unreferenced (Unit);
+         pragma Unreferenced (Unit, Timestamp);
       begin
          Output_Sdep (Source.Path_Name.Simple_Name);
       end Print_Dependency;

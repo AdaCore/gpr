@@ -1974,9 +1974,8 @@ package body GPR2.Project.View is
    -----------------
 
    function Is_Extended (Self : Object) return Boolean is
-      use Definition_References;
    begin
-      return Definition.Get_RO (Self).Extending /= Null_Weak_Ref;
+      return Definition.Get_RO (Self).Is_Extended;
    end Is_Extended;
 
    --------------------

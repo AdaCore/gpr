@@ -1,3 +1,6 @@
 with Tst;
 
-procedure Call is null;
+procedure Call is
+begin
+   null;
+end Call;
