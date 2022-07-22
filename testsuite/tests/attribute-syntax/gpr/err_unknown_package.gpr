@@ -1,0 +1,9 @@
+project Err_Unknown_Package is
+
+   for Source_Dirs use ("src");
+
+   package Naming is
+      for Undefined_Attribute use ("true");
+   end Naming;
+
+end Err_Unknown_Package;

@@ -1,7 +1,7 @@
 prj.gpr:3:07: error: unrecognized attribute "Toto"
-prj.gpr:5:07: error: attribute "Object_Dir" cannot be a list
-prj.gpr:7:07: error: attribute "Object_Dir" cannot have index
-prj.gpr:9:23: error: attribute "Source_Dirs" must be a list
+prj.gpr:5:07: error: attribute "Object_Dir" expects a single value
+prj.gpr:7:19: error: attribute "Object_Dir" does not expect an index
+prj.gpr:9:07: error: attribute "Source_Dirs" expects a list of values
 prj.gpr:11:19: error: undefined project "Imported"
 prj.gpr:14:05: error: full associative array expression requires simple attribute reference
 prj.gpr:31:08: error: type "T" already defined

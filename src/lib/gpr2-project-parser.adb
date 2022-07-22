@@ -3172,7 +3172,6 @@ package body GPR2.Project.Parser is
 
             Values   : constant Item_Values := Get_Term_List (Expr);
             A        : PA.Object;
-            Is_Valid : Boolean := True;
             --  Set to False if the attribute definition is invalid
 
             Id : constant Source_Reference.Attribute.Object :=
@@ -3235,120 +3234,90 @@ package body GPR2.Project.Parser is
                                 """ is read-only"));
                      end if;
 
-                     if (Single and then Values.First_Element.Text = "")
-                       or else (not Single and then Values.Length = 0)
-                     then
-                        case Def.Empty_Value is
-                           when PRA.Allow =>
-                              null;
-
-                           when PRA.Ignore =>
-                              Tree.Log_Messages.Append
-                                (Message.Create
-                                   (Level   => Message.Warning,
-                                    Sloc    => Sloc,
-                                    Message => "empty attribute "
-                                      & PRA.Image (Q_Name)
-                                      & " ignored"));
-                              Is_Valid := False;
-
-                           when PRA.Error =>
-                              Tree.Log_Messages.Append
-                                (Message.Create
-                                   (Level   => Message.Error,
-                                    Sloc    => Sloc,
-                                    Message => "attribute "
-                                      & PRA.Image (Q_Name)
-                                      & " cannot be empty"));
-                        end case;
-                     end if;
-
                      A.Set_Case
                        (Value_Is_Case_Sensitive => Def.Value_Case_Sensitive);
                   end;
                end if;
 
-               if Is_Valid then
-                  if Is_Open then
-                     if View_Def.Is_Root
-                       and then View_Def.Kind /= K_Configuration
-                       and then A.Name.Id = PRA.Target
-                       and then Tree.Has_Configuration
-                       and then A.Value.Text /= "all"
-                     then
-                        --  Check if defined target in the project is the
-                        --  same as configuration. Else issue a warning.
-
-                        declare
-                           C_View : Project.View.Object renames
-                                      Tree.Configuration.Corresponding_View;
-                           T_Conf : constant Name_Type :=
-                                      Name_Type
-                                        (C_View.Attribute
-                                           (PRA.Target).Value.Text);
-                           T_Attr : constant Name_Type :=
-                                      Name_Type (A.Value.Text);
-                           Base   : GPR2.KB.Object := Tree.Get_KB;
-
-                        begin
-                           if not Base.Is_Defined then
-                              Base := GPR2.KB.Create_Default
-                                (GPR2.KB.Targetset_Only_Flags);
-                           end if;
-
-                           if Base.Normalized_Target (T_Conf) /=
-                             Base.Normalized_Target (T_Attr)
-                           then
-                              Tree.Log_Messages.Append
-                                (Message.Create
-                                   (Level   => Message.Warning,
-                                    Sloc    => Sloc,
-                                    Message => "target attribute '"
-                                      & String (T_Attr)
-                                      & "' not used, overriden by the "
-                                      & "configuration's target: "
-                                      & String (T_Conf)));
-                           end if;
-                        end;
-                     end if;
+               if Is_Open then
+                  if View_Def.Is_Root
+                    and then View_Def.Kind /= K_Configuration
+                    and then A.Name.Id = PRA.Target
+                    and then Tree.Has_Configuration
+                    and then A.Value.Text /= "all"
+                  then
+                     --  Check if defined target in the project is the
+                     --  same as configuration. Else issue a warning.
 
                      declare
-                        Alias : constant Optional_Attribute_Id :=
-                                  PRA.Alias (Q_Name).Attr;
-                        A2    : constant GPR2.Project.Attribute.Object :=
-                                  (if Alias /= No_Attribute
-                                   then A.Get_Alias (Alias)
-                                   else Project.Attribute.Undefined);
+                        C_View : Project.View.Object renames
+                                   Tree.Configuration.Corresponding_View;
+                        T_Conf : constant Name_Type :=
+                                   Name_Type
+                                     (C_View.Attribute
+                                        (PRA.Target).Value.Text);
+                        T_Attr : constant Name_Type :=
+                                   Name_Type (A.Value.Text);
+                        Base   : GPR2.KB.Object := Tree.Get_KB;
+
                      begin
-                        if In_Pack then
-                           Record_Attribute (Pack_Ref.Attrs, A);
+                        if not Base.Is_Defined then
+                           Base := GPR2.KB.Create_Default
+                             (GPR2.KB.Targetset_Only_Flags);
+                        end if;
 
-                           if A2.Is_Defined
-                             and then Pack_Ref.Attrs.Contains (A2)
-                           then
-                              --  Need to update the value
-                              Record_Attribute (Pack_Ref.Attrs, A2);
-                           end if;
-
-                           if Is_Name_Exception then
-                              Actual.Include (Filename_Type (A.Value.Text));
-                           end if;
-
-                        else
-                           Record_Attribute (Attrs, A);
-
-                           if A2.Is_Defined and then Attrs.Contains (A2) then
-                              --  Need to update the value
-                              Record_Attribute (Attrs, A2);
-                           end if;
+                        if Base.Normalized_Target (T_Conf) /=
+                          Base.Normalized_Target (T_Attr)
+                        then
+                           Tree.Log_Messages.Append
+                             (Message.Create
+                                (Level   => Message.Warning,
+                                 Sloc    => Sloc,
+                                 Message => "target attribute '"
+                                            & String (T_Attr)
+                                            & "' not used, overriden by the "
+                                            & "configuration's target: "
+                                            & String (T_Conf)));
                         end if;
                      end;
-
-                  elsif Is_Name_Exception then
-                     Self.Skip_Src.Insert
-                       (Filename_Type (A.Value.Text), A.Value,
-                        Position, Inserted);
                   end if;
+
+                  declare
+                     Alias : constant Optional_Attribute_Id :=
+                               PRA.Alias (Q_Name).Attr;
+                     A2    : constant GPR2.Project.Attribute.Object :=
+                               (if Alias /= No_Attribute
+                                then A.Get_Alias (Alias)
+                                else Project.Attribute.Undefined);
+                  begin
+                     if In_Pack then
+                        Record_Attribute (Pack_Ref.Attrs, A);
+
+                        if A2.Is_Defined
+                          and then Pack_Ref.Attrs.Contains (A2)
+                        then
+                           --  Need to update the value
+                           Record_Attribute (Pack_Ref.Attrs, A2);
+                        end if;
+
+                        if Is_Name_Exception then
+                           Actual.Include (Filename_Type (A.Value.Text));
+                        end if;
+
+                     else
+                        Record_Attribute (Attrs, A);
+
+                        if A2.Is_Defined and then Attrs.Contains (A2) then
+                           --  Need to update the value
+                           Record_Attribute (Attrs, A2);
+                        end if;
+                     end if;
+                  end;
+
+               elsif Is_Name_Exception then
+                  Self.Skip_Src.Insert
+                    (Filename_Type (A.Value.Text), A.Value,
+                     Position, Inserted);
                end if;
             end Create_And_Register_Attribute;
 
@@ -4011,8 +3980,122 @@ package body GPR2.Project.Parser is
         (Set  : in out PA.Set.Object;
          A    : PA.Object)
       is
+         use type PRA.Value_Kind;
+         use type PRA.Empty_Value_Status;
+
          Include : Boolean := True;
+         Q_Name  : constant PRA.Qualified_Name :=
+                     ((if In_Pack then Pack_Ref.Id else No_Package),
+                      A.Name.Id);
+         Def     : PRA.Def;
+
       begin
+         --  Check that a definition exists
+
+         if not PRA.Exists (Q_Name) then
+            if Q_Name.Pack = No_Package
+              or else PRP.Attributes_Are_Checked (Q_Name.Pack)
+            then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level => Message.Error,
+                     Sloc  => Source_Reference.Object (A),
+                     Message => "unrecognized attribute """ &
+                                PRA.Image (Q_Name) & """"));
+            end if;
+
+            Include := False;
+
+         --  Malformed attribute values can be side-effects of another
+         --  error (such as missing variable). So only perform the next
+         --  checks if there's no critical error.
+
+         elsif not Tree.Log_Messages.Has_Error then
+
+            --  Check value kind
+
+            Def := PRA.Get (Q_Name);
+
+            if Def.Value /= A.Kind then
+               if Def.Value = PRA.Single then
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level => Message.Error,
+                        Sloc  => Source_Reference.Object (A),
+                        Message => "attribute """ & PRA.Image (Q_Name) &
+                                   """ expects a single value"));
+               else
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level => Message.Error,
+                        Sloc  => Source_Reference.Object (A),
+                        Message => "attribute """ & PRA.Image (Q_Name) &
+                                   """ expects a list of values"));
+               end if;
+
+               Include := False;
+
+            elsif Def.Value = PRA.Single
+              and then Def.Empty_Value in PRA.Error | PRA.Ignore
+              and then Length (A.Value.Unchecked_Text) = 0
+            then
+               if Def.Empty_Value = PRA.Error then
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Source_Reference.Object (A.Value),
+                        Message => "attribute """ & PRA.Image (Q_Name)
+                                   & """ cannot be empty"));
+               else
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level   => Message.Warning,
+                        Sloc    => Source_Reference.Object (A.Value),
+                        Message => "empty attribute """ & PRA.Image (Q_Name)
+                                   & """ ignored"));
+               end if;
+
+               Include := False;
+            end if;
+
+            --  Check the attribute index
+
+            case Def.Index_Type is
+               when PRA.No_Index =>
+                  if A.Has_Index then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level => Message.Error,
+                           Sloc  => Source_Reference.Object (A.Index),
+                           Message => "attribute """ & PRA.Image (Q_Name) &
+                                      """ does not expect an index"));
+                     Include := False;
+                  end if;
+
+               when others =>
+                  if not A.Has_Index then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level => Message.Error,
+                           Sloc  => Source_Reference.Object (A),
+                           Message => "attribute """ & PRA.Image (Q_Name) &
+                                      """ expects an index"));
+                     Include := False;
+
+                  elsif A.Index.Is_Others
+                    and then not Def.Index_Optional
+                  then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level => Message.Error,
+                           Sloc  => Source_Reference.Object (A),
+                           Message => "'others' index not allowed with """ &
+                                      PRA.Image (Q_Name) & """"));
+                     Include := False;
+                  end if;
+            end case;
+         end if;
+
          if Set.Contains (A) then
             declare
                Old : constant PA.Object := Set.Element (A.Name.Id, A.Index);

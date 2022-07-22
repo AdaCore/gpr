@@ -1,0 +1,5 @@
+project Err_Unknown_Toplevel is
+
+   for Undefined_Attribute use "True";
+
+end Err_Unknown_Toplevel;

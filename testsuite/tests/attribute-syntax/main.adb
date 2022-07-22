@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2022, AdaCore                     --
+--                     Copyright (C) 2021-2022, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -17,54 +17,48 @@
 ------------------------------------------------------------------------------
 
 with Ada.Text_IO;
-with Ada.Directories;
-with Ada.Strings.Fixed;
-with Ada.Strings.Unbounded;
 
 with GPR2.Context;
 with GPR2.Log;
-with GPR2.Message;
-with GPR2.Project.Attribute.Set;
+with GPR2.Path_Name;
+with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
-with GPR2.Project.Variable.Set;
-with GPR2.Project.View;
 
 procedure Main is
-
-   use Ada;
-   use Ada.Strings;
-   use Ada.Strings.Unbounded;
    use GPR2;
-   use GPR2.Project;
+   package PRP renames GPR2.Project.Registry.Pack;
 
-   Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Tree         : GPR2.Project.Tree.Object;
+   Context      : GPR2.Context.Object;
+
+   procedure Test (Project_Name : GPR2.Filename_Type);
+
+   procedure Test (Project_Name : GPR2.Filename_Type) is
+   begin
+      Ada.Text_IO.Put_Line ("testing " & String (Project_Name));
+      Tree.Unload;
+      Tree.Load_Autoconf
+        (Filename => GPR2.Path_Name.Create_File
+           (GPR2.Project.Ensure_Extension (Project_Name),
+            GPR2.Path_Name.No_Resolution),
+         Context  => Context);
+      Tree.Log_Messages.Output_Messages (Information => False);
+   exception
+      when Project_Error =>
+         Tree.Log_Messages.Output_Messages (Information => False);
+   end Test;
 
 begin
-   Ctx.Include ("OS", "");
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
-
-exception
-   when GPR2.Project_Error =>
-      if Prj.Has_Messages then
-         Text_IO.Put_Line ("Messages found:");
-
-         for C in Prj.Log_Messages.Iterate
-           (False, False, True, True, True)
-         loop
-            declare
-               M : constant Message.Object := Log.Element (C);
-               F : constant String := M.Sloc.Filename;
-               I : constant Natural := Strings.Fixed.Index (F, "errors-sem");
-            begin
-               Text_IO.Put_Line ("> " & F (I - 1 .. F'Last));
-               Text_IO.Put_Line (M.Level'Img);
-               if M.Sloc.Has_Source_Reference then
-                  Text_IO.Put_Line (M.Sloc.Line'Img);
-                  Text_IO.Put_Line (M.Sloc.Column'Img);
-               end if;
-               Text_IO.Put_Line (M.Message);
-            end;
-         end loop;
-      end if;
+   PRP.Check_Attributes (PRP.Builder);
+   PRP.Check_Attributes (PRP.Naming);
+   Test ("gpr/err_unknown_toplevel.gpr");
+   Test ("gpr/err_unknown_package.gpr");
+   Test ("gpr/err_single_value.gpr");
+   Test ("gpr/err_list_value.gpr");
+   Test ("gpr/err_unexp_index.gpr");
+   Test ("gpr/err_empty_value.gpr");
+   Test ("gpr/warn_empty_value.gpr");
+   Test ("gpr/err_no_index.gpr");
+   Test ("gpr/err_unexp_index.gpr");
+   Test ("gpr/err_unexp_others.gpr");
 end Main;

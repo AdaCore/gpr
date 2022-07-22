@@ -2890,8 +2890,7 @@ package body GPR2.Project.View is
       function Is_Compilable (S : Project.Source.Object) return Boolean;
 
       function Is_Interface (S : Project.Source.Object) return Boolean
-      is (S.Has_Units and then S.Has_Single_Unit
-          and then Data.Units.Contains (S.Unit_Name) and then S.Is_Interface);
+      is (S.Is_Interface);
 
       -------------------
       -- Is_Compilable --

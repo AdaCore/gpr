@@ -526,7 +526,7 @@ begin
      (Create (Inherit_Source_Path),
       Index_Type           => Language_Index,
       Value                => List,
-      Value_Case_Sensitive => True,
+      Value_Case_Sensitive => False,
       Is_Allowed_In        => No_Aggregates);
 
    --  excluded_source_dirs
@@ -589,9 +589,10 @@ begin
      (Create (Interfaces),
       Index_Type            => No_Index,
       Value                 => List,
-      Value_Case_Sensitive  => True,
+      Value_Case_Sensitive  => GPR2.File_Names_Case_Sensitive,
       Is_Allowed_In         => Everywhere,
-      Inherit_From_Extended => Inherited);
+      Inherit_From_Extended => Inherited,
+      Is_Set                => True);
 
    --  project_files
    Add
@@ -659,7 +660,7 @@ begin
      (Create (Library_Interface),
       Index_Type            => No_Index,
       Value                 => List,
-      Value_Case_Sensitive  => True,
+      Value_Case_Sensitive  => False,
       Is_Allowed_In         => In_Library,
       Inherit_From_Extended => Inherited,
       Is_Set                => True);

@@ -1,7 +1,0 @@
-
-with "gpr2";
-
-project unknown_attribute is
-   for Main use ("main.adb");
-   for Source_Dirs use (".");
-end unknown_attribute;

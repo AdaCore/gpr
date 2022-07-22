@@ -1,0 +1,5 @@
+project Err_No_Index is
+
+   for Runtime use "myruntime";
+
+end Err_No_Index;

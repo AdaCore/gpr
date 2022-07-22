@@ -23,30 +23,18 @@
 ------------------------------------------------------------------------------
 
 with Ada.Characters.Handling;
-with Ada.Containers.Doubly_Linked_Lists;
-with Ada.Containers.Hashed_Maps;
 with Ada.Strings.Fixed;
-with Ada.Strings.Maps;
-with Ada.Strings.Maps.Constants;
-with Ada.Text_IO;
-
-with GNAT.MD5;
-with GNAT.OS_Lib;
 
 with GPR2.Containers;
-with GPR2.Unit.List;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
-with GPR2.Source;
 with GPR2.Source_Info.Parser.Registry;
-with GPR2.Source_Reference.Identifier.Set;
+with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
-
-with GNATCOLL.Utils;
 
 package body GPR2.Project.Definition is
 
@@ -707,6 +695,27 @@ package body GPR2.Project.Definition is
          SW.Update (Backends);
          Insert_SW (C);
       end loop;
+
+      --  Check unit-based interface attributes
+
+      if not Def.Interface_Units.Is_Empty then
+         for C in Def.Interface_Units.Iterate loop
+            declare
+               Name : constant Name_Type := Unit_Name_To_Sloc.Key (C);
+            begin
+               if not Def.Units_Map.Contains ('S' & To_Lower (Name))
+                 and then not Def.Units_Map.Contains ('B' & To_Lower (Name))
+               then
+                  Def.Tree.Append_Message
+                    (Message.Create
+                       (Message.Error,
+                        "source for interface unit '" & String (Name)
+                        & "' not found",
+                        Unit_Name_To_Sloc.Element (C)));
+               end if;
+            end;
+         end loop;
+      end if;
    end Update_Sources_Parse;
 
 end GPR2.Project.Definition;

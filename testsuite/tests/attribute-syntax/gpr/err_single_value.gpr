@@ -1,0 +1,5 @@
+project Err_Single_Value is
+
+   for Object_Dir use ("obj");
+
+end Err_Single_Value;

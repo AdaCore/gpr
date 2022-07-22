@@ -1,0 +1,7 @@
+project Err_Empty_Value is
+
+   package Naming is
+      for Separate_Suffix use "";
+   end Naming;
+
+end Err_Empty_Value;

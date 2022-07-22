@@ -1,4 +1,0 @@
-
-abstract project last is
-   for Source_Dirs use ("libsrc");
-end last;

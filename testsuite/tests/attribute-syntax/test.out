@@ -1,0 +1,20 @@
+testing gpr/err_unknown_toplevel.gpr
+err_unknown_toplevel.gpr:3:08: error: unrecognized attribute "Undefined_Attribute"
+testing gpr/err_unknown_package.gpr
+err_unknown_package.gpr:6:11: error: unrecognized attribute "Naming'Undefined_Attribute"
+testing gpr/err_single_value.gpr
+err_single_value.gpr:3:08: error: attribute "Object_Dir" expects a single value
+testing gpr/err_list_value.gpr
+err_list_value.gpr:3:08: error: attribute "Source_Dirs" expects a list of values
+testing gpr/err_unexp_index.gpr
+err_unexp_index.gpr:3:19: error: attribute "Languages" does not expect an index
+testing gpr/err_empty_value.gpr
+err_empty_value.gpr:4:31: error: attribute "Naming'Separate_Suffix" cannot be empty
+testing gpr/warn_empty_value.gpr
+warn_empty_value.gpr:4:39: warning: empty attribute "Builder'Executable" ignored
+testing gpr/err_no_index.gpr
+err_no_index.gpr:3:04: error: full associative array expression requires simple attribute reference
+testing gpr/err_unexp_index.gpr
+err_unexp_index.gpr:3:19: error: attribute "Languages" does not expect an index
+testing gpr/err_unexp_others.gpr
+err_unexp_others.gpr:4:11: error: 'others' index not allowed with "Naming'Specification_Exceptions"

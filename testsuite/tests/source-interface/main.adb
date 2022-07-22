@@ -146,12 +146,15 @@ procedure Main is
 
       View := Prj.Root_Project;
       Text_IO.Put_Line ("Project: " & String (View.Name));
+      Print_Messages (False);
 
       List_Sources (View);
       Print_Messages (False);
+      Prj.Unload;
    exception
       when GPR2.Project_Error =>
          Print_Messages (True);
+         Prj.Unload;
    end Check;
 
    ---------------------

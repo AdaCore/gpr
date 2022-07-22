@@ -1,5 +1,0 @@
-description:
-    Check for unknown attribute.
-driver: build_and_run
-project_file: unknown_attribute
-main: main

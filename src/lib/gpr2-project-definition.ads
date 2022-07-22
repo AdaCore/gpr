@@ -38,6 +38,7 @@ with GPR2.Project.View;
 with GPR2.Project.View.Set;
 with GPR2.Project.Unit_Info.Set;
 with GPR2.Source_Info;
+with GPR2.Source_Reference;
 with GPR2.Unit;
 with GPR2.View_Ids;
 with GPR2.View_Ids.Set;
@@ -71,6 +72,22 @@ private package GPR2.Project.Definition is
        (String, Project.Source.Set.Cursor, Ada.Strings.Hash, "=",
         "=" => Project.Source.Set."=");
    --  Map to find in which view a unit is defined
+
+   package Unit_Name_To_Sloc is new
+     Ada.Containers.Indefinite_Hashed_Maps
+       (Name_Type, Source_Reference.Object, GPR2.Hash, GPR2."=",
+        Source_Reference."=");
+   --  Used for the Interface_Units container which will initially store all
+   --  the units from the Library_Interface attribute, as a mapping from
+   --  unit names to slocs.
+
+   package Source_Path_To_Sloc is new
+     Ada.Containers.Indefinite_Hashed_Maps
+       (Filename_Type, Source_Reference.Object, GPR2.Hash, GPR2."=",
+        Source_Reference."=");
+   --  Same as above but for the Interfaces attribute, so here we are using
+   --  Filename_Type instead of Name_Type since we're dealing with
+   --  filenames.
 
    function Key (Unit : GPR2.Unit.Object) return String is
      ((if Unit.Kind in GPR2.Unit.Spec_Kind then 'S' else 'B')
@@ -110,42 +127,66 @@ private package GPR2.Project.Definition is
 
    type Data is new Definition_Base with record
       Trees           : Tree;
+      --  Raw parsed values for the project
 
-      --  Actual values for the view
+      --  View hierarchy:
 
-      Extending       : Weak_Reference;
-      Extended_Root   : View.Object;
-      Extended        : View.Set.Object;
-      Agg_Libraries   : GPR2.View_Ids.Set.Object;
-      Imports         : Project_View_Store.Map;
-      Limited_Imports : Project_View_Store.Map;
-      Closure         : Project_View_Store.Map;
-      Is_Imported     : Boolean := False;
-      Aggregated      : Project_Vector.Vector;
-      Attrs           : Project.Attribute.Set.Object;
-      Vars            : Project.Variable.Set.Object;
-      Packs           : Project.Pack.Set.Map;
-      Types           : Project.Typ.Set.Object;
-      Sources         : Project.Source.Set.Object;
-      Sources_Map     : Simple_Name_Source.Map;
-      Units_Map       : Unit_Source.Map;
-      Units           : Unit_Info.Set.Object;
-      Unique_Id       : GPR2.View_Ids.View_Id;
-      Root_View       : Weak_Reference;
+      Tree              : access Project.Tree.Object;
+      --  The project tree for this view
+      Root_View         : Weak_Reference;
       --  Either root aggregated project view, or just root view of the tree
+      Extending       : Weak_Reference;
+      --  If defined, the view that is extending this definition
+      Extended_Root     : View.Object;
+      --  If defined, the root view (in case of extends all) of the extended
+      --  views.
+      Extended          : View.Set.Object;
+      --  The set of views that are extended
+      Imports           : Project_View_Store.Map;
+      --  List of imported views
+      Limited_Imports   : Project_View_Store.Map;
+      --  List of limited imported views
+      Closure           : Project_View_Store.Map;
+      --  The list of views sources from self can see
+      Agg_Libraries     : GPR2.View_Ids.Set.Object;
+      --  List of aggregate libraries that use this view
+      Aggregated        : Project_Vector.Vector;
+      --  List of projects that are aggregated by this view
+
+      --  View values
+
+      Attrs             : Project.Attribute.Set.Object;
+      --  The view's raw attributes
+      Vars              : Project.Variable.Set.Object;
+      --  The view's variables
+      Packs             : Project.Pack.Set.Map;
+      --  The view's raw packages
+      Types             : Project.Typ.Set.Object;
+      --  The view's type definitions
+
+      Sources           : Project.Source.Set.Object;
+      Sources_Map       : Simple_Name_Source.Map;
+      Units_Map         : Unit_Source.Map;
+      Units             : Unit_Info.Set.Object;
+      Unique_Id         : GPR2.View_Ids.View_Id;
 
       --  Some general information
 
-      Context         : GPR2.Context.Context_Kind := GPR2.Context.Root;
+      Context           : GPR2.Context.Context_Kind := GPR2.Context.Root;
       --  Use the aggregate context including External attributes or only the
       --  root context.
 
-      Tree            : access Project.Tree.Object;
-      --  The project tree for this view
-
       --  Cached values for faster retrieval of attributes
-      Cache           : Attribute_Cache.Object;
-      Dir_Cache       : Dir_Cache_List;
+
+      Interface_Sources : Source_Path_To_Sloc.Map;
+      --  Source basenames that are part of the library interface
+      Interface_Units   : Unit_Name_To_Sloc.Map;
+      --  Source unit names that are part of the library interface
+      Cache             : Attribute_Cache.Object;
+      --  Attribute's final values cache
+      Dir_Cache         : Dir_Cache_List;
+      --  View's directories cache, havily used when loading sources and
+      --  retrieving build artifacts.
    end record;
 
    type Ref is access all Data;

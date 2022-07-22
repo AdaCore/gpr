@@ -1,0 +1,5 @@
+project Err_List_Value is
+
+   for Source_Dirs use "src";
+
+end Err_List_Value;

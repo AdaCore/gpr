@@ -1718,7 +1718,6 @@ package body GPR2.Project.Tree is
                Data.Tree        := Self.Self;
                Data.Context     := Context;
                Data.Is_Root     := Status = Root;
-               Data.Is_Imported := Status = Simple;
                Data.Unique_Id   := Id;
                View := Register_View (Data);
             end;
@@ -2331,8 +2330,9 @@ package body GPR2.Project.Tree is
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)
    is
-      Root : constant Definition.Ref := Definition.Get_RW (Self.Root);
-      Def  : Definition.Ref;
+      Root        : constant Definition.Ref := Definition.Get_RW (Self.Root);
+      Def         : Definition.Ref;
+      Attr        : Attribute.Object;
 
    begin
       --  Register the root context for this project tree
@@ -2371,6 +2371,25 @@ package body GPR2.Project.Tree is
             end;
 
             Def.Enable_Cache;
+         end if;
+
+         if V.Is_Library then
+            Def.Interface_Units.Clear;
+            Def.Interface_Sources.Clear;
+
+            if V.Check_Attribute (PRA.Library_Interface, Result => Attr) then
+               for Val of Attr.Values loop
+                  Def.Interface_Units.Insert
+                    (Name_Type (Val.Text), Source_Reference.Object (Val));
+               end loop;
+            end if;
+
+            if V.Check_Attribute (PRA.Interfaces, Result => Attr) then
+               for Val of Attr.Values loop
+                  Def.Interface_Sources.Insert
+                    (Filename_Type (Val.Text), Source_Reference.Object (Val));
+               end loop;
+            end if;
          end if;
       end loop;
    end Set_Context;
@@ -2854,49 +2873,6 @@ package body GPR2.Project.Tree is
 
       procedure Validity_Check (View : Project.View.Object) is
          use type PRA.Index_Value_Type;
-         use type PRA.Value_Kind;
-
-         Check_Object_Dir_Exists : Boolean := True;
-         Check_Exec_Dir_Exists   : Boolean := True;
-         --  To avoid error on check Object_Dir and Exec_Dir existence when
-         --  attribute is not correct.
-
-         procedure Check_Def (Def : PRA.Def; A : Attribute.Object);
-         --  Check if attribute definition is valid, record errors into the
-         --  message log facility.
-
-         ---------------
-         -- Check_Def --
-         ---------------
-
-         procedure Check_Def (Def : PRA.Def; A : Attribute.Object) is
-         begin
-            if Def.Index_Type = PRA.No_Index and then A.Has_Index then
-               Self.Error
-                  ("attribute """ & Image (A.Name.Id)
-                   & """ cannot have index", A);
-            end if;
-
-            if Def.Value = PRA.Single and then A.Kind = PRA.List then
-               Self.Error
-                 ("attribute """ & Image (A.Name.Id)
-                  & """ cannot be a list",
-                  A);
-
-               if A.Name.Id = PRA.Object_Dir then
-                  Check_Object_Dir_Exists := False;
-               elsif A.Name.Id = PRA.Exec_Dir then
-                  Check_Exec_Dir_Exists := False;
-               end if;
-            end if;
-
-            if Def.Value = PRA.List and then A.Kind = PRA.Single then
-               Self.Error
-                 ("attribute """ & Image (A.Name.Id)
-                  & """ must be a list",
-                  A.Value);
-            end if;
-         end Check_Def;
 
          P_Kind : constant Project_Kind := View.Kind;
          P_Data : constant Definition.Const_Ref := Definition.Get_RO (View);
@@ -2930,42 +2906,30 @@ package body GPR2.Project.Tree is
                   declare
                      Q_Name : constant PRA.Qualified_Name :=
                                 PRA.Create (A.Name.Id, P.Id);
-                     Def    : PRA.Def;
+                     Def    : constant PRA.Def := PRA.Get (Q_Name);
+
                   begin
-                     if PRA.Exists (Q_Name) then
-                        Def := PRA.Get (Q_Name);
-
-                        if not Def.Is_Allowed_In (P_Kind) then
-                           Self.Warning
-                             ("attribute """ & PRA.Image (Q_Name)
-                              & """ cannot be used in " & Image (P_Kind),
-                              A);
-                        end if;
-
-                        Check_Def (Def, A);
-
-                        --  In aggregate project, the Builder package only
-                        --  accepts the index "others" for file globs.
-
-                        if P_Data.Kind in Aggregate_Kind
-                          and then P.Id = PRP.Builder
-                          and then Def.Index_Type in
-                            PRA.FileGlob_Index | PRA.FileGlob_Or_Language_Index
-                          and then A.Index.Is_Defined
-                          and then not A.Index.Is_Others
-                        then
-                           Self.Warning
-                             ("attribute """ & PRA.Image (Q_Name)
-                              & """ only supports index ""others"""
-                              & " in aggregate projects",
-                              A);
-                        end if;
-
-                     elsif PRP.Attributes_Are_Checked (P.Id) then
+                     if not Def.Is_Allowed_In (P_Kind) then
                         Self.Warning
-                          ("attribute """ & Image (A.Name.Id)
-                           & """ not supported in package "
-                           & Image (P.Id),
+                          ("attribute """ & PRA.Image (Q_Name)
+                           & """ cannot be used in " & Image (P_Kind),
+                           A);
+                     end if;
+
+                     --  In aggregate project, the Builder package only
+                     --  accepts the index "others" for file globs.
+
+                     if P_Data.Kind in Aggregate_Kind
+                       and then P.Id = PRP.Builder
+                       and then Def.Index_Type in
+                            PRA.FileGlob_Index | PRA.FileGlob_Or_Language_Index
+                       and then A.Index.Is_Defined
+                       and then not A.Index.Is_Others
+                     then
+                        Self.Warning
+                          ("attribute """ & PRA.Image (Q_Name)
+                           & """ only supports index ""others"""
+                           & " in aggregate projects",
                            A);
                      end if;
                   end;
@@ -2979,56 +2943,44 @@ package body GPR2.Project.Tree is
             declare
                Q_Name : constant PRA.Qualified_Name := PRA.Create (A.Name.Id);
             begin
-               if not PRA.Exists (Q_Name) then
-                  Self.Messages.Append
-                    (Message.Create
-                       (Message.Error,
-                        "unrecognized attribute """ & Image (A.Name.Id)
-                        & '"',
-                        A));
-
-               else
-                  declare
-                     Allowed : constant PRA.Allowed_In :=
-                                 PRA.Get (Q_Name).Is_Allowed_In;
-                     Found   : Natural := 0;
-                     Allow   : Project_Kind;
-                  begin
-                     if not Allowed (P_Kind) then
-                        for A in Allowed'Range loop
-                           if Allowed (A) then
-                              Found := Found + 1;
-                              exit when Found > 1;
-                              Allow := A;
-                           end if;
-                        end loop;
-
-                        pragma Assert (Found > 0);
-
-                        if Found = 1 or else Allow = K_Aggregate then
-                           --  If one or Aggregate_Kind allowed use including
-                           --  error message.
-
-                           Self.Warning
-                             ('"' & Image (A.Name.Id)
-                              & """ is only valid in "
-                              & Image (Allow) & 's',
-                              A);
-                        else
-                           --  If more than one is allowed use excluding
-                           --  error message.
-
-                           Self.Warning
-                             ("attribute """ & Image (A.Name.Id)
-                              & """ cannot be used in "
-                              & Image (P_Kind) & 's',
-                              A);
+               declare
+                  Allowed : constant PRA.Allowed_In :=
+                              PRA.Get (Q_Name).Is_Allowed_In;
+                  Found   : Natural := 0;
+                  Allow   : Project_Kind;
+               begin
+                  if not Allowed (P_Kind) then
+                     for A in Allowed'Range loop
+                        if Allowed (A) then
+                           Found := Found + 1;
+                           exit when Found > 1;
+                           Allow := A;
                         end if;
-                     end if;
-                  end;
+                     end loop;
 
-                  Check_Def (PRA.Get (Q_Name), A);
-               end if;
+                     pragma Assert (Found > 0);
+
+                     if Found = 1 or else Allow = K_Aggregate then
+                        --  If one or Aggregate_Kind allowed use including
+                        --  error message.
+
+                        Self.Warning
+                          ('"' & Image (A.Name.Id)
+                           & """ is only valid in "
+                           & Image (Allow) & 's',
+                           A);
+                     else
+                        --  If more than one is allowed use excluding
+                        --  error message.
+
+                        Self.Warning
+                          ("attribute """ & Image (A.Name.Id)
+                           & """ cannot be used in "
+                           & Image (P_Kind) & 's',
+                           A);
+                     end if;
+                  end if;
+               end;
             end;
          end loop;
 
@@ -3118,7 +3070,6 @@ package body GPR2.Project.Tree is
 
          begin
             if View.Kind in K_Standard | K_Library | K_Aggregate_Library
-              and then Check_Object_Dir_Exists
               and then not View.Is_Aggregated_In_Library
             then
                Check_Directory
@@ -3165,9 +3116,7 @@ package body GPR2.Project.Tree is
 
             case View.Kind is
                when K_Standard =>
-                  if Check_Exec_Dir_Exists
-                    and then not View.Is_Aggregated_In_Library
-                  then
+                  if not View.Is_Aggregated_In_Library then
                      Check_Directory
                        (PRA.Exec_Dir, "exec",
                         Project.View.Executable_Directory'Access);

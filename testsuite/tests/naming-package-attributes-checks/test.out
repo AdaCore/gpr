@@ -1,7 +1,7 @@
 testing abst.gpr
-abst.gpr:6:08: error: attribute Naming'Dot_Replacement cannot be empty
+abst.gpr:6:32: error: attribute "Naming'Dot_Replacement" cannot be empty
 testing abst2.gpr
-abst2.gpr:6:08: error: attribute Naming'Separate_Suffix cannot be empty
+abst2.gpr:6:32: error: attribute "Naming'Separate_Suffix" cannot be empty
 testing agg.gpr
 import9.gpr:5:13: error: "- -" is illegal for Dot_Replacement
 import9.gpr:6:13: error: Spec_Suffix (C) value is already used for language Ada

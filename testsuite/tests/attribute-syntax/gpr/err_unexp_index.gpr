@@ -1,0 +1,5 @@
+project Err_Unexp_Index is
+
+   for Languages ("Ada") use ("C");
+
+end Err_Unexp_Index;
