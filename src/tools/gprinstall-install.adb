@@ -1020,8 +1020,8 @@ package body GPRinstall.Install is
 
                if not Project.Is_Library
                  or else Project.Library_Standalone = No
-                 or else Source.Is_Interface
                  or else Is_Interface_Closure
+                 or else Source.Is_Interface
                then
                   if Source.Has_Units then
                      CUs := Source.Units;

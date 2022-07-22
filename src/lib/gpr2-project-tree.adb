@@ -1718,7 +1718,6 @@ package body GPR2.Project.Tree is
                Data.Tree        := Self.Self;
                Data.Context     := Context;
                Data.Is_Root     := Status = Root;
-               Data.Is_Imported := Status = Simple;
                Data.Unique_Id   := Id;
                View := Register_View (Data);
             end;
@@ -2331,8 +2330,9 @@ package body GPR2.Project.Tree is
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)
    is
-      Root : constant Definition.Ref := Definition.Get_RW (Self.Root);
-      Def  : Definition.Ref;
+      Root        : constant Definition.Ref := Definition.Get_RW (Self.Root);
+      Def         : Definition.Ref;
+      Attr        : Attribute.Object;
 
    begin
       --  Register the root context for this project tree
@@ -2371,6 +2371,25 @@ package body GPR2.Project.Tree is
             end;
 
             Def.Enable_Cache;
+         end if;
+
+         if V.Is_Library then
+            Def.Interface_Units.Clear;
+            Def.Interface_Sources.Clear;
+
+            if V.Check_Attribute (PRA.Library_Interface, Result => Attr) then
+               for Val of Attr.Values loop
+                  Def.Interface_Units.Insert
+                    (Name_Type (Val.Text), Source_Reference.Object (Val));
+               end loop;
+            end if;
+
+            if V.Check_Attribute (PRA.Interfaces, Result => Attr) then
+               for Val of Attr.Values loop
+                  Def.Interface_Sources.Insert
+                    (Filename_Type (Val.Text), Source_Reference.Object (Val));
+               end loop;
+            end if;
          end if;
       end loop;
    end Set_Context;

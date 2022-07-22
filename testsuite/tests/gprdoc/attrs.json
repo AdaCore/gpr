@@ -535,7 +535,7 @@
             "index_optional": false,
             "value": "LIST",
             "value_case_sensitive": true,
-            "value_is_set": false,
+            "value_is_set": true,
             "empty_value": "ALLOW",
             "builtin": false,
             "is_allowed_in": {
@@ -930,7 +930,7 @@
             "index_type": "NO_INDEX",
             "index_optional": false,
             "value": "LIST",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": true,
             "empty_value": "ALLOW",
             "builtin": false,

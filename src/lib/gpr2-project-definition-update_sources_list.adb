@@ -22,6 +22,18 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Containers.Hashed_Maps;
+with Ada.Strings.Maps.Constants;
+with Ada.Text_IO;
+
+with GNAT.OS_Lib;
+with GNAT.MD5;
+
+with GPR2.Unit.List;
+with GPR2.Source;
+with GPR2.Source_Reference.Identifier.Set;
+
 separate (GPR2.Project.Definition)
 procedure Update_Sources_List
   (Def           : in out Data;
@@ -34,8 +46,6 @@ is
    use GPR2.Containers;
    use GPR2.Path_Name;
 
-   use type SR.Object;
-
    Root : constant GPR2.Path_Name.Object := Def.Path;
 
    Current_Src_Dir_SR : GPR2.Source_Reference.Value.Object;
@@ -46,20 +56,6 @@ is
 
    package Lang_Boolean_Map is new Ada.Containers.Hashed_Maps
      (Language_Id, Boolean, Hash, "=");
-
-   package Unit_Name_To_Sloc is new
-     Ada.Containers.Indefinite_Hashed_Maps
-       (Name_Type, SR.Object, GPR2.Hash, GPR2."=");
-   --  Used for the Interface_Units container which will initially store all
-   --  the units from the Library_Interface attribute, as a mapping from
-   --  unit names to slocs.
-
-   package Source_Path_To_Sloc is new
-     Ada.Containers.Indefinite_Hashed_Maps
-       (Filename_Type, SR.Object, GPR2.Hash, GPR2."=");
-   --  Same as above but for the Interfaces attribute, so here we are using
-   --  Filename_Type instead of Name_Type since we're dealing with
-   --  filenames.
 
    package Attribute_List is new
      Ada.Containers.Doubly_Linked_Lists (Project.Attribute.Object);
@@ -186,13 +182,7 @@ is
    Has_Source_List   : Boolean := False;
    --  Has either Source_Files or Source_List_File attributes
 
-   Interface_Units       : Unit_Name_To_Sloc.Map;
-   Position_In_Units     : Unit_Name_To_Sloc.Cursor;
    Inserted              : Boolean;
-   Interface_Units_Found : Name_Set;
-   Interface_Found       : Boolean := False;
-   Interface_Sources     : Source_Path_To_Sloc.Map;
-   Position_In_Sources   : Source_Path_To_Sloc.Cursor;
    Language_Compilable   : Lang_Boolean_Map.Map;
    Has_Src_In_Lang       : Language_Set;
    --  Insert record there if the language has a source
@@ -772,13 +762,12 @@ is
 
       Basename  : constant Filename_Type := File.Simple_Name;
 
-      Match                  : Boolean := False;
+      Match            : Boolean := False;
 
-      Source_Is_In_Interface : Boolean := False;
-      Naming_Exception       : Project.Source.Naming_Exception_Kind := No;
-      Units                  : Unit.List.Object;  --  For Ada
-      Kind                   : Unit.Library_Unit_Type;
-      Source                 : GPR2.Source.Object;
+      Naming_Exception : Project.Source.Naming_Exception_Kind := No;
+      Units            : Unit.List.Object;  --  For Ada
+      Kind             : Unit.Library_Unit_Type;
+      Source           : GPR2.Source.Object;
 
       function Naming_Exception_Equal
         (A : Attribute.Object;
@@ -994,19 +983,7 @@ is
             if Match then
                Mark_Language (Language);
 
-               Source_Is_In_Interface :=
-                 Interface_Sources.Contains (Basename);
-               --  Different Source constructors for Ada and other
-               --  languages. Also some additional checks for Ada.
-
                if Language = Ada_Language then
-                  for CU of Units loop
-                     if Interface_Units.Contains (CU.Name) then
-                        Interface_Units_Found.Include (CU.Name);
-                        Source_Is_In_Interface := True;
-                     end if;
-                  end loop;
-
                   if Is_Indexed then
                      Source := GPR2.Source.Object
                        (GPR2.Source.Create_Ada
@@ -1029,26 +1006,15 @@ is
 
                --  Final processing
 
-               if Source_Is_In_Interface then
-                  Interface_Sources.Exclude (Basename);
-               end if;
+               --  if Source_Is_In_Interface then
+               --     Interface_Sources.Exclude (Basename);
+               --  end if;
 
                declare
-                  Is_Interface : constant Boolean :=
-                                   Source_Is_In_Interface
-                                       or else
-                                   (not Interface_Found
-                                    and then View.Kind in K_Library
-                                    and then
-                                      (not Source.Has_Units or else
-                                       not Source.Units.Is_Indexed_List)
-                                    and then Source.Kind in
-                                               Unit.Spec_Kind);
                   Project_Source : constant GPR2.Project.Source.Object :=
                                      Project.Source.Create
                                        (Source           => Source,
                                         View             => View,
-                                        Is_Interface     => Is_Interface,
                                         Naming_Exception =>
                                           Naming_Exception,
                                         Is_Compilable    => Is_Compilable
@@ -1172,35 +1138,14 @@ is
          --  TODO: avoid the code duplication from Handle_File
          --
 
-         File                   : constant Path_Name.Object :=
-                                    Src.Path_Name;
-         Basename               : constant Filename_Type :=
-                                    File.Simple_Name;
-         Language               : constant Language_Id :=
-                                    Src.Language;
-         Source_Is_In_Interface : Boolean :=
-                                    Interface_Sources.Contains (Basename);
+         Language : constant Language_Id := Src.Language;
 
       begin
+         --  Mark the language as used
+
          Mark_Language (Language);
 
-         --  Different Source constructors for Ada and other
-         --  languages. Also some additional checks for Ada.
-
-         if Language = Ada_Language then
-            for CU of Src.Units loop
-               if Interface_Units.Contains (CU.Name) then
-                  Interface_Units_Found.Include (CU.Name);
-                  Source_Is_In_Interface := True;
-               end if;
-            end loop;
-         end if;
-
          --  Final processing
-
-         if Source_Is_In_Interface then
-            Interface_Sources.Exclude (Basename);
-         end if;
 
          declare
             Position : Project.Source.Set.Cursor;
@@ -1210,6 +1155,7 @@ is
             pragma Assert (Inserted);
             Def.Sources_Map_Insert (Src, Position);
          end;
+
          --  For Ada, register the Unit object into the view
 
          if Language = Ada_Language then
@@ -1615,49 +1561,6 @@ begin
    Fill_Other_Naming_Exceptions
      (View.Attributes (PRP.Naming, PRA.Implementation_Exceptions));
 
-   --  Record units being set as interfaces, first for Library_Interface
-   --  which contains unit names.
-
-   if View.Has_Attribute (PRA.Library_Interface) then
-      Interface_Found := True;
-
-      for Unit of View.Attribute (PRA.Library_Interface).Values loop
-         Interface_Units.Insert
-           (Name_Type (Unit.Text), SR.Object (Unit),
-            Position_In_Units, Inserted);
-
-         if not Inserted then
-            Tree.Append_Message
-              (Message.Create
-                 (Message.Warning,
-                  "duplicate unit '" & Unit.Text
-                  & "' in library_interface attribute",
-                  Unit));
-         end if;
-      end loop;
-   end if;
-
-   --  And then for Interfaces which contains filenames
-
-   if View.Has_Attribute (PRA.Interfaces) then
-      Interface_Found := True;
-
-      for Source of View.Attribute (PRA.Interfaces).Values loop
-         Interface_Sources.Insert
-           (Filename_Type (Source.Text), SR.Object (Source),
-            Position_In_Sources, Inserted);
-
-         if not Inserted then
-            Tree.Append_Message
-              (Message.Create
-                 (Message.Warning,
-                  "duplicate source '" & Source.Text
-                  & "' in interfaces attribute",
-                  Source));
-         end if;
-      end loop;
-   end if;
-
    --  Read sources and set up the corresponding definition
 
    --  First reset the current set
@@ -1720,7 +1623,6 @@ begin
       for Agg of Def.Aggregated loop
          declare
             DA           : constant Ref := Get_RW (Agg);
-            In_Interface : Boolean      := False;
             A_Set        : Project.Source.Set.Object;
          begin
             Update_Sources
@@ -1728,43 +1630,17 @@ begin
                Backends => Source_Info.No_Backends);
 
             for P of Agg.Sources loop
-               In_Interface :=
-                 Interface_Sources.Contains
-                   (P.Path_Name.Simple_Name);
+               --  An aggregate library project does not allow naming
+               --  exception. So the source naming exception status is
+               --  the one from the aggregated project.
 
-               if P.Has_Units then
-                  for CU of P.Units loop
-                     if Interface_Units.Contains (CU.Name) then
-                        Interface_Units_Found.Include (CU.Name);
-                        In_Interface := True;
-                     end if;
-                  end loop;
-               end if;
-
-               declare
-                  use all type Unit.Library_Unit_Type;
-
-                  Is_Interface : constant Boolean :=
-                                   In_Interface
-                                       or else
-                                         (not Interface_Found
-                                          and then P.Kind
-                                                   in Unit.Spec_Kind);
-
-               begin
-                  --  An aggregate library project does not allow naming
-                  --  exception. So the source naming exception status is
-                  --  the one from the aggregated project.
-
-                  A_Set.Insert
-                    (Project.Source.Create
-                       (Source           => GPR2.Source.Object (P),
-                        View             => View,
-                        Is_Interface     => Is_Interface,
-                        Naming_Exception => P.Naming_Exception,
-                        Is_Compilable    => P.Is_Compilable,
-                        Aggregated       => P.View));
-               end;
+               A_Set.Insert
+                 (Project.Source.Create
+                    (Source           => GPR2.Source.Object (P),
+                     View             => View,
+                     Naming_Exception => P.Naming_Exception,
+                     Is_Compilable    => P.Is_Compilable,
+                     Aggregated       => P.View));
             end loop;
 
             Insert
@@ -1885,43 +1761,25 @@ begin
       end;
    end if;
 
-   --  And update the interface units bookkeeping
-
-   for U of Interface_Units_Found loop
-      Interface_Units.Exclude (U);
-   end loop;
-
-   --  Check that all unit and source interfaces have been found in the
+   --  Check that all source interfaces have been found in the
    --  project view.
 
-   for Cur in Interface_Units.Iterate loop
-      declare
-         Sloc      : constant SR.Object := Unit_Name_To_Sloc.Element (Cur);
-         Unit_Name : constant Name_Type := Unit_Name_To_Sloc.Key (Cur);
-      begin
-         Tree.Append_Message
-           (Message.Create
-              (Message.Error,
-               "source for interface unit '" & String (Unit_Name)
-               & "' not found",
-               Sloc));
-      end;
-   end loop;
-
-   for Cur in Interface_Sources.Iterate loop
-      declare
-         Sloc        : constant SR.Object :=
-                         Source_Path_To_Sloc.Element (Cur);
-         Source_Path : constant Filename_Type :=
-                         Source_Path_To_Sloc.Key (Cur);
-      begin
-         Tree.Append_Message
-           (Message.Create
-              (Message.Error,
-               "source for '" & String (Source_Path) & "' not found",
-               Sloc));
-      end;
-   end loop;
+   if not Def.Interface_Sources.Is_Empty then
+      for C in Def.Interface_Sources.Iterate loop
+         declare
+            Name : constant Filename_Type := Source_Path_To_Sloc.Key (C);
+         begin
+            if not Def.Sources_Map.Contains (Name) then
+               Def.Tree.Append_Message
+                 (Message.Create
+                    (Message.Error,
+                     "interface source '" & String (Name)
+                     & "' not found",
+                     Source_Path_To_Sloc.Element (C)));
+            end if;
+         end;
+      end loop;
+   end if;
 
    --  Record back new definition for the view with updated sources
 

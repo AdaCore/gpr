@@ -347,7 +347,7 @@ Project Level Attributes
     Value is a text file name that contains a list of file simple names that are
     not sources of the project.
 
-  * **Interfaces**: list value
+  * **Interfaces**: set value, case-sensitive
 
     Value is a list of file names that constitutes the interfaces of the project.
 
@@ -445,7 +445,7 @@ Project Level Attributes
     Indicates if encapsulated Stand-Alone Libraries are supported. Only authorized
     case-insensitive values are 'true' and 'false' (the default).
 
-  * **Library_Interface**: set value, case-sensitive
+  * **Library_Interface**: set value, case-insensitive
 
     Value is the list of unit names that constitutes the interfaces of a
     Stand-Alone Library project.

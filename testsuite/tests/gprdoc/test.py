@@ -43,6 +43,8 @@ if is_win:
     # default value for exe_extension is different on windows host.
     # so change the default...
     doc_new["Builder.Executable_Suffix"]["attribute_def"]["default"]["value"] = ""
+    # case sensitivity of Interfaces attribute is different on windows
+    doc_new["Interfaces"]["attribute_def"]["value_case_sensitive"] = True
 
 has_error = False
 

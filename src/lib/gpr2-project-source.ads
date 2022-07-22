@@ -62,7 +62,6 @@ package GPR2.Project.Source is
    function Create
      (Source           : GPR2.Source.Object;
       View             : Project.View.Object;
-      Is_Interface     : Boolean;
       Naming_Exception : Naming_Exception_Kind;
       Is_Compilable    : Boolean;
       Aggregated       : Project.View.Object := Project.View.Undefined)
@@ -229,7 +228,6 @@ private
       Aggregated       : Project.Weak_Reference;
       --  View where the source is aggregated from
 
-      Is_Interface     : Boolean               := False;
       Naming_Exception : Naming_Exception_Kind := No;
       Is_Compilable    : Boolean               := False;
       Inherited        : Boolean               := False;
@@ -244,9 +242,6 @@ private
    function Is_Aggregated (Self : Object) return Boolean is
      (not Definition_References."="
         (Self.Aggregated, Definition_References.Null_Weak_Ref));
-
-   function Is_Interface (Self : Object) return Boolean is
-     (Self.Is_Interface);
 
    function Is_Compilable (Self : Object;
                            Index : Unit_Index) return Boolean

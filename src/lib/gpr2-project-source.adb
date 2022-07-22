@@ -309,7 +309,6 @@ package body GPR2.Project.Source is
    function Create
      (Source           : GPR2.Source.Object;
       View             : Project.View.Object;
-      Is_Interface     : Boolean;
       Naming_Exception : Naming_Exception_Kind;
       Is_Compilable    : Boolean;
       Aggregated       : Project.View.Object := Project.View.Undefined)
@@ -319,7 +318,6 @@ package body GPR2.Project.Source is
         Object'
           (Source with
            Definition.Weak (View),
-           Is_Interface     => Is_Interface,
            Naming_Exception => Naming_Exception,
            Is_Compilable    => Is_Compilable,
            others           => <>)
@@ -559,6 +557,31 @@ package body GPR2.Project.Source is
    begin
       return Self.Is_Compilable;
    end Is_Compilable;
+
+   ------------------
+   -- Is_Interface --
+   ------------------
+
+   function Is_Interface (Self : Object) return Boolean is
+      Def : constant Definition.Const_Ref :=
+              Definition.Get_RO (View (Self));
+   begin
+      if Def.Interface_Sources.Contains (Self.Path_Name.Simple_Name) then
+
+         return True;
+
+      elsif Self.Has_Units then
+         for CU of Self.Units loop
+            if Def.Interface_Units.Contains (CU.Name) then
+
+               return True;
+
+            end if;
+         end loop;
+      end if;
+
+      return False;
+   end Is_Interface;
 
    -------------
    -- Is_Main --
