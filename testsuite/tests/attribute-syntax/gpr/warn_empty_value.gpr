@@ -1,0 +1,7 @@
+project Warn_Empty_Value is
+
+   package Builder is
+      for Executable ("main.adb") use "";
+   end Builder;
+
+end Warn_Empty_Value;

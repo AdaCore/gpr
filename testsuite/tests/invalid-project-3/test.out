@@ -36,12 +36,12 @@ renames_nonexist.gpr: warning: there are no sources of language "Ada" in this pr
 
 conf.gpr:3:08: error: Cannot set configuration attribute "Target" after it is referenced.
 builtin.gpr:3:04: error: builtin attribute "Name" is read-only
-empty_warning.gpr:4:07: warning: empty attribute Builder'Executable ignored
+empty_warning.gpr:4:44: warning: empty attribute "Builder'Executable" ignored
 empty_warning.gpr: warning: there are no sources of language "Ada" in this project
-empty_error.gpr:4:07: error: attribute Naming'Dot_Replacement cannot be empty
+empty_error.gpr:4:31: error: attribute "Naming'Dot_Replacement" cannot be empty
 no_package.gpr:3:19: error: unknown package or project "Unknown"
 no_package2.gpr:3:18: error: package "Remote" not declared in project "No_Package2"
-unexpected_index.gpr:3:08: error: attribute "Object_Dir" cannot have index
+unexpected_index.gpr:3:20: error: attribute "Object_Dir" does not expect an index
 unexpected_index2.gpr:3:19: error: attribute "Object_Dir" cannot have index
 
 ** variables:
@@ -51,8 +51,7 @@ in_pack.gpr:4:14: error: undefined variable "Naming.Var2"
 
 ** projects:
 
-no_lang.gpr:3:08: warning: no language for the project No_Lang
-no_lang.gpr:3:08: warning: no language for the projects tree: configuration skipped
+no_lang.gpr:7:08: error: unrecognized attribute "Library_Type"
 agg_lib_shared_libdir.gpr: error: aggregate library ALI directory cannot be shared with library directory of aggregated project "some_lib"
 agg_lib_shared_libdir2.gpr: error: aggregate library directory cannot be shared with library directory of aggregated project "some_lib"
 

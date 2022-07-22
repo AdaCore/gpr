@@ -1,3 +1,0 @@
-project Simple is
-   for An_Unknown_Attr use "foo.gpr";
-end Simple;

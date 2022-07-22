@@ -1,0 +1,7 @@
+project Err_Unexp_Others is
+
+   package Naming is
+      for Specification_Exceptions (others) use ("main.adb");
+   end Naming;
+
+end Err_Unexp_Others;

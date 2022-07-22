@@ -1,3 +1,0 @@
-> unknown-attribute/simple.gpr
-ERROR
-simple.gpr:2:08: error: unrecognized attribute "An_Unknown_Attr"

@@ -502,7 +502,7 @@
             "index_type": "LANGUAGE_INDEX",
             "index_optional": false,
             "value": "LIST",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,

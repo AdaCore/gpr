@@ -526,7 +526,7 @@ begin
      (Create (Inherit_Source_Path),
       Index_Type           => Language_Index,
       Value                => List,
-      Value_Case_Sensitive => True,
+      Value_Case_Sensitive => False,
       Is_Allowed_In        => No_Aggregates);
 
    --  excluded_source_dirs
