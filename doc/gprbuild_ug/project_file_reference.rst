@@ -561,7 +561,53 @@ In an expression, a built-in function is recognized if its name is immediately
 followed by an open parenthesis ('(').
 
 
-.. index:: external function
+.. index:: alternative built-in function
+
+.. _Alternative:
+
+The function ``alternative``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: ../share/legacy.rst
+
+The function Alternative takes two arguments. It returns the second
+argument if the first one is not the empty string.
+
+  ::
+
+      Alternative ("", "this is the default value")
+
+      => ""
+
+      Alternative ("x86_64-linux-gnu", "linux")
+
+      => "linux"
+
+
+.. index:: default built-in function
+
+.. _Default:
+
+The function ``default``
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: ../share/legacy.rst
+
+The function Default takes two arguments. It returns the second
+argument if the first one is the empty string.
+
+  ::
+
+      Default ("", "this is the default value")
+
+      => "this is the default value"
+
+      Default ("One", "this is the default value")
+
+      => "One"
+
+
+.. index:: external built-in function
 
 .. _External_Values:
 
@@ -600,7 +646,8 @@ are then used in *case* constructions to control the value assigned to
 attributes in various scenarios. Thus such variables are often called
 *scenario variables*.
 
-.. index:: external_as_list function
+
+.. index:: external_as_list built-in function
 
 The function ``external_as_list``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -673,10 +720,192 @@ If the external value is ``",,"``, the result is (``""``).
 
 If the external value is ``","``, the result is ``()``, the empty string list.
 
+
+.. index:: filter_out built-in function
+
+.. _Filter_Out:
+
+The function ``filter_out``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: ../share/legacy.rst
+
+The function Filter_Out takes two arguments. The first argument must
+be a list and the second one a simple string. The second argument is a
+pattern (regular expression). Elements in the list matching the
+pattern will be removed from the list.
+
+  ::
+      List := ("value1", "or", "another", "one");
+
+Example removing all values containing the letter 'o':
+
+  ::
+      Filter_Out (List, ".*o.*")
+
+      => ("value1")
+
+Example removing all values:
+
+  ::
+      Filter_Out (List, ".*")
+
+      => ()
+
+
+.. index:: item_at built-in function
+
+.. _Item_At:
+
+The function ``item_at``
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: ../share/legacy.rst
+
+The function Item_At takes two arguments. The first argument must
+be a list and the second argument an integer image (simple
+string). The number represents the index of the item to return from
+the list. If the number is negative it is an index starting from the
+end of the list. That is, "-1" is the last list item.
+
+  ::
+      List := ("one", "two", "three", "last");
+
+      Item_At (List, "2")
+
+      => "two"
+
+      Item_At (List, "-1")
+
+      => "last"
+
+
+.. index:: lower built-in function
+
+.. _Lower:
+
+The function ``lower``
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: ../share/legacy.rst
+
+Function Lower takes a single argument which can be a simple string or
+a list. It returns the argument with all strings in lower case.
+
+Example:
+
+  ::
+
+      Lower ("The Lower Built-In")
+
+      => "the lower built-in"
+
+Example with a list:
+
+  ::
+      List := ("One", "Two");
+
+      Lower (List)
+
+      => ("one", "two")
+
+
+.. index:: match built-in function
+
+.. _Match:
+
+The function ``match``
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: ../share/legacy.rst
+
+Function Match takes two mandatory arguments. The first argument is a
+simple string or a list. The second argument is the pattern (regular
+expression) to match. An optional third argument can be given which is
+the replacement pattern for the macthing strings.
+
+Example:
+
+  ::
+
+      Match ("x86_64-linux-gnu", "linux")
+
+      => "linux"
+
+Example with a list and a replacement pattern:
+
+  ::
+      List := ("value1", "or", "another", "one");
+
+      Match (List, "(.*r)", "r:\1")
+
+      => ("r:or", "r:another")
+
+In the above example we match all strings in List containing the
+letter 'r' and the result is formed with 'r:' as prefix concatened
+with the matching string.
+
+
+.. index:: remove_prefix built-in function
+
+.. _remove_prefix:
+
+The function ``remove_prefix``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: ../share/legacy.rst
+
+The function Remove_Prefix takes two arguments. The first argument can
+be a simple string or a list. The second argument is a simple string
+representing the prefix to remove if present. The prefix is removed
+from the simple string or from each element of the list.
+
+  ::
+
+      List := ("libone", "two", "libthree")
+
+      Remove_Prefix (List, "lib")
+
+      => ("one", "two", "three")
+
+      Remove_Prefix ("libZ.so", "lib")
+
+      => "Z.so"
+
+
+.. index:: remove_suffix built-in function
+
+.. _remove_suffix:
+
+The function ``remove_suffix``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: ../share/legacy.rst
+
+The function Remove_Suffix takes two arguments. The first argument can
+be a simple string or a list. The second argument is a simple string
+representing the suffix to remove if present. The suffix is removed
+from the simple string or from each element of the list.
+
+  ::
+
+      List := ("libone", "two", "libthree")
+
+      Remove_Suffix (List, "one")
+
+      => ("lib", "two", "libthree")
+
+      Remove_Suffix ("libZ.so", ".so")
+
+      => "libZ"
+
+
+.. index:: split built-in function
+
 .. _Split:
 
-Split
-^^^^^
+The function ``split``
+^^^^^^^^^^^^^^^^^^^^^^
 
 Function Split takes two single string parameters and return a string list.
 
@@ -701,6 +930,36 @@ not included in the result.
       Split ("-gnatf   -gnatv", " ")
 
       => ("-gnatf", "gnatv")
+
+
+.. index:: upper built-in function
+
+.. _Upper:
+
+The function ``upper``
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: ../share/legacy.rst
+
+Function Upper takes a single argument which can be a simple string or
+a list. It returns the argument with all strings in upper case.
+
+Example:
+
+  ::
+
+      Upper ("The Lower Built-In")
+
+      => "THE LOWER BUILT-IN"
+
+Example with a list:
+
+  ::
+      List := ("One", "Two");
+
+      Upper (List)
+
+      => ("ONE", "TWO")
 
 
 .. index:: Type declaration
@@ -875,4 +1134,3 @@ Here is a typical example, with a typed string variable:
             end case;
           end Compiler;
        end MyProj;
-
