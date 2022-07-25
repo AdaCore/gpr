@@ -39,9 +39,10 @@ package GPR2.Project.Unit_Info is
 
    function Create
      (Name      : Name_Type;
-      Spec      : Unit.Source_Unit_Identifier;
-      Main_Body : Unit.Source_Unit_Identifier;
-      Separates : Unit.Source_Unit_Vectors.Vector) return Object;
+      Spec      : Unit.Source_Unit_Identifier := Unit.Undefined_Id;
+      Main_Body : Unit.Source_Unit_Identifier := Unit.Undefined_Id;
+      Separates : Unit.Source_Unit_Vectors.Vector :=
+                    Unit.Source_Unit_Vectors.Empty_Vector) return Object;
    --  Constructor for a Unit object
 
    function Name (Self : Object) return Name_Type

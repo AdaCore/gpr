@@ -449,20 +449,22 @@ begin
          use type Source_Info.Backend;
 
          procedure Output_Source
-           (S   : Project.Source.Object;
-            Idx : Unit_Index;
-            A   : Project.Source.Artifact.Object :=
-                    Project.Source.Artifact.Undefined);
+           (S          : Project.Source.Object;
+            Idx        : Unit_Index;
+            Build_Time : Ada.Calendar.Time;
+            A          : Project.Source.Artifact.Object :=
+                           Project.Source.Artifact.Undefined);
 
          -------------------
          -- Output_Source --
          -------------------
 
          procedure Output_Source
-           (S   : Project.Source.Object;
-            Idx : Unit_Index;
-            A   : Project.Source.Artifact.Object :=
-                    Project.Source.Artifact.Undefined)
+           (S          : Project.Source.Object;
+            Idx        : Unit_Index;
+            Build_Time : Ada.Calendar.Time;
+            A          : Project.Source.Artifact.Object :=
+                           Project.Source.Artifact.Undefined)
          is
             use type Calendar.Time;
 
@@ -518,12 +520,7 @@ begin
             --  For now we stick to the timestamp-based logic: if time stamps
             --  are equal, assume the file didn't change.
 
-            if (S.Is_Parsed (Idx)
-                and then S.Used_Backend (Idx) = Source_Info.LI
-                and then S.Build_Timestamp (Idx) = S.Timestamp (ALI => True))
-              or else
-                (not S.Has_Units and then S.Kind in Unit.Spec_Kind
-                 and then S.Build_Timestamp (Idx) = S.Timestamp (ALI => True))
+            if Build_Time = S.Timestamp (ALI => True)
               or else
                 (not SI.Parser.Registry.Exists (S.Language, SI.None)
                  and then Check_Object_Code
@@ -622,9 +619,10 @@ begin
 
                procedure Print_Object (U_Sec : GPR2.Unit.Object);
 
-               procedure Dependence_Output
+               procedure Dependency_Output
                  (Dep_Source : Project.Source.Object;
-                  Index      : Unit_Index);
+                  Index      : Unit_Index;
+                  Timestamp  : Ada.Calendar.Time);
 
                function Has_Dependency (Index : Unit_Index) return Boolean is
                  (Artifacts.Has_Dependency (Index)
@@ -633,20 +631,23 @@ begin
                      or else Opt.Source_Parser));
 
                -----------------------
-               -- Dependence_Output --
+               -- Dependency_Output --
                -----------------------
 
-               procedure Dependence_Output
+               procedure Dependency_Output
                  (Dep_Source : Project.Source.Object;
-                  Index      : Unit_Index) is
+                  Index      : Unit_Index;
+                  Timestamp  : Ada.Calendar.Time) is
                begin
                   if Opt.With_Predefined_Units
                     or else not Dep_Source.Is_Runtime
                   then
                      Text_IO.Put ("   ");
-                     Output_Source (S => Dep_Source, Idx => Index);
+                     Output_Source (S          => Dep_Source,
+                                    Idx        => Index,
+                                    Build_Time => Timestamp);
                   end if;
-               end Dependence_Output;
+               end Dependency_Output;
 
                ------------------
                -- Print_Object --
@@ -682,7 +683,9 @@ begin
                   end if;
 
                   if Opt.Print_Sources and then not Opt.Dependency_Mode then
-                     Output_Source (S.Source, S.Index, Artifacts);
+                     Output_Source
+                       (S.Source, S.Index, S.Source.Build_Timestamp (S.Index),
+                        Artifacts);
                   end if;
 
                   if Opt.Verbose then
@@ -768,7 +771,8 @@ begin
                        and then not Opt.Dependency_Mode
                        and then Opt.Print_Sources)
                   then
-                     Output_Source (U_Src, Src.Index);
+                     Output_Source (U_Src, Src.Index,
+                                    U_Src.Build_Timestamp (Src.Index));
                   end if;
                end Print_Unit_From;
 
@@ -777,7 +781,10 @@ begin
                   Print_Object (No_Index);
 
                   if Opt.Print_Sources and then not Opt.Dependency_Mode then
-                     Output_Source (S.Source, S.Index, Artifacts);
+                     Output_Source
+                       (S.Source, No_Index,
+                        S.Source.Build_Timestamp (No_Index),
+                        Artifacts);
                   end if;
 
                elsif S.Index = No_Index then
@@ -798,7 +805,7 @@ begin
                   end if;
 
                   S.Source.Dependencies
-                    (S.Index, Dependence_Output'Access);
+                    (S.Index, Dependency_Output'Access);
                end if;
             end;
          end loop;

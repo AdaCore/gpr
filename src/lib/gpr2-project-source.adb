@@ -31,10 +31,10 @@ with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Artifact;
+with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.Unit_Info.Set;
 with GPR2.Source_Info.Parser.Registry;
-with GPR2.Source_Reference.Identifier.Set;
 
 package body GPR2.Project.Source is
 
@@ -49,18 +49,6 @@ package body GPR2.Project.Source is
 
    package Source_Unit_Id_Sets is new Ada.Containers.Hashed_Sets
      (GPR2.Unit.Source_Unit_Identifier, Hash, GPR2.Unit."=", GPR2.Unit."=");
-
-   procedure Context_Clause_Dependencies
-     (Self     : Object;
-      For_Each : not null access procedure
-                   (Source : GPR2.Project.Source.Object;
-                    Unit   : GPR2.Unit.Object);
-      Closure  : Boolean := False;
-      Index    : Unit_Index := No_Index)
-     with Pre => Self.Is_Defined and then Self.Has_Units;
-   --  Returns the source files on which the current source file depends
-   --  (potentially transitively). The dependence built on top of Ada "with"
-   --  statements.
 
    function Change_Actual_View
      (Self : Object; View : Project.View.Object) return Object
@@ -111,197 +99,6 @@ package body GPR2.Project.Source is
       end return;
    end Change_Actual_View;
 
-   ---------------------------------
-   -- Context_Clause_Dependencies --
-   ---------------------------------
-
-   procedure Context_Clause_Dependencies
-     (Self     : Object;
-      For_Each : not null access procedure
-                  (Source : GPR2.Project.Source.Object;
-                   Unit   : GPR2.Unit.Object);
-      Closure  : Boolean := False;
-      Index    : Unit_Index := No_Index)
-   is
-      use GPR2.Unit;
-      Tree   : constant not null access Project.Tree.Object :=
-                 View (Self).Tree;
-      U_Done : Containers.Name_Set;
-
-      S_Done : Source_Unit_Id_Sets.Set;
-      --  Fast look-up tables to avoid analysing the same unit/file multiple
-      --  time and more specifically avoid circularities.
-
-      procedure Output (Unit     : Unit_Info.Object;
-                        Add_Body : Boolean := False)
-        with Inline, Pre => Unit.Is_Defined;
-      --  Call For_Each for each part of the Unit
-
-      procedure To_Analyze (Src : Source_Part);
-      --  Record Src's withed units to be analysed (insert into Buf)
-
-      function Get
-        (Source : GPR2.Path_Name.Object) return Project.Source.Object
-      is
-        (Tree.Get_View (Source).Source (Source));
-
-      ------------
-      -- Output --
-      ------------
-
-      procedure Output (Unit     : Unit_Info.Object;
-                        Add_Body : Boolean := False) is
-
-         procedure Outp (Item : GPR2.Unit.Source_Unit_Identifier);
-
-         ----------
-         -- Outp --
-         ----------
-
-         procedure Outp (Item : GPR2.Unit.Source_Unit_Identifier) is
-            Position : Source_Unit_Id_Sets.Cursor;
-            Inserted : Boolean;
-            Src      : GPR2.Project.Source.Object;
-         begin
-            S_Done.Insert (Item, Position, Inserted);
-            if Inserted then
-               Src := Get (Item.Source);
-               For_Each (Src, Src.Unit (Item.Index));
-            end if;
-         end Outp;
-
-      begin
-         if Unit.Has_Spec then
-            --  function and procedure compilation units allowed to do not have
-            --  a spec.
-            Outp (Unit.Spec);
-         end if;
-
-         if Unit.Has_Body and then (Add_Body or else not Unit.Has_Spec) then
-            Outp (Unit.Main_Body);
-
-            for Sep of Unit.Separates loop
-               Outp (Sep);
-            end loop;
-         end if;
-      end Output;
-
-      Buf  : Source_Reference.Identifier.Set.Object;
-      --  Buf contains units to be checked, this list is extended when looking
-      --  for the full-closure. Using this list we avoid a recursive call.
-
-      ----------------
-      -- To_Analyze --
-      ----------------
-
-      procedure To_Analyze (Src : Source_Part) is
-         Done_Pos : Containers.Name_Type_Set.Cursor;
-         Position : Source_Reference.Identifier.Set.Cursor;
-         Inserted : Boolean;
-         CU       : GPR2.Unit.Object renames Src.Source.Unit (Src.Index);
-      begin
-         for W of CU.Dependencies loop
-            U_Done.Insert (W.Text, Done_Pos, Inserted);
-
-            if Inserted then
-               Buf.Insert (W, Position, Inserted);
-            end if;
-         end loop;
-      end To_Analyze;
-
-   begin
-      --  Self is part of the context clause dependencies, so add it first...
-      --  except when it is a separate.
-
-      if not Self.Has_Units
-        or else Self.Unit (Index).Kind /= S_Separate
-      then
-         declare
-            Self_Ref : constant Source_Reference.Identifier.Object'Class :=
-                         Source_Reference.Identifier.Create
-                           (Self.Path_Name.Value, 0, 0,
-                            Self.Unit (Index).Name);
-         begin
-            U_Done.Insert (Self_Ref.Text);
-            Buf.Insert (Self_Ref);
-         end;
-      end if;
-
-      To_Analyze ((Self, Index));
-
-      if Self.Has_Other_Part (Index) then
-         To_Analyze (Self.Other_Part (Index));
-      end if;
-
-      For_Every_Unit : while not Buf.Is_Empty loop
-         declare
-            W    : constant Source_Reference.Identifier.Object'Class :=
-                     Buf.First_Element;
-            View : constant Project.View.Object :=
-                     Tree.Get_View (Unit => W.Text);
-         begin
-            --  Remove the unit just taken from the list
-
-            Buf.Delete_First;
-
-            if not View.Is_Defined then
-               Tree.Log_Messages.Append
-                 (Message.Create
-                    (Message.Warning,
-                     "withed unit " & String (W.Text) & " not found",
-                     W));
-
-            else
-               declare
-                  Data : constant Definition.Const_Ref :=
-                           Definition.Get_RO (View);
-                  --  The view information for the unit Identifier
-                  CU   : constant Unit_Info.Set.Cursor :=
-                           Data.Units.Find (W.Text);
-                  SU   : Unit_Info.Object;
-               begin
-                  if Unit_Info.Set.Set.Has_Element (CU) then
-                     SU := Unit_Info.Set.Set.Element (CU);
-
-                     --  At least the dependencies are the spec of
-                     --  the withed unit.
-
-                     Output (SU,
-                             Add_Body => Closure
-                               or else W.Text = Self.Unit (Index).Name);
-
-                     --  Finally, for the Closure mode add the dependencies
-                     --  of withed unit from the direct withed spec and
-                     --  bodies.
-
-                     if Closure then
-                        if SU.Spec.Source.Is_Defined then
-                           To_Analyze ((Get (SU.Spec.Source), SU.Spec.Index));
-                        end if;
-
-                        if SU.Main_Body.Source.Is_Defined then
-                           To_Analyze
-                             ((Get (SU.Main_Body.Source), SU.Main_Body.Index));
-                        end if;
-
-                        for Sep of SU.Separates loop
-                           To_Analyze ((Get (Sep.Source), Sep.Index));
-                        end loop;
-                     end if;
-
-                  else
-                     --  This should never happen, if the unit has been
-                     --  found to be in the View, it should be there.
-
-                     raise Project_Error
-                       with "internal error in dependencies";
-                  end if;
-               end;
-            end if;
-         end;
-      end loop For_Every_Unit;
-   end Context_Clause_Dependencies;
-
    ------------
    -- Create --
    ------------
@@ -340,13 +137,21 @@ package body GPR2.Project.Source is
    is
       Deps : Part_Set.Object (Sorted => Sorted);
 
-      procedure Insert (Source : Object; Unit : GPR2.Unit.Object);
+      procedure Insert
+        (Source    : Object;
+         Unit      : GPR2.Unit.Object;
+         Timestamp : Ada.Calendar.Time);
 
       ------------
       -- Insert --
       ------------
 
-      procedure Insert (Source : Object; Unit : GPR2.Unit.Object) is
+      procedure Insert
+        (Source    : Object;
+         Unit      : GPR2.Unit.Object;
+         Timestamp : Ada.Calendar.Time)
+      is
+         pragma Unreferenced (Timestamp);
       begin
          if Unit.Is_Defined then
             Deps.Insert ((Source, Unit.Index));
@@ -365,36 +170,138 @@ package body GPR2.Project.Source is
      (Self     : Object;
       Index    : Unit_Index;
       For_Each : not null access procedure
-                   (Source : Object; Unit : GPR2.Unit.Object);
+                   (Source    : Object;
+                    Unit      : GPR2.Unit.Object;
+                    Timestamp : Ada.Calendar.Time);
       Closure  : Boolean := False;
       Sorted   : Boolean := True)
    is
       use type GPR2.Source_Info.Backend;
 
-      Done      : Source_Unit_Id_Sets.Set;
-      Added     : Part_Set.Object (Sorted => Sorted);
+      Tree   : constant not null access Project.Tree.Object :=
+                    View (Self).Tree;
+      Done   : Source_Unit_Id_Sets.Set;
+      Added  : Part_Set.Object (Sorted => Sorted);
 
-      procedure Action
+      procedure Analyze_With_Clauses (Src : Source_Part);
+      --  Retrieve the dependencies from with clauses
+
+      procedure Handle_Dependency
+        (Source    : Object;
+         Index     : Unit_Index;
+         Timestamp : Ada.Calendar.Time);
+      --  Add the dependency to the result
+
+      procedure On_Dependency
         (Unit_Name : Name_Type;
          Sfile     : Simple_Name;
          Kind      : GPR2.Unit.Library_Unit_Type;
          Stamp     : Ada.Calendar.Time);
-      --  Callback to list dependencies from GPR2.Source_Info
+      --  Callback when iterating on Source_Info.Dependencies
 
-      ------------
-      -- Action --
-      ------------
+      --------------------------
+      -- Analyze_With_Clauses --
+      --------------------------
 
-      procedure Action
+      procedure Analyze_With_Clauses (Src : Source_Part) is
+         CU : GPR2.Unit.Object renames Src.Source.Unit (Src.Index);
+      begin
+         for W of CU.Dependencies loop
+            declare
+               V  : constant Project.View.Object :=
+                        Tree.Get_View (W.Text);
+               UI : Unit_Info.Object;
+            begin
+               if not V.Is_Defined then
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Message.Warning,
+                        "withed unit " & String (W.Text) & " not found",
+                        W));
+
+               else
+                  UI := Definition.Get_RO (V).Units (W.Text);
+
+                  if not Closure then
+                     if UI.Has_Spec then
+                        Handle_Dependency
+                          (V.Source (UI.Spec.Source),
+                           UI.Spec.Index,
+                           No_Time);
+
+                     elsif UI.Has_Body then
+                        Handle_Dependency
+                          (V.Source (UI.Main_Body.Source),
+                           UI.Main_Body.Index,
+                           No_Time);
+                     end if;
+
+                  else
+                     if UI.Has_Spec then
+                        Handle_Dependency
+                          (V.Source (UI.Spec.Source),
+                           UI.Spec.Index,
+                           No_Time);
+                     end if;
+
+                     if UI.Has_Body then
+                        Handle_Dependency
+                          (V.Source (UI.Main_Body.Source),
+                           UI.Main_Body.Index,
+                           No_Time);
+                     end if;
+
+                     for Sep of UI.Separates loop
+                        Handle_Dependency
+                          (V.Source (Sep.Source),
+                           Sep.Index,
+                           No_Time);
+                     end loop;
+                  end if;
+               end if;
+            end;
+         end loop;
+      end Analyze_With_Clauses;
+
+      -----------------------
+      -- Handle_Dependency --
+      -----------------------
+
+      procedure Handle_Dependency
+        (Source    : Object;
+         Index     : Unit_Index;
+         Timestamp : Ada.Calendar.Time)
+      is
+         Position : Source_Unit_Id_Sets.Cursor;
+         Inserted : Boolean;
+      begin
+         Done.Insert ((Source.Path_Name, Index), Position, Inserted);
+
+         if Inserted then
+            if Closure then
+               Added.Insert ((Source, Index));
+            end if;
+
+            if Source.Has_Units then
+               For_Each (Source, Source.Unit (Index), Timestamp);
+            else
+               For_Each (Source, GPR2.Unit.Undefined, Timestamp);
+            end if;
+         end if;
+      end Handle_Dependency;
+
+      -------------------
+      -- On_Dependency --
+      -------------------
+
+      procedure On_Dependency
         (Unit_Name : Name_Type;
          Sfile     : Simple_Name;
          Kind      : GPR2.Unit.Library_Unit_Type;
          Stamp     : Ada.Calendar.Time)
       is
-         S        : Project.Source.Constant_Access;
-         Position : Source_Unit_Id_Sets.Cursor;
-         Inserted : Boolean;
-         CU       : GPR2.Unit.Object;
+         S  : Project.Source.Constant_Access;
+         CU : GPR2.Unit.Object;
 
       begin
          if not View (Self).Check_Source (Sfile, S) then
@@ -405,42 +312,66 @@ package body GPR2.Project.Source is
            and then S.Check_Unit
              (Unit_Name, Spec => Kind in GPR2.Unit.Spec_Kind, Unit => CU)
          then
-            Done.Insert ((S.Path_Name, CU.Index), Position, Inserted);
+            Handle_Dependency (S.all, CU.Index, Stamp);
          else
-            Done.Insert ((S.Path_Name, No_Index), Position, Inserted);
+            Handle_Dependency (S.all, No_Index, Stamp);
          end if;
-
-         if Inserted then
-            if Closure then
-               if S.Has_Units then
-                  Added.Insert ((S.all, CU.Index));
-               else
-                  Added.Insert ((S.all, No_Index));
-               end if;
-            end if;
-
-            if not S.Is_Ada
-              and then not S.Is_Parsed (No_Index)
-              and then S.Kind in GPR2.Unit.Spec_Kind
-            then
-               --  Non-Ada spec build timestamp can be taken only from
-               --  dependencies.
-
-               declare
-                  Src : Project.Source.Object := S.all;
-               begin
-                  Src.Update_Build_Timestamp (Stamp);
-                  For_Each (Src, CU);
-               end;
-
-            else
-               For_Each (S.all, CU);
-            end if;
-         end if;
-      end Action;
+      end On_Dependency;
 
    begin
-      Self.Dependencies (Index, Action'Access);
+      if not Self.Is_Parsed (Index) then
+         return;
+      end if;
+
+      if Self.Used_Backend (Index) = Source_Info.LI then
+         --  Dependencies will be retrieved from LI information for the
+         --  source file.
+         Added.Insert ((Self, Index));
+      else
+         --  Gather the withed units from the compilation unit: spec + body
+         --  + separates.
+         declare
+            V    : constant Project.View.Object := View (Self);
+            Def  : constant Definition.Const_Ref :=
+                     Definition.Get_RO (View (Self));
+            Unit : constant GPR2.Unit.Object := Self.Unit (Index);
+            UI   : constant Unit_Info.Object :=
+                     Def.Units.Element (if Unit.Kind = GPR2.Unit.S_Separate
+                                        then Unit.Separate_From
+                                        else Unit.Name);
+         begin
+            if UI.Has_Spec then
+               if not Closure then
+                  --  In closure mode, Handle_Directory will add the source
+                  --  there.
+                  Added.Insert ((V.Source (UI.Spec.Source), UI.Spec.Index));
+               end if;
+
+               --  Add explicitly the compilation unit, as the with clauses
+               --  won't list them (but they're still dependencies).
+               Handle_Dependency
+                 (V.Source (UI.Spec.Source), UI.Spec.Index, No_Time);
+            end if;
+
+            if UI.Has_Body then
+               if not Closure then
+                  Added.Insert
+                    ((V.Source (UI.Main_Body.Source), UI.Main_Body.Index));
+               end if;
+
+               Handle_Dependency
+                 (V.Source (UI.Main_Body.Source), UI.Main_Body.Index, No_Time);
+            end if;
+
+            for Sep of UI.Separates loop
+               if not Closure then
+                  Added.Insert ((V.Source (Sep.Source), Sep.Index));
+               end if;
+               Handle_Dependency
+                 (V.Source (Sep.Source), Sep.Index, No_Time);
+            end loop;
+         end;
+      end if;
 
       while not Added.Is_Empty loop
          declare
@@ -449,45 +380,57 @@ package body GPR2.Project.Source is
             Added.Clear;
 
             for Src_Part of Set loop
-               Src_Part.Source.Dependencies (Src_Part.Index, Action'Access);
+               if Src_Part.Source.Is_Parsed (Src_Part.Index) then
+                  if Src_Part.Source.Used_Backend (Src_Part.Index) =
+                    GPR2.Source_Info.LI
+                  then
+                     --  Get the dependencies directly from the dependency
+                     --  file.
+
+                     Src_Part.Source.Dependencies
+                       (Src_Part.Index,
+                        On_Dependency'Access);
+
+                  elsif Src_Part.Source.Has_Units then
+                     --  No dependency file: use the source parser to gather
+                     --  the list of withed units.
+
+                     Analyze_With_Clauses (Src_Part);
+                  end if;
+               end if;
             end loop;
          end;
       end loop;
-
-      if Done.Is_Empty
-        and then Self.Has_Units
-        and then Self.Is_Parsed (Index)
-        and then Self.Used_Backend (Index) = GPR2.Source_Info.Source
-      then
-         --  It mean that we do not have ALI file parsed, try to get "with"
-         --  dependencies from Ada parser.
-
-         Self.Context_Clause_Dependencies
-           (For_Each, Closure => Closure, Index => Index);
-      end if;
    end Dependencies;
 
    procedure Dependencies
      (Self     : Object;
       Index    : Unit_Index;
       For_Each : not null access procedure
-                   (Source : Object; Index : Unit_Index);
+                   (Source    : Object;
+                    Index     : Unit_Index;
+                    Timestamp : Ada.Calendar.Time);
       Closure  : Boolean := False;
       Sorted   : Boolean := True)
    is
-      procedure Action (Source : Object; Unit : GPR2.Unit.Object);
+      procedure Action (Source    : Object;
+                        Unit      : GPR2.Unit.Object;
+                        Timestamp : Ada.Calendar.Time);
 
-      procedure Action (Source : Object; Unit : GPR2.Unit.Object) is
+      procedure Action (Source    : Object;
+                        Unit      : GPR2.Unit.Object;
+                        Timestamp : Ada.Calendar.Time) is
       begin
          if Unit.Is_Defined then
-            For_Each (Source, Unit.Index);
+            For_Each (Source, Unit.Index, Timestamp);
          else
-            For_Each (Source, No_Index);
+            For_Each (Source, No_Index, Timestamp);
          end if;
       end Action;
 
    begin
-      Self.Dependencies (Index, Action'Access, Sorted => Sorted);
+      Self.Dependencies
+        (Index, Action'Access, Closure => Closure, Sorted => Sorted);
    end Dependencies;
 
    --------------------------
@@ -718,8 +661,28 @@ package body GPR2.Project.Source is
      (Self     : in out Object;
       Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
    is
+      Def : constant Definition.Ref :=
+              Definition.Get (Definition.Strong (Self.View));
+      C   : constant Project.Source.Set.Cursor :=
+              Def.Sources.Find (Self);
+   begin
+      pragma Assert (Project.Source.Set.Has_Element (C));
+      Self.Update (C, Backends);
+   end Update;
+
+   ------------
+   -- Update --
+   ------------
+
+   procedure Update
+     (Self     : in out Object;
+      C        : Project.Source.Set.Cursor;
+      Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
+   is
       use type GPR2.Source_Info.Parse_State;
       Language : constant Language_Id := Self.Language;
+      Def      : constant Definition.Ref :=
+                   Definition.Get (Definition.Strong (Self.View));
 
       procedure Clarify_Unit_Type;
       --  Set Kind to Spec_Only for the units without body and
@@ -731,7 +694,6 @@ package body GPR2.Project.Source is
 
       procedure Clarify_Unit_Type is
          use Definition;
-         Def : constant Ref := Get (Strong (Self.View));
       begin
          for U of Self.Units loop
             declare
@@ -831,7 +793,53 @@ package body GPR2.Project.Source is
 
       if Self.Has_Units then
          Clarify_Unit_Type;
+
+         declare
+            CUnits   : GPR2.Project.Unit_Info.Set.Cursor;
+            Inserted : Boolean;
+         begin
+            --  Check newly found separates and update Unit_Info
+            for Unit of Self.Units loop
+               declare
+                  Unit_Name : constant Name_Type :=
+                                (if Unit.Kind = GPR2.Unit.S_Separate
+                                 then Unit.Separate_From
+                                 else Unit.Name);
+               begin
+                  Def.Units.Insert
+                    (Unit_Name,
+                     Unit_Info.Create (Unit_Name),
+                     CUnits,
+                     Inserted);
+               end;
+
+               declare
+                  SUI : constant GPR2.Unit.Source_Unit_Identifier :=
+                          (Self.Path_Name, Unit.Index);
+                  Ref : constant Unit_Info.Set.Set.Reference_Type :=
+                          Def.Units.Reference (CUnits);
+               begin
+                  if Unit.Kind in GPR2.Unit.Spec_Kind
+                    and then not Ref.Has_Spec
+                  then
+                     Ref.Update_Spec (SUI);
+
+                  elsif Unit.Kind in GPR2.Unit.Body_Kind
+                    and then not Ref.Has_Body
+                  then
+                     Ref.Update_Body (SUI);
+
+                  elsif Unit.Kind = GPR2.Unit.S_Separate then
+                     Ref.Update_Separates (SUI);
+                  end if;
+               end;
+
+               Def.Units_Map.Include (Definition.Key (Unit), C);
+            end loop;
+         end;
       end if;
+
+      Def.Sources.Replace (C, Self);
    end Update;
 
    ----------

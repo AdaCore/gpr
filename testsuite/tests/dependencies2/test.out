@@ -33,9 +33,15 @@ Project: Demo
 
  > /src/api-call.adb   unit: API.CALL
 ..... DIRECT
+   > /src/api-call.adb
+   > /src/api.adb
+   > /src/api.ads
    > /src2/toto.ads
 api.ads:3:01: warning: withed unit titi not found
 ..... CLOSURE
+   > /src/api-call.adb
+   > /src/api.adb
+   > /src/api.ads
    > /src2/toto.adb
    > /src2/toto.ads
 

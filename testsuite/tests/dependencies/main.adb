@@ -89,6 +89,12 @@ procedure Main is
                   Output_Filename (D.Source.Path_Name.Value);
                   Text_IO.New_Line;
                end loop;
+
+               if Prj.Has_Messages then
+                  for M of Prj.Log_Messages.all loop
+                     Text_IO.Put_Line (M.Format);
+                  end loop;
+               end if;
             end if;
          end;
       end loop;

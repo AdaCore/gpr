@@ -22,6 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Calendar;
+
 with GPR2.Unit;
 with GPR2.Project.View;
 with GPR2.Project.View.Set;
@@ -30,6 +32,7 @@ with GPR2.Source_Info;
 
 limited with GPR2.Project.Source.Artifact;
 limited with GPR2.Project.Source.Part_Set;
+limited with GPR2.Project.Source.Set;
 
 package GPR2.Project.Source is
 
@@ -159,7 +162,9 @@ package GPR2.Project.Source is
      (Self     : Object;
       Index    : Unit_Index;
       For_Each : not null access procedure
-                   (Source : Object; Index : Unit_Index);
+                   (Source    : Object;
+                    Index     : Unit_Index;
+                    Timestamp : Ada.Calendar.Time);
       Closure  : Boolean := False;
       Sorted   : Boolean := True);
    --  Call For_Each routine for each dependency unit with it's source
@@ -174,7 +179,9 @@ package GPR2.Project.Source is
      (Self     : Object;
       Index    : Unit_Index;
       For_Each : not null access procedure
-                   (Source : Object; Unit : GPR2.Unit.Object);
+                   (Source    : Object;
+                    Unit      : GPR2.Unit.Object;
+                    Timestamp : Ada.Calendar.Time);
       Closure  : Boolean := False;
       Sorted   : Boolean := True);
    --  Call For_Each routine for each dependency unit with it's source
@@ -213,6 +220,13 @@ package GPR2.Project.Source is
 
    procedure Update
      (Self     : in out Object;
+      Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
+     with Pre => Self.Is_Defined;
+   --  Ensure that the project source is parsed/updated if needed
+
+   procedure Update
+     (Self     : in out Object;
+      C        : Project.Source.Set.Cursor;
       Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
      with Pre => Self.Is_Defined;
    --  Ensure that the project source is parsed/updated if needed

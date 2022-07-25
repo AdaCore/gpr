@@ -75,9 +75,34 @@ gprls -d -a0 --debugF -P pa.gpr p0
          OK s-valuns.ads
          OK s-valuti.ads
          OK s-valuei.ads
+         OK s-vaispe.ads
          OK s-valueu.ads
+         OK s-vauspe.ads
          OK s-widuns.ads
          OK s-widthu.ads
+------------------
+gprls -s --closure -P pa.gpr p6_2
+
+
+Closure:
+
+  /p6/p6_0.adb
+  /p6/p6_0.ads
+  /p6/p6_1.adb
+  /p6/p6_1.ads
+  /p6/p6_2.adb
+  /p6/p6_2.ads
+  /p6/p6_3.adb
+  /p6/p6_3.ads
+  /p7/p7_0.adb
+  /p7/p7_0.ads
+  /p7/p7_1.adb
+  /p7/p7_1.ads
+  /p7/p7_2.adb
+  /p7/p7_2.ads
+  /p7/p7_3.adb
+  /p7/p7_3.ads
+
 cleaning...
 ------------------
 gprls -d -P pa.gpr p5_1

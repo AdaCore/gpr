@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Calendar;
 with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Text_IO;
@@ -50,14 +51,20 @@ procedure Main is
       Dep : Path_Name.Object;
 
       procedure Print_Dependency
-        (Src : Project.Source.Object; Unit : GPR2.Unit.Object);
+        (Src : Project.Source.Object;
+         Unit : GPR2.Unit.Object;
+         Timestamp : Ada.Calendar.Time);
 
       ----------------------
       -- Print_Dependency --
       ----------------------
 
       procedure Print_Dependency
-        (Src : Project.Source.Object; Unit : GPR2.Unit.Object) is
+        (Src : Project.Source.Object;
+         Unit : GPR2.Unit.Object;
+         Timestamp : Ada.Calendar.Time)
+      is
+         pragma Unreferenced (Timestamp);
       begin
          Text_IO.Put_Line
            ("    dependency unit " & String (Unit.Name) & ' ' & Unit.Kind'Img
