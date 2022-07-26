@@ -508,10 +508,24 @@ is
 
                elsif J + Dot_Repl'Length <= Basename'Last - Suffix'Length
                  and then DD < J -- Don't after underscore or dot replace
-                 and then Basename (J .. J + Dot_Repl'Length - 1)
-                 = Dot_Repl
+                 and then
+                   (Basename (J .. J + Dot_Repl'Length - 1) = Dot_Repl
+                    or else
+                    --  In the standard GNAT naming scheme,
+                    --  handle children or separates of A, G, I or S.
+                    --  "~" is used as dot replacement by gnatkr
+                      (Is_Standard_GNAT_Naming
+                       and then Basename (J) = '~'
+                       and then J = Basename'First + 1
+                       and then Basename (Basename'First) in
+                           'a' | 'g' | 'i' | 's'))
                then
-                  J := J + Dot_Repl'Length;
+                  if Basename (J .. J + Dot_Repl'Length - 1) = Dot_Repl then
+                     J := J + Dot_Repl'Length;
+                  else
+                     J := J + 1;
+                  end if;
+
                   DD := J;
                   DP := J;
 
@@ -693,20 +707,13 @@ is
             declare
                S1 : constant Character := Element (Result, 1);
                S2 : constant Character := Element (Result, 2);
-               S3 : constant Character := Element (Result, 3);
 
             begin
                if S1 in 'a' | 'g' | 'i' | 's' then
                   --  Children or separates of packages A, G, I or S. These
-                  --  names are x__ ... or x~... (where x is a, g, i, or s).
-                  --  Both versions (x__... and x~...) are allowed in all
-                  --  platforms, because it is not possible to know the
-                  --  platform before processing the project files.
+                  --  names are x~... (where x is a, g, i, or s).
 
-                  if S2 = '_' and then S3 = '_' then
-                     Replace_Slice (Result, 2, 3, ".");
-
-                  elsif S2 = '~' then
+                  if S2 = '~' then
                      Replace_Element (Result, 2, '.');
                   end if;
 
