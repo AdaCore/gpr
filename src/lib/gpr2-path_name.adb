@@ -549,13 +549,13 @@ package body GPR2.Path_Name is
    -----------------------
 
    function Filesystem_String
-     (Path : GPR2.Path_Name.Object) return VFS.Filesystem_String is
+     (Self : Object) return VFS.Filesystem_String is
    begin
-      if Path.Is_Defined then
-         if Path.Has_Dir_Name then
-            return VFS.Filesystem_String (To_String (Path.Value));
+      if Self.Is_Defined then
+         if Self.Has_Dir_Name then
+            return VFS.Filesystem_String (To_String (Self.Value));
          else
-            return VFS.Filesystem_String (Simple_Name (Path));
+            return VFS.Filesystem_String (Simple_Name (Self));
          end if;
       else
          return "";
