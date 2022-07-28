@@ -2653,8 +2653,8 @@ package body GPR2.Project.Tree is
             --  Aggregate project must have Project_Files attribute
 
             Self.Error
-              ("Attribute ""project_files"" must be specified in"
-               & " aggregate project",
+              ("attribute ""Project_Files"" must be defined in"
+               & " an aggregate project",
                Source_Reference.Create (View.Path_Name.Value, 0, 0));
 
          else
