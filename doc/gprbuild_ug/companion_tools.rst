@@ -2463,12 +2463,16 @@ You may specify any of the following switches to `gprname`:
 * :samp:`-D{filename}`
 
   Look for source files in all directories listed in text file :file:`filename`.
+  This :file:`filename` can also contain file simple names. Those file will be
+  directly added to :file:`Source_File_List` and their paths to 
+  :file:`Source_Dirs`.
   There may be zero, one or more spaces between *-D*
   and :file:`filename`.
   :file:`filename` must be an existing, readable text file.
-  Each nonempty line in :file:`filename` must be a directory.
-  Specifying switch *-D* is equivalent to specifying as many
-  switches *-d* as there are nonempty lines in
+  Each nonempty line in :file:`filename` must be a directory or a file 
+  simple name.
+  When only containing directories, specifying switch *-D* is equivalent
+  to specifying as many switches *-d* as there are nonempty lines in
   :file:`file`.
 
 * :samp:`-eL`

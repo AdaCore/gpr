@@ -19,6 +19,8 @@
 with Ada.Containers.Indefinite_Hashed_Maps;
 
 with GPRname.Common;
+with GPRname.Source;
+with GPRname.Source.Set;
 with GPRname.Source_Dir;
 with GPRname.Source_Dir.Vector;
 with GPRname.Pattern;
@@ -89,6 +91,9 @@ package GPRname.Section is
    --  Returns the list of patterns and the associated languages, declared in
    --  section Self.
 
+   function Files (Self : Object) return Source.Set.Object;
+   --  Returns the list of files declared in section Self.
+
    function Excluded_Patterns
      (Self : Object) return Language_Patterns_Map.Map;
    --  Returns the map from languages to excluded patterns, as defined in
@@ -98,6 +103,7 @@ private
 
    type Object is tagged record
       Directories       : Source_Dir.Vector.Object;
+      Files             : Source.Set.Object;
       Directories_Files : Path_Name_Vector.Vector;
       Patterns          : Pattern.Language.Vector.Object;
       Excluded_Patterns : Language_Patterns_Map.Map;
@@ -107,14 +113,18 @@ private
    --  need to preserve the command-line order.
 
    Empty_Section : constant Object :=
-                     (Directories       => Source_Dir.Vector.Empty_Vector,
-                      Directories_Files => Path_Name_Vector.Empty_Vector,
-                      Patterns          =>
-                        Pattern.Language.Vector.Empty_Vector,
-                      Excluded_Patterns => Language_Patterns_Map.Empty_Map);
+     (Directories       => Source_Dir.Vector.Empty_Vector,
+      Files             => Source.Set.Empty_Set,
+      Directories_Files => Path_Name_Vector.Empty_Vector,
+      Patterns          =>
+        Pattern.Language.Vector.Empty_Vector,
+      Excluded_Patterns => Language_Patterns_Map.Empty_Map);
 
    function Directories (Self : Object) return Source_Dir.Vector.Object is
      (Self.Directories);
+
+   function Files (Self : Object) return Source.Set.Object is
+     (Self.Files);
 
    function Patterns (Self : Object) return Pattern.Language.Vector.Object is
      (Self.Patterns);

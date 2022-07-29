@@ -34,7 +34,7 @@ renames_nonexist.gpr: warning: there are no sources of language "Ada" in this pr
 
 ** attributes:
 
-conf.gpr:3:08: error: Cannot set configuration attribute "Target" after it is referenced.
+conf.gpr:3:08: error: cannot set configuration attribute "Target" after it was referenced
 builtin.gpr:3:04: error: builtin attribute "Name" is read-only
 empty_warning.gpr:4:44: warning: empty attribute "Builder'Executable" ignored
 empty_warning.gpr: warning: there are no sources of language "Ada" in this project

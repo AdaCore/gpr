@@ -1,5 +1,5 @@
 testing aggr1.gpr
-aggr1.gpr: error: Attribute "project_files" must be specified in aggregate project
+aggr1.gpr: error: attribute "Project_Files" must be defined in an aggregate project
 testing aggr2.gpr
 aggr2.gpr:4:04: warning: package "Naming" cannot be used in aggregate projects
 testing aggr3.gpr

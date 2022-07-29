@@ -886,6 +886,7 @@ begin
       Implementation_Except : Unbounded_String;
       File_Src_List         : Text_IO.File_Type;
 
+      Listed_Source_Files : Source.Set.Object;
    begin
       Text_IO.Create
         (File_Src_List, Text_IO.Out_File, String (Source_List_File_Path.Name));
@@ -918,6 +919,13 @@ begin
                      Quote (String (Sources (S_Curs).File.Simple_Name))
                      & (if S_Curs = Sources.Last then ");" else ", "));
 
+                  Listed_Source_Files.Insert
+                    (New_Item => Source.Create
+                       (File       => Sources (S_Curs).File,
+                        Language   => "",
+                        Unit_Based => False)
+                    );
+
                   --  Write the source to the source list file
 
                   Text_IO.Put_Line
@@ -943,11 +951,47 @@ begin
                      else ";"));
             end loop;
 
+            Listed_Source_Files.Insert
+              (New_Item => Source.Create
+                 (File       => S.File,
+                  Language   => "",
+                  Unit_Based => False)
+              );
+
             --  Write the source to the source list file
 
             Text_IO.Put_Line (File_Src_List, String (S.File.Simple_Name));
          end loop;
       end if;
+
+      --  Adding explicitly added files to the source list if not present yet.
+      --  If the file is already present, verify if the file is not hidden
+      --  by another file found from Source_Dirs search.
+
+      for Section of Opt.Sections loop
+         for File of Section.Files loop
+            if (for some Listed_File of Listed_Source_Files
+                => Listed_File.File.Value = File.File.Value)
+            then
+               for Listed_File of Listed_Source_Files loop
+                  if File.File.Value = Listed_File.File.Value then
+                     exit;
+                  elsif File.File.Simple_Name = Listed_File.File.Simple_Name
+                  then
+                     Text_IO.Put_Line
+                       (Item => "warning: " & File.File.Value
+                        & " hidden by "
+                        & Listed_File.File.Value
+                        & " found through source dirs");
+                     exit;
+                  end if;
+               end loop;
+            else
+               Text_IO.Put_Line (File_Src_List,
+                                 String (File.File.Simple_Name));
+            end if;
+         end loop;
+      end loop;
 
       Append (Naming_Project_Buffer, Implementation_Except);
       Append

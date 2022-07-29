@@ -4105,9 +4105,9 @@ package body GPR2.Project.Parser is
                     (Message.Create
                        (Level => Message.Error,
                         Sloc  => Source_Reference.Object (A),
-                        Message => "Cannot set configuration attribute """ &
+                        Message => "cannot set configuration attribute """ &
                           Image (A.Name.Id) &
-                          """ after it is referenced."));
+                          """ after it was referenced"));
                   Include := False;
                end if;
             end;
