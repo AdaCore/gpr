@@ -29,6 +29,8 @@
 --  for the corresponding tree. It also gives the sources for the views and
 --  this include sources from extended project or aggregated project if needed.
 
+with Ada.Calendar;
+
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name.Set;
@@ -410,6 +412,17 @@ package GPR2.Project.View is
                  and then Self.Qualifier in K_Standard | K_Library;
    --  Returns the source dir paths for a given project
 
+   procedure Source_Directories
+     (Self      : Object;
+      Source_CB : not null access procedure
+                    (Dir_Reference : GPR2.Source_Reference.Value.Object;
+                     Source        : GPR2.Path_Name.Object;
+                     Timestamp     : Ada.Calendar.Time))
+     with Pre => Self.Is_Defined
+                   and then Self.Qualifier in K_Standard | K_Library;
+   --  Calls Source_CB for each file contained in the view's source
+   --  directories.
+
    function Has_Sources (Self : Object) return Boolean
      with Pre  => Self.Is_Defined,
           Post => (if Self.Kind in K_Abstract | K_Aggregate
@@ -694,6 +707,29 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns artifact files taken from Artifacts_In_Object_Dir and
    --  Artifacts_In_Exec_Dir attributes.
+
+   procedure Foreach
+     (Self              : Object;
+      Directory_Pattern : GPR2.Filename_Optional;
+      Source            : GPR2.Source_Reference.Value.Object;
+      File_CB           : access procedure
+                            (File      : GPR2.Path_Name.Object;
+                             Timestamp : Ada.Calendar.Time);
+      Directory_CB      : access procedure
+                            (Directory       : GPR2.Path_Name.Object;
+                             Is_Root_Dir     : Boolean;
+                             Do_Dir_Visit    : in out Boolean;
+                             Do_Subdir_Visit : in out Boolean) := null)
+     with Pre => Self.Is_Defined
+                   and then (File_CB /= null or else Directory_CB /= null);
+   --  Visit Directory_Pattern (recursive if "**" at end) calling callbacks
+   --  on each directory/file visited.
+   --  When entering a Directory, Directory_CB callback can avoid Directory's
+   --  files to be handled. If recursive mode, sub directories are visited if
+   --  Do_Subdir_Visit is True.
+   --  Is_Root_Dir is set when entering the top level dir.
+   --  File_CB is called for each regular file found.
+   --  Source reference is used when messages added to Self.Tree's log
 
    function Executable
      (Self   : Object;

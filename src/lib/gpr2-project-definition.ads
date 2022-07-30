@@ -26,7 +26,6 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Vectors;
 
 with GPR2.Context;
-with GPR2.Log;
 with GPR2.Project.Attribute_Cache;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Configuration;
@@ -301,41 +300,6 @@ private package GPR2.Project.Definition is
      (Def : in out Data; Backends : Source_Info.Backend_Set);
    --  Parse the project's source dependency file and populate the
    --  corresponding source_info.
-
-   procedure Foreach
-     (Base_Dir          : GPR2.Path_Name.Object;
-      Messages          : in out GPR2.Log.Object;
-      Directory_Pattern : GPR2.Filename_Optional;
-      Source            : GPR2.Source_Reference.Value.Object;
-      File_CB           : access procedure
-                            (File      : GPR2.Path_Name.Object;
-                             Timestamp : Ada.Calendar.Time);
-      Directory_CB      : access procedure
-                            (Directory       : GPR2.Path_Name.Object;
-                             Is_Root_Dir     : Boolean;
-                             Do_Dir_Visit    : in out Boolean;
-                             Do_Subdir_Visit : in out Boolean) := null)
-     with Pre => (File_CB /= null or else Directory_CB /= null)
-                   and then Base_Dir.Is_Defined and then Base_Dir.Is_Directory;
-   --  Visit Directory_Pattern (recursive if "**" at end) calling callbacks
-   --  on each directory/file visited.
-   --  When entering a Directory, Directory_CB callback can avoid Directory's
-   --  files to be handled. If recursive mode, sub directories are visited if
-   --  Do_Subdir_Visit is True.
-   --  Is_Root_Dir is set when entering the top level dir.
-   --  File_CB is called for each regular file found.
-   --  Source reference is used when messages added to Self.Tree's log
-
-   procedure Source_Directories_Walk
-     (View      : Project.View.Object;
-      Source_CB : access procedure
-                    (Dir_Reference : GPR2.Source_Reference.Value.Object;
-                     Source        : GPR2.Path_Name.Object;
-                     Timestamp     : Ada.Calendar.Time);
-      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object));
-   --  Walks the source directories of Self and calls Source_CB on every
-   --  file found, and Dir_CB on each directory found, if the callbacks are
-   --  defined.
 
    procedure Sources_Map_Insert
      (Def : in out Data;
