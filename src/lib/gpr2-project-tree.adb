@@ -62,7 +62,7 @@ package body GPR2.Project.Tree is
                          with Warnings => Off;
 
    Wildcards       : constant Strings.Maps.Character_Set :=
-                       Strings.Maps.To_Set ("?*");
+                       Strings.Maps.To_Set ("?*[]");
    --  Wild chars for filename pattern
 
    procedure Error
@@ -2546,8 +2546,10 @@ package body GPR2.Project.Tree is
                end Is_Directory_Handled;
 
             begin
-               View.Foreach
-                 (Directory_Pattern => Dir_Part,
+               Definition.Foreach
+                 (Base_Dir          => View.Dir_Name,
+                  Messages          => View.Tree.Log_Messages.all,
+                  Directory_Pattern => Dir_Part,
                   Source            => Projects,
                   File_CB           => Handle_File'Access,
                   Directory_CB      => Is_Directory_Handled'Access);
