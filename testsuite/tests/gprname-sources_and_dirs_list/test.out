@@ -1,5 +1,5 @@
-warning: duplicate file pack2.ads for unit Pack2 will be ignored
-warning: duplicate file pack2.adb for unit Pack2 will be ignored
+warning: duplicate file pack2.ad? for unit Pack2 will be ignored
+warning: duplicate file pack2.ad? for unit Pack2 will be ignored
 warning: /dir2/pack2.ads hidden by /dir1/pack2.ads found through source dirs
 
 Compile

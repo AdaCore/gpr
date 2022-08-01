@@ -9,7 +9,18 @@ def run(args):
 
 # check recursive dir support
 try:
-    run([GPRNAME, '-Dprj_source_list.txt', '-Ptest.gpr', 'pack*.ad?'])
+    res = bnr.check_output([GPRNAME, '-Dprj_source_list.txt',
+                            '-Ptest.gpr', 'pack*.ad?'])
+
+    for line in res.out.split("\n"):
+        if "hidden by" in line:
+            print(line)
+        elif "pack2.ads" in line:
+            print("warning: duplicate file pack2.ad? for unit Pack2 will be ignored")
+        elif "pack2.adb" in line:
+            print("warning: duplicate file pack2.ad? for unit Pack2 will be ignored")
+    print()
+
     run(['gprbuild', '-Ptest.gpr'])
     run(['./main'])
 except Exception as E:
