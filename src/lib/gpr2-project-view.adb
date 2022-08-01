@@ -28,12 +28,9 @@ with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GNAT.OS_Lib;
-with GNATCOLL.OS.Dir;
-with GNATCOLL.OS.Stat;
 with GNATCOLL.Utils;
 with GNAT.Regexp; use GNAT.Regexp;
 
-with GPR2.Message;
 with GPR2.Project.Attribute_Cache;
 with GPR2.Project.Definition;
 with GPR2.Project.Source.Set;
@@ -47,9 +44,6 @@ with GPR2.Source_Reference.Pack;
 package body GPR2.Project.View is
 
    use GNAT;
-
-   package Regexp_List is new Ada.Containers.Indefinite_Vectors
-     (Positive, GNAT.Regexp.Regexp, "=" => GNAT.Regexp."=");
 
    function Get_Ref (View : Object) return Definition.Ref is
      (Definition.Data (View.Get.Element.all)'Unchecked_Access);
@@ -99,14 +93,6 @@ package body GPR2.Project.View is
       With_Config   : Boolean := True)
       return Project.Attribute.Set.Object
    with Inline;
-
-   procedure Source_Directories_Internal
-     (Self      : Object;
-      Source_CB : access procedure
-                    (Dir_Reference : GPR2.Source_Reference.Value.Object;
-                     Source        : GPR2.Path_Name.Object;
-                     Timestamp     : Ada.Calendar.Time);
-      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object));
 
    -------------------------
    -- Aggregate_Libraries --
@@ -1497,161 +1483,6 @@ package body GPR2.Project.View is
       return Definition.Strong (Definition.Get_RO (Self).Extending);
    end Extending;
 
-   -------------
-   -- Foreach --
-   -------------
-
-   procedure Foreach
-     (Self              : Object;
-      Directory_Pattern : GPR2.Filename_Optional;
-      Source            : GPR2.Source_Reference.Value.Object;
-      File_CB           : access procedure
-                            (File      : GPR2.Path_Name.Object;
-                             Timestamp : Ada.Calendar.Time);
-      Directory_CB      : access procedure
-                            (Directory       : GPR2.Path_Name.Object;
-                             Is_Root_Dir     : Boolean;
-                             Do_Dir_Visit    : in out Boolean;
-                             Do_Subdir_Visit : in out Boolean) := null)
-   is
-      use GNAT.OS_Lib;
-      use GNATCOLL.Utils;
-
-      View_Dir  : constant GPR2.Path_Name.Object :=
-                    GPR2.Path_Name.Create_Directory
-                      (Filename_Optional (Self.Path_Name.Dir_Name));
-      Dir       : constant String :=
-                    (if Directory_Pattern'Length = 0
-                     then "."
-                     else
-                       (if Directory_Pattern = "**"
-                        then "./**"
-                        else String (Directory_Pattern)));
-      --  Normalize dir part avoiding "" & "**"
-      Recursive : constant Boolean :=
-                    Dir'Length > 2
-                    and then Dir (Dir'Last - 1 .. Dir'Last) = "**"
-                    and then Is_Directory_Separator (Dir (Dir'Last - 2));
-      Last      : constant Positive :=
-                    Dir'Last - (if Recursive then 2 else 0);
-      Root_Dir  : constant String :=
-                    (if Is_Absolute_Path (Dir)
-                     then Dir (Dir'First .. Last)
-                     else View_Dir.Compose
-                       (Filename_Optional (Dir (Dir'First .. Last))).Value);
-
-      procedure Handle_Directory
-        (Dir         : GPR2.Path_Name.Object;
-         Recursive   : Boolean;
-         Is_Root_Dir : Boolean := False);
-      --  Handle the specified directory, that is read all files in Dir and
-      --  eventually call recursivelly Handle_Directory if a recursive read
-      --  is specified.
-
-      function Is_Missing_Subdirectory
-        (Dir : GPR2.Path_Name.Full_Name) return Boolean;
-      --  Returns True is Path is a missing sub-directory (as specified by
-      --  --src-subdirs option) which should be filtered out.
-
-      ----------------------
-      -- Handle_Directory --
-      ----------------------
-
-      procedure Handle_Directory
-        (Dir         : GPR2.Path_Name.Object;
-         Recursive   : Boolean;
-         Is_Root_Dir : Boolean := False)
-      is
-         use GNATCOLL.OS.Dir;
-         use GNATCOLL.OS.Stat;
-
-         Do_Dir_Visit    : Boolean := File_CB /= null;
-         Do_Subdir_Visit : Boolean := Recursive;
-         Handle          : Dir_Handle;
-         D_Entry         : Dir_Entry;
-         Stat            : File_Attributes;
-
-      begin
-         if Directory_CB /= null then
-            Directory_CB
-              (Dir,
-               Is_Root_Dir,
-               Do_Dir_Visit,
-               Do_Subdir_Visit);
-         end if;
-
-         if Do_Dir_Visit or else Do_Subdir_Visit then
-            begin
-               Handle := Open (String (Dir.Value));
-            exception
-               when GNATCOLL.OS.OS_Error =>
-                  Self.Tree.Append_Message
-                    (Message.Create
-                       (Message.Error,
-                        """" & String (Dir.Name) &
-                          """ is not a valid directory",
-                        Source));
-                  return;
-            end;
-
-            begin
-               loop
-                  D_Entry := Read (Handle);
-
-                  exit when End_Of_Iteration (D_Entry);
-
-                  Stat := Attributes (D_Entry);
-
-                  if Do_Dir_Visit and then Is_File (Stat) then
-                     File_CB
-                       (Dir.Compose (Filename_Type (Name (D_Entry))),
-                        Modification_Time (Stat));
-
-                  elsif Do_Subdir_Visit and then Is_Directory (Stat) then
-                     if Name (D_Entry) not in "." | ".." then
-                        Handle_Directory
-                          (Dir.Compose
-                             (Filename_Type (Name (D_Entry)),
-                              Directory => True),
-                           True);
-                     end if;
-                  end if;
-               end loop;
-
-               Close (Handle);
-
-            exception
-               when others =>
-                  Close (Handle);
-                  raise;
-            end;
-         end if;
-      end Handle_Directory;
-
-      -----------------------------
-      -- Is_Missing_Subdirectory --
-      -----------------------------
-
-      function Is_Missing_Subdirectory
-        (Dir : GPR2.Path_Name.Full_Name) return Boolean is
-      begin
-         return Self.Kind in K_Standard | K_Library
-           and then Self.Has_Source_Subdirectory
-           and then Dir = Self.Source_Subdirectory.Value
-           and then not Ada.Directories.Exists (Dir);
-      end Is_Missing_Subdirectory;
-
-   begin
-      if not Is_Missing_Subdirectory (Root_Dir) then
-         Handle_Directory
-           (GPR2.Path_Name.Create_Directory
-              (Filename_Type (Root_Dir),
-               GPR2.Path_Name.No_Resolution),
-            Recursive   => Recursive,
-            Is_Root_Dir => True);
-      end if;
-   end Foreach;
-
    ---------------------------
    -- Has_Aggregate_Context --
    ---------------------------
@@ -2601,17 +2432,6 @@ package body GPR2.Project.View is
    -- Source_Directories --
    ------------------------
 
-   procedure Source_Directories
-     (Self      : Object;
-      Source_CB : not null access procedure
-        (Dir_Reference : GPR2.Source_Reference.Value.Object;
-         Source        : GPR2.Path_Name.Object;
-         Timestamp     : Ada.Calendar.Time))
-   is
-   begin
-      Self.Source_Directories_Internal (Source_CB, null);
-   end Source_Directories;
-
    function Source_Directories
      (Self : Object) return GPR2.Path_Name.Set.Object
    is
@@ -2625,136 +2445,13 @@ package body GPR2.Project.View is
       end Dir_Cb;
 
    begin
-      Self.Source_Directories_Internal
-        (Source_CB => null,
+      Definition.Source_Directories_Walk
+        (Self,
+         Source_CB => null,
          Dir_CB    => Dir_Cb'Unrestricted_Access);
 
       return Result;
    end Source_Directories;
-
-   ---------------------------------
-   -- Source_Directories_Internal --
-   ---------------------------------
-
-   procedure Source_Directories_Internal
-     (Self      : Object;
-      Source_CB : access procedure
-                   (Dir_Reference : GPR2.Source_Reference.Value.Object;
-                    Source        : GPR2.Path_Name.Object;
-                    Timestamp     : Ada.Calendar.Time);
-      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object))
-   is
-      Visited_Dirs             : GPR2.Containers.Filename_Set;
-      Dir_Ref                  : GPR2.Source_Reference.Value.Object;
-      Ignored_Sub_Dirs         : constant GPR2.Project.Attribute.Object :=
-                                   Self.Attribute (PRA.Ignore_Source_Sub_Dirs);
-      Ignored_Sub_Dirs_Regexps : Regexp_List.Vector;
-      Excluded_Dirs            : constant GPR2.Project.Attribute.Object :=
-                                   Self.Attribute (PRA.Excluded_Source_Dirs);
-      Excluded_Dirs_List       : GPR2.Path_Name.Set.Object;
-      --  Ignore_Source_Sub_Dirs attribute regexps
-
-      procedure On_Directory
-        (Directory       : GPR2.Path_Name.Object;
-         Is_Root_Dir     : Boolean;
-         Do_Dir_Visit    : in out Boolean;
-         Do_Subdir_Visit : in out Boolean);
-
-      procedure On_File
-        (File      : GPR2.Path_Name.Object;
-         Timestamp : Ada.Calendar.Time);
-
-      ------------------
-      -- On_Directory --
-      ------------------
-
-      procedure On_Directory
-        (Directory       : GPR2.Path_Name.Object;
-         Is_Root_Dir     : Boolean;
-         Do_Dir_Visit    : in out Boolean;
-         Do_Subdir_Visit : in out Boolean)
-      is
-         Position : GPR2.Containers.Filename_Type_Set.Cursor;
-         Inserted : Boolean;
-      begin
-         if Excluded_Dirs_List.Contains (Directory) then
-
-            --  Do not visit this directory's files but still look for
-            --  subdirectories.
-
-            Do_Dir_Visit := False;
-
-            return;
-         end if;
-
-         if not Is_Root_Dir then
-            for Ignored_Sub_Dir of Ignored_Sub_Dirs_Regexps loop
-               if GNAT.Regexp.Match
-                 (String (Directory.Simple_Name), Ignored_Sub_Dir)
-               then
-                  --  Ignore this matching sub dir tree.
-                  Do_Dir_Visit    := False;
-                  Do_Subdir_Visit := False;
-
-                  return;
-               end if;
-            end loop;
-         end if;
-
-         --  Do_Subdir_Visit is set to False if we already have visited
-         --  this source directory:
-
-         Visited_Dirs.Insert
-           (Directory.Name, Position, Inserted);
-
-         if not Inserted then
-            --  Already visited
-            Do_Dir_Visit    := False;
-
-         elsif Dir_CB /= null then
-            Dir_CB (Directory);
-         end if;
-      end On_Directory;
-
-      -------------
-      -- On_File --
-      -------------
-
-      procedure On_File
-        (File      : GPR2.Path_Name.Object;
-         Timestamp : Ada.Calendar.Time)
-      is
-      begin
-         Source_CB (Dir_Ref, File, Timestamp);
-      end On_File;
-
-   begin
-      if Ignored_Sub_Dirs.Is_Defined then
-         for V of Ignored_Sub_Dirs.Values loop
-            if V.Text /= "" then
-               Ignored_Sub_Dirs_Regexps.Append
-                 (GPR2.Compile_Regexp (Filename_Optional (V.Text)));
-            end if;
-         end loop;
-      end if;
-
-      if Excluded_Dirs.Is_Defined then
-         for V of Excluded_Dirs.Values loop
-            Excluded_Dirs_List.Append
-              (Self.Dir_Name.Compose (Filename_Type (V.Text), True));
-         end loop;
-      end if;
-
-      for S of Self.Attribute (PRA.Source_Dirs).Values loop
-         Dir_Ref := S;
-         Self.Foreach
-           (Directory_Pattern =>  Filename_Optional (S.Text),
-            Source            =>  S,
-            File_CB           =>  (if Source_CB = null then null
-                                   else On_File'Unrestricted_Access),
-            Directory_CB      =>  On_Directory'Unrestricted_Access);
-      end loop;
-   end Source_Directories_Internal;
 
    -----------------
    -- Source_Path --

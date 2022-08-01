@@ -96,9 +96,11 @@ is
       Text_IO.Put_Line ("Source Search Path:");
 
       for V of Tree loop
-         for Src of V.Source_Directories loop
-            Text_IO.Put_Line ("   " & String (Src.Dir_Name));
-         end loop;
+         if V.Kind in With_Source_Dirs_Kind then
+            for Src of V.Source_Directories loop
+               Text_IO.Put_Line ("   " & String (Src.Dir_Name));
+            end loop;
+         end if;
       end loop;
 
       if Tree.Has_Runtime_Project then

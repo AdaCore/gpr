@@ -268,7 +268,7 @@ general switches:
 switches for naming pattern sections:
   --and                Begin a new naming patterns section
   -d[ ]<dir>           Use <dir> as one of the source directories for the current section
-  -D[ ]<file>          Get source directories from <file>
+  -D[ ]<file>          Get source directories and files from <file>
    [-x][ ]<pat>        [exclude] pattern <pat> for Ada source
   -[x]f[ ]<pat>        [exclude] pattern <pat> for C source
   -[x]f:<lang>[ ]<pat> [exclude] pattern <pat> for source of language <lang>
@@ -544,7 +544,7 @@ general switches:
 switches for naming pattern sections:
   --and                Begin a new naming patterns section
   -d[ ]<dir>           Use <dir> as one of the source directories for the current section
-  -D[ ]<file>          Get source directories from <file>
+  -D[ ]<file>          Get source directories and files from <file>
    [-x][ ]<pat>        [exclude] pattern <pat> for Ada source
   -[x]f[ ]<pat>        [exclude] pattern <pat> for C source
   -[x]f:<lang>[ ]<pat> [exclude] pattern <pat> for source of language <lang>

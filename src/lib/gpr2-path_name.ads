@@ -217,26 +217,20 @@ package GPR2.Path_Name is
      with Pre => Self.Exists;
    --  Returns Self's modification time
 
-   function Filesystem_String
-     (Path : GPR2.Path_Name.Object) return VFS.Filesystem_String;
+   function Filesystem_String (Self : Object) return VFS.Filesystem_String;
    --  GPR2.Path_Name.Object to GNATCOLL.VFS.Filesystem_String conversion
 
-   function Virtual_File
-     (Path : GPR2.Path_Name.Object) return VFS.Virtual_File is
-     (if Path.Is_Defined
-      then VFS.Create (Filesystem_String (Path))
-      else VFS.No_File);
+   function Virtual_File (Self : Object) return VFS.Virtual_File;
    --  GPR2.Path_Name.Object to GNATCOLL.VFS.Virtual_File conversion
 
-   function Create
-     (Filename : VFS.Filesystem_String) return GPR2.Path_Name.Object;
+   function Create (Filename : VFS.Filesystem_String) return Object;
    --  GNATCOLL.VFS.Filesystem_String to GPR2.Path_Name.Object conversion
 
-   function Create (File : VFS.Virtual_File) return GPR2.Path_Name.Object;
+   function Create (File : VFS.Virtual_File) return Object;
    --  GNATCOLL.VFS.Virtual_File to GPR2.Path_Name.Object to conversion
 
    function Hash
-     (Path : GPR2.Path_Name.Object) return Ada.Containers.Hash_Type;
+     (Self : Object) return Ada.Containers.Hash_Type;
    --  For use with Hashed containers
 
 private
@@ -284,35 +278,35 @@ private
    function Modification_Time (Self : Object) return Ada.Calendar.Time is
      (Ada.Directories.Modification_Time (To_String (Self.Value)));
 
-   function Create
-     (Filename : VFS.Filesystem_String) return GPR2.Path_Name.Object
+   function Create (Filename : VFS.Filesystem_String) return Object
    is
      (if Filename'Length > 1
       then
         (if GNATCOLL.Utils.Is_Directory_Separator (Filename (Filename'Last))
-         then (GPR2.Path_Name.Create_Directory (GPR2.Filename_Type (Filename)))
-         else GPR2.Path_Name.Create
-           (GPR2.Filename_Type (Filename), GPR2.Filename_Type (Filename)))
-      else GPR2.Path_Name.Undefined);
+         then Create_Directory (Filename_Type (Filename))
+         else Create (Filename_Type (Filename), Filename_Type (Filename)))
+      else Undefined);
 
-   function Create
-     (File : VFS.Virtual_File) return GPR2.Path_Name.Object
+   function Create (File : VFS.Virtual_File) return Object
    is
      (if VFS."/=" (File, VFS.No_File)
       then
-        (if GNATCOLL.VFS.Is_Directory (File)
+        (if VFS.Is_Directory (File)
          or else GNATCOLL.Utils.Is_Directory_Separator
-           (GNATCOLL.VFS.Full_Name (File).all
-            (GNATCOLL.VFS.Full_Name (File).all'Last))
-         then GPR2.Path_Name.Create_Directory
-           (GPR2.Filename_Type (File.Display_Full_Name))
-         else GPR2.Path_Name.Create
-           (GPR2.Filename_Type (File.Display_Full_Name),
-            GPR2.Filename_Type (File.Display_Full_Name)))
-      else GPR2.Path_Name.Undefined);
+                   (File.Full_Name (File.Full_Name.all'Last))
+         then Create_Directory
+                (Filename_Type (File.Display_Full_Name))
+         else Create
+                (Filename_Type (File.Display_Full_Name),
+                 Filename_Type (File.Display_Full_Name)))
+      else Undefined);
 
-   function Hash
-     (Path : GPR2.Path_Name.Object) return Ada.Containers.Hash_Type
-   is (Ada.Strings.Unbounded.Hash (Path.Comparing));
+   function Virtual_File (Self : Object) return VFS.Virtual_File is
+     (if Self.Is_Defined
+      then VFS.Create (Self.Filesystem_String)
+      else VFS.No_File);
+
+   function Hash (Self : Object) return Ada.Containers.Hash_Type is
+     (Ada.Strings.Unbounded.Hash (Self.Comparing));
 
 end GPR2.Path_Name;
