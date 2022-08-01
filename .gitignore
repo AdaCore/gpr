@@ -7,12 +7,15 @@ testsuite/out
 
 .build
 makefile.setup
+bindings/c/build
 
 /workspace
 
 # Editor artifacts
 *~
 *.swp
+*-loc.xml
+.#*#
 
 # GDB artifacts
 .gdb_history
