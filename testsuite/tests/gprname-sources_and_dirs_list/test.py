@@ -16,9 +16,9 @@ try:
         if "hidden by" in line:
             print(line)
         elif "pack2.ads" in line:
-            print("warning: duplicate file pack2.ad? for unit Pack2 will be ignored")
+            print(line.replace("pack2.ads", "pack2.ad?"))
         elif "pack2.adb" in line:
-            print("warning: duplicate file pack2.ad? for unit Pack2 will be ignored")
+            print(line.replace("pack2.adb", "pack2.ad?"))
     print()
 
     run(['gprbuild', '-Ptest.gpr'])
