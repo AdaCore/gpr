@@ -402,7 +402,7 @@ package body GPRls.Gnatdist is
          "source undefined: View " &
            String (View.Name) & " Unit " & String (W));
 
-      Afile := Src.Artifacts.Dependency (Index);
+      Afile := Project.Source.Artifact.Dependency (Src, Index);
 
       Output_Token (T_With);
       N_Indents := N_Indents + 1;
