@@ -548,24 +548,24 @@ Here are some specific examples:
        Illegal := "gnat.adc" & List2;  --  Illegal, must start with list
 
 
-.. index:: Built-in Functions
+.. index:: Built-in function
 
 .. _Builtin_Functions:
 
 Built-in Functions
 ------------------
 
-Built-in functions may be used in expression. The names of built-in functions
+Built-in functions may be used in expressions. The names of built-in functions
 are not reserved words and may also be used as variable names.
 In an expression, a built-in function is recognized if its name is immediately
 followed by an open parenthesis ('(').
 
 
-.. index:: alternative built-in function
+.. index:: Built-in function; Alternative
 
 .. _Alternative:
 
-The function ``alternative``
+The function ``Alternative``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: ../share/legacy.rst
@@ -584,11 +584,11 @@ argument if the first one is not the empty string.
       => "linux"
 
 
-.. index:: default built-in function
+.. index:: Built-in function; Default
 
 .. _Default:
 
-The function ``default``
+The function ``Default``
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: ../share/legacy.rst
@@ -607,11 +607,11 @@ argument if the first one is the empty string.
       => "One"
 
 
-.. index:: external built-in function
+.. index:: Built-in function; External
 
 .. _External_Values:
 
-The function ``external``
+The function ``External``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 An external value is an expression whose value is obtained from the command
@@ -647,9 +647,9 @@ attributes in various scenarios. Thus such variables are often called
 *scenario variables*.
 
 
-.. index:: external_as_list built-in function
+.. index:: Built-in function; External_As_List
 
-The function ``external_as_list``
+The function ``External_As_List``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 An external value is an expression whose value is obtained from the command
@@ -677,16 +677,16 @@ a string list with only one string. Otherwise, any string between the beginning
 and the first separator, between two consecutive separators and between the
 last separator and the end are components of the string list.
 
-Note the following differences between ``external`` and ``external_as_list``:
+Note the following differences between ``External`` and ``External_As_List``:
 
-* The ``external_as_list`` function has no default value for the external
+* The ``External_As_List`` function has no default value for the external
   variable
 
-* The ``external_as_list`` function returns an empty list, and does not
+* The ``External_As_List`` function returns an empty list, and does not
   report an error, when the value of the external variable is undefined.
 
 These differences reflect the different use cases for the two functions.
-External variables evaluated by the ``external`` function are
+External variables evaluated by the ``External`` function are
 often used for configuration control, and misspellings should be
 detected as errors rather than silently returning the empty string. If the
 user intended an empty string as the result when the external variable
@@ -694,18 +694,18 @@ was undefined, then this could easily be obtained:
 
   ::
 
-     external ("SOME_VAR", "")
+     External ("SOME_VAR", "")
 
-In contrast, the ``external_as_list`` function more typically is used
+In contrast, the ``External_As_List`` function more typically is used
 for external variables that may or may not have definitions (for example,
 lists of options or paths) and then the desired result in the undefined
 case is an empty list, not a reported error.
 
-Here is an example of the ``external_as_list`` function:
+Here is an example of the ``External_As_List`` function:
 
   ::
 
-      external_as_list ("SWITCHES", ",")
+      External_As_List ("SWITCHES", ",")
 
 If the external value of ``SWITCHES`` is ``"-O2,-g"``,
 the result is ``("-O2", "-g")``.
@@ -721,11 +721,11 @@ If the external value is ``",,"``, the result is (``""``).
 If the external value is ``","``, the result is ``()``, the empty string list.
 
 
-.. index:: filter_out built-in function
+.. index:: Built-in function; Filter_Out
 
 .. _Filter_Out:
 
-The function ``filter_out``
+The function ``Filter_Out``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: ../share/legacy.rst
@@ -753,11 +753,11 @@ Example removing all values:
       => ()
 
 
-.. index:: item_at built-in function
+.. index:: Built-in function; Item_At
 
 .. _Item_At:
 
-The function ``item_at``
+The function ``Item_At``
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: ../share/legacy.rst
@@ -780,11 +780,11 @@ end of the list. That is, "-1" is the last list item.
       => "last"
 
 
-.. index:: lower built-in function
+.. index:: Built-in function; Lower
 
 .. _Lower:
 
-The function ``lower``
+The function ``Lower``
 ^^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: ../share/legacy.rst
@@ -810,11 +810,11 @@ Example with a list:
       => ("one", "two")
 
 
-.. index:: match built-in function
+.. index:: Built-in function; Match
 
 .. _Match:
 
-The function ``match``
+The function ``Match``
 ^^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: ../share/legacy.rst
@@ -822,7 +822,7 @@ The function ``match``
 Function Match takes two mandatory arguments. The first argument is a
 simple string or a list. The second argument is the pattern (regular
 expression) to match. An optional third argument can be given which is
-the replacement pattern for the macthing strings.
+the replacement pattern for the matching strings.
 
 Example:
 
@@ -842,15 +842,15 @@ Example with a list and a replacement pattern:
       => ("r:or", "r:another")
 
 In the above example we match all strings in List containing the
-letter 'r' and the result is formed with 'r:' as prefix concatened
+letter 'r' and the result is formed with 'r:' as prefix concatenated
 with the matching string.
 
 
-.. index:: remove_prefix built-in function
+.. index:: Built-in function; Remove_Prefix
 
-.. _remove_prefix:
+.. _Remove_Prefix:
 
-The function ``remove_prefix``
+The function ``Remove_Prefix``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: ../share/legacy.rst
@@ -873,11 +873,11 @@ from the simple string or from each element of the list.
       => "Z.so"
 
 
-.. index:: remove_suffix built-in function
+.. index:: Built-in function; Remove_Suffix
 
-.. _remove_suffix:
+.. _Remove_Suffix:
 
-The function ``remove_suffix``
+The function ``Remove_Suffix``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: ../share/legacy.rst
@@ -900,11 +900,11 @@ from the simple string or from each element of the list.
       => "libZ"
 
 
-.. index:: split built-in function
+.. index:: Built-in function; Split
 
 .. _Split:
 
-The function ``split``
+The function ``Split``
 ^^^^^^^^^^^^^^^^^^^^^^
 
 Function Split takes two single string parameters and return a string list.
@@ -932,11 +932,11 @@ not included in the result.
       => ("-gnatf", "gnatv")
 
 
-.. index:: upper built-in function
+.. index:: Built-in function; Upper
 
 .. _Upper:
 
-The function ``upper``
+The function ``Upper``
 ^^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: ../share/legacy.rst
@@ -948,9 +948,9 @@ Example:
 
   ::
 
-      Upper ("The Lower Built-In")
+      Upper ("The Upper Built-In")
 
-      => "THE LOWER BUILT-IN"
+      => "THE UPPER BUILT-IN"
 
 Example with a list:
 
