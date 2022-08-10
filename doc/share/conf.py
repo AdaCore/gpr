@@ -53,7 +53,7 @@ for d in os.listdir(root_source_dir):
         exclude_patterns.append(d)
         print('ignoring %s' % d)
 
-extensions = []
+extensions = ['sphinx_rtd_theme']
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = doc_name
@@ -70,7 +70,7 @@ version = get_gpr_version()
 release = get_gpr_version()
 
 pygments_style = None
-html_theme = 'sphinxdoc'
+html_theme = 'sphinx_rtd_theme'
 if os.path.isfile('adacore_transparent.png'):
     html_logo = 'adacore_transparent.png'
 if os.path.isfile('favicon.ico'):
