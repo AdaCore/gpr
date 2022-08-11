@@ -26,25 +26,25 @@ environments with several compilers for the same language ---
 you may need to control more precisely the generation of
 the desired configuration of toolsets. A tool, GPRconfig, described in
 :ref:`Configuring_with_GPRconfig`), offers this capability. In this
-chapter most of the examples can use autoconfiguration.
+chapter most of the examples can use auto-configuration.
 
 GPRbuild will start its build process by trying to locate a configuration
 file. The following tests are performed in the specified order, and the
 first that matches provides the configuration file to use.
 
-* If a file has a base names that matches `<target>-<rts>.cgpr`,
-  `<target.cgpr`, `<rts>.cgpr` or `default.cgpr` is found in
+* If a file with a name that matches :file:`<target>-<rts>.cgpr`,
+  :file:`<target.cgpr`, :file:`<rts>.cgpr` or :file:`default.cgpr` is found in
   the default configuration files directory, this file is used. The target
-  and rts parameters are specified via the `--target` and `--RTS`
-  switches of `gprbuild`. The default directory is :file:`share/gpr`
-  in the installation directory of `gprbuild`
+  and RTS parameters are specified via the :samp:`--target` and :samp:`--RTS`
+  switches of gprbuild. The default directory is :file:`share/gpr`
+  in the installation directory of gprbuild.
 
-* If not found, the environment variable `GPR_CONFIG` is tested
+* If not found, the environment variable :envvar:`GPR_CONFIG` is tested
   to check whether it contains the name of a valid configuration file. This
   can either be an absolute path name or a base name that will be searched
   in the same default directory as above.
 
-* If still not found and you used the `--autoconf` switch, then
+* If still not found and you used the :samp:`--autoconf` switch, then
   a new configuration file is automatically generated based on the specified
   target and on the list of languages specified in your projects.
 
@@ -56,7 +56,7 @@ first that matches provides the configuration file to use.
     :samp:`--target=`) option,
   * using a specific Ada runtime (e.g. :samp:`--RTS=sjlj`),
   * working with compilers not in the path or not first in the path, or
-  * autoconfiguration does not give the expected results.
+  * auto-configuration does not give the expected results.
 
 
 GPRconfig provides several ways of generating configuration files. By
@@ -127,7 +127,7 @@ application, it generates the proper configuration file.
 
   In general, you will not launch GPRconfig
   explicitly. Instead, it is used implicitly by GPRbuild through the use
-  of `--config` and `--autoconf` switches.
+  of ``--config`` and ``--autoconf`` switches.
 
 Command line arguments
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -174,7 +174,7 @@ GPRconfig supports the following command line switches:
   will be computed automatically by GPRconfig.
 
   In general, only *language* needs to be specified, and the first
-  compiler on the :envvar:`PATH` that can compile this language will be selected.
+  compiler on the :samp:`PATH` that can compile this language will be selected.
   As an example, for a multi-language application programmed in C and Ada,
   the command line would be:
 
@@ -187,12 +187,12 @@ GPRconfig supports the following command line switches:
 
   *name* should be one of the compiler names defined in the GPRconfig
   knowledge base. The list of supported names includes :samp:`GNAT`,
-  :samp:`GCC`,.... This name is
+  :samp:`GCC` and so on. This name is
   generally not needed, but can be used to distinguish among several compilers
   that could match the other arguments of :samp:`--config`.
 
   Another possible more frequent use of *name* is to specify the base
-  name of an executable. For instance, if you prefer to use a diab C compiler
+  name of an executable. For instance, if you prefer to use the Diab C compiler
   (executable is called :file:`dcc`) instead of :file:`gcc`, even if the latter
   appears first in the path, you could specify :file:`dcc` as the name parameter.
 
@@ -204,7 +204,7 @@ GPRconfig supports the following command line switches:
 
   This switch is also the only possibility to include in your project some
   languages that are not associated with a compiler. This is sometimes useful
-  especially when you are using environments like GPS that support project files.
+  especially when you are using an IDE that supports project files.
   For instance, if you select "Project file" as a language, the files matching
   the :file:`.gpr` extension will be shown in the editor, although they of course
   play no role for gprbuild itself.
@@ -216,7 +216,7 @@ GPRconfig supports the following command line switches:
   .. -- @TIPHTML{Use :samp:`--batch` to generate the configuration file with no user interaction}
 
   If this switch is specified, GPRconfig automatically selects the first
-  compiler matching each of the `--config` switches, and generates the
+  compiler matching each of the :samp:`--config` switches, and generates the
   configuration file immediately. It will not display an interactive menu.
 
 .. index:: -o (gprconfig)
@@ -235,6 +235,7 @@ GPRconfig supports the following command line switches:
 .. index:: --db (gprconfig)
 
 :samp:`--db {directory}`, :samp:`--db-`
+
   Indicates another directory that should be parsed for GPRconfig's knowledge
   base. Most of the time this is only useful if you are creating your own
   XML description files locally. Additional directories are always processed
@@ -244,6 +245,7 @@ GPRconfig supports the following command line switches:
 .. index:: -h (gprconfig)
 
 :samp:`-h`
+
   Generates a brief help message listing all GPRconfig switches and the
   default value for their arguments. This includes the location of the
   knowledge base, the default target, etc.
@@ -253,10 +255,10 @@ Interactive use
 ^^^^^^^^^^^^^^^
 
 When you launch GPRconfig, it first searches for all compilers it
-can find on your :envvar:`PATH`, that match the target specified by
+can find on your :samp:`PATH`, that match the target specified by
 :samp:`--target`. It is recommended, although not
 required, that you place the compilers that you expect to use for your
-application in your :envvar:`PATH` before you launch *gprconfig*,
+application in your :samp:`PATH` before you launch gprconfig,
 since that simplifies the setup.
 
 .. -- @TIPHTML{The list of compilers is sorted so that the most likely compilers appear first}
@@ -265,7 +267,7 @@ GPRconfig then displays the list of all the compilers
 it has found, along with the language they can compile, the run-time
 they use (when applicable),.... It then waits for you to select
 one of the compilers.  This list is sorted by language, then by order
-in the :envvar:`PATH` environment variable (so that compilers that you
+in the :samp:`PATH` environment variable (so that compilers that you
 are more likely to use appear first), then by run-time names and
 finally by version of the compiler.  Thus the first
 compiler for any language is most likely the one you want to use.
@@ -325,7 +327,7 @@ The knowledge base contains various kinds of information:
 * Compiler description
 
   When it is run interactively, GPRconfig searches the user's
-  :envvar:`PATH` for known compilers, and tries to deduce their
+  :samp:`PATH` for known compilers, and tries to deduce their
   configuration (version, supported languages, supported targets, run-times,
   ...). From the knowledge base GPRconfig knows how to extract the
   relevant information about a compiler.
@@ -372,8 +374,8 @@ files has a special name, nor a special role. Instead, the user can
 freely create new files, and put them in the knowledge base directory,
 to contribute new knowledge.
 
-The location of the knowledge base is :file:`$prefix/share/gprconfig`,
-where :file:`$prefix` is the directory in which GPRconfig was
+The location of the knowledge base is :file:`{$prefix}/share/gprconfig`,
+where :file:`{$prefix}` is the directory in which GPRconfig was
 installed. Any file with extension :file:`.xml` in this directory will
 be parsed automatically by GPRconfig at startup after sorting
 them alphabetically.
@@ -399,23 +401,24 @@ placed in a single XML file, or split across several files.
 Compiler description
 ^^^^^^^^^^^^^^^^^^^^
 
-One of the XML tags that can be specified as a child of `<gprconfig>` is
-`<compiler_description>`. This node and its children describe one of
+One of the XML tags that can be specified as a child of :code:`<gprconfig>` is
+:code:`<compiler_description>`. This node and its children describe one of
 the compilers known to GPRconfig. The tool uses them when it
-initially looks for all compilers known on the user's :envvar:`PATH`
+initially looks for all compilers known on the user's :samp:`PATH`
 environment variable.
 
 This is optional information, but simplifies the use of GPRconfig,
 since the user is then able to omit some parameters from the :samp:`--config`
 command line argument, and have them automatically computed.
 
-The `<compiler_description>` node doesn't accept any XML
+The :code:`<compiler_description>` node doesn't accept any XML
 attribute.  However, it accepts a number of child tags that explain
 how to query the various attributes of the compiler.  The child tags
 are evaluated (if necessary) in the same order as they are documented below.
 
 
-*<name>*
+* :samp:`<name>`
+
   This tag contains a simple string, which is the name of the compiler.
   This name must be unique across all the configuration files, and is used to
   identify that `compiler_description` node.
@@ -426,7 +429,8 @@ are evaluated (if necessary) in the same order as they are documented below.
        <name>GNAT</name>
        </compiler_description>
 
-*<executable>*
+* :samp:`<executable>'
+
   This tag contains a string, which is the name of an executable
   to search for on the PATH. Examples are :samp:`gnatls`, :samp:`gcc`,...
 
@@ -436,7 +440,7 @@ are evaluated (if necessary) in the same order as they are documented below.
   Most of the compiler description is the same, however.
   For such cases, the value of the `executable` node is considered as
   beginning a regular expression. The tag also accepts an optional
-  attribute `prefix`,
+  attribute ``prefix``,
   which is an integer indicating the parenthesis group that contains the prefix.
   In the following example, you obtain the version of the GNAT compiler by running
   either *gnatls* or *powerpc-wrs-vxworks-gnatls*, depending on
@@ -467,25 +471,28 @@ are evaluated (if necessary) in the same order as they are documented below.
       <version><external>${PREFIX}gnatls -v</external></version>
 
   GPRconfig searches in all directories listed on the PATH for such
-  an executable. When one is found, the rest of the `<compiler_description>`
+  an executable. When one is found, the rest of the ``<compiler_description>``
   children are checked to know whether the compiler is valid. The directory
   in which the executable was found becomes the 'current directory' for
   the remaining XML children.
 
-*<target>*
+* :samp:`<target>`
+
   This node indicates how to query the target architecture for the compiler.
   See :ref:`GPRconfig_external_values` for valid children.
 
   If this isn't specified, the compiler will always be considered as matching
   on the current target.
 
-*<version>*
+* :samp:`<version>`
+
   This tag contains any of the nodes defined in :ref:`GPRconfig_external_values` below.
   It shows how to query the version number of the compiler. If the version
   cannot be found, the executable will not be listed in the list of compilers.
 
 
-*<variable name="varname">*
+* :samp:`<variable name="{varname}">`
+
   This node will define a user variable which may be later referenced.  The
   variables are evaluated just after the version but before the languages
   and the runtimes nodes.  See :ref:`GPRconfig_external_values`
@@ -493,7 +500,8 @@ are evaluated (if necessary) in the same order as they are documented below.
   this node.  If the evaluation of this variable is empty then the compiler
   is considered as invalid.
 
-*<languages>*
+* :samp:`<languages>`
+
   This node indicates how to query the list of languages. See
   :ref:`GPRconfig_external_values`
   below for valid children of this node.
@@ -508,11 +516,12 @@ are evaluated (if necessary) in the same order as they are documented below.
   value is computed from the result of a command, the words can also be
   space-separated, to be compatible with more tools.
 
-*<runtimes>*
+* :samp:`<runtimes>`
+
   This node indicates how to query the list of supported runtimes for the
   compiler. See :ref:`GPRconfig_external_values`
   below for valid children. The returned value
-  is split into words as for `<languages>`.
+  is split into words as for ``<languages>``.
 
   This node accepts one attribute, `"default"`, which contains a list
   of comma-separated names of runtimes. It is used to sort the runtimes when
@@ -532,11 +541,11 @@ GPRconfig external values
 
 A number of the XML nodes described above can contain one or more children,
 and specify how to query a value from an executable. Here is the list of
-valid contents for these nodes. The `<directory>` and `<external>`
-children can be repeated multiple times, and the `<filter>` and
-`<must_match>` nodes will be applied to each of these. The final
+valid contents for these nodes. The ``<directory>`` and ``<external>``
+children can be repeated multiple times, and the ``<filter>`` and
+``<must_match>`` nodes will be applied to each of these. The final
 value of the external value is the concatenation of the computation for each
-of the `<directory>` and `<external>` nodes.
+of the ``<directory>`` and ``<external>`` nodes.
 
 .. index:: gprconfig external values
 
@@ -557,9 +566,9 @@ of the `<directory>` and `<external>` nodes.
 
   Variables can be referenced in simple strings.
 
-* `<getenv name="variable" />`
+* :samp:`<getenv name="{variable}" />`
 
-  If the contents of the node is a `<getenv>` child, the value of
+  If the contents of the node is a ``<getenv>`` child, the value of
   the environment variable `variable` is returned. If the variable is
   not defined, this is an error and the compiler is ignored.
 
@@ -573,17 +582,17 @@ of the `<directory>` and `<external>` nodes.
       </version>
       </compile_description>
 
-* `<external>command</external>`
+* :samp:`<external>{command}</external>`
 
-  If the contents of the node is an `<external>` child, this indicates
+  If the contents of the node is an ``<external>`` child, this indicates
   that a command should be run on the system.
   When the command is run, the current directory (i.e., the one that contains
-  the executable found through the `<executable>` node), is placed first
-  on the :envvar:`PATH`. The output of the command is returned and may be later
+  the executable found through the ``<executable>`` node), is placed first
+  on the :samp:`PATH`. The output of the command is returned and may be later
   filtered. The command is not executed through a shell; therefore you cannot
   use output redirection, pipes, or other advanced features.
 
-  For instance, extracting the target processor from *gcc* can be done
+  For instance, extracting the target processor from :program:`gcc` can be done
   with:
 
   ::
@@ -592,13 +601,13 @@ of the `<directory>` and `<external>` nodes.
       <external>gcc -dumpmachine</external>
       </version>
 
-  Since the :envvar:`PATH` has been modified, we know that the *gcc* command
-  that is executed is the one from the same directory as the `<external>`
+  Since the :samp:`PATH` has been modified, we know that the gcc command
+  that is executed is the one from the same directory as the ``<external>``
   node.
 
   Variables are substituted in `command`.
 
-* `<grep regexp="regexp" group="0" />`
+* :samp:`<grep regexp="{regexp}" group="0" />`
 
   This node must come after the previously described ones. It is used to
   further filter the output. The previous output is matched against the regular
@@ -606,7 +615,7 @@ of the `<directory>` and `<external>` nodes.
   `group` is returned. By default, group is 0, which indicates the
   whole output of the command.
 
-  For instance, extracting the version number from *gcc* can be done
+  For instance, extracting the version number from :program:`gcc` can be done
   with:
 
   ::
@@ -616,12 +625,12 @@ of the `<directory>` and `<external>` nodes.
       <grep regexp="^gcc version (\S+)" group="1" />
       </version>
 
-* `<directory group="0" contents="">regexp</directory>`
+* :samp:`<directory group="0" contents="">{regexp}</directory>`
 
-  If the contents of the node is a `<directory`> child, this
+  If the contents of the node is a ``<directory>`` child, this
   indicates that GPRconfig should find all the files matching the
   regular expression. Regexp is a path relative to the directory that contains
-  the `<executable>` file, and should use Unix directory separators
+  the ``<executable>`` file, and should use Unix directory separators
   (i.e. '/'), since the actual directory will be converted into this format
   before the match, for system independence of the knowledge base.
 
@@ -629,18 +638,18 @@ of the `<directory>` and `<external>` nodes.
   It defaults to 0 which indicates the whole matched path. If this attribute is
   a string rather than an integer, then it is the value returned.
 
-  `regexp` can be any valid regular expression. This will only match
+  *regexp* can be any valid regular expression. This will only match
   a directory or file name, not a subdirectory. Remember to quote special
   characters, including '.', if you do not mean to use a regexp.
 
-  The optional attribute `contents` can be used to indicate that the
+  The optional attribute *contents* can be used to indicate that the
   contents of the file should be read. The first line that matches the regular
-  expression given by `contents` will be used as a file path instead of
-  the file matched by `regexp`. This is in general used on platforms that
+  expression given by *contents* will be used as a file path instead of
+  the file matched by *regexp*. This is in general used on platforms that
   do not have symbolic links, and a file is used instead of a symbolic link.
-  In general, this will work better than `group` specifies a string rather
+  In general, this will work better when *group* specifies a string rather
   than a parenthesis group, since the latter will match the path matched by
-  `regexp`, not the one read in the file.
+  *regexp*, not the one read in the file.
 
   For instance, finding the list of supported runtimes for the GNAT compiler
   is done with:
@@ -659,12 +668,12 @@ of the `<directory>` and `<external>` nodes.
   Note the second node, which matches the default run-time, and displays it as
   such.
 
-* `<filter>value1,value2,...</filter>`
+* :samp:`<filter>{value1,value2,...}</filter>`
 
   This node must come after one of the previously described ones. It is used to
   further filter the output. The previous output is split into words (it is
   considered as a comma-separated or space-separated list of words), and only
-  those words in :samp:`value1`, :samp:`value2`,... are kept.
+  those words in *value1*, *value2*,... are kept.
 
   For instance, the *gcc* compiler will return a variety of supported
   languages, including 'ada'. If we do not want to use it as an Ada
@@ -677,13 +686,13 @@ of the `<directory>` and `<external>` nodes.
       <filter>c,c++,fortran</filter>
       </languages>
 
-* `<must_match>regexp</must_match>`
+* :samp:`<must_match>{regexp}</must_match>`
 
   If this node is present, then the filtered output is compared with the
   specified regular expression. If no match is found, then the executable
   is not stored in the list of known compilers.
 
-  For instance, if you want to have a `<compiler_description>` tag
+  For instance, if you want to have a ``<compiler_description>`` tag
   specific to an older version of GCC, you could write:
 
   ::
@@ -694,7 +703,7 @@ of the `<directory>` and `<external>` nodes.
       <must_match>2.8.1</must_match>
       </version>
 
-  Other versions of gcc will not match this `<compiler_description>`
+  Other versions of gcc will not match this ``<compiler_description>``
   node.
 
 .. _GPRconfig_variable_substitution:
@@ -704,20 +713,20 @@ GPRconfig variable substitution
 
 The various compiler attributes defined above are made available as
 variables in the rest of the XML files. Each of these variables can be used
-in the value of the various nodes (for instance in `<directory>`),
+in the value of the various nodes (for instance in ``<directory>``),
 and in the configurations (:ref:`Configuration`).
 
-A variable is referenced by `${name}` where `name` is either
+A variable is referenced by ``${name}`` where *name* is either
 a user variable or a predefined variable.  An alternate reference is
-`$name` where `name` is a sequence of alpha numeric characters or
-underscores.  Finally `$$` is replaced by a simple `$`.
+`$name` where *name* is a sequence of alpha numeric characters or
+underscores.  Finally ``$$`` is replaced by a simple ``$``.
 
-User variables are defined by `<variable>` nodes and may override
+User variables are defined by ``<variable>`` nodes and may override
 predefined variables.  To avoid a possible override use lower case names.
 
 The variables are used in two contexts: either in a
-`<compiler_description>` node, in which case the variable refers to
-the compiler we are describing, or within a `<configuration>` node.
+``<compiler_description>`` node, in which case the variable refers to
+the compiler we are describing, or within a ``<configuration>`` node.
 In the latter case, and since there might be several compilers selected,
 you need to further specify the variable by adding in parenthesis the
 language of the compiler you are interested in.
@@ -742,9 +751,9 @@ For instance, the following is invalid:
 
 The trouble with the above is that if you are using multiple languages
 like C and Ada, both compilers will match the "negate" part, and therefore
-there is an ambiguity for the value of `${PATH}`. To prevent such
+there is an ambiguity for the value of ``${PATH}``. To prevent such
 issues, you need to use the following syntax instead when inside a
-`<configuration>` node:
+``<configuration>`` node:
 
 .. code-block:: gpr
 
@@ -754,7 +763,7 @@ Predefined variables are always in upper case.  Here is the list of
 predefined variables
 
 * *EXEC*
-    is the name of the executable that was found through `<executable>`. It
+    is the name of the executable that was found through ``<executable>``. It
     only contains the basename, not the directory information.
 
 
@@ -766,11 +775,11 @@ predefined variables
 
 * *TARGET*
     is replaced by the target architecture of the compiler, as returned by the
-    `<target>` node. This is of course not available when computing the
+    ``<target>`` node. This is of course not available when computing the
     target itself.
 
     This variable takes the language of the compiler as an optional index when
-    in a `<configuration>` block: if the language is specified, the target
+    in a ``<configuration>`` block: if the language is specified, the target
     returned by that specific compiler is used; otherwise, the normalized target
     common to all the selected compilers will be returned (target normalization
     is also described in the knowledge base's XML files).
@@ -783,12 +792,12 @@ predefined variables
 
 * *PREFIX*
     is replaced by the prefix to the executable name, as defined by the
-    `<executable>` node.
+    ``<executable>`` node.
 
 
 * *PATH*
     is the current directory, i.e. the one containing the executable found through
-    `<executable>`. It always ends with a directory separator.
+    ``<executable>``. It always ends with a directory separator.
 
 
 * *LANGUAGE*
@@ -800,7 +809,7 @@ predefined variables
     value of the external value is computed. These are special strings
     used when substituting text in configuration chunks.
 
-    `RUNTIME_DIR` always end with a directory separator.
+    *RUNTIME_DIR* always end with a directory separator.
 
 
 * *GPRCONFIG_PREFIX*
@@ -831,7 +840,7 @@ by GPRconfig.
 For instance, it is possible to indicate that a chunk should only be
 included if the GNAT compiler with the soft-float runtime is used. Such
 a chunk can for instance be used to ensure that Ada sources are always
-compiled with the `-msoft-float` command line switch.
+compiled with the :samp:`-msoft-float` command line switch.
 
 GPRconfig does not perform sophisticated merging of chunks. It simply
 groups packages together. For example, if the two chunks are:
@@ -879,8 +888,8 @@ the two chunks above should be written as:
         for Attr1 use Language_Processing'Attr1 & ("bar");
     end Language_Processing;
 
-The chunks are described in a `<configuration>` XML node. The most
-important child of such a node is `<config>`, which contains the
+The chunks are described in a ``<configuration>`` XML node. The most
+important child of such a node is ``<config>``, which contains the
 chunk itself. For instance, you would write:
 
 ::
@@ -894,7 +903,7 @@ chunk itself. For instance, you would write:
      </config>
    </configuration>
 
-If `<config>` is an empty node (i.e., :samp:`<config/>` or
+If ``<config>`` is an empty node (i.e., :samp:`<config/>` or
 :samp:`<config></config>` was used), then the combination of selected
 compilers will be reported as invalid, in the sense that code
 compiled with these compilers cannot be linked together. As a result,
@@ -908,10 +917,10 @@ chunks.
 The filters themselves are of course defined through XML tags, and can
 be any of:
 
-*<compilers negate="false">*
-  This filter contains a list of `<compiler>` children. The
-  `<compilers>` filter matches if any of its children match.
-  However, you can have several `<compilers>` filters, in which
+* :samp:`<compilers negate="false">`
+  This filter contains a list of ``<compiler>`` children. The
+  ``<compilers>`` filter matches if any of its children match.
+  However, you can have several ``<compilers>`` filters, in which
   case they must all match. This can be used to include linker switches
   chunks. For instance, the following code would be used to describe
   the linker switches to use when GNAT 5.05 or 5.04 is used in addition to
@@ -930,10 +939,10 @@ be any of:
        ...
      </configuration>
 
-  If the attribute `negate` is :samp:`true`, then the meaning of this
+  If the attribute `negate` is 'true', then the meaning of this
   filter is inverted, and it will match if none of its children matches.
 
-  The format of the `<compiler>` is the following:
+  The format of the ``<compiler>`` is the following:
 
   ::
 
@@ -941,7 +950,7 @@ be any of:
      runtime="..." language="..." />
 
   The language attribute, when specified, matches
-  the corresponding attribute used in the `<compiler_description>`
+  the corresponding attribute used in the ``<compiler_description>``
   children. All other attributes are regular expressions, which are matched
   against the corresponding selected compilers. Runtime attribute is matched
   against the base name of corresponding compiler runtime if it is given
@@ -954,15 +963,15 @@ be any of:
 
      <compiler name="GNAT" version="5.\d+" />
 
-*<hosts negate="false">*
-  This filter contains a list of `<host>` children. It matches when
-  any of its children matches. You can specify only one `<hosts>`
+* :samp:`<hosts negate="false">`
+  This filter contains a list of ``<host>`` children. It matches when
+  any of its children matches. You can specify only one ``<hosts>``
   node.
-  The format of `<host>` is a node with one mandatory attribute
+  The format of ``<host>`` is a node with one mandatory attribute
   `name`, which is a regexp matched against the architecture on
   which GPRconfig is running, and one optional attribute `except`, which
   is also a regexp, but a negative one. If both `name` and `except` match
-  the architecture, corresponding `<configuration>` node is ignored.
+  the architecture, corresponding ``<configuration>`` node is ignored.
   The name of the architecture was
   computed by `configure` when GPRconfig was built. Note that
   the regexp might match a substring of the host name, so you might want
@@ -970,7 +979,7 @@ be any of:
   name (for instance, "elf" would match "powerpc-elf", but "^elf$" would
   not).
 
-  If the `negate` attribute is :samp:`true`, then the meaning of this
+  If the `negate` attribute is 'true', then the meaning of this
   filter is inverted, and it will match when none of its children matches.
 
   For instance, to activate a chunk only if the compiler is running on an
@@ -982,20 +991,20 @@ be any of:
        <host name="i.86-.*-linux(-gnu)?" />
      </hosts>
 
-*<targets negate="false">*
-  This filter contains a list of `<target>` children. It behaves
-  exactly like `<hosts>`, but matches against the architecture
+* :samp:`<targets negate="false">`
+  This filter contains a list of ``<target>`` children. It behaves
+  exactly like ``<hosts>``, but matches against the architecture
   targeted by the selected compilers. For instance, to activate a chunk
-  only when the code is targeted for linux, use:
-
-  If the `negate` attribute is :samp:`true`, then the meaning of this filter
-  is inverted, and it will match when none of its children matches.
+  only when the code is targeted for Linux, use:
 
   ::
 
      <targets>
        <target name="i.86-.*-linux(-gnu)?" />
      </targets>
+
+  If the `negate` attribute is 'true', then the meaning of this filter
+  is inverted, and it will match when none of its children matches.
 
 .. _Configuration_File_Reference:
 
@@ -1028,8 +1037,8 @@ GPRbuild invokes GPRconfig to create a configuration file.
 
 In the following description of the attributes, when an attribute is an
 indexed attribute and its index is a language name, for example
-`Spec_Suffix (<language>)`, then the name of the language is case insensitive.
-For example, both `C` and `c` are allowed.
+:samp:`Spec_Suffix ({<language>})`, then the name of the language is
+case-insensitive. For example, both "C" and "c" are allowed.
 
 Any attribute may appear in a configuration project file. All attributes in
 a configuration project file are inherited by each user project file in the
@@ -1775,7 +1784,7 @@ Cleaning up with GPRclean
 
 The GPRclean tool removes the files created by GPRbuild.
 At a minimum, to invoke GPRclean you must specify a main project file
-in a command such as `gprclean proj.gpr` or `gprclean -P proj.gpr`.
+in a command such as :samp:`gprclean proj.gpr` or :samp:`gprclean -P proj.gpr`.
 
 Examples of invocation of GPRclean:
 
@@ -1799,7 +1808,7 @@ The switches for GPRclean are:
 
   When this switch is specified, it indicates to gprclean that the project
   files in the current directory should not be considered and that the default
-  project file in <prefix>/share/gpr is to be used.
+  project file in :file:`{<prefix>}/share/gpr` is to be used.
 
   It is usually used with one or several mains specified on the command line.
 

@@ -202,7 +202,7 @@ package Builder of the main project:
 
   This switch is not compatible with :samp:`--distributed=`.
 
-  When this switch is specified, a shell script <script_file> is created.
+  When this switch is specified, a shell script :file:`<script_file>` is created.
   Provided that the temporary files created by gprbuild are not deleted,
   running this script should perform the same build as the invocation of
   gprbuild, with the same sources.
@@ -214,7 +214,7 @@ package Builder of the main project:
 
   When this switch is specified, it indicates to gprbuild that the project
   files in the current directory should not be considered and that the default
-  project file in <prefix>/share/gpr is to be used.
+  project file in :file:`<prefix>/share/gpr` is to be used.
 
   It is usually used with one or several mains specified on the command line.
 
@@ -243,13 +243,13 @@ package Builder of the main project:
   :samp:`--build-script=`.
 
   Activate the distributed compilation on the listed slaves nodes (IP or
-  name). Or if no slave are specified they are search in `GPR_SLAVES` or
-  `GPR_SLAVES_FILE` environment variables.
+  name). Or if no slave are specified they are search in :envvar:``GPR_SLAVES`` or
+  :envvar:``GPR_SLAVES_FILE`` environment variables.
   see :ref:`Distributed_compilation`.
 
 * :samp:`--hash={string}`
 
-  Specify an hash string. This is just a value which is checked against the
+  Specify a hash string. This is just a value which is checked against the
   GPRslave hash value. If GPRslave has a hash value specified this string
   must match, otherwise it is ignored. For example:
 
@@ -391,7 +391,7 @@ package Builder of the main project:
 * :samp:`-d` (Display progress)
 
   Display progress for each source, up to date or not, as a single
-  line *completed x out of y (zz%)...*. If the file needs to be compiled
+  line :samp:`completed x out of y (zz%)...`. If the file needs to be compiled
   this is displayed after the invocation of the compiler. These lines are
   displayed even in quiet output mode (switch :samp:`-q`).
 
@@ -467,9 +467,9 @@ package Builder of the main project:
 * :samp:`-Xnm={val}` (Specify an external reference for Project Files)
 
   Specify an external reference that may be queried inside the project files
-  using built-in function `external`. For example, with
-  :samp:`-XBUILD=DEBUG`,
-  `external("BUILD")` inside a project file will have the value
+  using built-in function `external`. For example, if
+  :samp:`-XBUILD=DEBUG` is specified,
+  :samp:`External("BUILD")` inside a project file will have the value
   `"DEBUG"`.
 
 * :samp:`--compiler-subst={lang},{tool}` (Specify alternative compiler)
@@ -501,10 +501,10 @@ package Builder of the main project (attribute Switches):
   When linking an executable, if supported by the platform, create a map file
   with the same name as the executable, but with suffix :file:`.map`.
 
-* :samp:`--create-map-file={map file}`
+* :samp:`--create-map-file={map_file}`
 
   When linking an executable, if supported by the platform, create a map file
-  with file name :file:`map file`.
+  with file name :file:`map_file`.
 
 * :samp:`--no-indirect-imports`
 
@@ -565,7 +565,7 @@ package Builder of the main project (attribute Switches):
   used, then the maximum number of simultaneous compilation jobs is the number
   of core processors on the platform.
 
-  Switch :samp:`-j{num}` is also used to spawned several simultaneous binding
+  Switch :samp:`-j{num}` is also used to spawn several simultaneous binding
   processes and several simultaneous linking processes when there are several
   mains to be bound and/or linked.
 
@@ -610,7 +610,7 @@ package Builder of the main project (attribute Switches):
 * :samp:`-q` (Quiet output)
 
   Do not display anything except errors and progress (switch :samp:`-d`).
-  Cancel any previous switch :samp:`-v`.
+  Cancels any previous switch :samp:`-v`.
 
 * :samp:`-R` (no run path option)
 
@@ -730,22 +730,22 @@ If GPRbuild cannot find the main configuration project on the configuration
 project path, then it will look for all the languages specified in the user
 project tree and invoke GPRconfig to create a temporary configuration project
 file. This file is located in the directory computed by the following sequence:
+
 * Look for a valid absolute path in the environment variables TMPDIR, TEMP, and
-TMP.
-* If this fails, check some predefined platform-specific temp dirs (e.g. /tmp
-for linux).
-* Finally if none is accessible we fall back onto the current working
-directory.
+  TMP.
+* If this fails, check some predefined platform-specific temp dirs (e.g. ``/tmp``
+  on Linux).
+* Finally if none is accessible we fall back to the current working directory.
 
 The invocation of GPRconfig will take into account the target, if specified
-either by switch --target= on the command line or by attribute Target in the
+either by switch :samp:`--target=` on the command line or by attribute Target in the
 main project. Also, if Ada is one of the languages, it will take into account
-the Ada runtime directory, specified either by switches --RTS= or --RTS:ada= on
-the command line or by attribute Runtime ("Ada") in the main project file. If
+the Ada runtime directory, specified either by switches :samp:`--RTS=` or :samp:`--RTS:ada=` on
+the command line or by attribute :samp:`Runtime ("Ada")` in the main project file. If
 the Ada runtime is specified as a relative path, gprbuild will try to locate
 the Ada runtime directory as a subdirectory of the main project directory, or
-if environment variable GPR_RUNTIME_PATH is defined in the path specified
-by GPR_RUNTIME_PATH.
+in the path specified by environment variable :envvar:`GPR_RUNTIME_PATH` if it
+is defined.
 
 Once it has found the configuration project, GPRbuild will process its
 configuration: if a single string attribute is specified in the configuration
@@ -786,9 +786,9 @@ If GPRbuild is invoked with :samp:`-u` and no source file name is specified
 on the command line, GPRbuild will compile or recompile all the sources of the
 *main* project and then stop.
 
-In contrast, if GPRbuild is invoked with :samp:`-U`, and again no source file name is specified
-on the command line, GPRbuild will compile or recompile all the sources of
-*all the projects in the project tree* and then stop.
+In contrast, if GPRbuild is invoked with :samp:`-U`, and again no source file
+name is specified on the command line, GPRbuild will compile or recompile all
+the sources of *all the projects in the project tree* and then stop.
 
 .. _Compilation_Phase:
 
@@ -814,8 +814,8 @@ considered are:
   of the main
 
 
-Attribute Roots takes as an index a main and a string list value. Each string
-in the list is the name of an Ada library unit.
+Attribute Roots takes as an index a main which is associated with a string list
+value. Each string in the list is the name of an Ada library unit.
 
 Example:
 
@@ -940,23 +940,22 @@ Post-Compilation Phase
 
 The post-compilation phase has two parts: library building and program binding.
 
-If there are libraries that need to be built or rebuilt, *gprbuild* will
-call the library builder, specified by attribute `Library_Builder`.
-This is generally the tool *gprlib*, provided with GPRbuild. If gprbuild
+If there are libraries that need to be built or rebuilt, gprbuild will
+call the library builder, specified by attribute :samp:`Library_Builder`.
+This is generally the tool :program:`gprlib`, provided with GPRbuild. If gprbuild
 can determine that a library is already up to date, then the library builder
 will not be called.
 
 If there are mains specified, and for these mains there are sources of
-languages with a binder driver (specified by attribute Binder'Driver
-(<language>), then the binder driver is called for each such main, but only
-if it needs to.
+languages with a binder driver (specified by attribute :samp:`Binder'Driver({<language>})`,
+then the binder driver is called for each such main, but only if it needs to.
 
-For Ada, the binder driver is normally *gprbind*, which will call
-the appropriate version of *gnatbind*, that either the one in the same
+For Ada, the binder driver is normally :program:`gprbind`, which will call
+the appropriate version of :program:`gnatbind`, that either the one in the same
 directory as the Ada compiler or the fist one found on the path.
 When neither of those is appropriate, it is possible to specify to
-*gprbind* the full path of *gnatbind*, using the Binder switch
-`--gnatbind_path=`.
+:program:`gprbind` the full path of :program:`gnatbind`, using the Binder switch
+:samp:`--gnatbind_path=`.
 
 Example:
 
@@ -1036,7 +1035,7 @@ support is the following:
 
   The build master will communicate with each build slave with a specific driver
   in charge of running the compilation process and returning statuses. This
-  driver is *gprslave*, :ref:`GPRslave`.
+  driver is :ref:`GPRslave`.
 
   The requirement for the slaves are:
 
@@ -1058,7 +1057,7 @@ running GPRbuild in distributed mode from the build master:
 
     $ gprbuild --distributed=comp1.xyz.com,comp2.xyz.com prj.gpr
 
-Alternatively the slaves can be set using the `GPR_SLAVES` environment
+Alternatively the slaves can be set using the :envvar:`GPR_SLAVES` environment
 variable. So the following command is equivalent to the above:
 
 ::
@@ -1067,7 +1066,7 @@ variable. So the following command is equivalent to the above:
     $ gprbuild --distributed prj.gpr
 
 A third alternative is proposed using a list of slaves in a file (one
-per line). In this case the `GPR_SLAVES_FILE` environment variable
+per line). In this case the :envvar:`GPR_SLAVES_FILE` environment variable
 must contain the path name to this file:
 
 ::
@@ -1076,8 +1075,8 @@ must contain the path name to this file:
     $ gprbuild --distributed prj.gpr
 
 Finally note that the search for the slaves are in this specific
-order. First the command line values, then `GPR_SLAVES` if set and
-finally `GPR_SLAVES_FILES`.
+order. First the command line values, then :samp:`GPR_SLAVES` if set and
+finally :samp:`GPR_SLAVES_FILES`.
 
 The build slaves are specified with the following form:
 
@@ -1097,7 +1096,7 @@ launched in each build slave referenced in the project file.
 
 Compilations for a specific project are conducted under a sub-directory
 from where the slave is launched by default. This can be overridden
-with the `-d` option below.
+with the :samp:`-d` option below.
 
 The current options are:
 
@@ -1157,7 +1156,7 @@ following format:
 
    <lower-bound><upper-bound>PG
 
-When <lower-bound> and <upper-bound> are 32bits binary values for the
+Where *<lower-bound>* and *<upper-bound>* are 32-bit binary values for the
 PG string command. As an example here is how to send a ping command
 from a UNIX shell using the echo command:
 
@@ -1170,4 +1169,4 @@ The answer from the ping command has the following format:
 ::
    OK<GPR Version String>[ASCII.GS]<time-stamp>[ASCII.GS]<slave hash>
 
-The ASCII.GS is the Group Separator character whose code is 29.
+ASCII.GS is the Group Separator character whose code is 29.

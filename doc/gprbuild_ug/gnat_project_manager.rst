@@ -180,7 +180,7 @@ following examples:
   :file:`proc.adb` are in   the :file:`common/` directory. The file
   :file:`proc.adb` contains an Ada main subprogram ``Proc`` that
   |withs| package ``Pack``. We want to compile these source files
-  with the switch :option:`-O2`, and place the resulting files in
+  with the switch :samp:`-O2`, and place the resulting files in
   the :file:`common/obj/` directory. Here is the directory structure:
 
   ::
@@ -427,7 +427,7 @@ Its value is the path to the object directory, either absolute or
 relative to the directory containing the project file. This
 directory must already exist and be readable and writable, although
 some tools have a switch to create the directory if needed (See
-the switch :option:`-p` for *gprbuild*).
+the switch :samp:`-p` for *gprbuild*).
 
 If the attribute ``Object_Dir`` is not specified, it defaults to
 the directory containing the project file.
@@ -527,7 +527,7 @@ automatically builds all the executables corresponding to the files
 listed in the *Main* attribute. It is possible to specify one
 or more executables on the command line to build a subset of them.
 
-One or more spaces may be placed between the :option:`-P` and the project
+One or more spaces may be placed between the :samp:`-P` and the project
 name, and the project name may be a simple name (no file extension) or
 a path for the project file.  Thus each of the following is equivalent to
 the command above:
@@ -557,7 +557,7 @@ executable should use.
 
 Since source names and locations are described in the project file, it is not
 necessary to use switches on the command line for this purpose (such
-as :option:`-I` for gcc). This removes a major source of command line length overflow.
+as :samp:`-I` for gcc). This removes a major source of command line length overflow.
 Clearly, the builders will have to communicate this information one way or
 another to the underlying compilers and tools they call, but they usually use
 various text files, such as response files, for this purpose and thus are not subject
@@ -607,7 +607,7 @@ packages would be involved in the build process.
        end Build;
 
 Let's first examine the compiler switches. As stated in the initial description
-of the example, we want to compile all files with :option:`-O2`. This is a
+of the example, we want to compile all files with :samp:`-O2`. This is a
 compiler switch, although it is typical, on the command line, to pass it to the
 builder which then passes it to the compiler. We recommend directly using
 the correct package, which will make the setup easier to understand.
@@ -628,7 +628,7 @@ Several attributes can be used to specify the switches:
   switches). The value of the attribute is a list of switches.
 
   In this example, we want to compile all Ada source files with the switch
-  :option:`-O2`; the resulting `Compiler` package is as follows:
+  :samp:`-O2`; the resulting `Compiler` package is as follows:
 
   .. code-block:: gpr
 
@@ -669,8 +669,8 @@ Several attributes can be used to specify the switches:
             use ("-O0");
       end Compiler;
 
-  Sources :file:`pkg.adb` and :file:`pkg-child.adb` would be compiled with :option:`-O0`,
-  not :option:`-O2`.
+  Sources :file:`pkg.adb` and :file:`pkg-child.adb` would be compiled with :samp:`-O0`,
+  not :samp:`-O2`.
 
   *Switches* can also be given a language name as index instead of a file
   name in which case it has the same semantics as *Default_Switches*.
@@ -754,7 +754,7 @@ The default output of *GPRbuild* is reasonably simple and easy
 to understand. In particular, some of the less frequently used commands are not
 shown, and some parameters are abbreviated. Thus it is not possible to rerun the
 effect of the *GPRbuild* command by cut-and-pasting its output.
-The :option:`-v` option to *GPRbuild* provides a much more verbose output which includes,
+The :samp:`-v` option to *GPRbuild* provides a much more verbose output which includes,
 among other information, more complete compilation, post-compilation and link
 commands.
 
@@ -792,8 +792,8 @@ its value replaces the platform-specific executable suffix.
 The default executable suffix is the empty string empty on Unix and ``".exe"`` on Windows.
 
 It is also possible to change the name of the produced executable by using the
-command line switch :option:`-o`. However, when several main programs are defined in the project,
-it is not possible to use the :option:`-o` switch; then the only way to change the
+command line switch :samp:`-o`. However, when several main programs are defined in the project,
+it is not possible to use the :samp:`-o` switch; then the only way to change the
 names of the executable is through the attributes ``Executable`` and
 ``Executable_Suffix``.
 
@@ -833,7 +833,7 @@ modify if we want to add new switches for C files). We will later revisit
 the use of variables in the context of scenarios (see :ref:`Scenarios_in_Projects`).
 
 In this example, we see that the file :file:`main.c` will be compiled with
-the switches used for all the other C files, plus :option:`-g`.
+the switches used for all the other C files, plus :samp:`-g`.
 In this specific situation the use of a variable could have been
 replaced by a reference to the ``Default_Switches`` attribute:
 
@@ -1180,8 +1180,8 @@ file is used:
   * :file:`<compiler_prefix>/lib/gnat/`
 
 The first two paths are only added if the explicit runtime is specified either
-via :option:`--RTS` switch or via ``Runtime`` attribute. <target> can be
-communicated via :option:`--target` switch or ``Target`` attribute, otherwise
+via :samp:`--RTS` switch or via ``Runtime`` attribute. <target> can be
+communicated via :samp:`--target` switch or ``Target`` attribute, otherwise
 default target will be used. <compiler_prefix> is typically discovered
 automatically based on target, runtime and language information.
 
@@ -1192,7 +1192,7 @@ it was installed at the same root as GNAT.
 .. index:: -v (gprls)
 
 Some tools also support extending the project path from the command line,
-generally through the :option:`-aP`. You can see the value of the project
+generally through the :samp:`-aP`. You can see the value of the project
 path by using the ``gprls -v`` command.
 
 Any symbolic link will be fully resolved in the directory of the
@@ -1206,7 +1206,7 @@ Thus if `A` imports `B`, which imports `C`, the sources of
 `A` may depend on the sources of `C`, even if `A` does not
 import `C` explicitly. However, this is not recommended, because if
 and when `B` ceases to import `C`, some sources in `A` will
-no longer compile. *GPRbuild* has a switch :option:`--no-indirect-imports`
+no longer compile. *GPRbuild* has a switch :samp:`--no-indirect-imports`
 that will report such indirect dependencies.
 
 .. index:: Project import closure
@@ -1446,8 +1446,8 @@ information, while the latter would request an increased level of code
 optimization).
 
 Let's enhance our example to support debug and release modes. The issue is to
-let the user choose which kind of system to build: use :option:`-g` as a
-compiler switch in debug mode and :option:`-O2` in release mode. We will also
+let the user choose which kind of system to build: use :samp:`-g` as a
+compiler switch in debug mode and :samp:`-O2` in release mode. We will also
 set up the projects so that we do not share the same object directory in both
 modes; otherwise switching from one to the other might trigger more
 recompilations than needed or mix objects from the two modes.
@@ -1470,7 +1470,7 @@ order of priority):
 
 **Command line**:
   When launching *gprbuild*, the user can pass
-  :option:`-X` switches to define the external variables. In
+  :samp:`-X` switches to define the external variables. In
   our case, the command line might look like
 
   .. code-block:: sh
@@ -2189,7 +2189,7 @@ projects.
 
 .. only:: html or latex
 
-   This project structure is shown in :numref:`figure #<fig-badproject>`.
+   This project structure is shown in :numref:`fig-badproject`.
 
    .. _fig-badproject:
 
@@ -2237,7 +2237,7 @@ A solution is to introduce an "empty" extension of :file:`b.gpr`, which is impor
 
 .. only:: html or latex
 
-   This project structure is shown in :numref:`figure #<fig-goodproject>`.
+   This project structure is shown in :numref:`fig-goodproject`.
 
    .. _fig-goodproject:
 
@@ -2300,7 +2300,7 @@ to compilation units whose sources are in ``C`` and ``A``.  (Recall that
 
 .. only:: html or latex
 
-   This project structure is shown in :numref:`figure #<fig-simpleproject>`.
+   This project structure is shown in :numref:`fig-simpleproject`.
 
    .. _fig-simpleproject:
 
@@ -2353,7 +2353,7 @@ and :file:`c_ext.gpr` as well as the relevant import relationships:
 
 .. only:: html or latex
 
-   The resulting project structure is shown in :numref:`figure #<fig-extends_all>`,
+   The resulting project structure is shown in :numref:`fig-extends_all`,
    where the italicized labels, dashed arrows, and dashed boxes indicate what was
    added implicitly as an effect of the ``extends_all``.
 
@@ -2501,7 +2501,7 @@ imported projects B and C. Therefore you have to spawn several
 This is somewhat inconvenient, but more importantly is inefficient
 because *GPRbuild* needs to do duplicate work to ensure that sources are
 up-to-date, and cannot easily compile things in parallel when using
-the :option:`-j` switch.
+the :samp:`-j` switch.
 
 Also, libraries are always rebuilt when building a project.
 
@@ -2587,7 +2587,7 @@ will influence the view these tools have of the project
 :envvar:`GPR_PROJECT_PATH` to find the projects, and environment variables
 that are referenced in project files
 through the ``external`` built-in function). Several command line switches
-can be used to override those (:option:`-X` or :option:`-aP`), but on some
+can be used to override those (:samp:`-X` or :samp:`-aP`), but on some
 systems and with some projects, this might make the command line too long,
 and on all systems often make it hard to read.
 
@@ -2656,7 +2656,7 @@ once.
 
 Since there is no ambiguity as to which switches should be used, individual
 compilations, binds and links can be performed in parallel (through the usual
-:option:`-j` switch) and this can be done while maximizing the use of CPUs
+:samp:`-j` switch) and this can be done while maximizing the use of CPUs
 (compared to launching multiple *GPRbuild* commands in parallel). The -j
 option can control parallelization of compilation, binding, and linking
 separately with -jc, -jb, and -jl variants accordingly.
@@ -2785,7 +2785,7 @@ The following three attributes can be used only in an aggregate project:
 
   * the current directory;
 
-  * followed by the command line :option:`-aP` switches;
+  * followed by the command line :samp:`-aP` switches;
 
   * then the directories from the :envvar:`GPR_PROJECT_PATH` and
     :envvar:`ADA_PROJECT_PATH` environment variables;
@@ -2802,7 +2802,7 @@ The following three attributes can be used only in an aggregate project:
   .. only:: html or latex
 
      This can potentially lead to errors. Consider the example in
-     :numref:`figure #<fig-aggproject_error>`.
+     :numref:`fig-aggproject_error`.
 
      .. _fig-aggproject_error:
 
@@ -2877,7 +2877,7 @@ The following three attributes can be used only in an aggregate project:
     users can override the value set in the (presumably shared
     with others team members) aggregate project.
 
-  * The :option:`-X` command line switch to *gprbuild*.
+  * The :samp:`-X` command line switch to *gprbuild*.
     This always takes precedence.
 
   This attribute is only taken into account in the main aggregate
@@ -3002,16 +3002,16 @@ package are valid:
   The following switches are used:
 
   * all files from project ``A`` except :file:`a_file1.adb` are compiled
-    with :option:`-O2 -g`, since the aggregate project has priority.
+    with :samp:`-O2 -g`, since the aggregate project has priority.
 
   * the file :file:`a_file1.adb` is compiled with
     :option"`-O0`, since ``Compiler'Switches`` has priority
 
   * all files from project ``B`` are compiled with
-    :option:`-O2`, since the aggregate project has priority
+    :samp:`-O2`, since the aggregate project has priority
 
-  * all files from ``C`` are compiled with :option:`-O2 -gnatn`, except for
-    :file:`c_file1.adb` which is compiled with :option:`-O0 -g`
+  * all files from ``C`` are compiled with :samp:`-O2 -gnatn`, except for
+    :file:`c_file1.adb` which is compiled with :samp:`-O0 -g`
 
   Even though ``C`` is seen through two paths (through ``A`` and through
   ``B``), the switches used by the compiler are unambiguous.
@@ -3105,7 +3105,7 @@ aggregate library project may be used:
           end Builder;
        end Agg;
 
-With the above aggregate library Builder package, the :option:`-fPIC`
+With the above aggregate library Builder package, the :samp:`-fPIC`
 option will be passed to the compiler when building any source code
 from projects :file:`a.gpr`, :file:`b.gpr` and :file:`c.gpr`.
 
@@ -3216,7 +3216,7 @@ Glossary
      object-oriented programming. See :ref:`Project_Extension`.
 
    External variable
-     A variable that is defined on the command line (by the :option:`-X` switch), as the
+     A variable that is defined on the command line (by the :samp:`-X` switch), as the
      value of an environment variable, or, by default, as the second parameter to the
      ``external`` function. See :ref:`Scenarios_in_Projects`.
 

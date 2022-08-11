@@ -11,7 +11,7 @@ Project processing can be affected by environment variables.
 
   When declared with a non empty name, use its value as the default
   configuration project file name in native platforms, instead of
-  "default.cgpr".
+  :file:`default.cgpr`.
 
 * **GPR_RUNTIME_PATH**
 
@@ -49,7 +49,7 @@ Project processing can be affected by environment variables.
 * **GPR_VERBOSITY**
 
   Value for the quiet mode or the verbosity level.
-  Overriden with switches -q, -v and -vP?
+  Overriden with switches ``-q``, ``-v`` and ``-vP?``
 
 * **USER**
 
@@ -62,9 +62,9 @@ Project processing can be affected by environment variables.
 * **GPRBIND_DEBUG**
 
   When value is "TRUE", keep a copy of the binder exchange file sent to
-  gprbind as main.bexch__saved
+  gprbind as :file:`main.bexch__saved`
 
 * **GPRLIB_DEBUG**
 
   When value is "TRUE", keep a copy of the library exchange file sent to
-  gprlib as main.lexch__saved
+  gprlib as :file:`main.lexch__saved`
