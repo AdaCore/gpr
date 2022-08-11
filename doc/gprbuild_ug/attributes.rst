@@ -282,7 +282,7 @@ Project Level Attributes
     Index is a language name. Indicates the runtime directory that is to be used
     when using the compiler of the language. Taken into account only in the main
     project, or its extended projects if any. Note that when the runtime is
-    specified for a language on the command line (usually with a switch --RTS), the
+    specified for a language on the command line (usually with a switch ``--RTS``), the
     value of attribute reference 'Runtime for this language is the one specified on
     the command line.
 
@@ -316,8 +316,8 @@ Project Level Attributes
   * **Target**: single value
 
     Value is the name of the target platform. Taken into account only in the main
-    project. ote that when the target is specified on the command line (usually
-    with a switch --target=), the value of attribute reference 'Target is the one
+    project. Note that when the target is specified on the command line (usually
+    with a switch ``--target=``), the value of attribute reference 'Target is the one
     specified on the command line.
 
   * **Toolchain_Version**: single value, indexed by a language
@@ -615,7 +615,7 @@ Package Builder Attributes
 * **Executable_Suffix**: single value
 
   Value is the extension of the file name of executables. The actual default
-  value for the extension depends on the host: .exe on windows, else an empty
+  value for the extension depends on the host: ``.exe`` on windows, else an empty
   string.
 
 * **Global_Compilation_Switches**: list value, indexed by a language, "others" index allowed, configuration concatenable
@@ -936,13 +936,13 @@ Package Install Attributes
 
 * **Mode**: single value
 
-  Value is the installation mode, it is either dev (default) or usage.
+  Value is the installation mode, it is either 'dev' (default) or 'usage'.
 
 * **Prefix**: single value
 
   Value is the install destination directory. If the value is a relative path, it
   is taken as relative to the global prefix directory. That is, either the value
-  passed to --prefix option or the default installation prefix.
+  passed to ``--prefix`` option or the default installation prefix.
 
 * **Project_Subdir**: single value
 
@@ -1113,8 +1113,8 @@ Package Remote Attributes
 * **Included_Patterns**: list value
 
   If this attribute is defined it sets the patterns to synchronized from the
-  master to the slaves. It is exclusive with Excluded_Patterns, that is it is an
-  error to define both.
+  master to the slaves. It is incompatible with Excluded_Patterns, that is it
+  is an error to define both.
 
 * **Included_Artifact_Patterns**: list value
 
