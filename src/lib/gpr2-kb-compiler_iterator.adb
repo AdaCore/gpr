@@ -592,6 +592,8 @@ package body GPR2.KB.Compiler_Iterator is
             else
                Trace (Main_Trace, "Target unknown for this compiler");
                Comp.Targets_Set := Unknown_Targets_Set;
+               Continue := True;
+               return;
             end if;
 
             if On_Target /= All_Target_Sets
