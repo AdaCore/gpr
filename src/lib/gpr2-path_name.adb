@@ -530,8 +530,7 @@ package body GPR2.Path_Name is
    -- Filesystem_String --
    -----------------------
 
-   function Filesystem_String
-     (Self : Object) return VFS.Filesystem_String is
+   function Filesystem_String (Self : Object) return VFS.Filesystem_String is
    begin
       if Self.Is_Defined then
          if Self.Has_Dir_Name then
