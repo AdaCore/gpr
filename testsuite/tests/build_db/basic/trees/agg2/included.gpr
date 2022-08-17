@@ -1,0 +1,6 @@
+project Included is
+
+   for Source_Dirs use ("inc");
+   for Object_Dir use "objinc";
+
+end Included;
