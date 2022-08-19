@@ -72,7 +72,7 @@ package body GPR2.Project.Attribute.Set is
       Attribute : Project.Attribute.Object) return Boolean is
    begin
       return Self.Contains
-        (Attribute.Name.Id,
+        (Attribute.Name.Id.Attr,
          Attribute.Index,
          At_Pos_Or (Source_Reference.Value.Object (Attribute.Index), 0));
    end Contains;
@@ -209,7 +209,7 @@ package body GPR2.Project.Attribute.Set is
    is
    begin
       return Self.Find
-        (Attribute.Name.Id,
+        (Attribute.Name.Id.Attr,
          Attribute.Index,
          At_Pos_Or (Source_Reference.Value.Object (Attribute.Index), 0));
    end Find;
@@ -257,7 +257,7 @@ package body GPR2.Project.Attribute.Set is
 
    begin
       Self.Attributes.Insert
-        (Attribute.Name.Id, Set_Attribute.Empty_Map, Position, Inserted);
+        (Attribute.Name.Id.Attr, Set_Attribute.Empty_Map, Position, Inserted);
 
       Self.Attributes (Position).Insert
         (Attribute.Case_Aware_Index, Attribute, CSA, Inserted);
@@ -280,7 +280,7 @@ package body GPR2.Project.Attribute.Set is
       Inserted : Boolean;
    begin
       Self.Attributes.Insert
-        (Attribute.Name.Id, Set_Attribute.Empty_Map, Position, Inserted);
+        (Attribute.Name.Id.Attr, Set_Attribute.Empty_Map, Position, Inserted);
 
       Self.Attributes (Position).Insert
         (Attribute.Case_Aware_Index, Attribute);
@@ -314,7 +314,8 @@ package body GPR2.Project.Attribute.Set is
                     (Position.CM).Element.Constant_Reference (Position.CA);
          begin
             return
-              (Iter.Name = No_Attribute or else A.Name.Id = Iter.Name)
+              (Iter.Name = No_Attribute
+               or else A.Name.Id.Attr = Iter.Name)
               and then (not Iter.Index.Is_Defined
                         or else A.Index = Iter.Index)
               and then (Iter.With_Defaults or else not A.Is_Default);
@@ -327,11 +328,11 @@ package body GPR2.Project.Attribute.Set is
    -------------
 
    function Iterate
-     (Self            : Object;
-      Name            : Optional_Attribute_Id  := No_Attribute;
-      Index           : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos          : Unit_Index             := No_Index;
-      With_Defaults   : Boolean                := True)
+     (Self          : Object;
+      Name          : Optional_Attribute_Id  := No_Attribute;
+      Index         : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos        : Unit_Index             := No_Index;
+      With_Defaults : Boolean                := True)
       return Attribute_Iterator.Forward_Iterator'Class is
    begin
       return It : Iterator do

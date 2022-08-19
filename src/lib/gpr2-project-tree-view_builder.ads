@@ -17,23 +17,23 @@ package GPR2.Project.Tree.View_Builder is
 
    procedure Set_Attribute
      (Self  : in out Object;
-      Attr  : Project.Registry.Attribute.Qualified_Name;
+      Attr  : Q_Attribute_Id;
       Value : Value_Type);
 
    procedure Set_Attribute
      (Self   : in out Object;
-      Attr   : Registry.Attribute.Qualified_Name;
+      Attr   : Q_Attribute_Id;
       Values : Containers.Value_List);
 
    procedure Set_Attribute
      (Self  : in out Object;
-      Attr  : Project.Registry.Attribute.Qualified_Name;
+      Attr  : Q_Attribute_Id;
       Index : Value_Type;
       Value : Value_Type);
 
    procedure Set_Attribute
      (Self   : in out Object;
-      Attr   : Registry.Attribute.Qualified_Name;
+      Attr   : Q_Attribute_Id;
       Index  : Value_Type;
       Values : Containers.Value_List);
 

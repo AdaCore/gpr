@@ -18,11 +18,10 @@ with GPR2.Project.Registry.Pack;
 package body GPR2_GNATCOLL_Projects is
 
    function Attribute_Value
-     (Project        : GPR2.Project.View.Object;
-      Attribute_Name : Optional_Attribute_Id;
-      Package_Name   : Optional_Package_Id := No_Package;
-      Index          : GPR2.Project.Attribute_Index.Object;
-      Use_Extended   : Boolean := False)
+     (Project      : GPR2.Project.View.Object;
+      Name         : Q_Attribute_Id;
+      Index        : GPR2.Project.Attribute_Index.Object;
+      Use_Extended : Boolean := False)
       return GPR2.Project.Attribute.Object;
    --  Internal Attribute_Value returning GPR2.Project.Attribute.Object.
    --  Single, List kinds and return type formating will be done by callers
@@ -57,66 +56,30 @@ package body GPR2_GNATCOLL_Projects is
    ---------------------
 
    function Attribute_Value
-     (Project        : GPR2.Project.View.Object;
-      Attribute_Name : Optional_Attribute_Id;
-      Package_Name   : Optional_Package_Id := No_Package;
-      Index          : GPR2.Project.Attribute_Index.Object;
-      Use_Extended   : Boolean := False)
+     (Project      : GPR2.Project.View.Object;
+      Name         : Q_Attribute_Id;
+      Index        : GPR2.Project.Attribute_Index.Object;
+      Use_Extended : Boolean := False)
       return GPR2.Project.Attribute.Object
    is
 
       function Get_Attribute
         (View  : GPR2.Project.View.Object;
-         Pack  : GPR2.Package_Id;
-         Name  : GPR2.Attribute_Id;
+         Name  : Q_Attribute_Id;
          Index : GPR2.Project.Attribute_Index.Object :=
-                   GPR2.Project.Attribute_Index.Undefined)
+           GPR2.Project.Attribute_Index.Undefined)
          return GPR2.Project.Attribute.Object;
       --  Get package's attribute value
 
-      function Get_Attribute
-        (View  : GPR2.Project.View.Object;
-         Name  : GPR2.Attribute_Id;
-         Index : GPR2.Project.Attribute_Index.Object :=
-                   GPR2.Project.Attribute_Index.Undefined)
-         return GPR2.Project.Attribute.Object;
-      --  Get view's attribute value
-
       -------------------
       -- Get_Attribute --
       -------------------
 
       function Get_Attribute
         (View  : GPR2.Project.View.Object;
-         Pack  : GPR2.Package_Id;
-         Name  : GPR2.Attribute_Id;
+         Name  : Q_Attribute_Id;
          Index : GPR2.Project.Attribute_Index.Object :=
-                   GPR2.Project.Attribute_Index.Undefined)
-         return GPR2.Project.Attribute.Object
-      is
-         Attribute : GPR2.Project.Attribute.Object;
-      begin
-         if View.Check_Attribute
-           (Pack   => Pack,
-            Name   => Name,
-            Index  => Index,
-            Result => Attribute)
-         then
-            return Attribute;
-         else
-            return GPR2.Project.Attribute.Undefined;
-         end if;
-      end Get_Attribute;
-
-      -------------------
-      -- Get_Attribute --
-      -------------------
-
-      function Get_Attribute
-        (View  : GPR2.Project.View.Object;
-         Name  : GPR2.Attribute_Id;
-         Index : GPR2.Project.Attribute_Index.Object :=
-                   GPR2.Project.Attribute_Index.Undefined)
+           GPR2.Project.Attribute_Index.Undefined)
          return GPR2.Project.Attribute.Object
       is
          Attribute : GPR2.Project.Attribute.Object;
@@ -137,17 +100,16 @@ package body GPR2_GNATCOLL_Projects is
 
    begin
       if Project.Is_Defined then
-         if Package_Name /= No_Package then
+         if Name.Pack /= Project_Level_Scope then
 
             --  Looking for a project's package's attribute
 
             if Project.Has_Package
-              (Name => Package_Name, Check_Extended => True)
+              (Name => Name.Pack, Check_Extended => True)
             then
                Attribute := Get_Attribute
                  (View  => Project,
-                  Pack  => Package_Name,
-                  Name  => Attribute_Name,
+                  Name  => Name,
                   Index => Index);
             end if;
 
@@ -163,13 +125,12 @@ package body GPR2_GNATCOLL_Projects is
                begin
                   while Extended_Root.Is_Defined loop
                      if Extended_Root.Has_Package
-                       (Name           => Package_Name,
+                       (Name           => Name.Pack,
                         Check_Extended => True)
                      then
                         Attribute := Get_Attribute
                           (View  => Extended_Root,
-                           Pack  => Package_Name,
-                           Name  => Attribute_Name,
+                           Name  => Name,
                            Index => Index);
                      end if;
                      if not Attribute.Is_Defined
@@ -192,12 +153,11 @@ package body GPR2_GNATCOLL_Projects is
             if not Attribute.Is_Defined
               and then Project.Tree.Has_Configuration
               and then Project.Tree.Configuration.Corresponding_View.
-                Has_Package (Name => Package_Name, Check_Extended => True)
+                Has_Package (Name => Name.Pack, Check_Extended => True)
             then
                Attribute := Get_Attribute
                  (View  => Project.Tree.Configuration.Corresponding_View,
-                  Pack  => Package_Name,
-                  Name  => Attribute_Name,
+                  Name  => Name,
                   Index => Index);
             end if;
 
@@ -206,7 +166,7 @@ package body GPR2_GNATCOLL_Projects is
 
             Attribute := Get_Attribute
               (View  => Project,
-               Name  => Attribute_Name,
+               Name  => Name,
                Index => Index);
 
             --  If not yet found look if required in extended list
@@ -222,7 +182,7 @@ package body GPR2_GNATCOLL_Projects is
                   while Extended_Root.Is_Defined loop
                      Attribute := Get_Attribute
                        (View  => Extended_Root,
-                        Name  => Attribute_Name,
+                        Name  => Name,
                         Index => Index);
                      if not Attribute.Is_Defined
                        and then Extended_Root.Is_Extending
@@ -246,8 +206,8 @@ package body GPR2_GNATCOLL_Projects is
             then
                Attribute := Get_Attribute
                  (View  => Project.Tree.Configuration.Corresponding_View,
-                 Name  => Attribute_Name,
-                 Index => Index);
+                  Name  => Name,
+                  Index => Index);
             end if;
          end if;
       end if;
@@ -259,20 +219,18 @@ package body GPR2_GNATCOLL_Projects is
    ---------------------
 
    function Attribute_Value
-     (Project        : GPR2.Project.View.Object;
-      Attribute_Name : Optional_Attribute_Id;
-      Package_Name   : Optional_Package_Id := No_Package;
-      Index          : String := "";
-      Default        : String := "";
-      Use_Extended   : Boolean := False) return String is
+     (Project      : GPR2.Project.View.Object;
+      Name         : Q_Attribute_Id;
+      Index        : String := "";
+      Default      : String := "";
+      Use_Extended : Boolean := False) return String is
    begin
-      if Attribute_Name /= No_Attribute then
+      if Name.Attr /= No_Attribute then
          declare
             Attribute : constant GPR2.Project.Attribute.Object :=
                           Attribute_Value
                             (Project        => Project,
-                             Package_Name   => Package_Name,
-                             Attribute_Name => Attribute_Name,
+                             Name           => Name,
                              Index          =>
                                (if Index = ""
                                 then GPR2.Project.Attribute_Index.Undefined
@@ -301,11 +259,10 @@ package body GPR2_GNATCOLL_Projects is
    ---------------------
 
    function Attribute_Value
-     (Project        : GPR2.Project.View.Object;
-      Attribute_Name : Optional_Attribute_Id;
-      Package_Name   : Optional_Package_Id := No_Package;
-      Index          : String := "";
-      Use_Extended   : Boolean := False)
+     (Project      : GPR2.Project.View.Object;
+      Name         : Q_Attribute_Id;
+      Index        : String := "";
+      Use_Extended : Boolean := False)
       return GNAT.Strings.String_List_Access
    is
 
@@ -341,11 +298,10 @@ package body GPR2_GNATCOLL_Projects is
       end List;
 
    begin
-      if Attribute_Name /= No_Attribute then
+      if Name.Attr /= No_Attribute then
          return List (Attribute_Value
                       (Project        => Project,
-                       Package_Name   => Package_Name,
-                       Attribute_Name => Attribute_Name,
+                       Name           => Name,
                        Index          =>
                          (if Index = ""
                           then GPR2.Project.Attribute_Index.Undefined
@@ -442,28 +398,25 @@ package body GPR2_GNATCOLL_Projects is
    ----------------------------
 
    function Register_New_Attribute
-     (Name                 : Optional_Attribute_Id;
-      Pkg                  : Optional_Package_Id := No_Package;
+     (Name                 : Q_Attribute_Id;
       Is_List              : Boolean := False;
       Indexed              : Boolean := False;
       Case_Sensitive_Index : Boolean := False) return String is
    begin
-      if Name = No_Attribute then
+      if Name.Attr = No_Attribute then
          return "cannot register attribute without name for package "
-           & Image (Pkg);
+           & Image (Name.Pack);
       end if;
 
-      if Pkg /= No_Package
-        and then not GPR2.Project.Registry.Pack.Exists (Pkg)
+      if Name.Pack /= Project_Level_Scope
+        and then not GPR2.Project.Registry.Pack.Exists (Name.Pack)
       then
          GPR2.Project.Registry.Pack.Add
-           (Pkg, GPR2.Project.Registry.Pack.Everywhere);
+           (Name.Pack, GPR2.Project.Registry.Pack.Everywhere);
       end if;
 
       GPR2.Project.Registry.Attribute.Add
-        (Name                 => GPR2.Project.Registry.Attribute.Create
-           (Name => Name,
-            Pack => Pkg),
+        (Name                 => Name,
          Index_Type           =>
            (if not Indexed
               then GPR2.Project.Registry.Attribute.No_Index
@@ -480,8 +433,8 @@ package body GPR2_GNATCOLL_Projects is
       return "";
    exception
       when others =>
-         return "cannot register new attribute " & Image (Name)
-           & " for package " & Image (Pkg);
+         return "cannot register new attribute " & Image (Name.Attr)
+           & " for package " & Image (Name.Pack);
    end Register_New_Attribute;
 
 end GPR2_GNATCOLL_Projects;

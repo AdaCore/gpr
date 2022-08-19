@@ -34,31 +34,18 @@ procedure Main is
       end if;
    end Print_Messages;
 
-   procedure Print_Attributes (Pack : GPR2.Optional_Package_Id;
-                               Name : GPR2.Optional_Attribute_Id) is
+   procedure Print_Attributes (Name : Q_Attribute_Id) is
       Attributes : GPR2.Project.Attribute.Set.Object;
       use GPR2;
-      Header     : String := (if Pack = No_Package
-                              then Image (Name)
-                              else Image (Pack) & "." & Image (Name));
+      Header     : String := (if Name.Pack = Project_Level_Scope
+                              then Image (Name.Attr)
+                              else Image (Name.Pack) & "."
+                              & Image (Name.Attr));
    begin
-      if Name = No_Attribute then
-         Attributes := Tree.Root_Project.Attributes
-           (Pack,
-            With_Defaults => False,
-            With_Config   => False);
-      elsif Pack = No_Package then
-         Attributes := Tree.Root_Project.Attributes
-           (Name,
-            With_Defaults => False,
-            With_Config   => False);
-      elsif Tree.Root_Project.Has_Package (Pack, With_Defaults => False) then
-         Attributes := Tree.Root_Project.Attributes
-           (Pack,
-            Name,
-            With_Defaults => False,
-            With_Config   => False);
-      end if;
+      Attributes := Tree.Root_Project.Attributes
+        (Name          => Name,
+         With_Defaults => False,
+         With_Config   => False);
 
       for A of Attributes loop
          declare
@@ -133,7 +120,7 @@ procedure Main is
 
    procedure Test is
    begin
-      Print_Attributes (Pack => No_Package, Name => Source_Dirs);
+      Print_Attributes (Source_Dirs);
       Print_Variable ("A");
       Print_Variable ("B");
       Print_Variable ("C");

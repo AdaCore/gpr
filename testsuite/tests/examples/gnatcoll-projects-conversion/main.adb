@@ -94,8 +94,8 @@ procedure Main is
    is
       Status : constant String :=
                  GPR2_GNATCOLL_Projects.Register_New_Attribute
-                   (Name                 => +(GPR2.Optional_Name_Type (Name)),
-                    Pkg                  => +(GPR2.Optional_Name_Type (Pkg)),
+                   (Name                 => (+(GPR2.Optional_Name_Type (Pkg)),
+                                             +(GPR2.Optional_Name_Type (Name))),
                     Is_List              => Is_List,
                     Indexed              => Indexed,
                     Case_Sensitive_Index => Case_Sensitive_Index);
@@ -189,8 +189,8 @@ procedure Main is
       Value : constant String :=
                 GPR2_GNATCOLL_Projects.Attribute_Value
                   (Project        => View,
-                   Package_Name   => +(GPR2.Optional_Name_Type (Pack)),
-                   Attribute_Name => +(GPR2.Optional_Name_Type (Name)),
+                   Name           => (+(GPR2.Optional_Name_Type (Pack)),
+                                      +(GPR2.Optional_Name_Type (Name))),
                    Index          => Index,
                    Default        => "test default value",
                    Use_Extended   => Use_Extended);
@@ -206,8 +206,8 @@ procedure Main is
       Values : constant String :=
                  Strings (GPR2_GNATCOLL_Projects.Attribute_Value
                           (Project        => View,
-                           Package_Name   => +(GPR2.Optional_Name_Type (Pack)),
-                           Attribute_Name => +(GPR2.Optional_Name_Type (Name)),
+                           Name           => (+(GPR2.Optional_Name_Type (Pack)),
+                                              +(GPR2.Optional_Name_Type (Name))),
                            Index          => Index,
                            Use_Extended   => Use_Extended));
 

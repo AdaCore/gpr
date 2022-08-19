@@ -490,6 +490,7 @@ package GPR2.Project.Tree is
 private
 
    package PC renames Project.Configuration;
+   package PRA renames GPR2.Project.Registry.Attribute;
 
    package Name_View is
      new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, View.Object);
@@ -649,11 +650,10 @@ private
      (Tree.Has_Configuration
         and then
       Tree.Configuration.Corresponding_View.Has_Attribute
-        (GPR2.Project.Registry.Attribute.Shared_Library_Suffix)
+        (PRA.Shared_Library_Suffix)
         and then
       Tree.Configuration.Corresponding_View.Attribute
-        (GPR2.Project.Registry.Attribute.Shared_Library_Suffix).Value_Equal
-          (".dll"));
+        (PRA.Shared_Library_Suffix).Value_Equal (".dll"));
       --  ??? We may also check that the Tree target name constains mingw or
       --  windows.
 

@@ -35,7 +35,6 @@ package body GPR2.Project.Tree is
    use type GPR2.Path_Name.Object;
    use type GNATCOLL.OS.OS_Type;
 
-   package PRA renames Project.Registry.Attribute;
    package PRP renames Project.Registry.Pack;
    package IDS renames GPR2.View_Ids;
 
@@ -182,10 +181,9 @@ package body GPR2.Project.Tree is
                   Index  : constant Attribute_Index.Object :=
                              Attribute_Index.Create (Language.Text);
                   Attr   : constant Attribute.Object :=
-                             (if View.Has_Attribute
-                                        (PRA.Driver, PRP.Compiler, Index)
-                              then View.Attribute
-                                          (PRA.Driver, PRP.Compiler, Index)
+                             (if View.Has_Attribute (PRA.Compiler.Driver,
+                                                     Index)
+                              then View.Attribute (PRA.Compiler.Driver, Index)
                               else Attribute.Undefined);
                   Driver : constant String :=
                              (if Attr.Is_Defined
@@ -325,14 +323,14 @@ package body GPR2.Project.Tree is
       RTD  : Attribute.Object;
       RTF  : Path_Name.Object;
 
-      procedure Add_Attribute (Name : Attribute_Id; Value : Value_Type);
+      procedure Add_Attribute (Name : Q_Attribute_Id; Value : Value_Type);
       --  Add builtin attribute into Data.Attrs
 
       -------------------
       -- Add_Attribute --
       -------------------
 
-      procedure Add_Attribute (Name : Attribute_Id; Value : Value_Type) is
+      procedure Add_Attribute (Name : Q_Attribute_Id; Value : Value_Type) is
       begin
          Data.Attrs.Insert
            (Project.Attribute.Create
@@ -349,8 +347,8 @@ package body GPR2.Project.Tree is
    begin
       --  Check runtime path
 
-      RTD := CV.Attribute (PRA.Runtime_Dir,
-                               Index => Attribute_Index.Create (Ada_Language));
+      RTD := CV.Attribute (Name  => PRA.Runtime_Dir,
+                           Index => Attribute_Index.Create (Ada_Language));
 
       if RTD.Is_Defined and then RTD.Value.Text /= "" then
          --  Runtime_Dir (Ada) exists, this is used to compute the Source_Dirs
@@ -422,7 +420,7 @@ package body GPR2.Project.Tree is
                   Values => Dirs));
          end;
 
-         Add_Attribute (PRA.Object_Dir,  RTD.Value.Text & DS & "adalib");
+         Add_Attribute (PRA.Object_Dir, RTD.Value.Text & DS & "adalib");
 
          --  The only language supported is Ada
 
@@ -436,7 +434,7 @@ package body GPR2.Project.Tree is
          Data.Unique_Id := GPR2.View_Ids.Runtime_View_Id;
 
          Data.Trees.Project := Project.Parser.Create
-           (Name      => Name (PRA.Runtime),
+           (Name      => Name (PRA.Runtime.Attr),
             File      => RTF,
             Qualifier => K_Standard);
 
@@ -2287,8 +2285,7 @@ package body GPR2.Project.Tree is
    begin
       if Self.Root.Is_Defined then
          TA := Self.Root.Attribute
-          (PRA.Runtime,
-           Index => Attribute_Index.Create (Language));
+           (PRA.Runtime, Index => Attribute_Index.Create (Language));
 
          if TA.Is_Defined then
             return Optional_Name_Type (TA.Value.Text);
@@ -2581,14 +2578,14 @@ package body GPR2.Project.Tree is
            (View : Project.View.Object) return Boolean
          is
 
-            function Is_Defined_Empty (Attr : Attribute_Id) return Boolean;
+            function Is_Defined_Empty (Attr : Q_Attribute_Id) return Boolean;
             --  Returns True if attribute defined as empty list in view
 
             ----------------------
             -- Is_Defined_Empty --
             ----------------------
 
-            function Is_Defined_Empty (Attr : Attribute_Id) return Boolean is
+            function Is_Defined_Empty (Attr : Q_Attribute_Id) return Boolean is
             begin
                Tmp_Attr := View.Attribute (Attr);
 
@@ -2635,7 +2632,7 @@ package body GPR2.Project.Tree is
          if View.Qualifier not in Aggregate_Kind then
             New_Signature := View.Context.Signature (P_Data.Externals);
 
-         elsif not P_Data.Attrs.Contains (PRA.Project_Files) then
+         elsif not P_Data.Attrs.Contains (PRA.Project_Files.Attr) then
             --  Aggregate project must have Project_Files attribute
 
             Self.Error
@@ -2648,7 +2645,7 @@ package body GPR2.Project.Tree is
             --  then remove the dependency on the corresponding externals.
 
             if P_Data.Is_Root then
-               for C in P_Data.Attrs.Iterate (Name => PRA.External) loop
+               for C in P_Data.Attrs.Iterate (Name => PRA.External.Attr) loop
                   declare
                      P : Containers.Name_Type_List.Cursor :=
                            P_Data.Externals.Find
@@ -2672,7 +2669,7 @@ package body GPR2.Project.Tree is
                --  And then adjust context based on External attribute values
                --  inside the root aggregate project.
 
-               for C in P_Data.Attrs.Iterate (PRA.External) loop
+               for C in P_Data.Attrs.Iterate (PRA.External.Attr) loop
                   declare
                      use all type PRA.Value_Kind;
 
@@ -2706,7 +2703,8 @@ package body GPR2.Project.Tree is
 
             Paths.Append (View.Path_Name);
 
-            for Project of P_Data.Attrs.Element (PRA.Project_Files).Values loop
+            for Project of P_Data.Attrs.Element (PRA.Project_Files.Attr).Values
+            loop
                declare
                   Found : Boolean := False;
                begin
@@ -2805,8 +2803,7 @@ package body GPR2.Project.Tree is
                   end if;
 
                elsif View.Check_Attribute
-                       (PRA.Library_Name,
-                        Result         => Tmp_Attr)
+                       (PRA.Library_Name, Result => Tmp_Attr)
                  and then (Tmp_Attr.Value.Text /= ""
                            or else Tmp_Attr.Value.Is_From_Default)
                  and then View.Check_Attribute
@@ -2892,14 +2889,14 @@ package body GPR2.Project.Tree is
 
                for A of P.Attrs loop
                   declare
-                     Q_Name : constant PRA.Qualified_Name :=
-                                PRA.Create (A.Name.Id, P.Id);
+                     Q_Name : constant Q_Attribute_Id :=
+                                (P.Id, A.Name.Id.Attr);
                      Def    : constant PRA.Def := PRA.Get (Q_Name);
 
                   begin
                      if not Def.Is_Allowed_In (P_Kind) then
                         Self.Warning
-                          ("attribute """ & PRA.Image (Q_Name)
+                          ("attribute """ & Image (Q_Name)
                            & """ cannot be used in " & Image (P_Kind),
                            A);
                      end if;
@@ -2915,7 +2912,7 @@ package body GPR2.Project.Tree is
                        and then not A.Index.Is_Others
                      then
                         Self.Warning
-                          ("attribute """ & PRA.Image (Q_Name)
+                          ("attribute """ & Image (Q_Name)
                            & """ only supports index ""others"""
                            & " in aggregate projects",
                            A);
@@ -2929,7 +2926,7 @@ package body GPR2.Project.Tree is
 
          for A of P_Data.Attrs loop
             declare
-               Q_Name : constant PRA.Qualified_Name := PRA.Create (A.Name.Id);
+               Q_Name : constant Q_Attribute_Id := A.Name.Id;
             begin
                declare
                   Allowed : constant PRA.Allowed_In :=
@@ -2953,8 +2950,7 @@ package body GPR2.Project.Tree is
                         --  error message.
 
                         Self.Warning
-                          ('"' & Image (A.Name.Id)
-                           & """ is only valid in "
+                          ('"' & Image (A.Name.Id) & """ is only valid in "
                            & Image (Allow) & 's',
                            A);
                      else
@@ -2976,7 +2972,7 @@ package body GPR2.Project.Tree is
 
          declare
             procedure Check_Directory
-              (Attr_Name     : Attribute_Id;
+              (Name          : Q_Attribute_Id;
                Human_Name    : String;
                Get_Directory : not null access function
                                  (Self : Project.View.Object)
@@ -2998,7 +2994,7 @@ package body GPR2.Project.Tree is
             ---------------------
 
             procedure Check_Directory
-              (Attr_Name     : Attribute_Id;
+              (Name          : Q_Attribute_Id;
                Human_Name    : String;
                Get_Directory : not null access function
                                  (Self : Project.View.Object)
@@ -3009,7 +3005,7 @@ package body GPR2.Project.Tree is
                --  We don't warn for default attributes (such as exec dir
                --  defaulting to a non-existing object dir), as we already
                --  warn for the referenced attribute.
-               if View.Check_Attribute (Attr_Name, Result => Attr)
+               if View.Check_Attribute (Name, Result => Attr)
                  and then not Attr.Is_Default
                then
                   declare
@@ -3051,7 +3047,7 @@ package body GPR2.Project.Tree is
                   Self.Messages.Append
                     (Message.Create
                        (Message.Error,
-                        "attribute " & Image (Attr_Name) & " not declared",
+                        "attribute " & Image (Name.Attr) & " not declared",
                         Source_Reference.Create (View.Path_Name.Value, 0, 0)));
                end if;
             end Check_Directory;
@@ -3061,7 +3057,8 @@ package body GPR2.Project.Tree is
               and then not View.Is_Aggregated_In_Library
             then
                Check_Directory
-                 (PRA.Object_Dir, "object",
+                 (PRA.Object_Dir,
+                  "object",
                   Project.View.Object_Directory'Access,
                   Must_Exist => not View.Is_Aggregated_In_Library
                                   and then not View.Is_Extended);
@@ -3071,14 +3068,16 @@ package body GPR2.Project.Tree is
               and then not View.Is_Aggregated_In_Library
             then
                Check_Directory
-                 (PRA.Library_Dir, "library",
+                 (PRA.Library_Dir,
+                  "library",
                   Project.View.Library_Directory'Access,
                   Mandatory  => True,
                   Must_Exist => not View.Is_Aggregated_In_Library
                                   and then not View.Is_Extended);
 
                Check_Directory
-                 (PRA.Library_Ali_Dir, "library ALI",
+                 (PRA.Library_Ali_Dir,
+                  "library ALI",
                   Project.View.Library_Ali_Directory'Access,
                   Must_Exist => not View.Is_Aggregated_In_Library
                                   and then not View.Is_Extended);
@@ -3087,12 +3086,12 @@ package body GPR2.Project.Tree is
                  or else View.Has_Attribute (PRA.Interfaces)
                then
                   Check_Directory
-                    (PRA.Library_Src_Dir, "",
+                    (PRA.Library_Src_Dir,
+                     "",
                      Project.View.Library_Src_Directory'Access);
                end if;
 
-               if not View.Check_Attribute
-                        (PRA.Library_Name, Result => Attr)
+               if not View.Check_Attribute (PRA.Library_Name, Result => Attr)
                then
                   Self.Messages.Append
                     (Message.Create
@@ -3106,7 +3105,8 @@ package body GPR2.Project.Tree is
                when K_Standard =>
                   if not View.Is_Aggregated_In_Library then
                      Check_Directory
-                       (PRA.Exec_Dir, "exec",
+                       (PRA.Exec_Dir,
+                        "exec",
                         Project.View.Executable_Directory'Access);
                   end if;
 
@@ -3537,9 +3537,7 @@ package body GPR2.Project.Tree is
          (1 => Path_Separator),
          String_Split.Multiple);
 
-      Drivers := Conf.Corresponding_View.Attributes
-        (Registry.Pack.Compiler,
-         Registry.Attribute.Driver);
+      Drivers := Conf.Corresponding_View.Attributes (PRA.Compiler.Driver);
 
       --  We need to arrange toolchains in the order of appearance on PATH
 
@@ -3827,8 +3825,7 @@ package body GPR2.Project.Tree is
                              (Message.Error,
                               "wrong value for Library_Standalone when"
                               & " Library_Interface defined",
-                              PV.Attribute_Location
-                                (Registry.Attribute.Library_Standalone)));
+                              PV.Attribute_Location (PRA.Library_Standalone)));
                      end if;
 
                      --  And if a standalone library has interfaces
@@ -3841,8 +3838,7 @@ package body GPR2.Project.Tree is
                              (Message.Error,
                               "Library_Standalone valid only if library"
                               & " has interfaces",
-                              PV.Attribute_Location
-                                (Registry.Attribute.Library_Standalone)));
+                              PV.Attribute_Location (PRA.Library_Standalone)));
                      end if;
                   end if;
                end Check_Shared_Lib;

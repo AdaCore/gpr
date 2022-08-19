@@ -35,7 +35,6 @@ with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Configuration;
 with GPR2.Project.Registry.Attribute;
-with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Artifact;
 
 pragma Warnings (Off, "unit ""GPR2.Project.Source.Set"" is not referenced");
@@ -75,7 +74,6 @@ procedure GPRclean.Main is
    use all type Unit.Library_Unit_Type;
 
    package PRA renames GPR2.Project.Registry.Attribute;
-   package PRP renames GPR2.Project.Registry.Pack;
 
    procedure Clean (View : Project.View.Object);
    --  Clean given View
@@ -685,8 +683,7 @@ begin
 
    declare
       Attr : constant GPR2.Project.Attribute.Object :=
-               Project_Tree.Root_Project.Attribute
-                 (PRA.Switches, PRP.Clean);
+               Project_Tree.Root_Project.Attribute (PRA.Clean.Switches);
    begin
       if Attr.Is_Defined then
          Options := (GPRtools.Command_Line.Empty_Result

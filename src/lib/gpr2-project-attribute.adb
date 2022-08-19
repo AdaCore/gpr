@@ -101,7 +101,7 @@ package body GPR2.Project.Attribute is
    end Create;
 
    function Create
-     (Name                 : Attribute_Id;
+     (Name                 : Q_Attribute_Id;
       Index                : Value_Type;
       Index_Case_Sensitive : Boolean;
       Source               : GPR2.Path_Name.Object;
@@ -116,7 +116,7 @@ package body GPR2.Project.Attribute is
    end Create;
 
    function Create
-     (Name    : Attribute_Id;
+     (Name    : Q_Attribute_Id;
       Index   : Attribute_Index.Object;
       Source  : GPR2.Path_Name.Object;
       Default : Value_Type;
@@ -170,7 +170,7 @@ package body GPR2.Project.Attribute is
 
    function Get_Alias
      (Self     : Object;
-      New_Name : Attribute_Id) return Object
+      New_Name : Q_Attribute_Id) return Object
    is
       SR_Name : constant Source_Reference.Attribute.Object :=
                   Source_Reference.Attribute.Object
@@ -205,7 +205,7 @@ package body GPR2.Project.Attribute is
       use GPR2.Project.Registry.Attribute;
       use all type GPR2.Project.Attr_Values.Object;
 
-      Name   : constant String := Image (Self.Name.Id);
+      Name   : constant String := Image (Self.Name.Id.Attr);
       Result : Unbounded_String := To_Unbounded_String ("for ");
    begin
       Append (Result, Name);

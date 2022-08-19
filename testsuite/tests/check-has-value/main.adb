@@ -43,7 +43,7 @@ procedure Main is
       Text_IO.Put_Line ("FORTRAN " & Att.Has_Value ("FORTRAN")'Img);
       Text_IO.Put_Line ("fortran " & Att.Has_Value ("fortran")'Img);
 
-      Att := Prj.Attributes.Element (A.Source_Dirs);
+      Att := Prj.Attributes.Element (A.Source_Dirs.Attr);
       Text_IO.Put_Line (Att.Image);
 
       Text_IO.Put_Line (". " & Att.Has_Value (".")'Img);

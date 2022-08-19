@@ -101,7 +101,7 @@ is
    --  need to be recomputed.
 
    procedure Read_Source_List
-     (Attr_Name : Attribute_Id;
+     (Attr_Name : Q_Attribute_Id;
       Set       : in out Source_Set.Set);
    --  Read from file defined in project attribute Attr_Name and insert each
    --  line into Set
@@ -124,16 +124,16 @@ is
 
    procedure Fill_Naming_Schema;
 
-   procedure Fill_Ada_Naming_Exceptions (Attr : Attribute_Id)
-     with Pre => Attr in  PRA.Spec | PRA.Body_N;
+   procedure Fill_Ada_Naming_Exceptions (Attr : Q_Attribute_Id)
+     with Pre => Attr in  PRA.Naming.Spec | PRA.Naming.Body_N;
    --  Fill the Ada_Naming_Exceptions object with the given attribute set
 
    procedure Fill_Other_Naming_Exceptions
      (Set : Project.Attribute.Set.Object)
      with Pre =>
        (for all A of Set =>
-          A.Name.Id = PRA.Specification_Exceptions
-          or else A.Name.Id = PRA.Implementation_Exceptions);
+          A.Name.Id = PRA.Naming.Specification_Exceptions
+          or else A.Name.Id = PRA.Naming.Implementation_Exceptions);
 
    function Is_Compilable (Language : Language_Id) return Boolean;
    --  Check whether the language is compilable on the current View. This
@@ -141,8 +141,7 @@ is
    --  that this routine caches the result into a map.
 
    Dot_Repl : constant String :=
-                View.Attribute
-                  (PRA.Dot_Replacement, PRP.Naming).Value.Text;
+                View.Attribute (PRA.Naming.Dot_Replacement).Value.Text;
    --  Get Dot_Replacement value
 
    Naming_Schema_Map : Naming_Schema_Maps.Map;
@@ -182,7 +181,7 @@ is
    --  Mark that language exists in sources
 
    function Ada_Use_Index (Attr : Attribute.Object) return Value_Type is
-     (Attr.Index.Text & Image (Attr.Name.Id) (1));
+     (Attr.Index.Text & Image (Attr.Name.Id.Attr) (1));
    --  Index created from Body or Spec attribute index i.e. Ada unit name
    --  and first character of the attribute name i.e. B or S. It is used to
    --  distinct body naming exception from spec naming exception.
@@ -191,11 +190,10 @@ is
    -- Fill_Ada_Naming_Exceptions --
    --------------------------------
 
-   procedure Fill_Ada_Naming_Exceptions (Attr : Attribute_Id) is
+   procedure Fill_Ada_Naming_Exceptions (Attr : Q_Attribute_Id) is
    begin
       for A of View.Attributes
-        (Pack          => PRP.Naming,
-         Name          => Attr,
+        (Name          => Attr,
          With_Defaults => False,
          With_Config   => False)
       loop
@@ -399,20 +397,18 @@ is
 
          else
             if View.Check_Attribute
-                 (PRP.Naming,
-                  PRA.Specification_Exceptions,
-                  Attribute_Index.Create (Language),
-                  Result => Attr)
+              (PRA.Naming.Specification_Exceptions,
+               Attribute_Index.Create (Language),
+               Result => Attr)
               and then Attr.Has_Value (Value_Type (Basename))
             then
                Match := True;
                Kind  := Unit.S_Spec;
 
             elsif View.Check_Attribute
-                    (PRP.Naming,
-                     PRA.Implementation_Exceptions,
-                     Attribute_Index.Create (Language),
-                     Result => Attr)
+              (PRA.Naming.Implementation_Exceptions,
+               Attribute_Index.Create (Language),
+               Result => Attr)
               and then Attr.Has_Value (Value_Type (Basename))
             then
                Match := True;
@@ -461,8 +457,7 @@ is
             use Ada.Strings.Maps;
             Casing  : constant String :=
                         ACH.To_Lower
-                          (View.Attribute
-                             (PRA.Casing, PRP.Naming).Value.Text);
+                          (View.Attribute (PRA.Naming.Casing).Value.Text);
             Charset : constant Character_Set :=
                         (if not File_Names_Case_Sensitive
                          or else Casing = "mixedcase"
@@ -821,7 +816,7 @@ is
                               Index := No_Index;
                            end if;
 
-                           Kind := (if Exc.Name.Id = PRA.Spec
+                           Kind := (if Exc.Name.Id = PRA.Naming.Spec
                                     then Unit.S_Spec
                                     else Unit.S_Body);
                            --  May actually be a Separate, we cannot know
@@ -879,7 +874,7 @@ is
                                       Success  => Match);
 
                      function Has_Conflict_NE
-                       (Attr_Name : Attribute_Id) return Boolean;
+                       (Attr_Name : Q_Attribute_Id) return Boolean;
                      --  Search the Naming package for attributes with name
                      --  Attr_Name and index Unit_Name, and return True if
                      --  at least one of the matching attributes references
@@ -913,7 +908,7 @@ is
                      ---------------------
 
                      function Has_Conflict_NE
-                       (Attr_Name : Attribute_Id) return Boolean
+                       (Attr_Name : Q_Attribute_Id) return Boolean
                      is
                         Cursor : Source_Path_To_Attribute_List.Cursor;
                         use Source_Path_To_Attribute_List;
@@ -943,10 +938,10 @@ is
                         --  In this case we skip this source.
 
                         if (Kind = Unit.S_Spec
-                            and then Has_Conflict_NE (PRA.Spec))
+                            and then Has_Conflict_NE (PRA.Naming.Spec))
                           or else
                             (Kind = Unit.S_Body
-                             and then Has_Conflict_NE (PRA.Body_N))
+                             and then Has_Conflict_NE (PRA.Naming.Body_N))
                         then
                            return;
                         end if;
@@ -1251,8 +1246,7 @@ is
       begin
          if View.Has_Package (PRP.Compiler) then
             if View.Check_Attribute
-              (PRP.Compiler,
-               PRA.Driver,
+              (PRA.Compiler.Driver,
                Attribute_Index.Create (Language),
                Result => Att)
             then
@@ -1298,11 +1292,11 @@ is
    ---------------
 
    procedure Read_Source_List
-     (Attr_Name : Attribute_Id;
+     (Attr_Name : Q_Attribute_Id;
       Set       : in out Source_Set.Set)
    is
       Attr_Value : constant SR.Value.Object :=
-                     Def.Attrs.Element (Attr_Name).Value;
+                     Def.Attrs.Element (Attr_Name.Attr).Value;
       Filename   : constant GPR2.Path_Name.Full_Name :=
                      (if GNAT.OS_Lib.Is_Absolute_Path (Attr_Value.Text)
                       then Attr_Value.Text
@@ -1414,7 +1408,7 @@ is
          procedure Add (A : Project.Attribute.Object);
          --  Add attribute name and values into the MD5 context
 
-         procedure Add (Attribute_Name : Attribute_Id);
+         procedure Add (Attribute_Name : Q_Attribute_Id);
          --  Add attribute by into the MD5 context
 
          ---------
@@ -1423,15 +1417,15 @@ is
 
          procedure Add (A : Project.Attribute.Object) is
          begin
-            MD5.Update (C, String (Name (A.Name.Id)) & "/");
+            MD5.Update (C, String (Name (A.Name.Id.Attr)) & "/");
             for Value of A.Values loop
                MD5.Update (C, Value.Text);
             end loop;
          end Add;
 
-         procedure Add (Attribute_Name : Attribute_Id) is
+         procedure Add (Attribute_Name : Q_Attribute_Id) is
             Attr : constant Project.Attribute.Object :=
-                     Data.Attrs.Element (Attribute_Name);
+                     Data.Attrs.Element (Attribute_Name.Attr);
          begin
             if Attr.Is_Defined then
                Add (Attr);
@@ -1456,7 +1450,7 @@ is
                Attr   : Attribute.Object;
             begin
                if View.Check_Attribute
-                 (PRP.Naming, PRA.Dot_Replacement, Result => Attr)
+                 (PRA.Naming.Dot_Replacement, Result => Attr)
                then
                   Add (Attr);
                end if;
@@ -1469,20 +1463,24 @@ is
                                Attribute_Index.Create (L_Id);
                   begin
                      if View.Check_Attribute
-                       (PRP.Naming, PRA.Spec_Suffix, Index, Result => Attr)
+                       (PRA.Naming.Spec_Suffix,
+                        Index,
+                        Result => Attr)
                      then
                         Add (Attr);
                      end if;
 
                      if View.Check_Attribute
-                       (PRP.Naming, PRA.Body_Suffix, Index, Result => Attr)
+                       (PRA.Naming.Body_Suffix,
+                        Index,
+                        Result => Attr)
                      then
                         Add (Attr);
                      end if;
 
                      if L_Id = Ada_Language then
                         if View.Check_Attribute
-                          (PRP.Naming, PRA.Separate_Suffix, Result => Attr)
+                          (PRA.Naming.Separate_Suffix, Result => Attr)
                         then
                            Add (Attr);
                         end if;
@@ -1490,16 +1488,16 @@ is
                   end;
                end loop;
 
-               for A of View.Attributes (PRP.Naming, PRA.Spec,
-                                               With_Defaults => False,
-                                               With_Config   => False)
+               for A of View.Attributes (PRA.Naming.Spec,
+                                         With_Defaults => False,
+                                         With_Config   => False)
                loop
                   Add (A);
                end loop;
 
-               for A of View.Attributes (PRP.Naming, PRA.Body_N,
-                                               With_Defaults => False,
-                                               With_Config   => False)
+               for A of View.Attributes (PRA.Naming.Body_N,
+                                         With_Defaults => False,
+                                         With_Config   => False)
                loop
                   Add (A);
                end loop;
@@ -1542,13 +1540,13 @@ begin
 
    --  Setup the naming exceptions look-up table if needed
 
-   Fill_Ada_Naming_Exceptions (PRA.Spec);
-   Fill_Ada_Naming_Exceptions (PRA.Body_N);
+   Fill_Ada_Naming_Exceptions (PRA.Naming.Spec);
+   Fill_Ada_Naming_Exceptions (PRA.Naming.Body_N);
 
    Fill_Other_Naming_Exceptions
-     (View.Attributes (PRP.Naming, PRA.Specification_Exceptions));
+     (View.Attributes (PRA.Naming.Specification_Exceptions));
    Fill_Other_Naming_Exceptions
-     (View.Attributes (PRP.Naming, PRA.Implementation_Exceptions));
+     (View.Attributes (PRA.Naming.Implementation_Exceptions));
 
    --  Read sources and set up the corresponding definition
 
@@ -1591,7 +1589,6 @@ begin
 
    if View.Has_Attribute (PRA.Source_List_File) then
       Read_Source_List (PRA.Source_List_File, Included_Sources);
-
       Has_Source_List := True;
    end if;
 

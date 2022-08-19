@@ -5,6 +5,7 @@
 --
 
 with Ada.Directories;
+with Ada.Exceptions;
 with Ada.Text_IO;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
@@ -15,6 +16,8 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Variable.Set;
 with GPR2.Context;
+
+with GNAT.Traceback.Symbolic;
 
 procedure Main is
 
@@ -46,7 +49,7 @@ procedure Main is
       begin
          for A in Attrs.Iterate (With_Defaults => True) loop
             Attr := Attribute.Set.Element (A);
-            Text_IO.Put ("A:   " & Image (Attr.Name.Id));
+            Text_IO.Put ("A:   " & Image (Attr.Name.Id.Attr));
 
             if Attr.Has_Index then
                if Attr.Index.Is_Any_Index then

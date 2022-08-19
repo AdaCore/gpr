@@ -91,7 +91,7 @@ package GPR2.Project.Attribute is
    --  Creates a multi-valued object with Default flag
 
    function Create
-     (Name    : Attribute_Id;
+     (Name    : Q_Attribute_Id;
       Index   : Attribute_Index.Object;
       Source  : GPR2.Path_Name.Object;
       Default : Value_Type;
@@ -100,7 +100,7 @@ package GPR2.Project.Attribute is
                   and then Create'Result.Name.Id = Name;
 
    function Create
-     (Name                 : Attribute_Id;
+     (Name                 : Q_Attribute_Id;
       Index                : Value_Type;
       Index_Case_Sensitive : Boolean;
       Source               : GPR2.Path_Name.Object;
@@ -162,8 +162,9 @@ package GPR2.Project.Attribute is
 
    function Get_Alias
      (Self     : Object;
-      New_Name : Attribute_Id) return Object
-     with Pre => Self.Is_Defined;
+      New_Name : Q_Attribute_Id) return Object
+     with Pre => Self.Is_Defined
+          and then Self.Name.Id.Pack = New_Name.Pack;
    --  Indicate that this attribute is another name for an existing attribute
 
    function Is_Alias (Self : Object) return Boolean

@@ -14,7 +14,7 @@ package body GPR2.Project.Registry.Pack is
    end record;
 
    package Pack_Definition is new Ada.Containers.Ordered_Maps
-     (Optional_Package_Id, Package_Options, "<");
+     (Package_Id, Package_Options, "<");
 
    Store : Pack_Definition.Map;
 
@@ -36,7 +36,7 @@ package body GPR2.Project.Registry.Pack is
    begin
       for P in Store.Iterate loop
          declare
-            Name : constant Optional_Package_Id := Pack_Definition.Key (P);
+            Name : constant Package_Id := Pack_Definition.Key (P);
          begin
             Result.Insert (Name);
          end;
@@ -71,7 +71,11 @@ package body GPR2.Project.Registry.Pack is
 
    function Exists (Name : Package_Id) return Boolean is
    begin
-      return Store.Contains (Name);
+      if Name = GPR2.Project_Level_Scope then
+         return True;
+      else
+         return Store.Contains (Name);
+      end if;
    end Exists;
 
    -------------------

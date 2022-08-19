@@ -72,7 +72,7 @@ package body GPRtools.Command_Line is
 
    procedure Get_Opt_Internal
      (Parser    : Command_Line_Parser;
-      Pack      : GPR2.Optional_Package_Id;
+      Pack      : GPR2.Package_Id;
       Arg       : String;
       Next      : String;
       Next_Used : out Boolean;
@@ -358,7 +358,7 @@ package body GPRtools.Command_Line is
    begin
       while Idx <= Ada.Command_Line.Argument_Count loop
          Self.Get_Opt_Internal
-           (Pack      => GPR2.No_Package,
+           (Pack      => GPR2.Project_Level_Scope,
             Arg       => Ada.Command_Line.Argument (Idx),
             Next      => (if Idx = Ada.Command_Line.Argument_Count
                           then ""
@@ -380,14 +380,14 @@ package body GPRtools.Command_Line is
 
    procedure Get_Opt_Internal
      (Parser    : Command_Line_Parser;
-      Pack      : GPR2.Optional_Package_Id;
+      Pack      : GPR2.Package_Id;
       Arg       : String;
       Next      : String;
       Next_Used : out Boolean;
       State     : in out Parser_State;
       Result    : in out Command_Line_Result'Class)
    is
-      use type GPR2.Optional_Package_Id;
+      use type GPR2.Package_Id;
 
       function Find_Def (Sw : Switch_Type) return Arg_Maps.Cursor;
 
@@ -454,7 +454,7 @@ package body GPRtools.Command_Line is
       if Arg_Maps.Has_Element (C) then
          Def := Arg_Maps.Element (C);
 
-         if Pack /= GPR2.No_Package
+         if Pack /= GPR2.Project_Level_Scope
            and then not Def.In_Attr
          then
             --  Switch not available in the Switches Attribute
@@ -545,7 +545,7 @@ package body GPRtools.Command_Line is
       then
          if Arg (Arg'First) = '-' then
             raise Usage_Error with "unrecognized option '" & Arg & "'" &
-              (if Pack = GPR2.No_Package
+              (if Pack = GPR2.Project_Level_Scope
                then ""
                else " in package " & GPR2.Image (Pack));
          end if;
@@ -574,7 +574,7 @@ package body GPRtools.Command_Line is
          then
             raise Usage_Error with
               "unexpected index for '" & Arg & "'" &
-              (if Pack = GPR2.No_Package
+              (if Pack = GPR2.Project_Level_Scope
                then ""
                else " in package " & GPR2.Image (Pack));
          end if;
@@ -584,7 +584,7 @@ package body GPRtools.Command_Line is
          then
             raise Usage_Error with
               "unexpected parameter for '" & Arg & "'" &
-              (if Pack = GPR2.No_Package
+              (if Pack = GPR2.Project_Level_Scope
                then ""
                else " in package " & GPR2.Image (Pack));
          end if;
@@ -595,7 +595,7 @@ package body GPRtools.Command_Line is
          then
             raise Usage_Error with
               "wrong format for '" & Arg & "'" &
-              (if Pack = GPR2.No_Package
+              (if Pack = GPR2.Project_Level_Scope
                then ""
                else " in package " & GPR2.Image (Pack));
          end if;
@@ -621,7 +621,7 @@ package body GPRtools.Command_Line is
          then
             raise Usage_Error with
               "parameter expected for argument '" & Arg & "'" &
-              (if Pack = GPR2.No_Package
+              (if Pack = GPR2.Project_Level_Scope
                then ""
                else " in package " & GPR2.Image (Pack));
          end if;

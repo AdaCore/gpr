@@ -11,7 +11,6 @@ with GPR2.Message;
 with GPR2.Project.Source.Part_Set;
 with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
-with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
@@ -21,7 +20,6 @@ with GPR2.Source_Info.Parser.Registry;
 package body GPR2.Project.Source is
 
    package PRA renames GPR2.Project.Registry.Attribute;
-   package PRP renames GPR2.Project.Registry.Pack;
    use type Ada.Containers.Hash_Type;
 
    function Hash
@@ -698,7 +696,7 @@ package body GPR2.Project.Source is
                      declare
                         DR : constant String :=
                                View (Self).Attribute
-                                 (PRA.Dot_Replacement, PRP.Naming).Value.Text;
+                                 (PRA.Naming.Dot_Replacement).Value.Text;
                         SN : constant String :=
                                String (Self.Path_Name.Simple_Name);
                         CU : Project.Unit_Info.Set.Cursor;

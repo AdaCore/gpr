@@ -97,9 +97,8 @@ begin
                                Mains.First_Element;
             begin
                Sw_Attr := Tree.Root_Project.Attribute
-                 (PRA.Switches,
-                  Pack => PRP.Builder,
-                  Index => Project.Attribute_Index.Create
+                 (Name   => PRA.Builder.Switches,
+                  Index  => Project.Attribute_Index.Create
                     (GPR2.Value_Type (Source_Part.Source.Simple_Name),
                      Case_Sensitive => GPR2.File_Names_Case_Sensitive),
                   At_Pos => Source_Part.Index);
@@ -137,8 +136,7 @@ begin
 
                if Lang /= No_Language then
                   Sw_Attr := Tree.Root_Project.Attribute
-                    (PRA.Switches,
-                     PRP.Builder,
+                    (Name  => PRA.Builder.Switches,
                      Index => Project.Attribute_Index.Create (Lang));
                end if;
             end;
@@ -158,8 +156,7 @@ begin
                   New_Lang := +Optional_Name_Type (Val.Text);
 
                   Driver_Attr := Tree.Root_Project.Attribute
-                    (PRA.Driver,
-                     PRP.Compiler,
+                    (Name  => PRA.Compiler.Driver,
                      Index => Project.Attribute_Index.Create (New_Lang));
 
                   if Driver_Attr.Is_Defined then
@@ -174,8 +171,7 @@ begin
 
                if Lang /= No_Language then
                   Sw_Attr := Tree.Root_Project.Attribute
-                    (PRA.Switches,
-                     PRP.Builder,
+                    (Name  => PRA.Builder.Switches,
                      Index => Project.Attribute_Index.Create (Lang));
                end if;
             end;
@@ -186,8 +182,7 @@ begin
 
       if not Sw_Attr.Is_Defined then
          Sw_Attr := Tree.Root_Project.Attribute
-           (PRA.Switches,
-            PRP.Builder,
+           (Name  => PRA.Builder.Switches,
             Index => Project.Attribute_Index.I_Others);
       end if;
 

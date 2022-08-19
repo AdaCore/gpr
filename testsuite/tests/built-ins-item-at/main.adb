@@ -39,7 +39,7 @@ procedure Main is
       if Full then
          for A of Prj.Attributes (With_Defaults => False) loop
             Text_IO.Put
-              ("A:   " & Image (A.Name.Id));
+              ("A:   " & Image (A.Name.Id.Attr));
             Text_IO.Put (" ->");
 
             for V of A.Values loop

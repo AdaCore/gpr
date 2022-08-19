@@ -44,8 +44,8 @@ package body GPR2.C.Utils is
    begin
       return
         View.Attribute
-          (Name  => GPR2."+" (Optional_Name_Type (Name)),
-           Pack  => GPR2."+" (Optional_Name_Type (Pkg)),
+          (Name  => (GPR2."+" (Optional_Name_Type (Pkg)),
+                     GPR2."+" (Optional_Name_Type (Name))),
            Index => Index.GPR2_Index, At_Pos => Index.Position);
    end Attribute;
 

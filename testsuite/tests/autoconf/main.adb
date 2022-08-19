@@ -53,7 +53,7 @@ procedure Main is
       Target           : constant String :=
                            Config_View.Attribute (PRA.Target).Value.Text;
       Canonical_Target : constant String :=
-                           Config_View.Attribute
+                           Config_View.Attribute 
                              (PRA.Canonical_Target).Value.Text;
       Languages        : constant GPR2.Containers.Source_Value_List :=
                            Project_Tree.Root_Project.Languages;
@@ -81,9 +81,8 @@ procedure Main is
                package PAI renames Project.Attribute_Index;
                Driver_Attr     : constant Project.Attribute.Object :=
                                    Config_View.Attribute
-                                     (Name  => PRA.Driver,
-                                      Pack  => PRP.Compiler,
-                                      Index => PAI.Create
+                                     (Name  => PRA.Compiler.Driver,
+                                      Index => PAI.Create 
                                                  (+Name_Type (Value.Text)));
                Compiler_Driver : constant Path_Name.Object :=
                                    Path_Name.Create_File

@@ -10,4 +10,5 @@
 with GPR2.Source_Reference.Scalar_Value;
 
 package GPR2.Source_Reference.Attribute is
-  new GPR2.Source_Reference.Scalar_Value (Optional_Attribute_Id, No_Attribute);
+  new GPR2.Source_Reference.Scalar_Value
+    (Q_Optional_Attribute_Id, No_Attribute_Id);

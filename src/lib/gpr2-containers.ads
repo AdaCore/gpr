@@ -108,12 +108,12 @@ package GPR2.Containers is
    subtype Source_Value_Set is Source_Value_Type_Set.Set;
 
    package Attribute_Id_Type_List is new Ada.Containers.Ordered_Sets
-     (Optional_Attribute_Id);
+     (Q_Attribute_Id);
 
    subtype Attribute_Id_List is Attribute_Id_Type_List.Set;
 
    package Package_Id_Type_List is new Ada.Containers.Ordered_Sets
-     (Optional_Package_Id);
+     (Package_Id);
 
    subtype Package_Id_List is Package_Id_Type_List.Set;
 

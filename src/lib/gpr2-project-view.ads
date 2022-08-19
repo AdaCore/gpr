@@ -33,6 +33,8 @@ private with GPR2.Project.Registry.Pack;
 
 package GPR2.Project.View is
 
+   package PRA renames GPR2.Project.Registry.Attribute;
+
    use GPR2.Context;
 
    type Object is tagged private;
@@ -180,8 +182,7 @@ package GPR2.Project.View is
 
    function Has_Attribute
      (Self   : Object;
-      Name   : Attribute_Id;
-      Pack   : Optional_Package_Id    := No_Package;
+      Name   : Q_Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos : Unit_Index             := No_Index) return Boolean
      with Pre => Self.Is_Defined;
@@ -192,8 +193,7 @@ package GPR2.Project.View is
 
    function Attribute
      (Self   : Object;
-      Name   : Attribute_Id;
-      Pack   : Optional_Package_Id    := No_Package;
+      Name   : Q_Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos : Unit_Index             := No_Index)
       return Project.Attribute.Object
@@ -204,7 +204,7 @@ package GPR2.Project.View is
 
    function Check_Attribute
      (Self   : Object;
-      Name   : Attribute_Id;
+      Name   : Q_Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos : Unit_Index             := No_Index;
       Result : out Project.Attribute.Object) return Boolean
@@ -214,22 +214,9 @@ package GPR2.Project.View is
    --  according to project kind, etc.).
    --  Returns whether the result is defined.
 
-   function Check_Attribute
-     (Self   : Object;
-      Pack   : Package_Id;
-      Name   : Attribute_Id;
-      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Unit_Index             := No_Index;
-      Result : out Project.Attribute.Object) return Boolean
-     with Pre => Self.Is_Defined;
-   --  Returns True and set Result if the value of the package attribute
-   --  exists, after all resolutions are applied (inheritance, default value
-   --  according to project kind, etc.).
-   --  Returns whether the result is defined.
-
    function Attributes
      (Self          : Object;
-      Name          : Attribute_Id;
+      Name          : Q_Attribute_Id;
       With_Defaults : Boolean := True;
       With_Config   : Boolean := True)
       return Project.Attribute.Set.Object
@@ -250,17 +237,7 @@ package GPR2.Project.View is
 
    function Attributes
      (Self          : Object;
-      Pack          : Package_Id;
-      Name          : Attribute_Id;
-      With_Defaults : Boolean := True;
-      With_Config   : Boolean := True)
-      return Project.Attribute.Set.Object
-     with Pre => Self.Is_Defined;
-   --  See above, but for packages
-
-   function Attributes
-     (Self          : Object;
-      Pack          : Optional_Package_Id    := No_Package;
+      Pack          : Package_Id             := Project_Level_Scope;
       With_Defaults : Boolean                := True;
       With_Config   : Boolean                := True)
       return Project.Attribute.Set.Object
@@ -269,9 +246,8 @@ package GPR2.Project.View is
 
    function Attribute_Location
      (Self  : Object;
-      Name  : Attribute_Id;
-      Index : Attribute_Index.Object := Attribute_Index.Undefined;
-      Pack  : Optional_Package_Id    := No_Package)
+      Name  : Q_Attribute_Id;
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Source_Reference.Object'Class
      with
        Pre => Self.Is_Defined;
@@ -534,8 +510,7 @@ package GPR2.Project.View is
    function Library_Kind (Self : Object) return Name_Type
      with Pre  => Self.Is_Defined
                   and then Self.Is_Library,
-          Post => Self.Has_Attribute
-                    (Project.Registry.Attribute.Library_Kind)
+          Post => Self.Has_Attribute (PRA.Library_Kind)
                   or else Library_Kind'Result = "static";
    --  Returns the library kind, "static" if the corresponding attribute is not
    --  defined.
@@ -784,7 +759,7 @@ private
 
    function Clean_Attribute_List
      (Self     : Object;
-      Name     : Attribute_Id;
+      Name     : Q_Attribute_Id;
       Language : Language_Id) return Containers.Value_Set;
    --  Returns union of the attribute lists of the Clean packages from the
    --  configuration view, extending view if it exists and Self view.
@@ -800,14 +775,14 @@ private
    function Object_Artifact_Extensions
      (Self : Object; Language : Language_Id) return Containers.Value_Set
    is
-     (Self.Clean_Attribute_List
-        (Registry.Attribute.Object_Artifact_Extensions, Language));
+     (Self.Clean_Attribute_List (PRA.Clean.Object_Artifact_Extensions,
+                                 Language));
 
    function Source_Artifact_Extensions
      (Self : Object; Language : Language_Id) return Containers.Value_Set
    is
-     (Self.Clean_Attribute_List
-        (Registry.Attribute.Source_Artifact_Extensions, Language));
+     (Self.Clean_Attribute_List (PRA.Clean.Source_Artifact_Extensions,
+                                 Language));
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
@@ -819,18 +794,17 @@ private
      (Self.Kind in K_Library | K_Aggregate_Library);
 
    function Library_Name (Self : Object) return Simple_Name is
-     (Simple_Name
-        (Self.Attribute (Registry.Attribute.Library_Name).Value.Text));
+     (Simple_Name (Self.Attribute (PRA.Library_Name).Value.Text));
 
    function Has_Library_Version (Self : Object) return Boolean is
-     (Self.Has_Attribute (Registry.Attribute.Library_Version));
+     (Self.Has_Attribute (PRA.Library_Version));
 
    function Has_Library_Interface (Self : Object) return Boolean is
-     (Self.Has_Attribute (Registry.Attribute.Library_Interface));
+     (Self.Has_Attribute (PRA.Library_Interface));
 
    function Has_Interfaces (Self : Object) return Boolean is
-     (Self.Has_Attribute (Registry.Attribute.Interfaces) and then
-      not Self.Attribute (Registry.Attribute.Interfaces).Values.Is_Empty);
+     (Self.Has_Attribute (PRA.Interfaces)
+      and then not Self.Attribute (PRA.Interfaces).Values.Is_Empty);
 
    function Has_Any_Interfaces (Self : Object) return Boolean is
      (Self.Has_Library_Interface or else Self.Has_Interfaces);
@@ -847,64 +821,56 @@ private
    --  Naming package accessor
 
    package PA  renames Project.Attribute;
-   package PRA renames Project.Registry.Attribute;
    package PRP renames Project.Registry.Pack;
    package PAI renames Project.Attribute_Index;
 
    function Has_Separate_Suffix
      (Self : Object) return Boolean
-   is
-     (Self.Has_Attribute (PRA.Separate_Suffix, PRP.Naming));
+   is (Self.Has_Attribute (PRA.Naming.Separate_Suffix));
 
    function Separate_Suffix
      (Self : Object) return Project.Attribute.Object
-   is (Self.Attribute (PRA.Separate_Suffix, PRP.Naming));
+   is (Self.Attribute (PRA.Naming.Separate_Suffix));
 
    function Has_Spec_Suffix
      (Self     : Object;
       Language : Language_Id) return Boolean
-   is
-     (Self.Has_Attribute (PRA.Spec_Suffix, PRP.Naming, PAI.Create (Language)));
+   is (Self.Has_Attribute (PRA.Naming.Spec_Suffix, PAI.Create (Language)));
 
    function Spec_Suffix
      (Self     : Object;
       Language : Language_Id) return Project.Attribute.Object
-   is (Self.Attribute
-         (PRA.Spec_Suffix, PRP.Naming, PAI.Create (Language)));
+   is (Self.Attribute (PRA.Naming.Spec_Suffix, PAI.Create (Language)));
 
    function Has_Body_Suffix
      (Self     : Object;
       Language : Language_Id) return Boolean
-   is
-     (Self.Has_Attribute (PRA.Body_Suffix, PRP.Naming, PAI.Create (Language)));
+   is (Self.Has_Attribute (PRA.Naming.Body_Suffix, PAI.Create (Language)));
 
    function Body_Suffix
      (Self     : Object;
       Language : Language_Id) return Project.Attribute.Object
-   is (Self.Attribute
-         (PRA.Body_Suffix, PRP.Naming, PAI.Create (Language)));
+   is (Self.Attribute (PRA.Naming.Body_Suffix, PAI.Create (Language)));
 
    function Has_Implementation
      (Self : Object;
       Unit : Value_Type) return Boolean
-   is
-     (Self.Has_Attribute (PRA.Body_N, PRP.Naming, PAI.Create (Unit)));
+   is (Self.Has_Attribute (PRA.Naming.Body_N, PAI.Create (Unit)));
 
    function Implementation
      (Self : Object;
       Unit : Value_Type) return Project.Attribute.Object
-   is (Self.Attribute (PRA.Body_N, PRP.Naming, PAI.Create (Unit)));
+   is (Self.Attribute (PRA.Naming.Body_N, PAI.Create (Unit)));
 
    function Has_Specification
      (Self : Object;
       Unit : Value_Type) return Boolean
-   is
-     (Self.Has_Attribute (PRA.Spec, PRP.Naming, PAI.Create (Unit)));
+   is (Self.Has_Attribute (PRA.Naming.Spec, PAI.Create (Unit)));
 
    function Specification
      (Self : Object;
       Unit : Value_Type) return Project.Attribute.Object
-   is (Self.Attribute (PRA.Spec, PRP.Naming, PAI.Create (Unit)));
+   is (Self.Attribute (PRA.Naming.Spec, PAI.Create (Unit)));
 
    function Raw_Attributes
      (Self : Object;

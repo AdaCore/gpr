@@ -11,16 +11,16 @@ with Ada.Containers; use Ada.Containers;
 
 package GPR2.Project.Registry.Attribute.Description is
 
-   function Get_Attribute_Description (Key : Qualified_Name)
+   function Get_Attribute_Description (Key : Q_Attribute_Id)
                                        return String;
    --  Retrieve a description for a given attribute and package.
 
 private
 
-   function Hash (Key : Qualified_Name) return Hash_Type;
+   function Hash (Key : Q_Attribute_Id) return Hash_Type;
 
    package Pack_Attribute_Description is new Indefinite_Hashed_Maps
-     (Qualified_Name, String, Hash, "=", "=");
+     (Q_Attribute_Id, String, Hash, "=", "=");
 
    Attribute_Description : Pack_Attribute_Description.Map;
 

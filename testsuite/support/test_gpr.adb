@@ -49,10 +49,9 @@ package body Test_GPR is
       Attr_Index  : GPR2.Project.Attribute_Index.Object;
       Attr_Value  : GPR2.Project.Attribute.Object;
       Attr_Values : GPR2.Containers.Source_Value_List;
-      Q_Name      : constant GPR2.Project.Registry.Attribute.Qualified_Name :=
-                      GPR2.Project.Registry.Attribute.Create
-                        (+Name_Type (Name),
-                         +Optional_Name_Type (Pkg));
+      Q_Name      : constant GPR2.Q_Attribute_Id :=
+                      (+Optional_Name_Type (Pkg),
+                       +Name_Type (Name));
       PRA_Def     : constant GPR2.Project.Registry.Attribute.Def :=
                       GPR2.Project.Registry.Attribute.Get (Q_Name);
    begin
@@ -64,8 +63,7 @@ package body Test_GPR is
       end if;
 
       Attr_Value := View.Attribute
-         (Name   => Q_Name.Attr,
-          Pack   => Q_Name.Pack,
+         (Name   => Q_Name,
           Index  => Attr_Index,
           At_Pos => At_Pos);
 
@@ -128,8 +126,8 @@ package body Test_GPR is
              Case_Sensitive => True);
       end if;
       Attr_Value := View.Attribute
-         (Name   => GPR2."+" (GPR2.Optional_Name_Type (Name)),
-          Pack   => GPR2."+" (GPR2.Optional_Name_Type (Pkg)),
+         (Name   => (GPR2."+" (GPR2.Optional_Name_Type (Pkg)),
+                     GPR2."+" (GPR2.Optional_Name_Type (Name))),
           Index  => Attr_Index,
           At_Pos => At_Pos);
       A.Assert (Attr_Value.Is_Defined,
@@ -167,8 +165,8 @@ package body Test_GPR is
       end if;
       begin
          Attr_Value := View.Attribute
-         (Name   => GPR2."+" (GPR2.Optional_Name_Type (Name)),
-          Pack   => GPR2."+" (GPR2.Optional_Name_Type (Pkg)),
+         (Name   => (GPR2."+" (GPR2.Optional_Name_Type (Pkg)),
+                     GPR2."+" (GPR2.Optional_Name_Type (Name))),
           Index  => Attr_Index,
           At_Pos => At_Pos);
          A.Assert (False, "no exception raised");
@@ -199,8 +197,8 @@ package body Test_GPR is
              Case_Sensitive => True);
       end if;
       Attr_Value := View.Attribute
-         (Name   => GPR2."+" (GPR2.Optional_Name_Type (Name)),
-          Pack   => GPR2."+" (GPR2.Optional_Name_Type (Pkg)),
+         (Name   => (GPR2."+" (GPR2.Optional_Name_Type (Pkg)),
+                     GPR2."+" (GPR2.Optional_Name_Type (Name))),
           Index  => Attr_Index,
           At_Pos => At_Pos);
       A.Assert

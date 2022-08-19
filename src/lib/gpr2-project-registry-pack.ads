@@ -24,8 +24,8 @@ package GPR2.Project.Registry.Pack is
    --  Insert package in known packages
 
    function All_Packages return Containers.Package_Id_List;
-   --  Retrieve the Id of all defined packages. No_Package is not part
-   --  of the result.
+   --  Retrieve the Id of all defined packages. Project_Level_Scope is not
+   --  part of the result.
 
    function Exists (Name : Package_Id) return Boolean;
    --  Returns True if Name is a known package

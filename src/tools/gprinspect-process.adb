@@ -184,7 +184,7 @@ is
                   declare
                      Att : constant JSON_Value := Create_Object;
                   begin
-                     Set_Field (Att, "name", Image (A.Name.Id));
+                     Set_Field (Att, "name", Image (A.Name.Id.Attr));
 
                      if A.Has_Index then
                         Set_Field (Att, "index", A.Index.Value);
@@ -743,7 +743,8 @@ is
                            then
                               Text_IO.Put_Line
                                 (Item => "       - "
-                                 & "Project_Level." & Image (Attr.Name.Id)
+                                 & "Project_Level_Scope."
+                                 & Image (Attr.Name.Id.Attr)
                                  & " [ " & Attr.Kind'Img & " ]");
                               if Attr.Has_Index then
                                  Text_IO.Put_Line
@@ -789,7 +790,7 @@ is
                                        Text_IO.Put_Line
                                          (Item => "       - "
                                           & Image (P) & '.'
-                                          & Image (Attr.Name.Id)
+                                          & Image (Attr.Name.Id.Attr)
                                           & " [ " & Attr.Kind'Img & " ]");
                                        if Attr.Has_Index then
                                           Text_IO.Put_Line

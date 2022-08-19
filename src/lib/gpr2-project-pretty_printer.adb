@@ -609,14 +609,16 @@ package body GPR2.Project.Pretty_Printer is
          use GPR2.Project.Registry.Attribute;
       begin
          if Self.Backward_Compatibility then
-            if Name = Spec then
-               Write_Name (GPR2.Name (Specification), Indent);
-            elsif Name = Spec_Suffix then
-               Write_Name (GPR2.Name (Specification_Suffix), Indent);
-            elsif Name = Body_N then
-               Write_Name (GPR2.Name (Implementation), Indent);
-            elsif Name = Body_Suffix then
-               Write_Name (GPR2.Name (Implementation_Suffix), Indent);
+            if Name = Naming.Spec.Attr then
+               Write_Name (GPR2.Name (Naming.Specification.Attr), Indent);
+            elsif Name = Naming.Spec_Suffix.Attr then
+               Write_Name (GPR2.Name (Naming.Specification_Suffix.Attr),
+                           Indent);
+            elsif Name = Naming.Body_N.Attr then
+               Write_Name (GPR2.Name (Naming.Implementation.Attr), Indent);
+            elsif Name = Naming.Body_Suffix.Attr then
+               Write_Name (GPR2.Name (Naming.Implementation_Suffix.Attr),
+                           Indent);
             else
                Write_Name (GPR2.Name (Name), Indent);
             end if;

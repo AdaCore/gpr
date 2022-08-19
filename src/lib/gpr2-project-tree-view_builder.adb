@@ -17,17 +17,17 @@ package body GPR2.Project.Tree.View_Builder is
 
    procedure Set_Attribute
      (Self   : in out Object;
-      Q_Name : Registry.Attribute.Qualified_Name;
+      Q_Name : Q_Attribute_Id;
       Attr   : GPR2.Project.Attribute.Object);
 
    function SR_Attr
      (Self : Object;
-      Attr : Registry.Attribute.Qualified_Name)
+      Attr : Q_Attribute_Id)
       return Source_Reference.Attribute.Object
    is (GPR2.Source_Reference.Attribute.Object
        (GPR2.Source_Reference.Attribute.Create
           (Self.Data.Trees.Project.Path_Name.Value, 0, 0,
-           Attr.Attr)));
+           Attr)));
 
    function SR_Index
      (Self  : Object;
@@ -157,11 +157,11 @@ package body GPR2.Project.Tree.View_Builder is
 
    procedure Set_Attribute
      (Self   : in out Object;
-      Q_Name : Registry.Attribute.Qualified_Name;
+      Q_Name : Q_Attribute_Id;
       Attr   : GPR2.Project.Attribute.Object)
    is
    begin
-      if Q_Name.Pack = No_Package then
+      if Q_Name.Pack = Project_Level_Scope then
          Self.Data.Attrs.Include (Attr);
 
       elsif not Self.Data.Packs.Contains (Q_Name.Pack) then
@@ -185,7 +185,7 @@ package body GPR2.Project.Tree.View_Builder is
 
    procedure Set_Attribute
      (Self  : in out Object;
-      Attr  : Registry.Attribute.Qualified_Name;
+      Attr  : Q_Attribute_Id;
       Value : Value_Type)
    is
    begin
@@ -197,7 +197,7 @@ package body GPR2.Project.Tree.View_Builder is
 
    procedure Set_Attribute
      (Self   : in out Object;
-      Attr   : Registry.Attribute.Qualified_Name;
+      Attr   : Q_Attribute_Id;
       Values : Containers.Value_List)
    is
    begin
@@ -210,7 +210,7 @@ package body GPR2.Project.Tree.View_Builder is
 
    procedure Set_Attribute
      (Self  : in out Object;
-      Attr  : Registry.Attribute.Qualified_Name;
+      Attr  : Q_Attribute_Id;
       Index : Value_Type;
       Value : Value_Type)
    is
@@ -225,7 +225,7 @@ package body GPR2.Project.Tree.View_Builder is
 
    procedure Set_Attribute
      (Self   : in out Object;
-      Attr   : Registry.Attribute.Qualified_Name;
+      Attr   : Q_Attribute_Id;
       Index  : Value_Type;
       Values : Containers.Value_List)
    is
