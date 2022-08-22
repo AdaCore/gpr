@@ -2,6 +2,6 @@
 with "lib2";
 with "lib3";
 
-abstract project Demo is
+abstract project Demo2 is
    for Source_Dirs use ();
-end Demo;
+end Demo2;
