@@ -86,4 +86,5 @@ private
 
    function Is_Defined (Self : Object) return Boolean is
      (Self.Data.Path.Is_Defined);
+
 end GPR2.Project.Tree.View_Builder;

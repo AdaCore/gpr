@@ -79,8 +79,8 @@ is
    -------------------
 
    procedure Display_Paths is
-      Obj_Path : Path_Name.Set.Object;
       Curr_Dir : constant String := Directories.Current_Directory;
+      Obj_Path : Path_Name.Set.Object;
 
       function Mask_Current (Dir : String) return String is
         (if Dir (Dir'First .. Dir'Last - 1) = Curr_Dir

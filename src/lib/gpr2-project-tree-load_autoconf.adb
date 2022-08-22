@@ -532,7 +532,8 @@ begin
       --  3- we then reload the project with the configuration
 
       Self.Load
-        (Root_Project, Context,
+        (Root_Project,
+         Context,
          File_Reader      => File_Reader,
          Build_Path       => Build_Path,
          Subdirs          => Subdirs,
