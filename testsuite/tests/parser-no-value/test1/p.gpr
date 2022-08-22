@@ -1,0 +1,5 @@
+with "withed";
+
+project P is
+   for Runtime ("Ada") use Withed.Runtime;
+end P;
