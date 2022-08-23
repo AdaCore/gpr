@@ -1,3 +1,9 @@
+#
+#  Copyright (C) 2020-2022, AdaCore
+#
+#  SPDX-License-Identifier: Apache-2.0
+#
+
 from __future__ import annotations
 from ctypes import CDLL, c_char_p, c_int, POINTER, byref
 from functools import partial
