@@ -1,3 +1,9 @@
+#
+#  Copyright (C) 2020-2022, AdaCore
+#
+#  SPDX-License-Identifier: Apache-2.0
+#
+
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from gpr2.capi import LibGPR2

@@ -110,3 +110,12 @@ with the GNAT toolset itself.
 If you read this from the [GitHub repository](https://github.com/AdaCore/gpr),
 please [open issues](https://github.com/AdaCore/gpr/issues) to send questions
 and bug reports.
+
+LICENSE
+-------
+
+The gpr2 library (gpr2.gpr), and bindings (gpr2-c.gpr, gpr2-python.gpr) are
+licensed under Apache License, Version 2.0 (see LICENSE).
+
+The gpr2 tools (gpr2-name.gpr, gpr2-tools.gpr) are licensed under GNU General
+Public License, Version 3 or later (see COPYING3).
