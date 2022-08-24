@@ -1,0 +1,5 @@
+description:
+    This test checks that a proper error message is displayed when we
+    fail to evaluate the right-hand side of an expression for attribute
+    declaration of variable declaration
+driver: python_script

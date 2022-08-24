@@ -1,0 +1,5 @@
+with "withed";
+
+project P is
+   Runtime := Withed.Runtime;
+end P;

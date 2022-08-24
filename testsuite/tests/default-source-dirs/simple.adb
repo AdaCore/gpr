@@ -1,24 +1,6 @@
 --
 --  Copyright (C) 2011-2022, AdaCore
 --
+--  SPDX-License-Identifier: Apache-2.0
+--
 
-package body Simple is
-
-   function Inc (X : Integer) return Integer
-   is
-   begin
-      return X + 1;
-   end Inc;
-
---     function Dec (X : Integer) return Integer
---     is
---     begin
---        return X - 1;
---     end Dec;
-
---     procedure Interface is
---     begin
---        null;
---     end;
-
-end Simple;

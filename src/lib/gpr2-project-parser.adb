@@ -1,26 +1,8 @@
-------------------------------------------------------------------------------
---                                                                          --
---                           GPR2 PROJECT MANAGER                           --
---                                                                          --
---                    Copyright (C) 2019-2022, AdaCore                      --
---                                                                          --
--- This library is free software;  you can redistribute it and/or modify it --
--- under terms of the  GNU General Public License  as published by the Free --
--- Software  Foundation;  either version 3,  or (at your  option) any later --
--- version. This library is distributed in the hope that it will be useful, --
--- but WITHOUT ANY WARRANTY;  without even the implied warranty of MERCHAN- --
--- TABILITY or FITNESS FOR A PARTICULAR PURPOSE.                            --
---                                                                          --
--- As a special exception under Section 7 of GPL version 3, you are granted --
--- additional permissions described in the GCC Runtime Library Exception,   --
--- version 3.1, as published by the Free Software Foundation.               --
---                                                                          --
--- You should have received a copy of the GNU General Public License and    --
--- a copy of the GCC Runtime Library Exception along with this program;     --
--- see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see    --
--- <http://www.gnu.org/licenses/>.                                          --
---                                                                          --
-------------------------------------------------------------------------------
+--
+--  Copyright (C) 2019-2022, AdaCore
+--
+--  SPDX-License-Identifier: Apache-2.0
+--
 
 with Ada.Characters.Conversions;
 with Ada.Characters.Handling;
@@ -1276,7 +1258,7 @@ package body GPR2.Project.Parser is
          Indexed_Values : Indexed_Item_Values;
       end record
         with Dynamic_Predicate =>
-          (if Item_Values.Single then Item_Values.Values.Length = 1);
+          (if Item_Values.Single then Item_Values.Values.Length <= 1);
       --  Indexed_Values is filled only in Get_Attribute_Ref when attribute
       --  allows index and index is not provided in the reference.
 
@@ -1287,6 +1269,8 @@ package body GPR2.Project.Parser is
       Unfilled_Indexed_Values : constant Indexed_Item_Values := (others => <>);
 
       Empty_Item_Values : constant Item_Values := (others => <>);
+      No_Values         : constant Item_Values := (Single => True,
+                                                   others => <>);
 
       function Missing_Project_Error_Level return Message.Level_Value is
         (if Pre_Conf_Mode then Message.Warning else Message.Error);
@@ -1559,7 +1543,7 @@ package body GPR2.Project.Parser is
                   "cannot have a reference to a limited project",
                   Get_Source_Reference (Self.File, Node)));
 
-            return Empty_Item_Values;
+            return No_Values;
          end if;
 
          --  For a project/attribute reference we need to check the attribute
@@ -1593,7 +1577,7 @@ package body GPR2.Project.Parser is
                end if;
             end if;
 
-            return Empty_Item_Values;
+            return No_Values;
          end if;
 
          if Index.Is_Defined and then Def.Index_Type = PRA.No_Index then
@@ -1603,7 +1587,7 @@ package body GPR2.Project.Parser is
                   "attribute """ & PRA.Image (Q_Name) & """ cannot have index",
                   Get_Source_Reference (Self.File, Node)));
 
-            return Empty_Item_Values;
+            return No_Values;
          end if;
 
          --  If the attribute is not found or not yet resolved we need
@@ -1874,6 +1858,8 @@ package body GPR2.Project.Parser is
                   Sep : constant Value_Type := Get_Parameter (2);
 
                begin
+                  Result.Single := False;
+
                   for V of Builtin.External_As_List (Context, Var, Sep) loop
                      New_Item := True;
                      Record_Value
@@ -2714,13 +2700,7 @@ package body GPR2.Project.Parser is
 
          Traverse (Gpr_Node (Node), Parser'Access);
 
-         if Result.Values.Is_Empty
-           and then Result.Indexed_Values = Unfilled_Indexed_Values
-         then
-            return Empty_Item_Values;
-         else
-            return Result;
-         end if;
+         return Result;
       end Get_Term_List;
 
       ----------------------
@@ -2791,7 +2771,7 @@ package body GPR2.Project.Parser is
                end;
             else
                Error;
-               return Empty_Item_Values;
+               return No_Values;
             end if;
          end Get_Pack_Var;
 
@@ -2811,7 +2791,7 @@ package body GPR2.Project.Parser is
                   From_View  => View.Extended_Root,
                   Source_Ref => Source_Ref);
 
-               if Result /= Empty_Item_Values then
+               if Result /= No_Values then
                   return Result;
                end if;
             end if;
@@ -2822,14 +2802,14 @@ package body GPR2.Project.Parser is
                   From_View  => Parent,
                   Source_Ref => Source_Ref);
 
-               if Result /= Empty_Item_Values then
+               if Result /= No_Values then
                   return Result;
                end if;
             end if;
 
             Error;
 
-            return Empty_Item_Values;
+            return No_Values;
          end Try_Visible_In;
 
       begin
@@ -2942,7 +2922,7 @@ package body GPR2.Project.Parser is
             end if;
          end if;
 
-         return Empty_Item_Values;
+         return No_Values;
       end Get_Variable_Ref;
 
       -------------------------
@@ -3398,7 +3378,7 @@ package body GPR2.Project.Parser is
                   end loop;
                end if;
 
-            elsif Values /= Empty_Item_Values or else not Values.Single then
+            elsif Values /= No_Values then
                if I_Sloc.Is_Defined and then PRA.Exists (Q_Name) then
                   I_Sloc.Set_Case
                     (PRA.Is_Case_Sensitive
@@ -3878,7 +3858,32 @@ package body GPR2.Project.Parser is
                end;
             end if;
 
-            if Values.Single then
+            if Values = No_Values then
+               --  Do not report failure of evaluating the left-hand side if
+               --  errors have already been reported: failure to get the actual
+               --  value(s) is most certainly a direct consequence of the
+               --  previous error.
+               --
+               --  Detecting such error without other explicit error is not
+               --  expected, so this is just a safe guard, not expected to be
+               --  covered by tests.
+
+               if not Tree.Log_Messages.Has_Error
+                 and then Non_Fatal_Error.Is_Empty
+               then
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Self.File, Name),
+                        Message =>
+                          "internal error evaluating the value for """ &
+                          Get_Value_Type (Single_Tok_Node (Name)) &
+                          '"'));
+               end if;
+
+               return;
+
+            elsif Values.Single then
                V := GPR2.Project.Variable.Create
                  (Name  =>
                     Get_Identifier_Reference
