@@ -1,1 +1,2 @@
 p.gpr:2:08: error: source list file /this_file_does_not_exist.txt not found
+p2.gpr:2:08: error: excluded source list file /this_file_does_not_exist2.txt not found
