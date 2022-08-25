@@ -1,0 +1,3 @@
+project P2 is
+   for Excluded_Source_List_File use "this_file_does_not_exist2.txt";
+end P2;

@@ -1,0 +1,5 @@
+description:
+    tests error message when source list file is missing
+driver: build_and_run
+project_file: test
+main: main
