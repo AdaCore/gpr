@@ -1839,13 +1839,13 @@ The name of a stand-alone library, specified with attribute
 
 The most prominent characteristic of a stand-alone library is that it offers a
 distinction between interface units and implementation units. Only the former
-are visible to units outside the library. A stand-alone library project is thus
-characterized by a third attribute, usually ``Library_Interface``, in addition
-to the two attributes that make a project a Library Project
-(`Library_Name` and `Library_Dir`). This third attribute may also be
-``Interfaces``. ``Library_Interface`` only works when the interface is in Ada
-and takes a list of units as parameter. ``Interfaces`` works for any supported
-language and takes a list of sources as parameter.
+are visible to units outside the library. Thus to define a stand-alone library
+project, one extra attribute, either ``Interfaces`` or ``Library_Interface``,
+must be specified in addition to the two attributes that make a project a
+Library Project (``Library_Name`` and ``Library_Dir``). ``Interfaces`` defines
+the list of sources of the library, in any language, that should be considered
+as library's interface; ``Library_Interface`` is an Ada-specific alternative
+that defines the list of units rather than their containing sources.
 
 .. index:: Library_Interface attribute
 
@@ -1885,10 +1885,8 @@ language and takes a list of sources as parameter.
   finalize the library is embedded, when ``encapsulated`` is used the
   library can furthermore depend only on static libraries (including
   the GNAT runtime). This attribute can be set to ``no`` to make it clear
-  that the library should not be stand-alone in which case the
-  ``Library_Interface`` should not defined. Note that this attribute
-  only applies to shared libraries, so ``Library_Kind`` must be set
-  to `dynamic` or `relocatable`.
+  that the library should not be stand-alone in which case attributes
+  ``Library_Interface`` or ``Interfaces`` should not be defined.
 
   .. code-block:: gpr
 
