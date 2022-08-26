@@ -22,7 +22,7 @@ package GPR2.View_Ids.DAGs is
    procedure Add_Vertex
      (Self         : in out DAG;
       Vertex       : View_Id;
-      Predecessors : View_Ids.Set.Object := View_Ids.Set.Empty_Set)
+      Predecessors : View_Ids.Set.Set := View_Ids.Set.Empty_Set)
      with Pre  => not Self.Contains (Vertex),
           Post => Self.Contains (Vertex);
    --  Adds a node called Vertex to Self and set its predecessors to the
@@ -31,7 +31,7 @@ package GPR2.View_Ids.DAGs is
    procedure Update_Vertex
      (Self         : in out DAG;
       Vertex       : View_Id;
-      Predecessors : View_Ids.Set.Object := View_Ids.Set.Empty_Set)
+      Predecessors : View_Ids.Set.Set := View_Ids.Set.Empty_Set)
      with Post => Self.Contains (Vertex);
    --  Updates or creates a node called Vertex to Self and add to its
    --  predecessors the elements of Predecessors set.
@@ -53,17 +53,17 @@ package GPR2.View_Ids.DAGs is
    --  Updates the internal structure of the DAG.
    --  Circularity is set if a circularity is found during this update.
 
-   function Shortest_Circle (Self : DAG) return GPR2.View_Ids.Vector.Object
+   function Shortest_Circle (Self : DAG) return GPR2.View_Ids.Vector.Vector
      with Pre => Self.Is_Up_To_Date;
    --  Returns the smallest circle, if any, or the empty vector.
 
-   function Topological_Sort (Self : DAG) return View_Ids.Vector.Object
+   function Topological_Sort (Self : DAG) return View_Ids.Vector.Vector
      with Pre => Self.Is_Up_To_Date;
    --  Returns the list of nodes in a topological order
 
    function Shortest_Path
      (Self           : DAG;
-      Source, Target : View_Id) return View_Ids.Vector.Object
+      Source, Target : View_Id) return View_Ids.Vector.Vector
      with Pre => Contains (Self, Source) and then Contains (Self, Target);
    --  Computes the shortest path between two vertices of the DAG.
    --  If target equals to Source then the algorithm tries to find the
@@ -104,7 +104,7 @@ private
       Successors     : Node_Node_Set_Maps.Map;
       Vertex_Names   : Name_Node_Maps.Map;
       Vertex_Ids     : Node_Name_Maps.Map;
-      Sort_Cache     : View_Ids.Vector.Object;
+      Sort_Cache     : View_Ids.Vector.Vector;
       Has_Cycle      : Boolean := False;
       Cache_Valid    : Boolean := True;
       --  Whether the Sort_Cache is valid.

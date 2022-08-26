@@ -1878,7 +1878,7 @@ package body GPR2.Project.Tree is
                --  processing order for the views.
 
                declare
-                  Predecessors : GPR2.View_Ids.Set.Object;
+                  Predecessors : GPR2.View_Ids.Set.Set;
                begin
                   for Import of View.Imports loop
                      Predecessors.Include (Import.Id);
@@ -2043,7 +2043,7 @@ package body GPR2.Project.Tree is
       is
          Data     : constant GPR2.Project.Definition.Ref :=
                       Definition.Get_RW (View);
-         Position : GPR2.View_Ids.Set.Set.Cursor;
+         Position : GPR2.View_Ids.Set.Cursor;
          Inserted : Boolean;
       begin
          Data.Agg_Libraries.Insert (Agg_Library, Position, Inserted);
@@ -2171,7 +2171,7 @@ package body GPR2.Project.Tree is
          --  level handling)
 
          declare
-            Cycle       : GPR2.View_Ids.Vector.Object;
+            Cycle       : GPR2.View_Ids.Vector.Vector;
             Prev        : View.Object;
             Current     : View.Object;
             Circularity : Boolean;
@@ -3235,8 +3235,8 @@ package body GPR2.Project.Tree is
 
       declare
          Closure_Found : Boolean := True;
-         Closure       : GPR2.View_Ids.Set.Object;
-         Position      : GPR2.View_Ids.Set.Set.Cursor;
+         Closure       : GPR2.View_Ids.Set.Set;
+         Position      : GPR2.View_Ids.Set.Cursor;
          Inserted      : Boolean;
       begin
          --  First do a pass on the subtree that starts from root of

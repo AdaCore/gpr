@@ -6,15 +6,7 @@
 
 with Ada.Containers.Hashed_Sets;
 
-package GPR2.View_Ids.Set is
-
-   package Set is new Ada.Containers.Hashed_Sets
-     (GPR2.View_Ids.View_Id,
-      Hash => GPR2.View_Ids.Hash,
-      Equivalent_Elements => "=");
-
-   subtype Object is Set.Set;
-
-   Empty_Set : constant Object := Set.Empty_Set;
-
-end GPR2.View_Ids.Set;
+package GPR2.View_Ids.Set is new Ada.Containers.Hashed_Sets
+  (GPR2.View_Ids.View_Id,
+   Hash => GPR2.View_Ids.Hash,
+   Equivalent_Elements => "=");
