@@ -49,7 +49,7 @@ package GPR2.Project.Parser is
    --  lexing/parsing) or reading a source file from memory instead of disk.
 
    function Parse
-     (Contents        : Unbounded_String;
+     (Contents        : Ada.Strings.Unbounded.Unbounded_String;
       Messages        : out Log.Object;
       Pseudo_Filename : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined)
       return Object;
