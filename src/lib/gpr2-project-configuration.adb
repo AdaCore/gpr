@@ -264,7 +264,7 @@ package body GPR2.Project.Configuration is
       if Configuration_String /= Null_Unbounded_String then
          if Save_Name.Is_Defined then
             declare
-               Output : Ada.Text_IO.File_Type;
+               Output : Text_IO.File_Type;
             begin
                Ada.Text_IO.Create (Output, Ada.Text_IO.Out_File,
                                    String (Save_Name.Value));
@@ -301,10 +301,10 @@ package body GPR2.Project.Configuration is
          end loop;
 
       else
-
          for Msg of Base.Log_Messages loop
             Result.Messages.Append (Msg);
          end loop;
+
          Result.Messages.Append
            (Message.Create
               (Message.Error,

@@ -142,7 +142,7 @@ package body GPR2.Project.Tree is
       Do_Action        : not null access procedure
                            (View : Project.View.Object))
      with Pre => Self.Is_Defined;
-   --  Call Do_Action for View & View's subtree.
+   --  Call Do_Action for View & View's subtree
 
    ---------------------
    -- Add_Tool_Prefix --
@@ -502,7 +502,7 @@ package body GPR2.Project.Tree is
 
       procedure Do_Action (View : Project.View.Object)
         with Pre => View.Is_Defined;
-      --  Call Action for all View's source object having a valid language.
+      --  Call Action for all View's source object having a valid language
 
       ---------------
       -- Do_Action --
@@ -1107,10 +1107,12 @@ package body GPR2.Project.Tree is
    begin
       Self.Self := Self'Unchecked_Access;
 
-      --  Let ada or gpr parser use this reader.
+      --  Let ada or gpr parser use this reader
+
       Self.File_Reader_Ref := File_Reader;
 
       --  If re-loading, invalidate the views cache
+
       for V of Self.Views_Set loop
          Definition.Get (V).Clear_Cache;
       end loop;
@@ -1120,6 +1122,7 @@ package body GPR2.Project.Tree is
 
       if Config.Is_Defined then
          --  Set Tree for this config project
+
          Self.Conf := Config;
 
          for M of Config.Log_Messages loop
@@ -1231,7 +1234,6 @@ package body GPR2.Project.Tree is
          Def := Definition.Get (Self.Root);
 
          if Config.Is_Defined and then Config.Has_Externals then
-
             for E of Config.Externals loop
                if not Def.Externals.Contains (E) then
                   Def.Externals.Append (E);
@@ -1281,8 +1283,8 @@ package body GPR2.Project.Tree is
       end if;
 
       if not Self.Pre_Conf_Mode and then Self.Messages.Has_Error then
-         raise Project_Error with Gpr_Path.Value &
-           ": fatal error, cannot load the project tree";
+         raise Project_Error
+           with Gpr_Path.Value & ": fatal error, cannot load the project tree";
       end if;
    end Load;
 
@@ -1305,8 +1307,7 @@ package body GPR2.Project.Tree is
                            GPR2.Path_Name.Set.Empty_Set;
       Pre_Conf_Mode    : Boolean                   := False;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference)
-   is
+                           GPR2.File_Readers.No_File_Reader_Reference) is
    begin
       if not Filename.Is_Directory then
          Self.Load
@@ -1323,6 +1324,7 @@ package body GPR2.Project.Tree is
             File_Reader      => File_Reader);
       else
          --  Load an empty project in directory "Filename"
+
          View_Builder.Load
            (Self,
             View_Builder.Create (Filename, "Default"),
@@ -1380,8 +1382,7 @@ package body GPR2.Project.Tree is
       Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
       Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined;
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
-                            GPR2.File_Readers.No_File_Reader_Reference)
-   is
+                            GPR2.File_Readers.No_File_Reader_Reference) is
    begin
       if not Filename.Is_Directory then
          Self.Load_Autoconf
@@ -1429,6 +1430,8 @@ package body GPR2.Project.Tree is
 
       Self.Conf := PC.Load (Filename);
       Definition.Bind_Configuration_To_Tree (Self.Conf, Self.Self);
+
+      --  Copy all configuration message into the main tree's log message list
 
       for M of Self.Conf.Log_Messages loop
          Self.Messages.Append (M);
@@ -1660,6 +1663,7 @@ package body GPR2.Project.Tree is
 
       begin
          --  If the view is already defined just return it
+
          if not View.Is_Defined then
             declare
                Data : Definition.Data := (if Project.Kind = Project_Definition
@@ -1684,6 +1688,7 @@ package body GPR2.Project.Tree is
 
                if Status = Extended then
                   Data.Extending := Definition.Weak (Parent);
+
                elsif not Extends_Ctx.Is_Empty then
                   Data.Extending :=
                     Definition.Weak (Extends_Ctx.First_Element);
@@ -1701,6 +1706,7 @@ package body GPR2.Project.Tree is
                Data.Context     := Context;
                Data.Is_Root     := Status = Root;
                Data.Unique_Id   := Id;
+
                View := Register_View (Data);
             end;
 
@@ -1807,12 +1813,10 @@ package body GPR2.Project.Tree is
                      end if;
 
                      if Limited_With then
-                        Data.Limited_Imports.Insert
-                          (Prj.Name, Imported_View);
+                        Data.Limited_Imports.Insert (Prj.Name, Imported_View);
 
                      else
-                        Data.Imports.Insert
-                          (Prj.Name, Imported_View);
+                        Data.Imports.Insert (Prj.Name, Imported_View);
                      end if;
 
                      Data.Closure.Include (Prj.Name, Imported_View);

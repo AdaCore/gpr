@@ -54,8 +54,8 @@ package body GPR2.Log is
    ------------
 
    procedure Append (Self : in out Object; Message : GPR2.Message.Object) is
-      Index : constant String :=
-                Message.Format (Levels => (others => GPR2.Message.Short));
+      Index    : constant String :=
+                   Message.Format (Levels => (others => GPR2.Message.Short));
       Position : Containers.Value_Type_Set.Cursor;
       Inserted : Boolean;
    begin

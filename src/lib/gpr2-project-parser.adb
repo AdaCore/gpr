@@ -349,7 +349,7 @@ package body GPR2.Project.Parser is
    -----------
 
    function Parse
-     (Contents        : Ada.Strings.Unbounded.Unbounded_String;
+     (Contents        : Unbounded_String;
       Messages        : out Log.Object;
       Pseudo_Filename : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined)
       return Object
@@ -358,9 +358,10 @@ package body GPR2.Project.Parser is
       use Ada.Strings.Wide_Wide_Unbounded;
 
       Filename : constant GPR2.Path_Name.Object :=
-                   (if Pseudo_Filename.Is_Defined then Pseudo_Filename
+                   (if Pseudo_Filename.Is_Defined
+                    then Pseudo_Filename
                     else GPR2.Path_Name.Create_File
-                      ("/string_input/default.gpr"));
+                           ("/string_input/default.gpr"));
       Context  : constant Analysis_Context := Create_Context ("UTF-8");
       Unit     : Analysis_Unit;
       Project  : Object;
@@ -440,8 +441,8 @@ package body GPR2.Project.Parser is
       Messages      : in out Log.Object;
       File_Reader   : Gpr_Parser_Support.File_Readers.File_Reader_Reference :=
                         Gpr_Parser_Support.File_Readers.
-                          No_File_Reader_Reference
-     ) return Object
+                          No_File_Reader_Reference)
+      return Object
    is
       use Ada.Characters.Conversions;
       use Ada.Strings.Wide_Wide_Unbounded;
@@ -990,9 +991,9 @@ package body GPR2.Project.Parser is
             Project.Name := To_Unbounded_String
               (To_UTF8 (F_Project_Name (N).Text));
 
-            if Name (Project)
-              /= Name_Type (To_UTF8 (F_End_Name (N).Text))
-            then
+            --  Check that project name is consistent with the end declaration
+
+            if Name (Project) /= Name_Type (To_UTF8 (F_End_Name (N).Text)) then
                Messages.Append
                  (GPR2.Message.Create
                     (Level   => Message.Error,
@@ -3646,6 +3647,7 @@ package body GPR2.Project.Parser is
                      Sloc    => Sloc,
                      Message =>
                        "project_name.package_name reference is required"));
+
             elsif Is_Limited_Import (Self, Project) then
                Tree.Log_Messages.Append
                  (Message.Create
@@ -3706,6 +3708,7 @@ package body GPR2.Project.Parser is
             if not V_Type.Is_Null then
                declare
                   package PTS renames GPR2.Project.Typ.Set.Set;
+
                   CT : PTS.Cursor;
 
                   Type_N     : constant Identifier_List :=
