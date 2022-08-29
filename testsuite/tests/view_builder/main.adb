@@ -21,17 +21,17 @@ is
    Tree     : Project.Tree.Object;
    Ctxt     : GPR2.Context.Object;
 
-   procedure Print_Attrs (Pck : GPR2.Optional_Package_Id) is
+   procedure Print_Attrs (Pck : GPR2.Package_Id) is
    begin
       for A of Tree.Root_Project.Attributes (Pack        => Pck,
                                              With_Config => False)
       loop
          declare
             use type PRA.Value_Kind;
-            Attr_Name : constant String := Image (A.Name.Id);
+            Attr_Name : constant String := Image (A.Name.Id.Attr);
             First     : Boolean := True;
          begin
-            if Pck /= No_Package then
+            if Pck /= Project_Level_Scope then
                Ada.Text_IO.Put (Image (Pck) & "'");
             end if;
 
@@ -66,11 +66,11 @@ is
 begin
    Src_Dirs.Append ("src1");
    Src_Dirs.Append ("src2");
-   Root.Set_Attribute (PRA.Create (PRA.Source_Dirs, No_Package), Src_Dirs);
-   Root.Set_Attribute (PRA.Create (PRA.Object_Dir, No_Package), "obj");
+   Root.Set_Attribute (PRA.Source_Dirs, Src_Dirs);
+   Root.Set_Attribute (PRA.Object_Dir, "obj");
    Mains.Append ("main.adb");
-   Root.Set_Attribute (PRA.Create (PRA.Main, No_Package), Mains);
-   Root.Set_Attribute (PRA.Create (PRA.Executable, PRP.Builder),
+   Root.Set_Attribute (PRA.Main, Mains);
+   Root.Set_Attribute (PRA.Builder.Executable,
                        "main.adb", "mymain");
 
    View_Builder.Load_Autoconf (Tree, Root, Ctxt);
@@ -80,7 +80,7 @@ begin
    end if;
 
    Ada.Text_IO.Put_Line ("Attributes:");
-   Print_Attrs (No_Package);
+   Print_Attrs (Project_Level_Scope);
    Print_Attrs (PRP.Builder);
 
    Ada.Text_IO.Put_Line ("Sources:");

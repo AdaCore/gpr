@@ -29,12 +29,13 @@ procedure Main is
       end if;
    end Print_Message;
 
-   procedure Print_Variable (Variable : GPR2.Project.Variable.Object;
-                             Pack     : GPR2.Optional_Package_Id := GPR2.No_Package) is
+   procedure Print_Variable
+     (Variable : GPR2.Project.Variable.Object;
+      Pack     : GPR2.Package_Id := GPR2.Project_Level_Scope) is
       use GPR2.Project.Registry.Attribute;
       use type GPR2.Package_Id;
    begin
-      if Pack /= GPR2.No_Package then
+      if Pack /= GPR2.Project_Level_Scope then
          Ada.Text_IO.Put (GPR2.Image (Pack) & '.');
       end if;
 

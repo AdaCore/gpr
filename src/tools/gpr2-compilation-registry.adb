@@ -37,12 +37,13 @@ with GPR2.Compilation.Slave.List;
 with GPR2.Compilation.Sync;
 with GPR2.Message;
 with GPR2.Project.Registry.Attribute;
-with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference;
 
 with GPRtools.Util;
 
 package body GPR2.Compilation.Registry is
+
+   package PRA renames GPR2.Project.Registry.Attribute;
 
    use Ada.Exceptions;
 
@@ -723,8 +724,6 @@ package body GPR2.Compilation.Registry is
          end loop;
       end Insert;
 
-      package Attrs renames GPR2.Project.Registry.Attribute;
-
       Project  : constant GPR2.Project.View.Object :=
                    Tree.Root_Project;
 
@@ -733,33 +732,23 @@ package body GPR2.Compilation.Registry is
 
       --  Check for Root_Dir attribute and Excluded_Patterns
 
-      if Project.Has_Attribute (Attrs.Excluded_Patterns,
-                                GPR2.Project.Registry.Pack.Remote)
+      if Project.Has_Attribute (PRA.Remote.Excluded_Patterns)
       then
          Insert
            (Excluded_Patterns,
-            Project.Attribute
-              (Attrs.Excluded_Patterns,
-               GPR2.Project.Registry.Pack.Remote).Values);
+            Project.Attribute (PRA.Remote.Excluded_Patterns).Values);
 
-      elsif Project.Has_Attribute (Attrs.Included_Patterns,
-                                   GPR2.Project.Registry.Pack.Remote)
+      elsif Project.Has_Attribute (PRA.Remote.Included_Patterns)
       then
          Insert
            (Included_Patterns,
-            Project.Attribute
-              (Attrs.Included_Patterns,
-               GPR2.Project.Registry.Pack.Remote).Values);
+            Project.Attribute (PRA.Remote.Included_Patterns).Values);
 
-      elsif Project.Has_Attribute
-        (Attrs.Included_Artifacts_Patterns,
-         GPR2.Project.Registry.Pack.Remote)
+      elsif Project.Has_Attribute (PRA.Remote.Included_Artifact_Patterns)
       then
          Insert
            (Included_Artifact_Patterns,
-            Project.Attribute
-              (Attrs.Included_Artifacts_Patterns,
-               GPR2.Project.Registry.Pack.Remote).Values);
+            Project.Attribute (PRA.Remote.Included_Artifact_Patterns).Values);
       end if;
 
       if not Exists (To_String (Root_Dir))
@@ -843,18 +832,13 @@ package body GPR2.Compilation.Registry is
    is
       use GNAT.OS_Lib;
 
-      package Attrs renames GPR2.Project.Registry.Attribute;
-
       Root_Dir : constant String := Project.Dir_Name.Value;
    begin
-      if Project.Has_Attribute (Attrs.Root_Dir,
-                                GPR2.Project.Registry.Pack.Remote)
+      if Project.Has_Attribute (PRA.Remote.Root_Dir)
       then
          declare
             RD : constant String :=
-                   Project.Attribute
-                     (Attrs.Root_Dir,
-                      GPR2.Project.Registry.Pack.Remote).Value.Text;
+                   Project.Attribute (PRA.Remote.Root_Dir).Value.Text;
          begin
             if Is_Absolute_Path (RD) then
                return RD;
@@ -1428,11 +1412,6 @@ package body GPR2.Compilation.Registry is
 
          else
             null;
---            if Opt.Verbosity_Level = Opt.High then
---               Put_Line
---                 ("warning: selector in " & Selector_Status'Image (Status)
---                  & " state");
---            end if;
          end if;
 
          Sockets.Empty (R_Set);

@@ -1,0 +1,5 @@
+Case 1 - Adding a custom attribute without pack
+raised ADA.ASSERTIONS.ASSERTION_ERROR : failed precondition
+Test OK !
+Case 2 - Adding a custom attribute with pack
+Test OK !

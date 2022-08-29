@@ -72,28 +72,25 @@ package GPR2_GNATCOLL_Projects is
    --  GNATCOLL.Projects.Create function conversion
 
    function Register_New_Attribute
-     (Name                 : Optional_Attribute_Id;
-      Pkg                  : Optional_Package_Id := No_Package;
+     (Name                 : Q_Attribute_Id;
       Is_List              : Boolean := False;
       Indexed              : Boolean := False;
       Case_Sensitive_Index : Boolean := False) return String;
    --  GNATCOLL.Projects.Register_New_Attribute conversion
 
    function Attribute_Value
-     (Project        : GPR2.Project.View.Object;
-      Attribute_Name : Optional_Attribute_Id;
-      Package_Name   : Optional_Package_Id := No_Package;
-      Index          : String := "";
-      Default        : String := "";
-      Use_Extended   : Boolean := False) return String;
+     (Project      : GPR2.Project.View.Object;
+      Name         : Q_Attribute_Id;
+      Index        : String := "";
+      Default      : String := "";
+      Use_Extended : Boolean := False) return String;
    --  GNATCOLL.Projects.Attribute_Value conversion (string attribute)
 
    function Attribute_Value
-     (Project        : GPR2.Project.View.Object;
-      Attribute_Name : Optional_Attribute_Id;
-      Package_Name   : Optional_Package_Id := No_Package;
-      Index          : String := "";
-      Use_Extended   : Boolean := False)
+     (Project      : GPR2.Project.View.Object;
+      Name         : Q_Attribute_Id;
+      Index        : String := "";
+      Use_Extended : Boolean := False)
       return GNAT.Strings.String_List_Access;
    --  GNATCOLL.Projects.Attribute_Value conversion (string list attribute)
 

@@ -40,7 +40,7 @@ procedure Main is
       if Full then
          for A in Prj.Attributes (With_Defaults => False).Iterate loop
             Text_IO.Put
-              ("A:   " & Image (Attribute.Set.Element (A).Name.Id));
+              ("A:   " & Image (Attribute.Set.Element (A).Name.Id.Attr));
             Text_IO.Put (" ->");
 
             for V of Attribute.Set.Element (A).Values loop
@@ -49,9 +49,9 @@ procedure Main is
             Text_IO.New_Line;
          end loop;
 
-         for A in Prj.Attributes.Filter (Object_Dir).Iterate loop
+         for A in Prj.Attributes.Filter (Object_Dir.Attr).Iterate loop
             Text_IO.Put
-              ("A2:  " & Image (Attribute.Set.Element (A).Name.Id));
+              ("A2:  " & Image (Attribute.Set.Element (A).Name.Id.Attr));
             Text_IO.Put (" ->");
 
             for V of Attribute.Set.Element (A).Values loop
@@ -60,9 +60,9 @@ procedure Main is
             Text_IO.New_Line;
          end loop;
 
-         for A of Prj.Attributes.Filter (Object_Dir) loop
+         for A of Prj.Attributes.Filter (Object_Dir.Attr) loop
             Text_IO.Put_Line
-              ("A3:  " & Image (A.Name.Id) & " -> " & A.Value.Text);
+              ("A3:  " & Image (A.Name.Id.Attr) & " -> " & A.Value.Text);
          end loop;
 
          if Prj.Has_Variables then

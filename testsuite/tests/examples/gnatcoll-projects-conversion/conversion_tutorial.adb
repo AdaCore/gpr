@@ -298,8 +298,7 @@ begin
    --  GNATCOLL.Projects.Register_New_Attribute
    Put_Line ("Register_New_Attribute returned:" &
                Register_New_Attribute
-               (Name                 => +"Test",
-                Pkg                  => +"Conversion_Tutorial",
+               (Name                 => (+"Conversion_Tutorial", +"Test"),
                 Is_List              => True,
                 Indexed              => True,
                 Case_Sensitive_Index => True));
@@ -308,18 +307,17 @@ begin
       Languages : GNAT.Strings.String_List_Access;
    begin
       Languages := Attribute_Value
-        (Project        => Project_Tree.Root_Project,
-         Attribute_Name => +"Languages",
-         Package_Name   => +"");
+        (Project => Project_Tree.Root_Project,
+         Name    => (+"", +"Languages"));
 
       if Languages'Length > 0 then
          Put_Line ("Languages'First:" & Languages (Languages'First).all);
       end if;
 
       Put_Line ("Attribute_Value(Object_Dir):" &
-                  Attribute_Value (Project        => Project_Tree.Root_Project,
-                                   Attribute_Name => +"Object_Dir",
-                                   Package_Name   => +""));
+                  Attribute_Value
+                  (Project => Project_Tree.Root_Project,
+                   Name    => (+"", +"Object_Dir")));
    end;
 
    Project_Tree.Unload;

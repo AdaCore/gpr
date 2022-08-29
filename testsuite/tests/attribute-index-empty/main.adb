@@ -19,36 +19,22 @@ procedure Main is
    Context      : GPR2.Context.Object;
    use GPR2;
 
-   procedure Print_Attributes (Pack : GPR2.Optional_Package_Id;
-                               Name : GPR2.Optional_Attribute_Id);
+   procedure Print_Attributes (Name : Q_Attribute_Id);
    procedure Print_Messages;
    procedure Test (Project_Name : GPR2.Filename_Type);
 
-   procedure Print_Attributes (Pack : GPR2.Optional_Package_Id;
-                               Name : GPR2.Optional_Attribute_Id) is
+   procedure Print_Attributes (Name : Q_Attribute_Id) is
       Attributes : GPR2.Project.Attribute.Set.Object;
       Header     : constant String :=
-                     (if Pack = No_Package
-                      then Image (Name)
-                      else Image (Pack) & "." & Image (Name));
+                     (if Name.Pack = Project_Level_Scope
+                      then Image (Name.Attr)
+                      else Image (Name.Pack)
+                      & "." & Image (Name.Attr));
    begin
-      if Name = No_Attribute then
-         Attributes := Tree.Root_Project.Attributes
-           (Pack,
-            With_Defaults => False,
-            With_Config   => False);
-      elsif Pack = No_Package then
-         Attributes := Tree.Root_Project.Attributes
-           (Name,
-            With_Defaults => False,
-            With_Config   => False);
-      elsif Tree.Root_Project.Has_Package (Pack, With_Defaults => False) then
-         Attributes := Tree.Root_Project.Attributes
-           (Pack,
-            Name,
-            With_Defaults => False,
-            With_Config   => False);
-      end if;
+      Attributes := Tree.Root_Project.Attributes
+        (Name          => Name,
+         With_Defaults => False,
+         With_Config   => False);
 
       for A of Attributes loop
          declare
@@ -109,7 +95,7 @@ procedure Main is
            (GPR2.Project.Ensure_Extension (Project_Name),
             GPR2.Path_Name.No_Resolution),
          Context  => Context);
-      Print_Attributes (+"Compiler", +"Default_Switches");
+      Print_Attributes ((+"Compiler", +"Default_Switches"));
    exception
       when Project_Error =>
          Print_Messages;

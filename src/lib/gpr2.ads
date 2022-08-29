@@ -229,30 +229,48 @@ package GPR2 is
    function Image (Id : Optional_Attribute_Id) return String;
    function Hash (Id : Optional_Attribute_Id) return Ada.Containers.Hash_Type;
 
-   type Optional_Package_Id is new Natural with Default_Value => 0;
-   subtype Package_Id is Optional_Package_Id range
-     1 .. Optional_Package_Id'Last;
-   No_Package : constant Optional_Package_Id;
-   function "+" (Name : Optional_Name_Type) return Optional_Package_Id;
-   function Name (Id : Optional_Package_Id) return Optional_Name_Type;
-   function Image (Id : Optional_Package_Id) return String;
-   function Hash (Id : Optional_Package_Id) return Ada.Containers.Hash_Type;
+   type Package_Id is new Natural with Default_Value => 0;
+   Project_Level_Scope : constant Package_Id;
+
+   function "+" (Name : Optional_Name_Type) return Package_Id;
+   function Name (Id : Package_Id) return Optional_Name_Type;
+   function Image (Id : Package_Id) return String;
+   function Hash (Id : Package_Id) return Ada.Containers.Hash_Type;
+
+   type Q_Optional_Attribute_Id is record
+      Pack : Package_Id;
+      Attr : Optional_Attribute_Id;
+   end record;
+   --  A qualified name is an attribute name possibly prefixed with a package
+   --  name. It is the only way to create a non-ambiguous reference to an
+   --  attribute.
+
+   subtype Q_Attribute_Id is Q_Optional_Attribute_Id
+     with Dynamic_Predicate => Q_Attribute_Id.Attr in Attribute_Id'Range;
+
+   No_Attribute_Id : constant Q_Optional_Attribute_Id;
+
+   function "<" (Left, Right : Q_Attribute_Id) return Boolean;
+   function Image (Name : Q_Attribute_Id) return String;
+   --  Returns qualified name image
 
 private
 
    use Ada;
    use Ada.Strings.Unbounded;
 
-   No_Name      : constant Optional_Name_Type := "";
-   No_Value     : constant Value_Type := "";
-   No_Filename  : constant Filename_Optional := "";
-   No_Time      : Calendar.Time renames GNATCOLL.Utils.No_Time;
-   No_Language  : constant Language_Id := 0;
-   Ada_Language : constant Language_Id := 1;
-   C_Language   : constant Language_Id := 2;
-   CPP_Language : constant Language_Id := 3;
-   No_Attribute : constant Optional_Attribute_Id := 0;
-   No_Package   : constant Optional_Package_Id := 0;
+   No_Name             : constant Optional_Name_Type := "";
+   No_Value            : constant Value_Type := "";
+   No_Filename         : constant Filename_Optional := "";
+   No_Time             : Calendar.Time renames GNATCOLL.Utils.No_Time;
+   No_Language         : constant Language_Id := 0;
+   Ada_Language        : constant Language_Id := 1;
+   C_Language          : constant Language_Id := 2;
+   CPP_Language        : constant Language_Id := 3;
+   No_Attribute        : constant Optional_Attribute_Id := 0;
+   Project_Level_Scope : constant Package_Id := 0;
+   No_Attribute_Id     : constant Q_Optional_Attribute_Id :=
+                           (Project_Level_Scope, No_Attribute);
 
    function Image (Kind : Project_Kind) return String is
      ((case Kind is
@@ -361,14 +379,22 @@ private
 
    Pck_Id_List : Name_List;
 
-   function "+" (Name : Optional_Name_Type) return Optional_Package_Id is
-     (Optional_Package_Id (Id (Pck_Id_List, Name)));
-   function Name (Id : Optional_Package_Id) return Optional_Name_Type is
+   function "+" (Name : Optional_Name_Type) return Package_Id is
+     (Package_Id (Id (Pck_Id_List, Name)));
+   function Name (Id : Package_Id) return Optional_Name_Type is
      (Name (Pck_Id_List, Natural (Id)));
-   function Image (Id : Optional_Package_Id) return String is
+   function Image (Id : Package_Id) return String is
      (Image (Pck_Id_List, Natural (Id)));
-   function Hash (Id : Optional_Package_Id) return Ada.Containers.Hash_Type is
+   function Hash (Id : Package_Id) return Ada.Containers.Hash_Type is
      (Ada.Containers.Hash_Type (Id));
+
+   function "<" (Left, Right : Q_Attribute_Id) return Boolean is
+     (if Left.Pack /= Right.Pack then Left.Pack < Right.Pack
+      else Left.Attr < Right.Attr);
+   function Image (Name : Q_Attribute_Id) return String is
+     (if Name.Pack = Project_Level_Scope
+      then Image (Name.Attr)
+      else Image (Name.Pack) & "'" & Image (Name.Attr));
 
    function Is_Debug (Mode : Character) return Boolean is
      (Debug (Mode));

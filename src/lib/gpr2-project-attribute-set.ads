@@ -129,6 +129,8 @@ package GPR2.Project.Attribute.Set is
 
 private
 
+   package PRA renames GPR2.Project.Registry.Attribute;
+
    --  An attribute set object is:
    --
    --     1. A map at the first level with the attribute name as key
@@ -179,9 +181,9 @@ private
    Empty_Set : constant Object := (others => <>);
 
    function Has_Languages (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Languages));
+     (Self.Contains (Name => PRA.Languages.Attr));
 
    function Languages (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Languages));
+     (Self.Element (Name => PRA.Languages.Attr));
 
 end GPR2.Project.Attribute.Set;

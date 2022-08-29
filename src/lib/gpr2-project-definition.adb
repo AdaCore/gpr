@@ -200,7 +200,7 @@ package body GPR2.Project.Definition is
          use type Project.Attribute.Object;
 
          procedure Check_Illegal_Suffix
-           (Attribute_Name : Attribute_Id;
+           (Attribute_Name : Q_Attribute_Id;
             Language       : Language_Id;
             Attribute      : Project.Attribute.Object)
            with Pre => Attribute /= Project.Attribute.Undefined;
@@ -213,7 +213,7 @@ package body GPR2.Project.Definition is
          procedure Check_Casing is
             Casing : Project.Attribute.Object;
          begin
-            if View.Check_Attribute (PRP.Naming, PRA.Casing, Result => Casing)
+            if View.Check_Attribute (PRA.Naming.Casing, Result => Casing)
               and then ACH.To_Lower (Casing.Value.Text) not in
               "lowercase" | "uppercase" | "mixedcase"
             then
@@ -227,8 +227,7 @@ package body GPR2.Project.Definition is
 
          procedure Check_Dot_Replacement is
             Dot_Replacement : constant Project.Attribute.Object :=
-                                View.Attribute
-                                  (PRA.Dot_Replacement, PRP.Naming);
+                                View.Attribute (PRA.Naming.Dot_Replacement);
             Value           : constant String :=
                                 Dot_Replacement.Value.Text;
             Not_OK          : Boolean := False;
@@ -275,20 +274,20 @@ package body GPR2.Project.Definition is
          --------------------------
 
          procedure Check_Illegal_Suffix
-           (Attribute_Name : Attribute_Id;
+           (Attribute_Name : Q_Attribute_Id;
             Language       : Language_Id;
             Attribute      : Project.Attribute.Object)
          is
             Value    : constant Value_Type := Attribute.Value.Text;
             Dot_Repl : constant Value_Type :=
                          View.Attribute
-                           (PRA.Dot_Replacement, PRP.Naming).Value.Text;
+                           (PRA.Naming.Dot_Replacement).Value.Text;
          begin
             if Value /= No_Value and then ASF.Index (Value, ".") = 0 then
                Log_Error
                  (Message.Error,
                   """" & Value & """ is illegal for "
-                  & Image (Attribute_Name) & ": must have a dot",
+                  & Image (Attribute_Name.Attr) & ": must have a dot",
                   Attribute);
 
                return;
@@ -312,7 +311,7 @@ package body GPR2.Project.Definition is
                         Log_Error
                           (Message.Error,
                            """" & Value & """ is illegal for "
-                           & Image (Attribute_Name)
+                           & Image (Attribute_Name.Attr)
                            & ": ambiguous prefix when "
                            & "Dot_Replacement is a dot",
                            Attribute);
@@ -333,12 +332,11 @@ package body GPR2.Project.Definition is
             begin
                if Suffix_Lang_Maps.Has_Element (Associated_Lang) then
                   if Suffix_Lang_Maps.Element (Associated_Lang) = Ada_Language
-                    and then Attribute_Name = PRA.Separate_Suffix
-                    and then View.Has_Attribute (PRA.Body_Suffix,
-                                                 Pack  => PRP.Naming,
-                                                 Index => Index)
+                    and then Attribute_Name = PRA.Naming.Separate_Suffix
+                    and then View.Has_Attribute
+                               (Name => PRA.Naming.Body_Suffix, Index => Index)
                     and then View.Attribute
-                      (PRA.Body_Suffix, PRP.Naming, Index).Value.Text = Value
+                      (PRA.Naming.Body_Suffix, Index).Value.Text = Value
                   then
                      return;
                   end if;
@@ -346,15 +344,17 @@ package body GPR2.Project.Definition is
                   if Language = Suffix_Lang_Maps.Element (Associated_Lang) then
                      Log_Error
                        (Message.Error,
-                          Image (Attribute_Name) & " (" & Image (Language) &
-                          ") value already used for this language",
+                        Image (Attribute_Name.Attr) & " ("
+                        & Image (Language) &
+                        ") value already used for this language",
                         Attribute);
                   else
                      Log_Error
                        (Message.Error,
-                        Image (Attribute_Name) & " (" & Image (Language) &
-                          ") value is already used for language " &
-                          Image (Suffix_Lang_Maps.Element (Associated_Lang)),
+                        Image (Attribute_Name.Attr) & " ("
+                        & Image (Language) &
+                        ") value is already used for language " &
+                        Image (Suffix_Lang_Maps.Element (Associated_Lang)),
                         Attribute);
                   end if;
                else
@@ -394,16 +394,16 @@ package body GPR2.Project.Definition is
                                      Attribute_Index.Create (Language);
                      Spec_Suffix : constant Attribute.Object :=
                                      View.Attribute
-                                       (PRA.Spec_Suffix, PRP.Naming, Index);
+                                       (PRA.Naming.Spec_Suffix, Index);
                      Body_Suffix : constant Attribute.Object :=
                                      View.Attribute
-                                       (PRA.Body_Suffix, PRP.Naming, Index);
+                                       (PRA.Naming.Body_Suffix, Index);
                   begin
                      if Spec_Suffix.Is_Defined
                        and then not Spec_Suffix.Is_Default
                      then
                         Check_Illegal_Suffix
-                          (PRA.Spec_Suffix,
+                          (PRA.Naming.Spec_Suffix,
                            Language,
                            Spec_Suffix);
                      end if;
@@ -412,7 +412,7 @@ package body GPR2.Project.Definition is
                        and then not Body_Suffix.Is_Default
                      then
                         Check_Illegal_Suffix
-                          (PRA.Body_Suffix,
+                          (PRA.Naming.Body_Suffix,
                            Language,
                            Body_Suffix);
                      end if;
@@ -422,12 +422,11 @@ package body GPR2.Project.Definition is
 
             declare
                Sep_Suffix : constant Attribute.Object :=
-                              View.Attribute
-                                (PRA.Separate_Suffix, PRP.Naming);
+                              View.Attribute (PRA.Naming.Separate_Suffix);
             begin
                if Sep_Suffix.Is_Defined and then not Sep_Suffix.Is_Default then
                   Check_Illegal_Suffix
-                    (PRA.Separate_Suffix,
+                    (PRA.Naming.Separate_Suffix,
                      Ada_Language,
                      Sep_Suffix);
                end if;

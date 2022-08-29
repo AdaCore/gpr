@@ -10,4 +10,4 @@
 with GPR2.Source_Reference.Scalar_Value;
 
 package GPR2.Source_Reference.Pack is
-  new GPR2.Source_Reference.Scalar_Value (Optional_Package_Id, No_Package);
+  new GPR2.Source_Reference.Scalar_Value (Package_Id, Project_Level_Scope);

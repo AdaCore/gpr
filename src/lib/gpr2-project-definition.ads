@@ -238,9 +238,9 @@ private package GPR2.Project.Definition is
 
    function Has_Packages
      (Def  : Data;
-      Name : Optional_Package_Id) return Boolean
+      Name : Package_Id) return Boolean
    is
-     (if Name = No_Package
+     (if Name = Project_Level_Scope
       then not Def.Packs.Is_Empty
       else Def.Packs.Contains (Name));
    --  Returns true if the project view definition has some packages defined

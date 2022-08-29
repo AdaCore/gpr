@@ -12,8 +12,7 @@ package body GPR2.Project.Attribute_Cache is
    use type Project.Attribute_Index.Object;
 
    function Cache_Key
-      (Name   : Attribute_Id;
-       Pkg    : Optional_Package_Id            := No_Package;
+      (Name   : Q_Attribute_Id;
        Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
        At_Pos : Unit_Index                     := No_Index)
       return String;
@@ -32,10 +31,11 @@ package body GPR2.Project.Attribute_Cache is
    overriding procedure Adjust (Cache : in out Object) is
    begin
       Cache.Inner := new Inner_Object'
-        (Enabled => Cache.Inner.Enabled,
-         Table   => new Attribute_Cache_Maps.Map'(Cache.Inner.Table.Copy),
+        (Enabled               => Cache.Inner.Enabled,
+         Table                 => new Attribute_Cache_Maps.Map'
+                                    (Cache.Inner.Table.Copy),
          --  No need to keep the former cache table on copy
-         Former_Table => null,
+         Former_Table          => null,
          --  Extra capacity should be set to 0 as no new element is scheduled
          --  for addition in the cache.
          Needed_Extra_Capacity => 0);
@@ -51,19 +51,18 @@ package body GPR2.Project.Attribute_Cache is
    ---------------
 
    function Cache_Key
-      (Name   : Attribute_Id;
-       Pkg    : Optional_Package_Id            := No_Package;
+      (Name   : Q_Attribute_Id;
        Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
        At_Pos : Unit_Index                     := No_Index)
       return String
    is
    begin
       if Index /= Attribute_Index.Undefined then
-         return Name'Img & ":" & Pkg'Img & ":" &
+         return Name.Attr'Img & ":" & Name.Pack'Img & ":" &
             Index.Value (Preserve_Case => Index.Is_Case_Sensitive) & ":" &
             At_Pos'Img;
       else
-         return Name'Img & ":" & Pkg'Img;
+         return Name.Attr'Img & ":" & Name.Pack'Img;
       end if;
    end Cache_Key;
 
@@ -73,13 +72,12 @@ package body GPR2.Project.Attribute_Cache is
 
    function Check_Cache
       (Self   : Object;
-       Name   : Attribute_Id;
-       Pkg    : Optional_Package_Id            := No_Package;
+       Name   : Q_Attribute_Id;
        Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
        At_Pos : Unit_Index                     := No_Index)
       return Cursor
    is
-      Key : constant String := Cache_Key (Name, Pkg, Index, At_Pos);
+      Key : constant String := Cache_Key (Name, Index, At_Pos);
    begin
       return Attribute_Cache.Cursor
          (Attribute_Cache_Maps.Find (Self.Inner.Table.all, Key));
@@ -167,7 +165,8 @@ package body GPR2.Project.Attribute_Cache is
       Cache.Inner := new Inner_Object'
         (Enabled               => True,
          Table                 => new Attribute_Cache_Maps.Map'
-           (Attribute_Cache_Maps.Empty (Capacity => Min_Cache_Size)),
+                                    (Attribute_Cache_Maps.Empty
+                                       (Capacity => Min_Cache_Size)),
          Former_Table          => null,
          Needed_Extra_Capacity => 0);
    end Initialize;
@@ -225,13 +224,12 @@ package body GPR2.Project.Attribute_Cache is
 
    procedure Update_Cache
       (Self   : Object;
-       Name   : Attribute_Id;
-       Pkg    : Optional_Package_Id            := No_Package;
+       Name   : Q_Attribute_Id;
        Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
        At_Pos : Unit_Index                     := No_Index;
        Attr   : GPR2.Project.Attribute.Object)
    is
-      Key : constant String := Cache_Key (Name, Pkg, Index, At_Pos);
+      Key : constant String := Cache_Key (Name, Index, At_Pos);
    begin
       GNAT.Task_Lock.Lock;
 

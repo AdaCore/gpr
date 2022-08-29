@@ -44,6 +44,7 @@ V:   Target_Name -> x86_64-linux
    Object_Artifact_Extensions (Ada) -> .s .ci .gcno
    Source_Artifact_Extensions (Ada) -> .dg .rep .stdout .stderr
  Compiler
+   Driver (Ada) -> /home/obry/dev/builds/install/bin/gcc
    Config_Body_File_Name (Ada) -> pragma Source_File_Name_Project (%u, Body_File_Name => ""%f"");
    Config_Body_File_Name_Index (Ada) -> pragma Source_File_Name_Project (%u, Body_File_Name => ""%f"", Index => %i);
    Config_Body_File_Name_Pattern (Ada) -> pragma Source_File_Name_Project   (Body_File_Name  => ""*%b"",   Casing          => %c,   Dot_Replacement => ""%d"");
@@ -53,7 +54,6 @@ V:   Target_Name -> x86_64-linux
    Config_Spec_File_Name_Index (Ada) -> pragma Source_File_Name_Project (%u, Spec_File_Name => ""%f"", Index => %i);
    Config_Spec_File_Name_Pattern (Ada) -> pragma Source_File_Name_Project   (Spec_File_Name  => ""*%s"",   Casing          => %c,   Dot_Replacement => ""%d"");
    Dependency_Kind (Ada) -> ALI_File
-   Driver (Ada) -> /home/obry/dev/builds/install/bin/gcc
    Include_Path_File (Ada) -> ADA_PRJ_INCLUDE_FILE
    Language_Kind (Ada) -> unit_based
    Leading_Required_Switches (Ada) -> -c -x ada -gnatA
@@ -65,11 +65,11 @@ V:   Target_Name -> x86_64-linux
    Pic_Option (Ada) -> -fPIC
  Linker
    Driver -> /home/obry/dev/builds/install/bin/gcc
+   Max_Command_Line_Length -> 8192
+   Response_File_Format -> GCC_GNU
    Export_File_Format -> GNU
    Export_File_Switch -> -Wl,--version-script=
    Map_File_Option -> -Wl,-Map,
-   Max_Command_Line_Length -> 8192
-   Response_File_Format -> GCC_GNU
  Naming
    Body_Suffix (Ada) -> .adb
    Casing -> lowercase

@@ -6,13 +6,12 @@
 
 with GNAT.OS_Lib;
 
-with GPR2.Project.Registry.Pack;
 with GPR2.Project.View;
 
 package body GPR2.Project.Registry.Attribute is
 
    package Pack_Defaults is new Ada.Containers.Ordered_Maps
-     (Optional_Package_Id, Default_References.Map,
+     (Package_Id, Default_References.Map,
       "=" => Default_References."=");
 
    Store    : Attribute_Definitions.Map;
@@ -43,7 +42,7 @@ package body GPR2.Project.Registry.Attribute is
    --  Constants for some common attribute definitions
 
    function Create (Index, Value : Value_Type) return Default_Value;
-   function Create (Ref : Attribute_Id) return Default_Value;
+   function Create (Ref : Q_Attribute_Id) return Default_Value;
    function Create (Value : Value_Type) return Default_Value is
      (Create (Value_Type (Any_Index), Value));
    --  Create container for attribute default value
@@ -76,7 +75,7 @@ package body GPR2.Project.Registry.Attribute is
    ---------
 
    procedure Add
-     (Name                  : Qualified_Name;
+     (Name                  : Q_Attribute_Id;
       Index_Type            : Index_Value_Type;
       Value                 : Value_Kind;
       Value_Case_Sensitive  : Boolean;
@@ -103,7 +102,7 @@ package body GPR2.Project.Registry.Attribute is
          OK     : Boolean;
       begin
          Defaults.Insert (Name.Pack, Default_References.Empty_Map, CP, OK);
-         Defaults (CP).Insert (Name.Attr, Store (Name).Element);
+         Defaults (CP).Insert (Name, Store (Name).Element);
       end Index_Default;
 
    begin
@@ -124,7 +123,7 @@ package body GPR2.Project.Registry.Attribute is
                                           else Has_Default_In)),
               Is_Toolchain_Config   => Is_Toolchain_Config,
               Config_Concatenable   => Config_Concatenable,
-              Inherit_From_Extended => (if Name.Pack = No_Package
+              Inherit_From_Extended => (if Name.Pack = Project_Level_Scope
                                         then Inherit_From_Extended
                                         else Not_Inherited),
               Value_Is_Set          => Is_Set));
@@ -139,8 +138,8 @@ package body GPR2.Project.Registry.Attribute is
    ---------------
 
    procedure Add_Alias
-     (Name     : Qualified_Name;
-      Alias_Of : Qualified_Name)
+     (Name     : Q_Attribute_Id;
+      Alias_Of : Q_Attribute_Id)
    is
    begin
       Aliases.Include (Name, Alias_Of);
@@ -151,12 +150,12 @@ package body GPR2.Project.Registry.Attribute is
    -- Alias --
    -----------
 
-   function Alias (Name : Qualified_Name) return Qualified_Name
+   function Alias (Name : Q_Attribute_Id) return Q_Optional_Attribute_Id
    is
       C : constant Attribute_Aliases.Cursor := Aliases.Find (Name);
    begin
       if not Attribute_Aliases.Has_Element (C) then
-         return No_Name;
+         return No_Attribute_Id;
       else
          return Attribute_Aliases.Element (C);
       end if;
@@ -167,21 +166,21 @@ package body GPR2.Project.Registry.Attribute is
    --------------------
 
    function All_Attributes
-     (Pack : Optional_Package_Id) return Containers.Attribute_Id_List
+     (Pack : Package_Id) return Containers.Attribute_Id_List
    is
       Result : Containers.Attribute_Id_List;
    begin
       for C in Store.Iterate loop
          declare
-            Q_Name : constant Qualified_Name := Attribute_Definitions.Key (C);
-            A      : Qualified_Name;
+            Q_Name : constant Q_Attribute_Id := Attribute_Definitions.Key (C);
+            A      : Q_Optional_Attribute_Id;
          begin
             if Q_Name.Pack = Pack then
-               Result.Insert (Q_Name.Attr);
+               Result.Insert (Q_Name);
                A := Alias (Q_Name);
 
-               if A /= No_Name then
-                  Result.Insert (A.Attr);
+               if A /= No_Attribute_Id then
+                  Result.Insert (A);
                end if;
             end if;
          end;
@@ -194,13 +193,6 @@ package body GPR2.Project.Registry.Attribute is
    -- Create --
    ------------
 
-   function Create
-     (Name : Attribute_Id;
-      Pack : Optional_Package_Id := No_Package) return Qualified_Name is
-   begin
-      return (Pack => Pack, Attr => Name);
-   end Create;
-
    function Create (Index, Value : Value_Type) return Default_Value is
       Result : Default_Value (D_Value);
    begin
@@ -209,16 +201,16 @@ package body GPR2.Project.Registry.Attribute is
       return Result;
    end Create;
 
-   function Create (Ref : Attribute_Id) return Default_Value is
+   function Create (Ref : Q_Attribute_Id) return Default_Value is
    begin
-      return Default_Value'(D_Attribute_Reference, Ref);
+      return Default_Value'(D_Attribute_Reference, Ref.Attr);
    end Create;
 
    ------------
    -- Exists --
    ------------
 
-   function Exists (Q_Name : Qualified_Name) return Boolean is
+   function Exists (Q_Name : Q_Attribute_Id) return Boolean is
    begin
       return Store.Contains (Q_Name)
         or else (Aliases.Contains (Q_Name)
@@ -256,7 +248,7 @@ package body GPR2.Project.Registry.Attribute is
    procedure For_Each_Default
      (Rules  : Default_Rules;
       Action : not null access procedure
-        (Attribute : Attribute_Id; Definition : Def))
+        (Attribute : Q_Attribute_Id; Definition : Def))
    is
       procedure Each_Element (C : Default_References.Cursor);
 
@@ -279,7 +271,7 @@ package body GPR2.Project.Registry.Attribute is
    -- Get --
    ---------
 
-   function Get (Q_Name : Qualified_Name) return Def
+   function Get (Q_Name : Q_Attribute_Id) return Def
    is
       C : constant Attribute_Definitions.Cursor := Store.Find (Q_Name);
    begin
@@ -319,7 +311,7 @@ package body GPR2.Project.Registry.Attribute is
    -----------------------
 
    function Get_Default_Rules
-     (Pack : Optional_Package_Id) return Default_Rules
+     (Pack : Package_Id) return Default_Rules
    is
       CR : constant Pack_Defaults.Cursor := Defaults.Find (Pack);
    begin
@@ -339,7 +331,7 @@ package body GPR2.Project.Registry.Attribute is
       Result : Containers.Package_Id_List;
    begin
       for C in Defaults.Iterate loop
-         if Pack_Defaults.Key (C) /= No_Package then
+         if Pack_Defaults.Key (C) /= Project_Level_Scope then
             Result.Include (Pack_Defaults.Key (C));
          end if;
       end loop;
@@ -351,7 +343,7 @@ package body GPR2.Project.Registry.Attribute is
    -- Has_Alias --
    ---------------
 
-   function Has_Alias (Name : Qualified_Name) return Boolean
+   function Has_Alias (Name : Q_Attribute_Id) return Boolean
    is
    begin
       return Aliases.Contains (Name);
@@ -415,7 +407,7 @@ package body GPR2.Project.Registry.Attribute is
 begin
    --  name
    Add
-     (Create (Name),
+     (Name                  => Name,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -425,7 +417,7 @@ begin
 
    --  project_dir
    Add
-     (Create (Project_Dir),
+     (Name                  => Project_Dir,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -435,7 +427,7 @@ begin
 
    --  main
    Add
-     (Create (Main),
+     (Name                 => Main,
       Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -443,7 +435,7 @@ begin
 
    --  languages
    Add
-     (Create (Languages),
+     (Name                  => Languages,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => False,
@@ -455,7 +447,7 @@ begin
 
    --  roots
    Add
-     (Create (Roots),
+     (Name                 => Roots,
       Index_Type           => FileGlob_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -463,7 +455,7 @@ begin
 
    --  externally_built
    Add
-     (Create (Externally_Built),
+     (Name                  => Externally_Built,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => False,
@@ -474,7 +466,7 @@ begin
 
    --  object_dir
    Add
-     (Create (Object_Dir),
+     (Name                  => Object_Dir,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -484,17 +476,17 @@ begin
 
    --  exec_dir
    Add
-     (Create (Exec_Dir),
+     (Name                  => Exec_Dir,
       Index_Type            => No_Index,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => No_Aggregates,
-      Default              => Create (Object_Dir),
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Is_Allowed_In         => No_Aggregates,
+      Default               => Create (Object_Dir),
       Inherit_From_Extended => Not_Inherited);
 
    --  source_dirs
    Add
-     (Create (Source_Dirs),
+     (Name                  => Source_Dirs,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -505,7 +497,7 @@ begin
 
    --  inherit_source_path
    Add
-     (Create (Inherit_Source_Path),
+     (Name                 => Inherit_Source_Path,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => False,
@@ -513,7 +505,7 @@ begin
 
    --  excluded_source_dirs
    Add
-     (Create (Excluded_Source_Dirs),
+     (Name                  => Excluded_Source_Dirs,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -522,7 +514,7 @@ begin
 
    --  ignore_source_sub_dirs
    Add
-     (Create (Ignore_Source_Sub_Dirs),
+     (Name                  => Ignore_Source_Sub_Dirs,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -531,7 +523,7 @@ begin
 
    --  source_files
    Add
-     (Create (Source_Files),
+     (Name                  => Source_Files,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -540,17 +532,18 @@ begin
 
    --  excluded_source_files, Locally_Removed_Files
    Add
-     (Create (Excluded_Source_Files),
+     (Name                 => Excluded_Source_Files,
       Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
       Inherit_From_Extended => Not_Inherited);
-   Add_Alias (Create (Locally_Removed_Files), Create (Excluded_Source_Files));
+   Add_Alias (Name     => Locally_Removed_Files,
+              Alias_Of => Excluded_Source_Files);
 
    --  source_list_file
    Add
-     (Create (Source_List_File),
+     (Name                  => Source_List_File,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -559,7 +552,7 @@ begin
 
    --  excluded_source_list_file
    Add
-     (Create (Excluded_Source_List_File),
+     (Name                  => Excluded_Source_List_File,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -568,7 +561,7 @@ begin
 
    --  interfaces
    Add
-     (Create (Interfaces),
+     (Name                  => Interfaces,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => GPR2.File_Names_Case_Sensitive,
@@ -578,7 +571,7 @@ begin
 
    --  project_files
    Add
-     (Create (Project_Files),
+     (Name                  => Project_Files,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -587,7 +580,7 @@ begin
 
    --  project_path
    Add
-     (Create (Project_Path),
+     (Name                  => Project_Path,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -596,7 +589,7 @@ begin
 
    --  external
    Add
-     (Create (External),
+     (Name                 => External,
       Index_Type           => Env_Var_Name_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -604,7 +597,7 @@ begin
 
    --  library_dir
    Add
-     (Create (Library_Dir),
+     (Name                 => Library_Dir,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -612,7 +605,7 @@ begin
 
    --  library_name
    Add
-     (Create (Library_Name),
+     (Name                  => Library_Name,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -620,7 +613,7 @@ begin
 
    --  library_kind
    Add
-     (Create (Library_Kind),
+     (Name                  => Library_Kind,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => False,
@@ -630,7 +623,7 @@ begin
 
    --  library_version
    Add
-     (Create (Library_Version),
+     (Name                  => Library_Version,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -639,7 +632,7 @@ begin
 
    --  library_interface
    Add
-     (Create (Library_Interface),
+     (Name                  => Library_Interface,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => False,
@@ -649,7 +642,7 @@ begin
 
    --  library_standalone
    Add
-     (Create (Library_Standalone),
+     (Name                  => Library_Standalone,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => False,
@@ -659,7 +652,7 @@ begin
 
    --  library_encapsulated_options
    Add
-     (Create (Library_Encapsulated_Options),
+     (Name                  => Library_Encapsulated_Options,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -669,7 +662,7 @@ begin
 
    --  library_encapsulated_supported
    Add
-     (Create (Library_Encapsulated_Supported),
+     (Name                  => Library_Encapsulated_Supported,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -679,7 +672,7 @@ begin
 
    --  library_auto_init
    Add
-     (Create (Library_Auto_Init),
+     (Name                  => Library_Auto_Init,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -689,7 +682,7 @@ begin
 
    --  leading_library_options
    Add
-     (Create (Leading_Library_Options),
+     (Name                  => Leading_Library_Options,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -699,7 +692,7 @@ begin
 
    --  library_options
    Add
-     (Create (Library_Options),
+     (Name                  => Library_Options,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -709,7 +702,7 @@ begin
 
    --  library_rpath_options
    Add
-     (Create (Library_Rpath_Options),
+     (Name                 => Library_Rpath_Options,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -718,7 +711,7 @@ begin
 
    --  library_src_dir
    Add
-     (Create (Library_Src_Dir),
+     (Name                 => Library_Src_Dir,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -728,7 +721,7 @@ begin
 
    --  library_ali_dir
    Add
-     (Create (Library_Ali_Dir),
+     (Name                 => Library_Ali_Dir,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -738,7 +731,7 @@ begin
 
    --  library_gcc
    Add
-     (Create (Library_Gcc),
+     (Name                  => Library_Gcc,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -747,7 +740,7 @@ begin
 
    --  library_symbol_file
    Add
-     (Create (Library_Symbol_File),
+     (Name                  => Library_Symbol_File,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -756,7 +749,7 @@ begin
 
    --  library_symbol_policy
    Add
-     (Create (Library_Symbol_Policy),
+     (Name                  => Library_Symbol_Policy,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -765,7 +758,7 @@ begin
 
    --  library_reference_symbol_file
    Add
-     (Create (Library_Reference_Symbol_File),
+     (Name                  => Library_Reference_Symbol_File,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -774,7 +767,7 @@ begin
 
    --  default_language
    Add
-     (Create (Default_Language),
+     (Name                  => Default_Language,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -783,7 +776,7 @@ begin
 
    --  run_path_option
    Add
-     (Create (Run_Path_Option),
+     (Name                  => Run_Path_Option,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -792,7 +785,7 @@ begin
 
    --  run_path_origin
    Add
-     (Create (Run_Path_Origin),
+     (Name                  => Run_Path_Origin,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -801,7 +794,7 @@ begin
 
    --  separate_run_path_options
    Add
-     (Create (Separate_Run_Path_Options),
+     (Name                  => Separate_Run_Path_Options,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -810,7 +803,7 @@ begin
 
    --  toolchain_version
    Add
-     (Create (Toolchain_Version),
+     (Name                 => Toolchain_Version,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -819,7 +812,7 @@ begin
 
    --  toolchain_name
    Add
-     (Create (Toolchain_Name),
+     (Name                 => Toolchain_Name,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -828,7 +821,7 @@ begin
 
    --  toolchain_path
    Add
-     (Create (Toolchain_Path),
+     (Name                 => Toolchain_Path,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -837,7 +830,7 @@ begin
 
    --  required_toolchain_version
    Add
-     (Create (Required_Toolchain_Version),
+     (Name                 => Required_Toolchain_Version,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -846,7 +839,7 @@ begin
 
    --  toolchain_description
    Add
-     (Create (Toolchain_Description),
+     (Name                 => Toolchain_Description,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -854,7 +847,7 @@ begin
 
    --  object_generated
    Add
-     (Create (Object_Generated),
+     (Name                 => Object_Generated,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -862,7 +855,7 @@ begin
 
    --  objects_linked
    Add
-     (Create (Objects_Linked),
+     (Name                 => Objects_Linked,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -870,7 +863,7 @@ begin
 
    --  target
    Add
-     (Create (Target),
+     (Name                  => Target,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -881,7 +874,7 @@ begin
 
    --  runtime
    Add
-     (Create (Runtime),
+     (Name                 => Runtime,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -890,7 +883,7 @@ begin
 
    --  library_builder
    Add
-     (Create (Library_Builder),
+     (Name                  => Library_Builder,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -899,7 +892,7 @@ begin
 
    --  library_support
    Add
-     (Create (Library_Support),
+     (Name                  => Library_Support,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -908,7 +901,7 @@ begin
 
    --  archive_builder
    Add
-     (Create (Archive_Builder),
+     (Name                  => Archive_Builder,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -917,7 +910,7 @@ begin
 
    --  archive_builder_append_option
    Add
-     (Create (Archive_Builder_Append_Option),
+     (Name                  => Archive_Builder_Append_Option,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -926,7 +919,7 @@ begin
 
    --  archive_indexer
    Add
-     (Create (Archive_Indexer),
+     (Name                  => Archive_Indexer,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -935,7 +928,7 @@ begin
 
    --  archive_suffix
    Add
-     (Create (Archive_Suffix),
+     (Name                  => Archive_Suffix,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -945,7 +938,7 @@ begin
 
    --  library_partial_linker
    Add
-     (Create (Library_Partial_Linker),
+     (Name                  => Library_Partial_Linker,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -954,7 +947,7 @@ begin
 
    --  object_lister
    Add
-     (Create (Object_Lister),
+     (Name                 => Object_Lister,
       Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -962,7 +955,7 @@ begin
 
    --  object_lister_matcher
    Add
-     (Create (Object_Lister_Matcher),
+     (Name                 => Object_Lister_Matcher,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -970,7 +963,7 @@ begin
 
    --  shared_library_prefix
    Add
-     (Create (Shared_Library_Prefix),
+     (Name                  => Shared_Library_Prefix,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -980,7 +973,7 @@ begin
 
    --  shared_library_suffix
    Add
-     (Create (Shared_Library_Suffix),
+     (Name                  => Shared_Library_Suffix,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -990,7 +983,7 @@ begin
 
    --  symbolic_link_supported
    Add
-     (Create (Symbolic_Link_Supported),
+     (Name                  => Symbolic_Link_Supported,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -999,7 +992,7 @@ begin
 
    --  library_major_minor_id_supported
    Add
-     (Create (Library_Major_Minor_Id_Supported),
+     (Name                  => Library_Major_Minor_Id_Supported,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -1008,7 +1001,7 @@ begin
 
    --  library_auto_init_supported
    Add
-     (Create (Library_Auto_Init_Supported),
+     (Name                  => Library_Auto_Init_Supported,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -1017,7 +1010,7 @@ begin
 
    --  shared_library_minimum_switches
    Add
-     (Create (Shared_Library_Minimum_Switches),
+     (Name                  => Shared_Library_Minimum_Switches,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -1026,7 +1019,7 @@ begin
 
    --  library_version_switches
    Add
-     (Create (Library_Version_Switches),
+     (Name                  => Library_Version_Switches,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -1036,7 +1029,7 @@ begin
 
    --  library_install_name_option
    Add
-     (Create (Library_Install_Name_Option),
+     (Name                  => Library_Install_Name_Option,
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -1045,7 +1038,7 @@ begin
 
    --  runtime_dir
    Add
-     (Create (Runtime_Dir),
+     (Name                 => Runtime_Dir,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1053,7 +1046,7 @@ begin
 
    --  runtime_library_dir
    Add
-     (Create (Runtime_Library_Dir),
+     (Name                  => Runtime_Library_Dir,
       Index_Type            => Language_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
@@ -1062,7 +1055,7 @@ begin
 
    --  runtime_source_dir
    Add
-     (Create (Runtime_Source_Dir),
+     (Name                 => Runtime_Source_Dir,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1070,7 +1063,7 @@ begin
 
    --  runtime_source_dirs
    Add
-     (Create (Runtime_Source_Dirs),
+     (Name                 => Runtime_Source_Dirs,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1078,39 +1071,39 @@ begin
 
    --  naming.spec_suffix & specification_suffix
    Add
-     (Create (Spec_Suffix, Pack.Naming),
+     (Name                 => Naming.Spec_Suffix,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
       Default              => Create ("ada", ".ads") + Create ("c", ".h"));
-   Add_Alias (Create (Spec_Suffix, Pack.Naming),
-              Create (Specification_Suffix, Pack.Naming));
+   Add_Alias (Name     => Naming.Spec_Suffix,
+              Alias_Of => Naming.Specification_Suffix);
 
    --  naming.body_suffix & implementation_suffix
    Add
-     (Create (Body_Suffix, Pack.Naming),
+     (Name                 => Naming.Body_Suffix,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
       Default              => Create ("ada", ".adb") + Create ("c", ".c"));
-   Add_Alias (Create (Body_Suffix, Pack.Naming),
-              Create (Implementation_Suffix, Pack.Naming));
+   Add_Alias (Name     => Naming.Body_Suffix,
+              Alias_Of => Naming.Implementation_Suffix);
 
    --  naming.separate_suffix
    Add
-     (Create (Separate_Suffix, Pack.Naming),
+     (Name                 => Naming.Separate_Suffix,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Empty_Value          => Error,
       Is_Allowed_In        => Everywhere,
-      Default              => Create (Body_Suffix));
+      Default              => Create (Naming.Body_Suffix));
 
    --  naming.casing
    Add
-     (Create (Casing, Pack.Naming),
+     (Name                 => Naming.Casing,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => False,
@@ -1119,7 +1112,7 @@ begin
 
    --  naming.dot_replacement
    Add
-     (Create (Dot_Replacement, Pack.Naming),
+     (Name                 => Naming.Dot_Replacement,
       Index_Type           => No_Index,
       Empty_Value          => Error,
       Value                => Single,
@@ -1129,27 +1122,25 @@ begin
 
    --  naming.spec & specification
    Add
-     (Create (Spec, Pack.Naming),
+     (Name                 => Naming.Spec,
       Index_Type           => Unit_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
-   Add_Alias (Create (Spec, Pack.Naming),
-              Create (Specification, Pack.Naming));
+   Add_Alias (Name => Naming.Spec, Alias_Of => Naming.Specification);
 
    --  naming.body & implementation
    Add
-     (Create (Body_N, Pack.Naming),
+     (Name                 => Naming.Body_N,
       Index_Type           => Unit_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
-   Add_Alias (Create (Body_N, Pack.Naming),
-              Create (Implementation, Pack.Naming));
+   Add_Alias (Name => Naming.Body_N, Alias_Of => Naming.Implementation);
 
    --  naming.specification_exceptions
    Add
-     (Create (Specification_Exceptions, Pack.Naming),
+     (Name                 => Naming.Specification_Exceptions,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1157,7 +1148,7 @@ begin
 
    --  naming.implementation_exceptions
    Add
-     (Create (Implementation_Exceptions, Pack.Naming),
+     (Name                 => Naming.Implementation_Exceptions,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1166,19 +1157,19 @@ begin
    --  compiler.default_switches
    --  compiler.switches
    Add
-     (Create (Switches, Pack.Compiler),
+     (Name                 => Compiler.Switches,
       Index_Type           => FileGlob_Or_Language_Index,
       Index_Optional       => True,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
       Config_Concatenable  => True);
-   Add_Alias (Create (Default_Switches, Pack.Compiler),
-              Create (Switches, Pack.Compiler));
+   Add_Alias (Name     => Compiler.Default_Switches,
+              Alias_Of => Compiler.Switches);
 
    --  compiler.local_configuration_pragmas
    Add
-     (Create (Local_Configuration_Pragmas, Pack.Compiler),
+     (Name                 => Compiler.Local_Configuration_Pragmas,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1186,7 +1177,7 @@ begin
 
    --  compiler.local_config_file
    Add
-     (Create (Local_Config_File, Pack.Compiler),
+     (Name                 => Compiler.Local_Config_File,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1194,7 +1185,7 @@ begin
 
    --  compiler.driver
    Add
-     (Create (Driver, Pack.Compiler),
+     (Name                 => Compiler.Driver,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1202,7 +1193,7 @@ begin
 
    --  compiler.language_kind
    Add
-     (Create (Language_Kind, Pack.Compiler),
+     (Name                 => Compiler.Language_Kind,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1210,7 +1201,7 @@ begin
 
    --  compiler.dependency_kind
    Add
-     (Create (Dependency_Kind, Pack.Compiler),
+     (Name                 => Compiler.Dependency_Kind,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1218,7 +1209,7 @@ begin
 
    --  compiler.required_switches
    Add
-     (Create (Required_Switches, Pack.Compiler),
+     (Name                 => Compiler.Required_Switches,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1227,7 +1218,7 @@ begin
 
    --  compiler.leading_required_switches
    Add
-     (Create (Leading_Required_Switches, Pack.Compiler),
+     (Name                 => Compiler.Leading_Required_Switches,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1236,7 +1227,7 @@ begin
 
    --  compiler.trailing_required_switches
    Add
-     (Create (Trailing_Required_Switches, Pack.Compiler),
+     (Name                 => Compiler.Trailing_Required_Switches,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1245,7 +1236,7 @@ begin
 
    --  compiler.pic_option
    Add
-     (Create (Pic_Option, Pack.Compiler),
+     (Name                 => Compiler.Pic_Option,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1253,7 +1244,7 @@ begin
 
    --  compiler.path_syntax
    Add
-     (Create (Path_Syntax, Pack.Compiler),
+     (Name                 => Compiler.Path_Syntax,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1261,7 +1252,7 @@ begin
 
    --  compiler.source_file_switches
    Add
-     (Create (Source_File_Switches, Pack.Compiler),
+     (Name                 => Compiler.Source_File_Switches,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1270,7 +1261,7 @@ begin
 
    --  compiler.object_file_suffix
    Add
-     (Create (Object_File_Suffix, Pack.Compiler),
+     (Name                 => Compiler.Object_File_Suffix,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1279,7 +1270,7 @@ begin
 
    --  compiler.object_file_switches
    Add
-     (Create (Object_File_Switches, Pack.Compiler),
+     (Name                 => Compiler.Object_File_Switches,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1288,7 +1279,7 @@ begin
 
    --  compiler.multi_unit_switches
    Add
-     (Create (Multi_Unit_Switches, Pack.Compiler),
+     (Name                 => Compiler.Multi_Unit_Switches,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1296,7 +1287,7 @@ begin
 
    --  compiler.multi_unit_object_separator
    Add
-     (Create (Multi_Unit_Object_Separator, Pack.Compiler),
+     (Name                 => Compiler.Multi_Unit_Object_Separator,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1304,7 +1295,7 @@ begin
 
    --  compiler.mapping_file_switches
    Add
-     (Create (Mapping_File_Switches, Pack.Compiler),
+     (Name                 => Compiler.Mapping_File_Switches,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1313,7 +1304,7 @@ begin
 
    --  compiler.mapping_spec_suffix
    Add
-     (Create (Mapping_Spec_Suffix, Pack.Compiler),
+     (Name                 => Compiler.Mapping_Spec_Suffix,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1321,7 +1312,7 @@ begin
 
    --  compiler.mapping_body_suffix
    Add
-     (Create (Mapping_Body_Suffix, Pack.Compiler),
+     (Name                 => Compiler.Mapping_Body_Suffix,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1329,7 +1320,7 @@ begin
 
    --  compiler.config_file_switches
    Add
-     (Create (Config_File_Switches, Pack.Compiler),
+     (Name                 => Compiler.Config_File_Switches,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1338,7 +1329,7 @@ begin
 
    --  compiler.config_body_file_name
    Add
-     (Create (Config_Body_File_Name, Pack.Compiler),
+     (Name                 => Compiler.Config_Body_File_Name,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1346,7 +1337,7 @@ begin
 
    --  compiler.config_body_file_name_index
    Add
-     (Create (Config_Body_File_Name_Index, Pack.Compiler),
+     (Name                 => Compiler.Config_Body_File_Name_Index,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1354,7 +1345,7 @@ begin
 
    --  compiler.config_body_file_name_pattern
    Add
-     (Create (Config_Body_File_Name_Pattern, Pack.Compiler),
+     (Name                 => Compiler.Config_Body_File_Name_Pattern,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1362,7 +1353,7 @@ begin
 
    --  compiler.config_spec_file_name
    Add
-     (Create (Config_Spec_File_Name, Pack.Compiler),
+     (Name                 => Compiler.Config_Spec_File_Name,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1370,7 +1361,7 @@ begin
 
    --  compiler.config_spec_file_name_index
    Add
-     (Create (Config_Spec_File_Name_Index, Pack.Compiler),
+     (Name                 => Compiler.Config_Spec_File_Name_Index,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1378,7 +1369,7 @@ begin
 
    --  compiler.config_spec_file_name_pattern
    Add
-     (Create (Config_Spec_File_Name_Pattern, Pack.Compiler),
+     (Name                 => Compiler.Config_Spec_File_Name_Pattern,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1386,7 +1377,7 @@ begin
 
    --  compiler.config_file_unique
    Add
-     (Create (Config_File_Unique, Pack.Compiler),
+     (Name                 => Compiler.Config_File_Unique,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1394,7 +1385,7 @@ begin
 
    --  compiler.dependency_switches
    Add
-     (Create (Dependency_Switches, Pack.Compiler),
+     (Name                 => Compiler.Dependency_Switches,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1403,7 +1394,7 @@ begin
 
    --  compiler.dependency_driver
    Add
-     (Create (Dependency_Driver, Pack.Compiler),
+     (Name                 => Compiler.Dependency_Driver,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1411,7 +1402,7 @@ begin
 
    --  compiler.include_switches
    Add
-     (Create (Include_Switches, Pack.Compiler),
+     (Name                 => Compiler.Include_Switches,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1420,7 +1411,7 @@ begin
 
    --  compiler.include_path
    Add
-     (Create (Include_Path, Pack.Compiler),
+     (Name                 => Compiler.Include_Path,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1428,7 +1419,7 @@ begin
 
    --  compiler.include_path_file
    Add
-     (Create (Include_Path_File, Pack.Compiler),
+     (Name                 => Compiler.Include_Path_File,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1436,7 +1427,7 @@ begin
 
    --  compiler.object_path_switches
    Add
-     (Create (Object_Path_Switches, Pack.Compiler),
+     (Name                 => Compiler.Object_Path_Switches,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1445,7 +1436,7 @@ begin
 
    --  compiler.max_command_line_length
    Add
-     (Create (Max_Command_Line_Length, Pack.Compiler),
+     (Name                 => Compiler.Max_Command_Line_Length,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1453,7 +1444,7 @@ begin
 
    --  compiler.response_file_format
    Add
-     (Create (Response_File_Format, Pack.Compiler),
+     (Name                 => Compiler.Response_File_Format,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1461,7 +1452,7 @@ begin
 
    --  compiler.response_file_switches
    Add
-     (Create (Response_File_Switches, Pack.Compiler),
+     (Name                 => Compiler.Response_File_Switches,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1470,19 +1461,18 @@ begin
 
    --  builder.switches, builder.default_switches
    Add
-     (Create (Switches, Pack.Builder),
+     (Name                 => Builder.Switches,
       Index_Type           => FileGlob_Or_Language_Index,
       Index_Optional       => True,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
       Config_Concatenable  => True);
-   Add_Alias (Create (Default_Switches, Pack.Builder),
-              Create (Switches, Pack.Builder));
+   Add_Alias (Name => Builder.Default_Switches, Alias_Of => Builder.Switches);
 
    --  builder.global_compilation_switches
    Add
-     (Create (Global_Compilation_Switches, Pack.Builder),
+     (Name                 => Builder.Global_Compilation_Switches,
       Index_Type           => Language_Index,
       Index_Optional       => True,
       Value                => List,
@@ -1492,7 +1482,7 @@ begin
 
    --  builder.executable
    Add
-     (Create (Executable, Pack.Builder),
+     (Name                 => Builder.Executable,
       Index_Type           => File_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1501,7 +1491,7 @@ begin
 
    --  builder.executable_suffix
    Add
-     (Create (Executable_Suffix, Pack.Builder),
+     (Name                 => Builder.Executable_Suffix,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1510,7 +1500,7 @@ begin
 
    --  builder.global_configuration_pragmas
    Add
-     (Create (Global_Configuration_Pragmas, Pack.Builder),
+     (Name                 => Builder.Global_Configuration_Pragmas,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1518,7 +1508,7 @@ begin
 
    --  builder.global_config_file
    Add
-     (Create (Global_Config_File, Pack.Builder),
+     (Name                 => Builder.Global_Config_File,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1526,7 +1516,7 @@ begin
 
    --  gnatls.switches
    Add
-     (Create (Switches, Pack.Gnatls),
+     (Name                 => Gnatls.Switches,
       Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1534,19 +1524,18 @@ begin
 
    --  binder.switches, binder.default_switches
    Add
-     (Create (Switches, Pack.Binder),
+     (Name                 => Binder.Switches,
       Index_Type           => FileGlob_Or_Language_Index,
       Index_Optional       => True,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
       Config_Concatenable  => True);
-   Add_Alias (Create (Default_Switches, Pack.Binder),
-              Create (Switches, Pack.Binder));
+   Add_Alias (Name => Binder.Default_Switches, Alias_Of => Binder.Switches);
 
    --  binder.driver
    Add
-     (Create (Driver, Pack.Binder),
+     (Name                 => Binder.Driver,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1554,7 +1543,7 @@ begin
 
    --  binder.required_switches
    Add
-     (Create (Required_Switches, Pack.Binder),
+     (Name                 => Binder.Required_Switches,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1563,7 +1552,7 @@ begin
 
    --  binder.prefix
    Add
-     (Create (Prefix, Pack.Binder),
+     (Name                 => Binder.Prefix,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1572,7 +1561,7 @@ begin
 
    --  binder.objects_path
    Add
-     (Create (Objects_Path, Pack.Binder),
+     (Name                 => Binder.Objects_Path,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1580,7 +1569,7 @@ begin
 
    --  binder.objects_path_file
    Add
-     (Create (Objects_Path_File, Pack.Binder),
+     (Name                 => Binder.Objects_Path_File,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1588,7 +1577,7 @@ begin
 
    --  binder.bindfile_option_substitution
    Add
-     (Create (Bindfile_Option_Substitution, Pack.Binder),
+     (Name                 => Binder.Bindfile_Option_Substitution,
       Index_Type           => String_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1597,7 +1586,7 @@ begin
 
    --  linker.required_switches
    Add
-     (Create (Required_Switches, Pack.Linker),
+     (Name                 => Linker.Required_Switches,
       Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1606,7 +1595,7 @@ begin
 
    --  linker.leading_switches
    Add
-     (Create (Leading_Switches, Pack.Linker),
+     (Name                 => Linker.Leading_Switches,
       Index_Type           => FileGlob_Or_Language_Index,
       Index_Optional       => True,
       Value                => List,
@@ -1616,19 +1605,18 @@ begin
 
    --  linker.switches, linker.default_switches
    Add
-     (Create (Switches, Pack.Linker),
+     (Name                 => Linker.Switches,
       Index_Type           => FileGlob_Or_Language_Index,
       Index_Optional       => True,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
       Config_Concatenable  => True);
-   Add_Alias (Create (Default_Switches, Pack.Linker),
-              Create (Switches, Pack.Linker));
+   Add_Alias (Name => Linker.Default_Switches, Alias_Of => Linker.Switches);
 
    --  linker.trailing_switches
    Add
-     (Create (Trailing_Switches, Pack.Linker),
+     (Name                 => Linker.Trailing_Switches,
       Index_Type           => FileGlob_Or_Language_Index,
       Index_Optional       => True,
       Value                => List,
@@ -1638,7 +1626,7 @@ begin
 
    --  linker.linker_options
    Add
-     (Create (Linker_Options, Pack.Linker),
+     (Name                  => Linker.Linker_Options,
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
@@ -1648,7 +1636,7 @@ begin
 
    --  linker.map_file_option
    Add
-     (Create (Map_File_Option, Pack.Linker),
+     (Name                 => Linker.Map_File_Option,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1656,7 +1644,7 @@ begin
 
    --  linker.driver
    Add
-     (Create (Driver, Pack.Linker),
+     (Name                 => Linker.Driver,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1664,7 +1652,7 @@ begin
 
    --  linker.max_command_line_length
    Add
-     (Create (Max_Command_Line_Length, Pack.Linker),
+     (Name                 => Linker.Max_Command_Line_Length,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1672,7 +1660,7 @@ begin
 
    --  linker.response_file_format
    Add
-     (Create (Response_File_Format, Pack.Linker),
+     (Name                 => Linker.Response_File_Format,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1680,7 +1668,7 @@ begin
 
    --  linker.response_file_switches
    Add
-     (Create (Response_File_Switches, Pack.Linker),
+     (Name                 => Linker.Response_File_Switches,
       Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1689,7 +1677,7 @@ begin
 
    --  linker.export_file_format
    Add
-     (Create (Export_File_Format, Pack.Linker),
+     (Name                 => Linker.Export_File_Format,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1697,7 +1685,7 @@ begin
 
    --  linker.export_file_switch
    Add
-     (Create (Export_File_Switch, Pack.Linker),
+     (Name                 => Linker.Export_File_Switch,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1705,7 +1693,7 @@ begin
 
    --  clean.switches
    Add
-     (Create (Switches, Pack.Clean),
+     (Name                 => Clean.Switches,
       Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1714,7 +1702,7 @@ begin
 
    --  clean.source_artifact_extensions
    Add
-     (Create (Source_Artifact_Extensions, Pack.Clean),
+     (Name                 => Clean.Source_Artifact_Extensions,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1722,7 +1710,7 @@ begin
 
    --  clean.object_artifact_extensions
    Add
-     (Create (Object_Artifact_Extensions, Pack.Clean),
+     (Name                 => Clean.Object_Artifact_Extensions,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1730,7 +1718,7 @@ begin
 
    --  clean.artifacts_in_exec_dir
    Add
-     (Create (Artifacts_In_Exec_Dir, Pack.Clean),
+     (Name                 => Clean.Artifacts_In_Exec_Dir,
       Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1738,7 +1726,7 @@ begin
 
    --  clean.artifacts_in_object_dir
    Add
-     (Create (Artifacts_In_Object_Dir, Pack.Clean),
+     (Name                 => Clean.Artifacts_In_Object_Dir,
       Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1746,7 +1734,7 @@ begin
 
    --  install.prefix
    Add
-     (Create (Prefix, Pack.Install),
+     (Name                 => Install.Prefix,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1754,7 +1742,7 @@ begin
 
    --  install.sources_subdir
    Add
-     (Create (Sources_Subdir, Pack.Install),
+     (Name                 => Install.Sources_Subdir,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1762,7 +1750,7 @@ begin
 
    --  install.exec_subdir
    Add
-     (Create (Exec_Subdir, Pack.Install),
+     (Name                 => Install.Exec_Subdir,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1770,7 +1758,7 @@ begin
 
    --  install.lib_subdir
    Add
-     (Create (Lib_Subdir, Pack.Install),
+     (Name                 => Install.Lib_Subdir,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1778,7 +1766,7 @@ begin
 
    --  install.lib_subdir
    Add
-     (Create (ALI_Subdir, Pack.Install),
+     (Name                 => Install.ALI_Subdir,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1786,7 +1774,7 @@ begin
 
    --  install.project_subdir
    Add
-     (Create (Project_Subdir, Pack.Install),
+     (Name                 => Install.Project_Subdir,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1794,7 +1782,7 @@ begin
 
    --  install.active
    Add
-     (Create (Active, Pack.Install),
+     (Name                 => Install.Active,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1802,7 +1790,7 @@ begin
 
    --  install.artifacts
    Add
-     (Create (Artifacts, Pack.Install),
+     (Name                 => Install.Artifacts,
       Index_Type           => File_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1810,7 +1798,7 @@ begin
 
    --  install.required_artifacts
    Add
-     (Create (Required_Artifacts, Pack.Install),
+     (Name                 => Install.Required_Artifacts,
       Index_Type           => File_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1818,7 +1806,7 @@ begin
 
    --  install.mode
    Add
-     (Create (Mode, Pack.Install),
+     (Name                 => Install.Mode,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1826,7 +1814,7 @@ begin
 
    --  install.install_name
    Add
-     (Create (Install_Name, Pack.Install),
+     (Name                 => Install.Install_Name,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1834,7 +1822,7 @@ begin
 
    --  remote.root_dir
    Add
-     (Create (Root_Dir, Pack.Remote),
+     (Name                 => Remote.Root_Dir,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1842,7 +1830,7 @@ begin
 
    --  remote.excluded_patterns
    Add
-     (Create (Excluded_Patterns, Pack.Remote),
+     (Name                 => Remote.Excluded_Patterns,
       Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1850,7 +1838,7 @@ begin
 
    --  remote.included_patterns
    Add
-     (Create (Included_Patterns, Pack.Remote),
+     (Name                 => Remote.Included_Patterns,
       Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1858,7 +1846,7 @@ begin
 
    --  remote.included_artifact_patterns
    Add
-     (Create (Included_Artifact_Patterns, Pack.Remote),
+     (Name                 => Remote.Included_Artifact_Patterns,
       Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1866,7 +1854,7 @@ begin
 
    --  origin_project
    Add
-     (Create (Origin_Project),
+     (Name                 => Origin_Project,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1874,7 +1862,7 @@ begin
 
    --  install'side_debug
    Add
-     (Create (Side_Debug, Pack.Install),
+     (Name                 => Install.Side_Debug,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => False,
@@ -1882,7 +1870,7 @@ begin
 
    --  include_switches_via_spec
    Add
-     (Create (Include_Switches_Via_Spec),
+     (Name                 => Include_Switches_Via_Spec,
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
@@ -1890,7 +1878,7 @@ begin
 
    --  only_dirs_with_sources
    Add
-     (Create (Only_Dirs_With_Sources),
+     (Name                 => Only_Dirs_With_Sources,
       Index_Type           => Language_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1898,7 +1886,7 @@ begin
 
    --  warning_message
    Add
-     (Create (Warning_Message),
+     (Name                 => Warning_Message,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1906,16 +1894,16 @@ begin
 
    --  canonical_target
    Add
-     (Create (Canonical_Target),
+     (Name                 => Canonical_Target,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
       Is_Toolchain_Config  => True);
 
-   --  create_missing_dirs
+   --  GPR2.Create_missing_dirs
    Add
-     (Create (Create_Missing_Dirs),
+     (Name                 => Create_Missing_Dirs,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
@@ -1923,7 +1911,7 @@ begin
 
    --  install_project
    Add
-     (Create (Install_Project, Pack.Install),
+     (Name                 => Install.Install_Project,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => False,

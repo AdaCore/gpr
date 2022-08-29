@@ -45,7 +45,7 @@ procedure Main is
 
       for A in Prj.Attributes (With_Defaults => False).Iterate loop
          Text_IO.Put
-           ("A:   " & Image (Attribute.Set.Element (A).Name.Id));
+           ("A:   " & Image (Attribute.Set.Element (A).Name.Id.Attr));
          Text_IO.Put (" ->");
 
          for V of Element (A).Values loop

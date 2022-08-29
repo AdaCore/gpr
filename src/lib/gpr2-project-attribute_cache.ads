@@ -33,11 +33,10 @@ package GPR2.Project.Attribute_Cache is
    type Cursor is private;
 
    function Check_Cache
-      (Self   : Object;
-       Name   : Attribute_Id;
-       Pkg    : Optional_Package_Id            := No_Package;
-       Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
-       At_Pos : Unit_Index                     := No_Index)
+     (Self   : Object;
+      Name   : Q_Attribute_Id;
+      Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index                     := No_Index)
       return Cursor;
 
    function Has_Element (C : Cursor) return Boolean;
@@ -47,12 +46,11 @@ package GPR2.Project.Attribute_Cache is
    procedure Schedule_Update_Cache (Self : Object);
 
    procedure Update_Cache
-      (Self   : Object;
-       Name   : Attribute_Id;
-       Pkg    : Optional_Package_Id            := No_Package;
-       Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
-       At_Pos : Unit_Index                     := No_Index;
-       Attr   : GPR2.Project.Attribute.Object);
+     (Self   : Object;
+      Name   : Q_Attribute_Id;
+      Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index                     := No_Index;
+      Attr   : GPR2.Project.Attribute.Object);
 
    procedure Clear_Cache (Self : Object);
    --  Empty the cache

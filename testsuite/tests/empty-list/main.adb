@@ -39,7 +39,7 @@ procedure Main is
       if Full then
          for A in Prj.Attributes (With_Defaults => False).Iterate loop
             Text_IO.Put
-              ("A:   " & Image (Attribute.Set.Element (A).Name.Id));
+              ("A:   " & Image (Attribute.Set.Element (A).Name.Id.Attr));
             Text_IO.Put (" ->");
 
             if not Element (A).Values.Is_Empty then

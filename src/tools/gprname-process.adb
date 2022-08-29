@@ -330,15 +330,17 @@ begin
                            OS_Lib.Locate_Exec_On_Path ("gcc");
 
    begin
-      if Proj.Has_Attribute (PRA.Driver, PRP.Compiler, Ada_I) then
+      if Proj.Has_Attribute (PRA.Compiler.Driver, Ada_I)
+      then
          --  Use the main project's driver if it is defined
 
-         Driver_Attr := Proj.Attribute (PRA.Driver, PRP.Compiler, Ada_I);
+         Driver_Attr := Proj.Attribute (PRA.Compiler.Driver, Ada_I);
 
-      elsif Conf.Has_Attribute (PRA.Driver, PRP.Compiler, Ada_I) then
+      elsif Conf.Has_Attribute (PRA.Compiler.Driver, Ada_I)
+      then
          --  Otherwise, we expect to have a configuration-defined driver
 
-         Driver_Attr := Conf.Attribute (PRA.Driver, PRP.Compiler, Ada_I);
+         Driver_Attr := Conf.Attribute (PRA.Compiler.Driver, Ada_I);
 
       else
          raise GPRname_Exception with
@@ -724,10 +726,10 @@ begin
                                   (F_Attr_Name (Child.As_Attribute_Decl).
                                      As_Single_Tok_Node);
                            begin
-                              if Attr_Name = PRA.Languages
-                                or else Attr_Name = PRA.Source_Dirs
-                                or else Attr_Name = PRA.Source_List_File
-                                or else Attr_Name = PRA.Source_Files
+                              if Attr_Name = PRA.Languages.Attr
+                                or else Attr_Name = PRA.Source_Dirs.Attr
+                                or else Attr_Name = PRA.Source_List_File.Attr
+                                or else Attr_Name = PRA.Source_Files.Attr
                               then
                                  Remove_Child (Children_Handle, I);
                               end if;

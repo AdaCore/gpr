@@ -31,7 +31,7 @@ procedure Main is
 
    procedure Display (Att : Project.Attribute.Object) is
    begin
-      Text_IO.Put ("   " & Image (Att.Name.Id));
+      Text_IO.Put ("   " & Image (Att.Name.Id.Attr));
 
       if Att.Has_Index then
          Text_IO.Put (" (" & Att.Index.Text & ")");
@@ -57,7 +57,7 @@ procedure Main is
          for A of Prj.Attributes (With_Defaults => False,
                                   With_Config   => False) loop
             Text_IO.Put
-              ("A:   " & Image (A.Name.Id));
+              ("A:   " & Image (A.Name.Id.Attr));
             Text_IO.Put (" ->");
 
             for V of A.Values loop

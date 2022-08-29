@@ -1,0 +1,5 @@
+description:
+    simple test to check adding custom attribute with and without pack
+driver: build_and_run
+project_file: test
+main: main

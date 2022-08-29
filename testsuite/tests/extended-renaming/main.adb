@@ -33,7 +33,7 @@ procedure Main is
 
    procedure Display (Att : Project.Attribute.Object) is
    begin
-      Text_IO.Put ("   " & Image (Att.Name.Id));
+      Text_IO.Put ("   " & Image (Att.Name.Id.Attr));
 
       if Att.Has_Index then
          Text_IO.Put (" (" & Att.Index.Text & ")");

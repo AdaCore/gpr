@@ -57,7 +57,7 @@ procedure Main is
       if Full then
          for A in Prj.Attributes.Iterate loop
             Text_IO.Put
-              ("A:   " & Image (Attribute.Set.Element (A).Name.Id));
+              ("A:   " & Image (Attribute.Set.Element (A).Name.Id.Attr));
             Text_IO.Put (" ->");
 
             for V of Attribute.Set.Element (A).Values loop

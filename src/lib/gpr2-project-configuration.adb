@@ -16,14 +16,12 @@ with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
-with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference.Value;
 with GPR2.View_Ids;
 
 package body GPR2.Project.Configuration is
 
    package PRA renames Project.Registry.Attribute;
-   package PRP renames Project.Registry.Pack;
 
    --------------------
    -- Archive_Suffix --
@@ -403,8 +401,7 @@ package body GPR2.Project.Configuration is
    is
       Attr  : constant Project.Attribute.Object :=
                 Self.Conf.Attribute
-                  (PRA.Object_File_Suffix,
-                   Pack  => PRP.Compiler,
+                  (Name  => PRA.Compiler.Object_File_Suffix,
                    Index => Attribute_Index.Create (Language));
    begin
       if Attr.Is_Defined then

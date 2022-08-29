@@ -398,8 +398,7 @@ is
 
       if Self.Root.Is_Defined then
          Tmp_Attr := Self.Root.Attribute
-           (PRA.Runtime,
-            Index => Attribute_Index.Create (Language));
+           (PRA.Runtime, Index => Attribute_Index.Create (Language));
       end if;
 
       if Tmp_Attr.Is_Defined then
@@ -420,8 +419,7 @@ is
    begin
       if Self.Root.Is_Defined then
          Tmp_Attr := Self.Root.Attribute
-           (PRA.Toolchain_Name,
-            Index => Attribute_Index.Create (Language));
+           (PRA.Toolchain_Name, Index => Attribute_Index.Create (Language));
       end if;
 
       if Tmp_Attr.Is_Defined then
@@ -442,8 +440,7 @@ is
    begin
       if Self.Root.Is_Defined then
          Tmp_Attr := Self.Root.Attribute
-           (PRA.Toolchain_Path,
-            Index => Attribute_Index.Create (Language));
+           (PRA.Toolchain_Path, Index => Attribute_Index.Create (Language));
       end if;
 
       if Tmp_Attr.Is_Defined and then Tmp_Attr.Value.Text /= "" then
@@ -466,8 +463,8 @@ is
    begin
       if Self.Root.Is_Defined then
          Tmp_Attr := Self.Root.Attribute
-           (PRA.Required_Toolchain_Version,
-            Index => Attribute_Index.Create (Language));
+                        (PRA.Required_Toolchain_Version,
+                         Index => Attribute_Index.Create (Language));
       end if;
 
       if Tmp_Attr.Is_Defined then

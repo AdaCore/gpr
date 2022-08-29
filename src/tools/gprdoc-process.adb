@@ -49,14 +49,14 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
    procedure Generate_IO_Textual_Documentation is
 
       procedure Display_Attributes
-        (Attr_Name : Qualified_Name;
+        (Attr_Name : Q_Attribute_Id;
          Attr_Def  : Def);
       --  Display the attributes as the same GNAT Project Manager Documentation
       --  output. Useful in order to compare the actual code attributes
       --  definitions to the existing documentation.
 
       procedure Generate_Package_Attributes
-        (Pack : Optional_Package_Id);
+        (Pack : Package_Id);
       --  Look for all attributes for a given package
 
       ------------------------
@@ -64,7 +64,7 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
       ------------------------
 
       procedure Display_Attributes
-        (Attr_Name : Qualified_Name;
+        (Attr_Name : Q_Attribute_Id;
          Attr_Def  : Def)
       is
          K_Separator : constant String := ", ";
@@ -141,12 +141,13 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
       ---------------------------------
 
       procedure Generate_Package_Attributes
-        (Pack : Optional_Package_Id)
+        (Pack : Package_Id)
       is
-         Package_Name         : constant String
-           := (if Pack /= No_Package then Image (Pack) else "Project_Level");
-         Package_Name_Shown : Boolean := False;
-         Attribute_Name       : Qualified_Name;
+         Package_Name         : constant String :=
+                                  (if Pack = Project_Level_Scope
+                                   then "Project_Level"
+                                   else Image (Pack));
+         Package_Name_Shown   : Boolean := False;
          Attribute_Definition : Def;
       begin
 
@@ -156,9 +157,8 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
          loop
 
             --  Get the attribute informations
-
-            Attribute_Name       := Create (Name => Attr_Id, Pack => Pack);
-            Attribute_Definition := PRA.Get (Q_Name => Attribute_Name);
+            Attribute_Definition :=
+              PRA.Get (Q_Name => Attr_Id);
 
             --  Display attribute and package informations
 
@@ -168,7 +168,7 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
             end if;
 
             Display_Attributes
-              (Attr_Name => Attribute_Name,
+              (Attr_Name => Attr_Id,
                Attr_Def  => Attribute_Definition);
 
             Text_IO.New_Line;
@@ -181,7 +181,7 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
 
       --  First retrieve all attributes from the Top-Level package
 
-      Generate_Package_Attributes (Pack => No_Package);
+      Generate_Package_Attributes (Pack => Project_Level_Scope);
 
       --  Then retrieve all attributes from all registered packages
 
@@ -198,12 +198,12 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
 
    procedure Generate_JSON_Documentation (Compact : Boolean) is
 
-      function Attribute_Object (Attr_Name  : Qualified_Name;
+      function Attribute_Object (Attr_Name  : Q_Attribute_Id;
                                  Attr_Def   : Def;
                                  Attr_Descr : String) return JSON_Value;
       --  The attribute JSON object description
 
-      function Package_Object (Pack      : Optional_Package_Id;
+      function Package_Object (Pack      : Package_Id;
                                Descr     : String;
                                Attr_List : JSON_Array) return JSON_Value;
       --  The package JSON object description
@@ -212,7 +212,7 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
       -- Attribute_Object --
       ----------------------
 
-      function Attribute_Object (Attr_Name  : Qualified_Name;
+      function Attribute_Object (Attr_Name  : Q_Attribute_Id;
                                  Attr_Def   : Def;
                                  Attr_Descr : String) return JSON_Value
       is
@@ -369,14 +369,15 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
       -- Package_Object --
       --------------------
 
-      function Package_Object (Pack      : Optional_Package_Id;
+      function Package_Object (Pack      : Package_Id;
                                Descr     : String;
                                Attr_List : JSON_Array) return JSON_Value
       is
-         Package_Name         : constant String
-           := (if Pack /= No_Package then Image (Pack) else "Project_Level");
-
-         Obj : constant JSON_Value := Create_Object;
+         Package_Name : constant String :=
+                          (if Pack = Project_Level_Scope
+                           then "Project_Level"
+                           else Image (Pack));
+         Obj          : constant JSON_Value := Create_Object;
       begin
          Set_Field (Val        => Obj,
                     Field_Name => "package_name",
@@ -399,37 +400,36 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
 
       --  First retrieve all attributes from the Top-Level package
       declare
-         Attr_Name : Qualified_Name;
-         Attr_Def  : Def;
-         A_Array   : JSON_Array;
+         Attr_Def : Def;
+         A_Array  : JSON_Array;
       begin
 
-         for Attr_Id of PRA.All_Attributes (Pack => No_Package)
+         for Attr_Id of PRA.All_Attributes (Pack => Project_Level_Scope)
          loop
 
             --  Get the attribute informations
-
-            Attr_Name  := Create (Name => Attr_Id, Pack => No_Package);
-            Attr_Def   := PRA.Get (Q_Name => Attr_Name);
+            Attr_Def :=
+              PRA.Get (Q_Name => Attr_Id);
 
             --  Create the JSON Attributes list
 
             JSON.Append
               (Arr => A_Array,
                Val => Attribute_Object
-                 (Attr_Name  => Attr_Name,
+                 (Attr_Name  => Attr_Id,
                   Attr_Def   => Attr_Def,
                   Attr_Descr => PRAD.Get_Attribute_Description
-                    (Key => Attr_Name)));
+                                  (Key => Attr_Id)));
 
          end loop;
 
          --  Create the JSON package with the attribute list
 
          JSON.Append (Arr => P_Array,
-                      Val => Package_Object (Pack      => No_Package,
-                                             Descr     => "",
-                                             Attr_List => A_Array));
+                      Val => Package_Object
+                        (Pack      => Project_Level_Scope,
+                         Descr     => "",
+                         Attr_List => A_Array));
       end;
 
       --  Then retrieve all attributes from all registered packages
@@ -437,27 +437,25 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
       for Pack of PRP.All_Packages
       loop
          declare
-            Attr_Name : Qualified_Name;
-            Attr_Def  : Def;
-            A_Array   : JSON_Array;
+            Attr_Def : Def;
+            A_Array  : JSON_Array;
          begin
             for Attr_Id of PRA.All_Attributes (Pack => Pack)
             loop
 
                --  Get the attribute informations
-
-               Attr_Name := Create (Name => Attr_Id, Pack => Pack);
-               Attr_Def  := PRA.Get (Q_Name => Attr_Name);
+               Attr_Def :=
+                 PRA.Get (Q_Name => Attr_Id);
 
                --  Create the JSON Attributes list
 
                JSON.Append
                  (Arr => A_Array,
                   Val => Attribute_Object
-                    (Attr_Name  => Attr_Name,
+                    (Attr_Name  => Attr_Id,
                      Attr_Def   => Attr_Def,
                      Attr_Descr => PRAD.Get_Attribute_Description
-                       (Key => Attr_Name)));
+                                     (Key => Attr_Id)));
 
             end loop;
 

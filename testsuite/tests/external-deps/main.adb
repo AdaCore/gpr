@@ -29,14 +29,12 @@ begin
    Ctx.Include ("OS", "Linux");
    Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
 
-   Text_IO.Put_Line
-     (Prj.Root_Project.Attribute (PRA.Object_Dir).Value.Text);
+   Text_IO.Put_Line (Prj.Root_Project.Attribute (PRA.Object_Dir).Value.Text);
 
    Ctx.Include ("OS", "Windows");
    Prj.Set_Context (Ctx);
 
-   Text_IO.Put_Line
-     (Prj.Root_Project.Attribute (PRA.Object_Dir).Value.Text);
+   Text_IO.Put_Line (Prj.Root_Project.Attribute (PRA.Object_Dir).Value.Text);
 
 exception
    when GPR2.Project_Error =>

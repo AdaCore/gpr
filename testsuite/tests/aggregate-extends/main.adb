@@ -56,7 +56,7 @@ procedure Main is
    procedure Display (Att : Project.Attribute.Object) is
    begin
       Put_Indent;
-      Text_IO.Put (Image (Att.Name.Id));
+      Text_IO.Put (Image (Att.Name.Id.Attr));
 
       if Att.Has_Index then
          Text_IO.Put (" (" & String (Att.Index.Text) & ")");

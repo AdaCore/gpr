@@ -29,31 +29,18 @@ procedure Main is
 
    procedure Print_Attributes
      (Tree : GPR2.Project.Tree.Object;
-      Pack : GPR2.Optional_Package_Id;
-      Name : GPR2.Optional_Attribute_Id) is
+      Name : GPR2.Q_Attribute_Id) is
       Attributes : GPR2.Project.Attribute.Set.Object;
       use GPR2;
-      Header     : String := (if Pack = No_Package
-                              then Image (Name)
-                              else Image (Pack) & "." & Image (Name));
+      Header     : String := (if Name.Pack = Project_Level_Scope
+                              then Image (Name.Attr)
+                              else Image (Name.Pack) & "."
+                              & Image (Name.Attr));
    begin
-      if Name = No_Attribute then
-         Attributes := Tree.Root_Project.Attributes
-           (Pack,
-            With_Defaults => False,
-            With_Config   => False);
-      elsif Pack = No_Package then
-         Attributes := Tree.Root_Project.Attributes
-           (Name,
-            With_Defaults => False,
-            With_Config   => False);
-      elsif Tree.Root_Project.Has_Package (Pack, With_Defaults => False) then
-         Attributes := Tree.Root_Project.Attributes
-           (Pack,
-            Name,
-            With_Defaults => False,
-            With_Config   => False);
-      end if;
+      Attributes := Tree.Root_Project.Attributes
+        (Name,
+         With_Defaults => False,
+         With_Config   => False);
 
       for A of Attributes loop
          declare
@@ -101,15 +88,14 @@ begin
          GPR2.Path_Name.No_Resolution),
       Context  => Context);
    Library_Options := Tree1.Root_Project.Attribute
-     (Name  => GPR2.Project.Registry.Attribute.Library_Options).Values;
+     (Name => GPR2.Project.Registry.Attribute.Library_Options).Values;
    Tree2.Load_Autoconf
      (Filename => GPR2.Path_Name.Create_File
         (GPR2.Project.Ensure_Extension ("inst/share/gpr/lib2"),
          GPR2.Path_Name.No_Resolution),
       Context  => Context);
    Linker_Options := Tree2.Root_Project.Attribute
-     (Name  => GPR2.Project.Registry.Attribute.Linker_Options,
-      Pack  => GPR2.Project.Registry.Pack.Linker).Values;
+     (Name => GPR2.Project.Registry.Attribute.Linker.Linker_Options).Values;
    for Library_Option of Library_Options loop
       declare
          Found : Boolean := False;
@@ -123,12 +109,10 @@ begin
          if not Found then
             Print_Attributes
               (Tree => Tree1,
-               Pack => GPR2.No_Package,
                Name => GPR2.Project.Registry.Attribute.Library_Options);
             Print_Attributes
               (Tree => Tree2,
-               Pack => GPR2.Project.Registry.Pack.Linker,
-               Name => GPR2.Project.Registry.Attribute.Linker_Options);
+               Name => GPR2.Project.Registry.Attribute.Linker.Linker_Options);
             return;
          end if;
       end;
