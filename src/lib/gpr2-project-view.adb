@@ -11,8 +11,8 @@ with Ada.Text_IO;
 
 with GNAT.OS_Lib;
 with GNATCOLL.Utils;
-with GNAT.Regexp; use GNAT.Regexp;
 
+with GPR2.FNMatch;
 with GPR2.Project.Attribute_Cache;
 with GPR2.Project.Definition;
 with GPR2.Project.Source.Set;
@@ -278,11 +278,8 @@ package body GPR2.Project.View is
       is
          use type Source_Reference.Object;
       begin
-         if Match (Index.Text,
-                   Compile
-                     (Pattern.Index.Text,
-                      Glob           => True,
-                      Case_Sensitive => Pattern.Index.Is_Case_Sensitive))
+         if FNMatch.Match (Str     => Index.Text,
+                           Pattern => Pattern.Index.Text)
          then
             if not Found (Result)
               or else
