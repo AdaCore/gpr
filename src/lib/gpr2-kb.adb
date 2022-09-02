@@ -2883,7 +2883,16 @@ package body GPR2.KB is
                   Pattern   => "");
 
                while More_Entries (Search) loop
-                  Get_Next_Entry (Search, File);
+                  begin
+                     Get_Next_Entry (Search, File);
+                  exception
+                     when E : others =>
+                        Trace
+                          (Main_Trace,
+                           "<dir>: ignoring entry, "
+                           & Ada.Exceptions.Exception_Message (E));
+                        goto Next_Entry;
+                  end;
 
                   if Directories.Simple_Name (File) /= "."
                     and then Directories.Simple_Name (File) /= ".."
@@ -2960,6 +2969,7 @@ package body GPR2.KB is
                         end if;
                      end;
                   end if;
+                  << Next_Entry >>
                end loop;
             end;
          end if;
