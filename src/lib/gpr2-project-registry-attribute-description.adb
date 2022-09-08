@@ -504,8 +504,8 @@ begin
       Key       => PRA.Target,
       New_Item  =>
         "Value is the name of the target platform. Taken into account only " &
-        "in the main project. ote that when the target is specified on the " &
-        "command line (usually with a switch --target=), the value of " &
+        "in the main project. Note that when the target is specified on the " &
+        "command line (usually with a switch ``--target=``), the value of " &
         "attribute reference 'Target is the one specified on the command " &
         "line."
      );
@@ -519,9 +519,9 @@ begin
         "to be used when using the compiler of the language. Taken into " &
         "account only in the main project, or its extended projects if any. " &
         "Note that when the runtime is specified for a language on the " &
-        "command line (usually with a switch --RTS), the value of attribute " &
-        "reference 'Runtime for this language is the one specified on the " &
-        "command line."
+        "command line (usually with a switch ``--RTS``), the value of " &
+        "attribute reference 'Runtime for this language is the one " &
+        "specified on the command line."
      );
 
    --  Runtime_Dir
@@ -827,7 +827,7 @@ begin
       Key       => PRA.Builder.Executable_Suffix,
       New_Item  =>
         "Value is the extension of the file name of executables. The actual " &
-        "default value for the extension depends on the host: .exe on " &
+        "default value for the extension depends on the host: ``.exe`` on " &
         "windows, else an empty string."
      );
 
@@ -1356,8 +1356,8 @@ begin
      (Container => Attribute_Description,
       Key       => PRA.Install.Mode,
       New_Item  =>
-        "Value is the installation mode, it is either dev (default) or " &
-        "usage."
+        "Value is the installation mode, it is either 'dev' (default) or " &
+        "'usage'."
      );
 
    --  Install.Install_Name
@@ -1626,7 +1626,7 @@ begin
       Key       => PRA.Remote.Included_Patterns,
       New_Item  =>
         "If this attribute is defined it sets the patterns to synchronized " &
-        "from the master to the slaves. It is exclusive with " &
+        "from the master to the slaves. It is incompatible with " &
         "Excluded_Patterns, that is it is an error to define both."
      );
 
