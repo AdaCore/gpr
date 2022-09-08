@@ -145,12 +145,14 @@ def generate(data, file):
 
         tmp_descr = attribute.get_descr()
 
+        package_text_name = " ".join(package.get_name().split("_")) + " Attributes"
+        if package.get_name() != "Project_Level":
+            package_text_name = "Package " + package_text_name
+
         # If the package is not in the map, it is not displayed already
         if not package.get_name() in displayed_pc:
-            package_text_name = " ".join(package.get_name().split("_")) + " Attributes"
             package_cat_name = f"_{package.get_name()}_Attributes"
             if package.get_name() != "Project_Level":
-                package_text_name = "Package " + package_text_name
                 package_cat_name = "_Package" + package_cat_name
             file.write(
                 f".. {package_cat_name}:\n\n"
@@ -172,6 +174,8 @@ def generate(data, file):
             # Insert the category into the map, it will not be displayed anymore
             displayed_pc[package.get_name() + "." + category.get_name()] = True
 
+        file.write(f"{attr_indent}.. index:: Attributes - {package_text_name}; "
+                   + f"{attribute.get_name()}\n\n")
         file.write(f"{attr_indent}* **{attribute.get_name()}**: ")
         if display_options["Short_Def"]:
             file.write(attribute.get_def_str())

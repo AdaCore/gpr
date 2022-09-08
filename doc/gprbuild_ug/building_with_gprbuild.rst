@@ -1167,6 +1167,22 @@ from a UNIX shell using the echo command:
 The answer from the ping command has the following format:
 
 ::
+
    OK<GPR Version String>[ASCII.GS]<time-stamp>[ASCII.GS]<slave hash>
 
 ASCII.GS is the Group Separator character whose code is 29.
+
+.. _Exit_code:
+
+Exit code
+=========
+
+* **0** : No errors. Although warnings can be raised.
+
+* **1** : General tool error, such as invalid option, missing file...
+
+* **4** : Underlying tool error.
+
+* **5** : Project parsing error.
+
+* **7** : Critical tool error. Defensive code failures and the like.

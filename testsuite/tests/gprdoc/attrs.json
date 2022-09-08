@@ -1994,7 +1994,7 @@
             "config_concatenable": false,
             "inherit_from_extended": "INHERITED"
           },
-          "attribute_descr": "Index is a language name. Indicates the runtime directory that is to be used when using the compiler of the language. Taken into account only in the main project, or its extended projects if any. Note that when the runtime is specified for a language on the command line (usually with a switch --RTS), the value of attribute reference 'Runtime for this language is the one specified on the command line."
+          "attribute_descr": "Index is a language name. Indicates the runtime directory that is to be used when using the compiler of the language. Taken into account only in the main project, or its extended projects if any. Note that when the runtime is specified for a language on the command line (usually with a switch ``--RTS``), the value of attribute reference 'Runtime for this language is the one specified on the command line."
         },
         {
           "attribute_name": "Runtime_Dir",
@@ -2426,7 +2426,7 @@
             "config_concatenable": false,
             "inherit_from_extended": "INHERITED"
           },
-          "attribute_descr": "Value is the name of the target platform. Taken into account only in the main project. ote that when the target is specified on the command line (usually with a switch --target=), the value of attribute reference 'Target is the one specified on the command line."
+          "attribute_descr": "Value is the name of the target platform. Taken into account only in the main project. Note that when the target is specified on the command line (usually with a switch ``--target=``), the value of attribute reference 'Target is the one specified on the command line."
         },
         {
           "attribute_name": "Toolchain_Version",
@@ -2893,6 +2893,38 @@
           "attribute_descr": "Index is a language name. Value is the list of builder switches to be used when building an executable of the language, if there is no applicable attribute Switches."
         },
         {
+          "attribute_name": "Switches",
+          "attribute_def": {
+            "index_type": "FILEGLOB_OR_LANGUAGE_INDEX",
+            "index_optional": true,
+            "value": "LIST",
+            "value_case_sensitive": true,
+            "value_is_set": false,
+            "empty_value": "ALLOW",
+            "builtin": false,
+            "is_allowed_in": {
+              "configuration": true,
+              "abstract": true,
+              "standard": true,
+              "library": true,
+              "aggregate": true,
+              "aggregate_library": true
+            },
+            "has_default_in": {
+              "configuration": false,
+              "abstract": false,
+              "standard": false,
+              "library": false,
+              "aggregate": false,
+              "aggregate_library": false
+            },
+            "is_toolchain_config": false,
+            "config_concatenable": true,
+            "inherit_from_extended": "NOT_INHERITED"
+          },
+          "attribute_descr": "Index is either a language name or a source file name. Value is the list of builder switches to be used when building an executable. Index is either the source file name of the executable to be built or its language name."
+        },
+        {
           "attribute_name": "Executable",
           "attribute_def": {
             "index_type": "FILE_INDEX",
@@ -2958,7 +2990,7 @@
             "config_concatenable": false,
             "inherit_from_extended": "NOT_INHERITED"
           },
-          "attribute_descr": "Value is the extension of the file name of executables. The actual default value for the extension depends on the host: .exe on windows, else an empty string."
+          "attribute_descr": "Value is the extension of the file name of executables. The actual default value for the extension depends on the host: ``.exe`` on windows, else an empty string."
         },
         {
           "attribute_name": "Global_Compilation_Switches",
@@ -3055,12 +3087,18 @@
             "inherit_from_extended": "NOT_INHERITED"
           },
           "attribute_descr": "Value is the file name of a configuration pragmas file that is specified to the Ada compiler when compiling any Ada source in the project tree."
-        },
+        }
+      ]
+    },
+    {
+      "package_name": "Clean",
+      "package_descr": "",
+      "attributes": [
         {
           "attribute_name": "Switches",
           "attribute_def": {
-            "index_type": "FILEGLOB_OR_LANGUAGE_INDEX",
-            "index_optional": true,
+            "index_type": "NO_INDEX",
+            "index_optional": false,
             "value": "LIST",
             "value_case_sensitive": true,
             "value_is_set": false,
@@ -3086,14 +3124,8 @@
             "config_concatenable": true,
             "inherit_from_extended": "NOT_INHERITED"
           },
-          "attribute_descr": "Index is either a language name or a source file name. Value is the list of builder switches to be used when building an executable. Index is either the source file name of the executable to be built or its language name."
-        }
-      ]
-    },
-    {
-      "package_name": "Clean",
-      "package_descr": "",
-      "attributes": [
+          "attribute_descr": "Taken into account only in the main project. Value is a list of switches to be used by the cleaning application."
+        },
         {
           "attribute_name": "Artifacts_In_Exec_Dir",
           "attribute_def": {
@@ -3221,11 +3253,81 @@
             "inherit_from_extended": "NOT_INHERITED"
           },
           "attribute_descr": "Index is a language names. Value is the list of extensions for file names derived from object file names that need to be cleaned in the object directory of the project."
+        }
+      ]
+    },
+    {
+      "package_name": "Compiler",
+      "package_descr": "",
+      "attributes": [
+        {
+          "attribute_name": "Default_Switches",
+          "attribute_def": {
+            "index_type": "FILEGLOB_OR_LANGUAGE_INDEX",
+            "index_optional": true,
+            "value": "LIST",
+            "value_case_sensitive": true,
+            "value_is_set": false,
+            "empty_value": "ALLOW",
+            "builtin": false,
+            "is_allowed_in": {
+              "configuration": true,
+              "abstract": true,
+              "standard": true,
+              "library": true,
+              "aggregate": false,
+              "aggregate_library": false
+            },
+            "has_default_in": {
+              "configuration": false,
+              "abstract": false,
+              "standard": false,
+              "library": false,
+              "aggregate": false,
+              "aggregate_library": false
+            },
+            "is_toolchain_config": false,
+            "config_concatenable": true,
+            "inherit_from_extended": "NOT_INHERITED"
+          },
+          "attribute_descr": "Index is a language name. Value is a list of switches to be used when invoking the compiler for the language for a source of the project, if there is no applicable attribute Switches."
         },
         {
-          "attribute_name": "Switches",
+          "attribute_name": "Driver",
           "attribute_def": {
-            "index_type": "NO_INDEX",
+            "index_type": "LANGUAGE_INDEX",
+            "index_optional": false,
+            "value": "SINGLE",
+            "value_case_sensitive": true,
+            "value_is_set": false,
+            "empty_value": "ALLOW",
+            "builtin": false,
+            "is_allowed_in": {
+              "configuration": true,
+              "abstract": true,
+              "standard": true,
+              "library": true,
+              "aggregate": true,
+              "aggregate_library": true
+            },
+            "has_default_in": {
+              "configuration": false,
+              "abstract": false,
+              "standard": false,
+              "library": false,
+              "aggregate": false,
+              "aggregate_library": false
+            },
+            "is_toolchain_config": false,
+            "config_concatenable": false,
+            "inherit_from_extended": "NOT_INHERITED"
+          },
+          "attribute_descr": "Index is a language name. Value is the name of the executable for the compiler of the language."
+        },
+        {
+          "attribute_name": "Required_Switches",
+          "attribute_def": {
+            "index_type": "LANGUAGE_INDEX",
             "index_optional": false,
             "value": "LIST",
             "value_case_sensitive": true,
@@ -3252,14 +3354,40 @@
             "config_concatenable": true,
             "inherit_from_extended": "NOT_INHERITED"
           },
-          "attribute_descr": "Taken into account only in the main project. Value is a list of switches to be used by the cleaning application."
-        }
-      ]
-    },
-    {
-      "package_name": "Compiler",
-      "package_descr": "",
-      "attributes": [
+          "attribute_descr": "Equivalent to attribute Leading_Required_Switches."
+        },
+        {
+          "attribute_name": "Switches",
+          "attribute_def": {
+            "index_type": "FILEGLOB_OR_LANGUAGE_INDEX",
+            "index_optional": true,
+            "value": "LIST",
+            "value_case_sensitive": true,
+            "value_is_set": false,
+            "empty_value": "ALLOW",
+            "builtin": false,
+            "is_allowed_in": {
+              "configuration": true,
+              "abstract": true,
+              "standard": true,
+              "library": true,
+              "aggregate": false,
+              "aggregate_library": false
+            },
+            "has_default_in": {
+              "configuration": false,
+              "abstract": false,
+              "standard": false,
+              "library": false,
+              "aggregate": false,
+              "aggregate_library": false
+            },
+            "is_toolchain_config": false,
+            "config_concatenable": true,
+            "inherit_from_extended": "NOT_INHERITED"
+          },
+          "attribute_descr": "Index is a source file name or a language name. Value is the list of switches to be used when invoking the compiler for the source or for its language."
+        },
         {
           "attribute_name": "Config_Body_File_Name",
           "attribute_def": {
@@ -3517,38 +3645,6 @@
           "attribute_descr": "Index is a language name. Value is the template to be used to indicate a configuration for all specs of the languages in a configuration file."
         },
         {
-          "attribute_name": "Default_Switches",
-          "attribute_def": {
-            "index_type": "FILEGLOB_OR_LANGUAGE_INDEX",
-            "index_optional": true,
-            "value": "LIST",
-            "value_case_sensitive": true,
-            "value_is_set": false,
-            "empty_value": "ALLOW",
-            "builtin": false,
-            "is_allowed_in": {
-              "configuration": true,
-              "abstract": true,
-              "standard": true,
-              "library": true,
-              "aggregate": false,
-              "aggregate_library": false
-            },
-            "has_default_in": {
-              "configuration": false,
-              "abstract": false,
-              "standard": false,
-              "library": false,
-              "aggregate": false,
-              "aggregate_library": false
-            },
-            "is_toolchain_config": false,
-            "config_concatenable": true,
-            "inherit_from_extended": "NOT_INHERITED"
-          },
-          "attribute_descr": "Index is a language name. Value is a list of switches to be used when invoking the compiler for the language for a source of the project, if there is no applicable attribute Switches."
-        },
-        {
           "attribute_name": "Dependency_Driver",
           "attribute_def": {
             "index_type": "LANGUAGE_INDEX",
@@ -3643,38 +3739,6 @@
             "inherit_from_extended": "NOT_INHERITED"
           },
           "attribute_descr": "Index is a language name. Value is the list of switches to be used to specify to the compiler the dependency file when the dependency kind of the language is file based, and when Dependency_Driver is not specified for the language."
-        },
-        {
-          "attribute_name": "Driver",
-          "attribute_def": {
-            "index_type": "LANGUAGE_INDEX",
-            "index_optional": false,
-            "value": "SINGLE",
-            "value_case_sensitive": true,
-            "value_is_set": false,
-            "empty_value": "ALLOW",
-            "builtin": false,
-            "is_allowed_in": {
-              "configuration": true,
-              "abstract": true,
-              "standard": true,
-              "library": true,
-              "aggregate": true,
-              "aggregate_library": true
-            },
-            "has_default_in": {
-              "configuration": false,
-              "abstract": false,
-              "standard": false,
-              "library": false,
-              "aggregate": false,
-              "aggregate_library": false
-            },
-            "is_toolchain_config": false,
-            "config_concatenable": false,
-            "inherit_from_extended": "NOT_INHERITED"
-          },
-          "attribute_descr": "Index is a language name. Value is the name of the executable for the compiler of the language."
         },
         {
           "attribute_name": "Include_Path",
@@ -4257,38 +4321,6 @@
           "attribute_descr": "Index is a language name. Value is the list of switches to be used when compiling a source of the language when the project is a shared library project."
         },
         {
-          "attribute_name": "Required_Switches",
-          "attribute_def": {
-            "index_type": "LANGUAGE_INDEX",
-            "index_optional": false,
-            "value": "LIST",
-            "value_case_sensitive": true,
-            "value_is_set": false,
-            "empty_value": "ALLOW",
-            "builtin": false,
-            "is_allowed_in": {
-              "configuration": true,
-              "abstract": true,
-              "standard": true,
-              "library": true,
-              "aggregate": true,
-              "aggregate_library": true
-            },
-            "has_default_in": {
-              "configuration": false,
-              "abstract": false,
-              "standard": false,
-              "library": false,
-              "aggregate": false,
-              "aggregate_library": false
-            },
-            "is_toolchain_config": false,
-            "config_concatenable": true,
-            "inherit_from_extended": "NOT_INHERITED"
-          },
-          "attribute_descr": "Equivalent to attribute Leading_Required_Switches."
-        },
-        {
           "attribute_name": "Response_File_Format",
           "attribute_def": {
             "index_type": "LANGUAGE_INDEX",
@@ -4385,38 +4417,6 @@
           "attribute_descr": "Index is a language name. Value is a list of switches to be used just before the path name of the source to compile when invoking the compiler for a source of the language."
         },
         {
-          "attribute_name": "Switches",
-          "attribute_def": {
-            "index_type": "FILEGLOB_OR_LANGUAGE_INDEX",
-            "index_optional": true,
-            "value": "LIST",
-            "value_case_sensitive": true,
-            "value_is_set": false,
-            "empty_value": "ALLOW",
-            "builtin": false,
-            "is_allowed_in": {
-              "configuration": true,
-              "abstract": true,
-              "standard": true,
-              "library": true,
-              "aggregate": false,
-              "aggregate_library": false
-            },
-            "has_default_in": {
-              "configuration": false,
-              "abstract": false,
-              "standard": false,
-              "library": false,
-              "aggregate": false,
-              "aggregate_library": false
-            },
-            "is_toolchain_config": false,
-            "config_concatenable": true,
-            "inherit_from_extended": "NOT_INHERITED"
-          },
-          "attribute_descr": "Index is a source file name or a language name. Value is the list of switches to be used when invoking the compiler for the source or for its language."
-        },
-        {
           "attribute_name": "Trailing_Required_Switches",
           "attribute_def": {
             "index_type": "LANGUAGE_INDEX",
@@ -4492,6 +4492,38 @@
       "package_name": "Install",
       "package_descr": "",
       "attributes": [
+        {
+          "attribute_name": "Prefix",
+          "attribute_def": {
+            "index_type": "NO_INDEX",
+            "index_optional": false,
+            "value": "SINGLE",
+            "value_case_sensitive": true,
+            "value_is_set": false,
+            "empty_value": "ALLOW",
+            "builtin": false,
+            "is_allowed_in": {
+              "configuration": true,
+              "abstract": true,
+              "standard": true,
+              "library": true,
+              "aggregate": true,
+              "aggregate_library": true
+            },
+            "has_default_in": {
+              "configuration": false,
+              "abstract": false,
+              "standard": false,
+              "library": false,
+              "aggregate": false,
+              "aggregate_library": false
+            },
+            "is_toolchain_config": false,
+            "config_concatenable": false,
+            "inherit_from_extended": "NOT_INHERITED"
+          },
+          "attribute_descr": "Value is the install destination directory. If the value is a relative path, it is taken as relative to the global prefix directory. That is, either the value passed to --prefix option or the default installation prefix."
+        },
         {
           "attribute_name": "Ali_Subdir",
           "attribute_def": {
@@ -4746,39 +4778,7 @@
             "config_concatenable": false,
             "inherit_from_extended": "NOT_INHERITED"
           },
-          "attribute_descr": "Value is the installation mode, it is either dev (default) or usage."
-        },
-        {
-          "attribute_name": "Prefix",
-          "attribute_def": {
-            "index_type": "NO_INDEX",
-            "index_optional": false,
-            "value": "SINGLE",
-            "value_case_sensitive": true,
-            "value_is_set": false,
-            "empty_value": "ALLOW",
-            "builtin": false,
-            "is_allowed_in": {
-              "configuration": true,
-              "abstract": true,
-              "standard": true,
-              "library": true,
-              "aggregate": true,
-              "aggregate_library": true
-            },
-            "has_default_in": {
-              "configuration": false,
-              "abstract": false,
-              "standard": false,
-              "library": false,
-              "aggregate": false,
-              "aggregate_library": false
-            },
-            "is_toolchain_config": false,
-            "config_concatenable": false,
-            "inherit_from_extended": "NOT_INHERITED"
-          },
-          "attribute_descr": "Value is the install destination directory. If the value is a relative path, it is taken as relative to the global prefix directory. That is, either the value passed to --prefix option or the default installation prefix."
+          "attribute_descr": "Value is the installation mode, it is either 'dev' (default) or 'usage'."
         },
         {
           "attribute_name": "Project_Subdir",
@@ -4979,6 +4979,166 @@
           "attribute_descr": "Value is the name of the linker executable."
         },
         {
+          "attribute_name": "Required_Switches",
+          "attribute_def": {
+            "index_type": "NO_INDEX",
+            "index_optional": false,
+            "value": "LIST",
+            "value_case_sensitive": true,
+            "value_is_set": false,
+            "empty_value": "ALLOW",
+            "builtin": false,
+            "is_allowed_in": {
+              "configuration": true,
+              "abstract": true,
+              "standard": true,
+              "library": true,
+              "aggregate": true,
+              "aggregate_library": true
+            },
+            "has_default_in": {
+              "configuration": false,
+              "abstract": false,
+              "standard": false,
+              "library": false,
+              "aggregate": false,
+              "aggregate_library": false
+            },
+            "is_toolchain_config": false,
+            "config_concatenable": true,
+            "inherit_from_extended": "NOT_INHERITED"
+          },
+          "attribute_descr": "Value is a list of switches that are required when invoking the linker to link an executable."
+        },
+        {
+          "attribute_name": "Switches",
+          "attribute_def": {
+            "index_type": "FILEGLOB_OR_LANGUAGE_INDEX",
+            "index_optional": true,
+            "value": "LIST",
+            "value_case_sensitive": true,
+            "value_is_set": false,
+            "empty_value": "ALLOW",
+            "builtin": false,
+            "is_allowed_in": {
+              "configuration": true,
+              "abstract": true,
+              "standard": true,
+              "library": true,
+              "aggregate": false,
+              "aggregate_library": false
+            },
+            "has_default_in": {
+              "configuration": false,
+              "abstract": false,
+              "standard": false,
+              "library": false,
+              "aggregate": false,
+              "aggregate_library": false
+            },
+            "is_toolchain_config": false,
+            "config_concatenable": true,
+            "inherit_from_extended": "NOT_INHERITED"
+          },
+          "attribute_descr": "Index is a source file name or a language name. Value is the list of switches to be used when invoking the linker to build an executable for the source or for its language."
+        },
+        {
+          "attribute_name": "Max_Command_Line_Length",
+          "attribute_def": {
+            "index_type": "NO_INDEX",
+            "index_optional": false,
+            "value": "SINGLE",
+            "value_case_sensitive": true,
+            "value_is_set": false,
+            "empty_value": "ALLOW",
+            "builtin": false,
+            "is_allowed_in": {
+              "configuration": true,
+              "abstract": true,
+              "standard": true,
+              "library": true,
+              "aggregate": true,
+              "aggregate_library": true
+            },
+            "has_default_in": {
+              "configuration": false,
+              "abstract": false,
+              "standard": false,
+              "library": false,
+              "aggregate": false,
+              "aggregate_library": false
+            },
+            "is_toolchain_config": false,
+            "config_concatenable": false,
+            "inherit_from_extended": "NOT_INHERITED"
+          },
+          "attribute_descr": "Value is the maximum number of character in the command line when invoking the linker to link an executable."
+        },
+        {
+          "attribute_name": "Response_File_Format",
+          "attribute_def": {
+            "index_type": "NO_INDEX",
+            "index_optional": false,
+            "value": "SINGLE",
+            "value_case_sensitive": true,
+            "value_is_set": false,
+            "empty_value": "ALLOW",
+            "builtin": false,
+            "is_allowed_in": {
+              "configuration": true,
+              "abstract": true,
+              "standard": true,
+              "library": true,
+              "aggregate": true,
+              "aggregate_library": true
+            },
+            "has_default_in": {
+              "configuration": false,
+              "abstract": false,
+              "standard": false,
+              "library": false,
+              "aggregate": false,
+              "aggregate_library": false
+            },
+            "is_toolchain_config": false,
+            "config_concatenable": false,
+            "inherit_from_extended": "NOT_INHERITED"
+          },
+          "attribute_descr": "Indicates the kind of response file to create when the length of the linking command line is too large. Only authorized case-insensitive values are 'none', 'gnu', 'object_list', 'gcc_gnu', 'gcc_option_list' and 'gcc_object_list'."
+        },
+        {
+          "attribute_name": "Response_File_Switches",
+          "attribute_def": {
+            "index_type": "NO_INDEX",
+            "index_optional": false,
+            "value": "LIST",
+            "value_case_sensitive": true,
+            "value_is_set": false,
+            "empty_value": "ALLOW",
+            "builtin": false,
+            "is_allowed_in": {
+              "configuration": true,
+              "abstract": true,
+              "standard": true,
+              "library": true,
+              "aggregate": true,
+              "aggregate_library": true
+            },
+            "has_default_in": {
+              "configuration": false,
+              "abstract": false,
+              "standard": false,
+              "library": false,
+              "aggregate": false,
+              "aggregate_library": false
+            },
+            "is_toolchain_config": false,
+            "config_concatenable": true,
+            "inherit_from_extended": "NOT_INHERITED"
+          },
+          "attribute_descr": "Value is the list of switches to specify a response file to the linker."
+        },
+        {
           "attribute_name": "Export_File_Format",
           "attribute_def": {
             "index_type": "NO_INDEX",
@@ -5137,166 +5297,6 @@
             "inherit_from_extended": "NOT_INHERITED"
           },
           "attribute_descr": "Value is the switch to specify the map file name that the linker needs to create."
-        },
-        {
-          "attribute_name": "Max_Command_Line_Length",
-          "attribute_def": {
-            "index_type": "NO_INDEX",
-            "index_optional": false,
-            "value": "SINGLE",
-            "value_case_sensitive": true,
-            "value_is_set": false,
-            "empty_value": "ALLOW",
-            "builtin": false,
-            "is_allowed_in": {
-              "configuration": true,
-              "abstract": true,
-              "standard": true,
-              "library": true,
-              "aggregate": true,
-              "aggregate_library": true
-            },
-            "has_default_in": {
-              "configuration": false,
-              "abstract": false,
-              "standard": false,
-              "library": false,
-              "aggregate": false,
-              "aggregate_library": false
-            },
-            "is_toolchain_config": false,
-            "config_concatenable": false,
-            "inherit_from_extended": "NOT_INHERITED"
-          },
-          "attribute_descr": "Value is the maximum number of character in the command line when invoking the linker to link an executable."
-        },
-        {
-          "attribute_name": "Required_Switches",
-          "attribute_def": {
-            "index_type": "NO_INDEX",
-            "index_optional": false,
-            "value": "LIST",
-            "value_case_sensitive": true,
-            "value_is_set": false,
-            "empty_value": "ALLOW",
-            "builtin": false,
-            "is_allowed_in": {
-              "configuration": true,
-              "abstract": true,
-              "standard": true,
-              "library": true,
-              "aggregate": true,
-              "aggregate_library": true
-            },
-            "has_default_in": {
-              "configuration": false,
-              "abstract": false,
-              "standard": false,
-              "library": false,
-              "aggregate": false,
-              "aggregate_library": false
-            },
-            "is_toolchain_config": false,
-            "config_concatenable": true,
-            "inherit_from_extended": "NOT_INHERITED"
-          },
-          "attribute_descr": "Value is a list of switches that are required when invoking the linker to link an executable."
-        },
-        {
-          "attribute_name": "Response_File_Format",
-          "attribute_def": {
-            "index_type": "NO_INDEX",
-            "index_optional": false,
-            "value": "SINGLE",
-            "value_case_sensitive": true,
-            "value_is_set": false,
-            "empty_value": "ALLOW",
-            "builtin": false,
-            "is_allowed_in": {
-              "configuration": true,
-              "abstract": true,
-              "standard": true,
-              "library": true,
-              "aggregate": true,
-              "aggregate_library": true
-            },
-            "has_default_in": {
-              "configuration": false,
-              "abstract": false,
-              "standard": false,
-              "library": false,
-              "aggregate": false,
-              "aggregate_library": false
-            },
-            "is_toolchain_config": false,
-            "config_concatenable": false,
-            "inherit_from_extended": "NOT_INHERITED"
-          },
-          "attribute_descr": "Indicates the kind of response file to create when the length of the linking command line is too large. Only authorized case-insensitive values are 'none', 'gnu', 'object_list', 'gcc_gnu', 'gcc_option_list' and 'gcc_object_list'."
-        },
-        {
-          "attribute_name": "Response_File_Switches",
-          "attribute_def": {
-            "index_type": "NO_INDEX",
-            "index_optional": false,
-            "value": "LIST",
-            "value_case_sensitive": true,
-            "value_is_set": false,
-            "empty_value": "ALLOW",
-            "builtin": false,
-            "is_allowed_in": {
-              "configuration": true,
-              "abstract": true,
-              "standard": true,
-              "library": true,
-              "aggregate": true,
-              "aggregate_library": true
-            },
-            "has_default_in": {
-              "configuration": false,
-              "abstract": false,
-              "standard": false,
-              "library": false,
-              "aggregate": false,
-              "aggregate_library": false
-            },
-            "is_toolchain_config": false,
-            "config_concatenable": true,
-            "inherit_from_extended": "NOT_INHERITED"
-          },
-          "attribute_descr": "Value is the list of switches to specify a response file to the linker."
-        },
-        {
-          "attribute_name": "Switches",
-          "attribute_def": {
-            "index_type": "FILEGLOB_OR_LANGUAGE_INDEX",
-            "index_optional": true,
-            "value": "LIST",
-            "value_case_sensitive": true,
-            "value_is_set": false,
-            "empty_value": "ALLOW",
-            "builtin": false,
-            "is_allowed_in": {
-              "configuration": true,
-              "abstract": true,
-              "standard": true,
-              "library": true,
-              "aggregate": false,
-              "aggregate_library": false
-            },
-            "has_default_in": {
-              "configuration": false,
-              "abstract": false,
-              "standard": false,
-              "library": false,
-              "aggregate": false,
-              "aggregate_library": false
-            },
-            "is_toolchain_config": false,
-            "config_concatenable": true,
-            "inherit_from_extended": "NOT_INHERITED"
-          },
-          "attribute_descr": "Index is a source file name or a language name. Value is the list of switches to be used when invoking the linker to build an executable for the source or for its language."
         },
         {
           "attribute_name": "Trailing_Switches",
@@ -5852,7 +5852,7 @@
             "config_concatenable": false,
             "inherit_from_extended": "NOT_INHERITED"
           },
-          "attribute_descr": "If this attribute is defined it sets the patterns to synchronized from the master to the slaves. It is exclusive with Excluded_Patterns, that is it is an error to define both."
+          "attribute_descr": "If this attribute is defined it sets the patterns to synchronized from the master to the slaves. It is incompatible with Excluded_Patterns, that is it is an error to define both."
         },
         {
           "attribute_name": "Included_Artifact_Patterns",
