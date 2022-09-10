@@ -558,8 +558,7 @@ package body GPR2.Project.Tree is
       --------------
 
       procedure Add_File
-        (Name : Path_Name.Object; Check_Exist : Boolean := True)
-      is
+        (Name : Path_Name.Object; Check_Exist : Boolean := True) is
       begin
          if Check_Exist and then not Name.Exists then
             return;
@@ -3481,6 +3480,7 @@ package body GPR2.Project.Tree is
       Conf : Project.Configuration.Object)
    is
       use OS_Lib;
+
       Drivers      : Attribute.Set.Object;
 
       PATH         : constant String := Environment_Variables.Value ("PATH");

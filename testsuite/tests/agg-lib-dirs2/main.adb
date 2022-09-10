@@ -11,9 +11,11 @@ with GPR2.Path_Name;
 with GPR2.Project.Tree;
 
 procedure Main is
-   Tree         : GPR2.Project.Tree.Object;
-   Context      : GPR2.Context.Object;
+
    use GPR2;
+
+   Tree    : GPR2.Project.Tree.Object;
+   Context : GPR2.Context.Object;
 
    procedure Print_Messages is
    begin
