@@ -151,7 +151,8 @@ package GPR2.Project.Tree is
 
    procedure Unload
      (Self : in out Object;
-      Full : Boolean := True);
+      Full : Boolean := True)
+     with Post => not Self.Is_Defined;
    --  Unloads the tree and free all associated objects (projects, sources,
    --  etc...).
    --  If Full is set, then the cached parsed projects objects will also be

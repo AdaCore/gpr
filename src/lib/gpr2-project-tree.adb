@@ -3428,19 +3428,25 @@ package body GPR2.Project.Tree is
       Self.Root             := Undefined.Root;
       Self.Conf             := Undefined.Conf;
       Self.Runtime          := Undefined.Runtime;
+      Self.Search_Paths     := Undefined.Search_Paths;
+      Self.Implicit_With    := Undefined.Implicit_With;
       Self.Build_Path       := Undefined.Build_Path;
       Self.Subdirs          := Undefined.Subdirs;
       Self.Src_Subdirs      := Undefined.Src_Subdirs;
       Self.Check_Shared_Lib := Undefined.Check_Shared_Lib;
-      Self.Search_Paths     := Undefined.Search_Paths;
+      Self.Absent_Dir_Error := Undefined.Absent_Dir_Error;
+      Self.Pre_Conf_Mode    := Undefined.Pre_Conf_Mode;
+      Self.Sources_Loaded   := Undefined.Sources_Loaded;
+      Self.Explicit_Target  := Undefined.Explicit_Target;
+      Self.File_Reader_Ref  := Undefined.File_Reader_Ref;
 
       Self.Units.Clear;
       Self.Sources.Clear;
-      --  Self.Rooted_Sources.Clear;
       Self.Messages.Clear;
+      Self.Views_Set.Clear;
       Self.View_Ids.Clear;
       Self.View_DAG.Clear;
-      Self.Views_Set.Clear;
+      Self.Explicit_Runtimes.Clear;
    end Unload;
 
    --------------------
