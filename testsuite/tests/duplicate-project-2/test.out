@@ -1,0 +1,2 @@
+Messages found:
+q.gpr:1:01: error: duplicate project name "p" in "/p.gpr"

@@ -1,0 +1,5 @@
+description:
+    Test for project name consistency
+driver: build_and_run
+project_file: dup_project
+main: main

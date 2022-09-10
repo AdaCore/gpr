@@ -1582,6 +1582,10 @@ package body GPR2.Project.Tree is
          Aggregated,      --  In an aggregate project
          Simple);         --  Import, Limited import or aggregate library
 
+      P_Names     : Containers.Name_Value_Map;
+      --  Used to check for duplicate project names possibly in
+      --  different (inconsistent naming) filenames.
+
       Search_Path : Path_Name.Set.Object := Self.Search_Paths;
       PP          : Attribute.Object;
 
@@ -1700,12 +1704,38 @@ package body GPR2.Project.Tree is
                --  At this stage even if not complete we can create the view
                --  and register it so that we can have references to it.
 
-               Data.Tree        := Self.Self;
-               Data.Context     := Context;
-               Data.Is_Root     := Status = Root;
-               Data.Unique_Id   := Id;
+               Data.Tree      := Self.Self;
+               Data.Context   := Context;
+               Data.Is_Root   := Status = Root;
+               Data.Unique_Id := Id;
 
                View := Register_View (Data);
+
+               --  Check if we already have a project recorded with the same
+               --  name. Issue an error if it is on a different filename.
+
+               declare
+                  Full_Name : constant String :=
+                                OS_Lib.Normalize_Pathname
+                                  (View.Path_Name.Value);
+               begin
+                  if P_Names.Contains (View.Name) then
+                     if P_Names (View.Name) /= Full_Name then
+                        Self.Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Message => "duplicate project name """
+                                          & String (View.Name) & """ in """
+                                          & P_Names (View.Name)
+                                          & """",
+                              Sloc    => Source_Reference.Create
+                                           (Full_Name, 1, 1)));
+                     end if;
+
+                  else
+                     P_Names.Insert (View.Name, Full_Name);
+                  end if;
+               end;
             end;
 
             declare
@@ -1810,11 +1840,21 @@ package body GPR2.Project.Tree is
                         end if;
                      end if;
 
-                     if Limited_With then
-                        Data.Limited_Imports.Insert (Prj.Name, Imported_View);
+                     if Data.Limited_Imports.Contains (Prj.Name)
+                       or else Data.Imports.Contains (Prj.Name)
+                     then
+                        --  Do not try to insert the project below as it is
+                        --  a duplicate import. The error will be reported
+                        --  later, so here we do nothing.
+                        null;
 
                      else
-                        Data.Imports.Insert (Prj.Name, Imported_View);
+                        if Limited_With then
+                           Data.Limited_Imports.Insert
+                             (Prj.Name, Imported_View);
+                        else
+                           Data.Imports.Insert (Prj.Name, Imported_View);
+                        end if;
                      end if;
 
                      Data.Closure.Include (Prj.Name, Imported_View);

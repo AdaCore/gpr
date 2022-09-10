@@ -1,0 +1,13 @@
+--
+--  Copyright (C) 2019-2022, AdaCore
+--
+--  SPDX-License-Identifier: Apache-2.0
+--
+
+with "gpr2";
+
+project Dup_Project is
+   for Object_Dir use "obj";
+   for Exec_Dir use ".";
+   for Main use ("main.adb");
+end Dup_Project;
