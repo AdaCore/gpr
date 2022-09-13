@@ -189,7 +189,7 @@ is
       else
          for C in Tree.Log_Messages.Iterate
            (Information => Opt.Verbose,
-            Warning     => True,
+            Warning     => Opt.Warnings,
             Error       => False,
             Read        => False,
             Unread      => True)

@@ -307,6 +307,11 @@ package body GPRtools.Options is
          Create (Name   => "-v",
                  Help   => "Verbose output"));
 
+      Parser.Add_Argument
+        (Verbosity_Group,
+         Create (Name   =>  "-ws",
+                 Help   => "Suppress all warnings"));
+
       --  Internal switch
 
       Hidden_Group :=
@@ -494,7 +499,7 @@ package body GPRtools.Options is
          elsif not Opt.Quiet then
             for C in Logs.Iterate
               (Information => Handle_Information,
-               Warning     => True,
+               Warning     => Opt.Warnings,
                Error       => False,
                Lint        => Handle_Lint,
                Read        => False,
@@ -832,6 +837,9 @@ package body GPRtools.Options is
             when others =>
                Result.Verbosity := Verbose;
          end case;
+
+      elsif Arg = "-ws" then
+         Result.Warnings := False;
 
       elsif Arg = "--debug" then
          for C of Param loop

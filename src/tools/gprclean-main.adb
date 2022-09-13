@@ -649,7 +649,7 @@ procedure GPRclean.Main is
                   Text_IO.Put_Line ('"' & Name & """ has been deleted");
                end if;
 
-            elsif Opts.Verbosity > Quiet then
+            elsif Opts.Verbosity > Quiet and then Opts.Warnings then
                Text_IO.Put_Line
                  ("Warning: """ & Name & """ could not be deleted");
             end if;

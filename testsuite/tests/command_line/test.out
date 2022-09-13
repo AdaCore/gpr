@@ -64,6 +64,7 @@ Project configuration switches:
 Verbosity switches:
  -F        Full project path name in brief error messages
  -v        Verbose output
+ -ws       Suppress all warnings
 
 -------------------------
 gprclean -h
@@ -136,6 +137,7 @@ Verbosity switches:
  -F        Full project path name in brief error messages
  -q        Be quiet/terse
  -v        Verbose output
+ -ws       Suppress all warnings
 
 -------------------------
 gprinstall -h
@@ -234,6 +236,7 @@ Verbosity switches:
  -F        Full project path name in brief error messages
  -q        Be quiet/terse
  -v        Verbose output
+ -ws       Suppress all warnings
 
 -------------------------
 gprname -h
@@ -340,6 +343,7 @@ Project configuration switches:
 Verbosity switches:
  -F        Full project path name in brief error messages
  -v        Verbose output
+ -ws       Suppress all warnings
 
 -------------------------
 gprclean --help
@@ -412,6 +416,7 @@ Verbosity switches:
  -F        Full project path name in brief error messages
  -q        Be quiet/terse
  -v        Verbose output
+ -ws       Suppress all warnings
 
 -------------------------
 gprinstall --help
@@ -510,6 +515,7 @@ Verbosity switches:
  -F        Full project path name in brief error messages
  -q        Be quiet/terse
  -v        Verbose output
+ -ws       Suppress all warnings
 
 -------------------------
 gprname --help

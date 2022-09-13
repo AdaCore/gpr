@@ -1,0 +1,2 @@
+description: Test gpr tools -ws (disable all warnings) support
+driver: python_script
