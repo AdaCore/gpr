@@ -1,0 +1,10 @@
+with "base";
+project gauges is
+   for Source_Files use ("gauge.ads", "gauge.adb");
+   for Object_Dir use "ogauge";
+   for Library_Dir use "lgauge";
+   for Library_Name use "plugin_gauge";
+   for Library_Kind use "dynamic";
+   for Library_Interface use ("gauge");
+   package Compiler renames Base.Compiler;
+end gauges;

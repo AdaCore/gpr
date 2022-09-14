@@ -1,0 +1,5 @@
+project P is
+
+   for main use ("main.adb");
+
+end P;

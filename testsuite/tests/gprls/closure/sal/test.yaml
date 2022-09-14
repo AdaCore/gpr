@@ -1,0 +1,2 @@
+description: gprbuild's S522-016 test. gprls source closure for SAL display
+driver: python_script

@@ -1,0 +1,2 @@
+description: gprbuild's QC06-015_gprls_closure_subunits test
+driver: python_script

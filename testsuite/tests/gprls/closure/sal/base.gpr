@@ -1,0 +1,12 @@
+project Base is
+   for Source_Files use
+      ("dash_board.ads", "dash_board.adb", "indash.ads", "indash.adb");
+   for Object_Dir use "obase";
+   for Library_Dir use "lbase";
+   for Library_Name use "base";
+   for Library_Kind use "dynamic";
+   package Compiler is
+      for Default_Switches ("ada") use ("-g", "-gnat05");
+   end Compiler;
+end Base;
+
