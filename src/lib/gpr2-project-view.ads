@@ -94,6 +94,11 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns True if the project has some imports
 
+   function Closure (Self : Object) return GPR2.Project.View.Set.Object
+     with Pre => Self.Is_Defined;
+   --  Returns the list of views that are withed or limited withed by Self
+   --  recursively.
+
    function Imports
      (Self : Object; Recursive : Boolean := False) return Set.Object
      with Pre => Self.Is_Defined;

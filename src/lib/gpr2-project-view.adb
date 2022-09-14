@@ -1316,6 +1316,20 @@ package body GPR2.Project.View is
    end Clean_Attribute_List;
 
    -------------
+   -- Closure --
+   -------------
+
+   function Closure (Self : Object) return GPR2.Project.View.Set.Object is
+      Closure_Views : GPR2.Project.View.Set.Object;
+   begin
+      for V of Get_RO (Self).Closure loop
+         Closure_Views.Insert (V);
+      end loop;
+
+      return Closure_Views;
+   end Closure;
+
+   -------------
    -- Context --
    -------------
 
