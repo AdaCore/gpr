@@ -1,5 +1,6 @@
 with Ada.Text_IO;
 with Ada.Environment_Variables;
+with Ada.Exceptions;
 
 with GPR2.KB;
 with GPR2.Log;
@@ -12,6 +13,7 @@ with GPR2.Project.Tree;
 procedure Main is
 
    use Ada.Text_IO;
+   use Ada.Exceptions;
 
    use GPR2;
    use GPR2.Containers;
@@ -94,7 +96,9 @@ begin
    Project_Tree.Unload;
 
 exception
-   when Project_Error =>
+   when E : Project_Error =>
+      Ada.Text_IO.Put_Line
+        ("Exception Project_Error " & Exception_Information (E));
       for M of Project_Tree.Log_Messages.all loop
          Put_Line (M.Format);
       end loop;
