@@ -1,0 +1,5 @@
+project Prj is
+   for Source_Dirs use (".", "subs");
+   for Main use ("main.adb");
+end Prj;
+

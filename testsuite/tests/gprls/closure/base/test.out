@@ -1,0 +1,32 @@
+
+Closure:
+
+  /bodies/main.adb
+  /bodies/pkg.adb
+  /specs/pkg.ads
+
+Can't find ALI file for /bodies/main2.adb
+
+Incomplete closure:
+
+  /bodies/main2.adb
+
+Can't find source for toto.adb
+
+Closures:
+
+  /bodies/main.adb
+  /bodies/main2.adb
+  /bodies/pkg.adb
+  /bodies/pkg2.adb
+  /specs/pkg.ads
+  /specs/pkg2.ads
+
+Can't find source for toto.adb
+
+Closure:
+
+  /bodies/main.adb
+  /bodies/pkg.adb
+  /specs/pkg.ads
+

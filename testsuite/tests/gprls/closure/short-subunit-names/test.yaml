@@ -1,0 +1,2 @@
+description: gprbuild's R409-047 test (closure computation of short subunit names)
+driver: python_script
