@@ -1,0 +1,10 @@
+aggregate project Agg is
+
+   type Yes_No is ("yes", "no");
+
+   Answer : Yes_No := external ("FOO", "yes");
+   Var2   := external ("BAR", "no");
+
+   for Project_Files use ("prj.gpr");
+
+end Agg;
