@@ -1,0 +1,2 @@
+abstract project Shared is
+end Shared;

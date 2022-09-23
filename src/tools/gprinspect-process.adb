@@ -22,8 +22,6 @@ with Ada.Containers.Ordered_Maps;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Text_IO;
 
-with GNAT.MD5;
-
 with GNATCOLL.JSON;
 
 with GPRtools.Options;
@@ -45,8 +43,6 @@ procedure GPRinspect.Process (Options : in out GPRinspect.GPRinspect_Options)
 is
 
    use Ada;
-
-   use GNAT;
    use GNATCOLL;
    use GNATCOLL.JSON;
    use GPR2;
@@ -70,8 +66,8 @@ is
                            Options : in out GPRinspect.GPRinspect_Options);
    --  Load project to inspect
 
-   function View_Id (View : Project.View.Object) return MD5.Message_Digest;
-   --  Get the hash from the view ID
+   function View_Id (View : Project.View.Object) return String;
+   --  Get the View's View_Id image
 
    function No_View_Restriction (Views : Restricted_Scope;
                                  VName : Name_Type)
@@ -317,13 +313,13 @@ is
          Set_Field (Prj, "file-name", View.Path_Name.Value);
          Set_Field (Prj, "directory", View.Path_Name.Dir_Name);
 
-         if View.Kind /= K_Abstract then
+         if View.Kind in With_Object_Dir_Kind then
             Set_Field
               (Prj, "object-directory", View.Object_Directory.Dir_Name);
 
             O_Array.Include (View.Object_Directory.Dir_Name);
 
-            if View.Kind /= K_Aggregate then
+            if View.Kind in With_Source_Dirs_Kind then
                declare
                   Src_Array : GPR2.Containers.Value_Set;
                begin
@@ -591,8 +587,7 @@ is
          Set_Field (J_Res, "projects", P_Array);
       end;
 
-      Text_IO.Put_Line (Item => JSON.Write (Item    => J_Res,
-                                            Compact => Compact));
+      Text_IO.Put_Line (JSON.Write (J_Res, Compact => Compact));
 
    end Inspect_Project_JSON_Output;
 
@@ -602,32 +597,105 @@ is
 
    procedure Inspect_Project_Textual_Output (Tree : Project.Tree.Object) is
 
+      procedure Indent (Level : Natural; Item : String);
       procedure Print_Infos;
       procedure Print_Projects;
       procedure Print_Tree;
 
+      function Image (V : GPR2.Project.View.Object) return String
+      is (String (V.Name) & " (" & View_Id (V) & ")");
+
+      ------------
+      -- Indent --
+      ------------
+
+      procedure Indent (Level : Natural; Item : String)
+      is
+         Prefix : constant String :=
+                    (case Level is
+                        when 0      => "",
+                        when 1      => "* ",
+                        when others => (1 .. (Level - 1) * 3 => ' ') & " - ");
+
+      begin
+         Text_IO.Put_Line (Prefix & Item);
+      end Indent;
+
+      -----------------
+      -- Print_Infos --
+      -----------------
+
       procedure Print_Infos is
       begin
-         Text_IO.Put_Line (Item => "+--------------------------------------+");
-         Text_IO.Put_Line (Item => "|         General Informations         |");
-         Text_IO.Put_Line (Item => "+--------------------------------------+");
-         Text_IO.Put_Line (Item => "* Generated on : "
-                           & Calendar.Formatting.Image (Calendar.Clock));
-         Text_IO.Put_Line (Item => "* Version      : "
-                           & GPR2.Version.Long_Value);
+         Indent (0, "+--------------------------------------+");
+         Indent (0, "|         General Informations         |");
+         Indent (0, "+--------------------------------------+");
+         Indent (1, "Generated on : " &
+                   Calendar.Formatting.Image (Calendar.Clock));
+         Indent (1, "Version      : " &
+                   GPR2.Version.Long_Value);
       end Print_Infos;
 
+      --------------------
+      -- Print_Projects --
+      --------------------
+
       procedure Print_Projects is
+         First_Attr : Boolean := True;
+
+         procedure Print_Attributes
+           (View : GPR2.Project.View.Object;
+            Pack : GPR2.Package_Id);
+
+         ----------------------
+         -- Print_Attributes --
+         ----------------------
+
+         procedure Print_Attributes
+           (View : GPR2.Project.View.Object;
+            Pack : GPR2.Package_Id) is
+         begin
+            for Attr of View.Attributes
+              (Pack, With_Config => Options.Display_Config_Attributes)
+            loop
+               if First_Attr then
+                  --  Actually has attributes to display, print the
+                  --  category
+                  Indent (2, "Attributes        : ");
+                  First_Attr := False;
+               end if;
+
+               Indent (3, Image (Attr.Name.Id) &
+                         " [ " & Attr.Kind'Img & " ]");
+
+               if Attr.Has_Index then
+                  Indent (4, "Index value : """ &
+                            Attr.Index.Value & '"');
+               end if;
+
+               if Attr.Kind = PRA.Single  then
+                  Indent (4, "Value : """ & Attr.Value.Text & '"');
+
+               elsif Attr.Kind = PRA.List then
+                  Indent (4, "Values : ");
+
+                  for V of Attr.Values loop
+                     Indent (5, '"' & V.Text & '"');
+                  end loop;
+               end if;
+            end loop;
+         end Print_Attributes;
+
       begin
 
-         Text_IO.Put_Line (Item => "+--------------------------------------+");
-         Text_IO.Put_Line (Item => "|         Projects Informations        |");
-         Text_IO.Put_Line (Item => "+--------------------------------------+");
+         Indent (0, "+--------------------------------------+");
+         Indent (0, "|         Projects Informations        |");
+         Indent (0, "+--------------------------------------+");
 
-         for V in Tree.Iterate
-         loop
+         for V in Tree.Iterate loop
             declare
                View : constant Project.View.Object := Project.Tree.Element (V);
+
             begin
                if (Options.All_Projects
                    and then No_View_Restriction
@@ -635,76 +703,67 @@ is
                       VName => View.Name))
                  or else (View_Id (View) = View_Id (Tree.Root_Project))
                then
-                  Text_IO.Put_Line (Item => "* "
-                                    & String (View.Name)
-                                    & " (" & View_Id (View) & ") [ "
-                                    & Image (View.Kind) & " ]");
-                  Text_IO.Put_Line (Item => "    - Project file      : "
-                                    & View.Path_Name.Value);
-                  Text_IO.Put_Line (Item => "    - Project directory : "
-                                    & View.Path_Name.Dir_Name);
-                  if View.Kind /= K_Abstract then
-                     Text_IO.Put_Line (Item => "    - Object directory  : "
-                                       & View.Object_Directory.Dir_Name);
-                     if View.Kind /= K_Aggregate then
-                        Text_IO.Put_Line (Item => "    - Source directory  :");
-                        for S of View.Source_Directories
-                        loop
-                           Text_IO.Put_Line (Item => "       - " & S.Value);
-                        end loop;
-                     end if;
+                  Indent (1, Image (View) & " [ " & Image (View.Kind) & " ]");
+                  Indent (2, "Project file      : " & View.Path_Name.Value);
+                  Indent (2, "Project directory : " & View.Path_Name.Dir_Name);
+
+                  if View.Kind in With_Object_Dir_Kind then
+                     Indent (2, "Object directory  : " &
+                               View.Object_Directory.Dir_Name);
+                  end if;
+
+                  if View.Kind in With_Source_Dirs_Kind then
+                     Indent (2, "Source directory  :");
+
+                     for S of View.Source_Directories loop
+                        Indent (3, S.Value);
+                     end loop;
                   end if;
 
                   if View.Is_Library then
-                     Text_IO.Put_Line (Item => "    - Library name      : "
-                                       & String (View.Library_Name));
-                     Text_IO.Put_Line (Item => "    - Library file      : "
-                                       & String (View.Library_Filename.Value));
-                     Text_IO.Put_Line (Item => "    - Library directory : "
-                                       & View.Library_Directory.Dir_Name);
-                     Text_IO.Put_Line (Item => "    - Library ALI dir.  : "
-                                       & View.Library_Ali_Directory.Dir_Name);
-                  end if;
-
-                  if View.Is_Extending then
-                     Text_IO.Put_Line (Item => "    - Extending         : "
-                                       & View_Id (View.Extending));
+                     Indent (2, "Library name      : " &
+                               String (View.Library_Name));
+                     Indent (2, "Library file      : " &
+                               String (View.Library_Filename.Value));
+                     Indent (2, "Library directory : " &
+                               View.Library_Directory.Dir_Name);
+                     Indent (2, "Library ALI dir.  : " &
+                               View.Library_Ali_Directory.Dir_Name);
                   end if;
 
                   if View.Is_Extended then
-                     Text_IO.Put_Line (Item => "    - Extended by       : ");
-                     for Extended_V of View.Extended
-                     loop
-                        Text_IO.Put_Line (Item => "       - "
-                                          & View_Id (Extended_V));
+                     Indent (2, "Extended by       : " &
+                               Image (View.Extending));
+                  end if;
+
+                  if View.Is_Extending then
+                     Indent (2, "Extends           : ");
+
+                     for Extended_V of View.Extended loop
+                        Indent (3, Image (Extended_V));
                      end loop;
                   end if;
 
                   declare
                      First_Import : Boolean := True;
                   begin
-                     for I_V in Tree.Iterate
-                     loop
+                     for I_V in Tree.Iterate loop
                         declare
-                           I_View : constant Project.View.Object
-                             := Project.Tree.Element (I_V);
+                           I_View : constant Project.View.Object :=
+                                      Project.Tree.Element (I_V);
+
                         begin
                            if I_View.Id /= View.Id
                              and then I_View.Has_Imports
                            then
-                              for I of I_View.Imports
-                              loop
+                              for I of I_View.Imports loop
                                  if I.Id = View.Id then
                                     if First_Import then
-                                       Text_IO.Put_Line
-                                         (Item => "    - Imported-by"
-                                          & "        : ");
+                                       Indent (2, "Imported-by        : ");
                                        First_Import := False;
                                     end if;
-                                    Text_IO.Put_Line
-                                      (Item => "       - "
-                                       & String (I_View.Name)
-                                       & " (" & View_Id (I_View) & ")");
+
+                                    Indent (3, Image (I_View));
                                  end if;
                               end loop;
                            end if;
@@ -713,111 +772,37 @@ is
                   end;
 
                   if View.Has_Imports then
-                     Text_IO.Put_Line (Item => "    - Imports           : ");
-                     for I of View.Imports
-                     loop
-                        Text_IO.Put_Line (Item => "       - " & String (I.Name)
-                                          & " (" & View_Id (I) & ")");
+                     Indent (2, "Imports           : ");
+
+                     for I of View.Imports loop
+                        Indent (3, Image (I));
                      end loop;
                   end if;
 
                   if View.Qualifier in Aggregate_Kind then
-                     Text_IO.Put_Line (Item => "    - Aggregate         : ");
-                     for A of View.Aggregated
-                     loop
-                        Text_IO.Put_Line (Item => "       - " & String (A.Name)
-                                          & " (" & View_Id (A) & ")");
+
+                     Indent (2, "Aggregated        : ");
+
+                     for A of View.Aggregated loop
+                        Indent (3, Image (A));
                      end loop;
                   end if;
 
                   if Options.Display_Attributes
                     or else Options.Display_Everything
                   then
-                     if not View.Attributes.Is_Empty
-                     then
-                        Text_IO.Put_Line (Item => "    - Attributes     : ");
-                        for Attr of View.Attributes
-                        loop
-                           if not Attr.Is_From_Config
-                             or else Options.Display_Config_Attributes
-                           then
-                              Text_IO.Put_Line
-                                (Item => "       - "
-                                 & "Project_Level_Scope."
-                                 & Image (Attr.Name.Id.Attr)
-                                 & " [ " & Attr.Kind'Img & " ]");
-                              if Attr.Has_Index then
-                                 Text_IO.Put_Line
-                                   (Item => "          - Index value : "
-                                    & '"' & Attr.Index.Value & '"');
-                              end if;
-                              if Attr.Kind = PRA.Single
-                              then
-                                 Text_IO.Put_Line
-                                   (Item => "          - Value : "
-                                    & '"' & Attr.Value.Text & '"');
-                              elsif Attr.Kind = PRA.List
-                              then
-                                 Text_IO.Put_Line
-                                   (Item => "          - Values : ");
-                                 for V of Attr.Values
-                                 loop
-                                    Text_IO.Put_Line
-                                      (Item => "             - "
-                                       & '"' & V.Text & '"');
-                                 end loop;
-                              end if;
-                           end if;
-                        end loop;
-                     end if;
-                  end if;
+                     First_Attr := True;
 
-                  if Options.Display_Packages
-                    or else Options.Display_Everything
-                  then
-                     if not View.Packages (False, False).Is_Empty then
-                        for P of View.Packages (False, False)
+                     Print_Attributes (View, Project_Level_Scope);
+
+                     if Options.Display_Packages
+                       or else Options.Display_Everything
+                     then
+                        for P of View.Packages
+                          (With_Defaults => False,
+                           With_Config   => Options.Display_Config_Attributes)
                         loop
-                           if Options.Display_Attributes
-                             or else Options.Display_Everything
-                           then
-                              if not View.Attributes (P).Is_Empty then
-                                 for Attr of View.Attributes
-                                 loop
-                                    if not Attr.Is_From_Config
-                                      or else Options.Display_Config_Attributes
-                                    then
-                                       Text_IO.Put_Line
-                                         (Item => "       - "
-                                          & Image (P) & '.'
-                                          & Image (Attr.Name.Id.Attr)
-                                          & " [ " & Attr.Kind'Img & " ]");
-                                       if Attr.Has_Index then
-                                          Text_IO.Put_Line
-                                            (Item => "          - "
-                                             & "Index value : "
-                                             & '"' & Attr.Index.Value & '"');
-                                       end if;
-                                       if Attr.Kind = PRA.Single
-                                       then
-                                          Text_IO.Put_Line
-                                            (Item => "          - Value : "
-                                             & '"' & Attr.Value.Text & '"');
-                                       elsif Attr.Kind = PRA.List
-                                       then
-                                          Text_IO.Put_Line
-                                            (Item => "          - Values : ");
-                                          for V of Attr.Values
-                                          loop
-                                             Text_IO.Put_Line
-                                               (Item => "             - "
-                                                & '"' & V.Text & '"');
-                                          end loop;
-                                       end if;
-                                    end if;
-                                 end loop;
-                              end if;
-                           end if;
+                           Print_Attributes (View, P);
                         end loop;
                      end if;
                   end if;
@@ -825,36 +810,26 @@ is
                   if Options.Display_Variables
                     or else Options.Display_Everything
                   then
-                     if not View.Variables.Is_Empty
-                     then
-                        Text_IO.Put_Line (Item => "    - Variables      : ");
-                        for Var of View.Variables
-                        loop
-                           Text_IO.Put_Line
-                             (Item => "       - "
-                              & String (Var.Name.Text)
-                              & " [ " & Var.Kind'Img & " ]");
+                     if not View.Variables.Is_Empty then
+                        Indent (2, "Variables      : ");
+
+                        for Var of View.Variables loop
+                           Indent (3, String (Var.Name.Text) &
+                                     " [ " & Var.Kind'Img & " ]");
 
                            if Var.Has_Type then
-                              Text_IO.Put_Line
-                                (Item => "          - Variable type : "
-                                 & '"' & String (Var.Typ.Name.Text) & '"');
+                              Indent (4, "Variable type : """ &
+                                        String (Var.Typ.Name.Text) & '"');
                            end if;
 
-                           if Var.Kind = PRA.Single
-                           then
-                              Text_IO.Put_Line
-                                (Item => "          - Value : "
-                                 & '"' & Var.Value.Text & '"');
-                           elsif Var.Kind = PRA.List
-                           then
-                              Text_IO.Put_Line
-                                (Item => "          - Values : ");
-                              for V of Var.Values
-                              loop
-                                 Text_IO.Put_Line
-                                   (Item => "             - "
-                                    & '"' & V.Text & '"');
+                           if Var.Kind = PRA.Single then
+                              Indent (4, "Value : """ & Var.Value.Text & '"');
+
+                           elsif Var.Kind = PRA.List then
+                              Indent (4, "Values : ");
+
+                              for V of Var.Values loop
+                                 Indent (5, '"' & V.Text & '"');
                               end loop;
                            end if;
                         end loop;
@@ -865,35 +840,35 @@ is
                     or else Options.Display_Everything
                   then
                      if not View.Types.Is_Empty then
-                        Text_IO.Put_Line (Item => "    - Types          : ");
-                        for T of View.Types
-                        loop
-                           Text_IO.Put_Line
-                             (Item => "       - "
-                              & String (T.Name.Text));
-                           Text_IO.Put_Line
-                             (Item => "          - Values : ");
+                        Indent (2, "Types          : ");
+
+                        for T of View.Types loop
+                           Indent (3, String (T.Name.Text));
+                           Indent (4, "Values : ");
+
                            for V of T.Values loop
-                              Text_IO.Put_Line
-                                (Item => "             - "
-                                 & '"' & V.Text & '"');
+                              Indent (5, '"' & V.Text & '"');
                            end loop;
                         end loop;
                      end if;
                   end if;
-                  Ada.Text_IO.Put_Line (Item => "");
+
+                  Text_IO.New_Line;
                end if;
             end;
          end loop;
-
       end Print_Projects;
 
-      procedure Print_Tree is
-      begin
+      ----------------
+      -- Print_Tree --
+      ----------------
 
-         Text_IO.Put_Line (Item => "+--------------------------------------+");
-         Text_IO.Put_Line (Item => "|       Project Tree Informations      |");
-         Text_IO.Put_Line (Item => "+--------------------------------------+");
+      procedure Print_Tree
+      is
+      begin
+         Indent (0, "+--------------------------------------+");
+         Indent (0, "|       Project Tree Informations      |");
+         Indent (0, "+--------------------------------------+");
 
          if Tree.Has_Messages then
             declare
@@ -907,16 +882,15 @@ is
                   Read        => False,
                   Unread      => True)
                loop
-                  if not First_Message
-                  then
-                     Text_IO.Put_Line (Item => "* Messages :");
+                  if not First_Message then
+                     Indent (1, "Messages :");
                      First_Message := True;
                   end if;
 
                   declare
                      M : constant Message.Object := GPR2.Log.Element (C);
                   begin
-                     Text_IO.Put_Line (Item => "    - " & M.Format);
+                     Indent (2, M.Format);
                   end;
                end loop;
             end;
@@ -925,11 +899,10 @@ is
          declare
             Project_Count : Integer := 0;
          begin
-            for V in Tree.Iterate
-            loop
+            for V in Tree.Iterate loop
                declare
-                  View : constant Project.View.Object
-                    := Project.Tree.Element (V);
+                  View : constant Project.View.Object :=
+                           Project.Tree.Element (V);
                begin
                   if (Options.All_Projects
                       and then No_View_Restriction
@@ -941,20 +914,20 @@ is
                   end if;
                end;
             end loop;
-            Text_IO.Put_Line (Item => "* Project count        : "
-                              & Project_Count'Img);
+
+            Indent (1, "Project count        : " & Project_Count'Img);
          end;
 
          declare
             First_PPath : Boolean := False;
          begin
             for P of Tree.Project_Search_Paths loop
-               if not First_PPath
-               then
-                  Ada.Text_IO.Put_Line (Item => "* Project search paths :");
+               if not First_PPath then
+                  Indent (1, "Project search paths :");
                   First_PPath := True;
                end if;
-               Ada.Text_IO.Put_Line (Item => "    - " & P.Dir_Name);
+
+               Indent (2, P.Dir_Name);
             end loop;
          end;
 
@@ -962,12 +935,13 @@ is
             First_SPath : Boolean := False;
          begin
             if Tree.Has_Runtime_Project then
-               Ada.Text_IO.Put_Line (Item => "* Object search paths  :");
-               for V in Tree.Iterate
-               loop
+               Indent (1, "Object search paths  :");
+
+               for V in Tree.Iterate loop
                   declare
-                     View : constant Project.View.Object
-                       := Project.Tree.Element (V);
+                     View : constant Project.View.Object :=
+                              Project.Tree.Element (V);
+
                   begin
                      if (Options.All_Projects
                          and then No_View_Restriction
@@ -975,23 +949,19 @@ is
                             VName => View.Name))
                        or else (View_Id (View) = View_Id (Tree.Root_Project))
                      then
-                        if View.Kind /= K_Abstract then
-                           Ada.Text_IO.Put_Line
-                             (Item => "    - "
-                              & View.Object_Directory.Dir_Name);
+                        if View.Kind in With_Object_Dir_Kind then
+                           Indent (2, View.Object_Directory.Dir_Name);
                         end if;
                      end if;
                   end;
                end loop;
-               Ada.Text_IO.Put_Line
-                 (Item => "    - "
-                  & Tree.Runtime_Project.Object_Directory.Dir_Name);
 
-               for V in Tree.Iterate
-               loop
+               Indent (2, Tree.Runtime_Project.Object_Directory.Dir_Name);
+
+               for V in Tree.Iterate loop
                   declare
-                     View : constant Project.View.Object
-                       := Project.Tree.Element (V);
+                     View : constant Project.View.Object :=
+                              Project.Tree.Element (V);
                   begin
                      if (Options.All_Projects
                          and then No_View_Restriction
@@ -999,46 +969,42 @@ is
                             VName => View.Name))
                        or else (View_Id (View) = View_Id (Tree.Root_Project))
                      then
-                        if View.Kind /= K_Abstract
-                          and then View.Kind /= K_Aggregate
-                        then
-                           for S of View.Source_Directories
-                           loop
-                              if not First_SPath
-                              then
-                                 Ada.Text_IO.Put_Line
-                                   (Item => "* Source search paths  :");
+                        if View.Kind in With_Source_Dirs_Kind then
+                           for S of View.Source_Directories loop
+                              if not First_SPath then
+                                 Indent (1, "Source search paths  :");
                                  First_SPath := True;
                               end if;
-                              Ada.Text_IO.Put_Line
-                                (Item => "    - " & S.Value);
+
+                              Indent (2, S.Value);
                            end loop;
                         end if;
                      end if;
                   end;
                end loop;
+
                for S of Tree.Runtime_Project.Source_Directories loop
-                  if not First_SPath
-                  then
-                     Ada.Text_IO.Put_Line (Item => "* Source search paths  :");
+                  if not First_SPath then
+                     Indent (1, "Source search paths  :");
                      First_SPath := True;
                   end if;
-                  Ada.Text_IO.Put_Line (Item => "    - " & S.Dir_Name);
+
+                  Indent (2, S.Dir_Name);
                end loop;
             end if;
          end;
 
-         Ada.Text_IO.Put_Line (Item => "* Root project :");
-         Ada.Text_IO.Put_Line (Item => "    - "
-                               & String (Tree.Root_Project.Name)
-                               & " (" & View_Id (Tree.Root_Project) & ")");
+         Indent (1, "Root project :");
+         Indent (2, Image (Tree.Root_Project));
       end Print_Tree;
 
       pragma Unreferenced (Tree);
 
    begin
       Print_Infos;
+      Text_IO.New_Line;
       Print_Tree;
+      Text_IO.New_Line;
       Print_Projects;
    end Inspect_Project_Textual_Output;
 
@@ -1113,12 +1079,10 @@ is
    -------------
 
    function View_Id
-     (View : Project.View.Object) return MD5.Message_Digest
+     (View : Project.View.Object) return String
    is
-      C : MD5.Context;
    begin
-      MD5.Update (C, String (GPR2.View_Ids.Image (View.Id)));
-      return String'(MD5.Digest (C));
+      return String (GPR2.View_Ids.Image (View.Id));
    end View_Id;
 
 begin

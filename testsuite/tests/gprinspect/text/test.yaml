@@ -1,0 +1,3 @@
+description:
+    check text output of gprinspect
+driver: python_script
