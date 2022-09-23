@@ -1091,7 +1091,7 @@ package body GPR2.Project.Tree is
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;
       Check_Shared_Lib : Boolean                   := True;
-      Absent_Dir_Error : Boolean                   := False;
+      Absent_Dir_Error : Error_Level               := Warning;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
       Pre_Conf_Mode    : Boolean                   := False;
@@ -1300,7 +1300,7 @@ package body GPR2.Project.Tree is
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;
       Check_Shared_Lib : Boolean                   := True;
-      Absent_Dir_Error : Boolean                   := False;
+      Absent_Dir_Error : Error_Level               := Warning;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
       Pre_Conf_Mode    : Boolean                   := False;
@@ -1347,18 +1347,19 @@ package body GPR2.Project.Tree is
      (Self              : in out Object;
       Root_Project      : Project_Descriptor;
       Context           : GPR2.Context.Object;
-      Build_Path        : Path_Name.Object        := Path_Name.Undefined;
-      Subdirs           : Optional_Name_Type      := No_Name;
-      Src_Subdirs       : Optional_Name_Type      := No_Name;
-      Check_Shared_Lib  : Boolean                 := True;
-      Absent_Dir_Error  : Boolean                 := False;
+      Build_Path        : Path_Name.Object          := Path_Name.Undefined;
+      Subdirs           : Optional_Name_Type        := No_Name;
+      Src_Subdirs       : Optional_Name_Type        := No_Name;
+      Check_Shared_Lib  : Boolean                   := True;
+      Absent_Dir_Error  : Error_Level               := Warning;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
-      Target            : Optional_Name_Type      := No_Name;
+      Target            : Optional_Name_Type        := No_Name;
       Language_Runtimes : Containers.Lang_Value_Map :=
                             Containers.Lang_Value_Maps.Empty_Map;
-      Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
-      Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined;
+      Base              : GPR2.KB.Object            := GPR2.KB.Undefined;
+      Config_Project    : GPR2.Path_Name.Object     :=
+                            GPR2.Path_Name.Undefined;
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
                             GPR2.File_Readers.No_File_Reader_Reference)
        is separate;
@@ -1371,7 +1372,7 @@ package body GPR2.Project.Tree is
       Subdirs           : Optional_Name_Type      := No_Name;
       Src_Subdirs       : Optional_Name_Type      := No_Name;
       Check_Shared_Lib  : Boolean                 := True;
-      Absent_Dir_Error  : Boolean                 := False;
+      Absent_Dir_Error  : Error_Level             := Warning;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
       Target            : Optional_Name_Type      := No_Name;
@@ -1380,7 +1381,7 @@ package body GPR2.Project.Tree is
       Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
       Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined;
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
-                            GPR2.File_Readers.No_File_Reader_Reference) is
+        GPR2.File_Readers.No_File_Reader_Reference) is
    begin
       if not Filename.Is_Directory then
          Self.Load_Autoconf
@@ -3012,10 +3013,13 @@ package body GPR2.Project.Tree is
                      AV : constant Source_Reference.Value.Object := Attr.Value;
                      PN : constant Path_Name.Object := Get_Directory (View);
                   begin
-                     if Must_Exist and then not PN.Exists then
+                     if Must_Exist
+                       and then Self.Absent_Dir_Error /= No_Error
+                       and then not PN.Exists
+                     then
                         Self.Messages.Append
                           (Message.Create
-                             ((if Self.Absent_Dir_Error
+                             ((if Self.Absent_Dir_Error = Error
                               then Message.Error
                               else Message.Warning),
                               (if Human_Name = ""

@@ -1062,7 +1062,7 @@ is
       if not
         GPRtools.Options.Load_Project
           (Opt                => Options,
-           Absent_Dir_Error   => False,
+           Absent_Dir_Error   => Project.Tree.No_Error,
            Handle_Information => Options.Verbose)
       then
          Command_Line.Set_Exit_Status (Command_Line.Failure);

@@ -43,6 +43,13 @@ package GPR2.Project.Tree is
           Default_Iterator  => Iterate,
           Iterator_Element  => View.Object;
 
+   type Error_Level is
+     (No_Error,
+      Warning,
+      Error);
+   --  For certain categories of messages, tells if we ignore them, raise a
+   --  warning or an error.
+
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
    --  initializer.
@@ -66,7 +73,7 @@ package GPR2.Project.Tree is
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;
       Check_Shared_Lib : Boolean                   := True;
-      Absent_Dir_Error : Boolean                   := False;
+      Absent_Dir_Error : Error_Level               := Warning;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
       Pre_Conf_Mode    : Boolean                   := False;
@@ -109,7 +116,7 @@ package GPR2.Project.Tree is
       Subdirs           : Optional_Name_Type      := No_Name;
       Src_Subdirs       : Optional_Name_Type      := No_Name;
       Check_Shared_Lib  : Boolean                 := True;
-      Absent_Dir_Error  : Boolean                 := False;
+      Absent_Dir_Error  : Error_Level             := Warning;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
       Target            : Optional_Name_Type      := No_Name;
@@ -565,7 +572,7 @@ private
       Subdirs           : Unbounded_String;
       Src_Subdirs       : Unbounded_String;
       Check_Shared_Lib  : Boolean := True;
-      Absent_Dir_Error  : Boolean := False;
+      Absent_Dir_Error  : Error_Level := Warning;
       Pre_Conf_Mode     : Boolean := True;
       Views_Set         : View.Set.Object;
       --  All projects in registration order
@@ -589,7 +596,7 @@ private
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;
       Check_Shared_Lib : Boolean                   := True;
-      Absent_Dir_Error : Boolean                   := False;
+      Absent_Dir_Error : Error_Level               := Warning;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
       Pre_Conf_Mode    : Boolean                   := False;
@@ -606,7 +613,7 @@ private
       Subdirs           : Optional_Name_Type      := No_Name;
       Src_Subdirs       : Optional_Name_Type      := No_Name;
       Check_Shared_Lib  : Boolean                 := True;
-      Absent_Dir_Error  : Boolean                 := False;
+      Absent_Dir_Error  : Error_Level               := Warning;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
       Target            : Optional_Name_Type      := No_Name;

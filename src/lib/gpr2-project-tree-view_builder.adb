@@ -93,7 +93,7 @@ package body GPR2.Project.Tree.View_Builder is
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;
       Check_Shared_Lib : Boolean                   := True;
-      Absent_Dir_Error : Boolean                   := False;
+      Absent_Dir_Error : Error_Level               := Warning;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
       Pre_Conf_Mode    : Boolean                   := False;
@@ -122,7 +122,7 @@ package body GPR2.Project.Tree.View_Builder is
       Subdirs           : Optional_Name_Type      := No_Name;
       Src_Subdirs       : Optional_Name_Type      := No_Name;
       Check_Shared_Lib  : Boolean                 := True;
-      Absent_Dir_Error  : Boolean                 := False;
+      Absent_Dir_Error  : Error_Level             := Warning;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
       Target            : Optional_Name_Type      := No_Name;

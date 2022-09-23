@@ -73,7 +73,7 @@ begin
 
    --  Load the project tree
 
-   if not GPRtools.Options.Load_Project (Opt, False) then
+   if not GPRtools.Options.Load_Project (Opt, Project.Tree.No_Error) then
       return Ada.Command_Line.Failure;
    end if;
 

@@ -212,7 +212,9 @@ is
                Subdirs          => Optional_Name_Type (Subdirs),
                Src_Subdirs      => Optional_Name_Type (Src_Subdirs),
                Check_Shared_Lib => Check_Shared_Lib,
-               Absent_Dir_Error => Absent_Dir_Error,
+               Absent_Dir_Error => (if Absent_Dir_Error
+                                    then GPR2.Project.Tree.Error
+                                    else GPR2.Project.Tree.Warning),
                Implicit_With    => Implicit_With);
          end;
       else
@@ -223,7 +225,9 @@ is
             Subdirs           => Optional_Name_Type (Subdirs),
             Src_Subdirs       => Optional_Name_Type (Src_Subdirs),
             Check_Shared_Lib  => Check_Shared_Lib,
-            Absent_Dir_Error  => Absent_Dir_Error,
+            Absent_Dir_Error  => (if Absent_Dir_Error
+                                  then GPR2.Project.Tree.Error
+                                  else GPR2.Project.Tree.Warning),
             Implicit_With     => Implicit_With,
             Target            => Optional_Name_Type (Target),
             Language_Runtimes => Runtimes);

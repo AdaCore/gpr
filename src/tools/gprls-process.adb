@@ -204,7 +204,7 @@ begin
 
    if not GPRtools.Options.Load_Project
      (Opt,
-      Absent_Dir_Error   => False,
+      Absent_Dir_Error   => Project.Tree.Warning,
       Handle_Information => Opt.Verbose,
       Handle_Lint        => Opt.Verbose)
    then
