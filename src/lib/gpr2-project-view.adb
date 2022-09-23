@@ -94,11 +94,16 @@ package body GPR2.Project.View is
    -- Aggregated --
    ----------------
 
-   function Aggregated (Self : Object) return Set.Object is
+   function Aggregated (Self      : Object;
+                        Recursive : Boolean := True) return Set.Object is
    begin
       return Set : GPR2.Project.View.Set.Object do
          for Agg of Definition.Get_RO (Self).Aggregated loop
-            Set.Insert (Agg);
+            if Agg.Kind /= K_Aggregate or else not Recursive then
+               Set.Insert (Agg);
+            else
+               Set.Union (Agg.Aggregated);
+            end if;
          end loop;
       end return;
    end Aggregated;

@@ -140,8 +140,14 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns True if the source is the main unit of the view
 
-   function Aggregated (Self : Object) return Set.Object
+   function Aggregated (Self      : Object;
+                        Recursive : Boolean := True) return Set.Object
      with Pre => Self.Is_Defined and then Self.Kind in Aggregate_Kind;
+   --  Get the aggregated views.
+   --  In case Self is an aggregate project and recursive is set, if
+   --  one of the aggregated project is also an "aggregate project" then
+   --  its aggregated views are also returned.
+   --  In case Self is an aggregate library, this parameter has no effect.
 
    function Aggregate_Libraries (Self : Object) return Set.Object
      with Pre => Self.Is_Defined;

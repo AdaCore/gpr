@@ -2874,7 +2874,7 @@ package body GPRinstall.Install is
             Open_Check_Manifest (Agg_Manifest, Line_Agg_Manifest);
          end if;
 
-         for Agg of Project.Aggregated loop
+         for Agg of Project.Aggregated (Recursive => False) loop
             Process (Tree, Agg, Options);
          end loop;
 

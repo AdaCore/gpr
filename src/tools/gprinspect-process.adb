@@ -402,7 +402,7 @@ is
          --  Aggregated
 
          if View.Qualifier in Aggregate_Kind then
-            for A of View.Aggregated loop
+            for A of View.Aggregated (Recursive => False) loop
                Append (A_Array, Create (View_Id (A)));
 
                if Options.All_Projects then
@@ -723,8 +723,7 @@ is
 
                   if View.Qualifier in Aggregate_Kind then
                      Text_IO.Put_Line (Item => "    - Aggregate         : ");
-                     for A of View.Aggregated
-                     loop
+                     for A of View.Aggregated (Recursive => False) loop
                         Text_IO.Put_Line (Item => "       - " & String (A.Name)
                                           & " (" & View_Id (A) & ")");
                      end loop;
