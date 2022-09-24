@@ -107,7 +107,8 @@ begin
             Build_Path       => Options.Build_Path,
             Subdirs          => Options.Get_Subdirs,
             Src_Subdirs      => ONT (To_String (Options.Src_Subdirs)),
-            Check_Shared_Lib => not Options.Unchecked_Shared_Lib);
+            Check_Shared_Lib => not Options.Unchecked_Shared_Lib,
+            Implicit_With    => Options.Implicit_With);
       else
          --  No configuration, go with auto-configuration
 
@@ -117,6 +118,7 @@ begin
             Subdirs           => Options.Get_Subdirs,
             Src_Subdirs       => Options.Get_Src_Subdirs,
             Check_Shared_Lib  => not Options.Unchecked_Shared_Lib,
+            Implicit_With     => Options.Implicit_With,
             Target            => Options.Get_Target,
             Language_Runtimes => Options.RTS_Map,
             Base              => GPR2.KB.Create
