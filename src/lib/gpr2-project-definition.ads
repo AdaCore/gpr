@@ -161,6 +161,8 @@ private package GPR2.Project.Definition is
 
       --  Cached values for faster retrieval of attributes
 
+      Languages         : Containers.Language_Set;
+      --  Languages as Language_Ids defined for the view
       Interface_Sources : Source_Path_To_Sloc.Map;
       --  Source basenames that are part of the library interface
       Interface_Units   : Unit_Name_To_Sloc.Map;

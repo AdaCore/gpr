@@ -148,6 +148,13 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns True if the source is the main unit of the view
 
+   function Is_Namespace_Root (Self : Object) return Boolean
+     with Pre  => Self.Is_Defined and then Self.Kind /= K_Aggregate,
+          Post => (if Is_Namespace_Root'Result
+                   then Self.Namespace_Root = Self);
+   --  Whether this view is either the root of the tree or the root
+   --  project of an aggregated subtree.
+
    function Aggregated (Self      : Object;
                         Recursive : Boolean := True) return Set.Object
      with Pre => Self.Is_Defined and then Self.Kind in Aggregate_Kind;
@@ -377,6 +384,10 @@ package GPR2.Project.View is
      with Pre  => Self.Is_Defined;
    --  Returns the languages used on this project
 
+   function Language_Ids (Self : Object) return Containers.Language_Set
+     with Pre => Self.Is_Defined;
+   --  Returns the languages used by this project as a set of Language id
+
    function Source_Directories (Self : Object) return GPR2.Path_Name.Set.Object
      with Pre => Self.Is_Defined
                  and then Self.Qualifier in K_Standard | K_Library;
@@ -392,6 +403,22 @@ package GPR2.Project.View is
    --  Walks the source directories of Self and calls Source_CB on every
    --  file found, and Dir_CB on each directory found, if the callbacks are
    --  defined.
+
+   function Skipped_Sources
+     (View : Project.View.Object) return Containers.Filename_Source_Reference;
+   --  List of source basenames to ignore when loading the list of sources:
+   --  they are mentioned in ignored case statements, so should be skipped so
+   --  as to not interfere with the case statement that is selected.
+   --  e.g.:
+   --  Val := "True";
+   --  case Val is
+   --     when "True" =>
+   --        for Body ("Foo") use "foo__ok.adb";
+   --     when "False" =>
+   --        for Body ("Foo") use "foo__not_ok.adb";
+   --  end case;
+   --
+   --  In the above example. "foo__not_ok.adb" needs to be skipped.
 
    function Has_Sources (Self : Object) return Boolean
      with Pre  => Self.Is_Defined,
@@ -839,6 +866,9 @@ private
 
    function Is_Library_Standalone (Self : Object) return Boolean is
       (Self.Library_Standalone /= No);
+
+   function Is_Namespace_Root (Self : Object) return Boolean is
+     (Self.Namespace_Root = Self);
 
    function Dir_Name (Self : Object) return GPR2.Path_Name.Object is
      (Self.Get.Path);

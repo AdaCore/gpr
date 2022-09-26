@@ -1922,6 +1922,24 @@ package body GPR2.Project.View is
       return Definition.Get_RO (Self).Kind;
    end Kind;
 
+   ------------------
+   -- Language_Ids --
+   ------------------
+
+   function Language_Ids (Self : Object) return Containers.Language_Set is
+      Def : constant Definition.Ref := Get_Ref (Self);
+   begin
+      if Def.Kind in K_Standard | K_Library then
+         if Def.Languages.Is_Empty then
+            for Val of Self.Languages loop
+               Def.Languages.Include (+Name_Type (Val.Text));
+            end loop;
+         end if;
+      end if;
+
+      return Def.Languages;
+   end Language_Ids;
+
    ---------------
    -- Languages --
    ---------------
@@ -2372,6 +2390,14 @@ package body GPR2.Project.View is
    begin
       return Definition.Get_RO (Self).Signature;
    end Signature;
+
+   ---------------------
+   -- Skipped_Sources --
+   ---------------------
+
+   function Skipped_Sources
+     (View : Project.View.Object) return Containers.Filename_Source_Reference
+   is (Get_RO (View).Trees.Project.Skip_Sources);
 
    ------------
    -- Source --
