@@ -1642,8 +1642,8 @@ begin
    else
       --  Handle Source_Dirs
 
-      Definition.Source_Directories_Walk
-        (View, Source_CB => Handle_File'Access, Dir_CB => null);
+      View.Source_Directories_Walk
+        (Source_CB => Handle_File'Access, Dir_CB => null);
 
       for C in Def.Sources.Iterate loop
          Def.Sources_Map_Insert (Project.Source.Set.Element (C), C);
