@@ -1,0 +1,5 @@
+with "demo1.gpr";
+with "demo2.gpr";
+
+project Demo is
+end Demo;

@@ -1,0 +1,177 @@
++--------------------------------------+
+|         General Informations         |
++--------------------------------------+
+* Generated on : 2000-01-01 00:00:00
+* Version      : Pro 1.0 (20000101) (<host>)
+
++--------------------------------------+
+|       Project Tree Informations      |
++--------------------------------------+
+* Project count        :  5
+* Project search paths :
+    - <filtered-out>
+* Object search paths  :
+    - /obj/
+    - /obj2/
+    - <gnat rts>/adalib/
+* Source search paths  :
+    - /src
+    - /src2
+    - <gnat rts>/adainclude/
+* Root project :
+    - Root (</root.gpr)
+
++--------------------------------------+
+|         Projects Informations        |
++--------------------------------------+
+* Root (</root.gpr) [ aggregate project ]
+    - Project file      : /root.gpr
+    - Project directory : /
+    - Aggregated        : 
+       - Agg ($/agg.gpr)
+    - Attributes        : 
+       - Externally_Built [ SINGLE ]
+          - Value : "false"
+       - Name [ SINGLE ]
+          - Value : "root"
+       - Object_Dir [ SINGLE ]
+          - Value : "."
+       - Project_Dir [ SINGLE ]
+          - Value : "/"
+       - Project_Files [ LIST ]
+          - Values : 
+             - "agg.gpr"
+
+* Agg ($/agg.gpr) [ aggregate project ]
+    - Project file      : /agg.gpr
+    - Project directory : /
+    - Aggregated        : 
+       - Prj ($/prj.gpr)
+    - Attributes        : 
+       - Externally_Built [ SINGLE ]
+          - Value : "false"
+       - Name [ SINGLE ]
+          - Value : "agg"
+       - Object_Dir [ SINGLE ]
+          - Value : "."
+       - Project_Dir [ SINGLE ]
+          - Value : "/"
+       - Project_Files [ LIST ]
+          - Values : 
+             - "prj.gpr"
+    - Variables      : 
+       - Answer [ SINGLE ]
+          - Variable type : "Yes_No"
+          - Value : "yes"
+       - Var2 [ SINGLE ]
+          - Value : "no"
+    - Types          : 
+       - Yes_No
+          - Values : 
+             - "yes"
+             - "no"
+
+* Shared ($/shared.gpr>$/prj.gpr) [ abstract project ]
+    - Project file      : /shared.gpr
+    - Project directory : /
+    - Extended by       : Prj ($/prj.gpr)
+    - Imported-by        : 
+       - Base ($/base.gpr>$/prj.gpr)
+    - Attributes        : 
+       - Exec_Dir [ SINGLE ]
+          - Value : "."
+       - Externally_Built [ SINGLE ]
+          - Value : "false"
+       - Library_Auto_Init [ SINGLE ]
+          - Value : "false"
+       - Library_Kind [ SINGLE ]
+          - Value : "static"
+       - Library_Standalone [ SINGLE ]
+          - Value : "no"
+       - Name [ SINGLE ]
+          - Value : "shared"
+       - Object_Dir [ SINGLE ]
+          - Value : "."
+       - Project_Dir [ SINGLE ]
+          - Value : "/"
+
+* Base ($/base.gpr>$/prj.gpr) [ standard project ]
+    - Project file      : /base.gpr
+    - Project directory : /
+    - Object directory  : /obj/
+    - Source directory  :
+       - /src
+    - Extended by       : Prj ($/prj.gpr)
+    - Imports           : 
+       - Shared ($/shared.gpr>$/prj.gpr)
+    - Attributes        : 
+       - Exec_Dir [ SINGLE ]
+          - Value : "obj"
+       - Externally_Built [ SINGLE ]
+          - Value : "false"
+       - Languages [ LIST ]
+          - Values : 
+             - "Ada"
+       - Name [ SINGLE ]
+          - Value : "base"
+       - Object_Dir [ SINGLE ]
+          - Value : "obj"
+       - Project_Dir [ SINGLE ]
+          - Value : "/"
+       - Source_Dirs [ LIST ]
+          - Values : 
+             - "src"
+
+* Prj ($/prj.gpr) [ standard project ]
+    - Project file      : /prj.gpr
+    - Project directory : /
+    - Object directory  : /obj2/
+    - Source directory  :
+       - /src2
+    - Extends           : 
+       - Base ($/base.gpr>$/prj.gpr)
+       - Shared ($/shared.gpr>$/prj.gpr)
+    - Attributes        : 
+       - Exec_Dir [ SINGLE ]
+          - Value : "obj2"
+       - Externally_Built [ SINGLE ]
+          - Value : "false"
+       - Languages [ LIST ]
+          - Values : 
+             - "Ada"
+       - Name [ SINGLE ]
+          - Value : "prj"
+       - Object_Dir [ SINGLE ]
+          - Value : "obj2"
+       - Project_Dir [ SINGLE ]
+          - Value : "/"
+       - Source_Dirs [ LIST ]
+          - Values : 
+             - "src2"
+       - Naming'Body_Suffix [ SINGLE ]
+          - Index value : "ada"
+          - Value : ".adb"
+       - Naming'Body_Suffix [ SINGLE ]
+          - Index value : "c"
+          - Value : ".c"
+       - Naming'Dot_Replacement [ SINGLE ]
+          - Value : "~"
+       - Naming'Implementation_Suffix [ SINGLE ]
+          - Index value : "ada"
+          - Value : ".adb"
+       - Naming'Implementation_Suffix [ SINGLE ]
+          - Index value : "c"
+          - Value : ".c"
+       - Naming'Spec_Suffix [ SINGLE ]
+          - Index value : "ada"
+          - Value : ".ads"
+       - Naming'Spec_Suffix [ SINGLE ]
+          - Index value : "c"
+          - Value : ".h"
+       - Naming'Specification_Suffix [ SINGLE ]
+          - Index value : "ada"
+          - Value : ".ads"
+       - Naming'Specification_Suffix [ SINGLE ]
+          - Index value : "c"
+          - Value : ".h"
+

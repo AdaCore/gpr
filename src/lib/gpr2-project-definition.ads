@@ -131,7 +131,7 @@ private package GPR2.Project.Definition is
       --  List of limited imported views
       Closure           : Project_View_Store.Map;
       --  The list of views sources from self can see
-      Agg_Libraries     : GPR2.View_Ids.Set.Object;
+      Agg_Libraries     : GPR2.View_Ids.Set.Set;
       --  List of aggregate libraries that use this view
       Aggregated        : Project_Vector.Vector;
       --  List of projects that are aggregated by this view

@@ -210,7 +210,7 @@ procedure GPRdump is
       end loop;
 
       if not GPRtools.Options.Load_Project
-        (Options, Absent_Dir_Error => False)
+        (Options, Absent_Dir_Error => Project.Tree.Warning)
       then
          GPRtools.Command_Line.Try_Help;
       end if;

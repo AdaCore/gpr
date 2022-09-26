@@ -94,11 +94,16 @@ package body GPR2.Project.View is
    -- Aggregated --
    ----------------
 
-   function Aggregated (Self : Object) return Set.Object is
+   function Aggregated (Self      : Object;
+                        Recursive : Boolean := True) return Set.Object is
    begin
       return Set : GPR2.Project.View.Set.Object do
          for Agg of Definition.Get_RO (Self).Aggregated loop
-            Set.Insert (Agg);
+            if Agg.Kind /= K_Aggregate or else not Recursive then
+               Set.Insert (Agg);
+            else
+               Set.Union (Agg.Aggregated);
+            end if;
          end loop;
       end return;
    end Aggregated;
@@ -1309,6 +1314,20 @@ package body GPR2.Project.View is
 
       return Result;
    end Clean_Attribute_List;
+
+   -------------
+   -- Closure --
+   -------------
+
+   function Closure (Self : Object) return GPR2.Project.View.Set.Object is
+      Closure_Views : GPR2.Project.View.Set.Object;
+   begin
+      for V of Get_RO (Self).Closure loop
+         Closure_Views.Insert (V);
+      end loop;
+
+      return Closure_Views;
+   end Closure;
 
    -------------
    -- Context --

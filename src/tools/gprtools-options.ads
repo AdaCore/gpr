@@ -121,7 +121,7 @@ package GPRtools.Options is
 
    function Load_Project
      (Opt                : in out Base_Options'Class;
-      Absent_Dir_Error   : Boolean;
+      Absent_Dir_Error   : GPR2.Project.Tree.Error_Level;
       Handle_Information : Boolean := False;
       Handle_Errors      : Boolean := True;
       Handle_Lint        : Boolean := False) return Boolean

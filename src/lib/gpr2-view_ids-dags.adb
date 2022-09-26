@@ -25,7 +25,7 @@ package body GPR2.View_Ids.DAGs is
 
    function Shortest_Path
      (Self           : DAG;
-      Source, Target : Node_Id) return View_Ids.Vector.Object;
+      Source, Target : Node_Id) return View_Ids.Vector.Vector;
 
    procedure Update (Self  : in out Node_Node_Set_Maps.Map;
                      Key   : Node_Id;
@@ -47,7 +47,7 @@ package body GPR2.View_Ids.DAGs is
    procedure Add_Vertex
      (Self         : in out DAG;
       Vertex       : View_Id;
-      Predecessors : View_Ids.Set.Object := View_Ids.Set.Empty_Set) is
+      Predecessors : View_Ids.Set.Set := View_Ids.Set.Empty_Set) is
    begin
       if Self.Contains (Vertex) then
          raise DAG_Error with
@@ -188,9 +188,9 @@ package body GPR2.View_Ids.DAGs is
    -- Shortest_Circle --
    ---------------------
 
-   function Shortest_Circle (Self : DAG) return GPR2.View_Ids.Vector.Object
+   function Shortest_Circle (Self : DAG) return GPR2.View_Ids.Vector.Vector
    is
-      Result : GPR2.View_Ids.Vector.Object;
+      Result : GPR2.View_Ids.Vector.Vector;
    begin
       if not Self.Has_Cycle then
          return GPR2.View_Ids.Vector.Empty_Vector;
@@ -212,7 +212,7 @@ package body GPR2.View_Ids.DAGs is
 
    function Shortest_Path
      (Self           : DAG;
-      Source, Target : View_Id) return View_Ids.Vector.Object
+      Source, Target : View_Id) return View_Ids.Vector.Vector
    is
    begin
       return Shortest_Path (Self,
@@ -222,7 +222,7 @@ package body GPR2.View_Ids.DAGs is
 
    function Shortest_Path
      (Self           : DAG;
-      Source, Target : Node_Id) return View_Ids.Vector.Object
+      Source, Target : Node_Id) return View_Ids.Vector.Vector
    is
       Infinite    : constant Natural := Natural (Self.Vertex_Ids.Length) + 1;
       --  Maximum distance between two vertices is the number of nodes in the
@@ -245,7 +245,7 @@ package body GPR2.View_Ids.DAGs is
 
       U, V        : Node_Id;
       Alt         : Natural;
-      Result      : View_Ids.Vector.Object;
+      Result      : View_Ids.Vector.Vector;
 
    begin
       --  We use the Dikjstra algorithm to compute the shortest path.
@@ -333,7 +333,7 @@ package body GPR2.View_Ids.DAGs is
    -- Topological_Sort --
    ----------------------
 
-   function Topological_Sort (Self : DAG) return View_Ids.Vector.Object
+   function Topological_Sort (Self : DAG) return View_Ids.Vector.Vector
    is
    begin
       return Self.Sort_Cache;
@@ -470,7 +470,7 @@ package body GPR2.View_Ids.DAGs is
    procedure Update_Vertex
      (Self         : in out DAG;
       Vertex       : View_Id;
-      Predecessors : View_Ids.Set.Object := View_Ids.Set.Empty_Set)
+      Predecessors : View_Ids.Set.Set := View_Ids.Set.Empty_Set)
    is
       Node : Node_Id;
    begin
@@ -505,7 +505,7 @@ package body GPR2.View_Ids.DAGs is
       Vertex      : View_Id;
       Predecessor : View_Id)
    is
-      Predecessors : View_Ids.Set.Object;
+      Predecessors : View_Ids.Set.Set;
    begin
       Predecessors.Include (Predecessor);
       Self.Update_Vertex (Vertex, Predecessors);
