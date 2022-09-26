@@ -308,17 +308,6 @@ private package GPR2.Project.Definition is
    --  File_CB is called for each regular file found.
    --  Source reference is used when messages added to Self.Tree's log
 
-   procedure Source_Directories_Walk
-     (View      : Project.View.Object;
-      Source_CB : access procedure
-                    (Dir_Reference : GPR2.Source_Reference.Value.Object;
-                     Source        : GPR2.Path_Name.Object;
-                     Timestamp     : Ada.Calendar.Time);
-      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object));
-   --  Walks the source directories of Self and calls Source_CB on every
-   --  file found, and Dir_CB on each directory found, if the callbacks are
-   --  defined.
-
    procedure Sources_Map_Insert
      (Def : in out Data;
       Src : Project.Source.Object;

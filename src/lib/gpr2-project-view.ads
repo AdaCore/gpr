@@ -11,6 +11,8 @@
 --  for the corresponding tree. It also gives the sources for the views and
 --  this include sources from extended project or aggregated project if needed.
 
+with Ada.Calendar;
+
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name.Set;
@@ -367,6 +369,17 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined
                  and then Self.Qualifier in K_Standard | K_Library;
    --  Returns the source dir paths for a given project
+
+   procedure Source_Directories_Walk
+     (View      : Project.View.Object;
+      Source_CB : access procedure
+                    (Dir_Reference : GPR2.Source_Reference.Value.Object;
+                     Source        : GPR2.Path_Name.Object;
+                     Timestamp     : Ada.Calendar.Time);
+      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object));
+   --  Walks the source directories of Self and calls Source_CB on every
+   --  file found, and Dir_CB on each directory found, if the callbacks are
+   --  defined.
 
    function Has_Sources (Self : Object) return Boolean
      with Pre  => Self.Is_Defined,
