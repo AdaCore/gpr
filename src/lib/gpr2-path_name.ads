@@ -115,6 +115,14 @@ package GPR2.Path_Name is
    --  This routine should be used when base filename used as part of another
    --  source related filenames.
 
+   function Extension (Self : Object) return Filename_Optional
+     with Pre => Self.Is_Defined
+                   and then not Self.Is_Directory;
+   --  Returns the extension of the file, with the dot.
+   --  If the file doesn't have an extension, the empty string is returned.
+   --  Self.Base_Filename & Self.Extension give the same result as
+   --   Self.Simple_Name.
+
    function Simple_Name (Self : Object) return GPR2.Simple_Name
      with Pre => Self.Is_Defined
                    and then not Self.Is_Root_Dir;

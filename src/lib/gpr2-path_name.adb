@@ -526,6 +526,16 @@ package body GPR2.Path_Name is
          return False;
    end Exists;
 
+   ---------------
+   -- Extension --
+   ---------------
+
+   function Extension (Self : Object) return Filename_Optional is
+      SN : constant GPR2.Simple_Name := Self.Simple_Name;
+   begin
+      return SN (SN'First + Length (Self.Base_Name) .. SN'Last);
+   end Extension;
+
    -----------------------
    -- Filesystem_String --
    -----------------------
