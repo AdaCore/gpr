@@ -649,7 +649,7 @@ package GPR2.Project.View is
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre =>
        Self.Is_Defined
-       and then Self.Kind not in K_Configuration | K_Abstract;
+       and then Self.Kind not in K_Configuration | K_Abstract | K_Aggregate;
    --  As above but for the Object_Dir attribute
 
    function Has_Source_Subdirectory (Self : Object) return Boolean
