@@ -7,28 +7,32 @@
 +--------------------------------------+
 |       Project Tree Informations      |
 +--------------------------------------+
-* Project count        :  5
+* Messages :
+    - lib.gpr: lint: project qualifier could be explicitly set to library project
+* Project count        :  6
 * Project search paths :
     - <filtered-out>
 * Object search paths  :
-    - /obj/
-    - /obj2/
+    - <cwd>/
+    - <cwd>/obj/
+    - <cwd>/obj2/
     - <gnat rts>/adalib/
 * Source search paths  :
-    - /src
-    - /src2
+    - <cwd>
+    - <cwd>/src
+    - <cwd>/src2
     - <gnat rts>/adainclude/
 * Root project :
-    - Root (</root.gpr)
+    - Root (<<cwd>/root.gpr)
 
 +--------------------------------------+
 |         Projects Informations        |
 +--------------------------------------+
-* Root (</root.gpr) [ aggregate project ]
-    - Project file      : /root.gpr
-    - Project directory : /
+* Root (<<cwd>/root.gpr) [ aggregate project ]
+    - Project file      : <cwd>/root.gpr
+    - Project directory : <cwd>/
     - Aggregated        : 
-       - Agg ($/agg.gpr)
+       - Agg ($<cwd>/agg.gpr)
     - Attributes        : 
        - Externally_Built [ SINGLE ]
           - Value : "false"
@@ -37,16 +41,16 @@
        - Object_Dir [ SINGLE ]
           - Value : "."
        - Project_Dir [ SINGLE ]
-          - Value : "/"
+          - Value : "<cwd>/"
        - Project_Files [ LIST ]
           - Values : 
              - "agg.gpr"
 
-* Agg ($/agg.gpr) [ aggregate project ]
-    - Project file      : /agg.gpr
-    - Project directory : /
+* Agg ($<cwd>/agg.gpr) [ aggregate project ]
+    - Project file      : <cwd>/agg.gpr
+    - Project directory : <cwd>/
     - Aggregated        : 
-       - Prj ($/prj.gpr)
+       - Prj ($<cwd>/prj.gpr)
     - Attributes        : 
        - Externally_Built [ SINGLE ]
           - Value : "false"
@@ -55,7 +59,7 @@
        - Object_Dir [ SINGLE ]
           - Value : "."
        - Project_Dir [ SINGLE ]
-          - Value : "/"
+          - Value : "<cwd>/"
        - Project_Files [ LIST ]
           - Values : 
              - "prj.gpr"
@@ -71,12 +75,13 @@
              - "yes"
              - "no"
 
-* Shared ($/shared.gpr>$/prj.gpr) [ abstract project ]
-    - Project file      : /shared.gpr
-    - Project directory : /
-    - Extended by       : Prj ($/prj.gpr)
+* Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr) [ abstract project ]
+    - Project file      : <cwd>/shared.gpr
+    - Project directory : <cwd>/
+    - Extended by       : Prj ($<cwd>/prj.gpr)
     - Imported-by        : 
-       - Base ($/base.gpr>$/prj.gpr)
+       - Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr)
+       - Base ($<cwd>/base.gpr>$<cwd>/prj.gpr)
     - Attributes        : 
        - Exec_Dir [ SINGLE ]
           - Value : "."
@@ -93,17 +98,70 @@
        - Object_Dir [ SINGLE ]
           - Value : "."
        - Project_Dir [ SINGLE ]
-          - Value : "/"
+          - Value : "<cwd>/"
+    - Variables      : 
+       - Languages [ LIST ]
+          - Values : 
+             - "Ada"
+             - "C"
 
-* Base ($/base.gpr>$/prj.gpr) [ standard project ]
-    - Project file      : /base.gpr
-    - Project directory : /
-    - Object directory  : /obj/
+* Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr) [ library project ]
+    - Project file      : <cwd>/lib.gpr
+    - Project directory : <cwd>/
+    - Object directory  : <cwd>/
     - Source directory  :
-       - /src
-    - Extended by       : Prj ($/prj.gpr)
+       - <cwd>
+    - Library name      : somename
+    - Library file      : <cwd>/lib/libsomename.a
+    - Library directory : <cwd>/lib/
+    - Library ALI dir.  : <cwd>/lib/
+    - Extended by       : Prj ($<cwd>/prj.gpr)
+    - Imported-by        : 
+       - Base ($<cwd>/base.gpr>$<cwd>/prj.gpr)
     - Imports           : 
-       - Shared ($/shared.gpr>$/prj.gpr)
+       - Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr)
+    - Attributes        : 
+       - Exec_Dir [ SINGLE ]
+          - Value : "."
+       - Externally_Built [ SINGLE ]
+          - Value : "false"
+       - Languages [ LIST ]
+          - Values : 
+             - "Ada"
+       - Library_Ali_Dir [ SINGLE ]
+          - Value : "lib"
+       - Library_Auto_Init [ SINGLE ]
+          - Value : "false"
+       - Library_Dir [ SINGLE ]
+          - Value : "lib"
+       - Library_Kind [ SINGLE ]
+          - Value : "static"
+       - Library_Name [ SINGLE ]
+          - Value : "somename"
+       - Library_Src_Dir [ SINGLE ]
+          - Value : "lib"
+       - Library_Standalone [ SINGLE ]
+          - Value : "no"
+       - Name [ SINGLE ]
+          - Value : "lib"
+       - Object_Dir [ SINGLE ]
+          - Value : "."
+       - Project_Dir [ SINGLE ]
+          - Value : "<cwd>/"
+       - Source_Dirs [ LIST ]
+          - Values : 
+             - "."
+
+* Base ($<cwd>/base.gpr>$<cwd>/prj.gpr) [ standard project ]
+    - Project file      : <cwd>/base.gpr
+    - Project directory : <cwd>/
+    - Object directory  : <cwd>/obj/
+    - Source directory  :
+       - <cwd>/src
+    - Extended by       : Prj ($<cwd>/prj.gpr)
+    - Imports           : 
+       - Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr)
+       - Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr)
     - Attributes        : 
        - Exec_Dir [ SINGLE ]
           - Value : "obj"
@@ -117,20 +175,21 @@
        - Object_Dir [ SINGLE ]
           - Value : "obj"
        - Project_Dir [ SINGLE ]
-          - Value : "/"
+          - Value : "<cwd>/"
        - Source_Dirs [ LIST ]
           - Values : 
              - "src"
 
-* Prj ($/prj.gpr) [ standard project ]
-    - Project file      : /prj.gpr
-    - Project directory : /
-    - Object directory  : /obj2/
+* Prj ($<cwd>/prj.gpr) [ standard project ]
+    - Project file      : <cwd>/prj.gpr
+    - Project directory : <cwd>/
+    - Object directory  : <cwd>/obj2/
     - Source directory  :
-       - /src2
+       - <cwd>/src2
     - Extends           : 
-       - Base ($/base.gpr>$/prj.gpr)
-       - Shared ($/shared.gpr>$/prj.gpr)
+       - Base ($<cwd>/base.gpr>$<cwd>/prj.gpr)
+       - Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr)
+       - Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr)
     - Attributes        : 
        - Exec_Dir [ SINGLE ]
           - Value : "obj2"
@@ -144,7 +203,7 @@
        - Object_Dir [ SINGLE ]
           - Value : "obj2"
        - Project_Dir [ SINGLE ]
-          - Value : "/"
+          - Value : "<cwd>/"
        - Source_Dirs [ LIST ]
           - Values : 
              - "src2"

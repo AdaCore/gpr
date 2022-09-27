@@ -1,4 +1,6 @@
+--  Shared is used also by agg.gpr
 with "shared";
+with "lib";
 
 project Base is
 
