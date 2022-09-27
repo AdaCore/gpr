@@ -943,7 +943,7 @@ package body GPRinstall.Install is
                   Rollback_Manifests;
                   raise GPRinstall_Error with
                     "error: file does not exist '" & Pathname.Value & ''';
-               else
+               elsif Options.Warnings then
                   Put_Line
                     ("warning: file does not exist '" & Pathname.Value & ''');
                end if;

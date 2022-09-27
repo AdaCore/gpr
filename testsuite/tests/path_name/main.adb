@@ -59,6 +59,7 @@ procedure Main is
       if not Path.Is_Directory then
          Put_Line ("- Base_Name: " & String (Path.Base_Name));
          Put_Line ("- Base_Filename: " & String (Path.Base_Filename));
+         Put_Line ("- Extension: " & String (Path.Extension));
       end if;
 
       if not Path.Is_Root_Dir then

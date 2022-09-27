@@ -1,6 +1,2 @@
-
-Closure:
-
-  /src/main.c
-  /src/resources.h
-
+/src/main.c
+/src/resources.h

@@ -1,10 +1,6 @@
-
-Closure:
-
-  /dash_board.adb
-  /dash_board.ads
-  /gauge.adb
-  /gauge.ads
-  /indash.adb
-  /indash.ads
-
+/dash_board.adb
+/dash_board.ads
+/gauge.adb
+/gauge.ads
+/indash.adb
+/indash.ads

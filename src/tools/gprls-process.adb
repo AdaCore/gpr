@@ -189,7 +189,7 @@ is
       else
          for C in Tree.Log_Messages.Iterate
            (Information => Opt.Verbose,
-            Warning     => True,
+            Warning     => Opt.Warnings,
             Error       => False,
             Read        => False,
             Unread      => True)
@@ -316,9 +316,6 @@ begin
       --     - In closure mode and no file given on the CL, the root project's
       --       main sources.
 
-      Full_Closure : Boolean := Opt.Closure_Mode;
-      --  Reset this flag to False if closure became incomplete
-
       procedure Display_Closures;
 
       procedure Display_Gnatdist;
@@ -330,8 +327,6 @@ begin
       ----------------------
 
       procedure Display_Closures is
-         use type Ada.Containers.Count_Type;
-
          Closures : Project.Source.Part_Set.Object (Sorted => True);
       begin
          if Sources.Is_Empty then
@@ -355,8 +350,6 @@ begin
             end;
          end loop;
 
-         Text_IO.New_Line;
-
          declare
             package String_Sorting is new String_Vector.Generic_Sorting;
 
@@ -367,37 +360,31 @@ begin
                   if not GPR2.Project.Source.Artifact.Dependency
                            (R.Source, R.Index).Is_Defined
                   then
-                     Full_Closure := False;
+                     Text_IO.Put_Line
+                       (File => Text_IO.Standard_Error,
+                        Item =>
+                          String (R.Source.View.Path_Name.Simple_Name) &
+                          ": WARNING: the closure for " &
+                          String (R.Source.Path_Name.Simple_Name) &
+                          " is incomplete");
                   end if;
 
                   if R.Index not in Multi_Unit_Index then
-                     Output.Append ("  " & R.Source.Path_Name.Value);
+                     Output.Append (R.Source.Path_Name.Value);
                   else
                      Output.Append
-                       ("  " & R.Source.Path_Name.Value
-                        & " @" & R.Index'Image);
+                       (R.Source.Path_Name.Value & " @" & R.Index'Image);
                   end if;
                end if;
             end loop;
 
             String_Sorting.Sort (Output);
 
-            Text_IO.Put_Line
-              ((if Full_Closure
-               then "C"
-               else "Incomplete c") & "losure"
-               & (if Sources.Length = 1
-                 then ""
-                 else "s") & ":");
-
-            Text_IO.New_Line;
-
             for O of Output loop
                Text_IO.Put_Line (O);
             end loop;
          end;
 
-         Text_IO.New_Line;
       end Display_Closures;
 
       ----------------------
@@ -1062,7 +1049,15 @@ begin
                       (not Other.Source.Is_Defined
                        or else not Other.Source.Is_Parsed (Other.Index))
                   then
-                     Full_Closure := False;
+                     if Opt.Closure_Mode then
+                        Text_IO.Put_Line
+                          (File => Text_IO.Standard_Error,
+                           Item =>
+                             String (S.Source.View.Path_Name.Simple_Name) &
+                             ": WARNING: the closure for " &
+                             String (S.Source.Path_Name.Simple_Name) &
+                             " is incomplete");
+                     end if;
 
                      if S.Source.Has_Naming_Exception
                        and then S.Source.Naming_Exception

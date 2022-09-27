@@ -39,6 +39,9 @@ package GPRtools.Util is
       E_Abort);     -- Internally detected compiler error
 
    procedure Set_Program_Name (Name : String);
+   --  Set GPR_TOOL environment variable if it is not yet defined.
+   --  Note: gprclean, gprbuild, gprls, gprname, gprinstall, gprdump & gprdoc
+   --        tools are setting GPR_TOOL to gprbuild instead of their own names.
 
    procedure Output_Messages
      (Options : GPRtools.Options.Base_Options'Class;
