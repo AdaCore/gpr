@@ -7,7 +7,6 @@ Can't find ALI file for /src/main.adb
 -------------------------
 gprclean -Pdemo
 -------------------------
-demo.gpr:4:23: warning: object directory "obj" not found
 
 -------------------------
 gprls -Pdemo -ws

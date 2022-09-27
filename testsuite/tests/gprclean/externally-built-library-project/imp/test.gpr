@@ -1,0 +1,9 @@
+
+with "test/test_common";
+
+project Test is
+
+   for Object_Dir  use  "obj";
+   for Externally_Built use "true";
+
+end Test;

@@ -1,0 +1,2 @@
+description: gprbuild's I728-026 test (complains when directory does not exist)
+driver: python_script

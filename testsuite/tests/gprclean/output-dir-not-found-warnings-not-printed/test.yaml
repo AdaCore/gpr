@@ -1,0 +1,2 @@
+description: obj, exec, lib, ali, source dir not found warnings not printed by gprclean
+driver: python_script

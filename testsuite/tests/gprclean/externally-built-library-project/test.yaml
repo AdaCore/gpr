@@ -1,0 +1,2 @@
+description: N120-075 imported test (segfault on externally built library project)
+driver: python_script

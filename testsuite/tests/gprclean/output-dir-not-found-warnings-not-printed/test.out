@@ -1,0 +1,2 @@
+gprclean -P adaexe
+gprclean -P adalib

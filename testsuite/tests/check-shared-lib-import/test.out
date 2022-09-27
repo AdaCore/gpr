@@ -1,7 +1,3 @@
-static.gpr:3:25: warning: library directory "lib" not found
-shared.gpr:5:25: warning: library directory "lib" not found
 base.gpr:2:06: error: shared library project "Shared" cannot import project "Nolib" that is not a shared library project
 base.gpr:1:06: error: shared library project "Shared" cannot import static library project "Static"
 gprclean: "prj.gpr" processing failed
-static.gpr:3:25: warning: library directory "lib" not found
-shared.gpr:5:25: warning: library directory "lib" not found

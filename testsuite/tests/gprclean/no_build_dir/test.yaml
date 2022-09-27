@@ -1,0 +1,2 @@
+description: KC12-010 imported test (no complain when missing obj_dir)
+driver: python_script
