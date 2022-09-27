@@ -1,0 +1,12 @@
+--  Shared is included multiple times
+with "shared.gpr";
+
+--  Library project-specific output. Also don't specify the kind of project
+--  so that the linter comes into play.
+project Lib is
+
+   for Library_Name use "somename";
+   for Library_Kind use "static";
+   for Library_Dir  use "lib";
+
+end Lib;

@@ -1,8 +1,14 @@
+--  Test nested aggregates
+--  Also, Agg_Different should trigger a warning
 aggregate project Agg is
 
+   --  Test type printing
    type Yes_No is ("yes", "no");
 
+   --  Test var printing with type
    Answer : Yes_No := external ("FOO", "yes");
+
+   --  Test anonymous type printing
    Var2   := external ("BAR", "no");
 
    for Project_Files use ("prj.gpr");
