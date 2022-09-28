@@ -12,7 +12,6 @@ with Ada.Text_IO;
 with GNAT.OS_Lib;
 with GNATCOLL.Utils;
 
-with GPR2.FNMatch;
 with GPR2.Project.Attribute_Cache;
 with GPR2.Project.Definition;
 with GPR2.Project.Source.Set;
@@ -283,8 +282,8 @@ package body GPR2.Project.View is
       is
          use type Source_Reference.Object;
       begin
-         if FNMatch.Match (Str     => Index.Text,
-                           Pattern => Pattern.Index.Text)
+         if GNATCOLL.Utils.Match  (Str     => Index.Text,
+                                   Pattern => Pattern.Index.Text)
          then
             if not Found (Result)
               or else
