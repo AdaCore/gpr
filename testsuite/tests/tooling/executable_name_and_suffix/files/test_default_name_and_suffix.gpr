@@ -1,0 +1,9 @@
+project Test_Default_Name_And_Suffix is
+   for Languages use ("Ada");
+   for Source_Dirs use ("src");
+   for Main use ("main.adb");
+
+   package Builder is
+      for Executable_Suffix use ".out";
+   end Builder;
+end Test_Default_Name_And_Suffix;

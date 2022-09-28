@@ -87,9 +87,12 @@ class ObjRes:
     @staticmethod
     def __substitute__(s, val):
         a_val_prefix, a_val_name, a_val_suffix = val
-        a_val_prefix = os.path.normpath(a_val_prefix)
-        a_val_name = os.path.normpath(a_val_name)
-        a_val_suffix = os.path.normpath(a_val_suffix)
+        if a_val_prefix:
+            a_val_prefix = os.path.normpath(a_val_prefix)
+        if a_val_name:
+            a_val_name = os.path.normpath(a_val_name)
+        if a_val_suffix:
+            a_val_suffix = os.path.normpath(a_val_suffix)
 
         if Pattern.SCN_ATTR_ALT_SUBST_PATTERN_ALL.value in s:
             return s.replace(
@@ -328,7 +331,7 @@ class ObjRes:
                     if not self.res:
                         logging.error(
                             f"{behavior_image} behavior not found at least"
-                            + "one time in the output"
+                            + " one time in the output"
                         )
                 else:
                     condition = False
@@ -667,6 +670,8 @@ class ObjConfig:
             for b in SCN_ATTRIBUTE_TEST_CONFIG[self.name]["test_cmd"]:
                 new_behavior = ObjBehavior(b)
                 self.behaviors.append(new_behavior)
+        else:
+            logging.error(f"{self.name} not found in the driver database !")
 
     def get_name(self):
         return self.name
