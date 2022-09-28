@@ -2410,6 +2410,15 @@ package body GPRinstall.Install is
 
                With_External_Imports (Project);
 
+               --  Also add with for all limited with projects
+
+               for L of Project.Limited_Imports loop
+                  if Is_Install_Active (L) then
+                     Content.Append
+                       ("with """ & String (L.Path_Name.Base_Name) & """;");
+                  end if;
+               end loop;
+
                Add_Empty_Line;
             end if;
 
@@ -2968,6 +2977,12 @@ package body GPRinstall.Install is
 
          if Options.Recursive and then Project.Has_Imports then
             for P of Project.Imports loop
+               Process (Tree, P, Options);
+            end loop;
+
+            --  Also install all limited with projects
+
+            for P of Project.Limited_Imports loop
                Process (Tree, P, Options);
             end loop;
          end if;

@@ -19,7 +19,9 @@ class ObjScnPhase(Enum):
     SCN_PHASE_GPRBUILD_COMPILATION = 1
     SCN_PHASE_GPRBUILD_BIND = 2
     SCN_PHASE_GPRBUILD_LINK = 3
-    SCN_PHASE_GPRLS_SOURCE_PARSING = 4
+    SCN_PHASE_GPRBUILD_ALL = 4
+    SCN_PHASE_GPRCLEAN_ALL = 5
+    SCN_PHASE_GPRLS_SOURCE_PARSING = 6
     SCN_PHASE_CUSTOM_SLOT_1 = 101
     SCN_PHASE_CUSTOM_SLOT_2 = 102
     SCN_PHASE_CUSTOM_SLOT_3 = 103
@@ -171,6 +173,10 @@ SCN_TOOLS_CMD = {
         {"cmd": ['gprbuild', '-l', f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
                  f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
          "output": output.SCN_OUTPUT_CMD_LINE},
+    f"{tool.SCN_TOOL_GPRBUILD}.{phase.SCN_PHASE_GPRBUILD_ALL}":
+        {"cmd": ['gprbuild', f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
+                 f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
+         "output": output.SCN_OUTPUT_CMD_LINE},
     f"{tool.SCN_TOOL_GPRCONFIG}.{phase.SCN_PHASE_NONE}":
         {"cmd": ['gprconfig', '--batch', '--config=Ada', '-o',
                  f'{cmd.SCN_CMD_CONFIG_FILE.value}'],
@@ -178,6 +184,10 @@ SCN_TOOLS_CMD = {
     f"{tool.SCN_TOOL_GPRCLEAN}.{phase.SCN_PHASE_NONE}":
         {"cmd": ['gprclean', '-p', '-r', f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
          "output": None},
+    f"{tool.SCN_TOOL_GPRCLEAN}.{phase.SCN_PHASE_GPRCLEAN_ALL}":
+        {"cmd": ['gprclean', '-p', '-r', f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}',
+                 '-n'],
+         "output": output.SCN_OUTPUT_CMD_LINE},
     f"{tool.SCN_TOOL_GPRLS}.{phase.SCN_PHASE_GPRLS_SOURCE_PARSING}":
         {"cmd": ['gprls', '--source-parser', '-s',
                  f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],

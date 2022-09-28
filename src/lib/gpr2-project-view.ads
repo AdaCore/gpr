@@ -92,7 +92,8 @@ package GPR2.Project.View is
 
    function Has_Imports (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
-   --  Returns True if the project has some imports
+   --  Returns True if the project has some imports (either standard or
+   --  limited).
 
    function Closure (Self : Object) return GPR2.Project.View.Set.Object
      with Pre => Self.Is_Defined;

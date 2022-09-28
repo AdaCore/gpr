@@ -57,7 +57,7 @@ package body GPRinstall.Options is
       use type GPRtools.Command_Line.Switch_Type;
       use GPRtools;
 
-      Result   : constant access Object := Object (Res.all)'Access;
+      Result : constant access Object := Object (Res.all)'Access;
    begin
       if Arg = "-p" then
          Result.Create_Dest_Dir := True;

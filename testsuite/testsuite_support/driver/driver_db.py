@@ -77,6 +77,7 @@ SCN_ATTRIBUTE_TEST_CONFIG = {
         ]
     },
     "Project_Level.Shared_Library_Prefix": {
+        "also_tests": "Project_Level.Shared_Library_Suffix",
         "value_kind": Value.SCN_ATTR_VALUES_UNIQUE,
         "setup_cmd": [
             {"tool": Tool.SCN_TOOL_GPRCONFIG},
@@ -144,4 +145,33 @@ SCN_ATTRIBUTE_TEST_CONFIG = {
             }
         ]
     },
+    "Builder.Executable": {
+        "also_tests": "Builder.Executable_Suffix",
+        "value_kind": Value.SCN_ATTR_VALUES_UNIQUE,
+        "test_cmd": [
+            {
+                "tool": Tool.SCN_TOOL_GPRBUILD, "phase": Phase.SCN_PHASE_GPRBUILD_ALL,
+                "output_delimiter": f"{ExtTool.SCN_CMD_GCC.value} main.o",
+                "expected_behavior": {
+                    Case.SCN_CASE_VALUE_DEF: {
+                        Res.SCN_RES_FOR_ALL:
+                            [f"{Pattern.SCN_ATTR_ALT_SUBST_PATTERN_SUFFIX.value}"],
+                    }
+                }
+            },
+            {
+                "tool": Tool.SCN_TOOL_GPRCLEAN, "phase": Phase.SCN_PHASE_GPRCLEAN_ALL,
+                "output_delimiter": "",
+                "expected_behavior": {
+                    Case.SCN_CASE_VALUE_DEF: {
+                        Res.SCN_RES_FOR_ANY:
+                            [f"{Pattern.SCN_ATTR_ALT_SUBST_PATTERN_SUFFIX.value}"],
+                    }
+                }
+            }
+        ],
+        "cleanup_cmd": [
+            {"tool": Tool.SCN_TOOL_GPRCLEAN}
+        ]
+    }
 }
