@@ -1361,10 +1361,25 @@ package body GPR2.Project.View is
       Attr     : GPR2.Project.Attribute.Object;
 
       function Executable
+        (Base_Name : Value_Not_Empty) return GPR2.Path_Name.Object;
+
+      ----------------
+      -- Executable --
+      ----------------
+
+      function Executable
         (Base_Name : Value_Not_Empty) return GPR2.Path_Name.Object
-      is (GPR2.Path_Name.Create_File
-          (Filename_Type (Base_Name) & Self.Executable_Suffix,
-           Filename_Optional (Self.Executable_Directory.Dir_Name)));
+      is
+         Suffix : constant Value_Type :=
+                    (if GNATCOLL.Utils.Ends_With
+                       (Base_Name, String (Self.Executable_Suffix))
+                     then ""
+                     else Value_Type (Self.Executable_Suffix));
+      begin
+         return GPR2.Path_Name.Create_File
+                  (Filename_Type (Base_Name & Suffix),
+                   Filename_Optional (Self.Executable_Directory.Dir_Name));
+      end Executable;
       --  Full executable path for base name
 
    begin

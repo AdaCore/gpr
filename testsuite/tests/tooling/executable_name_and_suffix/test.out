@@ -1,0 +1,30 @@
+[INFO] - Creating a test for Builder.Executable attribute
+[INFO] - Running Builder.Executable attribute test
+[INFO] - [ Testcase 1 - SCN_CASE_VALUE_DEF ]
+[INFO] - Launching : "gprbuild --build-script=output.log -Pfiles/test_default_name_and_suffix.gpr"
+[INFO] - Expects - [ SCN_RES_FOR_ALL - ['main.out'] ]
+[INFO] - Test OK !
+[INFO] - Launching : "gprclean -p -r -Pfiles/test_default_name_and_suffix.gpr -n"
+[INFO] - Expects - [ SCN_RES_FOR_ANY - ['main.out'] ]
+[INFO] - Test OK !
+[INFO] - [ Testcase 2 - SCN_CASE_VALUE_DEF ]
+[INFO] - Launching : "gprbuild --build-script=output.log -Pfiles/test_name_and_suffix.gpr"
+[INFO] - Expects - [ SCN_RES_FOR_ALL - ['foo.out'] ]
+[INFO] - Test OK !
+[INFO] - Launching : "gprclean -p -r -Pfiles/test_name_and_suffix.gpr -n"
+[INFO] - Expects - [ SCN_RES_FOR_ANY - ['foo.out'] ]
+[INFO] - Test OK !
+[INFO] - [ Testcase 3 - SCN_CASE_VALUE_DEF ]
+[INFO] - Launching : "gprbuild --build-script=output.log -Pfiles/test_name_suffix_and_same_suffix.gpr"
+[INFO] - Expects - [ SCN_RES_FOR_ALL - ['foo.out'] ]
+[INFO] - Test OK !
+[INFO] - Launching : "gprclean -p -r -Pfiles/test_name_suffix_and_same_suffix.gpr -n"
+[INFO] - Expects - [ SCN_RES_FOR_ANY - ['foo.out'] ]
+[INFO] - Test OK !
+[INFO] - [ Testcase 4 - SCN_CASE_VALUE_DEF ]
+[INFO] - Launching : "gprbuild --build-script=output.log -Pfiles/test_name_suffix_and_suffix.gpr"
+[INFO] - Expects - [ SCN_RES_FOR_ALL - ['foo.bar.out'] ]
+[INFO] - Test OK !
+[INFO] - Launching : "gprclean -p -r -Pfiles/test_name_suffix_and_suffix.gpr -n"
+[INFO] - Expects - [ SCN_RES_FOR_ANY - ['foo.bar.out'] ]
+[INFO] - Test OK !
