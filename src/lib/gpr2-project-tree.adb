@@ -1749,7 +1749,7 @@ package body GPR2.Project.Tree is
                --  Set root view regarding context namespace
                --  ??? (need more explanation)
 
-               if not Parent.Is_Defined then
+               if not Parent.Is_Defined or else Parent.Kind = K_Aggregate then
                   --  This is the root project or an aggregate project. This
                   --  create a new namespace (i.e root in the subtree)
 
