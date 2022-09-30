@@ -1396,20 +1396,22 @@ is
    function Signature return MD5.Binary_Message_Digest is
       C : MD5.Context;
 
-      procedure Handle (Data : Definition.Data);
+      procedure Handle (View : GPR2.Project.View.Object);
       --  Handle the given project's definition
 
       ------------
       -- Handle --
       ------------
 
-      procedure Handle (Data : Definition.Data) is
+      procedure Handle (View : GPR2.Project.View.Object) is
 
          procedure Add (A : Project.Attribute.Object);
          --  Add attribute name and values into the MD5 context
 
          procedure Add (Attribute_Name : Q_Attribute_Id);
          --  Add attribute by into the MD5 context
+
+         Data : constant Const_Ref := Get_RO (View);
 
          ---------
          -- Add --
@@ -1506,14 +1508,14 @@ is
       end Handle;
 
    begin
-      Handle (Def);
+      Handle (View);
 
       --  If an aggregate library project take into account the
       --  aggregated projects.
 
       if Def.Kind = K_Aggregate_Library then
          for A of Def.Aggregated loop
-            Handle (Definition.Get_RO (A).all);
+            Handle (A);
          end loop;
       end if;
 
@@ -1642,8 +1644,8 @@ begin
    else
       --  Handle Source_Dirs
 
-      Definition.Source_Directories_Walk
-        (View, Source_CB => Handle_File'Access, Dir_CB => null);
+      View.Source_Directories_Walk
+        (Source_CB => Handle_File'Access, Dir_CB => null);
 
       for C in Def.Sources.Iterate loop
          Def.Sources_Map_Insert (Project.Source.Set.Element (C), C);

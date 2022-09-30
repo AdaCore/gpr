@@ -1,2 +1,6 @@
 abstract project Shared is
+
+  --  Test variables with a list value
+  Languages := ("Ada", "C");
+
 end Shared;

@@ -5,11 +5,9 @@
 --
 
 with Ada.Characters.Handling;
-with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Unchecked_Deallocation;
 with GNAT.OS_Lib;
-with GNAT.Regexp;
 
 with GNATCOLL.OS.Dir;
 with GNATCOLL.OS.Stat;
@@ -35,9 +33,6 @@ package body GPR2.Project.Definition is
    package PRP renames Project.Registry.Pack;
    package SR  renames GPR2.Source_Reference;
    package SRI renames SR.Identifier;
-
-   package Regexp_List is new Ada.Containers.Indefinite_Vectors
-     (Positive, GNAT.Regexp.Regexp, "=" => GNAT.Regexp."=");
 
    ----------------------------------
    -- Check_Aggregate_Library_Dirs --
@@ -742,144 +737,6 @@ package body GPR2.Project.Definition is
    begin
       return not Get_RO (View).Sources_Map.Is_Empty;
    end Is_Sources_Loaded;
-
-   -----------------------------
-   -- Source_Directories_Walk --
-   -----------------------------
-
-   procedure Source_Directories_Walk
-     (View      : Project.View.Object;
-      Source_CB : access procedure
-                   (Dir_Reference : GPR2.Source_Reference.Value.Object;
-                    Source        : GPR2.Path_Name.Object;
-                    Timestamp     : Ada.Calendar.Time);
-      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object))
-   is
-      Visited_Dirs             : GPR2.Containers.Filename_Set;
-      Dir_Ref                  : GPR2.Source_Reference.Value.Object;
-      Ignored_Sub_Dirs         : constant GPR2.Project.Attribute.Object :=
-                                   View.Attribute (PRA.Ignore_Source_Sub_Dirs);
-      Ignored_Sub_Dirs_Regexps : Regexp_List.Vector;
-      Excluded_Dirs            : constant GPR2.Project.Attribute.Object :=
-                                   View.Attribute (PRA.Excluded_Source_Dirs);
-      Excluded_Dirs_List       : GPR2.Path_Name.Set.Object;
-      --  Ignore_Source_Sub_Dirs attribute regexps
-
-      procedure On_Directory
-        (Directory       : GPR2.Path_Name.Object;
-         Is_Root_Dir     : Boolean;
-         Do_Dir_Visit    : in out Boolean;
-         Do_Subdir_Visit : in out Boolean);
-
-      procedure On_File
-        (File      : GPR2.Path_Name.Object;
-         Timestamp : Ada.Calendar.Time);
-
-      ------------------
-      -- On_Directory --
-      ------------------
-
-      procedure On_Directory
-        (Directory       : GPR2.Path_Name.Object;
-         Is_Root_Dir     : Boolean;
-         Do_Dir_Visit    : in out Boolean;
-         Do_Subdir_Visit : in out Boolean)
-      is
-         Position : GPR2.Containers.Filename_Type_Set.Cursor;
-         Inserted : Boolean;
-      begin
-         if Excluded_Dirs_List.Contains (Directory) then
-
-            --  Do not visit this directory's files but still look for
-            --  subdirectories.
-
-            Do_Dir_Visit := False;
-
-            return;
-         end if;
-
-         if not Is_Root_Dir then
-            for Ignored_Sub_Dir of Ignored_Sub_Dirs_Regexps loop
-               if GNAT.Regexp.Match
-                 (String (Directory.Simple_Name), Ignored_Sub_Dir)
-               then
-                  --  Ignore this matching sub dir tree.
-                  Do_Dir_Visit    := False;
-                  Do_Subdir_Visit := False;
-
-                  return;
-               end if;
-            end loop;
-         end if;
-
-         --  Do_Subdir_Visit is set to False if we already have visited
-         --  this source directory:
-
-         Visited_Dirs.Insert
-           (Directory.Name, Position, Inserted);
-
-         if not Inserted then
-            --  Already visited
-            Do_Dir_Visit    := False;
-
-         elsif Dir_CB /= null then
-            Dir_CB (Directory);
-         end if;
-      end On_Directory;
-
-      -------------
-      -- On_File --
-      -------------
-
-      procedure On_File
-        (File      : GPR2.Path_Name.Object;
-         Timestamp : Ada.Calendar.Time)
-      is
-      begin
-         Source_CB (Dir_Ref, File, Timestamp);
-      end On_File;
-
-   begin
-      if View.Kind not in With_Source_Dirs_Kind then
-         return;
-      end if;
-
-      if Ignored_Sub_Dirs.Is_Defined then
-         for V of Ignored_Sub_Dirs.Values loop
-            if V.Text /= "" then
-               Ignored_Sub_Dirs_Regexps.Append
-                 (GPR2.Compile_Regexp (Filename_Optional (V.Text)));
-            end if;
-         end loop;
-      end if;
-
-      if Excluded_Dirs.Is_Defined then
-         for V of Excluded_Dirs.Values loop
-            Excluded_Dirs_List.Append
-              (View.Dir_Name.Compose (Filename_Type (V.Text), True));
-         end loop;
-      end if;
-
-      for S of View.Attribute (PRA.Source_Dirs).Values loop
-         --  If S denotes the view's source dir corresponding to
-         --  --src-subdir, just skip if the dir does not exist (it is
-         --  optional).
-         if not (View.Has_Source_Subdirectory
-                 and then S.Text = View.Source_Subdirectory.Value
-                 and then not Ada.Directories.Exists (S.Text))
-         then
-            Dir_Ref := S;
-            Foreach
-              (Base_Dir          => View.Dir_Name,
-               Messages          => Get_RO (View).Tree.Log_Messages.all,
-               Directory_Pattern => Filename_Optional (S.Text),
-               Source            => S,
-               File_CB           => (if Source_CB = null then null
-                                     else On_File'Access),
-               Directory_CB      => On_Directory'Access);
-         end if;
-      end loop;
-   end Source_Directories_Walk;
 
    -----------------------
    -- Source_Map_Insert --

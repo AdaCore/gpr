@@ -11,6 +11,8 @@
 --  for the corresponding tree. It also gives the sources for the views and
 --  this include sources from extended project or aggregated project if needed.
 
+with Ada.Calendar;
+
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name.Set;
@@ -145,6 +147,13 @@ package GPR2.Project.View is
      (Self : Object; Source : Project.Source.Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if the source is the main unit of the view
+
+   function Is_Namespace_Root (Self : Object) return Boolean
+     with Pre  => Self.Is_Defined and then Self.Kind /= K_Aggregate,
+          Post => (if Is_Namespace_Root'Result
+                   then Self.Namespace_Root = Self);
+   --  Whether this view is either the root of the tree or the root
+   --  project of an aggregated subtree.
 
    function Aggregated (Self      : Object;
                         Recursive : Boolean := True) return Set.Object
@@ -375,10 +384,41 @@ package GPR2.Project.View is
      with Pre  => Self.Is_Defined;
    --  Returns the languages used on this project
 
+   function Language_Ids (Self : Object) return Containers.Language_Set
+     with Pre => Self.Is_Defined;
+   --  Returns the languages used by this project as a set of Language id
+
    function Source_Directories (Self : Object) return GPR2.Path_Name.Set.Object
      with Pre => Self.Is_Defined
                  and then Self.Qualifier in K_Standard | K_Library;
    --  Returns the source dir paths for a given project
+
+   procedure Source_Directories_Walk
+     (View      : Project.View.Object;
+      Source_CB : access procedure
+                    (Dir_Reference : GPR2.Source_Reference.Value.Object;
+                     Source        : GPR2.Path_Name.Object;
+                     Timestamp     : Ada.Calendar.Time);
+      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object));
+   --  Walks the source directories of Self and calls Source_CB on every
+   --  file found, and Dir_CB on each directory found, if the callbacks are
+   --  defined.
+
+   function Skipped_Sources
+     (View : Project.View.Object) return Containers.Filename_Source_Reference;
+   --  List of source basenames to ignore when loading the list of sources:
+   --  they are mentioned in ignored case statements, so should be skipped so
+   --  as to not interfere with the case statement that is selected.
+   --  e.g.:
+   --  Val := "True";
+   --  case Val is
+   --     when "True" =>
+   --        for Body ("Foo") use "foo__ok.adb";
+   --     when "False" =>
+   --        for Body ("Foo") use "foo__not_ok.adb";
+   --  end case;
+   --
+   --  In the above example. "foo__not_ok.adb" needs to be skipped.
 
    function Has_Sources (Self : Object) return Boolean
      with Pre  => Self.Is_Defined,
@@ -609,7 +649,7 @@ package GPR2.Project.View is
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre =>
        Self.Is_Defined
-       and then Self.Kind not in K_Configuration | K_Abstract;
+       and then Self.Kind not in K_Configuration | K_Abstract | K_Aggregate;
    --  As above but for the Object_Dir attribute
 
    function Has_Source_Subdirectory (Self : Object) return Boolean
@@ -826,6 +866,9 @@ private
 
    function Is_Library_Standalone (Self : Object) return Boolean is
       (Self.Library_Standalone /= No);
+
+   function Is_Namespace_Root (Self : Object) return Boolean is
+     (Self.Namespace_Root = Self);
 
    function Dir_Name (Self : Object) return GPR2.Path_Name.Object is
      (Self.Get.Path);

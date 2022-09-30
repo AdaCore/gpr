@@ -1,5 +1,7 @@
+--  Test aggregates
 aggregate project Root is
 
+   --  Agg is also an aggregate to test the main loop
    for Project_Files use ("agg.gpr");
 
 end Root;
