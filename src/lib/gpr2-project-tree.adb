@@ -2473,37 +2473,38 @@ package body GPR2.Project.Tree is
 
             procedure Get_Files is
 
-               View_Dir        : constant GPR2.Path_Name.Object :=
-                                   Path_Name.Create_Directory
-                                     (Filename_Optional
-                                        (View.Path_Name.Dir_Name));
+               View_Dir      : constant GPR2.Path_Name.Object :=
+                                 Path_Name.Create_Directory
+                                   (Filename_Optional
+                                      (View.Path_Name.Dir_Name));
                --  View root directory
 
-               Pattern         : constant GPR2.Path_Name.Object :=
-                                   (if OS_Lib.Is_Absolute_Path (Projects.Text)
-                                    then Path_Name.Create_File
-                                      (Filename_Optional (Projects.Text),
-                                       Path_Name.No_Resolution)
-                                    else View_Dir.Compose
-                                      (Filename_Optional (Projects.Text)));
+               Pattern       : constant GPR2.Path_Name.Object :=
+                                 (if OS_Lib.Is_Absolute_Path (Projects.Text)
+                                  then Path_Name.Create_File
+                                    (Filename_Optional (Projects.Text),
+                                     Path_Name.No_Resolution)
+                                  else View_Dir.Compose
+                                    (Filename_Optional (Projects.Text)));
                --  The absolute path pattern to get matching files
 
-               Dir_Part        : constant Filename_Optional :=
-                                   Filename_Optional (Pattern.Relative_Path
-                                                      (View_Dir).Value);
+               Dir_Part      : constant Filename_Optional :=
+                                 Filename_Optional
+                                   (Pattern.Containing_Directory.Relative_Path
+                                      (View_Dir).Value);
                --  The dir part without the trailing directory separator
 
-               Filename_Part   : constant Filename_Optional :=
-                                   Filename_Optional (Pattern.Simple_Name);
+               Filename_Part : constant Filename_Optional :=
+                                 Filename_Optional (Pattern.Simple_Name);
                --  The filename pattern of matching files
 
-               Filename        : constant Filename_Optional :=
-                                   (if Strings.Fixed.Index
-                                      (String (Filename_Part),
-                                       Wildcards,
-                                       Going => Strings.Backward) = 0
-                                    then Filename_Part
-                                    else "");
+               Filename      : constant Filename_Optional :=
+                                 (if Strings.Fixed.Index
+                                    (String (Filename_Part),
+                                     Wildcards,
+                                     Going => Strings.Backward) = 0
+                                  then Filename_Part
+                                  else "");
                --  "" if Filename part is a regular expression otherwise the
                --  filename to locate.
 
