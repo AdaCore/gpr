@@ -1,0 +1,7 @@
+
+with "p";
+with "q";
+
+abstract project Demo is
+   for Source_Dirs use ();
+end Demo;

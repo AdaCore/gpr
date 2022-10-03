@@ -50,7 +50,7 @@ package GPR2.Project.Parser is
 
    function Parse
      (Contents        : Ada.Strings.Unbounded.Unbounded_String;
-      Messages        : out Log.Object;
+      Messages        : in out Log.Object;
       Pseudo_Filename : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined)
       return Object;
    --  Performs phase-1 on Contents. Project parsed this way is not registered
@@ -65,7 +65,7 @@ package GPR2.Project.Parser is
 
    procedure Process
      (Self          : in out Object;
-      Tree          : GPR2.Project.Tree.Object;
+      Tree          : in out GPR2.Project.Tree.Object;
       Context       : GPR2.Context.Object;
       View          : GPR2.Project.View.Object;
       Pre_Conf_Mode : Boolean := False;

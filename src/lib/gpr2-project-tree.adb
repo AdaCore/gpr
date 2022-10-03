@@ -558,8 +558,7 @@ package body GPR2.Project.Tree is
       --------------
 
       procedure Add_File
-        (Name : Path_Name.Object; Check_Exist : Boolean := True)
-      is
+        (Name : Path_Name.Object; Check_Exist : Boolean := True) is
       begin
          if Check_Exist and then not Name.Exists then
             return;
@@ -1583,6 +1582,10 @@ package body GPR2.Project.Tree is
          Aggregated,      --  In an aggregate project
          Simple);         --  Import, Limited import or aggregate library
 
+      P_Names     : Containers.Name_Value_Map;
+      --  Used to check for duplicate project names possibly in
+      --  different (inconsistent naming) filenames.
+
       Search_Path : Path_Name.Set.Object := Self.Search_Paths;
       PP          : Attribute.Object;
 
@@ -1701,12 +1704,38 @@ package body GPR2.Project.Tree is
                --  At this stage even if not complete we can create the view
                --  and register it so that we can have references to it.
 
-               Data.Tree        := Self.Self;
-               Data.Context     := Context;
-               Data.Is_Root     := Status = Root;
-               Data.Unique_Id   := Id;
+               Data.Tree      := Self.Self;
+               Data.Context   := Context;
+               Data.Is_Root   := Status = Root;
+               Data.Unique_Id := Id;
 
                View := Register_View (Data);
+
+               --  Check if we already have a project recorded with the same
+               --  name. Issue an error if it is on a different filename.
+
+               declare
+                  Full_Name : constant String :=
+                                OS_Lib.Normalize_Pathname
+                                  (View.Path_Name.Value);
+               begin
+                  if P_Names.Contains (View.Name) then
+                     if P_Names (View.Name) /= Full_Name then
+                        Self.Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Message => "duplicate project name """
+                                          & String (View.Name) & """ in """
+                                          & P_Names (View.Name)
+                                          & """",
+                              Sloc    => Source_Reference.Create
+                                           (Full_Name, 1, 1)));
+                     end if;
+
+                  else
+                     P_Names.Insert (View.Name, Full_Name);
+                  end if;
+               end;
             end;
 
             declare
@@ -1811,11 +1840,21 @@ package body GPR2.Project.Tree is
                         end if;
                      end if;
 
-                     if Limited_With then
-                        Data.Limited_Imports.Insert (Prj.Name, Imported_View);
+                     if Data.Limited_Imports.Contains (Prj.Name)
+                       or else Data.Imports.Contains (Prj.Name)
+                     then
+                        --  Do not try to insert the project below as it is
+                        --  a duplicate import. The error will be reported
+                        --  later, so here we do nothing.
+                        null;
 
                      else
-                        Data.Imports.Insert (Prj.Name, Imported_View);
+                        if Limited_With then
+                           Data.Limited_Imports.Insert
+                             (Prj.Name, Imported_View);
+                        else
+                           Data.Imports.Insert (Prj.Name, Imported_View);
+                        end if;
                      end if;
 
                      Data.Closure.Include (Prj.Name, Imported_View);
@@ -3429,19 +3468,25 @@ package body GPR2.Project.Tree is
       Self.Root             := Undefined.Root;
       Self.Conf             := Undefined.Conf;
       Self.Runtime          := Undefined.Runtime;
+      Self.Search_Paths     := Undefined.Search_Paths;
+      Self.Implicit_With    := Undefined.Implicit_With;
       Self.Build_Path       := Undefined.Build_Path;
       Self.Subdirs          := Undefined.Subdirs;
       Self.Src_Subdirs      := Undefined.Src_Subdirs;
       Self.Check_Shared_Lib := Undefined.Check_Shared_Lib;
-      Self.Search_Paths     := Undefined.Search_Paths;
+      Self.Absent_Dir_Error := Undefined.Absent_Dir_Error;
+      Self.Pre_Conf_Mode    := Undefined.Pre_Conf_Mode;
+      Self.Sources_Loaded   := Undefined.Sources_Loaded;
+      Self.Explicit_Target  := Undefined.Explicit_Target;
+      Self.File_Reader_Ref  := Undefined.File_Reader_Ref;
 
       Self.Units.Clear;
       Self.Sources.Clear;
-      --  Self.Rooted_Sources.Clear;
       Self.Messages.Clear;
+      Self.Views_Set.Clear;
       Self.View_Ids.Clear;
       Self.View_DAG.Clear;
-      Self.Views_Set.Clear;
+      Self.Explicit_Runtimes.Clear;
    end Unload;
 
    --------------------
@@ -3481,6 +3526,7 @@ package body GPR2.Project.Tree is
       Conf : Project.Configuration.Object)
    is
       use OS_Lib;
+
       Drivers      : Attribute.Set.Object;
 
       PATH         : constant String := Environment_Variables.Value ("PATH");

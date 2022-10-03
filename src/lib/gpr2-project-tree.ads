@@ -149,8 +149,10 @@ package GPR2.Project.Tree is
    --  If File_Reader is set, then it is used when parsing Ada sources or
    --  GPR projects. Else default file reader is used.
 
-   procedure Unload (Self : in out Object;
-                     Full : Boolean := True);
+   procedure Unload
+     (Self : in out Object;
+      Full : Boolean := True)
+     with Post => not Self.Is_Defined;
    --  Unloads the tree and free all associated objects (projects, sources,
    --  etc...).
    --  If Full is set, then the cached parsed projects objects will also be

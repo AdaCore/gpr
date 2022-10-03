@@ -157,7 +157,7 @@ package body GPR2.Project.Parser is
      (Unit          : Analysis_Unit;
       Filename      : GPR2.Path_Name.Object;
       Implicit_With : GPR2.Path_Name.Set.Object;
-      Messages      : out Log.Object) return Object;
+      Messages      : in out Log.Object) return Object;
    --  Analyzes the project, recording all external references and imports
 
    -----------------
@@ -350,7 +350,7 @@ package body GPR2.Project.Parser is
 
    function Parse
      (Contents        : Unbounded_String;
-      Messages        : out Log.Object;
+      Messages        : in out Log.Object;
       Pseudo_Filename : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined)
       return Object
    is
@@ -536,7 +536,7 @@ package body GPR2.Project.Parser is
      (Unit          : Analysis_Unit;
       Filename      : GPR2.Path_Name.Object;
       Implicit_With : GPR2.Path_Name.Set.Object;
-      Messages      : out Log.Object) return Object
+      Messages      : in out Log.Object) return Object
    is
       use type GPR2.Path_Name.Object;
 
@@ -1226,7 +1226,7 @@ package body GPR2.Project.Parser is
 
    procedure Process
      (Self          : in out Object;
-      Tree          : GPR2.Project.Tree.Object;
+      Tree          : in out GPR2.Project.Tree.Object;
       Context       : GPR2.Context.Object;
       View          : GPR2.Project.View.Object;
       Pre_Conf_Mode : Boolean := False;
@@ -3108,6 +3108,10 @@ package body GPR2.Project.Parser is
            with Pre => Is_Open;
          --  Parse a package extension
 
+         procedure Parse_Project_Declaration (N : Project_Declaration)
+           with Pre => Is_Open;
+         --  Parse the project declaration
+
          procedure Parse_Case_Construction (Node : Case_Construction)
            with Post => Case_Values.Length'Old = Case_Values.Length;
          --  Parse a case construction, during a case construction parsing the
@@ -3679,6 +3683,38 @@ package body GPR2.Project.Parser is
             Status := Over;
          end Parse_Package_Renaming;
 
+         -------------------------------
+         -- Parse_Project_Declaration --
+         -------------------------------
+
+         procedure Parse_Project_Declaration (N : Project_Declaration) is
+            Dot_Map  : constant Strings.Maps.Character_Mapping :=
+                         Strings.Maps.To_Mapping ("-", ".");
+           --  A dash on a project's file name is translated as a dot in the
+           --  actual project name.
+
+            Prj_Name : constant Name_Type :=
+                         Name_Type
+                           (Strings.Fixed.Translate
+                              (String (Self.File.Base_Name),
+                               Mapping => Dot_Map));
+         begin
+            --  Check that project name is consistent with the filename, we
+            --  skip autoconf which is using the Default project name.
+
+            if Self.Qualifier /= K_Configuration
+              and then Name_Type (To_String (Self.Name)) /= Prj_Name
+            then
+               Tree.Log_Messages.Append
+                 (GPR2.Message.Create
+                    (Level   => Message.Warning,
+                     Sloc    =>
+                       Get_Source_Reference (Self.File, F_Project_Name (N)),
+                     Message =>
+                       "project name '" & String (Prj_Name) & "' expected"));
+            end if;
+         end Parse_Project_Declaration;
+
          -------------------------
          -- Parse_Variable_Decl --
          -------------------------
@@ -3925,6 +3961,9 @@ package body GPR2.Project.Parser is
             --  Handle all kind of nodes when the parsing is open
 
             case Kind (Node) is
+               when Gpr_Project_Declaration =>
+                  Parse_Project_Declaration (Node.As_Project_Declaration);
+
                when Gpr_Attribute_Decl =>
                   Parse_Attribute_Decl (Node.As_Attribute_Decl);
 

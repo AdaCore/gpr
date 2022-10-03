@@ -259,7 +259,7 @@ package body GPR2.Project.View is
       Result    : Project.Attribute.Object;
 
       function Found (Attribute : Project.Attribute.Object) return Boolean
-         with Inline => True;
+        with Inline => True;
 
       function Get_Attribute_From_View
         (View : Object) return Project.Attribute.Object;
@@ -2934,11 +2934,11 @@ package body GPR2.Project.View is
    end View_For;
 
 begin
-   Definition.Get_RO                 := Get_RO'Access;
-   Definition.Get_RW                 := Get_RW'Access;
-   Definition.Get                    := Get_Ref'Access;
-   Definition.Set                    := Set_Def'Access;
-   Definition.Refcount               := Refcount'Access;
-   Definition.Weak                   := Weak'Access;
-   Definition.Strong                 := Strong'Access;
+   Definition.Get_RO   := Get_RO'Access;
+   Definition.Get_RW   := Get_RW'Access;
+   Definition.Get      := Get_Ref'Access;
+   Definition.Set      := Set_Def'Access;
+   Definition.Refcount := Refcount'Access;
+   Definition.Weak     := Weak'Access;
+   Definition.Strong   := Strong'Access;
 end GPR2.Project.View;

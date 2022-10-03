@@ -1,0 +1,4 @@
+
+abstract project Wrong_Name is
+   for Source_Dirs use ();
+end Wrong_Name;
