@@ -667,7 +667,7 @@ begin
    GPRclean.Options.Parse_Command_Line (Parser, Options);
 
    if not Options.Load_Project
-     (Absent_Dir_Error   => Project.Tree.Warning,
+     (Absent_Dir_Error   => Project.Tree.No_Error,
       Handle_Information => Options.Verbose,
       Handle_Lint        => Options.Verbose)
    then

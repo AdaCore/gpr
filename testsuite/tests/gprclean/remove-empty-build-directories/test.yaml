@@ -1,0 +1,2 @@
+description: S513-047 imported test (no warning on gprclean -p)
+driver: python_script
