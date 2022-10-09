@@ -347,7 +347,6 @@ package body GPRinstall.Install is
               is (OS_Lib.Normalize_Pathname (Str, Case_Sensitive => False));
 
             MD5  : constant String := String (Pathname.Content_MD5);
-            File : constant String := String (Pathname.Simple_Name);
          begin
             if not Aggregate_Only and then Is_Open (Man) then
                declare
@@ -359,8 +358,8 @@ package body GPRinstall.Install is
                   Put_Line
                     (Man,
                      MD5 & ' '
-                     & String (Pathname.Relative_Path (From => Man_Path).Name)
-                     & File);
+                     & String
+                       (Pathname.Relative_Path (From => Man_Path).Name));
                end;
             end if;
 
@@ -375,8 +374,7 @@ package body GPRinstall.Install is
                     (Agg_Manifest,
                      MD5 & ' '
                      & String
-                         (Pathname.Relative_Path (From => Agg_Man_Path).Name)
-                     & File);
+                         (Pathname.Relative_Path (From => Agg_Man_Path).Name));
                end;
             end if;
          end;

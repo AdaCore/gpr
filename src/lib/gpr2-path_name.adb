@@ -428,8 +428,7 @@ package body GPR2.Path_Name is
       C_From  : constant String := To_String (Self.Value) & ASCII.NUL;
       pragma Warnings (Off, "*actuals for this call may be in wrong order*");
       C_To    : constant String :=
-                  String (Relative_Path (To, Self).Name)
-                  & String (Simple_Name (To)) & ASCII.NUL;
+                  String (Relative_Path (To, Self).Name) & ASCII.NUL;
       Result  : Integer;
       Success : Boolean;
       pragma Unreferenced (Result);
@@ -597,8 +596,9 @@ package body GPR2.Path_Name is
       use Ada.Strings.Fixed;
       use GNATCOLL.Utils;
 
-      P : constant String := To_String (Self.Dir_Name);
-      T : constant String := To_String (From.Dir_Name);
+      P       : constant String := To_String (Self.Dir_Name);
+      T       : constant String := To_String (From.Dir_Name);
+      Rel_Dir : Object;
 
       Pi : Positive := P'First; -- common prefix ending
       Ti : Positive := P'First;
@@ -635,12 +635,21 @@ package body GPR2.Path_Name is
 
       N := Strings.Fixed.Count (T (Pi + 1 .. T'Last), Dir_Seps);
 
-      return Create_Directory
+      Rel_Dir := Create_Directory
         (Filename_Type (String'(N * "../")
          & (if Pi = P'Last and then N = 0
-           then "./"
-           else P (Pi + 1 .. P'Last))),
+            then "./"
+            else P (Pi + 1 .. P'Last))),
          Filename_Optional (T));
+
+      if Self.Is_Dir then
+         return Rel_Dir;
+      else
+         return Create_File
+           (Filename_Type (Ensure_Directory (String (Rel_Dir.Name))) &
+              Self.Simple_Name,
+            Filename_Optional (T));
+      end if;
    end Relative_Path;
 
    -----------------

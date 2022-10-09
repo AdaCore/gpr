@@ -614,8 +614,9 @@ begin
                      Append_Dir (GPR2.Path_Name.Create_Directory
                                  (Filename_Optional
                                     (GPR2.Path_Name.Relative_Path
-                                       (Sources (S_Curs).File,
-                                          Current_Dir).Name)));
+                                       (Sources
+                                          (S_Curs).File.Containing_Directory,
+                                        Current_Dir).Name)));
                   end loop;
                end;
             end loop;
