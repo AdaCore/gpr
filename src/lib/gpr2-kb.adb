@@ -755,7 +755,7 @@ package body GPR2.KB is
                   declare
                      Local_Iter  : Batch_Iterator (Length (Filters));
                   begin
-                     Local_Iter := Iterator;
+                     Local_Iter.Filters := Iterator.Filters;
 
                      Compiler_Iterator.Foreach_In_Path
                        (Self       => Local_Iter,
