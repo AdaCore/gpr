@@ -31,7 +31,6 @@ limited with GPR2.Project.Tree;
 limited with GPR2.Project.View.Set;
 
 private with GPR2.Project.Pack;
-private with GPR2.Project.Registry.Pack;
 
 package GPR2.Project.View is
 
@@ -805,6 +804,17 @@ package GPR2.Project.View is
    --  Internal function used to retrieve the unprocessed list of attributes
    --  defined in a package.
 
+   function Apply_Root_And_Subdirs
+     (Self : Object; Dir_Attr : Q_Attribute_Id) return GPR2.Path_Name.Object
+     with Pre => (Dir_Attr.Pack = Project_Level_Scope
+                  and then Dir_Attr in PRA.Object_Dir | PRA.Library_Ali_Dir |
+                                       PRA.Library_Dir | PRA.Exec_Dir |
+                                       PRA.Library_Src_Dir);
+   --  Apply project path and subdir option for library, object and executable
+   --  directories defined in attribute Dir_Attr.
+   --  Internal use: the accessors Object_Directory, Executable_Directory and
+   --  so on already handle the out-of-tree builds and the subdirs.
+
 private
 
    type Object is new Definition_References.Ref with null record;
@@ -876,7 +886,6 @@ private
    --  Naming package accessor
 
    package PA  renames Project.Attribute;
-   package PRP renames Project.Registry.Pack;
    package PAI renames Project.Attribute_Index;
 
    function Has_Separate_Suffix
