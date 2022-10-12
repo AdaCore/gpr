@@ -21,6 +21,7 @@ with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree.View_Builder;
 with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Value;
+with GPR2.Unit;
 with GPR2.View_Ids.Set;
 with GPR2.View_Ids.Vector;
 with GNAT.OS_Lib;
@@ -444,7 +445,12 @@ package body GPR2.Project.Tree is
             --  It is not actual for now because line below is added after the
             --  T709-001 bug detected.
 
-            Definition.Get_RW (Result).Root_View := Definition.Weak (Result);
+            --  ??? We shouldn't consider the runtime view as a root view, but
+            --  instead add it as implicitly limited withed project for all
+            --  views that have Ada sources.
+
+            Definition.Get_RW (Result).Root_Views.Append
+              (View_Ids.Runtime_View_Id);
          end return;
 
       else
@@ -1618,17 +1624,18 @@ package body GPR2.Project.Tree is
           Import_Path  : Path_Name.Object) return Boolean;
       --  Returns True if the Import_Path is a limited with in View
 
-      procedure Propagate_Aggregate_Library
-        (View        : in out GPR2.Project.View.Object;
-         Agg_Library : GPR2.View_Ids.View_Id);
+      procedure Propagate_Aggregate
+        (View                 : in out GPR2.Project.View.Object;
+         Root                 : GPR2.View_Ids.View_Id;
+         Is_Aggregate_Library : Boolean) with Inline;
       --  Make sure that all views in the subtree of View reference the
-      --  Aggregate Library.
+      --  Aggregate Library (if set), or set their namespace root to Root.
       --
-      --  This is needed if several aggregate libraries exist in the tree
-      --  and they reference the same project. This is also needed if a
-      --  subproject is withed from the regular project before being also
-      --  in the closure of the aggregate library, as in these cases the
-      --  view will already exist before the aggregate library is loaded.
+      --  In case of Aggregate Libraries, this is needed if several aggregate
+      --  libraries exist in the tree and they reference the same project.
+      --
+      --  This is also needed for both aggrete and aggregate library cases if a
+      --  subproject is withed from several subtrees of the aggregate.
 
       --------------
       -- Internal --
@@ -1746,24 +1753,32 @@ package body GPR2.Project.Tree is
                --  Extends all context for the extended project if any
 
             begin
-               --  Set root view regarding context namespace
-               --  ??? (need more explanation)
+               --  Set the root view(s), so the view that is at the toplevel
+               --  of a standalone hierarchy (so either the root project,
+               --  or the top-level aggregated projects.
+               --
+               --  Note that in case of aggregated projects, a view can have
+               --  several root views.
 
-               if not Parent.Is_Defined or else Parent.Kind = K_Aggregate then
-                  --  This is the root project or an aggregate project. This
+               if not Parent.Is_Defined
+                 or else View.Kind = K_Aggregate
+                 or else Parent.Kind = K_Aggregate
+               then
+                  --  This is the root project or an aggregated project. This
                   --  create a new namespace (i.e root in the subtree)
 
-                  Data.Root_View := Definition.Weak (View);
+                  Data.Root_Views.Append (View.Id);
 
                else
-                  --  ??? what happens if a project is withed inside several
-                  --  aggregate projects ???
+                  Data.Root_Views :=
+                    Definition.Get_RO (Parent).Root_Views;
 
-                  Data.Root_View := Definition.Get_RO (Parent).Root_View;
                   Data.Agg_Libraries :=
                     Definition.Get_RO (Parent).Agg_Libraries;
 
-                  if Parent.Kind = K_Aggregate_Library then
+                  if Parent.Kind = K_Aggregate_Library
+                    and then Status = Aggregated
+                  then
                      Data.Agg_Libraries.Include (Parent.Id);
                   end if;
                end if;
@@ -1957,13 +1972,23 @@ package body GPR2.Project.Tree is
                end if;
             end;
 
-         elsif Parent.Is_Defined
-           and then Parent.Kind = K_Aggregate_Library
-         then
-            --  We need to keep track of aggregate libraries
-            --  closure.
+         elsif Parent.Is_Defined then
+            if Parent.Kind = K_Aggregate_Library
+              and then Status = Aggregated
+            then
+               --  We need to keep track of aggregate libraries
+               --  closure, and namespace root views
 
-            Propagate_Aggregate_Library (View, Parent.Id);
+               Propagate_Aggregate (View, Parent.Id, True);
+            end if;
+
+            if Parent.Kind /= K_Aggregate then
+               for Root of Parent.Namespace_Roots loop
+                  Propagate_Aggregate (View, Root.Id, False);
+               end loop;
+            elsif Status = Aggregated then
+               Propagate_Aggregate (View, View.Id, False);
+            end if;
          end if;
 
          return View;
@@ -2073,37 +2098,54 @@ package body GPR2.Project.Tree is
          return Data;
       end Load;
 
-      ---------------------------------
-      -- Propagate_Aggregate_Library --
-      ---------------------------------
+      -------------------------
+      -- Propagate_Aggregate --
+      -------------------------
 
-      procedure Propagate_Aggregate_Library
-        (View        : in out GPR2.Project.View.Object;
-         Agg_Library : GPR2.View_Ids.View_Id)
+      procedure Propagate_Aggregate
+        (View                 : in out GPR2.Project.View.Object;
+         Root                 : GPR2.View_Ids.View_Id;
+         Is_Aggregate_Library : Boolean)
       is
          Data     : constant GPR2.Project.Definition.Ref :=
                       Definition.Get_RW (View);
          Position : GPR2.View_Ids.Set.Cursor;
-         Inserted : Boolean;
+         Inserted : Boolean := False;
+
       begin
-         Data.Agg_Libraries.Insert (Agg_Library, Position, Inserted);
+         if Is_Aggregate_Library then
+            Data.Agg_Libraries.Insert (Root, Position, Inserted);
+         elsif not Data.Root_Views.Contains (Root) then
+            Data.Root_Views.Append (Root);
+            Inserted := True;
+         end if;
 
          if not Inserted then
             return;
          end if;
 
          if Data.Extended_Root.Is_Defined then
-            Propagate_Aggregate_Library (Data.Extended_Root, Agg_Library);
+            Propagate_Aggregate
+              (Data.Extended_Root, Root, Is_Aggregate_Library);
          end if;
 
          for Import of Data.Imports loop
-            Propagate_Aggregate_Library (Import, Agg_Library);
+            Propagate_Aggregate (Import, Root, Is_Aggregate_Library);
          end loop;
 
          for Import of Data.Limited_Imports loop
-            Propagate_Aggregate_Library (Import, Agg_Library);
+            Propagate_Aggregate (Import, Root, Is_Aggregate_Library);
          end loop;
-      end Propagate_Aggregate_Library;
+
+         if not Is_Aggregate_Library
+           and then Data.Kind = K_Aggregate_Library
+         then
+            --  Propagete the namespace root
+            for Agg of Data.Aggregated loop
+               Propagate_Aggregate (Agg, Root, False);
+            end loop;
+         end if;
+      end Propagate_Aggregate;
 
    begin
       if Starting_From.Is_Defined then
@@ -2184,6 +2226,7 @@ package body GPR2.Project.Tree is
                Status := Root;
 
             elsif Parent.Kind in Aggregate_Kind then
+               --  Aggregate library project
                Status := Aggregated;
 
             else

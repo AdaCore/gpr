@@ -30,7 +30,6 @@ private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Strings.Hash;
 
 private with GPR2.Project.Definition;
-private with GPR2.Unit;
 
 package GPR2.Project.Tree is
 
@@ -518,28 +517,6 @@ private
    package Filename_View is
      new Ada.Containers.Indefinite_Ordered_Maps (Filename_Type, View.Object);
    --  Map to find in which view a unit/source is defined
-
-   function Key
-     (View : Project.View.Object; Source : Simple_Name) return String
-   is
-     (Path_Name.To_OS_Case (View.Namespace_Root.Path_Name.Value)
-      & '|' & Path_Name.To_OS_Case (String (Source)));
-
-   function Key
-     (View : Project.View.Object; Unit : GPR2.Unit.Object) return String
-   is
-     (Path_Name.To_OS_Case (View.Namespace_Root.Path_Name.Value)
-      & (if Unit.Kind in GPR2.Unit.Spec_Kind then 'S' else 'B')
-      & To_Lower (Unit.Name));
-
-   function Key (Item : Source.Object) return String is
-     (Key (Item.View, Item.Path_Name.Simple_Name));
-
-   function To_Hash (Item : Source.Object) return Ada.Containers.Hash_Type is
-     (Ada.Strings.Hash (Key (Item)));
-
-   function Same_Key (Left, Right : Source.Object) return Boolean is
-     (Key (Left) = Key (Right));
 
    package Id_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (GPR2.View_Ids.View_Id, View.Object,

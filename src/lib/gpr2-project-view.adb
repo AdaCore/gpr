@@ -412,7 +412,6 @@ package body GPR2.Project.View is
 
             if not Found (Result)
               and then PRA_Def.Index_Type = PRA.FileGlob_Or_Language_Index
-              and then not Get_RO (Self).Root_View.Was_Freed
               and then Self.Has_Source (GPR2.Simple_Name (Index.Value))
             then
                declare
@@ -1876,6 +1875,13 @@ package body GPR2.Project.View is
            or else Mains.Has_Value (Value_Type (Path.Simple_Name)));
    end Is_Main;
 
+   -----------------------
+   -- Is_Namespace_Root --
+   -----------------------
+
+   function Is_Namespace_Root (Self : Object) return Boolean is
+     (for some V of Self.Namespace_Roots => Self = V);
+
    ----------------
    -- Is_Runtime --
    ----------------
@@ -2200,10 +2206,14 @@ package body GPR2.Project.View is
    -- Namespace_Root --
    --------------------
 
-   function Namespace_Root (Self : Object) return Object is
+   function Namespace_Roots (Self : Object) return Set.Object is
    begin
-      return Definition.Strong (Get_RO (Self).Root_View);
-   end Namespace_Root;
+      return Result : Set.Object do
+         for Id of Get_RO (Self).Root_Views loop
+            Result.Include (Self.Tree.Instance_Of (Id));
+         end loop;
+      end return;
+   end Namespace_Roots;
 
    ----------------------
    -- Object_Directory --

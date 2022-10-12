@@ -1,0 +1,8 @@
+aggregate library project P4 is
+
+   for Library_Name use "p4";
+   for Library_Dir use "lib";
+
+   for Project_Files use ("p1.gpr");
+
+end P4;

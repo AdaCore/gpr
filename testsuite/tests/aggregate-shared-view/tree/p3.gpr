@@ -1,0 +1,7 @@
+with "shared";
+
+aggregate project P3 is
+
+   for Project_Files use ("p5.gpr", "p6.gpr");
+
+end P3;

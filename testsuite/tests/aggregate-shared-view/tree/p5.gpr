@@ -1,0 +1,5 @@
+with "p6";
+
+project P5 extends all "p2" is
+
+end P5;
