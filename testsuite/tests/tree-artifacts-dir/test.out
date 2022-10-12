@@ -1,0 +1,11 @@
+Prj => trees/obj/
+Agg => trees/
+subdirs set to 'sub'
+Prj => trees/obj/sub/
+Agg => trees/sub/
+build tree set to 'reloc'
+Prj => reloc/obj/
+Agg => reloc/
+both set
+Prj => reloc/obj/sub/
+Agg => reloc/sub/

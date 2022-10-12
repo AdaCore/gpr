@@ -14,6 +14,7 @@ with GNATCOLL.Utils;
 
 with GPR2.Project.Attribute_Cache;
 with GPR2.Project.Definition;
+with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
@@ -24,6 +25,7 @@ with GPR2.Source_Reference.Pack;
 
 package body GPR2.Project.View is
 
+   package PRP renames GPR2.Project.Registry.Pack;
    use GNAT;
 
    package Regexp_List is new Ada.Containers.Indefinite_Vectors
@@ -44,15 +46,6 @@ package body GPR2.Project.View is
 
    procedure Set_Def (Ref : out View.Object; Def : Definition_Base'Class);
    --  Convert definition to view
-
-   function Apply_Root_And_Subdirs
-     (Self : Object; Dir_Attr : Q_Attribute_Id) return GPR2.Path_Name.Object
-     with Pre => (Dir_Attr.Pack = Project_Level_Scope
-                  and then Dir_Attr in PRA.Object_Dir | PRA.Library_Ali_Dir |
-                                       PRA.Library_Dir | PRA.Exec_Dir |
-                                       PRA.Library_Src_Dir);
-   --  Apply project path and subdir option for library, object and executable
-   --  directories defined in attribute Dir_Attr.
 
    function Weak (View : Object) return Weak_Reference is
      (Definition_References.Weak (View));

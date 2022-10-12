@@ -1,0 +1,5 @@
+description:
+    Test for GPR2.Project.Tree.Artifacts_Dir
+driver: build_and_run
+project_file: test
+main: main

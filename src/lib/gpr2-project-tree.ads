@@ -190,6 +190,16 @@ package GPR2.Project.Tree is
    --  Returns the runtime selected for the given language or the empty string
    --  if no specific runtime has been configured for this project tree.
 
+   function Artifacts_Dir (Self : Object) return Path_Name.Object
+     with Pre => Self.Is_Defined;
+   --  Tries to return a directory that can be used to store artifacts that
+   --  are global to the tree.
+   --  This returns the object directory of the root view if available, else
+   --  it returns the root view's project directory.
+   --  **Important note** project directories may not be writable, as only
+   --  object dirs are required to have read/write access. So this function
+   --  needs to be used with care.
+
    function Ordered_Views (Self : Object) return View.Vector.Object
      with Pre => Self.Is_Defined;
 
@@ -665,6 +675,14 @@ private
         (PRA.Shared_Library_Suffix).Value_Equal (".dll"));
       --  ??? We may also check that the Tree target name constains mingw or
       --  windows.
+
+   function Artifacts_Dir (Self : Object) return Path_Name.Object is
+     (if Self.Root_Project.Kind in With_Object_Dir_Kind
+      then Self.Root_Project.Object_Directory
+      else Self.Root_Project.Apply_Root_And_Subdirs (PRA.Object_Dir));
+   --  Object_Directory has a precondition to prevent its use when the view
+   --  don't expect one (aggregate, abstract). But Apply_Root_And_Subdirs
+   --  doesn't, and object_directory will default to Project_Dir in such case.
 
    function Archive_Suffix (Self : Object) return Filename_Type is
      (if Self.Has_Configuration

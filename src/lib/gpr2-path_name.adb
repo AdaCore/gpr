@@ -65,7 +65,7 @@ package body GPR2.Path_Name is
    --  Assumes Path is a file.
 
    function Ensure_Directory (Path : String) return String is
-     (if Path (Path'Last) = OS_Lib.Directory_Separator
+     (if Path (Path'Last) in OS_Lib.Directory_Separator | '/'
       then Path
       else Path & OS_Lib.Directory_Separator);
 
