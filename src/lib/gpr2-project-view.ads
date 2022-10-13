@@ -148,9 +148,7 @@ package GPR2.Project.View is
    --  Returns True if the source is the main unit of the view
 
    function Is_Namespace_Root (Self : Object) return Boolean
-     with Pre  => Self.Is_Defined and then Self.Kind /= K_Aggregate,
-          Post => (if Is_Namespace_Root'Result
-                   then Self.Namespace_Root = Self);
+     with Pre  => Self.Is_Defined;
    --  Whether this view is either the root of the tree or the root
    --  project of an aggregated subtree.
 
@@ -332,9 +330,8 @@ package GPR2.Project.View is
      with Pre  => Self.Is_Defined and then Self.Has_Variables (Pack, Name),
           Post => Variable'Result.Is_Defined;
 
-   function Namespace_Root (Self : Object) return Object
-     with Pre  => Self.Is_Defined,
-          Post => Namespace_Root'Result.Is_Defined;
+   function Namespace_Roots (Self : Object) return Set.Object
+     with Pre  => Self.Is_Defined and then Self.Kind /= K_Aggregate;
    --  Root of the projects namespace subtree. It is either root aggregated
    --  project view or just root view of the tree. Source simple filenames
    --  have to be unique in the name-space of this subtree.
@@ -648,7 +645,7 @@ package GPR2.Project.View is
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre =>
        Self.Is_Defined
-       and then Self.Kind not in K_Configuration | K_Abstract | K_Aggregate;
+       and then Self.Kind in With_Object_Dir_Kind;
    --  As above but for the Object_Dir attribute
 
    function Has_Source_Subdirectory (Self : Object) return Boolean
@@ -876,9 +873,6 @@ private
 
    function Is_Library_Standalone (Self : Object) return Boolean is
       (Self.Library_Standalone /= No);
-
-   function Is_Namespace_Root (Self : Object) return Boolean is
-     (Self.Namespace_Root = Self);
 
    function Dir_Name (Self : Object) return GPR2.Path_Name.Object is
      (Self.Get.Path);

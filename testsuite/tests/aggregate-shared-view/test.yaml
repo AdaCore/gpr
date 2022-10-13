@@ -1,0 +1,6 @@
+description:
+    Test Namespace_Roots value when views are present multiple times in
+    an aggregate project.
+driver: build_and_run
+project_file: prj
+main: main

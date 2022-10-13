@@ -1,0 +1,4 @@
+limited with "shared";
+
+project P6 is
+end P6;

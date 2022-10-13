@@ -261,8 +261,8 @@ begin
       function Path_Equal
         (Left, Right : Project.Source.Source_Part) return Boolean
       is (Left.Source = Right.Source
-          and then Left.Source.View.Namespace_Root =
-                   Right.Source.View.Namespace_Root
+          and then Left.Source.View.Namespace_Roots.First_Element =
+            Right.Source.View.Namespace_Roots.First_Element
           and then Left.Index = Right.Index);
 
       type One_Type is range -1 .. 1;
@@ -284,13 +284,13 @@ begin
 
       function Path_Less
         (Left, Right : Project.Source.Source_Part) return Boolean
-      is (case Compare
-            (Left.Source.View.Namespace_Root, Right.Source.View.Namespace_Root)
+      is (case Compare (Left.Source.View.Namespace_Roots.First_Element,
+                        Right.Source.View.Namespace_Roots.First_Element)
           is
              when -1 => True,
              when  1 => False,
              when  0 =>
-            (case Compare (Left.Source, Right.Source) is
+               (case Compare (Left.Source, Right.Source) is
                 when -1 => True,
                 when  1 => False,
                 when  0 => Compare (Left.Index, Right.Index) = -1));

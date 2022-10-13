@@ -1,0 +1,2 @@
+project P1 extends "shared" is
+end P1;
