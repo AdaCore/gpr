@@ -328,6 +328,11 @@
           ]
         },
         {
+          "name": "Builder",
+          "attributes": [
+          ]
+        },
+        {
           "name": "Clean",
           "attributes": [
             {
@@ -510,14 +515,6 @@
               "kind": "list",
               "values": [
                 "-gnateI"
-              ]
-            },
-            {
-              "name": "Pic_Option",
-              "index": "Ada",
-              "kind": "list",
-              "values": [
-                "-fPIC"
               ]
             }
           ]

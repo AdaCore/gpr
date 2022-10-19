@@ -348,7 +348,7 @@ is
 
          --  Extending
 
-         if View.Is_Extending then
+         if View.Is_Extended then
             declare
                E : constant JSON_Value := Create_Object;
             begin
@@ -361,7 +361,7 @@ is
 
          --  Extended
 
-         if View.Is_Extended then
+         if View.Is_Extending then
             declare
                E : JSON_Array;
             begin
