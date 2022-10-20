@@ -1,13 +1,50 @@
-from testsuite_support.driver.driver_imports import create_scenario
-from testsuite_support.driver.driver_imports import add_testcase
-from testsuite_support.driver.driver_imports import run
+from testsuite_support.driver.driver_imports import create_scenario, add_testcase, run
 from testsuite_support.driver.driver_constants import ObjOptions as Opt
-from testsuite_support.driver.driver_constants import ObjScnCaseValue as Case
+from testsuite_support.driver.driver_constants import ObjScnAttrValues as Value
 from testsuite_support.driver.driver_constants import ObjScnRes as Res
+from testsuite_support.driver.driver_constants import ObjScnCaseValue as Case
+from testsuite_support.driver.driver_constants import ObjScnTool as Tool
+from testsuite_support.driver.driver_constants import ObjScnPhase as Phase
+from testsuite_support.driver.driver_constants import ObjScnAttrSubstPattern as Pattern
+import logging
 import os
 
+scn_descr = {
+    "tests": ["Project_Level.Source_Dirs"],
+    "value_kind": Value.SCN_ATTR_VALUES_DISTRIBUTED,
+    "setup_cmd": [],
+    "test_cmd": [
+        {
+            "tool": Tool.SCN_TOOL_GPRLS,
+            "phase": Phase.SCN_PHASE_GPRLS_SOURCE_PARSING,
+            "output_delimiter": "",
+            "expected_behavior": {
+                Case.SCN_CASE_VALUE_UNDEF: {
+                    Res.SCN_RES_FOR_EMPTY: []
+                },
+                Case.SCN_CASE_VALUE_DEF: {
+                    Res.SCN_RES_FOR_NONE: [
+                        f"{Pattern.SCN_ATTR_ALT_SUBST_PATTERN_PREFIX.value}"
+                    ],
+                    Res.SCN_RES_FOR_ANY: [
+                        f"{Pattern.SCN_ATTR_ALT_SUBST_PATTERN_PREFIX.value}"
+                    ]
+                },
+                Case.SCN_CASE_VALUE_INVALID: {
+                    Res.SCN_RES_FOR_ANY: [
+                        "is not a valid directory",
+                        "gprls: unable to process project file",
+                    ]
+                }
+            }
+        }
+    ],
+    "cleanup_cmd": [],
+}
+
 alt_values = {}
-create_scenario("Source_Dirs", common_options=Opt.SCN_OPTION_HIDE_PATH_TO_FILE)
+create_scenario(scn_descr, common_options=Opt.SCN_OPTION_HIDE_PATH_TO_FILE,
+                log_level=logging.INFO)
 
 add_testcase(file="files/test_no_src_dirs.gpr", case_type=Case.SCN_CASE_VALUE_UNDEF)
 

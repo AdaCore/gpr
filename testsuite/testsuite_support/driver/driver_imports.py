@@ -10,9 +10,9 @@ my_scn = None
 
 def edit_custom_command(custom_cmd=None, slot=Phase.SCN_PHASE_CUSTOM_SLOT_1) -> None:
     """ This function allows the user to set a custom command to be executed
-        whe setting up a scenario.
+        when setting up a scenario.
         For instance, if the user want to modify a value in a specific file between
-        two calls of GPRtools.
+        two calls of GPRTools.
         This function will replace the SCN_TOOL_CUSTOM value in the scenario
         description in driver_db.py
     """
@@ -22,14 +22,14 @@ def edit_custom_command(custom_cmd=None, slot=Phase.SCN_PHASE_CUSTOM_SLOT_1) -> 
     SCN_TOOLS_CMD[f"{Tool.SCN_TOOL_CUSTOM}.{slot}"]["cmd"] = custom_cmd
 
 
-def create_scenario(attribute: str, common_options=0, log_level: int = logging.INFO):
+def create_scenario(scn_descr: dict, common_options=0, log_level: int = logging.INFO):
     """ This function create a scenario object
     """
     logging.basicConfig(level=log_level, format="[%(levelname)s] - %(message)s")
     global my_scn
     if my_scn:
         logging.error("A scenario already exists. It will be overwritten")
-    my_scn = ObjScn(attribute, common_options)
+    my_scn = ObjScn(scn_descr, common_options)
 
 
 def add_testcase(*, file, case_type, alt_value=None, options=0):
