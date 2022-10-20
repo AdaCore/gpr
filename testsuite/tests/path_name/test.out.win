@@ -10,103 +10,103 @@ Root dir:
 '.' dir:
 - Is a directory
 - Actually exists
-- Dir_Name: /files/subdir/
-- Name: /files/subdir/.
-- Name (no extension): /files/subdir/.
-- Value: /files/subdir
+- Dir_Name: /files.dir/subdir/
+- Name: /files.dir/subdir/.
+- Name (no extension): /files.dir/subdir/.
+- Value: /files.dir/subdir
 - Simple_Name: .
-- Containing_Directory: '/files'
+- Containing_Directory: '/files.dir'
 
 '..' dir:
 - Is a directory
 - Actually exists
-- Dir_Name: /files/
-- Name: /files/subdir/..
-- Name (no extension): /files/subdir/..
-- Value: /files
+- Dir_Name: /files.dir/
+- Name: /files.dir/subdir/..
+- Name (no extension): /files.dir/subdir/..
+- Value: /files.dir
 - Simple_Name: ..
 - Containing_Directory: ''
 
 Non existing file:
 - Is a file
 - Does not exist on disk
-- Dir_Name: /files/
-- Name: /files/foo.ext
-- Name (no extension): /files/foo
-- Value: /files/foo.ext
+- Dir_Name: /files.dir/
+- Name: /files.dir/foo.ext
+- Name (no extension): /files.dir/foo
+- Value: /files.dir/foo.ext
 - Base_Name: foo
 - Base_Filename: foo
 - Extension: .ext
 - Simple_Name: foo.ext
-- Containing_Directory: '/files/'
+- Containing_Directory: '/files.dir/'
 
 existing file:
 - Is a file
 - Actually exists
-- Dir_Name: /files/subdir/
-- Name: /files/subdir/file.txt
-- Name (no extension): /files/subdir/file
-- Value: /files/subdir/file.txt
+- Dir_Name: /files.dir/subdir/
+- Name: /files.dir/subdir/file.txt
+- Name (no extension): /files.dir/subdir/file
+- Value: /files.dir/subdir/file.txt
 - Base_Name: file
 - Base_Filename: file
 - Extension: .txt
 - Simple_Name: file.txt
-- Containing_Directory: '/files/subdir/'
+- Containing_Directory: '/files.dir/subdir/'
 
 File with no extension:
 - Is a file
 - Does not exist on disk
-- Dir_Name: /files/
-- Name: /files/foo
-- Name (no extension): /files/foo
-- Value: /files/foo
+- Dir_Name: /files.dir/
+- Name: /files.dir/foo
+- Name (no extension): /files.dir/foo
+- Value: /files.dir/foo
 - Base_Name: foo
 - Base_Filename: foo
 - Extension: 
 - Simple_Name: foo
-- Containing_Directory: '/files/'
+- Containing_Directory: '/files.dir/'
 
 Dir with extension:
 - Is a directory
 - Does not exist on disk
-- Dir_Name: /files/readme.foo/
-- Name: /files/readme.foo
-- Name (no extension): /files/readme.foo
-- Value: /files/readme.foo
+- Dir_Name: /files.dir/readme.foo/
+- Name: /files.dir/readme.foo
+- Name (no extension): /files.dir/readme.foo
+- Value: /files.dir/readme.foo
 - Simple_Name: readme.foo
-- Containing_Directory: '/files'
+- Containing_Directory: '/files.dir'
 
 With white space:
 - Is a file
 - Actually exists
-- Dir_Name: /files/with white/
-- Name: /files/with white/space file.txt
-- Name (no extension): /files/with white/space file
-- Value: /files/with white/space file.txt
+- Dir_Name: /files.dir/with white/
+- Name: /files.dir/with white/space file.txt
+- Name (no extension): /files.dir/with white/space file
+- Value: /files.dir/with white/space file.txt
 - Base_Name: space file
 - Base_Filename: space file
 - Extension: .txt
 - Simple_Name: space file.txt
-- Containing_Directory: '/files/with white/'
+- Containing_Directory: '/files.dir/with white/'
 
 Common_Prefix (directory, file)
 - Is a directory
 - Actually exists
-- Dir_Name: /files/
-- Name: /files
-- Name (no extension): /files
-- Value: /files
-- Simple_Name: files
+- Dir_Name: /files.dir/
+- Name: /files.dir
+- Name (no extension): /files.dir
+- Value: /files.dir
+- Simple_Name: files.dir
 - Containing_Directory: ''
 
 Common_Prefix (file, directory)
 - Is a directory
 - Actually exists
-- Dir_Name: /files/
-- Name: /files
-- Name (no extension): /files
-- Value: /files
-- Simple_Name: files
+- Dir_Name: /files.dir/
+- Name: /files.dir
+- Name (no extension): /files.dir
+- Value: /files.dir
+- Simple_Name: files.dir
 - Containing_Directory: ''
 
 Common_Prefix (src, src/source.adb)
@@ -141,13 +141,13 @@ Common_Prefix with root common
 File with no full path
 - Is a file
 - Does not exist on disk
-- Name: files/file.txt
-- Name (no extension): files/file
+- Name: files.dir/file.txt
+- Name (no extension): files.dir/file
 - Base_Name: file
 - Base_Filename: file
 - Extension: .txt
 - Simple_Name: file.txt
-- Containing_Directory: 'files'
+- Containing_Directory: 'files.dir'
 
 Check temp directory
 - Is a directory

@@ -572,13 +572,25 @@ package body GPR2.Path_Name is
    is
       Name : constant String := To_String (Self.As_Is);
       Ext : Natural;
+      Sep : Natural;
    begin
       if Extension or else Self.Is_Dir then
          return Filename_Type (Name);
       else
+         Sep := Strings.Fixed.Index (Name, Dir_Seps,
+                                     Going => Strings.Backward);
+
+         --  Handle trailing directory separators
+
+         if Sep = Name'Last then
+            Sep := Strings.Fixed.Index
+              (Name (Name'First .. Name'Last - 1),
+               Dir_Seps, Going => Strings.Backward);
+         end if;
+
          Ext := Strings.Fixed.Index (Name, ".", Going => Strings.Backward);
 
-         if Ext = 0 then
+         if Ext = 0 or else Ext < Sep then
             Ext := Name'Last;
          else
             Ext := Ext - 1;

@@ -68,7 +68,7 @@ procedure Main is
       end if;
    end Check_Path;
 
-   Base       : constant Object := Create_Directory ("files");
+   Base       : constant Object := Create_Directory ("files.dir");
    Subdir     : constant Object := Base.Compose ("subdir", True);
    On_Windows : constant Boolean := GNAT.OS_Lib.Directory_Separator = '\';
 
@@ -97,7 +97,7 @@ begin
                Common_Prefix (Create_Directory ("/foo/bar"),
                               Create_File ("/bar/foo/test.txt")));
    Check_Path ("File with no full path",
-               Create_File ("files/file.txt", No_Resolution));
+               Create_File ("files.dir/file.txt", No_Resolution));
    Check_Path ("Check temp directory", Temporary_Directory, True);
 
    --  Additional windows-specific tests
