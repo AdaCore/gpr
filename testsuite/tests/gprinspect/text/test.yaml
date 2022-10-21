@@ -1,3 +1,5 @@
 description:
     check text output of gprinspect
 driver: python_script
+output:
+- ["test.out.win", "'windows' in env.host.platform"]
