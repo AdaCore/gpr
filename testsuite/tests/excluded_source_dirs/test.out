@@ -1,12 +1,18 @@
 * non-existing directory value
 bad.gpr:4:48: error: "non_existing" is not a valid directory
-gprls: unable to process project file bad.gpr
+gprls: unable to process project file files/bad.gpr
 * excluded dirs from a recursive search
-/src1/a.ads
+/files/src1/a.ads
 * excluded explicitly defined dirs
-/src1/a.ads
+/files/src1/a.ads
 * excluded parent with visible subdir
-/src1/src11/b.ads
+/files/src1/src11/b.ads
+* exclude ""
+/files/src2/c.ads
+* exclude recursive
+/exclude_recursive/a.ads
+* exclude "**"
+/files/src2/c.ads
 * source search path reported by gprinspect
 <...lib/gcc/(host)/(version)/adainclude>
-/src1
+/files/src1

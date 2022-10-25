@@ -133,15 +133,59 @@ package body GPR2.Project.Definition is
       for V of View.Tree.Ordered_Views loop
          if V.Kind in With_Source_Dirs_Kind then
             declare
-               V_Path : constant Path_Name.Object := V.Dir_Name;
-               Attr   : constant Project.Attribute.Object :=
-                          V.Attribute (PRA.Excluded_Source_Dirs);
+               Attr : constant Project.Attribute.Object :=
+                        V.Attribute (PRA.Excluded_Source_Dirs);
+
+               function Exists
+                 (Value : Source_Reference.Value.Object) return Boolean;
+
+               ------------
+               -- Exists --
+               ------------
+
+               function Exists
+                 (Value : Source_Reference.Value.Object) return Boolean
+               is
+                  Root_Dir_Exist : Boolean := False;
+
+                  procedure On_Directory
+                    (Directory       : GPR2.Path_Name.Object;
+                     Is_Root_Dir     : Boolean;
+                     Do_Dir_Visit    : in out Boolean;
+                     Do_Subdir_Visit : in out Boolean);
+
+                  ------------------
+                  -- On_Directory --
+                  ------------------
+
+                  procedure On_Directory
+                    (Directory       : GPR2.Path_Name.Object;
+                     Is_Root_Dir     : Boolean;
+                     Do_Dir_Visit    : in out Boolean;
+                     Do_Subdir_Visit : in out Boolean) is
+                  begin
+                     Do_Dir_Visit := False;
+                     Do_Subdir_Visit := False;
+                     if Is_Root_Dir then
+                        Root_Dir_Exist := Directory.Exists;
+                     end if;
+                  end On_Directory;
+
+               begin
+                  Foreach
+                    (Base_Dir          => View.Dir_Name,
+                     Messages          => Get_RO (View).Tree.Log_Messages.all,
+                     Directory_Pattern => Filename_Optional (Value.Text),
+                     Source            => Value,
+                     File_CB           => null,
+                     Directory_CB      => On_Directory'Access);
+                  return Root_Dir_Exist;
+               end Exists;
+
             begin
                if Attr.Is_Defined then
                   for Val of Attr.Values loop
-                     if not V_Path.Compose
-                       (Filename_Type (Val.Text)).Exists
-                     then
+                     if not Exists (Val) then
                         View.Tree.Log_Messages.Append
                           (Message.Create
                              (Level   => Message.Error,

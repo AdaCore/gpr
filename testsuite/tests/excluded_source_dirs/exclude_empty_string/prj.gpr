@@ -1,0 +1,6 @@
+project Prj is
+
+   for Source_Dirs use ("../files/src2", ".");
+   for Excluded_Source_Dirs use ("");
+
+end Prj;
