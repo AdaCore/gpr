@@ -661,7 +661,7 @@
           "name": "Toolchain_Version",
           "index": "Ada",
           "kind": "single",
-          "value": "GNAT 24.0"
+          "value": "GNAT <version>
         }
       ]
     },
@@ -735,7 +735,7 @@
           "name": "Toolchain_Version",
           "index": "Ada",
           "kind": "single",
-          "value": "GNAT 24.0"
+          "value": "GNAT <version>
         }
       ],
       "variables": [
@@ -828,7 +828,7 @@
           "name": "Toolchain_Version",
           "index": "Ada",
           "kind": "single",
-          "value": "GNAT 24.0"
+          "value": "GNAT <version>
         }
       ]
     }
