@@ -10,8 +10,9 @@ import logging
 import os
 
 scn_descr = {
-    "tests": ["Project_Level.Source_Dirs"],
-    "value_kind": Value.SCN_ATTR_VALUES_DISTRIBUTED,
+    "attributes": ["Project_Level.Source_Dirs"],
+
+    "value_kind": Value.SCN_ATTR_VALUE_LIST_DISTRIBUTED,
     "setup_cmd": [],
     "test_cmd": [
         {

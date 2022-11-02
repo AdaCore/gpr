@@ -202,22 +202,22 @@ class ObjScnRes(Enum):
 
 class ObjScnAttrValues(Enum):
     SCN_ATTR_VALUES_UNKNOWN = 0
-    SCN_ATTR_VALUES_UNIQUE = 1
-    SCN_ATTR_VALUES_CONCATENATED = 2
-    SCN_ATTR_VALUES_DISTRIBUTED = 3
+    SCN_ATTR_VALUE_SINGLE = 1
+    SCN_ATTR_VALUE_LIST_CONCATENATED = 2
+    SCN_ATTR_VALUE_LIST_DISTRIBUTED = 3
 
     def unique(self):
-        if self is ObjScnAttrValues.SCN_ATTR_VALUES_UNIQUE:
+        if self is ObjScnAttrValues.SCN_ATTR_VALUE_SINGLE:
             return True
         return False
 
     def concatenated(self):
-        if self is ObjScnAttrValues.SCN_ATTR_VALUES_CONCATENATED:
+        if self is ObjScnAttrValues.SCN_ATTR_VALUE_LIST_CONCATENATED:
             return True
         return False
 
     def distributed(self):
-        if self is ObjScnAttrValues.SCN_ATTR_VALUES_DISTRIBUTED:
+        if self is ObjScnAttrValues.SCN_ATTR_VALUE_LIST_DISTRIBUTED:
             return True
         return False
 
@@ -225,13 +225,13 @@ class ObjScnAttrValues(Enum):
         to_print = f"- {self.name}"
         if self is ObjScnAttrValues.SCN_ATTR_VALUES_UNKNOWN:
             return f"{to_print} : Default value. Should not be used."
-        if self is ObjScnAttrValues.SCN_ATTR_VALUES_UNIQUE:
+        if self is ObjScnAttrValues.SCN_ATTR_VALUE_SINGLE:
             return f"{to_print} : The value is a single value."
-        if self is ObjScnAttrValues.SCN_ATTR_VALUES_CONCATENATED:
+        if self is ObjScnAttrValues.SCN_ATTR_VALUE_LIST_CONCATENATED:
             return f"{to_print} : The value is a list. This list of values are "\
                    + "expected to be concatenated. All values will be concatenated " \
                    + "and treated as an unique value."
-        if self is ObjScnAttrValues.SCN_ATTR_VALUES_DISTRIBUTED:
+        if self is ObjScnAttrValues.SCN_ATTR_VALUE_LIST_DISTRIBUTED:
             return f"{to_print} : The value is a list. This list of values are "\
                    + "expected to be distributed. Each value will be managed "\
                    + "separately."

@@ -13,11 +13,11 @@ import logging
 import re
 
 scn_descr = {
-    "tests": [
+    "attributes": [
         "Project_Level.Shared_Library_Prefix",
         "Project_Level.Shared_Library_Suffix",
     ],
-    "value_kind": Value.SCN_ATTR_VALUES_UNIQUE,
+    "value_kind": Value.SCN_ATTR_VALUE_SINGLE,
     "setup_cmd": [
         {"tool": Tool.SCN_TOOL_GPRCONFIG},
         {"tool": Tool.SCN_TOOL_CUSTOM, "phase": Phase.SCN_PHASE_CUSTOM_SLOT_1},

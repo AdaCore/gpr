@@ -8,7 +8,7 @@ import shutil
 import sys
 import testsuite_support.driver.driver_constants as consts
 
-driver_tests_dir = os.getcwd() + "/tests/tooling/"
+driver_tests_dir = os.path.dirname(__file__) + "/tests/tooling/"
 max_len = 80
 
 
@@ -173,7 +173,7 @@ def create_test(name):
                            + 'the direct command which\n')
                 file.write('output is monitored to a have a specific fixed '
                            + 'behavior.\n\n')
-                file.write('"tests": Is the list of attributes that are being'
+                file.write('"attributes": Is the list of attributes that are being'
                            + ' tested.\n\n')
                 file.write('"value_kind": Is the attribute a simple value '
                            + 'or a list. If it\'s a list\n')
@@ -234,7 +234,7 @@ def create_test(name):
                            + 'extensive help about usable\nvalues and options.\n')
                 file.write('"""\n\n')
                 file.write("scn_descr = {\n")
-                file.write('    "tests": ["Package.Attribute"],\n')
+                file.write('    "attributes": ["Package.Attribute"],\n')
                 file.write('    "value_kind": Value.SCN_ATTR_VALUES_UNKNOWN,\n')
                 file.write('    "setup_cmd": [{"tool": Tool.SCN_TOOL_NONE, '
                            + '"phase": Phase.SCN_PHASE_NONE}],\n')
