@@ -2575,8 +2575,38 @@ package body GPR2.Project.View is
 
       if Excluded_Dirs.Is_Defined then
          for V of Excluded_Dirs.Values loop
-            Excluded_Dirs_List.Append
-              (View.Dir_Name.Compose (Filename_Type (V.Text), True));
+            declare
+               procedure On_Directory
+                 (Directory       : GPR2.Path_Name.Object;
+                  Is_Root_Dir     : Boolean;
+                  Do_Dir_Visit    : in out Boolean;
+                  Do_Subdir_Visit : in out Boolean);
+
+               ------------------
+               -- On_Directory --
+               ------------------
+
+               procedure On_Directory
+                 (Directory       : GPR2.Path_Name.Object;
+                  Is_Root_Dir     : Boolean;
+                  Do_Dir_Visit    : in out Boolean;
+                  Do_Subdir_Visit : in out Boolean)
+               is
+                  pragma Unreferenced (Is_Root_Dir, Do_Dir_Visit,
+                                       Do_Subdir_Visit);
+               begin
+                  Excluded_Dirs_List.Append (Directory);
+               end On_Directory;
+
+            begin
+               Definition.Foreach
+                 (Base_Dir          => View.Dir_Name,
+                  Messages          => Get_RO (View).Tree.Log_Messages.all,
+                  Directory_Pattern => Filename_Optional (V.Text),
+                  Source            => V,
+                  File_CB           => null,
+                  Directory_CB      => On_Directory'Access);
+            end;
          end loop;
       end if;
 

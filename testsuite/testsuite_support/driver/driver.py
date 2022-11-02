@@ -1,13 +1,12 @@
 from e3.env import Env
 from testsuite_support.builder_and_runner import BuilderAndRunner
-from testsuite_support.driver.driver_db import SCN_ATTRIBUTE_TEST_CONFIG
 from testsuite_support.driver.driver_constants import ObjOptions as Opt
 from testsuite_support.driver.driver_constants import ObjScnPhase as Phase
-from testsuite_support.driver.driver_constants import ObjScnCaseValue as Case
 from testsuite_support.driver.driver_constants import ObjScnTool as Tool
 from testsuite_support.driver.driver_constants import ObjScnCmd as Cmd
 from testsuite_support.driver.driver_constants import ObjScnOutput as Output
 from testsuite_support.driver.driver_constants import ObjScnAttrSubstPattern as Pattern
+from testsuite_support.driver.driver_constants import ObjScnAttrValues as Values
 from testsuite_support.driver.driver_constants import SCN_TOOLS_CMD
 import re
 import logging
@@ -257,7 +256,7 @@ class ObjRes:
                 cls.append(line)
 
         logging.debug(f"{cls}")
-        if tct == Case.SCN_CASE_VALUE_DEFAULT:
+        if Opt.SCN_OPTION_HIDE_EXPECTED_RES in o:
             logging.debug(f"Expects - [ {k.name} - {behavior_image} ]")
         else:
             logging.info(f"Expects - [ {k.name} - {behavior_image} ]")
@@ -409,7 +408,7 @@ class ObjProject:
 
 
 class ObjTestCase:
-    def __init__(self, name, file, alt_value, ttype, options):
+    def __init__(self, name, file, alt_value, ttype, options, config):
         self.file = file
         self.ttype = ttype
         self.project = ObjProject(file, alt_value)
@@ -418,14 +417,12 @@ class ObjTestCase:
         self.options_list = [flag.name for flag in Opt if flag in self.options]
         self.setup = []
         self.cleanup = []
-        if "setup_cmd" in SCN_ATTRIBUTE_TEST_CONFIG[name]:
-            for s in SCN_ATTRIBUTE_TEST_CONFIG[name]["setup_cmd"]:
-                new_setup_cmd = ObjCmd(s)
-                self.setup.append(new_setup_cmd)
-        if "cleanup_cmd" in SCN_ATTRIBUTE_TEST_CONFIG[name]:
-            for c in SCN_ATTRIBUTE_TEST_CONFIG[name]["cleanup_cmd"]:
-                new_cleanup_cmd = ObjCmd(c)
-                self.cleanup.append(new_cleanup_cmd)
+        for s in config.setup:
+            new_setup_cmd = ObjCmd(s)
+            self.setup.append(new_setup_cmd)
+        for c in config.cleanup:
+            new_cleanup_cmd = ObjCmd(c)
+            self.cleanup.append(new_cleanup_cmd)
 
     def compile(self, attribute):
         self.project.compile(attribute, self.options)
@@ -635,6 +632,7 @@ class ObjCmd:
                 logging.error(f"{self.index} has no command defined")
         else:
             logging.error("No command available for this tool and phase")
+            return []
 
     def get_cmd_output(self):
         if self.index in self.cmd:
@@ -644,6 +642,7 @@ class ObjCmd:
                 logging.error(f"{self.index} has no output type defined")
         else:
             logging.error("No command available for this tool and phase")
+            return Output.SCN_OUTPUT_UNDEFINED
 
     def log(self):
         if self.index in self.cmd:
@@ -659,19 +658,18 @@ class ObjCmd:
 
 
 class ObjConfig:
-    def __init__(self, name, options=0):
-        self.name = name
+    def __init__(self, descr, options=0):
+        self.name = descr['tests'][0]
         self.value_kind = None
         self.behaviors = []
         self.common_options = Opt(options)
         self.common_options_list = [f.name for f in Opt if f in self.common_options]
-        if self.name in SCN_ATTRIBUTE_TEST_CONFIG:
-            self.value_kind = SCN_ATTRIBUTE_TEST_CONFIG[self.name]["value_kind"]
-            for b in SCN_ATTRIBUTE_TEST_CONFIG[self.name]["test_cmd"]:
-                new_behavior = ObjBehavior(b)
-                self.behaviors.append(new_behavior)
-        else:
-            logging.error(f"{self.name} not found in the driver database !")
+        self.value_kind = descr["value_kind"]
+        for b in descr["test_cmd"]:
+            new_behavior = ObjBehavior(b)
+            self.behaviors.append(new_behavior)
+        self.setup = descr['setup_cmd']
+        self.cleanup = descr['cleanup_cmd']
 
     def get_name(self):
         return self.name
@@ -693,27 +691,27 @@ class ObjConfig:
     def log(self):
         logging.debug(f"[ Config ] Name    -> {self.name} ")
         logging.debug(f"[ Config ] Kind    -> {self.value_kind.name}")
+        if self.value_kind is Values.SCN_ATTR_VALUES_UNKNOWN:
+            logging.error(f"Value kind should not be {self.value_kind.name}")
         logging.debug(f"[ Config ] Options -> {self.common_options_list}")
         for i, b in enumerate(self.behaviors, start=1):
             b.log(i)
 
 
 class ObjScn:
-    def __init__(self, attribute, options):
+    def __init__(self, descr, options):
         self.config = None
         self.testcases = []
         self.has_testcase = False
-        if "." not in attribute:
-            self.config = ObjConfig(f"Project_Level.{attribute}", options)
-        else:
-            self.config = ObjConfig(attribute, options)
+        self.config = ObjConfig(descr, options)
+
         logging.info(f"Creating a test for {self.config.get_name()} attribute")
         self.config.log()
 
     def add_testcase(self, file, ttype, alt_value=None, options=0):
         all_options = self.config.get_common_options() + options
         my_testcase = ObjTestCase(
-            self.config.get_name(), file, alt_value, ttype, all_options
+            self.config.get_name(), file, alt_value, ttype, all_options, self.config
         )
         my_testcase.compile(self.config.get_name())
         self.testcases.append(my_testcase)

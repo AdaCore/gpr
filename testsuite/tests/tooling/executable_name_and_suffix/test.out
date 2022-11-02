@@ -1,6 +1,6 @@
 [INFO] - Creating a test for Builder.Executable attribute
 [INFO] - Running Builder.Executable attribute test
-[INFO] - [ Testcase 1 - SCN_CASE_VALUE_DEF ]
+[INFO] - [ Testcase 1 - SCN_CASE_VALUE_DEFAULT ]
 [INFO] - Launching : "gprbuild --build-script=output.log -Pfiles/test_default_name_and_suffix.gpr"
 [INFO] - Expects - [ SCN_RES_FOR_ALL - ['main.out'] ]
 [INFO] - Test OK !
