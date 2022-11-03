@@ -1356,6 +1356,7 @@ package body GPR2.Project.View is
 
       function Executable
         (Base_Name : Value_Not_Empty) return GPR2.Path_Name.Object;
+      --  Full executable path for base name
 
       ----------------
       -- Executable --
@@ -1374,7 +1375,6 @@ package body GPR2.Project.View is
                   (Filename_Type (Base_Name & Suffix),
                    Filename_Optional (Self.Executable_Directory.Dir_Name));
       end Executable;
-      --  Full executable path for base name
 
    begin
       if (Self.Check_Attribute (PRA.Builder.Executable, Index, At_Pos, Attr)
