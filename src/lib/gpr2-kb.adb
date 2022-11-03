@@ -3379,6 +3379,14 @@ package body GPR2.KB is
                            & " for language " & Image (Lang));
                   end;
                end loop;
+
+               Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "variable '" & Var_Name
+                     & "' is not defined for any language",
+                     Sloc => Error_Sloc));
+               raise Invalid_KB;
             else
                begin
                   return Do_Subst (+Name_Type (Index));
@@ -3393,14 +3401,13 @@ package body GPR2.KB is
                end;
             end if;
          end if;
-
-         return "";
       end Callback;
 
       function Do_Substitute is new Substitute_Variables (Callback);
    begin
       return Do_Substitute (Str, Error_Sloc, Messages);
    end Substitute_Variables_In_Configuration;
+
    ---------------
    -- To_String --
    ---------------

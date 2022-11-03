@@ -1175,6 +1175,7 @@ package body GPR2.KB.Parsing is
 
       begin
          Config.Supported := True;
+         Config.Sloc      := Error_Sloc;
 
          while N /= null loop
             if Node_Type (N) /= Element_Node then
