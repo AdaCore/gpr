@@ -2428,15 +2428,18 @@ package body GPR2.Project.View is
                     Timestamp     : Ada.Calendar.Time);
       Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object))
    is
-      Visited_Dirs             : GPR2.Containers.Filename_Set;
-      Dir_Ref                  : GPR2.Source_Reference.Value.Object;
-      Ignored_Sub_Dirs         : constant GPR2.Project.Attribute.Object :=
+      Visited_Dirs               : GPR2.Containers.Filename_Set;
+      Dir_Ref                    : GPR2.Source_Reference.Value.Object;
+      Ignored_Sub_Dirs           : constant GPR2.Project.Attribute.Object :=
                                    View.Attribute (PRA.Ignore_Source_Sub_Dirs);
-      Ignored_Sub_Dirs_Regexps : Regexp_List.Vector;
-      Excluded_Dirs            : constant GPR2.Project.Attribute.Object :=
-                                   View.Attribute (PRA.Excluded_Source_Dirs);
-      Excluded_Dirs_List       : GPR2.Path_Name.Set.Object;
-      --  Ignore_Source_Sub_Dirs attribute regexps
+      Ignored_Sub_Dirs_Regexps   : Regexp_List.Vector;
+      Excluded_Dirs              : constant GPR2.Project.Attribute.Object :=
+                                     View.Attribute (PRA.Excluded_Source_Dirs);
+      Excluded_Dirs_List         : GPR2.Path_Name.Set.Object;
+      Excluded_Recurse_Dirs_List : GPR2.Path_Name.Set.Object;
+      --  Ignore_Source_Sub_Dirs attribute values. In case the directory ends
+      --  with a recursive indication "**", the dir is placed in
+      --  Excluded_Recursive_Dirs_List.
 
       procedure On_Directory
         (Directory       : GPR2.Path_Name.Object;
@@ -2462,11 +2465,18 @@ package body GPR2.Project.View is
          Inserted : Boolean;
       begin
          if Excluded_Dirs_List.Contains (Directory) then
-
             --  Do not visit this directory's files but still look for
             --  subdirectories.
 
             Do_Dir_Visit := False;
+
+            return;
+
+         elsif Excluded_Recurse_Dirs_List.Contains (Directory) then
+            --  Do not visit directory and subdirectories
+
+            Do_Dir_Visit := False;
+            Do_Subdir_Visit := False;
 
             return;
          end if;
@@ -2529,36 +2539,28 @@ package body GPR2.Project.View is
       if Excluded_Dirs.Is_Defined then
          for V of Excluded_Dirs.Values loop
             declare
-               procedure On_Directory
-                 (Directory       : GPR2.Path_Name.Object;
-                  Is_Root_Dir     : Boolean;
-                  Do_Dir_Visit    : in out Boolean;
-                  Do_Subdir_Visit : in out Boolean);
-
-               ------------------
-               -- On_Directory --
-               ------------------
-
-               procedure On_Directory
-                 (Directory       : GPR2.Path_Name.Object;
-                  Is_Root_Dir     : Boolean;
-                  Do_Dir_Visit    : in out Boolean;
-                  Do_Subdir_Visit : in out Boolean)
-               is
-                  pragma Unreferenced (Is_Root_Dir, Do_Dir_Visit,
-                                       Do_Subdir_Visit);
-               begin
-                  Excluded_Dirs_List.Append (Directory);
-               end On_Directory;
-
+               Val : constant Value_Type := V.Text;
             begin
-               Definition.Foreach
-                 (Base_Dir          => View.Dir_Name,
-                  Messages          => Get_RO (View).Tree.Log_Messages.all,
-                  Directory_Pattern => Filename_Optional (V.Text),
-                  Source            => V,
-                  File_CB           => null,
-                  Directory_CB      => On_Directory'Access);
+               if Val'Length >= 2
+                 and then Val (Val'Last - 1 .. Val'Last) = "**"
+               then
+                  if Val'Length = 2 then
+                     Excluded_Recurse_Dirs_List.Append (View.Dir_Name);
+
+                  else
+                     Excluded_Recurse_Dirs_List.Append
+                       (View.Dir_Name.Compose
+                          (Filename_Type (Val (Val'First .. Val'Last - 2)),
+                           True));
+                  end if;
+
+               elsif Val'Length > 0 then
+                  Excluded_Dirs_List.Append
+                    (View.Dir_Name.Compose (Filename_Type (Val), True));
+
+               else
+                  Excluded_Dirs_List.Append (View.Dir_Name);
+               end if;
             end;
          end loop;
       end if;
