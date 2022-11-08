@@ -10,8 +10,8 @@ from testsuite_support.driver.driver_constants import ObjScnExternalTool as ExtT
 import logging
 
 scn_descr = {
-    "tests": ["Builder.Executable", "Builder.Executable_Suffix"],
-    "value_kind": Value.SCN_ATTR_VALUES_UNIQUE,
+    "attributes": ["Builder.Executable", "Builder.Executable_Suffix"],
+    "value_kind": Value.SCN_ATTR_VALUE_SINGLE,
     "setup_cmd": [],
     "test_cmd": [
         {

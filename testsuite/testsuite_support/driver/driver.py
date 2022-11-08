@@ -30,6 +30,7 @@ class ObjRes:
                 self.output = [line for line in fp]
         else:
             logging.error("Unexpected output format")
+            exit(1)
         self.__compile__(opts)
 
     def get(self):
@@ -41,6 +42,7 @@ class ObjRes:
     def compute(self, delimiter, behavior, vk, v, o, tct):
         if not behavior:
             logging.error("This testcase is not expecting anything to happen")
+            exit(1)
         else:
             for key in behavior.keys():
                 self.__compute__(delimiter, behavior, key, vk, v, o, tct)
@@ -152,6 +154,7 @@ class ObjRes:
                         )
             else:
                 logging.error("Attempt to exploit an output which is not defined")
+                exit(1)
 
     def __compute__(self, d, b, k, vk, v, o, tct):
 
@@ -382,23 +385,32 @@ class ObjProject:
         self.attribute_value = alt_value
 
     def compile(self, attribute, options):
-        if options.SCN_OPTION_USE_ALT_ATTR_VALUE not in options:
-            with open(self.filename, "r+") as fp:
-                pack, attr = attribute.split(".")
-                data = mmap.mmap(fp.fileno(), 0).read().decode()
-                regex = (
-                    r"^ *(?:package (\w+) is[\w\s]*)?(?:(?!project|package|end))"
-                    + rf"(.*(for|\')[ ]*{attr}.* use (.*);)"
-                )
-                pat = re.compile(regex, flags=re.MULTILINE | re.IGNORECASE)
-                results = pat.findall(data)
+        if len(attribute) == 1:
+            if options.SCN_OPTION_USE_ALT_ATTR_VALUE not in options:
+                with open(self.filename, "r+") as fp:
+                    pack, attr = attribute[0].split(".")
+                    data = mmap.mmap(fp.fileno(), 0).read().decode()
+                    regex = (
+                        r"^ *(?:package (\w+) is[\w\s]*)?(?:(?!project|package|end))"
+                        + rf"(.*(for|\')[ ]*{attr}.* use (.*);)"
+                    )
+                    pat = re.compile(regex, flags=re.MULTILINE | re.IGNORECASE)
+                    results = pat.findall(data)
 
-                for match_p, match_a, x_, value in results:
-                    if (match_p == pack) or (match_p == "" and pack == "Project_Level"):
-                        self.attribute_value = [
-                            r.group(0).replace('"', "")
-                            for r in re.finditer('"(.*?)"', value)
-                        ]
+                    for match_p, match_a, x_, value in results:
+                        if (match_p == pack) or \
+                                (match_p == "" and pack == "Project_Level"):
+                            self.attribute_value = [
+                                r.group(0).replace('"', "")
+                                for r in re.finditer('"(.*?)"', value)
+                            ]
+        else:
+            if options.SCN_OPTION_USE_ALT_ATTR_VALUE not in options:
+                logging.error("Reading attribute value from project file in "
+                              + "a multi-attribute test is unavailable. Please use "
+                              + "SCN_OPTION_USE_ALT_ATTR_VALUE options and provide "
+                              + "alternative values.")
+                exit(1)
 
     def get_attr_value(self):
         return self.attribute_value
@@ -408,7 +420,7 @@ class ObjProject:
 
 
 class ObjTestCase:
-    def __init__(self, name, file, alt_value, ttype, options, config):
+    def __init__(self, file, alt_value, ttype, options, config):
         self.file = file
         self.ttype = ttype
         self.project = ObjProject(file, alt_value)
@@ -466,6 +478,7 @@ class ObjTestCase:
                 custom_cmd()
             else:
                 logging.error(f"Could not launch setup cmd : {s.get_cmd()}")
+                exit(1)
 
     def __destroy__(self):
         for c in self.cleanup:
@@ -492,6 +505,7 @@ class ObjTestCase:
                 custom_cmd()
             else:
                 logging.error(f"Could not launch clean up cmd : {c.get_cmd()}")
+                exit(1)
 
     def run(self, config):
 
@@ -630,9 +644,10 @@ class ObjCmd:
                 return self.cmd[self.index]["cmd"]
             else:
                 logging.error(f"{self.index} has no command defined")
+                exit(1)
         else:
             logging.error("No command available for this tool and phase")
-            return []
+            exit(1)
 
     def get_cmd_output(self):
         if self.index in self.cmd:
@@ -640,9 +655,10 @@ class ObjCmd:
                 return self.cmd[self.index]["output"]
             else:
                 logging.error(f"{self.index} has no output type defined")
+                exit(1)
         else:
             logging.error("No command available for this tool and phase")
-            return Output.SCN_OUTPUT_UNDEFINED
+            exit(1)
 
     def log(self):
         if self.index in self.cmd:
@@ -655,11 +671,15 @@ class ObjCmd:
                 f"   - [ {self.tool.name} - {self.phase.name} ] "
                 + "index does not exist"
             )
+            exit(1)
 
 
 class ObjConfig:
     def __init__(self, descr, options=0):
-        self.name = descr['tests'][0]
+        if not descr['attributes']:
+            logging.error("No attributes are defined for this scenario")
+            exit(1)
+        self.name = descr['attributes']
         self.value_kind = None
         self.behaviors = []
         self.common_options = Opt(options)
@@ -674,9 +694,12 @@ class ObjConfig:
     def get_name(self):
         return self.name
 
-    def get_index(self):
-        p, a = self.name.split(".")
-        return f"{p}.{a}"
+    def get_name_string(self):
+        if len(self.name) == 1:
+            return self.name[0]
+        else:
+            start, end = self.name[0:len(self.name) - 1], self.name[-1]
+            return ", ".join(start) + " and " + end
 
     def get_common_options(self):
         return self.common_options
@@ -693,6 +716,7 @@ class ObjConfig:
         logging.debug(f"[ Config ] Kind    -> {self.value_kind.name}")
         if self.value_kind is Values.SCN_ATTR_VALUES_UNKNOWN:
             logging.error(f"Value kind should not be {self.value_kind.name}")
+            exit(1)
         logging.debug(f"[ Config ] Options -> {self.common_options_list}")
         for i, b in enumerate(self.behaviors, start=1):
             b.log(i)
@@ -705,21 +729,19 @@ class ObjScn:
         self.has_testcase = False
         self.config = ObjConfig(descr, options)
 
-        logging.info(f"Creating a test for {self.config.get_name()} attribute")
+        logging.info(f"Creating a test for {self.config.get_name_string()} attribute")
         self.config.log()
 
     def add_testcase(self, file, ttype, alt_value=None, options=0):
         all_options = self.config.get_common_options() + options
-        my_testcase = ObjTestCase(
-            self.config.get_name(), file, alt_value, ttype, all_options, self.config
-        )
+        my_testcase = ObjTestCase(file, alt_value, ttype, all_options, self.config)
         my_testcase.compile(self.config.get_name())
         self.testcases.append(my_testcase)
         self.has_testcase = True
         my_testcase.log()
 
     def run(self):
-        logging.info(f"Running {self.config.get_name()} attribute test")
+        logging.info(f"Running {self.config.get_name_string()} attribute test")
         for i, case in enumerate(self.testcases, start=1):
             logging.info(f"[ Testcase {i} - {case.get_type().name} ]")
             case.run(self.config)

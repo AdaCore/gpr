@@ -1,5 +1,5 @@
-[INFO] - Creating a test for Builder.Executable attribute
-[INFO] - Running Builder.Executable attribute test
+[INFO] - Creating a test for Builder.Executable and Builder.Executable_Suffix attribute
+[INFO] - Running Builder.Executable and Builder.Executable_Suffix attribute test
 [INFO] - [ Testcase 1 - SCN_CASE_VALUE_DEFAULT ]
 [INFO] - Launching : "gprbuild --build-script=output.log -Pfiles/test_default_name_and_suffix.gpr"
 [INFO] - Expects - [ SCN_RES_FOR_ALL - ['main.out'] ]
