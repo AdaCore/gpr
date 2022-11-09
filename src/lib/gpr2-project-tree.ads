@@ -107,6 +107,13 @@ package GPR2.Project.Tree is
      with Pre => Filename.Is_Defined;
    --  Loads a configuration project for this tree
 
+   procedure Restrict_Autoconf_To_Languages
+     (Self  : in out Object;
+      Langs : Containers.Language_Set);
+   --  Sets a list of languages that autoconfiguration will be reduced to
+   --  from the actual set of languages used in project tree. Empty set of
+   --  languages means regular autoconfiguration with no reductions.
+
    procedure Load_Autoconf
      (Self              : in out Object;
       Filename          : Path_Name.Object;
@@ -573,6 +580,8 @@ private
       --  Configuration items from command line
       Explicit_Target   : Unbounded_String;
       Explicit_Runtimes : Containers.Lang_Value_Map;
+      Langs_Of_Interest : Containers.Language_Set;
+      --  Languages that autoconfiguration should be reduced to
       File_Reader_Ref   : GPR2.File_Readers.File_Reader_Reference;
    end record;
 
