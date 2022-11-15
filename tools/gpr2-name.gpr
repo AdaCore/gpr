@@ -17,8 +17,10 @@
 ------------------------------------------------------------------------------
 
 with "gpr2";
+with "libadalang";
+with "langkit_support";
 
-project GPR2.Tools is
+project GPR2.Name is
 
    Build      := GPR2.Build;
    Build_Root := GPR2.Build_Root;
@@ -27,22 +29,11 @@ project GPR2.Tools is
    type Target_type is ("Windows_NT", "UNIX");
    Target : Target_Type := external ("OS", "UNIX");
 
-   type Tools_Prefix_Type is ("gpr", "gpr2");
-   Edge_Tools_Prefix : Tools_Prefix_Type := external ("GPR2_EDGE_TOOLS_PREFIX", "gpr2");
-
-   for Source_Dirs use ("src/tools");
+   for Source_Dirs use ("src");
    for Object_Dir use Build_Root & "/" & Build & "/obj-tools";
    for Exec_Dir use Build_Root & "/" & Build;
    for Main use
-     ("gprbuild-main.adb",
-      "gprclean-main.adb",
-      "gprconfig.adb",
-      "gprdoc-main.adb",
-      "gprdump.adb",
-      "gprinspect-main.adb",
-      "gprinstall-main.adb",
-      "gprls-main.adb",
-      "gprremote.adb");
+     ("gprname-main.adb");
 
    --------------
    -- Compiler --
@@ -53,10 +44,13 @@ project GPR2.Tools is
 
       case Build is
          when "gnatcov" =>
-            for Default_Switches ("gnatcov*") use GPR2.Debug_Options;
+            for Default_Switches ("gnatcov*") use GPR2.Debug_Options & ("-gnatws");
 
          when others =>
       end case;
+
+      for Switches ("gprdoc-*.adb") use ("-gnat2022");
+      --  Add the -gnat2022 compilation option for gprdoc and scalars printout
 
    end Compiler;
 
@@ -73,29 +67,9 @@ project GPR2.Tools is
    -------------
 
    package Builder is
-      for Executable ("gprbuild-main.adb") use Edge_Tools_Prefix & "build";
-      for Executable ("gprconfig.adb")       use "gprconfig";
-      for Executable ("gprclean-main.adb")   use "gprclean";
-      for Executable ("gprdoc-main.adb")     use "gprdoc";
-      for Executable ("gprinspect-main.adb") use "gprinspect";
-      for Executable ("gprinstall-main.adb") use "gprinstall";
-      for Executable ("gprls-main.adb")      use "gprls";
-
+      for Executable ("gprname-main.adb") use "gprname";
       for Switches (others) use ("-m", "-j" & Processors);
    end Builder;
-
-   -------------
-   -- Install --
-   -------------
-
-   package Install is
-      case Target is
-         when "Windows_NT" =>
-            for Artifacts ("bin") use ("src/tools/gpr2install.exe.manifest");
-         when "UNIX" =>
-            null;
-      end case;
-   end Install;
 
    ------------
    -- Linker --
@@ -110,4 +84,4 @@ project GPR2.Tools is
       end case;
    end Linker;
 
-end GPR2.Tools;
+end GPR2.Name;
