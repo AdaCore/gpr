@@ -65,8 +65,8 @@ GPR2_EDGE_TOOLS_PREFIX=gpr2
 FORCE_PARSER_GEN=
 
 GPR2=${SOURCE_DIR}/gpr2.gpr
-GPR2TOOLS=${SOURCE_DIR}/tools/gpr2-tools.gpr
-GPR2NAME=${SOURCE_DIR}/tools/gpr2-name.gpr
+GPR2TOOLS=${SOURCE_DIR}/gpr2-tools.gpr
+GPR2NAME=${SOURCE_DIR}/gpr2-name.gpr
 GPR2KB=${SOURCE_DIR}/src/kb/collect_kb.gpr
 GPR2KBDIR=${SOURCE_DIR}/src/kb/gprconfig_kb
 
@@ -169,12 +169,12 @@ endif
 # Gpr2 tools
 build-tools: build-lib-static coverage-instrument
 	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-		${GPR2TOOLS} -aP ${SOURCE_DIR}
+		${GPR2TOOLS}
 
 # gprname is built separately: it requires libadalang
 build-gprname: build-lib-static coverage-instrument
 	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-	  -XLANGKIT_SUPPORT_BUILD=static ${GPR2NAME} -aP ${SOURCE_DIR}
+	  -XLANGKIT_SUPPORT_BUILD=static ${GPR2NAME}
 
 # Gnatcov instrumentation
 coverage-instrument:
@@ -184,10 +184,8 @@ ifeq (${GPR2_BUILD},gnatcov)
 	rm -rf "${BUILD_ROOT}/${GPR2_BUILD}/obj-*/*gnatcov-instr"
 	mkdir -p "${BUILD_ROOT}/${GPR2_BUILD}"
 
-	GPR_PROJECT_PATH=$(SOURCE_DIR):$(GPR_PROJECT_PATH) \
-	  ${COVERAGE_INSTR} -P ${GPR2TOOLS}
-	GPR_PROJECT_PATH=$(SOURCE_DIR):$(GPR_PROJECT_PATH) \
-	  ${COVERAGE_INSTR} -P ${GPR2NAME}
+	${COVERAGE_INSTR} -P ${GPR2TOOLS}
+	${COVERAGE_INSTR} -P ${GPR2NAME}
 endif
 
 ###########
@@ -221,12 +219,12 @@ install-lib-%:
 
 install-tools: uninstall-tools
 	${INSTALLER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-		--build-name=static --mode=usage ${GPR2TOOLS} -aP ${SOURCE_DIR}
+		--build-name=static --mode=usage ${GPR2TOOLS}
 
 install-gprname: uninstall-gprname
 	${INSTALLER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
 	  -XLANGKIT_SUPPORT_BUILD=static --build-name=static \
-          --mode=usage ${GPR2NAME} -aP ${SOURCE_DIR}
+          --mode=usage ${GPR2NAME}
 
 #########
 # setup #
@@ -271,7 +269,7 @@ clean-buildtype-%:
 	rm -rf ${BUILD_ROOT}/$*
 
 clean-tools:
-	-${CLEANER} -XLIBRARY_TYPE=static -P ${GPR2TOOLS} -aP ${SOURCE_DIR}
+	-${CLEANER} -XLIBRARY_TYPE=static -P ${GPR2TOOLS}
 
 #################
 # Documentation #
