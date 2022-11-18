@@ -319,6 +319,15 @@ private
    package Unit_Map is new Ada.Containers.Indefinite_Ordered_Maps
      (Unit_Index, Unit_Part);
 
+   type Reference_Type (Element : not null access Unit_Part) is record
+      Ref : Unit_Map.Reference_Type (Element);
+   end record;
+
+   type Constant_Reference_Type (Element : not null access constant Unit_Part)
+   is record
+      Ref : Unit_Map.Constant_Reference_Type (Element);
+   end record;
+
    type Unit_List is tagged record
       Has_Index : Boolean := False;
       Units     : Unit_Map.Map;
@@ -328,15 +337,6 @@ private
 
    Empty_List : constant Unit_List := (others => <>);
    No_Element : constant Cursor := Cursor (Unit_Map.No_Element);
-
-   type Reference_Type (Element : not null access Unit_Part) is record
-      Ref : Unit_Map.Reference_Type (Element);
-   end record;
-
-   type Constant_Reference_Type (Element : not null access constant Unit_Part)
-   is record
-      Ref : Unit_Map.Constant_Reference_Type (Element);
-   end record;
 
    function Is_Empty (Self : Unit_List) return Boolean
    is (Self.Units.Is_Empty);
