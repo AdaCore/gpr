@@ -123,27 +123,27 @@ sources of Included
 - inc/shared.ads (spec)
   SHARED (spec)
 sources of Shared extended by Prj1
-- src/pkg.ads (spec)
+- src0/pkg.ads (spec)
   PKG (spec)
-- src/shared.adb (body)
+- src0/shared.adb (body)
   SHARED (body)
 sources of Prj1
-- src/pkg.ads (spec)
+- src0/pkg.ads (spec)
   PKG (spec)
-- src/shared.adb (body)
+- src0/shared.adb (body)
   SHARED (body)
 - src1/main.adb (body)
   MAIN (body)
 sources of Prj2
 sources of Shared extended by Prj3
-- src/pkg.ads (spec)
+- src0/pkg.ads (spec)
   PKG (spec)
-- src/shared.adb (body)
+- src0/shared.adb (body)
   SHARED (body)
 sources of Prj3
-- src/pkg.ads (spec)
+- src0/pkg.ads (spec)
   PKG (spec)
-- src/shared.adb (body)
+- src0/shared.adb (body)
   SHARED (body)
 - src2/main.adb (body)
   MAIN (body)
@@ -154,18 +154,18 @@ units of subtree Prj1
 - MAIN
   body: src1/main.adb (from view Prj1)
 - PKG
-  spec: src/pkg.ads (from view Prj1)
+  spec: src0/pkg.ads (from view Prj1)
 - SHARED
   spec: inc/shared.ads (from view Included)
-  body: src/shared.adb (from view Prj1)
+  body: src0/shared.adb (from view Prj1)
 units of subtree Prj2
 - MAIN
   body: src2/main.adb (from view Prj3)
 - PKG
-  spec: src/pkg.ads (from view Prj3)
+  spec: src0/pkg.ads (from view Prj3)
 - SHARED
   spec: inc/shared.ads (from view Included)
-  body: src/shared.adb (from view Prj3)
+  body: src0/shared.adb (from view Prj3)
 
 *** checking sources of project trees/multi/prj.gpr
 
