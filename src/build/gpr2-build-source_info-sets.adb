@@ -94,25 +94,27 @@ package body GPR2.Build.Source_Info.Sets is
    overriding function First (Self : Source_Iterator) return Cursor is
       Sources : Basename_Source_Maps.Map renames Get_Ref (Self.Db).Sources;
    begin
-      if Self.Paths.Is_Empty then
-         return (Db           => Self.Db,
-                 Sort         => False,
-                 Current_Src  => Basename_Source_Maps.No_Element,
-                 Current_Path => Path_Name_Sets.No_Element);
+      if Self.Sort then
+         if Self.Paths.Is_Empty then
+            return (Db           => Self.Db,
+                    Sort         => False,
+                    Current_Src  => Basename_Source_Maps.No_Element,
+                    Current_Path => Path_Name_Sets.No_Element);
 
-      elsif not Self.Sort then
+         else
+            return
+              (Db           => Self.Db,
+               Sort         => True,
+               Current_Src  => Sources.Find
+                                 (Self.Paths.First_Element.Simple_Name),
+               Current_Path => Self.Paths.First);
+         end if;
+
+      else
          return (Db           => Self.Db,
                  Sort         => False,
                  Current_Src  => Sources.First,
                  Current_Path => Path_Name_Sets.No_Element);
-
-      else
-         return
-           (Db           => Self.Db,
-            Sort         => True,
-            Current_Src  => Sources.Find
-                              (Self.Paths.First_Element.Simple_Name),
-            Current_Path => Self.Paths.First);
       end if;
    end First;
 
