@@ -46,6 +46,9 @@ The following variables can be used to configure the libGPR2 library:
 * `GPR2KBDIR`: Location of the Knowledge Base contents (by default library
    expects them in src/kb/gprconfig_kb).
 
+* `ENABLE_SHARED`: Enables the build of libgpr2 as a dynamic library if
+  set to "yes". Otherwise only the static library is built.
+
 To use the default options:
 
 ```sh
