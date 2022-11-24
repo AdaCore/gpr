@@ -1,3 +1,5 @@
 description:
     basic sanity test for the build database
 driver: python_script
+output:
+- ["test.out.win", "'windows' in env.host.platform"]
