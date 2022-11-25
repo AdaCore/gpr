@@ -1,0 +1,89 @@
+# This bit is used to make sure we don't run too many pipelines:
+# don't run the branch CI when a merge request is already open for the
+# branch.
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"
+      when: never
+    - when: always
+
+variables:
+   #  These are not needed at the moment, but will be useful when we migrate
+   #  to a multi-stage pipeline.
+   #  PACKAGE_BASE_NAME: gpr.tar.gz
+   #  PACKAGE_ABSOLUTE_NAME: $CI_PROJECT_DIR/$PACKAGE_BASE_NAME
+   #  PACKAGE_REPOSITORY_PROJECT: eng/gpr/ci-packages
+   #  CI_FRAGMENTS: ci-fragments
+   #  CI_FRAGMENTS_GIT: https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}:${CI_SERVER_PORT}/eng/it/$CI_FRAGMENTS
+   GIT_CLONE_BASE: https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}:${CI_SERVER_PORT}
+
+stages:
+  - builds
+
+build_and_test:
+  services:
+     - image:sandbox
+     - cpu:8
+     - mem:16
+  stage: builds
+  script:
+    - . ~/.aws_container_credentials
+    - export PATH=/it/e3/bin:$PATH
+
+    # Setup the 'anod vcs' for this repo
+    - cd /it/wave
+    - anod vcs --add-repo gpr2 $CI_PROJECT_DIR
+
+    # Tune to use our build & test plan
+    - anod tune --plan $CI_PROJECT_DIR/.ci.plan
+
+    # Figure out if we're on a sync branch
+    - BRANCH=master
+    - if [[ $CI_COMMIT_BRANCH =~ ^sync/ ]]; then
+         BRANCH=$CI_COMMIT_BRANCH;
+      elif [[ $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ ^sync/ ]]; then
+         BRANCH=$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME;
+      fi
+
+    # Setup the 'anod vcs for all other repos.
+    # For each repo, check if a branch with the same name as
+    # $BRANCH exists; if so, use it.
+    - cd /tmp
+    - for subproject in gprbuild gprbuild-internal gprconfig_kb ; do
+         cd /tmp ;
+         git clone $GIT_CLONE_BASE/eng/gpr/$subproject ;
+         cd $subproject ;
+         if `git show-ref $BRANCH > /dev/null` ; then
+             git checkout $BRANCH ;
+         fi ;
+         cd /it/wave ;
+         if [ $subproject = gprbuild-internal ]; then
+            anod_name=gprbuild_testsuite ;
+         else
+            anod_name=$subproject ;
+         fi ;
+         anod vcs --add-repo $anod_name /tmp/$subproject ;
+      done
+
+    # Build & test using anod
+    - cd /it/wave
+    - anod run build
+
+    # Get the test results
+    - anod run testgpr2
+    - e3-testsuite-report --failure-exit-code 1 x86_64-linux/gpr2-test-gnat/results/new/
+
+    - anod run testgprbuild
+    - e3-testsuite-report --failure-exit-code 1 x86_64-linux/gprbuild-testAdaCC++_Auto/results/new/
+
+    - anod run testgpr2ls
+    - e3-testsuite-report --failure-exit-code 1 x86_64-linux/gprbuild-testAdaCC++_Auto-gpr2ls/results/new/
+
+    - anod test gpr2-bindings
+    # TODO: adjust this when this testsuite supports e3-testsuite-report
+    - OUTPUT=$(sed x86_64-linux/gpr2-bindings-test/results/results -e '/.*PASSED$/d' -e '/.*XFAIL$/d' -e '/^$/d')
+    - if [ -n "$OUTPUT" ] ; then
+         echo "the following tests fail:" ;
+         echo "$OUTPUT" ;
+         (exit 1) ;
+      fi
