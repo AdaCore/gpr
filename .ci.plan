@@ -1,0 +1,56 @@
+def all():
+    build()
+    test()
+
+def build():
+    # customer scenario
+    setup()
+    anod_build("gpr2name")
+    anod_build("gpr2")
+    anod_build("gprbuild")
+    anod_build("gnat")
+    anod_build("gnatcxx")
+    anod_build("gnatall")
+    anod_build("libgpr2", qualifier="bare")
+    anod_build("libgpr2")
+    anod_build("gpr-unit-provider")
+    anod_build("gpr2-bindings")
+    anod_build("aws-lib")
+
+def setup():
+    # for gpr2name
+    anod_install("stable-gnat")
+    anod_install("stable-libadalang")
+    anod_install("stable-langkit_support")
+    # for the other gpr2 tools and libgpr2
+    anod_install("stable-gprbuild")
+    anod_install("gcc")
+    anod_install("stable-langkit")
+    # gpr-unit-provider
+    anod_install("langkit_support")
+    anod_install("libadalang")
+    # gprbuild, gnat
+    anod_install("libadalang-tools")
+    anod_install("gdb")
+    anod_install("e3")
+
+def test():
+    testgpr2()
+    testgprbuild()
+    testgpr2ls()
+    anod_test("gpr-unit-provider")
+    anod_test("gpr2-bindings")
+
+def testgpr2():
+   anod_test("gpr2", qualifier="from_gnat")
+
+def testgprbuild():
+   anod_test("gprbuild", qualifier="AdaCC++_Auto")
+
+def testgpr2ls():
+   anod_build("gprbuild", qualifier="gpr1")
+   anod_test("gprbuild", qualifier="AdaCC++_Auto,check-gpr2ls")
+
+def cov():
+   anod_build("gpr2", qualifier="coverage")
+   anod_test("gpr2", qualifier="coverage")
