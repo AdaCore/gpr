@@ -210,6 +210,8 @@ endif
 install: uninstall-libs ${LIBGPR2_TYPES:%=install-lib-%} install-tools \
            install-gprname
 
+install-libs: uninstall-libs ${LIBGPR2_TYPES:%=install-lib-%}
+
 install-lib-%:
 	${INSTALLER} -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		--build-name=$* \
