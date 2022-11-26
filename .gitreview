@@ -1,5 +1,0 @@
-[gerrit]
-host=git.adacore.com
-project=gpr
-defaultbranch=edge
-defaultremote=origin

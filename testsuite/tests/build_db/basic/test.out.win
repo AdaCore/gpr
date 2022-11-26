@@ -1,0 +1,346 @@
+a.gpr:4:23: warning: object directory "obj/a" not found
+b.gpr:4:23: warning: object directory "obj/b" not found
+c.gpr:5:23: warning: object directory "obj/c" not found
+d.gpr:5:23: warning: object directory "obj/d" not found
+*** checking sources of project trees/agg/agg.gpr
+c.gpr:12:37: error: source file "notfound.ada" for unit "Foo" not found
+
+* Views *
+
+** Agg (K_AGGREGATE) **
+- Aggregated project(s):
+  - A
+  - B
+  - C
+  - D
+** Agg2 (K_AGGREGATE) **
+- Aggregated project(s):
+  - C
+  - D
+** C (K_STANDARD) **
+- Root project(s):
+  - C
+** D (K_STANDARD) **
+- Root project(s):
+  - D
+** A (K_STANDARD) **
+- Root project(s):
+  - A
+** B (K_STANDARD) **
+- Root project(s):
+  - B
+
+* Sources *
+
+sources of C
+- src/c/c_src.c (body)
+- src/c/found.ada (spec)
+  BAR (spec)
+- src/c/found_body.ada (body)
+  BAR (body)
+- src/c/pkg.1.ada (spec)
+  PKG (spec)
+- src/c/pkg.2.ada (body)
+  PKG (body)
+- src/c/pkg__p.s.2.ada (sep.)
+  PKG.P (sep.from PKG)
+- src/c/pkg__proc.2.ada (body)
+  PKG.PROC (body)
+sources of D
+- src/d/header.h (spec)
+- src/d/implem.c (body)
+sources of A
+- src/a/pkg.ads (spec)
+  PKG (spec)
+sources of B
+- src/b/pkg.ads (spec)
+  PKG (spec)
+
+* Compilation units *
+
+units of subtree A
+- PKG
+  spec: src/a/pkg.ads (from view A)
+units of subtree B
+- PKG
+  spec: src/b/pkg.ads (from view B)
+units of subtree C
+- BAR
+  spec: src/c/found.ada (from view C)
+  body: src/c/found_body.ada (from view C)
+- PKG
+  spec: src/c/pkg.1.ada (from view C)
+  body: src/c/pkg.2.ada (from view C)
+  sep. P: src/c/pkg__p.s.2.ada (from view C)
+- PKG.PROC
+  body: src/c/pkg__proc.2.ada (from view C)
+units of subtree D
+
+included.gpr:4:23: warning: object directory "objinc" not found
+prj1.gpr:6:23: warning: object directory "obj1" not found
+prj1.gpr:3:24: warning: library directory "lib1" not found
+prj2.gpr:5:23: warning: object directory "obj2" not found
+prj2.gpr:3:24: warning: library directory "lib2" not found
+*** checking sources of project trees/agg2/agg.gpr
+
+* Views *
+
+** Agg (K_AGGREGATE) **
+- Aggregated project(s):
+  - Prj1
+  - Prj2
+** Included (K_STANDARD) **
+- Root project(s):
+  - Prj1
+  - Prj2
+** Shared (K_STANDARD) **
+- Root project(s):
+  - Prj1
+** Prj1 (K_LIBRARY) **
+- Root project(s):
+  - Prj1
+- Extends  - Shared
+** Prj2 (K_AGGREGATE_LIBRARY) **
+- Root project(s):
+  - Prj2
+- Aggregated by:
+  - Prj3
+** Shared (K_STANDARD) **
+- Root project(s):
+  - Prj2
+- Aggregated in library:
+  - Prj2
+** Prj3 (K_STANDARD) **
+- Root project(s):
+  - Prj2
+- Aggregated in library:
+  - Prj2
+- Extends  - Shared
+
+* Sources *
+
+sources of Included
+- inc/shared.ads (spec)
+  SHARED (spec)
+sources of Shared extended by Prj1
+- src0/pkg.ads (spec)
+  PKG (spec)
+- src0/shared.adb (body)
+  SHARED (body)
+sources of Prj1
+- src0/pkg.ads (spec)
+  PKG (spec)
+- src0/shared.adb (body)
+  SHARED (body)
+- src1/main.adb (body)
+  MAIN (body)
+sources of Prj2
+sources of Shared extended by Prj3
+- src0/pkg.ads (spec)
+  PKG (spec)
+- src0/shared.adb (body)
+  SHARED (body)
+sources of Prj3
+- src0/pkg.ads (spec)
+  PKG (spec)
+- src0/shared.adb (body)
+  SHARED (body)
+- src2/main.adb (body)
+  MAIN (body)
+
+* Compilation units *
+
+units of subtree Prj1
+- MAIN
+  body: src1/main.adb (from view Prj1)
+- PKG
+  spec: src0/pkg.ads (from view Prj1)
+- SHARED
+  spec: inc/shared.ads (from view Included)
+  body: src0/shared.adb (from view Prj1)
+units of subtree Prj2
+- MAIN
+  body: src2/main.adb (from view Prj3)
+- PKG
+  spec: src0/pkg.ads (from view Prj3)
+- SHARED
+  spec: inc/shared.ads (from view Included)
+  body: src0/shared.adb (from view Prj3)
+
+*** checking sources of project trees/multi/prj.gpr
+
+* Views *
+
+** Prj_Naming (K_ABSTRACT) **
+- Root project(s):
+  - Prj
+** Prj (K_STANDARD) **
+- Root project(s):
+  - Prj
+
+* Sources *
+
+sources of Prj
+- ./sources.ada
+  PKG (spec)
+  PKG (body)
+  MAIN (body)
+- ./src2.ada
+  PKG2 (spec)
+  PKG2 (body)
+  MAIN2 (body)
+
+* Compilation units *
+
+units of Prj
+- MAIN
+  body: ./sources.ada @ 3 (from view Prj)
+- MAIN2
+  body: ./src2.ada @ 3 (from view Prj)
+- PKG
+  spec: ./sources.ada @ 1 (from view Prj)
+  body: ./sources.ada @ 2 (from view Prj)
+- PKG2
+  spec: ./src2.ada @ 1 (from view Prj)
+  body: ./src2.ada @ 2 (from view Prj)
+
+*** checking sources of project trees/invalid_naming/prj.gpr
+foo..bar.ads:1:01: warning: invalid file name, contains dot
+foo._bar.ads:1:01: warning: invalid file name, contains dot
+foo_.bor.ads:1:01: warning: invalid file name, contains dot
+
+* Views *
+
+** Prj (K_STANDARD) **
+- Root project(s):
+  - Prj
+
+* Sources *
+
+sources of Prj
+- src/0foo-bar.ads (spec)
+  0FOO.BAR (spec)
+- src/foo--bar.ads (spec)
+  FOO..BAR (spec)
+- src/foo-0bar.ads (spec)
+  FOO.0BAR (spec)
+- src/foo-_bar.ads (spec)
+  FOO._BAR (spec)
+- src/Foo-Bar.ads (spec)
+  FOO.BAR (spec)
+- src/foo__bar.ads (spec)
+  FOO__BAR (spec)
+
+* Compilation units *
+
+units of Prj
+- 0FOO.BAR
+  spec: src/0foo-bar.ads (from view Prj)
+- FOO..BAR
+  spec: src/foo--bar.ads (from view Prj)
+- FOO.0BAR
+  spec: src/foo-0bar.ads (from view Prj)
+- FOO._BAR
+  spec: src/foo-_bar.ads (from view Prj)
+- FOO.BAR
+  spec: src/Foo-Bar.ads (from view Prj)
+- FOO__BAR
+  spec: src/foo__bar.ads (from view Prj)
+
+lib.gpr:6:23: warning: object directory "obj2" not found
+lib.gpr:7:24: warning: library directory "lib" not found
+*** checking sources of project trees/separates/lib.gpr
+
+* Views *
+
+** Lib (K_AGGREGATE_LIBRARY) **
+- Root project(s):
+  - Lib
+- Aggregated by:
+  - Prj
+** Prj (K_STANDARD) **
+- Root project(s):
+  - Lib
+- Aggregated in library:
+  - Lib
+
+* Sources *
+
+sources of Lib
+sources of Prj
+- ./pkg-child.adb (body)
+  PKG.CHILD (body)
+- ./pkg-child.ads (spec)
+  PKG.CHILD (spec)
+- ./pkg-p.adb (sep.)
+  PKG.P (sep.from PKG)
+- ./pkg-pack-sub.adb (sep.)
+  PKG.PACK.SUB (sep.from PKG)
+- ./pkg-pack.adb (sep.)
+  PKG.PACK (sep.from PKG)
+- ./pkg-proc.adb (body)
+  PKG.PROC (body)
+- ./pkg.adb (body)
+  PKG (body)
+- ./pkg.ads (spec)
+  PKG (spec)
+
+* Compilation units *
+
+units of Lib
+- PKG
+  spec: ./pkg.ads (from view Prj)
+  body: ./pkg.adb (from view Prj)
+  sep. P: ./pkg-p.adb (from view Prj)
+  sep. PACK: ./pkg-pack.adb (from view Prj)
+  sep. PACK.SUB: ./pkg-pack-sub.adb (from view Prj)
+- PKG.CHILD
+  spec: ./pkg-child.ads (from view Prj)
+  body: ./pkg-child.adb (from view Prj)
+- PKG.PROC
+  body: ./pkg-proc.adb (from view Prj)
+
+prj.gpr:2:23: warning: object directory "obj" not found
+*** checking sources of project trees/separates/prj.gpr
+
+* Views *
+
+** Prj (K_STANDARD) **
+- Root project(s):
+  - Prj
+
+* Sources *
+
+sources of Prj
+- ./pkg-child.adb (body)
+  PKG.CHILD (body)
+- ./pkg-child.ads (spec)
+  PKG.CHILD (spec)
+- ./pkg-p.adb (sep.)
+  PKG.P (sep.from PKG)
+- ./pkg-pack-sub.adb (sep.)
+  PKG.PACK.SUB (sep.from PKG)
+- ./pkg-pack.adb (sep.)
+  PKG.PACK (sep.from PKG)
+- ./pkg-proc.adb (body)
+  PKG.PROC (body)
+- ./pkg.adb (body)
+  PKG (body)
+- ./pkg.ads (spec)
+  PKG (spec)
+
+* Compilation units *
+
+units of Prj
+- PKG
+  spec: ./pkg.ads (from view Prj)
+  body: ./pkg.adb (from view Prj)
+  sep. P: ./pkg-p.adb (from view Prj)
+  sep. PACK: ./pkg-pack.adb (from view Prj)
+  sep. PACK.SUB: ./pkg-pack-sub.adb (from view Prj)
+- PKG.CHILD
+  spec: ./pkg-child.ads (from view Prj)
+  body: ./pkg-child.adb (from view Prj)
+- PKG.PROC
+  body: ./pkg-proc.adb (from view Prj)
+
