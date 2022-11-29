@@ -22,6 +22,7 @@ with Ada.Text_IO;
 with GNATCOLL.Traces;
 
 with GPR2.Containers;
+with GPR2.Options;
 
 with GPRtools;
 with GPRtools.Command_Line;
@@ -70,7 +71,7 @@ procedure GPRinspect.Main is
          elsif Param = "textual" then
             Result.Kind_Of_Display := GPRtools.K_Textual_IO;
          else
-            raise GPRtools.Usage_Error with "use --display=<value> "
+            raise GPR2.Options.Usage_Error with "use --display=<value> "
               & "with <value>=[json, json-compact, textual]";
          end if;
       elsif Arg = "-r" then
@@ -174,7 +175,7 @@ begin
    GPRinspect.Process (Options => Options);
 
 exception
-   when E : GPRtools.Usage_Error =>
+   when E : GPR2.Options.Usage_Error =>
       Text_IO.Put_Line
         (Text_IO.Standard_Error,
          "gprinspect: " & Exception_Message (E));

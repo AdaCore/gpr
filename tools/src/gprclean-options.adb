@@ -20,7 +20,7 @@ with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GPR2.Compilation.Registry;
-with GPR2.Path_Name;
+with GPR2.Options;
 with GPR2.Project.Registry.Pack;
 
 with GPRtools.Command_Line;
@@ -54,8 +54,10 @@ package body GPRclean.Options is
       elsif Arg = "-n" then
          Result.Dry_Run := True;
       elsif Arg = "--autoconf" then
-         Result.Config_Project :=
-           GPR2.Path_Name.Create_File (GPR2.Filename_Type (Param));
+         Result.Add_Switch
+           (Switch => GPR2.Options.Autoconf,
+            Param  => Param,
+            Index  => "");
          Result.Remove_Config  := True;
       elsif Arg = "-c" then
          Result.Remain_Useful := True;

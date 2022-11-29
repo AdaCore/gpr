@@ -1,0 +1,14 @@
+--
+--  Copyright (C) 2019-2023, AdaCore
+--
+--  SPDX-License-Identifier: Apache-2.0
+--
+
+with "gpr2";
+
+project Test is
+   for Main use ("test.adb");
+   for Source_Dirs use ("src/**");
+   for Object_Dir use "obj";
+   for Exec_Dir use ".";
+end Test;

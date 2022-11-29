@@ -25,8 +25,6 @@ with GNAT.Case_Util;
 with GNAT.OS_Lib;
 with GNATCOLL.Utils;
 
-with GPR2.Project.Tree;
-
 package body GPRtools.Util is
 
    use Ada;
@@ -261,21 +259,21 @@ package body GPRtools.Util is
    ---------------------
 
    procedure Output_Messages
-     (Options : GPRtools.Options.Base_Options'Class;
-      Log     : GPR2.Log.Object := GPR2.Log.Undefined)
+     (Options : GPRtools.Options.Base_Options'Class)
    is
-      use GPR2.Log;
-      Used_Log : constant GPR2.Log.Object :=
-                   (if not Log.Is_Defined
-                      and then Options.Tree /= null
-                    then Options.Tree.Log_Messages.all
-                    else Log);
    begin
-      Used_Log.Output_Messages
+      Options.Config_Project_Log.Output_Messages
         (Information    => Options.Verbosity = Very_Verbose,
          Warning        => Options.Warnings,
          Lint           => Options.Verbosity = Very_Verbose,
          Full_Path_Name => Options.Full_Path_Name_For_Brief);
+      if Options.Tree /= null and then Options.Tree.Has_Messages then
+         Options.Tree.all.Log_Messages.Output_Messages
+           (Information    => Options.Verbosity = Very_Verbose,
+            Warning        => Options.Warnings,
+            Lint           => Options.Verbosity = Very_Verbose,
+            Full_Path_Name => Options.Full_Path_Name_For_Brief);
+      end if;
    end Output_Messages;
 
    ------------------
@@ -302,10 +300,10 @@ package body GPRtools.Util is
       Output_Messages (Options);
       Fail_Program
         ('"'
-         & (if Options.Project_File.Is_Defined
-            then String (Options.Project_File.Simple_Name)
-            else Options.Project_Base.Value)
-         & """ processing failed");
+         & (if Options.Config_Project_Has_Error
+           then String (Options.Config_Project.Simple_Name)
+           else String (Options.Filename.Simple_Name))
+          & """ processing failed");
    end Project_Processing_Failed;
 
    ----------------------

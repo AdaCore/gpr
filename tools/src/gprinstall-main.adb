@@ -21,9 +21,7 @@ with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GPR2.Interrupt_Handler;
-with GPR2.KB;
-with GPR2.Path_Name;
-with GPR2.Project.Configuration;
+with GPR2.Options;
 with GPR2.Project.Tree;
 with GPRtools.Command_Line;
 with GPRtools.Sigint;
@@ -40,17 +38,13 @@ procedure GPRinstall.Main is
    use Ada.Exceptions;
 
    use GPR2;
-   use GPRtools;
 
    Tree    : GPR2.Project.Tree.Object;
 
    Dummy   : aliased Boolean;
    --  A dummy boolean for supporting default switch like -a
 
-   Config  : Project.Configuration.Object;
    Options : GPRinstall.Options.Object;
-
-   subtype ONT is Optional_Name_Type;
 
    use Ada.Strings.Unbounded;
 
@@ -65,30 +59,6 @@ begin
 
    Interrupt_Handler.Install_Sigint (GPRtools.Sigint.Handler'Access);
 
-   --  Check command line arguments. These will be overridden when looking
-   --  for the configuration file.
-   --
-   --  If configuration project is specified then load it, otherwise we will
-   --  conduct an autoconf setup.
-
-   if Options.Config_Project.Is_Defined
-     and then (not Options.Create_Missing_Config
-               or else Options.Config_Project.Exists)
-   then
-      Config := Project.Configuration.Load (Options.Config_Project);
-
-      if Config.Has_Error then
-         Util.Output_Messages (Options, Config.Log_Messages);
-         GPRtools.Util.Fail_Program
-           ('"' & String (Options.Config_Project.Name) &
-              """ processing failed");
-      end if;
-   end if;
-
-   --  Then, parse the user's project and the configuration file. Apply the
-   --  configuration file to the project so that its settings are
-   --  automatically inherited by the project.
-
    if Options.Uninstall_Mode then
       if Options.Global_Install_Name.Default then
          Uninstall.Process (Options.Args.First_Element, Options);
@@ -101,43 +71,28 @@ begin
       DB.List (Options);
 
    else
-      if Config.Is_Defined then
-         Tree.Load
-           (Options.Project_File, Options.Context, Config,
-            Build_Path       => Options.Build_Path,
-            Subdirs          => Options.Get_Subdirs,
-            Src_Subdirs      => ONT (To_String (Options.Src_Subdirs)),
-            Check_Shared_Lib => not Options.Unchecked_Shared_Lib,
-            Implicit_With    => Options.Implicit_With);
-      else
-         --  No configuration, go with auto-configuration
-
-         Tree.Load_Autoconf
-           (Options.Project_File, Options.Context,
-            Build_Path        => Options.Build_Path,
-            Subdirs           => Options.Get_Subdirs,
-            Src_Subdirs       => Options.Get_Src_Subdirs,
-            Check_Shared_Lib  => not Options.Unchecked_Shared_Lib,
-            Implicit_With     => Options.Implicit_With,
-            Target            => Options.Get_Target,
-            Language_Runtimes => Options.RTS_Map,
-            Base              => GPR2.KB.Create
-              (Flags      => KB.Default_Flags,
-               Default_KB => not Options.Skip_Default_KB,
-               Custom_KB  => Options.KB_Locations));
+      if not Options.Load_Project (Tree  => Options.Tree.all,
+                                   Quiet => Options.Quiet)
+      then
+         GPRtools.Util.Project_Processing_Failed (Options);
       end if;
 
       if Options.Verbose then
-         for M of Tree.Log_Messages.all loop
+         for M of Options.Config_Project_Log loop
             M.Output;
          end loop;
+         if Tree.Has_Messages then
+            for M of Tree.Log_Messages.all loop
+               M.Output;
+            end loop;
+         end if;
       end if;
 
       Install.Process (Tree, Options);
    end if;
 
 exception
-   when E : Usage_Error =>
+   when E : GPR2.Options.Usage_Error =>
       Ada.Text_IO.Put_Line ("gprinstall: " & Exception_Message (E));
       Ada.Text_IO.Flush;
       GPRtools.Command_Line.Try_Help;

@@ -21,6 +21,7 @@ with Ada.Exceptions;
 with Ada.Text_IO;
 
 with GPR2.Interrupt_Handler;
+with GPR2.Options;
 
 with GPRdoc.Process;
 
@@ -74,7 +75,7 @@ procedure GPRdoc.Main is
          elsif Param = "textual" then
             Options.Kind_Of_Display := GPRtools.K_Textual_IO;
          else
-            raise GPRtools.Usage_Error with "use --display=<value> "
+            raise GPR2.Options.Usage_Error with "use --display=<value> "
               & "with <value>=[json, json-compact, textual]";
          end if;
       end if;
@@ -108,7 +109,9 @@ procedure GPRdoc.Main is
                  Delimiter  => Equal,
                  Parameter  => "json|json-compact|textual",
                  Default    => "json-compact"));
-      Options.No_Project := True;
+
+      --  implicit --no-project switch.
+      Options.Add_Switch (GPR2.Options.No_Project);
 
       Parser.Get_Opt (Options);
    end Parse_Command_Line;
@@ -128,7 +131,7 @@ begin
    GPRdoc.Process (Options => Options);
 
 exception
-   when E : GPRtools.Usage_Error =>
+   when E : GPR2.Options.Usage_Error =>
       Text_IO.Put_Line
         (Text_IO.Standard_Error,
          "gprdoc: " & Exception_Message (E));

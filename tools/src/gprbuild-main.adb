@@ -22,6 +22,7 @@ with Ada.Exceptions;
 with Ada.Text_IO;
 
 with GPR2.Interrupt_Handler;
+with GPR2.Options;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
@@ -189,7 +190,7 @@ begin
       --  Finally, if we found a Switches attribute, apply it
 
       if Sw_Attr.Is_Defined then
-         Opt := Options.Object'(GPRtools.Command_Line.Empty_Result
+         Opt := Options.Object'(GPRtools.Options.Empty_Options
                                 with others => <>);
          Opt.Tree := Tree.Reference;
          Parser.Get_Opt (From_Pack => PRP.Builder,
@@ -205,7 +206,7 @@ begin
    return Ada.Command_Line.Success;
 
 exception
-   when E : GPRtools.Usage_Error =>
+   when E : GPR2.Options.Usage_Error =>
       Text_IO.Put_Line (Text_IO.Standard_Error,
                         "error: " & Exception_Message (E));
       GPRtools.Command_Line.Try_Help;

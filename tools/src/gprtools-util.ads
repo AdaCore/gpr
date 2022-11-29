@@ -20,7 +20,6 @@
 
 with Ada.Command_Line;
 
-with GPR2.Log;
 with GPR2.Path_Name;
 
 with GPRtools.Options;
@@ -44,10 +43,8 @@ package GPRtools.Util is
    --        tools are setting GPR_TOOL to gprbuild instead of their own names.
 
    procedure Output_Messages
-     (Options : GPRtools.Options.Base_Options'Class;
-      Log     : GPR2.Log.Object := GPR2.Log.Undefined);
+     (Options : GPRtools.Options.Base_Options'Class);
    --  Output errors and if Verbose is True other messages from Log.
-   --  Options Tree's log is used when Log is undefined.
 
    function Is_Ada_Predefined_Unit (Unit : Name_Type) return Boolean;
    --  Return True if Unit is an Ada runtime unit

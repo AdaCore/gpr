@@ -33,6 +33,7 @@ with GPR2.Compilation.Registry;
 with GPR2.Compilation.Sync;
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Time_Stamp;
@@ -372,7 +373,7 @@ procedure GPRremote is
 
          Project.Load
            (Pathname, Context,
-            Check_Shared_Lib => not Options.Unchecked_Shared_Lib);
+            Check_Shared_Lib => Options.Check_Shared_Lib);
       end Load_Project;
 
       Project_Name : constant String := To_String (Args (Arg_Project));
@@ -388,12 +389,13 @@ procedure GPRremote is
 
       if Cmd in Exec | Syncexec then
          if Last < Arg_First_Option then
-            raise Usage_Error with "missing aguments (command to execute)";
+            raise GPR2.Options.Usage_Error with
+              "missing aguments (command to execute)";
          end if;
 
       else
          if Last >= Arg_First_Option then
-            raise Usage_Error with "too many aguments";
+            raise GPR2.Options.Usage_Error with "too many aguments";
          end if;
       end if;
 
@@ -469,7 +471,7 @@ begin
    GNAT.OS_Lib.OS_Exit (Exit_Status);
 
 exception
-   when E : Usage_Error =>
+   when E : GPR2.Options.Usage_Error =>
       Put_Line ("gprremote: " & Exception_Message (E));
       GNAT.OS_Lib.OS_Exit (1);
 
