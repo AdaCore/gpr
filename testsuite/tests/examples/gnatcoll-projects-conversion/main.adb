@@ -27,8 +27,8 @@ procedure Main is
    Project_Tree : GNATCOLL.Projects.Project_Tree;
 
    procedure Print_Messages
-     (Output_Warnings     : Boolean := True;
-      Output_Informations : Boolean := False);
+     (Output_Warnings    : Boolean := True;
+      Output_Information : Boolean := False);
 
    ----------
    -- Load --
@@ -64,13 +64,13 @@ procedure Main is
    --------------------
 
    procedure Print_Messages
-     (Output_Warnings     : Boolean := True;
-      Output_Informations : Boolean := False)
+     (Output_Warnings    : Boolean := True;
+      Output_Information : Boolean := False)
    is
    begin
       if Tree.Has_Messages then
          GPR2_GNATCOLL_Projects.Output_Messages
-           (Tree.Log_Messages.all, Output_Warnings, Output_Informations);
+           (Tree.Log_Messages.all, Output_Warnings, Output_Information);
       end if;
    end Print_Messages;
 

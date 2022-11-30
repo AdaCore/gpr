@@ -156,11 +156,11 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
          for Attr_Id of PRA.All_Attributes (Pack => Pack)
          loop
 
-            --  Get the attribute informations
+            --  Get the attribute information
             Attribute_Definition :=
               PRA.Get (Q_Name => Attr_Id);
 
-            --  Display attribute and package informations
+            --  Display attribute and package information
 
             if not Package_Name_Shown then
                Text_IO.Put_Line (Item => Package_Name);
@@ -407,7 +407,7 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
          for Attr_Id of PRA.All_Attributes (Pack => Project_Level_Scope)
          loop
 
-            --  Get the attribute informations
+            --  Get the attribute information
             Attr_Def :=
               PRA.Get (Q_Name => Attr_Id);
 
@@ -443,7 +443,7 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
             for Attr_Id of PRA.All_Attributes (Pack => Pack)
             loop
 
-               --  Get the attribute informations
+               --  Get the attribute information
                Attr_Def :=
                  PRA.Get (Q_Name => Attr_Id);
 

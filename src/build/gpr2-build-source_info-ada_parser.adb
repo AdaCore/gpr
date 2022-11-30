@@ -264,7 +264,7 @@ package body GPR2.Build.Source_Info.Ada_Parser is
                      end if;
 
                      --  Note that we do not append but actually replace the
-                     --  new unit created with all informations (dependencies,
+                     --  new unit created with all information (dependencies,
                      --  generic, etc...).
 
                      Data.CU_List.Units.Replace (Index, CU);

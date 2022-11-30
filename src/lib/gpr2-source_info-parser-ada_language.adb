@@ -276,7 +276,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                      end if;
 
                      --  Note that we do not append but actually replace the
-                     --  new unit created with all informations (dependencies,
+                     --  new unit created with all information (dependencies,
                      --  generic, etc...).
 
                      Data.CU_List (Index) := CU;
