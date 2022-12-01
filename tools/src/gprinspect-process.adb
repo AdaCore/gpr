@@ -628,7 +628,7 @@ is
       procedure Print_Infos is
       begin
          Indent (0, "+--------------------------------------+");
-         Indent (0, "|         General Informations         |");
+         Indent (0, "|         General Information          |");
          Indent (0, "+--------------------------------------+");
          Indent (1, "Generated on : " &
                    Calendar.Formatting.Image (Calendar.Clock));
@@ -689,7 +689,7 @@ is
       begin
 
          Indent (0, "+--------------------------------------+");
-         Indent (0, "|         Projects Informations        |");
+         Indent (0, "|         Projects Information         |");
          Indent (0, "+--------------------------------------+");
 
          for V in Tree.Iterate loop
@@ -866,7 +866,7 @@ is
       is
       begin
          Indent (0, "+--------------------------------------+");
-         Indent (0, "|       Project Tree Informations      |");
+         Indent (0, "|       Project Tree Information       |");
          Indent (0, "+--------------------------------------+");
 
          if Tree.Has_Messages then

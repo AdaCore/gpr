@@ -95,9 +95,9 @@ package GPR2_GNATCOLL_Projects is
    --  GNATCOLL.Projects.Attribute_Value conversion (string list attribute)
 
    procedure Output_Messages
-     (Log                 : GPR2.Log.Object;
-      Output_Warnings     : Boolean := True;
-      Output_Informations : Boolean := False);
+     (Log                : GPR2.Log.Object;
+      Output_Warnings    : Boolean := True;
+      Output_Information : Boolean := False);
    --  print Log content
 
    function Get_Target

@@ -1,11 +1,11 @@
 +--------------------------------------+
-|         General Informations         |
+|         General Information          |
 +--------------------------------------+
 * Generated on : 2000-01-01 00:00:00
 * Version      : Pro 1.0 (20000101) (<host>)
 
 +--------------------------------------+
-|       Project Tree Informations      |
+|       Project Tree Information       |
 +--------------------------------------+
 * Messages :
     - lib.gpr: lint: project qualifier could be explicitly set to library project
@@ -26,7 +26,7 @@
     - Root (<<cwd>/root.gpr)
 
 +--------------------------------------+
-|         Projects Informations        |
+|         Projects Information         |
 +--------------------------------------+
 * Root (<<cwd>/root.gpr) [ aggregate project ]
     - Project file      : <cwd>/root.gpr

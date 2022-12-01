@@ -354,15 +354,15 @@ package body GPR2_GNATCOLL_Projects is
    ---------------------
 
    procedure Output_Messages
-     (Log                 : GPR2.Log.Object;
-      Output_Warnings     : Boolean := True;
-      Output_Informations : Boolean := False)
+     (Log                : GPR2.Log.Object;
+      Output_Warnings    : Boolean := True;
+      Output_Information : Boolean := False)
    is
       use GPR2.Log;
       Displayed : GPR2.Containers.Value_Set;
    begin
       for C in Log.Iterate
-        (Information => Output_Informations,
+        (Information => Output_Information,
          Warning     => Output_Warnings,
          Error       => True,
          Read        => True,
