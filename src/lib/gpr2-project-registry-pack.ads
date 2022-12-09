@@ -48,14 +48,14 @@ package GPR2.Project.Registry.Pack is
 
    --  Some common package names
 
-   Binder          : constant Package_Id := +"binder";
-   Builder         : constant Package_Id := +"builder";
-   Clean           : constant Package_Id := +"clean";
-   Compiler        : constant Package_Id := +"compiler";
-   Gnatls          : constant Package_Id := +"gnatls";
-   Install         : constant Package_Id := +"install";
-   Linker          : constant Package_Id := +"linker";
-   Naming          : constant Package_Id := +"naming";
-   Remote          : constant Package_Id := +"remote";
+   Binder   : constant Package_Id := +"binder";
+   Builder  : constant Package_Id := +"builder";
+   Clean    : constant Package_Id := +"clean";
+   Compiler : constant Package_Id := +"compiler";
+   Gnatls   : constant Package_Id := +"gnatls";
+   Install  : constant Package_Id := +"install";
+   Linker   : constant Package_Id := +"linker";
+   Naming   : constant Package_Id := +"naming";
+   Remote   : constant Package_Id := +"remote";
 
 end GPR2.Project.Registry.Pack;

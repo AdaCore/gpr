@@ -42,8 +42,7 @@ package GPR2.Project.Attribute_Index is
      with Post => Create'Result.Is_Defined;
    --  Creates a built-in attribute index
 
-   function Create
-     (Value : Language_Id) return Object;
+   function Create (Value : Language_Id) return Object;
    --  Creates an attribute index for the given language
 
    function Is_Others (Self : Object) return Boolean
@@ -132,8 +131,8 @@ private
                (Source_Reference.Builtin, Value_Type (Name (Value)))),
               False, False));
 
-   function Is_Case_Sensitive (Self : Object) return Boolean is
-     (Self.Case_Sensitive);
+   function Is_Case_Sensitive (Self : Object) return Boolean
+     is (Self.Case_Sensitive);
 
    function Value
      (Self          : Object;
@@ -141,6 +140,6 @@ private
    is
      (if Preserve_Case
       then Self.Text
-      else Ada.Characters.Handling.To_Lower (Self.Text));
+      else Characters.Handling.To_Lower (Self.Text));
 
 end GPR2.Project.Attribute_Index;
