@@ -71,7 +71,7 @@ GPR2KB=${SOURCE_DIR}/src/kb/collect_kb.gpr
 GPR2KBDIR=${SOURCE_DIR}/src/kb/gprconfig_kb
 
 # check for out-of-tree build
-ifeq (${SOURCE_DIR},.)
+ifeq (${SOURCE_DIR},$(PWD))
 BUILD_ROOT=.build
 else
 BUILD_ROOT=.
