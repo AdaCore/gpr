@@ -7,6 +7,7 @@
 #ifdef __APPLE__
 .section __TEXT,__const
 #else
+.section .note.GNU-stack
 .section .rodata
 #endif
   .global _binary_config_kb_start
