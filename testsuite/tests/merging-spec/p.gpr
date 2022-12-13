@@ -1,0 +1,6 @@
+with "a", "b";
+project P is
+   package Naming is
+      for Spec use A.Naming'Spec & B.Naming'Spec;
+   end Naming;
+end P;

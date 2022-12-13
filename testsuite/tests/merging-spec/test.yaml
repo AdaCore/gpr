@@ -1,0 +1,5 @@
+description:
+    Check for concat of indexed attributes
+driver: build_and_run
+project_file: mergingspec
+main: main

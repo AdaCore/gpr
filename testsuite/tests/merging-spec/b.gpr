@@ -1,0 +1,6 @@
+abstract project B is
+   package Naming is
+      for Spec ("B") use "bbb";
+      for Spec ("B2") use "b2";
+   end Naming;
+end B;

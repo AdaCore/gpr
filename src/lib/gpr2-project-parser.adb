@@ -2674,8 +2674,31 @@ package body GPR2.Project.Parser is
          -------------------
 
          procedure Record_Values (Values : Item_Values) is
+            use type Project.Attribute_Index.Object;
          begin
-            Result.Indexed_Values := Values.Indexed_Values;
+            --  If we already have a list of indexed values, or If we already
+            --  have one indexed values and we have new indexed values and if
+            --  those are having different index then we want to append to the
+            --  list.
+            --
+            --  It covers the following case:
+            --
+            --  for Attr use Pck'Attr & Pck'Attr;
+            --
+
+            if Result.Indexed_Values.Values.Length > 1
+              or else
+                (Result.Indexed_Values.Values.Length > 0
+                 and then Values.Indexed_Values.Values.Length > 0
+                 and then Values.Indexed_Values.Values.First_Element.Index
+                           /= Result.Indexed_Values.Values.First_Element.Index)
+            then
+               for V of Values.Indexed_Values.Values loop
+                  Result.Indexed_Values.Values.Append (V);
+               end loop;
+            else
+               Result.Indexed_Values := Values.Indexed_Values;
+            end if;
 
             for V of Values.Values loop
                New_Item := New_Item or else not Values.Single;
