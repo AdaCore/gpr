@@ -7,7 +7,7 @@
 #ifdef __APPLE__
 .section __TEXT,__const
 #else
-#ifdef __LINUX__
+#ifdef __linux__
 .section .note.GNU-stack
 #endif
 .section .rodata
