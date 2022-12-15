@@ -2675,6 +2675,11 @@ package body GPR2.Project.Parser is
 
          procedure Record_Values (Values : Item_Values) is
             use type Project.Attribute_Index.Object;
+
+            function Has_Index (Index : Attribute_Index.Object) return Boolean
+              is (for some V of Result.Indexed_Values.Values
+                    => V.Index = Index);
+
          begin
             --  If we already have a list of indexed values, or If we already
             --  have one indexed values and we have new indexed values and if
@@ -2694,6 +2699,18 @@ package body GPR2.Project.Parser is
                            /= Result.Indexed_Values.Values.First_Element.Index)
             then
                for V of Values.Indexed_Values.Values loop
+                  --  Issue a lint-level message if we are going to overwrite
+                  --  an already existing value for the given index.
+
+                  if Has_Index (V.Index) then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Message.Lint,
+                           "duplicate indexed attribute found for "
+                           & V.Index.Text,
+                           Source_Reference.Object (V.Index)));
+                  end if;
+
                   Result.Indexed_Values.Values.Append (V);
                end loop;
             else

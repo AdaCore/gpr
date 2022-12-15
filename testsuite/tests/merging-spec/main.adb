@@ -55,6 +55,16 @@ begin
 
    Display (Prj.Root_Project);
 
+   if Prj.Has_Messages then
+      Prj.Log_Messages.Output_Messages
+        (Information => False,
+         Warning     => False,
+         Error       => False,
+         Lint        => True);
+   else
+      Text_IO.Put_Line ("Missing lint-message about duplicate index");
+   end if;
+
 exception
    when GPR2.Project_Error =>
       if Prj.Has_Messages then
