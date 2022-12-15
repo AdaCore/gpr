@@ -64,7 +64,7 @@ exception
             declare
                Mes : constant String := M.Format;
                L   : constant Natural :=
-                 Strings.Fixed.Index (Mes, "/simple");
+                       Strings.Fixed.Index (Mes, "/merging-spec");
             begin
                if L /= 0 then
                   Text_IO.Put_Line (Mes (L .. Mes'Last));
