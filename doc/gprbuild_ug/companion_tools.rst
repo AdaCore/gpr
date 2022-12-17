@@ -2043,7 +2043,7 @@ Examples of installation under the same name:
      gprinstall --install-name=myapp --mode=usage tools/tools.gpr
 
 Note the ``--mode=usage`` option above. This tells GPRinstall to only install
-the executable built as part of the project.
+the executable or the shared library built as part of the project.
 
 It is possible to uninstall a project by using the ``--uninstall`` option. In
 this case we just pass the install name to GPRinstall:
@@ -2168,16 +2168,17 @@ The switches for GPRinstall are:
   * usage
 
     The installation is done in usage mode. This means that only the
-    library or the executable is installed. In this installation mode
-    there is no project generated, nor specs or ALI files installed.
+    executable or the shared library is installed. In this
+    installation mode there is no project generated, nor specs or ALI
+    files installed.
 
   ======== ================================================================
   Mode     Interpretation
   -------- ----------------------------------------------------------------
   `dev`    For this mode the binaries (built libraries and
            executable) are installed together with the sources to use them.
-  `usage`  For this mode only the binaries are installed and no project are
-           created.
+  `usage`  For this mode only the executables or the shared libraries
+           are installed and no project are created.
   ======== ================================================================
 
 * :samp:`-p`, :samp:`--create-missing-dirs`
@@ -2473,12 +2474,12 @@ You may specify any of the following switches to `gprname`:
 
   Look for source files in all directories listed in text file :file:`filename`.
   This :file:`filename` can also contain file simple names. Those file will be
-  directly added to :file:`Source_File_List` and their paths to 
+  directly added to :file:`Source_File_List` and their paths to
   :file:`Source_Dirs`.
   There may be zero, one or more spaces between *-D*
   and :file:`filename`.
   :file:`filename` must be an existing, readable text file.
-  Each nonempty line in :file:`filename` must be a directory or a file 
+  Each nonempty line in :file:`filename` must be a directory or a file
   simple name.
   When only containing directories, specifying switch *-D* is equivalent
   to specifying as many switches *-d* as there are nonempty lines in
