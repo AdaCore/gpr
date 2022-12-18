@@ -1,0 +1,5 @@
+P        K_STANDARD
+for Spec ("A") use "aaa";
+for Spec ("B") use "bbb";
+for Spec ("B2") use "b2";
+b.gpr:3:17: lint: duplicate indexed attribute found for B

@@ -424,7 +424,7 @@ is
                   if Has_Element (C) then
                      Other_Except_Usage.Delete (C);
                   else
-                     --  Basename was already handled, don't handle twice.
+                     --  Basename was already handled, don't handle twice
 
                      Match := False;
                      Kind  := Unit.S_Spec;  --  Dummy value
@@ -1449,7 +1449,7 @@ is
 
          if Data.Packs.Contains (PRP.Naming) then
             Handle_Naming : declare
-               Attr   : Attribute.Object;
+               Attr : Attribute.Object;
             begin
                if View.Check_Attribute
                  (PRA.Naming.Dot_Replacement, Result => Attr)
