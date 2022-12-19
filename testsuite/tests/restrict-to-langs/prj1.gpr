@@ -1,0 +1,3 @@
+project Prj1 is
+   for Languages use ("Ada", "Fortran");
+end Prj1;

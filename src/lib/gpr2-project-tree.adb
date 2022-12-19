@@ -2265,6 +2265,17 @@ package body GPR2.Project.Tree is
       end if;
    end Reindex_Unit;
 
+   ------------------------------------
+   -- Restrict_Autoconf_To_Languages --
+   ------------------------------------
+
+   procedure Restrict_Autoconf_To_Languages
+     (Self  : in out Object;
+      Langs : Containers.Language_Set) is
+   begin
+      Self.Langs_Of_Interest := Langs;
+   end Restrict_Autoconf_To_Languages;
+
    ------------------
    -- Root_Project --
    ------------------

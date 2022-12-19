@@ -290,19 +290,43 @@ is
      return Project.Configuration.Description_Set
    is
       Descr_Index : Natural := 0;
-      Result      : Project.Configuration.Description_Set
-        (1 .. Positive (Languages.Length));
+      Restricted  : constant Boolean := not Self.Langs_Of_Interest.Is_Empty;
+      Length      : constant Natural :=
+                      Natural
+                        (if Restricted then
+                           (Languages.Intersection
+                              (Self.Langs_Of_Interest).Length)
+                         else Languages.Length);
+      Result      : Project.Configuration.Description_Set (1 .. Length);
    begin
-      for L of Languages loop
-         Descr_Index := Descr_Index + 1;
+      if Restricted and then
+        Languages.Intersection (Self.Langs_Of_Interest).Is_Empty
+      then
+         Self.Append_Message
+           (Message.Create
+              (Level   => Message.Error,
+               Message => "no language for the projects tree "
+               & "due to language restriction",
+               Sloc    => Source_Reference.Create
+                 (Self.Root.Path_Name.Value, 0, 0)));
 
-         Result (Descr_Index) :=
-           Project.Configuration.Create
-             (Language => L,
-              Version  => Toolchain_Version (L),
-              Runtime  => Runtime (L),
-              Path     => Toolchain_Path (L),
-              Name     => Toolchain_Name (L));
+         --  Generate a default config
+         return (1 => Project.Configuration.Create (Language => Ada_Language));
+
+      end if;
+
+      for L of Languages loop
+         if Self.Langs_Of_Interest.Contains (L) or else not Restricted then
+            Descr_Index := Descr_Index + 1;
+
+            Result (Descr_Index) :=
+              Project.Configuration.Create
+                (Language => L,
+                 Version  => Toolchain_Version (L),
+                 Runtime  => Runtime (L),
+                 Path     => Toolchain_Path (L),
+                 Name     => Toolchain_Name (L));
+         end if;
       end loop;
 
       return Result;
