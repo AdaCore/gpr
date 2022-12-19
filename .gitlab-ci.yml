@@ -1,0 +1,10 @@
+# This is a dummy .gitlab-ci.yml file that does nothing, since we currently
+# do not have real CIs on 23.x branches
+
+stages:
+  - donothing
+
+nothing:
+  stage: donothing
+  script:
+    - exit 0
