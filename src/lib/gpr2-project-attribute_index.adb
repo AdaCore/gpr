@@ -32,8 +32,10 @@ package body GPR2.Project.Attribute_Index is
          return Source_Reference.Value.Object (Left).Is_Defined
            = Source_Reference.Value.Object (Right).Is_Defined;
       end if;
+
       if Left.Case_Sensitive then
          return Is_Others and then L_Text = R_Text;
+
       else
          return Is_Others
            and then Equal_Case_Insensitive (L_Text, R_Text);

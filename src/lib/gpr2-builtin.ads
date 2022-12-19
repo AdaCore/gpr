@@ -49,7 +49,7 @@ package GPR2.Builtin is
    function Split
      (Value     : Value_Type;
       Separator : Value_Not_Empty) return Containers.Value_List
-     renames Containers.Create;
+      renames Containers.Create;
    --  The Split built-in. Returns a list of values corresponding
    --  to the string value split using the given separator.
 

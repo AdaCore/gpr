@@ -1,0 +1,6 @@
+abstract project A is
+   package Naming is
+      for Spec ("A") use "aaa";
+      for Spec ("B") use "bab";
+   end Naming;
+end A;
