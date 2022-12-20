@@ -128,64 +128,42 @@ package body GPR2.Project.Definition is
    -- Check_Excluded_Source_Dirs --
    --------------------------------
 
-   procedure Check_Excluded_Source_Dirs (View : Project.View.Object) is
+   procedure Check_Excluded_Source_Dirs (View : Project.View.Object)
+   is
+      function Exists
+        (View_Path : Path_Name.Object;
+         Val       : Value_Type) return Boolean;
+
+      ------------
+      -- Exists --
+      ------------
+
+      function Exists
+        (View_Path : Path_Name.Object;
+         Val       : Value_Type) return Boolean
+      is
+         Recursive : constant Boolean :=
+                       Val'Length >= 2
+                           and then Val (Val'Last - 1 .. Val'Last) = "**";
+         Last      : constant Natural :=
+                       (if Recursive then Val'Last - 2 else Val'Last);
+         Dir_Name  : constant Value_Type := Val (Val'First .. Last);
+      begin
+         return Dir_Name'Length = 0
+           or else View_Path.Compose (Filename_Type (Dir_Name), True).Exists;
+      end Exists;
+
    begin
       for V of View.Tree.Ordered_Views loop
          if V.Kind in With_Source_Dirs_Kind then
             declare
-               Attr : constant Project.Attribute.Object :=
-                        V.Attribute (PRA.Excluded_Source_Dirs);
-
-               function Exists
-                 (Value : Source_Reference.Value.Object) return Boolean;
-
-               ------------
-               -- Exists --
-               ------------
-
-               function Exists
-                 (Value : Source_Reference.Value.Object) return Boolean
-               is
-                  Root_Dir_Exist : Boolean := False;
-
-                  procedure On_Directory
-                    (Directory       : GPR2.Path_Name.Object;
-                     Is_Root_Dir     : Boolean;
-                     Do_Dir_Visit    : in out Boolean;
-                     Do_Subdir_Visit : in out Boolean);
-
-                  ------------------
-                  -- On_Directory --
-                  ------------------
-
-                  procedure On_Directory
-                    (Directory       : GPR2.Path_Name.Object;
-                     Is_Root_Dir     : Boolean;
-                     Do_Dir_Visit    : in out Boolean;
-                     Do_Subdir_Visit : in out Boolean) is
-                  begin
-                     Do_Dir_Visit := False;
-                     Do_Subdir_Visit := False;
-                     if Is_Root_Dir then
-                        Root_Dir_Exist := Directory.Exists;
-                     end if;
-                  end On_Directory;
-
-               begin
-                  Foreach
-                    (Base_Dir          => View.Dir_Name,
-                     Messages          => Get_RO (View).Tree.Log_Messages.all,
-                     Directory_Pattern => Filename_Optional (Value.Text),
-                     Source            => Value,
-                     File_CB           => null,
-                     Directory_CB      => On_Directory'Access);
-                  return Root_Dir_Exist;
-               end Exists;
-
+               V_Path : constant Path_Name.Object := V.Dir_Name;
+               Attr   : constant Project.Attribute.Object :=
+                          V.Attribute (PRA.Excluded_Source_Dirs);
             begin
                if Attr.Is_Defined then
                   for Val of Attr.Values loop
-                     if not Exists (Val) then
+                     if not Exists (V_Path, Val.Text) then
                         View.Tree.Log_Messages.Append
                           (Message.Create
                              (Level   => Message.Error,
