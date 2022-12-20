@@ -132,10 +132,15 @@ package body GPR2.KB is
       Messages   : in out Log.Object) return String;
    --  Substitutes the special "$..." names in compiler description
 
+   package Ordered_Languages_Vectors is new
+     Ada.Containers.Vectors (Positive, Language_Id);
+   subtype Ordered_Languages is Ordered_Languages_Vectors.Vector;
+
    function Substitute_Variables_In_Configuration
      (Self       : Object;
       Str        : String;
       Comps      : Compiler_Lists.List;
+      Langs      : Ordered_Languages;
       Error_Sloc : Source_Reference.Object;
       Messages   : in out Log.Object) return String;
    --  Substitutes the special "$..." names in configuration
@@ -191,6 +196,7 @@ package body GPR2.KB is
      (Self      : Object;
       Compilers : Compiler_Lists.List;
       Target    : String;
+      Langs     : Ordered_Languages;
       Errors    : in out Log.Object) return Unbounded_String;
    --  Generate the configuration string for the list of selected compilers
 
@@ -202,6 +208,7 @@ package body GPR2.KB is
       Packages   : in out String_Maps.Map;
       Compilers  : Compiler_Lists.List;
       Config     : String;
+      Langs      : Ordered_Languages;
       Error_Sloc : Source_Reference.Object;
       Errors     : in out Log.Object);
    --  Merge the contents of Config into Packages, so that each attributes ends
@@ -904,6 +911,7 @@ package body GPR2.KB is
       Compilers            : Compiler_Lists.List;
       Selected_Target      : Unbounded_String;
       Runtime_Specific_KB  : Object;
+      Langs                : Ordered_Languages;
 
       Configuration_String : Unbounded_String;
 
@@ -922,6 +930,7 @@ package body GPR2.KB is
 
          else
             Filters.Append (Create_Filter (Self, Setting));
+            Langs.Append (Language (Setting));
          end if;
       end loop;
 
@@ -949,7 +958,7 @@ package body GPR2.KB is
       end loop;
 
       Configuration_String := Runtime_Specific_KB.Generate_Configuration
-        (Compilers, To_String (Selected_Target), Messages);
+        (Compilers, To_String (Selected_Target), Langs, Messages);
 
       return Configuration_String;
    end Configuration;
@@ -968,6 +977,9 @@ package body GPR2.KB is
       Configuration_String : Unbounded_String;
       Runtime_Specific_KB  : Object;
       Compilers            : Compiler_Lists.List;
+
+      --  ??? atm follow order of selection
+      Langs                : Ordered_Languages;
    begin
 
       --  Runtime dir may have additional knowledge base chunks specific to
@@ -978,10 +990,11 @@ package body GPR2.KB is
       for Comp of Selection loop
          Update_With_Compiler_Runtime (Runtime_Specific_KB, Comp);
          Compilers.Append (Comp);
+         Langs.Append (Comp.Language);
       end loop;
 
       Configuration_String := Runtime_Specific_KB.Generate_Configuration
-        (Compilers, String (Target), Messages);
+        (Compilers, String (Target), Langs, Messages);
 
       return Configuration_String;
 
@@ -1461,6 +1474,7 @@ package body GPR2.KB is
      (Self      : Object;
       Compilers : Compiler_Lists.List;
       Target    : String;
+      Langs     : Ordered_Languages;
       Errors    : in out Log.Object) return Unbounded_String
    is
       Project_Name      : constant String := "Default";
@@ -1546,6 +1560,7 @@ package body GPR2.KB is
                Packages,
                Compilers,
                To_String (Config.Config),
+               Langs,
                Config.Sloc,
                Errors);
          end if;
@@ -2408,6 +2423,7 @@ package body GPR2.KB is
       Packages   : in out String_Maps.Map;
       Compilers  : Compiler_Lists.List;
       Config     : String;
+      Langs      : Ordered_Languages;
       Error_Sloc : Source_Reference.Object;
       Errors     : in out Log.Object)
    is
@@ -2434,7 +2450,7 @@ package body GPR2.KB is
                       Find (Packages, Name);
          Replaced : constant String :=
                       Substitute_Variables_In_Configuration
-                        (Self, Chunk, Compilers, Error_Sloc, Errors);
+                        (Self, Chunk, Compilers, Langs, Error_Sloc, Errors);
       begin
          if Replaced /= "" then
             if Has_Element (C) then
@@ -3287,6 +3303,7 @@ package body GPR2.KB is
      (Self       : Object;
       Str        : String;
       Comps      : Compiler_Lists.List;
+      Langs      : Ordered_Languages;
       Error_Sloc : Source_Reference.Object;
       Messages   : in out Log.Object) return String
    is
@@ -3300,6 +3317,27 @@ package body GPR2.KB is
       --------------
 
       function Callback (Var_Name, Index : String) return String is
+
+         function Do_Subst (Lang : Language_Id) return String;
+         --  Performs substitution with a given language index
+
+         --------------
+         -- Do_Subst --
+         --------------
+
+         function Do_Subst (Lang : Language_Id) return String is
+         begin
+            for Comp of Comps loop
+               if Comp.Selected
+                 and then Comp.Language = Lang
+               then
+                  return Get_Variable_Value (Comp, Var_Name);
+               end if;
+            end loop;
+
+            return "";
+         end Do_Subst;
+
       begin
          if Var_Name = "GPRCONFIG_PREFIX" then
             return GPR_Executable_Prefix_Path;
@@ -3329,36 +3367,47 @@ package body GPR2.KB is
             end if;
 
          else
-            declare
-               Lang : constant Language_Id := +Name_Type (Index);
-            begin
-               for Comp of Comps loop
-                  if Comp.Selected
-                    and then Comp.Language = Lang
-                  then
-                     begin
-                        return Get_Variable_Value (Comp, Var_Name);
-                     exception
-                        when Ex : Invalid_KB =>
-                           Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 Ada.Exceptions.Exception_Message (Ex),
-                                 Sloc => Error_Sloc));
-                           raise Invalid_KB;
-                     end;
-                  end if;
+            if Index = "*" then
+               for Lang of Langs loop
+                  begin
+                     return Do_Subst (Lang);
+                  exception
+                     when Ex : Invalid_KB =>
+                        GNATCOLL.Traces.Trace
+                          (Main_Trace,
+                           Ada.Exceptions.Exception_Message (Ex)
+                           & " for language " & Image (Lang));
+                  end;
                end loop;
-            end;
-         end if;
 
-         return "";
+               Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "variable '" & Var_Name
+                     & "' is not defined for any language",
+                     Sloc => Error_Sloc));
+               raise Invalid_KB;
+            else
+               begin
+                  return Do_Subst (+Name_Type (Index));
+               exception
+                  when Ex : Invalid_KB =>
+                     Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           Ada.Exceptions.Exception_Message (Ex),
+                           Sloc => Error_Sloc));
+                     raise Invalid_KB;
+               end;
+            end if;
+         end if;
       end Callback;
 
       function Do_Substitute is new Substitute_Variables (Callback);
    begin
       return Do_Substitute (Str, Error_Sloc, Messages);
    end Substitute_Variables_In_Configuration;
+
    ---------------
    -- To_String --
    ---------------
