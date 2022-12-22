@@ -2938,6 +2938,13 @@ package body GPRinstall.Install is
                               (not Project.Is_Static_Library or else For_Dev),
             Executable => Project.Has_Mains);
 
+         if Copy = (Items => False) then
+            Put_Line
+              ("Nothing to be copied in mode "
+               & (if For_Dev then "developer" else "usage")
+               & " for this project");
+         end if;
+
          --  Copy all files from the project
 
          Copy_Files;
