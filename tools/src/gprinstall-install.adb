@@ -2902,6 +2902,7 @@ package body GPRinstall.Install is
 
             if Is_Project_To_Install or else Options.Verbose then
                Put (" project " & String (Project.Name));
+
                if -Options.Build_Name /= "default" then
                   Put (" - " & (-Options.Build_Name));
                end if;
