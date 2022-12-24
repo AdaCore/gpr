@@ -2902,6 +2902,7 @@ package body GPRinstall.Install is
 
             if Is_Project_To_Install or else Options.Verbose then
                Put (" project " & String (Project.Name));
+
                if -Options.Build_Name /= "default" then
                   Put (" - " & (-Options.Build_Name));
                end if;
@@ -2936,6 +2937,13 @@ package body GPRinstall.Install is
                             and then
                               (not Project.Is_Static_Library or else For_Dev),
             Executable => Project.Has_Mains);
+
+         if Copy = (Items => False) then
+            Put_Line
+              ("Nothing to be copied in mode "
+               & (if For_Dev then "developer" else "usage")
+               & " for this project");
+         end if;
 
          --  Copy all files from the project
 
