@@ -2807,7 +2807,7 @@ Examples of `gprls` Usage
       Checking configuration /my_path/obj/auto.cgpr
 
       GPRLS Pro 17.0 (20161010) (x86_64-unknown-linux-gnu)
-      Copyright (C) 2015-2016, AdaCore
+      Copyright (C) 2015-2023, AdaCore
 
       Source Search Path:
          <Current directory>
