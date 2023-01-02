@@ -1,5 +1,5 @@
 #
-#  Copyright (C) 2020-2022, AdaCore
+#  Copyright (C) 2020-2023, AdaCore
 #
 #  SPDX-License-Identifier: Apache-2.0
 #
