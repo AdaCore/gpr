@@ -1315,6 +1315,8 @@ package body GPR2.Project.Tree is
                            GPR2.File_Readers.No_File_Reader_Reference) is
    begin
       if not Filename.Is_Directory then
+         GPR2.Project.Parser.Clear_Cache;
+
          Self.Load
            (Project_Descriptor'(Project_Path, Filename),
             Context          => Context,
@@ -1327,6 +1329,8 @@ package body GPR2.Project.Tree is
             Implicit_With    => Implicit_With,
             Pre_Conf_Mode    => Pre_Conf_Mode,
             File_Reader      => File_Reader);
+
+         GPR2.Project.Parser.Clear_Cache;
       else
          --  Load an empty project in directory "Filename"
 
@@ -3516,9 +3520,7 @@ package body GPR2.Project.Tree is
       Full : Boolean := True) is
    begin
       if Full then
-         for V of Self.Views_Set loop
-            GPR2.Project.Parser.Clear_Cache (V.Path_Name);
-         end loop;
+         GPR2.Project.Parser.Clear_Cache;
       end if;
 
       Self.Self             := Undefined.Self;

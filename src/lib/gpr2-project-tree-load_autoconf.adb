@@ -508,6 +508,8 @@ is
    use Description_Set_Holders;
 
 begin
+   GPR2.Project.Parser.Clear_Cache;
+
    if GNAT_Prefix = "" then
       --  No GNAT, use default config only in current directory
 
@@ -595,6 +597,7 @@ begin
                                    (Self.Root.Path_Name.Value, 0, 0))));
             end if;
 
+            GPR2.Project.Parser.Clear_Cache;
             return;
          end if;
 
@@ -627,6 +630,7 @@ begin
             Self.Append_Message (M);
          end loop;
 
+         GPR2.Project.Parser.Clear_Cache;
          raise Project_Error with "cannot create configuration";
       end if;
 
@@ -654,6 +658,7 @@ begin
    if Default_Cfg.Exists then
       --  No need for reconfiguration if explicit default configuration
       --  project has been specified.
+      GPR2.Project.Parser.Clear_Cache;
       return;
    end if;
 
@@ -681,10 +686,12 @@ begin
 
       if Reconf_Status = Unchanged then
          --  Nothing changed, no need for reconfiguration
+         GPR2.Project.Parser.Clear_Cache;
          return;
       end if;
 
       if Reconf_Status = Incompatible then
+         GPR2.Project.Parser.Clear_Cache;
          raise Project_Error with "reconfiguration error";
       end if;
    end if;
@@ -712,4 +719,6 @@ begin
       Check_Shared_Lib => Check_Shared_Lib,
       Absent_Dir_Error => Absent_Dir_Error,
       Implicit_With    => Implicit_With);
+
+   GPR2.Project.Parser.Clear_Cache;
 end Load_Autoconf;

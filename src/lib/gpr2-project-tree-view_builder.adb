@@ -101,6 +101,8 @@ package body GPR2.Project.Tree.View_Builder is
                            GPR2.File_Readers.No_File_Reader_Reference)
    is
    begin
+      GPR2.Project.Parser.Clear_Cache;
+
       Self.Load ((Project_Definition, Project.Data),
                  Context          => Context,
                  Config           => Config,
@@ -112,6 +114,8 @@ package body GPR2.Project.Tree.View_Builder is
                  Implicit_With    => Implicit_With,
                  Pre_Conf_Mode    => Pre_Conf_Mode,
                  File_Reader      => File_Reader);
+
+      GPR2.Project.Parser.Clear_Cache;
    end Load;
 
    procedure Load_Autoconf
