@@ -1,3 +1,4 @@
+with Ada.Real_Time;     use Ada.Real_Time;
 with Ada.Command_Line;
 with Ada.Text_IO;
 
@@ -20,29 +21,6 @@ procedure Main is
       Db          : Build.Tree_Db.Object;
       Src_Count   : Natural := 0;
       Src_Count_2 : Natural := 0;
-
-      ---------------------
-      -- Print_Unit_Part --
-      ---------------------
-
-      procedure Print_Unit_Part
-        (Kind     : Unit_Kind;
-         View     : Project.View.Object;
-         Path     : Path_Name.Object;
-         Index    : Unit_Index;
-         Sep_Name : Optional_Name_Type)
-      is
-         Root : constant Path_Name.Object := Tree.Root_Project.Dir_Name;
-      begin
-         Ada.Text_IO.Put_Line
-           ("  " &
-            (if Kind = S_Spec then "spec: "
-               elsif Kind = S_Body then "body: "
-               else "sep. " & String (Sep_Name) & ": ")
-            & String (Path.Relative_Path (Root).Name)
-            & (if Index = No_Index then "" else " @" & Index'Image)
-            & " (from view " & String (View.Name) & ")");
-      end Print_Unit_Part;
 
       ------------------
       -- Print_Source --
@@ -199,48 +177,13 @@ procedure Main is
 
                Ada.Text_IO.New_Line;
 
-               for S of Db.View_Database (V).Sources (Sorted => True) loop
+               for S of Db.View_Database (V).Visible_Sources loop
                   Src_Count := Src_Count + 1;
                   Print_Source (S);
                end loop;
-
-               --  Check that unsorted list gives the same number of sources.
-               --  We can't print them out though as this would generate
-               --  non stable output.
-               for S of Db.View_Database (V).Sources (Sorted => False) loop
-                  Src_Count_2 := Src_Count_2 + 1;
-               end loop;
-
-               if Src_Count /= Src_Count_2 then
-                  Ada.Text_IO.Put_Line
-                    ("!!! ERROR: sorted and unsorted list of sources don't" &
-                       " have the same number of elements");
-               end if;
             end if;
          end;
       end loop;
-
-      Ada.Text_IO.New_Line;
-      Ada.Text_IO.Put_Line ("* Compilation units *");
-      Ada.Text_IO.New_Line;
-
-      if Tree.Root_Project.Kind = K_Aggregate then
-         for V of Tree.Root_Project.Aggregated loop
-            Ada.Text_IO.Put_Line ("units of subtree " & String (V.Name));
-
-            for U of Db.View_Database (V).Compilation_Units loop
-               Ada.Text_IO.Put_Line ("- " & String (U.Name));
-               U.For_All_Part (Print_Unit_Part'Access);
-            end loop;
-         end loop;
-      else
-         Ada.Text_IO.Put_Line ("units of " & String (Tree.Root_Project.Name));
-
-         for U of Db.View_Database (Tree.Root_Project).Compilation_Units loop
-            Ada.Text_IO.Put_Line ("- " & String (U.Name));
-            U.For_All_Part (Print_Unit_Part'Access);
-         end loop;
-      end if;
 
       Db.Unload;
       Tree.Unload;
