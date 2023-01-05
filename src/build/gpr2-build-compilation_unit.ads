@@ -38,6 +38,7 @@ package GPR2.Build.Compilation_Unit is
 
    function Name (Self : Object) return Name_Type
      with Pre => Self.Is_Defined;
+   --  Return the name of the compilation unit
 
    function Has_Part
      (Self : Object;
@@ -61,6 +62,8 @@ package GPR2.Build.Compilation_Unit is
       Sep_Name : Optional_Name_Type) return Unit_Location
      with Pre => Self.Is_Defined
                    and then (Sep_Name'Length = 0) = (Kind /= S_Separate);
+   --  Retrieve the unit part identified by Kind.
+   --  If kind is "separate", the separate name must be provided.
 
    procedure Remove
      (Self     : in out Object;
@@ -68,6 +71,8 @@ package GPR2.Build.Compilation_Unit is
       Sep_Name : Optional_Name_Type := "")
      with Pre => Self.Is_Defined
                    and then (Sep_Name'Length = 0) = (Kind /= S_Separate);
+   --  Remove unit part identified by Kind from the compilation unit.
+   --  If kind is separate, the separate name must be provided.
 
    function Spec (Self : Object) return Unit_Location
      with Pre => Self.Is_Defined and then Self.Has_Part (S_Spec);
@@ -95,6 +100,7 @@ package GPR2.Build.Compilation_Unit is
       Path  : Path_Name.Object;
       Index : Unit_Index := No_Index)
      with Pre => Self.Is_Defined;
+   --  Set or change the spec of the compilation unit
 
    procedure Update_Body
      (Self  : in out Object;
@@ -102,6 +108,7 @@ package GPR2.Build.Compilation_Unit is
       Path  : Path_Name.Object;
       Index : Unit_Index := No_Index)
      with Pre => Self.Is_Defined;
+   --  Set or change the body of the compilation unit
 
    procedure Add_Separate
      (Self  : in out Object;
@@ -110,17 +117,21 @@ package GPR2.Build.Compilation_Unit is
       Path  : Path_Name.Object;
       Index : Unit_Index := No_Index)
      with Pre => Self.Is_Defined;
+   --  Add a separate unit for the compilation unit
 
    procedure Remove_Spec (Self : in out Object)
      with Pre => Self.Is_Defined and then Self.Has_Part (S_Spec);
+   --  Remove the spec of the compilation unit
 
    procedure Remove_Body (Self : in out Object)
      with Pre => Self.Is_Defined and then Self.Has_Part (S_Body);
+   --  Remove the body of the compilation unit
 
    procedure Remove_Separate
      (Self : in out Object;
       Name : Name_Type)
      with Pre => Self.Is_Defined and then Self.Has_Part (S_Separate);
+   --  Remove the specified separate unit of the compilation unit
 
    procedure For_All_Part
      (Self : Object;
