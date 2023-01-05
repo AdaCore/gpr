@@ -13,7 +13,6 @@ def build():
     anod_build("gnatall")
     anod_build("libgpr2", qualifier="bare")
     anod_build("libgpr2")
-    anod_build("gpr-unit-provider")
     anod_build("gpr2-bindings")
     anod_build("aws-lib")
 
@@ -26,9 +25,6 @@ def setup():
     anod_install("stable-gprbuild")
     anod_install("gcc")
     anod_install("stable-langkit")
-    # gpr-unit-provider
-    anod_install("langkit_support")
-    anod_install("libadalang")
     # gprbuild, gnat
     anod_install("libadalang-tools")
     anod_install("gdb")
@@ -38,7 +34,6 @@ def test():
     testgpr2()
     testgprbuild()
     testgpr2ls()
-    anod_test("gpr-unit-provider")
     anod_test("gpr2-bindings")
 
 def testgpr2():
