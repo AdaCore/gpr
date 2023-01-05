@@ -736,11 +736,13 @@ pattern (regular expression). Elements in the list matching the
 pattern will be removed from the list.
 
   ::
+
       List := ("value1", "or", "another", "one");
 
 Example removing all values containing the letter 'o':
 
   ::
+
       Filter_Out (List, ".*o.*")
 
       => ("value1")
@@ -748,6 +750,7 @@ Example removing all values containing the letter 'o':
 Example removing all values:
 
   ::
+
       Filter_Out (List, ".*")
 
       => ()
@@ -769,6 +772,7 @@ the list. If the number is negative it is an index starting from the
 end of the list. That is, "-1" is the last list item.
 
   ::
+
       List := ("one", "two", "three", "last");
 
       Item_At (List, "2")
@@ -803,6 +807,7 @@ Example:
 Example with a list:
 
   ::
+
       List := ("One", "Two");
 
       Lower (List)
@@ -835,6 +840,7 @@ Example:
 Example with a list and a replacement pattern:
 
   ::
+
       List := ("value1", "or", "another", "one");
 
       Match (List, "(.*r)", "r:\1")
@@ -955,6 +961,7 @@ Example:
 Example with a list:
 
   ::
+
       List := ("One", "Two");
 
       Upper (List)
