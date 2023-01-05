@@ -320,15 +320,18 @@ package body GPR2.Build.View_Tables is
    -------------------
 
    procedure Remove_Source
-     (Data       : in out View_Data;
-      View_Owner : GPR2.Project.View.Object;
-      Path       : GPR2.Path_Name.Object)
+     (Data            : in out View_Data;
+      View_Owner      : GPR2.Project.View.Object;
+      Path            : GPR2.Path_Name.Object;
+      Extended_View   : GPR2.Project.View.Object;
+      Aggregated_View : GPR2.Project.View.Object)
    is
       Basename : constant Simple_Name := Path.Simple_Name;
       C_Overload : Basename_Source_List_Maps.Cursor;
       Proxy    : constant Source_Proxy := (View      => View_Owner,
                                            Path_Name => Path,
-                                           others    => <>);
+                                           Inh_From  => Extended_View,
+                                           Agg_From  => Aggregated_View);
 
    begin
       C_Overload := Data.Overloaded_Srcs.Find (Basename);
@@ -440,9 +443,7 @@ package body GPR2.Build.View_Tables is
                       View_Db.Src_Infos (Src.Path_Name);
 
       begin
-         if Src_Info.Has_Units
-           and then not Data.View.Is_Extended
-         then
+         if Src_Info.Has_Units and then not Data.View.Is_Extended then
             for U of Src_Info.Units loop
                for Root of Src.View.Namespace_Roots loop
                   Remove_Unit_Part
@@ -458,7 +459,9 @@ package body GPR2.Build.View_Tables is
             Remove_Source
               (Get_Data (Data.Tree_Db, Data.View.Extending),
                Src.View,
-               Src.Path_Name);
+               Src.Path_Name,
+               Extended_View   => Data.View,
+               Aggregated_View => Project.View.Undefined);
          end if;
       end Propagate_Visible_Source_Removal;
 
