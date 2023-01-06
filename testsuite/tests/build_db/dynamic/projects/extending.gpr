@@ -1,0 +1,8 @@
+project Extending extends "base.gpr" is
+
+   for Languages use ("Ada", "C");
+
+   for Source_Dirs use ("ext");
+   for Object_Dir use "obj_ext";
+
+end Extending;

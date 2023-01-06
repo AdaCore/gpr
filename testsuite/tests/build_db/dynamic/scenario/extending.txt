@@ -1,0 +1,37 @@
+mkdir src
+mkdir ext
+mkdir obj_ext
+copy ../projects/base.gpr .
+copy ../projects/extending.gpr .
+load extending.gpr
+dump
+
+create_spec Pkg src/pkg.ads
+create_body Pkg src/pkg.adb
+create_separate Pkg Sub src/pkg-sub.adb
+refresh
+dump
+
+# Overload the separate in the extending project
+create_separate Pkg Sub ext/pkg-sub.adb
+refresh
+dump
+
+# And remove it afterwards: CU should be updated
+remove ext/pkg-sub.adb
+refresh
+dump
+
+# Now remove from the extended project: extending should be updated
+# accordingly
+remove src/pkg-sub.adb
+refresh
+dump
+
+# move extended pkg.adb to extending project
+create_body Pkg ext/pkg.adb
+remove src/pkg.adb
+refresh
+dump
+
+unload
