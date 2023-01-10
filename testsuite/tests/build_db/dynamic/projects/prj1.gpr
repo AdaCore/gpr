@@ -1,0 +1,5 @@
+project Prj1 is
+
+   for Source_Dirs use ("src1");
+
+end Prj1;

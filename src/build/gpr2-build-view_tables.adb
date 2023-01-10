@@ -599,20 +599,39 @@ package body GPR2.Build.View_Tables is
                        " is found in several extended projects",
                      Source_Reference.Create
                        (Data.View.Path_Name.Value, 0, 0)));
-               Tree.Append_Message
-                 (Message.Create
-                    (Message.Error,
-                     C.Path_Name.Value,
-                     Source_Reference.Create
-                       (C.View.Path_Name.Value, 0, 0),
-                     Indent => 1));
-               Tree.Append_Message
-                 (Message.Create
-                    (Message.Error,
-                     Candidate.Path_Name.Value,
-                     Source_Reference.Create
-                       (Candidate.View.Path_Name.Value, 0, 0),
-                     Indent => 1));
+               declare
+                  P1, P2 : GPR2.Path_Name.Object;
+                  V1, V2 : GPR2.Path_Name.Object;
+               begin
+                  --  Use alphabetical sort to have consistent output.
+                  --  This is in particular important when comparing test
+                  --  output.
+
+                  if C.Path_Name < Candidate.Path_Name then
+                     P1 := C.Path_Name;
+                     V1 := C.View.Path_Name;
+                     P2 := Candidate.Path_Name;
+                     V2 := Candidate.View.Path_Name;
+                  else
+                     P1 := Candidate.Path_Name;
+                     V1 := Candidate.View.Path_Name;
+                     P2 := C.Path_Name;
+                     V2 := C.View.Path_Name;
+                  end if;
+
+                  Tree.Append_Message
+                    (Message.Create
+                       (Message.Error,
+                        P1.Value,
+                        Source_Reference.Create (V1.Value, 0, 0),
+                        Indent => 1));
+                  Tree.Append_Message
+                    (Message.Create
+                       (Message.Error,
+                        P2.Value,
+                        Source_Reference.Create (V2.Value, 0, 0),
+                        Indent => 1));
+               end;
 
                Candidate := No_Proxy;
 

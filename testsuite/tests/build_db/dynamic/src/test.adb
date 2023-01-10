@@ -68,89 +68,14 @@ package body Test is
       end Print_Source;
 
    begin
-      --  Ada.Text_IO.New_Line;
-      --  Ada.Text_IO.Put_Line ("* Views *");
-      --  Ada.Text_IO.New_Line;
-      --
-      --  for C in Tree.Iterate loop
-      --     declare
-      --        V : constant Project.View.Object := Project.Tree.Element (C);
-      --        First : Boolean;
-      --     begin
-      --        Ada.Text_IO.Put_Line
-      --          ("** " & String (V.Name) & " (" & V.Kind'Image & ") **");
-      --
-      --        First := True;
-      --
-      --        if V.Kind = K_Aggregate then
-      --           for Agg of V.Aggregated loop
-      --              if First then
-      --                 Ada.Text_IO.Put_Line ("- Aggregated project(s):");
-      --                 First := False;
-      --              end if;
-      --
-      --              Ada.Text_IO.Put_Line ("  - " & String (Agg.Name));
-      --           end loop;
-      --
-      --        else
-      --           First := True;
-      --
-      --           for Root of V.Namespace_Roots loop
-      --              if First then
-      --                 Ada.Text_IO.Put_Line ("- Root project(s):");
-      --                 First := False;
-      --              end if;
-      --
-      --              Ada.Text_IO.Put_Line ("  - " & String (Root.Name));
-      --           end loop;
-      --
-      --           if V.Kind = K_Aggregate_Library then
-      --              First := True;
-      --
-      --              for Agg of V.Aggregated loop
-      --                 if First then
-      --                    Ada.Text_IO.Put_Line ("- Aggregated by:");
-      --                    First := False;
-      --                 end if;
-      --
-      --                 Ada.Text_IO.Put_Line ("  - " & String (Agg.Name));
-      --              end loop;
-      --           end if;
-      --
-      --           if V.Is_Aggregated_In_Library then
-      --              First := True;
-      --
-      --              for Agg of V.Aggregate_Libraries loop
-      --                 if First then
-      --                    Ada.Text_IO.Put_Line ("- Aggregated in library:");
-      --                    First := False;
-      --                 end if;
-      --
-      --                 Ada.Text_IO.Put_Line ("  - " & String (Agg.Name));
-      --              end loop;
-      --           end if;
-      --
-      --           if V.Is_Extending then
-      --              Ada.Text_IO.Put ("- Extends");
-      --
-      --              if V.Is_Extending_All then
-      --                 Ada.Text_IO.Put_Line (" all:");
-      --              end if;
-      --
-      --              Ada.Text_IO.Put_Line ("  - " & String (V.Extended_Root.Name));
-      --           end if;
-      --        end if;
-      --     end;
-      --  end loop;
-      --
-      --  Ada.Text_IO.New_Line;
       Ada.Text_IO.Put_Line ("* Sources:");
 
       for C in Tree.Iterate loop
          declare
             V : constant Project.View.Object := Project.Tree.Element (C);
+            Has_Sources : Boolean := False;
          begin
-            if V.Kind in GPR2.With_Object_Dir_Kind then
+            if V.Kind in GPR2.With_Source_Dirs_Kind then
                Ada.Text_IO.Put (" - sources of " & String (V.Name));
 
                if V.Is_Extended then
@@ -162,7 +87,12 @@ package body Test is
 
                for S of Db.View_Database (V).Sources (Sorted => True) loop
                   Print_Source (S);
+                  Has_Sources := True;
                end loop;
+
+               if not Has_Sources then
+                  Ada.Text_IO.Put_Line ("   (no sources)");
+               end if;
             end if;
          end;
       end loop;
