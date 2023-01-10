@@ -52,7 +52,8 @@ package GPR2.Build.Compilation_Unit is
       View     : GPR2.Project.View.Object;
       Path     : GPR2.Path_Name.Object;
       Index    : Unit_Index := No_Index;
-      Sep_Name : Optional_Name_Type := "")
+      Sep_Name : Optional_Name_Type := "";
+      Success  : out Boolean)
      with Pre => Self.Is_Defined
                    and then (Sep_Name'Length = 0) = (Kind /= S_Separate);
 
@@ -68,6 +69,9 @@ package GPR2.Build.Compilation_Unit is
    procedure Remove
      (Self     : in out Object;
       Kind     : Unit_Kind;
+      View     : GPR2.Project.View.Object;
+      Path     : GPR2.Path_Name.Object;
+      Index    : Unit_Index := No_Index;
       Sep_Name : Optional_Name_Type := "")
      with Pre => Self.Is_Defined
                    and then (Sep_Name'Length = 0) = (Kind /= S_Separate);
@@ -94,45 +98,6 @@ package GPR2.Build.Compilation_Unit is
                             or else Self.Has_Part (S_Body));
    --  Returns the body of the compilation unit if it exists, or the spec
 
-   procedure Update_Spec
-     (Self  : in out Object;
-      View  : Project.View.Object;
-      Path  : Path_Name.Object;
-      Index : Unit_Index := No_Index)
-     with Pre => Self.Is_Defined;
-   --  Set or change the spec of the compilation unit
-
-   procedure Update_Body
-     (Self  : in out Object;
-      View  : Project.View.Object;
-      Path  : Path_Name.Object;
-      Index : Unit_Index := No_Index)
-     with Pre => Self.Is_Defined;
-   --  Set or change the body of the compilation unit
-
-   procedure Add_Separate
-     (Self  : in out Object;
-      Name  : Name_Type;
-      View  : Project.View.Object;
-      Path  : Path_Name.Object;
-      Index : Unit_Index := No_Index)
-     with Pre => Self.Is_Defined;
-   --  Add a separate unit for the compilation unit
-
-   procedure Remove_Spec (Self : in out Object)
-     with Pre => Self.Is_Defined and then Self.Has_Part (S_Spec);
-   --  Remove the spec of the compilation unit
-
-   procedure Remove_Body (Self : in out Object)
-     with Pre => Self.Is_Defined and then Self.Has_Part (S_Body);
-   --  Remove the body of the compilation unit
-
-   procedure Remove_Separate
-     (Self : in out Object;
-      Name : Name_Type)
-     with Pre => Self.Is_Defined and then Self.Has_Part (S_Separate);
-   --  Remove the specified separate unit of the compilation unit
-
    procedure For_All_Part
      (Self : Object;
       Action : access procedure
@@ -149,11 +114,21 @@ package GPR2.Build.Compilation_Unit is
 
 private
 
+   type Clashing_Unit (Sep_Name_Len : Natural) is record
+      Loc : Unit_Location;
+      Kind : Unit_Kind;
+      Sep_Name : Optional_Name_Type (1 .. Sep_Name_Len);
+   end record;
+
+   package Duplicates_List is new Ada.Containers.Indefinite_Vectors
+     (Positive, Clashing_Unit);
+
    type Object is tagged record
-      Name      : Unbounded_String;
-      Spec      : Unit_Location;
-      Implem    : Unit_Location;
-      Separates : Separate_Maps.Map;
+      Name       : Unbounded_String;
+      Spec       : Unit_Location;
+      Implem     : Unit_Location;
+      Separates  : Separate_Maps.Map;
+      Duplicates : Duplicates_List.Vector;
    end record;
 
    Undefined : constant Object := (others => <>);
