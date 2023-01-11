@@ -61,8 +61,20 @@ package GPR2.Build.View_Db is
    --  Get the complete list of visible sources: so sources owned by the view
    --  but also all sources made visible by withed or limited withed views.
 
+   function Has_Compilation_Unit
+     (Self : Object;
+      Name : Name_Type) return Boolean
+     with Pre => Self.Is_Defined and then Self.View.Is_Namespace_Root;
+   --  Whether the compilation unit is defined in the namespace
+
+   function Compilation_Unit
+     (Self : Object;
+      Name : Name_Type) return Compilation_Unit.Object
+     with Pre => Self.Has_Compilation_Unit (Name);
+   --  Return the compilation unit named "Name".
+
    function Compilation_Units
-     (Self : Object) return Compilation_Unit.Maps.Map
+     (Self : Object) return Build.Compilation_Unit.Maps.Map
      with Pre => Self.Is_Defined and then Self.View.Is_Namespace_Root;
 
    function View (Self : Object) return GPR2.Project.View.Object

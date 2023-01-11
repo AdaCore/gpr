@@ -9,6 +9,7 @@ with Ada.Iterator_Interfaces;
 
 private with Ada.Containers.Indefinite_Ordered_Maps;
 
+limited with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.Source_Reference.Value;
@@ -162,9 +163,10 @@ package GPR2.Build.Source_Info is
       Kind             : Unit_Kind;
       Timestamp        : Ada.Calendar.Time;
       View             : GPR2.Project.View.Object;
+      Tree_Db          : access GPR2.Build.Tree_Db.Object;
       Naming_Exception : Naming_Exception_Kind;
       Source_Ref       : Source_Reference.Value.Object;
-      Aggregated       : Project.View.Object := Project.View.Undefined)
+      Is_Compilable    : Boolean := False)
       return Object
      with Pre  => Filename.Is_Defined and then Language /= Ada_Language,
           Post => Create'Result.Is_Defined;
@@ -174,10 +176,10 @@ package GPR2.Build.Source_Info is
      (Filename         : GPR2.Path_Name.Object;
       Timestamp        : Ada.Calendar.Time;
       View             : GPR2.Project.View.Object;
+      Tree_Db          : access GPR2.Build.Tree_Db.Object;
       Naming_Exception : Naming_Exception_Kind;
       Source_Ref       : Source_Reference.Value.Object;
-      Units            : Unit_List'Class;
-      Aggregated       : Project.View.Object := Project.View.Undefined)
+      Units            : Unit_List'Class)
       return Object
      with Pre  => Filename.Is_Defined,
           Post => Create_Ada'Result.Is_Defined;
@@ -268,22 +270,15 @@ package GPR2.Build.Source_Info is
                   or else Self.Has_Single_Unit;
    --  Returns all compilation units for self
 
-   --  function Is_Implementation_Required
-   --    (Self : Object; Index : Unit_Index) return Boolean
-   --    with Pre => Self.Is_Defined
-   --                and then Self.Has_Unit_At (Index);
-   --  Returns True if the source for the implementation is required for the
-   --  compilation. This is the case for a generic package or a package having
-   --  inlined routines.
-
-   --  function Is_Aggregated (Self : Object) return Boolean
-   --    with Pre => Self.Is_Defined;
-   --  Returns True if the source is taken into aggregating library source set
-   --  from the aggregated project.
-
-   --  function Aggregated (Self : Object) return Project.View.Object
-   --    with Pre  => Self.Is_Defined;
-   --  The view where the source is aggregated from
+   function Is_Compilation_Input
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Whether this source is used as input for a compilation:
+   --  - for Ada, the body of a compilation unit, or the spec if there's no
+   --    body
+   --  - for the other compiled languages, the body
+   --  - always returns False if the source's language has to compiler driver
 
    function Has_Naming_Exception (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -359,6 +354,8 @@ private
    type Object is tagged record
       View              : Project.View.Object;
       --  View that owns the source
+      Db                : access Build.Tree_Db.Object;
+      --  The view's build database
       Path_Name         : GPR2.Path_Name.Object;
       --  Source path
       Modification_Time : Calendar.Time := No_Time;
@@ -369,12 +366,13 @@ private
       --  Source library unit kind in case the language is not unit-based
       CU_List           : Unit_List;
       --  Source's units in case of unit-based language
-      Aggregated        : Project.View.Object;
-      --  View where the source is aggregated from
       Inherited         : Boolean := False;
       --  Whether the source has been inherited by project extension
       Naming_Exception  : Naming_Exception_Kind := No;
       --  Whether a naming exception concerns this source
+      Is_Compilable     : Boolean := False;
+      --  Whether the source can be compiled (e.g. we need a compiler to
+      --  build a source for the specified language)
       SR                : GPR2.Source_Reference.Value.Object;
       --  The value of Source_Dirs responsible for loading this value
    end record;
@@ -426,5 +424,6 @@ private
 
    function Source_Reference
      (Self : Object) return GPR2.Source_Reference.Value.Object is
-      (Self.SR);
+     (Self.SR);
+
 end GPR2.Build.Source_Info;

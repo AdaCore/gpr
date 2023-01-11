@@ -7,6 +7,10 @@
 with Interfaces.C;
 with Ada.Calendar.Conversions;
 
+with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Tree_Db;
+with GPR2.Build.View_Db;
+
 package body GPR2.Build.Source_Info is
 
    type Unit_Iterator is new Unit_Iterators.Forward_Iterator with record
@@ -50,29 +54,6 @@ package body GPR2.Build.Source_Info is
          pragma Assert (Done);
       end if;
    end Add_Unit;
-
-   --  ----------------
-   --  -- Check_Unit --
-   --  ----------------
-   --
-   --  function Check_Unit
-   --    (Self : Object;
-   --     Name : Name_Type;
-   --     Spec : Boolean;
-   --     Unit : out GPR2.Unit.Object) return Boolean
-   --  is
-   --  begin
-   --     for CU of Self.CU_List loop
-   --        if (CU.Kind in GPR2.Unit.Spec_Kind) = Spec
-   --          and then CU.Name = Name
-   --        then
-   --           Unit := CU;
-   --           return True;
-   --        end if;
-   --     end loop;
-   --
-   --     return False;
-   --  end Check_Unit;
 
    ------------------------
    -- Constant_Reference --
@@ -120,22 +101,24 @@ package body GPR2.Build.Source_Info is
       Kind             : Unit_Kind;
       Timestamp        : Ada.Calendar.Time;
       View             : GPR2.Project.View.Object;
+      Tree_Db          : access GPR2.Build.Tree_Db.Object;
       Naming_Exception : Naming_Exception_Kind;
       Source_Ref       : GPR2.Source_Reference.Value.Object;
-      Aggregated       : Project.View.Object := Project.View.Undefined)
+      Is_Compilable    : Boolean := False)
       return Object
    is
    begin
       return
-        (View              => View,
+        (Db                => Tree_Db,
+         View              => View,
          Path_Name         => Filename,
          Modification_Time => Timestamp,
          Language          => Language,
          Kind              => Kind,
          CU_List           => Empty_List,
-         Aggregated        => Aggregated,
          Inherited         => False,
          Naming_Exception  => Naming_Exception,
+         Is_Compilable     => Is_Compilable,
          SR                => Source_Ref);
    end Create;
 
@@ -147,23 +130,24 @@ package body GPR2.Build.Source_Info is
      (Filename         : GPR2.Path_Name.Object;
       Timestamp        : Ada.Calendar.Time;
       View             : GPR2.Project.View.Object;
+      Tree_Db          : access GPR2.Build.Tree_Db.Object;
       Naming_Exception : Naming_Exception_Kind;
       Source_Ref       : GPR2.Source_Reference.Value.Object;
-      Units            : Unit_List'Class;
-      Aggregated       : Project.View.Object := Project.View.Undefined)
+      Units            : Unit_List'Class)
       return Object
    is
    begin
       return
-        (View              => View,
+        (Db                => Tree_Db,
+         View              => View,
          Path_Name         => Filename,
          Modification_Time => Timestamp,
          Language          => Ada_Language,
          Kind              => <>,
          CU_List           => Unit_List (Units),
-         Aggregated        => Aggregated,
          Inherited         => False,
          Naming_Exception  => Naming_Exception,
+         Is_Compilable     => True,
          SR                => Source_Ref);
    end Create_Ada;
 
@@ -202,17 +186,45 @@ package body GPR2.Build.Source_Info is
       end if;
    end Insert;
 
-   --------------------------------
-   -- Is_Implementation_Required --
-   --------------------------------
+   --------------------------
+   -- Is_Compilation_Input --
+   --------------------------
 
-   --  function Is_Implementation_Required
-   --    (Self : Object; Index : Unit_Index) return Boolean
-   --  is
-   --  begin
-   --     return Self.CU_List
-   --       (Index).Is_Flag_Set (GPR2.Unit.Body_Needed_For_SAL);
-   --  end Is_Implementation_Required;
+   function Is_Compilation_Input
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return Boolean
+   is
+   begin
+      if Self.Has_Units then
+         case Self.Unit (Index).Kind is
+            when S_Body =>
+               return True;
+
+            when S_Separate =>
+               return False;
+
+            when S_Spec =>
+               --  Check if the compilation unit has a body or has only a spec
+               declare
+                  Root_Db : constant GPR2.Build.View_Db.Object :=
+                              Self.Db.View_Database
+                                (Self.View.Namespace_Roots.First_Element);
+                  CU      : constant GPR2.Build.Compilation_Unit.Object :=
+                              Root_Db.Compilation_Unit
+                                (Self.Unit (Index).Unit_Name);
+               begin
+                  return not CU.Has_Part (S_Body);
+               end;
+         end case;
+
+      else
+         return Self.Is_Compilable and then Self.Kind = S_Body;
+      end if;
+   end Is_Compilation_Input;
+
+   -------------
+   -- Iterate --
+   -------------
 
    function Iterate
      (Self : Unit_List) return Unit_Iterators.Forward_Iterator'Class

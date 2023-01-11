@@ -18,20 +18,43 @@ package body GPR2.Build.View_Db is
    is (Inst.Get);
    --  Extracts a reference to view_tables data from a View_Base instance
 
+   ----------------------
+   -- Compilation_Unit --
+   ----------------------
+
+   function Compilation_Unit
+     (Self : Object;
+      Name : Name_Type) return Build.Compilation_Unit.Object is
+   begin
+      return Ref (Self).CUs.Element (Name);
+   end Compilation_Unit;
+
    -----------------------
    -- Compilation_Units --
    -----------------------
 
    function Compilation_Units
-     (Self : Object) return Compilation_Unit.Maps.Map is
+     (Self : Object) return Build.Compilation_Unit.Maps.Map is
    begin
-      return Result : Compilation_Unit.Maps.Map do
+      return Result : Build.Compilation_Unit.Maps.Map do
          for C in Ref (Self).CUs.Iterate loop
             Result.Insert (Compilation_Unit_Maps.Key (C),
                            Compilation_Unit_Maps.Element (C));
          end loop;
       end return;
    end Compilation_Units;
+
+   --------------------------
+   -- Has_Compilation_Unit --
+   --------------------------
+
+   function Has_Compilation_Unit
+     (Self : Object;
+      Name : Name_Type) return Boolean
+   is
+   begin
+      return Ref (Self).CUs.Contains (Name);
+   end Has_Compilation_Unit;
 
    ----------------
    -- Has_Source --
