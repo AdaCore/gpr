@@ -829,9 +829,8 @@ package body Update_Sources_List is
                if Src_Info_Maps.Has_Element (C) then
                   --  File was a source and has disapeared: notify the build
                   --  db object to cleanup tables.
-                  Remove_Source (Data, Data.View, F.Path,
-                                 Project.View.Undefined,
-                                 Project.View.Undefined);
+                  Remove_Source
+                    (Data, Data.View, F.Path, Project.View.Undefined);
                end if;
             end;
          end if;
@@ -856,8 +855,7 @@ package body Update_Sources_List is
                   --  First add source to Data view.
                   Add_Source
                     (Data, Data.View, F.Path,
-                     Extended_View   => Project.View.Undefined,
-                     Aggregated_View => Project.View.Undefined);
+                     Extended_View   => Project.View.Undefined);
                end if;
 
             elsif File_Sets.Element (C).Stamp /= F.Stamp then

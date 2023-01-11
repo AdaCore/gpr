@@ -91,7 +91,6 @@ private package GPR2.Build.View_Tables is
       View      : GPR2.Project.View.Object;
       Path_Name : GPR2.Path_Name.Object;
       Inh_From  : GPR2.Project.View.Object;
-      Agg_From  : GPR2.Project.View.Object;
    end record;
 
    No_Proxy : constant Source_Proxy := (others => <>);
@@ -160,18 +159,16 @@ private package GPR2.Build.View_Tables is
    end record;
 
    procedure Add_Source
-     (Data            : in out View_Data;
-      View_Owner      : GPR2.Project.View.Object;
-      Path            : GPR2.Path_Name.Object;
-      Extended_View   : GPR2.Project.View.Object;
-      Aggregated_View : GPR2.Project.View.Object);
+     (Data          : in out View_Data;
+      View_Owner    : GPR2.Project.View.Object;
+      Path          : GPR2.Path_Name.Object;
+      Extended_View : GPR2.Project.View.Object);
 
    procedure Remove_Source
-     (Data            : in out View_Data;
-      View_Owner      : GPR2.Project.View.Object;
-      Path            : GPR2.Path_Name.Object;
-      Extended_View   : GPR2.Project.View.Object;
-      Aggregated_View : GPR2.Project.View.Object);
+     (Data          : in out View_Data;
+      View_Owner    : GPR2.Project.View.Object;
+      Path          : GPR2.Path_Name.Object;
+      Extended_View : GPR2.Project.View.Object);
 
    procedure Refresh (Data : in out View_Data);
 

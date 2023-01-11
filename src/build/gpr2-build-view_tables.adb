@@ -61,19 +61,17 @@ package body GPR2.Build.View_Tables is
    ----------------
 
    procedure Add_Source
-     (Data            : in out View_Data;
-      View_Owner      : GPR2.Project.View.Object;
-      Path            : GPR2.Path_Name.Object;
-      Extended_View   : GPR2.Project.View.Object;
-      Aggregated_View : GPR2.Project.View.Object)
+     (Data          : in out View_Data;
+      View_Owner    : GPR2.Project.View.Object;
+      Path          : GPR2.Path_Name.Object;
+      Extended_View : GPR2.Project.View.Object)
    is
       C_Overload : Basename_Source_List_Maps.Cursor;
       Done       : Boolean;
       Proxy      : constant Source_Proxy :=
                      (View      => View_Owner,
                       Path_Name => Path,
-                      Inh_From  => Extended_View,
-                      Agg_From  => Aggregated_View);
+                      Inh_From  => Extended_View);
 
    begin
       Data.Overloaded_Srcs.Insert (Path.Simple_Name,
@@ -351,18 +349,16 @@ package body GPR2.Build.View_Tables is
    -------------------
 
    procedure Remove_Source
-     (Data            : in out View_Data;
-      View_Owner      : GPR2.Project.View.Object;
-      Path            : GPR2.Path_Name.Object;
-      Extended_View   : GPR2.Project.View.Object;
-      Aggregated_View : GPR2.Project.View.Object)
+     (Data          : in out View_Data;
+      View_Owner    : GPR2.Project.View.Object;
+      Path          : GPR2.Path_Name.Object;
+      Extended_View : GPR2.Project.View.Object)
    is
       Basename : constant Simple_Name := Path.Simple_Name;
       C_Overload : Basename_Source_List_Maps.Cursor;
       Proxy    : constant Source_Proxy := (View      => View_Owner,
                                            Path_Name => Path,
-                                           Inh_From  => Extended_View,
-                                           Agg_From  => Aggregated_View);
+                                           Inh_From  => Extended_View);
 
    begin
       C_Overload := Data.Overloaded_Srcs.Find (Basename);
@@ -436,12 +432,12 @@ package body GPR2.Build.View_Tables is
 
       begin
          if Data.View.Is_Extended then
+            --  ??? Check the view's list of excluded sources before doing that
             Add_Source
               (Get_Data (Data.Tree_Db, Data.View.Extending),
                Src.View,
                Src.Path_Name,
-               Extended_View   => Data.View,
-               Aggregated_View => Project.View.Undefined);
+               Extended_View   => Data.View);
          end if;
 
          if Src_Info.Has_Units
@@ -499,8 +495,7 @@ package body GPR2.Build.View_Tables is
               (Get_Data (Data.Tree_Db, Data.View.Extending),
                Src.View,
                Src.Path_Name,
-               Extended_View   => Data.View,
-               Aggregated_View => Project.View.Undefined);
+               Extended_View => Data.View);
          end if;
       end Propagate_Visible_Source_Removal;
 
