@@ -19,6 +19,7 @@ package body GPR2.Build.Tree_Db is
    begin
 
       Self.Self := Self'Unrestricted_Access;
+      Self.Tree := Tree'Unrestricted_Access;
 
       --  Source files are propagated from the source owner (e.g. the view that
       --  defines the source directory where we found the source) to
@@ -42,12 +43,21 @@ package body GPR2.Build.Tree_Db is
          end if;
       end loop;
 
-      for V of Tree.Ordered_Views loop
+      Self.Refresh;
+   end Load;
+
+   -------------
+   -- Refresh --
+   -------------
+
+   procedure Refresh (Self : in out Object) is
+   begin
+      for V of Self.Tree.Ordered_Views loop
          if V.Kind in With_Object_Dir_Kind then
             View_Tables.Refresh (View_Tables.Get_Data (Self.Self, V));
          end if;
       end loop;
-   end Load;
+   end Refresh;
 
    ------------
    -- Unload --

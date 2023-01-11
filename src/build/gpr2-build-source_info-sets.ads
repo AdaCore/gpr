@@ -18,7 +18,7 @@ with Ada.Iterator_Interfaces;
 
 with GPR2.Build.View_Db;
 
-private with Ada.Containers.Ordered_Sets;
+private with Ada.Containers.Indefinite_Ordered_Maps;
 private with GPR2.Build.View_Tables;
 
 package GPR2.Build.Source_Info.Sets is
@@ -30,10 +30,21 @@ package GPR2.Build.Source_Info.Sets is
 
    Empty_Set : constant Object;
 
-   function Is_Empty (Self : Object) return Boolean;
+   type Source_Set_Option is
+     (Unsorted,
+      --  Iterate over the view db's hashed map: result is fast but unsorted
+      Sorted,
+      --  Use a local sorted container: more memory footprint but result is
+      --  sorted
+      Recurse
+      --  Lookup the view's sources together with the view's visibility
+      --  closure. Has to use a local container, so the result will be also
+      --  sorted alphabetically.
+     );
 
-   function Create (Db : Build.View_Db.Object;
-                    Sorted : Boolean := False) return Object;
+   function Create
+     (Db     : Build.View_Db.Object;
+      Option : Source_Set_Option := Unsorted) return Object;
    --  Create a source iterator set representing the sources stored in the
    --  view db object.
    --  If sorted is set, the iterated list is sorted alphabetically (but doing
@@ -67,16 +78,23 @@ private
 
    use GPR2.Build.View_Tables;
 
-   package Path_Name_Sets is new Ada.Containers.Ordered_Sets
-     (GPR2.Path_Name.Object,
-      "<" => GPR2.Path_Name."<",
-      "=" => GPR2.Path_Name."=");
+   package Path_Source_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (Simple_Name,
+      GPR2.Build.View_Tables.Source_Proxy,
+      "<" => GPR2."<",
+      "=" => GPR2.Build.View_Tables."=");
 
-   type Cursor is record
+   type Cursor (From_View_Db : Boolean := False) is record
       Db            : Build.View_Db.Object;
-      Sort          : Boolean := False;
-      Current_Src   : Basename_Source_Maps.Cursor;
-      Current_Path  : Path_Name_Sets.Cursor;
+
+      case From_View_Db is
+         when True =>
+            --  we iterate directly the view db's "Sources" list
+            Current_Src   : Basename_Source_Maps.Cursor;
+         when False =>
+            --  we iterate the list in the iterator
+            Current_Path  : Path_Source_Maps.Cursor;
+      end case;
    end record;
 
    No_Element : constant Cursor := (others => <>);
@@ -87,10 +105,31 @@ private
    end record;
 
    type Object is tagged record
-      Db   : Build.View_Db.Object;
-      Sort : Boolean := False;
+      Db     : Build.View_Db.Object;
+      Option : Source_Set_Option := Unsorted;
    end record;
 
-   Empty_Set : constant Object := (Db => <>, Sort => False);
+   Empty_Set : constant Object := (others => <>);
+
+   type Source_Iterator
+     (From_View_Db : Boolean)
+   is new Source_Iterators.Forward_Iterator
+   with record
+      --  we keep a reference to the view db for faster retrieval of
+      --  the source items
+      Db    : Build.View_Db.Object;
+      case From_View_Db is
+         when False =>
+            --  we have our own list of source proxy
+            Paths : Path_Source_Maps.Map;
+         when True =>
+            null;
+      end case;
+   end record;
+
+   overriding function First (Self : Source_Iterator) return Cursor;
+   overriding function Next
+     (Self     : Source_Iterator;
+      Position : Cursor) return Cursor;
 
 end GPR2.Build.Source_Info.Sets;

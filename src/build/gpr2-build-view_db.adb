@@ -83,7 +83,10 @@ package body GPR2.Build.View_Db is
    function Sources
      (Self : Object;
       Sorted : Boolean := False) return GPR2.Build.Source_Info.Sets.Object
-   is (Source_Info.Sets.Create (Self, Sorted));
+   is (Source_Info.Sets.Create
+         (Self,
+          (if Sorted then Build.Source_Info.Sets.Sorted
+           else Build.Source_Info.Sets.Unsorted)));
 
    ------------
    -- Update --
@@ -134,9 +137,31 @@ package body GPR2.Build.View_Db is
          return Result;
       end if;
 
-      --  ??? Need access to the view's closure
+      --  Look for the source in the view's closure (withed or limited withed
+      --  views)
+
+      for V of Self.View.Closure loop
+         declare
+            Db : constant Object := Self.View_Base_For (V);
+         begin
+            Result := Db.Source (Basename);
+
+            if Result.Is_Defined then
+               return Result;
+            end if;
+         end;
+      end loop;
+
       return Source_Info.Undefined;
    end Visible_Source;
+
+   ---------------------
+   -- Visible_Sources --
+   ---------------------
+
+   function Visible_Sources
+     (Self : Object) return GPR2.Build.Source_Info.Sets.Object
+   is (Source_Info.Sets.Create (Self, Build.Source_Info.Sets.Recurse));
 
 begin
 

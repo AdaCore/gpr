@@ -1,0 +1,5 @@
+project Simple is
+
+   for Source_Dirs use ("src1", "src2", "src3/**");
+
+end Simple;

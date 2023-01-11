@@ -1,0 +1,5 @@
+description:
+    test how the build database handles sources dynamically
+driver: build_and_run
+project_file: prj
+main: main

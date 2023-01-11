@@ -128,12 +128,12 @@ sources of Shared extended by Prj1
 - src0/shared.adb (body)
   SHARED (body)
 sources of Prj1
+- src1/main.adb (body)
+  MAIN (body)
 - src0/pkg.ads (spec)
   PKG (spec)
 - src0/shared.adb (body)
   SHARED (body)
-- src1/main.adb (body)
-  MAIN (body)
 sources of Prj2
 sources of Shared extended by Prj3
 - src0/pkg.ads (spec)
@@ -141,12 +141,12 @@ sources of Shared extended by Prj3
 - src0/shared.adb (body)
   SHARED (body)
 sources of Prj3
+- src2/main.adb (body)
+  MAIN (body)
 - src0/pkg.ads (spec)
   PKG (spec)
 - src0/shared.adb (body)
   SHARED (body)
-- src2/main.adb (body)
-  MAIN (body)
 
 * Compilation units *
 
