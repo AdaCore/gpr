@@ -16,8 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Unbounded;
-
 with GPR2;
 with GPR2.Containers;
 with GPR2.Context;
@@ -26,8 +24,6 @@ with GPR2.Path_Name;
 with GPRtools.Options;
 
 package GPRls.Options is
-
-   use Ada.Strings.Unbounded;
 
    use GPR2;
 
@@ -39,7 +35,7 @@ package GPRls.Options is
 
    function Files (Self : Object) return Containers.Value_Set;
 
-   function Project_Context (Self : Object) return Context.Object;
+   function Project_Context (Self : Object) return GPR2.Context.Object;
 
    function List_File (Self : Object) return Path_Name.Object;
 
@@ -96,7 +92,7 @@ private
    function Only_Display_Paths (Self : Object) return Boolean is
      (Self.Only_Display_Paths);
 
-   function Project_Context (Self : Object) return Context.Object is
+   function Project_Context (Self : Object) return GPR2.Context.Object is
      (Self.Context);
 
    function List_File (Self : Object) return Path_Name.Object is

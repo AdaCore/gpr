@@ -20,6 +20,7 @@ with Ada.Characters.Handling;
 
 with GPR2.Path_Name;
 
+with GPR2.Options;
 with GPRtools.Command_Line;
 with GPRtools.Util;
 
@@ -55,7 +56,6 @@ package body GPRinstall.Options is
    is
       pragma Unreferenced (Parser, Index);
       use type GPRtools.Command_Line.Switch_Type;
-      use GPRtools;
 
       Result : constant access Object := Object (Res.all)'Access;
    begin
@@ -151,7 +151,8 @@ package body GPRinstall.Options is
             if Low in "dev" | "usage" then
                Set_Param (Result.Global_Install_Mode, Low);
             else
-               raise Usage_Error with "mode value must be dev or usage";
+               raise GPR2.Options.Usage_Error with
+                 "mode value must be dev or usage";
             end if;
          end;
 
@@ -369,23 +370,24 @@ package body GPRinstall.Options is
       if Options.Uninstall_Mode then
          if Options.Project_File.Is_Defined then
             Options.Args.Include
-              (String (Options.Project_File.Name (Extension => False)));
+              (String (Options.Project_File.Name
+               (Extension => False)));
          end if;
 
          case Options.Args.Length is
             when 0 =>
-               raise GPRtools.Usage_Error with
+               raise GPR2.Options.Usage_Error with
                  "A project file or an install name is"
                  & " required with --uninstall";
             when 1 =>
                null;
             when others =>
-               raise GPRtools.Usage_Error with
+               raise GPR2.Options.Usage_Error with
                  "Can have only one uninstall name";
          end case;
 
       elsif not Options.Args.Is_Empty then
-         raise GPRtools.Usage_Error with
+         raise GPR2.Options.Usage_Error with
            "Parameter " & Options.Args.First_Element & " unrecognized";
       end if;
 
@@ -405,39 +407,39 @@ package body GPRinstall.Options is
       if To_String (Options.Build_Name) /= "default"
         and then Options.Uninstall_Mode
       then
-         raise GPRtools.Usage_Error with
+         raise GPR2.Options.Usage_Error with
            "cannot specify --build-name in uninstall mode";
       end if;
 
       if Length (Options.Build_Vars) > 0 and then Options.Uninstall_Mode then
-         raise GPRtools.Usage_Error with
+         raise GPR2.Options.Usage_Error with
            "cannot specify --build-var in uninstall mode";
       end if;
 
       if Length (Options.Build_Vars) > 0 and then Options.No_Build_Var then
-         raise GPRtools.Usage_Error with
+         raise GPR2.Options.Usage_Error with
            "cannot specify --build-var and --no-build-var";
       end if;
 
       if Options.Output_Stats and then not Options.List_Mode then
-         raise GPRtools.Usage_Error with
+         raise GPR2.Options.Usage_Error with
            "cannot specify --stat in install/uninstall mode";
       end if;
 
       if Options.No_GPR_Install
         and then not Options.Global_Project_Subdir.Default
       then
-         raise GPRtools.Usage_Error with
+         raise GPR2.Options.Usage_Error with
            "cannot specify --no-project and --project-subdir";
       end if;
 
       --  If no project file was specified, this is an error
 
-      if not Options.Project_File.Is_Defined
+      if not Options.Project_Is_Defined
         and then not Options.List_Mode
         and then not Options.Uninstall_Mode
       then
-         raise GPRtools.Usage_Error with "no project file specified";
+         raise GPR2.Options.Usage_Error with "no project file specified";
       end if;
 
       --  Check prefix, if not specified set to default toolchain

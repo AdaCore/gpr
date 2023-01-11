@@ -18,6 +18,7 @@
 
 with Ada.Exceptions;
 with Ada.Text_IO;
+with GPR2.Options;
 
 with GPRtools.Command_Line;
 
@@ -129,7 +130,7 @@ package body GPRls.Options is
 
       if Self.List_File.Is_Defined then
          if not Self.List_File.Exists then
-            raise GPRtools.Usage_Error with String (Self.List_File.Value) &
+            raise GPR2.Options.Usage_Error with String (Self.List_File.Value) &
               "does not exist";
          else
             Self.Args.Union (Get_Files_From_List_File (Self.List_File));
@@ -159,7 +160,7 @@ package body GPRls.Options is
       return True;
 
    exception
-      when E : GPRtools.Usage_Error =>
+      when E : GPR2.Options.Usage_Error =>
          Ada.Text_IO.Put_Line
            (Ada.Text_IO.Standard_Error,
             "gprls: " & Ada.Exceptions.Exception_Message (E));
@@ -195,7 +196,7 @@ package body GPRls.Options is
       return Ret;
    exception
       when others =>
-         raise GPRtools.Usage_Error with
+         raise GPR2.Options.Usage_Error with
            "Could not read file '" & String (File.Name) & "'";
    end Get_Files_From_List_File;
 
@@ -229,11 +230,11 @@ package body GPRls.Options is
                   when 0      => GPRtools.Regular,
                   when 1      => GPRtools.Verbose,
                   when 2      => GPRtools.Very_Verbose,
-                  when others => raise GPRtools.Usage_Error with
+                  when others => raise GPR2.Options.Usage_Error with
                                    "-vP accepts a value in the range 0 .. 2");
          exception
             when Constraint_Error =>
-               raise GPRtools.Usage_Error with
+               raise GPR2.Options.Usage_Error with
                  "-vP accepts a value in the range 0 .. 2";
          end;
 
@@ -243,7 +244,7 @@ package body GPRls.Options is
          if Param = "0" then
             Result.Hide_Predefined_Path := True;
          elsif Param /= "default" then
-            raise GPRtools.Usage_Error with "use -a or -a0 only";
+            raise GPR2.Options.Usage_Error with "use -a or -a0 only";
          end if;
 
       elsif Arg = "-u" then
@@ -298,20 +299,25 @@ package body GPRls.Options is
          Text_IO.Put_Line ("   " & P.Value);
       end loop;
 
-      Text_IO.Put_Line ("Target: " & To_String (Self.Target));
+      Text_IO.Put_Line ("Target: " & String (Self.Target));
 
-      for R in Self.RTS_Map.Iterate loop
-         declare
-            Lang : constant Language_Id :=
-                     GPR2.Containers.Lang_Value_Maps.Key (R);
-         begin
-            Text_IO.Put_Line
-              ("RTS"
-               & (if Lang = Ada_Language then ""
-                 else '(' & Image (Lang) & ')')
-               & ": " & Self.RTS_Map (R));
-         end;
-      end loop;
+      declare
+         RTS_Map : constant GPR2.Containers.Lang_Value_Map :=
+                     Self.RTS_Map;
+      begin
+         for R in RTS_Map.Iterate loop
+            declare
+               Lang : constant Language_Id :=
+                        GPR2.Containers.Lang_Value_Maps.Key (R);
+            begin
+               Text_IO.Put_Line
+                 ("RTS"
+                  & (if Lang = Ada_Language then ""
+                    else '(' & Image (Lang) & ')')
+                  & ": " & RTS_Map (R));
+            end;
+         end loop;
+      end;
 
       if Self.List_File /= Path_Name.Undefined then
          Text_IO.Put_Line ("List file: " & Self.List_File.Value);
@@ -321,8 +327,8 @@ package body GPRls.Options is
 
       for Curs in Self.Project_Context.Iterate loop
          declare
-            K : constant Name_Type := Context.Key_Value.Key (Curs);
-            V : constant Value_Type := Context.Key_Value.Element (Curs);
+            K : constant Name_Type := GPR2.Context.Key_Value.Key (Curs);
+            V : constant Value_Type := GPR2.Context.Key_Value.Element (Curs);
          begin
             Text_IO.Put_Line ("   " & String (K) & " => " & V);
          end;

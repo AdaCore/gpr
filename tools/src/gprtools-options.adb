@@ -16,27 +16,17 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Directories;
-with Ada.Strings.Fixed;
-with Ada.Text_IO;
-
 with GNAT.Directory_Operations;
-with GNAT.OS_Lib;
 
 with GPR2.Compilation.Registry;
-with GPR2.KB;
 with GPR2.Log;
 with GPR2.Message;
-with GPR2.Project.Attribute;
-with GPR2.Project.Configuration;
-with GPR2.Project.Registry.Attribute;
+with GPR2.Path_Name;
 with GPR2.Project.Registry.Pack;
 
 pragma Warnings (Off);
 with System.OS_Constants;
 pragma Warnings (On);
-
-with GNATCOLL.Utils;
 
 with GPRtools.Util;
 
@@ -54,6 +44,17 @@ package body GPRtools.Options is
       Arg    : GPRtools.Command_Line.Switch_Type;
       Index  : String;
       Param  : String);
+
+   ---------------------
+   -- Append_Argument --
+   ---------------------
+
+   overriding procedure Append_Argument
+     (Result : in out Base_Options; Value : GPR2.Value_Type) is
+   begin
+      Result.Remaining.Append (Value);
+   end Append_Argument;
+
 
    ------------
    -- Create --
@@ -351,109 +352,19 @@ package body GPRtools.Options is
      (Parser : Command_Line_Parser;
       Result : in out Base_Options'Class)
    is
-      use GPR2;
-      Got_Prj : Boolean := False;
    begin
       GPRtools.Command_Line.Command_Line_Parser (Parser).Get_Opt (Result);
 
       for Arg of Result.Remaining_Arguments loop
-         if GNATCOLL.Utils.Ends_With
-           (GPR2.Path_Name.To_OS_Case (Arg),
-            String (GPR2.Project.Project_File_Extension))
-         then
-            if not Result.Project_File.Is_Defined then
-               On_Switch
-                 (Parser, Result'Access,
-                  Arg   => "-P",
-                  Index => "",
-                  Param => Arg);
-               Got_Prj := True;
-
-            elsif not Got_Prj then
-               raise GPRtools.Usage_Error with
-                 "cannot have -P<prj> and <prj> on the same command line";
-
-            else
-               raise GPRtools.Usage_Error with
-                 "cannot have multiple <proj> on the same command line";
-            end if;
-
-         else
+         if not Result.On_Extra_Arg (Arg) then
             Result.Args.Include (Arg);
          end if;
       end loop;
 
-      if Result.Project_File.Is_Defined
-        and then not Result.Project_File.Has_Dir_Name
-        and then Result.Root_Path.Is_Defined
-      then
-         --  We have to resolve the project directory without target specific
-         --  directories in search path because --root-dir exists in command
-         --  line parameters.
+      Result.Finalize
+        (Allow_Implicit_Project => Parser.Find_Implicit_Project,
+         Quiet                  => Result.Quiet);
 
-         Result.Project_File := GPR2.Project.Create
-           (Result.Project_File.Name, Result.Tree.Project_Search_Paths);
-      end if;
-
-      Result.Project_Is_Defined := Result.Project_File.Is_Defined;
-
-      if not Result.Project_File.Is_Defined then
-         if Result.No_Project then
-            Result.Project_Base := GPR2.Path_Name.Create_Directory
-              (GPR2.Filename_Type (Ada.Directories.Current_Directory));
-
-         elsif Parser.Find_Implicit_Project then
-            Result.Project_File := GPRtools.Util.Check_For_Default_Project;
-
-            if not Result.Project_File.Is_Defined then
-               Result.Project_Base :=
-                 GPR2.Path_Name.Create_Directory
-                   (GPR2.Filename_Type (Ada.Directories.Current_Directory));
-
-               if not Result.Quiet then
-                  Ada.Text_IO.Put_Line
-                    ("use implicit project in " & Result.Project_Base.Value);
-               end if;
-
-            elsif not Result.Quiet then
-               Ada.Text_IO.Put_Line
-                 ("using project file " & Result.Project_File.Value);
-            end if;
-         end if;
-
-      elsif Result.No_Project then
-         raise GPRtools.Usage_Error with
-           "cannot specify --no-project with a project file";
-      end if;
-
-      if not Result.Build_Path.Is_Defined
-        and then Result.Root_Path.Is_Defined
-      then
-         raise GPRtools.Usage_Error with
-           "cannot use --root-dir without --relocate-build-tree option";
-      end if;
-
-      declare
-         Project_Dir : constant GPR2.Path_Name.Object :=
-                         (if Result.Project_Base.Is_Defined
-                          then Result.Project_Base
-                          elsif Result.Project_File.Is_Defined
-                            and then Result.Project_File.Has_Dir_Name
-                          then GPR2.Path_Name.Create_Directory
-                            (Filename_Type (Result.Project_File.Dir_Name))
-                          else
-                             GPR2.Path_Name.Undefined);
-      begin
-         if Project_Dir.Is_Defined then
-            if not Result.Build_Path.Is_Defined then
-               Result.Build_Path := Project_Dir;
-            elsif Result.Root_Path.Is_Defined then
-               Result.Build_Path := GPR2.Path_Name.Create_Directory
-                 (Project_Dir.Relative_Path (Result.Root_Path).Name,
-                  Filename_Type (Result.Build_Path.Value));
-            end if;
-         end if;
-      end;
    end Get_Opt_Internal;
 
    ------------------
@@ -511,152 +422,39 @@ package body GPRtools.Options is
          end if;
       end Display;
 
-      Conf        : GPR2.Project.Configuration.Object;
-      Create_Cgpr : Boolean := False;
-
+      Loaded : Boolean := False;
    begin
-      if Opt.Config_Project.Is_Defined
-           and then
-         (not Opt.Create_Missing_Config or else Opt.Config_Project.Exists)
-      then
-         Conf := GPR2.Project.Configuration.Load (Opt.Config_Project);
 
-         Display (Conf.Log_Messages);
-
-         if Conf.Has_Error then
-            if Handle_Errors then
-               GPRtools.Util.Finish_Program
-                 (GPRtools.Util.E_Fatal,
-                    '"'
-                  & String (Opt.Config_Project.Simple_Name)
-                  & """ processing failed");
-            end if;
-
-            return False;
-         end if;
-
-         Opt.Tree.Load
-           (Filename         =>  (if Opt.Project_File.Is_Defined
-                                  then Opt.Project_File
-                                  else Opt.Project_Base),
-            Context          =>  Opt.Context,
-            Config           =>  Conf,
-            Build_Path       =>  Opt.Build_Path,
-            Subdirs          =>  Opt.Get_Subdirs,
-            Src_Subdirs      =>  Opt.Get_Src_Subdirs,
-            Check_Shared_Lib =>  not Opt.Unchecked_Shared_Lib,
-            Absent_Dir_Error =>  Absent_Dir_Error,
-            Implicit_With    =>  Opt.Implicit_With);
-
-         if To_String (Opt.Target) /= "all" then
-            --  if target is defined on the command line, and a config
-            --  file is specified, issue an error if the target of the config
-            --  is different from the command line.
-
-            declare
-               use GPR2;
-               package PRA renames GPR2.Project.Registry.Attribute;
-
-               Target_Attr : constant GPR2.Project.Attribute.Object :=
-                               Opt.Tree.Configuration.Corresponding_View.
-                                 Attribute (PRA.Target);
-               Conf_Target : constant Value_Type := Target_Attr.Value.Text;
-               Base        : constant GPR2.KB.Object :=
-                               (if Opt.Tree.Get_KB.Is_Defined
-                                then Opt.Tree.Get_KB
-                                else GPR2.KB.Create_Default
-                                  (GPR2.KB.Targetset_Only_Flags));
-               Conf_Norm   : constant Name_Type :=
-                               Base.Normalized_Target
-                                 (Name_Type (Conf_Target));
-               Opt_Norm    : constant Name_Type :=
-                               Base.Normalized_Target
-                                 (Name_Type (To_String (Opt.Target)));
-            begin
-               if Conf_Norm /= Opt_Norm then
-                  Opt.Tree.Log_Messages.Append
-                    (GPR2.Message.Create
-                       (Level   =>  GPR2.Message.Error,
-                        Message =>  "--target: '" & To_String (Opt.Target) &
-                          "' is different from the target value in the" &
-                          " configuration project '" &
-                          String (Conf_Norm) & "'",
-                        Sloc    => Target_Attr.Value));
-               else
-                  Opt.Tree.Log_Messages.Append
-                    (GPR2.Message.Create
-                       (Level   =>  GPR2.Message.Warning,
-                        Message =>  "--target is not used when a " &
-                          "configuration project is specified.",
-                        Sloc    => Target_Attr.Value));
-               end if;
-            end;
-         end if;
-
-      else
-         if Opt.Create_Missing_Config
-           and then not Opt.Config_Project.Exists
-         then
-            if not Opt.Quiet then
-               Ada.Text_IO.Put_Line
-                 ("creating configuration project " &
-                    String (Opt.Config_Project.Name));
-            end if;
-
-            Create_Cgpr := True;
-         end if;
-
-         Opt.Tree.Load_Autoconf
-           (Filename          =>  (if Opt.Project_File.Is_Defined
-                                   then Opt.Project_File
-                                   else Opt.Project_Base),
-            Context           =>  Opt.Context,
-            Build_Path        =>  Opt.Build_Path,
-            Subdirs           =>  Opt.Get_Subdirs,
-            Src_Subdirs       =>  Opt.Get_Src_Subdirs,
-            Check_Shared_Lib  =>  not Opt.Unchecked_Shared_Lib,
-            Absent_Dir_Error  =>  Absent_Dir_Error,
-            Implicit_With     =>  Opt.Implicit_With,
-            Target            =>  Opt.Get_Target,
-            Language_Runtimes =>  Opt.RTS_Map,
-            Base              =>  GPR2.KB.Create
-                                    (Flags      => GPR2.KB.Default_Flags,
-                                     Default_KB => not Opt.Skip_Default_KB,
-                                     Custom_KB  => Opt.KB_Locations),
-            Config_Project    => (if Create_Cgpr
-                                  then Opt.Config_Project
-                                  else GPR2.Path_Name.Undefined));
-      end if;
+      Loaded := Opt.Load_Project
+        (Tree             => Opt.Tree.all,
+         Absent_Dir_Error => Absent_Dir_Error);
 
       if Handle_Errors then
-         Display (Opt.Tree.Log_Messages.all);
-      end if;
-
-      if Opt.Tree.Log_Messages.Has_Error then
-         if Handle_Errors then
+         Display (Opt.Config_Project_Log);
+         if Opt.Tree /= null and then Opt.Tree.Has_Messages then
+            Display (Opt.Tree.all.Log_Messages.all);
+         end if;
+         if Opt.Config_Project_Has_Error then
             GPRtools.Util.Finish_Program
               (GPRtools.Util.E_Fatal,
-                 '"'
-               & (if Opt.Project_File.Is_Defined
-                 then String (Opt.Config_Project.Simple_Name)
-                 else Opt.Project_Base.Value)
+            '"'
+               & String (Opt.Config_Project.Simple_Name)
+               & """ processing failed");
+         end if;
+         if Opt.Tree /= null
+           and then Opt.Tree.Has_Messages
+           and then Opt.Tree.Log_Messages.Has_Error
+         then
+            GPRtools.Util.Finish_Program
+              (GPRtools.Util.E_Fatal,
+            '"'
+               & String (Opt.Filename.Simple_Name)
                & """ processing failed");
          end if;
       end if;
 
-      return True;
+      return Loaded;
 
-   exception
-      when GPR2.Project_Error =>
-         if not Handle_Errors then
-            return False;
-         end if;
-
-         if Opt.Tree.Has_Messages then
-            Display (Opt.Tree.Log_Messages.all);
-         end if;
-
-         return False;
    end Load_Project;
 
    ---------------
@@ -671,124 +469,110 @@ package body GPRtools.Options is
       Param  : String)
    is
       pragma Unreferenced (Parser);
-      use type GPR2.Language_Id;
       use type GPRtools.Command_Line.Switch_Type;
 
       Result   : constant access Base_Options := Base_Options (Res.all)'Access;
-      Lang_Idx : constant GPR2.Language_Id :=
-                   (if Index'Length > 0
-                    then GPR2."+" (GPR2.Name_Type (Index))
-                    else GPR2.No_Language);
 
    begin
       if Arg = "-P" then
-         if not Result.Project_File.Is_Defined then
-            Result.Project_File :=
-              GPR2.Path_Name.Create_File
-                (GPR2.Project.Ensure_Extension (GPR2.Filename_Type (Param)),
-                 GPR2.Path_Name.No_Resolution);
-         else
-            raise GPRtools.Usage_Error with
-              '"' & String (Arg) & """, project already """
-              & (if Result.Project_File.Has_Dir_Name
-                 then Result.Project_File.Value
-                 else String (Result.Project_File.Name)) & '"';
-         end if;
+         Result.Add_Switch
+           (Switch => GPR2.Options.P,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "-aP" then
-         Result.Tree.Register_Project_Search_Path
-           (GPR2.Path_Name.Create_Directory (GPR2.Filename_Type (Param)));
+         Result.Add_Switch
+           (Switch => GPR2.Options.AP,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "-X" then
-         declare
-            Idx : constant Natural := Ada.Strings.Fixed.Index (Param, "=");
-         begin
-            if Idx = 0 then
-               raise GPRtools.Usage_Error with
-                 "Can't split '" & Param & "' to name and value";
-            end if;
-
-            Result.Context.Include
-              (GPR2.Name_Type (Param (Param'First .. Idx - 1)),
-               Param (Idx + 1 .. Param'Last));
-         end;
+         Result.Add_Switch
+           (Switch => GPR2.Options.X,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "-eL" then
          --  ??? TODO
          null;
 
       elsif Arg = "--no-project" then
-         Result.No_Project := True;
+         Result.Add_Switch
+           (Switch => GPR2.Options.No_Project,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "--implicit-with" then
-         Result.Implicit_With.Append
-           (GPR2.Path_Name.Create_File
-              (GPR2.Project.Ensure_Extension (GPR2.Filename_Type (Param))));
+         Result.Add_Switch
+           (Switch => GPR2.Options.Implicit_With,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "--unchecked-shared-lib-imports" then
-         Result.Unchecked_Shared_Lib := True;
+         Result.Add_Switch
+           (Switch => GPR2.Options.Unchecked_Shared_Lib_Imports,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "--relocate-build-tree" then
-         Result.Build_Path :=
-           GPR2.Path_Name.Create_Directory (GPR2.Filename_Type (Param));
+         Result.Add_Switch
+           (Switch => GPR2.Options.Relocate_Build_Tree,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "--root-dir" then
-         Result.Root_Path :=
-           GPR2.Path_Name.Create_Directory (GPR2.Filename_Type (Param));
+         Result.Add_Switch
+           (Switch => GPR2.Options.Root_Dir,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "--src-subdirs" then
-         Result.Src_Subdirs := To_Unbounded_String (Param);
+         Result.Add_Switch
+           (Switch => GPR2.Options.Src_Subdirs,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "--subdirs" then
-         Result.Subdirs := To_Unbounded_String (Param);
+         Result.Add_Switch
+           (Switch => GPR2.Options.Subdirs,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "--config" then
-         Result.Config_Project :=
-           GPR2.Path_Name.Create_File
-             (GPR2.Filename_Type (Param));
-         Result.Create_Missing_Config := False;
+         Result.Add_Switch
+           (Switch => GPR2.Options.Config,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "--autoconf" then
-         Result.Config_Project :=
-           GPR2.Path_Name.Create_File
-             (GPR2.Filename_Type (Param));
-         Result.Create_Missing_Config := True;
+         Result.Add_Switch
+           (Switch => GPR2.Options.Autoconf,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "--target" then
-         Result.Target := To_Unbounded_String (Param);
+         Result.Add_Switch
+           (Switch => GPR2.Options.Target,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "--RTS" then
-         if Lang_Idx = GPR2.No_Language then
-            Result.RTS_Map.Include (GPR2.Ada_Language, Param);
-         else
-            Result.RTS_Map.Include (Lang_Idx, Param);
-         end if;
+         Result.Add_Switch
+           (Switch => GPR2.Options.RTS,
+            Param  => Param,
+            Index  => Index);
 
       elsif Arg = "--db" then
-         declare
-            KB_Norm : constant String :=
-                        GNAT.OS_Lib.Normalize_Pathname (Param);
-            KB_Path : GPR2.Path_Name.Object;
-         begin
-            if GNAT.OS_Lib.Is_Directory (KB_Norm) then
-               KB_Path :=
-                 GPR2.Path_Name.Create_Directory
-                   (GPR2.Filename_Type (KB_Norm));
-
-            elsif GNAT.OS_Lib.Is_Regular_File (KB_Norm) then
-               KB_Path :=
-                 GPR2.Path_Name.Create_File (GPR2.Filename_Type (KB_Norm));
-
-            else
-               raise GPRtools.Usage_Error with
-                 KB_Norm & " is not a file or directory";
-            end if;
-
-            Result.KB_Locations.Append (KB_Path);
-         end;
+         Result.Add_Switch
+           (Switch => GPR2.Options.Db,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "--db-" then
-         Result.Skip_Default_KB := True;
+         Result.Add_Switch
+           (Switch => GPR2.Options.Db_Minus,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "--distributed" then
          declare
@@ -804,7 +588,7 @@ package body GPRtools.Options is
                                Separator => ","));
          begin
             if Hosts.Length = 0 then
-               raise Usage_Error with
+               raise GPR2.Options.Usage_Error with
                  "missing hosts for distributed mode compilation";
             else
                GPR2.Compilation.Registry.Record_Slaves (Hosts);
