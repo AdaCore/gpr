@@ -1,9 +1,10 @@
 with Ada.Command_Line;
 with Ada.Text_IO;
 
+with GPR2.Build.Compilation_Input.Sets;
+with GPR2.Build.Source_Info.Sets;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
-with GPR2.Build.Source_Info.Sets;
 with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
@@ -16,6 +17,7 @@ procedure Main is
    procedure Test (Gpr : Filename_Type)
    is
       Tree        : Project.Tree.Object;
+      Root        : Path_Name.Object;
       Ctx         : Context.Object := Context.Empty;
       Db          : Build.Tree_Db.Object;
       Src_Count   : Natural := 0;
@@ -49,7 +51,6 @@ procedure Main is
       ------------------
 
       procedure Print_Source (S : Build.Source_Info.Object) is
-         Root : constant Path_Name.Object := Tree.Root_Project.Dir_Name;
 
          function Image (Kind : Unit_Kind) return String
          is (case Kind is
@@ -93,6 +94,8 @@ procedure Main is
 
             return;
       end;
+
+      Root := Tree.Root_Project.Dir_Name;
 
       Ada.Text_IO.Put_Line
         ("*** checking sources of project " &
@@ -216,6 +219,17 @@ procedure Main is
                     ("!!! ERROR: sorted and unsorted list of sources don't" &
                        " have the same number of elements");
                end if;
+
+               Ada.Text_IO.New_Line;
+               Ada.Text_IO.Put_Line ("Compilation inputs:");
+               for Input of Db.View_Database (V).Compilation_Inputs loop
+                  Ada.Text_IO.Put
+                    ("- " & String (Input.Source.Path_Name.Relative_Path (Root).Name));
+                  if Input.Index /= No_Index then
+                     Ada.Text_IO.Put (" @" & Input.Index'Image);
+                  end if;
+                  Ada.Text_IO.New_Line;
+               end loop;
             end if;
          end;
       end loop;

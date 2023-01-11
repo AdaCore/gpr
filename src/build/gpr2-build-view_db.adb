@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0
 --
 
+with GPR2.Build.Compilation_Input.Sets;
 with GPR2.Build.Source_Info.Sets;
 with GPR2.Build.Tree_Db;
 
@@ -17,6 +18,16 @@ package body GPR2.Build.View_Db is
    function Ref (Inst : Object) return View_Tables.View_Data_Ref
    is (Inst.Get);
    --  Extracts a reference to view_tables data from a View_Base instance
+
+   ------------------------
+   -- Compilation_Inputs --
+   ------------------------
+
+   function Compilation_Inputs
+     (Self : Object) return Build.Compilation_Input.Sets.Object is
+   begin
+      return Build.Compilation_Input.Sets.Create (Self);
+   end Compilation_Inputs;
 
    ----------------------
    -- Compilation_Unit --
@@ -84,8 +95,6 @@ package body GPR2.Build.View_Db is
          return Source_Info.Undefined;
       else
          declare
-            use type GPR2.Project.View.Object;
-
             Proxy : Source_Proxy renames Basename_Source_Maps.Element (C);
 
          begin
@@ -120,9 +129,9 @@ package body GPR2.Build.View_Db is
       View_Tables.Refresh (Ref (Self));
    end Update;
 
-   -----------
-   -- To_Db --
-   -----------
+   -------------------
+   -- View_Base_For --
+   -------------------
 
    function View_Base_For (Data : View_Tables.View_Data) return Object is
    begin
@@ -135,7 +144,6 @@ package body GPR2.Build.View_Db is
      (Self : Object;
       View : Project.View.Object) return Object
    is
-      use type Project.View.Object;
    begin
       if Self.View = View then
          return Self;
