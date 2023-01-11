@@ -8,15 +8,9 @@ with Ada.Containers.Ordered_Maps;
 
 package body GPR2.Project.Parser.Registry is
 
-   --  Project with reference counter
-
-   type Data is record
-      Project : GPR2.Project.Parser.Object;
-      Ref     : Natural;
-   end record;
-
    package Project_Store is
-     new Ada.Containers.Ordered_Maps (GPR2.Path_Name.Object, Data);
+     new Ada.Containers.Ordered_Maps (GPR2.Path_Name.Object,
+                                      GPR2.Project.Parser.Object);
 
    protected Shared is
 
@@ -33,7 +27,7 @@ package body GPR2.Project.Parser.Registry is
         (Pathname : GPR2.Path_Name.Object;
          Project  : out GPR2.Project.Parser.Object);
 
-      procedure Unregister (Pathname : GPR2.Path_Name.Object);
+      procedure Clear;
 
    private
       Store : Project_Store.Map;
@@ -50,6 +44,15 @@ package body GPR2.Project.Parser.Registry is
       Shared.Check_Registry (Pathname, Project);
       return Project.Is_Defined;
    end Check_Project;
+
+   -----------------
+   -- Clear_Cache --
+   -----------------
+
+   procedure Clear_Cache is
+   begin
+      Shared.Clear;
+   end Clear_Cache;
 
    ------------
    -- Exists --
@@ -103,13 +106,21 @@ package body GPR2.Project.Parser.Registry is
                Ref : constant Project_Store.Reference_Type :=
                        Store.Reference (CP);
             begin
-               Project := Ref.Project;
-               Ref.Ref := Ref.Ref + 1;
+               Project := Ref;
             end;
          else
             Project := GPR2.Project.Parser.Undefined;
          end if;
       end Check_Registry;
+
+      -----------
+      -- Clear --
+      -----------
+
+      procedure Clear is
+      begin
+         Store.Clear;
+      end Clear;
 
       -----------
       -- Exist --
@@ -128,7 +139,7 @@ package body GPR2.Project.Parser.Registry is
         (Pathname : GPR2.Path_Name.Object) return Project.Parser.Object
       is
       begin
-         return Store (Pathname).Project;
+         return Store (Pathname);
       end Get;
 
       --------------
@@ -143,42 +154,10 @@ package body GPR2.Project.Parser.Registry is
          Pos : constant Project_Store.Cursor := Store.Find (Pathname);
       begin
          if Pos = Project_Store.No_Element then
-            Store.Insert (Pathname, Data'(Project, 1));
-
-         else
-            Store (Pos).Ref := Store (Pos).Ref + 1;
+            Store.Insert (Pathname, Project);
          end if;
       end Register;
 
-      ----------------
-      -- Unregister --
-      ----------------
-
-      procedure Unregister (Pathname : GPR2.Path_Name.Object) is
-         Pos : constant Project_Store.Cursor := Store.Find (Pathname);
-         D   : Data := Store (Pos);
-      begin
-         D.Ref := D.Ref - 1;
-
-         if D.Ref = 0 then
-            --  No more reference to this tree, clean it
-
-            Store.Delete (Pathname);
-
-         else
-            Store (Pos).Ref := D.Ref;
-         end if;
-      end Unregister;
-
    end Shared;
-
-   ----------------
-   -- Unregister --
-   ----------------
-
-   procedure Unregister (Pathname : GPR2.Path_Name.Object) is
-   begin
-      Shared.Unregister (Pathname);
-   end Unregister;
 
 end GPR2.Project.Parser.Registry;

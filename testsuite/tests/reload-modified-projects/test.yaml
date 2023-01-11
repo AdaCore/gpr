@@ -1,0 +1,5 @@
+description:
+    test that modified gpr files are read at project reload.
+driver: build_and_run
+project_file: test
+main: test
