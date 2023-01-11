@@ -37,7 +37,7 @@ procedure Main is
          Root : constant Path_Name.Object := Tree.Root_Project.Dir_Name;
       begin
          Ada.Text_IO.Put_Line
-           ("  " &
+           ("     " &
             (if Kind = S_Spec then "spec: "
                elsif Kind = S_Body then "body: "
                else "sep. " & String (Sep_Name) & ": ")
@@ -58,7 +58,7 @@ procedure Main is
                 when S_Body     => "body",
                 when S_Separate => "sep.");
       begin
-         Ada.Text_IO.Put ("- " &
+         Ada.Text_IO.Put ("   - " &
                             String (S.Path_Name.Relative_Path (Root).Name));
 
          if not S.Has_Units or else not S.Has_Index then
@@ -69,7 +69,13 @@ procedure Main is
 
          if S.Has_Units then
             for U of S.Units loop
-               Ada.Text_IO.Put ("  " & String (U.Unit_Name));
+               Ada.Text_IO.Put ("     ");
+
+               if U.Index /= No_Index then
+                  Ada.Text_IO.Put ("@" & U.Index'Image & " ");
+               end if;
+
+               Ada.Text_IO.Put (String (U.Unit_Name));
 
                if U.Kind = S_Separate then
                   Ada.Text_IO.Put ("." & String (U.Separate_Name));
@@ -81,6 +87,10 @@ procedure Main is
       end Print_Source;
 
    begin
+      Ada.Text_IO.Put_Line ("=========================================");
+      Ada.Text_IO.Put_Line ("Testing " & String (Gpr));
+      Ada.Text_IO.Put_Line ("=========================================");
+
       begin
          Project.Tree.Load_Autoconf
            (Tree,
@@ -97,18 +107,11 @@ procedure Main is
 
       Root := Tree.Root_Project.Dir_Name;
 
-      Ada.Text_IO.Put_Line
-        ("*** checking sources of project " &
-           String (Tree.Root_Project.Path_Name.Relative_Path
-             (Path_Name.Create_Directory (".")).Name));
-
       Db.Load (Tree);
 
       Tree.Log_Messages.Output_Messages (Information => False);
 
-      Ada.Text_IO.New_Line;
-      Ada.Text_IO.Put_Line ("* Views *");
-      Ada.Text_IO.New_Line;
+      Ada.Text_IO.Put_Line ("* Views:");
 
       for C in Tree.Iterate loop
          declare
@@ -116,18 +119,18 @@ procedure Main is
             First : Boolean;
          begin
             Ada.Text_IO.Put_Line
-              ("** " & String (V.Name) & " (" & V.Kind'Image & ") **");
+              (" - " & String (V.Name) & " (" & V.Kind'Image & ") **");
 
             First := True;
 
             if V.Kind = K_Aggregate then
                for Agg of V.Aggregated loop
                   if First then
-                     Ada.Text_IO.Put_Line ("- Aggregated project(s):");
+                     Ada.Text_IO.Put_Line ("   - Aggregated project(s):");
                      First := False;
                   end if;
 
-                  Ada.Text_IO.Put_Line ("  - " & String (Agg.Name));
+                  Ada.Text_IO.Put_Line ("     - " & String (Agg.Name));
                end loop;
 
             else
@@ -135,11 +138,11 @@ procedure Main is
 
                for Root of V.Namespace_Roots loop
                   if First then
-                     Ada.Text_IO.Put_Line ("- Root project(s):");
+                     Ada.Text_IO.Put_Line ("   - Root project(s):");
                      First := False;
                   end if;
 
-                  Ada.Text_IO.Put_Line ("  - " & String (Root.Name));
+                  Ada.Text_IO.Put_Line ("     - " & String (Root.Name));
                end loop;
 
                if V.Kind = K_Aggregate_Library then
@@ -147,11 +150,11 @@ procedure Main is
 
                   for Agg of V.Aggregated loop
                      if First then
-                        Ada.Text_IO.Put_Line ("- Aggregated by:");
+                        Ada.Text_IO.Put_Line ("   - Aggregated by:");
                         First := False;
                      end if;
 
-                     Ada.Text_IO.Put_Line ("  - " & String (Agg.Name));
+                     Ada.Text_IO.Put_Line ("     - " & String (Agg.Name));
                   end loop;
                end if;
 
@@ -160,30 +163,28 @@ procedure Main is
 
                   for Agg of V.Aggregate_Libraries loop
                      if First then
-                        Ada.Text_IO.Put_Line ("- Aggregated in library:");
+                        Ada.Text_IO.Put_Line ("   - Aggregated in library:");
                         First := False;
                      end if;
 
-                     Ada.Text_IO.Put_Line ("  - " & String (Agg.Name));
+                     Ada.Text_IO.Put_Line ("     - " & String (Agg.Name));
                   end loop;
                end if;
 
                if V.Is_Extending then
-                  Ada.Text_IO.Put ("- Extends");
+                  Ada.Text_IO.Put ("   - Extends ");
 
                   if V.Is_Extending_All then
-                     Ada.Text_IO.Put_Line (" all:");
+                     Ada.Text_IO.Put ("all ");
                   end if;
 
-                  Ada.Text_IO.Put_Line ("  - " & String (V.Extended_Root.Name));
+                  Ada.Text_IO.Put_Line (String (V.Extended_Root.Name));
                end if;
             end if;
          end;
       end loop;
 
-      Ada.Text_IO.New_Line;
-      Ada.Text_IO.Put_Line ("* Sources *");
-      Ada.Text_IO.New_Line;
+      Ada.Text_IO.Put_Line ("* Sources:");
 
       Src_Count := 0;
       Src_Count_2 := 0;
@@ -193,7 +194,7 @@ procedure Main is
             V : constant Project.View.Object := Project.Tree.Element (C);
          begin
             if V.Kind in GPR2.With_Object_Dir_Kind then
-               Ada.Text_IO.Put ("sources of " & String (V.Name));
+               Ada.Text_IO.Put (" - sources of " & String (V.Name));
 
                if V.Is_Extended then
                   Ada.Text_IO.Put (" extended by " &
@@ -220,11 +221,10 @@ procedure Main is
                        " have the same number of elements");
                end if;
 
-               Ada.Text_IO.New_Line;
-               Ada.Text_IO.Put_Line ("Compilation inputs:");
+               Ada.Text_IO.Put_Line (" - compilation inputs:");
                for Input of Db.View_Database (V).Compilation_Inputs loop
                   Ada.Text_IO.Put
-                    ("- " & String (Input.Source.Path_Name.Relative_Path (Root).Name));
+                    ("   - " & String (Input.Source.Path_Name.Relative_Path (Root).Name));
                   if Input.Index /= No_Index then
                      Ada.Text_IO.Put (" @" & Input.Index'Image);
                   end if;
@@ -234,31 +234,28 @@ procedure Main is
          end;
       end loop;
 
-      Ada.Text_IO.New_Line;
-      Ada.Text_IO.Put_Line ("* Compilation units *");
-      Ada.Text_IO.New_Line;
+      Ada.Text_IO.Put_Line ("* Compilation units:");
 
       if Tree.Root_Project.Kind = K_Aggregate then
          for V of Tree.Root_Project.Aggregated loop
-            Ada.Text_IO.Put_Line ("units of subtree " & String (V.Name));
+            Ada.Text_IO.Put_Line (" - units of subtree " & String (V.Name));
 
             for U of Db.View_Database (V).Compilation_Units loop
-               Ada.Text_IO.Put_Line ("- " & String (U.Name));
+               Ada.Text_IO.Put_Line ("   - " & String (U.Name));
                U.For_All_Part (Print_Unit_Part'Access);
             end loop;
          end loop;
       else
-         Ada.Text_IO.Put_Line ("units of " & String (Tree.Root_Project.Name));
+         Ada.Text_IO.Put_Line (" - units of " & String (Tree.Root_Project.Name));
 
          for U of Db.View_Database (Tree.Root_Project).Compilation_Units loop
-            Ada.Text_IO.Put_Line ("- " & String (U.Name));
+            Ada.Text_IO.Put_Line ("   - " & String (U.Name));
             U.For_All_Part (Print_Unit_Part'Access);
          end loop;
       end if;
 
       Db.Unload;
       Tree.Unload;
-      Ada.Text_IO.New_Line;
    end Test;
 
 begin

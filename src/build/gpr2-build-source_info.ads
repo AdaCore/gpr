@@ -79,7 +79,6 @@ package GPR2.Build.Source_Info is
 
    type Unit_List is tagged private
      with Constant_Indexing => Constant_Reference,
-          Variable_Indexing => Reference,
           Default_Iterator  => Iterate,
           Iterator_Element  => Unit_Part;
    --  The list is used to store units. It handles single unit and multi-unit
@@ -121,13 +120,6 @@ package GPR2.Build.Source_Info is
    function Constant_Reference
      (Self     : aliased Unit_List;
       Position : Unit_Index) return Constant_Reference_Type;
-
-   function Reference
-     (Self     : aliased in out Unit_List;
-      Position : Cursor) return Reference_Type;
-   function Reference
-     (Self     : aliased in out Unit_List;
-      Position : Unit_Index) return Reference_Type;
 
    package Unit_Iterators is
      new Ada.Iterator_Interfaces (Cursor, Has_Element);
@@ -186,13 +178,6 @@ package GPR2.Build.Source_Info is
    --  Constructor for a Ada source object. The unit information is added
    --  later via Add_Unit below.
 
-   procedure Add_Unit
-     (Self  : in out Object;
-      Unit  : Unit_Part)
-     with Pre => Self.Is_Defined
-                   and then Self.Language = Ada_Language
-                   and then not Self.Has_Unit_At (Unit.Index);
-
    procedure Update_Unit
      (Self  : in out Object;
       Unit  : Unit_Part)
@@ -217,13 +202,6 @@ package GPR2.Build.Source_Info is
      (Self : in out Object;
       Time : Ada.Calendar.Time);
    --  Update the source modification time field.
-
-   function Copy
-     (Self    : Object;
-      To_View : Project.View.Object) return Object
-     with Pre => Self.Is_Defined and then To_View.Is_Defined;
-   --  Copy Self, changing the owning view to To_View, in case of source
-   --  inheritance.
 
    function Language (Self : Object) return Language_Id
      with Pre => Self.Is_Defined;

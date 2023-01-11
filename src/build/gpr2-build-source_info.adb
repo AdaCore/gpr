@@ -24,37 +24,6 @@ package body GPR2.Build.Source_Info is
      (Object   : Unit_Iterator;
       Position : Cursor) return Cursor;
 
-   --------------
-   -- Add_Unit --
-   --------------
-
-   procedure Add_Unit
-     (Self  : in out Object;
-      Unit  : Unit_Part)
-   is
-      Done : Boolean;
-      C    : Unit_Map.Cursor;
-   begin
-      if Unit.Index = No_Index then
-         pragma Assert (Self.CU_List.Units.Is_Empty);
-
-         Self.CU_List.Units.Insert (Unit.Index, Unit);
-         Self.CU_List.Has_Index := False;
-         Self.Kind := Unit.Kind;
-
-      else
-         if not Self.CU_List.Has_Index then
-            pragma Assert (Self.CU_List.Units.Is_Empty);
-
-            Self.CU_List.Has_Index := True;
-         end if;
-
-         Self.CU_List.Units.Insert (Unit.Index, Unit, C, Done);
-
-         pragma Assert (Done);
-      end if;
-   end Add_Unit;
-
    ------------------------
    -- Constant_Reference --
    ------------------------
@@ -77,19 +46,6 @@ package body GPR2.Build.Source_Info is
    begin
       return Self.Constant_Reference (Cursor (Self.Units.Find (Position)));
    end Constant_Reference;
-
-   ----------
-   -- Copy --
-   ----------
-
-   function Copy (Self : Object; To_View : Project.View.Object) return Object
-   is
-   begin
-      return Result : Object := Self do
-         Result.View := To_View;
-         Result.Inherited := True;
-      end return;
-   end Copy;
 
    ------------
    -- Create --
@@ -264,29 +220,6 @@ package body GPR2.Build.Source_Info is
       Unit_Map.Next (Result);
       return Cursor (Result);
    end Next;
-
-   ---------------
-   -- Reference --
-   ---------------
-
-   function Reference
-     (Self     : aliased in out Unit_List;
-      Position : Cursor) return Reference_Type
-   is
-      Ref : constant Unit_Map.Reference_Type :=
-              Self.Units.Reference (Unit_Map.Cursor (Position));
-   begin
-      return (Element => Ref.Element.all'Unchecked_Access,
-              Ref     => Ref);
-   end Reference;
-
-   function Reference
-     (Self     : aliased in out Unit_List;
-      Position : Unit_Index) return Reference_Type
-   is
-   begin
-      return Self.Reference (Cursor (Self.Units.Find (Position)));
-   end Reference;
 
    ----------------------
    -- To_ALI_Timestamp --
