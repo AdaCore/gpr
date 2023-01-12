@@ -31,6 +31,7 @@ with GPR2.Compilation.Registry;
 with GPR2.Containers;
 with GPR2.Log;
 with GPR2.Message;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Configuration;
@@ -673,9 +674,9 @@ begin
    then
       GPRtools.Util.Fail_Program
         ('"'
-         & (if Options.Project_File.Is_Defined
-           then String (Options.Project_File.Simple_Name)
-           else Options.Project_Base.Value)
+         & (if Options.Project_Is_Defined
+           then String (Options.Filename.Simple_Name)
+           else Options.Filename.Value)
          & """ processing failed");
    end if;
 
@@ -686,7 +687,7 @@ begin
                Project_Tree.Root_Project.Attribute (PRA.Clean.Switches);
    begin
       if Attr.Is_Defined then
-         Options := (GPRtools.Command_Line.Empty_Result
+         Options := (GPRtools.Options.Empty_Options
                      with others => <>);
          GPRclean.Options.Parse_Attribute_Switches
            (Parser, Options, Attr.Values);
@@ -702,7 +703,7 @@ begin
          --  attribute.
       end if;
    exception
-      when E : Usage_Error =>
+      when E : GPR2.Options.Usage_Error =>
          GPRtools.Util.Finish_Program
            (GPRtools.Util.E_Fatal, Exception_Message (E));
    end;
@@ -776,7 +777,7 @@ begin
    Util.Output_Messages (Options);
 
 exception
-   when E : GPRtools.Usage_Error =>
+   when E : GPR2.Options.Usage_Error =>
       Text_IO.Put_Line
         (Text_IO.Standard_Error,
          "gprclean: " & Exception_Message (E));

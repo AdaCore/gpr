@@ -1,12 +1,8 @@
 --
---  Copyright (C) 2022, AdaCore
+--  Copyright (C) 2022-2023, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0
 --
-
-pragma Warnings (Off, ".* is not referenced");
-with GPR2.Project.View.Set;
-pragma Warnings (On, ".* is not referenced");
 
 with GPR2.Build.Tree_Db;
 
@@ -14,30 +10,12 @@ package body GPR2.Build.Source_Info.Sets is
 
    use type GPR2.Project.View.Object;
 
-   type Source_Iterator (Sort : Boolean) is
-     new Source_Iterators.Forward_Iterator
-   with record
-      Db    : Build.View_Db.Object;
-
-      case Sort is
-         when True =>
-            Paths : Path_Name_Sets.Set;
-         when False =>
-            null;
-      end case;
-   end record;
-
    function "-" (Inst : Build.View_Db.Object) return View_Data_Ref
      is (Get_Ref (Inst));
 
    function Tree_Db
      (Db : Build.View_Db.Object) return access GPR2.Build.Tree_Db.Object
    is (Get_Ref (Db).Tree_Db);
-
-   overriding function First (Self : Source_Iterator) return Cursor;
-   overriding function Next
-     (Self     : Source_Iterator;
-      Position : Cursor) return Cursor;
 
    ------------------------
    -- Constant_Reference --
@@ -47,7 +25,9 @@ package body GPR2.Build.Source_Info.Sets is
      (Self : aliased Object; Position : Cursor) return Constant_Reference_Type
    is
       Proxy : constant Source_Proxy :=
-                Basename_Source_Maps.Element (Position.Current_Src);
+                (if Position.From_View_Db
+                 then  Basename_Source_Maps.Element (Position.Current_Src)
+                 else Path_Source_Maps.Element (Position.Current_Path));
       Db    : constant View_Data_Ref :=
                 (if Proxy.View /= Position.Db.View
                  then Get_Data (Tree_Db (Position.Db), Proxy.View)
@@ -64,12 +44,12 @@ package body GPR2.Build.Source_Info.Sets is
    -- Create --
    ------------
 
-   function Create (Db     : Build.View_Db.Object;
-                    Sorted : Boolean := False) return Object
+   function Create
+     (Db     : Build.View_Db.Object;
+      Option : Source_Set_Option := Unsorted) return Object
    is
    begin
-      return (Db   => Db,
-              Sort => Sorted);
+      return (Db, Option);
    end Create;
 
    -------------
@@ -78,7 +58,9 @@ package body GPR2.Build.Source_Info.Sets is
 
    function Element (Position : Cursor) return Source_Info.Object is
       Proxy : constant Source_Proxy :=
-                 Basename_Source_Maps.Element (Position.Current_Src);
+                (if Position.From_View_Db
+                 then Basename_Source_Maps.Element (Position.Current_Src)
+                 else Path_Source_Maps.Element (Position.Current_Path));
       Db    : constant View_Data_Ref :=
                 (if Proxy.View /= Position.Db.View
                  then Get_Data (Tree_Db (Position.Db), Proxy.View)
@@ -92,29 +74,31 @@ package body GPR2.Build.Source_Info.Sets is
    -----------
 
    overriding function First (Self : Source_Iterator) return Cursor is
-      Sources : Basename_Source_Maps.Map renames Get_Ref (Self.Db).Sources;
    begin
-      if Self.Sort then
+      if Self.From_View_Db then
+         declare
+            List : Basename_Source_Maps.Map renames Get_Ref (Self.Db).Sources;
+         begin
+            if List.Is_Empty then
+               return No_Element;
+
+            else
+               return (From_View_Db => True,
+                       Db           => Self.Db,
+                       Current_Src  => List.First);
+            end if;
+         end;
+
+      else
          if Self.Paths.Is_Empty then
-            return (Db           => Self.Db,
-                    Sort         => False,
-                    Current_Src  => Basename_Source_Maps.No_Element,
-                    Current_Path => Path_Name_Sets.No_Element);
+            return No_Element;
 
          else
             return
-              (Db           => Self.Db,
-               Sort         => True,
-               Current_Src  => Sources.Find
-                                 (Self.Paths.First_Element.Simple_Name),
+              (From_View_Db => False,
+               Db           => Self.Db,
                Current_Path => Self.Paths.First);
          end if;
-
-      else
-         return (Db           => Self.Db,
-                 Sort         => False,
-                 Current_Src  => Sources.First,
-                 Current_Path => Path_Name_Sets.No_Element);
       end if;
    end First;
 
@@ -124,18 +108,12 @@ package body GPR2.Build.Source_Info.Sets is
 
    function Has_Element (Position : Cursor) return Boolean is
    begin
-      return Basename_Source_Maps.Has_Element (Position.Current_Src);
+      if Position.From_View_Db then
+         return Basename_Source_Maps.Has_Element (Position.Current_Src);
+      else
+         return Path_Source_Maps.Has_Element (Position.Current_Path);
+      end if;
    end Has_Element;
-
-   --------------
-   -- Is_Empty --
-   --------------
-
-   function Is_Empty (Self : Object) return Boolean
-   is
-   begin
-      return Get_Ref (Self.Db).Sources.Is_Empty;
-   end Is_Empty;
 
    -------------
    -- Iterate --
@@ -145,19 +123,63 @@ package body GPR2.Build.Source_Info.Sets is
      (Self : Object) return Source_Iterators.Forward_Iterator'Class
    is
    begin
-      if Self.Sort then
-         return Result : Source_Iterator (True) do
-            Result.Db := Self.Db;
+      case Self.Option is
+         when Unsorted =>
+            return Source_Iterator'(True, Self.Db);
 
-            for S of Get_Ref (Self.Db).Sources loop
-               Result.Paths.Insert (S.Path_Name);
-            end loop;
-         end return;
+         when Sorted =>
+            return Iter : Source_Iterator (False) do
+               Iter.Db := Self.Db;
 
-      else
-         return Source_Iterator'(Sort => False,
-                                 Db   => Self.Db);
-      end if;
+               for C in Get_Ref (Self.Db).Sources.Iterate loop
+                  Iter.Paths.Insert
+                    (View_Tables.Basename_Source_Maps.Key (C),
+                     View_Tables.Basename_Source_Maps.Element (C));
+               end loop;
+            end return;
+
+         when Recurse =>
+            declare
+               Result : Source_Iterator (False);
+            begin
+               Result.Db := Self.Db;
+
+               --  Add first the view's sources, unconditionally
+
+               for C in Get_Ref (Self.Db).Sources.Iterate loop
+                  Result.Paths.Insert
+                    (View_Tables.Basename_Source_Maps.Key (C),
+                     View_Tables.Basename_Source_Maps.Element (C));
+               end loop;
+
+               --  Then add the withed views sources, not overriding if
+               --  there's a basename clash.
+
+               for V of Get_Ref (Self.Db).View.Closure loop
+                  if V.Kind in With_Object_Dir_Kind then
+                     declare
+                        Db   : constant View_Db.Object :=
+                                 Get_Ref (Self.Db).Tree_Db.View_Database (V);
+                        Pos  : Path_Source_Maps.Cursor;
+                        Done : Boolean;
+                     begin
+                        for C in Get_Ref (Db).Sources.Iterate loop
+                           Result.Paths.Insert
+                             (Key       => Basename_Source_Maps.Key (C),
+                              New_Item  => Basename_Source_Maps.Element (C),
+                              Position  => Pos,
+                              Inserted  => Done);
+
+                           --  ??? In case of basename clash, we should issue a
+                           --  linter warning...
+                        end loop;
+                     end;
+                  end if;
+               end loop;
+
+               return Result;
+            end;
+      end case;
    end Iterate;
 
    ----------
@@ -169,24 +191,13 @@ package body GPR2.Build.Source_Info.Sets is
       Position : Cursor) return Cursor
    is
       Result : Cursor := Position;
-      use Basename_Source_Maps;
-      use Path_Name_Sets;
 
    begin
-      if not Self.Sort then
-         Next (Result.Current_Src);
+      if Self.From_View_Db then
+         Basename_Source_Maps.Next (Result.Current_Src);
 
       else
-         Next (Result.Current_Path);
-
-         if Has_Element (Result.Current_Path) then
-            Result.Current_Src :=
-              Get_Ref (Self.Db).Sources.Find
-                (Element (Result.Current_Path).Simple_Name);
-
-         else
-            Result.Current_Src := Basename_Source_Maps.No_Element;
-         end if;
+         Path_Source_Maps.Next (Result.Current_Path);
       end if;
 
       return Result;

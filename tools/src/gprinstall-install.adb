@@ -161,7 +161,7 @@ package body GPRinstall.Install is
 
       subtype Param is GPRinstall.Options.Param;
 
-      Target_Name  : constant String := To_String (Options.Target);
+      Target_Name  : constant String := String (Options.Target);
 
       Objcopy_Exec : constant String :=
                        (if Target_Name = "all"

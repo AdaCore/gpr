@@ -211,11 +211,11 @@ begin
       if Opt.Project_File.Is_Defined then
          Text_IO.Put_Line
            ("gprls: unable to process project file "
-            & String (Opt.Project_File.Name));
+            & String (Opt.Filename.Name));
       else
          Text_IO.Put_Line
            ("gprls: unable to process default project file in "
-            & String (Opt.Project_Base.Name));
+            & String (Opt.Filename.Name));
       end if;
 
       return Command_Line.Failure;
@@ -1116,7 +1116,7 @@ exception
 
       Finish_Program
         (E_Errors,
-         "unable to process project file " & String (Opt.Project_File.Name));
+         "unable to process project file " & String (Opt.Filename.Name));
 
       return Command_Line.Failure;
 end GPRls.Process;

@@ -23,6 +23,7 @@ with Ada.Text_IO;
 with GNAT.Directory_Operations;
 with GNAT.OS_Lib;
 
+with GPR2.Options;
 with GPR2.Version;
 
 package body GPRtools.Command_Line is
@@ -458,7 +459,7 @@ package body GPRtools.Command_Line is
            and then not Def.In_Attr
          then
             --  Switch not available in the Switches Attribute
-            raise Usage_Error with "option '" & Arg &
+            raise GPR2.Options.Usage_Error with "option '" & Arg &
               "' not available in package " & GPR2.Image (Pack);
          end if;
 
@@ -544,13 +545,14 @@ package body GPRtools.Command_Line is
         and then Arg'Length > 0
       then
          if Arg (Arg'First) = '-' then
-            raise Usage_Error with "unrecognized option '" & Arg & "'" &
+            raise GPR2.Options.Usage_Error with
+              "unrecognized option '" & Arg & "'" &
               (if Pack = GPR2.Project_Level_Scope
                then ""
                else " in package " & GPR2.Image (Pack));
          end if;
 
-         Result.Remaining.Append (Arg);
+         Result.Append_Argument (Arg);
          --  ??? TODO: On windows, Arg may be a glob pattern: we
          --  need to manually expand it in this case !
          --  This is done by the shell on unix.
@@ -572,7 +574,7 @@ package body GPRtools.Command_Line is
          if Length (Def.Index) = 0
            and then Length (Index) > 0
          then
-            raise Usage_Error with
+            raise GPR2.Options.Usage_Error with
               "unexpected index for '" & Arg & "'" &
               (if Pack = GPR2.Project_Level_Scope
                then ""
@@ -582,7 +584,7 @@ package body GPRtools.Command_Line is
          if not Def.With_Value
            and then Length (Param) > 0
          then
-            raise Usage_Error with
+            raise GPR2.Options.Usage_Error with
               "unexpected parameter for '" & Arg & "'" &
               (if Pack = GPR2.Project_Level_Scope
                then ""
@@ -593,7 +595,7 @@ package body GPRtools.Command_Line is
            and then Def.Delimiter = Space
            and then Length (Param) > 0
          then
-            raise Usage_Error with
+            raise GPR2.Options.Usage_Error with
               "wrong format for '" & Arg & "'" &
               (if Pack = GPR2.Project_Level_Scope
                then ""
@@ -619,7 +621,7 @@ package body GPRtools.Command_Line is
          if Def.With_Value
            and then Length (Param) = 0
          then
-            raise Usage_Error with
+            raise GPR2.Options.Usage_Error with
               "parameter expected for argument '" & Arg & "'" &
               (if Pack = GPR2.Project_Level_Scope
                then ""

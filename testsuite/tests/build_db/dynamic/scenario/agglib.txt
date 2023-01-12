@@ -1,0 +1,46 @@
+copy ../projects/agglib.gpr .
+copy ../projects/prj1.gpr .
+copy ../projects/prj2.gpr .
+mkdir src1
+mkdir src2
+mkdir lib
+create_spec Foo src1/foo.ads
+create_body Foo src1/foo.adb
+create_spec Bar src2/bar.ads
+create_body Bar src2/bar.adb
+load agglib.gpr
+dump
+
+# check duplicated units
+create_spec Foo src2/foo.ads
+refresh
+dump
+
+# check CU is correct if changing of view
+create_body Foo src2/foo.adb
+remove src1/foo.ads
+remove src1/foo.adb
+refresh
+dump
+
+# do the same with multi-unit source
+unload
+copy ../projects/prj3.gpr .
+mkdir src3
+copy ../projects/source.ada src3
+copy ../projects/agglib_multi.gpr .
+load agglib_multi.gpr
+dump
+
+# agglib_multi should now have compilation unit pointing to multi-unit source
+remove src1/foo.ads
+remove src1/foo.adb
+refresh
+dump
+
+# reactivate the foo regular CU
+create_spec Foo src1/foo.ads
+create_body Foo src1/foo.adb
+remove src3/source.ada
+refresh
+dump

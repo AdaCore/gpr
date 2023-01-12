@@ -21,8 +21,6 @@ with Ada.Exceptions;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
-with GNAT.Command_Line;
-
 with GNATCOLL.Traces;
 with GNATCOLL.Tribooleans;
 
@@ -152,7 +150,6 @@ procedure GPRdump is
    ------------------------
 
    procedure Parse_Command_Line is
-      use GNAT.Command_Line;
       use GPRtools.Command_Line;
 
       Parser     : GPRtools.Options.Command_Line_Parser :=
@@ -197,17 +194,6 @@ procedure GPRdump is
 
       Options.Tree := Project_Tree.Reference;
       Parser.Get_Opt (Options);
-
-      --  Now read arguments
-
-      for Arg of Options.Args loop
-         if not Options.Project_File.Is_Defined then
-            Options.Project_File :=
-              GPR2.Path_Name.Create_File (Filename_Type (Arg));
-         else
-            raise Invalid_Switch;
-         end if;
-      end loop;
 
       if not GPRtools.Options.Load_Project
         (Options, Absent_Dir_Error => Project.Tree.Warning)

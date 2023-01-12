@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2022, AdaCore
+--  Copyright (C) 2022-2023, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0
 --
@@ -19,7 +19,8 @@ package body GPR2.Build.View_Tables is
       Sep_Name : Optional_Name_Type;
       View     : Project.View.Object;
       Path     : Path_Name.Object;
-      Index    : Unit_Index)
+      Index    : Unit_Index;
+      Success  : out Boolean)
      with Pre => Data.Is_Root
                    and then (Kind = S_Separate) = (Sep_Name'Length > 0);
 
@@ -27,7 +28,10 @@ package body GPR2.Build.View_Tables is
      (Data     : in out View_Data;
       CU       : Name_Type;
       Kind     : Unit_Kind;
-      Sep_Name : Optional_Name_Type)
+      Sep_Name : Optional_Name_Type;
+      View     : Project.View.Object;
+      Path     : Path_Name.Object;
+      Index    : Unit_Index)
      with Pre => Data.Is_Root
                    and then (Kind = S_Separate) = (Sep_Name'Length > 0);
 
@@ -92,10 +96,12 @@ package body GPR2.Build.View_Tables is
       Sep_Name : Optional_Name_Type;
       View     : Project.View.Object;
       Path     : Path_Name.Object;
-      Index    : Unit_Index)
+      Index    : Unit_Index;
+      Success  : out Boolean)
    is
       Cursor : Compilation_Unit_Maps.Cursor;
       Done   : Boolean;
+      Other  : Path_Name.Object;
    begin
       Cursor := Data.CUs.Find (CU);
 
@@ -104,15 +110,28 @@ package body GPR2.Build.View_Tables is
          pragma Assert (Done);
       end if;
 
-      Data.CUs.Reference (Cursor).Add (Kind, View, Path, Index, Sep_Name);
+      Data.CUs.Reference (Cursor).Add
+        (Kind, View, Path, Index, Sep_Name, Success);
 
-      if Kind = S_Separate then
+      if Success and then Kind = S_Separate then
          declare
             Full_Name : constant Name_Type :=
                           GPR2."&" (GPR2."&" (CU, "."), Sep_Name);
          begin
             Data.Separates.Include (Full_Name, CU);
          end;
+      end if;
+
+      if not Success then
+         Other := Data.CUs.Reference (Cursor).Get (Kind, Sep_Name).Path;
+         Data.View.Tree.Append_Message
+           (Message.Create
+              (Level   => Message.Warning,
+               Message => "Duplicated " &
+                 Image (Kind) & " for unit """ & String (CU) & """ in " &
+                 String (Other.Value) & " and " & String (Path.Value),
+               Sloc    =>
+                 Source_Reference.Create (View.Path_Name.Value, 0, 0)));
       end if;
    end Add_Unit_Part;
 
@@ -239,6 +258,7 @@ package body GPR2.Build.View_Tables is
                                  Root_Db : constant View_Data_Ref :=
                                              Get_Data (Data.Tree_Db,
                                                        Root_View);
+                                 Done    : Boolean;
                               begin
                                  --  Remove old unit from the namespace root
                                  --  list.
@@ -247,7 +267,10 @@ package body GPR2.Build.View_Tables is
                                    (Root_Db,
                                     Unit.Unit_Name,
                                     Unit.Kind,
-                                    Unit.Separate_Name);
+                                    Unit.Separate_Name,
+                                    Data.View,
+                                    S_Ref.Path_Name,
+                                    S_Ref.Unit.Index);
 
                                  --  And add the new one
                                  Add_Unit_Part
@@ -257,7 +280,9 @@ package body GPR2.Build.View_Tables is
                                     S_Ref.Unit.Separate_Name,
                                     Data.View,
                                     S_Ref.Path_Name,
-                                    S_Ref.Unit.Index);
+                                    S_Ref.Unit.Index,
+                                    Done);
+                                 pragma Assert (Done);
                               end;
                            end loop;
                         end if;
@@ -287,6 +312,7 @@ package body GPR2.Build.View_Tables is
                         Root_Db : constant View_Data_Ref :=
                                     Get_Data (Data.Tree_Db, Root);
                         Old     : constant Source_Info.Unit_Part := S_Ref.Unit;
+                        Done    : Boolean;
                      begin
                         Check_Separate (Root_Db, S_Ref);
 
@@ -295,7 +321,10 @@ package body GPR2.Build.View_Tables is
                              (Root_Db,
                               Old.Unit_Name,
                               Old.Kind,
-                              Old.Separate_Name);
+                              Old.Separate_Name,
+                              Data.View,
+                              S_Ref.Path_Name,
+                              S_Ref.Unit.Index);
 
                            --  And add the new one
                            Add_Unit_Part
@@ -305,7 +334,9 @@ package body GPR2.Build.View_Tables is
                               S_Ref.Unit.Separate_Name,
                               Data.View,
                               S_Ref.Path_Name,
-                              S_Ref.Unit.Index);
+                              S_Ref.Unit.Index,
+                              Done);
+                           pragma Assert (Done);
                         end if;
                      end;
                   end loop;
@@ -320,15 +351,18 @@ package body GPR2.Build.View_Tables is
    -------------------
 
    procedure Remove_Source
-     (Data       : in out View_Data;
-      View_Owner : GPR2.Project.View.Object;
-      Path       : GPR2.Path_Name.Object)
+     (Data            : in out View_Data;
+      View_Owner      : GPR2.Project.View.Object;
+      Path            : GPR2.Path_Name.Object;
+      Extended_View   : GPR2.Project.View.Object;
+      Aggregated_View : GPR2.Project.View.Object)
    is
       Basename : constant Simple_Name := Path.Simple_Name;
       C_Overload : Basename_Source_List_Maps.Cursor;
       Proxy    : constant Source_Proxy := (View      => View_Owner,
                                            Path_Name => Path,
-                                           others    => <>);
+                                           Inh_From  => Extended_View,
+                                           Agg_From  => Aggregated_View);
 
    begin
       C_Overload := Data.Overloaded_Srcs.Find (Basename);
@@ -345,7 +379,10 @@ package body GPR2.Build.View_Tables is
      (Data     : in out View_Data;
       CU       : Name_Type;
       Kind     : Unit_Kind;
-      Sep_Name : Optional_Name_Type)
+      Sep_Name : Optional_Name_Type;
+      View     : Project.View.Object;
+      Path     : Path_Name.Object;
+      Index    : Unit_Index)
    is
       Cursor : Compilation_Unit_Maps.Cursor;
    begin
@@ -355,7 +392,7 @@ package body GPR2.Build.View_Tables is
          return;
       end if;
 
-      Data.CUs.Reference (Cursor).Remove (Kind, Sep_Name);
+      Data.CUs.Reference (Cursor).Remove (Kind, View, Path, Index, Sep_Name);
 
       if Data.CUs.Reference (Cursor).Is_Empty then
          Data.CUs.Delete (Cursor);
@@ -395,6 +432,7 @@ package body GPR2.Build.View_Tables is
                       Get_Data (Data.Tree_Db, Src.View);
          Src_Info : constant Source_Info.Object :=
                       View_Db.Src_Infos (Src.Path_Name);
+         Success  : Boolean;
 
       begin
          if Data.View.Is_Extended then
@@ -423,7 +461,8 @@ package body GPR2.Build.View_Tables is
                      Sep_Name => U.Separate_Name,
                      View     => Data.View,
                      Path     => Src_Info.Path_Name,
-                     Index    => U.Index);
+                     Index    => U.Index,
+                     Success  => Success);
                end loop;
             end loop;
          end if;
@@ -440,16 +479,17 @@ package body GPR2.Build.View_Tables is
                       View_Db.Src_Infos (Src.Path_Name);
 
       begin
-         if Src_Info.Has_Units
-           and then not Data.View.Is_Extended
-         then
+         if Src_Info.Has_Units and then not Data.View.Is_Extended then
             for U of Src_Info.Units loop
                for Root of Src.View.Namespace_Roots loop
                   Remove_Unit_Part
                     (Get_Data (Data.Tree_Db, Root),
                      CU       => U.Unit_Name,
                      Kind     => U.Kind,
-                     Sep_Name => U.Separate_Name);
+                     Sep_Name => U.Separate_Name,
+                     View     => Data.View,
+                     Path     => Src_Info.Path_Name,
+                     Index    => U.Index);
                end loop;
             end loop;
          end if;
@@ -458,7 +498,9 @@ package body GPR2.Build.View_Tables is
             Remove_Source
               (Get_Data (Data.Tree_Db, Data.View.Extending),
                Src.View,
-               Src.Path_Name);
+               Src.Path_Name,
+               Extended_View   => Data.View,
+               Aggregated_View => Project.View.Undefined);
          end if;
       end Propagate_Visible_Source_Removal;
 
@@ -485,29 +527,6 @@ package body GPR2.Build.View_Tables is
          --  Only one source in the set: just use it
 
          Candidate := Source_Proxy_Sets.Element (Set.First);
-
-      elsif Data.View.Kind = K_Aggregate_Library then
-         --  at least two sources with the same basename: error
-
-         Data.View.Tree.Append_Message
-           (Message.Create
-              (Level   => Message.Warning,
-               Message => Set.Length'Image & " sources with the same base " &
-                          "name """ & String (Basename) &
-                          """: cannot aggregate in the same library",
-               Sloc    => Source_Reference.Create
-                 (Data.View.Path_Name.Value, 0, 0)));
-
-         for Proxy of Set loop
-            Data.View.Tree.Append_Message
-              (Message.Create
-                 (Message.Warning,
-                  Proxy.Path_Name.Value,
-                  Sloc => Source_Reference.Create
-                    (Proxy.View.Path_Name.Value, 0, 0)));
-         end loop;
-
-         Candidate := No_Proxy;
 
       else
          --  project extension case, or the same basename is found in
@@ -580,20 +599,39 @@ package body GPR2.Build.View_Tables is
                        " is found in several extended projects",
                      Source_Reference.Create
                        (Data.View.Path_Name.Value, 0, 0)));
-               Tree.Append_Message
-                 (Message.Create
-                    (Message.Error,
-                     C.Path_Name.Value,
-                     Source_Reference.Create
-                       (C.View.Path_Name.Value, 0, 0),
-                     Indent => 1));
-               Tree.Append_Message
-                 (Message.Create
-                    (Message.Error,
-                     Candidate.Path_Name.Value,
-                     Source_Reference.Create
-                       (Candidate.View.Path_Name.Value, 0, 0),
-                     Indent => 1));
+               declare
+                  P1, P2 : GPR2.Path_Name.Object;
+                  V1, V2 : GPR2.Path_Name.Object;
+               begin
+                  --  Use alphabetical sort to have consistent output.
+                  --  This is in particular important when comparing test
+                  --  output.
+
+                  if C.Path_Name < Candidate.Path_Name then
+                     P1 := C.Path_Name;
+                     V1 := C.View.Path_Name;
+                     P2 := Candidate.Path_Name;
+                     V2 := Candidate.View.Path_Name;
+                  else
+                     P1 := Candidate.Path_Name;
+                     V1 := Candidate.View.Path_Name;
+                     P2 := C.Path_Name;
+                     V2 := C.View.Path_Name;
+                  end if;
+
+                  Tree.Append_Message
+                    (Message.Create
+                       (Message.Error,
+                        P1.Value,
+                        Source_Reference.Create (V1.Value, 0, 0),
+                        Indent => 1));
+                  Tree.Append_Message
+                    (Message.Create
+                       (Message.Error,
+                        P2.Value,
+                        Source_Reference.Create (V2.Value, 0, 0),
+                        Indent => 1));
+               end;
 
                Candidate := No_Proxy;
 

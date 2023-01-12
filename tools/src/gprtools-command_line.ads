@@ -63,14 +63,15 @@ package GPRtools.Command_Line is
    -- COMMAND LINE RESULT DEFINITION --
    ------------------------------------
 
-   type Command_Line_Result is tagged private;
-   --  used to store the result of the command line parsing
-
-   Empty_Result : constant Command_Line_Result;
+   type Command_Line_Result is interface;
 
    function Remaining_Arguments
-     (Result : Command_Line_Result) return GPR2.Containers.Value_List
-     with Inline;
+     (Result : Command_Line_Result)
+      return GPR2.Containers.Value_List is abstract;
+
+   procedure Append_Argument
+     (Result : in out Command_Line_Result;
+      Value  : GPR2.Value_Type) is abstract;
 
    --------------------------------------
    -- COMMAND LINE ARGUMENT DEFINITION --
@@ -470,16 +471,6 @@ private
                             Delimiter  => Delimiter,
                             Default    => To_Unbounded_String (Default),
                             Required   => Required));
-
-   type Command_Line_Result is tagged record
-      Remaining : GPR2.Containers.Value_List;
-   end record;
-
-   Empty_Result : constant Command_Line_Result := (others => <>);
-
-   function Remaining_Arguments
-     (Result : Command_Line_Result) return GPR2.Containers.Value_List
-   is (Result.Remaining);
 
    function Dash_Dash
      (S : Switch_Type) return Boolean

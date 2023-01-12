@@ -1208,19 +1208,21 @@ package body GPR2.Project.Tree is
 
       --  Add all search paths into the message log
 
-      Self.Messages.Append
-        (Message.Create
-           (Message.Information,
-            "search path:",
-            Source_Reference.Create (Gpr_Path.Value, 0, 0)));
+      declare
+         Search_Paths : Unbounded_String;
+      begin
+         for P of Self.Search_Paths loop
+            Append (Search_Paths, GNAT.OS_Lib.Path_Separator & P.Value);
+         end loop;
+         --  Remove first path separator
+         Delete (Search_Paths, 1, 1);
 
-      for P of Self.Search_Paths loop
          Self.Messages.Append
            (Message.Create
               (Message.Information,
-               P.Value,
+               "project search path: " & To_String (Search_Paths),
                Source_Reference.Create (Gpr_Path.Value, 0, 0)));
-      end loop;
+      end;
 
       Self.Root := Recursive_Load
         (Self,
@@ -1313,6 +1315,8 @@ package body GPR2.Project.Tree is
                            GPR2.File_Readers.No_File_Reader_Reference) is
    begin
       if not Filename.Is_Directory then
+         GPR2.Project.Parser.Clear_Cache;
+
          Self.Load
            (Project_Descriptor'(Project_Path, Filename),
             Context          => Context,
@@ -1325,6 +1329,8 @@ package body GPR2.Project.Tree is
             Implicit_With    => Implicit_With,
             Pre_Conf_Mode    => Pre_Conf_Mode,
             File_Reader      => File_Reader);
+
+         GPR2.Project.Parser.Clear_Cache;
       else
          --  Load an empty project in directory "Filename"
 
@@ -3514,9 +3520,7 @@ package body GPR2.Project.Tree is
       Full : Boolean := True) is
    begin
       if Full then
-         for V of Self.Views_Set loop
-            GPR2.Project.Parser.Clear_Cache (V.Path_Name);
-         end loop;
+         GPR2.Project.Parser.Clear_Cache;
       end if;
 
       Self.Self             := Undefined.Self;

@@ -18,6 +18,7 @@
 
 with GPRtools.Command_Line;
 
+with GPR2.Options;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
@@ -292,7 +293,7 @@ package body GPRbuild.Options is
       if Options.Multi_Unit_Index /= No_Index
         and then Options.Args.Length > 1
       then
-         raise Usage_Error with
+         raise GPR2.Options.Usage_Error with
            "only one source can be specified with multi-unit index " &
            "specified with '-eI'";
       end if;
@@ -328,7 +329,7 @@ package body GPRbuild.Options is
             end if;
 
             if not Found then
-               raise Usage_Error with
+               raise GPR2.Options.Usage_Error with
                  """" & Arg & """ was not found in the sources of any project";
             end if;
          end;
@@ -469,7 +470,7 @@ package body GPRbuild.Options is
               GPR2.Unit_Index'Value (Param);
          exception
             when Constraint_Error =>
-               raise Usage_Error with
+               raise GPR2.Options.Usage_Error with
                  "'" & Param & "' is not a valid unit index";
          end;
 
@@ -486,7 +487,7 @@ package body GPRbuild.Options is
             Result.Parallel_Link := Val;
          exception
             when Constraint_Error =>
-               raise Usage_Error with
+               raise GPR2.Options.Usage_Error with
                  "'" & Param & "' is not a valid parameter for -j";
          end;
 
@@ -495,7 +496,7 @@ package body GPRbuild.Options is
             Result.Parallel_Compilation := Natural'Value (Param);
          exception
             when Constraint_Error =>
-               raise Usage_Error with
+               raise GPR2.Options.Usage_Error with
                  "'" & Param & "' is not a valid parameter for -jc";
          end;
 
@@ -504,7 +505,7 @@ package body GPRbuild.Options is
             Result.Parallel_Bind := Natural'Value (Param);
          exception
             when Constraint_Error =>
-               raise Usage_Error with
+               raise GPR2.Options.Usage_Error with
                  "'" & Param & "' is not a valid parameter for -jb";
          end;
 
@@ -513,7 +514,7 @@ package body GPRbuild.Options is
             Result.Parallel_Link := Natural'Value (Param);
          exception
             when Constraint_Error =>
-               raise Usage_Error with
+               raise GPR2.Options.Usage_Error with
                  "'" & Param & "' is not a valid parameter for -jl";
          end;
 
@@ -619,7 +620,7 @@ package body GPRbuild.Options is
             end;
 
             if Failed then
-               raise Usage_Error with
+               raise GPR2.Options.Usage_Error with
                  "argument to '-O' should be a non-negative integer, " &
                  "'g', 's' or 'fast'";
             end if;

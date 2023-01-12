@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2022, AdaCore
+--  Copyright (C) 2022-2023, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0
 --
@@ -18,47 +18,43 @@ package body GPR2.Build.Compilation_Unit is
       View     : GPR2.Project.View.Object;
       Path     : GPR2.Path_Name.Object;
       Index    : Unit_Index := No_Index;
-      Sep_Name : Optional_Name_Type := "")
+      Sep_Name : Optional_Name_Type := "";
+      Success  : out Boolean)
    is
       UL : constant Unit_Location :=
              (View  => View,
               Path  => Path,
               Index => Index);
    begin
+      Success := False;
+
       case Kind is
          when S_Spec =>
-            Self.Spec := UL;
+            if Self.Spec = No_Unit then
+               Self.Spec := UL;
+               Success := True;
+            end if;
+
          when S_Body =>
-            Self.Implem := UL;
+            if Self.Implem = No_Unit then
+               Self.Implem := UL;
+               Success := True;
+            end if;
+
          when S_Separate =>
             declare
                Up : constant String :=
                       Ada.Characters.Handling.To_Upper (String (Sep_Name));
+               C  : Separate_Maps.Cursor;
             begin
-               Self.Separates.Include (Name_Type (Up), UL);
+               Self.Separates.Insert (Name_Type (Up), UL, C, Success);
             end;
       end case;
+
+      if not Success then
+         Self.Duplicates.Append ((Sep_Name'Length, UL, Kind, Sep_Name));
+      end if;
    end Add;
-
-   ------------------
-   -- Add_Separate --
-   ------------------
-
-   procedure Add_Separate
-     (Self  : in out Object;
-      Name  : Name_Type;
-      View  : Project.View.Object;
-      Path  : Path_Name.Object;
-      Index : Unit_Index := No_Index)
-   is
-   begin
-      Self.Add
-        (S_Separate,
-         View,
-         Path,
-         Index,
-         Name);
-   end Add_Separate;
 
    ------------
    -- Create --
@@ -170,79 +166,102 @@ package body GPR2.Build.Compilation_Unit is
    procedure Remove
      (Self     : in out Object;
       Kind     : Unit_Kind;
-      Sep_Name : Optional_Name_Type := "") is
+      View     : GPR2.Project.View.Object;
+      Path     : GPR2.Path_Name.Object;
+      Index    : Unit_Index := No_Index;
+      Sep_Name : Optional_Name_Type := "")
+   is
+      UL    : constant Unit_Location :=
+                (View  => View,
+                 Path  => Path,
+                 Index => Index);
+      C     : Separate_Maps.Cursor;
+      CD    : Duplicates_List.Cursor;
+      Found : Boolean := False;
+
    begin
       case Kind is
          when S_Spec =>
-            Self.Spec := No_Unit;
+            if Self.Spec = UL then
+               Self.Spec := No_Unit;
+
+               Found := True;
+            end if;
+
          when S_Body =>
-            Self.Implem := No_Unit;
+            if Self.Implem = UL then
+               Self.Implem := No_Unit;
+
+               Found := True;
+            end if;
+
          when S_Separate =>
-            Self.Separates.Delete (Sep_Name);
+            C := Self.Separates.Find (Sep_Name);
+
+            if not Separate_Maps.Has_Element (C) then
+               return;
+            end if;
+
+            if Separate_Maps.Element (C) = UL then
+               Self.Separates.Delete (C);
+
+               Found := True;
+            end if;
       end case;
+
+      if not Found then
+         --  no matching unit part: check the list of duplicates
+         CD := Self.Duplicates.First;
+
+         while Duplicates_List.Has_Element (CD) loop
+            declare
+               Elem : constant Duplicates_List.Constant_Reference_Type :=
+                        Self.Duplicates.Constant_Reference (CD);
+            begin
+               if Elem.Kind = Kind
+                 and then Elem.Loc = UL
+               then
+                  Found := True;
+               end if;
+            end;
+
+            if Found then
+               Self.Duplicates.Delete (CD);
+               exit;
+            else
+               Duplicates_List.Next (CD);
+            end if;
+         end loop;
+
+      elsif not Self.Duplicates.Is_Empty then
+         --  We removed a unit part, but then we have somewhere else
+         --  another source that contains a part of this compilation unit.
+         --  Let's check if this part replaces the removed part
+
+         Found := False;
+         CD := Self.Duplicates.First;
+
+         while Duplicates_List.Has_Element (CD) loop
+            declare
+               Elem : constant Clashing_Unit :=
+                        Duplicates_List.Element (CD);
+            begin
+               if Elem.Kind = Kind then
+                  Self.Duplicates.Delete (CD);
+                  Self.Add (Elem.Kind,
+                            Elem.Loc.View,
+                            Elem.Loc.Path,
+                            Elem.Loc.Index,
+                            Elem.Sep_Name,
+                            Found);
+
+                  exit;
+               else
+                  Duplicates_List.Next (CD);
+               end if;
+            end;
+         end loop;
+      end if;
    end Remove;
-
-   -----------------
-   -- Remove_Body --
-   -----------------
-
-   procedure Remove_Body (Self : in out Object) is
-   begin
-      Self.Implem := No_Unit;
-   end Remove_Body;
-
-   ---------------------
-   -- Remove_Separate --
-   ---------------------
-
-   procedure Remove_Separate
-     (Self : in out Object;
-      Name : Name_Type) is
-   begin
-      Self.Separates.Delete (Name);
-   end Remove_Separate;
-
-   -----------------
-   -- Remove_Spec --
-   -----------------
-
-   procedure Remove_Spec (Self : in out Object) is
-   begin
-      Self.Spec := No_Unit;
-   end Remove_Spec;
-
-   -----------------
-   -- Update_Body --
-   -----------------
-
-   procedure Update_Body
-     (Self : in out Object;
-      View : Project.View.Object;
-      Path : Path_Name.Object;
-      Index : Unit_Index := No_Index)
-   is
-   begin
-      Self.Implem :=
-        (View  => View,
-         Path  => Path,
-         Index => Index);
-   end Update_Body;
-
-   -----------------
-   -- Update_Spec --
-   -----------------
-
-   procedure Update_Spec
-     (Self  : in out Object;
-      View  : Project.View.Object;
-      Path  : Path_Name.Object;
-      Index : Unit_Index := No_Index)
-   is
-   begin
-      Self.Spec :=
-        (View  => View,
-         Path  => Path,
-         Index => Index);
-   end Update_Spec;
 
 end GPR2.Build.Compilation_Unit;

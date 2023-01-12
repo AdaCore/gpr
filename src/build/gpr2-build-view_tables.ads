@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2022, AdaCore
+--  Copyright (C) 2022-2023, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0
 --
@@ -167,9 +167,11 @@ private package GPR2.Build.View_Tables is
       Aggregated_View : GPR2.Project.View.Object);
 
    procedure Remove_Source
-     (Data       : in out View_Data;
-      View_Owner : GPR2.Project.View.Object;
-      Path       : GPR2.Path_Name.Object);
+     (Data            : in out View_Data;
+      View_Owner      : GPR2.Project.View.Object;
+      Path            : GPR2.Path_Name.Object;
+      Extended_View   : GPR2.Project.View.Object;
+      Aggregated_View : GPR2.Project.View.Object);
 
    procedure Refresh (Data : in out View_Data);
 

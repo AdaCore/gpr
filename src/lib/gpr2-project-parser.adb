@@ -164,12 +164,9 @@ package body GPR2.Project.Parser is
    -- Clear_Cache --
    -----------------
 
-   procedure Clear_Cache
-     (Filename : GPR2.Path_Name.Object) is
+   procedure Clear_Cache is
    begin
-      if Registry.Exists (Filename) then
-         Registry.Unregister (Filename);
-      end if;
+      GPR2.Project.Parser.Registry.Clear_Cache;
    end Clear_Cache;
 
    --------------

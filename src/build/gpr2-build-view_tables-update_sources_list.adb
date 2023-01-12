@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2022, AdaCore
+--  Copyright (C) 2022-2023, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0
 --
@@ -829,7 +829,9 @@ package body Update_Sources_List is
                if Src_Info_Maps.Has_Element (C) then
                   --  File was a source and has disapeared: notify the build
                   --  db object to cleanup tables.
-                  Remove_Source (Data, Data.View, F.Path);
+                  Remove_Source (Data, Data.View, F.Path,
+                                 Project.View.Undefined,
+                                 Project.View.Undefined);
                end if;
             end;
          end if;

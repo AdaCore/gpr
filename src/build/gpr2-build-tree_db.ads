@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2022, AdaCore
+--  Copyright (C) 2022-2023, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0
 --
@@ -29,6 +29,9 @@ package GPR2.Build.Tree_Db is
 
    procedure Unload (Self : in out Object)
      with Post => not Self.Is_Defined;
+
+   procedure Refresh (Self : in out Object)
+     with Pre => Self.Is_Defined;
 
    function View_Database
      (Self : in out Object;

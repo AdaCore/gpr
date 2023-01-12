@@ -19,9 +19,7 @@
 with Ada.Strings.Unbounded;
 
 with GPR2.Containers;
-with GPR2.Context;
-with GPR2.Path_Name;
-with GPR2.Path_Name.Set;
+with GPR2.Options;
 with GPR2.Project.Tree;
 
 with GPRtools.Command_Line;
@@ -33,36 +31,10 @@ package GPRtools.Options is
    type Command_Line_Parser is
      new Command_Line.Command_Line_Parser with private;
 
-   type Base_Options is new Command_Line.Command_Line_Result with record
-      --  Project file and context:
+   type Base_Options is new GPR2.Options.Object
+     and Command_Line.Command_Line_Result with record
 
-      Context                  : GPR2.Context.Object;
-      Project_File             : GPR2.Path_Name.Object;
-      Project_Is_Defined       : Boolean := False;
-      No_Project               : aliased Boolean := False;
-      Project_Base             : GPR2.Path_Name.Object;
-      --  If defined, then process Project_File like it is located in the
-      --  Project_Base.
-
-      --  Project tree modifiers
-
-      Root_Path                : GPR2.Path_Name.Object;
-      Build_Path               : GPR2.Path_Name.Object;
-      Src_Subdirs              : Ada.Strings.Unbounded.Unbounded_String;
-      Subdirs                  : Ada.Strings.Unbounded.Unbounded_String;
-      Implicit_With            : GPR2.Path_Name.Set.Object;
-      Unchecked_Shared_Lib     : Boolean := False;
-
-      --  Conf/Autoconf
-
-      Config_Project           : GPR2.Path_Name.Object;
-      Create_Missing_Config    : Boolean := False;
-      Target                   : Ada.Strings.Unbounded.Unbounded_String :=
-                                   Ada.Strings.Unbounded.To_Unbounded_String
-                                     ("all");
-      RTS_Map                  : GPR2.Containers.Lang_Value_Map;
-      Skip_Default_KB          : aliased Boolean := False;
-      KB_Locations             : GPR2.Path_Name.Set.Object;
+      Remaining : GPR2.Containers.Value_List;
 
       --  Non-switch arguments
 
@@ -87,6 +59,15 @@ package GPRtools.Options is
       Hash_Value               : Unbounded_String;
    end record;
    --  Options common to most gpr tools
+
+   Empty_Options : constant Base_Options;
+
+   overriding function Remaining_Arguments
+     (Result : Base_Options) return GPR2.Containers.Value_List
+     is (Result.Remaining);
+
+   overriding procedure Append_Argument
+     (Result : in out Base_Options; Value : GPR2.Value_Type);
 
    procedure Setup (Tool : Which);
    --  Setup the GPR2 library options to properly handle the tool's attributes
@@ -135,14 +116,6 @@ package GPRtools.Options is
 
    function Very_Verbose (Self : Base_Options) return Boolean;
 
-   function Get_Target (Self : Base_Options) return GPR2.Name_Type;
-
-   function Get_Subdirs
-     (Self : Base_Options) return GPR2.Optional_Name_Type;
-
-   function Get_Src_Subdirs
-     (Self : Base_Options) return GPR2.Optional_Name_Type;
-
 private
 
    type Command_Line_Parser is new Command_Line.Command_Line_Parser with record
@@ -159,16 +132,7 @@ private
    function Very_Verbose (Self : Base_Options) return Boolean is
      (Self.Verbosity = GPRtools.Very_Verbose);
 
-   function Get_Target
-     (Self : Base_Options) return GPR2.Name_Type
-   is (GPR2.Name_Type (To_String (Self.Target)));
-
-   function Get_Subdirs
-     (Self : Base_Options) return GPR2.Optional_Name_Type
-   is (GPR2.Optional_Name_Type (To_String (Self.Subdirs)));
-
-   function Get_Src_Subdirs
-     (Self : Base_Options) return GPR2.Optional_Name_Type
-   is (GPR2.Optional_Name_Type (To_String (Self.Src_Subdirs)));
+   Empty_Options : constant Base_Options :=
+                     (GPR2.Options.Empty_Options with others => <>);
 
 end GPRtools.Options;

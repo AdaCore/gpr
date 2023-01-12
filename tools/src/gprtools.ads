@@ -18,9 +18,6 @@
 
 package GPRtools is
 
-   Usage_Error : exception;
-   --  Raised when a wrong usage is detected
-
    type Which is (Build, Clean, Ls, Install, Name, Remote, Inspect);
    --  Names of the supported tools
 

@@ -1,0 +1,267 @@
+Testing Add_Switch pre check
+Add_Switch pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Base pre check
+Base pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Build_Path pre check
+Build_Path pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Check_Shared_Lib pre check
+Check_Shared_Lib pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Config_Project_Pre_Check pre check
+Config_Project_Pre_Check pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Config_Project_Has_Error pre check
+Config_Project_Has_Error pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Config_Project_Log pre check
+Config_Project_Log pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Context pre check
+Context pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Filename pre check
+Filename pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Finalize pre check
+Finalize pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Implicit_With pre check
+Implicit_With pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Load_Project pre check
+Load_Project pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing On_Extra_Arg pre check
+On_Extra_Arg pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Project_File pre check
+Project_File pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Project_Is_Defined pre check
+Project_Is_Defined pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing RTS_Map pre check
+RTS_Map pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Src_Subdirs_Unbounded pre check
+Src_Subdirs_Unbounded pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Src_Subdirs pre check
+Src_Subdirs pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Subdirs_Unbounded pre check
+Subdirs_Unbounded pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Subdirs pre check
+Subdirs pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Target pre check
+Target pre check => ADA.ASSERTIONS.ASSERTION_ERROR
+Test OK
+
+Testing Add_Switch --db test.gpr
+Test OK
+
+Testing Add_Switch --db src
+Test OK
+
+Testing Add_Switch --db unexisting
+GPR2.OPTIONS.USAGE_ERROR = > /unexisting is not a file or directory
+Test OK
+
+Testing Add_Switch -Pfirst -Psecond
+GPR2.OPTIONS.USAGE_ERROR = > "-P", project already "first.gpr"
+Test OK
+
+Testing Add_Switch extra.gpr -Ptest
+On_Extra_Arg ("extra.gpr") => TRUE
+GPR2.OPTIONS.USAGE_ERROR = > cannot have -P<prj> and <prj> on the same command line
+Test OK
+
+Testing Add_Switch -X name:value
+GPR2.OPTIONS.USAGE_ERROR = > Can't split 'name:value' to name and value
+Test OK
+
+Testing On_Extra_Arg other-arg extra1.gpr other-arg extra2.gpr
+On_Extra_Arg ("other-arg") => FALSE
+On_Extra_Arg ("extra1.gpr") => TRUE
+On_Extra_Arg ("other-arg") => FALSE
+GPR2.OPTIONS.USAGE_ERROR = > cannot have multiple <proj> on the same command line
+Test OK
+
+Testing Add_Switch -Ptest extra.gpr
+GPR2.OPTIONS.USAGE_ERROR = > cannot have -P<prj> and <prj> on the same command line
+Test OK
+
+Testing --RTS=adaRuntime1 --RTS:otherLanguage=otherRuntime1
+Ada runtime: adaRuntime1
+Other runtime: otherRuntime1
+Test OK
+
+Testing --RTS:ada=adaRuntime0 --RTS:ADA=adaRuntime2 --RTS:otherLanguage=otherRuntime1
+Ada runtime: adaRuntime2
+Other language runtime: otherRuntime2
+Test OK
+
+Testing default values (--no-project)
+Filename:
+Context.Length: 0
+Context: is empty
+Config_Project: is not defined
+Build_Path:
+Subdirs:
+Subdirs (unbounded):
+Src_Subdirs:
+Src_Subdirs (unbounded):
+Check_Shared_Lib:TRUE
+Implicit_With: is empty
+Target:all
+RTS_Map.Length: 0
+Base.Is_Default_Db:TRUE
+Project_Is_Defined:FALSE
+Filename(Allow_Implicit_Project):
+Context.Length(Allow_Implicit_Project): 0
+Context(Allow_Implicit_Project): is empty
+Config_Project(Allow_Implicit_Project): is not defined
+Build_Path(Allow_Implicit_Project):
+Subdirs(Allow_Implicit_Project):
+Subdirs (unbounded)(Allow_Implicit_Project):
+Src_Subdirs(Allow_Implicit_Project):
+Src_Subdirs (unbounded)(Allow_Implicit_Project):
+Check_Shared_Lib(Allow_Implicit_Project):TRUE
+Implicit_With(Allow_Implicit_Project): is empty
+Target(Allow_Implicit_Project):all
+RTS_Map.Length(Allow_Implicit_Project): 0
+Base.Is_Default_Db(Allow_Implicit_Project):TRUE
+Project_Is_Defined(Allow_Implicit_Project):FALSE
+Test OK
+
+Testing values
+using project file /test.gpr
+Filename:/test.gpr
+Context.Length: 1
+Context'First key=value
+Config_Project:autoconf.cgpr
+Build_Path:
+Subdirs:Subdirs
+Subdirs (unbounded):Subdirs
+Src_Subdirs:Src_Subdirs
+Src_Subdirs (unbounded):Src_Subdirs
+Check_Shared_Lib:FALSE
+Implicit_With'Firstimplicit.gpr
+Target:arm-elf
+RTS_Map.Length: 0
+Base.Is_Default_Db:FALSE
+Project_Is_Defined:FALSE
+using project file /test.gpr
+Config_Project (--config):config.cgpr
+Test OK
+
+Testing Finalize --no-project -Ptest
+GPR2.OPTIONS.USAGE_ERROR = > cannot specify --no-project with a project file
+Test OK
+
+Testing Finalize --root-dir=root  -Ptest
+GPR2.OPTIONS.USAGE_ERROR = > cannot use --root-dir without --relocate-build-tree option
+Test OK
+
+Testing Finalize no arguments at  with Allow_Implicit_Project=TRUE
+using project file /test.gpr
+Filename:./test.gpr
+Build_Path:/
+Test OK
+
+Testing Finalize no arguments at /new-current-directory/default with Allow_Implicit_Project=TRUE
+using project file /new-current-directory/default/default.gpr
+Filename:default.gpr
+Build_Path:/new-current-directory/default/
+Test OK
+
+Testing Finalize no arguments at /new-current-directory/two-gpr with Allow_Implicit_Project=TRUE
+use implicit project in /new-current-directory/two-gpr
+Filename:/new-current-directory/two-gpr
+Build_Path:/new-current-directory/two-gpr
+Test OK
+
+Testing Finalize no arguments at /new-current-directory/two-gpr with Allow_Implicit_Project=TRUE
+Filename:/new-current-directory/two-gpr
+Build_Path:/new-current-directory/two-gpr
+Test OK
+
+Testing Finalize no arguments at /new-current-directory/no-gpr with Allow_Implicit_Project=TRUE
+use implicit project in /new-current-directory/no-gpr
+Filename:/new-current-directory/no-gpr
+Build_Path:/new-current-directory/no-gpr
+Test OK
+
+Testing Finalize no arguments at  with Allow_Implicit_Project=FALSE
+Filename is Undefined
+Build_Path is Undefined
+Test OK
+
+Testing Finalize -Ptest
+Filename:test.gpr
+Build_Path is Undefined
+Test OK
+
+Testing Finalize --relocate-build-tree=relocated -Ptest
+Filename:test.gpr
+Build_Path:relocated
+Test OK
+
+Testing Finalize --no-project --relocate-build-tree=relocated
+Filename:
+Build_Path:relocated
+Test OK
+
+Testing Finalize --no-project --relocate-build-tree=relocated --root-dir=.
+Filename:
+Build_Path:../options/
+Test OK
+
+Testing Load Project -aP added-path -Pload-project/test --autoconf=other-autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug
+creating configuration project autoconf.cgpr
+Load_Project returned TRUE
+Test OK
+
+Testing Load Project -aP added-path -aP load-project --root-dir=. --relocate-build-tree=relocated -Ptest --autoconf=autoconf.cgpr -XBUILD=Debug
+Load_Project returned TRUE
+Test OK
+
+Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug
+Load_Project returned TRUE
+Test OK
+
+Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug --target x86_64-windows
+Load_Project returned TRUE
+Test OK
+
+Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug --target unknown-target
+Load_Project returned TRUE
+test.gpr:12:32: warning: object directory "obj-Release" not found
+autoconf.cgpr:2:19: error: --target: 'unknown-target' is different from the target value in the configuration project 'x86_64-windows'
+Test OK
+

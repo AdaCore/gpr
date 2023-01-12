@@ -1,4 +1,3 @@
-with Ada.Real_Time;     use Ada.Real_Time;
 with Ada.Command_Line;
 with Ada.Text_IO;
 
@@ -16,9 +15,11 @@ procedure Main is
 
    procedure Test (Gpr : Filename_Type)
    is
-      Tree     : Project.Tree.Object;
-      Ctx      : Context.Object := Context.Empty;
-      Db       : Build.Tree_Db.Object;
+      Tree        : Project.Tree.Object;
+      Ctx         : Context.Object := Context.Empty;
+      Db          : Build.Tree_Db.Object;
+      Src_Count   : Natural := 0;
+      Src_Count_2 : Natural := 0;
 
       ---------------------
       -- Print_Unit_Part --
@@ -181,6 +182,9 @@ procedure Main is
       Ada.Text_IO.Put_Line ("* Sources *");
       Ada.Text_IO.New_Line;
 
+      Src_Count := 0;
+      Src_Count_2 := 0;
+
       for C in Tree.Iterate loop
          declare
             V : constant Project.View.Object := Project.Tree.Element (C);
@@ -196,8 +200,22 @@ procedure Main is
                Ada.Text_IO.New_Line;
 
                for S of Db.View_Database (V).Sources (Sorted => True) loop
+                  Src_Count := Src_Count + 1;
                   Print_Source (S);
                end loop;
+
+               --  Check that unsorted list gives the same number of sources.
+               --  We can't print them out though as this would generate
+               --  non stable output.
+               for S of Db.View_Database (V).Sources (Sorted => False) loop
+                  Src_Count_2 := Src_Count_2 + 1;
+               end loop;
+
+               if Src_Count /= Src_Count_2 then
+                  Ada.Text_IO.Put_Line
+                    ("!!! ERROR: sorted and unsorted list of sources don't" &
+                       " have the same number of elements");
+               end if;
             end if;
          end;
       end loop;

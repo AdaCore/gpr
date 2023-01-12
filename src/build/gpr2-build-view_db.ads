@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2022, AdaCore
+--  Copyright (C) 2022-2023, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0
 --
@@ -42,7 +42,7 @@ package GPR2.Build.View_Db is
    --  Get a source info object for the view source with simple name Basename.
    --
    --  Note that only sources owned by the view (present in its source
-   --  directorView_Dbnherited via project extension, or aggregated in an
+   --  directory, inherited via project extension, or aggregated in an
    --  aggregate library are returned, but not the sources visible via simple
    --  withed or limited withed projects.
    --
@@ -54,6 +54,12 @@ package GPR2.Build.View_Db is
      with Pre  => Self.Is_Defined;
    --  Get a source from its simple name, that is visible for a given view's
    --  sources (so project's own sources and all its withed projects).
+
+   function Visible_Sources
+     (Self : Object) return GPR2.Build.Source_Info.Sets.Object
+     with Pre => Self.Is_Defined;
+   --  Get the complete list of visible sources: so sources owned by the view
+   --  but also all sources made visible by withed or limited withed views.
 
    function Compilation_Units
      (Self : Object) return Compilation_Unit.Maps.Map
