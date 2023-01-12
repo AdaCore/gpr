@@ -7,6 +7,7 @@
 with Ada.Containers.Hashed_Maps;
 with Ada.Containers.Hashed_Sets;
 with Ada.Containers.Indefinite_Hashed_Maps;
+with Ada.Containers.Indefinite_Hashed_Sets;
 with Ada.Containers.Ordered_Sets;
 
 with GNATCOLL.Refcount;
@@ -54,6 +55,9 @@ private package GPR2.Build.View_Tables is
 
    package File_Sets is new Ada.Containers.Ordered_Sets
      (File_Info);
+
+   package Basename_Sets is new Ada.Containers.Indefinite_Hashed_Sets
+     (Simple_Name, Hash, "=");
 
    package Name_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (Name_Type, Name_Type, Hash, "=");
@@ -159,16 +163,18 @@ private package GPR2.Build.View_Tables is
    end record;
 
    procedure Add_Source
-     (Data          : in out View_Data;
-      View_Owner    : GPR2.Project.View.Object;
-      Path          : GPR2.Path_Name.Object;
-      Extended_View : GPR2.Project.View.Object);
+     (Data               : in out View_Data;
+      View_Owner         : GPR2.Project.View.Object;
+      Path               : GPR2.Path_Name.Object;
+      Extended_View      : GPR2.Project.View.Object;
+      Resolve_Visibility : Boolean := False);
 
    procedure Remove_Source
-     (Data          : in out View_Data;
-      View_Owner    : GPR2.Project.View.Object;
-      Path          : GPR2.Path_Name.Object;
-      Extended_View : GPR2.Project.View.Object);
+     (Data               : in out View_Data;
+      View_Owner         : GPR2.Project.View.Object;
+      Path               : GPR2.Path_Name.Object;
+      Extended_View      : GPR2.Project.View.Object;
+      Resolve_Visibility : Boolean := False);
 
    procedure Refresh (Data : in out View_Data);
 
