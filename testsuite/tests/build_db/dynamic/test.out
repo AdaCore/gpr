@@ -71,7 +71,7 @@ Executing scenario/simple.txt
 -----------------------------------
 --- rm src2/pkg.ads
 --- Refresh list of sources
-simple.gpr:3:41: error: "pkg.ads" is found in several source directories
+simple.gpr:3:41: error: "pkg.ads" is found multiple times for the same source directory value
 -----------------------------------
 * Sources:
  - sources of Simple
