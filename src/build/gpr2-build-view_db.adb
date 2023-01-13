@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0
 --
 
+with GPR2.Build.Compilation_Input.Sets;
 with GPR2.Build.Source_Info.Sets;
 with GPR2.Build.Tree_Db;
 
@@ -18,20 +19,53 @@ package body GPR2.Build.View_Db is
    is (Inst.Get);
    --  Extracts a reference to view_tables data from a View_Base instance
 
+   ------------------------
+   -- Compilation_Inputs --
+   ------------------------
+
+   function Compilation_Inputs
+     (Self : Object) return Build.Compilation_Input.Sets.Object is
+   begin
+      return Build.Compilation_Input.Sets.Create (Self);
+   end Compilation_Inputs;
+
+   ----------------------
+   -- Compilation_Unit --
+   ----------------------
+
+   function Compilation_Unit
+     (Self : Object;
+      Name : Name_Type) return Build.Compilation_Unit.Object is
+   begin
+      return Ref (Self).CUs.Element (Name);
+   end Compilation_Unit;
+
    -----------------------
    -- Compilation_Units --
    -----------------------
 
    function Compilation_Units
-     (Self : Object) return Compilation_Unit.Maps.Map is
+     (Self : Object) return Build.Compilation_Unit.Maps.Map is
    begin
-      return Result : Compilation_Unit.Maps.Map do
+      return Result : Build.Compilation_Unit.Maps.Map do
          for C in Ref (Self).CUs.Iterate loop
             Result.Insert (Compilation_Unit_Maps.Key (C),
                            Compilation_Unit_Maps.Element (C));
          end loop;
       end return;
    end Compilation_Units;
+
+   --------------------------
+   -- Has_Compilation_Unit --
+   --------------------------
+
+   function Has_Compilation_Unit
+     (Self : Object;
+      Name : Name_Type) return Boolean
+   is
+   begin
+      return Ref (Self).CUs.Contains (Name);
+   end Has_Compilation_Unit;
 
    ----------------
    -- Has_Source --
@@ -61,8 +95,6 @@ package body GPR2.Build.View_Db is
          return Source_Info.Undefined;
       else
          declare
-            use type GPR2.Project.View.Object;
-
             Proxy : Source_Proxy renames Basename_Source_Maps.Element (C);
 
          begin
@@ -97,9 +129,9 @@ package body GPR2.Build.View_Db is
       View_Tables.Refresh (Ref (Self));
    end Update;
 
-   -----------
-   -- To_Db --
-   -----------
+   -------------------
+   -- View_Base_For --
+   -------------------
 
    function View_Base_For (Data : View_Tables.View_Data) return Object is
    begin
@@ -112,7 +144,6 @@ package body GPR2.Build.View_Db is
      (Self : Object;
       View : Project.View.Object) return Object
    is
-      use type Project.View.Object;
    begin
       if Self.View = View then
          return Self;

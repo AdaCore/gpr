@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0
 --
 
+limited with GPR2.Build.Compilation_Input.Sets;
 limited with GPR2.Build.Source_Info.Sets;
 with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Project.View;
@@ -61,19 +62,42 @@ package GPR2.Build.View_Db is
    --  Get the complete list of visible sources: so sources owned by the view
    --  but also all sources made visible by withed or limited withed views.
 
-   function Compilation_Units
-     (Self : Object) return Compilation_Unit.Maps.Map
+   function Has_Compilation_Unit
+     (Self : Object;
+      Name : Name_Type) return Boolean
      with Pre => Self.Is_Defined and then Self.View.Is_Namespace_Root;
+   --  Whether the compilation unit is defined in the namespace
+
+   function Compilation_Unit
+     (Self : Object;
+      Name : Name_Type) return Compilation_Unit.Object
+     with Pre => Self.Has_Compilation_Unit (Name);
+   --  Return the compilation unit named "Name".
+
+   function Compilation_Units
+     (Self : Object) return Build.Compilation_Unit.Maps.Map
+     with Pre => Self.Is_Defined and then Self.View.Is_Namespace_Root;
+
+   function Compilation_Inputs
+     (Self : Object) return Build.Compilation_Input.Sets.Object
+     with Pre => Self.Is_Defined;
+   --  Returns all sources (and index in case of multi-unit source) that can
+   --  be used as input for a compilation for this view.
 
    function View (Self : Object) return GPR2.Project.View.Object
      with Pre => Self.Is_Defined;
 
    function View_Base_For
      (Self : Object;
-      View : Project.View.Object) return Object;
+      View : Project.View.Object) return Object
+     with Pre => Self.Is_Defined;
    --  Retrieve the build database for View.
 
+   function "<" (L, R : Object) return Boolean;
+
 private
+
+   use type Project.View.Object;
 
    type Object is new View_Tables.Data_Refs.Ref with null record;
 
@@ -83,4 +107,6 @@ private
    function View (Self : Object) return GPR2.Project.View.Object is
      (Self.Get.View);
 
+   function "<" (L, R : Object) return Boolean is
+      (L.Get.View < R.Get.View);
 end GPR2.Build.View_Db;

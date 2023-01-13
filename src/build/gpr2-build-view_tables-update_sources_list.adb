@@ -63,6 +63,9 @@ package body Update_Sources_List is
 
    package Source_Set renames Containers.Filename_Type_Set;
 
+   package Lang_Boolean_Map is new Ada.Containers.Hashed_Maps
+     (Language_Id, Boolean, Hash, "=");
+
    procedure Include_Simple_Filename
      (Data  : View_Data;
       Set   : in out Source_Set.Set;
@@ -332,6 +335,10 @@ package body Update_Sources_List is
      (Data             : in out View_Data;
       Stop_On_Error    : Boolean)
    is
+      function Is_Compilable (Language : Language_Id) return Boolean;
+      --  Check whether the language is compilable on the current View. This
+      --  includes information provided by the Tree (Driver attribute). Note
+      --  that this routine caches the result into a map.
 
       procedure Handle_File
         (Dir_Ref   : SR.Value.Object;
@@ -358,7 +365,7 @@ package body Update_Sources_List is
                    Data.View.Attribute (PRA.Naming.Dot_Replacement).Value.Text;
       --  Get Dot_Replacement value
 
-      Naming_Schema_Map : Naming_Schema_Maps.Map;
+      Naming_Schema_Map       : Naming_Schema_Maps.Map;
 
       Listed_Sources          : Source_Set.Set;
       Excluded_Sources        : Source_Set.Set;
@@ -370,8 +377,11 @@ package body Update_Sources_List is
       Tree                    : constant not null access Project.Tree.Object :=
                                   Data.View.Tree;
 
-      Ada_Naming_Exceptions : Source_Path_To_Attribute_List.Map;
-      Attr                  : Project.Attribute.Object;
+      Ada_Naming_Exceptions   : Source_Path_To_Attribute_List.Map;
+      Attr                    : Project.Attribute.Object;
+
+      Compilable_Language     : Lang_Boolean_Map.Map;
+      --  List of compilable languages for the view
 
       -----------------
       -- Handle_File --
@@ -385,6 +395,32 @@ package body Update_Sources_List is
       begin
          Data.Src_Files.Include ((File, Timestamp, Dir_Ref));
       end Handle_File;
+
+      -------------------
+      -- Is_Compilable --
+      -------------------
+
+      function Is_Compilable (Language : Language_Id) return Boolean
+      is
+         C    : constant Lang_Boolean_Map.Cursor :=
+                  Compilable_Language.Find (Language);
+         Attr : GPR2.Project.Attribute.Object;
+         Res  : Boolean;
+      begin
+         if not Lang_Boolean_Map.Has_Element (C) then
+            Attr := Data.View.Attribute
+              (PRA.Compiler.Driver, Project.Attribute_Index.Create (Language));
+            Res := Attr.Is_Defined
+              and then Length (Attr.Value.Unchecked_Text) > 0;
+
+            Compilable_Language.Insert (Language, Res);
+
+            return Res;
+
+         else
+            return Lang_Boolean_Map.Element (C);
+         end if;
+      end Is_Compilable;
 
       ------------------
       -- Process_File --
@@ -722,6 +758,7 @@ package body Update_Sources_List is
                     (Filename            => File.Path,
                      Timestamp           => File.Stamp,
                      View                => Data.View,
+                     Tree_Db             => Data.Tree_Db,
                      Naming_Exception    => Naming_Exception,
                      Units               => Units,
                      Source_Ref          => File.Dir_Ref);
@@ -733,8 +770,10 @@ package body Update_Sources_List is
                      Kind             => Kind,
                      Timestamp        => File.Stamp,
                      View             => Data.View,
+                     Tree_Db          => Data.Tree_Db,
                      Naming_Exception => Naming_Exception,
-                     Source_Ref       => File.Dir_Ref);
+                     Source_Ref       => File.Dir_Ref,
+                     Is_Compilable    => Is_Compilable (Language));
                end if;
 
                Data.Src_Infos.Insert (File.Path, Source);
