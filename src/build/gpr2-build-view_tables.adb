@@ -61,19 +61,18 @@ package body GPR2.Build.View_Tables is
    ----------------
 
    procedure Add_Source
-     (Data            : in out View_Data;
-      View_Owner      : GPR2.Project.View.Object;
-      Path            : GPR2.Path_Name.Object;
-      Extended_View   : GPR2.Project.View.Object;
-      Aggregated_View : GPR2.Project.View.Object)
+     (Data               : in out View_Data;
+      View_Owner         : GPR2.Project.View.Object;
+      Path               : GPR2.Path_Name.Object;
+      Extended_View      : GPR2.Project.View.Object;
+      Resolve_Visibility : Boolean := False)
    is
       C_Overload : Basename_Source_List_Maps.Cursor;
       Done       : Boolean;
       Proxy      : constant Source_Proxy :=
                      (View      => View_Owner,
                       Path_Name => Path,
-                      Inh_From  => Extended_View,
-                      Agg_From  => Aggregated_View);
+                      Inh_From  => Extended_View);
 
    begin
       Data.Overloaded_Srcs.Insert (Path.Simple_Name,
@@ -82,7 +81,9 @@ package body GPR2.Build.View_Tables is
                                    Done);
       Data.Overloaded_Srcs.Reference (C_Overload).Include (Proxy);
 
-      Resolve_Visibility (Data, C_Overload);
+      if Resolve_Visibility then
+         View_Tables.Resolve_Visibility (Data, C_Overload);
+      end if;
    end Add_Source;
 
    -------------------
@@ -351,24 +352,25 @@ package body GPR2.Build.View_Tables is
    -------------------
 
    procedure Remove_Source
-     (Data            : in out View_Data;
-      View_Owner      : GPR2.Project.View.Object;
-      Path            : GPR2.Path_Name.Object;
-      Extended_View   : GPR2.Project.View.Object;
-      Aggregated_View : GPR2.Project.View.Object)
+     (Data               : in out View_Data;
+      View_Owner         : GPR2.Project.View.Object;
+      Path               : GPR2.Path_Name.Object;
+      Extended_View      : GPR2.Project.View.Object;
+      Resolve_Visibility : Boolean := False)
    is
       Basename : constant Simple_Name := Path.Simple_Name;
       C_Overload : Basename_Source_List_Maps.Cursor;
       Proxy    : constant Source_Proxy := (View      => View_Owner,
                                            Path_Name => Path,
-                                           Inh_From  => Extended_View,
-                                           Agg_From  => Aggregated_View);
+                                           Inh_From  => Extended_View);
 
    begin
       C_Overload := Data.Overloaded_Srcs.Find (Basename);
-
       Data.Overloaded_Srcs.Reference (C_Overload).Delete (Proxy);
-      Resolve_Visibility (Data, C_Overload);
+
+      if Resolve_Visibility then
+         View_Tables.Resolve_Visibility (Data, C_Overload);
+      end if;
    end Remove_Source;
 
    ----------------------
@@ -436,12 +438,18 @@ package body GPR2.Build.View_Tables is
 
       begin
          if Data.View.Is_Extended then
-            Add_Source
-              (Get_Data (Data.Tree_Db, Data.View.Extending),
-               Src.View,
-               Src.Path_Name,
-               Extended_View   => Data.View,
-               Aggregated_View => Project.View.Undefined);
+            --  ??? Check the view's list of excluded sources before doing that
+            declare
+               Ext_Data : constant View_Data_Ref :=
+                            Get_Data (Data.Tree_Db, Data.View.Extending);
+            begin
+               Add_Source
+                 (Ext_Data,
+                  Src.View,
+                  Src.Path_Name,
+                  Extended_View      => Data.View,
+                  Resolve_Visibility => True);
+            end;
          end if;
 
          if Src_Info.Has_Units
@@ -499,8 +507,8 @@ package body GPR2.Build.View_Tables is
               (Get_Data (Data.Tree_Db, Data.View.Extending),
                Src.View,
                Src.Path_Name,
-               Extended_View   => Data.View,
-               Aggregated_View => Project.View.Undefined);
+               Extended_View      => Data.View,
+               Resolve_Visibility => True);
          end if;
       end Propagate_Visible_Source_Removal;
 

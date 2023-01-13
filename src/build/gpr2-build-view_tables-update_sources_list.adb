@@ -346,6 +346,8 @@ package body Update_Sources_List is
       --  List of files that were present in the source dirs during last call
       --  to Process. Used for delta updates
 
+      Changed_Sources    : Basename_Sets.Set;
+
       Current_Src_Dir_SR : GPR2.Source_Reference.Value.Object;
       --  Identifies the Source_Dirs value being processed
 
@@ -815,6 +817,8 @@ package body Update_Sources_List is
       Data.View.Source_Directories_Walk
         (Source_CB => Handle_File'Access, Dir_CB => null);
 
+      Changed_Sources.Clear;
+
       --  Check deleted files
 
       for F of Previous_Files loop
@@ -829,9 +833,10 @@ package body Update_Sources_List is
                if Src_Info_Maps.Has_Element (C) then
                   --  File was a source and has disapeared: notify the build
                   --  db object to cleanup tables.
-                  Remove_Source (Data, Data.View, F.Path,
-                                 Project.View.Undefined,
-                                 Project.View.Undefined);
+                  Remove_Source
+                    (Data, Data.View, F.Path, Project.View.Undefined);
+
+                  Changed_Sources.Include (F.Path.Simple_Name);
                end if;
             end;
          end if;
@@ -856,8 +861,8 @@ package body Update_Sources_List is
                   --  First add source to Data view.
                   Add_Source
                     (Data, Data.View, F.Path,
-                     Extended_View   => Project.View.Undefined,
-                     Aggregated_View => Project.View.Undefined);
+                     Extended_View   => Project.View.Undefined);
+                  Changed_Sources.Include (F.Path.Simple_Name);
                end if;
 
             elsif File_Sets.Element (C).Stamp /= F.Stamp then
@@ -868,6 +873,18 @@ package body Update_Sources_List is
                     (F.Stamp);
                end if;
             end if;
+         end;
+      end loop;
+
+      --  All source changes have been processed: now resolve potential
+      --  visibility issues
+
+      for Base_Name of Changed_Sources loop
+         declare
+            C_Overload : Basename_Source_List_Maps.Cursor;
+         begin
+            C_Overload := Data.Overloaded_Srcs.Find (Base_Name);
+            Resolve_Visibility (Data, C_Overload);
          end;
       end loop;
 
