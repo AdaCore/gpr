@@ -26,7 +26,7 @@ def setup():
     anod_install("gcc")
     anod_install("stable-langkit")
     # gprbuild, gnat
-    anod_install("libadalang-tools")
+    anod_install("stable-libadalang-tools")
     anod_install("gdb")
     anod_install("e3")
 

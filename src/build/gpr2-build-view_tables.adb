@@ -524,6 +524,7 @@ package body GPR2.Build.View_Tables is
       C_Info    : Src_Info_Maps.Cursor;
       C_Info2   : Src_Info_Maps.Cursor;
       SR1, SR2  : Source_Reference.Value.Object;
+      Clashes   : GPR2.Containers.Source_Value_Set;
 
    begin
       if Set.Is_Empty then
@@ -567,7 +568,9 @@ package body GPR2.Build.View_Tables is
 
             elsif C.View = Data.View then
                --  Both candidates are owned by the view, check
-               --  Source_Reference.
+               --  Source_Reference: the declaration order of the source
+               --  directory in the Source_Dirs attribute gives the
+               --  visibility priority
 
                C_Info2 := Data.Src_Infos.Find (C.Path_Name);
 
@@ -575,16 +578,7 @@ package body GPR2.Build.View_Tables is
                SR2 := Src_Info_Maps.Element (C_Info2).Source_Reference;
 
                if SR1 = SR2 then
-                  Tree.Append_Message
-                    (Message.Create
-                       (Message.Error,
-                        '"' & String (Basename) & '"' &
-                          " is found in several source directories",
-                        SR1));
-
-                  Candidate := No_Proxy;
-
-                  exit;
+                  Clashes.Include (SR1);
 
                elsif SR2 < SR1 then
                   --  Source_Ref of C2 is declared before the one of
@@ -592,13 +586,11 @@ package body GPR2.Build.View_Tables is
 
                   Candidate := C;
                   C_Info := C_Info2;
+                  Clashes.Clear;
                end if;
 
             else
                --  Remaining case: inheritance shows two candidate sources
-
-               --  ??? We should raise an error only if those candidates are
-               --  not overloaded by the View
 
                Tree.Append_Message
                  (Message.Create
@@ -647,6 +639,20 @@ package body GPR2.Build.View_Tables is
 
             end if;
          end loop;
+
+         if not Clashes.Is_Empty then
+            for SR of Clashes loop
+               Tree.Append_Message
+                 (Message.Create
+                    (Message.Error,
+                     '"' & String (Basename) & '"' &
+                       " is found multiple times for the same source" &
+                       " directory value",
+                     SR));
+            end loop;
+
+            Candidate := No_Proxy;
+         end if;
       end if;
 
       if Basename_Source_Maps.Has_Element (C_Src) then
