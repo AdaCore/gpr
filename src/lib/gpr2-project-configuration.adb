@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0
 --
 
-with Ada.Environment_Variables;
 with Ada.Text_IO;
 
 with GNAT.OS_Lib;
@@ -85,11 +84,13 @@ package body GPR2.Project.Configuration is
    end Create;
 
    function Create
-     (Settings   : Description_Set;
-      Target     : Name_Type;
-      Project    : GPR2.Path_Name.Object;
-      Base       : in out GPR2.KB.Object;
-      Save_Name  : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined)
+     (Settings    : Description_Set;
+      Target      : Name_Type;
+      Project     : GPR2.Path_Name.Object;
+      Base        : in out GPR2.KB.Object;
+      Save_Name   : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment)
       return Object
    is
 
@@ -195,11 +196,11 @@ package body GPR2.Project.Configuration is
                   exit;
                end if;
 
-               if Ada.Environment_Variables.Exists ("GPR_RUNTIME_PATH") then
+               if Environment.Exists ("GPR_RUNTIME_PATH") then
 
                   Runtime_Dir := Locate_Runtime
                     (Filename_Optional (Runtime (Settings_Local (Descr))),
-                     Ada.Environment_Variables.Value ("GPR_RUNTIME_PATH"));
+                     Environment.Value ("GPR_RUNTIME_PATH"));
 
                   if Runtime_Dir.Is_Defined and then Runtime_Dir.Exists then
                      if Check_Runtime_Dir (Runtime_Dir) then
@@ -236,27 +237,30 @@ package body GPR2.Project.Configuration is
             if Normalized = "unknown" then
                Configuration_String :=
                  Base.Configuration
-                   (Settings => Settings_Local,
-                    Target   => GPR2.KB.Default_Target,
-                    Messages => Result.Messages,
-                    Fallback => True);
+                   (Settings    => Settings_Local,
+                    Target      => GPR2.KB.Default_Target,
+                    Messages    => Result.Messages,
+                    Fallback    => True,
+                    Environment => Environment);
             else
                Configuration_String :=
                  Base.Configuration
-                   (Settings => Settings_Local,
-                    Target   => Normalized,
-                    Messages => Result.Messages,
-                    Fallback => True);
+                   (Settings    => Settings_Local,
+                    Target      => Normalized,
+                    Messages    => Result.Messages,
+                    Fallback    => True,
+                    Environment => Environment);
             end if;
          end;
 
       else
          Configuration_String :=
            Base.Configuration
-             (Settings => Settings_Local,
-              Target   => Target,
-              Messages => Result.Messages,
-              Fallback => False);
+             (Settings    => Settings_Local,
+              Target      => Target,
+              Messages    => Result.Messages,
+              Fallback    => False,
+              Environment => Environment);
       end if;
 
       if Configuration_String /= Null_Unbounded_String then

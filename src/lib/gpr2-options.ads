@@ -10,11 +10,11 @@
 --  Once options object is configured (by parsing the command line or calling
 --  On_Switch/Finalize functions directly), it can be used to load a Tree.
 
-
 with Ada.Strings.Unbounded;
 
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.Environment;
 with GPR2.File_Readers;
 with GPR2.KB;
 with GPR2.Log;
@@ -115,9 +115,12 @@ package GPR2.Options is
    --  If Arg is a valid file name and Project_File was never set, it is set
    --    and True is returned, else Usage_Error is raised.
 
-   procedure Finalize (Self                   : in out Object;
-                       Allow_Implicit_Project : Boolean := True;
-                       Quiet                  : Boolean := False)
+   procedure Finalize
+     (Self                   : in out Object;
+      Allow_Implicit_Project : Boolean := True;
+      Quiet                  : Boolean := False;
+      Environment            : GPR2.Environment.Object :=
+                                 GPR2.Environment.Process_Environment)
      with Pre => not Self.Is_Finalized,
           Post => Self.Is_Finalized;
    --  Option set should be finalized before Load_Project can be called.
@@ -238,6 +241,10 @@ package GPR2.Options is
      with Pre => Self.Is_Finalized;
    --  Returns True if project defined directly, not using implicit project.
 
+   function Check_For_Default_Project
+     (Directory : String := "") return GPR2.Path_Name.Object;
+   --  returns default gpr file or else the only gpr file found in directory.
+
 private
 
    type Object is tagged record
@@ -287,6 +294,8 @@ private
 
       Config_Project_Log       : GPR2.Log.Object;
 
+      Environment              : GPR2.Environment.Object;
+
    end record;
 
    function Is_Finalized (Self : Object) return Boolean
@@ -294,9 +303,10 @@ private
 
    function Base (Self : Object) return GPR2.KB.Object
    is (GPR2.KB.Create
-       (Flags      => GPR2.KB.Default_Flags,
-        Default_KB => not Self.Skip_Default_KB,
-        Custom_KB  => Self.KB_Locations));
+       (Flags       => GPR2.KB.Default_Flags,
+        Default_KB  => not Self.Skip_Default_KB,
+        Custom_KB   => Self.KB_Locations,
+        Environment => Self.Environment));
 
    function Build_Path
      (Self : Object) return GPR2.Path_Name.Object

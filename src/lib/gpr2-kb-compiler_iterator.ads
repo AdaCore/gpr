@@ -6,6 +6,8 @@
 
 --  Compiler iterator
 
+with GPR2.Environment;
+
 package GPR2.KB.Compiler_Iterator is
 
    type Object is abstract tagged null record;
@@ -34,10 +36,11 @@ package GPR2.KB.Compiler_Iterator is
    --  search at the same point later on).
 
    procedure Foreach_In_Path
-     (Self       : in out Object'Class;
-      Base       : in out KB.Object;
-      On_Target  : Name_Type;
-      Extra_Dirs : String := "");
+     (Self        : in out Object'Class;
+      Base        : in out KB.Object;
+      On_Target   : Name_Type;
+      Environment : GPR2.Environment.Object;
+      Extra_Dirs  : String := "");
    --  Find all compilers in "Extra_Dirs & $PATH".
    --  Extra_Dirs should typically be the list of directories coming from
    --  GPR2.Project.Configuration.Description parameters.

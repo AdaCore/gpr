@@ -1,0 +1,5 @@
+description:
+    Test support of environment objects
+driver: build_and_run
+project_file: test
+main: test

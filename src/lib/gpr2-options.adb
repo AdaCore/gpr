@@ -18,9 +18,6 @@ with GPR2.Project.Registry.Attribute;
 
 package body GPR2.Options is
 
-   function Check_For_Default_Project return GPR2.Path_Name.Object;
-   --  returns default gpr file or else the only gpr file found in current dir.
-
    ----------------
    -- Add_Switch --
    ----------------
@@ -157,9 +154,15 @@ package body GPR2.Options is
    -- Check_For_Default_Project --
    -------------------------------
 
-   function Check_For_Default_Project return GPR2.Path_Name.Object is
+   function Check_For_Default_Project
+     (Directory : String := "") return GPR2.Path_Name.Object is
       use Directories;
-      Default_Name : constant String := "default.gpr";
+      Default_Name : constant String :=
+                       (if Directory = ""
+                        then "default.gpr"
+                       else Directory
+                        & GNAT.OS_Lib.Directory_Separator
+                        & "default.gpr");
       Search       : Search_Type;
       Item         : Directory_Entry_Type;
 
@@ -171,7 +174,10 @@ package body GPR2.Options is
       end if;
 
       Start_Search
-        (Search, ".", "*.gpr", (Ordinary_File => True, others => False));
+        (Search,
+         (if Directory = "" then "." else Directory),
+         "*.gpr",
+         (Ordinary_File => True, others => False));
 
       if More_Entries (Search) then
          Get_Next_Entry (Search, Item);
@@ -190,10 +196,15 @@ package body GPR2.Options is
    -- Finalize --
    --------------
 
-   procedure Finalize (Self                   : in out Object;
-                       Allow_Implicit_Project : Boolean := True;
-                       Quiet                  : Boolean := False) is
+   procedure Finalize
+     (Self                   : in out Object;
+      Allow_Implicit_Project : Boolean := True;
+      Quiet                  : Boolean := False;
+      Environment            : GPR2.Environment.Object :=
+                                 GPR2.Environment.Process_Environment) is
    begin
+      Self.Environment := Environment;
+
       if Self.Project_File.Is_Defined
         and then not Self.Project_File.Has_Dir_Name
         and then Self.Root_Path.Is_Defined
@@ -204,7 +215,8 @@ package body GPR2.Options is
 
          declare
             Search_Paths : Path_Name.Set.Object :=
-                             GPR2.Project.Default_Search_Paths (True);
+                             GPR2.Project.Default_Search_Paths
+                               (True, Self.Environment);
          begin
             for P of Self.Search_Paths loop
                Search_Paths.Prepend (P);
@@ -330,7 +342,8 @@ package body GPR2.Options is
             Check_Shared_Lib =>  Self.Check_Shared_Lib,
             Absent_Dir_Error =>  Absent_Dir_Error,
             Implicit_With    =>  Self.Implicit_With,
-            File_Reader      => File_Reader);
+            File_Reader      => File_Reader,
+            Environment      => Self.Environment);
 
 
          if To_String (Self.Target) /= "all" then
@@ -349,7 +362,8 @@ package body GPR2.Options is
                                (if Tree.Get_KB.Is_Defined
                                 then Tree.Get_KB
                                 else GPR2.KB.Create_Default
-                                  (GPR2.KB.Targetset_Only_Flags));
+                                  (GPR2.KB.Targetset_Only_Flags,
+                                   Self.Environment));
                Conf_Norm   : constant Name_Type :=
                                Base.Normalized_Target
                                  (Name_Type (Conf_Target));
@@ -405,7 +419,8 @@ package body GPR2.Options is
             Config_Project    => (if Create_Cgpr
                                   then Self.Config_Project
                                   else GPR2.Path_Name.Undefined),
-            File_Reader       => File_Reader);
+            File_Reader       => File_Reader,
+            Environment       => Self.Environment);
 
       end if;
 

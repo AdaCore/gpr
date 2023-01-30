@@ -7,9 +7,11 @@
 --  Handle the configuration object for a project tree
 
 limited with GPR2.KB;
+with GPR2.Environment;
 with GPR2.Log;
 with GPR2.Project.Parser;
 with GPR2.Project.View;
+
 with GNATCOLL.Refcount;
 
 private with Ada.Containers.Indefinite_Hashed_Maps;
@@ -80,11 +82,13 @@ package GPR2.Project.Configuration is
    --  Returns name specified by Descr
 
    function Create
-     (Settings   : Description_Set;
-      Target     : Name_Type;
-      Project    : GPR2.Path_Name.Object;
-      Base       : in out GPR2.KB.Object;
-      Save_Name  : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined)
+     (Settings    : Description_Set;
+      Target      : Name_Type;
+      Project     : GPR2.Path_Name.Object;
+      Base        : in out GPR2.KB.Object;
+      Save_Name   : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment)
       return Object
    with Pre => Settings'Length > 0;
    --  Creates a configuration based on the settings requested.

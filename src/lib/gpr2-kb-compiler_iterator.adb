@@ -7,7 +7,6 @@
 with Ada.Characters.Handling;
 with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Directories;
-with Ada.Environment_Variables;
 
 with GNAT.Directory_Operations;
 with GNAT.OS_Lib;
@@ -36,7 +35,8 @@ package body GPR2.KB.Compiler_Iterator is
       From_Extra_Dir : Boolean;
       On_Target      : Targets_Set_Id;
       Path_Order     : Integer;
-      Continue       : out Boolean);
+      Continue       : out Boolean;
+      Environment    : GPR2.Environment.Object);
    --  Find all known compilers in Directory, and call Iterator.Callback as
    --  appropriate.
 
@@ -51,7 +51,8 @@ package body GPR2.KB.Compiler_Iterator is
       On_Target      : Targets_Set_Id;
       Descr          : Compiler_Description;
       Path_Order     : Integer;
-      Continue       : out Boolean);
+      Continue       : out Boolean;
+      Environment    : GPR2.Environment.Object);
    --  For each language/runtime parsed in Languages/Runtimes, create a new
    --  compiler in the list, if it matches Description
 
@@ -73,7 +74,8 @@ package body GPR2.KB.Compiler_Iterator is
       From_Extra_Dir : Boolean;
       On_Target      : Targets_Set_Id;
       Path_Order     : Integer;
-      Continue       : out Boolean)
+      Continue       : out Boolean;
+      Environment    : GPR2.Environment.Object)
    is
       use CDM;
       use Exec_Sets;
@@ -162,7 +164,8 @@ package body GPR2.KB.Compiler_Iterator is
                         From_Extra_Dir => From_Extra_Dir,
                         Descr          => Config,
                         Path_Order     => Path_Order,
-                        Continue       => Continue);
+                        Continue       => Continue,
+                        Environment    => Environment);
 
                      Decrease_Indent (Main_Trace);
 
@@ -212,7 +215,8 @@ package body GPR2.KB.Compiler_Iterator is
                         From_Extra_Dir => From_Extra_Dir,
                         Descr          => Config,
                         Path_Order     => Path_Order,
-                        Continue       => Continue);
+                        Continue       => Continue,
+                        Environment    => Environment);
 
                      Decrease_Indent (Main_Trace);
                      exit For_All_Files_In_Dir when not Continue;
@@ -256,7 +260,8 @@ package body GPR2.KB.Compiler_Iterator is
                      Directory      => Directory,
                      Descr          => Config,
                      Path_Order     => Path_Order,
-                     Continue       => Continue);
+                     Continue       => Continue,
+                     Environment    => Environment);
                   exit when not Continue;
                end if;
             exception
@@ -274,10 +279,11 @@ package body GPR2.KB.Compiler_Iterator is
    ------------------------------
 
    procedure Foreach_In_Path
-     (Self       : in out Object'Class;
-      Base       : in out KB.Object;
-      On_Target  : Name_Type;
-      Extra_Dirs : String := "")
+     (Self        : in out Object'Class;
+      Base        : in out KB.Object;
+      On_Target   : Name_Type;
+      Environment : GPR2.Environment.Object;
+      Extra_Dirs  : String := "")
    is
       use GNATCOLL.Traces;
 
@@ -403,8 +409,8 @@ package body GPR2.KB.Compiler_Iterator is
       --  set to 'E' if the dir comes from extra_dirs, or 'P' if it comes from
       --  PATH.
 
-      if Environment_Variables.Exists ("PATH") then
-         Process_Path (Ada.Environment_Variables.Value ("PATH"), 'P', False);
+      if Environment.Exists ("PATH") then
+         Process_Path (Environment.Value ("PATH"), 'P', False);
       end if;
 
       if Extra_Dirs /= "" then
@@ -426,7 +432,8 @@ package body GPR2.KB.Compiler_Iterator is
                From_Extra_Dir => P (P'First) = 'E',
                Path_Order     => Path_Order,
                On_Target      => Selected_Targets_Set,
-               Continue       => Continue);
+               Continue       => Continue,
+               Environment    => Environment);
             exit when not Continue;
          end;
 
@@ -450,7 +457,8 @@ package body GPR2.KB.Compiler_Iterator is
       On_Target      : Targets_Set_Id;
       Descr          : Compiler_Description;
       Path_Order     : Integer;
-      Continue       : out Boolean)
+      Continue       : out Boolean;
+      Environment    : GPR2.Environment.Object)
    is
       use External_Value_Nodes;
       use External_Value_Lists;
@@ -551,6 +559,7 @@ package body GPR2.KB.Compiler_Iterator is
                Value            => Descr.Target,
                Comp             => Comp,
                Split_Into_Words => False,
+               Environment      => Environment,
                Calls_Cache      => Base.External_Calls_Cache,
                Messages         => Base.Messages,
                Processed_Value  => Target,
@@ -595,6 +604,7 @@ package body GPR2.KB.Compiler_Iterator is
             Value            => Descr.Version,
             Comp             => Comp,
             Split_Into_Words => False,
+            Environment      => Environment,
             Calls_Cache      => Base.External_Calls_Cache,
             Messages         => Base.Messages,
             Processed_Value  => Version,
@@ -619,6 +629,7 @@ package body GPR2.KB.Compiler_Iterator is
             Value            => Descr.Variables,
             Comp             => Comp,
             Split_Into_Words => False,
+            Environment      => Environment,
             Calls_Cache      => Base.External_Calls_Cache,
             Messages         => Base.Messages,
             Processed_Value  => Variables,
@@ -668,6 +679,7 @@ package body GPR2.KB.Compiler_Iterator is
          Value            => Descr.Languages,
          Comp             => Comp,
          Split_Into_Words => True,
+         Environment      => Environment,
          Calls_Cache      => Base.External_Calls_Cache,
          Messages         => Base.Messages,
          Processed_Value  => Languages,
@@ -692,6 +704,7 @@ package body GPR2.KB.Compiler_Iterator is
             Comp             => Comp,
             Split_Into_Words => True,
             Merge_Same_Dirs  => True,
+            Environment      => Environment,
             Calls_Cache      => Base.External_Calls_Cache,
             Messages         => Base.Messages,
             Processed_Value  => Runtimes,

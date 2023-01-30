@@ -98,7 +98,9 @@ package body GPR2.Project.Tree.View_Builder is
                            GPR2.Path_Name.Set.Empty_Set;
       Pre_Conf_Mode    : Boolean                   := False;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference)
+                           GPR2.File_Readers.No_File_Reader_Reference;
+      Environment      : GPR2.Environment.Object :=
+                           GPR2.Environment.Process_Environment)
    is
    begin
       GPR2.Project.Parser.Clear_Cache;
@@ -113,7 +115,8 @@ package body GPR2.Project.Tree.View_Builder is
                  Absent_Dir_Error => Absent_Dir_Error,
                  Implicit_With    => Implicit_With,
                  Pre_Conf_Mode    => Pre_Conf_Mode,
-                 File_Reader      => File_Reader);
+                 File_Reader      => File_Reader,
+                 Environment      => Environment);
 
       GPR2.Project.Parser.Clear_Cache;
    end Load;
@@ -136,7 +139,9 @@ package body GPR2.Project.Tree.View_Builder is
       Config_Project    : GPR2.Path_Name.Object   :=
                             GPR2.Path_Name.Undefined;
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
-                            GPR2.File_Readers.No_File_Reader_Reference)
+                            GPR2.File_Readers.No_File_Reader_Reference;
+      Environment       : GPR2.Environment.Object :=
+                            GPR2.Environment.Process_Environment)
    is
    begin
       Self.Load_Autoconf
@@ -152,7 +157,8 @@ package body GPR2.Project.Tree.View_Builder is
          Language_Runtimes => Language_Runtimes,
          Base              => Base,
          Config_Project    => Config_Project,
-         File_Reader       => File_Reader);
+         File_Reader       => File_Reader,
+         Environment       => Environment);
    end Load_Autoconf;
 
    -------------------

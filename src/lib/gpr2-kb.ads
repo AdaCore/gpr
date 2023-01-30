@@ -20,6 +20,7 @@ with Ada.Strings.Hash;
 with Ada.Strings.Unbounded;
 
 with GPR2.Containers;
+with GPR2.Environment;
 with GPR2.Log;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Configuration;
@@ -71,9 +72,11 @@ package GPR2.KB is
    --  be found or doesn't exist, raises Default_Location_Error.
 
    function Create
-     (Flags      : Parsing_Flags := Targetset_Only_Flags;
-      Default_KB : Boolean := True;
-      Custom_KB  : GPR2.Path_Name.Set.Object := GPR2.Path_Name.Set.Empty_Set)
+     (Flags       : Parsing_Flags := Targetset_Only_Flags;
+      Default_KB  : Boolean := True;
+      Custom_KB   : GPR2.Path_Name.Set.Object := GPR2.Path_Name.Set.Empty_Set;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment)
       return Object
      with Post => Create'Result.Is_Defined;
    --  Main entry point for creating a KB object.
@@ -87,8 +90,10 @@ package GPR2.KB is
    --  not set, only those locations will be parsed.
 
    function Create
-     (Location : GPR2.Path_Name.Object;
-      Flags    : Parsing_Flags) return Object
+     (Location    : GPR2.Path_Name.Object;
+      Flags       : Parsing_Flags;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment) return Object
      with Pre  => Location.Is_Defined and then Location.Exists,
           Post => Create'Result.Is_Defined;
    --  Parses info from the knowledge base available at Location,
@@ -103,13 +108,17 @@ package GPR2.KB is
    --  is performed only once and cached for efficiency.
 
    function Create
-     (Content : GPR2.Containers.Value_List;
-      Flags   : Parsing_Flags) return Object
+     (Content     : GPR2.Containers.Value_List;
+      Flags       : Parsing_Flags;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment) return Object
      with Post => Create'Result.Is_Defined;
    --  Same as above, but the knowledge base is parsed from a list of Values
 
    function Create_Default
-     (Flags : Parsing_Flags) return Object
+     (Flags       : Parsing_Flags;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment) return Object
      with Post => Create_Default'Result.Is_Defined;
    --  Parses default contents of the knowledge base embedded
    --  into the library.
@@ -120,14 +129,19 @@ package GPR2.KB is
    --  with additional chunks.
 
    procedure Add
-     (Self     : in out Object;
-      Flags    : Parsing_Flags;
-      Location : GPR2.Path_Name.Object)
-     with Pre => Self.Is_Defined;
+     (Self        : in out Object;
+      Flags       : Parsing_Flags;
+      Location    : GPR2.Path_Name.Object;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment)
+       with Pre => Self.Is_Defined;
    procedure Add
-     (Self    : in out Object;
-      Flags   : Parsing_Flags;
-      Content : Value_Not_Empty)
+     (Self        : in out Object;
+      Flags       : Parsing_Flags;
+      Content     : Value_Not_Empty;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment)
+
      with Pre => Self.Is_Defined;
    --  Adds new portions of configuration chunks to the knowledge base
 
@@ -158,11 +172,13 @@ package GPR2.KB is
    --  data.
 
    function Configuration
-     (Self     : in out Object;
-      Settings : Project.Configuration.Description_Set;
-      Target   : Name_Type;
-      Messages : in out GPR2.Log.Object;
-      Fallback : Boolean := False)
+     (Self        : in out Object;
+      Settings    : Project.Configuration.Description_Set;
+      Target      : Name_Type;
+      Messages    : in out GPR2.Log.Object;
+      Fallback    : Boolean := False;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment)
       return Ada.Strings.Unbounded.Unbounded_String
      with Pre  => Self.Is_Defined,
           Post => Configuration'Result /= Null_Unbounded_String
@@ -258,20 +274,25 @@ package GPR2.KB is
    --  returns "runtime [alt_runtime]".
 
    function All_Compilers
-     (Self     : in out Object;
-      Settings : Project.Configuration.Description_Set;
-      Target   : Name_Type;
-      Messages : in out GPR2.Log.Object) return Compiler_Array;
+     (Self        : in out Object;
+      Settings    : Project.Configuration.Description_Set;
+      Target      : Name_Type;
+      Messages    : in out GPR2.Log.Object;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment)
+      return Compiler_Array;
    --  Returns the list of all compilers for given target, or all compilers
    --  for any target when "all" is passed as Target.
    --  Settings affect the selection status of the compilers, but do not
    --  exclude any compilers from the resulting list.
 
    function Configuration
-     (Self      : in out Object;
-      Selection : Compiler_Array;
-      Target    : Name_Type;
-      Messages  : in out GPR2.Log.Object)
+     (Self        : in out Object;
+      Selection   : Compiler_Array;
+      Target      : Name_Type;
+      Messages    : in out GPR2.Log.Object;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment)
       return Ada.Strings.Unbounded.Unbounded_String
      with Pre  => Self.Is_Defined and then Selection'Length > 0,
           Post => Configuration'Result /= Null_Unbounded_String
@@ -654,6 +675,7 @@ private
      (Attribute        : String;
       Value            : External_Value;
       Comp             : Compiler;
+      Environment      : GPR2.Environment.Object;
       Split_Into_Words : Boolean := True;
       Merge_Same_Dirs  : Boolean := False;
       Calls_Cache      : in out GPR2.Containers.Name_Value_Map;

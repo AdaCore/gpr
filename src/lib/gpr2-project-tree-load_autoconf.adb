@@ -22,7 +22,9 @@ procedure Load_Autoconf
    Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
    Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined;
    File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
-                         GPR2.File_Readers.No_File_Reader_Reference)
+                         GPR2.File_Readers.No_File_Reader_Reference;
+   Environment       : GPR2.Environment.Object :=
+                         GPR2.Environment.Process_Environment)
 is
    Languages   : Containers.Language_Set;
    Conf        : Project.Configuration.Object;
@@ -31,10 +33,9 @@ is
    Lang_Sloc   : Attribute.Object;
    --  Keep languages attribute for Sloc parameter in error message
 
-   Old_Paths    : constant Path_Name.Set.Object := Self.Search_Paths;
-   --  Search paths may be affected by -aP options passed by gprtools,
-   --  so we need to keep the original search paths for the reconfiguration
-   --  stage.
+   function Get_Updated_Search_Paths return All_Search_Paths;
+   --  Let Tree use Environment & return updates search paths.
+
    Old_Messages : constant Log.Object := Self.Messages;
    --  Likewise, Self may already have some messages and we don't want
    --  to loose them when we unload the tree for conf/reconf.
@@ -49,7 +50,8 @@ is
    function Conf_Descriptions return Project.Configuration.Description_Set;
    --  Returns set of descriptions for configuration creation
 
-   function Default_Config_File return Filename_Type;
+   function Default_Config_File
+     (Environment : GPR2.Environment.Object) return Filename_Type;
    --  Returns default config filename
 
    function Runtime
@@ -335,7 +337,8 @@ is
    -- Default_Config_File --
    -------------------------
 
-   function Default_Config_File return Filename_Type is
+   function Default_Config_File
+     (Environment : GPR2.Environment.Object) return Filename_Type is
       Ada_RTS_Val : constant Value_Type :=
                       Containers.Value_Or_Default
                         (Language_Runtimes, Ada_Language);
@@ -356,7 +359,7 @@ is
          declare
             GPR_Config : constant String := "GPR_CONFIG";
             Filename   : constant String :=
-                           Environment_Variables.Value (GPR_Config, "");
+                           Environment.Value (GPR_Config, "");
          begin
             if Filename = "" then
                return Default_Config_Name;
@@ -366,6 +369,16 @@ is
          end;
       end if;
    end Default_Config_File;
+
+   ------------------------------
+   -- Get_Updated_Search_Paths --
+   ------------------------------
+
+   function Get_Updated_Search_Paths return All_Search_Paths is
+   begin
+      Self.Set_Environment (Environment);
+      return Self.Search_Paths;
+   end Get_Updated_Search_Paths;
 
    -------------
    -- Runtime --
@@ -506,13 +519,18 @@ is
    Has_Errors             : Boolean;
    use Description_Set_Holders;
 
+   Old_Paths : constant All_Search_Paths := Get_Updated_Search_Paths;
+   --  Search paths may be affected by -aP options passed by gprtools,
+   --  so we need to keep the original search paths for the reconfiguration
+   --  stage.
+
 begin
    GPR2.Project.Parser.Clear_Cache;
 
    if GNAT_Prefix = "" then
       --  No GNAT, use default config only in current directory
 
-      Default_Cfg := Path_Name.Create_File (Default_Config_File);
+      Default_Cfg := Path_Name.Create_File (Default_Config_File (Environment));
 
    else
       --  GNAT found, look for the default config first in the current
@@ -520,7 +538,7 @@ begin
 
       Default_Cfg :=
         Create
-          (Default_Config_File,
+          (Default_Config_File (Environment),
            Path_Name.Set.To_Set
              (Path_Name.Create_Directory
                 ("share", Filename_Type (GNAT_Prefix)).Compose
@@ -563,7 +581,8 @@ begin
          Check_Shared_Lib => Check_Shared_Lib,
          Absent_Dir_Error => No_Error,
          Implicit_With    => Implicit_With,
-         Pre_Conf_Mode    => True);
+         Pre_Conf_Mode    => True,
+         Environment      => Environment);
       --  Ignore possible missing dirs and imported projects since they can
       --  depend on the result of auto-configuration.
 
@@ -611,7 +630,8 @@ begin
       Pre_Conf_Description := To_Holder (Conf_Descriptions);
 
       if not Self.Base.Is_Defined then
-         Self.Base := GPR2.KB.Create (GPR2.KB.Default_Flags);
+         Self.Base := GPR2.KB.Create
+           (GPR2.KB.Default_Flags, Environment => Environment);
       end if;
 
       Conf := Project.Configuration.Create
@@ -622,7 +642,8 @@ begin
           then Root_Project.Data.Trees.Project.Path_Name
           else Root_Project.Path),
          Self.Base,
-         Save_Name => Config_Project);
+         Save_Name   => Config_Project,
+         Environment => Environment);
 
       if Conf.Has_Error then
          for M of Conf.Log_Messages loop
@@ -652,7 +673,8 @@ begin
       Src_Subdirs      => Src_Subdirs,
       Check_Shared_Lib => Check_Shared_Lib,
       Absent_Dir_Error => Absent_Dir_Error,
-      Implicit_With    => Implicit_With);
+      Implicit_With    => Implicit_With,
+      Environment      => Environment);
 
    if Default_Cfg.Exists then
       --  No need for reconfiguration if explicit default configuration
@@ -702,7 +724,8 @@ begin
       Actual_Target,
       Self.Root.Path_Name,
       Self.Base,
-      Save_Name => Config_Project);
+      Save_Name   => Config_Project,
+      Environment => Environment);
 
    Self.Unload (False);
    Self.Messages := Old_Messages;
@@ -717,7 +740,8 @@ begin
       Src_Subdirs      => Src_Subdirs,
       Check_Shared_Lib => Check_Shared_Lib,
       Absent_Dir_Error => Absent_Dir_Error,
-      Implicit_With    => Implicit_With);
+      Implicit_With    => Implicit_With,
+      Environment      => Environment);
 
    GPR2.Project.Parser.Clear_Cache;
 end Load_Autoconf;

@@ -5,7 +5,6 @@
 --
 
 with Ada.Directories;
-with Ada.Environment_Variables;
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
 
@@ -53,10 +52,11 @@ package body GPR2.KB.Parsing is
    --  Returns the value of the node, concatenating all Text children
 
    procedure Parse_Knowledge_Base
-     (Base      : in out Object;
-      Root_Node : DOM.Core.Node;
-      Flags     : Parsing_Flags;
-      From_File : Value_Not_Empty)
+     (Base        : in out Object;
+      Root_Node   : DOM.Core.Node;
+      Flags       : Parsing_Flags;
+      From_File   : Value_Not_Empty;
+      Environment : GPR2.Environment.Object)
      with Pre => Base.Is_Defined and then DOM.Core."/=" (Root_Node, null);
    --  Parses a single top-level KB node. From_File used for diagnostics
 
@@ -106,9 +106,10 @@ package body GPR2.KB.Parsing is
    ---------
 
    procedure Add
-     (Self    : in out Object;
-      Flags   : Parsing_Flags;
-      Content : Value_Not_Empty)
+     (Self        : in out Object;
+      Flags       : Parsing_Flags;
+      Content     : Value_Not_Empty;
+      Environment : GPR2.Environment.Object)
    is
       use Input_Sources.Strings;
       use Schema.Dom_Readers;
@@ -153,7 +154,8 @@ package body GPR2.KB.Parsing is
         (Self,
          DOM.Core.Documents.Get_Element (Get_Tree (Reader)),
          Flags,
-         Embed_Pseudo_Dir & String_Argument);
+         Embed_Pseudo_Dir & String_Argument,
+         Environment);
 
       Free_Reader (Reader);
 
@@ -398,7 +400,8 @@ package body GPR2.KB.Parsing is
    ----------------------------------
 
    function Parse_Default_Knowledge_Base
-     (Flags : Parsing_Flags) return Object
+     (Flags       : Parsing_Flags;
+      Environment : GPR2.Environment.Object) return Object
    is
       use GNAT.Directory_Operations;
       use GNATCOLL.Traces;
@@ -542,7 +545,8 @@ package body GPR2.KB.Parsing is
               (Result,
                DOM.Core.Documents.Get_Element (Get_Tree (Reader)),
                Flags,
-               Embed_Pseudo_Dir & String (Key (Cur)));
+               Embed_Pseudo_Dir & String (Key (Cur)),
+               Environment);
 
             Free_Reader (Reader);
          end if;
@@ -558,9 +562,10 @@ package body GPR2.KB.Parsing is
    --------------------------
 
    procedure Parse_Knowledge_Base
-     (Self     : in out Object;
-      Location : GPR2.Path_Name.Object;
-      Flags    : Parsing_Flags)
+     (Self        : in out Object;
+      Location    : GPR2.Path_Name.Object;
+      Flags       : Parsing_Flags;
+      Environment : GPR2.Environment.Object)
    is
       use GPR2.Path_Name;
       use Ada.Directories;
@@ -627,7 +632,7 @@ package body GPR2.KB.Parsing is
          Parse_Knowledge_Base
            (Self,
             DOM.Core.Documents.Get_Element (Get_Tree (Reader)),
-            Flags, File.Value);
+            Flags, File.Value, Environment);
 
          Free_Reader (Reader);
       end Parse_Single_File;
@@ -696,10 +701,11 @@ package body GPR2.KB.Parsing is
    --------------------------
 
    procedure Parse_Knowledge_Base
-     (Base      : in out Object;
-      Root_Node : DOM.Core.Node;
-      Flags     : Parsing_Flags;
-      From_File : Value_Not_Empty)
+     (Base        : in out Object;
+      Root_Node   : DOM.Core.Node;
+      Flags       : Parsing_Flags;
+      From_File   : Value_Not_Empty;
+      Environment : GPR2.Environment.Object)
    is
       use DOM.Core;
       use DOM.Core.Nodes;
@@ -847,11 +853,11 @@ package body GPR2.KB.Parsing is
                   declare
                      Name : constant String := Get_Attribute (Tmp, "name", "");
                   begin
-                     if Ada.Environment_Variables.Exists (Name) then
+                     if Environment.Exists (Name) then
                         External_Node :=
                           (Typ        => Value_Constant,
                            Value      => To_Unbounded_String
-                             (Ada.Environment_Variables.Value (Name)));
+                             (Environment.Value (Name)));
                      else
                         Base.Messages.Append
                           (Message.Create
@@ -1061,6 +1067,7 @@ package body GPR2.KB.Parsing is
                Value            => Compiler.Languages,
                Comp             => No_Compiler,
                Split_Into_Words => True,
+               Environment      => Environment,
                Calls_Cache      => Base.External_Calls_Cache,
                Messages         => Base.Messages,
                Processed_Value  => Lang,
@@ -1091,6 +1098,7 @@ package body GPR2.KB.Parsing is
                Value            => Compiler.Languages,
                Comp             => No_Compiler,
                Split_Into_Words => True,
+               Environment      => Environment,
                Calls_Cache      => Base.External_Calls_Cache,
                Messages         => Base.Messages,
                Processed_Value  => Lang,

@@ -1,0 +1,7 @@
+with "test_ada_project_path";
+with "test_gpr_project_path";
+with "test_gpr_project_path_file";
+with "registered";
+with "gnatcoll";
+project Prj is
+end Prj;
