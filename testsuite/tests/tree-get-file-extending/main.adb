@@ -35,4 +35,6 @@ begin
          Put_Line ("OK");
       end if;
    end;
+
+   Tree.Unload;
 end Main;

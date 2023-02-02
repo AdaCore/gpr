@@ -19,6 +19,7 @@ GPRCONFIG = GPR + "config"
 GPRREMOTE = GPR + "remote"
 GPRDOC = GPR + "doc"
 GPRINSPECT = GPR + "inspect"
+GPRTOOLS = [GPRLS, GPRCLEAN, GPRINSTALL, GPRNAME, GPRCONFIG, GPRREMOTE, GPRDOC, GPRINSPECT]
 
 
 class BuilderAndRunner(object):
@@ -145,7 +146,15 @@ class BuilderAndRunner(object):
                 env = {}
             file = str(getrandbits(128)) + ".srctrace"
             env["GNATCOV_TRACE_FILE"] = os.path.join(self.traces_dir, file)
-        run_cmd = (["valgrind", "-q"] if self.valgrind else []) + cmd
+        
+        if self.valgrind:
+            run_cmd = (
+                ["valgrind", "-q", "--leak-check=full", "--show-possibly-lost=no",
+                 f"--suppressions={os.path.dirname(os.path.dirname(__file__))}/valgrind-suppressions.txt"]
+                 + cmd
+                )
+        else:
+            run_cmd = cmd
 
         return self.simple_run(run_cmd, env=env, catch_error=catch_error, output=output)
 

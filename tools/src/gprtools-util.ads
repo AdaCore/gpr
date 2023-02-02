@@ -55,6 +55,9 @@ package GPRtools.Util is
    --  return an empty string. When a directory is returned, it is guaranteed
    --  to end with a directory separator.
 
+   function Locate_Exec_On_Path (Exec_Name : String) return String;
+   --  Get the path location of a given executable
+
    -------------------------
    -- Program termination --
    -------------------------

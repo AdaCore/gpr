@@ -131,19 +131,9 @@ package body GPRtools.Util is
       --  directory prefix.
 
       declare
-         use type OS_Lib.String_Access;
-         Path : OS_Lib.String_Access := OS_Lib.Locate_Exec_On_Path (Exec_Name);
+         Path : constant String := Locate_Exec_On_Path (Exec_Name);
       begin
-         if Path = null then
-            return "";
-         else
-            declare
-               Dir : constant String := Get_Install_Dir (Path.all);
-            begin
-               OS_Lib.Free (Path);
-               return Dir;
-            end;
-         end if;
+         return (if Path = "" then "" else Get_Install_Dir (Path));
       end;
    end Executable_Prefix_Path;
 
@@ -253,6 +243,21 @@ package body GPRtools.Util is
         or else Starts_With (Lower_Unit, "system.")
         or else Starts_With (Lower_Unit, "interfaces.");
    end Is_Ada_Predefined_Unit;
+
+   -------------------------
+   -- Locate_Exec_On_Path --
+   -------------------------
+
+   function Locate_Exec_On_Path (Exec_Name : String) return String is
+      use type GNAT.OS_Lib.String_Access;
+
+      Path     : GNAT.OS_Lib.String_Access
+        := GNAT.OS_Lib.Locate_Exec_On_Path (Exec_Name);
+      Path_Str : constant String := (if Path = null then "" else Path.all);
+   begin
+      GNAT.OS_Lib.Free (Path);
+      return Path_Str;
+   end Locate_Exec_On_Path;
 
    ---------------------
    -- Output_Messages --

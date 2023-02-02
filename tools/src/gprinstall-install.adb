@@ -58,6 +58,7 @@ with GPR2.Source_Reference;
 with GPR2.Source_Reference.Value;
 
 with GPRtools;
+with GPRtools.Util;
 
 package body GPRinstall.Install is
 
@@ -151,8 +152,8 @@ package body GPRinstall.Install is
       Options : GPRinstall.Options.Object)
    is
       use GPRtools;
+      use GPRtools.Util;
 
-      use type OS_Lib.String_Access;
       use type GPR2.Path_Name.Object;
       use type GPR2.Project.View.Object;
 
@@ -175,10 +176,8 @@ package body GPRinstall.Install is
                         else Target_Name & "-strip");
       --  Name of strip executable, possible a cross one
 
-      Objcopy      : constant OS_Lib.String_Access :=
-                       OS_Lib.Locate_Exec_On_Path (Objcopy_Exec);
-      Strip        : constant OS_Lib.String_Access :=
-                       OS_Lib.Locate_Exec_On_Path (Strip_Exec);
+      Objcopy      : constant String := Locate_Exec_On_Path (Objcopy_Exec);
+      Strip        : constant String := Locate_Exec_On_Path (Strip_Exec);
 
       Windows_Target : constant Boolean := Tree.Is_Windows_Target;
 
@@ -757,13 +756,13 @@ package body GPRinstall.Install is
                   --    $ objcopy --add-gnu-debuglink=<exec>.debug <exec>
 
                   if Extract_Debug then
-                     if Objcopy = null then
+                     if Objcopy = "" then
                         Put_Line
                           (Objcopy_Exec & " not found, "
                            & "cannot create side debug file for "
                            & Dest_Filename);
 
-                     elsif Strip = null then
+                     elsif Strip = "" then
                         Put_Line
                           (Strip_Exec & " not found, "
                            & "cannot create side debug file for "
@@ -786,7 +785,7 @@ package body GPRinstall.Install is
                            Args (2) := Dest_Filename'Unchecked_Access;
                            Args (3) := Dest_Debug'Unchecked_Access;
 
-                           OS_Lib.Spawn (Objcopy.all, Args, Success);
+                           OS_Lib.Spawn (Objcopy, Args, Success);
 
                            if Success then
                               --  Record the debug file in the manifest
@@ -800,7 +799,7 @@ package body GPRinstall.Install is
 
                               Args (1) := Dest_Filename'Unchecked_Access;
 
-                              OS_Lib.Spawn (Strip.all, Args (1 .. 1), Success);
+                              OS_Lib.Spawn (Strip, Args (1 .. 1), Success);
 
                               if Success then
                                  --  2. link debug symbols file with original
@@ -810,7 +809,7 @@ package body GPRinstall.Install is
                                  Args (2) := Dest_Filename'Unchecked_Access;
 
                                  OS_Lib.Spawn
-                                   (Objcopy.all, Args (1 .. 2), Success);
+                                   (Objcopy, Args (1 .. 2), Success);
 
                                  if not Success then
                                     Put_Line
