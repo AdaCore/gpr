@@ -4,8 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0
 --
 
-with GNAT.OS_Lib;
-
 with GPR2.Project.View;
 
 package body GPR2.Project.Registry.Attribute is
@@ -1491,8 +1489,7 @@ begin
 
    --  builder.executable_suffix
    declare
-      Exec_Suffix : GNAT.OS_Lib.String_Access :=
-                      GNAT.OS_Lib.Get_Executable_Suffix;
+      Exec_Suffix : constant String := Get_Executable_Suffix;
    begin
       Add
         (Name                 => Builder.Executable_Suffix,
@@ -1500,8 +1497,7 @@ begin
          Value                => Single,
          Value_Case_Sensitive => True,
          Is_Allowed_In        => No_Aggregates,
-         Default              => Create (Exec_Suffix.all));
-      GNAT.OS_Lib.Free (Exec_Suffix);
+         Default              => Create (Exec_Suffix));
    end;
 
    --  builder.global_configuration_pragmas

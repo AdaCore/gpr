@@ -303,6 +303,12 @@ private
 
    function To_Mixed (A : String) return String;
 
+   function Get_Executable_Suffix return String;
+   --  Get the OS default executable suffix convention
+
+   function Locate_Exec_On_Path (Exec_Name : String) return String;
+   --  Get the path location of a given executable
+
    function Get_Tools_Directory return String;
    --  Get the GNAT prefix
 

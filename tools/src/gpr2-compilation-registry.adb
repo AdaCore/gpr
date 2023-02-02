@@ -117,8 +117,7 @@ package body GPR2.Compilation.Registry is
    WR : Wait_Remote_Ref;
    --  Will be initialized only if the distributed mode is activated
 
-   Compiler_Path : constant GNAT.OS_Lib.String_Access :=
-                     GNAT.OS_Lib.Locate_Exec_On_Path ("gnatls");
+   Compiler_Path : constant String := Locate_Exec_On_Path ("gnatls");
 
    Remote_Process : Shared_Counter;
    Slaves_Sockets : Sockets.Socket_Set_Type;
@@ -864,8 +863,6 @@ package body GPR2.Compilation.Registry is
       Dep_Name : String := "";
       Env      : String := "") return Compilation.Id
    is
-      use type GNAT.OS_Lib.String_Access;
-
       Tree : constant not null access GPR2.Project.Tree.Object := Project.Tree;
 
       CWD : constant String := Directories.Current_Directory;
@@ -1018,11 +1015,11 @@ package body GPR2.Compilation.Registry is
 
       Slaves.Set_Rewrite_WD (S, Path => RD);
 
-      if Compiler_Path /= null then
+      if Compiler_Path /= "" then
          Slaves.Set_Rewrite_CD
            (S,
             Path => Directories.Containing_Directory
-                      (Directories.Containing_Directory (Compiler_Path.all)));
+                      (Directories.Containing_Directory (Compiler_Path)));
       end if;
 
       Protocol.Send_Exec

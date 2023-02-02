@@ -54,29 +54,34 @@ package body GPR2 is
                      (String (Left), String (Right)));
    end "=";
 
+   ---------------------------
+   -- Get_Executable_Suffix --
+   ---------------------------
+
+   function Get_Executable_Suffix return String is
+      Exec_Suffix : GNAT.OS_Lib.String_Access
+                      := GNAT.OS_Lib.Get_Executable_Suffix;
+   begin
+      return Result : constant String := Exec_Suffix.all
+      do
+         GNAT.OS_Lib.Free (Exec_Suffix);
+      end return;
+   end Get_Executable_Suffix;
+
    -------------------------
    -- Get_Tools_Directory --
    -------------------------
 
    function Get_Tools_Directory return String is
-      use type GNAT.OS_Lib.String_Access;
-
-      GPRls : GNAT.OS_Lib.String_Access :=
-                GNAT.OS_Lib.Locate_Exec_On_Path ("gprls");
+      GPRls : constant String := Locate_Exec_On_Path ("gprls");
       --  Check for GPRls executable
    begin
-      if GPRls = null then
-         return "";
-      else
-         return Result : constant String :=
-                           Directories.Containing_Directory
-                             (Directories.Containing_Directory
-                                (GNAT.OS_Lib.Normalize_Pathname
-                                   (GPRls.all, Resolve_Links => True)))
-         do
-            GNAT.OS_Lib.Free (GPRls);
-         end return;
-      end if;
+      return (if GPRls = ""
+              then ""
+              else Directories.Containing_Directory
+                     (Directories.Containing_Directory
+                        (GNAT.OS_Lib.Normalize_Pathname
+                            (GPRls, Resolve_Links => True))));
    end Get_Tools_Directory;
 
    --------
@@ -178,6 +183,21 @@ package body GPR2 is
                     | "unchecked_conversion"
                     | "unchecked_deallocation";
    end Is_Runtime_Unit_Name;
+
+   -------------------------
+   -- Locate_Exec_On_Path --
+   -------------------------
+
+   function Locate_Exec_On_Path (Exec_Name : String) return String is
+      use type GNAT.OS_Lib.String_Access;
+
+      Path     : GNAT.OS_Lib.String_Access
+                   := GNAT.OS_Lib.Locate_Exec_On_Path (Exec_Name);
+      Path_Str : constant String := (if Path = null then "" else Path.all);
+   begin
+      GNAT.OS_Lib.Free (Path);
+      return Path_Str;
+   end Locate_Exec_On_Path;
 
    ----------
    -- Name --

@@ -1,6 +1,5 @@
 description: Check memory leaks
 driver: python_script
-timeout: 600
+timeout: 1500
 control:
-- [XFAIL, "env.valgrind", "too long when run from valgrind"]
 - [SKIP, "env.gnatcov is not None", "produces file descriptor errors when run on instrumented code"]
