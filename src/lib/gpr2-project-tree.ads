@@ -662,14 +662,6 @@ private
       --  ??? We may also check that the Tree target name constains mingw or
       --  windows.
 
-   function Artifacts_Dir (Self : Object) return Path_Name.Object is
-     (if Self.Root_Project.Kind in With_Object_Dir_Kind
-      then Self.Root_Project.Object_Directory
-      else Self.Root_Project.Apply_Root_And_Subdirs (PRA.Object_Dir));
-   --  Object_Directory has a precondition to prevent its use when the view
-   --  don't expect one (aggregate, abstract). But Apply_Root_And_Subdirs
-   --  doesn't, and object_directory will default to Project_Dir in such case.
-
    function Archive_Suffix (Self : Object) return Filename_Type is
      (if Self.Has_Configuration
       then Self.Configuration.Archive_Suffix

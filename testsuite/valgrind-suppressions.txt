@@ -1,0 +1,64 @@
+# Setenv leak if still reachable by glibc and freed when another call to setenv is done
+# with the same variable. Nothing to be done appart from ignoring.
+{
+   gnat_setenv
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:__gnat_setenv
+   fun:ada__environment_variables__set
+}
+
+# Possible leak in gnat command_line but it is used in our tools that are not meant to
+# have a long lifetime so this can be ignored for now.
+# Used in :
+# [ GPRCONFIG ] invalid-trace-file
+# [ GPRCONFIG ] target-checks
+{
+   gnat_command_line:1
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:__gnat_malloc
+   ...
+   fun:gnat__command_line__getopt__2
+   fun:_ada_gprconfig
+}
+
+# Internal gnatcoll memory leak
+# Used in :
+# [ GPRCONFIG ] invalid-trace-file
+{
+   gnatcoll_mmap
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:__gnat_malloc
+   fun:system__pool_global__allocate
+   fun:gnatcoll__mmap__open_read
+   ...
+   fun:_ada_gprconfig
+}
+
+# Possible leak in gnatcoll command_line but it is used in our test so this can be ignored for now.
+# Used in :
+# - [ TEST ] gnat_tool_prefix
+# - [ TEST ] examples
+{
+   gnatcoll_command_line:1
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:__gnat_malloc
+   ...
+   fun:gnatcoll__opt_parse__parse
+}
+
+# For now, just ignore the tools that have been stripped of their symbols and we can't debug
+{
+   tools:1
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:???
+}

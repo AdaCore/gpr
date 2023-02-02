@@ -85,8 +85,7 @@ package body GPR2.KB.Compiler_Iterator is
                              (if On_Windows then "*.{exe,bat,cmd}" else "");
       Search             : Search_Type;
       Dir                : Directory_Entry_Type;
-      Exec_Suffix        : OS_Lib.String_Access :=
-                             GNAT.OS_Lib.Get_Executable_Suffix;
+      Exec_Suffix        : constant String := Get_Executable_Suffix;
       Exec_Set           : Exec_Sets.Set;
    begin
       --  Since the name of an executable can be a regular expression, we need
@@ -114,13 +113,11 @@ package body GPR2.KB.Compiler_Iterator is
                Decrease_Indent
                  (Main_Trace, "No such directory:" & Directory);
                Continue := True;
-               GNAT.OS_Lib.Free (Exec_Suffix);
                return;
             when Ada.Directories.Use_Error =>
                Decrease_Indent
                  (Main_Trace, "Directory not readable:" & Directory);
                Continue := True;
-               GNAT.OS_Lib.Free (Exec_Suffix);
                return;
          end;
 
@@ -182,7 +179,7 @@ package body GPR2.KB.Compiler_Iterator is
 
                   else
                      Matched :=
-                       (To_String (Config.Executable) & Exec_Suffix.all) =
+                       (To_String (Config.Executable) & Exec_Suffix) =
                          Simple;
                   end if;
 
@@ -240,7 +237,7 @@ package body GPR2.KB.Compiler_Iterator is
                              Directory      => Directory,
                              Resolve_Links  => False,
                              Case_Sensitive => On_Windows)
-                          & Exec_Suffix.all;
+                          & Exec_Suffix;
             begin
                if Ada.Directories.Exists (F) then
                   Trace (Main_Trace, "--------------------------------------");
@@ -269,7 +266,6 @@ package body GPR2.KB.Compiler_Iterator is
          end loop;
       end if;
 
-      GNAT.OS_Lib.Free (Exec_Suffix);
       Decrease_Indent (Main_Trace);
    end Foreach_Compiler_In_Dir;
 
@@ -499,7 +495,7 @@ package body GPR2.KB.Compiler_Iterator is
          end if;
       end Is_Windows_Executable;
 
-      Exec_Suffix : GNAT.OS_Lib.String_Access;
+      Exec_Suffix : constant String := Get_Executable_Suffix;
 
       Target    : External_Value_Lists.List;
       Version   : External_Value_Lists.List;
@@ -537,12 +533,10 @@ package body GPR2.KB.Compiler_Iterator is
           (Filename_Type
              (GNAT.OS_Lib.Normalize_Pathname
                 (Directory, Case_Sensitive => False)));
-      Exec_Suffix := GNAT.OS_Lib.Get_Executable_Suffix;
       Comp.Base_Name :=
         To_Unbounded_String
           (GNAT.Directory_Operations.Base_Name
-             (To_String (Executable), Suffix => Exec_Suffix.all));
-      GNAT.OS_Lib.Free (Exec_Suffix);
+             (To_String (Executable), Suffix => Exec_Suffix));
       Comp.Path_Order := Path_Order;
       Comp.Prefix     := Prefix;
       Comp.Executable := Executable;

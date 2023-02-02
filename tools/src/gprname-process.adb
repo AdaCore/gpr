@@ -58,6 +58,8 @@ with GPRname.Section;
 with GPRname.Source.Set;
 with GPRname.Unit;
 
+with GPRtools.Util;
+
 with Langkit_Support.Text;
 
 procedure GPRname.Process (Opt : GPRname.Options.Object) is
@@ -326,8 +328,8 @@ begin
       Driver_Attr : GPR2.Project.Attribute.Object :=
                       GPR2.Project.Attribute.Undefined;
 
-      Default_Compiler : OS_Lib.String_Access :=
-                           OS_Lib.Locate_Exec_On_Path ("gcc");
+      Default_Compiler : constant String
+                           := GPRtools.Util.Locate_Exec_On_Path ("gcc");
 
    begin
       if Proj.Has_Attribute (PRA.Compiler.Driver, Ada_I)
@@ -361,17 +363,15 @@ begin
          Put_Line ("warning: invalid compiler path from configuration ("
                    & Compiler_Path.Value & ")", Low);
 
-         if Default_Compiler /= null then
+         if Default_Compiler /= "" then
             Compiler_Path := Path_Name.Create_File
-              (Filename_Type (Default_Compiler.all));
+              (Filename_Type (Default_Compiler));
             Put_Line ("trying default gcc (" & Compiler_Path.Value & ")", Low);
 
          else
             raise GPRname_Exception with "no gcc found on PATH";
          end if;
       end if;
-
-      OS_Lib.Free (Default_Compiler);
    end;
 
    Put_Line ("compiler path = " & Compiler_Path.Value, Low);
