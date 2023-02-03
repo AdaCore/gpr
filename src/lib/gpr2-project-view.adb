@@ -27,6 +27,7 @@ package body GPR2.Project.View is
 
    package PRP renames GPR2.Project.Registry.Pack;
    use GNAT;
+   use type GPR2.View_Ids.View_Id;
 
    package Regexp_List is new Ada.Containers.Indefinite_Vectors
      (Positive, GNAT.Regexp.Regexp, "=" => GNAT.Regexp."=");
@@ -1808,7 +1809,7 @@ package body GPR2.Project.View is
          return True;
       end if;
 
-      for Ext of Self.Extended loop
+      for Ext of Definition.Get_RO (Self).Extended loop
          if Ext = Object (Parent) then
             return True;
          end if;
@@ -1880,7 +1881,7 @@ package body GPR2.Project.View is
    -----------------------
 
    function Is_Namespace_Root (Self : Object) return Boolean is
-     (for some V of Self.Namespace_Roots => Self = V);
+     (for some Id of Get_RO (Self).Root_Views => Self.Id = Id);
 
    ----------------
    -- Is_Runtime --

@@ -249,6 +249,22 @@ package body GPR2.Project.Tree is
       Self.Messages.Append (Message);
    end Append_Message;
 
+   --------------------
+   -- Artifacts_Dir --
+   --------------------
+
+   function Artifacts_Dir (Self : Object) return Path_Name.Object is
+   begin
+      if Self.Root_Project.Kind in With_Object_Dir_Kind then
+         return Self.Root_Project.Object_Directory;
+      else
+         return Self.Root_Project.Apply_Root_And_Subdirs (PRA.Object_Dir);
+      end if;
+   end Artifacts_Dir;
+   --  Object_Directory has a precondition to prevent its use when the view
+   --  don't expect one (aggregate, abstract). But Apply_Root_And_Subdirs
+   --  doesn't, and object_directory will default to Project_Dir in such case.
+
    ----------------
    -- Clear_View --
    ----------------

@@ -1014,16 +1014,21 @@ begin
       Text_IO.Close (Output);
    end if;
 
+   GNAT.Command_Line.Free (Config => Cmd_Config);
+
 exception
    when Ada.Directories.Name_Error | Ada.IO_Exceptions.Use_Error =>
+      GNAT.Command_Line.Free (Config => Cmd_Config);
       Text_IO.Put_Line
         (Text_IO.Standard_Error,
          "Could not create the file " & To_String (Output_File));
 
    when Invalid_Switch | Exit_From_Command_Line =>
+      GNAT.Command_Line.Free (Config => Cmd_Config);
       GNAT.OS_Lib.OS_Exit (1);
 
    when Invalid_Parameter =>
+      GNAT.Command_Line.Free (Config => Cmd_Config);
       Text_IO.Put_Line
         (Text_IO.Standard_Error,
          "Missing parameter for switch: -" & Full_Switch);
@@ -1036,5 +1041,6 @@ exception
         (Text_IO.Standard_Error,
          "Unrecoverable error in GPRconfig: "
          & Ada.Exceptions.Exception_Information (E));
+      GNAT.Command_Line.Free (Config => Cmd_Config);
       GNAT.OS_Lib.OS_Exit (1);
 end GPRconfig;

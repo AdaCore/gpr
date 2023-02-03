@@ -10,7 +10,6 @@ with Ada.Exceptions;
 with Ada.Strings.Fixed;
 
 with GNAT.Directory_Operations;
-with GNAT.OS_Lib;
 with GNAT.Regpat;
 
 with DOM.Core.Nodes;
@@ -939,8 +938,7 @@ package body GPR2.KB.Parsing is
          Lang        : External_Value_Lists.List;
          C           : External_Value_Lists.Cursor;
 
-         Exec_Suffix : OS_Lib.String_Access :=
-                         OS_Lib.Get_Executable_Suffix;
+         Exec_Suffix : constant String := Get_Executable_Suffix;
 
          Ignore_Compiler_Dummy : Boolean;
          --  Dummy value passed to Get_External_Value. At the stage of KB
@@ -982,8 +980,8 @@ package body GPR2.KB.Parsing is
                      Compiler.Executable_Re := To_Holder
                        (Compile
                           ("^" & Val
-                           & (if Ends_With (Val, Exec_Suffix.all) then ""
-                              else Exec_Suffix.all) & "$"));
+                           & (if Ends_With (Val, Exec_Suffix) then ""
+                              else Exec_Suffix) & "$"));
 
                      Base.Check_Executable_Regexp := True;
                   end if;
@@ -1113,8 +1111,6 @@ package body GPR2.KB.Parsing is
                Next (C);
             end loop;
          end if;
-
-         OS_Lib.Free (Exec_Suffix);
       end Parse_Compiler_Description;
 
       -------------------------

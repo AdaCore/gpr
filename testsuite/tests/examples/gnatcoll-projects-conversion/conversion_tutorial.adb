@@ -314,6 +314,8 @@ begin
          Put_Line ("Languages'First:" & Languages (Languages'First).all);
       end if;
 
+      GNAT.Strings.Free (Arg => Languages);
+
       Put_Line ("Attribute_Value(Object_Dir):" &
                   Attribute_Value
                   (Project => Project_Tree.Root_Project,

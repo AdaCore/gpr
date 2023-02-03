@@ -1134,8 +1134,7 @@ package body GPR2.KB is
       Result : Compiler;
 
       Lang_Id       : Language_Id renames Language (Descr);
-      Exec_Suffix   : OS_Lib.String_Access :=
-                        OS_Lib.Get_Executable_Suffix;
+      Exec_Suffix   : constant String := Get_Executable_Suffix;
 
       function Legacy_Name_Support
         (Name : String; Lang : Language_Id) return String;
@@ -1198,10 +1197,8 @@ package body GPR2.KB is
              (GNAT.Directory_Operations.Base_Name
                 (Legacy_Name_Support
                    (String (Name (Descr)), Lang_Id),
-                 Exec_Suffix.all));
+                 Exec_Suffix));
       end if;
-
-      GNAT.OS_Lib.Free (Exec_Suffix);
 
       Result.Complete := False;
 
