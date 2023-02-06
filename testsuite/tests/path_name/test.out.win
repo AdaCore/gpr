@@ -89,6 +89,19 @@ With white space:
 - Simple_Name: space file.txt
 - Containing_Directory: '/files.dir/with white/'
 
+File with dot as first char:
+- Is a file
+- Does not exist on disk
+- Dir_Name: /files.dir/
+- Name: /files.dir/.foo
+- Name (no extension): /files.dir/.foo
+- Value: /files.dir/.foo
+- Base_Name: .foo
+- Base_Filename: .foo
+- Extension: 
+- Simple_Name: .foo
+- Containing_Directory: '/files.dir/'
+
 Common_Prefix (directory, file)
 - Is a directory
 - Actually exists
