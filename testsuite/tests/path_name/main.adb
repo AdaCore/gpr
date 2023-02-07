@@ -81,6 +81,7 @@ begin
    Check_Path ("File with no extension:", Base.Compose ("foo"));
    Check_Path ("Dir with extension:", Base.Compose ("readme.foo", True));
    Check_Path ("With white space:", Base.Compose ("with white/space file.txt"));
+   Check_Path ("File with dot as first char:", Base.Compose (".foo"));
    Check_Path ("Common_Prefix (directory, file)",
                Common_Prefix (Base.Compose ("somedir", True),
                               Subdir.Compose ("foo.txt")));

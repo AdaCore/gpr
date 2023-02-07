@@ -118,9 +118,10 @@ package body GPR2.Path_Name is
       --  return the part of the file name preceding this last dot.
       --  If the first dot is the first character of the file name,
       --  the base name is the empty string.
+      --  ".filename" case is treated as a base name without extension.
 
       for Pos in reverse Simple'Range loop
-         if Simple (Pos) = '.' then
+         if Simple (Pos) = '.' and then Pos /= Simple'First then
             return Simple (Simple'First .. Pos - 1);
          end if;
       end loop;
@@ -590,7 +591,8 @@ package body GPR2.Path_Name is
 
          Ext := Strings.Fixed.Index (Name, ".", Going => Strings.Backward);
 
-         if Ext = 0 or else Ext < Sep then
+         if Ext = 0 or else Ext < Sep + 2 then
+            --  .filename is treated as a whole file name without extension
             Ext := Name'Last;
          else
             Ext := Ext - 1;

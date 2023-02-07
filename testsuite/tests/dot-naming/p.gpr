@@ -1,0 +1,7 @@
+project p is
+
+   package Naming is
+      for Spec ("w") use ".adb";
+   end Naming;
+
+end p;
