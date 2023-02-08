@@ -1,0 +1,7 @@
+foo.3.ada
+  - compilation unit at 2
+    unit name    = BAR
+    kind         = S_SPEC_ONLY
+  - compilation unit at 5
+    unit name    = PAR
+    kind         = S_SPEC_ONLY
