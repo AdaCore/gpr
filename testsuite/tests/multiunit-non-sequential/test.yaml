@@ -1,0 +1,6 @@
+description:
+    check that sources are correctly computed
+    if for a multiunit source pos 1 is not specified
+driver: build_and_run
+project_file: test
+main: main
