@@ -1244,6 +1244,10 @@ Package Linker Attributes
 
   * **Default_Switches**: list value, indexed by a source glob or language, "others" index allowed, configuration concatenable
 
+    .. warning::
+
+    	Index "others" is not supported yet in gprbuild or GNATcoll.Projects-based tools
+
     Index is a language name. Value is a list of switches for the linker when
     linking an executable for a main source of the language, when there is no
     applicable Switches.

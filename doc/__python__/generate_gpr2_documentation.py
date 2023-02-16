@@ -12,6 +12,7 @@ from docgen.conf import attribute_key_value_translation
 from docgen.conf import complementary_files
 from docgen.conf import display_options
 from docgen.conf import logging_options
+from docgen.conf import attributes_warnings
 from docgen.utils import obj_package
 from docgen.utils import obj_category
 from docgen.utils import obj_attribute
@@ -180,6 +181,11 @@ def generate(data, file):
         if display_options["Short_Def"]:
             file.write(attribute.get_def_str())
         file.write("\n\n")
+
+        if f"{package.get_name()}.{attribute.get_name()}" in attributes_warnings:
+            file.write(f"{attr_indent}  .. warning::\n\n")
+            warning_msg = attributes_warnings[f"{package.get_name()}.{attribute.get_name()}"]
+            file.write(f"{attr_indent}  \t{warning_msg}\n\n")
 
         if display_options["Whole_Def"]:
             file.write(f"{attr_indent}  .. code-block:: attribute_definition\n\n")

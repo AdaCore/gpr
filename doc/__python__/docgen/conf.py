@@ -45,6 +45,10 @@ attribute_key_value_translation = {
     ("inherit_from_extended", "NOT_INHERITED"): "not inherited from extended project",
 }
 
+attributes_warnings = {
+    "Linker.Default_Switches": 'Index "others" is not supported yet in gprbuild or GNATcoll.Projects-based tools'
+}
+
 # Complementary files
 complementary_files = {
     "Intro_File": "./__python__/metadata/attributes_introduction.rst",
