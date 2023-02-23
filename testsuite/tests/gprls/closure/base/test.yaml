@@ -1,2 +1,3 @@
 description: gprbuild's P323-041_gprls_closure test
 driver: python_script
+timeout: 500
