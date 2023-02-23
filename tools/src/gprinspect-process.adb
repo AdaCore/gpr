@@ -39,7 +39,8 @@ with GPR2.Project.View.Set;
 with GPR2.Version;
 with GPR2.View_Ids;
 
-procedure GPRinspect.Process (Options : in out GPRinspect.GPRinspect_Options)
+procedure GPRinspect.Process
+  (Options : in out GPRinspect.GPRinspect_Options)
 is
 
    use Ada;
@@ -55,31 +56,34 @@ is
    --  Variables for tool's options
    Project_Tree : aliased Project.Tree.Object;
 
-   procedure Inspect_Project_JSON_Output (Tree : Project.Tree.Object;
-                                          Compact : Boolean);
+   procedure Inspect_Project_JSON_Output
+     (Tree : Project.Tree.Object;
+      Compact : Boolean);
    --  Inspect project and possibly recursively all imports
 
    procedure Inspect_Project_Textual_Output (Tree : Project.Tree.Object);
    --  Inspect project and possibly recursively all imports
 
-   procedure Load_Project (Tree    : in out Project.Tree.Object;
-                           Options : in out GPRinspect.GPRinspect_Options);
+   procedure Load_Project
+     (Tree    : in out Project.Tree.Object;
+      Options : in out GPRinspect.GPRinspect_Options);
    --  Load project to inspect
 
    function View_Id (View : Project.View.Object) return String;
    --  Get the View's View_Id image
 
-   function No_View_Restriction (Views : Restricted_Scope;
-                                 VName : Name_Type)
-                                 return Boolean;
+   function No_View_Restriction
+     (Views : Restricted_Scope;
+      VName : Name_Type) return Boolean;
    --  Return if the view must be processed and displayed or not.
 
    ---------------------------------
    -- Inspect_Project_JSON_Output --
    ---------------------------------
 
-   procedure Inspect_Project_JSON_Output (Tree    : Project.Tree.Object;
-                                          Compact : Boolean)
+   procedure Inspect_Project_JSON_Output
+     (Tree    : Project.Tree.Object;
+      Compact : Boolean)
    is
       J_Res   : constant JSON_Value := Create_Object;
       --  The JSON response
@@ -144,9 +148,9 @@ is
       -------------------
 
       procedure Parse_Project
-        (Prjs  : in out JSON_Array;
-         View    : Project.View.Object;
-         Parent  : Project.View.Object)
+        (Prjs   : in out JSON_Array;
+         View   : Project.View.Object;
+         Parent : Project.View.Object)
       is
          function Attributes
            (Atts : Project.Attribute.Set.Object) return JSON_Array;
@@ -575,7 +579,6 @@ is
       end Tree_Object;
 
    begin
-
       declare
          P_Array : JSON_Array;
       begin
@@ -588,7 +591,6 @@ is
       end;
 
       Text_IO.Put_Line (JSON.Write (J_Res, Compact => Compact));
-
    end Inspect_Project_JSON_Output;
 
    ------------------------------------
@@ -602,15 +604,15 @@ is
       procedure Print_Projects;
       procedure Print_Tree;
 
-      function Image (V : GPR2.Project.View.Object) return String
+      function Image
+        (V : GPR2.Project.View.Object) return String
       is (String (V.Name) & " (" & View_Id (V) & ")");
 
       ------------
       -- Indent --
       ------------
 
-      procedure Indent (Level : Natural; Item : String)
-      is
+      procedure Indent (Level : Natural; Item : String) is
          Prefix : constant String :=
                     (case Level is
                         when 0      => "",
@@ -862,8 +864,7 @@ is
       -- Print_Tree --
       ----------------
 
-      procedure Print_Tree
-      is
+      procedure Print_Tree is
       begin
          Indent (0, "+--------------------------------------+");
          Indent (0, "|       Project Tree Information       |");
@@ -1011,8 +1012,9 @@ is
    -- Load_Project --
    ------------------
 
-   procedure Load_Project (Tree    : in out GPR2.Project.Tree.Object;
-                           Options : in out GPRinspect.GPRinspect_Options)
+   procedure Load_Project
+     (Tree    : in out GPR2.Project.Tree.Object;
+      Options : in out GPRinspect.GPRinspect_Options)
    is
       package Imported_By_Map is new
         Ada.Containers.Ordered_Maps
@@ -1065,10 +1067,9 @@ is
    -- View_Restriction --
    ----------------------
 
-   function No_View_Restriction (Views : Restricted_Scope;
-                                 VName : Name_Type)
-                                 return Boolean
-   is
+   function No_View_Restriction
+     (Views : Restricted_Scope;
+      VName : Name_Type) return Boolean is
    begin
       return (not Views.Restrict or else (Views.Views.Contains (VName)));
    end No_View_Restriction;
@@ -1077,15 +1078,12 @@ is
    -- View_Id --
    -------------
 
-   function View_Id
-     (View : Project.View.Object) return String
-   is
+   function View_Id (View : Project.View.Object) return String is
    begin
       return String (GPR2.View_Ids.Image (View.Id));
    end View_Id;
 
 begin
-
    Load_Project (Tree    => Project_Tree,
                  Options => Options);
 

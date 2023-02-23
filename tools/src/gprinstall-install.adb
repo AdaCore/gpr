@@ -89,7 +89,8 @@ package body GPRinstall.Install is
    Initial_Buffer_Size : constant := 100;
    --  Arbitrary value for the initial size of the buffer below
 
-   Buffer : GNAT.OS_Lib.String_Access := new String (1 .. Initial_Buffer_Size);
+   Buffer      : GNAT.OS_Lib.String_Access :=
+                   new String (1 .. Initial_Buffer_Size);
    Buffer_Last : Natural := 0;
 
    Agg_Manifest : Text_IO.File_Type;
@@ -99,6 +100,9 @@ package body GPRinstall.Install is
    Line_Agg_Manifest : Text_IO.Count := 0;
    --  Keep lines when opening the manifest files. This is used by the rollback
    --  routine when an error occurs while copying the files.
+
+   Installed : GPR2.Project.View.Set.Object;
+   --  Record already installed project
 
    function Other_Part_Need_Body
      (Source : GPR2.Project.Source.Object;
@@ -125,9 +129,6 @@ package body GPRinstall.Install is
       Project : GPR2.Project.View.Object;
       Options : GPRinstall.Options.Object);
    --  Install the give project view
-
-   Installed : GPR2.Project.View.Set.Object;
-   --  Record already installed project
 
    -------------------
    -- Double_Buffer --
@@ -465,7 +466,7 @@ package body GPRinstall.Install is
       begin
          if Project.Has_Package (P.Install) then
             declare
-               use Ada.Characters.Handling;
+               use Characters.Handling;
             begin
                for V of Project.Attributes (Pack => P.Install) loop
                   if V.Name.Id = A.Install.Prefix then
@@ -990,8 +991,8 @@ package body GPRinstall.Install is
                               or else Other_Part_Need_Body (D.Source, D.Index))
                     and then Source.View = D.Source.View
                   then
-                     Install_Project_Source (D.Source,
-                                             Is_Interface_Closure => True);
+                     Install_Project_Source
+                       (D.Source, Is_Interface_Closure => True);
                   end if;
                end loop;
             end Copy_Interface_Closure;
@@ -1001,8 +1002,8 @@ package body GPRinstall.Install is
             ----------------------------
 
             procedure Install_Project_Source
-              (Source                : GPR2.Project.Source.Object;
-               Is_Interface_Closure  : Boolean := False)
+              (Source               : GPR2.Project.Source.Object;
+               Is_Interface_Closure : Boolean := False)
             is
                Atf     : GPR2.Project.Source.Artifact.Object;
                CUs     : GPR2.Unit.List.Object;
@@ -1036,7 +1037,7 @@ package body GPRinstall.Install is
                   then
                      Done := Copy_Source (Source);
 
-                     --  This if a source is an interface of the project we
+                     --  If this source is an interface of the project we
                      --  need to also install the full-closure for this source.
 
                      if Source.Is_Interface
@@ -1064,12 +1065,12 @@ package body GPRinstall.Install is
 
                   --  Objects / Deps
 
-                  for CU of CUs loop
+                  Check_For_Artefacts : for CU of CUs loop
                      if CU.Kind not in S_Spec | S_Separate then
                         Has_Atf := True;
-                        exit;
+                        exit Check_For_Artefacts;
                      end if;
-                  end loop;
+                  end loop Check_For_Artefacts;
 
                   if Done
                     and then not Options.Sources_Only
@@ -1094,8 +1095,8 @@ package body GPRinstall.Install is
                      if Copy (Dependency) then
                         declare
                            use GPR2.Project.Source.Artifact;
-                           Proj : GPR2.Project.View.Object;
-                           Satf : GPR2.Project.Source.Artifact.Object;
+                           Proj  : GPR2.Project.View.Object;
+                           Satf  : GPR2.Project.Source.Artifact.Object;
                         begin
                            if Options.All_Sources
                              or else not Source.Has_Naming_Exception
@@ -1106,7 +1107,7 @@ package body GPRinstall.Install is
                            else
                               Satf :=
                                 Source.Other_Part.Source.Artifacts
-                                                          (Force_Spec => True);
+                                  (Force_Spec => True);
                            end if;
 
                            if Project.Qualifier = K_Aggregate_Library then
