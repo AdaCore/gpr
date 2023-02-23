@@ -953,8 +953,6 @@ package body GPRinstall.Install is
 
          procedure Copy_Project_Sources (Project : GPR2.Project.View.Object) is
 
-            use all type GPR2.Project.Standalone_Library_Kind;
-
             function Is_Ada
               (Source : GPR2.Project.Source.Object) return Boolean
             is (Source.Language = Ada_Language);
@@ -1011,6 +1009,20 @@ package body GPRinstall.Install is
                Has_Atf : Boolean := False;
                --  Has artefacts to install
 
+               function Is_Interface return Boolean;
+               --  Returns True if Source is an interface (spec or body)
+
+               ------------------
+               -- Is_Interface --
+               ------------------
+
+               function Is_Interface return Boolean is
+               begin
+                  return Source.Is_Interface
+                    or else (Source.Has_Other_Part
+                             and then Source.Other_Part.Source.Is_Interface);
+               end Is_Interface;
+
             begin
                --  Skip sources that are removed/excluded and sources not
                --  part of the interface for standalone libraries.
@@ -1018,9 +1030,9 @@ package body GPRinstall.Install is
                Atf := Source.Artifacts;
 
                if not Project.Is_Library
-                 or else Project.Library_Standalone = No
+                 or else not Project.Is_Library_Standalone
                  or else Is_Interface_Closure
-                 or else Source.Is_Interface
+                 or else Is_Interface
                then
                   if Source.Has_Units then
                      CUs := Source.Units;
