@@ -1,2 +1,3 @@
 description: test gpr2clean deleting executable, libraries & lib_src_dir files
 driver: python_script
+timeout: 500

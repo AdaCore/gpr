@@ -1,3 +1,4 @@
 description:
     check for library interfaces & library_interface
 driver: python_script
+timeout: 500
