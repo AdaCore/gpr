@@ -317,8 +317,6 @@ begin
    --
 
    declare
-      use type OS_Lib.String_Access;
-
       Ada_I : constant Attribute_Index.Object :=
                 Attribute_Index.Create ("ada");
 

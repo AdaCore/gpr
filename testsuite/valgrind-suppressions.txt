@@ -54,11 +54,12 @@
    fun:gnatcoll__opt_parse__parse
 }
 
-# For now, just ignore the tools that have been stripped of their symbols and we can't debug
+# Ignore any gprbuild memory leak
 {
-   tools:1
+   gprbuild
    Memcheck:Leak
    match-leak-kinds: definite
    fun:malloc
    fun:???
+   obj:*gprbuild*
 }

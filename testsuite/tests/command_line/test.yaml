@@ -1,2 +1,3 @@
 description: Test gpr tools command line support
 driver: python_script
+timeout: 500
