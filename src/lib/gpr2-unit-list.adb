@@ -13,6 +13,9 @@ package body GPR2.Unit.List is
    overriding function First (Iter : Iterator) return Cursor;
    overriding function Next (Iter : Iterator; Position : Cursor) return Cursor;
 
+   procedure Skip_Padding (Cursor : in out Unit_Vectors.Cursor) with Inline;
+   --  Skips padding elements that correspond to unused positions
+
    -----------
    -- Clear --
    -----------
@@ -77,8 +80,11 @@ package body GPR2.Unit.List is
    -----------
 
    overriding function First (Iter : Iterator) return Cursor is
+      First : Unit_Vectors.Cursor := Iter.Root.List.First;
    begin
-      return (Current => Iter.Root.List.First);
+      Skip_Padding (First);
+
+      return (Current => First);
    end First;
 
    -----------------
@@ -220,9 +226,10 @@ package body GPR2.Unit.List is
 
    overriding function Next (Iter : Iterator; Position : Cursor) return Cursor
    is
-      Next : constant Unit_Vectors.Cursor :=
-               Unit_Vectors.Next (Position.Current);
+      Next : Unit_Vectors.Cursor := Unit_Vectors.Next (Position.Current);
    begin
+      Skip_Padding (Next);
+
       return Cursor'(Current => Next);
    end Next;
 
@@ -253,5 +260,18 @@ package body GPR2.Unit.List is
    begin
       return (Unit => Ref.Element.all'Unchecked_Access, Ref => Ref);
    end Reference;
+
+   ------------------
+   -- Skip_Padding --
+   ------------------
+
+   procedure Skip_Padding (Cursor : in out Unit_Vectors.Cursor) is
+   begin
+      while Unit_Vectors.Has_Element (Cursor)
+        and then not Unit_Vectors.Element (Cursor).Is_Defined
+      loop
+         Cursor := Unit_Vectors.Next (Cursor);
+      end loop;
+   end Skip_Padding;
 
 end GPR2.Unit.List;
