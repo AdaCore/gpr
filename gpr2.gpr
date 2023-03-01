@@ -14,16 +14,19 @@ library project GPR2 is
    Build : Build_Type := external ("GPR2_BUILD", "debug");
 
    type Profiler_Flag is ("yes", "no");
-   Profiler : Profiler_Flag := External ("PROFILER", "no");
+   Profiler : Profiler_Flag := external ("PROFILER", "no");
 
    type Bool is ("true", "false");
    Is_Externally_Built : Bool := external ("EXTERNALLY_BUILT", "false");
    for Externally_Built use Is_Externally_Built;
 
+   type Langkit_Src_Kind is ("sustained", "generated");
+   Langkit_Src : Langkit_Src_Kind
+                   := external ("LANGKIT_SRC_KIND", "sustained");
+
    Processors := external ("PROCESSORS", "0");
-   Build_Root            := external ("BUILD_ROOT", ".build");
-   Langkit_Generated_Src := Build_Root & "/lkparser";
-   KB_Build              := Build_Root & "/kb";
+   Build_Root := external ("BUILD_ROOT", ".build");
+   KB_Build   := Build_Root & "/kb";
 
    type Library_Kind is ("static", "relocatable", "static-pic");
    Library_Type : Library_Kind :=
@@ -34,7 +37,7 @@ library project GPR2 is
                         "src/build",
                         "src/kb",
                         KB_Build,
-                        Langkit_Generated_Src & "/src");
+                        "langkit/" & Langkit_Src & "/src");
    for Library_Name use "gpr2";
 
    for Object_Dir use Build_Root & "/" & Build & "/obj-" & Library_Type;
