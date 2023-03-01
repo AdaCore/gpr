@@ -286,8 +286,6 @@ package body GPR2.Path_Name is
             Result : String := Path (Path'First .. Last_DS);
 
          begin
-            Result := Path (Path'First .. Last_DS);
-
             --  Remove any trailing directory separator, except as the
             --  first character or the first character following a drive
             --  number on Windows.
@@ -295,7 +293,7 @@ package body GPR2.Path_Name is
             if Is_Root_Directory_Name (Result) then
                return Result;
             else
-               return Result (1 .. Result'Last - 1);
+               return Result (Result'First .. Result'Last - 1);
             end if;
          end;
       end if;
