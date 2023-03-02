@@ -283,7 +283,7 @@ package body GPR2.Path_Name is
 
       else
          declare
-            Result : String := Path (Path'First .. Last_DS);
+            Result : constant String := Path (Path'First .. Last_DS);
 
          begin
             --  Remove any trailing directory separator, except as the
