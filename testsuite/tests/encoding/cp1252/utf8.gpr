@@ -1,0 +1,23 @@
+--
+--  Copyright © 2023, AdaCore
+--
+--  SPDX-License-Identifier: Apache-2.0
+--
+
+project utf8 is
+Var2 := "Var2="" !""#$%&'()*+,-./""; ";
+Var3 := "Var3=""0123456789:;<=>?""; ";
+Var4 := "Var4=""@ABCDEFGHIJKLMNO""; ";
+Var5 := "Var5=""PQRSTUVWXYZ[\]^_""; ";
+Var6 := "Var6=""abcdefghijklmno""; ";
+Var7 := "Var7=""pqrstuvwxyz{|}~""; ";
+Var8 := "Var8=""€‚ƒ„…†‡ˆ‰Š‹ŒŽ""; ";
+Var9 := "Var9=""‘’“”•–—˜ ™š›œžŸ""; ";
+VarA := "VarA=""¡¢£¤¥¦§¨©ª«¬®¯""; ";
+VarB := "VarB=""°±²³´µ¶·¸¹º»¼½¾¿""; ";
+VarC := "VarC=""ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏ""; ";
+VarD := "VarD=""ÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞß""; ";
+VarE := "VarE=""àáâãäåæçèéêëìíîï""; ";
+VarF := "VarF=""ðñòóôõö÷øùúûüýþÿ""; ";
+Var := Var2 & Var3 & Var4 & Var5 & Var6 & Var7 & Var8 & Var9 & VarA & VarB & VarC & VarD & VarE & VarF;
+end utf8;
