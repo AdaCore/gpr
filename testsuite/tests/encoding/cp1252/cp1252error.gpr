@@ -1,0 +1,23 @@
+--
+--  Copyright © 2023, AdaCore
+--
+--  SPDX-License-Identifier: Apache-2.0
+--
+
+project cp1252 is
+Var2 := "Var2="" !""#$%&'()*+,-./""; ";
+Var3 := "Var3=""0123456789:;<=>?""; ";
+Var4 := "Var4=""@ABCDEFGHIJKLMNO""; ";
+Var5 := "Var5=""PQRSTUVWXYZ[\]^_""; ";
+Var6 := "Var6=""abcdefghijklmno""; ";
+Var7 := "Var7=""pqrstuvwxyz{|}~""; ";
+Var8 := "Var8=""€‚ƒ„…†‡ˆ‰Š‹Œ""; ";
+Var9 := "Var9=""‘’“”•–—˜ ™š›œŸ""; ";
+VarA := "VarA=""¡¢£¤¥¦§¨©ª«¬®¯""; ";
+VarB := "VarB=""°±²³´µ¶·¸¹º»¼½¾¿""; ";
+VarC := "VarC=""ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏ""; ";
+VarD := "VarD=""ĞÑÒÓÔÕÖ×ØÙÚÛÜİŞß""; ";
+VarE := "VarE=""àáâãäåæçèéêëìíîï""; ";
+VarF := "VarF=""ğñòóôõö÷øùúûüışÿ""; ";
+Var := Var2 & Var3 & Var4 & Var5 & Var6 & Var7 & Var8 & Var9 & VarA & VarB & VarC & VarD & VarE & VarF;
+end cp1252;

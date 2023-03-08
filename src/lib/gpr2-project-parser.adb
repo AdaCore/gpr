@@ -15,6 +15,7 @@ with Ada.Strings.Wide_Wide_Unbounded;
 
 with GNAT.Regpat;
 
+with Gpr_Parser_Support.Diagnostics;
 with Gpr_Parser_Support.Slocs;
 with Gpr_Parser_Support.Text;
 with Gpr_Parser.Common;
@@ -444,7 +445,7 @@ package body GPR2.Project.Parser is
       use Ada.Characters.Conversions;
       use Ada.Strings.Wide_Wide_Unbounded;
 
-      Context : constant Analysis_Context :=
+      Context : Analysis_Context :=
                   Create_Context (Charset     => "UTF-8",
                                   File_Reader => File_Reader);
       Unit    : Analysis_Unit;
@@ -468,28 +469,51 @@ package body GPR2.Project.Parser is
          Unit := Get_From_File (Context, Filename.Value);
 
          if Root (Unit).Is_Null or else Has_Diagnostics (Unit) then
-            if Has_Diagnostics (Unit) then
-               for D of Diagnostics (Unit) loop
-                  declare
-                     Sloc : constant Source_Reference.Object'Class :=
-                              Source_Reference.Create
-                                (Filename => Filename.Value,
-                                 Line     =>
-                                   Natural (D.Sloc_Range.Start_Line),
-                                 Column   =>
-                                   Natural (D.Sloc_Range.Start_Column));
-                  begin
-                     Messages.Append
-                       (GPR2.Message.Create
-                          (Level   => Message.Error,
-                           Sloc    => Sloc,
-                           Message =>
-                             To_String (To_Wide_Wide_String (D.Message))));
-                  end;
-               end loop;
-            end if;
+            declare
+               use Gpr_Parser_Support.Diagnostics;
 
-            return Undefined;
+               Diags_UTF8 : constant Diagnostics_Array := Diagnostics (Unit);
+            begin
+
+               --  if UTF-8 encoding issue let's try Windows-1252, a ISO 8859-1
+               --  (Latin-1) superset.
+
+               Context := Create_Context (Charset     => "Windows-1252",
+
+                                          File_Reader => File_Reader);
+               Unit := Get_From_File (Context, Filename.Value);
+
+               if Root (Unit).Is_Null or else Has_Diagnostics (Unit) then
+                  declare
+                     Diags : constant Diagnostics_Array :=
+                               (if Diags_UTF8'Length > 0
+                                then Diags_UTF8
+                                else Diagnostics (Unit));
+                  begin
+                     for D of Diags loop
+                        declare
+                           Sloc : constant Source_Reference.Object'Class :=
+                                    Source_Reference.Create
+                                      (Filename => Filename.Value,
+                                       Line     =>
+                                         Natural (D.Sloc_Range.Start_Line),
+                                       Column   =>
+                                         Natural (D.Sloc_Range.Start_Column));
+                        begin
+                           Messages.Append
+                             (GPR2.Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    => Sloc,
+                                 Message =>
+                                   To_String
+                                     (To_Wide_Wide_String (D.Message))));
+                        end;
+                     end loop;
+
+                     return Undefined;
+                  end;
+               end if;
+            end;
          end if;
 
          --  Do the first stage parsing. We just need the external references
