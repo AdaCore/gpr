@@ -63,3 +63,13 @@
    fun:???
    obj:*gprbuild*
 }
+
+# Nighly CI fails on not having debug symbols
+# To be removed when we figure out why we don't have them only on Nightly CI
+{
+   gprbuild
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:???
+}
