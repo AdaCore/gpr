@@ -70,7 +70,7 @@ package body GPR2.Project.Variable is
 
       case Self.Kind is
          when Single =>
-            Append (Result, '"' & Self.Value.Text & '"');
+            Append (Result, GPR2.Quote (Self.Value.Text));
 
          when List =>
             declare
@@ -83,7 +83,7 @@ package body GPR2.Project.Variable is
                      Append (Result, ", ");
                   end if;
 
-                  Append (Result, '"' & String (V.Text) & '"');
+                  Append (Result, GPR2.Quote (V.Text));
                   First := False;
                end loop;
 

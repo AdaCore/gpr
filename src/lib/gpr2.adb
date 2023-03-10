@@ -236,7 +236,10 @@ package body GPR2 is
      (Str        : Value_Type;
       Quote_With : Character := '"') return Value_Type is
    begin
-      return Quote_With & Str & Quote_With;
+      return Quote_With &
+        GNATCOLL.Utils.Replace (Str, "" & Quote_With,
+                                Quote_With & Quote_With) &
+        Quote_With;
    end Quote;
 
    ---------------
@@ -303,7 +306,17 @@ package body GPR2 is
           ((Str (Str'First) = ''' and then Str (Str'Last) = ''')
            or else (Str (Str'First) = '"' and then Str (Str'Last) = '"'))
       then
-         return Str (Str'First + 1 .. Str'Last - 1);
+         if Str (Str'First) = ''' then
+            return GNATCOLL.Utils.Replace
+              (S           => Str (Str'First + 1 .. Str'Last - 1),
+               Pattern     => "''",
+               Replacement => "'");
+         else
+            return GNATCOLL.Utils.Replace
+              (S           => Str (Str'First + 1 .. Str'Last - 1),
+               Pattern     => """""",
+               Replacement => """");
+         end if;
       else
          return Str;
       end if;
