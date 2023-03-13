@@ -1,0 +1,5 @@
+description:
+    check that "" used to encode " in string are correctly handled.
+driver: build_and_run
+project_file: test
+main: main

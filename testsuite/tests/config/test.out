@@ -45,14 +45,14 @@ V:   Target_Name -> x86_64-linux
    Source_Artifact_Extensions (Ada) -> .dg .rep .stdout .stderr
  Compiler
    Driver (Ada) -> /home/obry/dev/builds/install/bin/gcc
-   Config_Body_File_Name (Ada) -> pragma Source_File_Name_Project (%u, Body_File_Name => ""%f"");
-   Config_Body_File_Name_Index (Ada) -> pragma Source_File_Name_Project (%u, Body_File_Name => ""%f"", Index => %i);
-   Config_Body_File_Name_Pattern (Ada) -> pragma Source_File_Name_Project   (Body_File_Name  => ""*%b"",   Casing          => %c,   Dot_Replacement => ""%d"");
+   Config_Body_File_Name (Ada) -> pragma Source_File_Name_Project (%u, Body_File_Name => "%f");
+   Config_Body_File_Name_Index (Ada) -> pragma Source_File_Name_Project (%u, Body_File_Name => "%f", Index => %i);
+   Config_Body_File_Name_Pattern (Ada) -> pragma Source_File_Name_Project   (Body_File_Name  => "*%b",   Casing          => %c,   Dot_Replacement => "%d");
    Config_File_Switches (Ada) -> -gnatec=
    Config_File_Unique (Ada) -> False
-   Config_Spec_File_Name (Ada) -> pragma Source_File_Name_Project (%u, Spec_File_Name => ""%f"");
-   Config_Spec_File_Name_Index (Ada) -> pragma Source_File_Name_Project (%u, Spec_File_Name => ""%f"", Index => %i);
-   Config_Spec_File_Name_Pattern (Ada) -> pragma Source_File_Name_Project   (Spec_File_Name  => ""*%s"",   Casing          => %c,   Dot_Replacement => ""%d"");
+   Config_Spec_File_Name (Ada) -> pragma Source_File_Name_Project (%u, Spec_File_Name => "%f");
+   Config_Spec_File_Name_Index (Ada) -> pragma Source_File_Name_Project (%u, Spec_File_Name => "%f", Index => %i);
+   Config_Spec_File_Name_Pattern (Ada) -> pragma Source_File_Name_Project   (Spec_File_Name  => "*%s",   Casing          => %c,   Dot_Replacement => "%d");
    Dependency_Kind (Ada) -> ALI_File
    Include_Path_File (Ada) -> ADA_PRJ_INCLUDE_FILE
    Language_Kind (Ada) -> unit_based

@@ -1,0 +1,6 @@
+abstract project Double_Quote is
+   Var := "-D_TEST_H_INCLUDE=""test.h""";
+   package Compiler is
+      for Default_Switches ("c") use ("-D_TEST_H_INCLUDE=""test.h""");
+   end Compiler;
+end Double_Quote;
