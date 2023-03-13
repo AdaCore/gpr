@@ -1140,6 +1140,34 @@ package body GPRinstall.Install is
                                                 then ALI_Dir
                                                 else Lib_Dir),
                                        File => Satf.Dependency.Simple_Name);
+
+                                    --  The <body>.ali has been copied, we now
+                                    --  also want to create a file based on
+                                    --  <body>.ali for <spec>.ali.
+
+                                    if Source.Has_Other_Part then
+                                       declare
+                                          O_Src : constant GPR2.Project.
+                                            Source.Object :=
+                                                    Source.Other_Part.Source;
+                                          O_BN  : constant String :=
+                                                    String (O_Src.Path_Name
+                                                            .Base_Name);
+                                          D_Sfx : constant String :=
+                                                    String
+                                                      (Source.View.Tree
+                                                       .Dependency_Suffix
+                                                         (Source.Language));
+                                       begin
+                                          Copy_File
+                                            (From => Atf.Dependency (CU.Index),
+                                             To   => (if Proj.Kind = K_Library
+                                                      then ALI_Dir
+                                                      else Lib_Dir),
+                                             File => Filename_Optional
+                                               (O_BN & D_Sfx));
+                                       end;
+                                    end if;
                                  end if;
                               end loop;
                            end if;
