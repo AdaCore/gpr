@@ -45,7 +45,7 @@ package GPR2.Project.Source.Part_Set is
      (Self    : in out Object;
       Element : Source_Part)
      with Inline;
-   --  Insert Element in Self. If Element is alreadu in Self, this raises
+   --  Insert Element in Self. If Element is already in Self, this raises
    --  Constraint_Error.
 
    procedure Insert

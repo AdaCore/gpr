@@ -4,8 +4,8 @@
 --  SPDX-License-Identifier: Apache-2.0
 --
 
---  This package provides to GPR library the known description of defined at-
---  tributes.
+--  This package provides to GPR library the known description of defined
+--  attributes.
 
 with Ada.Containers; use Ada.Containers;
 
@@ -13,7 +13,7 @@ package GPR2.Project.Registry.Attribute.Description is
 
    function Get_Attribute_Description (Key : Q_Attribute_Id)
                                        return String;
-   --  Retrieve a description for a given attribute and package.
+   --  Retrieves a description for a given attribute and package
 
 private
 

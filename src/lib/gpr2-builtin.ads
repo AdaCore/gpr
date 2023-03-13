@@ -55,7 +55,7 @@ package GPR2.Builtin is
 
    function Lower (Value : Value_Type) return Value_Type
      with Post => Lower'Result = Characters.Handling.To_Lower (Value);
-   --  Lower-case Value
+   --  Lower-case value
 
    function Upper (Value : Value_Type) return Value_Type
      with Post => Upper'Result = Characters.Handling.To_Upper (Value);
@@ -64,30 +64,31 @@ package GPR2.Builtin is
    function Default (Value, Default_Value : Value_Type) return Value_Type
      with Post => Default'Result
                     = (if Value = "" then Default_Value else Value);
-   --  The default built-in, returns Default if Value is empty
+   --  The Default built-in. Returns Default_Value if Value is empty
 
    function Remove_Prefix
      (Value, Pattern : Value_Type) return Value_Type
      with Post => Remove_Prefix'Result'Length <= Value'Length;
-   --  The Remove_Prefix built-in, returns Default if Value is empty
+   --  The Remove_Prefix built-in
 
    function Remove_Suffix
      (Value, Pattern : Value_Type) return Value_Type
      with Post => Remove_Suffix'Result'Length <= Value'Length;
-   --  The Remove_Suffix built-in, returns Default if Value is empty
+   --  The Remove_Suffix built-in
 
    function Default
      (List, Default : Containers.Source_Value_List)
       return Containers.Source_Value_List
      with Post => Builtin.Default'Result
                     = (if List.Is_Empty then Default else List);
-   --  The default built-in, returns Default if List is empty
+   --  The Default built-in. Returns Default if List is empty
 
    function Alternative
      (Value, Alternative_Value : Value_Type) return Value_Type
      with Post => Alternative'Result
                     = (if Value = "" then "" else Alternative_Value);
-   --  The alternative built-in, returns Alternative is Value is not empty
+   --  The Alternative built-in. Returns Alternative_Value if Value is not
+   --  empty.
 
    function Alternative
      (List, Alternative : Containers.Source_Value_List)
@@ -96,7 +97,7 @@ package GPR2.Builtin is
                     = (if List.Is_Empty
                        then Containers.Source_Value_Type_List.Empty
                        else Alternative);
-   --  The default built-in, returns Default if List is empty
+   --  The Alternative built-in. Returns Alternative if List is not empty
 
    function Item_At
      (List  : Containers.Source_Value_List;

@@ -222,7 +222,7 @@ private
      with Dynamic_Predicate =>
        (Length (Sep_From) > 0) = (Kind = S_Separate);
    --  Note that in GPR2 we have a distinction between sources, that may
-   --  define either the spec or body/ies for a unit - those definitions are
+   --  define either the spec or body(ies) for a unit - those definitions are
    --  represented as Compil_Unit records, and the unit itself which
    --  is just a name (the Unit_Name).
 

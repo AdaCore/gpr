@@ -154,8 +154,8 @@ package body GPR2.Project.Tree is
    is
 
       Not_Defined : constant Optional_Name_Type := " ";
-      --  value returned when GNAT_Compilers_Prefix cannot find Compiler
-      --  Driver in View
+      --  Value returned when GNAT_Compilers_Prefix cannot find Compiler
+      --  Driver in View.
 
       function GNAT_Compilers_Prefix
         (View : Project.View.Object) return Optional_Name_Type
@@ -224,12 +224,12 @@ package body GPR2.Project.Tree is
       Prefix_From_Root : constant Optional_Name_Type :=
                            GNAT_Compilers_Prefix (Self.Root);
       --  Try to find prefix from root project compiler package or from its
-      --  associated configuration project
+      --  associated configuration project.
 
    begin
       if Prefix_From_Root = Not_Defined then
          --  Use Target as prefix if not defined in project and no
-         --  configution file was loaded.
+         --  configuration file was loaded.
 
          return Name_Type (String (Self.Target) & "-" & String (Tool_Name));
 
@@ -1293,7 +1293,7 @@ package body GPR2.Project.Tree is
          Definition.Check_Same_Name_Extended (Self.Root);
 
          if not Self.Pre_Conf_Mode then
-            --  We only need those checks if we are not in pre-confinguration
+            --  We only need those checks if we are not in pre-configuration
             --  stage, otherwise we might have errors if a project references
             --  corresponding attributes from a not yet found project and their
             --  values default to empty ones.
@@ -1318,7 +1318,6 @@ package body GPR2.Project.Tree is
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
       Config           : PC.Object                 := PC.Undefined;
-      --  Project_Dir      : Path_Name.Object          := Path_Name.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;
@@ -1627,7 +1626,7 @@ package body GPR2.Project.Tree is
          Parent      : View.Object;
          Extends_Ctx : View.Vector.Object) return View.Object;
       --  Internal function doing the actual load of the tree.
-      --  Project:   the project to laod
+      --  Project:   the project to load
       --  Aggregate: if defines, is set to the aggregate project that includes
       --             "Filename".
       --  Status:    denotes the context of the load.
@@ -1656,8 +1655,8 @@ package body GPR2.Project.Tree is
       --  In case of Aggregate Libraries, this is needed if several aggregate
       --  libraries exist in the tree and they reference the same project.
       --
-      --  This is also needed for both aggrete and aggregate library cases if a
-      --  subproject is withed from several subtrees of the aggregate.
+      --  This is also needed for both aggregate and aggregate library cases
+      --  if a subproject is withed from several subtrees of the aggregate.
 
       --------------
       -- Internal --
@@ -1775,7 +1774,7 @@ package body GPR2.Project.Tree is
                --  Extends all context for the extended project if any
 
             begin
-               --  Set the root view(s), so the view that is at the toplevel
+               --  Set the root view(s), so the view that is at the top level
                --  of a standalone hierarchy (so either the root project,
                --  or the top-level aggregated projects.
                --
@@ -1787,7 +1786,7 @@ package body GPR2.Project.Tree is
                  or else Parent.Kind = K_Aggregate
                then
                   --  This is the root project or an aggregated project. This
-                  --  create a new namespace (i.e root in the subtree)
+                  --  creates a new namespace (i.e. root in the subtree)
 
                   Data.Root_Views.Append (View.Id);
 
@@ -2162,7 +2161,7 @@ package body GPR2.Project.Tree is
          if not Is_Aggregate_Library
            and then Data.Kind = K_Aggregate_Library
          then
-            --  Propagete the namespace root
+            --  Propagate the namespace root
             for Agg of Data.Aggregated loop
                Propagate_Aggregate (Agg, Root, False);
             end loop;
@@ -2265,7 +2264,7 @@ package body GPR2.Project.Tree is
 
          --  Update the DAG with the newly loaded tree.
          --
-         --  ??? This is certainly not optimal, in particlar when there's
+         --  ??? This is certainly not optimal, in particular when there's
          --  a lot of aggregates, potentially nested, in the final tree, as
          --  Recursive_Load will be called for each aggregated project. However
          --  that's convenient to do it there as we have a single entry point
@@ -2683,9 +2682,9 @@ package body GPR2.Project.Tree is
 
          function Is_Implicitly_Abstract
            (View : Project.View.Object) return Boolean;
-         --  Returns True if project can be recognised as abstract project.
-         --  I.e. not inherited from non abstract project and has empty one of
-         --  source list defining attributes.
+         --  Returns True if project can be recognized as abstract project.
+         --  I.e. not inherited from non abstract project and one of
+         --  source list defining attributes is empty.
 
          ----------------------------
          -- Is_Implicitly_Abstract --
@@ -3688,7 +3687,7 @@ package body GPR2.Project.Tree is
                         if Given_Set then
                            --  We only care for runtime if it is a simple
                            --  name. Runtime specific names go with explicitly
-                           --  specified target (if it has been specifed).
+                           --  specified target (if it has been specified).
 
                            if Conf.Runtime (Index) /= No_Name
                              and then not
@@ -3815,7 +3814,7 @@ package body GPR2.Project.Tree is
       end if;
 
       for V of reverse Views loop
-         --  We list the views in referse topological order so that we never
+         --  We list the views in reverse topological order so that we never
          --  end up having a dependency external to the view that's not
          --  already parsed.
 

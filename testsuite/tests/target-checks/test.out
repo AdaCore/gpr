@@ -13,7 +13,7 @@ config.cgpr:6:19: error: --target: 'aarch64-elf' is different from the target va
 gprls --config config.cgpr -XTARGET=aarch64-elf -s
 -------------------------
 using project file /demo.gpr
-demo.gpr:4:04: warning: target attribute 'aarch64-elf' not used, overriden by the configuration's target: (host)
+demo.gpr:4:04: warning: target attribute 'aarch64-elf' not used, overridden by the configuration's target: (host)
 /src/pkg.ads
 
 -------------------------

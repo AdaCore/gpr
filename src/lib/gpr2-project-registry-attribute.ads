@@ -151,7 +151,7 @@ package GPR2.Project.Registry.Attribute is
 
       Inherit_From_Extended : Inherit_From_Extended_Type := Inherited;
       --  Whether an attribute is inherited from an extended project or not
-      --  See Inherited_From_Extended_Type definition for available behaviours.
+      --  See Inherited_From_Extended_Type definition for available behaviors.
    end record
      with Dynamic_Predicate =>
        --  Must be usable somewhere
@@ -226,13 +226,13 @@ package GPR2.Project.Registry.Attribute is
    --    default value. Ignored if no default value is defined.
    --  Is_Toolchain_Config: flags the attribute as being relevant when
    --    automatically configuring the project. Such attribute can't be
-   --    written after being read to prevent bootstraping issues.
+   --    written after being read to prevent bootstrapping issues.
    --  Config_Concatenable: if set, the final values hold by the attribute
    --    will be the concatenation of the user-defined attribute and the
    --    configuration project value.
    --  Inherit_From_Extended: Whether the attribute is inherited from extended
    --    projects, its values concatenated or not inherited. Only relevant
-   --    for toplevel attributes.
+   --    for top-level attributes.
    --  Is_Set: if set, the attribute values is considered a set, so won't
    --    hold duplicated values.
 

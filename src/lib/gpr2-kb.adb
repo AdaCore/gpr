@@ -156,11 +156,11 @@ package body GPR2.KB is
    --  Returns the name without "adalib" at the end
 
    function To_String (Comp : Compiler) return String;
-   --  Return a string representing the compiler. Used for diagnotics.
+   --  Return a string representing the compiler. Used for diagnostics.
 
    function To_String (Compilers  : Compiler_Lists.List) return String;
-   --  Return a string representing the list ofcompilers. Only Selected
-   --  compilers are taken into account. Used for diagnotics.
+   --  Return a string representing the list of compilers. Only Selected
+   --  compilers are taken into account. Used for diagnostics.
 
    procedure Set_Selection
      (Compilers : in out Compiler_Lists.List;
@@ -171,7 +171,7 @@ package body GPR2.KB is
      (Filter    : Compilers_Filter_Lists.List;
       Compilers : Compiler_Lists.List) return Boolean;
    --  Returns True if all elements of Filter matches against Compilers.
-   --  Filter represents the list of nides <configuration><compilers>.
+   --  Filter represents the list of nodes <configuration><compilers>.
 
    function Match
      (Filter    : Compilers_Filter;
@@ -316,7 +316,7 @@ package body GPR2.KB is
       function Display_Before (Comp1, Comp2 : Compiler) return Boolean;
       --  Whether Comp1 should be displayed before Comp2 when displaying lists
       --  of compilers. This ensures that similar languages are grouped,
-      --  among othe things.
+      --  among other things.
 
       package Compiler_Sort is
         new Compiler_Lists.Generic_Sorting (Display_Before);
@@ -362,7 +362,7 @@ package body GPR2.KB is
             end if;
 
             --  Ignore compilers from extra directories, unless they have been
-            --  selected because of a --config argument
+            --  selected because of a --config argument.
 
             if Is_Selected (New_Comp) or else not From_Extra_Dir then
                GNATCOLL.Traces.Trace
@@ -631,7 +631,7 @@ package body GPR2.KB is
                        (Iterator.Compilers, Iterator.Matched (Index), False);
                      Trace
                        (Match_Trace,
-                        "Compilers are not compatible, cancelling last"
+                        "Compilers are not compatible, canceling last"
                         & " compiler found");
                      Iterator.Matched (Index) := Compiler_Lists.No_Element;
                      Iterator.Found := Iterator.Found - 1;
@@ -950,7 +950,7 @@ package body GPR2.KB is
 
       --  Runtime dir may have additional knowledge base chunks specific to
       --  given runtime. We do not want to include them in Self, otherwise
-      --  it becomes unusable for other runtimes/compiletrs.
+      --  it becomes unusable for other runtimes/compilers.
       Runtime_Specific_KB := Self;
 
       for Comp of Compilers loop
@@ -1479,7 +1479,7 @@ package body GPR2.KB is
       Result            : Unbounded_String;
 
       procedure Add_Line (S : String);
-      --  Appends to result the given string and a line terminator. There is nj
+      --  Appends to result the given string and a line terminator. There is no
       --  actual need for the terminators but it makes it more readable in
       --  traces.
 
@@ -2497,7 +2497,7 @@ package body GPR2.KB is
       use Ada.Strings.Fixed;
    begin
       while First /= 0 and then First <= Config'Last loop
-         --  Do we have a toplevel attribute ?
+         --  Do we have a top-level attribute ?
          Skip_Spaces (Config, First);
          Pkg_Name_First := Index (Config (First .. Config'Last), "package ");
          if Pkg_Name_First = 0 then

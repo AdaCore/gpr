@@ -62,7 +62,7 @@ package body GPR2.View_Ids is
       end if;
 
       if not Project_File.Has_Dir_Name then
-         raise View_Id_Error with "cannot creaste view id from relative path";
+         raise View_Id_Error with "cannot create view id from relative path";
       end if;
 
       Append (Id_Str, GPR2.Path_Name.To_OS_Case (Project_File.Value));

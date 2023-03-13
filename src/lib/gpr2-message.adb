@@ -66,7 +66,7 @@ package body GPR2.Message is
                       then Level_Image & ": "
                       else "")
                    & To_String (Self.Message);
-      --  Need to distingush warnings from errors because they are both going
+      --  Need to distinguish warnings from errors because they are both going
       --  to the error output.
 
    begin

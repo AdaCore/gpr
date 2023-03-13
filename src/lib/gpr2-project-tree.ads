@@ -90,7 +90,7 @@ package GPR2.Project.Tree is
    --   project tree (out of tree build).
    --  Subdirs: if specified, this value is used as subdirectory for
    --   lib/obj/exec directories
-   --  Src_Subdirs: if specified, prepend obj/<project namne>_<value> or
+   --  Src_Subdirs: if specified, prepend obj/<project name>_<value> or
    --   obj/<value> to the list of source directories, if they exist.
    --  Check_Shared_Lib: checks for shared library compatibilities
    --  Absent_Dir_Error: whether a missing directory should be treated as an
@@ -110,9 +110,9 @@ package GPR2.Project.Tree is
    procedure Restrict_Autoconf_To_Languages
      (Self  : in out Object;
       Langs : Containers.Language_Set);
-   --  Sets a list of languages that autoconfiguration will be reduced to
+   --  Sets a list of languages that auto-configuration will be reduced to
    --  from the actual set of languages used in project tree. Empty set of
-   --  languages means regular autoconfiguration with no reductions.
+   --  languages means regular auto-configuration with no reductions.
 
    procedure Load_Autoconf
      (Self              : in out Object;
@@ -581,7 +581,7 @@ private
       Explicit_Target   : Unbounded_String;
       Explicit_Runtimes : Containers.Lang_Value_Map;
       Langs_Of_Interest : Containers.Language_Set;
-      --  Languages that autoconfiguration should be reduced to
+      --  Languages that auto-configuration should be reduced to
       File_Reader_Ref   : GPR2.File_Readers.File_Reader_Reference;
    end record;
 
@@ -659,7 +659,7 @@ private
         and then
       Tree.Configuration.Corresponding_View.Attribute
         (PRA.Shared_Library_Suffix).Value_Equal (".dll"));
-      --  ??? We may also check that the Tree target name constains mingw or
+      --  ??? We may also check that the Tree target name contains mingw or
       --  windows.
 
    function Archive_Suffix (Self : Object) return Filename_Type is

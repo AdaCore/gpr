@@ -48,7 +48,7 @@ private
       At_Pos       : Unit_Index := No_Index;
       From_Default : Boolean := False;
       --  From_Default is only relevant for Target attribute value that may
-      --  be evaluated as implicit one. The knowledge wether or not the target
+      --  be evaluated as implicit one. The knowledge whether or not the target
       --  is default is necessary to decide i.e. on target fallback.
    end record;
 

@@ -137,7 +137,7 @@ package body GPR2.Source_Info.Parser.D is
       --  Loop Big_Loop is executed several times only when the dependency file
       --  contains several times
       --     <object file>: <source1> ...
-      --  When there is only one of such occurence, Big_Loop is exited
+      --  When there is only one of such occurrence, Big_Loop is exited
       --  successfully at the beginning of the second loop.
 
       Big_Loop : loop

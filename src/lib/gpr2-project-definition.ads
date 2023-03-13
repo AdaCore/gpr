@@ -87,8 +87,8 @@ private package GPR2.Project.Definition is
       Is_Set : Boolean := False;
       Value  : GPR2.Path_Name.Object;
    end record;
-   --  Used to cache directory attributes that require otherwise
-   --  postprocessing each time they are retrieved (Call to
+   --  Used to cache directory attributes that otherwise require
+   --  post-processing each time they are retrieved (Call to
    --  Apply_Root_And_Subdirs).
 
    package View_Lists is new Ada.Containers.Vectors
@@ -173,7 +173,7 @@ private package GPR2.Project.Definition is
       Cache             : Attribute_Cache.Object;
       --  Attribute's final values cache
       Dir_Cache         : Dir_Cache_List;
-      --  View's directories cache, havily used when loading sources and
+      --  View's directories cache, heavily used when loading sources and
       --  retrieving build artifacts.
    end record;
 

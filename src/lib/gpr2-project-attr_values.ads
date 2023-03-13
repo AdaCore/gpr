@@ -72,13 +72,13 @@ package GPR2.Project.Attr_Values is
 
    function Value_Equal (Self : Object; Value : Value_Type) return Boolean
      with Pre => Self.Kind = Single;
-   --  Returns True if the attribute's value is equal to Value taking into
+   --  Returns True if the attribute value is equal to Value taking into
    --  account the case-sensitivity of the value.
 
    procedure Set_Case
      (Self                    : in out Object;
       Value_Is_Case_Sensitive : Boolean);
-   --  Sets values case sensitivity which is by default it is case-sensitive
+   --  Sets value case sensitivity which is by default case-sensitive
 
    function Rename
      (Self : Object;

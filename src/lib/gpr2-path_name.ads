@@ -165,7 +165,7 @@ package GPR2.Path_Name is
 
    procedure Create_Sym_Link (Self, To : Object)
      with Pre => Self.Is_Defined and then To.Is_Defined;
-   --  Creates a sym-link for Self as To
+   --  Creates a symlink for Self as To
 
    function Relative_Path (Self, From : Object) return Object
      with Pre  => Self.Is_Defined and then From.Is_Defined,

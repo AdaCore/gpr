@@ -101,7 +101,7 @@ package GPR2.Project is
      (Current_Directory : Boolean) return Path_Name.Set.Object
      with Post => Default_Search_Paths'Result.Length > 0;
    --  Get the search paths common for all targets.
-   --  If Current_Directory is True then the current directory is incuded at
+   --  If Current_Directory is True then the current directory is included at
    --  the first place in the result set.
 
    procedure Append_Default_Search_Paths (Paths : in out Path_Name.Set.Object);

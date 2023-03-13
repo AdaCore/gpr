@@ -475,11 +475,11 @@ package body GPR2.Project.Definition is
          CN    : Containers.Name_Type_Set.Cursor;
 
          Names : Containers.Name_Set;
-         --  set of already found extended's name.
+         --  Set of already found extended projects' names
 
          procedure Check_Extending (View : Project.View.Object);
          --  If View is extending, checks that extended projects list contains
-         --  unique project's names.
+         --  unique project names.
 
          ---------------------
          -- Check_Extending --

@@ -761,7 +761,7 @@ is
 
    begin
       --  Stop here if it's one of the excluded sources, or it's not in the
-      --  included sources if those are given explicitely.
+      --  included sources if those are given explicitly.
 
       if Excluded_Sources.Contains (Basename)
         or else (Has_Source_List
@@ -1037,7 +1037,7 @@ is
                        (Project_Source.Path_Name.Simple_Name)
                      then
                         --  Remaining case is when both sources have the
-                        --  same naming exception. If they also comme from
+                        --  same naming exception. If they also come from
                         --  the same base directory value (because of
                         --  recursive search there), then we issue an error
                         --  as the first source found is fs-dependent.
@@ -1674,9 +1674,9 @@ begin
                            With_Config    => False)
       then
          --  Check all naming exceptions is used only in the original
-         --  project where Naming package is declared. If nameing package is
+         --  project where Naming package is declared. If package Naming is
          --  inherited then not all sources from naming exceptions have to
-         --  be defined, some of then inherited from extended project.
+         --  be defined, some of them inherited from extended project.
 
          for C in Ada_Except_Usage.Iterate loop
             declare
@@ -1714,7 +1714,7 @@ begin
    end if;
 
    --  Finally get the sources from the extended project if defined. We
-   --  only add the sources not already defined in the currebnt set.
+   --  only add the sources not already defined in the current set.
 
    if not Def.Extended.Is_Empty then
       for Ext of Def.Extended loop
