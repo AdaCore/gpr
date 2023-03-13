@@ -100,7 +100,7 @@ package body GPR2 is
          return 0;
       end if;
 
-      --  Note: if we just read the value, the operation is multithread-safe.
+      --  Note: if we just read the value, the operation is thread-safe.
       --  So let's not add a penalty for the read operation, that should be
       --  the most common operation.
       C := List.Name_To_Id.Find (Value);

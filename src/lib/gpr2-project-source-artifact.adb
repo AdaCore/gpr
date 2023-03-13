@@ -595,7 +595,7 @@ package body GPR2.Project.Source.Artifact is
             Result.Append (O);
          end loop;
 
-         --  The generated artefacts
+         --  The generated artifacts
 
          Append_File (Name & ".stdout");
          Append_File (Name & ".stderr");

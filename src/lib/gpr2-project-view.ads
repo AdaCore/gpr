@@ -131,7 +131,7 @@ package GPR2.Project.View is
    function Extended_Root (Self : Object) return Object
      with Pre => Self.Is_Defined and then Self.Is_Extending;
    --  Returns the root view of the extended subtree. In case of extends
-   --  all this will thus return the project that is explicitely extended.
+   --  all this will thus return the project that is explicitly extended.
 
    function Is_Extended (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -578,7 +578,7 @@ package GPR2.Project.View is
 
    function Has_Library_Interface (Self : Object) return Boolean
      with Pre => Self.Is_Defined and then Self.Is_Library;
-   --  Retruns whether the optional library interface attribute is defined
+   --  Returns whether the optional library interface attribute is defined
 
    function Has_Interfaces (Self : Object) return Boolean
      with Pre => Self.Is_Defined and then Self.Is_Library;
@@ -676,12 +676,12 @@ package GPR2.Project.View is
    function Object_Artifact_Extensions
      (Self : Object; Language : Language_Id) return Containers.Value_Set
      with Pre => Self.Is_Defined;
-   --  Returns set of object artefacts extensions for the cleanup
+   --  Returns set of object artifacts extensions for the cleanup
 
    function Source_Artifact_Extensions
      (Self : Object; Language : Language_Id) return Containers.Value_Set
      with Pre => Self.Is_Defined;
-   --  Returns set of source artefacts extensions for the cleanup
+   --  Returns set of source artifacts extensions for the cleanup
 
    function Binder_Artifacts
      (Self     : Object;

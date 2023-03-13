@@ -52,7 +52,7 @@ package GPR2.Project.Source.Set is
      (Self   : Object;
       Source : Project.Source.Object) return Boolean
      with Pre => Source.Is_Defined, Inline;
-   --  Returns True if Self constains Source
+   --  Returns True if Self contains Source
 
    procedure Delete
      (Self : in out Object; Source : Project.Source.Object)

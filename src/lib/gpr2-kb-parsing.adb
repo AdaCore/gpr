@@ -83,7 +83,7 @@ package body GPR2.KB.Parsing is
 
    Embed_Pseudo_Dir : constant String :=
                         "embedded_kb" & Directory_Operations.Dir_Separator;
-   --  Used for reporting potential errors in the embeded base
+   --  Used for reporting potential errors in the embedded base
 
    Main_Trace : constant GNATCOLL.Traces.Trace_Handle :=
                   GNATCOLL.Traces.Create
@@ -1146,7 +1146,7 @@ package body GPR2.KB.Parsing is
          exception
             when Expression_Error =>
                --  We do not want to invalidate the whole Knowledge
-               --  Base because of a wrong regexp. Istead, report it
+               --  Base because of a wrong regexp. Instead, report it
                --  and skip corresponding <configuration> node.
                Base.Messages.Append
                  (Message.Create

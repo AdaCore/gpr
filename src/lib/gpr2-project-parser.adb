@@ -541,7 +541,7 @@ package body GPR2.Project.Parser is
       --  The project being constructed
 
       function Parser (Node : Gpr_Node'Class) return Visit_Status;
-      --  Actual parser callabck for the project
+      --  Actual parser callback for the project
 
       ------------
       -- Parser --
@@ -1261,7 +1261,7 @@ package body GPR2.Project.Parser is
 
       function To_Set
         (Values : Containers.Source_Value_List) return Containers.Value_Set;
-      --  Create a set for fast searchiing from a list of values
+      --  Creates a set for fast searching from a list of values
 
       Unfilled_Indexed_Values : constant Indexed_Item_Values := (others => <>);
 
@@ -1277,27 +1277,27 @@ package body GPR2.Project.Parser is
         (Values : Containers.Source_Value_List;
          Sloc   : Source_Reference.Object)
          return Containers.Source_Value_List;
-      --  Ensure the values have the proper Source_Loc
+      --  Ensures the values have the proper Source_Loc
 
       function Parser (Node : Gpr_Node'Class) return Visit_Status;
-      --  Actual parser callabck for the project
+      --  Actual parser callback for the project
 
       function Get_Variable_Values
         (Node : Variable_Reference) return Item_Values;
-      --  Parse and return the values for the given variable/attribute
+      --  Parses and returns the values for the given variable/attribute
       --  reference.
 
       function Get_Attribute_Index
         (Node : Attribute_Reference;
          Pack : Package_Id := Project_Level_Scope) return PAI.Object;
-      --  Get the attribute index, if any, or PAI.Undefined
+      --  Gets the attribute index, if any, or PAI.Undefined
 
       function Get_Attribute_Ref
         (Project : Name_Type;
          Node    : Attribute_Reference;
          Pack    : Package_Id := Project_Level_Scope) return Item_Values;
-      --  Return the value for an attribute reference in the given project and
-      --  possibly the given package.
+      --  Returns the value for an attribute reference in the given project
+      --  and possibly the given package.
 
       function Get_Variable_Ref
         (Variable   : Name_Type;
@@ -1306,14 +1306,14 @@ package body GPR2.Project.Parser is
          Pack       : Package_Id := Project_Level_Scope;
          From_View  : GPR2.Project.View.Object := GPR2.Project.View.Undefined)
          return Item_Values;
-      --  Return the value for a variable reference in the given project
+      --  Returns the value for a variable reference in the given project
       --
       --  Variable:   the variable name to retrieve
       --  Source_Ref: the location of the variable reference
       --  Project:    the project name in which to look for the variable
       --              if No_Name it lookup is done in From_View
       --  Pack:       the package in which which to look for the variable. If
-      --              No_Name it assumes the variable is declared at toplevel
+      --              No_Name it assumes the variable is declared at top-level
       --  From_View:  the reference view from where to start the search. If
       --              set to Undefined search starts from the currently
       --              processed view.
@@ -1321,10 +1321,10 @@ package body GPR2.Project.Parser is
       function Is_Limited_Import
         (Self : Object; Project : Name_Type) return Boolean;
       --  Returns True if the given project exists and is made visible through
-      --  a limited immport clause.
+      --  a limited import clause.
 
       function Get_Term_List (Node : Term_List) return Item_Values;
-      --  Parse a list of value or a single value as found in an attribute.
+      --  Parses a list of value or a single value as found in an attribute.
       --  Single is set to True if we have a single value. It is false if we
       --  have parsed an expression list. In this later case it does not mean
       --  that we are retuning multiple values, just that the expression is a
@@ -1333,9 +1333,9 @@ package body GPR2.Project.Parser is
       procedure Record_Attribute
         (Set : in out PA.Set.Object;
          A   : PA.Object);
-      --  Record an attribute into the given set. At the same time we increment
-      --  the Empty_Attribute_Count if this attribute has an empty value. This
-      --  is used to check whether we need to reparse the tree.
+      --  Records an attribute into the given set. At the same time we
+      --  increment the Empty_Attribute_Count if this attribute has an empty
+      --  value. This is used to check whether we need to reparse the tree.
 
       function Has_Error return Boolean is
         (Tree.Log_Messages.Has_Error);
@@ -1361,7 +1361,7 @@ package body GPR2.Project.Parser is
 
       Case_Values : Containers.Value_List;
       --  The case-values to match against the case-item. Each time a case
-      --  statement is enterred the value for the case is prepended into this
+      --  statement is entered the value for the case is prepended into this
       --  vector. The first value is then removed when exiting from the case
       --  statement. This is to support nested case statements.
       --  First character in each element mean is the case-item is open or
@@ -1370,13 +1370,13 @@ package body GPR2.Project.Parser is
       In_Pack     : Boolean := False;
       Pack_Name   : Package_Id := Project_Level_Scope;
       Pack_Ref    : access GPR2.Project.Pack.Object;
-      --  Package orientated state, when parsing is in a package In_Pack is
+      --  Package-oriented state, when parsing is in a package In_Pack is
       --  set and Pack_Name contains the name of the package and Pack_Ref
       --  will point to the view's package object.
 
       Non_Fatal_Error : GPR2.Log.Object;
       --  Store non fatal errors that we record while parsing. This avoids
-      --  stoping the parsing at the first error.
+      --  stopping the parsing at the first error.
 
       function Is_Open return Boolean is
         (Case_Values.Is_Empty
@@ -1535,7 +1535,7 @@ package body GPR2.Project.Parser is
          end if;
 
          --  For a project/attribute reference we need to check the attribute
-         --  definition to know wether the result is multi-valued or not.
+         --  definition to know whether the result is multi-valued or not.
 
          if not PRA.Exists (Q_Name) then
             if not In_Pack
@@ -1544,7 +1544,7 @@ package body GPR2.Project.Parser is
                --  Ignore case where we know nothing about the currently parsed
                --  package.
 
-               --  Non defined package name
+               --  Unknown package name
                if not PRP.Exists (Q_Name.Pack) then
                   Tree.Log_Messages.Append
                     (Message.Create
@@ -1586,7 +1586,7 @@ package body GPR2.Project.Parser is
                       (Name  => (Pack, Name), Index => Index);
             Fill_Indexed_Values (Project_View, Pack);
 
-            --  Some toplevel attribute specific processing:
+            --  Some top-level attribute specific processing
             if Pack = Project_Level_Scope then
                if Attr.Is_Defined then
                   if Project_View = View
@@ -2889,7 +2889,7 @@ package body GPR2.Project.Parser is
             --  yet.
 
             if Pack = Project_Level_Scope then
-               --  Look first if the variable is declared explicitely in the
+               --  Look first if the variable is declared explicitly in the
                --  project itself otherwise iterate on the extended project
                --  chain.
 
@@ -3058,7 +3058,7 @@ package body GPR2.Project.Parser is
 
                   if In_Pack and then Pack_Ref.Vars.Contains (Variable) then
                      --  If we are in the context of a package we don't need
-                     --  the package prefix to refer to variables explicitely
+                     --  the package prefix to refer to variables explicitly
                      --  declared in the package.
 
                      return Get_Variable_Ref
@@ -3298,7 +3298,7 @@ package body GPR2.Project.Parser is
                                  Sloc    => Sloc,
                                  Message => "target attribute '"
                                             & String (T_Attr)
-                                            & "' not used, overriden by the "
+                                            & "' not used, overridden by the "
                                             & "configuration's target: "
                                             & String (T_Conf)));
                         end if;

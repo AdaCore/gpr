@@ -172,7 +172,7 @@ package body GPR2.Project.Configuration is
       --  3) pass it as is to configuration creation.
       --
       --  If step 1 or 2 results in a valid runtime dir, pass full path
-      --  to it to cofiguration creation.
+      --  to it to configuration creation.
       --  If on step 2 corresponding directory is found, but it does not
       --  have runtime features, configuration is abandoned.
 

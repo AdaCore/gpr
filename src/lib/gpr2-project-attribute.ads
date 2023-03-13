@@ -116,7 +116,7 @@ package GPR2.Project.Attribute is
    procedure Set_Index
      (Self  : in out Object;
       Index : Attribute_Index.Object);
-   --  Overrwrite the attribute's index value
+   --  Overwrites the attribute's index value
 
    function Index (Self : Object) return Attribute_Index.Object
      with Inline,
@@ -143,17 +143,17 @@ package GPR2.Project.Attribute is
       Is_Default : Boolean)
      with Pre  => Self.Is_Defined,
           Post => Self.Is_Default = Is_Default;
-   --  Set the default flag
+   --  Sets the default flag
 
    function Is_Default (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
-   --  Attribute did not exist in attribute set and was created from default
-   --  value.
+   --  Returns whether attribute did not exist in attribute set and was
+   --  created from default value.
 
    procedure Freeze (Self : in out Object)
      with Pre  => Self.Is_Defined,
           Post => Self.Is_Frozen;
-   --  Set the freeze state of the attribute
+   --  Sets the freeze state of the attribute
 
    function Is_Frozen (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -165,7 +165,7 @@ package GPR2.Project.Attribute is
       New_Name : Q_Attribute_Id) return Object
      with Pre => Self.Is_Defined
           and then Self.Name.Id.Pack = New_Name.Pack;
-   --  Indicate that this attribute is another name for an existing attribute
+   --  Indicates that this attribute is another name for an existing attribute
 
    function Is_Alias (Self : Object) return Boolean
      with Pre => Self.Is_Defined;

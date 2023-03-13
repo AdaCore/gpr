@@ -96,8 +96,8 @@ package body GPR2.Unit is
          return False;
       end if;
 
-      --  Cannot have dot and underscores one after anothers and should
-      --  contains only alphanumeric characters.
+      --  Cannot have dots and underscores one after another and should
+      --  contain only alphanumeric characters.
 
       for K in Unit_Name'First + 1 .. Unit_Name'Last loop
          declare
@@ -108,7 +108,7 @@ package body GPR2.Unit is
                return False;
 
             elsif Two_Chars = "__" then
-               Error (Not_Valid & "two consecutive underlines not permitted");
+               Error (Not_Valid & "two consecutive underscores not permitted");
                return False;
 
             elsif Two_Chars = "._" then

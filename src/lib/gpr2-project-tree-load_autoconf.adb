@@ -79,7 +79,7 @@ is
       After  : Project.Configuration.Description_Set;
       Result : out Reconfiguration_Status);
    --  Compares two sets of description sets to check for possible changes
-   --  that happened after autoconfiguration. For example, new languages
+   --  that happened after auto-configuration. For example, new languages
    --  may be added after finding missing imports. Also, previously
    --  unresolved constructs may cause changes in already established
    --  descriptions (toolchain-related attribute under a case statement
@@ -547,7 +547,7 @@ begin
       --  This involves some delicate bootstrap:
       --  1- we load the project without configuration
       --  2- using the loaded project, we determine
-      --     * the Target: if explicitely given to us, this one is used,
+      --     * the Target: if explicitly given to us, this one is used,
       --       else if the project defines it, this one is used, else the
       --       host's value is used.
       --     * the list of languages
@@ -566,7 +566,7 @@ begin
          Implicit_With    => Implicit_With,
          Pre_Conf_Mode    => True);
       --  Ignore possible missing dirs and imported projects since they can
-      --  depend on the result of autoconfiguration.
+      --  depend on the result of auto-configuration.
 
       Has_Errors := Self.Messages.Has_Error;
 

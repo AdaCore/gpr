@@ -421,7 +421,7 @@ package body GPR2.Source_Info.Parser.ALI is
                             when GPR2.Unit.S_Spec_Only => GPR2.Unit.S_Spec,
                             when GPR2.Unit.S_Body_Only => GPR2.Unit.S_Body,
                             when others => Kind));
-      --  Do not distingush between S_Spec/Body_Only and S_Spec/Body because
+      --  Do not distinguish between S_Spec/Body_Only and S_Spec/Body because
       --  package without body can be inherited from extended project and body
       --  defined in extending project. The same with S_Spec, but for procedure
       --  or function.
@@ -523,7 +523,7 @@ package body GPR2.Source_Info.Parser.ALI is
             View : Project.View.Object := Tree.Get_View (Path);
             Source : Project.Source.Object;
          begin
-            --  The runtime is not always registerd in the tree, to speed up
+            --  The runtime is not always registered in the tree, to speed up
             --  computation. So perform an explicit check here.
 
             if not View.Is_Defined
@@ -992,7 +992,7 @@ package body GPR2.Source_Info.Parser.ALI is
             --  For each unit, read the With list (W/Y/Z lines) if any
 
             while Header in 'W' | 'Y' | 'Z' loop
-               --  Only record explicite with clauses
+               --  Only record explicit with clauses
                if Header in 'W' | 'Y' then
                   Fill_With;
                end if;

@@ -57,7 +57,7 @@ package GPR2.Project.Parser is
    --  in the Registry. Pseudo_Filename is used for reporting possible errors,
    --  when not specified the default /string_input/default.gpr is used.
    --  This is mostly intended to load configuration projects created in memory
-   --  to be used during autoconfiguration step.
+   --  to be used during auto-configuration step.
 
    procedure Clear_Cache;
    --  Clears the parsed objects cache
