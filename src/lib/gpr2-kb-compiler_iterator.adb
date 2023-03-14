@@ -325,7 +325,7 @@ package body GPR2.KB.Compiler_Iterator is
                   --  Use a hash to make sure we do not parse the same
                   --  directory twice. This is both more efficient and avoids
                   --  duplicates in the final result list. To handle the case
-                  --  of links (on linux for instance /usr/bin/X11 points to
+                  --  of links (on Linux for instance /usr/bin/X11 points to
                   --  ".", ie /usr/bin, and compilers would appear duplicated),
                   --  we resolve symbolic links. This call is also set to fold
                   --  to lower-case when appropriate
@@ -352,7 +352,7 @@ package body GPR2.KB.Compiler_Iterator is
                                           Case_Sensitive => False);
                      begin
                         --  Windows is somewhat slow at parsing directories, do
-                        --  not look into any directory under C:\windows as
+                        --  not look into any directory under C:\Windows as
                         --  there is no compiler to be found there anyway.
 
                         if not On_Windows
@@ -514,7 +514,7 @@ package body GPR2.KB.Compiler_Iterator is
       --  Verify that the compiler is indeed a real executable
       --  on Windows and not a cygwin symbolic link.
       --  This whole part is optimized out on non-windows hosts, so in order
-      --  to keep the builds in debug mode a warning suppresion is needed.
+      --  to keep the builds in debug mode a warning suppression is needed.
 
       pragma Warnings (Off, "this code can never be executed");
       if On_Windows

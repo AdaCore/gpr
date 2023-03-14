@@ -248,7 +248,7 @@ package body GPR2.View_Ids.DAGs is
       Result      : View_Ids.Vector.Vector;
 
    begin
-      --  We use the Dikjstra algorithm to compute the shortest path.
+      --  We use the Dijkstra algorithm to compute the shortest path.
       --  Note that this is a slight variation so that the algorithm
       --  can be used to compute shortest cycle on a given node.
 
@@ -274,9 +274,9 @@ package body GPR2.View_Ids.DAGs is
       end loop;
 
       if S_Id = T_Id then
-         --  If Source is equal to target, default dikjstra algorithm does
+         --  If Source is equal to target, default Dijkstra algorithm does
          --  not work. Add a fake node and use it as target. When iterating
-         --  on predecessors, replace all occurences of sources to that node.
+         --  on predecessors, replace all occurrences of sources to that node.
          --  If we find a path between that node and the source, it means we
          --  have our shortest cycle.
          Dist.Insert (Undefined, Infinite);

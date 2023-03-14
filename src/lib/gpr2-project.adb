@@ -115,7 +115,7 @@ package body GPR2.Project is
       GPR_Name : constant Filename_Type := Ensure_Extension (Name);
 
    begin
-      --  If the file exists or an absolute path has been specificed or there
+      --  If the file exists or an absolute path has been specified or there
       --  is no ADA_PROJECT_PATH, just create the Path_Name_Type using the
       --  given Name.
 
@@ -128,7 +128,7 @@ package body GPR2.Project is
 
       else
          --  If we have an empty Paths set, this is the root project and it is
-         --  expected to look into the current working directorty in this case.
+         --  expected to look into the current working directory in this case.
 
          if Paths.Is_Empty then
             if Directories.Exists

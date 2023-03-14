@@ -97,7 +97,7 @@ package body GPR2.Builtin is
                declare
                   Value : constant String := Slice (Slices, K);
                begin
-                  --  We ingnore empty values at the start or at the end
+                  --  We ignore empty values at the start or at the end
                   if Value /= "" or else K not in 1 | Slice_Count (Slices) then
                      Result.Append (Value);
                   end if;

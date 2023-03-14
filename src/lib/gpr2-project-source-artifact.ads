@@ -33,7 +33,7 @@ package GPR2.Project.Source.Artifact is
 
    type Dependency_Location is (In_Library, In_Objects, In_Both);
    --  Kind of the dependency files location.
-   --  The Ada dependency files can be either in object durectory or/and
+   --  The Ada dependency files can be either in object directory or/and
    --  in Library directory.
 
    function Is_Defined (Self : Object) return Boolean;
@@ -46,7 +46,7 @@ package GPR2.Project.Source.Artifact is
      with Pre => Source.Is_Defined;
    --  Constructor for Object defining the artifacts for the given Source.
    --  Force_Spec is for the case when specification has implementation part
-   --  but artefact names need to be created from specification base name. It
+   --  but artifact names need to be created from specification base name. It
    --  is necessary when body and spec have different base names due to naming
    --  exception and gprinstall installing only specifications with -m option.
 
@@ -117,7 +117,7 @@ package GPR2.Project.Source.Artifact is
 
    function Preprocessed_Source (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined and then Self.Has_Preprocessed_Source;
-   --  Returns the file containing the pre-processed source
+   --  Returns the file containing the preprocessed source
 
    function Has_Callgraph
      (Self  : Object;

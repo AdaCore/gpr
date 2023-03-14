@@ -27,7 +27,7 @@ package body GPR2.Project.Attribute_Index is
                      else "");
    begin
       if L_Text = "" and then R_Text = "" then
-         --  Empty index should be different from not defined index
+         --  Empty index should be different from undefined index
 
          return Source_Reference.Value.Object (Left).Is_Defined
            = Source_Reference.Value.Object (Right).Is_Defined;

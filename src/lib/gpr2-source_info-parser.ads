@@ -8,7 +8,7 @@
 --  given for a specific language and kind (either parsed from source
 --  or some artifact files created during the compilation like ALI for GNAT).
 --
---  A soucre parser is created as a child package. It is then
+--  A source parser is created as a child package. It is then
 --  registered into the source info parser registry child package.
 
 limited with GPR2.Project.Source;
@@ -37,7 +37,7 @@ package GPR2.Source_Info.Parser is
    --  source and unit information provided by project.
 
    procedure Clear_Cache (Self : not null access Object) is null;
-   --  Default version is null, this must be overriden by parsers in need of
+   --  Default version is null, this must be overridden by parsers in need of
    --  cleaning up cache information.
 
 private

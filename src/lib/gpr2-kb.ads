@@ -100,7 +100,7 @@ package GPR2.KB is
    --  messages.
    --  During KB parsing and configuration creation a set of calls to external
    --  processes is performed in order to collect info on compilers. Each call
-   --  is perfromed only once and cashed for efficiency.
+   --  is performed only once and cached for efficiency.
 
    function Create
      (Content : GPR2.Containers.Value_List;
@@ -215,11 +215,11 @@ package GPR2.KB is
    --  Returns the selection status of the compiler
 
    function Is_Selectable (Comp : Compiler) return Boolean;
-   --  Returns wether compiler can be selected with the already existing
+   --  Returns whether compiler can be selected with the already existing
    --  selection.
 
    function Requires_Compiler (Comp : Compiler) return Boolean;
-   --  Returns wether Compiler is a real compiler or a placeholder
+   --  Returns whether Compiler is a real compiler or a placeholder
    --  for a language that does not require a compiler
 
    function Target (Comp : Compiler) return Name_Type
@@ -586,7 +586,7 @@ private
    --  a slightly slower algorithm is used to search for compilers.
    --  No_Compilers is the list of languages that require no compiler, and thus
    --  should not be searched on the PATH.
-   --  Schema_File is reflevant when Is_Default id False. In that case the
+   --  Schema_File is relevant when Is_Default id False. In that case the
    --  first .xsd file found in the given knowledge base directory is taken
    --  as a schema for the knowledge base. The file name is stored to later
    --  get access to schema again for validating additional KB chunks.
@@ -659,15 +659,15 @@ private
       Ignore_Compiler  : out Boolean);
    --  Computes the value of Value, depending on its type. When an external
    --  command needs to be executed, Path is put first on the PATH environment
-   --  variable. Results of external command execution are cached for effciency
-   --  and are stored/looked up in Calls_Cache.
+   --  variable. Results of external command execution are cached for
+   --  efficiency and are stored/looked up in Calls_Cache.
    --  Sets Ignore_Compiler if the value doesn't match its <must_have>
    --  regexp.
    --  The <filter> node is also taken into account.
    --  If Split_Into_Words is true, then the value read from <shell> or as a
    --  constant string is further assumed to be a comma-separated or space-
    --  separated string, and split.
-   --  Comparisong with Matching is case-insensitive (this is needed for
+   --  Comparison with Matching is case-insensitive (this is needed for
    --  languages, does not matter for versions, is not used for targets)
    --
    --  If Merge_Same_Dirs is True, then the values that come from a

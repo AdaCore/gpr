@@ -226,7 +226,7 @@ package body GPR2.Project.Attribute is
 
       case Self.Kind is
          when Single =>
-            Append (Result, '"' & Self.Value.Text & '"');
+            Append (Result, GPR2.Quote (Self.Value.Text));
 
             if Self.Value.Has_At_Pos then
                Append (Result, " at" & Self.Value.At_Pos'Image);

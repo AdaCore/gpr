@@ -403,19 +403,19 @@
               "name": "Config_Body_File_Name",
               "index": "Ada",
               "kind": "single",
-              "value": "pragma Source_File_Name_Project (%u, Body_File_Name => /"/"%f/"/");"
+              "value": "pragma Source_File_Name_Project (%u, Body_File_Name => /"%f/");"
             },
             {
               "name": "Config_Body_File_Name_Index",
               "index": "Ada",
               "kind": "single",
-              "value": "pragma Source_File_Name_Project (%u, Body_File_Name => /"/"%f/"/", Index => %i);"
+              "value": "pragma Source_File_Name_Project (%u, Body_File_Name => /"%f/", Index => %i);"
             },
             {
               "name": "Config_Body_File_Name_Pattern",
               "index": "Ada",
               "kind": "single",
-              "value": "pragma Source_File_Name_Project   (Body_File_Name  => /"/"*%b/"/",   Casing          => %c,   Dot_Replacement => /"/"%d/"/");"
+              "value": "pragma Source_File_Name_Project   (Body_File_Name  => /"*%b/",   Casing          => %c,   Dot_Replacement => /"%d/");"
             },
             {
               "name": "Config_File_Switches",
@@ -435,19 +435,19 @@
               "name": "Config_Spec_File_Name",
               "index": "Ada",
               "kind": "single",
-              "value": "pragma Source_File_Name_Project (%u, Spec_File_Name => /"/"%f/"/");"
+              "value": "pragma Source_File_Name_Project (%u, Spec_File_Name => /"%f/");"
             },
             {
               "name": "Config_Spec_File_Name_Index",
               "index": "Ada",
               "kind": "single",
-              "value": "pragma Source_File_Name_Project (%u, Spec_File_Name => /"/"%f/"/", Index => %i);"
+              "value": "pragma Source_File_Name_Project (%u, Spec_File_Name => /"%f/", Index => %i);"
             },
             {
               "name": "Config_Spec_File_Name_Pattern",
               "index": "Ada",
               "kind": "single",
-              "value": "pragma Source_File_Name_Project   (Spec_File_Name  => /"/"*%s/"/",   Casing          => %c,   Dot_Replacement => /"/"%d/"/");"
+              "value": "pragma Source_File_Name_Project   (Spec_File_Name  => /"*%s/",   Casing          => %c,   Dot_Replacement => /"%d/");"
             },
             {
               "name": "Dependency_Kind",

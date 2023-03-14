@@ -282,7 +282,7 @@ private
       --  unit based sources properties
       Is_RTS_Source : Boolean := False;
       CU_List       : GPR2.Unit.List.Object;
-      --  multi-unit specifc source property
+      --  multi-unit specific source property
       CU_Info       : Unit_Info_Vectors.Vector;
    end record;
    --  Record that holds relevant source information, including details about

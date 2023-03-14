@@ -36,14 +36,14 @@ package body GPR2.Path_Name is
       then Name
       else +Characters.Handling.To_Lower (To_String (Name)));
    --  If filenames is case insensitive converts path name to lowercase,
-   --  returns the same value othervise.
+   --  returns the same value otherwise.
 
    function To_OS_Case (C : Character) return Character is
      (if File_Names_Case_Sensitive
       then C
       else Characters.Handling.To_Lower (C));
    --  If filenames is case insensitive converts char to lowercase,
-   --  returns the same value othervise.
+   --  returns the same value otherwise.
 
    Root_Path : constant GNAT.Regexp.Regexp :=
                  Compile ("/+|[A-Z]:\\+", Case_Sensitive => False);
@@ -628,7 +628,7 @@ package body GPR2.Path_Name is
          elsif To_OS_Case (P (Ti)) /= To_OS_Case (T (Ti)) then
             if Ti = P'First then
                --  First character differ, it can be only on Windows because
-               --  unix path started from directory separator.
+               --  UNIX path starts with a directory separator.
                --  "From" path is on another drive, returns original path.
 
                return Self;

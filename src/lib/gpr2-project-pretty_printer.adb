@@ -99,7 +99,7 @@ package body GPR2.Project.Pretty_Printer is
         (S          : String;
          Indent     : Natural;
          Splittable : Boolean := False);
-      --  Use this to write string litterals that may be split / concatenated
+      --  Use this to write string literals that may be split / concatenated
       --  with "&" operators to fit within max line length.
 
       procedure Write_Token
@@ -390,7 +390,7 @@ package body GPR2.Project.Pretty_Printer is
             when Gpr_Attribute_Reference =>
                --  Attribute reference node, possibly with an index.
                --  Write_Attribute_Name takes care of compatibility with former
-               --  GPR versions for atttribute names (e.g. replace Spec with
+               --  GPR versions for attribute names (e.g. replace Spec with
                --  Specification).
 
                Write_Attribute_Name

@@ -83,7 +83,7 @@ package body GPR2.Containers is
             Append (Result, ", ");
          end if;
 
-         Append (Result, '"' & String (V) & '"');
+         Append (Result, GPR2.Quote (V));
          First := False;
       end loop;
 
