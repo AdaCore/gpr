@@ -1012,6 +1012,42 @@ package body GPRinstall.Install is
                function Is_Interface return Boolean;
                --  Returns True if Source is an interface (spec or body)
 
+               procedure Copy_ALI_Other_Part
+                 (From   : GPR2.Path_Name.Object;
+                  To     : GPR2.Path_Name.Object;
+                  Source : GPR2.Project.Source.Object)
+                 with Pre => Source.Has_Other_Part;
+               --  Copy ALI for other part of source if the naming exception
+               --  brings different base names for the spec and body.
+
+               -------------------------
+               -- Copy_ALI_Other_Part --
+               -------------------------
+
+               procedure Copy_ALI_Other_Part
+                 (From   : GPR2.Path_Name.Object;
+                  To     : GPR2.Path_Name.Object;
+                  Source : GPR2.Project.Source.Object)
+               is
+                  S_BN  : constant String :=
+                            String (Source.Path_Name.Base_Name);
+                  O_Src : constant GPR2.Project.Source.Object :=
+                            Source.Other_Part.Source;
+                  O_BN  : constant String :=
+                            String (O_Src.Path_Name.Base_Name);
+                  D_Sfx : constant String :=
+                            String
+                              (Source.View.Tree.Dependency_Suffix
+                                 (Source.Language));
+               begin
+                  if S_BN /= O_BN then
+                     Copy_File
+                       (From => From,
+                        To   => To,
+                        File => Filename_Optional (O_BN & D_Sfx));
+                  end if;
+               end Copy_ALI_Other_Part;
+
                ------------------
                -- Is_Interface --
                ------------------
@@ -1143,30 +1179,15 @@ package body GPRinstall.Install is
 
                                     --  The <body>.ali has been copied, we now
                                     --  also want to create a file based on
-                                    --  <body>.ali for <spec>.ali.
+                                    --  <body>.ali for <spec>.ali if needed.
 
                                     if Source.Has_Other_Part then
-                                       declare
-                                          O_Src : constant GPR2.Project.
-                                            Source.Object :=
-                                                    Source.Other_Part.Source;
-                                          O_BN  : constant String :=
-                                                    String (O_Src.Path_Name
-                                                            .Base_Name);
-                                          D_Sfx : constant String :=
-                                                    String
-                                                      (Source.View.Tree
-                                                       .Dependency_Suffix
-                                                         (Source.Language));
-                                       begin
-                                          Copy_File
-                                            (From => Atf.Dependency (CU.Index),
-                                             To   => (if Proj.Kind = K_Library
-                                                      then ALI_Dir
-                                                      else Lib_Dir),
-                                             File => Filename_Optional
-                                               (O_BN & D_Sfx));
-                                       end;
+                                       Copy_ALI_Other_Part
+                                         (From => Atf.Dependency (CU.Index),
+                                          To   => (if Proj.Kind = K_Library
+                                                   then ALI_Dir
+                                                   else Lib_Dir),
+                                          Source => Source);
                                     end if;
                                  end if;
                               end loop;
