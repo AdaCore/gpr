@@ -1,0 +1,3 @@
+cp1252error.gpr:2:15: error: Could not decode source as "UTF-8"
+cp1252error.gpr:1:01: error: Expected Identifier, got Termination
+OK
