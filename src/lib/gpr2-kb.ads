@@ -186,6 +186,9 @@ package GPR2.KB is
    --  <gprtools directory>/share/gprconfig/default_target if it exists, or
    --  default host name.
 
+   procedure Set_Default_Target (New_Target : Name_Type);
+   --  Overrides the result returned by Default_Target
+
    function Fallback_List
      (Self   : Object;
       Target : Name_Type) return GPR2.Containers.Name_List

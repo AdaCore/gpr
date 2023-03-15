@@ -3110,6 +3110,16 @@ package body GPR2.KB is
       end if;
    end Runtime;
 
+   ------------------------
+   -- Set_Default_Target --
+   ------------------------
+
+   procedure Set_Default_Target (New_Target : Name_Type) is
+   begin
+      Default_Target_Parsed := True;
+      Default_Target_Val := To_Unbounded_String (String (New_Target));
+   end Set_Default_Target;
+
    -------------------
    -- Set_Selection --
    -------------------
