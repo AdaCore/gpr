@@ -152,13 +152,8 @@ ${KB_BUILD_DIR}/config.kb: ${KB_BUILD_DIR} $(wildcard $(GPR2KBDIR)/*)
 	gprbuild -p -P ${GPR2KB} -XKB_BUILD_DIR=${KB_BUILD_DIR} --relocate-build-tree
 	${KB_BUILD_DIR}/collect_kb -o $@ ${GPR2KBDIR}
 
-# Langkit parser (GPR + Ada support)
-${LANGKIT_GENERATED_SRC}: $(wildcard ${SOURCE_DIR}/langkit/language/**/*.py) ${FORCE_PARSER_GEN}
-	${MAKE} -C ${SOURCE_DIR}/langkit setup DEST="${CURDIR}/${LANGKIT_GENERATED_SRC}" PYTHONEXE=${PYTHON}
-	touch ${LANGKIT_GENERATED_SRC}
-
 # Libgpr2
-build-lib-%: ${KB_BUILD_DIR}/config.kb ${LANGKIT_GENERATED_SRC}
+build-lib-%: ${KB_BUILD_DIR}/config.kb
 ifneq (${GPR2_BUILD},gnatcov)
 	${BUILDER} -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		${GPR2}
@@ -283,3 +278,21 @@ docgen:
 	${GPRDOC} > ${DOCOUT}
 	${GPRDOC} --display=json > ${SOURCE_DIR}/testsuite/tests/gprdoc/attrs.json
 	make -C ${SOURCE_DIR}/doc gen GPRDOC_FILE="../${DOCOUT}"
+
+
+###########
+# Langkit #
+###########
+
+# Langkit parser (GPR + Ada support)
+build-langkit: $(wildcard ${SOURCE_DIR}/langkit/language/**/*.py) ${FORCE_PARSER_GEN}
+	${MAKE} -C ${SOURCE_DIR}/langkit setup DEST="${SOURCE_DIR}/generated" PYTHONEXE=${PYTHON}
+
+update-langkit-sources:
+	rm -rf ${SOURCE_DIR}/langkit/sustained/src
+	cp -R ${SOURCE_DIR}/langkit/generated/src ${SOURCE_DIR}/langkit/sustained/src
+
+clean-langkit:
+	make -C ${SOURCE_DIR}/langkit clean DEST="${SOURCE_DIR}/generated"
+
+update-langkit: build-langkit update-langkit-sources clean-langkit
