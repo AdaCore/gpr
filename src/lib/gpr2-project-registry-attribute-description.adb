@@ -634,7 +634,8 @@ begin
       Key       => PRA.Library_Partial_Linker,
       New_Item  =>
         "Value is the name of the partial linker executable, followed by the" &
-        " required options."
+        " required options. If set to an empty list, partial linking is not" &
+        " performed."
      );
 
    --  Shared_Library_Prefix

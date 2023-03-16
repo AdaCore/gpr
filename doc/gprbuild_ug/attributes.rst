@@ -217,7 +217,7 @@ Project Level Attributes
   * **Library_Partial_Linker**: list value, not inherited from extended project
 
     Value is the name of the partial linker executable, followed by the required
-    options.
+    options. If set to an empty list, partial linking is not performed.
 
 * **Directories**
 
