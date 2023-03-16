@@ -8,6 +8,7 @@ testsuite/out
 .build
 makefile.setup
 bindings/c/build
+langkit/generated
 
 /workspace
 
