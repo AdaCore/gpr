@@ -124,6 +124,14 @@ def generate(data, file):
     displayed_pc = {}
 
     def generate_introduction(file):
+
+        file.write("..\n")
+        file.write("  THIS FILE IS AUTO-GENERATED. DO NOT EDIT.\n")
+        file.write("  If you want to edit its content, either edit :\n")
+        file.write(f"    - Introduction                        : {complementary_files['Intro_File']}\n")
+        file.write("    - Attribute information & description : directly from libGPR2 source code\n")
+        file.write("  then run `make docgen` in gpr2 root directory to generate the wanted version of this document\n\n")
+
         title = "Attributes"
         file.write(f".. index:: attribute\n\n.. _{title}:\n\n")
         file.write(f"{title}\n" + "-" * len(title) + "\n\n")
