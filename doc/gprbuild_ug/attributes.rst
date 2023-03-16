@@ -1,3 +1,10 @@
+..
+  THIS FILE IS AUTO-GENERATED. DO NOT EDIT.
+  If you want to edit its content, either edit :
+    - Introduction                        : ./__python__/metadata/attributes_introduction.rst
+    - Attribute information & description : directly from libGPR2 source code
+  then run `make docgen` in gpr2 root directory to generate the wanted version of this document
+
 .. index:: attribute
 
 .. _Attributes:
