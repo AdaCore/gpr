@@ -1118,7 +1118,7 @@
             "config_concatenable": false,
             "inherit_from_extended": "NOT_INHERITED"
           },
-          "attribute_descr": "Value is the name of the partial linker executable, followed by the required options."
+          "attribute_descr": "Value is the name of the partial linker executable, followed by the required options. If set to an empty list, partial linking is not performed."
         },
         {
           "attribute_name": "Library_Reference_Symbol_File",

@@ -1,3 +1,10 @@
+..
+  THIS FILE IS AUTO-GENERATED. DO NOT EDIT.
+  If you want to edit its content, either edit :
+    - Introduction                        : ./__python__/metadata/attributes_introduction.rst
+    - Attribute information & description : directly from libGPR2 source code
+  then run `make docgen` in gpr2 root directory to generate the wanted version of this document
+
 .. index:: attribute
 
 .. _Attributes:
@@ -217,7 +224,7 @@ Project Level Attributes
   * **Library_Partial_Linker**: list value, not inherited from extended project
 
     Value is the name of the partial linker executable, followed by the required
-    options.
+    options. If set to an empty list, partial linking is not performed.
 
 * **Directories**
 
