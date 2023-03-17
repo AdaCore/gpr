@@ -1690,7 +1690,9 @@ Other library-related attributes can be used to change the defaults:
   directory since there may be hundreds of such files. The same restrictions as for
   the :samp:`Library_Dir` attribute apply.
 
-.. index:: Library_Version attribute
+.. index:: Attributes - Project Level Attributes; Library_Version
+
+.. _Library_Version:
 
 **Library_Version**:
 
