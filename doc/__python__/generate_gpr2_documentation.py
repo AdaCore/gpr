@@ -13,6 +13,7 @@ from docgen.conf import complementary_files
 from docgen.conf import display_options
 from docgen.conf import logging_options
 from docgen.conf import attributes_warnings
+from docgen.conf import attribute_additionnal_ref
 from docgen.utils import obj_package
 from docgen.utils import obj_category
 from docgen.utils import obj_attribute
@@ -242,6 +243,12 @@ def generate(data, file):
                 )
             file.write(f"{attr_indent}  {tmp_descr[:length]}\n")
             tmp_descr = tmp_descr[length + 1 :]
+
+        
+        if f"{package.get_name()}.{attribute.get_name()}" in attribute_additionnal_ref:
+            file.write("\n")
+            additional_ref = attribute_additionnal_ref[f"{package.get_name()}.{attribute.get_name()}"]
+            file.write(f"{attr_indent}  {additional_ref}\n")
 
         file.write("\n")
 
