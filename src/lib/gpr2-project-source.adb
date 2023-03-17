@@ -439,6 +439,7 @@ package body GPR2.Project.Source is
       Data : constant Definition.Const_Ref := Definition.Get_RO (View);
    begin
       if Self.Has_Units
+        and then Self.Has_Unit_At (Index)
         and then Self.Units.Length >= Containers.Count_Type (Index)
       then
          declare
