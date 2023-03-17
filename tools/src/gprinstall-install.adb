@@ -89,7 +89,8 @@ package body GPRinstall.Install is
    Initial_Buffer_Size : constant := 100;
    --  Arbitrary value for the initial size of the buffer below
 
-   Buffer : GNAT.OS_Lib.String_Access := new String (1 .. Initial_Buffer_Size);
+   Buffer      : GNAT.OS_Lib.String_Access :=
+                   new String (1 .. Initial_Buffer_Size);
    Buffer_Last : Natural := 0;
 
    Agg_Manifest : Text_IO.File_Type;
@@ -99,6 +100,9 @@ package body GPRinstall.Install is
    Line_Agg_Manifest : Text_IO.Count := 0;
    --  Keep lines when opening the manifest files. This is used by the rollback
    --  routine when an error occurs while copying the files.
+
+   Installed : GPR2.Project.View.Set.Object;
+   --  Record already installed project
 
    function Other_Part_Need_Body
      (Source : GPR2.Project.Source.Object;
@@ -125,9 +129,6 @@ package body GPRinstall.Install is
       Project : GPR2.Project.View.Object;
       Options : GPRinstall.Options.Object);
    --  Install the give project view
-
-   Installed : GPR2.Project.View.Set.Object;
-   --  Record already installed project
 
    -------------------
    -- Double_Buffer --
@@ -465,7 +466,7 @@ package body GPRinstall.Install is
       begin
          if Project.Has_Package (P.Install) then
             declare
-               use Ada.Characters.Handling;
+               use Characters.Handling;
             begin
                for V of Project.Attributes (Pack => P.Install) loop
                   if V.Name.Id = A.Install.Prefix then
@@ -952,8 +953,6 @@ package body GPRinstall.Install is
 
          procedure Copy_Project_Sources (Project : GPR2.Project.View.Object) is
 
-            use all type GPR2.Project.Standalone_Library_Kind;
-
             function Is_Ada
               (Source : GPR2.Project.Source.Object) return Boolean
             is (Source.Language = Ada_Language);
@@ -990,8 +989,8 @@ package body GPRinstall.Install is
                               or else Other_Part_Need_Body (D.Source, D.Index))
                     and then Source.View = D.Source.View
                   then
-                     Install_Project_Source (D.Source,
-                                             Is_Interface_Closure => True);
+                     Install_Project_Source
+                       (D.Source, Is_Interface_Closure => True);
                   end if;
                end loop;
             end Copy_Interface_Closure;
@@ -1001,14 +1000,64 @@ package body GPRinstall.Install is
             ----------------------------
 
             procedure Install_Project_Source
-              (Source                : GPR2.Project.Source.Object;
-               Is_Interface_Closure  : Boolean := False)
+              (Source               : GPR2.Project.Source.Object;
+               Is_Interface_Closure : Boolean := False)
             is
                Atf     : GPR2.Project.Source.Artifact.Object;
                CUs     : GPR2.Unit.List.Object;
                Done    : Boolean := True;
                Has_Atf : Boolean := False;
                --  Has artefacts to install
+
+               function Is_Interface return Boolean;
+               --  Returns True if Source is an interface (spec or body)
+
+               procedure Copy_ALI_Other_Part
+                 (From   : GPR2.Path_Name.Object;
+                  To     : GPR2.Path_Name.Object;
+                  Source : GPR2.Project.Source.Object)
+                 with Pre => Source.Has_Other_Part;
+               --  Copy ALI for other part of source if the naming exception
+               --  brings different base names for the spec and body.
+
+               -------------------------
+               -- Copy_ALI_Other_Part --
+               -------------------------
+
+               procedure Copy_ALI_Other_Part
+                 (From   : GPR2.Path_Name.Object;
+                  To     : GPR2.Path_Name.Object;
+                  Source : GPR2.Project.Source.Object)
+               is
+                  S_BN  : constant String :=
+                            String (Source.Path_Name.Base_Name);
+                  O_Src : constant GPR2.Project.Source.Object :=
+                            Source.Other_Part.Source;
+                  O_BN  : constant String :=
+                            String (O_Src.Path_Name.Base_Name);
+                  D_Sfx : constant String :=
+                            String
+                              (Source.View.Tree.Dependency_Suffix
+                                 (Source.Language));
+               begin
+                  if S_BN /= O_BN then
+                     Copy_File
+                       (From => From,
+                        To   => To,
+                        File => Filename_Optional (O_BN & D_Sfx));
+                  end if;
+               end Copy_ALI_Other_Part;
+
+               ------------------
+               -- Is_Interface --
+               ------------------
+
+               function Is_Interface return Boolean is
+               begin
+                  return Source.Is_Interface
+                    or else (Source.Has_Other_Part
+                             and then Source.Other_Part.Source.Is_Interface);
+               end Is_Interface;
 
             begin
                --  Skip sources that are removed/excluded and sources not
@@ -1017,9 +1066,9 @@ package body GPRinstall.Install is
                Atf := Source.Artifacts;
 
                if not Project.Is_Library
-                 or else Project.Library_Standalone = No
+                 or else not Project.Is_Library_Standalone
                  or else Is_Interface_Closure
-                 or else Source.Is_Interface
+                 or else Is_Interface
                then
                   if Source.Has_Units then
                      CUs := Source.Units;
@@ -1036,7 +1085,7 @@ package body GPRinstall.Install is
                   then
                      Done := Copy_Source (Source);
 
-                     --  This if a source is an interface of the project we
+                     --  If this source is an interface of the project we
                      --  need to also install the full-closure for this source.
 
                      if Source.Is_Interface
@@ -1064,12 +1113,12 @@ package body GPRinstall.Install is
 
                   --  Objects / Deps
 
-                  for CU of CUs loop
+                  Check_For_Artefacts : for CU of CUs loop
                      if CU.Kind not in S_Spec | S_Separate then
                         Has_Atf := True;
-                        exit;
+                        exit Check_For_Artefacts;
                      end if;
-                  end loop;
+                  end loop Check_For_Artefacts;
 
                   if Done
                     and then not Options.Sources_Only
@@ -1094,8 +1143,8 @@ package body GPRinstall.Install is
                      if Copy (Dependency) then
                         declare
                            use GPR2.Project.Source.Artifact;
-                           Proj : GPR2.Project.View.Object;
-                           Satf : GPR2.Project.Source.Artifact.Object;
+                           Proj  : GPR2.Project.View.Object;
+                           Satf  : GPR2.Project.Source.Artifact.Object;
                         begin
                            if Options.All_Sources
                              or else not Source.Has_Naming_Exception
@@ -1106,7 +1155,7 @@ package body GPRinstall.Install is
                            else
                               Satf :=
                                 Source.Other_Part.Source.Artifacts
-                                                          (Force_Spec => True);
+                                  (Force_Spec => True);
                            end if;
 
                            if Project.Qualifier = K_Aggregate_Library then
@@ -1127,6 +1176,19 @@ package body GPRinstall.Install is
                                                 then ALI_Dir
                                                 else Lib_Dir),
                                        File => Satf.Dependency.Simple_Name);
+
+                                    --  The <body>.ali has been copied, we now
+                                    --  also want to create a file based on
+                                    --  <body>.ali for <spec>.ali if needed.
+
+                                    if Source.Has_Other_Part then
+                                       Copy_ALI_Other_Part
+                                         (From => Atf.Dependency (CU.Index),
+                                          To   => (if Proj.Kind = K_Library
+                                                   then ALI_Dir
+                                                   else Lib_Dir),
+                                          Source => Source);
+                                    end if;
                                  end if;
                               end loop;
                            end if;

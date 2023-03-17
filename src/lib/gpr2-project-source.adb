@@ -189,7 +189,7 @@ package body GPR2.Project.Source is
          for W of CU.Dependencies loop
             declare
                V  : constant Project.View.Object :=
-                        Tree.Get_View (W.Text);
+                      Tree.Get_View (W.Text);
                UI : Unit_Info.Object;
             begin
                if not V.Is_Defined then
@@ -397,6 +397,10 @@ package body GPR2.Project.Source is
                         Unit      : GPR2.Unit.Object;
                         Timestamp : Ada.Calendar.Time);
 
+      ------------
+      -- Action --
+      ------------
+
       procedure Action (Source    : Object;
                         Unit      : GPR2.Unit.Object;
                         Timestamp : Ada.Calendar.Time) is
@@ -430,12 +434,12 @@ package body GPR2.Project.Source is
      (Self  : Object;
       Index : Unit_Index := No_Index) return Boolean
    is
-      View   : constant Project.View.Object  :=
-                 Definition.Strong (Self.View);
-      Data   : constant Definition.Const_Ref := Definition.Get_RO (View);
-
+      View : constant Project.View.Object  :=
+               Definition.Strong (Self.View);
+      Data : constant Definition.Const_Ref := Definition.Get_RO (View);
    begin
       if Self.Has_Units
+        and then Self.Has_Unit_At (Index)
         and then Self.Units.Length >= Containers.Count_Type (Index)
       then
          declare
@@ -496,9 +500,7 @@ package body GPR2.Project.Source is
       elsif Self.Has_Units then
          for CU of Self.Units loop
             if Def.Interface_Units.Contains (CU.Name) then
-
                return True;
-
             end if;
          end loop;
       end if;
@@ -532,7 +534,7 @@ package body GPR2.Project.Source is
                           (if Kind = S_Separate
                            then CU.Separate_From
                            else CU.Name);
-      Unit : constant Unit_Info.Object := View.Unit (Unit_Name);
+      Unit      : constant Unit_Info.Object := View.Unit (Unit_Name);
    begin
       case Kind is
          when GPR2.Unit.Body_Kind =>
@@ -560,9 +562,9 @@ package body GPR2.Project.Source is
      (Self  : Object;
       Index : Unit_Index) return Source_Part
    is
-      View   : constant Project.View.Object  :=
-                 Definition.Strong (Self.View);
-      Data   : constant Definition.Const_Ref := Definition.Get_RO (View);
+      View : constant Project.View.Object  :=
+               Definition.Strong (Self.View);
+      Data : constant Definition.Const_Ref := Definition.Get_RO (View);
    begin
       if Self.Has_Units
         and then Self.Units.Length >= Containers.Count_Type (Index)
