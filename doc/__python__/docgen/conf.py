@@ -50,7 +50,7 @@ attributes_warnings = {
 }
 
 attribute_additionnal_ref = {
-    "Project_Level.Library_Version": "For more details see the :ref:`<Library_Version> semantics`."
+    "Project_Level.Library_Version": "For more details see the :ref:`attribute semantics <Library_Version>`."
 }
 
 # Complementary files
