@@ -200,9 +200,8 @@ package body GPR2.Project.Source.Artifact is
          for CU of Source.Units loop
             --  Only consider object artifacts for the body part or if the
             --  spec has no body, except when Force_Spec is set (in which case
-            --  don't check anything and just return the simple name)..
-            if (CU.Kind in
-                  GPR2.Unit.Body_Kind | GPR2.Unit.S_Spec_Only)
+            --  don't check anything and just return the simple name).
+            if (CU.Kind in GPR2.Unit.Body_Kind | GPR2.Unit.S_Spec_Only)
               or else (Force_Spec and then CU.Kind = GPR2.Unit.S_Spec)
             then
                declare

@@ -450,6 +450,7 @@ package body GPRinstall.Options is
            (+(GPRtools.Util.Executable_Prefix_Path), True);
       end if;
    end Parse_Command_Line;
+
    -----------------
    -- Project_Dir --
    -----------------

@@ -627,6 +627,8 @@ Project Level Attributes
 
     Value is the name of the library file.
 
+    For more details see the :ref:`<Library_Version> semantics`.
+
 * **Configuration - Shared Libraries**
 
   .. index:: Attributes - Project Level Attributes; Library_Auto_Init_Supported

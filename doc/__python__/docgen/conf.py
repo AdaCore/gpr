@@ -49,6 +49,10 @@ attributes_warnings = {
     "Linker.Default_Switches": 'Index "others" is not supported yet in gprbuild or GNATcoll.Projects-based tools'
 }
 
+attribute_additionnal_ref = {
+    "Project_Level.Library_Version": "For more details see the :ref:`<Library_Version> semantics`."
+}
+
 # Complementary files
 complementary_files = {
     "Intro_File": "./__python__/metadata/attributes_introduction.rst",
