@@ -652,8 +652,6 @@ package GPR2.Project.Registry.Attribute is
                              (Pack.Install, +"install_project");
       Lib_Subdir         : constant Q_Attribute_Id :=
                              (Pack.Install, +"lib_subdir");
-      Link_Lib_Subdir    : constant Q_Attribute_Id :=
-                             (Pack.Install, +"link_lib_subdir");
       Mode               : constant Q_Attribute_Id :=
                              (Pack.Install, +"mode");
       Prefix             : constant Q_Attribute_Id :=
@@ -666,6 +664,11 @@ package GPR2.Project.Registry.Attribute is
                              (Pack.Install, +"side_debug");
       Sources_Subdir     : constant Q_Attribute_Id :=
                              (Pack.Install, +"sources_subdir");
+
+      --  Link_Lib_Subdir is not a supported attribute but it is
+      --  defined there to make the handling of options consistent.
+      Link_Lib_Subdir    : constant Q_Attribute_Id :=
+                             (Pack.Install, +"link_lib_subdir");
    end Install;
 
    --  Linker attribute qualified names
