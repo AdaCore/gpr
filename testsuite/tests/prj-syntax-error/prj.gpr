@@ -1,0 +1,3 @@
+project Prj is
+   for Languages use ("Ada",);
+end Prj;

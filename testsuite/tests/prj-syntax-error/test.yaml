@@ -1,0 +1,3 @@
+description:
+    check for GPR syntax error recovery
+driver: python_script
