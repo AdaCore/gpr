@@ -1,0 +1,52 @@
+
+# scbi --shell:tests c-gpr
+
+GPR1install=$HOME/dev/builds/c-gprbuild/build/install/bin/gprinstall
+GPR2install=$HOME/dev/builds/c-gpr/build/install/bin/gprinstall
+
+rm -fr install* obj obj_lib lib use/*.o use/b_* use/obj use/main
+
+echo "========== BUILD"
+gprbuild -p libtst.gpr
+
+#cp lib/library_api.2.ali lib/library_api.1.ali
+#cp obj_lib/hello_world.2.ali lib/hello_world.1.ali
+#cp obj_lib/hello_world.2.ali lib/hello_world.2.ali
+
+echo "========== INSTALL 1"
+$GPR1install -f -P libtst.gpr --prefix=$PWD/install1 -p
+echo "========== INSTALL 1m"
+$GPR1install -m -f -P libtst.gpr --prefix=$PWD/install1m -p
+
+echo "========== INSTALL 2 (dry-run)"
+$GPR2install -f --dry-run -P libtst.gpr --prefix=$PWD/install2 -p
+echo "========== INSTALL 2"
+$GPR2install -f -P libtst.gpr --prefix=$PWD/install2 -p
+echo "========== INSTALL 2m"
+$GPR2install -m -f -P libtst.gpr --prefix=$PWD/install2m -p
+
+echo "========== BUILD main 1"
+rm -fr use/obj use/main
+gprbuild -p -aPinstall1/share/gpr use/usel.gpr
+./use/obj/main
+
+echo "========== BUILD main 1m"
+rm -fr use/obj use/main
+gprbuild -p -aPinstall1m/share/gpr use/usel.gpr
+./use/obj/main
+
+echo "========== BUILD main 2"
+rm -fr use/obj use/main
+gprbuild -p -aPinstall2/share/gpr use/usel.gpr
+./use/obj/main
+
+echo "========== BUILD main 2m"
+rm -fr use/obj use/main
+gprbuild -p -aPinstall2m/share/gpr use/usel.gpr
+./use/obj/main
+
+echo "========== DIFF 1/2"
+diff -c <( tree install1 ) <( tree install2 )
+
+echo "========== DIFF 1m/2m"
+diff -c <( tree install1m ) <( tree install2m )

@@ -1,0 +1,60 @@
+library project LibTst is
+
+  for Languages	use ("Ada");
+
+  for Source_Dirs use ("src");
+
+  for Object_Dir use "./obj_lib";
+
+  for Library_Dir use "./lib";
+
+  for Library_Name use "mylib";
+
+  for Library_Kind use "static";
+
+  for Interfaces use ("library_api.1.ada"); -- unit names
+
+  for Library_Src_Dir use "./include";
+
+  package Naming is
+
+    for Spec_Suffix ("Ada") use ".1.ada";
+    for Body_Suffix ("Ada") use ".2.ada";
+    for Separate_Suffix     use ".2.ada";
+    for Casing              use "lowercase";
+    for Dot_Replacement     use ".";
+
+  end Naming;
+
+  package Builder is
+  end Builder;
+
+  package Compiler is
+
+    for Default_Switches ("Ada")
+      use (  "-gnat12"
+           , "-gnateE"      -- Extra Exception information
+           , "-gnatwl"      -- Elaboration order warnings
+           , "-gnatwG"      -- Suppress unrecognized pragma warnings
+           , "-gnatwq"      -- Parentheses recommended warning
+           , "-gnatwV"      -- Suppress Unassigned variables warning
+           , "-gnatw.V"     -- Activate info messages for non-default bit order
+          );
+
+    for Default_Switches ("C")
+      use (
+          "-Wall"       -- Include all warnings
+          , "-Werror"   -- Reject all warnings
+          );
+
+  end Compiler;
+
+  package Binder is
+
+    for Default_Switches ("Ada")
+      use (  "-u50"
+          );
+
+  end Binder;
+
+end LibTst;
