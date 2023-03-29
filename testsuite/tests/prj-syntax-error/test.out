@@ -1,0 +1,4 @@
+prj.gpr:2:29: cannot be part of an expression
+gprbuild: "prj.gpr" processing failed
+prj.gpr:2:29: error: Expected Identifier, got ')'
+gprls: unable to process project file prj.gpr
