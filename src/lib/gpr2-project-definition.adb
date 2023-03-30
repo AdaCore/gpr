@@ -133,6 +133,11 @@ package body GPR2.Project.Definition is
       function Exists
         (View_Path : Path_Name.Object;
          Val       : Value_Type) return Boolean;
+      --  Check if Excluded_Source_Dirs attribute value exists on the path.
+      --  The attribute value is considered as a relative path from the view
+      --  directory. If there is no match we try to process it as an
+      --  absolute value and we check the existence of the relative path
+      --  between the two absolute paths.
 
       ------------
       -- Exists --
@@ -147,10 +152,23 @@ package body GPR2.Project.Definition is
                            and then Val (Val'Last - 1 .. Val'Last) = "**";
          Last      : constant Natural :=
                        (if Recursive then Val'Last - 2 else Val'Last);
-         Dir_Name  : constant Value_Type := Val (Val'First .. Last);
+         Dir_Val   : constant Value_Type := Val (Val'First .. Last);
       begin
-         return Dir_Name'Length = 0
-           or else View_Path.Compose (Filename_Type (Dir_Name), True).Exists;
+         if Dir_Val'Length = 0 then
+            return True;
+         else
+            declare
+               Dir_Name     : constant GPR2.Path_Name.Object :=
+                                GPR2.Path_Name.Create_Directory
+                                  (Filename_Type (Dir_Val),
+                                   View_Path.Name);
+               Relative_Dir : constant Filename_Type :=
+                                Dir_Name.Relative_Path
+                                  (From => View_Path).Name;
+            begin
+               return View_Path.Compose (Relative_Dir, True).Exists;
+            end;
+         end if;
       end Exists;
 
    begin
@@ -582,7 +600,6 @@ package body GPR2.Project.Definition is
                              Do_Dir_Visit    : in out Boolean;
                              Do_Subdir_Visit : in out Boolean) := null)
    is
-      --  use GNAT.OS_Lib;
       use GNATCOLL.Utils;
       use GNATCOLL.OS.Dir;
       use GNATCOLL.OS.Stat;
