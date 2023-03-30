@@ -2587,27 +2587,39 @@ package body GPR2.Project.View is
       if Excluded_Dirs.Is_Defined then
          for V of Excluded_Dirs.Values loop
             declare
-               Val : constant Value_Type := V.Text;
+               Val          : constant Value_Type := V.Text;
+               Recursive    : constant Boolean :=
+                                Val'Length >= 2
+                                    and then
+                                      Val (Val'Last - 1 .. Val'Last) = "**";
+               Last         : constant Natural :=
+                                (if Recursive then Val'Last - 2 else Val'Last);
+               Dir_Val      : constant Value_Type := Val (Val'First .. Last);
             begin
-               if Val'Length >= 2
-                 and then Val (Val'Last - 1 .. Val'Last) = "**"
-               then
-                  if Val'Length = 2 then
+               if Dir_Val'Length = 0 then
+                  if Recursive then
                      Excluded_Recurse_Dirs_List.Append (View.Dir_Name);
-
                   else
-                     Excluded_Recurse_Dirs_List.Append
-                       (View.Dir_Name.Compose
-                          (Filename_Type (Val (Val'First .. Val'Last - 2)),
-                           True));
+                     Excluded_Dirs_List.Append (View.Dir_Name);
                   end if;
-
-               elsif Val'Length > 0 then
-                  Excluded_Dirs_List.Append
-                    (View.Dir_Name.Compose (Filename_Type (Val), True));
-
                else
-                  Excluded_Dirs_List.Append (View.Dir_Name);
+                  declare
+                     Dir_Name     : constant GPR2.Path_Name.Object :=
+                                      GPR2.Path_Name.Create_Directory
+                                        (Filename_Type (Dir_Val),
+                                         View.Dir_Name.Name);
+                     Relative_Dir : constant Filename_Type :=
+                                      Dir_Name.Relative_Path
+                                        (From => View.Dir_Name).Name;
+                  begin
+                     if Recursive then
+                        Excluded_Recurse_Dirs_List.Append
+                          (View.Dir_Name.Compose (Relative_Dir, True));
+                     else
+                        Excluded_Dirs_List.Append
+                          (View.Dir_Name.Compose (Relative_Dir, True));
+                     end if;
+                  end;
                end if;
             end;
          end loop;

@@ -13,6 +13,11 @@ gprls: unable to process project file files/bad.gpr
 /exclude_recursive/a.ads
 * exclude "**"
 /files/src2/c.ads
+* exclude absolute path
+/exclude_absolute_path/src1/a.ads
+* exclude non existing absolute path
+bad.gpr:4:70: error: "/exclude_absolute_path/non_existing" is not a valid directory
+gprls: unable to process project file exclude_absolute_path/bad.gpr
 * source search path reported by gprinspect
 <...lib/gcc/(host)/(version)/adainclude>
 /files/src1
