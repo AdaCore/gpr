@@ -29,7 +29,12 @@
 [INFO] - Expects - [ SCN_RES_FOR_NONE - ['/files/src1'] ]
 [INFO] - Expects - [ SCN_RES_FOR_ANY - ['/files/src2', '/files/src3', '/files/src1/src1', '/files/src1/src2'] ]
 [INFO] - Test OK !
-[INFO] - [ Testcase 7 - SCN_CASE_VALUE_INVALID ]
+[INFO] - [ Testcase 7 - SCN_CASE_VALUE_DEF ]
+[INFO] - Launching : "gprls --source-parser -s -Pfiles/test_src_dirs_excluded_dirs_3.gpr"
+[INFO] - Expects - [ SCN_RES_FOR_NONE - ['/files/src3', '/files/src1/src2'] ]
+[INFO] - Expects - [ SCN_RES_FOR_ANY - ['/files/src1', '/files/src2', '/files/src1/src1'] ]
+[INFO] - Test OK !
+[INFO] - [ Testcase 8 - SCN_CASE_VALUE_INVALID ]
 [INFO] - Launching : "gprls --source-parser -s -Pfiles/test_invalid_src_dirs.gpr"
 [INFO] - Expects - [ SCN_RES_FOR_ANY - ['is not a valid directory', 'gprls: unable to process project file'] ]
 [INFO] - Test OK !
