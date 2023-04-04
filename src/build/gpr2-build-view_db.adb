@@ -4,9 +4,14 @@
 --  SPDX-License-Identifier: Apache-2.0
 --
 
-with GPR2.Build.Compilation_Input.Sets;
-with GPR2.Build.Source_Info.Sets;
+--  with GPR2.Build.Compilation_Input.Sets;
+with GPR2.Build.Source.Sets;
 with GPR2.Build.Tree_Db;
+pragma Warnings (Off);
+--  needed for visibility reasons of the object, as it is limited withed
+--  otherwise
+with GPR2.Project.View.Set;
+pragma Warnings (On);
 
 package body GPR2.Build.View_Db is
 
@@ -19,15 +24,15 @@ package body GPR2.Build.View_Db is
    is (Inst.Get);
    --  Extracts a reference to view_tables data from a View_Base instance
 
-   ------------------------
-   -- Compilation_Inputs --
-   ------------------------
-
-   function Compilation_Inputs
-     (Self : Object) return Build.Compilation_Input.Sets.Object is
-   begin
-      return Build.Compilation_Input.Sets.Create (Self);
-   end Compilation_Inputs;
+   --  ------------------------
+   --  -- Compilation_Inputs --
+   --  ------------------------
+   --
+   --  function Compilation_Inputs
+   --    (Self : Object) return Build.Compilation_Input.Sets.Object is
+   --  begin
+   --     return Build.Compilation_Input.Sets.Create (Self);
+   --  end Compilation_Inputs;
 
    ----------------------
    -- Compilation_Unit --
@@ -85,14 +90,14 @@ package body GPR2.Build.View_Db is
 
    function Source
      (Self     : Object;
-      Basename : Simple_Name) return Source_Info.Object
+      Basename : Simple_Name) return Build.Source.Object
    is
       Def : constant View_Data_Ref := Ref (Self);
       C   : constant Basename_Source_Maps.Cursor :=
               Def.Sources.Find (Basename);
    begin
       if not Basename_Source_Maps.Has_Element (C) then
-         return Source_Info.Undefined;
+         return Build.Source.Undefined;
       else
          declare
             Proxy : Source_Proxy renames Basename_Source_Maps.Element (C);
@@ -114,19 +119,21 @@ package body GPR2.Build.View_Db is
 
    function Sources
      (Self : Object;
-      Sorted : Boolean := False) return GPR2.Build.Source_Info.Sets.Object
-   is (Source_Info.Sets.Create
+      Sorted : Boolean := False) return GPR2.Build.Source.Sets.Object
+   is (Build.Source.Sets.Create
          (Self,
-          (if Sorted then Build.Source_Info.Sets.Sorted
-           else Build.Source_Info.Sets.Unsorted)));
+          (if Sorted then Build.Source.Sets.Sorted
+           else Build.Source.Sets.Unsorted)));
 
    ------------
    -- Update --
    ------------
 
-   procedure Update (Self : in out Object) is
+   procedure Update
+     (Self     : Object;
+      Messages : in out GPR2.Log.Object) is
    begin
-      View_Tables.Refresh (Ref (Self));
+      View_Tables.Refresh (Ref (Self), Messages);
    end Update;
 
    -------------------
@@ -158,32 +165,26 @@ package body GPR2.Build.View_Db is
 
    function Visible_Source
      (Self     : Object;
-      Basename : Simple_Name) return GPR2.Build.Source_Info.Object
+      Basename : Simple_Name) return Source_Context
    is
-      Result : GPR2.Build.Source_Info.Object;
+      Result : GPR2.Build.Source.Object;
    begin
-      Result := Self.Source (Basename);
-
-      if Result.Is_Defined then
-         return Result;
-      end if;
-
       --  Look for the source in the view's closure (withed or limited withed
       --  views)
 
-      for V of Self.View.Closure loop
+      for V of Self.View.Closure (Include_Self => True) loop
          declare
             Db : constant Object := Self.View_Base_For (V);
          begin
             Result := Db.Source (Basename);
 
             if Result.Is_Defined then
-               return Result;
+               return (V, Result);
             end if;
          end;
       end loop;
 
-      return Source_Info.Undefined;
+      return No_Context;
    end Visible_Source;
 
    ---------------------
@@ -191,8 +192,8 @@ package body GPR2.Build.View_Db is
    ---------------------
 
    function Visible_Sources
-     (Self : Object) return GPR2.Build.Source_Info.Sets.Object
-   is (Source_Info.Sets.Create (Self, Build.Source_Info.Sets.Recurse));
+     (Self : Object) return GPR2.Build.Source.Sets.Object
+   is (Build.Source.Sets.Create (Self, Build.Source.Sets.Recurse));
 
 begin
 

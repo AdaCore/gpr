@@ -11,10 +11,9 @@ private with Ada.Containers.Indefinite_Ordered_Maps;
 
 limited with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
-with GPR2.Project.View;
 with GPR2.Source_Reference.Value;
 
-package GPR2.Build.Source_Info is
+package GPR2.Build.Source is
 
    use type Ada.Containers.Count_Type;
 
@@ -86,6 +85,9 @@ package GPR2.Build.Source_Info is
 
    Empty_List : constant Unit_List;
 
+   function Is_Indexed_List (Self : Unit_List) return Boolean;
+   --  True if units in the list have index
+
    function Is_Empty (Self : Unit_List) return Boolean;
    --  True if Self has no units
 
@@ -128,7 +130,7 @@ package GPR2.Build.Source_Info is
      (Self : Unit_List) return Unit_Iterators.Forward_Iterator'Class;
 
    type Object is tagged private;
-   --  Source_Info represents the data computed from the source filename and
+   --  Source represents the data computed from the source filename and
    --  the project view only: in particular unit(s) and kind information come
    --  from naming schema and naming exceptions.
    --
@@ -154,7 +156,6 @@ package GPR2.Build.Source_Info is
       Language         : Language_Id;
       Kind             : Unit_Kind;
       Timestamp        : Ada.Calendar.Time;
-      View             : GPR2.Project.View.Object;
       Tree_Db          : access GPR2.Build.Tree_Db.Object;
       Naming_Exception : Naming_Exception_Kind;
       Source_Ref       : Source_Reference.Value.Object;
@@ -167,7 +168,6 @@ package GPR2.Build.Source_Info is
    function Create_Ada
      (Filename         : GPR2.Path_Name.Object;
       Timestamp        : Ada.Calendar.Time;
-      View             : GPR2.Project.View.Object;
       Tree_Db          : access GPR2.Build.Tree_Db.Object;
       Naming_Exception : Naming_Exception_Kind;
       Source_Ref       : Source_Reference.Value.Object;
@@ -248,10 +248,10 @@ package GPR2.Build.Source_Info is
                   or else Self.Has_Single_Unit;
    --  Returns all compilation units for self
 
-   function Is_Compilation_Input
-     (Self  : Object;
-      Index : Unit_Index := No_Index) return Boolean
-     with Pre => Self.Is_Defined;
+   --  function Is_Compilation_Input
+   --    (Self  : Object;
+   --     Index : Unit_Index := No_Index) return Boolean
+   --    with Pre => Self.Is_Defined;
    --  Whether this source is used as input for a compilation:
    --  - for Ada, the body of a compilation unit, or the spec if there's no
    --    body
@@ -265,6 +265,9 @@ package GPR2.Build.Source_Info is
    function Naming_Exception (Self : Object) return Naming_Exception_Kind
      with Pre  => Self.Is_Defined;
    --  Returns whether the source comes from a naming exception
+
+   function Is_Compilable (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
 
    function Source_Reference
      (Self : Object) return Source_Reference.Value.Object
@@ -314,6 +317,9 @@ private
    function Is_Empty (Self : Unit_List) return Boolean
    is (Self.Units.Is_Empty);
 
+   function Is_Indexed_List (Self : Unit_List) return Boolean
+   is (Self.Has_Index);
+
    function Length (Self : Unit_List) return Natural
    is (Natural (Self.Units.Length));
 
@@ -330,8 +336,6 @@ private
    function To_ALI_Timestamp (Stamp : Calendar.Time) return Calendar.Time;
 
    type Object is tagged record
-      View              : Project.View.Object;
-      --  View that owns the source
       Db                : access Build.Tree_Db.Object;
       --  The view's build database
       Path_Name         : GPR2.Path_Name.Object;
@@ -393,7 +397,10 @@ private
    --
    --  function Is_Aggregated (Self : Object) return Boolean is
    --    (Self.Aggregated.Is_Defined);
-   --
+
+   function Is_Compilable (Self : Object) return Boolean is
+     (Self.Is_Compilable);
+
    function Has_Naming_Exception (Self : Object) return Boolean is
      (Self.Naming_Exception in Naming_Exception_Value);
 
@@ -404,4 +411,4 @@ private
      (Self : Object) return GPR2.Source_Reference.Value.Object is
      (Self.SR);
 
-end GPR2.Build.Source_Info;
+end GPR2.Build.Source;

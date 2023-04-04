@@ -13,6 +13,8 @@
 
 with Ada.Calendar;
 
+with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name.Set;
@@ -21,12 +23,11 @@ with GPR2.Project.Attribute.Set;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
-with GPR2.Project.Unit_Info.Set;
 with GPR2.Source_Reference.Value;
-with GPR2.Unit;
 with GPR2.View_Ids;
 
-limited with GPR2.Project.Source.Set;
+limited with GPR2.Build.Compilation_Input.Sets;
+limited with GPR2.Build.Source.Sets;
 limited with GPR2.Project.Tree;
 limited with GPR2.Project.View.Set;
 
@@ -96,10 +97,13 @@ package GPR2.Project.View is
    --  Returns True if the project has some imports (either standard or
    --  limited).
 
-   function Closure (Self : Object) return GPR2.Project.View.Set.Object
+   function Closure
+     (Self         : Object;
+      Include_Self : Boolean := False) return GPR2.Project.View.Set.Object
      with Pre => Self.Is_Defined;
    --  Returns the list of views that are withed or limited withed by Self
-   --  recursively.
+   --  recursively. If Include_Self is set, then Self will be part of the
+   --  returned set.
 
    function Imports
      (Self : Object; Recursive : Boolean := False) return Set.Object
@@ -143,7 +147,7 @@ package GPR2.Project.View is
    --  Return the extending view
 
    function Is_Main
-     (Self : Object; Source : Project.Source.Object) return Boolean
+     (Self : Object; Source : Build.Source.Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if the source is the main unit of the view
 
@@ -426,17 +430,12 @@ package GPR2.Project.View is
      (Self            : Object;
       Interface_Only  : Boolean := False;
       Compilable_Only : Boolean := False)
-      return Project.Source.Set.Object
+      return Build.Source.Sets.Object
      with Pre => Self.Is_Defined, Inline;
    --  Returns the sources for the view, note that this routine ensure that
    --  the sources are loaded.
    --  Interface_Only: only sources part of a library interface are returned
    --  Compilable_Only: only sources that can be compiled are returned
-
-   function Source
-     (Self : Object; File : GPR2.Path_Name.Object) return Project.Source.Object
-     with Pre => Self.Is_Defined;
-   --  Get project source object corresponding to the given File
 
    function Source_Path
      (Self : Object; Filename : GPR2.Simple_Name) return GPR2.Path_Name.Object
@@ -446,13 +445,11 @@ package GPR2.Project.View is
    function Source_Path
      (Self            : Object;
       Name            : GPR2.Simple_Name;
-      Allow_Spec_File : Boolean;
-      Allow_Unit_Name : Boolean) return GPR2.Path_Name.Object
+      Allow_Spec_File : Boolean) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined;
    --  Get full path name corresponding to the given name
    --  name can be the filename with or without body/spec extension
    --  Set allow_spec_file if spec file can also be returned.
-   --  Set allow_unit_name if name can also be a unit name.
    --  Returns body file when body & spec files are found.
 
    function Has_Source
@@ -462,43 +459,19 @@ package GPR2.Project.View is
    --  subtree.
 
    function Source
-     (Self : Object; Filename : GPR2.Simple_Name) return Project.Source.Object
+     (Self : Object; Filename : GPR2.Simple_Name)
+      return Build.Source.Object
      with Pre => Self.Is_Defined;
    --  Returns source by simple filename. The search is performed in the view
    --  only.
    --  If the source with such simple filename is not found in the subtree,
    --  then GPR2.Project.Source.Undefined is returned.
 
-   function Check_Source
-     (Self     : Object;
-      Filename : GPR2.Simple_Name;
-      Result   : out Project.Source.Constant_Access) return Boolean
-     with Pre => Self.Is_Defined;
-   function Check_Source
-     (Self     : Object;
-      Filename : GPR2.Simple_Name;
-      Result   : in out Project.Source.Object) return Boolean
-     with Pre => Self.Is_Defined;
-   --  Get the source by simple filename from the subtree of the View.
-   --  Return True on success and set Result.
-   --  Return False if source not found and keep Result untouched.
-   --  This routine is faster than using Has_Source and Source above as
-   --  avoiding one access to the underlying structure.
-
-   function Check_Source_Unit
-     (Self   : Object;
-      Unit   : GPR2.Unit.Object;
-      Result : in out Project.Source.Object) return Boolean
-     with Pre => Self.Is_Defined;
-   --  Get the source object by the unit from the same projects subtree where
-   --  the View is.
-   --  Return True on success and set Result.
-   --  Return False if source not found and remain Result untouched.
-
-   function Check_Parent (Self : Object; Parent : out Object) return Boolean
-     with Pre => Self.Is_Defined;
-   --  Returns True and set Parent if Self has parent view, otherwise returns
-   --  False.
+   function Compilation_Inputs (Self : Object)
+     return GPR2.Build.Compilation_Input.Sets.Object
+     with Pre => Self.Is_Defined and then Self.Kind in With_Object_Dir_Kind;
+   --  Returns the set of sources (possibly indexed) used as input to the
+   --  compiler.
 
    procedure Invalidate_Sources (Self : in out Object)
      with Pre => Self.Is_Defined;
@@ -512,14 +485,14 @@ package GPR2.Project.View is
 
    --  Units
 
-   function Units (Self : Object) return Unit_Info.Set.Object
-     with Pre => Self.Is_Defined;
+   function Units (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
+     with Pre => Self.Is_Defined and then Self.Is_Namespace_Root;
    --  Returns all the known units for the view. Note that the list of units
    --  is populated only when Update_Sources is called.
 
    function Unit
-     (Self : Object; Name : Name_Type) return Unit_Info.Object
-     with Pre => Self.Is_Defined;
+     (Self : Object; Name : Name_Type) return Build.Compilation_Unit.Object
+     with Pre => Self.Is_Defined and then Self.Is_Namespace_Root;
 
    function Is_Abstract (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -541,7 +514,8 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns true if the project has some mains defined
 
-   function Mains (Self : Object) return GPR2.Unit.Source_Unit_Vectors.Vector
+   function Mains
+     (Self : Object) return GPR2.Build.Compilation_Unit.Unit_Location_Vector
      with Pre  => Self.Is_Defined,
           Post => not Self.Has_Mains or else Mains'Result.Length > 0;
    --  returns the list of main bodies
@@ -709,17 +683,9 @@ package GPR2.Project.View is
 
    function Main
      (Self       : Object;
-      Executable : Simple_Name) return GPR2.Unit.Source_Unit_Identifier
+      Executable : Simple_Name) return Build.Compilation_Unit.Unit_Location
      with Pre  => Self.Is_Defined;
    --  Returns the body unit corresponding to the given executable result
-
-   procedure Reindex_Unit (Self : Object; From, To : Name_Type)
-     with Pre  => Self.Is_Defined;
-   --  Change name of unit in unit index used to get unit info by unit name
-
-   procedure Hide_Unit_Body (Self : Object; Unit : Name_Type)
-     with Pre  => Self.Is_Defined;
-   --  Remove unit body from unit info index
 
    --  To ease the use of some attributes (some have synonyms for example)
    --  below are direct access to them.
@@ -811,6 +777,11 @@ package GPR2.Project.View is
    --  directories defined in attribute Dir_Attr.
    --  Internal use: the accessors Object_Directory, Executable_Directory and
    --  so on already handle the out-of-tree builds and the subdirs.
+
+   function Check_Parent (Self : Object; Parent : out Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True and set Parent if Self has parent view, otherwise returns
+   --  False.
 
 private
 

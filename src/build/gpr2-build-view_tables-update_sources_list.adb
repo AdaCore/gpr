@@ -95,16 +95,17 @@ package body Update_Sources_List is
    procedure Read_Source_List
      (View      : Project.View.Object;
       Filename  : Source_Reference.Value.Object;
-      Set       : in out Source_Set.Set);
+      Set       : in out Source_Set.Set;
+      Messages  : in out GPR2.Log.Object);
    --  Read from file defined in project attribute Attr_Name and insert each
    --  line into Set
 
    function Compute_Unit_From_Filename
-     (Tree     : access GPR2.Project.Tree.Object;
-      File     : Path_Name.Object;
+     (File     : Path_Name.Object;
       Kind     : Unit_Kind;
       NS       : Naming_Schema;
       Dot_Repl : String;
+      Messages : in out GPR2.Log.Object;
       Last_Dot : out Natural;
       Success  : out Boolean) return Name_Type;
    --  For an Ada source and given its kind, try to compute a valid unit
@@ -117,11 +118,11 @@ package body Update_Sources_List is
    --------------------------------
 
    function Compute_Unit_From_Filename
-     (Tree     : access GPR2.Project.Tree.Object;
-      File     : Path_Name.Object;
+     (File     : Path_Name.Object;
       Kind     : Unit_Kind;
       NS       : Naming_Schema;
       Dot_Repl : String;
+      Messages : in out GPR2.Log.Object;
       Last_Dot : out Natural;
       Success  : out Boolean) return Name_Type
    is
@@ -159,7 +160,7 @@ package body Update_Sources_List is
 
       if Dot_Repl /= "." then
          if Index (Result, ".") /= 0 then
-            Tree.Append_Message
+            Messages.Append
               (Message.Create
                  (Message.Warning, "invalid file name, contains dot",
                   SR.Create (File.Value, 1, 1)));
@@ -332,8 +333,9 @@ package body Update_Sources_List is
    -------------
 
    procedure Process
-     (Data             : in out View_Data;
-      Stop_On_Error    : Boolean)
+     (Data          : in out View_Data;
+      Stop_On_Error : Boolean;
+      Messages      : in out GPR2.Log.Object)
    is
       function Is_Compilable (Language : Language_Id) return Boolean;
       --  Check whether the language is compilable on the current View. This
@@ -428,7 +430,7 @@ package body Update_Sources_List is
 
       function Process_File (File : File_Info) return Boolean is
 
-         use all type GPR2.Build.Source_Info.Naming_Exception_Kind;
+         use all type GPR2.Build.Source.Naming_Exception_Kind;
 
          --  The implementation works as follows:
          --    For every language L in the project:
@@ -477,11 +479,11 @@ package body Update_Sources_List is
 
          Match            : Boolean := False;
 
-         Naming_Exception : Source_Info.Naming_Exception_Kind := No;
-         Units            : Source_Info.Unit_List;  --  For Ada
+         Naming_Exception : Source.Naming_Exception_Kind := No;
+         Units            : Source.Unit_List;  --  For Ada
          Kind             : Unit_Kind;
          Index            : Unit_Index;
-         Source           : Build.Source_Info.Object;
+         Source           : Build.Source.Object;
          Attr             : Project.Attribute.Object;
          Ada_Exc_CS       : Source_Path_To_Attribute_List.Cursor;
          Ambiguous_Kind   : Boolean := False;
@@ -539,7 +541,7 @@ package body Update_Sources_List is
                      --  source parsing.
 
                      Units.Insert
-                       (Source_Info.Create
+                       (Build.Source.Create
                           (Unit_Name      => Name_Type (Exc.Index.Text),
                            Index          => Index,
                            Kind           => Kind,
@@ -652,12 +654,12 @@ package body Update_Sources_List is
                      Last_Dot  : Natural;
                      Unit_Name : constant Name_Type :=
                                    Compute_Unit_From_Filename
-                                     (Tree     => Tree,
-                                      File     => File.Path,
+                                     (File     => File.Path,
                                       Kind     => Kind,
                                       NS       =>
                                         Naming_Schema_Map (Ada_Language),
                                       Dot_Repl => Dot_Repl,
+                                      Messages => Messages,
                                       Last_Dot => Last_Dot,
                                       Success  => Match);
 
@@ -724,7 +726,7 @@ package body Update_Sources_List is
                                 Unit_Name'First + 1 .. Unit_Name'Last - 1);
 
                            Units.Insert
-                             (Source_Info.Create
+                             (Build.Source.Create
                                 (Unit_Name      => Unit_Name
                                                      (Unit_Name'First ..
                                                       Last_Dot - 1),
@@ -736,7 +738,7 @@ package body Update_Sources_List is
                                  Kind_Ambiguous => False));
                         else
                            Units.Insert
-                             (Source_Info.Create
+                             (Build.Source.Create
                                 (Unit_Name      => Unit_Name,
                                  Index          => No_Index,
                                  Kind           => Kind,
@@ -748,28 +750,26 @@ package body Update_Sources_List is
             end if;
 
             --  If we have a match from either naming exception or scheme
-            --  we create the Source_Info object.
+            --  we create the Source object.
 
             if Naming_Exception /= No or else Match then
                Has_Src_In_Lang.Include (Language);
 
                if Language = Ada_Language then
-                  Source := Build.Source_Info.Create_Ada
+                  Source := Build.Source.Create_Ada
                     (Filename            => File.Path,
                      Timestamp           => File.Stamp,
-                     View                => Data.View,
                      Tree_Db             => Data.Tree_Db,
                      Naming_Exception    => Naming_Exception,
                      Units               => Units,
                      Source_Ref          => File.Dir_Ref);
 
                else
-                  Source := Build.Source_Info.Create
+                  Source := Build.Source.Create
                     (File.Path,
                      Language         => Language,
                      Kind             => Kind,
                      Timestamp        => File.Stamp,
-                     View             => Data.View,
                      Tree_Db          => Data.Tree_Db,
                      Naming_Exception => Naming_Exception,
                      Source_Ref       => File.Dir_Ref,
@@ -811,7 +811,7 @@ package body Update_Sources_List is
 
       if Attr.Is_Defined then
          Read_Source_List
-           (Data.View, Attr.Value, Excluded_Sources);
+           (Data.View, Attr.Value, Excluded_Sources, Messages);
       end if;
 
       --  If we have attribute Excluded_Source_Files
@@ -836,7 +836,7 @@ package body Update_Sources_List is
 
       if Attr.Is_Defined then
          Read_Source_List
-           (Data.View, Attr.Value, Listed_Sources);
+           (Data.View, Attr.Value, Listed_Sources, Messages);
       end if;
 
       --  If we have attribute Source_Files
@@ -935,7 +935,7 @@ package body Update_Sources_List is
          if not Excluded_Sources.Contains (S)
            and then not Data.Sources.Contains (S)
          then
-            Tree.Append_Message
+            Messages.Append
               (Message.Create
                  (Message.Error,
                   "source file """ & String (S) & """ not found",
@@ -961,7 +961,7 @@ package body Update_Sources_List is
                      With_Config   => False)
          loop
             if not Data.Sources.Contains (Simple_Name (A.Value.Text)) then
-               Tree.Append_Message
+               Messages.Append
                  (Message.Create
                     ((if Data.View.Has_Attribute (PRA.Source_Files)
                      or else Data.View.Has_Attribute (PRA.Source_List_File)
@@ -980,7 +980,7 @@ package body Update_Sources_List is
                      With_Config   => False)
          loop
             if not Data.Sources.Contains (Simple_Name (A.Value.Text)) then
-               Tree.Append_Message
+               Messages.Append
                  (Message.Create
                     ((if Data.View.Has_Attribute (PRA.Source_Files)
                      or else Data.View.Has_Attribute (PRA.Source_List_File)
@@ -1001,7 +1001,7 @@ package body Update_Sources_List is
             then
                for V of Attr.Values loop
                   if not Data.Sources.Contains (Simple_Name (V.Text)) then
-                     Tree.Append_Message
+                     Messages.Append
                        (Message.Create
                           (Message.Warning,
                            "source file """ & V.Text & """ not found",
@@ -1017,7 +1017,7 @@ package body Update_Sources_List is
             then
                for V of Attr.Values loop
                   if not Data.Sources.Contains (Simple_Name (V.Text)) then
-                     Tree.Append_Message
+                     Messages.Append
                        (Message.Create
                           (Message.Warning,
                            "source file """ & V.Text & """ not found",
@@ -1036,7 +1036,8 @@ package body Update_Sources_List is
    procedure Read_Source_List
      (View      : Project.View.Object;
       Filename  : Source_Reference.Value.Object;
-      Set       : in out Source_Set.Set)
+      Set       : in out Source_Set.Set;
+      Messages  : in out GPR2.Log.Object)
    is
       use Ada.Strings;
       Fullname   : constant GPR2.Path_Name.Full_Name :=
@@ -1063,7 +1064,7 @@ package body Update_Sources_List is
          begin
             if Line /= "" and then not Starts_With (Line, "-- ") then
                if Has_Directory_Separator (Line) then
-                  View.Tree.Append_Message
+                  Messages.Append
                     (Message.Create
                        (Message.Error,
                         "file name cannot include directory information ("""

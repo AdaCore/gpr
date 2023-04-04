@@ -15,7 +15,7 @@ package body GPR2.Build.Compilation_Unit is
    procedure Add
      (Self     : in out Object;
       Kind     : Unit_Kind;
-      View     : GPR2.Project.View.Object;
+      View     : GPR2.View_Ids.View_Id;
       Path     : GPR2.Path_Name.Object;
       Index    : Unit_Index := No_Index;
       Sep_Name : Optional_Name_Type := "";
@@ -77,7 +77,7 @@ package body GPR2.Build.Compilation_Unit is
      (Self : Object;
       Action : access procedure
         (Kind     : Unit_Kind;
-         View     : Project.View.Object;
+         View     : View_Ids.View_Id;
          Path     : Path_Name.Object;
          Index    : Unit_Index;
          Sep_Name : Optional_Name_Type)) is
@@ -141,20 +141,22 @@ package body GPR2.Build.Compilation_Unit is
    -- Object_File --
    -----------------
 
-   function Object_File (Self : Object) return Simple_Name
+   function Object_File
+     (Self : Object;
+      Tree : GPR2.Project.Tree.Object) return Simple_Name
    is
       Main : constant Unit_Location := Self.Main_Part;
       BN   : constant Simple_Name := Main.Path.Base_Filename;
    begin
       if Main.Index = No_Index then
-         return BN & Main.View.Tree.Object_Suffix (Ada_Language);
+         return BN & Tree.Object_Suffix (Ada_Language);
       else
          declare
             Idx_Img : constant String := Main.Index'Image;
          begin
             return BN & "~" &
               Simple_Name (Idx_Img (Idx_Img'First + 1 .. Idx_Img'Last)) &
-              Main.View.Tree.Object_Suffix (Ada_Language);
+              Tree.Object_Suffix (Ada_Language);
          end;
       end if;
    end Object_File;
@@ -166,7 +168,7 @@ package body GPR2.Build.Compilation_Unit is
    procedure Remove
      (Self     : in out Object;
       Kind     : Unit_Kind;
-      View     : GPR2.Project.View.Object;
+      View     : GPR2.View_Ids.View_Id;
       Path     : GPR2.Path_Name.Object;
       Index    : Unit_Index := No_Index;
       Sep_Name : Optional_Name_Type := "")

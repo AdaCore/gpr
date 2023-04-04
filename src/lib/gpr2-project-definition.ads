@@ -14,13 +14,10 @@ with GPR2.Project.Attribute.Set;
 with GPR2.Project.Configuration;
 with GPR2.Project.Pack;
 with GPR2.Project.Parser.Set;
-with GPR2.Project.Source.Set;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
 with GPR2.Project.View.Set;
-with GPR2.Project.Unit_Info.Set;
-with GPR2.Source_Info;
 with GPR2.Source_Reference;
 with GPR2.Unit;
 with GPR2.View_Ids;
@@ -43,18 +40,6 @@ private package GPR2.Project.Definition is
       Imports  : GPR2.Project.Parser.Set.Object;
       Extended : GPR2.Project.Parser.Object;
    end record;
-
-   package Simple_Name_Source is
-     new Ada.Containers.Indefinite_Hashed_Maps
-       (Simple_Name, Project.Source.Set.Cursor, GPR2.Hash, GPR2."=",
-        Project.Source.Set."=");
-   --  Map to find in which view a source is defined
-
-   package Unit_Source is
-     new Ada.Containers.Indefinite_Hashed_Maps
-       (String, Project.Source.Set.Cursor, Ada.Strings.Hash, "=",
-        "=" => Project.Source.Set."=");
-   --  Map to find in which view a unit is defined
 
    package Unit_Name_To_Sloc is new
      Ada.Containers.Indefinite_Hashed_Maps
@@ -150,10 +135,6 @@ private package GPR2.Project.Definition is
       Types             : Project.Typ.Set.Object;
       --  The view's type definitions
 
-      Sources           : Project.Source.Set.Object;
-      Sources_Map       : Simple_Name_Source.Map;
-      Units_Map         : Unit_Source.Map;
-      Units             : Unit_Info.Set.Object;
       Unique_Id         : GPR2.View_Ids.View_Id;
 
       --  Some general information
@@ -226,9 +207,6 @@ private package GPR2.Project.Definition is
    Strong : access function (View : Weak_Reference) return Project.View.Object;
    --  Get view from weak reference
 
-   Change_Actual_View : access function
-     (Self : Source.Object; View : Project.View.Object) return Source.Object;
-
    -----------------------------------------------------------------------
    -- Private routines exported from GPR2.Project.Configuration package --
    -----------------------------------------------------------------------
@@ -261,34 +239,6 @@ private package GPR2.Project.Definition is
    function Is_Extended (Def : Data) return Boolean
    is (not Def.Extending.Was_Freed);
 
-   procedure Update_Sources
-     (Def           : in out Data;
-      View          : Project.View.Object;
-      Stop_On_Error : Boolean;
-      Backends      : Source_Info.Backend_Set)
-     with Pre => View.Is_Defined;
-   --  Ensure that the view definition sources are up-to-date. This is needed
-   --  before computing the dependencies of a source in the project tree. This
-   --  routine is called where needed and is there for internal use only.
-   --  If Stop_On_Error is True and an error occurred on reading the sources,
-   --  then the exception Project_Error raised. If Stop_On_Error is False then
-   --  no exception is raised and errors can be discovered only from the
-   --  Log.Object taken from the View.Tree.Log_Messages call.
-   --  Backends parameter defines the set of parser that can be used to parse
-   --  the source information.
-
-   procedure Update_Sources_List
-     (Def           : in out Data;
-      View          : Project.View.Object;
-      Stop_On_Error : Boolean)
-   with Pre => View.Is_Defined;
-   --  Populate the list of sources for the given view
-
-   procedure Update_Sources_Parse
-     (Def : in out Data; Backends : Source_Info.Backend_Set);
-   --  Parse the project's source dependency file and populate the
-   --  corresponding source_info.
-
    procedure Foreach
      (Base_Dir          : GPR2.Path_Name.Object;
       Messages          : in out GPR2.Log.Object;
@@ -312,16 +262,6 @@ private package GPR2.Project.Definition is
    --  Is_Root_Dir is set when entering the top level dir.
    --  File_CB is called for each regular file found.
    --  Source reference is used when messages added to Self.Tree's log
-
-   procedure Sources_Map_Insert
-     (Def : in out Data;
-      Src : Project.Source.Object;
-      C   : Project.Source.Set.Cursor);
-   --  Insert source into simple filename index if it is not yet inserted
-
-   function Is_Sources_Loaded (View : Project.View.Object) return Boolean
-     with Pre => View.Is_Defined;
-   --  Return True if Sources already updated once
 
    procedure Check_Same_Name_Extended (View : Project.View.Object);
    --  Report "cannot extend a project with the same name" errors

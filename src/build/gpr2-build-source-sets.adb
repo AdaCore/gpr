@@ -5,10 +5,16 @@
 --
 
 with GPR2.Build.Tree_Db;
+pragma Warnings (Off);
+with GPR2.Project.View.Set;
+pragma Warnings (On);
 
-package body GPR2.Build.Source_Info.Sets is
+package body GPR2.Build.Source.Sets is
 
    use type GPR2.Project.View.Object;
+
+   function Element (Self  : Object;
+                     Proxy : Source_Proxy) return Source.Object;
 
    function "-" (Inst : Build.View_Db.Object) return View_Data_Ref
      is (Get_Ref (Inst));
@@ -46,17 +52,34 @@ package body GPR2.Build.Source_Info.Sets is
 
    function Create
      (Db     : Build.View_Db.Object;
-      Option : Source_Set_Option := Unsorted) return Object
+      Option : Source_Set_Option := Unsorted;
+      Filter : Filter_Function := null;
+      F_Data : Filter_Data'Class := No_Data) return Object
    is
    begin
-      return (Db, Option);
+      return (Db, Option, Filter, Filter_Data_Holders.To_Holder (F_Data));
    end Create;
 
    -------------
    -- Element --
    -------------
 
-   function Element (Position : Cursor) return Source_Info.Object is
+   function Element (Self  : Object;
+                     Proxy : Source_Proxy) return Source.Object
+   is
+      Db : constant View_Data_Ref :=
+             (if Proxy.View /= Self.Db.View
+              then -Self.Db.View_Base_For (Proxy.View)
+              else -Self.Db);
+   begin
+      return Db.Src_Infos.Element (Proxy.Path_Name);
+   end Element;
+
+   -------------
+   -- Element --
+   -------------
+
+   function Element (Position : Cursor) return Source.Object is
       Proxy : constant Source_Proxy :=
                 (if Position.From_View_Db
                  then Basename_Source_Maps.Element (Position.Current_Src)
@@ -74,19 +97,21 @@ package body GPR2.Build.Source_Info.Sets is
    -----------
 
    overriding function First (Self : Source_Iterator) return Cursor is
+      Candidate : Cursor;
    begin
       if Self.From_View_Db then
          declare
-            List : Basename_Source_Maps.Map renames Get_Ref (Self.Db).Sources;
+            List : Basename_Source_Maps.Map renames
+                     Get_Ref (Self.Db).Sources;
          begin
             if List.Is_Empty then
                return No_Element;
-
-            else
-               return (From_View_Db => True,
-                       Db           => Self.Db,
-                       Current_Src  => List.First);
             end if;
+
+            Candidate := (From_View_Db => True,
+                          Db           => Self.Db,
+                          Current_Src  => List.First);
+            return Candidate;
          end;
 
       else
@@ -115,6 +140,13 @@ package body GPR2.Build.Source_Info.Sets is
       end if;
    end Has_Element;
 
+   --------------
+   -- Is_Empty --
+   --------------
+
+   function Is_Empty (Self : Object) return Boolean is
+     (Get_Ref (Self.Db).Sources.Is_Empty);
+
    -------------
    -- Iterate --
    -------------
@@ -122,19 +154,30 @@ package body GPR2.Build.Source_Info.Sets is
    function Iterate
      (Self : Object) return Source_Iterators.Forward_Iterator'Class
    is
+      use View_Tables.Basename_Source_Maps;
+      Opt : Source_Set_Option := Self.Option;
+
    begin
-      case Self.Option is
+      if Opt = Unsorted and then Self.Filter /= null then
+         Opt := Sorted;
+      end if;
+
+      case Opt is
          when Unsorted =>
-            return Source_Iterator'(True, Self.Db);
+            return Source_Iterator'(True, Self.Db, Self.Filter);
 
          when Sorted =>
             return Iter : Source_Iterator (False) do
                Iter.Db := Self.Db;
 
                for C in Get_Ref (Self.Db).Sources.Iterate loop
-                  Iter.Paths.Insert
-                    (View_Tables.Basename_Source_Maps.Key (C),
-                     View_Tables.Basename_Source_Maps.Element (C));
+                  if Self.Filter = null
+                    or else Self.Filter
+                      (Self.Element (Element (C)),
+                       Filter_Data_Holders.Element (Self.F_Data))
+                  then
+                     Iter.Paths.Insert (Key (C), Element (C));
+                  end if;
                end loop;
             end return;
 
@@ -144,18 +187,11 @@ package body GPR2.Build.Source_Info.Sets is
             begin
                Result.Db := Self.Db;
 
-               --  Add first the view's sources, unconditionally
-
-               for C in Get_Ref (Self.Db).Sources.Iterate loop
-                  Result.Paths.Insert
-                    (View_Tables.Basename_Source_Maps.Key (C),
-                     View_Tables.Basename_Source_Maps.Element (C));
-               end loop;
-
-               --  Then add the withed views sources, not overriding if
+               --  Add the withed views sources, not overriding if
                --  there's a basename clash.
 
-               for V of Get_Ref (Self.Db).View.Closure loop
+               for V of Get_Ref (Self.Db).View.Closure (Include_Self => True)
+               loop
                   if V.Kind in With_Object_Dir_Kind then
                      declare
                         Db   : constant View_Db.Object :=
@@ -164,14 +200,17 @@ package body GPR2.Build.Source_Info.Sets is
                         Done : Boolean;
                      begin
                         for C in Get_Ref (Db).Sources.Iterate loop
-                           Result.Paths.Insert
-                             (Key       => Basename_Source_Maps.Key (C),
-                              New_Item  => Basename_Source_Maps.Element (C),
-                              Position  => Pos,
-                              Inserted  => Done);
-
-                           --  ??? In case of basename clash, we should issue a
-                           --  linter warning...
+                           if Self.Filter = null
+                             or else Self.Filter
+                               (Self.Element (Element (C)),
+                                Filter_Data_Holders.Element (Self.F_Data))
+                           then
+                              Result.Paths.Insert
+                                (Key       => Basename_Source_Maps.Key (C),
+                                 New_Item  => Basename_Source_Maps.Element (C),
+                                 Position  => Pos,
+                                 Inserted  => Done);
+                           end if;
                         end loop;
                      end;
                   end if;
@@ -203,4 +242,4 @@ package body GPR2.Build.Source_Info.Sets is
       return Result;
    end Next;
 
-end GPR2.Build.Source_Info.Sets;
+end GPR2.Build.Source.Sets;

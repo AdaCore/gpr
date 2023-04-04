@@ -11,6 +11,10 @@ with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
 with Ada.Text_IO;
 
+pragma Warnings (Off, ".* is not referenced");
+with GPR2.Build.Source.Sets;
+pragma Warnings (On, ".* is not referenced");
+
 with GPR2.Project.Parser.Create;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
@@ -20,7 +24,6 @@ with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree.View_Builder;
 with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Value;
-with GPR2.Unit;
 with GPR2.View_Ids.Set;
 with GPR2.View_Ids.Vector;
 with GNAT.OS_Lib;
@@ -113,13 +116,6 @@ package body GPR2.Project.Tree is
      with Pre => Self.Is_Defined
                  and then Self.Has_Configuration;
    --  Create the runtime view given the configuration project
-
-   function Get_View
-      (Tree : Project.Tree.Object;
-       Id   : IDS.View_Id)
-       return Project.View.Object;
-   --  Given a View_Id Id returns the associated view if it exists. Returns
-   --  Project.View.Undefined otherwise.
 
    procedure Update_Context
      (Context     : in out GPR2.Context.Object;
@@ -271,6 +267,20 @@ package body GPR2.Project.Tree is
       Self.Update_Search_Paths;
    end Append_Search_Paths;
 
+   ------------------------
+   -- Artifacts_Database --
+   ------------------------
+
+   function Artifacts_Database
+     (Self : Object) return Build.Tree_Db.Object_Access is
+   begin
+      if not Self.Tree_Db.Is_Defined then
+         Self.Self.Tree_Db.Load (Self);
+      end if;
+
+      return Self.Tree_Db.Reference;
+   end Artifacts_Database;
+
    --------------------
    -- Artifacts_Dir --
    --------------------
@@ -287,30 +297,17 @@ package body GPR2.Project.Tree is
    --  don't expect one (aggregate, abstract). But Apply_Root_And_Subdirs
    --  doesn't, and object_directory will default to Project_Dir in such case.
 
-   ----------------
-   -- Clear_View --
-   ----------------
+   -------------------
+   -- Clear_Sources --
+   -------------------
 
-   procedure Clear_View
-     (Self : in out Object;
-      Unit : Unit_Info.Object) is
+   procedure Clear_Sources
+     (Self : Object;
+      View : Project.View.Object := Project.View.Undefined)
+   is
    begin
-      --  Clear the corresponding sources
-
-      if Unit.Spec.Source.Is_Defined then
-         Self.Sources.Exclude
-           (Filename_Type (Unit.Spec.Source.Value));
-      end if;
-
-      if Unit.Main_Body.Source.Is_Defined then
-         Self.Sources.Exclude
-           (Filename_Type (Unit.Main_Body.Source.Value));
-      end if;
-
-      for S of Unit.Separates loop
-         Self.Sources.Exclude (Filename_Type (S.Source.Value));
-      end loop;
-   end Clear_View;
+      Self.Self.Tree_Db.Unload;
+   end Clear_Sources;
 
    -------------------
    -- Configuration --
@@ -517,6 +514,33 @@ package body GPR2.Project.Tree is
       Self.Messages.Append (Message.Create (Message.Error, Msg, Sloc));
    end Error;
 
+   ------------------
+   -- Find_Project --
+   ------------------
+
+   function Find_Project
+     (Self       : Object;
+      Base_Name  : Simple_Name) return Path_Name.Object
+   is
+      GPR_Name    : constant Simple_Name :=
+                      Project.Ensure_Extension (Base_Name);
+
+   begin
+      for V in Self.Iterate
+        (Status => (Project.S_Externally_Built => Indeterminate))
+      loop
+         declare
+            View : constant Project.View.Object := Project.Tree.Element (V);
+         begin
+            if View.Path_Name.Simple_Name = GPR_Name then
+               return View.Path_Name;
+            end if;
+         end;
+      end loop;
+
+      return Path_Name.Undefined;
+   end Find_Project;
+
    -----------
    -- First --
    -----------
@@ -538,7 +562,7 @@ package body GPR2.Project.Tree is
    procedure For_Each_Source
      (Self             : Object;
       View             : Project.View.Object := Project.View.Undefined;
-      Action           : access procedure (Source : Project.Source.Object);
+      Action           : access procedure (Source : Build.Source.Object);
       Language         : Language_Id := No_Language;
       Externally_Built : Boolean := False) is
 
@@ -564,261 +588,8 @@ package body GPR2.Project.Tree is
    end For_Each_Source;
 
    --------------
-   -- Get_File --
-   --------------
-
-   function Get_File
-     (Self             : Object;
-      Base_Name        : Simple_Name;
-      View             : Project.View.Object := Project.View.Undefined;
-      Use_Source_Path  : Boolean := True;
-      Use_Object_Path  : Boolean := True;
-      Predefined_Only  : Boolean := False;
-      Return_Ambiguous : Boolean := True) return Path_Name.Object
-   is
-      File_Name   : Path_Name.Object;
-      Source_Name : Project.Source.Object;
-      Ambiguous   : Boolean;
-
-      procedure Add_File
-        (Name : Path_Name.Object; Check_Exist : Boolean := True);
-      --  Add Name to matching files, when Check_Exist is True file existence
-      --  is checked before Path is added to matching files.
-
-      procedure Add_Source (Name : Project.Source.Object);
-      --  Add new candidate source and check for overriding
-
-      procedure Handle_Object_File;
-      --  Set Full_Path with matching object file
-
-      procedure Handle_Project_File;
-      --  Set Full_Path with the first matching project
-
-      procedure Handle_Source_File;
-      --  Set Full_Path with matching source file
-
-      --------------
-      -- Add_File --
-      --------------
-
-      procedure Add_File
-        (Name : Path_Name.Object; Check_Exist : Boolean := True) is
-      begin
-         if Check_Exist and then not Name.Exists then
-            return;
-         end if;
-
-         if not File_Name.Is_Defined then
-            File_Name := Name;
-
-         else
-            Ambiguous := True;
-         end if;
-      end Add_File;
-
-      ----------------
-      -- Add_Source --
-      ----------------
-
-      procedure Add_Source (Name : Project.Source.Object) is
-      begin
-         if not Source_Name.Is_Defined then
-            Source_Name := Name;
-
-         elsif Source_Name.View.Is_Extending (Name.View) then
-            --  We already have the overriding source
-            return;
-
-         elsif Name.View.Is_Extending (Source_Name.View) then
-            Source_Name := Name;
-
-         else
-            Ambiguous := True;
-         end if;
-      end Add_Source;
-
-      ------------------------
-      -- Handle_Object_File --
-      ------------------------
-
-      procedure Handle_Object_File is
-
-         procedure Handle_Object_File_In_View (View : Project.View.Object);
-         --  Set Full_Path with matching View's object file
-
-         --------------------------------
-         -- Handle_Object_File_In_View --
-         --------------------------------
-
-         procedure Handle_Object_File_In_View (View : Project.View.Object) is
-         begin
-            if View.Is_Library then
-               Add_File (View.Object_Directory.Compose (Base_Name));
-
-               if not File_Name.Is_Defined then
-                  Add_File (View.Library_Directory.Compose (Base_Name));
-               end if;
-
-               if not File_Name.Is_Defined then
-                  Add_File (View.Library_Ali_Directory.Compose (Base_Name));
-               end if;
-
-            elsif View.Kind = K_Standard then
-               Add_File (View.Object_Directory.Compose (Base_Name));
-            end if;
-         end Handle_Object_File_In_View;
-
-      begin
-         if not Predefined_Only then
-            if View.Is_Defined then
-               Handle_Object_File_In_View (View);
-
-            else
-               for V in Self.Iterate
-                 (Status => (Project.S_Externally_Built => Indeterminate))
-               loop
-                  Handle_Object_File_In_View (Project.Tree.Element (V));
-               end loop;
-            end if;
-         end if;
-
-         if not File_Name.Is_Defined then
-            if Self.Has_Runtime_Project then
-               Handle_Object_File_In_View (Self.Runtime_Project);
-            end if;
-         end if;
-      end Handle_Object_File;
-
-      -------------------------
-      -- Handle_Project_File --
-      -------------------------
-
-      procedure Handle_Project_File is
-      begin
-         for V in Self.Iterate
-           (Status => (Project.S_Externally_Built => Indeterminate))
-         loop
-            declare
-               View : constant Project.View.Object := Project.Tree.Element (V);
-            begin
-               if View.Path_Name.Simple_Name = Base_Name then
-                  File_Name := View.Path_Name;
-               end if;
-            end;
-         end loop;
-      end Handle_Project_File;
-
-      ------------------------
-      -- Handle_Source_File --
-      ------------------------
-
-      procedure Handle_Source_File is
-
-         procedure Handle_Source_File_In_View (View : Project.View.Object);
-         --  Set Full_Path with matching View's source file
-
-         --------------------------------
-         -- Handle_Source_File_In_View --
-         --------------------------------
-
-         procedure Handle_Source_File_In_View (View : Project.View.Object) is
-            Full_Path : constant Project.Source.Object :=
-                          View.Source (Base_Name);
-         begin
-            if Full_Path.Is_Defined then
-               Add_Source (Full_Path);
-            end if;
-         end Handle_Source_File_In_View;
-
-      begin
-         if not Predefined_Only then
-            if View.Is_Defined then
-               Handle_Source_File_In_View (View);
-
-            else
-               for V in Self.Iterate
-                 (Status => (Project.S_Externally_Built => Indeterminate))
-               loop
-                  Handle_Source_File_In_View (Project.Tree.Element (V));
-               end loop;
-            end if;
-         end if;
-
-         if not File_Name.Is_Defined then
-            if Self.Has_Runtime_Project then
-               Handle_Source_File_In_View (Self.Runtime_Project);
-            end if;
-         end if;
-      end Handle_Source_File;
-
-   begin
-      --  Initialize return values
-
-      Ambiguous := False;
-      File_Name := Path_Name.Undefined;
-
-      --  Handle project file
-
-      if Project.Ensure_Extension (Base_Name) = Base_Name then
-         Handle_Project_File;
-      else
-         --  Handle source file
-
-         if Use_Source_Path then
-            Handle_Source_File;
-
-            if Source_Name.Is_Defined then
-               File_Name := Source_Name.Path_Name;
-            end if;
-         end if;
-
-         --  Handle object file
-
-         if not File_Name.Is_Defined and then Use_Object_Path then
-            Handle_Object_File;
-         end if;
-      end if;
-
-      if Ambiguous and then not Return_Ambiguous then
-         return Path_Name.Undefined;
-      else
-         return File_Name;
-      end if;
-   end Get_File;
-
-   --------------
    -- Get_View --
    --------------
-
-   function Get_View
-     (Self   : Object;
-      Source : Path_Name.Object) return Project.View.Object
-   is
-      Pos : constant Filename_View.Cursor :=
-              Self.Sources.Find
-                (if Source.Has_Dir_Name
-                 then Filename_Type (Source.Value)
-                 else Source.Simple_Name);
-   begin
-      if Filename_View.Has_Element (Pos) then
-         return Filename_View.Element (Pos);
-      end if;
-
-      return Project.View.Undefined;
-   end Get_View;
-
-   function Get_View
-     (Self : Object;
-      Unit : Name_Type) return Project.View.Object
-   is
-      Pos : constant Name_View.Cursor := Self.Units.Find (Unit);
-   begin
-      if Name_View.Has_Element (Pos) then
-         return Name_View.Element (Pos);
-      end if;
-
-      return Project.View.Undefined;
-   end Get_View;
 
    function Get_View
      (Tree : Project.Tree.Object;
@@ -897,34 +668,6 @@ package body GPR2.Project.Tree is
    begin
       return Self.View_Ids.Element (Instance_Id);
    end Instance_Of;
-
-   ------------------------
-   -- Invalidate_Sources --
-   ------------------------
-
-   procedure Invalidate_Sources
-     (Self : Object;
-      View : Project.View.Object := Project.View.Undefined) is
-   begin
-      if not View.Is_Defined then
-         for V of Self.Views_Set loop
-            Definition.Get (V).Sources_Signature :=
-              GPR2.Context.Default_Signature;
-         end loop;
-
-         Self.Self.Sources_Loaded := False;
-
-      else
-         Definition.Get (View).Sources_Signature :=
-           GPR2.Context.Default_Signature;
-
-         if View.Is_Aggregated_In_Library then
-            for Agg of View.Aggregate_Libraries loop
-               Self.Invalidate_Sources (Agg);
-            end loop;
-         end if;
-      end if;
-   end Invalidate_Sources;
 
    -------------
    -- Is_Root --
@@ -1515,6 +1258,24 @@ package body GPR2.Project.Tree is
       return Self.Self.Messages'Access;
    end Log_Messages;
 
+   -----------------------------
+   -- Namespace_Root_Projects --
+   -----------------------------
+
+   function Namespace_Root_Projects (Self : Object) return View.Set.Object is
+   begin
+      return Result : View.Set.Object do
+         if Self.Root.Kind = K_Aggregate then
+            for V of Self.Root.Aggregated loop
+               Result.Insert (V);
+            end loop;
+
+         else
+            Result.Insert (Self.Root);
+         end if;
+      end return;
+   end Namespace_Root_Projects;
+
    ----------
    -- Next --
    ----------
@@ -1624,23 +1385,6 @@ package body GPR2.Project.Tree is
    begin
       return Self.Search_Paths.All_Paths;
    end Project_Search_Paths;
-
-   -----------------
-   -- Record_View --
-   -----------------
-
-   procedure Record_View
-     (Self   : in out Object;
-      View   : GPR2.Project.View.Object;
-      Source : Path_Name.Object;
-      Unit   : Name_Type) is
-   begin
-      if not View.Is_Extended then
-         Self.Units.Include (Unit, View);
-         Self.Sources.Include (Filename_Type (Source.Value), View);
-         Self.Sources.Include (Source.Simple_Name, View);
-      end if;
-   end Record_View;
 
    --------------------
    -- Recursive_Load --
@@ -2406,19 +2150,6 @@ package body GPR2.Project.Tree is
       return View;
    end Register_View;
 
-   ------------------
-   -- Reindex_Unit --
-   ------------------
-
-   procedure Reindex_Unit (Self : in out Object; From, To : Name_Type) is
-      C : constant Name_View.Cursor := Self.Units.Find (From);
-   begin
-      if Name_View.Has_Element (C) then
-         Self.Units.Include (To, Name_View.Element (C));
-         Self.Units.Delete (From);
-      end if;
-   end Reindex_Unit;
-
    ------------------------------------
    -- Restrict_Autoconf_To_Languages --
    ------------------------------------
@@ -3013,8 +2744,6 @@ package body GPR2.Project.Tree is
                if Changed /= null then
                   Changed (View);
                end if;
-
-               Self.Invalidate_Sources (View);
             end if;
          end if;
       end Set_View;
@@ -3618,8 +3347,7 @@ package body GPR2.Project.Tree is
       Self.File_Reader_Ref  := Undefined.File_Reader_Ref;
       Self.Environment      := Undefined.Environment;
 
-      Self.Units.Clear;
-      Self.Sources.Clear;
+      Self.Tree_Db.Unload;
       Self.Messages.Clear;
       Self.Views_Set.Clear;
       Self.View_Ids.Clear;
@@ -3865,200 +3593,23 @@ package body GPR2.Project.Tree is
    --------------------
 
    procedure Update_Sources
-     (Self          : Object;
-      Stop_On_Error : Boolean := True;
-      With_Runtime  : Boolean := False;
-      Backends      : Source_Info.Backend_Set := Source_Info.All_Backends)
+     (Self         : Object;
+      With_Runtime : Boolean := False;
+      Messages     : out GPR2.Log.Object)
    is
-      Has_RT : Boolean := False;
-      Views  : View.Vector.Object renames Self.Ordered_Views;
    begin
       Self.Self.Sources_Loaded := True;
 
-      for V of reverse Views loop
-         Definition.Get (V).Update_Sources_List (V, Stop_On_Error);
-
-         if V.Is_Runtime then
-            Has_RT := True;
-         end if;
-      end loop;
+      Self.Artifacts_Database.Refresh (With_Runtime, Messages);
 
       --  Make sure the runtime is taken care of first : it is most certainly
       --  involved in source dependencies at one point or another.
 
-      if not Has_RT
-        and then With_Runtime
+      if With_Runtime
         and then Self.Runtime.Is_Defined
       then
-         Definition.Get (Self.Runtime).Update_Sources_List
-           (Self.Runtime, Stop_On_Error);
-         Definition.Get (Self.Runtime).Update_Sources_Parse (Backends);
-      end if;
-
-      for V of reverse Views loop
-         --  We list the views in reverse topological order so that we never
-         --  end up having a dependency external to the view that's not
-         --  already parsed.
-
-         if With_Runtime or else not V.Is_Runtime then
-            Definition.Get (V).Update_Sources_Parse (Backends);
-         else
-            Definition.Get (V).Update_Sources_Parse (Source_Info.No_Backends);
-         end if;
-      end loop;
-
-      if Self.Check_Shared_Lib then
-         for View of Self.Views_Set loop
-            declare
-               procedure Check_Shared_Lib (PV : Project.View.Object);
-               --  Check that shared library project does not have in imports
-               --  static library or standard projects.
-
-               ----------------------
-               -- Check_Shared_Lib --
-               ----------------------
-
-               procedure Check_Shared_Lib (PV : Project.View.Object) is
-                  P_Data : constant Definition.Const_Ref :=
-                             Definition.Get_RO (PV);
-
-                  function Has_Essential_Sources
-                    (V : Project.View.Object) return Boolean;
-                  --  Returns True if V has Ada sources or non ada bodies
-
-                  function Source_Loc
-                    (Imp : Project.View.Object)
-                     return Source_Reference.Object'Class;
-                  --  Returns a source location for the import.
-                  --
-                  --  Can't rely on P_Data.Trees.Project.Imports as
-                  --  in case of extended projects the import may be
-                  --  implicit, so retrieval of the source location is not
-                  --  easy.
-
-                  ---------------------------
-                  -- Has_Essential_Sources --
-                  ---------------------------
-
-                  function Has_Essential_Sources
-                    (V : Project.View.Object) return Boolean is
-                  begin
-                     for S of V.Sources loop
-                        if S.Language = Ada_Language
-                          or else S.Kind not in GPR2.Unit.Spec_Kind
-                        then
-                           return True;
-                        end if;
-                     end loop;
-
-                     return False;
-                  end Has_Essential_Sources;
-
-                  ----------------
-                  -- Source_Loc --
-                  ----------------
-
-                  function Source_Loc
-                    (Imp : Project.View.Object)
-                     return Source_Reference.Object'Class
-                  is
-                     Imports  : constant Project.Import.Set.Object :=
-                                  P_Data.Trees.Project.Imports;
-                     Position : constant Project.Import.Set.Cursor :=
-                                  Imports.Find (Imp.Path_Name);
-                  begin
-                     if Project.Import.Set.Has_Element (Position) then
-                        return Project.Import.Set.Element (Position);
-                     else
-                        return Source_Reference.Create
-                          (P_Data.Trees.Project.Path_Name.Value, 0, 0);
-                     end if;
-                  end Source_Loc;
-
-               begin
-                  for Imp of P_Data.Imports loop
-                     if Imp.Kind = K_Abstract
-                       or else not Has_Essential_Sources (Imp)
-                     then
-                        --  Check imports further in recursion
-
-                        Check_Shared_Lib (Imp);
-
-                     elsif not Imp.Is_Library then
-                        Self.Self.Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              "shared library project """ & String (View.Name)
-                              & """ cannot import project """
-                              & String (Imp.Name)
-                              & """ that is not a shared library project",
-                              Source_Loc (Imp)));
-
-                     elsif Imp.Is_Static_Library
-                       and then View.Library_Standalone /= Encapsulated
-                     then
-                        Self.Self.Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              "shared library project """ &
-                                String (View.Name)
-                              & """ cannot import static library project """
-                              & String (Imp.Name) & '"',
-                              Source_Loc (Imp)));
-
-                     elsif Imp.Is_Shared_Library
-                       and then View.Library_Standalone = Encapsulated
-                     then
-                        Self.Self.Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              "encapsulated library project """
-                              & String (View.Name)
-                              & """ cannot import shared library project """
-                              & String (Imp.Name) & '"',
-                              Source_Loc (Imp)));
-                     end if;
-                  end loop;
-
-                  if PV.Is_Library and then PV.Is_Shared_Library then
-                     --  Also check value of liobrary_standalone if any
-
-                     if PV.Has_Any_Interfaces
-                       and then PV.Library_Standalone = No
-                     then
-                        Self.Self.Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              "wrong value for Library_Standalone when"
-                              & " Library_Interface defined",
-                              PV.Attribute_Location (PRA.Library_Standalone)));
-                     end if;
-
-                     --  And if a standalone library has interfaces
-
-                     if not PV.Has_Any_Interfaces
-                       and then PV.Library_Standalone /= No
-                     then
-                        Self.Self.Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              "Library_Standalone valid only if library"
-                              & " has interfaces",
-                              PV.Attribute_Location (PRA.Library_Standalone)));
-                     end if;
-                  end if;
-               end Check_Shared_Lib;
-
-            begin
-               if View.Is_Library and then View.Is_Shared_Library then
-                  Check_Shared_Lib (View);
-               end if;
-            end;
-         end loop;
-
-         if Stop_On_Error and then Self.Messages.Has_Error then
-            raise Project_Error;
-         end if;
+         Self.Artifacts_Database (Self.Runtime).Update
+           (Messages);
       end if;
    end Update_Sources;
 

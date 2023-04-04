@@ -83,6 +83,11 @@ package body GPR2.Unit.List is
       First : Unit_Vectors.Cursor := Iter.Root.List.First;
    begin
       Skip_Padding (First);
+      while Unit_Vectors.Has_Element (First)
+        and then not Unit_Vectors.Element (First).Is_Defined
+      loop
+         First := Unit_Vectors.Next (First);
+      end loop;
 
       return (Current => First);
    end First;

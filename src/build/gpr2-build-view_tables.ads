@@ -13,12 +13,13 @@ with Ada.Containers.Ordered_Sets;
 with GNATCOLL.Refcount;
 
 --  with GPR2.Build.Db.Source_Sets;
+with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Object_Info;
-with GPR2.Build.Source_Info;
+with GPR2.Build.Source;
 with GPR2.Source_Reference.Value;
 with GPR2.View_Ids;
 
@@ -85,8 +86,8 @@ private package GPR2.Build.View_Tables is
    --    sources that are not visible (because of overloading or errors).
 
    package Src_Info_Maps is new Ada.Containers.Hashed_Maps
-     (Path_Name.Object, Source_Info.Object,
-      Path_Name.Hash, Path_Name."=", Source_Info."=");
+     (Path_Name.Object, Build.Source.Object,
+      Path_Name.Hash, Path_Name."=", Source."=");
 
    package Object_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (Simple_Name, Object_Info.Object, Hash, "=", Object_Info."=");
@@ -176,7 +177,9 @@ private package GPR2.Build.View_Tables is
       Extended_View      : GPR2.Project.View.Object;
       Resolve_Visibility : Boolean := False);
 
-   procedure Refresh (Data : in out View_Data);
+   procedure Refresh
+     (Data     : in out View_Data;
+      Messages : in out GPR2.Log.Object);
 
    package Data_Refs is new GNATCOLL.Refcount.Shared_Pointers (View_Data);
 

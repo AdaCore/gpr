@@ -14,14 +14,14 @@ with Gpr_Parser.Common;
 with GPR2.Containers;
 with GPR2.Source_Reference.Identifier.Set;
 
-package body GPR2.Build.Source_Info.Ada_Parser is
+package body GPR2.Build.Source.Ada_Parser is
 
    -------------
    -- Compute --
    -------------
 
    procedure Compute
-     (Data             : in out Source_Info.Object'Class;
+     (Data             : in out Source.Object'Class;
       Get_Withed_Units : Boolean)
    is
       use Gpr_Parser.Analysis;
@@ -248,8 +248,8 @@ package body GPR2.Build.Source_Info.Ada_Parser is
                   --  Construct the unit
 
                   declare
-                     CU : constant Source_Info.Unit_Part :=
-                            Source_Info.Create
+                     CU : constant Source.Unit_Part :=
+                            Source.Create
                               (Unit_Name       => Name_Type (-U_Name),
                                Index           => Index,
                                Kind            => U_Kind,
@@ -303,4 +303,4 @@ package body GPR2.Build.Source_Info.Ada_Parser is
       end if;
    end Compute;
 
-end GPR2.Build.Source_Info.Ada_Parser;
+end GPR2.Build.Source.Ada_Parser;

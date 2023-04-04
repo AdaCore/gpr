@@ -10,8 +10,9 @@ with Ada.IO_Exceptions;
 with GNATCOLL.OS.FS;
 with GNATCOLL.Utils;
 
+with GPR2.Build.Source;
+with GPR2.Build.View_Db;
 with GPR2.Message;
-with GPR2.Project.Source;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
@@ -74,8 +75,8 @@ package body GPR2.Build.Object_Info.Parser.ALI is
    function Get_Checksum (A_Handle : in out IO.Handle) return Word;
 
    function To_Unit_Name
-     (Sfile : Simple_Name;
-      Tree  : access Project.Tree.Object)
+     (Current_View : GPR2.Project.View.Object;
+      Sfile        : Simple_Name)
       return String;
    --  Compatibility mode for old GNAT compilers where the unit name and
    --  kind is not recorded as part of the Dependency lines.
@@ -697,8 +698,7 @@ package body GPR2.Build.Object_Info.Parser.ALI is
             Name     : constant String :=
                          (if Uname = "" and then Chksum /= 0
                           -- before GNAT 7.2.2
-                          then To_Unit_Name (Simple_Name (Sfile),
-                                             Data.View.Tree)
+                          then To_Unit_Name (Data.View, Simple_Name (Sfile))
                           else Uname);
             --  Unit_Name
             Suffix   : constant String :=
@@ -804,48 +804,53 @@ package body GPR2.Build.Object_Info.Parser.ALI is
    ------------------
 
    function To_Unit_Name
-     (Sfile : Simple_Name;
-      Tree  : access Project.Tree.Object)
+     (Current_View : GPR2.Project.View.Object;
+      Sfile        : Simple_Name)
       return String
    is
-      Path   : constant Path_Name.Object :=
-                 Path_Name.Create_File (Sfile, Path_Name.No_Resolution);
-      View   : Project.View.Object := Tree.Get_View (Path);
-      Source : Project.Source.Object;
-      Kind   : Unit.Library_Unit_Type;
+      Path : constant Path_Name.Object :=
+               Path_Name.Create_File (Sfile, Path_Name.No_Resolution);
+      Db   : Build.View_Db.Object;
+      Src  : Build.View_Db.Source_Context;
+      Kind : Build.Unit_Kind;
 
    begin
+      for V of Current_View.Namespace_Roots loop
+         Db := Current_View.Tree.Artifacts_Database (V);
+         Src := Db.Visible_Source (Sfile);
+         exit when Src.Source.Is_Defined;
+      end loop;
+
       --  The runtime is not always registerd in the tree, to speed up
       --  computation. So perform an explicit check here.
 
-      if not View.Is_Defined
-        and then Tree.Has_Runtime_Project
-        and then Tree.Runtime_Project.Has_Source (Sfile)
+      if not Src.Source.Is_Defined
+        and then Current_View.Tree.Has_Runtime_Project
+        and then Current_View.Tree.Runtime_Project.Has_Source (Sfile)
       then
-         View := Tree.Runtime_Project;
+         Db := Current_View.Tree.Artifacts_Database
+           (Current_View.Tree.Runtime_Project);
+         Src := Db.Visible_Source (Sfile);
       end if;
 
-      if View.Is_Defined then
-         Source := View.Source (Path);
-
-         pragma Assert (Source.Is_Defined);
-
-         if Source.Units.Is_Indexed_List then
+      if Src.Source.Is_Defined then
+         if Src.Source.Units.Is_Indexed_List then
             --  No way to disambiguate: pick up the first unit.
             --  Note: this is a corner case, as support for Multi-Unit
             --  sources with antique compilers is not really a user case.
 
-            Kind := Source.Kind (Multi_Unit_Index'First);
+            Kind := Src.Source.Kind (Multi_Unit_Index'First);
 
-            return To_Lower (Source.Unit_Name (Multi_Unit_Index'First))
-              & (if Kind in Unit.Spec_Kind then "%s"
-                 elsif Kind in Unit.Body_Kind then "%b"
+            return To_Lower
+                     (Src.Source.Unit (Multi_Unit_Index'First).Unit_Name)
+              & (if Kind = Build.S_Spec then "%s"
+                 elsif Kind = Build.S_Body then "%b"
                  else "");
 
          else
-            Kind := Source.Kind (No_Index);
+            Kind := Src.Source.Kind (No_Index);
 
-            return To_Lower (Source.Unit_Name (No_Index));
+            return To_Lower (Src.Source.Unit (No_Index).Unit_Name);
          end if;
 
       else

@@ -17,18 +17,17 @@ with GPR2.Project.Configuration;
 pragma Elaborate (GPR2.Project.Configuration);
 --  Elaborate to avoid a circular dependency due to default Elaborate_Body
 
+with GPR2.Build.Source;
+with GPR2.Build.Tree_Db;
+with GPR2.Build.View_Db;
 with GPR2.Project.Registry.Attribute;
-with GPR2.Project.Source;
-with GPR2.Project.Unit_Info;
 with GPR2.Project.View.Set;
 with GPR2.Project.View.Vector;
-with GPR2.Source_Info;
 with GPR2.View_Ids;
 with GPR2.View_Ids.DAGs;
 
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Indefinite_Hashed_Maps;
-private with Ada.Strings.Hash;
 
 private with GPR2.Project.Definition;
 
@@ -174,6 +173,11 @@ package GPR2.Project.Tree is
           Post => Root_Project'Result.Is_Defined;
    --  Returns the root project for the given tree
 
+   function Namespace_Root_Projects (Self : Object) return View.Set.Object
+     with Pre  => Self.Is_Defined;
+   --  Returns the list of namespace root projects: either the root project
+   --  for regular trees, or the root of the subtrees for an aggregate project.
+
    function Has_Configuration (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if a configuration project is loaded on this tree
@@ -308,39 +312,25 @@ package GPR2.Project.Tree is
    --  used to iterate over only some specific projects (only the library
    --  projects for example).
 
-   --  Unit/View
+   --  Views
 
-   procedure Record_View
-     (Self   : in out Object;
-      View   : GPR2.Project.View.Object;
-      Source : Path_Name.Object;
-      Unit   : Name_Type)
+   --  Artifacts database
+
+   function Artifacts_Database
+     (Self : Object) return Build.Tree_Db.Object_Access
      with Pre => Self.Is_Defined;
-   --  Records the view in which unit is defined
 
-   procedure Clear_View
-     (Self : in out Object;
-      Unit : Unit_Info.Object)
-     with Pre => Self.Is_Defined;
-   --  Clears the view set for the given unit
-
-   function Get_View
+   function Artifacts_Database
      (Self : Object;
-      Unit : Name_Type) return Project.View.Object
-     with Pre => Self.Is_Defined;
-   --  Gets the view in which unit is defined, returns Undefined if the unit
-   --  has not been found.
+      View : GPR2.Project.View.Object) return Build.View_Db.Object
+     with Pre => Self.Is_Defined and then View.Kind in With_Object_Dir_Kind;
 
-   function Get_View
-     (Self   : Object;
-      Source : Path_Name.Object) return Project.View.Object
+   function Artifacts_Database
+     (Self : Object;
+      View : GPR2.View_Ids.View_Id) return Build.View_Db.Object
      with Pre => Self.Is_Defined;
-   --  Gets the view in which source file is defined, returns Undefined if the
-   --  source file has not been found.
-   --  If Update is True and view with this source is not found, than Update
-   --  sources in all views and try to find again.
 
-   procedure Invalidate_Sources
+   procedure Clear_Sources
      (Self : Object;
       View : Project.View.Object := Project.View.Undefined)
      with Pre => Self.Is_Defined;
@@ -351,20 +341,11 @@ package GPR2.Project.Tree is
    --  the tree will be called, the set of sources will be recomputed.
 
    procedure Update_Sources
-     (Self          : Object;
-      Stop_On_Error : Boolean := True;
-      With_Runtime  : Boolean := False;
-      Backends      : Source_Info.Backend_Set := Source_Info.All_Backends)
+     (Self         : Object;
+      With_Runtime : Boolean := False;
+      Messages     : out GPR2.Log.Object)
      with Pre => Self.Is_Defined;
-   --  Ensures that all views' sources are up-to-date. This is needed before
-   --  computing the dependencies of a source in the project tree. This routine
-   --  is called where needed and is there for internal use only.
-   --  If Stop_On_Error is True then exception Project_Error is raised in case
-   --  an error message exists in log after processing one of project files in
-   --  tree. If Stop_On_Error is False then no exception is raised and errors
-   --  can be discovered from the Log.Object taken from Log_Messages call.
-   --  Backends parameter defines the set of parsers that can be used to parse
-   --  the source information.
+   --  Ensures that all views' sources are up-to-date.
 
    procedure Register_Project_Search_Path
      (Self : in out Object;
@@ -415,44 +396,13 @@ package GPR2.Project.Tree is
    function Reference (Self : Object) return access Object;
    --  Returns access to itself
 
-   function Get_File
-     (Self             : Object;
-      Base_Name        : Simple_Name;
-      View             : Project.View.Object := Project.View.Undefined;
-      Use_Source_Path  : Boolean := True;
-      Use_Object_Path  : Boolean := True;
-      Predefined_Only  : Boolean := False;
-      Return_Ambiguous : Boolean := True) return Path_Name.Object
+   function Find_Project
+     (Self      : Object;
+      Base_Name : Simple_Name) return Path_Name.Object
      with Pre => Self.Is_Defined;
-   --  Return absolute path of source/object/project file found in Self or in
-   --  View when defined.
-   --
-   --  If a source file matches Base_Name and Use_Source_Path is true, it
-   --  is always returned.
-   --  Set Predefined_Only to True to disable looking in the project sources
-   --  and only look in the predefined source files.
-   --
-   --  Otherwise, the file will be searched for in the source dirs and/or
-   --  object dirs of either a specific Project or in the whole project tree.
-   --  As a special case, if Base_Name ends with '.gpr', it is also looked
-   --  for among the already loaded project, even if their directory is outside
-   --  the source dirs and object dirs.
-   --
-   --  If no such file is found, Undefined is returned.
-   --
-   --  The matching from base source names to full path names is potentially
-   --  ambiguous when using aggregate projects, because it is valid to have
-   --  multiple files with the same base name within a given project tree.
-   --  In such an ambiguous case, this function will return Undefined.
-   --  To lift this ambiguity, and if you know which project the file is found
-   --  in, you must pass a View argument. The file must be a direct source
-   --  of that project.
-   --
-   --  If a given full path is part of the sources for several projects, this
-   --  is considered as ambiguous, because the associated object file,
-   --  for instance, is different. In this case the returned value is
-   --  set to the common source file if Return_Ambiguous is set to True
-   --  otherwise Undefined is returned.
+   --  Search for the project file named "Base_Name" through the tree's
+   --  hierarchy or the project paths. If not found, Path_Name.Undefined is
+   --  returned
 
    Target_Name : constant Name_Type;
    --  Native host target
@@ -469,9 +419,6 @@ package GPR2.Project.Tree is
    --  Given a view id return the effective view that should be used. The
    --  function is mainly used to get the effective view in case a project has
    --  been extended using extends all.
-
-   procedure Reindex_Unit (Self : in out Object; From, To : Name_Type);
-   --  Change name of unit in view index used to get view by unit name
 
    function Target_From_Command_Line
      (Self       : Object;
@@ -506,7 +453,7 @@ package GPR2.Project.Tree is
    procedure For_Each_Source
      (Self             : Object;
       View             : Project.View.Object := Project.View.Undefined;
-      Action           : access procedure (Source : Project.Source.Object);
+      Action           : access procedure (Source : Build.Source.Object);
       Language         : Language_Id := No_Language;
       Externally_Built : Boolean := False)
      with Pre => Self.Is_Defined;
@@ -520,6 +467,13 @@ package GPR2.Project.Tree is
    function Environment (Self : Object) return GPR2.Environment.Object
      with Pre => Self.Is_Defined;
    --  Returns used environment.
+
+   function Get_View
+      (Tree : Project.Tree.Object;
+       Id   : GPR2.View_Ids.View_Id)
+       return Project.View.Object;
+   --  Given a View_Id Id returns the associated view if it exists. Returns
+   --  Project.View.Undefined otherwise.
 
 private
 
@@ -542,13 +496,6 @@ private
       Hash            => GPR2.View_Ids.Hash,
       Equivalent_Keys => GPR2.View_Ids."=");
    --  Maps View_Ids to View objects
-
-   package Source_Maps is new Ada.Containers.Indefinite_Hashed_Maps
-     (Key_Type        => String,
-      Element_Type    => Source.Object,
-      Hash            => Ada.Strings.Hash,
-      Equivalent_Keys => "=",
-      "="             => Source."=");
 
    type Two_Contexts is array (Context_Kind) of GPR2.Context.Object;
    --  Root and Aggregate contexts
@@ -580,9 +527,8 @@ private
       Root              : View.Object;
       Conf              : Project.Configuration.Object;
       Base              : GPR2.KB.Object;
+      Tree_Db           : Build.Tree_Db.Object;
       Runtime           : View.Object;
-      Units             : Name_View.Map;
-      Sources           : Filename_View.Map;
       Messages          : aliased Log.Object;
       Search_Paths      : All_Search_Paths;
       Implicit_With     : Path_Name.Set.Object;
@@ -727,6 +673,16 @@ private
      (if Self.Explicit_Runtimes.Contains (Language)
       then Optional_Name_Type (Self.Explicit_Runtimes.Element (Language))
       else No_Name);
+
+   function Artifacts_Database
+     (Self : Object;
+      View : GPR2.Project.View.Object) return Build.View_Db.Object is
+     (Self.Artifacts_Database.View_Database (View));
+
+   function Artifacts_Database
+     (Self : Object;
+      View : GPR2.View_Ids.View_Id) return Build.View_Db.Object is
+     (Self.Artifacts_Database.View_Database (Self.Get_View (View)));
 
    function Get_KB (Self : Object) return GPR2.KB.Object is
      (Self.Base);

@@ -4,9 +4,11 @@
 --  SPDX-License-Identifier: Apache-2.0
 --
 
-limited with GPR2.Build.Compilation_Input.Sets;
-limited with GPR2.Build.Source_Info.Sets;
+--  limited with GPR2.Build.Compilation_Input.Sets;
+with GPR2.Build.Source;
+limited with GPR2.Build.Source.Sets;
 with GPR2.Build.Compilation_Unit.Maps;
+with GPR2.Log;
 with GPR2.Project.View;
 
 private with GPR2.Build.View_Tables;
@@ -17,14 +19,16 @@ package GPR2.Build.View_Db is
 
    function Is_Defined (Self : Object) return Boolean;
 
-   procedure Update (Self : in out Object)
+   procedure Update
+     (Self     : Object;
+      Messages : in out GPR2.Log.Object)
      with Pre => Self.Is_Defined;
    --  Update the list of objects and dependency files found in the object
    --  directory and adjust the internal values.
 
    function Sources
      (Self   : Object;
-      Sorted : Boolean := False) return GPR2.Build.Source_Info.Sets.Object
+      Sorted : Boolean := False) return GPR2.Build.Source.Sets.Object
      with Pre => Self.Is_Defined;
    --  Returns an iterator on the source set. If Sorted is set, the result is
    --  alphabetically sorted (but the operation is slower).
@@ -37,7 +41,7 @@ package GPR2.Build.View_Db is
 
    function Source
      (Self     : Object;
-      Basename : Simple_Name) return GPR2.Build.Source_Info.Object
+      Basename : Simple_Name) return GPR2.Build.Source.Object
      with Pre  => Self.Is_Defined,
           Post => Self.Has_Source (Basename) = Source'Result.Is_Defined;
    --  Get a source info object for the view source with simple name Basename.
@@ -49,15 +53,22 @@ package GPR2.Build.View_Db is
    --
    --  This contrasts with the "Visible_Source" primitive in this regard.
 
+   type Source_Context is record
+      Owning_View   : GPR2.Project.View.Object;
+      Source        : GPR2.Build.Source.Object;
+   end record;
+
+   No_Context : constant Source_Context := (others => <>);
+
    function Visible_Source
      (Self     : Object;
-      Basename : Simple_Name) return GPR2.Build.Source_Info.Object
+      Basename : Simple_Name) return Source_Context
      with Pre  => Self.Is_Defined;
    --  Get a source from its simple name, that is visible for a given view's
    --  sources (so project's own sources and all its withed projects).
 
    function Visible_Sources
-     (Self : Object) return GPR2.Build.Source_Info.Sets.Object
+     (Self : Object) return GPR2.Build.Source.Sets.Object
      with Pre => Self.Is_Defined;
    --  Get the complete list of visible sources: so sources owned by the view
    --  but also all sources made visible by withed or limited withed views.
@@ -70,7 +81,7 @@ package GPR2.Build.View_Db is
 
    function Compilation_Unit
      (Self : Object;
-      Name : Name_Type) return Compilation_Unit.Object
+      Name : Name_Type) return Build.Compilation_Unit.Object
      with Pre => Self.Has_Compilation_Unit (Name);
    --  Return the compilation unit named "Name".
 
@@ -78,9 +89,9 @@ package GPR2.Build.View_Db is
      (Self : Object) return Build.Compilation_Unit.Maps.Map
      with Pre => Self.Is_Defined and then Self.View.Is_Namespace_Root;
 
-   function Compilation_Inputs
-     (Self : Object) return Build.Compilation_Input.Sets.Object
-     with Pre => Self.Is_Defined;
+   --  function Compilation_Inputs
+   --    (Self : Object) return Build.Compilation_Input.Sets.Object
+   --    with Pre => Self.Is_Defined;
    --  Returns all sources (and index in case of multi-unit source) that can
    --  be used as input for a compilation for this view.
 

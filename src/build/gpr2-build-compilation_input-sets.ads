@@ -5,7 +5,7 @@
 --
 
 with Ada.Containers.Ordered_Sets;
-with GPR2.Build.View_Db;
+with GPR2.Project.View;
 
 package GPR2.Build.Compilation_Input.Sets is
 
@@ -13,7 +13,15 @@ package GPR2.Build.Compilation_Input.Sets is
      (Compilation_Input.Object, "<" => Compilation_Input."<");
 
    type Object is new Internal.Set with null record;
+   Empty_Set : constant Object;
 
-   function Create (View : View_Db.Object) return Object;
+   subtype Cursor is Internal.Cursor;
+
+   function Create (View : Project.View.Object) return Object
+     with Pre => View.Is_Defined;
+
+private
+
+   Empty_Set : constant Object := Object'(Internal.Empty_Set with null record);
 
 end GPR2.Build.Compilation_Input.Sets;

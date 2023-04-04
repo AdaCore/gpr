@@ -19,20 +19,15 @@ with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
-with GPR2.Source_Info.Parser.Registry;
-with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
 
 package body GPR2.Project.Definition is
-
-   use GNAT;
 
    package ACH renames Ada.Characters.Handling;
    package ASF renames Ada.Strings.Fixed;
    package PRA renames Project.Registry.Attribute;
    package PRP renames Project.Registry.Pack;
    package SR  renames GPR2.Source_Reference;
-   package SRI renames SR.Identifier;
 
    ----------------------------------
    -- Check_Aggregate_Library_Dirs --
@@ -767,130 +762,5 @@ package body GPR2.Project.Definition is
 
       Free (States);
    end Foreach;
-
-   -----------------------
-   -- Is_Sources_Loaded --
-   -----------------------
-
-   function Is_Sources_Loaded (View : Project.View.Object) return Boolean is
-   begin
-      return not Get_RO (View).Sources_Map.Is_Empty;
-   end Is_Sources_Loaded;
-
-   -----------------------
-   -- Source_Map_Insert --
-   -----------------------
-
-   procedure Sources_Map_Insert
-     (Def : in out Data;
-      Src : Project.Source.Object;
-      C   : Project.Source.Set.Cursor)
-   is
-      Position : Simple_Name_Source.Cursor;
-      Inserted : Boolean;
-   begin
-      Def.Sources_Map.Insert
-        (Src.Path_Name.Simple_Name, C, Position, Inserted);
-   end Sources_Map_Insert;
-
-   --------------------
-   -- Update_Sources --
-   --------------------
-
-   procedure Update_Sources
-     (Def           : in out Data;
-      View          : Project.View.Object;
-      Stop_On_Error : Boolean;
-      Backends      : Source_Info.Backend_Set)
-   is
-   begin
-      Update_Sources_List (Def, View, Stop_On_Error);
-      Update_Sources_Parse
-        (Def, Backends);
-   end Update_Sources;
-
-   -------------------------
-   -- Update_Sources_List --
-   -------------------------
-
-   procedure Update_Sources_List
-     (Def           : in out Data;
-      View          : Project.View.Object;
-      Stop_On_Error : Boolean) is separate;
-
-   --------------------------
-   -- Update_Sources_Parse --
-   --------------------------
-
-   procedure Update_Sources_Parse
-     (Def : in out Data; Backends : Source_Info.Backend_Set)
-   is
-      use type GPR2.Source_Info.Backend_Set;
-
-      Repeat_Map  : Simple_Name_Source.Map; -- Second pass for subunits
-      Position    : Simple_Name_Source.Cursor;
-      Inserted    : Boolean;
-      SW          : Project.Source.Object;
-
-   begin
-      Source_Info.Parser.Registry.Clear_Cache;
-      Def.Units_Map.Clear;
-
-      for C in Def.Sources.Iterate loop
-         SW := Project.Source.Set.Element (C);
-
-         --  If the view is extended, we will use the ALI from the extending
-         --  project. We still need to call SW.Update to disambiguate
-         --  Spec/Spec_Only and Body/Body_Only units.
-
-         SW.Update
-           (C,
-            (if not Def.Is_Extended
-             then Backends
-             else Source_Info.No_Backends));
-
-         if not SW.Is_Parsed (No_Index)
-           and then not Def.Is_Extended
-           and then SW.Language = Ada_Language
-           and then Backends /= Source_Info.No_Backends
-         then
-            --  It can be subunit case in runtime krunched source names, need
-            --  to repeat after all .ali files parsed.
-
-            Repeat_Map.Insert
-              (SW.Path_Name.Simple_Name, C, Position, Inserted);
-
-            pragma Assert
-              (Inserted,
-               String (SW.Path_Name.Simple_Name) & " subunit duplicated");
-         end if;
-      end loop;
-
-      for C of Repeat_Map loop
-         SW := Project.Source.Set.Element (C);
-         SW.Update (C, Backends);
-      end loop;
-
-      --  Check unit-based interface attributes
-
-      if not Def.Interface_Units.Is_Empty then
-         for C in Def.Interface_Units.Iterate loop
-            declare
-               Name : constant Name_Type := Unit_Name_To_Sloc.Key (C);
-            begin
-               if not Def.Units_Map.Contains ('S' & To_Lower (Name))
-                 and then not Def.Units_Map.Contains ('B' & To_Lower (Name))
-               then
-                  Def.Tree.Append_Message
-                    (Message.Create
-                       (Message.Error,
-                        "source for interface unit '" & String (Name)
-                        & "' not found",
-                        Unit_Name_To_Sloc.Element (C)));
-               end if;
-            end;
-         end loop;
-      end if;
-   end Update_Sources_Parse;
 
 end GPR2.Project.Definition;

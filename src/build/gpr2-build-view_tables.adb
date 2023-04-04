@@ -4,7 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0
 --
 
-with GPR2.Build.Source_Info.Ada_Parser;
+with GPR2.Build.Source.Ada_Parser;
 with GPR2.Build.Tree_Db;
 with GPR2.Containers;
 with GPR2.Message;
@@ -41,8 +41,9 @@ package body GPR2.Build.View_Tables is
 
    package Update_Sources_List is
       procedure Process
-        (Data             : in out View_Data;
-         Stop_On_Error    : Boolean);
+        (Data          : in out View_Data;
+         Stop_On_Error : Boolean;
+         Messages      : in out GPR2.Log.Object);
       --  Update the list of sources
    end Update_Sources_List;
 
@@ -51,7 +52,7 @@ package body GPR2.Build.View_Tables is
 
    procedure Check_Separate
      (Root_Db : View_Tables.View_Data;
-      File    : in out Source_Info.Object)
+      File    : in out Source.Object)
      with Pre => Root_Db.Is_Root
                    and then File.Has_Single_Unit
                    and then File.Unit.Kind = S_Separate;
@@ -112,7 +113,7 @@ package body GPR2.Build.View_Tables is
       end if;
 
       Data.CUs.Reference (Cursor).Add
-        (Kind, View, Path, Index, Sep_Name, Success);
+        (Kind, View.Id, Path, Index, Sep_Name, Success);
 
       if Success and then Kind = S_Separate then
          declare
@@ -142,7 +143,7 @@ package body GPR2.Build.View_Tables is
 
    procedure Check_Separate
      (Root_Db : View_Tables.View_Data;
-      File    : in out Source_Info.Object)
+      File    : in out Source.Object)
    is
       C : Name_Maps.Cursor;
    begin
@@ -156,7 +157,7 @@ package body GPR2.Build.View_Tables is
          --  We need to rebase on the actual compilation unit in this case.
 
          declare
-            U            : constant Source_Info.Unit_Part := File.Unit;
+            U            : constant Source.Unit_Part := File.Unit;
             New_Name     : constant Name_Type := Name_Maps.Element (C);
             --  New compilation unit name
             P_Simple     : constant Name_Type := U.Unit_Name
@@ -167,7 +168,7 @@ package body GPR2.Build.View_Tables is
                                        U.Separate_Name);
          begin
             File.Update_Unit
-              (Source_Info.Create
+              (Source.Create
                  (Unit_Name      => New_Name,
                   Index          => U.Index,
                   Kind           => U.Kind,
@@ -193,10 +194,11 @@ package body GPR2.Build.View_Tables is
    -- Refresh --
    -------------
 
-   procedure Refresh (Data : in out View_Data)
-   is
+   procedure Refresh
+     (Data     : in out View_Data;
+      Messages : in out GPR2.Log.Object) is
    begin
-      Update_Sources_List.Process (Data, False);
+      Update_Sources_List.Process (Data, False, Messages);
 
       --  Disambiguate unit kind for Ada bodies
 
@@ -221,7 +223,7 @@ package body GPR2.Build.View_Tables is
                  and then not S_Ref.Has_Index
                then
                   declare
-                     Unit : Source_Info.Unit_Part := S_Ref.Unit;
+                     Unit : Source.Unit_Part := S_Ref.Unit;
 
                   begin
                      if Unit.Kind_Ambiguous then
@@ -249,7 +251,7 @@ package body GPR2.Build.View_Tables is
                         --  filename: can be a child body-only, or a separate.
                         --  We need to parse the source to determine the
                         --  exact kind.
-                        Build.Source_Info.Ada_Parser.Compute (S_Ref, False);
+                        Build.Source.Ada_Parser.Compute (S_Ref, False);
 
                         if S_Ref.Unit (No_Index).Unit_Name /= Unit.Unit_Name
                           or else S_Ref.Unit (No_Index).Kind /= Unit.Kind
@@ -312,7 +314,7 @@ package body GPR2.Build.View_Tables is
                      declare
                         Root_Db : constant View_Data_Ref :=
                                     Get_Data (Data.Tree_Db, Root);
-                        Old     : constant Source_Info.Unit_Part := S_Ref.Unit;
+                        Old     : constant Source.Unit_Part := S_Ref.Unit;
                         Done    : Boolean;
                      begin
                         Check_Separate (Root_Db, S_Ref);
@@ -394,7 +396,8 @@ package body GPR2.Build.View_Tables is
          return;
       end if;
 
-      Data.CUs.Reference (Cursor).Remove (Kind, View, Path, Index, Sep_Name);
+      Data.CUs.Reference (Cursor).Remove
+        (Kind, View.Id, Path, Index, Sep_Name);
 
       if Data.CUs.Reference (Cursor).Is_Empty then
          Data.CUs.Delete (Cursor);
@@ -432,7 +435,7 @@ package body GPR2.Build.View_Tables is
       procedure Propagate_Visible_Source_Added (Src : Source_Proxy) is
          View_Db  : constant View_Data_Ref :=
                       Get_Data (Data.Tree_Db, Src.View);
-         Src_Info : constant Source_Info.Object :=
+         Src_Info : constant Source.Object :=
                       View_Db.Src_Infos (Src.Path_Name);
          Success  : Boolean;
 
@@ -483,7 +486,7 @@ package body GPR2.Build.View_Tables is
       procedure Propagate_Visible_Source_Removal (Src : Source_Proxy) is
          View_Db  : constant View_Data_Ref :=
                       Get_Data (Data.Tree_Db, Src.View);
-         Src_Info : constant Source_Info.Object :=
+         Src_Info : constant Source.Object :=
                       View_Db.Src_Infos (Src.Path_Name);
 
       begin

@@ -7,11 +7,9 @@
 with Interfaces.C;
 with Ada.Calendar.Conversions;
 
-with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Tree_Db;
-with GPR2.Build.View_Db;
 
-package body GPR2.Build.Source_Info is
+package body GPR2.Build.Source is
 
    type Unit_Iterator is new Unit_Iterators.Forward_Iterator with record
       List : access constant Unit_List;
@@ -56,7 +54,6 @@ package body GPR2.Build.Source_Info is
       Language         : Language_Id;
       Kind             : Unit_Kind;
       Timestamp        : Ada.Calendar.Time;
-      View             : GPR2.Project.View.Object;
       Tree_Db          : access GPR2.Build.Tree_Db.Object;
       Naming_Exception : Naming_Exception_Kind;
       Source_Ref       : GPR2.Source_Reference.Value.Object;
@@ -66,7 +63,6 @@ package body GPR2.Build.Source_Info is
    begin
       return
         (Db                => Tree_Db,
-         View              => View,
          Path_Name         => Filename,
          Modification_Time => Timestamp,
          Language          => Language,
@@ -85,7 +81,6 @@ package body GPR2.Build.Source_Info is
    function Create_Ada
      (Filename         : GPR2.Path_Name.Object;
       Timestamp        : Ada.Calendar.Time;
-      View             : GPR2.Project.View.Object;
       Tree_Db          : access GPR2.Build.Tree_Db.Object;
       Naming_Exception : Naming_Exception_Kind;
       Source_Ref       : GPR2.Source_Reference.Value.Object;
@@ -95,7 +90,6 @@ package body GPR2.Build.Source_Info is
    begin
       return
         (Db                => Tree_Db,
-         View              => View,
          Path_Name         => Filename,
          Modification_Time => Timestamp,
          Language          => Ada_Language,
@@ -141,42 +135,6 @@ package body GPR2.Build.Source_Info is
          Self.Has_Index := True;
       end if;
    end Insert;
-
-   --------------------------
-   -- Is_Compilation_Input --
-   --------------------------
-
-   function Is_Compilation_Input
-     (Self  : Object;
-      Index : Unit_Index := No_Index) return Boolean
-   is
-   begin
-      if Self.Has_Units then
-         case Self.Unit (Index).Kind is
-            when S_Body =>
-               return True;
-
-            when S_Separate =>
-               return False;
-
-            when S_Spec =>
-               --  Check if the compilation unit has a body or has only a spec
-               declare
-                  Root_Db : constant GPR2.Build.View_Db.Object :=
-                              Self.Db.View_Database
-                                (Self.View.Namespace_Roots.First_Element);
-                  CU      : constant GPR2.Build.Compilation_Unit.Object :=
-                              Root_Db.Compilation_Unit
-                                (Self.Unit (Index).Unit_Name);
-               begin
-                  return not CU.Has_Part (S_Body);
-               end;
-         end case;
-
-      else
-         return Self.Is_Compilable and then Self.Kind = S_Body;
-      end if;
-   end Is_Compilation_Input;
 
    -------------
    -- Iterate --
@@ -278,4 +236,4 @@ package body GPR2.Build.Source_Info is
       end if;
    end Update_Unit;
 
-end GPR2.Build.Source_Info;
+end GPR2.Build.Source;

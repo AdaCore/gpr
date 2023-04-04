@@ -5,23 +5,30 @@
 --
 
 with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Containers.Vectors;
 
 with GPR2.Path_Name;
-with GPR2.Project.View;
+with GPR2.View_Ids;
+limited with GPR2.Project.Tree;
 
 package GPR2.Build.Compilation_Unit is
 
    type Unit_Location is record
-      View  : Project.View.Object;
+      View  : View_Ids.View_Id;
       Path  : Path_Name.Object;
       Index : Unit_Index := No_Index;
    end record;
-   --  Identifies the location of a Unit (spec/body or separate)
+   --  Identifies the location of a Unit (spec/body or separate).
+
+   No_Unit : constant Unit_Location := (others => <>);
+
+   package Unit_Location_Vectors is new Ada.Containers.Vectors
+     (Positive, Unit_Location);
+
+   subtype Unit_Location_Vector is Unit_Location_Vectors.Vector;
 
    package Separate_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, Unit_Location);
-
-   No_Unit : constant Unit_Location := (others => <>);
 
    type Object is tagged private;
 
@@ -49,7 +56,7 @@ package GPR2.Build.Compilation_Unit is
    procedure Add
      (Self     : in out Object;
       Kind     : Unit_Kind;
-      View     : GPR2.Project.View.Object;
+      View     : GPR2.View_Ids.View_Id;
       Path     : GPR2.Path_Name.Object;
       Index    : Unit_Index := No_Index;
       Sep_Name : Optional_Name_Type := "";
@@ -69,7 +76,7 @@ package GPR2.Build.Compilation_Unit is
    procedure Remove
      (Self     : in out Object;
       Kind     : Unit_Kind;
-      View     : GPR2.Project.View.Object;
+      View     : GPR2.View_Ids.View_Id;
       Path     : GPR2.Path_Name.Object;
       Index    : Unit_Index := No_Index;
       Sep_Name : Optional_Name_Type := "")
@@ -102,14 +109,15 @@ package GPR2.Build.Compilation_Unit is
      (Self : Object;
       Action : access procedure
         (Kind     : Unit_Kind;
-         View     : Project.View.Object;
+         View     : View_Ids.View_Id;
          Path     : Path_Name.Object;
          Index    : Unit_Index;
          Sep_Name : Optional_Name_Type))
      with Pre => Self.Is_Defined;
    --  Execute Action for all parts of the given compilation unit
 
-   function Object_File (Self : Object) return Simple_Name;
+   function Object_File (Self : Object;
+                         Tree : GPR2.Project.Tree.Object) return Simple_Name;
    --  Returns the .o's simple name for Self.
 
 private
