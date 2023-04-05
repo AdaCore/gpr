@@ -1,3 +1,1 @@
-warning: duplicate unit Jvm_Ada in file jvm_ada.adb aready exists in r.adb
-warning: generated Naming package needs to be reviewed manually
-
+TEST OK !

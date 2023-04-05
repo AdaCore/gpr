@@ -6,7 +6,11 @@ bnr = BuilderAndRunner()
 
 
 def run(args):
-    print(bnr.check_output(args).out)
+    out = bnr.check_output(args).out.split("\n")
+    if "warning: duplicate unit" in out[0] and "warning: generated Naming package needs to be reviewed manually" in out[1]:
+        print("TEST OK !")
+    else:
+        print("TEST KO ! warnings were not outputed")
 
 
 # ignore-duplicate-files switch support
