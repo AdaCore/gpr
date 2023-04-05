@@ -747,6 +747,7 @@ begin
                  Project.I_Aggregated    => Options.All_Projects
                                          or else Project_Tree.Root_Project.Kind
                                                  /= K_Aggregate_Library,
+                 Project.I_Extended      => Options.All_Projects,
                  Project.I_Runtime       => False,
                  Project.I_Configuration => False,
                  others => True),
