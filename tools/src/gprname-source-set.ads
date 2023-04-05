@@ -20,7 +20,12 @@ with Ada.Containers.Indefinite_Ordered_Sets;
 
 package GPRname.Source.Set is
 
-   package Set is new Ada.Containers.Indefinite_Ordered_Sets (Source.Object);
+   function Source_Less
+     (Left, Right : Source.Object) return Boolean
+   is (Left < Right);
+
+   package Set is new Ada.Containers.Indefinite_Ordered_Sets
+     (Source.Object, "<" => Source_Less);
 
    subtype Object is Set.Set;
 
