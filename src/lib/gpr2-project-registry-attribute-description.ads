@@ -15,6 +15,10 @@ package GPR2.Project.Registry.Attribute.Description is
                                        return String;
    --  Retrieves a description for a given attribute and package
 
+   procedure Set_Attribute_Description
+     (Key : Q_Attribute_Id; Description : String);
+   --  Set a description for a given attribute and package
+
 private
 
    function Hash (Key : Q_Attribute_Id) return Hash_Type;
