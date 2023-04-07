@@ -22,15 +22,12 @@ package GPR2.Message is
      (Level   : Level_Value;
       Message : String;
       Sloc    : Source_Reference.Object'Class;
-      Indent  : Natural := 0;
-      Raw     : Boolean := False) return Object
+      Indent  : Natural := 0) return Object
      with Pre  => Sloc.Is_Defined,
           Post => Create'Result.Status = Unread;
    --  Constructor for a log message.
    --  Raw parameter mean that message should be displayed as is, without
    --  source reference.
-   --  ??? Raw parameter should be removed when configuration will be done with
-   --  libgprconfig instead of calling the gprconfig tool.
 
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
@@ -98,7 +95,6 @@ private
       Message : Unbounded_String := To_Unbounded_String ((1 => ASCII.NUL));
       Sloc    : Source_Reference.Object;
       Indent  : Natural := 0;
-      Raw     : Boolean := False;
    end record
      with Dynamic_Predicate => Message /= Null_Unbounded_String;
 

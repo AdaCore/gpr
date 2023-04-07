@@ -720,8 +720,7 @@ begin
             "Cleaning may be incomplete, as there were problems during"
             & " auto-configuration",
             Source_Reference.Create
-              (Project_Tree.Root_Project.Path_Name.Value, 0, 0),
-            Raw => True));
+              (Project_Tree.Root_Project.Path_Name.Value, 0, 0)));
    end if;
 
    if Project_Tree.Root_Project.Is_Library and then Options.Arg_Mains then

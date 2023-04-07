@@ -250,8 +250,7 @@ is
                        (Level   => Message.Error,
                         Message => Error (Descr_B, Descr_A),
                         Sloc    => Source_Reference.Create
-                          (Self.Root.Path_Name.Value, 0, 0),
-                        Raw     => True));
+                          (Self.Root.Path_Name.Value, 0, 0)));
 
                   Result := Incompatible;
 
