@@ -25,6 +25,7 @@ with GNATCOLL.JSON;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Attribute.Description;
 with GPR2.Project.Registry.Pack;
+with GPR2.Project.Registry.Pack.Description;
 
 procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
 
@@ -37,6 +38,7 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
    package PRA  renames GPR2.Project.Registry.Attribute;
    package PRP  renames GPR2.Project.Registry.Pack;
    package PRAD renames GPR2.Project.Registry.Attribute.Description;
+   package PRPD  renames GPR2.Project.Registry.Pack.Description;
 
    procedure Generate_IO_Textual_Documentation;
    --  Format the attributes and package information to generate a textual
@@ -164,6 +166,9 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
 
             if not Package_Name_Shown then
                Text_IO.Put_Line (Item => Package_Name);
+               Text_IO.Put_Line
+                 (Item => "Description: "
+                  & PRPD.Get_Package_Description (Key => Pack));
                Package_Name_Shown := True;
             end if;
 
@@ -204,7 +209,6 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
       --  The attribute JSON object description
 
       function Package_Object (Pack      : Package_Id;
-                               Descr     : String;
                                Attr_List : JSON_Array) return JSON_Value;
       --  The package JSON object description
 
@@ -370,7 +374,6 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
       --------------------
 
       function Package_Object (Pack      : Package_Id;
-                               Descr     : String;
                                Attr_List : JSON_Array) return JSON_Value
       is
          Package_Name : constant String :=
@@ -384,7 +387,7 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
                     Field      => Package_Name);
          Set_Field (Val        => Obj,
                     Field_Name => "package_descr",
-                    Field      => Descr);
+                    Field      => PRPD.Get_Package_Description (Key => Pack));
          Set_Field (Val        => Obj,
                     Field_Name => "attributes",
                     Field      => Attr_List);
@@ -428,7 +431,6 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
          JSON.Append (Arr => P_Array,
                       Val => Package_Object
                         (Pack      => Project_Level_Scope,
-                         Descr     => "",
                          Attr_List => A_Array));
       end;
 
@@ -463,7 +465,6 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
 
             JSON.Append (Arr => P_Array,
                          Val => Package_Object (Pack      => Pack,
-                                                Descr     => "",
                                                 Attr_List => A_Array));
          end;
       end loop;
