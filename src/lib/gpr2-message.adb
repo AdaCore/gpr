@@ -18,12 +18,11 @@ package body GPR2.Message is
      (Level   : Level_Value;
       Message : String;
       Sloc    : Source_Reference.Object'Class;
-      Indent  : Natural := 0;
-      Raw     : Boolean := False) return Object is
+      Indent  : Natural := 0) return Object is
    begin
       return Object'
         (Level, Unread, To_Unbounded_String (Message),
-         Source_Reference.Object (Sloc), Indent, Raw);
+         Source_Reference.Object (Sloc), Indent);
    end Create;
 
    ------------
@@ -70,10 +69,7 @@ package body GPR2.Message is
       --  to the error output.
 
    begin
-      if Self.Raw then
-         return Indent & To_String (Self.Message);
-
-      elsif Self.Sloc.Has_Source_Reference then
+      if Self.Sloc.Has_Source_Reference then
          declare
             Format : constant Formatted_String := +"%s:%d:%02d: %s";
          begin
