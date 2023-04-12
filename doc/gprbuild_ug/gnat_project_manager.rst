@@ -1847,9 +1847,12 @@ must be specified in addition to the two attributes that make a project a
 Library Project (``Library_Name`` and ``Library_Dir``). ``Interfaces`` defines
 the list of sources of the library, in any language, that should be considered
 as library's interface; ``Library_Interface`` is an Ada-specific alternative
-that defines the list of units rather than their containing sources.
+that defines the list of units rather than their containing sources. When a
+library needs to declare a mixed language interface, only the attribute
+``Interfaces``  should be used (with Ada interface units listed by their spec
+source file names).
 
-.. index:: Library_Interface attribute
+.. index:: Attributes - Project Level Attributes; Library_Interface
 
 **Library_Interface**:
 
@@ -1864,7 +1867,7 @@ that defines the list of units rather than their containing sources.
      for Library_Name use "logging";
      for Library_Interface use ("lib1", "lib2");  --  unit names
 
-.. index:: Interfaces attribute
+.. index:: Attributes - Project Level Attributes; Interfaces
 
 **Interfaces**
 
@@ -1877,7 +1880,7 @@ that defines the list of units rather than their containing sources.
   whose interface is not purely Ada.
 
 
-.. index:: Library_Standalone attribute
+.. index:: Attributes - Project Level Attributes; Library_Standalone
 
 **Library_Standalone**:
 
@@ -1906,7 +1909,7 @@ procedures whose names depend on the library name (``logginginit`` and
 ``loggingfinal`` in the example). The object corresponding to this package is
 included in the library.
 
-.. index:: Library_Auto_Init attribute
+.. index:: Attributes - Project Level Attributes; Library_Auto_Init
 
 **Library_Auto_Init**:
 
@@ -1925,7 +1928,7 @@ included in the library.
   package.
 
 
-.. index:: Library_Dir attribute
+.. index:: Attributes - Project Level Attributes; Library_Dir
 
 **Library_Dir**:
 
@@ -1946,7 +1949,7 @@ included in the library.
   used in the call to *gnatbind*.
 
 
-.. index:: Library_Src_Dir attribute
+.. index:: Attributes - Project Level Attributes; Library_Src_Dir
 
 **Library_Src_Dir**:
 
@@ -1961,7 +1964,7 @@ included in the library.
   which is the default value for this attribute.
 
 
-.. index:: Library_Symbol_Policy attribute
+.. index:: Attributes - Project Level Attributes; Library_Symbol_Policy
 
 **Library_Symbol_Policy**:
 
@@ -1973,11 +1976,15 @@ included in the library.
   * ``"restricted"``: The exported symbols will be restricted to the one
     from the interface of the stand-alone library. This is either computed
     automatically or using the ``Library_Symbol_File`` if specified.
+    gprbuild selects this policy by default if a library interface contains
+    Ada units.
 
   * ``"unrestricted"``: All symbols from the stand-alone library are exported.
+    gprbuild selects this policy by default if a library interface contains no
+    Ada units.
 
 
-.. index:: Library_Symbol_File attribute
+.. index:: Attributes - Project Level Attributes; Library_Symbol_File
 
 **Library_Symbol_File**
 
