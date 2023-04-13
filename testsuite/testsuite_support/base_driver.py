@@ -217,6 +217,7 @@ class BaseDriver(DiffTestDriver):
             ReplacePath(self.working_dir(), replacement=""),
             Substitute("\\", "/"),
             Substitute("C:/", "/"),
+            Substitute("aarch64-linux", replacement="(host)"),
             Substitute("x86_64-pc-linux-gnu", replacement="(host)"),
             Substitute("i686-pc-linux-gnu", replacement="(host)"),
             Substitute("x86_64-w64-mingw32", replacement="(host)"),
