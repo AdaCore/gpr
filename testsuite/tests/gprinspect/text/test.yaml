@@ -3,3 +3,4 @@ description:
 driver: python_script
 output:
 - ["test.out.win", "'windows' in env.host.platform"]
+- ["test.out.2", "env.platform == 'aarch64-linux'"]
