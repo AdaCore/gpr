@@ -8,33 +8,31 @@ workflow:
     - when: always
 
 variables:
-   #  These are not needed at the moment, but will be useful when we migrate
-   #  to a multi-stage pipeline.
-   #  PACKAGE_BASE_NAME: gpr.tar.gz
-   #  PACKAGE_ABSOLUTE_NAME: $CI_PROJECT_DIR/$PACKAGE_BASE_NAME
-   #  PACKAGE_REPOSITORY_PROJECT: eng/gpr/ci-packages
-   #  CI_FRAGMENTS: ci-fragments
-   #  CI_FRAGMENTS_GIT: https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}:${CI_SERVER_PORT}/eng/it/$CI_FRAGMENTS
    GIT_CLONE_BASE: https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}:${CI_SERVER_PORT}
+   SANDBOX: /it/wave
+   HOST: x86_64-linux
+   ANOD_DEFAULT_SANDBOX_DIR: /it/wave
 
 stages:
-  - builds
+  - build
+  - test
+  - post
 
-build_and_test:
+###########
+## BUILD ##
+###########
+
+build:
   services:
      - image:sandbox
      - cpu:8
      - mem:16
-  stage: builds
+  stage: build
   script:
     # reset badge while the pipeline is running
     - anybadge -l "Tests passed" -v "Error" -f test-count.svg -c red
 
-    - . ~/.aws_container_credentials
-    - export PATH=/it/e3/bin:$PATH
-
     # Setup the 'anod vcs' for this repo
-    - cd /it/wave
     - anod vcs --add-repo gpr2 $CI_PROJECT_DIR
 
     # Tune to use our build & test plan
@@ -52,77 +50,223 @@ build_and_test:
     # For each repo, check if a branch with the same name as
     # $BRANCH exists; if so, use it.
     - cd /tmp
-    - for subproject in gprbuild gprbuild-internal gprconfig_kb ; do
+    - for subproject in gprbuild gprconfig_kb ; do
          cd /tmp ;
          git clone $GIT_CLONE_BASE/eng/gpr/$subproject ;
          cd $subproject ;
          if `git show-ref $BRANCH > /dev/null` ; then
              git checkout $BRANCH ;
          fi ;
-         cd /it/wave ;
-         if [ $subproject = gprbuild-internal ]; then
-            anod_name=gprbuild_testsuite ;
-         else
-            anod_name=$subproject ;
-         fi ;
-         anod vcs --add-repo $anod_name /tmp/$subproject ;
+         cd $SANDBOX ;
+         anod vcs --add-repo $subproject /tmp/$subproject ;
       done
 
     # Build & test using anod
-    - cd /it/wave
     - anod run build
 
-    # Get the test results
-    - anod run testgpr2
-    - e3-testsuite-report
-        --failure-exit-code 1
-        --xunit-output $CI_PROJECT_DIR/test_gpr2_output.xml
-        --xunit-name all
-        x86_64-linux/gpr2-test-gnat/results/new/ || FAILED=true
-
-    - anod run testgprbuild
-    - e3-testsuite-report
-        --failure-exit-code 1
-        --xunit-output $CI_PROJECT_DIR/test_gprbuild_output.xml
-        --xunit-name all
-        x86_64-linux/gprbuild-testAdaCC++_Auto/results/new/ || FAILED=true
-
-    - anod run testgpr2ls
-    - e3-testsuite-report
-        --failure-exit-code 1
-        --xunit-output $CI_PROJECT_DIR/test_gpr2ls_output.xml
-        --xunit-name all
-        x86_64-linux/gprbuild-testAdaCC++_Auto-gpr2ls/results/new/ || FAILED=true
-
-    - anod test gpr2-bindings
-    # TODO: adjust this when this testsuite supports e3-testsuite-report
-    - OUTPUT=$(sed x86_64-linux/gpr2-bindings-test/results/results -e '/.*PASSED$/d' -e '/.*XFAIL$/d' -e '/^$/d')
-    - if [ -n "$OUTPUT" ] ; then
-         echo "the following tests fail:" ;
-         echo "$OUTPUT" ;
-         FAILED=true ;
-      fi
-    - if [ ! -z ${FAILED+x} ]; then
-         echo "There was at least one testcase failure" && exit 1 ;
-      fi
-
-    # merge testsuite results
-    - merge_xunit_reports --output_file $CI_PROJECT_DIR/test_output.xml
-        --xunit_reports $CI_PROJECT_DIR/test_gpr2_output.xml $CI_PROJECT_DIR/test_gprbuild_output.xml $CI_PROJECT_DIR/test_gpr2ls_output.xml
-
-    # generate badge
+    # generate packages. Note we can't package the full gnat or gnatall install
+    # as the size seems to reach some limits for the saved artifacts. So
+    # we package gprbuild and will amend the toolchains at installation.
+    - for pkg in gprbuild gpr2 libgpr2 gpr2-bindings gpr1build; do
+        echo "packaging $SANDBOX/$HOST/$pkg/install/" ;
+        tar czf $CI_PROJECT_DIR/$pkg.tar.gz -C $SANDBOX/$HOST/$pkg/ install/ ;
+      done
     - cd $CI_PROJECT_DIR
-    - rm test-count.svg
-    - create_xunit_badge --xunit_reports test_output.xml
+    - ls -l *.tar.gz
 
+  artifacts:
+    paths:
+      - gprbuild.tar.gz
+      - gpr2.tar.gz
+      - gpr2-bindings.tar.gz
+      - libgpr2.tar.gz
+      - gpr1build.tar.gz
+      - test-count.svg
+
+################
+## TEST SETUP ##
+################
+
+.test_setup: &setup_repo
+    # unpack the packages
+    - cd $SANDBOX
+    - mkdir -p fingerprints
+    - for pkg in $packages; do
+        if [ $pkg = "gnat" -o $pkg = "gnatall" ]; then
+           anod install $pkg ;
+           tar zxf $CI_PROJECT_DIR/gprbuild.tar.gz -C $HOST/$pkg ;
+        else
+           mkdir -p $HOST/$pkg ;
+           tar zxf $CI_PROJECT_DIR/$pkg.tar.gz -C $HOST/$pkg ;
+        fi ;
+        touch fingerprints/$HOST.$pkg.install.json.assume-unchanged ;
+        touch fingerprints/$HOST.$pkg.download-bin.json.assume-unchanged ;
+      done
+    - rm -f $CI_PROJECT_DIR/*.tar.gz
+
+####################
+## GPR2 TESTSUITE ##
+####################
+
+test_gpr2:
+  services:
+     - image:sandbox
+     - cpu:8
+     - mem:16
+  stage: test
+  script:
+    - packages="gnat gpr2 libgpr2"
+    - *setup_repo
+    - anod vcs --add-repo gpr2 $CI_PROJECT_DIR
+
+    - anod test gpr2 -Qfrom_gnat --minimal
+    - e3-testsuite-report
+        --failure-exit-code 1
+        --xunit-output $CI_PROJECT_DIR/testgpr2_result.xml
+        --xunit-name test_gpr2
+        $SANDBOX/$HOST/gpr2-test-gnat/results/new/ || exit 1
   artifacts:
     when:
       always
     paths:
-      - test_gpr2_output.xml
-      - test_gprbuild_output.xml
-      - test_gpr2ls_output.xml
-      - test_output.xml
-      - test-count.svg
+      - testgpr2_result.xml
     reports:
-      junit: test_output.xml
+      junit: testgpr2_result.xml
+      # TODO add coverage testing
+
+########################
+## GPRBUILD TESTSUITE ##
+########################
+
+test_gprbuild:
+  services:
+     - image:sandbox
+     - cpu:8
+     - mem:16
+  stage: test
+  script:
+    - packages=gnatall
+    - *setup_repo
+
+    # Figure out if we're on a sync branch
+    - BRANCH=master
+    - if [[ $CI_COMMIT_BRANCH =~ ^sync/ ]]; then
+         BRANCH=$CI_COMMIT_BRANCH;
+      elif [[ $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ ^sync/ ]]; then
+         BRANCH=$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME;
+      fi
+
+    # Setup the 'anod vcs for all other repos.
+    # For each repo, check if a branch with the same name as
+    # $BRANCH exists; if so, use it.
+    - cd /tmp
+    - subproject=gprbuild-internal
+    - git clone $GIT_CLONE_BASE/eng/gpr/$subproject
+    - cd $subproject ;
+    - if `git show-ref $BRANCH > /dev/null` ; then
+         git checkout $BRANCH ;
+      fi ;
+    - anod vcs --add-repo gprbuild_testsuite /tmp/$subproject ;
+
+    - anod test gprbuild -QAdaCC++_Auto --minimal
+    - e3-testsuite-report
+        --failure-exit-code 1
+        --xunit-output $CI_PROJECT_DIR/testgprbuild_result.xml
+        --xunit-name test_gprbuild
+        $SANDBOX/$HOST/gprbuild-testAdaCC++_Auto/results/new/ || exit 1
+  artifacts:
+    when:
+      always
+    paths:
+      - testgprbuild_result.xml
+    reports:
+      junit: testgprbuild_result.xml
+
+######################
+## GPR2LS TESTSUITE ##
+######################
+
+test_gpr2ls:
+  services:
+     - image:sandbox
+     - cpu:8
+     - mem:16
+  stage: test
+  script:
+    - packages="gnatall gpr1build"
+    - *setup_repo
+
+    # Figure out if we're on a sync branch
+    - BRANCH=master
+    - if [[ $CI_COMMIT_BRANCH =~ ^sync/ ]]; then
+         BRANCH=$CI_COMMIT_BRANCH;
+      elif [[ $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ ^sync/ ]]; then
+         BRANCH=$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME;
+      fi
+
+    # Setup the 'anod vcs for all other repos.
+    # For each repo, check if a branch with the same name as
+    # $BRANCH exists; if so, use it.
+    - cd /tmp
+    - subproject=gprbuild-internal
+    - git clone $GIT_CLONE_BASE/eng/gpr/$subproject
+    - cd $subproject ;
+    - if `git show-ref $BRANCH > /dev/null` ; then
+         git checkout $BRANCH ;
+      fi ;
+    - anod vcs --add-repo gprbuild_testsuite /tmp/$subproject ;
+
+    - anod test gprbuild -QAdaCC++_Auto -Qcheck-gpr2ls --minimal
+    - e3-testsuite-report
+        --failure-exit-code 1
+        --xunit-output $CI_PROJECT_DIR/testgpr2ls_result.xml
+        --xunit-name test_gpr2ls
+        $SANDBOX/$HOST/gprbuild-testAdaCC++_Auto-gpr2ls/results/new/ || exit 1
+  artifacts:
+    when:
+      always
+    paths:
+      - testgpr2ls_result.xml
+    reports:
+      junit: testgpr2ls_result.xml
+
+#############################
+## GPR2 BINDINGS TESTSUITE ##
+#############################
+
+test_gpr2bindings:
+  services:
+     - image:sandbox
+     - cpu:8
+     - mem:16
+  stage: test
+  script:
+    - packages=gpr2-bindings
+    - *setup_repo
+    - anod vcs --add-repo gpr2 $CI_PROJECT_DIR
+
+    - anod test gpr2-bindings --minimal
+    # TODO: adjust this when this testsuite supports e3-testsuite-report
+    - OUTPUT=$(sed $HOST/gpr2-bindings-test/results/results -e '/.*PASSED$/d' -e '/.*XFAIL$/d' -e '/^$/d')
+    - if [ -n "$OUTPUT" ] ; then
+         echo "the following tests fail:" ;
+         echo "$OUTPUT" ;
+         exit 1 ;
+      fi
+
+post:
+  services:
+     - image:sandbox
+     - cpu:8
+     - mem:16
+  stage: post
+  script:
+    # generate badge
+    - cd $CI_PROJECT_DIR
+    - rm -f test-count.svg
+    - create_xunit_badge --xunit_reports test*_result.xml
+  artifacts:
+    when:
+      always
+    paths:
+      - test-count.svg
