@@ -103,6 +103,10 @@ build_and_test:
          echo "There was at least one testcase failure" && exit 1 ;
       fi
 
+    # merge testsuite results
+    - merge_xunit_reports --output_file $CI_PROJECT_DIR/test_output.xml
+        --xunit_reports $CI_PROJECT_DIR/test_gpr2_output.xml $CI_PROJECT_DIR/test_gprbuild_output.xml $CI_PROJECT_DIR/test_gpr2ls_output.xml
+
   artifacts:
     when:
       always
@@ -110,8 +114,6 @@ build_and_test:
       - test_gpr2_output.xml
       - test_gprbuild_output.xml
       - test_gpr2ls_output.xml
+      - test_output.xml
     reports:
-      junit:
-        - test_gpr2_output.xml
-        - test_gprbuild_output.xml
-        - test_gpr2ls_output.xml
+      junit: test_output.xml
