@@ -18,76 +18,15 @@ stages:
   - test
   - post
 
-###########
-## BUILD ##
-###########
+########################
+## SETUP REPOSITORIES ##
+########################
 
-build:
-  services:
-     - image:sandbox
-     - cpu:8
-     - mem:16
-  stage: build
-  script:
-    # reset badge in case pipeline fails*-
-    - anybadge -l "Tests passed" -v "Error" -f test-count.svg -c red
+.setup: &setup_repos
+    # This script expects $packages to be set to the list of packages to
+    # retrieve from the build phase, and $subprojects to be set to the list
+    # of subprojects to install in /tmp to be used by anod.
 
-    # Setup the 'anod vcs' for this repo
-    - anod vcs --add-repo gpr2 $CI_PROJECT_DIR
-
-    # Tune to use our build & test plan
-    - anod tune --plan $CI_PROJECT_DIR/.ci.plan
-
-    # Figure out if we're on a sync branch
-    - BRANCH=master
-    - if [[ $CI_COMMIT_BRANCH =~ ^sync/ ]]; then
-         BRANCH=$CI_COMMIT_BRANCH;
-      elif [[ $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ ^sync/ ]]; then
-         BRANCH=$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME;
-      fi
-
-    # Setup the 'anod vcs for all other repos.
-    # For each repo, check if a branch with the same name as
-    # $BRANCH exists; if so, use it.
-    - cd /tmp
-    - for subproject in gprbuild gprconfig_kb ; do
-         cd /tmp ;
-         git clone $GIT_CLONE_BASE/eng/gpr/$subproject ;
-         cd $subproject ;
-         if `git show-ref $BRANCH > /dev/null` ; then
-             git checkout $BRANCH ;
-         fi ;
-         cd $SANDBOX ;
-         anod vcs --add-repo $subproject /tmp/$subproject ;
-      done
-
-    # Build & test using anod
-    - anod run build
-
-    # generate packages. Note we can't package the full gnat or gnatall install
-    # as the size seems to reach some limits for the saved artifacts. So
-    # we package gprbuild and will amend the toolchains at installation.
-    - for pkg in gprbuild gpr2 libgpr2 gpr2-bindings gpr1build; do
-        echo "packaging $SANDBOX/$HOST/$pkg/install/" ;
-        tar czf $CI_PROJECT_DIR/$pkg.tar.gz -C $SANDBOX/$HOST/$pkg/ install/ ;
-      done
-    - cd $CI_PROJECT_DIR
-    - ls -l *.tar.gz
-
-  artifacts:
-    paths:
-      - gprbuild.tar.gz
-      - gpr2.tar.gz
-      - gpr2-bindings.tar.gz
-      - libgpr2.tar.gz
-      - gpr1build.tar.gz
-      - test-count.svg
-
-################
-## TEST SETUP ##
-################
-
-.test_setup: &setup_repo
     # unpack the packages
     - cd $SANDBOX
     - mkdir -p fingerprints
@@ -104,6 +43,84 @@ build:
       done
     - rm -f $CI_PROJECT_DIR/*.tar.gz
 
+    # Figure out if we're on a sync branch
+    - BRANCH=master
+    - if [[ $CI_COMMIT_BRANCH =~ ^sync/ ]]; then
+         BRANCH=$CI_COMMIT_BRANCH;
+      elif [[ $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ ^sync/ ]]; then
+         BRANCH=$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME;
+      fi
+
+    # Setup the anod vcs for all subprojects.
+    # For each repo, check if a branch with the same name as
+    # $BRANCH exists; if so, use it.
+    - for subproject in $subprojects ; do
+         cd /tmp ;
+         git clone $GIT_CLONE_BASE/eng/gpr/$subproject ;
+         cd $subproject ;
+         if `git show-ref $BRANCH > /dev/null` ; then
+            git checkout $BRANCH ;
+         fi ;
+         if [ $subproject = "gprbuild-internal" ]; then
+            anodrepo=gprbuild_testsuite ;
+         else
+            anodrepo=$subproject ;
+         fi ;
+         anod vcs --add-repo $anodrepo /tmp/$subproject ;
+      done
+
+###########
+## BUILD ##
+###########
+
+build:
+  services:
+     - image:sandbox
+     - cpu:8
+     - mem:16
+  stage: build
+  script:
+    # reset badge in case pipeline fails*-
+    - anybadge -l "Tests passed" -v "Error" -f test-count.svg -c red
+
+    # setup submodules
+    - packages=""
+    - subprojects="gprbuild gprconfig_kb"
+    - *setup_repos
+
+    # Setup the 'anod vcs' for this repo
+    - anod vcs --add-repo gpr2 $CI_PROJECT_DIR
+
+    # Tune to use our build & test plan
+    - anod tune --plan $CI_PROJECT_DIR/.ci.plan
+
+    # Run a gnat bootstrap.
+    # Note: we could take shortcuts here and just build the gprbuild package
+    # but being able to run a full gnat bootstrap with the updated gpr tools is
+    # part of our assurance that we don't provoque a disaster during the
+    # nightly builds.
+    - anod run build
+
+    # generate packages to be used at test stages.
+    # Note: we can't package the full gnat or gnatall install as the size seems
+    # to reach some limits for the saved artifacts. So we package gprbuild and
+    # co and will amend the toolchains for testing..
+    - for pkg in gprbuild gpr2 libgpr2 gpr2-bindings gpr1build; do
+        echo "packaging $SANDBOX/$HOST/$pkg/install/" ;
+        tar czf $CI_PROJECT_DIR/$pkg.tar.gz -C $SANDBOX/$HOST/$pkg/ install/ ;
+      done
+    - cd $CI_PROJECT_DIR
+    - ls -l *.tar.gz
+
+  artifacts:
+    paths:
+      - gprbuild.tar.gz
+      - gpr2.tar.gz
+      - gpr2-bindings.tar.gz
+      - libgpr2.tar.gz
+      - gpr1build.tar.gz
+      - test-count.svg
+
 ####################
 ## GPR2 TESTSUITE ##
 ####################
@@ -117,7 +134,10 @@ test_gpr2:
   allow_failure: true
   script:
     - packages="gnat gpr2 libgpr2"
-    - *setup_repo
+    - subprojects=""
+    - *setup_repos
+
+    # add the gpr2 repo
     - anod vcs --add-repo gpr2 $CI_PROJECT_DIR
 
     - anod test gpr2 -Qfrom_gnat --minimal
@@ -147,7 +167,10 @@ test_gpr2_cov:
   allow_failure: true
   script:
     - packages=""
-    - *setup_repo
+    - subprojects=""
+    - *setup_repos
+
+    # add the gpr2 repo
     - anod vcs --add-repo gpr2 $CI_PROJECT_DIR
 
     - anod build gpr2 -Qcoverage
@@ -190,27 +213,8 @@ test_gprbuild:
   allow_failure: true
   script:
     - packages=gnatall
-    - *setup_repo
-
-    # Figure out if we're on a sync branch
-    - BRANCH=master
-    - if [[ $CI_COMMIT_BRANCH =~ ^sync/ ]]; then
-         BRANCH=$CI_COMMIT_BRANCH;
-      elif [[ $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ ^sync/ ]]; then
-         BRANCH=$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME;
-      fi
-
-    # Setup the 'anod vcs for all other repos.
-    # For each repo, check if a branch with the same name as
-    # $BRANCH exists; if so, use it.
-    - cd /tmp
-    - subproject=gprbuild-internal
-    - git clone $GIT_CLONE_BASE/eng/gpr/$subproject
-    - cd $subproject ;
-    - if `git show-ref $BRANCH > /dev/null` ; then
-         git checkout $BRANCH ;
-      fi ;
-    - anod vcs --add-repo gprbuild_testsuite /tmp/$subproject ;
+    - subprojects=gprbuild-internal
+    - *setup_repos
 
     - anod test gprbuild -QAdaCC++_Auto --minimal
     - e3-testsuite-report
@@ -239,27 +243,8 @@ test_gpr2ls:
   allow_failure: true
   script:
     - packages="gnatall gpr1build"
-    - *setup_repo
-
-    # Figure out if we're on a sync branch
-    - BRANCH=master
-    - if [[ $CI_COMMIT_BRANCH =~ ^sync/ ]]; then
-         BRANCH=$CI_COMMIT_BRANCH;
-      elif [[ $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ ^sync/ ]]; then
-         BRANCH=$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME;
-      fi
-
-    # Setup the 'anod vcs for all other repos.
-    # For each repo, check if a branch with the same name as
-    # $BRANCH exists; if so, use it.
-    - cd /tmp
-    - subproject=gprbuild-internal
-    - git clone $GIT_CLONE_BASE/eng/gpr/$subproject
-    - cd $subproject ;
-    - if `git show-ref $BRANCH > /dev/null` ; then
-         git checkout $BRANCH ;
-      fi ;
-    - anod vcs --add-repo gprbuild_testsuite /tmp/$subproject ;
+    - subprojects=gprbuild-internal
+    - *setup_repos
 
     - anod test gprbuild -QAdaCC++_Auto -Qcheck-gpr2ls --minimal
     - e3-testsuite-report
@@ -288,12 +273,13 @@ test_gpr2bindings:
   allow_failure: true
   script:
     - packages=gpr2-bindings
-    - *setup_repo
+    - subprojects=""
+    - *setup_repos
     - anod vcs --add-repo gpr2 $CI_PROJECT_DIR
 
     - anod test gpr2-bindings --minimal
     # TODO: adjust this when this testsuite supports e3-testsuite-report
-    - OUTPUT=$(sed $HOST/gpr2-bindings-test/results/results -e '/.*PASSED$/d' -e '/.*XFAIL$/d' -e '/^$/d')
+    - OUTPUT=$(sed $SANDBOX/$HOST/gpr2-bindings-test/results/results -e '/.*PASSED$/d' -e '/.*XFAIL$/d' -e '/^$/d')
     - if [ -n "$OUTPUT" ] ; then
          echo "the following tests fail:" ;
          echo "$OUTPUT" ;
