@@ -27,6 +27,9 @@ build_and_test:
      - mem:16
   stage: builds
   script:
+    # reset badge while the pipeline is running
+    - anybadge -l "Tests passed" -v "Error" -f test-count.svg -c red
+
     - . ~/.aws_container_credentials
     - export PATH=/it/e3/bin:$PATH
 
@@ -107,6 +110,11 @@ build_and_test:
     - merge_xunit_reports --output_file $CI_PROJECT_DIR/test_output.xml
         --xunit_reports $CI_PROJECT_DIR/test_gpr2_output.xml $CI_PROJECT_DIR/test_gprbuild_output.xml $CI_PROJECT_DIR/test_gpr2ls_output.xml
 
+    # generate badge
+    - cd $CI_PROJECT_DIR
+    - rm test-count.svg
+    - create_xunit_badge --xunit_reports test_output.xml
+
   artifacts:
     when:
       always
@@ -115,5 +123,6 @@ build_and_test:
       - test_gprbuild_output.xml
       - test_gpr2ls_output.xml
       - test_output.xml
+      - test-count.svg
     reports:
       junit: test_output.xml
