@@ -71,13 +71,25 @@ build_and_test:
 
     # Get the test results
     - anod run testgpr2
-    - e3-testsuite-report --failure-exit-code 1 x86_64-linux/gpr2-test-gnat/results/new/
+    - e3-testsuite-report
+        --failure-exit-code 1
+        --xunit-output $CI_PROJECT_DIR/test_gpr2_output.xml
+        --xunit-name all
+        x86_64-linux/gpr2-test-gnat/results/new/ || FAILED=true
 
     - anod run testgprbuild
-    - e3-testsuite-report --failure-exit-code 1 x86_64-linux/gprbuild-testAdaCC++_Auto/results/new/
+    - e3-testsuite-report
+        --failure-exit-code 1
+        --xunit-output $CI_PROJECT_DIR/test_gprbuild_output.xml
+        --xunit-name all
+        x86_64-linux/gprbuild-testAdaCC++_Auto/results/new/ || FAILED=true
 
     - anod run testgpr2ls
-    - e3-testsuite-report --failure-exit-code 1 x86_64-linux/gprbuild-testAdaCC++_Auto-gpr2ls/results/new/
+    - e3-testsuite-report
+        --failure-exit-code 1
+        --xunit-output $CI_PROJECT_DIR/test_gpr2ls_output.xml
+        --xunit-name all
+        x86_64-linux/gprbuild-testAdaCC++_Auto-gpr2ls/results/new/ || FAILED=true
 
     - anod test gpr2-bindings
     # TODO: adjust this when this testsuite supports e3-testsuite-report
@@ -85,5 +97,21 @@ build_and_test:
     - if [ -n "$OUTPUT" ] ; then
          echo "the following tests fail:" ;
          echo "$OUTPUT" ;
-         (exit 1) ;
+         FAILED=true ;
       fi
+    - if [ ! -z ${FAILED+x} ]; then
+         echo "There was at least one testcase failure" && exit 1 ;
+      fi
+
+  artifacts:
+    when:
+      always
+    paths:
+      - test_gpr2_output.xml
+      - test_gprbuild_output.xml
+      - test_gpr2ls_output.xml
+    reports:
+      junit:
+        - test_gpr2_output.xml
+        - test_gprbuild_output.xml
+        - test_gpr2ls_output.xml
