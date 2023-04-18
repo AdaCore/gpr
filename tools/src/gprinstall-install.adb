@@ -1848,12 +1848,20 @@ package body GPRinstall.Install is
                            C : constant GPR2.Project.View.Object :=
                                  Project.Tree.Configuration.Corresponding_View;
                         begin
-                           if C.Has_Package (P.Compiler)
-                             and then C.Check_Attribute
-                               (A.Compiler.Driver,
-                                Attribute_Index.Create (Lang.Text),
-                                Result => Attr)
-                             and then Attr.Value.Text /= ""
+                           --  Compiler driver defined in configuration
+                           if (C.Has_Package (P.Compiler)
+                               and then C.Check_Attribute
+                                 (A.Compiler.Driver,
+                                  Attribute_Index.Create (Lang.Text),
+                                  Result => Attr)
+                               and then Attr.Value.Text /= "")
+                             --  Or defined in the project itself
+                             or else
+                               (Project.Has_Package (P.Compiler)
+                                and then Project.Check_Attribute
+                                  (A.Compiler.Driver,
+                                   Attribute_Index.Create (Lang.Text),
+                                   Result => Attr))
                            then
                               Langs.Include (Lang.Text);
                            end if;
