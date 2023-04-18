@@ -1411,6 +1411,7 @@ package body GPRinstall.Install is
       --------------------
 
       procedure Create_Project (Project : GPR2.Project.View.Object) is
+         use type Ada.Containers.Count_Type;
 
          package Lang_Set is new Ada.Containers.Indefinite_Ordered_Sets
            (String,
@@ -1895,8 +1896,6 @@ package body GPRinstall.Install is
          function Linker_Case_Alternative
            (Proj : GPR2.Project.View.Object) return String_Vector.Vector
          is
-            use type Ada.Containers.Count_Type;
-
             procedure Linker_For (View : GPR2.Project.View.Object);
             --  Handle the linker options for this package
 
@@ -2199,6 +2198,16 @@ package body GPRinstall.Install is
 
          Languages := Get_Languages;
 
+         --  Check if the tool set has been found and we have at least one
+         --  language defined.
+
+         if Languages.Length = 0 then
+            raise GPRinstall_Error with
+              "cannot find toolchain for the project "
+              & String (Project.Name)
+              & ", no language found, aborting";
+         end if;
+
          if Options.Dry_Run or else Options.Verbose then
             New_Line;
             Put ("Project ");
@@ -2366,8 +2375,6 @@ package body GPRinstall.Install is
                      --  case alternative.
 
                      Count_And_Delete : declare
-
-                        use type Ada.Containers.Count_Type;
 
                         function End_When (L : String) return Boolean;
                         --  Return True if L is the end of a when alternative
