@@ -56,7 +56,7 @@ class GNATcov(object):
             logging.error('Output:\n' + p.out)
             raise RuntimeError
 
-    def report(self, formats=['dhtml', 'xcov']):
+    def report(self, formats=['dhtml', 'xml', 'cobertura']):
         """Generate coverage reports for all given output formats."""
 
         # Get the list of all trace files

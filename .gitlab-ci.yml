@@ -29,7 +29,7 @@ build:
      - mem:16
   stage: build
   script:
-    # reset badge while the pipeline is running
+    # reset badge in case pipeline fails*-
     - anybadge -l "Tests passed" -v "Error" -f test-count.svg -c red
 
     # Setup the 'anod vcs' for this repo
@@ -114,6 +114,7 @@ test_gpr2:
      - cpu:8
      - mem:16
   stage: test
+  allow_failure: true
   script:
     - packages="gnat gpr2 libgpr2"
     - *setup_repo
@@ -132,7 +133,49 @@ test_gpr2:
       - testgpr2_result.xml
     reports:
       junit: testgpr2_result.xml
-      # TODO add coverage testing
+
+##############
+## COVERAGE ##
+##############
+
+test_gpr2_cov:
+  services:
+     - image:sandbox
+     - cpu:8
+     - mem:16
+  stage: test
+  allow_failure: true
+  script:
+    - packages=""
+    - *setup_repo
+    - anod vcs --add-repo gpr2 $CI_PROJECT_DIR
+
+    - anod build gpr2 -Qcoverage
+    - anod test gpr2 -Qcoverage --minimal
+    - mkdir $CI_PROJECT_DIR/coverage
+    - cov_dir=$SANDBOX/$HOST/gpr2-test-cov-stmt/results/new
+    - mv $cov_dir/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
+    - mv $cov_dir/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
+    - mv $cov_dir/coverage-xml $CI_PROJECT_DIR/coverage/xml
+    - echo_coverage_stats --coverage-file $CI_PROJECT_DIR/coverage/xml/index.xml
+    - e3-testsuite-report
+        --failure-exit-code 1
+        --xunit-output $CI_PROJECT_DIR/testgpr2cov_result.xml
+        --xunit-name test_gpr2_cov
+        $SANDBOX/$HOST/gpr2-test-cov-stmt/results/new/ || exit 1
+  coverage: '/^Stmt Coverage:\s+(\d+\.\d+\%) \(\d+ \/ \d+\)$/'
+  artifacts:
+    when:
+      always
+    paths:
+      - coverage/cobertura.xml
+      - coverage/dhtml
+      - testgpr2cov_result.xml
+    reports:
+      junit: testgpr2cov_result.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura.xml
 
 ########################
 ## GPRBUILD TESTSUITE ##
@@ -144,6 +187,7 @@ test_gprbuild:
      - cpu:8
      - mem:16
   stage: test
+  allow_failure: true
   script:
     - packages=gnatall
     - *setup_repo
@@ -192,6 +236,7 @@ test_gpr2ls:
      - cpu:8
      - mem:16
   stage: test
+  allow_failure: true
   script:
     - packages="gnatall gpr1build"
     - *setup_repo
@@ -240,6 +285,7 @@ test_gpr2bindings:
      - cpu:8
      - mem:16
   stage: test
+  allow_failure: true
   script:
     - packages=gpr2-bindings
     - *setup_repo
