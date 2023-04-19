@@ -51,8 +51,6 @@ gprls -d -a0 --debugF -P pa.gpr p0
 /p0/obj/p0.o
    P0
          OK ada.ads
-         OK a-assert.ads
-         OK a-except.ads
          OK a-numeri.ads
          OK a-nubinu.ads
          OK a-nbnbig.ads
@@ -62,14 +60,11 @@ gprls -d -a0 --debugF -P pa.gpr p0
          OK /p0/p0.adb
          OK /p0/p0_0.ads
          OK system.ads
-         OK s-assert.ads
          OK s-casuti.ads
          OK s-exctab.ads
          OK s-imagei.ads
          OK s-imgint.ads
-         OK s-parame.ads
          OK s-stalib.ads
-         OK s-traent.ads
          OK s-unstyp.ads
          OK s-valint.ads
          OK s-valuns.ads
