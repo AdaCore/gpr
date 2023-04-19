@@ -80,9 +80,6 @@ build:
      - mem:16
   stage: build
   script:
-    # reset badge in case pipeline fails*-
-    - anybadge -l "Tests passed" -v "Error" -f test-count.svg -c red
-
     # setup submodules
     - packages=""
     - subprojects="gprbuild gprconfig_kb"
@@ -286,17 +283,26 @@ test_gpr2bindings:
          exit 1 ;
       fi
 
+####################
+## POSTPROCESSING ##
+####################
+
 post:
   services:
      - image:sandbox
      - cpu:8
      - mem:16
   stage: post
+  when: always
   script:
     # generate badge
     - cd $CI_PROJECT_DIR
     - rm -f test-count.svg
-    - create_xunit_badge --xunit_reports test*_result.xml
+    - if ls test*_result.xml &> /dev/null; then
+        create_xunit_badge --xunit_reports test*_result.xml;
+      else
+        anybadge -l "Tests Passing" -v "Error" -f test-count.svg -c red;
+      fi
   artifacts:
     when:
       always
