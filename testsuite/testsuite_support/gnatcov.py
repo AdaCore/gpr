@@ -29,8 +29,17 @@ class GNATcov(object):
         os.mkdir(self.traces_dir)
 
     @property
+    def gpr2_project_dir(self):
+        "Find the gpr2 project directory"
+        paths = os.environ.get("GPR_PROJECT_PATH", "").split (os.pathsep)
+        for p in paths:
+            if os.path.exists(os.path.join(p, "gpr2.gpr")):
+                return p
+        return None
+
+    @property
     def traces_dir(self):
-        """ The gnatcov's trace file destination folder """
+        "The gnatcov's trace file destination folder"
         return os.path.join(self.temp_dir, 'traces')
 
     @staticmethod
@@ -81,6 +90,12 @@ class GNATcov(object):
         for fmt in formats:
             report_dir = os.path.join(self.output_dir, 'coverage-' + fmt)
             self.ensure_clean_dir(report_dir)
+            path_opt = []
+            if fmt == 'cobertura':
+                # we need paths relative to the project root in this case
+                gpr2_path = self.gpr2_project_dir
+                if gpr2_path is not None:
+                    path_opt = ['--source-root=' + gpr2_path]
             self.checked_run([
                 'gnatcov', 'coverage',
                 '--annotate', fmt,
@@ -89,7 +104,7 @@ class GNATcov(object):
                 '-P', 'gpr2-tools',
                 '--externally-built-projects',
                 '-XGPR2_BUILD=gnatcov',
-                '--checkpoint', ckpt_file])
+                '--checkpoint', ckpt_file] + path_opt)
 
     @property
     def covlevel(self):
