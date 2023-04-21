@@ -15,6 +15,7 @@ def build():
     anod_build("libgpr2")
     anod_build("gpr2-bindings")
     anod_build("aws-lib")
+    anod_build("gprbuild", qualifier="gpr1")
 
 def setup():
     # for gpr2name

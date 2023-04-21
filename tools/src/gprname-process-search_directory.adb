@@ -135,6 +135,26 @@ is
          end if;
 
       else
+         if Src.Has_Units then
+            for Unit of Src.Units loop
+               for Source_Name of Source_Names loop
+                  if Source_Name.Has_Units
+                    and then Source_Name.Units.Contains (Unit)
+                  then
+                     Text_IO.Put_Line
+                       ("warning: duplicate unit " & String (Unit.Name)
+                        & " in file "
+                        & String (Src.File.Simple_Name)
+                        & " aready exists in "
+                        & String (Source_Name.File.Simple_Name));
+                     Text_IO.Put_Line
+                       ("warning: generated Naming package needs to be "
+                         & "reviewed manually");
+                  end if;
+               end loop;
+            end loop;
+         end if;
+
          if Src.Unit_Based then
             for U of Src.Units loop
                Src_Idx.Append_Unit (U);

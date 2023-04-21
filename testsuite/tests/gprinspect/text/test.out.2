@@ -1,0 +1,844 @@
++--------------------------------------+
+|         General Information          |
++--------------------------------------+
+* Generated on : 2000-01-01 00:00:00
+* Version      : Pro 1.0 (20000101) (<host>)
+
++--------------------------------------+
+|       Project Tree Information       |
++--------------------------------------+
+* Messages :
+    - lib.gpr: lint: project qualifier could be explicitly set to library project
+* Project count        :  6
+* Project search paths :
+    - <filtered-out>
+* Object search paths  :
+    - <cwd>/
+    - <cwd>/obj/
+    - <cwd>/obj2/
+    - <gnat rts>/adalib/
+* Source search paths  :
+    - <cwd>
+    - <cwd>/src
+    - <cwd>/src2
+    - <gnat rts>/adainclude/
+* Root project :
+    - Root (<<cwd>/root.gpr)
+
++--------------------------------------+
+|         Projects Information         |
++--------------------------------------+
+* Root (<<cwd>/root.gpr) [ aggregate project ]
+    - Project file      : <cwd>/root.gpr
+    - Project directory : <cwd>/
+    - Aggregated        : 
+       - Agg ($<cwd>/agg.gpr)
+    - Attributes        : 
+       - Externally_Built [ SINGLE ]
+          - Value : "false"
+       - Name [ SINGLE ]
+          - Value : "root"
+       - Object_Dir [ SINGLE ]
+          - Value : "."
+       - Project_Dir [ SINGLE ]
+          - Value : "<cwd>/"
+       - Project_Files [ LIST ]
+          - Values : 
+             - "agg.gpr"
+
+* Agg ($<cwd>/agg.gpr) [ aggregate project ]
+    - Project file      : <cwd>/agg.gpr
+    - Project directory : <cwd>/
+    - Aggregated        : 
+       - Prj ($<cwd>/prj.gpr)
+    - Attributes        : 
+       - Externally_Built [ SINGLE ]
+          - Value : "false"
+       - Name [ SINGLE ]
+          - Value : "agg"
+       - Object_Dir [ SINGLE ]
+          - Value : "."
+       - Project_Dir [ SINGLE ]
+          - Value : "<cwd>/"
+       - Project_Files [ LIST ]
+          - Values : 
+             - "prj.gpr"
+    - Variables      : 
+       - Answer [ SINGLE ]
+          - Variable type : "Yes_No"
+          - Value : "yes"
+       - Var2 [ SINGLE ]
+          - Value : "no"
+    - Types          : 
+       - Yes_No
+          - Values : 
+             - "yes"
+             - "no"
+
+* Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr) [ abstract project ]
+    - Project file      : <cwd>/shared.gpr
+    - Project directory : <cwd>/
+    - Extended by       : Prj ($<cwd>/prj.gpr)
+    - Imported-by        : 
+       - Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr)
+       - Base ($<cwd>/base.gpr>$<cwd>/prj.gpr)
+    - Attributes        : 
+       - Exec_Dir [ SINGLE ]
+          - Value : "."
+       - Externally_Built [ SINGLE ]
+          - Value : "false"
+       - Library_Auto_Init [ SINGLE ]
+          - Value : "false"
+       - Library_Kind [ SINGLE ]
+          - Value : "static"
+       - Library_Standalone [ SINGLE ]
+          - Value : "no"
+       - Name [ SINGLE ]
+          - Value : "shared"
+       - Object_Dir [ SINGLE ]
+          - Value : "."
+       - Project_Dir [ SINGLE ]
+          - Value : "<cwd>/"
+    - Variables      : 
+       - Languages [ LIST ]
+          - Values : 
+             - "Ada"
+             - "C"
+
+* Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr) [ library project ]
+    - Project file      : <cwd>/lib.gpr
+    - Project directory : <cwd>/
+    - Object directory  : <cwd>/
+    - Source directory  :
+       - <cwd>
+    - Library name      : somename
+    - Library file      : <cwd>/lib/libsomename.a
+    - Library directory : <cwd>/lib/
+    - Library ALI dir.  : <cwd>/lib/
+    - Extended by       : Prj ($<cwd>/prj.gpr)
+    - Imported-by        : 
+       - Base ($<cwd>/base.gpr>$<cwd>/prj.gpr)
+    - Imports           : 
+       - Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr)
+    - Attributes        : 
+       - Exec_Dir [ SINGLE ]
+          - Value : "."
+       - Externally_Built [ SINGLE ]
+          - Value : "false"
+       - Languages [ LIST ]
+          - Values : 
+             - "Ada"
+       - Library_Ali_Dir [ SINGLE ]
+          - Value : "lib"
+       - Library_Auto_Init [ SINGLE ]
+          - Value : "false"
+       - Library_Dir [ SINGLE ]
+          - Value : "lib"
+       - Library_Kind [ SINGLE ]
+          - Value : "static"
+       - Library_Name [ SINGLE ]
+          - Value : "somename"
+       - Library_Src_Dir [ SINGLE ]
+          - Value : "lib"
+       - Library_Standalone [ SINGLE ]
+          - Value : "no"
+       - Name [ SINGLE ]
+          - Value : "lib"
+       - Object_Dir [ SINGLE ]
+          - Value : "."
+       - Project_Dir [ SINGLE ]
+          - Value : "<cwd>/"
+       - Source_Dirs [ LIST ]
+          - Values : 
+             - "."
+
+* Base ($<cwd>/base.gpr>$<cwd>/prj.gpr) [ standard project ]
+    - Project file      : <cwd>/base.gpr
+    - Project directory : <cwd>/
+    - Object directory  : <cwd>/obj/
+    - Source directory  :
+       - <cwd>/src
+    - Extended by       : Prj ($<cwd>/prj.gpr)
+    - Imports           : 
+       - Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr)
+       - Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr)
+    - Attributes        : 
+       - Exec_Dir [ SINGLE ]
+          - Value : "obj"
+       - Externally_Built [ SINGLE ]
+          - Value : "false"
+       - Languages [ LIST ]
+          - Values : 
+             - "Ada"
+       - Name [ SINGLE ]
+          - Value : "base"
+       - Object_Dir [ SINGLE ]
+          - Value : "obj"
+       - Project_Dir [ SINGLE ]
+          - Value : "<cwd>/"
+       - Source_Dirs [ LIST ]
+          - Values : 
+             - "src"
+
+* Prj ($<cwd>/prj.gpr) [ standard project ]
+    - Project file      : <cwd>/prj.gpr
+    - Project directory : <cwd>/
+    - Object directory  : <cwd>/obj2/
+    - Source directory  :
+       - <cwd>/src2
+    - Extends           : 
+       - Base ($<cwd>/base.gpr>$<cwd>/prj.gpr)
+       - Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr)
+       - Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr)
+    - Attributes        : 
+       - Exec_Dir [ SINGLE ]
+          - Value : "obj2"
+       - Externally_Built [ SINGLE ]
+          - Value : "false"
+       - Languages [ LIST ]
+          - Values : 
+             - "Ada"
+       - Name [ SINGLE ]
+          - Value : "prj"
+       - Object_Dir [ SINGLE ]
+          - Value : "obj2"
+       - Project_Dir [ SINGLE ]
+          - Value : "<cwd>/"
+       - Source_Dirs [ LIST ]
+          - Values : 
+             - "src2"
+       - Naming'Body_Suffix [ SINGLE ]
+          - Index value : "ada"
+          - Value : ".adb"
+       - Naming'Body_Suffix [ SINGLE ]
+          - Index value : "c"
+          - Value : ".c"
+       - Naming'Dot_Replacement [ SINGLE ]
+          - Value : "~"
+       - Naming'Implementation_Suffix [ SINGLE ]
+          - Index value : "ada"
+          - Value : ".adb"
+       - Naming'Implementation_Suffix [ SINGLE ]
+          - Index value : "c"
+          - Value : ".c"
+       - Naming'Spec_Suffix [ SINGLE ]
+          - Index value : "ada"
+          - Value : ".ads"
+       - Naming'Spec_Suffix [ SINGLE ]
+          - Index value : "c"
+          - Value : ".h"
+       - Naming'Specification_Suffix [ SINGLE ]
+          - Index value : "ada"
+          - Value : ".ads"
+       - Naming'Specification_Suffix [ SINGLE ]
+          - Index value : "c"
+          - Value : ".h"
+
+{
+  "info": {
+    "generated-on": 2000-01-01 00:00:00
+    "version": Pro 1.0 (20000101) (<host>)
+  },
+  "tree": {
+    "messages": [
+      "lib.gpr: lint: project qualifier could be explicitly set to library project"
+    ],
+    "stats": {
+      "project-count": 3
+    },
+    "project-search-paths": [
+      <filtered-out>
+    ],
+    "object-search-paths": [
+      "<gnat rts>/adalib/",
+      "<cwd>/obj2/"
+    ],
+    "source-search-paths": [
+      "<gnat rts>/adainclude/",
+      "<cwd>/src2"
+    ],
+    "root-project": {
+      "name": "Root",
+      "id": "<<cwd>/root.gpr"
+    }
+  },
+  "projects": [
+    {
+      "project": {
+        "id": "$<cwd>/prj.gpr",
+        "name": "Prj",
+        "kind": "standard",
+        "qualifier": "standard",
+        "simple-name": "prj.gpr",
+        "file-name": "<cwd>/prj.gpr",
+        "directory": "<cwd>/",
+        "object-directory": "<cwd>/obj2/",
+        "source-directories": [
+          "<cwd>/src2"
+        ]
+      },
+      "extended": [
+        "$<cwd>/base.gpr>$<cwd>/prj.gpr",
+        "$<cwd>/lib.gpr>$<cwd>/prj.gpr",
+        "$<cwd>/shared.gpr>$<cwd>/prj.gpr"
+      ],
+      "imported-by": [
+        "$<cwd>/agg.gpr"
+      ],
+      "packages": [
+        {
+          "name": "Binder",
+          "attributes": [
+            {
+              "name": "Bindfile_Option_Substitution",
+              "index": "-shared",
+              "kind": "list",
+              "values": [
+                "-shared-libgcc"
+              ]
+            },
+            {
+              "name": "Bindfile_Option_Substitution",
+              "index": "-static",
+              "kind": "list",
+              "values": [
+                "-static-libgcc"
+              ]
+            },
+            {
+              "name": "Driver",
+              "index": "Ada",
+              "kind": "single",
+              "value": "<root>/gprbuild/gprbind/"
+            },
+            {
+              "name": "Objects_Path_File",
+              "index": "Ada",
+              "kind": "single",
+              "value": "ADA_PRJ_OBJECTS_FILE"
+            },
+            {
+              "name": "Required_Switches",
+              "index": "Ada",
+              "kind": "list",
+              "values": [
+                "gnatbind_prefix="
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Builder",
+          "attributes": [
+          ]
+        },
+        {
+          "name": "Clean",
+          "attributes": [
+            {
+              "name": "Object_Artifact_Extensions",
+              "index": "Ada",
+              "kind": "list",
+              "values": [
+                ".s",
+                ".ci",
+                ".gcno",
+                ".su"
+              ]
+            },
+            {
+              "name": "Object_Artifact_Extensions",
+              "index": "C",
+              "kind": "list",
+              "values": [
+                ".s",
+                "ci",
+                ".gcno",
+                ".su"
+              ]
+            },
+            {
+              "name": "Object_Artifact_Extensions",
+              "index": "C++",
+              "kind": "list",
+              "values": [
+                ".s",
+                "ci",
+                ".gcno",
+                ".su"
+              ]
+            },
+            {
+              "name": "Source_Artifact_Extensions",
+              "index": "Ada",
+              "kind": "list",
+              "values": [
+                ".dg",
+                ".rep"
+              ]
+            },
+            {
+              "name": "Source_Artifact_Extensions",
+              "index": "C",
+              "kind": "list",
+              "values": [
+                ".gli"
+              ]
+            },
+            {
+              "name": "Source_Artifact_Extensions",
+              "index": "C++",
+              "kind": "list",
+              "values": [
+                ".gli"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Compiler",
+          "attributes": [
+            {
+              "name": "Driver",
+              "index": "Ada",
+              "kind": "single",
+              "value": "<root>/bin/gcc/"
+            },
+            {
+              "name": "Config_Body_File_Name",
+              "index": "Ada",
+              "kind": "single",
+              "value": "pragma Source_File_Name_Project (%u, Body_File_Name => /"%f/");"
+            },
+            {
+              "name": "Config_Body_File_Name_Index",
+              "index": "Ada",
+              "kind": "single",
+              "value": "pragma Source_File_Name_Project (%u, Body_File_Name => /"%f/", Index => %i);"
+            },
+            {
+              "name": "Config_Body_File_Name_Pattern",
+              "index": "Ada",
+              "kind": "single",
+              "value": "pragma Source_File_Name_Project   (Body_File_Name  => /"*%b/",   Casing          => %c,   Dot_Replacement => /"%d/");"
+            },
+            {
+              "name": "Config_File_Switches",
+              "index": "Ada",
+              "kind": "list",
+              "values": [
+                "-gnatec="
+              ]
+            },
+            {
+              "name": "Config_File_Unique",
+              "index": "Ada",
+              "kind": "single",
+              "value": "False"
+            },
+            {
+              "name": "Config_Spec_File_Name",
+              "index": "Ada",
+              "kind": "single",
+              "value": "pragma Source_File_Name_Project (%u, Spec_File_Name => /"%f/");"
+            },
+            {
+              "name": "Config_Spec_File_Name_Index",
+              "index": "Ada",
+              "kind": "single",
+              "value": "pragma Source_File_Name_Project (%u, Spec_File_Name => /"%f/", Index => %i);"
+            },
+            {
+              "name": "Config_Spec_File_Name_Pattern",
+              "index": "Ada",
+              "kind": "single",
+              "value": "pragma Source_File_Name_Project   (Spec_File_Name  => /"*%s/",   Casing          => %c,   Dot_Replacement => /"%d/");"
+            },
+            {
+              "name": "Dependency_Kind",
+              "index": "Ada",
+              "kind": "single",
+              "value": "ALI_File"
+            },
+            {
+              "name": "Include_Path_File",
+              "index": "Ada",
+              "kind": "single",
+              "value": "ADA_PRJ_INCLUDE_FILE"
+            },
+            {
+              "name": "Language_Kind",
+              "index": "Ada",
+              "kind": "single",
+              "value": "unit_based"
+            },
+            {
+              "name": "Leading_Required_Switches",
+              "index": "Ada",
+              "kind": "list",
+              "values": [
+                "-c",
+                "-x",
+                "ada",
+                "-gnatA"
+              ]
+            },
+            {
+              "name": "Mapping_Body_Suffix",
+              "index": "Ada",
+              "kind": "single",
+              "value": "%b"
+            },
+            {
+              "name": "Mapping_File_Switches",
+              "index": "Ada",
+              "kind": "list",
+              "values": [
+                "-gnatem="
+              ]
+            },
+            {
+              "name": "Mapping_Spec_Suffix",
+              "index": "Ada",
+              "kind": "single",
+              "value": "%s"
+            },
+            {
+              "name": "Multi_Unit_Object_Separator",
+              "index": "Ada",
+              "kind": "single",
+              "value": "~"
+            },
+            {
+              "name": "Multi_Unit_Switches",
+              "index": "Ada",
+              "kind": "list",
+              "values": [
+                "-gnateI"
+              ]
+            },
+            {
+              "name": "Pic_Option",
+              "index": "Ada",
+              "kind": "list",
+              "values": [
+                "-fPIC"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Linker",
+          "attributes": [
+          ]
+        },
+        {
+          "name": "Naming",
+          "attributes": [
+            {
+              "name": "Body_Suffix",
+              "index": "Ada",
+              "kind": "single",
+              "value": ".adb"
+            },
+            {
+              "name": "Body_Suffix",
+              "index": "Asm",
+              "kind": "single",
+              "value": ".s"
+            },
+            {
+              "name": "Body_Suffix",
+              "index": "Asm2",
+              "kind": "single",
+              "value": ".asm"
+            },
+            {
+              "name": "Body_Suffix",
+              "index": "Asm_Cpp",
+              "kind": "single",
+              "value": ".S"
+            },
+            {
+              "name": "Body_Suffix",
+              "index": "C",
+              "kind": "single",
+              "value": ".c"
+            },
+            {
+              "name": "Body_Suffix",
+              "index": "C++",
+              "kind": "single",
+              "value": ".cpp"
+            },
+            {
+              "name": "Body_Suffix",
+              "index": "Fortran",
+              "kind": "single",
+              "value": ".f"
+            },
+            {
+              "name": "Dot_Replacement",
+              "kind": "single",
+              "value": "~"
+            },
+            {
+              "name": "Spec_Suffix",
+              "index": "Ada",
+              "kind": "single",
+              "value": ".ads"
+            },
+            {
+              "name": "Spec_Suffix",
+              "index": "C",
+              "kind": "single",
+              "value": ".h"
+            },
+            {
+              "name": "Spec_Suffix",
+              "index": "C++",
+              "kind": "single",
+              "value": ".hh"
+            }
+          ]
+        }
+      ],
+      "attributes": [
+        {
+          "name": "Exec_Dir",
+          "kind": "single",
+          "value": "obj2"
+        },
+        {
+          "name": "Externally_Built",
+          "kind": "single",
+          "value": "false"
+        },
+        {
+          "name": "Inherit_Source_Path",
+          "index": "Asm_Cpp",
+          "kind": "list",
+          "values": [
+            "Asm"
+          ]
+        },
+        {
+          "name": "Inherit_Source_Path",
+          "index": "C++",
+          "kind": "list",
+          "values": [
+            "C"
+          ]
+        },
+        {
+          "name": "Languages",
+          "kind": "list",
+          "values": [
+            "Ada"
+          ]
+        },
+        {
+          "name": "Name",
+          "kind": "single",
+          "value": "prj"
+        },
+        {
+          "name": "Object_Dir",
+          "kind": "single",
+          "value": "obj2"
+        },
+        {
+          "name": "Project_Dir",
+          "kind": "single",
+          "value": "<cwd>/"
+        },
+        {
+          "name": "Runtime_Dir",
+          "index": "Ada",
+          "kind": "single",
+          "value": "<root>/lib/gcc/"
+        },
+        {
+          "name": "Source_Dirs",
+          "kind": "list",
+          "values": [
+            "src2"
+          ]
+        },
+        {
+          "name": "Toolchain_Version",
+          "index": "Ada",
+          "kind": "single",
+          "value": "GNAT <version>
+        }
+      ]
+    },
+    {
+      "project": {
+        "id": "$<cwd>/agg.gpr",
+        "name": "Agg",
+        "kind": "aggregate",
+        "qualifier": "aggregate",
+        "simple-name": "agg.gpr",
+        "file-name": "<cwd>/agg.gpr",
+        "directory": "<cwd>/"
+      },
+      "imported-by": [
+        "<<cwd>/root.gpr"
+      ],
+      "aggregated": [
+        "$<cwd>/prj.gpr"
+      ],
+      "attributes": [
+        {
+          "name": "Externally_Built",
+          "kind": "single",
+          "value": "false"
+        },
+        {
+          "name": "Inherit_Source_Path",
+          "index": "Asm_Cpp",
+          "kind": "list",
+          "values": [
+            "Asm"
+          ]
+        },
+        {
+          "name": "Inherit_Source_Path",
+          "index": "C++",
+          "kind": "list",
+          "values": [
+            "C"
+          ]
+        },
+        {
+          "name": "Name",
+          "kind": "single",
+          "value": "agg"
+        },
+        {
+          "name": "Object_Dir",
+          "kind": "single",
+          "value": "."
+        },
+        {
+          "name": "Project_Dir",
+          "kind": "single",
+          "value": "<cwd>/"
+        },
+        {
+          "name": "Project_Files",
+          "kind": "list",
+          "values": [
+            "prj.gpr"
+          ]
+        },
+        {
+          "name": "Runtime_Dir",
+          "index": "Ada",
+          "kind": "single",
+          "value": "<root>/lib/gcc/"
+        },
+        {
+          "name": "Toolchain_Version",
+          "index": "Ada",
+          "kind": "single",
+          "value": "GNAT <version>
+        }
+      ],
+      "variables": [
+        {
+          "name": "Answer",
+          "type": "Yes_No",
+          "kind": "single",
+          "value": "yes"
+        },
+        {
+          "name": "Var2",
+          "kind": "single",
+          "value": "no"
+        }
+      ],
+      "types": [
+        {
+          "name": "Yes_No",
+          "values": [
+            "yes",
+            "no"
+          ]
+        }
+      ]
+    },
+    {
+      "project": {
+        "id": "<<cwd>/root.gpr",
+        "name": "Root",
+        "kind": "aggregate",
+        "qualifier": "aggregate",
+        "simple-name": "root.gpr",
+        "file-name": "<cwd>/root.gpr",
+        "directory": "<cwd>/"
+      },
+      "aggregated": [
+        "$<cwd>/agg.gpr"
+      ],
+      "attributes": [
+        {
+          "name": "Externally_Built",
+          "kind": "single",
+          "value": "false"
+        },
+        {
+          "name": "Inherit_Source_Path",
+          "index": "Asm_Cpp",
+          "kind": "list",
+          "values": [
+            "Asm"
+          ]
+        },
+        {
+          "name": "Inherit_Source_Path",
+          "index": "C++",
+          "kind": "list",
+          "values": [
+            "C"
+          ]
+        },
+        {
+          "name": "Name",
+          "kind": "single",
+          "value": "root"
+        },
+        {
+          "name": "Object_Dir",
+          "kind": "single",
+          "value": "."
+        },
+        {
+          "name": "Project_Dir",
+          "kind": "single",
+          "value": "<cwd>/"
+        },
+        {
+          "name": "Project_Files",
+          "kind": "list",
+          "values": [
+            "agg.gpr"
+          ]
+        },
+        {
+          "name": "Runtime_Dir",
+          "index": "Ada",
+          "kind": "single",
+          "value": "<root>/lib/gcc/"
+        },
+        {
+          "name": "Toolchain_Version",
+          "index": "Ada",
+          "kind": "single",
+          "value": "GNAT <version>
+        }
+      ]
+    }
+  ]
+}
