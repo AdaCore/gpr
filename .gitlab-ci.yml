@@ -116,7 +116,6 @@ build:
       - gpr2-bindings.tar.gz
       - libgpr2.tar.gz
       - gpr1build.tar.gz
-      - test-count.svg
 
 ####################
 ## GPR2 TESTSUITE ##
@@ -176,8 +175,7 @@ test_gpr2_cov:
     - cov_dir=$SANDBOX/$HOST/gpr2-test-cov-stmt/results/new
     - mv $cov_dir/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
     - mv $cov_dir/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
-    - mv $cov_dir/coverage-xml $CI_PROJECT_DIR/coverage/xml
-    - echo_coverage_stats --coverage-file $CI_PROJECT_DIR/coverage/xml/index.xml
+    - echo_coverage_stats --coverage-file $cov_dir/coverage-xml/index.xml
     - e3-testsuite-report
         --failure-exit-code 1
         --xunit-output $CI_PROJECT_DIR/testgpr2cov_result.xml
