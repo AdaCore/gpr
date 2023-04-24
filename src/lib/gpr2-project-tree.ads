@@ -6,6 +6,7 @@
 
 with Ada.Iterator_Interfaces;
 
+with GPR2.Environment;
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.File_Readers;
@@ -77,7 +78,9 @@ package GPR2.Project.Tree is
                            GPR2.Path_Name.Set.Empty_Set;
       Pre_Conf_Mode    : Boolean                   := False;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference)
+                           GPR2.File_Readers.No_File_Reader_Reference;
+      Environment      : GPR2.Environment.Object :=
+                           GPR2.Environment.Process_Environment)
      with Pre => Filename.Is_Defined;
    --  Loads a root project
    --  Filename: if Filename is a file path, then Load_Autoconf will use it as
@@ -131,7 +134,9 @@ package GPR2.Project.Tree is
       Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
       Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined;
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
-                            GPR2.File_Readers.No_File_Reader_Reference)
+                            GPR2.File_Readers.No_File_Reader_Reference;
+      Environment       : GPR2.Environment.Object :=
+                            GPR2.Environment.Process_Environment)
        with Pre => Filename.Is_Defined;
    --  Loads a tree in autoconf mode.
    --  If Filename is a file path, then Load_Autoconf will use it as
@@ -512,7 +517,14 @@ package GPR2.Project.Tree is
    --  to project marked "Externally_Built" will not be returned.
    --  Note that this routine ensure that the sources are loaded.
 
+   function Environment (Self : Object) return GPR2.Environment.Object
+     with Pre => Self.Is_Defined;
+   --  Returns used environment.
+
 private
+
+   procedure Set_Environment
+     (Self : in out Object; Environment : GPR2.Environment.Object);
 
    package PC renames Project.Configuration;
    package PRA renames GPR2.Project.Registry.Attribute;
@@ -552,6 +564,17 @@ private
       end case;
    end record;
 
+   type All_Search_Paths is record
+      Default    : Path_Name.Set.Object :=
+                     Default_Search_Paths
+                       (True, GPR2.Environment.Process_Environment);
+      Prepended  : Path_Name.Set.Object;
+      Appended   : Path_Name.Set.Object;
+      All_Paths  : Path_Name.Set.Object :=
+                     Default_Search_Paths
+                       (True, GPR2.Environment.Process_Environment);
+   end record;
+
    type Object is tagged limited record
       Self              : access Object := null;
       Root              : View.Object;
@@ -561,8 +584,7 @@ private
       Units             : Name_View.Map;
       Sources           : Filename_View.Map;
       Messages          : aliased Log.Object;
-      Search_Paths      : Path_Name.Set.Object :=
-                            Default_Search_Paths (True);
+      Search_Paths      : All_Search_Paths;
       Implicit_With     : Path_Name.Set.Object;
       Build_Path        : Path_Name.Object;
       Subdirs           : Unbounded_String;
@@ -583,6 +605,8 @@ private
       Langs_Of_Interest : Containers.Language_Set;
       --  Languages that auto-configuration should be reduced to
       File_Reader_Ref   : GPR2.File_Readers.File_Reader_Reference;
+      Environment       : GPR2.Environment.Object :=
+                            GPR2.Environment.Process_Environment;
    end record;
 
    procedure Load
@@ -599,7 +623,9 @@ private
                            GPR2.Path_Name.Set.Empty_Set;
       Pre_Conf_Mode    : Boolean                   := False;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference);
+                           GPR2.File_Readers.No_File_Reader_Reference;
+      Environment      : GPR2.Environment.Object :=
+                           GPR2.Environment.Process_Environment);
    --  Common implementation for loading a project either from an actual
    --  file or from a manually built root project data.
 
@@ -620,7 +646,9 @@ private
       Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
       Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined;
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
-                            GPR2.File_Readers.No_File_Reader_Reference);
+                            GPR2.File_Readers.No_File_Reader_Reference;
+      Environment       : GPR2.Environment.Object :=
+                            GPR2.Environment.Process_Environment);
 
    function "=" (Left, Right : Object) return Boolean
    is (Left.Self = Right.Self);
@@ -707,5 +735,8 @@ private
      (Self : Object)
       return GPR2.File_Readers.File_Reader_Reference is
      (Self.File_Reader_Ref);
+
+   function Environment (Self : Object) return GPR2.Environment.Object is
+      (Self.Environment);
 
 end GPR2.Project.Tree;

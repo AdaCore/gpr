@@ -6,7 +6,6 @@
 
 with Ada.Command_Line;
 with Ada.Directories;
-with Ada.Environment_Variables;
 with Ada.Exceptions;
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
@@ -46,7 +45,8 @@ package body GPR2.KB is
       Compilers        : in out Compiler_Lists.List;
       Selected_Target  : in out Unbounded_String;
       Fallback         : Boolean;
-      Errors           : out Log.Object);
+      Errors           : out Log.Object;
+      Environment      : GPR2.Environment.Object);
    --  In batch mode, the configuration descriptions indicate what compilers
    --  should be selected. Each of these descriptions selects the first
    --  matching compiler available, and all descriptions must match a compiler.
@@ -215,8 +215,9 @@ package body GPR2.KB is
    --  up in the right package, and the packages are not duplicated.
 
    procedure Update_With_Compiler_Runtime
-     (Self : in out Object;
-      Comp : Compiler);
+     (Self        : in out Object;
+      Comp        : Compiler;
+      Environment : GPR2.Environment.Object);
    --  Update the knowledge base with additional runtime specific chunks
    --  if a given compiler has any.
 
@@ -250,9 +251,11 @@ package body GPR2.KB is
    ---------
 
    procedure Add
-     (Self     : in out Object;
-      Flags    : Parsing_Flags;
-      Location : GPR2.Path_Name.Object) is
+     (Self        : in out Object;
+      Flags       : Parsing_Flags;
+      Location    : GPR2.Path_Name.Object;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment) is
    begin
       if Self.Parsed_Directories.Contains (Location) then
          --  Do not parse several times the same database directory
@@ -260,7 +263,7 @@ package body GPR2.KB is
       end if;
 
       Self.Parsed_Directories.Append (Location);
-      Parsing.Parse_Knowledge_Base (Self, Location, Flags);
+      Parsing.Parse_Knowledge_Base (Self, Location, Flags, Environment);
    end Add;
 
    ---------
@@ -268,11 +271,13 @@ package body GPR2.KB is
    ---------
 
    procedure Add
-     (Self    : in out Object;
-      Flags   : Parsing_Flags;
-      Content : Value_Not_Empty) is
+     (Self        : in out Object;
+      Flags       : Parsing_Flags;
+      Content     : Value_Not_Empty;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment) is
    begin
-      Parsing.Add (Self, Flags, Content);
+      Parsing.Add (Self, Flags, Content, Environment);
    end Add;
 
    -------------------
@@ -280,10 +285,13 @@ package body GPR2.KB is
    -------------------
 
    function All_Compilers
-     (Self     : in out Object;
-      Settings : Project.Configuration.Description_Set;
-      Target   : Name_Type;
-      Messages : in out GPR2.Log.Object) return Compiler_Array
+     (Self        : in out Object;
+      Settings    : Project.Configuration.Description_Set;
+      Target      : Name_Type;
+      Messages    : in out GPR2.Log.Object;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment)
+      return Compiler_Array
    is
       use Compiler_Lists;
       use Ada.Containers;
@@ -457,10 +465,11 @@ package body GPR2.KB is
 
       Iter.Filters := Filters;
       Foreach_In_Path
-        (Self       => Iter,
-         Base       => Self,
-         On_Target  => Target,
-         Extra_Dirs => Extra_Dirs_From_Filters (Filters));
+        (Self        => Iter,
+         Base        => Self,
+         On_Target   => Target,
+         Environment => Environment,
+         Extra_Dirs  => Extra_Dirs_From_Filters (Filters));
 
       Splice (Target => Compilers,
               Before => Compiler_Lists.No_Element,
@@ -494,7 +503,8 @@ package body GPR2.KB is
       Compilers        : in out Compiler_Lists.List;
       Selected_Target  : in out Unbounded_String;
       Fallback         : Boolean;
-      Errors           : out Log.Object)
+      Errors           : out Log.Object;
+      Environment      : GPR2.Environment.Object)
    is
       use Compiler_Lists;
       use Ada.Containers;
@@ -707,10 +717,11 @@ package body GPR2.KB is
       --  Find all the compilers in PATH and Extra_Dirs
 
       Compiler_Iterator.Foreach_In_Path
-        (Self       => Iterator,
-         Base       => Self,
-         On_Target  => On_Target,
-         Extra_Dirs => Extra_Dirs);
+        (Self        => Iterator,
+         Base        => Self,
+         On_Target   => On_Target,
+         Environment => Environment,
+         Extra_Dirs  => Extra_Dirs);
 
       Decrease_Indent (Main_Trace);
 
@@ -765,10 +776,11 @@ package body GPR2.KB is
                      Local_Iter.Filters := Iterator.Filters;
 
                      Compiler_Iterator.Foreach_In_Path
-                       (Self       => Local_Iter,
-                        Base       => Self,
-                        On_Target  => Element (Cur),
-                        Extra_Dirs => Extra_Dirs);
+                       (Self        => Local_Iter,
+                        Base        => Self,
+                        On_Target   => Element (Cur),
+                        Environment => Environment,
+                        Extra_Dirs  => Extra_Dirs);
 
                      Found_All := True;
                      C := First (Filters);
@@ -898,11 +910,13 @@ package body GPR2.KB is
    -------------------
 
    function Configuration
-     (Self     : in out Object;
-      Settings : Project.Configuration.Description_Set;
-      Target   : Name_Type;
-      Messages : in out GPR2.Log.Object;
-      Fallback : Boolean := False)
+     (Self        : in out Object;
+      Settings    : Project.Configuration.Description_Set;
+      Target      : Name_Type;
+      Messages    : in out GPR2.Log.Object;
+      Fallback    : Boolean := False;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment)
       return Ada.Strings.Unbounded.Unbounded_String
    is
       use Project.Configuration;
@@ -942,7 +956,8 @@ package body GPR2.KB is
             Compilers        => Compilers,
             Selected_Target  => Selected_Target,
             Fallback         => Fallback,
-            Errors           => Messages);
+            Errors           => Messages,
+            Environment      => Environment);
       exception
          when No_Compatible_Compilers | Invalid_KB =>
             return Null_Unbounded_String;
@@ -954,7 +969,7 @@ package body GPR2.KB is
       Runtime_Specific_KB := Self;
 
       for Comp of Compilers loop
-         Update_With_Compiler_Runtime (Runtime_Specific_KB, Comp);
+         Update_With_Compiler_Runtime (Runtime_Specific_KB, Comp, Environment);
       end loop;
 
       Configuration_String := Runtime_Specific_KB.Generate_Configuration
@@ -968,10 +983,12 @@ package body GPR2.KB is
    -------------------
 
    function Configuration
-     (Self      : in out Object;
-      Selection : Compiler_Array;
-      Target    : Name_Type;
-      Messages  : in out GPR2.Log.Object)
+     (Self        : in out Object;
+      Selection   : Compiler_Array;
+      Target      : Name_Type;
+      Messages    : in out GPR2.Log.Object;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment)
       return Ada.Strings.Unbounded.Unbounded_String
    is
       Configuration_String : Unbounded_String;
@@ -988,7 +1005,7 @@ package body GPR2.KB is
       Runtime_Specific_KB := Self;
 
       for Comp of Selection loop
-         Update_With_Compiler_Runtime (Runtime_Specific_KB, Comp);
+         Update_With_Compiler_Runtime (Runtime_Specific_KB, Comp, Environment);
          Compilers.Append (Comp);
          Langs.Append (Comp.Language);
       end loop;
@@ -1038,21 +1055,23 @@ package body GPR2.KB is
    ------------
 
    function Create
-     (Flags      : Parsing_Flags := Targetset_Only_Flags;
-      Default_KB : Boolean := True;
-      Custom_KB  : GPR2.Path_Name.Set.Object := GPR2.Path_Name.Set.Empty_Set)
+     (Flags       : Parsing_Flags := Targetset_Only_Flags;
+      Default_KB  : Boolean := True;
+      Custom_KB   : GPR2.Path_Name.Set.Object := GPR2.Path_Name.Set.Empty_Set;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment)
       return Object
    is
       Result : Object;
    begin
       if Default_KB then
-         Result := Create_Default (Flags => Flags);
+         Result := Create_Default (Flags => Flags, Environment => Environment);
       else
          Result := Create_Empty;
       end if;
 
       for Location of Custom_KB loop
-         Result.Add (Flags, Location);
+         Result.Add (Flags, Location, Environment);
       end loop;
 
       return Result;
@@ -1063,14 +1082,16 @@ package body GPR2.KB is
    ------------
 
    function Create
-     (Content : GPR2.Containers.Value_List;
-      Flags   : Parsing_Flags) return Object
+     (Content     : GPR2.Containers.Value_List;
+      Flags       : Parsing_Flags;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment) return Object
    is
       Result : Object := Create_Empty;
    begin
       for Cont of Content loop
          if Cont /= "" then
-            Result.Add (Flags, Cont);
+            Result.Add (Flags, Cont, Environment);
          end if;
       end loop;
 
@@ -1082,13 +1103,16 @@ package body GPR2.KB is
    ------------
 
    function Create
-     (Location : GPR2.Path_Name.Object;
-      Flags   : Parsing_Flags) return Object
+     (Location    : GPR2.Path_Name.Object;
+      Flags       : Parsing_Flags;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment) return Object
    is
       Result    : Object := Create_Empty;
    begin
       Result.Parsed_Directories.Append (Location);
-      Parsing.Parse_Knowledge_Base (Result, Location, Flags);
+      Parsing.Parse_Knowledge_Base
+        (Result, Location, Flags, Environment);
 
       return Result;
    end Create;
@@ -1098,12 +1122,14 @@ package body GPR2.KB is
    --------------------
 
    function Create_Default
-     (Flags : Parsing_Flags) return Object
+     (Flags       : Parsing_Flags;
+      Environment : GPR2.Environment.Object :=
+                      GPR2.Environment.Process_Environment) return Object
    is
       Ret : Object;
    begin
-      Ret := Parsing.Parse_Default_Knowledge_Base (Flags);
-
+      Ret := Parsing.Parse_Default_Knowledge_Base
+        (Flags, Environment);
       return Ret;
    end Create_Default;
 
@@ -1612,6 +1638,7 @@ package body GPR2.KB is
      (Attribute        : String;
       Value            : External_Value;
       Comp             : Compiler;
+      Environment      : GPR2.Environment.Object;
       Split_Into_Words : Boolean := True;
       Merge_Same_Dirs  : Boolean := False;
       Calls_Cache      : in out GPR2.Containers.Name_Value_Map;
@@ -1625,6 +1652,8 @@ package body GPR2.KB is
       use GNATCOLL.Traces;
 
       Error_Sloc : constant Source_Reference.Object := Value.Sloc;
+      Saved_Path : constant String := Environment.Value ("PATH");
+      Used_Env   : GPR2.Environment.Object := Environment;
 
       function Get_Command_Output_Cache
         (Path    : String;
@@ -1666,10 +1695,12 @@ package body GPR2.KB is
                end loop;
                OS_Lib.Free (Args);
                Tmp_Result := GNATCOLL.OS.Process.Run
-                 (Args_Vector,
-                  Stdin  => GNATCOLL.OS.Process.FS.Null_FD,
-                  Stderr => GNATCOLL.OS.Process.FS.To_Stdout,
-                  Status => Dummy);
+                 (Args        => Args_Vector,
+                  Env         => Used_Env.To_GNATCOLL_Environment,
+                  Stdin       => GNATCOLL.OS.Process.FS.Null_FD,
+                  Stderr      => GNATCOLL.OS.Process.FS.To_Stdout,
+                  Status      => Dummy,
+                  Inherit_Env => Used_Env.Inherit);
                Args_Vector.Clear;
                Calls_Cache.Include (Key, To_String (Tmp_Result));
                return Tmp_Result;
@@ -1680,8 +1711,6 @@ package body GPR2.KB is
          end if;
       end Get_Command_Output_Cache;
 
-      Saved_Path     : constant String :=
-                         Environment_Variables.Value ("PATH");
       Extracted_From : Unbounded_String := Null_Unbounded_String;
       Tmp_Result     : Unbounded_String;
       Node_Cursor    : External_Value_Nodes.Cursor := Value.EV.First;
@@ -1719,10 +1748,9 @@ package body GPR2.KB is
                      Attribute & ": constant := " & To_String (Tmp_Result));
 
                when Value_Shell =>
-                  Ada.Environment_Variables.Set
+                  Used_Env.Insert
                     ("PATH",
-                     Comp.Path.Value
-                     & OS_Lib.Path_Separator & Saved_Path);
+                     Comp.Path.Value & OS_Lib.Path_Separator & Saved_Path);
 
                   declare
                      Command : constant String :=
@@ -1735,7 +1763,7 @@ package body GPR2.KB is
                      Tmp_Result := Null_Unbounded_String;
                      Tmp_Result :=
                        Get_Command_Output_Cache (Comp.Path.Value, Command);
-                     Ada.Environment_Variables.Set ("PATH", Saved_Path);
+                     Used_Env := Environment;
 
                      Trace (Main_Trace,
                             Attribute & ": executing """ & Command
@@ -3458,7 +3486,9 @@ package body GPR2.KB is
    ----------------------------------
 
    procedure Update_With_Compiler_Runtime
-     (Self : in out Object; Comp : Compiler) is
+     (Self        : in out Object;
+      Comp        : Compiler;
+      Environment : GPR2.Environment.Object) is
    begin
       if Comp.Selected
         and then Comp.Runtime_Dir /= Null_Unbounded_String
@@ -3491,7 +3521,8 @@ package body GPR2.KB is
                Self.Add
                  (Default_Flags,
                   GPR2.Path_Name.Create_Directory
-                    (Filename_Type (RTS (RTS'First .. Last))));
+                    (Filename_Type (RTS (RTS'First .. Last))),
+                  Environment);
             end if;
 
          end;

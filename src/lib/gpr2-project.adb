@@ -6,7 +6,6 @@
 
 with Ada.Characters.Handling;
 with Ada.Directories;
-with Ada.Environment_Variables;
 with Ada.Text_IO;
 
 with GNAT.OS_Lib;
@@ -21,7 +20,8 @@ package body GPR2.Project is
    ---------------------------------
 
    procedure Append_Default_Search_Paths
-     (Paths : in out Path_Name.Set.Object)
+     (Paths       : in out Path_Name.Set.Object;
+      Environment : GPR2.Environment.Object)
    is
 
       procedure Append (Value : String)
@@ -72,10 +72,10 @@ package body GPR2.Project is
    begin
       --  Then in GPR_PROJECT_PATH_FILE, one path per line
 
-      if Environment_Variables.Exists ("GPR_PROJECT_PATH_FILE") then
+      if Environment.Exists ("GPR_PROJECT_PATH_FILE") then
          declare
             Filename : constant String :=
-                         Environment_Variables.Value
+                         Environment.Value
                            ("GPR_PROJECT_PATH_FILE");
             File     : Text_IO.File_Type;
          begin
@@ -93,12 +93,12 @@ package body GPR2.Project is
 
       --  Then in GPR_PROJECT_PATH and ADA_PROJECT_PATH
 
-      if Environment_Variables.Exists ("GPR_PROJECT_PATH") then
-         Add_List (Environment_Variables.Value ("GPR_PROJECT_PATH"));
+      if Environment.Exists ("GPR_PROJECT_PATH") then
+         Add_List (Environment.Value ("GPR_PROJECT_PATH"));
       end if;
 
-      if Environment_Variables.Exists ("ADA_PROJECT_PATH") then
-         Add_List (Environment_Variables.Value ("ADA_PROJECT_PATH"));
+      if Environment.Exists ("ADA_PROJECT_PATH") then
+         Add_List (Environment.Value ("ADA_PROJECT_PATH"));
       end if;
    end Append_Default_Search_Paths;
 
@@ -168,7 +168,8 @@ package body GPR2.Project is
    --------------------------
 
    function Default_Search_Paths
-     (Current_Directory : Boolean) return Path_Name.Set.Object
+     (Current_Directory : Boolean;
+      Environment       : GPR2.Environment.Object) return Path_Name.Set.Object
    is
       Result : Path_Name.Set.Object;
    begin
@@ -178,7 +179,7 @@ package body GPR2.Project is
               (Filename_Type (Directories.Current_Directory)));
       end if;
 
-      Append_Default_Search_Paths (Result);
+      Append_Default_Search_Paths (Result, Environment);
 
       return Result;
    end Default_Search_Paths;
