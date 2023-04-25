@@ -3310,7 +3310,8 @@ package body GPR2.Project.Parser is
                      begin
                         if not Base.Is_Defined then
                            Base := GPR2.KB.Create_Default
-                             (GPR2.KB.Targetset_Only_Flags);
+                             (GPR2.KB.Targetset_Only_Flags,
+                              Tree.Environment);
                         end if;
 
                         if Base.Normalized_Target (T_Conf) /=

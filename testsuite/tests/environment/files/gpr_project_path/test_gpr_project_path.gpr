@@ -1,0 +1,2 @@
+abstract project test_gpr_project_path is
+end test_gpr_project_path;

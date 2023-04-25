@@ -5,7 +5,6 @@
 --
 
 with Ada.Containers.Indefinite_Holders;
-with Ada.Environment_Variables;
 with Ada.Directories;
 with Ada.IO_Exceptions;
 with Ada.Strings.Fixed;
@@ -123,8 +122,9 @@ package body GPR2.Project.Tree is
    --  Project.View.Undefined otherwise.
 
    procedure Update_Context
-     (Context   : in out GPR2.Context.Object;
-      Externals : Containers.Name_List);
+     (Context     : in out GPR2.Context.Object;
+      Externals   : Containers.Name_List;
+      Environment : GPR2.Environment.Object);
    --  For all externals in Externals, if external is not already present in
    --  the context, fetch its value from the environment and insert it into the
    --  context.
@@ -143,6 +143,17 @@ package body GPR2.Project.Tree is
                            (View : Project.View.Object))
      with Pre => Self.Is_Defined;
    --  Call Do_Action for View & View's subtree
+
+   procedure Prepend_Search_Paths
+     (Self : in out Object; Dir : GPR2.Path_Name.Object)
+     with Pre => Dir.Is_Defined;
+
+   procedure Append_Search_Paths
+     (Self : in out Object; Dir : GPR2.Path_Name.Object)
+     with Pre => Dir.Is_Defined;
+
+   procedure Update_Search_Paths (Self : in out Object);
+   --  Update Self.Search_Paths after Prepend, Append & Environment changes
 
    ---------------------
    -- Add_Tool_Prefix --
@@ -248,6 +259,17 @@ package body GPR2.Project.Tree is
    begin
       Self.Messages.Append (Message);
    end Append_Message;
+
+   -------------------------
+   -- Append_Search_Paths --
+   -------------------------
+
+   procedure Append_Search_Paths
+     (Self : in out Object; Dir : GPR2.Path_Name.Object) is
+   begin
+      Self.Search_Paths.Appended.Append (Dir);
+      Self.Update_Search_Paths;
+   end Append_Search_Paths;
 
    --------------------
    -- Artifacts_Dir --
@@ -1117,7 +1139,9 @@ package body GPR2.Project.Tree is
                            GPR2.Path_Name.Set.Empty_Set;
       Pre_Conf_Mode    : Boolean                   := False;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference)
+                           GPR2.File_Readers.No_File_Reader_Reference;
+      Environment      : GPR2.Environment.Object :=
+                           GPR2.Environment.Process_Environment)
    is
       Gpr_Path      : Path_Name.Object;
       Root_Context  : GPR2.Context.Object := Context;
@@ -1125,6 +1149,8 @@ package body GPR2.Project.Tree is
 
    begin
       Self.Self := Self'Unchecked_Access;
+
+      Self.Set_Environment (Environment);
 
       --  Let ada or gpr parser use this reader
 
@@ -1153,7 +1179,7 @@ package body GPR2.Project.Tree is
          end if;
 
          if Config.Has_Externals then
-            Update_Context (Root_Context, Config.Externals);
+            Update_Context (Root_Context, Config.Externals, Environment);
          end if;
 
          Definition.Bind_Configuration_To_Tree (Self.Conf, Self.Self);
@@ -1179,7 +1205,8 @@ package body GPR2.Project.Tree is
                Ext_Conf_Mode => True);
 
             if Self.Conf.Is_Defined then
-               Update_Project_Search_Path_From_Config (Self, Self.Conf);
+               Update_Project_Search_Path_From_Config
+                 (Self, Self.Conf);
             end if;
 
             pragma Assert
@@ -1206,7 +1233,8 @@ package body GPR2.Project.Tree is
          --  If project directory still not defined, search it in full set
          --  of search paths.
 
-         Gpr_Path := Create (Root_Project.Path.Name, Self.Search_Paths);
+         Gpr_Path := Create
+           (Root_Project.Path.Name, Self.Search_Paths.All_Paths);
 
          if not Build_Path.Is_Defined then
             Self.Build_Path := Path_Name.Create_Directory
@@ -1227,7 +1255,7 @@ package body GPR2.Project.Tree is
       declare
          Search_Paths : Unbounded_String;
       begin
-         for P of Self.Search_Paths loop
+         for P of Self.Search_Paths.All_Paths loop
             Append (Search_Paths, GNAT.OS_Lib.Path_Separator & P.Value);
          end loop;
          --  Remove first path separator
@@ -1285,7 +1313,8 @@ package body GPR2.Project.Tree is
          if Config.Is_Defined and then Config.Has_Externals
            and then Self.Root.Kind in Aggregate_Kind
          then
-            Update_Context (Self.Context (Aggregate), Config.Externals);
+            Update_Context
+              (Self.Context (Aggregate), Config.Externals, Environment);
          end if;
 
          Set_Context (Self, Context);
@@ -1327,7 +1356,9 @@ package body GPR2.Project.Tree is
                            GPR2.Path_Name.Set.Empty_Set;
       Pre_Conf_Mode    : Boolean                   := False;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference) is
+                           GPR2.File_Readers.No_File_Reader_Reference;
+      Environment      : GPR2.Environment.Object :=
+                           GPR2.Environment.Process_Environment) is
    begin
       if not Filename.Is_Directory then
          GPR2.Project.Parser.Clear_Cache;
@@ -1343,7 +1374,8 @@ package body GPR2.Project.Tree is
             Absent_Dir_Error => Absent_Dir_Error,
             Implicit_With    => Implicit_With,
             Pre_Conf_Mode    => Pre_Conf_Mode,
-            File_Reader      => File_Reader);
+            File_Reader      => File_Reader,
+            Environment      => Environment);
 
          GPR2.Project.Parser.Clear_Cache;
       else
@@ -1361,7 +1393,8 @@ package body GPR2.Project.Tree is
             Absent_Dir_Error => Absent_Dir_Error,
             Implicit_With    => Implicit_With,
             Pre_Conf_Mode    => Pre_Conf_Mode,
-            File_Reader      => File_Reader);
+            File_Reader      => File_Reader,
+            Environment      => Environment);
       end if;
    end Load;
 
@@ -1387,7 +1420,9 @@ package body GPR2.Project.Tree is
       Config_Project    : GPR2.Path_Name.Object     :=
                             GPR2.Path_Name.Undefined;
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
-                            GPR2.File_Readers.No_File_Reader_Reference)
+                            GPR2.File_Readers.No_File_Reader_Reference;
+      Environment      : GPR2.Environment.Object :=
+                            GPR2.Environment.Process_Environment)
        is separate;
 
    procedure Load_Autoconf
@@ -1407,7 +1442,9 @@ package body GPR2.Project.Tree is
       Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
       Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined;
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
-        GPR2.File_Readers.No_File_Reader_Reference) is
+                            GPR2.File_Readers.No_File_Reader_Reference;
+      Environment       : GPR2.Environment.Object :=
+                            GPR2.Environment.Process_Environment) is
    begin
       if not Filename.Is_Directory then
          Self.Load_Autoconf
@@ -1423,7 +1460,8 @@ package body GPR2.Project.Tree is
             Language_Runtimes => Language_Runtimes,
             Base              => Base,
             Config_Project    => Config_Project,
-            File_Reader       => File_Reader);
+            File_Reader       => File_Reader,
+            Environment       => Environment);
       else
          View_Builder.Load_Autoconf
            (Self,
@@ -1439,7 +1477,8 @@ package body GPR2.Project.Tree is
             Language_Runtimes => Language_Runtimes,
             Base              => Base,
             Config_Project    => Config_Project,
-            File_Reader       => File_Reader);
+            File_Reader       => File_Reader,
+            Environment       => Environment);
       end if;
    end Load_Autoconf;
 
@@ -1505,6 +1544,17 @@ package body GPR2.Project.Tree is
 
       return Result;
    end Ordered_Views;
+
+   --------------------------
+   -- Prepend_Search_Paths --
+   --------------------------
+
+   procedure Prepend_Search_Paths
+     (Self : in out Object; Dir : GPR2.Path_Name.Object) is
+   begin
+      Self.Search_Paths.Prepended.Prepend (Dir);
+      Self.Update_Search_Paths;
+   end Prepend_Search_Paths;
 
    ---------------------
    -- Process_Subtree --
@@ -1572,7 +1622,7 @@ package body GPR2.Project.Tree is
 
    function Project_Search_Paths (Self : Object) return Path_Name.Set.Object is
    begin
-      return Self.Search_Paths;
+      return Self.Search_Paths.All_Paths;
    end Project_Search_Paths;
 
    -----------------
@@ -1613,7 +1663,7 @@ package body GPR2.Project.Tree is
       --  Used to check for duplicate project names possibly in
       --  different (inconsistent naming) filenames.
 
-      Search_Path : Path_Name.Set.Object := Self.Search_Paths;
+      Search_Path : Path_Name.Set.Object := Self.Search_Paths.All_Paths;
       PP          : Attribute.Object;
 
       function Load (Filename : Path_Name.Object) return Definition.Data;
@@ -1727,7 +1777,8 @@ package body GPR2.Project.Tree is
                --  Update context associated with the the list of externals
                --  defined in that project file.
 
-               Update_Context (Self.Context (Context), Data.Externals);
+               Update_Context
+                 (Self.Context (Context), Data.Externals, Self.Environment);
 
                --  At this stage even if not complete we can create the view
                --  and register it so that we can have references to it.
@@ -2320,10 +2371,9 @@ package body GPR2.Project.Tree is
    ----------------------------------
 
    procedure Register_Project_Search_Path
-     (Self : in out Object;
-      Dir  : Path_Name.Object) is
+     (Self : in out Object; Dir : Path_Name.Object) is
    begin
-      Self.Search_Paths.Prepend (Dir);
+      Prepend_Search_Paths (Self, Dir);
    end Register_Project_Search_Path;
 
    -------------------
@@ -2439,7 +2489,8 @@ package body GPR2.Project.Tree is
 
       --  Take missing external values from environment
 
-      Update_Context (Self.Context (GPR2.Context.Root), Root.Externals);
+      Update_Context
+        (Self.Context (GPR2.Context.Root), Root.Externals, Self.Environment);
 
       Set_Context (Self, Changed);
 
@@ -3409,6 +3460,18 @@ package body GPR2.Project.Tree is
       end if;
    end Set_Context;
 
+   ---------------------
+   -- Set_Environment --
+   ---------------------
+
+   procedure Set_Environment
+     (Self : in out Object; Environment : GPR2.Environment.Object) is
+   begin
+      Self.Environment := Environment;
+      Self.Search_Paths.Default := Default_Search_Paths (True, Environment);
+      Self.Update_Search_Paths;
+   end Set_Environment;
+
    ------------------------
    -- Source_Directories --
    ------------------------
@@ -3553,6 +3616,7 @@ package body GPR2.Project.Tree is
       Self.Sources_Loaded   := Undefined.Sources_Loaded;
       Self.Explicit_Target  := Undefined.Explicit_Target;
       Self.File_Reader_Ref  := Undefined.File_Reader_Ref;
+      Self.Environment      := Undefined.Environment;
 
       Self.Units.Clear;
       Self.Sources.Clear;
@@ -3568,13 +3632,14 @@ package body GPR2.Project.Tree is
    --------------------
 
    procedure Update_Context
-     (Context   : in out GPR2.Context.Object;
-      Externals : Containers.Name_List) is
+     (Context     : in out GPR2.Context.Object;
+      Externals   : Containers.Name_List;
+      Environment : GPR2.Environment.Object) is
    begin
       for External of Externals loop
          declare
             External_Value : constant String :=
-                               Environment_Variables.Value
+                               Environment.Value
                                  (String (External), "");
             Position       : GPR2.Context.Key_Value.Cursor;
             Inserted       : Boolean;
@@ -3603,7 +3668,7 @@ package body GPR2.Project.Tree is
 
       Drivers      : Attribute.Set.Object;
 
-      PATH         : constant String := Environment_Variables.Value ("PATH");
+      PATH         : constant String := Self.Environment.Value ("PATH");
       PATH_Subs    : String_Split.Slice_Set;
 
       Given_Target : Project.Attribute.Object;
@@ -3627,8 +3692,8 @@ package body GPR2.Project.Tree is
          Unique.Insert (Filename_Type (Dir), Position, Inserted);
 
          if Inserted then
-            Self.Search_Paths.Append
-              (Path_Name.Create_Directory (Filename_Type (Dir)));
+            Append_Search_Paths
+              (Self, Path_Name.Create_Directory (Filename_Type (Dir)));
          end if;
       end Append;
 
@@ -3777,6 +3842,23 @@ package body GPR2.Project.Tree is
          end if;
       end loop;
    end Update_Project_Search_Path_From_Config;
+
+   -------------------------
+   -- Update_Search_Paths --
+   -------------------------
+
+   procedure Update_Search_Paths (Self : in out Object) is
+   begin
+      Self.Search_Paths.All_Paths := Self.Search_Paths.Prepended;
+
+      for P of Self.Search_Paths.Default loop
+         Self.Search_Paths.All_Paths.Append (P);
+      end loop;
+
+      for P of Self.Search_Paths.Appended loop
+         Self.Search_Paths.All_Paths.Append (P);
+      end loop;
+   end Update_Search_Paths;
 
    --------------------
    -- Update_Sources --

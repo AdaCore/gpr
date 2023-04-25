@@ -55,7 +55,9 @@ package GPR2.Project.Tree.View_Builder is
       Config_Project    : GPR2.Path_Name.Object     :=
                             GPR2.Path_Name.Undefined;
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
-                            GPR2.File_Readers.No_File_Reader_Reference)
+                            GPR2.File_Readers.No_File_Reader_Reference;
+      Environment       : GPR2.Environment.Object :=
+                            GPR2.Environment.Process_Environment)
        with Pre => Project.Is_Defined;
 
    procedure Load
@@ -73,7 +75,9 @@ package GPR2.Project.Tree.View_Builder is
                            GPR2.Path_Name.Set.Empty_Set;
       Pre_Conf_Mode    : Boolean                   := False;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference)
+                           GPR2.File_Readers.No_File_Reader_Reference;
+      Environment      : GPR2.Environment.Object :=
+                           GPR2.Environment.Process_Environment)
        with Pre => Project.Is_Defined;
    --  Loads a root project. Similar to Tree.Load, using a View_Builder
    --  object as root project.
