@@ -21,7 +21,8 @@ package body GPR2.Project is
 
    procedure Append_Default_Search_Paths
      (Paths       : in out Path_Name.Set.Object;
-      Environment : GPR2.Environment.Object)
+      Environment : GPR2.Environment.Object :=
+                       GPR2.Environment.Process_Environment)
    is
 
       procedure Append (Value : String)
@@ -169,7 +170,9 @@ package body GPR2.Project is
 
    function Default_Search_Paths
      (Current_Directory : Boolean;
-      Environment       : GPR2.Environment.Object) return Path_Name.Set.Object
+      Environment       : GPR2.Environment.Object :=
+                             GPR2.Environment.Process_Environment
+     ) return Path_Name.Set.Object
    is
       Result : Path_Name.Set.Object;
    begin
