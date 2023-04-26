@@ -1,0 +1,10 @@
+project Install is
+
+   for Languages use ("XML");
+   for Source_Files use ("runtime.xml");
+
+   package Naming is
+      for Spec_Suffix ("XML") use ".xml";
+   end Naming;
+
+end Install;
