@@ -8,3 +8,6 @@ testsuite/tests/**/*.h no-precommit-check
 
 # Disable checks on python bindings until Python 3.x is supported
 bindings/python/** no-precommit-check
+
+# Help gitlab choose correct highlighting for rst files
+*.rst diff=text gitlab-language=text
