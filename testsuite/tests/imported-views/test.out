@@ -9,3 +9,12 @@ Project: Demo2
      > /demo3.gpr
    imports recursively:
      > /demo3.gpr
+Project: Demo4
+   imports:
+     > /demo1.gpr
+     > /demo2.gpr
+     > /demo3.gpr
+   imports recursively:
+     > /demo1.gpr
+     > /demo2.gpr
+     > /demo3.gpr
