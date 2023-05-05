@@ -13,6 +13,7 @@ with GNAT.OS_Lib;
 with GNATCOLL.Utils;
 
 with GPR2.FNMatch;
+with GPR2.Message;
 with GPR2.Project.Attribute_Cache;
 with GPR2.Project.Definition;
 with GPR2.Project.Source.Set;
@@ -1525,11 +1526,33 @@ package body GPR2.Project.View is
 
    function Has_Mains (Self : Object) return Boolean is
       Attr : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
+
+      function Are_Valid (Mains : Project.Attribute.Object) return Boolean;
+
+      function Are_Valid (Mains : Project.Attribute.Object) return Boolean is
+         Src  : GPR2.Project.Source.Object;
+         Valid : Boolean := True;
+      begin
+         for Main of Mains.Values loop
+            if not Self.Check_Source (Simple_Name (Main.Text), Src) then
+               Self.Tree.Append_Message
+                 (Message.Create
+                    (Level   => Message.Warning,
+                     Message => Main.Text & " is not a source of project "
+                     & String (Self.Name),
+                     Sloc    => Main));
+               Valid := False;
+            end if;
+         end loop;
+
+         return Valid;
+      end Are_Valid;
+
    begin
-      if not Attr.Is_Defined then
+      if not Attr.Is_Defined or else Attr.Count_Values = 0 then
          return False;
       else
-         return Attr.Count_Values > 0;
+         return Are_Valid (Mains => Attr);
       end if;
    end Has_Mains;
 

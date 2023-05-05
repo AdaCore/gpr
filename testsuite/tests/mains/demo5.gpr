@@ -1,0 +1,4 @@
+with "demo/demo.gpr";
+project Demo5 is
+   for Main use ("call.adb");
+end Demo5;
