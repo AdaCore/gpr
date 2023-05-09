@@ -125,7 +125,7 @@ package body GPR2.Build.View_Tables is
       end if;
 
       if not Success then
-         Other := Data.CUs.Reference (Cursor).Get (Kind, Sep_Name).Path;
+         Other := Data.CUs.Reference (Cursor).Get (Kind, Sep_Name).Source;
          Data.View.Tree.Append_Message
            (Message.Create
               (Level   => Message.Warning,

@@ -25,7 +25,7 @@ package body GPR2.Build.Compilation_Input.Sets is
             if CU.Main_Part.View = View.Id then
                Self.Include ((View,
                               Unit_Kind,
-                              +String (CU.Main_Part.Path.Simple_Name),
+                              +String (CU.Main_Part.Source.Simple_Name),
                               CU.Main_Part.Index));
             end if;
          end loop;

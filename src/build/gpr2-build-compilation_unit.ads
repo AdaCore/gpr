@@ -14,9 +14,9 @@ limited with GPR2.Project.Tree;
 package GPR2.Build.Compilation_Unit is
 
    type Unit_Location is record
-      View  : View_Ids.View_Id;
-      Path  : Path_Name.Object;
-      Index : Unit_Index := No_Index;
+      View   : View_Ids.View_Id;
+      Source : Path_Name.Object;
+      Index  : Unit_Index := No_Index;
    end record;
    --  Identifies the location of a Unit (spec/body or separate).
 

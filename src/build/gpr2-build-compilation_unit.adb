@@ -22,9 +22,9 @@ package body GPR2.Build.Compilation_Unit is
       Success  : out Boolean)
    is
       UL : constant Unit_Location :=
-             (View  => View,
-              Path  => Path,
-              Index => Index);
+             (View   => View,
+              Source => Path,
+              Index  => Index);
    begin
       Success := False;
 
@@ -86,7 +86,7 @@ package body GPR2.Build.Compilation_Unit is
          Action
            (S_Spec,
             Self.Spec.View,
-            Self.Spec.Path,
+            Self.Spec.Source,
             Self.Spec.Index,
             "");
       end if;
@@ -95,7 +95,7 @@ package body GPR2.Build.Compilation_Unit is
          Action
            (S_Body,
             Self.Implem.View,
-            Self.Implem.Path,
+            Self.Implem.Source,
             Self.Implem.Index,
             "");
       end if;
@@ -110,7 +110,7 @@ package body GPR2.Build.Compilation_Unit is
             Action
               (S_Separate,
                Unit.View,
-               Unit.Path,
+               Unit.Source,
                Unit.Index,
                Sep_Name);
          end;
@@ -146,7 +146,7 @@ package body GPR2.Build.Compilation_Unit is
       Tree : GPR2.Project.Tree.Object) return Simple_Name
    is
       Main : constant Unit_Location := Self.Main_Part;
-      BN   : constant Simple_Name := Main.Path.Base_Filename;
+      BN   : constant Simple_Name := Main.Source.Base_Filename;
    begin
       if Main.Index = No_Index then
          return BN & Tree.Object_Suffix (Ada_Language);
@@ -174,9 +174,9 @@ package body GPR2.Build.Compilation_Unit is
       Sep_Name : Optional_Name_Type := "")
    is
       UL    : constant Unit_Location :=
-                (View  => View,
-                 Path  => Path,
-                 Index => Index);
+                (View   => View,
+                 Source => Path,
+                 Index  => Index);
       C     : Separate_Maps.Cursor;
       CD    : Duplicates_List.Cursor;
       Found : Boolean := False;
@@ -252,7 +252,7 @@ package body GPR2.Build.Compilation_Unit is
                   Self.Duplicates.Delete (CD);
                   Self.Add (Elem.Kind,
                             Elem.Loc.View,
-                            Elem.Loc.Path,
+                            Elem.Loc.Source,
                             Elem.Loc.Index,
                             Elem.Sep_Name,
                             Found);
