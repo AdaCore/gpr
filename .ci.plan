@@ -5,17 +5,8 @@ def all():
 def build():
     # customer scenario
     setup()
-    anod_build("gpr2name")
-    anod_build("gpr2")
-    anod_build("gprbuild")
-    anod_build("gnat")
-    anod_build("gnatcxx")
-    anod_build("gnatall")
-    anod_build("libgpr2", qualifier="bare")
-    anod_build("libgpr2")
-    anod_build("gpr2-bindings")
-    anod_build("aws-lib")
-    anod_build("gprbuild", qualifier="gpr1")
+    anod_build("libgpr2", qualifier="bare,next")
+    anod_build("libgpr2", qualifier="next")
 
 def setup():
     # for gpr2name
@@ -30,23 +21,3 @@ def setup():
     anod_install("stable-libadalang-tools")
     anod_install("gdb")
     anod_install("e3")
-
-def test():
-    testgpr2()
-    testgprbuild()
-    testgpr2ls()
-    anod_test("gpr2-bindings")
-
-def testgpr2():
-   anod_test("gpr2", qualifier="from_gnat")
-
-def testgprbuild():
-   anod_test("gprbuild", qualifier="AdaCC++_Auto")
-
-def testgpr2ls():
-   anod_build("gprbuild", qualifier="gpr1")
-   anod_test("gprbuild", qualifier="AdaCC++_Auto,check-gpr2ls")
-
-def cov():
-   anod_build("gpr2", qualifier="coverage")
-   anod_test("gpr2", qualifier="coverage")

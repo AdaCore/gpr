@@ -15,8 +15,6 @@ variables:
 
 stages:
   - build
-  - test
-  - post
 
 ########################
 ## SETUP REPOSITORIES ##
@@ -86,23 +84,17 @@ build:
     - *setup_repos
 
     # Setup the 'anod vcs' for this repo
-    - anod vcs --add-repo gpr2 $CI_PROJECT_DIR
+    - anod vcs --add-repo gpr2-next $CI_PROJECT_DIR
 
     # Tune to use our build & test plan
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
-
-    # Run a gnat bootstrap.
-    # Note: we could take shortcuts here and just build the gprbuild package
-    # but being able to run a full gnat bootstrap with the updated gpr tools is
-    # part of our assurance that we don't provoque a disaster during the
-    # nightly builds.
     - anod run build
 
     # generate packages to be used at test stages.
     # Note: we can't package the full gnat or gnatall install as the size seems
     # to reach some limits for the saved artifacts. So we package gprbuild and
     # co and will amend the toolchains for testing..
-    - for pkg in gprbuild gpr2 libgpr2 gpr2-bindings gpr1build; do
+    - for pkg in libgpr2-next; do
         echo "packaging $SANDBOX/$HOST/$pkg/install/" ;
         tar czf $CI_PROJECT_DIR/$pkg.tar.gz -C $SANDBOX/$HOST/$pkg/ install/ ;
       done
@@ -111,198 +103,4 @@ build:
 
   artifacts:
     paths:
-      - gprbuild.tar.gz
-      - gpr2.tar.gz
-      - gpr2-bindings.tar.gz
-      - libgpr2.tar.gz
-      - gpr1build.tar.gz
-
-####################
-## GPR2 TESTSUITE ##
-####################
-
-test_gpr2:
-  services:
-     - image:sandbox
-     - cpu:8
-     - mem:16
-  stage: test
-  allow_failure: true
-  script:
-    - packages="gnat gpr2 libgpr2"
-    - subprojects=""
-    - *setup_repos
-
-    # add the gpr2 repo
-    - anod vcs --add-repo gpr2 $CI_PROJECT_DIR
-
-    - anod test gpr2 -Qfrom_gnat --minimal
-    - e3-testsuite-report
-        --failure-exit-code 1
-        --xunit-output $CI_PROJECT_DIR/testgpr2_result.xml
-        --xunit-name test_gpr2
-        $SANDBOX/$HOST/gpr2-test-gnat/results/new/ || exit 1
-  artifacts:
-    when:
-      always
-    paths:
-      - testgpr2_result.xml
-    reports:
-      junit: testgpr2_result.xml
-
-##############
-## COVERAGE ##
-##############
-
-test_gpr2_cov:
-  services:
-     - image:sandbox
-     - cpu:8
-     - mem:16
-  stage: test
-  allow_failure: true
-  script:
-    - packages=""
-    - subprojects=""
-    - *setup_repos
-
-    # add the gpr2 repo
-    - anod vcs --add-repo gpr2 $CI_PROJECT_DIR
-
-    - anod build gpr2 -Qcoverage
-    - anod test gpr2 -Qcoverage --minimal
-    - mkdir $CI_PROJECT_DIR/coverage
-    - cov_dir=$SANDBOX/$HOST/gpr2-test-cov-stmt/results/new
-    - mv $cov_dir/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
-    - mv $cov_dir/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
-    - echo_coverage_stats --coverage-file $cov_dir/coverage-xml/index.xml
-    - e3-testsuite-report
-        --failure-exit-code 1
-        --xunit-output $CI_PROJECT_DIR/testgpr2cov_result.xml
-        --xunit-name test_gpr2_cov
-        $SANDBOX/$HOST/gpr2-test-cov-stmt/results/new/ || exit 1
-  coverage: '/^Stmt Coverage:\s+(\d+\.\d+\%) \(\d+ \/ \d+\)$/'
-  artifacts:
-    when:
-      always
-    paths:
-      - coverage/cobertura.xml
-      - coverage/dhtml
-      - testgpr2cov_result.xml
-    reports:
-      junit: testgpr2cov_result.xml
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage/cobertura.xml
-
-########################
-## GPRBUILD TESTSUITE ##
-########################
-
-test_gprbuild:
-  services:
-     - image:sandbox
-     - cpu:8
-     - mem:16
-  stage: test
-  allow_failure: true
-  script:
-    - packages=gnatall
-    - subprojects=gprbuild-internal
-    - *setup_repos
-
-    - anod test gprbuild -QAdaCC++_Auto --minimal
-    - e3-testsuite-report
-        --failure-exit-code 1
-        --xunit-output $CI_PROJECT_DIR/testgprbuild_result.xml
-        --xunit-name test_gprbuild
-        $SANDBOX/$HOST/gprbuild-testAdaCC++_Auto/results/new/ || exit 1
-  artifacts:
-    when:
-      always
-    paths:
-      - testgprbuild_result.xml
-    reports:
-      junit: testgprbuild_result.xml
-
-######################
-## GPR2LS TESTSUITE ##
-######################
-
-test_gpr2ls:
-  services:
-     - image:sandbox
-     - cpu:8
-     - mem:16
-  stage: test
-  allow_failure: true
-  script:
-    - packages="gnatall gpr1build"
-    - subprojects=gprbuild-internal
-    - *setup_repos
-
-    - anod test gprbuild -QAdaCC++_Auto -Qcheck-gpr2ls --minimal
-    - e3-testsuite-report
-        --failure-exit-code 1
-        --xunit-output $CI_PROJECT_DIR/testgpr2ls_result.xml
-        --xunit-name test_gpr2ls
-        $SANDBOX/$HOST/gprbuild-testAdaCC++_Auto-gpr2ls/results/new/ || exit 1
-  artifacts:
-    when:
-      always
-    paths:
-      - testgpr2ls_result.xml
-    reports:
-      junit: testgpr2ls_result.xml
-
-#############################
-## GPR2 BINDINGS TESTSUITE ##
-#############################
-
-test_gpr2bindings:
-  services:
-     - image:sandbox
-     - cpu:8
-     - mem:16
-  stage: test
-  allow_failure: true
-  script:
-    - packages=gpr2-bindings
-    - subprojects=""
-    - *setup_repos
-    - anod vcs --add-repo gpr2 $CI_PROJECT_DIR
-
-    - anod test gpr2-bindings --minimal
-    # TODO: adjust this when this testsuite supports e3-testsuite-report
-    - OUTPUT=$(sed $SANDBOX/$HOST/gpr2-bindings-test/results/results -e '/.*PASSED$/d' -e '/.*XFAIL$/d' -e '/^$/d')
-    - if [ -n "$OUTPUT" ] ; then
-         echo "the following tests fail:" ;
-         echo "$OUTPUT" ;
-         exit 1 ;
-      fi
-
-####################
-## POSTPROCESSING ##
-####################
-
-post:
-  services:
-     - image:sandbox
-     - cpu:8
-     - mem:16
-  stage: post
-  when: always
-  script:
-    # generate badge
-    - cd $CI_PROJECT_DIR
-    - rm -f test-count.svg
-    - if ls test*_result.xml &> /dev/null; then
-        create_xunit_badge --xunit_reports test*_result.xml;
-      else
-        anybadge -l "Tests Passing" -v "Error" -f test-count.svg -c red;
-      fi
-  artifacts:
-    when:
-      always
-    paths:
-      - test-count.svg
+      - libgpr2-next.tar.gz
