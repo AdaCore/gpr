@@ -299,6 +299,7 @@ package body GPR2.Options is
    function Load_Project
      (Self             : in out Object;
       Tree             : in out GPR2.Project.Tree.Object;
+      With_Runtime     : Boolean;
       Absent_Dir_Error : GPR2.Project.Tree.Error_Level :=
                            GPR2.Project.Tree.Warning;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
@@ -333,15 +334,16 @@ package body GPR2.Options is
          end if;
 
          Tree.Load
-           (Filename         =>  Self.Filename,
-            Context          =>  Self.Context,
-            Config           =>  Conf,
-            Build_Path       =>  Self.Build_Path,
-            Subdirs          =>  Subdirs (Self),
-            Src_Subdirs      =>  Src_Subdirs (Self),
-            Check_Shared_Lib =>  Self.Check_Shared_Lib,
-            Absent_Dir_Error =>  Absent_Dir_Error,
-            Implicit_With    =>  Self.Implicit_With,
+           (Filename         => Self.Filename,
+            Context          => Self.Context,
+            With_Runtime     => With_Runtime,
+            Config           => Conf,
+            Build_Path       => Self.Build_Path,
+            Subdirs          => Subdirs (Self),
+            Src_Subdirs      => Src_Subdirs (Self),
+            Check_Shared_Lib => Self.Check_Shared_Lib,
+            Absent_Dir_Error => Absent_Dir_Error,
+            Implicit_With    => Self.Implicit_With,
             File_Reader      => File_Reader,
             Environment      => Self.Environment);
 
@@ -405,17 +407,18 @@ package body GPR2.Options is
          end if;
 
          Tree.Load_Autoconf
-           (Filename          =>  Self.Filename,
-            Context           =>  Self.Context,
-            Build_Path        =>  Self.Build_Path,
-            Subdirs           =>  Subdirs (Self),
-            Src_Subdirs       =>  Src_Subdirs (Self),
-            Check_Shared_Lib  =>  Self.Check_Shared_Lib,
-            Absent_Dir_Error  =>  Absent_Dir_Error,
-            Implicit_With     =>  Self.Implicit_With,
-            Target            =>  Target (Self),
-            Language_Runtimes =>  Self.RTS_Map,
-            Base              =>  Self.Base,
+           (Filename          => Self.Filename,
+            Context           => Self.Context,
+            With_Runtime      => With_Runtime,
+            Build_Path        => Self.Build_Path,
+            Subdirs           => Subdirs (Self),
+            Src_Subdirs       => Src_Subdirs (Self),
+            Check_Shared_Lib  => Self.Check_Shared_Lib,
+            Absent_Dir_Error  => Absent_Dir_Error,
+            Implicit_With     => Self.Implicit_With,
+            Target            => Target (Self),
+            Language_Runtimes => Self.RTS_Map,
+            Base              => Self.Base,
             Config_Project    => (if Create_Cgpr
                                   then Self.Config_Project
                                   else GPR2.Path_Name.Undefined),

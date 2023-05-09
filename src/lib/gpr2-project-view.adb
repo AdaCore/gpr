@@ -1454,6 +1454,11 @@ package body GPR2.Project.View is
       return False;
    end Has_Language;
 
+   function Has_Language (Self : Object; Name : Language_Id) return Boolean is
+   begin
+      return Self.Has_Language (GPR2.Name (Name));
+   end Has_Language;
+
    -------------------
    -- Has_Languages --
    -------------------

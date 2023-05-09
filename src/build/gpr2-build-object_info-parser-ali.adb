@@ -821,18 +821,6 @@ package body GPR2.Build.Object_Info.Parser.ALI is
          exit when Src.Source.Is_Defined;
       end loop;
 
-      --  The runtime is not always registerd in the tree, to speed up
-      --  computation. So perform an explicit check here.
-
-      if not Src.Source.Is_Defined
-        and then Current_View.Tree.Has_Runtime_Project
-        and then Current_View.Tree.Runtime_Project.Has_Source (Sfile)
-      then
-         Db := Current_View.Tree.Artifacts_Database
-           (Current_View.Tree.Runtime_Project);
-         Src := Db.Visible_Source (Sfile);
-      end if;
-
       if Src.Source.Is_Defined then
          if Src.Source.Units.Is_Indexed_List then
             --  No way to disambiguate: pick up the first unit.

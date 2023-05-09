@@ -41,6 +41,7 @@ package GPR2.Project.Tree.View_Builder is
      (Self              : in out Tree.Object;
       Project           : View_Builder.Object;
       Context           : GPR2.Context.Object;
+      With_Runtime      : Boolean;
       Build_Path        : Path_Name.Object          := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type        := No_Name;
       Src_Subdirs       : Optional_Name_Type        := No_Name;
@@ -64,6 +65,7 @@ package GPR2.Project.Tree.View_Builder is
      (Self             : in out Tree.Object;
       Project          : View_Builder.Object;
       Context          : GPR2.Context.Object;
+      With_Runtime     : Boolean;
       Config           : GPR2.Project.Configuration.Object :=
                            GPR2.Project.Configuration.Undefined;
       Build_Path       : Path_Name.Object        := Path_Name.Undefined;

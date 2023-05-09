@@ -88,6 +88,7 @@ package body GPR2.Project.Tree.View_Builder is
      (Self             : in out Tree.Object;
       Project          : Object;
       Context          : GPR2.Context.Object;
+      With_Runtime     : Boolean;
       Config           : PC.Object                 := PC.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type        := No_Name;
@@ -108,6 +109,7 @@ package body GPR2.Project.Tree.View_Builder is
       Self.Load ((Project_Definition, Project.Data),
                  Context          => Context,
                  Config           => Config,
+                 With_Runtime     => With_Runtime,
                  Build_Path       => Build_Path,
                  Subdirs          => Subdirs,
                  Src_Subdirs      => Src_Subdirs,
@@ -125,6 +127,7 @@ package body GPR2.Project.Tree.View_Builder is
      (Self              : in out Tree.Object;
       Project           : Object;
       Context           : GPR2.Context.Object;
+      With_Runtime      : Boolean;
       Build_Path        : Path_Name.Object        := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type      := No_Name;
       Src_Subdirs       : Optional_Name_Type      := No_Name;
@@ -147,6 +150,7 @@ package body GPR2.Project.Tree.View_Builder is
       Self.Load_Autoconf
         (Root_Project      => (Project_Definition, Project.Data),
          Context           => Context,
+         With_Runtime      => With_Runtime,
          Build_Path        => Build_Path,
          Subdirs           => Subdirs,
          Src_Subdirs       => Src_Subdirs,

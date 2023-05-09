@@ -35,7 +35,6 @@ package GPR2.Build.Tree_Db is
      with Post => not Self.Is_Defined;
 
    procedure Refresh (Self         : in out Object;
-                      With_Runtime : Boolean;
                       Messages     : out GPR2.Log.Object)
      with Pre => Self.Is_Defined;
 

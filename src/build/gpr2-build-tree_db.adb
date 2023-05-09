@@ -51,16 +51,11 @@ package body GPR2.Build.Tree_Db is
 
    procedure Refresh
      (Self         : in out Object;
-      With_Runtime : Boolean;
       Messages     : out GPR2.Log.Object)
    is
-      use type GPR2.View_Ids.View_Id;
    begin
       for V of Self.Tree.Ordered_Views loop
-         if V.Kind in With_Object_Dir_Kind
-           and then (With_Runtime
-                     or else V.Id /= GPR2.View_Ids.Runtime_View_Id)
-         then
+         if V.Kind in With_Object_Dir_Kind then
             View_Tables.Refresh (View_Tables.Get_Data (Self.Self, V),
                                  Messages);
          end if;

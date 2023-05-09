@@ -67,6 +67,7 @@ package GPR2.Project.Tree is
      (Self             : in out Object;
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
+      With_Runtime     : Boolean;
       Config           : Configuration.Object      := Configuration.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type        := No_Name;
@@ -120,6 +121,7 @@ package GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
+      With_Runtime      : Boolean;
       Build_Path        : Path_Name.Object        := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type      := No_Name;
       Src_Subdirs       : Optional_Name_Type      := No_Name;
@@ -342,7 +344,6 @@ package GPR2.Project.Tree is
 
    procedure Update_Sources
      (Self         : Object;
-      With_Runtime : Boolean := False;
       Messages     : out GPR2.Log.Object)
      with Pre => Self.Is_Defined;
    --  Ensures that all views' sources are up-to-date.
@@ -528,6 +529,7 @@ private
       Conf              : Project.Configuration.Object;
       Base              : GPR2.KB.Object;
       Tree_Db           : Build.Tree_Db.Object;
+      With_RTS_View     : Boolean := False;
       Runtime           : View.Object;
       Messages          : aliased Log.Object;
       Search_Paths      : All_Search_Paths;
@@ -559,6 +561,7 @@ private
      (Self             : in out Object;
       Root_Project     : Project_Descriptor;
       Context          : GPR2.Context.Object;
+      With_Runtime     : Boolean;
       Config           : PC.Object                 := PC.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type        := No_Name;
@@ -579,6 +582,7 @@ private
      (Self              : in out Object;
       Root_Project      : Project_Descriptor;
       Context           : GPR2.Context.Object;
+      With_Runtime      : Boolean;
       Build_Path        : Path_Name.Object        := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type      := No_Name;
       Src_Subdirs       : Optional_Name_Type      := No_Name;

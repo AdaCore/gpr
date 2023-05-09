@@ -9,6 +9,7 @@ procedure Load_Autoconf
   (Self              : in out Object;
    Root_Project      : Project_Descriptor;
    Context           : GPR2.Context.Object;
+   With_Runtime      : Boolean;
    Build_Path        : Path_Name.Object        := Path_Name.Undefined;
    Subdirs           : Optional_Name_Type      := No_Name;
    Src_Subdirs       : Optional_Name_Type      := No_Name;
@@ -574,6 +575,7 @@ begin
       Self.Load
         (Root_Project,
          Context,
+         With_Runtime     => With_Runtime,
          File_Reader      => File_Reader,
          Build_Path       => Build_Path,
          Subdirs          => Subdirs,
@@ -666,7 +668,9 @@ begin
 
    Self.Load
      (Root_Project,
-      Context, Conf,
+      Context,
+      With_Runtime     => With_Runtime,
+      Config           => Conf,
       File_Reader      => File_Reader,
       Build_Path       => Build_Path,
       Subdirs          => Subdirs,
@@ -733,7 +737,9 @@ begin
 
    Self.Load
      (Root_Project,
-      Context, Conf,
+      Context,
+      With_Runtime     => With_Runtime,
+      Config           => Conf,
       File_Reader      => File_Reader,
       Build_Path       => Build_Path,
       Subdirs          => Subdirs,

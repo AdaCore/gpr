@@ -101,6 +101,7 @@ package body GPR2.Project.Tree is
      (Self          : in out Object;
       Root_Project  : Project_Descriptor;
       Context       : Context_Kind;
+      With_Runtime  : Boolean;
       Starting_From : View.Object := View.Undefined) return View.Object
      with Pre =>
        (if Starting_From.Is_Defined
@@ -353,11 +354,12 @@ package body GPR2.Project.Tree is
    -------------------------
 
    function Create_Runtime_View (Self : Object) return View.Object is
-      CV   : constant View.Object := Self.Conf.Corresponding_View;
-      DS   : Character renames OS_Lib.Directory_Separator;
-      Data : Project.Definition.Data;
-      RTD  : Attribute.Object;
-      RTF  : Path_Name.Object;
+      CV     : constant View.Object := Self.Conf.Corresponding_View;
+      DS     : Character renames OS_Lib.Directory_Separator;
+      Data   : Project.Definition.Data;
+      RTD    : Attribute.Object;
+      RTF    : Path_Name.Object;
+      Result : View.Object;
 
       procedure Add_Attribute (Name : Q_Attribute_Id; Value : Value_Type);
       --  Add builtin attribute into Data.Attrs
@@ -474,20 +476,9 @@ package body GPR2.Project.Tree is
             File      => RTF,
             Qualifier => K_Standard);
 
-         return Result : View.Object := Register_View (Data) do
-            --  If we simply return Register_View (Data) the reference counter
-            --  will be one more than should be, see T709-001.
-            --  It is not actual for now because line below is added after the
-            --  T709-001 bug detected.
+         Result := Register_View (Data);
 
-            --  ??? We shouldn't consider the runtime view as a root view, but
-            --  instead add it as implicitly limited withed project for all
-            --  views that have Ada sources.
-
-            Definition.Get_RW (Result).Root_Views.Append
-              (View_Ids.Runtime_View_Id);
-         end return;
-
+         return Result;
       else
          return Project.View.Undefined;
       end if;
@@ -872,6 +863,7 @@ package body GPR2.Project.Tree is
      (Self             : in out Object;
       Root_Project     : Project_Descriptor;
       Context          : GPR2.Context.Object;
+      With_Runtime     : Boolean;
       Config           : PC.Object                 := PC.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type        := No_Name;
@@ -958,6 +950,17 @@ package body GPR2.Project.Tree is
          end;
       end if;
 
+      if With_Runtime
+        and then not Self.With_RTS_View
+        and then Self.Has_Configuration
+      then
+         --  Create the runtime view
+         Self.Runtime := Self.Create_Runtime_View;
+         --  And indicate we want the runtime view to be used when loading the
+         --  tree
+         Self.With_RTS_View := With_Runtime;
+      end if;
+
       Self.Build_Path       := Build_Path;
       Self.Subdirs          := To_Unbounded_String (String (Subdirs));
       Self.Src_Subdirs      := To_Unbounded_String (String (Src_Subdirs));
@@ -1016,7 +1019,8 @@ package body GPR2.Project.Tree is
          Root_Project => (if Root_Project.Kind = Project_Definition
                           then Root_Project
                           else (Project_Path, Gpr_Path)),
-         Context      => Root);
+         Context      => Root,
+         With_Runtime => Self.With_RTS_View);
 
       --  Do nothing more if there are errors during the parsing
 
@@ -1089,6 +1093,7 @@ package body GPR2.Project.Tree is
      (Self             : in out Object;
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
+      With_Runtime     : Boolean;
       Config           : PC.Object                 := PC.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type        := No_Name;
@@ -1109,6 +1114,7 @@ package body GPR2.Project.Tree is
          Self.Load
            (Project_Descriptor'(Project_Path, Filename),
             Context          => Context,
+            With_Runtime     => With_Runtime,
             Config           => Config,
             Build_Path       => Build_Path,
             Subdirs          => Subdirs,
@@ -1127,6 +1133,7 @@ package body GPR2.Project.Tree is
          View_Builder.Load
            (Self,
             View_Builder.Create (Filename, "Default"),
+            With_Runtime     => With_Runtime,
             Context          => Context,
             Config           => Config,
             Build_Path       => Build_Path,
@@ -1149,6 +1156,7 @@ package body GPR2.Project.Tree is
      (Self              : in out Object;
       Root_Project      : Project_Descriptor;
       Context           : GPR2.Context.Object;
+      With_Runtime      : Boolean;
       Build_Path        : Path_Name.Object          := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type        := No_Name;
       Src_Subdirs       : Optional_Name_Type        := No_Name;
@@ -1172,6 +1180,7 @@ package body GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
+      With_Runtime      : Boolean;
       Build_Path        : Path_Name.Object        := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type      := No_Name;
       Src_Subdirs       : Optional_Name_Type      := No_Name;
@@ -1193,6 +1202,7 @@ package body GPR2.Project.Tree is
          Self.Load_Autoconf
            (Root_Project      => (Project_Path, Filename),
             Context           => Context,
+            With_Runtime      => With_Runtime,
             Build_Path        => Build_Path,
             Subdirs           => Subdirs,
             Src_Subdirs       => Src_Subdirs,
@@ -1209,6 +1219,7 @@ package body GPR2.Project.Tree is
          View_Builder.Load_Autoconf
            (Self,
             View_Builder.Create (Filename, "Default"),
+            With_Runtime      => With_Runtime,
             Context           => Context,
             Build_Path        => Build_Path,
             Subdirs           => Subdirs,
@@ -1394,6 +1405,7 @@ package body GPR2.Project.Tree is
      (Self          : in out Object;
       Root_Project  : Project_Descriptor;
       Context       : Context_Kind;
+      With_Runtime  : Boolean;
       Starting_From : View.Object := View.Undefined) return View.Object
    is
 
@@ -1731,6 +1743,30 @@ package body GPR2.Project.Tree is
                         Data.Extended.Include (Extended_View);
                         Data.Extended_Root := Extended_View;
                      end if;
+                  end;
+               end if;
+
+               --  We can now resolve correctly the language attribute and thus
+               --  determine if we need to add the runtime to the list of
+               --  imported views.
+
+               if With_Runtime
+                 and then View.Kind in With_Object_Dir_Kind
+                 and then View.Has_Language (Ada_Language)
+                 and then not
+                   (Data.Limited_Imports.Contains (Self.Runtime_Project.Name)
+                    or else Data.Imports.Contains (Self.Runtime_Project.Name))
+               then
+                  declare
+                     RTS_View : GPR2.Project.View.Object :=
+                                  Self.Runtime_Project;
+                  begin
+                     Data.Imports.Insert (RTS_View.Name, RTS_View);
+                     Data.Closure.Include (RTS_View.Name, RTS_View);
+
+                     for Root of View.Namespace_Roots loop
+                        Propagate_Aggregate (RTS_View, Root.Id, False);
+                     end loop;
                   end;
                end if;
             end;
@@ -2639,6 +2675,7 @@ package body GPR2.Project.Tree is
                                           Root_Project  => (Project_Path,
                                                             Pathname),
                                           Context       => Context,
+                                          With_Runtime  => Self.With_RTS_View,
                                           Starting_From => View);
                         begin
                            --  If there was error messages during the parsing
@@ -3128,8 +3165,6 @@ package body GPR2.Project.Tree is
 
       if Self.Has_Configuration then
          Set_View (Self.Conf.Corresponding_View);
-
-         Self.Runtime := Create_Runtime_View (Self);
       end if;
 
       declare
@@ -3594,23 +3629,12 @@ package body GPR2.Project.Tree is
 
    procedure Update_Sources
      (Self         : Object;
-      With_Runtime : Boolean := False;
       Messages     : out GPR2.Log.Object)
    is
    begin
       Self.Self.Sources_Loaded := True;
 
-      Self.Artifacts_Database.Refresh (With_Runtime, Messages);
-
-      --  Make sure the runtime is taken care of first : it is most certainly
-      --  involved in source dependencies at one point or another.
-
-      if With_Runtime
-        and then Self.Runtime.Is_Defined
-      then
-         Self.Artifacts_Database (Self.Runtime).Update
-           (Messages);
-      end if;
+      Self.Artifacts_Database.Refresh (Messages);
    end Update_Sources;
 
    -------------
