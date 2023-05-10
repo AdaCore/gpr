@@ -1,5 +1,5 @@
 project Inst is
-   for Main use ("adactl.adb"); -- , "ptree", "pfni");
+   for Main use ("adactl"); -- , "ptree", "pfni");
 
    package Install is
       for mode use "usage";

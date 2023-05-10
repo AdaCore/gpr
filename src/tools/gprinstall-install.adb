@@ -58,7 +58,6 @@ with GPR2.Source_Reference;
 with GPR2.Source_Reference.Value;
 
 with GPRtools;
-with GPRtools.Util;
 
 package body GPRinstall.Install is
 
@@ -73,7 +72,6 @@ package body GPRinstall.Install is
 
    use type GNATCOLL.OS.OS_Type;
 
-   package PRA           renames GPR2.Project.Registry.Attribute;
    package String_Vector renames GPR2.Containers.Value_Type_List;
 
    subtype Message_Digest is GNAT.MD5.Message_Digest;
@@ -2915,13 +2913,6 @@ package body GPRinstall.Install is
 
          if not Is_Project_To_Install then
             return;
-         end if;
-
-         if Project.Attribute (PRA.Main).Is_Defined
-           and then Project.Mains.Is_Empty
-         then
-            Util.Output_Messages (Options);
-            GPRtools.Util.Fail_Program ("problems with main sources");
          end if;
 
          --  What should be copied ?
