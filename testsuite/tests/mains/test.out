@@ -5,14 +5,5 @@ mains/obj/call2
 Demo3    K_STANDARD
 mains/exec/call3_1
 mains/exec/call3_2
-demo3.gpr:2:20: warning: exec directory "exec" not found
-demo3.gpr:3:17: warning: call3_1.adb is not a source of project Demo3
 Demo4    K_STANDARD
 mains/exec4/call4
-demo4.gpr:3:20: warning: exec directory "exec4" not found
-demo4.gpr:4:17: warning: call4.adb is not a source of project Demo4
-Demo5    K_STANDARD
-mains/call
-Demo6    K_STANDARD
-mains/call_not_found
-demo6.gpr:3:18: warning: call_not_found.adb is not a source of project Demo6

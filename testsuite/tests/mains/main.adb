@@ -53,56 +53,14 @@ procedure Main is
 
 begin
    Project.Tree.Load (Prj, Create ("demo1.gpr"), Ctx);
-   Prj.Update_Sources;
    Display (Prj.Root_Project);
-   Prj.Log_Messages.Output_Messages
-     (Information    => False,
-      Warning        => True,
-      Error          => False);
-   Prj.Unload;
 
    Project.Tree.Load (Prj, Create ("demo2.gpr"), Ctx);
-   Prj.Update_Sources;
    Display (Prj.Root_Project);
-   Prj.Log_Messages.Output_Messages
-     (Information    => False,
-      Warning        => True,
-      Error          => False);
-   Prj.Unload;
 
    Project.Tree.Load (Prj, Create ("demo3.gpr"), Ctx);
-   Prj.Update_Sources;
    Display (Prj.Root_Project);
-   Prj.Log_Messages.Output_Messages
-     (Information    => False,
-      Warning        => True,
-      Error          => False);
-   Prj.Unload;
 
    Project.Tree.Load (Prj, Create ("demo4.gpr"), Ctx);
-   Prj.Update_Sources;
    Display (Prj.Root_Project);
-   Prj.Log_Messages.Output_Messages
-     (Information    => False,
-      Warning        => True,
-      Error          => False);
-   Prj.Unload;
-
-   Project.Tree.Load (Prj, Create ("demo5.gpr"), Ctx);
-   Prj.Update_Sources;
-   Display (Prj.Root_Project);
-   Prj.Log_Messages.Output_Messages
-     (Information    => False,
-      Warning        => True,
-      Error          => False);
-   Prj.Unload;
-
-   Project.Tree.Load (Prj, Create ("demo6.gpr"), Ctx);
-   Prj.Update_Sources;
-   Display (Prj.Root_Project);
-   Prj.Log_Messages.Output_Messages
-     (Information    => False,
-      Warning        => True,
-      Error          => False);
-   Prj.Unload;
 end Main;
