@@ -1,9 +1,33 @@
 Demo1    K_STANDARD
-mains/call1
+mains/prj/call1
 Demo2    K_STANDARD
-mains/obj/call2
+mains/prj/call2
 Demo3    K_STANDARD
-mains/exec/call3_1
-mains/exec/call3_2
+mains/prj/exec/not_found
+mains/prj/exec/call3_2
+demo3.gpr:3:20: warning: exec directory "exec" not found
+demo3.gpr:4:17: warning: not_found.adb is not a source of project Demo3
 Demo4    K_STANDARD
-mains/exec4/call4
+mains/prj/exec4/not_found
+demo4.gpr:3:20: warning: exec directory "exec4" not found
+demo4.gpr:4:17: warning: not_found.adb is not a source of project Demo4
+Demo5    K_STANDARD
+mains/prj/call
+Demo6    K_STANDARD
+mains/prj/not_found
+demo6.gpr:4:18: warning: not_found.adb is not a source of project Demo6
+Demo7    K_STANDARD
+mains/prj/demo7
+Demo8    K_STANDARD
+mains/prj/demo8
+demo8.gpr:3:26: warning: demo8.adb is not a source of project Demo8
+Demo9    K_STANDARD
+mains/prj/demo9
+Demo10   K_STANDARD
+mains/prj/demo10
+demo10.gpr:4:26: warning: demo10.1.ada is not a source of project Demo10
+Demo11   K_STANDARD
+mains/prj/demo11
+Demo12   K_STANDARD
+mains/prj/demo12_not_found
+demo12.gpr:4:33: warning: demo12_not_found.1.ada is not a source of project Demo12
