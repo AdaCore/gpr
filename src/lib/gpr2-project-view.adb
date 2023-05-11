@@ -13,6 +13,7 @@ with GNAT.OS_Lib;
 with GNATCOLL.Utils;
 
 with GPR2.FNMatch;
+with GPR2.Message;
 with GPR2.Project.Attribute_Cache;
 with GPR2.Project.Definition;
 with GPR2.Project.Source.Set;
@@ -1524,12 +1525,120 @@ package body GPR2.Project.View is
    ---------------
 
    function Has_Mains (Self : Object) return Boolean is
+      use GNATCOLL.Utils;
+
       Attr : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
+
+      function Are_Valid (Mains : Project.Attribute.Object) return Boolean;
+      --  Check is main attribute values exists in the source of Self.
+
+      function Get_Main_Fullname (Main : String) return String;
+      --  Get the main attribute value, if the value contains any standard
+      --  suffix (.ada, .c) or any declared convention in the Naming package
+      --  then it returns the value as is.
+      --  Otherwise, the default Ada suffix or any Ada Naming convention
+      --  declared in Self is applied to the value.
+
+      ---------------
+      -- Are_Valid --
+      ---------------
+
+      function Are_Valid (Mains : Project.Attribute.Object) return Boolean is
+         Src   : GPR2.Project.Source.Object;
+         Valid : Boolean := True;
+      begin
+         for Main of Mains.Values loop
+            declare
+               Main_Fullname : constant String :=
+                                 Get_Main_Fullname (Main.Text);
+            begin
+               if not Self.Check_Source (Simple_Name (Main_Fullname), Src)
+               then
+                  Self.Tree.Append_Message
+                    (Message.Create
+                       (Level   => Message.Warning,
+                        Message => Main_Fullname &
+                          " is not a source of project " & String (Self.Name),
+                        Sloc    => Main));
+                  Valid := False;
+               end if;
+            end;
+         end loop;
+
+         return Valid;
+      end Are_Valid;
+
+      -----------------------
+      -- Get_Main_Fullname --
+      -----------------------
+
+      function Get_Main_Fullname (Main : String) return String is
+         Default_Ada_BS : constant String :=
+                            PRA.Get
+                              (PRA.Naming.Body_Suffix).Default.Values ("ada");
+         Default_C_BS   : constant String :=
+                            PRA.Get
+                              (PRA.Naming.Body_Suffix).Default.Values ("c");
+         Ada_Index      : constant Attribute_Index.Object :=
+                            Attribute_Index.Create (Ada_Language);
+         Ada_BS_Defined : constant Boolean :=
+                            Self.Attribute
+                              (PRA.Naming.Body_Suffix, Ada_Index).Is_Defined;
+         Ada_BS         : constant String :=
+                            (if Ada_BS_Defined
+                             then Self.Attribute
+                               (PRA.Naming.Body_Suffix, Ada_Index).Value.Text
+                             else "");
+
+         function Ends_With_One_Language (Main : String) return Boolean;
+         --  Check if Main ends with any Self language naming convention suffix
+
+         ----------------------------
+         -- Ends_With_One_Language --
+         ----------------------------
+
+         function Ends_With_One_Language (Main : String) return Boolean is
+            Ends_With_One : Boolean := False;
+         begin
+            for Lang of Self.Languages
+            loop
+               declare
+                  L_Id   : constant Language_Id := +Name_Type (Lang.Text);
+                  Index  : constant Attribute_Index.Object :=
+                             Attribute_Index.Create (L_Id);
+                  BS_Def : constant Boolean :=
+                             Self.Attribute
+                               (PRA.Naming.Body_Suffix, Index).Is_Defined;
+                  BS     : constant String :=
+                             (if BS_Def
+                              then Self.Attribute
+                                (PRA.Naming.Body_Suffix, Index).Value.Text
+                              else "");
+               begin
+                  Ends_With_One :=
+                    Ends_With_One or else
+                    (if BS_Def then Ends_With (Main, BS) else False);
+               end;
+            end loop;
+
+            return Ends_With_One;
+         end Ends_With_One_Language;
+
+      begin
+         return (if Ends_With (Main, Default_Ada_BS)
+                 or else Ends_With (Main, Default_C_BS)
+                 or else Ends_With_One_Language (Main)
+                 then Main
+                 elsif Ada_BS_Defined
+                 then Main & Ada_BS
+                 else Main & Default_Ada_BS);
+      end Get_Main_Fullname;
+
    begin
-      if not Attr.Is_Defined then
+      if not Attr.Is_Defined or else Attr.Count_Values = 0 then
          return False;
       else
-         return Attr.Count_Values > 0;
+         return Are_Valid (Mains => Attr);
       end if;
    end Has_Mains;
 
