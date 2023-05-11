@@ -1,9 +1,7 @@
 Key:
- - ada.direct_io
+ - gnat.md5
 Name:
- - ada.direct_io
+ - gnat.md5
 Spec:
- - a-direio.ads
-Body:
- - a-direio.adb
-ada.direct_io found: TRUE
+ - g-md5.ads
+GNAT.MD5 found: TRUE

@@ -1704,10 +1704,14 @@ package body GPR2.Project.View is
 
    procedure Hide_Unit_Body (Self : Object; Unit : Name_Type) is
       Ref : constant Definition.Ref := Definition.Get (Self);
-      CU  : constant Unit_Info.Set.Cursor := Ref.Units.Find (Unit);
+      CU  : Unit_Info.Set.Cursor := Ref.Units.Find (Unit);
    begin
       if Unit_Info.Set.Set.Has_Element (CU) then
          Ref.Units (CU).Remove_Body;
+
+         if Ref.Units (CU).Is_Empty then
+            Ref.Units.Delete (CU);
+         end if;
       end if;
    end Hide_Unit_Body;
 
