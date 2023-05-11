@@ -1,0 +1,9 @@
+Key:
+ - ada.direct_io
+Name:
+ - ada.direct_io
+Spec:
+ - a-direio.ads
+Body:
+ - a-direio.adb
+ada.direct_io found: TRUE
