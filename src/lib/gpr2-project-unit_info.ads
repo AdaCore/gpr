@@ -19,6 +19,8 @@ package GPR2.Project.Unit_Info is
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
 
+   function Is_Empty (Self : Object) return Boolean;
+
    function Create
      (Name      : Name_Type;
       Spec      : Unit.Source_Unit_Identifier := Unit.Undefined_Id;
@@ -90,6 +92,11 @@ private
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
+
+   function Is_Empty (Self : Object) return Boolean is
+     (not Self.Has_Spec
+      and then not Self.Has_Body
+      and then Self.Separates.Is_Empty);
 
    function Has_Spec (Self : Object) return Boolean is
      (Self.Spec.Source.Is_Defined);

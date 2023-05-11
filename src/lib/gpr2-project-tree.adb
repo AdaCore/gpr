@@ -2408,11 +2408,11 @@ package body GPR2.Project.Tree is
    ------------------
 
    procedure Reindex_Unit (Self : in out Object; From, To : Name_Type) is
-      C : constant Name_View.Cursor := Self.Units.Find (From);
+      C : Name_View.Cursor := Self.Units.Find (From);
    begin
       if Name_View.Has_Element (C) then
          Self.Units.Include (To, Name_View.Element (C));
-         Self.Units.Delete (From);
+         Self.Units.Delete (C);
       end if;
    end Reindex_Unit;
 

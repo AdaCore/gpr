@@ -1004,7 +1004,9 @@ package body GPR2.Source_Info.Parser.ALI is
 
             CU_Idx := CU_Idx + 1;
 
-            if U_Ref.Name /= Name_Type (-U_Name) then
+            if U_Ref.Name /= Name_Type (-U_Name)
+              and then CU_Idx = 1
+            then
                View.Reindex_Unit
                  (From => U_Ref.Name, To => Name_Type (-U_Name));
             end if;
@@ -1052,11 +1054,35 @@ package body GPR2.Source_Info.Parser.ALI is
             then
                --  Body file with pragma No_Body
 
-               View.Hide_Unit_Body (U_Ref.Name);
                View.Hide_Unit_Body (CUs (1).Name);
+
+               CU_Idx := 2;
+               Current := 2;
+
+               CUs (CU_Idx) :=
+                 GPR2.Unit.Create
+                   (Name          => Name_Type (-U_Name),
+                    Index         => U_Ref.Index,
+                    Lib_Unit_Kind => S_Body,
+                    Lib_Item_Kind => Is_No_Body,
+                    Main          => GPR2.Unit.None,
+                    Dependencies  =>
+                      Source_Reference.Identifier.Set.Set.Empty_Set,
+                    Sep_From      => No_Name,
+                    Flags         => GPR2.Unit.Default_Flags);
+               Data.Parsed := Source_Info.LI;
+
+               declare
+                  Cache : constant Cache_Holder :=
+                            (CUs (CU_Idx),
+                             Checksum  => 0,
+                             Timestamp => No_Time,
+                             Depends   => Dependency_Vectors_Ref.Null_Ref);
+               begin
+                  Set_Source_Info_Data (Cache, Add_Deps => False);
+               end;
             end if;
 
-            Data.Parsed := None;
             IO.Close (A_Handle);
             return;
          end if;
@@ -1079,7 +1105,7 @@ package body GPR2.Source_Info.Parser.ALI is
          --  If we have 2 units, the first one should be the body and the
          --  second one the spec. Update the u_kind accordingly.
 
-         if CU_Idx = 2 then
+         if CU_Idx = 2 and then CUs (2).Library_Item_Kind /= Is_No_Body then
             pragma Assert (CUs (1).Name = CUs (2).Name);
 
             if CUs (1).Kind /= GPR2.Unit.S_Body_Only then
