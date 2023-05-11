@@ -340,10 +340,14 @@ package GPR2.Project.Tree is
    --  If Update is True and view with this source is not found, than Update
    --  sources in all views and try to find again.
 
+   function Are_Sources_Loaded (Tree : Object) return Boolean;
+   --  Whether the sources are loaded in the tree or not
+
    procedure Invalidate_Sources
      (Self : Object;
       View : Project.View.Object := Project.View.Undefined)
-     with Pre => Self.Is_Defined;
+     with Pre  => Self.Is_Defined,
+          Post => (if not View.Is_Defined then Not Self.Are_Sources_Loaded);
    --  Invalidates the sources for all views in the tree if View is undefined
    --  or the source in the given view otherwise. This is needed when some
    --  sources are added or removed from the view. It is not required to call
@@ -355,7 +359,7 @@ package GPR2.Project.Tree is
       Stop_On_Error : Boolean := True;
       With_Runtime  : Boolean := False;
       Backends      : Source_Info.Backend_Set := Source_Info.All_Backends)
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined and then not Self.Are_Sources_Loaded;
    --  Ensures that all views' sources are up-to-date. This is needed before
    --  computing the dependencies of a source in the project tree. This routine
    --  is called where needed and is there for internal use only.
@@ -738,5 +742,8 @@ private
 
    function Environment (Self : Object) return GPR2.Environment.Object is
       (Self.Environment);
+
+   function Are_Sources_Loaded (Tree : Object) return Boolean is
+     (Tree.Sources_Loaded);
 
 end GPR2.Project.Tree;

@@ -80,9 +80,6 @@ package body GPR2.Project.Tree is
      (View.Tree.Context (View.Context));
    --  Returns context of the project view
 
-   function Are_Sources_Loaded (Tree : Object) return Boolean is
-     (Tree.Sources_Loaded);
-
    type Iterator is new Project_Iterator.Forward_Iterator with record
       Views : Project_View_Store.Vector;
       Tree  : access Object;
