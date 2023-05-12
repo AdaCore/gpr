@@ -1704,10 +1704,14 @@ package body GPR2.Project.View is
 
    procedure Hide_Unit_Body (Self : Object; Unit : Name_Type) is
       Ref : constant Definition.Ref := Definition.Get (Self);
-      CU  : constant Unit_Info.Set.Cursor := Ref.Units.Find (Unit);
+      CU  : Unit_Info.Set.Cursor := Ref.Units.Find (Unit);
    begin
       if Unit_Info.Set.Set.Has_Element (CU) then
          Ref.Units (CU).Remove_Body;
+
+         if Ref.Units (CU).Is_Empty then
+            Ref.Units.Delete (CU);
+         end if;
       end if;
    end Hide_Unit_Body;
 
@@ -2328,12 +2332,15 @@ package body GPR2.Project.View is
    ------------------
 
    procedure Reindex_Unit (Self : Object; From, To : Name_Type) is
-      Ref : constant Definition.Ref := Definition.Get (Self);
-      C   : constant Unit_Info.Set.Cursor := Ref.Units.Find (From);
+      Ref    : constant Definition.Ref := Get_Ref (Self);
+      C      : Unit_Info.Set.Cursor := Ref.Units.Find (From);
+      U      : Unit_Info.Object;
    begin
       if Unit_Info.Set.Set.Has_Element (C) then
-         Ref.Units.Include (To, Unit_Info.Set.Set.Element (C));
-         Ref.Units.Delete (From);
+         U := Unit_Info.Set.Set.Element (C);
+         U.Update_Name (To);
+         Ref.Units.Include (To, U);
+         Ref.Units.Delete (C);
       end if;
 
       Ref.Tree.Reindex_Unit (From, To);

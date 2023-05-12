@@ -719,7 +719,8 @@ begin
                        ("     Kind   => "
                         & (case U_Sec.Library_Item_Kind is
                              when GPR2.Unit.Is_Package    => "package",
-                             when GPR2.Unit.Is_Subprogram => "subprogram")
+                             when GPR2.Unit.Is_Subprogram => "subprogram",
+                             when GPR2.Unit.Is_No_Body    => "no-body")
                         & ' '
                         & (case U_Sec.Kind is
                              when GPR2.Unit.Spec_Kind  => "spec",

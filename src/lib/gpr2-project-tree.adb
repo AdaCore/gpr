@@ -80,9 +80,6 @@ package body GPR2.Project.Tree is
      (View.Tree.Context (View.Context));
    --  Returns context of the project view
 
-   function Are_Sources_Loaded (Tree : Object) return Boolean is
-     (Tree.Sources_Loaded);
-
    type Iterator is new Project_Iterator.Forward_Iterator with record
       Views : Project_View_Store.Vector;
       Tree  : access Object;
@@ -2411,11 +2408,11 @@ package body GPR2.Project.Tree is
    ------------------
 
    procedure Reindex_Unit (Self : in out Object; From, To : Name_Type) is
-      C : constant Name_View.Cursor := Self.Units.Find (From);
+      C : Name_View.Cursor := Self.Units.Find (From);
    begin
       if Name_View.Has_Element (C) then
          Self.Units.Include (To, Name_View.Element (C));
-         Self.Units.Delete (From);
+         Self.Units.Delete (C);
       end if;
    end Reindex_Unit;
 

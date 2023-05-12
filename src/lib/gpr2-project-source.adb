@@ -800,6 +800,9 @@ package body GPR2.Project.Source is
                           (Self.Path_Name, Unit.Index);
                   Ref : constant Unit_Info.Set.Set.Reference_Type :=
                           Def.Units.Reference (CUnits);
+
+                  use type GPR2.Unit.Library_Item_Type;
+
                begin
                   if Unit.Kind in GPR2.Unit.Spec_Kind
                     and then not Ref.Has_Spec
@@ -808,6 +811,7 @@ package body GPR2.Project.Source is
 
                   elsif Unit.Kind in GPR2.Unit.Body_Kind
                     and then not Ref.Has_Body
+                    and then Unit.Library_Item_Kind /= GPR2.Unit.Is_No_Body
                   then
                      Ref.Update_Body (SUI);
 
