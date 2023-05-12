@@ -1534,8 +1534,8 @@ package body GPR2.Project.View is
 
       function Get_Main_Fullname (Main : String) return String;
       --  Get the main attribute value, if the value contains any standard
-      --  suffix (.ada, .c) or any declared convention in the Naming package
-      --  then it returns the value as is.
+      --  suffix (.ada, .adb, .c) or any declared convention in the Naming
+      --  package then it returns the value as is.
       --  Otherwise, the default Ada suffix or any Ada Naming convention
       --  declared in Self is applied to the value.
 
@@ -1573,6 +1573,7 @@ package body GPR2.Project.View is
       -----------------------
 
       function Get_Main_Fullname (Main : String) return String is
+         Default_Ada_MU_BS : constant String := ".ada";
          Default_Ada_BS : constant String :=
                             PRA.Get
                               (PRA.Naming.Body_Suffix).Default.Values ("ada");
@@ -1592,6 +1593,10 @@ package body GPR2.Project.View is
 
          function Ends_With_One_Language (Main : String) return Boolean;
          --  Check if Main ends with any Self language naming convention suffix
+
+         function Is_An_Exception (Main : String) return Boolean;
+         --  Check if Main is an exception and should not be matched
+         --  with classical language naming convention.
 
          ----------------------------
          -- Ends_With_One_Language --
@@ -1624,8 +1629,42 @@ package body GPR2.Project.View is
             return Ends_With_One;
          end Ends_With_One_Language;
 
+         ---------------------
+         -- Is_An_Exception --
+         ---------------------
+
+         function Is_An_Exception (Main : String) return Boolean is
+         begin
+            for Lang of Self.Languages
+            loop
+               declare
+                  L_Id    : constant Language_Id := +Name_Type (Lang.Text);
+                  Index   : constant Attribute_Index.Object :=
+                              Attribute_Index.Create (L_Id);
+                  IEs_Def : constant Boolean :=
+                              Self.Attribute
+                                (PRA.Naming.Implementation_Exceptions,
+                                 Index).Is_Defined;
+               begin
+                  if IEs_Def then
+                     for Value of Self.Attribute
+                       (PRA.Naming.Implementation_Exceptions, Index).Values
+                     loop
+                        if Main = Value.Text then
+                           return True;
+                        end if;
+                     end loop;
+                  end if;
+               end;
+            end loop;
+
+            return False;
+         end Is_An_Exception;
+
       begin
-         return (if Ends_With (Main, Default_Ada_BS)
+         return (if Is_An_Exception (Main)
+                 or else Ends_With (Main, Default_Ada_MU_BS)
+                 or else Ends_With (Main, Default_Ada_BS)
                  or else Ends_With (Main, Default_C_BS)
                  or else Ends_With_One_Language (Main)
                  then Main
