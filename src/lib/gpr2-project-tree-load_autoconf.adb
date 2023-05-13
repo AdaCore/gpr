@@ -28,7 +28,6 @@ procedure Load_Autoconf
 is
    Languages   : Containers.Language_Set;
    Conf        : Project.Configuration.Object;
-   GNAT_Prefix : constant String := Get_Tools_Directory;
    Default_Cfg : Path_Name.Object;
    Lang_Sloc   : Attribute.Object;
    --  Keep languages attribute for Sloc parameter in error message
@@ -346,27 +345,38 @@ is
                       (if Ada_RTS_Val = No_Value then No_Filename
                        else Filename_Optional
                          (Directories.Simple_Name (Ada_RTS_Val)));
+
+      Target_Val  : constant Filename_Optional :=
+                        (if Target not in No_Name | "all" then
+                            Filename_Type (Target)
+                         else No_Filename);
+
+      Platform    : constant Filename_Type :=
+                      (if Target_Val /= No_Filename then
+                         (if Ada_RTS = No_Filename then Target_Val
+                          else Target_Val & "-" & Ada_RTS)
+                         & Config_File_Extension
+                       elsif Ada_RTS /= No_Filename then
+                          Ada_RTS & Config_File_Extension
+                       else Default_Config_Name);
+
+      GPR_Config_V : constant String := "GPR_CONFIG";
+
    begin
-      if Target not in No_Name | "all" then
-         return Filename_Type (Target)
-           & (if Ada_RTS = No_Filename then "" else "-" & Ada_RTS)
-           & Config_File_Extension;
-
-      elsif Ada_RTS /= No_Filename then
-         return Ada_RTS & Config_File_Extension;
-
-      else
+      if Environment.Exists (GPR_Config_V) then
          declare
-            GPR_Config : constant String := "GPR_CONFIG";
-            Filename   : constant String :=
-                           Environment.Value (GPR_Config, "");
+            GPR_CONFIG : constant String :=
+                           Environment.Value (GPR_Config_V, "");
          begin
-            if Filename = "" then
-               return Default_Config_Name;
+            if GNAT.OS_Lib.Is_Directory (GPR_CONFIG) then
+               return Filename_Type
+                 (GPR_CONFIG & GNAT.OS_Lib.Directory_Separator) & Platform;
             else
-               return Filename_Type (Filename);
+               return Filename_Type (GPR_CONFIG);
             end if;
          end;
+      else
+         return Platform;
       end if;
    end Default_Config_File;
 
@@ -527,25 +537,19 @@ is
 begin
    GPR2.Project.Parser.Clear_Cache;
 
-   if GNAT_Prefix = "" then
-      --  No GNAT, use default config only in current directory
-
-      Default_Cfg := Path_Name.Create_File (Default_Config_File (Environment));
-
-   else
-      --  GNAT found, look for the default config first in the current
-      --  directory and then in the GNAT/share/gpr
-
-      Default_Cfg :=
-        Create
-          (Default_Config_File (Environment),
-           Path_Name.Set.To_Set
-             (Path_Name.Create_Directory
-                ("share", Filename_Type (GNAT_Prefix)).Compose
-              ("gpr", Directory => True)));
-   end if;
+   Default_Cfg := Path_Name.Create_File (Default_Config_File (Environment));
 
    if Default_Cfg.Exists then
+      if not Language_Runtimes.Is_Empty then
+         Self.Messages.Append
+           (Message.Create
+              (Level   => Message.Warning,
+               Message => "runtimes are taken into account "
+               & "only in auto-configuration",
+               Sloc    => Source_Reference.Create
+                 (Default_Cfg.Value, 0, 0)));
+      end if;
+
       Conf := Project.Configuration.Load (Default_Cfg);
    end if;
 
