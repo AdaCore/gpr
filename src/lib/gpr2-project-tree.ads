@@ -347,7 +347,7 @@ package GPR2.Project.Tree is
      (Self : Object;
       View : Project.View.Object := Project.View.Undefined)
      with Pre  => Self.Is_Defined,
-          Post => (if not View.Is_Defined then Not Self.Are_Sources_Loaded);
+          Post => (if not View.Is_Defined then not Self.Are_Sources_Loaded);
    --  Invalidates the sources for all views in the tree if View is undefined
    --  or the source in the given view otherwise. This is needed when some
    --  sources are added or removed from the view. It is not required to call
