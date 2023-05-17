@@ -46,7 +46,7 @@ package body GPR2.Project.View is
    --  Get view refcount
 
    function View_DB (Self : Object) return Build.View_Db.Object is
-     (GPR2.Build.View_Db.Undefined);
+     (Self.Tree.Artifacts_Database (Self));
 
    procedure Set_Def (Ref : out View.Object; Def : Definition_Base'Class);
    --  Convert definition to view
