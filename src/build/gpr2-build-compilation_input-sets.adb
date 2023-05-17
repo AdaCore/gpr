@@ -21,7 +21,7 @@ package body GPR2.Build.Compilation_Input.Sets is
       Self : Object;
    begin
       for NS of View.Namespace_Roots loop
-         for CU of View.Tree.Artifacts_Database (View).Compilation_Units loop
+         for CU of View.Tree.Artifacts_Database (NS).Compilation_Units loop
             if CU.Main_Part.View = View.Id then
                Self.Include ((View,
                               Unit_Kind,
