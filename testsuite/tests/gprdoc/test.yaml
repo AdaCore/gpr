@@ -1,3 +1,5 @@
 description:
     Test gprdoc expected output
 driver: python_script
+control:
+- [XFAIL, "True", "pending libgpr2-next changes"]

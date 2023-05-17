@@ -15,6 +15,7 @@ variables:
 
 stages:
   - build
+  - test
 
 ########################
 ## SETUP REPOSITORIES ##
@@ -104,3 +105,47 @@ build:
   artifacts:
     paths:
       - libgpr2-next.tar.gz
+
+####################
+## GPR2 TESTSUITE ##
+####################
+
+test_gpr2:
+  services:
+     - image:sandbox
+     - cpu:8
+     - mem:16
+  stage: test
+  allow_failure: true
+  script:
+    # Use proper anod scripts
+    - cd /tmp
+    - git clone $GIT_CLONE_BASE/eng/it/anod
+    - (cd anod && git checkout wip/gpr2-58-next-testing)
+    - anod tune --anod-dir anod
+
+    # unpack the packages
+    - cd $SANDBOX
+    - mkdir -p fingerprints
+    - mkdir -p $HOST/libgpr2-next
+    - tar zxf $CI_PROJECT_DIR/libgpr2-next.tar.gz -C $HOST/libgpr2-next
+    - touch fingerprints/$HOST.libgpr2-next.install.json.assume-unchanged ;
+    - touch fingerprints/$HOST.libgpr2-next.download-bin.json.assume-unchanged ;
+    - rm -f $CI_PROJECT_DIR/*.tar.gz
+
+    # add the gpr2 repo
+    - anod vcs --add-repo gpr2-next $CI_PROJECT_DIR
+
+    - anod test gpr2 -Qnext --minimal
+    - e3-testsuite-report
+        --failure-exit-code 1
+        --xunit-output $CI_PROJECT_DIR/testgpr2_result.xml
+        --xunit-name test_gpr2
+        $SANDBOX/$HOST/gpr2-test-next/results/new/ || exit 1
+  artifacts:
+    when:
+      always
+    paths:
+      - testgpr2_result.xml
+    reports:
+      junit: testgpr2_result.xml

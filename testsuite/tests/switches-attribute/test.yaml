@@ -1,3 +1,5 @@
 description:
     check swicthes index case handling
 driver: python_script
+control:
+- [XFAIL, "True", "pending libgpr2-next changes"]

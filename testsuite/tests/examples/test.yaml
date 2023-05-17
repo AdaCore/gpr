@@ -1,2 +1,4 @@
 description: Check gpr2 examples
 driver: python_script
+control:
+- [XFAIL, "True", "pending libgpr2-next changes"]

@@ -1,2 +1,4 @@
 description: Ensure nested aggregates are parsed correctly
 driver: basic
+control:
+- [XFAIL, "True", "pending libgpr2-next changes"]

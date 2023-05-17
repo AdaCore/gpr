@@ -3,3 +3,5 @@ description:
 driver: build_and_run
 project_file: runtime
 main: main
+control:
+- [XFAIL, "True", "pending libgpr2-next changes"]

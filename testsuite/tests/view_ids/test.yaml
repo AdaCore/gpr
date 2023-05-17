@@ -1,2 +1,4 @@
 description: Ensure that view_ids can be used to reference safely views
 driver: basic
+control:
+- [XFAIL, "True", "pending libgpr2-next changes"]
