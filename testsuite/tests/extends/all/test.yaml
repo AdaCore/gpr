@@ -1,4 +1,2 @@
 description: Test for extends all projects
 driver: basic
-control:
-- [XFAIL, "True", "pending libgpr2-next changes"]

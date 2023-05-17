@@ -1,4 +1,2 @@
 description: Test behaviour of variables with extends
 driver: basic
-control:
-- [XFAIL, "True", "pending libgpr2-next changes"]
