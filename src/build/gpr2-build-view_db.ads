@@ -17,6 +17,8 @@ package GPR2.Build.View_Db is
 
    type Object is tagged private;
 
+   Undefined : constant Object;
+
    function Is_Defined (Self : Object) return Boolean;
 
    procedure Update
@@ -111,6 +113,9 @@ private
    use type Project.View.Object;
 
    type Object is new View_Tables.Data_Refs.Ref with null record;
+
+   Undefined : constant Object :=
+                 Object'(View_Tables.Data_Refs.Null_Ref with null record);
 
    function Is_Defined (Self : Object) return Boolean is
       (not Self.Is_Null);

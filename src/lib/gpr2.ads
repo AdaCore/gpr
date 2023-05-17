@@ -192,6 +192,30 @@ package GPR2 is
    subtype Multi_Unit_Index is Unit_Index range 1 .. Unit_Index'Last;
    --  Value range of the unit index
 
+   --  Source load options
+
+   type Optional_Source_Info_Option is
+     (No_Source,
+      Sources_Only,
+      Sources_Units,
+      Sources_Units_Dependencies);
+   --  Indicates the level of information to retrieve for sources:
+   --  * No_Source: sources are not loaded
+   --  * Sources_Only will only load the sources and fill the unit name
+   --    information that is highly dependent on the naming schema. With this
+   --    option unit information may be inaccurate in case of ambiguity between
+   --    e.g. separates and package body from the naming schema, or krunched
+   --    filenames.
+   --  * Sources_Units: unit information is retrieved from either ALI file
+   --    if they exist, or using an Ada parser.
+   --  * Sources_Units_Dependencies: same as above, but also dependencies
+   --    between sources is retrieved from the ALI files, or simulated from
+   --    with clauses detected by the Ada parser.
+
+
+   subtype Source_Info_Option is Optional_Source_Info_Option
+     range Sources_Only .. Sources_Units_Dependencies;
+
    --  Name tables definition
 
    type Language_Id is new Natural with Default_Value => 0;
