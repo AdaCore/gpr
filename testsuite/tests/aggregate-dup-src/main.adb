@@ -22,37 +22,17 @@ procedure Main is
 
    Prj : Project.Tree.Object;
    Ctx : Context.Object;
+   Log : GPR2.Log.Object;
 
 begin
    Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
 
-   Prj.Update_Sources;
+   Prj.Update_Sources (Messages => Log);
+   Log.Output_Messages (Information => False);
 
 exception
    when Project_Error =>
 
       Text_IO.Put_Line ("Messages found:");
-
-      for C in Prj.Log_Messages.Iterate (False, True, True, True, True) loop
-         declare
-            use Ada.Strings;
-            use Ada.Strings.Fixed;
-            DS  : Character renames GNAT.OS_Lib.Directory_Separator;
-            M   : constant Message.Object := Log.Element (C);
-            Mes : constant String := M.Format;
-            L   : constant Natural :=
-                    Fixed.Index (Mes, DS & "aggregate-dup-src" & DS);
-         begin
-            if L /= 0 then
-               Text_IO.Put_Line
-                 (Replace_Slice
-                    (Mes,
-                     Fixed.Index (Mes (1 .. L), """", Going => Backward) + 1,
-                     L - 1,
-                     "<path>"));
-            else
-               Text_IO.Put_Line (Mes);
-            end if;
-         end;
-      end loop;
+      Prj.Log_Messages.Output_Messages (Information => False);
 end Main;

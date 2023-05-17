@@ -1,5 +1,1 @@
-Messages found:
-demo.gpr:4:24: warning: library directory "lib" not found
-b.gpr:2:08: error: source "src.ads" cannot belong to several projects
-b.gpr:2:08:   project "A", "<path>/aggregate-dup-src/src-a/src.ads"
-b.gpr:2:08:   project "B", "<path>/aggregate-dup-src/src-b/src.ads"
+demo.gpr: warning: Duplicated spec for unit "SRC" in /src-a/src.ads and /src-b/src.ads

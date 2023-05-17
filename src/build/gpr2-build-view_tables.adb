@@ -20,6 +20,7 @@ package body GPR2.Build.View_Tables is
       View     : Project.View.Object;
       Path     : Path_Name.Object;
       Index    : Unit_Index;
+      Messages : in out GPR2.Log.Object;
       Success  : out Boolean)
      with Pre => Data.Is_Root
                    and then (Kind = S_Separate) = (Sep_Name'Length > 0);
@@ -36,8 +37,9 @@ package body GPR2.Build.View_Tables is
                    and then (Kind = S_Separate) = (Sep_Name'Length > 0);
 
    procedure Resolve_Visibility
-     (Data   : in out View_Data;
-      Cursor : in out Basename_Source_List_Maps.Cursor);
+     (Data     : in out View_Data;
+      Cursor   : in out Basename_Source_List_Maps.Cursor;
+      Messages : in out GPR2.Log.Object);
 
    package Update_Sources_List is
       procedure Process
@@ -66,7 +68,8 @@ package body GPR2.Build.View_Tables is
       View_Owner         : GPR2.Project.View.Object;
       Path               : GPR2.Path_Name.Object;
       Extended_View      : GPR2.Project.View.Object;
-      Resolve_Visibility : Boolean := False)
+      Resolve_Visibility : Boolean := False;
+      Messages           : in out GPR2.Log.Object)
    is
       C_Overload : Basename_Source_List_Maps.Cursor;
       Done       : Boolean;
@@ -83,7 +86,7 @@ package body GPR2.Build.View_Tables is
       Data.Overloaded_Srcs.Reference (C_Overload).Include (Proxy);
 
       if Resolve_Visibility then
-         View_Tables.Resolve_Visibility (Data, C_Overload);
+         View_Tables.Resolve_Visibility (Data, C_Overload, Messages);
       end if;
    end Add_Source;
 
@@ -99,6 +102,7 @@ package body GPR2.Build.View_Tables is
       View     : Project.View.Object;
       Path     : Path_Name.Object;
       Index    : Unit_Index;
+      Messages : in out GPR2.Log.Object;
       Success  : out Boolean)
    is
       Cursor : Compilation_Unit_Maps.Cursor;
@@ -126,14 +130,14 @@ package body GPR2.Build.View_Tables is
 
       if not Success then
          Other := Data.CUs.Reference (Cursor).Get (Kind, Sep_Name).Source;
-         Data.View.Tree.Append_Message
+         Messages.Append
            (Message.Create
               (Level   => Message.Warning,
                Message => "Duplicated " &
                  Image (Kind) & " for unit """ & String (CU) & """ in " &
                  String (Other.Value) & " and " & String (Path.Value),
                Sloc    =>
-                 Source_Reference.Create (View.Path_Name.Value, 0, 0)));
+                 Source_Reference.Create (Data.View.Path_Name.Value, 0, 0)));
       end if;
    end Add_Unit_Part;
 
@@ -284,6 +288,7 @@ package body GPR2.Build.View_Tables is
                                     Data.View,
                                     S_Ref.Path_Name,
                                     S_Ref.Unit.Index,
+                                    Messages,
                                     Done);
                                  pragma Assert (Done);
                               end;
@@ -338,6 +343,7 @@ package body GPR2.Build.View_Tables is
                               Data.View,
                               S_Ref.Path_Name,
                               S_Ref.Unit.Index,
+                              Messages,
                               Done);
                            pragma Assert (Done);
                         end if;
@@ -358,7 +364,8 @@ package body GPR2.Build.View_Tables is
       View_Owner         : GPR2.Project.View.Object;
       Path               : GPR2.Path_Name.Object;
       Extended_View      : GPR2.Project.View.Object;
-      Resolve_Visibility : Boolean := False)
+      Resolve_Visibility : Boolean := False;
+      Messages           : in out GPR2.Log.Object)
    is
       Basename : constant Simple_Name := Path.Simple_Name;
       C_Overload : Basename_Source_List_Maps.Cursor;
@@ -371,7 +378,7 @@ package body GPR2.Build.View_Tables is
       Data.Overloaded_Srcs.Reference (C_Overload).Delete (Proxy);
 
       if Resolve_Visibility then
-         View_Tables.Resolve_Visibility (Data, C_Overload);
+         View_Tables.Resolve_Visibility (Data, C_Overload, Messages);
       end if;
    end Remove_Source;
 
@@ -418,8 +425,9 @@ package body GPR2.Build.View_Tables is
    ------------------------
 
    procedure Resolve_Visibility
-     (Data   : in out View_Data;
-      Cursor : in out Basename_Source_List_Maps.Cursor)
+     (Data     : in out View_Data;
+      Cursor   : in out Basename_Source_List_Maps.Cursor;
+      Messages : in out Log.Object)
    is
       use type Ada.Containers.Count_Type;
       use type Project.View.Object;
@@ -451,7 +459,8 @@ package body GPR2.Build.View_Tables is
                   Src.View,
                   Src.Path_Name,
                   Extended_View      => Data.View,
-                  Resolve_Visibility => True);
+                  Resolve_Visibility => True,
+                  Messages           => Messages);
             end;
          end if;
 
@@ -473,6 +482,7 @@ package body GPR2.Build.View_Tables is
                      View     => Data.View,
                      Path     => Src_Info.Path_Name,
                      Index    => U.Index,
+                     Messages => Messages,
                      Success  => Success);
                end loop;
             end loop;
@@ -511,11 +521,11 @@ package body GPR2.Build.View_Tables is
                Src.View,
                Src.Path_Name,
                Extended_View      => Data.View,
-               Resolve_Visibility => True);
+               Resolve_Visibility => True,
+               Messages           => Messages);
          end if;
       end Propagate_Visible_Source_Removal;
 
-      Tree      : constant access Project.Tree.Object := Data.View.Tree;
       Basename  : constant Simple_Name :=
                     Basename_Source_List_Maps.Key (Cursor);
       Set       : constant Source_Proxy_Sets.Set :=
@@ -595,7 +605,7 @@ package body GPR2.Build.View_Tables is
             else
                --  Remaining case: inheritance shows two candidate sources
 
-               Tree.Append_Message
+               Messages.Append
                  (Message.Create
                     (Message.Error,
                      '"' & String (Basename) & '"' &
@@ -622,13 +632,13 @@ package body GPR2.Build.View_Tables is
                      V2 := C.View.Path_Name;
                   end if;
 
-                  Tree.Append_Message
+                  Messages.Append
                     (Message.Create
                        (Message.Error,
                         P1.Value,
                         Source_Reference.Create (V1.Value, 0, 0),
                         Indent => 1));
-                  Tree.Append_Message
+                  Messages.Append
                     (Message.Create
                        (Message.Error,
                         P2.Value,
@@ -645,7 +655,7 @@ package body GPR2.Build.View_Tables is
 
          if not Clashes.Is_Empty then
             for SR of Clashes loop
-               Tree.Append_Message
+               Messages.Append
                  (Message.Create
                     (Message.Error,
                      '"' & String (Basename) & '"' &
