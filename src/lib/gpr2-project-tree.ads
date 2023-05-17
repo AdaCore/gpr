@@ -323,6 +323,10 @@ package GPR2.Project.Tree is
      (Self : Object) return Build.Tree_Db.Object_Access
      with Pre => Self.Is_Defined;
 
+   function Has_Artifacts_Database
+     (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+
    function Artifacts_Database
      (Self : Object;
       View : GPR2.Project.View.Object) return Build.View_Db.Object
@@ -687,10 +691,16 @@ private
       then Optional_Name_Type (Self.Explicit_Runtimes.Element (Language))
       else No_Name);
 
+   function Has_Artifacts_Database
+     (Self : Object) return Boolean is
+     (Self.Tree_Db.Is_Defined);
+
    function Artifacts_Database
      (Self : Object;
       View : GPR2.Project.View.Object) return Build.View_Db.Object is
-     (Self.Artifacts_Database.View_Database (View));
+     (if Self.Tree_Db.Is_Defined
+      then Self.Tree_Db.View_Database (View)
+      else Build.View_Db.Undefined);
 
    function Artifacts_Database
      (Self : Object;

@@ -271,7 +271,11 @@ package body GPR2.Project.Tree is
    function Artifacts_Database
      (Self : Object) return Build.Tree_Db.Object_Access is
    begin
-      return Self.Tree_Db.Reference;
+      if Self.Tree_Db.Is_Defined then
+         return Self.Tree_Db.Reference;
+      else
+         return null;
+      end if;
    end Artifacts_Database;
 
    --------------------

@@ -1566,9 +1566,17 @@ package body GPR2.Project.View is
    function Has_Source
      (Self : Object; Filename : GPR2.Simple_Name) return Boolean
    is
+      Db : Build.View_Db.Object;
    begin
       if Self.Kind in With_Object_Dir_Kind then
-         return Self.View_Db.Has_Source (Filename);
+         Db := Self.View_Db;
+
+         if Db.Is_Defined then
+            return Db.Has_Source (Filename);
+         else
+            return False;
+         end if;
+
       else
          return False;
       end if;

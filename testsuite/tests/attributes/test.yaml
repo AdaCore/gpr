@@ -1,4 +1,2 @@
 description: Test Attribute retrieval
 driver: basic
-control:
-- [XFAIL, "True", "pending libgpr2-next changes"]
