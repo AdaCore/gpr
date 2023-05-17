@@ -83,9 +83,6 @@ package body GPR2.Project.Tree is
      (View.Tree.Context (View.Context));
    --  Returns context of the project view
 
-   function Are_Sources_Loaded (Tree : Object) return Boolean is
-     (Tree.Sources_Loaded);
-
    type Iterator is new Project_Iterator.Forward_Iterator with record
       Views : Project_View_Store.Vector;
       Tree  : access Object;
@@ -101,7 +98,6 @@ package body GPR2.Project.Tree is
      (Self          : in out Object;
       Root_Project  : Project_Descriptor;
       Context       : Context_Kind;
-      With_Runtime  : Boolean;
       Starting_From : View.Object := View.Undefined) return View.Object
      with Pre =>
        (if Starting_From.Is_Defined
@@ -275,10 +271,6 @@ package body GPR2.Project.Tree is
    function Artifacts_Database
      (Self : Object) return Build.Tree_Db.Object_Access is
    begin
-      if not Self.Tree_Db.Is_Defined then
-         Self.Self.Tree_Db.Load (Self);
-      end if;
-
       return Self.Tree_Db.Reference;
    end Artifacts_Database;
 
@@ -950,15 +942,11 @@ package body GPR2.Project.Tree is
          end;
       end if;
 
-      if With_Runtime
-        and then not Self.With_RTS_View
-        and then Self.Has_Configuration
+      if Self.Has_Configuration
+        and then not Self.Runtime.Is_Defined
       then
          --  Create the runtime view
          Self.Runtime := Self.Create_Runtime_View;
-         --  And indicate we want the runtime view to be used when loading the
-         --  tree
-         Self.With_RTS_View := With_Runtime;
       end if;
 
       Self.Build_Path       := Build_Path;
@@ -1019,8 +1007,7 @@ package body GPR2.Project.Tree is
          Root_Project => (if Root_Project.Kind = Project_Definition
                           then Root_Project
                           else (Project_Path, Gpr_Path)),
-         Context      => Root,
-         With_Runtime => Self.With_RTS_View);
+         Context      => Root);
 
       --  Do nothing more if there are errors during the parsing
 
@@ -1079,9 +1066,16 @@ package body GPR2.Project.Tree is
          end if;
       end if;
 
-      if not Self.Pre_Conf_Mode and then Self.Messages.Has_Error then
-         raise Project_Error
-           with Gpr_Path.Value & ": fatal error, cannot load the project tree";
+      if not Self.Pre_Conf_Mode then
+         if not Self.Messages.Has_Error then
+            --  Tree is now fully loaded, we can create the artifacts database
+            --  object
+            Self.Tree_Db.Create (Self, With_Runtime);
+         else
+            raise Project_Error
+              with Gpr_Path.Value &
+              ": fatal error, cannot load the project tree";
+         end if;
       end if;
    end Load;
 
@@ -1093,7 +1087,7 @@ package body GPR2.Project.Tree is
      (Self             : in out Object;
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
-      With_Runtime     : Boolean;
+      With_Runtime     : Boolean                   := False;
       Config           : PC.Object                 := PC.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type        := No_Name;
@@ -1180,7 +1174,7 @@ package body GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
-      With_Runtime      : Boolean;
+      With_Runtime      : Boolean                 := False;
       Build_Path        : Path_Name.Object        := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type      := No_Name;
       Src_Subdirs       : Optional_Name_Type      := No_Name;
@@ -1405,7 +1399,6 @@ package body GPR2.Project.Tree is
      (Self          : in out Object;
       Root_Project  : Project_Descriptor;
       Context       : Context_Kind;
-      With_Runtime  : Boolean;
       Starting_From : View.Object := View.Undefined) return View.Object
    is
 
@@ -1595,7 +1588,7 @@ package body GPR2.Project.Tree is
                   --  This is the root project or an aggregated project. This
                   --  creates a new namespace (i.e. root in the subtree)
 
-                  Data.Root_Views.Append (View.Id);
+                  Data.Root_Views.Include (View.Id);
 
                else
                   Data.Root_Views :=
@@ -1743,30 +1736,6 @@ package body GPR2.Project.Tree is
                         Data.Extended.Include (Extended_View);
                         Data.Extended_Root := Extended_View;
                      end if;
-                  end;
-               end if;
-
-               --  We can now resolve correctly the language attribute and thus
-               --  determine if we need to add the runtime to the list of
-               --  imported views.
-
-               if With_Runtime
-                 and then View.Kind in With_Object_Dir_Kind
-                 and then View.Has_Language (Ada_Language)
-                 and then not
-                   (Data.Limited_Imports.Contains (Self.Runtime_Project.Name)
-                    or else Data.Imports.Contains (Self.Runtime_Project.Name))
-               then
-                  declare
-                     RTS_View : GPR2.Project.View.Object :=
-                                  Self.Runtime_Project;
-                  begin
-                     Data.Imports.Insert (RTS_View.Name, RTS_View);
-                     Data.Closure.Include (RTS_View.Name, RTS_View);
-
-                     for Root of View.Namespace_Roots loop
-                        Propagate_Aggregate (RTS_View, Root.Id, False);
-                     end loop;
                   end;
                end if;
             end;
@@ -1967,9 +1936,8 @@ package body GPR2.Project.Tree is
       begin
          if Is_Aggregate_Library then
             Data.Agg_Libraries.Insert (Root, Position, Inserted);
-         elsif not Data.Root_Views.Contains (Root) then
-            Data.Root_Views.Append (Root);
-            Inserted := True;
+         else
+            Data.Root_Views.Insert (Root, Position, Inserted);
          end if;
 
          if not Inserted then
@@ -2675,7 +2643,6 @@ package body GPR2.Project.Tree is
                                           Root_Project  => (Project_Path,
                                                             Pathname),
                                           Context       => Context,
-                                          With_Runtime  => Self.With_RTS_View,
                                           Starting_From => View);
                         begin
                            --  If there was error messages during the parsing
@@ -2772,6 +2739,37 @@ package body GPR2.Project.Tree is
                         P_Data.Trees.Project.Extended));
                end if;
             end if;
+
+            --  We can now resolve correctly the language attribute and thus
+            --  determine if we need to add the runtime to the list of
+            --  imported views.
+
+            if Self.Runtime.Is_Defined
+              and then View.Kind in With_Object_Dir_Kind
+              and then View.Has_Language (Ada_Language)
+              and then not
+                (P_Data.Limited_Imports.Contains (Self.Runtime_Project.Name)
+                 or else P_Data.Imports.Contains (Self.Runtime_Project.Name))
+            then
+               declare
+                  RTS_View : constant GPR2.Project.View.Object :=
+                               Self.Runtime_Project;
+               begin
+                  P_Data.Imports.Insert (RTS_View.Name, RTS_View);
+                  P_Data.Closure.Include (RTS_View.Name, RTS_View);
+
+                  --  Propagate the namespace root
+                  for Root of View.Namespace_Roots loop
+                     declare
+                        RTS_Data : constant Definition.Ref :=
+                                     Definition.Get (RTS_View);
+                     begin
+                        RTS_Data.Root_Views.Include (Root.Id);
+                     end;
+                  end loop;
+               end;
+            end if;
+
 
             --  Signal project change if we have different signature.
             --  That is if there is at least some external used otherwise the
@@ -3377,7 +3375,6 @@ package body GPR2.Project.Tree is
       Self.Check_Shared_Lib := Undefined.Check_Shared_Lib;
       Self.Absent_Dir_Error := Undefined.Absent_Dir_Error;
       Self.Pre_Conf_Mode    := Undefined.Pre_Conf_Mode;
-      Self.Sources_Loaded   := Undefined.Sources_Loaded;
       Self.Explicit_Target  := Undefined.Explicit_Target;
       Self.File_Reader_Ref  := Undefined.File_Reader_Ref;
       Self.Environment      := Undefined.Environment;
@@ -3628,13 +3625,12 @@ package body GPR2.Project.Tree is
    --------------------
 
    procedure Update_Sources
-     (Self         : Object;
-      Messages     : out GPR2.Log.Object)
+     (Self     : Object;
+      Option   : Source_Info_Option := Sources_Units;
+      Messages : out GPR2.Log.Object)
    is
    begin
-      Self.Self.Sources_Loaded := True;
-
-      Self.Artifacts_Database.Refresh (Messages);
+      Self.Artifacts_Database.Refresh (Option, Messages);
    end Update_Sources;
 
    -------------
@@ -3654,5 +3650,5 @@ begin
 
    Definition.Register           := Register_View'Access;
    Definition.Get_Context        := Get_Context'Access;
-   Definition.Are_Sources_Loaded := Are_Sources_Loaded'Access;
+
 end GPR2.Project.Tree;

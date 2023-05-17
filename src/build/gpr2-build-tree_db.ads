@@ -24,19 +24,28 @@ package GPR2.Build.Tree_Db is
    function Tree (Self : Object) return access GPR2.Project.Tree.Object
      with Pre => Self.Is_Defined;
 
-   procedure Load
-     (Self : in out Object;
-      Tree : GPR2.Project.Tree.Object)
+   procedure Create
+     (Self                 : in out Object;
+      Tree                 : GPR2.Project.Tree.Object;
+      With_Runtime_Sources : Boolean)
      with Pre => not Self.Is_Defined;
-   --  Initializes the object. This operation will load an existing database
-   --  if any, or will collect the sources for the tree.
+   --  Initializes the object.
+   --  The artifacts are not loaded at this stage, Refresh needs to be called
+   --  With_Runtime_Sources indicates whether the database should consider the
+   --   sources of the Ada runtime attached to the tree or not.
+
+   function Use_Runtime_Sources (Self : Object) return Boolean;
+   --  Whether sources of the runtime are considered.
 
    procedure Unload (Self : in out Object)
      with Post => not Self.Is_Defined;
 
-   procedure Refresh (Self         : in out Object;
-                      Messages     : out GPR2.Log.Object)
+   procedure Refresh (Self     : in out Object;
+                      Option   : Source_Info_Option;
+                      Messages : out GPR2.Log.Object)
      with Pre => Self.Is_Defined;
+
+   function Source_Option (Self : Object) return Optional_Source_Info_Option;
 
    function View_Database
      (Self : Object;
@@ -57,6 +66,8 @@ private
    type Object is tagged limited record
       Self       : access Object;
       Tree       : access GPR2.Project.Tree.Object;
+      Src_Option : Optional_Source_Info_Option := No_Source;
+      With_RTS   : Boolean := False;
       Build_Dbs  : Build_DB_Maps.Map;
    end record;
 
@@ -67,5 +78,11 @@ private
 
    function Reference (Self : Object) return access Object is
      (Self'Unrestricted_Access);
+
+   function Use_Runtime_Sources (Self : Object) return Boolean is
+     (Self.With_RTS);
+
+   function Source_Option (Self : Object) return Optional_Source_Info_Option is
+     (Self.Src_Option);
 
 end GPR2.Build.Tree_Db;

@@ -67,7 +67,7 @@ package GPR2.Project.Tree is
      (Self             : in out Object;
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
-      With_Runtime     : Boolean;
+      With_Runtime     : Boolean                   := False;
       Config           : Configuration.Object      := Configuration.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type        := No_Name;
@@ -88,6 +88,7 @@ package GPR2.Project.Tree is
    --   are searched there. If not such implicit project is found, then the
    --   tree is loaded with an empty project.
    --  Context: list of values to use to fill externals.
+   --  With_Runtime: whether runtime sources are considered.
    --  Config: the configuration to use to load the tree.
    --  Build_Path: if defined, indicate the directory to use to build the
    --   project tree (out of tree build).
@@ -121,7 +122,7 @@ package GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
-      With_Runtime      : Boolean;
+      With_Runtime      : Boolean                 := False;
       Build_Path        : Path_Name.Object        := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type      := No_Name;
       Src_Subdirs       : Optional_Name_Type      := No_Name;
@@ -332,6 +333,10 @@ package GPR2.Project.Tree is
       View : GPR2.View_Ids.View_Id) return Build.View_Db.Object
      with Pre => Self.Is_Defined;
 
+   function Source_Option (Self : Object) return Optional_Source_Info_Option;
+   --  Retrieve the level of source information currently requested for
+   --  the tree database.
+
    procedure Clear_Sources
      (Self : Object;
       View : Project.View.Object := Project.View.Undefined)
@@ -344,9 +349,13 @@ package GPR2.Project.Tree is
 
    procedure Update_Sources
      (Self         : Object;
+      Option       : Source_Info_Option := Sources_Units;
       Messages     : out GPR2.Log.Object)
      with Pre => Self.Is_Defined;
    --  Ensures that all views' sources are up-to-date.
+   --  Option selects the information that will be gathered on the sources. The
+   --   more information is requested, the slower is the update operation.
+   --  Messages is used to report errors or info about the update.
 
    procedure Register_Project_Search_Path
      (Self : in out Object;
@@ -529,7 +538,6 @@ private
       Conf              : Project.Configuration.Object;
       Base              : GPR2.KB.Object;
       Tree_Db           : Build.Tree_Db.Object;
-      With_RTS_View     : Boolean := False;
       Runtime           : View.Object;
       Messages          : aliased Log.Object;
       Search_Paths      : All_Search_Paths;
@@ -546,7 +554,6 @@ private
       --  Root and aggregate contexts
       View_Ids          : aliased Id_Maps.Map;
       View_DAG          : GPR2.View_Ids.DAGs.DAG;
-      Sources_Loaded    : Boolean := False;
       --  Configuration items from command line
       Explicit_Target   : Unbounded_String;
       Explicit_Runtimes : Containers.Lang_Value_Map;
@@ -698,5 +705,8 @@ private
 
    function Environment (Self : Object) return GPR2.Environment.Object is
       (Self.Environment);
+
+   function Source_Option (Self : Object) return Optional_Source_Info_Option is
+     (Self.Artifacts_Database.Source_Option);
 
 end GPR2.Project.Tree;

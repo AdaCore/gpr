@@ -76,9 +76,6 @@ private package GPR2.Project.Definition is
    --  post-processing each time they are retrieved (Call to
    --  Apply_Root_And_Subdirs).
 
-   package View_Lists is new Ada.Containers.Vectors
-     (Positive, View_Ids.View_Id, "=" => View_Ids."=");
-
    type Cacheable_Dir_Attrs is
      (Exec_Dir, Library_Ali_Dir, Library_Dir, Library_Src_Dir, Object_Dir);
 
@@ -104,7 +101,7 @@ private package GPR2.Project.Definition is
 
       Tree              : access Project.Tree.Object;
       --  The project tree for this view
-      Root_Views        : View_Lists.Vector;
+      Root_Views        : View_Ids.Set.Set;
       --  Either root aggregated project view, or just root view of the tree
       Extending         : Weak_Reference;
       --  If defined, the view that is extending this definition
@@ -173,10 +170,6 @@ private package GPR2.Project.Definition is
    Get_Context : access function
      (View : Project.View.Object) return Context.Object;
    --  Returns context of the project view
-
-   Are_Sources_Loaded : access function
-     (Tree : Project.Tree.Object) return Boolean;
-   --  Returns True if the sources are loaded into project tree
 
    --------------------------------------------------------------
    -- Private routines exported from GPR2.Project.View package --
