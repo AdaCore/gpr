@@ -28,6 +28,7 @@ with GPR2.Log;
 with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Part_Set;
 with GPR2.Project.Source.Set;
@@ -59,6 +60,8 @@ is
 
    use GPRtools;
    use GPRtools.Util;
+
+   package PRA renames GPR2.Project.Registry.Attribute;
 
    Tree : Project.Tree.Object renames Opt.Tree.all;
 
@@ -959,6 +962,13 @@ begin
          --  If none was provided, then:
          --     - Either we're in closure mode, and we want to use the mains
          --       from the root project.
+
+         if Tree.Root_Project.Attribute (PRA.Main).Is_Defined
+           and then Tree.Root_Project.Mains.Is_Empty
+         then
+            Util.Output_Messages (Opt);
+            GPRtools.Util.Fail_Program ("problems with main sources");
+         end if;
 
          for S of Tree.Root_Project.Sources loop
             if Tree.Root_Project.Has_Mains
