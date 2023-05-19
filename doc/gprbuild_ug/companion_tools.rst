@@ -429,7 +429,7 @@ are evaluated (if necessary) in the same order as they are documented below.
        <name>GNAT</name>
        </compiler_description>
 
-* :samp:`<executable>'
+* :samp:`<executable>`
 
   This tag contains a string, which is the name of an executable
   to search for on the PATH. Examples are :samp:`gnatls`, :samp:`gcc`,...
