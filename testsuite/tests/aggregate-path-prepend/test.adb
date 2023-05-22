@@ -15,20 +15,23 @@ procedure Test is
 
    procedure Show_Tree (Tree : GPR2.Project.Tree.Object)
    is
+      use type GPR2.Project.View.Object;
    begin
       if Tree.Log_Messages.Has_Error then
          Put_Line (" loaded with errors");
       else
          for View of reverse Tree.Ordered_Views loop
-            Put (" - " & String (View.Name));
-            Put (" @ ");
-            declare
-               Rel_Path : GPR2.Path_Name.Object;
-            begin
-               Rel_Path :=
-                 View.Dir_Name.Relative_Path (Tree.Root_Project.Dir_Name);
-               Put_Line (String (Rel_Path.Name));
-            end;
+            if View /= Tree.Runtime_Project then
+               Put (" - " & String (View.Name));
+               Put (" @ ");
+               declare
+                  Rel_Path : GPR2.Path_Name.Object;
+               begin
+                  Rel_Path :=
+                    View.Dir_Name.Relative_Path (Tree.Root_Project.Dir_Name);
+                  Put_Line (String (Rel_Path.Name));
+               end;
+            end if;
          end loop;
       end if;
    end Show_Tree;

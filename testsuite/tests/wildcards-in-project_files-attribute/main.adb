@@ -27,6 +27,7 @@ procedure main is
    Regexp8_Found   : Boolean := False;
    Project9_Found  : Boolean := Get_File_Names_Case_Sensitive /= 0;
    Project10_Found : Boolean := False;
+   Runtime_Found   : Boolean := False;
    procedure Show_Tree_Log is
    begin
       for C in Tree.Log_Messages.Iterate
@@ -78,8 +79,9 @@ begin
    end if;
    for Cursor in Tree.Iterate loop
       declare
-         Name : constant String :=
-           String (GPR2.Project.Tree.Element (Cursor).Name);
+         use type GPR2.Name_Type;
+         Name : constant GPR2.Name_Type :=
+                  GPR2.Project.Tree.Element (Cursor).Name;
       begin
          if Name = "Aggr" and then not Aggr_Found then
             Aggr_Found := True;
@@ -103,8 +105,10 @@ begin
             Project9_Found := True;
          elsif Name = "Project10" and then not Project10_Found then
             Project10_Found := True;
+         elsif Name = "Runtime" then
+            Runtime_Found := True;
          else
-            Ada.Text_IO.Put_Line ("Unexpected view:" & Name);
+            Ada.Text_IO.Put_Line ("Unexpected view:" & String (Name));
          end if;
       end;
    end loop;
@@ -116,6 +120,7 @@ begin
      or else not Project5_Found
      or else not Project7_Found
      or else not Regexp8_Found
+     or else not Runtime_Found
    then
       Ada.Text_IO.Put_Line ("Missing view");
    end if;
