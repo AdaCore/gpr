@@ -1,7 +1,7 @@
 --
 --  Copyright (C) 2019-2023, AdaCore
 --
---  SPDX-License-Identifier: Apache-2.0
+--  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
 --  This container is designed to contain the set of imports for a specific

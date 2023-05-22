@@ -1,7 +1,7 @@
 --
 --  Copyright (C) 2021-2023, AdaCore
 --
---  SPDX-License-Identifier: Apache-2.0
+--  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
 --  This package handles the creation, manipulation of View_Id objects.
