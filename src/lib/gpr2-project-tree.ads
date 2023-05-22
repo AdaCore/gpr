@@ -340,7 +340,9 @@ package GPR2.Project.Tree is
    procedure Clear_Sources
      (Self : Object;
       View : Project.View.Object := Project.View.Undefined)
-     with Pre => Self.Is_Defined;
+     with Pre  => Self.Is_Defined,
+          Post => (if not View.Is_Defined
+                   then Self.Source_Option = No_Source);
    --  Invalidates the sources for all views in the tree if View is undefined
    --  or the source in the given view otherwise. This is needed when some
    --  sources are added or removed from the view. It is not required to call

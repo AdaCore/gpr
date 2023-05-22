@@ -311,6 +311,8 @@ package body GPRls.Gnatdist is
    is
       Tree : constant access Project.Tree.Object := S.View.Tree;
 
+      use type GPR2.Unit.Library_Item_Type;
+
       procedure Check_Flag (Flag : GPR2.Unit.Flag; Token : Token_Type);
 
       ----------------
@@ -325,6 +327,11 @@ package body GPRls.Gnatdist is
       end Check_Flag;
 
    begin
+      --  Do not list No_Body sources
+      if Unit.Library_Item_Kind = GPR2.Unit.Is_No_Body then
+         return;
+      end if;
+
       Output_Token (T_Unit);
       N_Indents := N_Indents + 1;
 
@@ -336,10 +343,13 @@ package body GPRls.Gnatdist is
 
       Output_Token (T_Kind);
 
+      --  Note the Is_No_Body case is dummy as we don't output such unit in
+      --  this case (see above).
       Output_Token
         (case Unit.Library_Item_Kind is
             when GPR2.Unit.Is_Package    => T_Package,
-            when GPR2.Unit.Is_Subprogram => T_Subprogram);
+            when GPR2.Unit.Is_Subprogram => T_Subprogram,
+            when GPR2.Unit.Is_No_Body    => T_Package);
 
       Output_Token
         (if Unit.Kind in GPR2.Unit.Spec_Kind then T_Spec else T_Body);

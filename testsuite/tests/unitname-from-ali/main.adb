@@ -23,7 +23,10 @@ begin
          U   : constant GPR2.Project.Unit_Info.Object :=
                  GPR2.Project.Unit_Info.Set.Set.Element (C);
       begin
-         if U.Has_Spec and then U.Spec.Source.Simple_Name = "a-direio.ads" then
+         if (U.Has_Spec and then U.Spec.Source.Simple_Name = "g-md5.ads")
+           or else
+             (U.Has_Body and then U.Main_Body.Source.Simple_Name = "g-md5.adb")
+         then
             Put_Line ("Key:");
             Put_Line (" - " & String (Key));
             Put_Line ("Name:");
@@ -41,7 +44,7 @@ begin
    end loop;
 
    declare
-      N : constant GPR2.Name_Type := "ada.direct_io";
+      N : constant GPR2.Name_Type := "GNAT.MD5";
       U : GPR2.Project.Unit_Info.Object := Tree.Runtime_Project.Unit (N);
    begin
       Put_Line (String (N) & " found: " & U.Is_Defined'Image);

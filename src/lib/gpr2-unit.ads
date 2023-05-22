@@ -76,7 +76,7 @@ package GPR2.Unit is
    subtype Spec_Kind is Library_Unit_Type range S_Spec .. S_Spec_Only;
    subtype Body_Kind is Library_Unit_Type range S_Body .. S_Body_Only;
 
-   type Library_Item_Type is (Is_Package, Is_Subprogram);
+   type Library_Item_Type is (Is_Package, Is_Subprogram, Is_No_Body);
    --  Indicates whether a library item is a package or a subprogram
 
    type Main_Type is (None, Is_Procedure, Is_Function);
