@@ -1675,10 +1675,12 @@ package body GPR2.Project.View is
       end Are_Valid;
 
    begin
-      if not Attr.Is_Defined or else Attr.Count_Values = 0 then
-         return False;
-      else
+      if (Self = Self.Namespace_Root)
+        and then (Attr.Is_Defined and then Attr.Count_Values > 0)
+      then
          return Are_Valid (Mains => Attr);
+      else
+         return False;
       end if;
    end Has_Mains;
 

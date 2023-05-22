@@ -73,7 +73,6 @@ package body GPRinstall.Install is
 
    use type GNATCOLL.OS.OS_Type;
 
-   package PRA           renames GPR2.Project.Registry.Attribute;
    package String_Vector renames GPR2.Containers.Value_Type_List;
 
    subtype Message_Digest is GNAT.MD5.Message_Digest;
@@ -2917,8 +2916,7 @@ package body GPRinstall.Install is
             return;
          end if;
 
-         if Project = Project.Tree.Root_Project
-           and then Project.Attribute (PRA.Main).Is_Defined
+         if Project.Has_Mains
            and then Project.Mains.Is_Empty
          then
             Util.Output_Messages (Options);

@@ -95,7 +95,6 @@ procedure GPRclean.Main is
 
    procedure Clean (View : Project.View.Object) is
       use GNATCOLL.Utils;
-      use type Project.View.Object;
 
       Obj_Dir     : constant Path_Name.Object := View.Object_Directory;
       Tree        : constant access Project.Tree.Object := View.Tree;
@@ -339,8 +338,7 @@ procedure GPRclean.Main is
 
       end;
 
-      if View = View.Tree.Root_Project
-        and then View.Attribute (PRA.Main).Is_Defined
+      if View.Has_Mains
         and then View.Mains.Is_Empty
       then
          GPRtools.Util.Output_Messages (Options);
