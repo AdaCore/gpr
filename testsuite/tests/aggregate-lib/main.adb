@@ -8,9 +8,10 @@ with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
-with GPR2.Project.Source.Set;
+with GPR2.Build.Source.Sets;
 with GPR2.Project.Tree;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
@@ -72,6 +73,7 @@ procedure Main is
 
    Prj : Project.Tree.Object;
    Ctx : Context.Object;
+   Log : GPR2.Log.Object;
 
 begin
    Text_IO.Put_Line ("//// OS set to Linux");
@@ -83,13 +85,19 @@ begin
       Display (P);
    end loop;
 
+   Prj.Update_Sources (Messages => Log);
+   Log.Output_Messages (Information => False);
+
    Text_IO.Put_Line ("sources:");
-   for S of Prj.Root_Project.Sources loop
-      Output_Filename (S.Path_Name.Value);
+   for Agg of Prj.Root_Project.Aggregated loop
+      for S of Agg.Sources loop
+         Output_Filename (S.Path_Name.Value);
+      end loop;
    end loop;
 
    Text_IO.New_Line;
    Text_IO.Put_Line ("//// OS set to Windows");
+
    Ctx := Prj.Context;
    Ctx.Include ("OS", "Windows");
    Prj.Set_Context (Ctx, Changed_Callback'Access);
@@ -98,8 +106,13 @@ begin
       Display (P);
    end loop;
 
+   Prj.Update_Sources (Messages => Log);
+   Log.Output_Messages (Information => False);
+
    Text_IO.Put_Line ("sources:");
-   for S of Prj.Root_Project.Sources loop
-      Output_Filename (S.Path_Name.Value);
+   for Agg of Prj.Root_Project.Aggregated loop
+      for S of Agg.Sources loop
+         Output_Filename (S.Path_Name.Value);
+      end loop;
    end loop;
 end Main;

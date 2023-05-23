@@ -67,10 +67,10 @@ package body Update_Sources_List is
      (Language_Id, Boolean, Hash, "=");
 
    procedure Include_Simple_Filename
-     (Data  : View_Data;
-      Set   : in out Source_Set.Set;
-      Value : Value_Type;
-      Sloc  : SR.Value.Object);
+     (Set      : in out Source_Set.Set;
+      Value    : Value_Type;
+      Sloc     : SR.Value.Object;
+      Messages : in out GPR2.Log.Object);
 
    function Naming_Exception_Equal
      (A : Project.Attribute.Object;
@@ -308,16 +308,16 @@ package body Update_Sources_List is
    -----------------------------
 
    procedure Include_Simple_Filename
-     (Data  : View_Data;
-      Set   : in out Source_Set.Set;
-      Value : Value_Type;
-      Sloc  : SR.Value.Object)
+     (Set      : in out Source_Set.Set;
+      Value    : Value_Type;
+      Sloc     : SR.Value.Object;
+      Messages : in out GPR2.Log.Object)
    is
       Position : Source_Set.Cursor;
       Inserted : Boolean;
    begin
       if Has_Directory_Separator (Value) then
-         Data.View.Tree.Append_Message
+         Messages.Append
            (Message.Create
               (Message.Error,
                "file name cannot include directory information (""" & Value
@@ -820,14 +820,16 @@ package body Update_Sources_List is
 
       if Attr.Is_Defined then
          for File of Attr.Values loop
-            Include_Simple_Filename (Data, Excluded_Sources, File.Text, File);
+            Include_Simple_Filename
+              (Excluded_Sources, File.Text, File, Messages);
          end loop;
       end if;
 
       --  Remove naming exception sources from inactive case alternatives
 
       for File of Data.View.Skipped_Sources loop
-         Include_Simple_Filename (Data, Excluded_Sources, File.Text, File);
+         Include_Simple_Filename
+           (Excluded_Sources, File.Text, File, Messages);
       end loop;
 
       --  If we have attribute Source_List_File
@@ -845,7 +847,8 @@ package body Update_Sources_List is
 
       if Attr.Is_Defined then
          for File of Attr.Values loop
-            Include_Simple_Filename (Data, Listed_Sources, File.Text, File);
+            Include_Simple_Filename
+              (Listed_Sources, File.Text, File, Messages);
          end loop;
       end if;
 
@@ -873,7 +876,8 @@ package body Update_Sources_List is
                   --  File was a source and has disapeared: notify the build
                   --  db object to cleanup tables.
                   Remove_Source
-                    (Data, Data.View, F.Path, Project.View.Undefined);
+                    (Data, Data.View, F.Path, Project.View.Undefined,
+                     Messages => Messages);
 
                   Changed_Sources.Include (F.Path.Simple_Name);
                end if;
@@ -900,7 +904,8 @@ package body Update_Sources_List is
                   --  First add source to Data view.
                   Add_Source
                     (Data, Data.View, F.Path,
-                     Extended_View   => Project.View.Undefined);
+                     Extended_View => Project.View.Undefined,
+                     Messages      => Messages);
                   Changed_Sources.Include (F.Path.Simple_Name);
                end if;
 
@@ -923,7 +928,7 @@ package body Update_Sources_List is
             C_Overload : Basename_Source_List_Maps.Cursor;
          begin
             C_Overload := Data.Overloaded_Srcs.Find (Base_Name);
-            Resolve_Visibility (Data, C_Overload);
+            Resolve_Visibility (Data, C_Overload, Messages);
          end;
       end loop;
 

@@ -15,7 +15,7 @@ package body GPR2.Build.Compilation_Unit is
    procedure Add
      (Self     : in out Object;
       Kind     : Unit_Kind;
-      View     : GPR2.View_Ids.View_Id;
+      View     : GPR2.Project.View.Object;
       Path     : GPR2.Path_Name.Object;
       Index    : Unit_Index := No_Index;
       Sep_Name : Optional_Name_Type := "";
@@ -77,7 +77,7 @@ package body GPR2.Build.Compilation_Unit is
      (Self : Object;
       Action : access procedure
         (Kind     : Unit_Kind;
-         View     : View_Ids.View_Id;
+         View     : Project.View.Object;
          Path     : Path_Name.Object;
          Index    : Unit_Index;
          Sep_Name : Optional_Name_Type)) is
@@ -168,7 +168,7 @@ package body GPR2.Build.Compilation_Unit is
    procedure Remove
      (Self     : in out Object;
       Kind     : Unit_Kind;
-      View     : GPR2.View_Ids.View_Id;
+      View     : GPR2.Project.View.Object;
       Path     : GPR2.Path_Name.Object;
       Index    : Unit_Index := No_Index;
       Sep_Name : Optional_Name_Type := "")

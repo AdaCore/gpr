@@ -168,14 +168,16 @@ private package GPR2.Build.View_Tables is
       View_Owner         : GPR2.Project.View.Object;
       Path               : GPR2.Path_Name.Object;
       Extended_View      : GPR2.Project.View.Object;
-      Resolve_Visibility : Boolean := False);
+      Resolve_Visibility : Boolean := False;
+      Messages           : in out GPR2.Log.Object);
 
    procedure Remove_Source
      (Data               : in out View_Data;
       View_Owner         : GPR2.Project.View.Object;
       Path               : GPR2.Path_Name.Object;
       Extended_View      : GPR2.Project.View.Object;
-      Resolve_Visibility : Boolean := False);
+      Resolve_Visibility : Boolean := False;
+      Messages           : in out GPR2.Log.Object);
 
    procedure Refresh
      (Data     : in out View_Data;

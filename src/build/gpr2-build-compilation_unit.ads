@@ -8,13 +8,13 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Vectors;
 
 with GPR2.Path_Name;
-with GPR2.View_Ids;
+with GPR2.Project.View;
 limited with GPR2.Project.Tree;
 
 package GPR2.Build.Compilation_Unit is
 
    type Unit_Location is record
-      View   : View_Ids.View_Id;
+      View   : Project.View.Object;
       Source : Path_Name.Object;
       Index  : Unit_Index := No_Index;
    end record;
@@ -25,7 +25,12 @@ package GPR2.Build.Compilation_Unit is
    package Unit_Location_Vectors is new Ada.Containers.Vectors
      (Positive, Unit_Location);
 
-   subtype Unit_Location_Vector is Unit_Location_Vectors.Vector;
+   type Unit_Location_Vector is new Unit_Location_Vectors.Vector
+     with null record;
+   subtype Unit_Location_Cursor is Unit_Location_Vectors.Cursor;
+   Empty_Vector : constant Unit_Location_Vector :=
+                    Unit_Location_Vector'(Unit_Location_Vectors.Empty_Vector
+                                                           with null record);
 
    package Separate_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, Unit_Location);
@@ -56,7 +61,7 @@ package GPR2.Build.Compilation_Unit is
    procedure Add
      (Self     : in out Object;
       Kind     : Unit_Kind;
-      View     : GPR2.View_Ids.View_Id;
+      View     : GPR2.Project.View.Object;
       Path     : GPR2.Path_Name.Object;
       Index    : Unit_Index := No_Index;
       Sep_Name : Optional_Name_Type := "";
@@ -76,7 +81,7 @@ package GPR2.Build.Compilation_Unit is
    procedure Remove
      (Self     : in out Object;
       Kind     : Unit_Kind;
-      View     : GPR2.View_Ids.View_Id;
+      View     : GPR2.Project.View.Object;
       Path     : GPR2.Path_Name.Object;
       Index    : Unit_Index := No_Index;
       Sep_Name : Optional_Name_Type := "")
@@ -109,7 +114,7 @@ package GPR2.Build.Compilation_Unit is
      (Self : Object;
       Action : access procedure
         (Kind     : Unit_Kind;
-         View     : View_Ids.View_Id;
+         View     : GPR2.Project.View.Object;
          Path     : Path_Name.Object;
          Index    : Unit_Index;
          Sep_Name : Optional_Name_Type))
@@ -123,8 +128,8 @@ package GPR2.Build.Compilation_Unit is
 private
 
    type Clashing_Unit (Sep_Name_Len : Natural) is record
-      Loc : Unit_Location;
-      Kind : Unit_Kind;
+      Loc      : Unit_Location;
+      Kind     : Unit_Kind;
       Sep_Name : Optional_Name_Type (1 .. Sep_Name_Len);
    end record;
 

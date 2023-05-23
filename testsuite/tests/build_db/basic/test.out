@@ -17,6 +17,12 @@ c.gpr:12:37: error: source file "notfound.ada" for unit "Foo" not found
    - Aggregated project(s):
      - C
      - D
+ - runtime (K_STANDARD) **
+   - Root project(s):
+     - A
+     - B
+     - C
+     - D
  - C (K_STANDARD) **
    - Root project(s):
      - C
@@ -95,6 +101,10 @@ prj2.gpr:3:24: warning: library directory "lib2" not found
    - Aggregated project(s):
      - Prj1
      - Prj2
+ - runtime (K_STANDARD) **
+   - Root project(s):
+     - Prj1
+     - Prj2
  - Included (K_STANDARD) **
    - Root project(s):
      - Prj1
@@ -133,8 +143,6 @@ prj2.gpr:3:24: warning: library directory "lib2" not found
    - src0/shared.adb (body)
      SHARED (body)
  - compilation inputs:
-   - src0/pkg.ads
-   - src0/shared.adb
  - sources of Prj1
    - src1/main.adb (body)
      MAIN (body)
@@ -154,8 +162,6 @@ prj2.gpr:3:24: warning: library directory "lib2" not found
    - src0/shared.adb (body)
      SHARED (body)
  - compilation inputs:
-   - src0/pkg.ads
-   - src0/shared.adb
  - sources of Prj3
    - src2/main.adb (body)
      MAIN (body)
@@ -189,6 +195,9 @@ Testing trees/multi/prj.gpr
 =========================================
 * Views:
  - Prj_Naming (K_ABSTRACT) **
+   - Root project(s):
+     - Prj
+ - runtime (K_STANDARD) **
    - Root project(s):
      - Prj
  - Prj (K_STANDARD) **
@@ -228,6 +237,9 @@ foo..bar.ads:1:01: warning: invalid file name, contains dot
 foo._bar.ads:1:01: warning: invalid file name, contains dot
 foo_.bor.ads:1:01: warning: invalid file name, contains dot
 * Views:
+ - runtime (K_STANDARD) **
+   - Root project(s):
+     - Prj
  - Prj (K_STANDARD) **
    - Root project(s):
      - Prj
@@ -277,6 +289,9 @@ lib.gpr:7:24: warning: library directory "lib" not found
      - Lib
    - Aggregated by:
      - Prj
+ - runtime (K_STANDARD) **
+   - Root project(s):
+     - Lib
  - Prj (K_STANDARD) **
    - Root project(s):
      - Lib
@@ -324,6 +339,9 @@ Testing trees/separates/prj.gpr
 =========================================
 prj.gpr:2:23: warning: object directory "obj" not found
 * Views:
+ - runtime (K_STANDARD) **
+   - Root project(s):
+     - Prj
  - Prj (K_STANDARD) **
    - Root project(s):
      - Prj

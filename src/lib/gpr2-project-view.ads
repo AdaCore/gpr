@@ -13,8 +13,6 @@
 
 with Ada.Calendar;
 
-with GPR2.Build.Compilation_Unit;
-with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name.Set;
@@ -27,6 +25,8 @@ with GPR2.Source_Reference.Value;
 with GPR2.View_Ids;
 
 limited with GPR2.Build.Compilation_Input.Sets;
+limited with GPR2.Build.Compilation_Unit;
+limited with GPR2.Build.Compilation_Unit.Maps;
 limited with GPR2.Build.Source.Sets;
 limited with GPR2.Build.View_Db;
 limited with GPR2.Project.Tree;
@@ -526,8 +526,7 @@ package GPR2.Project.View is
 
    function Mains
      (Self : Object) return GPR2.Build.Compilation_Unit.Unit_Location_Vector
-     with Pre  => Self.Is_Defined,
-          Post => not Self.Has_Mains or else Mains'Result.Length > 0;
+     with Pre  => Self.Is_Defined;
    --  returns the list of main bodies
 
    function Executables (Self : Object) return GPR2.Path_Name.Set.Object

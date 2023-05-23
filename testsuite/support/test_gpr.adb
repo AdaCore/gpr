@@ -6,6 +6,7 @@
 
 with GNAT.IO;
 with GPR2;
+with GPR2.Log;
 with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
@@ -279,8 +280,10 @@ package body Test_GPR is
        Config_Filename  : String := "";
        Load_Source_List : Boolean := False)
    is
+      use type GPR2.Message.Level_Value;
       Error_Message_Count : Integer := 0;
-      Config_Project : GPR2.Project.Configuration.Object;
+      Config_Project      : GPR2.Project.Configuration.Object;
+      Log                 : GPR2.Log.Object;
    begin
       if Config_Filename'Length > 0 then
          Config_Project := GPR2.Project.Configuration.Load
@@ -307,7 +310,18 @@ package body Test_GPR is
       A.Assert (Error_Message_Count, 0,
                 "expect no error messages");
       if Load_Source_List then
-         Tree.Update_Sources;
+         Tree.Update_Sources (Messages => Log);
+         IO.Put_Line ("messages during sources loading " & Filename);
+         Error_Message_Count := 0;
+
+         for M of Log loop
+            if M.Level = GPR2.Message.Error then
+               Error_Message_Count := Error_Message_Count + 1;
+            end if;
+            IO.Put_Line (M.Format);
+         end loop;
+         A.Assert (Error_Message_Count, 0,
+                   "expect no error messages");
       end if;
    end Load_With_No_Errors;
 

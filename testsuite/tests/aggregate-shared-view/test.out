@@ -1,15 +1,18 @@
 Roots for Shared extended by P1
  - P1
  - P4
+Roots for runtime
+ - P1
+ - P2
+ - P4
+ - P5
+ - P6
 Roots for Shared
  - P2
  - P5
  - P6
 Roots for P4
  - P4
-Roots for P6
- - P5
- - P6
 Roots for Shared extended by P5
  - P5
 Roots for P1
@@ -17,6 +20,9 @@ Roots for P1
  - P4
 Roots for P2
  - P2
+Roots for P6
+ - P5
+ - P6
 Roots for P2 extended by P5
  - P5
 Roots for P5

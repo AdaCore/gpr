@@ -271,7 +271,11 @@ package body GPR2.Project.Tree is
    function Artifacts_Database
      (Self : Object) return Build.Tree_Db.Object_Access is
    begin
-      return Self.Tree_Db.Reference;
+      if Self.Tree_Db.Is_Defined then
+         return Self.Tree_Db.Reference;
+      else
+         return null;
+      end if;
    end Artifacts_Database;
 
    --------------------
@@ -455,6 +459,10 @@ package body GPR2.Project.Tree is
          --  The only language supported is Ada
 
          Add_Attribute (PRA.Languages, "ada");
+
+         --  The runtime is externally built
+
+         Add_Attribute (PRA.Externally_Built, "true");
 
          Data.Tree      := Self.Self;
          Data.Kind      := K_Standard;
@@ -1705,6 +1713,19 @@ package body GPR2.Project.Tree is
                   end;
                end loop;
 
+               if Data.Kind in With_Source_Dirs_Kind
+                 and then Self.Has_Runtime_Project
+                 and then not Data.Imports.Contains (Self.Runtime.Name)
+               then
+                  Data.Imports.Insert (Self.Runtime.Name, Self.Runtime);
+                  Data.Closure.Include (Self.Runtime.Name, Self.Runtime);
+
+                  for Root of Data.Root_Views loop
+                     Definition.Get_RW
+                       (Self.Runtime).Root_Views.Include (Root);
+                  end loop;
+               end if;
+
                if Status = Extended then
                   --  Remove Parent from New_Extends_Ctx: simple extension
                   --  don't propagate to the subtree.
@@ -2740,37 +2761,6 @@ package body GPR2.Project.Tree is
                end if;
             end if;
 
-            --  We can now resolve correctly the language attribute and thus
-            --  determine if we need to add the runtime to the list of
-            --  imported views.
-
-            if Self.Runtime.Is_Defined
-              and then View.Kind in With_Object_Dir_Kind
-              and then View.Has_Language (Ada_Language)
-              and then not
-                (P_Data.Limited_Imports.Contains (Self.Runtime_Project.Name)
-                 or else P_Data.Imports.Contains (Self.Runtime_Project.Name))
-            then
-               declare
-                  RTS_View : constant GPR2.Project.View.Object :=
-                               Self.Runtime_Project;
-               begin
-                  P_Data.Imports.Insert (RTS_View.Name, RTS_View);
-                  P_Data.Closure.Include (RTS_View.Name, RTS_View);
-
-                  --  Propagate the namespace root
-                  for Root of View.Namespace_Roots loop
-                     declare
-                        RTS_Data : constant Definition.Ref :=
-                                     Definition.Get (RTS_View);
-                     begin
-                        RTS_Data.Root_Views.Include (Root.Id);
-                     end;
-                  end loop;
-               end;
-            end if;
-
-
             --  Signal project change if we have different signature.
             --  That is if there is at least some external used otherwise the
             --  project is stable and won't change.
@@ -3137,6 +3127,7 @@ package body GPR2.Project.Tree is
                   File := Path_Name.Create_File
                     (Filename_Type (Att.Value.Text),
                      Filename_Type (View.Path_Name.Dir_Name));
+
                   if not File.Exists or else File.Is_Directory then
                      Self.Messages.Append
                        (Message.Create

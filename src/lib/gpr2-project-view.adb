@@ -12,6 +12,8 @@ with GNAT.OS_Lib;
 with GNATCOLL.Utils;
 
 with GPR2.Build.Compilation_Input.Sets;
+with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Source;
 with GPR2.Build.Source.Sets;
 with GPR2.Build.View_Db;
@@ -46,7 +48,7 @@ package body GPR2.Project.View is
    --  Get view refcount
 
    function View_DB (Self : Object) return Build.View_Db.Object is
-     (GPR2.Build.View_Db.Undefined);
+     (Self.Tree.Artifacts_Database (Self));
 
    procedure Set_Def (Ref : out View.Object; Def : Definition_Base'Class);
    --  Convert definition to view
@@ -1566,9 +1568,17 @@ package body GPR2.Project.View is
    function Has_Source
      (Self : Object; Filename : GPR2.Simple_Name) return Boolean
    is
+      Db : Build.View_Db.Object;
    begin
       if Self.Kind in With_Object_Dir_Kind then
-         return Self.View_Db.Has_Source (Filename);
+         Db := Self.View_Db;
+
+         if Db.Is_Defined then
+            return Db.Has_Source (Filename);
+         else
+            return False;
+         end if;
+
       else
          return False;
       end if;
@@ -2077,7 +2087,7 @@ package body GPR2.Project.View is
 
             if Src.Source.Is_Defined then
                return
-                 (Src.Owning_View.Id,
+                 (Src.Owning_View,
                   Src.Source.Path_Name,
                   Attr.Index.At_Pos);
             end if;
@@ -2096,7 +2106,7 @@ package body GPR2.Project.View is
                Src := Self.View_Db.Visible_Source (Simple_Name (Value.Text));
 
                if Src.Source.Is_Defined then
-                  return (Src.Owning_View.Id,
+                  return (Src.Owning_View,
                           Src.Source.Path_Name,
                           Value.At_Pos);
                end if;
@@ -2127,7 +2137,8 @@ package body GPR2.Project.View is
 
                if Src.Source.Is_Defined then
                   Set.Append
-                    ((Src.Owning_View.Id, Src.Source.Path_Name, Main.At_Pos));
+                    (Build.Compilation_Unit.Unit_Location'
+                       (Src.Owning_View, Src.Source.Path_Name, Main.At_Pos));
                end if;
             end loop;
          end if;
