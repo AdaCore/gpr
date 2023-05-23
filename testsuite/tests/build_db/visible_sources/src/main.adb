@@ -4,8 +4,9 @@ with Ada.Text_IO;
 
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
-with GPR2.Build.Source_Info.Sets;
+with GPR2.Build.Source.Sets;
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -13,12 +14,13 @@ with GPR2.Project.View;
 procedure Main is
    use GPR2;
    use GPR2.Build;
+   use type GPR2.Project.View.Object;
 
    procedure Test (Gpr : Filename_Type)
    is
       Tree        : Project.Tree.Object;
+      Log         : GPR2.Log.Object;
       Ctx         : Context.Object := Context.Empty;
-      Db          : Build.Tree_Db.Object;
       Src_Count   : Natural := 0;
       Src_Count_2 : Natural := 0;
 
@@ -26,7 +28,7 @@ procedure Main is
       -- Print_Source --
       ------------------
 
-      procedure Print_Source (S : Build.Source_Info.Object) is
+      procedure Print_Source (S : Build.Source.Object) is
          Root : constant Path_Name.Object := Tree.Root_Project.Dir_Name;
 
          function Image (Kind : Unit_Kind) return String
@@ -77,9 +79,8 @@ procedure Main is
            String (Tree.Root_Project.Path_Name.Relative_Path
              (Path_Name.Create_Directory (".")).Name));
 
-      Db.Load (Tree);
-
-      Tree.Log_Messages.Output_Messages (Information => False);
+      Tree.Update_Sources (Messages => Log);
+      Log.Output_Messages (Information => False);
 
       Ada.Text_IO.New_Line;
       Ada.Text_IO.Put_Line ("* Views *");
@@ -163,29 +164,26 @@ procedure Main is
       Src_Count := 0;
       Src_Count_2 := 0;
 
-      for C in Tree.Iterate loop
-         declare
-            V : constant Project.View.Object := Project.Tree.Element (C);
-         begin
-            if V.Kind in GPR2.With_Object_Dir_Kind then
-               Ada.Text_IO.Put ("sources of " & String (V.Name));
+      for V of Tree loop
+         if V /= Tree.Runtime_Project
+           and then V.Kind in GPR2.With_Object_Dir_Kind
+         then
+            Ada.Text_IO.Put ("sources of " & String (V.Name));
 
-               if V.Is_Extended then
-                  Ada.Text_IO.Put (" extended by " &
-                                     String (V.Extending.Name));
-               end if;
-
-               Ada.Text_IO.New_Line;
-
-               for S of Db.View_Database (V).Visible_Sources loop
-                  Src_Count := Src_Count + 1;
-                  Print_Source (S);
-               end loop;
+            if V.Is_Extended then
+               Ada.Text_IO.Put (" extended by " &
+                                  String (V.Extending.Name));
             end if;
-         end;
+
+            Ada.Text_IO.New_Line;
+
+            for S of V.View_Db.Visible_Sources loop
+               Src_Count := Src_Count + 1;
+               Print_Source (S);
+            end loop;
+         end if;
       end loop;
 
-      Db.Unload;
       Tree.Unload;
       Ada.Text_IO.New_Line;
    end Test;

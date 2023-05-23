@@ -5,5 +5,3 @@ project_file: prj
 main: main
 output:
 - ["test.out.win", "'windows' in env.host.platform"]
-control:
-- [XFAIL, "True", "pending libgpr2-next changes"]

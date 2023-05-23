@@ -5,6 +5,9 @@ simple.gpr:6:23: warning: object directory "obj/simple" not found
 
 * Views *
 
+** runtime (K_STANDARD) **
+- Root project(s):
+  - Simple
 ** B (K_STANDARD) **
 - Root project(s):
   - Simple

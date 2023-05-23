@@ -6,8 +6,9 @@ with GNATCOLL.Strings; use GNATCOLL.Strings;
 with GPR2.Path_Name;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
-with GPR2.Build.Source_Info.Sets;
+with GPR2.Build.Source.Sets;
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -16,26 +17,26 @@ with Test;
 with Objects; use Objects;
 
 package body Scenario is
-   
+
    use GNATCOLL.VFS;
    use GPR2;
    use GPR2.Build;
-   
+
    Tok_Load    : constant XString := To_XString ("load");
    --  Load the tree
-   
+
    Tok_Unload  : constant XString := To_XString ("unload");
    --  Unload the tree
-   
+
    Tok_Refresh : constant XString := To_XString ("refresh");
    --  Refresh the build db
-   
+
    Tok_Dump    : constant XString := To_XString ("dump");
    --  Refresh the build db
-   
+
    Tok_Mkdir       : constant XString := To_XString ("mkdir");
    --  Create a directory
-   
+
    Tok_Copy        : constant XString := To_XString ("copy");
    --  Copy a file
 
@@ -43,14 +44,14 @@ package body Scenario is
    Tok_Create_Body      : constant XString := To_XString ("create_body");
    Tok_Create_Separate  : constant XString := To_XString ("create_separate");
    Tok_Create_Proc_Body : constant XString := To_XString ("create_proc_body");
-   
+
    Tok_Remove  : constant XString := To_XString ("remove");
    --  Remove a file
-   
+
    Ctx         : Context.Object := Context.Empty;
 
    package VFS_Vectors is new Ada.Containers.Vectors (Positive, Virtual_File);
-   
+
    -------------
    -- Execute --
    -------------
@@ -58,7 +59,7 @@ package body Scenario is
    procedure Execute (Path : String)
    is
       function To_File (Token : XString) return Virtual_File;
-      
+
       -------------
       -- To_File --
       -------------
@@ -69,7 +70,7 @@ package body Scenario is
          return Path_Name.Create_File
            (Filename_Type (Token.To_String)).Virtual_File;
       end To_File;
-      
+
       Scenario_Path : constant Virtual_File := To_File (To_XString (Path));
       Scenario      : constant XString := Scenario_Path.Read_File;
       Lines         : constant XString_Array := Split (Scenario, ASCII.LF);
@@ -77,14 +78,15 @@ package body Scenario is
       Old_Dir       : constant Virtual_File := Get_Current_Dir;
       Artifacts     : VFS_Vectors.Vector;
       Loaded        : Boolean := False;
-      
+      Log           : GPR2.Log.Object;
+
    begin
       Scenario_Path.Get_Parent.Change_Dir;
       Ada.Text_IO.Put_Line ("=======================================");
       Ada.Text_IO.Put_Line ("Executing " & Path);
       Ada.Text_IO.Put_Line ("=======================================");
       Ada.Text_IO.New_Line;
-      
+
       for L of Lines loop
          declare
             Tokens : constant XString_Array := L.Trim.Split (' ');
@@ -93,13 +95,12 @@ package body Scenario is
          begin
             if Tokens'Length > 0 and then not Tokens (1).Is_Empty and then Tokens (1).To_String /= "#" then
                Cmd := Tokens (1).To_Lower;
-               
+
                if Cmd = Tok_Load then
                   Ada.Text_IO.Put_Line
                     ("--- Loading project " & Tokens (2).To_String);
 
                   if Loaded then
-                     Db.Unload;
                      Tree.Unload (True);
                      Loaded := False;
                   end if;
@@ -111,40 +112,39 @@ package body Scenario is
                           (Filename_Type (Tokens (2).To_String)),
                         Ctx);
                      Tree.Log_Messages.Output_Messages (Information => False);
-                     
+
                   exception
                      when GPR2.Project_Error =>
                         Tree.Log_Messages.Output_Messages
                           (Information => False);
-                        
+
                         exit;
                   end;
 
-                  Db.Load (Tree);
-                  Tree.Log_Messages.Output_Messages (Information => False);
+                  Tree.Update_Sources (Messages => Log);
+                  Log.Output_Messages (Information => False);
                   Loaded := True;
 
                elsif Cmd = Tok_Unload then
                   Ada.Text_IO.Put_Line
                     ("--- Unloading project");
-                  Db.Unload;
                   Tree.Unload (Full => True);
                   Loaded := False;
-                  
+
                elsif Cmd = Tok_Refresh then
                   Ada.Text_IO.Put_Line
                     ("--- Refresh list of sources");
-                  Db.Refresh;
-                  Tree.Log_Messages.Output_Messages (Information => False);
-                  
+                  Tree.Update_Sources (Messages => Log);
+                  Log.Output_Messages (Information => False);
+
                elsif Cmd = Tok_Dump then
                   Ada.Text_IO.Put_Line ("-----------------------------------");
                   Test.Dump;
                   Ada.Text_IO.Put_Line ("-----------------------------------");
-                  
+
                elsif Cmd = Tok_Mkdir then
                   Ada.Text_IO.Put_Line
-                    ("--- mkdir " & Tokens (2).To_String);                  
+                    ("--- mkdir " & Tokens (2).To_String);
                   declare
                      D : constant Virtual_File := To_File (Tokens (2));
                   begin
@@ -152,12 +152,12 @@ package body Scenario is
                      D.Make_Dir;
                      Artifacts.Prepend (D);
                   end;
-                  
+
                elsif Cmd = Tok_Copy then
                   Ada.Text_IO.Put_Line
                     ("--- cp " & Tokens (2).To_String & " " &
                        Tokens (3).To_String);
-                  
+
                   declare
                      Src : constant Virtual_File := To_File (Tokens (2));
                      Dest : Virtual_File := To_File (Tokens (3));
@@ -165,7 +165,7 @@ package body Scenario is
                      if Dest.Is_Directory then
                         Dest := Dest.Create_From_Dir (Src.Base_Name);
                      end if;
-                     
+
                      Src.Copy (Dest.Full_Name, Success);
                      exit when not Success;
                      Artifacts.Prepend (Dest);
@@ -179,7 +179,7 @@ package body Scenario is
                               To_File (Tokens (2));
                   begin
                      Path.Delete (Success);
-                     
+
                      if Success and then not Artifacts.Is_Empty then
                         for Idx in 1 .. Positive (Artifacts.Last_Index) loop
                            if Artifacts (Idx) = Path then
@@ -189,7 +189,7 @@ package body Scenario is
                         end loop;
                      end if;
                   end;
-                  
+
                elsif Cmd = Tok_Create_Spec then
                   Ada.Text_IO.Put_Line ("--- create spec " & Tokens (3).To_String);
                   declare
@@ -208,7 +208,7 @@ package body Scenario is
                      Close (Fd);
                      Artifacts.Prepend (File);
                   end;
-                  
+
                elsif Cmd = Tok_Create_Body then
                   Ada.Text_IO.Put_Line ("--- create body " & Tokens (3).To_String);
                   declare
@@ -227,7 +227,7 @@ package body Scenario is
                      Close (Fd);
                      Artifacts.Prepend (File);
                   end;
-                  
+
                elsif Cmd = Tok_Create_Separate then
                   Ada.Text_IO.Put_Line ("--- create separate " & Tokens (4).To_String);
                   declare
@@ -248,7 +248,7 @@ package body Scenario is
                      Close (Fd);
                      Artifacts.Prepend (File);
                   end;
-                  
+
                elsif Cmd = Tok_Create_Proc_Body then
                   Ada.Text_IO.Put_Line ("--- create procedure body " &
                                           Tokens (3).To_String);
@@ -269,7 +269,7 @@ package body Scenario is
                      Close (Fd);
                      Artifacts.Prepend (File);
                   end;
-                  
+
                else
                   Ada.Text_IO.Put_Line
                     ("Unexpected command " & Tokens (1).To_String);
@@ -278,7 +278,7 @@ package body Scenario is
             end if;
          end;
       end loop;
-      
+
       Ada.Text_IO.New_Line;
 
       while not Artifacts.Is_Empty loop
@@ -293,13 +293,12 @@ package body Scenario is
             end if;
          end;
       end loop;
-      
+
       if Loaded then
-         Db.Unload;
          Tree.Unload;
       end if;
 
       Old_Dir.Change_Dir;
    end Execute;
-   
+
 end Scenario;
