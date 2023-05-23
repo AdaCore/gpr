@@ -1,7 +1,7 @@
 --
 --  Copyright (C) 2019-2023, AdaCore
 --
---  SPDX-License-Identifier: Apache-2.0
+--  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
 --  This package record the relation between unit name and the different part

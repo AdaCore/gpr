@@ -1,7 +1,7 @@
 --
 --  Copyright (C) 2019-2023, AdaCore
 --
---  SPDX-License-Identifier: Apache-2.0
+--  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
 --  A specific view of a project as seen in a tree. A project view is retrieved
