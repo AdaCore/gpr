@@ -118,12 +118,6 @@ test_gpr2:
   stage: test
   allow_failure: true
   script:
-    # Use proper anod scripts
-    - cd /tmp
-    - git clone $GIT_CLONE_BASE/eng/it/anod
-    - (cd anod && git checkout wip/gpr2-58-next-testing)
-    - anod tune --anod-dir anod
-
     # unpack the packages
     - cd $SANDBOX
     - mkdir -p fingerprints
