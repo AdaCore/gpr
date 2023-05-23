@@ -1,12 +1,13 @@
 with Ada.Text_IO;
 
+with GPR2.Build.Source.Sets;
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree.View_Builder;
-with GPR2.Source_Info;
 
 procedure Main
 is
@@ -20,6 +21,7 @@ is
    Mains    : Containers.Value_List;
    Tree     : Project.Tree.Object;
    Ctxt     : GPR2.Context.Object;
+   Log      : GPR2.Log.Object;
 
    procedure Print_Attrs (Pck : GPR2.Package_Id) is
    begin
@@ -73,7 +75,7 @@ begin
    Root.Set_Attribute (PRA.Builder.Executable,
                        "main.adb", "mymain");
 
-   View_Builder.Load_Autoconf (Tree, Root, Ctxt);
+   View_Builder.Load_Autoconf (Tree, Root, Ctxt, With_Runtime => False);
    if Tree.Log_Messages.Has_Error then
       Tree.Log_Messages.Output_Messages;
       return;
@@ -84,7 +86,8 @@ begin
    Print_Attrs (PRP.Builder);
 
    Ada.Text_IO.Put_Line ("Sources:");
-   Tree.Update_Sources (Backends => Source_Info.No_Backends);
+   Tree.Update_Sources (Messages => Log);
+   Log.Output_Messages (Information => False);
 
    for S of Tree.Root_Project.Sources loop
       Ada.Text_IO.Put_Line (String (S.Path_Name.Value));
