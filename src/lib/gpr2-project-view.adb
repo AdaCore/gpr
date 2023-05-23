@@ -12,6 +12,8 @@ with GNAT.OS_Lib;
 with GNATCOLL.Utils;
 
 with GPR2.Build.Compilation_Input.Sets;
+with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Source;
 with GPR2.Build.Source.Sets;
 with GPR2.Build.View_Db;
@@ -2085,7 +2087,7 @@ package body GPR2.Project.View is
 
             if Src.Source.Is_Defined then
                return
-                 (Src.Owning_View.Id,
+                 (Src.Owning_View,
                   Src.Source.Path_Name,
                   Attr.Index.At_Pos);
             end if;
@@ -2104,7 +2106,7 @@ package body GPR2.Project.View is
                Src := Self.View_Db.Visible_Source (Simple_Name (Value.Text));
 
                if Src.Source.Is_Defined then
-                  return (Src.Owning_View.Id,
+                  return (Src.Owning_View,
                           Src.Source.Path_Name,
                           Value.At_Pos);
                end if;
@@ -2135,7 +2137,8 @@ package body GPR2.Project.View is
 
                if Src.Source.Is_Defined then
                   Set.Append
-                    ((Src.Owning_View.Id, Src.Source.Path_Name, Main.At_Pos));
+                    (Build.Compilation_Unit.Unit_Location'
+                       (Src.Owning_View, Src.Source.Path_Name, Main.At_Pos));
                end if;
             end loop;
          end if;

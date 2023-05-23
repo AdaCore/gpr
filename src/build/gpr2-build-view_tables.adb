@@ -117,7 +117,7 @@ package body GPR2.Build.View_Tables is
       end if;
 
       Data.CUs.Reference (Cursor).Add
-        (Kind, View.Id, Path, Index, Sep_Name, Success);
+        (Kind, View, Path, Index, Sep_Name, Success);
 
       if Success and then Kind = S_Separate then
          declare
@@ -404,7 +404,7 @@ package body GPR2.Build.View_Tables is
       end if;
 
       Data.CUs.Reference (Cursor).Remove
-        (Kind, View.Id, Path, Index, Sep_Name);
+        (Kind, View, Path, Index, Sep_Name);
 
       if Data.CUs.Reference (Cursor).Is_Empty then
          Data.CUs.Delete (Cursor);

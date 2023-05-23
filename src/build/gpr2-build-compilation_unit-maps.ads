@@ -12,9 +12,13 @@ package GPR2.Build.Compilation_Unit.Maps is
      new Ada.Containers.Indefinite_Ordered_Maps
        (Name_Type, Compilation_Unit.Object);
 
-   subtype Map is Maps.Map;
+   type Map is new Maps.Map with null record;
    subtype Cursor is Maps.Cursor;
 
-   Empty_Map : Map renames Maps.Empty_Map;
+   Empty_Map : constant Map;
+
+private
+
+   Empty_Map : constant Map := Map'(Maps.Empty_Map with null record);
 
 end GPR2.Build.Compilation_Unit.Maps;

@@ -460,6 +460,10 @@ package body GPR2.Project.Tree is
 
          Add_Attribute (PRA.Languages, "ada");
 
+         --  The runtime is externally built
+
+         Add_Attribute (PRA.Externally_Built, "true");
+
          Data.Tree      := Self.Self;
          Data.Kind      := K_Standard;
          Data.Path      := Path_Name.Create_Directory

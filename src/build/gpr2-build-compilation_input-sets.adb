@@ -5,7 +5,6 @@
 --
 
 with GPR2.Project.Tree;
-with GPR2.View_Ids;
 
 pragma Warnings (Off, ".* is not referenced");
 --  We need it as call to Src.Units has only a limited view over the set
@@ -17,12 +16,11 @@ package body GPR2.Build.Compilation_Input.Sets is
 
    function Create (View : Project.View.Object) return Object
    is
-      use type GPR2.View_Ids.View_Id;
       Self : Object;
    begin
       for NS of View.Namespace_Roots loop
          for CU of View.Tree.Artifacts_Database (NS).Compilation_Units loop
-            if CU.Main_Part.View = View.Id then
+            if CU.Main_Part.View = View then
                Self.Include ((View,
                               Unit_Kind,
                               +String (CU.Main_Part.Source.Simple_Name),
