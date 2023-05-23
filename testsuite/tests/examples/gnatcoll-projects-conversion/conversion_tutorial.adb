@@ -15,11 +15,16 @@ with GNATCOLL.Opt_Parse; use GNATCOLL.Opt_Parse;
 with GNATCOLL.Tribooleans;
 with GNATCOLL.VFS;
 
+pragma Warnings (Off, ".* is not referenced");
+--  need visibility on it, else source iterator is not visible
+--  as the Project.View package only has limited visibility on it.
+with GPR2.Build.Source.Sets;
+pragma Warnings (On, ".* is not referenced");
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Configuration;
-with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
@@ -155,7 +160,8 @@ procedure Conversion_Tutorial is
       declare
          Language_Runtimes : GPR2.Containers.Lang_Value_Map :=
            GPR2.Containers.Lang_Value_Maps.Empty_Map;
-         Config  : GPR2.Project.Configuration.Object;
+         Config            : GPR2.Project.Configuration.Object;
+         Log               : GPR2.Log.Object;
 
          use GPR2;
       begin
@@ -196,13 +202,20 @@ procedure Conversion_Tutorial is
                Language_Runtimes => Language_Runtimes);
          end if;
 
-         if not Project_Tree.Has_Runtime_Project then
-            Put_Line ("Toolchain not found for this target/runtime.");
-            return False;
-         end if;
+         Project_Tree.Log_Messages.Output_Messages
+           (Information => False);
+
+         Project_Tree.Update_Sources (Messages => Log);
+         Log.Output_Messages;
 
          return True;
       end;
+   exception
+      when GPR2.Project_Error =>
+         Project_Tree.Log_Messages.Output_Messages
+           (Information => False, Warning => False);
+
+         return False;
    end Init_Project;
 
    --------------------------
@@ -255,15 +268,10 @@ begin
       Status =>
         (GPR2.Project.S_Externally_Built => GNATCOLL.Tribooleans.False))
    loop
-      declare
-         use GPR2.Project.Source.Set;
-         --  GPR2.Project.Source.Set package required for Sources iterator
-      begin
-         for Source of GPR2.Project.Tree.Element (Cursor).Sources loop
-            Last_Source := Source.Path_Name;
-            Put_Line (Source.Path_Name.Value);
-         end loop;
-      end;
+      for Source of GPR2.Project.Tree.Element (Cursor).Sources loop
+         Last_Source := Source.Path_Name;
+         Put_Line (Source.Path_Name.Value);
+      end loop;
    end loop;
 
    --  GNATCOLL.Projects.Object_Dir
@@ -281,10 +289,6 @@ begin
    Put_Line ("Runtime:" & Get_Runtime (Project_Tree.Root_Project));
 
    if Last_Source.Is_Defined then
-      --  GNATCOLL.Projects.Create
-      Put_Line ("Create:" & Create (Project_Tree,
-                GNATCOLL.VFS.Filesystem_String
-                  (Last_Source.Simple_Name)).Display_Full_Name);
       --  To_Pathname functions
       Put_Line ("To_Pathnane:" & String
                 (GPR2.Path_Name.Create
