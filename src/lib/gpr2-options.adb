@@ -299,7 +299,6 @@ package body GPR2.Options is
    function Load_Project
      (Self             : in out Object;
       Tree             : in out GPR2.Project.Tree.Object;
-      With_Runtime     : Boolean;
       Absent_Dir_Error : GPR2.Project.Tree.Error_Level :=
                            GPR2.Project.Tree.Warning;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
@@ -336,7 +335,6 @@ package body GPR2.Options is
          Tree.Load
            (Filename         => Self.Filename,
             Context          => Self.Context,
-            With_Runtime     => With_Runtime,
             Config           => Conf,
             Build_Path       => Self.Build_Path,
             Subdirs          => Subdirs (Self),
@@ -409,7 +407,6 @@ package body GPR2.Options is
          Tree.Load_Autoconf
            (Filename          => Self.Filename,
             Context           => Self.Context,
-            With_Runtime      => With_Runtime,
             Build_Path        => Self.Build_Path,
             Subdirs           => Subdirs (Self),
             Src_Subdirs       => Src_Subdirs (Self),
