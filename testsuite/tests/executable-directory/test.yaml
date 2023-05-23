@@ -3,5 +3,3 @@ description:
 driver: build_and_run
 project_file: exedir
 main: main
-control:
-- [XFAIL, "True", "pending libgpr2-next changes"]

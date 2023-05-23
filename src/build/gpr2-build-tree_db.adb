@@ -6,10 +6,52 @@
 
 with GPR2.Build.View_Tables;
 with GPR2.Project.Tree;
+with GPR2.View_Ids.Set;
 
 package body GPR2.Build.Tree_Db is
 
    use type GPR2.View_Ids.View_Id;
+
+   procedure Check_Tree (Self : in out Object)
+   is
+      To_Remove : GPR2.View_Ids.Set.Set;
+   begin
+      --  Check for new views
+
+      for V of Self.Tree.Ordered_Views loop
+         if V.Kind in With_Object_Dir_Kind
+           and then not Self.Build_Dbs.Contains (V.Id)
+         then
+            declare
+               Db_Data : View_Tables.View_Data
+                           (Is_Root => V.Is_Namespace_Root);
+               Db_Inst : View_Db.Object;
+            begin
+               Db_Data.View    := V;
+               Db_Data.Tree_Db := Self.Self;
+               Db_Inst := View_Tables.View_Base_For (Db_Data);
+               Self.Build_Dbs.Insert (V.Id, Db_Inst);
+               --  Db_Inst.Update;
+            end;
+         end if;
+      end loop;
+
+      --  Check for deleted views
+
+      for C in Self.Build_Dbs.Iterate loop
+         declare
+            Id : constant View_Ids.View_Id := Build_DB_Maps.Key (C);
+         begin
+            if not Self.Tree.Get_View (Id).Is_Defined then
+               To_Remove.Include (Id);
+            end if;
+         end;
+      end loop;
+
+      for Id of To_Remove loop
+         Self.Build_Dbs.Delete (Id);
+      end loop;
+   end Check_Tree;
 
    ----------
    -- Load --

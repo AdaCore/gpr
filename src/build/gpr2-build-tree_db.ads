@@ -34,6 +34,10 @@ package GPR2.Build.Tree_Db is
    --  With_Runtime_Sources indicates whether the database should consider the
    --   sources of the Ada runtime attached to the tree or not.
 
+   procedure Check_Tree (Self : in out Object)
+     with Pre => Self.Is_Defined;
+   --  Update the internal structures according to the updated tree.
+
    function Use_Runtime_Sources (Self : Object) return Boolean;
    --  Whether sources of the runtime are considered.
 

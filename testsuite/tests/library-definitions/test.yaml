@@ -3,5 +3,3 @@ description:
 driver: build_and_run
 project_file: lib_def.gpr
 main: main
-control:
-- [XFAIL, "True", "pending libgpr2-next changes"]

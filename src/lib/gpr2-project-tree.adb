@@ -1078,7 +1078,13 @@ package body GPR2.Project.Tree is
          if not Self.Messages.Has_Error then
             --  Tree is now fully loaded, we can create the artifacts database
             --  object
-            Self.Tree_Db.Create (Self, With_Runtime);
+            if not Self.Tree_Db.Is_Defined then
+               Self.Tree_Db.Create (Self, With_Runtime);
+            else
+               --  Tree has been reloaded: update the database in case views
+               --  have changed
+               Self.Tree_Db.Check_Tree;
+            end if;
          else
             raise Project_Error
               with Gpr_Path.Value &
