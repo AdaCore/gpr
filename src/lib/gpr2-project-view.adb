@@ -2722,15 +2722,22 @@ package body GPR2.Project.View is
       Interface_Only  : Boolean := False;
       Compilable_Only : Boolean := False) return Build.Source.Sets.Object
    is
-      Db     : constant Build.View_Db.Object := Self.View_Db;
-      F_Data : constant Source_Filter_Data :=
-                 (View            => Self,
-                  Interface_Only  => Interface_Only,
-                  Compilable_Only => Compilable_Only);
-
    begin
-      return Build.Source.Sets.Create
-        (Db, Build.Source.Sets.Sorted, Source_Filter'Access, F_Data);
+      if Self.Kind in With_Object_Dir_Kind then
+         declare
+            Db     : constant Build.View_Db.Object := Self.View_Db;
+            F_Data : constant Source_Filter_Data :=
+                       (View            => Self,
+                        Interface_Only  => Interface_Only,
+                        Compilable_Only => Compilable_Only);
+
+         begin
+            return Build.Source.Sets.Create
+              (Db, Build.Source.Sets.Sorted, Source_Filter'Access, F_Data);
+         end;
+      else
+         return Build.Source.Sets.Empty_Set;
+      end if;
    end Sources;
 
    ------------

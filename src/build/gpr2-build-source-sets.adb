@@ -99,7 +99,10 @@ package body GPR2.Build.Source.Sets is
    overriding function First (Self : Source_Iterator) return Cursor is
       Candidate : Cursor;
    begin
-      if Self.From_View_Db then
+      if not Self.Db.Is_Defined then
+         return No_Element;
+
+      elsif Self.From_View_Db then
          declare
             List : Basename_Source_Maps.Map renames
                      Get_Ref (Self.Db).Sources;
@@ -160,6 +163,12 @@ package body GPR2.Build.Source.Sets is
    begin
       if Opt = Unsorted and then Self.Filter /= null then
          Opt := Sorted;
+      end if;
+
+      if Self = Empty_Set then
+         return Source_Iterator'(False,
+                                 Db     => Build.View_Db.Undefined,
+                                 others => <>);
       end if;
 
       case Opt is
