@@ -138,6 +138,14 @@ package body Update_Sources_List is
       --  This is to take into account shortened names like "Ada." (a-),
       --  "System." (s-) and so on.
    begin
+      --  Check binder-generated source, and ignore it
+
+      if Length (Result) > 3
+        and then Slice (Result, 1, 3) = "b__"
+      then
+         goto Invalid;
+      end if;
+
       --  First remove the suffix for the given language
 
       declare
