@@ -152,7 +152,7 @@ package body GPR2.Build.View_Tables is
       C : Name_Maps.Cursor;
    begin
       loop
-         C := Root_Db.Separates.Find (File.Unit.Unit_Name);
+         C := Root_Db.Separates.Find (File.Unit.Name);
 
          exit when not Name_Maps.Has_Element (C);
 
@@ -164,7 +164,7 @@ package body GPR2.Build.View_Tables is
             U            : constant Source.Unit_Part := File.Unit;
             New_Name     : constant Name_Type := Name_Maps.Element (C);
             --  New compilation unit name
-            P_Simple     : constant Name_Type := U.Unit_Name
+            P_Simple     : constant Name_Type := U.Name
                                          (New_Name'Length + 2 .. U.Name_Len);
             --  Simple unit name of the separate parent
             New_Sep_Name : constant Name_Type :=
@@ -237,7 +237,7 @@ package body GPR2.Build.View_Tables is
                               Units : Compilation_Unit_Maps.Map renames
                                         Get_Data (Data.Tree_Db, Root_View).CUs;
                            begin
-                              if Units (Unit.Unit_Name).Has_Part (S_Spec) then
+                              if Units (Unit.Name).Has_Part (S_Spec) then
                                  --  If it has a corresponding spec, then it's
                                  --  a body
                                  Unit.Kind_Ambiguous := False;
@@ -257,7 +257,7 @@ package body GPR2.Build.View_Tables is
                         --  exact kind.
                         Build.Source.Ada_Parser.Compute (S_Ref, False);
 
-                        if S_Ref.Unit (No_Index).Unit_Name /= Unit.Unit_Name
+                        if S_Ref.Unit (No_Index).Name /= Unit.Name
                           or else S_Ref.Unit (No_Index).Kind /= Unit.Kind
                         then
                            for Root_View of Data.View.Namespace_Roots loop
@@ -272,7 +272,7 @@ package body GPR2.Build.View_Tables is
 
                                  Remove_Unit_Part
                                    (Root_Db,
-                                    Unit.Unit_Name,
+                                    Unit.Name,
                                     Unit.Kind,
                                     Unit.Separate_Name,
                                     Data.View,
@@ -282,7 +282,7 @@ package body GPR2.Build.View_Tables is
                                  --  And add the new one
                                  Add_Unit_Part
                                    (Root_Db,
-                                    S_Ref.Unit.Unit_Name,
+                                    S_Ref.Unit.Name,
                                     S_Ref.Unit.Kind,
                                     S_Ref.Unit.Separate_Name,
                                     Data.View,
@@ -324,10 +324,10 @@ package body GPR2.Build.View_Tables is
                      begin
                         Check_Separate (Root_Db, S_Ref);
 
-                        if S_Ref.Unit.Unit_Name /= Old.Unit_Name then
+                        if S_Ref.Unit.Name /= Old.Name then
                            Remove_Unit_Part
                              (Root_Db,
-                              Old.Unit_Name,
+                              Old.Name,
                               Old.Kind,
                               Old.Separate_Name,
                               Data.View,
@@ -337,7 +337,7 @@ package body GPR2.Build.View_Tables is
                            --  And add the new one
                            Add_Unit_Part
                              (Root_Db,
-                              S_Ref.Unit.Unit_Name,
+                              S_Ref.Unit.Name,
                               S_Ref.Unit.Kind,
                               S_Ref.Unit.Separate_Name,
                               Data.View,
@@ -476,7 +476,7 @@ package body GPR2.Build.View_Tables is
                for Root of Src.View.Namespace_Roots loop
                   Add_Unit_Part
                     (Data     => Get_Data (Data.Tree_Db, Root),
-                     CU       => U.Unit_Name,
+                     CU       => U.Name,
                      Kind     => U.Kind,
                      Sep_Name => U.Separate_Name,
                      View     => Data.View,
@@ -505,7 +505,7 @@ package body GPR2.Build.View_Tables is
                for Root of Src.View.Namespace_Roots loop
                   Remove_Unit_Part
                     (Get_Data (Data.Tree_Db, Root),
-                     CU       => U.Unit_Name,
+                     CU       => U.Name,
                      Kind     => U.Kind,
                      Sep_Name => U.Separate_Name,
                      View     => Data.View,

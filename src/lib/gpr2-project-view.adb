@@ -2593,7 +2593,7 @@ package body GPR2.Project.View is
 
                elsif Unit.Kind = Build.S_Spec then
                   for NS of Opt.View.Namespace_Roots loop
-                     CU := NS.Unit (Unit.Unit_Name);
+                     CU := NS.Unit (Unit.Name);
 
                      if not CU.Has_Part (Build.S_Body) then
                         Result := True;

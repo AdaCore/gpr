@@ -59,7 +59,7 @@ package GPR2.Build.Source is
       --  information.
       Index          : Unit_Index;
       --  In case of multi-unit source, the index of the unit, else No_Index
-      Unit_Name      : Name_Type (1 .. Name_Len);
+      Name           : Name_Type (1 .. Name_Len);
       --  The compilation unit name
       Separate_Name  : Optional_Name_Type (1 .. Separate_Len);
       --  In case Kind is S_Separate, the name of the subunit (without the
@@ -286,7 +286,7 @@ private
        Kind           => Kind,
        Kind_Ambiguous => Kind_Ambiguous,
        Index          => Index,
-       Unit_Name      => Name_Type (Ada.Characters.Handling.To_Upper
+       Name           => Name_Type (Ada.Characters.Handling.To_Upper
                                       (String (Unit_Name))),
        Separate_Name  => Optional_Name_Type
                            (Ada.Characters.Handling.To_Upper
