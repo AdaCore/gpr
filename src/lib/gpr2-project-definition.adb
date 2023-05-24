@@ -227,6 +227,9 @@ package body GPR2.Project.Definition is
          procedure Check_Dot_Replacement;
          --  check dot_replacement is not illegal
 
+         procedure Check_Naming_Exceptions;
+         --  check the same source + index is not used for spec and body
+
          use type Project.Attribute.Object;
 
          procedure Check_Illegal_Suffix
@@ -394,6 +397,45 @@ package body GPR2.Project.Definition is
 
          end Check_Illegal_Suffix;
 
+         -----------------------------
+         -- Check_Naming_Exceptions --
+         -----------------------------
+
+         procedure Check_Naming_Exceptions is
+            procedure Internal (Attr_Id : Q_Attribute_Id);
+
+            Sources : Containers.Filename_Source_Reference;
+
+            --------------
+            -- Internal --
+            --------------
+
+            procedure Internal (Attr_Id : Q_Attribute_Id) is
+               C       : Containers.Filename_Source_Reference_Package.Cursor;
+               Ok      : Boolean;
+            begin
+               for Attr of View.Attributes (Attr_Id) loop
+                  for V of Attr.Values loop
+                     Sources.Insert
+                       (Filename_Type (V.Text),
+                        Source_Reference.Value.Object (V),
+                        C, Ok);
+                     if not Ok then
+                        Log_Error
+                          (Message.Error,
+                           "file """ & String (V.Text) &
+                             """ specified in naming exception more than once",
+                           Attr);
+                     end if;
+                  end loop;
+               end loop;
+            end Internal;
+
+         begin
+            Internal (PRA.Naming.Specification_Exceptions);
+            Internal (PRA.Naming.Implementation_Exceptions);
+         end Check_Naming_Exceptions;
+
          ---------------
          -- Log_Error --
          ---------------
@@ -415,6 +457,7 @@ package body GPR2.Project.Definition is
          if View.Has_Package (PRP.Naming) then
             Check_Casing;
             Check_Dot_Replacement;
+            Check_Naming_Exceptions;
 
             if View.Kind /= K_Aggregate and then View.Has_Languages then
                for L of View.Languages loop
