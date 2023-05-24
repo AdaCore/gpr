@@ -532,19 +532,6 @@ procedure test is
                       Quiet            : Boolean := False) is
          Loaded : Boolean;
 
-         procedure Output_Messages (Log : GPR2.Log.Object) is
-         begin
-            for C in Log.Iterate
-              (Information => False,
-               Warning     => True,
-               Error       => True,
-               Lint        => False,
-               Read        => False,
-               Unread      => True)
-            loop
-               Put_Line (Log (C).Format);
-            end loop;
-         end Output_Messages;
       begin
          Put_Line ("Testing Load Project " & Name);
          Loaded := Options.Load_Project
@@ -555,11 +542,17 @@ procedure test is
          Put_Line ("Load_Project returned " & Loaded'Image);
 
          if Options.Config_Project_Has_Error then
-            Output_Messages (Options.Config_Project_Log);
+            Options.Config_Project_Log.Output_Messages (Information => False,
+                                                        Warning     => False);
+         else
+            Options.Config_Project_Log.Output_Messages;
          end if;
 
          if Tree.Log_Messages.Has_Error then
-            Output_Messages (Tree.Log_Messages.all);
+            Tree.Log_Messages.Output_Messages (Information => False,
+                                               Warning     => False);
+         else
+            Tree.Log_Messages.Output_Messages (Information => False);
          end if;
 
          if not Loaded then

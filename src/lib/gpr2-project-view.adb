@@ -137,7 +137,9 @@ package body GPR2.Project.View is
       function Compute return GPR2.Path_Name.Object is
          Dir      : constant Value_Type :=
                       Self.Attribute (Dir_Attr).Value.Text;
-         Subdirs  : constant Filename_Optional := Self.Tree.Subdirs;
+         Subdirs  : constant Filename_Optional :=
+                      (if Self.Id = View_Ids.Runtime_View_Id then ""
+                       else Self.Tree.Subdirs);
          Dir_Name : constant Filename_Type :=
                       (if Dir = "" then "." else Filename_Type (Dir));
          Result   : GPR2.Path_Name.Object;

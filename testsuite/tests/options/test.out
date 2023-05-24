@@ -245,23 +245,27 @@ Test OK
 Testing Load Project -aP added-path -Pload-project/test --autoconf=other-autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug
 creating configuration project autoconf.cgpr
 Load_Project returned TRUE
+test.gpr:12:32: warning: object directory "obj-Debug" not found
 Test OK
 
 Testing Load Project -aP added-path -aP load-project --root-dir=. --relocate-build-tree=relocated -Ptest --autoconf=autoconf.cgpr -XBUILD=Debug
 Load_Project returned TRUE
+test.gpr:12:32: warning: object directory "obj-Debug" not found
 Test OK
 
 Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug
 Load_Project returned TRUE
+test.gpr:12:32: warning: object directory "obj-Release" not found
 Test OK
 
-Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug --target x86_64-windows
+Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug --target (host)
 Load_Project returned TRUE
+test.gpr:12:32: warning: object directory "obj-Release" not found
+autoconf.cgpr:2:19: warning: --target is not used when a configuration project is specified.
 Test OK
 
 Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug --target unknown-target
 Load_Project returned TRUE
-test.gpr:12:32: warning: object directory "obj-Release" not found
-autoconf.cgpr:2:19: error: --target: 'unknown-target' is different from the target value in the configuration project 'x86_64-windows'
+autoconf.cgpr:2:19: error: --target: 'unknown-target' is different from the target value in the configuration project '(host)'
 Test OK
 

@@ -2958,6 +2958,7 @@ package body GPR2.Project.Tree is
                        and then OS_Lib.Is_Absolute_Path (AV.Text)
                        and then Self.Root.Is_Defined
                        and then Self.Build_Path /= Self.Root.Dir_Name
+                       and then not View.Is_Externally_Built
                      then
                         Self.Messages.Append
                           (Message.Create
