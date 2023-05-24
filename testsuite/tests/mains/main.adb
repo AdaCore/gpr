@@ -8,6 +8,7 @@ with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -50,17 +51,26 @@ procedure Main is
 
    Prj : Project.Tree.Object;
    Ctx : Context.Object;
+   Log : GPR2.Log.Object;
 
 begin
    Project.Tree.Load (Prj, Create ("demo1.gpr"), Ctx);
+   Prj.Update_Sources (Messages => Log);
+   Log.Output_Messages;
    Display (Prj.Root_Project);
 
    Project.Tree.Load (Prj, Create ("demo2.gpr"), Ctx);
+   Prj.Update_Sources (Messages => Log);
+   Log.Output_Messages;
    Display (Prj.Root_Project);
 
    Project.Tree.Load (Prj, Create ("demo3.gpr"), Ctx);
+   Prj.Update_Sources (Messages => Log);
+   Log.Output_Messages;
    Display (Prj.Root_Project);
 
    Project.Tree.Load (Prj, Create ("demo4.gpr"), Ctx);
+   Prj.Update_Sources (Messages => Log);
+   Log.Output_Messages;
    Display (Prj.Root_Project);
 end Main;
