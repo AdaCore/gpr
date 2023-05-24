@@ -15,18 +15,8 @@ procedure Main is
    Context      : GPR2.Context.Object;
    use GPR2;
 
-   procedure Print_Messages is
-   begin
-      if Tree.Has_Messages then
-         for C in Tree.Log_Messages.Iterate
-           (False, True, True, False, True, True)
-         loop
-            Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-         end loop;
-      end if;
-   end Print_Messages;
-
    procedure Test (Project_Name : GPR2.Filename_Type) is
+      Log      : GPR2.Log.Object;
    begin
       Ada.Text_IO.Put_Line ("testing " & String (Project_Name));
       Tree.Unload;
@@ -35,11 +25,11 @@ procedure Main is
            (GPR2.Project.Ensure_Extension (Project_Name),
             GPR2.Path_Name.No_Resolution),
          Context  => Context);
-      Tree.Update_Sources;
-      Print_Messages;
+      Tree.Update_Sources (Messages => Log);
+      Log.Output_Messages (Information => False);
    exception
       when Project_Error =>
-         Print_Messages;
+         Log.Output_Messages (Information => False);
    end Test;
 
 begin
