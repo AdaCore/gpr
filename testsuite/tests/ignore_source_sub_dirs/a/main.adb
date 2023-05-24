@@ -7,10 +7,10 @@
 with Ada.Exceptions;
 with Ada.Text_IO;
 
+with GPR2.Build.Source.Sets;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;
-with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 
 with Test;
@@ -20,19 +20,9 @@ procedure Main is
    Context    : GPR2.Context.Object;
    Main_Found : Integer := 0;
    Test_Found : Integer := 0;
+   Log        : GPR2.Log.Object;
 
    use GPR2;
-
-   procedure Print_Messages is
-   begin
-      if Tree.Has_Messages then
-         for C in Tree.Log_Messages.Iterate
-           (False, True, True, True, True)
-         loop
-            Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-         end loop;
-      end if;
-   end Print_Messages;
 
 begin
    Tree.Load_Autoconf
@@ -40,6 +30,9 @@ begin
         (GPR2.Project.Ensure_Extension ("test.gpr"),
          GPR2.Path_Name.No_Resolution),
       Context  => Context);
+   Tree.Update_Sources (Messages => Log);
+   Log.Output_Messages;
+
    for Prj of Tree loop
       for S of Prj.Sources loop
          if S.Path_Name.Simple_Name = "main.adb" then
@@ -61,5 +54,5 @@ begin
 exception
    when E : others =>
       Ada.Text_IO.Put_Line (Ada.Exceptions.Exception_Message (E));
-      Print_Messages;
+      Tree.Log_Messages.Output_Messages (Information => False);
 end Main;
