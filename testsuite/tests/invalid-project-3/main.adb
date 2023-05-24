@@ -17,19 +17,6 @@ procedure Main is
    Context      : GPR2.Context.Object;
    use GPR2;
 
-   procedure Print_Messages is
-   begin
-      for C in Tree.Log_Messages.Iterate
-        (Information => False,
-         Warning     => not Tree.Log_Messages.Has_Error, --  Show warning only when no error
-         Error       => True,
-         Read        => False,
-         Unread      => True)
-      loop
-         Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-      end loop;
-   end Print_Messages;
-
    procedure Test (Project_Name : GPR2.Filename_Type;
                    Implicit     : Boolean := False)
    is
@@ -40,7 +27,8 @@ procedure Main is
                     then GPR2.Path_Name.Create_File (Project_Name)
                     else GPR2.Path_Name.Create_Directory (Project_Name));
       Gpr_Dir : constant GNAT.Directory_Operations.Dir_Name_Str :=
-                  String (Gpr_Path.Dir_Name);
+                   String (Gpr_Path.Dir_Name);
+      Log     : GPR2.Log.Object;
    begin
       Tree.Unload;
       GNAT.Directory_Operations.Change_Dir (Gpr_Dir);
@@ -48,14 +36,15 @@ procedure Main is
       Tree.Load_Autoconf
         (Filename => Gpr_Path,
          Context  => Context);
-      Tree.Update_Sources;
-
-      Print_Messages;
+      Tree.Log_Messages.Output_Messages (Information => False);
+      Tree.Update_Sources (Messages => Log);
+      Log.Output_Messages;
 
       GNAT.Directory_Operations.Change_Dir (Old_Cwd);
    exception
       when Project_Error =>
-         Print_Messages;
+         Tree.Log_Messages.Output_Messages (Information => False,
+                                            Warning     => False);
          GNAT.Directory_Operations.Change_Dir (Old_Cwd);
       when E : others =>
          Ada.Text_IO.Put_Line ("!!! Uncaught exception raised !!!");
