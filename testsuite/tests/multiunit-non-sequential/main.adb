@@ -1,3 +1,4 @@
+with GPR2.Build.Source.Sets;
 with GPR2.Log;
 with GPR2.Project.Tree;
 with GPR2.Context;
@@ -7,11 +8,12 @@ with Ada.Text_IO;
 
 procedure Main is
    Tree : GPR2.Project.Tree.Object;
+   Log  : GPR2.Log.Object;
 begin
    Tree.Load_Autoconf
      (Filename => GPR2.Path_Name.Create_File ("g.gpr"),
       Context  => GPR2.Context.Empty);
-   Tree.Update_Sources;
+   Tree.Update_Sources (Messages => Log);
 
       for S of Tree.Root_Project.Sources loop
       Ada.Text_IO.Put_Line (String (S.Path_Name.Simple_Name));
