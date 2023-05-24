@@ -1,12 +1,11 @@
+with GPR2.Build.Source.Sets;
+with GPR2.Context;
 with GPR2.File_Readers;
 with GNAT.IO;  use GNAT.IO;
-with GPR2.Path_Name; use GPR2.Path_Name;
 with GPR2.Log;
+with GPR2.Path_Name; use GPR2.Path_Name;
 with GPR2.Project.Tree;
-with GPR2.Context;
 with GPR2.Project.View;
-with GPR2.Project.Source.Set;
-with GPR2.Project.Source.Part_Set;
 
 with My_File_Reader;
 
@@ -21,6 +20,7 @@ procedure main is
 
    Prj : GPR2.Project.Tree.Object;
    Ctx : GPR2.Context.Object;
+   Log : GPR2.Log.Object;
 
    M_ADB : constant GPR2.Path_Name.Object :=
              GPR2.Path_Name.Create_File ("m.adb");
@@ -38,34 +38,24 @@ procedure main is
         (Filename         => GPR2.Path_Name.Create_File ("aggregating.gpr"),
          Context          => Ctx,
          File_Reader      => Reference);
-
-      GPR2.Log.Output_Messages
-        (Log            => Prj.Log_Messages.all,
-         Information    => False);
+      Prj.Log_Messages.Output_Messages (Information => False);
 
       --  Get dependencies
 
-      Prj.Update_Sources;
+      Prj.Update_Sources (Messages => Log);
+      Log.Output_Messages;
 
       --  Print m.adb dependencies
 
-      declare
-         use GPR2.Project.Source.Set;
-      begin
-         for Source of Prj.Root_Project.Aggregated.First_Element.Sources loop
-            if Source.Path_Name = M_ADB then
-               declare
-                  use GPR2.Project.Source.Part_Set;
-               begin
-                  for D of Source.Dependencies (Closure => True) loop
-                     if D.Source.Path_Name /= M_ADB then
-                        Put_Line (D.Source.Path_Name.Value);
-                     end if;
-                  end loop;
-               end;
-            end if;
-         end loop;
-      end;
+      for Source of Prj.Root_Project.Aggregated.First_Element.Sources loop
+         if Source.Path_Name = M_ADB then
+            for D of Source.Dependencies (Closure => True) loop
+               if D.Source.Path_Name /= M_ADB then
+                  Put_Line (D.Source.Path_Name.Value);
+               end if;
+            end loop;
+         end if;
+      end loop;
 
    end Test;
 
