@@ -8,15 +8,12 @@ with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
-with GPR2.Unit;
+with GPR2.Build.Source.Sets;
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Path_Name;
-with GPR2.Project.Source.Set;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
-with GPR2.Source;
-
-with GPR2.Source_Info.Parser.Ada_Language;
 
 procedure Main is
 
@@ -42,13 +39,15 @@ procedure Main is
       -- List_Sources --
       ------------------
 
-      procedure List_Sources (View : Project.View.Object) is
+      procedure List_Sources (View : Project.View.Object)
+      is
+         use type GPR2.Build.Unit_Kind;
       begin
          Text_IO.Put_Line ("----------");
 
          for Source of View.Sources loop
             declare
-               U : constant Optional_Name_Type := Source.Unit_Name;
+               U : constant Optional_Name_Type := Source.Unit.Name;
             begin
                Output_Filename (Source.Path_Name.Value);
 
@@ -57,12 +56,15 @@ procedure Main is
 
                Text_IO.Set_Col (36);
                Text_IO.Put
-                 ("   Kind: "
-                  & GPR2.Unit.Library_Unit_Type'Image (Source.Kind));
+                 ("   Kind: " & Source.Kind'Image);
 
                if U /= "" then
                   Text_IO.Set_Col (60);
                   Text_IO.Put ("unit: " & String (U));
+                  if Source.Kind = Build.S_Separate then
+                     Text_IO.Put (".");
+                     Text_IO.Put (String (Source.Unit.Separate_Name));
+                  end if;
                end if;
 
                Text_IO.New_Line;
@@ -73,6 +75,7 @@ procedure Main is
       Prj  : Project.Tree.Object;
       Ctx  : Context.Object;
       View : Project.View.Object;
+      Log  : GPR2.Log.Object;
 
    begin
       --  Create api-call.adb as a separate
@@ -90,7 +93,7 @@ procedure Main is
       end;
 
       Project.Tree.Load (Prj, Create (Project_Name), Ctx);
-
+      Prj.Update_Sources (Messages => Log);
       View := Prj.Root_Project;
       Text_IO.Put_Line ("Project: " & String (View.Name));
 
@@ -120,8 +123,7 @@ procedure Main is
          Directories.Delete_File ("src/api-call.adb");
       end;
 
-      Prj.Invalidate_Sources (View);
-
+      Prj.Update_Sources (Messages => Log);
       List_Sources (View);
    end Check;
 
