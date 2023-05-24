@@ -18,7 +18,7 @@ with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Configuration;
-with GPR2.Project.Source.Set;
+with GPR2.Build.Source.Sets;
 with GPR2.Project.Tree;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
@@ -159,6 +159,7 @@ procedure Main is
 
    Prj : Project.Tree.Object;
    Ctx : Context.Object;
+   Log : GPR2.Log.Object;
 
 begin
    if Cnf.Has_Messages then
@@ -174,7 +175,8 @@ begin
       end loop;
    end if;
 
-   Project.Tree.Load (Prj, Gpr, Ctx, Config => Cnf);
+   Project.Tree.Load (Prj, Gpr, Ctx, With_Runtime => True, Config => Cnf);
+   Prj.Update_Sources (Messages => Log);
 
    Display (Prj.Root_Project);
 
@@ -193,13 +195,13 @@ begin
          then
             declare
                U : constant Optional_Name_Type :=
-                     (if Source.Has_Units then Source.Unit_Name else "");
+                     (if Source.Has_Units then Source.Unit.Name else "");
             begin
                Output_Filename (Source.Path_Name.Value);
 
                Text_IO.Set_Col (27);
                Text_IO.Put
-                 ("   Kind: " & GPR2.Unit.Library_Unit_Type'Image (Source.Kind));
+                 ("   Kind: " & Source.Kind'Image);
                Text_IO.Put ("   unit: " & String (U));
                Text_IO.New_Line;
             end;

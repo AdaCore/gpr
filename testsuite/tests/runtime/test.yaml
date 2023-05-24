@@ -4,4 +4,4 @@ driver: build_and_run
 project_file: runtime
 main: main
 control:
-- [XFAIL, "True", "pending libgpr2-next changes"]
+    - [XFAIL, "True", "libgpr2-next: missing unit name resolution from ali"]
