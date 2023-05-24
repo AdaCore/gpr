@@ -12,7 +12,7 @@ with GNAT.OS_Lib;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
-with GPR2.Project.Source;
+with GPR2.Build.Source;
 with GPR2.Project.Tree;
 
 procedure Main is
@@ -23,11 +23,12 @@ procedure Main is
 
    Prj : Project.Tree.Object;
    Ctx : Context.Object;
+   Log : GPR2.Log.Object;
 
    procedure Display_Source (Name : Simple_Name);
 
    procedure Display_Source (Name : Simple_Name) is
-      Src : GPR2.Project.Source.Object;
+      Src : GPR2.Build.Source.Object;
    begin
       if Prj.Root_Project.Has_Source (Name) then
          Src := Prj.Root_Project.Source (Name);
@@ -40,36 +41,14 @@ procedure Main is
 begin
    Project.Tree.Load (Prj, Create ("./data/prj.gpr"), Ctx);
 
-   Prj.Update_Sources;
+   Prj.Update_Sources (Messages => Log);
    Display_Source ("pkg.a");
    Display_Source ("pkg_b.a");
    Display_Source ("pkg-execute_s_b.a");
 
 exception
    when Project_Error =>
-
-      Text_IO.Put_Line ("Messages found:");
-
-      for C in Prj.Log_Messages.Iterate (False, True, True, True, True) loop
-         declare
-            use Ada.Strings;
-            use Ada.Strings.Fixed;
-            DS  : Character renames GNAT.OS_Lib.Directory_Separator;
-            M   : constant Message.Object := Log.Element (C);
-            Mes : constant String := M.Format;
-            L   : constant Natural :=
-                    Fixed.Index (Mes, DS & "aggregate-dup-src" & DS);
-         begin
-            if L /= 0 then
-               Text_IO.Put_Line
-                 (Replace_Slice
-                    (Mes,
-                     Fixed.Index (Mes (1 .. L), """", Going => Backward) + 1,
-                     L - 1,
-                     "<path>"));
-            else
-               Text_IO.Put_Line (Mes);
-            end if;
-         end;
-      end loop;
+      Text_IO.Put_Line ("Cannot load tree:");
+      Prj.Log_Messages.Output_Messages
+        (Information => False, Warning => False);
 end Main;
