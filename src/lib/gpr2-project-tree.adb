@@ -1116,6 +1116,10 @@ package body GPR2.Project.Tree is
       Environment      : GPR2.Environment.Object :=
                            GPR2.Environment.Process_Environment) is
    begin
+      if Self.Is_Defined then
+         Self.Unload;
+      end if;
+
       if not Filename.Is_Directory then
          GPR2.Project.Parser.Clear_Cache;
 
@@ -1206,6 +1210,10 @@ package body GPR2.Project.Tree is
       Environment       : GPR2.Environment.Object :=
                             GPR2.Environment.Process_Environment) is
    begin
+      if Self.Is_Defined then
+         Self.Unload;
+      end if;
+
       if not Filename.Is_Directory then
          Self.Load_Autoconf
            (Root_Project      => (Project_Path, Filename),

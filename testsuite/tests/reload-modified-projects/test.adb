@@ -35,9 +35,19 @@ procedure test is
    procedure Print_Source_Dirs (Header : String) is
    begin
       Put_Line (Header);
-      Put_Line (String (Tree.Root_Project.Source_Directories.First_Element.Simple_Name));
-      Put_Line (String (Tree.Root_Project.Imports.First_Element.Source_Directories.First_Element.Simple_Name));
-      Put_Line (String (Tree.Root_Project.Extended_Root.Source_Directories.First_Element.Simple_Name));
+      for Dir of Tree.Root_Project.Source_Directories loop
+         Put_Line (String (Dir.Simple_Name));
+      end loop;
+      for Import of Tree.Root_Project.Imports loop
+         if not Import.Is_Externally_Built then
+            for Dir of Import.Source_Directories loop
+               Put_Line (String (Dir.Simple_Name));
+            end loop;
+         end if;
+      end loop;
+      for Dir of Tree.Root_Project.Extended_Root.Source_Directories loop
+         Put_Line (String (Dir.Simple_Name));
+      end loop;
    end Print_Source_Dirs;
 begin
    Write (Imported, Imported_Begin, "imported_1", Imported_End);
