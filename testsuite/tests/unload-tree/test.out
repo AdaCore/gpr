@@ -5,11 +5,11 @@ A:   Library_Name -> l
 A:   Object_Dir -> lobj
 A:   Source_Dirs -> lsrc1
  > lsrc1/lpck1.ads
-                  language: Ada    Kind: S_SPEC_ONLY   unit: LPCK1
+                  language: Ada    Kind: spec   unit: LPCK1
 First    K_STANDARD
 A:   Source_Dirs -> fsrc
  > fsrc/first.ads
-                  language: Ada    Kind: S_SPEC_ONLY   unit: FIRST
+                  language: Ada    Kind: spec   unit: FIRST
    is root
 **************** Iterator Prj2
 Lib      K_LIBRARY
@@ -18,9 +18,9 @@ A:   Library_Name -> l
 A:   Object_Dir -> lobj
 A:   Source_Dirs -> lsrc2
  > lsrc2/lpck2.ads
-                  language: Ada    Kind: S_SPEC_ONLY   unit: LPCK2
+                  language: Ada    Kind: spec   unit: LPCK2
 Second   K_STANDARD
 A:   Source_Dirs -> ssrc
  > ssrc/second.ads
-                  language: Ada    Kind: S_SPEC_ONLY   unit: SECOND
+                  language: Ada    Kind: spec   unit: SECOND
    is root
