@@ -2,4 +2,4 @@ description:
     Basic multi-unit test
 driver: python_script
 control:
-- [XFAIL, "True", "pending libgpr2-next changes"]
+- [XFAIL, "True", "libgpr2-next missing Source.Artifacts"]
