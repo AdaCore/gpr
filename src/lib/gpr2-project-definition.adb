@@ -216,9 +216,9 @@ package body GPR2.Project.Definition is
          --  map used to detect/report multiple use of a suffix.
 
          procedure Log_Error
-           (Level     : Message.Level_Value;
-            Msg       : String;
-            Attribute : Project.Attribute.Object);
+           (Level : Message.Level_Value;
+            Msg   : String;
+            Sloc  : Source_Reference.Object'Class);
          --  log naming package's  attribute problem at 'Attribute' source ref
 
          procedure Check_Casing;
@@ -425,7 +425,7 @@ package body GPR2.Project.Definition is
                           (Message.Error,
                            "file """ & String (V.Text) &
                              """ specified in naming exception more than once",
-                           Attr);
+                           V);
                      end if;
                   end loop;
                end loop;
@@ -441,15 +441,15 @@ package body GPR2.Project.Definition is
          ---------------
 
          procedure Log_Error
-           (Level     : Message.Level_Value;
-            Msg       : String;
-            Attribute : Project.Attribute.Object)
+           (Level : Message.Level_Value;
+            Msg   : String;
+            Sloc  : Source_Reference.Object'Class)
          is
          begin
             View.Tree.Log_Messages.Append
               (Message.Create
                  (Level   => Level,
-                  Sloc    => Attribute,
+                  Sloc    => Sloc,
                   Message => Msg));
          end Log_Error;
 
