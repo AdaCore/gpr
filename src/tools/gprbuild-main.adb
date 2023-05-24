@@ -79,7 +79,7 @@ begin
 
    Tree.Update_Sources (Backends => Source_Info.No_Backends);
 
-   if Tree.Root_Project.Attribute (PRA.Main).Is_Defined
+   if Tree.Root_Project.Has_Mains
      and then Tree.Root_Project.Mains.Is_Empty
    then
       GPRtools.Util.Output_Messages (Opt);
