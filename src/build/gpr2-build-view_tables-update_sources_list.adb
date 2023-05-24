@@ -917,12 +917,18 @@ package body Update_Sources_List is
                   Changed_Sources.Include (F.Path.Simple_Name);
                end if;
 
-            elsif File_Sets.Element (C).Stamp /= F.Stamp then
+            else
                C_Src := Data.Src_Infos.Find (F.Path);
 
                if Src_Info_Maps.Has_Element (C_Src) then
-                  Data.Src_Infos.Reference (C_Src).Update_Modification_Time
-                    (F.Stamp);
+                  if File_Sets.Element (C).Stamp /= F.Stamp then
+                     Data.Src_Infos.Reference (C_Src).Update_Modification_Time
+                       (F.Stamp);
+                  end if;
+
+                  --  Mark language used
+                  Has_Src_In_Lang.Include
+                    (Src_Info_Maps.Element (C_Src).Language);
                end if;
             end if;
          end;
@@ -1039,6 +1045,29 @@ package body Update_Sources_List is
                end loop;
             end if;
          end loop;
+      end if;
+
+      if Data.View.Has_Attribute (PRA.Languages)
+        and then Data.View.Kind not in K_Abstract | K_Configuration
+        and then Excluded_Sources.Is_Empty
+      then
+         declare
+            SF : constant Project.Attribute.Object :=
+                   Data.View.Attribute (PRA.Source_Files);
+         begin
+            if not SF.Is_Defined or else not SF.Values.Is_Empty then
+               for L of Data.View.Languages loop
+                  if not Has_Src_In_Lang.Contains (+Name_Type (L.Text)) then
+                     Messages.Append
+                       (Message.Create
+                          (Message.Warning,
+                           "there are no sources of language """ & L.Text
+                           & """ in this project",
+                           L));
+                  end if;
+               end loop;
+            end if;
+         end;
       end if;
    end Process;
 

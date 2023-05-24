@@ -8,6 +8,7 @@ Executing scenario/simple.txt
 --- mkdir src3/sub
 --- cp ../projects/simple.gpr simple.gpr
 --- Loading project simple.gpr
+simple.gpr: warning: there are no sources of language "Ada" in this project
 -----------------------------------
 * Sources:
  - sources of Simple
@@ -125,6 +126,9 @@ Executing scenario/extending.txt
 --- cp ../projects/base.gpr .
 --- cp ../projects/extending.gpr .
 --- Loading project extending.gpr
+base.gpr: warning: there are no sources of language "Ada" in this project
+extending.gpr:3:23: warning: there are no sources of language "Ada" in this project
+extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
  - sources of Base extended by Extending
@@ -249,6 +253,8 @@ Executing scenario/extending.txt
 extending2.gpr: error: "pkg.ads" is found in several extended projects
 base.gpr:   /scenario/src/pkg.ads
 base2.gpr:   /scenario/src2/pkg.ads
+extending2.gpr:3:23: warning: there are no sources of language "Ada" in this project
+extending2.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
  - sources of Base extended by Extending2
@@ -348,6 +354,7 @@ agglib.gpr: warning: Duplicated spec for unit "FOO" in /scenario/src1/foo.ads an
 --- rm src1/foo.ads
 --- rm src1/foo.adb
 --- Refresh list of sources
+prj1.gpr: warning: there are no sources of language "Ada" in this project
 -----------------------------------
 * Sources:
  - sources of Prj1
@@ -408,6 +415,7 @@ agglib_multi.gpr: warning: Duplicated spec for unit "FOO" in /scenario/src3/sour
 prj3.gpr:3:08: error: source file "source.ada" not found
 prj3.gpr:8:28: warning: source file "source.ada" for unit "Foo" not found
 prj3.gpr:9:28: warning: source file "source.ada" for unit "Foo" not found
+prj3.gpr:5:23: warning: there are no sources of language "Ada" in this project
 -----------------------------------
 * Sources:
  - sources of Prj1
