@@ -7,6 +7,7 @@
 --  limited with GPR2.Build.Compilation_Input.Sets;
 with GPR2.Build.Source;
 limited with GPR2.Build.Source.Sets;
+limited with GPR2.Build.Tree_Db;
 with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Log;
 with GPR2.Project.View;
@@ -31,20 +32,20 @@ package GPR2.Build.View_Db is
    function Sources
      (Self   : Object;
       Sorted : Boolean := False) return GPR2.Build.Source.Sets.Object
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined and then Self.Source_Option > No_Source;
    --  Returns an iterator on the source set. If Sorted is set, the result is
    --  alphabetically sorted (but the operation is slower).
 
    function Has_Source
      (Self     : Object;
       Basename : Simple_Name) return Boolean
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined and then Self.Source_Option > No_Source;
    --  Check if Basename is a source for the view.
 
    function Source
      (Self     : Object;
       Basename : Simple_Name) return GPR2.Build.Source.Object
-     with Pre  => Self.Is_Defined,
+     with Pre  => Self.Is_Defined and then Self.Source_Option > No_Source,
           Post => Self.Has_Source (Basename) = Source'Result.Is_Defined;
    --  Get a source info object for the view source with simple name Basename.
    --
@@ -65,20 +66,22 @@ package GPR2.Build.View_Db is
    function Visible_Source
      (Self     : Object;
       Basename : Simple_Name) return Source_Context
-     with Pre  => Self.Is_Defined;
+     with Pre  => Self.Is_Defined and then Self.Source_Option > No_Source;
    --  Get a source from its simple name, that is visible for a given view's
    --  sources (so project's own sources and all its withed projects).
 
    function Visible_Sources
      (Self : Object) return GPR2.Build.Source.Sets.Object
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined and then Self.Source_Option > No_Source;
    --  Get the complete list of visible sources: so sources owned by the view
    --  but also all sources made visible by withed or limited withed views.
 
    function Has_Compilation_Unit
      (Self : Object;
       Name : Name_Type) return Boolean
-     with Pre => Self.Is_Defined and then Self.View.Is_Namespace_Root;
+     with Pre => Self.Is_Defined
+                   and then Self.View.Is_Namespace_Root
+                   and then Self.Source_Option >= Sources_Units;
    --  Whether the compilation unit is defined in the namespace
 
    function Compilation_Unit
@@ -89,13 +92,9 @@ package GPR2.Build.View_Db is
 
    function Compilation_Units
      (Self : Object) return Build.Compilation_Unit.Maps.Map
-     with Pre => Self.Is_Defined and then Self.View.Is_Namespace_Root;
-
-   --  function Compilation_Inputs
-   --    (Self : Object) return Build.Compilation_Input.Sets.Object
-   --    with Pre => Self.Is_Defined;
-   --  Returns all sources (and index in case of multi-unit source) that can
-   --  be used as input for a compilation for this view.
+     with Pre => Self.Is_Defined
+                   and then Self.View.Is_Namespace_Root
+                   and then Self.Source_Option >= Sources_Units;
 
    function View (Self : Object) return GPR2.Project.View.Object
      with Pre => Self.Is_Defined;
@@ -105,6 +104,12 @@ package GPR2.Build.View_Db is
       View : Project.View.Object) return Object
      with Pre => Self.Is_Defined;
    --  Retrieve the build database for View.
+
+   function Tree_Db (Self : Object) return access GPR2.Build.Tree_Db.Object
+     with Pre => Self.Is_Defined;
+
+   function Source_Option (Self : Object) return Optional_Source_Info_Option
+     with Pre => Self.Is_Defined;
 
    function "<" (L, R : Object) return Boolean;
 
@@ -125,4 +130,5 @@ private
 
    function "<" (L, R : Object) return Boolean is
       (L.Get.View < R.Get.View);
+
 end GPR2.Build.View_Db;
