@@ -1074,22 +1074,21 @@ package body GPR2.Project.Tree is
          end if;
       end if;
 
-      if not Self.Pre_Conf_Mode then
-         if not Self.Messages.Has_Error then
-            --  Tree is now fully loaded, we can create the artifacts database
-            --  object
-            if not Self.Tree_Db.Is_Defined then
-               Self.Tree_Db.Create (Self, With_Runtime);
-            else
-               --  Tree has been reloaded: update the database in case views
-               --  have changed
-               Self.Tree_Db.Check_Tree;
-            end if;
+      if not Self.Messages.Has_Error then
+         --  Tree is now fully loaded, we can create the artifacts database
+         --  object
+         if not Self.Tree_Db.Is_Defined then
+            Self.Tree_Db.Create (Self, With_Runtime);
          else
-            raise Project_Error
-              with Gpr_Path.Value &
-              ": fatal error, cannot load the project tree";
+            --  Tree has been reloaded: update the database in case views
+            --  have changed
+            Self.Tree_Db.Check_Tree;
          end if;
+
+      elsif not Self.Pre_Conf_Mode then
+         raise Project_Error
+         with Gpr_Path.Value &
+         ": fatal error, cannot load the project tree";
       end if;
    end Load;
 
