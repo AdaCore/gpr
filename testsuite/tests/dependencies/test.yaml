@@ -4,4 +4,4 @@ driver: build_and_run
 project_file: dependencies
 main: main
 control:
-- [XFAIL, "True", "libgpr2-next: missing Source.Dependencies"]
+- [SKIP, "True", "libgpr2-next: missing Source.Dependencies"]

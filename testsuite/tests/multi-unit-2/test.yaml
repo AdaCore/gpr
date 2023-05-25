@@ -2,4 +2,4 @@ description: R604-015 multi-unit test
 driver: python_script
 timeout: 500
 control:
-- [XFAIL, "True", "missing Source.Artifacts"]
+- [SKIP, "True", "missing Source.Artifacts"]

@@ -4,4 +4,4 @@ driver: build_and_run
 project_file: withunits
 main: main
 control:
-- [XFAIL, "True", "pending libgpr2-next changes. Tests expect source context clause dependencies, which is not supported yet."]
+- [SKIP, "True", "libgpr2-next: missing Source.Dependencies"]

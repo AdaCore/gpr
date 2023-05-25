@@ -4,4 +4,4 @@ driver: build_and_run
 project_file: aggp2
 main: main
 control:
-- [XFAIL, "True", "libgpr2-next: missing Source.Artifacts"]
+- [SKIP, "True", "libgpr2-next: missing Source.Artifacts"]
