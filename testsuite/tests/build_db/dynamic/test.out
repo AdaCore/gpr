@@ -72,7 +72,7 @@ simple.gpr: warning: there are no sources of language "Ada" in this project
 -----------------------------------
 --- rm src2/pkg.ads
 --- Refresh list of sources
-simple.gpr:3:41: error: "pkg.ads" is found multiple times for the same source directory value
+simple.gpr:3:41: error: "pkg.ads" is found multiple times for the same source directory
 -----------------------------------
 * Sources:
  - sources of Simple

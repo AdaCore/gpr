@@ -4,7 +4,11 @@
 --  SPDX-License-Identifier: Apache-2.0
 --
 
+with Ada.Strings.Maps.Constants;
+
+with GPR2.Message;
 with GPR2.Project.Tree;
+with GPR2.Source_Reference;
 
 package body GPR2.Build.Compilation_Unit is
 
@@ -55,6 +59,94 @@ package body GPR2.Build.Compilation_Unit is
          Self.Duplicates.Append ((Sep_Name'Length, UL, Kind, Sep_Name));
       end if;
    end Add;
+
+   -------------------------
+   -- Check_Name_Validity --
+   -------------------------
+
+   procedure Check_Name_Validity
+     (Self     : Object;
+      Messages : in out GPR2.Log.Object)
+   is
+      use Ada.Strings.Maps;
+
+      procedure Error (Message : String);
+      function Sloc return GPR2.Source_Reference.Object'Class;
+
+      procedure Error (Message : String)
+      is
+      begin
+         Messages.Append
+           (GPR2.Message.Create (GPR2.Message.Error, Message, Sloc));
+      end Error;
+
+      function Sloc return GPR2.Source_Reference.Object'Class
+      is
+         Path : GPR2.Path_Name.Object;
+      begin
+         if Self.Implem /= No_Unit then
+            Path := Self.Implem.Source;
+         elsif Self.Spec /= No_Unit then
+            Path := Self.Spec.Source;
+         elsif not Self.Separates.Is_Empty then
+            Path := Self.Separates.First_Element.Source;
+         end if;
+
+         if Path.Is_Defined then
+            return GPR2.Source_Reference.Create (Path.Value, 0, 0);
+         else
+            return GPR2.Source_Reference.Undefined;
+         end if;
+      end Sloc;
+
+      Unit_Name : constant String := To_String (Self.Name);
+
+      Not_Valid : constant String :=
+                    "invalid name for unit '" & Unit_Name & "', ";
+
+   begin
+      --  Must start with a letter
+
+      if not Is_In
+        (Unit_Name (Unit_Name'First),
+         Constants.Letter_Set or To_Set ("_"))
+      then
+         Error (Not_Valid & "should start with a letter or an underscore");
+         return;
+      end if;
+
+      --  Cannot have dots and underscores one after another and should
+      --  contain only alphanumeric characters.
+
+      for K in Unit_Name'First + 1 .. Unit_Name'Last loop
+         declare
+            Two_Chars : constant String := Unit_Name (K - 1 .. K);
+         begin
+            if Two_Chars = "_." then
+               Error (Not_Valid & "cannot contain dot after underscore");
+               return;
+
+            elsif Two_Chars = "__" then
+               Error (Not_Valid & "two consecutive underscores not permitted");
+               return;
+
+            elsif Two_Chars = "._" then
+               Error (Not_Valid & "cannot contain underscore after dot");
+               return;
+
+            elsif Two_Chars = ".." then
+               Error (Not_Valid & "two consecutive dots not permitted");
+               return;
+
+            elsif not Characters.Handling.Is_Alphanumeric (Unit_Name (K))
+              and then Unit_Name (K) not in '.' | '_'
+            then
+               Error (Not_Valid & "should have only alpha numeric characters");
+               return;
+            end if;
+         end;
+      end loop;
+   end Check_Name_Validity;
 
    ------------
    -- Create --

@@ -20,8 +20,7 @@ package body GPR2.Build.View_Tables is
       View     : Project.View.Object;
       Path     : Path_Name.Object;
       Index    : Unit_Index;
-      Messages : in out GPR2.Log.Object;
-      Success  : out Boolean)
+      Messages : in out GPR2.Log.Object)
      with Pre => Data.Is_Root
                    and then (Kind = S_Separate) = (Sep_Name'Length > 0);
 
@@ -121,22 +120,40 @@ package body GPR2.Build.View_Tables is
       View     : Project.View.Object;
       Path     : Path_Name.Object;
       Index    : Unit_Index;
-      Messages : in out GPR2.Log.Object;
-      Success  : out Boolean)
+      Messages : in out GPR2.Log.Object)
    is
-      Cursor : Compilation_Unit_Maps.Cursor;
-      Done   : Boolean;
-      Other  : Path_Name.Object;
+      Cursor  : Compilation_Unit_Maps.Cursor;
+      Done    : Boolean;
+      Other   : Path_Name.Object;
+      Success : Boolean := True;
    begin
       Cursor := Data.CUs.Find (CU);
 
       if not Compilation_Unit_Maps.Has_Element (Cursor) then
-         Data.CUs.Insert (CU, Compilation_Unit.Create (CU), Cursor, Done);
-         pragma Assert (Done);
-      end if;
+         declare
+            CU_Instance : Compilation_Unit.Object :=
+                            Compilation_Unit.Create (CU);
+         begin
+            CU_Instance.Add (Kind, View, Path, Index, Sep_Name, Done);
+            Data.CUs.Insert (CU, CU_Instance);
+         end;
+      else
+         Data.CUs.Reference (Cursor).Add
+           (Kind, View, Path, Index, Sep_Name, Success);
 
-      Data.CUs.Reference (Cursor).Add
-        (Kind, View, Path, Index, Sep_Name, Success);
+         if not Success then
+            Other := Data.CUs.Reference (Cursor).Get (Kind, Sep_Name).Source;
+            Messages.Append
+              (Message.Create
+                 (Level   => Message.Warning,
+                  Message => "Duplicated " &
+                    Image (Kind) & " for unit """ & String (CU) & """ in " &
+                    String (Other.Value) & " and " & String (Path.Value),
+                  Sloc    =>
+                    Source_Reference.Create
+                      (Data.View.Path_Name.Value, 0, 0)));
+         end if;
+      end if;
 
       if Success and then Kind = S_Separate then
          declare
@@ -145,18 +162,6 @@ package body GPR2.Build.View_Tables is
          begin
             Data.Separates.Include (Full_Name, CU);
          end;
-      end if;
-
-      if not Success then
-         Other := Data.CUs.Reference (Cursor).Get (Kind, Sep_Name).Source;
-         Messages.Append
-           (Message.Create
-              (Level   => Message.Warning,
-               Message => "Duplicated " &
-                 Image (Kind) & " for unit """ & String (CU) & """ in " &
-                 String (Other.Value) & " and " & String (Path.Value),
-               Sloc    =>
-                 Source_Reference.Create (Data.View.Path_Name.Value, 0, 0)));
       end if;
    end Add_Unit_Part;
 
@@ -225,7 +230,8 @@ package body GPR2.Build.View_Tables is
 
       --  Disambiguate unit kind for Ada bodies
 
-      if not Data.View.Is_Extended
+      if Data.Tree_Db.Source_Option >= Sources_Units
+        and then not Data.View.Is_Extended
         and then Data.View.Kind in With_Object_Dir_Kind
       then
          --  Only look at "final" views: e.g. not inherited.
@@ -279,12 +285,26 @@ package body GPR2.Build.View_Tables is
                         if S_Ref.Unit (No_Index).Name /= Unit.Name
                           or else S_Ref.Unit (No_Index).Kind /= Unit.Kind
                         then
+                           if Source.Full_Name (S_Ref.Unit) /=
+                             Source.Full_Name (Unit)
+                           then
+                              Messages.Append
+                                (Message.Create
+                                   (Message.Warning,
+                                    "source file name """ &
+                                      String (S_Ref.Path_Name.Simple_Name) &
+                                      """ does not match unit name """ &
+                                      String (Source.Full_Name (S_Ref.Unit)) &
+                                      """",
+                                    Source_Reference.Create
+                                      (Data.View.Path_Name.Value, 0, 0)));
+                           end if;
+
                            for Root_View of Data.View.Namespace_Roots loop
                               declare
                                  Root_Db : constant View_Data_Ref :=
                                              Get_Data (Data.Tree_Db,
                                                        Root_View);
-                                 Done    : Boolean;
                               begin
                                  --  Remove old unit from the namespace root
                                  --  list.
@@ -307,9 +327,7 @@ package body GPR2.Build.View_Tables is
                                     Data.View,
                                     S_Ref.Path_Name,
                                     S_Ref.Unit.Index,
-                                    Messages,
-                                    Done);
-                                 pragma Assert (Done);
+                                    Messages);
                               end;
                            end loop;
                         end if;
@@ -339,7 +357,6 @@ package body GPR2.Build.View_Tables is
                         Root_Db : constant View_Data_Ref :=
                                     Get_Data (Data.Tree_Db, Root);
                         Old     : constant Source.Unit_Part := S_Ref.Unit;
-                        Done    : Boolean;
                      begin
                         Check_Separate (Root_Db, S_Ref);
 
@@ -362,9 +379,7 @@ package body GPR2.Build.View_Tables is
                               Data.View,
                               S_Ref.Path_Name,
                               S_Ref.Unit.Index,
-                              Messages,
-                              Done);
-                           pragma Assert (Done);
+                              Messages);
                         end if;
                      end;
                   end loop;
@@ -476,11 +491,10 @@ package body GPR2.Build.View_Tables is
       ------------------------------------
 
       procedure Propagate_Visible_Source_Added (Src : Source_Proxy) is
-         View_Db  : constant View_Data_Ref :=
-                      Get_Data (Data.Tree_Db, Src.View);
-         Src_Info : constant Source.Object :=
-                      View_Db.Src_Infos (Src.Path_Name);
-         Success  : Boolean;
+         View_Db   : constant View_Data_Ref :=
+                       Get_Data (Data.Tree_Db, Src.View);
+         Src_Info  : constant Src_Info_Maps.Reference_Type :=
+                       View_Db.Src_Infos.Reference (Src.Path_Name);
 
       begin
          if Data.View.Is_Extended then
@@ -517,8 +531,7 @@ package body GPR2.Build.View_Tables is
                      View     => Data.View,
                      Path     => Src_Info.Path_Name,
                      Index    => U.Index,
-                     Messages => Messages,
-                     Success  => Success);
+                     Messages => Messages);
                end loop;
             end loop;
          end if;
@@ -695,7 +708,7 @@ package body GPR2.Build.View_Tables is
                     (Message.Error,
                      '"' & String (Basename) & '"' &
                        " is found multiple times for the same source" &
-                       " directory value",
+                       " directory",
                      SR));
             end loop;
 

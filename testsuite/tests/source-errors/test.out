@@ -1,38 +1,22 @@
 Project: Demo1
-BEFORE: Has unread Message: TRUE
-> /source-errors/demo1.gpr
-ERROR
- 3
- 25
-unit '1pck' not valid, should start with a letter or an underscore
-> /source-errors/demo1.gpr
-WARNING
-there are no sources of language "Ada" in this project
-AFTER: Has unread Message: FALSE
-
+1pck.adb: error: invalid name for unit '1PCK', should start with a letter or an underscore
+ > src1/1pck.adb
+                  language: Ada    Kind: S_BODY   unit: 1PCK
 Project: Demo2
-BEFORE: Has unread Message: TRUE
-> /source-errors/demo2.gpr
-ERROR
- 4
- 25
-unit 'pck._b' not valid, cannot contain underscore after dot
-AFTER: Has unread Message: FALSE
-
+demo2.gpr: warning: source file name "pck___b.ads" does not match unit name "WRONG"
+ > src2/pck___b.ads
+                  language: Ada    Kind: S_SPEC   unit: WRONG
+ > src2/pck__a.adb
+                  language: Ada    Kind: S_BODY   unit: PCK.A
+ > src2/pcka.ads
+                  language: Ada    Kind: S_SPEC   unit: PCKA
 Project: Demo3
  > src2/pck__a.adb
-                  language: Ada    Kind: S_BODY_ONLY   unit: PCK.A
+                  language: Ada    Kind: S_BODY   unit: PCK.A
  > src2/pcka.ads
-                  language: Ada    Kind: S_SPEC_ONLY   unit: PCKA
+                  language: Ada    Kind: S_SPEC   unit: PCKA
 Project: Demo4
  > src3/main.adb
-                  language: Ada    Kind: S_BODY_ONLY   unit: MAIN
+                  language: Ada    Kind: S_BODY   unit: MAIN
 Project: Demo5
-BEFORE: Has unread Message: TRUE
-> /source-errors/demo5.gpr
-ERROR
- 3
- 25
-"main.adb" is found in several source directories
-AFTER: Has unread Message: FALSE
-
+demo5.gpr:3:25: error: "main.adb" is found multiple times for the same source directory

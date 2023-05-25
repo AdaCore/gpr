@@ -152,6 +152,21 @@ package body GPR2.Build.Tree_Db is
             end;
          end if;
       end loop;
+
+      if Self.Src_Option >= Sources_Units then
+         for V of Self.Tree.Namespace_Root_Projects loop
+            if V.Kind in With_Object_Dir_Kind then
+               declare
+                  V_Db : constant View_Tables.View_Data_Ref :=
+                           View_Tables.Get_Data (Self.Self, V);
+               begin
+                  for U of V_Db.CUs loop
+                     U.Check_Name_Validity (Messages);
+                  end loop;
+               end;
+            end if;
+         end loop;
+      end if;
    end Refresh;
 
    function Tree (Self : Object) return access GPR2.Project.Tree.Object is

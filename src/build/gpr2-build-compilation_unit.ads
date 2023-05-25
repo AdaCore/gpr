@@ -7,6 +7,7 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Vectors;
 
+with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 limited with GPR2.Project.Tree;
@@ -41,6 +42,12 @@ package GPR2.Build.Compilation_Unit is
 
    function Create (Name : Name_Type) return Object;
    --  Create a new compilation unit object with name Name
+
+   procedure Check_Name_Validity
+     (Self     : Object;
+      Messages : in out GPR2.Log.Object)
+     with Pre => Self.Is_Defined and then not Self.Is_Empty;
+   --  Check that the unit name is valid.
 
    function Is_Defined (Self : Object) return Boolean;
    --  Whether Self is defined

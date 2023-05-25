@@ -57,7 +57,7 @@ package GPR2.Build.Source is
       --  In particular, in many situations we can't differentiate body and
       --  separates without parsing either the source or the dependencies
       --  information.
-      Index          : Unit_Index;
+      Index          : Unit_Index := No_Index;
       --  In case of multi-unit source, the index of the unit, else No_Index
       Name           : Name_Type (1 .. Name_Len);
       --  The compilation unit name
@@ -68,6 +68,10 @@ package GPR2.Build.Source is
    --  Structure used to describe the unit(s) contained in the source.
    --  The corresponding Compilation Unit can be retrieved from the main
    --  tree_db object.
+
+   function Full_Name (U : Unit_Part) return Name_Type;
+   --  If the part denotes a separate, return Name.Separate_Name, else just
+   --  reutrn Name.
 
    function Create
      (Unit_Name      : Name_Type;
@@ -184,6 +188,7 @@ package GPR2.Build.Source is
      with Pre => Self.Is_Defined
                    and then Self.Language = Ada_Language
                    and then Self.Has_Unit_At (Unit.Index);
+   --  Change the unit info stored in Self with updated information in Unit
 
    function Path_Name (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined;
@@ -274,6 +279,11 @@ package GPR2.Build.Source is
      with Pre => Self.Is_Defined;
 
 private
+
+   function Full_Name (U : Unit_Part) return Name_Type is
+     (if U.Separate_Len = 0
+      then U.Name
+      else GPR2."&" (GPR2."&" (U.Name, "."), U.Separate_Name));
 
    function Create
      (Unit_Name      : Name_Type;
