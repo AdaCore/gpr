@@ -253,7 +253,6 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 extending2.gpr: error: "pkg.ads" is found in several extended projects
 base.gpr:   /scenario/src/pkg.ads
 base2.gpr:   /scenario/src2/pkg.ads
-extending2.gpr:3:23: warning: there are no sources of language "Ada" in this project
 extending2.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:

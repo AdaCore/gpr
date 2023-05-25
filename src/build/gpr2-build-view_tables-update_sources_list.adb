@@ -381,9 +381,6 @@ package body Update_Sources_List is
       Excluded_Sources        : Source_Set.Set;
       --  Has either Source_Files or Source_List_File attributes
 
-      Has_Src_In_Lang         : Language_Set;
-      --  Insert record there if the language has a source
-
       Tree                    : constant not null access Project.Tree.Object :=
                                   Data.View.Tree;
 
@@ -729,6 +726,11 @@ package body Update_Sources_List is
                         end if;
 
                         if Kind = S_Separate then
+                           if Last_Dot = 0 then
+                              --  Explicit separate case with no dot: ignore
+                              return False;
+                           end if;
+
                            pragma Assert
                              (Last_Dot in
                                 Unit_Name'First + 1 .. Unit_Name'Last - 1);
@@ -761,8 +763,6 @@ package body Update_Sources_List is
             --  we create the Source object.
 
             if Naming_Exception /= No or else Match then
-               Has_Src_In_Lang.Include (Language);
-
                if Language = Ada_Language then
                   Source := Build.Source.Create_Ada
                     (Filename            => File.Path,
@@ -925,10 +925,6 @@ package body Update_Sources_List is
                      Data.Src_Infos.Reference (C_Src).Update_Modification_Time
                        (F.Stamp);
                   end if;
-
-                  --  Mark language used
-                  Has_Src_In_Lang.Include
-                    (Src_Info_Maps.Element (C_Src).Language);
                end if;
             end if;
          end;
@@ -1045,29 +1041,6 @@ package body Update_Sources_List is
                end loop;
             end if;
          end loop;
-      end if;
-
-      if Data.View.Has_Attribute (PRA.Languages)
-        and then Data.View.Kind not in K_Abstract | K_Configuration
-        and then Excluded_Sources.Is_Empty
-      then
-         declare
-            SF : constant Project.Attribute.Object :=
-                   Data.View.Attribute (PRA.Source_Files);
-         begin
-            if not SF.Is_Defined or else not SF.Values.Is_Empty then
-               for L of Data.View.Languages loop
-                  if not Has_Src_In_Lang.Contains (+Name_Type (L.Text)) then
-                     Messages.Append
-                       (Message.Create
-                          (Message.Warning,
-                           "there are no sources of language """ & L.Text
-                           & """ in this project",
-                           L));
-                  end if;
-               end loop;
-            end if;
-         end;
       end if;
    end Process;
 

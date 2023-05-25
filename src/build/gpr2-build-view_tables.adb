@@ -71,12 +71,20 @@ package body GPR2.Build.View_Tables is
       Resolve_Visibility : Boolean := False;
       Messages           : in out GPR2.Log.Object)
    is
+      use type GPR2.Project.View.Object;
+
       C_Overload : Basename_Source_List_Maps.Cursor;
       Done       : Boolean;
       Proxy      : constant Source_Proxy :=
                      (View      => View_Owner,
                       Path_Name => Path,
                       Inh_From  => Extended_View);
+      Owner_Db   : constant View_Data :=
+                     (if View_Owner = Data.View
+                      then Data
+                      else Get_Data (Data.Tree_Db, View_Owner));
+      Src_Info   : constant Src_Info_Maps.Constant_Reference_Type :=
+                     Owner_Db.Src_Infos.Constant_Reference (Path);
 
    begin
       Data.Overloaded_Srcs.Insert (Path.Simple_Name,
@@ -84,6 +92,17 @@ package body GPR2.Build.View_Tables is
                                    C_Overload,
                                    Done);
       Data.Overloaded_Srcs.Reference (C_Overload).Include (Proxy);
+
+      if not Data.Langs_Usage.Contains (Src_Info.Language) then
+         Data.Langs_Usage.Insert (Src_Info.Language, 1);
+      else
+         declare
+            Val : constant Sources_By_Langs_Maps.Reference_Type :=
+                    Data.Langs_Usage.Reference (Src_Info.Language);
+         begin
+            Val.Element.all := Val + 1;
+         end;
+      end if;
 
       if Resolve_Visibility then
          View_Tables.Resolve_Visibility (Data, C_Overload, Messages);
@@ -367,15 +386,31 @@ package body GPR2.Build.View_Tables is
       Resolve_Visibility : Boolean := False;
       Messages           : in out GPR2.Log.Object)
    is
+      use type GPR2.Project.View.Object;
+
       Basename : constant Simple_Name := Path.Simple_Name;
       C_Overload : Basename_Source_List_Maps.Cursor;
       Proxy    : constant Source_Proxy := (View      => View_Owner,
                                            Path_Name => Path,
                                            Inh_From  => Extended_View);
+      Owner_Db   : constant View_Data :=
+                     (if View_Owner = Data.View
+                      then Data
+                      else Get_Data (Data.Tree_Db, View_Owner));
+      Src_Info   : constant Src_Info_Maps.Constant_Reference_Type :=
+                     Owner_Db.Src_Infos.Constant_Reference (Path);
 
    begin
       C_Overload := Data.Overloaded_Srcs.Find (Basename);
       Data.Overloaded_Srcs.Reference (C_Overload).Delete (Proxy);
+
+      declare
+         Val : constant Sources_By_Langs_Maps.Reference_Type :=
+                 Data.Langs_Usage.Reference (Src_Info.Language);
+      begin
+         pragma Assert (Val > 0);
+         Val.Element.all := Val - 1;
+      end;
 
       if Resolve_Visibility then
          View_Tables.Resolve_Visibility (Data, C_Overload, Messages);

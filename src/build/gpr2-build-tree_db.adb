@@ -5,10 +5,15 @@
 --
 
 with GPR2.Build.View_Tables;
+with GPR2.Message;
+with GPR2.Project.Attribute;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
 with GPR2.View_Ids.Set;
 
 package body GPR2.Build.Tree_Db is
+
+   package PRA renames GPR2.Project.Registry.Attribute;
 
    use type GPR2.View_Ids.View_Id;
 
@@ -111,6 +116,40 @@ package body GPR2.Build.Tree_Db is
          then
             View_Tables.Refresh (View_Tables.Get_Data (Self.Self, V),
                                  Messages);
+         end if;
+      end loop;
+
+      for V of Self.Tree.Ordered_Views loop
+         if V.Kind in With_Source_Dirs_Kind
+           and then V.Id /= View_Ids.Runtime_View_Id
+         then
+            declare
+               SF : constant Project.Attribute.Object :=
+                      V.Attribute (PRA.Source_Files);
+               V_Db : constant GPR2.Build.View_Tables.View_Data_Ref :=
+                        View_Tables.Get_Data (Self.Self, V);
+            begin
+               if not SF.Is_Defined
+                 or else not SF.Values.Is_Empty
+               then
+                  for L of V.Languages loop
+                     declare
+                        Lang : constant Language_Id := +Name_Type (L.Text);
+                     begin
+                        if not V_Db.Langs_Usage.Contains (Lang)
+                          or else V_Db.Langs_Usage (Lang) = 0
+                        then
+                           Messages.Append
+                             (Message.Create
+                                (Message.Warning,
+                                 "there are no sources of language """ & L.Text
+                                 & """ in this project",
+                                 L));
+                        end if;
+                     end;
+                  end loop;
+               end if;
+            end;
          end if;
       end loop;
    end Refresh;
