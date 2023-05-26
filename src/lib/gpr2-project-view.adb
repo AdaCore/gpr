@@ -85,7 +85,8 @@ package body GPR2.Project.View is
    --  Options used to filter a list of sources
 
    function Source_Filter
-     (S    : Build.Source.Object;
+     (Self : Object;
+      S    : Build.Source.Object;
       Data : Build.Source.Sets.Filter_Data'Class) return Boolean;
    --  Function used to filter the sources in the Sources subprogram
 
@@ -2567,7 +2568,8 @@ package body GPR2.Project.View is
    -------------------
 
    function Source_Filter
-     (S    : Build.Source.Object;
+     (Self : Object;
+      S    : Build.Source.Object;
       Data : Build.Source.Sets.Filter_Data'Class) return Boolean
    is
       CU     : Build.Compilation_Unit.Object;
@@ -2616,8 +2618,28 @@ package body GPR2.Project.View is
       end if;
 
       if Opt.Interface_Only then
-         --  ??? TODO
-         null;
+         Result := False;
+
+         declare
+            Def : constant Definition.Const_Ref :=
+                    Definition.Get_RO (Self);
+         begin
+            if Def.Interface_Sources.Contains (S.Path_Name.Simple_Name) then
+
+               Result := True;
+
+            elsif S.Has_Units then
+               for CU of S.Units loop
+                  if Def.Interface_Units.Contains (CU.Name) then
+                     Result := True;
+                  end if;
+               end loop;
+            end if;
+
+            if not Result then
+               return False;
+            end if;
+         end;
       end if;
 
       return True;

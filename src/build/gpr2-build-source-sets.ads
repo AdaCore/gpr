@@ -19,6 +19,8 @@ with Ada.Containers.Indefinite_Holders;
 
 with GPR2.Build.View_Db;
 
+limited with GPR2.Project.View;
+
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with GPR2.Build.View_Tables;
 
@@ -49,7 +51,8 @@ package GPR2.Build.Source.Sets is
    No_Data : Dummy_Filter_Data;
 
    type Filter_Function is access
-     function (Source : GPR2.Build.Source.Object;
+     function (View   : GPR2.Project.View.Object;
+               Source : GPR2.Build.Source.Object;
                Data   : Filter_Data'Class) return Boolean;
    --  function that can be used to filter sources from the set.
    --  Must return True if the source is to be kept, false otherwise.

@@ -182,7 +182,8 @@ package body GPR2.Build.Source.Sets is
                for C in Get_Ref (Self.Db).Sources.Iterate loop
                   if Self.Filter = null
                     or else Self.Filter
-                      (Self.Element (Element (C)),
+                      (Self.Db.View,
+                       Self.Element (Element (C)),
                        Filter_Data_Holders.Element (Self.F_Data))
                   then
                      Iter.Paths.Insert (Key (C), Element (C));
@@ -211,7 +212,8 @@ package body GPR2.Build.Source.Sets is
                         for C in Get_Ref (Db).Sources.Iterate loop
                            if Self.Filter = null
                              or else Self.Filter
-                               (Self.Element (Element (C)),
+                               (Self.Db.View,
+                                Self.Element (Element (C)),
                                 Filter_Data_Holders.Element (Self.F_Data))
                            then
                               Result.Paths.Insert

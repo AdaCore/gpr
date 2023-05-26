@@ -7,14 +7,13 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
-with GPR2.Unit;
+with GPR2.Build.Source.Sets;
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
-
-with GPR2.Source_Info.Parser.Ada_Language;
 
 procedure Main is
 
@@ -47,19 +46,13 @@ procedure Main is
 
          for Source of View.Sources loop
             declare
-               U : constant Optional_Name_Type := Source.Unit_Name;
+               U : constant Optional_Name_Type := Source.Unit.Name;
             begin
                Output_Filename (Source.Path_Name.Value);
 
-               Text_IO.Put (",language: " & Image (Source.Language));
-
-               Text_IO.Put
-                 (",Kind: "
-                  & GPR2.Unit.Library_Unit_Type'Image (Source.Kind));
-
-               if U /= "" then
-                  Text_IO.Put (",unit: " & String (U));
-               end if;
+               Text_IO.Put (", language: " & Image (Source.Language));
+               Text_IO.Put (", Kind: " & Source.Kind'Image);
+               Text_IO.Put (", unit: " & String (U));
 
                Text_IO.New_Line;
             end;
@@ -70,18 +63,11 @@ procedure Main is
 
          for Source of View.Sources (Interface_Only => True) loop
             declare
-               U : constant Optional_Name_Type := Source.Unit_Name;
+               U : constant Optional_Name_Type := Source.Unit.Name;
             begin
                Output_Filename (Source.Path_Name.Value);
-
-               Text_IO.Put
-                 (",Kind: "
-                  & GPR2.Unit.Library_Unit_Type'Image (Source.Kind));
-
-               if U /= "" then
-                  Text_IO.Put (",unit: " & String (U));
-               end if;
-
+               Text_IO.Put (", Kind: " & Source.Kind'Image);
+               Text_IO.Put (", unit: " & String (U));
                Text_IO.New_Line;
             end;
          end loop;
@@ -91,18 +77,11 @@ procedure Main is
 
          for Source of View.Sources (Compilable_Only => True) loop
             declare
-               U : constant Optional_Name_Type := Source.Unit_Name;
+               U : constant Optional_Name_Type := Source.Unit.Name;
             begin
                Output_Filename (Source.Path_Name.Value);
-
-               Text_IO.Put
-                 (",Kind: "
-                  & GPR2.Unit.Library_Unit_Type'Image (Source.Kind));
-
-               if U /= "" then
-                  Text_IO.Put (",unit: " & String (U));
-               end if;
-
+               Text_IO.Put (", Kind: " & Source.Kind'Image);
+               Text_IO.Put (", unit: " & String (U));
                Text_IO.New_Line;
             end;
          end loop;
@@ -111,37 +90,24 @@ procedure Main is
       Prj  : Project.Tree.Object;
       Ctx  : Context.Object;
       View : Project.View.Object;
-
-      procedure Print_Messages (Info : Boolean) is
-      begin
-         if Prj.Log_Messages.Has_Element
-           (Information => Info, Lint => False)
-         then
-            Text_IO.Put_Line ("Messages found:");
-
-            for J in Prj.Log_Messages.Iterate (Information => Info) loop
-               declare
-                  M : constant Message.Object := Prj.Log_Messages.all (J);
-               begin
-                  Text_IO.Put_Line (M.Format);
-               end;
-            end loop;
-         end if;
-      end Print_Messages;
+      Log  : GPR2.Log.Object;
 
    begin
       Project.Tree.Load (Prj, Create (Project_Name), Ctx);
 
       View := Prj.Root_Project;
       Text_IO.Put_Line ("Project: " & String (View.Name));
-      Print_Messages (False);
+      Prj.Log_Messages.Output_Messages (Information => False);
+
+      Prj.Update_Sources (Messages => Log);
+      Log.Output_Messages;
 
       List_Sources (View);
-      Print_Messages (False);
       Prj.Unload;
    exception
       when GPR2.Project_Error =>
-         Print_Messages (True);
+         Prj.Log_Messages.Output_Messages
+           (Information => False, Warning => False);
          Prj.Unload;
    end Check;
 
@@ -150,8 +116,10 @@ procedure Main is
    ---------------------
 
    procedure Output_Filename (Filename : Path_Name.Full_Name) is
+      I : constant Positive :=
+            Strings.Fixed.Index (Filename, "source-interface");
    begin
-      Text_IO.Put (" > " & Filename);
+      Text_IO.Put (" > " & Filename (I + 17 .. Filename'Last));
    end Output_Filename;
 
 begin
