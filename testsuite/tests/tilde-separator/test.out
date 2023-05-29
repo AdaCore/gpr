@@ -1,3 +1,4 @@
+h~foo.ads: error: invalid name for unit 'H~FOO', should have only alpha numeric characters
 /a-foo2.adb
 /a-p1.adb
 /a-p2.ads
@@ -9,6 +10,7 @@
 /g.ads
 /g~foo.ads
 /h.ads
+/h~foo.ads
 /i.ads
 /i~foo.ads
 /main.adb
@@ -23,6 +25,7 @@ A.P2
 G
 G.FOO
 H
+H~FOO
 I
 I.FOO
 MAIN
