@@ -20,47 +20,16 @@ with "gpr2";
 with "libadalang";
 with "langkit_support";
 
-project GPR2.Name is
-
-   Build      := GPR2.Build;
-   Build_Root := GPR2.Build_Root;
-   Processors := GPR2.Processors;
+project GPR2.Name extends "../shared.gpr" is
 
    type Target_type is ("Windows_NT", "UNIX");
    Target : Target_Type := external ("OS", "UNIX");
 
    for Source_Dirs use ("src");
-   for Object_Dir use Build_Root & "/" & Build & "/obj-tools";
-   for Exec_Dir use Build_Root & "/" & Build;
+   for Object_Dir use Shared.Build_Root & "/" & Shared.Build & "/obj-tools";
+   for Exec_Dir use Shared.Build_Root & "/" & Shared.Build;
    for Main use
      ("gprname-main.adb");
-
-   --------------
-   -- Compiler --
-   --------------
-
-   package Compiler is
-      for Default_Switches ("Ada") use GPR2.Compiler'Default_Switches ("Ada");
-
-      case Build is
-         when "gnatcov" =>
-            for Default_Switches ("gnatcov*") use GPR2.Debug_Options & ("-gnatws");
-
-         when others =>
-      end case;
-
-      for Switches ("gprdoc-*.adb") use ("-gnat2022");
-      --  Add the -gnat2022 compilation option for gprdoc and scalars printout
-
-   end Compiler;
-
-   ------------
-   -- Binder --
-   ------------
-
-   package Binder is
-      for Default_Switches ("Ada") use ("-Es");
-   end Binder;
 
    -------------
    -- Builder --
@@ -70,18 +39,5 @@ project GPR2.Name is
       for Executable ("gprname-main.adb") use "gprname";
       for Switches (others) use ("-m", "-j" & Processors);
    end Builder;
-
-   ------------
-   -- Linker --
-   ------------
-
-   package Linker is
-      case GPR2.Profiler is
-         when "yes" =>
-            for Switches ("Ada") use ("-pg");
-         when "no" =>
-            null;
-      end case;
-   end Linker;
 
 end GPR2.Name;

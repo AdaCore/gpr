@@ -8,13 +8,7 @@ with "gnatcoll";
 with "gnatcoll_iconv";
 with "gnatcoll_gmp";
 
-library project GPR2 is
-
-   type Build_Type is ("debug", "release", "release_checks", "gnatcov");
-   Build : Build_Type := external ("GPR2_BUILD", "debug");
-
-   type Profiler_Flag is ("yes", "no");
-   Profiler : Profiler_Flag := external ("PROFILER", "no");
+library project GPR2 extends "shared.gpr" is
 
    type Bool is ("true", "false");
    Is_Externally_Built : Bool := external ("EXTERNALLY_BUILT", "false");
@@ -24,13 +18,7 @@ library project GPR2 is
    Langkit_Src : Langkit_Src_Kind
                    := external ("LANGKIT_SRC_KIND", "sustained");
 
-   Processors := external ("PROCESSORS", "0");
-   Build_Root := external ("BUILD_ROOT", ".build");
    KB_Build   := Build_Root & "/kb";
-
-   type Library_Kind is ("static", "relocatable", "static-pic");
-   Library_Type : Library_Kind :=
-     external ("GPR2_LIBRARY_TYPE", external ("LIBRARY_TYPE", "static"));
 
    for Languages use ("Ada", "C", "Asm_Cpp");
    for Source_Dirs use ("src/lib",
@@ -48,49 +36,17 @@ library project GPR2 is
    -- Compiler --
    --------------
 
-   Common_Options :=
-     ("-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx");
-   --  Common options used for the Debug and Release modes
-
-   case Profiler is
-      when "yes" =>
-         Common_Options := Common_Options & "-pg";
-      when "no" =>
-         null;
-   end case;
-
-   Checks_Options :=
-     ("-gnata", "-gnatVa", "-gnato", "-fstack-check");
-   --  Common options used to enable checking for the Debug and Release_Checks
-   --  modes
-
-   Debug_Options :=
-     ("-g", "-gnatQ", "-gnatwe");
-
-   Release_Options :=
-     ("-O2", "-gnatn");
-
    Langkit_Parser_Options := ("-g");
 
-   package Compiler is
-
+   package Compiler extends Shared.Compiler is
       case Build is
          when "debug" | "gnatcov" =>
-            for Default_Switches ("Ada") use Common_Options & Checks_Options &
-                                             Debug_Options;
-            for Default_Switches ("C") use ("-g");
             Langkit_Parser_Options := Langkit_Parser_Options & ("-O0");
-            for Switches ("gnatcov*") use ("-g", "-O0");
 
          when "release_checks" =>
-            for Default_Switches ("Ada") use Common_Options & Checks_Options &
-                                             Release_Options;
-            for Default_Switches ("C") use ("-O2");
             Langkit_Parser_Options := Langkit_Parser_Options & ("-Ofast");
 
          when "release" =>
-            for Default_Switches ("Ada") use Common_Options & Release_Options;
-            for Default_Switches ("C") use ("-O2");
             Langkit_Parser_Options := Langkit_Parser_Options & ("-Ofast");
       end case;
 
@@ -101,22 +57,6 @@ library project GPR2 is
       for Switches ("gpr_parser-gdb.c") use Langkit_Parser_Options;
 
    end Compiler;
-
-   ------------
-   -- Binder --
-   ------------
-
-   package Binder is
-      for Default_Switches ("Ada") use ("-Es");
-   end Binder;
-
-   -------------
-   -- Builder --
-   -------------
-
-   package Builder is
-      for Switches (others) use ("-m", "-j" & Processors);
-   end Builder;
 
    --------------
    -- Coverage --

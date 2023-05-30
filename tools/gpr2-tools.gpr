@@ -18,11 +18,7 @@
 
 with "gpr2";
 
-project GPR2.Tools is
-
-   Build      := GPR2.Build;
-   Build_Root := GPR2.Build_Root;
-   Processors := GPR2.Processors;
+project GPR2.Tools extends "../shared.gpr" is
 
    type Target_type is ("Windows_NT", "UNIX");
    Target : Target_Type := external ("OS", "UNIX");
@@ -31,8 +27,8 @@ project GPR2.Tools is
    Edge_Tools_Prefix : Tools_Prefix_Type := external ("GPR2_EDGE_TOOLS_PREFIX", "gpr2");
 
    for Source_Dirs use ("src");
-   for Object_Dir use Build_Root & "/" & Build & "/obj-tools";
-   for Exec_Dir use Build_Root & "/" & Build;
+   for Object_Dir use Shared.Build_Root & "/" & Shared.Build & "/obj-tools";
+   for Exec_Dir use Shared.Build_Root & "/" & Shared.Build;
    for Main use
      ("gprbuild-main.adb",
       "gprclean-main.adb",
@@ -44,35 +40,11 @@ project GPR2.Tools is
       "gprls-main.adb",
       "gprremote.adb");
 
-   --------------
-   -- Compiler --
-   --------------
-
-   package Compiler is
-      for Default_Switches ("Ada") use GPR2.Compiler'Default_Switches ("Ada");
-
-      case Build is
-         when "gnatcov" =>
-            for Default_Switches ("gnatcov*") use GPR2.Debug_Options;
-
-         when others =>
-      end case;
-
-   end Compiler;
-
-   ------------
-   -- Binder --
-   ------------
-
-   package Binder is
-      for Default_Switches ("Ada") use ("-Es");
-   end Binder;
-
    -------------
    -- Builder --
    -------------
 
-   package Builder is
+   package Builder extends Shared.Builder is
       for Executable ("gprbuild-main.adb") use Edge_Tools_Prefix & "build";
       for Executable ("gprconfig.adb")       use "gprconfig";
       for Executable ("gprclean-main.adb")   use "gprclean";
@@ -80,8 +52,6 @@ project GPR2.Tools is
       for Executable ("gprinspect-main.adb") use "gprinspect";
       for Executable ("gprinstall-main.adb") use "gprinstall";
       for Executable ("gprls-main.adb")      use "gprls";
-
-      for Switches (others) use ("-m", "-j" & Processors);
    end Builder;
 
    -------------
@@ -96,18 +66,5 @@ project GPR2.Tools is
             null;
       end case;
    end Install;
-
-   ------------
-   -- Linker --
-   ------------
-
-   package Linker is
-      case GPR2.Profiler is
-         when "yes" =>
-            for Switches ("Ada") use ("-pg");
-         when "no" =>
-            null;
-      end case;
-   end Linker;
 
 end GPR2.Tools;
