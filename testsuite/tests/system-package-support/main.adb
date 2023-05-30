@@ -26,6 +26,7 @@ procedure Main is
    end Print_Messages;
 
    procedure Test (Project_Name : GPR2.Filename_Type) is
+      Log  : GPR2.Log.Object;
    begin
       Ada.Text_IO.Put_Line ("testing " & String (Project_Name));
       Tree.Unload;
@@ -34,7 +35,8 @@ procedure Main is
            (GPR2.Project.Ensure_Extension (Project_Name),
             GPR2.Path_Name.No_Resolution),
          Context  => Context);
-      Tree.Update_Sources;
+      Tree.Update_Sources (Messages => Log);
+      Log.Output_Messages (Information => False);
       Print_Messages;
    exception
       when Project_Error =>
