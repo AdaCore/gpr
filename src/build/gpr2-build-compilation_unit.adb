@@ -222,7 +222,7 @@ package body GPR2.Build.Compilation_Unit is
    function Get
      (Self     : Object;
       Kind     : Unit_Kind;
-      Sep_Name : Optional_Name_Type) return Unit_Location
+      Sep_Name : Optional_Name_Type := "") return Unit_Location
    is
    begin
       case Kind is

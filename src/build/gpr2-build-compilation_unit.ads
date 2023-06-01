@@ -84,7 +84,7 @@ package GPR2.Build.Compilation_Unit is
    function Get
      (Self     : Object;
       Kind     : Unit_Kind;
-      Sep_Name : Optional_Name_Type) return Unit_Location
+      Sep_Name : Optional_Name_Type := "") return Unit_Location
      with Pre => Self.Is_Defined
                    and then (Sep_Name'Length = 0) = (Kind /= S_Separate);
    --  Retrieve the unit part identified by Kind.
