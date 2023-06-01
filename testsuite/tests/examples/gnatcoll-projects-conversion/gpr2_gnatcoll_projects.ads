@@ -61,16 +61,6 @@ package GPR2_GNATCOLL_Projects is
      (String (Project.Tree.Runtime (Ada_Language)));
    --  GNATCOLL.Projects.Get_Runtime (Project : Project_Type) conversion
 
-   function Create
-     (Self            : GPR2.Project.Tree.Object;
-      Name            : GNATCOLL.VFS.Filesystem_String;
-      Project         : GPR2.Project.View.Object'Class :=
-                          GPR2.Project.View.Undefined;
-      Use_Source_Path : Boolean := True;
-      Use_Object_Path : Boolean := True)
-      return GNATCOLL.VFS.Virtual_File;
-   --  GNATCOLL.Projects.Create function conversion
-
    function Register_New_Attribute
      (Name                 : Q_Attribute_Id;
       Is_List              : Boolean := False;

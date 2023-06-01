@@ -6,4 +6,4 @@ Prj2     K_STANDARD
 V:   V0 -> debug
 V:   V1 -> yes
 V:   V2 -> no
- > main.adb       language: Ada    Kind: S_BODY_ONLY   unit: MAIN
+ > main.adb       language: Ada    Kind: S_BODY   unit: MAIN

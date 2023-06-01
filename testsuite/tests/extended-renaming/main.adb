@@ -12,16 +12,12 @@ with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
-with GPR2.Source;
 
 procedure Main is
 
    use Ada;
    use GPR2;
    use GPR2.Project;
-
-   procedure Output_Filename (Filename : Path_Name.Full_Name);
-   --  Remove the leading tmp directory
 
    procedure Display (Prj : Project.View.Object; Full : Boolean := True);
 
@@ -64,16 +60,6 @@ procedure Main is
          end loop;
       end loop;
    end Display;
-
-   ---------------------
-   -- Output_Filename --
-   ---------------------
-
-   procedure Output_Filename (Filename : Path_Name.Full_Name) is
-      I : constant Positive := Strings.Fixed.Index (Filename, "extended/");
-   begin
-      Text_IO.Put (" > " & Filename (I + 8 .. Filename'Last));
-   end Output_Filename;
 
    Prj : Project.Tree.Object;
    Ctx : Context.Object;

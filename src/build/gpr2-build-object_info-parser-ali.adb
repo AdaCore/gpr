@@ -830,7 +830,7 @@ package body GPR2.Build.Object_Info.Parser.ALI is
             Kind := Src.Source.Kind (Multi_Unit_Index'First);
 
             return To_Lower
-                     (Src.Source.Unit (Multi_Unit_Index'First).Unit_Name)
+                     (Src.Source.Unit (Multi_Unit_Index'First).Name)
               & (if Kind = Build.S_Spec then "%s"
                  elsif Kind = Build.S_Body then "%b"
                  else "");
@@ -838,7 +838,7 @@ package body GPR2.Build.Object_Info.Parser.ALI is
          else
             Kind := Src.Source.Kind (No_Index);
 
-            return To_Lower (Src.Source.Unit (No_Index).Unit_Name);
+            return To_Lower (Src.Source.Unit (No_Index).Name);
          end if;
 
       else

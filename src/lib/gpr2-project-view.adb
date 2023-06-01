@@ -69,6 +69,14 @@ package body GPR2.Project.View is
      (Self : Object; Name : Simple_Name) return Value_Not_Empty;
    --  Remove body suffix from Name
 
+   function Interface_Units
+     (Self : Object) return GPR2.Containers.Unit_Name_To_Sloc.Map is
+     (Get_RO (Self).Interface_Units);
+
+   function Interface_Sources
+     (Self : Object) return GPR2.Containers.Source_Path_To_Sloc.Map is
+     (Get_RO (Self).Interface_Sources);
+
    function Attributes_Internal
      (Self          : Object;
       Name          : Q_Attribute_Id;
@@ -85,7 +93,8 @@ package body GPR2.Project.View is
    --  Options used to filter a list of sources
 
    function Source_Filter
-     (S    : Build.Source.Object;
+     (Self : Object;
+      S    : Build.Source.Object;
       Data : Build.Source.Sets.Filter_Data'Class) return Boolean;
    --  Function used to filter the sources in the Sources subprogram
 
@@ -137,7 +146,9 @@ package body GPR2.Project.View is
       function Compute return GPR2.Path_Name.Object is
          Dir      : constant Value_Type :=
                       Self.Attribute (Dir_Attr).Value.Text;
-         Subdirs  : constant Filename_Optional := Self.Tree.Subdirs;
+         Subdirs  : constant Filename_Optional :=
+                      (if Self.Id = View_Ids.Runtime_View_Id then ""
+                       else Self.Tree.Subdirs);
          Dir_Name : constant Filename_Type :=
                       (if Dir = "" then "." else Filename_Type (Dir));
          Result   : GPR2.Path_Name.Object;
@@ -2565,7 +2576,8 @@ package body GPR2.Project.View is
    -------------------
 
    function Source_Filter
-     (S    : Build.Source.Object;
+     (Self : Object;
+      S    : Build.Source.Object;
       Data : Build.Source.Sets.Filter_Data'Class) return Boolean
    is
       CU     : Build.Compilation_Unit.Object;
@@ -2593,7 +2605,7 @@ package body GPR2.Project.View is
 
                elsif Unit.Kind = Build.S_Spec then
                   for NS of Opt.View.Namespace_Roots loop
-                     CU := NS.Unit (Unit.Unit_Name);
+                     CU := NS.Unit (Unit.Name);
 
                      if not CU.Has_Part (Build.S_Body) then
                         Result := True;
@@ -2614,8 +2626,28 @@ package body GPR2.Project.View is
       end if;
 
       if Opt.Interface_Only then
-         --  ??? TODO
-         null;
+         Result := False;
+
+         declare
+            Def : constant Definition.Const_Ref :=
+                    Definition.Get_RO (Self);
+         begin
+            if Def.Interface_Sources.Contains (S.Path_Name.Simple_Name) then
+
+               Result := True;
+
+            elsif S.Has_Units then
+               for CU of S.Units loop
+                  if Def.Interface_Units.Contains (CU.Name) then
+                     Result := True;
+                  end if;
+               end loop;
+            end if;
+
+            if not Result then
+               return False;
+            end if;
+         end;
       end if;
 
       return True;
@@ -2722,15 +2754,22 @@ package body GPR2.Project.View is
       Interface_Only  : Boolean := False;
       Compilable_Only : Boolean := False) return Build.Source.Sets.Object
    is
-      Db     : constant Build.View_Db.Object := Self.View_Db;
-      F_Data : constant Source_Filter_Data :=
-                 (View            => Self,
-                  Interface_Only  => Interface_Only,
-                  Compilable_Only => Compilable_Only);
-
    begin
-      return Build.Source.Sets.Create
-        (Db, Build.Source.Sets.Sorted, Source_Filter'Access, F_Data);
+      if Self.Kind in With_Object_Dir_Kind then
+         declare
+            Db     : constant Build.View_Db.Object := Self.View_Db;
+            F_Data : constant Source_Filter_Data :=
+                       (View            => Self,
+                        Interface_Only  => Interface_Only,
+                        Compilable_Only => Compilable_Only);
+
+         begin
+            return Build.Source.Sets.Create
+              (Db, Build.Source.Sets.Sorted, Source_Filter'Access, F_Data);
+         end;
+      else
+         return Build.Source.Sets.Empty_Set;
+      end if;
    end Sources;
 
    ------------

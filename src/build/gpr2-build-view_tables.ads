@@ -119,6 +119,12 @@ private package GPR2.Build.View_Tables is
    package Compilation_Unit_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (Name_Type, Compilation_Unit.Object, Hash, "=", Compilation_Unit."=");
 
+   package Sources_By_Langs_Maps is new Ada.Containers.Hashed_Maps
+     (GPR2.Language_Id, Natural, Hash, "=");
+
+   package Name_Count is new Ada.Containers.Indefinite_Hashed_Maps
+     (Name_Type, Natural, GPR2.Hash, GPR2."=");
+
    type View_Data (Is_Root : Boolean) is record
       --  Static data:
 
@@ -140,12 +146,18 @@ private package GPR2.Build.View_Tables is
       Src_Files       : File_Sets.Set;
       --  raw list of files found in the source directories, used to check
       --  updates
+      Langs_Usage     : Sources_By_Langs_Maps.Map;
+      --  Indicates the number of sources per language. Allows detecting
+      --  unused languages.
       Object_Infos    : Object_Maps.Map;
       --  Object traceability information table
       Object_Files    : File_Info_Maps.Map;
       --  raw list of object files, used to check updates
       Ali_Files       : File_Info_Maps.Map;
       --  raw list of ali files, used to check updates
+
+      Own_CUs         : Name_Count.Map;
+      --  The compilation units whose main unit belongs to the table's view
 
       case Is_Root is
          when True =>

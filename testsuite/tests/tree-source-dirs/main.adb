@@ -1,9 +1,9 @@
 with Ada.Text_IO;
+with GPR2.Build.Source.Sets;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
-with GPR2.Project.Source;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
@@ -39,9 +39,9 @@ procedure Main is
                         "testing " & File & " View=Root_Project" &
                         " Externally_Built= " & Externally_Built'Image);
 
-         procedure Do_Action (Source : Project.Source.Object);
+         procedure Do_Action (Source : Build.Source.Object);
 
-         procedure Do_Action (Source : Project.Source.Object) is
+         procedure Do_Action (Source : Build.Source.Object) is
          begin
             Paths.Append (Source.Path_Name);
          end Do_Action;
@@ -49,10 +49,19 @@ procedure Main is
          procedure Print_Paths;
 
          procedure Print_Paths is
+            use type Path_Name.Object;
+            RTS_Src_Dir : constant Path_Name.Object :=
+              (if Project_Tree.Has_Runtime_Project then
+                 Project_Tree.Runtime_Project.Source_Directories.First_Element
+               else Path_Name.Undefined);
          begin
             Sort.Sort (Paths);
             for Path of Paths loop
-               Ada.Text_IO.Put_Line (Path.Value);
+               --  Filter out runtime dir as this is installation-specific and
+               --  thus prevents having a stable output
+               if Path /= RTS_Src_Dir then
+                  Ada.Text_IO.Put_Line (Path.Value);
+               end if;
             end loop;
             Paths.Clear;
          end Print_Paths;
@@ -93,6 +102,8 @@ procedure Main is
       use GPR2.Log;
 
       View : GPR2.Project.View.Object;
+      
+      Log  : GPR2.Log.Object;
 
       use GPR2.Path_Name;
    begin
@@ -101,6 +112,9 @@ procedure Main is
       Project_Tree.Load_Autoconf
         (Filename          => Project.Create (GPR2.Filename_Type (File)),
          Context           => Ctx);
+
+      Project_Tree.Update_Sources (Messages => Log);
+      Log.Output_Messages (Information => False);
 
       Check (View, False);
 

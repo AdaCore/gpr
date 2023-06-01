@@ -7,14 +7,12 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+with GPR2.Build.Source.Sets;
 with GPR2.Context;
 with GPR2.Log;
-with GPR2.Message;
 with GPR2.Path_Name;
-with GPR2.Project.Source.Set;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
-with GPR2.Source;
 
 procedure Main is
 
@@ -33,35 +31,14 @@ procedure Main is
       Prj  : Project.Tree.Object;
       Ctx  : Context.Object;
       View : Project.View.Object;
+      Log  : GPR2.Log.Object;
    begin
       Project.Tree.Load (Prj, Create (Project_Name), Ctx);
-
-      for Source of Prj.Root_Project.Sources loop
-         null;
-      end loop;
-   exception
-      when GPR2.Project_Error =>
-         if Prj.Has_Messages then
-            Text_IO.Put_Line ("Messages found:");
-
-            for C in Prj.Log_Messages.Iterate
-              (False, False, True, False, True, True)
-            loop
-               declare
-                  M   : constant Message.Object := Log.Element (C);
-                  Mes : constant String := M.Format;
-                  L   : constant Natural :=
-                          Strings.Fixed.Index
-                            (Mes, "/source-missing-interface");
-               begin
-                  if L /= 0 then
-                     Text_IO.Put_Line (Mes (L .. Mes'Last));
-                  else
-                     Text_IO.Put_Line (Mes);
-                  end if;
-               end;
-            end loop;
-         end if;
+      Prj.Update_Sources (Messages => Log);
+      if Log.Has_Element then
+         Text_IO.Put_Line ("Messages found:");
+         Log.Output_Messages;
+      end if;
    end Check;
 
 begin

@@ -112,14 +112,16 @@ begin
    Input_Task.Start;
    delay 0.1;
 
-   GPR2.Project.Tree.View_Builder.Load_Autoconf (Tree, Root, Context);
+   GPR2.Project.Tree.View_Builder.Load_Autoconf
+     (Tree, Root, Context, With_Runtime => False);
    if Tree.Log_Messages.Has_Error then
       Tree.Log_Messages.Output_Messages;
    end if;
 
    Tree.Unload;
 
-   Tree.Load_Autoconf (GPR2.Path_Name.Create_File ("test.gpr"), Context);
+   Tree.Load_Autoconf
+     (GPR2.Path_Name.Create_File ("test.gpr"), Context, With_Runtime => False);
 
    if Tree.Log_Messages.Has_Error then
       Tree.Log_Messages.Output_Messages;

@@ -6,8 +6,6 @@
 
 with Ada.Text_IO;
 
-with GNAT.OS_Lib;
-
 with GPR2.Containers;
 with GPR2.Message;
 with GPR2.Project.Attribute;
@@ -311,43 +309,6 @@ package body GPR2_GNATCOLL_Projects is
          return null;
       end if;
    end Attribute_Value;
-
-   ------------
-   -- Create --
-   ------------
-
-   function Create
-     (Self            : GPR2.Project.Tree.Object;
-      Name            : GNATCOLL.VFS.Filesystem_String;
-      Project         : GPR2.Project.View.Object'Class :=
-                          GPR2.Project.View.Undefined;
-      Use_Source_Path : Boolean := True;
-      Use_Object_Path : Boolean := True)
-      return GNATCOLL.VFS.Virtual_File
-   is
-      use GNATCOLL.VFS;
-   begin
-      if GNAT.OS_Lib.Is_Absolute_Path (+Name) then
-         return GNATCOLL.VFS.Create (Full_Filename => Name);
-      else
-         declare
-            Full_Path : constant GPR2.Path_Name.Object := Self.Get_File
-              (Base_Name        => GPR2.Path_Name.Create
-                 (GPR2.Filename_Type (Name),
-                  GPR2.Filename_Type (Name)).Simple_Name,
-               View             => GPR2.Project.View.Object (Project),
-               Use_Source_Path  => Use_Source_Path,
-               Use_Object_Path  => Use_Object_Path);
-         begin
-            if not Full_Path.Is_Defined then
-               return GNATCOLL.VFS.Create (Full_Filename => Name);
-            else
-               return GNATCOLL.VFS.Create
-                 (Full_Filename => +String (Full_Path.Value));
-            end if;
-         end;
-      end if;
-   end Create;
 
    ---------------------
    -- Output_Messages --

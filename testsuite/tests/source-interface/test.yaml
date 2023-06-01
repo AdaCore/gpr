@@ -4,4 +4,4 @@ driver: build_and_run
 project_file: source_interface
 main: main
 control:
-- [XFAIL, "True", "pending libgpr2-next changes"]
+- [SKIP, "True", "libgpr2-next: missing unit name resolution with Ada parser"]

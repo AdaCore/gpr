@@ -236,6 +236,10 @@ Testing trees/invalid_naming/prj.gpr
 foo..bar.ads:1:01: warning: invalid file name, contains dot
 foo._bar.ads:1:01: warning: invalid file name, contains dot
 foo_.bor.ads:1:01: warning: invalid file name, contains dot
+foo-_bar.ads: error: invalid name for unit 'FOO._BAR', cannot contain underscore after dot
+foo--bar.ads: error: invalid name for unit 'FOO..BAR', two consecutive dots not permitted
+0foo-bar.ads: error: invalid name for unit '0FOO.BAR', should start with a letter or an underscore
+foo__bar.ads: error: invalid name for unit 'FOO__BAR', two consecutive underscores not permitted
 * Views:
  - runtime (K_STANDARD) **
    - Root project(s):

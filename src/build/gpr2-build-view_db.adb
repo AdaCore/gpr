@@ -24,15 +24,11 @@ package body GPR2.Build.View_Db is
    is (Inst.Get);
    --  Extracts a reference to view_tables data from a View_Base instance
 
-   --  ------------------------
-   --  -- Compilation_Inputs --
-   --  ------------------------
-   --
-   --  function Compilation_Inputs
-   --    (Self : Object) return Build.Compilation_Input.Sets.Object is
-   --  begin
-   --     return Build.Compilation_Input.Sets.Create (Self);
-   --  end Compilation_Inputs;
+   function Tree_Db (Self : Object) return access GPR2.Build.Tree_Db.Object is
+     (Self.Get.Tree_Db);
+
+   function Source_Option (Self : Object) return Optional_Source_Info_Option is
+     (Self.Get.Tree_Db.Source_Option);
 
    ----------------------
    -- Compilation_Unit --

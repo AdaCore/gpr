@@ -105,7 +105,6 @@ Object_Dir:/gnatcoll-projects-conversion/
 Artifacts_Dir:/gnatcoll-projects-conversion/
 Name:Conversion_Tutorial
 Runtime:
-Create:/gnatcoll-projects-conversion/main.adb
 To_Pathnane:/gnatcoll-projects-conversion/main.adb
 To_Pathname:/gnatcoll-projects-conversion/main.adb
 Register_New_Attribute returned:

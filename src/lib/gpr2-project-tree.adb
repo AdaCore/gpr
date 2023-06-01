@@ -1074,16 +1074,21 @@ package body GPR2.Project.Tree is
          end if;
       end if;
 
-      if not Self.Pre_Conf_Mode then
-         if not Self.Messages.Has_Error then
-            --  Tree is now fully loaded, we can create the artifacts database
-            --  object
+      if not Self.Messages.Has_Error then
+         --  Tree is now fully loaded, we can create the artifacts database
+         --  object
+         if not Self.Tree_Db.Is_Defined then
             Self.Tree_Db.Create (Self, With_Runtime);
          else
-            raise Project_Error
-              with Gpr_Path.Value &
-              ": fatal error, cannot load the project tree";
+            --  Tree has been reloaded: update the database in case views
+            --  have changed
+            Self.Tree_Db.Check_Tree;
          end if;
+
+      elsif not Self.Pre_Conf_Mode then
+         raise Project_Error
+         with Gpr_Path.Value &
+         ": fatal error, cannot load the project tree";
       end if;
    end Load;
 
@@ -1110,6 +1115,10 @@ package body GPR2.Project.Tree is
       Environment      : GPR2.Environment.Object :=
                            GPR2.Environment.Process_Environment) is
    begin
+      if Self.Is_Defined then
+         Self.Unload;
+      end if;
+
       if not Filename.Is_Directory then
          GPR2.Project.Parser.Clear_Cache;
 
@@ -1200,6 +1209,10 @@ package body GPR2.Project.Tree is
       Environment       : GPR2.Environment.Object :=
                             GPR2.Environment.Process_Environment) is
    begin
+      if Self.Is_Defined then
+         Self.Unload;
+      end if;
+
       if not Filename.Is_Directory then
          Self.Load_Autoconf
            (Root_Project      => (Project_Path, Filename),
@@ -2952,6 +2965,7 @@ package body GPR2.Project.Tree is
                        and then OS_Lib.Is_Absolute_Path (AV.Text)
                        and then Self.Root.Is_Defined
                        and then Self.Build_Path /= Self.Root.Dir_Name
+                       and then not View.Is_Externally_Built
                      then
                         Self.Messages.Append
                           (Message.Create

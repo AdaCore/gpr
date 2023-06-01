@@ -59,7 +59,7 @@ agg_lib_shared_libdir2.gpr: error: aggregate library directory cannot be shared 
 
 dot_repl_is_dot.gpr:5:11: error: ".s.ada" is illegal for Spec_Suffix: ambiguous prefix when Dot_Replacement is a dot
 dot_repl_is_dot.gpr:6:11: error: ".b.ada" is illegal for Body_Suffix: ambiguous prefix when Dot_Replacement is a dot
-name_except.gpr:7:49: error: File "foo.1" specified in naming exception more than once
+name_except.gpr:7:49: error: file "foo.1" specified in naming exception more than once
 same_suffix.gpr:4:11: error: Body_Suffix (Ada) value already used for this language
 same_suffix2.gpr:7:11: error: Spec_Suffix (C++) value is already used for language C
 same_suffix3.gpr:4:11: error: Body_Suffix (Ada) value already used for this language

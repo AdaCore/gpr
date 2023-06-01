@@ -7,6 +7,7 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Vectors;
 
+with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 limited with GPR2.Project.Tree;
@@ -42,6 +43,12 @@ package GPR2.Build.Compilation_Unit is
    function Create (Name : Name_Type) return Object;
    --  Create a new compilation unit object with name Name
 
+   procedure Check_Name_Validity
+     (Self     : Object;
+      Messages : in out GPR2.Log.Object)
+     with Pre => Self.Is_Defined and then not Self.Is_Empty;
+   --  Check that the unit name is valid.
+
    function Is_Defined (Self : Object) return Boolean;
    --  Whether Self is defined
 
@@ -51,6 +58,11 @@ package GPR2.Build.Compilation_Unit is
    function Name (Self : Object) return Name_Type
      with Pre => Self.Is_Defined;
    --  Return the name of the compilation unit
+
+   function Owning_View (Self : Object) return GPR2.Project.View.Object
+     with Pre => Self.Is_Defined;
+   --  Return the view that defines the main part of this compilation unit.
+   --  Result may be undefined if Self is empty or only contains separates.
 
    function Has_Part
      (Self : Object;
@@ -72,7 +84,7 @@ package GPR2.Build.Compilation_Unit is
    function Get
      (Self     : Object;
       Kind     : Unit_Kind;
-      Sep_Name : Optional_Name_Type) return Unit_Location
+      Sep_Name : Optional_Name_Type := "") return Unit_Location
      with Pre => Self.Is_Defined
                    and then (Sep_Name'Length = 0) = (Kind /= S_Separate);
    --  Retrieve the unit part identified by Kind.
@@ -138,6 +150,7 @@ private
 
    type Object is tagged record
       Name       : Unbounded_String;
+      Owner      : GPR2.Project.View.Object;
       Spec       : Unit_Location;
       Implem     : Unit_Location;
       Separates  : Separate_Maps.Map;
@@ -156,6 +169,9 @@ private
 
    function Name (Self : Object) return Name_Type is
      (Name_Type (-Self.Name));
+
+   function Owning_View (Self : Object) return GPR2.Project.View.Object is
+     (Self.Owner);
 
    function Has_Part
      (Self : Object;

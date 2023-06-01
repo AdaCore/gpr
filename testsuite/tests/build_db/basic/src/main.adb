@@ -76,13 +76,16 @@ procedure Main is
                   Ada.Text_IO.Put ("@" & U.Index'Image & " ");
                end if;
 
-               Ada.Text_IO.Put (String (U.Unit_Name));
+               Ada.Text_IO.Put (String (U.Name));
 
                if U.Kind = S_Separate then
                   Ada.Text_IO.Put ("." & String (U.Separate_Name));
                end if;
 
-               Ada.Text_IO.Put_Line (" (" & Image (U.Kind) & (if U.Kind = S_Separate then "from " & String (U.Unit_Name) else "") & ")");
+               Ada.Text_IO.Put_Line
+                 (" (" & Image (U.Kind) &
+                  (if U.Kind = S_Separate
+                     then "from " & String (U.Name) else "") & ")");
             end loop;
          end if;
       end Print_Source;

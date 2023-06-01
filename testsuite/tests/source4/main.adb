@@ -8,14 +8,12 @@ with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
-with GPR2.Unit;
+with GPR2.Build.Source.Sets;
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Path_Name;
-with GPR2.Project.Source.Set;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
-
-with GPR2.Source_Info.Parser.Ada_Language;
 
 procedure Main is
 
@@ -50,7 +48,7 @@ procedure Main is
 
          for Source of View.Sources loop
             declare
-               U : constant Optional_Name_Type := Source.Unit_Name;
+               U : constant Optional_Name_Type := Source.Unit.Name;
             begin
                Output_Filename (Source.Path_Name.Value);
 
@@ -59,8 +57,7 @@ procedure Main is
 
                Text_IO.Set_Col (36);
                Text_IO.Put
-                 ("   Kind: "
-                  & GPR2.Unit.Library_Unit_Type'Image (Source.Kind));
+                 ("   Kind: " & Source.Kind'Image);
 
                if U /= "" then
                   Text_IO.Set_Col (60);
@@ -84,6 +81,7 @@ procedure Main is
       Prj  : Project.Tree.Object;
       Ctx  : Context.Object;
       View : Project.View.Object;
+      Log  : GPR2.Log.Object;
 
    begin
       --  Create api-call.adb as a separate
@@ -93,13 +91,17 @@ procedure Main is
       View := Prj.Root_Project;
       Text_IO.Put_Line ("Project: " & String (View.Name));
 
-      List_Sources (View);
+      Prj.Update_Sources (Messages => Log);
+      Log.Output_Messages;
 
-      Prj.Invalidate_Sources;
+      List_Sources (View);
 
       Copy_Source ("api.ads");
       Copy_Source ("api.adb");
       Copy_Source ("api-call.adb");
+
+      Prj.Update_Sources (Messages => Log);
+      Log.Output_Messages;
 
       List_Sources (View);
    end Check;

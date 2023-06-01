@@ -7,4 +7,4 @@ Prj2     K_STANDARD
 A:   Object_Dir -> obj2
 A:   Source_Dirs -> p2
 V:   V -> prj1-prj2
- > p2/pck2.ads    language: Ada    Kind: S_SPEC_ONLY   unit: PCK2
+ > p2/pck2.ads    language: Ada    Kind: S_SPEC   unit: PCK2

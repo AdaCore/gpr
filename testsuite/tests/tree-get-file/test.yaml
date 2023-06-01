@@ -4,4 +4,4 @@ driver: build_and_run
 project_file: test
 main: main
 control:
-- [XFAIL, "True", "pending libgpr2-next changes"]
+- [XFAIL, "True", "GPR2.Project_Tree.Get_File does not exist anymore in GPR2."]

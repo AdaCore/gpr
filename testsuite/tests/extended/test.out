@@ -1,10 +1,14 @@
+prj1.gpr:3:39: warning: object directory "obj1" not found
+prj2.gpr:11:39: warning: object directory "obj2" not found
 **************** Iterator Prj1
 Prj0     K_ABSTRACT
 Prj1     obj_dir=obj1 K_STANDARD
+ > /p1/pck1.ads   language: Ada    Kind: S_SPEC   unit: PCK1
  > /p1/pck11.ads
-                  language: Ada    Kind: S_SPEC_ONLY   unit: PCK11
- > /p1/pck1.ads   language: Ada    Kind: S_SPEC_ONLY   unit: PCK1
+                  language: Ada    Kind: S_SPEC   unit: PCK11
 **************** Iterator Prj2
 Prj2     obj_dir=obj2 K_STANDARD
- > /p1/pck1.ads   language: Ada    Kind: S_SPEC_ONLY   unit: PCK1
- > /p2/pck2.ads   language: Ada    Kind: S_SPEC_ONLY   unit: PCK2
+ > /p1/pck1.ads   language: Ada    Kind: S_SPEC   unit: PCK1
+ > /p1/pck11.ads
+                  language: Ada    Kind: S_SPEC   unit: PCK11
+ > /p2/pck2.ads   language: Ada    Kind: S_SPEC   unit: PCK2

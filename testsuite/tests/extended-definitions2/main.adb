@@ -7,17 +7,14 @@
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
-with GPR2.Unit;
+with GPR2.Build.Source.Sets;
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
-with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
-with GPR2.Source;
-
-with GPR2.Source_Info.Parser.Ada_Language;
 
 procedure Main is
 
@@ -64,7 +61,7 @@ procedure Main is
 
       for Source of Prj.Sources loop
          declare
-            U : constant Optional_Name_Type := Source.Unit_Name;
+            U : constant Optional_Name_Type := Source.Unit.Name;
          begin
             Output_Filename (Source.Path_Name.Value);
 
@@ -72,8 +69,7 @@ procedure Main is
             Text_IO.Put ("   language: " & Image (Source.Language));
 
             Text_IO.Set_Col (33);
-            Text_IO.Put ("   Kind: "
-                         & GPR2.Unit.Library_Unit_Type'Image (Source.Kind));
+            Text_IO.Put ("   Kind: " & Source.Kind'Image);
 
             if U /= "" then
                Text_IO.Put ("   unit: " & String (U));
@@ -97,9 +93,14 @@ procedure Main is
 
    Prj1, Prj2 : Project.Tree.Object;
    Ctx        : Context.Object;
+   Log        : GPR2.Log.Object;
 begin
    Project.Tree.Load (Prj1, Project.Create ("prj1.gpr"), Ctx);
+   Prj1.Update_Sources (Messages => Log);
+   Log.Output_Messages;
    Project.Tree.Load (Prj2, Project.Create ("prj2.gpr"), Ctx);
+   Prj2.Update_Sources (Messages => Log);
+   Log.Output_Messages;
 
    Text_IO.Put_Line ("**************** Iterator Prj1");
 

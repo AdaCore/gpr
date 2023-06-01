@@ -9,7 +9,7 @@ with Ada.Text_IO;
 
 with GPR2.Path_Name;
 with GPR2.Context;
-with GPR2.Project.Source.Set;
+with GPR2.Build.Source.Sets;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 

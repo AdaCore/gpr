@@ -6,7 +6,6 @@ with GPR2.Context;
 with GPR2.Path_Name; use GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 with GPR2.Project.View;
-with GPR2.Project.Source;
 
 with Ada.Text_IO;
 

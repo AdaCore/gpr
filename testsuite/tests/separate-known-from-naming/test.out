@@ -1,2 +1,3 @@
 I'm from project COMPONENT
 DOT_REPLACEMENT="-"
+PACK.Functions_TEST.ada:1:01: warning: invalid file name, contains dot

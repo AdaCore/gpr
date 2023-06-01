@@ -3,4 +3,3 @@ driver: python_script
 timeout: 1500
 control:
 - [SKIP, "env.gnatcov is not None", "produces file descriptor errors when run on instrumented code"]
-- [XFAIL, "True", "pending libgpr2-next changes"]

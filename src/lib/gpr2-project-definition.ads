@@ -19,7 +19,6 @@ with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
 with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
-with GPR2.Unit;
 with GPR2.View_Ids;
 with GPR2.View_Ids.Set;
 
@@ -40,27 +39,6 @@ private package GPR2.Project.Definition is
       Imports  : GPR2.Project.Parser.Set.Object;
       Extended : GPR2.Project.Parser.Object;
    end record;
-
-   package Unit_Name_To_Sloc is new
-     Ada.Containers.Indefinite_Hashed_Maps
-       (Name_Type, Source_Reference.Object, GPR2.Hash, GPR2."=",
-        Source_Reference."=");
-   --  Used for the Interface_Units container which will initially store all
-   --  the units from the Library_Interface attribute, as a mapping from
-   --  unit names to slocs.
-
-   package Source_Path_To_Sloc is new
-     Ada.Containers.Indefinite_Hashed_Maps
-       (Filename_Type, Source_Reference.Object, GPR2.Hash, GPR2."=",
-        Source_Reference."=");
-   --  Same as above but for the Interfaces attribute, so here we are using
-   --  Filename_Type instead of Name_Type since we're dealing with
-   --  filenames.
-
-   function Key (Unit : GPR2.Unit.Object) return String is
-     ((if Unit.Kind in GPR2.Unit.Spec_Kind then 'S' else 'B')
-       & To_Lower (Unit.Name));
-   --  Key function used as index to Unit_Source
 
    package Project_Vector is new Ada.Containers.Vectors
      (Positive, View.Object);
@@ -144,9 +122,9 @@ private package GPR2.Project.Definition is
 
       Languages         : Containers.Language_Set;
       --  Languages as Language_Ids defined for the view
-      Interface_Sources : Source_Path_To_Sloc.Map;
+      Interface_Sources : Containers.Source_Path_To_Sloc.Map;
       --  Source basenames that are part of the library interface
-      Interface_Units   : Unit_Name_To_Sloc.Map;
+      Interface_Units   : Containers.Unit_Name_To_Sloc.Map;
       --  Source unit names that are part of the library interface
       Cache             : Attribute_Cache.Object;
       --  Attribute's final values cache

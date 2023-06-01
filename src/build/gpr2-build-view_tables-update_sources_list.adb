@@ -138,6 +138,14 @@ package body Update_Sources_List is
       --  This is to take into account shortened names like "Ada." (a-),
       --  "System." (s-) and so on.
    begin
+      --  Check binder-generated source, and ignore it
+
+      if Length (Result) > 3
+        and then Slice (Result, 1, 3) = "b__"
+      then
+         goto Invalid;
+      end if;
+
       --  First remove the suffix for the given language
 
       declare
@@ -372,9 +380,6 @@ package body Update_Sources_List is
       Listed_Sources          : Source_Set.Set;
       Excluded_Sources        : Source_Set.Set;
       --  Has either Source_Files or Source_List_File attributes
-
-      Has_Src_In_Lang         : Language_Set;
-      --  Insert record there if the language has a source
 
       Tree                    : constant not null access Project.Tree.Object :=
                                   Data.View.Tree;
@@ -721,6 +726,11 @@ package body Update_Sources_List is
                         end if;
 
                         if Kind = S_Separate then
+                           if Last_Dot = 0 then
+                              --  Explicit separate case with no dot: ignore
+                              return False;
+                           end if;
+
                            pragma Assert
                              (Last_Dot in
                                 Unit_Name'First + 1 .. Unit_Name'Last - 1);
@@ -753,8 +763,6 @@ package body Update_Sources_List is
             --  we create the Source object.
 
             if Naming_Exception /= No or else Match then
-               Has_Src_In_Lang.Include (Language);
-
                if Language = Ada_Language then
                   Source := Build.Source.Create_Ada
                     (Filename            => File.Path,
@@ -890,9 +898,7 @@ package body Update_Sources_List is
       for F of Data.Src_Files loop
          declare
             use type Ada.Calendar.Time;
-
             C     : File_Sets.Cursor;
-            C_Src : Src_Info_Maps.Cursor;
 
          begin
             C := Previous_Files.Find (F);
@@ -909,13 +915,38 @@ package body Update_Sources_List is
                   Changed_Sources.Include (F.Path.Simple_Name);
                end if;
 
-            elsif File_Sets.Element (C).Stamp /= F.Stamp then
-               C_Src := Data.Src_Infos.Find (F.Path);
+            else
+               declare
+                  Src_Ref : constant Src_Info_Maps.Reference_Type :=
+                              Data.Src_Infos.Reference (F.Path);
+               begin
+                  if Src_Ref.Modification_Time /= F.Stamp then
+                     Src_Ref.Update_Modification_Time (F.Stamp);
+                  end if;
 
-               if Src_Info_Maps.Has_Element (C_Src) then
-                  Data.Src_Infos.Reference (C_Src).Update_Modification_Time
-                    (F.Stamp);
-               end if;
+                  if Src_Ref.Has_Units
+                    and then not Src_Ref.Has_Index
+                    and then Src_Ref.Unit.Kind /= S_Spec
+                    and then Naming_Schema_Map (Ada_Language).Body_Suffix =
+                      Naming_Schema_Map (Ada_Language).Sep_Suffix
+                    and then
+                      (Src_Ref.Unit.Kind = S_Separate
+                       or else Strings.Fixed.Index
+                         (".", String (Src_Ref.Unit.Name)) > 0)
+                  then
+                     --  In case the default naming schema is used, and the
+                     --  file has a single unit that is a body or a separate
+                     --  with a dot, we have ambiguity. Since it has changed
+                     --  since previous load, we mark again the kind as
+                     --  ambiguous.
+                     declare
+                        U : Source.Unit_Part := Src_Ref.Unit;
+                     begin
+                        U.Kind_Ambiguous := True;
+                        Src_Ref.Update_Unit (U);
+                     end;
+                  end if;
+               end;
             end if;
          end;
       end loop;
