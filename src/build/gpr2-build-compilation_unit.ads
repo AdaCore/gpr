@@ -59,6 +59,11 @@ package GPR2.Build.Compilation_Unit is
      with Pre => Self.Is_Defined;
    --  Return the name of the compilation unit
 
+   function Owning_View (Self : Object) return GPR2.Project.View.Object
+     with Pre => Self.Is_Defined;
+   --  Return the view that defines the main part of this compilation unit.
+   --  Result may be undefined if Self is empty or only contains separates.
+
    function Has_Part
      (Self : Object;
       Kind : Unit_Kind) return Boolean
@@ -145,6 +150,7 @@ private
 
    type Object is tagged record
       Name       : Unbounded_String;
+      Owner      : GPR2.Project.View.Object;
       Spec       : Unit_Location;
       Implem     : Unit_Location;
       Separates  : Separate_Maps.Map;
@@ -163,6 +169,9 @@ private
 
    function Name (Self : Object) return Name_Type is
      (Name_Type (-Self.Name));
+
+   function Owning_View (Self : Object) return GPR2.Project.View.Object is
+     (Self.Owner);
 
    function Has_Part
      (Self : Object;

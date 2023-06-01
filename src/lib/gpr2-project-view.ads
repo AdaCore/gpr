@@ -483,6 +483,18 @@ package GPR2.Project.View is
    --  Returns the set of sources (possibly indexed) used as input to the
    --  compiler.
 
+   function Interface_Units
+     (Self : Object) return GPR2.Containers.Unit_Name_To_Sloc.Map
+     with Pre => Self.Is_Defined;
+   --  Return a map of interface units defined by the view to their
+   --  definition in the project file.
+
+   function Interface_Sources
+     (Self : Object) return GPR2.Containers.Source_Path_To_Sloc.Map
+     with Pre => Self.Is_Defined;
+   --  Return a map of interface sources defined by the view to their
+   --  definition in the project file.
+
    procedure Invalidate_Sources (Self : in out Object)
      with Pre => Self.Is_Defined;
    --  Invalidate the sources for the view. This means that the Sources routine

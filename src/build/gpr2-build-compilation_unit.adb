@@ -36,12 +36,18 @@ package body GPR2.Build.Compilation_Unit is
          when S_Spec =>
             if Self.Spec = No_Unit then
                Self.Spec := UL;
+
+               if not Self.Has_Part (S_Body) then
+                  Self.Owner := UL.View;
+               end if;
+
                Success := True;
             end if;
 
          when S_Body =>
             if Self.Implem = No_Unit then
                Self.Implem := UL;
+               Self.Owner  := UL.View;
                Success := True;
             end if;
 
@@ -279,12 +285,22 @@ package body GPR2.Build.Compilation_Unit is
             if Self.Spec = UL then
                Self.Spec := No_Unit;
 
+               if not Self.Has_Part (S_Body) then
+                  Self.Owner := Project.View.Undefined;
+               end if;
+
                Found := True;
             end if;
 
          when S_Body =>
             if Self.Implem = UL then
                Self.Implem := No_Unit;
+
+               if not Self.Has_Part (S_Spec) then
+                  Self.Owner := Project.View.Undefined;
+               else
+                  Self.Owner := Self.Spec.View;
+               end if;
 
                Found := True;
             end if;

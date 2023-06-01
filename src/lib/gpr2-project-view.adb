@@ -69,6 +69,14 @@ package body GPR2.Project.View is
      (Self : Object; Name : Simple_Name) return Value_Not_Empty;
    --  Remove body suffix from Name
 
+   function Interface_Units
+     (Self : Object) return GPR2.Containers.Unit_Name_To_Sloc.Map is
+     (Get_RO (Self).Interface_Units);
+
+   function Interface_Sources
+     (Self : Object) return GPR2.Containers.Source_Path_To_Sloc.Map is
+     (Get_RO (Self).Interface_Sources);
+
    function Attributes_Internal
      (Self          : Object;
       Name          : Q_Attribute_Id;

@@ -7,9 +7,10 @@
 --  Some common containers for Name, Value
 
 with Ada.Containers.Hashed_Sets;
-with Ada.Containers.Indefinite_Vectors;
+with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Indefinite_Ordered_Sets;
+with Ada.Containers.Indefinite_Vectors;
 with Ada.Containers.Ordered_Sets;
 
 with GPR2.Source_Reference.Value;
@@ -126,6 +127,22 @@ package GPR2.Containers is
    package Lang_Value_Maps is
      new Ada.Containers.Indefinite_Ordered_Maps (Language_Id, Value_Type);
    subtype Lang_Value_Map is Lang_Value_Maps.Map;
+
+   package Unit_Name_To_Sloc is new
+     Ada.Containers.Indefinite_Hashed_Maps
+       (Name_Type, Source_Reference.Object, GPR2.Hash, GPR2."=",
+        Source_Reference."=");
+   --  Used for the Interface_Units container which will initially store all
+   --  the units from the Library_Interface attribute, as a mapping from
+   --  unit names to slocs.
+
+   package Source_Path_To_Sloc is new
+     Ada.Containers.Indefinite_Hashed_Maps
+       (Filename_Type, Source_Reference.Object, GPR2.Hash, GPR2."=",
+        Source_Reference."=");
+   --  Same as above but for the Interfaces attribute, so here we are using
+   --  Filename_Type instead of Name_Type since we're dealing with
+   --  filenames.
 
    function Value_Or_Default
      (Map     : Lang_Value_Map;

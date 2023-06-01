@@ -5,6 +5,7 @@
 --
 
 with GPR2.Build.View_Tables;
+with GPR2.Containers;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
@@ -166,7 +167,46 @@ package body GPR2.Build.Tree_Db is
                end;
             end if;
          end loop;
+
+         for V of Self.Tree.Ordered_Views loop
+            if V.Kind in With_Object_Dir_Kind then
+               declare
+                  use GPR2.Containers;
+                  V_Db            : constant View_Tables.View_Data_Ref :=
+                                      View_Tables.Get_Data (Self.Self, V);
+               begin
+                  for C in V.Interface_Units.Iterate loop
+                     if not V_Db.Own_CUs.Contains
+                       (Unit_Name_To_Sloc.Key (C))
+                     then
+                        Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "source for interface unit '" &
+                                String (Unit_Name_To_Sloc.Key (C)) &
+                                "' not found",
+                              Unit_Name_To_Sloc.Element (C)));
+                     end if;
+                  end loop;
+
+                  for C in V.Interface_Sources.Iterate loop
+                     if not V_Db.Sources.Contains
+                       (Source_Path_To_Sloc.Key (C))
+                     then
+                        Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "source for interface '" &
+                                String (Source_Path_To_Sloc.Key (C)) &
+                                "' not found",
+                              Source_Path_To_Sloc.Element (C)));
+                     end if;
+                  end loop;
+               end;
+            end if;
+         end loop;
       end if;
+
    end Refresh;
 
    function Tree (Self : Object) return access GPR2.Project.Tree.Object is

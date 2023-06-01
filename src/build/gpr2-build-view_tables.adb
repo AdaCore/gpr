@@ -13,32 +13,40 @@ with GPR2.Project.Tree;
 package body GPR2.Build.View_Tables is
 
    procedure Add_Unit_Part
-     (Data     : in out View_Data;
-      CU       : Name_Type;
-      Kind     : Unit_Kind;
-      Sep_Name : Optional_Name_Type;
-      View     : Project.View.Object;
-      Path     : Path_Name.Object;
-      Index    : Unit_Index;
-      Messages : in out GPR2.Log.Object)
-     with Pre => Data.Is_Root
+     (NS_Db   : in out View_Data;
+      CU        : Name_Type;
+      Kind      : Unit_Kind;
+      Sep_Name  : Optional_Name_Type;
+      View_Db   : in out View_Data;
+      Path      : Path_Name.Object;
+      Index     : Unit_Index;
+      Messages  : in out GPR2.Log.Object)
+     with Pre => NS_Db.Is_Root
                    and then (Kind = S_Separate) = (Sep_Name'Length > 0);
 
    procedure Remove_Unit_Part
-     (Data     : in out View_Data;
+     (NS_Db    : in out View_Data;
       CU       : Name_Type;
       Kind     : Unit_Kind;
       Sep_Name : Optional_Name_Type;
-      View     : Project.View.Object;
+      View_Db  : in out View_Data;
       Path     : Path_Name.Object;
       Index    : Unit_Index)
-     with Pre => Data.Is_Root
+     with Pre => NS_Db.Is_Root
                    and then (Kind = S_Separate) = (Sep_Name'Length > 0);
 
    procedure Resolve_Visibility
      (Data     : in out View_Data;
       Cursor   : in out Basename_Source_List_Maps.Cursor;
       Messages : in out GPR2.Log.Object);
+
+   procedure Add_Unit_Ownership
+     (To : in out View_Data;
+      CU : Name_Type);
+
+   procedure Remove_Unit_Ownership
+     (From : in out View_Data;
+      CU   : Name_Type);
 
    package Update_Sources_List is
       procedure Process
@@ -108,51 +116,108 @@ package body GPR2.Build.View_Tables is
       end if;
    end Add_Source;
 
+   ------------------------
+   -- Add_Unit_Ownership --
+   ------------------------
+
+   procedure Add_Unit_Ownership
+     (To : in out View_Data;
+      CU : Name_Type)
+   is
+      C : Name_Count.Cursor;
+   begin
+      C := To.Own_CUs.Find (CU);
+
+      if Name_Count.Has_Element (C) then
+         To.Own_CUs.Reference (C) :=
+           To.Own_CUs.Reference (C) + 1;
+      else
+         To.Own_CUs.Include (CU, 1);
+      end if;
+
+      if not To.View.Is_Extended then
+         for NS of To.View.Aggregate_Libraries loop
+            Add_Unit_Ownership (Get_Data (To.Tree_Db, NS), CU);
+         end loop;
+      end if;
+   end Add_Unit_Ownership;
+
    -------------------
    -- Add_Unit_Part --
    -------------------
 
    procedure Add_Unit_Part
-     (Data     : in out View_Data;
-      CU       : Name_Type;
-      Kind     : Unit_Kind;
-      Sep_Name : Optional_Name_Type;
-      View     : Project.View.Object;
-      Path     : Path_Name.Object;
-      Index    : Unit_Index;
-      Messages : in out GPR2.Log.Object)
+     (NS_Db   : in out View_Data;
+      CU        : Name_Type;
+      Kind      : Unit_Kind;
+      Sep_Name  : Optional_Name_Type;
+      View_Db   : in out View_Data;
+      Path      : Path_Name.Object;
+      Index     : Unit_Index;
+      Messages  : in out GPR2.Log.Object)
    is
       Cursor  : Compilation_Unit_Maps.Cursor;
       Done    : Boolean;
       Other   : Path_Name.Object;
       Success : Boolean := True;
+
    begin
-      Cursor := Data.CUs.Find (CU);
+      Cursor := NS_Db.CUs.Find (CU);
 
       if not Compilation_Unit_Maps.Has_Element (Cursor) then
          declare
             CU_Instance : Compilation_Unit.Object :=
                             Compilation_Unit.Create (CU);
          begin
-            CU_Instance.Add (Kind, View, Path, Index, Sep_Name, Done);
-            Data.CUs.Insert (CU, CU_Instance);
+            CU_Instance.Add (Kind, View_Db.View, Path, Index, Sep_Name, Done);
+            NS_Db.CUs.Insert (CU, CU_Instance);
+
+            if Kind /= S_Separate then
+               Add_Unit_Ownership (View_Db, CU);
+            end if;
          end;
       else
-         Data.CUs.Reference (Cursor).Add
-           (Kind, View, Path, Index, Sep_Name, Success);
+         declare
+            CU_Instance : constant Compilation_Unit_Maps.Reference_Type :=
+                            NS_Db.CUs.Reference (Cursor);
+            Old_Owner   : constant Project.View.Object :=
+                            CU_Instance.Owning_View;
+            use type GPR2.Project.View.Object;
+         begin
+            CU_Instance.Add
+              (Kind, View_Db.View, Path, Index, Sep_Name, Success);
 
-         if not Success then
-            Other := Data.CUs.Reference (Cursor).Get (Kind, Sep_Name).Source;
-            Messages.Append
-              (Message.Create
-                 (Level   => Message.Warning,
-                  Message => "Duplicated " &
-                    Image (Kind) & " for unit """ & String (CU) & """ in " &
-                    String (Other.Value) & " and " & String (Path.Value),
-                  Sloc    =>
-                    Source_Reference.Create
-                      (Data.View.Path_Name.Value, 0, 0)));
-         end if;
+            if Success and then Old_Owner /= CU_Instance.Owning_View then
+
+               --  Owning view changed, let's apply this change
+               if Old_Owner.Is_Defined then
+                  declare
+                     Old_Db : constant View_Data_Ref :=
+                                Get_Data (NS_Db.Tree_Db, Old_Owner);
+                  begin
+                     Remove_Unit_Ownership (Old_Db, CU);
+                  end;
+               end if;
+
+               if CU_Instance.Owning_View.Is_Defined then
+                  Add_Unit_Ownership (View_Db, CU);
+               end if;
+            end if;
+
+            if not Success then
+               Other := CU_Instance.Get (Kind, Sep_Name).Source;
+
+               Messages.Append
+                 (Message.Create
+                    (Level   => Message.Warning,
+                     Message => "Duplicated " &
+                       Image (Kind) & " for unit """ & String (CU) & """ in " &
+                       String (Other.Value) & " and " & String (Path.Value),
+                     Sloc    =>
+                       Source_Reference.Create
+                         (NS_Db.View.Path_Name.Value, 0, 0)));
+            end if;
+         end;
       end if;
 
       if Success and then Kind = S_Separate then
@@ -160,7 +225,7 @@ package body GPR2.Build.View_Tables is
             Full_Name : constant Name_Type :=
                           GPR2."&" (GPR2."&" (CU, "."), Sep_Name);
          begin
-            Data.Separates.Include (Full_Name, CU);
+            NS_Db.Separates.Include (Full_Name, CU);
          end;
       end if;
    end Add_Unit_Part;
@@ -314,7 +379,7 @@ package body GPR2.Build.View_Tables is
                                     Unit.Name,
                                     Unit.Kind,
                                     Unit.Separate_Name,
-                                    Data.View,
+                                    Data,
                                     S_Ref.Path_Name,
                                     S_Ref.Unit.Index);
 
@@ -324,7 +389,7 @@ package body GPR2.Build.View_Tables is
                                     S_Ref.Unit.Name,
                                     S_Ref.Unit.Kind,
                                     S_Ref.Unit.Separate_Name,
-                                    Data.View,
+                                    Data,
                                     S_Ref.Path_Name,
                                     S_Ref.Unit.Index,
                                     Messages);
@@ -366,7 +431,7 @@ package body GPR2.Build.View_Tables is
                               Old.Name,
                               Old.Kind,
                               Old.Separate_Name,
-                              Data.View,
+                              Data,
                               S_Ref.Path_Name,
                               S_Ref.Unit.Index);
 
@@ -376,7 +441,7 @@ package body GPR2.Build.View_Tables is
                               S_Ref.Unit.Name,
                               S_Ref.Unit.Kind,
                               S_Ref.Unit.Separate_Name,
-                              Data.View,
+                              Data,
                               S_Ref.Path_Name,
                               S_Ref.Unit.Index,
                               Messages);
@@ -432,32 +497,79 @@ package body GPR2.Build.View_Tables is
       end if;
    end Remove_Source;
 
+   ---------------------------
+   -- Remove_Unit_Ownership --
+   ---------------------------
+
+   procedure Remove_Unit_Ownership
+     (From : in out View_Data;
+      CU   : Name_Type)
+   is
+      C : Name_Count.Cursor;
+   begin
+      C := From.Own_CUs.Find (CU);
+
+      if From.Own_CUs.Reference (C) > 1 then
+         From.Own_CUs.Reference (C) :=
+           From.Own_CUs.Reference (C) - 1;
+      else
+         From.Own_CUs.Delete (C);
+      end if;
+
+      if not From.View.Is_Extended then
+         for NS of From.View.Aggregate_Libraries loop
+            Remove_Unit_Ownership (Get_Data (From.Tree_Db, NS), CU);
+         end loop;
+      end if;
+   end Remove_Unit_Ownership;
+
    ----------------------
    -- Remove_Unit_Part --
    ----------------------
 
    procedure Remove_Unit_Part
-     (Data     : in out View_Data;
+     (NS_Db    : in out View_Data;
       CU       : Name_Type;
       Kind     : Unit_Kind;
       Sep_Name : Optional_Name_Type;
-      View     : Project.View.Object;
+      View_Db  : in out View_Data;
       Path     : Path_Name.Object;
       Index    : Unit_Index)
    is
-      Cursor : Compilation_Unit_Maps.Cursor;
+      Cursor    : Compilation_Unit_Maps.Cursor;
+      Old_Owner : Project.View.Object;
    begin
-      Cursor := Data.CUs.Find (CU);
+      Cursor := NS_Db.CUs.Find (CU);
 
       if not Compilation_Unit_Maps.Has_Element (Cursor) then
          return;
       end if;
 
-      Data.CUs.Reference (Cursor).Remove
-        (Kind, View, Path, Index, Sep_Name);
+      declare
+         use type GPR2.Project.View.Object;
+         CU_Ref : constant Compilation_Unit_Maps.Reference_Type :=
+                    NS_Db.CUs.Reference (Cursor);
+      begin
+         Old_Owner := CU_Ref.Owning_View;
 
-      if Data.CUs.Reference (Cursor).Is_Empty then
-         Data.CUs.Delete (Cursor);
+         CU_Ref.Remove
+           (Kind, View_Db.View, Path, Index, Sep_Name);
+
+         if CU_Ref.Owning_View /= Old_Owner then
+            if CU_Ref.Owning_View.Is_Defined then
+               Add_Unit_Ownership
+                 (Get_Data (NS_Db.Tree_Db, CU_Ref.Owning_View), CU);
+            end if;
+
+            if Old_Owner.Is_Defined then
+               pragma Assert (Old_Owner = View_Db.View);
+               Remove_Unit_Ownership (View_Db, CU);
+            end if;
+         end if;
+      end;
+
+      if Compilation_Unit_Maps.Element (Cursor).Is_Empty then
+         NS_Db.CUs.Delete (Cursor);
       end if;
 
       if Kind = S_Separate then
@@ -465,7 +577,7 @@ package body GPR2.Build.View_Tables is
             Full_Name : constant Name_Type :=
                           GPR2."&" (GPR2."&" (CU, "."), Sep_Name);
          begin
-            Data.Separates.Delete (Full_Name);
+            NS_Db.Separates.Delete (Full_Name);
          end;
       end if;
    end Remove_Unit_Part;
@@ -524,11 +636,11 @@ package body GPR2.Build.View_Tables is
             for U of Src_Info.Units loop
                for Root of Src.View.Namespace_Roots loop
                   Add_Unit_Part
-                    (Data     => Get_Data (Data.Tree_Db, Root),
+                    (NS_Db    => Get_Data (Data.Tree_Db, Root),
                      CU       => U.Name,
                      Kind     => U.Kind,
                      Sep_Name => U.Separate_Name,
-                     View     => Data.View,
+                     View_Db  => Data,
                      Path     => Src_Info.Path_Name,
                      Index    => U.Index,
                      Messages => Messages);
@@ -556,7 +668,7 @@ package body GPR2.Build.View_Tables is
                      CU       => U.Name,
                      Kind     => U.Kind,
                      Sep_Name => U.Separate_Name,
-                     View     => Data.View,
+                     View_Db  => Data,
                      Path     => Src_Info.Path_Name,
                      Index    => U.Index);
                end loop;
