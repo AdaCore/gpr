@@ -320,7 +320,12 @@ package body GPR2.Build.View_Tables is
                      Unit : Source.Unit_Part := S_Ref.Unit;
 
                   begin
-                     if Unit.Kind_Ambiguous then
+                     if Unit.Kind_Ambiguous
+                       and then Unit.Kind = S_Body
+                     then
+                        --  If an ambiguous body is found, check if it has a
+                        --  spec: it there is, then it's an actual body.
+
                         Root_Loop :
                         for Root_View of Data.View.Namespace_Roots loop
                            declare
@@ -345,11 +350,15 @@ package body GPR2.Build.View_Tables is
                         --  filename: can be a child body-only, or a separate.
                         --  We need to parse the source to determine the
                         --  exact kind.
+                        --  ??? Use the ali parser if any corresponding ali
+                        --  file is present as it's faster than the Ada
+                        --  parser.
                         Build.Source.Ada_Parser.Compute (S_Ref, False);
 
                         if S_Ref.Unit (No_Index).Name /= Unit.Name
                           or else S_Ref.Unit (No_Index).Kind /= Unit.Kind
                         then
+                           --  ??? Take care of krunched names ?
                            if Source.Full_Name (S_Ref.Unit) /=
                              Source.Full_Name (Unit)
                            then

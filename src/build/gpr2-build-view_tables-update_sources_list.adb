@@ -898,9 +898,7 @@ package body Update_Sources_List is
       for F of Data.Src_Files loop
          declare
             use type Ada.Calendar.Time;
-
             C     : File_Sets.Cursor;
-            C_Src : Src_Info_Maps.Cursor;
 
          begin
             C := Previous_Files.Find (F);
@@ -918,14 +916,37 @@ package body Update_Sources_List is
                end if;
 
             else
-               C_Src := Data.Src_Infos.Find (F.Path);
-
-               if Src_Info_Maps.Has_Element (C_Src) then
-                  if File_Sets.Element (C).Stamp /= F.Stamp then
-                     Data.Src_Infos.Reference (C_Src).Update_Modification_Time
-                       (F.Stamp);
+               declare
+                  Src_Ref : constant Src_Info_Maps.Reference_Type :=
+                              Data.Src_Infos.Reference (F.Path);
+               begin
+                  if Src_Ref.Modification_Time /= F.Stamp then
+                     Src_Ref.Update_Modification_Time (F.Stamp);
                   end if;
-               end if;
+
+                  if Src_Ref.Has_Units
+                    and then not Src_Ref.Has_Index
+                    and then Src_Ref.Unit.Kind /= S_Spec
+                    and then Naming_Schema_Map (Ada_Language).Body_Suffix =
+                      Naming_Schema_Map (Ada_Language).Sep_Suffix
+                    and then
+                      (Src_Ref.Unit.Kind = S_Separate
+                       or else Strings.Fixed.Index
+                         (".", String (Src_Ref.Unit.Name)) > 0)
+                  then
+                     --  In case the default naming schema is used, and the
+                     --  file has a single unit that is a body or a separate
+                     --  with a dot, we have ambiguity. Since it has changed
+                     --  since previous load, we mark again the kind as
+                     --  ambiguous.
+                     declare
+                        U : Source.Unit_Part := Src_Ref.Unit;
+                     begin
+                        U.Kind_Ambiguous := True;
+                        Src_Ref.Update_Unit (U);
+                     end;
+                  end if;
+               end;
             end if;
          end;
       end loop;

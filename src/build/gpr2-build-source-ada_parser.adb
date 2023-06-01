@@ -209,8 +209,13 @@ package body GPR2.Build.Source.Ada_Parser is
                         --  this information has been already computed
                         --  based on the naming scheme while adding
                         --  the files to the view.
+                        --  Separate does not make sense in this case, and
+                        --  the only case where the old unit can be a separate
+                        --  is the .adb case (so a body), so we enforce that.
 
-                        if Index = No_Index then
+                        if Data.Kind = S_Separate then
+                           U_Kind := S_Body;
+                        else
                            if Data.Is_Defined
                              and then Data.Has_Unit_At (No_Index)
                            then
