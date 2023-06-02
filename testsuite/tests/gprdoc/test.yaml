@@ -2,4 +2,4 @@ description:
     Test gprdoc expected output
 driver: python_script
 control:
-- [SKIP, "True", "libgpr2-next: missing gprdoc as tools are not built yet"]
+- [XFAIL, "True", "libgpr2-next: missing gprdoc as tools are not built yet"]
