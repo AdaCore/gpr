@@ -96,6 +96,11 @@ package GPR2.Build.View_Db is
                    and then Self.View.Is_Namespace_Root
                    and then Self.Source_Option >= Sources_Units;
 
+   function Own_Unit
+     (Self : Object;
+      Name : Name_Type) return Build.Compilation_Unit.Object
+     with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Units;
+
    function View (Self : Object) return GPR2.Project.View.Object
      with Pre => Self.Is_Defined;
 

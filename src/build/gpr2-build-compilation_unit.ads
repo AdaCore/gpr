@@ -40,7 +40,9 @@ package GPR2.Build.Compilation_Unit is
 
    Undefined : constant Object;
 
-   function Create (Name : Name_Type) return Object;
+   function Create (Name : Name_Type;
+                    Context : GPR2.Project.View.Object) return Object
+     with Pre => Context.Is_Namespace_Root;
    --  Create a new compilation unit object with name Name
 
    procedure Check_Name_Validity
@@ -58,6 +60,11 @@ package GPR2.Build.Compilation_Unit is
    function Name (Self : Object) return Name_Type
      with Pre => Self.Is_Defined;
    --  Return the name of the compilation unit
+
+   function Root_View (Self : Object) return GPR2.Project.View.Object
+     with Pre  => Self.Is_Defined,
+          Post => Root_View'Result.Is_Namespace_Root;
+   --  Return the root view of the subtree Self belongs to
 
    function Owning_View (Self : Object) return GPR2.Project.View.Object
      with Pre => Self.Is_Defined;
@@ -151,6 +158,7 @@ private
    type Object is tagged record
       Name       : Unbounded_String;
       Owner      : GPR2.Project.View.Object;
+      Root_View  : GPR2.Project.View.Object;
       Spec       : Unit_Location;
       Implem     : Unit_Location;
       Separates  : Separate_Maps.Map;
@@ -169,6 +177,9 @@ private
 
    function Name (Self : Object) return Name_Type is
      (Name_Type (-Self.Name));
+
+   function Root_View (Self : Object) return GPR2.Project.View.Object is
+     (Self.Root_View);
 
    function Owning_View (Self : Object) return GPR2.Project.View.Object is
      (Self.Owner);

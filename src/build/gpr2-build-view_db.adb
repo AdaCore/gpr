@@ -80,6 +80,31 @@ package body GPR2.Build.View_Db is
       return Ref (Self).Sources.Contains (Basename);
    end Has_Source;
 
+   --------------
+   -- Own_Unit --
+   --------------
+
+   function Own_Unit
+     (Self : Object;
+      Name : Name_Type) return Build.Compilation_Unit.Object
+   is
+      C     : Unit_Maps.Cursor;
+      Db    : constant View_Tables.View_Data_Ref := Ref (Self);
+
+   begin
+      C := Db.Own_CUs.Find (Name);
+
+      if Unit_Maps.Has_Element (C) then
+         for Root of Db.Own_CUs.Reference (C) loop
+            if Self.View.Namespace_Roots.Contains (Root) then
+               return Root.Unit (Name);
+            end if;
+         end loop;
+      end if;
+
+      return Build.Compilation_Unit.Undefined;
+   end Own_Unit;
+
    ------------
    -- Source --
    ------------

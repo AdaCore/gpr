@@ -2187,6 +2187,22 @@ package body GPR2.Project.View is
       return Self.Apply_Root_And_Subdirs (PRA.Object_Dir);
    end Object_Directory;
 
+   --------------
+   -- Own_Unit --
+   --------------
+
+   function Own_Unit
+     (Self : Object; Name : Name_Type) return Build.Compilation_Unit.Object
+   is
+      Db : constant Build.View_Db.Object := Self.View_Db;
+   begin
+      if Self.Kind in With_Object_Dir_Kind then
+         return Db.Own_Unit (Name);
+      else
+         return Build.Compilation_Unit.Undefined;
+      end if;
+   end Own_Unit;
+
    ----------
    -- Pack --
    ----------
@@ -2672,7 +2688,8 @@ package body GPR2.Project.View is
    function Source_Path
      (Self            : Object;
       Name            : GPR2.Simple_Name;
-      Allow_Spec_File : Boolean) return GPR2.Path_Name.Object
+      Allow_Spec_File : Boolean;
+      Allow_Unit_Name : Boolean) return GPR2.Path_Name.Object
    is
       Src : GPR2.Build.Source.Object;
    begin
@@ -2680,6 +2697,21 @@ package body GPR2.Project.View is
 
       if Src.Is_Defined then
          return Src.Path_Name;
+      end if;
+
+      if Allow_Unit_Name then
+         declare
+            Unit : constant Build.Compilation_Unit.Object :=
+                     Self.Own_Unit (Name_Type (Name));
+         begin
+            if Unit.Is_Defined then
+               if Allow_Spec_File
+                 or else Unit.Has_Part (Build.S_Body)
+               then
+                  return Unit.Main_Part.Source;
+               end if;
+            end if;
+         end;
       end if;
 
       for Language of Self.Languages loop

@@ -159,12 +159,15 @@ package body GPR2.Build.Compilation_Unit is
    ------------
 
    function Create
-     (Name : Name_Type) return Object
+     (Name    : Name_Type;
+      Context : GPR2.Project.View.Object) return Object
    is
    begin
-      return (Name   => To_Unbounded_String
-                          (Ada.Characters.Handling.To_Upper (String (Name))),
-              others => <>);
+      return
+        (Name      => To_Unbounded_String
+                        (Ada.Characters.Handling.To_Upper (String (Name))),
+         Root_View => Context,
+         others    => <>);
    end Create;
 
    ------------------

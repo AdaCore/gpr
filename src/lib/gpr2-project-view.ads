@@ -455,11 +455,14 @@ package GPR2.Project.View is
    function Source_Path
      (Self            : Object;
       Name            : GPR2.Simple_Name;
-      Allow_Spec_File : Boolean) return GPR2.Path_Name.Object
+      Allow_Spec_File : Boolean;
+      Allow_Unit_Name : Boolean) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined;
    --  Get full path name corresponding to the given name
    --  name can be the filename with or without body/spec extension
    --  Set allow_spec_file if spec file can also be returned.
+   --  Set Allow_Unit_Name if Name may denote a unit, The main part of the
+   --   unit is then returned, whatever the value of Allow_Spec_File.
    --  Returns body file when body & spec files are found.
 
    function Has_Source
@@ -515,6 +518,14 @@ package GPR2.Project.View is
    function Unit
      (Self : Object; Name : Name_Type) return Build.Compilation_Unit.Object
      with Pre => Self.Is_Defined and then Self.Is_Namespace_Root;
+   --  Lookup the compilation unit "Name" in the subtree whose root view is
+   --  Self.
+
+   function Own_Unit
+     (Self : Object; Name : Name_Type) return Build.Compilation_Unit.Object
+     with Pre => Self.Is_Defined;
+   --  Lookup the compilation unit "Name", owned by Self (meaning that the main
+   --  unit of the compilation unit belongs to Self.
 
    function Is_Abstract (Self : Object) return Boolean
      with Pre => Self.Is_Defined;

@@ -12,10 +12,9 @@ with Ada.Containers.Ordered_Sets;
 
 with GNATCOLL.Refcount;
 
---  with GPR2.Build.Db.Source_Sets;
 with GPR2.Log;
 with GPR2.Path_Name;
-with GPR2.Project.View;
+with GPR2.Project.View.Set;
 
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Object_Info;
@@ -122,8 +121,12 @@ private package GPR2.Build.View_Tables is
    package Sources_By_Langs_Maps is new Ada.Containers.Hashed_Maps
      (GPR2.Language_Id, Natural, Hash, "=");
 
-   package Name_Count is new Ada.Containers.Indefinite_Hashed_Maps
-     (Name_Type, Natural, GPR2.Hash, GPR2."=");
+   package Unit_Maps is new Ada.Containers.Indefinite_Hashed_Maps
+     (Name_Type,
+      GPR2.Project.View.Set.Object,
+      GPR2.Hash,
+      GPR2."=",
+      GPR2.Project.View.Set."=");
 
    type View_Data (Is_Root : Boolean) is record
       --  Static data:
@@ -156,7 +159,7 @@ private package GPR2.Build.View_Tables is
       Ali_Files       : File_Info_Maps.Map;
       --  raw list of ali files, used to check updates
 
-      Own_CUs         : Name_Count.Map;
+      Own_CUs         : Unit_Maps.Map;
       --  The compilation units whose main unit belongs to the table's view
 
       case Is_Root is

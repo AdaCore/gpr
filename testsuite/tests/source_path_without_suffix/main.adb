@@ -5,6 +5,7 @@
 --
 
 with Ada.Text_IO;
+with GPR2.Build.Compilation_Unit;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;
@@ -18,17 +19,8 @@ procedure Main is
                     GPR2.Path_Name.Create_File
                       (GPR2.Project.Ensure_Extension ("file/prj.gpr"),
                        GPR2.Path_Name.No_Resolution);
+   Log          : GPR2.Log.Object;
    use GPR2;
-
-   procedure Print_Messages is
-   begin
-      if Tree.Has_Messages then
-         for C in Tree.Log_Messages.Iterate (Information => False)
-         loop
-            Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-         end loop;
-      end if;
-   end Print_Messages;
 
    procedure Test
      (Name            : GPR2.Simple_Name;
@@ -52,8 +44,10 @@ procedure Main is
 
 begin
    Tree.Load_Autoconf (Filename => Filename, Context  => Context);
-   Tree.Update_Sources;
-   Print_Messages;
+   Tree.Log_Messages.Output_Messages (Information => False);
+   Tree.Update_Sources (Messages => Log);
+   Log.Output_Messages (Information => False);
+
    --  check full filename works
    Test ("main.2.ada", True, True);
    --  check alternate language spec/body suffix used
@@ -73,5 +67,5 @@ begin
    Test ("root.child.child", False, True);
 exception
    when Project_Error =>
-      Print_Messages;
+      Tree.Log_Messages.Output_Messages (Information => False);
 end Main;
