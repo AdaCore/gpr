@@ -365,22 +365,6 @@ package body GPR2.Build.View_Tables is
                         if S_Ref.Unit (No_Index).Name /= Unit.Name
                           or else S_Ref.Unit (No_Index).Kind /= Unit.Kind
                         then
-                           --  ??? Take care of krunched names ?
-                           if Source.Full_Name (S_Ref.Unit) /=
-                             Source.Full_Name (Unit)
-                           then
-                              Messages.Append
-                                (Message.Create
-                                   (Message.Warning,
-                                    "source file name """ &
-                                      String (S_Ref.Path_Name.Simple_Name) &
-                                      """ does not match unit name """ &
-                                      String (Source.Full_Name (S_Ref.Unit)) &
-                                      """",
-                                    Source_Reference.Create
-                                      (Data.View.Path_Name.Value, 0, 0)));
-                           end if;
-
                            for Root_View of Data.View.Namespace_Roots loop
                               declare
                                  Root_Db : constant View_Data_Ref :=
