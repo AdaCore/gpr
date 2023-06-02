@@ -2,4 +2,4 @@ description:
     Basic multi-unit test
 driver: python_script
 control:
-- [SKIP, "True", "libgpr2-next missing Source.Artifacts"]
+- [XFAIL, "True", "libgpr2-next missing Source.Artifacts"]

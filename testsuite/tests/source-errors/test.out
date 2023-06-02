@@ -3,7 +3,6 @@ Project: Demo1
  > src1/1pck.adb
                   language: Ada    Kind: S_BODY   unit: 1PCK
 Project: Demo2
-demo2.gpr: warning: source file name "pck___b.ads" does not match unit name "WRONG"
  > src2/pck___b.ads
                   language: Ada    Kind: S_SPEC   unit: WRONG
  > src2/pck__a.adb

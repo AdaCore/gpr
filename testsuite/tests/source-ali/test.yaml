@@ -4,4 +4,4 @@ driver: build_and_run
 project_file: source_ali
 main: main
 control:
-- [SKIP, "True", "libgpr2-next: requires dependency support"]
+- [XFAIL, "True", "libgpr2-next: requires dependency support"]

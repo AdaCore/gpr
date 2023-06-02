@@ -41,12 +41,14 @@ package body GPR2.Build.View_Tables is
       Messages : in out GPR2.Log.Object);
 
    procedure Add_Unit_Ownership
-     (To : in out View_Data;
-      CU : Name_Type);
+     (To   : in out View_Data;
+      CU   : Name_Type;
+      Root : View_Data);
 
    procedure Remove_Unit_Ownership
      (From : in out View_Data;
-      CU   : Name_Type);
+      CU   : Name_Type;
+      Root : View_Data);
 
    package Update_Sources_List is
       procedure Process
@@ -121,23 +123,28 @@ package body GPR2.Build.View_Tables is
    ------------------------
 
    procedure Add_Unit_Ownership
-     (To : in out View_Data;
-      CU : Name_Type)
+     (To   : in out View_Data;
+      CU   : Name_Type;
+      Root : View_Data)
    is
-      C : Name_Count.Cursor;
+      C         : Unit_Maps.Cursor;
+      New_Set   : Project.View.Set.Object;
+
    begin
       C := To.Own_CUs.Find (CU);
 
-      if Name_Count.Has_Element (C) then
-         To.Own_CUs.Reference (C) :=
-           To.Own_CUs.Reference (C) + 1;
+      if Unit_Maps.Has_Element (C) then
+         To.Own_CUs.Reference (C).Insert (Root.View);
       else
-         To.Own_CUs.Include (CU, 1);
+         New_Set.Insert (Root.View);
+         To.Own_CUs.Include (CU, New_Set);
       end if;
 
       if not To.View.Is_Extended then
          for NS of To.View.Aggregate_Libraries loop
-            Add_Unit_Ownership (Get_Data (To.Tree_Db, NS), CU);
+            if NS.Namespace_Roots.Contains (Root.View) then
+               Add_Unit_Ownership (Get_Data (To.Tree_Db, NS), CU, Root);
+            end if;
          end loop;
       end if;
    end Add_Unit_Ownership;
@@ -167,13 +174,13 @@ package body GPR2.Build.View_Tables is
       if not Compilation_Unit_Maps.Has_Element (Cursor) then
          declare
             CU_Instance : Compilation_Unit.Object :=
-                            Compilation_Unit.Create (CU);
+                            Compilation_Unit.Create (CU, NS_Db.View);
          begin
             CU_Instance.Add (Kind, View_Db.View, Path, Index, Sep_Name, Done);
             NS_Db.CUs.Insert (CU, CU_Instance);
 
             if Kind /= S_Separate then
-               Add_Unit_Ownership (View_Db, CU);
+               Add_Unit_Ownership (View_Db, CU, NS_Db);
             end if;
          end;
       else
@@ -195,12 +202,12 @@ package body GPR2.Build.View_Tables is
                      Old_Db : constant View_Data_Ref :=
                                 Get_Data (NS_Db.Tree_Db, Old_Owner);
                   begin
-                     Remove_Unit_Ownership (Old_Db, CU);
+                     Remove_Unit_Ownership (Old_Db, CU, NS_Db);
                   end;
                end if;
 
                if CU_Instance.Owning_View.Is_Defined then
-                  Add_Unit_Ownership (View_Db, CU);
+                  Add_Unit_Ownership (View_Db, CU, NS_Db);
                end if;
             end if;
 
@@ -358,22 +365,6 @@ package body GPR2.Build.View_Tables is
                         if S_Ref.Unit (No_Index).Name /= Unit.Name
                           or else S_Ref.Unit (No_Index).Kind /= Unit.Kind
                         then
-                           --  ??? Take care of krunched names ?
-                           if Source.Full_Name (S_Ref.Unit) /=
-                             Source.Full_Name (Unit)
-                           then
-                              Messages.Append
-                                (Message.Create
-                                   (Message.Warning,
-                                    "source file name """ &
-                                      String (S_Ref.Path_Name.Simple_Name) &
-                                      """ does not match unit name """ &
-                                      String (Source.Full_Name (S_Ref.Unit)) &
-                                      """",
-                                    Source_Reference.Create
-                                      (Data.View.Path_Name.Value, 0, 0)));
-                           end if;
-
                            for Root_View of Data.View.Namespace_Roots loop
                               declare
                                  Root_Db : constant View_Data_Ref :=
@@ -512,22 +503,24 @@ package body GPR2.Build.View_Tables is
 
    procedure Remove_Unit_Ownership
      (From : in out View_Data;
-      CU   : Name_Type)
+      CU   : Name_Type;
+      Root : View_Data)
    is
-      C : Name_Count.Cursor;
+      C : Unit_Maps.Cursor;
    begin
       C := From.Own_CUs.Find (CU);
 
-      if From.Own_CUs.Reference (C) > 1 then
-         From.Own_CUs.Reference (C) :=
-           From.Own_CUs.Reference (C) - 1;
-      else
+      From.Own_CUs.Reference (C).Delete (Root.View);
+
+      if Unit_Maps.Element (C).Is_Empty then
          From.Own_CUs.Delete (C);
       end if;
 
       if not From.View.Is_Extended then
          for NS of From.View.Aggregate_Libraries loop
-            Remove_Unit_Ownership (Get_Data (From.Tree_Db, NS), CU);
+            if NS.Namespace_Roots.Contains (Root.View) then
+               Remove_Unit_Ownership (Get_Data (From.Tree_Db, NS), CU, Root);
+            end if;
          end loop;
       end if;
    end Remove_Unit_Ownership;
@@ -565,14 +558,14 @@ package body GPR2.Build.View_Tables is
            (Kind, View_Db.View, Path, Index, Sep_Name);
 
          if CU_Ref.Owning_View /= Old_Owner then
-            if CU_Ref.Owning_View.Is_Defined then
-               Add_Unit_Ownership
-                 (Get_Data (NS_Db.Tree_Db, CU_Ref.Owning_View), CU);
-            end if;
-
             if Old_Owner.Is_Defined then
                pragma Assert (Old_Owner = View_Db.View);
-               Remove_Unit_Ownership (View_Db, CU);
+               Remove_Unit_Ownership (View_Db, CU, NS_Db);
+            end if;
+
+            if CU_Ref.Owning_View.Is_Defined then
+               Add_Unit_Ownership
+                 (Get_Data (NS_Db.Tree_Db, CU_Ref.Owning_View), CU, NS_Db);
             end if;
          end if;
       end;
