@@ -14,15 +14,50 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import sys
+import os
+import time
+import re
+
+sys.path.append('.')
+
+DOCS = {
+    'gpr2_um': {
+        'title': u'GPR2 Library User Manual'}}
+doc_name = 'gpr2_um'
+
+# Then retrieve the source directory
+root_source_dir = os.path.dirname(os.path.abspath(__file__))
+gpr_version_spec = os.path.join(root_source_dir, '..', '..', '..', 'tools', 'src',
+                                'gpr2-version.ads')
+
+with open(gpr_version_spec, 'r') as fd:
+    gpr_version_content = fd.read()
+
+def get_copyright():
+    return u'2022-%s, AdaCore' % time.strftime('%Y')
+
+def get_gpr_version():
+    m = re.search(r'Short_Value : ' +
+                  r'constant String := "([^"]+)";',
+                  gpr_version_content)
+    if m:
+        return m.group(1).strip()
+    print('cannot find GPR version in ' + gpr_version_spec)
+    return 'unknown'
 
 # -- Project information -----------------------------------------------------
 
-project = 'GPR2 Library User Manual'
-copyright = '2022, AdaCore'
+project = DOCS[doc_name]['title']
+
+copyright = get_copyright()
+
+version = get_gpr_version()
+
 author = 'AdaCore'
 
 # The full version, including alpha/beta/rc tags
-release = '23.0w'
+release = get_gpr_version()
 
 
 # -- General configuration ---------------------------------------------------

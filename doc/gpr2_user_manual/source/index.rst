@@ -1,7 +1,10 @@
 .. The GPR2 library User Manual documentation master file
 
 The GPR2 library User Manual
-===========================
+============================
+
+| Version |version|
+| Date: |today|
 
 .. toctree::
    :maxdepth: 2
@@ -10,10 +13,3 @@ The GPR2 library User Manual
    introduction
    concepts
    ada_api_tutorial
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

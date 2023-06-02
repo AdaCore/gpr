@@ -76,7 +76,7 @@ and then write the following project file to ``gpr2_test.gpr``:
       for Object_Dir use "obj";
    end GPR2_Test;
 
-Now you can run GPRbuild to compile the test program:
+Now you can run ``gprbuild`` to compile the test program:
 
 .. code-block:: shell
 
@@ -102,9 +102,8 @@ In autoconf mode a configuration project is automatically generated.
 A configuration, a runtime project and all imported,
 extended or aggregated projects are recursively loaded.
 
-All of these projects are available through 'GPR2.Project.View.Object' objects.
-After a successful load,
-Tree.Root_Project contains the project passed when loading the tree.
+All of these projects are available through ``GPR2.Project.View.Object`` objects.
+After a successful load, ``Tree.Root_Project`` contains the project passed when loading the tree.
 
 .. code-block:: ada
 
@@ -145,7 +144,7 @@ Tree.Root_Project contains the project passed when loading the tree.
       
    end Views;
 
-As for all tutorial examples don't forget to add procedure call in Main procedure.
+As for all tutorial examples don't forget to add procedure call in ``Main`` procedure.
 
 .. code-block:: ada
 
@@ -157,7 +156,14 @@ As for all tutorial examples don't forget to add procedure call in Main procedur
 
    --  Uncomment tutorial call
       Views;
-      [...]
+   --   Scenarios;
+   --   Packages;
+   --   Attributes;
+   --   Types;
+   --   Variables;
+   --   Sources;
+   --   Units;
+   --   Registry;
    end Main;
 
 
