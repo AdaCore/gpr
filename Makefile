@@ -69,7 +69,6 @@ FORCE_PARSER_GEN=
 
 GPR2=${SOURCE_DIR}/gpr2.gpr
 GPR2TOOLS=${SOURCE_DIR}/tools/gpr2-tools.gpr
-GPR2NAME=${SOURCE_DIR}/tools/gpr2-name.gpr
 GPR2KB=${SOURCE_DIR}/src/kb/collect_kb.gpr
 GPR2KBDIR=${SOURCE_DIR}/src/kb/gprconfig_kb
 
@@ -176,11 +175,6 @@ build-tools: ${BUILD_LIBGPR2} coverage-instrument
 	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
 		${GPR2TOOLS} ${AP_GPR2}
 
-# gprname is built separately: it requires libadalang
-build-gprname: ${BUILD_LIBGPR2} coverage-instrument
-	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-	  -XLANGKIT_SUPPORT_BUILD=static ${GPR2NAME} ${AP_GPR2}
-
 # Gnatcov instrumentation
 coverage-instrument:
 ifeq (${GPR2_BUILD},gnatcov)
@@ -190,7 +184,6 @@ ifeq (${GPR2_BUILD},gnatcov)
 	mkdir -p "${BUILD_ROOT}/${GPR2_BUILD}"
 
 	${COVERAGE_INSTR} -P ${GPR2TOOLS}
-	${COVERAGE_INSTR} -P ${GPR2NAME}
 endif
 
 ###########
@@ -205,11 +198,6 @@ endif
 uninstall-tools:
 ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2-tools))
 	${UNINSTALLER} $(notdir ${GPR2TOOLS})
-endif
-
-uninstall-gprname:
-ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2-name))
-	${UNINSTALLER} $(notdir ${GPR2NAME})
 endif
 
 install: uninstall-libs ${LIBGPR2_TYPES:%=install-lib-%} install-tools \
@@ -227,11 +215,6 @@ install-lib-%:
 install-tools: uninstall-tools
 	${INSTALLER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
 		--build-name=static --mode=usage ${GPR2TOOLS} ${AP_GPR2}
-
-install-gprname: uninstall-gprname
-	${INSTALLER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-	  -XLANGKIT_SUPPORT_BUILD=static --build-name=static \
-          --mode=usage ${GPR2NAME} ${AP_GPR2}
 
 #########
 # setup #

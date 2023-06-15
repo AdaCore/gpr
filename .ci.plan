@@ -9,14 +9,12 @@ def build():
     anod_build("libgpr2", qualifier="next")
 
 def setup():
-    # for gpr2name
-    anod_install("stable-gnat")
-    anod_install("stable-libadalang")
-    anod_install("stable-langkit_support")
-    # for the other gpr2 tools and libgpr2
+    # general dependencies for gpr2 tools and libgpr2
     anod_install("stable-gprbuild")
     anod_install("gcc")
-    anod_install("stable-langkit")
+    # for gprname
+    anod_install("libadalang")
+    anod_install("langkit_support")
     # gprbuild, gnat
     anod_install("stable-libadalang-tools")
     anod_install("gdb")
