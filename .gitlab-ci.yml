@@ -69,6 +69,14 @@ stages:
          anod vcs --add-repo $anodrepo /tmp/$subproject ;
       done
 
+    # Make sure we use the latest version of anod scripts. This is a
+    # workaround waiting for proper support of dependencies towards
+    # MRs in the anod repo.
+    # ??? /it/anod seems readonly, so we need to clone the scripts again
+    - cd /tmp
+    - git clone $GIT_CLONE_BASE/eng/it/anod
+    - anod tune --anod /tmp/anod
+
 ###########
 ## BUILD ##
 ###########
