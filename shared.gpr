@@ -1,0 +1,110 @@
+--
+--  Copyright (C) 2019-2023, AdaCore
+--
+--  SPDX-License-Identifier: Apache-2.0
+--
+
+abstract project Shared is
+
+   type Build_Type is ("debug", "release", "release_checks", "gnatcov");
+   Build : Build_Type := external ("GPR2_BUILD", "debug");
+
+   type Profiler_Flag is ("yes", "no");
+   Profiler : Profiler_Flag := external ("PROFILER", "no");
+
+   type Bool is ("true", "false");
+   Is_Externally_Built : Bool := external ("EXTERNALLY_BUILT", "false");
+   for Externally_Built use Is_Externally_Built;
+
+   Processors := external ("PROCESSORS", "0");
+   Build_Root := external ("BUILD_ROOT", Project'Project_Dir & ".build");
+
+   type Library_Kind is ("static", "relocatable", "static-pic");
+   Library_Type : Library_Kind :=
+     external ("GPR2_LIBRARY_TYPE", external ("LIBRARY_TYPE", "static"));
+
+   --------------
+   -- Compiler --
+   --------------
+
+   Common_Options :=
+     ("-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx");
+   --  Common options used for the Debug and Release modes
+
+   case Profiler is
+      when "yes" =>
+         Common_Options := Common_Options & "-pg";
+      when "no" =>
+         null;
+   end case;
+
+   Checks_Options :=
+     ("-gnata", "-gnatVa", "-gnato", "-fstack-check");
+   --  Common options used to enable checking for the Debug and Release_Checks
+   --  modes
+
+   Debug_Options :=
+     ("-g", "-gnatQ", "-gnatwe");
+
+   Release_Options :=
+     ("-O2", "-gnatn");
+
+   Langkit_Parser_Options := ("-g");
+
+   package Compiler is
+      case Build is
+         when "debug" | "gnatcov" =>
+            for Default_Switches ("Ada") use Common_Options & Checks_Options &
+                                             Debug_Options;
+            for Default_Switches ("C") use ("-g");
+            for Default_Switches ("gnatcov*") use Debug_Options;
+
+         when "release_checks" =>
+            for Default_Switches ("Ada") use Common_Options & Checks_Options &
+                                             Release_Options;
+            for Default_Switches ("C") use ("-O2");
+
+         when "release" =>
+            for Default_Switches ("Ada") use Common_Options & Release_Options;
+            for Default_Switches ("C") use ("-O2");
+      end case;
+   end Compiler;
+
+   ------------
+   -- Binder --
+   ------------
+
+   package Binder is
+      for Default_Switches ("Ada") use ("-Es");
+   end Binder;
+
+   -------------
+   -- Builder --
+   -------------
+
+   package Builder is
+      for Switches (others) use ("-m", "-j" & Processors);
+   end Builder;
+
+   ------------
+   -- Linker --
+   ------------
+
+   package Linker is
+      case Profiler is
+         when "yes" =>
+            for Switches ("Ada") use ("-pg");
+         when "no" =>
+            null;
+      end case;
+   end Linker;
+
+   --------------
+   -- Coverage --
+   --------------
+
+   package Coverage is
+      for Excluded_Units use ("gpr_parser*");
+   end Coverage;
+
+end Shared;

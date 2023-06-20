@@ -37,6 +37,8 @@
 #   PROCESSORS    : nb parallel compilations (0 to use all cores)
 #   PROFILER      : Include gprof support instrumentation (yes / no)
 #   TARGET        : target triplet for cross-compilation
+#   LOCAL_GPR2    : whether tools should be built with the local gpr2
+#                   project or use an installed one. (yes/no)
 
 HOST    = $(shell gcc -dumpmachine)
 TARGET := $(shell gcc -dumpmachine)
@@ -54,6 +56,7 @@ prefix	      := $(dir $(shell which gnatls))..
 GPR2_BUILD     = release
 PROCESSORS     = 0
 PROFILER       = no
+LOCAL_GPR2     = yes
 GPRINSTALL     = gprinstall
 PYTHON         = python
 
@@ -66,7 +69,6 @@ FORCE_PARSER_GEN=
 
 GPR2=${SOURCE_DIR}/gpr2.gpr
 GPR2TOOLS=${SOURCE_DIR}/tools/gpr2-tools.gpr
-GPR2NAME=${SOURCE_DIR}/tools/gpr2-name.gpr
 GPR2KB=${SOURCE_DIR}/src/kb/collect_kb.gpr
 GPR2KBDIR=${SOURCE_DIR}/src/kb/gprconfig_kb
 
@@ -102,6 +104,13 @@ ifeq (${ENABLE_SHARED},yes)
 ifneq (${GPR2_BUILD},gnatcov)
    LIBGPR2_TYPES=static relocatable static-pic
 endif
+endif
+
+AP_GPR2=
+BUILD_LIBGPR2=
+ifeq (${LOCAL_GPR2},yes)
+  AP_GPR2=-aP ${SOURCE_DIR}
+  BUILD_LIBGPR2=build-lib-static
 endif
 
 BUILD_TYPES=debug release release_checks gnatcov
@@ -162,14 +171,9 @@ else
 endif
 
 # Gpr2 tools
-build-tools: build-lib-static coverage-instrument
+build-tools: ${BUILD_LIBGPR2} coverage-instrument
 	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-		${GPR2TOOLS} -aP ${SOURCE_DIR}
-
-# gprname is built separately: it requires libadalang
-build-gprname: build-lib-static coverage-instrument
-	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-	  -XLANGKIT_SUPPORT_BUILD=static ${GPR2NAME} -aP ${SOURCE_DIR}
+		${GPR2TOOLS} ${AP_GPR2}
 
 # Gnatcov instrumentation
 coverage-instrument:
@@ -180,7 +184,6 @@ ifeq (${GPR2_BUILD},gnatcov)
 	mkdir -p "${BUILD_ROOT}/${GPR2_BUILD}"
 
 	${COVERAGE_INSTR} -P ${GPR2TOOLS}
-	${COVERAGE_INSTR} -P ${GPR2NAME}
 endif
 
 ###########
@@ -197,11 +200,6 @@ ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2-tools))
 	${UNINSTALLER} $(notdir ${GPR2TOOLS})
 endif
 
-uninstall-gprname:
-ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2-name))
-	${UNINSTALLER} $(notdir ${GPR2NAME})
-endif
-
 install: uninstall-libs ${LIBGPR2_TYPES:%=install-lib-%} install-tools \
            install-gprname
 
@@ -216,12 +214,7 @@ install-lib-%:
 
 install-tools: uninstall-tools
 	${INSTALLER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-		--build-name=static --mode=usage ${GPR2TOOLS} -aP ${SOURCE_DIR}
-
-install-gprname: uninstall-gprname
-	${INSTALLER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-	  -XLANGKIT_SUPPORT_BUILD=static --build-name=static \
-          --mode=usage ${GPR2NAME} -aP ${SOURCE_DIR}
+		--build-name=static --mode=usage ${GPR2TOOLS} ${AP_GPR2}
 
 #########
 # setup #
@@ -241,6 +234,7 @@ endif
 	echo "GPR2KBDIR=${GPR2KBDIR}" >> makefile.setup
 	echo "GPR2_EDGE_TOOLS_PREFIX=${GPR2_EDGE_TOOLS_PREFIX}" >> makefile.setup
 	echo "PYTHON=${PYTHON}" >> makefile.setup
+	echo "LOCAL_GPR2=${LOCAL_GPR2}" >> makefile.setup
 
 setup2: setup
 	echo "GPRINSTALL=\"${BUILD_ROOT}/${GPR2_BUILD}/obj-tools/gprinstall\"" >> makefile.setup
@@ -266,7 +260,7 @@ clean-buildtype-%:
 	rm -rf ${BUILD_ROOT}/$*
 
 clean-tools:
-	-${CLEANER} -XLIBRARY_TYPE=static -P ${GPR2TOOLS} -aP ${SOURCE_DIR}
+	-${CLEANER} -XLIBRARY_TYPE=static -P ${GPR2TOOLS} ${AP_GPR2}
 
 #################
 # Documentation #
