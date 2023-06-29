@@ -151,7 +151,7 @@ DOCOUT=${BUILD_ROOT}/attributes.json
 # build #
 #########
 
-all: ${LIBGPR2_TYPES:%=build-lib-%} build-tools build-gprname
+all: ${LIBGPR2_TYPES:%=build-lib-%} build-tools
 
 # Knowledge base
 ${KB_BUILD_DIR}:
