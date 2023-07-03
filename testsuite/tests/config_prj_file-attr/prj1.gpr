@@ -1,0 +1,5 @@
+project Prj1 is
+
+   for Config_Prj_File use Project'Project_Dir & "cfg.cgpr";
+
+end Prj1;
