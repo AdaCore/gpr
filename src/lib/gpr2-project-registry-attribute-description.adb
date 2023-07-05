@@ -78,6 +78,13 @@ begin
         "The list of languages of the sources of the project."
      );
 
+   --  Config_Prj_File
+   Set_Attribute_Description
+     (Key          => PRA.Config_Prj_File,
+      Description  =>
+        "The main configuration project file."
+     );
+
    --  Roots
    Set_Attribute_Description
      (Key          => PRA.Roots,
