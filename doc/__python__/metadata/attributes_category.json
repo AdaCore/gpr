@@ -38,7 +38,7 @@
 				{
 					"category_name": "Configuration - General",
 					"category_to_display": true,
-					"attributes" : [{"attribute_name": "Default_Language"},{"attribute_name": "Run_Path_Option"},{"attribute_name": "Run_Path_Origin"},{"attribute_name": "Separate_Run_Path_Options"},{"attribute_name": "Toolchain_Version"},{"attribute_name": "Required_Toolchain_Version"},{"attribute_name": "Toolchain_Description"},{"attribute_name": "Object_Generated"},{"attribute_name": "Objects_Linked"},{"attribute_name": "Target"},{"attribute_name": "Runtime"},{"attribute_name": "Runtime_Dir"},{"attribute_name": "Runtime_Library_Dirs"},{"attribute_name": "Runtime_Library_Dir"},{"attribute_name": "Runtime_Source_Dirs"},{"attribute_name": "Runtime_Source_Dir"},{"attribute_name": "Runtime_Library_Version"},{"attribute_name": "Toolchain_Name"}]
+					"attributes" : [{"attribute_name": "Default_Language"},{"attribute_name": "Run_Path_Option"},{"attribute_name": "Run_Path_Origin"},{"attribute_name": "Separate_Run_Path_Options"},{"attribute_name": "Toolchain_Version"},{"attribute_name": "Required_Toolchain_Version"},{"attribute_name": "Toolchain_Description"},{"attribute_name": "Object_Generated"},{"attribute_name": "Objects_Linked"},{"attribute_name": "Target"},{"attribute_name": "Runtime"},{"attribute_name": "Runtime_Dir"},{"attribute_name": "Runtime_Library_Dirs"},{"attribute_name": "Runtime_Library_Dir"},{"attribute_name": "Runtime_Source_Dirs"},{"attribute_name": "Runtime_Source_Dir"},{"attribute_name": "Runtime_Library_Version"},{"attribute_name": "Toolchain_Name"},{"attribute_name": "Config_Prj_File"}]
 				},
 				{
 					"category_name": "Configuration - Libraries",

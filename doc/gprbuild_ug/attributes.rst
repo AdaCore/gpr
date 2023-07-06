@@ -272,6 +272,12 @@ Project Level Attributes
 
 * **Configuration - General**
 
+  .. index:: Attributes - Project Level Attributes; Config_Prj_File
+
+  * **Config_Prj_File**: single value
+
+    The main configuration project file.
+
   .. index:: Attributes - Project Level Attributes; Default_Language
 
   * **Default_Language**: single value, not inherited from extended project

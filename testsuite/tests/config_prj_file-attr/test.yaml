@@ -1,0 +1,6 @@
+description:
+    Check Config_Prj_File attribute and legacy way
+    of specifying config prj in Builder switches.
+driver: build_and_run
+project_file: test
+main: main
