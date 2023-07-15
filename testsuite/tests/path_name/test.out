@@ -165,3 +165,17 @@ File with no full path
 Check temp directory
 - Is a directory
 - Actually exists
+
+Check in-memory autoconf file
+- Is a file
+- Exists in memory only
+- Does not exist on disk
+- Dir_Name: /<ram>/
+- Name: autoconf.cgpr
+- Name (no extension): autoconf
+- Value: /<ram>/autoconf.cgpr
+- Base_Name: autoconf
+- Base_Filename: autoconf
+- Extension: .cgpr
+- Simple_Name: autoconf.cgpr
+- Containing_Directory: '/<ram>/'
