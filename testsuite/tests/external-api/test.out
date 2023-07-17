@@ -1,0 +1,176 @@
+Testing parsed
+
+======= ROOT_ONLY : TRUE =======
+
+=============
+== UNTYPED ==
+=============
+EXT_4
+MODE_10
+MODE_6
+MODE_9
+TYPE_D_CONCAT
+UNTYPED_EXT
+
+=============
+==  TYPED  ==
+=============
+COMMON
+   - Value_1
+   - Value_2
+COMMON_INVALID
+   - Value_1
+   - Value_2
+COMMON_UNION
+   - Value_1
+   - Value_2
+EXT_3
+   - type1_d
+   - type2_d
+   - type3_d
+EXT_INTERSECT_EMPTY (Conflicting)
+   - inter_1
+   - inter_2
+   - inter_3
+   - inter_4
+   - inter_5
+   - inter_6
+EXT_UNION (Conflicting)
+   - inter_1
+   - inter_2
+   - inter_3
+   - inter_4
+IMPORTED_FROM_PARSED
+   - Imported-Value_1
+   - Imported-Value_2
+MODE_1
+   - debug
+   - release
+MODE_2
+   - debug
+   - release
+MODE_3
+   - debug
+   - release
+MODE_4
+   - debug
+   - release
+MODE_5
+   - debug
+   - release
+MODE_7
+   - debug
+   - release
+MODE_8
+   - debug
+   - release
+
+==============
+== WARNINGS ==
+==============
+parsed.gpr:38:49: warning: set of values for EXT_INTERSECT_EMPTY is conflicting
+parsed.gpr:38:49: warning:   type Type_Intersect_empty_1 is defined at parsed.gpr:37:09 and used at parsed.gpr:38:49
+parsed.gpr:38:49: warning:   type Type_Intersect_empty_2 is defined at parsed.gpr:39:09 and used at parsed.gpr:40:49
+parsed.gpr:38:49: warning:   type Type_Intersect_empty_3 is defined at parsed.gpr:41:09 and used at parsed.gpr:42:49
+parsed.gpr:33:33: warning: set of values for EXT_UNION is conflicting
+parsed.gpr:33:33: warning:   type Type_1 is defined at parsed.gpr:32:09 and used at parsed.gpr:33:33
+parsed.gpr:33:33: warning:   type Type_2 is defined at parsed.gpr:34:09 and used at parsed.gpr:35:33
+
+======= ROOT_ONLY : FALSE =======
+
+=============
+== UNTYPED ==
+=============
+EXT_4
+MODE_10
+MODE_6
+MODE_9
+TYPE_D_CONCAT
+UNTYPED_EXT
+
+=============
+==  TYPED  ==
+=============
+COMMON
+   - Value_1
+   - Value_2
+COMMON_INVALID
+   - Value_1
+   - Value_2
+COMMON_UNION (Conflicting)
+   - Value_1
+   - Value_2
+   - Value_3
+   - Value_4
+   - Value_5
+   - Value_6
+   - Value_7
+   - Value_8
+EXT_3
+   - type1_d
+   - type2_d
+   - type3_d
+EXT_INTERSECT_EMPTY (Conflicting)
+   - inter_1
+   - inter_2
+   - inter_3
+   - inter_4
+   - inter_5
+   - inter_6
+EXT_UNION (Conflicting)
+   - inter_1
+   - inter_2
+   - inter_3
+   - inter_4
+IMPORTED_CHILD_EXT
+   - Imported-child-Value_1
+   - Imported-child-Value_2
+IMPORTED_EXT
+   - Imported_Value_1
+   - Imported_Value_2
+IMPORTED_FROM_IMPORTED_CHILD_EXT
+   - Imported-Value_1
+   - Imported-Value_2
+IMPORTED_FROM_PARSED
+   - Imported-Value_1
+   - Imported-Value_2
+INDIRECTLY_IMPORTED_EXT
+   - Indirectly_Imported_Value_1
+   - Indirectly_Imported_Value_2
+MODE_1
+   - debug
+   - release
+MODE_2
+   - debug
+   - release
+MODE_3
+   - debug
+   - release
+MODE_4
+   - debug
+   - release
+MODE_5
+   - debug
+   - release
+MODE_7
+   - debug
+   - release
+MODE_8
+   - debug
+   - release
+
+==============
+== WARNINGS ==
+==============
+imported.gpr:10:42: warning: set of values for COMMON_UNION is conflicting
+imported.gpr:10:42: warning:   type Type_Union_Dupl is defined at imported.gpr:9:09 and used at imported.gpr:10:42
+imported.gpr:10:42: warning:   type Type_Common_Union is defined at indirectly_imported.gpr:8:09 and used at indirectly_imported.gpr:9:44
+imported.gpr:10:42: warning:   type Type_Common_Union is defined at imported-child.gpr:11:09 and used at imported-child.gpr:12:44
+imported.gpr:10:42: warning:   type Duplicated_Type is defined at parsed.gpr:55:09 and used at parsed.gpr:57:42
+parsed.gpr:38:49: warning: set of values for EXT_INTERSECT_EMPTY is conflicting
+parsed.gpr:38:49: warning:   type Type_Intersect_empty_1 is defined at parsed.gpr:37:09 and used at parsed.gpr:38:49
+parsed.gpr:38:49: warning:   type Type_Intersect_empty_2 is defined at parsed.gpr:39:09 and used at parsed.gpr:40:49
+parsed.gpr:38:49: warning:   type Type_Intersect_empty_3 is defined at parsed.gpr:41:09 and used at parsed.gpr:42:49
+parsed.gpr:33:33: warning: set of values for EXT_UNION is conflicting
+parsed.gpr:33:33: warning:   type Type_1 is defined at parsed.gpr:32:09 and used at parsed.gpr:33:33
+parsed.gpr:33:33: warning:   type Type_2 is defined at parsed.gpr:34:09 and used at parsed.gpr:35:33

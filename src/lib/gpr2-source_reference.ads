@@ -15,6 +15,8 @@ package GPR2.Source_Reference is
 
    function "<" (Left, Right : Object) return Boolean;
 
+   overriding function "=" (Left, Right : Object) return Boolean;
+
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
    --  initializer.
@@ -68,6 +70,10 @@ private
      (if Left.Filename /= Right.Filename then Left.Filename < Right.Filename
       elsif Left.Line /= Right.Line then Left.Line < Right.Line
       else Left.Column < Right.Column);
+
+   overriding function "=" (Left, Right : Object) return Boolean is
+     (Left.Filename = Right.Filename and then
+      Left.Line = Right.Line and then Left.Column = Right.Column);
 
    function Has_Source_Reference (Self : Object) return Boolean
      is (Self.Column > 0 and then Self.Line > 0);

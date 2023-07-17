@@ -1,0 +1,16 @@
+with "imported";
+with "indirectly_imported";
+
+project imported.child is
+
+   type Type_1 is ("Imported-child-Value_1", "Imported-child-Value_2");
+   Var1_0 : Type_1 := external ("IMPORTED_CHILD_EXT", "Imported-child-Value_1");
+
+   Var2_0 : Imported.Imported_Type := external ("IMPORTED_FROM_IMPORTED_CHILD_EXT", "Imported-Value_1");
+
+   type Type_Common_Union is ("Value_5", "Value_6");
+   Var3_0 : Type_Common_Union := external ("COMMON_UNION", "Value_5");
+
+
+
+end imported.child;
