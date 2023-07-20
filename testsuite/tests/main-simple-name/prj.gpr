@@ -1,0 +1,6 @@
+
+project Prj is
+
+   for Main use ("src/main.adb");
+
+end Prj;
