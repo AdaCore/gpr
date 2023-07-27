@@ -1294,6 +1294,11 @@ is
      (Attr_Name : Q_Attribute_Id;
       Set       : in out Source_Set.Set)
    is
+      use Ada.Strings;
+      use type Ada.Strings.Maps.Character_Set;
+
+      Skip_Set   : constant Maps.Character_Set :=
+                     Maps.Constants.Control_Set or Maps.To_Set (" ");
       Attr_Value : constant SR.Value.Object :=
                      Def.Attrs.Element (Attr_Name.Attr).Value;
       Filename   : constant GPR2.Path_Name.Full_Name :=
@@ -1307,15 +1312,13 @@ is
 
       while not Text_IO.End_Of_File (F) loop
          declare
-            use Ada.Strings;
             use GNATCOLL.Utils;
             Line : constant String :=
                      Fixed.Trim
                        (Text_IO.Get_Line (F),
-                        Maps.Constants.Control_Set,
-                        Maps.Constants.Control_Set);
+                        Skip_Set, Skip_Set);
          begin
-            if Line /= "" and then not Starts_With (Line, "-- ") then
+            if Line /= "" and then not Starts_With (Line, "--") then
                Include_Simple_Filename (Set, Line, Attr_Value);
             end if;
          end;

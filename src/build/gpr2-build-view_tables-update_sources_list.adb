@@ -1037,6 +1037,10 @@ package body Update_Sources_List is
       Set      : in out Source_Set.Set)
    is
       use Ada.Strings;
+      use type Ada.Strings.Maps.Character_Set;
+
+      Skip_Set : constant Maps.Character_Set :=
+                   Maps.Constants.Control_Set or Maps.To_Set (" ");
       Fullname : constant GPR2.Path_Name.Full_Name :=
                    (if GNAT.OS_Lib.Is_Absolute_Path (Filename.Text)
                     then Filename.Text
@@ -1053,13 +1057,12 @@ package body Update_Sources_List is
             Line     : constant String :=
                          Fixed.Trim
                            (Text_IO.Get_Line (F),
-                            Maps.Constants.Control_Set,
-                            Maps.Constants.Control_Set);
+                            Skip_Set, Skip_Set);
             Position : Source_Set.Cursor;
             Inserted : Boolean;
 
          begin
-            if Line /= "" and then not Starts_With (Line, "-- ") then
+            if Line /= "" and then not Starts_With (Line, "--") then
                if Has_Directory_Separator (Line) then
                   View.Tree.Append_Message
                     (Message.Create
