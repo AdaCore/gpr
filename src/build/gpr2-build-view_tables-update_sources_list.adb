@@ -80,9 +80,9 @@ package body Update_Sources_List is
    --  Check if two naming exception attributes are equal
 
    procedure Fill_Ada_Naming_Exceptions
-     (View         : GPR2.Project.View.Object;
-      Attr         : Attribute_Id;
-      Src_Map      : in out Source_Path_To_Attribute_List.Map)
+     (View    : GPR2.Project.View.Object;
+      Attr    : Attribute_Id;
+      Src_Map : in out Source_Path_To_Attribute_List.Map)
      with Pre => Attr in  PRA.Naming.Spec.Attr | PRA.Naming.Body_N.Attr;
    --  Populate the src->unit and unit->src maps for Ada sources
 
@@ -93,9 +93,9 @@ package body Update_Sources_List is
    --  language in use for the view.
 
    procedure Read_Source_List
-     (View      : Project.View.Object;
-      Filename  : Source_Reference.Value.Object;
-      Set       : in out Source_Set.Set);
+     (View     : Project.View.Object;
+      Filename : Source_Reference.Value.Object;
+      Set      : in out Source_Set.Set);
    --  Read from file defined in project attribute Attr_Name and insert each
    --  line into Set
 
@@ -131,8 +131,10 @@ package body Update_Sources_List is
       Result     : Unbounded_String :=
                      To_Unbounded_String (String (File.Simple_Name));
       Default_NS : constant  Boolean :=
-                     NS.Spec_Suffix = ".ads" and then NS.Body_Suffix = ".adb"
-                      and then NS.Sep_Suffix = ".adb" and then Dot_Repl = "-";
+                     NS.Spec_Suffix = ".ads"
+                       and then NS.Body_Suffix = ".adb"
+                       and then NS.Sep_Suffix = ".adb"
+                       and then Dot_Repl = "-";
       --  True if the current naming scheme is GNAT's default naming scheme.
       --  This is to take into account shortened names like "Ada." (a-),
       --  "System." (s-) and so on.
@@ -229,10 +231,9 @@ package body Update_Sources_List is
    --------------------------------
 
    procedure Fill_Ada_Naming_Exceptions
-     (View         : GPR2.Project.View.Object;
-      Attr         : Attribute_Id;
-      Src_Map      : in out Source_Path_To_Attribute_List.Map)
-   is
+     (View    : GPR2.Project.View.Object;
+      Attr    : Attribute_Id;
+      Src_Map : in out Source_Path_To_Attribute_List.Map) is
    begin
       for A of View.Attributes
         (Name          => (PRP.Naming, Attr),
@@ -261,8 +262,7 @@ package body Update_Sources_List is
 
    procedure Fill_Naming_Schema
      (View : Project.View.Object;
-      Map  : in out Naming_Schema_Maps.Map)
-   is
+      Map  : in out Naming_Schema_Maps.Map) is
    begin
       for L of View.Languages loop
          declare
@@ -332,8 +332,8 @@ package body Update_Sources_List is
    -------------
 
    procedure Process
-     (Data             : in out View_Data;
-      Stop_On_Error    : Boolean)
+     (Data          : in out View_Data;
+      Stop_On_Error : Boolean)
    is
       function Is_Compilable (Language : Language_Id) return Boolean;
       --  Check whether the language is compilable on the current View. This
@@ -365,22 +365,22 @@ package body Update_Sources_List is
                    Data.View.Attribute (PRA.Naming.Dot_Replacement).Value.Text;
       --  Get Dot_Replacement value
 
-      Naming_Schema_Map       : Naming_Schema_Maps.Map;
+      Naming_Schema_Map     : Naming_Schema_Maps.Map;
 
-      Listed_Sources          : Source_Set.Set;
-      Excluded_Sources        : Source_Set.Set;
+      Listed_Sources        : Source_Set.Set;
+      Excluded_Sources      : Source_Set.Set;
       --  Has either Source_Files or Source_List_File attributes
 
-      Has_Src_In_Lang         : Language_Set;
+      Has_Src_In_Lang       : Language_Set;
       --  Insert record there if the language has a source
 
-      Tree                    : constant not null access Project.Tree.Object :=
-                                  Data.View.Tree;
+      Tree                  : constant not null access Project.Tree.Object :=
+                                Data.View.Tree;
 
-      Ada_Naming_Exceptions   : Source_Path_To_Attribute_List.Map;
-      Attr                    : Project.Attribute.Object;
+      Ada_Naming_Exceptions : Source_Path_To_Attribute_List.Map;
+      Attr                  : Project.Attribute.Object;
 
-      Compilable_Language     : Lang_Boolean_Map.Map;
+      Compilable_Language   : Lang_Boolean_Map.Map;
       --  List of compilable languages for the view
 
       -----------------
@@ -390,8 +390,7 @@ package body Update_Sources_List is
       procedure Handle_File
         (Dir_Ref   : SR.Value.Object;
          File      : GPR2.Path_Name.Object;
-         Timestamp : Ada.Calendar.Time)
-      is
+         Timestamp : Ada.Calendar.Time) is
       begin
          Data.Src_Files.Include ((File, Timestamp, Dir_Ref));
       end Handle_File;
@@ -400,8 +399,7 @@ package body Update_Sources_List is
       -- Is_Compilable --
       -------------------
 
-      function Is_Compilable (Language : Language_Id) return Boolean
-      is
+      function Is_Compilable (Language : Language_Id) return Boolean is
          C    : constant Lang_Boolean_Map.Cursor :=
                   Compilable_Language.Find (Language);
          Attr : GPR2.Project.Attribute.Object;
@@ -1034,17 +1032,17 @@ package body Update_Sources_List is
    ---------------
 
    procedure Read_Source_List
-     (View      : Project.View.Object;
-      Filename  : Source_Reference.Value.Object;
-      Set       : in out Source_Set.Set)
+     (View     : Project.View.Object;
+      Filename : Source_Reference.Value.Object;
+      Set      : in out Source_Set.Set)
    is
       use Ada.Strings;
-      Fullname   : constant GPR2.Path_Name.Full_Name :=
-                     (if GNAT.OS_Lib.Is_Absolute_Path (Filename.Text)
-                      then Filename.Text
-                      else View.Dir_Name.Compose
-                        (Filename_Type (Filename.Text)).Value);
-      F          : Text_IO.File_Type;
+      Fullname : constant GPR2.Path_Name.Full_Name :=
+                   (if GNAT.OS_Lib.Is_Absolute_Path (Filename.Text)
+                    then Filename.Text
+                    else View.Dir_Name.Compose
+                      (Filename_Type (Filename.Text)).Value);
+      F        : Text_IO.File_Type;
    begin
       Text_IO.Open (F, Text_IO.In_File, Fullname);
 

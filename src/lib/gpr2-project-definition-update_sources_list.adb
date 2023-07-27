@@ -218,8 +218,7 @@ is
    -- Fill_Naming_Schema --
    ------------------------
 
-   procedure Fill_Naming_Schema
-   is
+   procedure Fill_Naming_Schema is
    begin
       for L of View.Languages loop
          declare
@@ -777,8 +776,8 @@ is
 
       for L of Languages.Values loop
          declare
-            Language        : constant Language_Id := +Name_Type (L.Text);
-            Is_Indexed      : Boolean := False;
+            Language   : constant Language_Id := +Name_Type (L.Text);
+            Is_Indexed : Boolean := False;
          begin
             --  First, try naming exceptions
 
@@ -1152,8 +1151,8 @@ is
       -------------------------
 
       procedure Exclude_Recursively
-        (View      : in out Project.View.Object;
-         Source    : Project.Source.Object)
+        (View   : in out Project.View.Object;
+         Source : Project.Source.Object)
       is
          Def : constant Ref := Get_RW (View);
       begin
@@ -1287,9 +1286,9 @@ is
       Has_Src_In_Lang.Insert (Lang, CL, OK);
    end Mark_Language;
 
-   ---------------
-   -- Read_File --
-   ---------------
+   ----------------------
+   -- Read_Source_List --
+   ----------------------
 
    procedure Read_Source_List
      (Attr_Name : Q_Attribute_Id;
