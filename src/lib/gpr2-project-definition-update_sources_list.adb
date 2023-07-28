@@ -7,12 +7,12 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Hashed_Maps;
 with Ada.Strings.Maps.Constants;
-with Ada.Text_IO;
 
 with GNAT.OS_Lib;
 with GNAT.MD5;
 
 with GPR2.Unit.List;
+with GPR2.Project.Source_Files;
 with GPR2.Source;
 with GPR2.Source_Reference.Identifier.Set;
 
@@ -1294,11 +1294,6 @@ is
      (Attr_Name : Q_Attribute_Id;
       Set       : in out Source_Set.Set)
    is
-      use Ada.Strings;
-      use type Ada.Strings.Maps.Character_Set;
-
-      Skip_Set   : constant Maps.Character_Set :=
-                     Maps.Constants.Control_Set or Maps.To_Set (" ");
       Attr_Value : constant SR.Value.Object :=
                      Def.Attrs.Element (Attr_Name.Attr).Value;
       Filename   : constant GPR2.Path_Name.Full_Name :=
@@ -1306,25 +1301,8 @@ is
                       then Attr_Value.Text
                       else Root.Compose
                         (Filename_Type (Attr_Value.Text)).Value);
-      F          : Text_IO.File_Type;
    begin
-      Text_IO.Open (F, Text_IO.In_File, Filename);
-
-      while not Text_IO.End_Of_File (F) loop
-         declare
-            use GNATCOLL.Utils;
-            Line : constant String :=
-                     Fixed.Trim
-                       (Text_IO.Get_Line (F),
-                        Skip_Set, Skip_Set);
-         begin
-            if Line /= "" and then not Starts_With (Line, "--") then
-               Include_Simple_Filename (Set, Line, Attr_Value);
-            end if;
-         end;
-      end loop;
-
-      Text_IO.Close (F);
+      Source_Files.Read (Tree, Filename, Attr_Value, Set);
    end Read_Source_List;
 
    --------------------

@@ -5,9 +5,6 @@
 --
 
 with Ada.Containers.Doubly_Linked_Lists;
-with Ada.Strings.Maps.Constants;
-with Ada.Strings.Fixed;
-with Ada.Text_IO;
 
 with GNAT.OS_Lib;
 
@@ -16,6 +13,7 @@ with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
+with GPR2.Project.Source_Files;
 with GPR2.Project.View;
 with GPR2.Source_Reference.Value;
 
@@ -126,7 +124,6 @@ package body Update_Sources_List is
       Success  : out Boolean) return Name_Type
    is
       use Ada.Strings;
-      use Ada.Strings.Maps;
 
       Result     : Unbounded_String :=
                      To_Unbounded_String (String (File.Simple_Name));
@@ -1036,48 +1033,13 @@ package body Update_Sources_List is
       Filename : Source_Reference.Value.Object;
       Set      : in out Source_Set.Set)
    is
-      use Ada.Strings;
-      use type Ada.Strings.Maps.Character_Set;
-
-      Skip_Set : constant Maps.Character_Set :=
-                   Maps.Constants.Control_Set or Maps.To_Set (" ");
       Fullname : constant GPR2.Path_Name.Full_Name :=
                    (if GNAT.OS_Lib.Is_Absolute_Path (Filename.Text)
                     then Filename.Text
                     else View.Dir_Name.Compose
                       (Filename_Type (Filename.Text)).Value);
-      F        : Text_IO.File_Type;
    begin
-      Text_IO.Open (F, Text_IO.In_File, Fullname);
-
-      while not Text_IO.End_Of_File (F) loop
-         declare
-            use GNATCOLL.Utils;
-
-            Line     : constant String :=
-                         Fixed.Trim
-                           (Text_IO.Get_Line (F),
-                            Skip_Set, Skip_Set);
-            Position : Source_Set.Cursor;
-            Inserted : Boolean;
-
-         begin
-            if Line /= "" and then not Starts_With (Line, "--") then
-               if Has_Directory_Separator (Line) then
-                  View.Tree.Append_Message
-                    (Message.Create
-                       (Message.Error,
-                        "file name cannot include directory information ("""
-                        & Line & """)",
-                        Filename));
-               else
-                  Set.Insert (Filename_Type (Line), Position, Inserted);
-               end if;
-            end if;
-         end;
-      end loop;
-
-      Text_IO.Close (F);
+      Project.Source_Files.Read (View.Tree, Fullname, Filename, Set);
    end Read_Source_List;
 
 end Update_Sources_List;
