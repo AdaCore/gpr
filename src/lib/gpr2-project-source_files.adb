@@ -33,17 +33,13 @@ package body GPR2.Project.Source_Files is
 
       while not Text_IO.End_Of_File (F) loop
          declare
-            use GNATCOLL.Utils;
-
-            Line     : constant String :=
-                         Fixed.Trim
-                           (Text_IO.Get_Line (F),
-                            Skip_Set, Skip_Set);
-            Position : Source_Set.Cursor;
-            Inserted : Boolean;
+            Line : constant String :=
+                     Fixed.Trim (Text_IO.Get_Line (F), Skip_Set, Skip_Set);
 
          begin
-            if Line /= "" and then not Starts_With (Line, "--") then
+            if Line /= ""
+              and then not GNATCOLL.Utils.Starts_With (Line, "--")
+            then
                if Has_Directory_Separator (Line) then
                   Tree.Append_Message
                     (Message.Create
@@ -52,7 +48,7 @@ package body GPR2.Project.Source_Files is
                         & Line & """)",
                         Attr));
                else
-                  Set.Insert (Filename_Type (Line), Position, Inserted);
+                  Set.Include (Filename_Type (Line));
                end if;
             end if;
          end;
