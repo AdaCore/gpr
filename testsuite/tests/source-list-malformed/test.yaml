@@ -1,0 +1,5 @@
+description:
+    Test for malformed source list file
+driver: build_and_run
+project_file: source_list_malformed
+main: main
