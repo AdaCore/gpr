@@ -76,8 +76,6 @@ if os.path.isfile('adacore_transparent.png'):
 if os.path.isfile('favicon.ico'):
     html_favicon = 'favicon.ico'
 
-html_static_path = ['_static']
-
 latex_elements = {
     'preamble': latex_elements.TOC_DEPTH +
     latex_elements.PAGE_BLANK +
