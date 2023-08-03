@@ -1811,9 +1811,9 @@ the proper order of libraries in the final link command.
 Stand-alone Library Projects
 ----------------------------
 
-.. index:: Stand-alone libraries
+.. index:: Stand-alone library
 
-A **stand-alone library** is a library that contains the necessary code to
+A **stand-alone library** (SAL) is a library that contains the necessary code to
 elaborate the Ada units that are included in the library. A stand-alone
 library is a convenient way to add an Ada subsystem to a more global system
 whose main is not in Ada since it makes the elaboration of the Ada part mostly
@@ -1873,8 +1873,7 @@ source file names).
   build. Values are either ``standard`` (the default), ``no`` or
   ``encapsulated``. When ``standard`` is used the code to elaborate and
   finalize the library is embedded, when ``encapsulated`` is used the
-  library can furthermore depend only on static libraries (including
-  the GNAT runtime). This attribute can be set to ``no`` to make it clear
+  library is an encapsulated library (see :ref:`Encapsulated_Stand-alone_Library_Projects`). This attribute can be set to ``no`` to make it clear
   that the library should not be stand-alone in which case attributes
   ``Library_Interface`` or ``Interfaces`` should not be defined.
 
@@ -1977,6 +1976,158 @@ included in the library.
   ``"restricted"``, on platforms that support symbol control. This file
   must contain one symbol per line and only those symbols will be
   exported from the stand-alone library.
+
+
+.. index:: Aggregate library project
+
+.. _Encapsulated_Stand-alone_Library_Projects:
+
+Encapsulated Stand-alone Library Projects
+-----------------------------------------
+
+.. index:: Encapsulated stand-alone library
+
+An *encapsulated stand-alone library* (ESAL) is a special kind of an Ada
+stand-alone library which, in addition to user sources that are part of the
+project, also includes all units of the GNAT run-time that user sources
+transitively depend upon. A project is an ESAL project if the project-level
+attribute :samp:`Library_Standalone` is declared with the value
+:samp:`"encapsulated"`. Both static and shared library kinds are supported
+for ESALs.
+
+Elaboration of included run-time units occurs as part of ESAL elaboration, and
+the library has no further external dependency on the GNAT run-time. This makes
+it a convenient option when the Ada subsystem is used as part of a bigger non-Ada
+system, as deploying the Ada component to users is greatly simplified. At the
+same time, this is also the most important limitation of ESAL: when an ESAL is
+used in the partition, *all* Ada code must be located inside of the ESAL, no
+other components (such as the main subprogram or any additional libraries) can
+contain Ada code. When starting with a mix of Ada projects, one convenient way
+to ensure this property is by using :ref:`Aggregate_ESAL_Projects`.
+
+.. warning::
+
+   The user must ensure no Ada code is present outside of the ESAL, since this
+   can result in a duplicated state, making the program erroneous.
+
+
+.. _Aggregate_Library_Projects:
+
+Aggregate Library Projects
+--------------------------
+
+.. index:: Aggregate library project
+
+Aggregate library projects make it possible to build a single library
+using object files built using other standard or library
+projects. This gives the flexibility to describe an application as
+having multiple modules (for example a GUI, database access, and other)
+using different project files (so possibly built with different compiler
+options) and yet create a single library (static or relocatable) out of the
+corresponding object files.
+
+.. _Building_aggregate_library_projects:
+
+.. rubric:: Building aggregate library projects
+
+For example, we can define an aggregate project ``Agg`` that groups ``A``, ``B``
+and ``C``:
+
+  .. code-block:: gpr
+
+       aggregate library project Agg is
+          for Project_Files use ("a.gpr", "b.gpr", "c.gpr");
+          for Library_Name  use "agg";
+          for Library_Dir   use "lagg";
+       end Agg;
+
+Then, when you build with:
+
+  .. code-block:: sh
+
+       gprbuild agg.gpr
+
+this will build all units from projects ``A``, ``B`` and ``C`` and will create a
+static library named :file:`libagg.a` in the :file:`lagg`
+directory. An aggregate library project has the same properties as a standard
+library project; in particular it can be of any kind, which can be different
+from the kind(s) of library projects that it aggregates.
+
+When creating an aggregate library project, additional compilation options
+may need to be passed to all nested compilations. The most common use case is
+a need to pass :samp:`-fPIC` when creating an aggregate shared library out of
+static library projects on platforms where this compiler option is
+required to create relocatable object files. For this, an attribute
+:samp:`Builder'Global_Compilation_Switches` may be used in the aggregate
+library project:
+
+  .. code-block:: gpr
+
+       aggregate library project Agg is
+          for Project_Files use ("a.gpr", "b.gpr", "c.gpr");
+          for Library_Name use ("agg");
+          for Library_Dir use ("lagg");
+          for Library_Kind use "relocatable";
+
+          package Builder is
+             for Global_Compilation_Switches ("Ada") use ("-fPIC");
+          end Builder;
+       end Agg;
+
+With the above aggregate library Builder package, the :samp:`-fPIC`
+option will be passed to the compiler when building any source code
+from projects :file:`a.gpr`, :file:`b.gpr` and :file:`c.gpr`.
+
+.. _Syntax_of_aggregate_library_projects:
+
+.. rubric:: Syntax of aggregate library projects
+
+An aggregate library project follows the general syntax of project
+files. The recommended extension is still :file:`.gpr`. However, a special
+``aggregate library`` qualifier must appear before the keyword
+``project``.
+
+The :samp:`Project_Files` attribute is used to
+describe the aggregated projects whose object files have to be
+included into the aggregate library. The environment variables
+:samp:`ADA_PROJECT_PATH`, :samp:`GPR_PROJECT_PATH` and
+:samp:`GPR_PROJECT_PATH_FILE` are not used to find the project files.
+
+An aggregate library project can only |with| abstract projects that can be used
+to share attribute values.
+
+When creating an aggregate stand-alone library, the attributes :samp:`Library_Interface`/:samp:`Interfaces` can be used as usual, referring to
+sources from the aggregated projects.
+
+An aggregate library project does not have any source files directly (only
+through other standard projects). Therefore a number of the standard
+attributes and packages are forbidden in an aggregate library
+project. Here is a (non-exhaustive) list:
+
+* ``Languages``
+* ``Source_Files``, ``Source_List_File`` and other attributes dealing with
+  a list of sources.
+* ``Source_Dirs`` and ``Exec_Dir``
+* ``Main``
+* ``Roots``
+* ``Externally_Built``
+* ``Inherit_Source_Path``
+* ``Excluded_Source_Dirs``
+* ``Locally_Removed_Files``
+* ``Excluded_Source_Files``
+* ``Excluded_Source_List_File``
+
+The :samp:`Object_Dir` attribute is allowed, and can be used by
+some analysis tools to store their artifacts.
+
+The only package that is allowed (and optional) is ``Builder``.
+
+.. _Aggregate_esal_projects:
+
+.. rubric:: Aggregate ESAL Projects
+
+An aggregate SAL can be declared encapsulated. This gives a convenient way to
+satisfy the requirement that no Ada code can be present outside of a ESAL.
 
 
 .. _Installing_a_Library_with_Project_Files:
@@ -3016,114 +3167,6 @@ is ignored, except for the ``Executable`` attribute which specifies the
 name of the executables resulting from the link of the main programs, and
 for the ``Executable_Suffix``.
 
-
-.. index:: Aggregate library project
-
-.. _Aggregate_Library_Projects:
-
-Aggregate Library Projects
-==========================
-
-Aggregate library projects make it possible to build a single library
-using object files built using other standard or library
-projects. This gives the flexibility to describe an application as
-having multiple modules (for example a GUI, database access, and other)
-using different project files (so possibly built with different compiler
-options) and yet create a single library (static or relocatable) out of the
-corresponding object files.
-
-.. _Building_aggregate_library_projects:
-
-Building aggregate library projects
------------------------------------
-
-For example, we can define an aggregate project ``Agg`` that groups ``A``, ``B``
-and ``C``:
-
-  .. code-block:: gpr
-
-       aggregate library project Agg is
-          for Project_Files use ("a.gpr", "b.gpr", "c.gpr");
-          for Library_Name  use "agg";
-          for Library_Dir   use "lagg";
-       end Agg;
-
-Then, when you build with:
-
-  .. code-block:: sh
-
-       gprbuild agg.gpr
-
-this will build all units from projects ``A``, ``B`` and ``C`` and will create a
-static library named :file:`libagg.a` in the :file:`lagg`
-directory. An aggregate library project has the same set of
-restrictions as a standard library project.
-
-Note that a shared aggregate library project cannot aggregate a
-static library project. In platforms where a compiler option is
-required to create relocatable object files, a ``Builder package`` in the
-aggregate library project may be used:
-
-  .. code-block:: gpr
-
-       aggregate library project Agg is
-          for Project_Files use ("a.gpr", "b.gpr", "c.gpr");
-          for Library_Name use ("agg");
-          for Library_Dir use ("lagg");
-          for Library_Kind use "relocatable";
-
-          package Builder is
-             for Global_Compilation_Switches ("Ada") use ("-fPIC");
-          end Builder;
-       end Agg;
-
-With the above aggregate library Builder package, the :samp:`-fPIC`
-option will be passed to the compiler when building any source code
-from projects :file:`a.gpr`, :file:`b.gpr` and :file:`c.gpr`.
-
-
-.. _Syntax_of_aggregate_library_projects:
-
-Syntax of aggregate library projects
-------------------------------------
-
-An aggregate library project follows the general syntax of project
-files. The recommended extension is still :file:`.gpr`. However, a special
-``aggregate library`` qualifier must appear before the keyword
-``project``.
-
-An aggregate library project cannot |with| any other project
-(standard or aggregate), except an abstract project which can be used
-to share attribute values.
-
-An aggregate library project does not have any source files directly (only
-through other standard projects). Therefore a number of the standard
-attributes and packages are forbidden in an aggregate library
-project. Here is a (non-exhaustive) list:
-
-* ``Languages``
-* ``Source_Files``, ``Source_List_File`` and other attributes dealing with
-  a list of sources.
-* ``Source_Dirs`` and ``Exec_Dir``
-* ``Main``
-* ``Roots``
-* ``Externally_Built``
-* ``Inherit_Source_Path``
-* ``Excluded_Source_Dirs``
-* ``Locally_Removed_Files``
-* ``Excluded_Source_Files``
-* ``Excluded_Source_List_File``
-
-The only package that is allowed (and optional) is ``Builder``.
-
-The ``Project_Files`` attribute is used to
-describe the aggregated projects whose object files have to be
-included into the aggregate library. The environment variables
-:envvar:`ADA_PROJECT_PATH`, :envvar:`GPR_PROJECT_PATH` and
-:envvar:`GPR_PROJECT_PATH_FILE` are not used to find the project files.
-
-As for regular (not library) aggregate projects, the ``Object_Dir`` attribute
-is allowed and used by some analysis tools in the same fashion.
 
 .. _Project_File_Reference:
 
