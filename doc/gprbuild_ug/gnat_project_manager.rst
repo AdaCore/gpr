@@ -1877,14 +1877,6 @@ source file names).
   that the library should not be stand-alone in which case attributes
   ``Library_Interface`` or ``Interfaces`` should not be defined.
 
-  .. code-block:: gpr
-
-     for Library_Dir use "lib";
-     for Library_Name use "logging";
-     for Library_Kind use "dynamic";
-     for Library_Interface use ("lib1", "lib2");  --  unit names
-     for Library_Standalone use "encapsulated";
-
 In order to include the elaboration code in the stand-alone library, the binder
 is invoked on the closure of the library units creating a package whose name
 depends on the library name (:file:`b~logging.ads/b` in the example).
@@ -1989,15 +1981,26 @@ Encapsulated Stand-alone Library Projects
 
 An *encapsulated stand-alone library* (ESAL) is a special kind of an Ada
 stand-alone library which, in addition to user sources that are part of the
-project, also includes all units of the GNAT run-time that user sources
-transitively depend upon. A project is an ESAL project if the project-level
-attribute :samp:`Library_Standalone` is declared with the value
-:samp:`"encapsulated"`. Both static and shared library kinds are supported
-for ESALs.
+project, also includes the complete closure of the library interface units,
+including those coming from outside projects or the Ada runtime. A project is
+an ESAL project if the project-level attribute :samp:`Library_Standalone` is
+declared with the value :samp:`"encapsulated"`. Both static and shared library
+kinds are supported for ESALs.
 
-Elaboration of included run-time units occurs as part of ESAL elaboration, and
-the library has no further external dependency on the GNAT run-time. This makes
-it a convenient option when the Ada subsystem is used as part of a bigger non-Ada
+The following is an example of attribute declarations for an ESAL project:
+
+.. code-block:: gpr
+
+   for Library_Dir use "lib";
+   for Library_Name use "logging";
+   for Library_Kind use "dynamic";
+   for Library_Interface use ("lib1", "lib2");  --  unit names
+   for Library_Standalone use "encapsulated";
+
+Elaboration of transitively included units, including the run-time ones,
+occurs as part of ESAL elaboration, and the library has no further external
+dependency on the GNAT run-time. This makes it a convenient option when the
+Ada subsystem is used as part of a bigger non-Ada
 system, as deploying the Ada component to users is greatly simplified. At the
 same time, this is also the most important limitation of ESAL: when an ESAL is
 used in the partition, *all* Ada code must be located inside of the ESAL, no
@@ -2008,7 +2011,8 @@ to ensure this property is by using :ref:`Aggregate_ESAL_Projects`.
 .. warning::
 
    The user must ensure no Ada code is present outside of the ESAL, since this
-   can result in a duplicated state, making the program erroneous.
+   might result in several copies of the same unit in the same partition,
+   making the program potentially erroneous.
 
 
 .. _Aggregate_Library_Projects:
@@ -2126,8 +2130,12 @@ The only package that is allowed (and optional) is ``Builder``.
 
 .. rubric:: Aggregate ESAL Projects
 
-An aggregate SAL can be declared encapsulated. This gives a convenient way to
-satisfy the requirement that no Ada code can be present outside of a ESAL.
+An aggregate library can also be declared encapsulated. As previously
+mentioned, using an encapsulated library implies ensuring that there is no Ada
+code in the partition that is outside of the ESAL. When starting with a mix of
+Ada projects, ensuring this property may be challenging. One convenient way is
+to wrap all Ada projects in the partition in an aggregate encapsulated library
+project.
 
 
 .. _Installing_a_Library_with_Project_Files:
