@@ -1,0 +1,4 @@
+Cross:
+/fake-ada-x86_64-wrs-vxworks7/x86_64-wrs-vxworks7/rtp/share/gpr/preinstalled.gpr
+Native:
+/fake-ada-native/share/gpr/preinstalled.gpr
