@@ -728,6 +728,11 @@ begin
          --  Generate a default config, since a critical failure occurred:
          --  this will reload the project in normal mode and print the
          --  relevant error messages.
+         --  Additionally, this is used when attempting to load a predefined
+         --  project. First loading attempt results in a failure since we don't
+         --  have the toolchain yet and we cannot find the project, so we use
+         --  default Ada config to get the toolchain and then retry loading
+         --  the project.
 
          Languages.Include (Ada_Language);
       end if;
@@ -781,7 +786,7 @@ begin
       Implicit_With    => Implicit_With,
       Environment      => Environment);
 
-   if Default_Cfg.Exists then
+   if Default_Cfg.Is_Defined and then Default_Cfg.Exists then
       --  No need for reconfiguration if explicit default configuration
       --  project has been specified.
       GPR2.Project.Parser.Clear_Cache;

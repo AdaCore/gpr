@@ -1,0 +1,9 @@
+description:
+    A test for loading a preinstalled project by simple name
+    # requires x86_64-vx7-linux64/gnat/install/bin on PATH
+driver: build_and_run
+project_file: test
+main: main
+fake_ada_target:
+  - x86_64-wrs-vxworks7
+  - native
