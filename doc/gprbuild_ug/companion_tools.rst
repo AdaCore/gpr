@@ -34,7 +34,10 @@ file, using the following rules.
 * If either :samp:`--config` or :samp:`--autoconf` switch is specified, the
   argument of this switch is used as the configuration file.
 
-* If neither switch is specified, and both target and rts are explicitly
+* If neither switch is specified, and root project has :samp:`Config_Prj_File`
+  attribute specified, the value of this attribute is used as configuration file.
+
+* If neither switch nor attribute are specified, and both target and rts are explicitly
   specified in the project or on the command line, then configuration file
   is called :file:`<target>-<rts>.cgpr`; if only target or only rts is
   specified, it is called :file:`<target>.cgpr` or :file:`<rts>.cgpr`

@@ -36,9 +36,11 @@ is
    function Get_Updated_Search_Paths return All_Search_Paths;
    --  Let Tree use Environment & return updates search paths.
 
-   Old_Messages : constant Log.Object := Self.Messages;
+   Old_Messages : Log.Object := Self.Messages;
    --  Likewise, Self may already have some messages and we don't want
    --  to loose them when we unload the tree for conf/reconf.
+
+   package PRA renames Project.Registry.Attribute;
 
    function Actual_Target return Name_Type;
    --  Returns the target, depending on the parsing stage
@@ -538,22 +540,6 @@ is
 begin
    GPR2.Project.Parser.Clear_Cache;
 
-   Default_Cfg := Path_Name.Create_File (Default_Config_File (Environment));
-
-   if Default_Cfg.Exists then
-      if not Language_Runtimes.Is_Empty then
-         Self.Messages.Append
-           (Message.Create
-              (Level   => Message.Warning,
-               Message => "runtimes are taken into account "
-               & "only in auto-configuration",
-               Sloc    => Source_Reference.Create
-                 (Default_Cfg.Value, 0, 0)));
-      end if;
-
-      Conf := Project.Configuration.Load (Default_Cfg);
-   end if;
-
    if Base.Is_Defined then
       Self.Base := Base;
    end if;
@@ -562,45 +548,160 @@ begin
      +((if Target = No_Name then "all" else String (Target)));
    Self.Explicit_Runtimes := Language_Runtimes;
 
+   Self.Load
+     (Root_Project,
+      Context,
+      With_Runtime     => With_Runtime,
+      File_Reader      => File_Reader,
+      Build_Path       => Build_Path,
+      Subdirs          => Subdirs,
+      Src_Subdirs      => Src_Subdirs,
+      Check_Shared_Lib => Check_Shared_Lib,
+      Absent_Dir_Error => No_Error,
+      Implicit_With    => Implicit_With,
+      Pre_Conf_Mode    => True,
+      Environment      => Environment);
+   --  Ignore possible missing dirs and imported projects since they can
+   --  depend on the result of auto-configuration.
+
+   Has_Errors := Self.Messages.Has_Error;
+
+   --  Ignore messages issued with this initial load: as we don't have
+   --  a valid configuration here, we can't really know whether they
+   --  are meaningful or not.
+
+   Self.Messages.Clear;
+
+   if not Has_Errors then
+
+      --  First, check for Config_Prj_File declaration
+      if not Default_Cfg.Is_Defined then
+         declare
+            CPF_Attr : Project.Attribute.Object;
+         begin
+            if Self.Root_Project.Check_Attribute
+              (PRA.Config_Prj_File, Result => CPF_Attr)
+            then
+               Default_Cfg := Path_Name.Create_File
+                 (Filename_Type (CPF_Attr.Value.Text));
+
+               if not Default_Cfg.Exists then
+                  Self.Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Message =>
+                          "could not locate main configuration project "
+                        & Default_Cfg.Value,
+                        Sloc    => CPF_Attr));
+                  GPR2.Project.Parser.Clear_Cache;
+                  raise Project_Error with "cannot locate configuration";
+               end if;
+            end if;
+         end;
+      end if;
+
+      --  Then check for legacy way of specifying --config among
+      --  Builder.Switches or Builder.Default_Switches.
+      if not Default_Cfg.Is_Defined then
+         declare
+            Attr_Sloc             : Project.Attribute.Object;
+            Report_Obsolete_Usage : Boolean := False;
+         begin
+            for Attr of Self.Root_Project.Attributes (PRA.Builder.Switches)
+            loop
+               for Val of Attr.Values loop
+                  declare
+                     S : constant String := Val.Text;
+                  begin
+                     if S'Length > 9 and then S (1 .. 9) = "--config=" then
+                        Default_Cfg := Path_Name.Create_File
+                          (Filename_Type (S (10 .. S'Last)));
+                        Attr_Sloc := Attr;
+                        Report_Obsolete_Usage := True;
+                     end if;
+                  end;
+               end loop;
+            end loop;
+
+            for Attr of Self.Root_Project.Attributes
+              (PRA.Builder.Default_Switches)
+            loop
+               for Val of Attr.Values loop
+                  declare
+                     S : constant String := Val.Text;
+                  begin
+                     if S'Length > 9 and then S (1 .. 9) = "--config=" then
+                        Default_Cfg := Path_Name.Create_File
+                          (Filename_Type (S (10 .. S'Last)));
+                        Attr_Sloc := Attr;
+                        Report_Obsolete_Usage := True;
+                     end if;
+                  end;
+               end loop;
+            end loop;
+
+            if Default_Cfg.Is_Defined and then not Default_Cfg.Exists then
+               Self.Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Message =>
+                       "could not locate main configuration project "
+                     & Default_Cfg.Value,
+                     Sloc    => Attr_Sloc));
+               GPR2.Project.Parser.Clear_Cache;
+               raise Project_Error with "cannot locate configuration";
+            end if;
+
+            if Report_Obsolete_Usage then
+               --  The warning should go into Old_Messages because
+               --  Self.Messages will be reset after applying configuration.
+               Old_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Warning,
+                     Message =>
+                       "--config in Builder switches is obsolescent, "
+                     & "use Config_Prj_File instead",
+                     Sloc    => Attr_Sloc));
+            end if;
+         end;
+      end if;
+
+      --  Finally, check if default config file is present
+      if not Default_Cfg.Is_Defined then
+         Default_Cfg :=
+           Path_Name.Create_File (Default_Config_File (Environment));
+      end if;
+
+      if Default_Cfg.Exists then
+         if not Language_Runtimes.Is_Empty then
+            Old_Messages.Append
+              (Message.Create
+                 (Level   => Message.Warning,
+                  Message => "runtimes are taken into account "
+                  & "only in auto-configuration",
+                  Sloc    => Source_Reference.Create
+                    (Default_Cfg.Value, 0, 0)));
+         end if;
+
+         Conf := Project.Configuration.Load (Default_Cfg);
+      end if;
+
+   end if;
+
    if not Conf.Is_Defined then
-      --  Default configuration file does not exists. Generate configuration
-      --  automatically.
-
-      --  This involves some delicate bootstrap:
-      --  1- we load the project without configuration
-      --  2- using the loaded project, we determine
-      --     * the Target: if explicitly given to us, this one is used,
-      --       else if the project defines it, this one is used, else the
-      --       host's value is used.
-      --     * the list of languages
-      --     and we load a configuration for the above.
-      --  3- we then reload the project with the configuration
-
-      Self.Load
-        (Root_Project,
-         Context,
-         With_Runtime     => With_Runtime,
-         File_Reader      => File_Reader,
-         Build_Path       => Build_Path,
-         Subdirs          => Subdirs,
-         Src_Subdirs      => Src_Subdirs,
-         Check_Shared_Lib => Check_Shared_Lib,
-         Absent_Dir_Error => No_Error,
-         Implicit_With    => Implicit_With,
-         Pre_Conf_Mode    => True,
-         Environment      => Environment);
-      --  Ignore possible missing dirs and imported projects since they can
-      --  depend on the result of auto-configuration.
-
-      Has_Errors := Self.Messages.Has_Error;
-
-      --  Ignore messages issued with this initial load: as we don't have
-      --  a valid configuration here, we can't really know whether they
-      --  are meaningful or not.
-
-      Self.Messages.Clear;
-
       if not Has_Errors then
+         --  No configuration file specified, but project load was sucessfull.
+         --  Generate configuration automatically.
+
+         --  This involves some delicate bootstrap:
+         --  1- we load the project without configuration
+         --  2- using the loaded project, we determine
+         --     * the Target: if explicitly given to us, this one is used,
+         --       else if the project defines it, this one is used, else the
+         --       host's value is used.
+         --     * the list of languages
+         --     and we load a configuration for the above.
+         --  3- we then reload the project with the configuration
          for C in Self.Iterate
            (Filter =>
               (F_Aggregate | F_Aggregate_Library => False, others => True))
@@ -629,6 +730,11 @@ begin
          --  Generate a default config, since a critical failure occurred:
          --  this will reload the project in normal mode and print the
          --  relevant error messages.
+         --  Additionally, this is used when attempting to load a predefined
+         --  project. First loading attempt results in a failure since we don't
+         --  have the toolchain yet and we cannot find the project, so we use
+         --  default Ada config to get the toolchain and then retry loading
+         --  the project.
 
          Languages.Include (Ada_Language);
       end if;
@@ -650,25 +756,25 @@ begin
          Self.Base,
          Save_Name   => Config_Project,
          Environment => Environment);
-
-      if Conf.Has_Error then
-         for M of Conf.Log_Messages loop
-            Self.Append_Message (M);
-         end loop;
-
-         GPR2.Project.Parser.Clear_Cache;
-         raise Project_Error with "cannot create configuration";
-      end if;
-
-      --  Unload the project that was loaded without configuration.
-      --  We need to backup the messages and default search path:
-      --  messages issued during configuration are relevant, together with
-      --  already computed search paths
-
-      Self.Unload (False);
-      Self.Messages := Old_Messages;
-      Self.Search_Paths := Old_Paths;
    end if;
+
+   if Conf.Has_Error then
+      for M of Conf.Log_Messages loop
+         Self.Append_Message (M);
+      end loop;
+
+      GPR2.Project.Parser.Clear_Cache;
+      raise Project_Error with "cannot create configuration";
+   end if;
+
+   --  Unload the project that was loaded without configuration.
+   --  We need to backup the messages and default search path:
+   --  messages issued during configuration are relevant, together with
+   --  already computed search paths
+
+   Self.Unload (False);
+   Self.Messages := Old_Messages;
+   Self.Search_Paths := Old_Paths;
 
    Self.Load
      (Root_Project,
@@ -684,7 +790,7 @@ begin
       Implicit_With    => Implicit_With,
       Environment      => Environment);
 
-   if Default_Cfg.Exists then
+   if Default_Cfg.Is_Defined and then Default_Cfg.Exists then
       --  No need for reconfiguration if explicit default configuration
       --  project has been specified.
       GPR2.Project.Parser.Clear_Cache;

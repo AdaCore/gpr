@@ -1,0 +1,3 @@
+pseudo_rts
+prj2.gpr:4:11: warning: --config in Builder switches is obsolescent, use Config_Prj_File instead
+pseudo_rts

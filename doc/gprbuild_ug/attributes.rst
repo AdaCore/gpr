@@ -5,7 +5,7 @@
     - Attribute information & description : directly from libGPR2 source code
   then run `make docgen` in gpr2 root directory to generate the wanted version of this document
 
-.. index:: attribute
+.. index:: Attribute
 
 .. _Attributes:
 
@@ -271,6 +271,12 @@ Project Level Attributes
     The list of source directories of the project.
 
 * **Configuration - General**
+
+  .. index:: Attributes - Project Level Attributes; Config_Prj_File
+
+  * **Config_Prj_File**: single value
+
+    The main configuration project file.
 
   .. index:: Attributes - Project Level Attributes; Default_Language
 

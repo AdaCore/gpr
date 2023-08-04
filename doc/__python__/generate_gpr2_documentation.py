@@ -134,7 +134,7 @@ def generate(data, file):
         file.write("  then run `make docgen` in gpr2 root directory to generate the wanted version of this document\n\n")
 
         title = "Attributes"
-        file.write(f".. index:: attribute\n\n.. _{title}:\n\n")
+        file.write(f".. index:: Attribute\n\n.. _{title}:\n\n")
         file.write(f"{title}\n" + "-" * len(title) + "\n\n")
 
         with open(complementary_files["Intro_File"], "r") as intro_file:

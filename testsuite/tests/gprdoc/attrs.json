@@ -201,6 +201,38 @@
           "attribute_descr": "Indicates if the missing object, library and executable directories should be created automatically by the project-aware tool. Taken into account only in the main project. Only authorized case-insensitive values are 'true' and 'false'."
         },
         {
+          "attribute_name": "Config_Prj_File",
+          "attribute_def": {
+            "index_type": "NO_INDEX",
+            "index_optional": false,
+            "value": "SINGLE",
+            "value_case_sensitive": true,
+            "value_is_set": false,
+            "empty_value": "ALLOW",
+            "builtin": false,
+            "is_allowed_in": {
+              "configuration": true,
+              "abstract": true,
+              "standard": true,
+              "library": true,
+              "aggregate": true,
+              "aggregate_library": true
+            },
+            "has_default_in": {
+              "configuration": false,
+              "abstract": false,
+              "standard": false,
+              "library": false,
+              "aggregate": false,
+              "aggregate_library": false
+            },
+            "is_toolchain_config": false,
+            "config_concatenable": false,
+            "inherit_from_extended": "INHERITED"
+          },
+          "attribute_descr": "The main configuration project file."
+        },
+        {
           "attribute_name": "Default_Language",
           "attribute_def": {
             "index_type": "NO_INDEX",
@@ -2592,7 +2624,7 @@
     },
     {
       "package_name": "Binder",
-      "package_descr": "",
+      "package_descr": "This package specifies characteristics useful when invoking the binder either directly via the gnat driver or when using GPRbuild.",
       "attributes": [
         {
           "attribute_name": "Bindfile_Option_Substitution",
@@ -2858,7 +2890,7 @@
     },
     {
       "package_name": "Builder",
-      "package_descr": "",
+      "package_descr": "This package specifies the compilation options used when building an executable or a library for a project. Most of the options should be set in one of Compiler, Binder or Linker packages, but there are some general options that should be defined in this package.",
       "attributes": [
         {
           "attribute_name": "Default_Switches",
@@ -3092,7 +3124,7 @@
     },
     {
       "package_name": "Clean",
-      "package_descr": "",
+      "package_descr": "This package specifies the options used when cleaning a project or a project tree using the tools gnatclean or gprclean.",
       "attributes": [
         {
           "attribute_name": "Switches",
@@ -3258,7 +3290,7 @@
     },
     {
       "package_name": "Compiler",
-      "package_descr": "",
+      "package_descr": "This package specifies the compilation options used by the compiler for each language.",
       "attributes": [
         {
           "attribute_name": "Default_Switches",
@@ -4452,7 +4484,7 @@
     },
     {
       "package_name": "Gnatls",
-      "package_descr": "",
+      "package_descr": "This package specifies the options to use when invoking gnatls via the gnat driver.",
       "attributes": [
         {
           "attribute_name": "Switches",
@@ -4490,7 +4522,7 @@
     },
     {
       "package_name": "Install",
-      "package_descr": "",
+      "package_descr": "This package specifies the options used when installing a project with gprinstall.",
       "attributes": [
         {
           "attribute_name": "Prefix",
@@ -4912,7 +4944,7 @@
     },
     {
       "package_name": "Linker",
-      "package_descr": "",
+      "package_descr": "This package specifies the options used by the linker.",
       "attributes": [
         {
           "attribute_name": "Default_Switches",
@@ -5334,7 +5366,7 @@
     },
     {
       "package_name": "Naming",
-      "package_descr": "",
+      "package_descr": "This package specifies the naming conventions that apply to the source files in a project. In particular, these conventions are used to automatically find all source files in the source directories, or given a file name to find out its language for proper processing.",
       "attributes": [
         {
           "attribute_name": "Body",
@@ -5788,7 +5820,7 @@
     },
     {
       "package_name": "Remote",
-      "package_descr": "",
+      "package_descr": "This package is used by GPRbuild to describe how distributed compilation should be done.",
       "attributes": [
         {
           "attribute_name": "Excluded_Patterns",

@@ -4118,7 +4118,6 @@ package body GPR2.Project.Parser is
          --  checks if there's no critical error.
 
          elsif not Tree.Log_Messages.Has_Error then
-
             --  Check value kind
 
             Def := PRA.Get (Q_Name);
@@ -4163,6 +4162,28 @@ package body GPR2.Project.Parser is
                end if;
 
                Include := False;
+
+            elsif Q_Name = PRA.Main then
+               --  A main attrbute must contain only basename and must reject
+               --  full names. We ensure here that we don't have directory
+               --  separators in the list of mains.
+               for V of A.Values loop
+                  declare
+                     M : constant String := V.Text;
+                  begin
+                     --  Check for bath Unix & Windows directory separators
+                     if Strings.Fixed.Index
+                       (M, Strings.Maps.To_Set ("/\")) > 0
+                     then
+                        Tree.Log_Messages.Append
+                          (Message.Create
+                             (Level   => Message.Error,
+                              Sloc    => Source_Reference.Object (A),
+                              Message => "attribute """ & Image (Q_Name)
+                                         & """ accepts only simple names"));
+                     end if;
+                  end;
+               end loop;
             end if;
 
             --  Check the attribute index

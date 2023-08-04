@@ -267,6 +267,9 @@ package GPR2.Project.Registry.Attribute is
    Create_Missing_Dirs              : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"create_missing_dirs");
+   Config_Prj_File                  : constant Q_Attribute_Id :=
+                                        (Project_Level_Scope,
+                                         +"config_prj_file");
    Default_Language                 : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"default_language");

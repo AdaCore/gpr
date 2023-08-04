@@ -443,6 +443,14 @@ begin
       Inherit_From_Extended => Concatenated,
       Is_Set                => True);
 
+   --  config_prj_file
+   Add
+     (Name                 => Config_Prj_File,
+      Index_Type           => No_Index,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Is_Allowed_In        => Everywhere);
+
    --  roots
    Add
      (Name                 => Roots,
