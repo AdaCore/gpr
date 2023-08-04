@@ -120,7 +120,7 @@ detailed later in this documentation. They are summarized here as a reference.
   the main program, and the options for the various tools involved in the
   build process.
 
-.. index:: Project attribute
+.. index:: Attribute
 
 **Project attribute**:
   A specific project characteristic is defined by an `attribute clause`. Its
@@ -128,7 +128,7 @@ detailed later in this documentation. They are summarized here as a reference.
   are defined through a list of predefined attributes with precise
   semantics. See :ref:`Attributes`.
 
-.. index:: Packages in project files
+.. index:: Package
 
 **Package in a project**:
   Global attributes are defined at the top level of a project.
@@ -225,7 +225,7 @@ The first step is thus to declare the source directories, which are the director
 to be searched to find source files. In the current example,
 the :file:`common` directory is the only source directory.
 
-.. index:: Source_Dirs attribute
+.. index:: Attributes - Project Level Attributes; Source_Dirs
 
 There are several ways to specify the source directories:
 
@@ -256,8 +256,7 @@ There are several ways to specify the source directories:
   ":file:`**`" and ":file:`./**`" represent the complete directory tree rooted at
   the directory in which the project file resides.
 
-.. index:: Source_Dirs attribute
-.. index:: Excluded_Source_Dirs attribute
+.. index:: Attributes - Project Level Attributes; Excluded_Source_Dirs
 
 When using the ``Source_Dirs`` construct, you may sometimes find it convenient
 to also use the attribute ``Excluded_Source_Dirs``, which is also a list of
@@ -265,7 +264,7 @@ paths. Each entry specifies a directory whose immediate content, not including
 subdirs, is to be excluded. It is also possible to exclude a complete
 directory subtree using the ``**`` notation.
 
-.. index:: Ignore_Source_Sub_Dirs attribute
+.. index:: Attributes - Project Level Attributes; Ignore_Source_Sub_Dirs
 
 It is often desirable to remove, from the source directories, directory
 subtrees rooted at some subdirectories. An example is the subdirectories
@@ -311,7 +310,7 @@ locating the specified source files in the specified source directories.
   all the sources in subdirectory :file:`common` for the default language (Ada) using
   the default naming convention.
 
-  .. index:: Languages attribute
+  .. index:: Attributes - Project Level Attributes; Languages
 
   However, when compiling a multi-language application, or a pure C
   application, the project manager must be told which languages are of
@@ -329,7 +328,7 @@ locating the specified source files in the specified source directories.
   is explicitly specified.
   See :ref:`Naming_Schemes`.
 
-  .. index:: Source_Files attribute
+  .. index:: Attributes - Project Level Attributes; Source_Files
 
 * `Source_Files`.
   In some cases, source directories might contain files that should not be
@@ -348,7 +347,7 @@ locating the specified source files in the specified source directories.
   ``Source_Dirs`` can be set to the empty list, with the same
   result.
 
-  .. index:: Source_List_File attribute
+  .. index:: Attributes - Project Level Attributes; Source_List_File
 
 * `Source_List_File`.
   If there is a large number of files, it might be more convenient to use
@@ -362,9 +361,9 @@ locating the specified source files in the specified source directories.
   ``Source_List_File`` are given explicit values. In this case, the
   attribute ``Source_Files`` prevails.
 
-  .. index:: Excluded_Source_Files attribute
-  .. index:: Locally_Removed_Files attribute
-  .. index:: Excluded_Source_List_File attribute
+  .. index:: Attributes - Project Level Attributes; Excluded_Source_Files
+  .. index:: Attributes - Project Level Attributes; Locally_Removed_Files
+  .. index:: Attributes - Project Level Attributes; Excluded_Source_List_File
 
 * `Excluded_Source_Files`.
   Specifying an explicit list of files is not always convenient. Instead it might
@@ -419,8 +418,7 @@ new or temporary files there. Instead, all such files are created in the object
 directory. (This is not true for project-aware IDEs, one of whose purposes is
 to create the source files.)
 
-.. index:: Object_Dir attribute
-.. index:: -p (gprbuild)
+.. index:: Attributes - Project Level Attributes; Object_Dir
 
 The object directory is specified through the **Object_Dir** attribute.
 Its value is the path to the object directory, either absolute or
@@ -455,7 +453,7 @@ Incidentally, the directory designated by the ``Object_Dir`` attribute may
 be used by project aware tools other than the compilation toolchain to store
 reports or intermediate files.
 
-.. index:: Exec_Dir attribute
+.. index:: Attributes - Project Level Attributes; Exec_Dir
 
 When the *linker* is called, it usually creates an executable. By
 default, this executable is placed in the project's object directory.
@@ -496,7 +494,7 @@ such as through a *Makefile*, you do not need to specify the list of
 dependencies of each executable. The project-aware builder knows enough of the
 semantics of the languages to build and link only the necessary elements.
 
-.. index:: Main attribute
+.. index:: Attributes - Project Level Attributes; Main
 
 The list of main files is specified via the **Main** attribute. It contains
 a list of file names (no directories). If a file name is specified without
@@ -572,14 +570,15 @@ the project manager and will be invoked with user-defined switches from the
 project files. To obtain this effect, a project file feature known as
 a *package* is used.
 
-.. index:: Packages in project files
+.. index:: Package
 
 A project file contains zero or more **packages**, each of which
 defines the attributes specific to one tool (or one set of tools). Project
-files use an Ada-like syntax for packages. Package names permitted in project
-files are restricted to a predefined set (see :ref:`Packages`), and the contents
+files use an Ada-like syntax for packages. Package names recognized in project
+files depend on a tool (see :ref:`Packages` for the predefined set); if a tool
+doesn't recognize a package, its content is ignored. The contents
 of packages are limited to a small set of constructs and attributes
-(see :ref:`Attributes`).
+(see :ref:`Attributes` for the attributes of predefined packages).
 
 Our example project file below includes several empty packages. At
 this stage, they could all be omitted since they are empty, but they show which
@@ -614,8 +613,7 @@ the correct package, which will make the setup easier to understand.
 
 Several attributes can be used to specify the switches:
 
-.. index:: Default_Switches attribute
-.. index:: Indexed attribute concept
+.. index:: Indexed attribute
 
 **Default_Switches**:
 
@@ -635,8 +633,6 @@ Several attributes can be used to specify the switches:
        package Compiler is
          for Default_Switches ("Ada") use ("-O2");
        end Compiler;
-
-.. index:: Switches attribute
 
 **Switches**:
 
@@ -676,18 +672,12 @@ Several attributes can be used to specify the switches:
   name in which case it has the same semantics as *Default_Switches*.
   However, indexes with wild cards are never valid for language name.
 
-.. index:: Local_Configuration_Pragmas attribute
-
 **Local_Configuration_Pragmas**:
 
   This attribute may specify the path
   of a file containing configuration pragmas for use by the Ada compiler,
   such as `pragma Restrictions (No_Tasking)`. These pragmas will be
   used for all the sources of the project.
-
-.. index:: Builder package
-.. index:: Binder package
-.. index:: Linker package
 
 The switches for the other tools are defined in a similar manner through the
 **Default_Switches** and **Switches** attributes, respectively in the
@@ -862,7 +852,7 @@ and the specific switches for :file:`main.c` have all been taken into
 account.
 
 .. index:: Naming scheme
-.. index:: Naming package
+.. index:: Package; Naming
 
 .. _Naming_Schemes:
 
@@ -886,7 +876,7 @@ You can, however, specify other configuration pragmas.
 
 The following attributes can be defined in package `Naming`:
 
-.. index:: Casing attribute
+.. index:: Attributes - Package Naming Attributes; Casing
 
 **Casing**:
 
@@ -910,7 +900,7 @@ The following attributes can be defined in package `Naming`:
   On Windows, file names are case insensitive, so this attribute is
   irrelevant.
 
-.. index:: Dot_Replacement attribute
+.. index:: Attributes - Package Naming Attributes; Dot_Replacement
 
 **Dot_Replacement**:
 
@@ -932,8 +922,7 @@ The following attributes can be defined in package `Naming`:
 
   * It cannot include a space or a character that is not printable ASCII
 
-.. index:: Spec_Suffix attribute
-.. index:: Specification_Suffix attribute
+.. index:: Attributes - Package Naming Attributes; Spec_Suffix
 
 **Spec_Suffix** and **Specification_Suffix**:
 
@@ -958,8 +947,7 @@ The following attributes can be defined in package `Naming`:
   * If ``Dot_Replacement`` is a single dot, then it cannot include
     more than one dot.
 
-.. index:: Body_Suffix attribute
-.. index:: Implementation_Suffix attribute
+.. index:: Attributes - Package Naming Attributes; Body_Suffix
 
 **Body_Suffix** and **Implementation_Suffix**:
 
@@ -994,7 +982,7 @@ The following attributes can be defined in package `Naming`:
   find the list of source files in an editor, like the GNAT Programming System
   (GPS).
 
-.. index:: Separate_Suffix attribute
+.. index:: Attributes - Package Naming Attributes; Separate_Suffix
 
 **Separate_Suffix**:
 
@@ -1007,8 +995,8 @@ The following attributes can be defined in package `Naming`:
   Otherwise, the same rules apply as for the ``Body_Suffix`` attribute.
 
 
-.. index:: Spec attribute
-.. index:: Specification attribute
+.. index:: Attributes - Package Naming Attributes; Spec
+.. index:: Attributes - Package Naming Attributes; Specification
 
 **Spec** or **Specification**:
 
@@ -1031,16 +1019,16 @@ The following attributes can be defined in package `Naming`:
          for Spec ("foo") use "foo.a" at 2;
 
 
-.. index:: Body attribute
-.. index:: Implementation attribute
+.. index:: Attributes - Package Naming Attributes; Body
+.. index:: Attributes - Package Naming Attributes; Implementation
 
 **Body** or **Implementation**:
 
   These attribute play the same role as ``Spec``, but for Ada bodies.
 
 
-.. index:: Specification_Exceptions attribute
-.. index:: Implementation_Exceptions attribute
+.. index:: Attributes - Package Naming Attributes; Specification_Exceptions
+.. index:: Attributes - Package Naming Attributes; Implementation_Exceptions
 
 **Specification_Exceptions** and **Implementation_Exceptions**:
 
@@ -1108,12 +1096,12 @@ at the beginning of our project:
        end Build;
 
 
-.. index:: Externally_Built attribute
-
 When such a project is compiled, *gprbuild* will automatically check
 the imported projects and recompile their sources when needed. It will also
 recompile the sources from `Build` when needed, and finally create the
 executable.
+
+.. index:: Attributes - Project Level Attributes; Externally_Built
 
 In some cases, the implementation units needed to recompile a
 project are not available, or come from some third party and you do not want to
@@ -1372,9 +1360,6 @@ There are two main approaches to avoiding this duplication:
   in any directory, and we are sure it shares no sources with `Build`
   or `Logging`, which would be invalid.
 
-  .. index:: Project qualifier
-  .. index:: abstract project qualifier
-
   Note the additional use of the **abstract** qualifier in :file:`shared.gpr`.
   This qualifier is optional, but helps convey the message that we do not
   intend this project to have source files (see :ref:`Qualified_Projects` for
@@ -1401,7 +1386,7 @@ A :dfn:`main project` is a project explicitly specified on the command line.
 Such attributes are known as :dfn:`global attributes`;
 here are several that are commonly used:
 
-.. index:: Global_Configuration_Pragmas attribute
+.. index:: Attributes - Package Builder Attributes; Global_Configuration_Pragmas
 
 **Builder'Global_Configuration_Pragmas**:
 
@@ -1411,7 +1396,7 @@ here are several that are commonly used:
   additional pragmas can be specified on a per-project basis by setting the
   ``Compiler'Local_Configuration_Pragmas`` attribute.
 
-.. index:: Global_Compilation_Switches attribute
+.. index:: Attributes - Package Builder Attributes; Global_Compilation_Switches
 
 **Builder'Global_Compilation_Switches**:
 
@@ -1616,7 +1601,7 @@ can be used to specify specific aspects of the library. For readability, it is
 also recommended (although not mandatory), to use the qualifier `library`
 in front of the `project` keyword.
 
-.. index:: Library_Name attribute
+.. index:: Attributes - Project Level Attributes; Library_Name
 
 **Library_Name**:
 
@@ -1627,7 +1612,7 @@ in front of the `project` keyword.
   In general, we recommend using only alphanumeric characters (and
   possibly single underscores), to help portability.
 
-.. index:: Library_Dir attribute
+.. index:: Attributes - Project Level Attributes; Library_Dir
 
 **Library_Dir**:
 
@@ -1654,7 +1639,7 @@ Once the above two attributes are defined, the library project is valid and
 is sufficient for building a library with default characteristics.
 Other library-related attributes can be used to change the defaults:
 
-.. index:: Library_Kind attribute
+.. index:: Attributes - Project Level Attributes; Library_Kind
 
 **Library_Kind**:
 
@@ -1679,7 +1664,7 @@ Other library-related attributes can be used to change the defaults:
   two different project files, or a single one that uses scenarios to indicate
   the various kinds of library to be built and their corresponding object_dir.
 
-.. index:: Library_ALI_Dir attribute
+.. index:: Attributes - Project Level Attributes; Library_ALI_Dir
 
 **Library_ALI_Dir**:
 
@@ -1719,7 +1704,7 @@ Other library-related attributes can be used to change the defaults:
   :file:`liblogging.so.1` library and a symbolic link to it called
   :file:`liblogging.so`.
 
-.. index:: Library_GCC attribute
+.. index:: Attributes - Project Level Attributes; Library_GCC
 
 **Library_GCC**:
 
@@ -1728,7 +1713,7 @@ Other library-related attributes can be used to change the defaults:
   accomplishes specific actions before calling ``gcc`` (which itself calls the
   linker to build the library image).
 
-.. index:: Library_Options attribute
+.. index:: Attributes - Project Level Attributes; Library_Options
 
 **Library_Options**:
 
@@ -1738,7 +1723,7 @@ Other library-related attributes can be used to change the defaults:
   restricted to paths to object files. Those paths may be absolute or relative
   to the object directory.
 
-.. index:: Leading_Library_Options attribute
+.. index:: Attributes - Project Level Attributes; Leading_Library_Options
 
 **Leading_Library_Options**:
 
@@ -1785,7 +1770,7 @@ All :file:`ALI` files will also be copied from the object directory to the
 library directory. To build executables, *GPRbuild* will use the
 library rather than the individual object files.
 
-.. index:: Externally_Built attribute
+.. index:: Attributes - Project Level Attributes; Externally_Built
 
 Library projects can also be useful to specify a library that needs to be used
 but, for some reason, cannot be rebuilt. Such a situation may arise when some
@@ -1826,9 +1811,9 @@ the proper order of libraries in the final link command.
 Stand-alone Library Projects
 ----------------------------
 
-.. index:: Stand-alone libraries
+.. index:: Stand-alone library
 
-A **stand-alone library** is a library that contains the necessary code to
+A **stand-alone library** (SAL) is a library that contains the necessary code to
 elaborate the Ada units that are included in the library. A stand-alone
 library is a convenient way to add an Ada subsystem to a more global system
 whose main is not in Ada since it makes the elaboration of the Ada part mostly
@@ -1888,18 +1873,9 @@ source file names).
   build. Values are either ``standard`` (the default), ``no`` or
   ``encapsulated``. When ``standard`` is used the code to elaborate and
   finalize the library is embedded, when ``encapsulated`` is used the
-  library can furthermore depend only on static libraries (including
-  the GNAT runtime). This attribute can be set to ``no`` to make it clear
+  library is an encapsulated library (see :ref:`Encapsulated_Stand-alone_Library_Projects`). This attribute can be set to ``no`` to make it clear
   that the library should not be stand-alone in which case attributes
   ``Library_Interface`` or ``Interfaces`` should not be defined.
-
-  .. code-block:: gpr
-
-     for Library_Dir use "lib";
-     for Library_Name use "logging";
-     for Library_Kind use "dynamic";
-     for Library_Interface use ("lib1", "lib2");  --  unit names
-     for Library_Standalone use "encapsulated";
 
 In order to include the elaboration code in the stand-alone library, the binder
 is invoked on the closure of the library units creating a package whose name
@@ -1939,8 +1915,7 @@ included in the library.
   the binding phase will fail.
 
 
-.. index:: Binder'Default_Switches attribute
-.. index:: Default_Switches attribute
+.. index:: Attributes - Package Binder Attributes; Default_Switches
 
 **Binder'Default_Switches**:
 
@@ -1995,6 +1970,174 @@ included in the library.
   exported from the stand-alone library.
 
 
+.. index:: Aggregate library project
+
+.. _Encapsulated_Stand-alone_Library_Projects:
+
+Encapsulated Stand-alone Library Projects
+-----------------------------------------
+
+.. index:: Encapsulated stand-alone library
+
+An *encapsulated stand-alone library* (ESAL) is a special kind of an Ada
+stand-alone library which, in addition to user sources that are part of the
+project, also includes the complete closure of the library interface units,
+including those coming from outside projects or the Ada runtime. A project is
+an ESAL project if the project-level attribute :samp:`Library_Standalone` is
+declared with the value :samp:`"encapsulated"`. Both static and shared library
+kinds are supported for ESALs.
+
+The following is an example of attribute declarations for an ESAL project:
+
+.. code-block:: gpr
+
+   for Library_Dir use "lib";
+   for Library_Name use "logging";
+   for Library_Kind use "dynamic";
+   for Library_Interface use ("lib1", "lib2");  --  unit names
+   for Library_Standalone use "encapsulated";
+
+Elaboration of transitively included units, including the run-time ones,
+occurs as part of ESAL elaboration, and the library has no further external
+dependency on the GNAT run-time. This makes it a convenient option when the
+Ada subsystem is used as part of a bigger non-Ada
+system, as deploying the Ada component to users is greatly simplified. At the
+same time, this is also the most important limitation of ESAL: when an ESAL is
+used in the partition, *all* Ada code must be located inside of the ESAL, no
+other components (such as the main subprogram or any additional libraries) can
+contain Ada code. When starting with a mix of Ada projects, one convenient way
+to ensure this property is by using :ref:`Aggregate_ESAL_Projects`.
+
+.. warning::
+
+   The user must ensure no Ada code is present outside of the ESAL, since this
+   might result in several copies of the same unit in the same partition,
+   making the program potentially erroneous.
+
+
+.. _Aggregate_Library_Projects:
+
+Aggregate Library Projects
+--------------------------
+
+.. index:: Aggregate library project
+
+Aggregate library projects make it possible to build a single library
+using object files built using other standard or library
+projects. This gives the flexibility to describe an application as
+having multiple modules (for example a GUI, database access, and other)
+using different project files (so possibly built with different compiler
+options) and yet create a single library (static or relocatable) out of the
+corresponding object files.
+
+.. _Building_aggregate_library_projects:
+
+.. rubric:: Building aggregate library projects
+
+For example, we can define an aggregate project ``Agg`` that groups ``A``, ``B``
+and ``C``:
+
+  .. code-block:: gpr
+
+       aggregate library project Agg is
+          for Project_Files use ("a.gpr", "b.gpr", "c.gpr");
+          for Library_Name  use "agg";
+          for Library_Dir   use "lagg";
+       end Agg;
+
+Then, when you build with:
+
+  .. code-block:: sh
+
+       gprbuild agg.gpr
+
+this will build all units from projects ``A``, ``B`` and ``C`` and will create a
+static library named :file:`libagg.a` in the :file:`lagg`
+directory. An aggregate library project has the same properties as a standard
+library project; in particular it can be of any kind, which can be different
+from the kind(s) of library projects that it aggregates.
+
+When creating an aggregate library project, additional compilation options
+may need to be passed to all nested compilations. The most common use case is
+a need to pass :samp:`-fPIC` when creating an aggregate shared library out of
+static library projects on platforms where this compiler option is
+required to create relocatable object files. For this, an attribute
+:samp:`Builder'Global_Compilation_Switches` may be used in the aggregate
+library project:
+
+  .. code-block:: gpr
+
+       aggregate library project Agg is
+          for Project_Files use ("a.gpr", "b.gpr", "c.gpr");
+          for Library_Name use ("agg");
+          for Library_Dir use ("lagg");
+          for Library_Kind use "relocatable";
+
+          package Builder is
+             for Global_Compilation_Switches ("Ada") use ("-fPIC");
+          end Builder;
+       end Agg;
+
+With the above aggregate library Builder package, the :samp:`-fPIC`
+option will be passed to the compiler when building any source code
+from projects :file:`a.gpr`, :file:`b.gpr` and :file:`c.gpr`.
+
+.. _Syntax_of_aggregate_library_projects:
+
+.. rubric:: Syntax of aggregate library projects
+
+An aggregate library project follows the general syntax of project
+files. The recommended extension is still :file:`.gpr`. However, a special
+``aggregate library`` qualifier must appear before the keyword
+``project``.
+
+The :samp:`Project_Files` attribute is used to
+describe the aggregated projects whose object files have to be
+included into the aggregate library. The environment variables
+:samp:`ADA_PROJECT_PATH`, :samp:`GPR_PROJECT_PATH` and
+:samp:`GPR_PROJECT_PATH_FILE` are not used to find the project files.
+
+An aggregate library project can only |with| abstract projects that can be used
+to share attribute values.
+
+When creating an aggregate stand-alone library, the attributes :samp:`Library_Interface`/:samp:`Interfaces` can be used as usual, referring to
+sources from the aggregated projects.
+
+An aggregate library project does not have any source files directly (only
+through other standard projects). Therefore a number of the standard
+attributes and packages are forbidden in an aggregate library
+project. Here is a (non-exhaustive) list:
+
+* ``Languages``
+* ``Source_Files``, ``Source_List_File`` and other attributes dealing with
+  a list of sources.
+* ``Source_Dirs`` and ``Exec_Dir``
+* ``Main``
+* ``Roots``
+* ``Externally_Built``
+* ``Inherit_Source_Path``
+* ``Excluded_Source_Dirs``
+* ``Locally_Removed_Files``
+* ``Excluded_Source_Files``
+* ``Excluded_Source_List_File``
+
+The :samp:`Object_Dir` attribute is allowed, and can be used by
+some analysis tools to store their artifacts.
+
+The only package that is allowed (and optional) is ``Builder``.
+
+.. _Aggregate_esal_projects:
+
+.. rubric:: Aggregate ESAL Projects
+
+An aggregate library can also be declared encapsulated. As previously
+mentioned, using an encapsulated library implies ensuring that there is no Ada
+code in the partition that is outside of the ESAL. When starting with a mix of
+Ada projects, ensuring this property may be challenging. One convenient way is
+to wrap all Ada projects in the partition in an aggregate encapsulated library
+project.
+
+
 .. _Installing_a_Library_with_Project_Files:
 
 Installing a Library with Project Files
@@ -2018,10 +2161,9 @@ Another option is to use *gprinstall* to install the library in a
 different context than the build location. The *gprinstall* tool automatically
 generates a project to use this library, and also copies the minimum set of
 sources needed to use the library to the install location.
-See :ref:`Package_Install_Attributes`.
+See :ref:`Installing_with_GPRinstall`.
 
 .. index:: Project extension
-.. index:: Extending a project
 
 .. _Project_Extension:
 
@@ -2068,6 +2210,13 @@ This facility is somewhat analogous to class extension (with single
 inheritance) in object-oriented programming. Project extension hierarchies
 are permitted (an extending project may itself serve as a base project and
 be extended), and a project that extends a project can also import other projects.
+
+All tool packages that are not declared in the extending project are inherited
+from the base project, with their attributes, with the exception of
+``Linker'Linker_Options`` which is never inherited. In particular, an
+extending project retains all the switches specified in its base project.
+Most project-level attributes, if they are not declared in the extending
+project, are also inherited (see :ref:`Attributes` for exceptions).
 
 An extending project implicitly inherits all the sources and objects from
 its base project. It is possible to create a new version of some of
@@ -2127,9 +2276,6 @@ been overridden in such a way that a body is forbidden. In this case, it is
 necessary to indicate that the inherited body is not part of the sources
 of the project, otherwise there will be a compilation error.
 
-.. index:: Excluded_Source_Files attribute
-.. index:: Excluded_Source_List_File attribute
-
 Two attributes are available for this purpose:
 
 * **Excluded_Source_Files**, whose value is a list of file names, and
@@ -2145,16 +2291,6 @@ Two attributes are available for this purpose:
           for Excluded_Source_Files use ("pack.adb");
        end Work;
 
-
-All tool packages that are not declared in the extending project are inherited from
-the base project, with their attributes, with the exception of
-``Linker'Linker_Options`` which is never inherited. In particular, an
-extending project retains all the switches specified in its base project.
-
-At the project level, if they are not declared in the extending project, some
-attributes are inherited from the base project. They are:
-``Languages``, ``Main`` (for a root non library project) and
-``Library_Name`` (for a project extending a library project).
 
 .. _Importing_and_Project_Extension:
 
@@ -2275,7 +2411,7 @@ A solution is to introduce an "empty" extension of :file:`b.gpr`, which is impor
 There is now no ambiguity over which version of :file:`foo.adb` to use;
 it will be the one from :file:`a_ext.gpr`.
 
-.. index:: extends all
+.. index:: Project extension; extends all
 
 When extending a large system spanning multiple projects, it is often
 inconvenient to extend every project in the project import closure that
@@ -2515,8 +2651,6 @@ Also, libraries are always rebuilt when building a project.
 To solve this problem you can define an *aggregate project* ``Agg`` that
 groups ``A``, ``B`` and ``C``:
 
-  .. index:: Project_Files attribute
-
   .. code-block:: gpr
 
        aggregate project Agg is
@@ -2716,7 +2850,7 @@ The package ``Naming`` and packages that control the compilation process
 
 The following three attributes can be used only in an aggregate project:
 
-.. index:: Project_Files attribute
+.. index:: Attributes - Project Level Attributes; Project_Files
 
 **Project_Files**:
 
@@ -2769,7 +2903,7 @@ The following three attributes can be used only in an aggregate project:
        --  all projects recursively
 
 
-.. index:: Project_Path attribute
+.. index:: Attributes - Project Level Attributes; Project_Path
 
 **Project_Path**:
 
@@ -2860,7 +2994,7 @@ The following three attributes can be used only in an aggregate project:
 
         for Project_Path use ("/usr/local/gpr", "gpr/");
 
-.. index:: External attribute
+.. index:: Attributes - Project Level Attributes; External
 
 **External**:
 
@@ -2900,17 +3034,13 @@ The following three attributes can be used only in an aggregate project:
   ``P``, which in particular might impact the list of source files in ``P``.
 
 
-.. index:: Package Builder
-
 .. _package_Builder_in_aggregate_projects:
 
-package Builder in aggregate projects
+Package Builder in aggregate projects
 -------------------------------------
 
 When used in an aggregate project, only the following attributes of this
 package are valid:
-
-.. index:: Switches attribute
 
 **Switches**:
 
@@ -2930,8 +3060,6 @@ package are valid:
   projects or projects.
 
   It can only contain builder switches, not compiler switches.
-
-.. index:: Global_Compilation_Switches attribute
 
 **Global_Compilation_Switches**
 
@@ -3024,8 +3152,6 @@ package are valid:
   ``B``), the switches used by the compiler are unambiguous.
 
 
-.. index:: Global_Configuration_Pragmas attribute
-
 **Global_Configuration_Pragmas**
 
   This attribute can be used to specify a file containing
@@ -3038,8 +3164,6 @@ package are valid:
   ``Compiler'Local_Configuration_Pragmas`` attribute if they need.
 
 
-.. index:: Global_Config_File attribute
-
 **Global_Config_File**
 
   This attribute, indexed with a language name, can be used to specify a config
@@ -3051,114 +3175,6 @@ is ignored, except for the ``Executable`` attribute which specifies the
 name of the executables resulting from the link of the main programs, and
 for the ``Executable_Suffix``.
 
-
-.. index:: Aggregate library project
-
-.. _Aggregate_Library_Projects:
-
-Aggregate Library Projects
-==========================
-
-Aggregate library projects make it possible to build a single library
-using object files built using other standard or library
-projects. This gives the flexibility to describe an application as
-having multiple modules (for example a GUI, database access, and other)
-using different project files (so possibly built with different compiler
-options) and yet create a single library (static or relocatable) out of the
-corresponding object files.
-
-.. _Building_aggregate_library_projects:
-
-Building aggregate library projects
------------------------------------
-
-For example, we can define an aggregate project ``Agg`` that groups ``A``, ``B``
-and ``C``:
-
-  .. code-block:: gpr
-
-       aggregate library project Agg is
-          for Project_Files use ("a.gpr", "b.gpr", "c.gpr");
-          for Library_Name  use "agg";
-          for Library_Dir   use "lagg";
-       end Agg;
-
-Then, when you build with:
-
-  .. code-block:: sh
-
-       gprbuild agg.gpr
-
-this will build all units from projects ``A``, ``B`` and ``C`` and will create a
-static library named :file:`libagg.a` in the :file:`lagg`
-directory. An aggregate library project has the same set of
-restrictions as a standard library project.
-
-Note that a shared aggregate library project cannot aggregate a
-static library project. In platforms where a compiler option is
-required to create relocatable object files, a ``Builder package`` in the
-aggregate library project may be used:
-
-  .. code-block:: gpr
-
-       aggregate library project Agg is
-          for Project_Files use ("a.gpr", "b.gpr", "c.gpr");
-          for Library_Name use ("agg");
-          for Library_Dir use ("lagg");
-          for Library_Kind use "relocatable";
-
-          package Builder is
-             for Global_Compilation_Switches ("Ada") use ("-fPIC");
-          end Builder;
-       end Agg;
-
-With the above aggregate library Builder package, the :samp:`-fPIC`
-option will be passed to the compiler when building any source code
-from projects :file:`a.gpr`, :file:`b.gpr` and :file:`c.gpr`.
-
-
-.. _Syntax_of_aggregate_library_projects:
-
-Syntax of aggregate library projects
-------------------------------------
-
-An aggregate library project follows the general syntax of project
-files. The recommended extension is still :file:`.gpr`. However, a special
-``aggregate library`` qualifier must appear before the keyword
-``project``.
-
-An aggregate library project cannot |with| any other project
-(standard or aggregate), except an abstract project which can be used
-to share attribute values.
-
-An aggregate library project does not have any source files directly (only
-through other standard projects). Therefore a number of the standard
-attributes and packages are forbidden in an aggregate library
-project. Here is a (non-exhaustive) list:
-
-* ``Languages``
-* ``Source_Files``, ``Source_List_File`` and other attributes dealing with
-  a list of sources.
-* ``Source_Dirs`` and ``Exec_Dir``
-* ``Main``
-* ``Roots``
-* ``Externally_Built``
-* ``Inherit_Source_Path``
-* ``Excluded_Source_Dirs``
-* ``Locally_Removed_Files``
-* ``Excluded_Source_Files``
-* ``Excluded_Source_List_File``
-
-The only package that is allowed (and optional) is ``Builder``.
-
-The ``Project_Files`` attribute is used to
-describe the aggregated projects whose object files have to be
-included into the aggregate library. The environment variables
-:envvar:`ADA_PROJECT_PATH`, :envvar:`GPR_PROJECT_PATH` and
-:envvar:`GPR_PROJECT_PATH_FILE` are not used to find the project files.
-
-As for regular (not library) aggregate projects, the ``Object_Dir`` attribute
-is allowed and used by some analysis tools in the same fashion.
 
 .. _Project_File_Reference:
 
@@ -3217,11 +3233,6 @@ Glossary
      A project that describes compilers and other tools, for use by *GPRbuild*.
      See :ref:`Configuration Project<Configuration_Project>`.
 
-   Extending a project
-     The reuse and possible adaption by one project of the source files from
-     another project (the base project). Somewhat analogous to (single) class inheritance in
-     object-oriented programming. See :ref:`Project_Extension`.
-
    External variable
      A variable that is defined on the command line (by the :samp:`-X` switch), as the
      value of an environment variable, or, by default, as the second parameter to the
@@ -3261,7 +3272,9 @@ Glossary
      files.
 
    Project extension
-     See glossary item `Extending a project`
+     The reuse and possible adaptation by one project of the source files from
+     another project (the base project). Somewhat analogous to (single) class
+     inheritance in object-oriented programming. See :ref:`Project_Extension`.
 
    Project file
      A textual representation of a project, which uses an Ada-like notation.

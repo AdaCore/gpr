@@ -5,7 +5,7 @@
     - Attribute information & description : directly from libGPR2 source code
   then run `make docgen` in gpr2 root directory to generate the wanted version of this document
 
-.. index:: attribute
+.. index:: Attribute
 
 .. _Attributes:
 

@@ -1,4 +1,4 @@
-.. index:: environment_variables
+.. index:: environment variable
 
 .. _Environment_Variables:
 

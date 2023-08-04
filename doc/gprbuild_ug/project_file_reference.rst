@@ -232,7 +232,7 @@ An empty declaration is allowed anywhere a declaration is allowed. It has
 no effect.
 
 
-.. index:: Packages in project files
+.. index:: Package
 
 .. _Packages:
 
@@ -243,17 +243,17 @@ A project file may contain **packages**, which group attributes (typically
 all the attributes that are used by one of the GNAT tools).
 
 A package with a given name may only appear once in a project file.
-The following packages are currently supported in project files
+The following packages are currently always recognized in project files
 (See :ref:`Attributes` for the list of attributes that each can contain).
 
-.. index:: Binder package
+.. index:: Package; Binder
 
 *Binder*
   This package specifies characteristics useful when invoking the binder either
   directly via the *gnat* driver or when using *GPRbuild*.
   See :ref:`Main_Subprograms`.
 
-.. index:: Builder package
+.. index:: Package; Builder
 
 *Builder*
   This package specifies the compilation options used when building an
@@ -263,109 +263,37 @@ The following packages are currently supported in project files
   package. See :ref:`Main_Subprograms`, and :ref:`Executable_File_Names` in
   particular.
 
-.. index:: Check package
-.. index:: gnatcheck tool
-
-*Check*
-  This package specifies the options used when calling the coding standard
-  verification tool *gnatcheck*. Its attributes
-  ``Default_Switches`` and ``Switches`` have the same semantics as for the package
-  ``Builder``. The first string should always be :option:`-rules` to specify
-  that all the other options belong to the ``-rules`` section of the
-  parameters to *gnatcheck*.
-
-.. index:: Clean package
-.. index:: gprclean tool
+.. index:: Package; Clean
 
 *Clean*
   This package specifies the options used when cleaning a project or a project
   tree using the tools *gnatclean* or *gprclean*.
 
-.. index:: Compiler package
+.. index:: Package; Compiler
 
 *Compiler*
   This package specifies the compilation options used by the compiler for
   each language. See :ref:`Tools_Options_in_Project_Files`.
 
-.. index:: Cross_Reference package
-.. index:: gnatxref tool
-
-*Cross_Reference*
-  This package specifies the options used when calling the library tool
-  *gnatxref* via the *gnat* driver. Its attributes
-  ``Default_Switches`` and ``Switches`` have the same semantics as for the
-  package ``Builder``.
-
-.. index:: Documentation package
-.. index:: gnatdoc tool
-
-*Documentation*
-  This package specifies the options used when calling the tool
-  *gnatdoc*.
-
-.. index:: Eliminate package
-.. index:: gnatelim tool
-
-*Eliminate*
-  This package specifies the options used when calling the tool
-  *gnatelim*. Its attributes
-  ``Default_Switches`` and ``Switches`` have the same semantics as for the
-  package ``Builder``.
-
-.. index:: Finder package
-.. index:: gnatfind tool
-
-*Finder*
-  This package specifies the options used when calling the search tool
-  *gnatfind* via the *gnat* driver. Its attributes
-  ``Default_Switches`` and ``Switches`` have the same semantics as for the
-  package ``Builder``.
-
-.. index:: Gnatls package
-.. index:: gnatls tool
+.. index:: Package; Gnatls
 
 *Gnatls*
   This package specifies the options to use when invoking *gnatls*
   via the *gnat* driver.
 
-.. index:: Gnatstub package
-.. index:: gnatstub tool
-
-*Gnatstub*
-  This package specifies the options used when calling the tool
-  *gnatstub*. Its attributes
-  ``Default_Switches`` and ``Switches`` have the same semantics as for the
-  package ``Builder``.
-
-.. index:: IDE package
-
-*IDE*
-  This package specifies the options used when starting an integrated
-  development environment, for instance *GPS* or *GNATbench*.
-
-.. index:: Install package
-.. index:: gprinstall tool
+.. index:: Package; Install
 
 *Install*
   This package specifies the options used when installing a project
   with *gprinstall*. See :ref:`Package_Install_Attributes`.
 
-.. index:: Linker package
+.. index:: Package; Linker
 
 *Linker*
   This package specifies the options used by the linker.
   See :ref:`Main_Subprograms`.
 
-.. index:: Metrics package
-.. index:: gnatmetric tool
-
-*Metrics*
-  This package specifies the options used when calling the tool
-  *gnatmetric*. Its attributes
-  ``Default_Switches`` and ``Switches`` have the same semantics as for the
-  package ``Builder``.
-
-.. index:: Naming package
+.. index:: Package; Naming
 
 *Naming*
   This package specifies the naming conventions that apply
@@ -374,37 +302,15 @@ The following packages are currently supported in project files
   or given a file name to find out its language for proper processing.
   See :ref:`Naming_Schemes`.
 
-.. index:: Pretty_Printer package
-.. index:: gnatpp tool
-
-*Pretty_Printer*
-  This package specifies the options used when calling the formatting tool
-  *gnatpp*. Its attributes
-  ``Default_Switches`` and ``Switches`` have the same semantics as for the
-  package ``Builder``.
-
-.. index:: Remote package
-.. index:: Distributed compilation
+.. index:: Package; Remote
 
 *Remote*
   This package is used by *GPRbuild* to describe how distributed
   compilation should be done.
 
-.. index:: Stack package
-.. index:: gnatstack tool
-
-*Stack*
-  This package specifies the options used when calling the tool
-  *gnatstack*. Its attributes
-  **Default_Switches** and **Switches** have the same semantics as for the
-  package `Builder`.
-
-.. index:: Synchronize package
-.. index:: gnatsync tool
-
-*Synchronize*
-  This package specifies the options used when calling the tool
-  *gnatsync* via the *gnat* driver.
+Other tool-specific packages may be defined by different project-aware tools.
+Refer to the tool's documentation for the list of supported attributes and other
+specifics.
 
 In its simplest form, a package may be empty:
 
