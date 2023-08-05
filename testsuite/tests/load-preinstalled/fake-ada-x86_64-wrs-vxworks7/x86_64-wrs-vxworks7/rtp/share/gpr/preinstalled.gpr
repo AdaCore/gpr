@@ -1,0 +1,3 @@
+project Preinstalled is
+   for Languages use ("Ada");
+end Preinstalled;
