@@ -102,8 +102,7 @@ package GPR2.Project is
      (Current_Directory : Boolean;
       Environment       : GPR2.Environment.Object :=
                              GPR2.Environment.Process_Environment
-     ) return Path_Name.Set.Object
-     with Post => Default_Search_Paths'Result.Length > 0;
+     ) return Path_Name.Set.Object;
    --  Get the search paths common for all targets.
    --  If Current_Directory is True then the current directory is included at
    --  the first place in the result set.
