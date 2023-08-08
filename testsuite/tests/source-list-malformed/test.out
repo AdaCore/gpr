@@ -1,0 +1,3 @@
+Project: Demo
+demo.gpr:5:29: error: file name cannot include directory information ("src/pck1.adb")
+demo.gpr:5:29: error: file name cannot include directory information ("include/pck3.adb")
