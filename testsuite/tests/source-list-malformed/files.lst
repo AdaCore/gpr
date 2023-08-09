@@ -1,0 +1,6 @@
+-- comment1
+pck1.ads
+src/pck1.adb
+pck3.ads
+  --com
+include/pck3.adb

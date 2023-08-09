@@ -3343,6 +3343,7 @@ package body GPR2.Project.Tree is
          end;
 
          --  Check source list files
+
          if View.Kind in K_Standard | K_Library then
             declare
                Att  : Attribute.Object;
@@ -3354,6 +3355,7 @@ package body GPR2.Project.Tree is
                   File := Path_Name.Create_File
                     (Filename_Type (Att.Value.Text),
                      Filename_Type (View.Path_Name.Dir_Name));
+
                   if not File.Exists or else File.Is_Directory then
                      Self.Messages.Append
                        (Message.Create
@@ -3370,6 +3372,7 @@ package body GPR2.Project.Tree is
                   File := Path_Name.Create_File
                     (Filename_Type (Att.Value.Text),
                      Filename_Type (View.Path_Name.Dir_Name));
+
                   if not File.Exists or else File.Is_Directory then
                      Self.Messages.Append
                        (Message.Create

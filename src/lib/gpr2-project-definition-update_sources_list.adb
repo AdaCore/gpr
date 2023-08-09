@@ -7,12 +7,12 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Hashed_Maps;
 with Ada.Strings.Maps.Constants;
-with Ada.Text_IO;
 
 with GNAT.OS_Lib;
 with GNAT.MD5;
 
 with GPR2.Unit.List;
+with GPR2.Project.Source_Files;
 with GPR2.Source;
 with GPR2.Source_Reference.Identifier.Set;
 
@@ -218,8 +218,7 @@ is
    -- Fill_Naming_Schema --
    ------------------------
 
-   procedure Fill_Naming_Schema
-   is
+   procedure Fill_Naming_Schema is
    begin
       for L of View.Languages loop
          declare
@@ -777,8 +776,8 @@ is
 
       for L of Languages.Values loop
          declare
-            Language        : constant Language_Id := +Name_Type (L.Text);
-            Is_Indexed      : Boolean := False;
+            Language   : constant Language_Id := +Name_Type (L.Text);
+            Is_Indexed : Boolean := False;
          begin
             --  First, try naming exceptions
 
@@ -1152,8 +1151,8 @@ is
       -------------------------
 
       procedure Exclude_Recursively
-        (View      : in out Project.View.Object;
-         Source    : Project.Source.Object)
+        (View   : in out Project.View.Object;
+         Source : Project.Source.Object)
       is
          Def : constant Ref := Get_RW (View);
       begin
@@ -1287,9 +1286,9 @@ is
       Has_Src_In_Lang.Insert (Lang, CL, OK);
    end Mark_Language;
 
-   ---------------
-   -- Read_File --
-   ---------------
+   ----------------------
+   -- Read_Source_List --
+   ----------------------
 
    procedure Read_Source_List
      (Attr_Name : Q_Attribute_Id;
@@ -1302,27 +1301,8 @@ is
                       then Attr_Value.Text
                       else Root.Compose
                         (Filename_Type (Attr_Value.Text)).Value);
-      F          : Text_IO.File_Type;
    begin
-      Text_IO.Open (F, Text_IO.In_File, Filename);
-
-      while not Text_IO.End_Of_File (F) loop
-         declare
-            use Ada.Strings;
-            use GNATCOLL.Utils;
-            Line : constant String :=
-                     Fixed.Trim
-                       (Text_IO.Get_Line (F),
-                        Maps.Constants.Control_Set,
-                        Maps.Constants.Control_Set);
-         begin
-            if Line /= "" and then not Starts_With (Line, "-- ") then
-               Include_Simple_Filename (Set, Line, Attr_Value);
-            end if;
-         end;
-      end loop;
-
-      Text_IO.Close (F);
+      Source_Files.Read (Tree, Filename, Attr_Value, Set);
    end Read_Source_List;
 
    --------------------
