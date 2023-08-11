@@ -581,7 +581,7 @@ package body GPR2.Project.Pretty_Printer is
             Append (Self.Buffer, String'(1 => ASCII.LF));
 
          else
-            W_EOL;
+            Write_EOL.all;
          end if;
       end W_EOL;
 
