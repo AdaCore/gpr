@@ -47,9 +47,13 @@ private package Gpr_Parser.Generic_Impl is
      (Implementation.Bare_Gpr_Node, Internal_Node);
 
    function "+"
-     (Entity : Internal_Entity) return Implementation.Internal_Entity;
+     (Entity : Internal_Entity) return Implementation.Internal_Entity
+     with Export,
+          External_Name => "Gpr_Parser__from_generic_internal_entity";
    function "+"
-     (Entity : Implementation.Internal_Entity) return Internal_Entity;
+     (Entity : Implementation.Internal_Entity) return Internal_Entity
+     with Export,
+          External_Name => "Gpr_Parser__to_generic_internal_entity";
 
    function "+" (Rule : Grammar_Rule_Index) return Common.Grammar_Rule
    is (Common.Grammar_Rule'Val (Rule - 1));
@@ -272,13 +276,13 @@ private package Gpr_Parser.Generic_Impl is
 
    No_Metadata_Value : aliased Internal_Node_Metadata_Type :=
      (0, Implementation.No_Metadata);
-   No_Metadata       : Internal_Node_Metadata_Access
-     := No_Metadata_Value'Access;
+   No_Metadata       : Internal_Node_Metadata_Access :=
+     No_Metadata_Value'Access;
 
    Desc : aliased constant Language_Descriptor :=
      (Language_Name => Language_Name'Access,
 
-      Default_Grammar_Rule => 48,
+      Default_Grammar_Rule => 47,
       Grammar_Rules        => Grammar_Rules'Access,
 
       Token_Kind_Names => Token_Kind_Names'Access,

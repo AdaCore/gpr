@@ -1829,23 +1829,6 @@ package body Gpr_Parser.Rewriting_Implementation is
          end;
 
 
-         function Create_Project_Reference
-           (Handle : Rewriting_Handle
-               ; Project_Reference_F_Attr_Ref : Node_Rewriting_Handle
-            ) return Node_Rewriting_Handle is
-         begin
-            
-      Pre_Check
-        (Handle /= No_Rewriting_Handle,
-         "Handle should not be null");
-   
-
-            return Create_Regular_Node
-              (Handle, Gpr_Project_Reference,
-               (1 => Project_Reference_F_Attr_Ref));
-         end;
-
-
          function Create_String_Literal_At
            (Handle : Rewriting_Handle
                ; String_Literal_At_F_Str_Lit : Node_Rewriting_Handle

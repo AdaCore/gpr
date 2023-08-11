@@ -71,6 +71,9 @@ package body GPR2.Project.Pretty_Printer is
       procedure Write_Indentation (Indent : Natural);
       --  Output the indentation at the beginning of the line
 
+      procedure Write_Indentation_If_Needed (Indent : Natural);
+      --  Output the indentation when we are at the beginning of the line
+
       procedure Write_Attribute_Name (Name : Attribute_Id; Indent : Natural);
       --  Write an attribute name, taking into account the value of
       --  Backward_Compatibility.
@@ -85,10 +88,7 @@ package body GPR2.Project.Pretty_Printer is
          Separator : String := ".");
       --  Output identifiers separated by separator token
 
-      procedure Write_Name
-        (Name       : Name_Type;
-         Indent     : Natural;
-         Capitalize : Boolean := True);
+      procedure Write_Name (Name : Name_Type; Indent : Natural);
       --  Output a name, with the GNAT casing by default
 
       procedure Write_Project_Filename (S : String; Indent : Natural);
@@ -410,16 +410,6 @@ package body GPR2.Project.Pretty_Printer is
                   Write_Token (")", Indent);
                end if;
 
-            when Gpr_Project_Reference =>
-               --  Node for the Project'... construct
-
-               Write_Token ("Project'", Indent);
-               Write_Name
-                 (Name_Type
-                    (String'(To_UTF8 (F_Attr_Ref
-                     (Node.As_Project_Reference).Text))),
-                  Indent);
-
             when Gpr_Variable_Decl =>
                --  <var>[ : <type>] := <value>;
 
@@ -583,6 +573,8 @@ package body GPR2.Project.Pretty_Printer is
          else
             Write_EOL.all;
          end if;
+
+         Column := 0;
       end W_EOL;
 
       --------------
@@ -638,7 +630,6 @@ package body GPR2.Project.Pretty_Printer is
            and then not Last_Line_Is_Empty
          then
             W_EOL;
-            Column := 0;
             Last_Line_Is_Empty := True;
          end if;
       end Write_Empty_Line;
@@ -676,57 +667,54 @@ package body GPR2.Project.Pretty_Printer is
          Column := Indent;
       end Write_Indentation;
 
+      ---------------------------------
+      -- Write_Indentation_If_Needed --
+      ---------------------------------
+
+      procedure Write_Indentation_If_Needed (Indent : Natural) is
+      begin
+         if Column = 0 then
+            Write_Indentation (Indent);
+         end if;
+      end Write_Indentation_If_Needed;
+
       ----------------
       -- Write_Name --
       ----------------
 
-      procedure Write_Name
-        (Name       : Name_Type;
-         Indent     : Natural;
-         Capitalize : Boolean := True)
-      is
-         Capital     : Boolean := Capitalize;
+      procedure Write_Name (Name : Name_Type; Indent : Natural) is
+         Capital     : Boolean := True;
          Name_Buffer : constant String := String (Name);
          Name_Len    : constant Natural := Name_Buffer'Length;
 
       begin
          Last_Line_Is_Empty := False;
 
-         if not Capitalize then
-            Write_Token (Name_Buffer, Indent);
+         Write_Indentation_If_Needed (Indent);
 
-         else
-            if Column = 0 then
-               Write_Indentation (Indent);
-            end if;
+         --  If the line would become too long, start a new line if it helps
 
-            --  If the line would become too long, start a new line if it helps
-
-            if Column + Name_Len > Self.Max_Line_Length
-              and then Column > Indent + Self.Increment
-            then
-               W_EOL;
-               Write_Indentation (Indent + Self.Increment);
-            end if;
-
-            --  Capitalize First letter and letters following a "_"
-
-            for J in Name_Buffer'Range loop
-               if Capital then
-                  W_Character (To_Upper (Name_Buffer (J)));
-               else
-                  W_Character (Name_Buffer (J));
-               end if;
-
-               if Capitalize then
-                  Capital :=
-                    Name_Buffer (J) = '_'
-                    or else Is_Digit (Name_Buffer (J));
-               end if;
-            end loop;
-
-            Column := Column + Name_Len;
+         if Column + Name_Len > Self.Max_Line_Length
+           and then Column > Indent + Self.Increment
+         then
+            W_EOL;
+            Write_Indentation (Indent + Self.Increment);
          end if;
+
+         --  Capitalize First letter and letters following a "_"
+
+         for J in Name_Buffer'Range loop
+            if Capital then
+               W_Character (To_Upper (Name_Buffer (J)));
+            else
+               W_Character (Name_Buffer (J));
+            end if;
+
+            Capital :=
+              Name_Buffer (J) = '_' or else Is_Digit (Name_Buffer (J));
+         end loop;
+
+         Column := Column + Name_Len;
       end Write_Name;
 
       ----------------------------
@@ -750,9 +738,7 @@ package body GPR2.Project.Pretty_Printer is
       begin
          Last_Line_Is_Empty := False;
 
-         if Column = 0 then
-            Write_Indentation (Indent);
-         end if;
+         Write_Indentation_If_Needed (Indent);
 
          --  If the line would become too long, start a new line if it helps
 
@@ -808,9 +794,7 @@ package body GPR2.Project.Pretty_Printer is
 
          Last_Line_Is_Empty := False;
 
-         if Column = 0 then
-            Write_Indentation (Indent);
-         end if;
+         Write_Indentation_If_Needed (Indent);
 
          --  If the line would become too long, start a new line if it helps
 
@@ -827,7 +811,6 @@ package body GPR2.Project.Pretty_Printer is
 
          if End_Line then
             W_EOL;
-            Column := 0;
          end if;
       end Write_Token;
 

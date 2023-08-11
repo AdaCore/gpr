@@ -1,0 +1,3 @@
+aggregate project aggregate_prj is
+for Project_Files use ("demo.gpr");
+end aggregate_prj;

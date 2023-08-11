@@ -343,31 +343,6 @@ type gpr_base_entity_Ptr is access Internal_Entity;
    --  See the documentation of each unit provider for the exact semantics of
    --  the unit name/kind information.
 
-   type gpr_unit_provider_destroy_callback is access procedure
-     (Data : System.Address)
-      with Convention => C;
-   --  Callback type for functions that are called when destroying a unit file
-   --  provider type.
-
-   type gpr_unit_provider_get_unit_filename_callback is access function
-     (Data        : System.Address;
-      Name        : gpr_text;
-      Kind        : gpr_analysis_unit_kind) return chars_ptr
-      with Convention => C;
-   --  Callback type for functions that are called to turn a unit reference
-   --  encoded as a unit name into an analysis unit.
-
-   type gpr_unit_provider_get_unit_from_name_callback is access function
-     (Data        : System.Address;
-      Context     : gpr_analysis_context;
-      Name        : gpr_text;
-      Kind        : gpr_analysis_unit_kind;
-      Charset     : chars_ptr;
-      Reparse     : int) return gpr_analysis_unit
-      with Convention => C;
-   --  Callback type for functions that are called to turn a unit reference
-   --  encoded as a unit name into an analysis unit.
-
    -------------------------
    -- Analysis primitives --
    -------------------------
@@ -605,8 +580,8 @@ type gpr_base_entity_Ptr is access Internal_Entity;
    --  diagnostic are emitted to explain what happened.
 
    function gpr_unit_populate_lexical_env
-     (Unit : gpr_analysis_unit)
-      return int
+     (Unit : gpr_analysis_unit
+   ) return int
       with Export        => True,
            Convention    => C,
            External_name => "gpr_unit_populate_lexical_env";
@@ -828,32 +803,6 @@ type gpr_base_entity_Ptr is access Internal_Entity;
    -- Unit providers --
    --------------------
 
-   function gpr_create_unit_provider
-     (Data                    : System.Address;
-      Destroy_Func            : gpr_unit_provider_destroy_callback;
-      Get_Unit_Filename_Func  : gpr_unit_provider_get_unit_filename_callback;
-      Get_Unit_From_Name_Func : gpr_unit_provider_get_unit_from_name_callback)
-      return gpr_unit_provider
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_create_unit_provider";
-   --  Create a unit provider. When done with it, the result must be passed to
-   --  ``gpr_destroy_unit_provider``.
-   --
-   --  Pass as ``data`` a pointer to hold your private data: it will be passed
-   --  to all callbacks below.
-   --
-   --  ``destroy`` is a callback that is called by
-   --  ``gpr_destroy_unit_provider`` to leave a chance to free resources that
-   --  ``data`` may hold.
-   --
-   --  ``get_unit_from_node`` is a callback. It turns an analysis unit
-   --  reference represented as a node into an analysis unit. It should return
-   --  ``NULL`` if the node is not a valid unit name representation.
-   --
-   --  ``get_unit_from_name`` is a callback similar to ``get_unit_from_node``
-   --  except it takes an analysis unit reference represented as a string.
-
    procedure gpr_dec_ref_unit_provider
      (Provider : gpr_unit_provider)
       with Export        => True,
@@ -928,6 +877,11 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    procedure Set_Last_Exception (Exc : Exception_Occurrence);
    --  Free the information contained in Last_Exception and replace it with
    --  newly allocated information from Exc.
+
+   procedure Set_Last_Exception (Id : Exception_Id; Message : String);
+   --  Likewise, but put destructured exception information. This is useful to
+   --  pass messages that are longer than what the Ada runtime accepts (i.e.
+   --  allows to avoid truncated error messages).
 
    function gpr_token_kind_name (Kind : int) return chars_ptr
       with Export => True,
@@ -1590,9 +1544,8 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
            Convention    => C,
            External_name => "gpr_attribute_decl_f_expr";
    --  This field contains a list that itself contains one of the following
-   --  nodes: :ada:ref:`Builtin_Function_Call`, :ada:ref:`Project_Reference`,
-   --  :ada:ref:`String_Literal_At`, :ada:ref:`Terms`,
-   --  :ada:ref:`Variable_Reference`
+   --  nodes: :ada:ref:`Builtin_Function_Call`, :ada:ref:`String_Literal_At`,
+   --  :ada:ref:`Terms`, :ada:ref:`Variable_Reference`
 
            
    
@@ -2106,23 +2059,6 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
    
 
-   function gpr_project_reference_f_attr_ref
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_project_reference_f_attr_ref";
-   
-
-           
-   
-
-   
-   
-
    function gpr_string_literal_at_f_str_lit
      (Node : gpr_base_entity_Ptr;
 
@@ -2269,9 +2205,8 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
            Convention    => C,
            External_name => "gpr_variable_decl_f_expr";
    --  This field contains a list that itself contains one of the following
-   --  nodes: :ada:ref:`Builtin_Function_Call`, :ada:ref:`Project_Reference`,
-   --  :ada:ref:`String_Literal_At`, :ada:ref:`Terms`,
-   --  :ada:ref:`Variable_Reference`
+   --  nodes: :ada:ref:`Builtin_Function_Call`, :ada:ref:`String_Literal_At`,
+   --  :ada:ref:`Terms`, :ada:ref:`Variable_Reference`
 
            
    
