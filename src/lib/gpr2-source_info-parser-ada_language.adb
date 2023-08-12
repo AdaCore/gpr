@@ -208,6 +208,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
          Source_Loc : Gpr_Parser_Support.Slocs.Source_Location;
          Is_Limited : Boolean)
       is
+         pragma Unreferenced (Is_Limited);
          Sloc : constant Source_Reference.Object :=
            Source_Reference.Object
              (Source_Reference.Create
