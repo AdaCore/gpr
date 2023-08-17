@@ -1,8 +1,0 @@
-with "b";
-
-project A is
-
-   for Source_Dirs use ("src/a");
-   for Object_Dir use "obj/a";
-   for Languages use ("Ada", "C");
-end A;
