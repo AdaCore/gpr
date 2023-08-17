@@ -224,7 +224,7 @@ test_gprbuild:
         --failure-exit-code 1
         --xunit-output $CI_PROJECT_DIR/testgprbuild_result.xml
         --xunit-name test_gprbuild
-        $SANDBOX/$HOST/gprbuild-testAdaCC++_Auto/results/new/ || exit 1
+        $SANDBOX/$HOST/gprbuild_AdaCC++_Auto_test/results/new/ || exit 1
   artifacts:
     when:
       always
@@ -254,7 +254,7 @@ test_gpr2ls:
         --failure-exit-code 1
         --xunit-output $CI_PROJECT_DIR/testgpr2ls_result.xml
         --xunit-name test_gpr2ls
-        $SANDBOX/$HOST/gprbuild-testAdaCC++_Auto-gpr2ls/results/new/ || exit 1
+        $SANDBOX/$HOST/gprbuild_AdaCC++_Auto_check-gpr2ls_test/results/new/ || exit 1
   artifacts:
     when:
       always
