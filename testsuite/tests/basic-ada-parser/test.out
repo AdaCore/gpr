@@ -1,0 +1,109 @@
+===== FILE function.adb=====
+Loading files-to-parse/function.adb
+Unit name: My_Function
+
+===== FILE generics_function.ads=====
+Loading files-to-parse/generics_function.ads
+Withed unit name: Toto
+Withed unit name: A.Titi
+Withed unit name: A.Titi.Tata
+Unit name: My_Generic_Function
+
+===== FILE generics_function_alone.ads=====
+Loading files-to-parse/generics_function_alone.ads
+Unit name: My_Generic_Function
+
+===== FILE generics_package.ads=====
+Loading files-to-parse/generics_package.ads
+Withed unit name: Toto
+Withed unit name: A.Titi
+Withed unit name: A.Titi.Tata
+Unit name: GNATCOLL.Pools
+
+===== FILE generics_package_alone.ads=====
+Loading files-to-parse/generics_package_alone.ads
+Unit name: My_Package.Sub_Package
+
+===== FILE generics_procedure.ads=====
+Loading files-to-parse/generics_procedure.ads
+Withed unit name: Toto
+Withed unit name: A.Titi
+Withed unit name: A.Titi.Tata
+Unit name: My_Generic_Procedure
+
+===== FILE generics_procedure_alone.ads=====
+Loading files-to-parse/generics_procedure_alone.ads
+Unit name: My_Generic_Procedure
+
+===== FILE iso_8859_1.adb=====
+Loading files-to-parse/iso_8859_1.adb
+Unit name: My_Package_Body
+
+===== FILE long-package-name.ads=====
+Loading files-to-parse/long-package-name.ads
+Unit name: Looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong.
+
+===== FILE multi-units.ads=====
+Loading files-to-parse/multi-units.ads
+Unit name: First_Package
+
+===== FILE no_body_pragma.adb=====
+Loading files-to-parse/no_body_pragma.adb
+No body source file
+
+===== FILE package.ads=====
+Loading files-to-parse/package.ads
+Unit name: My_Package
+
+===== FILE package_body.adb=====
+Loading files-to-parse/package_body.adb
+Unit name: My_Package
+
+===== FILE private_procedure.ads=====
+Loading files-to-parse/private_procedure.ads
+Unit name: My_Private_Procedure
+
+===== FILE procedure.adb=====
+Loading files-to-parse/procedure.adb
+Unit name: Call
+
+===== FILE procedure_no_args.ads=====
+Loading files-to-parse/procedure_no_args.ads
+Unit name: Call
+
+===== FILE protected.adb=====
+Loading files-to-parse/protected.adb
+Unit name: My_Protected_Body
+Separate from: Parent_Unit
+
+===== FILE separate.adb=====
+Loading files-to-parse/separate.adb
+Unit name: My_Procedure
+Separate from: Toto.S_Unit
+
+===== FILE space.adb=====
+Loading files-to-parse/space.adb
+Withed unit name: A.B.C
+Unit name: My_Package
+
+===== FILE task_body.adb=====
+Loading files-to-parse/task_body.adb
+Unit name: My_Body_Task
+Separate from: Parent_Unit
+
+===== FILE upper-case.adb=====
+Loading files-to-parse/upper-case.adb
+Unit name: TESTS
+
+===== FILE with.ads=====
+Loading files-to-parse/with.ads
+Withed unit name: A.B.C
+Withed unit name: D.E.F
+Withed unit name: H.I
+Withed unit name: J
+Withed unit name: J.Toto.Wonderful
+Withed unit name: K
+Withed unit name: L
+Withed unit name: M
+Withed unit name: N.O.P
+Unit name: My_Package

@@ -151,3 +151,48 @@ test_gpr2:
       - testgpr2_result.xml
     reports:
       junit: testgpr2_result.xml
+
+##############
+## COVERAGE ##
+##############
+
+test_gpr2_cov:
+  services:
+     - image:sandbox
+     - cpu:8
+     - mem:16
+  stage: test
+  allow_failure: true
+  script:
+    - packages=""
+    - subprojects=""
+    - *setup_repos
+
+    # add the gpr2 repo
+    - anod vcs --add-repo gpr2-next $CI_PROJECT_DIR
+
+    - anod build gpr2 -Qcoverage -Qnext
+    - anod test gpr2 -Qcoverage -Qnext --minimal
+    - mkdir $CI_PROJECT_DIR/coverage
+    - cov_dir=$SANDBOX/$HOST/gpr2-test-cov-stmt/results/new
+    - mv $cov_dir/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
+    - mv $cov_dir/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
+    - echo_coverage_stats --coverage-file $cov_dir/coverage-xml/index.xml
+    - e3-testsuite-report
+        --failure-exit-code 1
+        --xunit-output $CI_PROJECT_DIR/testgpr2cov_result.xml
+        --xunit-name test_gpr2_cov
+        $SANDBOX/$HOST/gpr2-test-cov-stmt/results/new/ || exit 1
+  coverage: '/^Stmt Coverage:\s+(\d+\.\d+\%) \(\d+ \/ \d+\)$/'
+  artifacts:
+    when:
+      always
+    paths:
+      - coverage/cobertura.xml
+      - coverage/dhtml
+      - testgpr2cov_result.xml
+    reports:
+      junit: testgpr2cov_result.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura.xml

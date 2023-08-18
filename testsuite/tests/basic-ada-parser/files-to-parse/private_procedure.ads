@@ -1,0 +1,1 @@
+private procedure My_Private_Procedure (Self : in out T);

@@ -13,8 +13,13 @@
 
 with System;
 
+with Gpr_Parser_Support.Generic_API.Introspection;
+use Gpr_Parser_Support.Generic_API.Introspection;
+
 with Gpr_Parser.Analysis; use Gpr_Parser.Analysis;
 with Gpr_Parser.Common;   use Gpr_Parser.Common;
+with Gpr_Parser.Generic_API.Introspection;
+use Gpr_Parser.Generic_API.Introspection;
 
 package Gpr_Parser.Rewriting is
 
@@ -146,6 +151,11 @@ package Gpr_Parser.Rewriting is
    function Kind (Handle : Node_Rewriting_Handle) return Gpr_Node_Kind_Type;
    --  Return the kind corresponding to Handle's node
 
+   function Type_Of (Handle : Node_Rewriting_Handle) return Type_Ref
+   is (Kind_To_Type (Kind (Handle)));
+   --  Return the introspection type reference corresponding to ``Handle``'s
+   --  node.
+
    function Tied (Handle : Node_Rewriting_Handle) return Boolean;
    --  Return whether this node handle is tied to an analysis unit. If it is
    --  not, it can be passed as the Child parameter to Set_Child.
@@ -158,11 +168,38 @@ package Gpr_Parser.Rewriting is
    function Children_Count (Handle : Node_Rewriting_Handle) return Natural;
    --  Return the number of children the node represented by Handle has
 
+   function Child_Index
+     (Handle : Node_Rewriting_Handle;
+      Field  : Struct_Member_Ref) return Positive
+   is (Syntax_Field_Index (Field, Type_Of (Handle)));
+   --  Return the index of ``Handle``'s ``Child`` that correspond to the given
+   --  ``Field``.
+
    function Child
      (Handle : Node_Rewriting_Handle;
       Index  : Positive) return Node_Rewriting_Handle;
    --  Return a handle corresponding to the Index'th child of the node that
    --  Handle represents. Index is 1-based.
+
+   function Child
+     (Handle : Node_Rewriting_Handle;
+      Field  : Struct_Member_Ref) return Node_Rewriting_Handle;
+   --  Return the node that is in the syntax ``Field`` for ``Handle``
+
+   function Child
+     (Handle : Node_Rewriting_Handle;
+      Fields : Struct_Member_Ref_Array) return Node_Rewriting_Handle;
+   --  Return a child deep in the tree ``Handle``.
+   --
+   --  Assuming ``Fields'Range`` is ``1 .. N``, this is a shortcut for:
+   --
+   --  .. code::
+   --
+   --     C1 := Child (Handle, Fields (1));
+   --     C2 := Child (C1, Fields (2));
+   --     ...
+   --     CN_1 := Child (CN_2, Fields (N - 1));
+   --     CN := Child (CN_1, Fields (N));
 
    procedure Set_Child
      (Handle : Node_Rewriting_Handle;
@@ -171,6 +208,15 @@ package Gpr_Parser.Rewriting is
    --  If Child is ``No_Rewriting_Node``, untie the Handle's ``Index``'th child
    --  to this tree, so it can be attached to another one. Otherwise, Child
    --  must have no parent as it will be tied to ``Handle``'s tree.
+
+   procedure Set_Child
+     (Handle : Node_Rewriting_Handle;
+      Field  : Struct_Member_Ref;
+      Child  : Node_Rewriting_Handle);
+   --  If ``Child`` is ``No_Rewriting_Node``, untie the syntax field in
+   --  ``Handle`` corresponding to ``Field``, so it can be attached to another
+   --  one. Otherwise, ``Child`` must have no parent as it will be tied to
+   --  ``Handle``'s tree.
 
    function Text (Handle : Node_Rewriting_Handle) return Text_Type;
    --  Return the text associated to the given token node.
@@ -461,12 +507,6 @@ package Gpr_Parser.Rewriting is
            (Handle : Rewriting_Handle
                ; F_Is_All : Node_Rewriting_Handle
                ; F_Path_Name : Node_Rewriting_Handle
-            ) return Node_Rewriting_Handle;
-
-
-         function Create_Project_Reference
-           (Handle : Rewriting_Handle
-               ; F_Attr_Ref : Node_Rewriting_Handle
             ) return Node_Rewriting_Handle;
 
 

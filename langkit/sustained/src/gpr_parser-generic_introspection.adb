@@ -1060,21 +1060,6 @@ end;
 when others => null;
 end case;
 end;
-when Gpr_Project_Reference_Range =>
-declare
-N_Bare_Project_Reference : constant Analysis.Project_Reference := N.As_Project_Reference;
-begin
-case Member is
-when Member_Index_For_Project_Reference_F_Attr_Ref =>
-declare
-R : Internal_Acc_Node :=  new Internal_Rec_Node;
-begin
-Set_Node (R, N_Bare_Project_Reference.F_Attr_Ref);
-Result := Internal_Value_Access (R);
-end;
-when others => null;
-end case;
-end;
 when Gpr_String_Literal_At_Range =>
 declare
 N_Bare_String_Literal_At : constant Analysis.String_Literal_At := N.As_String_Literal_At;

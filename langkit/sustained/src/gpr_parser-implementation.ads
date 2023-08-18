@@ -18,6 +18,7 @@ with Ada.Containers;              use Ada.Containers;
 with Ada.Containers.Hashed_Maps;
 with Ada.Containers.Hashed_Sets;
 with Ada.Containers.Ordered_Maps;
+with Ada.Containers.Vectors;
 with Ada.Exceptions;
 with Ada.Strings.Unbounded;       use Ada.Strings.Unbounded;
 with Ada.Strings.Unbounded.Hash;
@@ -34,7 +35,7 @@ with Gpr_Parser_Support.Adalog.Logic_Var;
 with Gpr_Parser_Support.Adalog.Solver;
 with Gpr_Parser_Support.Adalog.Solver_Interface;
 
-with Gpr_Parser_Support.Bump_Ptr;    use Gpr_Parser_Support.Bump_Ptr;
+with Gpr_Parser_Support.Bump_Ptr;     use Gpr_Parser_Support.Bump_Ptr;
 with Gpr_Parser_Support.Cheap_Sets;
 with Gpr_Parser_Support.File_Readers; use Gpr_Parser_Support.File_Readers;
 with Gpr_Parser_Support.Lexical_Envs; use Gpr_Parser_Support.Lexical_Envs;
@@ -410,10 +411,6 @@ private package Gpr_Parser.Implementation is
             with Dynamic_Predicate =>
                Is_Null (Bare_Project_Qualifier_Standard)
                or else Kind (Bare_Project_Qualifier_Standard) in Gpr_Project_Qualifier_Standard_Range;
-         subtype Bare_Project_Reference is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Project_Reference)
-               or else Kind (Bare_Project_Reference) in Gpr_Project_Reference_Range;
          subtype Bare_String_Literal_At is Bare_Gpr_Node
             with Dynamic_Predicate =>
                Is_Null (Bare_String_Literal_At)
@@ -546,7 +543,7 @@ private package Gpr_Parser.Implementation is
 
       type Internal_Metadata is record
 
-            null;
+            Dummy : Character;
       end record
         with Convention => C;
 
@@ -564,7 +561,7 @@ private package Gpr_Parser.Implementation is
 
 
       No_Metadata : constant Internal_Metadata :=
-      (null record);
+      (Dummy => Character'Val (0));
 
 
    function Hash (Self : Internal_Metadata) return Hash_Type;
@@ -740,7 +737,8 @@ private package Gpr_Parser.Implementation is
    --  The combine function on environments metadata does a boolean Or on every
    --  boolean component of the env metadata.
 
-   function Can_Reach (El, From : Bare_Gpr_Node) return Boolean;
+   function Can_Reach (El, From : Bare_Gpr_Node) return Boolean
+     with Inline;
    --  Return whether El can reach From, from a sequential viewpoint. If
    --  elements are declared in different units, it will always return True,
    --  eg this does not handle general visibility issues, just sequentiality of
@@ -1243,10 +1241,6 @@ private package Gpr_Parser.Implementation is
 
          
       type Internal_Entity_Project_Qualifier_Standard;
-      
-
-         
-      type Internal_Entity_Project_Reference;
       
 
          
@@ -3224,34 +3218,6 @@ private package Gpr_Parser.Implementation is
 
       
 
-      type Internal_Entity_Project_Reference is record
-
-               Node : aliased Bare_Project_Reference;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Project_Reference : constant Internal_Entity_Project_Reference;
-
-
-      function Create_Internal_Entity_Project_Reference
-        (Node : Bare_Project_Reference; Info : Internal_Entity_Info)
-         return Internal_Entity_Project_Reference;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Project_Reference) return String;
-
-
-         
-
-      
-
       type Internal_Entity_String_Literal is record
 
                Node : aliased Bare_String_Literal;
@@ -4223,7 +4189,6 @@ Gpr_Project_Qualifier_Aggregate_Library => 0,
 Gpr_Project_Qualifier_Configuration => 0, 
 Gpr_Project_Qualifier_Library => 0, 
 Gpr_Project_Qualifier_Standard => 0, 
-Gpr_Project_Reference => 1, 
 Gpr_String_Literal_At => 2, 
 Gpr_Terms => 1, 
 Gpr_Type_Reference => 1, 
@@ -5362,19 +5327,6 @@ Gpr_With_Decl => 2);
             end case;
 
       
-                  when Gpr_Project_Reference_Range =>
-                     
-         
-
-
-            Project_Reference_F_Attr_Ref : aliased Bare_Attribute_Reference :=
-               No_Bare_Gpr_Node;
-
-         
-
-
-
-      
                   when Gpr_String_Literal_At_Range =>
                      
          
@@ -5729,16 +5681,33 @@ Gpr_With_Decl => 2);
    end record;
    --  Variant that holds either an node or a token
 
-   type Bare_Children_Array is array (Positive range <>) of Bare_Child_Record;
+   package Bare_Children_Record_Vectors is new Ada.Containers.Vectors
+     (Positive, Bare_Child_Record);
+
+   subtype Bare_Children_Vector is Bare_Children_Record_Vectors.Vector;
 
    function Children_And_Trivia
-     (Node : Bare_Gpr_Node) return Bare_Children_Array;
+     (Node : Bare_Gpr_Node) return Bare_Children_Vector;
    --  Implementation for Analysis.Children_And_Trivia
 
       
 
    
 
+
+
+         
+
+
+
+ function Gpr_Node_P_Can_Reach
+   
+  (Node : Bare_Gpr_Node
+      ; From_Node : Bare_Gpr_Node
+  )
+
+   return Boolean
+   ;
 
 
          
@@ -5905,6 +5874,20 @@ Gpr_With_Decl => 2);
    return Internal_Unit
    ;
 --  Return the analysis unit owning this node.
+
+         
+
+
+
+ function Ple_Root
+   
+  (Node : Bare_Gpr_Node
+  )
+
+   return Bare_Gpr_Node
+   ;
+--  Return the PLE root that owns this node, or the unit root node if this unit
+--  has no PLE root.
 
          
 
@@ -7274,27 +7257,6 @@ Gpr_With_Decl => 2);
    
 
       
-      procedure Initialize_Fields_For_Project_Reference
-        (Self : Bare_Project_Reference
-         ; Project_Reference_F_Attr_Ref : Bare_Attribute_Reference
-        );
-
-      
-   function Project_Reference_F_Attr_Ref
-     (Node : Bare_Project_Reference) return Bare_Attribute_Reference;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-      
       procedure Initialize_Fields_For_String_Literal_At
         (Self : Bare_String_Literal_At
          ; String_Literal_At_F_Str_Lit : Bare_String_Literal
@@ -7622,24 +7584,43 @@ Gpr_With_Decl => 2);
    --
    --  Return whether there are no ownership shares left.
 
-   function Get_Unit_Filename
-     (Provider : Internal_Unit_Provider;
-      Name     : Text_Type;
-      Kind     : Analysis_Unit_Kind) return String is abstract;
-   --  Return the filename corresponding to the given unit name/unit kind.
-   --  Raise a ``Property_Error`` if the given unit name is not valid.
+   procedure Get_Unit_Location
+     (Provider       : Internal_Unit_Provider;
+      Name           : Text_Type;
+      Kind           : Analysis_Unit_Kind;
+      Filename       : out Unbounded_String;
+      PLE_Root_Index : out Positive) is abstract;
+   --  See the public ``Get_Unit_Location`` procedure
 
-   function Get_Unit
-     (Provider    : Internal_Unit_Provider;
-      Context     : Internal_Context;
-      Name        : Text_Type;
-      Kind        : Analysis_Unit_Kind;
-      Charset     : String := "";
-      Reparse     : Boolean := False) return Internal_Unit is abstract;
-   --  Fetch and return the analysis unit referenced by the given unit name.
-   --  Raise a ``Property_Error`` if the given unit name is not valid.
+   procedure Get_Unit_And_PLE_Root
+     (Provider       : Internal_Unit_Provider;
+      Context        : Internal_Context;
+      Name           : Text_Type;
+      Kind           : Analysis_Unit_Kind;
+      Charset        : String := "";
+      Reparse        : Boolean := False;
+      Unit           : out Internal_Unit;
+      PLE_Root_Index : out Positive) is abstract;
+   --  See the public ``Get_Unit_And_PLE_Root`` procedure
 
    procedure Dec_Ref (Provider : in out Internal_Unit_Provider_Access);
+
+   type Resolved_Unit is record
+      Unit           : Internal_Unit;
+      Filename       : String_Access;
+      PLE_Root_Index : Positive;
+   end record;
+   --  Cache entry for requests to unit providers
+
+   type Resolved_Unit_Array is array (Analysis_Unit_Kind) of Resolved_Unit;
+   --  One cache entry per unit kind, i.e. all cache entries needed for a given
+   --  unit name.
+
+   package Unit_Provider_Cache_Maps is new Ada.Containers.Hashed_Maps
+     (Key_Type        => Symbol_Type,
+      Element_Type    => Resolved_Unit_Array,
+      Equivalent_Keys => "=",
+      Hash            => Hash);
 
    --------------------------------------
    -- Event handler internal interface --
@@ -7731,6 +7712,9 @@ Gpr_With_Decl => 2);
       Unit_Provider : Internal_Unit_Provider_Access;
       --  Object to translate unit names to file names
 
+      Unit_Provider_Cache : Unit_Provider_Cache_Maps.Map;
+      --  Cache for the Unit_Provider.Get_Unit_And_PLE_Root primitive
+
       Parser : Parser_Type;
       --  Main parser type. TODO: If we want to parse in several tasks, we'll
       --  replace that by an array of parsers.
@@ -7792,6 +7776,8 @@ Gpr_With_Decl => 2);
       Hash            => Hash,
       Equivalent_Keys => "=");
 
+   package Boolean_Vectors is new Gpr_Parser_Support.Vectors (Boolean);
+
    type Analysis_Unit_Type is limited record
       --  Start of ABI area. In order to perform fast checks from foreign
       --  languages, we maintain minimal ABI for analysis context: this allows
@@ -7851,10 +7837,23 @@ Gpr_With_Decl => 2);
       --  Units that are referenced from this one. Useful for
       --  visibility/computation of the reference graph.
 
-      Is_Env_Populated : Boolean;
-      --  Whether Populate_Lexical_Env was called on this unit. Used not to
-      --  populate multiple times the same unit and hence avoid infinite
-      --  populate recursions for circular dependencies.
+      PLE_Roots_Starting_Token : Token_Index_Vectors.Vector;
+      --  If this unit contains a list of PLE roots, then for each PLE root,
+      --  this vector contains a reference to the first token that is part of
+      --  it. Otherwise, this vector is empty.
+      --
+      --  This table is initialized after each parsing and allows to quickly
+      --  look for the PLE root corresponding to some token, and thus to some
+      --  node in this unit (see the ``Lookup_PLE_Root`` function).
+
+      Env_Populated_Roots : Boolean_Vectors.Vector;
+      --  For each PLE root in this unit, indicates whether
+      --  Populate_Lexical_Env was called on it.
+      --
+      --  Note that this vector may contain less or more elements than the
+      --  number of PLE roots in this unit: this allows not to run PLE twice on
+      --  each root, and to keep track on which roots PLE should be run after a
+      --  reparse. "Missing" elements in this vector are considered False.
 
       Exiled_Entries : Exiled_Entry_Vectors.Vector;
       --  Lexical env population for this unit may have added AST nodes it owns
@@ -8018,6 +8017,30 @@ Gpr_With_Decl => 2);
      (Context : Internal_Context) return Internal_Unit_Provider_Access;
    --  Implementation for Analysis.Unit_Provider
 
+   procedure Resolve_Unit
+     (Context : Internal_Context;
+      Name    : Text_Type;
+      Kind    : Analysis_Unit_Kind;
+      Unit    : out Resolved_Unit);
+   --  Completely resolve the requested unit. The result is cached: later calls
+   --  for the same name/kind will have constant complexity.
+
+   procedure Get_Unit_Location
+     (Context        : Internal_Context;
+      Name           : Text_Type;
+      Kind           : Analysis_Unit_Kind;
+      Filename       : out String_Access;
+      PLE_Root_Index : out Positive);
+   --  Caching wrapper around Context.Unit_Provider.Get_Unit_Location
+
+   procedure Get_Unit_And_PLE_Root
+     (Context        : Internal_Context;
+      Name           : Text_Type;
+      Kind           : Analysis_Unit_Kind;
+      Unit           : out Internal_Unit;
+      PLE_Root_Index : out Positive);
+   --  Caching wrapper around Context.Unit_Provider.Get_Unit_And_PLE_Root
+
    function Hash (Context : Internal_Context) return Hash_Type;
    --  Implementation for Analysis.Hash
 
@@ -8064,8 +8087,16 @@ Gpr_With_Decl => 2);
      (Unit : Internal_Unit; Charset : String; Buffer  : String);
    --  Implementation for Analysis.Reparse
 
-   procedure Populate_Lexical_Env (Unit : Internal_Unit);
+   procedure Populate_Lexical_Env
+     (Unit           : Internal_Unit;
+      PLE_Root_Index : Positive
+         := 1
+      );
    --  Implementation for Analysis.Populate_Lexical_Env
+
+   procedure Populate_Lexical_Env_For_Unit (Node : Bare_Gpr_Node);
+   --  Populate the lexical environment for the PLE root that owns ``Node``, or
+   --  for the whole unit if there is no PLE root.
 
    function Get_Filename (Unit : Internal_Unit) return String;
    --  Implementation for Analysis.Get_Filename
@@ -8104,6 +8135,14 @@ Gpr_With_Decl => 2);
    function Lookup_Token
      (Unit : Internal_Unit; Sloc : Source_Location) return Token_Reference;
    --  Implementation for Analysis.Lookup_Token
+
+   procedure Lookup_PLE_Root
+     (Node  : Bare_Gpr_Node;
+      Root  : out Bare_Gpr_Node;
+      Index : out Natural);
+   --  Look for the PLE root that owns this node. If there is one, assign it to
+   --  ``Root`` and assign its index in the list of PLE roots to ``Index``. If
+   --  there is none, set ``Root`` to the unit root node and ``Index`` to 0.
 
    procedure Dump_Lexical_Env (Unit : Internal_Unit);
    --  Implementation for Analysis.Dump_Lexical_Env
@@ -8915,16 +8954,6 @@ private
 
 
       No_Entity_Project_Qualifier_Standard : constant Internal_Entity_Project_Qualifier_Standard :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Project_Reference : constant Internal_Entity_Project_Reference :=
       (
                Node => No_Bare_Gpr_Node, 
                Info => No_Entity_Info

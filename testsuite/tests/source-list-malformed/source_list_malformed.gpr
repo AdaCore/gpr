@@ -1,0 +1,13 @@
+--
+--  Copyright (C) 2023, AdaCore
+--
+--  SPDX-License-Identifier: Apache-2.0
+--
+
+with "gpr2";
+
+project Source_List_Malformed is
+   for Object_Dir use "obj";
+   for Exec_Dir use ".";
+   for Main use ("main.adb");
+end Source_List_Malformed;

@@ -1,4 +1,8 @@
+-- comment1
 pck1.ads
 pck1.adb
+   -- or in the middle
+   --and continued here
 pck3.ads
 pck3.adb
+--comment2

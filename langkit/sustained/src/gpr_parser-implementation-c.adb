@@ -99,41 +99,6 @@ package body Gpr_Parser.Implementation.C is
       Contents    : out Decoded_File_Contents;
       Diagnostics : in out Diagnostics_Vectors.Vector);
 
-   --------------------
-   -- Unit providers --
-   --------------------
-
-   type C_Unit_Provider is limited new
-      Ada.Finalization.Limited_Controlled
-      and Internal_Unit_Provider
-   with record
-      Ref_Count               : Natural;
-      Data                    : System.Address;
-      Destroy_Func            : gpr_unit_provider_destroy_callback;
-      Get_Unit_Filename_Func  : gpr_unit_provider_get_unit_filename_callback;
-      Get_Unit_From_Name_Func : gpr_unit_provider_get_unit_from_name_callback;
-   end record;
-
-   type C_Unit_Provider_Access is access all C_Unit_Provider;
-
-   overriding procedure Finalize (Provider : in out C_Unit_Provider);
-   overriding procedure Inc_Ref (Provider : in out C_Unit_Provider);
-   overriding function Dec_Ref
-     (Provider : in out C_Unit_Provider) return Boolean;
-
-   overriding function Get_Unit_Filename
-     (Provider : C_Unit_Provider;
-      Name     : Text_Type;
-      Kind     : Analysis_Unit_Kind) return String;
-
-   overriding function Get_Unit
-     (Provider : C_Unit_Provider;
-      Context  : Internal_Context;
-      Name     : Text_Type;
-      Kind     : Analysis_Unit_Kind;
-      Charset  : String := "";
-      Reparse  : Boolean := False) return Internal_Unit;
-
    function Value_Or_Empty (S : chars_ptr) return String
    --  If S is null, return an empty string. Return Value (S) otherwise.
    is (if S = Null_Ptr
@@ -492,10 +457,12 @@ package body Gpr_Parser.Implementation.C is
    end;
 
    function gpr_unit_populate_lexical_env
-     (Unit : gpr_analysis_unit) return int is
+     (Unit : gpr_analysis_unit
+   ) return int is
    begin
       Clear_Last_Exception;
-      Populate_Lexical_Env (Unit);
+      Populate_Lexical_Env
+        (Unit, 1);
       return 1;
    exception
       when Exc : others =>
@@ -508,7 +475,7 @@ package body Gpr_Parser.Implementation.C is
    ---------------------------------
 
    Node_Kind_Names : constant array (Gpr_Node_Kind_Type) of Text_Access :=
-     (Gpr_Ada_Access_Subp => new Text_Type'(To_Text ("AdaAccessSubp")), Gpr_Ada_Pragma => new Text_Type'(To_Text ("AdaPragma")), Gpr_Ada_Use => new Text_Type'(To_Text ("AdaUse")), Gpr_Ada_With => new Text_Type'(To_Text ("AdaWith")), Gpr_Ada_Entity_Kind_Function => new Text_Type'(To_Text ("AdaEntityKindFunction")), Gpr_Ada_Entity_Kind_Package => new Text_Type'(To_Text ("AdaEntityKindPackage")), Gpr_Ada_Entity_Kind_Procedure => new Text_Type'(To_Text ("AdaEntityKindProcedure")), Gpr_Ada_Generic => new Text_Type'(To_Text ("AdaGeneric")), Gpr_Ada_Library_Item => new Text_Type'(To_Text ("AdaLibraryItem")), Gpr_Ada_Pkg => new Text_Type'(To_Text ("AdaPkg")), Gpr_Ada_Pkg_Body => new Text_Type'(To_Text ("AdaPkgBody")), Gpr_Ada_Subp => new Text_Type'(To_Text ("AdaSubp")), Gpr_Ada_Prelude => new Text_Type'(To_Text ("AdaPrelude")), Gpr_Ada_Separate => new Text_Type'(To_Text ("AdaSeparate")), Gpr_Ada_Skip => new Text_Type'(To_Text ("AdaSkip")), Gpr_Ada_With_Formal => new Text_Type'(To_Text ("AdaWithFormal")), Gpr_All_Qualifier_Absent => new Text_Type'(To_Text ("AllQualifierAbsent")), Gpr_All_Qualifier_Present => new Text_Type'(To_Text ("AllQualifierPresent")), Gpr_Attribute_Decl => new Text_Type'(To_Text ("AttributeDecl")), Gpr_Attribute_Reference => new Text_Type'(To_Text ("AttributeReference")), Gpr_Ada_Context_Clause_List => new Text_Type'(To_Text ("AdaContextClauseList")), Gpr_Ada_Prelude_Node_List => new Text_Type'(To_Text ("AdaPreludeNodeList")), Gpr_Ada_Skip_List => new Text_Type'(To_Text ("AdaSkipList")), Gpr_Case_Item_List => new Text_Type'(To_Text ("CaseItemList")), Gpr_Expr_List => new Text_Type'(To_Text ("ExprList")), Gpr_Gpr_Node_List => new Text_Type'(To_Text ("GprNodeList")), Gpr_Choices => new Text_Type'(To_Text ("Choices")), Gpr_Term_List => new Text_Type'(To_Text ("TermList")), Gpr_Identifier_List => new Text_Type'(To_Text ("IdentifierList")), Gpr_String_Literal_List => new Text_Type'(To_Text ("StringLiteralList")), Gpr_Term_List_List => new Text_Type'(To_Text ("TermListList")), Gpr_With_Decl_List => new Text_Type'(To_Text ("WithDeclList")), Gpr_Builtin_Function_Call => new Text_Type'(To_Text ("BuiltinFunctionCall")), Gpr_Case_Construction => new Text_Type'(To_Text ("CaseConstruction")), Gpr_Case_Item => new Text_Type'(To_Text ("CaseItem")), Gpr_Compilation_Unit => new Text_Type'(To_Text ("CompilationUnit")), Gpr_Empty_Decl => new Text_Type'(To_Text ("EmptyDecl")), Gpr_Prefix => new Text_Type'(To_Text ("Prefix")), Gpr_Identifier => new Text_Type'(To_Text ("Identifier")), Gpr_Num_Literal => new Text_Type'(To_Text ("NumLiteral")), Gpr_String_Literal => new Text_Type'(To_Text ("StringLiteral")), Gpr_Limited_Absent => new Text_Type'(To_Text ("LimitedAbsent")), Gpr_Limited_Present => new Text_Type'(To_Text ("LimitedPresent")), Gpr_Others_Designator => new Text_Type'(To_Text ("OthersDesignator")), Gpr_Package_Decl => new Text_Type'(To_Text ("PackageDecl")), Gpr_Package_Extension => new Text_Type'(To_Text ("PackageExtension")), Gpr_Package_Renaming => new Text_Type'(To_Text ("PackageRenaming")), Gpr_Package_Spec => new Text_Type'(To_Text ("PackageSpec")), Gpr_Private_Absent => new Text_Type'(To_Text ("PrivateAbsent")), Gpr_Private_Present => new Text_Type'(To_Text ("PrivatePresent")), Gpr_Project => new Text_Type'(To_Text ("Project")), Gpr_Project_Declaration => new Text_Type'(To_Text ("ProjectDeclaration")), Gpr_Project_Extension => new Text_Type'(To_Text ("ProjectExtension")), Gpr_Project_Qualifier_Abstract => new Text_Type'(To_Text ("ProjectQualifierAbstract")), Gpr_Project_Qualifier_Aggregate => new Text_Type'(To_Text ("ProjectQualifierAggregate")), Gpr_Project_Qualifier_Aggregate_Library => new Text_Type'(To_Text ("ProjectQualifierAggregateLibrary")), Gpr_Project_Qualifier_Configuration => new Text_Type'(To_Text ("ProjectQualifierConfiguration")), Gpr_Project_Qualifier_Library => new Text_Type'(To_Text ("ProjectQualifierLibrary")), Gpr_Project_Qualifier_Standard => new Text_Type'(To_Text ("ProjectQualifierStandard")), Gpr_Project_Reference => new Text_Type'(To_Text ("ProjectReference")), Gpr_String_Literal_At => new Text_Type'(To_Text ("StringLiteralAt")), Gpr_Terms => new Text_Type'(To_Text ("Terms")), Gpr_Type_Reference => new Text_Type'(To_Text ("TypeReference")), Gpr_Typed_String_Decl => new Text_Type'(To_Text ("TypedStringDecl")), Gpr_Variable_Decl => new Text_Type'(To_Text ("VariableDecl")), Gpr_Variable_Reference => new Text_Type'(To_Text ("VariableReference")), Gpr_With_Decl => new Text_Type'(To_Text ("WithDecl")));
+     (Gpr_Ada_Access_Subp => new Text_Type'(To_Text ("AdaAccessSubp")), Gpr_Ada_Pragma => new Text_Type'(To_Text ("AdaPragma")), Gpr_Ada_Use => new Text_Type'(To_Text ("AdaUse")), Gpr_Ada_With => new Text_Type'(To_Text ("AdaWith")), Gpr_Ada_Entity_Kind_Function => new Text_Type'(To_Text ("AdaEntityKindFunction")), Gpr_Ada_Entity_Kind_Package => new Text_Type'(To_Text ("AdaEntityKindPackage")), Gpr_Ada_Entity_Kind_Procedure => new Text_Type'(To_Text ("AdaEntityKindProcedure")), Gpr_Ada_Generic => new Text_Type'(To_Text ("AdaGeneric")), Gpr_Ada_Library_Item => new Text_Type'(To_Text ("AdaLibraryItem")), Gpr_Ada_Pkg => new Text_Type'(To_Text ("AdaPkg")), Gpr_Ada_Pkg_Body => new Text_Type'(To_Text ("AdaPkgBody")), Gpr_Ada_Subp => new Text_Type'(To_Text ("AdaSubp")), Gpr_Ada_Prelude => new Text_Type'(To_Text ("AdaPrelude")), Gpr_Ada_Separate => new Text_Type'(To_Text ("AdaSeparate")), Gpr_Ada_Skip => new Text_Type'(To_Text ("AdaSkip")), Gpr_Ada_With_Formal => new Text_Type'(To_Text ("AdaWithFormal")), Gpr_All_Qualifier_Absent => new Text_Type'(To_Text ("AllQualifierAbsent")), Gpr_All_Qualifier_Present => new Text_Type'(To_Text ("AllQualifierPresent")), Gpr_Attribute_Decl => new Text_Type'(To_Text ("AttributeDecl")), Gpr_Attribute_Reference => new Text_Type'(To_Text ("AttributeReference")), Gpr_Ada_Context_Clause_List => new Text_Type'(To_Text ("AdaContextClauseList")), Gpr_Ada_Prelude_Node_List => new Text_Type'(To_Text ("AdaPreludeNodeList")), Gpr_Ada_Skip_List => new Text_Type'(To_Text ("AdaSkipList")), Gpr_Case_Item_List => new Text_Type'(To_Text ("CaseItemList")), Gpr_Expr_List => new Text_Type'(To_Text ("ExprList")), Gpr_Gpr_Node_List => new Text_Type'(To_Text ("GprNodeList")), Gpr_Choices => new Text_Type'(To_Text ("Choices")), Gpr_Term_List => new Text_Type'(To_Text ("TermList")), Gpr_Identifier_List => new Text_Type'(To_Text ("IdentifierList")), Gpr_String_Literal_List => new Text_Type'(To_Text ("StringLiteralList")), Gpr_Term_List_List => new Text_Type'(To_Text ("TermListList")), Gpr_With_Decl_List => new Text_Type'(To_Text ("WithDeclList")), Gpr_Builtin_Function_Call => new Text_Type'(To_Text ("BuiltinFunctionCall")), Gpr_Case_Construction => new Text_Type'(To_Text ("CaseConstruction")), Gpr_Case_Item => new Text_Type'(To_Text ("CaseItem")), Gpr_Compilation_Unit => new Text_Type'(To_Text ("CompilationUnit")), Gpr_Empty_Decl => new Text_Type'(To_Text ("EmptyDecl")), Gpr_Prefix => new Text_Type'(To_Text ("Prefix")), Gpr_Identifier => new Text_Type'(To_Text ("Identifier")), Gpr_Num_Literal => new Text_Type'(To_Text ("NumLiteral")), Gpr_String_Literal => new Text_Type'(To_Text ("StringLiteral")), Gpr_Limited_Absent => new Text_Type'(To_Text ("LimitedAbsent")), Gpr_Limited_Present => new Text_Type'(To_Text ("LimitedPresent")), Gpr_Others_Designator => new Text_Type'(To_Text ("OthersDesignator")), Gpr_Package_Decl => new Text_Type'(To_Text ("PackageDecl")), Gpr_Package_Extension => new Text_Type'(To_Text ("PackageExtension")), Gpr_Package_Renaming => new Text_Type'(To_Text ("PackageRenaming")), Gpr_Package_Spec => new Text_Type'(To_Text ("PackageSpec")), Gpr_Private_Absent => new Text_Type'(To_Text ("PrivateAbsent")), Gpr_Private_Present => new Text_Type'(To_Text ("PrivatePresent")), Gpr_Project => new Text_Type'(To_Text ("Project")), Gpr_Project_Declaration => new Text_Type'(To_Text ("ProjectDeclaration")), Gpr_Project_Extension => new Text_Type'(To_Text ("ProjectExtension")), Gpr_Project_Qualifier_Abstract => new Text_Type'(To_Text ("ProjectQualifierAbstract")), Gpr_Project_Qualifier_Aggregate => new Text_Type'(To_Text ("ProjectQualifierAggregate")), Gpr_Project_Qualifier_Aggregate_Library => new Text_Type'(To_Text ("ProjectQualifierAggregateLibrary")), Gpr_Project_Qualifier_Configuration => new Text_Type'(To_Text ("ProjectQualifierConfiguration")), Gpr_Project_Qualifier_Library => new Text_Type'(To_Text ("ProjectQualifierLibrary")), Gpr_Project_Qualifier_Standard => new Text_Type'(To_Text ("ProjectQualifierStandard")), Gpr_String_Literal_At => new Text_Type'(To_Text ("StringLiteralAt")), Gpr_Terms => new Text_Type'(To_Text ("Terms")), Gpr_Type_Reference => new Text_Type'(To_Text ("TypeReference")), Gpr_Typed_String_Decl => new Text_Type'(To_Text ("TypedStringDecl")), Gpr_Variable_Decl => new Text_Type'(To_Text ("VariableDecl")), Gpr_Variable_Reference => new Text_Type'(To_Text ("VariableReference")), Gpr_With_Decl => new Text_Type'(To_Text ("WithDecl")));
 
    function gpr_node_kind
      (Node : gpr_base_entity_Ptr) return gpr_node_kind_enum is
@@ -779,6 +746,15 @@ package body Gpr_Parser.Implementation.C is
 
    procedure Set_Last_Exception (Exc : Exception_Occurrence) is
    begin
+      Set_Last_Exception (Exception_Identity (Exc), Exception_Message (Exc));
+   end Set_Last_Exception;
+
+   ------------------------
+   -- Set_Last_Exception --
+   ------------------------
+
+   procedure Set_Last_Exception (Id : Exception_Id; Message : String) is
+   begin
       --  If it's the first time, allocate room for the exception information
 
       if Last_Exception = null then
@@ -793,80 +769,58 @@ package body Gpr_Parser.Implementation.C is
 
       --  Get the kind corresponding to Exc
 
-      declare
-         Id : constant Exception_Id := Exception_Identity (Exc);
-      begin
-         if Id = Gpr_Parser_Support.Errors.File_Read_Error'Identity then
-            Last_Exception.Kind := Exception_File_Read_Error;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         elsif Id = Gpr_Parser_Support.Errors.Introspection.Bad_Type_Error'Identity then
-            Last_Exception.Kind := Exception_Bad_Type_Error;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         elsif Id = Gpr_Parser_Support.Errors.Introspection.Out_Of_Bounds_Error'Identity then
-            Last_Exception.Kind := Exception_Out_Of_Bounds_Error;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         elsif Id = Gpr_Parser_Support.Errors.Invalid_Input'Identity then
-            Last_Exception.Kind := Exception_Invalid_Input;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         elsif Id = Gpr_Parser_Support.Errors.Invalid_Symbol_Error'Identity then
-            Last_Exception.Kind := Exception_Invalid_Symbol_Error;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         elsif Id = Gpr_Parser_Support.Errors.Invalid_Unit_Name_Error'Identity then
-            Last_Exception.Kind := Exception_Invalid_Unit_Name_Error;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         elsif Id = Gpr_Parser_Support.Errors.Native_Exception'Identity then
-            Last_Exception.Kind := Exception_Native_Exception;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         elsif Id = Gpr_Parser_Support.Errors.Precondition_Failure'Identity then
-            Last_Exception.Kind := Exception_Precondition_Failure;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         elsif Id = Gpr_Parser_Support.Errors.Property_Error'Identity then
-            Last_Exception.Kind := Exception_Property_Error;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         elsif Id = Gpr_Parser_Support.Errors.Rewriting.Template_Args_Error'Identity then
-            Last_Exception.Kind := Exception_Template_Args_Error;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         elsif Id = Gpr_Parser_Support.Errors.Rewriting.Template_Format_Error'Identity then
-            Last_Exception.Kind := Exception_Template_Format_Error;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         elsif Id = Gpr_Parser_Support.Errors.Rewriting.Template_Instantiation_Error'Identity then
-            Last_Exception.Kind := Exception_Template_Instantiation_Error;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         elsif Id = Gpr_Parser_Support.Errors.Stale_Reference_Error'Identity then
-            Last_Exception.Kind := Exception_Stale_Reference_Error;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         elsif Id = Gpr_Parser_Support.Errors.Syntax_Error'Identity then
-            Last_Exception.Kind := Exception_Syntax_Error;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         elsif Id = Gpr_Parser_Support.Errors.Unknown_Charset'Identity then
-            Last_Exception.Kind := Exception_Unknown_Charset;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         elsif Id = Gpr_Parser_Support.Errors.Unparsing.Malformed_Tree_Error'Identity then
-            Last_Exception.Kind := Exception_Malformed_Tree_Error;
-            Last_Exception.Information :=
-               New_String (Exception_Message (Exc));
-         else
-            Last_Exception.Kind := Exception_Native_Exception;
-            Last_Exception.Information :=
-               New_String (Exception_Information (Exc));
-         end if;
-      end;
-
+      if Id = Gpr_Parser_Support.Errors.File_Read_Error'Identity then
+         Last_Exception.Kind := Exception_File_Read_Error;
+         Last_Exception.Information := New_String (Message);
+      elsif Id = Gpr_Parser_Support.Errors.Introspection.Bad_Type_Error'Identity then
+         Last_Exception.Kind := Exception_Bad_Type_Error;
+         Last_Exception.Information := New_String (Message);
+      elsif Id = Gpr_Parser_Support.Errors.Introspection.Out_Of_Bounds_Error'Identity then
+         Last_Exception.Kind := Exception_Out_Of_Bounds_Error;
+         Last_Exception.Information := New_String (Message);
+      elsif Id = Gpr_Parser_Support.Errors.Invalid_Input'Identity then
+         Last_Exception.Kind := Exception_Invalid_Input;
+         Last_Exception.Information := New_String (Message);
+      elsif Id = Gpr_Parser_Support.Errors.Invalid_Symbol_Error'Identity then
+         Last_Exception.Kind := Exception_Invalid_Symbol_Error;
+         Last_Exception.Information := New_String (Message);
+      elsif Id = Gpr_Parser_Support.Errors.Invalid_Unit_Name_Error'Identity then
+         Last_Exception.Kind := Exception_Invalid_Unit_Name_Error;
+         Last_Exception.Information := New_String (Message);
+      elsif Id = Gpr_Parser_Support.Errors.Native_Exception'Identity then
+         Last_Exception.Kind := Exception_Native_Exception;
+         Last_Exception.Information := New_String (Message);
+      elsif Id = Gpr_Parser_Support.Errors.Precondition_Failure'Identity then
+         Last_Exception.Kind := Exception_Precondition_Failure;
+         Last_Exception.Information := New_String (Message);
+      elsif Id = Gpr_Parser_Support.Errors.Property_Error'Identity then
+         Last_Exception.Kind := Exception_Property_Error;
+         Last_Exception.Information := New_String (Message);
+      elsif Id = Gpr_Parser_Support.Errors.Rewriting.Template_Args_Error'Identity then
+         Last_Exception.Kind := Exception_Template_Args_Error;
+         Last_Exception.Information := New_String (Message);
+      elsif Id = Gpr_Parser_Support.Errors.Rewriting.Template_Format_Error'Identity then
+         Last_Exception.Kind := Exception_Template_Format_Error;
+         Last_Exception.Information := New_String (Message);
+      elsif Id = Gpr_Parser_Support.Errors.Rewriting.Template_Instantiation_Error'Identity then
+         Last_Exception.Kind := Exception_Template_Instantiation_Error;
+         Last_Exception.Information := New_String (Message);
+      elsif Id = Gpr_Parser_Support.Errors.Stale_Reference_Error'Identity then
+         Last_Exception.Kind := Exception_Stale_Reference_Error;
+         Last_Exception.Information := New_String (Message);
+      elsif Id = Gpr_Parser_Support.Errors.Syntax_Error'Identity then
+         Last_Exception.Kind := Exception_Syntax_Error;
+         Last_Exception.Information := New_String (Message);
+      elsif Id = Gpr_Parser_Support.Errors.Unknown_Charset'Identity then
+         Last_Exception.Kind := Exception_Unknown_Charset;
+         Last_Exception.Information := New_String (Message);
+      elsif Id = Gpr_Parser_Support.Errors.Unparsing.Malformed_Tree_Error'Identity then
+         Last_Exception.Kind := Exception_Malformed_Tree_Error;
+         Last_Exception.Information := New_String (Message);
+      else
+         Last_Exception.Kind := Exception_Native_Exception;
+         Last_Exception.Information := New_String (Message);
+      end if;
    end Set_Last_Exception;
 
    --------------------------
@@ -1149,31 +1103,6 @@ package body Gpr_Parser.Implementation.C is
          Set_Last_Exception (Exc);
    end;
 
-   function gpr_create_unit_provider
-     (Data                    : System.Address;
-      Destroy_Func            : gpr_unit_provider_destroy_callback;
-      Get_Unit_Filename_Func  : gpr_unit_provider_get_unit_filename_callback;
-      Get_Unit_From_Name_Func : gpr_unit_provider_get_unit_from_name_callback)
-      return gpr_unit_provider is
-   begin
-      Clear_Last_Exception;
-      declare
-         Result : constant C_Unit_Provider_Access := new C_Unit_Provider'
-           (Ada.Finalization.Limited_Controlled with
-            Ref_Count               => 1,
-            Data                    => Data,
-            Destroy_Func            => Destroy_Func,
-            Get_Unit_Filename_Func  => Get_Unit_Filename_Func,
-            Get_Unit_From_Name_Func => Get_Unit_From_Name_Func);
-      begin
-         return Wrap_Private_Provider (Internal_Unit_Provider_Access (Result));
-      end;
-   exception
-      when Exc : others =>
-         Set_Last_Exception (Exc);
-         return gpr_unit_provider (System.Null_Address);
-   end;
-
    procedure gpr_dec_ref_unit_provider
      (Provider : gpr_unit_provider) is
    begin
@@ -1434,94 +1363,6 @@ package body Gpr_Parser.Implementation.C is
       Self.Unit_Parsed_Func
         (Self.Data, Context, Unit, (if Reparsed then 1 else 0));
    end Unit_Parsed_Callback;
-
-   --------------
-   -- Finalize --
-   --------------
-
-   overriding procedure Finalize (Provider : in out C_Unit_Provider) is
-   begin
-      Provider.Destroy_Func (Provider.Data);
-   end Finalize;
-
-   -------------
-   -- Inc_Ref --
-   -------------
-
-   overriding procedure Inc_Ref (Provider : in out C_Unit_Provider) is
-   begin
-      Provider.Ref_Count := Provider.Ref_Count + 1;
-   end Inc_Ref;
-
-   -------------
-   -- Dec_Ref --
-   -------------
-
-   overriding function Dec_Ref
-     (Provider : in out C_Unit_Provider) return Boolean is
-   begin
-      Provider.Ref_Count := Provider.Ref_Count - 1;
-      if Provider.Ref_Count = 0 then
-         return True;
-      else
-         return False;
-      end if;
-   end Dec_Ref;
-
-   -----------------------
-   -- Get_Unit_Filename --
-   -----------------------
-
-   overriding function Get_Unit_Filename
-     (Provider : C_Unit_Provider;
-      Name     : Text_Type;
-      Kind     : Analysis_Unit_Kind) return String
-   is
-      Name_Access : constant Text_Cst_Access := Name'Unrestricted_Access;
-
-      C_Result : chars_ptr := Provider.Get_Unit_Filename_Func
-        (Provider.Data, Wrap (Name_Access), Kind);
-   begin
-      if C_Result = Null_Ptr then
-         raise Property_Error with "invalid AST node for unit name";
-      else
-         declare
-            Result : constant String := Value (C_Result);
-         begin
-            Free (C_Result);
-            return Result;
-         end;
-      end if;
-   end Get_Unit_Filename;
-
-   --------------
-   -- Get_Unit --
-   --------------
-
-   overriding function Get_Unit
-     (Provider : C_Unit_Provider;
-      Context  : Internal_Context;
-      Name     : Text_Type;
-      Kind     : Analysis_Unit_Kind;
-      Charset  : String := "";
-      Reparse  : Boolean := False) return Internal_Unit
-   is
-      Name_Access : constant Text_Cst_Access := Name'Unrestricted_Access;
-      C_Charset   : chars_ptr := (if Charset'Length = 0
-                                  then Null_Ptr
-                                  else New_String (Charset));
-   begin
-      return C_Result : constant gpr_analysis_unit :=
-         Provider.Get_Unit_From_Name_Func
-           (Provider.Data, Context, Wrap (Name_Access), Kind,
-            C_Charset, Boolean'Pos (Reparse))
-      do
-         Free (C_Charset);
-         if C_Result = null then
-            raise Property_Error with "invalid AST node for unit name";
-         end if;
-      end return;
-   end Get_Unit;
 
    
 
@@ -4690,56 +4531,6 @@ package body Gpr_Parser.Implementation.C is
          Set_Last_Exception (Exc);
          return 0;
    end gpr_project_extension_f_path_name;
-
-
-           
-
-   
-
-   
-   
-
-   function gpr_project_reference_f_attr_ref
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-   is
-      Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
-   begin
-      Clear_Last_Exception;
-
-
-      if Unwrapped_Node.Kind in Gpr_Project_Reference_Range then
-
-         declare
-            
-
-            Result : Bare_Attribute_Reference;
-         begin
-            Result := Project_Reference_F_Attr_Ref (Unwrapped_Node);
-
-            Value_P.all :=
-                   (Result, Node.Info)
-            ;
-
-            return 1;
-         exception
-            when Exc : Property_Error =>
-               Set_Last_Exception (Exc);
-               return 0;
-         end;
-
-      else
-         return 0;
-      end if;
-
-   exception
-      when Exc : others =>
-         Set_Last_Exception (Exc);
-         return 0;
-   end gpr_project_reference_f_attr_ref;
 
 
            

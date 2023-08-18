@@ -64,10 +64,6 @@ class TypeReference(GprNode):
     var_type_name = Field(type=T.Identifier.list)
 
 
-class ProjectReference(GprNode):
-    attr_ref = Field(type=T.AttributeReference)
-
-
 A.add_rules(
     identifier=Identifier(Token.Identifier),
     string_literal=StringLiteral(Token.String),
@@ -92,14 +88,10 @@ A.add_rules(
     string_literal_at=StringLiteralAt(
         A.string_literal, Opt(Pick("at", A.num_literal))
     ),
-    project_reference=ProjectReference(
-        Lex.Identifier(match_text="project"), "'", A.attribute_reference
-    ),
     term=Or(
         A.expression_list,
         A.string_literal_at,
         A.builtin_function_call,
         A.variable_reference,
-        A.project_reference,
     ),
 )

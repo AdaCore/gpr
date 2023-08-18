@@ -7,7 +7,7 @@
 asm(
 ".pushsection \".debug_gdb_scripts\", \"MS\",@progbits,1\n"
 ".byte 1 /* Python */\n"
-".asciz \"/home/pbeguet/WorkSpace/gpr_Issue#32/langkit/./generated/gdbinit.py\"\n"
+".asciz \"/media/psf/Home/src/gpr/langkit/build/gdbinit.py\"\n"
 ".popsection\n"
 );
 #endif

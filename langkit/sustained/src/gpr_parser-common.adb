@@ -29,12 +29,12 @@ with Gpr_Parser.Private_Converters;
 package body Gpr_Parser.Common is
 
    Is_Token_Node_Kind : constant array (Gpr_Node_Kind_Type) of Boolean :=
-     (Gpr_Ada_Access_Subp => False, Gpr_Ada_Pragma => False, Gpr_Ada_Use => False, Gpr_Ada_With => False, Gpr_Ada_Entity_Kind_Function => False, Gpr_Ada_Entity_Kind_Package => False, Gpr_Ada_Entity_Kind_Procedure => False, Gpr_Ada_Generic => False, Gpr_Ada_Library_Item => False, Gpr_Ada_Pkg => False, Gpr_Ada_Pkg_Body => False, Gpr_Ada_Subp => False, Gpr_Ada_Prelude => False, Gpr_Ada_Separate => False, Gpr_Ada_Skip => False, Gpr_Ada_With_Formal => False, Gpr_All_Qualifier_Absent => False, Gpr_All_Qualifier_Present => False, Gpr_Attribute_Decl => False, Gpr_Attribute_Reference => False, Gpr_Ada_Context_Clause_List => False, Gpr_Ada_Prelude_Node_List => False, Gpr_Ada_Skip_List => False, Gpr_Case_Item_List => False, Gpr_Expr_List => False, Gpr_Gpr_Node_List => False, Gpr_Choices => False, Gpr_Term_List => False, Gpr_Identifier_List => False, Gpr_String_Literal_List => False, Gpr_Term_List_List => False, Gpr_With_Decl_List => False, Gpr_Builtin_Function_Call => False, Gpr_Case_Construction => False, Gpr_Case_Item => False, Gpr_Compilation_Unit => False, Gpr_Empty_Decl => False, Gpr_Prefix => False, Gpr_Identifier => True, Gpr_Num_Literal => True, Gpr_String_Literal => True, Gpr_Limited_Absent => False, Gpr_Limited_Present => False, Gpr_Others_Designator => False, Gpr_Package_Decl => False, Gpr_Package_Extension => False, Gpr_Package_Renaming => False, Gpr_Package_Spec => False, Gpr_Private_Absent => False, Gpr_Private_Present => False, Gpr_Project => False, Gpr_Project_Declaration => False, Gpr_Project_Extension => False, Gpr_Project_Qualifier_Abstract => False, Gpr_Project_Qualifier_Aggregate => False, Gpr_Project_Qualifier_Aggregate_Library => False, Gpr_Project_Qualifier_Configuration => False, Gpr_Project_Qualifier_Library => False, Gpr_Project_Qualifier_Standard => False, Gpr_Project_Reference => False, Gpr_String_Literal_At => False, Gpr_Terms => False, Gpr_Type_Reference => False, Gpr_Typed_String_Decl => False, Gpr_Variable_Decl => False, Gpr_Variable_Reference => False, Gpr_With_Decl => False);
+     (Gpr_Ada_Access_Subp => False, Gpr_Ada_Pragma => False, Gpr_Ada_Use => False, Gpr_Ada_With => False, Gpr_Ada_Entity_Kind_Function => False, Gpr_Ada_Entity_Kind_Package => False, Gpr_Ada_Entity_Kind_Procedure => False, Gpr_Ada_Generic => False, Gpr_Ada_Library_Item => False, Gpr_Ada_Pkg => False, Gpr_Ada_Pkg_Body => False, Gpr_Ada_Subp => False, Gpr_Ada_Prelude => False, Gpr_Ada_Separate => False, Gpr_Ada_Skip => False, Gpr_Ada_With_Formal => False, Gpr_All_Qualifier_Absent => False, Gpr_All_Qualifier_Present => False, Gpr_Attribute_Decl => False, Gpr_Attribute_Reference => False, Gpr_Ada_Context_Clause_List => False, Gpr_Ada_Prelude_Node_List => False, Gpr_Ada_Skip_List => False, Gpr_Case_Item_List => False, Gpr_Expr_List => False, Gpr_Gpr_Node_List => False, Gpr_Choices => False, Gpr_Term_List => False, Gpr_Identifier_List => False, Gpr_String_Literal_List => False, Gpr_Term_List_List => False, Gpr_With_Decl_List => False, Gpr_Builtin_Function_Call => False, Gpr_Case_Construction => False, Gpr_Case_Item => False, Gpr_Compilation_Unit => False, Gpr_Empty_Decl => False, Gpr_Prefix => False, Gpr_Identifier => True, Gpr_Num_Literal => True, Gpr_String_Literal => True, Gpr_Limited_Absent => False, Gpr_Limited_Present => False, Gpr_Others_Designator => False, Gpr_Package_Decl => False, Gpr_Package_Extension => False, Gpr_Package_Renaming => False, Gpr_Package_Spec => False, Gpr_Private_Absent => False, Gpr_Private_Present => False, Gpr_Project => False, Gpr_Project_Declaration => False, Gpr_Project_Extension => False, Gpr_Project_Qualifier_Abstract => False, Gpr_Project_Qualifier_Aggregate => False, Gpr_Project_Qualifier_Aggregate_Library => False, Gpr_Project_Qualifier_Configuration => False, Gpr_Project_Qualifier_Library => False, Gpr_Project_Qualifier_Standard => False, Gpr_String_Literal_At => False, Gpr_Terms => False, Gpr_Type_Reference => False, Gpr_Typed_String_Decl => False, Gpr_Variable_Decl => False, Gpr_Variable_Reference => False, Gpr_With_Decl => False);
    --  For each node kind, return whether it is a node that contains only a
    --  single token.
 
    Is_Error_Node_Kind : constant array (Gpr_Node_Kind_Type) of Boolean :=
-     (Gpr_Ada_Access_Subp => False, Gpr_Ada_Pragma => False, Gpr_Ada_Use => False, Gpr_Ada_With => False, Gpr_Ada_Entity_Kind_Function => False, Gpr_Ada_Entity_Kind_Package => False, Gpr_Ada_Entity_Kind_Procedure => False, Gpr_Ada_Generic => False, Gpr_Ada_Library_Item => False, Gpr_Ada_Pkg => False, Gpr_Ada_Pkg_Body => False, Gpr_Ada_Subp => False, Gpr_Ada_Prelude => False, Gpr_Ada_Separate => False, Gpr_Ada_Skip => True, Gpr_Ada_With_Formal => False, Gpr_All_Qualifier_Absent => False, Gpr_All_Qualifier_Present => False, Gpr_Attribute_Decl => False, Gpr_Attribute_Reference => False, Gpr_Ada_Context_Clause_List => False, Gpr_Ada_Prelude_Node_List => False, Gpr_Ada_Skip_List => False, Gpr_Case_Item_List => False, Gpr_Expr_List => False, Gpr_Gpr_Node_List => False, Gpr_Choices => False, Gpr_Term_List => False, Gpr_Identifier_List => False, Gpr_String_Literal_List => False, Gpr_Term_List_List => False, Gpr_With_Decl_List => False, Gpr_Builtin_Function_Call => False, Gpr_Case_Construction => False, Gpr_Case_Item => False, Gpr_Compilation_Unit => False, Gpr_Empty_Decl => False, Gpr_Prefix => False, Gpr_Identifier => False, Gpr_Num_Literal => False, Gpr_String_Literal => False, Gpr_Limited_Absent => False, Gpr_Limited_Present => False, Gpr_Others_Designator => False, Gpr_Package_Decl => False, Gpr_Package_Extension => False, Gpr_Package_Renaming => False, Gpr_Package_Spec => False, Gpr_Private_Absent => False, Gpr_Private_Present => False, Gpr_Project => False, Gpr_Project_Declaration => False, Gpr_Project_Extension => False, Gpr_Project_Qualifier_Abstract => False, Gpr_Project_Qualifier_Aggregate => False, Gpr_Project_Qualifier_Aggregate_Library => False, Gpr_Project_Qualifier_Configuration => False, Gpr_Project_Qualifier_Library => False, Gpr_Project_Qualifier_Standard => False, Gpr_Project_Reference => False, Gpr_String_Literal_At => False, Gpr_Terms => False, Gpr_Type_Reference => False, Gpr_Typed_String_Decl => False, Gpr_Variable_Decl => False, Gpr_Variable_Reference => False, Gpr_With_Decl => False);
+     (Gpr_Ada_Access_Subp => False, Gpr_Ada_Pragma => False, Gpr_Ada_Use => False, Gpr_Ada_With => False, Gpr_Ada_Entity_Kind_Function => False, Gpr_Ada_Entity_Kind_Package => False, Gpr_Ada_Entity_Kind_Procedure => False, Gpr_Ada_Generic => False, Gpr_Ada_Library_Item => False, Gpr_Ada_Pkg => False, Gpr_Ada_Pkg_Body => False, Gpr_Ada_Subp => False, Gpr_Ada_Prelude => False, Gpr_Ada_Separate => False, Gpr_Ada_Skip => True, Gpr_Ada_With_Formal => False, Gpr_All_Qualifier_Absent => False, Gpr_All_Qualifier_Present => False, Gpr_Attribute_Decl => False, Gpr_Attribute_Reference => False, Gpr_Ada_Context_Clause_List => False, Gpr_Ada_Prelude_Node_List => False, Gpr_Ada_Skip_List => False, Gpr_Case_Item_List => False, Gpr_Expr_List => False, Gpr_Gpr_Node_List => False, Gpr_Choices => False, Gpr_Term_List => False, Gpr_Identifier_List => False, Gpr_String_Literal_List => False, Gpr_Term_List_List => False, Gpr_With_Decl_List => False, Gpr_Builtin_Function_Call => False, Gpr_Case_Construction => False, Gpr_Case_Item => False, Gpr_Compilation_Unit => False, Gpr_Empty_Decl => False, Gpr_Prefix => False, Gpr_Identifier => False, Gpr_Num_Literal => False, Gpr_String_Literal => False, Gpr_Limited_Absent => False, Gpr_Limited_Present => False, Gpr_Others_Designator => False, Gpr_Package_Decl => False, Gpr_Package_Extension => False, Gpr_Package_Renaming => False, Gpr_Package_Spec => False, Gpr_Private_Absent => False, Gpr_Private_Present => False, Gpr_Project => False, Gpr_Project_Declaration => False, Gpr_Project_Extension => False, Gpr_Project_Qualifier_Abstract => False, Gpr_Project_Qualifier_Aggregate => False, Gpr_Project_Qualifier_Aggregate_Library => False, Gpr_Project_Qualifier_Configuration => False, Gpr_Project_Qualifier_Library => False, Gpr_Project_Qualifier_Standard => False, Gpr_String_Literal_At => False, Gpr_Terms => False, Gpr_Type_Reference => False, Gpr_Typed_String_Decl => False, Gpr_Variable_Decl => False, Gpr_Variable_Reference => False, Gpr_With_Decl => False);
    --  For each node kind, return whether it is an error node
 
    function Wrap_Token_Reference
@@ -604,7 +604,6 @@ package body Gpr_Parser.Common is
               Sloc_Range    => Sloc_Range (TDH, Raw_Data));
    end Convert;
 
-
    ------------------
    -- From_Generic --
    ------------------
@@ -638,7 +637,6 @@ package body Gpr_Parser.Common is
           Token.Safety_Net.Context_Version,
           Token.Safety_Net.TDH_Version));
    end To_Generic;
-
 
    --------------------------
    -- Wrap_Token_Reference --
@@ -722,6 +720,29 @@ package body Gpr_Parser.Common is
       First := Token.Source_First;
       Last := Token.Source_Last;
    end Extract_Token_Text;
+
+   ---------------------
+   -- Token_Node_Kind --
+   ---------------------
+
+   function Token_Node_Kind (Kind : Gpr_Node_Kind_Type) return Token_Kind is
+      
+   begin
+         case Kind is
+               when Gpr_Identifier =>
+                  return Gpr_Identifier;
+               when Gpr_Num_Literal =>
+                  return Gpr_Number;
+               when Gpr_String_Literal =>
+                  return Gpr_String;
+
+            when others =>
+               --  Kind is not a token node, and thus the precondition does not
+               --  hold.
+               return (raise Program_Error);
+         end case;
+
+   end Token_Node_Kind;
 
 
 begin
