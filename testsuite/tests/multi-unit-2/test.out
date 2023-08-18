@@ -205,7 +205,9 @@ pkg.ads
   has naming exception = FALSE
   - compilation unit at 0
     unit name    = PKG
-    kind         = S_SPEC
+    kind         = S_SPEC_ONLY
+    object file  = pkg.ali
+    dependency unit PKG S_SPEC_ONLY in pkg.ads
 few_units.ada
   single-unit          = FALSE
   has naming exception = TRUE

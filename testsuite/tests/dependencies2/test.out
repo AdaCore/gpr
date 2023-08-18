@@ -37,7 +37,7 @@ Project: Demo
    > /src/api.adb
    > /src/api.ads
    > /src2/toto.ads
-api.ads:3:01: warning: withed unit titi not found
+api.ads: warning: withed unit titi not found
 ..... CLOSURE
    > /src/api-call.adb
    > /src/api.adb
@@ -51,7 +51,7 @@ api.ads:3:01: warning: withed unit titi not found
    > /src/api.adb
    > /src/api.ads
    > /src2/toto.ads
-api.ads:3:01: warning: withed unit titi not found
+api.ads: warning: withed unit titi not found
 ..... CLOSURE
    > /src/api-call.adb
    > /src/api.adb
@@ -65,7 +65,7 @@ api.ads:3:01: warning: withed unit titi not found
    > /src/api.adb
    > /src/api.ads
    > /src2/toto.ads
-api.ads:3:01: warning: withed unit titi not found
+api.ads: warning: withed unit titi not found
 ..... CLOSURE
    > /src/api-call.adb
    > /src/api.adb
