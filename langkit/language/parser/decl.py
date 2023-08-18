@@ -24,8 +24,11 @@ class WithDecl(GprNode):
 class ProjectQualifier(GprNode):
     enum_node = True
     alternatives = [
-        "abstract",  "standard", "library",
-        "aggregate", "aggregate_library",
+        "abstract",
+        "standard",
+        "library",
+        "aggregate",
+        "aggregate_library",
         "configuration",
     ]
 
@@ -109,15 +112,9 @@ A.add_rules(
     project_qualifier=Or(
         ProjectQualifier.alt_abstract("abstract"),
         ProjectQualifier.alt_library(l_id("library")),
-
-        ProjectQualifier.alt_aggregate_library(
-            l_id("aggregate"), l_id("library")
-        ),
-
+        ProjectQualifier.alt_aggregate_library(l_id("aggregate"), l_id("library")),
         ProjectQualifier.alt_aggregate(l_id("aggregate")),
-
         ProjectQualifier.alt_configuration(l_id("configuration")),
-
         ProjectQualifier.alt_standard(l_id("standard")),
     ),
     project_extension=ProjectExtension(
@@ -134,12 +131,13 @@ A.add_rules(
         A.static_name,
         ";",
     ),
-    project=Project(A.context_clauses, A.project_declaration,),
+    project=Project(
+        A.context_clauses,
+        A.project_declaration,
+    ),
     # ----------------------------------------------- declarative items
     declarative_items=List(A.declarative_item, empty_valid=True),
-    declarative_item=Or(
-        A.simple_declarative_item, A.typed_string_decl, A.package_decl
-    ),
+    declarative_item=Or(A.simple_declarative_item, A.typed_string_decl, A.package_decl),
     simple_declarative_items=List(A.simple_declarative_item, empty_valid=True),
     simple_declarative_item=Or(
         A.variable_decl,
@@ -162,12 +160,8 @@ A.add_rules(
     package_decl=PackageDecl(
         "package", A.identifier, Or(A.package_renaming, A.package_spec), ";"
     ),
-    package_renaming=PackageRenaming(
-        "renames", List(A.identifier, sep=".")
-    ),
-    package_extension=PackageExtension(
-        "extends", List(A.identifier, sep=".")
-    ),
+    package_renaming=PackageRenaming("renames", List(A.identifier, sep=".")),
+    package_extension=PackageExtension("extends", List(A.identifier, sep=".")),
     package_spec=PackageSpec(
         Opt(A.package_extension),
         "is",
@@ -195,7 +189,6 @@ A.add_rules(
     others_designator=OthersDesignator("others"),
     choice=Or(A.string_literal, A.others_designator),
     discrete_choice_list=List(A.choice, sep="|", list_cls=Choices),
-
     with_decl=WithDecl(
         Opt("limited").as_bool(Limited),
         "with",

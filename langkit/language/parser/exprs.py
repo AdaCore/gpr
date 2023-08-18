@@ -78,16 +78,14 @@ A.add_rules(
         List(A.identifier, sep="."),
         Opt(Pick("'", A.attribute_reference)),
     ),
-    type_reference=TypeReference(List(A.identifier, sep="."),),
+    type_reference=TypeReference(
+        List(A.identifier, sep="."),
+    ),
     builtin_function_call=BuiltinFunctionCall(A.identifier, A.expression_list),
     # ----------------------------------------------------------------
     expression=List(A.term, sep="&", list_cls=TermList),
-    expression_list=Terms(
-        "(", List(A.expression, sep=",", empty_valid=True), ")"
-    ),
-    string_literal_at=StringLiteralAt(
-        A.string_literal, Opt(Pick("at", A.num_literal))
-    ),
+    expression_list=Terms("(", List(A.expression, sep=",", empty_valid=True), ")"),
+    string_literal_at=StringLiteralAt(A.string_literal, Opt(Pick("at", A.num_literal))),
     term=Or(
         A.expression_list,
         A.string_literal_at,

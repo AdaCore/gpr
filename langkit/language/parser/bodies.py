@@ -7,4 +7,6 @@ class CompilationUnit(GprNode):
     project = Field(type=T.Project)
 
 
-A.add_rules(compilation_unit=CompilationUnit(A.project),)
+A.add_rules(
+    compilation_unit=CompilationUnit(A.project),
+)
