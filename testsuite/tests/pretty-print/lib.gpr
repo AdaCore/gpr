@@ -1,0 +1,10 @@
+limited with"demo";
+library project lib extends all"abstract_prj"is
+for Library_Name use "lib";for Library_Dir use "obj";
+package Naming is
+for spec("ada") use ".1.ads";
+for spec_suffix("ada") use ".2.ads";
+for body("ada") use ".1.adb";
+for body_suffix("ada") use ".2.adb";
+end Naming;
+end lib;

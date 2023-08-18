@@ -25,6 +25,9 @@ private package Gpr_Parser.Private_Converters is
      with Import, External_Name => "Gpr_Parser__to_generic_token";
    --  See the corresponding exports in $.Common's body
 
+   function From_Generic_Node (Node : Lk_Node) return Internal_Entity;
+   function To_Generic_Node (Entity : Internal_Entity) return Lk_Node;
+
    type Token_Reference_Wrapper is access function
      (Context : Internal_Context;
       TDH     : Token_Data_Handler_Access;

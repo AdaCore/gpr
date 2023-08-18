@@ -1,13 +1,14 @@
-project Demo is
+project Demo extends all "abstract_prj" is
 
-   for Main use ("foo.adb");
-   for Object_Dir use "obj";
+   for Main use ("foo.adb" at 1);
+   for Object_Dir use Project'Target;
    for Source_Dirs use ("src", "src2");
    type Choice is ("yes", "no");
    Has_Choice : Choice := External ("OFFER_CHOICE", "no");
 
    package Builder is
       for Executable ("foo.adb") use "executable";
+      for Executable ("foo1.adb") use Builder'Executable("foo.adb") & "1";
    end Builder;
 
    package Compiler is
@@ -23,5 +24,44 @@ project Demo is
 
    end Compiler;
 
+   type TriBool is ("true", "false", "undefined");
+   Value : TriBool := External ("Value", "true");
+
+   case Value is
+      when "true" | "false" => null;
+      when others => Var := Project'Name;
+   end case;
+
 end Demo;
+abstract project Abstract_Prj is
+
+end Abstract_Prj;
+limited with "demo";
+
+library project Lib extends all "abstract_prj" is
+
+   for Library_Name use "lib";
+   for Library_Dir use "obj";
+
+   package Naming is
+      for Specification ("ada") use ".1.ads";
+      for Specification_Suffix ("ada") use ".2.ads";
+      for Implementation ("ada") use ".1.adb";
+      for Implementation_Suffix ("ada") use ".2.adb";
+   end Naming;
+
+end Lib;
+aggregate project Aggregate_Prj is
+
+   for Project_Files use ("demo.gpr");
+
+end Aggregate_Prj;
+aggregate library project Aggregate_Lib is
+
+   for Project_Files use ("lib.gpr");
+   for Library_Name use "demo";
+   for Library_Dir use "lib";
+   for Library_Ali_Dir use "ali";
+
+end Aggregate_Lib;
 

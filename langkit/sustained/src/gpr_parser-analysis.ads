@@ -13,6 +13,7 @@
 
 
 with Ada.Containers;
+private with Ada.Containers.Vectors;
 private with Ada.Finalization;
 with Ada.Strings.Unbounded;
 
@@ -287,10 +288,9 @@ package Gpr_Parser.Analysis is
       --  :ada:ref:`Attribute_Decl`, :ada:ref:`Builtin_Function_Call`,
       --  :ada:ref:`Case_Construction`, :ada:ref:`Empty_Decl`,
       --  :ada:ref:`Others_Designator`, :ada:ref:`Package_Decl`,
-      --  :ada:ref:`Project_Reference`, :ada:ref:`String_Literal_At`,
-      --  :ada:ref:`String_Literal`, :ada:ref:`Terms`,
-      --  :ada:ref:`Typed_String_Decl`, :ada:ref:`Variable_Decl`,
-      --  :ada:ref:`Variable_Reference`
+      --  :ada:ref:`String_Literal_At`, :ada:ref:`String_Literal`,
+      --  :ada:ref:`Terms`, :ada:ref:`Typed_String_Decl`,
+      --  :ada:ref:`Variable_Decl`, :ada:ref:`Variable_Reference`
 
       type Choices is new Gpr_Node_List with private
       ;
@@ -428,10 +428,6 @@ package Gpr_Parser.Analysis is
       ;
       
 
-      type Project_Reference is new Gpr_Node with private
-      ;
-      
-
       type String_Literal is new Single_Tok_Node with private
       ;
       
@@ -451,9 +447,8 @@ package Gpr_Parser.Analysis is
       type Term_List is new Gpr_Node_List with private
       ;
       --  This list node can contain one of the following nodes:
-      --  :ada:ref:`Builtin_Function_Call`, :ada:ref:`Project_Reference`,
-      --  :ada:ref:`String_Literal_At`, :ada:ref:`Terms`,
-      --  :ada:ref:`Variable_Reference`
+      --  :ada:ref:`Builtin_Function_Call`, :ada:ref:`String_Literal_At`,
+      --  :ada:ref:`Terms`, :ada:ref:`Variable_Reference`
 
       type Term_List_List is new Base_List with private
          with Iterable => (First       => Term_List_List_First,
@@ -630,8 +625,6 @@ package Gpr_Parser.Analysis is
       --% no-document: True
       No_Project_Qualifier_Standard : constant Project_Qualifier_Standard;
       --% no-document: True
-      No_Project_Reference : constant Project_Reference;
-      --% no-document: True
       No_String_Literal : constant String_Literal;
       --% no-document: True
       No_String_Literal_At : constant String_Literal_At;
@@ -761,15 +754,42 @@ package Gpr_Parser.Analysis is
    --  Return the filename corresponding to the given unit name/unit kind.
    --  Raise a ``Property_Error`` if the given unit name is not valid.
 
+   procedure Get_Unit_Location
+     (Provider       : Unit_Provider_Interface;
+      Name           : Text_Type;
+      Kind           : Analysis_Unit_Kind;
+      Filename       : in out Ada.Strings.Unbounded.Unbounded_String;
+      PLE_Root_Index : in out Natural) is null;
+   --  Like ``Get_Unit_Filename``, but return both the source file that
+   --  ``Name``/``Kind`` designate (in ``Filename``) and the index of the PLE
+   --  root inside that unit (in ``PLE_Root_Index``). If ``PLE_Root_Index`` is
+   --  left to 0 upon return, discard the result and switch to the PLE root
+   --  unaware ``Get_Unit_Filename`` function.
+
    function Get_Unit
-     (Provider    : Unit_Provider_Interface;
-      Context     : Analysis_Context'Class;
-      Name        : Text_Type;
-      Kind        : Analysis_Unit_Kind;
-      Charset     : String := "";
-      Reparse     : Boolean := False) return Analysis_Unit'Class is abstract;
+     (Provider : Unit_Provider_Interface;
+      Context  : Analysis_Context'Class;
+      Name     : Text_Type;
+      Kind     : Analysis_Unit_Kind;
+      Charset  : String := "";
+      Reparse  : Boolean := False) return Analysis_Unit'Class is abstract;
    --  Fetch and return the analysis unit referenced by the given unit name.
    --  Raise a ``Property_Error`` if the given unit name is not valid.
+
+   procedure Get_Unit_And_PLE_Root
+     (Provider       : Unit_Provider_Interface;
+      Context        : Analysis_Context'Class;
+      Name           : Text_Type;
+      Kind           : Analysis_Unit_Kind;
+      Charset        : String := "";
+      Reparse        : Boolean := False;
+      Unit           : in out Analysis_Unit'Class;
+      PLE_Root_Index : in out Natural) is null;
+   --  Like ``Get_Unit``, but return both the analysis unit that
+   --  ``Name``/``Kind`` designate (in ``Unit``) and the index of the PLE root
+   --  inside that unit (in ``PLE_Root_Index``). If ``PLE_Root_Index`` is left
+   --  to 0 upon return, discard the result and switch to the PLE root unaware
+   --  ``Get_Unit`` function.
 
    procedure Release (Provider : in out Unit_Provider_Interface) is abstract;
    --  Actions to perform when releasing resources associated to Provider
@@ -975,7 +995,9 @@ package Gpr_Parser.Analysis is
    --  If any failure occurs, such as decoding, lexing or parsing failure,
    --  diagnostic are emitted to explain what happened.
 
-   procedure Populate_Lexical_Env (Unit : Analysis_Unit'Class);
+   procedure Populate_Lexical_Env
+     (Unit : Analysis_Unit'Class
+     );
    --  Create lexical environments for this analysis unit, according to the
    --  specifications given in the language spec.
    --
@@ -1066,7 +1088,40 @@ package Gpr_Parser.Analysis is
    end record;
    --  Variant that holds either an AST node or a token
 
-   type Children_Array is array (Positive range <>) of Child_Record;
+   type Children_Array is private
+      with Iterable => (First       => First,
+                        Next        => Next,
+                        Has_Element => Has_Element,
+                        Element     => Element,
+                        Last        => Last,
+                        Previous    => Previous);
+   --  This iterable type holds an array of ``Child`` or ``Trivia`` nodes
+
+   function First (Self : Children_Array) return Natural;
+   --  Return the first child or trivia cursor corresponding to the children
+   --  array. Helper for the ``Iterable`` aspect.
+
+   function Last (Self : Children_Array) return Natural;
+   --  Return the last child or trivia cursor corresponding to the children
+   --  array. Helper for the ``Iterable`` aspect.
+
+   function Next (Self : Children_Array; Pos  : Natural) return Natural;
+   --  Return the child or trivia cursor that follows ``Self`` in the children
+   --  array. Helper for the ``Iterable`` aspect.
+
+   function Previous (Self : Children_Array; Pos  : Natural) return Natural;
+   --  Return the child or trivia cursor that follows ``Self`` in the children
+   --  array. Helper for the ``Iterable`` aspect.
+
+   function Has_Element (Self : Children_Array; Pos  : Natural) return Boolean;
+   --  Return if ``Pos`` is in ``Self``'s iteration range. Helper for the
+   --  ``Iterable`` aspect.
+
+   function Element
+     (Self : Children_Array;
+      Pos  : Natural) return Child_Record;
+   --  Return the child of trivia node at position ``Pos`` in ``Self``. Helper
+   --  for the ``Iterable`` aspect.
 
    function Children_And_Trivia
      (Node : Gpr_Node'Class) return Children_Array;
@@ -1617,9 +1672,8 @@ package Gpr_Parser.Analysis is
    function F_Expr
      (Node : Attribute_Decl'Class) return Term_List;
    --  This field contains a list that itself contains one of the following
-   --  nodes: :ada:ref:`Builtin_Function_Call`, :ada:ref:`Project_Reference`,
-   --  :ada:ref:`String_Literal_At`, :ada:ref:`Terms`,
-   --  :ada:ref:`Variable_Reference`
+   --  nodes: :ada:ref:`Builtin_Function_Call`, :ada:ref:`String_Literal_At`,
+   --  :ada:ref:`Terms`, :ada:ref:`Variable_Reference`
    --% belongs-to: Attribute_Decl
 
 
@@ -2144,19 +2198,6 @@ package Gpr_Parser.Analysis is
 
 
 
-         
-   
-
-   function F_Attr_Ref
-     (Node : Project_Reference'Class) return Attribute_Reference;
-   --% belongs-to: Project_Reference
-
-
-
-
-
-
-
 
 
 
@@ -2307,9 +2348,8 @@ package Gpr_Parser.Analysis is
    function F_Expr
      (Node : Variable_Decl'Class) return Term_List;
    --  This field contains a list that itself contains one of the following
-   --  nodes: :ada:ref:`Builtin_Function_Call`, :ada:ref:`Project_Reference`,
-   --  :ada:ref:`String_Literal_At`, :ada:ref:`Terms`,
-   --  :ada:ref:`Variable_Reference`
+   --  nodes: :ada:ref:`Builtin_Function_Call`, :ada:ref:`String_Literal_At`,
+   --  :ada:ref:`Terms`, :ada:ref:`Variable_Reference`
    --% belongs-to: Variable_Decl
 
 
@@ -2731,9 +2771,6 @@ package Gpr_Parser.Analysis is
       function As_Project_Qualifier_Standard
         (Node : Gpr_Node'Class) return Project_Qualifier_Standard;
       --% no-document: True
-      function As_Project_Reference
-        (Node : Gpr_Node'Class) return Project_Reference;
-      --% no-document: True
       function As_String_Literal
         (Node : Gpr_Node'Class) return String_Literal;
       --% no-document: True
@@ -3076,10 +3113,6 @@ private
       No_Project_Qualifier_Standard : constant Project_Qualifier_Standard :=
         (Internal   => Implementation.No_Entity,
          Safety_Net => Implementation.No_Node_Safety_Net);
-         type Project_Reference is new Gpr_Node with null record;
-      No_Project_Reference : constant Project_Reference :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
          type String_Literal is new Single_Tok_Node with null record;
       No_String_Literal : constant String_Literal :=
         (Internal   => Implementation.No_Entity,
@@ -3128,6 +3161,14 @@ private
       No_With_Decl_List : constant With_Decl_List :=
         (Internal   => Implementation.No_Entity,
          Safety_Net => Implementation.No_Node_Safety_Net);
+
+   package Child_Record_Vectors is new Ada.Containers.Vectors
+     (Index_Type   => Positive,
+      Element_Type => Child_Record);
+
+   type Children_Array is record
+      Children : Child_Record_Vectors.Vector;
+   end record;
 
    procedure Check_Safety_Net (Self : Gpr_Node'Class);
    --  Check that Self's node and rebindings are still valid, raising a
