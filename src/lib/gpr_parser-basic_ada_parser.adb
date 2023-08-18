@@ -5,6 +5,8 @@
 --
 with System;
 
+with Ada.Characters.Conversions;
+
 with Gpr_Parser_Support.File_Readers; use Gpr_Parser_Support.File_Readers;
 with Gpr_Parser_Support.Diagnostics;  use Gpr_Parser_Support.Diagnostics;
 with Gpr_Parser.Lexer_State_Machine;  use Gpr_Parser.Lexer_State_Machine;
@@ -19,34 +21,33 @@ with Gpr_Parser.Analysis;
 
 package body Gpr_Parser.Basic_Ada_Parser is
 
+   package GPS renames Gpr_Parser_Support;
+
    --------------------------
    -- Parse_Context_Clause --
    --------------------------
 
    procedure Parse_Context_Clauses
      (Filename       : String;
-      Diagnostics    : in out Diagnostics_Vectors.Vector;
       Context        : Gpr_Parser.Analysis.Analysis_Context'Class;
-      Charset        : String           := "ISO-8859-1";
-      With_Clause_CB : access procedure
-        (Unit_Name  : String;
-         Source_Loc : Gpr_Parser_Support.Slocs.Source_Location;
-         Is_Limited : Boolean) := null;
-      Unit_Name_CB   : access procedure
-        (Unit_Name     : String;
-         Separate_From : String := "";
-         Source_Loc    : Gpr_Parser_Support.Slocs.Source_Location;
-         Lib_Item_Type : Gpr_Parser.Basic_Ada_Parser.Library_Item_Type;
-         Generic_Unit  : Boolean) := null;
-      On_No_Body_CB  : access procedure := null)
+      Charset        : String := "UTF-8";
+      Log_Error      : access procedure (Message : String);
+      With_Clause_CB : access procedure (Unit_Name  : String;
+                                         Is_Limited : Boolean) := null;
+      Unit_Name_CB   : access procedure (Unit_Name     : String;
+                                         Separate_From : String;
+                                         Lib_Item_Type : Library_Item_Type;
+                                         Generic_Unit  : Boolean) := null;
+      No_Body_CB               : access procedure := null)
    is
       Contents     : Decoded_File_Contents;
       Read_BOM     : Boolean          := Charset'Length = 0;
       State        : Lexer_State;
-      Token_DH     : Token_Data_Handler;
       Internal_Ctx : Internal_Context := Unwrap_Context (Context);
+      Has_Error    : Boolean := False;
 
       subtype Specific_Identifier is Text_Type;
+
       Procedure_Token : aliased Specific_Identifier := "procedure";
       Function_Token  : aliased Specific_Identifier := "function";
       Generic_Token   : aliased Specific_Identifier := "generic";
@@ -64,9 +65,7 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
       type Token_Kind_Array is array (Positive range <>) of Token_Kind;
 
-      procedure Log_Error (T       : Lexed_Token; Message : String) with
-        Pre => Initialized (Token_DH);
-      --  Append message to diagnostics with token source location
+      procedure Log_Error_Internal (Message : String);
 
       function Skip_Until
         (Kinds       :     Token_Kind_Array;
@@ -108,41 +107,18 @@ package body Gpr_Parser.Basic_Ada_Parser is
       --  Parse "with" clause, and calls With_Clause_CB if the callback is
       --  not null.
 
-      ---------------
-      -- Log_Error --
-      ---------------
+      ------------------------
+      -- Log_Error_Internal --
+      ------------------------
 
-      procedure Log_Error (T : Lexed_Token; Message : String) is
-
-         function Get_Sloc_Range (T : Lexed_Token)
-           return Source_Location_Range with
-           Pre => Initialized (Token_DH);
-         --  Obtain source location range from a lexer token
-
-         function Get_Sloc_Range
-           (T : Lexed_Token)
-            return Source_Location_Range is
-
-            Sloc_Start : Source_Location := Get_Sloc (Token_DH, T.Text_First);
-            Sloc_End   : Source_Location := Get_Sloc (Token_DH, T.Text_Last);
-
-         begin
-            --  We can not obtain source location range from Get_Token, because
-            --  the token data handler is empty. Only lines and columns have
-            --  been computed with the Reset procedure. Thus, only Get_Sloc
-            --  is available.
-
-            return
-              (Start_Line   => Sloc_Start.Line,
-               Start_Column => Sloc_Start.Column, End_Line => Sloc_End.Line,
-               End_Column   => Sloc_End.Column);
-         end Get_Sloc_Range;
-
-         Err_Sloc : Source_Location_Range := Get_Sloc_Range (T);
-
+      procedure Log_Error_Internal (Message : String) is
       begin
-         Append (Diagnostics, Err_Sloc, To_Text (Message));
-      end Log_Error;
+         Has_Error := True;
+
+         if Log_Error /= null then
+            Log_Error (Message);
+         end if;
+      end Log_Error_Internal;
 
       ------------------------------------
       -- Parse_Library_Item_And_Subunit --
@@ -184,51 +160,30 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
          procedure Parse_Separate is
          begin
-            declare
-               Err_Token_Save : Lexed_Token := T;
+            if not Skip_Until ((1 => Gpr_Par_Open), T) then
+               Log_Error_Internal
+                 ("no opening parenthesis after the 'separate' keyword");
+               return;
+            end if;
 
-            begin
-               if not Skip_Until ((1 => Gpr_Par_Open), T) then
-                  Log_Error
-                    (Err_Token_Save,
-                     "Error during parsing: Failed to find the opening " &
-                     "parenthese after the 'separate' token.");
-                  return;
-               end if;
-            end;
-
-            declare
-               Err_Token_Save : Lexed_Token := T;
-
-            begin
-               if not Skip_Until ((1 => Gpr_Identifier), T) then
-                  Log_Error
-                    (Err_Token_Save,
-                     "Error during parsing: Failed to find the identifier " &
-                     "after the 'separate' opening parenthese.");
-                  return;
-               end if;
-            end;
+            if not Skip_Until ((1 => Gpr_Identifier), T) then
+               Log_Error_Internal
+                 ("no identifier after the 'separate' keyword");
+               return;
+            end if;
 
             Separate_From_First := T.Text_First;
             Separate_From_Last  := Parse_Static_Name (T);
 
-            declare
-               Err_Token_Save : Lexed_Token := T;
-
-            begin
-               if not Skip_Until
-                   ((Gpr_Identifier, Gpr_Package), T,
-                    (Function_Token'Access, Procedure_Token'Access,
-                     Task_Token'Access, Protected_Token'Access))
-               then
-                  Log_Error
-                    (Err_Token_Save,
-                     "Error during parsing: Failed to find mandatory " &
-                     "token for a subunit (package / function / procedure).");
-                  return;
-               end if;
-            end;
+            if not Skip_Until
+              ((Gpr_Identifier, Gpr_Package), T,
+               (Function_Token'Access, Procedure_Token'Access,
+                Task_Token'Access, Protected_Token'Access))
+            then
+               Log_Error_Internal
+                 ("missing the subunit kind (package / function / procedure)");
+               return;
+            end if;
          end Parse_Separate;
 
          ----------------
@@ -242,21 +197,15 @@ package body Gpr_Parser.Basic_Ada_Parser is
             --  identifier is different from body, as it contains the unit
             --  name.
 
-            declare
-               Err_Token_Save : Lexed_Token := T;
+            if not Skip_Until
+              ((1 => Gpr_Identifier), T, (1 => Body_Token'Access),
+               Expected => False)
+            then
+               Log_Error_Internal
+                 ("missing the unit or subunit identifier");
 
-            begin
-               if not Skip_Until
-                   ((1 => Gpr_Identifier), T, (1 => Body_Token'Access),
-                    Expected => False)
-               then
-                  Log_Error
-                    (Err_Token_Save,
-                     "Error during parsing: Failed to find identifier for " &
-                     "the mandatory library item / subunit part.");
-                  return;
-               end if;
-            end;
+               return;
+            end if;
 
             declare
                Unit_First : Positive := T.Text_First;
@@ -264,38 +213,25 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
             begin
                declare
+                  use Gpr_Parser_Support.Text;
+
                   U_Name : String :=
-                           Gpr_Parser_Support.Text.Encode
-                             (Contents.Buffer (Unit_First .. Unit_Last), Charset);
-                  Sloc   : Gpr_Parser_Support.Slocs.Source_Location :=
-                           Get_Sloc (Token_DH, Unit_First);
+                             Gpr_Parser_Support.Text.Encode
+                               (Contents.Buffer (Unit_First .. Unit_Last),
+                                Charset);
+                  Sep_Name : constant String :=
+                               (if Separate_From_First /= 0
+                                then Encode (Contents.Buffer
+                                  (Separate_From_First .. Separate_From_Last),
+                                  Charset)
+                                else "");
 
                begin
-                  if Separate_From_First /= 0 then
-                     declare
-
-                        Sep_Name : String :=
-                          Gpr_Parser_Support.Text.Encode
-                            (Contents.Buffer
-                               (Separate_From_First .. Separate_From_Last),
-                             Charset);
-
-                     begin
-                        Unit_Name_CB
-                          (Unit_Name     => U_Name,
-                           Separate_From => Sep_Name,
-                           Source_Loc    => Sloc,
-                           Lib_Item_Type => Lib_Item_Type,
-                           Generic_Unit  => Generic_Unit);
-                     end;
-
-                  else
-                     Unit_Name_CB
-                       (Unit_Name     => U_Name,
-                        Source_Loc    => Sloc,
-                        Lib_Item_Type => Lib_Item_Type,
-                        Generic_Unit  => Generic_Unit);
-                  end if;
+                  Unit_Name_CB
+                    (Unit_Name     => U_Name,
+                     Separate_From => Sep_Name,
+                     Lib_Item_Type => Lib_Item_Type,
+                     Generic_Unit  => Generic_Unit);
                end;
             end;
          end Parse_Unit;
@@ -315,7 +251,9 @@ package body Gpr_Parser.Basic_Ada_Parser is
             elsif T.Kind = Gpr_Identifier then
                declare
                   Token_Text : Text_Type :=
-                    To_Lower (Contents.Buffer (T.Text_First .. T.Text_Last));
+                                 To_Lower
+                                   (Contents.Buffer
+                                      (T.Text_First .. T.Text_Last));
 
                begin
                   if Token_Text = Procedure_Token
@@ -340,21 +278,16 @@ package body Gpr_Parser.Basic_Ada_Parser is
             --  we can not skip these keywords.
 
             loop
-               declare
-                  Err_Token_Save : Lexed_Token := T;
+               if not Skip_Until
+                 ((Gpr_Identifier, Gpr_With, Gpr_Package), T,
+                  (Function_Token'Access, Procedure_Token'Access,
+                   Access_Token'Access))
+               then
+                  Log_Error_Internal
+                    ("failed to skip the generic formal parameters part");
 
-               begin
-                  if not Skip_Until
-                      ((Gpr_Identifier, Gpr_With, Gpr_Package), T,
-                       (Function_Token'Access, Procedure_Token'Access,
-                        Access_Token'Access))
-                  then
-                     Log_Error
-                       (Err_Token_Save,
-                        "Error during parsing: Failed to skip generic.");
-                     exit;
-                  end if;
-               end;
+                  exit;
+               end if;
 
                if T.Kind = Gpr_Package then
                   --  "Package" not preceded by a with token is the start of
@@ -374,33 +307,22 @@ package body Gpr_Parser.Basic_Ada_Parser is
                      --  If we reach this part of the code, then the current
                      --  token shall be an access token.
 
-                     declare
-                        Err_Token_Save : Lexed_Token := T;
-
-                     begin
-                        if not Skip_Until ((1 => Gpr_Semicolon), T) then
-                           Log_Error
-                             (Err_Token_Save,
-                              "Error during parsing: Failed to skip generic. " &
-                              "Semicolon not eventually found after an 'access' token");
-                           exit;
-                        end if;
-                     end;
-                  end;
-
-               elsif T.Kind = Gpr_With then
-                  declare
-                     Err_Token_Save : Lexed_Token := T;
-
-                  begin
                      if not Skip_Until ((1 => Gpr_Semicolon), T) then
-                        Log_Error
-                          (Err_Token_Save,
-                           "Error during parsing: Failed to skip generic. Semicolon " &
-                           "not eventually found after a 'with' token");
+                        Log_Error_Internal
+                          ("in formal generic parameters, missing ':' after " &
+                             "variable declaration");
+
                         exit;
                      end if;
                   end;
+
+               elsif T.Kind = Gpr_With then
+                  if not Skip_Until ((1 => Gpr_Semicolon), T) then
+                     Log_Error_Internal
+                       ("missing ';' after a formal generic parameter " &
+                          "declaration");
+                     exit;
+                  end if;
                end if;
             end loop;
          end Skip_Generic;
@@ -512,48 +434,29 @@ package body Gpr_Parser.Basic_Ada_Parser is
          Withed_Unit_First : Positive;
          Withed_Unit_Last  : Positive;
          Lim               : Boolean     := False;
-         Sloc              : Source_Location;
 
       begin
          if T.Kind = Gpr_Limited then
             Lim := True;
 
-            declare
-               Err_Token_Save : Lexed_Token := T;
+            if not Skip_Until ((1 => Gpr_With), T) then
+               Log_Error_Internal
+                 ("expecting a with token after 'limited'");
 
-            begin
-               if not Skip_Until ((1 => Gpr_With), T) then
-                  Log_Error
-                    (Err_Token_Save,
-                     "Error during parsing: Limited token should " &
-                     "be followed by a with token.");
-                  return;
-               end if;
-            end;
+               return;
+            end if;
          end if;
 
          --  "With" token location is returned as source location, even for
          --  several units in the same with clause.
 
-         if With_Clause_CB /= null then
-            Sloc := Get_Sloc (Token_DH, T.Text_First);
-         end if;
-
          loop
-            declare
-               Err_Token_Save : Lexed_Token := T;
+            if not Skip_Until ((1 => Gpr_Identifier), T) then
+               Log_Error_Internal
+                 ("with clause is missing a unit identifier");
 
-            begin
-               if not Skip_Until ((1 => Gpr_Identifier), T) then
-                  Log_Error
-                    (Err_Token_Save,
-                     "Error during parsing: With token should be " &
-                     "followed eventually by an identifier. End of " &
-                     "file obtained instead.");
-
-                  return;
-               end if;
-            end;
+               return;
+            end if;
             --  Current token shall be an identifier
 
             Withed_Unit_First := T.Text_First;
@@ -567,25 +470,17 @@ package body Gpr_Parser.Basic_Ada_Parser is
                        Charset);
 
                begin
-                  With_Clause_CB (Name, Sloc, Lim);
+                  With_Clause_CB (Name, Lim);
                end;
             end if;
 
             if T.Kind /= Gpr_Semicolon and then T.Kind /= Gpr_Comma then
-               declare
-                  Err_Token_Save : Lexed_Token := T;
+               if not Skip_Until ((Gpr_Semicolon, Gpr_Comma), T) then
+                  Log_Error_Internal
+                    ("missing ';' or ',' in a with clause");
 
-               begin
-                  if not Skip_Until ((Gpr_Semicolon, Gpr_Comma), T) then
-                     Log_Error
-                       (Err_Token_Save,
-                        "Error during parsing: Withed unit shall be " &
-                        "eventually followed by a comma when several " &
-                        "units are specified, or a semicolon otherwise.");
-
-                     return;
-                  end if;
-               end;
+                  return;
+               end if;
             end if;
 
             if T.Kind = Gpr_Semicolon then
@@ -679,31 +574,34 @@ package body Gpr_Parser.Basic_Ada_Parser is
       --  Fill the Contents buffer with specified file content. If a file
       --  reader is provided, it is used instead to read source file.
 
-      if Internal_Ctx.File_Reader /= null then
-         Read
-           (Internal_Ctx.File_Reader.all, Filename, Charset, Read_BOM,
-            Contents, Diagnostics);
-      else
-         Direct_Read (Filename, Charset, Read_BOM, Contents, Diagnostics);
-      end if;
+      declare
+         use Ada.Characters.Conversions;
+
+         Diagnostics : GPS.Diagnostics.Diagnostics_Vectors.Vector;
+      begin
+
+         if Internal_Ctx.File_Reader /= null then
+            Read
+              (Internal_Ctx.File_Reader.all, Filename, Charset, Read_BOM,
+               Contents, Diagnostics);
+         else
+            Direct_Read (Filename, Charset, Read_BOM, Contents, Diagnostics);
+         end if;
+
+         if not Diagnostics.Is_Empty then
+            for D of Diagnostics loop
+               Log_Error_Internal (To_String (To_Text (D.Message)));
+            end loop;
+
+            return;
+         end if;
+      end;
 
       --  Initialize the lexer
 
       Initialize (State, Contents.Buffer, Contents.First, Contents.Last);
 
-      --  Initialize the token data handler, with which source location (slocs)
-      --  are obtained.
-
-      Initialize
-        (Token_DH, Internal_Ctx.Symbols, System.Null_Address,
-         Internal_Ctx.Tab_Stop);
-
-      --  Associate source buffer to token data handler, and compute new lines
-      --  indexes.
-
-      Reset (Token_DH, Contents.Buffer, Contents.First, Contents.Last);
-
-      while Has_Next (State) loop
+      while Has_Next (State) and then not Has_Error loop
 
          --  Parse 0, 1 or more withed clauses, and one library item or
          --  subunit. The parser may detect compilation units for invalid
@@ -720,12 +618,7 @@ package body Gpr_Parser.Basic_Ada_Parser is
                  (Procedure_Token'Access, Function_Token'Access,
                   Separate_Token'Access, Generic_Token'Access))
             then
-               Append
-                 (Diagnostics, No_Source_Location_Range,
-                  To_Text
-                    ("Error during parsing: Failed to find " &
-                     "a first valid token for with clause, " &
-                     "library item or subunit in the file " & Filename));
+               Log_Error_Internal ("Unexpected preamble");
 
                exit;
             end if;
@@ -753,40 +646,32 @@ package body Gpr_Parser.Basic_Ada_Parser is
                --  XXX; pragma No_Body", then the file will be categorized has
                --  No_Body, despite it is an invalid file.
 
-               declare
-                  Err_Token_Save : Lexed_Token := T;
+               if not Skip_Until ((1 => Gpr_Identifier), T) then
+                  Log_Error_Internal
+                    ("pragma should be followed by an identifier");
 
-               begin
-                  if not Skip_Until ((1 => Gpr_Identifier), T) then
-                     Log_Error
-                       (Err_Token_Save,
-                        "pragma should be followed by an identifier");
+                  exit;
 
-                     exit;
-                  else
-
-                     declare
-                        Text : Text_Type :=
-                               To_Lower
-                                 (Contents.Buffer
+               else
+                  declare
+                     Text : Text_Type :=
+                              To_Lower
+                                (Contents.Buffer
                                    (T.Text_First .. T.Text_Last));
 
-                     begin
-                        if Text = No_Body_Token then
-                           if On_No_Body_CB /= null then
-                              On_No_Body_CB.all;
-                           end if;
-
-                           exit;
+                  begin
+                     if Text = No_Body_Token then
+                        if No_Body_CB /= null then
+                           No_Body_CB.all;
                         end if;
-                     end;
-                  end if;
-               end;
+
+                        exit;
+                     end if;
+                  end;
+               end if;
             end if;
          end;
       end loop;
-
-      Free (Token_DH);
    end Parse_Context_Clauses;
 
 end Gpr_Parser.Basic_Ada_Parser;

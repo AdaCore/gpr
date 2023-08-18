@@ -42,6 +42,7 @@ with Ada.Containers.Vectors;
 
 with GNATCOLL.Refcount;
 
+with GPR2.Containers;
 with GPR2.Path_Name;
 with GPR2.Source_Reference.Identifier.Set;
 
@@ -110,7 +111,7 @@ package GPR2.Unit is
       Lib_Unit_Kind : Library_Unit_Type;
       Lib_Item_Kind : Library_Item_Type;
       Main          : Main_Type;
-      Dependencies  : Source_Reference.Identifier.Set.Object;
+      Dependencies  : GPR2.Containers.Name_Set;
       Sep_From      : Optional_Name_Type;
       Flags         : Flags_Set) return Object
      with Post => Create'Result.Is_Defined;
@@ -139,7 +140,7 @@ package GPR2.Unit is
      with Pre => Self.Is_Defined;
 
    function Dependencies
-     (Self : Object) return Source_Reference.Identifier.Set.Object
+     (Self : Object) return GPR2.Containers.Name_Set
      with Pre => Self.Is_Defined, Inline;
    --  Returns the set of withed units for this compilation unit
 
@@ -215,7 +216,7 @@ private
       Kind         : Library_Unit_Type := S_Spec;
       Item_Kind    : Library_Item_Type := Is_Package;
       Main         : Main_Type         := None;
-      Dependencies : Dependencies_Ref.Ref;
+      Dependencies : Containers.Name_Set;
       Sep_From     : Unbounded_String;
       Flags        : Flags_Set := Default_Flags;
    end record
@@ -242,19 +243,19 @@ private
       Lib_Unit_Kind : Library_Unit_Type;
       Lib_Item_Kind : Library_Item_Type;
       Main          : Main_Type;
-      Dependencies  : Source_Reference.Identifier.Set.Object;
+      Dependencies  : Containers.Name_Set;
       Sep_From      : Optional_Name_Type;
-      Flags         : Flags_Set) return Object is
-     (Object'(Name         => To_Unbounded_String
-                               (Ada.Characters.Handling.To_Upper
-                                  (String (Name))),
-              Index        => Index,
-              Kind         => Lib_Unit_Kind,
-              Item_Kind    => Lib_Item_Kind,
-              Main         => Main,
-              Dependencies => As_Ref (Dependencies),
-              Sep_From     => To_Unbounded_String (String (Sep_From)),
-              Flags        => Flags));
+      Flags         : Flags_Set) return Object
+   is (Object'(Name         => To_Unbounded_String
+                                 (Ada.Characters.Handling.To_Upper
+                                    (String (Name))),
+               Index        => Index,
+               Kind         => Lib_Unit_Kind,
+               Item_Kind    => Lib_Item_Kind,
+               Main         => Main,
+               Dependencies => Dependencies,
+               Sep_From     => To_Unbounded_String (String (Sep_From)),
+               Flags        => Flags));
 
    function Name (Self : Object) return Name_Type is
      (Name_Type (To_String (Self.Name)));
@@ -281,9 +282,9 @@ private
      (Self.Main);
 
    function Dependencies
-     (Self : Object) return Source_Reference.Identifier.Set.Object
+     (Self : Object) return Containers.Name_Set
    is
-     (Self.Dependencies.Get.Element.all);
+     (Self.Dependencies);
 
    function Is_Generic (Self : Object) return Boolean is
       (Self.Flags (Is_Generic));

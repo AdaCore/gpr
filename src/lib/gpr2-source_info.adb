@@ -58,7 +58,7 @@ package body GPR2.Source_Info is
 
    function Context_Clause_Dependencies
      (Self  : Object;
-      Index : Unit_Index) return Source_Reference.Identifier.Set.Object is
+      Index : Unit_Index) return Containers.Name_Set is
    begin
       return Self.CU_List (Index).Dependencies;
    end Context_Clause_Dependencies;

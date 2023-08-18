@@ -378,7 +378,7 @@ package body GPRls.Gnatdist is
 
       for W of S.Context_Clause_Dependencies (Unit.Index)
       loop
-         Output_With (Tree.all, W.Text);
+         Output_With (Tree.all, W);
       end loop;
 
       N_Indents := N_Indents - 1;

@@ -7,14 +7,12 @@ with Ada.Directories;
 
 with Gpr_Parser.Analysis;
 with Gpr_Parser.Basic_Ada_Parser;
-with Gpr_Parser_Support.Diagnostics;
-with Gpr_Parser_Support.Slocs;
 
+with GPR2.Containers;
 with GPR2.File_Readers;
 with GPR2.Project.Source;
 with GPR2.Project.Tree;
 with GPR2.Source_Info.Parser.Registry;
-with GPR2.Source_Reference.Identifier.Set;
 with GPR2.Unit;
 
 package body GPR2.Source_Info.Parser.Ada_Language is
@@ -31,29 +29,25 @@ package body GPR2.Source_Info.Parser.Ada_Language is
       Source :        Project.Source.Object) is
       use Gpr_Parser.Analysis;
       use Gpr_Parser.Basic_Ada_Parser;
-      use Gpr_Parser_Support.Diagnostics;
-      use Gpr_Parser_Support.Slocs;
       use GPR2.Unit;
 
-      package SRI renames Source_Reference.Identifier;
-
-      U_Withed : SRI.Set.Object;
+      U_Withed : Containers.Name_Set;
       W_Found  : Containers.Name_Set;
 
       Parsed   : Boolean := False;
       --  If something has been parsed on this source file, then Parsed is set
       --  to True and New_Data will replace Data parameter.
 
+      procedure No_Body_CB;
+
       procedure Register
         (Name         : String;
-         Sloc         : Source_Reference.Object;
          Parents_Only : Boolean := False);
       --  Register Name and parent if any
 
       procedure Unit_Name_CB
         (Unit_Name     : String;
          Separate_From : String := "";
-         Source_Loc    : Gpr_Parser_Support.Slocs.Source_Location;
          Lib_Item_Type : Gpr_Parser.Basic_Ada_Parser.Library_Item_Type;
          Generic_Unit  : Boolean);
          --  Callback called by the Ada parser when a unit has been
@@ -62,12 +56,35 @@ package body GPR2.Source_Info.Parser.Ada_Language is
 
       procedure With_Clause_CB
         (Unit_Name  : String;
-         Source_Loc : Gpr_Parser_Support.Slocs.Source_Location;
          Is_Limited : Boolean);
          --  Callback called by the Ada parser when a dependency has
          --  been processed. Add the withed unit to U_Withed if it has
          --  not already been inserted, so it can be linked to the unit
          --  during Unit_Name_CB.
+
+      ----------------
+      -- No_Body_CB --
+      ----------------
+
+      procedure No_Body_CB is
+      begin
+         Source.View.Hide_Unit_Body (Data.Unit_Name (No_Index));
+
+         Data.CU_List (No_Index) :=
+           GPR2.Unit.Create
+             (Name          => Data.Unit_Name (No_Index),
+              Index         => No_Index,
+              Lib_Unit_Kind => S_Body,
+              Lib_Item_Kind => Is_No_Body,
+              Main          => None,
+              Dependencies  => GPR2.Containers.Name_Type_Set.Empty_Set,
+              Sep_From      => No_Name,
+              Flags         => GPR2.Unit.Default_Flags);
+
+         Data.Kind     := S_Body;
+         Data.Parsed   := Source_Info.Source;
+         Data.Language := GPR2.Ada_Language;
+      end No_Body_CB;
 
       --------------
       -- Register --
@@ -75,12 +92,9 @@ package body GPR2.Source_Info.Parser.Ada_Language is
 
       procedure Register
         (Name         : String;
-         Sloc         : Source_Reference.Object;
          Parents_Only : Boolean := False)
       is
          N        : constant Name_Type := Name_Type (Name);
-         Item     : constant SRI.Object := SRI.Object
-                    (SRI.Create (Sloc, Name_Type (Name)));
          B_Name   : constant String    := Directories.Base_Name (Name);
          Position : Containers.Name_Type_Set.Cursor;
          Inserted : Boolean;
@@ -90,12 +104,12 @@ package body GPR2.Source_Info.Parser.Ada_Language is
             W_Found.Insert (N, Position, Inserted);
 
             if Inserted then
-               U_Withed.Insert (Item);
+               U_Withed.Insert (N);
             end if;
          end if;
 
          if B_Name /= Name then
-            Register (B_Name, Sloc);
+            Register (B_Name);
          end if;
       end Register;
 
@@ -106,7 +120,6 @@ package body GPR2.Source_Info.Parser.Ada_Language is
       procedure Unit_Name_CB
         (Unit_Name     : String;
          Separate_From : String := "";
-         Source_Loc    : Gpr_Parser_Support.Slocs.Source_Location;
          Lib_Item_Type : Gpr_Parser.Basic_Ada_Parser.Library_Item_Type;
          Generic_Unit  : Boolean)
       is
@@ -153,20 +166,10 @@ package body GPR2.Source_Info.Parser.Ada_Language is
          else
             U_Name := To_Unbounded_String (Unit_Name);
 
-            declare
-               Sloc : constant Source_Reference.Object :=
-                      Source_Reference.Object
-                         (Source_Reference.Create
-                            (Filename => Source.Path_Name.Value,
-                            Line     => Natural (Source_Loc.Line),
-                            Column   => Natural (Source_Loc.Column)));
+            --  If this is a child package, we register the parent
+            --  package(s) as visible.
 
-            begin
-               --  If this is a child package, we register the parent
-               --  package(s) as visible.
-
-               Register (-U_Name, Sloc, True);
-            end;
+            Register (-U_Name, True);
          end if;
 
          --  Construct the unit
@@ -205,26 +208,17 @@ package body GPR2.Source_Info.Parser.Ada_Language is
 
       procedure With_Clause_CB
         (Unit_Name  : String;
-         Source_Loc : Gpr_Parser_Support.Slocs.Source_Location;
          Is_Limited : Boolean)
       is
          pragma Unreferenced (Is_Limited);
-         Sloc : constant Source_Reference.Object :=
-           Source_Reference.Object
-             (Source_Reference.Create
-                (Filename => Source.Path_Name.Value,
-                 Line     => Natural (Source_Loc.Line),
-                 Column   => Natural (Source_Loc.Column)));
       begin
-         Register (Unit_Name, Sloc);
+         Register (Unit_Name);
       end With_Clause_CB;
 
       Ctx : constant Analysis_Context :=
             Create_Context
                (File_Reader =>
                   GPR2.File_Readers.Convert (Source.View.Tree.File_Reader));
-
-      Diag : Diagnostics_Vectors.Vector;
 
    begin
       Data.Dependencies.Clear;
@@ -233,10 +227,11 @@ package body GPR2.Source_Info.Parser.Ada_Language is
 
       Gpr_Parser.Basic_Ada_Parser.Parse_Context_Clauses
         (Filename       => Source.Path_Name.Value,
-         Diagnostics    => Diag,
          Context        => Ctx,
+         Log_Error      => null, --  Ignore parsing errors for now
          With_Clause_CB => With_Clause_CB'Access,
-         Unit_Name_CB   => Unit_Name_CB'Access);
+         Unit_Name_CB   => Unit_Name_CB'Access,
+         No_Body_CB     => No_Body_CB'Access);
 
       if Parsed then
          Data.Parsed   := Source_Info.Source;

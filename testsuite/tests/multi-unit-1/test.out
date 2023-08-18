@@ -48,7 +48,7 @@ main.adb
   - compilation unit at 0
     unit name    = MAIN
     kind         = S_BODY_ONLY
-    withed units = { U Ada Pkg }
+    withed units = { Ada Pkg U }
     object file  = main.o
     deps file    = main.ali
 pkg.adb
