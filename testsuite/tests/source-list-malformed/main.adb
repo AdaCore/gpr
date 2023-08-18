@@ -7,14 +7,12 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
-with GPR2.Unit;
+with GPR2.Build.Source.Sets;
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Path_Name;
-with GPR2.Project.Source.Set;
-with GPR2.Project.View;
 with GPR2.Project.Tree;
-
-with GPR2.Source_Info.Parser.Ada_Language;
+with GPR2.Project.View;
 
 procedure Main is
 
@@ -36,25 +34,27 @@ procedure Main is
       Prj  : Project.Tree.Object;
       Ctx  : Context.Object;
       View : Project.View.Object;
+      Log  : GPR2.Log.Object;
    begin
       Project.Tree.Load (Prj, Create (Project_Name), Ctx);
+      Prj.Update_Sources (Messages => Log);
+
+      Log.Output_Messages (Information => False);
 
       View := Prj.Root_Project;
       Text_IO.Put_Line ("Project: " & String (View.Name));
 
       for Source of View.Sources loop
          declare
-            U : constant Optional_Name_Type := Source.Unit_Name;
+            U : constant Optional_Name_Type := Source.Unit.Name;
          begin
             Output_Filename (Source.Path_Name.Value);
 
-            Text_IO.Set_Col (16);
-            Text_IO.Put ("   language: " & Image (Source.Language));
+            Text_IO.Set_Col (18);
+            Text_IO.Put ("language: " & Image (Source.Language));
 
             Text_IO.Set_Col (33);
-            Text_IO.Put
-              ("   Kind: "
-               & GPR2.Unit.Library_Unit_Type'Image (Source.Kind));
+            Text_IO.Put ("Kind: " & Source.Kind'Image);
 
             if U /= "" then
                Text_IO.Put ("   unit: " & String (U));
@@ -74,9 +74,9 @@ procedure Main is
 
    procedure Output_Filename (Filename : Path_Name.Full_Name) is
       I : constant Positive :=
-            Strings.Fixed.Index (Filename, "source-included");
+            Strings.Fixed.Index (Filename, "source-list-malformed");
    begin
-      Text_IO.Put (" > " & Filename (I + 15 .. Filename'Last));
+      Text_IO.Put (" > " & Filename (I + 22 .. Filename'Last));
    end Output_Filename;
 
 begin

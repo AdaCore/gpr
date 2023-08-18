@@ -32,14 +32,13 @@ project GPR2.Tools extends "../shared.gpr" is
    for Object_Dir use Shared.Build_Root & "/" & Shared.Build & "/obj-tools";
    for Exec_Dir use Shared.Build_Root & "/" & Shared.Build;
    for Main use
-     ("gprbuild-main.adb",
-      "gprclean-main.adb",
+     (--  "gprbuild-main.adb",
+      --  "gprclean-main.adb",
       "gprconfig.adb",
       "gprdoc-main.adb",
-      "gprdump.adb",
       "gprinspect-main.adb",
-      "gprinstall-main.adb",
-      "gprls-main.adb",
+      --  "gprinstall-main.adb",
+      --  "gprls-main.adb",
       "gprname-main.adb",
       "gprremote.adb");
 

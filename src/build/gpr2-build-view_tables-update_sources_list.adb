@@ -94,7 +94,7 @@ package body Update_Sources_List is
 
    procedure Read_Source_List
      (View      : Project.View.Object;
-      Filename  : Source_Reference.Value.Object;
+      Attr      : Project.Attribute.Object;
       Set       : in out Source_Set.Set;
       Messages  : in out GPR2.Log.Object);
    --  Read from file defined in project attribute Attr_Name and insert each
@@ -819,7 +819,7 @@ package body Update_Sources_List is
 
       if Attr.Is_Defined then
          Read_Source_List
-           (Data.View, Attr.Value, Excluded_Sources, Messages);
+           (Data.View, Attr, Excluded_Sources, Messages);
       end if;
 
       --  If we have attribute Excluded_Source_Files
@@ -846,7 +846,7 @@ package body Update_Sources_List is
 
       if Attr.Is_Defined then
          Read_Source_List
-           (Data.View, Attr.Value, Listed_Sources, Messages);
+           (Data.View, Attr, Listed_Sources, Messages);
       end if;
 
       --  If we have attribute Source_Files
@@ -1071,43 +1071,43 @@ package body Update_Sources_List is
 
    procedure Read_Source_List
      (View      : Project.View.Object;
-      Filename  : Source_Reference.Value.Object;
+      Attr      : Project.Attribute.Object;
       Set       : in out Source_Set.Set;
       Messages  : in out GPR2.Log.Object)
    is
       use Ada.Strings;
-      Fullname   : constant GPR2.Path_Name.Full_Name :=
-                     (if GNAT.OS_Lib.Is_Absolute_Path (Filename.Text)
-                      then Filename.Text
-                      else View.Dir_Name.Compose
-                        (Filename_Type (Filename.Text)).Value);
-      F          : Text_IO.File_Type;
+      use type Ada.Strings.Maps.Character_Set;
+
+      Filename : constant GPR2.Path_Name.Full_Name :=
+                   (if GNAT.OS_Lib.Is_Absolute_Path (Attr.Value.Text)
+                    then Attr.Value.Text
+                    else View.Dir_Name.Compose
+                      (Filename_Type (Attr.Value.Text)).Value);
+      Skip_Set : constant Strings.Maps.Character_Set :=
+                   Maps.Constants.Control_Set or Maps.To_Set (" ");
+      F        : Text_IO.File_Type;
+
    begin
-      Text_IO.Open (F, Text_IO.In_File, Fullname);
+      Text_IO.Open (F, Text_IO.In_File, Filename);
 
       while not Text_IO.End_Of_File (F) loop
          declare
-            use GNATCOLL.Utils;
-
-            Line     : constant String :=
-                         Fixed.Trim
-                           (Text_IO.Get_Line (F),
-                            Maps.Constants.Control_Set,
-                            Maps.Constants.Control_Set);
-            Position : Source_Set.Cursor;
-            Inserted : Boolean;
+            Line : constant String :=
+                     Fixed.Trim (Text_IO.Get_Line (F), Skip_Set, Skip_Set);
 
          begin
-            if Line /= "" and then not Starts_With (Line, "-- ") then
+            if Line /= ""
+              and then not GNATCOLL.Utils.Starts_With (Line, "--")
+            then
                if Has_Directory_Separator (Line) then
                   Messages.Append
                     (Message.Create
                        (Message.Error,
                         "file name cannot include directory information ("""
                         & Line & """)",
-                        Filename));
+                        Attr));
                else
-                  Set.Insert (Filename_Type (Line), Position, Inserted);
+                  Set.Include (Filename_Type (Line));
                end if;
             end if;
          end;

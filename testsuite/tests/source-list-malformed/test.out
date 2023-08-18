@@ -1,3 +1,5 @@
+demo.gpr:5:08: error: file name cannot include directory information ("src/pck1.adb")
+demo.gpr:5:08: error: file name cannot include directory information ("include/pck3.adb")
 Project: Demo
-demo.gpr:5:29: error: file name cannot include directory information ("src/pck1.adb")
-demo.gpr:5:29: error: file name cannot include directory information ("include/pck3.adb")
+ > src/pck1.ads  language: Ada  Kind: S_SPEC   unit: PCK1
+ > src/pck3.ads  language: Ada  Kind: S_SPEC   unit: PCK3

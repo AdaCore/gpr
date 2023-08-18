@@ -36,6 +36,7 @@ begin
      (Filename => GPR2.Path_Name.Create_File
         ("prj1.gpr"),
       Context  => GPR2.Context.Empty);
+   Tree.Log_Messages.Output_Messages (Information => False);
 
    Ada.Text_IO.Put_Line
      (String
@@ -47,18 +48,11 @@ begin
      (Filename => GPR2.Path_Name.Create_File
         ("prj2.gpr"),
       Context  => GPR2.Context.Empty);
-
-   if Tree.Has_Messages then
-      for C in Tree.Log_Messages.Iterate (False)
-      loop
-         Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-      end loop;
-   end if;
+   Tree.Log_Messages.Output_Messages (Information => False);
 
    Ada.Text_IO.Put_Line
      (String
         (Tree.Runtime_Project.Path_Name.Containing_Directory.Simple_Name));
 
    Tree.Unload;
-
 end Main;

@@ -10,4 +10,8 @@ project Source_Included is
    for Object_Dir use "obj";
    for Exec_Dir use ".";
    for Main use ("main.adb");
+
+   package Compiler is
+      for Switches ("Ada") use ("-g", "-O0");
+   end Compiler;
 end Source_Included;

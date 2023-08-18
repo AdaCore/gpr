@@ -1,4 +1,8 @@
 with "gpr2";
 project test is
    for Main use ("main.adb");
+
+   package Builder is
+      for Switches (others) use ("-g");
+   end Builder;
 end test;
