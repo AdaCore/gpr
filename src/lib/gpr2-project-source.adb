@@ -189,18 +189,21 @@ package body GPR2.Project.Source is
          for W of CU.Dependencies loop
             declare
                V  : constant Project.View.Object :=
-                      Tree.Get_View (W.Text);
+                      Tree.Get_View (W);
                UI : Unit_Info.Object;
             begin
                if not V.Is_Defined then
                   Tree.Log_Messages.Append
                     (Message.Create
                        (Message.Warning,
-                        "withed unit " & String (W.Text) & " not found",
-                        W));
+                        "withed unit " & String (W) & " not found",
+                        Source_Reference.Create
+                          (Filename => Src.Source.Path_Name.Value,
+                           Line     => 0,
+                           Column   => 0)));
 
                else
-                  UI := Definition.Get_RO (V).Units (W.Text);
+                  UI := Definition.Get_RO (V).Units (W);
 
                   if not Closure then
                      if UI.Has_Spec then

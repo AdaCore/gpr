@@ -5,7 +5,6 @@
 --
 with Ada.Text_IO;
 with Gpr_Parser_Support.Text;     use Gpr_Parser_Support.Text;
-with Gpr_Parser_Support.Diagnostics;
 with Gpr_Parser_Support.Slocs;
 with Gpr_Parser.Basic_Ada_Parser; use Gpr_Parser.Basic_Ada_Parser;
 with Gpr_Parser.Analysis;         use Gpr_Parser.Analysis;
@@ -15,7 +14,23 @@ with Ada.Command_Line;
 procedure Main is
    use all type Gpr_Parser_Support.Text.Text_Type;
 
+   procedure On_Error (Msg : String);
+
    procedure On_No_Body_CB;
+
+   procedure Unit_Name_CB
+     (Unit_Name     : String; Separate_From : String := "";
+      Lib_Item_Type : Gpr_Parser.Basic_Ada_Parser.Library_Item_Type;
+      Generic_Unit  : Boolean);
+
+   procedure With_Clause_CB
+     (Unit_Name  : String;
+      Is_Limited : Boolean);
+
+   procedure On_Error (Msg : String) is
+   begin
+      Ada.Text_IO.Put_Line ("Error during parsing: " & Msg);
+   end On_Error;
 
    procedure On_No_Body_CB is
    begin
@@ -24,13 +39,6 @@ procedure Main is
 
    procedure Unit_Name_CB
      (Unit_Name     : String; Separate_From : String := "";
-      Source_Loc    : Gpr_Parser_Support.Slocs.Source_Location;
-      Lib_Item_Type : Gpr_Parser.Basic_Ada_Parser.Library_Item_Type;
-      Generic_Unit  : Boolean);
-
-   procedure Unit_Name_CB
-     (Unit_Name     : String; Separate_From : String := "";
-      Source_Loc    : Gpr_Parser_Support.Slocs.Source_Location;
       Lib_Item_Type : Gpr_Parser.Basic_Ada_Parser.Library_Item_Type;
       Generic_Unit  : Boolean)
    is
@@ -43,19 +51,12 @@ procedure Main is
 
    procedure With_Clause_CB
      (Unit_Name  : String;
-      Source_Loc : Gpr_Parser_Support.Slocs.Source_Location;
-      Is_Limited : Boolean);
-
-   procedure With_Clause_CB
-     (Unit_Name  : String;
-      Source_Loc : Gpr_Parser_Support.Slocs.Source_Location;
       Is_Limited : Boolean)
    is
    begin
       Ada.Text_IO.Put_Line ("Withed unit name: " & Unit_Name);
    end With_Clause_CB;
 
-   Diagnostics : Gpr_Parser_Support.Diagnostics.Diagnostics_Vectors.Vector;
    Ctx         : constant Analysis_Context := Create_Context;
 begin
 
@@ -72,17 +73,10 @@ begin
 
       Parse_Context_Clauses
         (Filename       => File,
-         Diagnostics    => Diagnostics,
          Context        => Ctx,
+         Log_Error      => On_Error'Access,
          With_Clause_CB => With_Clause_CB'Access,
          Unit_Name_CB   => Unit_Name_CB'Access,
-         On_No_Body_CB  => On_No_Body_CB'Access);
-
-      if not Diagnostics.Is_Empty then
-         for D of Diagnostics loop
-            Ada.Text_IO.Put_Line
-              (Gpr_Parser_Support.Diagnostics.To_Pretty_String (D));
-         end loop;
-      end if;
+         No_Body_CB     => On_No_Body_CB'Access);
    end;
 end Main;

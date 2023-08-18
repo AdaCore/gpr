@@ -20,7 +20,6 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
 with GPR2.Source_Info.Parser.Registry;
-with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
 
 package body GPR2.Project.Definition is
@@ -32,7 +31,6 @@ package body GPR2.Project.Definition is
    package PRA renames Project.Registry.Attribute;
    package PRP renames Project.Registry.Pack;
    package SR  renames GPR2.Source_Reference;
-   package SRI renames SR.Identifier;
 
    ----------------------------------
    -- Check_Aggregate_Library_Dirs --
