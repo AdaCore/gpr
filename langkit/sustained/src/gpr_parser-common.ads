@@ -155,7 +155,7 @@ package Gpr_Parser.Common is
       is (Self'Image);
 
       type Grammar_Rule is
-        (Project_Qualifier_Rule, Project_Extension_Rule, Project_Declaration_Rule, Project_Rule, Declarative_Items_Rule, Declarative_Item_Rule, Simple_Declarative_Items_Rule, Simple_Declarative_Item_Rule, Variable_Decl_Rule, Attribute_Decl_Rule, Associative_Array_Index_Rule, Package_Decl_Rule, Package_Renaming_Rule, Package_Extension_Rule, Package_Spec_Rule, Empty_Declaration_Rule, Case_Construction_Rule, Case_Item_Rule, Others_Designator_Rule, Choice_Rule, Discrete_Choice_List_Rule, With_Decl_Rule, Context_Clauses_Rule, Ada_With_Clause_Rule, Ada_Context_Rule, Ada_Context_Item_Rule, Ada_Context_Skip_Rule, Ada_Use_Clause_Rule, Ada_Pragma_Rule, Ada_Subp_Kind_Rule, Ada_Pkg_Kind_Rule, Ada_Library_Item_Rule, Ada_Prelude_Rule, Typed_String_Decl_Rule, Identifier_Rule, String_Literal_Rule, Num_Literal_Rule, Static_Name_Rule, Attribute_Reference_Rule, Variable_Reference_Rule, Type_Reference_Rule, Builtin_Function_Call_Rule, Expression_Rule, Expression_List_Rule, String_Literal_At_Rule, Term_Rule, Compilation_Unit_Rule)
+        (Project_Qualifier_Rule, Project_Extension_Rule, Project_Declaration_Rule, Project_Rule, Declarative_Items_Rule, Declarative_Item_Rule, Simple_Declarative_Items_Rule, Simple_Declarative_Item_Rule, Variable_Decl_Rule, Attribute_Decl_Rule, Associative_Array_Index_Rule, Package_Decl_Rule, Package_Renaming_Rule, Package_Extension_Rule, Package_Spec_Rule, Empty_Declaration_Rule, Case_Construction_Rule, Case_Item_Rule, Others_Designator_Rule, Choice_Rule, Discrete_Choice_List_Rule, With_Decl_Rule, Context_Clauses_Rule, Typed_String_Decl_Rule, Identifier_Rule, String_Literal_Rule, Num_Literal_Rule, Static_Name_Rule, Attribute_Reference_Rule, Variable_Reference_Rule, Type_Reference_Rule, Builtin_Function_Call_Rule, Expression_Rule, Expression_List_Rule, String_Literal_At_Rule, Term_Rule, Compilation_Unit_Rule)
          with Convention => C;
       --  Gramar rule to use for parsing.
 
@@ -169,74 +169,14 @@ package Gpr_Parser.Common is
    -----------
 
    type Gpr_Node_Kind_Type is
-     (Gpr_Ada_Access_Subp, Gpr_Ada_Pragma, Gpr_Ada_Use, Gpr_Ada_With, Gpr_Ada_Entity_Kind_Function, Gpr_Ada_Entity_Kind_Package, Gpr_Ada_Entity_Kind_Procedure, Gpr_Ada_Generic, Gpr_Ada_Library_Item, Gpr_Ada_Pkg, Gpr_Ada_Pkg_Body, Gpr_Ada_Subp, Gpr_Ada_Prelude, Gpr_Ada_Separate, Gpr_Ada_Skip, Gpr_Ada_With_Formal, Gpr_All_Qualifier_Absent, Gpr_All_Qualifier_Present, Gpr_Attribute_Decl, Gpr_Attribute_Reference, Gpr_Ada_Context_Clause_List, Gpr_Ada_Prelude_Node_List, Gpr_Ada_Skip_List, Gpr_Case_Item_List, Gpr_Expr_List, Gpr_Gpr_Node_List, Gpr_Choices, Gpr_Term_List, Gpr_Identifier_List, Gpr_String_Literal_List, Gpr_Term_List_List, Gpr_With_Decl_List, Gpr_Builtin_Function_Call, Gpr_Case_Construction, Gpr_Case_Item, Gpr_Compilation_Unit, Gpr_Empty_Decl, Gpr_Prefix, Gpr_Identifier, Gpr_Num_Literal, Gpr_String_Literal, Gpr_Limited_Absent, Gpr_Limited_Present, Gpr_Others_Designator, Gpr_Package_Decl, Gpr_Package_Extension, Gpr_Package_Renaming, Gpr_Package_Spec, Gpr_Private_Absent, Gpr_Private_Present, Gpr_Project, Gpr_Project_Declaration, Gpr_Project_Extension, Gpr_Project_Qualifier_Abstract, Gpr_Project_Qualifier_Aggregate, Gpr_Project_Qualifier_Aggregate_Library, Gpr_Project_Qualifier_Configuration, Gpr_Project_Qualifier_Library, Gpr_Project_Qualifier_Standard, Gpr_String_Literal_At, Gpr_Terms, Gpr_Type_Reference, Gpr_Typed_String_Decl, Gpr_Variable_Decl, Gpr_Variable_Reference, Gpr_With_Decl);
+     (Gpr_All_Qualifier_Absent, Gpr_All_Qualifier_Present, Gpr_Attribute_Decl, Gpr_Attribute_Reference, Gpr_Case_Item_List, Gpr_Gpr_Node_List, Gpr_Choices, Gpr_Term_List, Gpr_Identifier_List, Gpr_String_Literal_List, Gpr_Term_List_List, Gpr_With_Decl_List, Gpr_Builtin_Function_Call, Gpr_Case_Construction, Gpr_Case_Item, Gpr_Compilation_Unit, Gpr_Empty_Decl, Gpr_Prefix, Gpr_Identifier, Gpr_Num_Literal, Gpr_String_Literal, Gpr_Limited_Absent, Gpr_Limited_Present, Gpr_Others_Designator, Gpr_Package_Decl, Gpr_Package_Extension, Gpr_Package_Renaming, Gpr_Package_Spec, Gpr_Project, Gpr_Project_Declaration, Gpr_Project_Extension, Gpr_Project_Qualifier_Abstract, Gpr_Project_Qualifier_Aggregate, Gpr_Project_Qualifier_Aggregate_Library, Gpr_Project_Qualifier_Configuration, Gpr_Project_Qualifier_Library, Gpr_Project_Qualifier_Standard, Gpr_String_Literal_At, Gpr_Terms, Gpr_Type_Reference, Gpr_Typed_String_Decl, Gpr_Variable_Decl, Gpr_Variable_Reference, Gpr_With_Decl);
    --  Type for concrete nodes
 
    for Gpr_Node_Kind_Type use
-     (Gpr_Ada_Access_Subp => 1, Gpr_Ada_Pragma => 2, Gpr_Ada_Use => 3, Gpr_Ada_With => 4, Gpr_Ada_Entity_Kind_Function => 5, Gpr_Ada_Entity_Kind_Package => 6, Gpr_Ada_Entity_Kind_Procedure => 7, Gpr_Ada_Generic => 8, Gpr_Ada_Library_Item => 9, Gpr_Ada_Pkg => 10, Gpr_Ada_Pkg_Body => 11, Gpr_Ada_Subp => 12, Gpr_Ada_Prelude => 13, Gpr_Ada_Separate => 14, Gpr_Ada_Skip => 15, Gpr_Ada_With_Formal => 16, Gpr_All_Qualifier_Absent => 17, Gpr_All_Qualifier_Present => 18, Gpr_Attribute_Decl => 19, Gpr_Attribute_Reference => 20, Gpr_Ada_Context_Clause_List => 21, Gpr_Ada_Prelude_Node_List => 22, Gpr_Ada_Skip_List => 23, Gpr_Case_Item_List => 24, Gpr_Expr_List => 25, Gpr_Gpr_Node_List => 26, Gpr_Choices => 27, Gpr_Term_List => 28, Gpr_Identifier_List => 29, Gpr_String_Literal_List => 30, Gpr_Term_List_List => 31, Gpr_With_Decl_List => 32, Gpr_Builtin_Function_Call => 33, Gpr_Case_Construction => 34, Gpr_Case_Item => 35, Gpr_Compilation_Unit => 36, Gpr_Empty_Decl => 37, Gpr_Prefix => 38, Gpr_Identifier => 39, Gpr_Num_Literal => 40, Gpr_String_Literal => 41, Gpr_Limited_Absent => 42, Gpr_Limited_Present => 43, Gpr_Others_Designator => 44, Gpr_Package_Decl => 45, Gpr_Package_Extension => 46, Gpr_Package_Renaming => 47, Gpr_Package_Spec => 48, Gpr_Private_Absent => 49, Gpr_Private_Present => 50, Gpr_Project => 51, Gpr_Project_Declaration => 52, Gpr_Project_Extension => 53, Gpr_Project_Qualifier_Abstract => 54, Gpr_Project_Qualifier_Aggregate => 55, Gpr_Project_Qualifier_Aggregate_Library => 56, Gpr_Project_Qualifier_Configuration => 57, Gpr_Project_Qualifier_Library => 58, Gpr_Project_Qualifier_Standard => 59, Gpr_String_Literal_At => 60, Gpr_Terms => 61, Gpr_Type_Reference => 62, Gpr_Typed_String_Decl => 63, Gpr_Variable_Decl => 64, Gpr_Variable_Reference => 65, Gpr_With_Decl => 66);
+     (Gpr_All_Qualifier_Absent => 1, Gpr_All_Qualifier_Present => 2, Gpr_Attribute_Decl => 3, Gpr_Attribute_Reference => 4, Gpr_Case_Item_List => 5, Gpr_Gpr_Node_List => 6, Gpr_Choices => 7, Gpr_Term_List => 8, Gpr_Identifier_List => 9, Gpr_String_Literal_List => 10, Gpr_Term_List_List => 11, Gpr_With_Decl_List => 12, Gpr_Builtin_Function_Call => 13, Gpr_Case_Construction => 14, Gpr_Case_Item => 15, Gpr_Compilation_Unit => 16, Gpr_Empty_Decl => 17, Gpr_Prefix => 18, Gpr_Identifier => 19, Gpr_Num_Literal => 20, Gpr_String_Literal => 21, Gpr_Limited_Absent => 22, Gpr_Limited_Present => 23, Gpr_Others_Designator => 24, Gpr_Package_Decl => 25, Gpr_Package_Extension => 26, Gpr_Package_Renaming => 27, Gpr_Package_Spec => 28, Gpr_Project => 29, Gpr_Project_Declaration => 30, Gpr_Project_Extension => 31, Gpr_Project_Qualifier_Abstract => 32, Gpr_Project_Qualifier_Aggregate => 33, Gpr_Project_Qualifier_Aggregate_Library => 34, Gpr_Project_Qualifier_Configuration => 35, Gpr_Project_Qualifier_Library => 36, Gpr_Project_Qualifier_Standard => 37, Gpr_String_Literal_At => 38, Gpr_Terms => 39, Gpr_Type_Reference => 40, Gpr_Typed_String_Decl => 41, Gpr_Variable_Decl => 42, Gpr_Variable_Reference => 43, Gpr_With_Decl => 44);
 
       subtype Gpr_Gpr_Node is Gpr_Node_Kind_Type
-            range Gpr_Ada_Access_Subp .. Gpr_With_Decl;
-      --% no-document: True
-      subtype Gpr_Ada_Prelude_Node is Gpr_Node_Kind_Type
-            range Gpr_Ada_Access_Subp .. Gpr_Ada_With_Formal;
-      --% no-document: True
-      subtype Gpr_Ada_Access_Subp_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Access_Subp .. Gpr_Ada_Access_Subp;
-      --% no-document: True
-      subtype Gpr_Ada_Context_Clause is Gpr_Node_Kind_Type
-            range Gpr_Ada_Pragma .. Gpr_Ada_With;
-      --% no-document: True
-      subtype Gpr_Ada_Pragma_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Pragma .. Gpr_Ada_Pragma;
-      --% no-document: True
-      subtype Gpr_Ada_Use_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Use .. Gpr_Ada_Use;
-      --% no-document: True
-      subtype Gpr_Ada_With_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_With .. Gpr_Ada_With;
-      --% no-document: True
-      subtype Gpr_Ada_Entity_Kind is Gpr_Node_Kind_Type
-            range Gpr_Ada_Entity_Kind_Function .. Gpr_Ada_Entity_Kind_Procedure;
-      --% no-document: True
-      subtype Gpr_Ada_Entity_Kind_Function_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Entity_Kind_Function .. Gpr_Ada_Entity_Kind_Function;
-      --% no-document: True
-      subtype Gpr_Ada_Entity_Kind_Package_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Entity_Kind_Package .. Gpr_Ada_Entity_Kind_Package;
-      --% no-document: True
-      subtype Gpr_Ada_Entity_Kind_Procedure_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Entity_Kind_Procedure .. Gpr_Ada_Entity_Kind_Procedure;
-      --% no-document: True
-      subtype Gpr_Ada_Generic_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Generic .. Gpr_Ada_Generic;
-      --% no-document: True
-      subtype Gpr_Ada_Library_Item_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Library_Item .. Gpr_Ada_Library_Item;
-      --% no-document: True
-      subtype Gpr_Ada_Main is Gpr_Node_Kind_Type
-            range Gpr_Ada_Pkg .. Gpr_Ada_Subp;
-      --% no-document: True
-      subtype Gpr_Ada_Pkg_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Pkg .. Gpr_Ada_Pkg;
-      --% no-document: True
-      subtype Gpr_Ada_Pkg_Body_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Pkg_Body .. Gpr_Ada_Pkg_Body;
-      --% no-document: True
-      subtype Gpr_Ada_Subp_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Subp .. Gpr_Ada_Subp;
-      --% no-document: True
-      subtype Gpr_Ada_Prelude_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Prelude .. Gpr_Ada_Prelude;
-      --% no-document: True
-      subtype Gpr_Ada_Separate_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Separate .. Gpr_Ada_Separate;
-      --% no-document: True
-      subtype Gpr_Ada_Skip_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Skip .. Gpr_Ada_Skip;
-      --% no-document: True
-      subtype Gpr_Ada_With_Formal_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_With_Formal .. Gpr_Ada_With_Formal;
+            range Gpr_All_Qualifier_Absent .. Gpr_With_Decl;
       --% no-document: True
       subtype Gpr_All_Qualifier is Gpr_Node_Kind_Type
             range Gpr_All_Qualifier_Absent .. Gpr_All_Qualifier_Present;
@@ -254,22 +194,10 @@ package Gpr_Parser.Common is
             range Gpr_Attribute_Reference .. Gpr_Attribute_Reference;
       --% no-document: True
       subtype Gpr_Base_List is Gpr_Node_Kind_Type
-            range Gpr_Ada_Context_Clause_List .. Gpr_With_Decl_List;
-      --% no-document: True
-      subtype Gpr_Ada_Context_Clause_List_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Context_Clause_List .. Gpr_Ada_Context_Clause_List;
-      --% no-document: True
-      subtype Gpr_Ada_Prelude_Node_List_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Prelude_Node_List .. Gpr_Ada_Prelude_Node_List;
-      --% no-document: True
-      subtype Gpr_Ada_Skip_List_Range is Gpr_Node_Kind_Type
-            range Gpr_Ada_Skip_List .. Gpr_Ada_Skip_List;
+            range Gpr_Case_Item_List .. Gpr_With_Decl_List;
       --% no-document: True
       subtype Gpr_Case_Item_List_Range is Gpr_Node_Kind_Type
             range Gpr_Case_Item_List .. Gpr_Case_Item_List;
-      --% no-document: True
-      subtype Gpr_Expr_List_Range is Gpr_Node_Kind_Type
-            range Gpr_Expr_List .. Gpr_Expr_List;
       --% no-document: True
       subtype Gpr_Gpr_Node_List_Range is Gpr_Node_Kind_Type
             range Gpr_Gpr_Node_List .. Gpr_Term_List;
@@ -348,15 +276,6 @@ package Gpr_Parser.Common is
       --% no-document: True
       subtype Gpr_Package_Spec_Range is Gpr_Node_Kind_Type
             range Gpr_Package_Spec .. Gpr_Package_Spec;
-      --% no-document: True
-      subtype Gpr_Private_Node is Gpr_Node_Kind_Type
-            range Gpr_Private_Absent .. Gpr_Private_Present;
-      --% no-document: True
-      subtype Gpr_Private_Absent_Range is Gpr_Node_Kind_Type
-            range Gpr_Private_Absent .. Gpr_Private_Absent;
-      --% no-document: True
-      subtype Gpr_Private_Present_Range is Gpr_Node_Kind_Type
-            range Gpr_Private_Present .. Gpr_Private_Present;
       --% no-document: True
       subtype Gpr_Project_Range is Gpr_Node_Kind_Type
             range Gpr_Project .. Gpr_Project;
