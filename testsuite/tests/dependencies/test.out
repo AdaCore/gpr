@@ -12,8 +12,8 @@ Project: Demo
    > src/api-call.adb
    > src/api.adb
    > src/api.ads
-api.ads:1:01: warning: withed unit Toto not found
-api.ads:3:01: warning: withed unit titi not found
+api.ads: warning: withed unit titi not found
+api.ads: warning: withed unit Toto not found
 
  > src/abc.adb   unit: ABC
 ..... DIRECT
@@ -36,42 +36,42 @@ api.ads:3:01: warning: withed unit titi not found
    > src/api-call.adb
    > src/api.adb
    > src/api.ads
-api.ads:1:01: warning: withed unit Toto not found
-api.ads:3:01: warning: withed unit titi not found
+api.ads: warning: withed unit titi not found
+api.ads: warning: withed unit Toto not found
 ..... CLOSURE
    > src/api-call.adb
    > src/api.adb
    > src/api.ads
-api.ads:1:01: warning: withed unit Toto not found
-api.ads:3:01: warning: withed unit titi not found
+api.ads: warning: withed unit titi not found
+api.ads: warning: withed unit Toto not found
 
  > src/api.adb   unit: API
 ..... DIRECT
    > src/api-call.adb
    > src/api.adb
    > src/api.ads
-api.ads:1:01: warning: withed unit Toto not found
-api.ads:3:01: warning: withed unit titi not found
+api.ads: warning: withed unit titi not found
+api.ads: warning: withed unit Toto not found
 ..... CLOSURE
    > src/api-call.adb
    > src/api.adb
    > src/api.ads
-api.ads:1:01: warning: withed unit Toto not found
-api.ads:3:01: warning: withed unit titi not found
+api.ads: warning: withed unit titi not found
+api.ads: warning: withed unit Toto not found
 
  > src/api.ads   unit: API
 ..... DIRECT
    > src/api-call.adb
    > src/api.adb
    > src/api.ads
-api.ads:1:01: warning: withed unit Toto not found
-api.ads:3:01: warning: withed unit titi not found
+api.ads: warning: withed unit titi not found
+api.ads: warning: withed unit Toto not found
 ..... CLOSURE
    > src/api-call.adb
    > src/api.adb
    > src/api.ads
-api.ads:1:01: warning: withed unit Toto not found
-api.ads:3:01: warning: withed unit titi not found
+api.ads: warning: withed unit titi not found
+api.ads: warning: withed unit Toto not found
 
  > src/call.adb   unit: CALL
 ..... DIRECT
@@ -87,8 +87,8 @@ api.ads:3:01: warning: withed unit titi not found
    > src/call.adb
    > src/tst.adb
    > src/tst.ads
-api.ads:1:01: warning: withed unit Toto not found
-api.ads:3:01: warning: withed unit titi not found
+api.ads: warning: withed unit titi not found
+api.ads: warning: withed unit Toto not found
 
  > src/tst.adb   unit: TST
 ..... DIRECT
@@ -108,8 +108,8 @@ api.ads:3:01: warning: withed unit titi not found
    > src/call.adb
    > src/tst.adb
    > src/tst.ads
-api.ads:1:01: warning: withed unit Toto not found
-api.ads:3:01: warning: withed unit titi not found
+api.ads: warning: withed unit titi not found
+api.ads: warning: withed unit Toto not found
 
  > src/tst.ads   unit: TST
 ..... DIRECT
@@ -129,5 +129,5 @@ api.ads:3:01: warning: withed unit titi not found
    > src/call.adb
    > src/tst.adb
    > src/tst.ads
-api.ads:1:01: warning: withed unit Toto not found
-api.ads:3:01: warning: withed unit titi not found
+api.ads: warning: withed unit titi not found
+api.ads: warning: withed unit Toto not found

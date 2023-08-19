@@ -44,8 +44,6 @@ procedure Main is
 
       for Source of View.Sources loop
          declare
-            subtype Id is Source_Reference.Identifier.Object;
-
             U : constant Optional_Name_Type := Source.Unit_Name (No_Index);
          begin
             Text_IO.New_Line;
@@ -56,7 +54,7 @@ procedure Main is
                Text_IO.New_Line;
 
                for W of Source.Context_Clause_Dependencies (No_Index) loop
-                  Text_IO.Put_Line ("   " & String (Id (W).Text));
+                  Text_IO.Put_Line ("   " & String (W));
                end loop;
             end if;
          end;

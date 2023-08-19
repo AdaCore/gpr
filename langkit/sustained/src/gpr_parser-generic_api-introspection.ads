@@ -190,23 +190,90 @@ package Gpr_Parser.Generic_API.Introspection is
            G.From_Index (Self_Id, 84);
          Project_Qualifier_Standard : constant G.Type_Ref :=
            G.From_Index (Self_Id, 85);
-         Project_Reference : constant G.Type_Ref :=
-           G.From_Index (Self_Id, 86);
          String_Literal_At : constant G.Type_Ref :=
-           G.From_Index (Self_Id, 87);
+           G.From_Index (Self_Id, 86);
          Terms : constant G.Type_Ref :=
-           G.From_Index (Self_Id, 88);
+           G.From_Index (Self_Id, 87);
          Type_Reference : constant G.Type_Ref :=
-           G.From_Index (Self_Id, 89);
+           G.From_Index (Self_Id, 88);
          Typed_String_Decl : constant G.Type_Ref :=
-           G.From_Index (Self_Id, 90);
+           G.From_Index (Self_Id, 89);
          Variable_Decl : constant G.Type_Ref :=
-           G.From_Index (Self_Id, 91);
+           G.From_Index (Self_Id, 90);
          Variable_Reference : constant G.Type_Ref :=
-           G.From_Index (Self_Id, 92);
+           G.From_Index (Self_Id, 91);
          With_Decl : constant G.Type_Ref :=
-           G.From_Index (Self_Id, 93);
+           G.From_Index (Self_Id, 92);
    end Type_Refs;
+
+   Kind_To_Type : constant array (Gpr_Node_Kind_Type) of G.Type_Ref := (
+      Gpr_Ada_Access_Subp => Type_Refs.Ada_Access_Subp,
+Gpr_Ada_Pragma => Type_Refs.Ada_Pragma,
+Gpr_Ada_Use => Type_Refs.Ada_Use,
+Gpr_Ada_With => Type_Refs.Ada_With,
+Gpr_Ada_Entity_Kind_Function => Type_Refs.Ada_Entity_Kind_Function,
+Gpr_Ada_Entity_Kind_Package => Type_Refs.Ada_Entity_Kind_Package,
+Gpr_Ada_Entity_Kind_Procedure => Type_Refs.Ada_Entity_Kind_Procedure,
+Gpr_Ada_Generic => Type_Refs.Ada_Generic,
+Gpr_Ada_Library_Item => Type_Refs.Ada_Library_Item,
+Gpr_Ada_Pkg => Type_Refs.Ada_Pkg,
+Gpr_Ada_Pkg_Body => Type_Refs.Ada_Pkg_Body,
+Gpr_Ada_Subp => Type_Refs.Ada_Subp,
+Gpr_Ada_Prelude => Type_Refs.Ada_Prelude,
+Gpr_Ada_Separate => Type_Refs.Ada_Separate,
+Gpr_Ada_Skip => Type_Refs.Ada_Skip,
+Gpr_Ada_With_Formal => Type_Refs.Ada_With_Formal,
+Gpr_All_Qualifier_Absent => Type_Refs.All_Qualifier_Absent,
+Gpr_All_Qualifier_Present => Type_Refs.All_Qualifier_Present,
+Gpr_Attribute_Decl => Type_Refs.Attribute_Decl,
+Gpr_Attribute_Reference => Type_Refs.Attribute_Reference,
+Gpr_Ada_Context_Clause_List => Type_Refs.Ada_Context_Clause_List,
+Gpr_Ada_Prelude_Node_List => Type_Refs.Ada_Prelude_Node_List,
+Gpr_Ada_Skip_List => Type_Refs.Ada_Skip_List,
+Gpr_Case_Item_List => Type_Refs.Case_Item_List,
+Gpr_Expr_List => Type_Refs.Expr_List,
+Gpr_Gpr_Node_List => Type_Refs.Gpr_Node_List,
+Gpr_Choices => Type_Refs.Choices,
+Gpr_Term_List => Type_Refs.Term_List,
+Gpr_Identifier_List => Type_Refs.Identifier_List,
+Gpr_String_Literal_List => Type_Refs.String_Literal_List,
+Gpr_Term_List_List => Type_Refs.Term_List_List,
+Gpr_With_Decl_List => Type_Refs.With_Decl_List,
+Gpr_Builtin_Function_Call => Type_Refs.Builtin_Function_Call,
+Gpr_Case_Construction => Type_Refs.Case_Construction,
+Gpr_Case_Item => Type_Refs.Case_Item,
+Gpr_Compilation_Unit => Type_Refs.Compilation_Unit,
+Gpr_Empty_Decl => Type_Refs.Empty_Decl,
+Gpr_Prefix => Type_Refs.Prefix,
+Gpr_Identifier => Type_Refs.Identifier,
+Gpr_Num_Literal => Type_Refs.Num_Literal,
+Gpr_String_Literal => Type_Refs.String_Literal,
+Gpr_Limited_Absent => Type_Refs.Limited_Absent,
+Gpr_Limited_Present => Type_Refs.Limited_Present,
+Gpr_Others_Designator => Type_Refs.Others_Designator,
+Gpr_Package_Decl => Type_Refs.Package_Decl,
+Gpr_Package_Extension => Type_Refs.Package_Extension,
+Gpr_Package_Renaming => Type_Refs.Package_Renaming,
+Gpr_Package_Spec => Type_Refs.Package_Spec,
+Gpr_Private_Absent => Type_Refs.Private_Absent,
+Gpr_Private_Present => Type_Refs.Private_Present,
+Gpr_Project => Type_Refs.Project,
+Gpr_Project_Declaration => Type_Refs.Project_Declaration,
+Gpr_Project_Extension => Type_Refs.Project_Extension,
+Gpr_Project_Qualifier_Abstract => Type_Refs.Project_Qualifier_Abstract,
+Gpr_Project_Qualifier_Aggregate => Type_Refs.Project_Qualifier_Aggregate,
+Gpr_Project_Qualifier_Aggregate_Library => Type_Refs.Project_Qualifier_Aggregate_Library,
+Gpr_Project_Qualifier_Configuration => Type_Refs.Project_Qualifier_Configuration,
+Gpr_Project_Qualifier_Library => Type_Refs.Project_Qualifier_Library,
+Gpr_Project_Qualifier_Standard => Type_Refs.Project_Qualifier_Standard,
+Gpr_String_Literal_At => Type_Refs.String_Literal_At,
+Gpr_Terms => Type_Refs.Terms,
+Gpr_Type_Reference => Type_Refs.Type_Reference,
+Gpr_Typed_String_Decl => Type_Refs.Typed_String_Decl,
+Gpr_Variable_Decl => Type_Refs.Variable_Decl,
+Gpr_Variable_Reference => Type_Refs.Variable_Reference,
+Gpr_With_Decl => Type_Refs.With_Decl
+   );
 
    -----------------------
    -- Member references --
@@ -311,62 +378,60 @@ package Gpr_Parser.Generic_API.Introspection is
            G.From_Index (Self_Id, 48);
          Project_Extension_F_Path_Name : constant G.Struct_Member_Ref :=
            G.From_Index (Self_Id, 49);
-         Project_Reference_F_Attr_Ref : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 50);
          String_Literal_At_F_Str_Lit : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 51);
+           G.From_Index (Self_Id, 50);
          String_Literal_At_F_At_Lit : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 52);
+           G.From_Index (Self_Id, 51);
          Terms_F_Terms : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 53);
+           G.From_Index (Self_Id, 52);
          Type_Reference_F_Var_Type_Name : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 54);
+           G.From_Index (Self_Id, 53);
          Typed_String_Decl_F_Type_Id : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 55);
+           G.From_Index (Self_Id, 54);
          Typed_String_Decl_F_String_Literals : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 56);
+           G.From_Index (Self_Id, 55);
          Variable_Decl_F_Var_Name : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 57);
+           G.From_Index (Self_Id, 56);
          Variable_Decl_F_Var_Type : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 58);
+           G.From_Index (Self_Id, 57);
          Variable_Decl_F_Expr : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 59);
+           G.From_Index (Self_Id, 58);
          Variable_Reference_F_Variable_Name : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 60);
+           G.From_Index (Self_Id, 59);
          Variable_Reference_F_Attribute_Ref : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 61);
+           G.From_Index (Self_Id, 60);
          With_Decl_F_Is_Limited : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 62);
+           G.From_Index (Self_Id, 61);
          With_Decl_F_Path_Names : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 63);
+           G.From_Index (Self_Id, 62);
          Parent : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 64);
+           G.From_Index (Self_Id, 63);
          Parents : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 65);
+           G.From_Index (Self_Id, 64);
          Children : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 66);
+           G.From_Index (Self_Id, 65);
          Token_Start : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 67);
+           G.From_Index (Self_Id, 66);
          Token_End : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 68);
+           G.From_Index (Self_Id, 67);
          Child_Index : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 69);
+           G.From_Index (Self_Id, 68);
          Previous_Sibling : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 70);
+           G.From_Index (Self_Id, 69);
          Next_Sibling : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 71);
+           G.From_Index (Self_Id, 70);
          Unit : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 72);
+           G.From_Index (Self_Id, 71);
          Is_Ghost : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 73);
+           G.From_Index (Self_Id, 72);
          Full_Sloc_Image : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 74);
+           G.From_Index (Self_Id, 73);
          All_Qualifier_P_As_Bool : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 75);
+           G.From_Index (Self_Id, 74);
          Limited_Node_P_As_Bool : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 76);
+           G.From_Index (Self_Id, 75);
          Private_Node_P_As_Bool : constant G.Struct_Member_Ref :=
-           G.From_Index (Self_Id, 77);
+           G.From_Index (Self_Id, 76);
    end Member_Refs;
 
 end Gpr_Parser.Generic_API.Introspection;

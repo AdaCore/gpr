@@ -1,5 +1,0 @@
-project Prj2 is
-
-   for Source_Dirs use ("src2");
-
-end Prj2;

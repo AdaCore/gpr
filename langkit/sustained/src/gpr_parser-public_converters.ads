@@ -5,6 +5,8 @@
 --
 
 
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+
 with Gpr_Parser_Support.Diagnostics;  use Gpr_Parser_Support.Diagnostics;
 with Gpr_Parser_Support.File_Readers; use Gpr_Parser_Support.File_Readers;
 
@@ -95,17 +97,21 @@ private package Gpr_Parser.Public_Converters is
    overriding function Dec_Ref
      (Provider : in out Unit_Provider_Wrapper) return Boolean;
 
-   overriding function Get_Unit_Filename
-     (Provider : Unit_Provider_Wrapper;
-      Name     : Text_Type;
-      Kind     : Analysis_Unit_Kind) return String;
-   overriding function Get_Unit
-     (Provider    : Unit_Provider_Wrapper;
-      Context     : Internal_Context;
-      Name        : Text_Type;
-      Kind        : Analysis_Unit_Kind;
-      Charset     : String := "";
-      Reparse     : Boolean := False) return Internal_Unit;
+   overriding procedure Get_Unit_Location
+     (Provider       : Unit_Provider_Wrapper;
+      Name           : Text_Type;
+      Kind           : Analysis_Unit_Kind;
+      Filename       : out Unbounded_String;
+      PLE_Root_Index : out Positive);
+   overriding procedure Get_Unit_And_PLE_Root
+     (Provider       : Unit_Provider_Wrapper;
+      Context        : Internal_Context;
+      Name           : Text_Type;
+      Kind           : Analysis_Unit_Kind;
+      Charset        : String := "";
+      Reparse        : Boolean := False;
+      Unit           : out Internal_Unit;
+      PLE_Root_Index : out Positive);
 
    function Wrap_Public_Provider
      (Provider : Unit_Provider_Reference) return Internal_Unit_Provider_Access;

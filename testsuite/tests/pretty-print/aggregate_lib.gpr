@@ -1,0 +1,4 @@
+aggregate library project aggregate_lib is
+for Project_Files use ("lib.gpr"); for Library_Name use "demo";
+for Library_Dir use "lib";for Library_ALI_Dir use "ali";
+end aggregate_lib;

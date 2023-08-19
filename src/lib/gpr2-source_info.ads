@@ -16,7 +16,6 @@ private with Ada.Containers.Vectors;
 
 with GPR2.Unit.List;
 with GPR2.Containers;
-with GPR2.Source_Reference.Identifier.Set;
 
 with GNATCOLL.Refcount;
 
@@ -161,7 +160,7 @@ package GPR2.Source_Info is
    function Context_Clause_Dependencies
      (Self  : Object;
       Index : Unit_Index)
-      return Source_Reference.Identifier.Set.Object
+      return GPR2.Containers.Name_Set
      with Pre => Self.Is_Defined and then Self.Has_Units
                  and then Self.Has_Unit_At (Index);
    --  Returns the list of withed unit for Self's source at Index (default = 1)

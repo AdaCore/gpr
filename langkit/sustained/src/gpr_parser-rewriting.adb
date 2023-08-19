@@ -285,6 +285,33 @@ package body Gpr_Parser.Rewriting is
       return Wrap_Node_RH (Impl.Child (Unwrap_Node_RH (Handle), Index));
    end Child;
 
+   -----------
+   -- Child --
+   -----------
+
+   function Child
+     (Handle : Node_Rewriting_Handle;
+      Field  : Struct_Member_Ref) return Node_Rewriting_Handle
+   is
+   begin
+      return Child (Handle, Child_Index (Handle, Field));
+   end Child;
+
+   -----------
+   -- Child --
+   -----------
+
+   function Child
+     (Handle : Node_Rewriting_Handle;
+      Fields : Struct_Member_Ref_Array) return Node_Rewriting_Handle is
+   begin
+      return Result : Node_Rewriting_Handle := Handle do
+         for F of Fields loop
+            Result := Child (Result, F);
+         end loop;
+      end return;
+   end Child;
+
    ---------------
    -- Set_Child --
    ---------------
@@ -296,6 +323,19 @@ package body Gpr_Parser.Rewriting is
    is
    begin
       Impl.Set_Child (Unwrap_Node_RH (Handle), Index, Unwrap_Node_RH (Child));
+   end Set_Child;
+
+   ---------------
+   -- Set_Child --
+   ---------------
+
+   procedure Set_Child
+     (Handle : Node_Rewriting_Handle;
+      Field  : Struct_Member_Ref;
+      Child  : Node_Rewriting_Handle)
+   is
+   begin
+      Set_Child (Handle, Child_Index (Handle, Field), Child);
    end Set_Child;
 
    ----------
@@ -734,17 +774,6 @@ package body Gpr_Parser.Rewriting is
             return Wrap_Node_RH (Impl.Create_Project_Extension
                (Unwrap_RH (Handle),
                 Project_Extension_F_Is_All => Unwrap_Node_RH (F_Is_All), Project_Extension_F_Path_Name => Unwrap_Node_RH (F_Path_Name)));
-         end;
-
-
-         function Create_Project_Reference
-           (Handle : Rewriting_Handle
-               ; F_Attr_Ref : Node_Rewriting_Handle
-            ) return Node_Rewriting_Handle is
-         begin
-            return Wrap_Node_RH (Impl.Create_Project_Reference
-               (Unwrap_RH (Handle),
-                Project_Reference_F_Attr_Ref => Unwrap_Node_RH (F_Attr_Ref)));
          end;
 
 

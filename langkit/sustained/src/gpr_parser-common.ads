@@ -155,7 +155,7 @@ package Gpr_Parser.Common is
       is (Self'Image);
 
       type Grammar_Rule is
-        (Project_Qualifier_Rule, Project_Extension_Rule, Project_Declaration_Rule, Project_Rule, Declarative_Items_Rule, Declarative_Item_Rule, Simple_Declarative_Items_Rule, Simple_Declarative_Item_Rule, Variable_Decl_Rule, Attribute_Decl_Rule, Associative_Array_Index_Rule, Package_Decl_Rule, Package_Renaming_Rule, Package_Extension_Rule, Package_Spec_Rule, Empty_Declaration_Rule, Case_Construction_Rule, Case_Item_Rule, Others_Designator_Rule, Choice_Rule, Discrete_Choice_List_Rule, With_Decl_Rule, Context_Clauses_Rule, Ada_With_Clause_Rule, Ada_Context_Rule, Ada_Context_Item_Rule, Ada_Context_Skip_Rule, Ada_Use_Clause_Rule, Ada_Pragma_Rule, Ada_Subp_Kind_Rule, Ada_Pkg_Kind_Rule, Ada_Library_Item_Rule, Ada_Prelude_Rule, Typed_String_Decl_Rule, Identifier_Rule, String_Literal_Rule, Num_Literal_Rule, Static_Name_Rule, Attribute_Reference_Rule, Variable_Reference_Rule, Type_Reference_Rule, Builtin_Function_Call_Rule, Expression_Rule, Expression_List_Rule, String_Literal_At_Rule, Project_Reference_Rule, Term_Rule, Compilation_Unit_Rule)
+        (Project_Qualifier_Rule, Project_Extension_Rule, Project_Declaration_Rule, Project_Rule, Declarative_Items_Rule, Declarative_Item_Rule, Simple_Declarative_Items_Rule, Simple_Declarative_Item_Rule, Variable_Decl_Rule, Attribute_Decl_Rule, Associative_Array_Index_Rule, Package_Decl_Rule, Package_Renaming_Rule, Package_Extension_Rule, Package_Spec_Rule, Empty_Declaration_Rule, Case_Construction_Rule, Case_Item_Rule, Others_Designator_Rule, Choice_Rule, Discrete_Choice_List_Rule, With_Decl_Rule, Context_Clauses_Rule, Ada_With_Clause_Rule, Ada_Context_Rule, Ada_Context_Item_Rule, Ada_Context_Skip_Rule, Ada_Use_Clause_Rule, Ada_Pragma_Rule, Ada_Subp_Kind_Rule, Ada_Pkg_Kind_Rule, Ada_Library_Item_Rule, Ada_Prelude_Rule, Typed_String_Decl_Rule, Identifier_Rule, String_Literal_Rule, Num_Literal_Rule, Static_Name_Rule, Attribute_Reference_Rule, Variable_Reference_Rule, Type_Reference_Rule, Builtin_Function_Call_Rule, Expression_Rule, Expression_List_Rule, String_Literal_At_Rule, Term_Rule, Compilation_Unit_Rule)
          with Convention => C;
       --  Gramar rule to use for parsing.
 
@@ -169,11 +169,11 @@ package Gpr_Parser.Common is
    -----------
 
    type Gpr_Node_Kind_Type is
-     (Gpr_Ada_Access_Subp, Gpr_Ada_Pragma, Gpr_Ada_Use, Gpr_Ada_With, Gpr_Ada_Entity_Kind_Function, Gpr_Ada_Entity_Kind_Package, Gpr_Ada_Entity_Kind_Procedure, Gpr_Ada_Generic, Gpr_Ada_Library_Item, Gpr_Ada_Pkg, Gpr_Ada_Pkg_Body, Gpr_Ada_Subp, Gpr_Ada_Prelude, Gpr_Ada_Separate, Gpr_Ada_Skip, Gpr_Ada_With_Formal, Gpr_All_Qualifier_Absent, Gpr_All_Qualifier_Present, Gpr_Attribute_Decl, Gpr_Attribute_Reference, Gpr_Ada_Context_Clause_List, Gpr_Ada_Prelude_Node_List, Gpr_Ada_Skip_List, Gpr_Case_Item_List, Gpr_Expr_List, Gpr_Gpr_Node_List, Gpr_Choices, Gpr_Term_List, Gpr_Identifier_List, Gpr_String_Literal_List, Gpr_Term_List_List, Gpr_With_Decl_List, Gpr_Builtin_Function_Call, Gpr_Case_Construction, Gpr_Case_Item, Gpr_Compilation_Unit, Gpr_Empty_Decl, Gpr_Prefix, Gpr_Identifier, Gpr_Num_Literal, Gpr_String_Literal, Gpr_Limited_Absent, Gpr_Limited_Present, Gpr_Others_Designator, Gpr_Package_Decl, Gpr_Package_Extension, Gpr_Package_Renaming, Gpr_Package_Spec, Gpr_Private_Absent, Gpr_Private_Present, Gpr_Project, Gpr_Project_Declaration, Gpr_Project_Extension, Gpr_Project_Qualifier_Abstract, Gpr_Project_Qualifier_Aggregate, Gpr_Project_Qualifier_Aggregate_Library, Gpr_Project_Qualifier_Configuration, Gpr_Project_Qualifier_Library, Gpr_Project_Qualifier_Standard, Gpr_Project_Reference, Gpr_String_Literal_At, Gpr_Terms, Gpr_Type_Reference, Gpr_Typed_String_Decl, Gpr_Variable_Decl, Gpr_Variable_Reference, Gpr_With_Decl);
+     (Gpr_Ada_Access_Subp, Gpr_Ada_Pragma, Gpr_Ada_Use, Gpr_Ada_With, Gpr_Ada_Entity_Kind_Function, Gpr_Ada_Entity_Kind_Package, Gpr_Ada_Entity_Kind_Procedure, Gpr_Ada_Generic, Gpr_Ada_Library_Item, Gpr_Ada_Pkg, Gpr_Ada_Pkg_Body, Gpr_Ada_Subp, Gpr_Ada_Prelude, Gpr_Ada_Separate, Gpr_Ada_Skip, Gpr_Ada_With_Formal, Gpr_All_Qualifier_Absent, Gpr_All_Qualifier_Present, Gpr_Attribute_Decl, Gpr_Attribute_Reference, Gpr_Ada_Context_Clause_List, Gpr_Ada_Prelude_Node_List, Gpr_Ada_Skip_List, Gpr_Case_Item_List, Gpr_Expr_List, Gpr_Gpr_Node_List, Gpr_Choices, Gpr_Term_List, Gpr_Identifier_List, Gpr_String_Literal_List, Gpr_Term_List_List, Gpr_With_Decl_List, Gpr_Builtin_Function_Call, Gpr_Case_Construction, Gpr_Case_Item, Gpr_Compilation_Unit, Gpr_Empty_Decl, Gpr_Prefix, Gpr_Identifier, Gpr_Num_Literal, Gpr_String_Literal, Gpr_Limited_Absent, Gpr_Limited_Present, Gpr_Others_Designator, Gpr_Package_Decl, Gpr_Package_Extension, Gpr_Package_Renaming, Gpr_Package_Spec, Gpr_Private_Absent, Gpr_Private_Present, Gpr_Project, Gpr_Project_Declaration, Gpr_Project_Extension, Gpr_Project_Qualifier_Abstract, Gpr_Project_Qualifier_Aggregate, Gpr_Project_Qualifier_Aggregate_Library, Gpr_Project_Qualifier_Configuration, Gpr_Project_Qualifier_Library, Gpr_Project_Qualifier_Standard, Gpr_String_Literal_At, Gpr_Terms, Gpr_Type_Reference, Gpr_Typed_String_Decl, Gpr_Variable_Decl, Gpr_Variable_Reference, Gpr_With_Decl);
    --  Type for concrete nodes
 
    for Gpr_Node_Kind_Type use
-     (Gpr_Ada_Access_Subp => 1, Gpr_Ada_Pragma => 2, Gpr_Ada_Use => 3, Gpr_Ada_With => 4, Gpr_Ada_Entity_Kind_Function => 5, Gpr_Ada_Entity_Kind_Package => 6, Gpr_Ada_Entity_Kind_Procedure => 7, Gpr_Ada_Generic => 8, Gpr_Ada_Library_Item => 9, Gpr_Ada_Pkg => 10, Gpr_Ada_Pkg_Body => 11, Gpr_Ada_Subp => 12, Gpr_Ada_Prelude => 13, Gpr_Ada_Separate => 14, Gpr_Ada_Skip => 15, Gpr_Ada_With_Formal => 16, Gpr_All_Qualifier_Absent => 17, Gpr_All_Qualifier_Present => 18, Gpr_Attribute_Decl => 19, Gpr_Attribute_Reference => 20, Gpr_Ada_Context_Clause_List => 21, Gpr_Ada_Prelude_Node_List => 22, Gpr_Ada_Skip_List => 23, Gpr_Case_Item_List => 24, Gpr_Expr_List => 25, Gpr_Gpr_Node_List => 26, Gpr_Choices => 27, Gpr_Term_List => 28, Gpr_Identifier_List => 29, Gpr_String_Literal_List => 30, Gpr_Term_List_List => 31, Gpr_With_Decl_List => 32, Gpr_Builtin_Function_Call => 33, Gpr_Case_Construction => 34, Gpr_Case_Item => 35, Gpr_Compilation_Unit => 36, Gpr_Empty_Decl => 37, Gpr_Prefix => 38, Gpr_Identifier => 39, Gpr_Num_Literal => 40, Gpr_String_Literal => 41, Gpr_Limited_Absent => 42, Gpr_Limited_Present => 43, Gpr_Others_Designator => 44, Gpr_Package_Decl => 45, Gpr_Package_Extension => 46, Gpr_Package_Renaming => 47, Gpr_Package_Spec => 48, Gpr_Private_Absent => 49, Gpr_Private_Present => 50, Gpr_Project => 51, Gpr_Project_Declaration => 52, Gpr_Project_Extension => 53, Gpr_Project_Qualifier_Abstract => 54, Gpr_Project_Qualifier_Aggregate => 55, Gpr_Project_Qualifier_Aggregate_Library => 56, Gpr_Project_Qualifier_Configuration => 57, Gpr_Project_Qualifier_Library => 58, Gpr_Project_Qualifier_Standard => 59, Gpr_Project_Reference => 60, Gpr_String_Literal_At => 61, Gpr_Terms => 62, Gpr_Type_Reference => 63, Gpr_Typed_String_Decl => 64, Gpr_Variable_Decl => 65, Gpr_Variable_Reference => 66, Gpr_With_Decl => 67);
+     (Gpr_Ada_Access_Subp => 1, Gpr_Ada_Pragma => 2, Gpr_Ada_Use => 3, Gpr_Ada_With => 4, Gpr_Ada_Entity_Kind_Function => 5, Gpr_Ada_Entity_Kind_Package => 6, Gpr_Ada_Entity_Kind_Procedure => 7, Gpr_Ada_Generic => 8, Gpr_Ada_Library_Item => 9, Gpr_Ada_Pkg => 10, Gpr_Ada_Pkg_Body => 11, Gpr_Ada_Subp => 12, Gpr_Ada_Prelude => 13, Gpr_Ada_Separate => 14, Gpr_Ada_Skip => 15, Gpr_Ada_With_Formal => 16, Gpr_All_Qualifier_Absent => 17, Gpr_All_Qualifier_Present => 18, Gpr_Attribute_Decl => 19, Gpr_Attribute_Reference => 20, Gpr_Ada_Context_Clause_List => 21, Gpr_Ada_Prelude_Node_List => 22, Gpr_Ada_Skip_List => 23, Gpr_Case_Item_List => 24, Gpr_Expr_List => 25, Gpr_Gpr_Node_List => 26, Gpr_Choices => 27, Gpr_Term_List => 28, Gpr_Identifier_List => 29, Gpr_String_Literal_List => 30, Gpr_Term_List_List => 31, Gpr_With_Decl_List => 32, Gpr_Builtin_Function_Call => 33, Gpr_Case_Construction => 34, Gpr_Case_Item => 35, Gpr_Compilation_Unit => 36, Gpr_Empty_Decl => 37, Gpr_Prefix => 38, Gpr_Identifier => 39, Gpr_Num_Literal => 40, Gpr_String_Literal => 41, Gpr_Limited_Absent => 42, Gpr_Limited_Present => 43, Gpr_Others_Designator => 44, Gpr_Package_Decl => 45, Gpr_Package_Extension => 46, Gpr_Package_Renaming => 47, Gpr_Package_Spec => 48, Gpr_Private_Absent => 49, Gpr_Private_Present => 50, Gpr_Project => 51, Gpr_Project_Declaration => 52, Gpr_Project_Extension => 53, Gpr_Project_Qualifier_Abstract => 54, Gpr_Project_Qualifier_Aggregate => 55, Gpr_Project_Qualifier_Aggregate_Library => 56, Gpr_Project_Qualifier_Configuration => 57, Gpr_Project_Qualifier_Library => 58, Gpr_Project_Qualifier_Standard => 59, Gpr_String_Literal_At => 60, Gpr_Terms => 61, Gpr_Type_Reference => 62, Gpr_Typed_String_Decl => 63, Gpr_Variable_Decl => 64, Gpr_Variable_Reference => 65, Gpr_With_Decl => 66);
 
       subtype Gpr_Gpr_Node is Gpr_Node_Kind_Type
             range Gpr_Ada_Access_Subp .. Gpr_With_Decl;
@@ -387,9 +387,6 @@ package Gpr_Parser.Common is
       --% no-document: True
       subtype Gpr_Project_Qualifier_Standard_Range is Gpr_Node_Kind_Type
             range Gpr_Project_Qualifier_Standard .. Gpr_Project_Qualifier_Standard;
-      --% no-document: True
-      subtype Gpr_Project_Reference_Range is Gpr_Node_Kind_Type
-            range Gpr_Project_Reference .. Gpr_Project_Reference;
       --% no-document: True
       subtype Gpr_String_Literal_At_Range is Gpr_Node_Kind_Type
             range Gpr_String_Literal_At .. Gpr_String_Literal_At;
@@ -632,123 +629,9 @@ Gpr_Whitespace
    function Raw_Data (T : Token_Reference) return Stored_Token_Data;
    --  Return the raw token data for ``T``
 
-   -------------------
-   -- Introspection --
-   -------------------
-
-   --  Unlike ``Gpr_Node_Kind_Type``, the following enumeration contains entries
-   --  for abstract nodes.
-
-   type Any_Node_Type_Id is (
-      None, Gpr_Node_Type_Id, Ada_Prelude_Node_Type_Id, Ada_Access_Subp_Type_Id, Ada_Context_Clause_Type_Id, Ada_Pragma_Type_Id, Ada_Use_Type_Id, Ada_With_Type_Id, Ada_Entity_Kind_Type_Id, Ada_Entity_Kind_Function_Type_Id, Ada_Entity_Kind_Package_Type_Id, Ada_Entity_Kind_Procedure_Type_Id, Ada_Generic_Type_Id, Ada_Library_Item_Type_Id, Ada_Main_Type_Id, Ada_Pkg_Type_Id, Ada_Pkg_Body_Type_Id, Ada_Subp_Type_Id, Ada_Prelude_Type_Id, Ada_Separate_Type_Id, Ada_Skip_Type_Id, Ada_With_Formal_Type_Id, All_Qualifier_Type_Id, All_Qualifier_Absent_Type_Id, All_Qualifier_Present_Type_Id, Attribute_Decl_Type_Id, Attribute_Reference_Type_Id, Base_List_Type_Id, Ada_Context_Clause_List_Type_Id, Ada_Prelude_Node_List_Type_Id, Ada_Skip_List_Type_Id, Case_Item_List_Type_Id, Expr_List_Type_Id, Gpr_Node_List_Type_Id, Choices_Type_Id, Term_List_Type_Id, Identifier_List_Type_Id, String_Literal_List_Type_Id, Term_List_List_Type_Id, With_Decl_List_Type_Id, Builtin_Function_Call_Type_Id, Case_Construction_Type_Id, Case_Item_Type_Id, Compilation_Unit_Type_Id, Empty_Decl_Type_Id, Expr_Type_Id, Prefix_Type_Id, Single_Tok_Node_Type_Id, Identifier_Type_Id, Num_Literal_Type_Id, String_Literal_Type_Id, Limited_Node_Type_Id, Limited_Absent_Type_Id, Limited_Present_Type_Id, Others_Designator_Type_Id, Package_Decl_Type_Id, Package_Extension_Type_Id, Package_Renaming_Type_Id, Package_Spec_Type_Id, Private_Node_Type_Id, Private_Absent_Type_Id, Private_Present_Type_Id, Project_Type_Id, Project_Declaration_Type_Id, Project_Extension_Type_Id, Project_Qualifier_Type_Id, Project_Qualifier_Abstract_Type_Id, Project_Qualifier_Aggregate_Type_Id, Project_Qualifier_Aggregate_Library_Type_Id, Project_Qualifier_Configuration_Type_Id, Project_Qualifier_Library_Type_Id, Project_Qualifier_Standard_Type_Id, Project_Reference_Type_Id, String_Literal_At_Type_Id, Terms_Type_Id, Type_Reference_Type_Id, Typed_String_Decl_Type_Id, Variable_Decl_Type_Id, Variable_Reference_Type_Id, With_Decl_Type_Id
-   );
-
-   subtype Node_Type_Id is Any_Node_Type_Id
-      range Gpr_Node_Type_Id
-            .. With_Decl_Type_Id;
-
-   type Node_Type_Id_Array is array (Positive range <>) of Node_Type_Id;
-
-   type Any_Value_Kind is (
-      None,
-      Boolean_Value,
-      Integer_Value,
-      Big_Integer_Value,
-      Character_Value,
-      String_Value,
-      Token_Value,
-      Unbounded_Text_Value,
-      Analysis_Unit_Value,
-      Node_Value
-
-      , Analysis_Unit_Kind_Value
-      , Lookup_Kind_Value
-      , Designated_Env_Kind_Value
-      , Grammar_Rule_Value
-
-      , Gpr_Node_Array_Value
-   );
-   subtype Value_Kind is
-      Any_Value_Kind range Boolean_Value ..  Any_Value_Kind'Last;
-   --  Enumeration for all types used to interact with properties
-
-   
-   subtype Enum_Value_Kind is Value_Kind with Static_Predicate =>
-      Enum_Value_Kind in Analysis_Unit_Kind_Value | Lookup_Kind_Value | Designated_Env_Kind_Value | Grammar_Rule_Value;
-   --  Subrange for all enum types
-
-   
-   subtype Array_Value_Kind is Value_Kind with Static_Predicate =>
-      Array_Value_Kind in Gpr_Node_Array_Value;
-   --  Subrange for all array types
-
-      pragma Warnings (Off, "null range");
-   subtype Struct_Value_Kind is Value_Kind
-         range Any_Value_Kind'Last .. Any_Value_Kind'First
-   ;
-      pragma Warnings (On, "null range");
-   --  Subrange for all struct types
-
-   type Type_Constraint (Kind : Value_Kind := Value_Kind'First) is record
-      case Kind is
-         when Node_Value =>
-            Node_Type : Node_Type_Id;
-            --  Base type for nodes that satisfy this constraint
-
-         when others =>
-            null;
-      end case;
-   end record;
-   --  Type constraint for a polymorphic value
-
-   type Type_Constraint_Array is array (Positive range <>) of Type_Constraint;
-
-   
-
-   type Any_Member_Reference is
-      (None, Ada_Access_Subp_F_Subp_Kind, Ada_Access_Subp_F_Skips, Ada_Pragma_F_Skips, Ada_Use_F_Skips, Ada_With_F_Has_Limited, Ada_With_F_Has_Private, Ada_With_F_Packages, Ada_Generic_F_Skips, Ada_Library_Item_F_Generic_Stub, Ada_Library_Item_F_Separate, Ada_Library_Item_F_Main, Ada_Main_F_Name, Ada_Pkg_F_Has_Private, Ada_Subp_F_Subp_Kind, Ada_Prelude_F_Context_Clauses, Ada_Prelude_F_Library_Item, Ada_Separate_F_Parent_Name, Ada_With_Formal_F_Kind, Ada_With_Formal_F_Skips, Attribute_Decl_F_Attr_Name, Attribute_Decl_F_Attr_Index, Attribute_Decl_F_Expr, Attribute_Reference_F_Attribute_Name, Attribute_Reference_F_Attribute_Index, Builtin_Function_Call_F_Function_Name, Builtin_Function_Call_F_Parameters, Case_Construction_F_Var_Ref, Case_Construction_F_Items, Case_Item_F_Choice, Case_Item_F_Decls, Compilation_Unit_F_Project, Prefix_F_Prefix, Prefix_F_Suffix, Package_Decl_F_Pkg_Name, Package_Decl_F_Pkg_Spec, Package_Extension_F_Extended_Name, Package_Renaming_F_Renamed_Name, Package_Spec_F_Extension, Package_Spec_F_Decls, Package_Spec_F_End_Name, Project_F_Context_Clauses, Project_F_Project_Decl, Project_Declaration_F_Qualifier, Project_Declaration_F_Project_Name, Project_Declaration_F_Extension, Project_Declaration_F_Decls, Project_Declaration_F_End_Name, Project_Extension_F_Is_All, Project_Extension_F_Path_Name, Project_Reference_F_Attr_Ref, String_Literal_At_F_Str_Lit, String_Literal_At_F_At_Lit, Terms_F_Terms, Type_Reference_F_Var_Type_Name, Typed_String_Decl_F_Type_Id, Typed_String_Decl_F_String_Literals, Variable_Decl_F_Var_Name, Variable_Decl_F_Var_Type, Variable_Decl_F_Expr, Variable_Reference_F_Variable_Name, Variable_Reference_F_Attribute_Ref, With_Decl_F_Is_Limited, With_Decl_F_Path_Names, Gpr_Node_Parent, Gpr_Node_Parents, Gpr_Node_Children, Gpr_Node_Token_Start, Gpr_Node_Token_End, Gpr_Node_Child_Index, Gpr_Node_Previous_Sibling, Gpr_Node_Next_Sibling, Gpr_Node_Unit, Gpr_Node_Is_Ghost, Gpr_Node_Full_Sloc_Image, All_Qualifier_P_As_Bool, Limited_Node_P_As_Bool, Private_Node_P_As_Bool);
-   subtype Member_Reference is Any_Member_Reference range
-      Ada_Access_Subp_F_Subp_Kind
-      ..  Private_Node_P_As_Bool;
-   --  Enumeration of all data attached to structs/nodes (fields and
-   --  properties).
-
-   subtype Node_Member_Reference is Member_Reference range
-      Ada_Access_Subp_F_Subp_Kind
-      ..  Private_Node_P_As_Bool;
-   --  Subrange for members of nodes only
-
-   type Member_Reference_Array is
-      array (Positive range <>) of Member_Reference;
-
-      pragma Warnings (Off, "null range");
-   subtype Struct_Field_Reference is Member_Reference range
-         
-      Private_Node_P_As_Bool
-      .. Ada_Access_Subp_F_Subp_Kind
-   ;
-      pragma Warnings (On, "null range");
-
-   type Struct_Field_Reference_Array is
-      array (Positive range <>) of Struct_Field_Reference;
-
-   subtype Syntax_Field_Reference is Member_Reference range
-         
-      Ada_Access_Subp_F_Subp_Kind
-      .. With_Decl_F_Path_Names
-   ;
-   --  Enumeration of all syntax fields for regular nodes
-
-   type Syntax_Field_Reference_Array is
-      array (Positive range <>) of Syntax_Field_Reference;
-
-   subtype Property_Reference is Member_Reference
-      range Gpr_Node_Parent
-         .. Private_Node_P_As_Bool;
-   --  Enumeration of all available node properties
-
-   type Property_Reference_Array is
-      array (Positive range <>) of Property_Reference;
+   function Token_Node_Kind (Kind : Gpr_Node_Kind_Type) return Token_Kind
+      with Pre => Is_Token_Node (Kind);
+   --  Return the token kind corresponding to the given token node kind
 
    
 

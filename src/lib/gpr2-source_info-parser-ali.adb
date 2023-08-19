@@ -385,7 +385,7 @@ package body GPR2.Source_Info.Parser.ALI is
       U_Flags : GPR2.Unit.Flags_Set         := GPR2.Unit.Default_Flags;
       Main    : GPR2.Unit.Main_Type         := GPR2.Unit.None;
       L_Type  : GPR2.Unit.Library_Item_Type := GPR2.Unit.Is_Package;
-      Withs   : Source_Reference.Identifier.Set.Object;
+      Withs   : Containers.Name_Set;
 
       CUs     : array (CU_Index range 1 .. 2) of GPR2.Unit.Object;
       CU_TS   : array (CU_Index range 1 .. 2) of Ada.Calendar.Time;
@@ -602,8 +602,7 @@ package body GPR2.Source_Info.Parser.ALI is
                      Lib_Unit_Kind => S_Separate,
                      Lib_Item_Kind => Is_Package, -- No way to know from ALI
                      Main          => None,       -- No way to know from ALI
-                     Dependencies  =>
-                       Source_Reference.Identifier.Set.Empty_Set,
+                     Dependencies  => Containers.Name_Type_Set.Empty_Set,
                      Sep_From      => Parent_Name (Name_Type (Name)),
                      Flags         => Default_Flags),
                   Chksum, Stamp, Data.Dependencies (LI_Idx));
@@ -816,21 +815,9 @@ package body GPR2.Source_Info.Parser.ALI is
          --  information is found at the end of the ALI file and will be
          --  setup later.
 
-         declare
-            --  ??? line & column are wrong, we should parse the xref
-            Sloc : constant GPR2.Source_Reference.Object :=
-                     GPR2.Source_Reference.Object
-                       (Source_Reference.Create (Source.Value, 1, 1));
-            Position : Source_Reference.Identifier.Set.Cursor;
-            Inserted : Boolean;
-         begin
-            --  With lines could be duplicated, ignore the next duplicated one
+         --  With lines could be duplicated, ignore the next duplicated one
 
-            Withs.Insert
-              (Source_Reference.Identifier.Create
-                 (Sloc => Sloc, Text => Name_Type (N (1 .. U_Last))),
-              Position, Inserted);
-         end;
+         Withs.Include (Name_Type (N (1 .. U_Last)));
       end Fill_With;
 
       --------------------------
@@ -1066,8 +1053,7 @@ package body GPR2.Source_Info.Parser.ALI is
                     Lib_Unit_Kind => S_Body,
                     Lib_Item_Kind => Is_No_Body,
                     Main          => GPR2.Unit.None,
-                    Dependencies  =>
-                      Source_Reference.Identifier.Set.Set.Empty_Set,
+                    Dependencies  => Containers.Name_Type_Set.Empty_Set,
                     Sep_From      => No_Name,
                     Flags         => GPR2.Unit.Default_Flags);
                Data.Parsed := Source_Info.LI;

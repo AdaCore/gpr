@@ -1,8 +1,0 @@
-aggregate library project AggLib_Multi is
-
-   for Project_Files use ("prj1.gpr", "prj3.gpr");
-   for Library_Name use "agglib";
-   for Library_Kind use "static";
-   for Library_Dir use "lib";
-
-end AggLib_Multi;

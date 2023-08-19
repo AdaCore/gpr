@@ -76,7 +76,7 @@ procedure Main is
             Text_IO.Put ("    withed units = { ");
 
             for W of CU.Dependencies loop
-               Text_IO.Put (String (W.Text) & " ");
+               Text_IO.Put (String (W) & " ");
             end loop;
 
             Text_IO.Put_Line ("}");

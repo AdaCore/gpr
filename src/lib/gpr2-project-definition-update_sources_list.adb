@@ -11,10 +11,10 @@ with Ada.Strings.Maps.Constants;
 with GNAT.OS_Lib;
 with GNAT.MD5;
 
+with GPR2.Containers;
 with GPR2.Unit.List;
 with GPR2.Project.Source_Files;
 with GPR2.Source;
-with GPR2.Source_Reference.Identifier.Set;
 
 separate (GPR2.Project.Definition)
 procedure Update_Sources_List
@@ -836,7 +836,7 @@ is
                                     Lib_Item_Kind => Unit.Is_Package,
                                     Main          => Unit.None,
                                     Flags         => Unit.Default_Flags,
-                                    Dependencies  => SRI.Set.Empty_Set,
+                                    Dependencies  => Name_Type_Set.Empty_Set,
                                     Sep_From      => No_Name));
                            else
                               Match := False;
@@ -898,7 +898,7 @@ is
                               Flags         => Unit.Default_Flags,
                               Lib_Unit_Kind => Kind,
                               Lib_Item_Kind => Unit.Is_Package,
-                              Dependencies  => SRI.Set.Empty_Set,
+                              Dependencies  => Name_Type_Set.Empty_Set,
                               Sep_From      => Sep_From));
                      end Append_Unit;
 

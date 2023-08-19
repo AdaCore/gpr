@@ -1,6 +1,7 @@
 --
---  Copyright (C) 2019-2022, AdaCore
---  SPDX-License-Identifier: Apache-2.0
+--  Copyright (C) 2019-2023, AdaCore
+--
+--  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 --
 
 package body Gpr_Parser_AdaSAT.Builders is

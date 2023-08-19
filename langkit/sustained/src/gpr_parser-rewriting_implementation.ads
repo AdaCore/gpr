@@ -520,12 +520,6 @@ private package Gpr_Parser.Rewriting_Implementation is
             ) return Node_Rewriting_Handle;
 
 
-         function Create_Project_Reference
-           (Handle : Rewriting_Handle
-               ; Project_Reference_F_Attr_Ref : Node_Rewriting_Handle
-            ) return Node_Rewriting_Handle;
-
-
          function Create_String_Literal_At
            (Handle : Rewriting_Handle
                ; String_Literal_At_F_Str_Lit : Node_Rewriting_Handle

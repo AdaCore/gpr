@@ -20,7 +20,7 @@ with Ada.Containers.Vectors;
 with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Finalization;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Strings.Unbounded;           use Ada.Strings.Unbounded;
 with Ada.Strings.Wide_Wide_Unbounded; use Ada.Strings.Wide_Wide_Unbounded;
 
 pragma Warnings (Off, "internal");
@@ -39,14 +39,15 @@ with GNAT.Traceback.Symbolic;
 with GNATCOLL.Traces;
 
 with Gpr_Parser_Support.Adalog.Debug;
+with Gpr_Parser_Support.Generic_API.Analysis;
+with Gpr_Parser_Support.Generic_API.Introspection;
 with Gpr_Parser_Support.Hashes; use Gpr_Parser_Support.Hashes;
 with Gpr_Parser_Support.Images; use Gpr_Parser_Support.Images;
+with Gpr_Parser_Support.Names;  use Gpr_Parser_Support.Names;
 with Gpr_Parser_Support.Relative_Get;
 
 with Gpr_Parser.Private_Converters;
 use Gpr_Parser.Private_Converters;
-
-with Gpr_Parser.Introspection_Implementation;
 
 pragma Warnings (Off, "referenced");
 
@@ -140,6 +141,12 @@ package body Gpr_Parser.Implementation is
      (E : Lexical_Env; State : in out Dump_Lexical_Env_State) return String;
    --  If E is known, return its unique Id from State. Otherwise, assign it a
    --  new unique Id and return it.
+
+   procedure Print
+     (Node        : Gpr_Parser_Support.Generic_API.Analysis.Lk_Node;
+      Show_Slocs  : Boolean;
+      Line_Prefix : String := "");
+   --  Helper for the public overload, but working on the generic API node type
 
    ------------------------
    -- Precomputed_Symbol --
@@ -668,6 +675,93 @@ package body Gpr_Parser.Implementation is
      (Context : Internal_Context) return Internal_Unit_Provider_Access
    is (Context.Unit_Provider);
 
+   ------------------
+   -- Resolve_Unit --
+   ------------------
+
+   procedure Resolve_Unit
+     (Context : Internal_Context;
+      Name    : Text_Type;
+      Kind    : Analysis_Unit_Kind;
+      Unit    : out Resolved_Unit)
+   is
+      --  Look for the cache entry corresponding to Unit; create one if needed
+
+      Dummy    : Resolved_Unit_Array;
+      Key      : constant Symbol_Type := Find (Context.Symbols, Name);
+      Pos      : Unit_Provider_Cache_Maps.Cursor;
+      Inserted : Boolean;
+   begin
+      Context.Unit_Provider_Cache.Insert (Key, Dummy, Pos, Inserted);
+      declare
+         Units : Resolved_Unit_Array renames
+           Context.Unit_Provider_Cache.Reference (Pos);
+         U     : Resolved_Unit renames Units (Kind);
+      begin
+         --  If the cache entry is not populated for the requested kind, run
+         --  the query and save the result for later requests.
+
+         if U.Filename = null then
+            declare
+               Provider : Internal_Unit_Provider'Class renames
+                 Context.Unit_Provider.all;
+               Filename : Unbounded_String;
+            begin
+               Provider.Get_Unit_Location
+                 (Name           => Name,
+                  Kind           => Kind,
+                  Filename       => Filename,
+                  PLE_Root_Index => U.PLE_Root_Index);
+               Provider.Get_Unit_And_PLE_Root
+                 (Context        => Context,
+                  Name           => Name,
+                  Kind           => Kind,
+                  Unit           => U.Unit,
+                  PLE_Root_Index => U.PLE_Root_Index);
+               U.Filename := new String'(To_String (Filename));
+            end;
+         end if;
+
+         Unit := U;
+      end;
+   end Resolve_Unit;
+
+   -----------------------
+   -- Get_Unit_Location --
+   -----------------------
+
+   procedure Get_Unit_Location
+     (Context        : Internal_Context;
+      Name           : Text_Type;
+      Kind           : Analysis_Unit_Kind;
+      Filename       : out String_Access;
+      PLE_Root_Index : out Positive)
+   is
+      U : Resolved_Unit;
+   begin
+      Resolve_Unit (Context, Name, Kind, U);
+      Filename := U.Filename;
+      PLE_Root_Index := U.PLE_Root_Index;
+   end Get_Unit_Location;
+
+   ---------------------------
+   -- Get_Unit_And_PLE_Root --
+   ---------------------------
+
+   procedure Get_Unit_And_PLE_Root
+     (Context        : Internal_Context;
+      Name           : Text_Type;
+      Kind           : Analysis_Unit_Kind;
+      Unit           : out Internal_Unit;
+      PLE_Root_Index : out Positive)
+   is
+      U : Resolved_Unit;
+   begin
+      Resolve_Unit (Context, Name, Kind, U);
+      Unit := U.Unit;
+      PLE_Root_Index := U.PLE_Root_Index;
+   end Get_Unit_And_PLE_Root;
+
    ----------
    -- Hash --
    ----------
@@ -779,6 +873,18 @@ package body Gpr_Parser.Implementation is
          AR.Destroy;
       end;
 
+      for Pos in Context.Unit_Provider_Cache.Iterate loop
+         declare
+            Units : Resolved_Unit_Array renames
+              Context.Unit_Provider_Cache.Reference (Pos);
+         begin
+            for U of Units loop
+               Free (U.Filename);
+            end loop;
+         end;
+      end loop;
+      Context.Unit_Provider_Cache.Clear;
+
       Destroy (Context.Templates_Unit);
       AST_Envs.Destroy (Context.Root_Scope);
       Destroy (Context.Symbols);
@@ -837,16 +943,34 @@ package body Gpr_Parser.Implementation is
    -- Populate_Lexical_Env --
    --------------------------
 
-   procedure Populate_Lexical_Env (Unit : Internal_Unit) is
+   procedure Populate_Lexical_Env
+     (Unit           : Internal_Unit;
+      PLE_Root_Index : Positive
+         := 1
+   ) is
       Context : constant Internal_Context := Unit.Context;
+
+      Saved_In_Populate_Lexical_Env : constant Boolean :=
+        Context.In_Populate_Lexical_Env;
 
       Has_Errors : Boolean := False;
       --  Whether at least one Property_Error occurred during this PLE pass
 
-      Saved_In_Populate_Lexical_Env : constant Boolean :=
-         Unit.Context.In_Populate_Lexical_Env;
+      procedure Reset_Envs_Caches (Unit : Internal_Unit);
+      --  Reset the env caches of all lexical environments created for ``Unit``
+
+      -----------------------
+      -- Reset_Envs_Caches --
+      -----------------------
 
       procedure Reset_Envs_Caches (Unit : Internal_Unit) is
+         procedure Internal (Node : Bare_Gpr_Node);
+         --  Reset env caches in ``Node`` and then in its children recursively
+
+         --------------
+         -- Internal --
+         --------------
+
          procedure Internal (Node : Bare_Gpr_Node) is
          begin
             if Node = null then
@@ -864,30 +988,54 @@ package body Gpr_Parser.Implementation is
    begin
       --  TODO??? Handle env invalidation when reparsing a unit and when a
       --  previous call raised a Property_Error.
-      if Unit.Is_Env_Populated then
+
+      --  If we have already run PLE on this root, there is nothing to do.
+      --  Otherwise, keep track of the fact that PLE was requested for it,
+      --  possibly extending the vector if needed.
+
+      if Unit.Env_Populated_Roots.Last_Index >= PLE_Root_Index
+         and then Unit.Env_Populated_Roots.Get (PLE_Root_Index)
+      then
          return;
       end if;
-      Unit.Is_Env_Populated := True;
+      for Dummy in Unit.Env_Populated_Roots.Last_Index + 1 .. PLE_Root_Index
+      loop
+         Unit.Env_Populated_Roots.Append (False);
+      end loop;
+      Unit.Env_Populated_Roots.Set (PLE_Root_Index, True);
 
-      if Unit.Ast_Root = null then
-         return;
-      end if;
-
-      GNATCOLL.Traces.Trace (Main_Trace, "Populating lexical envs for unit: "
-                                         & Basename (Unit));
-      if GNATCOLL.Traces.Active (Main_Trace) then
-         GNATCOLL.Traces.Increase_Indent (Main_Trace);
-      end if;
+      --  Create context for the PLE run: all exit points must call the Cleanup
+      --  procedure above first to clean this context.
 
       Context.In_Populate_Lexical_Env := True;
-      Has_Errors := Populate_Lexical_Env (Unit.Ast_Root);
-      Context.In_Populate_Lexical_Env := Saved_In_Populate_Lexical_Env;
+      if Main_Trace.Active then
+         Main_Trace.Trace
+           ("Populating lexical envs for"
+            & " unit: " & Basename (Unit));
+         Main_Trace.Increase_Indent;
+      end if;
 
-      if GNATCOLL.Traces.Active (Main_Trace) then
-         GNATCOLL.Traces.Decrease_Indent (Main_Trace);
-         GNATCOLL.Traces.Trace
-           (Main_Trace,
-            "Finished populating lexical envs for unit: " & Basename (Unit));
+      --  Fetch the node on which to run PLE: it's the unit root node, or one
+      --  of its children if PLE roots are enabled and the unit has a list of
+      --  PLE roots. Then run PLE itself.
+
+      declare
+         PLE_Root : Bare_Gpr_Node := Unit.Ast_Root;
+      begin
+
+         if PLE_Root /= null then
+            Has_Errors := Populate_Lexical_Env (PLE_Root);
+         end if;
+      end;
+
+      --  Restore the context for PLE run (undo what was done above)
+
+      Context.In_Populate_Lexical_Env := Saved_In_Populate_Lexical_Env;
+      if Main_Trace.Active then
+         Main_Trace.Decrease_Indent;
+         Main_Trace.Trace
+           ("Finished populating lexical envs for"
+            & " unit: " & Basename (Unit));
       end if;
 
       Reset_Envs_Caches (Unit);
@@ -898,6 +1046,21 @@ package body Gpr_Parser.Implementation is
             "errors occurred in Populate_Lexical_Env";
       end if;
    end Populate_Lexical_Env;
+
+   -----------------------------------
+   -- Populate_Lexical_Env_For_Unit --
+   -----------------------------------
+
+   procedure Populate_Lexical_Env_For_Unit (Node : Bare_Gpr_Node) is
+      Root  : Bare_Gpr_Node;
+      Index : Natural;
+   begin
+      Lookup_PLE_Root (Node, Root, Index);
+      if Index = 0 then
+         Index := 1;
+      end if;
+      Populate_Lexical_Env (Node.Unit, Index);
+   end Populate_Lexical_Env_For_Unit;
 
    ------------------
    -- Get_Filename --
@@ -1016,6 +1179,82 @@ package body Gpr_Parser.Implementation is
    begin
       return Wrap_Token_Reference (Unit.Context, Unit.TDH'Access, Result);
    end Lookup_Token;
+
+   ---------------------
+   -- Lookup_PLE_Root --
+   ---------------------
+
+   procedure Lookup_PLE_Root
+     (Node  : Bare_Gpr_Node;
+      Root  : out Bare_Gpr_Node;
+      Index : out Natural)
+   is
+      Unit : constant Internal_Unit := Node.Unit;
+   begin
+      --  If this unit does not contain a list of PLE roots, just return the
+      --  unit root node.
+
+      if Unit.PLE_Roots_Starting_Token.Is_Empty then
+         Root := Unit.Ast_Root;
+         Index := 0;
+         return;
+      end if;
+
+      --  Otherwise, look for the last PLE root whose first token (in
+      --  Unit.PLE_Roots_Starting_Token) appears before Node's (T). This vector
+      --  is sorted by construction, so we can perform a binary search.
+
+      declare
+         T      : constant Token_Index := Node.Token_Start_Index;
+         Tokens : Token_Index_Vectors.Vector renames
+           Unit.PLE_Roots_Starting_Token;
+
+         First : Positive := Tokens.First_Index;
+         Last  : Positive := Tokens.Last_Index;
+         I     : Positive;
+      begin
+         while First < Last loop
+
+            --  Because we look for the "floor" (last element that is <= T), we
+            --  need to look at the value in Last when there are only two
+            --  elements left to look at. If we did not do that, then we would
+            --  go into an infinite loop when Tokens[First] < T.
+
+            I := (if First + 1 = Last
+                  then Last
+                  else (First + Last) / 2);
+            declare
+               I_T : constant Token_Index := Tokens.Get (I);
+            begin
+               if I_T <= T then
+                  First := I;
+               else
+                  Last := I - 1;
+               end if;
+            end;
+         end loop;
+
+         Root := Child (Unit.Ast_Root, First);
+         Index := First;
+      end;
+   end Lookup_PLE_Root;
+
+   --------------
+   -- Ple_Root --
+   --------------
+
+   function Ple_Root
+     (Node : Bare_Gpr_Node) return Bare_Gpr_Node
+   is
+      Root        : Bare_Gpr_Node;
+      Dummy_Index : Natural;
+   begin
+      if Node = null then
+         raise Property_Error with "null node dereference";
+      end if;
+      Lookup_PLE_Root (Node, Root, Dummy_Index);
+      return Root;
+   end Ple_Root;
 
    ----------------------
    -- Dump_Lexical_Env --
@@ -1146,6 +1385,9 @@ package body Gpr_Parser.Implementation is
       if Unit = No_Analysis_Unit then
          return;
       end if;
+
+      Unit.PLE_Roots_Starting_Token.Destroy;
+      Unit.Env_Populated_Roots.Destroy;
 
       Unit.Exiled_Entries.Destroy;
       Unit.Foreign_Nodes.Destroy;
@@ -3231,26 +3473,12 @@ package body Gpr_Parser.Implementation is
       end Register_Foreign_Env;
 
    begin
-      --  This function is meant to be called during an existing PLE pass. If
-      --  if is called outside of this context, run the PLE pass on Node's
-      --  analysis unit. Likewise, if PLE has not run on the unit that owns
-      --  this PLE unit yet, do a full run, which will in the end trigger the
-      --  PLE on this PLE unit.
-      --
-      --  We do this so that as soon as PLE is required on a PLE unit: the
-      --  whole unit end up with its lexical environments populated.
-      if not Context.In_Populate_Lexical_Env then
-         begin
-            Populate_Lexical_Env (Node.Unit);
-            return False;
-         exception
-            when Property_Error =>
-               return True;
-         end;
-      end if;
-
-      --  This is intended to be called on the root node only
-      if Node.Parent /= null then
+      --  This is intended to be called on the root node only (when there is no
+      --  PLE root) or on a PLE root (child of the root node with a specific
+      --  kind).
+      if
+         Node.Parent /= null
+      then
          raise Program_Error;
       end if;
 
@@ -4434,21 +4662,6 @@ case Index is
                     end case;
                 
 end;
-when Gpr_Project_Reference_Range =>
-declare
-N_Bare_Project_Reference : constant Bare_Project_Reference := Node;
-begin
-case Index is
-
-                        when 1 =>
-                            Result := N_Bare_Project_Reference.Project_Reference_F_Attr_Ref;
-                            return;
-                    
-
-                        when others => null;
-                    end case;
-                
-end;
 when Gpr_String_Literal_At_Range =>
 declare
 N_Bare_String_Literal_At : constant Bare_String_Literal_At := Node;
@@ -4597,78 +4810,95 @@ end case;
    -----------
 
    procedure Print
+     (Node        : Gpr_Parser_Support.Generic_API.Analysis.Lk_Node;
+      Show_Slocs  : Boolean;
+      Line_Prefix : String := "")
+   is
+      use Gpr_Parser_Support.Generic_API.Analysis;
+      use Gpr_Parser_Support.Generic_API.Introspection;
+
+      T : Type_Ref;
+   begin
+      if Node.Is_Null then
+         Put_Line ("None");
+         return;
+      end if;
+
+      T := Type_Of (Node);
+      Put (Line_Prefix & Image (Node_Type_Repr_Name (T)));
+      if Show_Slocs then
+         Put ("[" & Image (Node.Sloc_Range) & "]");
+      end if;
+
+      if Node.Is_Incomplete then
+         Put (" <<INCOMPLETE>>");
+      end if;
+
+      if Node.Is_Token_Node then
+         Put_Line (": " & Image (Node.Text));
+
+      elsif Is_List_Node (Node) then
+
+         --  List nodes are displayed in a special way (they have no field)
+
+         declare
+            Count : constant Natural := Node.Children_Count;
+            Child : Lk_Node;
+         begin
+            if Count = 0 then
+               Put_Line (": <empty list>");
+               return;
+            end if;
+            New_Line;
+
+            for I in 1 .. Count loop
+               Child := Node.Child (I);
+               if not Child.Is_Null then
+                  Print (Child, Show_Slocs, Line_Prefix & "|  ");
+               end if;
+            end loop;
+         end;
+
+      else
+         --  This is for regular nodes: display each syntax field (i.e.
+         --  non-property member).
+
+         declare
+            Attr_Prefix     : constant String := Line_Prefix & "|";
+            Children_Prefix : constant String := Line_Prefix & "|  ";
+            M_List          : constant Struct_Member_Ref_Array := Members (T);
+            Child           : Lk_Node;
+         begin
+            New_Line;
+            for M of M_List loop
+               if not Is_Property (M) and then not Is_Null_For (M, T) then
+                  Child := As_Node (Eval_Node_Member (Node, M));
+                  Put (Attr_Prefix
+                       & Image (Format_Name (Member_Name (M), Lower)) & ":");
+                  if Child.Is_Null then
+                     Put_Line (" <null>");
+                  else
+                     New_Line;
+                     Print (Child, Show_Slocs, Children_Prefix);
+                  end if;
+               end if;
+            end loop;
+         end;
+      end if;
+   end Print;
+
+   -----------
+   -- Print --
+   -----------
+
+   procedure Print
      (Node        : Bare_Gpr_Node;
       Show_Slocs  : Boolean;
       Line_Prefix : String := "")
    is
-      K : Gpr_Node_Kind_Type;
+      Entity : constant Internal_Entity := (Node, No_Entity_Info);
    begin
-      if Node = null then
-         Put_Line ("None");
-         return;
-      end if;
-      K := Node.Kind;
-
-      Put (Line_Prefix & Kind_Name (Node));
-      if Show_Slocs then
-         Put ("[" & Image (Sloc_Range (Node)) & "]");
-      end if;
-
-      if Is_Incomplete (Node) then
-         Put (" <<INCOMPLETE>>");
-      end if;
-
-      if Is_Token_Node (Node.Kind) then
-         Put_Line (": " & Image (Text (Node)));
-
-      elsif Node.Kind not in Gpr_Base_List then
-         New_Line;
-
-      end if;
-
-         --  List nodes are displayed in a special way (they have no field)
-         if K in Gpr_Base_List then
-            if Node.Count = 0 then
-               Put_Line (": <empty list>");
-               return;
-            end if;
-
-            New_Line;
-            for Child of Node.Nodes (1 .. Node.Count) loop
-               if Child /= null then
-                  Print (Child, Show_Slocs, Line_Prefix & "|  ");
-               end if;
-            end loop;
-            return;
-         end if;
-
-         --  This is for regular nodes: display each field
-         declare
-            use Gpr_Parser.Introspection_Implementation;
-
-            Attr_Prefix     : constant String := Line_Prefix & "|";
-            Children_Prefix : constant String := Line_Prefix & "|  ";
-            Field_List      : constant Syntax_Field_Reference_Array :=
-              Syntax_Fields (K);
-         begin
-            for I in Field_List'Range loop
-               declare
-                  Child : constant Bare_Gpr_Node :=
-                     Implementation.Child (Node, I);
-               begin
-                  Put
-                    (Attr_Prefix
-                     & Image (Syntax_Field_Name (Field_List (I)))
-                     & ":");
-                  if Child /= null then
-                     New_Line;
-                     Print (Child, Show_Slocs, Children_Prefix);
-                  else
-                     Put_Line (" <null>");
-                  end if;
-               end;
-            end loop;
-         end;
+      Print (To_Generic_Node (Entity), Show_Slocs, Line_Prefix);
    end Print;
 
    ------------
@@ -4711,13 +4941,9 @@ end case;
    -------------------------
 
    function Children_And_Trivia
-     (Node : Bare_Gpr_Node) return Bare_Children_Array
+     (Node : Bare_Gpr_Node) return Bare_Children_Vector
    is
-      package Children_Vectors is new Ada.Containers.Vectors
-        (Positive, Bare_Child_Record);
-      use Children_Vectors;
-
-      Ret_Vec : Vector;
+      Ret_Vec : Bare_Children_Vector;
       Ctx     : Internal_Context renames Node.Unit.Context;
       TDH     : Token_Data_Handler renames Node.Unit.TDH;
 
@@ -4793,14 +5019,7 @@ end case;
          end if;
       end loop;
 
-      declare
-         A : Bare_Children_Array (1 .. Natural (Ret_Vec.Length));
-      begin
-         for I in A'Range loop
-            A (I) := Ret_Vec.Element (I);
-         end loop;
-         return A;
-      end;
+      return Ret_Vec;
    end Children_And_Trivia;
 
    --------------
@@ -5577,12 +5796,6 @@ end case;
 
 
 
-       
-
-   
-
-
-
 
    ------------------
    -- Children_Env --
@@ -5810,15 +6023,7 @@ end case;
 
    function Can_Reach (El, From : Bare_Gpr_Node) return Boolean is
    begin
-      --  Since this function is only used to implement sequential semantics in
-      --  envs, we consider that elements coming from different units are
-      --  always visible for each other, and let the user implement language
-      --  specific visibility rules in the DSL.
-      if El = null or else From = null or else El.Unit /= From.Unit then
-         return True;
-      end if;
-
-      return El.Token_Start_Index < From.Token_Start_Index;
+      return Gpr_Node_P_Can_Reach (El, From);
    end Can_Reach;
 
    -----------------
@@ -8346,39 +8551,6 @@ end case;
 
 
 
-      function Create_Internal_Entity_Project_Reference
-        (Node : Bare_Project_Reference; Info : Internal_Entity_Info)
-         return Internal_Entity_Project_Reference is
-      begin
-         if Node = null then
-            return No_Entity_Project_Reference;
-         end if;
-         return (Node => Node, Info => Info);
-      end;
-
-
-
-   
-
-
-      -----------------
-      -- Trace_Image --
-      -----------------
-
-      pragma Warnings (Off, "referenced");
-      function Trace_Image (R : Internal_Entity_Project_Reference) return String is
-         pragma Warnings (On, "referenced");
-      begin
-            return Image (Entity'(Node => R.Node, Info => R.Info));
-      end Trace_Image;
-
-
-   
-
-   
-
-
-
       function Create_Internal_Entity_String_Literal
         (Node : Bare_String_Literal; Info : Internal_Entity_Info)
          return Internal_Entity_String_Literal is
@@ -8906,6 +9078,10 @@ end case;
 
          
 
+         
+
+         
+
 
 
       
@@ -8919,6 +9095,177 @@ end case;
 
 
 
+
+   
+
+
+
+
+
+
+
+--# property-start GprNode.can_reach /home/lambourg/sbx/gpr/x86_64-linux/langkit/install/lib/python3.9/site-packages/Langkit-0.1.0-py3.9.egg/langkit/compiled_types.py:0
+pragma Warnings (Off, "is not referenced");
+ function Gpr_Node_P_Can_Reach
+  
+  (Node : Bare_Gpr_Node
+      ; From_Node : Bare_Gpr_Node
+  )
+
+   return Boolean
+is
+   Self : Bare_Gpr_Node  := Bare_Gpr_Node (Node);
+      --# bind self Self
+
+   
+
+   --# bind from_node From_Node
+
+   Property_Result : Boolean;
+
+      
+
+      Cast_Expr : Bare_Gpr_Node;
+Cast_Result : Bare_Gpr_Node;
+Is_Equal : Boolean;
+Fld : Internal_Unit;
+Fld_1 : Internal_Unit;
+Is_Equal_1 : Boolean;
+Not_Val : Boolean;
+If_Result : Boolean;
+Node_Comp : Boolean;
+If_Result_1 : Boolean;
+Let_Result : Boolean;
+
+
+
+begin
+   --# property-body-start
+
+   pragma Assert (Self = Node);
+
+
+
+
+
+      begin
+         
+   --# scope-start
+
+         --# expr-start 7 '<Block at ???>' Let_Result None
+--# scope-start
+
+
+
+
+
+
+--# expr-start 1 '<Eq at ???>' Is_Equal None
+
+
+
+
+
+
+Cast_Expr := From_Node; 
+
+
+
+   
+      Cast_Result := Cast_Expr;
+
+
+
+Is_Equal := Cast_Result = No_Bare_Gpr_Node; 
+--# expr-done 1
+if Is_Equal then
+   
+   If_Result := True;
+else
+   --# expr-start 5 '<Not at ???>' Not_Val None
+--# expr-start 4 '<Eq at ???>' Is_Equal_1 None
+--# expr-start 2 '<FieldAccess for unit at ???>' Fld None
+
+
+
+
+
+
+   
+
+      if Self = null then
+         Raise_Property_Exception
+           (Self, Property_Error'Identity, "dereferencing a null access");
+      end if;
+
+
+
+Fld := Gpr_Parser.Implementation.Unit (Node => Self);
+--# expr-done 2
+--# expr-start 3 '<FieldAccess for unit at ???>' Fld_1 None
+
+
+
+
+
+
+   
+
+      if From_Node = null then
+         Raise_Property_Exception
+           (Self, Property_Error'Identity, "dereferencing a null access");
+      end if;
+
+
+
+Fld_1 := Gpr_Parser.Implementation.Unit (Node => From_Node);
+--# expr-done 3
+Is_Equal_1 := Fld = Fld_1; 
+--# expr-done 4
+Not_Val := not (Is_Equal_1); 
+--# expr-done 5
+   If_Result := Not_Val;
+end if;
+
+
+
+if If_Result then
+   
+   If_Result_1 := True;
+else
+   --# expr-start 6 '<OrderingTest '"'"'lt'"'"' at ???>' Node_Comp None
+
+
+
+Node_Comp := Compare (Self, Self, From_Node, Less_Than); 
+--# expr-done 6
+   If_Result_1 := Node_Comp;
+end if;
+
+
+
+Let_Result := If_Result_1; 
+--# end
+--# expr-done 7
+
+         Property_Result := Let_Result;
+         
+   --# end
+
+
+      exception
+         when Exc : Property_Error =>
+
+
+
+            raise;
+      end;
+
+
+
+   return Property_Result;
+end Gpr_Node_P_Can_Reach;
+--# end
 
 
 
@@ -9755,7 +10102,7 @@ end Dispatcher_All_Qualifier_P_As_Bool;
 
 
 
---# property-start AllQualifier.Absent.as_bool '/home/pbeguet/WorkSpace/gpr_Issue#32/langkit/language/parser/decl.py:9'
+--# property-start AllQualifier.Absent.as_bool /media/psf/Home/src/gpr/langkit/language/parser/decl.py:9
 pragma Warnings (Off, "is not referenced");
  function All_Qualifier_Absent_P_As_Bool
   
@@ -9837,7 +10184,7 @@ end All_Qualifier_Absent_P_As_Bool;
 
 
 
---# property-start AllQualifier.Present.as_bool '/home/pbeguet/WorkSpace/gpr_Issue#32/langkit/language/parser/decl.py:9'
+--# property-start AllQualifier.Present.as_bool /media/psf/Home/src/gpr/langkit/language/parser/decl.py:9
 pragma Warnings (Off, "is not referenced");
  function All_Qualifier_Present_P_As_Bool
   
@@ -10700,7 +11047,7 @@ end Dispatcher_Limited_Node_P_As_Bool;
 
 
 
---# property-start Limited.Absent.as_bool '/home/pbeguet/WorkSpace/gpr_Issue#32/langkit/language/parser/decl.py:19'
+--# property-start Limited.Absent.as_bool /media/psf/Home/src/gpr/langkit/language/parser/decl.py:19
 pragma Warnings (Off, "is not referenced");
  function Limited_Absent_P_As_Bool
   
@@ -10782,7 +11129,7 @@ end Limited_Absent_P_As_Bool;
 
 
 
---# property-start Limited.Present.as_bool '/home/pbeguet/WorkSpace/gpr_Issue#32/langkit/language/parser/decl.py:19'
+--# property-start Limited.Present.as_bool /media/psf/Home/src/gpr/langkit/language/parser/decl.py:19
 pragma Warnings (Off, "is not referenced");
  function Limited_Present_P_As_Bool
   
@@ -11163,7 +11510,7 @@ end Dispatcher_Private_Node_P_As_Bool;
 
 
 
---# property-start Private.Absent.as_bool '/home/pbeguet/WorkSpace/gpr_Issue#32/langkit/language/parser/decl.py:14'
+--# property-start Private.Absent.as_bool /media/psf/Home/src/gpr/langkit/language/parser/decl.py:14
 pragma Warnings (Off, "is not referenced");
  function Private_Absent_P_As_Bool
   
@@ -11245,7 +11592,7 @@ end Private_Absent_P_As_Bool;
 
 
 
---# property-start Private.Present.as_bool '/home/pbeguet/WorkSpace/gpr_Issue#32/langkit/language/parser/decl.py:14'
+--# property-start Private.Present.as_bool /media/psf/Home/src/gpr/langkit/language/parser/decl.py:14
 pragma Warnings (Off, "is not referenced");
  function Private_Present_P_As_Bool
   
@@ -11623,46 +11970,6 @@ end Private_Present_P_As_Bool;
 
 
 
-
-
-
-
-   
-
-
-      
-
-   --
-   --  Primitives for Bare_Project_Reference
-   --
-
-   
-
-
-
-      
-      procedure Initialize_Fields_For_Project_Reference
-        (Self : Bare_Project_Reference
-         ; Project_Reference_F_Attr_Ref : Bare_Attribute_Reference
-        ) is
-      begin
-
-            Self.Project_Reference_F_Attr_Ref := Project_Reference_F_Attr_Ref;
-         
-
-      end Initialize_Fields_For_Project_Reference;
-
-      
-   function Project_Reference_F_Attr_Ref
-     (Node : Bare_Project_Reference) return Bare_Attribute_Reference
-   is
-      
-
-   begin
-         
-         return Node.Project_Reference_F_Attr_Ref;
-      
-   end;
 
 
 
@@ -12139,7 +12446,6 @@ Gpr_Project_Qualifier_Aggregate_Library => To_Unbounded_String ("ProjectQualifie
 Gpr_Project_Qualifier_Configuration => To_Unbounded_String ("ProjectQualifierConfiguration"), 
 Gpr_Project_Qualifier_Library => To_Unbounded_String ("ProjectQualifierLibrary"), 
 Gpr_Project_Qualifier_Standard => To_Unbounded_String ("ProjectQualifierStandard"), 
-Gpr_Project_Reference => To_Unbounded_String ("ProjectReference"), 
 Gpr_String_Literal_At => To_Unbounded_String ("StringLiteralAt"), 
 Gpr_Terms => To_Unbounded_String ("Terms"), 
 Gpr_Type_Reference => To_Unbounded_String ("TypeReference"), 
@@ -12242,7 +12548,6 @@ Gpr_With_Decl => To_Unbounded_String ("WithDecl"));
          Charset                      => To_Unbounded_String (Charset),
          TDH                          => <>,
          Diagnostics                  => <>,
-         Is_Env_Populated             => False,
          Rule                         => Rule,
          Ast_Mem_Pool                 => No_Pool,
          Destroyables                 => Destroyable_Vectors.Empty_Vector,
@@ -12597,13 +12902,7 @@ Gpr_With_Decl => To_Unbounded_String ("WithDecl"));
       --  Forward token data and diagnostics to the returned unit
 
       Rotate_TDH;
-
-      --  TODO we use a for loop rt. than the new ``Append_Vector`` here for
-      --  compatibility with old compilers, but someday we'll be able to get
-      --  rid of it.
-      for Diag of Unit.Context.Parser.Diagnostics loop
-         Result.Diagnostics.Append (Diag);
-      end loop;
+      Result.Diagnostics.Append_Vector (Unit.Context.Parser.Diagnostics);
    end Do_Parsing;
 
    --------------------------
@@ -12668,35 +12967,38 @@ Gpr_With_Decl => To_Unbounded_String ("WithDecl"));
       Unit.Unit_Version := Unit.Unit_Version + 1;
       Unit.TDH.Version := Unit.Unit_Version;
 
+      --  Compute the PLE_Roots_Starting_Token table
 
-      --  If Unit had its lexical environments populated, re-populate them
-      if not Unit.Is_Env_Populated then
-         return;
-      end if;
+      Unit.PLE_Roots_Starting_Token.Clear;
+
+      --  Update all the lexical envs entries affected by the reparse
 
       declare
          Unit_Name     : constant String := +Unit.Filename.Base_Name;
          Context       : constant Internal_Context := Unit.Context;
          Foreign_Nodes : Bare_Gpr_Node_Vectors.Vector :=
-            Bare_Gpr_Node_Vectors.Empty_Vector;
+           Bare_Gpr_Node_Vectors.Empty_Vector;
 
          Saved_In_Populate_Lexical_Env : constant Boolean :=
-            Context.In_Populate_Lexical_Env;
+           Context.In_Populate_Lexical_Env;
+         Saved_Env_Populated_Roots     : constant Boolean_Vectors.Vector :=
+           Unit.Env_Populated_Roots;
       begin
-         GNATCOLL.Traces.Trace
-           (Main_Trace, "Updating lexical envs for " & Unit_Name
-                        & " after reparse");
-         GNATCOLL.Traces.Increase_Indent (Main_Trace);
-
          Context.In_Populate_Lexical_Env := True;
+         if Main_Trace.Active then
+            Main_Trace.Trace
+              ("Updating lexical envs for " & Unit_Name & " after reparse");
+            Main_Trace.Increase_Indent;
+         end if;
 
          --  Collect all nodes that are foreign in this Unit's lexical envs.
          --  Exclude them from the corresponding lists of exiled entries.
          Extract_Foreign_Nodes (Unit, Foreign_Nodes);
 
-         --  Reset the flag so that the call to Populate_Lexical_Env below does
-         --  its work.
-         Unit.Is_Env_Populated := False;
+         --  Temporarily reset Env_Populated_Roots so that Populate_Lexical_Env
+         --  accepts to do its work on reparsed trees.
+
+         Unit.Env_Populated_Roots := Boolean_Vectors.Empty_Vector;
 
          --  Now that Unit has been reparsed, we can destroy all its
          --  destroyables, which refer to the old tree (i.e. dangling
@@ -12716,9 +13018,28 @@ Gpr_With_Decl => To_Unbounded_String ("WithDecl"));
          end loop;
          Foreign_Nodes.Destroy;
 
-         Populate_Lexical_Env (Unit);
+         --  Re-populate all PLE roots that were requested so far for this
+         --  unit. In the case where the unit has no PLE root, run PLE on the
+         --  whole unit iff it was requested on at least one PLE root.
+
+         declare
+            function At_Least_One_Root_Populated return Boolean
+            is (for some B of Saved_Env_Populated_Roots => B);
+         begin
+               if At_Least_One_Root_Populated then
+                  Populate_Lexical_Env (Unit);
+               end if;
+         end;
+
+         --  Restore the unit's original Env_Populated_Roots flags
+
+         Unit.Env_Populated_Roots.Destroy;
+         Unit.Env_Populated_Roots := Saved_Env_Populated_Roots;
+
          Context.In_Populate_Lexical_Env := Saved_In_Populate_Lexical_Env;
-         GNATCOLL.Traces.Decrease_Indent (Main_Trace);
+         if Main_Trace.Is_Active then
+            Main_Trace.Decrease_Indent;
+         end if;
       end;
    end Update_After_Reparse;
 

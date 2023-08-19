@@ -423,13 +423,16 @@ package body Gpr_Parser.Analysis is
    -- Populate_Lexical_Env --
    --------------------------
 
-   procedure Populate_Lexical_Env (Unit : Analysis_Unit'Class) is
+   procedure Populate_Lexical_Env
+     (Unit : Analysis_Unit'Class
+     ) is
    begin
       if Unit.Internal = null then
          raise Precondition_Failure with "null unit argument";
       end if;
 
-      Populate_Lexical_Env (Unwrap_Unit (Unit));
+      Populate_Lexical_Env
+        (Unwrap_Unit (Unit), 1);
    end Populate_Lexical_Env;
 
    ------------------
@@ -2574,34 +2577,6 @@ package body Gpr_Parser.Analysis is
               "Gpr_Parser: invalid type conversion from "
               & Node.Kind_Name
               & " to ProjectQualifier.Standard";
-         
-            end if;
-      end;
-      function As_Project_Reference
-        (Node : Gpr_Node'Class) return Project_Reference
-      is
-         N : constant Bare_Gpr_Node := Node.Internal.Node;
-      begin
-         if N = null then
-            return No_Project_Reference;
-         end if;
-
-         Check_Safety_Net (Node);
-
-         
-         
-
-            if N.Kind in Gpr_Project_Reference_Range then
-               
-            return (Internal   => (Node => N, Info => Node.Internal.Info),
-                    Safety_Net => Node.Safety_Net);
-         
-            else
-               
-            raise Constraint_Error with
-              "Gpr_Parser: invalid type conversion from "
-              & Node.Kind_Name
-              & " to ProjectReference";
          
             end if;
       end;
@@ -5335,34 +5310,6 @@ package body Gpr_Parser.Analysis is
 
 
 
-         
-   
-
-   function F_Attr_Ref
-     (Node : Project_Reference'Class) return Attribute_Reference
-   is
-      Result : Bare_Attribute_Reference;
-   begin
-      if Node.Internal.Node = null then
-         raise Precondition_Failure with "null node argument";
-      end if;
-
-      Check_Safety_Net (Node);
-      Result := Implementation.Project_Reference_F_Attr_Ref (Node.Internal.Node);
-         if Result = null then
-            return No_Attribute_Reference;
-         else
-            return (Internal   => (Result, Node.Internal.Info),
-                    Safety_Net => Node.Safety_Net);
-         end if;
-   end F_Attr_Ref;
-
-
-
-
-
-
-
 
 
 
@@ -6183,6 +6130,66 @@ package body Gpr_Parser.Analysis is
       Assign_Names_To_Logic_Vars (Node.Internal.Node);
    end Assign_Names_To_Logic_Vars;
 
+   -----------
+   -- First --
+   -----------
+
+   function First (Self : Children_Array) return Natural is
+   begin
+      return Self.Children.First_Index;
+   end First;
+
+   ----------
+   -- Last --
+   ----------
+
+   function Last (Self : Children_Array) return Natural is
+   begin
+      return Self.Children.Last_Index;
+   end Last;
+
+   ----------
+   -- Next --
+   ----------
+
+   function Next (Self : Children_Array; Pos  : Natural) return Natural is
+   begin
+      pragma Unreferenced (Self);
+      return Pos + 1;
+   end Next;
+
+   --------------
+   -- Previous --
+   --------------
+
+   function Previous (Self : Children_Array; Pos  : Natural) return Natural is
+   begin
+      pragma Unreferenced (Self);
+      return Pos - 1;
+   end Previous;
+
+   -----------------
+   -- Has_Element --
+   -----------------
+
+   function Has_Element
+     (Self : Children_Array;
+      Pos  : Natural) return Boolean is
+   begin
+      return Pos in First (Self) .. Last (Self);
+   end Has_Element;
+
+   -------------
+   -- Element --
+   -------------
+
+   function Element
+     (Self : Children_Array;
+      Pos  : Natural) return Child_Record is
+   begin
+      return Self.Children (Pos);
+   end Element;
+
    -------------------------
    -- Children_And_Trivia --
    -------------------------
@@ -6197,22 +6204,16 @@ package body Gpr_Parser.Analysis is
 
       Check_Safety_Net (Node);
       declare
-         Bare_Result : constant Bare_Children_Array :=
+         Bare_Result : constant Bare_Children_Vector :=
             Children_And_Trivia (Unwrap_Node (Node));
-         Result      : Children_Array (Bare_Result'Range);
+         Result      : Children_Array;
       begin
-         for I in Bare_Result'Range loop
-            declare
-               BR : Bare_Child_Record renames Bare_Result (I);
-               R  : Child_Record renames Result (I);
-            begin
-               case BR.Kind is
-                  when Child =>
-                     R := (Child, Wrap_Node (BR.Node));
-                  when Trivia =>
-                     R := (Trivia, BR.Trivia);
-               end case;
-            end;
+         for C of Bare_Result loop
+            Result.Children.Append
+              (Child_Record'
+                 (case C.Kind is
+                  when Child => (Child, Wrap_Node (C.Node)),
+                  when Trivia => (Trivia, C.Trivia)));
          end loop;
          return Result;
       end;
