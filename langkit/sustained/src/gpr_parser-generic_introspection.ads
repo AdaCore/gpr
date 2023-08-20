@@ -48,164 +48,117 @@ private package Gpr_Parser.Generic_Introspection is
       Type_Index_For_Grammar_Rule : constant Type_Index := 13;
       Type_Index_For_Gpr_Node_Array : constant Type_Index := 14;
       Type_Index_For_Gpr_Node : constant Type_Index := 15;
-      Type_Index_For_Ada_Prelude_Node : constant Type_Index := 16;
-      Type_Index_For_Ada_Access_Subp : constant Type_Index := 17;
-      Type_Index_For_Ada_Context_Clause : constant Type_Index := 18;
-      Type_Index_For_Ada_Pragma : constant Type_Index := 19;
-      Type_Index_For_Ada_Use : constant Type_Index := 20;
-      Type_Index_For_Ada_With : constant Type_Index := 21;
-      Type_Index_For_Ada_Entity_Kind : constant Type_Index := 22;
-      Type_Index_For_Ada_Entity_Kind_Function : constant Type_Index := 23;
-      Type_Index_For_Ada_Entity_Kind_Package : constant Type_Index := 24;
-      Type_Index_For_Ada_Entity_Kind_Procedure : constant Type_Index := 25;
-      Type_Index_For_Ada_Generic : constant Type_Index := 26;
-      Type_Index_For_Ada_Library_Item : constant Type_Index := 27;
-      Type_Index_For_Ada_Main : constant Type_Index := 28;
-      Type_Index_For_Ada_Pkg : constant Type_Index := 29;
-      Type_Index_For_Ada_Pkg_Body : constant Type_Index := 30;
-      Type_Index_For_Ada_Subp : constant Type_Index := 31;
-      Type_Index_For_Ada_Prelude : constant Type_Index := 32;
-      Type_Index_For_Ada_Separate : constant Type_Index := 33;
-      Type_Index_For_Ada_Skip : constant Type_Index := 34;
-      Type_Index_For_Ada_With_Formal : constant Type_Index := 35;
-      Type_Index_For_All_Qualifier : constant Type_Index := 36;
-      Type_Index_For_All_Qualifier_Absent : constant Type_Index := 37;
-      Type_Index_For_All_Qualifier_Present : constant Type_Index := 38;
-      Type_Index_For_Attribute_Decl : constant Type_Index := 39;
-      Type_Index_For_Attribute_Reference : constant Type_Index := 40;
-      Type_Index_For_Base_List : constant Type_Index := 41;
-      Type_Index_For_Ada_Context_Clause_List : constant Type_Index := 42;
-      Type_Index_For_Ada_Prelude_Node_List : constant Type_Index := 43;
-      Type_Index_For_Ada_Skip_List : constant Type_Index := 44;
-      Type_Index_For_Case_Item_List : constant Type_Index := 45;
-      Type_Index_For_Expr_List : constant Type_Index := 46;
-      Type_Index_For_Gpr_Node_List : constant Type_Index := 47;
-      Type_Index_For_Choices : constant Type_Index := 48;
-      Type_Index_For_Term_List : constant Type_Index := 49;
-      Type_Index_For_Identifier_List : constant Type_Index := 50;
-      Type_Index_For_String_Literal_List : constant Type_Index := 51;
-      Type_Index_For_Term_List_List : constant Type_Index := 52;
-      Type_Index_For_With_Decl_List : constant Type_Index := 53;
-      Type_Index_For_Builtin_Function_Call : constant Type_Index := 54;
-      Type_Index_For_Case_Construction : constant Type_Index := 55;
-      Type_Index_For_Case_Item : constant Type_Index := 56;
-      Type_Index_For_Compilation_Unit : constant Type_Index := 57;
-      Type_Index_For_Empty_Decl : constant Type_Index := 58;
-      Type_Index_For_Expr : constant Type_Index := 59;
-      Type_Index_For_Prefix : constant Type_Index := 60;
-      Type_Index_For_Single_Tok_Node : constant Type_Index := 61;
-      Type_Index_For_Identifier : constant Type_Index := 62;
-      Type_Index_For_Num_Literal : constant Type_Index := 63;
-      Type_Index_For_String_Literal : constant Type_Index := 64;
-      Type_Index_For_Limited : constant Type_Index := 65;
-      Type_Index_For_Limited_Absent : constant Type_Index := 66;
-      Type_Index_For_Limited_Present : constant Type_Index := 67;
-      Type_Index_For_Others_Designator : constant Type_Index := 68;
-      Type_Index_For_Package_Decl : constant Type_Index := 69;
-      Type_Index_For_Package_Extension : constant Type_Index := 70;
-      Type_Index_For_Package_Renaming : constant Type_Index := 71;
-      Type_Index_For_Package_Spec : constant Type_Index := 72;
-      Type_Index_For_Private : constant Type_Index := 73;
-      Type_Index_For_Private_Absent : constant Type_Index := 74;
-      Type_Index_For_Private_Present : constant Type_Index := 75;
-      Type_Index_For_Project : constant Type_Index := 76;
-      Type_Index_For_Project_Declaration : constant Type_Index := 77;
-      Type_Index_For_Project_Extension : constant Type_Index := 78;
-      Type_Index_For_Project_Qualifier : constant Type_Index := 79;
-      Type_Index_For_Project_Qualifier_Abstract : constant Type_Index := 80;
-      Type_Index_For_Project_Qualifier_Aggregate : constant Type_Index := 81;
-      Type_Index_For_Project_Qualifier_Aggregate_Library : constant Type_Index := 82;
-      Type_Index_For_Project_Qualifier_Configuration : constant Type_Index := 83;
-      Type_Index_For_Project_Qualifier_Library : constant Type_Index := 84;
-      Type_Index_For_Project_Qualifier_Standard : constant Type_Index := 85;
-      Type_Index_For_String_Literal_At : constant Type_Index := 86;
-      Type_Index_For_Terms : constant Type_Index := 87;
-      Type_Index_For_Type_Reference : constant Type_Index := 88;
-      Type_Index_For_Typed_String_Decl : constant Type_Index := 89;
-      Type_Index_For_Variable_Decl : constant Type_Index := 90;
-      Type_Index_For_Variable_Reference : constant Type_Index := 91;
-      Type_Index_For_With_Decl : constant Type_Index := 92;
+      Type_Index_For_All_Qualifier : constant Type_Index := 16;
+      Type_Index_For_All_Qualifier_Absent : constant Type_Index := 17;
+      Type_Index_For_All_Qualifier_Present : constant Type_Index := 18;
+      Type_Index_For_Attribute_Decl : constant Type_Index := 19;
+      Type_Index_For_Attribute_Reference : constant Type_Index := 20;
+      Type_Index_For_Base_List : constant Type_Index := 21;
+      Type_Index_For_Case_Item_List : constant Type_Index := 22;
+      Type_Index_For_Gpr_Node_List : constant Type_Index := 23;
+      Type_Index_For_Choices : constant Type_Index := 24;
+      Type_Index_For_Term_List : constant Type_Index := 25;
+      Type_Index_For_Identifier_List : constant Type_Index := 26;
+      Type_Index_For_String_Literal_List : constant Type_Index := 27;
+      Type_Index_For_Term_List_List : constant Type_Index := 28;
+      Type_Index_For_With_Decl_List : constant Type_Index := 29;
+      Type_Index_For_Builtin_Function_Call : constant Type_Index := 30;
+      Type_Index_For_Case_Construction : constant Type_Index := 31;
+      Type_Index_For_Case_Item : constant Type_Index := 32;
+      Type_Index_For_Compilation_Unit : constant Type_Index := 33;
+      Type_Index_For_Empty_Decl : constant Type_Index := 34;
+      Type_Index_For_Expr : constant Type_Index := 35;
+      Type_Index_For_Prefix : constant Type_Index := 36;
+      Type_Index_For_Single_Tok_Node : constant Type_Index := 37;
+      Type_Index_For_Identifier : constant Type_Index := 38;
+      Type_Index_For_Num_Literal : constant Type_Index := 39;
+      Type_Index_For_String_Literal : constant Type_Index := 40;
+      Type_Index_For_Limited : constant Type_Index := 41;
+      Type_Index_For_Limited_Absent : constant Type_Index := 42;
+      Type_Index_For_Limited_Present : constant Type_Index := 43;
+      Type_Index_For_Others_Designator : constant Type_Index := 44;
+      Type_Index_For_Package_Decl : constant Type_Index := 45;
+      Type_Index_For_Package_Extension : constant Type_Index := 46;
+      Type_Index_For_Package_Renaming : constant Type_Index := 47;
+      Type_Index_For_Package_Spec : constant Type_Index := 48;
+      Type_Index_For_Project : constant Type_Index := 49;
+      Type_Index_For_Project_Declaration : constant Type_Index := 50;
+      Type_Index_For_Project_Extension : constant Type_Index := 51;
+      Type_Index_For_Project_Qualifier : constant Type_Index := 52;
+      Type_Index_For_Project_Qualifier_Abstract : constant Type_Index := 53;
+      Type_Index_For_Project_Qualifier_Aggregate : constant Type_Index := 54;
+      Type_Index_For_Project_Qualifier_Aggregate_Library : constant Type_Index := 55;
+      Type_Index_For_Project_Qualifier_Configuration : constant Type_Index := 56;
+      Type_Index_For_Project_Qualifier_Library : constant Type_Index := 57;
+      Type_Index_For_Project_Qualifier_Standard : constant Type_Index := 58;
+      Type_Index_For_String_Literal_At : constant Type_Index := 59;
+      Type_Index_For_Terms : constant Type_Index := 60;
+      Type_Index_For_Type_Reference : constant Type_Index := 61;
+      Type_Index_For_Typed_String_Decl : constant Type_Index := 62;
+      Type_Index_For_Variable_Decl : constant Type_Index := 63;
+      Type_Index_For_Variable_Reference : constant Type_Index := 64;
+      Type_Index_For_With_Decl : constant Type_Index := 65;
 
    ----------------------------
    -- Member index constants --
    ----------------------------
 
-      Member_Index_For_Ada_Access_Subp_F_Subp_Kind : constant Struct_Member_Index := 1;
-      Member_Index_For_Ada_Access_Subp_F_Skips : constant Struct_Member_Index := 2;
-      Member_Index_For_Ada_Pragma_F_Skips : constant Struct_Member_Index := 3;
-      Member_Index_For_Ada_Use_F_Skips : constant Struct_Member_Index := 4;
-      Member_Index_For_Ada_With_F_Has_Limited : constant Struct_Member_Index := 5;
-      Member_Index_For_Ada_With_F_Has_Private : constant Struct_Member_Index := 6;
-      Member_Index_For_Ada_With_F_Packages : constant Struct_Member_Index := 7;
-      Member_Index_For_Ada_Generic_F_Skips : constant Struct_Member_Index := 8;
-      Member_Index_For_Ada_Library_Item_F_Generic_Stub : constant Struct_Member_Index := 9;
-      Member_Index_For_Ada_Library_Item_F_Separate : constant Struct_Member_Index := 10;
-      Member_Index_For_Ada_Library_Item_F_Main : constant Struct_Member_Index := 11;
-      Member_Index_For_Ada_Main_F_Name : constant Struct_Member_Index := 12;
-      Member_Index_For_Ada_Pkg_F_Has_Private : constant Struct_Member_Index := 13;
-      Member_Index_For_Ada_Subp_F_Subp_Kind : constant Struct_Member_Index := 14;
-      Member_Index_For_Ada_Prelude_F_Context_Clauses : constant Struct_Member_Index := 15;
-      Member_Index_For_Ada_Prelude_F_Library_Item : constant Struct_Member_Index := 16;
-      Member_Index_For_Ada_Separate_F_Parent_Name : constant Struct_Member_Index := 17;
-      Member_Index_For_Ada_With_Formal_F_Kind : constant Struct_Member_Index := 18;
-      Member_Index_For_Ada_With_Formal_F_Skips : constant Struct_Member_Index := 19;
-      Member_Index_For_Attribute_Decl_F_Attr_Name : constant Struct_Member_Index := 20;
-      Member_Index_For_Attribute_Decl_F_Attr_Index : constant Struct_Member_Index := 21;
-      Member_Index_For_Attribute_Decl_F_Expr : constant Struct_Member_Index := 22;
-      Member_Index_For_Attribute_Reference_F_Attribute_Name : constant Struct_Member_Index := 23;
-      Member_Index_For_Attribute_Reference_F_Attribute_Index : constant Struct_Member_Index := 24;
-      Member_Index_For_Builtin_Function_Call_F_Function_Name : constant Struct_Member_Index := 25;
-      Member_Index_For_Builtin_Function_Call_F_Parameters : constant Struct_Member_Index := 26;
-      Member_Index_For_Case_Construction_F_Var_Ref : constant Struct_Member_Index := 27;
-      Member_Index_For_Case_Construction_F_Items : constant Struct_Member_Index := 28;
-      Member_Index_For_Case_Item_F_Choice : constant Struct_Member_Index := 29;
-      Member_Index_For_Case_Item_F_Decls : constant Struct_Member_Index := 30;
-      Member_Index_For_Compilation_Unit_F_Project : constant Struct_Member_Index := 31;
-      Member_Index_For_Prefix_F_Prefix : constant Struct_Member_Index := 32;
-      Member_Index_For_Prefix_F_Suffix : constant Struct_Member_Index := 33;
-      Member_Index_For_Package_Decl_F_Pkg_Name : constant Struct_Member_Index := 34;
-      Member_Index_For_Package_Decl_F_Pkg_Spec : constant Struct_Member_Index := 35;
-      Member_Index_For_Package_Extension_F_Extended_Name : constant Struct_Member_Index := 36;
-      Member_Index_For_Package_Renaming_F_Renamed_Name : constant Struct_Member_Index := 37;
-      Member_Index_For_Package_Spec_F_Extension : constant Struct_Member_Index := 38;
-      Member_Index_For_Package_Spec_F_Decls : constant Struct_Member_Index := 39;
-      Member_Index_For_Package_Spec_F_End_Name : constant Struct_Member_Index := 40;
-      Member_Index_For_Project_F_Context_Clauses : constant Struct_Member_Index := 41;
-      Member_Index_For_Project_F_Project_Decl : constant Struct_Member_Index := 42;
-      Member_Index_For_Project_Declaration_F_Qualifier : constant Struct_Member_Index := 43;
-      Member_Index_For_Project_Declaration_F_Project_Name : constant Struct_Member_Index := 44;
-      Member_Index_For_Project_Declaration_F_Extension : constant Struct_Member_Index := 45;
-      Member_Index_For_Project_Declaration_F_Decls : constant Struct_Member_Index := 46;
-      Member_Index_For_Project_Declaration_F_End_Name : constant Struct_Member_Index := 47;
-      Member_Index_For_Project_Extension_F_Is_All : constant Struct_Member_Index := 48;
-      Member_Index_For_Project_Extension_F_Path_Name : constant Struct_Member_Index := 49;
-      Member_Index_For_String_Literal_At_F_Str_Lit : constant Struct_Member_Index := 50;
-      Member_Index_For_String_Literal_At_F_At_Lit : constant Struct_Member_Index := 51;
-      Member_Index_For_Terms_F_Terms : constant Struct_Member_Index := 52;
-      Member_Index_For_Type_Reference_F_Var_Type_Name : constant Struct_Member_Index := 53;
-      Member_Index_For_Typed_String_Decl_F_Type_Id : constant Struct_Member_Index := 54;
-      Member_Index_For_Typed_String_Decl_F_String_Literals : constant Struct_Member_Index := 55;
-      Member_Index_For_Variable_Decl_F_Var_Name : constant Struct_Member_Index := 56;
-      Member_Index_For_Variable_Decl_F_Var_Type : constant Struct_Member_Index := 57;
-      Member_Index_For_Variable_Decl_F_Expr : constant Struct_Member_Index := 58;
-      Member_Index_For_Variable_Reference_F_Variable_Name : constant Struct_Member_Index := 59;
-      Member_Index_For_Variable_Reference_F_Attribute_Ref : constant Struct_Member_Index := 60;
-      Member_Index_For_With_Decl_F_Is_Limited : constant Struct_Member_Index := 61;
-      Member_Index_For_With_Decl_F_Path_Names : constant Struct_Member_Index := 62;
-      Member_Index_For_Parent : constant Struct_Member_Index := 63;
-      Member_Index_For_Parents : constant Struct_Member_Index := 64;
-      Member_Index_For_Children : constant Struct_Member_Index := 65;
-      Member_Index_For_Token_Start : constant Struct_Member_Index := 66;
-      Member_Index_For_Token_End : constant Struct_Member_Index := 67;
-      Member_Index_For_Child_Index : constant Struct_Member_Index := 68;
-      Member_Index_For_Previous_Sibling : constant Struct_Member_Index := 69;
-      Member_Index_For_Next_Sibling : constant Struct_Member_Index := 70;
-      Member_Index_For_Unit : constant Struct_Member_Index := 71;
-      Member_Index_For_Is_Ghost : constant Struct_Member_Index := 72;
-      Member_Index_For_Full_Sloc_Image : constant Struct_Member_Index := 73;
-      Member_Index_For_All_Qualifier_P_As_Bool : constant Struct_Member_Index := 74;
-      Member_Index_For_Limited_Node_P_As_Bool : constant Struct_Member_Index := 75;
-      Member_Index_For_Private_Node_P_As_Bool : constant Struct_Member_Index := 76;
+      Member_Index_For_Attribute_Decl_F_Attr_Name : constant Struct_Member_Index := 1;
+      Member_Index_For_Attribute_Decl_F_Attr_Index : constant Struct_Member_Index := 2;
+      Member_Index_For_Attribute_Decl_F_Expr : constant Struct_Member_Index := 3;
+      Member_Index_For_Attribute_Reference_F_Attribute_Name : constant Struct_Member_Index := 4;
+      Member_Index_For_Attribute_Reference_F_Attribute_Index : constant Struct_Member_Index := 5;
+      Member_Index_For_Builtin_Function_Call_F_Function_Name : constant Struct_Member_Index := 6;
+      Member_Index_For_Builtin_Function_Call_F_Parameters : constant Struct_Member_Index := 7;
+      Member_Index_For_Case_Construction_F_Var_Ref : constant Struct_Member_Index := 8;
+      Member_Index_For_Case_Construction_F_Items : constant Struct_Member_Index := 9;
+      Member_Index_For_Case_Item_F_Choice : constant Struct_Member_Index := 10;
+      Member_Index_For_Case_Item_F_Decls : constant Struct_Member_Index := 11;
+      Member_Index_For_Compilation_Unit_F_Project : constant Struct_Member_Index := 12;
+      Member_Index_For_Prefix_F_Prefix : constant Struct_Member_Index := 13;
+      Member_Index_For_Prefix_F_Suffix : constant Struct_Member_Index := 14;
+      Member_Index_For_Package_Decl_F_Pkg_Name : constant Struct_Member_Index := 15;
+      Member_Index_For_Package_Decl_F_Pkg_Spec : constant Struct_Member_Index := 16;
+      Member_Index_For_Package_Extension_F_Extended_Name : constant Struct_Member_Index := 17;
+      Member_Index_For_Package_Renaming_F_Renamed_Name : constant Struct_Member_Index := 18;
+      Member_Index_For_Package_Spec_F_Extension : constant Struct_Member_Index := 19;
+      Member_Index_For_Package_Spec_F_Decls : constant Struct_Member_Index := 20;
+      Member_Index_For_Package_Spec_F_End_Name : constant Struct_Member_Index := 21;
+      Member_Index_For_Project_F_Context_Clauses : constant Struct_Member_Index := 22;
+      Member_Index_For_Project_F_Project_Decl : constant Struct_Member_Index := 23;
+      Member_Index_For_Project_Declaration_F_Qualifier : constant Struct_Member_Index := 24;
+      Member_Index_For_Project_Declaration_F_Project_Name : constant Struct_Member_Index := 25;
+      Member_Index_For_Project_Declaration_F_Extension : constant Struct_Member_Index := 26;
+      Member_Index_For_Project_Declaration_F_Decls : constant Struct_Member_Index := 27;
+      Member_Index_For_Project_Declaration_F_End_Name : constant Struct_Member_Index := 28;
+      Member_Index_For_Project_Extension_F_Is_All : constant Struct_Member_Index := 29;
+      Member_Index_For_Project_Extension_F_Path_Name : constant Struct_Member_Index := 30;
+      Member_Index_For_String_Literal_At_F_Str_Lit : constant Struct_Member_Index := 31;
+      Member_Index_For_String_Literal_At_F_At_Lit : constant Struct_Member_Index := 32;
+      Member_Index_For_Terms_F_Terms : constant Struct_Member_Index := 33;
+      Member_Index_For_Type_Reference_F_Var_Type_Name : constant Struct_Member_Index := 34;
+      Member_Index_For_Typed_String_Decl_F_Type_Id : constant Struct_Member_Index := 35;
+      Member_Index_For_Typed_String_Decl_F_String_Literals : constant Struct_Member_Index := 36;
+      Member_Index_For_Variable_Decl_F_Var_Name : constant Struct_Member_Index := 37;
+      Member_Index_For_Variable_Decl_F_Var_Type : constant Struct_Member_Index := 38;
+      Member_Index_For_Variable_Decl_F_Expr : constant Struct_Member_Index := 39;
+      Member_Index_For_Variable_Reference_F_Variable_Name : constant Struct_Member_Index := 40;
+      Member_Index_For_Variable_Reference_F_Attribute_Ref : constant Struct_Member_Index := 41;
+      Member_Index_For_With_Decl_F_Is_Limited : constant Struct_Member_Index := 42;
+      Member_Index_For_With_Decl_F_Path_Names : constant Struct_Member_Index := 43;
+      Member_Index_For_Parent : constant Struct_Member_Index := 44;
+      Member_Index_For_Parents : constant Struct_Member_Index := 45;
+      Member_Index_For_Children : constant Struct_Member_Index := 46;
+      Member_Index_For_Token_Start : constant Struct_Member_Index := 47;
+      Member_Index_For_Token_End : constant Struct_Member_Index := 48;
+      Member_Index_For_Child_Index : constant Struct_Member_Index := 49;
+      Member_Index_For_Previous_Sibling : constant Struct_Member_Index := 50;
+      Member_Index_For_Next_Sibling : constant Struct_Member_Index := 51;
+      Member_Index_For_Unit : constant Struct_Member_Index := 52;
+      Member_Index_For_Is_Ghost : constant Struct_Member_Index := 53;
+      Member_Index_For_Full_Sloc_Image : constant Struct_Member_Index := 54;
+      Member_Index_For_All_Qualifier_P_As_Bool : constant Struct_Member_Index := 55;
+      Member_Index_For_Limited_Node_P_As_Bool : constant Struct_Member_Index := 56;
 
    ------------------------------
    -- Grammar rule descriptors --
@@ -444,243 +397,143 @@ private package Gpr_Parser.Generic_Introspection is
          Return_Type => Type_Index_For_With_Decl_List);
       
       Rule_Name_24 : aliased constant Text_Type :=
-        "Ada_With_Clause";
+        "Typed_String_Decl";
       Rule_Doc_24 : aliased constant Text_Type :=
         "";
       Rule_Desc_24 : aliased constant Grammar_Rule_Descriptor :=
         (Name        => Rule_Name_24'Access,
          Is_Public   => False,
          Doc         => Rule_Doc_24'Access,
-         Return_Type => Type_Index_For_Ada_With);
+         Return_Type => Type_Index_For_Typed_String_Decl);
       
       Rule_Name_25 : aliased constant Text_Type :=
-        "Ada_Context";
+        "Identifier";
       Rule_Doc_25 : aliased constant Text_Type :=
         "";
       Rule_Desc_25 : aliased constant Grammar_Rule_Descriptor :=
         (Name        => Rule_Name_25'Access,
          Is_Public   => False,
          Doc         => Rule_Doc_25'Access,
-         Return_Type => Type_Index_For_Ada_Context_Clause_List);
+         Return_Type => Type_Index_For_Identifier);
       
       Rule_Name_26 : aliased constant Text_Type :=
-        "Ada_Context_Item";
+        "String_Literal";
       Rule_Doc_26 : aliased constant Text_Type :=
         "";
       Rule_Desc_26 : aliased constant Grammar_Rule_Descriptor :=
         (Name        => Rule_Name_26'Access,
          Is_Public   => False,
          Doc         => Rule_Doc_26'Access,
-         Return_Type => Type_Index_For_Ada_Context_Clause);
+         Return_Type => Type_Index_For_String_Literal);
       
       Rule_Name_27 : aliased constant Text_Type :=
-        "Ada_Context_Skip";
+        "Num_Literal";
       Rule_Doc_27 : aliased constant Text_Type :=
         "";
       Rule_Desc_27 : aliased constant Grammar_Rule_Descriptor :=
         (Name        => Rule_Name_27'Access,
          Is_Public   => False,
          Doc         => Rule_Doc_27'Access,
-         Return_Type => Type_Index_For_Ada_Skip_List);
+         Return_Type => Type_Index_For_Num_Literal);
       
       Rule_Name_28 : aliased constant Text_Type :=
-        "Ada_Use_Clause";
+        "Static_Name";
       Rule_Doc_28 : aliased constant Text_Type :=
         "";
       Rule_Desc_28 : aliased constant Grammar_Rule_Descriptor :=
         (Name        => Rule_Name_28'Access,
          Is_Public   => False,
          Doc         => Rule_Doc_28'Access,
-         Return_Type => Type_Index_For_Ada_Use);
+         Return_Type => Type_Index_For_Expr);
       
       Rule_Name_29 : aliased constant Text_Type :=
-        "Ada_Pragma";
+        "Attribute_Reference";
       Rule_Doc_29 : aliased constant Text_Type :=
         "";
       Rule_Desc_29 : aliased constant Grammar_Rule_Descriptor :=
         (Name        => Rule_Name_29'Access,
          Is_Public   => False,
          Doc         => Rule_Doc_29'Access,
-         Return_Type => Type_Index_For_Ada_Pragma);
+         Return_Type => Type_Index_For_Attribute_Reference);
       
       Rule_Name_30 : aliased constant Text_Type :=
-        "Ada_Subp_Kind";
+        "Variable_Reference";
       Rule_Doc_30 : aliased constant Text_Type :=
         "";
       Rule_Desc_30 : aliased constant Grammar_Rule_Descriptor :=
         (Name        => Rule_Name_30'Access,
          Is_Public   => False,
          Doc         => Rule_Doc_30'Access,
-         Return_Type => Type_Index_For_Ada_Entity_Kind);
+         Return_Type => Type_Index_For_Variable_Reference);
       
       Rule_Name_31 : aliased constant Text_Type :=
-        "Ada_Pkg_Kind";
+        "Type_Reference";
       Rule_Doc_31 : aliased constant Text_Type :=
         "";
       Rule_Desc_31 : aliased constant Grammar_Rule_Descriptor :=
         (Name        => Rule_Name_31'Access,
          Is_Public   => False,
          Doc         => Rule_Doc_31'Access,
-         Return_Type => Type_Index_For_Ada_Entity_Kind_Package);
+         Return_Type => Type_Index_For_Type_Reference);
       
       Rule_Name_32 : aliased constant Text_Type :=
-        "Ada_Library_Item";
+        "Builtin_Function_Call";
       Rule_Doc_32 : aliased constant Text_Type :=
         "";
       Rule_Desc_32 : aliased constant Grammar_Rule_Descriptor :=
         (Name        => Rule_Name_32'Access,
          Is_Public   => False,
          Doc         => Rule_Doc_32'Access,
-         Return_Type => Type_Index_For_Ada_Library_Item);
+         Return_Type => Type_Index_For_Builtin_Function_Call);
       
       Rule_Name_33 : aliased constant Text_Type :=
-        "Ada_Prelude";
+        "Expression";
       Rule_Doc_33 : aliased constant Text_Type :=
         "";
       Rule_Desc_33 : aliased constant Grammar_Rule_Descriptor :=
         (Name        => Rule_Name_33'Access,
          Is_Public   => False,
          Doc         => Rule_Doc_33'Access,
-         Return_Type => Type_Index_For_Ada_Prelude);
+         Return_Type => Type_Index_For_Term_List);
       
       Rule_Name_34 : aliased constant Text_Type :=
-        "Typed_String_Decl";
+        "Expression_List";
       Rule_Doc_34 : aliased constant Text_Type :=
         "";
       Rule_Desc_34 : aliased constant Grammar_Rule_Descriptor :=
         (Name        => Rule_Name_34'Access,
          Is_Public   => False,
          Doc         => Rule_Doc_34'Access,
-         Return_Type => Type_Index_For_Typed_String_Decl);
+         Return_Type => Type_Index_For_Terms);
       
       Rule_Name_35 : aliased constant Text_Type :=
-        "Identifier";
+        "String_Literal_At";
       Rule_Doc_35 : aliased constant Text_Type :=
         "";
       Rule_Desc_35 : aliased constant Grammar_Rule_Descriptor :=
         (Name        => Rule_Name_35'Access,
          Is_Public   => False,
          Doc         => Rule_Doc_35'Access,
-         Return_Type => Type_Index_For_Identifier);
+         Return_Type => Type_Index_For_String_Literal_At);
       
       Rule_Name_36 : aliased constant Text_Type :=
-        "String_Literal";
+        "Term";
       Rule_Doc_36 : aliased constant Text_Type :=
         "";
       Rule_Desc_36 : aliased constant Grammar_Rule_Descriptor :=
         (Name        => Rule_Name_36'Access,
          Is_Public   => False,
          Doc         => Rule_Doc_36'Access,
-         Return_Type => Type_Index_For_String_Literal);
+         Return_Type => Type_Index_For_Gpr_Node);
       
       Rule_Name_37 : aliased constant Text_Type :=
-        "Num_Literal";
+        "Compilation_Unit";
       Rule_Doc_37 : aliased constant Text_Type :=
         "";
       Rule_Desc_37 : aliased constant Grammar_Rule_Descriptor :=
         (Name        => Rule_Name_37'Access,
-         Is_Public   => False,
-         Doc         => Rule_Doc_37'Access,
-         Return_Type => Type_Index_For_Num_Literal);
-      
-      Rule_Name_38 : aliased constant Text_Type :=
-        "Static_Name";
-      Rule_Doc_38 : aliased constant Text_Type :=
-        "";
-      Rule_Desc_38 : aliased constant Grammar_Rule_Descriptor :=
-        (Name        => Rule_Name_38'Access,
-         Is_Public   => False,
-         Doc         => Rule_Doc_38'Access,
-         Return_Type => Type_Index_For_Expr);
-      
-      Rule_Name_39 : aliased constant Text_Type :=
-        "Attribute_Reference";
-      Rule_Doc_39 : aliased constant Text_Type :=
-        "";
-      Rule_Desc_39 : aliased constant Grammar_Rule_Descriptor :=
-        (Name        => Rule_Name_39'Access,
-         Is_Public   => False,
-         Doc         => Rule_Doc_39'Access,
-         Return_Type => Type_Index_For_Attribute_Reference);
-      
-      Rule_Name_40 : aliased constant Text_Type :=
-        "Variable_Reference";
-      Rule_Doc_40 : aliased constant Text_Type :=
-        "";
-      Rule_Desc_40 : aliased constant Grammar_Rule_Descriptor :=
-        (Name        => Rule_Name_40'Access,
-         Is_Public   => False,
-         Doc         => Rule_Doc_40'Access,
-         Return_Type => Type_Index_For_Variable_Reference);
-      
-      Rule_Name_41 : aliased constant Text_Type :=
-        "Type_Reference";
-      Rule_Doc_41 : aliased constant Text_Type :=
-        "";
-      Rule_Desc_41 : aliased constant Grammar_Rule_Descriptor :=
-        (Name        => Rule_Name_41'Access,
-         Is_Public   => False,
-         Doc         => Rule_Doc_41'Access,
-         Return_Type => Type_Index_For_Type_Reference);
-      
-      Rule_Name_42 : aliased constant Text_Type :=
-        "Builtin_Function_Call";
-      Rule_Doc_42 : aliased constant Text_Type :=
-        "";
-      Rule_Desc_42 : aliased constant Grammar_Rule_Descriptor :=
-        (Name        => Rule_Name_42'Access,
-         Is_Public   => False,
-         Doc         => Rule_Doc_42'Access,
-         Return_Type => Type_Index_For_Builtin_Function_Call);
-      
-      Rule_Name_43 : aliased constant Text_Type :=
-        "Expression";
-      Rule_Doc_43 : aliased constant Text_Type :=
-        "";
-      Rule_Desc_43 : aliased constant Grammar_Rule_Descriptor :=
-        (Name        => Rule_Name_43'Access,
-         Is_Public   => False,
-         Doc         => Rule_Doc_43'Access,
-         Return_Type => Type_Index_For_Term_List);
-      
-      Rule_Name_44 : aliased constant Text_Type :=
-        "Expression_List";
-      Rule_Doc_44 : aliased constant Text_Type :=
-        "";
-      Rule_Desc_44 : aliased constant Grammar_Rule_Descriptor :=
-        (Name        => Rule_Name_44'Access,
-         Is_Public   => False,
-         Doc         => Rule_Doc_44'Access,
-         Return_Type => Type_Index_For_Terms);
-      
-      Rule_Name_45 : aliased constant Text_Type :=
-        "String_Literal_At";
-      Rule_Doc_45 : aliased constant Text_Type :=
-        "";
-      Rule_Desc_45 : aliased constant Grammar_Rule_Descriptor :=
-        (Name        => Rule_Name_45'Access,
-         Is_Public   => False,
-         Doc         => Rule_Doc_45'Access,
-         Return_Type => Type_Index_For_String_Literal_At);
-      
-      Rule_Name_46 : aliased constant Text_Type :=
-        "Term";
-      Rule_Doc_46 : aliased constant Text_Type :=
-        "";
-      Rule_Desc_46 : aliased constant Grammar_Rule_Descriptor :=
-        (Name        => Rule_Name_46'Access,
-         Is_Public   => False,
-         Doc         => Rule_Doc_46'Access,
-         Return_Type => Type_Index_For_Gpr_Node);
-      
-      Rule_Name_47 : aliased constant Text_Type :=
-        "Compilation_Unit";
-      Rule_Doc_47 : aliased constant Text_Type :=
-        "";
-      Rule_Desc_47 : aliased constant Grammar_Rule_Descriptor :=
-        (Name        => Rule_Name_47'Access,
          Is_Public   => True,
-         Doc         => Rule_Doc_47'Access,
+         Doc         => Rule_Doc_37'Access,
          Return_Type => Type_Index_For_Compilation_Unit);
 
    Grammar_Rules : aliased constant Grammar_Rule_Descriptor_Array := (
@@ -720,17 +573,7 @@ private package Gpr_Parser.Generic_Introspection is
 34 => Rule_Desc_34'Access,
 35 => Rule_Desc_35'Access,
 36 => Rule_Desc_36'Access,
-37 => Rule_Desc_37'Access,
-38 => Rule_Desc_38'Access,
-39 => Rule_Desc_39'Access,
-40 => Rule_Desc_40'Access,
-41 => Rule_Desc_41'Access,
-42 => Rule_Desc_42'Access,
-43 => Rule_Desc_43'Access,
-44 => Rule_Desc_44'Access,
-45 => Rule_Desc_45'Access,
-46 => Rule_Desc_46'Access,
-47 => Rule_Desc_47'Access
+37 => Rule_Desc_37'Access
    );
 
    ------------------------------------
@@ -829,126 +672,6 @@ private package Gpr_Parser.Generic_Introspection is
         (Category   => Struct_Category,
          Debug_Name => Debug_Name_For_Internal_Entity'Access);
       
-      Debug_Name_For_Internal_Entity_Ada_Prelude_Node : aliased constant String :=
-        "AdaPreludeNode";
-      Desc_For_Internal_Entity_Ada_Prelude_Node : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Prelude_Node'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Access_Subp : aliased constant String :=
-        "AdaAccessSubp";
-      Desc_For_Internal_Entity_Ada_Access_Subp : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Access_Subp'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Context_Clause : aliased constant String :=
-        "AdaContextClause";
-      Desc_For_Internal_Entity_Ada_Context_Clause : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Context_Clause'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Pragma : aliased constant String :=
-        "AdaPragma";
-      Desc_For_Internal_Entity_Ada_Pragma : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Pragma'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Use : aliased constant String :=
-        "AdaUse";
-      Desc_For_Internal_Entity_Ada_Use : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Use'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_With : aliased constant String :=
-        "AdaWith";
-      Desc_For_Internal_Entity_Ada_With : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_With'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Entity_Kind : aliased constant String :=
-        "AdaEntityKind";
-      Desc_For_Internal_Entity_Ada_Entity_Kind : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Entity_Kind'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Entity_Kind_Function : aliased constant String :=
-        "AdaEntityKind.Function";
-      Desc_For_Internal_Entity_Ada_Entity_Kind_Function : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Entity_Kind_Function'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Entity_Kind_Package : aliased constant String :=
-        "AdaEntityKind.Package";
-      Desc_For_Internal_Entity_Ada_Entity_Kind_Package : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Entity_Kind_Package'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Entity_Kind_Procedure : aliased constant String :=
-        "AdaEntityKind.Procedure";
-      Desc_For_Internal_Entity_Ada_Entity_Kind_Procedure : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Entity_Kind_Procedure'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Generic : aliased constant String :=
-        "AdaGeneric";
-      Desc_For_Internal_Entity_Ada_Generic : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Generic'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Library_Item : aliased constant String :=
-        "AdaLibraryItem";
-      Desc_For_Internal_Entity_Ada_Library_Item : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Library_Item'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Main : aliased constant String :=
-        "AdaMain";
-      Desc_For_Internal_Entity_Ada_Main : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Main'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Pkg : aliased constant String :=
-        "AdaPkg";
-      Desc_For_Internal_Entity_Ada_Pkg : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Pkg'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Pkg_Body : aliased constant String :=
-        "AdaPkgBody";
-      Desc_For_Internal_Entity_Ada_Pkg_Body : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Pkg_Body'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Subp : aliased constant String :=
-        "AdaSubp";
-      Desc_For_Internal_Entity_Ada_Subp : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Subp'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Prelude : aliased constant String :=
-        "AdaPrelude";
-      Desc_For_Internal_Entity_Ada_Prelude : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Prelude'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Separate : aliased constant String :=
-        "AdaSeparate";
-      Desc_For_Internal_Entity_Ada_Separate : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Separate'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Skip : aliased constant String :=
-        "AdaSkip";
-      Desc_For_Internal_Entity_Ada_Skip : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Skip'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_With_Formal : aliased constant String :=
-        "AdaWithFormal";
-      Desc_For_Internal_Entity_Ada_With_Formal : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_With_Formal'Access);
-      
       Debug_Name_For_Internal_Entity_All_Qualifier : aliased constant String :=
         "AllQualifier";
       Desc_For_Internal_Entity_All_Qualifier : aliased constant Type_Descriptor :=
@@ -985,35 +708,11 @@ private package Gpr_Parser.Generic_Introspection is
         (Category   => Struct_Category,
          Debug_Name => Debug_Name_For_Internal_Entity_Base_List'Access);
       
-      Debug_Name_For_Internal_Entity_Ada_Context_Clause_List : aliased constant String :=
-        "AdaContextClause.list";
-      Desc_For_Internal_Entity_Ada_Context_Clause_List : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Context_Clause_List'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Prelude_Node_List : aliased constant String :=
-        "AdaPreludeNode.list";
-      Desc_For_Internal_Entity_Ada_Prelude_Node_List : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Prelude_Node_List'Access);
-      
-      Debug_Name_For_Internal_Entity_Ada_Skip_List : aliased constant String :=
-        "AdaSkip.list";
-      Desc_For_Internal_Entity_Ada_Skip_List : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Ada_Skip_List'Access);
-      
       Debug_Name_For_Internal_Entity_Case_Item_List : aliased constant String :=
         "CaseItem.list";
       Desc_For_Internal_Entity_Case_Item_List : aliased constant Type_Descriptor :=
         (Category   => Struct_Category,
          Debug_Name => Debug_Name_For_Internal_Entity_Case_Item_List'Access);
-      
-      Debug_Name_For_Internal_Entity_Expr_List : aliased constant String :=
-        "Expr.list";
-      Desc_For_Internal_Entity_Expr_List : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Expr_List'Access);
       
       Debug_Name_For_Internal_Entity_Gpr_Node_List : aliased constant String :=
         "GprNode.list";
@@ -1171,24 +870,6 @@ private package Gpr_Parser.Generic_Introspection is
         (Category   => Struct_Category,
          Debug_Name => Debug_Name_For_Internal_Entity_Package_Spec'Access);
       
-      Debug_Name_For_Internal_Entity_Private_Node : aliased constant String :=
-        "Private";
-      Desc_For_Internal_Entity_Private_Node : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Private_Node'Access);
-      
-      Debug_Name_For_Internal_Entity_Private_Absent : aliased constant String :=
-        "Private.Absent";
-      Desc_For_Internal_Entity_Private_Absent : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Private_Absent'Access);
-      
-      Debug_Name_For_Internal_Entity_Private_Present : aliased constant String :=
-        "Private.Present";
-      Desc_For_Internal_Entity_Private_Present : aliased constant Type_Descriptor :=
-        (Category   => Struct_Category,
-         Debug_Name => Debug_Name_For_Internal_Entity_Private_Present'Access);
-      
       Debug_Name_For_Internal_Entity_Project : aliased constant String :=
         "Project";
       Desc_For_Internal_Entity_Project : aliased constant Type_Descriptor :=
@@ -1307,37 +988,13 @@ Desc_For_Designated_Env_Kind'Access,
 Desc_For_Grammar_Rule'Access,
 Desc_For_Internal_Entity_Array_Access'Access,
 Desc_For_Internal_Entity'Access,
-Desc_For_Internal_Entity_Ada_Prelude_Node'Access,
-Desc_For_Internal_Entity_Ada_Access_Subp'Access,
-Desc_For_Internal_Entity_Ada_Context_Clause'Access,
-Desc_For_Internal_Entity_Ada_Pragma'Access,
-Desc_For_Internal_Entity_Ada_Use'Access,
-Desc_For_Internal_Entity_Ada_With'Access,
-Desc_For_Internal_Entity_Ada_Entity_Kind'Access,
-Desc_For_Internal_Entity_Ada_Entity_Kind_Function'Access,
-Desc_For_Internal_Entity_Ada_Entity_Kind_Package'Access,
-Desc_For_Internal_Entity_Ada_Entity_Kind_Procedure'Access,
-Desc_For_Internal_Entity_Ada_Generic'Access,
-Desc_For_Internal_Entity_Ada_Library_Item'Access,
-Desc_For_Internal_Entity_Ada_Main'Access,
-Desc_For_Internal_Entity_Ada_Pkg'Access,
-Desc_For_Internal_Entity_Ada_Pkg_Body'Access,
-Desc_For_Internal_Entity_Ada_Subp'Access,
-Desc_For_Internal_Entity_Ada_Prelude'Access,
-Desc_For_Internal_Entity_Ada_Separate'Access,
-Desc_For_Internal_Entity_Ada_Skip'Access,
-Desc_For_Internal_Entity_Ada_With_Formal'Access,
 Desc_For_Internal_Entity_All_Qualifier'Access,
 Desc_For_Internal_Entity_All_Qualifier_Absent'Access,
 Desc_For_Internal_Entity_All_Qualifier_Present'Access,
 Desc_For_Internal_Entity_Attribute_Decl'Access,
 Desc_For_Internal_Entity_Attribute_Reference'Access,
 Desc_For_Internal_Entity_Base_List'Access,
-Desc_For_Internal_Entity_Ada_Context_Clause_List'Access,
-Desc_For_Internal_Entity_Ada_Prelude_Node_List'Access,
-Desc_For_Internal_Entity_Ada_Skip_List'Access,
 Desc_For_Internal_Entity_Case_Item_List'Access,
-Desc_For_Internal_Entity_Expr_List'Access,
 Desc_For_Internal_Entity_Gpr_Node_List'Access,
 Desc_For_Internal_Entity_Choices'Access,
 Desc_For_Internal_Entity_Term_List'Access,
@@ -1364,9 +1021,6 @@ Desc_For_Internal_Entity_Package_Decl'Access,
 Desc_For_Internal_Entity_Package_Extension'Access,
 Desc_For_Internal_Entity_Package_Renaming'Access,
 Desc_For_Internal_Entity_Package_Spec'Access,
-Desc_For_Internal_Entity_Private_Node'Access,
-Desc_For_Internal_Entity_Private_Absent'Access,
-Desc_For_Internal_Entity_Private_Present'Access,
 Desc_For_Internal_Entity_Project'Access,
 Desc_For_Internal_Entity_Project_Declaration'Access,
 Desc_For_Internal_Entity_Project_Extension'Access,
@@ -1503,58 +1157,38 @@ Desc_For_Internal_Entity_With_Decl'Access
          Enum_Name_For_Grammar_Rule_23 : aliased constant Text_Type :=
            "Context_Clauses_Rule";
          Enum_Name_For_Grammar_Rule_24 : aliased constant Text_Type :=
-           "Ada_With_Clause_Rule";
-         Enum_Name_For_Grammar_Rule_25 : aliased constant Text_Type :=
-           "Ada_Context_Rule";
-         Enum_Name_For_Grammar_Rule_26 : aliased constant Text_Type :=
-           "Ada_Context_Item_Rule";
-         Enum_Name_For_Grammar_Rule_27 : aliased constant Text_Type :=
-           "Ada_Context_Skip_Rule";
-         Enum_Name_For_Grammar_Rule_28 : aliased constant Text_Type :=
-           "Ada_Use_Clause_Rule";
-         Enum_Name_For_Grammar_Rule_29 : aliased constant Text_Type :=
-           "Ada_Pragma_Rule";
-         Enum_Name_For_Grammar_Rule_30 : aliased constant Text_Type :=
-           "Ada_Subp_Kind_Rule";
-         Enum_Name_For_Grammar_Rule_31 : aliased constant Text_Type :=
-           "Ada_Pkg_Kind_Rule";
-         Enum_Name_For_Grammar_Rule_32 : aliased constant Text_Type :=
-           "Ada_Library_Item_Rule";
-         Enum_Name_For_Grammar_Rule_33 : aliased constant Text_Type :=
-           "Ada_Prelude_Rule";
-         Enum_Name_For_Grammar_Rule_34 : aliased constant Text_Type :=
            "Typed_String_Decl_Rule";
-         Enum_Name_For_Grammar_Rule_35 : aliased constant Text_Type :=
+         Enum_Name_For_Grammar_Rule_25 : aliased constant Text_Type :=
            "Identifier_Rule";
-         Enum_Name_For_Grammar_Rule_36 : aliased constant Text_Type :=
+         Enum_Name_For_Grammar_Rule_26 : aliased constant Text_Type :=
            "String_Literal_Rule";
-         Enum_Name_For_Grammar_Rule_37 : aliased constant Text_Type :=
+         Enum_Name_For_Grammar_Rule_27 : aliased constant Text_Type :=
            "Num_Literal_Rule";
-         Enum_Name_For_Grammar_Rule_38 : aliased constant Text_Type :=
+         Enum_Name_For_Grammar_Rule_28 : aliased constant Text_Type :=
            "Static_Name_Rule";
-         Enum_Name_For_Grammar_Rule_39 : aliased constant Text_Type :=
+         Enum_Name_For_Grammar_Rule_29 : aliased constant Text_Type :=
            "Attribute_Reference_Rule";
-         Enum_Name_For_Grammar_Rule_40 : aliased constant Text_Type :=
+         Enum_Name_For_Grammar_Rule_30 : aliased constant Text_Type :=
            "Variable_Reference_Rule";
-         Enum_Name_For_Grammar_Rule_41 : aliased constant Text_Type :=
+         Enum_Name_For_Grammar_Rule_31 : aliased constant Text_Type :=
            "Type_Reference_Rule";
-         Enum_Name_For_Grammar_Rule_42 : aliased constant Text_Type :=
+         Enum_Name_For_Grammar_Rule_32 : aliased constant Text_Type :=
            "Builtin_Function_Call_Rule";
-         Enum_Name_For_Grammar_Rule_43 : aliased constant Text_Type :=
+         Enum_Name_For_Grammar_Rule_33 : aliased constant Text_Type :=
            "Expression_Rule";
-         Enum_Name_For_Grammar_Rule_44 : aliased constant Text_Type :=
+         Enum_Name_For_Grammar_Rule_34 : aliased constant Text_Type :=
            "Expression_List_Rule";
-         Enum_Name_For_Grammar_Rule_45 : aliased constant Text_Type :=
+         Enum_Name_For_Grammar_Rule_35 : aliased constant Text_Type :=
            "String_Literal_At_Rule";
-         Enum_Name_For_Grammar_Rule_46 : aliased constant Text_Type :=
+         Enum_Name_For_Grammar_Rule_36 : aliased constant Text_Type :=
            "Term_Rule";
-         Enum_Name_For_Grammar_Rule_47 : aliased constant Text_Type :=
+         Enum_Name_For_Grammar_Rule_37 : aliased constant Text_Type :=
            "Compilation_Unit_Rule";
 
       Enum_Name_For_Grammar_Rule : aliased constant Text_Type :=
         "Grammar_Rule";
       Enum_Desc_For_Grammar_Rule : aliased constant Enum_Type_Descriptor := (
-         Last_Value    => 47,
+         Last_Value    => 37,
          Name          => Enum_Name_For_Grammar_Rule'Access,
          Default_Value => 0,
          Value_Names   => (
@@ -1594,17 +1228,7 @@ Desc_For_Internal_Entity_With_Decl'Access
 34 => Enum_Name_For_Grammar_Rule_34'Access,
 35 => Enum_Name_For_Grammar_Rule_35'Access,
 36 => Enum_Name_For_Grammar_Rule_36'Access,
-37 => Enum_Name_For_Grammar_Rule_37'Access,
-38 => Enum_Name_For_Grammar_Rule_38'Access,
-39 => Enum_Name_For_Grammar_Rule_39'Access,
-40 => Enum_Name_For_Grammar_Rule_40'Access,
-41 => Enum_Name_For_Grammar_Rule_41'Access,
-42 => Enum_Name_For_Grammar_Rule_42'Access,
-43 => Enum_Name_For_Grammar_Rule_43'Access,
-44 => Enum_Name_For_Grammar_Rule_44'Access,
-45 => Enum_Name_For_Grammar_Rule_45'Access,
-46 => Enum_Name_For_Grammar_Rule_46'Access,
-47 => Enum_Name_For_Grammar_Rule_47'Access
+37 => Enum_Name_For_Grammar_Rule_37'Access
          )
       );
    Enum_Types : aliased constant Enum_Type_Descriptor_Array := (
@@ -1728,427 +1352,6 @@ Type_Index_For_Grammar_Rule => Enum_Desc_For_Grammar_Rule'Access
    -------------------------------
 
    
-      
-
-
-      
-
-      
-         Indexes_For_Ada_Access_Subp_F_Subp_Kind : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_Access_Subp => 1);
-
-      Member_Name_For_Ada_Access_Subp_F_Subp_Kind : aliased constant Text_Type :=
-        "F_Subp_Kind";
-      Member_Desc_For_Ada_Access_Subp_F_Subp_Kind : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_Access_Subp_F_Subp_Kind'Access,
-         Owner         => Type_Index_For_Ada_Access_Subp,
-         Member_Type   => Type_Index_For_Ada_Entity_Kind,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_Access_Subp_F_Subp_Kind'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_Access_Subp_F_Skips : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_Access_Subp => 2);
-
-      Member_Name_For_Ada_Access_Subp_F_Skips : aliased constant Text_Type :=
-        "F_Skips";
-      Member_Desc_For_Ada_Access_Subp_F_Skips : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_Access_Subp_F_Skips'Access,
-         Owner         => Type_Index_For_Ada_Access_Subp,
-         Member_Type   => Type_Index_For_Ada_Skip_List,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_Access_Subp_F_Skips'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_Pragma_F_Skips : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_Pragma => 1);
-
-      Member_Name_For_Ada_Pragma_F_Skips : aliased constant Text_Type :=
-        "F_Skips";
-      Member_Desc_For_Ada_Pragma_F_Skips : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_Pragma_F_Skips'Access,
-         Owner         => Type_Index_For_Ada_Pragma,
-         Member_Type   => Type_Index_For_Ada_Skip_List,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_Pragma_F_Skips'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_Use_F_Skips : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_Use => 1);
-
-      Member_Name_For_Ada_Use_F_Skips : aliased constant Text_Type :=
-        "F_Skips";
-      Member_Desc_For_Ada_Use_F_Skips : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_Use_F_Skips'Access,
-         Owner         => Type_Index_For_Ada_Use,
-         Member_Type   => Type_Index_For_Ada_Skip_List,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_Use_F_Skips'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_With_F_Has_Limited : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_With => 1);
-
-      Member_Name_For_Ada_With_F_Has_Limited : aliased constant Text_Type :=
-        "F_Has_Limited";
-      Member_Desc_For_Ada_With_F_Has_Limited : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_With_F_Has_Limited'Access,
-         Owner         => Type_Index_For_Ada_With,
-         Member_Type   => Type_Index_For_Limited,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_With_F_Has_Limited'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_With_F_Has_Private : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_With => 2);
-
-      Member_Name_For_Ada_With_F_Has_Private : aliased constant Text_Type :=
-        "F_Has_Private";
-      Member_Desc_For_Ada_With_F_Has_Private : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_With_F_Has_Private'Access,
-         Owner         => Type_Index_For_Ada_With,
-         Member_Type   => Type_Index_For_Private,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_With_F_Has_Private'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_With_F_Packages : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_With => 3);
-
-      Member_Name_For_Ada_With_F_Packages : aliased constant Text_Type :=
-        "F_Packages";
-      Member_Desc_For_Ada_With_F_Packages : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_With_F_Packages'Access,
-         Owner         => Type_Index_For_Ada_With,
-         Member_Type   => Type_Index_For_Expr_List,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_With_F_Packages'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_Generic_F_Skips : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_Generic => 1);
-
-      Member_Name_For_Ada_Generic_F_Skips : aliased constant Text_Type :=
-        "F_Skips";
-      Member_Desc_For_Ada_Generic_F_Skips : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_Generic_F_Skips'Access,
-         Owner         => Type_Index_For_Ada_Generic,
-         Member_Type   => Type_Index_For_Gpr_Node,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_Generic_F_Skips'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_Library_Item_F_Generic_Stub : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_Library_Item => 1);
-
-      Member_Name_For_Ada_Library_Item_F_Generic_Stub : aliased constant Text_Type :=
-        "F_Generic_Stub";
-      Member_Desc_For_Ada_Library_Item_F_Generic_Stub : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_Library_Item_F_Generic_Stub'Access,
-         Owner         => Type_Index_For_Ada_Library_Item,
-         Member_Type   => Type_Index_For_Ada_Generic,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_Library_Item_F_Generic_Stub'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_Library_Item_F_Separate : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_Library_Item => 2);
-
-      Member_Name_For_Ada_Library_Item_F_Separate : aliased constant Text_Type :=
-        "F_Separate";
-      Member_Desc_For_Ada_Library_Item_F_Separate : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_Library_Item_F_Separate'Access,
-         Owner         => Type_Index_For_Ada_Library_Item,
-         Member_Type   => Type_Index_For_Ada_Separate,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_Library_Item_F_Separate'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_Library_Item_F_Main : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_Library_Item => 3);
-
-      Member_Name_For_Ada_Library_Item_F_Main : aliased constant Text_Type :=
-        "F_Main";
-      Member_Desc_For_Ada_Library_Item_F_Main : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_Library_Item_F_Main'Access,
-         Owner         => Type_Index_For_Ada_Library_Item,
-         Member_Type   => Type_Index_For_Ada_Main,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_Library_Item_F_Main'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_Main_F_Name : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_Main => 0,
-Type_Index_For_Ada_Pkg => 2,
-Type_Index_For_Ada_Pkg_Body => 1,
-Type_Index_For_Ada_Subp => 2);
-
-      Member_Name_For_Ada_Main_F_Name : aliased constant Text_Type :=
-        "F_Name";
-      Member_Desc_For_Ada_Main_F_Name : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_Main_F_Name'Access,
-         Owner         => Type_Index_For_Ada_Main,
-         Member_Type   => Type_Index_For_Expr,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_Main_F_Name'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_Pkg_F_Has_Private : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_Pkg => 1);
-
-      Member_Name_For_Ada_Pkg_F_Has_Private : aliased constant Text_Type :=
-        "F_Has_Private";
-      Member_Desc_For_Ada_Pkg_F_Has_Private : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_Pkg_F_Has_Private'Access,
-         Owner         => Type_Index_For_Ada_Pkg,
-         Member_Type   => Type_Index_For_Private,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_Pkg_F_Has_Private'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_Subp_F_Subp_Kind : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_Subp => 1);
-
-      Member_Name_For_Ada_Subp_F_Subp_Kind : aliased constant Text_Type :=
-        "F_Subp_Kind";
-      Member_Desc_For_Ada_Subp_F_Subp_Kind : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_Subp_F_Subp_Kind'Access,
-         Owner         => Type_Index_For_Ada_Subp,
-         Member_Type   => Type_Index_For_Ada_Entity_Kind,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_Subp_F_Subp_Kind'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_Prelude_F_Context_Clauses : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_Prelude => 1);
-
-      Member_Name_For_Ada_Prelude_F_Context_Clauses : aliased constant Text_Type :=
-        "F_Context_Clauses";
-      Member_Desc_For_Ada_Prelude_F_Context_Clauses : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_Prelude_F_Context_Clauses'Access,
-         Owner         => Type_Index_For_Ada_Prelude,
-         Member_Type   => Type_Index_For_Ada_Context_Clause_List,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_Prelude_F_Context_Clauses'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_Prelude_F_Library_Item : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_Prelude => 2);
-
-      Member_Name_For_Ada_Prelude_F_Library_Item : aliased constant Text_Type :=
-        "F_Library_Item";
-      Member_Desc_For_Ada_Prelude_F_Library_Item : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_Prelude_F_Library_Item'Access,
-         Owner         => Type_Index_For_Ada_Prelude,
-         Member_Type   => Type_Index_For_Ada_Library_Item,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_Prelude_F_Library_Item'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_Separate_F_Parent_Name : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_Separate => 1);
-
-      Member_Name_For_Ada_Separate_F_Parent_Name : aliased constant Text_Type :=
-        "F_Parent_Name";
-      Member_Desc_For_Ada_Separate_F_Parent_Name : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_Separate_F_Parent_Name'Access,
-         Owner         => Type_Index_For_Ada_Separate,
-         Member_Type   => Type_Index_For_Expr,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_Separate_F_Parent_Name'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_With_Formal_F_Kind : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_With_Formal => 1);
-
-      Member_Name_For_Ada_With_Formal_F_Kind : aliased constant Text_Type :=
-        "F_Kind";
-      Member_Desc_For_Ada_With_Formal_F_Kind : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_With_Formal_F_Kind'Access,
-         Owner         => Type_Index_For_Ada_With_Formal,
-         Member_Type   => Type_Index_For_Ada_Entity_Kind,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_With_Formal_F_Kind'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
-      
-
-
-      
-
-      
-         Indexes_For_Ada_With_Formal_F_Skips : aliased constant Syntax_Field_Indexes :=
-           (Type_Index_For_Ada_With_Formal => 2);
-
-      Member_Name_For_Ada_With_Formal_F_Skips : aliased constant Text_Type :=
-        "F_Skips";
-      Member_Desc_For_Ada_With_Formal_F_Skips : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Ada_With_Formal_F_Skips'Access,
-         Owner         => Type_Index_For_Ada_With_Formal,
-         Member_Type   => Type_Index_For_Ada_Skip_List,
-         Null_For      => null,
-         Indexes       => Indexes_For_Ada_With_Formal_F_Skips'Access,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
       
 
 
@@ -3358,48 +2561,9 @@ Type_Index_For_Ada_Subp => 2);
                1 .. 0 => <>
         ));
 
-      
-
-
-      
-
-      
-
-      Member_Name_For_Private_Node_P_As_Bool : aliased constant Text_Type :=
-        "P_As_Bool";
-      Member_Desc_For_Private_Node_P_As_Bool : aliased constant Struct_Member_Descriptor :=
-        (Last_Argument => 0,
-         Name          => Member_Name_For_Private_Node_P_As_Bool'Access,
-         Owner         => Type_Index_For_Private,
-         Member_Type   => Type_Index_For_Bool,
-         Null_For      => null,
-         Indexes       => null,
-         Arguments     => (
-               1 .. 0 => <>
-        ));
-
 
    Struct_Members : aliased constant Struct_Member_Descriptor_Array := (
-      Member_Index_For_Ada_Access_Subp_F_Subp_Kind => Member_Desc_For_Ada_Access_Subp_F_Subp_Kind'Access,
-Member_Index_For_Ada_Access_Subp_F_Skips => Member_Desc_For_Ada_Access_Subp_F_Skips'Access,
-Member_Index_For_Ada_Pragma_F_Skips => Member_Desc_For_Ada_Pragma_F_Skips'Access,
-Member_Index_For_Ada_Use_F_Skips => Member_Desc_For_Ada_Use_F_Skips'Access,
-Member_Index_For_Ada_With_F_Has_Limited => Member_Desc_For_Ada_With_F_Has_Limited'Access,
-Member_Index_For_Ada_With_F_Has_Private => Member_Desc_For_Ada_With_F_Has_Private'Access,
-Member_Index_For_Ada_With_F_Packages => Member_Desc_For_Ada_With_F_Packages'Access,
-Member_Index_For_Ada_Generic_F_Skips => Member_Desc_For_Ada_Generic_F_Skips'Access,
-Member_Index_For_Ada_Library_Item_F_Generic_Stub => Member_Desc_For_Ada_Library_Item_F_Generic_Stub'Access,
-Member_Index_For_Ada_Library_Item_F_Separate => Member_Desc_For_Ada_Library_Item_F_Separate'Access,
-Member_Index_For_Ada_Library_Item_F_Main => Member_Desc_For_Ada_Library_Item_F_Main'Access,
-Member_Index_For_Ada_Main_F_Name => Member_Desc_For_Ada_Main_F_Name'Access,
-Member_Index_For_Ada_Pkg_F_Has_Private => Member_Desc_For_Ada_Pkg_F_Has_Private'Access,
-Member_Index_For_Ada_Subp_F_Subp_Kind => Member_Desc_For_Ada_Subp_F_Subp_Kind'Access,
-Member_Index_For_Ada_Prelude_F_Context_Clauses => Member_Desc_For_Ada_Prelude_F_Context_Clauses'Access,
-Member_Index_For_Ada_Prelude_F_Library_Item => Member_Desc_For_Ada_Prelude_F_Library_Item'Access,
-Member_Index_For_Ada_Separate_F_Parent_Name => Member_Desc_For_Ada_Separate_F_Parent_Name'Access,
-Member_Index_For_Ada_With_Formal_F_Kind => Member_Desc_For_Ada_With_Formal_F_Kind'Access,
-Member_Index_For_Ada_With_Formal_F_Skips => Member_Desc_For_Ada_With_Formal_F_Skips'Access,
-Member_Index_For_Attribute_Decl_F_Attr_Name => Member_Desc_For_Attribute_Decl_F_Attr_Name'Access,
+      Member_Index_For_Attribute_Decl_F_Attr_Name => Member_Desc_For_Attribute_Decl_F_Attr_Name'Access,
 Member_Index_For_Attribute_Decl_F_Attr_Index => Member_Desc_For_Attribute_Decl_F_Attr_Index'Access,
 Member_Index_For_Attribute_Decl_F_Expr => Member_Desc_For_Attribute_Decl_F_Expr'Access,
 Member_Index_For_Attribute_Reference_F_Attribute_Name => Member_Desc_For_Attribute_Reference_F_Attribute_Name'Access,
@@ -3454,8 +2618,7 @@ Member_Index_For_Unit => Member_Desc_For_Unit'Access,
 Member_Index_For_Is_Ghost => Member_Desc_For_Is_Ghost'Access,
 Member_Index_For_Full_Sloc_Image => Member_Desc_For_Full_Sloc_Image'Access,
 Member_Index_For_All_Qualifier_P_As_Bool => Member_Desc_For_All_Qualifier_P_As_Bool'Access,
-Member_Index_For_Limited_Node_P_As_Bool => Member_Desc_For_Limited_Node_P_As_Bool'Access,
-Member_Index_For_Private_Node_P_As_Bool => Member_Desc_For_Private_Node_P_As_Bool'Access
+Member_Index_For_Limited_Node_P_As_Bool => Member_Desc_For_Limited_Node_P_As_Bool'Access
    );
 
    -----------------------------
@@ -3469,7 +2632,7 @@ Member_Index_For_Private_Node_P_As_Bool => Member_Desc_For_Private_Node_P_As_Boo
          Node_Repr_Name_For_Gpr_Node : aliased constant Text_Type :=
            "GprNode";
       Node_Desc_For_Gpr_Node : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 29,
+        (Derivations_Count => 27,
          Member_Count      => 11,
          Base_Type         => No_Type_Index,
          Is_Abstract       => True,
@@ -3479,35 +2642,33 @@ Member_Index_For_Private_Node_P_As_Bool => Member_Desc_For_Private_Node_P_As_Boo
          Repr_Name         => Node_Repr_Name_For_Gpr_Node'Access,
          Inherited_Members => 11,
          Derivations       => (
-             1 => Type_Index_For_Ada_Prelude_Node,
-2 => Type_Index_For_All_Qualifier,
-3 => Type_Index_For_Attribute_Decl,
-4 => Type_Index_For_Attribute_Reference,
-5 => Type_Index_For_Base_List,
-6 => Type_Index_For_Builtin_Function_Call,
-7 => Type_Index_For_Case_Construction,
-8 => Type_Index_For_Case_Item,
-9 => Type_Index_For_Compilation_Unit,
-10 => Type_Index_For_Empty_Decl,
-11 => Type_Index_For_Expr,
-12 => Type_Index_For_Limited,
-13 => Type_Index_For_Others_Designator,
-14 => Type_Index_For_Package_Decl,
-15 => Type_Index_For_Package_Extension,
-16 => Type_Index_For_Package_Renaming,
-17 => Type_Index_For_Package_Spec,
-18 => Type_Index_For_Private,
-19 => Type_Index_For_Project,
-20 => Type_Index_For_Project_Declaration,
-21 => Type_Index_For_Project_Extension,
-22 => Type_Index_For_Project_Qualifier,
-23 => Type_Index_For_String_Literal_At,
-24 => Type_Index_For_Terms,
-25 => Type_Index_For_Type_Reference,
-26 => Type_Index_For_Typed_String_Decl,
-27 => Type_Index_For_Variable_Decl,
-28 => Type_Index_For_Variable_Reference,
-29 => Type_Index_For_With_Decl
+             1 => Type_Index_For_All_Qualifier,
+2 => Type_Index_For_Attribute_Decl,
+3 => Type_Index_For_Attribute_Reference,
+4 => Type_Index_For_Base_List,
+5 => Type_Index_For_Builtin_Function_Call,
+6 => Type_Index_For_Case_Construction,
+7 => Type_Index_For_Case_Item,
+8 => Type_Index_For_Compilation_Unit,
+9 => Type_Index_For_Empty_Decl,
+10 => Type_Index_For_Expr,
+11 => Type_Index_For_Limited,
+12 => Type_Index_For_Others_Designator,
+13 => Type_Index_For_Package_Decl,
+14 => Type_Index_For_Package_Extension,
+15 => Type_Index_For_Package_Renaming,
+16 => Type_Index_For_Package_Spec,
+17 => Type_Index_For_Project,
+18 => Type_Index_For_Project_Declaration,
+19 => Type_Index_For_Project_Extension,
+20 => Type_Index_For_Project_Qualifier,
+21 => Type_Index_For_String_Literal_At,
+22 => Type_Index_For_Terms,
+23 => Type_Index_For_Type_Reference,
+24 => Type_Index_For_Typed_String_Decl,
+25 => Type_Index_For_Variable_Decl,
+26 => Type_Index_For_Variable_Reference,
+27 => Type_Index_For_With_Decl
          ),
          Members           => (
               1 => Member_Index_For_Parent,
@@ -3521,450 +2682,6 @@ Member_Index_For_Private_Node_P_As_Bool => Member_Desc_For_Private_Node_P_As_Boo
 9 => Member_Index_For_Unit,
 10 => Member_Index_For_Is_Ghost,
 11 => Member_Index_For_Full_Sloc_Image
-         ));
-      
-      Node_Name_For_Ada_Prelude_Node : aliased constant Text_Type :=
-        "Ada_Prelude_Node";
-         Node_Repr_Name_For_Ada_Prelude_Node : aliased constant Text_Type :=
-           "AdaPreludeNode";
-      Node_Desc_For_Ada_Prelude_Node : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 10,
-         Member_Count      => 0,
-         Base_Type         => Type_Index_For_Gpr_Node,
-         Is_Abstract       => True,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Prelude_Node'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Prelude_Node'Access,
-         Inherited_Members => 11,
-         Derivations       => (
-             1 => Type_Index_For_Ada_Access_Subp,
-2 => Type_Index_For_Ada_Context_Clause,
-3 => Type_Index_For_Ada_Entity_Kind,
-4 => Type_Index_For_Ada_Generic,
-5 => Type_Index_For_Ada_Library_Item,
-6 => Type_Index_For_Ada_Main,
-7 => Type_Index_For_Ada_Prelude,
-8 => Type_Index_For_Ada_Separate,
-9 => Type_Index_For_Ada_Skip,
-10 => Type_Index_For_Ada_With_Formal
-         ),
-         Members           => (
-              1 .. 0 => <>
-         ));
-      
-      Node_Name_For_Ada_Access_Subp : aliased constant Text_Type :=
-        "Ada_Access_Subp";
-         Node_Repr_Name_For_Ada_Access_Subp : aliased constant Text_Type :=
-           "AdaAccessSubp";
-      Node_Desc_For_Ada_Access_Subp : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 2,
-         Base_Type         => Type_Index_For_Ada_Prelude_Node,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Access_Subp'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Access_Subp'Access,
-         Inherited_Members => 13,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 => Member_Index_For_Ada_Access_Subp_F_Subp_Kind,
-2 => Member_Index_For_Ada_Access_Subp_F_Skips
-         ));
-      
-      Node_Name_For_Ada_Context_Clause : aliased constant Text_Type :=
-        "Ada_Context_Clause";
-         Node_Repr_Name_For_Ada_Context_Clause : aliased constant Text_Type :=
-           "AdaContextClause";
-      Node_Desc_For_Ada_Context_Clause : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 3,
-         Member_Count      => 0,
-         Base_Type         => Type_Index_For_Ada_Prelude_Node,
-         Is_Abstract       => True,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Context_Clause'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Context_Clause'Access,
-         Inherited_Members => 11,
-         Derivations       => (
-             1 => Type_Index_For_Ada_Pragma,
-2 => Type_Index_For_Ada_Use,
-3 => Type_Index_For_Ada_With
-         ),
-         Members           => (
-              1 .. 0 => <>
-         ));
-      
-      Node_Name_For_Ada_Pragma : aliased constant Text_Type :=
-        "Ada_Pragma";
-         Node_Repr_Name_For_Ada_Pragma : aliased constant Text_Type :=
-           "AdaPragma";
-      Node_Desc_For_Ada_Pragma : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 1,
-         Base_Type         => Type_Index_For_Ada_Context_Clause,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Pragma'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Pragma'Access,
-         Inherited_Members => 12,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 => Member_Index_For_Ada_Pragma_F_Skips
-         ));
-      
-      Node_Name_For_Ada_Use : aliased constant Text_Type :=
-        "Ada_Use";
-         Node_Repr_Name_For_Ada_Use : aliased constant Text_Type :=
-           "AdaUse";
-      Node_Desc_For_Ada_Use : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 1,
-         Base_Type         => Type_Index_For_Ada_Context_Clause,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Use'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Use'Access,
-         Inherited_Members => 12,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 => Member_Index_For_Ada_Use_F_Skips
-         ));
-      
-      Node_Name_For_Ada_With : aliased constant Text_Type :=
-        "Ada_With";
-         Node_Repr_Name_For_Ada_With : aliased constant Text_Type :=
-           "AdaWith";
-      Node_Desc_For_Ada_With : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 3,
-         Base_Type         => Type_Index_For_Ada_Context_Clause,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_With'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_With'Access,
-         Inherited_Members => 14,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 => Member_Index_For_Ada_With_F_Has_Limited,
-2 => Member_Index_For_Ada_With_F_Has_Private,
-3 => Member_Index_For_Ada_With_F_Packages
-         ));
-      
-      Node_Name_For_Ada_Entity_Kind : aliased constant Text_Type :=
-        "Ada_Entity_Kind";
-         Node_Repr_Name_For_Ada_Entity_Kind : aliased constant Text_Type :=
-           "AdaEntityKind";
-      Node_Desc_For_Ada_Entity_Kind : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 3,
-         Member_Count      => 0,
-         Base_Type         => Type_Index_For_Ada_Prelude_Node,
-         Is_Abstract       => True,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Entity_Kind'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Entity_Kind'Access,
-         Inherited_Members => 11,
-         Derivations       => (
-             1 => Type_Index_For_Ada_Entity_Kind_Function,
-2 => Type_Index_For_Ada_Entity_Kind_Package,
-3 => Type_Index_For_Ada_Entity_Kind_Procedure
-         ),
-         Members           => (
-              1 .. 0 => <>
-         ));
-      
-      Node_Name_For_Ada_Entity_Kind_Function : aliased constant Text_Type :=
-        "Ada_Entity_Kind_Function";
-         Node_Repr_Name_For_Ada_Entity_Kind_Function : aliased constant Text_Type :=
-           "AdaEntityKindFunction";
-      Node_Desc_For_Ada_Entity_Kind_Function : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 0,
-         Base_Type         => Type_Index_For_Ada_Entity_Kind,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Entity_Kind_Function'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Entity_Kind_Function'Access,
-         Inherited_Members => 11,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 .. 0 => <>
-         ));
-      
-      Node_Name_For_Ada_Entity_Kind_Package : aliased constant Text_Type :=
-        "Ada_Entity_Kind_Package";
-         Node_Repr_Name_For_Ada_Entity_Kind_Package : aliased constant Text_Type :=
-           "AdaEntityKindPackage";
-      Node_Desc_For_Ada_Entity_Kind_Package : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 0,
-         Base_Type         => Type_Index_For_Ada_Entity_Kind,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Entity_Kind_Package'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Entity_Kind_Package'Access,
-         Inherited_Members => 11,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 .. 0 => <>
-         ));
-      
-      Node_Name_For_Ada_Entity_Kind_Procedure : aliased constant Text_Type :=
-        "Ada_Entity_Kind_Procedure";
-         Node_Repr_Name_For_Ada_Entity_Kind_Procedure : aliased constant Text_Type :=
-           "AdaEntityKindProcedure";
-      Node_Desc_For_Ada_Entity_Kind_Procedure : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 0,
-         Base_Type         => Type_Index_For_Ada_Entity_Kind,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Entity_Kind_Procedure'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Entity_Kind_Procedure'Access,
-         Inherited_Members => 11,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 .. 0 => <>
-         ));
-      
-      Node_Name_For_Ada_Generic : aliased constant Text_Type :=
-        "Ada_Generic";
-         Node_Repr_Name_For_Ada_Generic : aliased constant Text_Type :=
-           "AdaGeneric";
-      Node_Desc_For_Ada_Generic : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 1,
-         Base_Type         => Type_Index_For_Ada_Prelude_Node,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Generic'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Generic'Access,
-         Inherited_Members => 12,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 => Member_Index_For_Ada_Generic_F_Skips
-         ));
-      
-      Node_Name_For_Ada_Library_Item : aliased constant Text_Type :=
-        "Ada_Library_Item";
-         Node_Repr_Name_For_Ada_Library_Item : aliased constant Text_Type :=
-           "AdaLibraryItem";
-      Node_Desc_For_Ada_Library_Item : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 3,
-         Base_Type         => Type_Index_For_Ada_Prelude_Node,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Library_Item'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Library_Item'Access,
-         Inherited_Members => 14,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 => Member_Index_For_Ada_Library_Item_F_Generic_Stub,
-2 => Member_Index_For_Ada_Library_Item_F_Separate,
-3 => Member_Index_For_Ada_Library_Item_F_Main
-         ));
-      
-      Node_Name_For_Ada_Main : aliased constant Text_Type :=
-        "Ada_Main";
-         Node_Repr_Name_For_Ada_Main : aliased constant Text_Type :=
-           "AdaMain";
-      Node_Desc_For_Ada_Main : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 3,
-         Member_Count      => 1,
-         Base_Type         => Type_Index_For_Ada_Prelude_Node,
-         Is_Abstract       => True,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Main'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Main'Access,
-         Inherited_Members => 12,
-         Derivations       => (
-             1 => Type_Index_For_Ada_Pkg,
-2 => Type_Index_For_Ada_Pkg_Body,
-3 => Type_Index_For_Ada_Subp
-         ),
-         Members           => (
-              1 => Member_Index_For_Ada_Main_F_Name
-         ));
-      
-      Node_Name_For_Ada_Pkg : aliased constant Text_Type :=
-        "Ada_Pkg";
-         Node_Repr_Name_For_Ada_Pkg : aliased constant Text_Type :=
-           "AdaPkg";
-      Node_Desc_For_Ada_Pkg : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 2,
-         Base_Type         => Type_Index_For_Ada_Main,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Pkg'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Pkg'Access,
-         Inherited_Members => 13,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 => Member_Index_For_Ada_Pkg_F_Has_Private,
-2 => Member_Index_For_Ada_Main_F_Name
-         ));
-      
-      Node_Name_For_Ada_Pkg_Body : aliased constant Text_Type :=
-        "Ada_Pkg_Body";
-         Node_Repr_Name_For_Ada_Pkg_Body : aliased constant Text_Type :=
-           "AdaPkgBody";
-      Node_Desc_For_Ada_Pkg_Body : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 1,
-         Base_Type         => Type_Index_For_Ada_Main,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Pkg_Body'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Pkg_Body'Access,
-         Inherited_Members => 12,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 => Member_Index_For_Ada_Main_F_Name
-         ));
-      
-      Node_Name_For_Ada_Subp : aliased constant Text_Type :=
-        "Ada_Subp";
-         Node_Repr_Name_For_Ada_Subp : aliased constant Text_Type :=
-           "AdaSubp";
-      Node_Desc_For_Ada_Subp : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 2,
-         Base_Type         => Type_Index_For_Ada_Main,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Subp'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Subp'Access,
-         Inherited_Members => 13,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 => Member_Index_For_Ada_Subp_F_Subp_Kind,
-2 => Member_Index_For_Ada_Main_F_Name
-         ));
-      
-      Node_Name_For_Ada_Prelude : aliased constant Text_Type :=
-        "Ada_Prelude";
-         Node_Repr_Name_For_Ada_Prelude : aliased constant Text_Type :=
-           "AdaPrelude";
-      Node_Desc_For_Ada_Prelude : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 2,
-         Base_Type         => Type_Index_For_Ada_Prelude_Node,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Prelude'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Prelude'Access,
-         Inherited_Members => 13,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 => Member_Index_For_Ada_Prelude_F_Context_Clauses,
-2 => Member_Index_For_Ada_Prelude_F_Library_Item
-         ));
-      
-      Node_Name_For_Ada_Separate : aliased constant Text_Type :=
-        "Ada_Separate";
-         Node_Repr_Name_For_Ada_Separate : aliased constant Text_Type :=
-           "AdaSeparate";
-      Node_Desc_For_Ada_Separate : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 1,
-         Base_Type         => Type_Index_For_Ada_Prelude_Node,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Separate'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Separate'Access,
-         Inherited_Members => 12,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 => Member_Index_For_Ada_Separate_F_Parent_Name
-         ));
-      
-      Node_Name_For_Ada_Skip : aliased constant Text_Type :=
-        "Ada_Skip";
-         Node_Repr_Name_For_Ada_Skip : aliased constant Text_Type :=
-           "AdaSkip";
-      Node_Desc_For_Ada_Skip : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 0,
-         Base_Type         => Type_Index_For_Ada_Prelude_Node,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_Skip'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Skip'Access,
-         Inherited_Members => 11,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 .. 0 => <>
-         ));
-      
-      Node_Name_For_Ada_With_Formal : aliased constant Text_Type :=
-        "Ada_With_Formal";
-         Node_Repr_Name_For_Ada_With_Formal : aliased constant Text_Type :=
-           "AdaWithFormal";
-      Node_Desc_For_Ada_With_Formal : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 2,
-         Base_Type         => Type_Index_For_Ada_Prelude_Node,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Ada_With_Formal'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_With_Formal'Access,
-         Inherited_Members => 13,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 => Member_Index_For_Ada_With_Formal_F_Kind,
-2 => Member_Index_For_Ada_With_Formal_F_Skips
          ));
       
       Node_Name_For_All_Qualifier : aliased constant Text_Type :=
@@ -4081,7 +2798,7 @@ Member_Index_For_Private_Node_P_As_Bool => Member_Desc_For_Private_Node_P_As_Boo
          Node_Repr_Name_For_Base_List : aliased constant Text_Type :=
            "BaseList";
       Node_Desc_For_Base_List : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 10,
+        (Derivations_Count => 6,
          Member_Count      => 0,
          Base_Type         => Type_Index_For_Gpr_Node,
          Is_Abstract       => True,
@@ -4091,79 +2808,12 @@ Member_Index_For_Private_Node_P_As_Bool => Member_Desc_For_Private_Node_P_As_Boo
          Repr_Name         => Node_Repr_Name_For_Base_List'Access,
          Inherited_Members => 11,
          Derivations       => (
-             1 => Type_Index_For_Ada_Context_Clause_List,
-2 => Type_Index_For_Ada_Prelude_Node_List,
-3 => Type_Index_For_Ada_Skip_List,
-4 => Type_Index_For_Case_Item_List,
-5 => Type_Index_For_Expr_List,
-6 => Type_Index_For_Gpr_Node_List,
-7 => Type_Index_For_Identifier_List,
-8 => Type_Index_For_String_Literal_List,
-9 => Type_Index_For_Term_List_List,
-10 => Type_Index_For_With_Decl_List
-         ),
-         Members           => (
-              1 .. 0 => <>
-         ));
-      
-      Node_Name_For_Ada_Context_Clause_List : aliased constant Text_Type :=
-        "Ada_Context_Clause_List";
-         Node_Repr_Name_For_Ada_Context_Clause_List : aliased constant Text_Type :=
-           "AdaContextClauseList";
-      Node_Desc_For_Ada_Context_Clause_List : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 0,
-         Base_Type         => Type_Index_For_Base_List,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => True,
-         Name              => Node_Name_For_Ada_Context_Clause_List'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Context_Clause_List'Access,
-         Inherited_Members => 11,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 .. 0 => <>
-         ));
-      
-      Node_Name_For_Ada_Prelude_Node_List : aliased constant Text_Type :=
-        "Ada_Prelude_Node_List";
-         Node_Repr_Name_For_Ada_Prelude_Node_List : aliased constant Text_Type :=
-           "AdaPreludeNodeList";
-      Node_Desc_For_Ada_Prelude_Node_List : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 0,
-         Base_Type         => Type_Index_For_Base_List,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => True,
-         Name              => Node_Name_For_Ada_Prelude_Node_List'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Prelude_Node_List'Access,
-         Inherited_Members => 11,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 .. 0 => <>
-         ));
-      
-      Node_Name_For_Ada_Skip_List : aliased constant Text_Type :=
-        "Ada_Skip_List";
-         Node_Repr_Name_For_Ada_Skip_List : aliased constant Text_Type :=
-           "AdaSkipList";
-      Node_Desc_For_Ada_Skip_List : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 0,
-         Base_Type         => Type_Index_For_Base_List,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => True,
-         Name              => Node_Name_For_Ada_Skip_List'Access,
-         Repr_Name         => Node_Repr_Name_For_Ada_Skip_List'Access,
-         Inherited_Members => 11,
-         Derivations       => (
-             1 .. 0 => <>
+             1 => Type_Index_For_Case_Item_List,
+2 => Type_Index_For_Gpr_Node_List,
+3 => Type_Index_For_Identifier_List,
+4 => Type_Index_For_String_Literal_List,
+5 => Type_Index_For_Term_List_List,
+6 => Type_Index_For_With_Decl_List
          ),
          Members           => (
               1 .. 0 => <>
@@ -4182,27 +2832,6 @@ Member_Index_For_Private_Node_P_As_Bool => Member_Desc_For_Private_Node_P_As_Boo
          Is_List_Node      => True,
          Name              => Node_Name_For_Case_Item_List'Access,
          Repr_Name         => Node_Repr_Name_For_Case_Item_List'Access,
-         Inherited_Members => 11,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 .. 0 => <>
-         ));
-      
-      Node_Name_For_Expr_List : aliased constant Text_Type :=
-        "Expr_List";
-         Node_Repr_Name_For_Expr_List : aliased constant Text_Type :=
-           "ExprList";
-      Node_Desc_For_Expr_List : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 0,
-         Base_Type         => Type_Index_For_Base_List,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => True,
-         Name              => Node_Name_For_Expr_List'Access,
-         Repr_Name         => Node_Repr_Name_For_Expr_List'Access,
          Inherited_Members => 11,
          Derivations       => (
              1 .. 0 => <>
@@ -4769,70 +3398,6 @@ Member_Index_For_Private_Node_P_As_Bool => Member_Desc_For_Private_Node_P_As_Boo
 3 => Member_Index_For_Package_Spec_F_End_Name
          ));
       
-      Node_Name_For_Private_Node : aliased constant Text_Type :=
-        "Private_Node";
-         Node_Repr_Name_For_Private_Node : aliased constant Text_Type :=
-           "PrivateNode";
-      Node_Desc_For_Private_Node : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 2,
-         Member_Count      => 1,
-         Base_Type         => Type_Index_For_Gpr_Node,
-         Is_Abstract       => True,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Private_Node'Access,
-         Repr_Name         => Node_Repr_Name_For_Private_Node'Access,
-         Inherited_Members => 12,
-         Derivations       => (
-             1 => Type_Index_For_Private_Absent,
-2 => Type_Index_For_Private_Present
-         ),
-         Members           => (
-              1 => Member_Index_For_Private_Node_P_As_Bool
-         ));
-      
-      Node_Name_For_Private_Absent : aliased constant Text_Type :=
-        "Private_Absent";
-         Node_Repr_Name_For_Private_Absent : aliased constant Text_Type :=
-           "PrivateAbsent";
-      Node_Desc_For_Private_Absent : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 0,
-         Base_Type         => Type_Index_For_Private,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Private_Absent'Access,
-         Repr_Name         => Node_Repr_Name_For_Private_Absent'Access,
-         Inherited_Members => 12,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 .. 0 => <>
-         ));
-      
-      Node_Name_For_Private_Present : aliased constant Text_Type :=
-        "Private_Present";
-         Node_Repr_Name_For_Private_Present : aliased constant Text_Type :=
-           "PrivatePresent";
-      Node_Desc_For_Private_Present : aliased constant Struct_Type_Descriptor :=
-        (Derivations_Count => 0,
-         Member_Count      => 0,
-         Base_Type         => Type_Index_For_Private,
-         Is_Abstract       => False,
-         Is_Token_Node     => False,
-         Is_List_Node      => False,
-         Name              => Node_Name_For_Private_Present'Access,
-         Repr_Name         => Node_Repr_Name_For_Private_Present'Access,
-         Inherited_Members => 12,
-         Derivations       => (
-             1 .. 0 => <>
-         ),
-         Members           => (
-              1 .. 0 => <>
-         ));
-      
       Node_Name_For_Project : aliased constant Text_Type :=
         "Project";
          Node_Repr_Name_For_Project : aliased constant Text_Type :=
@@ -5209,37 +3774,13 @@ Member_Index_For_Private_Node_P_As_Bool => Member_Desc_For_Private_Node_P_As_Boo
 
    Struct_Types : aliased constant Struct_Type_Descriptor_Array := (
       Type_Index_For_Gpr_Node => Node_Desc_For_Gpr_Node'Access,
-Type_Index_For_Ada_Prelude_Node => Node_Desc_For_Ada_Prelude_Node'Access,
-Type_Index_For_Ada_Access_Subp => Node_Desc_For_Ada_Access_Subp'Access,
-Type_Index_For_Ada_Context_Clause => Node_Desc_For_Ada_Context_Clause'Access,
-Type_Index_For_Ada_Pragma => Node_Desc_For_Ada_Pragma'Access,
-Type_Index_For_Ada_Use => Node_Desc_For_Ada_Use'Access,
-Type_Index_For_Ada_With => Node_Desc_For_Ada_With'Access,
-Type_Index_For_Ada_Entity_Kind => Node_Desc_For_Ada_Entity_Kind'Access,
-Type_Index_For_Ada_Entity_Kind_Function => Node_Desc_For_Ada_Entity_Kind_Function'Access,
-Type_Index_For_Ada_Entity_Kind_Package => Node_Desc_For_Ada_Entity_Kind_Package'Access,
-Type_Index_For_Ada_Entity_Kind_Procedure => Node_Desc_For_Ada_Entity_Kind_Procedure'Access,
-Type_Index_For_Ada_Generic => Node_Desc_For_Ada_Generic'Access,
-Type_Index_For_Ada_Library_Item => Node_Desc_For_Ada_Library_Item'Access,
-Type_Index_For_Ada_Main => Node_Desc_For_Ada_Main'Access,
-Type_Index_For_Ada_Pkg => Node_Desc_For_Ada_Pkg'Access,
-Type_Index_For_Ada_Pkg_Body => Node_Desc_For_Ada_Pkg_Body'Access,
-Type_Index_For_Ada_Subp => Node_Desc_For_Ada_Subp'Access,
-Type_Index_For_Ada_Prelude => Node_Desc_For_Ada_Prelude'Access,
-Type_Index_For_Ada_Separate => Node_Desc_For_Ada_Separate'Access,
-Type_Index_For_Ada_Skip => Node_Desc_For_Ada_Skip'Access,
-Type_Index_For_Ada_With_Formal => Node_Desc_For_Ada_With_Formal'Access,
 Type_Index_For_All_Qualifier => Node_Desc_For_All_Qualifier'Access,
 Type_Index_For_All_Qualifier_Absent => Node_Desc_For_All_Qualifier_Absent'Access,
 Type_Index_For_All_Qualifier_Present => Node_Desc_For_All_Qualifier_Present'Access,
 Type_Index_For_Attribute_Decl => Node_Desc_For_Attribute_Decl'Access,
 Type_Index_For_Attribute_Reference => Node_Desc_For_Attribute_Reference'Access,
 Type_Index_For_Base_List => Node_Desc_For_Base_List'Access,
-Type_Index_For_Ada_Context_Clause_List => Node_Desc_For_Ada_Context_Clause_List'Access,
-Type_Index_For_Ada_Prelude_Node_List => Node_Desc_For_Ada_Prelude_Node_List'Access,
-Type_Index_For_Ada_Skip_List => Node_Desc_For_Ada_Skip_List'Access,
 Type_Index_For_Case_Item_List => Node_Desc_For_Case_Item_List'Access,
-Type_Index_For_Expr_List => Node_Desc_For_Expr_List'Access,
 Type_Index_For_Gpr_Node_List => Node_Desc_For_Gpr_Node_List'Access,
 Type_Index_For_Choices => Node_Desc_For_Choices'Access,
 Type_Index_For_Term_List => Node_Desc_For_Term_List'Access,
@@ -5266,9 +3807,6 @@ Type_Index_For_Package_Decl => Node_Desc_For_Package_Decl'Access,
 Type_Index_For_Package_Extension => Node_Desc_For_Package_Extension'Access,
 Type_Index_For_Package_Renaming => Node_Desc_For_Package_Renaming'Access,
 Type_Index_For_Package_Spec => Node_Desc_For_Package_Spec'Access,
-Type_Index_For_Private => Node_Desc_For_Private_Node'Access,
-Type_Index_For_Private_Absent => Node_Desc_For_Private_Absent'Access,
-Type_Index_For_Private_Present => Node_Desc_For_Private_Present'Access,
 Type_Index_For_Project => Node_Desc_For_Project'Access,
 Type_Index_For_Project_Declaration => Node_Desc_For_Project_Declaration'Access,
 Type_Index_For_Project_Extension => Node_Desc_For_Project_Extension'Access,
@@ -5311,7 +3849,7 @@ Type_Index_For_With_Decl => Node_Desc_For_With_Decl'Access
       Symbol                => Type_Index_For_Symbol);
 
    Node_Kinds : constant array (Gpr_Node_Kind_Type) of Type_Index :=
-     (Gpr_Ada_Access_Subp => Type_Index_For_Ada_Access_Subp, Gpr_Ada_Pragma => Type_Index_For_Ada_Pragma, Gpr_Ada_Use => Type_Index_For_Ada_Use, Gpr_Ada_With => Type_Index_For_Ada_With, Gpr_Ada_Entity_Kind_Function => Type_Index_For_Ada_Entity_Kind_Function, Gpr_Ada_Entity_Kind_Package => Type_Index_For_Ada_Entity_Kind_Package, Gpr_Ada_Entity_Kind_Procedure => Type_Index_For_Ada_Entity_Kind_Procedure, Gpr_Ada_Generic => Type_Index_For_Ada_Generic, Gpr_Ada_Library_Item => Type_Index_For_Ada_Library_Item, Gpr_Ada_Pkg => Type_Index_For_Ada_Pkg, Gpr_Ada_Pkg_Body => Type_Index_For_Ada_Pkg_Body, Gpr_Ada_Subp => Type_Index_For_Ada_Subp, Gpr_Ada_Prelude => Type_Index_For_Ada_Prelude, Gpr_Ada_Separate => Type_Index_For_Ada_Separate, Gpr_Ada_Skip => Type_Index_For_Ada_Skip, Gpr_Ada_With_Formal => Type_Index_For_Ada_With_Formal, Gpr_All_Qualifier_Absent => Type_Index_For_All_Qualifier_Absent, Gpr_All_Qualifier_Present => Type_Index_For_All_Qualifier_Present, Gpr_Attribute_Decl => Type_Index_For_Attribute_Decl, Gpr_Attribute_Reference => Type_Index_For_Attribute_Reference, Gpr_Ada_Context_Clause_List => Type_Index_For_Ada_Context_Clause_List, Gpr_Ada_Prelude_Node_List => Type_Index_For_Ada_Prelude_Node_List, Gpr_Ada_Skip_List => Type_Index_For_Ada_Skip_List, Gpr_Case_Item_List => Type_Index_For_Case_Item_List, Gpr_Expr_List => Type_Index_For_Expr_List, Gpr_Gpr_Node_List => Type_Index_For_Gpr_Node_List, Gpr_Choices => Type_Index_For_Choices, Gpr_Term_List => Type_Index_For_Term_List, Gpr_Identifier_List => Type_Index_For_Identifier_List, Gpr_String_Literal_List => Type_Index_For_String_Literal_List, Gpr_Term_List_List => Type_Index_For_Term_List_List, Gpr_With_Decl_List => Type_Index_For_With_Decl_List, Gpr_Builtin_Function_Call => Type_Index_For_Builtin_Function_Call, Gpr_Case_Construction => Type_Index_For_Case_Construction, Gpr_Case_Item => Type_Index_For_Case_Item, Gpr_Compilation_Unit => Type_Index_For_Compilation_Unit, Gpr_Empty_Decl => Type_Index_For_Empty_Decl, Gpr_Prefix => Type_Index_For_Prefix, Gpr_Identifier => Type_Index_For_Identifier, Gpr_Num_Literal => Type_Index_For_Num_Literal, Gpr_String_Literal => Type_Index_For_String_Literal, Gpr_Limited_Absent => Type_Index_For_Limited_Absent, Gpr_Limited_Present => Type_Index_For_Limited_Present, Gpr_Others_Designator => Type_Index_For_Others_Designator, Gpr_Package_Decl => Type_Index_For_Package_Decl, Gpr_Package_Extension => Type_Index_For_Package_Extension, Gpr_Package_Renaming => Type_Index_For_Package_Renaming, Gpr_Package_Spec => Type_Index_For_Package_Spec, Gpr_Private_Absent => Type_Index_For_Private_Absent, Gpr_Private_Present => Type_Index_For_Private_Present, Gpr_Project => Type_Index_For_Project, Gpr_Project_Declaration => Type_Index_For_Project_Declaration, Gpr_Project_Extension => Type_Index_For_Project_Extension, Gpr_Project_Qualifier_Abstract => Type_Index_For_Project_Qualifier_Abstract, Gpr_Project_Qualifier_Aggregate => Type_Index_For_Project_Qualifier_Aggregate, Gpr_Project_Qualifier_Aggregate_Library => Type_Index_For_Project_Qualifier_Aggregate_Library, Gpr_Project_Qualifier_Configuration => Type_Index_For_Project_Qualifier_Configuration, Gpr_Project_Qualifier_Library => Type_Index_For_Project_Qualifier_Library, Gpr_Project_Qualifier_Standard => Type_Index_For_Project_Qualifier_Standard, Gpr_String_Literal_At => Type_Index_For_String_Literal_At, Gpr_Terms => Type_Index_For_Terms, Gpr_Type_Reference => Type_Index_For_Type_Reference, Gpr_Typed_String_Decl => Type_Index_For_Typed_String_Decl, Gpr_Variable_Decl => Type_Index_For_Variable_Decl, Gpr_Variable_Reference => Type_Index_For_Variable_Reference, Gpr_With_Decl => Type_Index_For_With_Decl);
+     (Gpr_All_Qualifier_Absent => Type_Index_For_All_Qualifier_Absent, Gpr_All_Qualifier_Present => Type_Index_For_All_Qualifier_Present, Gpr_Attribute_Decl => Type_Index_For_Attribute_Decl, Gpr_Attribute_Reference => Type_Index_For_Attribute_Reference, Gpr_Case_Item_List => Type_Index_For_Case_Item_List, Gpr_Gpr_Node_List => Type_Index_For_Gpr_Node_List, Gpr_Choices => Type_Index_For_Choices, Gpr_Term_List => Type_Index_For_Term_List, Gpr_Identifier_List => Type_Index_For_Identifier_List, Gpr_String_Literal_List => Type_Index_For_String_Literal_List, Gpr_Term_List_List => Type_Index_For_Term_List_List, Gpr_With_Decl_List => Type_Index_For_With_Decl_List, Gpr_Builtin_Function_Call => Type_Index_For_Builtin_Function_Call, Gpr_Case_Construction => Type_Index_For_Case_Construction, Gpr_Case_Item => Type_Index_For_Case_Item, Gpr_Compilation_Unit => Type_Index_For_Compilation_Unit, Gpr_Empty_Decl => Type_Index_For_Empty_Decl, Gpr_Prefix => Type_Index_For_Prefix, Gpr_Identifier => Type_Index_For_Identifier, Gpr_Num_Literal => Type_Index_For_Num_Literal, Gpr_String_Literal => Type_Index_For_String_Literal, Gpr_Limited_Absent => Type_Index_For_Limited_Absent, Gpr_Limited_Present => Type_Index_For_Limited_Present, Gpr_Others_Designator => Type_Index_For_Others_Designator, Gpr_Package_Decl => Type_Index_For_Package_Decl, Gpr_Package_Extension => Type_Index_For_Package_Extension, Gpr_Package_Renaming => Type_Index_For_Package_Renaming, Gpr_Package_Spec => Type_Index_For_Package_Spec, Gpr_Project => Type_Index_For_Project, Gpr_Project_Declaration => Type_Index_For_Project_Declaration, Gpr_Project_Extension => Type_Index_For_Project_Extension, Gpr_Project_Qualifier_Abstract => Type_Index_For_Project_Qualifier_Abstract, Gpr_Project_Qualifier_Aggregate => Type_Index_For_Project_Qualifier_Aggregate, Gpr_Project_Qualifier_Aggregate_Library => Type_Index_For_Project_Qualifier_Aggregate_Library, Gpr_Project_Qualifier_Configuration => Type_Index_For_Project_Qualifier_Configuration, Gpr_Project_Qualifier_Library => Type_Index_For_Project_Qualifier_Library, Gpr_Project_Qualifier_Standard => Type_Index_For_Project_Qualifier_Standard, Gpr_String_Literal_At => Type_Index_For_String_Literal_At, Gpr_Terms => Type_Index_For_Terms, Gpr_Type_Reference => Type_Index_For_Type_Reference, Gpr_Typed_String_Decl => Type_Index_For_Typed_String_Decl, Gpr_Variable_Decl => Type_Index_For_Variable_Decl, Gpr_Variable_Reference => Type_Index_For_Variable_Reference, Gpr_With_Decl => Type_Index_For_With_Decl);
    --  Associate a type index to each concrete node
 
    -----------------------------------------------------
