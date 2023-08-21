@@ -136,10 +136,6 @@ type gpr_base_entity_Ptr is access Internal_Entity;
       Context                   : gpr_analysis_context;
       Token_Data                : Token_Data_Handler_Access;
       Token_Index, Trivia_Index : int;
-
-      Kind       : int;
-      Text       : gpr_text;
-      Sloc_Range : gpr_source_location_range;
    end record
      with Convention => C;
    --  Reference to a token in an analysis unit.
@@ -775,7 +771,7 @@ type gpr_base_entity_Ptr is access Internal_Entity;
    --
    --  ``destroy`` is a callback that is called by
    --  ``gpr_dec_ref_event_handler`` to leave a chance to free resources that
-   --  ``data`` may hold.
+   --  ``data`` may hold. ``NULL`` can be passed if nothing needs to be done.
    --
    --  ``unit_requested`` is a callback that will be called when a unit is
    --  requested.
@@ -883,9 +879,16 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    --  pass messages that are longer than what the Ada runtime accepts (i.e.
    --  allows to avoid truncated error messages).
 
+   function gpr_token_get_kind
+     (Token : gpr_token) return int
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_token_get_kind";
+   --  Kind for this token.
+
    function gpr_token_kind_name (Kind : int) return chars_ptr
-      with Export => True,
-           Convention => C,
+      with Export        => True,
+           Convention    => C,
            External_Name => "gpr_token_kind_name";
    --  Return a human-readable name for a token kind.
    --
@@ -894,6 +897,13 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    --
    --  If the given kind is invalid, return ``NULL`` and set the last exception
    --  accordingly.
+
+   procedure gpr_token_sloc_range
+     (Token : gpr_token; Result : access gpr_source_location_range)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_token_sloc_range";
+   --  Return the source location range of the given token.
 
    procedure gpr_token_next
      (Token      : gpr_token;
@@ -1152,336 +1162,6 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
    
 
-   function gpr_ada_access_subp_f_subp_kind
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_access_subp_f_subp_kind";
-   --  This field can contain one of the following nodes:
-   --  :ada:ref:`Ada_Entity_Kind_Function`,
-   --  :ada:ref:`Ada_Entity_Kind_Procedure`
-
-           
-   
-
-   
-   
-
-   function gpr_ada_access_subp_f_skips
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_access_subp_f_skips";
-   
-
-           
-   
-
-   
-   
-
-   function gpr_ada_pragma_f_skips
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_pragma_f_skips";
-   
-
-           
-   
-
-   
-   
-
-   function gpr_ada_use_f_skips
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_use_f_skips";
-   
-
-           
-   
-
-   
-   
-
-   function gpr_ada_with_f_has_limited
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_with_f_has_limited";
-   
-
-           
-   
-
-   
-   
-
-   function gpr_ada_with_f_has_private
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_with_f_has_private";
-   
-
-           
-   
-
-   
-   
-
-   function gpr_ada_with_f_packages
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_with_f_packages";
-   --  This field contains a list that itself contains one of the following
-   --  nodes: :ada:ref:`Identifier`, :ada:ref:`Prefix`
-
-           
-   
-
-   
-   
-
-   function gpr_ada_generic_f_skips
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_generic_f_skips";
-   
-
-           
-   
-
-   
-   
-
-   function gpr_ada_library_item_f_generic_stub
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_library_item_f_generic_stub";
-   
-
-           
-   
-
-   
-   
-
-   function gpr_ada_library_item_f_separate
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_library_item_f_separate";
-   
-
-           
-   
-
-   
-   
-
-   function gpr_ada_library_item_f_main
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_library_item_f_main";
-   
-
-           
-   
-
-   
-   
-
-   function gpr_ada_main_f_name
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_main_f_name";
-   --  This field can contain one of the following nodes:
-   --  :ada:ref:`Identifier`, :ada:ref:`Prefix`
-
-           
-   
-
-   
-   
-
-   function gpr_ada_pkg_f_has_private
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_pkg_f_has_private";
-   
-
-           
-   
-
-   
-   
-
-   function gpr_ada_subp_f_subp_kind
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_subp_f_subp_kind";
-   --  This field can contain one of the following nodes:
-   --  :ada:ref:`Ada_Entity_Kind_Function`,
-   --  :ada:ref:`Ada_Entity_Kind_Procedure`
-
-           
-   
-
-   
-   
-
-   function gpr_ada_prelude_f_context_clauses
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_prelude_f_context_clauses";
-   
-
-           
-   
-
-   
-   
-
-   function gpr_ada_prelude_f_library_item
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_prelude_f_library_item";
-   
-
-           
-   
-
-   
-   
-
-   function gpr_ada_separate_f_parent_name
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_separate_f_parent_name";
-   --  This field can contain one of the following nodes:
-   --  :ada:ref:`Identifier`, :ada:ref:`Prefix`
-
-           
-   
-
-   
-   
-
-   function gpr_ada_with_formal_f_kind
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_with_formal_f_kind";
-   
-
-           
-   
-
-   
-   
-
-   function gpr_ada_with_formal_f_skips
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_base_entity) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_ada_with_formal_f_skips";
-   
-
-           
-   
-
-   
-   
-
    function gpr_all_qualifier_p_as_bool
      (Node : gpr_base_entity_Ptr;
 
@@ -1508,7 +1188,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_attribute_decl_f_attr_name";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1546,6 +1226,8 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    --  This field contains a list that itself contains one of the following
    --  nodes: :ada:ref:`Builtin_Function_Call`, :ada:ref:`String_Literal_At`,
    --  :ada:ref:`Terms`, :ada:ref:`Variable_Reference`
+   --
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1562,7 +1244,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_attribute_reference_f_attribute_name";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1597,7 +1279,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_builtin_function_call_f_function_name";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1614,7 +1296,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_builtin_function_call_f_parameters";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1631,7 +1313,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_case_construction_f_var_ref";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1648,7 +1330,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_case_construction_f_items";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1667,6 +1349,8 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
            External_name => "gpr_case_item_f_choice";
    --  This field contains a list that itself contains one of the following
    --  nodes: :ada:ref:`Others_Designator`, :ada:ref:`String_Literal`
+   --
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1686,6 +1370,8 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    --  This field contains a list that itself contains one of the following
    --  nodes: :ada:ref:`Attribute_Decl`, :ada:ref:`Case_Construction`,
    --  :ada:ref:`Empty_Decl`, :ada:ref:`Variable_Decl`
+   --
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1702,7 +1388,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_compilation_unit_f_project";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1721,6 +1407,8 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
            External_name => "gpr_prefix_f_prefix";
    --  This field can contain one of the following nodes:
    --  :ada:ref:`Identifier`, :ada:ref:`Prefix`
+   --
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1737,7 +1425,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_prefix_f_suffix";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1771,7 +1459,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_package_decl_f_pkg_name";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1790,6 +1478,8 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
            External_name => "gpr_package_decl_f_pkg_spec";
    --  This field can contain one of the following nodes:
    --  :ada:ref:`Package_Renaming`, :ada:ref:`Package_Spec`
+   --
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1806,7 +1496,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_package_extension_f_extended_name";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1823,7 +1513,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_package_renaming_f_renamed_name";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1860,6 +1550,8 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    --  This field contains a list that itself contains one of the following
    --  nodes: :ada:ref:`Attribute_Decl`, :ada:ref:`Case_Construction`,
    --  :ada:ref:`Empty_Decl`, :ada:ref:`Variable_Decl`
+   --
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1876,24 +1568,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_package_spec_f_end_name";
-   
-
-           
-   
-
-   
-   
-
-   function gpr_private_node_p_as_bool
-     (Node : gpr_base_entity_Ptr;
-
-
-      Value_P : access gpr_bool) return int
-
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_private_node_p_as_bool";
-   --  Return whether this is an instance of PrivatePresent
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1910,7 +1585,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_project_f_context_clauses";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1927,7 +1602,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_project_f_project_decl";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -1963,6 +1638,8 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
            External_name => "gpr_project_declaration_f_project_name";
    --  This field can contain one of the following nodes:
    --  :ada:ref:`Identifier`, :ada:ref:`Prefix`
+   --
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -2000,6 +1677,8 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    --  nodes: :ada:ref:`Attribute_Decl`, :ada:ref:`Case_Construction`,
    --  :ada:ref:`Empty_Decl`, :ada:ref:`Package_Decl`,
    --  :ada:ref:`Typed_String_Decl`, :ada:ref:`Variable_Decl`
+   --
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -2018,6 +1697,8 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
            External_name => "gpr_project_declaration_f_end_name";
    --  This field can contain one of the following nodes:
    --  :ada:ref:`Identifier`, :ada:ref:`Prefix`
+   --
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -2034,7 +1715,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_project_extension_f_is_all";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -2051,7 +1732,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_project_extension_f_path_name";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -2068,7 +1749,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_string_literal_at_f_str_lit";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -2102,7 +1783,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_terms_f_terms";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -2119,7 +1800,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_type_reference_f_var_type_name";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -2136,7 +1817,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_typed_string_decl_f_type_id";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -2153,7 +1834,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_typed_string_decl_f_string_literals";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -2170,7 +1851,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_variable_decl_f_var_name";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -2207,6 +1888,8 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    --  This field contains a list that itself contains one of the following
    --  nodes: :ada:ref:`Builtin_Function_Call`, :ada:ref:`String_Literal_At`,
    --  :ada:ref:`Terms`, :ada:ref:`Variable_Reference`
+   --
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -2223,7 +1906,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_variable_reference_f_variable_name";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -2257,7 +1940,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_with_decl_f_is_limited";
-   
+   --  When there are no parsing errors, this field is never null.
 
            
    
@@ -2274,7 +1957,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_with_decl_f_path_names";
-   
+   --  When there are no parsing errors, this field is never null.
 
 
    ------------------------

@@ -124,118 +124,6 @@ package Gpr_Parser.Analysis is
       --  .. note: For complex reasons, we cannot expose this function as the
       --     ``"="`` operator. This is the function you need to use as the
       --     equality function for containers instantiations.
-      type Ada_Prelude_Node is new Gpr_Node with private
-      ;
-      
-
-      type Ada_Access_Subp is new Ada_Prelude_Node with private
-      ;
-      
-
-      type Ada_Context_Clause is new Ada_Prelude_Node with private
-      ;
-      
-
-      type Base_List is new Gpr_Node with private
-      ;
-      
-
-      type Ada_Context_Clause_List is new Base_List with private
-         with Iterable => (First       => Ada_Context_Clause_List_First,
-                           Next        => Ada_Context_Clause_List_Next,
-                           Has_Element => Ada_Context_Clause_List_Has_Element,
-                           Element     => Ada_Context_Clause_List_Element)
-      ;
-      --  List of AdaContextClause.
-
-      type Ada_Entity_Kind is new Ada_Prelude_Node with private
-      ;
-      
-
-      type Ada_Entity_Kind_Function is new Ada_Entity_Kind with private
-      ;
-      
-
-      type Ada_Entity_Kind_Package is new Ada_Entity_Kind with private
-      ;
-      
-
-      type Ada_Entity_Kind_Procedure is new Ada_Entity_Kind with private
-      ;
-      
-
-      type Ada_Generic is new Ada_Prelude_Node with private
-      ;
-      
-
-      type Ada_Library_Item is new Ada_Prelude_Node with private
-      ;
-      
-
-      type Ada_Main is new Ada_Prelude_Node with private
-      ;
-      
-
-      type Ada_Pkg is new Ada_Main with private
-      ;
-      
-
-      type Ada_Pkg_Body is new Ada_Main with private
-      ;
-      
-
-      type Ada_Pragma is new Ada_Context_Clause with private
-      ;
-      
-
-      type Ada_Prelude is new Ada_Prelude_Node with private
-      ;
-      
-
-      type Ada_Prelude_Node_List is new Base_List with private
-         with Iterable => (First       => Ada_Prelude_Node_List_First,
-                           Next        => Ada_Prelude_Node_List_Next,
-                           Has_Element => Ada_Prelude_Node_List_Has_Element,
-                           Element     => Ada_Prelude_Node_List_Element)
-      ;
-      --  List of AdaPreludeNode.
-      --
-      --  This list node can contain one of the following nodes:
-      --  :ada:ref:`Ada_Access_Subp`, :ada:ref:`Ada_Skip`,
-      --  :ada:ref:`Ada_With_Formal`
-
-      type Ada_Separate is new Ada_Prelude_Node with private
-      ;
-      
-
-      type Ada_Skip is new Ada_Prelude_Node with private
-      ;
-      
-
-      type Ada_Skip_List is new Base_List with private
-         with Iterable => (First       => Ada_Skip_List_First,
-                           Next        => Ada_Skip_List_Next,
-                           Has_Element => Ada_Skip_List_Has_Element,
-                           Element     => Ada_Skip_List_Element)
-      ;
-      --  List of AdaSkip.
-
-      type Ada_Subp is new Ada_Main with private
-      ;
-      
-
-      type Ada_Use is new Ada_Context_Clause with private
-      ;
-      
-
-      type Ada_With is new Ada_Context_Clause with private
-      ;
-      
-
-      type Ada_With_Formal is new Ada_Prelude_Node with private
-      ;
-      
-
       type All_Qualifier is new Gpr_Node with private
       ;
       
@@ -253,6 +141,10 @@ package Gpr_Parser.Analysis is
       
 
       type Attribute_Reference is new Gpr_Node with private
+      ;
+      
+
+      type Base_List is new Gpr_Node with private
       ;
       
 
@@ -309,17 +201,6 @@ package Gpr_Parser.Analysis is
       ;
       
 
-      type Expr_List is new Base_List with private
-         with Iterable => (First       => Expr_List_First,
-                           Next        => Expr_List_Next,
-                           Has_Element => Expr_List_Has_Element,
-                           Element     => Expr_List_Element)
-      ;
-      --  List of Expr.
-      --
-      --  This list node can contain one of the following nodes:
-      --  :ada:ref:`Identifier`, :ada:ref:`Prefix`
-
       type Single_Tok_Node is new Expr with private
       ;
       
@@ -373,18 +254,6 @@ package Gpr_Parser.Analysis is
       
 
       type Prefix is new Expr with private
-      ;
-      
-
-      type Private_Node is new Gpr_Node with private
-      ;
-      
-
-      type Private_Absent is new Private_Node with private
-      ;
-      
-
-      type Private_Present is new Private_Node with private
       ;
       
 
@@ -495,54 +364,6 @@ package Gpr_Parser.Analysis is
       --  Special value to represent the absence of a node. Note that every
       --  node type derived from the root type has a similar ``No_Node``
       --  constant.
-      No_Ada_Prelude_Node : constant Ada_Prelude_Node;
-      --% no-document: True
-      No_Ada_Access_Subp : constant Ada_Access_Subp;
-      --% no-document: True
-      No_Ada_Context_Clause : constant Ada_Context_Clause;
-      --% no-document: True
-      No_Base_List : constant Base_List;
-      --% no-document: True
-      No_Ada_Context_Clause_List : constant Ada_Context_Clause_List;
-      --% no-document: True
-      No_Ada_Entity_Kind : constant Ada_Entity_Kind;
-      --% no-document: True
-      No_Ada_Entity_Kind_Function : constant Ada_Entity_Kind_Function;
-      --% no-document: True
-      No_Ada_Entity_Kind_Package : constant Ada_Entity_Kind_Package;
-      --% no-document: True
-      No_Ada_Entity_Kind_Procedure : constant Ada_Entity_Kind_Procedure;
-      --% no-document: True
-      No_Ada_Generic : constant Ada_Generic;
-      --% no-document: True
-      No_Ada_Library_Item : constant Ada_Library_Item;
-      --% no-document: True
-      No_Ada_Main : constant Ada_Main;
-      --% no-document: True
-      No_Ada_Pkg : constant Ada_Pkg;
-      --% no-document: True
-      No_Ada_Pkg_Body : constant Ada_Pkg_Body;
-      --% no-document: True
-      No_Ada_Pragma : constant Ada_Pragma;
-      --% no-document: True
-      No_Ada_Prelude : constant Ada_Prelude;
-      --% no-document: True
-      No_Ada_Prelude_Node_List : constant Ada_Prelude_Node_List;
-      --% no-document: True
-      No_Ada_Separate : constant Ada_Separate;
-      --% no-document: True
-      No_Ada_Skip : constant Ada_Skip;
-      --% no-document: True
-      No_Ada_Skip_List : constant Ada_Skip_List;
-      --% no-document: True
-      No_Ada_Subp : constant Ada_Subp;
-      --% no-document: True
-      No_Ada_Use : constant Ada_Use;
-      --% no-document: True
-      No_Ada_With : constant Ada_With;
-      --% no-document: True
-      No_Ada_With_Formal : constant Ada_With_Formal;
-      --% no-document: True
       No_All_Qualifier : constant All_Qualifier;
       --% no-document: True
       No_All_Qualifier_Absent : constant All_Qualifier_Absent;
@@ -552,6 +373,8 @@ package Gpr_Parser.Analysis is
       No_Attribute_Decl : constant Attribute_Decl;
       --% no-document: True
       No_Attribute_Reference : constant Attribute_Reference;
+      --% no-document: True
+      No_Base_List : constant Base_List;
       --% no-document: True
       No_Builtin_Function_Call : constant Builtin_Function_Call;
       --% no-document: True
@@ -570,8 +393,6 @@ package Gpr_Parser.Analysis is
       No_Empty_Decl : constant Empty_Decl;
       --% no-document: True
       No_Expr : constant Expr;
-      --% no-document: True
-      No_Expr_List : constant Expr_List;
       --% no-document: True
       No_Single_Tok_Node : constant Single_Tok_Node;
       --% no-document: True
@@ -598,12 +419,6 @@ package Gpr_Parser.Analysis is
       No_Package_Spec : constant Package_Spec;
       --% no-document: True
       No_Prefix : constant Prefix;
-      --% no-document: True
-      No_Private_Node : constant Private_Node;
-      --% no-document: True
-      No_Private_Absent : constant Private_Absent;
-      --% no-document: True
-      No_Private_Present : constant Private_Present;
       --% no-document: True
       No_Project : constant Project;
       --% no-document: True
@@ -1266,368 +1081,6 @@ package Gpr_Parser.Analysis is
 
 
 
-
-
-
-
-         
-   
-
-   function F_Subp_Kind
-     (Node : Ada_Access_Subp'Class) return Ada_Entity_Kind;
-   --  This field can contain one of the following nodes:
-   --  :ada:ref:`Ada_Entity_Kind_Function`,
-   --  :ada:ref:`Ada_Entity_Kind_Procedure`
-   --% belongs-to: Ada_Access_Subp
-
-      function F_Subp_Kind
-        (Node : Ada_Access_Subp'Class) return Gpr_Ada_Entity_Kind;
-      --% belongs-to: Ada_Access_Subp
-
-         
-   
-
-   function F_Skips
-     (Node : Ada_Access_Subp'Class) return Ada_Skip_List;
-   --% belongs-to: Ada_Access_Subp
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-         function List_Child
-           (Node : Ada_Context_Clause_List'Class; Index : Positive)
-            return Ada_Context_Clause;
-         --  Return the ``Index``'th child of ``Node``, or null if ``Node`` has
-         --  no such child.
-
-         function Ada_Context_Clause_List_First (Node : Ada_Context_Clause_List) return Positive;
-         --  Implementation detail for the Iterable aspect
-
-         function Ada_Context_Clause_List_Next
-           (Node : Ada_Context_Clause_List; Cursor : Positive) return Positive;
-         --  Implementation detail for the Iterable aspect
-
-         function Ada_Context_Clause_List_Has_Element
-           (Node : Ada_Context_Clause_List; Cursor : Positive) return Boolean;
-         --  Implementation detail for the Iterable aspect
-
-         function Ada_Context_Clause_List_Element
-           (Node : Ada_Context_Clause_List; Cursor : Positive)
-            return Ada_Context_Clause'Class;
-         --  Implementation detail for the Iterable aspect
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-         
-   
-
-   function F_Skips
-     (Node : Ada_Generic'Class) return Gpr_Node;
-   --% belongs-to: Ada_Generic
-
-
-
-
-
-
-
-         
-   
-
-   function F_Generic_Stub
-     (Node : Ada_Library_Item'Class) return Ada_Generic;
-   --% belongs-to: Ada_Library_Item
-
-
-         
-   
-
-   function F_Separate
-     (Node : Ada_Library_Item'Class) return Ada_Separate;
-   --% belongs-to: Ada_Library_Item
-
-
-         
-   
-
-   function F_Main
-     (Node : Ada_Library_Item'Class) return Ada_Main;
-   --% belongs-to: Ada_Library_Item
-
-
-
-
-
-
-
-         
-   
-
-   function F_Name
-     (Node : Ada_Main'Class) return Expr;
-   --  This field can contain one of the following nodes:
-   --  :ada:ref:`Identifier`, :ada:ref:`Prefix`
-   --% belongs-to: Ada_Main
-
-
-
-
-
-
-
-         
-   
-
-   function F_Has_Private
-     (Node : Ada_Pkg'Class) return Private_Node;
-   --% belongs-to: Ada_Pkg
-
-      function F_Has_Private (Node : Ada_Pkg'Class) return Boolean;
-      --% belongs-to: Ada_Pkg
-
-
-
-
-
-
-
-
-
-
-
-
-         
-   
-
-   function F_Skips
-     (Node : Ada_Pragma'Class) return Ada_Skip_List;
-   --% belongs-to: Ada_Pragma
-
-
-
-
-
-
-
-         
-   
-
-   function F_Context_Clauses
-     (Node : Ada_Prelude'Class) return Ada_Context_Clause_List;
-   --% belongs-to: Ada_Prelude
-
-
-         
-   
-
-   function F_Library_Item
-     (Node : Ada_Prelude'Class) return Ada_Library_Item;
-   --% belongs-to: Ada_Prelude
-
-
-
-
-
-         function List_Child
-           (Node : Ada_Prelude_Node_List'Class; Index : Positive)
-            return Ada_Prelude_Node;
-         --  Return the ``Index``'th child of ``Node``, or null if ``Node`` has
-         --  no such child.
-
-         function Ada_Prelude_Node_List_First (Node : Ada_Prelude_Node_List) return Positive;
-         --  Implementation detail for the Iterable aspect
-
-         function Ada_Prelude_Node_List_Next
-           (Node : Ada_Prelude_Node_List; Cursor : Positive) return Positive;
-         --  Implementation detail for the Iterable aspect
-
-         function Ada_Prelude_Node_List_Has_Element
-           (Node : Ada_Prelude_Node_List; Cursor : Positive) return Boolean;
-         --  Implementation detail for the Iterable aspect
-
-         function Ada_Prelude_Node_List_Element
-           (Node : Ada_Prelude_Node_List; Cursor : Positive)
-            return Ada_Prelude_Node'Class;
-         --  Implementation detail for the Iterable aspect
-
-
-
-
-
-
-         
-   
-
-   function F_Parent_Name
-     (Node : Ada_Separate'Class) return Expr;
-   --  This field can contain one of the following nodes:
-   --  :ada:ref:`Identifier`, :ada:ref:`Prefix`
-   --% belongs-to: Ada_Separate
-
-
-
-
-
-
-
-
-
-
-         function List_Child
-           (Node : Ada_Skip_List'Class; Index : Positive)
-            return Ada_Skip;
-         --  Return the ``Index``'th child of ``Node``, or null if ``Node`` has
-         --  no such child.
-
-         function Ada_Skip_List_First (Node : Ada_Skip_List) return Positive;
-         --  Implementation detail for the Iterable aspect
-
-         function Ada_Skip_List_Next
-           (Node : Ada_Skip_List; Cursor : Positive) return Positive;
-         --  Implementation detail for the Iterable aspect
-
-         function Ada_Skip_List_Has_Element
-           (Node : Ada_Skip_List; Cursor : Positive) return Boolean;
-         --  Implementation detail for the Iterable aspect
-
-         function Ada_Skip_List_Element
-           (Node : Ada_Skip_List; Cursor : Positive)
-            return Ada_Skip'Class;
-         --  Implementation detail for the Iterable aspect
-
-
-
-
-
-
-         
-   
-
-   function F_Subp_Kind
-     (Node : Ada_Subp'Class) return Ada_Entity_Kind;
-   --  This field can contain one of the following nodes:
-   --  :ada:ref:`Ada_Entity_Kind_Function`,
-   --  :ada:ref:`Ada_Entity_Kind_Procedure`
-   --% belongs-to: Ada_Subp
-
-      function F_Subp_Kind
-        (Node : Ada_Subp'Class) return Gpr_Ada_Entity_Kind;
-      --% belongs-to: Ada_Subp
-
-
-
-
-
-
-         
-   
-
-   function F_Skips
-     (Node : Ada_Use'Class) return Ada_Skip_List;
-   --% belongs-to: Ada_Use
-
-
-
-
-
-
-
-         
-   
-
-   function F_Has_Limited
-     (Node : Ada_With'Class) return Limited_Node;
-   --% belongs-to: Ada_With
-
-      function F_Has_Limited (Node : Ada_With'Class) return Boolean;
-      --% belongs-to: Ada_With
-
-
-         
-   
-
-   function F_Has_Private
-     (Node : Ada_With'Class) return Private_Node;
-   --% belongs-to: Ada_With
-
-      function F_Has_Private (Node : Ada_With'Class) return Boolean;
-      --% belongs-to: Ada_With
-
-
-         
-   
-
-   function F_Packages
-     (Node : Ada_With'Class) return Expr_List;
-   --  This field contains a list that itself contains one of the following
-   --  nodes: :ada:ref:`Identifier`, :ada:ref:`Prefix`
-   --% belongs-to: Ada_With
-
-
-
-
-
-
-
-         
-   
-
-   function F_Kind
-     (Node : Ada_With_Formal'Class) return Ada_Entity_Kind;
-   --% belongs-to: Ada_With_Formal
-
-      function F_Kind
-        (Node : Ada_With_Formal'Class) return Gpr_Ada_Entity_Kind;
-      --% belongs-to: Ada_With_Formal
-
-         
-   
-
-   function F_Skips
-     (Node : Ada_With_Formal'Class) return Ada_Skip_List;
-   --% belongs-to: Ada_With_Formal
-
-
-
-
-
-
-
-
          
    function P_As_Bool
      (Node : All_Qualifier'Class) return Boolean;
@@ -1653,6 +1106,7 @@ package Gpr_Parser.Analysis is
 
    function F_Attr_Name
      (Node : Attribute_Decl'Class) return Identifier;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Attribute_Decl
 
 
@@ -1674,6 +1128,8 @@ package Gpr_Parser.Analysis is
    --  This field contains a list that itself contains one of the following
    --  nodes: :ada:ref:`Builtin_Function_Call`, :ada:ref:`String_Literal_At`,
    --  :ada:ref:`Terms`, :ada:ref:`Variable_Reference`
+   --
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Attribute_Decl
 
 
@@ -1687,6 +1143,7 @@ package Gpr_Parser.Analysis is
 
    function F_Attribute_Name
      (Node : Attribute_Reference'Class) return Identifier;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Attribute_Reference
 
 
@@ -1705,11 +1162,17 @@ package Gpr_Parser.Analysis is
 
 
 
+
+
+
+
+
          
    
 
    function F_Function_Name
      (Node : Builtin_Function_Call'Class) return Identifier;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Builtin_Function_Call
 
 
@@ -1718,6 +1181,7 @@ package Gpr_Parser.Analysis is
 
    function F_Parameters
      (Node : Builtin_Function_Call'Class) return Terms;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Builtin_Function_Call
 
 
@@ -1731,6 +1195,7 @@ package Gpr_Parser.Analysis is
 
    function F_Var_Ref
      (Node : Case_Construction'Class) return Variable_Reference;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Case_Construction
 
 
@@ -1739,6 +1204,7 @@ package Gpr_Parser.Analysis is
 
    function F_Items
      (Node : Case_Construction'Class) return Case_Item_List;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Case_Construction
 
 
@@ -1754,6 +1220,8 @@ package Gpr_Parser.Analysis is
      (Node : Case_Item'Class) return Choices;
    --  This field contains a list that itself contains one of the following
    --  nodes: :ada:ref:`Others_Designator`, :ada:ref:`String_Literal`
+   --
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Case_Item
 
 
@@ -1765,6 +1233,8 @@ package Gpr_Parser.Analysis is
    --  This field contains a list that itself contains one of the following
    --  nodes: :ada:ref:`Attribute_Decl`, :ada:ref:`Case_Construction`,
    --  :ada:ref:`Empty_Decl`, :ada:ref:`Variable_Decl`
+   --
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Case_Item
 
 
@@ -1828,6 +1298,7 @@ package Gpr_Parser.Analysis is
 
    function F_Project
      (Node : Compilation_Unit'Class) return Project;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Compilation_Unit
 
 
@@ -1840,31 +1311,6 @@ package Gpr_Parser.Analysis is
 
 
 
-
-
-
-
-         function List_Child
-           (Node : Expr_List'Class; Index : Positive)
-            return Expr;
-         --  Return the ``Index``'th child of ``Node``, or null if ``Node`` has
-         --  no such child.
-
-         function Expr_List_First (Node : Expr_List) return Positive;
-         --  Implementation detail for the Iterable aspect
-
-         function Expr_List_Next
-           (Node : Expr_List; Cursor : Positive) return Positive;
-         --  Implementation detail for the Iterable aspect
-
-         function Expr_List_Has_Element
-           (Node : Expr_List; Cursor : Positive) return Boolean;
-         --  Implementation detail for the Iterable aspect
-
-         function Expr_List_Element
-           (Node : Expr_List; Cursor : Positive)
-            return Expr'Class;
-         --  Implementation detail for the Iterable aspect
 
 
 
@@ -1942,6 +1388,7 @@ package Gpr_Parser.Analysis is
 
    function F_Pkg_Name
      (Node : Package_Decl'Class) return Identifier;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Package_Decl
 
 
@@ -1952,6 +1399,8 @@ package Gpr_Parser.Analysis is
      (Node : Package_Decl'Class) return Gpr_Node;
    --  This field can contain one of the following nodes:
    --  :ada:ref:`Package_Renaming`, :ada:ref:`Package_Spec`
+   --
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Package_Decl
 
 
@@ -1965,6 +1414,7 @@ package Gpr_Parser.Analysis is
 
    function F_Extended_Name
      (Node : Package_Extension'Class) return Identifier_List;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Package_Extension
 
 
@@ -1978,6 +1428,7 @@ package Gpr_Parser.Analysis is
 
    function F_Renamed_Name
      (Node : Package_Renaming'Class) return Identifier_List;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Package_Renaming
 
 
@@ -2002,6 +1453,8 @@ package Gpr_Parser.Analysis is
    --  This field contains a list that itself contains one of the following
    --  nodes: :ada:ref:`Attribute_Decl`, :ada:ref:`Case_Construction`,
    --  :ada:ref:`Empty_Decl`, :ada:ref:`Variable_Decl`
+   --
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Package_Spec
 
 
@@ -2010,6 +1463,7 @@ package Gpr_Parser.Analysis is
 
    function F_End_Name
      (Node : Package_Spec'Class) return Identifier;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Package_Spec
 
 
@@ -2025,6 +1479,8 @@ package Gpr_Parser.Analysis is
      (Node : Prefix'Class) return Expr;
    --  This field can contain one of the following nodes:
    --  :ada:ref:`Identifier`, :ada:ref:`Prefix`
+   --
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Prefix
 
 
@@ -2033,28 +1489,8 @@ package Gpr_Parser.Analysis is
 
    function F_Suffix
      (Node : Prefix'Class) return Identifier;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Prefix
-
-
-
-
-
-
-
-
-         
-   function P_As_Bool
-     (Node : Private_Node'Class) return Boolean;
-   --  Return whether this is an instance of PrivatePresent
-   --% belongs-to: Private_Node
-
-
-
-
-
-
-
-
 
 
 
@@ -2067,6 +1503,7 @@ package Gpr_Parser.Analysis is
 
    function F_Context_Clauses
      (Node : Project'Class) return With_Decl_List;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Project
 
 
@@ -2075,6 +1512,7 @@ package Gpr_Parser.Analysis is
 
    function F_Project_Decl
      (Node : Project'Class) return Project_Declaration;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Project
 
 
@@ -2101,6 +1539,8 @@ package Gpr_Parser.Analysis is
      (Node : Project_Declaration'Class) return Expr;
    --  This field can contain one of the following nodes:
    --  :ada:ref:`Identifier`, :ada:ref:`Prefix`
+   --
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Project_Declaration
 
 
@@ -2121,6 +1561,8 @@ package Gpr_Parser.Analysis is
    --  nodes: :ada:ref:`Attribute_Decl`, :ada:ref:`Case_Construction`,
    --  :ada:ref:`Empty_Decl`, :ada:ref:`Package_Decl`,
    --  :ada:ref:`Typed_String_Decl`, :ada:ref:`Variable_Decl`
+   --
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Project_Declaration
 
 
@@ -2131,6 +1573,8 @@ package Gpr_Parser.Analysis is
      (Node : Project_Declaration'Class) return Expr;
    --  This field can contain one of the following nodes:
    --  :ada:ref:`Identifier`, :ada:ref:`Prefix`
+   --
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Project_Declaration
 
 
@@ -2144,6 +1588,7 @@ package Gpr_Parser.Analysis is
 
    function F_Is_All
      (Node : Project_Extension'Class) return All_Qualifier;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Project_Extension
 
       function F_Is_All (Node : Project_Extension'Class) return Boolean;
@@ -2155,6 +1600,7 @@ package Gpr_Parser.Analysis is
 
    function F_Path_Name
      (Node : Project_Extension'Class) return String_Literal;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Project_Extension
 
 
@@ -2208,6 +1654,7 @@ package Gpr_Parser.Analysis is
 
    function F_Str_Lit
      (Node : String_Literal_At'Class) return String_Literal;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: String_Literal_At
 
 
@@ -2284,6 +1731,7 @@ package Gpr_Parser.Analysis is
 
    function F_Terms
      (Node : Terms'Class) return Term_List_List;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Terms
 
 
@@ -2297,6 +1745,7 @@ package Gpr_Parser.Analysis is
 
    function F_Var_Type_Name
      (Node : Type_Reference'Class) return Identifier_List;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Type_Reference
 
 
@@ -2310,6 +1759,7 @@ package Gpr_Parser.Analysis is
 
    function F_Type_Id
      (Node : Typed_String_Decl'Class) return Identifier;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Typed_String_Decl
 
 
@@ -2318,6 +1768,7 @@ package Gpr_Parser.Analysis is
 
    function F_String_Literals
      (Node : Typed_String_Decl'Class) return String_Literal_List;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Typed_String_Decl
 
 
@@ -2331,6 +1782,7 @@ package Gpr_Parser.Analysis is
 
    function F_Var_Name
      (Node : Variable_Decl'Class) return Identifier;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Variable_Decl
 
 
@@ -2350,6 +1802,8 @@ package Gpr_Parser.Analysis is
    --  This field contains a list that itself contains one of the following
    --  nodes: :ada:ref:`Builtin_Function_Call`, :ada:ref:`String_Literal_At`,
    --  :ada:ref:`Terms`, :ada:ref:`Variable_Reference`
+   --
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Variable_Decl
 
 
@@ -2363,6 +1817,7 @@ package Gpr_Parser.Analysis is
 
    function F_Variable_Name
      (Node : Variable_Reference'Class) return Identifier_List;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: Variable_Reference
 
 
@@ -2384,6 +1839,7 @@ package Gpr_Parser.Analysis is
 
    function F_Is_Limited
      (Node : With_Decl'Class) return Limited_Node;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: With_Decl
 
       function F_Is_Limited (Node : With_Decl'Class) return Boolean;
@@ -2395,6 +1851,7 @@ package Gpr_Parser.Analysis is
 
    function F_Path_Names
      (Node : With_Decl'Class) return String_Literal_List;
+   --  When there are no parsing errors, this field is never null.
    --% belongs-to: With_Decl
 
 
@@ -2576,78 +2033,6 @@ package Gpr_Parser.Analysis is
       function As_Gpr_Node
         (Node : Gpr_Node'Class) return Gpr_Node;
       --% no-document: True
-      function As_Ada_Prelude_Node
-        (Node : Gpr_Node'Class) return Ada_Prelude_Node;
-      --% no-document: True
-      function As_Ada_Access_Subp
-        (Node : Gpr_Node'Class) return Ada_Access_Subp;
-      --% no-document: True
-      function As_Ada_Context_Clause
-        (Node : Gpr_Node'Class) return Ada_Context_Clause;
-      --% no-document: True
-      function As_Base_List
-        (Node : Gpr_Node'Class) return Base_List;
-      --% no-document: True
-      function As_Ada_Context_Clause_List
-        (Node : Gpr_Node'Class) return Ada_Context_Clause_List;
-      --% no-document: True
-      function As_Ada_Entity_Kind
-        (Node : Gpr_Node'Class) return Ada_Entity_Kind;
-      --% no-document: True
-      function As_Ada_Entity_Kind_Function
-        (Node : Gpr_Node'Class) return Ada_Entity_Kind_Function;
-      --% no-document: True
-      function As_Ada_Entity_Kind_Package
-        (Node : Gpr_Node'Class) return Ada_Entity_Kind_Package;
-      --% no-document: True
-      function As_Ada_Entity_Kind_Procedure
-        (Node : Gpr_Node'Class) return Ada_Entity_Kind_Procedure;
-      --% no-document: True
-      function As_Ada_Generic
-        (Node : Gpr_Node'Class) return Ada_Generic;
-      --% no-document: True
-      function As_Ada_Library_Item
-        (Node : Gpr_Node'Class) return Ada_Library_Item;
-      --% no-document: True
-      function As_Ada_Main
-        (Node : Gpr_Node'Class) return Ada_Main;
-      --% no-document: True
-      function As_Ada_Pkg
-        (Node : Gpr_Node'Class) return Ada_Pkg;
-      --% no-document: True
-      function As_Ada_Pkg_Body
-        (Node : Gpr_Node'Class) return Ada_Pkg_Body;
-      --% no-document: True
-      function As_Ada_Pragma
-        (Node : Gpr_Node'Class) return Ada_Pragma;
-      --% no-document: True
-      function As_Ada_Prelude
-        (Node : Gpr_Node'Class) return Ada_Prelude;
-      --% no-document: True
-      function As_Ada_Prelude_Node_List
-        (Node : Gpr_Node'Class) return Ada_Prelude_Node_List;
-      --% no-document: True
-      function As_Ada_Separate
-        (Node : Gpr_Node'Class) return Ada_Separate;
-      --% no-document: True
-      function As_Ada_Skip
-        (Node : Gpr_Node'Class) return Ada_Skip;
-      --% no-document: True
-      function As_Ada_Skip_List
-        (Node : Gpr_Node'Class) return Ada_Skip_List;
-      --% no-document: True
-      function As_Ada_Subp
-        (Node : Gpr_Node'Class) return Ada_Subp;
-      --% no-document: True
-      function As_Ada_Use
-        (Node : Gpr_Node'Class) return Ada_Use;
-      --% no-document: True
-      function As_Ada_With
-        (Node : Gpr_Node'Class) return Ada_With;
-      --% no-document: True
-      function As_Ada_With_Formal
-        (Node : Gpr_Node'Class) return Ada_With_Formal;
-      --% no-document: True
       function As_All_Qualifier
         (Node : Gpr_Node'Class) return All_Qualifier;
       --% no-document: True
@@ -2662,6 +2047,9 @@ package Gpr_Parser.Analysis is
       --% no-document: True
       function As_Attribute_Reference
         (Node : Gpr_Node'Class) return Attribute_Reference;
+      --% no-document: True
+      function As_Base_List
+        (Node : Gpr_Node'Class) return Base_List;
       --% no-document: True
       function As_Builtin_Function_Call
         (Node : Gpr_Node'Class) return Builtin_Function_Call;
@@ -2689,9 +2077,6 @@ package Gpr_Parser.Analysis is
       --% no-document: True
       function As_Expr
         (Node : Gpr_Node'Class) return Expr;
-      --% no-document: True
-      function As_Expr_List
-        (Node : Gpr_Node'Class) return Expr_List;
       --% no-document: True
       function As_Single_Tok_Node
         (Node : Gpr_Node'Class) return Single_Tok_Node;
@@ -2731,15 +2116,6 @@ package Gpr_Parser.Analysis is
       --% no-document: True
       function As_Prefix
         (Node : Gpr_Node'Class) return Prefix;
-      --% no-document: True
-      function As_Private_Node
-        (Node : Gpr_Node'Class) return Private_Node;
-      --% no-document: True
-      function As_Private_Absent
-        (Node : Gpr_Node'Class) return Private_Absent;
-      --% no-document: True
-      function As_Private_Present
-        (Node : Gpr_Node'Class) return Private_Present;
       --% no-document: True
       function As_Project
         (Node : Gpr_Node'Class) return Project;
@@ -2853,102 +2229,6 @@ private
       No_Gpr_Node : constant Gpr_Node :=
         (Internal   => Implementation.No_Entity,
          Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Prelude_Node is new Gpr_Node with null record;
-      No_Ada_Prelude_Node : constant Ada_Prelude_Node :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Access_Subp is new Ada_Prelude_Node with null record;
-      No_Ada_Access_Subp : constant Ada_Access_Subp :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Context_Clause is new Ada_Prelude_Node with null record;
-      No_Ada_Context_Clause : constant Ada_Context_Clause :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Base_List is new Gpr_Node with null record;
-      No_Base_List : constant Base_List :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Context_Clause_List is new Base_List with null record;
-      No_Ada_Context_Clause_List : constant Ada_Context_Clause_List :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Entity_Kind is new Ada_Prelude_Node with null record;
-      No_Ada_Entity_Kind : constant Ada_Entity_Kind :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Entity_Kind_Function is new Ada_Entity_Kind with null record;
-      No_Ada_Entity_Kind_Function : constant Ada_Entity_Kind_Function :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Entity_Kind_Package is new Ada_Entity_Kind with null record;
-      No_Ada_Entity_Kind_Package : constant Ada_Entity_Kind_Package :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Entity_Kind_Procedure is new Ada_Entity_Kind with null record;
-      No_Ada_Entity_Kind_Procedure : constant Ada_Entity_Kind_Procedure :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Generic is new Ada_Prelude_Node with null record;
-      No_Ada_Generic : constant Ada_Generic :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Library_Item is new Ada_Prelude_Node with null record;
-      No_Ada_Library_Item : constant Ada_Library_Item :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Main is new Ada_Prelude_Node with null record;
-      No_Ada_Main : constant Ada_Main :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Pkg is new Ada_Main with null record;
-      No_Ada_Pkg : constant Ada_Pkg :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Pkg_Body is new Ada_Main with null record;
-      No_Ada_Pkg_Body : constant Ada_Pkg_Body :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Pragma is new Ada_Context_Clause with null record;
-      No_Ada_Pragma : constant Ada_Pragma :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Prelude is new Ada_Prelude_Node with null record;
-      No_Ada_Prelude : constant Ada_Prelude :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Prelude_Node_List is new Base_List with null record;
-      No_Ada_Prelude_Node_List : constant Ada_Prelude_Node_List :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Separate is new Ada_Prelude_Node with null record;
-      No_Ada_Separate : constant Ada_Separate :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Skip is new Ada_Prelude_Node with null record;
-      No_Ada_Skip : constant Ada_Skip :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Skip_List is new Base_List with null record;
-      No_Ada_Skip_List : constant Ada_Skip_List :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Subp is new Ada_Main with null record;
-      No_Ada_Subp : constant Ada_Subp :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_Use is new Ada_Context_Clause with null record;
-      No_Ada_Use : constant Ada_Use :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_With is new Ada_Context_Clause with null record;
-      No_Ada_With : constant Ada_With :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Ada_With_Formal is new Ada_Prelude_Node with null record;
-      No_Ada_With_Formal : constant Ada_With_Formal :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
          type All_Qualifier is new Gpr_Node with null record;
       No_All_Qualifier : constant All_Qualifier :=
         (Internal   => Implementation.No_Entity,
@@ -2967,6 +2247,10 @@ private
          Safety_Net => Implementation.No_Node_Safety_Net);
          type Attribute_Reference is new Gpr_Node with null record;
       No_Attribute_Reference : constant Attribute_Reference :=
+        (Internal   => Implementation.No_Entity,
+         Safety_Net => Implementation.No_Node_Safety_Net);
+         type Base_List is new Gpr_Node with null record;
+      No_Base_List : constant Base_List :=
         (Internal   => Implementation.No_Entity,
          Safety_Net => Implementation.No_Node_Safety_Net);
          type Builtin_Function_Call is new Gpr_Node with null record;
@@ -3003,10 +2287,6 @@ private
          Safety_Net => Implementation.No_Node_Safety_Net);
          type Expr is new Gpr_Node with null record;
       No_Expr : constant Expr :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Expr_List is new Base_List with null record;
-      No_Expr_List : constant Expr_List :=
         (Internal   => Implementation.No_Entity,
          Safety_Net => Implementation.No_Node_Safety_Net);
          type Single_Tok_Node is new Expr with null record;
@@ -3059,18 +2339,6 @@ private
          Safety_Net => Implementation.No_Node_Safety_Net);
          type Prefix is new Expr with null record;
       No_Prefix : constant Prefix :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Private_Node is new Gpr_Node with null record;
-      No_Private_Node : constant Private_Node :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Private_Absent is new Private_Node with null record;
-      No_Private_Absent : constant Private_Absent :=
-        (Internal   => Implementation.No_Entity,
-         Safety_Net => Implementation.No_Node_Safety_Net);
-         type Private_Present is new Private_Node with null record;
-      No_Private_Present : constant Private_Present :=
         (Internal   => Implementation.No_Entity,
          Safety_Net => Implementation.No_Node_Safety_Net);
          type Project is new Gpr_Node with null record;

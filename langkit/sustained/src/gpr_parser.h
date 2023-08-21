@@ -84,126 +84,6 @@ typedef enum {
          */
     
 
-        /* ada_prelude_node (abstract)  */
-        /*
-
-         */
-    
-
-        /*
-
-         */
-        gpr_ada_access_subp = 1,
-    
-
-        /* ada_context_clause (abstract)  */
-        /*
-
-         */
-    
-
-        /*
-
-         */
-        gpr_ada_pragma = 2,
-    
-
-        /*
-
-         */
-        gpr_ada_use = 3,
-    
-
-        /*
-
-         */
-        gpr_ada_with = 4,
-    
-
-        /* ada_entity_kind (abstract)  */
-        /*
-
-         */
-    
-
-        /*
-
-         */
-        gpr_ada_entity_kind_function = 5,
-    
-
-        /*
-
-         */
-        gpr_ada_entity_kind_package = 6,
-    
-
-        /*
-
-         */
-        gpr_ada_entity_kind_procedure = 7,
-    
-
-        /*
-
-         */
-        gpr_ada_generic = 8,
-    
-
-        /*
-
-         */
-        gpr_ada_library_item = 9,
-    
-
-        /* ada_main (abstract)  */
-        /*
-
-         */
-    
-
-        /*
-
-         */
-        gpr_ada_pkg = 10,
-    
-
-        /*
-
-         */
-        gpr_ada_pkg_body = 11,
-    
-
-        /*
-
-         */
-        gpr_ada_subp = 12,
-    
-
-        /*
-
-         */
-        gpr_ada_prelude = 13,
-    
-
-        /*
-
-         */
-        gpr_ada_separate = 14,
-    
-
-        /*
-
-         */
-        gpr_ada_skip = 15,
-    
-
-        /*
-
-         */
-        gpr_ada_with_formal = 16,
-    
-
         /* all_qualifier (abstract)  */
         /*
 
@@ -213,25 +93,25 @@ typedef enum {
         /*
 
          */
-        gpr_all_qualifier_absent = 17,
+        gpr_all_qualifier_absent = 1,
     
 
         /*
 
          */
-        gpr_all_qualifier_present = 18,
+        gpr_all_qualifier_present = 2,
     
 
         /*
 
          */
-        gpr_attribute_decl = 19,
+        gpr_attribute_decl = 3,
     
 
         /*
 
          */
-        gpr_attribute_reference = 20,
+        gpr_attribute_reference = 4,
     
 
         /* base_list (abstract)  */
@@ -241,39 +121,9 @@ typedef enum {
     
 
         /*
-         * List of AdaContextClause.
-         */
-        gpr_ada_context_clause_list = 21,
-    
-
-        /*
-         * List of AdaPreludeNode.
-         *
-         * This list node can contain one of the following nodes:
-         * ``gpr_ada_access_subp``, ``gpr_ada_skip``, ``gpr_ada_with_formal``
-         */
-        gpr_ada_prelude_node_list = 22,
-    
-
-        /*
-         * List of AdaSkip.
-         */
-        gpr_ada_skip_list = 23,
-    
-
-        /*
          * List of CaseItem.
          */
-        gpr_case_item_list = 24,
-    
-
-        /*
-         * List of Expr.
-         *
-         * This list node can contain one of the following nodes:
-         * ``gpr_identifier``, ``gpr_prefix``
-         */
-        gpr_expr_list = 25,
+        gpr_case_item_list = 5,
     
 
         /*
@@ -287,14 +137,14 @@ typedef enum {
          * ``gpr_typed_string_decl``, ``gpr_variable_decl``,
          * ``gpr_variable_reference``
          */
-        gpr_gpr_node_list = 26,
+        gpr_gpr_node_list = 6,
     
 
         /*
          * This list node can contain one of the following nodes:
          * ``gpr_others_designator``, ``gpr_string_literal``
          */
-        gpr_choices = 27,
+        gpr_choices = 7,
     
 
         /*
@@ -302,61 +152,61 @@ typedef enum {
          * ``gpr_builtin_function_call``, ``gpr_string_literal_at``,
          * ``gpr_terms``, ``gpr_variable_reference``
          */
-        gpr_term_list = 28,
+        gpr_term_list = 8,
     
 
         /*
          * List of Identifier.
          */
-        gpr_identifier_list = 29,
+        gpr_identifier_list = 9,
     
 
         /*
          * List of StringLiteral.
          */
-        gpr_string_literal_list = 30,
+        gpr_string_literal_list = 10,
     
 
         /*
          * List of TermList.
          */
-        gpr_term_list_list = 31,
+        gpr_term_list_list = 11,
     
 
         /*
          * List of WithDecl.
          */
-        gpr_with_decl_list = 32,
+        gpr_with_decl_list = 12,
     
 
         /*
 
          */
-        gpr_builtin_function_call = 33,
+        gpr_builtin_function_call = 13,
     
 
         /*
 
          */
-        gpr_case_construction = 34,
+        gpr_case_construction = 14,
     
 
         /*
 
          */
-        gpr_case_item = 35,
+        gpr_case_item = 15,
     
 
         /*
 
          */
-        gpr_compilation_unit = 36,
+        gpr_compilation_unit = 16,
     
 
         /*
 
          */
-        gpr_empty_decl = 37,
+        gpr_empty_decl = 17,
     
 
         /* expr (abstract)  */
@@ -368,7 +218,7 @@ typedef enum {
         /*
 
          */
-        gpr_prefix = 38,
+        gpr_prefix = 18,
     
 
         /* single_tok_node (abstract)  */
@@ -380,19 +230,19 @@ typedef enum {
         /*
 
          */
-        gpr_identifier = 39,
+        gpr_identifier = 19,
     
 
         /*
 
          */
-        gpr_num_literal = 40,
+        gpr_num_literal = 20,
     
 
         /*
 
          */
-        gpr_string_literal = 41,
+        gpr_string_literal = 21,
     
 
         /* limited_node (abstract)  */
@@ -404,79 +254,61 @@ typedef enum {
         /*
 
          */
-        gpr_limited_absent = 42,
+        gpr_limited_absent = 22,
     
 
         /*
 
          */
-        gpr_limited_present = 43,
+        gpr_limited_present = 23,
     
 
         /*
 
          */
-        gpr_others_designator = 44,
+        gpr_others_designator = 24,
     
 
         /*
 
          */
-        gpr_package_decl = 45,
+        gpr_package_decl = 25,
     
 
         /*
 
          */
-        gpr_package_extension = 46,
+        gpr_package_extension = 26,
     
 
         /*
 
          */
-        gpr_package_renaming = 47,
+        gpr_package_renaming = 27,
     
 
         /*
 
          */
-        gpr_package_spec = 48,
-    
-
-        /* private_node (abstract)  */
-        /*
-
-         */
+        gpr_package_spec = 28,
     
 
         /*
 
          */
-        gpr_private_absent = 49,
+        gpr_project = 29,
     
 
         /*
 
          */
-        gpr_private_present = 50,
+        gpr_project_declaration = 30,
     
 
         /*
 
          */
-        gpr_project = 51,
-    
-
-        /*
-
-         */
-        gpr_project_declaration = 52,
-    
-
-        /*
-
-         */
-        gpr_project_extension = 53,
+        gpr_project_extension = 31,
     
 
         /* project_qualifier (abstract)  */
@@ -488,79 +320,79 @@ typedef enum {
         /*
 
          */
-        gpr_project_qualifier_abstract = 54,
+        gpr_project_qualifier_abstract = 32,
     
 
         /*
 
          */
-        gpr_project_qualifier_aggregate = 55,
+        gpr_project_qualifier_aggregate = 33,
     
 
         /*
 
          */
-        gpr_project_qualifier_aggregate_library = 56,
+        gpr_project_qualifier_aggregate_library = 34,
     
 
         /*
 
          */
-        gpr_project_qualifier_configuration = 57,
+        gpr_project_qualifier_configuration = 35,
     
 
         /*
 
          */
-        gpr_project_qualifier_library = 58,
+        gpr_project_qualifier_library = 36,
     
 
         /*
 
          */
-        gpr_project_qualifier_standard = 59,
+        gpr_project_qualifier_standard = 37,
     
 
         /*
 
          */
-        gpr_string_literal_at = 60,
+        gpr_string_literal_at = 38,
     
 
         /*
 
          */
-        gpr_terms = 61,
+        gpr_terms = 39,
     
 
         /*
 
          */
-        gpr_type_reference = 62,
+        gpr_type_reference = 40,
     
 
         /*
 
          */
-        gpr_typed_string_decl = 63,
+        gpr_typed_string_decl = 41,
     
 
         /*
 
          */
-        gpr_variable_decl = 64,
+        gpr_variable_decl = 42,
     
 
         /*
 
          */
-        gpr_variable_reference = 65,
+        gpr_variable_reference = 43,
     
 
         /*
 
          */
-        gpr_with_decl = 66,
+        gpr_with_decl = 44,
 } gpr_node_kind_enum;
 
 /*
@@ -730,10 +562,6 @@ typedef struct {
 
     /* Internal identifiers for this token.  */
     int token_index, trivia_index;
-
-    gpr_token_kind kind;
-    gpr_text text;
-    gpr_source_location_range sloc_range;
 } gpr_token;
 
 
@@ -767,7 +595,7 @@ typedef struct {
     * Discriminant for DesignatedEnv structures.
     */
    typedef enum {
-      GPR_GRAMMAR_RULE_PROJECT_QUALIFIER_RULE, GPR_GRAMMAR_RULE_PROJECT_EXTENSION_RULE, GPR_GRAMMAR_RULE_PROJECT_DECLARATION_RULE, GPR_GRAMMAR_RULE_PROJECT_RULE, GPR_GRAMMAR_RULE_DECLARATIVE_ITEMS_RULE, GPR_GRAMMAR_RULE_DECLARATIVE_ITEM_RULE, GPR_GRAMMAR_RULE_SIMPLE_DECLARATIVE_ITEMS_RULE, GPR_GRAMMAR_RULE_SIMPLE_DECLARATIVE_ITEM_RULE, GPR_GRAMMAR_RULE_VARIABLE_DECL_RULE, GPR_GRAMMAR_RULE_ATTRIBUTE_DECL_RULE, GPR_GRAMMAR_RULE_ASSOCIATIVE_ARRAY_INDEX_RULE, GPR_GRAMMAR_RULE_PACKAGE_DECL_RULE, GPR_GRAMMAR_RULE_PACKAGE_RENAMING_RULE, GPR_GRAMMAR_RULE_PACKAGE_EXTENSION_RULE, GPR_GRAMMAR_RULE_PACKAGE_SPEC_RULE, GPR_GRAMMAR_RULE_EMPTY_DECLARATION_RULE, GPR_GRAMMAR_RULE_CASE_CONSTRUCTION_RULE, GPR_GRAMMAR_RULE_CASE_ITEM_RULE, GPR_GRAMMAR_RULE_OTHERS_DESIGNATOR_RULE, GPR_GRAMMAR_RULE_CHOICE_RULE, GPR_GRAMMAR_RULE_DISCRETE_CHOICE_LIST_RULE, GPR_GRAMMAR_RULE_WITH_DECL_RULE, GPR_GRAMMAR_RULE_CONTEXT_CLAUSES_RULE, GPR_GRAMMAR_RULE_ADA_WITH_CLAUSE_RULE, GPR_GRAMMAR_RULE_ADA_CONTEXT_RULE, GPR_GRAMMAR_RULE_ADA_CONTEXT_ITEM_RULE, GPR_GRAMMAR_RULE_ADA_CONTEXT_SKIP_RULE, GPR_GRAMMAR_RULE_ADA_USE_CLAUSE_RULE, GPR_GRAMMAR_RULE_ADA_PRAGMA_RULE, GPR_GRAMMAR_RULE_ADA_SUBP_KIND_RULE, GPR_GRAMMAR_RULE_ADA_PKG_KIND_RULE, GPR_GRAMMAR_RULE_ADA_LIBRARY_ITEM_RULE, GPR_GRAMMAR_RULE_ADA_PRELUDE_RULE, GPR_GRAMMAR_RULE_TYPED_STRING_DECL_RULE, GPR_GRAMMAR_RULE_IDENTIFIER_RULE, GPR_GRAMMAR_RULE_STRING_LITERAL_RULE, GPR_GRAMMAR_RULE_NUM_LITERAL_RULE, GPR_GRAMMAR_RULE_STATIC_NAME_RULE, GPR_GRAMMAR_RULE_ATTRIBUTE_REFERENCE_RULE, GPR_GRAMMAR_RULE_VARIABLE_REFERENCE_RULE, GPR_GRAMMAR_RULE_TYPE_REFERENCE_RULE, GPR_GRAMMAR_RULE_BUILTIN_FUNCTION_CALL_RULE, GPR_GRAMMAR_RULE_EXPRESSION_RULE, GPR_GRAMMAR_RULE_EXPRESSION_LIST_RULE, GPR_GRAMMAR_RULE_STRING_LITERAL_AT_RULE, GPR_GRAMMAR_RULE_TERM_RULE, GPR_GRAMMAR_RULE_COMPILATION_UNIT_RULE
+      GPR_GRAMMAR_RULE_PROJECT_QUALIFIER_RULE, GPR_GRAMMAR_RULE_PROJECT_EXTENSION_RULE, GPR_GRAMMAR_RULE_PROJECT_DECLARATION_RULE, GPR_GRAMMAR_RULE_PROJECT_RULE, GPR_GRAMMAR_RULE_DECLARATIVE_ITEMS_RULE, GPR_GRAMMAR_RULE_DECLARATIVE_ITEM_RULE, GPR_GRAMMAR_RULE_SIMPLE_DECLARATIVE_ITEMS_RULE, GPR_GRAMMAR_RULE_SIMPLE_DECLARATIVE_ITEM_RULE, GPR_GRAMMAR_RULE_VARIABLE_DECL_RULE, GPR_GRAMMAR_RULE_ATTRIBUTE_DECL_RULE, GPR_GRAMMAR_RULE_ASSOCIATIVE_ARRAY_INDEX_RULE, GPR_GRAMMAR_RULE_PACKAGE_DECL_RULE, GPR_GRAMMAR_RULE_PACKAGE_RENAMING_RULE, GPR_GRAMMAR_RULE_PACKAGE_EXTENSION_RULE, GPR_GRAMMAR_RULE_PACKAGE_SPEC_RULE, GPR_GRAMMAR_RULE_EMPTY_DECLARATION_RULE, GPR_GRAMMAR_RULE_CASE_CONSTRUCTION_RULE, GPR_GRAMMAR_RULE_CASE_ITEM_RULE, GPR_GRAMMAR_RULE_OTHERS_DESIGNATOR_RULE, GPR_GRAMMAR_RULE_CHOICE_RULE, GPR_GRAMMAR_RULE_DISCRETE_CHOICE_LIST_RULE, GPR_GRAMMAR_RULE_WITH_DECL_RULE, GPR_GRAMMAR_RULE_CONTEXT_CLAUSES_RULE, GPR_GRAMMAR_RULE_TYPED_STRING_DECL_RULE, GPR_GRAMMAR_RULE_IDENTIFIER_RULE, GPR_GRAMMAR_RULE_STRING_LITERAL_RULE, GPR_GRAMMAR_RULE_NUM_LITERAL_RULE, GPR_GRAMMAR_RULE_STATIC_NAME_RULE, GPR_GRAMMAR_RULE_ATTRIBUTE_REFERENCE_RULE, GPR_GRAMMAR_RULE_VARIABLE_REFERENCE_RULE, GPR_GRAMMAR_RULE_TYPE_REFERENCE_RULE, GPR_GRAMMAR_RULE_BUILTIN_FUNCTION_CALL_RULE, GPR_GRAMMAR_RULE_EXPRESSION_RULE, GPR_GRAMMAR_RULE_EXPRESSION_LIST_RULE, GPR_GRAMMAR_RULE_STRING_LITERAL_AT_RULE, GPR_GRAMMAR_RULE_TERM_RULE, GPR_GRAMMAR_RULE_COMPILATION_UNIT_RULE
    } gpr_grammar_rule;
    /*
     * Gramar rule to use for parsing.
@@ -1622,296 +1450,6 @@ extern int gpr_gpr_node_full_sloc_image(
 
 
 /*
- * This field can contain one of the following nodes:
- * ``gpr_ada_entity_kind_function``, ``gpr_ada_entity_kind_procedure``
- */
-extern int gpr_ada_access_subp_f_subp_kind(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
-
- */
-extern int gpr_ada_access_subp_f_skips(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
-
- */
-extern int gpr_ada_pragma_f_skips(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
-
- */
-extern int gpr_ada_use_f_skips(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
-
- */
-extern int gpr_ada_with_f_has_limited(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
-
- */
-extern int gpr_ada_with_f_has_private(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
- * This field contains a list that itself contains one of the following nodes:
- * ``gpr_identifier``, ``gpr_prefix``
- */
-extern int gpr_ada_with_f_packages(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
-
- */
-extern int gpr_ada_generic_f_skips(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
-
- */
-extern int gpr_ada_library_item_f_generic_stub(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
-
- */
-extern int gpr_ada_library_item_f_separate(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
-
- */
-extern int gpr_ada_library_item_f_main(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
- * This field can contain one of the following nodes: ``gpr_identifier``,
- * ``gpr_prefix``
- */
-extern int gpr_ada_main_f_name(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
-
- */
-extern int gpr_ada_pkg_f_has_private(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
- * This field can contain one of the following nodes:
- * ``gpr_ada_entity_kind_function``, ``gpr_ada_entity_kind_procedure``
- */
-extern int gpr_ada_subp_f_subp_kind(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
-
- */
-extern int gpr_ada_prelude_f_context_clauses(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
-
- */
-extern int gpr_ada_prelude_f_library_item(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
- * This field can contain one of the following nodes: ``gpr_identifier``,
- * ``gpr_prefix``
- */
-extern int gpr_ada_separate_f_parent_name(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
-
- */
-extern int gpr_ada_with_formal_f_kind(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
-
- */
-extern int gpr_ada_with_formal_f_skips(
-    gpr_base_entity *node,
-
-
-    gpr_base_entity *value_p
-);
-
-
-        
-
-
-
-/*
  * Return whether this is an instance of AllQualifierPresent
  */
 extern int gpr_all_qualifier_p_as_bool(
@@ -1927,7 +1465,7 @@ extern int gpr_all_qualifier_p_as_bool(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_attribute_decl_f_attr_name(
     gpr_base_entity *node,
@@ -1961,6 +1499,8 @@ extern int gpr_attribute_decl_f_attr_index(
  * This field contains a list that itself contains one of the following nodes:
  * ``gpr_builtin_function_call``, ``gpr_string_literal_at``, ``gpr_terms``,
  * ``gpr_variable_reference``
+ *
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_attribute_decl_f_expr(
     gpr_base_entity *node,
@@ -1975,7 +1515,7 @@ extern int gpr_attribute_decl_f_expr(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_attribute_reference_f_attribute_name(
     gpr_base_entity *node,
@@ -2006,7 +1546,7 @@ extern int gpr_attribute_reference_f_attribute_index(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_builtin_function_call_f_function_name(
     gpr_base_entity *node,
@@ -2021,7 +1561,7 @@ extern int gpr_builtin_function_call_f_function_name(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_builtin_function_call_f_parameters(
     gpr_base_entity *node,
@@ -2036,7 +1576,7 @@ extern int gpr_builtin_function_call_f_parameters(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_case_construction_f_var_ref(
     gpr_base_entity *node,
@@ -2051,7 +1591,7 @@ extern int gpr_case_construction_f_var_ref(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_case_construction_f_items(
     gpr_base_entity *node,
@@ -2068,6 +1608,8 @@ extern int gpr_case_construction_f_items(
 /*
  * This field contains a list that itself contains one of the following nodes:
  * ``gpr_others_designator``, ``gpr_string_literal``
+ *
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_case_item_f_choice(
     gpr_base_entity *node,
@@ -2085,6 +1627,8 @@ extern int gpr_case_item_f_choice(
  * This field contains a list that itself contains one of the following nodes:
  * ``gpr_attribute_decl``, ``gpr_case_construction``, ``gpr_empty_decl``,
  * ``gpr_variable_decl``
+ *
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_case_item_f_decls(
     gpr_base_entity *node,
@@ -2099,7 +1643,7 @@ extern int gpr_case_item_f_decls(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_compilation_unit_f_project(
     gpr_base_entity *node,
@@ -2116,6 +1660,8 @@ extern int gpr_compilation_unit_f_project(
 /*
  * This field can contain one of the following nodes: ``gpr_identifier``,
  * ``gpr_prefix``
+ *
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_prefix_f_prefix(
     gpr_base_entity *node,
@@ -2130,7 +1676,7 @@ extern int gpr_prefix_f_prefix(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_prefix_f_suffix(
     gpr_base_entity *node,
@@ -2160,7 +1706,7 @@ extern int gpr_limited_node_p_as_bool(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_package_decl_f_pkg_name(
     gpr_base_entity *node,
@@ -2177,6 +1723,8 @@ extern int gpr_package_decl_f_pkg_name(
 /*
  * This field can contain one of the following nodes: ``gpr_package_renaming``,
  * ``gpr_package_spec``
+ *
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_package_decl_f_pkg_spec(
     gpr_base_entity *node,
@@ -2191,7 +1739,7 @@ extern int gpr_package_decl_f_pkg_spec(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_package_extension_f_extended_name(
     gpr_base_entity *node,
@@ -2206,7 +1754,7 @@ extern int gpr_package_extension_f_extended_name(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_package_renaming_f_renamed_name(
     gpr_base_entity *node,
@@ -2239,6 +1787,8 @@ extern int gpr_package_spec_f_extension(
  * This field contains a list that itself contains one of the following nodes:
  * ``gpr_attribute_decl``, ``gpr_case_construction``, ``gpr_empty_decl``,
  * ``gpr_variable_decl``
+ *
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_package_spec_f_decls(
     gpr_base_entity *node,
@@ -2253,7 +1803,7 @@ extern int gpr_package_spec_f_decls(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_package_spec_f_end_name(
     gpr_base_entity *node,
@@ -2268,22 +1818,7 @@ extern int gpr_package_spec_f_end_name(
 
 
 /*
- * Return whether this is an instance of PrivatePresent
- */
-extern int gpr_private_node_p_as_bool(
-    gpr_base_entity *node,
-
-
-    gpr_bool *value_p
-);
-
-
-        
-
-
-
-/*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_project_f_context_clauses(
     gpr_base_entity *node,
@@ -2298,7 +1833,7 @@ extern int gpr_project_f_context_clauses(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_project_f_project_decl(
     gpr_base_entity *node,
@@ -2330,6 +1865,8 @@ extern int gpr_project_declaration_f_qualifier(
 /*
  * This field can contain one of the following nodes: ``gpr_identifier``,
  * ``gpr_prefix``
+ *
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_project_declaration_f_project_name(
     gpr_base_entity *node,
@@ -2362,6 +1899,8 @@ extern int gpr_project_declaration_f_extension(
  * This field contains a list that itself contains one of the following nodes:
  * ``gpr_attribute_decl``, ``gpr_case_construction``, ``gpr_empty_decl``,
  * ``gpr_package_decl``, ``gpr_typed_string_decl``, ``gpr_variable_decl``
+ *
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_project_declaration_f_decls(
     gpr_base_entity *node,
@@ -2378,6 +1917,8 @@ extern int gpr_project_declaration_f_decls(
 /*
  * This field can contain one of the following nodes: ``gpr_identifier``,
  * ``gpr_prefix``
+ *
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_project_declaration_f_end_name(
     gpr_base_entity *node,
@@ -2392,7 +1933,7 @@ extern int gpr_project_declaration_f_end_name(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_project_extension_f_is_all(
     gpr_base_entity *node,
@@ -2407,7 +1948,7 @@ extern int gpr_project_extension_f_is_all(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_project_extension_f_path_name(
     gpr_base_entity *node,
@@ -2422,7 +1963,7 @@ extern int gpr_project_extension_f_path_name(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_string_literal_at_f_str_lit(
     gpr_base_entity *node,
@@ -2452,7 +1993,7 @@ extern int gpr_string_literal_at_f_at_lit(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_terms_f_terms(
     gpr_base_entity *node,
@@ -2467,7 +2008,7 @@ extern int gpr_terms_f_terms(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_type_reference_f_var_type_name(
     gpr_base_entity *node,
@@ -2482,7 +2023,7 @@ extern int gpr_type_reference_f_var_type_name(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_typed_string_decl_f_type_id(
     gpr_base_entity *node,
@@ -2497,7 +2038,7 @@ extern int gpr_typed_string_decl_f_type_id(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_typed_string_decl_f_string_literals(
     gpr_base_entity *node,
@@ -2512,7 +2053,7 @@ extern int gpr_typed_string_decl_f_string_literals(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_variable_decl_f_var_name(
     gpr_base_entity *node,
@@ -2545,6 +2086,8 @@ extern int gpr_variable_decl_f_var_type(
  * This field contains a list that itself contains one of the following nodes:
  * ``gpr_builtin_function_call``, ``gpr_string_literal_at``, ``gpr_terms``,
  * ``gpr_variable_reference``
+ *
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_variable_decl_f_expr(
     gpr_base_entity *node,
@@ -2559,7 +2102,7 @@ extern int gpr_variable_decl_f_expr(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_variable_reference_f_variable_name(
     gpr_base_entity *node,
@@ -2589,7 +2132,7 @@ extern int gpr_variable_reference_f_attribute_ref(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_with_decl_f_is_limited(
     gpr_base_entity *node,
@@ -2604,7 +2147,7 @@ extern int gpr_with_decl_f_is_limited(
 
 
 /*
-
+ * When there are no parsing errors, this field is never null.
  */
 extern int gpr_with_decl_f_path_names(
     gpr_base_entity *node,
@@ -2627,7 +2170,8 @@ extern int gpr_with_decl_f_path_names(
  * all callbacks below.
  *
  * ``destroy`` is a callback that is called by ``gpr_dec_ref_event_handler`` to
- * leave a chance to free resources that ``data`` may hold.
+ * leave a chance to free resources that ``data`` may hold. ``NULL`` can be
+ * passed if nothing needs to be done.
  *
  * ``unit_requested`` is a callback that will be called when a unit is
  * requested.
@@ -2723,6 +2267,12 @@ extern char *
 gpr_exception_name(gpr_exception_kind kind);
 
 /*
+ * Kind for this token.
+ */
+extern int
+gpr_token_get_kind(gpr_token *token);
+
+/*
  * Return a human-readable name for a token kind.
  *
  * The returned string is dynamically allocated and the caller must free it
@@ -2733,6 +2283,13 @@ gpr_exception_name(gpr_exception_kind kind);
  */
 extern char *
 gpr_token_kind_name(gpr_token_kind kind);
+
+/*
+ * Return the source location range of the given token.
+ */
+extern void
+gpr_token_sloc_range(gpr_token *token,
+                                     gpr_source_location_range *result);
 
 /*
  * Return a reference to the next token in the corresponding analysis unit.
