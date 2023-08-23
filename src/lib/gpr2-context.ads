@@ -34,7 +34,7 @@ package GPR2.Context is
 
    function Signature
      (Self      : Object;
-      Externals : Containers.Name_List) return Context.Binary_Signature
+      Externals : Containers.Name_Set) return Context.Binary_Signature
      with Post =>
        (if Externals.Length = 0
            or else (for all E of Externals => not Self.Contains (E))

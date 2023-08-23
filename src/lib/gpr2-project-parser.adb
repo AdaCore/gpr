@@ -183,7 +183,7 @@ package body GPR2.Project.Parser is
    -- Externals --
    ---------------
 
-   function Externals (Self : Object) return Containers.Name_List is
+   function Externals (Self : Object) return Containers.Name_Set is
    begin
       return Self.Externals;
    end Externals;
@@ -785,7 +785,7 @@ package body GPR2.Project.Parser is
                               & "empty"));
 
                      else
-                        Project.Externals.Append (Optional_Name_Type (Var));
+                        Project.Externals.Include (Optional_Name_Type (Var));
 
                         declare
                            Node : Gpr_Node := Exprs.Child (2);

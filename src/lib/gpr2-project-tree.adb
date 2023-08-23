@@ -120,7 +120,7 @@ package body GPR2.Project.Tree is
 
    procedure Update_Context
      (Context     : in out GPR2.Context.Object;
-      Externals   : Containers.Name_List;
+      Externals   : Containers.Name_Set;
       Environment : GPR2.Environment.Object);
    --  For all externals in Externals, if external is not already present in
    --  the context, fetch its value from the environment and insert it into the
@@ -1281,9 +1281,7 @@ package body GPR2.Project.Tree is
 
          if Config.Is_Defined and then Config.Has_Externals then
             for E of Config.Externals loop
-               if not Def.Externals.Contains (E) then
-                  Def.Externals.Append (E);
-               end if;
+               Def.Externals.Include (E);
             end loop;
          end if;
 
@@ -1293,17 +1291,15 @@ package body GPR2.Project.Tree is
             --  imported/extended project.
 
             for E of Definition.Get_RO (V_Data).Externals loop
-               if not Def.Externals.Contains (E) then
-                  --  Note that if we have an aggregate project, then
-                  --  we are not dependent on the external if it is
-                  --  statically redefined in the aggregate project. But
-                  --  at this point we have not yet parsed the project.
-                  --
-                  --  The externals will be removed in Set_Context when
-                  --  the parsing is done.
+               --  Note that if we have an aggregate project, then
+               --  we are not dependent on the external if it is
+               --  statically redefined in the aggregate project. But
+               --  at this point we have not yet parsed the project.
+               --
+               --  The externals will be removed in Set_Context when
+               --  the parsing is done.
 
-                  Def.Externals.Append (E);
-               end if;
+               Def.Externals.Include (E);
             end loop;
          end loop;
 
@@ -2811,11 +2807,11 @@ package body GPR2.Project.Tree is
             if P_Data.Is_Root then
                for C in P_Data.Attrs.Iterate (Name => PRA.External.Attr) loop
                   declare
-                     P : Containers.Name_Type_List.Cursor :=
+                     P : Containers.Name_Type_Set.Cursor :=
                            P_Data.Externals.Find
                              (Name_Type (P_Data.Attrs (C).Index.Text));
                   begin
-                     if Containers.Name_Type_List.Has_Element (P) then
+                     if Containers.Name_Type_Set.Has_Element (P) then
                         P_Data.Externals.Delete (P);
                      end if;
                   end;
@@ -3633,7 +3629,7 @@ package body GPR2.Project.Tree is
 
    procedure Update_Context
      (Context     : in out GPR2.Context.Object;
-      Externals   : Containers.Name_List;
+      Externals   : Containers.Name_Set;
       Environment : GPR2.Environment.Object) is
    begin
       for External of Externals loop
