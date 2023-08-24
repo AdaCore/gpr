@@ -2999,6 +2999,13 @@ package body GPRinstall.Install is
             return;
          end if;
 
+         if Project.Has_Mains
+           and then Project.Mains.Is_Empty
+         then
+            Util.Output_Messages (Options);
+            GPRtools.Util.Fail_Program ("problems with main sources");
+         end if;
+
          --  What should be copied ?
 
          Copy :=
