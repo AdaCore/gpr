@@ -78,8 +78,8 @@
              - "no"
 
 * runtime (!runtime) [ standard project ]
-    - Project file      : /home/lambourg/sbx/gpr/(host)/gcc/install/lib/gcc/(host)/12.3.1/runtime.gpr
-    - Project directory : /home/lambourg/sbx/gpr/(host)/gcc/install/lib/gcc/(host)/12.3.1/
+    - Project file      : <gcc>/lib/gcc/(host)/(gcc-version)/runtime.gpr
+    - Project directory : <gcc>/lib/gcc/(host)/(gcc-version)/
     - <gnat rts>/adalib/
     - Source directory  :
        - <gnat rts>/adainclude
@@ -98,7 +98,7 @@
        - Object_Dir [ SINGLE ]
           - <gnat rts>/adalib"
        - Project_Dir [ SINGLE ]
-          - Value : "/home/lambourg/sbx/gpr/(host)/gcc/install/lib/gcc/(host)/12.3.1/"
+          - Value : "<gcc>/lib/gcc/(host)/(gcc-version)/"
        - Source_Dirs [ LIST ]
           - Values : 
              - <gnat rts>/adainclude"
