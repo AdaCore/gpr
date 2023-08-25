@@ -172,7 +172,7 @@ test_gpr2_cov:
         --failure-exit-code 1
         --xunit-output $CI_PROJECT_DIR/testgpr2cov_result.xml
         --xunit-name test_gpr2_cov
-        $SANDBOX/$HOST/gpr2-test-cov-stmt/results/new/ || exit 1
+        $SANDBOX/$HOST/gpr2-test-cov-stmt-next/results/new/ || exit 1
   coverage: '/^Stmt Coverage:\s+(\d+\.\d+\%) \(\d+ \/ \d+\)$/'
   artifacts:
     when:
