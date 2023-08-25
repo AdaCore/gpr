@@ -5,10 +5,9 @@
 --
 
 with Ada.Containers.Hashed_Maps;
-with Ada.Containers.Hashed_Sets;
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Containers.Indefinite_Hashed_Sets;
-with Ada.Containers.Ordered_Sets;
+with Ada.Containers.Indefinite_Ordered_Sets;
 
 with GNATCOLL.Refcount;
 
@@ -32,13 +31,13 @@ private package GPR2.Build.View_Tables is
 
    --  generic file object: can represent any file found on the filesystem
 
-   type File_Info is record
-      Path    : Path_Name.Object;
-      --  Full path to the file
+   type File_Info (Path_Len : Natural) is record
       Stamp   : Ada.Calendar.Time;
       --  Modification time at the moment we've read the source dir
       Dir_Ref : Source_Reference.Value.Object;
       --  Attribute value that made us read this file
+      Path    : Filename_Optional (1 .. Path_Len);
+      --  Full path to the file
    end record;
 
    overriding function "=" (F1, F2 : File_Info) return Boolean is
@@ -48,12 +47,12 @@ private package GPR2.Build.View_Tables is
       (F1.Path < F2.Path);
 
    function Hash (F : File_Info) return Ada.Containers.Hash_Type is
-      (F.Path.Hash);
+      (GPR2.Hash (F.Path));
 
    package File_Info_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (Simple_Name, File_Info, Hash, "=");
 
-   package File_Sets is new Ada.Containers.Ordered_Sets
+   package File_Sets is new Ada.Containers.Indefinite_Ordered_Sets
      (File_Info);
 
    package Basename_Sets is new Ada.Containers.Indefinite_Hashed_Sets
@@ -84,25 +83,25 @@ private package GPR2.Build.View_Tables is
    --  * Self.Hidden_Sources: indexed by simple names, points to a list of
    --    sources that are not visible (because of overloading or errors).
 
-   package Src_Info_Maps is new Ada.Containers.Hashed_Maps
-     (Path_Name.Object, Build.Source.Object,
-      Path_Name.Hash, Path_Name."=", Source."=");
+   package Src_Info_Maps is new Ada.Containers.Indefinite_Hashed_Maps
+     (Filename_Optional, Build.Source.Object,
+      Hash, "=", Source."=");
 
    package Object_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (Simple_Name, Object_Info.Object, Hash, "=", Object_Info."=");
 
-   type Source_Proxy is record
+   type Source_Proxy (Path_Len : Natural) is record
       View      : GPR2.Project.View.Object;
-      Path_Name : GPR2.Path_Name.Object;
       Inh_From  : GPR2.Project.View.Object;
+      Path_Name : Filename_Optional (1 .. Path_Len);
    end record;
 
-   No_Proxy : constant Source_Proxy := (others => <>);
+   No_Proxy : constant Source_Proxy := (Path_Len => 0, others => <>);
 
    function Hash (Proxy : Source_Proxy) return Ada.Containers.Hash_Type
-     is (Path_Name.Hash (Proxy.Path_Name) + View_Ids.Hash (Proxy.View.Id));
+     is (GPR2.Hash (Proxy.Path_Name) + View_Ids.Hash (Proxy.View.Id));
 
-   package Source_Proxy_Sets is new Ada.Containers.Hashed_Sets
+   package Source_Proxy_Sets is new Ada.Containers.Indefinite_Hashed_Sets
      (Source_Proxy, Hash, "=");
    --  A set of source reference
 
@@ -178,31 +177,34 @@ private package GPR2.Build.View_Tables is
       end case;
    end record;
 
-   procedure Add_Source
-     (Data               : in out View_Data;
-      View_Owner         : GPR2.Project.View.Object;
-      Path               : GPR2.Path_Name.Object;
-      Extended_View      : GPR2.Project.View.Object;
-      Resolve_Visibility : Boolean := False;
-      Messages           : in out GPR2.Log.Object);
-
-   procedure Remove_Source
-     (Data               : in out View_Data;
-      View_Owner         : GPR2.Project.View.Object;
-      Path               : GPR2.Path_Name.Object;
-      Extended_View      : GPR2.Project.View.Object;
-      Resolve_Visibility : Boolean := False;
-      Messages           : in out GPR2.Log.Object);
-
-   procedure Refresh
-     (Data     : in out View_Data;
-      Messages : in out GPR2.Log.Object);
-
    package Data_Refs is new GNATCOLL.Refcount.Shared_Pointers (View_Data);
 
    subtype View_Data_Ref is Data_Refs.Reference_Type;
 
-   View_Base_For : access function (Data : View_Data) return View_Db.Object;
+   procedure Add_Source
+     (Data               : View_Data_Ref;
+      View_Owner         : GPR2.Project.View.Object;
+      Path               : Filename_Type;
+      Extended_View      : GPR2.Project.View.Object;
+      Resolve_Visibility : Boolean := False;
+      Messages           : in out GPR2.Log.Object)
+     with Inline;
+
+   procedure Remove_Source
+     (Data               : View_Data_Ref;
+      View_Owner         : GPR2.Project.View.Object;
+      Path               : Filename_Type;
+      Extended_View      : GPR2.Project.View.Object;
+      Resolve_Visibility : Boolean := False;
+      Messages           : in out GPR2.Log.Object)
+     with Inline;
+
+   procedure Refresh
+     (Data     : View_Data_Ref;
+      Messages : in out GPR2.Log.Object);
+
+   View_Base_For : access function
+                     (Data : View_Data) return View_Db.Object;
    Get_Ref       : access function
                      (Obj : View_Db.Object) return View_Data_Ref;
 

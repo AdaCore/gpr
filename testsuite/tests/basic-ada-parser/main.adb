@@ -20,7 +20,6 @@ procedure Main is
 
    procedure Unit_Name_CB
      (Unit_Name     : String; Separate_From : String := "";
-      Lib_Item_Type : Gpr_Parser.Basic_Ada_Parser.Library_Item_Type;
       Generic_Unit  : Boolean);
 
    procedure With_Clause_CB
@@ -39,7 +38,6 @@ procedure Main is
 
    procedure Unit_Name_CB
      (Unit_Name     : String; Separate_From : String := "";
-      Lib_Item_Type : Gpr_Parser.Basic_Ada_Parser.Library_Item_Type;
       Generic_Unit  : Boolean)
    is
    begin

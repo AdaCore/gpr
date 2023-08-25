@@ -3,5 +3,3 @@ description:
 driver: build_and_run
 project_file: source_interface
 main: main
-control:
-- [XFAIL, "True", "libgpr2-next: missing unit name resolution with Ada parser"]

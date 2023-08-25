@@ -3,8 +3,9 @@ Project: Demo1
  > src1/1pck.adb
                   language: Ada    Kind: S_BODY   unit: 1PCK
 Project: Demo2
+pck___b.ads: error: invalid name for unit 'PCK._B', cannot contain underscore after dot
  > src2/pck___b.ads
-                  language: Ada    Kind: S_SPEC   unit: WRONG
+                  language: Ada    Kind: S_BODY   unit: PCK._B
  > src2/pck__a.adb
                   language: Ada    Kind: S_BODY   unit: PCK.A
  > src2/pcka.ads

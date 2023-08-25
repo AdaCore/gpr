@@ -128,7 +128,7 @@ package GPR2.Path_Name is
                    and then not Self.Is_Root_Dir;
    --  Returns the base name for Self (with extension)
 
-   function Simple_Name (Path : String) return String;
+   function Simple_Name (Path : String) return GPR2.Simple_Name;
    --  Returns the simple name portion of the file name specified by Name.
    --  This is Ada.Directories.Simple_Name implementation with
    --  valid path name check removed to allow '*' chars.

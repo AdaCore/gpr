@@ -73,13 +73,13 @@ package GPR2.Build.Compilation_Unit is
 
    function Has_Part
      (Self : Object;
-      Kind : Unit_Kind) return Boolean
+      Kind : Valid_Unit_Kind) return Boolean
      with Pre => Self.Is_Defined;
    --  Whether a unit with Kind is defined for Self
 
    procedure Add
      (Self     : in out Object;
-      Kind     : Unit_Kind;
+      Kind     : Valid_Unit_Kind;
       View     : GPR2.Project.View.Object;
       Path     : GPR2.Path_Name.Object;
       Index    : Unit_Index := No_Index;
@@ -90,7 +90,7 @@ package GPR2.Build.Compilation_Unit is
 
    function Get
      (Self     : Object;
-      Kind     : Unit_Kind;
+      Kind     : Valid_Unit_Kind;
       Sep_Name : Optional_Name_Type := "") return Unit_Location
      with Pre => Self.Is_Defined
                    and then (Sep_Name'Length = 0) = (Kind /= S_Separate);
@@ -99,7 +99,7 @@ package GPR2.Build.Compilation_Unit is
 
    procedure Remove
      (Self     : in out Object;
-      Kind     : Unit_Kind;
+      Kind     : Valid_Unit_Kind;
       View     : GPR2.Project.View.Object;
       Path     : GPR2.Path_Name.Object;
       Index    : Unit_Index := No_Index;
@@ -186,7 +186,7 @@ private
 
    function Has_Part
      (Self : Object;
-      Kind : Unit_Kind) return Boolean
+      Kind : Valid_Unit_Kind) return Boolean
    is (case Kind is
           when S_Spec => Self.Spec /= No_Unit,
           when S_Body => Self.Implem /= No_Unit,

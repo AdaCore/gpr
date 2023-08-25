@@ -30,18 +30,15 @@ package body Gpr_Parser.Basic_Ada_Parser is
    procedure Parse_Context_Clauses
      (Filename       : String;
       Context        : Gpr_Parser.Analysis.Analysis_Context'Class;
-      Charset        : String := "UTF-8";
       Log_Error      : access procedure (Message : String);
       With_Clause_CB : access procedure (Unit_Name  : String;
                                          Is_Limited : Boolean) := null;
       Unit_Name_CB   : access procedure (Unit_Name     : String;
                                          Separate_From : String;
-                                         Lib_Item_Type : Library_Item_Type;
                                          Generic_Unit  : Boolean) := null;
-      No_Body_CB               : access procedure := null)
+      No_Body_CB     : access procedure := null)
    is
       Contents     : Decoded_File_Contents;
-      Read_BOM     : Boolean          := Charset'Length = 0;
       State        : Lexer_State;
       Internal_Ctx : Internal_Context := Unwrap_Context (Context);
       Has_Error    : Boolean := False;
@@ -130,7 +127,6 @@ package body Gpr_Parser.Basic_Ada_Parser is
          Separate_From_First : Natural     := 0;
          Separate_From_Last  : Natural     := 0;
          Generic_Unit        : Boolean     := False;
-         Lib_Item_Type       : Library_Item_Type;
 
          procedure Skip_Generic with
            Pre =>
@@ -218,19 +214,18 @@ package body Gpr_Parser.Basic_Ada_Parser is
                   U_Name : String :=
                              Gpr_Parser_Support.Text.Encode
                                (Contents.Buffer (Unit_First .. Unit_Last),
-                                Charset);
+                                "UTF-8");
                   Sep_Name : constant String :=
                                (if Separate_From_First /= 0
                                 then Encode (Contents.Buffer
                                   (Separate_From_First .. Separate_From_Last),
-                                  Charset)
+                                  "UTF-8")
                                 else "");
 
                begin
                   Unit_Name_CB
                     (Unit_Name     => U_Name,
                      Separate_From => Sep_Name,
-                     Lib_Item_Type => Lib_Item_Type,
                      Generic_Unit  => Generic_Unit);
                end;
             end;
@@ -350,13 +345,6 @@ package body Gpr_Parser.Basic_Ada_Parser is
          --  is present, the tokens we can expect are: - procedure / function
          --  - package body - task body - protected body.
 
-         if T.Kind = Gpr_Package then
-            Lib_Item_Type := Is_Package;
-
-         else
-            Lib_Item_Type := Is_Subprogram;
-         end if;
-
          Parse_Unit;
       end Parse_Library_Item_And_Subunit;
 
@@ -467,7 +455,7 @@ package body Gpr_Parser.Basic_Ada_Parser is
                   Name : String :=
                     Gpr_Parser_Support.Text.Encode
                       (Contents.Buffer (Withed_Unit_First .. Withed_Unit_Last),
-                       Charset);
+                       "UTF-8");
 
                begin
                   With_Clause_CB (Name, Lim);
@@ -582,10 +570,10 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
          if Internal_Ctx.File_Reader /= null then
             Read
-              (Internal_Ctx.File_Reader.all, Filename, Charset, Read_BOM,
+              (Internal_Ctx.File_Reader.all, Filename, "iso-8859-15", True,
                Contents, Diagnostics);
          else
-            Direct_Read (Filename, Charset, Read_BOM, Contents, Diagnostics);
+            Direct_Read (Filename, "iso-8859-15", True, Contents, Diagnostics);
          end if;
 
          if not Diagnostics.Is_Empty then
@@ -624,7 +612,15 @@ package body Gpr_Parser.Basic_Ada_Parser is
             end if;
 
             if T.Kind = Gpr_With or else T.Kind = Gpr_Limited then
-               Parse_With_Clause;
+               if With_Clause_CB /= null then
+                  Parse_With_Clause;
+
+               elsif not Skip_Until ((1 => Gpr_Semicolon), T) then
+                  Log_Error_Internal
+                    ("missing ';' or ',' in a with clause");
+
+                  exit;
+               end if;
 
             elsif T.Kind = Gpr_Identifier or else T.Kind = Gpr_Package then
                Parse_Library_Item_And_Subunit;

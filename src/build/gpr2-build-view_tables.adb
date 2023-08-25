@@ -13,11 +13,11 @@ with GPR2.Project.Tree;
 package body GPR2.Build.View_Tables is
 
    procedure Add_Unit_Part
-     (NS_Db   : in out View_Data;
+     (NS_Db     : View_Data_Ref;
       CU        : Name_Type;
       Kind      : Unit_Kind;
       Sep_Name  : Optional_Name_Type;
-      View_Db   : in out View_Data;
+      View_Db   : View_Data_Ref;
       Path      : Path_Name.Object;
       Index     : Unit_Index;
       Messages  : in out GPR2.Log.Object)
@@ -25,35 +25,35 @@ package body GPR2.Build.View_Tables is
                    and then (Kind = S_Separate) = (Sep_Name'Length > 0);
 
    procedure Remove_Unit_Part
-     (NS_Db    : in out View_Data;
+     (NS_Db    : View_Data_Ref;
       CU       : Name_Type;
       Kind     : Unit_Kind;
       Sep_Name : Optional_Name_Type;
-      View_Db  : in out View_Data;
+      View_Db  : View_Data_Ref;
       Path     : Path_Name.Object;
       Index    : Unit_Index)
      with Pre => NS_Db.Is_Root
                    and then (Kind = S_Separate) = (Sep_Name'Length > 0);
 
    procedure Resolve_Visibility
-     (Data     : in out View_Data;
+     (Data     : View_Data_Ref;
       Cursor   : in out Basename_Source_List_Maps.Cursor;
       Messages : in out GPR2.Log.Object);
 
    procedure Add_Unit_Ownership
-     (To   : in out View_Data;
+     (To   : View_Data_Ref;
       CU   : Name_Type;
-      Root : View_Data);
+      Root : View_Data_Ref);
 
    procedure Remove_Unit_Ownership
-     (From : in out View_Data;
+     (From : View_Data_Ref;
       CU   : Name_Type;
-      Root : View_Data);
+      Root : View_Data_Ref);
 
    package Update_Sources_List is
       procedure Process
-        (Data          : in out View_Data;
-         Stop_On_Error : Boolean;
+        (Data          : View_Data_Ref;
+      Stop_On_Error : Boolean;
          Messages      : in out GPR2.Log.Object);
       --  Update the list of sources
    end Update_Sources_List;
@@ -62,7 +62,7 @@ package body GPR2.Build.View_Tables is
    is (Get_Ref (Inst));
 
    procedure Check_Separate
-     (Root_Db : View_Tables.View_Data;
+     (Root_Db : View_Tables.View_Data_Ref;
       File    : in out Source.Object)
      with Pre => Root_Db.Is_Root
                    and then File.Has_Single_Unit
@@ -73,30 +73,32 @@ package body GPR2.Build.View_Tables is
    ----------------
 
    procedure Add_Source
-     (Data               : in out View_Data;
+     (Data               : View_Data_Ref;
       View_Owner         : GPR2.Project.View.Object;
-      Path               : GPR2.Path_Name.Object;
+      Path               : Filename_Type;
       Extended_View      : GPR2.Project.View.Object;
       Resolve_Visibility : Boolean := False;
       Messages           : in out GPR2.Log.Object)
    is
-      use type GPR2.Project.View.Object;
+      --  function Get_Owner_Db return View_Data_Ref is
+      --    (if View_Owner = Data.View
+      --     then Data
+      --     else Get_Data (Data.Tree_Db, View_Owner));
 
       C_Overload : Basename_Source_List_Maps.Cursor;
       Done       : Boolean;
       Proxy      : constant Source_Proxy :=
-                     (View      => View_Owner,
+                     (Path_Len  => Path'Length,
+                      View      => View_Owner,
                       Path_Name => Path,
                       Inh_From  => Extended_View);
-      Owner_Db   : constant View_Data :=
-                     (if View_Owner = Data.View
-                      then Data
-                      else Get_Data (Data.Tree_Db, View_Owner));
+      Owner_Db   : constant View_Data_Ref :=
+                     Get_Data (Data.Tree_Db, View_Owner);
       Src_Info   : constant Src_Info_Maps.Constant_Reference_Type :=
                      Owner_Db.Src_Infos.Constant_Reference (Path);
 
    begin
-      Data.Overloaded_Srcs.Insert (Path.Simple_Name,
+      Data.Overloaded_Srcs.Insert (Path_Name.Simple_Name (String (Path)),
                                    Source_Proxy_Sets.Empty_Set,
                                    C_Overload,
                                    Done);
@@ -123,9 +125,9 @@ package body GPR2.Build.View_Tables is
    ------------------------
 
    procedure Add_Unit_Ownership
-     (To   : in out View_Data;
+     (To   : View_Data_Ref;
       CU   : Name_Type;
-      Root : View_Data)
+      Root : View_Data_Ref)
    is
       C         : Unit_Maps.Cursor;
       New_Set   : Project.View.Set.Object;
@@ -154,11 +156,11 @@ package body GPR2.Build.View_Tables is
    -------------------
 
    procedure Add_Unit_Part
-     (NS_Db   : in out View_Data;
+     (NS_Db     : View_Data_Ref;
       CU        : Name_Type;
       Kind      : Unit_Kind;
       Sep_Name  : Optional_Name_Type;
-      View_Db   : in out View_Data;
+      View_Db   : View_Data_Ref;
       Path      : Path_Name.Object;
       Index     : Unit_Index;
       Messages  : in out GPR2.Log.Object)
@@ -242,7 +244,7 @@ package body GPR2.Build.View_Tables is
    --------------------
 
    procedure Check_Separate
-     (Root_Db : View_Tables.View_Data;
+     (Root_Db : View_Tables.View_Data_Ref;
       File    : in out Source.Object)
    is
       C : Name_Maps.Cursor;
@@ -272,7 +274,6 @@ package body GPR2.Build.View_Tables is
                  (Unit_Name      => New_Name,
                   Index          => U.Index,
                   Kind           => U.Kind,
-                  Kind_Ambiguous => False,
                   Separate_Name  => New_Sep_Name));
          end;
       end loop;
@@ -295,7 +296,7 @@ package body GPR2.Build.View_Tables is
    -------------
 
    procedure Refresh
-     (Data     : in out View_Data;
+     (Data     : View_Data_Ref;
       Messages : in out GPR2.Log.Object) is
    begin
       Update_Sources_List.Process (Data, False, Messages);
@@ -306,103 +307,7 @@ package body GPR2.Build.View_Tables is
         and then not Data.View.Is_Extended
         and then Data.View.Kind in With_Object_Dir_Kind
       then
-         --  Only look at "final" views: e.g. not inherited.
-         --  That's because the compilation unit may not be complete until we
-         --  reach the inheriting view that gathers together all the sources.
-
-         for C_Proxy in Data.Sources.Iterate loop
-            declare
-               Proxy : constant Source_Proxy :=
-                         Basename_Source_Maps.Element (C_Proxy);
-               Db    : constant View_Data_Ref :=
-                         Get_Data (Data.Tree_Db, Proxy.View);
-               S_Ref : constant Src_Info_Maps.Reference_Type :=
-                         Db.Src_Infos.Reference (Proxy.Path_Name);
-
-            begin
-               if S_Ref.Language = Ada_Language
-                 and then not S_Ref.Has_Index
-               then
-                  declare
-                     Unit : Source.Unit_Part := S_Ref.Unit;
-
-                  begin
-                     if Unit.Kind_Ambiguous
-                       and then Unit.Kind = S_Body
-                     then
-                        --  If an ambiguous body is found, check if it has a
-                        --  spec: it there is, then it's an actual body.
-
-                        Root_Loop :
-                        for Root_View of Data.View.Namespace_Roots loop
-                           declare
-                              Units : Compilation_Unit_Maps.Map renames
-                                        Get_Data (Data.Tree_Db, Root_View).CUs;
-                           begin
-                              if Units (Unit.Name).Has_Part (S_Spec) then
-                                 --  If it has a corresponding spec, then it's
-                                 --  a body
-                                 Unit.Kind_Ambiguous := False;
-                                 S_Ref.Update_Unit (Unit);
-
-                                 exit Root_Loop;
-                              end if;
-                           end;
-                        end loop Root_Loop;
-                     end if;
-
-                     if Unit.Kind_Ambiguous then
-                        --  If still ambiguous after the above path, we
-                        --  have a body with no spec and dot_repl in the
-                        --  filename: can be a child body-only, or a separate.
-                        --  We need to parse the source to determine the
-                        --  exact kind.
-                        --  ??? Use the ali parser if any corresponding ali
-                        --  file is present as it's faster than the Ada
-                        --  parser.
-                        Build.Source.Ada_Parser.Compute (S_Ref, False);
-
-                        if S_Ref.Unit (No_Index).Name /= Unit.Name
-                          or else S_Ref.Unit (No_Index).Kind /= Unit.Kind
-                        then
-                           for Root_View of Data.View.Namespace_Roots loop
-                              declare
-                                 Root_Db : constant View_Data_Ref :=
-                                             Get_Data (Data.Tree_Db,
-                                                       Root_View);
-                              begin
-                                 --  Remove old unit from the namespace root
-                                 --  list.
-
-                                 Remove_Unit_Part
-                                   (Root_Db,
-                                    Unit.Name,
-                                    Unit.Kind,
-                                    Unit.Separate_Name,
-                                    Data,
-                                    S_Ref.Path_Name,
-                                    S_Ref.Unit.Index);
-
-                                 --  And add the new one
-                                 Add_Unit_Part
-                                   (Root_Db,
-                                    S_Ref.Unit.Name,
-                                    S_Ref.Unit.Kind,
-                                    S_Ref.Unit.Separate_Name,
-                                    Data,
-                                    S_Ref.Path_Name,
-                                    S_Ref.Unit.Index,
-                                    Messages);
-                              end;
-                           end loop;
-                        end if;
-                     end if;
-                  end;
-               end if;
-            end;
-         end loop;
-
-         --  Now check separates of separates
+         --  Check separates of separates
 
          for C_Proxy in Data.Sources.Iterate loop
             declare
@@ -459,20 +364,22 @@ package body GPR2.Build.View_Tables is
    -------------------
 
    procedure Remove_Source
-     (Data               : in out View_Data;
+     (Data               : View_Data_Ref;
       View_Owner         : GPR2.Project.View.Object;
-      Path               : GPR2.Path_Name.Object;
+      Path               : Filename_Type;
       Extended_View      : GPR2.Project.View.Object;
       Resolve_Visibility : Boolean := False;
       Messages           : in out GPR2.Log.Object)
    is
       use type GPR2.Project.View.Object;
 
-      Basename : constant Simple_Name := Path.Simple_Name;
+      Basename   : constant Simple_Name :=
+                     Path_Name.Simple_Name (String (Path));
       C_Overload : Basename_Source_List_Maps.Cursor;
-      Proxy    : constant Source_Proxy := (View      => View_Owner,
-                                           Path_Name => Path,
-                                           Inh_From  => Extended_View);
+      Proxy      : constant Source_Proxy := (Path_Len  => Path'Length,
+                                             View      => View_Owner,
+                                             Path_Name => Path,
+                                             Inh_From  => Extended_View);
       Owner_Db   : constant View_Data :=
                      (if View_Owner = Data.View
                       then Data
@@ -502,9 +409,9 @@ package body GPR2.Build.View_Tables is
    ---------------------------
 
    procedure Remove_Unit_Ownership
-     (From : in out View_Data;
+     (From : View_Data_Ref;
       CU   : Name_Type;
-      Root : View_Data)
+      Root : View_Data_Ref)
    is
       C : Unit_Maps.Cursor;
    begin
@@ -530,11 +437,11 @@ package body GPR2.Build.View_Tables is
    ----------------------
 
    procedure Remove_Unit_Part
-     (NS_Db    : in out View_Data;
+     (NS_Db    : View_Data_Ref;
       CU       : Name_Type;
       Kind     : Unit_Kind;
       Sep_Name : Optional_Name_Type;
-      View_Db  : in out View_Data;
+      View_Db  : View_Data_Ref;
       Path     : Path_Name.Object;
       Index    : Unit_Index)
    is
@@ -589,9 +496,9 @@ package body GPR2.Build.View_Tables is
    ------------------------
 
    procedure Resolve_Visibility
-     (Data     : in out View_Data;
+     (Data     : View_Data_Ref;
       Cursor   : in out Basename_Source_List_Maps.Cursor;
-      Messages : in out Log.Object)
+      Messages : in out GPR2.Log.Object)
    is
       use type Ada.Containers.Count_Type;
       use type Project.View.Object;
@@ -637,15 +544,17 @@ package body GPR2.Build.View_Tables is
 
             for U of Src_Info.Units loop
                for Root of Src.View.Namespace_Roots loop
-                  Add_Unit_Part
-                    (NS_Db    => Get_Data (Data.Tree_Db, Root),
-                     CU       => U.Name,
-                     Kind     => U.Kind,
-                     Sep_Name => U.Separate_Name,
-                     View_Db  => Data,
-                     Path     => Src_Info.Path_Name,
-                     Index    => U.Index,
-                     Messages => Messages);
+                  if U.Kind /= S_No_Body then
+                     Add_Unit_Part
+                       (NS_Db    => Get_Data (Data.Tree_Db, Root),
+                        CU       => U.Name,
+                        Kind     => U.Kind,
+                        Sep_Name => U.Separate_Name,
+                        View_Db  => Data,
+                        Path     => Src_Info.Path_Name,
+                        Index    => U.Index,
+                        Messages => Messages);
+                  end if;
                end loop;
             end loop;
          end if;
@@ -690,10 +599,10 @@ package body GPR2.Build.View_Tables is
 
       Basename  : constant Simple_Name :=
                     Basename_Source_List_Maps.Key (Cursor);
-      Set       : constant Source_Proxy_Sets.Set :=
-                    Basename_Source_List_Maps.Element (Cursor);
-      Candidate : Source_Proxy;
-      Current   : Source_Proxy;
+      Set       : constant Basename_Source_List_Maps.Constant_Reference_Type :=
+                    Data.Overloaded_Srcs.Constant_Reference (Cursor);
+      Candidate : access constant Source_Proxy;
+      Current   : access constant Source_Proxy;
       C_Src     : Basename_Source_Maps.Cursor :=
                     Data.Sources.Find (Basename);
       C_Info    : Src_Info_Maps.Cursor;
@@ -705,114 +614,126 @@ package body GPR2.Build.View_Tables is
       if Set.Is_Empty then
          --  no source for the specified basenamne
 
-         Candidate := No_Proxy;
+         Candidate := null;
 
       elsif Set.Length = 1 then
          --  Only one source in the set: just use it
 
-         Candidate := Source_Proxy_Sets.Element (Set.First);
+         Candidate := Set.Constant_Reference (Set.First).Element;
 
       else
          --  project extension case, or the same basename is found in
          --  different source dirs
 
-         for C of Set loop
-            if Candidate = No_Proxy then
-               --  First value, consider it as a candidate
+         for Curs in Set.Iterate loop
+            declare
+               C : constant Source_Proxy_Sets.Constant_Reference_Type :=
+                     Set.Constant_Reference (Curs);
+            begin
+               if Candidate = null then
+                  --  First value, consider it as a candidate
 
-               Candidate := C;
+                  Candidate := C.Element;
 
-               if Candidate.View = Data.View then
-                  --  Own source, get Src_Info cursor
-                  C_Info := Data.Src_Infos.Find (Candidate.Path_Name);
-               end if;
+                  if Candidate.View = Data.View then
+                     --  Own source, get Src_Info cursor
+                     C_Info := Data.Src_Infos.Find (Candidate.Path_Name);
+                  end if;
 
-            elsif C.View = Data.View
-              and then Candidate.View /= Data.View
-            then
-               --  Candidate was inherited: own source overrides it
-               Candidate := C;
-               C_Info    := Data.Src_Infos.Find (Candidate.Path_Name);
+               elsif C.View = Data.View
+                 and then Candidate.View /= Data.View
+               then
+                  --  Candidate was inherited: own source overrides it
+                  Candidate := C.Element;
+                  C_Info    := Data.Src_Infos.Find (Candidate.Path_Name);
 
-            elsif Candidate.View = Data.View
-              and then C.View /= Data.View
-            then
-               --  Candidate is owned by current view, so ignore inherited
-               --  source
-               null;
+               elsif Candidate.View = Data.View
+                 and then C.View /= Data.View
+               then
+                  --  Candidate is owned by current view, so ignore inherited
+                  --  source
+                  null;
 
-            elsif C.View = Data.View then
-               --  Both candidates are owned by the view, check
-               --  Source_Reference: the declaration order of the source
-               --  directory in the Source_Dirs attribute gives the
-               --  visibility priority
+               elsif C.View = Data.View then
+                  --  Both candidates are owned by the view, check
+                  --  Source_Reference: the declaration order of the source
+                  --  directory in the Source_Dirs attribute gives the
+                  --  visibility priority
 
-               C_Info2 := Data.Src_Infos.Find (C.Path_Name);
+                  C_Info2 := Data.Src_Infos.Find (C.Path_Name);
 
-               SR1 := Src_Info_Maps.Element (C_Info).Source_Reference;
-               SR2 := Src_Info_Maps.Element (C_Info2).Source_Reference;
+                  SR1 := Src_Info_Maps.Element (C_Info).Source_Reference;
+                  SR2 := Src_Info_Maps.Element (C_Info2).Source_Reference;
 
-               if SR1 = SR2 then
-                  Clashes.Include (SR1);
+                  if SR1 = SR2 then
+                     Clashes.Include (SR1);
 
-               elsif SR2 < SR1 then
-                  --  Source_Ref of C2 is declared before the one of
-                  --  Candidate, so takes precedence.
+                  elsif SR2 < SR1 then
+                     --  Source_Ref of C2 is declared before the one of
+                     --  Candidate, so takes precedence.
 
-                  Candidate := C;
-                  C_Info := C_Info2;
-                  Clashes.Clear;
-               end if;
+                     Candidate := C.Element;
+                     C_Info := C_Info2;
+                     Clashes.Clear;
+                  end if;
 
-            else
-               --  Remaining case: inheritance shows two candidate sources
+               else
+                  --  Remaining case: inheritance shows two candidate sources
 
-               Messages.Append
-                 (Message.Create
-                    (Message.Error,
-                     '"' & String (Basename) & '"' &
-                       " is found in several extended projects",
-                     Source_Reference.Create
-                       (Data.View.Path_Name.Value, 0, 0)));
-               declare
-                  P1, P2 : GPR2.Path_Name.Object;
-                  V1, V2 : GPR2.Path_Name.Object;
-               begin
+                  Messages.Append
+                    (Message.Create
+                       (Message.Error,
+                        '"' & String (Basename) & '"' &
+                          " is found in several extended projects",
+                        Source_Reference.Create
+                          (Data.View.Path_Name.Value, 0, 0)));
+
                   --  Use alphabetical sort to have consistent output.
                   --  This is in particular important when comparing test
                   --  output.
 
-                  if C.Path_Name < Candidate.Path_Name then
-                     P1 := C.Path_Name;
-                     V1 := C.View.Path_Name;
-                     P2 := Candidate.Path_Name;
-                     V2 := Candidate.View.Path_Name;
-                  else
-                     P1 := Candidate.Path_Name;
-                     V1 := Candidate.View.Path_Name;
-                     P2 := C.Path_Name;
-                     V2 := C.View.Path_Name;
-                  end if;
+                  declare
+                     C_First : constant Boolean :=
+                                 C.Path_Name < Candidate.Path_Name;
+                     P1      : constant Filename_Type :=
+                                 (if C_First
+                                  then C.Path_Name
+                                  else Candidate.Path_Name);
+                     P2      : constant Filename_Type :=
+                                 (if not C_First
+                                  then C.Path_Name
+                                  else Candidate.Path_Name);
+                     V1, V2  : GPR2.Path_Name.Object;
+                  begin
 
-                  Messages.Append
-                    (Message.Create
-                       (Message.Error,
-                        P1.Value,
-                        Source_Reference.Create (V1.Value, 0, 0),
-                        Indent => 1));
-                  Messages.Append
-                    (Message.Create
-                       (Message.Error,
-                        P2.Value,
-                        Source_Reference.Create (V2.Value, 0, 0),
-                        Indent => 1));
-               end;
+                     if C_First then
+                        V1 := C.View.Path_Name;
+                        V2 := Candidate.View.Path_Name;
+                     else
+                        V1 := Candidate.View.Path_Name;
+                        V2 := C.View.Path_Name;
+                     end if;
 
-               Candidate := No_Proxy;
+                     Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           String (P1),
+                           Source_Reference.Create (V1.Value, 0, 0),
+                           Indent => 1));
+                     Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           String (P2),
+                           Source_Reference.Create (V2.Value, 0, 0),
+                           Indent => 1));
+                  end;
 
-               exit;
+                  Candidate := null;
 
-            end if;
+                  exit;
+
+               end if;
+            end;
          end loop;
 
          if not Clashes.Is_Empty then
@@ -826,34 +747,34 @@ package body GPR2.Build.View_Tables is
                      SR));
             end loop;
 
-            Candidate := No_Proxy;
+            Candidate := null;
          end if;
       end if;
 
       if Basename_Source_Maps.Has_Element (C_Src) then
-         Current := Basename_Source_Maps.Element (C_Src);
+         Current := Data.Sources.Constant_Reference (C_Src).Element;
       else
-         Current := No_Proxy;
+         Current := null;
       end if;
 
       if Current /= Candidate then
          --  Remove current visible source
-         if Current /= No_Proxy then
-            Propagate_Visible_Source_Removal (Current);
+         if Current /= null then
+            Propagate_Visible_Source_Removal (Current.all);
 
-            if Candidate = No_Proxy then
+            if Candidate = null then
                Data.Sources.Delete (C_Src);
             end if;
          end if;
 
-         if Candidate /= No_Proxy then
-            if Current = No_Proxy then
-               Data.Sources.Insert (Basename, Candidate);
+         if Candidate /= null then
+            if Current = null then
+               Data.Sources.Insert (Basename, Candidate.all);
             else
-               Data.Sources.Replace_Element (C_Src, Candidate);
+               Data.Sources.Replace_Element (C_Src, Candidate.all);
             end if;
 
-            Propagate_Visible_Source_Added (Candidate);
+            Propagate_Visible_Source_Added (Candidate.all);
          end if;
       end if;
    end Resolve_Visibility;

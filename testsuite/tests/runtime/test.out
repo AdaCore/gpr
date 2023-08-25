@@ -6,17 +6,18 @@ V:   RTL -> .../adainclude
 
 Config   K_CONFIGURATION
 runtime  K_STANDARD
+A:   Externally_Built -> true
 A:   Languages -> ada
 A:   Object_Dir -> .../adalib
 A:   Source_Dirs -> .../adainclude
 
  > adainclude/a-calend.adb   Kind: S_BODY   unit: ADA.CALENDAR
  > adainclude/a-calend.ads   Kind: S_SPEC   unit: ADA.CALENDAR
- > adainclude/a-contai.ads   Kind: S_SPEC_ONLY   unit: ADA.CONTAINERS
- > adainclude/a-string.ads   Kind: S_SPEC_ONLY   unit: ADA.STRINGS
+ > adainclude/a-contai.ads   Kind: S_SPEC   unit: ADA.CONTAINERS
+ > adainclude/a-string.ads   Kind: S_SPEC   unit: ADA.STRINGS
  > adainclude/a-strunb.adb   Kind: S_BODY   unit: ADA.STRINGS.UNBOUNDED
  > adainclude/a-strunb.ads   Kind: S_SPEC   unit: ADA.STRINGS.UNBOUNDED
  > adainclude/a-tags.adb     Kind: S_BODY   unit: ADA.TAGS
  > adainclude/a-tags.ads     Kind: S_SPEC   unit: ADA.TAGS
- > adainclude/a-uncdea.ads   Kind: S_SPEC_ONLY   unit: ADA.UNCHECKED_DEALLOCATION
- > adainclude/ada.ads        Kind: S_SPEC_ONLY   unit: ADA
+ > adainclude/a-uncdea.ads   Kind: S_SPEC   unit: ADA.UNCHECKED_DEALLOCATION
+ > adainclude/ada.ads        Kind: S_SPEC   unit: ADA

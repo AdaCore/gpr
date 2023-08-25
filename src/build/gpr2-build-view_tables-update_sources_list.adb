@@ -101,8 +101,8 @@ package body Update_Sources_List is
    --  line into Set
 
    function Compute_Unit_From_Filename
-     (File     : Path_Name.Object;
-      Kind     : Unit_Kind;
+     (File     : Filename_Type;
+      Kind     : Valid_Unit_Kind;
       NS       : Naming_Schema;
       Dot_Repl : String;
       Messages : in out GPR2.Log.Object;
@@ -113,13 +113,9 @@ package body Update_Sources_List is
    --  Set Last_Dot to last dot index in result to split separate unit
    --  name.
 
-   --------------------------------
-   -- Compute_Unit_From_Filename --
-   --------------------------------
-
    function Compute_Unit_From_Filename
-     (File     : Path_Name.Object;
-      Kind     : Unit_Kind;
+     (File     : Filename_Type;
+      Kind     : Valid_Unit_Kind;
       NS       : Naming_Schema;
       Dot_Repl : String;
       Messages : in out GPR2.Log.Object;
@@ -130,7 +126,8 @@ package body Update_Sources_List is
       use Ada.Strings.Maps;
 
       Result     : Unbounded_String :=
-                     To_Unbounded_String (String (File.Simple_Name));
+                     To_Unbounded_String
+                       (String (GPR2.Path_Name.Simple_Name (String (File))));
       Default_NS : constant  Boolean :=
                      NS.Spec_Suffix = ".ads" and then NS.Body_Suffix = ".adb"
                       and then NS.Sep_Suffix = ".adb" and then Dot_Repl = "-";
@@ -171,7 +168,7 @@ package body Update_Sources_List is
             Messages.Append
               (Message.Create
                  (Message.Warning, "invalid file name, contains dot",
-                  SR.Create (File.Value, 1, 1)));
+                  SR.Create (Full_Name (File), 1, 1)));
             Last_Dot := 0;
             goto Invalid;
 
@@ -341,7 +338,7 @@ package body Update_Sources_List is
    -------------
 
    procedure Process
-     (Data          : in out View_Data;
+     (Data          : View_Data_Ref;
       Stop_On_Error : Boolean;
       Messages      : in out GPR2.Log.Object)
    is
@@ -368,12 +365,12 @@ package body Update_Sources_List is
       Current_Src_Dir_SR : GPR2.Source_Reference.Value.Object;
       --  Identifies the Source_Dirs value being processed
 
-      Source_Name_Set    : GPR2.Containers.Filename_Set;
-      --  Collection of source simple names for a given Source_Dirs value
-
       Dot_Repl : constant String :=
                    Data.View.Attribute (PRA.Naming.Dot_Replacement).Value.Text;
       --  Get Dot_Replacement value
+
+      Source_Name_Set    : GPR2.Containers.Filename_Set;
+      --  Collection of source simple names for a given Source_Dirs value
 
       Naming_Schema_Map       : Naming_Schema_Maps.Map;
 
@@ -399,8 +396,9 @@ package body Update_Sources_List is
          File      : GPR2.Path_Name.Object;
          Timestamp : Ada.Calendar.Time)
       is
+         Path : constant Filename_Type := Filename_Type (File.Value);
       begin
-         Data.Src_Files.Include ((File, Timestamp, Dir_Ref));
+         Data.Src_Files.Include ((Path'Length, Timestamp, Dir_Ref, Path));
       end Handle_File;
 
       -------------------
@@ -480,18 +478,20 @@ package body Update_Sources_List is
          --           now inside a loop over the compilation units.
          --         - Exit.
 
-         Basename         : constant Filename_Type := File.Path.Simple_Name;
+         Basename         : constant Filename_Type :=
+                              Filename_Type
+                                (GPR2.Path_Name.Simple_Name
+                                   (String (File.Path)));
 
          Match            : Boolean := False;
 
          Naming_Exception : Source.Naming_Exception_Kind := No;
          Units            : Source.Unit_List;  --  For Ada
-         Kind             : Unit_Kind;
+         Kind             : Valid_Unit_Kind;
          Index            : Unit_Index;
          Source           : Build.Source.Object;
          Attr             : Project.Attribute.Object;
          Ada_Exc_CS       : Source_Path_To_Attribute_List.Cursor;
-         Ambiguous_Kind   : Boolean := False;
 
       begin
          --  Stop here if it's one of the excluded sources, or it's not in the
@@ -538,19 +538,11 @@ package body Update_Sources_List is
                               then S_Spec
                               else S_Body);
 
-                     --  May actually be a Separate, we cannot know
-                     --  until we parse the file.
-
-                     --  We know only Name, Index and Kind unit
-                     --  properties for now. Others will be taken on
-                     --  source parsing.
-
                      Units.Insert
                        (Build.Source.Create
                           (Unit_Name      => Name_Type (Exc.Index.Text),
                            Index          => Index,
-                           Kind           => Kind,
-                           Kind_Ambiguous => Kind = S_Body));
+                           Kind           => Kind));
                   end loop;
                end if;
 
@@ -624,12 +616,6 @@ package body Update_Sources_List is
 
                   if Matches_Body and then Matches_Separate then
                      if NS.Body_Suffix'Length >= NS.Sep_Suffix'Length then
-                        if NS.Body_Suffix'Length = NS.Sep_Suffix'Length then
-                           --  Default naming schema for Ada is ambiguous for
-                           --  separates.
-                           Ambiguous_Kind := True;
-                        end if;
-
                         Matches_Separate := False;
                      else
                         Matches_Body := False;
@@ -653,128 +639,14 @@ package body Update_Sources_List is
                      Kind  := S_Spec;
                   end if;
                end;
-
-               if Match and then Language = Ada_Language then
-                  declare
-                     Last_Dot  : Natural;
-                     Unit_Name : constant Name_Type :=
-                                   Compute_Unit_From_Filename
-                                     (File     => File.Path,
-                                      Kind     => Kind,
-                                      NS       =>
-                                        Naming_Schema_Map (Ada_Language),
-                                      Dot_Repl => Dot_Repl,
-                                      Messages => Messages,
-                                      Last_Dot => Last_Dot,
-                                      Success  => Match);
-
-                     function Has_Conflict_NE
-                       (Attr_Name : Q_Attribute_Id) return Boolean;
-                     --  Search the Naming package for attributes with name
-                     --  Attr_Name and index Unit_Name, and return True if
-                     --  at least one of the matching attributes references
-                     --  a different (source,index) than the current one.
-
-                     ---------------------
-                     -- Has_Conflict_NE --
-                     ---------------------
-
-                     function Has_Conflict_NE
-                       (Attr_Name : Q_Attribute_Id) return Boolean
-                     is
-                        Cursor : Source_Path_To_Attribute_List.Cursor;
-                        use Source_Path_To_Attribute_List;
-                     begin
-                        Cursor := Ada_Naming_Exceptions.Find
-                          (Filename_Optional (Unit_Name));
-
-                        if Has_Element (Cursor) then
-                           for Attr of Element (Cursor) loop
-                              if Attr.Name.Id = Attr_Name then
-                                 if not Naming_Exception_Equal
-                                   (Attr, Value_Type (Basename), 1)
-                                 then
-                                    return True;
-                                 end if;
-                              end if;
-                           end loop;
-                        end if;
-
-                        return False;
-                     end Has_Conflict_NE;
-
-                  begin
-                     if Match then
-                        --  Check if we have conflicting naming exceptions:
-                        --  same (unit,kind) but different source.
-                        --  In this case we skip this source.
-
-                        if (Kind = S_Spec
-                            and then Has_Conflict_NE (PRA.Naming.Spec))
-                          or else
-                            (Kind = S_Body
-                             and then Has_Conflict_NE (PRA.Naming.Body_N))
-                        then
-                           return False;
-                        end if;
-
-                        if Last_Dot = 0 then
-                           --  If not dot in the unit name, then there's no
-                           --  confusion between body and separate.
-
-                           Ambiguous_Kind := False;
-                        end if;
-
-                        if Kind = S_Separate then
-                           if Last_Dot = 0 then
-                              --  Explicit separate case with no dot: ignore
-                              return False;
-                           end if;
-
-                           pragma Assert
-                             (Last_Dot in
-                                Unit_Name'First + 1 .. Unit_Name'Last - 1);
-
-                           Units.Insert
-                             (Build.Source.Create
-                                (Unit_Name      => Unit_Name
-                                                     (Unit_Name'First ..
-                                                      Last_Dot - 1),
-                                 Separate_Name  => Unit_Name
-                                                     (Last_Dot + 1 ..
-                                                      Unit_Name'Last),
-                                 Index          => No_Index,
-                                 Kind           => S_Separate,
-                                 Kind_Ambiguous => False));
-                        else
-                           Units.Insert
-                             (Build.Source.Create
-                                (Unit_Name      => Unit_Name,
-                                 Index          => No_Index,
-                                 Kind           => Kind,
-                                 Kind_Ambiguous => Ambiguous_Kind));
-                        end if;
-                     end if;
-                  end;
-               end if;
             end if;
 
             --  If we have a match from either naming exception or scheme
             --  we create the Source object.
 
             if Naming_Exception /= No or else Match then
-               if Language = Ada_Language then
-                  Source := Build.Source.Create_Ada
-                    (Filename            => File.Path,
-                     Timestamp           => File.Stamp,
-                     Tree_Db             => Data.Tree_Db,
-                     Naming_Exception    => Naming_Exception,
-                     Units               => Units,
-                     Source_Ref          => File.Dir_Ref);
-
-               else
                   Source := Build.Source.Create
-                    (File.Path,
+                    (Path_Name.Create_File (File.Path),
                      Language         => Language,
                      Kind             => Kind,
                      Timestamp        => File.Stamp,
@@ -782,8 +654,135 @@ package body Update_Sources_List is
                      Naming_Exception => Naming_Exception,
                      Source_Ref       => File.Dir_Ref,
                      Is_Compilable    => Is_Compilable (Language));
-               end if;
 
+               --  If we know the units in the source (from naming exception),
+               --  then add them now.
+
+               for U of Units loop
+                  Source.Update_Unit (U);
+               end loop;
+            end if;
+
+            if Naming_Exception = No
+              and then Match
+              and then Language = Ada_Language
+            then
+               declare
+                  function Has_Conflict_NE
+                    (Attr_Name : Q_Attribute_Id) return Boolean;
+                  --  Search the Naming package for attributes with name
+                  --  Attr_Name and index Unit_Name, and return True if
+                  --  at least one of the matching attributes references
+                  --  a different (source,index) than the current one.
+
+                  Last_Dot  : Natural;
+                  Parsed    : Boolean;
+                  Unit_Name : constant Name_Type :=
+                                Compute_Unit_From_Filename
+                                  (File     => File.Path,
+                                   Kind     => Kind,
+                                   NS       =>
+                                     Naming_Schema_Map (Ada_Language),
+                                   Dot_Repl => Dot_Repl,
+                                   Messages => Messages,
+                                   Last_Dot => Last_Dot,
+                                   Success  => Match);
+
+                  ---------------------
+                  -- Has_Conflict_NE --
+                  ---------------------
+
+                  function Has_Conflict_NE
+                    (Attr_Name : Q_Attribute_Id) return Boolean
+                  is
+                     Cursor : Source_Path_To_Attribute_List.Cursor;
+                     use Source_Path_To_Attribute_List;
+                  begin
+                     Cursor := Ada_Naming_Exceptions.Find
+                       (Filename_Optional (Source.Unit.Name));
+
+                     if Has_Element (Cursor) then
+                        for Attr of Element (Cursor) loop
+                           if Attr.Name.Id = Attr_Name then
+                              if not Naming_Exception_Equal
+                                (Attr, Value_Type (Basename), 1)
+                              then
+                                 return True;
+                              end if;
+                           end if;
+                        end loop;
+                     end if;
+
+                     return False;
+                  end Has_Conflict_NE;
+
+               begin
+                  --  Ignore the source if it does not respect the naming
+                  --  convention.
+
+                  if Match then
+                     --  Parse the source to get unit and update its kind if
+                     --  needed.
+
+                     Build.Source.Ada_Parser.Compute
+                       (Tree             => Tree,
+                        Data             => Source,
+                        Get_Withed_Units => False,
+                        Success          => Parsed);
+
+                     --  In case the parser could not determine the enclosed
+                     --  unit, use the one from naming convention
+
+                     if not Parsed then
+                        if Kind = S_Separate then
+                           if Last_Dot > 0 then
+                              Source.Update_Unit
+                                (Build.Source.Create
+                                   (Unit_Name     => Unit_Name
+                                        (Unit_Name'First .. Last_Dot - 1),
+                                    Index         => No_Index,
+                                    Kind          => Kind,
+                                    Separate_Name => Unit_Name
+                                      (Last_Dot + 1 .. Unit_Name'Last),
+                                    Parsed        => False));
+                           else
+                              Messages.Append
+                                (Message.Create
+                                   (Message.Warning,
+                                    "invalid file name: no dot delimiter " &
+                                      "for this subunit",
+                                    SR.Create (Full_Name (File.Path), 1, 1)));
+
+                              return False;
+                           end if;
+                        else
+                           Source.Update_Unit
+                             (Build.Source.Create
+                                (Unit_Name     => Unit_Name,
+                                 Index         => No_Index,
+                                 Kind          => Kind,
+                                 Separate_Name => "",
+                                 Parsed        => False));
+                        end if;
+                     end if;
+
+                     --  Check if we have conflicting naming exceptions:
+                     --  same (unit,kind) but different source.
+                     --  In this case we skip this source.
+
+                     if (Source.Kind = S_Spec
+                         and then Has_Conflict_NE (PRA.Naming.Spec))
+                       or else
+                         (Source.Kind = S_Body
+                          and then Has_Conflict_NE (PRA.Naming.Body_N))
+                     then
+                        return False;
+                     end if;
+                  end if;
+               end;
+            end if;
+
+            if Naming_Exception /= No or else Match then
                Data.Src_Infos.Insert (File.Path, Source);
 
                return True;
@@ -884,10 +883,12 @@ package body Update_Sources_List is
                   --  File was a source and has disapeared: notify the build
                   --  db object to cleanup tables.
                   Remove_Source
-                    (Data, Data.View, F.Path, Project.View.Undefined,
+                    (Data, Data.View, F.Path,
+                     Project.View.Undefined,
                      Messages => Messages);
 
-                  Changed_Sources.Include (F.Path.Simple_Name);
+                  Changed_Sources.Include
+                    (Path_Name.Simple_Name (String (F.Path)));
                end if;
             end;
          end if;
@@ -899,6 +900,7 @@ package body Update_Sources_List is
          declare
             use type Ada.Calendar.Time;
             C     : File_Sets.Cursor;
+            C2    : Src_Info_Maps.Cursor;
 
          begin
             C := Previous_Files.Find (F);
@@ -912,41 +914,29 @@ package body Update_Sources_List is
                     (Data, Data.View, F.Path,
                      Extended_View => Project.View.Undefined,
                      Messages      => Messages);
-                  Changed_Sources.Include (F.Path.Simple_Name);
+                  Changed_Sources.Include
+                    (Path_Name.Simple_Name (String (F.Path)));
                end if;
 
             else
-               declare
-                  Src_Ref : constant Src_Info_Maps.Reference_Type :=
-                              Data.Src_Infos.Reference (F.Path);
-               begin
-                  if Src_Ref.Modification_Time /= F.Stamp then
-                     Src_Ref.Update_Modification_Time (F.Stamp);
-                  end if;
+               C2 := Data.Src_Infos.Find (F.Path);
 
-                  if Src_Ref.Has_Units
-                    and then not Src_Ref.Has_Index
-                    and then Src_Ref.Unit.Kind /= S_Spec
-                    and then Naming_Schema_Map (Ada_Language).Body_Suffix =
-                      Naming_Schema_Map (Ada_Language).Sep_Suffix
-                    and then
-                      (Src_Ref.Unit.Kind = S_Separate
-                       or else Strings.Fixed.Index
-                         (".", String (Src_Ref.Unit.Name)) > 0)
-                  then
-                     --  In case the default naming schema is used, and the
-                     --  file has a single unit that is a body or a separate
-                     --  with a dot, we have ambiguity. Since it has changed
-                     --  since previous load, we mark again the kind as
-                     --  ambiguous.
-                     declare
-                        U : Source.Unit_Part := Src_Ref.Unit;
-                     begin
-                        U.Kind_Ambiguous := True;
-                        Src_Ref.Update_Unit (U);
-                     end;
-                  end if;
-               end;
+               if Src_Info_Maps.Has_Element (C2) then
+                  declare
+                     Src_Ref : constant Src_Info_Maps.Reference_Type :=
+                                 Data.Src_Infos.Reference (C2);
+                     Success : Boolean;
+                  begin
+                     if Src_Ref.Modification_Time /= F.Stamp then
+                        Src_Ref.Update_Modification_Time (F.Stamp);
+
+                        if not Src_Ref.Has_Naming_Exception then
+                           Source.Ada_Parser.Compute
+                             (Tree, Src_Ref, False, Success);
+                        end if;
+                     end if;
+                  end;
+               end if;
             end if;
          end;
       end loop;

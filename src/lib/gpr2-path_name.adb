@@ -26,6 +26,10 @@ package body GPR2.Path_Name is
    function "+"
      (Str : String) return Unbounded_String renames To_Unbounded_String;
 
+   function "+"
+     (Str : GPR2.Simple_Name) return Unbounded_String
+   is (+String (Str));
+
    function To_OS_Case (Name : String) return String is
      (if File_Names_Case_Sensitive
       then Name
@@ -60,7 +64,7 @@ package body GPR2.Path_Name is
    procedure Determine_Temporary_Directory;
    --  Determine temporary directory
 
-   function Base_Name (Path : String) return String;
+   function Base_Name (Path : String) return GPR2.Simple_Name;
    --  Return Path basename (so simple name without extension).
    --  Assumes Path is a file.
 
@@ -104,8 +108,8 @@ package body GPR2.Path_Name is
    -- Base_Name --
    ---------------
 
-   function Base_Name (Path : String) return String is
-      Simple : constant String := Simple_Name (Path);
+   function Base_Name (Path : String) return GPR2.Simple_Name is
+      Simple : constant GPR2.Simple_Name := Simple_Name (Path);
       --  Simple'First is guaranteed to be 1
    begin
       --  Ada.Directories.Base_Name cannot be used here as
@@ -352,7 +356,7 @@ package body GPR2.Path_Name is
          As_Is     => +String (Name),
          Value     => Value,
          Comparing => To_OS_Case (Value),
-         Base_Name => +Base_Name (String (Path_Name)),
+         Base_Name => +String (Base_Name (String (Path_Name))),
          Dir_Name  =>
            +Ensure_Directory (Containing_Directory (String (Path_Name))));
    end Create;
@@ -673,11 +677,10 @@ package body GPR2.Path_Name is
       --  Ada.Directories.Simple_Name cannot be used here as
       --  Path can contain '*' character that will be rejected on windows
       --  by Ada.Directories.Validity.Is_Valid_Path_Name check.
-      return GPR2.Simple_Name
-        (Simple_Name (To_String (Self.As_Is)));
+      return Simple_Name (To_String (Self.As_Is));
    end Simple_Name;
 
-   function Simple_Name (Path : String) return String is
+   function Simple_Name (Path : String) return GPR2.Simple_Name is
 
       Cut_Start : Natural :=
                     Strings.Fixed.Index
@@ -711,7 +714,7 @@ package body GPR2.Path_Name is
 
       begin
          if BN = "." or else BN = ".." then
-            return BN;
+            return GPR2.Simple_Name (BN);
 
          elsif Has_Drive_Letter
            and then BN'Length > 2
@@ -720,10 +723,10 @@ package body GPR2.Path_Name is
          then
             --  We have a DOS drive letter prefix, remove it
 
-            return BN (BN'First + 2 .. BN'Last);
+            return GPR2.Simple_Name (BN (BN'First + 2 .. BN'Last));
 
          else
-            return BN;
+            return GPR2.Simple_Name (BN);
          end if;
       end Check_For_Standard_Dirs;
    end Simple_Name;

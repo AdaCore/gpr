@@ -74,33 +74,6 @@ package body GPR2.Build.Source is
          SR                => Source_Ref);
    end Create;
 
-   ----------------
-   -- Create_Ada --
-   ----------------
-
-   function Create_Ada
-     (Filename         : GPR2.Path_Name.Object;
-      Timestamp        : Ada.Calendar.Time;
-      Tree_Db          : access GPR2.Build.Tree_Db.Object;
-      Naming_Exception : Naming_Exception_Kind;
-      Source_Ref       : GPR2.Source_Reference.Value.Object;
-      Units            : Unit_List'Class)
-      return Object
-   is
-   begin
-      return
-        (Db                => Tree_Db,
-         Path_Name         => Filename,
-         Modification_Time => Timestamp,
-         Language          => Ada_Language,
-         Kind              => <>,
-         CU_List           => Unit_List (Units),
-         Inherited         => False,
-         Naming_Exception  => Naming_Exception,
-         Is_Compilable     => True,
-         SR                => Source_Ref);
-   end Create_Ada;
-
    -----------
    -- First --
    -----------
@@ -208,6 +181,10 @@ package body GPR2.Build.Source is
    is
    begin
       Self.Modification_Time := Time;
+
+      for U of Self.CU_List.Units loop
+         U.Is_Parsed := False;
+      end loop;
    end Update_Modification_Time;
 
    -----------------
@@ -216,24 +193,16 @@ package body GPR2.Build.Source is
 
    procedure Update_Unit
      (Self  : in out Object;
-      Unit  : Unit_Part)
-   is
-      C : Unit_Map.Cursor;
+      Unit  : Unit_Part) is
    begin
-      if Unit.Index = No_Index then
-         pragma Assert (not Self.CU_List.Has_Index
-                        and then Self.CU_List.Length = 1);
+      if Self.CU_List.Is_Empty then
+         Self.CU_List.Has_Index := Unit.Index /= No_Index;
 
-         Self.CU_List.Units.Include (Unit.Index, Unit);
       else
-         pragma Assert (Self.CU_List.Has_Index);
-
-         C := Self.CU_List.Units.Find (Unit.Index);
-
-         pragma Assert (Unit_Map.Has_Element (C));
-
-         Self.CU_List.Units.Replace_Element (C, Unit);
+         pragma Assert (Unit.Index = No_Index or else Self.CU_List.Has_Index);
       end if;
+
+      Self.CU_List.Units.Include (Unit.Index, Unit);
    end Update_Unit;
 
 end GPR2.Build.Source;

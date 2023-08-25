@@ -1,6 +1,0 @@
-project COMPONENT extends "SPEC.gpr" is
-   for source_dirs use ("src");
-   for object_dir use "obj";
-
---   package Naming renames Spec.Naming;
-end COMPONENT;

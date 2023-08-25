@@ -1,3 +1,11 @@
-I'm from project COMPONENT
+PACK-Functions_Test.ada:1:01: warning: invalid file name: no dot delimiter for this subunit
+PACK
+- S_SPEC: pack.ads
+- S_BODY: pack.adb
+- SEP. FUNCTIONS_TEST: PACK.Functions_TEST.ada
 DOT_REPLACEMENT="-"
 PACK.Functions_TEST.ada:1:01: warning: invalid file name, contains dot
+PACK
+- S_SPEC: pack.ads
+- S_BODY: pack.adb
+- SEP. FUNCTIONS_TEST: PACK-Functions_Test.ada

@@ -35,7 +35,8 @@ procedure Main is
          is (case Kind is
                 when S_Spec     => "spec",
                 when S_Body     => "body",
-                when S_Separate => "sep.");
+                when S_Separate => "sep.",
+                when S_No_Body  => "no_body");
       begin
          Ada.Text_IO.Put ("- " &
                             String (S.Path_Name.Relative_Path (Root).Name));

@@ -35,7 +35,8 @@ procedure Main is
 
       procedure List_Sources (View : Project.View.Object);
 
-      procedure Copy_Source (Name : String);
+      procedure Copy_Source (From : String;
+                             Name : String);
       --  Copy source file from srcp directory to src
 
       ------------------
@@ -43,6 +44,7 @@ procedure Main is
       ------------------
 
       procedure List_Sources (View : Project.View.Object) is
+         use GPR2.Build;
       begin
          Text_IO.Put_Line ("----------");
 
@@ -62,6 +64,10 @@ procedure Main is
                if U /= "" then
                   Text_IO.Set_Col (60);
                   Text_IO.Put ("unit: " & String (U));
+
+                  if Source.Kind = S_Separate then
+                     Text_IO.Put (" (" & String (Source.Unit.Separate_Name) & ")");
+                  end if;
                end if;
 
                Text_IO.New_Line;
@@ -73,9 +79,10 @@ procedure Main is
       -- Copy_Source --
       -----------------
 
-      procedure Copy_Source (Name : String) is
+      procedure Copy_Source (From : String;
+                             Name : String) is
       begin
-         Ada.Directories.Copy_File ("srcp/" & Name, "src/" & Name);
+         Ada.Directories.Copy_File (From & "/" & Name, "src/" & Name);
       end Copy_Source;
 
       Prj  : Project.Tree.Object;
@@ -91,14 +98,18 @@ procedure Main is
       View := Prj.Root_Project;
       Text_IO.Put_Line ("Project: " & String (View.Name));
 
+      Copy_Source ("src1", "api.ads");
+      Copy_Source ("src1", "api.adb");
+      Copy_Source ("src1", "api-call.adb");
+
       Prj.Update_Sources (Messages => Log);
       Log.Output_Messages;
 
       List_Sources (View);
 
-      Copy_Source ("api.ads");
-      Copy_Source ("api.adb");
-      Copy_Source ("api-call.adb");
+      Copy_Source ("src2", "api.ads");
+      Copy_Source ("src2", "api.adb");
+      Copy_Source ("src2", "api-call.adb");
 
       Prj.Update_Sources (Messages => Log);
       Log.Output_Messages;

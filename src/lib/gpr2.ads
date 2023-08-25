@@ -158,7 +158,7 @@ package GPR2 is
    File_Names_Case_Sensitive : constant Boolean;
    On_Windows                : constant Boolean;
 
-   function Hash (Fname : Filename_Type) return Ada.Containers.Hash_Type;
+   function Hash (Fname : Filename_Optional) return Ada.Containers.Hash_Type;
 
    function To_Hex_String (Num : Word) return String;
 
@@ -336,7 +336,7 @@ private
          Glob           => True,
          Case_Sensitive => File_Names_Case_Sensitive));
 
-   function Hash (Fname : Filename_Type) return Ada.Containers.Hash_Type
+   function Hash (Fname : Filename_Optional) return Ada.Containers.Hash_Type
    is (if File_Names_Case_Sensitive
        then Ada.Strings.Hash (String (Fname))
        else Ada.Strings.Hash_Case_Insensitive (String (Fname)));

@@ -18,7 +18,7 @@ package body GPR2.Build.Compilation_Unit is
 
    procedure Add
      (Self     : in out Object;
-      Kind     : Unit_Kind;
+      Kind     : Valid_Unit_Kind;
       View     : GPR2.Project.View.Object;
       Path     : GPR2.Path_Name.Object;
       Index    : Unit_Index := No_Index;
@@ -224,7 +224,7 @@ package body GPR2.Build.Compilation_Unit is
 
    function Get
      (Self     : Object;
-      Kind     : Unit_Kind;
+      Kind     : Valid_Unit_Kind;
       Sep_Name : Optional_Name_Type := "") return Unit_Location
    is
    begin
@@ -268,7 +268,7 @@ package body GPR2.Build.Compilation_Unit is
 
    procedure Remove
      (Self     : in out Object;
-      Kind     : Unit_Kind;
+      Kind     : Valid_Unit_Kind;
       View     : GPR2.Project.View.Object;
       Path     : GPR2.Path_Name.Object;
       Index    : Unit_Index := No_Index;

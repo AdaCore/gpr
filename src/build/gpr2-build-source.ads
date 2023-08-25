@@ -47,20 +47,19 @@ package GPR2.Build.Source is
    --  To handle all this:
    --  ??? continue design comment
 
-   type Unit_Part (Name_Len     : Positive;
+   type Unit_Part (Name_Len     : Natural;
                    Separate_Len : Natural)
    is record
       Kind           : Build.Unit_Kind := S_Spec;
       --  Kind of unit
-      Kind_Ambiguous : Boolean := False;
-      --  Set to True when the kind of unit cannot be fully determined.
-      --  In particular, in many situations we can't differentiate body and
-      --  separates without parsing either the source or the dependencies
-      --  information.
       Index          : Unit_Index := No_Index;
       --  In case of multi-unit source, the index of the unit, else No_Index
-      Name           : Name_Type (1 .. Name_Len);
-      --  The compilation unit name
+      Is_Parsed      : Boolean := False;
+      --  Whether we used the Ada parser to analyze the unit
+      --  ??? Add the with clauses here
+      Name           : Optional_Name_Type (1 .. Name_Len);
+      --  The compilation unit name. May be empty in case of a body with
+      --  pragma No_Body.
       Separate_Name  : Optional_Name_Type (1 .. Separate_Len);
       --  In case Kind is S_Separate, the name of the subunit (without the
       --  compilation unit name part).
@@ -74,11 +73,11 @@ package GPR2.Build.Source is
    --  reutrn Name.
 
    function Create
-     (Unit_Name      : Name_Type;
+     (Unit_Name      : Optional_Name_Type;
       Index          : Unit_Index;
       Kind           : Unit_Kind;
-      Kind_Ambiguous : Boolean;
-      Separate_Name  : Optional_Name_Type := No_Name) return Unit_Part;
+      Separate_Name  : Optional_Name_Type := No_Name;
+      Parsed         : Boolean := False) return Unit_Part;
 
    type Unit_List is tagged private
      with Constant_Indexing => Constant_Reference,
@@ -165,29 +164,15 @@ package GPR2.Build.Source is
       Source_Ref       : Source_Reference.Value.Object;
       Is_Compilable    : Boolean := False)
       return Object
-     with Pre  => Filename.Is_Defined and then Language /= Ada_Language,
+     with Pre  => Filename.Is_Defined,
           Post => Create'Result.Is_Defined;
    --  Constructor for a non-Ada source object
-
-   function Create_Ada
-     (Filename         : GPR2.Path_Name.Object;
-      Timestamp        : Ada.Calendar.Time;
-      Tree_Db          : access GPR2.Build.Tree_Db.Object;
-      Naming_Exception : Naming_Exception_Kind;
-      Source_Ref       : Source_Reference.Value.Object;
-      Units            : Unit_List'Class)
-      return Object
-     with Pre  => Filename.Is_Defined,
-          Post => Create_Ada'Result.Is_Defined;
-   --  Constructor for a Ada source object. The unit information is added
-   --  later via Add_Unit below.
 
    procedure Update_Unit
      (Self  : in out Object;
       Unit  : Unit_Part)
      with Pre => Self.Is_Defined
-                   and then Self.Language = Ada_Language
-                   and then Self.Has_Unit_At (Unit.Index);
+                   and then Self.Language = Ada_Language;
    --  Change the unit info stored in Self with updated information in Unit
 
    function Path_Name (Self : Object) return GPR2.Path_Name.Object
@@ -248,10 +233,8 @@ package GPR2.Build.Source is
 
    function Units (Self : Object) return Unit_List'Class
      with Inline,
-          Pre  => Self.Is_Defined and then Self.Has_Units,
-          Post => Units'Result.Length > 1
-                  or else Self.Has_Single_Unit;
-   --  Returns all compilation units for self
+          Pre  => Self.Is_Defined and then Self.Has_Units;
+   --  Returns all compilation units for self.
 
    --  function Is_Compilation_Input
    --    (Self  : Object;
@@ -286,18 +269,18 @@ private
       else GPR2."&" (GPR2."&" (U.Name, "."), U.Separate_Name));
 
    function Create
-     (Unit_Name      : Name_Type;
+     (Unit_Name      : Optional_Name_Type;
       Index          : Unit_Index;
       Kind           : Unit_Kind;
-      Kind_Ambiguous : Boolean;
-      Separate_Name  : Optional_Name_Type := No_Name) return Unit_Part
+      Separate_Name  : Optional_Name_Type := No_Name;
+      Parsed         : Boolean := False) return Unit_Part
    is (Name_Len       => Unit_Name'Length,
        Separate_Len   => Separate_Name'Length,
        Kind           => Kind,
-       Kind_Ambiguous => Kind_Ambiguous,
        Index          => Index,
-       Name           => Name_Type (Ada.Characters.Handling.To_Upper
-                                      (String (Unit_Name))),
+       Is_Parsed      => Parsed,
+       Name           => Optional_Name_Type (Ada.Characters.Handling.To_Upper
+                                               (String (Unit_Name))),
        Separate_Name  => Optional_Name_Type
                            (Ada.Characters.Handling.To_Upper
                               (String (Separate_Name))));

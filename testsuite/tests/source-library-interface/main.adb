@@ -88,7 +88,7 @@ procedure Main is
       Log  : GPR2.Log.Object;
 
    begin
-      Project.Tree.Load (Prj, Create (Project_Name), Ctx);
+      Project.Tree.Load_Autoconf (Prj, Create (Project_Name), Ctx);
 
       View := Prj.Root_Project;
       Text_IO.Put_Line ("Project: " & String (View.Name));
