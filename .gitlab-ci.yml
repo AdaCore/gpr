@@ -174,7 +174,7 @@ test_gpr2_cov:
     - anod build gpr2 -Qcoverage -Qnext
     - anod test gpr2 -Qcoverage -Qnext --minimal
     - mkdir $CI_PROJECT_DIR/coverage
-    - cov_dir=$SANDBOX/$HOST/gpr2-test-cov-stmt/results/new
+    - cov_dir=$SANDBOX/$HOST/gpr2-test-cov-stmt-next/results/new
     - mv $cov_dir/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
     - mv $cov_dir/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
     - echo_coverage_stats --coverage-file $cov_dir/coverage-xml/index.xml
