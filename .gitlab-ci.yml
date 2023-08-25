@@ -42,6 +42,9 @@ stages:
       done
     - rm -f $CI_PROJECT_DIR/*.tar.gz
 
+    # Setup the 'anod vcs' for this repo
+    - anod vcs --add-repo gpr2-next $CI_PROJECT_DIR
+
     # Figure out if we're on a sync branch
     - BRANCH=master
     - if [[ $CI_COMMIT_BRANCH =~ ^sync/ ]]; then
@@ -89,11 +92,8 @@ build:
   script:
     # setup submodules
     - packages=""
-    - subprojects="gprbuild gprconfig_kb"
+    - subprojects="gprconfig_kb"
     - *setup_repos
-
-    # Setup the 'anod vcs' for this repo
-    - anod vcs --add-repo gpr2-next $CI_PROJECT_DIR
 
     # Tune to use our build & test plan
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
@@ -103,7 +103,7 @@ build:
     # Note: we can't package the full gnat or gnatall install as the size seems
     # to reach some limits for the saved artifacts. So we package gprbuild and
     # co and will amend the toolchains for testing..
-    - for pkg in libgpr2-next; do
+    - for pkg in gpr2-next libgpr2-next-bare; do
         echo "packaging $SANDBOX/$HOST/$pkg/install/" ;
         tar czf $CI_PROJECT_DIR/$pkg.tar.gz -C $SANDBOX/$HOST/$pkg/ install/ ;
       done
@@ -112,7 +112,8 @@ build:
 
   artifacts:
     paths:
-      - libgpr2-next.tar.gz
+      - gpr2-next.tar.gz
+      - libgpr2-next-bare.tar.gz
 
 ####################
 ## GPR2 TESTSUITE ##
@@ -126,17 +127,9 @@ test_gpr2:
   stage: test
   allow_failure: true
   script:
-    # unpack the packages
-    - cd $SANDBOX
-    - mkdir -p fingerprints
-    - mkdir -p $HOST/libgpr2-next
-    - tar zxf $CI_PROJECT_DIR/libgpr2-next.tar.gz -C $HOST/libgpr2-next
-    - touch fingerprints/$HOST.libgpr2-next.install.json.assume-unchanged ;
-    - touch fingerprints/$HOST.libgpr2-next.download-bin.json.assume-unchanged ;
-    - rm -f $CI_PROJECT_DIR/*.tar.gz
-
-    # add the gpr2 repo
-    - anod vcs --add-repo gpr2-next $CI_PROJECT_DIR
+    - packages="gpr2-next libgpr2-next-bare"
+    - subprojects=""
+    - *setup_repos
 
     - anod test gpr2 -Qnext --minimal
     - e3-testsuite-report
@@ -168,13 +161,10 @@ test_gpr2_cov:
     - subprojects=""
     - *setup_repos
 
-    # add the gpr2 repo
-    - anod vcs --add-repo gpr2-next $CI_PROJECT_DIR
-
     - anod build gpr2 -Qcoverage -Qnext
     - anod test gpr2 -Qcoverage -Qnext --minimal
     - mkdir $CI_PROJECT_DIR/coverage
-    - cov_dir=$SANDBOX/$HOST/gpr2-test-cov-stmt/results/new
+    - cov_dir=$SANDBOX/$HOST/gpr2-test-cov-stmt-next/results/new
     - mv $cov_dir/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
     - mv $cov_dir/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
     - echo_coverage_stats --coverage-file $cov_dir/coverage-xml/index.xml
@@ -182,7 +172,7 @@ test_gpr2_cov:
         --failure-exit-code 1
         --xunit-output $CI_PROJECT_DIR/testgpr2cov_result.xml
         --xunit-name test_gpr2_cov
-        $SANDBOX/$HOST/gpr2-test-cov-stmt/results/new/ || exit 1
+        $SANDBOX/$HOST/gpr2-test-cov-stmt-next/results/new/ || exit 1
   coverage: '/^Stmt Coverage:\s+(\d+\.\d+\%) \(\d+ \/ \d+\)$/'
   artifacts:
     when:

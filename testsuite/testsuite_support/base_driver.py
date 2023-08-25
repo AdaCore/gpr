@@ -1,5 +1,8 @@
 import os
 import os.path
+import re
+from shutil import which
+from subprocess import check_output
 from typing import NoReturn
 
 from e3.env import Env
@@ -210,11 +213,20 @@ class BaseDriver(DiffTestDriver):
 
     @property
     def output_refiners(self):
+        # Find gcc
+        gcc = which("gcc")
+        gcc_install = os.path.dirname (os.path.dirname (gcc))
+        # and figure out gcc version
+        out = check_output([gcc, "--version"]).decode()
+        gcc_version = re.sub(r'gcc \(GCC\) ([0-9.]*)\s.*', r'\1', out.splitlines()[0])
+
         # Remove working directory from output and
         # make all filenames look like Unix ones (forward slashes for directory
         # separators, no drive letter).
         return super().output_refiners + [
             ReplacePath(self.working_dir(), replacement=""),
+            ReplacePath(gcc_install, replacement="<gcc>"),
+            Substitute(gcc_version, "(gcc-version)"),
             Substitute("\\", "/"),
             Substitute("C:/", "/"),
             Substitute("aarch64-linux", replacement="(host)"),
