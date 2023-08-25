@@ -81,16 +81,10 @@ private package Gpr_Parser.Implementation is
    type Precomputed_Symbol_Index is
          (
             
-               Precomputed_Sym_Access, --  access
                Precomputed_Sym_Aggregate, --  aggregate
-               Precomputed_Sym_Body, --  body
                Precomputed_Sym_Configuration, --  configuration
-               Precomputed_Sym_Function, --  function
-               Precomputed_Sym_Generic, --  generic
                Precomputed_Sym_Library, --  library
-               Precomputed_Sym_Procedure, --  procedure
                Precomputed_Sym_Project, --  project
-               Precomputed_Sym_Separate, --  separate
                Precomputed_Sym_Standard --  standard
          )
    ;
@@ -131,86 +125,6 @@ private package Gpr_Parser.Implementation is
    function Is_Null (Node : Bare_Gpr_Node) return Boolean;
    function Kind (Node : Bare_Gpr_Node) return Gpr_Node_Kind_Type;
 
-         subtype Bare_Ada_Prelude_Node is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Prelude_Node)
-               or else Kind (Bare_Ada_Prelude_Node) in Gpr_Ada_Prelude_Node;
-         subtype Bare_Ada_Access_Subp is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Access_Subp)
-               or else Kind (Bare_Ada_Access_Subp) in Gpr_Ada_Access_Subp_Range;
-         subtype Bare_Ada_Context_Clause is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Context_Clause)
-               or else Kind (Bare_Ada_Context_Clause) in Gpr_Ada_Context_Clause;
-         subtype Bare_Ada_Pragma is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Pragma)
-               or else Kind (Bare_Ada_Pragma) in Gpr_Ada_Pragma_Range;
-         subtype Bare_Ada_Use is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Use)
-               or else Kind (Bare_Ada_Use) in Gpr_Ada_Use_Range;
-         subtype Bare_Ada_With is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_With)
-               or else Kind (Bare_Ada_With) in Gpr_Ada_With_Range;
-         subtype Bare_Ada_Entity_Kind is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Entity_Kind)
-               or else Kind (Bare_Ada_Entity_Kind) in Gpr_Ada_Entity_Kind;
-         subtype Bare_Ada_Entity_Kind_Function is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Entity_Kind_Function)
-               or else Kind (Bare_Ada_Entity_Kind_Function) in Gpr_Ada_Entity_Kind_Function_Range;
-         subtype Bare_Ada_Entity_Kind_Package is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Entity_Kind_Package)
-               or else Kind (Bare_Ada_Entity_Kind_Package) in Gpr_Ada_Entity_Kind_Package_Range;
-         subtype Bare_Ada_Entity_Kind_Procedure is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Entity_Kind_Procedure)
-               or else Kind (Bare_Ada_Entity_Kind_Procedure) in Gpr_Ada_Entity_Kind_Procedure_Range;
-         subtype Bare_Ada_Generic is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Generic)
-               or else Kind (Bare_Ada_Generic) in Gpr_Ada_Generic_Range;
-         subtype Bare_Ada_Library_Item is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Library_Item)
-               or else Kind (Bare_Ada_Library_Item) in Gpr_Ada_Library_Item_Range;
-         subtype Bare_Ada_Main is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Main)
-               or else Kind (Bare_Ada_Main) in Gpr_Ada_Main;
-         subtype Bare_Ada_Pkg is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Pkg)
-               or else Kind (Bare_Ada_Pkg) in Gpr_Ada_Pkg_Range;
-         subtype Bare_Ada_Pkg_Body is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Pkg_Body)
-               or else Kind (Bare_Ada_Pkg_Body) in Gpr_Ada_Pkg_Body_Range;
-         subtype Bare_Ada_Subp is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Subp)
-               or else Kind (Bare_Ada_Subp) in Gpr_Ada_Subp_Range;
-         subtype Bare_Ada_Prelude is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Prelude)
-               or else Kind (Bare_Ada_Prelude) in Gpr_Ada_Prelude_Range;
-         subtype Bare_Ada_Separate is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Separate)
-               or else Kind (Bare_Ada_Separate) in Gpr_Ada_Separate_Range;
-         subtype Bare_Ada_Skip is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Skip)
-               or else Kind (Bare_Ada_Skip) in Gpr_Ada_Skip_Range;
-         subtype Bare_Ada_With_Formal is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_With_Formal)
-               or else Kind (Bare_Ada_With_Formal) in Gpr_Ada_With_Formal_Range;
          subtype Bare_All_Qualifier is Bare_Gpr_Node
             with Dynamic_Predicate =>
                Is_Null (Bare_All_Qualifier)
@@ -235,26 +149,10 @@ private package Gpr_Parser.Implementation is
             with Dynamic_Predicate =>
                Is_Null (Bare_Base_List)
                or else Kind (Bare_Base_List) in Gpr_Base_List;
-         subtype Bare_Ada_Context_Clause_List is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Context_Clause_List)
-               or else Kind (Bare_Ada_Context_Clause_List) in Gpr_Ada_Context_Clause_List_Range;
-         subtype Bare_Ada_Prelude_Node_List is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Prelude_Node_List)
-               or else Kind (Bare_Ada_Prelude_Node_List) in Gpr_Ada_Prelude_Node_List_Range;
-         subtype Bare_Ada_Skip_List is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Ada_Skip_List)
-               or else Kind (Bare_Ada_Skip_List) in Gpr_Ada_Skip_List_Range;
          subtype Bare_Case_Item_List is Bare_Gpr_Node
             with Dynamic_Predicate =>
                Is_Null (Bare_Case_Item_List)
                or else Kind (Bare_Case_Item_List) in Gpr_Case_Item_List_Range;
-         subtype Bare_Expr_List is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Expr_List)
-               or else Kind (Bare_Expr_List) in Gpr_Expr_List_Range;
          subtype Bare_Gpr_Node_List is Bare_Gpr_Node
             with Dynamic_Predicate =>
                Is_Null (Bare_Gpr_Node_List)
@@ -359,18 +257,6 @@ private package Gpr_Parser.Implementation is
             with Dynamic_Predicate =>
                Is_Null (Bare_Package_Spec)
                or else Kind (Bare_Package_Spec) in Gpr_Package_Spec_Range;
-         subtype Bare_Private_Node is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Private_Node)
-               or else Kind (Bare_Private_Node) in Gpr_Private_Node;
-         subtype Bare_Private_Absent is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Private_Absent)
-               or else Kind (Bare_Private_Absent) in Gpr_Private_Absent_Range;
-         subtype Bare_Private_Present is Bare_Gpr_Node
-            with Dynamic_Predicate =>
-               Is_Null (Bare_Private_Present)
-               or else Kind (Bare_Private_Present) in Gpr_Private_Present_Range;
          subtype Bare_Project is Bare_Gpr_Node
             with Dynamic_Predicate =>
                Is_Null (Bare_Project)
@@ -984,102 +870,6 @@ private package Gpr_Parser.Implementation is
          
 
          
-      type Internal_Entity_Ada_Prelude_Node;
-      
-
-         
-      type Internal_Entity_Ada_Access_Subp;
-      
-
-         
-      type Internal_Entity_Ada_Context_Clause;
-      
-
-         
-      type Internal_Entity_Base_List;
-      
-
-         
-      type Internal_Entity_Ada_Context_Clause_List;
-      
-
-         
-      type Internal_Entity_Ada_Entity_Kind;
-      
-
-         
-      type Internal_Entity_Ada_Entity_Kind_Function;
-      
-
-         
-      type Internal_Entity_Ada_Entity_Kind_Package;
-      
-
-         
-      type Internal_Entity_Ada_Entity_Kind_Procedure;
-      
-
-         
-      type Internal_Entity_Ada_Generic;
-      
-
-         
-      type Internal_Entity_Ada_Library_Item;
-      
-
-         
-      type Internal_Entity_Ada_Main;
-      
-
-         
-      type Internal_Entity_Ada_Pkg;
-      
-
-         
-      type Internal_Entity_Ada_Pkg_Body;
-      
-
-         
-      type Internal_Entity_Ada_Pragma;
-      
-
-         
-      type Internal_Entity_Ada_Prelude;
-      
-
-         
-      type Internal_Entity_Ada_Prelude_Node_List;
-      
-
-         
-      type Internal_Entity_Ada_Separate;
-      
-
-         
-      type Internal_Entity_Ada_Skip;
-      
-
-         
-      type Internal_Entity_Ada_Skip_List;
-      
-
-         
-      type Internal_Entity_Ada_Subp;
-      
-
-         
-      type Internal_Entity_Ada_Use;
-      
-
-         
-      type Internal_Entity_Ada_With;
-      
-
-         
-      type Internal_Entity_Ada_With_Formal;
-      
-
-         
       type Internal_Entity_All_Qualifier;
       
 
@@ -1097,6 +887,10 @@ private package Gpr_Parser.Implementation is
 
          
       type Internal_Entity_Attribute_Reference;
+      
+
+         
+      type Internal_Entity_Base_List;
       
 
          
@@ -1133,10 +927,6 @@ private package Gpr_Parser.Implementation is
 
          
       type Internal_Entity_Expr;
-      
-
-         
-      type Internal_Entity_Expr_List;
       
 
          
@@ -1189,18 +979,6 @@ private package Gpr_Parser.Implementation is
 
          
       type Internal_Entity_Prefix;
-      
-
-         
-      type Internal_Entity_Private_Node;
-      
-
-         
-      type Internal_Entity_Private_Absent;
-      
-
-         
-      type Internal_Entity_Private_Present;
       
 
          
@@ -1398,678 +1176,6 @@ private package Gpr_Parser.Implementation is
 
       
 
-      type Internal_Entity_Ada_Prelude_Node is record
-
-               Node : aliased Bare_Ada_Prelude_Node;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Prelude_Node : constant Internal_Entity_Ada_Prelude_Node;
-
-
-      function Create_Internal_Entity_Ada_Prelude_Node
-        (Node : Bare_Ada_Prelude_Node; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Prelude_Node;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Prelude_Node) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Access_Subp is record
-
-               Node : aliased Bare_Ada_Access_Subp;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Access_Subp : constant Internal_Entity_Ada_Access_Subp;
-
-
-      function Create_Internal_Entity_Ada_Access_Subp
-        (Node : Bare_Ada_Access_Subp; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Access_Subp;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Access_Subp) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Context_Clause is record
-
-               Node : aliased Bare_Ada_Context_Clause;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Context_Clause : constant Internal_Entity_Ada_Context_Clause;
-
-
-      function Create_Internal_Entity_Ada_Context_Clause
-        (Node : Bare_Ada_Context_Clause; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Context_Clause;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Context_Clause) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Base_List is record
-
-               Node : aliased Bare_Base_List;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Base_List : constant Internal_Entity_Base_List;
-
-
-      function Create_Internal_Entity_Base_List
-        (Node : Bare_Base_List; Info : Internal_Entity_Info)
-         return Internal_Entity_Base_List;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Base_List) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Context_Clause_List is record
-
-               Node : aliased Bare_Ada_Context_Clause_List;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Context_Clause_List : constant Internal_Entity_Ada_Context_Clause_List;
-
-
-      function Create_Internal_Entity_Ada_Context_Clause_List
-        (Node : Bare_Ada_Context_Clause_List; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Context_Clause_List;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Context_Clause_List) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Entity_Kind is record
-
-               Node : aliased Bare_Ada_Entity_Kind;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Entity_Kind : constant Internal_Entity_Ada_Entity_Kind;
-
-
-      function Create_Internal_Entity_Ada_Entity_Kind
-        (Node : Bare_Ada_Entity_Kind; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Entity_Kind;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Entity_Kind) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Entity_Kind_Function is record
-
-               Node : aliased Bare_Ada_Entity_Kind_Function;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Entity_Kind_Function : constant Internal_Entity_Ada_Entity_Kind_Function;
-
-
-      function Create_Internal_Entity_Ada_Entity_Kind_Function
-        (Node : Bare_Ada_Entity_Kind_Function; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Entity_Kind_Function;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Entity_Kind_Function) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Entity_Kind_Package is record
-
-               Node : aliased Bare_Ada_Entity_Kind_Package;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Entity_Kind_Package : constant Internal_Entity_Ada_Entity_Kind_Package;
-
-
-      function Create_Internal_Entity_Ada_Entity_Kind_Package
-        (Node : Bare_Ada_Entity_Kind_Package; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Entity_Kind_Package;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Entity_Kind_Package) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Entity_Kind_Procedure is record
-
-               Node : aliased Bare_Ada_Entity_Kind_Procedure;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Entity_Kind_Procedure : constant Internal_Entity_Ada_Entity_Kind_Procedure;
-
-
-      function Create_Internal_Entity_Ada_Entity_Kind_Procedure
-        (Node : Bare_Ada_Entity_Kind_Procedure; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Entity_Kind_Procedure;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Entity_Kind_Procedure) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Generic is record
-
-               Node : aliased Bare_Ada_Generic;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Generic : constant Internal_Entity_Ada_Generic;
-
-
-      function Create_Internal_Entity_Ada_Generic
-        (Node : Bare_Ada_Generic; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Generic;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Generic) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Library_Item is record
-
-               Node : aliased Bare_Ada_Library_Item;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Library_Item : constant Internal_Entity_Ada_Library_Item;
-
-
-      function Create_Internal_Entity_Ada_Library_Item
-        (Node : Bare_Ada_Library_Item; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Library_Item;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Library_Item) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Main is record
-
-               Node : aliased Bare_Ada_Main;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Main : constant Internal_Entity_Ada_Main;
-
-
-      function Create_Internal_Entity_Ada_Main
-        (Node : Bare_Ada_Main; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Main;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Main) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Pkg is record
-
-               Node : aliased Bare_Ada_Pkg;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Pkg : constant Internal_Entity_Ada_Pkg;
-
-
-      function Create_Internal_Entity_Ada_Pkg
-        (Node : Bare_Ada_Pkg; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Pkg;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Pkg) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Pkg_Body is record
-
-               Node : aliased Bare_Ada_Pkg_Body;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Pkg_Body : constant Internal_Entity_Ada_Pkg_Body;
-
-
-      function Create_Internal_Entity_Ada_Pkg_Body
-        (Node : Bare_Ada_Pkg_Body; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Pkg_Body;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Pkg_Body) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Pragma is record
-
-               Node : aliased Bare_Ada_Pragma;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Pragma : constant Internal_Entity_Ada_Pragma;
-
-
-      function Create_Internal_Entity_Ada_Pragma
-        (Node : Bare_Ada_Pragma; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Pragma;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Pragma) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Prelude is record
-
-               Node : aliased Bare_Ada_Prelude;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Prelude : constant Internal_Entity_Ada_Prelude;
-
-
-      function Create_Internal_Entity_Ada_Prelude
-        (Node : Bare_Ada_Prelude; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Prelude;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Prelude) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Prelude_Node_List is record
-
-               Node : aliased Bare_Ada_Prelude_Node_List;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Prelude_Node_List : constant Internal_Entity_Ada_Prelude_Node_List;
-
-
-      function Create_Internal_Entity_Ada_Prelude_Node_List
-        (Node : Bare_Ada_Prelude_Node_List; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Prelude_Node_List;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Prelude_Node_List) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Separate is record
-
-               Node : aliased Bare_Ada_Separate;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Separate : constant Internal_Entity_Ada_Separate;
-
-
-      function Create_Internal_Entity_Ada_Separate
-        (Node : Bare_Ada_Separate; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Separate;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Separate) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Skip is record
-
-               Node : aliased Bare_Ada_Skip;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Skip : constant Internal_Entity_Ada_Skip;
-
-
-      function Create_Internal_Entity_Ada_Skip
-        (Node : Bare_Ada_Skip; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Skip;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Skip) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Skip_List is record
-
-               Node : aliased Bare_Ada_Skip_List;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Skip_List : constant Internal_Entity_Ada_Skip_List;
-
-
-      function Create_Internal_Entity_Ada_Skip_List
-        (Node : Bare_Ada_Skip_List; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Skip_List;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Skip_List) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Subp is record
-
-               Node : aliased Bare_Ada_Subp;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Subp : constant Internal_Entity_Ada_Subp;
-
-
-      function Create_Internal_Entity_Ada_Subp
-        (Node : Bare_Ada_Subp; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Subp;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Subp) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_Use is record
-
-               Node : aliased Bare_Ada_Use;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_Use : constant Internal_Entity_Ada_Use;
-
-
-      function Create_Internal_Entity_Ada_Use
-        (Node : Bare_Ada_Use; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_Use;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_Use) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_With is record
-
-               Node : aliased Bare_Ada_With;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_With : constant Internal_Entity_Ada_With;
-
-
-      function Create_Internal_Entity_Ada_With
-        (Node : Bare_Ada_With; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_With;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_With) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Ada_With_Formal is record
-
-               Node : aliased Bare_Ada_With_Formal;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Ada_With_Formal : constant Internal_Entity_Ada_With_Formal;
-
-
-      function Create_Internal_Entity_Ada_With_Formal
-        (Node : Bare_Ada_With_Formal; Info : Internal_Entity_Info)
-         return Internal_Entity_Ada_With_Formal;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Ada_With_Formal) return String;
-
-
-         
-
-      
-
       type Internal_Entity_All_Qualifier is record
 
                Node : aliased Bare_All_Qualifier;
@@ -2204,6 +1310,34 @@ private package Gpr_Parser.Implementation is
 
 
       function Trace_Image (R : Internal_Entity_Attribute_Reference) return String;
+
+
+         
+
+      
+
+      type Internal_Entity_Base_List is record
+
+               Node : aliased Bare_Base_List;
+               --  The stored AST node
+               
+               Info : aliased Internal_Entity_Info;
+               --  Entity info for this node
+               
+      end record
+        with Convention => C;
+      No_Entity_Base_List : constant Internal_Entity_Base_List;
+
+
+      function Create_Internal_Entity_Base_List
+        (Node : Bare_Base_List; Info : Internal_Entity_Info)
+         return Internal_Entity_Base_List;
+
+
+   
+
+
+      function Trace_Image (R : Internal_Entity_Base_List) return String;
 
 
          
@@ -2456,34 +1590,6 @@ private package Gpr_Parser.Implementation is
 
 
       function Trace_Image (R : Internal_Entity_Expr) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Expr_List is record
-
-               Node : aliased Bare_Expr_List;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Expr_List : constant Internal_Entity_Expr_List;
-
-
-      function Create_Internal_Entity_Expr_List
-        (Node : Bare_Expr_List; Info : Internal_Entity_Info)
-         return Internal_Entity_Expr_List;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Expr_List) return String;
 
 
          
@@ -2848,90 +1954,6 @@ private package Gpr_Parser.Implementation is
 
 
       function Trace_Image (R : Internal_Entity_Prefix) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Private_Node is record
-
-               Node : aliased Bare_Private_Node;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Private_Node : constant Internal_Entity_Private_Node;
-
-
-      function Create_Internal_Entity_Private_Node
-        (Node : Bare_Private_Node; Info : Internal_Entity_Info)
-         return Internal_Entity_Private_Node;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Private_Node) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Private_Absent is record
-
-               Node : aliased Bare_Private_Absent;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Private_Absent : constant Internal_Entity_Private_Absent;
-
-
-      function Create_Internal_Entity_Private_Absent
-        (Node : Bare_Private_Absent; Info : Internal_Entity_Info)
-         return Internal_Entity_Private_Absent;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Private_Absent) return String;
-
-
-         
-
-      
-
-      type Internal_Entity_Private_Present is record
-
-               Node : aliased Bare_Private_Present;
-               --  The stored AST node
-               
-               Info : aliased Internal_Entity_Info;
-               --  Entity info for this node
-               
-      end record
-        with Convention => C;
-      No_Entity_Private_Present : constant Internal_Entity_Private_Present;
-
-
-      function Create_Internal_Entity_Private_Present
-        (Node : Bare_Private_Present; Info : Internal_Entity_Info)
-         return Internal_Entity_Private_Present;
-
-
-   
-
-
-      function Trace_Image (R : Internal_Entity_Private_Present) return String;
 
 
          
@@ -4130,31 +3152,11 @@ private package Gpr_Parser.Implementation is
    -------------------------------
 
    Kind_To_Node_Children_Count : constant array (Gpr_Node_Kind_Type) of Integer :=
-     (Gpr_Ada_Access_Subp => 2, 
-Gpr_Ada_Pragma => 1, 
-Gpr_Ada_Use => 1, 
-Gpr_Ada_With => 3, 
-Gpr_Ada_Entity_Kind_Function => 0, 
-Gpr_Ada_Entity_Kind_Package => 0, 
-Gpr_Ada_Entity_Kind_Procedure => 0, 
-Gpr_Ada_Generic => 1, 
-Gpr_Ada_Library_Item => 3, 
-Gpr_Ada_Pkg => 2, 
-Gpr_Ada_Pkg_Body => 1, 
-Gpr_Ada_Subp => 2, 
-Gpr_Ada_Prelude => 2, 
-Gpr_Ada_Separate => 1, 
-Gpr_Ada_Skip => 0, 
-Gpr_Ada_With_Formal => 2, 
-Gpr_All_Qualifier_Absent => 0, 
+     (Gpr_All_Qualifier_Absent => 0, 
 Gpr_All_Qualifier_Present => 0, 
 Gpr_Attribute_Decl => 3, 
 Gpr_Attribute_Reference => 2, 
-Gpr_Ada_Context_Clause_List => -1, 
-Gpr_Ada_Prelude_Node_List => -1, 
-Gpr_Ada_Skip_List => -1, 
 Gpr_Case_Item_List => -1, 
-Gpr_Expr_List => -1, 
 Gpr_Gpr_Node_List => -1, 
 Gpr_Choices => -1, 
 Gpr_Term_List => -1, 
@@ -4178,8 +3180,6 @@ Gpr_Package_Decl => 2,
 Gpr_Package_Extension => 1, 
 Gpr_Package_Renaming => 1, 
 Gpr_Package_Spec => 3, 
-Gpr_Private_Absent => 0, 
-Gpr_Private_Present => 0, 
 Gpr_Project => 2, 
 Gpr_Project_Declaration => 5, 
 Gpr_Project_Extension => 2, 
@@ -4385,284 +3385,6 @@ Gpr_With_Decl => 2);
 
 
             case Kind is
-                  when Gpr_Ada_Prelude_Node =>
-                     
-         
-
-
-
-         
-
-
-            case Kind is
-                  when Gpr_Ada_Access_Subp_Range =>
-                     
-         
-
-
-            Ada_Access_Subp_F_Subp_Kind : aliased Bare_Ada_Entity_Kind :=
-               No_Bare_Gpr_Node;
-            Ada_Access_Subp_F_Skips : aliased Bare_Ada_Skip_List :=
-               No_Bare_Gpr_Node;
-
-         
-
-
-
-      
-                  when Gpr_Ada_Context_Clause =>
-                     
-         
-
-
-
-         
-
-
-            case Kind is
-                  when Gpr_Ada_Pragma_Range =>
-                     
-         
-
-
-            Ada_Pragma_F_Skips : aliased Bare_Ada_Skip_List :=
-               No_Bare_Gpr_Node;
-
-         
-
-
-
-      
-                  when Gpr_Ada_Use_Range =>
-                     
-         
-
-
-            Ada_Use_F_Skips : aliased Bare_Ada_Skip_List :=
-               No_Bare_Gpr_Node;
-
-         
-
-
-
-      
-                  when Gpr_Ada_With_Range =>
-                     
-         
-
-
-            Ada_With_F_Has_Limited : aliased Bare_Limited_Node :=
-               No_Bare_Gpr_Node;
-            Ada_With_F_Has_Private : aliased Bare_Private_Node :=
-               No_Bare_Gpr_Node;
-            Ada_With_F_Packages : aliased Bare_Expr_List :=
-               No_Bare_Gpr_Node;
-
-         
-
-
-
-      
-               when others => null;
-            end case;
-
-      
-                  when Gpr_Ada_Entity_Kind =>
-                     
-         
-
-
-
-         
-
-
-            case Kind is
-                  when Gpr_Ada_Entity_Kind_Function_Range =>
-                     
-         
-
-
-
-         
-
-
-
-            null;
-      
-                  when Gpr_Ada_Entity_Kind_Package_Range =>
-                     
-         
-
-
-
-         
-
-
-
-            null;
-      
-                  when Gpr_Ada_Entity_Kind_Procedure_Range =>
-                     
-         
-
-
-
-         
-
-
-
-            null;
-      
-               when others => null;
-            end case;
-
-      
-                  when Gpr_Ada_Generic_Range =>
-                     
-         
-
-
-            Ada_Generic_F_Skips : aliased Bare_Gpr_Node :=
-               No_Bare_Gpr_Node;
-
-         
-
-
-
-      
-                  when Gpr_Ada_Library_Item_Range =>
-                     
-         
-
-
-            Ada_Library_Item_F_Generic_Stub : aliased Bare_Ada_Generic :=
-               No_Bare_Gpr_Node;
-            Ada_Library_Item_F_Separate : aliased Bare_Ada_Separate :=
-               No_Bare_Gpr_Node;
-            Ada_Library_Item_F_Main : aliased Bare_Ada_Main :=
-               No_Bare_Gpr_Node;
-
-         
-
-
-
-      
-                  when Gpr_Ada_Main =>
-                     
-         
-
-
-
-         
-
-
-            case Kind is
-                  when Gpr_Ada_Pkg_Range =>
-                     
-         
-
-
-            Ada_Pkg_F_Has_Private : aliased Bare_Private_Node :=
-               No_Bare_Gpr_Node;
-            Ada_Pkg_F_Name : aliased Bare_Expr :=
-               No_Bare_Gpr_Node;
-
-         
-
-
-
-      
-                  when Gpr_Ada_Pkg_Body_Range =>
-                     
-         
-
-
-            Ada_Pkg_Body_F_Name : aliased Bare_Expr :=
-               No_Bare_Gpr_Node;
-
-         
-
-
-
-      
-                  when Gpr_Ada_Subp_Range =>
-                     
-         
-
-
-            Ada_Subp_F_Subp_Kind : aliased Bare_Ada_Entity_Kind :=
-               No_Bare_Gpr_Node;
-            Ada_Subp_F_Name : aliased Bare_Expr :=
-               No_Bare_Gpr_Node;
-
-         
-
-
-
-      
-               when others => null;
-            end case;
-
-      
-                  when Gpr_Ada_Prelude_Range =>
-                     
-         
-
-
-            Ada_Prelude_F_Context_Clauses : aliased Bare_Ada_Context_Clause_List :=
-               No_Bare_Gpr_Node;
-            Ada_Prelude_F_Library_Item : aliased Bare_Ada_Library_Item :=
-               No_Bare_Gpr_Node;
-
-         
-
-
-
-      
-                  when Gpr_Ada_Separate_Range =>
-                     
-         
-
-
-            Ada_Separate_F_Parent_Name : aliased Bare_Expr :=
-               No_Bare_Gpr_Node;
-
-         
-
-
-
-      
-                  when Gpr_Ada_Skip_Range =>
-                     
-         
-
-
-
-         
-
-
-
-            null;
-      
-                  when Gpr_Ada_With_Formal_Range =>
-                     
-         
-
-
-            Ada_With_Formal_F_Kind : aliased Bare_Ada_Entity_Kind :=
-               No_Bare_Gpr_Node;
-            Ada_With_Formal_F_Skips : aliased Bare_Ada_Skip_List :=
-               No_Bare_Gpr_Node;
-
-         
-
-
-
-      
-               when others => null;
-            end case;
-
-      
                   when Gpr_All_Qualifier =>
                      
          
@@ -4745,55 +3467,7 @@ Gpr_With_Decl => 2);
 
 
             case Kind is
-                  when Gpr_Ada_Context_Clause_List_Range =>
-                     
-         
-
-
-
-         
-
-
-
-            null;
-      
-                  when Gpr_Ada_Prelude_Node_List_Range =>
-                     
-         
-
-
-
-         
-
-
-
-            null;
-      
-                  when Gpr_Ada_Skip_List_Range =>
-                     
-         
-
-
-
-         
-
-
-
-            null;
-      
                   when Gpr_Case_Item_List_Range =>
-                     
-         
-
-
-
-         
-
-
-
-            null;
-      
-                  when Gpr_Expr_List_Range =>
                      
          
 
@@ -5150,44 +3824,6 @@ Gpr_With_Decl => 2);
          
 
 
-
-      
-                  when Gpr_Private_Node =>
-                     
-         
-
-
-
-         
-
-
-            case Kind is
-                  when Gpr_Private_Absent_Range =>
-                     
-         
-
-
-
-         
-
-
-
-            null;
-      
-                  when Gpr_Private_Present_Range =>
-                     
-         
-
-
-
-         
-
-
-
-            null;
-      
-               when others => null;
-            end case;
 
       
                   when Gpr_Project_Range =>
@@ -5947,391 +4583,6 @@ Gpr_With_Decl => 2);
 
 
 
-
-   
-
-
-
-
-      
-
-   
-
-      
-      procedure Initialize_Fields_For_Ada_Access_Subp
-        (Self : Bare_Ada_Access_Subp
-         ; Ada_Access_Subp_F_Subp_Kind : Bare_Ada_Entity_Kind
-         ; Ada_Access_Subp_F_Skips : Bare_Ada_Skip_List
-        );
-
-      
-   function Ada_Access_Subp_F_Subp_Kind
-     (Node : Bare_Ada_Access_Subp) return Bare_Ada_Entity_Kind;
-
-      
-   function Ada_Access_Subp_F_Skips
-     (Node : Bare_Ada_Access_Subp) return Bare_Ada_Skip_List;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-
-
-
-   
-
-
-
-
-      
-
-   
-
-      
-      procedure Initialize_Fields_For_Ada_Pragma
-        (Self : Bare_Ada_Pragma
-         ; Ada_Pragma_F_Skips : Bare_Ada_Skip_List
-        );
-
-      
-   function Ada_Pragma_F_Skips
-     (Node : Bare_Ada_Pragma) return Bare_Ada_Skip_List;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-      
-      procedure Initialize_Fields_For_Ada_Use
-        (Self : Bare_Ada_Use
-         ; Ada_Use_F_Skips : Bare_Ada_Skip_List
-        );
-
-      
-   function Ada_Use_F_Skips
-     (Node : Bare_Ada_Use) return Bare_Ada_Skip_List;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-      
-      procedure Initialize_Fields_For_Ada_With
-        (Self : Bare_Ada_With
-         ; Ada_With_F_Has_Limited : Bare_Limited_Node
-         ; Ada_With_F_Has_Private : Bare_Private_Node
-         ; Ada_With_F_Packages : Bare_Expr_List
-        );
-
-      
-   function Ada_With_F_Has_Limited
-     (Node : Bare_Ada_With) return Bare_Limited_Node;
-
-      
-   function Ada_With_F_Has_Private
-     (Node : Bare_Ada_With) return Bare_Private_Node;
-
-      
-   function Ada_With_F_Packages
-     (Node : Bare_Ada_With) return Bare_Expr_List;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-
-
-
-   
-
-
-
-
-      
-
-   
-
-
-
-
-   
-
-
-
-
-      
-
-   
-
-
-
-
-   
-
-
-
-
-      
-
-   
-
-
-
-
-   
-
-
-
-
-      
-
-   
-
-      
-      procedure Initialize_Fields_For_Ada_Generic
-        (Self : Bare_Ada_Generic
-         ; Ada_Generic_F_Skips : Bare_Gpr_Node
-        );
-
-      
-   function Ada_Generic_F_Skips
-     (Node : Bare_Ada_Generic) return Bare_Gpr_Node;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-      
-      procedure Initialize_Fields_For_Ada_Library_Item
-        (Self : Bare_Ada_Library_Item
-         ; Ada_Library_Item_F_Generic_Stub : Bare_Ada_Generic
-         ; Ada_Library_Item_F_Separate : Bare_Ada_Separate
-         ; Ada_Library_Item_F_Main : Bare_Ada_Main
-        );
-
-      
-   function Ada_Library_Item_F_Generic_Stub
-     (Node : Bare_Ada_Library_Item) return Bare_Ada_Generic;
-
-      
-   function Ada_Library_Item_F_Separate
-     (Node : Bare_Ada_Library_Item) return Bare_Ada_Separate;
-
-      
-   function Ada_Library_Item_F_Main
-     (Node : Bare_Ada_Library_Item) return Bare_Ada_Main;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-
-      
-   function Ada_Main_F_Name
-     (Node : Bare_Ada_Main) return Bare_Expr;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-      
-      procedure Initialize_Fields_For_Ada_Pkg
-        (Self : Bare_Ada_Pkg
-         ; Ada_Pkg_F_Has_Private : Bare_Private_Node
-         ; Ada_Pkg_F_Name : Bare_Expr
-        );
-
-      
-   function Ada_Pkg_F_Has_Private
-     (Node : Bare_Ada_Pkg) return Bare_Private_Node;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-      
-      procedure Initialize_Fields_For_Ada_Pkg_Body
-        (Self : Bare_Ada_Pkg_Body
-         ; Ada_Pkg_Body_F_Name : Bare_Expr
-        );
-
-
-
-   
-
-
-
-
-      
-
-   
-
-      
-      procedure Initialize_Fields_For_Ada_Subp
-        (Self : Bare_Ada_Subp
-         ; Ada_Subp_F_Subp_Kind : Bare_Ada_Entity_Kind
-         ; Ada_Subp_F_Name : Bare_Expr
-        );
-
-      
-   function Ada_Subp_F_Subp_Kind
-     (Node : Bare_Ada_Subp) return Bare_Ada_Entity_Kind;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-      
-      procedure Initialize_Fields_For_Ada_Prelude
-        (Self : Bare_Ada_Prelude
-         ; Ada_Prelude_F_Context_Clauses : Bare_Ada_Context_Clause_List
-         ; Ada_Prelude_F_Library_Item : Bare_Ada_Library_Item
-        );
-
-      
-   function Ada_Prelude_F_Context_Clauses
-     (Node : Bare_Ada_Prelude) return Bare_Ada_Context_Clause_List;
-
-      
-   function Ada_Prelude_F_Library_Item
-     (Node : Bare_Ada_Prelude) return Bare_Ada_Library_Item;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-      
-      procedure Initialize_Fields_For_Ada_Separate
-        (Self : Bare_Ada_Separate
-         ; Ada_Separate_F_Parent_Name : Bare_Expr
-        );
-
-      
-   function Ada_Separate_F_Parent_Name
-     (Node : Bare_Ada_Separate) return Bare_Expr;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-
-
-
-   
-
-
-
-
-      
-
-   
-
-      
-      procedure Initialize_Fields_For_Ada_With_Formal
-        (Self : Bare_Ada_With_Formal
-         ; Ada_With_Formal_F_Kind : Bare_Ada_Entity_Kind
-         ; Ada_With_Formal_F_Skips : Bare_Ada_Skip_List
-        );
-
-      
-   function Ada_With_Formal_F_Kind
-     (Node : Bare_Ada_With_Formal) return Bare_Ada_Entity_Kind;
-
-      
-   function Ada_With_Formal_F_Skips
-     (Node : Bare_Ada_With_Formal) return Bare_Ada_Skip_List;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-
-
          
 
 
@@ -6451,54 +4702,6 @@ Gpr_With_Decl => 2);
       
    function Attribute_Reference_F_Attribute_Index
      (Node : Bare_Attribute_Reference) return Bare_Gpr_Node;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-
-
-
-   
-
-
-
-
-      
-
-   
-
-
-
-
-   
-
-
-
-
-      
-
-   
-
-
-
-
-   
-
-
-
-
-      
-
-   
-
 
 
 
@@ -6991,82 +5194,6 @@ Gpr_With_Decl => 2);
       
    function Package_Spec_F_End_Name
      (Node : Bare_Package_Spec) return Bare_Identifier;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-
-
-         
-
-
-
- function Dispatcher_Private_Node_P_As_Bool
-   
-  (Node : Bare_Private_Node
-  )
-
-   return Boolean
-   with Inline_Always
-   ;
---  Return whether this is an instance of PrivatePresent
-
-
-   
-
-
-
-
-      
-
-   
-
-
-
-         
-
-
-
- function Private_Absent_P_As_Bool
-   
-  (Node : Bare_Private_Absent
-  )
-
-   return Boolean
-   ;
-
-
-
-   
-
-
-
-
-      
-
-   
-
-
-
-         
-
-
-
- function Private_Present_P_As_Bool
-   
-  (Node : Bare_Private_Present
-  )
-
-   return Boolean
-   ;
 
 
 
@@ -7673,7 +5800,20 @@ Gpr_With_Decl => 2);
 
       --  End of ABI area
 
-      Ref_Count : Natural;
+      Initialized : Boolean;
+      Ref_Count   : Natural;
+      --  Whether this context is fully initialized, and when it is allocated,
+      --  its number of ownership shares. Allocated contexts have 3 possible
+      --  states:
+      --
+      --  * Acquired (not yet initialized, Ref_Count => 1, Initialized =>
+      --    False): it can be either initialized or released.
+      --
+      --  * Initialized (Ref_Count > 0, Initialized => True): it can only be
+      --    destroyed and released.
+      --
+      --  * Released (Ref_Count = 0, Initialized => False): it can only be
+      --    acquired again.
 
       Units : Units_Maps.Map;
       --  Collection of analysis units loaded in this context
@@ -8066,7 +6206,7 @@ Gpr_With_Decl => 2);
    --  Decrement the ref-count of Context, destroying it if the ref-count
    --  reaches zero. This does nothing if Context is null.
 
-   procedure Destroy (Context : in out Internal_Context)
+   procedure Destroy (Context : Internal_Context)
       with Pre => not Has_Rewriting_Handle (Context);
    --  Free all resources allocated for Context
 
@@ -8313,246 +6453,6 @@ private
       
 
 
-      No_Entity_Ada_Prelude_Node : constant Internal_Entity_Ada_Prelude_Node :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Access_Subp : constant Internal_Entity_Ada_Access_Subp :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Context_Clause : constant Internal_Entity_Ada_Context_Clause :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Base_List : constant Internal_Entity_Base_List :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Context_Clause_List : constant Internal_Entity_Ada_Context_Clause_List :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Entity_Kind : constant Internal_Entity_Ada_Entity_Kind :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Entity_Kind_Function : constant Internal_Entity_Ada_Entity_Kind_Function :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Entity_Kind_Package : constant Internal_Entity_Ada_Entity_Kind_Package :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Entity_Kind_Procedure : constant Internal_Entity_Ada_Entity_Kind_Procedure :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Generic : constant Internal_Entity_Ada_Generic :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Library_Item : constant Internal_Entity_Ada_Library_Item :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Main : constant Internal_Entity_Ada_Main :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Pkg : constant Internal_Entity_Ada_Pkg :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Pkg_Body : constant Internal_Entity_Ada_Pkg_Body :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Pragma : constant Internal_Entity_Ada_Pragma :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Prelude : constant Internal_Entity_Ada_Prelude :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Prelude_Node_List : constant Internal_Entity_Ada_Prelude_Node_List :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Separate : constant Internal_Entity_Ada_Separate :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Skip : constant Internal_Entity_Ada_Skip :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Skip_List : constant Internal_Entity_Ada_Skip_List :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Subp : constant Internal_Entity_Ada_Subp :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_Use : constant Internal_Entity_Ada_Use :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_With : constant Internal_Entity_Ada_With :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Ada_With_Formal : constant Internal_Entity_Ada_With_Formal :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
       No_Entity_All_Qualifier : constant Internal_Entity_All_Qualifier :=
       (
                Node => No_Bare_Gpr_Node, 
@@ -8594,6 +6494,16 @@ private
 
 
       No_Entity_Attribute_Reference : constant Internal_Entity_Attribute_Reference :=
+      (
+               Node => No_Bare_Gpr_Node, 
+               Info => No_Entity_Info
+      );
+
+         
+      
+
+
+      No_Entity_Base_List : constant Internal_Entity_Base_List :=
       (
                Node => No_Bare_Gpr_Node, 
                Info => No_Entity_Info
@@ -8684,16 +6594,6 @@ private
 
 
       No_Entity_Expr : constant Internal_Entity_Expr :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Expr_List : constant Internal_Entity_Expr_List :=
       (
                Node => No_Bare_Gpr_Node, 
                Info => No_Entity_Info
@@ -8824,36 +6724,6 @@ private
 
 
       No_Entity_Prefix : constant Internal_Entity_Prefix :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Private_Node : constant Internal_Entity_Private_Node :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Private_Absent : constant Internal_Entity_Private_Absent :=
-      (
-               Node => No_Bare_Gpr_Node, 
-               Info => No_Entity_Info
-      );
-
-         
-      
-
-
-      No_Entity_Private_Present : constant Internal_Entity_Private_Present :=
       (
                Node => No_Bare_Gpr_Node, 
                Info => No_Entity_Info

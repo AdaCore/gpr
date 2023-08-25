@@ -668,6 +668,8 @@ package body Gpr_Parser.Basic_Ada_Parser is
             end if;
          end;
       end loop;
+
+      Gpr_Parser_Support.Text.Free (Contents.Buffer);
    end Parse_Context_Clauses;
 
 end Gpr_Parser.Basic_Ada_Parser;

@@ -282,7 +282,7 @@ private package Gpr_Parser.Generic_Impl is
    Desc : aliased constant Language_Descriptor :=
      (Language_Name => Language_Name'Access,
 
-      Default_Grammar_Rule => 47,
+      Default_Grammar_Rule => 37,
       Grammar_Rules        => Grammar_Rules'Access,
 
       Token_Kind_Names => Token_Kind_Names'Access,

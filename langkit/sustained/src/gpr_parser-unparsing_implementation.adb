@@ -910,36 +910,28 @@ package body Gpr_Parser.Unparsing_Implementation is
          Token_Unparser_8 : aliased constant Token_Unparser :=            (Gpr_Semicolon,             null);
          Token_Unparser_9 : aliased constant Token_Unparser :=            (Gpr_Arrow,             null);
          Token_Unparser_10 : aliased constant Token_Unparser :=            (Gpr_Abstract,             null);
-         Token_Unparser_11 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("access"));
-         Token_Unparser_12 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("aggregate"));
-         Token_Unparser_13 : aliased constant Token_Unparser :=            (Gpr_All,             null);
-         Token_Unparser_14 : aliased constant Token_Unparser :=            (Gpr_At,             null);
-         Token_Unparser_15 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("body"));
-         Token_Unparser_16 : aliased constant Token_Unparser :=            (Gpr_Case,             null);
-         Token_Unparser_17 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("configuration"));
-         Token_Unparser_18 : aliased constant Token_Unparser :=            (Gpr_End,             null);
-         Token_Unparser_19 : aliased constant Token_Unparser :=            (Gpr_Extends,             null);
-         Token_Unparser_20 : aliased constant Token_Unparser :=            (Gpr_For,             null);
-         Token_Unparser_21 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("function"));
-         Token_Unparser_22 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("generic"));
-         Token_Unparser_23 : aliased constant Token_Unparser :=            (Gpr_Is,             null);
-         Token_Unparser_24 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("library"));
-         Token_Unparser_25 : aliased constant Token_Unparser :=            (Gpr_Limited,             null);
-         Token_Unparser_26 : aliased constant Token_Unparser :=            (Gpr_Null,             null);
-         Token_Unparser_27 : aliased constant Token_Unparser :=            (Gpr_Others,             null);
-         Token_Unparser_28 : aliased constant Token_Unparser :=            (Gpr_Package,             null);
-         Token_Unparser_29 : aliased constant Token_Unparser :=            (Gpr_Pragma,             null);
-         Token_Unparser_30 : aliased constant Token_Unparser :=            (Gpr_Private,             null);
-         Token_Unparser_31 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("procedure"));
-         Token_Unparser_32 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("project"));
-         Token_Unparser_33 : aliased constant Token_Unparser :=            (Gpr_Renames,             null);
-         Token_Unparser_34 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("separate"));
-         Token_Unparser_35 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("standard"));
-         Token_Unparser_36 : aliased constant Token_Unparser :=            (Gpr_Type,             null);
-         Token_Unparser_37 : aliased constant Token_Unparser :=            (Gpr_Use,             null);
-         Token_Unparser_38 : aliased constant Token_Unparser :=            (Gpr_When,             null);
-         Token_Unparser_39 : aliased constant Token_Unparser :=            (Gpr_With,             null);
-         Token_Unparser_40 : aliased constant Token_Unparser :=            (Gpr_Pipe,             null);
+         Token_Unparser_11 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("aggregate"));
+         Token_Unparser_12 : aliased constant Token_Unparser :=            (Gpr_All,             null);
+         Token_Unparser_13 : aliased constant Token_Unparser :=            (Gpr_At,             null);
+         Token_Unparser_14 : aliased constant Token_Unparser :=            (Gpr_Case,             null);
+         Token_Unparser_15 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("configuration"));
+         Token_Unparser_16 : aliased constant Token_Unparser :=            (Gpr_End,             null);
+         Token_Unparser_17 : aliased constant Token_Unparser :=            (Gpr_Extends,             null);
+         Token_Unparser_18 : aliased constant Token_Unparser :=            (Gpr_For,             null);
+         Token_Unparser_19 : aliased constant Token_Unparser :=            (Gpr_Is,             null);
+         Token_Unparser_20 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("library"));
+         Token_Unparser_21 : aliased constant Token_Unparser :=            (Gpr_Limited,             null);
+         Token_Unparser_22 : aliased constant Token_Unparser :=            (Gpr_Null,             null);
+         Token_Unparser_23 : aliased constant Token_Unparser :=            (Gpr_Others,             null);
+         Token_Unparser_24 : aliased constant Token_Unparser :=            (Gpr_Package,             null);
+         Token_Unparser_25 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("project"));
+         Token_Unparser_26 : aliased constant Token_Unparser :=            (Gpr_Renames,             null);
+         Token_Unparser_27 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("standard"));
+         Token_Unparser_28 : aliased constant Token_Unparser :=            (Gpr_Type,             null);
+         Token_Unparser_29 : aliased constant Token_Unparser :=            (Gpr_Use,             null);
+         Token_Unparser_30 : aliased constant Token_Unparser :=            (Gpr_When,             null);
+         Token_Unparser_31 : aliased constant Token_Unparser :=            (Gpr_With,             null);
+         Token_Unparser_32 : aliased constant Token_Unparser :=            (Gpr_Pipe,             null);
 
             Token_Sequence_1 : aliased constant Token_Sequence :=               (1 => Token_Unparser_1);
             Token_Sequence_2 : aliased constant Token_Sequence :=               (1 => Token_Unparser_2);
@@ -952,117 +944,37 @@ package body Gpr_Parser.Unparsing_Implementation is
             Token_Sequence_9 : aliased constant Token_Sequence :=               (1 => Token_Unparser_9);
             Token_Sequence_10 : aliased constant Token_Sequence :=               (1 => Token_Unparser_10);
             Token_Sequence_11 : aliased constant Token_Sequence :=               (1 => Token_Unparser_11);
-            Token_Sequence_12 : aliased constant Token_Sequence :=               (1 => Token_Unparser_12);
-            Token_Sequence_13 : aliased constant Token_Sequence :=               (1 => Token_Unparser_12, 2 => Token_Unparser_24);
+            Token_Sequence_12 : aliased constant Token_Sequence :=               (1 => Token_Unparser_11, 2 => Token_Unparser_20);
+            Token_Sequence_13 : aliased constant Token_Sequence :=               (1 => Token_Unparser_12);
             Token_Sequence_14 : aliased constant Token_Sequence :=               (1 => Token_Unparser_13);
             Token_Sequence_15 : aliased constant Token_Sequence :=               (1 => Token_Unparser_14);
-            Token_Sequence_16 : aliased constant Token_Sequence :=               (1 => Token_Unparser_16);
-            Token_Sequence_17 : aliased constant Token_Sequence :=               (1 => Token_Unparser_17);
-            Token_Sequence_18 : aliased constant Token_Sequence :=               (1 => Token_Unparser_18);
-            Token_Sequence_19 : aliased constant Token_Sequence :=               (1 => Token_Unparser_18, 2 => Token_Unparser_16, 3 => Token_Unparser_8);
-            Token_Sequence_20 : aliased constant Token_Sequence :=               (1 => Token_Unparser_19);
-            Token_Sequence_21 : aliased constant Token_Sequence :=               (1 => Token_Unparser_20);
-            Token_Sequence_22 : aliased constant Token_Sequence :=               (1 => Token_Unparser_21);
-            Token_Sequence_23 : aliased constant Token_Sequence :=               (1 => Token_Unparser_22);
-            Token_Sequence_24 : aliased constant Token_Sequence :=               (1 => Token_Unparser_23);
-            Token_Sequence_25 : aliased constant Token_Sequence :=               (1 => Token_Unparser_23, 2 => Token_Unparser_2);
-            Token_Sequence_26 : aliased constant Token_Sequence :=               (1 => Token_Unparser_24);
-            Token_Sequence_27 : aliased constant Token_Sequence :=               (1 => Token_Unparser_25);
-            Token_Sequence_28 : aliased constant Token_Sequence :=               (1 => Token_Unparser_26, 2 => Token_Unparser_8);
-            Token_Sequence_29 : aliased constant Token_Sequence :=               (1 => Token_Unparser_27);
-            Token_Sequence_30 : aliased constant Token_Sequence :=               (1 => Token_Unparser_28);
-            Token_Sequence_31 : aliased constant Token_Sequence :=               (1 => Token_Unparser_28, 2 => Token_Unparser_15);
+            Token_Sequence_16 : aliased constant Token_Sequence :=               (1 => Token_Unparser_15);
+            Token_Sequence_17 : aliased constant Token_Sequence :=               (1 => Token_Unparser_16);
+            Token_Sequence_18 : aliased constant Token_Sequence :=               (1 => Token_Unparser_16, 2 => Token_Unparser_14, 3 => Token_Unparser_8);
+            Token_Sequence_19 : aliased constant Token_Sequence :=               (1 => Token_Unparser_17);
+            Token_Sequence_20 : aliased constant Token_Sequence :=               (1 => Token_Unparser_18);
+            Token_Sequence_21 : aliased constant Token_Sequence :=               (1 => Token_Unparser_19);
+            Token_Sequence_22 : aliased constant Token_Sequence :=               (1 => Token_Unparser_19, 2 => Token_Unparser_2);
+            Token_Sequence_23 : aliased constant Token_Sequence :=               (1 => Token_Unparser_20);
+            Token_Sequence_24 : aliased constant Token_Sequence :=               (1 => Token_Unparser_21);
+            Token_Sequence_25 : aliased constant Token_Sequence :=               (1 => Token_Unparser_22, 2 => Token_Unparser_8);
+            Token_Sequence_26 : aliased constant Token_Sequence :=               (1 => Token_Unparser_23);
+            Token_Sequence_27 : aliased constant Token_Sequence :=               (1 => Token_Unparser_24);
+            Token_Sequence_28 : aliased constant Token_Sequence :=               (1 => Token_Unparser_25);
+            Token_Sequence_29 : aliased constant Token_Sequence :=               (1 => Token_Unparser_26);
+            Token_Sequence_30 : aliased constant Token_Sequence :=               (1 => Token_Unparser_27);
+            Token_Sequence_31 : aliased constant Token_Sequence :=               (1 => Token_Unparser_28);
             Token_Sequence_32 : aliased constant Token_Sequence :=               (1 => Token_Unparser_29);
             Token_Sequence_33 : aliased constant Token_Sequence :=               (1 => Token_Unparser_30);
             Token_Sequence_34 : aliased constant Token_Sequence :=               (1 => Token_Unparser_31);
-            Token_Sequence_35 : aliased constant Token_Sequence :=               (1 => Token_Unparser_32);
-            Token_Sequence_36 : aliased constant Token_Sequence :=               (1 => Token_Unparser_33);
-            Token_Sequence_37 : aliased constant Token_Sequence :=               (1 => Token_Unparser_34, 2 => Token_Unparser_2);
-            Token_Sequence_38 : aliased constant Token_Sequence :=               (1 => Token_Unparser_35);
-            Token_Sequence_39 : aliased constant Token_Sequence :=               (1 => Token_Unparser_36);
-            Token_Sequence_40 : aliased constant Token_Sequence :=               (1 => Token_Unparser_37);
-            Token_Sequence_41 : aliased constant Token_Sequence :=               (1 => Token_Unparser_38);
-            Token_Sequence_42 : aliased constant Token_Sequence :=               (1 => Token_Unparser_39);
 
 
-
-            
-
-            Bare_Ada_Access_Subp_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 2,
-                   Field_Unparsers => (1 => Empty_Field_Unparser, 2 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Empty_Token_Sequence'Access));
-
-            
-
-            Bare_Ada_Pragma_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 1,
-                   Field_Unparsers => (1 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access));
-
-            
-
-            Bare_Ada_Use_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 1,
-                   Field_Unparsers => (1 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access));
-
-            
-
-            Bare_Ada_With_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 3,
-                   Field_Unparsers => (1 => Empty_Field_Unparser, 2 => Empty_Field_Unparser, 3 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Empty_Token_Sequence'Access, 3 => Token_Sequence_42'Access));
-
-            
-
-            Bare_Ada_Generic_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 1,
-                   Field_Unparsers => (1 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access));
-
-            
-
-            Bare_Ada_Library_Item_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 3,
-                   Field_Unparsers => (1 => Empty_Field_Unparser, 2 => Empty_Field_Unparser, 3 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Empty_Token_Sequence'Access, 3 => Empty_Token_Sequence'Access));
-
-            
-
-            Bare_Ada_Pkg_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 2,
-                   Field_Unparsers => (1 => Empty_Field_Unparser, 2 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Token_Sequence_30'Access));
-
-            
-
-            Bare_Ada_Pkg_Body_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 1,
-                   Field_Unparsers => (1 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access));
-
-            
-
-            Bare_Ada_Subp_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 2,
-                   Field_Unparsers => (1 => Empty_Field_Unparser, 2 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Empty_Token_Sequence'Access));
-
-            
-
-            Bare_Ada_Prelude_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 2,
-                   Field_Unparsers => (1 => Empty_Field_Unparser, 2 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Empty_Token_Sequence'Access));
-
-            
-
-            Bare_Ada_Separate_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 1,
-                   Field_Unparsers => (1 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access));
-
-            
-
-            Bare_Ada_With_Formal_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 2,
-                   Field_Unparsers => (1 => Empty_Field_Unparser, 2 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Empty_Token_Sequence'Access));
 
             
 
             Bare_Attribute_Decl_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 3,
                    Field_Unparsers => (1 => Empty_Field_Unparser, 2 => (Token_Sequence_2'Access, Token_Sequence_3'Access, False), 3 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Empty_Token_Sequence'Access, 3 => Token_Sequence_40'Access));
+                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Empty_Token_Sequence'Access, 3 => Token_Sequence_32'Access));
 
             
 
@@ -1080,7 +992,7 @@ package body Gpr_Parser.Unparsing_Implementation is
 
             Bare_Case_Construction_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 2,
                    Field_Unparsers => (1 => Empty_Field_Unparser, 2 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Token_Sequence_24'Access));
+                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Token_Sequence_21'Access));
 
             
 
@@ -1122,7 +1034,7 @@ package body Gpr_Parser.Unparsing_Implementation is
 
             Bare_Package_Spec_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 3,
                    Field_Unparsers => (1 => Empty_Field_Unparser, 2 => Empty_Field_Unparser, 3 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Token_Sequence_24'Access, 3 => Token_Sequence_18'Access));
+                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Token_Sequence_21'Access, 3 => Token_Sequence_17'Access));
 
             
 
@@ -1134,7 +1046,7 @@ package body Gpr_Parser.Unparsing_Implementation is
 
             Bare_Project_Declaration_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 5,
                    Field_Unparsers => (1 => Empty_Field_Unparser, 2 => Empty_Field_Unparser, 3 => Empty_Field_Unparser, 4 => Empty_Field_Unparser, 5 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Token_Sequence_35'Access, 3 => Empty_Token_Sequence'Access, 4 => Token_Sequence_24'Access, 5 => Token_Sequence_18'Access));
+                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Token_Sequence_28'Access, 3 => Empty_Token_Sequence'Access, 4 => Token_Sequence_21'Access, 5 => Token_Sequence_17'Access));
 
             
 
@@ -1145,7 +1057,7 @@ package body Gpr_Parser.Unparsing_Implementation is
             
 
             Bare_String_Literal_At_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 2,
-                   Field_Unparsers => (1 => Empty_Field_Unparser, 2 => (Token_Sequence_15'Access, Empty_Token_Sequence'Access, False)),
+                   Field_Unparsers => (1 => Empty_Field_Unparser, 2 => (Token_Sequence_14'Access, Empty_Token_Sequence'Access, False)),
                    Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Empty_Token_Sequence'Access));
 
             
@@ -1164,7 +1076,7 @@ package body Gpr_Parser.Unparsing_Implementation is
 
             Bare_Typed_String_Decl_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 2,
                    Field_Unparsers => (1 => Empty_Field_Unparser, 2 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Token_Sequence_25'Access));
+                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Token_Sequence_22'Access));
 
             
 
@@ -1182,91 +1094,31 @@ package body Gpr_Parser.Unparsing_Implementation is
 
             Bare_With_Decl_Fields_Unparser_List                : aliased constant Field_Unparser_List                := (N => 2,
                    Field_Unparsers => (1 => Empty_Field_Unparser, 2 => Empty_Field_Unparser),
-                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Token_Sequence_42'Access));
+                   Inter_Tokens => (1 => Empty_Token_Sequence'Access, 2 => Token_Sequence_34'Access));
 
 
       Node_Unparsers_Array : aliased constant Node_Unparser_Map := (
                
 
-               Gpr_Ada_Access_Subp => (Kind => Regular, Pre_Tokens => Token_Sequence_11'Access, Field_Unparsers => Bare_Ada_Access_Subp_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
-               
-
-               Gpr_Ada_Pragma => (Kind => Regular, Pre_Tokens => Token_Sequence_32'Access, Field_Unparsers => Bare_Ada_Pragma_Fields_Unparser_List'Access, Post_Tokens => Token_Sequence_8'Access),
-               
-
-               Gpr_Ada_Use => (Kind => Regular, Pre_Tokens => Token_Sequence_40'Access, Field_Unparsers => Bare_Ada_Use_Fields_Unparser_List'Access, Post_Tokens => Token_Sequence_8'Access),
-               
-
-               Gpr_Ada_With => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Bare_Ada_With_Fields_Unparser_List'Access, Post_Tokens => Token_Sequence_8'Access),
-               
-
-               Gpr_Ada_Entity_Kind_Function => (Kind => Regular, Pre_Tokens => Token_Sequence_22'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
-               
-
-               Gpr_Ada_Entity_Kind_Package => (Kind => Regular, Pre_Tokens => Token_Sequence_30'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
-               
-
-               Gpr_Ada_Entity_Kind_Procedure => (Kind => Regular, Pre_Tokens => Token_Sequence_34'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
-               
-
-               Gpr_Ada_Generic => (Kind => Regular, Pre_Tokens => Token_Sequence_23'Access, Field_Unparsers => Bare_Ada_Generic_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
-               
-
-               Gpr_Ada_Library_Item => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Bare_Ada_Library_Item_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
-               
-
-               Gpr_Ada_Pkg => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Bare_Ada_Pkg_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
-               
-
-               Gpr_Ada_Pkg_Body => (Kind => Regular, Pre_Tokens => Token_Sequence_31'Access, Field_Unparsers => Bare_Ada_Pkg_Body_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
-               
-
-               Gpr_Ada_Subp => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Bare_Ada_Subp_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
-               
-
-               Gpr_Ada_Prelude => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Bare_Ada_Prelude_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
-               
-
-               Gpr_Ada_Separate => (Kind => Regular, Pre_Tokens => Token_Sequence_37'Access, Field_Unparsers => Bare_Ada_Separate_Fields_Unparser_List'Access, Post_Tokens => Token_Sequence_3'Access),
-               
-
-               Gpr_Ada_Skip => (Kind => Token),
-               
-
-               Gpr_Ada_With_Formal => (Kind => Regular, Pre_Tokens => Token_Sequence_42'Access, Field_Unparsers => Bare_Ada_With_Formal_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
-               
-
                Gpr_All_Qualifier_Absent => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
-               Gpr_All_Qualifier_Present => (Kind => Regular, Pre_Tokens => Token_Sequence_14'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
+               Gpr_All_Qualifier_Present => (Kind => Regular, Pre_Tokens => Token_Sequence_13'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
-               Gpr_Attribute_Decl => (Kind => Regular, Pre_Tokens => Token_Sequence_21'Access, Field_Unparsers => Bare_Attribute_Decl_Fields_Unparser_List'Access, Post_Tokens => Token_Sequence_8'Access),
+               Gpr_Attribute_Decl => (Kind => Regular, Pre_Tokens => Token_Sequence_20'Access, Field_Unparsers => Bare_Attribute_Decl_Fields_Unparser_List'Access, Post_Tokens => Token_Sequence_8'Access),
                
 
                Gpr_Attribute_Reference => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Bare_Attribute_Reference_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
-               Gpr_Ada_Context_Clause_List => (Kind => List, Has_Separator => False, Separator => <>),
-               
-
-               Gpr_Ada_Prelude_Node_List => (Kind => List, Has_Separator => False, Separator => <>),
-               
-
-               Gpr_Ada_Skip_List => (Kind => List, Has_Separator => False, Separator => <>),
-               
-
                Gpr_Case_Item_List => (Kind => List, Has_Separator => False, Separator => <>),
-               
-
-               Gpr_Expr_List => (Kind => List, Has_Separator => True, Separator => Token_Unparser_4),
                
 
                Gpr_Gpr_Node_List => (Kind => List, Has_Separator => False, Separator => <>),
                
 
-               Gpr_Choices => (Kind => List, Has_Separator => True, Separator => Token_Unparser_40),
+               Gpr_Choices => (Kind => List, Has_Separator => True, Separator => Token_Unparser_32),
                
 
                Gpr_Term_List => (Kind => List, Has_Separator => True, Separator => Token_Unparser_0),
@@ -1287,16 +1139,16 @@ package body Gpr_Parser.Unparsing_Implementation is
                Gpr_Builtin_Function_Call => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Bare_Builtin_Function_Call_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
-               Gpr_Case_Construction => (Kind => Regular, Pre_Tokens => Token_Sequence_16'Access, Field_Unparsers => Bare_Case_Construction_Fields_Unparser_List'Access, Post_Tokens => Token_Sequence_19'Access),
+               Gpr_Case_Construction => (Kind => Regular, Pre_Tokens => Token_Sequence_15'Access, Field_Unparsers => Bare_Case_Construction_Fields_Unparser_List'Access, Post_Tokens => Token_Sequence_18'Access),
                
 
-               Gpr_Case_Item => (Kind => Regular, Pre_Tokens => Token_Sequence_41'Access, Field_Unparsers => Bare_Case_Item_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
+               Gpr_Case_Item => (Kind => Regular, Pre_Tokens => Token_Sequence_33'Access, Field_Unparsers => Bare_Case_Item_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
                Gpr_Compilation_Unit => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Bare_Compilation_Unit_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
-               Gpr_Empty_Decl => (Kind => Regular, Pre_Tokens => Token_Sequence_28'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
+               Gpr_Empty_Decl => (Kind => Regular, Pre_Tokens => Token_Sequence_25'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
                Gpr_Prefix => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Bare_Prefix_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
@@ -1314,28 +1166,22 @@ package body Gpr_Parser.Unparsing_Implementation is
                Gpr_Limited_Absent => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
-               Gpr_Limited_Present => (Kind => Regular, Pre_Tokens => Token_Sequence_27'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
+               Gpr_Limited_Present => (Kind => Regular, Pre_Tokens => Token_Sequence_24'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
-               Gpr_Others_Designator => (Kind => Regular, Pre_Tokens => Token_Sequence_29'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
+               Gpr_Others_Designator => (Kind => Regular, Pre_Tokens => Token_Sequence_26'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
-               Gpr_Package_Decl => (Kind => Regular, Pre_Tokens => Token_Sequence_30'Access, Field_Unparsers => Bare_Package_Decl_Fields_Unparser_List'Access, Post_Tokens => Token_Sequence_8'Access),
+               Gpr_Package_Decl => (Kind => Regular, Pre_Tokens => Token_Sequence_27'Access, Field_Unparsers => Bare_Package_Decl_Fields_Unparser_List'Access, Post_Tokens => Token_Sequence_8'Access),
                
 
-               Gpr_Package_Extension => (Kind => Regular, Pre_Tokens => Token_Sequence_20'Access, Field_Unparsers => Bare_Package_Extension_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
+               Gpr_Package_Extension => (Kind => Regular, Pre_Tokens => Token_Sequence_19'Access, Field_Unparsers => Bare_Package_Extension_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
-               Gpr_Package_Renaming => (Kind => Regular, Pre_Tokens => Token_Sequence_36'Access, Field_Unparsers => Bare_Package_Renaming_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
+               Gpr_Package_Renaming => (Kind => Regular, Pre_Tokens => Token_Sequence_29'Access, Field_Unparsers => Bare_Package_Renaming_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
                Gpr_Package_Spec => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Bare_Package_Spec_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
-               
-
-               Gpr_Private_Absent => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
-               
-
-               Gpr_Private_Present => (Kind => Regular, Pre_Tokens => Token_Sequence_33'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
                Gpr_Project => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Bare_Project_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
@@ -1344,25 +1190,25 @@ package body Gpr_Parser.Unparsing_Implementation is
                Gpr_Project_Declaration => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Bare_Project_Declaration_Fields_Unparser_List'Access, Post_Tokens => Token_Sequence_8'Access),
                
 
-               Gpr_Project_Extension => (Kind => Regular, Pre_Tokens => Token_Sequence_20'Access, Field_Unparsers => Bare_Project_Extension_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
+               Gpr_Project_Extension => (Kind => Regular, Pre_Tokens => Token_Sequence_19'Access, Field_Unparsers => Bare_Project_Extension_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
                Gpr_Project_Qualifier_Abstract => (Kind => Regular, Pre_Tokens => Token_Sequence_10'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
-               Gpr_Project_Qualifier_Aggregate => (Kind => Regular, Pre_Tokens => Token_Sequence_12'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
+               Gpr_Project_Qualifier_Aggregate => (Kind => Regular, Pre_Tokens => Token_Sequence_11'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
-               Gpr_Project_Qualifier_Aggregate_Library => (Kind => Regular, Pre_Tokens => Token_Sequence_13'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
+               Gpr_Project_Qualifier_Aggregate_Library => (Kind => Regular, Pre_Tokens => Token_Sequence_12'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
-               Gpr_Project_Qualifier_Configuration => (Kind => Regular, Pre_Tokens => Token_Sequence_17'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
+               Gpr_Project_Qualifier_Configuration => (Kind => Regular, Pre_Tokens => Token_Sequence_16'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
-               Gpr_Project_Qualifier_Library => (Kind => Regular, Pre_Tokens => Token_Sequence_26'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
+               Gpr_Project_Qualifier_Library => (Kind => Regular, Pre_Tokens => Token_Sequence_23'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
-               Gpr_Project_Qualifier_Standard => (Kind => Regular, Pre_Tokens => Token_Sequence_38'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
+               Gpr_Project_Qualifier_Standard => (Kind => Regular, Pre_Tokens => Token_Sequence_30'Access, Field_Unparsers => Empty_Field_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
                Gpr_String_Literal_At => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Bare_String_Literal_At_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
@@ -1374,7 +1220,7 @@ package body Gpr_Parser.Unparsing_Implementation is
                Gpr_Type_Reference => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Bare_Type_Reference_Fields_Unparser_List'Access, Post_Tokens => Empty_Token_Sequence'Access),
                
 
-               Gpr_Typed_String_Decl => (Kind => Regular, Pre_Tokens => Token_Sequence_39'Access, Field_Unparsers => Bare_Typed_String_Decl_Fields_Unparser_List'Access, Post_Tokens => Token_Sequence_4'Access),
+               Gpr_Typed_String_Decl => (Kind => Regular, Pre_Tokens => Token_Sequence_31'Access, Field_Unparsers => Bare_Typed_String_Decl_Fields_Unparser_List'Access, Post_Tokens => Token_Sequence_4'Access),
                
 
                Gpr_Variable_Decl => (Kind => Regular, Pre_Tokens => Empty_Token_Sequence'Access, Field_Unparsers => Bare_Variable_Decl_Fields_Unparser_List'Access, Post_Tokens => Token_Sequence_8'Access),
