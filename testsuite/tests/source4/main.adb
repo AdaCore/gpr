@@ -107,6 +107,9 @@ procedure Main is
 
       List_Sources (View);
 
+      --  Wait 1 second so that timestamp check works
+      delay (1.0);
+
       Copy_Source ("src2", "api.ads");
       Copy_Source ("src2", "api.adb");
       Copy_Source ("src2", "api-call.adb");
