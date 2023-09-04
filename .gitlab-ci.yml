@@ -122,6 +122,21 @@ test_gprbuild:
     reports:
       junit: testgprbuild_result.xml
 
+
+test_gprconfig:
+  extends: .test_template
+  script:
+    - setup_repos gprbuild-internal
+    - install_packages gprbuild
+    - run_testsuite gprconfig test_gprconfig
+  artifacts:
+    when:
+      always
+    paths:
+      - testgprconfig_result.xml
+    reports:
+      junit: testgprconfig_result.xml
+
 ######################
 ## GPR2LS TESTSUITE ##
 ######################
