@@ -342,7 +342,7 @@ package body GPR2.Project.Configuration is
    -- Externals --
    ---------------
 
-   function Externals (Self : Object) return Containers.Name_List is
+   function Externals (Self : Object) return Containers.Name_Set is
    begin
       return Self.Project.Externals;
    end Externals;

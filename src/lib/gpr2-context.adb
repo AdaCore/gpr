@@ -12,7 +12,7 @@ package body GPR2.Context is
 
    function Signature
      (Self      : Object;
-      Externals : Containers.Name_List) return Context.Binary_Signature
+      Externals : Containers.Name_Set) return Context.Binary_Signature
    is
       Position : Context.Key_Value.Cursor;
       P_Ctx    : Context.Object;
