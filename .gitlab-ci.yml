@@ -12,98 +12,161 @@ variables:
    SANDBOX: /it/wave
    HOST: x86_64-linux
    ANOD_DEFAULT_SANDBOX_DIR: /it/wave
+   ANOD_REPO_NAME: gpr2-next
 
 stages:
   - build
   - test
 
-########################
-## SETUP REPOSITORIES ##
-########################
+# This step defines bash functions that are shared between jobs.
+# Note: before_script at toplevel is always executed, unless overriden by the
+# various stages, so please don't !
 
-.setup: &setup_repos
-    # This script expects $packages to be set to the list of packages to
-    # retrieve from the build phase, and $subprojects to be set to the list
-    # of subprojects to install in /tmp to be used by anod.
+default:
+  before_script: |
+    echo "before script executing..."
 
-    # unpack the packages
-    - cd $SANDBOX
-    - mkdir -p fingerprints
-    - for pkg in $packages; do
-        if [ $pkg = "gnat" -o $pkg = "gnatall" ]; then
-           anod install $pkg ;
-           tar zxf $CI_PROJECT_DIR/gprbuild.tar.gz -C $HOST/$pkg ;
+    #######################
+    ## colored execution ##
+    #######################
+
+    exec() {
+       # dark green + $ + command line + grey
+       echo -e "\e[0;32m\$ $@\e[0;37m"
+       $@
+       # save the result
+       res=$?
+       # back to normal output
+       echo -e -n "\e[0m"
+       # make sure we translate the exit code
+       return $res
+    }
+
+    ########################
+    ## SETUP REPOSITORIES ##
+    ########################
+
+    setup_repos() {
+      # clone subprojects and ensure anod uses them.
+      # input: the list of subprojects to clone
+
+      # make sure we use the local branch as gpr2 repo
+      exec anod vcs --add-repo $ANOD_REPO_NAME $CI_PROJECT_DIR
+
+      # ??? Following steps are workarounds waiting for a proper handling of
+      # commits dependencies between repositories. This ensures that the latest
+      # version of anod scripts and list given as input are used instead of the
+      # latest nightly build versions.
+
+      # Use latest anod
+      cd /tmp
+      exec git clone $GIT_CLONE_BASE/eng/it/anod
+      exec anod tune --anod /tmp/anod
+
+      # Setup the anod vcs for all subprojects.
+      cd /tmp
+      for subproject in $@; do
+        exec git clone $GIT_CLONE_BASE/eng/gpr/$subproject
+        if [ "$subproject" = "gprbuild-internal" ]; then
+          anod_repo=gprbuild_testsuite
         else
-           mkdir -p $HOST/$pkg ;
-           tar zxf $CI_PROJECT_DIR/$pkg.tar.gz -C $HOST/$pkg ;
-        fi ;
-        touch fingerprints/$HOST.$pkg.install.json.assume-unchanged ;
-        touch fingerprints/$HOST.$pkg.download-bin.json.assume-unchanged ;
+          anod_repo=$subproject
+        fi
+        exec anod vcs --add-repo $anod_repo /tmp/$subproject
       done
-    - rm -f $CI_PROJECT_DIR/*.tar.gz
+      # print final status, for record
+      exec anod vcs --list
+    }
 
-    # Setup the 'anod vcs' for this repo
-    - anod vcs --add-repo gpr2-next $CI_PROJECT_DIR
+    #########################
+    # PACKAGES INSTALLATION #
+    #########################
 
-    # Figure out if we're on a sync branch
-    - BRANCH=master
-    - if [[ $CI_COMMIT_BRANCH =~ ^sync/ ]]; then
-         BRANCH=$CI_COMMIT_BRANCH;
-      elif [[ $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ ^sync/ ]]; then
-         BRANCH=$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME;
-      fi
+    install_packages() {
+      # input: a list of packages to install in anod
 
-    # Setup the anod vcs for all subprojects.
-    # For each repo, check if a branch with the same name as
-    # $BRANCH exists; if so, use it.
-    - for subproject in $subprojects ; do
-         cd /tmp ;
-         git clone $GIT_CLONE_BASE/eng/gpr/$subproject ;
-         cd $subproject ;
-         if `git show-ref $BRANCH > /dev/null` ; then
-            git checkout $BRANCH ;
-         fi ;
-         if [ $subproject = "gprbuild-internal" ]; then
-            anodrepo=gprbuild_testsuite ;
-         else
-            anodrepo=$subproject ;
-         fi ;
-         anod vcs --add-repo $anodrepo /tmp/$subproject ;
+      cd $SANDBOX
+      exec mkdir -p fingerprints
+      for pkg in $@; do
+        if [ $pkg = "gnat" -o $pkg = "gnatall" ]; then
+          exec anod install $pkg
+          exec tar zxf $CI_PROJECT_DIR/gprbuild.tar.gz -C $HOST/$pkg
+        else
+          exec mkdir -p $HOST/$pkg ;
+          exec tar zxf $CI_PROJECT_DIR/$pkg.tar.gz -C $HOST/$pkg
+        fi
+        for json in install download-bin; do
+          exec touch fingerprints/$HOST.$pkg.$json.json.assume-unchanged
+        done
       done
+      exec rm -f $CI_PROJECT_DIR/*.tar.gz
+    }
 
-    # Make sure we use the latest version of anod scripts. This is a
-    # workaround waiting for proper support of dependencies towards
-    # MRs in the anod repo.
-    # ??? /it/anod seems readonly, so we need to clone the scripts again
-    - cd /tmp
-    - git clone $GIT_CLONE_BASE/eng/it/anod
-    - anod tune --anod /tmp/anod
+    ######################
+    # RUNNING TESTSUITES #
+    ######################
+
+    run_testsuite() {
+      # inputs:
+      # spec: the anod spec under test
+      # quals: the qualifiers to use
+      # xunit_name: the name under which the testsuite is reported to gitlab
+
+      local spec=$1
+      local quals=$2
+      local xunit_name=$3
+
+      # run the testsuite and extract its namespace
+      exec anod test $spec $quals --minimal
+      build_space=`anod eval $spec build_space_name $quals --primitive test`
+      test_output="$(echo $xunit_name | sed -e 's/_//g')_result.xml"
+
+      echo "generating result in $test_output"
+
+      # translate e3 results into xunit results (and highlight it in yellow)
+      echo -e "\e[1;34m"
+      e3-testsuite-report \
+        --failure-exit-code 1 \
+        --xunit-output $CI_PROJECT_DIR/$test_output \
+        --xunit-name $xunit_name \
+        $SANDBOX/$HOST/$build_space/results/new/ || exit 1
+      echo -e "\e[0m"
+    }
+
+################
+# JOB TEMPLATE #
+################
+
+.job_template: &job_definition
+  services:
+     - image:sandbox
+     - cpu:8
+     - mem:16
+
+.test_template: &test_definition
+  <<: *job_definition
+  stage: test
+  allow_failure: true
 
 ###########
 ## BUILD ##
 ###########
 
 build:
-  services:
-     - image:sandbox
-     - cpu:8
-     - mem:16
+  <<: *job_definition
   stage: build
   script:
     # setup submodules
-    - packages=""
-    - subprojects="gprconfig_kb"
-    - *setup_repos
+    - setup_repos gprbuild gprconfig_kb
 
     # Tune to use our build & test plan
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
+
+    # and build it...
     - anod run build
 
     # generate packages to be used at test stages.
-    # Note: we can't package the full gnat or gnatall install as the size seems
-    # to reach some limits for the saved artifacts. So we package gprbuild and
-    # co and will amend the toolchains for testing..
-    - for pkg in gpr2-next libgpr2-next-bare; do
+    - for pkg in gpr2-next libgpr2-next; do
         echo "packaging $SANDBOX/$HOST/$pkg/install/" ;
         tar czf $CI_PROJECT_DIR/$pkg.tar.gz -C $SANDBOX/$HOST/$pkg/ install/ ;
       done
@@ -113,30 +176,19 @@ build:
   artifacts:
     paths:
       - gpr2-next.tar.gz
-      - libgpr2-next-bare.tar.gz
+      - libgpr2-next.tar.gz
+      - gpr1build.tar.gz
 
 ####################
 ## GPR2 TESTSUITE ##
 ####################
 
 test_gpr2:
-  services:
-     - image:sandbox
-     - cpu:8
-     - mem:16
-  stage: test
-  allow_failure: true
+  <<: *test_definition
   script:
-    - packages="gpr2-next libgpr2-next-bare"
-    - subprojects=""
-    - *setup_repos
-
-    - anod test gpr2 -Qnext --minimal
-    - e3-testsuite-report
-        --failure-exit-code 1
-        --xunit-output $CI_PROJECT_DIR/testgpr2_result.xml
-        --xunit-name test_gpr2
-        $SANDBOX/$HOST/gpr2-test-next/results/new/ || exit 1
+    - setup_repos
+    - install_packages gpr2-next libgpr2-next
+    - run_testsuite gpr2 -Qnext test_gpr2
   artifacts:
     when:
       always
@@ -150,29 +202,28 @@ test_gpr2:
 ##############
 
 test_gpr2_cov:
-  services:
-     - image:sandbox
-     - cpu:8
-     - mem:16
-  stage: test
-  allow_failure: true
+  <<: *test_definition
   script:
-    - packages=""
-    - subprojects=""
-    - *setup_repos
+    - setup_repos
+    - anod build gpr2 -Qcoverage,next
+    # do a normal testsuite run but save the exit code instead of just exiting
+    # so that coverage artifacts can be saved and used.
+    - result=0
+    - run_testsuite gpr2 -Qcoverage,next test_gpr2_cov || result=$?
 
-    - anod build gpr2 -Qcoverage -Qnext
-    - anod test gpr2 -Qcoverage -Qnext --minimal
     - mkdir $CI_PROJECT_DIR/coverage
-    - cov_dir=$SANDBOX/$HOST/gpr2-test-cov-stmt-next/results/new
+
+    # save coverage results
+    - cov_dir=$SANDBOX/$HOST/$build_space/results/new
     - mv $cov_dir/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
     - mv $cov_dir/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
+
+    # display coverage stats for global reporting
     - echo_coverage_stats --coverage-file $cov_dir/coverage-xml/index.xml
-    - e3-testsuite-report
-        --failure-exit-code 1
-        --xunit-output $CI_PROJECT_DIR/testgpr2cov_result.xml
-        --xunit-name test_gpr2_cov
-        $SANDBOX/$HOST/gpr2-test-cov-stmt-next/results/new/ || exit 1
+
+    # report initial test status code
+    - exit $result
+
   coverage: '/^Stmt Coverage:\s+(\d+\.\d+\%) \(\d+ \/ \d+\)$/'
   artifacts:
     when:
