@@ -30,7 +30,7 @@ build:
     # Note: we can't package the full gnat or gnatall install as the size seems
     # to reach some limits for the saved artifacts. So we package gprbuild and
     # co and will amend the toolchains for testing..
-    - for pkg in gprbuild gpr2 libgpr2 gpr2-bindings gpr1build; do
+    - for pkg in gprbuild gpr2 libgpr2 libgpr2-bare gpr2-bindings gpr1build; do
         echo "packaging $SANDBOX/$HOST/$pkg/install/" ;
         tar czf $CI_PROJECT_DIR/$pkg.tar.gz -C $SANDBOX/$HOST/$pkg/ install/ ;
       done
@@ -43,6 +43,7 @@ build:
       - gpr2.tar.gz
       - gpr2-bindings.tar.gz
       - libgpr2.tar.gz
+      - libgpr2-bare.tar.gz
       - gpr1build.tar.gz
 
 ####################
@@ -71,6 +72,7 @@ test_gpr2_cov:
   extends: .test_template
   script:
     - setup_repos
+    - install_packages libgpr2-bare
     - anod build gpr2 -Qcoverage
     # do a normal testsuite run but save the exit code instead of just exiting
     # so that coverage artifacts can be saved and used.
@@ -80,12 +82,11 @@ test_gpr2_cov:
     - mkdir $CI_PROJECT_DIR/coverage
 
     # save coverage results
-    - cov_dir=$SANDBOX/$HOST/$build_space/results/new
-    - mv $cov_dir/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
-    - mv $cov_dir/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
+    - mv $RESULTS_DIR/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
+    - mv $RESULTS_DIR/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
 
     # display coverage stats for global reporting
-    - echo_coverage_stats --coverage-file $cov_dir/coverage-xml/index.xml
+    - echo_coverage_stats --coverage-file $RESULTS_DIR/coverage-xml/index.xml
 
     # report initial test status code
     - exit $result
@@ -122,6 +123,9 @@ test_gprbuild:
     reports:
       junit: testgprbuild_result.xml
 
+#########################
+## GPRCONFIG TESTSUITE ##
+#########################
 
 test_gprconfig:
   extends: .test_template
