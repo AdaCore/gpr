@@ -138,7 +138,7 @@ package GPR2.Project.Configuration is
      with Pre => Self.Is_Defined;
    --  Returns whether Externals where found during configuration project load
 
-   function Externals (Self : Object) return Containers.Name_List
+   function Externals (Self : Object) return Containers.Name_Set
      with Pre  => Self.Is_Defined and then Self.Has_Externals,
           Post => not Externals'Result.Is_Empty;
    --  Returns externals found in parsed configuration project
