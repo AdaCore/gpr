@@ -1,32 +1,9 @@
-def all():
-    build()
-    test()
-
 def build():
-    # customer scenario
-    setup()
-    anod_build("gpr2")
-    anod_build("gprbuild")
-    anod_build("gnat")
-    anod_build("gnatcxx")
+    anod_install("gnatmem", qualifier="compiler=bootstrap")
     anod_build("gnatall")
-    anod_build("libgpr2", qualifier="bare")
     anod_build("libgpr2")
     anod_build("gpr2-bindings")
-    anod_build("aws-lib")
     anod_build("gprbuild", qualifier="gpr1")
-
-def setup():
-    # general dependencies for gpr2 tools and libgpr2
-    anod_install("stable-gprbuild")
-    anod_install("gcc")
-    # for gprname
-    anod_install("libadalang")
-    anod_install("langkit_support")
-    # gprbuild, gnat
-    anod_install("stable-libadalang-tools")
-    anod_install("gdb")
-    anod_install("e3")
 
 def test():
     testgpr2()

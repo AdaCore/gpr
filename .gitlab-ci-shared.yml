@@ -1,17 +1,16 @@
-# This bit is used to make sure we don't run too many pipelines:
-# don't run the branch CI when a merge request is already open for the
-# branch.
+# Don't run CIs on branches without merge requests, except on important branches
+# The latter is important to get automatic comparison on failing tests
 workflow:
   rules:
-    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"
-      when: never
-    - when: always
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_REF_NAME == "master" || $CI_COMMIT_REF_NAME == "next")
+      when: always
+    - when: never
 
 variables:
    GIT_CLONE_BASE: https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}:${CI_SERVER_PORT}
-   SANDBOX: /it/wave
    HOST: x86_64-linux
-   ANOD_DEFAULT_SANDBOX_DIR: /it/wave
    TARGET: ""
 
 # This step defines bash functions that are shared between jobs.
@@ -146,13 +145,20 @@ default:
       echo -e "\e[0m"
     }
 
+    # Enable generic CI for building with Anod
+    generic_anod_ci
+    . /tmp/ci_env.sh
+    export SANDBOX=$ANOD_DEFAULT_SANDBOX_DIR
+    exec anod vcs --list
+
+
 ################
 # JOB TEMPLATE #
 ################
 
 .job_template:
   services:
-     - image:sandbox
+     - image:e3
      - cpu:8
      - mem:16
 
