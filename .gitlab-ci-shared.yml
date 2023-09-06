@@ -1,17 +1,17 @@
-# This bit is used to make sure we don't run too many pipelines:
-# don't run the branch CI when a merge request is already open for the
-# branch.
+# Don't run CIs on branches without merge requests, except on important branches
+# The latter is important to get automatic comparison on failing tests
 workflow:
   rules:
-    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"
-      when: never
-    - when: always
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_REF_NAME == "master" || $CI_COMMIT_REF_NAME == "next")
+      when: always
+    - when: never
 
 variables:
    GIT_CLONE_BASE: https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}:${CI_SERVER_PORT}
-   SANDBOX: /it/wave
    HOST: x86_64-linux
-   ANOD_DEFAULT_SANDBOX_DIR: /it/wave
+   TARGET: ""
 
 # This step defines bash functions that are shared between jobs.
 # Note: before_script at toplevel is always executed, unless overriden by the
@@ -88,20 +88,23 @@ default:
 
     install_packages() {
       # input: a list of packages to install in anod
+      # Note: TARGET can be set to --target=foo,version,machine to install
+      # a cross compiler with up-to-date gprbuild package
 
       cd $SANDBOX
       exec mkdir -p fingerprints
       for pkg in $@; do
         if [ $pkg = "gnat" -o $pkg = "gnatall" ]; then
-          exec anod install $pkg
-          exec tar zxf $CI_PROJECT_DIR/gprbuild.tar.gz -C $HOST/$pkg
+          exec anod install $pkg $TARGET
+          work_dir=$(anod info install $pkg $TARGET --show working_dir)
+          exec tar zxf $CI_PROJECT_DIR/gprbuild.tar.gz -C $work_dir
         else
           exec mkdir -p $HOST/$pkg ;
           exec tar zxf $CI_PROJECT_DIR/$pkg.tar.gz -C $HOST/$pkg
+          for json in install download-bin; do
+            exec touch fingerprints/$HOST.$pkg.$json.json.assume-unchanged
+          done
         fi
-        for json in install download-bin; do
-          exec touch fingerprints/$HOST.$pkg.$json.json.assume-unchanged
-        done
       done
       exec rm -f $CI_PROJECT_DIR/*.tar.gz
     }
@@ -113,19 +116,24 @@ default:
     run_testsuite() {
       # inputs:
       # spec: the anod spec under test
-      # quals: the qualifiers to use
+      # args: the anod arguments to use
       # xunit_name: the name under which the testsuite is reported to gitlab
 
       local spec=$1
-      local quals=$2
+      local args=$2
       local xunit_name=$3
 
-      # run the testsuite and extract its namespace
-      exec anod test $spec $quals --minimal
-      build_space=`anod eval $spec build_space_name $quals --primitive test`
-      test_output="$(echo $xunit_name | sed -e 's/_//g')_result.xml"
+      # run the testsuite
+      exec anod test $spec $args --minimal
 
+      # generate report for gitlab
+
+      test_output="$(echo $xunit_name | sed -e 's/_//g')_result.xml"
       echo "generating result in $test_output"
+
+      # check for results directory.
+      working_dir=$(anod info test $spec --show working_dir $args)
+      RESULTS_DIR=$working_dir/results/new
 
       # translate e3 results into xunit results (and highlight it in yellow)
       echo -e "\e[1;34m"
@@ -133,21 +141,28 @@ default:
         --failure-exit-code 1 \
         --xunit-output $CI_PROJECT_DIR/$test_output \
         --xunit-name $xunit_name \
-        $SANDBOX/$HOST/$build_space/results/new/ || exit 1
+        $RESULTS_DIR || exit 1
       echo -e "\e[0m"
     }
+
+    # Enable generic CI for building with Anod
+    generic_anod_ci
+    . /tmp/ci_env.sh
+    export SANDBOX=$ANOD_DEFAULT_SANDBOX_DIR
+    exec anod vcs --list
+
 
 ################
 # JOB TEMPLATE #
 ################
 
-.job_template: &job_definition
+.job_template:
   services:
-     - image:sandbox
+     - image:e3
      - cpu:8
      - mem:16
 
-.test_template: &test_definition
-  <<: *job_definition
+.test_template:
+  extends: .job_template
   stage: test
   allow_failure: true

@@ -13,24 +13,18 @@ build:
   extends: .job_template
   stage: build
   script:
-    # setup submodules
-    - setup_repos gprbuild gprconfig_kb
-
     # Tune to use our build & test plan
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
 
-    # Run a gnat bootstrap.
-    # Note: we could take shortcuts here and just build the gprbuild package
-    # but being able to run a full gnat bootstrap with the updated gpr tools is
-    # part of our assurance that we don't provoque a disaster during the
-    # nightly builds.
+    # Just build gprbuild/libgpr2/gpr2-bindings
+    # Full gnat bootstrap is tested though, but in the testing phase
     - anod run build
 
     # generate packages to be used at test stages.
     # Note: we can't package the full gnat or gnatall install as the size seems
     # to reach some limits for the saved artifacts. So we package gprbuild and
     # co and will amend the toolchains for testing..
-    - for pkg in gprbuild gpr2 libgpr2 gpr2-bindings gpr1build; do
+    - for pkg in gprbuild gpr2 libgpr2 libgpr2-bare gpr2-bindings gpr1build; do
         echo "packaging $SANDBOX/$HOST/$pkg/install/" ;
         tar czf $CI_PROJECT_DIR/$pkg.tar.gz -C $SANDBOX/$HOST/$pkg/ install/ ;
       done
@@ -43,7 +37,20 @@ build:
       - gpr2.tar.gz
       - gpr2-bindings.tar.gz
       - libgpr2.tar.gz
+      - libgpr2-bare.tar.gz
       - gpr1build.tar.gz
+
+###############################
+# CHECK WE CAN BOOTSTRAP GNAT #
+###############################
+
+test_bootstrap:
+  extends: .job_template
+  stage: test
+  script:
+    - install_packages libgpr2 libgpr2-bare
+    - anod tune --plan $CI_PROJECT_DIR/.ci.plan --full
+    - anod run bootstrap || exit 1
 
 ####################
 ## GPR2 TESTSUITE ##
@@ -52,7 +59,6 @@ build:
 test_gpr2:
   extends: .test_template
   script:
-    - setup_repos
     - install_packages gnat gpr2 libgpr2
     - run_testsuite gpr2 -Qfrom_gnat test_gpr2
   artifacts:
@@ -70,7 +76,8 @@ test_gpr2:
 test_gpr2_cov:
   extends: .test_template
   script:
-    - setup_repos
+    - install_packages libgpr2-bare
+    - anod tune --full
     - anod build gpr2 -Qcoverage
     # do a normal testsuite run but save the exit code instead of just exiting
     # so that coverage artifacts can be saved and used.
@@ -80,12 +87,11 @@ test_gpr2_cov:
     - mkdir $CI_PROJECT_DIR/coverage
 
     # save coverage results
-    - cov_dir=$SANDBOX/$HOST/$build_space/results/new
-    - mv $cov_dir/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
-    - mv $cov_dir/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
+    - mv $RESULTS_DIR/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
+    - mv $RESULTS_DIR/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
 
     # display coverage stats for global reporting
-    - echo_coverage_stats --coverage-file $cov_dir/coverage-xml/index.xml
+    - echo_coverage_stats --coverage-file $RESULTS_DIR/coverage-xml/index.xml
 
     # report initial test status code
     - exit $result
@@ -111,7 +117,6 @@ test_gpr2_cov:
 test_gprbuild:
   extends: .test_template
   script:
-    - setup_repos gprbuild-internal
     - install_packages gnatall
     - run_testsuite gprbuild -QAdaCC++_Auto test_gprbuild
   artifacts:
@@ -122,11 +127,13 @@ test_gprbuild:
     reports:
       junit: testgprbuild_result.xml
 
+#########################
+## GPRCONFIG TESTSUITE ##
+#########################
 
 test_gprconfig:
   extends: .test_template
   script:
-    - setup_repos gprbuild-internal
     - install_packages gprbuild
     - run_testsuite gprconfig "" test_gprconfig
   artifacts:
@@ -144,7 +151,6 @@ test_gprconfig:
 test_gpr2ls:
   extends: .test_template
   script:
-    - setup_repos gprbuild-internal
     - install_packages gnatall gpr1build
     - run_testsuite gprbuild "-QAdaCC++_Auto -Qcheck-gpr2ls" test_gpr2ls
   artifacts:
@@ -162,7 +168,6 @@ test_gpr2ls:
 test_gpr2bindings:
   extends: .test_template
   script:
-    - setup_repos
     - install_packages gpr2-bindings
 
     - anod test gpr2-bindings --minimal
