@@ -1,9 +1,15 @@
 def build():
-    anod_install("gnatmem", qualifier="compiler=bootstrap")
-    anod_build("gnatall")
+    anod_install("libadalang")
     anod_build("libgpr2")
     anod_build("gpr2-bindings")
     anod_build("gprbuild", qualifier="gpr1")
+    anod_build("gprbuild")
+
+def bootstrap():
+    anod_build("libadalang")
+    anod_build("gpr2")
+    anod_build("gprbuild")
+    anod_build("gnat")
 
 def test():
     testgpr2()
