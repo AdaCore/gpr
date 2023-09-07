@@ -150,11 +150,20 @@ default:
     }
 
     # Enable generic CI for building with Anod
-    generic_anod_ci
+
+    cmd="generic_anod_ci"
+    if [ x$CI_MERGE_REQUEST_IID = x ]; then
+      # look for a list of subprojects to use systematically in CBs
+      cmd="$cmd --continuous-builder-mode"
+      for pkg in $JOB_SUBPROJECTS; do
+         cmd="$cmd --add-dep $pkg"
+      done
+    fi
+    exec eval $cmd
+    echo "sourcing the generic CI environment"
     . /tmp/ci_env.sh
     export SANDBOX=$ANOD_DEFAULT_SANDBOX_DIR
     exec anod vcs --list
-
 
 ################
 # JOB TEMPLATE #
