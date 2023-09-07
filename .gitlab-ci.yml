@@ -172,7 +172,8 @@ test_gpr2bindings:
 
     - anod test gpr2-bindings --minimal
     # TODO: adjust this when this testsuite supports e3-testsuite-report
-    - OUTPUT=$(sed $SANDBOX/$HOST/gpr2-bindings-test/results/results -e '/.*PASSED$/d' -e '/.*XFAIL$/d' -e '/^$/d')
+    - work_dir=$(anod info test gpr2-bindings --show working_dir)
+    - OUTPUT=$(sed $work_dir/results/results -e '/.*PASSED$/d' -e '/.*XFAIL$/d' -e '/^$/d')
     - if [ -n "$OUTPUT" ] ; then
          echo "the following tests fail:" ;
          echo "$OUTPUT" ;
