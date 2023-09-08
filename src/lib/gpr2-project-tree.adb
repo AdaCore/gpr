@@ -300,8 +300,7 @@ package body GPR2.Project.Tree is
 
    procedure Clear_Sources
      (Self : Object;
-      View : Project.View.Object := Project.View.Undefined)
-   is
+      View : Project.View.Object := Project.View.Undefined) is
    begin
       Self.Self.Tree_Db.Unload;
    end Clear_Sources;
@@ -479,6 +478,7 @@ package body GPR2.Project.Tree is
          Result := Register_View (Data);
 
          return Result;
+
       else
          return Project.View.Undefined;
       end if;
@@ -513,8 +513,8 @@ package body GPR2.Project.Tree is
      (Self       : Object;
       Base_Name  : Simple_Name) return Path_Name.Object
    is
-      GPR_Name    : constant Simple_Name :=
-                      Project.Ensure_Extension (Base_Name);
+      GPR_Name : constant Simple_Name :=
+                   Project.Ensure_Extension (Base_Name);
 
    begin
       for V in Self.Iterate
@@ -681,14 +681,14 @@ package body GPR2.Project.Tree is
       Status : Status_Control   := Default_Status)
       return Project_Iterator.Forward_Iterator'Class
    is
-      Iter : Iterator;
+      Iter  : Iterator;
       --  The returned object
 
-      Seen : GPR2.Project.View.Set.Object;
+      Seen  : GPR2.Project.View.Set.Object;
       --  Keep track of already seen projects. Better than using the P vector
       --  which is not efficient when checking if an element exists.
 
-      P_Set    : GPR2.Project.View.Set.Object;
+      P_Set : GPR2.Project.View.Set.Object;
       --  Set of projects for the iterator which is returned in the Cursor and
       --  fill by the recursive procedure For_Project and For_Imports. P_Set is
       --  used to have a fast check on views already in Projects.
@@ -878,9 +878,9 @@ package body GPR2.Project.Tree is
       Environment      : GPR2.Environment.Object :=
                            GPR2.Environment.Process_Environment)
    is
-      Gpr_Path      : Path_Name.Object;
-      Root_Context  : GPR2.Context.Object := Context;
-      Def           : Definition.Ref;
+      Gpr_Path     : Path_Name.Object;
+      Root_Context : GPR2.Context.Object := Context;
+      Def          : Definition.Ref;
 
    begin
       Self.Self := Self'Unchecked_Access;
@@ -1072,19 +1072,19 @@ package body GPR2.Project.Tree is
 
       if not Self.Messages.Has_Error then
          --  Tree is now fully loaded, we can create the artifacts database
-         --  object
+         --  object.
          if not Self.Tree_Db.Is_Defined then
             Self.Tree_Db.Create (Self, With_Runtime);
          else
             --  Tree has been reloaded: update the database in case views
-            --  have changed
+            --  have changed.
             Self.Tree_Db.Check_Tree;
          end if;
 
       elsif not Self.Pre_Conf_Mode then
          raise Project_Error
-           with Gpr_Path.String_Value &
-           ": fatal error, cannot load the project tree";
+           with Gpr_Path.String_Value
+                & ": fatal error, cannot load the project tree";
       end if;
    end Load;
 
@@ -2241,9 +2241,9 @@ package body GPR2.Project.Tree is
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)
    is
-      Root        : constant Definition.Ref := Definition.Get_RW (Self.Root);
-      Def         : Definition.Ref;
-      Attr        : Attribute.Object;
+      Root : constant Definition.Ref := Definition.Get_RW (Self.Root);
+      Def  : Definition.Ref;
+      Attr : Attribute.Object;
 
    begin
       --  Register the root context for this project tree
@@ -2640,7 +2640,8 @@ package body GPR2.Project.Tree is
 
             Paths.Append (View.Path_Name);
 
-            for Project of P_Data.Attrs.Element (PRA.Project_Files.Attr).Values
+            for Project
+              of P_Data.Attrs.Element (PRA.Project_Files.Attr).Values
             loop
                declare
                   Found : Boolean := False;
@@ -3029,7 +3030,8 @@ package body GPR2.Project.Tree is
                      Project.View.Library_Src_Directory'Access);
                end if;
 
-               if not View.Check_Attribute (PRA.Library_Name, Result => Attr)
+               if not View.Check_Attribute
+                 (PRA.Library_Name, Result => Attr)
                then
                   Self.Messages.Append
                     (Message.Create
@@ -3112,7 +3114,6 @@ package body GPR2.Project.Tree is
                   null;
             end case;
          end;
-
       end Validity_Check;
 
    begin
@@ -3590,8 +3591,7 @@ package body GPR2.Project.Tree is
    procedure Update_Sources
      (Self     : Object;
       Option   : Source_Info_Option := Sources_Units;
-      Messages : out GPR2.Log.Object)
-   is
+      Messages : out GPR2.Log.Object) is
    begin
       Self.Artifacts_Database.Refresh (Option, Messages);
    end Update_Sources;
@@ -3613,5 +3613,4 @@ begin
 
    Definition.Register           := Register_View'Access;
    Definition.Get_Context        := Get_Context'Access;
-
 end GPR2.Project.Tree;

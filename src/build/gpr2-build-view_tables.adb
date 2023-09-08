@@ -80,7 +80,7 @@ package body GPR2.Build.View_Tables is
    end Update_Sources_List;
 
    function "-" (Inst : Build.View_Db.Object) return View_Data_Ref
-   is (Get_Ref (Inst));
+     is (Get_Ref (Inst));
 
    procedure Check_Separate
      (Root_Db : View_Tables.View_Data_Ref;
@@ -150,8 +150,8 @@ package body GPR2.Build.View_Tables is
       CU   : Name_Type;
       Root : View_Data_Ref)
    is
-      C         : Unit_Maps.Cursor;
-      New_Set   : Project.View.Set.Object;
+      C       : Unit_Maps.Cursor;
+      New_Set : Project.View.Set.Object;
 
    begin
       C := To.Own_CUs.Find (CU);
@@ -177,14 +177,14 @@ package body GPR2.Build.View_Tables is
    -------------------
 
    procedure Add_Unit_Part
-     (NS_Db     : View_Data_Ref;
-      CU        : Name_Type;
-      Kind      : Unit_Kind;
-      Sep_Name  : Optional_Name_Type;
-      View_Db   : View_Data_Ref;
-      Path      : Path_Name.Object;
-      Index     : Unit_Index;
-      Messages  : in out GPR2.Log.Object)
+     (NS_Db    : View_Data_Ref;
+      CU       : Name_Type;
+      Kind     : Unit_Kind;
+      Sep_Name : Optional_Name_Type;
+      View_Db  : View_Data_Ref;
+      Path     : Path_Name.Object;
+      Index    : Unit_Index;
+      Messages : in out GPR2.Log.Object)
    is
       Cursor  : Compilation_Unit_Maps.Cursor;
       Done    : Boolean;
@@ -205,6 +205,7 @@ package body GPR2.Build.View_Tables is
                Add_Unit_Ownership (View_Db, CU, NS_Db);
             end if;
          end;
+
       else
          declare
             CU_Instance : constant Compilation_Unit_Maps.Reference_Type :=
@@ -218,7 +219,6 @@ package body GPR2.Build.View_Tables is
               (Kind, View_Db.View, Path, Index, Sep_Name, Success);
 
             if Success and then Old_Owner /= CU_Instance.Owning_View then
-
                --  Owning view changed, let's apply this change
                if Old_Owner.Is_Defined then
                   declare
@@ -384,8 +384,7 @@ package body GPR2.Build.View_Tables is
 
    function Get_Data
      (Db : access GPR2.Build.Tree_Db.Object;
-      View : GPR2.Project.View.Object) return View_Data_Ref
-   is
+      View : GPR2.Project.View.Object) return View_Data_Ref is
    begin
       return -Db.View_Database (View);
    end Get_Data;
@@ -606,10 +605,8 @@ package body GPR2.Build.View_Tables is
       CU   : Name_Type;
       Root : View_Data_Ref)
    is
-      C : Unit_Maps.Cursor;
+      C : Unit_Maps.Cursor := From.Own_CUs.Find (CU);
    begin
-      C := From.Own_CUs.Find (CU);
-
       From.Own_CUs.Reference (C).Delete (Root.View);
 
       if Unit_Maps.Element (C).Is_Empty then
@@ -638,11 +635,9 @@ package body GPR2.Build.View_Tables is
       Path     : Path_Name.Object;
       Index    : Unit_Index)
    is
-      Cursor    : Compilation_Unit_Maps.Cursor;
+      Cursor    : Compilation_Unit_Maps.Cursor := NS_Db.CUs.Find (CU);
       Old_Owner : Project.View.Object;
    begin
-      Cursor := NS_Db.CUs.Find (CU);
-
       if not Compilation_Unit_Maps.Has_Element (Cursor) then
          return;
       end if;
@@ -705,11 +700,10 @@ package body GPR2.Build.View_Tables is
       ------------------------------------
 
       procedure Propagate_Visible_Source_Added (Src : Source_Proxy) is
-         View_Db   : constant View_Data_Ref :=
-                       Get_Data (Data.Tree_Db, Src.View);
-         Src_Info  : constant Src_Info_Maps.Reference_Type :=
-                       View_Db.Src_Infos.Reference (Src.Path_Name);
-
+         View_Db  : constant View_Data_Ref :=
+                      Get_Data (Data.Tree_Db, Src.View);
+         Src_Info : constant Src_Info_Maps.Reference_Type :=
+                      View_Db.Src_Infos.Reference (Src.Path_Name);
       begin
          if Data.View.Is_Extended then
             --  ??? Check the view's list of excluded sources before doing that
@@ -766,7 +760,6 @@ package body GPR2.Build.View_Tables is
                       Get_Data (Data.Tree_Db, Src.View);
          Src_Info : constant Source.Object :=
                       View_Db.Src_Infos (Src.Path_Name);
-
       begin
          if Src_Info.Has_Units and then not Data.View.Is_Extended then
             for U of Src_Info.Units loop
@@ -901,8 +894,8 @@ package body GPR2.Build.View_Tables is
                                   then C.Path_Name
                                   else Candidate.Path_Name);
                      V1, V2  : GPR2.Path_Name.Object;
-                  begin
 
+                  begin
                      if C_First then
                         V1 := C.View.Path_Name;
                         V2 := Candidate.View.Path_Name;
@@ -928,7 +921,6 @@ package body GPR2.Build.View_Tables is
                   Candidate := null;
 
                   exit;
-
                end if;
             end;
          end loop;

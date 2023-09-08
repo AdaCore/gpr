@@ -22,8 +22,11 @@ package body GPR2.Build.Tree_Db is
 
    use type GPR2.View_Ids.View_Id;
 
-   procedure Check_Tree (Self : in out Object)
-   is
+   ----------------
+   -- Check_Tree --
+   ----------------
+
+   procedure Check_Tree (Self : in out Object) is
       To_Remove : GPR2.View_Ids.Set.Set;
    begin
       --  Check for new views
@@ -75,7 +78,6 @@ package body GPR2.Build.Tree_Db is
       Db_Inst : View_Db.Object;
 
    begin
-
       Self.Self := Self'Unrestricted_Access;
       Self.Tree := Tree.Reference;
       Self.With_RTS := With_Runtime_Sources;
@@ -97,7 +99,6 @@ package body GPR2.Build.Tree_Db is
                Db_Data.Tree_Db := Self.Self;
                Db_Inst := View_Tables.View_Base_For (Db_Data);
                Self.Build_Dbs.Insert (V.Id, Db_Inst);
-               --  Db_Inst.Update;
             end;
          end if;
       end loop;
@@ -110,10 +111,11 @@ package body GPR2.Build.Tree_Db is
    procedure Refresh
      (Self     : in out Object;
       Option   : Source_Info_Option;
-      Messages : out GPR2.Log.Object)
-   is
+      Messages : out GPR2.Log.Object) is
    begin
       Self.Src_Option := Option;
+
+      --  Refresh each tree's views
 
       for V of Self.Tree.Ordered_Views loop
          if V.Kind in With_Object_Dir_Kind then
@@ -126,10 +128,12 @@ package body GPR2.Build.Tree_Db is
          if V.Kind in With_Object_Dir_Kind
            and then (Self.With_RTS or else V.Id /= View_Ids.Runtime_View_Id)
          then
-            View_Tables.Refresh (View_Tables.Get_Data (Self.Self, V),
-                                 Messages);
+            View_Tables.Refresh
+              (View_Tables.Get_Data (Self.Self, V), Messages);
          end if;
       end loop;
+
+      --  Do a set of checks for tree/view validity/errors
 
       for V of Self.Tree.Ordered_Views loop
          if V.Kind in With_Source_Dirs_Kind
@@ -138,8 +142,8 @@ package body GPR2.Build.Tree_Db is
             --  Check languages
 
             declare
-               SF : constant Project.Attribute.Object :=
-                      V.Attribute (PRA.Source_Files);
+               SF   : constant Project.Attribute.Object :=
+                        V.Attribute (PRA.Source_Files);
                V_Db : constant GPR2.Build.View_Tables.View_Data_Ref :=
                         View_Tables.Get_Data (Self.Self, V);
             begin
@@ -189,8 +193,8 @@ package body GPR2.Build.Tree_Db is
             if V.Kind in With_Object_Dir_Kind then
                declare
                   use GPR2.Containers;
-                  V_Db            : constant View_Tables.View_Data_Ref :=
-                                      View_Tables.Get_Data (Self.Self, V);
+                  V_Db : constant View_Tables.View_Data_Ref :=
+                           View_Tables.Get_Data (Self.Self, V);
                begin
                   for C in V.Interface_Units.Iterate loop
                      if not V_Db.Own_CUs.Contains
@@ -225,6 +229,10 @@ package body GPR2.Build.Tree_Db is
       end if;
    end Refresh;
 
+   ----------
+   -- Tree --
+   ----------
+
    function Tree (Self : Object) return access GPR2.Project.Tree.Object is
      (Self.Tree);
 
@@ -232,8 +240,7 @@ package body GPR2.Build.Tree_Db is
    -- Unload --
    ------------
 
-   procedure Unload (Self : in out Object)
-   is
+   procedure Unload (Self : in out Object) is
    begin
       Self.Build_Dbs.Clear;
       Self.Tree := null;
@@ -248,8 +255,7 @@ package body GPR2.Build.Tree_Db is
 
    function View_Database
      (Self : Object; View : GPR2.Project.View.Object)
-      return Build.View_Db.Object
-   is
+      return Build.View_Db.Object is
    begin
       return Self.Build_Dbs.Element (View.Id);
    end View_Database;

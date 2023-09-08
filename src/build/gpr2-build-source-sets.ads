@@ -54,7 +54,7 @@ package GPR2.Build.Source.Sets is
      function (View   : GPR2.Project.View.Object;
                Source : GPR2.Build.Source.Object;
                Data   : Filter_Data'Class) return Boolean;
-   --  function that can be used to filter sources from the set.
+   --  Function that can be used to filter sources from the set.
    --  Must return True if the source is to be kept, false otherwise.
    --  The filter_data interface can be used to pass parameters to the
    --  filter.
@@ -111,7 +111,7 @@ private
       "=" => GPR2.Build.View_Tables."=");
 
    type Cursor (From_View_Db : Boolean := False) is record
-      Db            : Build.View_Db.Object;
+      Db : Build.View_Db.Object;
 
       case From_View_Db is
          when True =>
@@ -126,7 +126,8 @@ private
    No_Element : constant Cursor := (others => <>);
 
    type Constant_Reference_Type
-     (Element : not null access constant Source.Object) is record
+     (Element : not null access constant Source.Object)
+   is record
       Ref : Src_Info_Maps.Constant_Reference_Type (Element);
    end record;
 
@@ -143,12 +144,12 @@ private
    Empty_Set : constant Object := (others => <>);
 
    type Source_Iterator
-     (From_View_Db : Boolean)
-   is new Source_Iterators.Forward_Iterator
+     (From_View_Db : Boolean) is new Source_Iterators.Forward_Iterator
    with record
       --  we keep a reference to the view db for faster retrieval of
       --  the source items
-      Db    : Build.View_Db.Object;
+      Db : Build.View_Db.Object;
+
       case From_View_Db is
          when False =>
             --  we have our own list of source proxy

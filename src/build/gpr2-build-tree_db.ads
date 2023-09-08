@@ -32,21 +32,22 @@ package GPR2.Build.Tree_Db is
    --  Initializes the object.
    --  The artifacts are not loaded at this stage, Refresh needs to be called
    --  With_Runtime_Sources indicates whether the database should consider the
-   --   sources of the Ada runtime attached to the tree or not.
+   --  sources of the Ada runtime attached to the tree or not.
 
    procedure Check_Tree (Self : in out Object)
      with Pre => Self.Is_Defined;
-   --  Update the internal structures according to the updated tree.
+   --  Update the internal structures according to the updated tree
 
    function Use_Runtime_Sources (Self : Object) return Boolean;
-   --  Whether sources of the runtime are considered.
+   --  Whether sources of the runtime are considered
 
    procedure Unload (Self : in out Object)
      with Post => not Self.Is_Defined;
 
-   procedure Refresh (Self     : in out Object;
-                      Option   : Source_Info_Option;
-                      Messages : out GPR2.Log.Object)
+   procedure Refresh
+     (Self     : in out Object;
+      Option   : Source_Info_Option;
+      Messages : out GPR2.Log.Object)
      with Pre => Self.Is_Defined;
 
    function Source_Option (Self : Object) return Optional_Source_Info_Option;

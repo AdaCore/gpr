@@ -59,9 +59,10 @@ package body GPR2.Project.Definition is
                            Column   => 0,
                            Text     => ""),
                         Message =>
-                          "aggregate library ALI directory cannot be shared " &
-                          "with object directory of aggregated project """ &
-                          String (V.Path_Name.Base_Name) & """"));
+                          "aggregate library ALI directory cannot be shared "
+                          & "with object directory of aggregated project """
+                          & String (V.Path_Name.Base_Name) & """"));
+
                elsif V.Is_Library
                  and then View.Library_Ali_Directory = V.Library_Directory
                then
@@ -74,11 +75,12 @@ package body GPR2.Project.Definition is
                            Column   => 0,
                            Text     => ""),
                         Message =>
-                          "aggregate library ALI directory cannot be shared " &
-                          "with library directory of aggregated project """ &
-                          String (V.Path_Name.Base_Name) & """"));
+                          "aggregate library ALI directory cannot be shared "
+                          & "with library directory of aggregated project """
+                          & String (V.Path_Name.Base_Name) & """"));
+
                elsif V.Kind not in K_Aggregate_Library | K_Configuration
-                 | K_Abstract
+                                   | K_Abstract
                  and then View.Library_Directory = V.Object_Directory
                then
                   View.Tree.Log_Messages.Append
@@ -90,9 +92,10 @@ package body GPR2.Project.Definition is
                            Column   => 0,
                            Text     => ""),
                         Message =>
-                          "aggregate library directory cannot be shared " &
-                          "with object directory of aggregated project """ &
-                          String (V.Path_Name.Base_Name) & """"));
+                          "aggregate library directory cannot be shared "
+                          & "with object directory of aggregated project """
+                          & String (V.Path_Name.Base_Name) & """"));
+
                elsif V.Is_Library
                  and then View.Library_Directory = V.Library_Directory
                then
@@ -105,9 +108,9 @@ package body GPR2.Project.Definition is
                            Column   => 0,
                            Text     => ""),
                         Message =>
-                          "aggregate library directory cannot be shared " &
-                          "with library directory of aggregated project """ &
-                          String (V.Path_Name.Base_Name) & """"));
+                          "aggregate library directory cannot be shared "
+                          & "with library directory of aggregated project """
+                          & String (V.Path_Name.Base_Name) & """"));
                end if;
 
                Process_Aggregate (V);
@@ -123,8 +126,8 @@ package body GPR2.Project.Definition is
    -- Check_Excluded_Source_Dirs --
    --------------------------------
 
-   procedure Check_Excluded_Source_Dirs (View : Project.View.Object)
-   is
+   procedure Check_Excluded_Source_Dirs (View : Project.View.Object) is
+
       function Exists
         (View_Path : Path_Name.Object;
          Val       : Value_Type) return Boolean;
@@ -151,6 +154,7 @@ package body GPR2.Project.Definition is
       begin
          if Dir_Val'Length = 0 then
             return True;
+
          else
             declare
                Dir_Name     : constant GPR2.Path_Name.Object :=
@@ -197,6 +201,7 @@ package body GPR2.Project.Definition is
    --------------------------
 
    procedure Check_Package_Naming (View : Project.View.Object) is
+
       procedure Check_View (View : Project.View.Object);
       --  Checks in View tree Casing, Dot_Replacement and Suffix attributes
       --  values.
@@ -207,9 +212,8 @@ package body GPR2.Project.Definition is
 
       procedure Check_View (View : Project.View.Object) is
 
-         package Suffix_Lang_Maps is
-           new Ada.Containers.Indefinite_Hashed_Maps
-             (Value_Type, Language_Id, Ada.Strings.Hash, "=");
+         package Suffix_Lang_Maps is new Ada.Containers.Indefinite_Hashed_Maps
+           (Value_Type, Language_Id, Ada.Strings.Hash, "=");
 
          Suffix_Lang_Map : Suffix_Lang_Maps.Map;
          --  key=suffix value; value=first language registering suffix use
@@ -247,8 +251,8 @@ package body GPR2.Project.Definition is
             Casing : Project.Attribute.Object;
          begin
             if View.Check_Attribute (PRA.Naming.Casing, Result => Casing)
-              and then ACH.To_Lower (Casing.Value.Text) not in
-              "lowercase" | "uppercase" | "mixedcase"
+              and then ACH.To_Lower (Casing.Value.Text)
+                         not in "lowercase" | "uppercase" | "mixedcase"
             then
                Log_Error (Message.Error, "invalid value for casing", Casing);
             end if;
@@ -394,7 +398,6 @@ package body GPR2.Project.Definition is
                   Suffix_Lang_Map.Include (Value, Language);
                end if;
             end;
-
          end Check_Illegal_Suffix;
 
          -----------------------------
@@ -411,8 +414,8 @@ package body GPR2.Project.Definition is
             --------------
 
             procedure Internal (Attr_Id : Q_Attribute_Id) is
-               C       : Containers.Filename_Source_Reference_Package.Cursor;
-               Ok      : Boolean;
+               C  : Containers.Filename_Source_Reference_Package.Cursor;
+               Ok : Boolean;
             begin
                for Attr of View.Attributes (Attr_Id) loop
                   for V of Attr.Values loop
@@ -423,8 +426,8 @@ package body GPR2.Project.Definition is
                      if not Ok then
                         Log_Error
                           (Message.Error,
-                           "file """ & String (V.Text) &
-                             """ specified in naming exception more than once",
+                           "file """ & String (V.Text) & """ "
+                           &  "specified in naming exception more than once",
                            V);
                      end if;
                   end loop;
@@ -443,8 +446,7 @@ package body GPR2.Project.Definition is
          procedure Log_Error
            (Level : Message.Level_Value;
             Msg   : String;
-            Sloc  : Source_Reference.Object'Class)
-         is
+            Sloc  : Source_Reference.Object'Class) is
          begin
             View.Tree.Log_Messages.Append
               (Message.Create
@@ -518,6 +520,7 @@ package body GPR2.Project.Definition is
    ------------------------------
 
    procedure Check_Same_Name_Extended (View : Project.View.Object) is
+
       procedure Check_View (View : Project.View.Object);
       --  Checks in View tree (extended, aggregated, imported) that
       --  any extending list contains unique project name.
@@ -593,8 +596,7 @@ package body GPR2.Project.Definition is
    -- Clear_Cache --
    -----------------
 
-   procedure Clear_Cache (Def : in out Data)
-   is
+   procedure Clear_Cache (Def : in out Data) is
    begin
       Def.Cache.Clear_Cache;
       Def.Dir_Cache := (others => <>);
@@ -604,8 +606,7 @@ package body GPR2.Project.Definition is
    -- Disable_Cache --
    -------------------
 
-   procedure Disable_Cache (Def : in out Data)
-   is
+   procedure Disable_Cache (Def : in out Data) is
    begin
       Def.Cache.Disable_Cache;
    end Disable_Cache;
@@ -614,8 +615,7 @@ package body GPR2.Project.Definition is
    -- Enable_Cache --
    ------------------
 
-   procedure Enable_Cache (Def : in out Data)
-   is
+   procedure Enable_Cache (Def : in out Data) is
    begin
       Def.Cache.Enable_Cache;
    end Enable_Cache;
@@ -656,30 +656,30 @@ package body GPR2.Project.Definition is
       procedure Free is new Ada.Unchecked_Deallocation
         (Walk_State_List, Walk_State_List_Access);
 
-      States    : Walk_State_List_Access := new Walk_State_List (1 .. 4);
+      States     : Walk_State_List_Access := new Walk_State_List (1 .. 4);
       New_States : Walk_State_List_Access;
-      Current   : Natural := 0;
-      Dir       : constant Filename_Optional :=
-                    (if Directory_Pattern'Length = 0
-                     then "."
-                     else
-                       (if Directory_Pattern = "**"
-                        then "./**"
-                        else Directory_Pattern));
+      Current    : Natural := 0;
+      Dir        : constant Filename_Optional :=
+                     (if Directory_Pattern'Length = 0
+                      then "."
+                      else
+                        (if Directory_Pattern = "**"
+                         then "./**"
+                         else Directory_Pattern));
       --  Normalize dir part avoiding "" & "**"
-      Recursive : constant Boolean :=
-                    Dir'Length > 2
-                    and then Dir (Dir'Last - 1 .. Dir'Last) = "**"
-                    and then Is_Directory_Separator (Dir (Dir'Last - 2));
-      Last      : constant Positive :=
-                    Dir'Last - (if Recursive then 2 else 0);
-      Root_Dir  : constant Filename_Optional :=
-                    (if GNAT.OS_Lib.Is_Absolute_Path (String (Dir))
-                     then Dir (Dir'First .. Last)
-                     else Base_Dir.Compose
-                       (Filename_Optional (Dir (Dir'First .. Last))).Value);
-      D_Entry   : Dir_Entry;
-      Stat      : File_Attributes;
+      Recursive  : constant Boolean :=
+                     Dir'Length > 2
+                     and then Dir (Dir'Last - 1 .. Dir'Last) = "**"
+                     and then Is_Directory_Separator (Dir (Dir'Last - 2));
+      Last       : constant Positive :=
+                     Dir'Last - (if Recursive then 2 else 0);
+      Root_Dir   : constant Filename_Optional :=
+                     (if GNAT.OS_Lib.Is_Absolute_Path (String (Dir))
+                      then Dir (Dir'First .. Last)
+                      else Base_Dir.Compose
+                        (Filename_Optional (Dir (Dir'First .. Last))).Value);
+      D_Entry    : Dir_Entry;
+      Stat       : File_Attributes;
 
       procedure Open_Directory
         (Dir         : Path_Name.Object;
@@ -692,8 +692,7 @@ package body GPR2.Project.Definition is
 
       procedure Open_Directory
         (Dir         : Path_Name.Object;
-         Is_Root_Dir : Boolean)
-      is
+         Is_Root_Dir : Boolean) is
       begin
          if Current >= 512 then
             Messages.Append
@@ -736,7 +735,6 @@ package body GPR2.Project.Definition is
 
          begin
             States (Current).Handle := Open (String (Dir.Value));
-
          exception
             when GNATCOLL.OS.OS_Error =>
                Current := Current - 1;

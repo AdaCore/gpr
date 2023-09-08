@@ -38,20 +38,21 @@ package GPR2.Build.Source is
    --  To handle all this:
    --  ??? continue design comment
 
-   type Unit_Part (Name_Len     : Natural;
-                   Separate_Len : Natural)
+   type Unit_Part
+     (Name_Len     : Natural;
+      Separate_Len : Natural)
    is record
-      Kind           : Build.Unit_Kind := S_Spec;
+      Kind          : Build.Unit_Kind := S_Spec;
       --  Kind of unit
-      Index          : Unit_Index := No_Index;
+      Index         : Unit_Index := No_Index;
       --  In case of multi-unit source, the index of the unit, else No_Index
-      Is_Parsed      : Boolean := False;
+      Is_Parsed     : Boolean := False;
       --  Whether we used the Ada parser to analyze the unit
       --  ??? Add the with clauses here
-      Name           : Optional_Name_Type (1 .. Name_Len);
+      Name          : Optional_Name_Type (1 .. Name_Len);
       --  The compilation unit name. May be empty in case of a body with
       --  pragma No_Body.
-      Separate_Name  : Optional_Name_Type (1 .. Separate_Len);
+      Separate_Name : Optional_Name_Type (1 .. Separate_Len);
       --  In case Kind is S_Separate, the name of the subunit (without the
       --  compilation unit name part).
    end record;
@@ -64,11 +65,11 @@ package GPR2.Build.Source is
    --  reutrn Name.
 
    function Create
-     (Unit_Name      : Optional_Name_Type;
-      Index          : Unit_Index;
-      Kind           : Unit_Kind;
-      Separate_Name  : Optional_Name_Type := No_Name;
-      Parsed         : Boolean := False) return Unit_Part;
+     (Unit_Name     : Optional_Name_Type;
+      Index         : Unit_Index;
+      Kind          : Unit_Kind;
+      Separate_Name : Optional_Name_Type := No_Name;
+      Parsed        : Boolean := False) return Unit_Part;
 
    type Unit_List is tagged private
      with Constant_Indexing => Constant_Reference,
@@ -107,7 +108,8 @@ package GPR2.Build.Source is
    type Reference_Type (Element : not null access Unit_Part) is private
    with Implicit_Dereference => Element;
 
-   type Constant_Reference_Type (Element : not null access constant Unit_Part)
+   type Constant_Reference_Type
+     (Element : not null access constant Unit_Part)
    is private with Implicit_Dereference => Element;
 
    function Constant_Reference
@@ -160,8 +162,8 @@ package GPR2.Build.Source is
    --  Constructor for a non-Ada source object
 
    procedure Update_Unit
-     (Self  : in out Object;
-      Unit  : Unit_Part)
+     (Self : in out Object;
+      Unit : Unit_Part)
      with Pre => Self.Is_Defined
                    and then Self.Language = Ada_Language;
    --  Change the unit info stored in Self with updated information in Unit
@@ -215,8 +217,9 @@ package GPR2.Build.Source is
    --  Returns True if source contains one or more units declared in Naming
    --  package with "at" Index.
 
-   function Unit (Self  : Object;
-                  Index : Unit_Index := No_Index) return Unit_Part
+   function Unit
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return Unit_Part
      with Pre => Self.Is_Defined
                    and then Self.Has_Units and then Self.Has_Unit_At (Index);
    --  Return the unit object at specified index (use No_Index if the source
@@ -269,7 +272,8 @@ private
       Ref : Unit_Map.Reference_Type (Element);
    end record;
 
-   type Constant_Reference_Type (Element : not null access constant Unit_Part)
+   type Constant_Reference_Type
+     (Element : not null access constant Unit_Part)
    is record
       Ref : Unit_Map.Constant_Reference_Type (Element);
    end record;
@@ -284,24 +288,24 @@ private
    Empty_List : constant Unit_List := (others => <>);
    No_Element : constant Cursor := Cursor (Unit_Map.No_Element);
 
-   function Is_Empty (Self : Unit_List) return Boolean
-   is (Self.Units.Is_Empty);
+   function Is_Empty (Self : Unit_List) return Boolean is
+     (Self.Units.Is_Empty);
 
-   function Is_Indexed_List (Self : Unit_List) return Boolean
-   is (Self.Has_Index);
+   function Is_Indexed_List (Self : Unit_List) return Boolean is
+     (Self.Has_Index);
 
-   function Length (Self : Unit_List) return Natural
-   is (Natural (Self.Units.Length));
+   function Length (Self : Unit_List) return Natural is
+     (Natural (Self.Units.Length));
 
    function Element (Self  : Unit_List;
                      Index : Unit_Index) return Unit_Part
    is (Self.Units.Element (Index));
 
-   overriding function Has_Element (Position : Cursor) return Boolean
-   is (Unit_Map.Has_Element (Unit_Map.Cursor (Position)));
+   overriding function Has_Element (Position : Cursor) return Boolean is
+     (Unit_Map.Has_Element (Unit_Map.Cursor (Position)));
 
-   overriding function Element (Position : Cursor) return Unit_Part
-   is (Unit_Map.Element (Unit_Map.Cursor (Position)));
+   overriding function Element (Position : Cursor) return Unit_Part is
+     (Unit_Map.Element (Unit_Map.Cursor (Position)));
 
    function To_ALI_Timestamp (Stamp : Calendar.Time) return Calendar.Time;
 
@@ -358,8 +362,9 @@ private
    function Units (Self : Object) return Unit_List'Class is
      (Self.CU_List);
 
-   function Unit (Self  : Object;
-                  Index : Unit_Index := No_Index) return Unit_Part
+   function Unit
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return Unit_Part
    is (Self.CU_List.Element (Index));
 
    --  function Aggregated (Self : Object) return Project.View.Object is

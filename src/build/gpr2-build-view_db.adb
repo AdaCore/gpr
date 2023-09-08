@@ -20,8 +20,8 @@ package body GPR2.Build.View_Db is
    function View_Base_For (Data : View_Tables.View_Data) return Object;
    --  Create an object from the View_Tables data
 
-   function Ref (Inst : Object) return View_Tables.View_Data_Ref
-   is (Inst.Get);
+   function Ref (Inst : Object) return View_Tables.View_Data_Ref is
+     (Inst.Get);
    --  Extracts a reference to view_tables data from a View_Base instance
 
    function Tree_Db (Self : Object) return access GPR2.Build.Tree_Db.Object is
@@ -62,8 +62,7 @@ package body GPR2.Build.View_Db is
 
    function Has_Compilation_Unit
      (Self : Object;
-      Name : Name_Type) return Boolean
-   is
+      Name : Name_Type) return Boolean is
    begin
       return Ref (Self).CUs.Contains (Name);
    end Has_Compilation_Unit;
@@ -74,8 +73,7 @@ package body GPR2.Build.View_Db is
 
    function Has_Source
      (Self     : Object;
-      Basename : Simple_Name) return Boolean
-   is
+      Basename : Simple_Name) return Boolean is
    begin
       return Ref (Self).Sources.Contains (Basename);
    end Has_Source;
@@ -119,6 +117,7 @@ package body GPR2.Build.View_Db is
    begin
       if not Basename_Source_Maps.Has_Element (C) then
          return Build.Source.Undefined;
+
       else
          declare
             Proxy : Source_Proxy renames Basename_Source_Maps.Element (C);
@@ -139,7 +138,7 @@ package body GPR2.Build.View_Db is
    -------------
 
    function Sources
-     (Self : Object;
+     (Self   : Object;
       Sorted : Boolean := False) return GPR2.Build.Source.Sets.Object
    is (Build.Source.Sets.Create
          (Self,
@@ -170,8 +169,7 @@ package body GPR2.Build.View_Db is
 
    function View_Base_For
      (Self : Object;
-      View : Project.View.Object) return Object
-   is
+      View : Project.View.Object) return Object is
    begin
       if Self.View = View then
          return Self;
@@ -219,8 +217,6 @@ package body GPR2.Build.View_Db is
    is (Build.Source.Sets.Create (Self, Build.Source.Sets.Recurse));
 
 begin
-
    View_Tables.View_Base_For := View_Base_For'Access;
    View_Tables.Get_Ref       := Ref'Access;
-
 end GPR2.Build.View_Db;

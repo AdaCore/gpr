@@ -13,11 +13,12 @@ package body GPR2.Build.Source.Sets is
 
    use type GPR2.Project.View.Object;
 
-   function Element (Self  : Object;
-                     Proxy : Source_Proxy) return Source.Object;
+   function Element
+     (Self  : Object;
+      Proxy : Source_Proxy) return Source.Object;
 
-   function "-" (Inst : Build.View_Db.Object) return View_Data_Ref
-     is (Get_Ref (Inst));
+   function "-" (Inst : Build.View_Db.Object) return View_Data_Ref is
+     (Get_Ref (Inst));
 
    function Tree_Db
      (Db : Build.View_Db.Object) return access GPR2.Build.Tree_Db.Object
@@ -54,8 +55,7 @@ package body GPR2.Build.Source.Sets is
      (Db     : Build.View_Db.Object;
       Option : Source_Set_Option := Unsorted;
       Filter : Filter_Function := null;
-      F_Data : Filter_Data'Class := No_Data) return Object
-   is
+      F_Data : Filter_Data'Class := No_Data) return Object is
    begin
       return (Db, Option, Filter, Filter_Data_Holders.To_Holder (F_Data));
    end Create;
@@ -64,8 +64,9 @@ package body GPR2.Build.Source.Sets is
    -- Element --
    -------------
 
-   function Element (Self  : Object;
-                     Proxy : Source_Proxy) return Source.Object
+   function Element
+     (Self  : Object;
+      Proxy : Source_Proxy) return Source.Object
    is
       Db : constant View_Data_Ref :=
              (if Proxy.View /= Self.Db.View
@@ -200,7 +201,8 @@ package body GPR2.Build.Source.Sets is
                --  Add the withed views sources, not overriding if
                --  there's a basename clash.
 
-               for V of Get_Ref (Self.Db).View.Closure (Include_Self => True)
+               for V
+                 of Get_Ref (Self.Db).View.Closure (Include_Self => True)
                loop
                   if V.Kind in With_Object_Dir_Kind then
                      declare
