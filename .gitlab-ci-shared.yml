@@ -6,6 +6,8 @@ workflow:
       when: always
     - if: $CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_REF_NAME == "master" || $CI_COMMIT_REF_NAME == "next")
       when: always
+    - if: $CI_PIPELINE_SOURCE == "scheduled"
+      when: always
     - when: never
 
 variables:
@@ -47,39 +49,6 @@ default:
          anod_name=gprbuild_testsuite
       fi
       echo $anod_name
-    }
-
-    ########################
-    ## SETUP REPOSITORIES ##
-    ########################
-
-    setup_repos() {
-      # clone subprojects and ensure anod uses them.
-      # input: the list of subprojects to clone
-
-      # make sure we use the local branch in anod
-      anod_name=`anod_repo_name $CI_PROJECT_NAME`
-      exec anod vcs --add-repo $anod_name $CI_PROJECT_DIR
-
-      # ??? Following steps are workarounds waiting for a proper handling of
-      # commits dependencies between repositories. This ensures that the latest
-      # version of anod scripts and list given as input are used instead of the
-      # latest nightly build versions.
-
-      # Use latest anod
-      cd /tmp
-      exec git clone $GIT_CLONE_BASE/eng/it/anod
-      exec anod tune --anod /tmp/anod
-
-      # Setup the anod vcs for all subprojects.
-      cd /tmp
-      for subproject in $@; do
-        exec git clone $GIT_CLONE_BASE/eng/gpr/$subproject
-        anod_repo=`anod_repo_name $subproject`
-        exec anod vcs --add-repo $anod_repo /tmp/$subproject
-      done
-      # print final status, for record
-      exec anod vcs --list
     }
 
     #########################
