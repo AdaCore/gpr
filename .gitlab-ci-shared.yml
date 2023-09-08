@@ -88,15 +88,19 @@ default:
 
     install_packages() {
       # input: a list of packages to install in anod
-      # Note: TARGET can be set to --target=foo,version,machine to install
+      # Note: TARGET can be set to foo,version,machine to install
       # a cross compiler with up-to-date gprbuild package
 
       cd $SANDBOX
       exec mkdir -p fingerprints
       for pkg in $@; do
         if [ $pkg = "gnat" -o $pkg = "gnatall" ]; then
-          exec anod install $pkg $TARGET
-          work_dir=$(anod info install $pkg $TARGET --show working_dir)
+          local targetopt=""
+          if [ x"$TARGET" != x ]; then
+            targetopt=--target=$TARGET
+          fi
+          exec anod install $pkg $targetopt
+          work_dir=$(anod info install $pkg $targetopt --show working_dir)
           exec tar zxf $CI_PROJECT_DIR/gprbuild.tar.gz -C $work_dir
         else
           exec mkdir -p $HOST/$pkg ;
