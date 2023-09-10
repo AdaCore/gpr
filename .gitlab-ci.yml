@@ -12,6 +12,8 @@ stages:
 build:
   extends: .job_template
   stage: build
+  variables:
+    JOB_SUBPROJECTS: eng/gpr/gprbuild eng/gpr/gprconfig_kb
   script:
     # Tune to use our build & test plan
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
@@ -47,6 +49,8 @@ build:
 test_bootstrap:
   extends: .job_template
   stage: test
+  variables:
+    JOB_SUBPROJECTS: eng/gpr/gprbuild eng/gpr/gprconfig_kb
   script:
     - install_packages libgpr2 libgpr2-bare
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan --full
@@ -116,6 +120,8 @@ test_gpr2_cov:
 
 test_gprbuild:
   extends: .test_template
+  variables:
+    JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
   script:
     - install_packages gnatall
     - run_testsuite gprbuild -QAdaCC++_Auto test_gprbuild
@@ -133,6 +139,8 @@ test_gprbuild:
 
 test_gprconfig:
   extends: .test_template
+  variables:
+    JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
   script:
     - install_packages gprbuild
     - run_testsuite gprconfig "" test_gprconfig
@@ -150,6 +158,8 @@ test_gprconfig:
 
 test_gpr2ls:
   extends: .test_template
+  variables:
+    JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
   script:
     - install_packages gnatall gpr1build
     - run_testsuite gprbuild "-QAdaCC++_Auto -Qcheck-gpr2ls" test_gpr2ls
