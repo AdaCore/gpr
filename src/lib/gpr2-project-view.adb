@@ -1232,7 +1232,7 @@ package body GPR2.Project.View is
                Messages.Append
                  (Message.Create
                     (Level   => Message.Warning,
-                     Message => Main.Text &
+                     Message => String (Main_Fullname) &
                        " is not a source of project " & String (Self.Name),
                      Sloc    => Main));
             end if;

@@ -56,14 +56,16 @@ procedure Main is
 begin
    for J in 1 .. 12 loop
       declare
-         constant      : String Num := J'Image;
+         Num : constant String := J'Image;
          Prj_File : constant String :=
            "prj/demo" & Num (Num'First + 1 .. Num'Last) & ".gpr";
       begin
-         Project.Tree.Load (Prj, Create (Prj_File), Ctx);
+         Project.Tree.Load (Prj, Create (Filename_Type (Prj_File)), Ctx);
          Prj.Update_Sources (Messages => Log);
-         Log.Output_Messages;
          Display (Prj.Root_Project);
+
+         Prj.Log_Messages.Output_Messages (Information => False);
+         Log.Output_Messages;
       end;
    end loop;
 end Main;
