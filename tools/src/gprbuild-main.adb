@@ -80,6 +80,13 @@ begin
 
    Tree.Update_Sources (Backends => Source_Info.No_Backends);
 
+   if Tree.Root_Project.Has_Mains
+     and then Tree.Root_Project.Mains.Is_Empty
+   then
+      GPRtools.Util.Output_Messages (Opt);
+      GPRtools.Util.Fail_Program ("problems with main sources");
+   end if;
+
    --  Check if we have a Builder'Switches attribute in the root project
 
    if Tree.Root_Project.Has_Package (PRP.Builder) then

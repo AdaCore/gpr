@@ -1,0 +1,9 @@
+project Demo10 is
+   for Languages use ("Ada");
+   for Source_Dirs use ("src");
+   for Main use (Project'Name);
+   
+   package Naming is
+      for Body_Suffix ("Ada") use ".1.ada";
+   end Naming;
+end Demo10;

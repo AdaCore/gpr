@@ -1,0 +1,4 @@
+project Demo7 is
+   for Source_Dirs use ("src");
+   for Main use (Project'Name);
+end Demo7;

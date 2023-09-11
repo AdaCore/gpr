@@ -948,6 +948,13 @@ begin
          --     - Either we're in closure mode, and we want to use the mains
          --       from the root project.
 
+         if Tree.Root_Project.Has_Mains
+           and then Tree.Root_Project.Mains.Is_Empty
+         then
+            Util.Output_Messages (Opt);
+            GPRtools.Util.Fail_Program ("problems with main sources");
+         end if;
+
          for S of Tree.Root_Project.Sources loop
             if Tree.Root_Project.Has_Mains
               and then S.Is_Main
