@@ -54,23 +54,16 @@ procedure Main is
    Log : GPR2.Log.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo1.gpr"), Ctx);
-   Prj.Update_Sources (Messages => Log);
-   Log.Output_Messages;
-   Display (Prj.Root_Project);
-
-   Project.Tree.Load (Prj, Create ("demo2.gpr"), Ctx);
-   Prj.Update_Sources (Messages => Log);
-   Log.Output_Messages;
-   Display (Prj.Root_Project);
-
-   Project.Tree.Load (Prj, Create ("demo3.gpr"), Ctx);
-   Prj.Update_Sources (Messages => Log);
-   Log.Output_Messages;
-   Display (Prj.Root_Project);
-
-   Project.Tree.Load (Prj, Create ("demo4.gpr"), Ctx);
-   Prj.Update_Sources (Messages => Log);
-   Log.Output_Messages;
-   Display (Prj.Root_Project);
+   for J in 1 .. 12 loop
+      declare
+         constant      : String Num := J'Image;
+         Prj_File : constant String :=
+           "prj/demo" & Num (Num'First + 1 .. Num'Last) & ".gpr";
+      begin
+         Project.Tree.Load (Prj, Create (Prj_File), Ctx);
+         Prj.Update_Sources (Messages => Log);
+         Log.Output_Messages;
+         Display (Prj.Root_Project);
+      end;
+   end loop;
 end Main;

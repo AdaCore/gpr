@@ -1,0 +1,150 @@
+# Don't run CIs on branches without merge requests, except on important branches
+# The latter is important to get automatic comparison on failing tests
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_REF_NAME == "master" || $CI_COMMIT_REF_NAME == "next")
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "scheduled"
+      when: always
+    - when: never
+
+variables:
+   GIT_CLONE_BASE: https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}:${CI_SERVER_PORT}
+   HOST: x86_64-linux
+   TARGET: ""
+
+# This step defines bash functions that are shared between jobs.
+# Note: before_script at toplevel is always executed, unless overriden by the
+# various stages, so please don't !
+
+default:
+  before_script: |
+    echo "before script executing..."
+
+    #######################
+    ## colored execution ##
+    #######################
+
+    exec() {
+       # dark green + $ + command line + grey
+       echo -e "\e[0;32m\$ $@\e[0;37m"
+       $@
+       # save the result
+       res=$?
+       # back to normal output
+       echo -e -n "\e[0m"
+       # make sure we translate the exit code
+       return $res
+    }
+
+    anod_repo_name() {
+      # anod repo name for a given project name
+      anod_name=$1
+      if [ "$anod_name" = "gpr" ]; then
+         anod_name=gpr2
+      fi
+      if [ "$anod_name" = "gprbuild-internal" ]; then
+         anod_name=gprbuild_testsuite
+      fi
+      echo $anod_name
+    }
+
+    #########################
+    # PACKAGES INSTALLATION #
+    #########################
+
+    install_packages() {
+      # input: a list of packages to install in anod
+      # Note: TARGET can be set to foo,version,machine to install
+      # a cross compiler with up-to-date gprbuild package
+
+      cd $SANDBOX
+      exec mkdir -p fingerprints
+      for pkg in $@; do
+        if [ $pkg = "gnat" -o $pkg = "gnatall" ]; then
+          local targetopt=""
+          if [ x"$TARGET" != x ]; then
+            targetopt=--target=$TARGET
+          fi
+          exec anod install $pkg $targetopt
+          work_dir=$(anod info install $pkg $targetopt --show working_dir)
+          exec tar zxf $CI_PROJECT_DIR/gprbuild.tar.gz -C $work_dir
+        else
+          exec mkdir -p $HOST/$pkg ;
+          exec tar zxf $CI_PROJECT_DIR/$pkg.tar.gz -C $HOST/$pkg
+          for json in install download-bin; do
+            exec touch fingerprints/$HOST.$pkg.$json.json.assume-unchanged
+          done
+        fi
+      done
+      exec rm -f $CI_PROJECT_DIR/*.tar.gz
+    }
+
+    ######################
+    # RUNNING TESTSUITES #
+    ######################
+
+    run_testsuite() {
+      # inputs:
+      # spec: the anod spec under test
+      # args: the anod arguments to use
+      # xunit_name: the name under which the testsuite is reported to gitlab
+
+      local spec=$1
+      local args=$2
+      local xunit_name=$3
+
+      # run the testsuite
+      exec anod test $spec $args --minimal
+
+      # generate report for gitlab
+
+      test_output="$(echo $xunit_name | sed -e 's/_//g')_result.xml"
+      echo "generating result in $test_output"
+
+      # check for results directory.
+      working_dir=$(anod info test $spec --show working_dir $args)
+      RESULTS_DIR=$working_dir/results/new
+
+      # translate e3 results into xunit results (and highlight it in yellow)
+      echo -e "\e[1;34m"
+      e3-testsuite-report \
+        --failure-exit-code 1 \
+        --xunit-output $CI_PROJECT_DIR/$test_output \
+        --xunit-name $xunit_name \
+        $RESULTS_DIR || exit 1
+      echo -e "\e[0m"
+    }
+
+    # Enable generic CI for building with Anod
+
+    cmd="generic_anod_ci"
+    if [ x$CI_MERGE_REQUEST_IID = x ]; then
+      # look for a list of subprojects to use systematically in CBs
+      cmd="$cmd --continuous-builder-mode"
+      for pkg in $JOB_SUBPROJECTS; do
+         cmd="$cmd --add-dep $pkg"
+      done
+    fi
+    exec eval $cmd
+    echo "sourcing the generic CI environment"
+    . /tmp/ci_env.sh
+    export SANDBOX=$ANOD_DEFAULT_SANDBOX_DIR
+    exec anod vcs --list
+
+################
+# JOB TEMPLATE #
+################
+
+.job_template:
+  services:
+     - image:e3
+     - cpu:8
+     - mem:16
+
+.test_template:
+  extends: .job_template
+  stage: test
+  allow_failure: true

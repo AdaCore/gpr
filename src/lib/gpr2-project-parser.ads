@@ -123,7 +123,7 @@ package GPR2.Project.Parser is
      with Pre => Self.Is_Defined;
    --  Returns True if the project has some external variable reference
 
-   function Externals (Self : Object) return Containers.Name_List
+   function Externals (Self : Object) return Containers.Name_Set
      with Pre  => Self.Is_Defined,
           Post => (if Self.Has_Externals
                    then not Externals'Result.Is_Empty
@@ -145,7 +145,7 @@ private
       File      : GPR2.Path_Name.Object;
       Qualifier : Project_Kind := K_Standard;
       Expl_Qual : Boolean      := False; -- Explicit qualifier
-      Externals : Containers.Name_List;
+      Externals : Containers.Name_Set;
       Imports   : GPR2.Project.Import.Set.Object;
       Extended  : GPR2.Project.Import.Object;
       Is_All    : Boolean := False;

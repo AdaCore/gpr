@@ -1,164 +1,19 @@
-# This bit is used to make sure we don't run too many pipelines:
-# don't run the branch CI when a merge request is already open for the
-# branch.
-workflow:
-  rules:
-    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"
-      when: never
-    - when: always
-
-variables:
-   GIT_CLONE_BASE: https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}:${CI_SERVER_PORT}
-   SANDBOX: /it/wave
-   HOST: x86_64-linux
-   ANOD_DEFAULT_SANDBOX_DIR: /it/wave
-   ANOD_REPO_NAME: gpr2-next
+include: '/.gitlab-ci-shared.yml'
 
 stages:
   - build
   - test
-
-# This step defines bash functions that are shared between jobs.
-# Note: before_script at toplevel is always executed, unless overriden by the
-# various stages, so please don't !
-
-default:
-  before_script: |
-    echo "before script executing..."
-
-    #######################
-    ## colored execution ##
-    #######################
-
-    exec() {
-       # dark green + $ + command line + grey
-       echo -e "\e[0;32m\$ $@\e[0;37m"
-       $@
-       # save the result
-       res=$?
-       # back to normal output
-       echo -e -n "\e[0m"
-       # make sure we translate the exit code
-       return $res
-    }
-
-    ########################
-    ## SETUP REPOSITORIES ##
-    ########################
-
-    setup_repos() {
-      # clone subprojects and ensure anod uses them.
-      # input: the list of subprojects to clone
-
-      # make sure we use the local branch as gpr2 repo
-      exec anod vcs --add-repo $ANOD_REPO_NAME $CI_PROJECT_DIR
-
-      # ??? Following steps are workarounds waiting for a proper handling of
-      # commits dependencies between repositories. This ensures that the latest
-      # version of anod scripts and list given as input are used instead of the
-      # latest nightly build versions.
-
-      # Use latest anod
-      cd /tmp
-      exec git clone $GIT_CLONE_BASE/eng/it/anod
-      exec anod tune --anod /tmp/anod
-
-      # Setup the anod vcs for all subprojects.
-      cd /tmp
-      for subproject in $@; do
-        exec git clone $GIT_CLONE_BASE/eng/gpr/$subproject
-        if [ "$subproject" = "gprbuild-internal" ]; then
-          anod_repo=gprbuild_testsuite
-        else
-          anod_repo=$subproject
-        fi
-        exec anod vcs --add-repo $anod_repo /tmp/$subproject
-      done
-      # print final status, for record
-      exec anod vcs --list
-    }
-
-    #########################
-    # PACKAGES INSTALLATION #
-    #########################
-
-    install_packages() {
-      # input: a list of packages to install in anod
-
-      cd $SANDBOX
-      exec mkdir -p fingerprints
-      for pkg in $@; do
-        if [ $pkg = "gnat" -o $pkg = "gnatall" ]; then
-          exec anod install $pkg
-          exec tar zxf $CI_PROJECT_DIR/gprbuild.tar.gz -C $HOST/$pkg
-        else
-          exec mkdir -p $HOST/$pkg ;
-          exec tar zxf $CI_PROJECT_DIR/$pkg.tar.gz -C $HOST/$pkg
-        fi
-        for json in install download-bin; do
-          exec touch fingerprints/$HOST.$pkg.$json.json.assume-unchanged
-        done
-      done
-      exec rm -f $CI_PROJECT_DIR/*.tar.gz
-    }
-
-    ######################
-    # RUNNING TESTSUITES #
-    ######################
-
-    run_testsuite() {
-      # inputs:
-      # spec: the anod spec under test
-      # quals: the qualifiers to use
-      # xunit_name: the name under which the testsuite is reported to gitlab
-
-      local spec=$1
-      local quals=$2
-      local xunit_name=$3
-
-      # run the testsuite and extract its namespace
-      exec anod test $spec $quals --minimal
-      build_space=`anod eval $spec build_space_name $quals --primitive test`
-      test_output="$(echo $xunit_name | sed -e 's/_//g')_result.xml"
-
-      echo "generating result in $test_output"
-
-      # translate e3 results into xunit results (and highlight it in yellow)
-      echo -e "\e[1;34m"
-      e3-testsuite-report \
-        --failure-exit-code 1 \
-        --xunit-output $CI_PROJECT_DIR/$test_output \
-        --xunit-name $xunit_name \
-        $SANDBOX/$HOST/$build_space/results/new/ || exit 1
-      echo -e "\e[0m"
-    }
-
-################
-# JOB TEMPLATE #
-################
-
-.job_template: &job_definition
-  services:
-     - image:sandbox
-     - cpu:8
-     - mem:16
-
-.test_template: &test_definition
-  <<: *job_definition
-  stage: test
-  allow_failure: true
 
 ###########
 ## BUILD ##
 ###########
 
 build:
-  <<: *job_definition
+  extends: .job_template
   stage: build
+  variables:
+    JOB_SUBPROJECTS: eng/gpr/gprbuild eng/gpr/gprconfig_kb
   script:
-    # setup submodules
-    - setup_repos gprbuild gprconfig_kb
-
     # Tune to use our build & test plan
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
 
@@ -184,7 +39,7 @@ build:
 ####################
 
 test_gpr2:
-  <<: *test_definition
+  extends: .test_template
   script:
     - setup_repos
     - install_packages gpr2-next libgpr2-next
@@ -202,7 +57,7 @@ test_gpr2:
 ##############
 
 test_gpr2_cov:
-  <<: *test_definition
+  extends: .test_template
   script:
     - setup_repos
     - anod build gpr2 -Qcoverage,next
@@ -214,12 +69,11 @@ test_gpr2_cov:
     - mkdir $CI_PROJECT_DIR/coverage
 
     # save coverage results
-    - cov_dir=$SANDBOX/$HOST/$build_space/results/new
-    - mv $cov_dir/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
-    - mv $cov_dir/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
+    - mv $RESULTS_DIR/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
+    - mv $RESULTS_DIR/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
 
     # display coverage stats for global reporting
-    - echo_coverage_stats --coverage-file $cov_dir/coverage-xml/index.xml
+    - echo_coverage_stats --coverage-file $RESULTS_DIR/coverage-xml/index.xml
 
     # report initial test status code
     - exit $result

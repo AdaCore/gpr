@@ -1,7 +1,3 @@
-def all():
-    build()
-    test()
-
 def build():
     # customer scenario
     setup()
@@ -13,10 +9,6 @@ def setup():
     # general dependencies for gpr2 tools and libgpr2
     anod_install("stable-gprbuild")
     anod_install("gcc")
-    # for gprname
-    anod_install("libadalang")
-    anod_install("langkit_support")
     # gprbuild, gnat
-    anod_install("stable-libadalang-tools")
     anod_install("gdb")
     anod_install("e3")

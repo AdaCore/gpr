@@ -34,6 +34,13 @@ package body GPR2.Project.View is
    package Regexp_List is new Ada.Containers.Indefinite_Vectors
      (Positive, GNAT.Regexp.Regexp, "=" => GNAT.Regexp."=");
 
+   function Get_Main_Fullname (Self : Object; Main : String) return String;
+   --  Get the main attribute value, if the value contains any standard
+   --  suffix (.ada, .adb, .c) or any declared convention in the Naming
+   --  package then it returns the value as is.
+   --  Otherwise, the default Ada suffix or any Ada Naming convention
+   --  declared in Self is applied to the value.
+
    function Get_Ref (View : Object) return Definition.Ref is
      (Definition.Data (View.Get.Element.all)'Unchecked_Access);
 
@@ -1404,6 +1411,113 @@ package body GPR2.Project.View is
       return Definition.Strong (Definition.Get_RO (Self).Extending);
    end Extending;
 
+   -----------------------
+   -- Get_Main_Fullname --
+   -----------------------
+
+   function Get_Main_Fullname (Self : Object; Main : String) return String is
+      use GNATCOLL.Utils;
+
+      Default_Ada_MU_BS : constant String := ".ada";
+      Default_Ada_BS    : constant String :=
+                            PRA.Get
+                              (PRA.Naming.Body_Suffix).Default.Values ("ada");
+      Default_C_BS      : constant String :=
+                            PRA.Get
+                              (PRA.Naming.Body_Suffix).Default.Values ("c");
+      Ada_Index         : constant Attribute_Index.Object :=
+                            Attribute_Index.Create (Ada_Language);
+      Ada_BS_Defined    : constant Boolean :=
+                            Self.Attribute
+                              (PRA.Naming.Body_Suffix, Ada_Index).Is_Defined;
+      Ada_BS            : constant String :=
+                            (if Ada_BS_Defined
+                             then Self.Attribute
+                               (PRA.Naming.Body_Suffix, Ada_Index).Value.Text
+                             else "");
+
+      function Ends_With_One_Language (Main : String) return Boolean;
+      --  Check if Main ends with any Self language naming convention suffix
+
+      function Is_An_Exception (Main : String) return Boolean;
+      --  Check if Main is an exception and should not be matched
+      --  with classical language naming convention.
+
+      ----------------------------
+      -- Ends_With_One_Language --
+      ----------------------------
+
+      function Ends_With_One_Language (Main : String) return Boolean is
+         Ends_With_One : Boolean := False;
+      begin
+         for Lang of Self.Languages
+         loop
+            declare
+               L_Id   : constant Language_Id := +Name_Type (Lang.Text);
+               Index  : constant Attribute_Index.Object :=
+                          Attribute_Index.Create (L_Id);
+               BS_Def : constant Boolean :=
+                          Self.Attribute
+                            (PRA.Naming.Body_Suffix, Index).Is_Defined;
+               BS     : constant String :=
+                          (if BS_Def
+                           then Self.Attribute
+                             (PRA.Naming.Body_Suffix, Index).Value.Text
+                           else "");
+            begin
+               Ends_With_One :=
+                 Ends_With_One or else
+                 (if BS_Def then Ends_With (Main, BS) else False);
+            end;
+         end loop;
+
+         return Ends_With_One;
+      end Ends_With_One_Language;
+
+      ---------------------
+      -- Is_An_Exception --
+      ---------------------
+
+      function Is_An_Exception (Main : String) return Boolean is
+      begin
+         for Lang of Self.Languages
+         loop
+            declare
+               L_Id    : constant Language_Id := +Name_Type (Lang.Text);
+               Index   : constant Attribute_Index.Object :=
+                           Attribute_Index.Create (L_Id);
+               IEs_Def : constant Boolean :=
+                           Self.Attribute
+                             (PRA.Naming.Implementation_Exceptions,
+                              Index).Is_Defined;
+            begin
+               if IEs_Def then
+                  for Value of Self.Attribute
+                    (PRA.Naming.Implementation_Exceptions, Index).Values
+                  loop
+                     if Main = Value.Text then
+                        return True;
+                     end if;
+                  end loop;
+               end if;
+            end;
+         end loop;
+
+         return False;
+      end Is_An_Exception;
+
+   begin
+      return (if Is_An_Exception (Main)
+              or else Ends_With (Main, Default_Ada_MU_BS)
+              or else Ends_With (Main, Default_Ada_BS)
+              or else Ends_With (Main, Default_C_BS)
+              or else Ends_With_One_Language (Main)
+              then Main
+              elsif Ada_BS_Defined
+              then Main & Ada_BS
+              else Main & Default_Ada_BS);
+   end Get_Main_Fullname;
+
    ---------------------------
    -- Has_Aggregate_Context --
    ---------------------------
@@ -1487,11 +1601,46 @@ package body GPR2.Project.View is
 
    function Has_Mains (Self : Object) return Boolean is
       Attr : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
+
+      function Are_Valid (Mains : Project.Attribute.Object) return Boolean;
+      --  Check is main attribute values exists in the source of Self.
+
+      ---------------
+      -- Are_Valid --
+      ---------------
+
+      function Are_Valid (Mains : Project.Attribute.Object) return Boolean is
+         Src   : GPR2.Project.Source.Object;
+         Valid : Boolean := True;
+      begin
+         for Main of Mains.Values loop
+            declare
+               Main_Fullname : constant String :=
+                                 Get_Main_Fullname (Self, Main.Text);
+            begin
+               if not Self.Check_Source (Simple_Name (Main_Fullname), Src)
+               then
+                  Self.Tree.Append_Message
+                    (Message.Create
+                       (Level   => Message.Warning,
+                        Message => Main_Fullname &
+                          " is not a source of project " & String (Self.Name),
+                        Sloc    => Main));
+                  Valid := False;
+               end if;
+            end;
+         end loop;
+
+         return Valid;
+      end Are_Valid;
+
    begin
-      if not Attr.Is_Defined then
-         return False;
+      if Self.Is_Namespace_Root
+        and then (Attr.Is_Defined and then Attr.Count_Values > 0)
+      then
+         return Are_Valid (Mains => Attr);
       else
-         return Attr.Count_Values > 0;
+         return False;
       end if;
    end Has_Mains;
 
