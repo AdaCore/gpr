@@ -154,6 +154,10 @@ package body GPR2.Build.Tree_Db is
          end if;
       end loop;
 
+      for V of Self.Tree.Namespace_Root_Projects loop
+         V.Check_Mains (Messages);
+      end loop;
+
       if Self.Src_Option >= Sources_Units then
          for V of Self.Tree.Namespace_Root_Projects loop
             if V.Kind in With_Object_Dir_Kind then

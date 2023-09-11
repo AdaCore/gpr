@@ -17,6 +17,7 @@ with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Source;
 with GPR2.Build.Source.Sets;
 with GPR2.Build.View_Db;
+with GPR2.Message;
 with GPR2.Project.Attribute_Cache;
 with GPR2.Project.Definition;
 with GPR2.Project.Registry.Pack;
@@ -34,7 +35,8 @@ package body GPR2.Project.View is
    package Regexp_List is new Ada.Containers.Indefinite_Vectors
      (Positive, GNAT.Regexp.Regexp, "=" => GNAT.Regexp."=");
 
-   function Get_Main_Fullname (Self : Object; Main : String) return String;
+   function Get_Main_Fullname
+     (Self : Object; Main : String) return Simple_Name;
    --  Get the main attribute value, if the value contains any standard
    --  suffix (.ada, .adb, .c) or any declared convention in the Naming
    --  package then it returns the value as is.
@@ -1198,6 +1200,46 @@ package body GPR2.Project.View is
          return False;
    end Check_Attribute;
 
+   -----------------
+   -- Check_Mains --
+   -----------------
+
+   procedure Check_Mains
+     (Self : Object;
+      Messages : in out Log.Object)
+   is
+      Attr : Project.Attribute.Object;
+      Src  : GPR2.Build.View_Db.Source_Context;
+   begin
+      if not Self.Is_Namespace_Root then
+         return;
+      end if;
+
+      Attr := Self.Attribute (PRA.Main);
+
+      if not Attr.Is_Defined then
+         return;
+      end if;
+
+      for Main of Attr.Values loop
+         declare
+            Main_Fullname : constant Simple_Name :=
+                              Get_Main_Fullname (Self, Main.Text);
+         begin
+            Src := Self.View_Db.Visible_Source (Main_Fullname);
+
+            if not Src.Source.Is_Defined then
+               Messages.Append
+                 (Message.Create
+                    (Level   => Message.Warning,
+                     Message => Main.Text &
+                       " is not a source of project " & String (Self.Name),
+                     Sloc    => Main));
+            end if;
+         end;
+      end loop;
+   end Check_Mains;
+
    ------------------
    -- Check_Parent --
    ------------------
@@ -1415,7 +1457,9 @@ package body GPR2.Project.View is
    -- Get_Main_Fullname --
    -----------------------
 
-   function Get_Main_Fullname (Self : Object; Main : String) return String is
+   function Get_Main_Fullname
+     (Self : Object; Main : String) return Simple_Name
+   is
       use GNATCOLL.Utils;
 
       Default_Ada_MU_BS : constant String := ".ada";
@@ -1512,10 +1556,10 @@ package body GPR2.Project.View is
               or else Ends_With (Main, Default_Ada_BS)
               or else Ends_With (Main, Default_C_BS)
               or else Ends_With_One_Language (Main)
-              then Main
+              then Simple_Name (Main)
               elsif Ada_BS_Defined
-              then Main & Ada_BS
-              else Main & Default_Ada_BS);
+              then Simple_Name (Main & Ada_BS)
+              else Simple_Name (Main & Default_Ada_BS));
    end Get_Main_Fullname;
 
    ---------------------------
@@ -1600,45 +1644,29 @@ package body GPR2.Project.View is
    ---------------
 
    function Has_Mains (Self : Object) return Boolean is
-      Attr : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
-
-      function Are_Valid (Mains : Project.Attribute.Object) return Boolean;
-      --  Check is main attribute values exists in the source of Self.
-
-      ---------------
-      -- Are_Valid --
-      ---------------
-
-      function Are_Valid (Mains : Project.Attribute.Object) return Boolean is
-         Src   : GPR2.Project.Source.Object;
-         Valid : Boolean := True;
-      begin
-         for Main of Mains.Values loop
-            declare
-               Main_Fullname : constant String :=
-                                 Get_Main_Fullname (Self, Main.Text);
-            begin
-               if not Self.Check_Source (Simple_Name (Main_Fullname), Src)
-               then
-                  Self.Tree.Append_Message
-                    (Message.Create
-                       (Level   => Message.Warning,
-                        Message => Main_Fullname &
-                          " is not a source of project " & String (Self.Name),
-                        Sloc    => Main));
-                  Valid := False;
-               end if;
-            end;
-         end loop;
-
-         return Valid;
-      end Are_Valid;
+      Attr  : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
+      Src   : GPR2.Build.View_Db.Source_Context;
 
    begin
       if Self.Is_Namespace_Root
         and then (Attr.Is_Defined and then Attr.Count_Values > 0)
       then
-         return Are_Valid (Mains => Attr);
+         for Main of Attr.Values loop
+            declare
+               Main_Fullname : constant Simple_Name :=
+                                 Get_Main_Fullname (Self, Main.Text);
+            begin
+               Src := Self.View_Db.Visible_Source (Main_Fullname);
+
+               if Src.Source.Is_Defined then
+                  --  At least one valid
+                  return True;
+               end if;
+            end;
+         end loop;
+
+         return False;
+
       else
          return False;
       end if;

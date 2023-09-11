@@ -15,6 +15,7 @@ with Ada.Calendar;
 
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
@@ -542,6 +543,13 @@ package GPR2.Project.View is
 
    function Is_Runtime (Self : Object) return Boolean;
    --  Returns True if the project describes the runtime
+
+   procedure Check_Mains
+     (Self : Object;
+      Messages : in out Log.Object)
+     with Pre => Self.Is_Defined;
+   --  Check the validity of the Main attribute values and fill appropriate
+   --  error/warning in case they are not valid.
 
    function Has_Mains (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
