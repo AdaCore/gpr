@@ -20,3 +20,4 @@ Project: Demo4
                   language: Ada    Kind: S_BODY   unit: MAIN
 Project: Demo5
 demo5.gpr:3:25: error: "main.adb" is found multiple times for the same source directory
+demo5.gpr:5:18: warning: main.adb is not a source of project Demo5

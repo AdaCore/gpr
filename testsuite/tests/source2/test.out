@@ -1,4 +1,5 @@
 Project: Demo
+demo.gpr:6:18: warning: main.adb is not a source of project Demo
  > src/pck.ada.1
                   language: Ada    Kind: S_SPEC   unit: PCK
  > src/pck.ada.2

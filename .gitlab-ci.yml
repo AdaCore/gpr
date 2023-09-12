@@ -21,7 +21,7 @@ build:
     - anod run build
 
     # generate packages to be used at test stages.
-    - for pkg in gpr2-next libgpr2-next; do
+    - for pkg in libgpr2-next libgpr2-bare-next gpr2_next ; do
         echo "packaging $SANDBOX/$HOST/$pkg/install/" ;
         tar czf $CI_PROJECT_DIR/$pkg.tar.gz -C $SANDBOX/$HOST/$pkg/ install/ ;
       done
@@ -30,9 +30,9 @@ build:
 
   artifacts:
     paths:
-      - gpr2-next.tar.gz
+      - gpr2_next.tar.gz
       - libgpr2-next.tar.gz
-      - gpr1build.tar.gz
+      - libgpr2-bare-next.tar.gz
 
 ####################
 ## GPR2 TESTSUITE ##
@@ -41,8 +41,7 @@ build:
 test_gpr2:
   extends: .test_template
   script:
-    - setup_repos
-    - install_packages gpr2-next libgpr2-next
+    - install_packages gpr2_next libgpr2-next libgpr2-bare-next
     - run_testsuite gpr2 -Qnext test_gpr2
   artifacts:
     when:
@@ -59,7 +58,6 @@ test_gpr2:
 test_gpr2_cov:
   extends: .test_template
   script:
-    - setup_repos
     - anod build gpr2 -Qcoverage,next
     # do a normal testsuite run but save the exit code instead of just exiting
     # so that coverage artifacts can be saved and used.

@@ -14,6 +14,7 @@ variables:
    GIT_CLONE_BASE: https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}:${CI_SERVER_PORT}
    HOST: x86_64-linux
    TARGET: ""
+   CI_FRAGMENTS_BRANCH: ""
 
 # This step defines bash functions that are shared between jobs.
 # Note: before_script at toplevel is always executed, unless overriden by the
@@ -128,6 +129,15 @@ default:
          cmd="$cmd --add-dep $pkg"
       done
     fi
+
+    # to set when using a specific version of the generic CI
+    if [ x$CI_FRAGMENTS_BRANCH != x ]; then
+      cd /tmp
+      exec git clone $GIT_CLONE_BASE/eng/it/ci-fragments -b $CI_FRAGMENTS_BRANCH --depth 1
+      exec export PATH=/tmp/ci-fragments:$PATH
+      cd -
+    fi
+
     exec eval $cmd
     echo "sourcing the generic CI environment"
     . /tmp/ci_env.sh

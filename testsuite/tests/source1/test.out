@@ -1,6 +1,7 @@
 Project: Demo1
  > src1/main.adb      language: Ada    Kind: S_BODY   unit: MAIN
 Project: Demo2
+demo2.gpr:6:18: warning: main.adb is not a source of project Demo2
  > src1/demo1.gpr     language: Ada    Kind: S_SPEC   unit: DEMO1
  > src1/demo2.gpr     language: Ada    Kind: S_SPEC   unit: DEMO2
  > src2/file.ab       language: Ada    Kind: S_BODY   unit: FILE
