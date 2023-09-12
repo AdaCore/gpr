@@ -8,6 +8,8 @@ workflow:
       when: always
     - if: $CI_PIPELINE_SOURCE == "scheduled"
       when: always
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: always
     - when: never
 
 variables:
