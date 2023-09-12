@@ -6,9 +6,6 @@ def build():
     anod_build("gprbuild")
 
 def bootstrap():
-    anod_build("libadalang")
-    anod_build("gpr2")
-    anod_build("gprbuild")
     anod_build("gnat")
 
 def test():
