@@ -52,15 +52,111 @@ procedure Main is
    Ctx : Context.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo1.gpr"), Ctx);
+   Project.Tree.Load (Prj, Create ("prj/demo1.gpr"), Ctx);
+   Prj.Update_Sources;
    Display (Prj.Root_Project);
+   Prj.Log_Messages.Output_Messages
+     (Information    => False,
+      Warning        => True,
+      Error          => False);
+   Prj.Unload;
 
-   Project.Tree.Load (Prj, Create ("demo2.gpr"), Ctx);
+   Project.Tree.Load (Prj, Create ("prj/demo2.gpr"), Ctx);
+   Prj.Update_Sources;
    Display (Prj.Root_Project);
+   Prj.Log_Messages.Output_Messages
+     (Information    => False,
+      Warning        => True,
+      Error          => False);
+   Prj.Unload;
 
-   Project.Tree.Load (Prj, Create ("demo3.gpr"), Ctx);
+   Project.Tree.Load (Prj, Create ("prj/demo3.gpr"), Ctx);
+   Prj.Update_Sources;
    Display (Prj.Root_Project);
+   Prj.Log_Messages.Output_Messages
+     (Information    => False,
+      Warning        => True,
+      Error          => False);
+   Prj.Unload;
 
-   Project.Tree.Load (Prj, Create ("demo4.gpr"), Ctx);
+   Project.Tree.Load (Prj, Create ("prj/demo4.gpr"), Ctx);
+   Prj.Update_Sources;
    Display (Prj.Root_Project);
+   Prj.Log_Messages.Output_Messages
+     (Information    => False,
+      Warning        => True,
+      Error          => False);
+   Prj.Unload;
+
+   Project.Tree.Load (Prj, Create ("prj/demo5.gpr"), Ctx);
+   Prj.Update_Sources;
+   Display (Prj.Root_Project);
+   Prj.Log_Messages.Output_Messages
+     (Information    => False,
+      Warning        => True,
+      Error          => False);
+   Prj.Unload;
+
+   Project.Tree.Load (Prj, Create ("prj/demo6.gpr"), Ctx);
+   Prj.Update_Sources;
+   Display (Prj.Root_Project);
+   Prj.Log_Messages.Output_Messages
+     (Information    => False,
+      Warning        => True,
+      Error          => False);
+   Prj.Unload;
+
+   Project.Tree.Load (Prj, Create ("prj/demo7.gpr"), Ctx);
+   Prj.Update_Sources;
+   Display (Prj.Root_Project);
+   Prj.Log_Messages.Output_Messages
+     (Information    => False,
+      Warning        => True,
+      Error          => False);
+   Prj.Unload;
+
+   Project.Tree.Load (Prj, Create ("prj/demo8.gpr"), Ctx);
+   Prj.Update_Sources;
+   Display (Prj.Root_Project);
+   Prj.Log_Messages.Output_Messages
+     (Information    => False,
+      Warning        => True,
+      Error          => False);
+   Prj.Unload;
+
+   Project.Tree.Load (Prj, Create ("prj/demo9.gpr"), Ctx);
+   Prj.Update_Sources;
+   Display (Prj.Root_Project);
+   Prj.Log_Messages.Output_Messages
+     (Information    => False,
+      Warning        => True,
+      Error          => False);
+   Prj.Unload;
+
+   Project.Tree.Load (Prj, Create ("prj/demo10.gpr"), Ctx);
+   Prj.Update_Sources;
+   Display (Prj.Root_Project);
+   Prj.Log_Messages.Output_Messages
+     (Information    => False,
+      Warning        => True,
+      Error          => False);
+   Prj.Unload;
+
+   Project.Tree.Load (Prj, Create ("prj/demo11.gpr"), Ctx);
+   Prj.Update_Sources;
+   Display (Prj.Root_Project);
+   Prj.Log_Messages.Output_Messages
+     (Information    => False,
+      Warning        => True,
+      Error          => False);
+   Prj.Unload;
+
+   Project.Tree.Load (Prj, Create ("prj/demo12.gpr"), Ctx);
+   Prj.Update_Sources;
+   Display (Prj.Root_Project);
+   Prj.Log_Messages.Output_Messages
+     (Information    => False,
+      Warning        => True,
+      Error          => False);
+   Prj.Unload;
 end Main;

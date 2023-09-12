@@ -1,0 +1,5 @@
+project Demo4 is
+  for Source_Dirs use ("src");
+  for Exec_Dir use "exec4";
+  for Main use ("not_found.adb");
+end Demo4;

@@ -339,6 +339,13 @@ procedure GPRclean.Main is
 
       end;
 
+      if View.Has_Mains
+        and then View.Mains.Is_Empty
+      then
+         GPRtools.Util.Output_Messages (Options);
+         GPRtools.Util.Fail_Program ("problems with main sources");
+      end if;
+
       for S of View.Sources loop
          declare
             Cleanup : Boolean := True;
