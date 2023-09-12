@@ -84,6 +84,60 @@ default:
       exec rm -f $CI_PROJECT_DIR/*.tar.gz
     }
 
+    install_cache() {
+      # input:
+      # no parameter: only the install subdir is installed
+      # "full": the build_trees are installed
+      # "gnat [<target>]": same as no parameter, plus gnat is installed
+      #   for the optional target, and amended with up-to-date gprbuild
+
+      local full=""
+      local gnat=""
+      local target=""
+
+      if [ ! -d $CI_PROJECT_DIR/cache ]; then
+        return 0
+      fi
+
+      if [ x$1 = xfull ]; then
+         full=1
+      else
+        if [ x$1 != x ]; then
+          gnat=$1
+          if [ x$2 != x ]; then
+            target=$2
+          fi
+        fi
+      fi
+
+      exec mkdir -p $SANDBOX/$HOST
+
+      if [ $full ]; then
+        exec rsync -a $CI_PROJECT_DIR/cache/* $SANDBOX/$HOST/
+      else
+        cd $CI_PROJECT_DIR/cache
+        for pkg in *; do
+          exec mkdir -p $SANDBOX/$HOST/$pkg
+          exec rsync -a $pkg/install $SANDBOX/$HOST/$pkg/
+
+          for json in install download-bin; do
+            exec mkdir -p $SANDBOX/fingerprints
+            exec touch $SANDBOX/fingerprints/$HOST.$pkg.$json.json.assume-unchanged
+          done
+        done
+        cd -
+      fi
+
+      # patch GNAT if requested
+      if [ x$gnat != x ]; then
+        exec anod install $gnat $target
+        local work_dir=$(anod info install $gnat $target --show working_dir)
+        exec rsync -a $CI_PROJECT_DIR/cache/gprbuild/install/* $work_dir/install/
+      fi
+
+      exec rm -rf $CI_PROJECT_DIR/cache
+    }
+
     ######################
     # RUNNING TESTSUITES #
     ######################
@@ -145,6 +199,7 @@ default:
      - image:e3
      - cpu:8
      - mem:16
+  interruptible: true
 
 .test_template:
   extends: .job_template
