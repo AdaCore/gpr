@@ -1,0 +1,6 @@
+project Ext extends "P" is
+
+   for Object_Dir use "objext";
+   for Excluded_Source_Files use ("pkg.ads");
+
+end Ext;

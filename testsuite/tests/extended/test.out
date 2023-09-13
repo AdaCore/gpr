@@ -9,6 +9,4 @@ Prj1     obj_dir=obj1 K_STANDARD
 **************** Iterator Prj2
 Prj2     obj_dir=obj2 K_STANDARD
  > /p1/pck1.ads   language: Ada    Kind: S_SPEC   unit: PCK1
- > /p1/pck11.ads
-                  language: Ada    Kind: S_SPEC   unit: PCK11
  > /p2/pck2.ads   language: Ada    Kind: S_SPEC   unit: PCK2

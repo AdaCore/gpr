@@ -112,6 +112,13 @@ package body GPR2.Build.Tree_Db is
       Self.Src_Option := Option;
 
       for V of Self.Tree.Ordered_Views loop
+         if V.Kind in With_Object_Dir_Kind then
+            View_Tables.Check_Source_Lists
+              (View_Tables.Get_Data (Self.Self, V), Messages);
+         end if;
+      end loop;
+
+      for V of Self.Tree.Ordered_Views loop
          if V.Kind in With_Object_Dir_Kind
            and then (Self.With_RTS or else V.Id /= View_Ids.Runtime_View_Id)
          then
@@ -210,7 +217,6 @@ package body GPR2.Build.Tree_Db is
             end if;
          end loop;
       end if;
-
    end Refresh;
 
    function Tree (Self : Object) return access GPR2.Project.Tree.Object is

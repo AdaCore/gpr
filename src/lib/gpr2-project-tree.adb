@@ -3109,49 +3109,6 @@ package body GPR2.Project.Tree is
             end case;
          end;
 
-         --  Check source list files
-
-         if View.Kind in K_Standard | K_Library then
-            declare
-               Att  : Attribute.Object;
-               File : Path_Name.Object;
-            begin
-               if View.Check_Attribute
-                 (PRA.Source_List_File, Result => Att)
-               then
-                  File := Path_Name.Create_File
-                    (Filename_Type (Att.Value.Text),
-                     Filename_Type (View.Path_Name.Dir_Name));
-
-                  if not File.Exists or else File.Is_Directory then
-                     Self.Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "source list file " & File.Value & " not found",
-                           Sloc => View.Attribute_Location
-                             (PRA.Source_List_File)));
-                  end if;
-               end if;
-
-               if View.Check_Attribute
-                 (PRA.Excluded_Source_List_File, Result => Att)
-               then
-                  File := Path_Name.Create_File
-                    (Filename_Type (Att.Value.Text),
-                     Filename_Type (View.Path_Name.Dir_Name));
-
-                  if not File.Exists or else File.Is_Directory then
-                     Self.Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "excluded source list file "
-                           & File.Value & " not found",
-                           Sloc => View.Attribute_Location
-                             (PRA.Excluded_Source_List_File)));
-                  end if;
-               end if;
-            end;
-         end if;
       end Validity_Check;
 
    begin

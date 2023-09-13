@@ -7,3 +7,4 @@ bnr.build(project='prj.gpr',
           env={})
 
 bnr.call(['./main', 'trees/simple/simple.gpr'])
+bnr.call(['./main', 'trees/extended/ext.gpr'])

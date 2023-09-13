@@ -37,6 +37,8 @@ procedure Main is
       Log  : GPR2.Log.Object;
    begin
       Project.Tree.Load (Prj, Create (Project_Name), Ctx);
+      Prj.Log_Messages.Output_Messages (Information => False);
+
       Prj.Update_Sources (Messages => Log);
 
       Log.Output_Messages (Information => False);

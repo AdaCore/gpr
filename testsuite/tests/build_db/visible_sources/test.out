@@ -20,12 +20,12 @@ simple.gpr:6:23: warning: object directory "obj/simple" not found
 
 * Sources *
 
-sources of B
+sources visible by B
 - src/b/header.h (spec)
 - src/b/header2.h (spec)
 - src/b/pkg2.ads (spec)
   PKG2 (spec)
-sources of A
+sources visible by A
 - src/a/header.h (spec)
 - src/b/header2.h (spec)
 - src/a/pkg.adb (body)
@@ -36,7 +36,7 @@ sources of A
   PKG2 (body)
 - src/b/pkg2.ads (spec)
   PKG2 (spec)
-sources of Simple
+sources visible by Simple
 - src/simple/foo.c (body)
 - src/a/header.h (spec)
 - src/b/header2.h (spec)
@@ -51,3 +51,15 @@ sources of Simple
 - src/b/pkg2.ads (spec)
   PKG2 (spec)
 
+* Units *
+
+MAIN
+- S_BODY main.adb
+PKG
+- S_SPEC pkg.ads
+- S_BODY pkg.adb
+PKG2
+- S_SPEC pkg2.ads
+- S_BODY pkg2.adb
+
+ext.gpr:1:13: error: extended project file "P.gpr" not found
