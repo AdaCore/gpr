@@ -324,7 +324,7 @@ package body GPRtools.Util is
       if Value (GPR_Tool, Default => "") = "" then
          Set
            (GPR_Tool,
-            (if Name in "gprclean" | "gprbuild" | "gprls" | "gprname"
+            (if Name in "gprclean" | "gprbuild" | "gprls"
                  | "gprinstall" | "gprdump" | "gprdoc"
              then "gprbuild"
              else Name));
