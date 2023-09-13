@@ -1,14 +1,5 @@
 def build():
     # customer scenario
-    setup()
     anod_build("libgpr2", qualifier="bare,next")
     anod_build("libgpr2", qualifier="next")
     anod_build("gpr2", qualifier="next")
-
-def setup():
-    # general dependencies for gpr2 tools and libgpr2
-    anod_install("stable-gprbuild")
-    anod_install("gcc")
-    # gprbuild, gnat
-    anod_install("gdb")
-    anod_install("e3")

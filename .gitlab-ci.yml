@@ -4,6 +4,14 @@ stages:
   - build
   - test
 
+.gpr2_test_template:
+  extends: .test_template
+  cache:
+    - key: $CI_COMMIT_REF_SLUG
+      policy: pull
+      paths:
+        - cache
+
 ###########
 ## BUILD ##
 ###########
@@ -13,35 +21,34 @@ build:
   stage: build
   variables:
     JOB_SUBPROJECTS: eng/gpr/gprbuild eng/gpr/gprconfig_kb
+  cache:
+    - key: $CI_COMMIT_REF_SLUG
+      fallback_keys:
+        - master
+      paths:
+        - cache
   script:
     # Tune to use our build & test plan
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
 
-    # and build it...
+    # if a cached sandbox exists, use it
+    - install_cache full
+
+    # (re)build gpr2
     - anod run build
 
-    # generate packages to be used at test stages.
-    - for pkg in libgpr2-next libgpr2-bare-next gpr2_next ; do
-        echo "packaging $SANDBOX/$HOST/$pkg/install/" ;
-        tar czf $CI_PROJECT_DIR/$pkg.tar.gz -C $SANDBOX/$HOST/$pkg/ install/ ;
-      done
-    - cd $CI_PROJECT_DIR
-    - ls -l *.tar.gz
-
-  artifacts:
-    paths:
-      - gpr2_next.tar.gz
-      - libgpr2-next.tar.gz
-      - libgpr2-bare-next.tar.gz
+    # Save gpr builds and libadalang in cache to speed up a re-build
+    - mkdir -p $CI_PROJECT_DIR/cache
+    - rsync -a $SANDBOX/$HOST/*gpr*next* $CI_PROJECT_DIR/cache/
 
 ####################
 ## GPR2 TESTSUITE ##
 ####################
 
 test_gpr2:
-  extends: .test_template
+  extends: .gpr2_test_template
   script:
-    - install_packages gpr2_next libgpr2-next libgpr2-bare-next
+    - install_cache
     - run_testsuite gpr2 -Qnext test_gpr2
   artifacts:
     when:
@@ -59,6 +66,7 @@ test_gpr2_cov:
   extends: .test_template
   script:
     - anod build gpr2 -Qcoverage,next
+
     # do a normal testsuite run but save the exit code instead of just exiting
     # so that coverage artifacts can be saved and used.
     - result=0
