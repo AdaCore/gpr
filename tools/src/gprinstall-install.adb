@@ -1341,6 +1341,9 @@ package body GPRinstall.Install is
                   end if;
 
                elsif Link_Lib_Dir /= Lib_Dir then
+                  pragma Warnings
+                    (Off,
+                     "this code can never be executed and has been deleted");
                   if Is_Windows_Host then
                      Copy_File
                        (From       => Lib_Dir,
@@ -1354,6 +1357,9 @@ package body GPRinstall.Install is
                         File       => Project.Library_Filename.Name,
                         Sym_Link   => True);
                   end if;
+                  pragma Warnings
+                    (On,
+                     "this code can never be executed and has been deleted");
 
                   --  Copy also the versioned library if any
 
