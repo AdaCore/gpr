@@ -4,10 +4,16 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Strings.Fixed;
+with Ada.Strings.Maps.Constants;
+with Ada.Text_IO;
+with GNAT.OS_Lib;
+
 with GPR2.Build.Source.Ada_Parser;
 with GPR2.Build.Tree_Db;
-with GPR2.Containers;
+with GPR2.Project.Attribute;
 with GPR2.Message;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
 
 package body GPR2.Build.View_Tables is
@@ -49,6 +55,20 @@ package body GPR2.Build.View_Tables is
      (From : View_Data_Ref;
       CU   : Name_Type;
       Root : View_Data_Ref);
+
+   procedure Read_Source_List
+     (View      : Project.View.Object;
+      Attr      : Project.Attribute.Object;
+      Set       : in out Source_Set.Set;
+      Messages  : in out GPR2.Log.Object);
+   --  Read from file defined in project attribute Attr_Name and insert each
+   --  line into Set
+
+   procedure Include_Simple_Filename
+     (Set      : in out Source_Set.Set;
+      Value    : Value_Type;
+      Sloc     : Source_Reference.Object'Class;
+      Messages : in out GPR2.Log.Object);
 
    package Update_Sources_List is
       procedure Process
@@ -279,6 +299,70 @@ package body GPR2.Build.View_Tables is
       end loop;
    end Check_Separate;
 
+   ------------------------
+   -- Check_Source_Lists --
+   ------------------------
+
+   procedure Check_Source_Lists
+     (Data     : View_Data_Ref;
+      Messages : in out GPR2.Log.Object)
+   is
+      package PRA renames Project.Registry.Attribute;
+
+      Attr : Project.Attribute.Object;
+
+   begin
+      Data.Excluded_Sources.Clear;
+      Data.Listed_Sources.Clear;
+
+      --  If we have attribute Excluded_Source_List_File
+
+      Attr := Data.View.Attribute (PRA.Excluded_Source_List_File);
+
+      if Attr.Is_Defined then
+         Read_Source_List
+           (Data.View, Attr, Data.Excluded_Sources, Messages);
+      end if;
+
+      --  If we have attribute Excluded_Source_Files
+
+      Attr := Data.View.Attribute (PRA.Excluded_Source_Files);
+
+      if Attr.Is_Defined then
+         for File of Attr.Values loop
+            Include_Simple_Filename
+              (Data.Excluded_Sources, File.Text, File, Messages);
+         end loop;
+      end if;
+
+      --  Remove naming exception sources from inactive case alternatives
+
+      for File of Data.View.Skipped_Sources loop
+         Include_Simple_Filename
+           (Data.Excluded_Sources, File.Text, File, Messages);
+      end loop;
+
+      --  If we have attribute Source_List_File
+
+      Attr := Data.View.Attribute (PRA.Source_List_File);
+
+      if Attr.Is_Defined then
+         Read_Source_List
+           (Data.View, Attr, Data.Listed_Sources, Messages);
+      end if;
+
+      --  If we have attribute Source_Files
+
+      Attr := Data.View.Attribute (PRA.Source_Files);
+
+      if Attr.Is_Defined then
+         for File of Attr.Values loop
+            Include_Simple_Filename
+              (Data.Listed_Sources, File.Text, File, Messages);
+         end loop;
+      end if;
+   end Check_Source_Lists;
+
    --------------
    -- Get_Data --
    --------------
@@ -290,6 +374,99 @@ package body GPR2.Build.View_Tables is
    begin
       return -Db.View_Database (View);
    end Get_Data;
+
+   -----------------------------
+   -- Include_Simple_Filename --
+   -----------------------------
+
+   procedure Include_Simple_Filename
+     (Set      : in out Source_Set.Set;
+      Value    : Value_Type;
+      Sloc     : Source_Reference.Object'Class;
+      Messages : in out GPR2.Log.Object)
+   is
+      Position : Source_Set.Cursor;
+      Inserted : Boolean;
+   begin
+      if Has_Directory_Separator (Value) then
+         Messages.Append
+           (Message.Create
+              (Message.Error,
+               "file name cannot include directory information (""" & Value
+               & """)",
+               Sloc));
+
+      elsif Value'Length = 0 then
+         Messages.Append
+           (Message.Create
+              (Message.Error,
+               "file name cannot be empty",
+               Sloc));
+      else
+         Set.Insert (Filename_Type (Value), Position, Inserted);
+      end if;
+   end Include_Simple_Filename;
+
+   ----------------------
+   -- Read_Source_List --
+   ----------------------
+
+   procedure Read_Source_List
+     (View      : Project.View.Object;
+      Attr      : Project.Attribute.Object;
+      Set       : in out Source_Set.Set;
+      Messages  : in out GPR2.Log.Object)
+   is
+      use Ada.Strings;
+      use type Ada.Strings.Maps.Character_Set;
+      package PRA renames Project.Registry.Attribute;
+
+      Filename : constant GPR2.Path_Name.Object :=
+                   (if GNAT.OS_Lib.Is_Absolute_Path (Attr.Value.Text)
+                    then Path_Name.Create_File
+                      (Filename_Type (Attr.Value.Text))
+                    else View.Dir_Name.Compose
+                      (Filename_Type (Attr.Value.Text)));
+      Skip_Set : constant Strings.Maps.Character_Set :=
+                   Maps.Constants.Control_Set or Maps.To_Set (" ");
+      F        : Text_IO.File_Type;
+
+   begin
+      if View.Kind not in K_Standard | K_Library then
+         return;
+      end if;
+
+      if not Filename.Exists or else Filename.Is_Directory then
+         Messages.Append
+           (Message.Create
+              (Message.Error,
+               (if Attr.Name.Id = PRA.Excluded_Source_List_File
+                then "excluded "
+                else "") & "source list file " & Filename.Value & " not found",
+               Sloc => Attr));
+
+         return;
+      end if;
+
+      Text_IO.Open (F, Text_IO.In_File, Filename.Value);
+
+      while not Text_IO.End_Of_File (F) loop
+         declare
+            Line : constant String :=
+                     Fixed.Trim (Text_IO.Get_Line (F), Skip_Set, Skip_Set);
+
+         begin
+            if Line /= ""
+              and then not GNATCOLL.Utils.Starts_With (Line, "--")
+            then
+               Include_Simple_Filename
+                 (Set, Line, Attr, Messages);
+            end if;
+         end;
+      end loop;
+
+      Text_IO.Close (F);
+   end Read_Source_List;
 
    -------------
    -- Refresh --
@@ -524,13 +701,17 @@ package body GPR2.Build.View_Tables is
                Ext_Data : constant View_Data_Ref :=
                             Get_Data (Data.Tree_Db, Data.View.Extending);
             begin
-               Add_Source
-                 (Ext_Data,
-                  Src.View,
-                  Src.Path_Name,
-                  Extended_View      => Data.View,
-                  Resolve_Visibility => True,
-                  Messages           => Messages);
+               if not Ext_Data.Excluded_Sources.Contains
+                 (GPR2.Path_Name.Simple_Name (String (Src.Path_Name)))
+               then
+                  Add_Source
+                    (Ext_Data,
+                     Src.View,
+                     Src.Path_Name,
+                     Extended_View      => Data.View,
+                     Resolve_Visibility => True,
+                     Messages           => Messages);
+               end if;
             end;
          end if;
 

@@ -5,11 +5,6 @@
 --
 
 with Ada.Containers.Doubly_Linked_Lists;
-with Ada.Strings.Maps.Constants;
-with Ada.Strings.Fixed;
-with Ada.Text_IO;
-
-with GNAT.OS_Lib;
 
 with GPR2.Containers;
 with GPR2.Project.Attribute;
@@ -61,16 +56,8 @@ package body Update_Sources_List is
    package Naming_Schema_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (Language_Id, Naming_Schema, GPR2.Hash, GPR2."=");
 
-   package Source_Set renames Containers.Filename_Type_Set;
-
    package Lang_Boolean_Map is new Ada.Containers.Hashed_Maps
      (Language_Id, Boolean, Hash, "=");
-
-   procedure Include_Simple_Filename
-     (Set      : in out Source_Set.Set;
-      Value    : Value_Type;
-      Sloc     : SR.Value.Object;
-      Messages : in out GPR2.Log.Object);
 
    function Naming_Exception_Equal
      (A : Project.Attribute.Object;
@@ -91,14 +78,6 @@ package body Update_Sources_List is
       Map  : in out Naming_Schema_Maps.Map);
    --  Populate Map with the naming schema information from view, for every
    --  language in use for the view.
-
-   procedure Read_Source_List
-     (View      : Project.View.Object;
-      Attr      : Project.Attribute.Object;
-      Set       : in out Source_Set.Set;
-      Messages  : in out GPR2.Log.Object);
-   --  Read from file defined in project attribute Attr_Name and insert each
-   --  line into Set
 
    function Compute_Unit_From_Filename
      (File     : Filename_Type;
@@ -308,31 +287,6 @@ package body Update_Sources_List is
       end loop;
    end Fill_Naming_Schema;
 
-   -----------------------------
-   -- Include_Simple_Filename --
-   -----------------------------
-
-   procedure Include_Simple_Filename
-     (Set      : in out Source_Set.Set;
-      Value    : Value_Type;
-      Sloc     : SR.Value.Object;
-      Messages : in out GPR2.Log.Object)
-   is
-      Position : Source_Set.Cursor;
-      Inserted : Boolean;
-   begin
-      if Has_Directory_Separator (Value) then
-         Messages.Append
-           (Message.Create
-              (Message.Error,
-               "file name cannot include directory information (""" & Value
-               & """)",
-               Sloc));
-      else
-         Set.Insert (Filename_Type (Value), Position, Inserted);
-      end if;
-   end Include_Simple_Filename;
-
    -------------
    -- Process --
    -------------
@@ -373,10 +327,6 @@ package body Update_Sources_List is
       --  Collection of source simple names for a given Source_Dirs value
 
       Naming_Schema_Map       : Naming_Schema_Maps.Map;
-
-      Listed_Sources          : Source_Set.Set;
-      Excluded_Sources        : Source_Set.Set;
-      --  Has either Source_Files or Source_List_File attributes
 
       Tree                    : constant not null access Project.Tree.Object :=
                                   Data.View.Tree;
@@ -497,9 +447,9 @@ package body Update_Sources_List is
          --  Stop here if it's one of the excluded sources, or it's not in the
          --  included sources if those are given explicitely.
 
-         if Excluded_Sources.Contains (Basename)
-           or else (not Listed_Sources.Is_Empty
-                    and then not Listed_Sources.Contains (Basename))
+         if Data.Excluded_Sources.Contains (Basename)
+           or else (not Data.Listed_Sources.Is_Empty
+                    and then not Data.Listed_Sources.Contains (Basename))
          then
             return False;
          end if;
@@ -812,53 +762,6 @@ package body Update_Sources_List is
            (Data.View, PRA.Naming.Body_N.Attr, Ada_Naming_Exceptions);
       end if;
 
-      --  If we have attribute Excluded_Source_List_File
-
-      Attr := Data.View.Attribute (PRA.Excluded_Source_List_File);
-
-      if Attr.Is_Defined then
-         Read_Source_List
-           (Data.View, Attr, Excluded_Sources, Messages);
-      end if;
-
-      --  If we have attribute Excluded_Source_Files
-
-      Attr := Data.View.Attribute (PRA.Excluded_Source_Files);
-
-      if Attr.Is_Defined then
-         for File of Attr.Values loop
-            Include_Simple_Filename
-              (Excluded_Sources, File.Text, File, Messages);
-         end loop;
-      end if;
-
-      --  Remove naming exception sources from inactive case alternatives
-
-      for File of Data.View.Skipped_Sources loop
-         Include_Simple_Filename
-           (Excluded_Sources, File.Text, File, Messages);
-      end loop;
-
-      --  If we have attribute Source_List_File
-
-      Attr := Data.View.Attribute (PRA.Source_List_File);
-
-      if Attr.Is_Defined then
-         Read_Source_List
-           (Data.View, Attr, Listed_Sources, Messages);
-      end if;
-
-      --  If we have attribute Source_Files
-
-      Attr := Data.View.Attribute (PRA.Source_Files);
-
-      if Attr.Is_Defined then
-         for File of Attr.Values loop
-            Include_Simple_Filename
-              (Listed_Sources, File.Text, File, Messages);
-         end loop;
-      end if;
-
       --  Lookup for all files in the source directories
 
       Data.Src_Files.Clear;
@@ -957,8 +860,8 @@ package body Update_Sources_List is
       Previous_Files.Clear;
 
       --  Check that we've found all the listed sources
-      for S of Listed_Sources loop
-         if not Excluded_Sources.Contains (S)
+      for S of Data.Listed_Sources loop
+         if not Data.Excluded_Sources.Contains (S)
            and then not Data.Sources.Contains (S)
          then
             Messages.Append
@@ -1054,56 +957,5 @@ package body Update_Sources_List is
          end loop;
       end if;
    end Process;
-
-   ---------------
-   -- Read_File --
-   ---------------
-
-   procedure Read_Source_List
-     (View      : Project.View.Object;
-      Attr      : Project.Attribute.Object;
-      Set       : in out Source_Set.Set;
-      Messages  : in out GPR2.Log.Object)
-   is
-      use Ada.Strings;
-      use type Ada.Strings.Maps.Character_Set;
-
-      Filename : constant GPR2.Path_Name.Full_Name :=
-                   (if GNAT.OS_Lib.Is_Absolute_Path (Attr.Value.Text)
-                    then Attr.Value.Text
-                    else View.Dir_Name.Compose
-                      (Filename_Type (Attr.Value.Text)).Value);
-      Skip_Set : constant Strings.Maps.Character_Set :=
-                   Maps.Constants.Control_Set or Maps.To_Set (" ");
-      F        : Text_IO.File_Type;
-
-   begin
-      Text_IO.Open (F, Text_IO.In_File, Filename);
-
-      while not Text_IO.End_Of_File (F) loop
-         declare
-            Line : constant String :=
-                     Fixed.Trim (Text_IO.Get_Line (F), Skip_Set, Skip_Set);
-
-         begin
-            if Line /= ""
-              and then not GNATCOLL.Utils.Starts_With (Line, "--")
-            then
-               if Has_Directory_Separator (Line) then
-                  Messages.Append
-                    (Message.Create
-                       (Message.Error,
-                        "file name cannot include directory information ("""
-                        & Line & """)",
-                        Attr));
-               else
-                  Set.Include (Filename_Type (Line));
-               end if;
-            end if;
-         end;
-      end loop;
-
-      Text_IO.Close (F);
-   end Read_Source_List;
 
 end Update_Sources_List;

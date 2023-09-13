@@ -2,6 +2,7 @@ with Ada.Real_Time;     use Ada.Real_Time;
 with Ada.Command_Line;
 with Ada.Text_IO;
 
+with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
 with GPR2.Build.Source.Sets;
@@ -172,7 +173,7 @@ procedure Main is
          if V /= Tree.Runtime_Project
            and then V.Kind in GPR2.With_Object_Dir_Kind
          then
-            Ada.Text_IO.Put ("sources of " & String (V.Name));
+            Ada.Text_IO.Put ("sources visible by " & String (V.Name));
 
             if V.Is_Extended then
                Ada.Text_IO.Put (" extended by " &
@@ -186,6 +187,32 @@ procedure Main is
                Print_Source (S);
             end loop;
          end if;
+      end loop;
+
+      Ada.Text_IO.New_Line;
+      Ada.Text_IO.Put_Line ("* Units *");
+      Ada.Text_IO.New_Line;
+
+      for NS of Tree.Namespace_Root_Projects loop
+         for U of NS.Units loop
+            Ada.Text_IO.Put_Line (String (U.Name));
+
+            for Kind in GPR2.Build.S_Spec .. GPR2.Build.S_Body loop
+               if U.Has_Part (Kind) then
+                  Ada.Text_IO.Put_Line ("- " & Kind'Image & " " & String (U.Get (Kind).Source.Simple_Name));
+               end if;
+               for C in U.Separates.Iterate loop
+                  declare
+                     Key : constant Name_Type :=
+                             GPR2.Build.Compilation_Unit.Separate_Maps.Key (C);
+                     Elem : constant GPR2.Build.Compilation_Unit.Unit_Location :=
+                              GPR2.Build.Compilation_Unit.Separate_Maps.Element (C);
+                  begin
+                     Ada.Text_IO.Put_Line ("- " & String (Key) & " " & String (Elem.Source.Simple_Name));
+                  end;
+               end loop;
+            end loop;
+         end loop;
       end loop;
 
       Tree.Unload;

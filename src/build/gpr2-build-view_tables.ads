@@ -11,6 +11,7 @@ with Ada.Containers.Indefinite_Ordered_Sets;
 
 with GNATCOLL.Refcount;
 
+with GPR2.Containers;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View.Set;
@@ -127,6 +128,8 @@ private package GPR2.Build.View_Tables is
       GPR2."=",
       GPR2.Project.View.Set."=");
 
+   package Source_Set renames GPR2.Containers.Filename_Type_Set;
+
    type View_Data (Is_Root : Boolean) is record
       --  Static data:
 
@@ -157,6 +160,11 @@ private package GPR2.Build.View_Tables is
       --  raw list of object files, used to check updates
       Ali_Files       : File_Info_Maps.Map;
       --  raw list of ali files, used to check updates
+      Listed_Sources   : Source_Set.Set;
+      --  content of Source_Files and Source_List_File attributes
+      Excluded_Sources : Source_Set.Set;
+      --  content of Excluded_Source_Files and Excluded_Source_List_File
+      --  attributes.
 
       Own_CUs         : Unit_Maps.Map;
       --  The compilation units whose main unit belongs to the table's view
@@ -180,6 +188,14 @@ private package GPR2.Build.View_Tables is
    package Data_Refs is new GNATCOLL.Refcount.Shared_Pointers (View_Data);
 
    subtype View_Data_Ref is Data_Refs.Reference_Type;
+
+   procedure Check_Source_Lists
+     (Data     : View_Data_Ref;
+      Messages : in out GPR2.Log.Object);
+   --  Check the attributes Source_File_List, Source_Files,
+   --  Excluded_Source_File_List and Excluded_Source_Files and fill the
+   --  corresponding structures in Data.
+   --  To be called before refreshing the sources.
 
    procedure Add_Source
      (Data               : View_Data_Ref;
