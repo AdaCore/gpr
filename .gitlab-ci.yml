@@ -5,6 +5,14 @@ stages:
   - test
   - post
 
+.gpr2_test_template:
+  extends: .test_template
+  cache:
+    - key: $CI_COMMIT_REF_SLUG
+      policy: pull
+      paths:
+        - cache
+
 ###########
 ## BUILD ##
 ###########
@@ -14,56 +22,74 @@ build:
   stage: build
   variables:
     JOB_SUBPROJECTS: eng/gpr/gprbuild eng/gpr/gprconfig_kb
+  cache:
+    - key: $CI_COMMIT_REF_SLUG
+      fallback_keys:
+        - master
+      paths:
+        - cache
   script:
     # Tune to use our build & test plan
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
+
+    # if a cached sandbox exists, use it
+    - install_cache full
 
     # Just build gprbuild/libgpr2/gpr2-bindings
     # Full gnat bootstrap is tested though, but in the testing phase
     - anod run build
 
-    # generate packages to be used at test stages.
-    # Note: we can't package the full gnat or gnatall install as the size seems
-    # to reach some limits for the saved artifacts. So we package gprbuild and
-    # co and will amend the toolchains for testing..
-    - for pkg in gprbuild gpr2 libgpr2 libgpr2-bare gpr2-bindings gpr1build; do
-        echo "packaging $SANDBOX/$HOST/$pkg/install/" ;
-        tar czf $CI_PROJECT_DIR/$pkg.tar.gz -C $SANDBOX/$HOST/$pkg/ install/ ;
-      done
-    - cd $CI_PROJECT_DIR
-    - ls -l *.tar.gz
-
-  artifacts:
-    paths:
-      - gprbuild.tar.gz
-      - gpr2.tar.gz
-      - gpr2-bindings.tar.gz
-      - libgpr2.tar.gz
-      - libgpr2-bare.tar.gz
-      - gpr1build.tar.gz
+    # Save gpr builds and libadalang in cache to speed up a re-build
+    - mkdir -p $CI_PROJECT_DIR/cache
+    - rsync -a $SANDBOX/$HOST/*gpr* $CI_PROJECT_DIR/cache/
 
 ###############################
 # CHECK WE CAN BOOTSTRAP GNAT #
 ###############################
 
 test_bootstrap:
-  extends: .job_template
-  stage: test
+  extends: .gpr2_test_template
+  allow_failure: false
   variables:
     JOB_SUBPROJECTS: eng/gpr/gprbuild eng/gpr/gprconfig_kb
+  cache:
+    - key: $CI_COMMIT_REF_SLUG
+      policy: pull
+      paths:
+        - cache
+    - key: bootstrop-$CI_COMMIT_REF_SLUG
+      fallback_keys:
+        - bootstrap-master
+      paths:
+        - bootstrap_cache
   script:
-    - install_packages libgpr2 libgpr2-bare
-    - anod tune --plan $CI_PROJECT_DIR/.ci.plan --full
-    - anod run bootstrap || exit 1
+    - install_cache full
+    - if [ -d $CI_PROJECT_DIR/bootstrap_cache ]; then
+        exec rsync -a $CI_PROJECT_DIR/bootstrap_cache/* $SANDBOX/$HOST/ ;
+        rm -rf $CI_PROJECT_DIR/bootstrap_cache ;
+      fi
+    - anod tune --plan $CI_PROJECT_DIR/.ci.plan
+    - result=0
+    - anod run bootstrap || result=$?
+    - mkdir -p $CI_PROJECT_DIR/bootstrap_cache
+    # save build for packages that take a long time to build: only a re-build
+    # will be performed on following runs, which assumably will be faster
+    # (than the time it takes to save/restore them).
+    # ??? the build space name is forged in stone here, while we know it can
+    # change anytime: maybe a hard to maintain choice
+    - for pkg in libadalang-internal aws-tools aws-lib laltools; do
+        rsync -a $SANDBOX/$HOST/$pkg $CI_PROJECT_DIR/bootstrap_cache/ ;
+      done
+    - exit $result
 
 ####################
 ## GPR2 TESTSUITE ##
 ####################
 
 test_gpr2:
-  extends: .test_template
+  extends: .gpr2_test_template
   script:
-    - install_packages gnat gpr2 libgpr2
+    - install_cache gnat
     - run_testsuite gpr2 -Qfrom_gnat test_gpr2
   artifacts:
     when:
@@ -78,9 +104,9 @@ test_gpr2:
 ##############
 
 test_gpr2_cov:
-  extends: .test_template
+  extends: .gpr2_test_template
   script:
-    - install_packages libgpr2-bare
+    - install_cache
     - anod tune --full
     - anod build gpr2 -Qcoverage
     # do a normal testsuite run but save the exit code instead of just exiting
@@ -119,11 +145,11 @@ test_gpr2_cov:
 ########################
 
 test_gprbuild:
-  extends: .test_template
+  extends: .gpr2_test_template
   variables:
     JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
   script:
-    - install_packages gnatall
+    - install_cache gnatall
     - run_testsuite gprbuild -QAdaCC++_Auto test_gprbuild
   artifacts:
     when:
@@ -138,11 +164,11 @@ test_gprbuild:
 #########################
 
 test_gprconfig:
-  extends: .test_template
+  extends: .gpr2_test_template
   variables:
     JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
   script:
-    - install_packages gprbuild
+    - install_cache
     - run_testsuite gprconfig "" test_gprconfig
   artifacts:
     when:
@@ -157,11 +183,11 @@ test_gprconfig:
 ######################
 
 test_gpr2ls:
-  extends: .test_template
+  extends: .gpr2_test_template
   variables:
     JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
   script:
-    - install_packages gnatall gpr1build
+    - install_cache gnatall
     - run_testsuite gprbuild "-QAdaCC++_Auto -Qcheck-gpr2ls" test_gpr2ls
   artifacts:
     when:
@@ -176,9 +202,9 @@ test_gpr2ls:
 #############################
 
 test_gpr2bindings:
-  extends: .test_template
+  extends: .gpr2_test_template
   script:
-    - install_packages gpr2-bindings
+    - install_cache
 
     - anod test gpr2-bindings --minimal
     # TODO: adjust this when this testsuite supports e3-testsuite-report

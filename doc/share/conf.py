@@ -22,7 +22,7 @@ doc_name = 'gprbuild_ug'
 
 # Then retrieve the source directory
 root_source_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-gpr_version_spec = os.path.join(root_source_dir, '..', 'tools', 'src',
+gpr_version_spec = os.path.join(root_source_dir, '..', 'src', 'lib',
                                 'gpr2-version.ads')
 texi_fsf = True  # Set to False when FSF doc is switched to sphinx by default
 
