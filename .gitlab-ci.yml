@@ -19,12 +19,10 @@ stages:
 build:
   extends: .job_template
   stage: build
-  variables:
-    JOB_SUBPROJECTS: eng/gpr/gprbuild eng/gpr/gprconfig_kb
   cache:
     - key: $CI_COMMIT_REF_SLUG
       fallback_keys:
-        - master
+        - next-branch
       paths:
         - cache
   script:
