@@ -138,6 +138,17 @@ package GPR2.Project.Parser is
      (Self : Object) return Containers.Filename_Source_Reference;
    --  Source filenames to skip due to inactive case items
 
+   function Type_Definition_From
+     (Self      : Object;
+      Tree      : GPR2.Project.Tree.Object;
+      Type_Node : Identifier_List)
+    return GPR2.Project.Typ.Object
+    with Pre => Self.Is_Defined;
+    --  Find the type definition corresponding to the specified node,
+    --  either from the parsed project file, an imported project file
+    --  or a parent project file. If the type definition is not found,
+    --  GPR2.Project.Typ.Undefined is returned.
+
 private
 
    type Object is tagged record
