@@ -57,7 +57,7 @@ test_bootstrap:
       policy: pull
       paths:
         - cache
-    - key: bootstrop-$CI_COMMIT_REF_SLUG
+    - key: bootstrap-$CI_COMMIT_REF_SLUG
       fallback_keys:
         - bootstrap-master
       paths:
