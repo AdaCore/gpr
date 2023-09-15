@@ -4,8 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Directories;
-with Ada.Strings.Fixed;
 with Ada.Text_IO;
 with GNAT.Formatted_String;
 
@@ -54,30 +52,6 @@ package body GPR2.Message is
                    when Information => "info",
                    when Lint        => "lint"));
 
-      function Simple_Name (S : String) return String;
-      --  Handle possible pseudo files
-
-      -----------------
-      -- Simple_Name --
-      -----------------
-
-      function Simple_Name (S : String) return String is
-         Start : Natural := Ada.Strings.Fixed.Index (S, "<ram>");
-      begin
-         if Start = 0 then
-            Start := S'First;
-         else
-            Start := Start + 5;
-         end if;
-
-         return Directories.Simple_Name (S (Start .. S'Last));
-      end Simple_Name;
-
-      Filename : constant String :=
-                   (if Full_Path_Name
-                    then Self.Sloc.Filename
-                    else Simple_Name (Self.Sloc.Filename));
-
       Indent   : constant String := (1 .. Self.Indent * 2 => ' ');
 
       Indented : constant String := Indent
@@ -88,23 +62,10 @@ package body GPR2.Message is
       --  Need to distinguish warnings from errors because they are both going
       --  to the error output.
 
-   begin
-      if Self.Sloc.Has_Source_Reference then
-         declare
-            Format : constant Formatted_String := +"%s:%d:%02d: %s";
-         begin
-            return -(Format
-                     & Filename & Self.Sloc.Line & Self.Sloc.Column
-                     & Indented);
-         end;
+      Format : constant Formatted_String := +"%s: %s";
 
-      else
-         declare
-            Format : constant Formatted_String := +"%s: %s";
-         begin
-            return -(Format & Filename & Indented);
-         end;
-      end if;
+   begin
+      return -(Format & Self.Sloc.Format (Full_Path_Name) & Indented);
    end Format;
 
    -----------

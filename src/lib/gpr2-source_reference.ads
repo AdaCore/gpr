@@ -47,6 +47,14 @@ package GPR2.Source_Reference is
      with Pre => Self.Is_Defined and then Self.Has_Source_Reference;
    --  Returns the starting column of the entity declaration
 
+   function Format (Self : Object; Full_Path_Name : Boolean := False)
+    return String
+     with Pre => Self.Is_Defined;
+   --  Returns the sloc string representation with the following format:
+   --  <filename>:<line>:<col>
+   --  <filename> format controlled by Full_Path_Name parameter. Default False
+   --  is for simple file name, True is for full path name format.
+
 private
 
    type Object is tagged record
