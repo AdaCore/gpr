@@ -13,7 +13,6 @@ with GNATCOLL.Refcount;
 
 with GPR2.Containers;
 with GPR2.Log;
-with GPR2.Path_Name;
 with GPR2.Project.View.Set;
 
 with GPR2.Build.Compilation_Unit;
@@ -28,7 +27,6 @@ limited with GPR2.Build.Tree_Db;
 private package GPR2.Build.View_Tables is
 
    use type Ada.Containers.Hash_Type;
-   use type Path_Name.Object;
 
    --  generic file object: can represent any file found on the filesystem
 
@@ -93,8 +91,13 @@ private package GPR2.Build.View_Tables is
 
    type Source_Proxy (Path_Len : Natural) is record
       View      : GPR2.Project.View.Object;
+      --  The view that owns the source (e.g. that has the source via its
+      --  source directory or source list)
       Inh_From  : GPR2.Project.View.Object;
+      --  Points to the extended view if any, from which the current view
+      --  inherits the source
       Path_Name : Filename_Optional (1 .. Path_Len);
+      --  The source path name
    end record;
 
    No_Proxy : constant Source_Proxy := (Path_Len => 0, others => <>);

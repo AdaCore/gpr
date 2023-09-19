@@ -13,6 +13,7 @@ with GPR2.Build.Source.Ada_Parser;
 with GPR2.Build.Tree_Db;
 with GPR2.Project.Attribute;
 with GPR2.Message;
+with GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
 
@@ -118,7 +119,7 @@ package body GPR2.Build.View_Tables is
                      Owner_Db.Src_Infos.Constant_Reference (Path);
 
    begin
-      Data.Overloaded_Srcs.Insert (Path_Name.Simple_Name (String (Path)),
+      Data.Overloaded_Srcs.Insert (Path_Name.Simple_Name (Path),
                                    Source_Proxy_Sets.Empty_Set,
                                    C_Overload,
                                    Done);
@@ -442,13 +443,14 @@ package body GPR2.Build.View_Tables is
               (Message.Error,
                (if Attr.Name.Id = PRA.Excluded_Source_List_File
                 then "excluded "
-                else "") & "source list file " & Filename.Value & " not found",
+                else "") & "source list file " &
+                  Filename.String_Value & " not found",
                Sloc => Attr));
 
          return;
       end if;
 
-      Text_IO.Open (F, Text_IO.In_File, Filename.Value);
+      Text_IO.Open (F, Text_IO.In_File, Filename.String_Value);
 
       while not Text_IO.End_Of_File (F) loop
          declare
@@ -551,7 +553,7 @@ package body GPR2.Build.View_Tables is
       use type GPR2.Project.View.Object;
 
       Basename   : constant Simple_Name :=
-                     Path_Name.Simple_Name (String (Path));
+                     Path_Name.Simple_Name (Path);
       C_Overload : Basename_Source_List_Maps.Cursor;
       Proxy      : constant Source_Proxy := (Path_Len  => Path'Length,
                                              View      => View_Owner,
@@ -702,7 +704,7 @@ package body GPR2.Build.View_Tables is
                             Get_Data (Data.Tree_Db, Data.View.Extending);
             begin
                if not Ext_Data.Excluded_Sources.Contains
-                 (GPR2.Path_Name.Simple_Name (String (Src.Path_Name)))
+                 (GPR2.Path_Name.Simple_Name (Src.Path_Name))
                then
                   Add_Source
                     (Ext_Data,

@@ -4,9 +4,9 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Directories;
 with Ada.Text_IO;
 with GNAT.Formatted_String;
+with GPR2.Path_Name;
 
 package body GPR2.Message is
 
@@ -53,10 +53,10 @@ package body GPR2.Message is
                    when Information => "info",
                    when Lint        => "lint"));
 
-      Filename : constant String :=
+      Filename : constant Filename_Type :=
                    (if Full_Path_Name
                     then Self.Sloc.Filename
-                    else Directories.Simple_Name (Self.Sloc.Filename));
+                    else GPR2.Path_Name.Simple_Name (Self.Sloc.Filename));
 
       Indent   : constant String := (1 .. Self.Indent * 2 => ' ');
 
@@ -74,7 +74,7 @@ package body GPR2.Message is
             Format : constant Formatted_String := +"%s:%d:%02d: %s";
          begin
             return -(Format
-                     & Filename & Self.Sloc.Line & Self.Sloc.Column
+                     & String (Filename) & Self.Sloc.Line & Self.Sloc.Column
                      & Indented);
          end;
 
@@ -82,7 +82,7 @@ package body GPR2.Message is
          declare
             Format : constant Formatted_String := +"%s: %s";
          begin
-            return -(Format & Filename & Indented);
+            return -(Format & String (Filename) & Indented);
          end;
       end if;
    end Format;

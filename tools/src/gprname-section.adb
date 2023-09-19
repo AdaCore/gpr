@@ -106,20 +106,20 @@ package body GPRname.Section is
 
       use Ada.Text_IO;
 
-      procedure Get_Source_Dirs_And_Files_From_File (File : String);
+      procedure Get_Source_Dirs_And_Files_From_File (File : Filename_Type);
       --  Add source directories and source files from a file
 
       -----------------------------------------
       -- Get_Source_Dirs_And_Files_From_File --
       -----------------------------------------
 
-      procedure Get_Source_Dirs_And_Files_From_File (File : String)
+      procedure Get_Source_Dirs_And_Files_From_File (File : Filename_Type)
       is
          F            : File_Type;
          Source_Dirs  : Source_Dir.Vector.Object;
          Source_Files : Source.Set.Object;
       begin
-         Open (F, In_File, File);
+         Open (F, In_File, String (File));
 
          while not End_Of_File (F) loop
             declare
@@ -151,7 +151,8 @@ package body GPRname.Section is
          when GPRname_Exception =>
             raise;
          when others =>
-            raise GPRname_Exception with "Could not read file '" & File & "'";
+            raise GPRname_Exception
+              with "Could not read file '" & String (File) & "'";
       end Get_Source_Dirs_And_Files_From_File;
 
    begin

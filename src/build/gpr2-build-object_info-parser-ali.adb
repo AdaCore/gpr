@@ -326,11 +326,11 @@ package body GPR2.Build.Object_Info.Parser.ALI is
          then
             raise Scan_ALI_Error with
               "Expected '" & Expected & "' but got '" & Header & "' in " &
-              File.Path.Value;
+              File.Path.String_Value;
 
          elsif not Allow_EOF and then At_EOF then
             raise Scan_ALI_Error with
-              "Unexpected end of file in " & File.Path.Value;
+              "Unexpected end of file in " & File.Path.String_Value;
          end if;
       end Next_Line;
 
@@ -342,11 +342,11 @@ package body GPR2.Build.Object_Info.Parser.ALI is
         (File     : in out Handle;
          Filename : GPR2.Path_Name.Object'Class) is
       begin
-         File.FD := FS.Open (Filename.Value, FS.Read_Mode);
+         File.FD := FS.Open (Filename.String_Value, FS.Read_Mode);
 
          if File.FD = FS.Invalid_FD then
             raise Ada.IO_Exceptions.Use_Error with
-              "Cannot read " & Filename.Value;
+              "Cannot read " & Filename.String_Value;
          end if;
          Fill_Buffer (File);
          File.Line := 1;

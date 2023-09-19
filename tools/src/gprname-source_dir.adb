@@ -52,7 +52,7 @@ package body GPRname.Source_Dir is
 
          if not PN.Exists then
             raise GPRname_Exception with "invalid source directory: "
-              & PN.Value;
+              & PN.String_Value;
          end if;
 
          return Dir_And_Optional_File'
@@ -67,7 +67,7 @@ package body GPRname.Source_Dir is
 
                if not PN.Exists then
                   raise GPRname_Exception with "invalid source directory: "
-                    & PN.Value;
+                    & PN.String_Value;
                end if;
 
                return Dir_And_Optional_File'
@@ -86,7 +86,7 @@ package body GPRname.Source_Dir is
 
                   if not PN.Exists then
                      raise GPRname_Exception with "invalid source directory: "
-                       & PN.Value;
+                       & PN.String_Value;
                   end if;
 
                   return Dir_And_Optional_File'

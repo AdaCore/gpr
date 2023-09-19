@@ -23,7 +23,7 @@ package body GPR2.Source_Reference is
      (Filename     : Path_Name.Full_Name;
       Line, Column : Natural) return Object'Class is
    begin
-      return Object'(Line, Column, To_Unbounded_String (Filename));
+      return Object'(Line, Column, +Filename);
    end Create;
 
    --------------
@@ -32,7 +32,7 @@ package body GPR2.Source_Reference is
 
    function Filename (Self : Object) return Path_Name.Full_Name is
    begin
-      return To_String (Self.Filename);
+      return -Self.Filename;
    end Filename;
 
    ----------

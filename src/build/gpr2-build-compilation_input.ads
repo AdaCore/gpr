@@ -5,6 +5,7 @@
 --
 
 with GPR2.Build.Source;
+
 private with GPR2.Project.View;
 
 package GPR2.Build.Compilation_Input is
@@ -61,7 +62,7 @@ private
        else L.Index < R.Index);
 
    function Source (Self : Object) return Build.Source.Object
-   is (Self.Src_Owner.Source (Simple_Name (-Self.Source_Basename)));
+   is (Self.Src_Owner.Source (-Self.Source_Basename));
 
    function Index (Self : Object) return Unit_Index is
       (Self.Index);

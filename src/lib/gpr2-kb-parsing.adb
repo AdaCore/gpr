@@ -55,7 +55,7 @@ package body GPR2.KB.Parsing is
      (Base        : in out Object;
       Root_Node   : DOM.Core.Node;
       Flags       : Parsing_Flags;
-      From_File   : Value_Not_Empty;
+      From_File   : Filename_Type;
       Environment : GPR2.Environment.Object)
      with Pre => Base.Is_Defined and then DOM.Core."/=" (Root_Node, null);
    --  Parses a single top-level KB node. From_File used for diagnostics
@@ -154,7 +154,7 @@ package body GPR2.KB.Parsing is
         (Self,
          DOM.Core.Documents.Get_Element (Get_Tree (Reader)),
          Flags,
-         Embed_Pseudo_Dir & String_Argument,
+         Filename_Type (Embed_Pseudo_Dir & String_Argument),
          Environment);
 
       Free_Reader (Reader);
@@ -167,7 +167,8 @@ package body GPR2.KB.Parsing is
                Get_Error_Message (Reader),
                Source_Reference.Object
                  (Source_Reference.Create
-                      (Embed_Pseudo_Dir & String_Argument, 0, 0))));
+                      (Filename_Type (Embed_Pseudo_Dir & String_Argument),
+                       0, 0))));
          Close (Input);
          Free_Reader (Reader);
 
@@ -178,7 +179,8 @@ package body GPR2.KB.Parsing is
                Ada.Exceptions.Exception_Message (E),
                Source_Reference.Object
                  (Source_Reference.Create
-                      (Embed_Pseudo_Dir & String_Argument, 0, 0))));
+                      (Filename_Type (Embed_Pseudo_Dir & String_Argument),
+                       0, 0))));
          Close (Input);
          Free_Reader (Reader);
    end Add;
@@ -332,7 +334,8 @@ package body GPR2.KB.Parsing is
                Get_Error_Message (Schema),
                Source_Reference.Object
                  (Source_Reference.Create
-                      (Embed_Pseudo_Dir & String (Key (Cur)), 0, 0))));
+                      (Filename_Type (Embed_Pseudo_Dir & String (Key (Cur))),
+                       0, 0))));
          return No_Grammar;
    end Get_Default_Schema_Grammar;
 
@@ -355,7 +358,7 @@ package body GPR2.KB.Parsing is
          return No_Grammar;
       end if;
 
-      Open (Base.Schema_File.Value, Input);
+      Open (String (Base.Schema_File.Value), Input);
       Parse (Schema, Input);
       Close (Input);
       Result := Get_Grammar (Schema);
@@ -468,7 +471,8 @@ package body GPR2.KB.Parsing is
                   & System_Id
                   & """",
                   Source_Reference.Create
-                    (Embed_Pseudo_Dir & To_String (Handler.Current_Source),
+                    (Filename_Type
+                         (Embed_Pseudo_Dir & "-" (Handler.Current_Source)),
                      0, 0)));
          end if;
 
@@ -519,7 +523,8 @@ package body GPR2.KB.Parsing is
                         Get_Error_Message (Reader),
                         Source_Reference.Object
                           (Source_Reference.Create
-                               (Embed_Pseudo_Dir & String (Key (Cur)),
+                               (Filename_Type
+                                    (Embed_Pseudo_Dir & String (Key (Cur))),
                                 0, 0))));
                   Close (Input);
                   Free_Reader (Reader);
@@ -532,8 +537,9 @@ package body GPR2.KB.Parsing is
                         Ada.Exceptions.Exception_Message (E),
                         Source_Reference.Object
                           (Source_Reference.Create
-                               (Embed_Pseudo_Dir & String (Key (Cur)),
-                                0, 0))));
+                             (Filename_Type
+                                (Embed_Pseudo_Dir & String (Key (Cur))),
+                              0, 0))));
                   Close (Input);
                   Free_Reader (Reader);
                   return Result;
@@ -545,7 +551,7 @@ package body GPR2.KB.Parsing is
               (Result,
                DOM.Core.Documents.Get_Element (Get_Tree (Reader)),
                Flags,
-               Embed_Pseudo_Dir & String (Key (Cur)),
+               Filename_Type (Embed_Pseudo_Dir & String (Key (Cur))),
                Environment);
 
             Free_Reader (Reader);
@@ -704,7 +710,7 @@ package body GPR2.KB.Parsing is
      (Base        : in out Object;
       Root_Node   : DOM.Core.Node;
       Flags       : Parsing_Flags;
-      From_File   : Value_Not_Empty;
+      From_File   : Filename_Type;
       Environment : GPR2.Environment.Object)
    is
       use DOM.Core;

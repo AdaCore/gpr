@@ -777,7 +777,7 @@ package body GPR2.KB.Compiler_Iterator is
                Trace
                  (Main_Trace,
                   "No runtime found where one is required for: "
-                  & Comp.Path.Value);
+                  & Comp.Path.String_Value);
             else
                Callback
                  (Self              => Iterator,

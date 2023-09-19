@@ -831,7 +831,7 @@ package body GPR2.Compilation.Registry is
    is
       use GNAT.OS_Lib;
 
-      Root_Dir : constant String := Project.Dir_Name.Value;
+      Root_Dir : constant String := Project.Dir_Name.String_Value;
    begin
       if Project.Has_Attribute (PRA.Remote.Root_Dir)
       then
@@ -1024,7 +1024,7 @@ package body GPR2.Compilation.Registry is
 
       Protocol.Send_Exec
         (S.Channel,
-         Project.Path_Name.Value,
+         Project.Path_Name.String_Value,
          Filter_String (CWD, Sep => ""),
          String (Name (Language)),
          String (Tree.Target),

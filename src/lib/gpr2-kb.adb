@@ -849,7 +849,7 @@ package body GPR2.KB is
                                ", version '" & To_String (Comp.Version) & "'"
                           else "")
                         & (if Comp.Path.Is_Defined then
-                               ", path '" & Comp.Path.Value & "'"
+                               ", path '" & Comp.Path.String_Value & "'"
                            else "")
                         & (if Comp.Name /= Null_Unbounded_String then
                                ", name '" & To_String (Comp.Name) & "'"
@@ -1302,7 +1302,8 @@ package body GPR2.KB is
          Elem := Compiler_Lists.Element (C);
          if Elem.Path /= GPR2.Path_Name.Undefined then
             Append
-              (Extra_Dirs, Elem.Path.Value & GNAT.OS_Lib.Path_Separator);
+              (Extra_Dirs,
+               Elem.Path.String_Value & GNAT.OS_Lib.Path_Separator);
          end if;
          Next (C);
       end loop;
@@ -1673,10 +1674,11 @@ package body GPR2.KB is
          use GNAT.OS_Lib;
          use GPR2.Containers.Name_Value_Map_Package;
 
-         Path_Dir : constant String :=
+         Path_Dir : constant Filename_Type :=
                       GPR2.Path_Name.Create_Directory
                         (Filename_Type (Path)).Dir_Name;
-         Key      : constant Name_Type := Name_Type (Path_Dir & Command);
+         Key      : constant Name_Type :=
+                      Name_Type (String (Path_Dir) & Command);
          Cur      : constant GPR2.Containers.Name_Value_Map_Package.Cursor :=
                       Calls_Cache.Find (Key);
 
@@ -1689,7 +1691,7 @@ package body GPR2.KB is
                Args_Vector : GNATCOLL.OS.Process.Argument_List;
                Dummy       : Integer;
             begin
-               Args_Vector.Append (Path_Dir & Args (Args'First).all);
+               Args_Vector.Append (String (Path_Dir) & Args (Args'First).all);
                for J in Args'First + 1 .. Args'Last loop
                   Args_Vector.Append (Args (J).all);
                end loop;
@@ -1750,7 +1752,8 @@ package body GPR2.KB is
                when Value_Shell =>
                   Used_Env.Insert
                     ("PATH",
-                     Comp.Path.Value & OS_Lib.Path_Separator & Saved_Path);
+                     Comp.Path.String_Value &
+                       OS_Lib.Path_Separator & Saved_Path);
 
                   declare
                      Command : constant String :=
@@ -1762,7 +1765,8 @@ package body GPR2.KB is
                   begin
                      Tmp_Result := Null_Unbounded_String;
                      Tmp_Result :=
-                       Get_Command_Output_Cache (Comp.Path.Value, Command);
+                       Get_Command_Output_Cache
+                         (Comp.Path.String_Value, Command);
                      Used_Env := Environment;
 
                      Trace (Main_Trace,
@@ -1809,12 +1813,12 @@ package body GPR2.KB is
                           (Main_Trace,
                            Attribute & ": search directories matching "
                            & Search & ", starting from "
-                           & Comp.Path.Value);
+                           & Comp.Path.String_Value);
 
                         Parse_All_Dirs
                           (Processed_Value => Processed_Value,
                            Visited         => Visited,
-                           Current_Dir     => Comp.Path.Value,
+                           Current_Dir     => Comp.Path.String_Value,
                            Path_To_Check   => Search,
                            Contents        => Node.Contents,
                            Regexp          => Compile (Search),
@@ -2025,7 +2029,7 @@ package body GPR2.KB is
          return To_String (Comp.Prefix);
       elsif Name = "PATH" then
          return GNAT.OS_Lib.Normalize_Pathname
-           (Comp.Path.Value, Case_Sensitive => False)
+           (Comp.Path.String_Value, Case_Sensitive => False)
            & GNAT.OS_Lib.Directory_Separator;
       elsif Name = "GPRCONFIG_PREFIX" then
          return GPR_Executable_Prefix_Path;
@@ -3453,10 +3457,10 @@ package body GPR2.KB is
 
    begin
       return String (Name (Comp.Language))
-           & ',' & Get_String_Or_Empty (Comp.Version)
-           & ',' & Get_String_Or_Empty (Comp.Runtime)
-           & ',' & (if Comp.Path.Is_Defined then Comp.Path.Value else "")
-           & ',' & Get_String_Or_Empty (Comp.Name);
+        & ',' & Get_String_Or_Empty (Comp.Version)
+        & ',' & Get_String_Or_Empty (Comp.Runtime)
+        & ',' & (if Comp.Path.Is_Defined then Comp.Path.String_Value else "")
+        & ',' & Get_String_Or_Empty (Comp.Name);
    end To_String;
 
    ---------------

@@ -82,7 +82,7 @@ package GPR2.Path_Name is
      with Post => Create'Result.Is_Defined;
    --  Creates a path-name object
 
-   subtype Full_Name is String
+   subtype Full_Name is Filename_Type
      with Dynamic_Predicate => (for some C of Full_Name => C in '/' | '\');
 
    function Name
@@ -100,6 +100,10 @@ package GPR2.Path_Name is
      with Pre => Self.Is_Defined and then Self.Has_Value;
    --  Returns the full pathname for Self if defined, or the empty string if
    --  the full path has not been resolved.
+
+   function String_Value (Self : Object) return String
+     with Pre => Self.Is_Defined and then Self.Has_Value;
+   --  Same as Value, but returning a simple String
 
    function Base_Name (Self : Object) return Name_Type
      with Pre => Self.Is_Defined
@@ -128,7 +132,7 @@ package GPR2.Path_Name is
                    and then not Self.Is_Root_Dir;
    --  Returns the base name for Self (with extension)
 
-   function Simple_Name (Path : String) return GPR2.Simple_Name;
+   function Simple_Name (Path : Filename_Optional) return GPR2.Simple_Name;
    --  Returns the simple name portion of the file name specified by Name.
    --  This is Ada.Directories.Simple_Name implementation with
    --  valid path name check removed to allow '*' chars.
@@ -192,12 +196,12 @@ package GPR2.Path_Name is
           Post => Containing_Directory'Result.Is_Defined;
    --  Returns the containing directory of the directory information of Self
 
-   function To_OS_Case (Name : String) return String with Inline;
+   function To_OS_Case (Name : Filename_Optional) return String with Inline;
    --  If filenames is case insensitive converts path name to lowercase,
    --  returns the same value otherwise.
 
    function Change_Extension
-     (Self : Object; Extension : Value_Type) return Object
+     (Self : Object; Extension : Filename_Optional) return Object
      with Pre => Self.Is_Defined and then not Self.Is_Directory;
    --  Return file object with another extension (possibly empty, which means
    --  removing current extension if any).
@@ -262,6 +266,9 @@ private
 
    function Has_Value (Self : Object) return Boolean is
      (Self.Value /= Null_Unbounded_String);
+
+   function String_Value (Self : Object) return String is
+     (String (Value (Self)));
 
    function Is_Directory (Self : Object) return Boolean is (Self.Is_Dir);
 

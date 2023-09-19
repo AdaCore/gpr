@@ -308,8 +308,19 @@ private
    function "+"
      (Source : String) return Unbounded_String renames To_Unbounded_String;
 
-   function "-"
-     (Source : Unbounded_String) return String renames To_String;
+   function "+" (Source : Filename_Optional) return Unbounded_String is
+      (+String (Source));
+
+   function "+" (Source : Optional_Name_Type) return Unbounded_String is
+      (+String (Source));
+
+   function "-" (Source : Unbounded_String) return String renames To_String;
+
+   function "-" (Source : Unbounded_String) return Filename_Optional is
+      (Filename_Optional (To_String (Source)));
+
+   function "-" (Source : Unbounded_String) return Optional_Name_Type is
+      (Optional_Name_Type (To_String (Source)));
 
    function To_Mixed (A : String) return String;
 

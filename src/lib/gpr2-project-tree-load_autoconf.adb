@@ -427,7 +427,7 @@ is
                return Name_Type (Value);
             else
                return Name_Type (GNAT.OS_Lib.Normalize_Pathname
-                                 (Value, View.Dir_Name.Value));
+                                 (Value, View.Dir_Name.String_Value));
             end if;
          else
             return Optional_Name_Type (Value);
@@ -495,7 +495,7 @@ is
       if Tmp_Attr.Is_Defined and then Tmp_Attr.Value.Text /= "" then
          return Filename_Type
            (GNAT.OS_Lib.Normalize_Pathname
-              (Tmp_Attr.Value.Text, Self.Root.Dir_Name.Value));
+              (Tmp_Attr.Value.Text, Self.Root.Dir_Name.String_Value));
       end if;
 
       return No_Filename;
@@ -590,8 +590,8 @@ begin
                     (Message.Create
                        (Level   => Message.Error,
                         Message =>
-                          "could not locate main configuration project "
-                        & Default_Cfg.Value,
+                          "could not locate main configuration project " &
+                          Default_Cfg.String_Value,
                         Sloc    => CPF_Attr));
                   GPR2.Project.Parser.Clear_Cache;
                   raise Project_Error with "cannot locate configuration";
@@ -645,8 +645,8 @@ begin
                  (Message.Create
                     (Level   => Message.Error,
                      Message =>
-                       "could not locate main configuration project "
-                     & Default_Cfg.Value,
+                       "could not locate main configuration project " &
+                       Default_Cfg.String_Value,
                      Sloc    => Attr_Sloc));
                GPR2.Project.Parser.Clear_Cache;
                raise Project_Error with "cannot locate configuration";

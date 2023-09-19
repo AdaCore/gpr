@@ -258,13 +258,13 @@ private
      (Self.Parsed /= None);
 
    function Unit_Name (Self : Object) return Name_Type is
-      (Name_Type (-Self.CU.Name));
+      (-Self.CU.Name);
 
    function Has_Spec (Self : Object) return Boolean is
       (Length (Self.CU.Spec.Source) > 0);
 
    function Spec (Self : Object) return Filename_Type is
-      (Filename_Type (-Self.CU.Spec.Source));
+      (-Self.CU.Spec.Source);
 
    function Spec_Flags (Self : Object) return Unit.Flags_Set is
       (Self.CU.Spec.Flags);
@@ -273,7 +273,7 @@ private
       (Length (Self.CU.Implem.Source) > 0);
 
    function Main_Body (Self : Object) return Filename_Type is
-      (Filename_Type (-Self.CU.Implem.Source));
+      (-Self.CU.Implem.Source);
 
    function Body_Flags (Self : Object) return Unit.Flags_Set is
       (Self.CU.Implem.Flags);

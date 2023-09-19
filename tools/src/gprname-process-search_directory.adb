@@ -190,7 +190,8 @@ is
 begin
    if Processed_Dirs.Contains (Dir_Path) then
       Put_Line
-        ("directory " & Dir_Path.Value & " already searched. skipping...",
+        ("directory " & Dir_Path.String_Value &
+           " already searched. skipping...",
          Low);
 
       if Recursively then
@@ -203,14 +204,14 @@ begin
       Processed_Dirs.Insert (Dir_Path);
    end if;
 
-   Put_Line ("entering directory: " & Dir_Path.Value, Low);
+   Put_Line ("entering directory: " & Dir_Path.String_Value, Low);
 
    begin
-      Directory_Operations.Open (Dir, Dir_Path.Value);
+      Directory_Operations.Open (Dir, Dir_Path.String_Value);
    exception
       when Directory_Operations.Directory_Error =>
          raise GPRname_Exception
-           with "cannot open directory " & String (Dir_Path.Value);
+           with "cannot open directory " & Dir_Path.String_Value;
    end;
 
    --  Loop over the directory's content
@@ -226,7 +227,7 @@ begin
 
       Put_Line ("  checking file: " & String (File.Name), Low);
 
-      if OS_Lib.Is_Regular_File (File.Value) and then not Processed then
+      if OS_Lib.Is_Regular_File (File.String_Value) and then not Processed then
          --  Regular file: check if it matches any naming schemes for Ada or
          --  other languages. Get additional info for Ada source files.
 
@@ -295,12 +296,13 @@ begin
 
                if Matched = Match then
                   if Lang = Ada_Lang then
-                     Put_Line ("      calling gcc for " & File.Value, Low);
+                     Put_Line
+                       ("      calling gcc for " & File.String_Value, Low);
 
                      Compiler_Args (Compiler_Args'Last) :=
-                       new String'(File.Value);
+                       new String'(File.String_Value);
 
-                     Put ("      " & Compiler_Path.Value, Low);
+                     Put ("      " & Compiler_Path.String_Value, Low);
 
                      for A of Compiler_Args.all loop
                         Put (" " & A.all, Low);
@@ -318,7 +320,7 @@ begin
 
                         Compiler_Output : constant String :=
                                             (Expect.Get_Command_Output
-                                               (Compiler_Path.Value,
+                                               (Compiler_Path.String_Value,
                                                 Compiler_Args.all,
                                                 Input      => "",
                                                 Status     => Status'Access,
@@ -441,11 +443,11 @@ begin
          end loop Patt_Loop;
 
       elsif Recursively
-        and then GNAT.OS_Lib.Is_Directory (File.Value)
+        and then GNAT.OS_Lib.Is_Directory (File.String_Value)
         and then Str (1 .. Last) not in "." | ".."
       then
          Search_Directory
-           (Path_Name.Create_Directory (Filename_Type (File.Value)),
+           (Path_Name.Create_Directory (File.Value),
             Sect,
             Processed_Dirs,
             True,

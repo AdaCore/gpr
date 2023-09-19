@@ -216,7 +216,7 @@ private package GPR2.Project.Definition is
       Directory_Pattern : GPR2.Filename_Optional;
       Source            : GPR2.Source_Reference.Value.Object;
       File_CB           : access procedure
-                            (File      : GPR2.Path_Name.Object;
+                            (File      : GPR2.Path_Name.Full_Name;
                              Timestamp : Ada.Calendar.Time);
       Directory_CB      : access procedure
                             (Directory       : GPR2.Path_Name.Object;

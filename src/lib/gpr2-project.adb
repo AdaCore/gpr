@@ -146,15 +146,15 @@ package body GPR2.Project is
          else
             for P of Paths loop
                declare
-                  F_Name : constant String :=
-                             Path_Name.Dir_Name (P) & String (GPR_Name);
+                  F_Name : constant Filename_Type :=
+                             Path_Name.Dir_Name (P) & GPR_Name;
                begin
-                  if Directories.Exists (F_Name) then
+                  if Directories.Exists (String (F_Name)) then
                      return Path_Name.Create
                        (GPR_Name,
                         Filename_Type
                           (OS_Lib.Normalize_Pathname
-                             (F_Name, Resolve_Links => False)));
+                             (String (F_Name), Resolve_Links => False)));
                   end if;
                end;
             end loop;
