@@ -60,7 +60,7 @@ procedure Main is
                --  Filter out runtime dir as this is installation-specific and
                --  thus prevents having a stable output
                if Path /= RTS_Src_Dir then
-                  Ada.Text_IO.Put_Line (Path.Value);
+                  Ada.Text_IO.Put_Line (Path.String_Value);
                end if;
             end loop;
             Paths.Clear;
@@ -102,7 +102,7 @@ procedure Main is
       use GPR2.Log;
 
       View : GPR2.Project.View.Object;
-      
+
       Log  : GPR2.Log.Object;
 
       use GPR2.Path_Name;

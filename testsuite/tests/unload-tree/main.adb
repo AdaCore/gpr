@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0
 --
 
-with Ada.Directories;
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
@@ -39,7 +38,7 @@ procedure Main is
    begin
       Text_IO.Put_Line
         (">>> Changed_Callback for "
-         & Directories.Simple_Name (Prj.Path_Name.Value));
+         & String (Prj.Path_Name.Simple_Name));
    end Changed_Callback;
 
    -------------
@@ -93,9 +92,11 @@ procedure Main is
    ---------------------
 
    procedure Output_Filename (Filename : Path_Name.Full_Name) is
-      I : constant Positive := Strings.Fixed.Index (Filename, "unload-tree");
+      S : constant String := String (Filename);
+      Test : constant String := "unload-tree";
+      I : constant Positive := Strings.Fixed.Index (S, Test);
    begin
-      Text_IO.Put (" > " & Filename (I + 12 .. Filename'Last));
+      Text_IO.Put (" > " & S (I + Test'Length + 1 .. S'Last));
    end Output_Filename;
 
    Prj1, Prj2 : Project.Tree.Object;
@@ -141,19 +142,6 @@ exception
    when GPR2.Project_Error =>
       if Prj1.Has_Messages then
          Text_IO.Put_Line ("Messages found:");
-
-         for M of Prj1.Log_Messages.all loop
-            declare
-               Mes : constant String := M.Format;
-               L   : constant Natural :=
-                 Strings.Fixed.Index (Mes, "/unload-tree");
-            begin
-               if L /= 0 then
-                  Text_IO.Put_Line (Mes (L .. Mes'Last));
-               else
-                  Text_IO.Put_Line (Mes);
-               end if;
-            end;
-         end loop;
+         Prj1.Log_Messages.Output_Messages (Information => False);
       end if;
 end Main;

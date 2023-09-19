@@ -41,7 +41,7 @@ begin
    Ada.Text_IO.Create (File => File, Name => "files/aggr.gpr");
    Ada.Text_IO.Put_Line (File, "aggregate project Aggr is");
    Ada.Text_IO.Put_Line (File, "for Project_Files use (");
-   Ada.Text_IO.Put_Line (File, """" & Absolute1.Value & """,");
+   Ada.Text_IO.Put_Line (File, """" & Absolute1.String_Value & """,");
    --  test absolute path support
    Ada.Text_IO.Put_Line (File, """relative2.gpr"",");
    --  test relative path without dir support

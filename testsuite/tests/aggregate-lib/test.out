@@ -10,8 +10,8 @@ B        K_STANDARD
 A:   Object_Dir -> bobj
 A:   Source_Dirs -> bsrc
 sources:
- > /alsrc/pckal.ads
- > /bsrc/pckb.ads
+ > alsrc/pckal.ads
+ > bsrc/pckb.ads
 
 //// OS set to Windows
 >>> Changed_Callback for A
@@ -26,5 +26,5 @@ B        K_STANDARD
 A:   Object_Dir -> bobj
 A:   Source_Dirs -> bsrc
 sources:
- > /awsrc/pcka.ads
- > /bsrc/pckb.ads
+ > awsrc/pcka.ads
+ > bsrc/pckb.ads

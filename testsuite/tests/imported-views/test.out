@@ -1,20 +1,20 @@
 Project: Demo1
    imports:
-     > /demo2.gpr
+     > demo2.gpr
    imports recursively:
-     > /demo2.gpr
-     > /demo3.gpr
+     > demo2.gpr
+     > demo3.gpr
 Project: Demo2
    imports:
-     > /demo3.gpr
+     > demo3.gpr
    imports recursively:
-     > /demo3.gpr
+     > demo3.gpr
 Project: Demo4
    imports:
-     > /demo1.gpr
-     > /demo2.gpr
-     > /demo3.gpr
+     > demo1.gpr
+     > demo2.gpr
+     > demo3.gpr
    imports recursively:
-     > /demo1.gpr
-     > /demo2.gpr
-     > /demo3.gpr
+     > demo1.gpr
+     > demo2.gpr
+     > demo3.gpr

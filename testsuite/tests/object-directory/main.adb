@@ -39,10 +39,11 @@ procedure Main is
    -----------------
 
    function Filter_Path (Filename : Path_Name.Full_Name) return String is
-      D : constant String := "object-directory";
-      I : constant Positive := Strings.Fixed.Index (Filename, D);
+      S : constant String := String (Filename);
+      Test : constant String := "object-directory";
+      I : constant Positive := Strings.Fixed.Index (S, Test);
    begin
-      return Filename (I .. Filename'Last);
+      return S (I + Test'Length + 1 .. S'Last);
    end Filter_Path;
 
    Prj : Project.Tree.Object;

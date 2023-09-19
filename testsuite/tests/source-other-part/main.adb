@@ -88,10 +88,11 @@ procedure Main is
    ---------------------
 
    function Filter_Filename (Filename : Path_Name.Full_Name) return String is
-      D : constant String := "source-other-part";
-      I : constant Positive := Strings.Fixed.Index (Filename, D);
+      S : constant String := String (Filename);
+      Test : constant String := "source-other-part";
+      I : constant Positive := Strings.Fixed.Index (S, Test);
    begin
-      return Filename (I + D'Length .. Filename'Last);
+      return S (I + Test'Length + 1 .. S'Last);
    end Filter_Filename;
 
 begin

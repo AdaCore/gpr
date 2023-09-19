@@ -71,10 +71,11 @@ procedure Main is
    ---------------------
 
    procedure Output_Filename (Filename : Path_Name.Full_Name) is
-      I : constant Positive :=
-            Strings.Fixed.Index (Filename, "source-excluded");
+      S : constant String := String (Filename);
+      Test : constant String := "source-excluded";
+      I : constant Positive := Strings.Fixed.Index (S, Test);
    begin
-      Text_IO.Put (" > " & Filename (I + 15 .. Filename'Last));
+      Text_IO.Put (" > " & S (I + Test'Length + 1 .. S'Last));
    end Output_Filename;
 
 begin

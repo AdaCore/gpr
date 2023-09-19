@@ -35,7 +35,7 @@ begin
       Environment => Env);
 
    Ada.Text_IO.Put_Line ("Cross:");
-   Ada.Text_IO.Put_Line (Tree.Root_Project.Path_Name.Value);
+   Ada.Text_IO.Put_Line (Tree.Root_Project.Path_Name.String_Value);
 
    Tree.Unload;
 
@@ -57,7 +57,7 @@ begin
       Environment => Env);
 
    Ada.Text_IO.Put_Line ("Native:");
-   Ada.Text_IO.Put_Line (Tree.Root_Project.Path_Name.Value);
+   Ada.Text_IO.Put_Line (Tree.Root_Project.Path_Name.String_Value);
 
    Tree.Unload;
 exception

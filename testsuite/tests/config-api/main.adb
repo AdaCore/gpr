@@ -110,16 +110,7 @@ procedure Main is
              Base => KB);
 begin
    if Cnf.Has_Messages then
-      for M of Cnf.Log_Messages loop
-         declare
-            F : constant String := M.Sloc.Filename;
-            I : constant Natural := Strings.Fixed.Index (F, "config-api");
-         begin
-            Text_IO.Put_Line ("> " & F (I - 1 .. F'Last));
-            Text_IO.Put_Line (M.Level'Img);
-            Text_IO.Put_Line (M.Format);
-         end;
-      end loop;
+      Cnf.Log_Messages.Output_Messages (Information => False);
    end if;
 
    Ctx.Include ("OS", "Linux");
@@ -134,19 +125,5 @@ begin
 exception
    when E : GPR2.Project_Error =>
       Text_IO.Put_Line (Exception_Information (E));
-
-      if Prj.Has_Messages then
-         Text_IO.Put_Line ("Messages found:");
-
-         for M of Prj.Log_Messages.all loop
-            declare
-               F : constant String := M.Sloc.Filename;
-               I : constant Natural := Strings.Fixed.Index (F, "config-api");
-            begin
-               Text_IO.Put_Line ("> " & F (I - 1 .. F'Last));
-               Text_IO.Put_Line (M.Level'Img);
-               Text_IO.Put_Line (M.Format);
-            end;
-         end loop;
-      end if;
+      Prj.Log_Messages.Output_Messages (Information => False);
 end Main;

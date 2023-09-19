@@ -38,8 +38,7 @@ procedure Main is
    procedure Changed_Callback (Prj : Project.View.Object) is
    begin
       Text_IO.Put_Line
-        (">>> Changed_Callback for "
-         & Directories.Simple_Name (Prj.Path_Name.Value));
+        (">>> Changed_Callback for " & String (Prj.Path_Name.Simple_Name));
    end Changed_Callback;
 
    -------------
@@ -88,23 +87,6 @@ exception
    when GPR2.Project_Error =>
       if Prj.Has_Messages then
          Text_IO.Put_Line ("Messages found:");
-
-         for C in Prj.Log_Messages.Iterate
-           (False, False, True, True, True)
-         loop
-            declare
-               M : constant Message.Object := Log.Element (C);
-               F : constant String := M.Sloc.Filename;
-               I : constant Natural :=
-                              Strings.Fixed.Index (F, "errors-syntax");
-            begin
-               Text_IO.Put_Line ("> " & F (I - 1 .. F'Last));
-               Text_IO.Put_Line (M.Level'Img);
-               Text_IO.Put_Line (M.Sloc.Line'Img);
-               Text_IO.Put_Line (M.Sloc.Column'Img);
-               Text_IO.Put_Line (M.Message);
-               Text_IO.Put_Line (M.Format);
-            end;
-         end loop;
+         Prj.Log_Messages.Output_Messages (Information => False);
       end if;
 end Main;

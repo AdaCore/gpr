@@ -106,18 +106,6 @@ begin
 
 exception
    when GPR2.Project_Error =>
-      if Prj.Has_Messages then
-         Text_IO.Put_Line ("Messages found:");
-
-         for M of Prj.Log_Messages.all loop
-            declare
-               F : constant String := M.Sloc.Filename;
-               I : constant Natural := Strings.Fixed.Index (F, "/config");
-            begin
-               Text_IO.Put_Line ("> " & F (I .. F'Last));
-               Text_IO.Put_Line (M.Level'Img);
-               Text_IO.Put_Line (M.Format);
-            end;
-         end loop;
-      end if;
+      Text_IO.Put_Line ("Messages found:");
+      Prj.Log_Messages.Output_Messages (Information => False);
 end Main;

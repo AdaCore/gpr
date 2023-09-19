@@ -23,7 +23,7 @@ procedure Main is
 
    procedure Display (Prj : Project.View.Object);
 
-   function Filter_Path (Line : String) return String;
+   function Filter_Path (Line : Filename_Type) return String;
    --  Remove the tmp directory where test is processing
 
    Prj : Project.Tree.Object;
@@ -69,12 +69,12 @@ procedure Main is
    -- Filter_Path --
    -----------------
 
-   function Filter_Path (Line : String) return String is
-      D : constant String := Prj.Root_Project.Path_Name.Dir_Name;
-      I : constant Positive := Strings.Fixed.Index (Line, D);
+   function Filter_Path (Line : Filename_Type) return String is
+      S : constant String := String (Line);
+      Test : constant String := "library-definitions";
+      I : constant Positive := Strings.Fixed.Index (S, Test);
    begin
-      return Line (Line'First .. I - 1) & "/" &
-        Line (I + D'Length .. Line'Last);
+      return S (I + Test'Length + 1 .. S'Last);
    end Filter_Path;
 
 begin
@@ -98,9 +98,5 @@ begin
 
 exception
    when Project_Error =>
-      for M of Prj.Log_Messages.all loop
-         if M.Level /= Information then
-            Text_IO.Put_Line (M.Format);
-         end if;
-      end loop;
+      Prj.Log_Messages.Output_Messages (Information => False);
 end Main;
