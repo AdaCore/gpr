@@ -239,45 +239,6 @@ Verbosity switches:
  -ws       Suppress all warnings
 
 -------------------------
-gprname -h
--------------------------
-Usage: gprname [switches] naming-pattern [naming-patterns]
-   {--and [switches] naming-pattern [naming-patterns]}
-
-general switches:
-  --version   Display version and exit
-  -h, --help  Display usage and exit
-
-  -eL             For backwards compatibility, has no effect
-  -P[ ]<proj>     Update or create project file <proj>
-
-  --ignore-duplicate-files    Ignore duplicate file names
-  --ignore-predefined-units   Ignore predefined units
-
-  --no-backup     Do not create backup of project file
-  --target=<targ> Indicates the target of the GNAT compiler
-  --RTS=<dir>     Specify the Ada runtime
-
-  -gnateD<sym>=<val> Preprocess with symbol definition
-  -gnatep=<data>     Preprocess files with data file
-
-  --minimal-dirs  Keep as Source_Dirs only the directories that contain at least one source.
-                  This will also expand any /** suffix to an explicit list of directories.
-
-  -v           Verbose output
-  -v -v        Very verbose output
-  -vP<x>       Specify verbosity when parsing Project Files (x = 0/1/2)
-
-switches for naming pattern sections:
-  --and                Begin a new naming patterns section
-  -d[ ]<dir>           Use <dir> as one of the source directories for the current section
-  -D[ ]<file>          Get source directories and files from <file>
-   [-x][ ]<pat>        [exclude] pattern <pat> for Ada source
-  -[x]f[ ]<pat>        [exclude] pattern <pat> for C source
-  -[x]f:<lang>[ ]<pat> [exclude] pattern <pat> for source of language <lang>
-
-
--------------------------
 gprls --help
 -------------------------
 Usage:
@@ -518,45 +479,6 @@ Verbosity switches:
  -ws       Suppress all warnings
 
 -------------------------
-gprname --help
--------------------------
-Usage: gprname [switches] naming-pattern [naming-patterns]
-   {--and [switches] naming-pattern [naming-patterns]}
-
-general switches:
-  --version   Display version and exit
-  -h, --help  Display usage and exit
-
-  -eL             For backwards compatibility, has no effect
-  -P[ ]<proj>     Update or create project file <proj>
-
-  --ignore-duplicate-files    Ignore duplicate file names
-  --ignore-predefined-units   Ignore predefined units
-
-  --no-backup     Do not create backup of project file
-  --target=<targ> Indicates the target of the GNAT compiler
-  --RTS=<dir>     Specify the Ada runtime
-
-  -gnateD<sym>=<val> Preprocess with symbol definition
-  -gnatep=<data>     Preprocess files with data file
-
-  --minimal-dirs  Keep as Source_Dirs only the directories that contain at least one source.
-                  This will also expand any /** suffix to an explicit list of directories.
-
-  -v           Verbose output
-  -v -v        Very verbose output
-  -vP<x>       Specify verbosity when parsing Project Files (x = 0/1/2)
-
-switches for naming pattern sections:
-  --and                Begin a new naming patterns section
-  -d[ ]<dir>           Use <dir> as one of the source directories for the current section
-  -D[ ]<file>          Get source directories and files from <file>
-   [-x][ ]<pat>        [exclude] pattern <pat> for Ada source
-  -[x]f[ ]<pat>        [exclude] pattern <pat> for C source
-  -[x]f:<lang>[ ]<pat> [exclude] pattern <pat> for source of language <lang>
-
-
--------------------------
 gprls --no-such-switch
 -------------------------
 gprls: unrecognized option '--no-such-switch'
@@ -575,12 +497,6 @@ gprinstall --no-such-switch
 -------------------------
 gprinstall: unrecognized option '--no-such-switch'
 try "gprinstall --help" for more information.
-STATUS: 4
-
--------------------------
-gprname --no-such-switch
--------------------------
-gprname: wrong switch: --no-such-switch
 STATUS: 4
 
 -------------------------
@@ -605,12 +521,6 @@ try "gprinstall --help" for more information.
 STATUS: 4
 
 -------------------------
-gprname -gnatep:foo
--------------------------
-gprname: project file name missing
-STATUS: 4
-
--------------------------
 gprls -P
 -------------------------
 gprls: parameter expected for argument '-P'
@@ -629,12 +539,6 @@ gprinstall -P
 -------------------------
 gprinstall: parameter expected for argument '-P'
 try "gprinstall --help" for more information.
-STATUS: 4
-
--------------------------
-gprname -P
--------------------------
-gprname: project file name missing
 STATUS: 4
 
 -------------------------
