@@ -660,15 +660,11 @@ package body GPRtools.Options is
          when Remote =>
             PRP.Check_Attributes (PRP.Remote);
 
-         when Ls | Name | Inspect =>
+         when Ls | Inspect =>
             null;
       end case;
       --  GPR tree handling
 
-      if Tool = Name then
-         --  GPRName doesn't need any project-related argument
-         return;
-      end if;
    end Setup;
 
 end GPRtools.Options;

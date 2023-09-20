@@ -200,8 +200,7 @@ ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2-tools))
 	${UNINSTALLER} $(notdir ${GPR2TOOLS})
 endif
 
-install: uninstall-libs ${LIBGPR2_TYPES:%=install-lib-%} install-tools \
-           install-gprname
+install: uninstall-libs ${LIBGPR2_TYPES:%=install-lib-%} install-tools
 
 install-libs: uninstall-libs ${LIBGPR2_TYPES:%=install-lib-%}
 

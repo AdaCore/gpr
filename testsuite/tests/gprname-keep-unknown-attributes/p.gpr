@@ -1,5 +1,0 @@
-project P is
-   package Codepeer is
-      for Foo use "Bar";
-   end Codepeer;
-end P;

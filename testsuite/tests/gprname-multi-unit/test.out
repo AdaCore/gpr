@@ -1,9 +1,0 @@
-Pkg.Execute
-
-/sources~2.o
-   PKG
-      OK /sources.ada at index 2
-/sources~3.o
-   MAIN
-      OK /sources.ada at index 3
-
