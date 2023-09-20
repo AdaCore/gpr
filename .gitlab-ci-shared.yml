@@ -208,7 +208,6 @@ default:
   services:
      - image:e3
      - cpu:8
-     - mem:16
   interruptible: true
 
 .test_template:
