@@ -1,3 +1,0 @@
-description: test gpr2name importing gprbuild-internal O512-046 tests
-driver: python_script
-timeout: 600

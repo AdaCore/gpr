@@ -18,7 +18,7 @@
 
 package GPRtools is
 
-   type Which is (Build, Clean, Ls, Install, Name, Remote, Inspect);
+   type Which is (Build, Clean, Ls, Install, Remote, Inspect);
    --  Names of the supported tools
 
    type Verbosity_Level is (Quiet, Regular, Verbose, Very_Verbose);
