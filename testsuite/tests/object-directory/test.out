@@ -1,6 +1,6 @@
 Demo1    K_STANDARD
-object-directory/obj
+obj
 Demo2    K_STANDARD
-object-directory
+
 Demo2    K_STANDARD
-object-directory/debug
+debug

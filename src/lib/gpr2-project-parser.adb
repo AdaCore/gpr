@@ -375,7 +375,7 @@ package body GPR2.Project.Parser is
       end if;
 
       Unit := Get_From_Buffer
-        (Context, Filename.Value, Buffer => To_String (Contents));
+        (Context, Filename.String_Value, Buffer => To_String (Contents));
 
       if Root (Unit).Is_Null or else Has_Diagnostics (Unit) then
          if Has_Diagnostics (Unit) then
@@ -460,13 +460,13 @@ package body GPR2.Project.Parser is
             Messages.Append
               (GPR2.Message.Create
                  (Level   => Message.Error,
-                  Message => "project file """ & Filename.Value &
+                  Message => "project file """ & Filename.String_Value &
                              """ not found",
                   Sloc    => Source_Reference.Create (Filename.Value, 0, 0)));
             return Undefined;
          end if;
 
-         Unit := Get_From_File (Context, Filename.Value);
+         Unit := Get_From_File (Context, Filename.String_Value);
 
          if Root (Unit).Is_Null or else Has_Diagnostics (Unit) then
             declare
@@ -481,7 +481,7 @@ package body GPR2.Project.Parser is
                Context := Create_Context (Charset     => "Windows-1252",
 
                                           File_Reader => File_Reader);
-               Unit := Get_From_File (Context, Filename.Value);
+               Unit := Get_From_File (Context, Filename.String_Value);
 
                if Root (Unit).Is_Null or else Has_Diagnostics (Unit) then
                   declare
@@ -4296,7 +4296,8 @@ package body GPR2.Project.Parser is
          Attrs.Insert
            (PA.Create
               (Name    => Create_Attr (PRA.Project_Dir),
-               Value   => Get_Value_Reference (Self.File.Dir_Name, Sloc),
+               Value   => Get_Value_Reference
+                            (String (Self.File.Dir_Name), Sloc),
                Default => True));
       end;
 

@@ -368,7 +368,7 @@ procedure GPRremote is
          Context  : GPR2.Context.Object;
       begin
          if Options.Verbose then
-            Put_Line ("loading project: " & Pathname.Value);
+            Put_Line ("loading project: " & Pathname.String_Value);
          end if;
 
          Project.Load

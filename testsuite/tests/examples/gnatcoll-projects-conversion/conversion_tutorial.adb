@@ -270,7 +270,7 @@ begin
    loop
       for Source of GPR2.Project.Tree.Element (Cursor).Sources loop
          Last_Source := Source.Path_Name;
-         Put_Line (Source.Path_Name.Value);
+         Put_Line (Source.Path_Name.String_Value);
       end loop;
    end loop;
 
@@ -292,7 +292,8 @@ begin
       --  To_Pathname functions
       Put_Line ("To_Pathnane:" & String
                 (GPR2.Path_Name.Create
-                   (GNATCOLL.VFS.Filesystem_String (Last_Source.Value)).Name));
+                   (GNATCOLL.VFS.Filesystem_String
+                      (Last_Source.Value)).Name));
       Put_Line ("To_Pathname:" & String
                 (GPR2.Path_Name.Create (GNATCOLL.VFS.Create
                    (GNATCOLL.VFS.Filesystem_String

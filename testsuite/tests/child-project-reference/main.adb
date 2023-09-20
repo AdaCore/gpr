@@ -70,7 +70,7 @@ procedure Main is
                GPR2.Path_Name.Create_File
                  (GPR2.Project.Ensure_Extension (Project_Name));
       Unit : constant GPR_Parser.Analysis.Analysis_Unit :=
-               GPR_Parser.Analysis.Get_From_File (Ctx, Path.Value);
+               GPR_Parser.Analysis.Get_From_File (Ctx, Path.String_Value);
       PP   : GPR2.Project.Pretty_Printer.Object;
 
    begin

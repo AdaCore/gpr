@@ -95,7 +95,7 @@ package body GPR2.Options is
                   raise GPR2.Options.Usage_Error with
                     """-P"", project already """
                     & (if Self.Project_File.Has_Dir_Name
-                       then Self.Project_File.Value
+                       then Self.Project_File.String_Value
                        else String (Self.Project_File.Name)) & '"';
                end if;
             end if;
@@ -244,12 +244,13 @@ package body GPR2.Options is
 
                if not Quiet then
                   Ada.Text_IO.Put_Line
-                    ("use implicit project in " & Self.Project_Base.Value);
+                    ("use implicit project in " &
+                       Self.Project_Base.String_Value);
                end if;
 
             elsif not Quiet then
                Ada.Text_IO.Put_Line
-                 ("using project file " & Self.Project_File.Value);
+                 ("using project file " & Self.Project_File.String_Value);
             end if;
          end if;
 
@@ -284,7 +285,7 @@ package body GPR2.Options is
             elsif Self.Root_Path.Is_Defined then
                Self.Build_Path := GPR2.Path_Name.Create_Directory
                  (Project_Dir.Relative_Path (Self.Root_Path).Name,
-                  Filename_Type (Self.Build_Path.Value));
+                  Self.Build_Path.Value);
             end if;
          end if;
       end;
@@ -438,7 +439,7 @@ package body GPR2.Options is
    function On_Extra_Arg (Self : in out Object; Arg : String) return Boolean is
    begin
       if GNATCOLL.Utils.Ends_With
-        (GPR2.Path_Name.To_OS_Case (Arg),
+        (GPR2.Path_Name.To_OS_Case (Filename_Optional (Arg)),
          String (GPR2.Project.Project_File_Extension))
       then
          if not Self.Project_File.Is_Defined then

@@ -25,7 +25,7 @@ procedure test is
       File : File_Type;
    begin
       Create (File => File,
-              Name => Path.Value);
+              Name => Path.String_Value);
       Put_Line (File, Before & Middle & After);
       Close (File);
    end Write;

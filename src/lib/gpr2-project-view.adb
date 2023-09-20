@@ -169,14 +169,14 @@ package body GPR2.Project.View is
             Result := GPR2.Path_Name.Create_Directory
               (Self.Dir_Name.Relative_Path
                  (Self.Tree.Root_Project.Dir_Name).Name,
-               Filename_Type (Self.Tree.Build_Path.Value));
+               Self.Tree.Build_Path.Value);
 
             Result := GPR2.Path_Name.Create_Directory
-              (Dir_Name, Filename_Type (Result.Value));
+              (Dir_Name, Result.Value);
 
          else
             Result := GPR2.Path_Name.Create_Directory
-              (Dir_Name, Filename_Type (Self.Dir_Name.Value));
+              (Dir_Name, Self.Dir_Name.Value);
          end if;
 
          if Subdirs = No_Filename then
@@ -184,7 +184,7 @@ package body GPR2.Project.View is
          end if;
 
          return GPR2.Path_Name.Create_Directory
-           (Subdirs, Filename_Type (Result.Value));
+           (Subdirs, Result.Value);
       end Compute;
 
       Def      : Definition.Ref renames Self.Get_Ref;
@@ -235,14 +235,14 @@ package body GPR2.Project.View is
          Item : Directory_Entry_Type;
          Find : Search_Type;
       begin
-         if not Exists (Dir.Value) then
+         if not Dir.Exists then
             return;
          end if;
 
          for Name of Self.Clean_Attribute_List (Attr, No_Language) loop
             Start_Search
               (Search    => Find,
-               Directory => Dir.Value,
+               Directory => Dir.String_Value,
                Pattern   => Name,
                Filter    => (Ordinary_File => True, others => False));
 
@@ -1107,8 +1107,8 @@ package body GPR2.Project.View is
       Gen_Src   : Boolean := False;
 
    begin
-      if GNAT.OS_Lib.Is_Regular_File (BF.Value) then
-         Open (File, Mode => In_File, Name => BF.Value);
+      if GNAT.OS_Lib.Is_Regular_File (String (BF.Value)) then
+         Open (File, Mode => In_File, Name => String (BF.Value));
 
          while not End_Of_File (File) loop
             declare
@@ -2492,17 +2492,19 @@ package body GPR2.Project.View is
                    (if Src.Source.Is_Defined
                     then Src.Source.Language
                     else No_Language);
-      Suffix   : constant String :=
+      Suffix   : constant Filename_Optional :=
                    (if Lang /= No_Language
                     and then Src.Owning_View.Has_Body_Suffix (Lang)
-                    then Src.Owning_View.Body_Suffix (Lang).Value.Text
+                    then Filename_Optional
+                           (Src.Owning_View.Body_Suffix (Lang).Value.Text)
                     else "");
    begin
       if Suffix'Length > 0
         and then Name'Length > Suffix'Length
         and then GPR2.Path_Name.To_OS_Case (Suffix) =
                    GPR2.Path_Name.To_OS_Case
-                     (Strings.Fixed.Tail (String (Name), Suffix'Length))
+                     (Filename_Optional
+                       (Strings.Fixed.Tail (String (Name), Suffix'Length)))
       then
          Last := Name'Last - Suffix'Length;
       else
@@ -2565,13 +2567,13 @@ package body GPR2.Project.View is
    function Source_Directories
      (Self : Object) return GPR2.Path_Name.Set.Object
    is
-      procedure Dir_Cb (Dir_Name : GPR2.Path_Name.Object);
+      procedure Dir_Cb (Dir_Name : GPR2.Path_Name.Full_Name);
 
       Result                   : GPR2.Path_Name.Set.Object;
 
-      procedure Dir_Cb (Dir_Name : GPR2.Path_Name.Object) is
+      procedure Dir_Cb (Dir_Name : GPR2.Path_Name.Full_Name) is
       begin
-         Result.Append (Dir_Name);
+         Result.Append (GPR2.Path_Name.Create_Directory (Dir_Name));
       end Dir_Cb;
 
    begin
@@ -2589,10 +2591,10 @@ package body GPR2.Project.View is
    procedure Source_Directories_Walk
      (View      : Project.View.Object;
       Source_CB : access procedure
-                   (Dir_Reference : GPR2.Source_Reference.Value.Object;
-                    Source        : GPR2.Path_Name.Object;
-                    Timestamp     : Ada.Calendar.Time);
-      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object))
+                    (Dir_Reference : GPR2.Source_Reference.Value.Object;
+                     Source        : GPR2.Path_Name.Full_Name;
+                     Timestamp     : Ada.Calendar.Time);
+      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Full_Name))
    is
       Visited_Dirs               : GPR2.Containers.Filename_Set;
       Dir_Ref                    : GPR2.Source_Reference.Value.Object;
@@ -2601,8 +2603,8 @@ package body GPR2.Project.View is
       Ignored_Sub_Dirs_Regexps   : Regexp_List.Vector;
       Excluded_Dirs              : constant GPR2.Project.Attribute.Object :=
                                      View.Attribute (PRA.Excluded_Source_Dirs);
-      Excluded_Dirs_List         : GPR2.Path_Name.Set.Object;
-      Excluded_Recurse_Dirs_List : GPR2.Path_Name.Set.Object;
+      Excluded_Dirs_List         : GPR2.Containers.Filename_Set;
+      Excluded_Recurse_Dirs_List : GPR2.Containers.Filename_Set;
       --  Ignore_Source_Sub_Dirs attribute values. In case the directory ends
       --  with a recursive indication "**", the dir is placed in
       --  Excluded_Recursive_Dirs_List.
@@ -2614,7 +2616,7 @@ package body GPR2.Project.View is
          Do_Subdir_Visit : in out Boolean);
 
       procedure On_File
-        (File      : GPR2.Path_Name.Object;
+        (File      : GPR2.Path_Name.Full_Name;
          Timestamp : Ada.Calendar.Time);
 
       ------------------
@@ -2630,7 +2632,7 @@ package body GPR2.Project.View is
          Position : GPR2.Containers.Filename_Type_Set.Cursor;
          Inserted : Boolean;
       begin
-         if Excluded_Dirs_List.Contains (Directory) then
+         if Excluded_Dirs_List.Contains (Directory.Value) then
             --  Do not visit this directory's files but still look for
             --  subdirectories.
 
@@ -2638,7 +2640,7 @@ package body GPR2.Project.View is
 
             return;
 
-         elsif Excluded_Recurse_Dirs_List.Contains (Directory) then
+         elsif Excluded_Recurse_Dirs_List.Contains (Directory.Value) then
             --  Do not visit directory and subdirectories
 
             Do_Dir_Visit := False;
@@ -2650,7 +2652,8 @@ package body GPR2.Project.View is
          if not Is_Root_Dir then
             for Ignored_Sub_Dir of Ignored_Sub_Dirs_Regexps loop
                if GNAT.Regexp.Match
-                 (String (Directory.Simple_Name), Ignored_Sub_Dir)
+                 (String (GPR2.Path_Name.Simple_Name (Directory)),
+                  Ignored_Sub_Dir)
                then
                   --  Ignore this matching sub dir tree.
                   Do_Dir_Visit    := False;
@@ -2665,14 +2668,14 @@ package body GPR2.Project.View is
          --  this source directory:
 
          Visited_Dirs.Insert
-           (Directory.Name, Position, Inserted);
+           (Directory.Value, Position, Inserted);
 
          if not Inserted then
             --  Already visited
             Do_Dir_Visit    := False;
 
          elsif Dir_CB /= null then
-            Dir_CB (Directory);
+            Dir_CB (Directory.Value);
          end if;
       end On_Directory;
 
@@ -2681,7 +2684,7 @@ package body GPR2.Project.View is
       -------------
 
       procedure On_File
-        (File      : GPR2.Path_Name.Object;
+        (File      : GPR2.Path_Name.Full_Name;
          Timestamp : Ada.Calendar.Time)
       is
       begin
@@ -2716,9 +2719,9 @@ package body GPR2.Project.View is
             begin
                if Dir_Val'Length = 0 then
                   if Recursive then
-                     Excluded_Recurse_Dirs_List.Append (View.Dir_Name);
+                     Excluded_Recurse_Dirs_List.Include (View.Dir_Name.Value);
                   else
-                     Excluded_Dirs_List.Append (View.Dir_Name);
+                     Excluded_Dirs_List.Include (View.Dir_Name.Value);
                   end if;
                else
                   declare
@@ -2731,11 +2734,11 @@ package body GPR2.Project.View is
                                         (From => View.Dir_Name).Name;
                   begin
                      if Recursive then
-                        Excluded_Recurse_Dirs_List.Append
-                          (View.Dir_Name.Compose (Relative_Dir, True));
+                        Excluded_Recurse_Dirs_List.Include
+                          (View.Dir_Name.Compose (Relative_Dir, True).Value);
                      else
-                        Excluded_Dirs_List.Append
-                          (View.Dir_Name.Compose (Relative_Dir, True));
+                        Excluded_Dirs_List.Include
+                          (View.Dir_Name.Compose (Relative_Dir, True).Value);
                      end if;
                   end;
                end if;
@@ -2748,7 +2751,7 @@ package body GPR2.Project.View is
          --  --src-subdir, just skip if the dir does not exist (it is
          --  optional).
          if not (View.Has_Source_Subdirectory
-                 and then S.Text = View.Source_Subdirectory.Value
+                 and then S.Text = View.Source_Subdirectory.String_Value
                  and then not Ada.Directories.Exists (S.Text))
          then
             Dir_Ref := S;

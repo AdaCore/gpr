@@ -630,7 +630,7 @@ package body GPR2.Project.Definition is
       Directory_Pattern : Filename_Optional;
       Source            : Source_Reference.Value.Object;
       File_CB           : access procedure
-                            (File      : Path_Name.Object;
+                            (File      : Path_Name.Full_Name;
                              Timestamp : Ada.Calendar.Time);
       Directory_CB      : access procedure
                             (Directory       : Path_Name.Object;
@@ -659,13 +659,13 @@ package body GPR2.Project.Definition is
       States    : Walk_State_List_Access := new Walk_State_List (1 .. 4);
       New_States : Walk_State_List_Access;
       Current   : Natural := 0;
-      Dir       : constant String :=
+      Dir       : constant Filename_Optional :=
                     (if Directory_Pattern'Length = 0
                      then "."
                      else
                        (if Directory_Pattern = "**"
                         then "./**"
-                        else String (Directory_Pattern)));
+                        else Directory_Pattern));
       --  Normalize dir part avoiding "" & "**"
       Recursive : constant Boolean :=
                     Dir'Length > 2
@@ -673,8 +673,8 @@ package body GPR2.Project.Definition is
                     and then Is_Directory_Separator (Dir (Dir'Last - 2));
       Last      : constant Positive :=
                     Dir'Last - (if Recursive then 2 else 0);
-      Root_Dir  : constant String :=
-                    (if GNAT.OS_Lib.Is_Absolute_Path (Dir)
+      Root_Dir  : constant Filename_Optional :=
+                    (if GNAT.OS_Lib.Is_Absolute_Path (String (Dir))
                      then Dir (Dir'First .. Last)
                      else Base_Dir.Compose
                        (Filename_Optional (Dir (Dir'First .. Last))).Value);
@@ -770,9 +770,14 @@ package body GPR2.Project.Definition is
                   Stat := Attributes (D_Entry);
 
                   if States (Current).Do_Dir_Visit and then Is_File (Stat) then
+                     --  Don't create a Path_Name object here as this is
+                     --  very costly and we can manipulate a pretty great
+                     --  number of files here. Using a Filename_Type (e.g. a
+                     --  string) is much faster.
+
                      File_CB
-                       (States (Current).Dir.Compose
-                          (Filename_Type (Name (D_Entry))),
+                       (States (Current).Dir.Dir_Name &
+                          Filename_Type (Name (D_Entry)),
                         Modification_Time (Stat));
 
                   elsif States (Current).Do_Subdir_Visit

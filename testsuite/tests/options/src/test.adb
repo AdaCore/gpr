@@ -352,7 +352,7 @@ procedure test is
       procedure Output_Values (Allow_Implicit_Project : String := "")is
          use Ada.Containers;
       begin
-         Put_Line ("Filename" & Allow_Implicit_Project & ":" & Options.Filename.Value);
+         Put_Line ("Filename" & Allow_Implicit_Project & ":" & Options.Filename.String_Value);
          Put_Line ("Context.Length" & Allow_Implicit_Project & ":" & Options.Context.Length'Image);
 
          if Options.Implicit_With.Length > 0 then
@@ -367,7 +367,7 @@ procedure test is
             Put_Line ("Config_Project" & Allow_Implicit_Project & ": is not defined");
          end if;
 
-         Put_Line ("Build_Path" & Allow_Implicit_Project & ":" & Options.Build_Path.Value);
+         Put_Line ("Build_Path" & Allow_Implicit_Project & ":" & Options.Build_Path.String_Value);
 
          declare
             Subdirs     : constant GPR2.Optional_Name_Type := Options.Subdirs;

@@ -143,9 +143,11 @@ procedure Main is
    ---------------------
 
    procedure Output_Filename (Filename : Path_Name.Full_Name) is
-      I : constant Positive := Strings.Fixed.Index (Filename, "adainclude");
+      S : constant String := String (Filename);
+      Test : constant String := "adainclude";
+      I : constant Positive := Strings.Fixed.Index (S, Test);
    begin
-      Text_IO.Put (" > " & Filename (I .. Filename'Last));
+      Text_IO.Put (" > " & S (I .. S'Last));
    end Output_Filename;
 
    Gpr : constant Path_Name.Object := Create ("demo.gpr");
@@ -163,16 +165,7 @@ procedure Main is
 
 begin
    if Cnf.Has_Messages then
-      for M of Cnf.Log_Messages loop
-         declare
-            F : constant String := M.Sloc.Filename;
-            I : constant Natural := Strings.Fixed.Index (F, "runtime");
-         begin
-            Text_IO.Put_Line ("> " & F (I - 1 .. F'Last));
-            Text_IO.Put_Line (M.Level'Img);
-            Text_IO.Put_Line (M.Format);
-         end;
-      end loop;
+      Cnf.Log_Messages.Output_Messages (Information => False);
    end if;
 
    Project.Tree.Load (Prj, Gpr, Ctx, With_Runtime => True, Config => Cnf);
@@ -211,20 +204,7 @@ begin
 
 exception
    when E : GPR2.Project_Error =>
-      Text_Io.Put_Line (Exception_Information (E));
-
-      if Prj.Has_Messages then
-         Text_IO.Put_Line ("Messages found:");
-
-         for M of Prj.Log_Messages.all loop
-            declare
-               F : constant String := M.Sloc.Filename;
-               I : constant Natural := Strings.Fixed.Index (F, "runtime");
-            begin
-               Text_IO.Put_Line ("> " & F (I - 1 .. F'Last));
-               Text_IO.Put_Line (M.Level'Img);
-               Text_IO.Put_Line (M.Format);
-            end;
-         end loop;
-      end if;
+      Text_IO.Put_Line (Exception_Information (E));
+      Text_IO.Put_Line ("Messages found:");
+      Prj.Log_Messages.Output_Messages (Information => False);
 end Main;

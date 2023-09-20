@@ -979,8 +979,7 @@ package body GPR2.Project.Tree is
            (Root_Project.Path.Name, Self.Search_Paths.All_Paths);
 
          if not Build_Path.Is_Defined then
-            Self.Build_Path := Path_Name.Create_Directory
-              (Filename_Type (Gpr_Path.Dir_Name));
+            Self.Build_Path := Path_Name.Create_Directory (Gpr_Path.Dir_Name);
          end if;
       end if;
 
@@ -989,7 +988,7 @@ package body GPR2.Project.Tree is
       Self.Messages.Append
         (Message.Create
            (Message.Information,
-            "Parsing """ & Gpr_Path.Value & """",
+            "Parsing """ & Gpr_Path.String_Value & """",
             Source_Reference.Create (Gpr_Path.Value, 0, 0)));
 
       --  Add all search paths into the message log
@@ -998,7 +997,8 @@ package body GPR2.Project.Tree is
          Search_Paths : Unbounded_String;
       begin
          for P of Self.Search_Paths.All_Paths loop
-            Append (Search_Paths, GNAT.OS_Lib.Path_Separator & P.Value);
+            Append
+              (Search_Paths, GNAT.OS_Lib.Path_Separator & P.String_Value);
          end loop;
          --  Remove first path separator
          Delete (Search_Paths, 1, 1);
@@ -1083,8 +1083,8 @@ package body GPR2.Project.Tree is
 
       elsif not Self.Pre_Conf_Mode then
          raise Project_Error
-         with Gpr_Path.Value &
-         ": fatal error, cannot load the project tree";
+           with Gpr_Path.String_Value &
+           ": fatal error, cannot load the project tree";
       end if;
    end Load;
 
@@ -1526,8 +1526,7 @@ package body GPR2.Project.Tree is
                --  This is influenced by the Project_Dir parameters used on
                --  load to simulate that a project is in another location.
 
-               Data.Path := Path_Name.Create_Directory
-                              (Filename_Type (Filename.Dir_Name));
+               Data.Path := Path_Name.Create_Directory (Filename.Dir_Name);
 
                --  If parent view is an extending project keep track of the
                --  relationship.
@@ -1562,7 +1561,7 @@ package body GPR2.Project.Tree is
                declare
                   Full_Name : constant String :=
                                 OS_Lib.Normalize_Pathname
-                                  (View.Path_Name.Value);
+                                  (View.Path_Name.String_Value);
                begin
                   if P_Names.Contains (View.Name) then
                      if P_Names (View.Name) /= Full_Name then
@@ -1574,7 +1573,7 @@ package body GPR2.Project.Tree is
                                           & P_Names (View.Name)
                                           & """",
                               Sloc    => Source_Reference.Create
-                                           (Full_Name, 1, 1)));
+                                           (Filename_Type (Full_Name), 1, 1)));
                      end if;
 
                   else
@@ -2014,7 +2013,7 @@ package body GPR2.Project.Tree is
                else
                   Path := Path_Name.Create_Directory
                     (Filename_Type (P.Text),
-                     Filename_Type (Starting_From.Dir_Name.Value));
+                     Starting_From.Dir_Name.Value);
 
                   if Prepend then
                      Search_Path.Prepend (Path);
@@ -2129,8 +2128,7 @@ package body GPR2.Project.Tree is
                      Self.Messages.Append
                        (Message.Create
                           (Message.Error,
-                           "depends on " &
-                             String (Current.Path_Name.Value),
+                           "depends on " & Current.Path_Name.String_Value,
                            Source_Reference.Create
                              (Prev.Path_Name.Value, 0, 0)));
                   end if;
@@ -2279,7 +2277,7 @@ package body GPR2.Project.Tree is
                  (Source_Reference.Value.Object
                     (Source_Reference.Value.Create
                          (Source_Reference.Object (SD),
-                          V.Source_Subdirectory.Value)));
+                          V.Source_Subdirectory.String_Value)));
 
                Def.Attrs.Include (Attribute.Create (SD.Name, SV));
             end;
@@ -2364,6 +2362,8 @@ package body GPR2.Project.Tree is
 
             procedure Get_Files is
 
+               package PN renames GPR2.Path_Name;
+
                View_Dir      : constant GPR2.Path_Name.Object :=
                                  Path_Name.Create_Directory
                                    (Filename_Optional
@@ -2380,13 +2380,12 @@ package body GPR2.Project.Tree is
                --  The absolute path pattern to get matching files
 
                Dir_Part      : constant Filename_Optional :=
-                                 Filename_Optional
-                                   (Pattern.Containing_Directory.Relative_Path
-                                      (View_Dir).Value);
+                                 Pattern.Containing_Directory.Relative_Path
+                                   (View_Dir).Value;
                --  The dir part without the trailing directory separator
 
                Filename_Part : constant Filename_Optional :=
-                                 Filename_Optional (Pattern.Simple_Name);
+                                 Pattern.Simple_Name;
                --  The filename pattern of matching files
 
                Filename      : constant Filename_Optional :=
@@ -2404,7 +2403,7 @@ package body GPR2.Project.Tree is
                --  regexp pattern for matching Filename
 
                procedure Handle_File
-                 (File      : GPR2.Path_Name.Object;
+                 (File      : GPR2.Path_Name.Full_Name;
                   Timestamp : Ada.Calendar.Time);
 
                procedure Is_Directory_Handled
@@ -2418,16 +2417,21 @@ package body GPR2.Project.Tree is
                -----------------
 
                procedure Handle_File
-                 (File      : GPR2.Path_Name.Object;
+                 (File      : GPR2.Path_Name.Full_Name;
                   Timestamp : Ada.Calendar.Time)
                is
                   pragma Unreferenced (Timestamp);
                begin
-                  if GNAT.Regexp.Match (String (File.Simple_Name),
+                  if GNAT.Regexp.Match (String (PN.Simple_Name (File)),
                                         Filename_Regexp)
-                    and then not Files.Contains (File)
                   then
-                     Files.Append (File);
+                     declare
+                        Path : constant PN.Object := PN.Create_File (File);
+                     begin
+                        if not Files.Contains (Path) then
+                           Files.Append (Path);
+                        end if;
+                     end;
                   end if;
                end Handle_File;
 
@@ -2452,7 +2456,8 @@ package body GPR2.Project.Tree is
                      begin
                         if File.Exists
                           and then not Files.Contains (File)
-                          and then Kind (File.Value) /= Directories.Directory
+                          and then Kind (File.String_Value) /=
+                            Directories.Directory
                         then
                            Files.Append (File);
                         end if;
@@ -2647,9 +2652,7 @@ package body GPR2.Project.Tree is
 
                         Found := True;
 
-                     elsif Agg_Paths.Contains
-                       (Filename_Type (Pathname.Value))
-                     then
+                     elsif Agg_Paths.Contains (Pathname.Value) then
                         --  Duplicate in the project_files attribute
 
                         Self.Messages.Append
@@ -2679,13 +2682,13 @@ package body GPR2.Project.Tree is
                            --  of the aggregated project, just exit now.
 
                            if Self.Messages.Has_Error then
-                              raise Project_Error with Pathname.Value;
+                              raise Project_Error with Pathname.String_Value;
                            end if;
 
                            --  Record aggregated view into the aggregate's view
 
                            P_Data.Aggregated.Append (A_View);
-                           Agg_Paths.Insert (Filename_Type (Pathname.Value));
+                           Agg_Paths.Insert (Pathname.Value);
                         end;
 
                         Found := True;
@@ -2966,8 +2969,9 @@ package body GPR2.Project.Tree is
                         Self.Messages.Append
                           (Message.Create
                              (Message.Warning,
-                                  '"'
-                              & PN.Relative_Path (Self.Root.Path_Name).Value
+                              '"'
+                              & String
+                                 (PN.Relative_Path (Self.Root.Path_Name).Name)
                               & """ cannot relocate absolute "
                               & (if Human_Name = ""
                                 then ""
@@ -3178,7 +3182,7 @@ package body GPR2.Project.Tree is
 
       if Has_Error and then not Self.Pre_Conf_Mode then
          raise Project_Error
-           with Self.Root.Path_Name.Value & " semantic error";
+           with Self.Root.Path_Name.String_Value & " semantic error";
       end if;
    end Set_Context;
 
@@ -3290,8 +3294,7 @@ package body GPR2.Project.Tree is
      (Self       : Object;
       Normalized : Boolean := False) return Name_Type
    is
-      Target : constant Optional_Name_Type :=
-                 Optional_Name_Type (-Self.Explicit_Target);
+      Target : constant Optional_Name_Type := -Self.Explicit_Target;
    begin
       if Target = No_Name then
          return "all";

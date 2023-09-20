@@ -257,11 +257,12 @@ begin
       exception
          when others =>
             raise GPRname_Exception with
-              "could not create project file " & Project_Path.Value;
+              "could not create project file " & Project_Path.String_Value;
       end;
 
    else
-      Put_Line ("parsing already existing project file " & Project_Path.Value,
+      Put_Line ("parsing already existing project file " &
+                  Project_Path.String_Value,
                 Low);
    end if;
 
@@ -359,12 +360,13 @@ begin
 
       if not Compiler_Path.Exists then
          Put_Line ("warning: invalid compiler path from configuration ("
-                   & Compiler_Path.Value & ")", Low);
+                   & Compiler_Path.String_Value & ")", Low);
 
          if Default_Compiler /= "" then
             Compiler_Path := Path_Name.Create_File
               (Filename_Type (Default_Compiler));
-            Put_Line ("trying default gcc (" & Compiler_Path.Value & ")", Low);
+            Put_Line ("trying default gcc (" &
+                        Compiler_Path.String_Value & ")", Low);
 
          else
             raise GPRname_Exception with "no gcc found on PATH";
@@ -372,7 +374,7 @@ begin
       end if;
    end;
 
-   Put_Line ("compiler path = " & Compiler_Path.Value, Low);
+   Put_Line ("compiler path = " & Compiler_Path.String_Value, Low);
 
    --
    --  Process the section's directories to get the sources that match the
@@ -631,7 +633,8 @@ begin
       end Get_Dir_List;
 
       Ctx  : constant Analysis_Context := Create_Context;
-      Unit : constant Analysis_Unit := Get_From_File (Ctx, Project_Path.Value);
+      Unit : constant Analysis_Unit :=
+               Get_From_File (Ctx, Project_Path.String_Value);
       Hand : Rewriting_Handle := Start_Rewriting (Ctx);
 
       --  The rewriting handles that we will use:
@@ -802,7 +805,7 @@ begin
 
          begin
             begin
-               Directory_Operations.Open (Dir, Project_Path.Dir_Name);
+               Directory_Operations.Open (Dir, String (Project_Path.Dir_Name));
             exception
                when Directory_Operations.Directory_Error =>
                   raise GPRname_Exception with
@@ -980,9 +983,9 @@ begin
                   elsif File.File.Simple_Name = Listed_File.File.Simple_Name
                   then
                      Text_IO.Put_Line
-                       (Item => "warning: " & File.File.Value
+                       (Item => "warning: " & File.File.String_Value
                         & " hidden by "
-                        & Listed_File.File.Value
+                        & Listed_File.File.String_Value
                         & " found through source dirs");
                      exit;
                   end if;
@@ -1029,7 +1032,7 @@ begin
 
             raise GPRname_Exception with
               "could not create naming project file "
-              & Naming_Project_Path.Value;
+              & Naming_Project_Path.String_Value;
          end if;
 
          PP.Pretty_Print (Analysis_Unit => Unit);
@@ -1043,6 +1046,7 @@ begin
    exception
       when others =>
          raise GPRname_Exception with
-           "could not create naming project file " & Naming_Project_Path.Value;
+           "could not create naming project file " &
+           Naming_Project_Path.String_Value;
    end;
 end GPRname.Process;

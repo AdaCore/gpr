@@ -24,12 +24,13 @@ procedure Main is
    P5 : constant Path_Name.Object :=
           Path_Name.Create_File ("/xyz");
 
-   function Remove_Drive_Letter (Path : String) return String is
+   function Remove_Drive_Letter (Path : Filename_Type) return String is
+      S : constant String := String (Path);
    begin
-      if Path'Length > 2 and then not (Path (Path'First) in '/' | '\') then
-         return Path (Path'First + 2 .. Path'Last);
+      if S'Length > 2 and then not (S (S'First) in '/' | '\') then
+         return S (S'First + 2 .. S'Last);
       else
-         return Path;
+         return S;
       end if;
    end Remove_Drive_Letter;
 

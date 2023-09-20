@@ -1,7 +1,2 @@
 Messages found:
-> /errors-syntax/demo.gpr
-ERROR
- 8
- 4
-Expected ';', got Identifier
 demo.gpr:8:04: error: Expected ';', got Identifier

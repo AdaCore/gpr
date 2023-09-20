@@ -1,9 +1,9 @@
 Project: Demo
-/src/low.c -> undefined
+src/low.c -> undefined
       language: C       Kind: S_BODY
-/src/low.h -> undefined
+src/low.h -> undefined
       language: C       Kind: S_SPEC
-/src/pck.adb -> /src/pck.ads
+src/pck.adb -> src/pck.ads
       language: Ada     Kind: S_BODY   unit: PCK
-/src/pck.ads -> /src/pck.adb
+src/pck.ads -> src/pck.adb
       language: Ada     Kind: S_SPEC   unit: PCK

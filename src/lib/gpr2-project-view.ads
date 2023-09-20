@@ -408,9 +408,9 @@ package GPR2.Project.View is
      (View      : Project.View.Object;
       Source_CB : access procedure
                     (Dir_Reference : GPR2.Source_Reference.Value.Object;
-                     Source        : GPR2.Path_Name.Object;
+                     Source        : GPR2.Path_Name.Full_Name;
                      Timestamp     : Ada.Calendar.Time);
-      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object));
+      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Full_Name));
    --  Walks the source directories of Self and calls Source_CB on every
    --  file found, and Dir_CB on each directory found, if the callbacks are
    --  defined.

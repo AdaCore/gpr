@@ -86,10 +86,11 @@ procedure Main is
    ---------------------
 
    procedure Output_Filename (Filename : Path_Name.Full_Name) is
-      I : constant Positive :=
-            Strings.Fixed.Index (Filename, "extended-definitions");
+      S : constant String := String (Filename);
+      Test : constant String := "extended-definitions";
+      I : constant Positive := Strings.Fixed.Index (S, Test);
    begin
-      Text_IO.Put (" > " & Filename (I + 21 .. Filename'Last));
+      Text_IO.Put (" > " & S (I + Test'Length + 1 .. S'Last));
    end Output_Filename;
 
    Prj1, Prj2 : Project.Tree.Object;

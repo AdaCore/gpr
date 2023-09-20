@@ -34,7 +34,7 @@ procedure Main is
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       for M of Prj.Executables loop
-         Text_IO.Put_Line (Filter_Path (M.Dir_Name & String (M.Base_Name)));
+         Text_IO.Put_Line (Filter_Path (M.Value));
       end loop;
    end Display;
 
@@ -43,10 +43,11 @@ procedure Main is
    -----------------
 
    function Filter_Path (Filename : Path_Name.Full_Name) return String is
-      D : constant String := "mains";
-      I : constant Positive := Strings.Fixed.Index (Filename, D);
+      S : constant String := String (Filename);
+      Test : constant String := "mains";
+      I : constant Positive := Strings.Fixed.Index (S, Test);
    begin
-      return Filename (I .. Filename'Last);
+      return S (I + Test'Length + 1 .. S'Last);
    end Filter_Path;
 
    Prj : Project.Tree.Object;

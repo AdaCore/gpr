@@ -29,7 +29,7 @@ begin
    Ada.Text_IO.Put_Line ("p.gpr:");
    for Src_Dir of Src_Dirs loop
       Ada.Text_IO.Put_Line
-        (Src_Dir.Value &
+        (Src_Dir.String_Value &
          (if not Src_Dir.Is_Directory then " is not a directory" else ""));
    end loop;
 
@@ -43,7 +43,7 @@ begin
 
    Ada.Text_IO.Put_Line ("q.gpr:");
    for Src_Dir of Src_Dirs loop
-      Ada.Text_IO.Put_Line (Src_Dir.Value);
+      Ada.Text_IO.Put_Line (Src_Dir.String_Value);
    end loop;
 
    Project_Tree.Unload;

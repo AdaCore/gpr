@@ -176,7 +176,7 @@ private
       and then Self.Separates.Is_Empty);
 
    function Name (Self : Object) return Name_Type is
-     (Name_Type (-Self.Name));
+     (-Self.Name);
 
    function Root_View (Self : Object) return GPR2.Project.View.Object is
      (Self.Root_View);

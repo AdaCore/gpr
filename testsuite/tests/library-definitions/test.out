@@ -1,44 +1,44 @@
 Demo     K_LIBRARY
 Library_Name : abc
 Library_Directory : lib
-                  : /lib
+                  : lib
 Library Filename : libabc.so
-                 : /lib/libabc.so
+                 : lib/libabc.so
 Library Version Filename : libabc.so.1.2
-                         : /lib/libabc.so.1.2
+                         : lib/libabc.so.1.2
 Library Major Version Filename : libabc.so.1
-                               : /lib/libabc.so.1
+                               : lib/libabc.so.1
 Library_Standalone : NO
 Demo     K_LIBRARY
 Library_Name : abc
 Library_Directory : lib
-                  : /lib
+                  : lib
 Library Filename : libabc.so
-                 : /lib/libabc.so
+                 : lib/libabc.so
 Library Version Filename : libabc.so.1.4
-                         : /lib/libabc.so.1.4
+                         : lib/libabc.so.1.4
 Library Major Version Filename : libabc.so.1
-                               : /lib/libabc.so.1
+                               : lib/libabc.so.1
 Library_Standalone : NO
 Demo     K_LIBRARY
 Library_Name : abc
 Library_Directory : release
-                  : /lib/release
+                  : lib/release
 Library Filename : libabc.so
-                 : /lib/release/libabc.so
+                 : lib/release/libabc.so
 Library Version Filename : libabc.so.1.4
-                         : /lib/release/libabc.so.1.4
+                         : lib/release/libabc.so.1.4
 Library Major Version Filename : libabc.so.1
-                               : /lib/release/libabc.so.1
+                               : lib/release/libabc.so.1
 Library_Standalone : NO
 Demo     K_LIBRARY
 Library_Name : abc
 Library_Directory : release
-                  : /lib/release
+                  : lib/release
 Library Filename : libabc.so
-                 : /lib/release/libabc.so
+                 : lib/release/libabc.so
 Library Version Filename : libabc.so.A.B
-                         : /lib/release/libabc.so.A.B
+                         : lib/release/libabc.so.A.B
 Library Major Version Filename : libabc.so.A
-                               : /lib/release/libabc.so.A
+                               : lib/release/libabc.so.A
 Library_Standalone : NO

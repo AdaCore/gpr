@@ -104,9 +104,7 @@ package body Update_Sources_List is
       use Ada.Strings;
       use Ada.Strings.Maps;
 
-      Result     : Unbounded_String :=
-                     To_Unbounded_String
-                       (String (GPR2.Path_Name.Simple_Name (String (File))));
+      Result     : Unbounded_String := +GPR2.Path_Name.Simple_Name (File);
       Default_NS : constant  Boolean :=
                      NS.Spec_Suffix = ".ads" and then NS.Body_Suffix = ".adb"
                       and then NS.Sep_Suffix = ".adb" and then Dot_Repl = "-";
@@ -303,7 +301,7 @@ package body Update_Sources_List is
 
       procedure Handle_File
         (Dir_Ref   : SR.Value.Object;
-         File      : GPR2.Path_Name.Object;
+         File      : GPR2.Path_Name.Full_Name;
          Timestamp : Ada.Calendar.Time);
       --  Callback to Source_Directories_Walk: update the list of files found
       --  in the source directories.
@@ -343,12 +341,11 @@ package body Update_Sources_List is
 
       procedure Handle_File
         (Dir_Ref   : SR.Value.Object;
-         File      : GPR2.Path_Name.Object;
+         File      : GPR2.Path_Name.Full_Name;
          Timestamp : Ada.Calendar.Time)
       is
-         Path : constant Filename_Type := Filename_Type (File.Value);
       begin
-         Data.Src_Files.Include ((Path'Length, Timestamp, Dir_Ref, Path));
+         Data.Src_Files.Include ((File'Length, Timestamp, Dir_Ref, File));
       end Handle_File;
 
       -------------------
@@ -429,9 +426,7 @@ package body Update_Sources_List is
          --         - Exit.
 
          Basename         : constant Filename_Type :=
-                              Filename_Type
-                                (GPR2.Path_Name.Simple_Name
-                                   (String (File.Path)));
+                                GPR2.Path_Name.Simple_Name (File.Path);
 
          Match            : Boolean := False;
 
@@ -791,7 +786,7 @@ package body Update_Sources_List is
                      Messages => Messages);
 
                   Changed_Sources.Include
-                    (Path_Name.Simple_Name (String (F.Path)));
+                    (Path_Name.Simple_Name (F.Path));
                end if;
             end;
          end if;
@@ -818,7 +813,7 @@ package body Update_Sources_List is
                      Extended_View => Project.View.Undefined,
                      Messages      => Messages);
                   Changed_Sources.Include
-                    (Path_Name.Simple_Name (String (F.Path)));
+                    (Path_Name.Simple_Name (F.Path));
                end if;
 
             else

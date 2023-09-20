@@ -61,11 +61,11 @@ procedure Main is
    ---------------------
 
    function Filter_Filename (Filename : Path_Name.Object) return String is
-      F : constant Path_Name.Full_Name := Filename.Value;
-      D : constant String := "imported-views";
-      I : constant Positive := Strings.Fixed.Index (F, D);
+      S : constant String := Filename.String_Value;
+      Test : constant String := "imported-views";
+      I : constant Positive := Strings.Fixed.Index (S, Test);
    begin
-      return F (I + D'Length .. F'Last);
+      return S (I + Test'Length + 1 .. S'Last);
    end Filter_Filename;
 
 begin

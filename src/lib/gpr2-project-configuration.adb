@@ -28,8 +28,7 @@ package body GPR2.Project.Configuration is
 
    function Archive_Suffix (Self : Object) return Filename_Type is
    begin
-      return Filename_Type
-        (-Self.Conf.Attribute (PRA.Archive_Suffix).Value.Unchecked_Text);
+      return -Self.Conf.Attribute (PRA.Archive_Suffix).Value.Unchecked_Text;
    end Archive_Suffix;
 
    ------------------
@@ -124,17 +123,16 @@ package body GPR2.Project.Configuration is
 
       function Check_Runtime_Dir (Dir : Path_Name.Object) return Boolean is
          Adalib_Dir     : constant Path_Name.Object :=
-                            Path_Name.Create_Directory
-                              ("adalib", Filename_Type (Dir.Value));
+                            Path_Name.Create_Directory ("adalib", Dir.Value);
          Adainclude_Dir : constant Path_Name.Object :=
                             Path_Name.Create_Directory
-                              ("adainclude", Filename_Type (Dir.Value));
+                              ("adainclude", Dir.Value);
          AOP_File       : constant Path_Name.Object :=
                             Path_Name.Create_File
-                              ("ada_object_path", Filename_Type (Dir.Value));
+                              ("ada_object_path", Dir.Value);
          ASP_File       : constant Path_Name.Object :=
                             Path_Name.Create_File
-                              ("ada_source_path", Filename_Type (Dir.Value));
+                              ("ada_source_path", Dir.Value);
       begin
          return (Adalib_Dir.Exists or else AOP_File.Exists)
            and then (Adainclude_Dir.Exists or else ASP_File.Exists);
@@ -191,8 +189,7 @@ package body GPR2.Project.Configuration is
             begin
                if Runtime_Dir.Exists and then Check_Runtime_Dir (Runtime_Dir)
                then
-                  Settings_Local (Descr).Runtime :=
-                    To_Unbounded_String (Runtime_Dir.Value);
+                  Settings_Local (Descr).Runtime := +Runtime_Dir.Value;
                   exit;
                end if;
 
@@ -205,15 +202,15 @@ package body GPR2.Project.Configuration is
                   if Runtime_Dir.Is_Defined and then Runtime_Dir.Exists then
                      if Check_Runtime_Dir (Runtime_Dir) then
 
-                        Settings_Local (Descr).Runtime :=
-                          To_Unbounded_String (Runtime_Dir.Value);
+                        Settings_Local (Descr).Runtime := +Runtime_Dir.Value;
                         exit;
                      else
 
                         Result.Messages.Append
                           (Message.Create
                              (Message.Error,
-                              "invalid runtime directory " & Runtime_Dir.Value,
+                              "invalid runtime directory " &
+                                Runtime_Dir.String_Value,
                               Sloc => Source_Reference.Create
                                 (Project_Path.Value, 0, 0)));
 
@@ -269,7 +266,7 @@ package body GPR2.Project.Configuration is
                Output : Text_IO.File_Type;
             begin
                Ada.Text_IO.Create (Output, Ada.Text_IO.Out_File,
-                                   String (Save_Name.Value));
+                                   Save_Name.String_Value);
                Ada.Text_IO.Put_Line
                  (Output, To_String (Configuration_String));
                Ada.Text_IO.Close (Output);
@@ -283,15 +280,14 @@ package body GPR2.Project.Configuration is
                  Messages        => Parsing_Messages,
                  Pseudo_Filename => Path_Name.Create_File
                    ("autoconf.cgpr",
-                    Filename_Type (Path_Name.Temporary_Directory.Value)));
+                    Path_Name.Temporary_Directory.Value));
          else
             Result.Project :=
               GPR2.Project.Parser.Parse
                 (Contents        => Configuration_String,
                  Messages        => Parsing_Messages,
                  Pseudo_Filename => Path_Name.Create_File
-                   ("autoconf.cgpr",
-                    Filename_Type (Project_Path.Dir_Name)));
+                   ("autoconf.cgpr", Project_Path.Dir_Name));
          end if;
 
          for M of Parsing_Messages loop

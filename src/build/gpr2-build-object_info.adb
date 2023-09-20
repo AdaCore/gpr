@@ -128,9 +128,7 @@ package body GPR2.Build.Object_Info is
    begin
       return Result : Separate_Maps.Map do
          for Sep of Self.CU.Separates loop
-            Result.Include
-              (Name_Type (-Sep.Sub_Unit),
-               Filename_Type (-Sep.Source));
+            Result.Include (-Sep.Sub_Unit, -Sep.Source);
          end loop;
       end return;
    end Separates;

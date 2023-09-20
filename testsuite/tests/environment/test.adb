@@ -13,8 +13,7 @@ with GPR2.Project.Tree;
 procedure Test is
 
    PATH : constant String :=
-            Ada.Environment_Variables.Value
-              ("PATH", "");
+            Ada.Environment_Variables.Value ("PATH", "");
    GPR_PROJECT_PATH : constant String :=
                         Ada.Environment_Variables.Value
                           ("GPR_PROJECT_PATH", "");
@@ -32,7 +31,7 @@ procedure Test is
       Content : constant String :=
                   GPR2.Path_Name.Create_Directory
                     (Name      => "gpr_project_path_file",
-                     Directory => Root).Value;
+                     Directory => Root).String_Value;
    begin
       Environment.Insert ("PATH", PATH);
       Ada.Environment_Variables.Set ("PATH", "");
@@ -41,7 +40,7 @@ procedure Test is
         ("ADA_PROJECT_PATH",
          GPR2.Path_Name.Create_Directory
            (Name      => "ada_project_path",
-            Directory => Root).Value
+            Directory => Root).String_Value
          & GNAT.OS_Lib.Path_Separator
          & ADA_PROJECT_PATH);
       Ada.Environment_Variables.Set ("ADA_PROJECT_PATH", "");
@@ -50,7 +49,7 @@ procedure Test is
         ("GPR_PROJECT_PATH",
          GPR2.Path_Name.Create_Directory
            (Name      => "gpr_project_path",
-            Directory => Root).Value
+            Directory => Root).String_Value
          & GNAT.OS_Lib.Path_Separator
          & GPR_PROJECT_PATH);
       Ada.Environment_Variables.Set ("GPR_PROJECT_PATH", "");
@@ -58,13 +57,13 @@ procedure Test is
       Ada.Text_IO.Open
         (File => File,
          Mode => Ada.Text_IO.Out_File,
-         Name => Project_Path_File.Value);
+         Name => Project_Path_File.String_Value);
       Ada.Text_IO.Put_Line
         (File => File,
          Item => Content);
       Ada.Text_IO.Close (File);
       Environment.Insert
-        ("GPR_PROJECT_PATH_FILE", Project_Path_File.Value);
+        ("GPR_PROJECT_PATH_FILE", Project_Path_File.String_Value);
       Ada.Environment_Variables.Set ("GPR_PROJECT_PATH_FILE", "");
 
       return Environment;
@@ -91,7 +90,7 @@ begin
    Options.Add_Switch (GPR2.Options.P,
                        GPR2.Options.Check_For_Default_Project
                          (GPR2.Path_Name.Create_Directory
-                            ("./files").Value).Value);
+                            ("./files").String_Value).String_Value);
    Options.Add_Switch (GPR2.Options.AP, "./files/registered");
    Options.Add_Switch (GPR2.Options.Config, "./files/autoconf.cgpr");
    Options.Finalize (Allow_Implicit_Project => True,

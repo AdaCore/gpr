@@ -75,7 +75,7 @@ begin
    --  /dir1/dir2 on linux, C:/dir1/dir2 on windows
 
    Assert
-     (P5.Containing_Directory.Value, Directories.Full_Name ("/dir1/dir2"));
+     (P5.Containing_Directory.String_Value, Directories.Full_Name ("/dir1/dir2"));
 
    PV := C2.Change_Extension ("");
    Text_IO.Put_Line ("B: " & String (PV.Name));
@@ -93,6 +93,6 @@ begin
 
    if On_Windows then
       Assert (String (W1.Relative_Path (W2).Name), "./");
-      Assert (String (W1.Relative_Path (W3).Name), W1.Value);
+      Assert (String (W1.Relative_Path (W3).Name), W1.String_Value);
    end if;
 end Main;

@@ -314,22 +314,23 @@ is
          Set_Field (Prj, "kind", Image (View.Kind));
          Set_Field (Prj, "qualifier", Image (View.Qualifier));
          Set_Field (Prj, "simple-name", String (View.Path_Name.Simple_Name));
-         Set_Field (Prj, "file-name", View.Path_Name.Value);
-         Set_Field (Prj, "directory", View.Path_Name.Dir_Name);
+         Set_Field (Prj, "file-name", View.Path_Name.String_Value);
+         Set_Field (Prj, "directory", String (View.Path_Name.Dir_Name));
 
          if View.Kind in With_Object_Dir_Kind then
             Set_Field
-              (Prj, "object-directory", View.Object_Directory.Dir_Name);
+              (Prj, "object-directory",
+               String (View.Object_Directory.Dir_Name));
 
-            O_Array.Include (View.Object_Directory.Dir_Name);
+            O_Array.Include (String (View.Object_Directory.Dir_Name));
 
             if View.Kind in With_Source_Dirs_Kind then
                declare
                   Src_Array : GPR2.Containers.Value_Set;
                begin
                   for S of View.Source_Directories loop
-                     S_Array.Include (S.Value);
-                     Src_Array.Include (S.Value);
+                     S_Array.Include (S.String_Value);
+                     Src_Array.Include (S.String_Value);
                   end loop;
 
                   Set_Field
@@ -343,9 +344,9 @@ is
                        String (View.Library_Filename.Value));
             Set_Field (Prj, "library-name", String (View.Library_Name));
             Set_Field (Prj, "library-directory",
-                       View.Library_Directory.Dir_Name);
+                       String (View.Library_Directory.Dir_Name));
             Set_Field (Prj, "library-ali-directory",
-                       View.Library_Ali_Directory.Dir_Name);
+                       String (View.Library_Ali_Directory.Dir_Name));
          end if;
 
          Set_Field (F_Prj, "project", Prj);
@@ -543,16 +544,17 @@ is
          --  Project search paths
 
          for P of Tree.Project_Search_Paths loop
-            Append (P_Array, Create (P.Dir_Name));
+            Append (P_Array, Create (String (P.Dir_Name)));
          end loop;
 
          Set_Field (T, "project-search-paths", P_Array);
 
          if Tree.Has_Runtime_Project then
-            O_Array.Include (Tree.Runtime_Project.Object_Directory.Dir_Name);
+            O_Array.Include
+              (String (Tree.Runtime_Project.Object_Directory.Dir_Name));
 
             for S of Tree.Runtime_Project.Source_Directories loop
-               S_Array.Include (S.Dir_Name);
+               S_Array.Include (String (S.Dir_Name));
             end loop;
          end if;
 
@@ -706,19 +708,21 @@ is
                  or else (View_Id (View) = View_Id (Tree.Root_Project))
                then
                   Indent (1, Image (View) & " [ " & Image (View.Kind) & " ]");
-                  Indent (2, "Project file      : " & View.Path_Name.Value);
-                  Indent (2, "Project directory : " & View.Path_Name.Dir_Name);
+                  Indent (2, "Project file      : " &
+                            View.Path_Name.String_Value);
+                  Indent (2, "Project directory : " &
+                            String (View.Path_Name.Dir_Name));
 
                   if View.Kind in With_Object_Dir_Kind then
                      Indent (2, "Object directory  : " &
-                               View.Object_Directory.Dir_Name);
+                               String (View.Object_Directory.Dir_Name));
                   end if;
 
                   if View.Kind in With_Source_Dirs_Kind then
                      Indent (2, "Source directory  :");
 
                      for S of View.Source_Directories loop
-                        Indent (3, S.Value);
+                        Indent (3, S.String_Value);
                      end loop;
                   end if;
 
@@ -726,11 +730,11 @@ is
                      Indent (2, "Library name      : " &
                                String (View.Library_Name));
                      Indent (2, "Library file      : " &
-                               String (View.Library_Filename.Value));
+                               View.Library_Filename.String_Value);
                      Indent (2, "Library directory : " &
-                               View.Library_Directory.Dir_Name);
+                               String (View.Library_Directory.Dir_Name));
                      Indent (2, "Library ALI dir.  : " &
-                               View.Library_Ali_Directory.Dir_Name);
+                               String (View.Library_Ali_Directory.Dir_Name));
                   end if;
 
                   if View.Is_Extended then
@@ -927,7 +931,7 @@ is
                   First_PPath := True;
                end if;
 
-               Indent (2, P.Dir_Name);
+               Indent (2, String (P.Dir_Name));
             end loop;
          end;
 
@@ -950,13 +954,14 @@ is
                        or else (View_Id (View) = View_Id (Tree.Root_Project))
                      then
                         if View.Kind in With_Object_Dir_Kind then
-                           Indent (2, View.Object_Directory.Dir_Name);
+                           Indent (2, String (View.Object_Directory.Dir_Name));
                         end if;
                      end if;
                   end;
                end loop;
 
-               Indent (2, Tree.Runtime_Project.Object_Directory.Dir_Name);
+               Indent
+                 (2, String (Tree.Runtime_Project.Object_Directory.Dir_Name));
 
                for V in Tree.Iterate loop
                   declare
@@ -976,7 +981,7 @@ is
                                  First_SPath := True;
                               end if;
 
-                              Indent (2, S.Value);
+                              Indent (2, S.String_Value);
                            end loop;
                         end if;
                      end if;
@@ -989,7 +994,7 @@ is
                      First_SPath := True;
                   end if;
 
-                  Indent (2, S.Dir_Name);
+                  Indent (2, String (S.Dir_Name));
                end loop;
             end if;
          end;

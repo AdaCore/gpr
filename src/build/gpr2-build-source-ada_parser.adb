@@ -183,7 +183,7 @@ package body GPR2.Build.Source.Ada_Parser is
 
    begin
       Gpr_Parser.Basic_Ada_Parser.Parse_Context_Clauses
-        (Filename       => Data.Path_Name.Value,
+        (Filename       => Data.Path_Name.String_Value,
          Context        => Ctx,
          Log_Error      => null, --  Ignore parsing errors for now
          With_Clause_CB => (if Get_Withed_Units

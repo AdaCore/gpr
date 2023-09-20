@@ -46,8 +46,8 @@ procedure Main is
       Ada.Text_IO.Put_Line ("testing " & String (View.Path_Name.Simple_Name));
       A := Get_Aggregated (View, "a.gpr");
       B := Get_Aggregated (View, "b.gpr");
-      Ada.Text_IO.Put_Line ("A.Object_Dir:" & A.Object_Directory.Value);
-      Ada.Text_IO.Put_Line ("B.Object_Dir:" & B.Object_Directory.Value);
+      Ada.Text_IO.Put_Line ("A.Object_Dir:" & A.Object_Directory.String_Value);
+      Ada.Text_IO.Put_Line ("B.Object_Dir:" & B.Object_Directory.String_Value);
    exception
       when Project_Error =>
          Print_Messages;

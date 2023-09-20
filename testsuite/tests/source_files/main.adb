@@ -62,7 +62,7 @@ begin
    Test_Prj ("data/prj1.gpr");
    Ada.Environment_Variables.Set
      ("SOURCE_LIST_FILE_PATH",
-      GPR2.Path_Name.Create_File("data/sources_absolute.lst").Value);
+      GPR2.Path_Name.Create_File("data/sources_absolute.lst").String_Value);
    Test_Prj ("data/prj1.gpr");
    Test_Prj ("data/prj2.gpr");
    Test_Prj ("data/prj3.gpr");
