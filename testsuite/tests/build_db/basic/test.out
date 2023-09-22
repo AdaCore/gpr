@@ -4,7 +4,7 @@ Testing trees/agg/agg.gpr
 a.gpr:4:23: warning: object directory "obj/a" not found
 b.gpr:4:23: warning: object directory "obj/b" not found
 c.gpr:5:23: warning: object directory "obj/c" not found
-d.gpr:5:23: warning: object directory "obj/d" not found
+d.gpr:7:23: warning: object directory "obj/d" not found
 c.gpr:12:37: error: source file "notfound.ada" for unit "Foo" not found
 * Views:
  - Agg (K_AGGREGATE) **
@@ -26,6 +26,9 @@ c.gpr:12:37: error: source file "notfound.ada" for unit "Foo" not found
  - C (K_STANDARD) **
    - Root project(s):
      - C
+ - E (K_ABSTRACT) **
+   - Root project(s):
+     - D
  - D (K_STANDARD) **
    - Root project(s):
      - D
@@ -88,6 +91,26 @@ c.gpr:12:37: error: source file "notfound.ada" for unit "Foo" not found
    - PKG.PROC
      body: src/c/pkg__proc.2.ada (from view C)
  - units of subtree D
+* query source pkg.ads
+ - query for NS A
+   found in A
+   src/a/pkg.ads
+ - query for NS B
+   found in B
+   src/b/pkg.ads
+ - query for NS C
+   not found
+ - query for NS D
+   not found
+* query source not_found.txt
+ - query for NS A
+   not found
+ - query for NS B
+   not found
+ - query for NS C
+   not found
+ - query for NS D
+   not found
 =========================================
 Testing trees/agg2/agg.gpr
 =========================================

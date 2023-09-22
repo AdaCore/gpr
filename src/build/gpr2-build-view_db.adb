@@ -194,15 +194,17 @@ package body GPR2.Build.View_Db is
       --  views)
 
       for V of Self.View.Closure (Include_Self => True) loop
-         declare
-            Db : constant Object := Self.View_Base_For (V);
-         begin
-            Result := Db.Source (Basename);
+         if V.Kind in With_Object_Dir_Kind then
+            declare
+               Db : constant Object := Self.View_Base_For (V);
+            begin
+               Result := Db.Source (Basename);
 
-            if Result.Is_Defined then
-               return (V, Result);
-            end if;
-         end;
+               if Result.Is_Defined then
+                  return (V, Result);
+               end if;
+            end;
+         end if;
       end loop;
 
       return No_Context;

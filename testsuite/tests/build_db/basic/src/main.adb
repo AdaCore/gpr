@@ -2,6 +2,7 @@ with Ada.Command_Line;
 with Ada.Text_IO;
 
 with GPR2.Build.Compilation_Input.Sets;
+with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source.Sets;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
@@ -263,6 +264,32 @@ procedure Main is
          end loop;
       end if;
 
+      if Ada.Command_Line.Argument_Count > 1 then
+         for J in 2 .. Ada.Command_Line.Argument_Count loop
+            declare
+               Src_Name : constant Simple_Name :=
+                             Simple_Name (Ada.Command_Line.Argument (J));
+               Src      : View_Db.Source_Context;
+               View_Db  : Build.View_Db.Object;
+            begin
+               Ada.Text_IO.Put_Line ("* query source " & String (Src_Name));
+               for NS of Tree.Namespace_Root_Projects loop
+                  View_Db := Tree.Artifacts_Database (NS);
+
+                  Src := View_Db.Visible_Source (Src_Name);
+                  Ada.Text_IO.Put_Line (" - query for NS " & String (NS.Name));
+
+                  if Src.Source.Is_Defined then
+                     Ada.Text_IO.Put_Line ("   found in " & String (Src.Owning_View.Name));
+                     Ada.Text_IO.Put_Line ("   " & String (Src.Source.Path_Name.Relative_Path (NS.Dir_Name).Name));
+                  else
+                     Ada.Text_IO.Put_Line ("   not found");
+                  end if;
+               end loop;
+            end;
+         end loop;
+      end if;
+
       Tree.Unload;
    end Test;
 
@@ -274,4 +301,5 @@ begin
    end if;
 
    Test (Filename_Type (Ada.Command_Line.Argument (1)));
+
 end Main;
