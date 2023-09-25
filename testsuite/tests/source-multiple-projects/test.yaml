@@ -1,0 +1,5 @@
+description:
+    Check same sources in multiple projects
+driver: build_and_run
+project_file: source_multiple_projects
+main: main

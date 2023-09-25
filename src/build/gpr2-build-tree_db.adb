@@ -4,6 +4,10 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+pragma Warnings (Off);
+with GPR2.Build.Source.Sets;
+pragma Warnings (On);
+
 with GPR2.Build.View_Tables;
 with GPR2.Containers;
 with GPR2.Message;
@@ -131,6 +135,8 @@ package body GPR2.Build.Tree_Db is
          if V.Kind in With_Source_Dirs_Kind
            and then V.Id /= View_Ids.Runtime_View_Id
          then
+            --  Check languages
+
             declare
                SF : constant Project.Attribute.Object :=
                       V.Attribute (PRA.Source_Files);

@@ -1,1 +1,1 @@
-demo.gpr: warning: Duplicated spec for unit "SRC" in /src-a/src.ads and /src-b/src.ads
+demo.gpr: warning: duplicated spec for unit "SRC" in /src-a/src.ads and /src-b/src.ads

@@ -1,0 +1,7 @@
+
+with "demo1";
+with "demo2";
+
+project Main is
+   for Source_Dirs use ("src3");
+end Main;

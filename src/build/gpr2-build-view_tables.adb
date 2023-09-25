@@ -188,7 +188,6 @@ package body GPR2.Build.View_Tables is
    is
       Cursor  : Compilation_Unit_Maps.Cursor;
       Done    : Boolean;
-      Other   : Path_Name.Object;
       Success : Boolean := True;
 
    begin
@@ -212,6 +211,7 @@ package body GPR2.Build.View_Tables is
                             NS_Db.CUs.Reference (Cursor);
             Old_Owner   : constant Project.View.Object :=
                             CU_Instance.Owning_View;
+            Other       : Path_Name.Object;
             use type GPR2.Project.View.Object;
          begin
             CU_Instance.Add
@@ -237,15 +237,29 @@ package body GPR2.Build.View_Tables is
             if not Success then
                Other := CU_Instance.Get (Kind, Sep_Name).Source;
 
-               Messages.Append
-                 (Message.Create
-                    (Level   => Message.Warning,
-                     Message => "Duplicated " &
-                       Image (Kind) & " for unit """ & String (CU) & """ in " &
-                       String (Other.Value) & " and " & String (Path.Value),
-                     Sloc    =>
-                       Source_Reference.Create
-                         (NS_Db.View.Path_Name.Value, 0, 0)));
+               if Other.Value = Path.Value then
+                  --  Same source found by multiple projects
+                  Messages.Append
+                    (Message.Create
+                       (Level => Message.Error,
+                        Message => "source file """ &
+                          String (Path.Simple_Name) &
+                          """ already part of project " &
+                          String (CU_Instance.Get (Kind, Sep_Name).View.Name),
+                        Sloc    => Source_Reference.Create
+                          (View_Db.View.Path_Name.Value, 0, 0)));
+               else
+                  Messages.Append
+                    (Message.Create
+                       (Level   => Message.Warning,
+                        Message => "duplicated " &
+                          Image (Kind) & " for unit """ & String (CU) &
+                          """ in " & String (Other.Value) & " and " &
+                          String (Path.Value),
+                        Sloc    =>
+                          Source_Reference.Create
+                            (NS_Db.View.Path_Name.Value, 0, 0)));
+               end if;
             end if;
          end;
       end if;

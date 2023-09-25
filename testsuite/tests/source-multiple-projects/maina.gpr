@@ -1,0 +1,6 @@
+
+with "demo1";
+with "agg";
+
+project MainA is
+end MainA;
