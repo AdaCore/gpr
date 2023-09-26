@@ -1,4 +1,4 @@
-PACK-Functions_Test.ada:1:01: warning: invalid file name: no dot delimiter for this subunit
+PACK-Functions_Test.ada: warning: invalid file name: no '.' in deduced separate unit name "PACK-Functions_Test"
 PACK
 - S_SPEC: pack.ads
 - S_BODY: pack.adb

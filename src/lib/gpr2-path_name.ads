@@ -112,6 +112,10 @@ package GPR2.Path_Name is
    --  This routine should be used when base filename used to get unit name
    --  from filename.
 
+   function Base_Name (Path : Filename_Type) return GPR2.Simple_Name;
+   --  Return Path basename (so simple name without extension).
+   --  Assumes Path is a file.
+
    function Base_Filename (Self : Object) return GPR2.Simple_Name
      with Pre => Self.Is_Defined
                    and then not Self.Is_Directory;

@@ -55,7 +55,7 @@ package body GPR2.Build.Source is
       Kind             : Unit_Kind;
       Timestamp        : Ada.Calendar.Time;
       Tree_Db          : access GPR2.Build.Tree_Db.Object;
-      Naming_Exception : Naming_Exception_Kind;
+      Naming_Exception : Boolean;
       Source_Ref       : GPR2.Source_Reference.Value.Object;
       Is_Compilable    : Boolean := False)
       return Object
