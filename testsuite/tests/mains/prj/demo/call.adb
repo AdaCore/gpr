@@ -1,4 +1,4 @@
-procedure Call6 is
+procedure Call is
 begin
    null;
-end Call6;
+end Call;

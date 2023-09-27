@@ -92,6 +92,17 @@ package body Update_Sources_List is
    --  Set Last_Dot to last dot index in result to split separate unit
    --  name.
 
+   procedure Krunch
+     (Buffer        : in out String;
+      Len           : in out Natural;
+      Maxlen        : Natural;
+      No_Predef     : Boolean);
+   --  From gnat tools: krunch a unit name to achieve a short-variant for the
+   --  source filename
+
+   function Krunch (Unit_Name : Name_Type) return Filename_Type;
+   --  convenient wrapper around the above procedure
+
    function Compute_Unit_From_Filename
      (File     : Filename_Type;
       Kind     : Valid_Unit_Kind;
@@ -285,6 +296,278 @@ package body Update_Sources_List is
       end loop;
    end Fill_Naming_Schema;
 
+   ------------
+   -- Krunch --
+   ------------
+
+   procedure Krunch
+     (Buffer        : in out String;
+      Len           : in out Natural;
+      Maxlen        : Natural;
+      No_Predef     : Boolean)
+   is
+      pragma Assert (Buffer'First = 1);
+      --  This is a documented requirement; the assert turns off index warnings
+
+      B1       : Character renames Buffer (1);
+      Curlen   : Natural;
+      Krlen    : Natural;
+      Num_Seps : Natural;
+      Startloc : Natural;
+      J        : Natural;
+
+   begin
+      --  Deal with special predefined children cases. Startloc is the first
+      --  location for the krunch, set to 1, except for the predefined children
+      --  case, where it is set to 3, to start after the standard prefix.
+
+      if No_Predef then
+         Startloc := 1;
+         Curlen := Len;
+         Krlen := Maxlen;
+
+      elsif Len >= 18
+        and then Buffer (1 .. 17) = "ada-wide_text_io-"
+      then
+         Startloc := 3;
+         Buffer (2 .. 5) := "-wt-";
+         Buffer (6 .. Len - 12) := Buffer (18 .. Len);
+         Curlen := Len - 12;
+         Krlen  := 8;
+
+      elsif Len >= 23
+        and then Buffer (1 .. 22) = "ada-wide_wide_text_io-"
+      then
+         Startloc := 3;
+         Buffer (2 .. 5) := "-zt-";
+         Buffer (6 .. Len - 17) := Buffer (23 .. Len);
+         Curlen := Len - 17;
+         Krlen := 8;
+
+      elsif Len >= 27
+        and then Buffer (1 .. 27) = "ada-long_long_long_integer_"
+      then
+         Startloc := 3;
+         Buffer (2 .. Len - 2) := Buffer (4 .. Len);
+         Buffer (18 .. Len - 10) := Buffer (26 .. Len - 2);
+         Curlen := Len - 10;
+         Krlen := 8;
+
+      elsif Len >= 4 and then Buffer (1 .. 4) = "ada-" then
+         Startloc := 3;
+         Buffer (2 .. Len - 2) := Buffer (4 .. Len);
+         Curlen := Len - 2;
+         Krlen  := 8;
+
+      elsif Len >= 5 and then Buffer (1 .. 5) = "gnat-" then
+         Startloc := 3;
+         Buffer (2 .. Len - 3) := Buffer (5 .. Len);
+         Curlen := Len - 3;
+         Krlen  := 8;
+
+      elsif Len >= 7 and then Buffer (1 .. 7) = "system-" then
+         Startloc := 3;
+         Buffer (2 .. Len - 5) := Buffer (7 .. Len);
+         Curlen := Len - 5;
+         if (Curlen >= 3 and then Buffer (Curlen - 2 .. Curlen) = "128")
+           or else (Len >= 9 and then
+                      (Buffer (3 .. 9) = "exn_lll"
+                       or else Buffer (3 .. 9) = "exp_lll"
+                       or else Buffer (3 .. 9) = "img_lll"
+                       or else Buffer (3 .. 9) = "val_lll"
+                       or else Buffer (3 .. 9) = "wid_lll"))
+           or else (Curlen = 10 and then Buffer (3 .. 6) = "pack")
+         then
+            if Len >= 15 and then Buffer (3 .. 15) = "compare_array" then
+               Buffer (3 .. 4) := "ca";
+               Buffer (5 .. Curlen - 11) := Buffer (16 .. Curlen);
+               Curlen := Curlen - 11;
+            end if;
+            Krlen := 9;
+         else
+            Krlen := 8;
+         end if;
+
+      elsif Len >= 11 and then Buffer (1 .. 11) = "interfaces-" then
+         Startloc := 3;
+         Buffer (2 .. Len - 9) := Buffer (11 .. Len);
+         Curlen := Len - 9;
+
+         --  Only fully krunch historical units. For new units, simply use
+         --  the 'i-' prefix instead of 'interfaces-'. Packages Interfaces.C
+         --  and Interfaces.Cobol are already in the right form. Package
+         --  Interfaces.Definitions is krunched for backward compatibility.
+
+         if        (Curlen >  3 and then Buffer (3 ..  4) = "c-")
+           or else (Curlen >  3 and then Buffer (3 ..  4) = "c_")
+           or else (Curlen = 13 and then Buffer (3 .. 13) = "definitions")
+           or else (Curlen =  9 and then Buffer (3 ..  9) = "fortran")
+           or else (Curlen = 16 and then Buffer (3 .. 16) = "packed_decimal")
+           or else (Curlen >  8 and then Buffer (3 ..  9) = "vxworks")
+           or else (Curlen >  5 and then Buffer (3 ..  6) = "java")
+         then
+            Krlen := 8;
+         else
+            Krlen := Maxlen;
+         end if;
+
+         --  For the renamings in the obsolescent section, we also force
+         --  krunching to 8 characters, but no other special processing is
+         --  required here. Note that text_io and calendar are already short
+         --  enough anyway.
+
+      elsif     (Len =  9 and then Buffer (1 ..  9) = "direct_io")
+        or else (Len = 10 and then Buffer (1 .. 10) = "interfaces")
+        or else (Len = 13 and then Buffer (1 .. 13) = "io_exceptions")
+        or else (Len = 12 and then Buffer (1 .. 12) = "machine_code")
+        or else (Len = 13 and then Buffer (1 .. 13) = "sequential_io")
+        or else (Len = 20 and then Buffer (1 .. 20) = "unchecked_conversion")
+        or else (Len = 22 and then Buffer (1 .. 22) = "unchecked_deallocation")
+      then
+         Startloc := 1;
+         Krlen    := 8;
+         Curlen   := Len;
+
+         --  Special case of a child unit whose parent unit is a single letter
+         --  that is A, G, I, or S. In order to prevent confusion with krunched
+         --  names of predefined units use a tilde rather than a minus as the
+         --  second character of the file name.
+
+      elsif Len > 1
+        and then Buffer (2) = '-'
+        and then (B1 = 'a' or else B1 = 'g' or else B1 = 'i' or else B1 = 's')
+        and then Len <= Maxlen
+      then
+         Buffer (2) := '~';
+         return;
+
+         --  Normal case, not a predefined file
+
+      else
+         Startloc := 1;
+         Curlen   := Len;
+         Krlen    := Maxlen;
+      end if;
+
+      --  Immediate return if file name is short enough now
+
+      if Curlen <= Krlen then
+         Len := Curlen;
+         return;
+      end if;
+
+      --  If string contains Wide_Wide, replace by a single z
+
+      J := Startloc;
+      while J <= Curlen - 8 loop
+         if Buffer (J .. J + 8) = "wide_wide"
+           and then (J = Startloc
+                     or else Buffer (J - 1) = '-'
+                     or else Buffer (J - 1) = '_')
+           and then (J + 8 = Curlen
+                     or else Buffer (J + 9) = '-'
+                     or else Buffer (J + 9) = '_')
+         then
+            Buffer (J) := 'z';
+            Buffer (J + 1 .. Curlen - 8) := Buffer (J + 9 .. Curlen);
+            Curlen := Curlen - 8;
+         end if;
+
+         J := J + 1;
+      end loop;
+
+      --  For now, refuse to krunch a name that contains an ESC character (wide
+      --  character sequence) since it's too much trouble to do this right ???
+
+      for J in 1 .. Curlen loop
+         if Buffer (J) = ASCII.ESC then
+            return;
+         end if;
+      end loop;
+
+      --  Count number of separators (minus signs and underscores) and for now
+      --  replace them by spaces. We keep them around till the end to control
+      --  the krunching process, and then we eliminate them as the last step
+
+      Num_Seps := 0;
+      for J in Startloc .. Curlen loop
+         if Buffer (J) = '-' or else Buffer (J) = '_' then
+            Buffer (J) := ' ';
+            Num_Seps := Num_Seps + 1;
+         end if;
+      end loop;
+
+      --  Now we do the one character at a time krunch till we are short enough
+
+      while Curlen - Num_Seps > Krlen loop
+         declare
+            Long_Length : Natural := 0;
+            Long_Last   : Natural := 0;
+            Piece_Start : Natural;
+            Ptr         : Natural;
+
+         begin
+            Ptr := Startloc;
+
+            --  Loop through pieces to find longest piece
+
+            while Ptr <= Curlen loop
+               Piece_Start := Ptr;
+
+               --  Loop through characters in one piece of name
+
+               while Ptr <= Curlen and then Buffer (Ptr) /= ' ' loop
+                  Ptr := Ptr + 1;
+               end loop;
+
+               if Ptr - Piece_Start > Long_Length then
+                  Long_Length := Ptr - Piece_Start;
+                  Long_Last := Ptr - 1;
+               end if;
+
+               Ptr := Ptr + 1;
+            end loop;
+
+            --  Remove last character of longest piece
+
+            if Long_Last < Curlen then
+               Buffer (Long_Last .. Curlen - 1) :=
+                 Buffer (Long_Last + 1 .. Curlen);
+            end if;
+
+            Curlen := Curlen - 1;
+         end;
+      end loop;
+
+      --  Final step, remove the spaces
+
+      Len := 0;
+
+      for J in 1 .. Curlen loop
+         if Buffer (J) /= ' ' then
+            Len := Len + 1;
+            Buffer (Len) := Buffer (J);
+         end if;
+      end loop;
+
+      return;
+   end Krunch;
+
+   function Krunch (Unit_Name : Name_Type) return Filename_Type is
+      Buffer : String := Ada.Characters.Handling.To_Lower (String (Unit_Name));
+      Len    : Natural := Buffer'Last;
+   begin
+      for J in Buffer'Range loop
+         if Buffer (J) = '.' then
+            Buffer (J) := '-';
+         end if;
+      end loop;
+
+      Krunch (Buffer, Len, 8, False);
+
+      return Filename_Type (Buffer (1 .. Len));
+   end Krunch;
+
    -------------
    -- Process --
    -------------
@@ -380,8 +663,6 @@ package body Update_Sources_List is
 
       function Process_File (File : File_Info) return Boolean is
 
-         use all type GPR2.Build.Source.Naming_Exception_Kind;
-
          --  The implementation works as follows:
          --    For every language L in the project:
          --      1- Check if F matches with a naming exception (see
@@ -428,15 +709,19 @@ package body Update_Sources_List is
          Basename         : constant Filename_Type :=
                                 GPR2.Path_Name.Simple_Name (File.Path);
 
-         Match            : Boolean := False;
-
-         Naming_Exception : Source.Naming_Exception_Kind := No;
+         type Source_Detection is
+           (Naming_Exception,
+            Naming_Convention,
+            No_Match);
+         Match            : Source_Detection := No_Match;
          Units            : Source.Unit_List;  --  For Ada
          Kind             : Valid_Unit_Kind;
          Index            : Unit_Index;
          Source           : Build.Source.Object;
          Attr             : Project.Attribute.Object;
          Ada_Exc_CS       : Source_Path_To_Attribute_List.Cursor;
+         Parsed           : Boolean;
+         Exc_Attr         : Source_Reference.Object;
 
       begin
          --  Stop here if it's one of the excluded sources, or it's not in the
@@ -457,7 +742,7 @@ package body Update_Sources_List is
          for Language of Data.View.Language_Ids loop
             --  First, try naming exceptions
 
-            Naming_Exception := No;
+            Match := No_Match;
             Kind  := S_Spec;  --  Dummy value
 
             if Language = Ada_Language
@@ -470,12 +755,13 @@ package body Update_Sources_List is
                      --  Found at least one: so we have naming exceptions for
                      --  this source
 
+                     Match := Naming_Exception;
+                     Exc_Attr := Source_Reference.Object (Exc);
+
                      if Exc.Value.Has_At_Pos then
-                        Naming_Exception := Multi_Unit;
                         Index := Exc.Value.At_Pos;
                         pragma Assert (Index /= No_Index);
                      else
-                        Naming_Exception := Yes;
                         Index := No_Index;
                      end if;
 
@@ -502,7 +788,7 @@ package body Update_Sources_List is
                  and then Attr.Has_Value (Value_Type (Basename))
                  --  ??? Doesn't take care of FS casing
                then
-                  Naming_Exception := Yes;
+                  Match := Naming_Exception;
                   Kind  := S_Spec;
 
                elsif Data.View.Check_Attribute
@@ -511,12 +797,12 @@ package body Update_Sources_List is
                         Result => Attr)
                  and then Attr.Has_Value (Value_Type (Basename))
                then
-                  Naming_Exception := Yes;
+                  Match := Naming_Exception;
                   Kind  := S_Body;
                end if;
             end if;
 
-            if Naming_Exception = No then
+            if Match = No_Match then
                --  If no naming exception matched, try with naming schema
 
                declare
@@ -567,21 +853,20 @@ package body Update_Sources_List is
                      end if;
                   end if;
 
+                  Match := (if Matches_Spec
+                              or else Matches_Body
+                              or else Matches_Separate
+                            then Naming_Convention
+                            else No_Match);
+
                   if Matches_Spec then
-                     Match := True;
                      Kind  := S_Spec;
 
                   elsif Matches_Body then
-                     Match := True;
                      Kind  := S_Body;
 
                   elsif Matches_Separate then
-                     Match := True;
                      Kind  := S_Separate;
-
-                  else
-                     Match := False;
-                     Kind  := S_Spec;
                   end if;
                end;
             end if;
@@ -589,16 +874,16 @@ package body Update_Sources_List is
             --  If we have a match from either naming exception or scheme
             --  we create the Source object.
 
-            if Naming_Exception /= No or else Match then
-                  Source := Build.Source.Create
-                    (Path_Name.Create_File (File.Path),
-                     Language         => Language,
-                     Kind             => Kind,
-                     Timestamp        => File.Stamp,
-                     Tree_Db          => Data.Tree_Db,
-                     Naming_Exception => Naming_Exception,
-                     Source_Ref       => File.Dir_Ref,
-                     Is_Compilable    => Is_Compilable (Language));
+            if Match /= No_Match then
+               Source := Build.Source.Create
+                 (Path_Name.Create_File (File.Path),
+                  Language         => Language,
+                  Kind             => Kind,
+                  Timestamp        => File.Stamp,
+                  Tree_Db          => Data.Tree_Db,
+                  Naming_Exception => Match = Naming_Exception,
+                  Source_Ref       => File.Dir_Ref,
+                  Is_Compilable    => Is_Compilable (Language));
 
                --  If we know the units in the source (from naming exception),
                --  then add them now.
@@ -608,10 +893,128 @@ package body Update_Sources_List is
                end loop;
             end if;
 
-            if Naming_Exception = No
-              and then Match
+            --  Check Unit names and kind for Ada:
+
+            if Match /= No_Match
+              and then not Units.Is_Indexed_List
               and then Language = Ada_Language
             then
+               --  There can be ambiguities in Ada with the default naming
+               --  convention or with naming exception with regards to
+               --  separate and child bodies. In order to disambiguate that
+               --  we need to parse the source.
+
+               --  Parse the source to get unit and update its kind if
+               --  needed.
+
+               Build.Source.Ada_Parser.Compute
+                 (Tree             => Tree,
+                  Data             => Source,
+                  Get_Withed_Units => False,
+                  Success          => Parsed);
+
+               if Parsed and then Match = Naming_Exception then
+                  --  Check parsed unit name is the same as the one declared
+                  --  in the gpr project.
+
+                  if Source.Unit.Kind /= S_No_Body
+                    and then Build.Source.Full_Name (Source.Unit) /=
+                      Build.Source.Full_Name (Units.Element (No_Index))
+                  then
+                     Messages.Append
+                       (Message.Create
+                          (Message.Warning,
+                           "actual unit name """ &
+                             String (Build.Source.Full_Name (Source.Unit)) &
+                             """ differs from the one declared in the " &
+                             "project : """ &
+                             String (Build.Source.Full_Name
+                                       (Units.Element (No_Index))) & '"',
+                           Exc_Attr));
+                  end if;
+
+
+               elsif Match = Naming_Convention then
+                  declare
+                     use type GPR2.View_Ids.View_Id;
+                     Last_Dot  : Natural;
+                     Success   : Boolean;
+                     Unit_Name : constant Name_Type :=
+                                   Compute_Unit_From_Filename
+                                     (File     => File.Path,
+                                      Kind     => Kind,
+                                      NS       =>
+                                        Naming_Schema_Map (Ada_Language),
+                                      Dot_Repl => Dot_Repl,
+                                      Messages => Messages,
+                                      Last_Dot => Last_Dot,
+                                      Success  => Success);
+
+                  begin
+                     if not Success then
+                        return False;
+                     end if;
+
+                     if Parsed then
+                        --  Check unit name from convention is the same as
+                        --  the parsed one.
+
+                        if Data.View.Id /= GPR2.View_Ids.Runtime_View_Id
+                          and then Unit_Name /=
+                            Build.Source.Full_Name (Source.Unit)
+                          and then Path_Name.Base_Name (File.Path) /=
+                            Krunch (Build.Source.Full_Name (Source.Unit))
+                        then
+                           Messages.Append
+                             (Message.Create
+                                (Message.Warning,
+                                 "unit name """ & String (Source.Unit.Name) &
+                                   """ does not match source name",
+                                 SR.Create (File.Path, 0, 0)));
+                        end if;
+
+                     elsif Kind = S_Separate then
+                        --  Separates must have a doted unit name
+
+                        if Last_Dot > 0 then
+                           Source.Update_Unit
+                             (Build.Source.Create
+                                (Unit_Name     => Unit_Name
+                                     (Unit_Name'First .. Last_Dot - 1),
+                                 Index         => No_Index,
+                                 Kind          => Kind,
+                                 Separate_Name => Unit_Name
+                                   (Last_Dot + 1 .. Unit_Name'Last),
+                                 Parsed        => False));
+                        else
+                           Messages.Append
+                             (Message.Create
+                                (Message.Warning,
+                                 "invalid file name: no '.' in deduced " &
+                                   "separate unit name """ &
+                                   String (Unit_Name) & '"',
+                                 SR.Create (File.Path, 0, 0)));
+
+                           return False;
+                        end if;
+
+                     else
+                        Source.Update_Unit
+                          (Build.Source.Create
+                             (Unit_Name     => Unit_Name,
+                              Index         => No_Index,
+                              Kind          => Kind,
+                              Separate_Name => "",
+                              Parsed        => False));
+                     end if;
+                  end;
+               end if;
+            end if;
+
+            --  Now check for conflicts between naming exceptions and naming
+            --  convention.
+
+            if Match = Naming_Convention and then Language = Ada_Language then
                declare
                   function Has_Conflict_NE
                     (Attr_Name : Q_Attribute_Id) return Boolean;
@@ -619,19 +1022,6 @@ package body Update_Sources_List is
                   --  Attr_Name and index Unit_Name, and return True if
                   --  at least one of the matching attributes references
                   --  a different (source,index) than the current one.
-
-                  Last_Dot  : Natural;
-                  Parsed    : Boolean;
-                  Unit_Name : constant Name_Type :=
-                                Compute_Unit_From_Filename
-                                  (File     => File.Path,
-                                   Kind     => Kind,
-                                   NS       =>
-                                     Naming_Schema_Map (Ada_Language),
-                                   Dot_Repl => Dot_Repl,
-                                   Messages => Messages,
-                                   Last_Dot => Last_Dot,
-                                   Success  => Match);
 
                   ---------------------
                   -- Has_Conflict_NE --
@@ -662,72 +1052,22 @@ package body Update_Sources_List is
                   end Has_Conflict_NE;
 
                begin
-                  --  Ignore the source if it does not respect the naming
-                  --  convention.
+                  --  Check if we have conflicting naming exceptions:
+                  --  same (unit,kind) but different source.
+                  --  In this case we skip this source.
 
-                  if Match then
-                     --  Parse the source to get unit and update its kind if
-                     --  needed.
-
-                     Build.Source.Ada_Parser.Compute
-                       (Tree             => Tree,
-                        Data             => Source,
-                        Get_Withed_Units => False,
-                        Success          => Parsed);
-
-                     --  In case the parser could not determine the enclosed
-                     --  unit, use the one from naming convention
-
-                     if not Parsed then
-                        if Kind = S_Separate then
-                           if Last_Dot > 0 then
-                              Source.Update_Unit
-                                (Build.Source.Create
-                                   (Unit_Name     => Unit_Name
-                                        (Unit_Name'First .. Last_Dot - 1),
-                                    Index         => No_Index,
-                                    Kind          => Kind,
-                                    Separate_Name => Unit_Name
-                                      (Last_Dot + 1 .. Unit_Name'Last),
-                                    Parsed        => False));
-                           else
-                              Messages.Append
-                                (Message.Create
-                                   (Message.Warning,
-                                    "invalid file name: no dot delimiter " &
-                                      "for this subunit",
-                                    SR.Create (Full_Name (File.Path), 1, 1)));
-
-                              return False;
-                           end if;
-                        else
-                           Source.Update_Unit
-                             (Build.Source.Create
-                                (Unit_Name     => Unit_Name,
-                                 Index         => No_Index,
-                                 Kind          => Kind,
-                                 Separate_Name => "",
-                                 Parsed        => False));
-                        end if;
-                     end if;
-
-                     --  Check if we have conflicting naming exceptions:
-                     --  same (unit,kind) but different source.
-                     --  In this case we skip this source.
-
-                     if (Source.Kind = S_Spec
-                         and then Has_Conflict_NE (PRA.Naming.Spec))
-                       or else
-                         (Source.Kind = S_Body
-                          and then Has_Conflict_NE (PRA.Naming.Body_N))
-                     then
-                        return False;
-                     end if;
+                  if (Source.Kind = S_Spec
+                      and then Has_Conflict_NE (PRA.Naming.Spec))
+                    or else
+                      (Source.Kind = S_Body
+                       and then Has_Conflict_NE (PRA.Naming.Body_N))
+                  then
+                     return False;
                   end if;
                end;
             end if;
 
-            if Naming_Exception /= No or else Match then
+            if Match /= No_Match then
                Data.Src_Infos.Insert (File.Path, Source);
 
                return True;

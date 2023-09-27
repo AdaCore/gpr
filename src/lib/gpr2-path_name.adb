@@ -57,10 +57,6 @@ package body GPR2.Path_Name is
    procedure Determine_Temporary_Directory;
    --  Determine temporary directory
 
-   function Base_Name (Path : Filename_Type) return GPR2.Simple_Name;
-   --  Return Path basename (so simple name without extension).
-   --  Assumes Path is a file.
-
    function Ensure_Directory (Path : Filename_Optional) return Filename_Type is
      (if Path (Path'Last) in OS_Lib.Directory_Separator | '/'
       then Path

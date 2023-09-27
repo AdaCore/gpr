@@ -17,15 +17,6 @@ package GPR2.Build.Source is
 
    use type Ada.Containers.Count_Type;
 
-   type Naming_Exception_Kind is (No, Yes, Multi_Unit);
-   --  How source has been found:
-   --  No: via naming schema
-   --  Yes: via naming exception, no index
-   --  Multi_Unit: naming exceptions with unit index
-
-   subtype Naming_Exception_Value is
-     Naming_Exception_Kind range Yes .. Multi_Unit;
-
    ----------------------
    -- UNITS IN SOURCES --
    ----------------------
@@ -160,7 +151,7 @@ package GPR2.Build.Source is
       Kind             : Unit_Kind;
       Timestamp        : Ada.Calendar.Time;
       Tree_Db          : access GPR2.Build.Tree_Db.Object;
-      Naming_Exception : Naming_Exception_Kind;
+      Naming_Exception : Boolean;
       Source_Ref       : Source_Reference.Value.Object;
       Is_Compilable    : Boolean := False)
       return Object
@@ -236,22 +227,8 @@ package GPR2.Build.Source is
           Pre  => Self.Is_Defined and then Self.Has_Units;
    --  Returns all compilation units for self.
 
-   --  function Is_Compilation_Input
-   --    (Self  : Object;
-   --     Index : Unit_Index := No_Index) return Boolean
-   --    with Pre => Self.Is_Defined;
-   --  Whether this source is used as input for a compilation:
-   --  - for Ada, the body of a compilation unit, or the spec if there's no
-   --    body
-   --  - for the other compiled languages, the body
-   --  - always returns False if the source's language has to compiler driver
-
    function Has_Naming_Exception (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
-   --  Returns whether the source comes from a naming exception
-
-   function Naming_Exception (Self : Object) return Naming_Exception_Kind
-     with Pre  => Self.Is_Defined;
    --  Returns whether the source comes from a naming exception
 
    function Is_Compilable (Self : Object) return Boolean
@@ -343,7 +320,7 @@ private
       --  Source's units in case of unit-based language
       Inherited         : Boolean := False;
       --  Whether the source has been inherited by project extension
-      Naming_Exception  : Naming_Exception_Kind := No;
+      Naming_Exception  : Boolean := False;
       --  Whether a naming exception concerns this source
       Is_Compilable     : Boolean := False;
       --  Whether the source can be compiled (e.g. we need a compiler to
@@ -395,9 +372,6 @@ private
      (Self.Is_Compilable);
 
    function Has_Naming_Exception (Self : Object) return Boolean is
-     (Self.Naming_Exception in Naming_Exception_Value);
-
-   function Naming_Exception (Self : Object) return Naming_Exception_Kind is
      (Self.Naming_Exception);
 
    function Source_Reference

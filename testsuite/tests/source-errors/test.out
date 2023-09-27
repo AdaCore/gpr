@@ -1,11 +1,11 @@
 Project: Demo1
-1pck.adb: error: invalid name for unit '1PCK', should start with a letter or an underscore
+demo1.gpr:7:11: warning: actual unit name "PCK" differs from the one declared in the project : "1PCK"
  > src1/1pck.adb
-                  language: Ada    Kind: S_BODY   unit: 1PCK
+                  language: Ada    Kind: S_BODY   unit: PCK
 Project: Demo2
-pck___b.ads: error: invalid name for unit 'PCK._B', cannot contain underscore after dot
+demo2.gpr:9:11: warning: actual unit name "WRONG" differs from the one declared in the project : "PCK._B"
  > src2/pck___b.ads
-                  language: Ada    Kind: S_BODY   unit: PCK._B
+                  language: Ada    Kind: S_BODY   unit: WRONG
  > src2/pck__a.adb
                   language: Ada    Kind: S_BODY   unit: PCK.A
  > src2/pcka.ads
