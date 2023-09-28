@@ -9,7 +9,6 @@ with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
 
-with GPR2.Unit;
 with GPR2.Context;
 with GPR2.KB;
 with GPR2.Log;
