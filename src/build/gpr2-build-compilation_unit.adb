@@ -9,6 +9,8 @@ with Ada.Strings.Maps.Constants;
 with GPR2.Message;
 with GPR2.Project.Tree;
 with GPR2.Source_Reference;
+with GPR2.Build.Tree_Db;
+with GPR2.Build.View_Tables;
 
 package body GPR2.Build.Compilation_Unit is
 
@@ -17,13 +19,13 @@ package body GPR2.Build.Compilation_Unit is
    ---------
 
    procedure Add
-     (Self     : in out Object;
-      Kind     : Valid_Unit_Kind;
-      View     : GPR2.Project.View.Object;
-      Path     : GPR2.Path_Name.Object;
-      Index    : Unit_Index := No_Index;
-      Sep_Name : Optional_Name_Type := "";
-      Success  : out Boolean)
+     (Self       : in out Object;
+      Kind       : Valid_Unit_Kind;
+      View       : GPR2.Project.View.Object;
+      Path       : GPR2.Path_Name.Object;
+      Index      : Unit_Index := No_Index;
+      Sep_Name   : Optional_Name_Type := "";
+      Success    : out Boolean)
    is
       UL : constant Unit_Location :=
              (View   => View,
@@ -62,7 +64,8 @@ package body GPR2.Build.Compilation_Unit is
       end case;
 
       if not Success then
-         Self.Duplicates.Append ((Sep_Name'Length, UL, Kind, Sep_Name));
+         Self.Duplicates.Append
+           ((Sep_Name'Length, UL, Kind, Sep_Name));
       end if;
    end Add;
 
@@ -237,6 +240,47 @@ package body GPR2.Build.Compilation_Unit is
             return Self.Separates.Element (Sep_Name);
       end case;
    end Get;
+
+   ------------------------
+   -- Known_Dependencies --
+   ------------------------
+
+   function Known_Dependencies
+     (Self : Object) return GPR2.Build.DAG.Artifact_Sets.Set
+   is
+      procedure Add_Deps (Part : Unit_Location);
+      --  Add with clauses from Part
+
+      Result  : GPR2.Build.DAG.Artifact_Sets.Set;
+      Tree_Db : constant Build.Tree_Db.Object_Access :=
+                  Self.Root_View.Tree.Artifacts_Database;
+
+      procedure Add_Deps (Part : Unit_Location) is
+         Db : constant Build.View_Tables.View_Data_Ref :=
+                View_Tables.Get_Data (Tree_Db, Part.View);
+      begin
+         for Dep of Db.Src_Infos.Element
+                      (Part.Source.Value).Unit (Part.Index).Dependencies
+         loop
+            Result.Include (Self.Root_View.Unit (Dep));
+         end loop;
+      end Add_Deps;
+
+   begin
+      if Self.Spec.Source.Is_Defined then
+         Add_Deps (Self.Spec);
+      end if;
+
+      if Self.Implem.Source.Is_Defined then
+         Add_Deps (Self.Implem);
+
+         for S of Self.Separates loop
+            Add_Deps (S);
+         end loop;
+      end if;
+
+      return Result;
+   end Known_Dependencies;
 
    -----------------
    -- Object_File --

@@ -7,6 +7,7 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Vectors;
 
+with GPR2.Build.DAG;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
@@ -36,11 +37,11 @@ package GPR2.Build.Compilation_Unit is
    package Separate_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, Unit_Location);
 
-   type Object is tagged private;
+   type Object is new GPR2.Build.DAG.Artifact with private;
 
    Undefined : constant Object;
 
-   function Create (Name : Name_Type;
+   function Create (Name    : Name_Type;
                     Context : GPR2.Project.View.Object) return Object
      with Pre => Context.Is_Namespace_Root;
    --  Create a new compilation unit object with name Name
@@ -78,13 +79,13 @@ package GPR2.Build.Compilation_Unit is
    --  Whether a unit with Kind is defined for Self
 
    procedure Add
-     (Self     : in out Object;
-      Kind     : Valid_Unit_Kind;
-      View     : GPR2.Project.View.Object;
-      Path     : GPR2.Path_Name.Object;
-      Index    : Unit_Index := No_Index;
-      Sep_Name : Optional_Name_Type := "";
-      Success  : out Boolean)
+     (Self       : in out Object;
+      Kind       : Valid_Unit_Kind;
+      View       : GPR2.Project.View.Object;
+      Path       : GPR2.Path_Name.Object;
+      Index      : Unit_Index := No_Index;
+      Sep_Name   : Optional_Name_Type := "";
+      Success    : out Boolean)
      with Pre => Self.Is_Defined
                    and then (Sep_Name'Length = 0) = (Kind /= S_Separate);
 
@@ -140,6 +141,12 @@ package GPR2.Build.Compilation_Unit is
      with Pre => Self.Is_Defined;
    --  Execute Action for all parts of the given compilation unit
 
+   function Known_Dependencies
+     (Self : Object) return GPR2.Build.DAG.Artifact_Sets.Set;
+   --  Extract the list of units withed by the spec of Self and return them.
+   --  If Self needs its own body (e.g. is a generic), then return also the
+   --  units withed by the body.
+
    function Object_File (Self : Object;
                          Tree : GPR2.Project.Tree.Object) return Simple_Name;
    --  Returns the .o's simple name for Self.
@@ -147,15 +154,15 @@ package GPR2.Build.Compilation_Unit is
 private
 
    type Clashing_Unit (Sep_Name_Len : Natural) is record
-      Loc      : Unit_Location;
-      Kind     : Unit_Kind;
-      Sep_Name : Optional_Name_Type (1 .. Sep_Name_Len);
+      Loc        : Unit_Location;
+      Kind       : Unit_Kind;
+      Sep_Name   : Optional_Name_Type (1 .. Sep_Name_Len);
    end record;
 
    package Duplicates_List is new Ada.Containers.Indefinite_Vectors
      (Positive, Clashing_Unit);
 
-   type Object is tagged record
+   type Object is new GPR2.Build.DAG.Artifact with record
       Name       : Unbounded_String;
       Owner      : GPR2.Project.View.Object;
       Root_View  : GPR2.Project.View.Object;
@@ -164,6 +171,12 @@ private
       Separates  : Separate_Maps.Map;
       Duplicates : Duplicates_List.Vector;
    end record;
+
+   overriding function View (Self : Object) return GPR2.Project.View.Object is
+      (Self.Owner);
+
+   overriding function Hash (Self : Object) return Ada.Containers.Hash_Type is
+      (Self.Main_Part.Source.Hash);
 
    Undefined : constant Object := (others => <>);
 
