@@ -7,14 +7,14 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Source.Sets;
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Path_Name;
-with GPR2.Project.Source.Set;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Source_Reference.Identifier;
-
-with GPR2.Source_Info.Parser.Ada_Language;
 
 procedure Main is
 
@@ -25,7 +25,7 @@ procedure Main is
    procedure Check (Project_Name : Filename_Type);
    --  Do check the given project's sources
 
-   procedure Output_Filename (Filename : Path_Name.Full_Name);
+   procedure Output_Filename (Filename : Path_Name.Object; V : View.Object);
    --  Remove the leading tmp directory
 
    -----------
@@ -36,25 +36,33 @@ procedure Main is
       Prj  : Project.Tree.Object;
       Ctx  : Context.Object;
       View : Project.View.Object;
+      Log  : GPR2.Log.Object;
    begin
-      Project.Tree.Load (Prj, Create (Project_Name), Ctx);
+      Project.Tree.Load_Autoconf
+        (Prj,
+         Create (Project_Name),
+         Ctx);
+      Prj.Update_Sources (Sources_Units_Dependencies, Log);
 
       View := Prj.Root_Project;
       Text_IO.Put_Line ("Project: " & String (View.Name));
 
       for Source of View.Sources loop
          declare
-            U : constant Optional_Name_Type := Source.Unit_Name (No_Index);
+            U  : constant Optional_Name_Type :=
+                   Build.Source.Full_Name (Source.Unit);
+            CU : constant Build.Compilation_Unit.Object :=
+                   View.Unit (Source.Unit.Name);
          begin
             Text_IO.New_Line;
-            Output_Filename (Source.Path_Name.Value);
+            Output_Filename (Source.Path_Name, View);
 
             if U /= "" then
                Text_IO.Put ("   unit: " & String (U));
                Text_IO.New_Line;
 
-               for W of Source.Context_Clause_Dependencies (No_Index) loop
-                  Text_IO.Put_Line ("   " & String (W));
+               for Dep of Source.Unit.Dependencies loop
+                  Text_IO.Put_Line ("   " & String (Dep));
                end loop;
             end if;
          end;
@@ -65,10 +73,9 @@ procedure Main is
    -- Output_Filename --
    ---------------------
 
-   procedure Output_Filename (Filename : Path_Name.Full_Name) is
-      I : constant Positive := Strings.Fixed.Index (Filename, "withunits");
+   procedure Output_Filename (Filename : Path_Name.Object; V : View.Object) is
    begin
-      Text_IO.Put (" > " & Filename (I + 10 .. Filename'Last));
+      Text_IO.Put (" > " & String (Filename.Relative_Path (V.Dir_Name).Name));
    end Output_Filename;
 
 begin

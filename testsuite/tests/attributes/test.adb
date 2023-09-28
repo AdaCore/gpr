@@ -156,6 +156,11 @@ begin
       Name => "Inexistent_Attribute",
       Pkg  => "Inexistent_Package");
 
+   TGPR.Assert_Attribute_Error
+     (Tree.Root_Project,
+      Name  => "Object_Dir",
+      Index => "C");
+
    IO.Put_Line ("test attribute alias names");
    TGPR.Assert_Attribute
      (Tree.Root_Project,

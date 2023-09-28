@@ -16,7 +16,6 @@ with GPR2.Log;
 with GPR2.Project.View.Set;
 
 with GPR2.Build.Compilation_Unit;
-with GPR2.Build.Object_Info;
 with GPR2.Build.Source;
 with GPR2.Source_Reference.Value;
 with GPR2.View_Ids;
@@ -86,9 +85,6 @@ private package GPR2.Build.View_Tables is
      (Filename_Optional, Build.Source.Object,
       Hash, "=", Source."=");
 
-   package Object_Maps is new Ada.Containers.Indefinite_Hashed_Maps
-     (Simple_Name, Object_Info.Object, Hash, "=", Object_Info."=");
-
    type Source_Proxy (Path_Len : Natural) is record
       View      : GPR2.Project.View.Object;
       --  The view that owns the source (e.g. that has the source via its
@@ -157,12 +153,6 @@ private package GPR2.Build.View_Tables is
       Langs_Usage     : Sources_By_Langs_Maps.Map;
       --  Indicates the number of sources per language. Allows detecting
       --  unused languages.
-      Object_Infos    : Object_Maps.Map;
-      --  Object traceability information table
-      Object_Files    : File_Info_Maps.Map;
-      --  raw list of object files, used to check updates
-      Ali_Files       : File_Info_Maps.Map;
-      --  raw list of ali files, used to check updates
       Listed_Sources   : Source_Set.Set;
       --  content of Source_Files and Source_List_File attributes
       Excluded_Sources : Source_Set.Set;

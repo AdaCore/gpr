@@ -3130,8 +3130,7 @@ package body GPR2.Project.Tree is
                              (Message.Error,
                               "cannot aggregate externally built project """
                               & String (Agg.Name) & '"',
-                              Sloc => View.Attribute_Location
-                                        (PRA.Project_Files)));
+                              Sloc => View.Attribute (PRA.Project_Files)));
                      end if;
                   end loop;
 
@@ -3146,8 +3145,7 @@ package body GPR2.Project.Tree is
                                 (Message.Error,
                                  "can only import abstract projects, not """
                                  & String (Imported.Name) & '"',
-                                 Sloc => View.Attribute_Location
-                                           (PRA.Project_Files)));
+                                 Sloc => View.Attribute (PRA.Project_Files)));
                         end if;
                      end loop;
                   end if;
@@ -3207,7 +3205,7 @@ package body GPR2.Project.Tree is
                         Self.Warning
                           ("attribute """ & Image (Name)
                            & """ is only used in standalone libraries",
-                          View.Attribute_Location (Name));
+                          Attr);
                      end if;
                   end;
                end if;

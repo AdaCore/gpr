@@ -1,0 +1,3 @@
+project RTS is
+   for Source_Dirs use (".");
+end RTS;

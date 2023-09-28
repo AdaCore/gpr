@@ -279,12 +279,13 @@ package body GPR2.Options is
    function Load_Project
      (Self             : in out Object;
       Tree             : in out GPR2.Project.Tree.Object;
+      With_Runtime     : Boolean := False;
       Absent_Dir_Error : GPR2.Project.Tree.Error_Level :=
                            GPR2.Project.Tree.Warning;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
-      Quiet            : Boolean := False;
-      With_Runtime     : Boolean := False) return Boolean is
+      Quiet            : Boolean := False) return Boolean
+   is
 
       Conf        : GPR2.Project.Configuration.Object;
       Create_Cgpr : Boolean := False;

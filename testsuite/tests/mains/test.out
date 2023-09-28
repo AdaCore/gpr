@@ -1,33 +1,79 @@
 Demo1    K_STANDARD
-prj/call1
+list of mains:
+src/call1.adb
+list of executables:
+./call_me
+  src/call1.adb
 Demo2    K_STANDARD
-prj/call2
+list of mains:
+src/call2.adb
+list of executables:
+./call2
+  src/call2.adb
 Demo3    K_STANDARD
-prj/exec/not_found
-prj/exec/call3_2
 demo3.gpr:3:20: warning: exec directory "exec" not found
 demo3.gpr:4:17: warning: not_found.adb is not a source of project Demo3
+list of mains:
+src/call3_2.adb
+list of executables:
+exec/not_found
+exec/call3_2
+  src/call3_2.adb
 Demo4    K_STANDARD
-prj/exec4/not_found
 demo4.gpr:3:20: warning: exec directory "exec4" not found
 demo4.gpr:4:17: warning: not_found.adb is not a source of project Demo4
+list of mains:
+list of executables:
+exec4/not_found
 Demo5    K_STANDARD
-prj/call
+list of mains:
+demo/call.adb
+list of executables:
+./call
+  demo/call.adb
 Demo6    K_STANDARD
-prj/not_found
 demo6.gpr:4:18: warning: not_found.adb is not a source of project Demo6
+list of mains:
+list of executables:
+./not_found
 Demo7    K_STANDARD
-prj/demo7
+list of mains:
+list of executables:
+./demo7
 Demo8    K_STANDARD
-prj/demo8
 demo8.gpr:3:26: warning: demo8.adb is not a source of project Demo8
+list of mains:
+list of executables:
+./demo8
 Demo9    K_STANDARD
-prj/demo9
+list of mains:
+list of executables:
+./demo9
 Demo10   K_STANDARD
-prj/demo10
 demo10.gpr:4:26: warning: demo10.1.ada is not a source of project Demo10
+list of mains:
+list of executables:
+./demo10
 Demo11   K_STANDARD
-prj/demo11
+list of mains:
+src/demo11.1.ada
+list of executables:
+./demo11
+  src/demo11.1.ada
 Demo12   K_STANDARD
-prj/demo12_not_found
 demo12.gpr:4:33: warning: demo12_not_found.1.ada is not a source of project Demo12
+list of mains:
+list of executables:
+./demo12_not_found
+Demo13   K_STANDARD
+list of mains:
+src/demo13.c
+list of executables:
+./demo13
+  src/demo13.c
+Demo14   K_STANDARD
+list of mains:
+src/demo14.myc
+list of executables:
+./demo14
+  src/demo14.myc

@@ -1,0 +1,7 @@
+project TypeDef is
+
+   type Bool is ("True", "False");
+   True  : Bool := "True";
+   False : Bool := "False";
+
+end TypeDef;

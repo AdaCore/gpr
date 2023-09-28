@@ -8,49 +8,44 @@ with GPR2.Project.Tree;
 procedure Main is
    use GPR2;
 
-   Project_Tree : Project.Tree.Object;
-   Ctx          : Context.Object := Context.Empty;
+   procedure Test (GPR : Filename_Type) is
 
-   Src_Dirs : GPR2.Path_Name.Set.Object;
+      Project_Tree : Project.Tree.Object;
+      Ctx          : Context.Object := Context.Empty;
 
-   function "<" (L, R : GPR2.Path_Name.Object) return Boolean
-     is (L.Value < R.Value);
-   package Sort is new GPR2.Path_Name.Set.Set.Generic_Sorting;
-begin
+      Src_Dirs : GPR2.Path_Name.Set.Object;
 
-   Project_Tree.Load_Autoconf
-     (Filename          => Project.Create ("p.gpr"),
-      Context           => Ctx);
+      function "<" (L, R : GPR2.Path_Name.Object) return Boolean
+        is (L.Value < R.Value);
+      package Sort is new GPR2.Path_Name.Set.Set.Generic_Sorting;
+   begin
 
-   Src_Dirs := Project_Tree.Root_Project.Source_Directories;
+      Project_Tree.Load_Autoconf
+        (Filename          => Project.Create (GPR),
+         Context           => Ctx);
 
-   Sort.Sort (Src_Dirs);
+      Src_Dirs := Project_Tree.Root_Project.Source_Directories;
 
-   Ada.Text_IO.Put_Line ("p.gpr:");
-   for Src_Dir of Src_Dirs loop
-      Ada.Text_IO.Put_Line
-        (Src_Dir.String_Value &
-         (if not Src_Dir.Is_Directory then " is not a directory" else ""));
-   end loop;
+      Sort.Sort (Src_Dirs);
 
-   Project_Tree.Unload;
-
-   Project_Tree.Load_Autoconf
-     (Filename          => Project.Create ("q.gpr"),
-      Context           => Ctx);
-
-   Src_Dirs := Project_Tree.Root_Project.Source_Directories;
-
-   Ada.Text_IO.Put_Line ("q.gpr:");
-   for Src_Dir of Src_Dirs loop
-      Ada.Text_IO.Put_Line (Src_Dir.String_Value);
-   end loop;
-
-   Project_Tree.Unload;
-
-exception
-   when Project_Error =>
-      for M of Project_Tree.Log_Messages.all loop
-         Ada.Text_IO.Put_Line (M.Format);
+      Ada.Text_IO.Put_Line (String (GPR) & ":");
+      for Src_Dir of Src_Dirs loop
+         Ada.Text_IO.Put_Line
+           (String (Src_Dir.Relative_Path (Project_Tree.Root_Project.Dir_Name)) &
+              (if not Src_Dir.Is_Directory then " is not a directory" else ""));
       end loop;
+
+      Project_Tree.Unload;
+   exception
+      when Project_Error =>
+         for M of Project_Tree.Log_Messages.all loop
+            Ada.Text_IO.Put_Line (M.Format);
+         end loop;
+   end Test;
+
+begin
+   Test ("p.gpr");
+   Test ("q.gpr");
+   Test ("r.gpr");
+   Test ("s.gpr");
 end Main;

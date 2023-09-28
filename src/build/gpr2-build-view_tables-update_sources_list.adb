@@ -935,7 +935,6 @@ package body Update_Sources_List is
 
                elsif Match = Naming_Convention then
                   declare
-                     use type GPR2.View_Ids.View_Id;
                      Last_Dot  : Natural;
                      Success   : Boolean;
                      Unit_Name : constant Name_Type :=
@@ -958,7 +957,7 @@ package body Update_Sources_List is
                         --  Check unit name from convention is the same as
                         --  the parsed one.
 
-                        if Data.View.Id /= GPR2.View_Ids.Runtime_View_Id
+                        if not Data.View.Is_Runtime
                           and then Source.Kind /= S_No_Body
                           and then Unit_Name /=
                             Build.Source.Full_Name (Source.Unit)

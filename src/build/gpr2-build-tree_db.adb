@@ -137,7 +137,7 @@ package body GPR2.Build.Tree_Db is
 
       for V of Self.Tree.Ordered_Views loop
          if V.Kind in With_Source_Dirs_Kind
-           and then V.Id /= View_Ids.Runtime_View_Id
+           and then not V.Is_Runtime
          then
             --  Check languages
 

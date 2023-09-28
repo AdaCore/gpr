@@ -6,7 +6,6 @@
 
 with Ada.Directories;
 with Ada.Strings.Fixed;
-with Ada.Text_IO;
 
 with GNAT.OS_Lib;
 with GNATCOLL.Utils;
@@ -20,7 +19,6 @@ with GPR2.Build.View_Db;
 with GPR2.Message;
 with GPR2.Project.Attribute_Cache;
 with GPR2.Project.Definition;
-with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
 with GPR2.Source_Reference.Attribute;
@@ -28,14 +26,13 @@ with GPR2.Source_Reference.Pack;
 
 package body GPR2.Project.View is
 
-   package PRP renames GPR2.Project.Registry.Pack;
    use GNAT;
    use type GPR2.View_Ids.View_Id;
 
    package Regexp_List is new Ada.Containers.Indefinite_Vectors
      (Positive, GNAT.Regexp.Regexp, "=" => GNAT.Regexp."=");
 
-   function Get_Main_Fullname
+   function Get_Main_Simplename
      (Self : Object; Main : String) return Simple_Name;
    --  Get the main attribute value, if the value contains any standard
    --  suffix (.ada, .adb, .c) or any declared convention in the Naming
@@ -67,13 +64,6 @@ package body GPR2.Project.View is
 
    function Strong (Weak : Weak_Reference) return Object;
 
-   function Binder_Prefix
-     (Self : Object; Language : Language_Id) return Filename_Optional
-     with Pre => Self.Is_Defined;
-   --  Prefix to be used for the binder exchange file name for the language.
-   --  Used to have different binder exchange file names when binding different
-   --  languages.
-
    function Remove_Body_Suffix
      (Self : Object; Name : Simple_Name) return Value_Not_Empty;
    --  Remove body suffix from Name
@@ -93,6 +83,9 @@ package body GPR2.Project.View is
       With_Config   : Boolean := True)
       return Project.Attribute.Set.Object
    with Inline;
+
+   function Has_Language (Self : Object; Name : Name_Type) return Boolean;
+   --  Whether Name is a language used by Self
 
    type Source_Filter_Data is new Build.Source.Sets.Filter_Data with record
       View            : Object;
@@ -156,7 +149,7 @@ package body GPR2.Project.View is
          Dir      : constant Value_Type :=
                       Self.Attribute (Dir_Attr).Value.Text;
          Subdirs  : constant Filename_Optional :=
-                      (if Self.Id = View_Ids.Runtime_View_Id then ""
+                      (if Self.Is_Runtime then ""
                        else Self.Tree.Subdirs);
          Dir_Name : constant Filename_Type :=
                       (if Dir = "" then "." else Filename_Type (Dir));
@@ -218,61 +211,6 @@ package body GPR2.Project.View is
 
       return Def.Dir_Cache (Def_Attr).Value;
    end Apply_Root_And_Subdirs;
-
-   ---------------
-   -- Artifacts --
-   ---------------
-
-   function Artifacts (Self : Object) return GPR2.Path_Name.Set.Object is
-      Result : GPR2.Path_Name.Set.Object;
-
-      procedure Result_Append
-        (Dir : GPR2.Path_Name.Object; Attr : Q_Attribute_Id);
-      --  Append files created from directory name and filenames from list of
-      --  attributes.
-
-      -------------------
-      -- Result_Append --
-      -------------------
-
-      procedure Result_Append
-        (Dir : GPR2.Path_Name.Object; Attr : Q_Attribute_Id)
-      is
-         use Ada.Directories;
-         Item : Directory_Entry_Type;
-         Find : Search_Type;
-      begin
-         if not Dir.Exists then
-            return;
-         end if;
-
-         for Name of Self.Clean_Attribute_List (Attr, No_Language) loop
-            Start_Search
-              (Search    => Find,
-               Directory => Dir.String_Value,
-               Pattern   => Name,
-               Filter    => (Ordinary_File => True, others => False));
-
-            while More_Entries (Find) loop
-               Get_Next_Entry (Find, Item);
-
-               Result.Append
-                 (GPR2.Path_Name.Create_File
-                    (Filename_Type (Full_Name (Item))));
-            end loop;
-         end loop;
-      end Result_Append;
-
-   begin
-      Result_Append (Self.Object_Directory, PRA.Clean.Artifacts_In_Object_Dir);
-
-      if Self.Kind = K_Standard then
-         Result_Append (Self.Executable_Directory,
-                        PRA.Clean.Artifacts_In_Exec_Dir);
-      end if;
-
-      return Result;
-   end Artifacts;
 
    ---------------
    -- Attribute --
@@ -815,27 +753,6 @@ package body GPR2.Project.View is
       return Result;
    end Attribute;
 
-   ------------------------
-   -- Attribute_Location --
-   ------------------------
-
-   function Attribute_Location
-     (Self  : Object;
-      Name  : Q_Attribute_Id;
-      Index : Attribute_Index.Object := Attribute_Index.Undefined)
-      return Source_Reference.Object'Class
-   is
-      Attr : Project.Attribute.Object;
-   begin
-      Attr := Self.Attribute (Name => Name, Index => Index);
-
-      if Attr.Is_Defined then
-         return Attr;
-      else
-         return Source_Reference.Create (Self.Path_Name.Value, 0, 0);
-      end if;
-   end Attribute_Location;
-
    ----------------
    -- Attributes --
    ----------------
@@ -923,6 +840,11 @@ package body GPR2.Project.View is
             --  If we have it, and we need to concatenate, then amend the
             --  value in Result.
 
+            pragma Annotate
+              (XCov, Exempt_On,
+               "Currently, no indexed attribute uses Concatenated as " &
+                 "inheritance policy");
+
             declare
                New_Attr : Project.Attribute.Object :=
                             Project.Attribute.Set.Element (Cursor);
@@ -930,6 +852,8 @@ package body GPR2.Project.View is
                New_Attr.Prepend_Vector (Attr);
                Result.Include (New_Attr);
             end;
+
+            pragma Annotate (Xcov, Exempt_Off);
          end if;
       end Add_Attr;
 
@@ -956,26 +880,21 @@ package body GPR2.Project.View is
       if Name.Pack = Project_Level_Scope then
          Result := Get_RO (Self).Attrs.Filter (Name.Attr);
 
-         if Alias.Attr /= No_Attribute then
-            for Attr of Get_RO (Self).Attrs.Filter (Alias.Attr) loop
-               --  Return the attributes with the requested name
-
-               if not Result.Contains (Name.Attr, Attr.Index) then
-                  Result.Include (Attr.Get_Alias (Name));
-               end if;
-            end loop;
-         end if;
-
          --  Query extended views
 
          if Def.Inherit_From_Extended /= PRA.Not_Inherited
            and then Self.Is_Extending
          then
+            pragma Annotate
+              (Xcov, Exempt_On, "no inherited attribute has index, for now");
+
             for Attr of Self.Extended_Root.Attributes_Internal
               (Name, False, False)
             loop
                Add_Attr (Attr, Def.Inherit_From_Extended = PRA.Concatenated);
             end loop;
+
+            pragma Annotate (Xcov, Exempt_Off);
          end if;
 
       else
@@ -1021,9 +940,16 @@ package body GPR2.Project.View is
          begin
             case Def.Default.Kind is
                when PRA.D_Callback =>
+                  pragma Annotate
+                    (Xcov, Exempt_On,
+                     "No indexed attribute with D_Callback default");
                   null;
+                  pragma Annotate (Xcov, Exempt_Off);
 
                when PRA.D_Attribute_Reference =>
+                  pragma Annotate
+                    (Xcov, Exempt_On,
+                     "No indexed attribute with D_Attribute_Ref default");
                   for Attr of Self.Attributes_Internal
                     ((Name.Pack, Def.Default.Attr))
                   loop
@@ -1038,6 +964,7 @@ package body GPR2.Project.View is
                                         Name))));
                      end if;
                   end loop;
+                  pragma Annotate (Xcov, Exempt_Off);
 
                when PRA.D_Value =>
                   for C in Def.Default.Values.Iterate loop
@@ -1082,112 +1009,6 @@ package body GPR2.Project.View is
       return Result;
    end Attributes_Internal;
 
-   ----------------------
-   -- Binder_Artifacts --
-   ----------------------
-
-   function Binder_Artifacts
-     (Self     : Object;
-      Name     : Simple_Name;
-      Language : Language_Id := No_Language)
-      return GPR2.Path_Name.Set.Object
-   is
-      use Ada.Text_IO;
-      use GNATCOLL.Utils;
-
-      Result  : GPR2.Path_Name.Set.Object;
-      Obj_Dir : constant GPR2.Path_Name.Object := Self.Object_Directory;
-      BP      : constant Filename_Optional :=
-                  (if Language = No_Language then No_Filename
-                   else Self.Binder_Prefix (Language));
-      BF      : constant GPR2.Path_Name.Object :=
-                  Obj_Dir.Compose
-                    (BP & Name
-                     & (if Self.Is_Library then ".lexch" else ".bexch"));
-
-      File    : File_Type;
-      Obj_Ext : constant Filename_Optional :=
-                  (if Language = No_Language then No_Filename
-                   else Self.Tree.Object_Suffix (Language));
-
-      Generated : Boolean := False;
-      Gen_Src   : Boolean := False;
-
-   begin
-      if GNAT.OS_Lib.Is_Regular_File (String (BF.Value)) then
-         Open (File, Mode => In_File, Name => String (BF.Value));
-
-         while not End_Of_File (File) loop
-            declare
-               Line : constant String := Get_Line (File);
-            begin
-               if Line (Line'First) = '[' then
-                  Generated := Starts_With (Line, "[GENERATED ");
-                  if Generated then
-                     Gen_Src := Line = "[GENERATED SOURCE FILES]";
-                  end if;
-
-               elsif Generated then
-                  Result.Append (Obj_Dir.Compose (Filename_Type (Line)));
-
-                  if Gen_Src and then Self.Has_Languages then
-                     for L of Self.Languages loop
-                        declare
-                           A : constant Project.Attribute.Object :=
-                                 Self.Attribute
-                                   (PRA.Naming.Body_Suffix,
-                                    Attribute_Index.Create (L.Text));
-                        begin
-                           if A.Is_Defined
-                             and then Ends_With (Line, A.Value.Text)
-                           then
-                              for E of Self.Source_Artifact_Extensions
-                                (Language => +Name_Type (L.Text))
-                              loop
-                                 Result.Append
-                                   (Obj_Dir.Compose
-                                      (Filename_Type (Line & E)));
-                              end loop;
-                           end if;
-                        end;
-                     end loop;
-
-                  elsif Obj_Ext /= ""
-                    and then Ends_With (Line, String (Obj_Ext))
-                  then
-                     for E of Self.Object_Artifact_Extensions (Language) loop
-                        Result.Append
-                          (Obj_Dir.Compose
-                             (Filename_Type
-                                (Line (Line'First
-                                       .. Line'Last - Obj_Ext'Length) & E)));
-                     end loop;
-                  end if;
-               end if;
-            end;
-         end loop;
-
-         Close (File);
-         Result.Append (BF);
-      end if;
-
-      return Result;
-   end Binder_Artifacts;
-
-   -------------------
-   -- Binder_Prefix --
-   -------------------
-
-   function Binder_Prefix
-     (Self : Object; Language : Language_Id) return Filename_Optional
-   is
-      Index : constant Attribute_Index.Object :=
-                Attribute_Index.Create (Value_Type (Name (Language)));
-   begin
-      return Filename_Optional
-        (Self.Attribute (PRA.Binder.Prefix, Index).Value.Text);
-   end Binder_Prefix;
-
    ---------------------
    -- Check_Attribute --
    ---------------------
@@ -1212,16 +1033,12 @@ package body GPR2.Project.View is
    -----------------
 
    procedure Check_Mains
-     (Self : Object;
+     (Self     : Object;
       Messages : in out Log.Object)
    is
       Attr : Project.Attribute.Object;
       Src  : GPR2.Build.View_Db.Source_Context;
    begin
-      if not Self.Is_Namespace_Root then
-         return;
-      end if;
-
       Attr := Self.Attribute (PRA.Main);
 
       if not Attr.Is_Defined then
@@ -1231,7 +1048,7 @@ package body GPR2.Project.View is
       for Main of Attr.Values loop
          declare
             Main_Fullname : constant Simple_Name :=
-                              Get_Main_Fullname (Self, Main.Text);
+                              Get_Main_Simplename (Self, Main.Text);
          begin
             Src := Self.View_Db.Visible_Source (Main_Fullname);
 
@@ -1259,40 +1076,18 @@ package body GPR2.Project.View is
       Dot  : constant Natural := Fixed.Index (String (Name), ".", Backward);
    begin
       if Dot > 0 then
-         Parent := Ref.Imports (Name (Name'First .. Dot - 1));
-         return True;
+         declare
+            P_Name : constant Name_Type := Name (Name'First .. Dot - 1);
+         begin
+            if Ref.Imports.Contains (P_Name) then
+               Parent := Ref.Imports (P_Name);
+               return True;
+            end if;
+         end;
       end if;
 
       return False;
    end Check_Parent;
-
-   --------------------------
-   -- Clean_Attribute_List --
-   --------------------------
-
-   function Clean_Attribute_List
-     (Self     : Object;
-      Name     : Q_Attribute_Id;
-      Language : Language_Id) return Containers.Value_Set
-   is
-      Index  : constant Attribute_Index.Object :=
-                 (if Language = No_Language
-                  then Attribute_Index.Undefined
-                  else Attribute_Index.Create
-                    (Value_Type (GPR2.Name (Language))));
-      Attr   : constant Project.Attribute.Object :=
-                 Self.Attribute ((PRP.Clean, Name.Attr), Index);
-      Result : Containers.Value_Set;
-
-   begin
-      if Attr.Is_Defined then
-         for Val of Attr.Values loop
-            Result.Include (Val.Text);
-         end loop;
-      end if;
-
-      return Result;
-   end Clean_Attribute_List;
 
    -------------
    -- Closure --
@@ -1464,28 +1259,17 @@ package body GPR2.Project.View is
    -- Get_Main_Fullname --
    -----------------------
 
-   function Get_Main_Fullname
+   function Get_Main_Simplename
      (Self : Object; Main : String) return Simple_Name
    is
       use GNATCOLL.Utils;
 
       Default_Ada_MU_BS : constant String := ".ada";
-      Default_Ada_BS    : constant String :=
-                            PRA.Get
-                              (PRA.Naming.Body_Suffix).Default.Values ("ada");
-      Default_C_BS      : constant String :=
-                            PRA.Get
-                              (PRA.Naming.Body_Suffix).Default.Values ("c");
       Ada_Index         : constant Attribute_Index.Object :=
                             Attribute_Index.Create (Ada_Language);
-      Ada_BS_Defined    : constant Boolean :=
-                            Self.Attribute
-                              (PRA.Naming.Body_Suffix, Ada_Index).Is_Defined;
       Ada_BS            : constant String :=
-                            (if Ada_BS_Defined
-                             then Self.Attribute
-                               (PRA.Naming.Body_Suffix, Ada_Index).Value.Text
-                             else "");
+                            Self.Attribute
+                               (PRA.Naming.Body_Suffix, Ada_Index).Value.Text;
 
       function Ends_With_One_Language (Main : String) return Boolean;
       --  Check if Main ends with any Self language naming convention suffix
@@ -1499,30 +1283,23 @@ package body GPR2.Project.View is
       ----------------------------
 
       function Ends_With_One_Language (Main : String) return Boolean is
-         Ends_With_One : Boolean := False;
       begin
-         for Lang of Self.Languages
-         loop
+         for Lang of Self.Language_Ids loop
             declare
-               L_Id   : constant Language_Id := +Name_Type (Lang.Text);
                Index  : constant Attribute_Index.Object :=
-                          Attribute_Index.Create (L_Id);
-               BS_Def : constant Boolean :=
-                          Self.Attribute
-                            (PRA.Naming.Body_Suffix, Index).Is_Defined;
-               BS     : constant String :=
-                          (if BS_Def
-                           then Self.Attribute
-                             (PRA.Naming.Body_Suffix, Index).Value.Text
-                           else "");
+                          Attribute_Index.Create (Lang);
+               Attr   : constant Project.Attribute.Object :=
+                          Self.Attribute (PRA.Naming.Body_Suffix, Index);
             begin
-               Ends_With_One :=
-                 Ends_With_One or else
-                 (if BS_Def then Ends_With (Main, BS) else False);
+               if Attr.Is_Defined
+                 and then Ends_With (Main, Attr.Value.Text)
+               then
+                  return True;
+               end if;
             end;
          end loop;
 
-         return Ends_With_One;
+         return False;
       end Ends_With_One_Language;
 
       ---------------------
@@ -1531,12 +1308,10 @@ package body GPR2.Project.View is
 
       function Is_An_Exception (Main : String) return Boolean is
       begin
-         for Lang of Self.Languages
-         loop
+         for Lang of Self.Language_Ids loop
             declare
-               L_Id    : constant Language_Id := +Name_Type (Lang.Text);
                Index   : constant Attribute_Index.Object :=
-                           Attribute_Index.Create (L_Id);
+                           Attribute_Index.Create (Lang);
                IEs_Def : constant Boolean :=
                            Self.Attribute
                              (PRA.Naming.Implementation_Exceptions,
@@ -1558,16 +1333,15 @@ package body GPR2.Project.View is
       end Is_An_Exception;
 
    begin
-      return (if Is_An_Exception (Main)
-              or else Ends_With (Main, Default_Ada_MU_BS)
-              or else Ends_With (Main, Default_Ada_BS)
-              or else Ends_With (Main, Default_C_BS)
-              or else Ends_With_One_Language (Main)
-              then Simple_Name (Main)
-              elsif Ada_BS_Defined
-              then Simple_Name (Main & Ada_BS)
-              else Simple_Name (Main & Default_Ada_BS));
-   end Get_Main_Fullname;
+      if Is_An_Exception (Main)
+        or else Ends_With_One_Language (Main)
+        or else Ends_With (Main, Default_Ada_MU_BS)
+      then
+         return Simple_Name (Main);
+      else
+         return Simple_Name (Main & Ada_BS);
+      end if;
+   end Get_Main_Simplename;
 
    ---------------------------
    -- Has_Aggregate_Context --
@@ -1632,11 +1406,6 @@ package body GPR2.Project.View is
       return False;
    end Has_Language;
 
-   function Has_Language (Self : Object; Name : Language_Id) return Boolean is
-   begin
-      return Self.Has_Language (GPR2.Name (Name));
-   end Has_Language;
-
    -------------------
    -- Has_Languages --
    -------------------
@@ -1661,7 +1430,7 @@ package body GPR2.Project.View is
          for Main of Attr.Values loop
             declare
                Main_Fullname : constant Simple_Name :=
-                                 Get_Main_Fullname (Self, Main.Text);
+                                 Get_Main_Simplename (Self, Main.Text);
             begin
                Src := Self.View_Db.Visible_Source (Main_Fullname);
 
@@ -1788,22 +1557,6 @@ package body GPR2.Project.View is
       return Self.Tree.all.Has_Src_Subdirs;
    end Has_Source_Subdirectory;
 
-   -----------------
-   -- Has_Sources --
-   -----------------
-
-   function Has_Sources (Self : Object) return Boolean is
-   begin
-      if Self.Kind in With_Object_Dir_Kind
-        and then (Self.Tree.Artifacts_Database.Use_Runtime_Sources
-                  or else Self.Id /= View_Ids.Runtime_View_Id)
-      then
-         return Self.View_Db.Sources.Is_Empty;
-      else
-         return False;
-      end if;
-   end Has_Sources;
-
    ---------------
    -- Has_Types --
    ---------------
@@ -1892,16 +1645,6 @@ package body GPR2.Project.View is
       return Result;
    end Imports;
 
-   ------------------------
-   -- Invalidate_Sources --
-   ------------------------
-
-   procedure Invalidate_Sources (Self : in out Object) is
-   begin
-      Definition.Get_RW (Self).Sources_Signature :=
-        GPR2.Context.Default_Signature;
-   end Invalidate_Sources;
-
    ------------------------------
    -- Is_Aggregated_In_Library --
    ------------------------------
@@ -1920,15 +1663,6 @@ package body GPR2.Project.View is
    begin
       return Definition.Get_RO (Self).Is_Extended;
    end Is_Extended;
-
-   --------------------
-   -- Is_Extended_By --
-   --------------------
-
-   function Is_Extended_By (Self : Object; View : Object) return Boolean is
-   begin
-      return View.Is_Extension_Of (Self);
-   end Is_Extended_By;
 
    ------------------
    -- Is_Extending --
@@ -1971,22 +1705,6 @@ package body GPR2.Project.View is
       return Definition.Get_RO (Self).Trees.Project.Is_Extending_All;
    end Is_Extending_All;
 
-   ---------------------
-   -- Is_Extension_Of --
-   ---------------------
-
-   function Is_Extension_Of (Self : Object; View : Object) return Boolean is
-      use GPR2.View_Ids;
-   begin
-      if Self.Id = View.Id then
-         return True;
-      elsif not Self.Is_Extending then
-         return False;
-      else
-         return View.Is_Extending (Self);
-      end if;
-   end Is_Extension_Of;
-
    -------------------------
    -- Is_Externally_Built --
    -------------------------
@@ -1997,22 +1715,6 @@ package body GPR2.Project.View is
    begin
       return Attr.Is_Defined and then Attr.Value_Equal ("true");
    end Is_Externally_Built;
-
-   -------------
-   -- Is_Main --
-   -------------
-
-   function Is_Main
-     (Self : Object; Source : Build.Source.Object) return Boolean
-   is
-      Path  : constant GPR2.Path_Name.Object := Source.Path_Name;
-      Mains : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
-   begin
-      return Mains.Is_Defined
-        and then
-          (Mains.Has_Value (Value_Type (Path.Base_Name))
-           or else Mains.Has_Value (Value_Type (Path.Simple_Name)));
-   end Is_Main;
 
    -----------------------
    -- Is_Namespace_Root --
@@ -2026,20 +1728,9 @@ package body GPR2.Project.View is
    ----------------
 
    function Is_Runtime (Self : Object) return Boolean is
-      Tree : constant not null access Project.Tree.Object := Self.Tree;
    begin
-      return Tree.Has_Runtime_Project and then Tree.Runtime_Project = Self;
+      return Self.Id = View_Ids.Runtime_View_Id;
    end Is_Runtime;
-
-   -----------------------
-   -- Is_Shared_Library --
-   -----------------------
-
-   function Is_Shared_Library (Self : Object) return Boolean is
-      LK : constant Name_Type := Self.Library_Kind;
-   begin
-      return LK = "dynamic" or else LK = "relocatable";
-   end Is_Shared_Library;
 
    -----------------------
    -- Is_Static_Library --
@@ -2077,21 +1768,6 @@ package body GPR2.Project.View is
 
       return Def.Languages;
    end Language_Ids;
-
-   ---------------
-   -- Languages --
-   ---------------
-
-   function Languages (Self : Object) return Containers.Source_Value_List is
-      Attr : constant GPR2.Project.Attribute.Object :=
-               Self.Attribute (PRA.Languages);
-   begin
-      if Attr.Is_Defined then
-         return Attr.Values;
-      else
-         return Containers.Source_Value_Type_List.Empty;
-      end if;
-   end Languages;
 
    ---------------------------
    -- Library_Ali_Directory --
@@ -2535,15 +2211,6 @@ package body GPR2.Project.View is
       pragma Assert (Ref.Get_Refcount = 1);
    end Set_Def;
 
-   ---------------
-   -- Signature --
-   ---------------
-
-   function Signature (Self : Object) return GPR2.Context.Binary_Signature is
-   begin
-      return Definition.Get_RO (Self).Signature;
-   end Signature;
-
    ---------------------
    -- Skipped_Sources --
    ---------------------
@@ -2866,18 +2533,6 @@ package body GPR2.Project.View is
    -----------------
 
    function Source_Path
-     (Self : Object; Filename : GPR2.Simple_Name) return GPR2.Path_Name.Object
-   is
-      Src : constant GPR2.Build.Source.Object := Self.Source (Filename);
-   begin
-      if Src.Is_Defined then
-         return Src.Path_Name;
-      else
-         return GPR2.Path_Name.Undefined;
-      end if;
-   end Source_Path;
-
-   function Source_Path
      (Self            : Object;
       Name            : GPR2.Simple_Name;
       Allow_Spec_File : Boolean;
@@ -3016,15 +2671,6 @@ package body GPR2.Project.View is
       return Definition.Get_RO (Self).Tree;
    end Tree;
 
-   ---------
-   -- Typ --
-   ---------
-
-   function Typ (Self : Object; Name : Name_Type) return Project.Typ.Object is
-   begin
-      return Definition.Get_RO (Self).Types (Name);
-   end Typ;
-
    -----------
    -- Types --
    -----------
@@ -3056,9 +2702,11 @@ package body GPR2.Project.View is
    -----------
 
    function Units
-     (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map is
+     (Self : Object;
+      With_Externally_Built : Boolean := False)
+      return GPR2.Build.Compilation_Unit.Maps.Map is
    begin
-      return Self.View_Db.Compilation_Units;
+      return Self.View_Db.Compilation_Units (With_Externally_Built);
    end Units;
 
    --------------
@@ -3135,13 +2783,6 @@ package body GPR2.Project.View is
 
          if CV.Is_Defined and then CV.Name = Name then
             return CV;
-
-         --  Try runtime project
-
-         elsif Data.Tree.Has_Runtime_Project
-           and then Data.Tree.Runtime_Project.Name = Name
-         then
-            return Data.Tree.Runtime_Project;
          end if;
       end;
 

@@ -256,10 +256,11 @@ Testing trees/multi/prj.gpr
      spec: ./src2.ada @ 1 (from view Prj)
      body: ./src2.ada @ 2 (from view Prj)
 =========================================
-Testing trees/invalid_naming/prj.gpr
+Testing trees/errors/prj.gpr
 =========================================
 foo..bar.ads:1:01: warning: invalid file name, contains dot
 foo._bar.ads:1:01: warning: invalid file name, contains dot
+foo.ads: warning: unit name "BAR" does not match source name
 foo_.bor.ads:1:01: warning: invalid file name, contains dot
 foo-_bar.ads: error: invalid name for unit 'FOO._BAR', cannot contain underscore after dot
 foo--bar.ads: error: invalid name for unit 'FOO..BAR', two consecutive dots not permitted
@@ -284,6 +285,8 @@ foo__bar.ads: error: invalid name for unit 'FOO__BAR', two consecutive underscor
      FOO.0BAR (spec)
    - src/foo-_bar.ads (spec)
      FOO._BAR (spec)
+   - src/foo.ads (spec)
+     BAR (spec)
    - src/foo__bar.ads (spec)
      FOO__BAR (spec)
  - compilation inputs:
@@ -292,11 +295,14 @@ foo__bar.ads: error: invalid name for unit 'FOO__BAR', two consecutive underscor
    - src/foo--bar.ads
    - src/foo-0bar.ads
    - src/foo-_bar.ads
+   - src/foo.ads
    - src/foo__bar.ads
 * Compilation units:
  - units of Prj
    - 0FOO.BAR
      spec: src/0foo-bar.ads (from view Prj)
+   - BAR
+     spec: src/foo.ads (from view Prj)
    - FOO..BAR
      spec: src/foo--bar.ads (from view Prj)
    - FOO.0BAR
@@ -409,3 +415,22 @@ prj.gpr:2:23: warning: object directory "obj" not found
      body: ./pkg-child.adb (from view Prj)
    - PKG.PROC
      body: ./pkg-proc.adb (from view Prj)
+=========================================
+Testing trees/non_ada/prj.gpr
+=========================================
+prj.gpr:6:67: warning: source file "notfound.inc" not found
+prj.gpr:7:48: warning: source file "notfound.cc" not found
+* Views:
+ - Prj (K_STANDARD) **
+   - Root project(s):
+     - Prj
+* Sources:
+ - sources of Prj
+   - src/bar.h (spec)
+   - src/baz.h (spec)
+   - src/foo.inc (spec)
+   - src/main.c (body)
+ - compilation inputs:
+   - src/main.c
+* Compilation units:
+ - units of Prj

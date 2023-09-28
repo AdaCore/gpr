@@ -3,5 +3,5 @@ project Demo is
    for Languages use ("ada");
    for Source_Dirs use ("src");
    for Object_Dir use "obj";
-   for Main use ("main.adb");
+   for Main use ("main.ada.2");
 end Demo;
