@@ -933,7 +933,6 @@ package body Update_Sources_List is
                            Exc_Attr));
                   end if;
 
-
                elsif Match = Naming_Convention then
                   declare
                      use type GPR2.View_Ids.View_Id;
@@ -960,6 +959,7 @@ package body Update_Sources_List is
                         --  the parsed one.
 
                         if Data.View.Id /= GPR2.View_Ids.Runtime_View_Id
+                          and then Source.Kind /= S_No_Body
                           and then Unit_Name /=
                             Build.Source.Full_Name (Source.Unit)
                           and then Path_Name.Base_Name (File.Path) /=

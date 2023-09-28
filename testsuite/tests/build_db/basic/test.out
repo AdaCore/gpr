@@ -64,6 +64,8 @@ c.gpr:12:37: error: source file "notfound.ada" for unit "Foo" not found
  - compilation inputs:
    - src/d/implem.c
  - sources of A
+   - src/a/pkg.adb (no_body)
+      (no_body)
    - src/a/pkg.ads (spec)
      PKG (spec)
  - compilation inputs:
