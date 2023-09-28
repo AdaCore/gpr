@@ -160,7 +160,6 @@ package GPR2.Options is
    --  Absent_Dir_Error: whether a missing directory should be treated as an
    --   error or a warning.
    --  If Quiet is true no output is printed.
-   --  With_Runtime loads the Ada runtime sources if set.
 
    -----------------------------------------------------
    --  Object's getters. (Requires finalized options) --

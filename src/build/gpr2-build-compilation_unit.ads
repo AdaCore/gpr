@@ -38,6 +38,7 @@ package GPR2.Build.Compilation_Unit is
      (Name_Type, Unit_Location);
 
    type Object is new GPR2.Build.DAG.Artifact with private;
+   type Object_List is array (Natural range <>) of Object;
 
    Undefined : constant Object;
 
@@ -79,13 +80,13 @@ package GPR2.Build.Compilation_Unit is
    --  Whether a unit with Kind is defined for Self
 
    procedure Add
-     (Self       : in out Object;
-      Kind       : Valid_Unit_Kind;
-      View       : GPR2.Project.View.Object;
-      Path       : GPR2.Path_Name.Object;
-      Index      : Unit_Index := No_Index;
-      Sep_Name   : Optional_Name_Type := "";
-      Success    : out Boolean)
+     (Self     : in out Object;
+      Kind     : Valid_Unit_Kind;
+      View     : GPR2.Project.View.Object;
+      Path     : GPR2.Path_Name.Object;
+      Index    : Unit_Index := No_Index;
+      Sep_Name : Optional_Name_Type := "";
+      Success  : out Boolean)
      with Pre => Self.Is_Defined
                    and then (Sep_Name'Length = 0) = (Kind /= S_Separate);
 
@@ -142,7 +143,7 @@ package GPR2.Build.Compilation_Unit is
    --  Execute Action for all parts of the given compilation unit
 
    function Known_Dependencies
-     (Self : Object) return GPR2.Build.DAG.Artifact_Sets.Set;
+     (Self : Object) return Object_List;
    --  Extract the list of units withed by the spec of Self and return them.
    --  If Self needs its own body (e.g. is a generic), then return also the
    --  units withed by the body.
@@ -154,9 +155,9 @@ package GPR2.Build.Compilation_Unit is
 private
 
    type Clashing_Unit (Sep_Name_Len : Natural) is record
-      Loc        : Unit_Location;
-      Kind       : Unit_Kind;
-      Sep_Name   : Optional_Name_Type (1 .. Sep_Name_Len);
+      Loc      : Unit_Location;
+      Kind     : Unit_Kind;
+      Sep_Name : Optional_Name_Type (1 .. Sep_Name_Len);
    end record;
 
    package Duplicates_List is new Ada.Containers.Indefinite_Vectors

@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Containers.Ordered_Sets;
 with Ada.Strings.Maps.Constants;
 
 with GPR2.Message;
@@ -19,13 +20,13 @@ package body GPR2.Build.Compilation_Unit is
    ---------
 
    procedure Add
-     (Self       : in out Object;
-      Kind       : Valid_Unit_Kind;
-      View       : GPR2.Project.View.Object;
-      Path       : GPR2.Path_Name.Object;
-      Index      : Unit_Index := No_Index;
-      Sep_Name   : Optional_Name_Type := "";
-      Success    : out Boolean)
+     (Self     : in out Object;
+      Kind     : Valid_Unit_Kind;
+      View     : GPR2.Project.View.Object;
+      Path     : GPR2.Path_Name.Object;
+      Index    : Unit_Index := No_Index;
+      Sep_Name : Optional_Name_Type := "";
+      Success  : out Boolean)
    is
       UL : constant Unit_Location :=
              (View   => View,
@@ -64,8 +65,7 @@ package body GPR2.Build.Compilation_Unit is
       end case;
 
       if not Success then
-         Self.Duplicates.Append
-           ((Sep_Name'Length, UL, Kind, Sep_Name));
+         Self.Duplicates.Append ((Sep_Name'Length, UL, Kind, Sep_Name));
       end if;
    end Add;
 
@@ -246,12 +246,18 @@ package body GPR2.Build.Compilation_Unit is
    ------------------------
 
    function Known_Dependencies
-     (Self : Object) return GPR2.Build.DAG.Artifact_Sets.Set
+     (Self : Object) return Object_List
    is
       procedure Add_Deps (Part : Unit_Location);
       --  Add with clauses from Part
 
-      Result  : GPR2.Build.DAG.Artifact_Sets.Set;
+      function Less (L, R : Object) return Boolean is
+         (L.Name < R.Name);
+
+      package Units_Set is new Ada.Containers.Ordered_Sets
+        (Object, Less);
+
+      Result  : Units_Set.Set;
       Tree_Db : constant Build.Tree_Db.Object_Access :=
                   Self.Root_View.Tree.Artifacts_Database;
 
@@ -262,7 +268,13 @@ package body GPR2.Build.Compilation_Unit is
          for Dep of Db.Src_Infos.Element
                       (Part.Source.Value).Unit (Part.Index).Dependencies
          loop
-            Result.Include (Self.Root_View.Unit (Dep));
+            declare
+               Unit : constant Object := Self.Root_View.Unit (Dep);
+            begin
+               if Unit.Is_Defined then
+                  Result.Include (Self.Root_View.Unit (Dep));
+               end if;
+            end;
          end loop;
       end Add_Deps;
 
@@ -273,13 +285,24 @@ package body GPR2.Build.Compilation_Unit is
 
       if Self.Implem.Source.Is_Defined then
          Add_Deps (Self.Implem);
-
-         for S of Self.Separates loop
-            Add_Deps (S);
-         end loop;
       end if;
 
-      return Result;
+      for S of Self.Separates loop
+         Add_Deps (S);
+      end loop;
+
+
+      declare
+         List : Object_List (1 .. Natural (Result.Length));
+         Idx  : Natural := 1;
+      begin
+         for Dep of Result loop
+            List (Idx) := Dep;
+            Idx := Idx + 1;
+         end loop;
+
+         return List;
+      end;
    end Known_Dependencies;
 
    -----------------

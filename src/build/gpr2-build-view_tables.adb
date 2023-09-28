@@ -745,14 +745,14 @@ package body GPR2.Build.View_Tables is
                for Root of Src.View.Namespace_Roots loop
                   if U.Kind /= S_No_Body then
                      Add_Unit_Part
-                       (NS_Db      => Get_Data (Data.Tree_Db, Root),
-                        CU         => U.Name,
-                        Kind       => U.Kind,
-                        Sep_Name   => U.Separate_Name,
-                        View_Db    => Data,
-                        Path       => Src_Info.Path_Name,
-                        Index      => U.Index,
-                        Messages   => Messages);
+                       (NS_Db    => Get_Data (Data.Tree_Db, Root),
+                        CU       => U.Name,
+                        Kind     => U.Kind,
+                        Sep_Name => U.Separate_Name,
+                        View_Db  => Data,
+                        Path     => Src_Info.Path_Name,
+                        Index    => U.Index,
+                        Messages => Messages);
                   end if;
                end loop;
             end loop;

@@ -75,7 +75,7 @@ procedure Main is
 
    procedure Output_Filename (Filename : Path_Name.Object; V : View.Object) is
    begin
-      Text_IO.Put (" > " & String (Filename.Relative_Path (V.Dir_Name).Name));
+      Text_IO.Put (" > " & String (Filename.Relative_Path (V.Dir_Name)));
    end Output_Filename;
 
 begin

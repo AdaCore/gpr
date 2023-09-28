@@ -87,6 +87,10 @@ begin
       else
          Ada.Text_IO.Put_Line (RTS_Unit & " located");
       end if;
+
+      for Dep of CU.Known_Dependencies loop
+         Ada.Text_IO.Put_Line (" dep: " & String (Dep.Name));
+      end loop;
    end;
 
    Tree.Unload;

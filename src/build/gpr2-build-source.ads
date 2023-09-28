@@ -56,8 +56,6 @@ package GPR2.Build.Source is
       Separate_Name : Optional_Name_Type (1 .. Separate_Len);
       --  In case Kind is S_Separate, the name of the subunit (without the
       --  compilation unit name part).
-      Is_Generic     : Boolean := False;
-      --  Whether the unit is a generic
       Dependencies   : GPR2.Containers.Name_Set;
       --  List of unit identifiers withed by this unit part
    end record;
@@ -74,7 +72,6 @@ package GPR2.Build.Source is
       Index         : Unit_Index;
       Kind          : Unit_Kind;
       Separate_Name : Optional_Name_Type := No_Name;
-      Generic_Unit  : Boolean := False;
       Dependencies  : GPR2.Containers.Name_Set :=
                         GPR2.Containers.Name_Type_Set.Empty_Set;
       Parsed        : Boolean := False) return Unit_Part;
@@ -261,7 +258,6 @@ private
       Index          : Unit_Index;
       Kind           : Unit_Kind;
       Separate_Name  : Optional_Name_Type := No_Name;
-      Generic_Unit   : Boolean := False;
       Dependencies   : GPR2.Containers.Name_Set :=
                          GPR2.Containers.Name_Type_Set.Empty_Set;
       Parsed         : Boolean := False) return Unit_Part
@@ -275,7 +271,6 @@ private
        Separate_Name  => Optional_Name_Type
                            (Ada.Characters.Handling.To_Upper
                               (String (Separate_Name))),
-       Is_Generic     => Generic_Unit,
        Dependencies   => Dependencies);
 
    package Unit_Map is new Ada.Containers.Indefinite_Ordered_Maps

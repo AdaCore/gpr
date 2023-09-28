@@ -3203,9 +3203,9 @@ package body GPR2.Project.Tree is
                          (SA_Exists and then View.Library_Standalone = No)
                      then
                         Self.Warning
-                          ("attribute """ & Image (Name)
-                           & """ is only used in standalone libraries",
-                          Attr);
+                          ("attribute """ & Image (Name) &
+                           """ is only used in standalone libraries",
+                           Attr);
                      end if;
                   end;
                end if;

@@ -1,0 +1,8 @@
+project A is
+
+   for Source_Dirs use ("srca");
+   for Object_Dir use "obja";
+
+   for Main use ("main.adb");
+
+end A;
