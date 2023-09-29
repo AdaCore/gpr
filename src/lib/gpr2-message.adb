@@ -5,6 +5,7 @@
 --
 
 with Ada.Directories;
+with Ada.Strings.Fixed;
 with Ada.Text_IO;
 with GNAT.Formatted_String;
 
@@ -53,10 +54,29 @@ package body GPR2.Message is
                    when Information => "info",
                    when Lint        => "lint"));
 
+      function Simple_Name (S : String) return String;
+      --  Handle possible pseudo files
+
+      -----------------
+      -- Simple_Name --
+      -----------------
+
+      function Simple_Name (S : String) return String is
+         Start : Natural := Ada.Strings.Fixed.Index (S, "<ram>");
+      begin
+         if Start = 0 then
+            Start := S'First;
+         else
+            Start := Start + 5;
+         end if;
+
+         return Directories.Simple_Name (S (Start .. S'Last));
+      end Simple_Name;
+
       Filename : constant String :=
                    (if Full_Path_Name
                     then Self.Sloc.Filename
-                    else Directories.Simple_Name (Self.Sloc.Filename));
+                    else Simple_Name (Self.Sloc.Filename));
 
       Indent   : constant String := (1 .. Self.Indent * 2 => ' ');
 
