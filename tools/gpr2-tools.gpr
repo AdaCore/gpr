@@ -33,10 +33,10 @@ project GPR2.Tools extends "../shared.gpr" is
       --  "gprclean-main.adb",
       "gprconfig.adb",
       "gprdoc-main.adb",
-      "gprinspect-main.adb",
+      "gprinspect-main.adb"
       --  "gprinstall-main.adb",
-      --  "gprls-main.adb",
-      "gprremote.adb");
+      --  "gprls-main.adb"
+     );
 
    -------------
    -- Builder --
