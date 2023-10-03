@@ -1,6 +1,6 @@
 import re
 
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRNAME, GPRLS, \
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS, \
                                                  GPRINSTALL, GPRCLEAN, GPRCONFIG, \
                                                  GPRREMOTE
 
@@ -11,7 +11,7 @@ def check(toolname, tool):
     try:
         p = BuilderAndRunner().run([tool, '--version'])
         if p.status != 0:
-            print('gprname returned ' + str(p.status))
+            print(toolname + ' returned ' + str(p.status))
             print(p.out)
         else:
             output = p.out
@@ -28,7 +28,6 @@ def check(toolname, tool):
         print('*** Error: %s' % str(E))
 
 
-check('GPRNAME', GPRNAME)
 check('GPRLS', GPRLS)
 check('GPRINSTALL', GPRINSTALL)
 check('GPRCLEAN', GPRCLEAN)

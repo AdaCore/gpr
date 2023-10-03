@@ -3,12 +3,11 @@ from testsuite_support.builder_and_runner import (
     GPRLS,
     GPRCLEAN,
     GPRINSTALL,
-    GPRNAME,
 )
 
 bnr = BuilderAndRunner()
 
-all_tools = [GPRLS, GPRCLEAN, GPRINSTALL, GPRNAME]
+all_tools = [GPRLS, GPRCLEAN, GPRINSTALL]
 
 
 def execute(cmd, check=False):
@@ -42,10 +41,7 @@ for t in all_tools:
 # check invalid parameter delimiter
 
 for t in all_tools:
-    if t == GPRNAME:
-        execute([t, "-gnatep:foo"])
-    else:
-        execute([t, "--config:conf.cgpr"])
+    execute([t, "--config:conf.cgpr"])
 
 # check no parameter
 

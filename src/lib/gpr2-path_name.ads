@@ -57,6 +57,10 @@ package GPR2.Path_Name is
    function Is_Root_Dir (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
 
+   function Is_Pseudo_File  (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if Self is a virtual file
+
    function Create_File
      (Name      : Filename_Type;
       Directory : Filename_Optional := Resolve_On_Current) return Object
@@ -77,6 +81,16 @@ package GPR2.Path_Name is
      with Post => Create_Directory'Result.Is_Defined
                   and then Create_Directory'Result.Is_Directory;
    --  Creates a Path_Name_Type for a directory
+
+   function Create_Pseudo_File (Name : Filename_Type) return Object
+     with Post => Create_Pseudo_File'Result.Is_Defined
+                  and then Create_Pseudo_File'Result.Is_Pseudo_File;
+   --  Creates a Path_Name.Object for a pseudo file. Pseudo file does not
+   --  exist anywhere on the file system, instead it is located in memory.
+   --  This is used in particular for configuration project files created in
+   --  memory during autoconfiguration step.
+   --  All possible path information is ignored, and resulting object gets
+   --  a pseudo-path /<ram>/Base_Name (Name).
 
    function Create (Name, Path_Name : Filename_Type) return Object
      with Post => Create'Result.Is_Defined;
@@ -235,6 +249,7 @@ private
 
    type Object is tagged record
       Is_Dir    : Boolean := False;
+      In_Memory : Boolean := False;
       As_Is     : Unbounded_String;
       Value     : Unbounded_String; -- the normalized path-name
       Comparing : Unbounded_String; -- normalized path-name for comparison
@@ -275,6 +290,8 @@ private
      (String (Value (Self)));
 
    function Is_Directory (Self : Object) return Boolean is (Self.Is_Dir);
+
+   function Is_Pseudo_File (Self : Object) return Boolean is (Self.In_Memory);
 
    function Modification_Time (Self : Object) return Ada.Calendar.Time is
      (Ada.Directories.Modification_Time (To_String (Self.Value)));
