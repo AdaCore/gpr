@@ -1,0 +1,5 @@
+description:
+    test reporting of invalid kb chunks (cannot be parsed)
+driver: build_and_run
+project_file: test
+main: main

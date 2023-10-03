@@ -4,9 +4,10 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Directories;
+with Ada.Strings.Fixed;
 with Ada.Text_IO;
 with GNAT.Formatted_String;
-with GPR2.Path_Name;
 
 package body GPR2.Message is
 
@@ -53,10 +54,29 @@ package body GPR2.Message is
                    when Information => "info",
                    when Lint        => "lint"));
 
-      Filename : constant Filename_Type :=
+      function Simple_Name (S : String) return String;
+      --  Handle possible pseudo files
+
+      -----------------
+      -- Simple_Name --
+      -----------------
+
+      function Simple_Name (S : String) return String is
+         Start : Natural := Ada.Strings.Fixed.Index (S, "<ram>");
+      begin
+         if Start = 0 then
+            Start := S'First;
+         else
+            Start := Start + 5;
+         end if;
+
+         return Directories.Simple_Name (S (Start .. S'Last));
+      end Simple_Name;
+
+      Filename : constant String :=
                    (if Full_Path_Name
-                    then Self.Sloc.Filename
-                    else GPR2.Path_Name.Simple_Name (Self.Sloc.Filename));
+                    then String (Self.Sloc.Filename)
+                    else Simple_Name (String (Self.Sloc.Filename)));
 
       Indent   : constant String := (1 .. Self.Indent * 2 => ' ');
 
@@ -74,7 +94,7 @@ package body GPR2.Message is
             Format : constant Formatted_String := +"%s:%d:%02d: %s";
          begin
             return -(Format
-                     & String (Filename) & Self.Sloc.Line & Self.Sloc.Column
+                     & Filename & Self.Sloc.Line & Self.Sloc.Column
                      & Indented);
          end;
 
@@ -82,7 +102,7 @@ package body GPR2.Message is
          declare
             Format : constant Formatted_String := +"%s: %s";
          begin
-            return -(Format & String (Filename) & Indented);
+            return -(Format & Filename & Indented);
          end;
       end if;
    end Format;

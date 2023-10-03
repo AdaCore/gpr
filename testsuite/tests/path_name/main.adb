@@ -6,6 +6,9 @@ with GNAT.OS_Lib;
 
 with GPR2.Path_Name; use GPR2.Path_Name;
 
+with GPR2.Context;
+with GPR2.Project.Tree;
+
 procedure Main is
    First_Check : Boolean := True;
 
@@ -30,6 +33,10 @@ procedure Main is
          Put_Line ("- Is a directory");
       else
          Put_Line ("- Is a file");
+      end if;
+
+      if Path.Is_Pseudo_File then
+         Put_Line ("- Exists in memory only");
       end if;
 
       if Path.Is_Root_Dir then
@@ -71,6 +78,8 @@ procedure Main is
    Base       : constant Object := Create_Directory ("files.dir");
    Subdir     : constant Object := Base.Compose ("subdir", True);
    On_Windows : constant Boolean := GNAT.OS_Lib.Directory_Separator = '\';
+
+   PT         : GPR2.Project.Tree.Object;
 
 begin
    Check_Path ("Root dir:", Create_Directory ("/"));
@@ -116,4 +125,11 @@ begin
                   Relative_Path (Create_Directory ("D:\Foo\Bar\"),
                                  Create_Directory ("D:\foo\baz\")));
    end if;
+
+   PT.Load_Autoconf (GPR2.Project.Create ("a.gpr"), GPR2.Context.Empty);
+
+   Check_Path ("Check in-memory autoconf file",
+               PT.Configuration.Corresponding_View.Path_Name);
+
+   PT.Unload;
 end Main;

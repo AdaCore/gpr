@@ -341,6 +341,7 @@ package body GPR2.Path_Name is
    begin
       return Object'
         (Is_Dir    => False,
+         In_Memory => False,
          As_Is     => +String (Name),
          Value     => Value,
          Comparing => To_OS_Case (Value),
@@ -365,6 +366,7 @@ package body GPR2.Path_Name is
    begin
       return Object'
         (Is_Dir    => True,
+         In_Memory => False,
          As_Is     => +String (Name),
          Value     => VN,
          Comparing => To_OS_Case (VN),
@@ -396,6 +398,7 @@ package body GPR2.Path_Name is
          begin
             return Object'
               (Is_Dir    => False,
+               In_Memory => False,
                As_Is     => +String (Name),
                Value     => VN,
                Comparing => To_OS_Case (VN),
@@ -404,6 +407,28 @@ package body GPR2.Path_Name is
          end;
       end if;
    end Create_File;
+
+   ------------------------
+   -- Create_Pseudo_File --
+   ------------------------
+
+   function Create_Pseudo_File (Name : Filename_Type) return Object is
+      Pseudo_Dir  : constant Filename_Type :=
+                      OS_Lib.Directory_Separator & "<ram>";
+      Pseudo_Full : constant Filename_Type :=
+                      Pseudo_Dir
+                      & OS_Lib.Directory_Separator
+                      & Simple_Name (Name);
+   begin
+      return Object'
+              (Is_Dir    => False,
+               In_Memory => True,
+               As_Is     => +String (Name),
+               Value     => +Pseudo_Full,
+               Comparing => To_OS_Case (+Pseudo_Full),
+               Base_Name => +Base_Name (Name),
+               Dir_Name  => +Ensure_Directory (Pseudo_Dir));
+   end Create_Pseudo_File;
 
    ---------------------
    -- Create_Sym_Link --

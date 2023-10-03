@@ -273,22 +273,12 @@ package body GPR2.Project.Configuration is
             end;
          end if;
 
-         if Path_Name.Temporary_Directory.Is_Defined then
-            Result.Project :=
-              GPR2.Project.Parser.Parse
-                (Contents        => Configuration_String,
-                 Messages        => Parsing_Messages,
-                 Pseudo_Filename => Path_Name.Create_File
-                   ("autoconf.cgpr",
-                    Path_Name.Temporary_Directory.Value));
-         else
-            Result.Project :=
-              GPR2.Project.Parser.Parse
-                (Contents        => Configuration_String,
-                 Messages        => Parsing_Messages,
-                 Pseudo_Filename => Path_Name.Create_File
-                   ("autoconf.cgpr", Project_Path.Dir_Name));
-         end if;
+         Result.Project :=
+           GPR2.Project.Parser.Parse
+             (Contents        => Configuration_String,
+              Messages        => Parsing_Messages,
+              Pseudo_Filename =>
+                Path_Name.Create_Pseudo_File ("autoconf.cgpr"));
 
          for M of Parsing_Messages loop
             Result.Messages.Append (M);
