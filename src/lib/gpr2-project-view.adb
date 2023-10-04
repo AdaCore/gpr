@@ -1312,9 +1312,9 @@ package body GPR2.Project.View is
    -- Compilation_Inputs --
    ------------------------
 
-   function Compilation_Inputs (Self : Object)
-                                return GPR2.Build.Compilation_Input.Sets.Object
-   is
+   function Compilation_Inputs
+     (Self : Object)
+      return GPR2.Build.Compilation_Input.Sets.Object is
    begin
       return GPR2.Build.Compilation_Input.Sets.Create (Self);
    end Compilation_Inputs;
@@ -1858,10 +1858,10 @@ package body GPR2.Project.View is
    function Imports
      (Self : Object; Recursive : Boolean := False) return Set.Object
    is
-      Result : GPR2.Project.View.Set.Object;
-
       procedure Add (Self : Object);
       --  Add Self imported projects
+
+      Result : GPR2.Project.View.Set.Object;
 
       ---------
       -- Add --
@@ -2549,9 +2549,9 @@ package body GPR2.Project.View is
    -- Source --
    ------------
 
-   function Source (Self : Object; Filename : GPR2.Simple_Name)
-      return Build.Source.Object
-   is
+   function Source
+     (Self : Object; Filename : GPR2.Simple_Name)
+      return Build.Source.Object is
    begin
       if Self.Kind not in With_Object_Dir_Kind then
          return Build.Source.Undefined;
@@ -2569,7 +2569,11 @@ package body GPR2.Project.View is
    is
       procedure Dir_Cb (Dir_Name : GPR2.Path_Name.Full_Name);
 
-      Result                   : GPR2.Path_Name.Set.Object;
+      Result : GPR2.Path_Name.Set.Object;
+
+      ------------
+      -- Dir_Cb --
+      ------------
 
       procedure Dir_Cb (Dir_Name : GPR2.Path_Name.Full_Name) is
       begin
@@ -2685,8 +2689,7 @@ package body GPR2.Project.View is
 
       procedure On_File
         (File      : GPR2.Path_Name.Full_Name;
-         Timestamp : Ada.Calendar.Time)
-      is
+         Timestamp : Ada.Calendar.Time) is
       begin
          Source_CB (Dir_Ref, File, Timestamp);
       end On_File;
@@ -2708,14 +2711,14 @@ package body GPR2.Project.View is
       if Excluded_Dirs.Is_Defined then
          for V of Excluded_Dirs.Values loop
             declare
-               Val          : constant Value_Type := V.Text;
-               Recursive    : constant Boolean :=
-                                Val'Length >= 2
-                                    and then
-                                      Val (Val'Last - 1 .. Val'Last) = "**";
-               Last         : constant Natural :=
-                                (if Recursive then Val'Last - 2 else Val'Last);
-               Dir_Val      : constant Value_Type := Val (Val'First .. Last);
+               Val       : constant Value_Type := V.Text;
+               Recursive : constant Boolean :=
+                             Val'Length >= 2
+                                 and then
+                                   Val (Val'Last - 1 .. Val'Last) = "**";
+               Last      : constant Natural :=
+                             (if Recursive then Val'Last - 2 else Val'Last);
+               Dir_Val   : constant Value_Type := Val (Val'First .. Last);
             begin
                if Dir_Val'Length = 0 then
                   if Recursive then
@@ -2723,6 +2726,7 @@ package body GPR2.Project.View is
                   else
                      Excluded_Dirs_List.Include (View.Dir_Name.Value);
                   end if;
+
                else
                   declare
                      Dir_Name     : constant GPR2.Path_Name.Object :=
@@ -2776,10 +2780,11 @@ package body GPR2.Project.View is
       S    : Build.Source.Object;
       Data : Build.Source.Sets.Filter_Data'Class) return Boolean
    is
+      use type Build.Unit_Kind;
+
       CU     : Build.Compilation_Unit.Object;
       Result : Boolean;
       Opt    : constant Source_Filter_Data := Source_Filter_Data (Data);
-      use type Build.Unit_Kind;
 
    begin
       if Opt.Compilable_Only then
@@ -2964,8 +2969,7 @@ package body GPR2.Project.View is
    function Sources
      (Self            : Object;
       Interface_Only  : Boolean := False;
-      Compilable_Only : Boolean := False) return Build.Source.Sets.Object
-   is
+      Compilable_Only : Boolean := False) return Build.Source.Sets.Object is
    begin
       if Self.Kind in With_Object_Dir_Kind then
          declare
@@ -2979,6 +2983,7 @@ package body GPR2.Project.View is
             return Build.Source.Sets.Create
               (Db, Build.Source.Sets.Sorted, Source_Filter'Access, F_Data);
          end;
+
       else
          return Build.Source.Sets.Empty_Set;
       end if;
@@ -3026,8 +3031,9 @@ package body GPR2.Project.View is
    -- Units --
    -----------
 
-   function Unit (Self : Object;
-                  Name : Name_Type) return Build.Compilation_Unit.Object
+   function Unit
+     (Self : Object;
+      Name : Name_Type) return Build.Compilation_Unit.Object
    is
       Db : constant Build.View_Db.Object := Self.View_Db;
    begin
@@ -3042,8 +3048,8 @@ package body GPR2.Project.View is
    -- Units --
    -----------
 
-   function Units (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
-   is
+   function Units
+     (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map is
    begin
       return Self.View_Db.Compilation_Units;
    end Units;
@@ -3058,9 +3064,10 @@ package body GPR2.Project.View is
       return Definition.Get_RO (Self).Vars (Name);
    end Variable;
 
-   function Variable (Self : Object;
-                      Pack : Package_Id;
-                      Name : Name_Type) return Project.Variable.Object is
+   function Variable
+     (Self : Object;
+      Pack : Package_Id;
+      Name : Name_Type) return Project.Variable.Object is
    begin
       return Self.Pack (Pack).Vars.Element (Name);
    end Variable;

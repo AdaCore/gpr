@@ -4171,7 +4171,7 @@ package body GPR2.Project.Parser is
                   declare
                      M : constant String := V.Text;
                   begin
-                     --  Check for bath Unix & Windows directory separators
+                     --  Check for both Unix & Windows directory separators
                      if Strings.Fixed.Index
                        (M, Strings.Maps.To_Set ("/\")) > 0
                      then

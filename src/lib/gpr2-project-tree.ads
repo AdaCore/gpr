@@ -354,9 +354,9 @@ package GPR2.Project.Tree is
    --  the tree will be called, the set of sources will be recomputed.
 
    procedure Update_Sources
-     (Self         : Object;
-      Option       : Source_Info_Option := Sources_Units;
-      Messages     : out GPR2.Log.Object)
+     (Self     : Object;
+      Option   : Source_Info_Option := Sources_Units;
+      Messages : out GPR2.Log.Object)
      with Pre => Self.Is_Defined;
    --  Ensures that all views' sources are up-to-date.
    --  Option selects the information that will be gathered on the sources. The
@@ -428,8 +428,8 @@ package GPR2.Project.Tree is
    ------------------------
 
    function Instance_Of
-      (Self        : Object;
-       Instance_Id : GPR2.View_Ids.View_Id) return View.Object
+     (Self        : Object;
+      Instance_Id : GPR2.View_Ids.View_Id) return View.Object
      with Pre => Self.Is_Defined
                    and then GPR2.View_Ids.Is_Defined (Instance_Id);
    --  Given a view id return the effective view that should be used. The
@@ -528,14 +528,14 @@ private
    end record;
 
    type All_Search_Paths is record
-      Default    : Path_Name.Set.Object :=
-                     Default_Search_Paths
-                       (True, GPR2.Environment.Process_Environment);
-      Prepended  : Path_Name.Set.Object;
-      Appended   : Path_Name.Set.Object;
-      All_Paths  : Path_Name.Set.Object :=
-                     Default_Search_Paths
-                       (True, GPR2.Environment.Process_Environment);
+      Default   : Path_Name.Set.Object :=
+                    Default_Search_Paths
+                      (True, GPR2.Environment.Process_Environment);
+      Prepended : Path_Name.Set.Object;
+      Appended  : Path_Name.Set.Object;
+      All_Paths : Path_Name.Set.Object :=
+                    Default_Search_Paths
+                      (True, GPR2.Environment.Process_Environment);
    end record;
 
    type Object is tagged limited record
@@ -613,8 +613,8 @@ private
       Environment       : GPR2.Environment.Object :=
                             GPR2.Environment.Process_Environment);
 
-   function "=" (Left, Right : Object) return Boolean
-   is (Left.Self = Right.Self);
+   function "=" (Left, Right : Object) return Boolean is
+     (Left.Self = Right.Self);
 
    package Project_View_Store renames GPR2.Project.View.Vector.Vector;
 
@@ -628,7 +628,8 @@ private
                    Tree    => null);
 
    type Constant_Reference_Type
-     (View : not null access constant Project.View.Object) is record
+     (View : not null access constant Project.View.Object)
+   is record
       --  We need to keep the underlying reference so that it is not cleared
       --  upon return of the getter, and so that the container has the proper
       --  busy state

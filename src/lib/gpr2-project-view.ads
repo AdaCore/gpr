@@ -154,12 +154,13 @@ package GPR2.Project.View is
    --  Returns True if the source is the main unit of the view
 
    function Is_Namespace_Root (Self : Object) return Boolean
-     with Pre  => Self.Is_Defined;
+     with Pre => Self.Is_Defined;
    --  Whether this view is either the root of the tree or the root
    --  project of an aggregated subtree.
 
-   function Aggregated (Self      : Object;
-                        Recursive : Boolean := True) return Set.Object
+   function Aggregated
+     (Self      : Object;
+      Recursive : Boolean := True) return Set.Object
      with Pre => Self.Is_Defined and then Self.Kind in Aggregate_Kind;
    --  Get the aggregated views.
    --  In case Self is an aggregate project and recursive is set, if
@@ -196,7 +197,7 @@ package GPR2.Project.View is
    --  Returns the Context for the given project tree
 
    function Context (Self : Object) return Context_Kind
-     with Pre  => Self.Is_Defined;
+     with Pre => Self.Is_Defined;
 
    function Has_Aggregate_Context (Self : Object) return Boolean
      with Pre => Self.Is_Defined;

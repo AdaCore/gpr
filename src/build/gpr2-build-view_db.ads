@@ -108,7 +108,7 @@ package GPR2.Build.View_Db is
      (Self : Object;
       View : Project.View.Object) return Object
      with Pre => Self.Is_Defined;
-   --  Retrieve the build database for View.
+   --  Retrieve the build database for View
 
    function Tree_Db (Self : Object) return access GPR2.Build.Tree_Db.Object
      with Pre => Self.Is_Defined;
