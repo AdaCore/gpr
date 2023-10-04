@@ -1,0 +1,6 @@
+Project: Main
+demo2.gpr: error: source file "a1.ads" already part of project Demo1
+Project: MainC
+mainc.gpr: error: source file "a1.ads" already part of project Demo1
+Project: MainE
+Project: MainA

@@ -1,0 +1,8 @@
+project p1 extends all "p" is
+
+   for Object_Dir use "op1";
+
+   for Locally_Removed_Files use
+     ("removed_unit.adb");
+
+end p1;

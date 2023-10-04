@@ -1,0 +1,4 @@
+project p is
+   for Source_Dirs use ("src4");
+   for Source_Files use ("removed_unit.adb");
+end p;
