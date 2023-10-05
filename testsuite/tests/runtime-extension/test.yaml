@@ -1,0 +1,5 @@
+description:
+    Check case where ada_object_path contains non simple names in runtime
+driver: build_and_run
+project_file: test
+main: main

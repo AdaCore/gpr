@@ -354,9 +354,9 @@ package body GPR2.Project.Tree is
 
    function Create_Runtime_View (Self : Object) return View.Object is
       CV   : constant View.Object := Self.Conf.Corresponding_View;
-      DS   : Character renames OS_Lib.Directory_Separator;
       Data : Project.Definition.Data;
-      RTD  : Attribute.Object;
+      Attr : Attribute.Object;
+      RTD  : Path_Name.Object;
       RTF  : Path_Name.Object;
 
       procedure Add_Attribute (Name : Q_Attribute_Id; Value : Value_Type);
@@ -383,61 +383,65 @@ package body GPR2.Project.Tree is
    begin
       --  Check runtime path
 
-      RTD := CV.Attribute (Name  => PRA.Runtime_Dir,
+      Attr := CV.Attribute (Name  => PRA.Runtime_Dir,
                            Index => Attribute_Index.Create (Ada_Language));
 
-      if RTD.Is_Defined and then RTD.Value.Text /= "" then
+      if Attr.Is_Defined and then Attr.Value.Text /= "" then
          --  Runtime_Dir (Ada) exists, this is used to compute the Source_Dirs
          --  and Object_Dir for the Runtime project view.
 
-         RTF := Path_Name.Create_File
-           ("runtime.gpr", Directory => Filename_Optional (RTD.Value.Text));
+         RTD := Path_Name.Create_Directory (Filename_Type (Attr.Value.Text));
+         RTF := RTD.Compose ("runtime.gpr");
 
          declare
             Dirs : Containers.Source_Value_List;
 
-            procedure Add_If_Exists (Dir_Name : String);
+            procedure Add_If_Exists (Dir_Name : Path_Name.Object);
             --  Add directory name into Dirs if it exists
 
             -------------------
             -- Add_If_Exists --
             -------------------
 
-            procedure Add_If_Exists (Dir_Name : String) is
+            procedure Add_If_Exists (Dir_Name : Path_Name.Object) is
             begin
-               if Directories.Exists (Dir_Name) then
+               if Dir_Name.Exists then
                   Dirs.Append
                     (Source_Reference.Value.Object
                        (Source_Reference.Value.Create
                           (Source_Reference.Object
                              (Source_Reference.Create (RTF.Value, 0, 0)),
-                              Dir_Name)));
+                              Dir_Name.Value)));
                end if;
             end Add_If_Exists;
 
-            function With_RTD_Prefix (Name : String) return String is
-              (Directories.Compose (RTD.Value.Text, Name));
-            --  Prepend the Name with
-
-            Ada_Source_Path : constant String :=
-                                With_RTD_Prefix ("ada_source_path");
+            Ada_Source_Path : constant Path_Name.Object :=
+                                RTD.Compose
+                                  ("ada_source_path",
+                                   Directory => False);
 
             use Ada.Text_IO;
 
             File : File_Type;
 
          begin
-            if Directories.Exists (Ada_Source_Path) then
-               Open (File, Text_IO.In_File, Ada_Source_Path);
+            if Ada_Source_Path.Exists then
+               Open (File, Text_IO.In_File, Ada_Source_Path.Value);
 
                while not End_Of_File (File) loop
                   declare
                      Line : constant String := Get_Line (File);
                   begin
                      if Line /= "" then
-                        Add_If_Exists
-                          (if OS_Lib.Is_Absolute_Path (Line) then Line
-                           else With_RTD_Prefix (Line));
+                        if OS_Lib.Is_Absolute_Path (Line) then
+                           Add_If_Exists
+                             (Path_Name.Create_Directory
+                                (Filename_Type (Line)));
+                        else
+                           Add_If_Exists
+                             (RTD.Compose
+                                (Filename_Type (Line), Directory => True));
+                        end if;
                      end if;
                   end;
                end loop;
@@ -445,7 +449,7 @@ package body GPR2.Project.Tree is
                Close (File);
 
             else
-               Add_If_Exists (With_RTD_Prefix ("adainclude"));
+               Add_If_Exists (RTD.Compose ("adainclude", Directory => True));
             end if;
 
             Data.Attrs.Insert
@@ -456,7 +460,7 @@ package body GPR2.Project.Tree is
                   Values => Dirs));
          end;
 
-         Add_Attribute (PRA.Object_Dir, RTD.Value.Text & DS & "adalib");
+         Add_Attribute (PRA.Object_Dir, RTD.Compose ("adalib", True).Value);
 
          --  The only language supported is Ada
 
@@ -464,8 +468,7 @@ package body GPR2.Project.Tree is
 
          Data.Tree      := Self.Self;
          Data.Kind      := K_Standard;
-         Data.Path      := Path_Name.Create_Directory
-                             (Filename_Type (RTD.Value.Text));
+         Data.Path      := RTD;
          Data.Is_Root   := True;
          Data.Unique_Id := GPR2.View_Ids.Runtime_View_Id;
 
