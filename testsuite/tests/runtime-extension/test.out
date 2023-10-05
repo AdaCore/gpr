@@ -1,0 +1,6 @@
+use implicit project in /tree
+Languages : ada
+Object_Dir : rts-ext/adalib/
+Source_Dirs : 
+  rts/gnat/
+  rts-ext/gnat/
