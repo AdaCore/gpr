@@ -9,15 +9,17 @@
 +--------------------------------------+
 * Messages :
     - lib.gpr: lint: project qualifier could be explicitly set to library project
-* Project count        :  6
+* Project count        :  7
 * Project search paths :
     - <filtered-out>
 * Object search paths  :
+    - <gnat rts>/adalib/
     - <cwd>/
     - <cwd>/obj/
     - <cwd>/obj2/
     - <gnat rts>/adalib/
 * Source search paths  :
+    - <gnat rts>/adainclude
     - <cwd>
     - <cwd>/src
     - <cwd>/src2
@@ -75,6 +77,32 @@
              - "yes"
              - "no"
 
+* runtime (!runtime) [ standard project ]
+    - Project file      : <gcc>/lib/gcc/(host)/(gcc-version)/runtime.gpr
+    - Project directory : <gcc>/lib/gcc/(host)/(gcc-version)/
+    - <gnat rts>/adalib/
+    - Source directory  :
+       - <gnat rts>/adainclude
+    - Imported-by        : 
+       - Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr)
+       - Base ($<cwd>/base.gpr>$<cwd>/prj.gpr)
+    - Attributes        : 
+       - Exec_Dir [ SINGLE ]
+          - <gnat rts>/adalib"
+       - Externally_Built [ SINGLE ]
+          - Value : "true"
+       - Languages [ SINGLE ]
+          - Value : "ada"
+       - Name [ SINGLE ]
+          - Value : "runtime"
+       - Object_Dir [ SINGLE ]
+          - <gnat rts>/adalib"
+       - Project_Dir [ SINGLE ]
+          - Value : "<gcc>/lib/gcc/(host)/(gcc-version)/"
+       - Source_Dirs [ LIST ]
+          - Values : 
+             - <gnat rts>/adainclude"
+
 * Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr) [ abstract project ]
     - Project file      : <cwd>/shared.gpr
     - Project directory : <cwd>/
@@ -119,6 +147,7 @@
     - Imported-by        : 
        - Base ($<cwd>/base.gpr>$<cwd>/prj.gpr)
     - Imports           : 
+       - runtime (!runtime)
        - Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr)
     - Attributes        : 
        - Exec_Dir [ SINGLE ]
@@ -160,6 +189,7 @@
        - <cwd>/src
     - Extended by       : Prj ($<cwd>/prj.gpr)
     - Imports           : 
+       - runtime (!runtime)
        - Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr)
        - Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr)
     - Attributes        : 
