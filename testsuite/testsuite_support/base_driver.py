@@ -216,19 +216,21 @@ class BaseDriver(DiffTestDriver):
         # Find gcc
         gcc = which("gcc")
         gcc_install = os.path.dirname (os.path.dirname (gcc))
+
         # and figure out gcc version
-        out = check_output([gcc, "--version"]).decode()
-        gcc_version = re.sub(r'gcc \(GCC\) ([0-9.]*)\s.*', r'\1', out.splitlines()[0])
+        out = check_output([gcc, "--version"]).decode().splitlines()[0]
+        gcc_version = re.sub(r'gcc(.EXE)? \(GCC\) ([0-9.]*)\s.*', r'\2', out)
 
         # Remove working directory from output and
         # make all filenames look like Unix ones (forward slashes for directory
         # separators, no drive letter).
         return super().output_refiners + [
             ReplacePath(self.working_dir(), replacement=""),
-            ReplacePath(gcc_install, replacement="<gcc>"),
+            Substitute(gcc_install, replacement="<gcc>"),
             Substitute(gcc_version, "(gcc-version)"),
             Substitute("\\", "/"),
             Substitute("C:/", "/"),
+            Substitute(".exe", ""),
             Substitute("aarch64-linux", replacement="(host)"),
             Substitute("x86_64-pc-linux-gnu", replacement="(host)"),
             Substitute("i686-pc-linux-gnu", replacement="(host)"),

@@ -28,21 +28,14 @@ def test(cmd):
     # Windows paths encoded in view_ids:
     # in view_ids, all paths are lower-cased (case insensitive filesystem)
     if os.name == 'nt':
-        cwd = os.getcwd().lower()
-        # first replace $PWD with a generic value (backslashes as path separators on
-        # both sides)
-        output = output.replace(cwd, "<cwd>")
-        # for the other paths, replace backslashes with slashes
-        output = output.replace("\\", "/")
-        # check windows drive, and remove it to have "root" paths only
-        output = re.sub(r"(.*)[a-zA-Z]://", r"\1/", output)
+        output = output.replace(os.getcwd().lower(), "<cwd>")
 
     # now for all hosts, make sure the runtime path is normalized for test
     # output comparison purpose
-    output = re.sub(r"( *- ).*/ada(lib|include)(.*)", r"\1<gnat rts>/ada\2\3", output)
-    output = re.sub(r"( *\").*/ada(lib|include)(.*)", r"\1<gnat rts>/ada\2\3", output)
-    output = re.sub(r"( *\"value\": \").*/(gprbuild/gprbind|bin/gcc|lib/gcc)(.*)",
-                    r"\1<root>/\2\"", output)
+    output = re.sub(r"( *- ).*([/\\]ada(lib|include))(.*)", r"\1<gnat rts>\2\4", output)
+    output = re.sub(r"( *\").*([/\\]ada(lib|include))(.*)", r"\1<gnat rts>\2\4", output)
+    output = re.sub(r"( *\"value\": \").*([/\\](gprbuild[/\\]gprbind|bin[/\\]gcc|lib[/\\]gcc))(.*)",
+                    r"\1<root>\2\"", output)
     out = []
     in_path = False
     in_textual_path = False

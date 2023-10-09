@@ -62,4 +62,35 @@ PKG2
 - S_SPEC pkg2.ads
 - S_BODY pkg2.adb
 
-ext.gpr:1:13: error: extended project file "P.gpr" not found
+ext.gpr:3:23: warning: object directory "objext" not found
+*** checking sources of project trees/extended/ext.gpr
+
+* Views *
+
+** runtime (K_STANDARD) **
+- Root project(s):
+  - Ext
+** P (K_STANDARD) **
+- Root project(s):
+  - Ext
+** Ext (K_STANDARD) **
+- Root project(s):
+  - Ext
+- Extends  - P
+
+* Sources *
+
+sources visible by P extended by Ext
+- src/main.adb (body)
+  MAIN (body)
+- src/pkg.ads (spec)
+  PKG (spec)
+sources visible by Ext
+- src/main.adb (body)
+  MAIN (body)
+
+* Units *
+
+MAIN
+- S_BODY main.adb
+
