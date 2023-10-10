@@ -1,5 +1,0 @@
-project Three_Arg is
-
-   Var := external ("EXT", ",", "whatever");
-
-end Three_Arg;

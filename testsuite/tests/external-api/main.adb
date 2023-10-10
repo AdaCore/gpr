@@ -94,6 +94,8 @@ procedure Main is
 
       Ada.Text_IO.Put_Line ("Testing " & String (Project_Name));
       Tree.Unload;
+      Ada.Environment_Variables.Set ("NO_DEFAULT", "No_Default_Value");
+
       Tree.Load_Autoconf
         (Filename =>
            GPR2.Path_Name.Create_File

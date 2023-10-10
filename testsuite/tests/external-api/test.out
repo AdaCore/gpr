@@ -9,7 +9,9 @@ EXT_4
 MODE_10
 MODE_6
 MODE_9
+NO_DEFAULT
 TYPE_D_CONCAT
+UNTYPED_EXPLICIT_1_DEFAULT
 UNTYPED_EXT
 
 =============
@@ -24,6 +26,28 @@ COMMON_INVALID
 COMMON_UNION
    - Value_1
    - Value_2
+CONFLICTING_EXPL_IMPL_EXT (Conflicting)
+   - inter_1
+   - inter_2
+   - inter_3
+   - inter_4
+EXPLICIT_1
+   - debug
+   - release
+EXPLICIT_AND_IMPLICIT_EXT_MODE_1
+   - debug
+   - release
+EXPLICIT_AND_IMPLICIT_EXT_MODE_2
+   - debug
+   - release
+EXPLICIT_EXT_MODE
+   - debug
+   - release
+EXPLICIT_SEVERAL_TYPES (Conflicting)
+   - inter_1
+   - inter_2
+   - inter_3
+   - inter_4
 EXT_3
    - type1_d
    - type2_d
@@ -68,13 +92,19 @@ MODE_8
 ==============
 == WARNINGS ==
 ==============
-parsed.gpr:38:49: warning: set of values for EXT_INTERSECT_EMPTY is conflicting
-parsed.gpr:38:49: warning:   type Type_Intersect_empty_1 is defined at parsed.gpr:37:09 and used at parsed.gpr:38:49
-parsed.gpr:38:49: warning:   type Type_Intersect_empty_2 is defined at parsed.gpr:39:09 and used at parsed.gpr:40:49
-parsed.gpr:38:49: warning:   type Type_Intersect_empty_3 is defined at parsed.gpr:41:09 and used at parsed.gpr:42:49
-parsed.gpr:33:33: warning: set of values for EXT_UNION is conflicting
-parsed.gpr:33:33: warning:   type Type_1 is defined at parsed.gpr:32:09 and used at parsed.gpr:33:33
-parsed.gpr:33:33: warning:   type Type_2 is defined at parsed.gpr:34:09 and used at parsed.gpr:35:33
+parsed.gpr:74:24: warning: set of values for CONFLICTING_EXPL_IMPL_EXT is conflicting
+parsed.gpr:74:24: warning:   type Type_2 is defined at parsed.gpr:35:09 and used at parsed.gpr:74:24
+parsed.gpr:74:24: warning:   type Type_1 is defined at parsed.gpr:33:09 and used at parsed.gpr:73:33
+parsed.gpr:76:24: warning: set of values for EXPLICIT_SEVERAL_TYPES is conflicting
+parsed.gpr:76:24: warning:   type Type_1 is defined at parsed.gpr:33:09 and used at parsed.gpr:76:24
+parsed.gpr:76:24: warning:   type Type_2 is defined at parsed.gpr:35:09 and used at parsed.gpr:77:24
+parsed.gpr:39:49: warning: set of values for EXT_INTERSECT_EMPTY is conflicting
+parsed.gpr:39:49: warning:   type Type_Intersect_empty_1 is defined at parsed.gpr:38:09 and used at parsed.gpr:39:49
+parsed.gpr:39:49: warning:   type Type_Intersect_empty_2 is defined at parsed.gpr:40:09 and used at parsed.gpr:41:49
+parsed.gpr:39:49: warning:   type Type_Intersect_empty_3 is defined at parsed.gpr:42:09 and used at parsed.gpr:43:49
+parsed.gpr:34:33: warning: set of values for EXT_UNION is conflicting
+parsed.gpr:34:33: warning:   type Type_1 is defined at parsed.gpr:33:09 and used at parsed.gpr:34:33
+parsed.gpr:34:33: warning:   type Type_2 is defined at parsed.gpr:35:09 and used at parsed.gpr:36:33
 
 ======= ROOT_ONLY : FALSE =======
 
@@ -85,7 +115,9 @@ EXT_4
 MODE_10
 MODE_6
 MODE_9
+NO_DEFAULT
 TYPE_D_CONCAT
+UNTYPED_EXPLICIT_1_DEFAULT
 UNTYPED_EXT
 
 =============
@@ -106,6 +138,28 @@ COMMON_UNION (Conflicting)
    - Value_6
    - Value_7
    - Value_8
+CONFLICTING_EXPL_IMPL_EXT (Conflicting)
+   - inter_1
+   - inter_2
+   - inter_3
+   - inter_4
+EXPLICIT_1
+   - debug
+   - release
+EXPLICIT_AND_IMPLICIT_EXT_MODE_1
+   - debug
+   - release
+EXPLICIT_AND_IMPLICIT_EXT_MODE_2
+   - debug
+   - release
+EXPLICIT_EXT_MODE
+   - debug
+   - release
+EXPLICIT_SEVERAL_TYPES (Conflicting)
+   - inter_1
+   - inter_2
+   - inter_3
+   - inter_4
 EXT_3
    - type1_d
    - type2_d
@@ -166,11 +220,17 @@ imported.gpr:10:42: warning: set of values for COMMON_UNION is conflicting
 imported.gpr:10:42: warning:   type Type_Union_Dupl is defined at imported.gpr:9:09 and used at imported.gpr:10:42
 imported.gpr:10:42: warning:   type Type_Common_Union is defined at indirectly_imported.gpr:8:09 and used at indirectly_imported.gpr:9:44
 imported.gpr:10:42: warning:   type Type_Common_Union is defined at imported-child.gpr:11:09 and used at imported-child.gpr:12:44
-imported.gpr:10:42: warning:   type Duplicated_Type is defined at parsed.gpr:55:09 and used at parsed.gpr:57:42
-parsed.gpr:38:49: warning: set of values for EXT_INTERSECT_EMPTY is conflicting
-parsed.gpr:38:49: warning:   type Type_Intersect_empty_1 is defined at parsed.gpr:37:09 and used at parsed.gpr:38:49
-parsed.gpr:38:49: warning:   type Type_Intersect_empty_2 is defined at parsed.gpr:39:09 and used at parsed.gpr:40:49
-parsed.gpr:38:49: warning:   type Type_Intersect_empty_3 is defined at parsed.gpr:41:09 and used at parsed.gpr:42:49
-parsed.gpr:33:33: warning: set of values for EXT_UNION is conflicting
-parsed.gpr:33:33: warning:   type Type_1 is defined at parsed.gpr:32:09 and used at parsed.gpr:33:33
-parsed.gpr:33:33: warning:   type Type_2 is defined at parsed.gpr:34:09 and used at parsed.gpr:35:33
+imported.gpr:10:42: warning:   type Duplicated_Type is defined at parsed.gpr:56:09 and used at parsed.gpr:58:42
+parsed.gpr:74:24: warning: set of values for CONFLICTING_EXPL_IMPL_EXT is conflicting
+parsed.gpr:74:24: warning:   type Type_2 is defined at parsed.gpr:35:09 and used at parsed.gpr:74:24
+parsed.gpr:74:24: warning:   type Type_1 is defined at parsed.gpr:33:09 and used at parsed.gpr:73:33
+parsed.gpr:76:24: warning: set of values for EXPLICIT_SEVERAL_TYPES is conflicting
+parsed.gpr:76:24: warning:   type Type_1 is defined at parsed.gpr:33:09 and used at parsed.gpr:76:24
+parsed.gpr:76:24: warning:   type Type_2 is defined at parsed.gpr:35:09 and used at parsed.gpr:77:24
+parsed.gpr:39:49: warning: set of values for EXT_INTERSECT_EMPTY is conflicting
+parsed.gpr:39:49: warning:   type Type_Intersect_empty_1 is defined at parsed.gpr:38:09 and used at parsed.gpr:39:49
+parsed.gpr:39:49: warning:   type Type_Intersect_empty_2 is defined at parsed.gpr:40:09 and used at parsed.gpr:41:49
+parsed.gpr:39:49: warning:   type Type_Intersect_empty_3 is defined at parsed.gpr:42:09 and used at parsed.gpr:43:49
+parsed.gpr:34:33: warning: set of values for EXT_UNION is conflicting
+parsed.gpr:34:33: warning:   type Type_1 is defined at parsed.gpr:33:09 and used at parsed.gpr:34:33
+parsed.gpr:34:33: warning:   type Type_2 is defined at parsed.gpr:35:09 and used at parsed.gpr:36:33

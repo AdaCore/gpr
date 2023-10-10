@@ -5,6 +5,7 @@ with "imported-child";
 project parsed is
 
    Var0_0 := external ("UNTYPED_EXT", "untyped");
+   Var0_1 := external ("NO_DEFAULT");
 
    type Mode_Type is ("debug", "release");
    Var1_0 : Mode_Type := external ("MODE_1", "debug");
@@ -59,5 +60,25 @@ project parsed is
 
    type Imported_Type is ("Value_3", "Value_4"); --  Ensure that local type is not used instead of the imported one
    Var7_0 : Imported.Imported_Type := external ("IMPORTED_FROM_PARSED", "Imported-Value_1");
+
+   --  Explicitly typed externals
+
+   Var8_0 := external (Mode_Type, "EXPLICIT_EXT_MODE", "debug");
+
+   Var8_1 : Mode_Type := external (Mode_Type, "EXPLICIT_AND_IMPLICIT_EXT_MODE_1", "debug");
+
+   Var8_2 : Mode_Type := external ("EXPLICIT_AND_IMPLICIT_EXT_MODE_2", "debug");
+   Var8_3 := external (Mode_Type, "EXPLICIT_AND_IMPLICIT_EXT_MODE_2", "debug");
+
+   Var8_4 : Type_1 := external ("CONFLICTING_EXPL_IMPL_EXT", "inter_2");
+   Var8_5 := external (Type_2, "CONFLICTING_EXPL_IMPL_EXT", "inter_2");
+
+   Var8_6 := external (Type_1, "EXPLICIT_SEVERAL_TYPES", "inter_2");
+   Var8_7 := external (Type_2, "EXPLICIT_SEVERAL_TYPES", "inter_2");
+
+   --  Limitations
+   --  Externals within an explicit typed external are not detected as typed externals.
+
+   Var9_0 := external (Mode_Type, "EXPLICIT_1", external ("UNTYPED_EXPLICIT_1_DEFAULT", "debug"));
 
 end parsed;
