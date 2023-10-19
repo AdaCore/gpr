@@ -18,7 +18,6 @@
 
 with Ada.Calendar.Formatting;
 with Ada.Command_Line;
-with Ada.Containers.Ordered_Maps;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Text_IO;
 
@@ -63,11 +62,6 @@ is
 
    procedure Inspect_Project_Textual_Output (Tree : Project.Tree.Object);
    --  Inspect project and possibly recursively all imports
-
-   procedure Load_Project
-     (Tree    : in out Project.Tree.Object;
-      Options : in out GPRinspect.GPRinspect_Options);
-   --  Load project to inspect
 
    function View_Id (View : Project.View.Object) return String;
    --  Get the View's View_Id image
@@ -1008,61 +1002,6 @@ is
       Print_Projects;
    end Inspect_Project_Textual_Output;
 
-   ------------------
-   -- Load_Project --
-   ------------------
-
-   procedure Load_Project
-     (Tree    : in out GPR2.Project.Tree.Object;
-      Options : in out GPRinspect.GPRinspect_Options)
-   is
-      package Imported_By_Map is new
-        Ada.Containers.Ordered_Maps
-          (Project.View.Object,
-           Project.View.Set.Object,
-           Project.View."<",
-           Project.View.Set."=");
-
-      Imported_By  : Imported_By_Map.Map;
-   begin
-      Options.Tree := Project_Tree.Reference;
-
-      if not
-        GPRtools.Options.Load_Project
-          (Opt                => Options,
-           Absent_Dir_Error   => Project.Tree.No_Error,
-           Handle_Information => Options.Verbose)
-      then
-         Command_Line.Set_Exit_Status (Command_Line.Failure);
-         return;
-      end if;
-
-      --  Build list of imported-by projects
-
-      for C in Tree.Iterate loop
-         declare
-            V : constant Project.View.Object := Project.Tree.Element (C);
-         begin
-            for I of V.Imports loop
-               declare
-                  S : constant Imported_By_Map.Cursor := Imported_By.Find (I);
-               begin
-                  if Imported_By_Map.Has_Element (S) then
-                     Imported_By.Reference (S).Insert (V);
-                  else
-                     declare
-                        N : Project.View.Set.Object;
-                     begin
-                        N.Include (V);
-                        Imported_By.Insert (I, N);
-                     end;
-                  end if;
-               end;
-            end loop;
-         end;
-      end loop;
-   end Load_Project;
-
    ----------------------
    -- View_Restriction --
    ----------------------
@@ -1084,8 +1023,20 @@ is
    end View_Id;
 
 begin
-   Load_Project (Tree    => Project_Tree,
-                 Options => Options);
+   Options.Tree := Project_Tree.Reference;
+
+   if not GPRtools.Options.Load_Project
+       (Opt                => Options,
+        Absent_Dir_Error   => Project.Tree.No_Error,
+        Handle_Information => Options.Verbose)
+   then
+      Text_IO.Put_Line
+        ("gprinspect: unable to process project file "
+         & String (Options.Filename.Name));
+
+      Command_Line.Set_Exit_Status (Command_Line.Failure);
+      return;
+   end if;
 
    case Options.Kind_Of_Display is
       when GPRtools.K_JSON | GPRtools.K_JSON_Compact =>

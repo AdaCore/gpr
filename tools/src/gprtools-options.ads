@@ -107,7 +107,7 @@ package GPRtools.Options is
       Handle_Errors      : Boolean := True;
       Handle_Lint        : Boolean := False) return Boolean
      with Pre => Opt.Tree /= null;
-   --  Load project giiven in the options and display errors based on the
+   --  Load project given in the options and display errors based on the
    --  selection given by Handle_{Error|Lint|Information).
 
    function Quiet (Self : Base_Options) return Boolean;
