@@ -3290,6 +3290,7 @@ package body GPR2.Project.Parser is
                     and then A.Name.Id = PRA.Target
                     and then Tree.Has_Configuration
                     and then A.Value.Text /= "all"
+                    and then A.Value.Text /= ""
                   then
                      --  Check if defined target in the project is the
                      --  same as configuration. Else issue a warning.
