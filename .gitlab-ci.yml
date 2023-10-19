@@ -150,7 +150,7 @@ test_gprbuild:
     JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
   script:
     - install_cache gnatall
-    - run_testsuite gprbuild -QAdaCC++_Auto test_gprbuild
+    - run_testsuite gprbuild "" test_gprbuild
   artifacts:
     when:
       always
@@ -188,7 +188,7 @@ test_gpr2ls:
     JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
   script:
     - install_cache gnatall
-    - run_testsuite gprbuild "-QAdaCC++_Auto -Qcheck-gpr2ls" test_gpr2ls
+    - run_testsuite gprbuild "-Qcheck-gpr2ls" test_gpr2ls
   artifacts:
     when:
       always
