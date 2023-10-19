@@ -31,3 +31,4 @@ with open(CGPR, "r") as fp:
 
 execute([GPRLS, "--config", CGPR, f"--target={target}", "-s"])
 execute([GPRLS, "--config", CGPR, f"-XTARGET={target}", "-s"])
+execute([GPRLS, "-XTARGET=", "-s"])

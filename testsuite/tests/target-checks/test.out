@@ -29,3 +29,9 @@ gprls --config config.cgpr -XTARGET=(host) -s
 using project file /demo.gpr
 /src/pkg.ads
 
+-------------------------
+gprls -XTARGET= -s
+-------------------------
+using project file /demo.gpr
+/src/pkg.ads
+
