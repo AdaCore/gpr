@@ -18,11 +18,11 @@ def testgpr2():
    anod_test("gpr2", qualifier="from_gnat")
 
 def testgprbuild():
-   anod_test("gprbuild", qualifier="AdaCC++_Auto")
+   anod_test("gprbuild")
 
 def testgpr2ls():
    anod_build("gprbuild", qualifier="gpr1")
-   anod_test("gprbuild", qualifier="AdaCC++_Auto,check-gpr2ls")
+   anod_test("gprbuild", qualifier="check-gpr2ls")
 
 def cov():
    anod_build("gpr2", qualifier="coverage")
