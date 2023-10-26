@@ -18,6 +18,10 @@ package body GPR2.Project.Registry.Pack is
 
    Store : Pack_Definition.Map;
 
+   Predefined : GPR2.Containers.Package_Id_List;
+   --  Defined packages at the end of gpr2 initialization including project
+   --  scope level
+
    ---------
    -- Add --
    ---------
@@ -95,6 +99,15 @@ package body GPR2.Project.Registry.Pack is
       end if;
    end Is_Allowed_In;
 
+   -------------------------
+   -- Predefined_Packages --
+   -------------------------
+
+   function Predefined_Packages return GPR2.Containers.Package_Id_List is
+   begin
+      return Predefined;
+   end Predefined_Packages;
+
 begin
    Add (Naming,          No_Aggregates);
    Add (Compiler,        No_Aggregates);
@@ -105,4 +118,7 @@ begin
    Add (Install,         (K_Aggregate => False, others => True));
    Add (Remote,          Everywhere);
    Add (Gnatls,          Everywhere);
+
+   Predefined := GPR2.Project.Registry.Pack.All_Packages;
+   Predefined.Insert (GPR2.Project_Level_Scope);
 end GPR2.Project.Registry.Pack;
