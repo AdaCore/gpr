@@ -1,0 +1,3 @@
+project Ko_Externally_Built is
+   for Externally_Built use "No";
+end Ko_Externally_Built;

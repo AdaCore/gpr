@@ -4223,6 +4223,56 @@ package body GPR2.Project.Parser is
                      Include := False;
                   end if;
             end case;
+
+            --  Check that the values respect the attribute type
+
+            declare
+               use GPR2.Containers.Value_Type_Set;
+               use Ada.Characters.Handling;
+
+            begin
+
+               if Def.Type_Def /= PRA.No_Attribute_Type then
+                  for Val of A.Values loop
+                     declare
+                        Found : Boolean := False;
+                     begin
+
+                        for Typ of Def.Type_Def loop
+                           if Def.Value_Case_Sensitive then
+                              if String (Val.Text) = String (Typ) then
+                                 Found := True;
+
+                                 exit;
+                              end if;
+
+                           else
+
+                              if
+                                To_Lower (String (Val.Text)) =
+                                To_Lower (String (Typ))
+                              then
+                                 Found := True;
+
+                                 exit;
+                              end if;
+                           end if;
+                        end loop;
+
+                        if not Found then
+                           Tree.Log_Messages.Append
+                                 (Message.Create
+                                    (Level => Message.Error,
+                                    Sloc  => Source_Reference.Object (A),
+                                    Message => "Value " & String (Val.Text) &
+                                       " is invalid for attribute " &
+                                       Image (Q_Name)));
+                           Include := False;
+                        end if;
+                     end;
+                  end loop;
+               end if;
+            end;
          end if;
 
          if Set.Contains (A) then

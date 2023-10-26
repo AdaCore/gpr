@@ -1,0 +1,4 @@
+/ko_externally_built.gpr semantic error
+ko_externally_built.gpr:2:08: error: Value No is invalid for attribute Externally_Built
+/ko_library_kind.gpr semantic error
+ko_library_kind.gpr:5:08: error: Value My_Custom_Kind is invalid for attribute Library_Kind
