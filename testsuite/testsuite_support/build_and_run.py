@@ -64,7 +64,9 @@ class BuildAndRunDriver(BaseDriver):
             else:
                 targets = [self.fake_ada_target]
             paths = []
-            for tgt in targets:
+            for tgt_rts in targets:
+                tgt = tgt_rts[0]
+                rts = tgt_rts[1:]
                 fake_dir = self.working_dir("fake-ada-%s" % tgt)
                 paths.append(os.path.join(fake_dir, "bin"))
 
@@ -77,10 +79,6 @@ class BuildAndRunDriver(BaseDriver):
                     is_cross = True
                 if not is_cross:
                     rts = ["native", "sjlj", "light"]
-                elif 'vxworks' in tgt:
-                    rts = ["rtp"]
-                else:
-                    assert False, "unexpected fake target %s" % tgt
 
                 create_fake_ada_compiler(
                     self,
