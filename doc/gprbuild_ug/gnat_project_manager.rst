@@ -982,6 +982,32 @@ The following attributes can be defined in package `Naming`:
   find the list of source files in an editor, like the GNAT Programming System
   (GPS).
 
+  .. note::
+
+    Attributes ``Body_Suffix`` and ``Spec_Suffix`` have case-insensitive values.
+    This means different languages should not share the same attribute value in a single project.
+
+    For instance :
+
+    .. code-block:: gpr
+
+      package Naming is
+        for Body_Suffix ("c") use ".c";
+        for Body_Suffix ("c++") use ".C";
+        for Spec_Suffix ("c") use ".h";
+        for Spec_Suffix ("c++") use ".H";
+      end Naming;
+
+    will result in :
+
+    .. code-block:: gpr
+
+      Body_Suffix (".c") for language c is also defined for language c++.
+      Spec_Suffix (".h") for language c is also defined for language c++.
+
+    In that case, having each language inside its own project and individually imported to a master
+    project allows such project architecture.
+
 .. index:: Attributes - Package Naming Attributes; Separate_Suffix
 
 **Separate_Suffix**:

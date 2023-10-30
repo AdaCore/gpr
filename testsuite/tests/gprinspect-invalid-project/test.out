@@ -1,0 +1,3 @@
+prj1.gpr:3:23: error: Expected Identifier, got ')'
+gprinspect: unable to process project file prj1.gpr
+
