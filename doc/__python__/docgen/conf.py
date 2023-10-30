@@ -46,7 +46,11 @@ attribute_key_value_translation = {
 }
 
 attributes_warnings = {
-    "Linker.Default_Switches": 'Index "others" is not supported yet in gprbuild or GNATcoll.Projects-based tools'
+    "Linker.Default_Switches": 'Index "others" is not supported yet in gprbuild or GNATcoll.Projects-based tools',
+    "Naming.Specification_Suffix" : 'Also has case-insensitive values in gprbuild and GNATcool.Project-based tools',
+    "Naming.Spec_Suffix" : 'Also has case-insensitive values in gprbuild and GNATcool.Project-based tools',
+    "Naming.Implementation_Suffix" : 'Also has case-insensitive values in gprbuild and GNATcool.Project-based tools',
+    "Naming.Body_Suffix" : 'Also has case-insensitive values in gprbuild and GNATcool.Project-based tools',
 }
 
 attribute_additionnal_ref = {
