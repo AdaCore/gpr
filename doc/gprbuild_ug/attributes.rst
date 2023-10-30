@@ -1358,6 +1358,10 @@ Package Naming Attributes
 
 * **Body_Suffix**: single value, indexed by a language
 
+  .. warning::
+
+  	Also has case-insensitive values in gprbuild and GNATcool.Project-based tools
+
   Index is a language name. Value is the extension of file names for bodies of
   the language.
 
@@ -1393,6 +1397,10 @@ Package Naming Attributes
 
 * **Implementation_Suffix**: single value, indexed by a language
 
+  .. warning::
+
+  	Also has case-insensitive values in gprbuild and GNATcool.Project-based tools
+
   Equivalent to attribute Body_Suffix.
 
 .. index:: Attributes - Package Naming Attributes; Separate_Suffix
@@ -1410,6 +1418,10 @@ Package Naming Attributes
 .. index:: Attributes - Package Naming Attributes; Spec_Suffix
 
 * **Spec_Suffix**: single value, indexed by a language
+
+  .. warning::
+
+  	Also has case-insensitive values in gprbuild and GNATcool.Project-based tools
 
   Index is a language name. Value is the extension of file names for specs of the
   language.
@@ -1431,6 +1443,10 @@ Package Naming Attributes
 .. index:: Attributes - Package Naming Attributes; Specification_Suffix
 
 * **Specification_Suffix**: single value, indexed by a language
+
+  .. warning::
+
+  	Also has case-insensitive values in gprbuild and GNATcool.Project-based tools
 
   Equivalent to attribute Spec_Suffix.
 
