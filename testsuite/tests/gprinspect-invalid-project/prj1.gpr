@@ -1,0 +1,4 @@
+with "unknown.gpr";
+project Prj1 is
+   X := ("asd", "asd",);
+end Prj1;
