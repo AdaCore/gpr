@@ -3788,10 +3788,6 @@ package body GPR2.Project.Parser is
 
          procedure Parse_Variable_Decl (Node : Variable_Decl) is
 
-            function Search_Paths return GPR2.Path_Name.Set.Object is
-              (GPR2.Project.Search_Paths
-                 (Self.File, Tree.Project_Search_Paths));
-
             function Sloc return Source_Reference.Object is
                (Get_Source_Reference (Self.File, Node));
             --  Use function instead of constant because Sloc need only in case
@@ -3806,107 +3802,14 @@ package body GPR2.Project.Parser is
          begin
             if not V_Type.Is_Null then
                declare
-                  package PTS renames GPR2.Project.Typ.Set.Set;
-
-                  CT : PTS.Cursor;
-
-                  Type_N     : constant Identifier_List :=
-                                 F_Var_Type_Name (V_Type);
-                  Num_Childs : constant Positive := Children_Count (Type_N);
-                  T_Name     : constant Name_Type :=
-                                 Get_Name_Type
-                                   (Type_N, Num_Childs, Num_Childs);
-
-                  procedure Get_Type_Def_From
-                    (Imp : GPR2.Project.Import.Object);
-                  --  Try to find type definition from Imp by name T_Name and
-                  --  store it to Type_Def if found.
-
-                  -----------------------
-                  -- Get_Type_Def_From --
-                  -----------------------
-
-                  procedure Get_Type_Def_From
-                    (Imp : GPR2.Project.Import.Object)
-                  is
-                     Path : constant GPR2.Path_Name.Object :=
-                              GPR2.Project.Create
-                                (Imp.Path_Name.Name, Search_Paths);
-                     Types : GPR2.Project.Typ.Set.Object;
-                  begin
-                     if Path.Exists then
-                        Types := Registry.Get (Path).Types;
-                        CT := Types.Find (T_Name);
-
-                        if PTS.Has_Element (CT) then
-                           Type_Def := PTS.Element (CT);
-                        end if;
-                     end if;
-                  end Get_Type_Def_From;
-
+                  Type_Node     : constant Identifier_List :=
+                     F_Var_Type_Name (V_Type);
+                  Num_Childs : constant Positive := Children_Count (Type_Node);
+                     T_Name     : constant Name_Type :=
+                  Get_Name_Type (Type_Node, Num_Childs, Num_Childs);
                begin
-                  if Num_Childs > 1 then
-                     --  We have a project prefix for the type name
 
-                     declare
-                        package PIS renames GPR2.Project.Import.Set;
-                        Position : constant PIS.Cursor :=
-                                     Self.Imports.Find
-                                       (Get_Name_Type
-                                          (Type_N, 1, Num_Childs - 1, "-"));
-                     begin
-                        if PIS.Has_Element (Position) then
-                           Get_Type_Def_From (PIS.Element (Position));
-                        end if;
-                     end;
-                  end if;
-
-                  if not Type_Def.Is_Defined
-                    or else Type_Def.Count_Values = 0
-                  then
-                     CT := Self.Types.Find (T_Name);
-
-                     if PTS.Has_Element (CT) then
-                        Type_Def := PTS.Element (CT);
-
-                     elsif Self.Has_Extended then
-                        Get_Type_Def_From (Self.Extended);
-                     end if;
-
-                     --  Type definition from "parent" project
-
-                     if not Type_Def.Is_Defined
-                       and then Self.Has_Imports
-                       and then Count (Self.Name, ".") > 0
-                     then
-                        declare
-                           Prj_Id       : constant String := -Self.Name;
-                           Dot_Position : Natural := Prj_Id'First;
-                           I_Cursor     : GPR2.Project.Import.Set.Cursor;
-                        begin
-                           loop
-                              for J in Dot_Position .. Prj_Id'Last loop
-                                 Dot_Position := J;
-                                 exit when Prj_Id (J) = '.';
-                              end loop;
-
-                              exit when Dot_Position = Prj_Id'Last;
-
-                              I_Cursor := Self.Imports.Find
-                                (Name_Type (Prj_Id (1 .. Dot_Position - 1)));
-                              if GPR2.Project.Import.Set.Has_Element
-                                                          (I_Cursor)
-                              then
-                                 Get_Type_Def_From
-                                   (GPR2.Project.Import.Set.Element
-                                      (I_Cursor));
-                              end if;
-
-                              exit when Type_Def.Is_Defined;
-                           end loop;
-                        end;
-                     end if;
-                  end if;
+                  Type_Def := Self.Type_Definition_From (Tree, Type_Node);
 
                   --  Check that the type has been defined
 
@@ -4378,6 +4281,143 @@ package body GPR2.Project.Parser is
    begin
       return Self.Qualifier;
    end Qualifier;
+
+   --------------------------
+   -- Type_Definition_From --
+   --------------------------
+
+   function Type_Definition_From
+     (Self      : Object;
+      Tree      : GPR2.Project.Tree.Object;
+      Type_Node : Identifier_List)
+     return GPR2.Project.Typ.Object is
+      package PTS renames GPR2.Project.Typ.Set.Set;
+
+      CT : PTS.Cursor;
+
+      Num_Childs : constant Positive := Children_Count (Type_Node);
+      T_Name     : constant Name_Type :=
+                     Get_Name_Type
+                        (Type_Node, Num_Childs, Num_Childs);
+      Type_Def   : GPR2.Project.Typ.Object := GPR2.Project.Typ.Undefined;
+
+      function Search_Paths return GPR2.Path_Name.Set.Object is
+         (GPR2.Project.Search_Paths
+           (Self.File, Tree.Project_Search_Paths));
+
+      procedure Get_Type_Def_From
+         (Imp : GPR2.Project.Import.Object);
+      --  Try to find type definition from Imp by name T_Name and
+      --  store it to Type_Def if found.
+
+      -----------------------
+      -- Get_Type_Def_From --
+      -----------------------
+
+      procedure Get_Type_Def_From
+         (Imp : GPR2.Project.Import.Object)
+      is
+         Path    : constant GPR2.Path_Name.Object :=
+                     GPR2.Project.Create
+                     (Imp.Path_Name.Name, Search_Paths);
+         Types   : GPR2.Project.Typ.Set.Object;
+         Project : GPR2.Project.Parser.Object := GPR2.Project.Parser.Undefined;
+
+         use GPR2.Path_Name;
+      begin
+
+         if Path.Exists then
+
+            --  Obtain the project parser if it is in cache, during the parsing
+            --  for example. Otherwise, obtain it with the views.
+
+            if not Registry.Check_Project (Path, Project) then
+               for V of Tree.Ordered_Views loop
+                  if V.Is_Defined and then V.Path_Name = Path then
+                     Project := Definition.Get_RO (V).Trees.Project;
+                     exit;
+                  end if;
+               end loop;
+            end if;
+
+            if Project.Is_Defined then
+               Types := Project.Types;
+               CT := Types.Find (T_Name);
+
+               if PTS.Has_Element (CT) then
+                  Type_Def := PTS.Element (CT);
+               end if;
+            end if;
+         end if;
+      end Get_Type_Def_From;
+
+   begin
+
+      if Num_Childs > 1 then
+         --  We have a project prefix for the type name
+
+         declare
+            package PIS renames GPR2.Project.Import.Set;
+            Position : constant PIS.Cursor :=
+                           Self.Imports.Find
+                           (Get_Name_Type
+                              (Type_Node, 1, Num_Childs - 1, "-"));
+         begin
+            if PIS.Has_Element (Position) then
+               Get_Type_Def_From (PIS.Element (Position));
+            end if;
+         end;
+      end if;
+
+      if not Type_Def.Is_Defined
+         or else Type_Def.Count_Values = 0
+      then
+         CT := Self.Types.Find (T_Name);
+
+         if PTS.Has_Element (CT) then
+            Type_Def := PTS.Element (CT);
+
+         elsif Self.Has_Extended then
+            Get_Type_Def_From (Self.Extended);
+         end if;
+
+         --  Type definition from "parent" project
+
+         if not Type_Def.Is_Defined
+            and then Self.Has_Imports
+            and then Count (Self.Name, ".") > 0
+         then
+            declare
+               Prj_Id       : constant String := -Self.Name;
+               Dot_Position : Natural := Prj_Id'First;
+               I_Cursor     : GPR2.Project.Import.Set.Cursor;
+            begin
+               loop
+                  for J in Dot_Position .. Prj_Id'Last loop
+                     Dot_Position := J;
+                     exit when Prj_Id (J) = '.';
+                  end loop;
+
+                  exit when Dot_Position = Prj_Id'Last;
+
+                  I_Cursor := Self.Imports.Find
+                     (Name_Type (Prj_Id (1 .. Dot_Position - 1)));
+                  if GPR2.Project.Import.Set.Has_Element
+                                                (I_Cursor)
+                  then
+                     Get_Type_Def_From
+                        (GPR2.Project.Import.Set.Element
+                           (I_Cursor));
+                  end if;
+
+                  exit when Type_Def.Is_Defined;
+               end loop;
+            end;
+         end if;
+      end if;
+
+      return Type_Def;
+   end Type_Definition_From;
 
    ----------
    -- Unit --

@@ -1,0 +1,19 @@
+project imported is
+
+   --  Externals also used by parsed.gpr
+
+   type Type_Duplicated is ("Value_1", "Value_2");
+   Var1_0 : Type_Duplicated := external ("COMMON", "Value_1");
+   Var1_1 : Type_Duplicated := external ("COMMON_INVALID", "Value") & "_1";
+
+   type Type_Union_Dupl is ("Value_3", "Value_4");
+   Var2_0 : Type_Union_Dupl := external ("COMMON_UNION", "Value_3");
+
+   type Type_1 is ("Imported_Value_1", "Imported_Value_2");
+   Var3_0 : Type_1 := external ("IMPORTED_EXT", "Imported_Value_1");
+
+   --  Type used by both imported-child.gpr and parsed.gpr
+
+   type Imported_Type is ("Imported-Value_1", "Imported-Value_2");
+
+end imported;

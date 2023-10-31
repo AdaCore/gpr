@@ -1,0 +1,14 @@
+project indirectly_imported is
+
+   --  Externals also used by parsed.gpr
+
+   type Type_Common is ("Value_1", "Value_2");
+   Var1_0 : Type_Common := external ("COMMON", "Value_1");
+
+   type Type_Common_Union is ("Value_7", "Value_8");
+   Var2_0 : Type_Common_Union := external ("COMMON_UNION", "Value_7");
+
+   type Type_1 is ("Indirectly_Imported_Value_1", "Indirectly_Imported_Value_2");
+   Var3_0 : Type_1 := external ("INDIRECTLY_IMPORTED_EXT", "Indirectly_Imported_Value_1");
+
+end indirectly_imported;
