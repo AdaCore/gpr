@@ -1,0 +1,39 @@
+    - Attributes        :
+       - Exec_Dir [ SINGLE ]
+          - Value : "."
+       - Externally_Built [ SINGLE ]
+          - Value : "false"
+       - Languages [ LIST ]
+          - Values :
+             - "Ada"
+       - Name [ SINGLE ]
+          - Value : "test"
+       - Object_Dir [ SINGLE ]
+          - Value : "."
+       - Project_Dir [ SINGLE ]
+          - Value : "/"
+       - Source_Dirs [ LIST ]
+          - Values :
+             - "."
+       - Check'Default_Switches [ LIST ]
+          - Index value : "Ada"
+          - Values :
+             - "--rules"
+             - "my_rules.txt"
+       - Check'Switches [ LIST ]
+          - Index value : "test.adb"
+          - Values :
+             - ""
+       - Codepeer'File_Patterns [ LIST ]
+          - Values :
+             - "*.ad?"
+       - Prove'Switches [ LIST ]
+          - Values :
+             - "--report=all"
+       - Prove'Proof_Switches [ LIST ]
+          - Index value : "file.adb"
+          - Values :
+             - "--timeout=10"
+       - Prove'Proof_Dir [ SINGLE ]
+          - Value : "proof_dir"
+
