@@ -145,8 +145,6 @@ package body GPR2.Project.External is
                   function Parser (Node : Gpr_Node'Class) return Visit_Status
                   is
 
-                     Status : Visit_Status := Into;
-
                      function Handle_String
                        (Node : String_Literal) return Unbounded_String;
                      --  A simple static string
@@ -175,7 +173,7 @@ package body GPR2.Project.External is
                         Result := Handle_String (Node.As_String_Literal);
                      end if;
 
-                     return Status;
+                     return Into;
                   end Parser;
 
                begin
