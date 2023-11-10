@@ -2435,16 +2435,31 @@ package body GPRinstall.Install is
                         Pos := Content.To_Cursor (I);
                      end Count_And_Delete;
 
+                  elsif Fixed.Index (Line, "   type ") /= 0
+                    and then Options.Minimal_Project
+                  then
+                     --  We need to remove the generated type
+                     declare
+                        Prev : constant String_Vector.Extended_Index :=
+                                 String_Vector.To_Index (Pos) - 1;
+                     begin
+                        Content.Delete (Pos);
+                        Pos := Content.To_Cursor (Prev);
+                     end;
+
                   else
                      Check_Vars : declare
+                        Prev   : constant String_Vector.Extended_Index :=
+                                   String_Vector.To_Index (Pos) - 1;
                         Assign : constant Natural :=
                                    Fixed.Index (Line, " := ");
                      begin
-                        --  Check if line is a variable definition, and if so
-                        --  update the value.
+                        --  Check if line is a variable definition, and if
+                        --  so update the value or remove the line if minimal
+                        --  project is requested.
 
                         if Assign > 0 then
-                           for V of Project.Variables loop
+                           Check_Var : for V of Project.Variables loop
                               declare
                                  Name : constant String :=
                                           String (V.Name.Text);
@@ -2452,11 +2467,18 @@ package body GPRinstall.Install is
                                  if Fixed.Index
                                    (Line, ' ' & Name & ' ') in 1 .. Assign - 1
                                  then
-                                    Content.Replace_Element
-                                      (Pos, "   " & V.Image);
+                                    if Options.Minimal_Project then
+                                       Content.Delete (Pos);
+                                       Pos := Content.To_Cursor (Prev);
+                                    else
+                                       Content.Replace_Element
+                                         (Pos, "   " & V.Image);
+                                    end if;
+
+                                    exit Check_Var;
                                  end if;
                               end;
-                           end loop;
+                           end loop Check_Var;
                         end if;
                      end Check_Vars;
                   end if;
@@ -2631,7 +2653,9 @@ package body GPRinstall.Install is
 
             Add_Empty_Line;
 
-            Create_Variables;
+            if not Options.Minimal_Project then
+               Create_Variables;
+            end if;
 
             --  Close project
 

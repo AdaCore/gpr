@@ -1,0 +1,11 @@
+================ 1
+
+   type Kind is ("one", "two");
+
+   Param  := "P1";
+   Param2 := "2";
+   This   : Kind := "one";
+end Prj;
+================ 2
+
+end Prj;
