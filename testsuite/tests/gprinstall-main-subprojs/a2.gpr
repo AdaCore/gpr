@@ -1,0 +1,4 @@
+aggregate project A2 is
+   for Project_Files use project'Project_Files & ("a1.gpr");
+   for Project_Files use project'Project_Files & ("p3/p3.gpr");
+end A2;
