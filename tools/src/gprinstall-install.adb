@@ -2171,8 +2171,10 @@ package body GPRinstall.Install is
          -------------------
 
          procedure Write_Project is
-            F    : File_Access := Standard_Output;
-            File : aliased File_Type;
+            F          : File_Access := Standard_Output;
+            File       : aliased File_Type;
+            Prev_Empty : Boolean := False;
+            Is_Empty   : Boolean := False;
          begin
             if not Options.Dry_Run then
                if not Project_Dir.Exists then
@@ -2183,8 +2185,15 @@ package body GPRinstall.Install is
                F := File'Unchecked_Access;
             end if;
 
+            --  While writing content avoid writing duplicate blank lines
+
             for Line of Content loop
-               Put_Line (F.all, Line);
+               Is_Empty := Line'Length = 0;
+               if not Is_Empty or else not Prev_Empty then
+                  Put_Line (F.all, Line);
+               end if;
+
+               Prev_Empty := Is_Empty;
             end loop;
 
             if not Options.Dry_Run then
