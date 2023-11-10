@@ -2412,11 +2412,11 @@ package body GPRinstall.Install is
                                    and then L (P .. P + 8) = "end case;"));
                         end End_When;
 
-                        I : constant String_Vector.Extended_Index :=
-                              String_Vector.To_Index (Pos);
-                        P : String_Vector.Extended_Index :=
-                              String_Vector.To_Index (Pos);
-                        N : Ada.Containers.Count_Type := 0;
+                        Prev : constant String_Vector.Extended_Index :=
+                                 String_Vector.To_Index (Pos) - 1;
+                        P    : String_Vector.Extended_Index :=
+                                 String_Vector.To_Index (Pos);
+                        N    : Ada.Containers.Count_Type := 0;
                      begin
                         --  The number of line to delete are from Pos to the
                         --  first line starting with a "when".
@@ -2430,9 +2430,11 @@ package body GPRinstall.Install is
 
                         Content.Delete (Pos, N);
 
-                        --  Then reset Pos to I (previous Pos index)
+                        --  Then reset Pos to Prev (line just before current
+                        --  Post as before the next iteration we are going to
+                        --  move to next line).
 
-                        Pos := Content.To_Cursor (I);
+                        Pos := Content.To_Cursor (Prev);
                      end Count_And_Delete;
 
                   elsif Fixed.Index (Line, "   type ") /= 0
