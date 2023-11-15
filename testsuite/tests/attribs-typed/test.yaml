@@ -1,0 +1,5 @@
+description:
+    check typed attributes
+driver: build_and_run
+project_file: test
+main: main

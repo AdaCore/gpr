@@ -1,0 +1,6 @@
+library project Ko_Library_Kind is
+
+   for Library_Name use project'Name;
+   for Library_Dir use "lib";
+   for Library_Kind use "My_Custom_Kind";
+end Ko_Library_Kind;

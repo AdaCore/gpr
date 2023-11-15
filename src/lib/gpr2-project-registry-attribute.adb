@@ -78,6 +78,7 @@ package body GPR2.Project.Registry.Attribute is
       Value                 : Value_Kind;
       Value_Case_Sensitive  : Boolean;
       Is_Allowed_In         : Allowed_In;
+      Type_Def              : Attribute_Type             := No_Attribute_Type;
       Is_Builtin            : Boolean                    := False;
       Index_Optional        : Boolean                    := False;
       Empty_Value           : Empty_Value_Status         := Allow;
@@ -111,6 +112,7 @@ package body GPR2.Project.Registry.Attribute is
               Value                 => Value,
               Value_Case_Sensitive  => Value_Case_Sensitive,
               Empty_Value           => Empty_Value,
+              Type_Def              => Type_Def,
               Builtin               => Is_Builtin,
               Is_Allowed_In         => Is_Allowed_In,
               Default               => Default,
@@ -459,16 +461,25 @@ begin
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates);
 
-   --  externally_built
-   Add
-     (Name                  => Externally_Built,
-      Index_Type            => No_Index,
-      Value                 => Single,
-      Value_Case_Sensitive  => False,
-      Is_Allowed_In         => No_Aggregates,
-      Inherit_From_Extended => Not_Inherited,
-      Default               => Create ("false"),
-      Has_Default_In        => Everywhere);
+
+   declare
+      Type_Def : Attribute_Type;
+   begin
+      Type_Def.Include ("true");
+      Type_Def.Include ("false");
+
+      --  externally_built
+      Add
+      (Name                  => Externally_Built,
+         Index_Type            => No_Index,
+         Value                 => Single,
+         Value_Case_Sensitive  => False,
+         Is_Allowed_In         => No_Aggregates,
+         Inherit_From_Extended => Not_Inherited,
+         Default               => Create ("false"),
+         Has_Default_In        => Everywhere,
+         Type_Def              => Type_Def);
+   end;
 
    --  object_dir
    Add
@@ -617,15 +628,25 @@ begin
       Value_Case_Sensitive => True,
       Is_Allowed_In        => In_Library);
 
-   --  library_kind
-   Add
-     (Name                  => Library_Kind,
-      Index_Type            => No_Index,
-      Value                 => Single,
-      Value_Case_Sensitive  => False,
-      Is_Allowed_In         => In_Library,
-      Inherit_From_Extended => Not_Inherited,
-      Default               => Create ("static"));
+   declare
+      Type_Def : Attribute_Type;
+   begin
+      Type_Def.Include ("static");
+      Type_Def.Include ("relocatable");
+      Type_Def.Include ("dynamic");
+      Type_Def.Include ("static-pic");
+
+      --  library_kind
+      Add
+      (Name                  => Library_Kind,
+         Index_Type            => No_Index,
+         Value                 => Single,
+         Value_Case_Sensitive  => False,
+         Is_Allowed_In         => In_Library,
+         Inherit_From_Extended => Not_Inherited,
+         Default               => Create ("static"),
+         Type_Def              => Type_Def);
+   end;
 
    --  library_version
    Add
