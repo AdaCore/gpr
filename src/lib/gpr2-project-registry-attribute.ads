@@ -13,6 +13,7 @@ private with Ada.Containers.Ordered_Maps;
 
 limited with GPR2.Project.View;
 with GPR2.Project.Registry.Pack;
+with GPR2.Containers;
 
 package GPR2.Project.Registry.Attribute is
 
@@ -121,6 +122,11 @@ package GPR2.Project.Registry.Attribute is
    No_Default_Value : constant Default_Value :=
       (Kind => D_Attribute_Reference, Attr => No_Attribute);
 
+   subtype Attribute_Type is GPR2.Containers.Value_Set;
+
+   No_Attribute_Type : constant Attribute_Type :=
+                         GPR2.Containers.Value_Type_Set.Empty_Set;
+
    type Def is record
       Index_Type            : Index_Value_Type   := No_Index;
       Index_Optional        : Boolean            := False;
@@ -131,6 +137,7 @@ package GPR2.Project.Registry.Attribute is
       --  or not.
 
       Empty_Value           : Empty_Value_Status := Allow;
+      Type_Def              : Attribute_Type     := No_Attribute_Type;
       Builtin               : Boolean            := False;
       Is_Allowed_In         : Allowed_In         := (K_Abstract => True,
                                                      others     => False);
@@ -193,6 +200,7 @@ package GPR2.Project.Registry.Attribute is
       Value                 : Value_Kind;
       Value_Case_Sensitive  : Boolean;
       Is_Allowed_In         : Allowed_In;
+      Type_Def              : Attribute_Type             := No_Attribute_Type;
       Is_Builtin            : Boolean                    := False;
       Index_Optional        : Boolean                    := False;
       Empty_Value           : Empty_Value_Status         := Allow;
@@ -215,6 +223,7 @@ package GPR2.Project.Registry.Attribute is
    --  Value_Case_Sensitive: whether the value(s) are considered case
    --    sensitive.
    --  Is_Allowed_In: list of project kind where the attribute is valid.
+   --  Type_Def: list of values accepted for the attribute.
    --  Is_Builtin: if set, denotes an attribute that is read-only and set
    --    automatically by libgpr.
    --  Index_Optional: whether the attribute's index is mandatory or optional.

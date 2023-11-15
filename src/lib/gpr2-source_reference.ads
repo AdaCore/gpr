@@ -15,6 +15,8 @@ package GPR2.Source_Reference is
 
    function "<" (Left, Right : Object) return Boolean;
 
+   overriding function "=" (Left, Right : Object) return Boolean;
+
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
    --  initializer.
@@ -47,6 +49,14 @@ package GPR2.Source_Reference is
      with Pre => Self.Is_Defined and then Self.Has_Source_Reference;
    --  Returns the starting column of the entity declaration
 
+   function Format (Self : Object; Full_Path_Name : Boolean := False)
+    return String
+     with Pre => Self.Is_Defined;
+   --  Returns the sloc string representation with the following format:
+   --  <filename>:<line>:<col>
+   --  <filename> format controlled by Full_Path_Name parameter. Default False
+   --  is for simple file name, True is for full path name format.
+
 private
 
    type Object is tagged record
@@ -60,6 +70,10 @@ private
      (if Left.Filename /= Right.Filename then Left.Filename < Right.Filename
       elsif Left.Line /= Right.Line then Left.Line < Right.Line
       else Left.Column < Right.Column);
+
+   overriding function "=" (Left, Right : Object) return Boolean is
+     (Left.Filename = Right.Filename and then
+      Left.Line = Right.Line and then Left.Column = Right.Column);
 
    function Has_Source_Reference (Self : Object) return Boolean
      is (Self.Column > 0 and then Self.Line > 0);

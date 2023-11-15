@@ -1,0 +1,63 @@
+with "imported";
+with "imported-child";
+
+
+project parsed is
+
+   Var0_0 := external ("UNTYPED_EXT", "untyped");
+
+   type Mode_Type is ("debug", "release");
+   Var1_0 : Mode_Type := external ("MODE_1", "debug");
+
+   --  All these externals are typed with Mode_Type
+
+   Var1_1 : Mode_Type := external ("MODE_2", external ("MODE_3", external ("MODE_4", "debug")));
+
+   --  MODE_5 is typed, MODE_6 is untyped.
+
+   Var1_2 : Mode_Type := external ("MODE_5", external ("MODE_6", "") & "debug");
+   Var1_2 : Mode_Type := external ("MODE_7", external ("MODE_8", external ("MODE_9", external ("MODE_10", "")) & "debug"));
+
+   --  Typed external used in concatenation are considered as untyped,
+   --  because possible values are not easily computable.
+
+   type Type_D is ("type1_d", "type2_d", "type3_d");
+   Var2_0 : Type_D := external ("TYPE_D_CONCAT", "type1") & "_d";
+
+   --  Test when an external has several types assigned. Take the union of
+   --  all types possible values.
+   --  EXT_INTERSECT and EXT_INTERSECT_EMPTY should be typed with the following
+   --  possible values: "inter1", "inter_2" and "inter_3" and "inter_4".
+
+   type Type_1 is ("inter_1", "inter_2", "inter_3");
+   Var3_0 : Type_1 := external ("EXT_UNION", "inter_1");
+   type Type_2 is ("inter_2", "inter_3", "inter_4");
+   Var3_1 : Type_2 := external ("EXT_UNION", "inter_4");
+
+   type Type_Intersect_empty_1 is ("inter_1", "inter_2");
+   Var4_0 : Type_Intersect_empty_1 := external ("EXT_INTERSECT_EMPTY", "inter_1");
+   type Type_Intersect_empty_2 is ("inter_3", "inter_4");
+   Var4_1 : Type_Intersect_empty_2 := external ("EXT_INTERSECT_EMPTY", "inter_4");
+   type Type_Intersect_empty_3 is ("inter_5", "inter_6");
+   Var4_2 : Type_Intersect_empty_3 := external ("EXT_INTERSECT_EMPTY", "inter_6");
+
+   --  Ensure that redefinition of variable does not influence
+   --  the external typing.
+
+   Var5_0 : Type_D := external ("EXT_3", "type1_d");
+   Var5_1 : Type_D := external ("EXT_3", "type1") & "_d"; --  No impact on the typing
+   Var5_2 : Type_D := external ("EXT_3", "type2_d");
+
+   Var6_0 : Type_D := external ("EXT_4", "type1") & "_d"; --  Untyped
+
+   --  External also used in imported.gpr
+
+   type Duplicated_Type is ("Value_1", "Value_2");
+   Var6_0 : Duplicated_Type := external ("COMMON", "Value_1");
+   Var6_1 : Duplicated_Type := external ("COMMON_UNION", "Value_1");
+   Var6_3 : Duplicated_Type := external ("COMMON_INVALID", "Value_1");
+
+   type Imported_Type is ("Value_3", "Value_4"); --  Ensure that local type is not used instead of the imported one
+   Var7_0 : Imported.Imported_Type := external ("IMPORTED_FROM_PARSED", "Imported-Value_1");
+
+end parsed;
