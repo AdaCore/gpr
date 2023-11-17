@@ -39,6 +39,8 @@ package GPRinstall.Options is
       List_Mode        : Boolean := False;
       Uninstall_Mode   : Boolean := False;
       Install_Manifest : Boolean := True;
+      Minimal_Project  : Boolean := False;
+      --  Generate the minimal data into the generated project
 
       Force_Installations : Boolean := False;
       --  True if gprinstall is allowed to overwrite existing files

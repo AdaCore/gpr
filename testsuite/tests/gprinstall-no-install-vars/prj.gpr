@@ -1,0 +1,11 @@
+project Prj is
+
+   for Object_Dir use "obj";
+
+   type Kind is ("one", "two");
+
+   This  : Kind := "one";
+   Param := external ("PARAM", "1");
+   Param2 := external ("PARAM2", "2");
+
+end Prj;

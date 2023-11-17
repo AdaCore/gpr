@@ -175,6 +175,8 @@ install switches:
  --link-lib-subdir=<dir>
            The symlib directory/sub-directory to libraries
  --list    List all installed projects
+ --minimal-project
+           Record the strict minimal date in project file
  --mode=dev|usage
            Kind of installation (default is "dev")
  --no-build-var
@@ -415,6 +417,8 @@ install switches:
  --link-lib-subdir=<dir>
            The symlib directory/sub-directory to libraries
  --list    List all installed projects
+ --minimal-project
+           Record the strict minimal date in project file
  --mode=dev|usage
            Kind of installation (default is "dev")
  --no-build-var
