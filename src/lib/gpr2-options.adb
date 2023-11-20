@@ -100,6 +100,9 @@ package body GPR2.Options is
                end if;
             end if;
 
+         when Print_GPR_Registry =>
+            Self.Print_GPR_Registry := True;
+
          when Relocate_Build_Tree =>
             Self.Build_Path :=
               GPR2.Path_Name.Create_Directory (GPR2.Filename_Type (Param));
@@ -463,6 +466,21 @@ package body GPR2.Options is
          return False;
       end if;
    end On_Extra_Arg;
+
+   ------------------------
+   -- Print_GPR_Registry --
+   ------------------------
+
+   procedure Print_GPR_Registry
+     (Self : Object;
+      Format   : GPR2.Project.Registry.Exchange.Export_Format :=
+                    GPR2.Project.Registry.Exchange.K_JSON_COMPACT) is
+   begin
+      if Self.Print_GPR_Registry then
+         GPR2.Project.Registry.Exchange.Export (Format => Format);
+         GNAT.OS_Lib.OS_Exit (0);
+      end if;
+   end Print_GPR_Registry;
 
    -----------------------------------
    -- Register_Project_Search_Paths --
