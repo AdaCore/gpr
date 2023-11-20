@@ -1,0 +1,3 @@
+project Demo is
+  for Warning_Message use "Hello";
+end Demo;
