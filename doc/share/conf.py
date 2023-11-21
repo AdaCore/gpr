@@ -58,6 +58,15 @@ templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = doc_name
 
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+# https://sphinx-rtd-theme.readthedocs.io/en/stable/configuring.html#theme-options
+html_theme_options = {
+    # Use AdaCore blue in the Table Of Content
+    "style_nav_header_background": "#12284c",
+}
+
 # General information about the project.
 project = DOCS[doc_name]['title']
 
@@ -71,8 +80,7 @@ release = get_gpr_version()
 
 pygments_style = None
 html_theme = 'sphinx_rtd_theme'
-if os.path.isfile('adacore_transparent.png'):
-    html_logo = 'adacore_transparent.png'
+html_logo = 'adacore-logo-white.png'
 if os.path.isfile('favicon.ico'):
     html_favicon = 'favicon.ico'
 
