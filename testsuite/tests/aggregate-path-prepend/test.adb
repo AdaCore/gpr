@@ -22,13 +22,9 @@ procedure Test is
          for View of reverse Tree.Ordered_Views loop
             Put (" - " & String (View.Name));
             Put (" @ ");
-            declare
-               Rel_Path : GPR2.Path_Name.Object;
-            begin
-               Rel_Path :=
-                 View.Dir_Name.Relative_Path (Tree.Root_Project.Dir_Name);
-               Put_Line (String (Rel_Path.Name));
-            end;
+            Put_Line
+              (String
+                 (View.Dir_Name.Relative_Path (Tree.Root_Project.Dir_Name)));
          end loop;
       end if;
    end Show_Tree;

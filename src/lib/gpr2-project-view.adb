@@ -131,15 +131,22 @@ package body GPR2.Project.View is
          Subdirs  : constant Filename_Optional := Self.Tree.Subdirs;
          Dir_Name : constant Filename_Type :=
                       (if Dir = "" then "." else Filename_Type (Dir));
+         Root     : GPR2.Path_Name.Object;
          Result   : GPR2.Path_Name.Object;
+
       begin
          if OS_Lib.Is_Absolute_Path (Dir) then
             Result := GPR2.Path_Name.Create_Directory (Dir_Name);
 
          elsif Self.Tree.Build_Path.Is_Defined then
+            if Self.Tree.Root_Path.Is_Defined then
+               Root := Self.Tree.Root_Path;
+            else
+               Root := Self.Tree.Root_Project.Dir_Name;
+            end if;
+
             Result := GPR2.Path_Name.Create_Directory
-              (Self.Dir_Name.Relative_Path
-                 (Self.Tree.Root_Project.Dir_Name).Name,
+              (Self.Dir_Name.Relative_Path (Root),
                Filename_Type (Self.Tree.Build_Path.Value));
 
             Result := GPR2.Path_Name.Create_Directory
@@ -2769,7 +2776,7 @@ package body GPR2.Project.View is
                                          View.Dir_Name.Name);
                      Relative_Dir : constant Filename_Type :=
                                       Dir_Name.Relative_Path
-                                        (From => View.Dir_Name).Name;
+                                        (From => View.Dir_Name);
                   begin
                      if Recursive then
                         Excluded_Recurse_Dirs_List.Append

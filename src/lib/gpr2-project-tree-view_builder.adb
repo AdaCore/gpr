@@ -90,6 +90,7 @@ package body GPR2.Project.Tree.View_Builder is
       Context          : GPR2.Context.Object;
       Config           : PC.Object                 := PC.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
+      Root_Path        : Path_Name.Object          := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;
       Check_Shared_Lib : Boolean                   := True;
@@ -109,6 +110,7 @@ package body GPR2.Project.Tree.View_Builder is
                  Context          => Context,
                  Config           => Config,
                  Build_Path       => Build_Path,
+                 Root_Path        => Root_Path,
                  Subdirs          => Subdirs,
                  Src_Subdirs      => Src_Subdirs,
                  Check_Shared_Lib => Check_Shared_Lib,
@@ -126,6 +128,7 @@ package body GPR2.Project.Tree.View_Builder is
       Project           : Object;
       Context           : GPR2.Context.Object;
       Build_Path        : Path_Name.Object        := Path_Name.Undefined;
+      Root_Path         : Path_Name.Object        := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type      := No_Name;
       Src_Subdirs       : Optional_Name_Type      := No_Name;
       Check_Shared_Lib  : Boolean                 := True;
@@ -148,6 +151,7 @@ package body GPR2.Project.Tree.View_Builder is
         (Root_Project      => (Project_Definition, Project.Data),
          Context           => Context,
          Build_Path        => Build_Path,
+         Root_Path         => Root_Path,
          Subdirs           => Subdirs,
          Src_Subdirs       => Src_Subdirs,
          Check_Shared_Lib  => Check_Shared_Lib,

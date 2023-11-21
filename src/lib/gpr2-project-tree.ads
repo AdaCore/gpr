@@ -70,6 +70,7 @@ package GPR2.Project.Tree is
       Context          : GPR2.Context.Object;
       Config           : Configuration.Object      := Configuration.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
+      Root_Path        : Path_Name.Object          := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;
       Check_Shared_Lib : Boolean                   := True;
@@ -122,6 +123,7 @@ package GPR2.Project.Tree is
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
       Build_Path        : Path_Name.Object        := Path_Name.Undefined;
+      Root_Path         : Path_Name.Object        := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type      := No_Name;
       Src_Subdirs       : Optional_Name_Type      := No_Name;
       Check_Shared_Lib  : Boolean                 := True;
@@ -416,6 +418,10 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined;
    --  Path to build tree
 
+   function Root_Path (Self : Object) return Path_Name.Object
+     with Pre => Self.Is_Defined;
+   --  Path to root to consider for the build tree
+
    function Reference (Self : Object) return access Object;
    --  Returns access to itself
 
@@ -591,6 +597,7 @@ private
       Search_Paths      : All_Search_Paths;
       Implicit_With     : Path_Name.Set.Object;
       Build_Path        : Path_Name.Object;
+      Root_Path         : Path_Name.Object;
       Subdirs           : Unbounded_String;
       Src_Subdirs       : Unbounded_String;
       Check_Shared_Lib  : Boolean := True;
@@ -619,6 +626,7 @@ private
       Context          : GPR2.Context.Object;
       Config           : PC.Object                 := PC.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
+      Root_Path        : Path_Name.Object          := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;
       Check_Shared_Lib : Boolean                   := True;
@@ -637,21 +645,22 @@ private
      (Self              : in out Object;
       Root_Project      : Project_Descriptor;
       Context           : GPR2.Context.Object;
-      Build_Path        : Path_Name.Object        := Path_Name.Undefined;
-      Subdirs           : Optional_Name_Type      := No_Name;
-      Src_Subdirs       : Optional_Name_Type      := No_Name;
-      Check_Shared_Lib  : Boolean                 := True;
+      Build_Path        : Path_Name.Object          := Path_Name.Undefined;
+      Root_Path         : Path_Name.Object          := Path_Name.Undefined;
+      Subdirs           : Optional_Name_Type        := No_Name;
+      Src_Subdirs       : Optional_Name_Type        := No_Name;
+      Check_Shared_Lib  : Boolean                   := True;
       Absent_Dir_Error  : Error_Level               := Warning;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
-      Target            : Optional_Name_Type      := No_Name;
+      Target            : Optional_Name_Type        := No_Name;
       Language_Runtimes : Containers.Lang_Value_Map :=
                             Containers.Lang_Value_Maps.Empty_Map;
-      Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
-      Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined;
+      Base              : GPR2.KB.Object            := GPR2.KB.Undefined;
+      Config_Project    : GPR2.Path_Name.Object     := GPR2.Path_Name.Undefined;
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
                             GPR2.File_Readers.No_File_Reader_Reference;
-      Environment       : GPR2.Environment.Object :=
+      Environment       : GPR2.Environment.Object   :=
                             GPR2.Environment.Process_Environment);
 
    function "=" (Left, Right : Object) return Boolean
@@ -725,6 +734,9 @@ private
 
    function Build_Path (Self : Object) return Path_Name.Object is
      (Self.Build_Path);
+
+   function Root_Path (Self : Object) return Path_Name.Object is
+      (Self.Root_Path);
 
    function Runtime_From_Command_Line
      (Self : Object; Language : Language_Id) return Optional_Name_Type is

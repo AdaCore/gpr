@@ -268,30 +268,6 @@ package body GPR2.Options is
            "cannot use --root-dir without --relocate-build-tree option";
       end if;
 
-      declare
-         Project_Dir : constant GPR2.Path_Name.Object :=
-                         (if Self.Project_Base.Is_Defined
-                          then Self.Project_Base
-                          elsif Self.Project_File.Is_Defined
-                            and then Self.Project_File.Has_Dir_Name
-                          then GPR2.Path_Name.Create_Directory
-                            (Filename_Type (Self.Project_File.Dir_Name))
-                          else
-                             GPR2.Path_Name.Undefined);
-
-      begin
-         if Project_Dir.Is_Defined then
-            if not Self.Build_Path.Is_Defined then
-               Self.Build_Path := Project_Dir;
-
-            elsif Self.Root_Path.Is_Defined then
-               Self.Build_Path := GPR2.Path_Name.Create_Directory
-                 (Project_Dir.Relative_Path (Self.Root_Path).Name,
-                  Filename_Type (Self.Build_Path.Value));
-            end if;
-         end if;
-      end;
-
       Self.Finalized := True;
    end Finalize;
 
@@ -336,15 +312,16 @@ package body GPR2.Options is
          end if;
 
          Tree.Load
-           (Filename         =>  Self.Filename,
-            Context          =>  Self.Context,
-            Config           =>  Conf,
-            Build_Path       =>  Self.Build_Path,
-            Subdirs          =>  Subdirs (Self),
-            Src_Subdirs      =>  Src_Subdirs (Self),
-            Check_Shared_Lib =>  Self.Check_Shared_Lib,
-            Absent_Dir_Error =>  Absent_Dir_Error,
-            Implicit_With    =>  Self.Implicit_With,
+           (Filename         => Self.Filename,
+            Context          => Self.Context,
+            Config           => Conf,
+            Build_Path       => Self.Build_Path,
+            Root_Path        => Self.Root_Path,
+            Subdirs          => Subdirs (Self),
+            Src_Subdirs      => Src_Subdirs (Self),
+            Check_Shared_Lib => Self.Check_Shared_Lib,
+            Absent_Dir_Error => Absent_Dir_Error,
+            Implicit_With    => Self.Implicit_With,
             File_Reader      => File_Reader,
             Environment      => Self.Environment);
 
@@ -408,17 +385,18 @@ package body GPR2.Options is
          end if;
 
          Tree.Load_Autoconf
-           (Filename          =>  Self.Filename,
-            Context           =>  Self.Context,
-            Build_Path        =>  Self.Build_Path,
-            Subdirs           =>  Subdirs (Self),
-            Src_Subdirs       =>  Src_Subdirs (Self),
-            Check_Shared_Lib  =>  Self.Check_Shared_Lib,
-            Absent_Dir_Error  =>  Absent_Dir_Error,
-            Implicit_With     =>  Self.Implicit_With,
-            Target            =>  Target (Self),
-            Language_Runtimes =>  Self.RTS_Map,
-            Base              =>  Self.Base,
+           (Filename          => Self.Filename,
+            Context           => Self.Context,
+            Build_Path        => Self.Build_Path,
+            Root_Path         => Self.Root_Path,
+            Subdirs           => Subdirs (Self),
+            Src_Subdirs       => Src_Subdirs (Self),
+            Check_Shared_Lib  => Self.Check_Shared_Lib,
+            Absent_Dir_Error  => Absent_Dir_Error,
+            Implicit_With     => Self.Implicit_With,
+            Target            => Target (Self),
+            Language_Runtimes => Self.RTS_Map,
+            Base              => Self.Base,
             Config_Project    => (if Create_Cgpr
                                   then Self.Config_Project
                                   else GPR2.Path_Name.Undefined),
