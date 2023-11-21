@@ -1,4 +1,11 @@
 +--------------------------------------+
+|               Messages               |
++--------------------------------------+
+* Configuration:
+* Tree:
+    - lib.gpr: lint: project qualifier could be explicitly set to library project
+
++--------------------------------------+
 |         General Information          |
 +--------------------------------------+
 * Generated on : 2000-01-01 00:00:00
@@ -7,8 +14,6 @@
 +--------------------------------------+
 |       Project Tree Information       |
 +--------------------------------------+
-* Messages :
-    - lib.gpr: lint: project qualifier could be explicitly set to library project
 * Project count        :  6
 * Project search paths :
     - <filtered-out>
@@ -235,14 +240,18 @@
           - Value : ".h"
 
 {
+  "messages": {
+    "configuration": [
+    ],
+    "tree": [
+      "lib.gpr: lint: project qualifier could be explicitly set to library project"
+    ]
+  },
   "info": {
     "generated-on": 2000-01-01 00:00:00
     "version": Pro 1.0 (20000101) (<host>)
   },
   "tree": {
-    "messages": [
-      "lib.gpr: lint: project qualifier could be explicitly set to library project"
-    ],
     "stats": {
       "project-count": 3
     },
