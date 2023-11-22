@@ -7,7 +7,6 @@
 with Ada.Characters.Conversions;
 with Ada.Characters.Handling;
 with Ada.Containers;
-with Ada.Containers.Vectors;
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps.Constants;
@@ -49,6 +48,11 @@ package body GPR2.Project.Parser is
    package PRP renames GPR2.Project.Registry.Pack;
    package PAI renames GPR2.Project.Attribute_Index;
    package ASU renames Ada.Strings.Unbounded;
+
+   subtype External_Builtin_Function_Call is Builtin_Function_Call with
+       Dynamic_Predicate =>
+        Get_Name_Type (F_Function_Name (External_Builtin_Function_Call)) =
+        "external";
 
    function Is_Builtin_Project_Name (Name : Name_Type) return Boolean is
      (To_Lower (Name) in "project" | "config" | "runtime");
@@ -154,6 +158,22 @@ package body GPR2.Project.Parser is
    --  helper routine to get strings out of built-in parameters for example.
    --  Set Error to True if the node was not a simple string-literal.
 
+   function External_Explicit_Type
+     (Node : External_Builtin_Function_Call) return Identifier_List;
+   --  Returns the external type if present. The type is an optional
+   --  first field parameter.
+
+   function External_Variable_Name
+     (Node  : External_Builtin_Function_Call;
+      Error : out Boolean) return Value_Type;
+   --  Returns the external variable name. It can be the first, or the
+   --  second field parameter, depending on if the type is present.
+
+   function External_Value_Node
+     (Node : External_Builtin_Function_Call) return Term_List;
+   --  Returns the external default value node. This value is optional
+   --  and is the last field if present.
+
    function Parse_Stage_1
      (Unit          : Analysis_Unit;
       Filename      : GPR2.Path_Name.Object;
@@ -179,11 +199,88 @@ package body GPR2.Project.Parser is
       return Self.Extended;
    end Extended;
 
+   ----------------------------
+   -- External_Explicit_Type --
+   ----------------------------
+
+   function External_Explicit_Type (Node : External_Builtin_Function_Call)
+   return Identifier_List is
+      Exprs : constant Term_List_List := F_Terms (F_Parameters (Node));
+   begin
+
+      if Exprs.Children_Count = 1 then
+         return No_Identifier_List;
+      end if;
+
+      --  HACK: We do not parse the type as a type reference,
+      --  but a variable reference. The parser can not distinguish
+      --  between a type and a variable in its current state,
+      --  as both begin similarly.
+
+      declare
+         Typ : constant Term_List := Exprs.First_Child.As_Term_List;
+      begin
+         if Kind (Typ.First_Child) = Gpr_Variable_Reference then
+            return As_Variable_Reference (Typ.First_Child).F_Variable_Name;
+         else
+            return No_Identifier_List;
+         end if;
+      end;
+   end External_Explicit_Type;
+
+   -------------------------
+   -- External_Value_Node --
+   -------------------------
+
+   function External_Value_Node (Node : External_Builtin_Function_Call)
+   return Term_List
+   is
+      Exprs : constant Term_List_List := F_Terms (F_Parameters (Node));
+      Value_Index : Natural;
+   begin
+
+      if External_Explicit_Type (Node) = No_Identifier_List then
+         Value_Index := 2;
+      else
+         Value_Index := 3;
+      end if;
+
+      return Exprs.Child (Value_Index).As_Term_List;
+   end External_Value_Node;
+
+   ----------------------------
+   -- External_Variable_Name --
+   ----------------------------
+
+   function External_Variable_Name
+     (Node  : External_Builtin_Function_Call;
+      Error : out Boolean) return Value_Type
+   is
+      Exprs : constant Term_List_List := F_Terms (F_Parameters (Node));
+      Var : Term_List;
+      Var_Index : Natural;
+
+   begin
+      --  Type is optional, and is the first external parameter
+
+      if Exprs.Children_Count = 1
+         or else External_Explicit_Type (Node) = No_Identifier_List
+      then
+         Var_Index := 1;
+      else
+         Var_Index := 2;
+      end if;
+
+      Var := Exprs.Child (Var_Index).As_Term_List;
+
+      return Get_String_Literal (Var, Error);
+   end External_Variable_Name;
+
    ---------------
    -- Externals --
    ---------------
 
-   function Externals (Self : Object) return Containers.Name_Set is
+   function Externals (Self : Object) return Externals_Map is
    begin
       return Self.Externals;
    end Externals;
@@ -733,6 +830,7 @@ package body GPR2.Project.Parser is
             ------------------------------
 
             procedure Parse_External_Reference (N : Builtin_Function_Call) is
+
                Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
             begin
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
@@ -743,35 +841,35 @@ package body GPR2.Project.Parser is
                         Message =>
                           "missing parameter for external built-in"));
 
-               elsif Exprs.Children_Count > 2 then
+               elsif Exprs.Children_Count > 3 then
                      Messages.Append
                        (GPR2.Message.Create
                           (Level   => Message.Error,
                            Sloc    =>
                              Get_Source_Reference (Filename, Exprs),
                            Message =>
-                             "external built-in accepts at most two "
-                             & "parameters."));
+                             "external built-in accepts at most three "
+                             & "parameters"));
 
                else
-                  --  We have External ("VAR" [, "VALUE"]), get the
+                  --  We have External ([TYPE, ]"VAR" [, "VALUE"]), get the
                   --  variable name.
 
                   declare
-                     Var_Node : constant Term_List :=
-                                  Child (Exprs, 1).As_Term_List;
-                     Error    : Boolean;
-                     Var      : constant Value_Type :=
-                                  Get_String_Literal (Var_Node, Error);
+                     Error : Boolean;
+                     Var   : constant Value_Type :=
+                               External_Variable_Name (N, Error);
+                     Typ   : constant Identifier_List :=
+                               External_Explicit_Type (N);
                   begin
                      if Error then
                         Messages.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
-                                Get_Source_Reference (Filename, Var_Node),
+                                Get_Source_Reference (Filename, Exprs),
                               Message =>
-                                "external first parameter must be a "
+                                "external variable name must be a "
                               & "simple string"));
 
                      elsif Var = "" then
@@ -779,16 +877,45 @@ package body GPR2.Project.Parser is
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
-                                Get_Source_Reference (Filename, Var_Node),
+                                Get_Source_Reference (Filename, Exprs),
                               Message =>
                                 "external variable name must not be "
                               & "empty"));
+                     elsif Typ = No_Identifier_List
+                       and then Exprs.Children_Count = 3
+                     then
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Filename, Exprs),
+                              Message =>
+                                "external type must be a type reference"));
 
                      else
-                        Project.Externals.Include (Optional_Name_Type (Var));
+
+                        if not Project.Externals.Contains
+                                 (Optional_Name_Type (Var))
+                        then
+                           Project.Externals.Insert
+                           (Key      => Optional_Name_Type (Var),
+                            New_Item => External_List_Package.Empty_Vector);
+                        end if;
 
                         declare
-                           Node : Gpr_Node := Exprs.Child (2);
+                           Ext :
+                             constant Externals_Map_Package.Reference_Type :=
+                               Project.Externals.Reference
+                                 (Optional_Name_Type (Var));
+                        begin
+                           Ext.Append
+                             ((Type_Node  => Typ,
+                               Source_Ref => Get_Source_Reference
+                                 (Filename, Exprs)));
+                        end;
+
+                        declare
+                           Node : Gpr_Node := Exprs.Last_Child;
                         begin
                            if not Node.Is_Null then
                               Node := Node.Child (1);
@@ -1801,7 +1928,7 @@ package body GPR2.Project.Parser is
 
                procedure Handle_External_Variable
                  (Node : Builtin_Function_Call);
-               --  An external variable : External ("VAR"[, "VALUE"])
+               --  An external variable : External ([TYPE, ]"VAR"[, "VALUE"])
 
                procedure Handle_External_As_List_Variable
                  (Node : Builtin_Function_Call);
@@ -1899,16 +2026,20 @@ package body GPR2.Project.Parser is
                procedure Handle_External_Variable
                  (Node : Builtin_Function_Call)
                is
+
                   Parameters : constant Term_List_List :=
                                  F_Terms (F_Parameters (Node));
                   Error      : Boolean;
                   Var        : constant Name_Type :=
                                  Name_Type
-                                   (Get_String_Literal
-                                      (Child (Parameters, 1), Error));
+                                   (External_Variable_Name (Node, Error));
                   Value_Node : constant Term_List :=
-                                 Child (Parameters, 2).As_Term_List;
+                                 External_Value_Node (Node);
+                  Value      : Source_Reference.Value.Object :=
+                                 Source_Reference.Value.Undefined;
+
                begin
+
                   if Present (Value_Node) then
                      --  External not in the context but has a default value
                      declare
@@ -1916,10 +2047,9 @@ package body GPR2.Project.Parser is
                                    Get_Term_List (Value_Node);
                      begin
                         if Values.Single then
-                           Record_Value
-                             (Builtin.External
-                                (Context,
-                                 Var, Values.Values.First_Element));
+                           Value := Builtin.External
+                             (Context,
+                               Var, Values.Values.First_Element);
 
                         else
                            Tree.Log_Messages.Append
@@ -1933,13 +2063,53 @@ package body GPR2.Project.Parser is
                                    & "simple string"));
                         end if;
                      end;
-
                   else
-                     Record_Value
-                       (Builtin.External
-                          (Context, Var,
-                           Sloc => Get_Source_Reference
-                                     (Self.File, Parameters)));
+                     Value := Builtin.External
+                        (Context, Var,
+                         Sloc => Get_Source_Reference
+                           (Self.File, Parameters));
+                  end if;
+
+                  if Value.Is_Defined then
+                     declare
+                        Ext_Type : constant Identifier_List :=
+                                     External_Explicit_Type (Node);
+                     begin
+                        if Ext_Type = No_Identifier_List then
+                           Record_Value (Value);
+                        else
+                           declare
+                              Type_Def : constant GPR2.Project.Typ.Object :=
+                              Type_Definition_From
+                                 (Self, Tree, Ext_Type);
+                              Found : Boolean := False;
+
+                           begin
+                              for Type_Value of Type_Def.Values loop
+                                 if Type_Value.Text = Value.Text then
+                                    Record_Value (Value);
+                                    Found := True;
+                                    exit;
+                                 end if;
+                              end loop;
+
+                              if not Found then
+                                 Tree.Log_Messages.Append
+                                 (GPR2.Message.Create
+                                    (Level   => Message.Error,
+                                    Sloc    =>
+                                       Get_Source_Reference
+                                          (Self.File, Node),
+                                    Message =>
+                                       "external value """
+                                       & String (Value.Text)
+                                       & """ is not compatible with the "
+                                       & "external type defined at "
+                                       & Type_Def.Format));
+                              end if;
+                           end;
+                        end if;
+                     end;
                   end if;
 
                   --  Skip all child nodes, we do not want to parse a second

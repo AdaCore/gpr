@@ -1,0 +1,5 @@
+project Four_Arg is
+
+   Var := external ("EXT", ",", "whatever", "fourth arg");
+
+end Four_Arg;

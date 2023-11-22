@@ -1179,7 +1179,16 @@ package body GPR2.Project.Tree is
          end if;
 
          if Config.Has_Externals then
-            Update_Context (Root_Context, Config.Externals, Environment);
+            declare
+               External_Names : Containers.Name_Set;
+            begin
+               for C in Config.Externals.Iterate loop
+                  External_Names.Include
+                    (GPR2.Project.Parser.Externals_Map_Package.Key (C));
+               end loop;
+
+               Update_Context (Root_Context, External_Names, Environment);
+            end;
          end if;
 
          Definition.Bind_Configuration_To_Tree (Self.Conf, Self.Self);
@@ -1283,8 +1292,9 @@ package body GPR2.Project.Tree is
          Def := Definition.Get (Self.Root);
 
          if Config.Is_Defined and then Config.Has_Externals then
-            for E of Config.Externals loop
-               Def.Externals.Include (E);
+            for Curs in Config.Externals.Iterate loop
+               Def.Externals.Include
+                 (GPR2.Project.Parser.Externals_Map_Package.Key (Curs));
             end loop;
          end if;
 
@@ -1309,8 +1319,18 @@ package body GPR2.Project.Tree is
          if Config.Is_Defined and then Config.Has_Externals
            and then Self.Root.Kind in Aggregate_Kind
          then
-            Update_Context
-              (Self.Context (Aggregate), Config.Externals, Environment);
+            declare
+               External_Names : Containers.Name_Set;
+
+            begin
+               for C in Config.Externals.Iterate loop
+                  External_Names.Include
+                    (GPR2.Project.Parser.Externals_Map_Package.Key (C));
+               end loop;
+
+               Update_Context
+                  (Self.Context (Aggregate), External_Names, Environment);
+            end;
          end if;
 
          Set_Context (Self, Context);
@@ -2101,7 +2121,18 @@ package body GPR2.Project.Tree is
 
          if not Self.Messages.Has_Error then
             Data.Kind := Project.Qualifier;
-            Data.Externals := Data.Trees.Project.Externals;
+
+            declare
+               External_Names : Containers.Name_Set;
+
+            begin
+               for C in Project.Externals.Iterate loop
+                  External_Names.Include
+                    (GPR2.Project.Parser.Externals_Map_Package.Key (C));
+               end loop;
+
+               Data.Externals := External_Names;
+            end;
 
             --  Now load all imported projects if any
 

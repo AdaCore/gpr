@@ -1,10 +1,12 @@
 ** builtins: external
 
 empty.gpr:3:11: error: missing parameter for external built-in
-non_string.gpr:3:21: error: external first parameter must be a simple string
+non_string.gpr:3:21: error: external variable name must be a simple string
 non_string2.gpr:3:21: error: external default parameter must be a simple string
 empty_string.gpr:3:21: error: external variable name must not be empty
-three_arg.gpr:3:21: error: external built-in accepts at most two parameters.
+four_arg.gpr:3:21: error: external built-in accepts at most three parameters
+string_typed.gpr:3:21: error: external type must be a type reference
+explicit_type_invalid_value.gpr:4:11: error: external value "Value3" is not compatible with the external type defined at explicit_type_invalid_value.gpr:3:09
 
 ** builtins: external_as_list
 
