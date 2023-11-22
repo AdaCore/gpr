@@ -96,6 +96,11 @@ procedure GPRinspect.Main is
             Result.All_Projects := True;
             Result.Restricted_Views := Scope;
          end;
+      elsif Arg = "--gpr-registry-file" then
+         if Param /= "" then
+            Result.Gpr_Registry_File :=
+              GPR2.Path_Name.Create_File (GPR2.Filename_Type (Param));
+         end if;
       end if;
    end On_Switch;
 
@@ -158,6 +163,13 @@ procedure GPRinspect.Main is
         (Group,
          Create ("--variables",
            Help => "Display variables & types"));
+      Parser.Add_Argument
+        (Group,
+         Create
+           ("--gpr-registry-file",
+            Help      => "Recognize additional attributes defined in <file>",
+            Delimiter => Equal,
+            Parameter => "<file>"));
 
       Parser.Get_Opt (Options);
    end Parse_Command_Line;
@@ -173,7 +185,10 @@ begin
    --  Run the GPRinspect main procedure depending on command line options
 
    Parse_Command_Line;
-   GPRinspect.External_Tools_Support.Import_External_Tools_Registry;
+
+   GPRinspect.External_Tools_Support.Import_External_Tools_Registry
+     (Options.Gpr_Registry_File);
+
    GPRinspect.Process (Options => Options);
 
 exception

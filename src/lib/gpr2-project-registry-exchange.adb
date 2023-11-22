@@ -672,7 +672,7 @@ package body GPR2.Project.Registry.Exchange is
 
    procedure Import (Definitions : Ada.Strings.Unbounded.Unbounded_String;
                      Included : GPR2.Containers.Package_Id_List :=
-                       GPR2.Project.Registry.Pack.All_Packages;
+                       GPR2.Containers.Package_Id_Type_List.Empty;
                      Excluded : GPR2.Containers.Package_Id_List :=
                        GPR2.Project.Registry.Pack.Predefined_Packages) is
 
