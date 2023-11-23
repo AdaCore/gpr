@@ -359,7 +359,7 @@ package body GPRinstall.Install is
                     (Man,
                      MD5 & ' '
                      & String
-                       (Pathname.Relative_Path (From => Man_Path).Name));
+                       (Pathname.Relative_Path (From => Man_Path)));
                end;
             end if;
 
@@ -374,7 +374,7 @@ package body GPRinstall.Install is
                     (Agg_Manifest,
                      MD5 & ' '
                      & String
-                         (Pathname.Relative_Path (From => Agg_Man_Path).Name));
+                         (Pathname.Relative_Path (From => Agg_Man_Path)));
                end;
             end if;
          end;
@@ -1665,7 +1665,7 @@ package body GPRinstall.Install is
             if Has_Sources (Project) then
                Line := Line
                  & String (Sources_Dir (Build_Name => False).Relative_Path
-                           (From => Project_Dir).Name);
+                           (From => Project_Dir));
 
                Gen_Dir_Name (Sources_Subdir, Line);
             end if;
@@ -1684,7 +1684,7 @@ package body GPRinstall.Install is
 
             Line := Line
               & String (Lib_Dir (Build_Name => False).Relative_Path
-                        (From => Project_Dir).Name);
+                        (From => Project_Dir));
 
             Gen_Dir_Name (Lib_Subdir, Line);
             Line := Line & """;";
@@ -1700,7 +1700,7 @@ package body GPRinstall.Install is
 
                   Line := Line
                     & String (ALI_Dir (Build_Name => False).Relative_Path
-                              (From => Project_Dir).Name);
+                              (From => Project_Dir));
 
                   Gen_Dir_Name (ALI_Subdir, Line);
                   Line := Line & """;";

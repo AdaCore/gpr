@@ -131,7 +131,7 @@ Filename:
 Context.Length: 0
 Context: is empty
 Config_Project: is not defined
-Build_Path:
+Build_Path is not defined
 Subdirs:
 Subdirs (unbounded):
 Src_Subdirs:
@@ -146,7 +146,7 @@ Filename(Allow_Implicit_Project):
 Context.Length(Allow_Implicit_Project): 0
 Context(Allow_Implicit_Project): is empty
 Config_Project(Allow_Implicit_Project): is not defined
-Build_Path(Allow_Implicit_Project):
+Build_Path(Allow_Implicit_Project) is not defined
 Subdirs(Allow_Implicit_Project):
 Subdirs (unbounded)(Allow_Implicit_Project):
 Src_Subdirs(Allow_Implicit_Project):
@@ -165,7 +165,7 @@ Filename:/test.gpr
 Context.Length: 1
 Context'First key=value
 Config_Project:autoconf.cgpr
-Build_Path:
+Build_Path is not defined
 Subdirs:Subdirs
 Subdirs (unbounded):Subdirs
 Src_Subdirs:Src_Subdirs
@@ -191,30 +191,30 @@ Test OK
 Testing Finalize no arguments at  with Allow_Implicit_Project=TRUE
 using project file /test.gpr
 Filename:./test.gpr
-Build_Path:/
+Build_Path is Undefined
 Test OK
 
 Testing Finalize no arguments at /new-current-directory/default with Allow_Implicit_Project=TRUE
 using project file /new-current-directory/default/default.gpr
 Filename:default.gpr
-Build_Path:/new-current-directory/default/
+Build_Path is Undefined
 Test OK
 
 Testing Finalize no arguments at /new-current-directory/two-gpr with Allow_Implicit_Project=TRUE
 use implicit project in /new-current-directory/two-gpr
 Filename:/new-current-directory/two-gpr
-Build_Path:/new-current-directory/two-gpr
+Build_Path is Undefined
 Test OK
 
 Testing Finalize no arguments at /new-current-directory/two-gpr with Allow_Implicit_Project=TRUE
 Filename:/new-current-directory/two-gpr
-Build_Path:/new-current-directory/two-gpr
+Build_Path is Undefined
 Test OK
 
 Testing Finalize no arguments at /new-current-directory/no-gpr with Allow_Implicit_Project=TRUE
 use implicit project in /new-current-directory/no-gpr
 Filename:/new-current-directory/no-gpr
-Build_Path:/new-current-directory/no-gpr
+Build_Path is Undefined
 Test OK
 
 Testing Finalize no arguments at  with Allow_Implicit_Project=FALSE
@@ -239,7 +239,7 @@ Test OK
 
 Testing Finalize --no-project --relocate-build-tree=relocated --root-dir=.
 Filename:
-Build_Path:../options/
+Build_Path:relocated
 Test OK
 
 Testing Load Project -aP added-path -Pload-project/test --autoconf=other-autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug
@@ -255,13 +255,13 @@ Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr -
 Load_Project returned TRUE
 Test OK
 
-Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug --target x86_64-windows
+Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug --target (host)
 Load_Project returned TRUE
 Test OK
 
 Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug --target unknown-target
 Load_Project returned TRUE
 test.gpr:12:32: warning: object directory "obj-Release" not found
-autoconf.cgpr:2:19: error: --target: 'unknown-target' is different from the target value in the configuration project 'x86_64-windows'
+autoconf.cgpr:2:19: error: --target: 'unknown-target' is different from the target value in the configuration project '(host)'
 Test OK
 

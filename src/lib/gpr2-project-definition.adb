@@ -161,8 +161,7 @@ package body GPR2.Project.Definition is
                                   (Filename_Type (Dir_Val),
                                    View_Path.Name);
                Relative_Dir : constant Filename_Type :=
-                                Dir_Name.Relative_Path
-                                  (From => View_Path).Name;
+                                Dir_Name.Relative_Path (From => View_Path);
             begin
                return View_Path.Compose (Relative_Dir, True).Exists;
             end;
@@ -636,8 +635,8 @@ package body GPR2.Project.Definition is
       Root_Dir  : constant String :=
                     (if GNAT.OS_Lib.Is_Absolute_Path (Dir)
                      then Dir (Dir'First .. Last)
-                     else Base_Dir.Compose
-                       (Filename_Optional (Dir (Dir'First .. Last))).Value);
+                     else String (Base_Dir.Compose
+                       (Filename_Optional (Dir (Dir'First .. Last))).Name));
       D_Entry   : Dir_Entry;
       Stat      : File_Attributes;
 
@@ -704,7 +703,7 @@ package body GPR2.Project.Definition is
                Messages.Append
                  (Message.Create
                     (Message.Error,
-                     """" & String (Dir.Name) &
+                     """" & Dir.Value &
                        """ is not a valid directory",
                      Source));
                return;

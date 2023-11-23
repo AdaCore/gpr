@@ -42,6 +42,7 @@ package GPR2.Project.Tree.View_Builder is
       Project           : View_Builder.Object;
       Context           : GPR2.Context.Object;
       Build_Path        : Path_Name.Object          := Path_Name.Undefined;
+      Root_Path         : Path_Name.Object          := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type        := No_Name;
       Src_Subdirs       : Optional_Name_Type        := No_Name;
       Check_Shared_Lib  : Boolean                   := True;
@@ -67,6 +68,7 @@ package GPR2.Project.Tree.View_Builder is
       Config           : GPR2.Project.Configuration.Object :=
                            GPR2.Project.Configuration.Undefined;
       Build_Path       : Path_Name.Object        := Path_Name.Undefined;
+      Root_Path        : Path_Name.Object        := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type      := No_Name;
       Src_Subdirs      : Optional_Name_Type      := No_Name;
       Check_Shared_Lib : Boolean                 := True;
