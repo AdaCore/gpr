@@ -657,7 +657,8 @@ private
       Language_Runtimes : Containers.Lang_Value_Map :=
                             Containers.Lang_Value_Maps.Empty_Map;
       Base              : GPR2.KB.Object            := GPR2.KB.Undefined;
-      Config_Project    : GPR2.Path_Name.Object     := GPR2.Path_Name.Undefined;
+      Config_Project    : GPR2.Path_Name.Object     :=
+                            GPR2.Path_Name.Undefined;
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
                             GPR2.File_Readers.No_File_Reader_Reference;
       Environment       : GPR2.Environment.Object   :=
