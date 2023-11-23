@@ -189,9 +189,9 @@ package GPR2.Path_Name is
      with Pre => Self.Is_Defined and then To.Is_Defined;
    --  Creates a symlink for Self as To
 
-   function Relative_Path (Self, From : Object) return Object
+   function Relative_Path (Self, From : Object) return Filename_Type
      with Pre  => Self.Is_Defined and then From.Is_Defined,
-          Post => Relative_Path'Result.Is_Defined;
+          Post => Relative_Path'Result'Length > 0;
    --  Returns the relative pathname which corresponds to Self when
    --  starting from directory From. Note that the relative pathname is
    --  actually given by Relative_Path'Result.Name.
@@ -207,6 +207,12 @@ package GPR2.Path_Name is
          = Common_Prefix'Result.Value
         and then Common_Prefix'Result.Is_Directory);
    --  Returns the longest common path for Self and Path
+
+   function Contains (Self, Path : Object) return Boolean
+     with Pre => Self.Is_Defined
+                   and then Self.Is_Directory and then Path.Is_Defined;
+   --  Tell whether Path is contained in Self (is a subdir or a file in a
+   --  subdir)
 
    function Containing_Directory (Self : Object) return Object
      with Pre  => Self.Is_Defined

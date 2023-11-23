@@ -46,6 +46,8 @@ package GPR2.Project.Registry.Pack is
    --  parameter Flag. If Check_Attributes is not called, then the attribute
    --  names are not going to be checked.
 
+   function Predefined_Packages return GPR2.Containers.Package_Id_List;
+
    --  Some common package names
 
    Binder   : constant Package_Id := +"binder";

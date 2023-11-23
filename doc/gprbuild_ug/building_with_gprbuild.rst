@@ -329,16 +329,175 @@ package Builder of the main project:
   With this option it is possible to achieve out-of-tree build. That
   is, real object, library or exec directories are relocated to the
   current working directory or dir if specified.
+  Let's take the following example:
+
+  ::
+
+      .
+      ├── ops_lib
+      │   ├── ops_lib.gpr
+      │   └── src
+      │       ├── ops.adb
+      │       └── ops.ads
+      ├── prj.gpr
+      └── src
+          └── main.adb
+
+  `prj.gpr` has a dependency towards `ops_lib.gpr`:
+  ::
+
+      -- prj.gpr
+      with "./ops_lib/ops_lib";
+
+      project Prj is
+        for Source_Dirs use ("src");
+        for Object_Dir use "obj";
+
+        for Main use ("main.adb");
+      end Prj;
+
+  A classic build without option will give the following tree:
+
+  ::
+
+      .
+      ├── obj
+      │   └── [compilation artifacts (.ali, .o, .stderr, .stdout, .lexch)]
+      ├── ops_lib
+      │   ├── lib
+      │   │   ├── libopslib.so
+      │   │   └── ops.ali
+      │   ├── obj
+      │   │   └── [compilation artifacts (.ali, .o, .stderr, .stdout, .lexch)]
+      │   ├── ops_lib.gpr
+      │   └── src
+      │       ├── ops.adb
+      │       └── ops.ads
+      ├── prj.gpr
+      └── src
+          └── main.adb
+
+  If we want to build prj from another directory, we can specify the
+  `--relocate-build-tree` option, like:
+
+  ::
+
+      $ mkdir build ; gprbuild -P prj.gpr --relocate-build-tree=./build
+
+  which produces the following tree:
+
+  ::
+
+      .
+      ├── ops_lib
+      │   ├── ops_lib.gpr
+      │   └── src
+      │       ├── ops.adb
+      │       └── ops.ads
+      ├── prj.gpr
+      ├── src
+      │   └── main.adb
+      └── build
+          ├── obj
+          │   └── [compilation artifacts (.ali, .o, .stderr, .stdout, .lexch)]
+          └── ops_lib
+              ├── lib
+              │   ├── libopslib.so
+              │   └── ops.ali
+              └── obj
+                  └── [compilation artifacts (.ali, .o, .stderr, .stdout, .lexch)]
+
+
+
 
 * :samp:`--root-dir={dir}`
 
-  This option is to be used with --relocate-build-tree above and
+  This option is to be used with `--relocate-build-tree`` above and
   cannot be specified alone. This option specifies the root directory
   for artifacts for proper relocation. The default value is the main
   project directory. This may not be suitable for relocation if for
   example some artifact directories are in parent directory of the
   main project. The specified directory must be a parent of all
-  artifact directories.
+  artifact directories. Let's take the example used for
+  `--relocate-build-tree`, but slightly modified:
+
+  ::
+
+      .
+      ├── ops_lib
+      │   ├── ops_lib.gpr
+      │   └── src
+      │       ├── ops.adb
+      │       └── ops.ads
+      └── prj
+          └── subdir
+              ├── prj.gpr
+              └── src
+                  └── main.adb
+
+
+  `prj.gpr` has a dependency towards `ops_lib.gpr`:
+
+  ::
+
+      -- prj.gpr
+      with "../../ops_lib/ops_lib";
+
+      project Prj is
+        for Source_Dirs use ("src");
+        for Object_Dir use "obj";
+
+        for Main use ("main.adb");
+      end Prj;
+
+  If we want to build prj.gpr in a separate directory with
+  `--relocate-build-tree`, we will obtain the following error:
+
+  ::
+
+      $ mkdir build ; gprbuild -P ./prj/subdir/prj.gpr --relocate-build-tree=./build
+      ops_lib.gpr:1:17: "obj" cannot relocate deeper than object directory
+      gprbuild: "../prj/subdir/prj.gpr" processing failed
+
+  It is because `ops_lib` directory would be outside the build directory:
+  `build/../../ops_lib/`, which is not acceptable.
+
+  Thus, we need to tell gprbuild that the root directory for the build
+  is "`./`" in the tree above. With so, the new build directory can contain
+  `ops_lib` and `prj` while conserving the project hierarchy:
+
+  ::
+
+      $ mkdir build ; gprbuild -P ./prj/subdir/prj.gpr --relocate-build-tree=./build --root-dir=.
+
+  which produces:
+
+  ::
+
+      .
+      ├── ops_lib
+      │   ├── ops_lib.gpr
+      │   └── src
+      │       ├── ops.adb
+      │       └── ops.ads
+      ├── prj
+      │   └── subdir
+      │       ├── prj.gpr
+      │       └── src
+      │           └── main.adb
+      └── build
+          ├── ops_lib
+          │   ├── lib
+          │   │   ├── libopslib.so
+          │   │   └── ops.ali
+          │   └── obj
+          │       └── [compilation artifacts (.ali, .o, .stderr, .stdout, .lexch)]
+          └── prj
+              └── subdir
+                  └── obj
+                      └── [compilation artifacts (.ali, .o, .stderr, .stdout, .lexch)]
+
+
 
 * :samp:`--unchecked-shared-lib-imports`
 

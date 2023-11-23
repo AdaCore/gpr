@@ -20,6 +20,7 @@ with GPR2.KB;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
+with GPR2.Project.Registry.Exchange;
 with GPR2.Project.Tree;
 
 package GPR2.Options is
@@ -64,6 +65,10 @@ package GPR2.Options is
 
       P,
       --  -Pproj<.gpr> or -P proj<.gpr> Use Project File <proj>
+
+      Print_GPR_Registry,
+      --  --print-gpr-registry
+      --      Print to console package/attribute added by tool in JSON & exit
 
       Relocate_Build_Tree,
       --  --relocate-build-tree[=dir]
@@ -142,7 +147,8 @@ package GPR2.Options is
                            GPR2.Project.Tree.Warning;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
-      Quiet            : Boolean := False) return Boolean
+      Quiet            : Boolean := False;
+      With_Runtime     : Boolean := False) return Boolean
      with Pre => Self.Is_Finalized;
    --  Load a project tree using configured options.
    --  If successful, Tree contains loaded project tree.
@@ -152,6 +158,7 @@ package GPR2.Options is
    --  Absent_Dir_Error: whether a missing directory should be treated as an
    --   error or a warning.
    --  If Quiet is true no output is printed.
+   --  With_Runtime loads the Ada runtime sources if set.
 
    -----------------------------------------------------
    --  Object's getters. (Requires finalized options) --
@@ -241,9 +248,19 @@ package GPR2.Options is
      with Pre => Self.Is_Finalized;
    --  Returns True if project defined directly, not using implicit project.
 
+   procedure Print_GPR_Registry
+     (Self : Object;
+      Format : GPR2.Project.Registry.Exchange.Export_Format :=
+                  GPR2.Project.Registry.Exchange.K_JSON_COMPACT);
+   --  If '--print-gpr-registry' switch in command line print
+   --  package/attributes added by current tool and exit.
+
    function Check_For_Default_Project
      (Directory : String := "") return GPR2.Path_Name.Object;
    --  returns default gpr file or else the only gpr file found in directory.
+
+   Print_GPR_Registry_Option : constant String := "--print-gpr-registry";
+   --  Option to be used to print registered package/attribute & exit
 
 private
 
@@ -286,6 +303,10 @@ private
       RTS_Map                  : GPR2.Containers.Lang_Value_Map;
       Skip_Default_KB          : aliased Boolean := False;
       KB_Locations             : GPR2.Path_Name.Set.Object;
+
+      --  Misc
+
+      Print_GPR_Registry       : Boolean := False;
 
       Search_Paths             : GPR2.Path_Name.Set.Object;
 

@@ -43,7 +43,7 @@ procedure Main is
             (if Kind = S_Spec then "spec: "
                elsif Kind = S_Body then "body: "
                else "sep. " & String (Sep_Name) & ": ")
-            & String (Path.Relative_Path (Root).Name)
+            & String (Path.Relative_Path (Root))
             & (if Index = No_Index then "" else " @" & Index'Image)
             & " (from view " & String (View.Name) & ")");
       end Print_Unit_Part;
@@ -62,7 +62,7 @@ procedure Main is
                 when S_No_Body  => "no_body");
       begin
          Ada.Text_IO.Put ("   - " &
-                            String (S.Path_Name.Relative_Path (Root).Name));
+                            String (S.Path_Name.Relative_Path (Root)));
 
          if not S.Has_Units or else not S.Has_Index then
             Ada.Text_IO.Put_Line (" (" & Image (S.Kind) & ")");
@@ -234,7 +234,7 @@ procedure Main is
                Ada.Text_IO.Put_Line (" - compilation inputs:");
                for Input of V.Compilation_Inputs loop
                   Ada.Text_IO.Put
-                    ("   - " & String (Input.Source.Path_Name.Relative_Path (Root).Name));
+                    ("   - " & String (Input.Source.Path_Name.Relative_Path (Root)));
                   if Input.Index /= No_Index then
                      Ada.Text_IO.Put (" @" & Input.Index'Image);
                   end if;
@@ -281,7 +281,7 @@ procedure Main is
 
                   if Src.Source.Is_Defined then
                      Ada.Text_IO.Put_Line ("   found in " & String (Src.Owning_View.Name));
-                     Ada.Text_IO.Put_Line ("   " & String (Src.Source.Path_Name.Relative_Path (NS.Dir_Name).Name));
+                     Ada.Text_IO.Put_Line ("   " & String (Src.Source.Path_Name.Relative_Path (NS.Dir_Name)));
                   else
                      Ada.Text_IO.Put_Line ("   not found");
                   end if;

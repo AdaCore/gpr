@@ -1,0 +1,5 @@
+project String_Typed is
+
+   Var := external ("INVALID_TYPE", "VAR", "DEFAULT_VALUE");
+
+end String_Typed;

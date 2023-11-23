@@ -29,6 +29,7 @@ with GPRtools.Command_Line;
 with GPRtools.Util;
 with GPRtools.Options;
 
+with GPRinspect.External_Tools_Support;
 with GPRinspect.Process;
 
 procedure GPRinspect.Main is
@@ -172,6 +173,7 @@ begin
    --  Run the GPRinspect main procedure depending on command line options
 
    Parse_Command_Line;
+   GPRinspect.External_Tools_Support.Import_External_Tools_Registry;
    GPRinspect.Process (Options => Options);
 
 exception

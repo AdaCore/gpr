@@ -101,6 +101,9 @@ package body GPRinstall.Options is
       elsif Arg = "--no-project" then
          Result.No_GPR_Install := True;
 
+      elsif Arg = "--minimal-project" then
+         Result.Minimal_Project := True;
+
       elsif Arg = "--prefix" then
          if Param /= "" then
             Set_Param (Result.Global_Prefix_Dir, Param);
@@ -280,6 +283,11 @@ package body GPRinstall.Options is
          Create
            (Name => "--no-project",
             Help => "Do not install project file"));
+      Parser.Add_Argument
+        (Install_Group,
+         Create
+           (Name => "--minimal-project",
+            Help => "Record the strict minimal date in project file"));
       Parser.Add_Argument
         (Install_Group,
          Create

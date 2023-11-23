@@ -39,7 +39,7 @@ package body Test is
             (if Kind = S_Spec then "spec: "
                elsif Kind = S_Body then "body: "
                else "sep. " & String (Sep_Name) & ": ")
-            & String (Path.Relative_Path (Root).Name)
+            & String (Path.Relative_Path (Root))
             & (if Index = No_Index then "" else " @" & Index'Image)
             & " (from view " & String (View.Name) & ")");
       end Print_Unit_Part;
@@ -59,7 +59,7 @@ package body Test is
                 when S_No_Body  => "no_body");
       begin
          Ada.Text_IO.Put ("   - " &
-                            String (S.Path_Name.Relative_Path (Root).Name));
+                            String (S.Path_Name.Relative_Path (Root)));
 
          if not S.Has_Units or else not S.Has_Index then
             Ada.Text_IO.Put_Line (" (" & Image (S.Kind) & ")");

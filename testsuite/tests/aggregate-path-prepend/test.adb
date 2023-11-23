@@ -24,13 +24,9 @@ procedure Test is
             if View /= Tree.Runtime_Project then
                Put (" - " & String (View.Name));
                Put (" @ ");
-               declare
-                  Rel_Path : GPR2.Path_Name.Object;
-               begin
-                  Rel_Path :=
-                    View.Dir_Name.Relative_Path (Tree.Root_Project.Dir_Name);
-                  Put_Line (String (Rel_Path.Name));
-               end;
+               Put_Line
+                 (String
+                   (View.Dir_Name.Relative_Path (Tree.Root_Project.Dir_Name)));
             end if;
          end loop;
       end if;

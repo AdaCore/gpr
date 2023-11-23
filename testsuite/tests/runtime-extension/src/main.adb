@@ -20,7 +20,7 @@ procedure Main is
       P : Path_Name.Object := Path_Name.Create_Directory (Filename_Type (Value));
    begin
       Ada.Text_IO.Put_Line
-        (String (P.Relative_Path (Tree.Root_Project.Dir_Name).Name));
+        (String (P.Relative_Path (Tree.Root_Project.Dir_Name)));
    end Display_Path;
 
 begin

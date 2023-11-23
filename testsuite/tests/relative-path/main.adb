@@ -59,16 +59,16 @@ procedure Main is
    end Assert;
 
 begin
-   Text_IO.Put_Line ("1: " & String (Path_Name.Relative_Path (P1, P2).Name));
-   Text_IO.Put_Line ("2: " & String (Path_Name.Relative_Path (P3, P2).Name));
-   Text_IO.Put_Line ("3: " & String (Path_Name.Relative_Path (P2, P1).Name));
-   Text_IO.Put_Line ("4: " & String (Path_Name.Relative_Path (P3, P4).Name));
-   Text_IO.Put_Line ("5: " & String (Path_Name.Relative_Path (P4, P3).Name));
-   Text_IO.Put_Line ("6: " & String (Path_Name.Relative_Path (P1, P1).Name));
-   Text_IO.Put_Line ("7: " & String (Path_Name.Relative_Path (P4, P4).Name));
-   Text_IO.Put_Line ("8: " & String (C2.Relative_Path (C1).Name));
-   Text_IO.Put_Line ("9: " & String (C1.Relative_Path (C2).Name));
-   Text_IO.Put_Line ("A: " & String (Path_Name.Relative_Path (P6, P5).Name));
+   Text_IO.Put_Line ("1: " & String (Path_Name.Relative_Path (P1, P2)));
+   Text_IO.Put_Line ("2: " & String (Path_Name.Relative_Path (P3, P2)));
+   Text_IO.Put_Line ("3: " & String (Path_Name.Relative_Path (P2, P1)));
+   Text_IO.Put_Line ("4: " & String (Path_Name.Relative_Path (P3, P4)));
+   Text_IO.Put_Line ("5: " & String (Path_Name.Relative_Path (P4, P3)));
+   Text_IO.Put_Line ("6: " & String (Path_Name.Relative_Path (P1, P1)));
+   Text_IO.Put_Line ("7: " & String (Path_Name.Relative_Path (P4, P4)));
+   Text_IO.Put_Line ("8: " & String (C2.Relative_Path (C1)));
+   Text_IO.Put_Line ("9: " & String (C1.Relative_Path (C2)));
+   Text_IO.Put_Line ("A: " & String (Path_Name.Relative_Path (P6, P5)));
 
    --  on windows current drive is added to absolute GPR2.Path_Name.
    --  use Ada.Directories.Full_Name to get normalized path.
@@ -89,10 +89,10 @@ begin
    Text_IO.Put_Line ("F: " & String (PV.Name));
    PV := PV.Change_Extension ("ef");
    Text_IO.Put_Line ("G: " & String (PV.Name));
-   Text_IO.Put_Line ("H: " & String (Path_Name.Relative_Path (FH, TH).Name));
+   Text_IO.Put_Line ("H: " & String (Path_Name.Relative_Path (FH, TH)));
 
    if On_Windows then
-      Assert (String (W1.Relative_Path (W2).Name), "./");
-      Assert (String (W1.Relative_Path (W3).Name), W1.String_Value);
+      Assert (String (W1.Relative_Path (W2)), "./");
+      Assert (String (W1.Relative_Path (W3)), W1.String_Value);
    end if;
 end Main;

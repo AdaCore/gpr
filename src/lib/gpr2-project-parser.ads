@@ -5,6 +5,8 @@
 --
 
 with Ada.Strings.Unbounded;
+with Ada.Containers.Vectors;
+with Ada.Containers.Indefinite_Ordered_Maps;
 
 with GPR2.Containers;
 with GPR2.Context;
@@ -14,6 +16,7 @@ with GPR2.Path_Name.Set;
 with GPR2.Project.Import.Set;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.View;
+with GPR2.Source_Reference;
 
 limited with GPR2.Project.Tree;
 
@@ -123,7 +126,25 @@ package GPR2.Project.Parser is
      with Pre => Self.Is_Defined;
    --  Returns True if the project has some external variable reference
 
-   function Externals (Self : Object) return Containers.Name_Set
+   type External is record
+     Type_Node  : Identifier_List;
+     Source_Ref : GPR2.Source_Reference.Object;
+   end record;
+
+   package External_List_Package is
+     new Ada.Containers.Vectors (Positive, External);
+
+   subtype External_List is External_List_Package.Vector;
+
+   package Externals_Map_Package is
+     new Ada.Containers.Indefinite_Ordered_Maps
+       (Key_Type     => Optional_Name_Type,
+        Element_Type => External_List,
+        "="          => External_List_Package."=");
+
+   subtype Externals_Map is Externals_Map_Package.Map;
+
+   function Externals (Self : Object) return Externals_Map
      with Pre  => Self.Is_Defined,
           Post => (if Self.Has_Externals
                    then not Externals'Result.Is_Empty
@@ -156,7 +177,7 @@ private
       File      : GPR2.Path_Name.Object;
       Qualifier : Project_Kind := K_Standard;
       Expl_Qual : Boolean      := False; -- Explicit qualifier
-      Externals : Containers.Name_Set;
+      Externals : Externals_Map;
       Imports   : GPR2.Project.Import.Set.Object;
       Extended  : GPR2.Project.Import.Object;
       Is_All    : Boolean := False;
