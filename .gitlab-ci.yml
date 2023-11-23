@@ -48,6 +48,16 @@ build:
     - mkdir -p $CI_PROJECT_DIR/cache
     - rsync -a $SANDBOX/$HOST/*gpr* $CI_PROJECT_DIR/cache/
 
+debug_build:
+  extends: .job_template
+  stage: build
+  variables:
+    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
+  script:
+
+    # build gpr2 in debug mode without rebuilding dependencies
+    - anod build gpr2 -Qdbg
+
 ###############################
 # CHECK WE CAN BOOTSTRAP GNAT #
 ###############################
