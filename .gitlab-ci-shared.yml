@@ -223,5 +223,7 @@ issue-check:
     GIT_STRATEGY: none
   rules: # Launch only on merge requests
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  before_script:
+    - echo "skipping before_script for the issue-check job"
   script:
     - require_issue # launch the verification
