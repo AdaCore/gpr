@@ -177,7 +177,7 @@ default:
     # Enable generic CI for building with Anod
 
     cmd="generic_anod_ci"
-    if [ x$CI_MERGE_REQUEST_IID = x ]; then
+    if [[ "x"$JOB_SUBPROJECTS != "x" ]]; then
       # look for a list of subprojects to use systematically in CBs
       cmd="$cmd --continuous-builder-mode"
       for pkg in $JOB_SUBPROJECTS; do
