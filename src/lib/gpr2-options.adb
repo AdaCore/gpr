@@ -100,6 +100,9 @@ package body GPR2.Options is
                end if;
             end if;
 
+         when Print_GPR_Registry =>
+            Self.Print_GPR_Registry := True;
+
          when Relocate_Build_Tree =>
             Self.Build_Path :=
               GPR2.Path_Name.Create_Directory (GPR2.Filename_Type (Param));
@@ -266,30 +269,6 @@ package body GPR2.Options is
            "cannot use --root-dir without --relocate-build-tree option";
       end if;
 
-      declare
-         Project_Dir : constant GPR2.Path_Name.Object :=
-                         (if Self.Project_Base.Is_Defined
-                          then Self.Project_Base
-                          elsif Self.Project_File.Is_Defined
-                            and then Self.Project_File.Has_Dir_Name
-                          then GPR2.Path_Name.Create_Directory
-                            (Filename_Type (Self.Project_File.Dir_Name))
-                          else
-                             GPR2.Path_Name.Undefined);
-
-      begin
-         if Project_Dir.Is_Defined then
-            if not Self.Build_Path.Is_Defined then
-               Self.Build_Path := Project_Dir;
-
-            elsif Self.Root_Path.Is_Defined then
-               Self.Build_Path := GPR2.Path_Name.Create_Directory
-                 (Project_Dir.Relative_Path (Self.Root_Path).Name,
-                  Self.Build_Path.Value);
-            end if;
-         end if;
-      end;
-
       Self.Finalized := True;
    end Finalize;
 
@@ -304,7 +283,8 @@ package body GPR2.Options is
                            GPR2.Project.Tree.Warning;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
-      Quiet            : Boolean := False) return Boolean is
+      Quiet            : Boolean := False;
+      With_Runtime     : Boolean := False) return Boolean is
 
       Conf        : GPR2.Project.Configuration.Object;
       Create_Cgpr : Boolean := False;
@@ -336,8 +316,10 @@ package body GPR2.Options is
          Tree.Load
            (Filename         => Self.Filename,
             Context          => Self.Context,
+            With_Runtime     => With_Runtime,
             Config           => Conf,
             Build_Path       => Self.Build_Path,
+            Root_Path        => Self.Root_Path,
             Subdirs          => Subdirs (Self),
             Src_Subdirs      => Src_Subdirs (Self),
             Check_Shared_Lib => Self.Check_Shared_Lib,
@@ -408,7 +390,9 @@ package body GPR2.Options is
          Tree.Load_Autoconf
            (Filename          => Self.Filename,
             Context           => Self.Context,
+            With_Runtime      => With_Runtime,
             Build_Path        => Self.Build_Path,
+            Root_Path         => Self.Root_Path,
             Subdirs           => Subdirs (Self),
             Src_Subdirs       => Src_Subdirs (Self),
             Check_Shared_Lib  => Self.Check_Shared_Lib,
@@ -464,6 +448,21 @@ package body GPR2.Options is
          return False;
       end if;
    end On_Extra_Arg;
+
+   ------------------------
+   -- Print_GPR_Registry --
+   ------------------------
+
+   procedure Print_GPR_Registry
+     (Self : Object;
+      Format   : GPR2.Project.Registry.Exchange.Export_Format :=
+                    GPR2.Project.Registry.Exchange.K_JSON_COMPACT) is
+   begin
+      if Self.Print_GPR_Registry then
+         GPR2.Project.Registry.Exchange.Export (Format => Format);
+         GNAT.OS_Lib.OS_Exit (0);
+      end if;
+   end Print_GPR_Registry;
 
    -----------------------------------
    -- Register_Project_Search_Paths --

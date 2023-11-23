@@ -868,6 +868,7 @@ package body GPR2.Project.Tree is
       With_Runtime     : Boolean;
       Config           : PC.Object                 := PC.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
+      Root_Path        : Path_Name.Object          := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;
       Check_Shared_Lib : Boolean                   := True;
@@ -916,7 +917,16 @@ package body GPR2.Project.Tree is
          end if;
 
          if Config.Has_Externals then
-            Update_Context (Root_Context, Config.Externals, Environment);
+            declare
+               External_Names : Containers.Name_Set;
+            begin
+               for C in Config.Externals.Iterate loop
+                  External_Names.Include
+                    (GPR2.Project.Parser.Externals_Map_Package.Key (C));
+               end loop;
+
+               Update_Context (Root_Context, External_Names, Environment);
+            end;
          end if;
 
          Definition.Bind_Configuration_To_Tree (Self.Conf, Self.Self);
@@ -960,6 +970,7 @@ package body GPR2.Project.Tree is
       end if;
 
       Self.Build_Path       := Build_Path;
+      Self.Root_Path        := Root_Path;
       Self.Subdirs          := To_Unbounded_String (String (Subdirs));
       Self.Src_Subdirs      := To_Unbounded_String (String (Src_Subdirs));
       Self.Check_Shared_Lib := Check_Shared_Lib;
@@ -979,10 +990,6 @@ package body GPR2.Project.Tree is
 
          Gpr_Path := Create
            (Root_Project.Path.Name, Self.Search_Paths.All_Paths);
-
-         if not Build_Path.Is_Defined then
-            Self.Build_Path := Path_Name.Create_Directory (Gpr_Path.Dir_Name);
-         end if;
       end if;
 
       --  Add full project path in the message log
@@ -1027,8 +1034,9 @@ package body GPR2.Project.Tree is
          Def := Definition.Get (Self.Root);
 
          if Config.Is_Defined and then Config.Has_Externals then
-            for E of Config.Externals loop
-               Def.Externals.Include (E);
+            for Curs in Config.Externals.Iterate loop
+               Def.Externals.Include
+                 (GPR2.Project.Parser.Externals_Map_Package.Key (Curs));
             end loop;
          end if;
 
@@ -1053,8 +1061,18 @@ package body GPR2.Project.Tree is
          if Config.Is_Defined and then Config.Has_Externals
            and then Self.Root.Kind in Aggregate_Kind
          then
-            Update_Context
-              (Self.Context (Aggregate), Config.Externals, Environment);
+            declare
+               External_Names : Containers.Name_Set;
+
+            begin
+               for C in Config.Externals.Iterate loop
+                  External_Names.Include
+                    (GPR2.Project.Parser.Externals_Map_Package.Key (C));
+               end loop;
+
+               Update_Context
+                  (Self.Context (Aggregate), External_Names, Environment);
+            end;
          end if;
 
          Set_Context (Self, Context);
@@ -1101,6 +1119,7 @@ package body GPR2.Project.Tree is
       With_Runtime     : Boolean                   := False;
       Config           : PC.Object                 := PC.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
+      Root_Path        : Path_Name.Object          := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;
       Check_Shared_Lib : Boolean                   := True;
@@ -1126,6 +1145,7 @@ package body GPR2.Project.Tree is
             With_Runtime     => With_Runtime,
             Config           => Config,
             Build_Path       => Build_Path,
+            Root_Path        => Root_Path,
             Subdirs          => Subdirs,
             Src_Subdirs      => Src_Subdirs,
             Check_Shared_Lib => Check_Shared_Lib,
@@ -1146,6 +1166,7 @@ package body GPR2.Project.Tree is
             Context          => Context,
             Config           => Config,
             Build_Path       => Build_Path,
+            Root_Path        => Root_Path,
             Subdirs          => Subdirs,
             Src_Subdirs      => Src_Subdirs,
             Check_Shared_Lib => Check_Shared_Lib,
@@ -1167,6 +1188,7 @@ package body GPR2.Project.Tree is
       Context           : GPR2.Context.Object;
       With_Runtime      : Boolean;
       Build_Path        : Path_Name.Object          := Path_Name.Undefined;
+      Root_Path         : Path_Name.Object          := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type        := No_Name;
       Src_Subdirs       : Optional_Name_Type        := No_Name;
       Check_Shared_Lib  : Boolean                   := True;
@@ -1191,6 +1213,7 @@ package body GPR2.Project.Tree is
       Context           : GPR2.Context.Object;
       With_Runtime      : Boolean                 := False;
       Build_Path        : Path_Name.Object        := Path_Name.Undefined;
+      Root_Path         : Path_Name.Object          := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type      := No_Name;
       Src_Subdirs       : Optional_Name_Type      := No_Name;
       Check_Shared_Lib  : Boolean                 := True;
@@ -1217,6 +1240,7 @@ package body GPR2.Project.Tree is
             Context           => Context,
             With_Runtime      => With_Runtime,
             Build_Path        => Build_Path,
+            Root_Path         => Root_Path,
             Subdirs           => Subdirs,
             Src_Subdirs       => Src_Subdirs,
             Check_Shared_Lib  => Check_Shared_Lib,
@@ -1235,6 +1259,7 @@ package body GPR2.Project.Tree is
             With_Runtime      => With_Runtime,
             Context           => Context,
             Build_Path        => Build_Path,
+            Root_Path         => Root_Path,
             Subdirs           => Subdirs,
             Src_Subdirs       => Src_Subdirs,
             Check_Shared_Lib  => Check_Shared_Lib,
@@ -1885,7 +1910,18 @@ package body GPR2.Project.Tree is
 
          if not Self.Messages.Has_Error then
             Data.Kind := Project.Qualifier;
-            Data.Externals := Data.Trees.Project.Externals;
+
+            declare
+               External_Names : Containers.Name_Set;
+
+            begin
+               for C in Project.Externals.Iterate loop
+                  External_Names.Include
+                    (GPR2.Project.Parser.Externals_Map_Package.Key (C));
+               end loop;
+
+               Data.Externals := External_Names;
+            end;
 
             --  Now load all imported projects if any
 
@@ -2363,6 +2399,7 @@ package body GPR2.Project.Tree is
             ---------------
 
             procedure Get_Files is
+               use GNAT.OS_Lib;
 
                package PN renames GPR2.Path_Name;
 
@@ -2381,9 +2418,16 @@ package body GPR2.Project.Tree is
                                     (Filename_Optional (Projects.Text)));
                --  The absolute path pattern to get matching files
 
+               Rel           : constant Filename_Optional :=
+                                  Filename_Optional
+                                    (Pattern.Containing_Directory.Relative_Path
+                                       (View_Dir));
                Dir_Part      : constant Filename_Optional :=
-                                 Pattern.Containing_Directory.Relative_Path
-                                   (View_Dir).Value;
+                                 (if Rel'Length > 0
+                                       and then Rel (Rel'Last) =
+                                         Directory_Separator
+                                  then Rel (Rel'First .. Rel'Last - 1)
+                                  else Rel);
                --  The dir part without the trailing directory separator
 
                Filename_Part : constant Filename_Optional :=
@@ -2964,23 +3008,41 @@ package body GPR2.Project.Tree is
                               Sloc => AV));
 
                      elsif Self.Build_Path.Is_Defined
+                       and then not View.Is_Externally_Built
                        and then OS_Lib.Is_Absolute_Path (AV.Text)
-                       and then Self.Root.Is_Defined
                        and then Self.Build_Path /= Self.Root.Dir_Name
                        and then not View.Is_Externally_Built
                      then
                         Self.Messages.Append
                           (Message.Create
                              (Message.Warning,
-                              '"'
-                              & String
-                                 (PN.Relative_Path (Self.Root.Path_Name).Name)
+                                  '"'
+                              & PN.String_Value
                               & """ cannot relocate absolute "
                               & (if Human_Name = ""
                                 then ""
                                 else Human_Name & ' ')
                               & "directory",
                               Sloc => AV));
+
+                     elsif Self.Build_Path.Is_Defined
+                       and then not View.Is_Externally_Built
+                       and then Self.Build_Path /= Self.Root.Dir_Name
+                       and then not Self.Build_Path.Contains (PN)
+                     then
+                        Self.Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              '"'
+                              & String (Self.Build_Path.Dir_Name)
+                              & String (PN.Relative_Path (Self.Build_Path))
+                              & """ cannot relocate "
+                              & (if Human_Name = ""
+                                 then ""
+                                 else Human_Name & ' ')
+                              & "directory deeper than relocated build tree,",
+                              Sloc => AV));
+
                      end if;
                   end;
 

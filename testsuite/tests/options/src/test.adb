@@ -367,7 +367,11 @@ procedure test is
             Put_Line ("Config_Project" & Allow_Implicit_Project & ": is not defined");
          end if;
 
-         Put_Line ("Build_Path" & Allow_Implicit_Project & ":" & Options.Build_Path.String_Value);
+         if Options.Build_Path.Is_Defined then
+            Put_Line ("Build_Path" & Allow_Implicit_Project & ":" & Options.Build_Path.String_Value);
+         else
+            Put_Line ("Build_Path" & Allow_Implicit_Project & " is not defined");
+         end if;
 
          declare
             Subdirs     : constant GPR2.Optional_Name_Type := Options.Subdirs;

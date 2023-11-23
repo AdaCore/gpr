@@ -162,8 +162,7 @@ package body GPR2.Project.Definition is
                                   (Filename_Type (Dir_Val),
                                    View_Path.Name);
                Relative_Dir : constant Filename_Type :=
-                                Dir_Name.Relative_Path
-                                  (From => View_Path).Name;
+                                Dir_Name.Relative_Path (From => View_Path);
             begin
                return View_Path.Compose (Relative_Dir, True).Exists;
             end;
@@ -667,19 +666,19 @@ package body GPR2.Project.Definition is
                          then "./**"
                          else Directory_Pattern));
       --  Normalize dir part avoiding "" & "**"
-      Recursive  : constant Boolean :=
-                     Dir'Length > 2
-                     and then Dir (Dir'Last - 1 .. Dir'Last) = "**"
-                     and then Is_Directory_Separator (Dir (Dir'Last - 2));
-      Last       : constant Positive :=
-                     Dir'Last - (if Recursive then 2 else 0);
-      Root_Dir   : constant Filename_Optional :=
-                     (if GNAT.OS_Lib.Is_Absolute_Path (String (Dir))
-                      then Dir (Dir'First .. Last)
-                      else Base_Dir.Compose
-                        (Filename_Optional (Dir (Dir'First .. Last))).Value);
-      D_Entry    : Dir_Entry;
-      Stat       : File_Attributes;
+      Recursive : constant Boolean :=
+                    Dir'Length > 2
+                    and then Dir (Dir'Last - 1 .. Dir'Last) = "**"
+                    and then Is_Directory_Separator (Dir (Dir'Last - 2));
+      Last      : constant Positive :=
+                    Dir'Last - (if Recursive then 2 else 0);
+      Root_Dir  : constant String :=
+                    (if GNAT.OS_Lib.Is_Absolute_Path (String (Dir))
+                     then String (Dir (Dir'First .. Last))
+                     else String (Base_Dir.Compose
+                       (Dir (Dir'First .. Last)).Name));
+      D_Entry   : Dir_Entry;
+      Stat      : File_Attributes;
 
       procedure Open_Directory
         (Dir         : Path_Name.Object;
@@ -734,7 +733,7 @@ package body GPR2.Project.Definition is
          end if;
 
          begin
-            States (Current).Handle := Open (String (Dir.Value));
+            States (Current).Handle := Open (Dir.String_Value);
          exception
             when GNATCOLL.OS.OS_Error =>
                Current := Current - 1;
@@ -742,7 +741,7 @@ package body GPR2.Project.Definition is
                Messages.Append
                  (Message.Create
                     (Message.Error,
-                     """" & String (Dir.Name) &
+                     """" & Dir.String_Value &
                        """ is not a valid directory",
                      Source));
                return;

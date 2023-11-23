@@ -1,0 +1,4 @@
+description: Test registry.exchange package
+driver: build_and_run
+project_file: test
+main: import

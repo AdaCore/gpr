@@ -24,6 +24,8 @@ package body GPR2.Project.External is
    use Gpr_Parser_Support.Text;
    use Gpr_Parser_Support.Slocs;
 
+   package PP renames GPR2.Project.Parser;
+
    -----------------------
    -- Externals --
    -----------------------
@@ -34,16 +36,100 @@ package body GPR2.Project.External is
       return External_Arr
    is
 
+      procedure Assign_Type_To_External
+         (Ext              : GPR2.Project.External.Set.Set.Reference_Type;
+          Typ              : Identifier_List;
+          Assignment_Sloc  : GPR2.Source_Reference.Object;
+          Parser           : PP.Object);
+      --  Assign type to external. If assigned type may be conflicting with
+      --  current external types, then the external is tagged as conflicting.
+      --  All type assignments are tracked so their position in source code
+      --  can be printed in case of conflicts.
+
       procedure Parse_Simple_Typed_Externals
-        (Parser    : GPR2.Project.Parser.Object;
+        (Parser    : PP.Object;
          Externals : in out GPR2.Project.External.Set.Object);
       --  Parse typed externals, and update them in "Externals"
+
+      procedure Populate_Externals
+         (Exts             : in out GPR2.Project.External.Set.Object;
+         Parsed_Externals : PP.Externals_Map;
+         Parser           : PP.Object);
+      --  Populate externals with explicit typed externals and untyped
+      --  externals parsed during the semantic parsing stage of
+      --  GPR2.Project.Parser parser.
 
       procedure Log_Warn_For_Conflicting_Ext (Ext : Object)
         with Pre => Ext.Is_Conflicting;
       --  Add warning messages to the logs explaining that the specified
       --  typed external is conflicting, and lists all the types assigned to
       --  it.
+
+      -----------------------------
+      -- Assign_Type_To_External --
+      -----------------------------
+
+      procedure Assign_Type_To_External
+         (Ext              : GPR2.Project.External.Set.Set.Reference_Type;
+          Typ              : Identifier_List;
+          Assignment_Sloc  : GPR2.Source_Reference.Object;
+          Parser           : PP.Object)
+      is
+         Type_Def :
+            constant GPR2.Project.Typ.Object :=
+              Parser.Type_Definition_From (Tree, Typ);
+      begin
+
+         --  Type_Def can not be undefined at this stage.
+         --  Otherwise, the previous parsing stages would
+         --  have failed.
+
+         if Ext.Is_Typed then
+
+            --  If external is already tagged as typed, union of
+            --  all assigned types values are used as external
+            --  possible values. If values differ between types,
+            --  the external is tagged as conflicting.
+
+            for T of Type_Def.Values loop
+               declare
+                  T_Unbounded :
+                     constant Unbounded_String :=
+                     To_Unbounded_String
+                        (String (T.Text));
+               begin
+
+                  if not Ext.Possible_Values
+                        .Contains
+                        (T_Unbounded)
+                  then
+                     Ext.Conflicting := True;
+                  end if;
+
+                  Ext.Possible_Values.Include
+                     (T_Unbounded);
+               end;
+            end loop;
+
+         else
+            Ext.Typed := True;
+            for T of Type_Def.Values loop
+               Ext.Possible_Values.Include
+                  (To_Unbounded_String
+                     (String (T.Text)));
+            end loop;
+         end if;
+
+         --  Add the type assignement source location
+         --  to the external. It is useful if the external
+         --  is conflicting. In this case, a warning is raised,
+         --  with all these references, so the user can easily
+         --  know which type cause the ambiguity.
+
+         Ext.Types_Assignments.Append
+            ((Typ             => Type_Def,
+             Assignment_Sloc => Assignment_Sloc));
+      end Assign_Type_To_External;
 
       ----------------------------------
       -- Log_Warn_For_Conflicting_Ext --
@@ -84,7 +170,7 @@ package body GPR2.Project.External is
       ----------------------------------
 
       procedure Parse_Simple_Typed_Externals
-        (Parser    : GPR2.Project.Parser.Object;
+        (Parser    : PP.Object;
          Externals : in out GPR2.Project.External.Set.Object)
       is
 
@@ -202,14 +288,84 @@ package body GPR2.Project.External is
                  (BFC : Builtin_Function_Call; Type_Node : Identifier_List)
                is
 
+                  function External_Variable_Name
+                    (Node  : Builtin_Function_Call;
+                     Error : out Boolean) return Value_Type;
+                  --  Returns the external variable name. It can be the first,
+                  --  or the second field parameter, depending on
+                  --  if the type is present.
+
+                  ----------------------------
+                  -- External_Variable_Name --
+                  ----------------------------
+
+                  function External_Variable_Name
+                    (Node  : Builtin_Function_Call;
+                     Error : out Boolean) return Value_Type
+                  is
+
+                     Exprs : constant Term_List_List :=
+                               F_Terms (F_Parameters (Node));
+
+                     function External_Explicit_Type return Identifier_List;
+                     --  Returns the external type if present.
+                     --  The type is an optional first field parameter.
+
+                     ----------------------------
+                     -- External_Explicit_Type --
+                     ----------------------------
+
+                     function External_Explicit_Type return Identifier_List is
+                        Exprs : constant Term_List_List :=
+                                  F_Terms (F_Parameters (Node));
+                     begin
+                        pragma Assert (Exprs.Children_Count > 1);
+
+                        --  HACK: We do not parse the type as a type reference,
+                        --  but a variable reference. The parser can not
+                        --  distinguish between a type and a variable in
+                        --  in its current state, as both begin similarly.
+
+                        declare
+                           Typ : constant Term_List :=
+                                   Exprs.First_Child.As_Term_List;
+                        begin
+
+                           if Kind (Typ.First_Child) = Gpr_Variable_Reference
+                           then
+                              return As_Variable_Reference
+                                (Typ.First_Child).F_Variable_Name;
+                           else
+                              return No_Identifier_List;
+                           end if;
+                        end;
+                     end External_Explicit_Type;
+
+                     Var : Term_List;
+                     Var_Index : Natural;
+
+                  begin
+                     --  Type is optional, and is the first external parameter
+
+                     if External_Explicit_Type = No_Identifier_List then
+                        Var_Index := 1;
+                     else
+                        Var_Index := 2;
+                     end if;
+
+                     Var := Exprs.Child (Var_Index).As_Term_List;
+
+                     return Get_String_Literal (Var, Error);
+                  end External_Variable_Name;
+
                   Parameters         : constant Term_List_List   :=
                     F_Terms (F_Parameters (BFC));
                   Error              : Boolean;
                   Ext_Name           : constant Name_Type        :=
                     Name_Type
-                      (Get_String_Literal (Child (Parameters, 1), Error));
+                      (External_Variable_Name (BFC, Error));
                   Default_Value_Node : constant Term_List        :=
-                    Child (Parameters, 2).As_Term_List;
+                    Last_Child (Parameters).As_Term_List;
 
                begin
                   Status := Over;
@@ -374,47 +530,72 @@ package body GPR2.Project.External is
          end if;
       end Parse_Simple_Typed_Externals;
 
+      ------------------------
+      -- Populate_Externals --
+      ------------------------
+
+      procedure Populate_Externals
+        (Exts             : in out GPR2.Project.External.Set.Object;
+         Parsed_Externals : PP.Externals_Map;
+         Parser           : PP.Object) is
+      begin
+         for C in Parsed_Externals.Iterate loop
+            declare
+               Name : constant Name_Type := PP.Externals_Map_Package.Key (C);
+            begin
+
+               if not Exts.Contains (Name) then
+                  Exts.Include
+                    (Name,
+                      (Name              =>
+                        To_Unbounded_String (String (Name)),
+                       Typed             => False,
+                       Conflicting       => False,
+                       Possible_Values   => <>,
+                       Types_Assignments => <>));
+               end if;
+
+               for Parsed_Ext of Parsed_Externals (C) loop
+
+                  --  Assign type for explicitly typed externals
+
+                  if Parsed_Ext.Type_Node /= No_Identifier_List then
+                     Assign_Type_To_External
+                       (Exts.Reference (Name),
+                        Parsed_Ext.Type_Node,
+                        Parsed_Ext.Source_Ref, Parser);
+                  end if;
+               end loop;
+            end;
+
+         end loop;
+      end Populate_Externals;
+
       Def : constant Definition.Ref := Definition.Get (Tree.Root_Project);
-
-      Externals_Names : Containers.Name_Set;
-      --  Externals names parsed during the first stage parsing (Parse_Stage_1)
-
       Externals : GPR2.Project.External.Set.Object;
 
    begin
 
       if Root_Only then
-         Externals_Names := Def.Trees.Project.Externals;
-      else
-
-         --  Def.Externals contains external names of the root project
-         --  and of all imported projets.
-
-         Externals_Names := Def.Externals;
-      end if;
-
-      for Name of Externals_Names loop
-         Externals.Include
-           (Name,
-            (Name              => To_Unbounded_String (String (Name)),
-             Typed             => False,
-             Conflicting       => False,
-             Possible_Values   => <>,
-             Types_Assignments => <>));
-      end loop;
-
-      if Root_Only then
+         Populate_Externals
+           (Externals,
+            Def.Trees.Project.Externals,
+            Def.Trees.Project);
          Parse_Simple_Typed_Externals (Def.Trees.Project, Externals);
+
       else
          for V of Tree.Ordered_Views loop
-            Parse_Simple_Typed_Externals
-              (Definition.Get_RO (V).Trees.Project, Externals);
+            declare
+               Parser : constant PP.Object :=
+                 Definition.Get_RO (V).Trees.Project;
+               Parsed_Exts : constant PP.Externals_Map := Parser.Externals;
+
+            begin
+               Populate_Externals (Externals, Parsed_Exts, Parser);
+               Parse_Simple_Typed_Externals (Parser, Externals);
+            end;
          end loop;
       end if;
-
-      --  All typed externals have been parsed.
-      --  Untyped externals are then externals whose names are only in
-      --  Externals_Names.
 
       declare
          Exts  : External_Arr (1 .. Integer (Externals.Length));

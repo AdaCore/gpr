@@ -359,7 +359,7 @@ package body GPRinstall.Install is
                     (Man,
                      MD5 & ' '
                      & String
-                       (Pathname.Relative_Path (From => Man_Path).Name));
+                       (Pathname.Relative_Path (From => Man_Path)));
                end;
             end if;
 
@@ -374,7 +374,7 @@ package body GPRinstall.Install is
                     (Agg_Manifest,
                      MD5 & ' '
                      & String
-                         (Pathname.Relative_Path (From => Agg_Man_Path).Name));
+                         (Pathname.Relative_Path (From => Agg_Man_Path)));
                end;
             end if;
          end;
@@ -1665,7 +1665,7 @@ package body GPRinstall.Install is
             if Has_Sources (Project) then
                Line := Line
                  & String (Sources_Dir (Build_Name => False).Relative_Path
-                           (From => Project_Dir).Name);
+                           (From => Project_Dir));
 
                Gen_Dir_Name (Sources_Subdir, Line);
             end if;
@@ -1684,7 +1684,7 @@ package body GPRinstall.Install is
 
             Line := Line
               & String (Lib_Dir (Build_Name => False).Relative_Path
-                        (From => Project_Dir).Name);
+                        (From => Project_Dir));
 
             Gen_Dir_Name (Lib_Subdir, Line);
             Line := Line & """;";
@@ -1700,7 +1700,7 @@ package body GPRinstall.Install is
 
                   Line := Line
                     & String (ALI_Dir (Build_Name => False).Relative_Path
-                              (From => Project_Dir).Name);
+                              (From => Project_Dir));
 
                   Gen_Dir_Name (ALI_Subdir, Line);
                   Line := Line & """;";
@@ -2171,8 +2171,10 @@ package body GPRinstall.Install is
          -------------------
 
          procedure Write_Project is
-            F    : File_Access := Standard_Output;
-            File : aliased File_Type;
+            F          : File_Access := Standard_Output;
+            File       : aliased File_Type;
+            Prev_Empty : Boolean := False;
+            Is_Empty   : Boolean := False;
          begin
             if not Options.Dry_Run then
                if not Project_Dir.Exists then
@@ -2183,8 +2185,15 @@ package body GPRinstall.Install is
                F := File'Unchecked_Access;
             end if;
 
+            --  While writing content avoid writing duplicate blank lines
+
             for Line of Content loop
-               Put_Line (F.all, Line);
+               Is_Empty := Line'Length = 0;
+               if not Is_Empty or else not Prev_Empty then
+                  Put_Line (F.all, Line);
+               end if;
+
+               Prev_Empty := Is_Empty;
             end loop;
 
             if not Options.Dry_Run then
@@ -2403,11 +2412,11 @@ package body GPRinstall.Install is
                                    and then L (P .. P + 8) = "end case;"));
                         end End_When;
 
-                        I : constant String_Vector.Extended_Index :=
-                              String_Vector.To_Index (Pos);
-                        P : String_Vector.Extended_Index :=
-                              String_Vector.To_Index (Pos);
-                        N : Ada.Containers.Count_Type := 0;
+                        Prev : constant String_Vector.Extended_Index :=
+                                 String_Vector.To_Index (Pos) - 1;
+                        P    : String_Vector.Extended_Index :=
+                                 String_Vector.To_Index (Pos);
+                        N    : Ada.Containers.Count_Type := 0;
                      begin
                         --  The number of line to delete are from Pos to the
                         --  first line starting with a "when".
@@ -2421,21 +2430,38 @@ package body GPRinstall.Install is
 
                         Content.Delete (Pos, N);
 
-                        --  Then reset Pos to I (previous Pos index)
+                        --  Then reset Pos to Prev (line just before current
+                        --  Post as before the next iteration we are going to
+                        --  move to next line).
 
-                        Pos := Content.To_Cursor (I);
+                        Pos := Content.To_Cursor (Prev);
                      end Count_And_Delete;
+
+                  elsif Fixed.Index (Line, "   type ") /= 0
+                    and then Options.Minimal_Project
+                  then
+                     --  We need to remove the generated type
+                     declare
+                        Prev : constant String_Vector.Extended_Index :=
+                                 String_Vector.To_Index (Pos) - 1;
+                     begin
+                        Content.Delete (Pos);
+                        Pos := Content.To_Cursor (Prev);
+                     end;
 
                   else
                      Check_Vars : declare
+                        Prev   : constant String_Vector.Extended_Index :=
+                                   String_Vector.To_Index (Pos) - 1;
                         Assign : constant Natural :=
                                    Fixed.Index (Line, " := ");
                      begin
-                        --  Check if line is a variable definition, and if so
-                        --  update the value.
+                        --  Check if line is a variable definition, and if
+                        --  so update the value or remove the line if minimal
+                        --  project is requested.
 
                         if Assign > 0 then
-                           for V of Project.Variables loop
+                           Check_Var : for V of Project.Variables loop
                               declare
                                  Name : constant String :=
                                           String (V.Name.Text);
@@ -2443,11 +2469,18 @@ package body GPRinstall.Install is
                                  if Fixed.Index
                                    (Line, ' ' & Name & ' ') in 1 .. Assign - 1
                                  then
-                                    Content.Replace_Element
-                                      (Pos, "   " & V.Image);
+                                    if Options.Minimal_Project then
+                                       Content.Delete (Pos);
+                                       Pos := Content.To_Cursor (Prev);
+                                    else
+                                       Content.Replace_Element
+                                         (Pos, "   " & V.Image);
+                                    end if;
+
+                                    exit Check_Var;
                                  end if;
                               end;
-                           end loop;
+                           end loop Check_Var;
                         end if;
                      end Check_Vars;
                   end if;
@@ -2622,7 +2655,9 @@ package body GPRinstall.Install is
 
             Add_Empty_Line;
 
-            Create_Variables;
+            if not Options.Minimal_Project then
+               Create_Variables;
+            end if;
 
             --  Close project
 

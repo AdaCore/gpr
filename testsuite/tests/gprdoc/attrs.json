@@ -446,6 +446,10 @@
               "aggregate": false,
               "aggregate_library": false
             },
+            "type_def": [
+              "false",
+              "true"
+            ],
             "has_default_in": {
               "configuration": true,
               "abstract": true,
@@ -1006,6 +1010,12 @@
               "aggregate": false,
               "aggregate_library": true
             },
+            "type_def": [
+              "dynamic",
+              "relocatable",
+              "static",
+              "static-pic"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": true,
@@ -2886,7 +2896,15 @@
           },
           "attribute_descr": "Index is either a language name or a source file name. Value is the list of switches to be used when binding code. Index is either the source file name of the executable to be bound or the language name of the code to be bound."
         }
-      ]
+      ],
+      "projects_kind": {
+        "configuration": true,
+        "abstract": true,
+        "standard": true,
+        "library": true,
+        "aggregate": false,
+        "aggregate_library": false
+      }
     },
     {
       "package_name": "Builder",
@@ -3120,7 +3138,15 @@
           },
           "attribute_descr": "Value is the file name of a configuration pragmas file that is specified to the Ada compiler when compiling any Ada source in the project tree."
         }
-      ]
+      ],
+      "projects_kind": {
+        "configuration": true,
+        "abstract": true,
+        "standard": true,
+        "library": true,
+        "aggregate": true,
+        "aggregate_library": true
+      }
     },
     {
       "package_name": "Clean",
@@ -3286,7 +3312,15 @@
           },
           "attribute_descr": "Index is a language names. Value is the list of extensions for file names derived from object file names that need to be cleaned in the object directory of the project."
         }
-      ]
+      ],
+      "projects_kind": {
+        "configuration": true,
+        "abstract": true,
+        "standard": true,
+        "library": true,
+        "aggregate": true,
+        "aggregate_library": true
+      }
     },
     {
       "package_name": "Compiler",
@@ -4480,7 +4514,15 @@
           },
           "attribute_descr": "Index is a language name. Value is the list of the minimum switches to be used at the end of the command line when invoking the compiler for the language."
         }
-      ]
+      ],
+      "projects_kind": {
+        "configuration": true,
+        "abstract": true,
+        "standard": true,
+        "library": true,
+        "aggregate": false,
+        "aggregate_library": false
+      }
     },
     {
       "package_name": "Gnatls",
@@ -4518,7 +4560,15 @@
           },
           "attribute_descr": "Taken into account only in the main project. Value is a list of switches to be used when invoking gnatls."
         }
-      ]
+      ],
+      "projects_kind": {
+        "configuration": true,
+        "abstract": true,
+        "standard": true,
+        "library": true,
+        "aggregate": true,
+        "aggregate_library": true
+      }
     },
     {
       "package_name": "Install",
@@ -4940,7 +4990,15 @@
           },
           "attribute_descr": "Value is the sources directory or subdirectory of Prefix."
         }
-      ]
+      ],
+      "projects_kind": {
+        "configuration": true,
+        "abstract": true,
+        "standard": true,
+        "library": true,
+        "aggregate": false,
+        "aggregate_library": true
+      }
     },
     {
       "package_name": "Linker",
@@ -5362,7 +5420,15 @@
           },
           "attribute_descr": "Index is a source file name or a language name. Value is the list of switches to be used at the end of the command line when invoking the linker to build an executable for the source or for its language. These switches may override the Required_Switches."
         }
-      ]
+      ],
+      "projects_kind": {
+        "configuration": true,
+        "abstract": true,
+        "standard": true,
+        "library": true,
+        "aggregate": false,
+        "aggregate_library": false
+      }
     },
     {
       "package_name": "Naming",
@@ -5816,7 +5882,15 @@
           },
           "attribute_descr": "Equivalent to attribute Spec_Suffix."
         }
-      ]
+      ],
+      "projects_kind": {
+        "configuration": true,
+        "abstract": true,
+        "standard": true,
+        "library": true,
+        "aggregate": false,
+        "aggregate_library": false
+      }
     },
     {
       "package_name": "Remote",
@@ -5950,7 +6024,15 @@
           },
           "attribute_descr": "Value is the root directory used by the slave machines."
         }
-      ]
+      ],
+      "projects_kind": {
+        "configuration": true,
+        "abstract": true,
+        "standard": true,
+        "library": true,
+        "aggregate": true,
+        "aggregate_library": true
+      }
     }
   ]
 }

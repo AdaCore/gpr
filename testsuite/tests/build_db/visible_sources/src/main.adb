@@ -40,7 +40,7 @@ procedure Main is
                 when S_No_Body  => "no_body");
       begin
          Ada.Text_IO.Put ("- " &
-                            String (S.Path_Name.Relative_Path (Root).Name));
+                            String (S.Path_Name.Relative_Path (Root)));
 
          if not S.Has_Units or else not S.Has_Index then
             Ada.Text_IO.Put_Line (" (" & Image (S.Kind) & ")");
@@ -82,7 +82,7 @@ procedure Main is
       Ada.Text_IO.Put_Line
         ("*** checking sources of project " &
            String (Tree.Root_Project.Path_Name.Relative_Path
-             (Path_Name.Create_Directory (".")).Name));
+             (Path_Name.Create_Directory ("."))));
 
       Tree.Update_Sources (Messages => Log);
       Log.Output_Messages (Information => False);

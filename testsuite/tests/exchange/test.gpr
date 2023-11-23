@@ -1,0 +1,5 @@
+with "gpr2";
+project Test is
+   for Main use ("export.adb", "import.adb", "check_prove.adb");
+   for Source_Dirs use (".");
+end Test;

@@ -11,6 +11,7 @@ procedure Load_Autoconf
    Context           : GPR2.Context.Object;
    With_Runtime      : Boolean;
    Build_Path        : Path_Name.Object        := Path_Name.Undefined;
+   Root_Path         : Path_Name.Object        := Path_Name.Undefined;
    Subdirs           : Optional_Name_Type      := No_Name;
    Src_Subdirs       : Optional_Name_Type      := No_Name;
    Check_Shared_Lib  : Boolean                 := True;
@@ -554,6 +555,7 @@ begin
       With_Runtime     => With_Runtime,
       File_Reader      => File_Reader,
       Build_Path       => Build_Path,
+      Root_Path        => Root_Path,
       Subdirs          => Subdirs,
       Src_Subdirs      => Src_Subdirs,
       Check_Shared_Lib => Check_Shared_Lib,
@@ -783,6 +785,7 @@ begin
       Config           => Conf,
       File_Reader      => File_Reader,
       Build_Path       => Build_Path,
+      Root_Path        => Root_Path,
       Subdirs          => Subdirs,
       Src_Subdirs      => Src_Subdirs,
       Check_Shared_Lib => Check_Shared_Lib,
@@ -852,6 +855,7 @@ begin
       Config           => Conf,
       File_Reader      => File_Reader,
       Build_Path       => Build_Path,
+      Root_Path        => Root_Path,
       Subdirs          => Subdirs,
       Src_Subdirs      => Src_Subdirs,
       Check_Shared_Lib => Check_Shared_Lib,

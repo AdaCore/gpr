@@ -306,6 +306,22 @@ package body GPR2.Path_Name is
       end if;
    end Containing_Directory;
 
+   --------------
+   -- Contains --
+   --------------
+
+   function Contains (Self, Path : Object) return Boolean is
+      Root   : constant Filename_Optional := Dir_Name (Self);
+      Target : constant Filename_Optional := Dir_Name (Path);
+
+   begin
+      if Target'Length < Root'Length then
+         return False;
+      end if;
+
+      return To_OS_Case (Root) = To_OS_Case (Target (Root'First .. Root'Last));
+   end Contains;
+
    -----------------
    -- Content_MD5 --
    -----------------
@@ -444,7 +460,7 @@ package body GPR2.Path_Name is
       C_From  : constant String := To_String (Self.Value) & ASCII.NUL;
       pragma Warnings (Off, "*actuals for this call may be in wrong order*");
       C_To    : constant String :=
-                  String (Relative_Path (To, Self).Name) & ASCII.NUL;
+                  String (Relative_Path (To, Self)) & ASCII.NUL;
       Result  : Integer;
       Success : Boolean;
       pragma Unreferenced (Result);
@@ -621,13 +637,12 @@ package body GPR2.Path_Name is
    -- Relative_Path --
    -------------------
 
-   function Relative_Path (Self, From : Object) return Object is
+   function Relative_Path (Self, From : Object) return Filename_Type is
       use Ada.Strings.Fixed;
       use GNATCOLL.Utils;
 
       P       : constant String := To_String (Self.Dir_Name);
       T       : constant String := To_String (From.Dir_Name);
-      Rel_Dir : Object;
 
       Pi : Positive := P'First; -- common prefix ending
       Ti : Positive := P'First;
@@ -648,7 +663,7 @@ package body GPR2.Path_Name is
                --  UNIX path starts with a directory separator.
                --  "From" path is on another drive, returns original path.
 
-               return Self;
+               return Filename_Type (Unchecked_Value (Self));
             end if;
 
             exit;
@@ -664,20 +679,12 @@ package body GPR2.Path_Name is
 
       N := Strings.Fixed.Count (T (Pi + 1 .. T'Last), Dir_Seps);
 
-      Rel_Dir := Create_Directory
-        (Filename_Type (String'(N * "../")
+      return Filename_Type
+        (String'(N * "../")
          & (if Pi = P'Last and then N = 0
-            then "./"
-            else P (Pi + 1 .. P'Last))),
-         Filename_Optional (T));
-
-      if Self.Is_Dir then
-         return Rel_Dir;
-      else
-         return Create_File
-           (Ensure_Directory (Rel_Dir.Name) &  Self.Simple_Name,
-            Filename_Optional (T));
-      end if;
+           then "./"
+           else P (Pi + 1 .. P'Last)))
+         & (if Self.Is_Dir then "" else Filename_Type (Self.Simple_Name));
    end Relative_Path;
 
    -----------------

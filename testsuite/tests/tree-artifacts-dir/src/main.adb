@@ -31,7 +31,7 @@ procedure Main is
       end if;
       Ada.Text_IO.Put_Line
         (String (Tree.Root_Project.Name) & " => " &
-           String (Tree.Artifacts_Dir.Relative_Path (Cwd).Name));
+           String (Tree.Artifacts_Dir.Relative_Path (Cwd)));
       Tree.Unload;
    end Test;
 

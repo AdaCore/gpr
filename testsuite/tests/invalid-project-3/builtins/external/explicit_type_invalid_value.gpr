@@ -1,0 +1,6 @@
+project Explicit_Type_Invalid_Value is
+
+   type Type_1 is ("Value1", "Value2");
+   Var := external (Type_1, "EXT", "Value3");
+
+end Explicit_Type_Invalid_Value;

@@ -59,7 +59,9 @@ begin
    Test ("builtins/external/non_string.gpr");
    Test ("builtins/external/non_string2.gpr");
    Test ("builtins/external/empty_string.gpr");
-   Test ("builtins/external/three_arg.gpr");
+   Test ("builtins/external/four_arg.gpr");
+   Test ("builtins/external/string_typed.gpr");
+   Test ("builtins/external/explicit_type_invalid_value.gpr");
    Ada.Text_IO.New_Line;
    Ada.Text_IO.Put_Line ("** builtins: external_as_list");
    Ada.Text_IO.New_Line;
