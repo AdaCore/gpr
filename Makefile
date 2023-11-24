@@ -134,7 +134,7 @@ endif
 GPR_OPTIONS := -XGPR2_BUILD=${GPR2_BUILD} \
                -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}"
 
-BUILDER     := gprbuild -p -m -j${PROCESSORS} ${GPR_OPTIONS} \
+BUILDER     := gprbuild -p -j${PROCESSORS} ${GPR_OPTIONS} \
                ${GPRBUILD_OPTIONS} -XPROFILER=${PROFILER} \
                ${COVERAGE_BUILD_FLAGS}
 INSTALLER   := gprinstall -p -f ${GPR_OPTIONS} --prefix='${prefix}'

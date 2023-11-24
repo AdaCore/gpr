@@ -83,7 +83,7 @@ abstract project Shared is
    -------------
 
    package Builder is
-      for Switches (others) use ("-m", "-j" & Processors);
+      for Switches (others) use ("-j" & Processors);
    end Builder;
 
    ------------
