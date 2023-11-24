@@ -43,15 +43,6 @@
 HOST    = $(shell gcc -dumpmachine)
 TARGET := $(shell gcc -dumpmachine)
 
-# Look for the source directory (in case of out-of-tree builds):
-#
-# first let's check if Makefile is symlinked: realpath will return the actual
-# (after link resolution) relative path of the Makefile from PWD.
-MFILE         := $(shell realpath --relative-to=. "$(firstword ${MAKEFILE_LIST})"))
-# as Makefile is in the root dir, SOURCE_DIR is just dirname of the Makefile
-# path above.
-SOURCE_DIR    := $(shell dirname "${MFILE}")
-
 prefix	      := $(dir $(shell which gnatls))..
 GPR2_BUILD     = release
 PROCESSORS     = 0
@@ -59,6 +50,15 @@ PROFILER       = no
 LOCAL_GPR2     = yes
 GPRINSTALL     = gprinstall
 PYTHON         = python
+
+# Look for the source directory (in case of out-of-tree builds):
+#
+# first let's check if Makefile is symlinked: realpath will return the actual
+# (after link resolution) absolute path of the Makefile.
+MFILE         := $(shell $(PYTHON) -c 'import os; print(os.path.realpath("$(firstword ${MAKEFILE_LIST})"))')
+# as Makefile is in the root dir, SOURCE_DIR is just dirname of the Makefile
+# path above.
+SOURCE_DIR    := $(shell dirname "${MFILE}")
 
 # Prefix to use for non-productized tools
 GPR2_EDGE_TOOLS_PREFIX=gpr2
@@ -73,7 +73,7 @@ GPR2KB=${SOURCE_DIR}/src/kb/collect_kb.gpr
 GPR2KBDIR=${SOURCE_DIR}/src/kb/gprconfig_kb
 
 # check for out-of-tree build
-ifeq (${SOURCE_DIR},.)
+ifeq (${SOURCE_DIR},$(PWD))
 BUILD_ROOT=.build
 else
 BUILD_ROOT=.
