@@ -34,7 +34,7 @@ with Gpr_Parser.Common;   use Gpr_Parser.Common;
 --  Internal package: defines data types and subprograms to provide the
 --  implementation of the exported C API (see the corresponding C header file).
 
-private package Gpr_Parser.Implementation.C is
+package Gpr_Parser.Implementation.C is
 
    subtype gpr_analysis_context is Internal_Context;
    --  This type represents a context for all source analysis. This is the
@@ -88,8 +88,8 @@ private package Gpr_Parser.Implementation.C is
 
 
 
-subtype gpr_base_entity is Internal_Entity;
-type gpr_base_entity_Ptr is access Internal_Entity;
+subtype gpr_node is Internal_Entity;
+type gpr_node_Ptr is access Internal_Entity;
 
 
 
@@ -454,7 +454,7 @@ type gpr_base_entity_Ptr is access Internal_Entity;
 
    procedure gpr_unit_root
      (Unit     : gpr_analysis_unit;
-      Result_P : gpr_base_entity_Ptr)
+      Result_P : gpr_node_Ptr)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_unit_root";
@@ -597,21 +597,21 @@ type gpr_base_entity_Ptr is access Internal_Entity;
    ---------------------------------
 
    function gpr_is_equivalent
-     (L, R : gpr_base_entity_Ptr) return gpr_bool
+     (L, R : gpr_node_Ptr) return gpr_bool
       with Export        => True,
            Convention    => C,
            External_name => "gpr_node_is_equivalent";
    --  Return whether the two nodes are equivalent.
 
    function gpr_hash
-     (Node : gpr_base_entity_Ptr) return uint32_t
+     (Node : gpr_node_Ptr) return uint32_t
       with Export        => True,
            Convention    => C,
            External_name => "gpr_node_hash";
    --  Return a hash for the given node.
 
    function gpr_node_kind
-     (Node : gpr_base_entity_Ptr) return gpr_node_kind_enum
+     (Node : gpr_node_Ptr) return gpr_node_kind_enum
       with Export        => True,
            Convention    => C,
            External_name => "gpr_node_kind";
@@ -626,35 +626,35 @@ type gpr_base_entity_Ptr is access Internal_Entity;
    --  returned string is a copy and thus must be free'd by the caller.
 
    function gpr_node_unit
-     (Node : gpr_base_entity_Ptr) return gpr_analysis_unit
+     (Node : gpr_node_Ptr) return gpr_analysis_unit
       with Export => True,
            Convention => C,
            External_Name => "gpr_node_unit";
    --  Return the analysis unit that owns this node.
 
    function gpr_is_token_node
-     (Node : gpr_base_entity_Ptr) return int
+     (Node : gpr_node_Ptr) return int
       with Export        => True,
            Convention    => C,
            External_name => "gpr_node_is_token_node";
    --  Return whether this node is a node that contains only a single token.
 
    function gpr_is_synthetic
-     (Node : gpr_base_entity_Ptr) return int
+     (Node : gpr_node_Ptr) return int
       with Export        => True,
            Convention    => C,
            External_name => "gpr_node_is_synthetic";
    --  Return whether this node is synthetic.
 
    procedure gpr_node_image
-     (Node : gpr_base_entity_Ptr; Result : access gpr_text)
+     (Node : gpr_node_Ptr; Result : access gpr_text)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_node_image";
    --  Return a representation of this node as a string.
 
    procedure gpr_node_text
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
       Text : access gpr_text)
       with Export, Convention => C,
            External_Name      => "gpr_node_text";
@@ -664,7 +664,7 @@ type gpr_base_entity_Ptr is access Internal_Entity;
    --  Note that this returns the empty string for synthetic nodes.
 
    procedure gpr_node_sloc_range
-     (Node         : gpr_base_entity_Ptr;
+     (Node         : gpr_node_Ptr;
       Sloc_Range_P : access gpr_source_location_range)
       with Export        => True,
            Convention    => C,
@@ -674,9 +674,9 @@ type gpr_base_entity_Ptr is access Internal_Entity;
    --  Note that this returns the sloc of the parent for synthetic nodes.
 
    procedure gpr_lookup_in_node
-     (Node   : gpr_base_entity_Ptr;
+     (Node   : gpr_node_Ptr;
       Sloc   : gpr_source_location;
-      Result : gpr_base_entity_Ptr)
+      Result : gpr_node_Ptr)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_lookup_in_node";
@@ -684,16 +684,16 @@ type gpr_base_entity_Ptr is access Internal_Entity;
    --  contains ``Sloc``, or ``NULL`` if there is none.
 
    function gpr_node_children_count
-     (Node : gpr_base_entity_Ptr) return unsigned
+     (Node : gpr_node_Ptr) return unsigned
       with Export        => True,
            Convention    => C,
            External_name => "gpr_node_children_count";
    --  Return the number of children in this node.
 
    function gpr_node_child
-     (Node    : gpr_base_entity_Ptr;
+     (Node    : gpr_node_Ptr;
       N       : unsigned;
-      Child_P : gpr_base_entity_Ptr) return int
+      Child_P : gpr_node_Ptr) return int
       with Export        => True,
            Convention    => C,
            External_name => "gpr_node_child";
@@ -824,23 +824,23 @@ type gpr_base_entity_Ptr is access Internal_Entity;
 
 
 
-subtype gpr_gpr_node_array is Internal_Entity_Array_Access;
-type gpr_gpr_node_array_Ptr is access Internal_Entity_Array_Access;
+subtype gpr_node_array is Internal_Entity_Array_Access;
+type gpr_node_array_Ptr is access Internal_Entity_Array_Access;
 
-function gpr_gpr_node_array_create (Length : int) return Internal_Entity_Array_Access
+function gpr_node_array_create (Length : int) return Internal_Entity_Array_Access
    with Export        => True,
         Convention    => C,
-        External_name => "gpr_gpr_node_array_create";
+        External_name => "gpr_node_array_create";
 
-procedure gpr_gpr_node_array_inc_ref (A : Internal_Entity_Array_Access)
+procedure gpr_node_array_inc_ref (A : Internal_Entity_Array_Access)
    with Export        => True,
         Convention    => C,
-        External_name => "gpr_gpr_node_array_inc_ref";
+        External_name => "gpr_node_array_inc_ref";
 
-procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
+procedure gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    with Export        => True,
         Convention    => C,
-        External_name => "gpr_gpr_node_array_dec_ref";
+        External_name => "gpr_node_array_dec_ref";
 
 
 
@@ -962,10 +962,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_gpr_node_parent
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -980,13 +980,13 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_gpr_node_parents
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
          With_Self :
             
             gpr_bool;
 
-      Value_P : access gpr_gpr_node_array) return int
+      Value_P : access gpr_node_array) return int
 
       with Export        => True,
            Convention    => C,
@@ -1001,10 +1001,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_gpr_node_children
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_gpr_node_array) return int
+      Value_P : access gpr_node_array) return int
 
       with Export        => True,
            Convention    => C,
@@ -1021,7 +1021,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_gpr_node_token_start
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access gpr_token) return int
@@ -1038,7 +1038,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_gpr_node_token_end
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access gpr_token) return int
@@ -1055,7 +1055,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_gpr_node_child_index
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access int) return int
@@ -1072,10 +1072,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_gpr_node_previous_sibling
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1089,10 +1089,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_gpr_node_next_sibling
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1106,7 +1106,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_gpr_node_unit
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access gpr_analysis_unit) return int
@@ -1123,7 +1123,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_gpr_node_is_ghost
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access gpr_bool) return int
@@ -1145,7 +1145,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_gpr_node_full_sloc_image
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access gpr_string_type) return int
@@ -1163,7 +1163,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_all_qualifier_p_as_bool
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access gpr_bool) return int
@@ -1180,10 +1180,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_attribute_decl_f_attr_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1197,16 +1197,18 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_attribute_decl_f_attr_index
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
            External_name => "gpr_attribute_decl_f_attr_index";
    --  This field can contain one of the following nodes:
    --  :ada:ref:`Others_Designator`, :ada:ref:`String_Literal_At`
+   --
+   --  This field may be null even when there are no parsing errors.
 
            
    
@@ -1215,10 +1217,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_attribute_decl_f_expr
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1236,10 +1238,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_attribute_reference_f_attribute_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1253,16 +1255,18 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_attribute_reference_f_attribute_index
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
            External_name => "gpr_attribute_reference_f_attribute_index";
    --  This field can contain one of the following nodes:
    --  :ada:ref:`Others_Designator`, :ada:ref:`String_Literal`
+   --
+   --  This field may be null even when there are no parsing errors.
 
            
    
@@ -1271,10 +1275,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_builtin_function_call_f_function_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1288,10 +1292,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_builtin_function_call_f_parameters
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1305,10 +1309,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_case_construction_f_var_ref
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1322,10 +1326,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_case_construction_f_items
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1339,10 +1343,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_case_item_f_choice
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1359,10 +1363,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_case_item_f_decls
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1380,10 +1384,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_compilation_unit_f_project
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1397,10 +1401,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_prefix_f_prefix
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1417,10 +1421,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_prefix_f_suffix
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1434,7 +1438,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_limited_node_p_as_bool
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access gpr_bool) return int
@@ -1451,10 +1455,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_package_decl_f_pkg_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1468,10 +1472,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_package_decl_f_pkg_spec
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1488,10 +1492,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_package_extension_f_extended_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1505,10 +1509,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_package_renaming_f_renamed_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1522,15 +1526,15 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_package_spec_f_extension
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
            External_name => "gpr_package_spec_f_extension";
-   
+   --  This field may be null even when there are no parsing errors.
 
            
    
@@ -1539,10 +1543,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_package_spec_f_decls
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1560,10 +1564,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_package_spec_f_end_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1577,10 +1581,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_project_f_context_clauses
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1594,10 +1598,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_project_f_project_decl
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1611,15 +1615,15 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_project_declaration_f_qualifier
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
            External_name => "gpr_project_declaration_f_qualifier";
-   
+   --  This field may be null even when there are no parsing errors.
 
            
    
@@ -1628,10 +1632,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_project_declaration_f_project_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1648,15 +1652,15 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_project_declaration_f_extension
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
            External_name => "gpr_project_declaration_f_extension";
-   
+   --  This field may be null even when there are no parsing errors.
 
            
    
@@ -1665,10 +1669,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_project_declaration_f_decls
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1687,10 +1691,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_project_declaration_f_end_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1707,10 +1711,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_project_extension_f_is_all
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1724,10 +1728,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_project_extension_f_path_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1741,10 +1745,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_string_literal_at_f_str_lit
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1758,15 +1762,15 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_string_literal_at_f_at_lit
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
            External_name => "gpr_string_literal_at_f_at_lit";
-   
+   --  This field may be null even when there are no parsing errors.
 
            
    
@@ -1775,10 +1779,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_terms_f_terms
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1792,10 +1796,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_type_reference_f_var_type_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1809,10 +1813,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_typed_string_decl_f_type_id
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1826,10 +1830,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_typed_string_decl_f_string_literals
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1843,10 +1847,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_variable_decl_f_var_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1860,15 +1864,15 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_variable_decl_f_var_type
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
            External_name => "gpr_variable_decl_f_var_type";
-   
+   --  This field may be null even when there are no parsing errors.
 
            
    
@@ -1877,10 +1881,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_variable_decl_f_expr
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1898,10 +1902,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_variable_reference_f_variable_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1915,15 +1919,15 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_variable_reference_f_attribute_ref
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
            External_name => "gpr_variable_reference_f_attribute_ref";
-   
+   --  This field may be null even when there are no parsing errors.
 
            
    
@@ -1932,10 +1936,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_with_decl_f_is_limited
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1949,10 +1953,10 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    
 
    function gpr_with_decl_f_path_names
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
       with Export        => True,
            Convention    => C,
@@ -1983,6 +1987,7 @@ procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access)
    function Wrap (S : Unbounded_Wide_Wide_String) return gpr_text;
 
    function Wrap_Alloc (S : Text_Type) return gpr_text;
+   function Wrap_Alloc (S : Unbounded_Wide_Wide_String) return gpr_text;
    function Wrap
      (S     : Text_Cst_Access;
       First : Positive;

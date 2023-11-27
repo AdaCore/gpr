@@ -9,9 +9,13 @@ with Gpr_Parser_AdaSAT.Internals; use Gpr_Parser_AdaSAT.Internals;
 
 package body Gpr_Parser_AdaSAT.DPLL is
    type Decision_Array is array (Variable_Or_Null range <>) of Natural;
+   type Decision_Array_Access is access Decision_Array;
+
    type Antecedent_Array is array (Variable_Or_Null range <>) of Clause;
+   type Antecedent_Array_Access is access Antecedent_Array;
 
    type Literal_Mask is array (Literal range <>) of Boolean;
+   type Literal_Mask_Access is access Literal_Mask;
 
    type Watcher is record
       Blit     : Literal;
@@ -54,6 +58,20 @@ package body Gpr_Parser_AdaSAT.DPLL is
    --  which uses a vector for clauses so as to easily append new ones.
    --  It also maintaints some data structures around the clauses such as
    --  the occurrence list, to optimize the different routines.
+
+   type Internal_Formula_Access is access Internal_Formula;
+
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Decision_Array, Decision_Array_Access);
+
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Antecedent_Array, Antecedent_Array_Access);
+
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Literal_Mask, Literal_Mask_Access);
+
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Internal_Formula, Internal_Formula_Access);
 
    procedure Destroy (F : in out Internal_Formula);
    --  Free the memory allocated for the formula's internal structures.
@@ -201,13 +219,13 @@ package body Gpr_Parser_AdaSAT.DPLL is
       Decision_Level : Natural := 0;
       --  The current decision level
 
-      Lit_Decisions : Decision_Array :=
-        (1 .. Variable_Or_Null (Unassigned_Left) => 0);
+      Lit_Decisions : Decision_Array_Access :=
+        new Decision_Array'(1 .. Variable_Or_Null (Unassigned_Left) => 0);
       --  Maps each variable to the decision level in which a value was
       --  set for it.
 
-      Lit_Antecedents : Antecedent_Array :=
-        (1 .. Variable_Or_Null (Unassigned_Left) => null);
+      Lit_Antecedents : Antecedent_Array_Access :=
+        new Antecedent_Array'(1 .. Variable_Or_Null (Unassigned_Left) => null);
       --  Maps each variable to its antecedent clause: if the variable was
       --  assigned a value through unit propagation, this is the clause that
       --  was unit. If the variable was assigned a value through a decision,
@@ -220,7 +238,8 @@ package body Gpr_Parser_AdaSAT.DPLL is
       Learnt_Clause : Literal_Vectors.Vector;
       --  The vector we use to generate the learnt clause during a backjump
 
-      Learnt_Mask : Literal_Mask (-M'Last .. +M'Last);
+      Learnt_Mask : Literal_Mask_Access :=
+        new Literal_Mask (-M'Last .. +M'Last);
       --  The mask used during backjump to indicate which literals are
       --  already present (or were present at some point) in the learnt clause.
 
@@ -599,7 +618,7 @@ package body Gpr_Parser_AdaSAT.DPLL is
       begin
          Learnt_Clause := Literal_Vectors.Empty_Vector;
          Learnt_Clause.Reserve (Conflicting_Clause.all'Length);
-         Learnt_Mask := (others => False);
+         Learnt_Mask.all := (others => False);
 
          for Lit of Conflicting_Clause.all loop
             if not Learnt_Mask (Lit) then
@@ -616,7 +635,7 @@ package body Gpr_Parser_AdaSAT.DPLL is
       procedure Setup_Backjump (First_Lit, Second_Lit : Literal) is
       begin
          Learnt_Clause := Literal_Vectors.Empty_Vector;
-         Learnt_Mask := (others => False);
+         Learnt_Mask.all := (others => False);
 
          Learnt_Clause.Append (First_Lit);
          Learnt_Clause.Append (Second_Lit);
@@ -660,12 +679,19 @@ package body Gpr_Parser_AdaSAT.DPLL is
                begin
                   if Lit_Decisions (Var) = Decision_Level then
                      Found := Found + 1;
-                     --  TODO: exit if Found > 1?
-                     if Pivot = 0 and then
-                        Lit_Antecedents (Var) /= null
-                     then
-                        Pivot       := Var;
-                        Pivot_Index := Lit_Index;
+                     if Pivot = 0 then
+                        if Lit_Antecedents (Var) /= null then
+                           Pivot       := Var;
+                           Pivot_Index := Lit_Index;
+                        end if;
+                     elsif Found > 1 then
+                        --  We know there are at least two pivots and we
+                        --  already selected one (since ``Pivot /= 0``), so we
+                        --  can exit early from this internal loop to save some
+                        --  cycles. This is OK because we don't need to know
+                        --  how many potential pivots there were, only that
+                        --  there were more than one.
+                        exit;
                      end if;
                   end if;
                end;
@@ -778,6 +804,9 @@ package body Gpr_Parser_AdaSAT.DPLL is
 
       function Cleanup (Result : Boolean) return Boolean is
       begin
+         Free (Lit_Decisions);
+         Free (Lit_Antecedents);
+         Free (Learnt_Mask);
          To_Propagate.Destroy;
          Destroy (F);
          return Result;
@@ -922,18 +951,38 @@ package body Gpr_Parser_AdaSAT.DPLL is
       M        : in out Model;
       Min_Vars : Variable_Or_Null := 0) return Boolean
    is
+      procedure Cleanup;
+      --  Clean up locally allocated memory before returning or propagating
+      --  an exception.
+
       Is_Empty : constant Boolean := M'Length = 0;
       First    : constant Literal := (if Is_Empty then 1 else -M'Last);
       Last     : constant Literal := (if Is_Empty then 0 else +M'Last);
-      Internal : Internal_Formula (First, Last);
+      Internal : Internal_Formula_Access := new Internal_Formula'
+        (First => First, Last => Last, Clauses => F, Occurs_List => <>);
+
+      -------------
+      -- Cleanup --
+      -------------
+
+      procedure Cleanup is
+      begin
+         Free (Internal);
+      end Cleanup;
    begin
-      Internal.Clauses := F;
       for C of F loop
          if C'Length >= 2 then
-            Append_Watcher (Internal, C);
+            Append_Watcher (Internal.all, C);
          end if;
       end loop;
-      return Solve_Internal
-        (Internal, Ctx, M, (if Min_Vars = 0 then M'Last else Min_Vars));
+      return R : constant Boolean := Solve_Internal
+        (Internal.all, Ctx, M, (if Min_Vars = 0 then M'Last else Min_Vars))
+      do
+         Cleanup;
+      end return;
+   exception
+      when others =>
+         Cleanup;
+         raise;
    end Solve;
 end Gpr_Parser_AdaSAT.DPLL;

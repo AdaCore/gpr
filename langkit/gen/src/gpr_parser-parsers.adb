@@ -29,6 +29,7 @@ pragma Warnings (On, "referenced");
 
 
 
+
 package body Gpr_Parser.Parsers is
    pragma Warnings (Off, "use clause");
    use all type Gpr_Parser_Support.Symbols.Symbol_Type;
