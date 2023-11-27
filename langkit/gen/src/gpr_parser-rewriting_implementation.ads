@@ -11,11 +11,19 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Strings.Unbounded.Hash;
 with Ada.Strings.Wide_Wide_Unbounded; use Ada.Strings.Wide_Wide_Unbounded;
 
+with Interfaces.C;
+
+with System;
+with System.Address_To_Access_Conversions;
+
 with Gpr_Parser_Support.Bump_Ptr; use Gpr_Parser_Support.Bump_Ptr;
 with Gpr_Parser_Support.Bump_Ptr_Vectors;
+with Gpr_Parser_Support.Generic_API.Introspection;
+use Gpr_Parser_Support.Generic_API.Introspection;
 
 with Gpr_Parser.Common;   use Gpr_Parser.Common;
-with Gpr_Parser.Implementation; use Gpr_Parser.Implementation;
+with Gpr_Parser.Implementation;   use Gpr_Parser.Implementation;
+with Gpr_Parser.Implementation.C; use Gpr_Parser.Implementation.C;
 
 --  Internal package: low-level primitives to implement syntax-based source
 --  rewriting.
@@ -28,13 +36,16 @@ private package Gpr_Parser.Rewriting_Implementation is
    type Unit_Rewriting_Handle_Type;
    type Node_Rewriting_Handle_Type;
 
-   type Rewriting_Handle is access Rewriting_Handle_Type;
+   type Rewriting_Handle is access Rewriting_Handle_Type
+      with Convention => C;
    --  Internal handle for an analysis context rewriting session
 
-   type Unit_Rewriting_Handle is access Unit_Rewriting_Handle_Type;
+   type Unit_Rewriting_Handle is access Unit_Rewriting_Handle_Type
+      with Convention => C;
    --  Internal handle for the process of rewriting an analysis unit
 
-   type Node_Rewriting_Handle is access Node_Rewriting_Handle_Type;
+   type Node_Rewriting_Handle is access Node_Rewriting_Handle_Type
+      with Convention => C;
    --  Internal handle for the process of rewriting an analysis unit
 
    pragma No_Strict_Aliasing (Rewriting_Handle);
@@ -61,13 +72,19 @@ private package Gpr_Parser.Rewriting_Implementation is
       --  Analysis context this rewriting handle relates to
 
       Units : Unit_Maps.Map;
-      --  Keep track of rewriting handles we create all units that Context owns
+      --  Keep track of rewriting handles we create for the units that Context
+      --  owns.
 
       Pool      : Bump_Ptr_Pool;
       New_Nodes : Nodes_Pools.Vector;
       --  Keep track of all node rewriting handles that don't map to original
       --  nodes, i.e. all nodes that were created during this rewriting
       --  session.
+
+      Stubs : Nodes_Pools.Vector;
+      --  Keep track of all allocated stub rewriting nodes. These are used in
+      --  ``Rotate`` as stubs for rotated ones, and are re-used each time
+      --  ``Rotate`` is called.
    end record;
 
    type Unit_Rewriting_Handle_Type is record
@@ -97,6 +114,10 @@ private package Gpr_Parser.Rewriting_Implementation is
       --  Expanded node rewriting handle: children have their own handle. Note
       --  that this is for all but token nodes.
 
+      Expanded_List,
+      --  Expanded node rewriting handle, specific for list nodes: element
+      --  nodes are stored as a doubly linked list.
+
       Expanded_Token_Node
       --  Expanded node rewriting handle, specific for token nodes: there is no
       --  children, only some associated text.
@@ -104,9 +125,23 @@ private package Gpr_Parser.Rewriting_Implementation is
 
    type Node_Children (Kind : Node_Children_Kind := Unexpanded) is record
       case Kind is
-         when Unexpanded          => null;
-         when Expanded_Regular    => Vector : Node_Vectors.Vector;
-         when Expanded_Token_Node => Text   : Unbounded_Wide_Wide_String;
+         when Unexpanded =>
+            null;
+
+         when Expanded_Regular =>
+            Vector : Node_Vectors.Vector;
+            --  Vector of children for all non-null syntax fields
+
+         when Expanded_List =>
+            First, Last : Node_Rewriting_Handle;
+            --  Doubly linked list of children
+
+            Count : Natural;
+            --  Number of children
+
+         when Expanded_Token_Node =>
+            Text : Unbounded_Wide_Wide_String;
+            --  Text for this token node
       end case;
    end record;
    --  Lazily evaluated vector of children for a Node_Rewriting_Handle.
@@ -126,6 +161,15 @@ private package Gpr_Parser.Rewriting_Implementation is
       Parent : Node_Rewriting_Handle;
       --  Rewriting handle for Node's parent, or No_Node_Rewriting_Handle if
       --  Node is a root node.
+
+      Previous, Next : Node_Rewriting_Handle;
+      --  If ``Parent`` is a list node, ``Previous`` is the previous subling
+      --  for this node in that list (``No_Node_Rewriting_Handle`` for the
+      --  first sibling), and ``Next`` is the next sibling
+      --  (``No_Node_Rewriting_Handle`` for the last sibling).
+      --
+      --  If ``Parent`` is not a list node, both are set to
+      --  ``No_Node_Rewriting_Handle``).
 
       Kind : Gpr_Node_Kind_Type;
       --  Kind for the node this handle represents. When Node is not null (i.e.
@@ -162,8 +206,20 @@ private package Gpr_Parser.Rewriting_Implementation is
    function Handle (Context : Internal_Context) return Rewriting_Handle;
    --  Implementation for Rewriting.Handle
 
+   function C_Context_To_Handle
+     (Context : Internal_Context) return Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_context_to_handle";
+
    function Context (Handle : Rewriting_Handle) return Internal_Context;
    --  Implementation for Rewriting.Context
+
+   function C_Handle_To_Context
+     (Handle : Rewriting_Handle) return Internal_Context
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_handle_to_context";
 
    function Start_Rewriting
      (Context : Internal_Context) return Rewriting_Handle
@@ -172,11 +228,22 @@ private package Gpr_Parser.Rewriting_Implementation is
                    and then Start_Rewriting'Result = Handle (Context)
                    and then Gpr_Parser.Rewriting_Implementation.Context
                              (Start_Rewriting'Result) = Context;
+
+   function C_Start_Rewriting
+     (Context : Internal_Context) return Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_start_rewriting";
    --  Implementation for Rewriting.Start_Rewriting
 
    procedure Abort_Rewriting (Handle : in out Rewriting_Handle)
       with Post => Handle = No_Rewriting_Handle;
    --  Implementation for Rewriting.Abort_Rewriting
+
+   procedure C_Abort_Rewriting (Handle : Rewriting_Handle)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_abort_rewriting";
 
    type Apply_Result (Success : Boolean := True) is record
       case Success is
@@ -197,9 +264,41 @@ private package Gpr_Parser.Rewriting_Implementation is
                     else Handle = Handle'Old);
    --  Implementation for Rewriting.Apply
 
+   package C_Diagnostic_Array is new
+     System.Address_To_Access_Conversions (gpr_diagnostic);
+
+   type C_Apply_Result is record
+      Success           : Interfaces.C.int;
+      Unit              : Internal_Unit;
+      Diagnostics_Count : Interfaces.C.int;
+      Diagnostics       : C_Diagnostic_Array.Object_Pointer;
+   end record
+      with Convention => C;
+
+   procedure C_Apply
+     (Handle : Rewriting_Handle;
+      Result : access C_Apply_Result)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_apply";
+
+   procedure Free_Apply_Result (Result : access C_Apply_Result)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_free_apply_result";
+
+   package C_Unit_Array is new
+     System.Address_To_Access_Conversions (Unit_Rewriting_Handle);
+
    function Unit_Handles
      (Handle : Rewriting_Handle) return Unit_Rewriting_Handle_Array;
    --  Implementation for Rewriting.Unit_Handles
+
+   function C_Unit_Handles
+     (Handle : Rewriting_Handle) return C_Unit_Array.Object_Pointer
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_unit_handles";
 
    ---------------------------------------
    -- Implementation for unit rewriting --
@@ -208,19 +307,50 @@ private package Gpr_Parser.Rewriting_Implementation is
    function Handle (Unit : Internal_Unit) return Unit_Rewriting_Handle;
    --  Implementation for Rewriting.Handle
 
+   function C_Unit_To_Handle
+     (Unit : Internal_Unit) return Unit_Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_unit_to_handle";
+
    function Unit (Handle : Unit_Rewriting_Handle) return Internal_Unit;
    --  Implementation for Rewriting.Unit
 
+   function C_Handle_To_Unit
+     (Handle : Unit_Rewriting_Handle) return Internal_Unit
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_handle_to_unit";
+
    function Root (Handle : Unit_Rewriting_Handle) return Node_Rewriting_Handle;
    --  Implementation for Rewriting.Root
+
+   function C_Root
+     (Handle : Unit_Rewriting_Handle) return Node_Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_unit_root";
 
    procedure Set_Root
      (Handle : Unit_Rewriting_Handle;
       Root   : Node_Rewriting_Handle);
    --  Implementation for Rewriting.Set_Root
 
+   procedure C_Set_Root
+     (Handle : Unit_Rewriting_Handle;
+      Root   : Node_Rewriting_Handle)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_unit_set_root";
+
    function Unparse (Handle : Unit_Rewriting_Handle) return Unbounded_Text_Type;
    --  Implementation for Rewriting.Unparse
+
+   procedure C_Unparse
+     (Handle : Unit_Rewriting_Handle; Result : access gpr_text)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_unit_unparse";
 
    ---------------------------------------
    -- Implementation for node rewriting --
@@ -230,72 +360,247 @@ private package Gpr_Parser.Rewriting_Implementation is
      (Node : Bare_Gpr_Node) return Node_Rewriting_Handle;
    --  Implementation for Rewriting.Handle
 
+   function C_Node_To_Handle
+     (Node : gpr_base_node) return Node_Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_node_to_handle";
+
    function Node
      (Handle : Node_Rewriting_Handle) return Bare_Gpr_Node;
    --  Implementation for Rewriting.Node
 
+   function C_Handle_To_Node
+     (Handle : Node_Rewriting_Handle) return gpr_base_node
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_handle_to_node";
+
    function Context (Handle : Node_Rewriting_Handle) return Rewriting_Handle;
    --  Implementation for Rewriting.Context
+
+   function C_Node_To_Context
+     (Node : Node_Rewriting_Handle) return Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_node_to_context";
 
    function Unparse (Handle : Node_Rewriting_Handle) return Text_Type;
    --  Implementation for Rewriting.Unparse
 
+   procedure C_Unparse
+     (Handle : Node_Rewriting_Handle; Result : access gpr_text)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_node_unparse";
+
    function Kind (Handle : Node_Rewriting_Handle) return Gpr_Node_Kind_Type;
    --  Implementation for Rewriting.Kind
 
+   function C_Kind (Handle : Node_Rewriting_Handle) return gpr_node_kind_enum
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_kind";
+
+   function Image (Handle : Node_Rewriting_Handle) return String;
+   --  Implementation for Rewriting.Image
+
+   procedure C_Image
+     (Handle : Node_Rewriting_Handle; Result : access gpr_text)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_node_image";
+
    function Tied (Handle : Node_Rewriting_Handle) return Boolean;
    --  Implementation for Rewriting.Tied
+
+   function C_Tied (Handle : Node_Rewriting_Handle) return Interfaces.C.int
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_tied";
 
    function Parent
      (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle;
    --  Implementation for Rewriting.Parent
 
+   function C_Parent
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_parent";
+
    function Children_Count (Handle : Node_Rewriting_Handle) return Natural;
    --  Implementation for Rewriting.Children_Count
 
+   function C_Children_Count
+     (Handle : Node_Rewriting_Handle) return Interfaces.C.int
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_children_count";
+
    function Child
      (Handle : Node_Rewriting_Handle;
-      Index  : Positive) return Node_Rewriting_Handle;
+      Field  : Struct_Member_Ref) return Node_Rewriting_Handle;
    --  Implementation for Rewriting.Child
+
+   function C_Child
+     (Handle : Node_Rewriting_Handle;
+      Field  : Interfaces.C.int) return Node_Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_child";
+
+   function Children
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle_Array;
+   --  Implementation for Rewriting.Children
+
+   package C_Node_Array is new
+     System.Address_To_Access_Conversions (Node_Rewriting_Handle);
+
+   procedure C_Children
+     (Handle   : Node_Rewriting_Handle;
+      Children : access C_Node_Array.Object_Pointer;
+      Count    : access Interfaces.C.int)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_children";
 
    procedure Set_Child
      (Handle : Node_Rewriting_Handle;
-      Index  : Positive;
+      Field  : Struct_Member_Ref;
       Child  : Node_Rewriting_Handle);
    --  Implementation for Rewriting.Set_Child
+
+   procedure C_Set_Child
+     (Handle : Node_Rewriting_Handle;
+      Field  : Interfaces.C.int;
+      Child  : Node_Rewriting_Handle)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_set_child";
 
    function Text (Handle : Node_Rewriting_Handle) return Text_Type;
    --  Implementation for Rewriting.Text
 
+   procedure C_Text
+     (Handle : Node_Rewriting_Handle; Result : access gpr_text)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_text";
+
    procedure Set_Text (Handle : Node_Rewriting_Handle; Text : Text_Type);
    --  Implementation for Rewriting.Set_Text
 
+   procedure C_Set_Text
+     (Handle : Node_Rewriting_Handle; Text : access gpr_text)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_set_text";
+
    procedure Replace (Handle, New_Node : Node_Rewriting_Handle);
    --  Implementation for Rewriting.Replace
+
+   procedure C_Replace (Handle, New_Node : Node_Rewriting_Handle)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_replace";
+
+   procedure Rotate (Handles : Node_Rewriting_Handle_Array);
+   --  Implementation for Rewriting.Rotate
+
+   procedure C_Rotate
+     (Handles : C_Node_Array.Object_Pointer;
+      Count   : Interfaces.C.int)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_rotate";
+
+   function Is_List_Node (Handle : Node_Rewriting_Handle) return Boolean;
+   --  Implementation for Rewriting.Is_List_Node
 
    --------------------------------------------
    -- Implementation for list node rewriting --
    --------------------------------------------
 
-   procedure Insert_Child
-     (Handle : Node_Rewriting_Handle;
-      Index  : Positive;
-      Child  : Node_Rewriting_Handle)
-      with Post => Rewriting_Implementation.Child
-                     (Handle, Index) = Child;
-   --  Implementation for Rewriting.Insert_Child
+   function First_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle;
+   --  Implementation for Rewriting.First_Child
 
-   procedure Append_Child
-     (Handle : Node_Rewriting_Handle;
-      Child  : Node_Rewriting_Handle)
-      with Post => Rewriting_Implementation.Child
-                     (Handle, Children_Count (Handle)) = Child;
-   --  Implementation for Rewriting.Append_Child
+   function C_First_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_first_child";
 
-   procedure Remove_Child
-     (Handle : Node_Rewriting_Handle;
-      Index  : Positive);
+   function Last_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle;
+   --  Implementation for Rewriting.Last_Child
+
+   function C_Last_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_last_child";
+
+   function Next_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle;
+   --  Implementation for Rewriting.Next_Child
+
+   function C_Next_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_next_child";
+
+   function Previous_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle;
+   --  Implementation for Rewriting.Previous_Child
+
+   function C_Previous_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_previous_child";
+
+   procedure Insert_Before (Handle, New_Sibling : Node_Rewriting_Handle);
+   --  Implementation for Rewriting.Insert_Before
+
+   procedure C_Insert_Before (Handle, New_Sibling : Node_Rewriting_Handle)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_insert_before";
+
+   procedure Insert_After (Handle, New_Sibling : Node_Rewriting_Handle);
+   --  Implementation for Rewriting.Insert_After
+
+   procedure C_Insert_After (Handle, New_Sibling : Node_Rewriting_Handle)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_insert_after";
+
+   procedure Insert_First (Handle, New_Child : Node_Rewriting_Handle);
+   --  Implementation for Rewriting.Insert_First
+
+   procedure C_Insert_First (Handle, New_Sibling : Node_Rewriting_Handle)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_insert_first";
+
+   procedure Insert_Last (Handle, New_Child : Node_Rewriting_Handle);
+   --  Implementation for Rewriting.Insert_Last
+
+   procedure C_Insert_Last (Handle, New_Sibling : Node_Rewriting_Handle)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_insert_last";
+
+   procedure Remove_Child (Handle : Node_Rewriting_Handle);
    --  Implementation for Rewriting.Remove_Child
+
+   procedure C_Remove_Child (Handle : Node_Rewriting_Handle)
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_remove_child";
 
    --------------------------------------
    -- Implementation for node creation --
@@ -305,10 +610,23 @@ private package Gpr_Parser.Rewriting_Implementation is
      (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle;
    --  Implementation for Rewriting.Clone
 
+   function C_Clone
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_clone";
+
    function Create_Node
      (Handle : Rewriting_Handle;
       Kind   : Gpr_Node_Kind_Type) return Node_Rewriting_Handle;
    --  Implementation for Rewriting.Create_Node
+
+   function C_Create_Node
+     (Handle : Rewriting_Handle;
+      Kind   : gpr_node_kind_enum) return Node_Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_create_node";
 
    function Create_Token_Node
      (Handle : Rewriting_Handle;
@@ -316,11 +634,28 @@ private package Gpr_Parser.Rewriting_Implementation is
       Text   : Text_Type) return Node_Rewriting_Handle;
    --  Implementation for Rewriting.Create_Token_Node
 
+   function C_Create_Token_Node
+     (Handle : Rewriting_Handle;
+      Kind   : gpr_node_kind_enum;
+      Text   : access gpr_text) return Node_Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_create_token_node";
+
    function Create_Regular_Node
      (Handle   : Rewriting_Handle;
       Kind     : Gpr_Node_Kind_Type;
       Children : Node_Rewriting_Handle_Array) return Node_Rewriting_Handle;
    --  Implementation for Rewriting.Create_Regular_Node
+
+   function C_Create_Regular_Node
+     (Handle   : Rewriting_Handle;
+      Kind     : gpr_node_kind_enum;
+      Children : C_Node_Array.Object_Pointer;
+      Count    : Interfaces.C.int) return Node_Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name => "gpr_rewriting_create_regular_node";
 
    ----------------------------------
    -- Implementation for templates --
@@ -332,6 +667,17 @@ private package Gpr_Parser.Rewriting_Implementation is
       Arguments : Node_Rewriting_Handle_Array;
       Rule      : Grammar_Rule) return Node_Rewriting_Handle;
    --  Implementation for Rewriting.Create_From_Template
+
+   function C_Create_From_Template
+     (Handle    : Rewriting_Handle;
+      Template  : access gpr_text;
+      Arguments : C_Node_Array.Object_Pointer;
+      Count     : Interfaces.C.int;
+      Rule      : gpr_grammar_rule) return Node_Rewriting_Handle
+      with Export        => True,
+           Convention    => C,
+           External_Name =>
+             "gpr_rewriting_create_from_template";
 
    -----------------------------
    -- Node creation shortcuts --

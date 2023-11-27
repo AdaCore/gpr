@@ -1117,6 +1117,8 @@ package Gpr_Parser.Analysis is
      (Node : Attribute_Decl'Class) return Gpr_Node;
    --  This field can contain one of the following nodes:
    --  :ada:ref:`Others_Designator`, :ada:ref:`String_Literal_At`
+   --
+   --  This field may be null even when there are no parsing errors.
    --% belongs-to: Attribute_Decl
 
 
@@ -1154,6 +1156,8 @@ package Gpr_Parser.Analysis is
      (Node : Attribute_Reference'Class) return Gpr_Node;
    --  This field can contain one of the following nodes:
    --  :ada:ref:`Others_Designator`, :ada:ref:`String_Literal`
+   --
+   --  This field may be null even when there are no parsing errors.
    --% belongs-to: Attribute_Reference
 
 
@@ -1442,6 +1446,7 @@ package Gpr_Parser.Analysis is
 
    function F_Extension
      (Node : Package_Spec'Class) return Package_Extension;
+   --  This field may be null even when there are no parsing errors.
    --% belongs-to: Package_Spec
 
 
@@ -1526,6 +1531,7 @@ package Gpr_Parser.Analysis is
 
    function F_Qualifier
      (Node : Project_Declaration'Class) return Project_Qualifier;
+   --  This field may be null even when there are no parsing errors.
    --% belongs-to: Project_Declaration
 
       function F_Qualifier
@@ -1549,6 +1555,7 @@ package Gpr_Parser.Analysis is
 
    function F_Extension
      (Node : Project_Declaration'Class) return Project_Extension;
+   --  This field may be null even when there are no parsing errors.
    --% belongs-to: Project_Declaration
 
 
@@ -1663,6 +1670,7 @@ package Gpr_Parser.Analysis is
 
    function F_At_Lit
      (Node : String_Literal_At'Class) return Num_Literal;
+   --  This field may be null even when there are no parsing errors.
    --% belongs-to: String_Literal_At
 
 
@@ -1791,6 +1799,7 @@ package Gpr_Parser.Analysis is
 
    function F_Var_Type
      (Node : Variable_Decl'Class) return Type_Reference;
+   --  This field may be null even when there are no parsing errors.
    --% belongs-to: Variable_Decl
 
 
@@ -1826,6 +1835,7 @@ package Gpr_Parser.Analysis is
 
    function F_Attribute_Ref
      (Node : Variable_Reference'Class) return Attribute_Reference;
+   --  This field may be null even when there are no parsing errors.
    --% belongs-to: Variable_Reference
 
 

@@ -273,6 +273,80 @@ package body Gpr_Parser.Unparsing_Implementation is
       end case;
    end Child;
 
+   ------------------
+   -- Iterate_List --
+   ------------------
+
+   function Iterate_List (Node : Abstract_Node) return Abstract_Cursor is
+   begin
+      case Node.Kind is
+         when From_Parsing =>
+            return
+              (Kind             => From_Parsing,
+               Parsing_List     => Node.Parsing_Node,
+               Next_Child_Index => 1);
+
+         when From_Rewriting =>
+            return
+              (Kind            => From_Rewriting,
+               Rewriting_Child => First_Child (Node.Rewriting_Node));
+      end case;
+   end Iterate_List;
+
+   -----------------
+   -- Has_Element --
+   -----------------
+
+   function Has_Element (Cursor : Abstract_Cursor) return Boolean is
+   begin
+      case Cursor.Kind is
+         when From_Parsing =>
+            return Cursor.Next_Child_Index
+                   <= Children_Count (Cursor.Parsing_List);
+
+         when From_Rewriting =>
+            return Cursor.Rewriting_Child /= No_Node_Rewriting_Handle;
+      end case;
+   end Has_Element;
+
+   -------------
+   -- Element --
+   -------------
+
+   function Element (Cursor : Abstract_Cursor) return Abstract_Node is
+   begin
+      case Cursor.Kind is
+         when From_Parsing =>
+            return
+              Create_Abstract_Node
+                (Child (Cursor.Parsing_List, Cursor.Next_Child_Index));
+
+         when From_Rewriting =>
+            return
+              Create_Abstract_Node (Cursor.Rewriting_Child);
+      end case;
+   end Element;
+
+   ----------
+   -- Next --
+   ----------
+
+   function Next (Cursor : Abstract_Cursor) return Abstract_Cursor is
+   begin
+      case Cursor.Kind is
+         when From_Parsing =>
+            return
+              (Kind             => From_Parsing,
+               Parsing_List     => Cursor.Parsing_List,
+               Next_Child_Index => Cursor.Next_Child_Index + 1);
+
+         when From_Rewriting =>
+            return
+              (Kind            => From_Rewriting,
+               Rewriting_Child => Next_Child (Cursor.Rewriting_Child));
+      end case;
+   end Next;
+
    ----------
    -- Text --
    ----------
@@ -744,10 +818,12 @@ package body Gpr_Parser.Unparsing_Implementation is
       Preserve_Formatting : Boolean;
       Result              : in out Unparsing_Buffer)
    is
+      Cursor   : Abstract_Cursor := Iterate_List (Node);
+      I        : Positive := 1;
       AN_Child : Abstract_Node;
    begin
-      for I in 1 .. Children_Count (Node) loop
-         AN_Child := Child (Node, I);
+      while Has_Element (Cursor) loop
+         AN_Child := Element (Cursor);
          if Is_Null (AN_Child) then
             raise Malformed_Tree_Error with "null node found in a list";
          end if;
@@ -774,6 +850,9 @@ package body Gpr_Parser.Unparsing_Implementation is
          end if;
 
          Unparse_Node (AN_Child, Preserve_Formatting, Result);
+
+         Cursor := Next (Cursor);
+         I := I + 1;
       end loop;
    end Unparse_List_Node;
 
@@ -899,39 +978,39 @@ package body Gpr_Parser.Unparsing_Implementation is
 
 
 
-         Token_Unparser_0 : aliased constant Token_Unparser :=            (Gpr_Amp,             null);
-         Token_Unparser_1 : aliased constant Token_Unparser :=            (Gpr_Tick,             null);
-         Token_Unparser_2 : aliased constant Token_Unparser :=            (Gpr_Par_Open,             null);
-         Token_Unparser_3 : aliased constant Token_Unparser :=            (Gpr_Par_Close,             null);
-         Token_Unparser_4 : aliased constant Token_Unparser :=            (Gpr_Comma,             null);
-         Token_Unparser_5 : aliased constant Token_Unparser :=            (Gpr_Dot,             null);
-         Token_Unparser_6 : aliased constant Token_Unparser :=            (Gpr_Colon,             null);
-         Token_Unparser_7 : aliased constant Token_Unparser :=            (Gpr_Assign,             null);
-         Token_Unparser_8 : aliased constant Token_Unparser :=            (Gpr_Semicolon,             null);
-         Token_Unparser_9 : aliased constant Token_Unparser :=            (Gpr_Arrow,             null);
-         Token_Unparser_10 : aliased constant Token_Unparser :=            (Gpr_Abstract,             null);
+         Token_Unparser_0 : aliased constant Token_Unparser :=            (Gpr_Amp,             new Text_Type'("&"));
+         Token_Unparser_1 : aliased constant Token_Unparser :=            (Gpr_Tick,             new Text_Type'("'"));
+         Token_Unparser_2 : aliased constant Token_Unparser :=            (Gpr_Par_Open,             new Text_Type'("("));
+         Token_Unparser_3 : aliased constant Token_Unparser :=            (Gpr_Par_Close,             new Text_Type'(")"));
+         Token_Unparser_4 : aliased constant Token_Unparser :=            (Gpr_Comma,             new Text_Type'(","));
+         Token_Unparser_5 : aliased constant Token_Unparser :=            (Gpr_Dot,             new Text_Type'("."));
+         Token_Unparser_6 : aliased constant Token_Unparser :=            (Gpr_Colon,             new Text_Type'(":"));
+         Token_Unparser_7 : aliased constant Token_Unparser :=            (Gpr_Assign,             new Text_Type'(":="));
+         Token_Unparser_8 : aliased constant Token_Unparser :=            (Gpr_Semicolon,             new Text_Type'(";"));
+         Token_Unparser_9 : aliased constant Token_Unparser :=            (Gpr_Arrow,             new Text_Type'("=>"));
+         Token_Unparser_10 : aliased constant Token_Unparser :=            (Gpr_Abstract,             new Text_Type'("abstract"));
          Token_Unparser_11 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("aggregate"));
-         Token_Unparser_12 : aliased constant Token_Unparser :=            (Gpr_All,             null);
-         Token_Unparser_13 : aliased constant Token_Unparser :=            (Gpr_At,             null);
-         Token_Unparser_14 : aliased constant Token_Unparser :=            (Gpr_Case,             null);
+         Token_Unparser_12 : aliased constant Token_Unparser :=            (Gpr_All,             new Text_Type'("all"));
+         Token_Unparser_13 : aliased constant Token_Unparser :=            (Gpr_At,             new Text_Type'("at"));
+         Token_Unparser_14 : aliased constant Token_Unparser :=            (Gpr_Case,             new Text_Type'("case"));
          Token_Unparser_15 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("configuration"));
-         Token_Unparser_16 : aliased constant Token_Unparser :=            (Gpr_End,             null);
-         Token_Unparser_17 : aliased constant Token_Unparser :=            (Gpr_Extends,             null);
-         Token_Unparser_18 : aliased constant Token_Unparser :=            (Gpr_For,             null);
-         Token_Unparser_19 : aliased constant Token_Unparser :=            (Gpr_Is,             null);
+         Token_Unparser_16 : aliased constant Token_Unparser :=            (Gpr_End,             new Text_Type'("end"));
+         Token_Unparser_17 : aliased constant Token_Unparser :=            (Gpr_Extends,             new Text_Type'("extends"));
+         Token_Unparser_18 : aliased constant Token_Unparser :=            (Gpr_For,             new Text_Type'("for"));
+         Token_Unparser_19 : aliased constant Token_Unparser :=            (Gpr_Is,             new Text_Type'("is"));
          Token_Unparser_20 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("library"));
-         Token_Unparser_21 : aliased constant Token_Unparser :=            (Gpr_Limited,             null);
-         Token_Unparser_22 : aliased constant Token_Unparser :=            (Gpr_Null,             null);
-         Token_Unparser_23 : aliased constant Token_Unparser :=            (Gpr_Others,             null);
-         Token_Unparser_24 : aliased constant Token_Unparser :=            (Gpr_Package,             null);
+         Token_Unparser_21 : aliased constant Token_Unparser :=            (Gpr_Limited,             new Text_Type'("limited"));
+         Token_Unparser_22 : aliased constant Token_Unparser :=            (Gpr_Null,             new Text_Type'("null"));
+         Token_Unparser_23 : aliased constant Token_Unparser :=            (Gpr_Others,             new Text_Type'("others"));
+         Token_Unparser_24 : aliased constant Token_Unparser :=            (Gpr_Package,             new Text_Type'("package"));
          Token_Unparser_25 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("project"));
-         Token_Unparser_26 : aliased constant Token_Unparser :=            (Gpr_Renames,             null);
+         Token_Unparser_26 : aliased constant Token_Unparser :=            (Gpr_Renames,             new Text_Type'("renames"));
          Token_Unparser_27 : aliased constant Token_Unparser :=            (Gpr_Identifier,             new Text_Type'("standard"));
-         Token_Unparser_28 : aliased constant Token_Unparser :=            (Gpr_Type,             null);
-         Token_Unparser_29 : aliased constant Token_Unparser :=            (Gpr_Use,             null);
-         Token_Unparser_30 : aliased constant Token_Unparser :=            (Gpr_When,             null);
-         Token_Unparser_31 : aliased constant Token_Unparser :=            (Gpr_With,             null);
-         Token_Unparser_32 : aliased constant Token_Unparser :=            (Gpr_Pipe,             null);
+         Token_Unparser_28 : aliased constant Token_Unparser :=            (Gpr_Type,             new Text_Type'("type"));
+         Token_Unparser_29 : aliased constant Token_Unparser :=            (Gpr_Use,             new Text_Type'("use"));
+         Token_Unparser_30 : aliased constant Token_Unparser :=            (Gpr_When,             new Text_Type'("when"));
+         Token_Unparser_31 : aliased constant Token_Unparser :=            (Gpr_With,             new Text_Type'("with"));
+         Token_Unparser_32 : aliased constant Token_Unparser :=            (Gpr_Pipe,             new Text_Type'("|"));
 
             Token_Sequence_1 : aliased constant Token_Sequence :=               (1 => Token_Unparser_1);
             Token_Sequence_2 : aliased constant Token_Sequence :=               (1 => Token_Unparser_2);

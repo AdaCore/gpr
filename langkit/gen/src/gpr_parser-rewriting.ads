@@ -156,6 +156,9 @@ package Gpr_Parser.Rewriting is
    --  Return the introspection type reference corresponding to ``Handle``'s
    --  node.
 
+   function Image (Handle : Node_Rewriting_Handle) return String;
+   --  Return a representation of ``Handle`` as a string.
+
    function Tied (Handle : Node_Rewriting_Handle) return Boolean;
    --  Return whether this node handle is tied to an analysis unit. If it is
    --  not, it can be passed as the Child parameter to Set_Child.
@@ -167,19 +170,6 @@ package Gpr_Parser.Rewriting is
 
    function Children_Count (Handle : Node_Rewriting_Handle) return Natural;
    --  Return the number of children the node represented by Handle has
-
-   function Child_Index
-     (Handle : Node_Rewriting_Handle;
-      Field  : Struct_Member_Ref) return Positive
-   is (Syntax_Field_Index (Field, Type_Of (Handle)));
-   --  Return the index of ``Handle``'s ``Child`` that correspond to the given
-   --  ``Field``.
-
-   function Child
-     (Handle : Node_Rewriting_Handle;
-      Index  : Positive) return Node_Rewriting_Handle;
-   --  Return a handle corresponding to the Index'th child of the node that
-   --  Handle represents. Index is 1-based.
 
    function Child
      (Handle : Node_Rewriting_Handle;
@@ -201,13 +191,9 @@ package Gpr_Parser.Rewriting is
    --     CN_1 := Child (CN_2, Fields (N - 1));
    --     CN := Child (CN_1, Fields (N));
 
-   procedure Set_Child
-     (Handle : Node_Rewriting_Handle;
-      Index  : Positive;
-      Child  : Node_Rewriting_Handle);
-   --  If Child is ``No_Rewriting_Node``, untie the Handle's ``Index``'th child
-   --  to this tree, so it can be attached to another one. Otherwise, Child
-   --  must have no parent as it will be tied to ``Handle``'s tree.
+   function Children
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle_Array;
+   --  Return the list of children for ``Handle``.
 
    procedure Set_Child
      (Handle : Node_Rewriting_Handle;
@@ -232,32 +218,64 @@ package Gpr_Parser.Rewriting is
    --  Note that: * Handle must be tied to an existing analysis unit handle. *
    --  New_Node must not already be tied to another analysis unit handle.
 
+   procedure Rotate (Handles : Node_Rewriting_Handle_Array);
+   --  Given a list of node rewriting handles ``H1``, ``H2``, ... ``HN``,
+   --  replace ``H1`` by ``H2`` in the rewritten tree, replace ``H2`` by
+   --  ``H3``, etc. and replace ``HN`` by ``H1``.
+   --
+   --  Note that this operation is atomic: if it fails, no replacement is
+   --  actually performed.
+
+   function Is_List_Node (Handle : Node_Rewriting_Handle) return Boolean;
+   --  Return whether ``Handle`` represents a list node.
+
    -------------------------
    -- List node rewriting --
    -------------------------
 
-   procedure Insert_Child
-     (Handle : Node_Rewriting_Handle;
-      Index  : Positive;
-      Child  : Node_Rewriting_Handle);
-   --  Assuming Handle refers to a list node, insert the given Child node to be
-   --  in the children list at the given index.
-   --
-   --  The given Child node must not be tied to any analysis unit.
+   function First_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle;
+   --  Assuming ``Handle`` refers to a list node, return a handle to its first
+   --  child, or ``No_Node_Rewriting_Handle``` if it has no child node.
 
-   procedure Append_Child
-     (Handle : Node_Rewriting_Handle;
-      Child  : Node_Rewriting_Handle);
-   --  Assuming Handle refers to a list node, append the given Child node to
-   --  the children list.
-   --
-   --  The given Child node must not be tied to any analysis unit.
+   function Last_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle;
+   --  Assuming ``Handle`` refers to a list node, return a handle to its last
+   --  child, or ``No_Node_Rewriting_Handle``` if it has no child node.
 
-   procedure Remove_Child
-     (Handle : Node_Rewriting_Handle;
-      Index  : Positive);
-   --  Assuming Handle refers to a list node, remove the child at the given
-   --  Index from the children list.
+   function Next_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle;
+   --  Assuming ``Handle`` refers to the child of a list node, return a handle
+   --  to its next sibling, or ``No_Node_Rewriting_Handle``` if it is the last
+   --  sibling.
+
+   function Previous_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle;
+   --  Assuming ``Handle`` refers to the child of a list node, return a handle
+   --  to its previous sibling, or ``No_Node_Rewriting_Handle``` if it is the
+   --  first sibling.
+
+   procedure Insert_Before
+     (Handle, New_Sibling : Node_Rewriting_Handle);
+   --  Assuming ``Handle`` refers to the child of a list node, insert
+   --  ``New_Sibling`` as a new child in this list, right before ``Handle``.
+
+   procedure Insert_After
+     (Handle, New_Sibling : Node_Rewriting_Handle);
+   --  Assuming ``Handle`` refers to the child of a list node, insert
+   --  ``New_Sibling`` as a new child in this list, right before ``Handle``.
+
+   procedure Insert_First (Handle, New_Child : Node_Rewriting_Handle);
+   --  Assuming ``Handle`` refers to a list node, insert ``New_Child`` to be
+   --  the first child in this list.
+
+   procedure Insert_Last (Handle, New_Child : Node_Rewriting_Handle);
+   --  Assuming ``Handle`` refers to a list node, insert ``New_Child`` to be
+   --  the last child in this list.
+
+   procedure Remove_Child (Handle : Node_Rewriting_Handle);
+   --  Assuming Handle refers to the child of a list node, remove it from that
+   --  list.
 
    -------------------
    -- Node creation --

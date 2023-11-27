@@ -38,6 +38,9 @@ package body Gpr_Parser.Rewriting is
      (Arr : Impl.Unit_Rewriting_Handle_Array)
       return Unit_Rewriting_Handle_Array;
 
+   function Wrap_Node_RH_Array
+     (Arr : Impl.Node_Rewriting_Handle_Array)
+      return Node_Rewriting_Handle_Array;
    function Unwrap_Node_RH_Array
      (Arr : Node_Rewriting_Handle_Array)
       return Impl.Node_Rewriting_Handle_Array;
@@ -70,6 +73,22 @@ package body Gpr_Parser.Rewriting is
       end loop;
       return Res;
    end Wrap_Unit_RH_Array;
+
+   ------------------------
+   -- Wrap_Node_RH_Array --
+   ------------------------
+
+   function Wrap_Node_RH_Array
+     (Arr : Impl.Node_Rewriting_Handle_Array)
+      return Node_Rewriting_Handle_Array
+   is
+      Res : Node_Rewriting_Handle_Array (Arr'Range);
+   begin
+      for I in Arr'Range loop
+         Res (I) := Wrap_Node_RH (Arr (I));
+      end loop;
+      return Res;
+   end Wrap_Node_RH_Array;
 
    --------------------------
    -- Unwrap_Node_RH_Array --
@@ -246,6 +265,15 @@ package body Gpr_Parser.Rewriting is
       return Impl.Kind (Unwrap_Node_RH (Handle));
    end Kind;
 
+   -----------
+   -- Image --
+   -----------
+
+   function Image (Handle : Node_Rewriting_Handle) return String is
+   begin
+      return Impl.Image (Unwrap_Node_RH (Handle));
+   end Image;
+
    ----------
    -- Tied --
    ----------
@@ -280,21 +308,9 @@ package body Gpr_Parser.Rewriting is
 
    function Child
      (Handle : Node_Rewriting_Handle;
-      Index  : Positive) return Node_Rewriting_Handle is
+      Field  : Struct_Member_Ref) return Node_Rewriting_Handle is
    begin
-      return Wrap_Node_RH (Impl.Child (Unwrap_Node_RH (Handle), Index));
-   end Child;
-
-   -----------
-   -- Child --
-   -----------
-
-   function Child
-     (Handle : Node_Rewriting_Handle;
-      Field  : Struct_Member_Ref) return Node_Rewriting_Handle
-   is
-   begin
-      return Child (Handle, Child_Index (Handle, Field));
+      return Wrap_Node_RH (Impl.Child (Unwrap_Node_RH (Handle), Field));
    end Child;
 
    -----------
@@ -312,18 +328,16 @@ package body Gpr_Parser.Rewriting is
       end return;
    end Child;
 
-   ---------------
-   -- Set_Child --
-   ---------------
+   --------------
+   -- Children --
+   --------------
 
-   procedure Set_Child
-     (Handle : Node_Rewriting_Handle;
-      Index  : Positive;
-      Child  : Node_Rewriting_Handle)
+   function Children
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle_Array
    is
    begin
-      Impl.Set_Child (Unwrap_Node_RH (Handle), Index, Unwrap_Node_RH (Child));
-   end Set_Child;
+      return Wrap_Node_RH_Array (Impl.Children (Unwrap_Node_RH (Handle)));
+   end Children;
 
    ---------------
    -- Set_Child --
@@ -335,7 +349,7 @@ package body Gpr_Parser.Rewriting is
       Child  : Node_Rewriting_Handle)
    is
    begin
-      Set_Child (Handle, Child_Index (Handle, Field), Child);
+      Impl.Set_Child (Unwrap_Node_RH (Handle), Field, Unwrap_Node_RH (Child));
    end Set_Child;
 
    ----------
@@ -365,39 +379,113 @@ package body Gpr_Parser.Rewriting is
       Impl.Replace (Unwrap_Node_RH (Handle), Unwrap_Node_RH (New_Node));
    end Replace;
 
-   ------------------
-   -- Insert_Child --
-   ------------------
+   ------------
+   -- Rotate --
+   ------------
 
-   procedure Insert_Child
-     (Handle : Node_Rewriting_Handle;
-      Index  : Positive;
-      Child  : Node_Rewriting_Handle) is
+   procedure Rotate (Handles : Node_Rewriting_Handle_Array) is
    begin
-      Impl.Insert_Child
-        (Unwrap_Node_RH (Handle), Index, Unwrap_Node_RH (Child));
-   end Insert_Child;
+      Impl.Rotate (Unwrap_Node_RH_Array (Handles));
+   end Rotate;
 
    ------------------
-   -- Append_Child --
+   -- Is_List_Node --
    ------------------
 
-   procedure Append_Child
-     (Handle : Node_Rewriting_Handle;
-      Child  : Node_Rewriting_Handle) is
+   function Is_List_Node (Handle : Node_Rewriting_Handle) return Boolean is
    begin
-      Impl.Append_Child (Unwrap_Node_RH (Handle), Unwrap_Node_RH (Child));
-   end Append_Child;
+      return Impl.Is_List_Node (Unwrap_Node_RH (Handle));
+   end Is_List_Node;
+
+   -----------------
+   -- First_Child --
+   -----------------
+
+   function First_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle is
+   begin
+      return Wrap_Node_RH (Impl.First_Child (Unwrap_Node_RH (Handle)));
+   end First_Child;
+
+   ----------------
+   -- Last_Child --
+   ----------------
+
+   function Last_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle is
+   begin
+      return Wrap_Node_RH (Impl.Last_Child (Unwrap_Node_RH (Handle)));
+   end Last_Child;
+
+   ----------------
+   -- Next_Child --
+   ----------------
+
+   function Next_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle is
+   begin
+      return Wrap_Node_RH (Impl.Next_Child (Unwrap_Node_RH (Handle)));
+   end Next_Child;
+
+   --------------------
+   -- Previous_Child --
+   --------------------
+
+   function Previous_Child
+     (Handle : Node_Rewriting_Handle) return Node_Rewriting_Handle is
+   begin
+      return Wrap_Node_RH (Impl.Previous_Child (Unwrap_Node_RH (Handle)));
+   end Previous_Child;
+
+   -------------------
+   -- Insert_Before --
+   -------------------
+
+   procedure Insert_Before
+     (Handle, New_Sibling : Node_Rewriting_Handle) is
+   begin
+      Impl.Insert_Before
+        (Unwrap_Node_RH (Handle), Unwrap_Node_RH (New_Sibling));
+   end Insert_Before;
+
+   ------------------
+   -- Insert_After --
+   ------------------
+
+   procedure Insert_After
+     (Handle, New_Sibling : Node_Rewriting_Handle) is
+   begin
+      Impl.Insert_After
+        (Unwrap_Node_RH (Handle), Unwrap_Node_RH (New_Sibling));
+   end Insert_After;
+
+   ------------------
+   -- Insert_First --
+   ------------------
+
+   procedure Insert_First (Handle, New_Child : Node_Rewriting_Handle) is
+   begin
+      Impl.Insert_First
+        (Unwrap_Node_RH (Handle), Unwrap_Node_RH (New_Child));
+   end Insert_First;
+
+   -----------------
+   -- Insert_Last --
+   -----------------
+
+   procedure Insert_Last (Handle, New_Child : Node_Rewriting_Handle) is
+   begin
+      Impl.Insert_Last
+        (Unwrap_Node_RH (Handle), Unwrap_Node_RH (New_Child));
+   end Insert_Last;
 
    ------------------
    -- Remove_Child --
    ------------------
 
-   procedure Remove_Child
-     (Handle : Node_Rewriting_Handle;
-      Index  : Positive) is
+   procedure Remove_Child (Handle : Node_Rewriting_Handle) is
    begin
-      Impl.Remove_Child (Unwrap_Node_RH (Handle), Index);
+      Impl.Remove_Child (Unwrap_Node_RH (Handle));
    end Remove_Child;
 
    -----------

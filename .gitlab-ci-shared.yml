@@ -178,13 +178,17 @@ default:
     # Enable generic CI for building with Anod
 
     cmd="generic_anod_ci"
-    if [ x$CI_MERGE_REQUEST_IID = x ]; then
-      # look for a list of subprojects to use systematically in CBs
+
+    # generic anod ci requires --continuous-builder-mode when not run in a
+    # MR context
+    if [[ $CI_PIPELINE_SOURCE != "merge_request_event" ]]; then
       cmd="$cmd --continuous-builder-mode"
-      for pkg in $JOB_SUBPROJECTS; do
-         cmd="$cmd --add-dep $pkg"
-      done
     fi
+
+    # look for a list of subprojects to use systematically in CBs
+    for pkg in $JOB_SUBPROJECTS; do
+       cmd="$cmd --add-dep $pkg"
+    done
 
     # to set when using a specific version of the generic CI
     if [ x$CI_FRAGMENTS_BRANCH != x ]; then
@@ -228,5 +232,7 @@ issue-check:
     GIT_STRATEGY: none
   rules: # Launch only on merge requests
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  before_script:
+    - echo "skipping before_script for the issue-check job"
   script:
     - require_issue # launch the verification
