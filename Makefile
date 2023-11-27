@@ -83,21 +83,21 @@ PYTHON            ?= python
 # * release: code optimisation and no assertion or contracts checking
 # * release_checks: code optimisation with assertions and contracts checks
 # * gnatcov: code optimisation with gnat coverage instrumentation and assertions
-BUILD_TYPES      ::= debug release release_checks gnatcov
+BUILD_TYPES       := debug release release_checks gnatcov
 
 # Location of the project files
-GPR2             ::= ${SOURCE_DIR}/gpr2.gpr
-GPR2TOOLS        ::= ${SOURCE_DIR}/tools/gpr2-tools.gpr
-GPR2KB           ::= ${SOURCE_DIR}/src/kb/collect_kb.gpr
+GPR2              := ${SOURCE_DIR}/gpr2.gpr
+GPR2TOOLS         := ${SOURCE_DIR}/tools/gpr2-tools.gpr
+GPR2KB            := ${SOURCE_DIR}/src/kb/collect_kb.gpr
 
 # adapt build dirs to out-of-tree builds
 ifeq (${SOURCE_DIR},.)
-BUILD_ROOT       ::= .build
+BUILD_ROOT        := .build
 else
-BUILD_ROOT       ::= .
+BUILD_ROOT        := .
 endif
 
-KB_BUILD_DIR     ::= ${BUILD_ROOT}/kb
+KB_BUILD_DIR      := ${BUILD_ROOT}/kb
 
 # Do not build static-pic and relocatable libs if shared libs are not supported
 LIBGPR2_TYPES     := static
