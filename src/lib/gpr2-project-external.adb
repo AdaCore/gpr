@@ -18,7 +18,6 @@ with Ada.Characters.Conversions;
 with Ada.Containers;
 package body GPR2.Project.External is
 
-   use Ada.Containers;
    use Gpr_Parser.Common;
    use Gpr_Parser.Analysis;
    use Gpr_Parser_Support.Text;

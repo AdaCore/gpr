@@ -14,17 +14,13 @@ library project GPR2 extends "shared.gpr" is
    Is_Externally_Built : Bool := external ("EXTERNALLY_BUILT", "false");
    for Externally_Built use Is_Externally_Built;
 
-   type Langkit_Src_Kind is ("sustained", "generated");
-   Langkit_Src : Langkit_Src_Kind
-                   := external ("LANGKIT_SRC_KIND", "sustained");
-
    KB_Build   := Build_Root & "/kb";
 
    for Languages use ("Ada", "C", "Asm_Cpp");
    for Source_Dirs use ("src/lib",
                         "src/kb",
                         KB_Build,
-                        "langkit/" & Langkit_Src & "/src");
+                        "langkit/gen/src");
    for Library_Name use "gpr2";
 
    for Object_Dir use Build_Root & "/" & Build & "/obj-" & Library_Type;

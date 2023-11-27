@@ -271,7 +271,7 @@ package body Gpr_Parser.Implementation.C is
 
    procedure gpr_unit_root
      (Unit     : gpr_analysis_unit;
-      Result_P : gpr_base_entity_Ptr) is
+      Result_P : gpr_node_Ptr) is
    begin
       Clear_Last_Exception;
 
@@ -478,7 +478,7 @@ package body Gpr_Parser.Implementation.C is
      (Gpr_All_Qualifier_Absent => new Text_Type'(To_Text ("AllQualifierAbsent")), Gpr_All_Qualifier_Present => new Text_Type'(To_Text ("AllQualifierPresent")), Gpr_Attribute_Decl => new Text_Type'(To_Text ("AttributeDecl")), Gpr_Attribute_Reference => new Text_Type'(To_Text ("AttributeReference")), Gpr_Case_Item_List => new Text_Type'(To_Text ("CaseItemList")), Gpr_Gpr_Node_List => new Text_Type'(To_Text ("GprNodeList")), Gpr_Choices => new Text_Type'(To_Text ("Choices")), Gpr_Term_List => new Text_Type'(To_Text ("TermList")), Gpr_Identifier_List => new Text_Type'(To_Text ("IdentifierList")), Gpr_String_Literal_List => new Text_Type'(To_Text ("StringLiteralList")), Gpr_Term_List_List => new Text_Type'(To_Text ("TermListList")), Gpr_With_Decl_List => new Text_Type'(To_Text ("WithDeclList")), Gpr_Builtin_Function_Call => new Text_Type'(To_Text ("BuiltinFunctionCall")), Gpr_Case_Construction => new Text_Type'(To_Text ("CaseConstruction")), Gpr_Case_Item => new Text_Type'(To_Text ("CaseItem")), Gpr_Compilation_Unit => new Text_Type'(To_Text ("CompilationUnit")), Gpr_Empty_Decl => new Text_Type'(To_Text ("EmptyDecl")), Gpr_Prefix => new Text_Type'(To_Text ("Prefix")), Gpr_Identifier => new Text_Type'(To_Text ("Identifier")), Gpr_Num_Literal => new Text_Type'(To_Text ("NumLiteral")), Gpr_String_Literal => new Text_Type'(To_Text ("StringLiteral")), Gpr_Limited_Absent => new Text_Type'(To_Text ("LimitedAbsent")), Gpr_Limited_Present => new Text_Type'(To_Text ("LimitedPresent")), Gpr_Others_Designator => new Text_Type'(To_Text ("OthersDesignator")), Gpr_Package_Decl => new Text_Type'(To_Text ("PackageDecl")), Gpr_Package_Extension => new Text_Type'(To_Text ("PackageExtension")), Gpr_Package_Renaming => new Text_Type'(To_Text ("PackageRenaming")), Gpr_Package_Spec => new Text_Type'(To_Text ("PackageSpec")), Gpr_Project => new Text_Type'(To_Text ("Project")), Gpr_Project_Declaration => new Text_Type'(To_Text ("ProjectDeclaration")), Gpr_Project_Extension => new Text_Type'(To_Text ("ProjectExtension")), Gpr_Project_Qualifier_Abstract => new Text_Type'(To_Text ("ProjectQualifierAbstract")), Gpr_Project_Qualifier_Aggregate => new Text_Type'(To_Text ("ProjectQualifierAggregate")), Gpr_Project_Qualifier_Aggregate_Library => new Text_Type'(To_Text ("ProjectQualifierAggregateLibrary")), Gpr_Project_Qualifier_Configuration => new Text_Type'(To_Text ("ProjectQualifierConfiguration")), Gpr_Project_Qualifier_Library => new Text_Type'(To_Text ("ProjectQualifierLibrary")), Gpr_Project_Qualifier_Standard => new Text_Type'(To_Text ("ProjectQualifierStandard")), Gpr_String_Literal_At => new Text_Type'(To_Text ("StringLiteralAt")), Gpr_Terms => new Text_Type'(To_Text ("Terms")), Gpr_Type_Reference => new Text_Type'(To_Text ("TypeReference")), Gpr_Typed_String_Decl => new Text_Type'(To_Text ("TypedStringDecl")), Gpr_Variable_Decl => new Text_Type'(To_Text ("VariableDecl")), Gpr_Variable_Reference => new Text_Type'(To_Text ("VariableReference")), Gpr_With_Decl => new Text_Type'(To_Text ("WithDecl")));
 
    function gpr_node_kind
-     (Node : gpr_base_entity_Ptr) return gpr_node_kind_enum is
+     (Node : gpr_node_Ptr) return gpr_node_kind_enum is
    begin
       Clear_Last_Exception;
 
@@ -512,7 +512,7 @@ package body Gpr_Parser.Implementation.C is
    end;
 
    function gpr_node_unit
-     (Node : gpr_base_entity_Ptr) return gpr_analysis_unit is
+     (Node : gpr_node_Ptr) return gpr_analysis_unit is
    begin
       Clear_Last_Exception;
       return Node.Node.Unit;
@@ -523,7 +523,7 @@ package body Gpr_Parser.Implementation.C is
    end;
 
    function gpr_is_equivalent
-     (L, R : gpr_base_entity_Ptr) return gpr_bool
+     (L, R : gpr_node_Ptr) return gpr_bool
    is
    begin
       Clear_Last_Exception;
@@ -535,7 +535,7 @@ package body Gpr_Parser.Implementation.C is
    end;
 
    function gpr_hash
-     (Node : gpr_base_entity_Ptr) return uint32_t
+     (Node : gpr_node_Ptr) return uint32_t
    is
    begin
       Clear_Last_Exception;
@@ -547,7 +547,7 @@ package body Gpr_Parser.Implementation.C is
    end;
 
    function gpr_is_token_node
-     (Node : gpr_base_entity_Ptr) return int is
+     (Node : gpr_node_Ptr) return int is
    begin
       Clear_Last_Exception;
       return Boolean'Pos (Is_Token_Node (Node.Node));
@@ -558,7 +558,7 @@ package body Gpr_Parser.Implementation.C is
    end;
 
    function gpr_is_synthetic
-     (Node : gpr_base_entity_Ptr) return int is
+     (Node : gpr_node_Ptr) return int is
    begin
       Clear_Last_Exception;
       return Boolean'Pos (Is_Synthetic (Node.Node));
@@ -569,7 +569,7 @@ package body Gpr_Parser.Implementation.C is
    end;
 
    procedure gpr_node_image
-     (Node : gpr_base_entity_Ptr; Result : access gpr_text) is
+     (Node : gpr_node_Ptr; Result : access gpr_text) is
    begin
       Clear_Last_Exception;
       declare
@@ -583,7 +583,7 @@ package body Gpr_Parser.Implementation.C is
    end;
 
    procedure gpr_node_text
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
       Text : access gpr_text) is
    begin
       Clear_Last_Exception;
@@ -594,7 +594,7 @@ package body Gpr_Parser.Implementation.C is
    end;
 
    procedure gpr_node_sloc_range
-     (Node         : gpr_base_entity_Ptr;
+     (Node         : gpr_node_Ptr;
       Sloc_Range_P : access gpr_source_location_range) is
    begin
       Clear_Last_Exception;
@@ -606,9 +606,9 @@ package body Gpr_Parser.Implementation.C is
    end;
 
    procedure gpr_lookup_in_node
-     (Node   : gpr_base_entity_Ptr;
+     (Node   : gpr_node_Ptr;
       Sloc   : gpr_source_location;
-      Result : gpr_base_entity_Ptr) is
+      Result : gpr_node_Ptr) is
    begin
       Clear_Last_Exception;
 
@@ -623,7 +623,7 @@ package body Gpr_Parser.Implementation.C is
    end;
 
    function gpr_node_children_count
-     (Node : gpr_base_entity_Ptr) return unsigned is
+     (Node : gpr_node_Ptr) return unsigned is
    begin
       Clear_Last_Exception;
       return unsigned (Children_Count (Node.Node));
@@ -634,9 +634,9 @@ package body Gpr_Parser.Implementation.C is
    end;
 
    function gpr_node_child
-     (Node    : gpr_base_entity_Ptr;
+     (Node    : gpr_node_Ptr;
       N       : unsigned;
-      Child_P : gpr_base_entity_Ptr) return int is
+      Child_P : gpr_node_Ptr) return int is
    begin
       Clear_Last_Exception;
 
@@ -988,6 +988,21 @@ package body Gpr_Parser.Implementation.C is
       T : Text_Access := new Text_Type'(S);
    begin
       return gpr_text'(T.all'Address, T.all'Length, Is_Allocated => 1);
+   end Wrap_Alloc;
+
+   ----------------
+   -- Wrap_Alloc --
+   ----------------
+
+   function Wrap_Alloc (S : Unbounded_Wide_Wide_String) return gpr_text is
+      Chars     : Big_Wide_Wide_String_Access;
+      Length    : Natural;
+      Allocated : Text_Access;
+   begin
+      Get_Wide_Wide_String (S, Chars, Length);
+      Allocated := new Text_Type (1 .. Length);
+      Allocated.all := Chars (1 .. Length);
+      return (Allocated.all'Address, Allocated.all'Length, 1);
    end Wrap_Alloc;
 
    ----------
@@ -1450,10 +1465,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_gpr_node_parent
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -1496,13 +1511,13 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_gpr_node_parents
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
          With_Self :
             
             gpr_bool;
 
-      Value_P : access gpr_gpr_node_array) return int
+      Value_P : access gpr_node_array) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -1549,10 +1564,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_gpr_node_children
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_gpr_node_array) return int
+      Value_P : access gpr_node_array) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -1595,7 +1610,7 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_gpr_node_token_start
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access gpr_token) return int
@@ -1641,7 +1656,7 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_gpr_node_token_end
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access gpr_token) return int
@@ -1687,7 +1702,7 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_gpr_node_child_index
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access int) return int
@@ -1733,10 +1748,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_gpr_node_previous_sibling
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -1779,10 +1794,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_gpr_node_next_sibling
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -1825,7 +1840,7 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_gpr_node_unit
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access gpr_analysis_unit) return int
@@ -1871,7 +1886,7 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_gpr_node_is_ghost
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access gpr_bool) return int
@@ -1917,7 +1932,7 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_gpr_node_full_sloc_image
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access gpr_string_type) return int
@@ -1963,7 +1978,7 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_all_qualifier_p_as_bool
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access gpr_bool) return int
@@ -2013,10 +2028,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_attribute_decl_f_attr_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2063,10 +2078,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_attribute_decl_f_attr_index
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2113,10 +2128,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_attribute_decl_f_expr
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2163,10 +2178,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_attribute_reference_f_attribute_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2213,10 +2228,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_attribute_reference_f_attribute_index
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2263,10 +2278,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_builtin_function_call_f_function_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2313,10 +2328,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_builtin_function_call_f_parameters
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2363,10 +2378,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_case_construction_f_var_ref
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2413,10 +2428,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_case_construction_f_items
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2463,10 +2478,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_case_item_f_choice
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2513,10 +2528,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_case_item_f_decls
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2563,10 +2578,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_compilation_unit_f_project
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2613,10 +2628,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_prefix_f_prefix
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2663,10 +2678,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_prefix_f_suffix
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2713,7 +2728,7 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_limited_node_p_as_bool
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
       Value_P : access gpr_bool) return int
@@ -2763,10 +2778,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_package_decl_f_pkg_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2813,10 +2828,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_package_decl_f_pkg_spec
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2863,10 +2878,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_package_extension_f_extended_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2913,10 +2928,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_package_renaming_f_renamed_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -2963,10 +2978,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_package_spec_f_extension
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3013,10 +3028,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_package_spec_f_decls
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3063,10 +3078,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_package_spec_f_end_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3113,10 +3128,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_project_f_context_clauses
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3163,10 +3178,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_project_f_project_decl
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3213,10 +3228,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_project_declaration_f_qualifier
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3263,10 +3278,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_project_declaration_f_project_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3313,10 +3328,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_project_declaration_f_extension
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3363,10 +3378,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_project_declaration_f_decls
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3413,10 +3428,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_project_declaration_f_end_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3463,10 +3478,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_project_extension_f_is_all
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3513,10 +3528,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_project_extension_f_path_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3563,10 +3578,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_string_literal_at_f_str_lit
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3613,10 +3628,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_string_literal_at_f_at_lit
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3663,10 +3678,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_terms_f_terms
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3713,10 +3728,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_type_reference_f_var_type_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3763,10 +3778,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_typed_string_decl_f_type_id
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3813,10 +3828,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_typed_string_decl_f_string_literals
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3863,10 +3878,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_variable_decl_f_var_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3913,10 +3928,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_variable_decl_f_var_type
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -3963,10 +3978,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_variable_decl_f_expr
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -4013,10 +4028,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_variable_reference_f_variable_name
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -4063,10 +4078,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_variable_reference_f_attribute_ref
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -4113,10 +4128,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_with_decl_f_is_limited
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -4163,10 +4178,10 @@ package body Gpr_Parser.Implementation.C is
    
 
    function gpr_with_decl_f_path_names
-     (Node : gpr_base_entity_Ptr;
+     (Node : gpr_node_Ptr;
 
 
-      Value_P : access gpr_base_entity) return int
+      Value_P : access gpr_node) return int
 
    is
       Unwrapped_Node : constant Bare_Gpr_Node := Node.Node;
@@ -4217,7 +4232,7 @@ package body Gpr_Parser.Implementation.C is
 
 
 
-function gpr_gpr_node_array_create (Length : int) return Internal_Entity_Array_Access is
+function gpr_node_array_create (Length : int) return Internal_Entity_Array_Access is
 begin
    Clear_Last_Exception;
    return Create_Internal_Entity_Array (Natural (Length));
@@ -4225,9 +4240,9 @@ exception
    when Exc : others =>
       Set_Last_Exception (Exc);
       return null;
-end gpr_gpr_node_array_create;
+end gpr_node_array_create;
 
-procedure gpr_gpr_node_array_inc_ref (A : Internal_Entity_Array_Access) is
+procedure gpr_node_array_inc_ref (A : Internal_Entity_Array_Access) is
 begin
    Clear_Last_Exception;
    Inc_Ref (A);
@@ -4236,7 +4251,7 @@ exception
       Set_Last_Exception (Exc);
 end;
 
-procedure gpr_gpr_node_array_dec_ref (A : Internal_Entity_Array_Access) is
+procedure gpr_node_array_dec_ref (A : Internal_Entity_Array_Access) is
 begin
    Clear_Last_Exception;
    declare

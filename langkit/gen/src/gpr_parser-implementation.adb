@@ -7822,7 +7822,7 @@ end case;
 
 
 
---# property-start GprNode.can_reach /home/lambourg/sbx/gpr/x86_64-linux/stable-langkit/install/lib/python3.9/site-packages/Langkit-0.1.0-py3.9.egg/langkit/compiled_types.py:0
+--# property-start GprNode.can_reach /home/lambourg/sbx/gpr/x86_64-linux/langkit/install/lib/python3.9/site-packages/Langkit-0.1.0-py3.9.egg/langkit/compiled_types.py:0
 pragma Warnings (Off, "is not referenced");
  function Gpr_Node_P_Can_Reach
   

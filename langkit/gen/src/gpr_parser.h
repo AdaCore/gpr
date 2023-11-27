@@ -601,7 +601,7 @@ typedef struct {
     * Gramar rule to use for parsing.
     */
 
-const gpr_grammar_rule gpr_default_grammar_rule = GPR_GRAMMAR_RULE_COMPILATION_UNIT_RULE;
+#define gpr_default_grammar_rule GPR_GRAMMAR_RULE_COMPILATION_UNIT_RULE
 
 /*
  * Enumerated type describing all possible exceptions that need to be handled
@@ -653,7 +653,7 @@ typedef struct {
 
         
 
-typedef struct gpr_gpr_node_array_record *gpr_gpr_node_array;
+typedef struct gpr_node_array_record *gpr_node_array;
 
 
 /*
@@ -672,7 +672,7 @@ typedef struct gpr_gpr_node_array_record *gpr_gpr_node_array;
 
 
 
-typedef void* gpr_gpr_node_iterator;
+typedef void* gpr_node_iterator;
 
 
 
@@ -707,7 +707,7 @@ typedef void* gpr_gpr_node_iterator;
     typedef struct {
             gpr_base_node node;
             gpr_internal_entity_info info;
-    } gpr_base_entity;
+    } gpr_node;
 
 
 
@@ -816,6 +816,162 @@ typedef void (*gpr_file_reader_read_callback)(
  */
 typedef void *gpr_unit_provider;
 
+/*
+ * Types for introspection
+ */
+
+/* References to struct/node members.  */
+typedef enum {
+      gpr_member_ref_attribute_decl_f_attr_name
+        = 1,
+      gpr_member_ref_attribute_decl_f_attr_index
+        = 2,
+      gpr_member_ref_attribute_decl_f_expr
+        = 3,
+      gpr_member_ref_attribute_reference_f_attribute_name
+        = 4,
+      gpr_member_ref_attribute_reference_f_attribute_index
+        = 5,
+      gpr_member_ref_builtin_function_call_f_function_name
+        = 6,
+      gpr_member_ref_builtin_function_call_f_parameters
+        = 7,
+      gpr_member_ref_case_construction_f_var_ref
+        = 8,
+      gpr_member_ref_case_construction_f_items
+        = 9,
+      gpr_member_ref_case_item_f_choice
+        = 10,
+      gpr_member_ref_case_item_f_decls
+        = 11,
+      gpr_member_ref_compilation_unit_f_project
+        = 12,
+      gpr_member_ref_prefix_f_prefix
+        = 13,
+      gpr_member_ref_prefix_f_suffix
+        = 14,
+      gpr_member_ref_package_decl_f_pkg_name
+        = 15,
+      gpr_member_ref_package_decl_f_pkg_spec
+        = 16,
+      gpr_member_ref_package_extension_f_extended_name
+        = 17,
+      gpr_member_ref_package_renaming_f_renamed_name
+        = 18,
+      gpr_member_ref_package_spec_f_extension
+        = 19,
+      gpr_member_ref_package_spec_f_decls
+        = 20,
+      gpr_member_ref_package_spec_f_end_name
+        = 21,
+      gpr_member_ref_project_f_context_clauses
+        = 22,
+      gpr_member_ref_project_f_project_decl
+        = 23,
+      gpr_member_ref_project_declaration_f_qualifier
+        = 24,
+      gpr_member_ref_project_declaration_f_project_name
+        = 25,
+      gpr_member_ref_project_declaration_f_extension
+        = 26,
+      gpr_member_ref_project_declaration_f_decls
+        = 27,
+      gpr_member_ref_project_declaration_f_end_name
+        = 28,
+      gpr_member_ref_project_extension_f_is_all
+        = 29,
+      gpr_member_ref_project_extension_f_path_name
+        = 30,
+      gpr_member_ref_string_literal_at_f_str_lit
+        = 31,
+      gpr_member_ref_string_literal_at_f_at_lit
+        = 32,
+      gpr_member_ref_terms_f_terms
+        = 33,
+      gpr_member_ref_type_reference_f_var_type_name
+        = 34,
+      gpr_member_ref_typed_string_decl_f_type_id
+        = 35,
+      gpr_member_ref_typed_string_decl_f_string_literals
+        = 36,
+      gpr_member_ref_variable_decl_f_var_name
+        = 37,
+      gpr_member_ref_variable_decl_f_var_type
+        = 38,
+      gpr_member_ref_variable_decl_f_expr
+        = 39,
+      gpr_member_ref_variable_reference_f_variable_name
+        = 40,
+      gpr_member_ref_variable_reference_f_attribute_ref
+        = 41,
+      gpr_member_ref_with_decl_f_is_limited
+        = 42,
+      gpr_member_ref_with_decl_f_path_names
+        = 43,
+      gpr_member_ref_parent
+        = 44,
+      gpr_member_ref_parents
+        = 45,
+      gpr_member_ref_children
+        = 46,
+      gpr_member_ref_token_start
+        = 47,
+      gpr_member_ref_token_end
+        = 48,
+      gpr_member_ref_child_index
+        = 49,
+      gpr_member_ref_previous_sibling
+        = 50,
+      gpr_member_ref_next_sibling
+        = 51,
+      gpr_member_ref_unit
+        = 52,
+      gpr_member_ref_is_ghost
+        = 53,
+      gpr_member_ref_full_sloc_image
+        = 54,
+      gpr_member_ref_all_qualifier_p_as_bool
+        = 55,
+      gpr_member_ref_limited_node_p_as_bool
+        = 56,
+} gpr_introspection_member_ref;
+
+/*
+ * Types for tree rewriting
+ */
+
+/*
+ * Handle for an analysis context rewriting session
+ */
+typedef void *gpr_rewriting_handle;
+
+/*
+ * Handle for the process of rewriting an analysis unit. Such handles are owned
+ * by a Rewriting_Handle instance.
+ */
+typedef void *gpr_unit_rewriting_handle;
+
+/*
+ * Handle for the process of rewriting an AST node. Such handles are owned by a
+ * Rewriting_Handle instance.
+ */
+typedef void *gpr_node_rewriting_handle;
+
+/*
+ * Result of applying a rewriting session.
+ *
+ * On success, ``Success`` is true.
+ *
+ * On failure, ``Success`` is false, ``Unit`` is set to the unit on which
+ * rewriting failed, and ``Diagnostics`` is set to related rewriting errors.
+ */
+typedef struct {
+    int success;
+    gpr_analysis_unit unit;
+    int diagnostics_count;
+    gpr_diagnostic *diagnostics;
+} gpr_rewriting_apply_result;
+
 /* All the functions below can potentially raise an exception, so
    gpr_get_last_exception must be checked after them even
    before trying to use the returned value.  */
@@ -832,24 +988,54 @@ typedef void *gpr_unit_provider;
 /*
 
  */
-struct gpr_gpr_node_array_record {
+struct gpr_node_array_record {
    int n;
    int ref_count;
-   gpr_base_entity items[1];
+   gpr_node items[1];
 };
 
 /* Create a length-sized array.  */
-extern gpr_gpr_node_array
-gpr_gpr_node_array_create(int length);
+extern gpr_node_array
+gpr_node_array_create(int length);
 
 /* Increment the ref-count for "a".  */
 extern void
-gpr_gpr_node_array_inc_ref(gpr_gpr_node_array a);
+gpr_node_array_inc_ref(gpr_node_array a);
 
 /* Decrement the ref-count for "a". This deallocates it if the ref-count drops
    to 0.  */
 extern void
-gpr_gpr_node_array_dec_ref(gpr_gpr_node_array a);
+gpr_node_array_dec_ref(gpr_node_array a);
+
+
+
+/*
+ * Iterator types declarations
+ */
+
+
+
+
+
+/*
+ * Set the next value from the iterator in the given element pointer. Return
+ * ``1`` if successful, otherwise ``0``.
+ *
+ * This raises a ``Stale_Reference_Error`` exception if the iterator is
+ * invalidated.
+ */
+extern int
+gpr_node_iterator_next(gpr_node_iterator i, gpr_node* e);
+
+/* Increment the ref-count for "i".  */
+extern void
+gpr_node_iterator_inc_ref(gpr_node_iterator i);
+
+/* Decrement the ref-count for "i". This deallocates it if the ref-count drops
+   to 0.  */
+extern void
+gpr_node_iterator_dec_ref(gpr_node_iterator i);
+
 
 
 
@@ -966,7 +1152,7 @@ gpr_get_analysis_unit_from_buffer(
  */
 extern void
 gpr_unit_root(gpr_analysis_unit unit,
-                              gpr_base_entity *result_p);
+                              gpr_node *result_p);
 
 /*
  * Return a reference to the first token scanned in this unit.
@@ -1083,7 +1269,7 @@ gpr_unit_populate_lexical_env(
  * Return whether this node is a null node reference.
  */
 static inline int
-gpr_node_is_null(gpr_base_entity *node) {
+gpr_node_is_null(gpr_node *node) {
     return node->node == NULL;
 }
 
@@ -1091,7 +1277,7 @@ gpr_node_is_null(gpr_base_entity *node) {
  * Return the kind of this node.
  */
 extern gpr_node_kind_enum
-gpr_node_kind(gpr_base_entity *node);
+gpr_node_kind(gpr_node *node);
 
 /*
  * Helper for textual dump: return the kind name for this node. The returned
@@ -1104,37 +1290,37 @@ gpr_kind_name(gpr_node_kind_enum kind, gpr_text *result);
  * Return the analysis unit that owns this node.
  */
 extern gpr_analysis_unit
-gpr_node_unit(gpr_base_entity *node);
+gpr_node_unit(gpr_node *node);
 
 /*
  * Return a hash for the given node.
  */
 extern uint32_t
-gpr_node_hash(gpr_base_entity *node);
+gpr_node_hash(gpr_node *node);
 
 /*
  * Return whether the two nodes are equivalent.
  */
 extern gpr_bool
-gpr_node_is_equivalent(gpr_base_entity *l, gpr_base_entity *r);
+gpr_node_is_equivalent(gpr_node *l, gpr_node *r);
 
 /*
  * Return whether this node is a node that contains only a single token.
  */
 extern int
-gpr_node_is_token_node(gpr_base_entity *node);
+gpr_node_is_token_node(gpr_node *node);
 
 /*
  * Return whether this node is synthetic.
  */
 extern int
-gpr_node_is_synthetic(gpr_base_entity *node);
+gpr_node_is_synthetic(gpr_node *node);
 
 /*
  * Return a representation of this node as a string.
  */
 extern void
-gpr_node_image(gpr_base_entity *node,
+gpr_node_image(gpr_node *node,
                                gpr_text *result);
 
 /*
@@ -1144,7 +1330,7 @@ gpr_node_image(gpr_base_entity *node,
  * Note that this returns the empty string for synthetic nodes.
  */
 extern void
-gpr_node_text(gpr_base_entity *node,
+gpr_node_text(gpr_node *node,
                               gpr_text *text);
 
 /*
@@ -1153,7 +1339,7 @@ gpr_node_text(gpr_base_entity *node,
  * Note that this returns the sloc of the parent for synthetic nodes.
  */
 extern void
-gpr_node_sloc_range(gpr_base_entity *node,
+gpr_node_sloc_range(gpr_node *node,
                                     gpr_source_location_range *sloc_range);
 
 /*
@@ -1161,24 +1347,24 @@ gpr_node_sloc_range(gpr_base_entity *node,
  * ``Sloc``, or ``NULL`` if there is none.
  */
 extern void
-gpr_lookup_in_node(gpr_base_entity *node,
+gpr_lookup_in_node(gpr_node *node,
                                    const gpr_source_location *sloc,
-                                   gpr_base_entity *result_p);
+                                   gpr_node *result_p);
 
 /*
  * Return the number of children in this node.
  */
 extern unsigned
-gpr_node_children_count(gpr_base_entity *node);
+gpr_node_children_count(gpr_node *node);
 
 /*
  * Return the Nth child for in this node's fields and store it into
  * ``*child_p``.  Return zero on failure (when ``N`` is too big).
  */
 extern int
-gpr_node_child(gpr_base_entity *node,
+gpr_node_child(gpr_node *node,
                                unsigned n,
-                               gpr_base_entity* child_p);
+                               gpr_node* child_p);
 
 /*
  * Encode some text using the current locale. The result is dynamically
@@ -1275,10 +1461,10 @@ gpr_string_dec_ref(gpr_string_type self);
  * Return the syntactic parent for this node. Return null for the root node.
  */
 extern int gpr_gpr_node_parent(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1291,13 +1477,13 @@ extern int gpr_gpr_node_parent(
  * ``with_self`` is True. Nearer parents are first in the list.
  */
 extern int gpr_gpr_node_parents(
-    gpr_base_entity *node,
+    gpr_node *node,
 
         
         gpr_bool
         with_self,
 
-    gpr_gpr_node_array *value_p
+    gpr_node_array *value_p
 );
 
 
@@ -1312,10 +1498,10 @@ extern int gpr_gpr_node_parents(
  *    such is less efficient than calling the ``Child`` built-in.
  */
 extern int gpr_gpr_node_children(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_gpr_node_array *value_p
+    gpr_node_array *value_p
 );
 
 
@@ -1327,7 +1513,7 @@ extern int gpr_gpr_node_children(
  * Return the first token used to parse this node.
  */
 extern int gpr_gpr_node_token_start(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
     gpr_token *value_p
@@ -1342,7 +1528,7 @@ extern int gpr_gpr_node_token_start(
  * Return the last token used to parse this node.
  */
 extern int gpr_gpr_node_token_end(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
     gpr_token *value_p
@@ -1357,7 +1543,7 @@ extern int gpr_gpr_node_token_end(
  * Return the 0-based index for Node in its parent's children.
  */
 extern int gpr_gpr_node_child_index(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
     int *value_p
@@ -1372,10 +1558,10 @@ extern int gpr_gpr_node_child_index(
  * Return the node's previous sibling, or null if there is no such sibling.
  */
 extern int gpr_gpr_node_previous_sibling(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1387,10 +1573,10 @@ extern int gpr_gpr_node_previous_sibling(
  * Return the node's next sibling, or null if there is no such sibling.
  */
 extern int gpr_gpr_node_next_sibling(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1402,7 +1588,7 @@ extern int gpr_gpr_node_next_sibling(
  * Return the analysis unit owning this node.
  */
 extern int gpr_gpr_node_unit(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
     gpr_analysis_unit *value_p
@@ -1422,7 +1608,7 @@ extern int gpr_gpr_node_unit(
  * logical position.
  */
 extern int gpr_gpr_node_is_ghost(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
     gpr_bool *value_p
@@ -1438,7 +1624,7 @@ extern int gpr_gpr_node_is_ghost(
  * Useful to create diagnostics from a node.
  */
 extern int gpr_gpr_node_full_sloc_image(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
     gpr_string_type *value_p
@@ -1453,7 +1639,7 @@ extern int gpr_gpr_node_full_sloc_image(
  * Return whether this is an instance of AllQualifierPresent
  */
 extern int gpr_all_qualifier_p_as_bool(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
     gpr_bool *value_p
@@ -1468,10 +1654,10 @@ extern int gpr_all_qualifier_p_as_bool(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_attribute_decl_f_attr_name(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1482,12 +1668,14 @@ extern int gpr_attribute_decl_f_attr_name(
 /*
  * This field can contain one of the following nodes:
  * ``gpr_others_designator``, ``gpr_string_literal_at``
+ *
+ * This field may be null even when there are no parsing errors.
  */
 extern int gpr_attribute_decl_f_attr_index(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1503,10 +1691,10 @@ extern int gpr_attribute_decl_f_attr_index(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_attribute_decl_f_expr(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1518,10 +1706,10 @@ extern int gpr_attribute_decl_f_expr(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_attribute_reference_f_attribute_name(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1532,12 +1720,14 @@ extern int gpr_attribute_reference_f_attribute_name(
 /*
  * This field can contain one of the following nodes:
  * ``gpr_others_designator``, ``gpr_string_literal``
+ *
+ * This field may be null even when there are no parsing errors.
  */
 extern int gpr_attribute_reference_f_attribute_index(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1549,10 +1739,10 @@ extern int gpr_attribute_reference_f_attribute_index(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_builtin_function_call_f_function_name(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1564,10 +1754,10 @@ extern int gpr_builtin_function_call_f_function_name(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_builtin_function_call_f_parameters(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1579,10 +1769,10 @@ extern int gpr_builtin_function_call_f_parameters(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_case_construction_f_var_ref(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1594,10 +1784,10 @@ extern int gpr_case_construction_f_var_ref(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_case_construction_f_items(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1612,10 +1802,10 @@ extern int gpr_case_construction_f_items(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_case_item_f_choice(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1631,10 +1821,10 @@ extern int gpr_case_item_f_choice(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_case_item_f_decls(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1646,10 +1836,10 @@ extern int gpr_case_item_f_decls(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_compilation_unit_f_project(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1664,10 +1854,10 @@ extern int gpr_compilation_unit_f_project(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_prefix_f_prefix(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1679,10 +1869,10 @@ extern int gpr_prefix_f_prefix(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_prefix_f_suffix(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1694,7 +1884,7 @@ extern int gpr_prefix_f_suffix(
  * Return whether this is an instance of LimitedPresent
  */
 extern int gpr_limited_node_p_as_bool(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
     gpr_bool *value_p
@@ -1709,10 +1899,10 @@ extern int gpr_limited_node_p_as_bool(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_package_decl_f_pkg_name(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1727,10 +1917,10 @@ extern int gpr_package_decl_f_pkg_name(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_package_decl_f_pkg_spec(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1742,10 +1932,10 @@ extern int gpr_package_decl_f_pkg_spec(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_package_extension_f_extended_name(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1757,10 +1947,10 @@ extern int gpr_package_extension_f_extended_name(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_package_renaming_f_renamed_name(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1769,13 +1959,13 @@ extern int gpr_package_renaming_f_renamed_name(
 
 
 /*
-
+ * This field may be null even when there are no parsing errors.
  */
 extern int gpr_package_spec_f_extension(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1791,10 +1981,10 @@ extern int gpr_package_spec_f_extension(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_package_spec_f_decls(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1806,10 +1996,10 @@ extern int gpr_package_spec_f_decls(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_package_spec_f_end_name(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1821,10 +2011,10 @@ extern int gpr_package_spec_f_end_name(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_project_f_context_clauses(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1836,10 +2026,10 @@ extern int gpr_project_f_context_clauses(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_project_f_project_decl(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1848,13 +2038,13 @@ extern int gpr_project_f_project_decl(
 
 
 /*
-
+ * This field may be null even when there are no parsing errors.
  */
 extern int gpr_project_declaration_f_qualifier(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1869,10 +2059,10 @@ extern int gpr_project_declaration_f_qualifier(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_project_declaration_f_project_name(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1881,13 +2071,13 @@ extern int gpr_project_declaration_f_project_name(
 
 
 /*
-
+ * This field may be null even when there are no parsing errors.
  */
 extern int gpr_project_declaration_f_extension(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1903,10 +2093,10 @@ extern int gpr_project_declaration_f_extension(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_project_declaration_f_decls(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1921,10 +2111,10 @@ extern int gpr_project_declaration_f_decls(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_project_declaration_f_end_name(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1936,10 +2126,10 @@ extern int gpr_project_declaration_f_end_name(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_project_extension_f_is_all(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1951,10 +2141,10 @@ extern int gpr_project_extension_f_is_all(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_project_extension_f_path_name(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1966,10 +2156,10 @@ extern int gpr_project_extension_f_path_name(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_string_literal_at_f_str_lit(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1978,13 +2168,13 @@ extern int gpr_string_literal_at_f_str_lit(
 
 
 /*
-
+ * This field may be null even when there are no parsing errors.
  */
 extern int gpr_string_literal_at_f_at_lit(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -1996,10 +2186,10 @@ extern int gpr_string_literal_at_f_at_lit(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_terms_f_terms(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -2011,10 +2201,10 @@ extern int gpr_terms_f_terms(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_type_reference_f_var_type_name(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -2026,10 +2216,10 @@ extern int gpr_type_reference_f_var_type_name(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_typed_string_decl_f_type_id(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -2041,10 +2231,10 @@ extern int gpr_typed_string_decl_f_type_id(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_typed_string_decl_f_string_literals(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -2056,10 +2246,10 @@ extern int gpr_typed_string_decl_f_string_literals(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_variable_decl_f_var_name(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -2068,13 +2258,13 @@ extern int gpr_variable_decl_f_var_name(
 
 
 /*
-
+ * This field may be null even when there are no parsing errors.
  */
 extern int gpr_variable_decl_f_var_type(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -2090,10 +2280,10 @@ extern int gpr_variable_decl_f_var_type(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_variable_decl_f_expr(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -2105,10 +2295,10 @@ extern int gpr_variable_decl_f_expr(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_variable_reference_f_variable_name(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -2117,13 +2307,13 @@ extern int gpr_variable_reference_f_variable_name(
 
 
 /*
-
+ * This field may be null even when there are no parsing errors.
  */
 extern int gpr_variable_reference_f_attribute_ref(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -2135,10 +2325,10 @@ extern int gpr_variable_reference_f_attribute_ref(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_with_decl_f_is_limited(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -2150,10 +2340,10 @@ extern int gpr_with_decl_f_is_limited(
  * When there are no parsing errors, this field is never null.
  */
 extern int gpr_with_decl_f_path_names(
-    gpr_base_entity *node,
+    gpr_node *node,
 
 
-    gpr_base_entity *value_p
+    gpr_node *value_p
 );
 
 
@@ -2327,6 +2517,437 @@ gpr_token_range_text(gpr_token *first,
 extern gpr_bool
 gpr_token_is_equivalent(gpr_token *left,
                                         gpr_token *right);
+
+/*
+ * Tree rewriting
+ */
+
+/* ... context rewriting... */
+
+/*
+ * Return the rewriting handle associated to Context, or No_Rewriting_Handle if
+ * Context is not being rewritten.
+ */
+extern gpr_rewriting_handle
+gpr_rewriting_context_to_handle(
+    gpr_analysis_context context
+);
+
+/*
+ * Return the analysis context associated to Handle
+ */
+extern gpr_analysis_context
+gpr_rewriting_handle_to_context(
+    gpr_rewriting_handle handle
+);
+
+/*
+ * Start a rewriting session for Context.
+ *
+ * This handle will keep track of all changes to do on Context's analysis
+ * units. Once the set of changes is complete, call the Apply procedure to
+ * actually update Context. This makes it possible to inspect the "old" Context
+ * state while creating the list of changes.
+ *
+ * There can be only one rewriting session per analysis context, so this will
+ * raise an Existing_Rewriting_Handle_Error exception if Context already has a
+ * living rewriting session.
+ */
+extern gpr_rewriting_handle
+gpr_rewriting_start_rewriting(
+    gpr_analysis_context context
+);
+
+/*
+ * Discard all modifications registered in Handle and close Handle. This
+ * invalidates all related unit/node handles.
+ */
+extern void
+gpr_rewriting_abort_rewriting(
+    gpr_rewriting_handle context
+);
+
+/*
+ * Apply all modifications to Handle's analysis context. If that worked, close
+ * Handle and return (Success => True). Otherwise, reparsing did not work, so
+ * keep Handle and its Context unchanged and return details about the error
+ * that happened.
+ *
+ * Note that on success, this invalidates all related unit/node handles.
+ */
+extern void
+gpr_rewriting_apply(
+    gpr_rewriting_handle context,
+    gpr_rewriting_apply_result *result
+);
+
+/*
+ * Free the result of the ``Apply`` operation.
+ */
+extern void
+gpr_rewriting_free_apply_result(
+    gpr_rewriting_apply_result *result
+);
+
+/*
+ * Return the list of unit rewriting handles in the given context handle for
+ * units that the Apply primitive will modify.
+ *
+ * This returns the list as a dynamically allocated NULL-terminated array, that
+ * the caller must free when done with it.
+ */
+extern gpr_unit_rewriting_handle *
+gpr_rewriting_unit_handles(
+    gpr_rewriting_handle handle
+);
+
+/* ... unit rewriting... */
+
+/*
+ * Return the rewriting handle corresponding to Unit
+ */
+extern gpr_unit_rewriting_handle
+gpr_rewriting_unit_to_handle(gpr_analysis_unit context);
+
+/*
+ * Return the unit corresponding to Handle
+ */
+extern gpr_analysis_unit
+gpr_rewriting_handle_to_unit(
+    gpr_unit_rewriting_handle handle
+);
+
+/*
+ * Return the node handle corresponding to the root of the unit which Handle
+ * designates.
+ */
+extern gpr_node_rewriting_handle
+gpr_rewriting_unit_root(
+    gpr_unit_rewriting_handle handle
+);
+
+/*
+ * Set the root node for the unit Handle to Root. This unties the previous root
+ * handle. If Root is not No_Node_Rewriting_Handle, this also ties Root to
+ * Handle.
+ *
+ * Root must not already be tied to another analysis unit handle.
+ */
+extern void
+gpr_rewriting_unit_set_root(
+    gpr_unit_rewriting_handle handle,
+    gpr_unit_rewriting_handle root
+);
+
+/*
+ * Return the text associated to the given unit.
+ */
+extern void
+gpr_rewriting_unit_unparse(
+    gpr_unit_rewriting_handle handle,
+    gpr_text *result
+);
+
+/* ... node rewriting... */
+
+/*
+ * Return the rewriting handle corresponding to Node.
+ *
+ * The owning unit of Node must be free of diagnostics.
+ */
+extern gpr_node_rewriting_handle
+gpr_rewriting_node_to_handle(gpr_base_node context);
+
+/*
+ * Return the node which the given rewriting Handle relates to. This can be the
+ * null entity if this handle designates a new node.
+ */
+extern gpr_base_node
+gpr_rewriting_handle_to_node(
+    gpr_node_rewriting_handle handle
+);
+
+/*
+ * Return a handle for the rewriting context to which Handle belongs
+ */
+extern gpr_rewriting_handle
+gpr_rewriting_node_to_context(
+    gpr_node_rewriting_handle handle
+);
+
+/*
+ * Turn the given rewritten node Handles designates into text. This is the text
+ * that is used in Apply in order to re-create an analysis unit.
+ */
+extern void
+gpr_rewriting_node_unparse(
+    gpr_node_rewriting_handle handle,
+    gpr_text *result
+);
+
+/*
+ * Return the kind corresponding to Handle's node
+ */
+extern gpr_node_kind_enum
+gpr_rewriting_kind(gpr_node_rewriting_handle handle);
+
+/*
+ * Return a representation of ``Handle`` as a string.
+ */
+extern void
+gpr_rewriting_node_image(
+    gpr_node_rewriting_handle handle,
+    gpr_text *result
+);
+
+/*
+ * Return whether this node handle is tied to an analysis unit. If it is not,
+ * it can be passed as the Child parameter to Set_Child.
+ */
+extern int
+gpr_rewriting_tied(gpr_node_rewriting_handle handle);
+
+/*
+ * Return a handle for the node that is the parent of Handle's node. This is
+ * ``No_Rewriting_Handle`` for a node that is not tied to any tree yet.
+ */
+extern gpr_node_rewriting_handle
+gpr_rewriting_parent(gpr_node_rewriting_handle handle);
+
+/*
+ * Return the number of children the node represented by Handle has
+ */
+extern int
+gpr_rewriting_children_count(
+    gpr_node_rewriting_handle handle
+);
+
+/*
+ * Return the node that is in the syntax ``Field`` for ``Handle``
+ */
+extern gpr_node_rewriting_handle
+gpr_rewriting_child(
+    gpr_node_rewriting_handle handle,
+    gpr_introspection_member_ref field
+);
+
+/*
+ * Return the list of children for ``Handle``.
+ *
+ * This returns the list as a dynamically allocated array with ``count``
+ * elements.  The caller must free it when done with it.
+ */
+extern void
+gpr_rewriting_children(
+    gpr_node_rewriting_handle handle,
+    gpr_node_rewriting_handle **children,
+    int *count
+);
+
+/*
+ * If ``Child`` is ``No_Rewriting_Node``, untie the syntax field in ``Handle``
+ * corresponding to ``Field``, so it can be attached to another one. Otherwise,
+ * ``Child`` must have no parent as it will be tied to ``Handle``'s tree.
+ */
+extern void
+gpr_rewriting_set_child(
+    gpr_node_rewriting_handle handle,
+    gpr_introspection_member_ref field,
+    gpr_node_rewriting_handle child
+);
+
+/*
+ * Return the text associated to the given token node.
+ */
+extern void
+gpr_rewriting_text(
+    gpr_node_rewriting_handle handle,
+    gpr_text *result
+);
+
+/*
+ * Override text associated to the given token node.
+ */
+extern void
+gpr_rewriting_set_text(
+    gpr_node_rewriting_handle handle,
+    gpr_text *text
+);
+
+/*
+ * If Handle is the root of an analysis unit, untie it and set New_Node as its
+ * new root. Otherwise, replace Handle with New_Node in Handle's parent node.
+ *
+ * Note that: * Handle must be tied to an existing analysis unit handle. *
+ * New_Node must not already be tied to another analysis unit handle.
+ */
+extern void
+gpr_rewriting_replace(
+    gpr_node_rewriting_handle handle,
+    gpr_node_rewriting_handle new_node
+);
+
+/*
+ * Given a list of node rewriting handles ``H1``, ``H2``, ... ``HN``, replace
+ * ``H1`` by ``H2`` in the rewritten tree, replace ``H2`` by ``H3``, etc. and
+ * replace ``HN`` by ``H1``.
+ *
+ * Note that this operation is atomic: if it fails, no replacement is actually
+ * performed.
+ */
+extern void
+gpr_rewriting_rotate(
+    gpr_node_rewriting_handle *handles,
+    int count
+);
+
+/* ... list node rewriting... */
+
+/*
+ * Assuming ``Handle`` refers to a list node, return a handle to its first
+ * child, or ``No_Node_Rewriting_Handle``` if it has no child node.
+ */
+extern gpr_node_rewriting_handle
+gpr_rewriting_first_child(
+    gpr_node_rewriting_handle handle
+);
+
+/*
+ * Assuming ``Handle`` refers to a list node, return a handle to its last
+ * child, or ``No_Node_Rewriting_Handle``` if it has no child node.
+ */
+extern gpr_node_rewriting_handle
+gpr_rewriting_last_child(
+    gpr_node_rewriting_handle handle
+);
+
+/*
+ * Assuming ``Handle`` refers to the child of a list node, return a handle to
+ * its next sibling, or ``No_Node_Rewriting_Handle``` if it is the last
+ * sibling.
+ */
+extern gpr_node_rewriting_handle
+gpr_rewriting_next_child(
+    gpr_node_rewriting_handle handle
+);
+
+/*
+ * Assuming ``Handle`` refers to the child of a list node, return a handle to
+ * its previous sibling, or ``No_Node_Rewriting_Handle``` if it is the first
+ * sibling.
+ */
+extern gpr_node_rewriting_handle
+gpr_rewriting_previous_child(
+    gpr_node_rewriting_handle handle
+);
+
+/*
+ * Assuming ``Handle`` refers to the child of a list node, insert
+ * ``New_Sibling`` as a new child in this list, right before ``Handle``.
+ */
+extern void
+gpr_rewriting_insert_before(
+    gpr_node_rewriting_handle handle,
+    gpr_node_rewriting_handle new_sibling
+);
+
+/*
+ * Assuming ``Handle`` refers to the child of a list node, insert
+ * ``New_Sibling`` as a new child in this list, right before ``Handle``.
+ */
+extern void
+gpr_rewriting_insert_after(
+    gpr_node_rewriting_handle handle,
+    gpr_node_rewriting_handle new_sibling
+);
+
+/*
+ * Assuming ``Handle`` refers to a list node, insert ``New_Child`` to be the
+ * first child in this list.
+ */
+extern void
+gpr_rewriting_insert_first(
+    gpr_node_rewriting_handle handle,
+    gpr_node_rewriting_handle new_sibling
+);
+
+/*
+ * Assuming ``Handle`` refers to a list node, insert ``New_Child`` to be the
+ * last child in this list.
+ */
+extern void
+gpr_rewriting_insert_last(
+    gpr_node_rewriting_handle handle,
+    gpr_node_rewriting_handle new_sibling
+);
+
+/*
+ * Assuming Handle refers to the child of a list node, remove it from that
+ * list.
+ */
+extern void
+gpr_rewriting_remove_child(
+    gpr_node_rewriting_handle handle
+);
+
+/* ... node creation... */
+
+/*
+ * Create a clone of the Handle node tree. The result is not tied to any
+ * analysis unit tree.
+ */
+extern gpr_node_rewriting_handle
+gpr_rewriting_clone(gpr_node_rewriting_handle handle);
+
+/*
+ * Create a new node of the given Kind, with empty text (for token nodes) or
+ * children (for regular nodes).
+ */
+extern gpr_node_rewriting_handle
+gpr_rewriting_create_node(
+    gpr_node_rewriting_handle handle,
+    gpr_node_kind_enum kind
+);
+
+/*
+ * Create a new token node with the given Kind and Text
+ */
+extern gpr_node_rewriting_handle
+gpr_rewriting_create_token_node(
+    gpr_node_rewriting_handle handle,
+    gpr_node_kind_enum kind,
+    gpr_text *text
+);
+
+/*
+ * Create a new regular node of the given Kind and assign it the given
+ * Children.
+ *
+ * Except for lists, which can have any number of children, the size of
+ * Children must match the number of children associated to the given Kind.
+ * Besides, all given children must not be tied.
+ */
+extern gpr_node_rewriting_handle
+gpr_rewriting_create_regular_node(
+    gpr_node_rewriting_handle handle,
+    gpr_node_kind_enum kind,
+    gpr_node_rewriting_handle *children,
+    int count
+);
+
+/*
+ * Create a tree of new nodes from the given Template string, replacing
+ * placeholders with nodes in Arguments and parsed according to the given
+ * grammar Rule.
+ */
+extern gpr_node_rewriting_handle
+gpr_rewriting_create_from_template(
+    gpr_node_rewriting_handle handle,
+    gpr_text *src_template,
+    gpr_node_rewriting_handle *arguments,
+    int count,
+    gpr_grammar_rule rule
+);
 
 
 
