@@ -21,6 +21,8 @@ stages:
 build:
   extends: .job_template
   stage: build
+  variables:
+    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
   cache:
     - key: $CI_COMMIT_REF_SLUG
       fallback_keys:

@@ -6,6 +6,7 @@
 with Ada.Containers; use Ada.Containers;
 with System;
 
+with Gpr_Parser_Support.Diagnostics;  use Gpr_Parser_Support.Diagnostics;
 with Gpr_Parser_Support.Hashes;       use Gpr_Parser_Support.Hashes;
 with Gpr_Parser_Support.Lexical_Envs; use Gpr_Parser_Support.Lexical_Envs;
 with Gpr_Parser_Support.Token_Data_Handlers;
@@ -137,5 +138,8 @@ package Gpr_Parser_Support.Internal.Analysis is
    is (Hash_TDH (if Self = null
                  then System.Null_Address
                  else Self.all'Address));
+
+   type Diagnostics_Access is access constant Diagnostics_Vectors.Vector;
+   --  Reference to an analysis unit's diagnostics array
 
 end Gpr_Parser_Support.Internal.Analysis;

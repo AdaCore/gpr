@@ -24,7 +24,6 @@ project GPR2.Tools extends "../shared.gpr" is
    Target : Target_Type := external ("OS", "UNIX");
 
    type Tools_Prefix_Type is ("gpr", "gpr2");
-   Edge_Tools_Prefix : Tools_Prefix_Type := external ("GPR2_EDGE_TOOLS_PREFIX", "gpr2");
 
    for Source_Dirs use ("src");
    for Object_Dir use Shared.Build_Root & "/" & Shared.Build & "/obj-tools";
@@ -44,7 +43,7 @@ project GPR2.Tools extends "../shared.gpr" is
    -------------
 
    package Builder extends Shared.Builder is
-      for Executable ("gprbuild-main.adb") use Edge_Tools_Prefix & "build";
+      for Executable ("gprbuild-main.adb")   use "gpr2build";
       for Executable ("gprconfig.adb")       use "gprconfig";
       for Executable ("gprclean-main.adb")   use "gprclean";
       for Executable ("gprdoc-main.adb")     use "gprdoc";

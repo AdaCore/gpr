@@ -1,0 +1,8 @@
+gen/gdbinit.py
+gen/*.gpr
+gen/java
+gen/obj
+gen/ocaml
+gen/python
+gen/scripts
+gen/src-mains

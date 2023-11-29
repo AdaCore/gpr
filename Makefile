@@ -36,114 +36,115 @@
 #   GPR2_BUILD    : debug / release / release_checks / gnatcov
 #   PROCESSORS    : nb parallel compilations (0 to use all cores)
 #   PROFILER      : Include gprof support instrumentation (yes / no)
-#   TARGET        : target triplet for cross-compilation
 #   LOCAL_GPR2    : whether tools should be built with the local gpr2
 #                   project or use an installed one. (yes/no)
-
-HOST    = $(shell gcc -dumpmachine)
-TARGET := $(shell gcc -dumpmachine)
+#   GPR2KBDIR     : path to the gprconfig_kb repository
 
 # Look for the source directory (in case of out-of-tree builds):
 #
+# Supports symlink of Makefile to the build directory
+# Supports building with make -f <gpr path>/Makefile from the build directory
+#
 # first let's check if Makefile is symlinked: realpath will return the actual
 # (after link resolution) relative path of the Makefile from PWD.
-MFILE         := $(shell realpath --relative-to=. "$(firstword ${MAKEFILE_LIST})"))
+MFILE      := $(shell realpath --relative-to=. "$(firstword ${MAKEFILE_LIST})"))
 # as Makefile is in the root dir, SOURCE_DIR is just dirname of the Makefile
 # path above.
-SOURCE_DIR    := $(shell dirname "${MFILE}")
-
-prefix	      := $(dir $(shell which gnatls))..
-GPR2_BUILD     = release
-PROCESSORS     = 0
-PROFILER       = no
-LOCAL_GPR2     = yes
-GPRINSTALL     = gprinstall
-PYTHON         = python
-
-# Prefix to use for non-productized tools
-GPR2_EDGE_TOOLS_PREFIX=gpr2
-
-# Whether we want to force a (re-)generation of the langkit parser.
-# Set this to "force" to regenerate the parser.
-FORCE_PARSER_GEN=
-
-GPR2=${SOURCE_DIR}/gpr2.gpr
-GPR2TOOLS=${SOURCE_DIR}/tools/gpr2-tools.gpr
-GPR2KB=${SOURCE_DIR}/src/kb/collect_kb.gpr
-GPR2KBDIR=${SOURCE_DIR}/src/kb/gprconfig_kb
-
-# check for out-of-tree build
-ifeq (${SOURCE_DIR},.)
-BUILD_ROOT=.build
-else
-BUILD_ROOT=.
-endif
-LANGKIT_GENERATED_SRC=${BUILD_ROOT}/lkparser
-KB_BUILD_DIR=${BUILD_ROOT}/kb
-GNATCOV_LEVEL=stmt
-
-ENABLE_SHARED := $(shell gprbuild ${GTARGET} -c -q -p \
-        -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}" \
-        -P${SOURCE_DIR}/config/test_shared 2>/dev/null && echo "yes")
-
-# Used to pass extra options to GPRBUILD, like -d or -v for instance
-GPRBUILD_OPTIONS=
+SOURCE_DIR := $(shell dirname "${MFILE}")
 
 # Load current setup if any
 -include makefile.setup
 
-# target options for cross-build
-ifeq (${HOST},${TARGET})
-GTARGET=
+# Else setup defaults:
+# Install in GNAT by default
+prefix	          ?= $(dir $(shell which gnatls))..
+# Enable shared libs by default.
+ENABLE_SHARED     ?= yes
+# Use release mode with assertions
+GPR2_BUILD        ?= release_checks
+# Use max number of processors by default
+PROCESSORS        ?= 0
+# Don't use gcov by default
+PROFILER          ?= no
+# Use local libgpr2 sources to build the gpr2 tools
+LOCAL_GPR2        ?= yes
+# gprconfig_kb repository location
+GPR2KBDIR         ?= ${SOURCE_DIR}/../gprconfig_kb/db
+# Used to pass extra options to GPRBUILD, like -d or -v for instance
+GPRBUILD_OPTIONS  ?=
+# Level of coverage requested from gnatcov code coverage testing
+GNATCOV_LEVEL     ?= stmt
+# To override in case the python executable is not named "python" when
+# generating the langkit parser
+PYTHON            ?= python
+
+# Build modes for this repository:
+# * debug: no optimisation and debug info
+# * release: code optimisation and no assertion or contracts checking
+# * release_checks: code optimisation with assertions and contracts checks
+# * gnatcov: code optimisation with gnat coverage instrumentation and assertions
+BUILD_TYPES       := debug release release_checks gnatcov
+
+# Location of the project files
+GPR2              := ${SOURCE_DIR}/gpr2.gpr
+GPR2TOOLS         := ${SOURCE_DIR}/tools/gpr2-tools.gpr
+GPR2KB            := ${SOURCE_DIR}/src/kb/collect_kb.gpr
+
+# adapt build dirs to out-of-tree builds
+ifeq (${SOURCE_DIR},.)
+BUILD_ROOT        := .build
 else
-GTARGET=--target=${TARGET}
+BUILD_ROOT        := .
 endif
 
-LIBGPR2_TYPES=static
+KB_BUILD_DIR      := ${BUILD_ROOT}/kb
+
+# Do not build static-pic and relocatable libs if shared libs are not supported
+LIBGPR2_TYPES     := static
 ifeq (${ENABLE_SHARED},yes)
-ifneq (${GPR2_BUILD},gnatcov)
-   LIBGPR2_TYPES=static relocatable static-pic
-endif
+  ifneq (${GPR2_BUILD},gnatcov)
+    LIBGPR2_TYPES := static relocatable static-pic
+  endif
 endif
 
-AP_GPR2=
-BUILD_LIBGPR2=
+# Add SOURCE_DIR in the project search path if LOCAL_GPR2 is set
+AP_GPR2           :=
+BUILD_LIBGPR2     :=
 ifeq (${LOCAL_GPR2},yes)
-  AP_GPR2=-aP ${SOURCE_DIR}
-  BUILD_LIBGPR2=build-lib-static
+  AP_GPR2         := -aP ${SOURCE_DIR}
+  BUILD_LIBGPR2   := build-lib-static
 endif
 
-BUILD_TYPES=debug release release_checks gnatcov
-
+# Code coverage support
 ifneq (${GPR2_BUILD},gnatcov)
-   COVERAGE_BUILD_FLAGS=
+   COVERAGE_BUILD_FLAGS :=
 else
-   COVERAGE_BUILD_FLAGS= \
+   COVERAGE_BUILD_FLAGS := \
            --implicit-with=gnatcov_rts \
            --src-subdirs=gnatcov-instr
-   COVERAGE_INSTR_FLAGS= -XGPR2_BUILD=${GPR2_BUILD} \
+   COVERAGE_INSTR_FLAGS := -XGPR2_BUILD=${GPR2_BUILD} \
            -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}" \
            -XLIBRARY_TYPE=static -XXMLADA_BUILD=static
-   COVERAGE_INSTR=gnatcov instrument --level $(GNATCOV_LEVEL) \
+   COVERAGE_INSTR       := gnatcov instrument --level $(GNATCOV_LEVEL) \
            --dump-trigger=atexit \
             ${COVERAGE_INSTR_FLAGS}
 endif
 
-GPR_OPTIONS=${GTARGET} -XGPR2_BUILD=${GPR2_BUILD} \
-        -XGPR2_EDGE_TOOLS_PREFIX=${GPR2_EDGE_TOOLS_PREFIX} \
-        -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}"
+# Command line helpers:
+GPR_OPTIONS := -XGPR2_BUILD=${GPR2_BUILD} \
+               -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}"
 
-BUILDER=gprbuild -p -m -j${PROCESSORS} ${GPR_OPTIONS} ${GPRBUILD_OPTIONS} \
-             -XPROFILER=${PROFILER} ${COVERAGE_BUILD_FLAGS}
-INSTALLER=${GPRINSTALL} -p -f ${GPR_OPTIONS} --prefix='${prefix}'
-CLEANER=gprclean -eL -p ${RBD} -XGPR2_BUILD=${GPR2_BUILD} \
-        -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}"
-UNINSTALLER=${INSTALLER} -p -f --uninstall
+BUILDER     := gprbuild -p -m -j${PROCESSORS} ${GPR_OPTIONS} \
+               ${GPRBUILD_OPTIONS} -XPROFILER=${PROFILER} \
+               ${COVERAGE_BUILD_FLAGS}
+INSTALLER   := gprinstall -p -f ${GPR_OPTIONS} --prefix='${prefix}'
+CLEANER     := gprclean -eL -p ${RBD} -XGPR2_BUILD=${GPR2_BUILD} \
+               -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}"
+UNINSTALLER := ${INSTALLER} -p -f --uninstall
 
-# doc generation
-
-GPRDOC=${BUILD_ROOT}/${GPR2_BUILD}/gprdoc
-DOCOUT=${BUILD_ROOT}/attributes.json
+# attributes documentation generation
+GPRDOC      := ${BUILD_ROOT}/${GPR2_BUILD}/gprdoc
+DOCOUT      := ${BUILD_ROOT}/attributes.json
 
 .PHONY: force doc
 
@@ -222,34 +223,27 @@ install-tools: uninstall-tools
 .SILENT: setup setup2
 
 setup:
-	echo "prefix=${prefix}" > makefile.setup
-	echo "ENABLE_SHARED=${ENABLE_SHARED}" >> makefile.setup
-	echo "GPR2_BUILD=${GPR2_BUILD}" >> makefile.setup
-	echo "PROCESSORS=${PROCESSORS}" >> makefile.setup
-	echo "PROFILER=${PROFILER}" >> makefile.setup
-ifneq (${HOST},${TARGET})
-	echo "TARGET=${TARGET}" >> makefile.setup
-endif
-	echo "GPR2KBDIR=${GPR2KBDIR}" >> makefile.setup
-	echo "GPR2_EDGE_TOOLS_PREFIX=${GPR2_EDGE_TOOLS_PREFIX}" >> makefile.setup
-	echo "PYTHON=${PYTHON}" >> makefile.setup
-	echo "LOCAL_GPR2=${LOCAL_GPR2}" >> makefile.setup
-
-setup2: setup
-	echo "GPRINSTALL=\"${BUILD_ROOT}/${GPR2_BUILD}/obj-tools/gprinstall\"" >> makefile.setup
+	echo "prefix           ?= ${prefix}" > makefile.setup
+	echo "ENABLE_SHARED    ?= ${ENABLE_SHARED}" >> makefile.setup
+	echo "GPR2_BUILD       ?= ${GPR2_BUILD}" >> makefile.setup
+	echo "PROCESSORS       ?= ${PROCESSORS}" >> makefile.setup
+	echo "PROFILER         ?= ${PROFILER}" >> makefile.setup
+	echo "LOCAL_GPR2       ?= ${LOCAL_GPR2}" >> makefile.setup
+	echo "GPR2KBDIR        ?= ${GPR2KBDIR}" >> makefile.setup
+	echo "GPRBUILD_OPTIONS ?= ${GPRBUILD_OPTIONS}" >> makefile.setup
+	echo "GNATCOV_LEVEL    ?= ${GNATCOV_LEVEL}" >> makefile.setup
+	echo "PYTHON           ?= ${PYTHON}" >> makefile.setup
 
 ###########
 # Cleanup #
 ###########
 
 distclean: clean ${BUILD_TYPES:%=clean-buildtype-%}
-	rm -rf ${LANGKIT_GENERATED_SRC}
 	rm -f makefile.setup
 
 clean: clean-tools ${LIBGPR2_TYPES:%=clean-libtype-%}
 	rm -rf ${KB_BUILD_DIR}
 	rm -rf ${BUILD_ROOT}/autoconf
-	make -C ${SOURCE_DIR}/langkit clean DEST="${CURDIR}/${LANGKIT_GENERATED_SRC}"
 	make -C ${SOURCE_DIR}/doc clean
 
 clean-libtype-%:
@@ -277,15 +271,7 @@ docgen:
 # Langkit #
 ###########
 
-# Langkit parser (GPR + Ada support)
-build-langkit: $(wildcard ${SOURCE_DIR}/langkit/language/**/*.py) ${FORCE_PARSER_GEN}
-	${MAKE} -C ${SOURCE_DIR}/langkit setup DEST="${SOURCE_DIR}/generated" PYTHONEXE=${PYTHON}
-
-update-langkit-sources:
-	rm -rf ${SOURCE_DIR}/langkit/sustained/src
-	cp -R ${SOURCE_DIR}/langkit/generated/src ${SOURCE_DIR}/langkit/sustained/src
-
-clean-langkit:
-	make -C ${SOURCE_DIR}/langkit clean DEST="${SOURCE_DIR}/generated"
-
-update-langkit: build-langkit update-langkit-sources clean-langkit
+# Langkit parser (GPR project parser)
+update-langkit: $(wildcard ${SOURCE_DIR}/langkit/language/**/*.py)
+	rm -rf ${SOURCE_DIR}/langkit/gen
+	${MAKE} -C ${SOURCE_DIR}/langkit setup DEST="gen" PYTHONEXE=${PYTHON}
