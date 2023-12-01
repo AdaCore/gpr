@@ -121,11 +121,13 @@ begin
       Check_Path ("Relative_Path (D:\foo\, E:\bar\)",
                   Create_Directory
                     (Relative_Path (Create_Directory ("D:\foo\"),
-                                    Create_Directory ("E:\bar\"))));
+                                    Create_Directory ("E:\bar\")),
+                     "E:\bar\"));
       Check_Path ("Relative_Path (D:\Foo\Bar\, D:\foo\baz\)",
                   Create_Directory
                     (Relative_Path (Create_Directory ("D:\Foo\Bar\"),
-                                    Create_Directory ("D:\foo\baz\"))));
+                                    Create_Directory ("D:\foo\baz\")),
+                     "D:\foo\baz"));
    end if;
 
    PT.Load_Autoconf (GPR2.Project.Create ("a.gpr"), GPR2.Context.Empty);
