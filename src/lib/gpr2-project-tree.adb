@@ -2571,6 +2571,14 @@ package body GPR2.Project.Tree is
                end loop;
             end if;
          end if;
+
+         if V.Check_Attribute (PRA.Warning_Message, Result => Attr) then
+            Self.Messages.Append
+              (GPR2.Message.Create
+                (Level   => Message.Warning,
+                 Message => Attr.Value.Text,
+                 Sloc    => Attr));
+         end if;
       end loop;
    end Set_Context;
 
