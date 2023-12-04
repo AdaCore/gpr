@@ -82,7 +82,7 @@ test_bootstrap:
     # (than the time it takes to save/restore them).
     # ??? the build space name is forged in stone here, while we know it can
     # change anytime: maybe a hard to maintain choice
-    - for pkg in libadalang-internal aws-tools aws-lib laltools; do
+    - for pkg in libadalang-internal laltools ; do
         rsync -a $SANDBOX/$HOST/$pkg $CI_PROJECT_DIR/bootstrap_cache/ ;
       done
     - exit $result
