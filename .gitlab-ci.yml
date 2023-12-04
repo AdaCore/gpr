@@ -32,8 +32,13 @@ build:
     # Tune to use our build & test plan
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
 
-    # if a cached sandbox exists, use it
-    - install_cache full
+    # if a cached sandbox exists, use it, except for the daily schedule
+    # where we want to start anew
+    - if [[ $CI_PIPELINE_SOURCE != "schedule" ]]; then
+        install_cache full ;
+      else
+        rm -rf $CI_PROJECT_DIR/cache ;
+      fi
 
     # Just build gprbuild/libgpr2/gpr2-bindings
     # Full gnat bootstrap is tested though, but in the testing phase
@@ -64,10 +69,10 @@ test_bootstrap:
         - bootstrap_cache
   script:
     - install_cache full
-    - if [ -d $CI_PROJECT_DIR/bootstrap_cache ]; then
+    - if [[ $CI_PIPELINE_SOURCE != "schedule" && -d $CI_PROJECT_DIR/bootstrap_cache ]]; then
         exec rsync -a $CI_PROJECT_DIR/bootstrap_cache/* $SANDBOX/$HOST/ ;
-        rm -rf $CI_PROJECT_DIR/bootstrap_cache ;
       fi
+    - rm -rf $CI_PROJECT_DIR/bootstrap_cache ;
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
     - result=0
     - anod run bootstrap || result=$?
