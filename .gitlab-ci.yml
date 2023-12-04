@@ -73,8 +73,32 @@ test_bootstrap:
         exec rsync -a $CI_PROJECT_DIR/bootstrap_cache/* $SANDBOX/$HOST/ ;
       fi
     - rm -rf $CI_PROJECT_DIR/bootstrap_cache ;
+    # JOB_SUBPROJECTS and repos identified by a "depends-on" in the MR are
+    # locally cloned and used by anod. However git don't preserve timestamps
+    # which lead to very long rebuild times (gprbuild then considers all sources
+    # as being modified), so caching the builds is highly ineffective.
+    # So in order to have a reasonable rebuild, we install a wrapper to gprbuild
+    # ensuring that -m is enforced for all packages.
+    - install_build_wrapper() {
+        bindir=$SANDBOX/$HOST/$1/install/bin ;
+        exec mv $bindir/gprbuild $bindir/gprbuild-saved ;
+        echo '#!'$SHELL > $bindir/gprbuild ;
+        echo 'gprbuild-saved -m $@' >> $bindir/gprbuild ;
+        exec cat $bindir/gprbuild ;
+        exec chmod a+x $bindir/gprbuild ;
+      }
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
     - result=0
+    # Install gprbuild wrappers for the gprbuild bootstrap part
+    - anod install stable-gprbuild
+    # - anod install stable-gnat
+    - install_build_wrapper stable-gprbuild
+    # - install_build_wrapper stable-gnat
+    # Build gprbuild
+    - anod build gprbuild
+    # install the wrapper for the newly built gprbuild
+    - install_build_wrapper gprbuild
+    # and run the gnat bootstrap
     - anod run bootstrap || result=$?
     - mkdir -p $CI_PROJECT_DIR/bootstrap_cache
     # save build for packages that take a long time to build: only a re-build
