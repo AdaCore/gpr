@@ -53,6 +53,9 @@ build:
 ###############################
 
 test_bootstrap:
+  services:
+     - image:e3
+     - cpu:16
   extends: .gpr2_test_template
   allow_failure: false
   variables:
