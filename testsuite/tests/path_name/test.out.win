@@ -182,8 +182,8 @@ Relative_Path (D:/foo/, E:/bar/)
 - Is a directory
 - Does not exist on disk
 - Dir_Name: D:/foo/
-- Name: D:/foo/
-- Name (no extension): D:/foo/
+- Name: D:/foo
+- Name (no extension): D:/foo
 - Value: D:/foo
 - Simple_Name: foo
 - Containing_Directory: 'D:/'
