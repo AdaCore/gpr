@@ -56,7 +56,7 @@ test_bootstrap:
   extends: .gpr2_test_template
   allow_failure: false
   variables:
-    JOB_SUBPROJECTS: eng/gpr/gprbuild eng/gpr/gprconfig_kb eng/gpr/gprname
+    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb eng/gpr/gprname
   cache:
     - key: $CI_COMMIT_REF_SLUG
       policy: pull
