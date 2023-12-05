@@ -1,0 +1,9 @@
+library project Libprj1_Not_Standalone is
+
+   for Object_Dir use "obj";
+   for Library_Name use project'Name;
+   for Library_Dir use project'Name & ".lib";
+   for Library_Symbol_Policy use "restricted";
+   for Library_Symbol_File use "symbols.def";
+
+end Libprj1_Not_Standalone;
