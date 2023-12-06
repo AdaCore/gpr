@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!DOCTYPE gprconfig [
+]>
+<gprconfig>
+
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-1</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes default="runtime-A">runtime-A,runtime-B,runtime-C</runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- Compiler with the same target and the same language as FAKE-ADA-COMPILER-1 -->
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-2</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes default="runtime-A">runtime-A,runtime-B</runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- Compiler with a different target -->
+    <compiler_description>
+        <name>FAKE-CPP-COMPILER-3</name>
+        <executable>another-fake-target-gcc</executable>
+        <version>
+            <external>another-fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>C++</languages>
+        <runtimes default="runtime-X">runtime-X</runtimes>
+        <target>another-fake-target</target>
+    </compiler_description>
+
+    <!-- This C compiler is used to check compiler incompatibility. Compilers can be
+    incompatible if they share the same target but not the same languages. -->
+    <compiler_description>
+        <name>FAKE-C-COMPILER-1</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>C</languages>
+        <runtimes default="runtime-B">runtime-B</runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- check that FAKE-ADA-COMPILER-1 and FAKE-C-COMPILER-2 are compatible -->
+    <compiler_description>
+        <name>FAKE-C-COMPILER-2</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>C</languages>
+        <runtimes default="runtime-B">runtime-B</runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+</gprconfig>

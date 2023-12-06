@@ -1,0 +1,3 @@
+FAKE-ADA-COMPILER-1 - Ada,fake-target,runtime-A
+^-------- Selected
+FAKE-C-COMPILER-2 - C,fake-target,runtime-B
