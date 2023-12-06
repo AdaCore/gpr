@@ -32,8 +32,13 @@ build:
     # Tune to use our build & test plan
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
 
-    # if a cached sandbox exists, use it
-    - install_cache full
+    # if a cached sandbox exists, use it, except for the daily schedule
+    # where we want to start anew
+    - if [[ $CI_PIPELINE_SOURCE != "schedule" ]]; then
+        install_cache full ;
+      else
+        rm -rf $CI_PROJECT_DIR/cache ;
+      fi
 
     # Just build gprbuild/libgpr2/gpr2-bindings
     # Full gnat bootstrap is tested though, but in the testing phase
@@ -48,10 +53,13 @@ build:
 ###############################
 
 test_bootstrap:
+  services:
+     - image:e3
+     - cpu:16
   extends: .gpr2_test_template
   allow_failure: false
   variables:
-    JOB_SUBPROJECTS: eng/gpr/gprbuild eng/gpr/gprconfig_kb eng/gpr/gprname
+    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb eng/gpr/gprname
   cache:
     - key: $CI_COMMIT_REF_SLUG
       policy: pull
@@ -64,12 +72,36 @@ test_bootstrap:
         - bootstrap_cache
   script:
     - install_cache full
-    - if [ -d $CI_PROJECT_DIR/bootstrap_cache ]; then
+    - if [[ $CI_PIPELINE_SOURCE != "schedule" && -d $CI_PROJECT_DIR/bootstrap_cache ]]; then
         exec rsync -a $CI_PROJECT_DIR/bootstrap_cache/* $SANDBOX/$HOST/ ;
-        rm -rf $CI_PROJECT_DIR/bootstrap_cache ;
       fi
+    - rm -rf $CI_PROJECT_DIR/bootstrap_cache ;
+    # JOB_SUBPROJECTS and repos identified by a "depends-on" in the MR are
+    # locally cloned and used by anod. However git don't preserve timestamps
+    # which lead to very long rebuild times (gprbuild then considers all sources
+    # as being modified), so caching the builds is highly ineffective.
+    # So in order to have a reasonable rebuild, we install a wrapper to gprbuild
+    # ensuring that -m is enforced for all packages.
+    - install_build_wrapper() {
+        bindir=$SANDBOX/$HOST/$1/install/bin ;
+        exec mv $bindir/gprbuild $bindir/gprbuild-saved ;
+        echo '#!'$SHELL > $bindir/gprbuild ;
+        echo 'gprbuild-saved -m $@' >> $bindir/gprbuild ;
+        exec cat $bindir/gprbuild ;
+        exec chmod a+x $bindir/gprbuild ;
+      }
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
     - result=0
+    # Install gprbuild wrappers for the gprbuild bootstrap part
+    - anod install stable-gprbuild
+    # - anod install stable-gnat
+    - install_build_wrapper stable-gprbuild
+    # - install_build_wrapper stable-gnat
+    # Build gprbuild
+    - anod build gprbuild
+    # install the wrapper for the newly built gprbuild
+    - install_build_wrapper gprbuild
+    # and run the gnat bootstrap
     - anod run bootstrap || result=$?
     - mkdir -p $CI_PROJECT_DIR/bootstrap_cache
     # save build for packages that take a long time to build: only a re-build
@@ -77,7 +109,7 @@ test_bootstrap:
     # (than the time it takes to save/restore them).
     # ??? the build space name is forged in stone here, while we know it can
     # change anytime: maybe a hard to maintain choice
-    - for pkg in libadalang-internal aws-tools aws-lib laltools; do
+    - for pkg in libadalang-internal laltools ; do
         rsync -a $SANDBOX/$HOST/$pkg $CI_PROJECT_DIR/bootstrap_cache/ ;
       done
     - exit $result
