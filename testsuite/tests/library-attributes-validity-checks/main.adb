@@ -35,6 +35,7 @@ begin
    Test ("prj1.gpr");
    Test ("abstractprj1.gpr");
    Test ("libprj1.gpr");
+   Test ("libprj1_not_standalone.gpr");
    Test ("aggrprj1.gpr");
    Test ("aggrlibprj1.gpr");
 end main;

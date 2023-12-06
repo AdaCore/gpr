@@ -3410,6 +3410,38 @@ package body GPR2.Project.Tree is
             end case;
          end;
 
+         --  Check library attributes validity
+
+         declare
+            procedure Check_Library_Is_Standalone (Name : Q_Attribute_Id);
+
+            procedure Check_Library_Is_Standalone (Name : Q_Attribute_Id) is
+               Attr : Attribute.Object;
+            begin
+               if View.Check_Attribute (Name, Result => Attr) then
+                  declare
+                     SA_Exists : constant Boolean :=
+                                   View.Has_Attribute (PRA.Library_Standalone);
+                  begin
+                     if not SA_Exists
+                       or else
+                         (SA_Exists and then View.Library_Standalone = No)
+                     then
+                        Self.Warning
+                          ("attribute """ & Image (Name)
+                           & """ is only used in standalone libraries",
+                          View.Attribute_Location (Name));
+                     end if;
+                  end;
+               end if;
+            end Check_Library_Is_Standalone;
+         begin
+            if View.Is_Library then
+               Check_Library_Is_Standalone (PRA.Library_Symbol_File);
+               Check_Library_Is_Standalone (PRA.Library_Symbol_Policy);
+            end if;
+         end;
+
          --  Check source list files
 
          if View.Kind in K_Standard | K_Library then
