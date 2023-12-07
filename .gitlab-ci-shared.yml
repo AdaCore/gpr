@@ -219,6 +219,7 @@ default:
 .test_template:
   extends: .job_template
   stage: test
+  needs: ["build"]
   allow_failure: true
 
 ###############
