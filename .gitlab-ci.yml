@@ -85,6 +85,7 @@ test_gpr2:
 
 test_gpr2_cov:
   extends: .test_template
+  needs: []
   script:
     - anod build gpr2 -Qcoverage,next
 
