@@ -9,6 +9,11 @@ libprj1.gpr:3:23: warning: object directory "obj" not found
 libprj1.gpr:5:39: warning: library directory "libprj1.lib" not found
 libprj1.gpr:7:50: warning: library ALI directory "libprj1.lib.ali" not found
 libprj1.gpr:16:50: warning: Directory "libprj1.lib.src" not found
+libprj1_not_standalone.gpr
+libprj1_not_standalone.gpr:3:23: warning: object directory "obj" not found
+libprj1_not_standalone.gpr:5:39: warning: library directory "libprj1_not_standalone.lib" not found
+libprj1_not_standalone.gpr:7:08: warning: attribute "Library_Symbol_File" is only used in standalone libraries
+libprj1_not_standalone.gpr:6:08: warning: attribute "Library_Symbol_Policy" is only used in standalone libraries
 aggrprj1.gpr
 libprj1.gpr:3:23: warning: object directory "obj" not found
 libprj1.gpr:5:39: warning: library directory "libprj1.lib" not found

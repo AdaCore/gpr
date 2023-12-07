@@ -6,7 +6,7 @@ workflow:
       when: always
     - if: $CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_REF_NAME == "master" || $CI_COMMIT_REF_NAME == "next")
       when: always
-    - if: $CI_PIPELINE_SOURCE == "scheduled"
+    - if: $CI_PIPELINE_SOURCE == "schedule"
       when: always
     - if: $CI_PIPELINE_SOURCE == "web"
       when: always
@@ -175,6 +175,16 @@ default:
       echo -e "\e[0m"
     }
 
+    if [[ $CI_FRAGMENTS_BRANCH != "" ]]; then
+       old=$PWD
+       cd /tmp
+       exec git clone $GIT_CLONE_BASE/eng/devenv/ci-fragments
+       cd ci-fragments
+       exec git checkout $CI_FRAGMENTS_BRANCH
+       cd $old
+       export PATH=/tmp/ci-fragments:$PATH
+    fi
+
     # Enable generic CI for building with Anod
 
     cmd="generic_anod_ci"
@@ -217,6 +227,7 @@ default:
 .test_template:
   extends: .job_template
   stage: test
+  needs: ["build"]
   allow_failure: true
 
 ###############

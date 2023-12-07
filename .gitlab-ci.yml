@@ -33,8 +33,13 @@ build:
     # Tune to use our build & test plan
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
 
-    # if a cached sandbox exists, use it
-    - install_cache full
+    # if a cached sandbox exists, use it, except for the daily schedule
+    # where we want to start anew
+    - if [[ $CI_PIPELINE_SOURCE != "schedule" ]]; then
+        install_cache full ;
+      else
+        rm -rf $CI_PROJECT_DIR/cache ;
+      fi
 
     # (re)build gpr2
     - anod run build
@@ -42,6 +47,20 @@ build:
     # Save gpr builds and libadalang in cache to speed up a re-build
     - mkdir -p $CI_PROJECT_DIR/cache
     - rsync -a $SANDBOX/$HOST/*gpr*next* $CI_PROJECT_DIR/cache/
+
+######################
+## DEBUG MODE BUILD ##
+######################
+
+debug_build:
+  extends: .job_template
+  stage: build
+  variables:
+    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
+  script:
+
+    # build gpr2 in debug mode without rebuilding dependencies
+    - anod build gpr2 -Qdbg
 
 ####################
 ## GPR2 TESTSUITE ##

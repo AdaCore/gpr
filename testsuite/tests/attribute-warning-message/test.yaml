@@ -1,0 +1,6 @@
+description:
+    simple test to check that the "Warning_Message" value is added to the GPR2
+    messages.
+driver: build_and_run
+project_file: test
+main: main
