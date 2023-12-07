@@ -16,9 +16,12 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GPR2.Path_Name;
+
 package GPRinspect.External_Tools_Support is
 
-   procedure Import_External_Tools_Registry;
+   procedure Import_External_Tools_Registry (File : GPR2.Path_Name.Object);
    --  Add gnatcheck,gnatprove,etc... related packages/attributes support
+   --  Try first to import attributes from 'File'
 
 end GPRinspect.External_Tools_Support;
