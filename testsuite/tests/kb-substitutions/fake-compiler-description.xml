@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<!DOCTYPE gprconfig [
+]>
+<gprconfig>
+
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-1</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes default="runtime-A">runtime-A,runtime-B,runtime-C</runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-2</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes default="runtime-A">runtime-A,runtime-B,runtime-C</runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <compiler_description>
+        <name>FAKE-C-COMPILER-1</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>C</languages>
+        <runtimes default="runtime-A">runtime-A</runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <compiler_description>
+        <name>FAKE-C-COMPILER-2</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>C</languages>
+        <runtimes default="runtime-A">runtime-A</runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <compiler_description>
+        <name>FAKE-C-COMPILER-3</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>C</languages>
+        <runtimes default="runtime-A">runtime-A</runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <compiler_description>
+        <name>FAKE-C-COMPILER-4</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>C</languages>
+        <runtimes default="runtime-A">runtime-A</runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- Contains the variable My_Variable -->
+    <compiler_description>
+        <name>FAKE-C-COMPILER-5</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>C</languages>
+        <variable name="My_Variable">My_Variable_Value</variable>
+        <runtimes default="runtime-A">runtime-A</runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <compiler_description>
+        <name>FAKE-C-COMPILER-6</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>C</languages>
+        <runtimes default="runtime-A">runtime-A</runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+</gprconfig>
