@@ -3,7 +3,7 @@ from testsuite_support.builder_and_runner import BuilderAndRunner
 
 bnr = BuilderAndRunner()
 
-if Env().host.platform.endswith('windows'):
+if 'windows' in Env().host.platform:
     is_win = True
 else:
     is_win = False

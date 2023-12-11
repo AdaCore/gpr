@@ -268,7 +268,7 @@ class ObjRes:
                 if Opt.SCN_OPTION_RES_AS_A_FULL_STRING in o:
                     sub_res = [s in cl for s in behavior]
                 else:
-                    if Env().host.platform.endswith("windows"):
+                    if "windows" in Env().host.platform:
                         cmd_switches = [
                             re.split("[= ]", s) for s in shlex.split(cl, posix=False)
                         ]
