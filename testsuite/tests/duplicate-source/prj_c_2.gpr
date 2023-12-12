@@ -1,0 +1,4 @@
+project Prj_C_2 is
+	for Languages use ("C");
+	for Source_Dirs use ("src/b", "src/a");
+end Prj_C_2;
