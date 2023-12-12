@@ -70,6 +70,52 @@ package body GPR2.Project.Source.Set is
       return Set.Element (Position.Current);
    end Element;
 
+   ----------
+   -- Find --
+   ----------
+
+   function Find
+     (Self   : Object;
+      Source : Project.Source.Object;
+      Kind   : Search_Kind := Full_Path)
+      return Cursor
+   is
+   begin
+      if Source.Is_Ada or else Kind = Full_Path then
+         return Self.Find_By_Ada_Key_Or_Full_Path (Source => Source);
+      else
+         return Self.Find_By_Simple_Name (Source => Source);
+      end if;
+   end Find;
+
+   ----------------------------------
+   -- Find_By_Ada_Key_Or_Full_Path --
+   ----------------------------------
+
+   function Find_By_Ada_Key_Or_Full_Path
+     (Self : Object; Source : Project.Source.Object) return Cursor
+   is (Current => Self.S.Find (Source));
+
+   -------------------------
+   -- Find_By_Simple_Name --
+   -------------------------
+
+   function Find_By_Simple_Name
+     (Self : Object; Source : Project.Source.Object) return Cursor
+   is
+      Result : Cursor := No_Element;
+   begin
+      for C in Self.S.Iterate loop
+         if Self.S.Element (C).Path_Name.Simple_Name =
+           Source.Path_Name.Simple_Name
+         then
+            Result := Cursor'(Current => C);
+         end if;
+      end loop;
+
+      return Result;
+   end Find_By_Simple_Name;
+
    -----------
    -- First --
    -----------

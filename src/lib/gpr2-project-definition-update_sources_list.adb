@@ -1048,12 +1048,50 @@ is
                               & " is found in several source directories",
                               Current_Src_Dir_SR));
                      end if;
-
                   else
-                     Def.Sources.Insert (Project_Source, CS, Inserted);
-                     Def.Sources_Map_Insert (Project_Source, CS);
-                     Source_Name_Set.Include
-                       (Project_Source.Path_Name.Simple_Name);
+                     --  Non-Ada file will not be matched with a regular Find
+                     --  where they are compared with their full path.
+                     --  So we launch a Find by Simple_Name to look for
+                     --  duplicates.
+
+                     CS := Def.Sources.Find
+                       (Project_Source,
+                        GPR2.Project.Source.Set.Simple_Name);
+
+                     if Project.Source.Set.Has_Element (CS)
+                       and then Project_Source.Is_Compilable
+                     then
+
+                        --  A non-Ada source with this simple name already
+                        --  exists.
+
+                        if Source_Name_Set.Contains
+                          (Project_Source.Path_Name.Simple_Name)
+                        then
+                           --  If they come from the same base directory value
+                           --  (because of recursive search there), then we
+                           --  issue an error as the first source found is
+                           --  fs-dependent.
+
+                           Tree.Append_Message
+                             (Message.Create
+                                (Message.Error,
+                                 '"' & String (File.Simple_Name) & '"'
+                                 & " is found in several source directories",
+                                 Current_Src_Dir_SR));
+                        else
+                           --  We don't need to do anything
+                           --  because of more priority source already in its
+                           --  place.
+
+                           return;
+                        end if;
+                     else
+                        Def.Sources.Insert (Project_Source, CS, Inserted);
+                        Def.Sources_Map_Insert (Project_Source, CS);
+                        Source_Name_Set.Include
+                          (Project_Source.Path_Name.Simple_Name);
+                     end if;
                   end if;
 
                   --  For Ada, register the Unit object into the view

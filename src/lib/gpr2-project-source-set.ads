@@ -11,6 +11,8 @@ private with Ada.Containers.Ordered_Sets;
 
 package GPR2.Project.Source.Set is
 
+   type Search_Kind is (Full_Path, Simple_Name);
+
    type Object is tagged private
      with Constant_Indexing => Constant_Reference,
           Default_Iterator  => Iterate,
@@ -75,8 +77,29 @@ package GPR2.Project.Source.Set is
    function First_Element (Self : Object) return Project.Source.Object;
 
    function Find
+     (Self   : Object;
+      Source : Project.Source.Object;
+      Kind   : Search_Kind := Full_Path)
+      return Cursor with Pre => Source.Is_Defined, Inline;
+   --  Returns the cursor to the match found into Self.
+   --  For Ada files, the search is based on unit name and unit kind.
+   --  For non-Ada files, the search is based on Kind value :
+   --     - Full_Path   : Source.Source.Path_Name.Value
+   --     - Simple_Name : Source.Source.Path_Name.Simple_Name
+
+   function Find_By_Ada_Key_Or_Full_Path
      (Self : Object; Source : Project.Source.Object) return Cursor
      with Pre => Source.Is_Defined, Inline;
+   --  Returns the cursor to the match found into Self.
+   --  This search is based on Source.Source.Path_Name.Value (Full Path)
+   --  for non-Ada files.
+   --  For Ada files, the search is based on unit name and unit kind.
+
+   function Find_By_Simple_Name
+     (Self : Object; Source : Project.Source.Object) return Cursor
+     with Pre => Source.Is_Defined, Inline;
+   --  Returns the cursor to the match found into Self.
+   --  This search is based on Source.Source.Path_Name.Simple_Name values
 
    function Element (Position : Cursor) return Project.Source.Object
      with Inline;
@@ -120,10 +143,6 @@ private
       --  the set.
 
    Empty_Set : constant Object := Object'(S => Set.Empty_Set);
-
-   function Find
-     (Self : Object; Source : Project.Source.Object) return Cursor
-   is (Current => Self.S.Find (Source));
 
    function Length (Self : Object) return Containers.Count_Type is
      (Self.S.Length);
