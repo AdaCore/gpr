@@ -7,7 +7,6 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Vectors;
 
-with GPR2.Build.DAG;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
@@ -37,7 +36,7 @@ package GPR2.Build.Compilation_Unit is
    package Separate_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, Unit_Location);
 
-   type Object is new GPR2.Build.DAG.Artifact with private;
+   type Object is tagged private;
    type Object_List is array (Natural range <>) of Object;
 
    Undefined : constant Object;
@@ -163,7 +162,7 @@ private
    package Duplicates_List is new Ada.Containers.Indefinite_Vectors
      (Positive, Clashing_Unit);
 
-   type Object is new GPR2.Build.DAG.Artifact with record
+   type Object is tagged record
       Name       : Unbounded_String;
       Owner      : GPR2.Project.View.Object;
       Root_View  : GPR2.Project.View.Object;
@@ -172,12 +171,6 @@ private
       Separates  : Separate_Maps.Map;
       Duplicates : Duplicates_List.Vector;
    end record;
-
-   overriding function View (Self : Object) return GPR2.Project.View.Object is
-      (Self.Owner);
-
-   overriding function Hash (Self : Object) return Ada.Containers.Hash_Type is
-      (Self.Main_Part.Source.Hash);
 
    Undefined : constant Object := (others => <>);
 

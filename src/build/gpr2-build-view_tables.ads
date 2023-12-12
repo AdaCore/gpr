@@ -16,6 +16,7 @@ with GPR2.Log;
 with GPR2.Project.View.Set;
 
 with GPR2.Build.Compilation_Unit;
+with GPR2.Build.DAG;
 with GPR2.Build.Source;
 with GPR2.Source_Reference.Value;
 with GPR2.View_Ids;
@@ -137,7 +138,7 @@ private package GPR2.Build.View_Tables is
       View            : GPR2.Project.View.Object;
       --  Owning view
 
-      --  Dynamic data:
+      --  Dynamic data
 
       Sources         : Basename_Source_Maps.Map;
       --  Sources to take into account for View after visibility is resolved.
@@ -164,15 +165,19 @@ private package GPR2.Build.View_Tables is
 
       case Is_Root is
          when True =>
-            --  Compilation units are stored in root projects: so for aggregate
-            --  projects each root project will maintain its own list so that
-            --  the unit names don't clash between otherwise independent
-            --  subtrees.
             CUs       : Compilation_Unit_Maps.Map;
             --  List of compilation units, indexed by their identifier
+            --
+            --  Note: Compilation units are stored in root projects: for
+            --  aggregate projects, each root project has its own list
+            --  to prevent clashes between independant subtrees.
+
             Separates : Name_Maps.Map;
             --  Map of separates to their declaring unit. Note that the
             --  parent unit may not be a compilation unit but another separate.
+
+            Graph     : aliased DAG.DAG;
+            --  The build artifacts organized as direct acyclic graph.
          when False =>
             null;
       end case;

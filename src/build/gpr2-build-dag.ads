@@ -4,118 +4,127 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
---  The Direct Acyclic Graph structure of the build database is at the heart
---  of the traceability engine that drives the builds (and more generally the
---  gpr tools actions) with regards to the artifacts detected via the GPR
---  project tree.
---
---  The nodes of this DAG are the artifacts, the links the actions. Each action
---  genernates a signature that is saved and then checked to see if it needs to
---  be replayed.
-
+with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Containers.Indefinite_Hashed_Sets;
+with Ada.Containers.Indefinite_Vectors;
+with Ada.Containers.Hashed_Maps;
 
-with GPR2.Log;
-with GPR2.Project.View;
+with GPR2.Build.Actions;
+with GPR2.Build.Artifacts;
+with GPR2.Build.Artifact_Ids;
 
 package GPR2.Build.DAG is
 
-   type Signature is interface;
-   --  Represents the signature of an action: the summary of all external
-   --  artifacts involved in an action to produce a new artifact.
-   --  The signature is saved with the produced artifact to check if it needs
-   --  to be re-created if its dependencies change.
-
-   type Checksum_Type is interface;
-   --  ??? would be nice to define a definite type here, like some hash format.
-
-   function Checksum
-     (Self : Signature) return Checksum_Type'Class is abstract;
-
-   procedure Report_Diff
-     (Self     : Signature;
-      Other    : Signature;
-      Messages : in out GPR2.Log.Object) is abstract;
-   --  Report why the checksum between Self and Other differ
-
-   type Artifact is interface;
-   --  An artifact is a compilation element, be it concrete (such as sources
-   --  or object files) or more abstract such as toolchain identifier (kind
-   --  and version). For GPR's build database DAG, it is the node of the
-   --  direct acyclic graph.
-
-   function View (Self : Artifact) return GPR2.Project.View.Object is abstract;
-
-   function Hash (Self : Artifact) return Ada.Containers.Hash_Type is abstract;
-   --  To store in hashed containers
-
-   function Class_Hash (Self : Artifact'Class) return Ada.Containers.Hash_Type;
-   --  Hash of the artifact\s path name, to store the object in containers
-
-   package Artifact_Sets is new Ada.Containers.Indefinite_Hashed_Sets
-     (Artifact'Class, Class_Hash, "=");
-
-   type Action is interface;
-
-   function Generates
-     (Self  : Action;
-      Input : Artifact'Class)
-      return Artifact_Sets.Set is abstract;
-   --  Return a set of artifacts that Self will generate from Input.
-
-   function Dependencies
-     (Self   : Action;
-      Output : Artifact'Class)
-      return Artifact_Sets.Set is abstract;
-   --  Return a list of artifacts that were used to generate the Output.
-   --  Important note: Output may not be present on the disk when
-   --  this function is called, in this case the set of predictable input
-   --  is given (for example foo.c for a compilation in C generating foo.o).
-   --  Once the action is done (so output is generated), it is the
-   --  responsibility of the action to store the actual dependencies, and the
-   --  state of the various inputs.
-
-   procedure Execute
-     (Self    : Action;
-      Input   : Artifact'Class;
-      Stamp   : out Signature'Class;
-      Success : out Boolean) is abstract;
-
-   type Artifact_Id is private;
-   No_Id : constant Artifact_Id;
-
-   type Artifact_Class is private;
-   No_Class : constant Artifact_Class;
-
-   type Object is tagged limited private;
+   type DAG is private;
+   --  DAG uses Artifact ids as node, but also stores the various actions
+   --  and their input that produce a given node.
 
    procedure Register_Action
-     (Self  : access Object;
-      Input : Artifact_Class;
-      Value : Action'Class);
+     (Self   : access DAG;
+      Action : Actions.Object'Class);
 
-   function Register_Artifact_Class
-     (Self       : access Object;
-      Class_Name : String) return Artifact_Class;
+   procedure Add_Artifact
+     (Self     : access DAG;
+      Artifact : Artifacts.Object'Class);
 
-   function Register_Artifact
-     (Self   : access Object;
-      Class  : Artifact_Class;
-      Value  : Artifact'Class) return Artifact_Id;
+   procedure Update_Artifact
+     (Self        : access DAG;
+      Artifact    : Artifact_Ids.Artifact_Id;
+      Predecessor : Artifact_Ids.Artifact_Id)
+     with Pre => Has_Artifact (Self.all, Artifact)
+                   and then Has_Artifact (Self.all, Predecessor);
+   --  ??? Missing the context of the generation if any: need action parameter
+
+   procedure Remove_Artifact
+     (Self     : access DAG;
+      Artifact : Artifact_Ids.Artifact_Id);
+
+   function Has_Artifact
+     (Self     : DAG;
+      Artifact : Artifact_Ids.Artifact_Id) return Boolean;
+
+   function Artifact
+     (Self     : DAG;
+      Artifact : Artifact_Ids.Artifact_Id) return Artifacts.Object'Class
+     with Pre => Has_Artifact (Self, Artifact);
 
 private
 
-   function Class_Hash (Self : Artifact'Class) return Ada.Containers.Hash_Type
-     is (Self.Hash);
+   use GPR2.Build.Artifact_Ids;
 
-   type Artifact_Id is new Natural with Default_Value => 0;
-   No_Id : constant Artifact_Id := 0;
+   package Artifact_Maps is new Ada.Containers.Indefinite_Hashed_Maps
+     (Artifact_Ids.Artifact_Id,
+      Artifacts.Object'Class,
+      Artifact_Ids.Hash,
+      Artifact_Ids."=",
+      Artifacts."=");
 
-   type Artifact_Class is new Natural with Default_Value => 0;
-   No_Class : constant Artifact_Class := 0;
+   package Artifact_Sets is new Ada.Containers.Indefinite_Hashed_Sets
+     (Artifact_Id, Hash, "=", "=");
 
-   type Object is tagged limited record
-      null;
+   package Artifact_Artifact_Set_Maps is new
+     Ada.Containers.Indefinite_Hashed_Maps
+       (Key_Type        => Artifact_Id,
+        Element_Type    => Artifact_Sets.Set,
+        Hash            => Hash,
+        Equivalent_Keys => "=",
+        "="             => Artifact_Sets."=");
+
+   package Artifact_Vectors is new Ada.Containers.Indefinite_Vectors
+     (Positive, Artifact_Id, "=");
+
+   package Action_Sets is new Ada.Containers.Indefinite_Hashed_Sets
+     (Element_Type        => Actions.Object'Class,
+      Hash                => Actions.Hash,
+      Equivalent_Elements => Actions."=",
+      "="                 => Actions."=");
+
+   package Artifact_Actions_Maps is new Ada.Containers.Hashed_Maps
+     (Artifact_Class, Action_Sets.Set, Hash, "=", Action_Sets."=");
+
+   type Exec_Instance is record
+      Action_Index : Positive;
+      --  Index of the action in Actions_List field
+      Inputs       : Artifact_Sets.Set;
+      --  Inputs used to generate the output
    end record;
+
+   package Exec_Maps is new Ada.Containers.Indefinite_Hashed_Maps
+     (Artifact_Id, Exec_Instance, Hash, "=");
+
+   type DAG is record
+      Artifacts    : Artifact_Maps.Map;
+      --  Stored artifacts
+
+      Actions_List : Artifact_Actions_Maps.Map;
+      --  Maps Artifact_Class => Actions that can take an artifact of such
+      --  class as input, to easily fetch possible actions for a newly
+      --  inserted artifact.
+
+      Executions   : Exec_Maps.Map;
+      --  For each output, list the action that created it and it's input(s)
+
+      --  DAG structure
+
+      Predecessors : Artifact_Artifact_Set_Maps.Map;
+      --  For each node, list its predecessors
+      Successors   : Artifact_Artifact_Set_Maps.Map;
+      --  For each node, list its successors
+      Sort         : Artifact_Vectors.Vector;
+      --  Ordered list of the nodes
+      Sort_Valid   : Boolean := True;
+      --  Flag telling if the ordered list is valid or needs to be
+      --  re-calculated
+   end record;
+
+   function Has_Artifact
+     (Self     : DAG;
+      Artifact : Artifact_Ids.Artifact_Id) return Boolean
+   is (Self.Artifacts.Contains (Artifact));
+
+   function Artifact
+     (Self : DAG;
+      Artifact : Artifact_Ids.Artifact_Id) return Artifacts.Object'Class
+   is (Self.Artifacts.Element (Artifact));
 
 end GPR2.Build.DAG;

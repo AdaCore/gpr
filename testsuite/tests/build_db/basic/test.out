@@ -53,28 +53,17 @@ c.gpr:12:37: error: source file "notfound.ada" for unit "Foo" not found
      PKG.P (sep.from PKG)
    - src/c/pkg__proc.2.ada (body)
      PKG.PROC (body)
- - compilation inputs:
-   - src/c/c_src.c
-   - src/c/found_body.ada
-   - src/c/pkg.2.ada
-   - src/c/pkg__proc.2.ada
  - sources of D
    - src/d/header.h (spec)
    - src/d/implem.c (body)
- - compilation inputs:
-   - src/d/implem.c
  - sources of A
    - src/a/pkg.adb (no_body)
       (no_body)
    - src/a/pkg.ads (spec)
      PKG (spec)
- - compilation inputs:
-   - src/a/pkg.ads
  - sources of B
    - src/b/pkg.ads (spec)
      PKG (spec)
- - compilation inputs:
-   - src/b/pkg.ads
 * Compilation units:
  - units of subtree A
    - PKG
@@ -161,13 +150,11 @@ prj2.gpr:3:24: warning: library directory "lib2" not found
  - sources of Included
    - inc/shared.ads (spec)
      SHARED (spec)
- - compilation inputs:
  - sources of Shared extended by Prj1
    - src0/pkg.ads (spec)
      PKG (spec)
    - src0/shared.adb (body)
      SHARED (body)
- - compilation inputs:
  - sources of Prj1
    - src1/main.adb (body)
      MAIN (body)
@@ -175,18 +162,12 @@ prj2.gpr:3:24: warning: library directory "lib2" not found
      PKG (spec)
    - src0/shared.adb (body)
      SHARED (body)
- - compilation inputs:
-   - src1/main.adb
-   - src0/pkg.ads
-   - src0/shared.adb
  - sources of Prj2
- - compilation inputs:
  - sources of Shared extended by Prj3
    - src0/pkg.ads (spec)
      PKG (spec)
    - src0/shared.adb (body)
      SHARED (body)
- - compilation inputs:
  - sources of Prj3
    - src2/main.adb (body)
      MAIN (body)
@@ -194,10 +175,6 @@ prj2.gpr:3:24: warning: library directory "lib2" not found
      PKG (spec)
    - src0/shared.adb (body)
      SHARED (body)
- - compilation inputs:
-   - src2/main.adb
-   - src0/pkg.ads
-   - src0/shared.adb
 * Compilation units:
  - units of subtree Prj1
    - MAIN
@@ -238,11 +215,6 @@ Testing trees/multi/prj.gpr
      @ 1 PKG2 (spec)
      @ 2 PKG2 (body)
      @ 3 MAIN2 (body)
- - compilation inputs:
-   - ./sources.ada @ 2
-   - ./sources.ada @ 3
-   - ./src2.ada @ 2
-   - ./src2.ada @ 3
 * Compilation units:
  - units of Prj
    - MAIN
@@ -289,14 +261,6 @@ foo__bar.ads: error: invalid name for unit 'FOO__BAR', two consecutive underscor
      BAR (spec)
    - src/foo__bar.ads (spec)
      FOO__BAR (spec)
- - compilation inputs:
-   - src/0foo-bar.ads
-   - src/Foo-Bar.ads
-   - src/foo--bar.ads
-   - src/foo-0bar.ads
-   - src/foo-_bar.ads
-   - src/foo.ads
-   - src/foo__bar.ads
 * Compilation units:
  - units of Prj
    - 0FOO.BAR
@@ -334,7 +298,6 @@ lib.gpr:7:24: warning: library directory "lib" not found
      - Lib
 * Sources:
  - sources of Lib
- - compilation inputs:
  - sources of Prj
    - ./pkg-child.adb (body)
      PKG.CHILD (body)
@@ -352,10 +315,6 @@ lib.gpr:7:24: warning: library directory "lib" not found
      PKG (body)
    - ./pkg.ads (spec)
      PKG (spec)
- - compilation inputs:
-   - ./pkg-child.adb
-   - ./pkg-proc.adb
-   - ./pkg.adb
 * Compilation units:
  - units of Lib
    - PKG
@@ -398,10 +357,6 @@ prj.gpr:2:23: warning: object directory "obj" not found
      PKG (body)
    - ./pkg.ads (spec)
      PKG (spec)
- - compilation inputs:
-   - ./pkg-child.adb
-   - ./pkg-proc.adb
-   - ./pkg.adb
 * Compilation units:
  - units of Prj
    - PKG
@@ -430,7 +385,5 @@ prj.gpr:7:48: warning: source file "notfound.cc" not found
    - src/baz.h (spec)
    - src/foo.inc (spec)
    - src/main.c (body)
- - compilation inputs:
-   - src/main.c
 * Compilation units:
  - units of Prj

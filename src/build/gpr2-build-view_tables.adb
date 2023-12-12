@@ -9,6 +9,8 @@ with Ada.Strings.Maps.Constants;
 with Ada.Text_IO;
 with GNAT.OS_Lib;
 
+with GPR2.Build.Artifacts.Source;
+with GPR2.Build.Artifacts.Source.Ada;
 with GPR2.Build.Source.Ada_Parser;
 with GPR2.Build.Tree_Db;
 with GPR2.Project.Attribute;
@@ -713,6 +715,30 @@ package body GPR2.Build.View_Tables is
          Src_Info : constant Src_Info_Maps.Reference_Type :=
                       View_Db.Src_Infos.Reference (Src.Path_Name);
       begin
+         for Root_View of Src.View.Namespace_Roots loop
+            declare
+               Root_Db : constant View_Data_Ref :=
+                           Get_Data (Data.Tree_Db, Root_View);
+            begin
+               if Src_Info.Has_Index then
+                  for U of Src_Info.Units loop
+                     DAG.Add_Artifact
+                       (Root_Db.Graph'Access,
+                        Artifacts.Source.Ada.Create
+                          (Data.View,
+                           Src_Info.Path_Name.Simple_Name,
+                           U.Index));
+                  end loop;
+               else
+                  DAG.Add_Artifact
+                    (Root_Db.Graph'Access,
+                     Artifacts.Source.Create
+                       (Data.View,
+                        Src_Info.Path_Name.Simple_Name));
+               end if;
+            end;
+         end loop;
+
          if Data.View.Is_Extended then
             --  ??? Check the view's list of excluded sources before doing that
             declare
@@ -769,6 +795,30 @@ package body GPR2.Build.View_Tables is
          Src_Info : constant Source.Object :=
                       View_Db.Src_Infos (Src.Path_Name);
       begin
+         for Root_View of Src.View.Namespace_Roots loop
+            declare
+               Root_Db : constant View_Data_Ref :=
+                           Get_Data (Data.Tree_Db, Root_View);
+            begin
+               if Src_Info.Has_Index then
+                  for U of Src_Info.Units loop
+                     DAG.Remove_Artifact
+                       (Root_Db.Graph'Access,
+                        Artifacts.Source.Ada.Create
+                          (Data.View,
+                           Src_Info.Path_Name.Simple_Name,
+                           U.Index).Id);
+                  end loop;
+               else
+                  DAG.Remove_Artifact
+                    (Root_Db.Graph'Access,
+                     Artifacts.Source.Create
+                       (Data.View,
+                        Src_Info.Path_Name.Simple_Name).Id);
+               end if;
+            end;
+         end loop;
+
          if Src_Info.Has_Units and then not Data.View.Is_Extended then
             for U of Src_Info.Units loop
                for Root of Src.View.Namespace_Roots loop

@@ -10,7 +10,6 @@ with Ada.Strings.Fixed;
 with GNAT.OS_Lib;
 with GNATCOLL.Utils;
 
-with GPR2.Build.Compilation_Input.Sets;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Source;
@@ -1109,17 +1108,6 @@ package body GPR2.Project.View is
 
       return Closure_Views;
    end Closure;
-
-   ------------------------
-   -- Compilation_Inputs --
-   ------------------------
-
-   function Compilation_Inputs
-     (Self : Object)
-      return GPR2.Build.Compilation_Input.Sets.Object is
-   begin
-      return GPR2.Build.Compilation_Input.Sets.Create (Self);
-   end Compilation_Inputs;
 
    -------------
    -- Context --
