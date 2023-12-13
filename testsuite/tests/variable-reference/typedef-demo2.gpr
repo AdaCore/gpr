@@ -1,0 +1,11 @@
+with "typedef";
+
+project TypeDef.Demo2 is
+
+   --  Var references parent's variable 'True' without prefix
+   Var : Bool := True;
+   for Object_Dir use Var;
+   --  Attr references parent's variable 'False' without prefix
+   for Externally_Built use False;
+
+end TypeDef.Demo2;

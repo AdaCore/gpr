@@ -214,6 +214,7 @@ package body GPR2.Build.View_Tables is
                             CU_Instance.Owning_View;
             Other       : Path_Name.Object;
             use type GPR2.Project.View.Object;
+
          begin
             CU_Instance.Add
               (Kind, View_Db.View, Path, Index, Sep_Name, Success);
@@ -234,7 +235,14 @@ package body GPR2.Build.View_Tables is
                end if;
             end if;
 
-            if not Success then
+            if not Success
+              and then not View_Db.View.Is_Runtime
+            then
+               --  Note: the runtime *has* duplicated unit to support
+               --  system.memory, now our generated project to add it to the
+               --  tree is a bit simple minded, so just kill the warning for
+               --  the runtime view, not user friendly.
+
                Other := CU_Instance.Get (Kind, Sep_Name).Source;
 
                if Other.Value = Path.Value then

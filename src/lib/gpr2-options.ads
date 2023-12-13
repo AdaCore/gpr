@@ -143,18 +143,20 @@ package GPR2.Options is
    function Load_Project
      (Self             : in out Object;
       Tree             : in out GPR2.Project.Tree.Object;
+      With_Runtime     : Boolean := False;
       Absent_Dir_Error : GPR2.Project.Tree.Error_Level :=
                            GPR2.Project.Tree.Warning;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
-      Quiet            : Boolean := False;
-      With_Runtime     : Boolean := False) return Boolean
+      Quiet            : Boolean := False) return Boolean
      with Pre => Self.Is_Finalized;
    --  Load a project tree using configured options.
    --  If successful, Tree contains loaded project tree.
    --  If Tree is undefined on entry, project search paths are automatically
    --   registered.
    --  Load messages are appended to Log.
+   --  With_Runtime: whether the runtime sources are looked for when updating
+   --   the sources.
    --  Absent_Dir_Error: whether a missing directory should be treated as an
    --   error or a warning.
    --  If Quiet is true no output is printed.

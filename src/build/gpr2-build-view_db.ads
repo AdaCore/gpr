@@ -91,7 +91,9 @@ package GPR2.Build.View_Db is
    --  Return the compilation unit named "Name".
 
    function Compilation_Units
-     (Self : Object) return Build.Compilation_Unit.Maps.Map
+     (Self                  : Object;
+      With_Externally_Built : Boolean := False)
+      return Build.Compilation_Unit.Maps.Map
      with Pre => Self.Is_Defined
                    and then Self.View.Is_Namespace_Root
                    and then Self.Source_Option >= Sources_Units;

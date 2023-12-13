@@ -129,8 +129,6 @@ private
       --  associated with the loaded main project file, the config view and
       --  the runtime view.
       Kind              : Project_Kind;
-      Sources_Signature : Context.Binary_Signature :=
-                            Context.Default_Signature;
    end record;
 
    package Definition_References is new GNATCOLL.Refcount.Shared_Pointers

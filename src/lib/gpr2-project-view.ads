@@ -54,13 +54,6 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns a unique Id for Self
 
-   function Is_Extension_Of (Self : Object; View : Object) return Boolean;
-   --  Returns whether Self extends View
-
-   function Is_Extended_By (Self : Object; View : Object) return Boolean
-     with Pre => Self.Is_Defined and then View.Is_Defined;
-   --  Returns whether Self is extended by View
-
    function "<" (Left, Right : Object) return Boolean;
    --  Ordering a project object to be able to build an ordered map for example
 
@@ -90,9 +83,6 @@ package GPR2.Project.View is
    function Tree (Self : Object) return not null access Project.Tree.Object
      with Pre => Self.Is_Defined;
    --  Returns the corresponding project tree
-
-   function Signature (Self : Object) return Context.Binary_Signature;
-   --  Returns the signature for the view
 
    function Has_Imports (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -147,11 +137,6 @@ package GPR2.Project.View is
      with Pre  => Self.Is_Defined and then Self.Is_Extended,
           Post => Extending'Result.Is_Extending;
    --  Return the extending view
-
-   function Is_Main
-     (Self : Object; Source : Build.Source.Object) return Boolean
-     with Pre => Self.Is_Defined;
-   --  Returns True if the source is the main unit of the view
 
    function Is_Namespace_Root (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -269,17 +254,6 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Get the list of attributes
 
-   function Attribute_Location
-     (Self  : Object;
-      Name  : Q_Attribute_Id;
-      Index : Attribute_Index.Object := Attribute_Index.Undefined)
-      return Source_Reference.Object'Class
-     with
-       Pre => Self.Is_Defined;
-   --  Returns the source location of the attribute definition in the view if
-   --  defined, or the view's location (e.g. path_name, 0, 0) if not.
-   --  To be used in particular when generating Messages.
-
    --  Types
 
    function Has_Types
@@ -292,11 +266,6 @@ package GPR2.Project.View is
      with Pre  => Self.Is_Defined,
           Post => (if Self.Has_Types then not Types'Result.Is_Empty);
    --  Get the list of all types defined
-
-   function Typ (Self : Object; Name : Name_Type) return Typ.Object
-     with Pre  => Self.Is_Defined and then Self.Has_Types (Name),
-          Post => Typ'Result.Is_Defined;
-   --  Returns the type with the given name
 
    --  Variables
 
@@ -372,14 +341,6 @@ package GPR2.Project.View is
 
    --  Sources
 
-   function Has_Language (Self : Object; Name : Name_Type) return Boolean
-     with Pre => Self.Is_Defined;
-   --  Whether Name is a language used by Self
-
-   function Has_Language (Self : Object; Name : Language_Id) return Boolean
-     with Pre => Self.Is_Defined;
-   --  Whether Name is a language used by Self
-
    function Has_Languages (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns true if the project view has languages attribute defined or has
@@ -401,8 +362,7 @@ package GPR2.Project.View is
    --  an object directory, then Undefined is returned.
 
    function Source_Directories (Self : Object) return GPR2.Path_Name.Set.Object
-     with Pre => Self.Is_Defined
-                 and then Self.Qualifier in K_Standard | K_Library;
+     with Pre => Self.Is_Defined;
    --  Returns the source dir paths for a given project
 
    procedure Source_Directories_Walk
@@ -432,12 +392,6 @@ package GPR2.Project.View is
    --
    --  In the above example. "foo__not_ok.adb" needs to be skipped.
 
-   function Has_Sources (Self : Object) return Boolean
-     with Pre  => Self.Is_Defined,
-          Post => (if Self.Kind in K_Abstract | K_Aggregate
-                   then not Has_Sources'Result);
-   --  Returns true if the project view has some sources
-
    function Sources
      (Self            : Object;
       Interface_Only  : Boolean := False;
@@ -448,11 +402,6 @@ package GPR2.Project.View is
    --  the sources are loaded.
    --  Interface_Only: only sources part of a library interface are returned
    --  Compilable_Only: only sources that can be compiled are returned
-
-   function Source_Path
-     (Self : Object; Filename : GPR2.Simple_Name) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined;
-   --  Get full path name corresponding to the given filename
 
    function Source_Path
      (Self            : Object;
@@ -500,22 +449,21 @@ package GPR2.Project.View is
    --  Return a map of interface sources defined by the view to their
    --  definition in the project file.
 
-   procedure Invalidate_Sources (Self : in out Object)
-     with Pre => Self.Is_Defined;
-   --  Invalidate the sources for the view. This means that the Sources routine
-   --  above will have to recompute the proper sources list for the view. This
-   --  is needed when some sources are added or removed from the view.
-
    --  Some common attributes redefined here and when some pathname are
    --  relative to the view, the proper value is returned. Following
    --  routines are for internal use only and convert from a View unique Id.
 
    --  Units
 
-   function Units (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
+   function Units
+     (Self                  : Object;
+      With_Externally_Built : Boolean := False)
+      return GPR2.Build.Compilation_Unit.Maps.Map
      with Pre => Self.Is_Defined and then Self.Is_Namespace_Root;
    --  Returns all the known units for the view. Note that the list of units
    --  is populated only when Update_Sources is called.
+   --  If With_Externally_Built is unset, then units defined by externally
+   --  built views won't be returned.
 
    function Unit
      (Self : Object; Name : Name_Type) return Build.Compilation_Unit.Object
@@ -544,13 +492,6 @@ package GPR2.Project.View is
 
    function Is_Runtime (Self : Object) return Boolean;
    --  Returns True if the project describes the runtime
-
-   procedure Check_Mains
-     (Self : Object;
-      Messages : in out Log.Object)
-     with Pre => Self.Is_Defined;
-   --  Check the validity of the Main attribute values and fill appropriate
-   --  error/warning in case they are not valid.
 
    function Has_Mains (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -688,33 +629,6 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns executable suffix for this project
 
-   function Object_Artifact_Extensions
-     (Self : Object; Language : Language_Id) return Containers.Value_Set
-     with Pre => Self.Is_Defined;
-   --  Returns set of object artifacts extensions for the cleanup
-
-   function Source_Artifact_Extensions
-     (Self : Object; Language : Language_Id) return Containers.Value_Set
-     with Pre => Self.Is_Defined;
-   --  Returns set of source artifacts extensions for the cleanup
-
-   function Binder_Artifacts
-     (Self     : Object;
-      Name     : Simple_Name;
-      Language : Language_Id := No_Language)
-      return GPR2.Path_Name.Set.Object
-     with Pre => Self.Is_Defined
-                 and then (not Self.Is_Library
-                           or else Self.Library_Name = Name
-                           or else Self.Is_Aggregated_In_Library);
-   --  Returns binder artifact files from main procedure name for standard
-   --  project or from library name for library project.
-
-   function Artifacts (Self : Object) return GPR2.Path_Name.Set.Object
-     with Pre => Self.Is_Defined;
-   --  Returns artifact files taken from Artifacts_In_Object_Dir and
-   --  Artifacts_In_Exec_Dir attributes.
-
    function Executable
      (Self   : Object;
       Source : Simple_Name;
@@ -824,16 +738,16 @@ package GPR2.Project.View is
    --  Returns True and set Parent if Self has parent view, otherwise returns
    --  False.
 
+   procedure Check_Mains
+     (Self : Object;
+      Messages : in out Log.Object)
+     with Pre => Self.Is_Defined and then Self.Is_Namespace_Root;
+   --  Check the validity of the Main attribute values and fill appropriate
+   --  error/warning in case they are not valid.
+
 private
 
    type Object is new Definition_References.Ref with null record;
-
-   function Clean_Attribute_List
-     (Self     : Object;
-      Name     : Q_Attribute_Id;
-      Language : Language_Id) return Containers.Value_Set;
-   --  Returns union of the attribute lists of the Clean packages from the
-   --  configuration view, extending view if it exists and Self view.
 
    function Pack
      (Self : Object;
@@ -842,18 +756,6 @@ private
 
    Undefined : constant Object :=
                  (Definition_References.Null_Ref with null record);
-
-   function Object_Artifact_Extensions
-     (Self : Object; Language : Language_Id) return Containers.Value_Set
-   is
-     (Self.Clean_Attribute_List (PRA.Clean.Object_Artifact_Extensions,
-                                 Language));
-
-   function Source_Artifact_Extensions
-     (Self : Object; Language : Language_Id) return Containers.Value_Set
-   is
-     (Self.Clean_Attribute_List (PRA.Clean.Source_Artifact_Extensions,
-                                 Language));
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
@@ -886,8 +788,14 @@ private
    function Is_Library_Standalone (Self : Object) return Boolean is
       (Self.Library_Standalone /= No);
 
+   function Is_Shared_Library (Self : Object) return Boolean is
+     (not Self.Is_Static_Library);
+
    function Dir_Name (Self : Object) return GPR2.Path_Name.Object is
      (Self.Get.Path);
+
+   function Languages (Self : Object) return Containers.Source_Value_List is
+     (Self.Attribute (PRA.Languages).Values);
 
    --  Naming package accessor
 

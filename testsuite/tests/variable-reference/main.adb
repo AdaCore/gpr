@@ -48,7 +48,7 @@ procedure Main is
       use GPR2.Project.Variable.Set.Set;
    begin
       Text_IO.Put (String (Prj.Name) & " ");
-      Text_IO.Set_Col (10);
+      Text_IO.Set_Col (16);
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       for A of Prj.Attributes (With_Defaults => False) loop
@@ -57,7 +57,7 @@ procedure Main is
 
       if Prj.Has_Variables then
          for V in Prj.Variables.Iterate loop
-            Text_IO.Put ("V:   " & String (Key (V)));
+            Text_IO.Put ("   V:   " & String (Key (V)));
             Text_IO.Put (" -> ");
             Text_IO.Put (Element (V).Value.Text);
             Text_IO.New_Line;
@@ -115,4 +115,5 @@ procedure Main is
 begin
    Load ("demo.gpr");
    Load ("demo1.gpr");
+   Load ("typedef-demo2.gpr");
 end Main;

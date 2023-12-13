@@ -46,12 +46,23 @@ package body GPR2.Build.View_Db is
    -----------------------
 
    function Compilation_Units
-     (Self : Object) return Build.Compilation_Unit.Maps.Map is
+     (Self                  : Object;
+      With_Externally_Built : Boolean := False)
+      return Build.Compilation_Unit.Maps.Map is
    begin
       return Result : Build.Compilation_Unit.Maps.Map do
          for C in Ref (Self).CUs.Iterate loop
-            Result.Insert (Compilation_Unit_Maps.Key (C),
-                           Compilation_Unit_Maps.Element (C));
+            declare
+               U : Build.Compilation_Unit.Object renames
+                     Compilation_Unit_Maps.Element (C);
+            begin
+               if With_Externally_Built
+                 or else not U.Owning_View.Is_Externally_Built
+               then
+                  Result.Insert (Compilation_Unit_Maps.Key (C),
+                                 Compilation_Unit_Maps.Element (C));
+               end if;
+            end;
          end loop;
       end return;
    end Compilation_Units;

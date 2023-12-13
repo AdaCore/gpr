@@ -83,7 +83,6 @@ package GPRtools.Options is
       Help                   : String := "";
       Allow_No_Project       : Boolean := True;
       Allow_Autoconf         : Boolean := False;
-      Allow_Distributed      : Boolean := False;
       Allow_Quiet            : Boolean := True;
       No_Project_Support     : Boolean := False;
       Allow_Implicit_Project : Boolean := True) return Command_Line_Parser;

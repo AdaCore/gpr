@@ -195,7 +195,7 @@ package GPR2.Project.Tree is
    --  Returns True if a runtime project is loaded on this tree
 
    function Runtime_Project (Self : Object) return View.Object
-     with Pre => Self.Is_Defined and then Self.Has_Runtime_Project;
+     with Pre => Self.Is_Defined;
    --  Returns the runtime project for the given tree
 
    function Target

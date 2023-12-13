@@ -119,4 +119,12 @@ begin
    loop
       Display (Project.Tree.Element (C), Full => False);
    end loop;
+
+exception
+   when GPR2.Project_Error =>
+      if Prj2.Is_Defined then
+         Prj2.Log_Messages.Output_Messages (Information => False);
+      else
+         Prj1.Log_Messages.Output_Messages (Information => False);
+      end if;
 end Main;

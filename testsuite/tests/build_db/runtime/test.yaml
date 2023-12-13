@@ -1,0 +1,5 @@
+description:
+    Test runtime units resolution and checks
+driver: build_and_run
+project_file: test
+main: main

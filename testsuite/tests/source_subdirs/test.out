@@ -7,6 +7,6 @@ gprls -Pprj1 -s --src-subdirs=src2
 ------------------
 gprls -Pprj2 -s --src-subdirs=src2
 
-/obj/src2/instrumented.adb
+/obj/prj2-src2/instrumented.adb
 /src/pkg2.ads
-/obj/src2/pkg.ads
+/obj/prj2-src2/pkg.ads

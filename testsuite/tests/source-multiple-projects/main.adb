@@ -8,7 +8,6 @@ with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
-with GPR2.Unit;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;

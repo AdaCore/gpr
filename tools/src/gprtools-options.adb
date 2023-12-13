@@ -18,7 +18,6 @@
 
 with GNAT.Directory_Operations;
 
-with GPR2.Compilation.Registry;
 with GPR2.Log;
 with GPR2.Message;
 with GPR2.Path_Name;
@@ -67,7 +66,6 @@ package body GPRtools.Options is
       Help                   : String := "";
       Allow_No_Project       : Boolean := True;
       Allow_Autoconf         : Boolean := False;
-      Allow_Distributed      : Boolean := False;
       Allow_Quiet            : Boolean := True;
       No_Project_Support     : Boolean := False;
       Allow_Implicit_Project : Boolean := True) return Command_Line_Parser
@@ -77,7 +75,6 @@ package body GPRtools.Options is
       Project_Group     : GPRtools.Command_Line.Argument_Group;
       Config_Group      : GPRtools.Command_Line.Argument_Group;
       Verbosity_Group   : GPRtools.Command_Line.Argument_Group;
-      Distributed_Group : GPRtools.Command_Line.Argument_Group;
       Hidden_Group      : GPRtools.Command_Line.Argument_Group;
 
    begin
@@ -247,40 +244,6 @@ package body GPRtools.Options is
                     Help           => "Do not load the standard knowledge" &
                                       " base",
                     In_Switch_Attr => False));
-      end if;
-
-      if Allow_Distributed then
-         Distributed_Group :=
-           Parser.Add_Argument_Group
-             ("Distributed build", On_Switch'Access,
-              Help => "Distributed compilation mode switches.",
-              Last => True);
-
-         Parser.Add_Argument
-           (Distributed_Group,
-            Create (Name           => "--distributed",
-                    Help           => "Activate the remote mode on specified" &
-                                      " node(s), or automatically.",
-                    In_Switch_Attr => False,
-                    Delimiter      => Equal,
-                    Parameter      => "node1[,node2]",
-                    Default        => "@auto@"));
-         Parser.Add_Argument
-           (Distributed_Group,
-            Create (Name           => "--slave-env",
-                    Help           => "Use a specific slave's environment",
-                    In_Switch_Attr => False,
-                    Delimiter      => Equal,
-                    Parameter      => "node",
-                    Default        => "@auto@"));
-         Parser.Add_Argument
-           (Distributed_Group,
-            Create (Name           => "--hash",
-                    Help           => "Set a hash string to identified" &
-                                      " environment",
-                    In_Switch_Attr => False,
-                    Delimiter      => Equal,
-                    Parameter      => "<string>"));
       end if;
 
       --  Verbosity
@@ -573,38 +536,6 @@ package body GPRtools.Options is
            (Switch => GPR2.Options.Db_Minus,
             Param  => Param,
             Index  => "");
-
-      elsif Arg = "--distributed" then
-         declare
-            use type GPR2.Containers.Count_Type;
-
-            --  If Value is set, the first character is a =, we remove it
-
-            Hosts : constant GPR2.Containers.Name_List :=
-                      (if Param = "@auto@"
-                       then GPR2.Compilation.Registry.Get_Hosts
-                       else GPR2.Containers.Create
-                              (GPR2.Name_Type (Param),
-                               Separator => ","));
-         begin
-            if Hosts.Length = 0 then
-               raise GPR2.Options.Usage_Error with
-                 "missing hosts for distributed mode compilation";
-            else
-               GPR2.Compilation.Registry.Record_Slaves (Hosts);
-               Result.Distributed_Mode := True;
-            end if;
-         end;
-
-      elsif Arg = "--slave-env" then
-         if Param = "@auto@" then
-            Result.Slave_Env_Auto := True;
-         else
-            Result.Slave_Env := To_Unbounded_String (Param);
-         end if;
-
-      elsif Arg = "--hash" then
-         Result.Hash_Value := To_Unbounded_String (Param);
 
       elsif Arg = "-F" then
          Result.Full_Path_Name_For_Brief := True;

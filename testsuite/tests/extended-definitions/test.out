@@ -1,9 +1,13 @@
+prj1.gpr:2:23: warning: there are no sources of language "C" in this project
 **************** Iterator Prj1
 Prj1     K_ABSTRACT
+A:   Languages -> C
 A:   Object_Dir -> obj
+A:   Source_Dirs ->
 V:   V -> prj1
 **************** Iterator Prj2
 Prj2     K_STANDARD
+A:   Languages -> C Ada
 A:   Object_Dir -> obj2
 A:   Source_Dirs -> p2
 V:   V -> prj1-prj2

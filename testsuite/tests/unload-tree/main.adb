@@ -8,7 +8,6 @@ with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
 with GPR2.Build.Source.Sets;
-with GPR2.Unit;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;

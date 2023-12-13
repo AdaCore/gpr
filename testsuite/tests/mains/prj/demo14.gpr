@@ -1,0 +1,9 @@
+project Demo14 is
+   for Languages use ("C");
+   for Source_Dirs use ("src");
+   for Main use ("demo14.myc");
+
+   package Naming is
+      for Implementation_Exceptions ("C") use ("demo14.myc");
+   end Naming;
+end Demo14;

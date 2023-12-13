@@ -1,0 +1,9 @@
+project Prj is
+   for Languages use ("C");
+   for Source_Dirs use ("src");
+
+   package Naming is
+      for Specification_Exceptions ("C") use ("foo.inc", "bar.h", "notfound.inc");
+      for Implementation_Exceptions ("C") use ("notfound.cc");
+   end Naming;
+end Prj;
