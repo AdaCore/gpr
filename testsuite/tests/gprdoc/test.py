@@ -7,7 +7,7 @@ bnr = BuilderAndRunner()
 
 p = bnr.run([GPRDOC])
 
-if Env().host.platform.endswith('windows'):
+if 'windows' in Env().host.platform:
     is_win = True
 else:
     is_win = False

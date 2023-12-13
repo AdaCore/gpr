@@ -111,7 +111,7 @@ class ObjScnPhase(Enum):
 
 
 class ObjScnExternalTool(Enum):
-    if Env().host.platform.endswith('windows'):
+    if 'windows' in Env().host.platform:
         SCN_CMD_GCC = "gcc.exe'"
     else:
         SCN_CMD_GCC = "gcc"
