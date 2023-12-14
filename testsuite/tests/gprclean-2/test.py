@@ -11,7 +11,7 @@ def check_paths_deleted(paths):
 
 bnr = BuilderAndRunner()
 
-if Env().host.platform.endswith('windows'):
+if 'windows' in Env().host.platform:
     main_adb = 'Main.Adb'
     test = 'Test'
 else:

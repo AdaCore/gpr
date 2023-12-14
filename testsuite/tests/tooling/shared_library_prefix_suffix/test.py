@@ -7,7 +7,7 @@ from testsuite_support.driver.driver_constants import ObjScnRes as Res
 import re
 
 
-if Env().host.platform.endswith("windows"):
+if 'windows' in Env().host.platform:
     default_suffix = ".dll"
 else:
     default_suffix = ".so"
