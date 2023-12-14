@@ -1,4 +1,4 @@
-project Prj_Ada_2 is
+project Prj_Ada_3 is
 	for Languages use ("Ada");
 	for Source_Dirs use ("src/a", "src/b");
-end Prj_Ada_2;
+end Prj_Ada_3;

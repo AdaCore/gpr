@@ -1,4 +1,4 @@
-project Prj_C_2 is
+project Prj_C_3 is
 	for Languages use ("C");
 	for Source_Dirs use ("src/a", "src/b");
-end Prj_C_2;
+end Prj_C_3;
