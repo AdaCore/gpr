@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<!DOCTYPE gprconfig [
+]>
+<gprconfig>
+
+    <!-- Special cases (GPRCONFIG_PREFIX and TARGET) -->
+    <configuration>
+        <compilers>
+            <compiler name="FAKE-ADA-COMPILER-1" />
+        </compilers>
+        <config>
+            Gprconfig_Prefix := ${GPRCONFIG_PREFIX}
+            Target := ${TARGET}
+        </config>
+    </configuration>
+
+    <configuration>
+        <compilers>
+            <compiler name="FAKE-ADA-COMPILER-1" />
+        </compilers>
+        <compilers>
+            <compiler name="FAKE-C-COMPILER-1" />
+        </compilers>
+        <config>
+            Unambiguous_Compiler_Path := ${PATH(C)};
+            First_Language_Found := ${LANGUAGE(*)};
+        </config>
+    </configuration>
+
+    <!-- Ambiguous paths should raise an error -->
+    <configuration>
+        <compilers>
+            <compiler name="FAKE-ADA-COMPILER-1" />
+        </compilers>
+        <compilers>
+            <compiler name="FAKE-C-COMPILER-2" />
+        </compilers>
+        <config>
+            Ambiguous_Compiler_Path := ${PATH};
+        </config>
+    </configuration>
+
+    <!-- Should raise an error, as the compiler is present,
+    but not the variable. -->
+    <configuration>
+        <compilers>
+            <compiler name="FAKE-C-COMPILER-3" />
+        </compilers>
+        <config>
+            Missing_variable := ${Missing_Variable(C)};
+        </config>
+    </configuration>
+
+    <!-- Should raise an error, because a variable
+    using the "*" index shall be found. -->
+    <configuration>
+        <compilers>
+            <compiler name="FAKE-C-COMPILER-4" />
+        </compilers>
+        <config>
+            Missing_Variable := ${Missing_Variable(*)}
+        </config>
+    </configuration>
+
+    <!-- My_Variable should be found for fake C compiler 5,
+    but not found for C compiler 4. -->
+    <configuration>
+        <compilers>
+            <compiler name="FAKE-C-COMPILER-4" />
+            <compiler name="FAKE-C-COMPILER-5" />
+        </compilers>
+        <compilers>
+            <compiler name="FAKE-ADA-COMPILER-2" />
+        </compilers>
+        <config>
+            My_Variable := ${My_Variable(*)}
+        </config>
+    </configuration>
+
+    <!-- If the compiler is missing for a variable (here we do
+    not have a Ada compiler selected), then no error is raised and
+    an empty value is returned. -->
+    <configuration>
+        <compilers>
+            <compiler name="FAKE-C-COMPILER-6" />
+        </compilers>
+        <config>
+            Missing_Variable := ${Missing_Variable(Ada)}
+        </config>
+    </configuration>
+</gprconfig>

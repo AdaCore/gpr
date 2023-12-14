@@ -1,0 +1,24 @@
+=== Prefined variable ===
+OK
+
+=== Common configuration ===
+OK
+
+=== Ambiguous path name ===
+fake-compiler-config.xml: error: Ambiguous variable substitution, need to specify the language (in PATH)
+KO
+
+=== Invalid variable name ===
+fake-compiler-config.xml: error: variable 'Missing_Variable' is not defined
+KO
+
+=== Invalid variable name with * ===
+fake-compiler-config.xml: error: variable 'Missing_Variable' is not defined for any declared language
+KO
+
+=== valid variable name with * ===
+OK
+
+=== Invalid variable name substituted by an empty string ===
+OK
+
