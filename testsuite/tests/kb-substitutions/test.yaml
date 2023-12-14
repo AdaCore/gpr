@@ -1,0 +1,7 @@
+description:
+    Test KB variable substitutions
+driver: build_and_run
+project_file: test
+main: main
+fake_ada_target:
+  - ['fake-target', 'runtime-A', 'runtime-B', 'runtime-C']

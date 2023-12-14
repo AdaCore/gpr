@@ -23,6 +23,8 @@
 --  fact that in Indefinite_Hashed_Maps reallocation is done only if there is
 --  need for new capacity.
 
+private with Ada.Finalization;
+
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 

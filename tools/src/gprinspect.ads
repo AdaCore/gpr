@@ -17,6 +17,7 @@
 ------------------------------------------------------------------------------
 
 with GPR2.Containers;
+with GPR2.Path_Name;
 
 with GPRtools;
 with GPRtools.Options;
@@ -42,6 +43,8 @@ package GPRinspect is
       Display_Packages          : Boolean := False;
       Display_Variables         : Boolean := False;
       Restricted_Views          : Restricted_Scope;
+      Gpr_Registry_File         : GPR2.Path_Name.Object
+        := GPR2.Path_Name.Undefined;
    end record;
 
 end GPRinspect;

@@ -16,8 +16,18 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Exceptions;
+with Ada.Strings.Unbounded;
+with Ada.Text_IO;
+
+with GNAT.OS_Lib;
+
+with GNATCOLL.OS.Process;
+
+with GPR2.Options;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Attribute.Description;
+with GPR2.Project.Registry.Exchange;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Registry.Pack.Description;
 
@@ -38,16 +48,100 @@ package body GPRinspect.External_Tools_Support is
    --  Add support of gnatprove tool not installed or not able to print
    --  registered data
 
+   procedure Import_From_File (File : GPR2.Path_Name.Object);
+   --  Import attribute definitions/documentation from provided file
+
+   procedure Import_From_Tool
+     (Tool_Name       : String;
+      Legacy_Callback : access procedure := null);
+   --  Import attributes from tool using --print-gpr-registry switch
+   --  If tool not installed or not supporting switch use 'Legacy_Callback'.
+
    ------------------------------------
    -- Import_External_Tools_Registry --
    ------------------------------------
 
-   procedure Import_External_Tools_Registry is
+   procedure Import_External_Tools_Registry (File : GPR2.Path_Name.Object) is
    begin
-      Register_Legacy_Gnatcheck;
-      Register_Legacy_Gnatprove;
+      Import_From_File (File);
+      Import_From_Tool ("gnatcheck", Register_Legacy_Gnatcheck'Access);
+      Import_From_Tool ("gnatprove", Register_Legacy_Gnatprove'Access);
    end Import_External_Tools_Registry;
 
+   ----------------------
+   -- Import_From_File --
+   ----------------------
+
+   procedure Import_From_File (File : GPR2.Path_Name.Object) is
+   begin
+      if File.Is_Defined and then File.Exists then
+         declare
+            use Ada.Strings.Unbounded;
+            use Ada.Text_IO;
+
+            Definitions : Unbounded_String;
+            F       : File_Type;
+         begin
+            Open (F, In_File, File.String_Value);
+            while not End_Of_File (F) loop
+               Append (Definitions, Get_Line (F) & ASCII.LF);
+            end loop;
+            GPR2.Project.Registry.Exchange.Import (Definitions);
+
+         exception
+            when E : others =>
+               Ada.Text_IO.Put_Line
+                 ("Warning: Cannot import attribute registry from file: " &
+                    Ada.Exceptions.Exception_Information (E));
+         end;
+      end if;
+   end Import_From_File;
+
+   ----------------------
+   -- Import_From_Tool --
+   ----------------------
+
+   procedure Import_From_Tool
+     (Tool_Name       : String;
+      Legacy_Callback : access procedure := null) is
+      Exec_Name   : GNAT.OS_Lib.String_Access :=
+                      GNAT.OS_Lib.Locate_Exec_On_Path (Tool_Name);
+      use type GNAT.OS_Lib.String_Access;
+   begin
+      if Exec_Name /= null then
+         declare
+            Args_Vector : GNATCOLL.OS.Process.Argument_List;
+            Output      : Ada.Strings.Unbounded.Unbounded_String;
+            Dummy       : Integer;
+         begin
+            Args_Vector.Append (Exec_Name.all);
+            GNAT.OS_Lib.Free (Exec_Name);
+            Args_Vector.Append (GPR2.Options.Print_GPR_Registry_Option);
+
+            Output := GNATCOLL.OS.Process.Run
+              (Args        => Args_Vector,
+               Stdin       => GNATCOLL.OS.Process.FS.Null_FD,
+               Stderr      => GNATCOLL.OS.Process.FS.To_Stdout,
+               Status      => Dummy);
+
+            if Dummy = 0 then
+               GPR2.Project.Registry.Exchange.Import (Output);
+               return;
+            end if;
+
+         exception
+            when E : others =>
+               Ada.Text_IO.Put_Line
+                 ("Warning: Cannot import attribute registry from " & Tool_Name
+                  & " : " & Ada.Exceptions.Exception_Information (E));
+         end;
+      end if;
+
+      --  If registry cannot be imported from tool use Legacy_Callback
+      if Legacy_Callback /= null then
+         Legacy_Callback.all;
+      end if;
+   end Import_From_Tool;
 
    -------------------------------
    -- Register_Legacy_Gnatcheck --

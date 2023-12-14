@@ -63,7 +63,7 @@ scn_descr = {
 }
 
 
-if Env().host.platform.endswith("windows"):
+if 'windows' in Env().host.platform:
     default_suffix = ".dll"
 else:
     default_suffix = ".so"

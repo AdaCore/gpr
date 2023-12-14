@@ -3357,19 +3357,26 @@ package body GPR2.KB is
 
       function Callback (Var_Name, Index : String) return String is
 
-         function Do_Subst (Lang : Language_Id) return String;
+         function Do_Subst
+           (Lang  : Language_Id;
+            Found : out Boolean) return String;
          --  Performs substitution with a given language index
 
          --------------
          -- Do_Subst --
          --------------
 
-         function Do_Subst (Lang : Language_Id) return String is
+         function Do_Subst
+           (Lang  : Language_Id;
+            Found : out Boolean) return String is
          begin
+            Found := False;
+
             for Comp of Comps loop
                if Comp.Selected
                  and then Comp.Language = Lang
                then
+                  Found := True;
                   return Get_Variable_Value (Comp, Var_Name);
                end if;
             end loop;
@@ -3408,27 +3415,41 @@ package body GPR2.KB is
          else
             if Index = "*" then
                for Lang of Langs loop
+                  declare
+                     Found : Boolean;
                   begin
-                     return Do_Subst (Lang);
+                     --  New block required to catch exception from Do_Subst
+
+                     declare
+                        Subst : constant String := Do_Subst (Lang, Found);
+                     begin
+                        if Found then
+                           return Subst;
+                        end if;
+                     end;
                   exception
-                     when Ex : Invalid_KB =>
-                        GNATCOLL.Traces.Trace
-                          (Main_Trace,
-                           Ada.Exceptions.Exception_Message (Ex)
-                           & " for language " & Image (Lang));
+                     when Invalid_KB => null;
                   end;
                end loop;
 
                Messages.Append
-                 (Message.Create
-                    (Message.Error,
+               (Message.Create
+                  (Message.Error,
                      "variable '" & Var_Name
-                     & "' is not defined for any language",
+                     & "' is not defined for any declared language",
                      Sloc => Error_Sloc));
                raise Invalid_KB;
             else
+               declare
+                  Found : Boolean;
                begin
-                  return Do_Subst (+Name_Type (Index));
+                  --  If the variable is not found, "" is returned
+                  --  by Do_Subst. In contrary to the "*" index scenario,
+                  --  this is a viable one, as a variable can be set
+                  --  out of context and used only in context, so it
+                  --  should not be empty anywhere it matters.
+
+                  return Do_Subst (+Name_Type (Index), Found);
                exception
                   when Ex : Invalid_KB =>
                      Messages.Append

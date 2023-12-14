@@ -31,14 +31,18 @@ package GPR2.Project.Registry.Exchange is
       Format   : Export_Format := K_JSON_COMPACT;
       Output   : access procedure (Item : String) := Ada.Text_IO.Put'Access);
    --  Export Packages filtered by Included/Excluded using right formating
+   --  By default export all packages added after gpr2 initialization.
 
    procedure Import (Definitions : Ada.Strings.Unbounded.Unbounded_String;
                      Included    : GPR2.Containers.Package_Id_List :=
-                       GPR2.Project.Registry.Pack.All_Packages;
+                       GPR2.Containers.Package_Id_Type_List.Empty;
                      Excluded    : GPR2.Containers.Package_Id_List :=
                        GPR2.Project.Registry.Pack.Predefined_Packages);
    --  Import in registry Definitions (in JSON format) filtered by
-   --  Included/Excluded parameters. Raise GNATCOLL.JSON.Invalid_JSON_Stream
-   --  exception if Definitions is an invalid JSON string.
+   --  Included/Excluded parameters.
+   --  By default import all definitions except project scope and gpr2
+   --  prefedined packages.
+   --  Raise GNATCOLL.JSON.Invalid_JSON_Stream exception if Definitions is an
+   --  invalid JSON string.
 
 end GPR2.Project.Registry.Exchange;

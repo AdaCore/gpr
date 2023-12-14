@@ -2,7 +2,7 @@ from e3.env import Env
 from e3.fs import cp
 from testsuite_support.builder_and_runner import BuilderAndRunner
 
-if Env().host.platform.endswith('windows'):
+if 'windows' in Env().host.platform:
     cp('config-windows.cgpr', 'config.cgpr')
     cp('prj_driver-windows.gpr', 'prj_driver.gpr')
 

@@ -1,0 +1,12 @@
+Project: Prj_C
+prj_c.gpr:3:30: error: "a.h" is found in several source directories
+Project: Prj_C_2
+ > /src/b/a.h         language: C      Kind: S_SPEC
+Project: Prj_C_2
+ > /src/a/a.h         language: C      Kind: S_SPEC
+Project: Prj_Ada
+prj_ada.gpr:3:30: error: "a.ads" is found in several source directories
+Project: Prj_Ada_2
+ > /src/b/a.ads       language: Ada    Kind: S_SPEC_ONLY   unit: A
+Project: Prj_Ada_2
+ > /src/a/a.ads       language: Ada    Kind: S_SPEC_ONLY   unit: A

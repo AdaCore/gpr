@@ -1074,6 +1074,55 @@ the following package models the Apex file naming rules:
          for Body_Suffix ("Ada")  use ".2.ada";
        end Naming;
 
+Handling multiple suffixes for the same language
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As seen above, suffix attributes allows only a single value. If a project
+contains sources having different suffixes for a given language (e.g. .cc and
+.cpp), it requires one of the following actions to be handled using project
+file(s).
+
+  * Rename all source files of a language to a single common suffix.
+
+or 
+
+  * Create extra project file(s) to handle extra suffix(es).
+    See :ref:`Organizing_Projects_into_Subsystems` presenting project's
+    subsystems concept used by this solution.
+  
+    As an example let's have project containing ``.cc`` and ``.cpp`` C++ source
+    files. First create a ``prj.gpr`` project file able to handle ``.cpp`` files.
+    To add ``.cc`` files support to your project, the following is needed:
+  
+    * Create a new ``prj_cpp_support.gpr`` file containing:
+
+      .. code-block:: gpr
+
+           with "prj";
+           --  get access to required 'prj' attributes/packages definitions
+
+           project Prj_Cc_Support is
+             for Languages   use ("C++");
+             for Source_Dirs use Prj'Source_Dirs;
+             for Object_Dir  use Prj'Object_Dir;
+
+             package Naming is
+               for Spec_Suffix ("C++") use ".no_extra_cpp_spec_suffix_defined";
+               for Body_Suffix ("C++") use ".cc";
+             end Naming;
+
+             package Compiler renames Prj.Compiler;
+           end Prj_Cc_Support;
+     
+    * Add on top of ``prj.gpr`` file, the following statement:
+    
+      .. code-block:: gpr
+
+           limited with "prj_cc_support";
+  
+      .. note::
+  
+        ``limited`` qualifier is required to avoid circular dependency.
 
 .. _Organizing_Projects_into_Subsystems:
 
