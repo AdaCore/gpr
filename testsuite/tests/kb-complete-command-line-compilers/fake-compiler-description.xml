@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!DOCTYPE gprconfig [
+]>
+<gprconfig>
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-1</name>
+        <executable>fake-target-1-gcc</executable>
+        <version>
+            <external>fake-target-1-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes default="runtime-A">runtime-A</runtimes>
+        <target>fake-target-1</target>
+    </compiler_description>
+
+    <!-- The name begins with Z, so it is checked to be compatible with
+    FAKE-C-COMPILER-1 after FAKE-ADA-COMPILER-1 has been checked with
+    FAKE-C-COMPILER. -->
+    <compiler_description>
+        <name>Z-COPY-OF-FIRST-FAKE-ADA-COMPILER</name>
+        <executable>fake-target-1-gcc</executable>
+        <version>
+            <external>fake-target-1-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes default="runtime-A">runtime-A</runtimes>
+        <target>fake-target-1</target>
+    </compiler_description>
+
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-2</name>
+        <executable>fake-target-2=-gcc</executable>
+        <version>
+            <external>fake-target-2-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes default="runtime-A">runtime-A</runtimes>
+        <target>fake-target-2</target>
+    </compiler_description>
+
+    <compiler_description>
+        <name>FAKE-C-COMPILER-1</name>
+        <executable>fake-target-1-gcc</executable>
+        <version>
+            <external>fake-target-1-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>C</languages>
+        <runtimes default="runtime-A">runtime-A</runtimes>
+        <target>fake-target-1</target>
+    </compiler_description>
+</gprconfig>
