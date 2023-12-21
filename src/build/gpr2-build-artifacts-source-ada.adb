@@ -49,7 +49,7 @@ package body GPR2.Build.Artifacts.Source.Ada is
          Index_Img : constant String := Index'Image;
       begin
          return
-           '@' & Index_Img (1 .. Index_Img'Last) & '@' & Basename;
+           '@' & Index_Img (2 .. Index_Img'Last) & '@' & Basename;
       end;
    end Serialize;
 

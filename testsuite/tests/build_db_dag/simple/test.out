@@ -1,0 +1,21 @@
+Source
+P1: foo.c
+P1: foo.h
+Source.Ada
+P1: main.adb
+P1: pkg.adb
+P1: pkg.ads
+P2: @1@foo.ada
+P2: @2@foo.ada
+P2: pkg.adb
+P2: pkg.ads
+Ali
+P1: obj1/subdir/main.ali
+P1: obj1/subdir/pkg.ali
+P2: lib2/subdir/foo~2.ali
+P2: lib2/subdir/pkg.ali
+Obj
+P1: obj1/subdir/main.o
+P1: obj1/subdir/pkg.o
+P2: obj2/subdir/foo~2.o
+P2: obj2/subdir/pkg.o
