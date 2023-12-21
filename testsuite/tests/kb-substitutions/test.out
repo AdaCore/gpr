@@ -22,3 +22,7 @@ OK
 === Invalid variable name substituted by an empty string ===
 OK
 
+=== Invalid variable name, missing clothing parenthesis ===
+fake-compiler-config.xml: error: Missing closing parenthesis in variable name: Missing_Variable(Ada
+KO
+

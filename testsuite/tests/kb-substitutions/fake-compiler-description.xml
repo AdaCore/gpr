@@ -101,4 +101,16 @@
         <target>fake-target</target>
     </compiler_description>
 
+    <compiler_description>
+        <name>FAKE-C-COMPILER-7</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>C</languages>
+        <runtimes default="runtime-A">runtime-A</runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
 </gprconfig>

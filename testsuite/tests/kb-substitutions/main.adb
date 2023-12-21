@@ -222,4 +222,16 @@ begin
       Test ("Invalid variable name substituted by an empty string", KB,
             Descriptions, Expected_Strings);
    end;
+
+   declare
+      Descriptions : GPC.Description_Set :=
+        (Positive'First => GPC.Create
+           (Language => +"C",
+            Runtime  => "runtime-A",
+            Name     => "FAKE-C-COMPILER-7"));
+      Expected_Strings : Unbounded_String_Array (1..0);
+   begin
+      Test ("Invalid variable name, missing clothing parenthesis", KB,
+            Descriptions, Expected_Strings);
+   end;
 end Main;
