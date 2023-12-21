@@ -74,7 +74,7 @@ begin
       Absent_Dir_Error => GPR2.Project.Tree.No_Error);
    Tree.Log_Messages.Output_Messages (Information => False);
 
-   Tree.Update_Sources (Sources_Units_Dependencies, Log);
+   Tree.Update_Sources (Sources_Units_Artifacts, Log);
    Log.Output_Messages;
 
    declare

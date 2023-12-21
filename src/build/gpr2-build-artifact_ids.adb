@@ -17,9 +17,13 @@ package body GPR2.Build.Artifact_Ids is
    function "<" (Id, Other : Artifact_Id) return Boolean is
       use type View_Ids.View_Id;
    begin
-      return Id.View_Id < Other.View_Id
-        and then Id.Class < Other.Class
-        and then Id.Path < Other.Path;
+      if Id.View_Id /= Other.View_Id then
+         return Id.View_Id < Other.View_Id;
+      elsif Id.Class /= Other.Class then
+         return Id.Class < Other.Class;
+      else
+         return Id.Path < Other.Path;
+      end if;
    end "<";
 
    ------------

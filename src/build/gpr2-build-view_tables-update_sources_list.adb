@@ -911,7 +911,7 @@ package body Update_Sources_List is
                  (Tree             => Tree,
                   Data             => Source,
                   Get_Withed_Units =>
-                    Data.Tree_Db.Source_Option >= Sources_Units_Dependencies,
+                    Data.Tree_Db.Source_Option >= Sources_Units_Artifacts,
                   Success          => Parsed);
 
                if Parsed and then Match = Naming_Exception then
@@ -1174,7 +1174,7 @@ package body Update_Sources_List is
                               Data             => Src_Ref,
                               Get_Withed_Units =>
                                 Data.Tree_Db.Source_Option >=
-                                  Sources_Units_Dependencies,
+                                  Sources_Units_Artifacts,
                               Success          => Success);
                         end if;
                      end if;

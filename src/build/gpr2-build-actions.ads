@@ -26,7 +26,7 @@ package GPR2.Build.Actions is
 
    procedure Fill
      (Self  : Object;
-      Graph : in out DAG.DAG;
+      Graph : access DAG.Object;
       Input : Artifact_Ids.Artifact_Id) is abstract;
    --  Fill the DAG with Input. Action is responsible to tell the DAG the
    --  dependencies of the generated artifact as soon as it is known

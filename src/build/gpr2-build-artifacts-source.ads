@@ -13,6 +13,8 @@ package GPR2.Build.Artifacts.Source is
    type Object (<>) is new Artifacts.Object with private;
    --  Represents an Ada source unit in the Build DAG.
 
+   A_Class     : constant Artifact_Class := +"Source";
+
    Undefined : constant Object;
 
    function Is_Defined (Self : Object) return Boolean;
@@ -66,7 +68,7 @@ private
          Path  => Self.Src_Basename));
 
    overriding function Class
-     (Self : Object) return Artifact_Class is (+"Source");
+     (Self : Object) return Artifact_Class is (A_Class);
 
    function Owning_View (Self : Object) return GPR2.Project.View.Object is
       (Self.Src_Owner);

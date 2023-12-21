@@ -115,6 +115,10 @@ package body GPR2.Build.Tree_Db is
    begin
       Self.Src_Option := Option;
 
+      if Option >= Sources_Units_Artifacts then
+         Self.DAG.Hold;
+      end if;
+
       --  Refresh each tree's views
 
       for V of Self.Tree.Ordered_Views loop
@@ -226,6 +230,10 @@ package body GPR2.Build.Tree_Db is
                end;
             end if;
          end loop;
+      end if;
+
+      if Option >= Sources_Units_Artifacts then
+         Self.DAG.Release;
       end if;
    end Refresh;
 

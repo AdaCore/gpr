@@ -6,6 +6,7 @@
 
 private with Ada.Containers.Hashed_Maps;
 
+with GPR2.Build.DAG;
 with GPR2.Build.View_Db;
 with GPR2.Log;
 limited with GPR2.Project.Tree;
@@ -57,7 +58,9 @@ package GPR2.Build.Tree_Db is
       View : GPR2.Project.View.Object) return Build.View_Db.Object
      with Pre => Self.Is_Defined
                    and then View.Is_Defined
-                   and then View.Kind in With_Object_Dir_Kind;
+     and then View.Kind in With_Object_Dir_Kind;
+
+   function DAG (Self : Object) return access Build.DAG.Object;
 
    function Reference (Self : Object) return access Object
      with Pre => Self.Is_Defined;
@@ -74,6 +77,7 @@ private
       Src_Option : Optional_Source_Info_Option := No_Source;
       With_RTS   : Boolean := False;
       Build_Dbs  : Build_DB_Maps.Map;
+      Graph      : aliased Build.DAG.Object;
    end record;
 
    Undefined : constant Object := (others => <>);
@@ -90,4 +94,6 @@ private
    function Source_Option (Self : Object) return Optional_Source_Info_Option is
      (Self.Src_Option);
 
+   function DAG (Self : Object) return access Build.DAG.Object is
+      (Self.Self.Graph'Access);
 end GPR2.Build.Tree_Db;

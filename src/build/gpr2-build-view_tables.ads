@@ -16,7 +16,6 @@ with GPR2.Log;
 with GPR2.Project.View.Set;
 
 with GPR2.Build.Compilation_Unit;
-with GPR2.Build.DAG;
 with GPR2.Build.Source;
 with GPR2.Source_Reference.Value;
 with GPR2.View_Ids;
@@ -174,10 +173,8 @@ private package GPR2.Build.View_Tables is
 
             Separates : Name_Maps.Map;
             --  Map of separates to their declaring unit. Note that the
-            --  parent unit may not be a compilation unit but another separate.
+            --  parent unit may not be a compilation unit but another separate
 
-            Graph     : aliased DAG.DAG;
-            --  The build artifacts organized as direct acyclic graph.
          when False =>
             null;
       end case;

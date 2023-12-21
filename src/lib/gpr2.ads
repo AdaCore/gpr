@@ -198,7 +198,7 @@ package GPR2 is
      (No_Source,
       Sources_Only,
       Sources_Units,
-      Sources_Units_Dependencies);
+      Sources_Units_Artifacts);
    --  Indicates the level of information to retrieve for sources:
    --  * No_Source: sources are not loaded
    --  * Sources_Only will only load the sources and fill the unit name
@@ -214,7 +214,7 @@ package GPR2 is
 
 
    subtype Source_Info_Option is Optional_Source_Info_Option
-     range Sources_Only .. Sources_Units_Dependencies;
+     range Sources_Only .. Sources_Units_Artifacts;
 
    --  Name tables definition
 

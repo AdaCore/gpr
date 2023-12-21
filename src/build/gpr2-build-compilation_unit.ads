@@ -7,10 +7,13 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Vectors;
 
+with GPR2.Build.Artifact_Ids;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 limited with GPR2.Project.Tree;
+
+private with GPR2.Build.Artifacts.Source.Ada;
 
 package GPR2.Build.Compilation_Unit is
 
@@ -22,6 +25,9 @@ package GPR2.Build.Compilation_Unit is
    --  Identifies the location of a Unit (spec/body or separate).
 
    No_Unit : constant Unit_Location := (others => <>);
+
+   function Artifact_Id
+     (U : Unit_Location) return GPR2.Build.Artifact_Ids.Artifact_Id;
 
    package Unit_Location_Vectors is new Ada.Containers.Vectors
      (Positive, Unit_Location);
@@ -124,6 +130,9 @@ package GPR2.Build.Compilation_Unit is
    --  Returns the list of separates for this compilation unit, indexed by
    --  their identifiers relative to the compilation unit.
 
+   function Has_Main_Part (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+
    function Main_Part (Self : Object) return Unit_Location
      with Pre => Self.Is_Defined
                   and then (Self.Has_Part (S_Spec)
@@ -152,6 +161,11 @@ package GPR2.Build.Compilation_Unit is
    --  Returns the .o's simple name for Self.
 
 private
+
+   function Artifact_Id (U : Unit_Location) return Artifact_Ids.Artifact_Id
+   is (Artifacts.Source.Ada.Id (View     => U.View,
+                                Basename => U.Source.Simple_Name,
+                                Index    => U.Index));
 
    type Clashing_Unit (Sep_Name_Len : Natural) is record
       Loc      : Unit_Location;
@@ -210,5 +224,8 @@ private
 
    function Main_Part (Self : Object) return Unit_Location is
      (if Self.Implem /= No_Unit then Self.Implem else Self.Spec);
+
+   function Has_Main_Part (Self : Object) return Boolean is
+     (Self.Implem /= No_Unit or else Self.Spec /= No_Unit);
 
 end GPR2.Build.Compilation_Unit;

@@ -29,7 +29,7 @@ begin
       return;
    end if;
 
-   Tree.Update_Sources (Sources_Units_Dependencies, Log);
+   Tree.Update_Sources (Sources_Units_Artifacts, Log);
    Log.Output_Messages;
 
    for NS of Tree.Namespace_Root_Projects loop

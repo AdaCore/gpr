@@ -33,6 +33,10 @@ package GPR2.Build.Artifact_Ids is
 
    function "<" (Id, Other : Artifact_Id) return Boolean;
 
+   function Class (Id : Artifact_Id) return Artifact_Class;
+   function Path (Id : Artifact_Id) return Value_Type;
+   function View (Id : Artifact_Id) return GPR2.View_Ids.View_Id;
+
 private
 
    type Artifact_Id (Path_Len : Natural) is record
@@ -44,10 +48,17 @@ private
    Undefined : constant Artifact_Id :=
                  (Path_Len => 0, others => <>);
 
-   function Hash (Id : Artifact_Id) return Ada.Containers.Hash_Type is
-      (Ada.Strings.Hash (Image (Id)));
+   function Hash (Id : Artifact_Id) return Ada.Containers.Hash_Type
+   is (Ada.Strings.Hash (Image (Id)));
 
-   function Is_Defined (Id : Artifact_Id) return Boolean is
-      (Id /= Undefined);
+   function Is_Defined (Id : Artifact_Id) return Boolean
+   is (Id /= Undefined);
+
+   function Class (Id : Artifact_Id) return Artifact_Class
+   is (Id.Class);
+   function Path (Id : Artifact_Id) return Value_Type
+   is (Id.Path);
+   function View (Id : Artifact_Id) return GPR2.View_Ids.View_Id
+   is (Id.View_Id);
 
 end GPR2.Build.Artifact_Ids;

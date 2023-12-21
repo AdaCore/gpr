@@ -42,7 +42,7 @@ procedure Main is
         (Prj,
          Create (Project_Name),
          Ctx);
-      Prj.Update_Sources (Sources_Units_Dependencies, Log);
+      Prj.Update_Sources (Sources_Units_Artifacts, Log);
 
       View := Prj.Root_Project;
       Text_IO.Put_Line ("Project: " & String (View.Name));

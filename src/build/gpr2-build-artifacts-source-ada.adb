@@ -17,9 +17,20 @@ package body GPR2.Build.Artifacts.Source.Ada is
    overriding function Id (Self : Object) return Artifact_Ids.Artifact_Id is
    begin
       return Artifact_Ids.Create
-        (Class => Self.Class,
+        (Class => A_Class,
          View  => Self.Src_Owner.Id,
          Path  => Serialize (Self.Src_Basename, Self.Src_Index));
+   end Id;
+
+   function Id
+     (View     : GPR2.Project.View.Object;
+      Basename : Simple_Name;
+      Index    : Unit_Index) return Artifact_Ids.Artifact_Id is
+   begin
+      return Artifact_Ids.Create
+        (Class => A_Class,
+         View  => View.Id,
+         Path  => Serialize (String (Basename), Index));
    end Id;
 
    ---------------
@@ -41,5 +52,16 @@ package body GPR2.Build.Artifacts.Source.Ada is
            '@' & Index_Img (1 .. Index_Img'Last) & '@' & Basename;
       end;
    end Serialize;
+
+   -----------------
+   -- Set_Is_Main --
+   -----------------
+
+   procedure Set_Is_Main
+     (Self  : in out Object;
+      Value : Boolean) is
+   begin
+      Self.Is_Main := Value;
+   end Set_Is_Main;
 
 end GPR2.Build.Artifacts.Source.Ada;
