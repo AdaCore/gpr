@@ -12,6 +12,7 @@ package GPR2.Build.Actions.Ada_Compile is
    procedure Register (Tree : access Tree_Db.Object);
 
    type Object is new Actions.Object with private;
+   --  Action responsible for building Ada sources
 
    overriding function Class (Self : Object) return Action_Class;
 

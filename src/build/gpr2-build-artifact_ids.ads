@@ -10,8 +10,17 @@ private with Ada.Strings.Hash;
 package GPR2.Build.Artifact_Ids is
 
    type Artifact_Id (<>) is private;
+   --  Artifact Ids are used to identify build artifacts without having to
+   --  manipulate the objects themselves. Such representation is faster to
+   --  use when reasoning at a graph level, and is resilient to artifacts
+   --  changes.
+   --  An artifact is identified by the class of the artifact, the view it
+   --  belongs to, and its "path" whose significance depends on the
+   --  artifact class.
 
    Undefined : constant Artifact_Id;
+
+   function Is_Defined (Id : Artifact_Id) return Boolean;
 
    function Create
      (Class : Artifact_Class;
@@ -23,13 +32,15 @@ package GPR2.Build.Artifact_Ids is
 
    function Image (Id : Artifact_Id) return Value_Type
      with Pre => Is_Defined (Id);
+   --  Serialisation of the Artifact_Id
 
    function Import (Image : Value_Type) return Artifact_Id
      with Pre => Is_Valid_Image (Image);
-
-   function Is_Defined (Id : Artifact_Id) return Boolean;
+   --  Deserialization of the Artifact_Id
 
    function Is_Valid_Image (Image : Value_Type) return Boolean;
+   --  To be used before deserializing to check if the image is
+   --  correct and can be decoded.
 
    function "<" (Id, Other : Artifact_Id) return Boolean;
 
