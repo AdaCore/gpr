@@ -25,22 +25,27 @@ function Main return Natural is
                     then Ada.Command_Line.Argument (1)
                     else "tree/agg.gpr");
 
+   procedure Print_Artifact (A : GPR2.Build.Artifacts.Object'Class) is
+      use GPR2.Build;
+
+      View : GPR2.Project.View.Object :=
+               Tree.Get_View (Artifact_Ids.View (A.Id));
+   begin
+      Ada.Text_IO.Put (String (View.Name));
+      Ada.Text_IO.Put (": ");
+      Ada.Text_IO.Put_Line (Artifact_Ids.Path (A.Id));
+   end Print_Artifact;
+
    procedure Test (Class : GPR2.Artifact_Class) is
    begin
       Ada.Text_IO.Put_Line (GPR2.Image (Class));
-      for C in Tree.Artifacts_Database.DAG.Iterate (Class) loop
-         declare
-            use GPR2.Build;
+      for A of Tree.Artifacts_Database.DAG.Artifacts (Class) loop
+         Print_Artifact (A);
 
-            A : GPR2.Build.DAG.Constant_Reference_Type :=
-                  Tree.Artifacts_Database.DAG.Constant_Reference (C);
-            View : GPR2.Project.View.Object :=
-                     Tree.Get_View (Artifact_Ids.View (A.Id));
-         begin
-            Ada.Text_IO.Put (String (View.Name));
-            Ada.Text_IO.Put (": ");
-            Ada.Text_IO.Put_Line (Artifact_Ids.Path (A.Id));
-         end;
+         for Dep of Tree.Artifacts_Database.DAG.Predecessors (A.Id) loop
+            Ada.Text_IO.Put (" - dep: ");
+            Print_Artifact (Dep);
+         end loop;
       end loop;
    end Test;
 

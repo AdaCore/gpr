@@ -45,8 +45,10 @@ package body GPR2.Build.Actions.Ada_Compile is
          --  ??? get extensions from configuration project
 
       begin
-         DAG.Add_Artifact (Graph, Ali);
-         DAG.Add_Artifact (Graph, Obj);
+         Graph.Add_Artifact (Ali);
+         Graph.Add_Explicit_Dependency (Ali.Id, Input);
+         Graph.Add_Artifact (Obj);
+         Graph.Add_Explicit_Dependency (Obj.Id, Input);
       end;
    end Fill;
 

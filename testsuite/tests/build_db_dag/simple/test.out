@@ -11,11 +11,19 @@ P2: pkg.adb
 P2: pkg.ads
 Ali
 P1: obj1/subdir/main.ali
+ - dep: P1: main.adb
 P1: obj1/subdir/pkg.ali
+ - dep: P1: pkg.adb
 P2: lib2/subdir/foo~2.ali
+ - dep: P2: @2@foo.ada
 P2: lib2/subdir/pkg.ali
+ - dep: P2: pkg.adb
 Obj
 P1: obj1/subdir/main.o
+ - dep: P1: main.adb
 P1: obj1/subdir/pkg.o
+ - dep: P1: pkg.adb
 P2: obj2/subdir/foo~2.o
+ - dep: P2: @2@foo.ada
 P2: obj2/subdir/pkg.o
+ - dep: P2: pkg.adb

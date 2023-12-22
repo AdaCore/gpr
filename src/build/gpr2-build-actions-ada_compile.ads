@@ -24,10 +24,12 @@ package GPR2.Build.Actions.Ada_Compile is
 
 private
 
+   This_Class : constant Action_Class := +"Ada compile";
+
    type Object is new Actions.Object with null record;
 
    overriding function Class (Self : Object) return Action_Class
-   is ("Ada compile");
+   is (This_Class);
 
    overriding function Inputs (Self : Object) return Artifact_Class
    is (Artifacts.Source.Ada.A_Class);

@@ -273,6 +273,14 @@ package GPR2 is
    function Image (Class : Artifact_Class) return String;
    function Hash (Class : Artifact_Class) return Ada.Containers.Hash_Type;
 
+   type Action_Class is new Natural with Default_Value => 0;
+
+   No_Action_Class : constant Action_Class;
+
+   function "+" (Name : Optional_Name_Type) return Action_Class;
+   function Name (Class : Action_Class) return Optional_Name_Type;
+   function Image (Class : Action_Class) return String;
+   function Hash (Class : Action_Class) return Ada.Containers.Hash_Type;
 
 private
 
@@ -291,7 +299,8 @@ private
    Project_Level_Scope : constant Package_Id := 0;
    No_Attribute_Id     : constant Q_Optional_Attribute_Id :=
                            (Project_Level_Scope, No_Attribute);
-   No_Artifact_Class : constant Artifact_Class := 0;
+   No_Artifact_Class   : constant Artifact_Class := 0;
+   No_Action_Class     : constant Action_Class := 0;
 
    function Image (Kind : Project_Kind) return String is
      ((case Kind is
@@ -435,6 +444,17 @@ private
    function Image (Class : Artifact_Class) return String is
      (Image (Artifact_Class_List, Natural (Class)));
    function Hash (Class : Artifact_Class) return Ada.Containers.Hash_Type is
+     (Ada.Containers.Hash_Type (Class));
+
+   Action_Class_List : Name_List;
+
+   function "+" (Name : Optional_Name_Type) return Action_Class is
+     (Action_Class (Id (Action_Class_List, Name)));
+   function Name (Class : Action_Class) return Optional_Name_Type is
+     (Name (Action_Class_List, Natural (Class)));
+   function Image (Class : Action_Class) return String is
+     (Image (Action_Class_List, Natural (Class)));
+   function Hash (Class : Action_Class) return Ada.Containers.Hash_Type is
      (Ada.Containers.Hash_Type (Class));
 
    function "<" (Left, Right : Q_Attribute_Id) return Boolean is

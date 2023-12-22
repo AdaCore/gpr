@@ -5,14 +5,11 @@
 --
 
 with Ada.Containers;
-with Ada.Strings.Hash_Case_Insensitive;
 
 with GPR2.Build.Artifact_Ids;
 limited with GPR2.Build.DAG;
 
 package GPR2.Build.Actions is
-
-   type Action_Class is new Name_Type;
 
    type Object is interface;
    --  Meant to be a singleton
@@ -34,6 +31,6 @@ package GPR2.Build.Actions is
    --  ??? TODO: the actual action execution
 
    function Hash (Action : Object'Class) return Ada.Containers.Hash_Type is
-     (Ada.Strings.Hash_Case_Insensitive (String (Action.Class)));
+     (Hash (Action.Class));
 
 end GPR2.Build.Actions;
