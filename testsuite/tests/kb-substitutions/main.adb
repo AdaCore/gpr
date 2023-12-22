@@ -21,6 +21,10 @@ procedure Main is
    type Unbounded_String_Array is
      array (Positive range <>) of Unbounded_String;
 
+   procedure Print_Logs (Logs : Log.Object; Warnings : Boolean);
+   --  Print the errors logs, and warnings'one if specified.
+
+
    procedure Test
      (Test_Title            : String;
       KB                    : in out GPR2.KB.Object;
@@ -33,6 +37,23 @@ procedure Main is
    --  all the strings are in the configuration.
    --  If the configuration is correct, displays OK.
    --  Otherwise, displays KO.
+
+   ----------------
+   -- Print_Logs --
+   ----------------
+
+   procedure Print_Logs (Logs : Log.Object ; Warnings : Boolean) is
+   begin
+      for C in Logs.Iterate
+         (False, Warnings, True, True, True)
+      loop
+         declare
+            M : constant GPR2.Message.Object := GPR2.Log.Element (C);
+         begin
+            Ada.Text_IO.Put_Line (M.Format);
+         end;
+      end loop;
+   end Print_Logs;
 
    ----------
    -- Test --
@@ -49,50 +70,54 @@ procedure Main is
         (Settings => Descriptions,
          Target   => "fake-target",
          Messages => Config_Log);
-   begin
-      KB.Filter_Compilers_List (Compilers, "fake-target");
-      declare
-         Conf : String := To_String (KB.Configuration
-                      (Selection => Compilers,
-                       Target    => "fake-target",
-                       Messages  => Config_Log));
-         Result : Boolean := True;
+      Result : Boolean := True;
+
+      procedure Check_For_Errors (Logs : Log.Object ; Warnings : Boolean) is
       begin
-
-         Ada.Text_IO.Put_Line ("=== " & Test_Title & " ===");
-
-         if Config_Log.Has_Error then
+         if Logs.Has_Error then
             Result := False;
          end if;
 
+         Print_Logs (Logs, Warnings);
+      end Check_For_Errors;
 
-         for C in Config_Log.Iterate
-            (True, True, True, True, True)
-         loop
-            declare
-               M : constant GPR2.Message.Object := GPR2.Log.Element (C);
-            begin
-               Ada.Text_IO.Put_Line (M.Format);
-            end;
-         end loop;
+   begin
 
-         if Result then
-            for Expected_Str of Expected_String_Parts loop
-               if Ada.Strings.Fixed.Index
-                    (Conf, To_String (Expected_Str)) <= 0 then
-                  Result := False;
-               end if;
-            end loop;
-         end if;
+      Ada.Text_IO.Put_Line ("=== " & Test_Title & " ===");
 
-         if Result then
-            Ada.Text_IO.Put_Line ("OK");
-         else
-            Ada.Text_IO.Put_Line ("KO");
-         end if;
-         Ada.Text_IO.Put_LIne ("");
+      Check_For_Errors (Config_Log, True);
+      Check_For_Errors (KB.Log_Messages, False);
 
-      end;
+      if Result then
+         KB.Filter_Compilers_List (Compilers, "fake-target");
+         declare
+            Conf : String := To_String (KB.Configuration
+                        (Selection => Compilers,
+                        Target    => "fake-target",
+                        Messages  => Config_Log));
+         begin
+
+            Check_For_Errors (Config_Log, True);
+            Check_For_Errors (KB.Log_Messages, False);
+
+            if Result then
+               for Expected_Str of Expected_String_Parts loop
+                  if Ada.Strings.Fixed.Index
+                     (Conf, To_String (Expected_Str)) <= 0 then
+                     Result := False;
+                  end if;
+               end loop;
+            end if;
+         end;
+      end if;
+
+      if Result then
+         Ada.Text_IO.Put_Line ("OK");
+      else
+         Ada.Text_IO.Put_Line ("KO");
+      end if;
+      Ada.Text_IO.Put_LIne ("");
+
    end Test;
 
    KB         : GPR2.KB.Object;
@@ -106,17 +131,10 @@ begin
    KB.Add (Flags, GPR2.Path_Name.Create_File
                     ("fake-compiler-config.xml"));
 
-   if KB.Has_Messages then
-      for C in KB.Log_Messages.Iterate
-         (False, False, True, True, True)
-      loop
-         declare
-            M : constant GPR2.Message.Object := GPR2.Log.Element (C);
-         begin
-            Ada.Text_IO.Put_Line (M.Format);
-         end;
-      end loop;
-   end if;
+   --  We do not display warnings to avoid undefined environment variable
+   --  used by the KB.
+
+   Print_Logs (KB.Log_Messages, False);
 
    declare
       Descriptions : GPC.Description_Set :=
@@ -232,6 +250,23 @@ begin
       Expected_Strings : Unbounded_String_Array (1..0);
    begin
       Test ("Invalid variable name, missing clothing parenthesis", KB,
+            Descriptions, Expected_Strings);
+   end;
+
+   KB.Add (Flags, GPR2.Path_Name.Create_File
+                    ("invalid-compiler-description.xml"));
+
+   Print_Logs (KB.Log_Messages, False);
+
+   declare
+      Descriptions : GPC.Description_Set :=
+        (Positive'First => GPC.Create
+           (Language => +"C",
+            Runtime  => "runtime-A",
+            Name     => "FAKE-C-COMPILER-8"));
+      Expected_Strings : Unbounded_String_Array (1..0);
+   begin
+      Test ("Indexed variable substitution, not allowed for compiler description", KB,
             Descriptions, Expected_Strings);
    end;
 end Main;

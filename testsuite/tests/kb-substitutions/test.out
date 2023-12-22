@@ -26,3 +26,7 @@ OK
 fake-compiler-config.xml: error: Missing closing parenthesis in variable name: Missing_Variable(Ada
 KO
 
+=== Indexed variable substitution, not allowed for compiler description ===
+invalid-compiler-description.xml: error: Indexed variables only allowed in <configuration> (in My_Var(C)
+KO
+
