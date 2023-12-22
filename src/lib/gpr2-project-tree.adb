@@ -272,7 +272,7 @@ package body GPR2.Project.Tree is
      (Self : Object) return Build.Tree_Db.Object_Access is
    begin
       if Self.Tree_Db.Is_Defined then
-         return Self.Tree_Db.Reference;
+         return Self.Tree_Db.Ref;
       else
          return null;
       end if;

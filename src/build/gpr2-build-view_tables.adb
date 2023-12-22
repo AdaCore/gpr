@@ -11,7 +11,6 @@ with GNAT.OS_Lib;
 
 with GPR2.Build.Artifacts.Source;
 with GPR2.Build.Artifacts.Source.Ada;
-with GPR2.Build.DAG;
 with GPR2.Build.Source.Ada_Parser;
 with GPR2.Build.Tree_Db;
 with GPR2.Project.Attribute;
@@ -205,8 +204,8 @@ package body GPR2.Build.View_Tables is
          if NS_Db.Tree_Db.Source_Option >= Sources_Units_Artifacts then
             --  Only doable if we have the artifacts database
             declare
-               Ref : constant DAG.Reference_Type :=
-                       NS_Db.Tree_Db.DAG.Reference
+               Ref : constant Tree_Db.Reference_Type :=
+                       NS_Db.Tree_Db.Reference
                          (Compilation_Unit.Artifact_Id (Id));
                Src : constant Artifacts.Source.Ada.Object_Access :=
                        Artifacts.Source.Ada.Object
@@ -779,26 +778,23 @@ package body GPR2.Build.View_Tables is
          if Data.Tree_Db.Source_Option >= Sources_Units_Artifacts then
             if Src_Info.Has_Index then
                for U of Src_Info.Units loop
-                  DAG.Add_Artifact
-                    (Data.Tree_Db.DAG,
-                     Artifacts.Source.Ada.Create
+                  Data.Tree_Db.Add_Artifact
+                    (Artifacts.Source.Ada.Create
                        (Data.View,
                         Src_Info.Path_Name.Simple_Name,
                         U.Index));
                end loop;
 
             elsif Src_Info.Language = Ada_Language then
-               DAG.Add_Artifact
-                 (Data.Tree_Db.DAG,
-                  Artifacts.Source.Ada.Create
+               Data.Tree_Db.Add_Artifact
+                 (Artifacts.Source.Ada.Create
                     (Data.View,
                      Src_Info.Path_Name.Simple_Name,
                      No_Index));
 
             else
-               DAG.Add_Artifact
-                 (Data.Tree_Db.DAG,
-                  Artifacts.Source.Create
+               Data.Tree_Db.Add_Artifact
+                 (Artifacts.Source.Create
                     (Data.View,
                      Src_Info.Path_Name.Simple_Name));
             end if;
@@ -863,28 +859,25 @@ package body GPR2.Build.View_Tables is
          if Data.Tree_Db.Source_Option >= Sources_Units_Artifacts then
             if Src_Info.Has_Index then
                for U of Src_Info.Units loop
-                  DAG.Remove_Artifact
-                    (Data.Tree_Db.DAG,
-                     Artifacts.Source.Ada.Create
+                  Data.Tree_Db.Remove_Artifact
+                    (Artifacts.Source.Ada.Id
                        (Data.View,
                         Src_Info.Path_Name.Simple_Name,
-                        U.Index).Id);
+                        U.Index));
                end loop;
 
             elsif Src_Info.Language = Ada_Language then
-               DAG.Remove_Artifact
-                 (Data.Tree_Db.DAG,
-                  Artifacts.Source.Ada.Create
+               Data.Tree_Db.Remove_Artifact
+                 (Artifacts.Source.Ada.Id
                     (Data.View,
                      Src_Info.Path_Name.Simple_Name,
-                     No_Index).Id);
+                     No_Index));
 
             else
-               DAG.Remove_Artifact
-                 (Data.Tree_Db.DAG,
-                  Artifacts.Source.Create
+               Data.Tree_Db.Remove_Artifact
+                 (Artifacts.Source.Id
                     (Data.View,
-                     Src_Info.Path_Name.Simple_Name).Id);
+                     Src_Info.Path_Name.Simple_Name));
             end if;
          end if;
 

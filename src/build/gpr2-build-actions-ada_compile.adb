@@ -16,12 +16,12 @@ package body GPR2.Build.Actions.Ada_Compile is
 
    overriding procedure Fill
      (Self  : Object;
-      Graph : access DAG.Object;
+      Graph : access Tree_Db.Object;
       Input : Artifact_Ids.Artifact_Id)
    is
       Src        : constant Artifacts.Source.Ada.Object :=
                      (Artifacts.Source.Ada.Object
-                        (DAG.Artifact (Graph.all, Input)));
+                        (Tree_Db.Artifact (Graph.all, Input)));
    begin
       if not Src.Is_Main then
          return;
@@ -56,10 +56,10 @@ package body GPR2.Build.Actions.Ada_Compile is
    -- Register --
    --------------
 
-   procedure Register (DAG : access Build.DAG.Object) is
+   procedure Register (Tree : access Tree_Db.Object) is
       Self : Object;
    begin
-      DAG.Register_Action (Self);
+      Tree.Register_Action (Self);
    end Register;
 
 end GPR2.Build.Actions.Ada_Compile;

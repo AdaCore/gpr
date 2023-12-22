@@ -22,6 +22,9 @@ package GPR2.Build.Artifacts.Source is
    function Create (View     : GPR2.Project.View.Object;
                     Basename : Simple_Name) return Object;
 
+   function Id (View     : GPR2.Project.View.Object;
+                Basename : Simple_Name) return Artifact_Ids.Artifact_Id;
+
    overriding function Id
      (Self : Object) return Artifact_Ids.Artifact_Id;
 
@@ -60,6 +63,13 @@ private
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
+
+   function Id (View     : GPR2.Project.View.Object;
+                Basename : Simple_Name) return Artifact_Ids.Artifact_Id is
+     (Artifact_Ids.Create
+        (Class => A_Class,
+         View  => View.Id,
+         Path  => Value_Type (Basename)));
 
    overriding function Id (Self : Object) return Artifact_Ids.Artifact_Id is
      (Artifact_Ids.Create

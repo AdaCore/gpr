@@ -4,12 +4,12 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.Build.DAG;
+with GPR2.Build.Tree_Db;
 private with GPR2.Build.Artifacts.Source.Ada;
 
 package GPR2.Build.Actions.Ada_Compile is
 
-   procedure Register (DAG : access Build.DAG.Object);
+   procedure Register (Tree : access Tree_Db.Object);
 
    type Object is new Actions.Object with private;
 
@@ -19,7 +19,7 @@ package GPR2.Build.Actions.Ada_Compile is
 
    overriding procedure Fill
      (Self  : Object;
-      Graph : access DAG.Object;
+      Graph : access Tree_Db.Object;
       Input : Artifact_Ids.Artifact_Id);
 
 private

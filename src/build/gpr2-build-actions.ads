@@ -7,7 +7,7 @@
 with Ada.Containers;
 
 with GPR2.Build.Artifact_Ids;
-limited with GPR2.Build.DAG;
+limited with GPR2.Build.Tree_Db;
 
 package GPR2.Build.Actions is
 
@@ -23,7 +23,7 @@ package GPR2.Build.Actions is
 
    procedure Fill
      (Self  : Object;
-      Graph : access DAG.Object;
+      Graph : access Tree_Db.Object;
       Input : Artifact_Ids.Artifact_Id) is abstract;
    --  Fill the DAG with Input. Action is responsible to tell the DAG the
    --  dependencies of the generated artifact as soon as it is known

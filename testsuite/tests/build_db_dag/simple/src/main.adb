@@ -7,7 +7,6 @@ with GPR2.Build.Artifacts.ALI;
 with GPR2.Build.Artifacts.Object_File;
 with GPR2.Build.Artifacts.Source;
 with GPR2.Build.Artifacts.Source.Ada;
-with GPR2.Build.DAG;
 
 with GPR2.Log;
 with GPR2.Options;
@@ -39,10 +38,10 @@ function Main return Natural is
    procedure Test (Class : GPR2.Artifact_Class) is
    begin
       Ada.Text_IO.Put_Line (GPR2.Image (Class));
-      for A of Tree.Artifacts_Database.DAG.Artifacts (Class) loop
+      for A of Tree.Artifacts_Database.Artifacts (Class) loop
          Print_Artifact (A);
 
-         for Dep of Tree.Artifacts_Database.DAG.Predecessors (A.Id) loop
+         for Dep of Tree.Artifacts_Database.Predecessors (A.Id) loop
             Ada.Text_IO.Put (" - dep: ");
             Print_Artifact (Dep);
          end loop;
@@ -62,7 +61,7 @@ begin
       return 1;
    end if;
 
-   GPR2.Build.Actions.Ada_Compile.Register (Tree.Artifacts_Database.DAG);
+   GPR2.Build.Actions.Ada_Compile.Register (Tree.Artifacts_Database);
 
    Tree.Update_Sources
      (Option   => GPR2.Sources_Units_Artifacts,
