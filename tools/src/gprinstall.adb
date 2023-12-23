@@ -17,64 +17,73 @@
 ------------------------------------------------------------------------------
 
 with Ada.Directories;
-with Ada.Text_IO;
+
+with GNATCOLL.OS.Dir;
 
 package body GPRinstall is
 
-   use Ada;
+   use GNATCOLL.OS.Dir;
 
-   ----------------------------
-   -- Delete_Empty_Directory --
-   ----------------------------
+   Delete_Main_Dir : Boolean := True;
+   Delete_Dir      : Boolean := True;
 
-   procedure Delete_Empty_Directory (Prefix, Dir_Name : String) is
-      use Ada.Directories;
+   function Process_Dir (Dir : Dir_Handle; Element : Dir_Entry)
+                         return Boolean;
 
-      Prefix_Dir_Len : constant Natural := Prefix'Length - 1;
-      Search         : Search_Type;
-      Element        : Directory_Entry_Type;
-      To_Delete      : Boolean := True;
+   procedure Process_File (Dir : Dir_Handle; Element : Dir_Entry);
+
+   ------------------------------
+   -- Delete_Install_Directory --
+   ------------------------------
+
+   procedure Delete_Install_Directory (Root_Dir : String) is
    begin
-      --  Do not try to remove a directory past the project dir
+      --  Recursively delete directory inside the install dir
+      Walk
+        (Path         => Root_Dir,
+         File_Handler => Process_File'Access,
+         Dir_Handler  => Process_Dir'Access,
+         Max_Depth    => 1);
 
-      if Dir_Name'Length >= Prefix_Dir_Len then
-         --  Check whether the directory is empty or not
+      --  Launch a last walk to delete the install root directory
+      Delete_Main_Dir := True;
 
-         if Exists (Dir_Name) then
-            Start_Search (Search, Dir_Name, Pattern => "");
+      Walk
+        (Path         => Root_Dir,
+         File_Handler => Process_File'Access,
+         Dir_Handler  => Process_Dir'Access,
+         Max_Depth    => 1);
 
-            Check_Entry : while More_Entries (Search) loop
-               Get_Next_Entry (Search, Element);
-
-               if Directories.Simple_Name (Element) not in "." | ".." then
-                  To_Delete := False;
-                  exit Check_Entry;
-               end if;
-            end loop Check_Entry;
-
-            End_Search (Search);
-
-         else
-            To_Delete := False;
-         end if;
-
-         --  If empty delete it
-
-         if To_Delete then
-            begin
-               Delete_Directory (Dir_Name);
-            exception
-                  --  This can happen if there is still some sym links into
-                  --  the directory.
-               when Text_IO.Use_Error =>
-                  null;
-            end;
-         end if;
-
-         --  And then try recursively with parent directory
-
-         Delete_Empty_Directory (Prefix, Containing_Directory (Dir_Name));
+      if Delete_Main_Dir then
+         Ada.Directories.Delete_Directory (Directory => Root_Dir);
       end if;
-   end Delete_Empty_Directory;
+   end Delete_Install_Directory;
+
+   function Process_Dir (Dir : Dir_Handle; Element : Dir_Entry) return Boolean
+   is
+      Dir_Path : constant String := Path (Dir) & "/" & Name (Element);
+   begin
+      Delete_Main_Dir := False;
+      Delete_Dir      := True;
+
+      Walk
+        (Path         => Dir_Path,
+         File_Handler => Process_File'Access,
+         Dir_Handler  => Process_Dir'Access,
+         Max_Depth    => 1);
+
+      if Delete_Dir then
+         Ada.Directories.Delete_Directory (Directory => Dir_Path);
+      end if;
+
+      return True;
+   end Process_Dir;
+
+   procedure Process_File (Dir : Dir_Handle; Element : Dir_Entry) is
+      pragma Unreferenced (Dir, Element);
+   begin
+      Delete_Main_Dir := False;
+      Delete_Dir      := False;
+   end Process_File;
 
 end GPRinstall;

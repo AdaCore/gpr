@@ -52,17 +52,9 @@ package body GPRinstall.Uninstall is
       procedure Do_Delete (Filename : String);
       --  Delete file or display a message if in dry-run mode
 
-      procedure Delete_Empty_Directory (Dir_Name : String);
-      --  Delete Dir_Name if empty, if removed try with parent directory
-
-      ----------------------------
-      -- Delete_Empty_Directory --
-      ----------------------------
-
-      procedure Delete_Empty_Directory (Dir_Name : String) is
-      begin
-         Delete_Empty_Directory (-Options.Global_Prefix_Dir.V, Dir_Name);
-      end Delete_Empty_Directory;
+      procedure Delete_Install_Directory;
+      --  Delete all empty directories found inside the install directory and
+      --  itself if no remaining elements are found.
 
       -----------------
       -- Delete_File --
@@ -73,6 +65,15 @@ package body GPRinstall.Uninstall is
       begin
          Do_Delete (Pathname);
       end Delete_File;
+
+      ------------------------------
+      -- Delete_Install_Directory --
+      ------------------------------
+
+      procedure Delete_Install_Directory is
+      begin
+         Delete_Install_Directory (-Options.Global_Prefix_Dir.V);
+      end Delete_Install_Directory;
 
       ---------------
       -- Do_Delete --
@@ -86,7 +87,7 @@ package body GPRinstall.Uninstall is
 
          else
             OS_Lib.Delete_File (Filename, Success);
-            Delete_Empty_Directory (Containing_Directory (Filename));
+            Delete_Install_Directory;
          end if;
       end Do_Delete;
 
