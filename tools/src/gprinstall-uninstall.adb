@@ -66,9 +66,9 @@ package body GPRinstall.Uninstall is
          Do_Delete (Pathname);
       end Delete_File;
 
-      ----------------------------
-      -- Delete_Empty_Directory --
-      ----------------------------
+      ------------------------------
+      -- Delete_Install_Directory --
+      ------------------------------
 
       procedure Delete_Install_Directory is
       begin
