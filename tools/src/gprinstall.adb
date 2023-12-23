@@ -32,9 +32,9 @@ package body GPRinstall is
 
    procedure Process_File (Dir : Dir_Handle; Element : Dir_Entry);
 
-   ----------------------------
-   -- Delete_Empty_Directory --
-   ----------------------------
+   ------------------------------
+   -- Delete_Install_Directory --
+   ------------------------------
 
    procedure Delete_Install_Directory (Root_Dir : String) is
    begin
