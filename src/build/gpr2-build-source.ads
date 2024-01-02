@@ -10,6 +10,7 @@ with Ada.Iterator_Interfaces;
 private with Ada.Containers.Indefinite_Ordered_Maps;
 
 limited with GPR2.Build.Tree_Db;
+with GPR2.Containers;
 with GPR2.Path_Name;
 with GPR2.Source_Reference.Value;
 
@@ -55,6 +56,8 @@ package GPR2.Build.Source is
       Separate_Name : Optional_Name_Type (1 .. Separate_Len);
       --  In case Kind is S_Separate, the name of the subunit (without the
       --  compilation unit name part).
+      Dependencies   : GPR2.Containers.Name_Set;
+      --  List of unit identifiers withed by this unit part
    end record;
    --  Structure used to describe the unit(s) contained in the source.
    --  The corresponding Compilation Unit can be retrieved from the main
@@ -69,6 +72,8 @@ package GPR2.Build.Source is
       Index         : Unit_Index;
       Kind          : Unit_Kind;
       Separate_Name : Optional_Name_Type := No_Name;
+      Dependencies  : GPR2.Containers.Name_Set :=
+                        GPR2.Containers.Name_Type_Set.Empty_Set;
       Parsed        : Boolean := False) return Unit_Part;
 
    type Unit_List is tagged private
@@ -253,6 +258,8 @@ private
       Index          : Unit_Index;
       Kind           : Unit_Kind;
       Separate_Name  : Optional_Name_Type := No_Name;
+      Dependencies   : GPR2.Containers.Name_Set :=
+                         GPR2.Containers.Name_Type_Set.Empty_Set;
       Parsed         : Boolean := False) return Unit_Part
    is (Name_Len       => Unit_Name'Length,
        Separate_Len   => Separate_Name'Length,
@@ -263,7 +270,8 @@ private
                                                (String (Unit_Name))),
        Separate_Name  => Optional_Name_Type
                            (Ada.Characters.Handling.To_Upper
-                              (String (Separate_Name))));
+                              (String (Separate_Name))),
+       Dependencies   => Dependencies);
 
    package Unit_Map is new Ada.Containers.Indefinite_Ordered_Maps
      (Unit_Index, Unit_Part);

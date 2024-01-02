@@ -3,5 +3,3 @@ description:
 driver: build_and_run
 project_file: withunits
 main: main
-control:
-- [XFAIL, "True", "libgpr2-next: missing Source.Dependencies"]

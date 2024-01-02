@@ -25,7 +25,6 @@ with GPR2.Project.Variable.Set;
 with GPR2.Source_Reference.Value;
 with GPR2.View_Ids;
 
-limited with GPR2.Build.Compilation_Input.Sets;
 limited with GPR2.Build.Compilation_Unit;
 limited with GPR2.Build.Compilation_Unit.Maps;
 limited with GPR2.Build.Source.Sets;
@@ -430,12 +429,6 @@ package GPR2.Project.View is
    --  only.
    --  If the source with such simple filename is not found in the subtree,
    --  then GPR2.Project.Source.Undefined is returned.
-
-   function Compilation_Inputs (Self : Object)
-     return GPR2.Build.Compilation_Input.Sets.Object
-     with Pre => Self.Is_Defined and then Self.Kind in With_Object_Dir_Kind;
-   --  Returns the set of sources (possibly indexed) used as input to the
-   --  compiler.
 
    function Interface_Units
      (Self : Object) return GPR2.Containers.Unit_Name_To_Sloc.Map

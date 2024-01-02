@@ -1,7 +1,6 @@
 with Ada.Command_Line;
 with Ada.Text_IO;
 
-with GPR2.Build.Compilation_Input.Sets;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source.Sets;
 with GPR2.Build.Tree_Db;
@@ -230,16 +229,6 @@ procedure Main is
                     ("!!! ERROR: sorted and unsorted list of sources don't" &
                        " have the same number of elements");
                end if;
-
-               Ada.Text_IO.Put_Line (" - compilation inputs:");
-               for Input of V.Compilation_Inputs loop
-                  Ada.Text_IO.Put
-                    ("   - " & String (Input.Source.Path_Name.Relative_Path (Root)));
-                  if Input.Index /= No_Index then
-                     Ada.Text_IO.Put (" @" & Input.Index'Image);
-                  end if;
-                  Ada.Text_IO.New_Line;
-               end loop;
             end if;
          end;
       end loop;

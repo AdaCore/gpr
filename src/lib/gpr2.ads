@@ -198,7 +198,7 @@ package GPR2 is
      (No_Source,
       Sources_Only,
       Sources_Units,
-      Sources_Units_Dependencies);
+      Sources_Units_Artifacts);
    --  Indicates the level of information to retrieve for sources:
    --  * No_Source: sources are not loaded
    --  * Sources_Only will only load the sources and fill the unit name
@@ -214,7 +214,7 @@ package GPR2 is
 
 
    subtype Source_Info_Option is Optional_Source_Info_Option
-     range Sources_Only .. Sources_Units_Dependencies;
+     range Sources_Only .. Sources_Units_Artifacts;
 
    --  Name tables definition
 
@@ -264,6 +264,24 @@ package GPR2 is
    function Image (Name : Q_Attribute_Id) return String;
    --  Returns qualified name image
 
+   type Artifact_Class is new Natural with Default_Value => 0;
+
+   No_Artifact_Class : constant Artifact_Class;
+
+   function "+" (Name : Optional_Name_Type) return Artifact_Class;
+   function Name (Class : Artifact_Class) return Optional_Name_Type;
+   function Image (Class : Artifact_Class) return String;
+   function Hash (Class : Artifact_Class) return Ada.Containers.Hash_Type;
+
+   type Action_Class is new Natural with Default_Value => 0;
+
+   No_Action_Class : constant Action_Class;
+
+   function "+" (Name : Optional_Name_Type) return Action_Class;
+   function Name (Class : Action_Class) return Optional_Name_Type;
+   function Image (Class : Action_Class) return String;
+   function Hash (Class : Action_Class) return Ada.Containers.Hash_Type;
+
 private
 
    use Ada;
@@ -281,6 +299,8 @@ private
    Project_Level_Scope : constant Package_Id := 0;
    No_Attribute_Id     : constant Q_Optional_Attribute_Id :=
                            (Project_Level_Scope, No_Attribute);
+   No_Artifact_Class   : constant Artifact_Class := 0;
+   No_Action_Class     : constant Action_Class := 0;
 
    function Image (Kind : Project_Kind) return String is
      ((case Kind is
@@ -414,6 +434,28 @@ private
      (Image (Pck_Id_List, Natural (Id)));
    function Hash (Id : Package_Id) return Ada.Containers.Hash_Type is
      (Ada.Containers.Hash_Type (Id));
+
+   Artifact_Class_List : Name_List;
+
+   function "+" (Name : Optional_Name_Type) return Artifact_Class is
+     (Artifact_Class (Id (Artifact_Class_List, Name)));
+   function Name (Class : Artifact_Class) return Optional_Name_Type is
+     (Name (Artifact_Class_List, Natural (Class)));
+   function Image (Class : Artifact_Class) return String is
+     (Image (Artifact_Class_List, Natural (Class)));
+   function Hash (Class : Artifact_Class) return Ada.Containers.Hash_Type is
+     (Ada.Containers.Hash_Type (Class));
+
+   Action_Class_List : Name_List;
+
+   function "+" (Name : Optional_Name_Type) return Action_Class is
+     (Action_Class (Id (Action_Class_List, Name)));
+   function Name (Class : Action_Class) return Optional_Name_Type is
+     (Name (Action_Class_List, Natural (Class)));
+   function Image (Class : Action_Class) return String is
+     (Image (Action_Class_List, Natural (Class)));
+   function Hash (Class : Action_Class) return Ada.Containers.Hash_Type is
+     (Ada.Containers.Hash_Type (Class));
 
    function "<" (Left, Right : Q_Attribute_Id) return Boolean is
      (if Left.Pack /= Right.Pack then Left.Pack < Right.Pack

@@ -7,10 +7,13 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Vectors;
 
+with GPR2.Build.Artifact_Ids;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 limited with GPR2.Project.Tree;
+
+private with GPR2.Build.Artifacts.Source.Ada;
 
 package GPR2.Build.Compilation_Unit is
 
@@ -22,6 +25,9 @@ package GPR2.Build.Compilation_Unit is
    --  Identifies the location of a Unit (spec/body or separate).
 
    No_Unit : constant Unit_Location := (others => <>);
+
+   function Artifact_Id
+     (U : Unit_Location) return GPR2.Build.Artifact_Ids.Artifact_Id;
 
    package Unit_Location_Vectors is new Ada.Containers.Vectors
      (Positive, Unit_Location);
@@ -37,10 +43,11 @@ package GPR2.Build.Compilation_Unit is
      (Name_Type, Unit_Location);
 
    type Object is tagged private;
+   type Object_List is array (Natural range <>) of Object;
 
    Undefined : constant Object;
 
-   function Create (Name : Name_Type;
+   function Create (Name    : Name_Type;
                     Context : GPR2.Project.View.Object) return Object
      with Pre => Context.Is_Namespace_Root;
    --  Create a new compilation unit object with name Name
@@ -123,6 +130,9 @@ package GPR2.Build.Compilation_Unit is
    --  Returns the list of separates for this compilation unit, indexed by
    --  their identifiers relative to the compilation unit.
 
+   function Has_Main_Part (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+
    function Main_Part (Self : Object) return Unit_Location
      with Pre => Self.Is_Defined
                   and then (Self.Has_Part (S_Spec)
@@ -140,11 +150,22 @@ package GPR2.Build.Compilation_Unit is
      with Pre => Self.Is_Defined;
    --  Execute Action for all parts of the given compilation unit
 
+   function Known_Dependencies
+     (Self : Object) return Object_List;
+   --  Extract the list of units withed by the spec of Self and return them.
+   --  If Self needs its own body (e.g. is a generic), then return also the
+   --  units withed by the body.
+
    function Object_File (Self : Object;
                          Tree : GPR2.Project.Tree.Object) return Simple_Name;
    --  Returns the .o's simple name for Self.
 
 private
+
+   function Artifact_Id (U : Unit_Location) return Artifact_Ids.Artifact_Id
+   is (Artifacts.Source.Ada.Id (View     => U.View,
+                                Basename => U.Source.Simple_Name,
+                                Index    => U.Index));
 
    type Clashing_Unit (Sep_Name_Len : Natural) is record
       Loc      : Unit_Location;
@@ -203,5 +224,8 @@ private
 
    function Main_Part (Self : Object) return Unit_Location is
      (if Self.Implem /= No_Unit then Self.Implem else Self.Spec);
+
+   function Has_Main_Part (Self : Object) return Boolean is
+     (Self.Implem /= No_Unit or else Self.Spec /= No_Unit);
 
 end GPR2.Build.Compilation_Unit;

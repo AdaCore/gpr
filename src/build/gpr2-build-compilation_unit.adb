@@ -4,11 +4,14 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Containers.Ordered_Sets;
 with Ada.Strings.Maps.Constants;
 
 with GPR2.Message;
 with GPR2.Project.Tree;
 with GPR2.Source_Reference;
+with GPR2.Build.Tree_Db;
+with GPR2.Build.View_Tables;
 
 package body GPR2.Build.Compilation_Unit is
 
@@ -237,6 +240,70 @@ package body GPR2.Build.Compilation_Unit is
             return Self.Separates.Element (Sep_Name);
       end case;
    end Get;
+
+   ------------------------
+   -- Known_Dependencies --
+   ------------------------
+
+   function Known_Dependencies
+     (Self : Object) return Object_List
+   is
+      procedure Add_Deps (Part : Unit_Location);
+      --  Add with clauses from Part
+
+      function Less (L, R : Object) return Boolean is
+         (L.Name < R.Name);
+
+      package Units_Set is new Ada.Containers.Ordered_Sets
+        (Object, Less);
+
+      Result  : Units_Set.Set;
+      Tree_Db : constant Build.Tree_Db.Object_Access :=
+                  Self.Root_View.Tree.Artifacts_Database;
+
+      procedure Add_Deps (Part : Unit_Location) is
+         Db : constant Build.View_Tables.View_Data_Ref :=
+                View_Tables.Get_Data (Tree_Db, Part.View);
+      begin
+         for Dep of Db.Src_Infos.Element
+                      (Part.Source.Value).Unit (Part.Index).Dependencies
+         loop
+            declare
+               Unit : constant Object := Self.Root_View.Unit (Dep);
+            begin
+               if Unit.Is_Defined then
+                  Result.Include (Self.Root_View.Unit (Dep));
+               end if;
+            end;
+         end loop;
+      end Add_Deps;
+
+   begin
+      if Self.Spec.Source.Is_Defined then
+         Add_Deps (Self.Spec);
+      end if;
+
+      if Self.Implem.Source.Is_Defined then
+         Add_Deps (Self.Implem);
+      end if;
+
+      for S of Self.Separates loop
+         Add_Deps (S);
+      end loop;
+
+
+      declare
+         List : Object_List (1 .. Natural (Result.Length));
+         Idx  : Natural := 1;
+      begin
+         for Dep of Result loop
+            List (Idx) := Dep;
+            Idx := Idx + 1;
+         end loop;
+
+         return List;
+      end;
+   end Known_Dependencies;
 
    -----------------
    -- Object_File --

@@ -1,0 +1,21 @@
+ROOT VIEW: A
+------------
+* MAIN: srca/main.adb
+  - depends on ADA
+  - depends on ADA.TEXT_IO
+  - depends on PKG
+* MY_STRING: srca/my_string.ads
+* PKG: srca/pkg.adb
+  - depends on ADA
+  - depends on ADA.DIRECT_IO
+  - depends on INTERFACES
+  - depends on INTERFACES.C
+  - depends on MY_STRING
+
+ROOT VIEW: B
+------------
+* MAIN: srcb/main.adb
+  - depends on ADA
+  - depends on ADA.TEXT_IO
+  - depends on PKG
+* PKG: srcb/pkg.adb

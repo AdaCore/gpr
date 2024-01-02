@@ -103,7 +103,6 @@ package body GPR2.Build.Source.Ada_Parser is
          Generic_Unit  : Boolean)
       is
          pragma Unreferenced (Generic_Unit);
-
       begin
 
          --  Only single unit parsing is supported. Data kind has been already
@@ -150,6 +149,7 @@ package body GPR2.Build.Source.Ada_Parser is
                             Index         => No_Index,
                             Kind          => Data.Kind,
                             Separate_Name => Sep_Name,
+                            Dependencies  => U_Withed,
                             Parsed        => True);
 
          begin

@@ -910,7 +910,8 @@ package body Update_Sources_List is
                Build.Source.Ada_Parser.Compute
                  (Tree             => Tree,
                   Data             => Source,
-                  Get_Withed_Units => False,
+                  Get_Withed_Units =>
+                    Data.Tree_Db.Source_Option >= Sources_Units_Artifacts,
                   Success          => Parsed);
 
                if Parsed and then Match = Naming_Exception then
@@ -1169,7 +1170,12 @@ package body Update_Sources_List is
 
                         if not Src_Ref.Has_Naming_Exception then
                            Source.Ada_Parser.Compute
-                             (Tree, Src_Ref, False, Success);
+                             (Tree             => Tree,
+                              Data             => Src_Ref,
+                              Get_Withed_Units =>
+                                Data.Tree_Db.Source_Option >=
+                                  Sources_Units_Artifacts,
+                              Success          => Success);
                         end if;
                      end if;
                   end;

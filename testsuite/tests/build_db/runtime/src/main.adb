@@ -74,7 +74,7 @@ begin
       Absent_Dir_Error => GPR2.Project.Tree.No_Error);
    Tree.Log_Messages.Output_Messages (Information => False);
 
-   Tree.Update_Sources (Sources_Units_Dependencies, Log);
+   Tree.Update_Sources (Sources_Units_Artifacts, Log);
    Log.Output_Messages;
 
    declare
@@ -87,6 +87,10 @@ begin
       else
          Ada.Text_IO.Put_Line (RTS_Unit & " located");
       end if;
+
+      for Dep of CU.Known_Dependencies loop
+         Ada.Text_IO.Put_Line (" dep: " & String (Dep.Name));
+      end loop;
    end;
 
    Tree.Unload;

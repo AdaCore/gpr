@@ -272,7 +272,7 @@ package body GPR2.Project.Tree is
      (Self : Object) return Build.Tree_Db.Object_Access is
    begin
       if Self.Tree_Db.Is_Defined then
-         return Self.Tree_Db.Reference;
+         return Self.Tree_Db.Ref;
       else
          return null;
       end if;
@@ -3203,9 +3203,9 @@ package body GPR2.Project.Tree is
                          (SA_Exists and then View.Library_Standalone = No)
                      then
                         Self.Warning
-                          ("attribute """ & Image (Name)
-                           & """ is only used in standalone libraries",
-                          Attr);
+                          ("attribute """ & Image (Name) &
+                           """ is only used in standalone libraries",
+                           Attr);
                      end if;
                   end;
                end if;
