@@ -88,4 +88,13 @@
             Missing_Variable := ${Missing_Variable(Ada)}
         </config>
     </configuration>
+
+    <configuration>
+        <compilers>
+            <compiler name="FAKE-C-COMPILER-7" />
+        </compilers>
+        <config>
+            Invalid_Variable := ${Missing_Variable(Ada}
+        </config>
+    </configuration>
 </gprconfig>
