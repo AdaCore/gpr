@@ -820,42 +820,28 @@ package body GPR2.KB is
             declare
                Comp           : constant Compiler :=
                                   Compiler_Lists.Element (C);
-               Language_Known : constant Boolean :=
-                                  Self.Languages_Known.Contains
-                                    (Comp.Language);
+
             begin
-
-               if not Language_Known then
-                  Errors.Append
-                    (Message.Create
-                       (Message.Information,
-                        "unknown language '"
-                        & Image (Comp.Language) & "'",
-                        Source_Reference.Create ("embedded_kb/kb", 0, 0)));
-
-               else
-
-                  Errors.Append
-                    (Message.Create
-                       (Message.Warning,
-                        "can't find a toolchain "
-                        & "for the following configuration: language '"
-                        & Image (Comp.Language) & "', target '"
-                        & String (On_Target) & "'"
-                        & (if Comp.Runtime = Null_Unbounded_String then
-                              ", default runtime"
-                           else ", runtime '" & To_String (Comp.Runtime) & "'")
-                        & (if Comp.Version /= Null_Unbounded_String then
-                               ", version '" & To_String (Comp.Version) & "'"
-                          else "")
-                        & (if Comp.Path.Is_Defined then
-                               ", path '" & Comp.Path.String_Value & "'"
-                           else "")
-                        & (if Comp.Name /= Null_Unbounded_String then
-                               ", name '" & To_String (Comp.Name) & "'"
-                           else ""),
-                        Source_Reference.Create ("embedded_kb/kb", 0, 0)));
-               end if;
+               Errors.Append
+                 (Message.Create
+                    (Message.Warning,
+                     "can't find a toolchain "
+                     & "for the following configuration: language '"
+                     & Image (Comp.Language) & "', target '"
+                     & String (On_Target) & "'"
+                     & (if Comp.Runtime = Null_Unbounded_String then
+                           ", default runtime"
+                        else ", runtime '" & To_String (Comp.Runtime) & "'")
+                     & (if Comp.Version /= Null_Unbounded_String then
+                            ", version '" & To_String (Comp.Version) & "'"
+                       else "")
+                     & (if Comp.Path.Is_Defined then
+                            ", path '" & Comp.Path.String_Value & "'"
+                        else "")
+                     & (if Comp.Name /= Null_Unbounded_String then
+                            ", name '" & To_String (Comp.Name) & "'"
+                        else ""),
+                     Source_Reference.Create ("embedded_kb/kb", 0, 0)));
             end;
 
             Found_All := False;

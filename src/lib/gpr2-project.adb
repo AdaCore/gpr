@@ -6,6 +6,7 @@
 
 with Ada.Characters.Handling;
 with Ada.Directories;
+with Ada.IO_Exceptions;
 with Ada.Text_IO;
 
 with GNAT.OS_Lib;
@@ -156,6 +157,9 @@ package body GPR2.Project is
                           (OS_Lib.Normalize_Pathname
                              (String (F_Name), Resolve_Links => False)));
                   end if;
+               exception
+                  when Ada.IO_Exceptions.Name_Error =>
+                     null;
                end;
             end loop;
          end if;

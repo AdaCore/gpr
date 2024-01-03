@@ -388,7 +388,7 @@ private
          when Global_List =>
             Class : Artifact_Class := No_Artifact_Class;
          when Predecessors | Successors =>
-            Pos     : Artifact_Dependency_Maps.Cursor;
+            Pos   : Artifact_Dependency_Maps.Cursor;
       end case;
    end record;
 

@@ -32,7 +32,7 @@ private
 
    Search_Paths : GPR2.Path_Name.Set.Object;
 
-   procedure Delete_Empty_Directory (Prefix, Dir_Name : String);
+   procedure Delete_Install_Directory (Root_Dir : String);
    --  Delete Dir_Name if empty, if removed try with parent directory but not
    --  above the given prefix.
 

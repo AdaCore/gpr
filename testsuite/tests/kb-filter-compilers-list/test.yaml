@@ -1,0 +1,8 @@
+description:
+    Test compilers compatibility with the function Filter_Compilers_List
+driver: build_and_run
+project_file: test
+main: main
+fake_ada_target:
+  - ['fake-target', 'runtime-A', 'runtime-B', 'runtime-C']
+  - ['another-fake-target', 'runtime-X']

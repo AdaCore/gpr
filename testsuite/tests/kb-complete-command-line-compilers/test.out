@@ -1,0 +1,23 @@
+=== Missing compiler without fallbacks ===
+kb: warning: can't find a toolchain for the following configuration: language 'Ada', target 'fake-target-0', runtime 'runtime-A', name 'FAKE-ADA-COMPILER-1'
+
+OK
+
+=== Missing compiler with fallback ===
+
+OK
+
+=== Unknown language ===
+kb: info: unknown language 'Unknown_Language'
+
+OK
+
+=== Incompatible configurations ===
+kb: error: no set of compatible compilers was found
+
+KO
+
+=== Resolvable configuration incompatibility ===
+
+OK
+
