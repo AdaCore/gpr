@@ -1,0 +1,2 @@
+description: let a long relative path be imported from a 255 chars absolute path
+driver: python_script
