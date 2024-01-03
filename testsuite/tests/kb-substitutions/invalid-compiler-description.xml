@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!DOCTYPE gprconfig [
+]>
+<gprconfig>
+
+    <!-- Ensure that indexed variable are not substituted in compiler
+    description. -->
+    <compiler_description>
+        <name>FAKE-C-COMPILER-8</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>C</languages>
+        <variable name="Forbidden_Indexed_Var">
+            <external>${My_Var(C)}</external>
+        </variable>
+        <runtimes default="runtime-A">runtime-A</runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+</gprconfig>
