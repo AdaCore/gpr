@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!DOCTYPE gprconfig [
+]>
+<gprconfig>
+    <fallback_targets>
+        <target>fake-target-0</target>
+        <target>fake-target-1</target>
+        <target>fake-target-2</target>
+    </fallback_targets>
+
+</gprconfig>

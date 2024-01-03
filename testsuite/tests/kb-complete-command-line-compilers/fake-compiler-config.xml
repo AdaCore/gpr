@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!DOCTYPE gprconfig [
+]>
+<gprconfig>
+
+    <configuration>
+        <compilers>
+            <compiler name="FAKE-ADA-COMPILER-1" />
+        </compilers>
+        <compilers>
+            <compiler name="FAKE-C-COMPILER-1" />
+        </compilers>
+        <config></config>
+    </configuration>
+
+</gprconfig>
