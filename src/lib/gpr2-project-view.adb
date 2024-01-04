@@ -1936,11 +1936,15 @@ package body GPR2.Project.View is
      (Self       : Object;
       Executable : Simple_Name) return Build.Compilation_Unit.Unit_Location
    is
-      Src  : GPR2.Build.View_Db.Source_Context;
+      Src    : GPR2.Build.View_Db.Source_Context;
+      Exc_BN : constant Simple_Name :=
+                 Simple_Name (Remove_Body_Suffix (Self, Executable));
    begin
       --  Check executable attribute
       for Attr of Self.Attributes (Name => PRA.Builder.Executable) loop
-         if Simple_Name (Attr.Value.Text) = Executable then
+         if Simple_Name (Attr.Value.Text) = Executable
+           or else Simple_Name (Attr.Value.Text) = Exc_BN
+         then
             Src :=
               Self.View_Db.Visible_Source (Simple_Name (Attr.Index.Value));
 
