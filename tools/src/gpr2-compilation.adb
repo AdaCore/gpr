@@ -24,8 +24,6 @@ with Ada.Text_IO;
 with GNAT.MD5;
 with GNAT.String_Split;
 
-with GPRtools.Util;
-
 package body GPR2.Compilation is
 
    use GNAT;
@@ -48,8 +46,9 @@ package body GPR2.Compilation is
             Err : constant String := "spawn failed with ERRNO ="
                     & OS_Lib.Errno'Img
                     & " (" & OS_Lib.Errno_Message & ")";
+            pragma Unreferenced (Err);
          begin
-            GPRtools.Util.Fail_Program (Err);
+            null; -- previously had an OS_Exit
          end;
       end if;
    end Check_Local_Process;

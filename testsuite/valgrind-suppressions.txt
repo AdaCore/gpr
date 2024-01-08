@@ -54,7 +54,9 @@
    fun:gnatcoll__opt_parse__parse
 }
 
-# Ignore any gprbuild memory leak
+#================================
+# Ignore any gprbuild1 memory leak
+#================================
 {
    gprbuild
    Memcheck:Leak
@@ -63,3 +65,21 @@
    fun:???
    obj:*gprbuild*
 }
+{
+   gprbuild
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:???
+   obj:*gprbuild*
+}
+{
+   gprbuild
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   ...
+   fun:???
+   obj:*gprbuild*
+}
+#================================

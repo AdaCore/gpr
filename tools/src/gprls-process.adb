@@ -17,7 +17,6 @@
 ------------------------------------------------------------------------------
 
 with Ada.Calendar;
-with Ada.Command_Line;
 with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Directories;
 with Ada.Text_IO;
@@ -38,14 +37,13 @@ with GPR2.Source_Info.Parser.Registry;
 with GPR2.Version;
 
 with GPRtools.Options;
-with GPRtools.Util;
+with GPRtools.Program_Termination;
 
 with GPRls.Common;
 with GPRls.Gnatdist;
 with GPRls.Options;
 
-function GPRls.Process
-  (Opt : in out GPRls.Options.Object) return Ada.Command_Line.Exit_Status
+procedure GPRls.Process (Opt : in out GPRls.Options.Object)
 is
 
    use Ada;
@@ -58,7 +56,7 @@ is
    use GPRls.Options;
 
    use GPRtools;
-   use GPRtools.Util;
+   use GPRtools.Program_Termination;
 
    Tree : Project.Tree.Object renames Opt.Tree.all;
 
@@ -174,7 +172,7 @@ is
    procedure Show_Tree_Load_Errors is
    begin
       if Tree.Log_Messages.Has_Error then
-         --  In case both warnings and errors are present, only displpay the
+         --  In case both warnings and errors are present, only display the
          --  errors as they are probably responsible for the warnings.
 
          for C in Tree.Log_Messages.Iterate
@@ -208,24 +206,15 @@ begin
       Handle_Information => Opt.Verbose,
       Handle_Lint        => Opt.Verbose)
    then
-      if Opt.Project_File.Is_Defined then
-         Text_IO.Put_Line
-           ("gprls: unable to process project file "
-            & String (Opt.Filename.Name));
-      else
-         Text_IO.Put_Line
-           ("gprls: unable to process default project file in "
-            & String (Opt.Filename.Name));
-      end if;
-
-      return Command_Line.Failure;
+      Handle_Program_Termination
+        (Opt     => Opt,
+         Message => '"' & String (Opt.Filename.Name) & """ processing failed");
    end if;
 
    if Opt.Only_Display_Paths then
       --  For the "gprls -v" usage
-
       Display_Paths;
-      return Command_Line.Success;
+      return;
    end if;
 
    Show_Tree_Load_Errors;
@@ -330,7 +319,9 @@ begin
          Closures : Project.Source.Part_Set.Object (Sorted => True);
       begin
          if Sources.Is_Empty then
-            Finish_Program (E_Errors, "no main specified for closure");
+            Handle_Program_Termination
+              (Opt     => Opt,
+               Message => "no main specified for closure");
          end if;
 
          for S of Sources loop
@@ -951,8 +942,9 @@ begin
          if Tree.Root_Project.Has_Mains
            and then Tree.Root_Project.Mains.Is_Empty
          then
-            Util.Output_Messages (Opt);
-            GPRtools.Util.Fail_Program ("problems with main sources");
+            Handle_Program_Termination
+              (Opt     => Opt,
+               Message => "problems with main sources");
          end if;
 
          for S of Tree.Root_Project.Sources loop
@@ -1039,7 +1031,7 @@ begin
       --  Do nothing if no source was found
 
       if Sources.Is_Empty then
-         return Command_Line.Success;
+         return;
       end if;
 
       --  Check all sources and notify when no ALI file is present
@@ -1115,16 +1107,4 @@ begin
          --  develop the dependencies (D lines of ALI) with their status.
       end if;
    end;
-
-   return Command_Line.Success;
-
-exception
-   when Project_Error | Processing_Error =>
-      Show_Tree_Load_Errors;
-
-      Finish_Program
-        (E_Errors,
-         "unable to process project file " & String (Opt.Filename.Name));
-
-      return Command_Line.Failure;
 end GPRls.Process;

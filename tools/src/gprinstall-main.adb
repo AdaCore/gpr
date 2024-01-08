@@ -16,28 +16,30 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Command_Line;
 with Ada.Exceptions;
 with Ada.Strings.Unbounded;
-with Ada.Text_IO;
 
 with GPR2.Interrupt_Handler;
 with GPR2.Options;
 with GPR2.Project.Tree;
-with GPRtools.Command_Line;
 with GPRtools.Sigint;
 with GPRtools.Util;
+with GPRtools.Program_Termination;
 
 with GPRinstall.DB;
 with GPRinstall.Install;
 with GPRinstall.Options;
 with GPRinstall.Uninstall;
 
-procedure GPRinstall.Main is
+function GPRinstall.Main return Ada.Command_Line.Exit_Status is
 
    use Ada;
    use Ada.Exceptions;
 
    use GPR2;
+
+   use GPRtools.Program_Termination;
 
    Tree    : GPR2.Project.Tree.Object;
 
@@ -71,10 +73,18 @@ begin
       DB.List (Options);
 
    else
-      if not Options.Load_Project (Tree  => Options.Tree.all,
-                                   Quiet => Options.Quiet)
+      if not Options.Load_Project
+        (Absent_Dir_Error   => Project.Tree.No_Error,
+         Handle_Information => Options.Verbose,
+         Handle_Lint        => Options.Verbose)
       then
-         GPRtools.Util.Project_Processing_Failed (Options);
+         Handle_Program_Termination
+           (Opt     => Options,
+            Message => '"'
+            & (if Options.Config_Project_Has_Error
+              then String (Options.Config_Project.Simple_Name)
+              else String (Options.Filename.Simple_Name))
+            & """ processing failed");
       end if;
 
       if Options.Verbose then
@@ -91,35 +101,45 @@ begin
       Install.Process (Tree, Options);
    end if;
 
+   return To_Exit_Status (E_Success);
+
 exception
    when E : GPR2.Options.Usage_Error =>
-      Ada.Text_IO.Put_Line ("gprinstall: " & Exception_Message (E));
-      Ada.Text_IO.Flush;
-      GPRtools.Command_Line.Try_Help;
-      GPRtools.Util.Exit_Program (GPRtools.Util.E_Fatal);
+      Handle_Program_Termination
+        (Opt                       => Options,
+         Display_Command_Line_Help => True,
+         Force_Exit                => False,
+         Message                   => Exception_Message (E));
+      return To_Exit_Status (E_Fatal);
 
    when Project_Error | Processing_Error =>
-      GPRtools.Util.Project_Processing_Failed (Options);
+      Handle_Program_Termination
+        (Opt                   => Options,
+         Display_Tree_Messages => True,
+         Force_Exit            => False,
+         Message               => '"'
+         & (if Options.Config_Project_Has_Error
+            then String (Options.Config_Project.Simple_Name)
+            else String (Options.Filename.Simple_Name))
+         & """ processing failed");
+      return To_Exit_Status (E_Fatal);
 
-   when E : GPRinstall_Error_No_Message =>
-      if Options.Verbose then
-         Text_IO.Put_Line
-           ("gprinstall: " & Exception_Information (E));
-      end if;
-      Text_IO.Flush;
-      GPRtools.Util.Exit_Program (GPRtools.Util.E_Errors);
+   when E : GPRinstall_Error_No_Message | GPRinstall_Error =>
+      Handle_Program_Termination
+        (Opt        => Options,
+         Force_Exit => False,
+         Exit_Code  => E_Errors,
+         Message    => Exception_Message (E));
+      return To_Exit_Status (E_Errors);
 
-   when E : GPRinstall_Error =>
-      Text_IO.Put_Line
-        ("gprinstall: "
-         & (if Options.Verbose
-            then Exception_Information (E)
-            else Exception_Message (E)));
-      Text_IO.Flush;
-      GPRtools.Util.Exit_Program (GPRtools.Util.E_Errors);
+   when E_Program_Termination =>
+      return To_Exit_Status (E_Fatal);
 
    when E : others =>
-      Text_IO.Put_Line ("error: " & Exception_Information (E));
-      Text_IO.Flush;
-      GPRtools.Util.Exit_Program (GPRtools.Util.E_Fatal);
+      Handle_Program_Termination
+        (Opt        => Options,
+         Force_Exit => False,
+         Exit_Cause => E_Generic,
+         Message    => Exception_Message (E));
+      return To_Exit_Status (E_Fatal);
 end GPRinstall.Main;

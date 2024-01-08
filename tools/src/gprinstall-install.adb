@@ -58,6 +58,7 @@ with GPR2.Source_Reference;
 with GPR2.Source_Reference.Value;
 
 with GPRtools;
+with GPRtools.Program_Termination;
 with GPRtools.Util;
 
 package body GPRinstall.Install is
@@ -69,6 +70,9 @@ package body GPRinstall.Install is
    use GNAT;
 
    use GPR2;
+
+   use GPRtools.Program_Termination;
+
    use all type Unit.Library_Unit_Type;
 
    use type GNATCOLL.OS.OS_Type;
@@ -3032,8 +3036,10 @@ package body GPRinstall.Install is
          if Project.Has_Mains
            and then Project.Mains.Is_Empty
          then
-            Util.Output_Messages (Options);
-            GPRtools.Util.Fail_Program ("problems with main sources");
+            Handle_Program_Termination
+              (Opt                   => Options,
+               Display_Tree_Messages => True,
+               Message               => "problems with main sources");
          end if;
 
          --  What should be copied ?

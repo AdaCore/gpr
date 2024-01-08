@@ -19,7 +19,6 @@
 with Ada.Command_Line;
 with Ada.Containers;
 with Ada.Exceptions;
-with Ada.Text_IO;
 
 with GPR2.Interrupt_Handler;
 with GPR2.Options;
@@ -32,8 +31,8 @@ with GPR2.Project.Tree;
 with GPR2.Source_Info;
 with GPR2.Unit;
 
-with GPRtools.Command_Line;
 with GPRtools.Options;
+with GPRtools.Program_Termination;
 with GPRtools.Sigint;
 with GPRtools.Util;
 
@@ -50,6 +49,9 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
    use Ada.Exceptions;
 
    use GPR2;
+
+   use GPRtools.Program_Termination;
+
    package PRP renames GPR2.Project.Registry.Pack;
    package PRA renames GPR2.Project.Registry.Attribute;
 
@@ -75,7 +77,9 @@ begin
    --  Load the project tree
 
    if not GPRtools.Options.Load_Project (Opt, Project.Tree.No_Error) then
-      return Ada.Command_Line.Failure;
+      Handle_Program_Termination
+        (Opt     => Opt,
+         Message => "");
    end if;
 
    Tree.Update_Sources (Backends => Source_Info.No_Backends);
@@ -83,8 +87,10 @@ begin
    if Tree.Root_Project.Has_Mains
      and then Tree.Root_Project.Mains.Is_Empty
    then
-      GPRtools.Util.Output_Messages (Opt);
-      GPRtools.Util.Fail_Program ("problems with main sources");
+      Handle_Program_Termination
+        (Opt                   => Opt,
+         Display_Tree_Messages => True,
+         Message               => "problems with main sources");
    end if;
 
    --  Check if we have a Builder'Switches attribute in the root project
@@ -210,17 +216,25 @@ begin
    Tree.Update_Sources
      (With_Runtime => True);
 
-   return Ada.Command_Line.Success;
+   return To_Exit_Status (E_Success);
 
 exception
    when E : GPR2.Options.Usage_Error =>
-      Text_IO.Put_Line (Text_IO.Standard_Error,
-                        "error: " & Exception_Message (E));
-      GPRtools.Command_Line.Try_Help;
-      return Ada.Command_Line.Failure;
+      Handle_Program_Termination
+        (Opt                       => Opt,
+         Display_Command_Line_Help => True,
+         Force_Exit                => False,
+         Message                   => Exception_Message (E));
+      return To_Exit_Status (E_Fatal);
+
+   when E_Program_Termination =>
+      return To_Exit_Status (E_Fatal);
 
    when E : others =>
-      Text_IO.Put_Line (Text_IO.Standard_Error,
-                        "error: " & Exception_Information (E));
-      return Ada.Command_Line.Failure;
+      Handle_Program_Termination
+        (Opt        => Opt,
+         Force_Exit => False,
+         Exit_Cause => E_Generic,
+         Message    => Exception_Message (E));
+      return To_Exit_Status (E_Fatal);
 end GPRbuild.Main;

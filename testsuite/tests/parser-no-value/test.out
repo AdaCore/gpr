@@ -2,9 +2,9 @@
 gprls -Ptest1/p
 
 p.gpr:4:28: error: undefined variable "Runtime"
-gprls: unable to process project file test1/p.gpr
+gprls: "p.gpr" processing failed
 ------------------
 gprls -Ptest2/p
 
 p.gpr:4:15: error: undefined variable "Runtime"
-gprls: unable to process project file test2/p.gpr
+gprls: "p.gpr" processing failed

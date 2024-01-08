@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Command_Line;
 with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Strings.Unbounded;
@@ -55,13 +56,13 @@ with GPR2.Project.View;
 with GPR2.Source_Reference;
 with GPR2.Unit;
 
-with GPRtools.Command_Line;
 with GPRtools.Options;
+with GPRtools.Program_Termination;
 with GPRtools.Util;
 
 with GPRclean.Options;
 
-procedure GPRclean.Main is
+function GPRclean.Main return Ada.Command_Line.Exit_Status is
 
    use Ada;
    use Ada.Exceptions;
@@ -71,6 +72,7 @@ procedure GPRclean.Main is
 
    use GPR2;
    use GPRtools;
+   use GPRtools.Program_Termination;
    use GPR2.Path_Name;
    use all type Unit.Library_Unit_Type;
 
@@ -342,8 +344,10 @@ procedure GPRclean.Main is
       if View.Has_Mains
         and then View.Mains.Is_Empty
       then
-         GPRtools.Util.Output_Messages (Options);
-         GPRtools.Util.Fail_Program ("problems with main sources");
+         Handle_Program_Termination
+           (Opt                   => Options,
+            Display_Tree_Messages => True,
+            Message               => "problems with main sources");
       end if;
 
       for S of View.Sources loop
@@ -679,11 +683,12 @@ begin
       Handle_Information => Options.Verbose,
       Handle_Lint        => Options.Verbose)
    then
-      GPRtools.Util.Fail_Program
-        ('"'
-         & (if Options.Project_Is_Defined
-           then String (Options.Filename.Simple_Name)
-           else Options.Filename.Value)
+      Handle_Program_Termination
+        (Opt     => Options,
+         Message => '"'
+         & (if Options.Config_Project_Has_Error
+           then String (Options.Config_Project.Simple_Name)
+           else String (Options.Filename.Value))
          & """ processing failed");
    end if;
 
@@ -709,10 +714,6 @@ begin
          --  way we load the project tree is allowed in the Switches
          --  attribute.
       end if;
-   exception
-      when E : GPR2.Options.Usage_Error =>
-         GPRtools.Util.Finish_Program
-           (GPRtools.Util.E_Fatal, Exception_Message (E));
    end;
 
    if Project_Tree.Has_Configuration
@@ -739,9 +740,10 @@ begin
             Source_Reference.Create
               (Project_Tree.Root_Project.Path_Name.Value, 0, 0)));
 
-      Util.Output_Messages (Options);
-
-      GPRtools.Util.Fail_Program ("problems with main sources");
+      Handle_Program_Termination
+        (Opt                   => Options,
+         Display_Tree_Messages => True,
+         Message               => "problems with main sources");
    end if;
 
    Project_Tree.Update_Sources;
@@ -772,9 +774,10 @@ begin
    end loop;
 
    if Options.Arg_Mains and then not Options.Mains.Is_Empty then
-      GPRtools.Util.Fail_Program
-        ('"' & String (Options.Mains.First_Element)
-         & """ was not found in the sources of any project");
+      Handle_Program_Termination
+        (Opt     => Options,
+         Message => '"' & String (Options.Mains.First_Element)
+         & """ was not found in " & "the sources of any project");
    end if;
 
    if Options.Remove_Config then
@@ -783,18 +786,37 @@ begin
 
    Util.Output_Messages (Options);
 
+   return To_Exit_Status (E_Success);
+
 exception
    when E : GPR2.Options.Usage_Error =>
-      Text_IO.Put_Line
-        (Text_IO.Standard_Error,
-         "gprclean: " & Exception_Message (E));
-      GPRtools.Command_Line.Try_Help;
-      GPRtools.Util.Exit_Program (GPRtools.Util.E_Fatal);
+      Handle_Program_Termination
+        (Opt                       => Options,
+         Display_Command_Line_Help => True,
+         Force_Exit                => False,
+         Message                   => Exception_Message (E));
+      return To_Exit_Status (E_Fatal);
 
    when Project_Error | Processing_Error =>
-      GPRtools.Util.Project_Processing_Failed (Options);
+      Handle_Program_Termination
+        (Opt                   => Options,
+         Display_Tree_Messages => True,
+         Force_Exit            => False,
+         Message               => '"'
+         & (if Options.Config_Project_Has_Error
+           then String (Options.Config_Project.Simple_Name)
+           else String (Options.Filename.Simple_Name))
+         & """ processing failed");
+      return To_Exit_Status (E_Fatal);
+
+   when E_Program_Termination =>
+      return To_Exit_Status (E_Fatal);
 
    when E : others =>
-      GPRtools.Util.Fail_Program
-        ("Fatal error: " & Exception_Information (E));
+      Handle_Program_Termination
+        (Opt        => Options,
+         Force_Exit => False,
+         Exit_Cause => E_Generic,
+         Message    => Exception_Message (E));
+      return To_Exit_Status (E_Fatal);
 end GPRclean.Main;

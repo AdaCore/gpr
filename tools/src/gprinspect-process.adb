@@ -17,13 +17,12 @@
 ------------------------------------------------------------------------------
 
 with Ada.Calendar.Formatting;
-with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Text_IO;
 
 with GNATCOLL.JSON;
 
 with GPRtools.Options;
-with GPRtools.Util;
+with GPRtools.Program_Termination;
 
 with GPR2.Containers;
 with GPR2.Log;
@@ -47,6 +46,7 @@ is
    use GNATCOLL.JSON;
    use GPR2;
    use GPR2.View_Ids;
+   use GPRtools.Program_Termination;
    use type GPRtools.Display_Kind;
    use type Project.Registry.Attribute.Value_Kind;
 
@@ -1167,20 +1167,9 @@ begin
    end case;
 
    if not Success then
-      GPRtools.Util.Fail_Program
-        ("unable to process project file "
-         & String (Options.Filename.Name));
+      Handle_Program_Termination
+        (Opt     => Options,
+         Message => '"' & String (Options.Filename.Name)
+         & """ processing failed");
    end if;
-
-exception
-   when E : others =>
-      Text_IO.Put_Line ("error: " & Exception_Information (E));
-      if Options.Tree /= null
-      then
-         if Options.Tree.Has_Messages then
-            for M of Options.Tree.Log_Messages.all loop
-               Text_IO.Put_Line (M.Format);
-            end loop;
-         end if;
-      end if;
 end GPRinspect.Process;
