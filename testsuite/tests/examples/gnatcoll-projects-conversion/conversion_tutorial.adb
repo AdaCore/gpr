@@ -1,9 +1,3 @@
---
---  Copyright (C) 2020-2023, AdaCore
---
---  SPDX-License-Identifier: Apache-2.0
---
-
 --  This example helps gnatcoll-projects based tools conversion to gpr2.
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;

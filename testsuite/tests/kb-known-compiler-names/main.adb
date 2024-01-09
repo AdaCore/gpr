@@ -1,9 +1,3 @@
---
---  Copyright (C) 2023, AdaCore
---
---  SPDX-License-Identifier: Apache-2.0
---
-
 with GPR2.KB;
 with Ada.Text_IO;
 with Ada.Strings.Unbounded;
