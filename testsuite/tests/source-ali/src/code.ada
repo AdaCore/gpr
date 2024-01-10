@@ -1,7 +1,3 @@
---
---  Copyright (C) 2020, AdaCore
---
-
 package U1 is
    A : Integer := 1;
 end U1;

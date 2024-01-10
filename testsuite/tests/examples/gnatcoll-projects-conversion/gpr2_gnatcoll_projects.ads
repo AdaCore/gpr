@@ -1,9 +1,3 @@
---
---  Copyright (C) 2022, AdaCore
---
---  SPDX-License-Identifier: Apache-2.0
---
-
 --  This package can be used to facilitate GNATCOLL.Projects to GPR2 conversion
 
 --  It provides primitives to emulate:

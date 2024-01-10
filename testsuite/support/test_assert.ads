@@ -1,9 +1,3 @@
---
---  Copyright (C) 2021-2023, AdaCore
---
---  SPDX-License-Identifier: Apache-2.0
---
-
 --  Helper package to implement tests that comply with the expectations
 --  of the default test driver.
 
