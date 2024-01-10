@@ -261,7 +261,7 @@ Test OK
 
 Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug --target unknown-target
 Load_Project returned TRUE
-test.gpr:12:32: warning: object directory "obj-Release" not found
+test.gpr:6:32: warning: object directory "obj-Release" not found
 autoconf.cgpr:2:19: error: --target: 'unknown-target' is different from the target value in the configuration project '(host)'
 Test OK
 

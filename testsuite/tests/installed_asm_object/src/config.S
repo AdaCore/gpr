@@ -1,9 +1,3 @@
-/*
- *  Copyright (C) 2022, AdaCore
- *
- *  SPDX-License-Identifier: Apache-2.0
- */
-
 #ifdef __APPLE__
 .section __TEXT,__const
 #else

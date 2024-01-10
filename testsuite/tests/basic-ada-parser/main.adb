@@ -1,8 +1,3 @@
---
---  Copyright (C) 2021-2023, AdaCore
---
---  SPDX-License-Identifier: Apache-2.0
---
 with Ada.Text_IO;
 with Gpr_Parser_Support.Text;     use Gpr_Parser_Support.Text;
 with Gpr_Parser_Support.Slocs;
