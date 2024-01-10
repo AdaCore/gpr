@@ -1,0 +1,36 @@
+
+### type references ###
+T OK
+project.T OK
+References.T OK
+Root.T OK
+Root.Child.T OK
+
+### variable references ###
+V0 OK
+project.V1 OK
+References.V2 OK
+Builder.V1 OK
+project.Builder.V2 OK
+References.Builder.V3 OK
+Root.V OK
+Root.Builder.V OK
+Root.Child.V OK
+Root.Child.Builder.V OK
+
+### attributes references ###
+project'Object_Dir OK
+References'Exec_Dir OK
+Builder'Executable_Suffix OK
+project.Executable ("main.adb") OK
+References.Builder'Global_Configuration_Pragmas OK
+Root'Object_Dir OK
+Root.Builder'Global_Configuration_Pragmas OK
+Root.Child'Object_Dir OK
+Root.Child.Builder'Global_Configuration_Pragmas OK
+
+### package renames/extends references ###
+renames Root.Builder OK
+extends Root.Builder OK
+renames Root.Child.Builder OK
+extends Root.Child.Builder OK

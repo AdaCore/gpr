@@ -1,0 +1,12 @@
+project Root is
+   type T is ("Root.T OK", "Root.V OK");
+   V : T := "Root.V OK";
+   for Source_Dirs use ("root");
+   for Object_Dir use "Root'Object_Dir OK";
+   package Builder is
+      V := "Root.Builder.V OK";
+      for Global_Configuration_Pragmas use "Root.Builder'Global_Configuration_Pragmas OK";
+      Test1 := "renames Root.Builder OK";
+      Test2 := "extends Root.Builder OK";
+   end Builder;
+end Root;
