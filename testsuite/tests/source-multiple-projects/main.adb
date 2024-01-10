@@ -1,9 +1,3 @@
---
---  Copyright (C) 2023, AdaCore
---
---  SPDX-License-Identifier: Apache-2.0
---
-
 with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;

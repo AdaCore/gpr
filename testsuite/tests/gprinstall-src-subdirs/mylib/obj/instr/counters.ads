@@ -1,9 +1,3 @@
---
---  Copyright (C) 2020-2023, AdaCore
---
---  SPDX-License-Identifier: Apache-2.0
---
-
 package Counters is
    type Counter is record
       Value : Integer := 0;

@@ -1,7 +1,3 @@
---
---  Copyright (C) 2020, AdaCore
---
-
 package U1 is
    procedure P;
 end U1;
