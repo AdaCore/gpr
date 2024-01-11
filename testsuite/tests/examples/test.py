@@ -14,7 +14,14 @@ def filter(file):
 bnr = BuilderAndRunner()
 
 # copy GPR2 examples here
-cp(os.path.join(os.environ["root_dir"], "../examples/*"), ".", recursive=True)
+found = False
+for examples_dir in '../examples', 'examples':
+    fulldir = os.path.join(os.environ["root_dir"], examples_dir)
+    if os.path.exists(fulldir):
+        cp(os.path.join(fulldir, "*"), ".", recursive=True)
+        found = True
+        break
+assert found, "cannot find the examples directory"
 
 os.chdir("casestmt")
 bnr.build("casestmt", args=["-p"])
