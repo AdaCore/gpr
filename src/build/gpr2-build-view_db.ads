@@ -56,16 +56,9 @@ package GPR2.Build.View_Db is
    --
    --  This contrasts with the "Visible_Source" primitive in this regard.
 
-   type Source_Context is record
-      Owning_View   : GPR2.Project.View.Object;
-      Source        : GPR2.Build.Source.Object;
-   end record;
-
-   No_Context : constant Source_Context := (others => <>);
-
    function Visible_Source
      (Self     : Object;
-      Basename : Simple_Name) return Source_Context
+      Basename : Simple_Name) return GPR2.Build.Source.Object
      with Pre  => Self.Is_Defined and then Self.Source_Option > No_Source;
    --  Get a source from its simple name, that is visible for a given view's
    --  sources (so project's own sources and all its withed projects).

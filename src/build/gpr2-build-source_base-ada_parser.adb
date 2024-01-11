@@ -9,14 +9,15 @@ with Ada.Directories;
 with Gpr_Parser.Analysis;
 with Gpr_Parser.Basic_Ada_Parser;
 
+with GPR2.Build.Unit_Info;
 with GPR2.Containers;
 with GPR2.File_Readers;
 
-package body GPR2.Build.Source.Ada_Parser is
+package body GPR2.Build.Source_Base.Ada_Parser is
 
    procedure Compute
      (Tree             : access GPR2.Project.Tree.Object;
-      Data             : in out Source.Object'Class;
+      Data             : in out Source_Base.Object'Class;
       Get_Withed_Units : Boolean;
       Success          : out Boolean)
    is
@@ -58,10 +59,12 @@ package body GPR2.Build.Source.Ada_Parser is
 
       procedure No_Body_CB is
       begin
-         Data.Update_Unit (Create (Unit_Name => No_Name,
-                                   Index     => No_Index,
-                                   Kind      => S_No_Body,
-                                   Parsed    => True));
+         Data.Update_Unit
+           (Unit_Info.Create
+              (Unit_Name => No_Name,
+               Index     => No_Index,
+               Kind      => S_No_Body,
+               Parsed    => True));
          Data.Kind := S_No_Body;
          Parsed    := True;
       end No_Body_CB;
@@ -143,8 +146,8 @@ package body GPR2.Build.Source.Ada_Parser is
                           then Optional_Name_Type (Unit_Name)
                           else "");
 
-            CU       : constant Unit_Part :=
-                         Build.Source.Create
+            CU       : constant Unit_Info.Object :=
+                         Unit_Info.Create
                            (Unit_Name     => U_Name,
                             Index         => No_Index,
                             Kind          => Data.Kind,
@@ -197,9 +200,9 @@ package body GPR2.Build.Source.Ada_Parser is
         and then Data.Unit.Is_Parsed
       then
          declare
-            Old : Unit_Part := Data.Unit;
+            Old : Unit_Info.Object := Data.Unit;
          begin
-            Old.Is_Parsed := False;
+            Old.Set_Parsed_State (False);
             Data.Update_Unit (Old);
          end;
       end if;
@@ -207,4 +210,4 @@ package body GPR2.Build.Source.Ada_Parser is
       Success := Parsed;
    end Compute;
 
-end GPR2.Build.Source.Ada_Parser;
+end GPR2.Build.Source_Base.Ada_Parser;

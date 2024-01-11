@@ -171,8 +171,8 @@ package GPR2.Build.Tree_Db is
    type Iterator (<>) is tagged private
      with Variable_Indexing => Iter_Reference,
           Constant_Indexing => Iter_Constant_Reference,
-          Default_Iterator   => Iterate,
-          Iterator_Element   => Build.Artifacts.Object'Class;
+          Default_Iterator  => Iterate,
+          Iterator_Element  => Build.Artifacts.Object'Class;
 
    function Iterate (Self  : Iterator)
       return Artifact_Iterators.Forward_Iterator'Class;

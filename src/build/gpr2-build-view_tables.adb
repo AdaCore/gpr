@@ -11,8 +11,9 @@ with GNAT.OS_Lib;
 
 with GPR2.Build.Artifacts.Source;
 with GPR2.Build.Artifacts.Source.Ada;
-with GPR2.Build.Source.Ada_Parser;
+with GPR2.Build.Source_Base.Ada_Parser;
 with GPR2.Build.Tree_Db;
+with GPR2.Build.Unit_Info;
 with GPR2.Project.Attribute;
 with GPR2.Message;
 with GPR2.Path_Name;
@@ -76,7 +77,7 @@ package body GPR2.Build.View_Tables is
    package Update_Sources_List is
       procedure Process
         (Data          : View_Data_Ref;
-      Stop_On_Error : Boolean;
+         Stop_On_Error : Boolean;
          Messages      : in out GPR2.Log.Object);
       --  Update the list of sources
    end Update_Sources_List;
@@ -86,7 +87,7 @@ package body GPR2.Build.View_Tables is
 
    procedure Check_Separate
      (Root_Db : View_Tables.View_Data_Ref;
-      File    : in out Source.Object)
+      File    : in out Source_Base.Object)
      with Pre => Root_Db.Is_Root
                    and then File.Has_Single_Unit
                    and then File.Unit.Kind = S_Separate;
@@ -350,7 +351,7 @@ package body GPR2.Build.View_Tables is
 
    procedure Check_Separate
      (Root_Db : View_Tables.View_Data_Ref;
-      File    : in out Source.Object)
+      File    : in out Source_Base.Object)
    is
       C : Name_Maps.Cursor;
    begin
@@ -364,18 +365,18 @@ package body GPR2.Build.View_Tables is
          --  We need to rebase on the actual compilation unit in this case.
 
          declare
-            U            : constant Source.Unit_Part := File.Unit;
+            U            : constant Unit_Info.Object := File.Unit;
             New_Name     : constant Name_Type := Name_Maps.Element (C);
             --  New compilation unit name
             P_Simple     : constant Name_Type := U.Name
-                                         (New_Name'Length + 2 .. U.Name_Len);
+                                        (New_Name'Length + 2 .. U.Name'Length);
             --  Simple unit name of the separate parent
             New_Sep_Name : constant Name_Type :=
                              GPR2."&" (GPR2."&" (P_Simple, "."),
                                        U.Separate_Name);
          begin
             File.Update_Unit
-              (Source.Create
+              (Unit_Info.Create
                  (Unit_Name      => New_Name,
                   Index          => U.Index,
                   Kind           => U.Kind,
@@ -588,7 +589,7 @@ package body GPR2.Build.View_Tables is
                      declare
                         Root_Db : constant View_Data_Ref :=
                                     Get_Data (Data.Tree_Db, Root);
-                        Old     : constant Source.Unit_Part := S_Ref.Unit;
+                        Old     : constant Unit_Info.Object := S_Ref.Unit;
                      begin
                         Check_Separate (Root_Db, S_Ref);
 
@@ -853,7 +854,7 @@ package body GPR2.Build.View_Tables is
       procedure Propagate_Visible_Source_Removal (Src : Source_Proxy) is
          View_Db  : constant View_Data_Ref :=
                       Get_Data (Data.Tree_Db, Src.View);
-         Src_Info : constant Source.Object :=
+         Src_Info : constant Source_Base.Object :=
                       View_Db.Src_Infos (Src.Path_Name);
       begin
          if Data.Tree_Db.Source_Option >= Sources_Units_Artifacts then

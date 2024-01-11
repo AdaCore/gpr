@@ -19,8 +19,6 @@ with Ada.Containers.Indefinite_Holders;
 
 with GPR2.Build.View_Db;
 
-limited with GPR2.Project.View;
-
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with GPR2.Build.View_Tables;
 
@@ -52,7 +50,7 @@ package GPR2.Build.Source.Sets is
 
    type Filter_Function is access
      function (View   : GPR2.Project.View.Object;
-               Source : GPR2.Build.Source.Object;
+               Source : GPR2.Build.Source_Base.Object'Class;
                Data   : Filter_Data'Class) return Boolean;
    --  Function that can be used to filter sources from the set.
    --  Must return True if the source is to be kept, false otherwise.
@@ -87,13 +85,9 @@ package GPR2.Build.Source.Sets is
    package Source_Iterators is
      new Ada.Iterator_Interfaces (Cursor, Has_Element);
 
-   type Constant_Reference_Type
-     (Element : not null access constant Source.Object) is private
-     with Implicit_Dereference => Element;
-
    function Constant_Reference
      (Self     : aliased Object;
-      Position : Cursor) return Constant_Reference_Type;
+      Position : Cursor) return Source.Object;
 
    function Is_Empty (Self : Object) return Boolean;
 
@@ -124,12 +118,6 @@ private
    end record;
 
    No_Element : constant Cursor := (others => <>);
-
-   type Constant_Reference_Type
-     (Element : not null access constant Source.Object)
-   is record
-      Ref : Src_Info_Maps.Constant_Reference_Type (Element);
-   end record;
 
    package Filter_Data_Holders is new Ada.Containers.Indefinite_Holders
      (Filter_Data'Class);

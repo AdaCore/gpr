@@ -28,6 +28,7 @@ with GPR2.View_Ids;
 limited with GPR2.Build.Compilation_Unit;
 limited with GPR2.Build.Compilation_Unit.Maps;
 limited with GPR2.Build.Source.Sets;
+limited with GPR2.Build.Source;
 limited with GPR2.Build.View_Db;
 limited with GPR2.Project.Tree;
 limited with GPR2.Project.View.Set;

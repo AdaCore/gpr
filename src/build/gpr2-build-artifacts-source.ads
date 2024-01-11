@@ -5,8 +5,8 @@
 --
 
 with Ada.Characters.Handling;
-with GPR2.Project.View;
 with GPR2.Build.Source;
+with GPR2.Project.View;
 
 package GPR2.Build.Artifacts.Source is
 

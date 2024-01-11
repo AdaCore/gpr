@@ -197,7 +197,7 @@ procedure Main is
          for U of NS.Units loop
             Ada.Text_IO.Put_Line (String (U.Name));
 
-            for Kind in GPR2.Build.S_Spec .. GPR2.Build.S_Body loop
+            for Kind in GPR2.S_Spec .. GPR2.S_Body loop
                if U.Has_Part (Kind) then
                   Ada.Text_IO.Put_Line ("- " & Kind'Image & " " & String (U.Get (Kind).Source.Simple_Name));
                end if;

@@ -135,10 +135,20 @@ package body GPR2.Build.View_Db is
 
          begin
             if Proxy.View = Def.View then
-               return Def.Src_Infos.Element (Proxy.Path_Name);
+               return Build.Source.Create
+                 (Base_Source    => Def.Src_Infos.Element (Proxy.Path_Name),
+                  Defining_View  => Proxy.View,
+                  Owning_View    => Def.View,
+                  Inherited_From => Proxy.Inh_From);
             else
-               return Get_Data
-                 (Def.Tree_Db, Proxy.View).Src_Infos.Element (Proxy.Path_Name);
+               return Build.Source.Create
+                 (Base_Source    => Get_Data
+                                     (Def.Tree_Db,
+                                      Proxy.View).Src_Infos.Element
+                                        (Proxy.Path_Name),
+                  Defining_View  => Proxy.View,
+                  Owning_View    => Def.View,
+                  Inherited_From => Proxy.Inh_From);
             end if;
          end;
       end if;
@@ -195,7 +205,7 @@ package body GPR2.Build.View_Db is
 
    function Visible_Source
      (Self     : Object;
-      Basename : Simple_Name) return Source_Context
+      Basename : Simple_Name) return GPR2.Build.Source.Object
    is
       Result : GPR2.Build.Source.Object;
    begin
@@ -210,13 +220,13 @@ package body GPR2.Build.View_Db is
                Result := Db.Source (Basename);
 
                if Result.Is_Defined then
-                  return (V, Result);
+                  return Result;
                end if;
             end;
          end if;
       end loop;
 
-      return No_Context;
+      return Build.Source.Undefined;
    end Visible_Source;
 
    ---------------------

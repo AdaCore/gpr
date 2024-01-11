@@ -3,6 +3,7 @@ with Ada.Text_IO;
 
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source.Sets;
+with GPR2.Build.Source_Base;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;
@@ -43,8 +44,7 @@ procedure Main is
 
       for Source of View.Sources loop
          declare
-            U  : constant Optional_Name_Type :=
-                   Build.Source.Full_Name (Source.Unit);
+            U  : constant Optional_Name_Type := Source.Unit.Full_Name;
             CU : constant Build.Compilation_Unit.Object :=
                    View.Unit (Source.Unit.Name);
          begin

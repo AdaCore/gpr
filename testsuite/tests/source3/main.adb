@@ -1,6 +1,7 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+with GPR2.Build.Source_Base;
 with GPR2.Build.Source.Sets;
 with GPR2.Context;
 with GPR2.Log;
@@ -41,8 +42,7 @@ procedure Main is
 
       for Source of View.Sources loop
          declare
-            U : constant Optional_Name_Type :=
-                  GPR2.Build.Source.Full_Name (Source.Unit);
+            U : constant Optional_Name_Type := Source.Unit.Full_Name;
          begin
             Output_Filename (Source.Path_Name.Value);
 
