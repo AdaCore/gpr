@@ -17,13 +17,13 @@
 ------------------------------------------------------------------------------
 
 with Ada.Calendar.Formatting;
-with Ada.Command_Line;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Text_IO;
 
 with GNATCOLL.JSON;
 
 with GPRtools.Options;
+with GPRtools.Util;
 
 with GPR2.Containers;
 with GPR2.Log;
@@ -55,10 +55,33 @@ is
    --  Variables for tool's options
    Project_Tree : aliased Project.Tree.Object;
 
+   procedure Display_Messages_JSON_Output
+     (JSON_Res    : JSON_Value;
+      Tree_Logs   : GPR2.Log.Object;
+      Conf_Logs   : GPR2.Log.Object;
+      Only_Errors : Boolean)
+   with Pre => JSON_Res.Kind = JSON_Object_Type;
+   --  Add a "messages" field to the provided JSON object,
+   --  and fill it with the tree messages. If Only_Errors
+   --  is true, only errors are added.
+
    procedure Inspect_Project_JSON_Output
-     (Tree : Project.Tree.Object;
-      Compact : Boolean);
+     (JSON_Res : JSON_Value;
+      Tree     : Project.Tree.Object)
+   with Pre => JSON_Res.Kind = JSON_Object_Type;
    --  Inspect project and possibly recursively all imports
+
+   procedure Indent (Level : Natural; Item : String);
+   --  Output indented text item. First level of indentation does not
+   --  have a prefix, the second one is prefixed with a "*", and
+   --  others with a "-".
+
+   procedure Display_Messages_Textual_Output
+     (Tree_Logs   : GPR2.Log.Object;
+      Conf_Logs   : GPR2.Log.Object;
+      Only_Errors : Boolean);
+   --  Display tree messages. If Only_Errors is true, only errors
+   --  are displayed.
 
    procedure Inspect_Project_Textual_Output (Tree : Project.Tree.Object);
    --  Inspect project and possibly recursively all imports
@@ -71,16 +94,126 @@ is
       VName : Name_Type) return Boolean;
    --  Return if the view must be processed and displayed or not.
 
+   ----------------------------------
+   -- Display_Messages_JSON_Output --
+   ----------------------------------
+
+   procedure Display_Messages_JSON_Output
+     (JSON_Res    : JSON_Value;
+      Tree_Logs   : GPR2.Log.Object;
+      Conf_Logs   : GPR2.Log.Object;
+      Only_Errors : Boolean)
+   is
+      Messages_Obj   : constant JSON_Value := Create_Object;
+      Tree_Mes_Array : JSON_Array;
+      Conf_Mes_Array : JSON_Array;
+
+      procedure Populate_Array
+        (Arr  : in out JSON_Array;
+         Logs : GPR2.Log.Object);
+      --  Populate a JSON array with Logs messages.
+
+      --------------------
+      -- Populate_Array --
+      --------------------
+
+      procedure Populate_Array
+        (Arr  : in out JSON_Array;
+         Logs : GPR2.Log.Object)
+      is
+      begin
+         for C in Logs.Iterate
+           (Information => (not Only_Errors) and then Options.Verbose,
+            Warning     => not Only_Errors,
+            Error       => True,
+            Lint        => not Only_Errors,
+            Read        => False,
+            Unread      => True)
+         loop
+            declare
+               M : constant Message.Object := GPR2.Log.Element (C);
+            begin
+               Append (Arr, Create (M.Format));
+            end;
+         end loop;
+      end Populate_Array;
+
+   begin
+      Populate_Array (Conf_Mes_Array, Conf_Logs);
+      Populate_Array (Tree_Mes_Array, Tree_Logs);
+
+      Set_Field (Messages_Obj, "configuration", Conf_Mes_Array);
+      Set_Field (Messages_Obj, "tree", Tree_Mes_Array);
+      Set_Field (JSON_Res, "messages", Messages_Obj);
+   end Display_Messages_JSON_Output;
+
+   -------------------------------------
+   -- Display_Messages_Textual_Output --
+   -------------------------------------
+
+   procedure Display_Messages_Textual_Output
+     (Tree_Logs   : GPR2.Log.Object;
+      Conf_Logs   : GPR2.Log.Object;
+      Only_Errors : Boolean)
+   is
+      procedure Display (Logs : GPR2.Log.Object);
+
+      -------------
+      -- Display --
+      -------------
+
+      procedure Display (Logs : GPR2.Log.Object)
+      is
+      begin
+         for C in Logs.Iterate
+           (Information => (not Only_Errors) and then Options.Verbose,
+            Warning     => not Only_Errors,
+            Error       => True,
+            Lint        => not Only_Errors,
+            Read        => False,
+            Unread      => True)
+         loop
+            Indent (2, GPR2.Log.Element (C).Format);
+         end loop;
+      end Display;
+
+   begin
+
+      Indent (0, "+--------------------------------------+");
+      Indent (0, "|               Messages               |");
+      Indent (0, "+--------------------------------------+");
+
+      Indent (1, "Configuration:");
+      Display (Conf_Logs);
+
+      Indent (1, "Tree:");
+      Display (Tree_Logs);
+      Ada.Text_IO.New_Line;
+   end Display_Messages_Textual_Output;
+
+   ------------
+   -- Indent --
+   ------------
+
+   procedure Indent (Level : Natural; Item : String) is
+      Prefix : constant String :=
+                 (case Level is
+                    when 0      => "",
+                    when 1      => "* ",
+                    when others => (1 .. (Level - 1) * 3 => ' ') & " - ");
+
+   begin
+      Text_IO.Put_Line (Prefix & Item);
+   end Indent;
+
    ---------------------------------
    -- Inspect_Project_JSON_Output --
    ---------------------------------
 
    procedure Inspect_Project_JSON_Output
-     (Tree    : Project.Tree.Object;
-      Compact : Boolean)
+     (JSON_Res : JSON_Value;
+      Tree     : Project.Tree.Object)
    is
-      J_Res   : constant JSON_Value := Create_Object;
-      --  The JSON response
 
       O_Array : GPR2.Containers.Value_Set;
       --  Object search-paths, global array with all project's object
@@ -506,28 +639,7 @@ is
          R       : constant JSON_Value := Create_Object;
          Stat    : constant JSON_Value := Create_Object;
          P_Array : JSON_Array;
-         M_Array : JSON_Array;
       begin
-         --  Messages
-
-         if Tree.Has_Messages then
-            for C in Tree.Log_Messages.Iterate
-              (Information => False,
-               Warning     => False,
-               Error       => False,
-               Lint        => True,
-               Read        => False,
-               Unread      => True)
-            loop
-               declare
-                  M : constant Message.Object := GPR2.Log.Element (C);
-               begin
-                  Append (M_Array, Create (M.Format));
-               end;
-            end loop;
-
-            Set_Field (T, "messages", M_Array);
-         end if;
 
          --  Some stats about the tree
 
@@ -579,12 +691,11 @@ is
          Parse_Project (Prjs   => P_Array,
                         View   => Tree.Root_Project,
                         Parent => Project.View.Undefined);
-         Set_Field (J_Res, "info", Info_Object);
-         Set_Field (J_Res, "tree", Tree_Object);
-         Set_Field (J_Res, "projects", P_Array);
+         Set_Field (JSON_Res, "info", Info_Object);
+         Set_Field (JSON_Res, "tree", Tree_Object);
+         Set_Field (JSON_Res, "projects", P_Array);
       end;
 
-      Text_IO.Put_Line (JSON.Write (J_Res, Compact => Compact));
    end Inspect_Project_JSON_Output;
 
    ------------------------------------
@@ -593,7 +704,6 @@ is
 
    procedure Inspect_Project_Textual_Output (Tree : Project.Tree.Object) is
 
-      procedure Indent (Level : Natural; Item : String);
       procedure Print_Infos;
       procedure Print_Projects;
       procedure Print_Tree;
@@ -601,21 +711,6 @@ is
       function Image
         (V : GPR2.Project.View.Object) return String
       is (String (V.Name) & " (" & View_Id (V) & ")");
-
-      ------------
-      -- Indent --
-      ------------
-
-      procedure Indent (Level : Natural; Item : String) is
-         Prefix : constant String :=
-                    (case Level is
-                        when 0      => "",
-                        when 1      => "* ",
-                        when others => (1 .. (Level - 1) * 3 => ' ') & " - ");
-
-      begin
-         Text_IO.Put_Line (Prefix & Item);
-      end Indent;
 
       -----------------
       -- Print_Infos --
@@ -869,9 +964,9 @@ is
                First_Message : Boolean := False;
             begin
                for C in Project_Tree.Log_Messages.Iterate
-                 (Information => False,
-                  Warning     => False,
-                  Error       => False,
+                 (Information => Options.Verbose,
+                  Warning     => True,
+                  Error       => True,
                   Lint        => True,
                   Read        => False,
                   Unread      => True)
@@ -1022,31 +1117,60 @@ is
       return String (GPR2.View_Ids.Image (View.Id));
    end View_Id;
 
+   Success : Boolean;
 begin
    Options.Tree := Project_Tree.Reference;
 
-   if not GPRtools.Options.Load_Project
-       (Opt                => Options,
-        Absent_Dir_Error   => Project.Tree.No_Error,
-        Handle_Information => Options.Verbose)
-   then
-      Text_IO.Put_Line
-        ("gprinspect: unable to process project file "
-         & String (Options.Filename.Name));
+   Success := GPRtools.Options.Load_Project
+                (Opt                => Options,
+                 Absent_Dir_Error   => Project.Tree.No_Error,
+                 Handle_Information => False,
+                 Handle_Errors      => False,
+                 Handle_Lint        => False);
 
-      Command_Line.Set_Exit_Status (Command_Line.Failure);
-      return;
+   if Options.Config_Project_Has_Error then
+      Success := False;
    end if;
 
    case Options.Kind_Of_Display is
       when GPRtools.K_JSON | GPRtools.K_JSON_Compact =>
-         Inspect_Project_JSON_Output
-           (Tree    => Project_Tree,
-            Compact => (Options.Kind_Of_Display = GPRtools.K_JSON_Compact));
+         declare
+            J_Res : constant JSON_Value := Create_Object;
+         begin
+            Display_Messages_JSON_Output
+              (JSON_Res    => J_Res,
+               Tree_Logs   => Options.Tree.Log_Messages.all,
+               Conf_Logs   => Options.Config_Project_Log,
+               Only_Errors => not Success);
+
+            if Success then
+               Inspect_Project_JSON_Output
+                 (JSON_Res => J_Res,
+                  Tree     => Project_Tree);
+            end if;
+
+            Text_IO.Put_Line
+              (JSON.Write
+                (J_Res, Compact =>
+                   Options.Kind_Of_Display = GPRtools.K_JSON_Compact));
+         end;
 
       when GPRtools.K_Textual_IO =>
-         Inspect_Project_Textual_Output (Tree => Project_Tree);
+         Display_Messages_Textual_Output
+           (Tree_Logs   => Options.Tree.Log_Messages.all,
+            Conf_Logs   => Options.Config_Project_Log,
+            Only_Errors => not Success);
+
+         if Success then
+            Inspect_Project_Textual_Output (Tree => Project_Tree);
+         end if;
    end case;
+
+   if not Success then
+      GPRtools.Util.Fail_Program
+        ("unable to process project file "
+         & String (Options.Filename.Name));
+   end if;
 
 exception
    when E : others =>
