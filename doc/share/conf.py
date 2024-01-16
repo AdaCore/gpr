@@ -67,6 +67,14 @@ html_theme_options = {
     "style_nav_header_background": "#12284c",
 }
 
+html_static_path = ["_static"]
+
+html_css_files = ["custom.css"]
+
+# Search page using pagefind indexing
+html_additional_pages = {
+  'search': 'search.html', # relative to the _templates directory
+}
 # General information about the project.
 project = DOCS[doc_name]['title']
 
