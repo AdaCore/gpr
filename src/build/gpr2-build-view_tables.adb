@@ -1089,6 +1089,77 @@ package body GPR2.Build.View_Tables is
       end if;
    end Resolve_Visibility;
 
+   ------------
+   -- Source --
+   ------------
+
+   function Source
+     (Data     : View_Data_Ref;
+      Basename : Simple_Name) return Build.Source.Object
+   is
+      C   : constant Basename_Source_Maps.Cursor :=
+              Data.Sources.Find (Basename);
+   begin
+      if not Basename_Source_Maps.Has_Element (C) then
+         return Build.Source.Undefined;
+
+      else
+         declare
+            Proxy : Source_Proxy renames Basename_Source_Maps.Element (C);
+            use type GPR2.Project.View.Object;
+
+         begin
+            if Proxy.View = Data.View then
+               return Build.Source.Create
+                 (Base_Source    => Data.Src_Infos.Element (Proxy.Path_Name),
+                  Defining_View  => Proxy.View,
+                  Owning_View    => Data.View,
+                  Inherited_From => Proxy.Inh_From);
+            else
+               return Build.Source.Create
+                 (Base_Source    => Get_Data
+                                     (Data.Tree_Db,
+                                      Proxy.View).Src_Infos.Element
+                                        (Proxy.Path_Name),
+                  Defining_View  => Proxy.View,
+                  Owning_View    => Data.View,
+                  Inherited_From => Proxy.Inh_From);
+            end if;
+         end;
+      end if;
+   end Source;
+
    package body Update_Sources_List is separate;
 
+   --------------------
+   -- Visible_Source --
+   --------------------
+
+   function Visible_Source
+     (Data     : View_Data_Ref;
+      Basename : Simple_Name) return Build.Source.Object
+   is
+      Result : GPR2.Build.Source.Object;
+   begin
+      --  Look for the source in the view's closure (withed or limited withed
+      --  views)
+
+      Result := Source (Data, Basename);
+
+      if not Result.Is_Defined then
+         for V of Data.View.Closure (Include_Self => False) loop
+            if V.Kind in With_Object_Dir_Kind then
+               declare
+                  V_Data : View_Data_Ref renames Get_Data (Data.Tree_Db, V);
+               begin
+                  Result := Source (V_Data, Basename);
+
+                  exit when Result.Is_Defined;
+               end;
+            end if;
+         end loop;
+      end if;
+
+      return Result;
+   end Visible_Source;
 end GPR2.Build.View_Tables;

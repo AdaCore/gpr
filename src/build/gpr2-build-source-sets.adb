@@ -102,6 +102,17 @@ package body GPR2.Build.Source.Sets is
          Inherited_From => Proxy.Inh_From);
    end Element;
 
+   --------------
+   -- Finalize --
+   --------------
+
+   overriding procedure Finalize (Self : in out Source_Iterator) is
+   begin
+      if not Self.From_View_Db then
+         Self.Paths.Clear;
+      end if;
+   end Finalize;
+
    -----------
    -- First --
    -----------
@@ -176,14 +187,18 @@ package body GPR2.Build.Source.Sets is
       end if;
 
       if Self = Empty_Set then
-         return Source_Iterator'(False,
-                                 Db     => Build.View_Db.Undefined,
-                                 others => <>);
+         return Source_Iterator'(Ada.Finalization.Controlled with
+                                 From_View_Db => False,
+                                 Db           => Build.View_Db.Undefined,
+                                 others       => <>);
       end if;
 
       case Opt is
          when Unsorted =>
-            return Source_Iterator'(True, Self.Db, Self.Filter);
+            return Source_Iterator'(Ada.Finalization.Controlled with
+                                    From_View_Db => True,
+                                    Db           => Self.Db,
+                                    Filter       => Self.Filter);
 
          when Sorted =>
             return Iter : Source_Iterator (False) do

@@ -683,15 +683,4 @@ package body GPR2.Build.Tree_Db is
       Self.With_RTS   := False;
    end Unload;
 
-   -------------------
-   -- View_Database --
-   -------------------
-
-   function View_Database
-     (Self : Object; View : GPR2.Project.View.Object)
-      return Build.View_Db.Object is
-   begin
-      return Self.Build_Dbs.Element (View.Id);
-   end View_Database;
-
 end GPR2.Build.Tree_Db;

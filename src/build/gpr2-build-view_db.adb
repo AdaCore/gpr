@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
---  with GPR2.Build.Compilation_Input.Sets;
 with GPR2.Build.Source.Sets;
 with GPR2.Build.Tree_Db;
 pragma Warnings (Off);
@@ -23,23 +22,6 @@ package body GPR2.Build.View_Db is
    function Ref (Inst : Object) return View_Tables.View_Data_Ref is
      (Inst.Get);
    --  Extracts a reference to view_tables data from a View_Base instance
-
-   function Tree_Db (Self : Object) return access GPR2.Build.Tree_Db.Object is
-     (Self.Get.Tree_Db);
-
-   function Source_Option (Self : Object) return Optional_Source_Info_Option is
-     (Self.Get.Tree_Db.Source_Option);
-
-   ----------------------
-   -- Compilation_Unit --
-   ----------------------
-
-   function Compilation_Unit
-     (Self : Object;
-      Name : Name_Type) return Build.Compilation_Unit.Object is
-   begin
-      return Ref (Self).CUs.Element (Name);
-   end Compilation_Unit;
 
    -----------------------
    -- Compilation_Units --
@@ -67,28 +49,6 @@ package body GPR2.Build.View_Db is
       end return;
    end Compilation_Units;
 
-   --------------------------
-   -- Has_Compilation_Unit --
-   --------------------------
-
-   function Has_Compilation_Unit
-     (Self : Object;
-      Name : Name_Type) return Boolean is
-   begin
-      return Ref (Self).CUs.Contains (Name);
-   end Has_Compilation_Unit;
-
-   ----------------
-   -- Has_Source --
-   ----------------
-
-   function Has_Source
-     (Self     : Object;
-      Basename : Simple_Name) return Boolean is
-   begin
-      return Ref (Self).Sources.Contains (Basename);
-   end Has_Source;
-
    --------------
    -- Own_Unit --
    --------------
@@ -114,46 +74,6 @@ package body GPR2.Build.View_Db is
       return Build.Compilation_Unit.Undefined;
    end Own_Unit;
 
-   ------------
-   -- Source --
-   ------------
-
-   function Source
-     (Self     : Object;
-      Basename : Simple_Name) return Build.Source.Object
-   is
-      Def : constant View_Data_Ref := Ref (Self);
-      C   : constant Basename_Source_Maps.Cursor :=
-              Def.Sources.Find (Basename);
-   begin
-      if not Basename_Source_Maps.Has_Element (C) then
-         return Build.Source.Undefined;
-
-      else
-         declare
-            Proxy : Source_Proxy renames Basename_Source_Maps.Element (C);
-
-         begin
-            if Proxy.View = Def.View then
-               return Build.Source.Create
-                 (Base_Source    => Def.Src_Infos.Element (Proxy.Path_Name),
-                  Defining_View  => Proxy.View,
-                  Owning_View    => Def.View,
-                  Inherited_From => Proxy.Inh_From);
-            else
-               return Build.Source.Create
-                 (Base_Source    => Get_Data
-                                     (Def.Tree_Db,
-                                      Proxy.View).Src_Infos.Element
-                                        (Proxy.Path_Name),
-                  Defining_View  => Proxy.View,
-                  Owning_View    => Def.View,
-                  Inherited_From => Proxy.Inh_From);
-            end if;
-         end;
-      end if;
-   end Source;
-
    -------------
    -- Sources --
    -------------
@@ -165,6 +85,20 @@ package body GPR2.Build.View_Db is
          (Self,
           (if Sorted then Build.Source.Sets.Sorted
            else Build.Source.Sets.Unsorted)));
+
+   -------------------
+   -- Source_Option --
+   -------------------
+
+   function Source_Option (Self : Object) return Optional_Source_Info_Option is
+     (Self.Get.Tree_Db.Source_Option);
+
+   -------------
+   -- Tree_Db --
+   -------------
+
+   function Tree_Db (Self : Object) return access GPR2.Build.Tree_Db.Object is
+     (Self.Get.Tree_Db);
 
    ------------
    -- Update --
@@ -190,44 +124,9 @@ package body GPR2.Build.View_Db is
 
    function View_Base_For
      (Self : Object;
-      View : Project.View.Object) return Object is
-   begin
-      if Self.View = View then
-         return Self;
-      else
-         return Self.Get.Tree_Db.View_Database (View);
-      end if;
-   end View_Base_For;
-
-   --------------------
-   -- Visible_Source --
-   --------------------
-
-   function Visible_Source
-     (Self     : Object;
-      Basename : Simple_Name) return GPR2.Build.Source.Object
-   is
-      Result : GPR2.Build.Source.Object;
-   begin
-      --  Look for the source in the view's closure (withed or limited withed
-      --  views)
-
-      for V of Self.View.Closure (Include_Self => True) loop
-         if V.Kind in With_Object_Dir_Kind then
-            declare
-               Db : constant Object := Self.View_Base_For (V);
-            begin
-               Result := Db.Source (Basename);
-
-               if Result.Is_Defined then
-                  return Result;
-               end if;
-            end;
-         end if;
-      end loop;
-
-      return Build.Source.Undefined;
-   end Visible_Source;
+      View : Project.View.Object) return Object
+   is (if Self.Get.View = View then Self
+       else Self.Get.Tree_Db.View_Database (View));
 
    ---------------------
    -- Visible_Sources --

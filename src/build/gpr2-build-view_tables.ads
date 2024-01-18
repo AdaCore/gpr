@@ -17,6 +17,7 @@ with GPR2.Project.View.Set;
 
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source_Base;
+with GPR2.Build.Source;
 with GPR2.Source_Reference.Value;
 with GPR2.View_Ids;
 
@@ -218,6 +219,14 @@ private package GPR2.Build.View_Tables is
                      (Data : View_Data) return View_Db.Object;
    Get_Ref       : access function
                      (Obj : View_Db.Object) return View_Data_Ref;
+
+   function Source
+     (Data     : View_Data_Ref;
+      Basename : Simple_Name) return Build.Source.Object;
+
+   function Visible_Source
+     (Data     : View_Data_Ref;
+      Basename : Simple_Name) return Build.Source.Object;
 
    function Get_Data
      (Db   : access GPR2.Build.Tree_Db.Object;

@@ -3695,7 +3695,7 @@ package body GPR2.Project.Tree is
       Option   : Source_Info_Option := Sources_Units;
       Messages : out GPR2.Log.Object) is
    begin
-      Self.Artifacts_Database.Refresh (Option, Messages);
+      Self.Tree_Db.Ref.Refresh (Option, Messages);
    end Update_Sources;
 
    -------------

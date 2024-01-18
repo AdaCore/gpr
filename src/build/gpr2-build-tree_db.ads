@@ -81,7 +81,14 @@ package GPR2.Build.Tree_Db is
       View : GPR2.Project.View.Object) return Build.View_Db.Object
      with Pre => Self.Is_Defined
                    and then View.Is_Defined
-     and then View.Kind in With_Object_Dir_Kind;
+                   and then View.Kind in With_Object_Dir_Kind,
+          Inline;
+
+   function View_Database
+     (Self : Object;
+      View : GPR2.View_Ids.View_Id) return Build.View_Db.Object
+     with Pre => Self.Is_Defined,
+          Inline;
 
    --  BUILD ARTIFACTS HANDLING
 
@@ -405,5 +412,15 @@ private
    function Iterate
      (Self  : Iterator) return Artifact_Iterators.Forward_Iterator'Class
    is (Self.Actual);
+
+   function View_Database
+     (Self : Object; View : GPR2.Project.View.Object)
+      return Build.View_Db.Object
+   is (Self.Build_Dbs.Element (View.Id));
+
+   function View_Database
+     (Self : Object;
+      View : GPR2.View_Ids.View_Id) return Build.View_Db.Object
+   is (Self.Build_Dbs.Element (View));
 
 end GPR2.Build.Tree_Db;

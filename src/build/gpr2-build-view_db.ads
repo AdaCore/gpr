@@ -131,4 +131,29 @@ private
    function "<" (L, R : Object) return Boolean is
       (L.Get.View < R.Get.View);
 
+   function Has_Compilation_Unit
+     (Self : Object;
+      Name : Name_Type) return Boolean
+   is (Self.Get.CUs.Contains (Name));
+
+   function Compilation_Unit
+     (Self : Object;
+      Name : Name_Type) return Build.Compilation_Unit.Object
+   is (Self.Get.CUs.Element (Name));
+
+   function Has_Source
+     (Self     : Object;
+      Basename : Simple_Name) return Boolean
+   is (Self.Get.Sources.Contains (Basename));
+
+   function Source
+     (Self     : Object;
+      Basename : Simple_Name) return Build.Source.Object
+   is (View_Tables.Source (Self.Get, Basename));
+
+   function Visible_Source
+     (Self     : Object;
+      Basename : Simple_Name) return GPR2.Build.Source.Object
+   is (View_Tables.Visible_Source (Self.Get, Basename));
+
 end GPR2.Build.View_Db;

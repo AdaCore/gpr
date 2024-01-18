@@ -16,6 +16,7 @@
 
 with Ada.Iterator_Interfaces;
 with Ada.Containers.Indefinite_Holders;
+with Ada.Finalization;
 
 with GPR2.Build.View_Db;
 
@@ -131,8 +132,8 @@ private
 
    Empty_Set : constant Object := (others => <>);
 
-   type Source_Iterator
-     (From_View_Db : Boolean) is new Source_Iterators.Forward_Iterator
+   type Source_Iterator (From_View_Db : Boolean) is
+     new Ada.Finalization.Controlled and Source_Iterators.Forward_Iterator
    with record
       --  we keep a reference to the view db for faster retrieval of
       --  the source items
@@ -151,5 +152,6 @@ private
    overriding function Next
      (Self     : Source_Iterator;
       Position : Cursor) return Cursor;
+   overriding procedure Finalize (Self : in out Source_Iterator);
 
 end GPR2.Build.Source.Sets;
