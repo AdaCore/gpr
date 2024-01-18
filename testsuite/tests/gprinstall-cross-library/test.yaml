@@ -3,3 +3,4 @@ description:
 driver: python_script
 control:
 - [SKIP, "'windows' not in env.host.platform", "DEAD on not windows"]
+- ["SKIP", "True", "gprinstall not yet built from gpr2-next"]

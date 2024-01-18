@@ -1,2 +1,4 @@
 description: test gprls switches -o -s -u combination
 driver: python_script
+control:
+    - ["SKIP", "True", "gprls not yet built from gpr2-next"]

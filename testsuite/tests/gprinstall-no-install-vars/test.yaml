@@ -2,4 +2,4 @@ description:
     Check gprinstall do not generate variables in installed project
 driver: python_script
 control:
-- [XFAIL, "True", "libgpr2-next: gprinstall not transitioned yet"]
+    - ["SKIP", "True", "gprinstall not yet built from gpr2-next"]
