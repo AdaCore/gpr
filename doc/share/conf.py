@@ -108,6 +108,8 @@ texinfo_documents = [
     (master_doc, doc_name, project,
      u'AdaCore', doc_name, doc_name, '')]
 
+latex_table_style = ["standard", "colorrows"]
+
 
 def setup(app):
     app.add_lexer('ada', ada_pygments.AdaLexer)
