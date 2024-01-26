@@ -1,3 +1,5 @@
 description:
     Check gprinstall reports correctly installation error
 driver: python_script
+control:
+    - ["SKIP", "True", "gprinstall is not built with gpr2-next"]

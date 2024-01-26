@@ -1,3 +1,5 @@
 description:
     Check gprinstall --prefix &  Install Prefix attribute implementation
 driver: python_script
+control:
+    - ["SKIP", "True", "gprinstall not yet built from gpr2-next"]
