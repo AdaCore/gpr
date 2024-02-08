@@ -16,8 +16,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Command_Line;
 with Ada.Exceptions; use Ada.Exceptions;
-with Ada.Text_IO;
 
 with GNATCOLL.Traces;
 
@@ -28,13 +28,17 @@ with GPRtools;
 with GPRtools.Command_Line;
 with GPRtools.Util;
 with GPRtools.Options;
+with GPRtools.Program_Termination;
 
 with GPRinspect.External_Tools_Support;
 with GPRinspect.Process;
 
-procedure GPRinspect.Main is
+function GPRinspect.Main return Ada.Command_Line.Exit_Status is
 
    use Ada;
+   use GPR2;
+
+   use GPRtools.Program_Termination;
 
    Options : GPRinspect.GPRinspect_Options;
 
@@ -191,15 +195,33 @@ begin
 
    GPRinspect.Process (Options => Options);
 
+   return To_Exit_Status (E_Success);
+
 exception
    when E : GPR2.Options.Usage_Error =>
-      Text_IO.Put_Line
-        (Text_IO.Standard_Error,
-         "gprinspect: " & Exception_Message (E));
-      GPRtools.Command_Line.Try_Help;
-      GPRtools.Util.Exit_Program (GPRtools.Util.E_Fatal);
+      Handle_Program_Termination
+        (Opt                       => Options,
+         Display_Command_Line_Help => True,
+         Force_Exit                => False,
+         Message                   => Exception_Message (E));
+      return To_Exit_Status (E_Fatal);
+
+   when E : Project_Error | Processing_Error =>
+      Handle_Program_Termination
+        (Opt                   => Options,
+         Display_Tree_Messages => True,
+         Force_Exit            => False,
+         Message               => Exception_Message (E));
+      return To_Exit_Status (E_Fatal);
+
+   when E_Program_Termination =>
+      return To_Exit_Status (E_Fatal);
 
    when E : others =>
-      GPRtools.Util.Fail_Program
-        ("Fatal error: " & Exception_Information (E));
+      Handle_Program_Termination
+        (Opt        => Options,
+         Force_Exit => False,
+         Exit_Cause => E_Generic,
+         Message    => Exception_Message (E));
+      return To_Exit_Status (E_Fatal);
 end GPRinspect.Main;

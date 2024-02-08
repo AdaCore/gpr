@@ -16,10 +16,9 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Directories;
+with Ada.Command_Line;
 with Ada.Environment_Variables;
 with Ada.Strings.Unbounded;
-with Ada.Text_IO;
 
 with GNAT.Case_Util;
 with GNAT.OS_Lib;
@@ -34,39 +33,6 @@ package body GPRtools.Util is
 
    Keep_Program_Name : Unbounded_String;
 
-   -------------------------------
-   -- Check_For_Default_Project --
-   -------------------------------
-
-   function Check_For_Default_Project return GPR2.Path_Name.Object is
-      use Directories;
-      Default_Name : constant String := "default.gpr";
-      Search       : Search_Type;
-      Item         : Directory_Entry_Type;
-
-   begin
-      if Exists (Default_Name)
-        and then Kind (Default_Name) = Ordinary_File
-      then
-         return Path_Name.Create_File (Filename_Type (Default_Name));
-      end if;
-
-      Start_Search
-        (Search, ".", "*.gpr", (Ordinary_File => True, others => False));
-
-      if More_Entries (Search) then
-         Get_Next_Entry (Search, Item);
-
-         if not More_Entries (Search) then
-            --  Only one project in current directory can be default one
-
-            return Path_Name.Create_File (Filename_Type (Full_Name (Item)));
-         end if;
-      end if;
-
-      return Path_Name.Undefined;
-   end Check_For_Default_Project;
-
    ----------------------------
    -- Executable_Prefix_Path --
    ----------------------------
@@ -75,7 +41,7 @@ package body GPRtools.Util is
       use GNAT;
       use GNATCOLL;
 
-      Exec_Name : constant String := Command_Line.Command_Name;
+      Exec_Name : constant String := Ada.Command_Line.Command_Name;
 
       function Get_Install_Dir (S : String) return String;
       --  S is the executable name preceded by the absolute or relative path,
@@ -137,85 +103,11 @@ package body GPRtools.Util is
       end;
    end Executable_Prefix_Path;
 
-   ---------------
-   -- Exit_Code --
-   ---------------
+   ----------------------
+   -- Get_Program_Name --
+   ----------------------
 
-   function Exit_Code
-     (Code : Exit_Code_Type) return Ada.Command_Line.Exit_Status is
-   begin
-      case Code is
-         when E_Success    => return 0;
-         when E_Warnings   => return 0;
-         when E_No_Compile => return 1;
-         when E_Fatal      => return 4;
-         when E_Errors     => return 5;
-         when E_No_Code    => return 6;
-         when E_Abort      => return 16#FF#;
-      end case;
-   end Exit_Code;
-
-   ------------------
-   -- Exit_Program --
-   ------------------
-
-   procedure Exit_Program (Exit_Code : Exit_Code_Type) is
-      use GNAT.OS_Lib;
-   begin
-      --  The program will exit with the following status:
-
-      --    0 if the object file has been generated (with or without warnings)
-      --    1 if recompilation was not needed (smart recompilation)
-      --    4 for a fatal error
-      --    5 if there were errors
-      --    6 if no code has been generated (spec)
-
-      --  Note that exit code 3 is not used and must not be used as this is
-      --  the code returned by a program aborted via C abort() routine on
-      --  Windows. GCC checks for that case and thinks that the child process
-      --  has been aborted. This code (exit code 3) used to be the code used
-      --  for E_No_Code, but E_No_Code was changed to 6 for this reason.
-
-      case Exit_Code is
-         when E_Success    => OS_Exit (0);
-         when E_Warnings   => OS_Exit (0);
-         when E_No_Compile => OS_Exit (1);
-         when E_Fatal      => OS_Exit (4);
-         when E_Errors     => OS_Exit (5);
-         when E_No_Code    => OS_Exit (6);
-         when E_Abort      => OS_Abort;
-      end case;
-   end Exit_Program;
-
-   ------------------
-   -- Fail_Program --
-   ------------------
-
-   procedure Fail_Program (Message : String) is
-   begin
-      Finish_Program (E_Fatal, Message);
-   end Fail_Program;
-
-   --------------------
-   -- Finish_Program --
-   --------------------
-
-   procedure Finish_Program
-     (Exit_Code : Exit_Code_Type := E_Success;
-      Message   : String := "")
-   is
-      use Ada.Text_IO;
-   begin
-      if Message'Length > 0 then
-         Put_Line
-           ((if Exit_Code = E_Success
-             then Standard_Output
-             else Standard_Error),
-            To_String (Keep_Program_Name) & ": " & Message);
-      end if;
-
-      Exit_Program (Exit_Code);
-   end Finish_Program;
+   function Get_Program_Name return String is (To_String (Keep_Program_Name));
 
    ----------------------------
    -- Is_Ada_Predefined_Unit --
@@ -294,22 +186,6 @@ package body GPRtools.Util is
              & Simple_Name ('_' & GNATCOLL.Utils.Image (Number, 1))
              & Object_Suffix;
    end Partial_Name;
-
-   -------------------------------
-   -- Project_Processing_Failed --
-   -------------------------------
-
-   procedure Project_Processing_Failed
-     (Options : GPRtools.Options.Base_Options'Class) is
-   begin
-      Output_Messages (Options);
-      Fail_Program
-        ('"'
-         & (if Options.Config_Project_Has_Error
-           then String (Options.Config_Project.Simple_Name)
-           else String (Options.Filename.Simple_Name))
-          & """ processing failed");
-   end Project_Processing_Failed;
 
    ----------------------
    -- Set_Program_Name --

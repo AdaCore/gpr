@@ -25,7 +25,6 @@ with Ada.Text_IO;
 
 with GNAT.Command_Line;
 with GNAT.Exception_Traces;
-with GNAT.OS_Lib;
 with GNAT.Traceback.Symbolic;
 
 with GPR2.Compilation.Protocol;
@@ -40,9 +39,10 @@ with GPR2.Time_Stamp;
 with GPR2.Version;
 
 with GPRtools.Options;
+with GPRtools.Program_Termination;
 with GPRtools.Util;
 
-procedure GPRremote is
+function GPRremote.Main return Ada.Command_Line.Exit_Status is
 
    use Ada;
    use Ada.Exceptions;
@@ -52,7 +52,9 @@ procedure GPRremote is
    use GPR2;
    use GPRtools;
 
-   procedure Parse_Command_Line;
+   use GPRtools.Program_Termination;
+
+   function Parse_Command_Line return Boolean;
    --  Parse command line parameters
 
    procedure Activate_Symbolic_Traceback;
@@ -74,7 +76,7 @@ procedure GPRremote is
    Args : array (1 .. Ada.Command_Line.Argument_Count) of Unbounded_String;
    Last : Natural := 0;
 
-   Exit_Status : Natural := 0;
+   Status : Exit_Code_Type := E_Success;
    --  GPRremote's exit status
 
    Project     : GPR2.Project.Tree.Object;
@@ -206,7 +208,7 @@ procedure GPRremote is
          if Cmd.Kind in OK then
             null;
          elsif Cmd.Kind = KO then
-            Exit_Status := 1;
+            Status := E_No_Compile;
          else
             raise Compilation.Protocol.Wrong_Command
               with "expected OK/NOK command, found " & Cmd.Kind'Img;
@@ -319,9 +321,8 @@ procedure GPRremote is
    -- Parse_Command_Line --
    ------------------------
 
-   procedure Parse_Command_Line is
+   function Parse_Command_Line return Boolean is
       use GNAT.Command_Line;
-      use GNAT.OS_Lib;
       Parser : constant GPRtools.Options.Command_Line_Parser :=
                  GPRtools.Options.Create
                    (Initial_Year       => "2017",
@@ -341,12 +342,10 @@ procedure GPRremote is
          Args (Last) := To_Unbounded_String (Arg);
       end loop;
 
+      return True;
    exception
-      when Invalid_Switch =>
-         OS_Exit (1);
-
-      when Exit_From_Command_Line =>
-         OS_Exit (1);
+      when Invalid_Switch | Exit_From_Command_Line =>
+         return False;
    end Parse_Command_Line;
 
    ------------
@@ -406,15 +405,16 @@ procedure GPRremote is
 begin
    GPRtools.Util.Set_Program_Name ("gprremote");
 
-   Parse_Command_Line;
+   if not Parse_Command_Line then
+      return To_Exit_Status (E_No_Compile);
+   end if;
 
    Activate_Symbolic_Traceback;
 
    if Args'Last < Arg_Cmd then
       Version.Display
         ("GPRREMOTE", "2017", Version_String => Version.Long_Value);
-
-      return;
+      return To_Exit_Status (E_Success);
    end if;
 
    --  Set corresponding slave environment
@@ -468,15 +468,25 @@ begin
 
    end;
 
-   GNAT.OS_Lib.OS_Exit (Exit_Status);
+   return To_Exit_Status (Status);
 
 exception
    when E : GPR2.Options.Usage_Error =>
-      Put_Line ("gprremote: " & Exception_Message (E));
-      GNAT.OS_Lib.OS_Exit (1);
+      Handle_Program_Termination
+        (Opt                       => Options,
+         Display_Command_Line_Help => True,
+         Force_Exit                => False,
+         Message                   => Exception_Message (E));
+      return To_Exit_Status (E_No_Compile);
+
+   when E_Program_Termination =>
+      return To_Exit_Status (E_Fatal);
 
    when E : others =>
-      Put_Line
-        ("Unrecoverable error in GPRremote :" & Exception_Information (E));
-      GNAT.OS_Lib.OS_Exit (1);
-end GPRremote;
+      Handle_Program_Termination
+        (Opt        => Options,
+         Force_Exit => False,
+         Exit_Cause => E_Generic,
+         Message    => Exception_Message (E));
+      return To_Exit_Status (E_No_Compile);
+end GPRremote.Main;

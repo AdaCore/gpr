@@ -39,8 +39,6 @@ with GPR2.Message;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Source_Reference;
 
-with GPRtools.Util;
-
 package body GPR2.Compilation.Registry is
 
    package PRA renames GPR2.Project.Registry.Attribute;
@@ -502,8 +500,7 @@ package body GPR2.Compilation.Registry is
                Text_IO.Close (F);
 
             else
-               GPRtools.Util.Fail_Program
-                 ("hosts distributed file " & F_Name & " not found");
+               null; -- previously had an OS_Exit
             end if;
          end;
       end if;

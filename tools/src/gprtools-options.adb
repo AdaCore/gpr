@@ -20,17 +20,17 @@ with GNAT.Directory_Operations;
 
 with GPR2.Compilation.Registry;
 with GPR2.Log;
-with GPR2.Message;
-with GPR2.Path_Name;
 with GPR2.Project.Registry.Pack;
+
+with GPRtools.Program_Termination;
 
 pragma Warnings (Off);
 with System.OS_Constants;
 pragma Warnings (On);
 
-with GPRtools.Util;
-
 package body GPRtools.Options is
+
+   use GPRtools.Program_Termination;
 
    package PRP renames GPR2.Project.Registry.Pack;
 
@@ -430,27 +430,36 @@ package body GPRtools.Options is
          Absent_Dir_Error => Absent_Dir_Error);
 
       if Handle_Errors then
-         Display (Opt.Config_Project_Log);
-         if Opt.Tree /= null and then Opt.Tree.Has_Messages then
-            Display (Opt.Tree.all.Log_Messages.all);
-         end if;
-         if Opt.Config_Project_Has_Error then
-            GPRtools.Util.Finish_Program
-              (GPRtools.Util.E_Fatal,
-            '"'
-               & String (Opt.Config_Project.Simple_Name)
-               & """ processing failed");
-         end if;
-         if Opt.Tree /= null
-           and then Opt.Tree.Has_Messages
-           and then Opt.Tree.Log_Messages.Has_Error
-         then
-            GPRtools.Util.Finish_Program
-              (GPRtools.Util.E_Fatal,
-            '"'
-               & String (Opt.Filename.Simple_Name)
-               & """ processing failed");
-         end if;
+         declare
+            Has_Messages : constant Boolean := Opt.Tree.Has_Messages;
+            Has_Error    : constant Boolean :=
+                             (if Has_Messages
+                              then Opt.Tree.Log_Messages.Has_Error
+                              else False);
+         begin
+            Display (Opt.Config_Project_Log);
+            if Opt.Tree /= null and then Has_Messages then
+               Display (Opt.Tree.all.Log_Messages.all);
+            end if;
+            if not Loaded
+              and then Opt.Config_Project_Has_Error
+            then
+               Handle_Program_Termination
+                 (Opt        => Opt,
+                  Message    => '"' & String (Opt.Config_Project.Simple_Name)
+                  & """ processing failed");
+            end if;
+            if not Loaded
+              and then Opt.Tree /= null
+              and then Has_Messages
+              and then Has_Error
+            then
+               Handle_Program_Termination
+                 (Opt        => Opt,
+                  Message    => '"' & String (Opt.Filename.Simple_Name)
+                  & """ processing failed");
+            end if;
+         end;
       end if;
 
       return Loaded;

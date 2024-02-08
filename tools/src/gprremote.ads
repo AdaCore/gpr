@@ -16,4 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-procedure GPRremote;
+package GPRremote with Pure is
+
+end GPRremote;
