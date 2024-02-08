@@ -2809,24 +2809,25 @@ package body GPR2.KB is
          --  anyway. This leaves \ for regexp quotes.
          Last := First + 1;
 
-         while Last <= Path_To_Check'Last
-           and then Path_To_Check (Last) /= '/'
+         while Last < Path_To_Check'Last
+           and then Last + 1 <= Path_To_Check'Last
+           and then Path_To_Check (Last + 1) /= '/'
          loop
             Last := Last + 1;
          end loop;
 
          --  If we do not have a regexp
 
-         if not Is_Regexp (Path_To_Check (First .. Last - 1)) then
+         if not Is_Regexp (Path_To_Check (First .. Last)) then
             declare
                Dir     : constant String :=
                            Normalize_Pathname
                              (Current_Dir, Resolve_Links => False)
                            & Directory_Separator
                            & Unquote_Regexp
-                              (Path_To_Check (First .. Last - 1));
+                              (Path_To_Check (First .. Last));
                Remains : constant String :=
-                           Path_To_Check (Last + 1 .. Path_To_Check'Last);
+                           Path_To_Check (Last + 2 .. Path_To_Check'Last);
             begin
                if (Remains'Length = 0
                    or else Remains = "/"
@@ -2883,7 +2884,7 @@ package body GPR2.KB is
                use Ada.Directories;
 
                File_Re     : constant String :=
-                               Path_To_Check (First .. Last - 1);
+                               Path_To_Check (First .. Last);
                File_Regexp : constant Pattern_Matcher := Compile (File_Re);
                Search      : Search_Type;
                File        : Directory_Entry_Type;
@@ -2896,7 +2897,9 @@ package body GPR2.KB is
                      & " and should be quoted in this case, as in \.\.");
                end if;
 
-               if Path_To_Check (Last) = '/' then
+               if Last + 1 <= Path_To_Check'Last
+                 and then Path_To_Check (Last + 1) = '/'
+               then
                   Trace
                     (Main_Trace,
                      "<dir>: Check directories in " & Current_Dir
@@ -2968,7 +2971,7 @@ package body GPR2.KB is
                                  Current_Dir     =>
                                    Full_Name (File) & Directory_Separator,
                                  Path_To_Check   => Path_To_Check
-                                   (Last + 1 .. Path_To_Check'Last),
+                                   (Last + 2 .. Path_To_Check'Last),
                                  Regexp          => Regexp,
                                  Regexp_Str      => Regexp_Str,
                                  Value_If_Match  => Value_If_Match,
@@ -2989,7 +2992,7 @@ package body GPR2.KB is
                                  Current_Dir     =>
                                    Full_Name (File) & Directory_Separator,
                                  Path_To_Check   => Path_To_Check
-                                   (Last + 1 .. Path_To_Check'Last),
+                                   (Last + 2 .. Path_To_Check'Last),
                                  Regexp          => Regexp,
                                  Regexp_Str      => Regexp_Str,
                                  Value_If_Match  => Value_If_Match,
