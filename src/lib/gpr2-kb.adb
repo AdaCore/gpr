@@ -2645,7 +2645,7 @@ package body GPR2.KB is
       --  and the following char are simply omitted in the output.
       --  For instance:
       --      Str="A\." Remove_Quoted=False  => output is "A."
-      --      Str="A\." Remove_Quoted=False  => output is "A"
+      --      Str="A\." Remove_Quoted=True   => output is "A"
 
       ---------------
       -- Is_Regexp --
