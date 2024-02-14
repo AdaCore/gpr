@@ -2901,8 +2901,8 @@ package body GPRinstall.Install is
                      Unused  : Boolean;
                   begin
                      OS_Lib.Delete_File (Filename, Unused);
-
-                     Delete_Install_Directory (-Prefix_Dir.V);
+                     Register_Directory
+                       (Directories.Containing_Directory (Filename));
                   end;
                end if;
             end loop;
@@ -2912,9 +2912,16 @@ package body GPRinstall.Install is
             --  containing only the previous content.
 
             if Content.Length = 1 then
-               Delete (File);
+               declare
+                  Manifest_Filename : constant String := Name (File);
+               begin
+                  Delete (File);
 
-               Delete_Install_Directory (-Prefix_Dir.V);
+                  Register_Directory
+                    (Directories.Containing_Directory (Manifest_Filename));
+                  Delete_Registered_Directory
+                    (Root_Dir => -Prefix_Dir.V);
+               end;
             else
                --  Set manifest file back to Write mode
 
