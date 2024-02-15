@@ -32,9 +32,12 @@ private
 
    Search_Paths : GPR2.Path_Name.Set.Object;
 
-   procedure Delete_Install_Directory (Root_Dir : String);
-   --  Delete Dir_Name if empty, if removed try with parent directory but not
-   --  above the given prefix.
+   procedure Delete_Registered_Directory (Root_Dir : String);
+   --  Delete all registered directories
+
+   procedure Register_Directory (Dir : String);
+   --  Register directories inside a map to be deleted by calling
+   --  Delete_Registered_Directory.
 
    GPRinstall_Error : exception;
    --  General GPRinstall exception that is supposed to have associated error
