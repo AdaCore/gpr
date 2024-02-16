@@ -2031,12 +2031,13 @@ package body GPR2.Project.View is
    --------------------
 
    function Namespace_Roots (Self : Object) return Set.Object is
+      Result : Set.Object;
    begin
-      return Result : Set.Object do
-         for Id of Get_RO (Self).Root_Views loop
-            Result.Include (Self.Tree.Instance_Of (Id));
-         end loop;
-      end return;
+      for Id of Get_RO (Self).Root_Views loop
+         Result.Include (Self.Tree.Instance_Of (Id));
+      end loop;
+
+      return Result;
    end Namespace_Roots;
 
    ----------------------

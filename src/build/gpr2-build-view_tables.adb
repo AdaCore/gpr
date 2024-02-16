@@ -9,8 +9,6 @@ with Ada.Strings.Maps.Constants;
 with Ada.Text_IO;
 with GNAT.OS_Lib;
 
-with GPR2.Build.Artifacts.Source;
-with GPR2.Build.Artifacts.Source.Ada;
 with GPR2.Build.Source_Base.Ada_Parser;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.Unit_Info;
@@ -189,34 +187,6 @@ package body GPR2.Build.View_Tables is
       Index    : Unit_Index;
       Messages : in out GPR2.Log.Object)
    is
-      procedure Set_Main_Flag
-        (Id   : Compilation_Unit.Unit_Location;
-         Flag : Boolean);
-
-      -------------------
-      -- Set_Main_Flag --
-      -------------------
-
-      procedure Set_Main_Flag
-        (Id   : Compilation_Unit.Unit_Location;
-         Flag : Boolean)
-      is
-      begin
-         if NS_Db.Tree_Db.Source_Option >= Sources_Units_Artifacts then
-            --  Only doable if we have the artifacts database
-            declare
-               Ref : constant Tree_Db.Reference_Type :=
-                       NS_Db.Tree_Db.Reference
-                         (Compilation_Unit.Artifact_Id (Id));
-               Src : constant Artifacts.Source.Ada.Object_Access :=
-                       Artifacts.Source.Ada.Object
-                         (Ref.Element.all)'Unchecked_Access;
-            begin
-               Src.Set_Is_Main (Flag);
-            end;
-         end if;
-      end Set_Main_Flag;
-
       Cursor  : Compilation_Unit_Maps.Cursor;
       Success : Boolean := True;
 
@@ -234,8 +204,6 @@ package body GPR2.Build.View_Tables is
 
             if Kind /= S_Separate then
                Add_Unit_Ownership (View_Db, CU, NS_Db);
-
-               Set_Main_Flag (CU_Instance.Main_Part, True);
             end if;
          end;
 
@@ -245,13 +213,8 @@ package body GPR2.Build.View_Tables is
                             NS_Db.CUs.Reference (Cursor);
             Old_Owner   : constant Project.View.Object :=
                             CU_Instance.Owning_View;
-            Old_Main    : constant Compilation_Unit.Unit_Location :=
-                            (if CU_Instance.Has_Main_Part
-                             then CU_Instance.Main_Part
-                             else Compilation_Unit.No_Unit);
             Other       : Compilation_Unit.Unit_Location;
             use type GPR2.Project.View.Object;
-            use type Compilation_Unit.Unit_Location;
 
          begin
             CU_Instance.Add
@@ -303,19 +266,6 @@ package body GPR2.Build.View_Tables is
             end if;
 
             if Success then
-               if CU_Instance.Has_Main_Part
-                 and then CU_Instance.Main_Part /= Old_Main
-               then
-                  --  Keep track of the main unit of compilation units: those
-                  --  are the one directly generating object files.
-
-                  if Old_Main /= Compilation_Unit.No_Unit then
-                     Set_Main_Flag (Old_Main, False);
-                  end if;
-
-                  Set_Main_Flag (CU_Instance.Main_Part, True);
-               end if;
-
                if Old_Owner /= CU_Instance.Owning_View then
                   --  Owning view changed, let's apply this change
                   if Old_Owner.Is_Defined then
@@ -776,31 +726,6 @@ package body GPR2.Build.View_Tables is
          Src_Info : constant Src_Info_Maps.Reference_Type :=
                       View_Db.Src_Infos.Reference (Src.Path_Name);
       begin
-         if Data.Tree_Db.Source_Option >= Sources_Units_Artifacts then
-            if Src_Info.Has_Index then
-               for U of Src_Info.Units loop
-                  Data.Tree_Db.Add_Artifact
-                    (Artifacts.Source.Ada.Create
-                       (Data.View,
-                        Src_Info.Path_Name.Simple_Name,
-                        U.Index));
-               end loop;
-
-            elsif Src_Info.Language = Ada_Language then
-               Data.Tree_Db.Add_Artifact
-                 (Artifacts.Source.Ada.Create
-                    (Data.View,
-                     Src_Info.Path_Name.Simple_Name,
-                     No_Index));
-
-            else
-               Data.Tree_Db.Add_Artifact
-                 (Artifacts.Source.Create
-                    (Data.View,
-                     Src_Info.Path_Name.Simple_Name));
-            end if;
-         end if;
-
          if Data.View.Is_Extended then
             --  ??? Check the view's list of excluded sources before doing that
             declare
@@ -857,31 +782,6 @@ package body GPR2.Build.View_Tables is
          Src_Info : constant Source_Base.Object :=
                       View_Db.Src_Infos (Src.Path_Name);
       begin
-         if Data.Tree_Db.Source_Option >= Sources_Units_Artifacts then
-            if Src_Info.Has_Index then
-               for U of Src_Info.Units loop
-                  Data.Tree_Db.Remove_Artifact
-                    (Artifacts.Source.Ada.Id
-                       (Data.View,
-                        Src_Info.Path_Name.Simple_Name,
-                        U.Index));
-               end loop;
-
-            elsif Src_Info.Language = Ada_Language then
-               Data.Tree_Db.Remove_Artifact
-                 (Artifacts.Source.Ada.Id
-                    (Data.View,
-                     Src_Info.Path_Name.Simple_Name,
-                     No_Index));
-
-            else
-               Data.Tree_Db.Remove_Artifact
-                 (Artifacts.Source.Id
-                    (Data.View,
-                     Src_Info.Path_Name.Simple_Name));
-            end if;
-         end if;
-
          if Src_Info.Has_Units and then not Data.View.Is_Extended then
             for U of Src_Info.Units loop
                for Root of Src.View.Namespace_Roots loop

@@ -1,4 +1,2 @@
 description: basic check the population of the build database DAG
-driver: build_and_run
-project_file: test
-main: main
+driver: python_script

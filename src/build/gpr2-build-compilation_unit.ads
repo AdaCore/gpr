@@ -7,13 +7,10 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Vectors;
 
-with GPR2.Build.Artifact_Ids;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 limited with GPR2.Project.Tree;
-
-private with GPR2.Build.Artifacts.Source.Ada;
 
 package GPR2.Build.Compilation_Unit is
 
@@ -25,9 +22,6 @@ package GPR2.Build.Compilation_Unit is
    --  Identifies the location of a Unit (spec/body or separate).
 
    No_Unit : constant Unit_Location := (others => <>);
-
-   function Artifact_Id
-     (U : Unit_Location) return GPR2.Build.Artifact_Ids.Artifact_Id;
 
    package Unit_Location_Vectors is new Ada.Containers.Vectors
      (Positive, Unit_Location);
@@ -126,7 +120,7 @@ package GPR2.Build.Compilation_Unit is
    --  we can't name the function "Body"
 
    function Separates (Self : Object) return Separate_Maps.Map
-     with Pre => Self.Is_Defined and then Self.Has_Part (S_Separate);
+     with Pre => Self.Is_Defined;
    --  Returns the list of separates for this compilation unit, indexed by
    --  their identifiers relative to the compilation unit.
 
@@ -138,6 +132,9 @@ package GPR2.Build.Compilation_Unit is
                   and then (Self.Has_Part (S_Spec)
                             or else Self.Has_Part (S_Body));
    --  Returns the body of the compilation unit if it exists, or the spec
+
+   function Main_Part (Self : Object) return Unit_Kind
+     with Pre => Self.Is_Defined and then Self.Has_Main_Part;
 
    procedure For_All_Part
      (Self : Object;
@@ -161,11 +158,6 @@ package GPR2.Build.Compilation_Unit is
    --  Returns the .o's simple name for Self.
 
 private
-
-   function Artifact_Id (U : Unit_Location) return Artifact_Ids.Artifact_Id
-   is (Artifacts.Source.Ada.Id (View     => U.View,
-                                Basename => U.Source.Simple_Name,
-                                Index    => U.Index));
 
    type Clashing_Unit (Sep_Name_Len : Natural) is record
       Loc      : Unit_Location;
@@ -224,6 +216,9 @@ private
 
    function Main_Part (Self : Object) return Unit_Location is
      (if Self.Implem /= No_Unit then Self.Implem else Self.Spec);
+
+   function Main_Part (Self : Object) return Unit_Kind is
+     (if Self.Implem /= No_Unit then S_Body else S_Spec);
 
    function Has_Main_Part (Self : Object) return Boolean is
      (Self.Implem /= No_Unit or else Self.Spec /= No_Unit);

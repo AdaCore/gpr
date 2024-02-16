@@ -2,11 +2,8 @@ with Ada.Command_Line;
 with Ada.Text_IO;
 
 with GPR2.Build.Actions.Ada_Compile;
-with GPR2.Build.Artifact_Ids;
-with GPR2.Build.Artifacts.ALI;
-with GPR2.Build.Artifacts.Object_File;
-with GPR2.Build.Artifacts.Source;
-with GPR2.Build.Artifacts.Source.Ada;
+with GPR2.Build.Artifacts.Files;
+with GPR2.Build.Artifacts.File_Part;
 
 with GPR2.Log;
 with GPR2.Options;
@@ -18,39 +15,13 @@ function Main return Natural is
    Tree        : GPR2.Project.Tree.Object;
    Opts        : GPR2.Options.Object;
    Log         : GPR2.Log.Object;
-   Ada_Compile : GPR2.Build.Actions.Ada_Compile.Object;
    Project     : constant String :=
                    (if Ada.Command_Line.Argument_Count > 0
                     then Ada.Command_Line.Argument (1)
                     else "tree/agg.gpr");
 
-   procedure Print_Artifact (A : GPR2.Build.Artifacts.Object'Class) is
-      use GPR2.Build;
-
-      View : GPR2.Project.View.Object :=
-               Tree.Get_View (Artifact_Ids.View (A.Id));
-   begin
-      Ada.Text_IO.Put (String (View.Name));
-      Ada.Text_IO.Put (": ");
-      Ada.Text_IO.Put_Line (Artifact_Ids.Path (A.Id));
-   end Print_Artifact;
-
-   procedure Test (Class : GPR2.Artifact_Class) is
-   begin
-      Ada.Text_IO.Put_Line (GPR2.Image (Class));
-      for A of Tree.Artifacts_Database.Artifacts (Class) loop
-         Print_Artifact (A);
-
-         for Dep of Tree.Artifacts_Database.Predecessors (A.Id) loop
-            Ada.Text_IO.Put (" - dep: ");
-            Print_Artifact (Dep);
-         end loop;
-      end loop;
-   end Test;
-
 begin
    Opts.Add_Switch (GPR2.Options.P, Project);
-   Opts.Add_Switch (GPR2.Options.Subdirs, "subdir");
    Opts.Finalize;
 
    if not Opts.Load_Project
@@ -61,17 +32,39 @@ begin
       return 1;
    end if;
 
-   GPR2.Build.Actions.Ada_Compile.Register (Tree.Artifacts_Database);
-
    Tree.Update_Sources
      (Option   => GPR2.Sources_Units_Artifacts,
       Messages => Log);
    Log.Output_Messages;
 
-   Test (GPR2.Build.Artifacts.Source.A_Class);
-   Test (GPR2.Build.Artifacts.Source.Ada.A_Class);
-   Test (GPR2.Build.Artifacts.ALI.A_Class);
-   Test (GPR2.Build.Artifacts.Object_File.A_Class);
+   Log.Clear;
+
+   for NS of Tree.Namespace_Root_Projects loop
+      for Unit of NS.Units loop
+         declare
+            A    : GPR2.Build.Actions.Ada_Compile.Object :=
+                     GPR2.Build.Actions.Ada_Compile.Create (Unit);
+         begin
+            if not Tree.Artifacts_Database.Has_Action (A.UID) then
+               Tree.Artifacts_Database.Add_Action (A, Log);
+               Log.Output_Messages;
+            end if;
+         end;
+      end loop;
+   end loop;
+
+   for A of Tree.Artifacts_Database.All_Actions loop
+      Ada.Text_IO.Put_Line (A.UID.Image);
+      Ada.Text_IO.Put_Line ("  inputs:");
+      for Input of Tree.Artifacts_Database.Inputs (A.UID) loop
+         Ada.Text_IO.Put_Line ("  - " & Input.Image);
+      end loop;
+
+      Ada.Text_IO.Put_Line ("  outputs:");
+      for Output of Tree.Artifacts_Database.Outputs (A.UID) loop
+         Ada.Text_IO.Put_Line ("  - " & Output.Image);
+      end loop;
+   end loop;
 
    return 0;
 end Main;
