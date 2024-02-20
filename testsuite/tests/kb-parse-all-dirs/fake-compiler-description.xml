@@ -1,0 +1,224 @@
+<?xml version="1.0"?>
+<!DOCTYPE gprconfig [
+]>
+<gprconfig>
+
+    <!-- content and group are unset, so group is set to its default value 0,
+    and contents to "". the file found with the given regex of directory
+    should be returned. -->
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-1</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes>
+            <directory>\.\./\.\./dir_path</directory>
+        </runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- Same as above, except that the value given to group is returned -->
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-2</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes>
+            <directory group="group value">\.\./\.\./dir_path</directory>
+        </runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- Because contents is set, the content of the found file
+      (../../link-to-dir) will be checked. If it contains the regex specified
+      in contents, then it is a match. The value returns depends on the
+      group as above. -->
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-3</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes>
+            <directory contents=".*path.*">\.\./\.\./link-to-dir</directory>
+        </runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- Same as above, but with group set -->
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-4</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes>
+            <directory group="group value with content" contents=".*path.*">\.\./\.\./link-to-dir</directory>
+        </runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- Group set to 1: obtain the value computed between the first
+      parentheses -->
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-5</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes>
+            <directory group="1">\.\./\.\./(.*)-to-dir</directory>
+        </runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- Regex test with default group -->
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-6</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes>
+            <directory>\.\./\.\./(.*)-to-dir</directory>
+        </runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- Regex with a depth of two -->
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-7</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes>
+            <directory>\.\./\.\./dir_(.*)/subdir(.*)</directory>
+        </runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- Regex and a group value -->
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-8</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes>
+            <directory group="regex group value">\.\./\.\./dir_(.*)</directory>
+        </runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- Invalid group number returns an empty value -->
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-9</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes>
+            <directory group="2">\.\./\.\./dir_(.*)</directory>
+        </runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- Unescaped ../ are processed as regex -->
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-10</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes>
+            <directory group="if you see me, this is an error">../../dir_(.*)</directory>
+        </runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- Ensure that empty regex does nothing -->
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-11</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes>
+            <directory group="If you see me, this is an error"></directory>
+        </runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- Ensure that empty regex does nothing -->
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-12</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes>
+            <directory group="search from '/' works">/</directory>
+        </runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <!-- The two following compiler descriptions test the Merge_Same_Dirs
+    parameter of Parse_All_Dirs. For the <version> node, Get_External_Value
+    will set this parameter to False. It means that only the first value that
+    comes from a <directory> node will be merged (the last one is kept, other
+    removed). For the <runtimes> node, Get_External_Value will set the
+    Merge_Same_Dirs parameter to True: only the last value will be kept. -->
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-13</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <directory group="11.2">\.\./\.\./dir_path</directory>
+            <directory group="If you see me, this is an error">\.\./\.\./dir_path</directory>
+        </version>
+        <languages>Ada</languages>
+        <runtimes>default</runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+
+    <compiler_description>
+        <name>FAKE-ADA-COMPILER-14</name>
+        <executable>fake-target-gcc</executable>
+        <version>
+            <external>fake-target-gcc -v</external>
+            <grep regexp="^gcc version (\S+)" group="1" />
+        </version>
+        <languages>Ada</languages>
+        <runtimes>
+            <directory group="If you see me, this is an error">/</directory>
+            <directory group="Correct">/</directory>
+        </runtimes>
+        <target>fake-target</target>
+    </compiler_description>
+</gprconfig>

@@ -1,0 +1,7 @@
+description:
+    Test the <directory> node parsing (Parse_All_Dirs)
+driver: build_and_run
+project_file: test
+main: main
+fake_ada_target:
+  - ['fake-target', 'default']
