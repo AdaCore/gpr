@@ -1773,7 +1773,11 @@ package body GPR2.KB is
                                    Error_Sloc,
                                    Messages);
                   begin
-                     if Search (Search'First) = '/' then
+                     if Search = "" then
+                        Increase_Indent
+                           (Main_Trace,
+                            Attribute & ": empty regex is invalid");
+                     elsif Search (Search'First) = '/' then
                         Increase_Indent
                           (Main_Trace,
                            Attribute & ": search directories matching "
