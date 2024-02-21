@@ -127,6 +127,8 @@ begin
       Tree.Log_Messages.Output_Messages;
    end if;
 
+   Tree.Unload;
+
    GNAT.OS_Lib.OS_Exit (0);
 exception
    when others =>

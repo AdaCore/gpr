@@ -18,29 +18,20 @@
 
 --  Common utilities for all gpr tools
 
-with Ada.Command_Line;
-
-with GPR2.Path_Name;
-
+with GPR2;
 with GPRtools.Options;
 
 package GPRtools.Util is
 
    use GPR2;
 
-   type Exit_Code_Type is
-     (E_Success,    -- No warnings or errors
-      E_Warnings,   -- Compiler warnings generated
-      E_No_Code,    -- No code generated
-      E_No_Compile, -- Compilation not needed (smart recompilation)
-      E_Errors,     -- Compiler error messages generated
-      E_Fatal,      -- Fatal (serious) error, e.g. source file not found
-      E_Abort);     -- Internally detected compiler error
-
    procedure Set_Program_Name (Name : String);
    --  Set GPR_TOOL environment variable if it is not yet defined.
    --  Note: gprclean, gprbuild, gprls, gprinstall, gprdump & gprdoc
    --        tools are setting GPR_TOOL to gprbuild instead of their own names.
+
+   function Get_Program_Name return String;
+   --  Get the internal value of the program name
 
    procedure Output_Messages
      (Options : GPRtools.Options.Base_Options'Class);
@@ -57,40 +48,6 @@ package GPRtools.Util is
 
    function Locate_Exec_On_Path (Exec_Name : String) return String;
    --  Get the path location of a given executable
-
-   -------------------------
-   -- Program termination --
-   -------------------------
-
-   procedure Fail_Program (Message : String);
-   --  Terminate program with a message and a fatal status code
-
-   procedure Project_Processing_Failed
-     (Options : GPRtools.Options.Base_Options'Class);
-   --  Output or not project processing error messages depend on Verbose
-   --  parameters. Output error message '"proj.gpr" processing failed' at the
-   --  end if not Quiet.
-
-   function Check_For_Default_Project return GPR2.Path_Name.Object;
-   --  Look for default project in the current directory,
-   --  return Undefined if no or several projects are in the current
-   --  directory.
-
-   procedure Finish_Program
-     (Exit_Code : Exit_Code_Type := E_Success;
-      Message   : String := "");
-   --  Terminate program, with or without a message, setting the status code
-   --  according to Exit_Code.
-
-   procedure Exit_Program (Exit_Code : Exit_Code_Type);
-   pragma No_Return (Exit_Program);
-   --  A call to Exit_Program terminates execution with the given status.
-   --  A status of zero indicates normal completion, a non-zero status
-   --  indicates abnormal termination.
-
-   function Exit_Code
-     (Code : Exit_Code_Type) return Ada.Command_Line.Exit_Status;
-   --  Translate Code as Exit_Status
 
    function Partial_Name
      (Lib_Name      : Simple_Name;

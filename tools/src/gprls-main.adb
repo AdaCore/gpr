@@ -18,7 +18,6 @@
 
 with Ada.Command_Line;
 with Ada.Exceptions;
-with Ada.Text_IO;
 
 with GPR2.Interrupt_Handler;
 with GPR2.Project.Tree;
@@ -26,6 +25,7 @@ with GPR2.Project.Tree;
 with GPRls.Options;
 with GPRls.Process;
 
+with GPRtools.Program_Termination;
 with GPRtools.Sigint;
 with GPRtools.Util;
 
@@ -34,7 +34,7 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
    use Ada;
    use Ada.Exceptions;
    use GPR2;
-   use GPRtools.Util;
+   use GPRtools.Program_Termination;
 
    Opt  : Options.Object;
    Tree : Project.Tree.Object;
@@ -52,15 +52,35 @@ begin
 
    Opt.Tree := Tree.Reference;
    if not Opt.Build_From_Command_Line then
-      return GPRtools.Util.Exit_Code (E_Fatal);
+      Handle_Program_Termination
+        (Opt     => Opt,
+         Message => "");
    end if;
 
    --  Run the gprls main procedure
 
-   return GPRls.Process (Opt);
+   GPRls.Process (Opt);
+
+   return To_Exit_Status (E_Success);
 
 exception
+   when Project_Error | Processing_Error =>
+      Handle_Program_Termination
+        (Opt                   => Opt,
+         Display_Tree_Messages => True,
+         Force_Exit            => False,
+         Message               => '"' & String (Opt.Filename.Name)
+         & """ processing failed");
+      return To_Exit_Status (E_Fatal);
+
+   when E_Program_Termination =>
+      return To_Exit_Status (E_Fatal);
+
    when E : others =>
-      Text_IO.Put_Line ("error: " & Exception_Information (E));
-      return GPRtools.Util.Exit_Code (E_Errors);
+      Handle_Program_Termination
+        (Opt        => Opt,
+         Force_Exit => False,
+         Exit_Cause => E_Generic,
+         Message    => Exception_Message (E));
+      return To_Exit_Status (E_Fatal);
 end GPRls.Main;

@@ -18,6 +18,7 @@ lib.obj_dir = prj/obj-lib
 prj.obj_dir = prj/obj
 --- 5
 $ gprinspect -r --display=json -Pprj/subdir/prj --relocate-build-tree=tmp
+gprinspect: "prj/subdir/prj.gpr" processing failed
 lib.gpr:3:22: error: "/tmp/../obj-lib/" cannot relocate object directory deeper than relocated build tree,
 lib.gpr:4:23: error: "/tmp/../lib/" cannot relocate library directory deeper than relocated build tree,
 --- 6

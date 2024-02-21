@@ -13,19 +13,33 @@ test_number = 1
 def test(command):
     global test_number
     print("--- " + str(test_number))
-    print("$ " + ' '.join(command))
+    print("$ " + " ".join(command))
     test_number += 1
     cnt = bnr.run(command).out.splitlines()
-    while True:
-        if re.match(r"[a-z]+.gpr(:[0-9]+)*: (warning|error): .*", cnt[0]):
-            print(cnt[0])
-            del(cnt[0])
-        else:
-            break
-    if len(cnt) <= 1:
-        return
+
+    # Remove the plain text gprinspect error if it exist, so we can
+    # load the JSON afterwards.
+
+    error = False
+    for line in cnt:
+        if re.match("gprinspect: .*", line):
+            print(line)
+            cnt.remove(line)
+            error = True
+
     cnt = "\n".join(cnt)
     val = json.loads(cnt)
+    for conf_msg in val["messages"]["configuration"]:
+        print(conf_msg)
+
+    for tree_msg in val["messages"]["tree"]:
+        print(tree_msg)
+
+    if error:
+        # Do not try to parse the JSON, as it does not contain the "projects"
+        # field, but only the "messages" field.
+        return
+
     for prj in val["projects"]:
         name = prj["project"]["name"]
         if name == "runtime":
@@ -34,8 +48,8 @@ def test(command):
         print(f"{name}.obj_dir = {obj_dir}")
 
 
-build_dir = os.path.join(os.getcwd(), 'tmp')
-tree_dir = os.path.join(os.getcwd(), 'prj')
+build_dir = os.path.join(os.getcwd(), "tmp")
+tree_dir = os.path.join(os.getcwd(), "prj")
 
 if not os.path.exists(build_dir):
     os.mkdir(build_dir)

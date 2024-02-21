@@ -349,6 +349,8 @@ New ``Q_Attribute_Id`` values (for external tools) can be defined/registered as 
       Value_Case_Sensitive => False,
       Is_Allowed_In        => GPR2.Project.Registry.Attribute.Everywhere);
 
+Registered ``Q_Attribute_Id`` packages/attributes can be exported/imported using JSON files through ``GPR2.Project.Registry.Exchange`` package API.
+
 Index are created using ``GPR2.Project.Attribute_Index.Create`` primitives.
 
 As an example to get Builder'Executable ("mains.adb" at 2) attribute use:

@@ -34,7 +34,7 @@ scn_descr = {
                 Case.SCN_CASE_VALUE_INVALID: {
                     Res.SCN_RES_FOR_ANY: [
                         "is not a valid directory",
-                        "gprls: unable to process project file",
+                        "processing failed",
                     ]
                 }
             }
