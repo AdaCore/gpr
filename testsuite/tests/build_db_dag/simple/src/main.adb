@@ -2,8 +2,10 @@ with Ada.Command_Line;
 with Ada.Text_IO;
 
 with GPR2.Build.Actions.Ada_Compile;
+with GPR2.Build.Actions.Compile;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.File_Part;
+with GPR2.Build.Source.Sets;
 
 with GPR2.Log;
 with GPR2.Options;
@@ -11,7 +13,10 @@ with GPR2.Options;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
+use GPR2;
+
 function Main return Natural is
+   use type GPR2.Language_Id;
    Tree        : GPR2.Project.Tree.Object;
    Opts        : GPR2.Options.Object;
    Log         : GPR2.Log.Object;
@@ -35,7 +40,11 @@ begin
    Tree.Update_Sources
      (Option   => GPR2.Sources_Units_Artifacts,
       Messages => Log);
-   Log.Output_Messages;
+
+   if Log.Has_Error then
+      Log.Output_Messages;
+      return 1;
+   end if;
 
    Log.Clear;
 
@@ -47,9 +56,31 @@ begin
          begin
             if not Tree.Artifacts_Database.Has_Action (A.UID) then
                Tree.Artifacts_Database.Add_Action (A, Log);
-               Log.Output_Messages;
+               if Log.Has_Error then
+                  Log.Output_Messages;
+                  return 0;
+               end if;
             end if;
          end;
+      end loop;
+
+      for Src of NS.Sources (Compilable_Only => True) loop
+         if Src.Language /= Ada_Language
+           and then Src.Kind = S_Body
+         then
+            declare
+               A : GPR2.Build.Actions.Compile.Object :=
+                     GPR2.Build.Actions.Compile.Create (Src);
+            begin
+               if not Tree.Artifacts_Database.Has_Action (A.UID) then
+                  Tree.Artifacts_Database.Add_Action (A, Log);
+                  if Log.Has_Error then
+                     Log.Output_Messages;
+                     return 0;
+                  end if;
+               end if;
+            end;
+         end if;
       end loop;
    end loop;
 

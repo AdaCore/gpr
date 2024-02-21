@@ -167,10 +167,10 @@ package body GPR2.Build.Tree_Db is
             Messages.Append
               (GPR2.Message.Create
                  (GPR2.Message.Error,
-                  Action.Image & " and " &
+                  '"' & Action.Image & """ and """ &
                     Self.Predecessor (Artifact).Image &
-                    " produce the same output " &
-                    Artifact.Image,
+                    """ produce the same output """ &
+                    Artifact.Image & '"',
                   Artifact.SLOC));
 
             return;

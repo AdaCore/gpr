@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2023, AdaCore
+--  Copyright (C) 2024, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -23,7 +23,8 @@ package body GPR2.Build.Actions.Ada_Compile is
    function Lookup
      (V          : GPR2.Project.View.Object;
       BN         : Simple_Name;
-      In_Lib_Dir : Boolean) return GPR2.Path_Name.Object;
+      In_Lib_Dir : Boolean;
+      Must_Exist : Boolean) return GPR2.Path_Name.Object;
    --  Look for BN in V's hierarchy of object/lib directories
 
    function Get_Attr
@@ -75,19 +76,44 @@ package body GPR2.Build.Actions.Ada_Compile is
                  (Input_Len => UID.Name_Len,
                   UID       => UID,
                   others    => <>);
-      BN   : constant Simple_Name := Artifacts_Base_Name (Src);
+      BN     : constant Simple_Name := Artifacts_Base_Name (Src);
+      O_Suff : constant Simple_Name :=
+                 Simple_Name
+                   (Get_Attr
+                      (Result.UID.Ctxt,
+                       PRA.Compiler.Object_File_Suffix,
+                       Ada_Language,
+                       ".o"));
+
    begin
       --  ??? Once we can save/restore, we shouldn't need this lookup, or
       --  at least we need it only when signature is incorrect
-      Result.Obj_File :=
-        Lookup
-          (Result.UID.Ctxt,
-           BN & Simple_Name (Get_Attr (Result.UID.Ctxt,
-                                       PRA.Compiler.Object_File_Suffix,
-                                       Ada_Language, ".o")),
-           False);
-      Result.Ali_File :=
-        Lookup (Result.UID.Ctxt, BN & ".ali", True);
+
+      --  Lookup existing obj file in the hierarchy
+      Result.Obj_File := Lookup
+        (Result.UID.Ctxt, BN & O_Suff,
+         In_Lib_Dir => False,
+         Must_Exist => True);
+
+      --  If not found, set the value to the object created after compilation
+      if not Result.Obj_File.Is_Defined then
+         Result.Obj_File := Lookup
+           (Result.UID.Ctxt, BN & O_Suff,
+            In_Lib_Dir => False,
+            Must_Exist => False);
+      end if;
+
+      Result.Ali_File :=  Lookup
+        (Result.UID.Ctxt, BN & ".ali",
+         In_Lib_Dir => True,
+         Must_Exist => True);
+
+      if not Result.Ali_File.Is_Defined then
+         Result.Ali_File :=  Lookup
+           (Result.UID.Ctxt, BN & ".ali",
+            In_Lib_Dir => True,
+            Must_Exist => False);
+      end if;
 
       --  ??? TODO: calculate the signature
 
@@ -121,21 +147,23 @@ package body GPR2.Build.Actions.Ada_Compile is
    function Lookup
      (V          : GPR2.Project.View.Object;
       BN         : Simple_Name;
-      In_Lib_Dir : Boolean) return GPR2.Path_Name.Object
+      In_Lib_Dir : Boolean;
+      Must_Exist : Boolean) return GPR2.Path_Name.Object
    is
       Todo      : GPR2.Project.View.Set.Object;
       Done      : GPR2.Project.View.Set.Object;
       Current   : GPR2.Project.View.Object := V;
       Candidate : GPR2.Path_Name.Object;
+
    begin
       loop
          if In_Lib_Dir and then Current.Is_Library then
             Candidate := Current.Library_Ali_Directory.Compose (BN);
-            exit when Candidate.Exists;
+            exit when not Must_Exist or else Candidate.Exists;
          end if;
 
          Candidate := Current.Object_Directory.Compose (BN);
-         exit when Candidate.Exists;
+         exit when not Must_Exist or else Candidate.Exists;
 
          if Current.Is_Extending then
             Todo.Union (Current.Extended);
@@ -167,6 +195,26 @@ package body GPR2.Build.Actions.Ada_Compile is
       Explicit : Boolean;
       Part     : Compilation_Unit.Unit_Location;
    begin
+      Db.Add_Output
+        (Self.UID,
+         Artifacts.Files.Create (Self.Obj_File),
+         Messages);
+
+      if Messages.Has_Error then
+         return;
+      end if;
+
+      if Self.Ali_File.Is_Defined then
+         Db.Add_Output
+           (Self.UID,
+            Artifacts.Files.Create (Self.Ali_File),
+            Messages);
+      end if;
+
+      if Messages.Has_Error then
+         return;
+      end if;
+
       for Kind in S_Spec .. S_Body loop
          if Unit.Has_Part (Kind) then
             Explicit := Unit.Main_Part = Kind;
@@ -184,20 +232,6 @@ package body GPR2.Build.Actions.Ada_Compile is
             Artifacts.File_Part.Create (Sep.Source, Sep.Index),
             False);
       end loop;
-
-      if Self.Ali_File.Is_Defined then
-         Db.Add_Output
-           (Self.UID,
-            Artifacts.Files.Create (Self.Ali_File),
-            Messages);
-      end if;
-
-      if Self.Obj_File.Is_Defined then
-         Db.Add_Output
-           (Self.UID,
-            Artifacts.Files.Create (Self.Obj_File),
-            Messages);
-      end if;
    end On_Tree_Insertion;
 
 end GPR2.Build.Actions.Ada_Compile;

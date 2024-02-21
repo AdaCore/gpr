@@ -12,4 +12,9 @@ bnr.call(["gprbuild", "-Ptree/p2.gpr", "-p", "-q"])
 # now build and run the test (using bnr.build and bnr.run to have proper
 # coverage when requested).
 bnr.build(project="test.gpr", args=["-p", "-q"])
-bnr.call(['./main'])
+for gpr in 'tree/agg.gpr', 'clashing_objects/agg.gpr':
+    print('-' * (len(gpr) + 6))
+    print(f"-- {gpr} --")
+    print('-' * (len(gpr) + 6))
+    bnr.call(['./main', gpr])
+    print("")
