@@ -1,0 +1,5 @@
+description:
+    Test empty value of GPR_CONFIG env var
+driver: build_and_run
+project_file: test
+main: main

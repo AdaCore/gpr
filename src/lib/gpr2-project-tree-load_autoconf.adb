@@ -372,11 +372,15 @@ is
             GPR_CONFIG : constant String :=
                            Environment.Value (GPR_Config_V, "");
          begin
-            if GNAT.OS_Lib.Is_Directory (GPR_CONFIG) then
-               return Filename_Type
-                 (GPR_CONFIG & GNAT.OS_Lib.Directory_Separator) & Platform;
+            if GPR_CONFIG = "" then
+               return Platform;
             else
-               return Filename_Type (GPR_CONFIG);
+               if GNAT.OS_Lib.Is_Directory (GPR_CONFIG) then
+                  return Filename_Type
+                    (GPR_CONFIG & GNAT.OS_Lib.Directory_Separator) & Platform;
+               else
+                  return Filename_Type (GPR_CONFIG);
+               end if;
             end if;
          end;
       else
