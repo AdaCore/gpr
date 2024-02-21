@@ -87,7 +87,10 @@ package GPR2.Build.Tree_Db is
      (Self     : in out Object;
       Action   : Actions.Object'Class;
       Messages : in out GPR2.Log.Object)
-     with Pre => Self.Is_Defined and then not Self.Has_Action (Action.UID);
+     with Pre =>
+       Self.Is_Defined
+       and then not Self.Has_Action (Action.UID)
+       and then not Messages.Has_Error;
 
    function Has_Action
      (Self : Object;

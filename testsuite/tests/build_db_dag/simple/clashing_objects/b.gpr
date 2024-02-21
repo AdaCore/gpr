@@ -1,0 +1,7 @@
+project B is
+
+   for Languages use ("C");
+
+   for Source_Dirs use ("srcb");
+
+end B;

@@ -48,7 +48,8 @@ package GPR2.Build.Actions is
    procedure On_Tree_Insertion
      (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object;
-      Messages : in out GPR2.Log.Object) is abstract;
+      Messages : in out GPR2.Log.Object) is abstract
+   with Pre'Class => not Messages.Has_Error;
    --  procedure called when Self is added to the tree's database. Allows the
    --  action to add its input and output artifacts and dependencies.
 

@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2023, AdaCore
+--  Copyright (C) 2024, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -54,7 +54,7 @@ private
 
    overriding function Image (Self : Ada_Compile_Id) return String is
      ("Compile Ada: " & String (Self.Unit_Name) &
-        " (" & String (Self.Ctxt.Name) & ")");
+        " (" & String (Self.Ctxt.Path_Name.Simple_Name) & ")");
 
    overriding function "<" (L, R : Ada_Compile_Id) return Boolean is
      (if L.Ctxt.Id = R.Ctxt.Id then L.Unit_Name < R.Unit_Name
