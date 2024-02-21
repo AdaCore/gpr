@@ -26,8 +26,10 @@
 # ----------------
 #
 # Setup:                   make [VAR=VALUE] setup (see below)
-# Build libgpr2:           make
-# Install libgpr2:         make install
+# Build libgpr2 & tools:   make
+# Build libgpr2:           make build-libs
+# Install libgpr2 & tools: make install
+# Install libgpr2:         make install-libs
 
 # Variables which can be set:
 #
@@ -151,7 +153,7 @@ DOCOUT=${BUILD_ROOT}/attributes.json
 # build #
 #########
 
-all: ${LIBGPR2_TYPES:%=build-lib-%} build-tools
+all: build-libs build-tools
 
 # Knowledge base
 ${KB_BUILD_DIR}:
@@ -162,6 +164,8 @@ ${KB_BUILD_DIR}/config.kb: ${KB_BUILD_DIR} $(wildcard $(GPR2KBDIR)/*)
 	${KB_BUILD_DIR}/collect_kb -o $@ ${GPR2KBDIR}
 
 # Libgpr2
+build-libs: ${LIBGPR2_TYPES:%=build-lib-%}
+
 build-lib-%: ${KB_BUILD_DIR}/config.kb
 ifneq (${GPR2_BUILD},gnatcov)
 	${BUILDER} -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
