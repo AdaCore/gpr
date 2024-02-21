@@ -258,7 +258,7 @@ procedure Main is
             declare
                Src_Name : constant Simple_Name :=
                              Simple_Name (Ada.Command_Line.Argument (J));
-               Src      : View_Db.Source_Context;
+               Src      : Build.Source.Object;
                View_Db  : Build.View_Db.Object;
             begin
                Ada.Text_IO.Put_Line ("* query source " & String (Src_Name));
@@ -268,9 +268,9 @@ procedure Main is
                   Src := View_Db.Visible_Source (Src_Name);
                   Ada.Text_IO.Put_Line (" - query for NS " & String (NS.Name));
 
-                  if Src.Source.Is_Defined then
+                  if Src.Is_Defined then
                      Ada.Text_IO.Put_Line ("   found in " & String (Src.Owning_View.Name));
-                     Ada.Text_IO.Put_Line ("   " & String (Src.Source.Path_Name.Relative_Path (NS.Dir_Name)));
+                     Ada.Text_IO.Put_Line ("   " & String (Src.Path_Name.Relative_Path (NS.Dir_Name)));
                   else
                      Ada.Text_IO.Put_Line ("   not found");
                   end if;

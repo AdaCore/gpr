@@ -41,7 +41,7 @@ begin
 
    for Unit of Tree.Root_Project.Units loop
       List.Append (To_Unbounded_String (String (Unit.Name)));
-      if Unit.Has_Part (GPR2.Build.S_Separate) then
+      if Unit.Has_Part (GPR2.S_Separate) then
          for S in Unit.Separates.Iterate loop
             List.Append
               (To_Unbounded_String

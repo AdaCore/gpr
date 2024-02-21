@@ -6,13 +6,13 @@
 
 with GPR2.Project.Tree;
 
-package GPR2.Build.Source.Ada_Parser is
+package GPR2.Build.Source_Base.Ada_Parser is
 
    procedure Compute
      (Tree             : access GPR2.Project.Tree.Object;
-      Data             : in out Source.Object'Class;
+      Data             : in out Source_Base.Object'Class;
       Get_Withed_Units : Boolean;
       Success          : out Boolean);
    --  Setup Data with the information from parsing Ada source file
 
-end GPR2.Build.Source.Ada_Parser;
+end GPR2.Build.Source_Base.Ada_Parser;

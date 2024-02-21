@@ -12,7 +12,7 @@ with GNATCOLL.Utils;
 
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Compilation_Unit.Maps;
-with GPR2.Build.Source;
+with GPR2.Build.Source_Base;
 with GPR2.Build.Source.Sets;
 with GPR2.Build.View_Db;
 with GPR2.Message;
@@ -53,7 +53,9 @@ package body GPR2.Project.View is
    --  Get view refcount
 
    function View_DB (Self : Object) return Build.View_Db.Object is
-     (Self.Tree.Artifacts_Database (Self));
+     (if Self.Tree.Has_Artifacts_Database
+      then Self.Tree.Artifacts_Database.View_Database (Self.Id)
+      else Build.View_Db.Undefined);
 
    procedure Set_Def (Ref : out View.Object; Def : Definition_Base'Class);
    --  Convert definition to view
@@ -95,7 +97,7 @@ package body GPR2.Project.View is
 
    function Source_Filter
      (Self : Object;
-      S    : Build.Source.Object;
+      S    : Build.Source_Base.Object'Class;
       Data : Build.Source.Sets.Filter_Data'Class) return Boolean;
    --  Function used to filter the sources in the Sources subprogram
 
@@ -400,8 +402,7 @@ package body GPR2.Project.View is
                   Src : Build.Source.Object renames
                           Self.Source (GPR2.Simple_Name (Index.Value));
                begin
-                  Result :=
-                    Attribute (View, Name, PAI.Create (Src.Language));
+                  Result := Attribute (View, Name, PAI.Create (Src.Language));
                end;
             end if;
 
@@ -1036,7 +1037,8 @@ package body GPR2.Project.View is
       Messages : in out Log.Object)
    is
       Attr : Project.Attribute.Object;
-      Src  : GPR2.Build.View_Db.Source_Context;
+      Src  : GPR2.Build.Source.Object;
+
    begin
       Attr := Self.Attribute (PRA.Main);
 
@@ -1048,10 +1050,11 @@ package body GPR2.Project.View is
          declare
             Main_Fullname : constant Simple_Name :=
                               Get_Main_Simplename (Self, Main.Text);
+            Db            : constant GPR2.Build.View_Db.Object := Self.View_Db;
          begin
-            Src := Self.View_Db.Visible_Source (Main_Fullname);
+            Src := Db.Visible_Source (Main_Fullname);
 
-            if not Src.Source.Is_Defined then
+            if not Src.Is_Defined then
                Messages.Append
                  (Message.Create
                     (Level   => Message.Warning,
@@ -1409,20 +1412,23 @@ package body GPR2.Project.View is
 
    function Has_Mains (Self : Object) return Boolean is
       Attr  : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
-      Src   : GPR2.Build.View_Db.Source_Context;
+      Src   : GPR2.Build.Source.Object;
+      Db    : GPR2.Build.View_Db.Object;
 
    begin
       if Self.Is_Namespace_Root
         and then (Attr.Is_Defined and then Attr.Count_Values > 0)
       then
+         Db := Self.View_Db;
+
          for Main of Attr.Values loop
             declare
                Main_Fullname : constant Simple_Name :=
                                  Get_Main_Simplename (Self, Main.Text);
             begin
-               Src := Self.View_Db.Visible_Source (Main_Fullname);
+               Src := Db.Visible_Source (Main_Fullname);
 
-               if Src.Source.Is_Defined then
+               if Src.Is_Defined then
                   --  At least one valid
                   return True;
                end if;
@@ -1936,22 +1942,23 @@ package body GPR2.Project.View is
      (Self       : Object;
       Executable : Simple_Name) return Build.Compilation_Unit.Unit_Location
    is
-      Src    : GPR2.Build.View_Db.Source_Context;
+      Src    : GPR2.Build.Source.Object;
+      Db     : constant GPR2.Build.View_Db.Object := Self.View_Db;
       Exc_BN : constant Simple_Name :=
                  Simple_Name (Remove_Body_Suffix (Self, Executable));
+
    begin
       --  Check executable attribute
       for Attr of Self.Attributes (Name => PRA.Builder.Executable) loop
          if Simple_Name (Attr.Value.Text) = Executable
            or else Simple_Name (Attr.Value.Text) = Exc_BN
          then
-            Src :=
-              Self.View_Db.Visible_Source (Simple_Name (Attr.Index.Value));
+            Src := Db.Visible_Source (Simple_Name (Attr.Index.Value));
 
-            if Src.Source.Is_Defined then
+            if Src.Is_Defined then
                return
                  (Src.Owning_View,
-                  Src.Source.Path_Name,
+                  Src.Path_Name,
                   Attr.Index.At_Pos);
             end if;
          end if;
@@ -1966,11 +1973,11 @@ package body GPR2.Project.View is
             Exec : constant Simple_Name := BN & Self.Executable_Suffix;
          begin
             if Exec = Executable or else BN = Executable then
-               Src := Self.View_Db.Visible_Source (Simple_Name (Value.Text));
+               Src := Db.Visible_Source (Simple_Name (Value.Text));
 
-               if Src.Source.Is_Defined then
+               if Src.Is_Defined then
                   return (Src.Owning_View,
-                          Src.Source.Path_Name,
+                          Src.Path_Name,
                           Value.At_Pos);
                end if;
             end if;
@@ -1990,7 +1997,7 @@ package body GPR2.Project.View is
    is
       Attr : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
       Db   : constant Build.View_Db.Object := Self.View_Db;
-      Src  : GPR2.Build.View_Db.Source_Context;
+      Src  : GPR2.Build.Source.Object;
 
    begin
       return Set : GPR2.Build.Compilation_Unit.Unit_Location_Vector do
@@ -1998,10 +2005,12 @@ package body GPR2.Project.View is
             for Main of Attr.Values loop
                Src := Db.Visible_Source (Simple_Name (Main.Text));
 
-               if Src.Source.Is_Defined then
+               if Src.Is_Defined then
                   Set.Append
                     (Build.Compilation_Unit.Unit_Location'
-                       (Src.Owning_View, Src.Source.Path_Name, Main.At_Pos));
+                       (Src.Owning_View,
+                        Src.Path_Name,
+                        Main.At_Pos));
                end if;
             end loop;
          end if;
@@ -2022,12 +2031,13 @@ package body GPR2.Project.View is
    --------------------
 
    function Namespace_Roots (Self : Object) return Set.Object is
+      Result : Set.Object;
    begin
-      return Result : Set.Object do
-         for Id of Get_RO (Self).Root_Views loop
-            Result.Include (Self.Tree.Instance_Of (Id));
-         end loop;
-      end return;
+      for Id of Get_RO (Self).Root_Views loop
+         Result.Include (Self.Tree.Instance_Of (Id));
+      end loop;
+
+      return Result;
    end Namespace_Roots;
 
    ----------------------
@@ -2161,11 +2171,11 @@ package body GPR2.Project.View is
      (Self : Object; Name : Simple_Name) return Value_Not_Empty
    is
       Last     : Positive := Name'First;
-      Src      : constant GPR2.Build.View_Db.Source_Context :=
-                   Self.View_Db.Visible_Source (Name);
+      Db       : constant GPR2.Build.View_Db.Object := Self.View_Db;
+      Src      : constant GPR2.Build.Source.Object := Db.Visible_Source (Name);
       Lang     : constant Language_Id :=
-                   (if Src.Source.Is_Defined
-                    then Src.Source.Language
+                   (if Src.Is_Defined
+                    then Src.Language
                     else No_Language);
       Suffix   : constant Filename_Optional :=
                    (if Lang /= No_Language
@@ -2217,13 +2227,17 @@ package body GPR2.Project.View is
 
    function Source
      (Self : Object; Filename : GPR2.Simple_Name)
-      return Build.Source.Object is
+      return Build.Source.Object
+   is
+      Db : GPR2.Build.View_Db.Object;
    begin
       if Self.Kind not in With_Object_Dir_Kind then
          return Build.Source.Undefined;
       end if;
 
-      return Self.View_Db.Source (Filename);
+      Db := Self.View_Db;
+
+      return Db.Source (Filename);
    end Source;
 
    ------------------------
@@ -2443,11 +2457,9 @@ package body GPR2.Project.View is
 
    function Source_Filter
      (Self : Object;
-      S    : Build.Source.Object;
+      S    : Build.Source_Base.Object'Class;
       Data : Build.Source.Sets.Filter_Data'Class) return Boolean
    is
-      use type Build.Unit_Kind;
-
       CU     : Build.Compilation_Unit.Object;
       Result : Boolean;
       Opt    : constant Source_Filter_Data := Source_Filter_Data (Data);
@@ -2465,16 +2477,16 @@ package body GPR2.Project.View is
 
             Unit_Loop :
             for Unit of S.Units loop
-               if Unit.Kind = Build.S_Body then
+               if Unit.Kind = S_Body then
                   Result := True;
 
                   exit Unit_Loop;
 
-               elsif Unit.Kind = Build.S_Spec then
+               elsif Unit.Kind = S_Spec then
                   for NS of Opt.View.Namespace_Roots loop
                      CU := NS.Unit (Unit.Name);
 
-                     if not CU.Has_Part (Build.S_Body) then
+                     if not CU.Has_Part (S_Body) then
                         Result := True;
 
                         exit Unit_Loop;
@@ -2487,7 +2499,7 @@ package body GPR2.Project.View is
                return False;
             end if;
 
-         elsif S.Kind /= Build.S_Body then
+         elsif S.Kind /= S_Body then
             return False;
          end if;
       end if;
@@ -2544,9 +2556,7 @@ package body GPR2.Project.View is
                      Self.Own_Unit (Name_Type (Name));
          begin
             if Unit.Is_Defined then
-               if Allow_Spec_File
-                 or else Unit.Has_Part (Build.S_Body)
-               then
+               if Allow_Spec_File or else Unit.Has_Part (S_Body) then
                   return Unit.Main_Part.Source;
                end if;
             end if;
@@ -2627,11 +2637,11 @@ package body GPR2.Project.View is
    begin
       if Self.Kind in With_Object_Dir_Kind then
          declare
-            Db     : constant Build.View_Db.Object := Self.View_Db;
             F_Data : constant Source_Filter_Data :=
                        (View            => Self,
                         Interface_Only  => Interface_Only,
                         Compilable_Only => Compilable_Only);
+            Db     : constant GPR2.Build.View_Db.Object := Self.View_Db;
 
          begin
             return Build.Source.Sets.Create
@@ -2696,9 +2706,11 @@ package body GPR2.Project.View is
    function Units
      (Self : Object;
       With_Externally_Built : Boolean := False)
-      return GPR2.Build.Compilation_Unit.Maps.Map is
+      return GPR2.Build.Compilation_Unit.Maps.Map
+   is
+      Db : constant GPR2.Build.View_Db.Object := Self.View_Db;
    begin
-      return Self.View_Db.Compilation_Units (With_Externally_Built);
+      return Db.Compilation_Units (With_Externally_Built);
    end Units;
 
    --------------

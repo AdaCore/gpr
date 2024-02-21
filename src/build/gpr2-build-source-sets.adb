@@ -29,7 +29,7 @@ package body GPR2.Build.Source.Sets is
    ------------------------
 
    function Constant_Reference
-     (Self : aliased Object; Position : Cursor) return Constant_Reference_Type
+     (Self : aliased Object; Position : Cursor) return Source.Object
    is
       Proxy : constant Source_Proxy :=
                 (if Position.From_View_Db
@@ -39,12 +39,13 @@ package body GPR2.Build.Source.Sets is
                 (if Proxy.View /= Position.Db.View
                  then Get_Data (Tree_Db (Position.Db), Proxy.View)
                  else -Self.Db);
-      Ref   : constant Src_Info_Maps.Constant_Reference_Type :=
-                Db.Src_Infos.Constant_Reference
-                  (Proxy.Path_Name);
+
    begin
-      return (Element => Ref.Element.all'Unchecked_Access,
-              Ref     => Ref);
+      return Build.Source.Create
+        (Base_Source => Db.Src_Infos.Element (Proxy.Path_Name),
+         Owning_View => Position.Db.View,
+         Defining_View => Proxy.View,
+         Inherited_From => Proxy.Inh_From);
    end Constant_Reference;
 
    ------------
@@ -73,7 +74,11 @@ package body GPR2.Build.Source.Sets is
               then -Self.Db.View_Base_For (Proxy.View)
               else -Self.Db);
    begin
-      return Db.Src_Infos.Element (Proxy.Path_Name);
+      return Source.Create
+        (Base_Source    => Db.Src_Infos.Element (Proxy.Path_Name),
+         Defining_View  => Proxy.View,
+         Owning_View    => Self.Db.View,
+         Inherited_From => Proxy.Inh_From);
    end Element;
 
    -------------
@@ -90,8 +95,23 @@ package body GPR2.Build.Source.Sets is
                  then Get_Data (Tree_Db (Position.Db), Proxy.View)
                  else -Position.Db);
    begin
-      return Db.Src_Infos.Element (Proxy.Path_Name);
+      return Source.Create
+        (Base_Source    => Db.Src_Infos.Element (Proxy.Path_Name),
+         Defining_View  => Proxy.View,
+         Owning_View    => Position.Db.View,
+         Inherited_From => Proxy.Inh_From);
    end Element;
+
+   --------------
+   -- Finalize --
+   --------------
+
+   overriding procedure Finalize (Self : in out Source_Iterator) is
+   begin
+      if not Self.From_View_Db then
+         Self.Paths.Clear;
+      end if;
+   end Finalize;
 
    -----------
    -- First --
@@ -167,14 +187,18 @@ package body GPR2.Build.Source.Sets is
       end if;
 
       if Self = Empty_Set then
-         return Source_Iterator'(False,
-                                 Db     => Build.View_Db.Undefined,
-                                 others => <>);
+         return Source_Iterator'(Ada.Finalization.Controlled with
+                                 From_View_Db => False,
+                                 Db           => Build.View_Db.Undefined,
+                                 others       => <>);
       end if;
 
       case Opt is
          when Unsorted =>
-            return Source_Iterator'(True, Self.Db, Self.Filter);
+            return Source_Iterator'(Ada.Finalization.Controlled with
+                                    From_View_Db => True,
+                                    Db           => Self.Db,
+                                    Filter       => Self.Filter);
 
          when Sorted =>
             return Iter : Source_Iterator (False) do

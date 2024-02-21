@@ -28,6 +28,7 @@ with GPR2.View_Ids;
 limited with GPR2.Build.Compilation_Unit;
 limited with GPR2.Build.Compilation_Unit.Maps;
 limited with GPR2.Build.Source.Sets;
+limited with GPR2.Build.Source;
 limited with GPR2.Build.View_Db;
 limited with GPR2.Project.Tree;
 limited with GPR2.Project.View.Set;
@@ -356,7 +357,7 @@ package GPR2.Project.View is
    --  Returns the languages used by this project as a set of Language id
 
    function View_Db (Self : Object) return GPR2.Build.View_Db.Object
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined, Inline;
    --  Return the artifacts database for the view. If the view don't have
    --  an object directory, then Undefined is returned.
 

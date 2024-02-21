@@ -9,10 +9,9 @@ with Ada.Strings.Maps.Constants;
 with Ada.Text_IO;
 with GNAT.OS_Lib;
 
-with GPR2.Build.Artifacts.Source;
-with GPR2.Build.Artifacts.Source.Ada;
-with GPR2.Build.Source.Ada_Parser;
+with GPR2.Build.Source_Base.Ada_Parser;
 with GPR2.Build.Tree_Db;
+with GPR2.Build.Unit_Info;
 with GPR2.Project.Attribute;
 with GPR2.Message;
 with GPR2.Path_Name;
@@ -76,7 +75,7 @@ package body GPR2.Build.View_Tables is
    package Update_Sources_List is
       procedure Process
         (Data          : View_Data_Ref;
-      Stop_On_Error : Boolean;
+         Stop_On_Error : Boolean;
          Messages      : in out GPR2.Log.Object);
       --  Update the list of sources
    end Update_Sources_List;
@@ -86,7 +85,7 @@ package body GPR2.Build.View_Tables is
 
    procedure Check_Separate
      (Root_Db : View_Tables.View_Data_Ref;
-      File    : in out Source.Object)
+      File    : in out Source_Base.Object)
      with Pre => Root_Db.Is_Root
                    and then File.Has_Single_Unit
                    and then File.Unit.Kind = S_Separate;
@@ -188,34 +187,6 @@ package body GPR2.Build.View_Tables is
       Index    : Unit_Index;
       Messages : in out GPR2.Log.Object)
    is
-      procedure Set_Main_Flag
-        (Id   : Compilation_Unit.Unit_Location;
-         Flag : Boolean);
-
-      -------------------
-      -- Set_Main_Flag --
-      -------------------
-
-      procedure Set_Main_Flag
-        (Id   : Compilation_Unit.Unit_Location;
-         Flag : Boolean)
-      is
-      begin
-         if NS_Db.Tree_Db.Source_Option >= Sources_Units_Artifacts then
-            --  Only doable if we have the artifacts database
-            declare
-               Ref : constant Tree_Db.Reference_Type :=
-                       NS_Db.Tree_Db.Reference
-                         (Compilation_Unit.Artifact_Id (Id));
-               Src : constant Artifacts.Source.Ada.Object_Access :=
-                       Artifacts.Source.Ada.Object
-                         (Ref.Element.all)'Unchecked_Access;
-            begin
-               Src.Set_Is_Main (Flag);
-            end;
-         end if;
-      end Set_Main_Flag;
-
       Cursor  : Compilation_Unit_Maps.Cursor;
       Success : Boolean := True;
 
@@ -233,8 +204,6 @@ package body GPR2.Build.View_Tables is
 
             if Kind /= S_Separate then
                Add_Unit_Ownership (View_Db, CU, NS_Db);
-
-               Set_Main_Flag (CU_Instance.Main_Part, True);
             end if;
          end;
 
@@ -244,13 +213,8 @@ package body GPR2.Build.View_Tables is
                             NS_Db.CUs.Reference (Cursor);
             Old_Owner   : constant Project.View.Object :=
                             CU_Instance.Owning_View;
-            Old_Main    : constant Compilation_Unit.Unit_Location :=
-                            (if CU_Instance.Has_Main_Part
-                             then CU_Instance.Main_Part
-                             else Compilation_Unit.No_Unit);
             Other       : Compilation_Unit.Unit_Location;
             use type GPR2.Project.View.Object;
-            use type Compilation_Unit.Unit_Location;
 
          begin
             CU_Instance.Add
@@ -302,19 +266,6 @@ package body GPR2.Build.View_Tables is
             end if;
 
             if Success then
-               if CU_Instance.Has_Main_Part
-                 and then CU_Instance.Main_Part /= Old_Main
-               then
-                  --  Keep track of the main unit of compilation units: those
-                  --  are the one directly generating object files.
-
-                  if Old_Main /= Compilation_Unit.No_Unit then
-                     Set_Main_Flag (Old_Main, False);
-                  end if;
-
-                  Set_Main_Flag (CU_Instance.Main_Part, True);
-               end if;
-
                if Old_Owner /= CU_Instance.Owning_View then
                   --  Owning view changed, let's apply this change
                   if Old_Owner.Is_Defined then
@@ -350,7 +301,7 @@ package body GPR2.Build.View_Tables is
 
    procedure Check_Separate
      (Root_Db : View_Tables.View_Data_Ref;
-      File    : in out Source.Object)
+      File    : in out Source_Base.Object)
    is
       C : Name_Maps.Cursor;
    begin
@@ -364,18 +315,18 @@ package body GPR2.Build.View_Tables is
          --  We need to rebase on the actual compilation unit in this case.
 
          declare
-            U            : constant Source.Unit_Part := File.Unit;
+            U            : constant Unit_Info.Object := File.Unit;
             New_Name     : constant Name_Type := Name_Maps.Element (C);
             --  New compilation unit name
             P_Simple     : constant Name_Type := U.Name
-                                         (New_Name'Length + 2 .. U.Name_Len);
+                                        (New_Name'Length + 2 .. U.Name'Length);
             --  Simple unit name of the separate parent
             New_Sep_Name : constant Name_Type :=
                              GPR2."&" (GPR2."&" (P_Simple, "."),
                                        U.Separate_Name);
          begin
             File.Update_Unit
-              (Source.Create
+              (Unit_Info.Create
                  (Unit_Name      => New_Name,
                   Index          => U.Index,
                   Kind           => U.Kind,
@@ -588,7 +539,7 @@ package body GPR2.Build.View_Tables is
                      declare
                         Root_Db : constant View_Data_Ref :=
                                     Get_Data (Data.Tree_Db, Root);
-                        Old     : constant Source.Unit_Part := S_Ref.Unit;
+                        Old     : constant Unit_Info.Object := S_Ref.Unit;
                      begin
                         Check_Separate (Root_Db, S_Ref);
 
@@ -775,31 +726,6 @@ package body GPR2.Build.View_Tables is
          Src_Info : constant Src_Info_Maps.Reference_Type :=
                       View_Db.Src_Infos.Reference (Src.Path_Name);
       begin
-         if Data.Tree_Db.Source_Option >= Sources_Units_Artifacts then
-            if Src_Info.Has_Index then
-               for U of Src_Info.Units loop
-                  Data.Tree_Db.Add_Artifact
-                    (Artifacts.Source.Ada.Create
-                       (Data.View,
-                        Src_Info.Path_Name.Simple_Name,
-                        U.Index));
-               end loop;
-
-            elsif Src_Info.Language = Ada_Language then
-               Data.Tree_Db.Add_Artifact
-                 (Artifacts.Source.Ada.Create
-                    (Data.View,
-                     Src_Info.Path_Name.Simple_Name,
-                     No_Index));
-
-            else
-               Data.Tree_Db.Add_Artifact
-                 (Artifacts.Source.Create
-                    (Data.View,
-                     Src_Info.Path_Name.Simple_Name));
-            end if;
-         end if;
-
          if Data.View.Is_Extended then
             --  ??? Check the view's list of excluded sources before doing that
             declare
@@ -853,34 +779,9 @@ package body GPR2.Build.View_Tables is
       procedure Propagate_Visible_Source_Removal (Src : Source_Proxy) is
          View_Db  : constant View_Data_Ref :=
                       Get_Data (Data.Tree_Db, Src.View);
-         Src_Info : constant Source.Object :=
+         Src_Info : constant Source_Base.Object :=
                       View_Db.Src_Infos (Src.Path_Name);
       begin
-         if Data.Tree_Db.Source_Option >= Sources_Units_Artifacts then
-            if Src_Info.Has_Index then
-               for U of Src_Info.Units loop
-                  Data.Tree_Db.Remove_Artifact
-                    (Artifacts.Source.Ada.Id
-                       (Data.View,
-                        Src_Info.Path_Name.Simple_Name,
-                        U.Index));
-               end loop;
-
-            elsif Src_Info.Language = Ada_Language then
-               Data.Tree_Db.Remove_Artifact
-                 (Artifacts.Source.Ada.Id
-                    (Data.View,
-                     Src_Info.Path_Name.Simple_Name,
-                     No_Index));
-
-            else
-               Data.Tree_Db.Remove_Artifact
-                 (Artifacts.Source.Id
-                    (Data.View,
-                     Src_Info.Path_Name.Simple_Name));
-            end if;
-         end if;
-
          if Src_Info.Has_Units and then not Data.View.Is_Extended then
             for U of Src_Info.Units loop
                for Root of Src.View.Namespace_Roots loop
@@ -1088,6 +989,77 @@ package body GPR2.Build.View_Tables is
       end if;
    end Resolve_Visibility;
 
+   ------------
+   -- Source --
+   ------------
+
+   function Source
+     (Data     : View_Data_Ref;
+      Basename : Simple_Name) return Build.Source.Object
+   is
+      C   : constant Basename_Source_Maps.Cursor :=
+              Data.Sources.Find (Basename);
+   begin
+      if not Basename_Source_Maps.Has_Element (C) then
+         return Build.Source.Undefined;
+
+      else
+         declare
+            Proxy : Source_Proxy renames Basename_Source_Maps.Element (C);
+            use type GPR2.Project.View.Object;
+
+         begin
+            if Proxy.View = Data.View then
+               return Build.Source.Create
+                 (Base_Source    => Data.Src_Infos.Element (Proxy.Path_Name),
+                  Defining_View  => Proxy.View,
+                  Owning_View    => Data.View,
+                  Inherited_From => Proxy.Inh_From);
+            else
+               return Build.Source.Create
+                 (Base_Source    => Get_Data
+                                     (Data.Tree_Db,
+                                      Proxy.View).Src_Infos.Element
+                                        (Proxy.Path_Name),
+                  Defining_View  => Proxy.View,
+                  Owning_View    => Data.View,
+                  Inherited_From => Proxy.Inh_From);
+            end if;
+         end;
+      end if;
+   end Source;
+
    package body Update_Sources_List is separate;
 
+   --------------------
+   -- Visible_Source --
+   --------------------
+
+   function Visible_Source
+     (Data     : View_Data_Ref;
+      Basename : Simple_Name) return Build.Source.Object
+   is
+      Result : GPR2.Build.Source.Object;
+   begin
+      --  Look for the source in the view's closure (withed or limited withed
+      --  views)
+
+      Result := Source (Data, Basename);
+
+      if not Result.Is_Defined then
+         for V of Data.View.Closure (Include_Self => False) loop
+            if V.Kind in With_Object_Dir_Kind then
+               declare
+                  V_Data : View_Data_Ref renames Get_Data (Data.Tree_Db, V);
+               begin
+                  Result := Source (V_Data, Basename);
+
+                  exit when Result.Is_Defined;
+               end;
+            end if;
+         end loop;
+      end if;
+
+      return Result;
+   end Visible_Source;
 end GPR2.Build.View_Tables;

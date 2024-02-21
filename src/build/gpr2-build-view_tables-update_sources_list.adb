@@ -6,6 +6,7 @@
 
 with Ada.Containers.Doubly_Linked_Lists;
 
+with GPR2.Build.Unit_Info.List;
 with GPR2.Containers;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
@@ -714,10 +715,10 @@ package body Update_Sources_List is
             Naming_Convention,
             No_Match);
          Match            : Source_Detection := No_Match;
-         Units            : Source.Unit_List;  --  For Ada
+         Units            : Unit_Info.List.Object;  --  For Ada
          Kind             : Valid_Unit_Kind;
          Index            : Unit_Index;
-         Source           : Build.Source.Object;
+         Source           : Build.Source_Base.Object;
          Attr             : Project.Attribute.Object;
          Ada_Exc_CS       : Source_Path_To_Attribute_List.Cursor;
          Parsed           : Boolean;
@@ -770,7 +771,7 @@ package body Update_Sources_List is
                               else S_Body);
 
                      Units.Insert
-                       (Build.Source.Create
+                       (Unit_Info.Create
                           (Unit_Name      => Name_Type (Exc.Index.Text),
                            Index          => Index,
                            Kind           => Kind));
@@ -875,15 +876,16 @@ package body Update_Sources_List is
             --  we create the Source object.
 
             if Match /= No_Match then
-               Source := Build.Source.Create
-                 (Path_Name.Create_File (File.Path),
-                  Language         => Language,
-                  Kind             => Kind,
-                  Timestamp        => File.Stamp,
-                  Tree_Db          => Data.Tree_Db,
-                  Naming_Exception => Match = Naming_Exception,
-                  Source_Ref       => File.Dir_Ref,
-                  Is_Compilable    => Is_Compilable (Language));
+               Source := Build.Source_Base.Object
+                 (Build.Source_Base.Create
+                    (Path_Name.Create_File (File.Path),
+                     Language         => Language,
+                     Kind             => Kind,
+                     Timestamp        => File.Stamp,
+                     Tree_Db          => Data.Tree_Db,
+                     Naming_Exception => Match = Naming_Exception,
+                     Source_Ref       => File.Dir_Ref,
+                     Is_Compilable    => Is_Compilable (Language)));
 
                --  If we know the units in the source (from naming exception),
                --  then add them now.
@@ -907,7 +909,7 @@ package body Update_Sources_List is
                --  Parse the source to get unit and update its kind if
                --  needed.
 
-               Build.Source.Ada_Parser.Compute
+               Build.Source_Base.Ada_Parser.Compute
                  (Tree             => Tree,
                   Data             => Source,
                   Get_Withed_Units =>
@@ -919,18 +921,18 @@ package body Update_Sources_List is
                   --  in the gpr project.
 
                   if Source.Unit.Kind /= S_No_Body
-                    and then Build.Source.Full_Name (Source.Unit) /=
-                      Build.Source.Full_Name (Units.Element (No_Index))
+                    and then Source.Unit.Full_Name /=
+                               Units (No_Index).Full_Name
                   then
                      Messages.Append
                        (Message.Create
                           (Message.Warning,
                            "actual unit name """ &
-                             String (Build.Source.Full_Name (Source.Unit)) &
+                             String
+                               (Source.Unit.Full_Name) &
                              """ differs from the one declared in the " &
                              "project : """ &
-                             String (Build.Source.Full_Name
-                                       (Units.Element (No_Index))) & '"',
+                             String (Units (No_Index).Full_Name) & '"',
                            Exc_Attr));
                   end if;
 
@@ -960,10 +962,9 @@ package body Update_Sources_List is
 
                         if not Data.View.Is_Runtime
                           and then Source.Kind /= S_No_Body
-                          and then Unit_Name /=
-                            Build.Source.Full_Name (Source.Unit)
+                          and then Unit_Name /= Source.Unit.Full_Name
                           and then Path_Name.Base_Name (File.Path) /=
-                            Krunch (Build.Source.Full_Name (Source.Unit))
+                            Krunch (Source.Unit.Full_Name)
                         then
                            Messages.Append
                              (Message.Create
@@ -978,7 +979,7 @@ package body Update_Sources_List is
 
                         if Last_Dot > 0 then
                            Source.Update_Unit
-                             (Build.Source.Create
+                             (Unit_Info.Create
                                 (Unit_Name     => Unit_Name
                                      (Unit_Name'First .. Last_Dot - 1),
                                  Index         => No_Index,
@@ -1000,7 +1001,7 @@ package body Update_Sources_List is
 
                      else
                         Source.Update_Unit
-                          (Build.Source.Create
+                          (Unit_Info.Create
                              (Unit_Name     => Unit_Name,
                               Index         => No_Index,
                               Kind          => Kind,
@@ -1169,7 +1170,7 @@ package body Update_Sources_List is
                         Src_Ref.Update_Modification_Time (F.Stamp);
 
                         if not Src_Ref.Has_Naming_Exception then
-                           Source.Ada_Parser.Compute
+                           Source_Base.Ada_Parser.Compute
                              (Tree             => Tree,
                               Data             => Src_Ref,
                               Get_Withed_Units =>

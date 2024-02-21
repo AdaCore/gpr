@@ -1,10 +1,14 @@
 --
---  Copyright (C) 2023, AdaCore
+--  Copyright (C) 2023-2024, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.Build.Artifact_Ids;
+with GNAT.SHA256;
+
+with GPR2.Source_Reference;
+
+private with Ada.Tags;
 
 package GPR2.Build.Artifacts is
 
@@ -18,10 +22,34 @@ package GPR2.Build.Artifacts is
    --  artifacts (so for example source artifacts generate object file
    --  artifacts).
 
-   function Id
-     (Self : Object) return Artifact_Ids.Artifact_Id is abstract;
+   function Image (Self : Object) return String is abstract;
+   --  A representation of Self that can be used to report messages to the
+   --  end user: must be user understandable.
 
-   function Class
-     (Self : Object) return Artifact_Class is abstract;
+   function SLOC (Self : Object) return GPR2.Source_Reference.Object'Class
+                  is abstract;
+   --  A source reference object, to be used in error reporting to locate the
+   --  artifact.
+
+   function Checksum (Self : Object) return GNAT.SHA256.Message_Digest
+   is abstract;
+   --  The current checksum of the resource.
+   --  ??? Don't use GNAT.SHA256 but an abstraction layer instead
+
+   function "<" (L, R : Object) return Boolean is abstract;
+
+   function Hash (Self : Object) return Ada.Containers.Hash_Type is abstract;
+
+   function Less (L, R : Object'Class) return Boolean;
+   --  Class wide comparison, compares object type's external tags if L and R
+   --  are not of the same type
+
+private
+
+   use type Ada.Tags.Tag;
+
+   function Less (L, R : Object'Class) return Boolean is
+     (if L'Tag = R'Tag then L < R
+      else Ada.Tags.External_Tag (L'Tag) < Ada.Tags.External_Tag (R'Tag));
 
 end GPR2.Build.Artifacts;

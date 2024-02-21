@@ -1,55 +1,70 @@
 --
---  Copyright (C) 2023, AdaCore
+--  Copyright (C) 2023-2024, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Containers;
+with GPR2.Log;
+with GPR2.Project.View;
 
-with GPR2.Build.Artifact_Ids;
 limited with GPR2.Build.Tree_Db;
+
+private with Ada.Tags;
 
 package GPR2.Build.Actions is
 
-   type Object is interface;
-   --  Actions object represent the links in our build graph. They represent
-   --  the tools involved in the build process to generate artifacts from
-   --  other artifacts.
-   --
-   --  In this regard, this object is responsible for informing the graph
-   --  of all the implicit dependencies involved during the generation of
-   --  the output.
-   --
-   --  To do so, actions are reported as working on a class of artifacts
-   --  (see the `Inputs` property). For each such artifact in the tree
-   --  database, `Fill` will then be called to add the dependencies.
-   --
-   --  This object is meant to be a singleton: only one instance is
-   --  expected for a given run, and needs to be registered via
-   --  `GPR2.Build.Tree_Db.Register_Action`.
+   type Action_Id is interface;
 
-   function Class (Self : Object) return Action_Class is abstract;
-   --  Identifier for this action. Used for fast storage/retrieval, and can
-   --  be used in debug output, so should remain explicit and human
-   --  understandable.
+   function Image (Self : Action_Id) return String is abstract;
+   --  A representation of Self that can be displayed to the end user for e.g.
+   --  error reporting or inspection reporting.
 
-   function Inputs (Self : Object) return Artifact_Class is abstract;
-   --  The category of artifacts handled by this action.
+   function "<" (L, R : Action_Id) return Boolean is abstract;
 
-   procedure Fill
-     (Self  : Object;
-      Graph : access Tree_Db.Object;
-      Input : Artifact_Ids.Artifact_Id) is abstract;
-   --  Fill the Database with artifacts that will be derived from Input
-   --  due to the execution of Self. known explicit and implicit dependencies
-   --  should also be filled.
+   function Less (L, R : Action_Id'Class) return Boolean;
+   --  Class-wide comparison
 
-   function Hash (Action : Object'Class) return Ada.Containers.Hash_Type;
-   --  Used to store action objects in hashed containers.
+   type Object is abstract tagged private;
+   --  Actions are atomic steps in a compilation process, where an external
+   --  process is called with a dedicated set of inputs to produce a set of
+   --  output build artifacts (e.g. source compilation, linker invocation and
+   --  so on). This object is responsible for keeping track of the
+   --  signature of such execution: the various checksums of all inputs and
+   --  outputs, to determine whether a previously executed action's output is
+   --  still valid or needs to be re-executed.
+
+   function UID (Self : Object) return Action_Id'Class is abstract;
+   --  An action UID is used to store/restore the action data on the
+   --  persistent storage, so must be unique for a given view. This means
+   --  that the action should at least be prefixed by its class name and
+   --  contain references to its inputs or outputs depending on what is
+   --  relevant to make it unique.
+
+   function View (Self : Object) return GPR2.Project.View.Object is abstract;
+   --  The view that is used for the context of the action's execution. The
+   --  view is used to retrieve the switches for the tool, and to know where
+   --  the output is stored (the Object_Dir attribute).
+
+   procedure On_Tree_Insertion
+     (Self     : Object;
+      Db       : in out GPR2.Build.Tree_Db.Object;
+      Messages : in out GPR2.Log.Object) is abstract;
+   --  procedure called when Self is added to the tree's database. Allows the
+   --  action to add its input and output artifacts and dependencies.
+
+   procedure Attach
+     (Self : in out Object;
+      Db   : in out GPR2.Build.Tree_Db.Object);
 
 private
 
-   function Hash (Action : Object'Class) return Ada.Containers.Hash_Type is
-     (Hash (Action.Class));
+   use type Ada.Tags.Tag;
 
+   type Object is abstract tagged record
+      Tree : access Tree_Db.Object;
+   end record;
+
+   function Less (L, R : Action_Id'Class) return Boolean is
+     (if L'Tag = R'Tag then L < R
+      else Ada.Tags.External_Tag (L'Tag) < Ada.Tags.External_Tag (R'Tag));
 end GPR2.Build.Actions;

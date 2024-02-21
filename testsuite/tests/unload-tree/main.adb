@@ -69,7 +69,7 @@ procedure Main is
             Text_IO.Set_Col (33);
             Text_IO.Put
               ("   Kind: "
-               & GPR2.Build.Image (Source.Kind));
+               & GPR2.Image (Source.Kind));
 
             if U /= "" then
                Text_IO.Put ("   unit: " & String (U));

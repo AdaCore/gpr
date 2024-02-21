@@ -33,9 +33,7 @@ procedure Main is
       -- List_Sources --
       ------------------
 
-      procedure List_Sources (View : Project.View.Object)
-      is
-         use type GPR2.Build.Unit_Kind;
+      procedure List_Sources (View : Project.View.Object) is
       begin
          Text_IO.Put_Line ("----------");
 
@@ -55,7 +53,7 @@ procedure Main is
                if U /= "" then
                   Text_IO.Set_Col (60);
                   Text_IO.Put ("unit: " & String (U));
-                  if Source.Kind = Build.S_Separate then
+                  if Source.Kind = S_Separate then
                      Text_IO.Put (".");
                      Text_IO.Put (String (Source.Unit.Separate_Name));
                   end if;

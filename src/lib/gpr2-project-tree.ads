@@ -332,12 +332,13 @@ package GPR2.Project.Tree is
    function Artifacts_Database
      (Self : Object;
       View : GPR2.Project.View.Object) return Build.View_Db.Object
-     with Pre => Self.Is_Defined and then View.Kind in With_Object_Dir_Kind;
+     with Pre => Self.Is_Defined and then View.Kind in With_Object_Dir_Kind,
+          Inline;
 
    function Artifacts_Database
      (Self : Object;
       View : GPR2.View_Ids.View_Id) return Build.View_Db.Object
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined, Inline;
 
    function Source_Option (Self : Object) return Optional_Source_Info_Option;
    --  Retrieve the level of source information currently requested for
@@ -712,14 +713,12 @@ private
    function Artifacts_Database
      (Self : Object;
       View : GPR2.Project.View.Object) return Build.View_Db.Object is
-     (if Self.Tree_Db.Is_Defined
-      then Self.Tree_Db.View_Database (View)
-      else Build.View_Db.Undefined);
+     (Self.Tree_Db.View_Database (View.Id));
 
    function Artifacts_Database
      (Self : Object;
       View : GPR2.View_Ids.View_Id) return Build.View_Db.Object is
-     (Self.Artifacts_Database.View_Database (Self.Get_View (View)));
+     (Self.Tree_Db.View_Database (View));
 
    function Get_KB (Self : Object) return GPR2.KB.Object is
      (Self.Base);
@@ -733,6 +732,6 @@ private
       (Self.Environment);
 
    function Source_Option (Self : Object) return Optional_Source_Info_Option is
-     (Self.Artifacts_Database.Source_Option);
+     (Self.Tree_Db.Source_Option);
 
 end GPR2.Project.Tree;

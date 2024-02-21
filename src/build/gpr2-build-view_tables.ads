@@ -16,6 +16,7 @@ with GPR2.Log;
 with GPR2.Project.View.Set;
 
 with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Source_Base;
 with GPR2.Build.Source;
 with GPR2.Source_Reference.Value;
 with GPR2.View_Ids;
@@ -82,8 +83,8 @@ private package GPR2.Build.View_Tables is
    --    sources that are not visible (because of overloading or errors).
 
    package Src_Info_Maps is new Ada.Containers.Indefinite_Hashed_Maps
-     (Filename_Optional, Build.Source.Object,
-      Hash, "=", Source."=");
+     (Filename_Optional, Build.Source_Base.Object,
+      Hash, "=", Source_Base."=");
 
    type Source_Proxy (Path_Len : Natural) is record
       View      : GPR2.Project.View.Object;
@@ -218,6 +219,14 @@ private package GPR2.Build.View_Tables is
                      (Data : View_Data) return View_Db.Object;
    Get_Ref       : access function
                      (Obj : View_Db.Object) return View_Data_Ref;
+
+   function Source
+     (Data     : View_Data_Ref;
+      Basename : Simple_Name) return Build.Source.Object;
+
+   function Visible_Source
+     (Data     : View_Data_Ref;
+      Basename : Simple_Name) return Build.Source.Object;
 
    function Get_Data
      (Db   : access GPR2.Build.Tree_Db.Object;

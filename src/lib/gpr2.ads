@@ -180,6 +180,17 @@ package GPR2 is
    --  Returns Regexp object for Filename_Regexp pattern
    --  Allows '?' & '*' wildchars. Use case insensitive match when required
 
+   type Unit_Kind is (S_Spec, S_Body, S_Separate, S_No_Body);
+   --  Used to identify the kind of source or unit is manipulated:
+   --  S_Spec: spec or header
+   --  S_Body: unit body or implementation source
+   --  S_Separate: unit separated from a body
+   --  S_No_Body: a body containing the pragma No_Body
+
+   subtype Valid_Unit_Kind is Unit_Kind range S_Spec .. S_Separate;
+
+   function Image (Kind : Valid_Unit_Kind) return String;
+
    --  Compilation unit index for multi-unit sources
 
    type Unit_Index is new Integer range 0 .. Integer'Last;
@@ -371,6 +382,12 @@ private
    is (if File_Names_Case_Sensitive
        then Ada.Strings.Hash (String (Fname))
        else Ada.Strings.Hash_Case_Insensitive (String (Fname)));
+
+   function Image (Kind : Valid_Unit_Kind) return String is
+     (case Kind is
+         when S_Spec => "spec",
+         when S_Body => "body",
+         when S_Separate => "separate");
 
    -------------------
    -- String tables --

@@ -22,106 +22,165 @@ package body GPR2.Build.Tree_Db is
 
    use type GPR2.View_Ids.View_Id;
 
-   procedure Add_Dependency
-     (Self        : access Object;
-      Artifact    : Artifact_Ids.Artifact_Id;
-      Predecessor : Artifact_Ids.Artifact_Id;
-      Kind        : Dependency_Kind);
+   type Artifact_Internal_Iterator is limited new
+     Artifact_Iterators.Forward_Iterator with record
+      Db     : access Object;
+      Kind   : Artifact_List_Kind;
+      Action : Action_Maps.Cursor;
+   end record;
 
-   procedure Release (Self : access Object);
-   --  To be called after a refresh to update the DAG
+   overriding function First
+     (Iter : Artifact_Internal_Iterator) return Artifact_Cursor;
+
+   overriding function Next
+     (Iter     : Artifact_Internal_Iterator;
+      Position : Artifact_Cursor) return Artifact_Cursor;
+
+   function Artifact_Iterate
+     (List : Artifacts_List) return Artifact_Iterators.Forward_Iterator'Class
+   is (Artifact_Internal_Iterator'
+         (Db     => List.Db,
+          Kind   => List.Kind,
+          Action => (if List.Kind = Global_List
+                     then Action_Maps.No_Element
+                     else List.Action)));
+
+   type Action_Internal_Iterator is limited new
+     Action_Iterators.Forward_Iterator with record
+      Db       : access Object;
+      Kind     : Action_List_Kind;
+      Artifact : Artifact_Sets.Cursor;
+   end record;
+
+   overriding function First
+     (Iter : Action_Internal_Iterator) return Action_Cursor;
+
+   overriding function Next
+     (Iter : Action_Internal_Iterator;
+      Position : Action_Cursor) return Action_Cursor;
+
+   function Action_Iterate
+     (List : Actions_List) return Action_Iterators.Forward_Iterator'Class
+   is (Action_Internal_Iterator'
+         (Db       => List.Db,
+          Kind     => List.Kind,
+          Artifact => (if List.Kind = Global_List
+                       then Artifact_Sets.No_Element
+                       else List.Artifact)));
+
+   ----------------------
+   -- Action_Reference --
+   ----------------------
+
+   function Action_Reference
+     (Iterator : access Actions_List;
+      Pos      : Action_Cursor) return Action_Reference_Type
+   is
+      Ref : constant Action_Maps.Reference_Type :=
+              Iterator.Db.Actions.Reference (Pos.Pos);
+   begin
+      return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
+   end Action_Reference;
+
+   ----------------
+   -- Add_Action --
+   ----------------
+
+   procedure Add_Action
+     (Self     : in out Object;
+      Action   : Actions.Object'Class;
+      Messages : in out GPR2.Log.Object)
+   is
+      Curs : Action_Maps.Cursor;
+      Done : Boolean;
+   begin
+      Self.Actions.Insert (Action.UID, Action, Curs, Done);
+      pragma Assert (Done, "duplicated action detected");
+      Self.Implicit_Inputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
+      Self.Inputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
+      Self.Outputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
+
+      Self.Actions.Reference (Curs).Attach (Self);
+      Self.Actions.Reference (Curs).On_Tree_Insertion (Self, Messages);
+   end Add_Action;
 
    ------------------
    -- Add_Artifact --
    ------------------
 
    procedure Add_Artifact
-     (Self     : access Object;
-      Artifact : Build.Artifacts.Object'Class)
+     (Self     : in out Object;
+      Artifact : Artifacts.Object'Class)
    is
-      C    : Artifact_Class_Artifact_Set_Maps.Cursor;
+      Curs : Artifact_Sets.Cursor;
       Done : Boolean;
-      Id   : constant Artifact_Id := Artifact.Id;
    begin
-      Self.Artifacts.Insert (Id, Artifact);
+      Self.Artifacts.Insert (Artifact, Curs, Done);
 
-      --  If key already exists, C is positioned to it, else it is created
-      --  with an empty artifacts set.
-      Self.New_Artifacts.Insert
-        (Artifact.Class, Artifact_Sets.Empty_Set, C, Done);
-
-      Self.New_Artifacts.Reference (C).Include (Id);
+      if Done then
+         Self.Successors.Insert (Artifact, Action_Sets.Empty_Set);
+      end if;
    end Add_Artifact;
 
-   --------------------
-   -- Add_Dependency --
-   --------------------
-
-   procedure Add_Dependency
-     (Self        : access Object;
-      Artifact    : Artifact_Ids.Artifact_Id;
-      Predecessor : Artifact_Ids.Artifact_Id;
-      Kind        : Dependency_Kind)
-   is
-      C    : Artifact_Dependency_Maps.Cursor;
-      Done : Boolean;
-
-   begin
-      --  Either add a new clean dependencies record, or set C to its existing
-      --  position
-      Self.Predecessors.Insert
-        (Artifact, Dependencies'(others => <>), C, Done);
-      Self.Predecessors.Reference (C).Inputs (Kind).Include (Predecessor);
-
-      --  Do the same for the Successors list
-      Self.Successors.Insert
-        (Predecessor, Dependencies'(others => <>), C, Done);
-      Self.Successors.Reference (C).Inputs (Kind).Include (Artifact);
-
-      Self.Sort_Valid := False;
-   end Add_Dependency;
-
-   -----------------------------
-   -- Add_Explicit_Dependency --
-   -----------------------------
-
-   procedure Add_Explicit_Dependency
-     (Self        : access Object;
-      Artifact    : Artifact_Ids.Artifact_Id;
-      Predecessor : Artifact_Ids.Artifact_Id) is
-   begin
-      Self.Add_Dependency (Artifact, Predecessor, Explicit);
-   end Add_Explicit_Dependency;
-
-   -----------------------------
-   -- Add_Implicit_Dependency --
-   -----------------------------
-
-   procedure Add_Implicit_Dependency
-     (Self        : access Object;
-      Artifact    : Artifact_Ids.Artifact_Id;
-      Predecessor : Artifact_Ids.Artifact_Id)
-   is
-   begin
-      Self.Add_Dependency (Artifact, Predecessor, Implicit);
-   end Add_Implicit_Dependency;
-
    ---------------
-   -- Artifacts --
+   -- Add_Input --
    ---------------
 
-   function Artifacts
-     (Self  : Object;
-      Class : Artifact_Class := No_Artifact_Class)
-      return Iterator'Class
-   is
+   procedure Add_Input
+     (Self     : in out Object;
+      Action   : Actions.Action_Id'Class;
+      Artifact : Artifacts.Object'Class;
+      Explicit : Boolean) is
    begin
-      return Iterator'
-        (Kind   => Global_List,
-         Actual => (Kind  => Global_List,
-                    Graph => Self'Unrestricted_Access,
-                    Class => Class));
-   end Artifacts;
+      Self.Add_Artifact (Artifact);
+
+      if Explicit then
+         Self.Inputs.Reference (Action).Include (Artifact);
+      else
+         Self.Implicit_Inputs.Reference (Action).Include (Artifact);
+      end if;
+
+      Self.Successors.Reference (Artifact).Include (Action);
+   end Add_Input;
+
+   ----------------
+   -- Add_Output --
+   ----------------
+
+   procedure Add_Output
+     (Self     : in out Object;
+      Action   : Actions.Action_Id'Class;
+      Artifact : Artifacts.Object'Class;
+      Messages : in out GPR2.Log.Object)
+   is
+      use type Actions.Action_Id;
+      Pred     : Artifact_Action_Maps.Cursor;
+
+   begin
+      Self.Add_Artifact (Artifact);
+
+      Pred := Self.Predecessor.Find (Artifact);
+
+      if Artifact_Action_Maps.Has_Element (Pred) then
+         if Self.Predecessor (Pred) /= Action then
+            --  Two actions produce the same output, raise an error
+            Messages.Append
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  Action.Image & " and " &
+                    Self.Predecessor (Artifact).Image &
+                    " produce the same output " &
+                    Artifact.Image,
+                  Artifact.SLOC));
+
+            return;
+         end if;
+      else
+         Self.Predecessor.Insert (Artifact, Action);
+      end if;
+
+      Self.Outputs.Reference (Action).Include (Artifact);
+   end Add_Output;
 
    ----------------
    -- Check_Tree --
@@ -167,19 +226,46 @@ package body GPR2.Build.Tree_Db is
       end loop;
    end Check_Tree;
 
-   ------------------------
-   -- Constant_Reference --
-   ------------------------
+   -------------------------------
+   -- Constant_Action_Reference --
+   -------------------------------
 
-   function Constant_Reference
-     (Self : aliased Object; Position : Cursor) return Constant_Reference_Type
+   function Constant_Action_Reference
+     (Iterator : aliased Actions_List;
+      Pos      : Action_Cursor) return Constant_Action_Reference_Type
    is
-      Ref : constant Artifact_Maps.Constant_Reference_Type :=
-              Self.Artifacts.Constant_Reference (Position.C);
+      Ref : constant Action_Maps.Constant_Reference_Type :=
+              Iterator.Db.Actions.Constant_Reference (Pos.Pos);
    begin
-      return (Element => Ref.Element.all'Unchecked_Access,
-              Ref     => Ref);
-   end Constant_Reference;
+      return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
+   end Constant_Action_Reference;
+
+   ---------------------------------
+   -- Constant_Artifact_Reference --
+   ---------------------------------
+
+   function Constant_Artifact_Reference
+     (Iterator : aliased Artifacts_List;
+      Pos      : Artifact_Cursor) return Constant_Artifact_Reference_Type
+   is
+      Ref : constant Artifact_Sets.Constant_Reference_Type :=
+              (case Pos.Current is
+               when Global_List     =>
+                  Iterator.Db.Artifacts.Constant_Reference (Pos.Pos),
+               when Implicit_Inputs =>
+                  Iterator.Db.Implicit_Inputs.Constant_Reference
+                    (Pos.Map_Pos).Constant_Reference (Pos.Pos),
+               when Explicit_Inputs =>
+                  Iterator.Db.Inputs.Constant_Reference
+                    (Pos.Map_Pos).Constant_Reference (Pos.Pos),
+               when Outputs         =>
+                  Iterator.Db.Outputs.Constant_Reference
+                    (Pos.Map_Pos).Constant_Reference (Pos.Pos),
+               when others          =>
+                    raise Program_Error with "Wrong kind of cursor");
+   begin
+      return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
+   end Constant_Artifact_Reference;
 
    ----------
    -- Load --
@@ -223,176 +309,165 @@ package body GPR2.Build.Tree_Db is
    -- First --
    -----------
 
-   overriding function First (Self : Artifact_Iterator) return Cursor is
-      C : Cursor (Self.Kind);
+   overriding function First
+     (Iter : Artifact_Internal_Iterator) return Artifact_Cursor
+   is
+      Res     : Artifact_Cursor;
+      Map_Pos : Action_Artifacts_Maps.Cursor;
+
    begin
-      case Self.Kind is
+      if Iter.Db.Artifacts.Is_Empty then
+         return No_Artifact_Element;
+      end if;
+
+      case Iter.Kind is
          when Global_List =>
-            if Self.Class = No_Artifact_Class then
-               C.C := Self.Graph.Artifacts.First;
-
-            else
-               C.C := Artifact_Maps.No_Element;
-
-               for Pos in Self.Graph.Artifacts.Iterate loop
-                  if Artifact_Ids.Class (Artifact_Maps.Key (Pos)) =
-                       Self.Class
-                  then
-                     C.C := Pos;
-
-                     exit;
-                  end if;
-               end loop;
-            end if;
-
-         when Predecessors | Successors =>
-            if not Artifact_Dependency_Maps.Has_Element (Self.Pos) then
-               return No_Element;
-            end if;
-
+            return (Pos     => Iter.Db.Artifacts.First,
+                    Map_Pos => Action_Artifacts_Maps.No_Element,
+                    Current => Iter.Kind);
+         when Explicit_Inputs | Inputs =>
             declare
-               subtype CR_Type is
-                 Artifact_Dependency_Maps.Constant_Reference_Type;
-               Ref   : constant CR_Type :=
-                         (if Self.Kind = Predecessors
-                          then Self.Graph.Predecessors.Constant_Reference
-                            (Self.Pos)
-                          else Self.Graph.Successors.Constant_Reference
-                            (Self.Pos));
-               Found : Boolean := False;
+               Id      : constant Actions.Action_Id'Class :=
+                           Action_Maps.Key (Iter.Action);
             begin
-               for Kind in Dependency_Kind'Range loop
-                  if not Ref.Inputs (Kind).Is_Empty then
-                     C.C_Art (Kind) := Ref.Inputs (Kind).First;
-                     if not Found then
-                        C.Current := Kind;
-                        C.C := Self.Graph.Artifacts.Find
-                          (Ref.Inputs (Kind).Element (C.C_Art (Kind)));
-                        Found := True;
-                     end if;
-                  end if;
-               end loop;
+               Map_Pos := Iter.Db.Inputs.Find (Id);
+               Res :=
+                 (Pos     => Iter.Db.Inputs.Constant_Reference (Map_Pos).First,
+                  Map_Pos => Map_Pos,
+                  Current => Explicit_Inputs);
 
-               if Found then
-                  return C;
+               if not Artifact_Sets.Has_Element (Res.Pos)
+                 and then Iter.Kind = Inputs
+               then
+                  Map_Pos := Iter.Db.Implicit_Inputs.Find (Id);
+                  Res :=
+                    (Pos     =>
+                       Iter.Db.Implicit_Inputs.Constant_Reference
+                         (Map_Pos).First,
+                     Map_Pos => Map_Pos,
+                     Current => Implicit_Inputs);
+               end if;
+            end;
+
+         when Implicit_Inputs =>
+            Map_Pos :=
+              Iter.Db.Implicit_Inputs.Find (Action_Maps.Key (Iter.Action));
+            Res :=
+              (Pos    => Iter.Db.Implicit_Inputs.Constant_Reference
+                           (Map_Pos).First,
+               Map_Pos => Map_Pos,
+               Current => Iter.Kind);
+
+         when Outputs =>
+            Map_Pos := Iter.Db.Outputs.Find (Action_Maps.Key (Iter.Action));
+            Res :=
+              (Pos     => Iter.Db.Outputs.Constant_Reference (Map_Pos).First,
+               Map_Pos => Map_Pos,
+               Current => Iter.Kind);
+
+      end case;
+
+      if not Artifact_Sets.Has_Element (Res.Pos) then
+         return No_Artifact_Element;
+      else
+         return Res;
+      end if;
+   end First;
+
+   -----------
+   -- First --
+   -----------
+
+   overriding function First
+     (Iter : Action_Internal_Iterator) return Action_Cursor
+   is
+      Res : Action_Cursor;
+   begin
+      if Iter.Db.Actions.Is_Empty then
+         return No_Action_Element;
+      end if;
+
+      case Iter.Kind is
+         when Global_List =>
+            return (Pos     => Iter.Db.Actions.First,
+                    Set_Pos => Action_Sets.No_Element);
+
+         when Successors =>
+            declare
+               Artifact : constant Artifacts.Object'Class :=
+                            Iter.Db.Artifacts.Element (Iter.Artifact);
+            begin
+               Res.Set_Pos :=
+                 Iter.Db.Successors.Constant_Reference (Artifact).First;
+
+               if not Action_Sets.Has_Element (Res.Set_Pos) then
+                  return No_Action_Element;
                else
-                  return No_Element;
+                  Res.Pos :=
+                    Iter.Db.Actions.Find (Action_Sets.Element (Res.Set_Pos));
+                  return Res;
                end if;
             end;
       end case;
-
-      return C;
    end First;
-
-   -----------------------------
-   -- Iter_Constant_Reference --
-   -----------------------------
-
-   function Iter_Constant_Reference
-     (Self     : aliased Iterator;
-      Position : Cursor) return Constant_Reference_Type
-   is
-      Ref : constant Artifact_Maps.Constant_Reference_Type :=
-              Self.Actual.Graph.Artifacts.Constant_Reference (Position.C);
-   begin
-      return (Element => Ref.Element.all'Unchecked_Access,
-              Ref     => Ref);
-   end Iter_Constant_Reference;
-
-   --------------------
-   -- Iter_Reference --
-   --------------------
-
-   function Iter_Reference
-     (Self     : access Iterator;
-      Position : Cursor) return Reference_Type
-   is
-      Ref : constant Artifact_Maps.Reference_Type :=
-              Self.Actual.Graph.Artifacts.Reference (Position.C);
-   begin
-      return (Element => Ref.Element.all'Unchecked_Access,
-              Ref     => Ref);
-   end Iter_Reference;
 
    ----------
    -- Next --
    ----------
 
    overriding function Next
-     (Self     : Artifact_Iterator;
-      Position : Cursor) return Cursor
+     (Iter     : Artifact_Internal_Iterator;
+      Position : Artifact_Cursor) return Artifact_Cursor
    is
-      Res : Cursor := Position;
+      Res : Artifact_Cursor := Position;
    begin
-      case Res.Kind is
+      Artifact_Sets.Next (Res.Pos);
+
+      if not Artifact_Sets.Has_Element (Res.Pos)
+        and then Iter.Kind = Inputs
+        and then Res.Current = Explicit_Inputs
+      then
+         Res.Current := Implicit_Inputs;
+         Res.Map_Pos :=
+           Iter.Db.Implicit_Inputs.Find (Action_Maps.Key (Iter.Action));
+         Res.Pos     :=
+           Iter.Db.Implicit_Inputs.Constant_Reference (Res.Map_Pos).First;
+      end if;
+
+      if not Artifact_Sets.Has_Element (Res.Pos) then
+         return No_Artifact_Element;
+      end if;
+
+      return Res;
+   end Next;
+
+   ----------
+   -- Next --
+   ----------
+
+   overriding function Next
+     (Iter : Action_Internal_Iterator;
+      Position : Action_Cursor) return Action_Cursor
+   is
+      Res : Action_Cursor := Position;
+   begin
+      case Iter.Kind is
          when Global_List =>
-            loop
-               Artifact_Maps.Next (Res.C);
-               exit when Self.Class = No_Artifact_Class
-                 or else not Artifact_Maps.Has_Element (Res.C)
-                 or else Artifact_Ids.Class (Artifact_Maps.Key (Res.C)) =
-                           Self.Class;
-            end loop;
+            Action_Maps.Next (Res.Pos);
 
-         when Predecessors | Successors =>
-            Artifact_Sets.Next (Res.C_Art (Res.Current));
+         when Successors =>
+            Action_Sets.Next (Res.Set_Pos);
 
-            if not Artifact_Sets.Has_Element (Res.C_Art (Res.Current))
-              and then Res.Current /= Dependency_Kind'Last
-            then
-               Res.Current := Dependency_Kind'Succ (Res.Current);
-            end if;
-
-            if Artifact_Sets.Has_Element (Res.C_Art (Res.Current)) then
-               Res.C := Self.Graph.Artifacts.Find
-                 (Artifact_Sets.Element (Res.C_Art (Res.Current)));
+            if not Action_Sets.Has_Element (Res.Set_Pos) then
+               return No_Action_Element;
             else
-               Res.C := Artifact_Maps.No_Element;
+               Res.Pos :=
+                 Iter.Db.Actions.Find (Action_Sets.Element (Res.Set_Pos));
             end if;
       end case;
 
       return Res;
    end Next;
-
-   ------------------
-   -- Predecessors --
-   ------------------
-
-   function Predecessors
-     (Self     : Object;
-      Artifact : Artifact_Ids.Artifact_Id)
-      return Iterator'Class is
-   begin
-      return Iterator'
-        (Kind  => Predecessors,
-         Actual => (Kind  => Predecessors,
-                    Graph => Self'Unrestricted_Access,
-                    Pos   => Self.Predecessors.Find (Artifact)));
-   end Predecessors;
-
-   ---------------
-   -- Reference --
-   ---------------
-
-   function Reference
-     (Self : access Object; Position : Cursor) return Reference_Type
-   is
-      Ref : constant Artifact_Maps.Reference_Type :=
-              Self.Artifacts.Reference (Position.C);
-   begin
-      return (Element => Ref.Element.all'Unchecked_Access,
-              Ref     => Ref);
-   end Reference;
-
-   function Reference
-     (Self : access Object; Id : Artifact_Id) return Reference_Type
-   is
-      Ref : constant Artifact_Maps.Reference_Type :=
-              Self.Artifacts.Reference (Id);
-   begin
-      return (Element => Ref.Element.all'Unchecked_Access,
-              Ref     => Ref);
-   end Reference;
 
    -------------
    -- Refresh --
@@ -404,9 +479,6 @@ package body GPR2.Build.Tree_Db is
       Messages : out GPR2.Log.Object) is
    begin
       Self.Src_Option := Option;
-
-      Self.On_Hold := True;
-      Self.Current_Action := No_Action_Class;
 
       --  Refresh each tree's views
 
@@ -520,148 +592,7 @@ package body GPR2.Build.Tree_Db is
             end if;
          end loop;
       end if;
-
-      if Option >= Sources_Units_Artifacts then
-         Self.Release;
-      end if;
    end Refresh;
-
-   ---------------------
-   -- Register_Action --
-   ---------------------
-
-   procedure Register_Action
-     (Self   : access Object;
-      Action : Actions.Object'Class)
-   is
-      Input : constant Artifact_Class := Action.Inputs;
-      C     : Artifact_Actions_Maps.Cursor;
-      Done  : Boolean;
-   begin
-      Self.Actions_List.Insert (Action.Class, Action);
-      Self.Todo_List.Insert (Input, Action_Sets.Empty_Set, C, Done);
-      Self.Todo_List (C).Insert (Action);
-   end Register_Action;
-
-   -------------
-   -- Release --
-   -------------
-
-   procedure Release (Self : access Object) is
-   begin
-      loop
-         declare
-            To_Remove : constant Artifact_Sets.Set :=
-                          Self.To_Remove;
-         begin
-            exit when To_Remove.Is_Empty;
-
-            Self.To_Remove.Clear;
-
-            for C of To_Remove loop
-               Self.Remove_Artifact (C);
-            end loop;
-         end;
-      end loop;
-
-      loop
-         declare
-            Inserted : constant Artifact_Class_Artifact_Set_Maps.Map :=
-                         Self.New_Artifacts;
-         begin
-            exit when Inserted.Is_Empty;
-
-            Self.New_Artifacts.Clear;
-
-            for C in Inserted.Iterate loop
-               declare
-                  Class   : constant Artifact_Class :=
-                              Artifact_Class_Artifact_Set_Maps.Key (C);
-                  C_Action : constant Artifact_Actions_Maps.Cursor :=
-                               Self.Todo_List.Find (Class);
-               begin
-                  if Artifact_Actions_Maps.Has_Element (C_Action) then
-                     for Action of Self.Todo_List.Reference (C_Action) loop
-                        Self.Current_Action := Action.Class;
-
-                        for Artifact of Inserted.Constant_Reference (C) loop
-                           Action.Fill (Self, Artifact);
-                        end loop;
-                     end loop;
-                  end if;
-               end;
-            end loop;
-         end;
-      end loop;
-
-      --  TODO: checks and update the TODO list once we have it
-
-      Self.On_Hold := False;
-   end Release;
-
-   ---------------------
-   -- Remove_Artifact --
-   ---------------------
-
-   procedure Remove_Artifact
-     (Self     : access Object;
-      Artifact : Artifact_Ids.Artifact_Id)
-   is
-      C : Artifact_Dependency_Maps.Cursor;
-   begin
-      C := Self.Predecessors.Find (Artifact);
-
-      if Artifact_Dependency_Maps.Has_Element (C) then
-         for Kind in Dependency_Kind loop
-            for C2 in
-              Self.Predecessors.Reference (C).Inputs (Kind).Iterate
-            loop
-               Self.Successors
-                 (Artifact_Sets.Element (C2)).Inputs (Kind).Delete (Artifact);
-            end loop;
-         end loop;
-
-         Self.Predecessors.Delete (C);
-      end if;
-
-      C := Self.Successors.Find (Artifact);
-
-      if Artifact_Dependency_Maps.Has_Element (C) then
-         for Kind in Dependency_Kind loop
-            for C2 in Self.Successors.Reference (C).Inputs (Kind).Iterate loop
-               Self.Predecessors
-                 (Artifact_Sets.Element (C2)).Inputs (Kind).Delete (Artifact);
-
-               if Kind = Explicit
-                 and then Self.Predecessors
-                            (Artifact_Sets.Element (C2)).Inputs (Kind).Is_Empty
-               then
-                  Self.To_Remove.Include (Artifact_Sets.Element (C2));
-               end if;
-            end loop;
-         end loop;
-
-         Self.Successors.Delete (C);
-      end if;
-
-      Self.Artifacts.Delete (Artifact);
-   end Remove_Artifact;
-
-   ----------------
-   -- Successors --
-   ----------------
-
-   function Successors
-     (Self     : Object;
-      Artifact : Artifact_Ids.Artifact_Id)
-      return Iterator'Class is
-   begin
-      return Iterator'
-        (Kind   => Successors,
-         Actual => (Kind  => Successors,
-                    Graph => Self'Unrestricted_Access,
-                    Pos   => Self.Successors.Find (Artifact)));
-   end Successors;
 
    ----------
    -- Tree --
@@ -682,16 +613,5 @@ package body GPR2.Build.Tree_Db is
       Self.Src_Option := No_Source;
       Self.With_RTS   := False;
    end Unload;
-
-   -------------------
-   -- View_Database --
-   -------------------
-
-   function View_Database
-     (Self : Object; View : GPR2.Project.View.Object)
-      return Build.View_Db.Object is
-   begin
-      return Self.Build_Dbs.Element (View.Id);
-   end View_Database;
 
 end GPR2.Build.Tree_Db;
