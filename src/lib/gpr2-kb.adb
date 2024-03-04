@@ -2804,24 +2804,27 @@ package body GPR2.KB is
          --  anyway. This leaves \ for regexp quotes.
          Last := First + 1;
 
-         while Last <= Path_To_Check'Last
-           and then Path_To_Check (Last) /= '/'
+         while Last < Path_To_Check'Last
+           and then Last + 1 <= Path_To_Check'Last
+           and then Path_To_Check (Last + 1) /= '/'
          loop
             Last := Last + 1;
          end loop;
 
          --  If we do not have a regexp
 
-         if not Is_Regexp (Path_To_Check (First .. Last - 1)) then
+         if not Is_Regexp (Path_To_Check (First .. Last)) then
             declare
                Dir     : constant String :=
                            Normalize_Pathname
                              (Current_Dir, Resolve_Links => False)
                            & Directory_Separator
                            & Unquote_Regexp
-                              (Path_To_Check (First .. Last - 1));
+                              (Path_To_Check (First .. Last));
                Remains : constant String :=
-                           Path_To_Check (Last + 1 .. Path_To_Check'Last);
+                           Path_To_Check (Last + 2 .. Path_To_Check'Last);
+               Updated_Group_Match : Unbounded_String :=
+                 To_Unbounded_String (Group_Match);
             begin
                if (Remains'Length = 0
                    or else Remains = "/"
@@ -2830,6 +2833,10 @@ package body GPR2.KB is
                then
                   Trace (Main_Trace, "<dir>: Found file " & Dir);
                   --  If there is such a subdir, keep checking
+
+                  if Group = 0 then
+                     Updated_Group_Match := To_Unbounded_String (Dir);
+                  end if;
 
                   Parse_All_Dirs
                     (Processed_Value => Processed_Value,
@@ -2840,7 +2847,7 @@ package body GPR2.KB is
                      Regexp_Str      => Regexp_Str,
                      Value_If_Match  => Value_If_Match,
                      Group           => Group,
-                     Group_Match     => Group_Match,
+                     Group_Match     => To_String (Updated_Group_Match),
                      Group_Count     => Group_Count,
                      Contents        => Contents,
                      Merge_Same_Dirs => Merge_Same_Dirs,
@@ -2851,6 +2858,11 @@ package body GPR2.KB is
                   Trace (Main_Trace, "<dir>: Recurse into " & Dir);
                   --  If there is such a subdir, keep checking
 
+                  if Group = 0 then
+                     Updated_Group_Match :=
+                      To_Unbounded_String (Dir & Directory_Separator);
+                  end if;
+
                   Parse_All_Dirs
                     (Processed_Value => Processed_Value,
                      Visited         => Visited,
@@ -2860,7 +2872,7 @@ package body GPR2.KB is
                      Regexp_Str      => Regexp_Str,
                      Value_If_Match  => Value_If_Match,
                      Group           => Group,
-                     Group_Match     => Group_Match,
+                     Group_Match     => To_String (Updated_Group_Match),
                      Group_Count     => Group_Count,
                      Contents        => Contents,
                      Merge_Same_Dirs => Merge_Same_Dirs,
@@ -2878,7 +2890,7 @@ package body GPR2.KB is
                use Ada.Directories;
 
                File_Re     : constant String :=
-                               Path_To_Check (First .. Last - 1);
+                               Path_To_Check (First .. Last);
                File_Regexp : constant Pattern_Matcher := Compile (File_Re);
                Search      : Search_Type;
                File        : Directory_Entry_Type;
@@ -2891,7 +2903,9 @@ package body GPR2.KB is
                      & " and should be quoted in this case, as in \.\.");
                end if;
 
-               if Path_To_Check (Last) = '/' then
+               if Last + 1 <= Path_To_Check'Last
+                 and then Path_To_Check (Last + 1) = '/'
+               then
                   Trace
                     (Main_Trace,
                      "<dir>: Check directories in " & Current_Dir
@@ -2942,7 +2956,33 @@ package body GPR2.KB is
                               "<dir>: Matched "
                               & Ada.Directories.Simple_Name (File));
 
-                           if Group_Count < Group
+                           if Group = 0 then
+                              Parse_All_Dirs
+                                (Processed_Value => Processed_Value,
+                                 Visited         => Visited,
+                                 Current_Dir     =>
+                                   Full_Name (File) & Directory_Separator,
+                                 Path_To_Check   => Path_To_Check
+                                   (Last + 2 .. Path_To_Check'Last),
+                                 Regexp          => Regexp,
+                                 Regexp_Str      => Regexp_Str,
+                                 Value_If_Match  => Value_If_Match,
+                                 Group           => Group,
+                                 Group_Match     =>
+                                   Group_Match & Simple
+                                     (Matched (0).First .. Matched (0).Last) &
+                                     (if Is_Directory (Simple)
+                                      then
+                                        "" & Directory_Separator
+                                      else
+                                        ""),
+                                 Group_Count     => Group_Count,
+                                 Contents        => Contents,
+                                 Merge_Same_Dirs => Merge_Same_Dirs,
+                                 Error_Sloc      => Error_Sloc,
+                                 Messages        => Messages);
+
+                           elsif Group_Count < Group
                              and then Group_Count + Count >= Group
                            then
                               if Matched (Group - Group_Count) = No_Match then
@@ -2963,7 +3003,7 @@ package body GPR2.KB is
                                  Current_Dir     =>
                                    Full_Name (File) & Directory_Separator,
                                  Path_To_Check   => Path_To_Check
-                                   (Last + 1 .. Path_To_Check'Last),
+                                   (Last + 2 .. Path_To_Check'Last),
                                  Regexp          => Regexp,
                                  Regexp_Str      => Regexp_Str,
                                  Value_If_Match  => Value_If_Match,
@@ -2984,7 +3024,7 @@ package body GPR2.KB is
                                  Current_Dir     =>
                                    Full_Name (File) & Directory_Separator,
                                  Path_To_Check   => Path_To_Check
-                                   (Last + 1 .. Path_To_Check'Last),
+                                   (Last + 2 .. Path_To_Check'Last),
                                  Regexp          => Regexp,
                                  Regexp_Str      => Regexp_Str,
                                  Value_If_Match  => Value_If_Match,

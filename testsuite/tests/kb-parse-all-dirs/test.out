@@ -1,0 +1,54 @@
+=== FAKE-ADA-COMPILER-1 ===
+Runtime: /dir_path/
+Version: 8.4.3
+
+=== FAKE-ADA-COMPILER-2 ===
+Runtime: group value
+Version: 8.4.3
+
+=== FAKE-ADA-COMPILER-3 ===
+Runtime: /link-to-dir
+Version: 8.4.3
+
+=== FAKE-ADA-COMPILER-4 ===
+Runtime: group value with content
+Version: 8.4.3
+
+=== FAKE-ADA-COMPILER-5 ===
+Runtime: link
+Version: 8.4.3
+
+=== FAKE-ADA-COMPILER-6 ===
+Runtime: /fake-ada-fake-target/../link-to-dir
+Version: 8.4.3
+
+=== FAKE-ADA-COMPILER-7 ===
+Runtime: /fake-ada-fake-target/../dir_path/subdir_path
+Version: 8.4.3
+
+=== FAKE-ADA-COMPILER-8 ===
+Runtime: regex group value
+Version: 8.4.3
+
+=== FAKE-ADA-COMPILER-9 ===
+Runtime: 
+Version: 8.4.3
+
+=== FAKE-ADA-COMPILER-10 ===
+No compiler found
+
+=== FAKE-ADA-COMPILER-11 ===
+No compiler found
+
+=== FAKE-ADA-COMPILER-12 ===
+Runtime: search from '/' works
+Version: 8.4.3
+
+=== FAKE-ADA-COMPILER-13 ===
+Runtime: default
+Version: 11.2
+
+=== FAKE-ADA-COMPILER-14 ===
+Runtime: Correct
+Version: 8.4.3
+
