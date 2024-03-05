@@ -826,6 +826,42 @@ predefined variables
 If a variable is not defined, an error message is issued and the variable
 is substituted by an empty string.
 
+.. _Fallback_targets:
+
+Fallback targets
+^^^^^^^^^^^^^^^^
+
+When no compiler matches the requirements for a given target, a compiler
+supporting other targets can be used. These targets are described with the XML
+tag :code:`<fallback_targets>` and its :code:`<target>` children.
+:code:`<fallback_targets>` must be a child of the root tag :code:`<gprconfig>`.
+All targets contained in the same :code:`<fallback_targets>` are fallbacks for
+each other.
+
+::
+
+    <fallback_targets>
+        <target>x86-linux</target>
+        <target>x86_64-linux</target>
+    </fallback_targets>
+
+Let's take an example. If we have the following configuration in a file named
+:node:`config.xml`, a call to :code:`gprconfig --db config.xml --batch --target=target-0 --config=Ada --fallback-targets`
+will produce a configuration file for a compiler supporting the :code:`x86_64-linux`
+target as the :code:`target-0` one is not supported by any compiler.
+
+::
+
+    <?xml version="1.0"?>
+    <!DOCTYPE gprconfig []>
+
+    <gprconfig>
+        <fallback_targets>
+            <target>target-0</target>
+            <target>x86_64-linux</target>
+        </fallback_targets>
+    </gprconfig>
+
 
 .. _Configurations:
 
