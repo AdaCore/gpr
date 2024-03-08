@@ -2139,7 +2139,7 @@
           "attribute_def": {
             "index_type": "LANGUAGE_INDEX",
             "index_optional": false,
-            "value": "SINGLE",
+            "value": "LIST",
             "value_case_sensitive": true,
             "value_is_set": false,
             "empty_value": "ALLOW",
@@ -6036,3 +6036,4 @@
     }
   ]
 }
+
