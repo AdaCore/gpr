@@ -19,9 +19,10 @@
 with Ada.Containers.Ordered_Maps;
 
 with GPR2;
+with GPR2.Build;
+with GPR2.Build.Compilation_Unit;
 with GPR2.Containers;
 with GPR2.Path_Name;
-with GPR2.Unit;
 
 with GPRtools.Options;
 
@@ -75,8 +76,8 @@ package GPRbuild.Options is
 
    function Create return GPRBuild_Parser;
 
-   function Mains
-     (Options : Object) return GPR2.Unit.Source_Unit_Vectors.Vector;
+   function Mains (Options : Object)
+     return GPR2.Build.Compilation_Unit.Unit_Location_Vector;
    --  The list of main units to compile
 
    function Recursive_Build (Options : Object) return Boolean is

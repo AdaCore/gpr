@@ -18,6 +18,10 @@
 
 with GPRtools.Command_Line;
 
+with GPR2.Build.Source;
+with GPR2.Build.Unit_Info;
+with GPR2.Build.Unit_Info.List;
+with GPR2.Build.View_Db;
 with GPR2.Options;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -26,6 +30,9 @@ package body GPRbuild.Options is
 
    use GPRtools;
    use GPR2;
+   use GPR2.Build.Compilation_Unit;
+
+   package BCU renames GPR2.Build.Compilation_Unit;
 
    procedure On_Switch
      (Parser : GPRtools.Command_Line.Command_Line_Parser'Class;
@@ -55,8 +62,7 @@ package body GPRbuild.Options is
                       ASCII.LF &
                       "     [-cargs[:lang] opts] [-largs opts] [-kargs opts]" &
                       " [-gargs opts]",
-                    Allow_Autoconf    => True,
-                    Allow_Distributed => True);
+                    Allow_Autoconf    => True);
       Build_Group    : GPRtools.Command_Line.Argument_Group;
       Compiler_Group : GPRtools.Command_Line.Argument_Group;
 
@@ -280,14 +286,14 @@ package body GPRbuild.Options is
    -- Mains --
    -----------
 
-   function Mains
-     (Options : Object) return GPR2.Unit.Source_Unit_Vectors.Vector
+   function Mains (Options : Object)
+     return BCU.Unit_Location_Vector
    is
       use type Ada.Containers.Count_Type;
-      Result : GPR2.Unit.Source_Unit_Vectors.Vector;
+      Result : BCU.Unit_Location_Vector;
    begin
       if Options.Args.Is_Empty then
-         return GPR2.Unit.Source_Unit_Vectors.Empty_Vector;
+         return BCU.Empty_Vector;
       end if;
 
       if Options.Multi_Unit_Index /= No_Index
@@ -300,33 +306,66 @@ package body GPRbuild.Options is
 
       for Arg of Options.Args loop
          declare
-            Path  : constant GPR2.Path_Name.Object :=
-                      Options.Tree.Get_File (Simple_Name (Arg));
-            Unit  : GPR2.Unit.Source_Unit_Identifier;
-            Found : Boolean := False;
+            Found      : Boolean := False;
+            Src        : GPR2.Build.Source.Object;
+            Unit_Loc   : BCU.Unit_Location;
          begin
-            if Path.Is_Defined then
-               Result.Append ((Path, Options.Multi_Unit_Index));
-               Found := True;
-            else
-               --  Try to find the main unit if executable is specified
-               View_Loop :
-               for C in Options.Tree.Iterate loop
-                  declare
-                     View : constant GPR2.Project.View.Object :=
-                              GPR2.Project.Tree.Element (C);
-                  begin
-                     if View.Has_Mains and then not View.Is_Extended then
-                        Unit := View.Main (Simple_Name (Arg));
-                        if Unit.Source.Is_Defined then
-                           Result.Append (Unit);
+            View_Loop :
+            for C in Options.Tree.Iterate loop
+               declare
+                  View       : constant GPR2.Project.View.Object :=
+                                 GPR2.Project.Tree.Element (C);
+                  View_DB    : constant GPR2.Build.View_Db.Object :=
+                                 Options.Tree.Artifacts_Database (View);
+               begin
+                  if View.Is_Extended then
+                     goto Continue;
+                  end if;
+
+                  if View.Has_Mains then
+                     Unit_Loc := View.Main (Simple_Name (Arg));
+                     if Unit_Loc /= No_Unit then
+                        Result.Append (Unit_Loc);
+                        Found := True;
+                        exit View_Loop;
+                     end if;
+                  end if;
+
+                  --  Provided argument is not known as a main. See if we can
+                  --  find this source with all the supported languages body
+                  --  suffix for the current view.
+
+                  for Lang of View.Language_Ids loop
+                     Src := View_DB.Visible_Source
+                              (GPR2.Project.View.Suffixed_Simple_Name
+                                 (View, Arg, Lang));
+
+                     if Src.Is_Defined then
+                        declare
+                           Index : Unit_Index := No_Index;
+                        begin
+
+                           --  Always set index to the first unit found.
+
+                           if Src.Has_Units then
+                              Index :=
+                                GPR2.Build.Unit_Info.List.Element
+                                  (Src.Units.Iterate.First).Index;
+                           end if;
+
+                           Result.Append
+                           (GPR2.Build.Compilation_Unit.Unit_Location'
+                              (Src.Owning_View,
+                               Src.Path_Name,
+                               Index));
                            Found := True;
                            exit View_Loop;
-                        end if;
+                        end;
                      end if;
-                  end;
-               end loop View_Loop;
-            end if;
+                  end loop;
+               end;
+               <<Continue>>
+            end loop View_Loop;
 
             if not Found then
                raise GPR2.Options.Usage_Error with
