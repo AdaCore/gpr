@@ -1092,7 +1092,7 @@ begin
    Add
      (Name                 => Runtime_Source_Dirs,
       Index_Type           => Language_Index,
-      Value                => Single,
+      Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
 

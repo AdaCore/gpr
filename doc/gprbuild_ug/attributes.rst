@@ -358,7 +358,7 @@ Project Level Attributes
 
   .. index:: Attributes - Project Level Attributes; Runtime_Source_Dirs
 
-  * **Runtime_Source_Dirs**: single value, indexed by a language
+  * **Runtime_Source_Dirs**: list value, indexed by a language
 
     Index is a language name. Value is the path names of the directories where the
     sources of runtime libraries are located. This attribute is not normally
