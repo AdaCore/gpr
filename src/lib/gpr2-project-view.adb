@@ -2003,7 +2003,7 @@ package body GPR2.Project.View is
       return Set : GPR2.Build.Compilation_Unit.Unit_Location_Vector do
          if Attr.Is_Defined then
             for Main of Attr.Values loop
-               Src := Db.Visible_Source (Simple_Name (Main.Text));
+               Src := Db.Visible_Source (Self.Get_Main_Simplename (Main.Text));
 
                if Src.Is_Defined then
                   Set.Append

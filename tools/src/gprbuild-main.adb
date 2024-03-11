@@ -84,15 +84,6 @@ begin
 
    Tree.Update_Sources (Backends => Source_Info.No_Backends);
 
-   if Tree.Root_Project.Has_Mains
-     and then Tree.Root_Project.Mains.Is_Empty
-   then
-      Handle_Program_Termination
-        (Opt                   => Opt,
-         Display_Tree_Messages => True,
-         Message               => "problems with main sources");
-   end if;
-
    --  Check if we have a Builder'Switches attribute in the root project
 
    if Tree.Root_Project.Has_Package (PRP.Builder) then
