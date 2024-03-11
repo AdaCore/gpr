@@ -846,7 +846,7 @@ each other.
     </fallback_targets>
 
 Let's take an example. If we have the following configuration in a file named
-:node:`config.xml`, a call to :code:`gprconfig --db config.xml --batch --target=target-0 --config=Ada --fallback-targets`
+:code:`config.xml`, a call to :code:`gprconfig --db config.xml --batch --target=target-0 --config=Ada --fallback-targets`
 will produce a configuration file for a compiler supporting the :code:`x86_64-linux`
 target as the :code:`target-0` one is not supported by any compiler.
 
