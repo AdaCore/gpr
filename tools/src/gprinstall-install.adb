@@ -3040,15 +3040,6 @@ package body GPRinstall.Install is
             return;
          end if;
 
-         if Project.Has_Mains
-           and then Project.Mains.Is_Empty
-         then
-            Handle_Program_Termination
-              (Opt                   => Options,
-               Display_Tree_Messages => True,
-               Message               => "problems with main sources");
-         end if;
-
          --  What should be copied ?
 
          Copy :=

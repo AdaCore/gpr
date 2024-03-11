@@ -341,15 +341,6 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
 
       end;
 
-      if View.Has_Mains
-        and then View.Mains.Is_Empty
-      then
-         Handle_Program_Termination
-           (Opt                   => Options,
-            Display_Tree_Messages => True,
-            Message               => "problems with main sources");
-      end if;
-
       for S of View.Sources loop
          declare
             Cleanup : Boolean := True;
