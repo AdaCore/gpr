@@ -4,6 +4,6 @@ project Demo1 is
 
   package Builder is
      for Executable ("call1.adb") use "call_me";
-  end Buillder;
+  end Builder;
 
 end Demo1;

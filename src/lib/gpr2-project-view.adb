@@ -32,12 +32,15 @@ package body GPR2.Project.View is
      (Positive, GNAT.Regexp.Regexp, "=" => GNAT.Regexp."=");
 
    function Main_Simple_Name
-     (Self : Object; Main : String) return Simple_Name;
+     (Self             : Object;
+      Main             : String;
+      Body_Suffix_Lang : Language_Id := Ada_Language) return Simple_Name;
    --  Get the main attribute value, if the value contains any standard
    --  suffix (.ada, .adb, .c) or any declared convention in the Naming
    --  package then it returns the value as is.
-   --  Otherwise, the default Ada suffix or any Ada Naming convention
-   --  declared in Self is applied to the value.
+   --  Otherwise, the suffix of the provided language "Body_Suffix_Lang"
+   --  is applied to the value. If no suffixes are defined for this language,
+   --  then it returns the value as is.
 
    function Get_Ref (View : Object) return Definition.Ref is
      (Definition.Data (View.Get.Element.all)'Unchecked_Access);
@@ -1047,22 +1050,24 @@ package body GPR2.Project.View is
       end if;
 
       for Value of Attr.Values loop
-         declare
-            Main : constant Simple_Name :=
-                     Main_Simple_Name (Self, Value.Text);
-            Db   : constant GPR2.Build.View_Db.Object := Self.View_Db;
-         begin
-            Src := Db.Visible_Source (Main);
+         for Lang of Self.Language_Ids loop
+            declare
+               Main : constant Simple_Name :=
+                        Main_Simple_Name (Self, Value.Text, Lang);
+               Db   : constant GPR2.Build.View_Db.Object := Self.View_Db;
+            begin
+               Src := Db.Visible_Source (Main);
 
-            if not Src.Is_Defined then
-               Messages.Append
-                 (Message.Create
-                    (Level   => Message.Warning,
-                     Message => String (Main) &
-                       " is not a source of project " & String (Self.Name),
-                     Sloc    => Value));
-            end if;
-         end;
+               if not Src.Is_Defined then
+                  Messages.Append
+                    (Message.Create
+                       (Level   => Message.Warning,
+                        Message => String (Main) &
+                        " is not a source of project " & String (Self.Name),
+                        Sloc    => Value));
+               end if;
+            end;
+         end loop;
       end loop;
    end Check_Mains;
 
@@ -1334,24 +1339,26 @@ package body GPR2.Project.View is
          Db := Self.View_Db;
 
          for Value of Attr.Values loop
-            declare
-               Main : constant Simple_Name :=
-                        Main_Simple_Name (Self, Value.Text);
-            begin
-               Src := Db.Visible_Source (Main);
+            for Lang of Self.Language_Ids loop
+               if Attr.Is_Defined then
+                  declare
+                     Main : constant Simple_Name :=
+                       Main_Simple_Name
+                         (Self, Value.Text, Lang);
+                  begin
+                     Src := Db.Visible_Source (Main);
 
-               if Src.Is_Defined then
-                  --  At least one valid
-                  return True;
+                     if Src.Is_Defined then
+                        --  At least one valid
+                        return True;
+                     end if;
+                  end;
                end if;
-            end;
+            end loop;
          end loop;
-
-         return False;
-
-      else
-         return False;
       end if;
+
+      return False;
    end Has_Mains;
 
    -----------------
@@ -1922,14 +1929,17 @@ package body GPR2.Project.View is
          if Simple_Name (Attr.Value.Text) = Executable
            or else Simple_Name (Attr.Value.Text) = Exc_BN
          then
-            Src := Db.Visible_Source (Simple_Name (Attr.Index.Value));
+            for Lang of Self.Language_Ids loop
+               Src := Db.Visible_Source
+                        (Main_Simple_Name (Self, Attr.Index.Value, Lang));
 
-            if Src.Is_Defined then
-               return
-                 (Src.Owning_View,
-                  Src.Path_Name,
-                  Attr.Index.At_Pos);
-            end if;
+               if Src.Is_Defined then
+                  return
+                    (Src.Owning_View,
+                     Src.Path_Name,
+                     Attr.Index.At_Pos);
+               end if;
+            end loop;
          end if;
       end loop;
 
@@ -1942,13 +1952,16 @@ package body GPR2.Project.View is
             Exec : constant Simple_Name := BN & Self.Executable_Suffix;
          begin
             if Exec = Executable or else BN = Executable then
-               Src := Db.Visible_Source (Simple_Name (Value.Text));
+               for Lang of Self.Language_Ids loop
+                  Src := Db.Visible_Source
+                           (Main_Simple_Name (Self, Value.Text, Lang));
 
-               if Src.Is_Defined then
-                  return (Src.Owning_View,
-                          Src.Path_Name,
-                          Value.At_Pos);
-               end if;
+                  if Src.Is_Defined then
+                     return (Src.Owning_View,
+                             Src.Path_Name,
+                             Value.At_Pos);
+                  end if;
+               end loop;
             end if;
          end;
       end loop;
@@ -1961,16 +1974,13 @@ package body GPR2.Project.View is
    ----------------------
 
    function Main_Simple_Name
-     (Self : Object; Main : String) return Simple_Name
+     (Self             : Object;
+      Main             : String;
+      Body_Suffix_Lang : Language_Id := Ada_Language) return Simple_Name
    is
       use GNATCOLL.Utils;
 
       Default_Ada_MU_BS : constant String := ".ada";
-      Ada_Index         : constant Attribute_Index.Object :=
-                            Attribute_Index.Create (Ada_Language);
-      Ada_BS            : constant String :=
-                            Self.Attribute
-                               (PRA.Naming.Body_Suffix, Ada_Index).Value.Text;
 
       function Ends_With_One_Language (Main : String) return Boolean;
       --  Check if Main ends with any Self language naming convention suffix
@@ -2040,7 +2050,19 @@ package body GPR2.Project.View is
       then
          return Simple_Name (Main);
       else
-         return Simple_Name (Main & Ada_BS);
+         declare
+            Index  : constant Attribute_Index.Object :=
+                        Attribute_Index.Create (Body_Suffix_Lang);
+            Attr   : constant Project.Attribute.Object :=
+                        Self.Attribute (PRA.Naming.Body_Suffix, Index);
+         begin
+            if Attr.Is_Defined
+            then
+               return Simple_Name (Main & Attr.Value.Text);
+            else
+               return Simple_Name (Main);
+            end if;
+         end;
       end if;
    end Main_Simple_Name;
 
@@ -2060,15 +2082,18 @@ package body GPR2.Project.View is
       return Set : GPR2.Build.Compilation_Unit.Unit_Location_Vector do
          if Attr.Is_Defined then
             for Value of Attr.Values loop
-               Src := Db.Visible_Source (Self.Main_Simple_Name (Value.Text));
+               for Lang of Self.Language_Ids loop
+                  Src := Db.Visible_Source
+                           (Self.Main_Simple_Name (Value.Text, Lang));
 
-               if Src.Is_Defined then
-                  Set.Append
-                    (Build.Compilation_Unit.Unit_Location'
-                       (Src.Owning_View,
-                        Src.Path_Name,
-                        Value.At_Pos));
-               end if;
+                  if Src.Is_Defined then
+                     Set.Append
+                       (Build.Compilation_Unit.Unit_Location'
+                          (Src.Owning_View,
+                           Src.Path_Name,
+                           Value.At_Pos));
+                  end if;
+               end loop;
             end loop;
          end if;
       end return;

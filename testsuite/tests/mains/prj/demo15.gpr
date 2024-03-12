@@ -1,0 +1,5 @@
+project Demo15 is
+   for Languages use ("C");
+   for Source_Dirs use ("src");
+   for Main use ("demo15");
+end Demo15;

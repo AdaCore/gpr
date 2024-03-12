@@ -47,7 +47,7 @@ procedure Main is
    Log  : GPR2.Log.Object;
 
 begin
-   for J in 1 .. 14 loop
+   for J in 1 .. 16 loop
       declare
          Num : constant String := J'Image;
          Prj_File : constant String :=
