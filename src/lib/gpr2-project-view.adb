@@ -31,7 +31,7 @@ package body GPR2.Project.View is
    package Regexp_List is new Ada.Containers.Indefinite_Vectors
      (Positive, GNAT.Regexp.Regexp, "=" => GNAT.Regexp."=");
 
-   function Get_Main_Simplename
+   function Main_Simple_Name
      (Self : Object; Main : String) return Simple_Name;
    --  Get the main attribute value, if the value contains any standard
    --  suffix (.ada, .adb, .c) or any declared convention in the Naming
@@ -1046,21 +1046,21 @@ package body GPR2.Project.View is
          return;
       end if;
 
-      for Main of Attr.Values loop
+      for Value of Attr.Values loop
          declare
-            Main_Fullname : constant Simple_Name :=
-                              Get_Main_Simplename (Self, Main.Text);
-            Db            : constant GPR2.Build.View_Db.Object := Self.View_Db;
+            Main : constant Simple_Name :=
+                     Main_Simple_Name (Self, Value.Text);
+            Db   : constant GPR2.Build.View_Db.Object := Self.View_Db;
          begin
-            Src := Db.Visible_Source (Main_Fullname);
+            Src := Db.Visible_Source (Main);
 
             if not Src.Is_Defined then
                Messages.Append
                  (Message.Create
                     (Level   => Message.Warning,
-                     Message => String (Main_Fullname) &
+                     Message => String (Main) &
                        " is not a source of project " & String (Self.Name),
-                     Sloc    => Main));
+                     Sloc    => Value));
             end if;
          end;
       end loop;
@@ -1246,94 +1246,6 @@ package body GPR2.Project.View is
       return Definition.Strong (Definition.Get_RO (Self).Extending);
    end Extending;
 
-   -----------------------
-   -- Get_Main_Fullname --
-   -----------------------
-
-   function Get_Main_Simplename
-     (Self : Object; Main : String) return Simple_Name
-   is
-      use GNATCOLL.Utils;
-
-      Default_Ada_MU_BS : constant String := ".ada";
-      Ada_Index         : constant Attribute_Index.Object :=
-                            Attribute_Index.Create (Ada_Language);
-      Ada_BS            : constant String :=
-                            Self.Attribute
-                               (PRA.Naming.Body_Suffix, Ada_Index).Value.Text;
-
-      function Ends_With_One_Language (Main : String) return Boolean;
-      --  Check if Main ends with any Self language naming convention suffix
-
-      function Is_An_Exception (Main : String) return Boolean;
-      --  Check if Main is an exception and should not be matched
-      --  with classical language naming convention.
-
-      ----------------------------
-      -- Ends_With_One_Language --
-      ----------------------------
-
-      function Ends_With_One_Language (Main : String) return Boolean is
-      begin
-         for Lang of Self.Language_Ids loop
-            declare
-               Index  : constant Attribute_Index.Object :=
-                          Attribute_Index.Create (Lang);
-               Attr   : constant Project.Attribute.Object :=
-                          Self.Attribute (PRA.Naming.Body_Suffix, Index);
-            begin
-               if Attr.Is_Defined
-                 and then Ends_With (Main, Attr.Value.Text)
-               then
-                  return True;
-               end if;
-            end;
-         end loop;
-
-         return False;
-      end Ends_With_One_Language;
-
-      ---------------------
-      -- Is_An_Exception --
-      ---------------------
-
-      function Is_An_Exception (Main : String) return Boolean is
-      begin
-         for Lang of Self.Language_Ids loop
-            declare
-               Index   : constant Attribute_Index.Object :=
-                           Attribute_Index.Create (Lang);
-               IEs_Def : constant Boolean :=
-                           Self.Attribute
-                             (PRA.Naming.Implementation_Exceptions,
-                              Index).Is_Defined;
-            begin
-               if IEs_Def then
-                  for Value of Self.Attribute
-                    (PRA.Naming.Implementation_Exceptions, Index).Values
-                  loop
-                     if Main = Value.Text then
-                        return True;
-                     end if;
-                  end loop;
-               end if;
-            end;
-         end loop;
-
-         return False;
-      end Is_An_Exception;
-
-   begin
-      if Is_An_Exception (Main)
-        or else Ends_With_One_Language (Main)
-        or else Ends_With (Main, Default_Ada_MU_BS)
-      then
-         return Simple_Name (Main);
-      else
-         return Simple_Name (Main & Ada_BS);
-      end if;
-   end Get_Main_Simplename;
-
    ---------------------------
    -- Has_Aggregate_Context --
    ---------------------------
@@ -1421,12 +1333,12 @@ package body GPR2.Project.View is
       then
          Db := Self.View_Db;
 
-         for Main of Attr.Values loop
+         for Value of Attr.Values loop
             declare
-               Main_Fullname : constant Simple_Name :=
-                                 Get_Main_Simplename (Self, Main.Text);
+               Main : constant Simple_Name :=
+                        Main_Simple_Name (Self, Value.Text);
             begin
-               Src := Db.Visible_Source (Main_Fullname);
+               Src := Db.Visible_Source (Main);
 
                if Src.Is_Defined then
                   --  At least one valid
@@ -1987,6 +1899,94 @@ package body GPR2.Project.View is
       return Build.Compilation_Unit.No_Unit;
    end Main;
 
+   ----------------------
+   -- Main_Simple_Name --
+   ----------------------
+
+   function Main_Simple_Name
+     (Self : Object; Main : String) return Simple_Name
+   is
+      use GNATCOLL.Utils;
+
+      Default_Ada_MU_BS : constant String := ".ada";
+      Ada_Index         : constant Attribute_Index.Object :=
+                            Attribute_Index.Create (Ada_Language);
+      Ada_BS            : constant String :=
+                            Self.Attribute
+                               (PRA.Naming.Body_Suffix, Ada_Index).Value.Text;
+
+      function Ends_With_One_Language (Main : String) return Boolean;
+      --  Check if Main ends with any Self language naming convention suffix
+
+      function Is_An_Exception (Main : String) return Boolean;
+      --  Check if Main is an exception and should not be matched
+      --  with classical language naming convention.
+
+      ----------------------------
+      -- Ends_With_One_Language --
+      ----------------------------
+
+      function Ends_With_One_Language (Main : String) return Boolean is
+      begin
+         for Lang of Self.Language_Ids loop
+            declare
+               Index  : constant Attribute_Index.Object :=
+                          Attribute_Index.Create (Lang);
+               Attr   : constant Project.Attribute.Object :=
+                          Self.Attribute (PRA.Naming.Body_Suffix, Index);
+            begin
+               if Attr.Is_Defined
+                 and then Ends_With (Main, Attr.Value.Text)
+               then
+                  return True;
+               end if;
+            end;
+         end loop;
+
+         return False;
+      end Ends_With_One_Language;
+
+      ---------------------
+      -- Is_An_Exception --
+      ---------------------
+
+      function Is_An_Exception (Main : String) return Boolean is
+      begin
+         for Lang of Self.Language_Ids loop
+            declare
+               Index   : constant Attribute_Index.Object :=
+                           Attribute_Index.Create (Lang);
+               IEs_Def : constant Boolean :=
+                           Self.Attribute
+                             (PRA.Naming.Implementation_Exceptions,
+                              Index).Is_Defined;
+            begin
+               if IEs_Def then
+                  for Value of Self.Attribute
+                    (PRA.Naming.Implementation_Exceptions, Index).Values
+                  loop
+                     if Main = Value.Text then
+                        return True;
+                     end if;
+                  end loop;
+               end if;
+            end;
+         end loop;
+
+         return False;
+      end Is_An_Exception;
+
+   begin
+      if Is_An_Exception (Main)
+        or else Ends_With_One_Language (Main)
+        or else Ends_With (Main, Default_Ada_MU_BS)
+      then
+         return Simple_Name (Main);
+      else
+         return Simple_Name (Main & Ada_BS);
+      end if;
+   end Main_Simple_Name;
+
    -----------
    -- Mains --
    -----------
@@ -2002,15 +2002,15 @@ package body GPR2.Project.View is
    begin
       return Set : GPR2.Build.Compilation_Unit.Unit_Location_Vector do
          if Attr.Is_Defined then
-            for Main of Attr.Values loop
-               Src := Db.Visible_Source (Self.Get_Main_Simplename (Main.Text));
+            for Value of Attr.Values loop
+               Src := Db.Visible_Source (Self.Main_Simple_Name (Value.Text));
 
                if Src.Is_Defined then
                   Set.Append
                     (Build.Compilation_Unit.Unit_Location'
                        (Src.Owning_View,
                         Src.Path_Name,
-                        Main.At_Pos));
+                        Value.At_Pos));
                end if;
             end loop;
          end if;
