@@ -57,6 +57,27 @@ LATEX_HYPHEN = r'''
 \tolerance=1000
 '''
 
+FOOTER = r"""
+\usepackage{titleref}
+
+\makeatletter
+\@ifundefined{fancyhf}{}{
+  \fancypagestyle{normal}{
+    \fancyhf{}
+    % Define footers
+    \fancyfoot[LE,RO]{{\py@HeaderFamily\thepage}}
+    \fancyfoot[LO,RE]{\TR@currentTitle}
+  }
+  \fancypagestyle{plain}{
+    \fancyhf{}
+    % Define footers
+    \fancyfoot[LE,RO]{{\py@HeaderFamily\thepage}}
+    \fancyfoot[LO,RE]{\TR@currentTitle}
+  }
+}
+\makeatother
+"""
+
 
 def doc_settings(full_document_name, version):
     return '\n'.join([

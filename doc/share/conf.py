@@ -97,8 +97,8 @@ latex_elements = {
     latex_elements.PAGE_BLANK +
     latex_elements.TOC_CMD +
     latex_elements.LATEX_HYPHEN +
-    latex_elements.doc_settings(DOCS[doc_name]['title'],
-                                version),
+    latex_elements.doc_settings(DOCS[doc_name]['title'], version) +
+    latex_elements.FOOTER,
     'tableofcontents': latex_elements.TOC}
 
 latex_documents = [
@@ -107,6 +107,8 @@ latex_documents = [
 texinfo_documents = [
     (master_doc, doc_name, project,
      u'AdaCore', doc_name, doc_name, '')]
+
+latex_table_style = ["standard", "colorrows"]
 
 
 def setup(app):
