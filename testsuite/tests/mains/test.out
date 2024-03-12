@@ -38,6 +38,7 @@ list of executables:
 ./not_found
 Demo7    K_STANDARD
 list of mains:
+src/demo7.adb
 list of executables:
 ./demo7
 Demo8    K_STANDARD
@@ -47,6 +48,7 @@ list of executables:
 ./demo8
 Demo9    K_STANDARD
 list of mains:
+src/demo9.1.ada
 list of executables:
 ./demo9
 Demo10   K_STANDARD
