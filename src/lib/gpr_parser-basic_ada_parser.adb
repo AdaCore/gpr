@@ -6,6 +6,7 @@
 with System;
 
 with Ada.Characters.Conversions;
+with Ada.Exceptions;
 
 with Gpr_Parser_Support.File_Readers; use Gpr_Parser_Support.File_Readers;
 with Gpr_Parser_Support.Diagnostics;  use Gpr_Parser_Support.Diagnostics;
@@ -583,6 +584,11 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
             return;
          end if;
+      exception
+         when E : others =>
+            Log_Error_Internal
+              ("exception while parsing " & String (Filename) & ASCII.LF &
+                 Ada.Exceptions.Exception_Information (E));
       end;
 
       --  Initialize the lexer
