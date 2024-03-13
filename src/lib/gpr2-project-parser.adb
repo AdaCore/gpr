@@ -644,6 +644,17 @@ package body GPR2.Project.Parser is
 
          return Project;
       end if;
+
+   exception
+      when E : others =>
+         Messages.Append
+           (Message.Create
+              (Message.Error,
+               "fatal error while parsing the project file: " &
+                 Ada.Exceptions.Exception_Message (E),
+               GPR2.Source_Reference.Create (Filename.Value, 0, 0)));
+
+         return Undefined;
    end Parse;
 
    -------------------
