@@ -125,6 +125,8 @@ package GPR2 is
    overriding function "=" (Left, Right : Filename_Optional) return Boolean;
    overriding function "<" (Left, Right : Filename_Optional) return Boolean;
 
+   function To_Lower (Name : Filename_Optional) return Value_Not_Empty;
+
    subtype Filename_Type is Filename_Optional
      with Dynamic_Predicate => Filename_Type'Length > 0;
 
@@ -365,6 +367,9 @@ private
    --  Get the GNAT prefix
 
    function To_Lower (Name : Name_Type) return Value_Not_Empty is
+     (Ada.Characters.Handling.To_Lower (String (Name)));
+
+   function To_Lower (Name : Filename_Optional) return Value_Not_Empty is
      (Ada.Characters.Handling.To_Lower (String (Name)));
 
    function Has_Directory_Separator (Name : String) return Boolean is

@@ -4,13 +4,13 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GNAT.SHA256;
-
 with GPR2.Source_Reference;
+with GPR2.Utils.Hash;
 
 private with Ada.Tags;
 
 package GPR2.Build.Artifacts is
+   use GPR2.Utils.Hash;
 
    type Object is interface;
    --  Artifacts are the nodes of the Tree DB graph, and represent the
@@ -31,18 +31,19 @@ package GPR2.Build.Artifacts is
    --  A source reference object, to be used in error reporting to locate the
    --  artifact.
 
-   function Checksum (Self : Object) return GNAT.SHA256.Message_Digest
-   is abstract;
-   --  The current checksum of the resource.
-   --  ??? Don't use GNAT.SHA256 but an abstraction layer instead
+   function Checksum (Self : Object) return Hash_Digest is abstract;
+   --  The current checksum of the resource
 
    function "<" (L, R : Object) return Boolean is abstract;
 
    function Hash (Self : Object) return Ada.Containers.Hash_Type is abstract;
 
+   function UID (Self : Object) return B3_Hash_Digest is abstract;
+   --  The UID of the artifact
+
    function Less (L, R : Object'Class) return Boolean;
    --  Class wide comparison, compares object type's external tags if L and R
-   --  are not of the same type
+   --  are not of the same type.
 
 private
 

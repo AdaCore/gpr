@@ -6,21 +6,101 @@
 
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Tree_Db;
+with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.View.Set;
-with GPR2.Project.Registry.Attribute;
+with GPR2.Utils.Hash;
 
 package body GPR2.Build.Actions.Compile is
 
    package PAI renames GPR2.Project.Attribute_Index;
-   package PRA renames GPR2.Project.Registry.Attribute;
 
    function Lookup
      (V          : GPR2.Project.View.Object;
       BN         : Simple_Name;
       Must_Exist : Boolean) return GPR2.Path_Name.Object;
    --  Look for BN in V's hierarchy of object/lib directories
+
+   -----------------------
+   -- Compare_Signature --
+   -----------------------
+
+   overriding procedure Compare_Signature
+     (Self     : in out Object;
+      Messages : in out GPR2.Log.Object)
+   is
+      use Build.Signature;
+      use Utils.Hash;
+
+      Db_File : constant Path_Name.Object :=
+                  Self.Tree.Db_Filename_Path (Self.UID);
+   begin
+      Self.Signature := Load (Db_File, Messages);
+
+      if Self.Signature.Coherent then
+         Self.Signature.Set_Valid_State (True);
+      else
+         Self.Signature.Set_Valid_State (False);
+
+         return;
+      end if;
+
+      for Input of Self.Tree.Inputs (Self.UID) loop
+         declare
+            Checksum : constant Hash_Digest :=
+                         Self.Signature.Artifact_Checksum (Input.UID);
+         begin
+            if not (Input.Checksum = Checksum)
+            then
+               Self.Signature.Set_Valid_State (False);
+               Messages.Append
+                 (Message.Create
+                    (Message.Information,
+                     "not up-to-date",
+                     Input.SLOC));
+            end if;
+         end;
+      end loop;
+
+      for Output of Self.Tree.Outputs (Self.UID) loop
+         declare
+            Checksum : constant Hash_Digest :=
+                         Self.Signature.Artifact_Checksum (Output.UID);
+         begin
+            if not (Output.Checksum = Checksum)
+            then
+               Self.Signature.Set_Valid_State (False);
+               Messages.Append
+                 (Message.Create
+                    (Message.Information,
+                     "not up-to-date",
+                     Output.SLOC));
+            end if;
+         end;
+      end loop;
+
+   end Compare_Signature;
+
+   -----------------------
+   -- Compute_Signature --
+   -----------------------
+
+   overriding procedure Compute_Signature (Self : in out Object) is
+      use GPR2.Build.Signature;
+   begin
+      for Input of Self.Tree.Inputs (Self.UID) loop
+         Self.Signature.Update_Artifact
+           (Input.UID, Input.Image, Input.Checksum);
+      end loop;
+
+      for Output of Self.Tree.Outputs (Self.UID) loop
+         Self.Signature.Update_Artifact
+           (Output.UID, Output.Image, Output.Checksum);
+      end loop;
+
+      Self.Signature.Store (Self.Tree.Db_Filename_Path (Self.UID));
+   end Compute_Signature;
 
    ------------
    -- Create --

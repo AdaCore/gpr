@@ -102,6 +102,7 @@ package body GPR2.Build.Tree_Db is
 
       Self.Actions.Reference (Curs).Attach (Self);
       Self.Actions.Reference (Curs).On_Tree_Insertion (Self, Messages);
+      Self.Actions.Reference (Curs).Compare_Signature (Messages);
    end Add_Action;
 
    ------------------
@@ -267,9 +268,9 @@ package body GPR2.Build.Tree_Db is
       return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
    end Constant_Artifact_Reference;
 
-   ----------
-   -- Load --
-   ----------
+   ------------
+   -- Create --
+   ------------
 
    procedure Create
      (Self                 : in out Object;
@@ -304,6 +305,35 @@ package body GPR2.Build.Tree_Db is
          end if;
       end loop;
    end Create;
+
+   ----------------------
+   -- DB_Filename_Path --
+   ----------------------
+
+   function Db_Filename_Path
+     (Self   : in out Object;
+      Action : Actions.Action_Id'Class) return Path_Name.Object
+   is
+      Curs : constant Action_Maps.Cursor := Self.Actions.Find (Action);
+   begin
+      return (GPR2.Path_Name.Create_File
+              (Self.Actions.Reference (Curs).UID.Db_Filename,
+               Self.Actions.Reference (Curs).View.Object_Directory.Value)
+             );
+   end Db_Filename_Path;
+
+   -------------
+   -- Execute --
+   -------------
+
+   procedure Execute
+     (Self   : in out Object;
+      Action : Actions.Action_Id'Class)
+   is
+      Curs : constant Action_Maps.Cursor := Self.Actions.Find (Action);
+   begin
+      Self.Actions.Reference (Curs).Compute_Signature;
+   end Execute;
 
    -----------
    -- First --

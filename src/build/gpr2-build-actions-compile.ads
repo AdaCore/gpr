@@ -4,17 +4,23 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Build.Signature;
 with GPR2.Build.Source;
 with GPR2.Path_Name;
+with GPR2.Project.Registry.Attribute;
 
 private with GPR2.Containers;
 private with GPR2.View_Ids;
 
 package GPR2.Build.Actions.Compile is
 
+   package PRA renames GPR2.Project.Registry.Attribute;
+
    type Compile_Id (<>) is new Actions.Action_Id with private;
 
    overriding function Image (Self : Compile_Id) return String;
+
+   overriding function Db_Filename (Self : Compile_Id) return Simple_Name;
 
    overriding function "<" (L, R : Compile_Id) return Boolean;
 
@@ -22,6 +28,8 @@ package GPR2.Build.Actions.Compile is
    --  Action responsible for building Ada sources
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
+
+   overriding function Valid_Signature (Self : Object) return Boolean;
 
    function Create (Src  : GPR2.Build.Source.Object) return Object;
 
@@ -35,6 +43,12 @@ package GPR2.Build.Actions.Compile is
    overriding procedure On_Tree_Insertion
      (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object;
+      Messages : in out GPR2.Log.Object);
+
+   overriding procedure Compute_Signature (Self : in out Object);
+
+   overriding procedure Compare_Signature
+     (Self     : in out Object;
       Messages : in out GPR2.Log.Object);
 
 private
@@ -51,6 +65,11 @@ private
      ("Compile " & Image (Self.Lang) & ": " & String (Self.Src_Name) &
         " (" & String (Self.Ctxt.Path_Name.Simple_Name) & ")");
 
+   overriding function Db_Filename (Self : Compile_Id) return Simple_Name is
+     (Simple_Name ("compile_" & To_Lower (Self.Src_Name)
+      & "_" & To_Lower (Self.Ctxt.Name)
+      & ".json"));
+
    overriding function "<" (L, R : Compile_Id) return Boolean is
      (if L.Ctxt.Id = R.Ctxt.Id then L.Src_Name < R.Src_Name
       else L.Ctxt.Id < R.Ctxt.Id);
@@ -62,13 +81,16 @@ private
       Deps     : GPR2.Containers.Name_Set;
       --  List of known dependencies for this unit
 
-      --  ??? Add the action's signature
+      Signature : GPR2.Build.Signature.Object;
 
       UID      : Compile_Id (Input_Len);
    end record;
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class is
      (Self.UID);
+
+   overriding function Valid_Signature (Self : Object) return Boolean is
+     (Self.Signature.Valid);
 
    overriding function View (Self : Object) return GPR2.Project.View.Object is
      (Self.UID.Ctxt);
