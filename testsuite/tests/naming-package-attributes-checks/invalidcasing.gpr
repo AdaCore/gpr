@@ -1,0 +1,5 @@
+project InvalidCasing is
+    package Naming is
+       for Casing use "invalidcasing";
+    end Naming;
+end InvalidCasing;

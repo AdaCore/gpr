@@ -1,0 +1,8 @@
+project Error is
+   for Allow_Single use "";
+   for Allow_List use ("");
+   for Ignore_Single use "";
+   for Ignore_List use ("");
+   for Error_Single use "";
+   for Error_List use ("");
+end Error;

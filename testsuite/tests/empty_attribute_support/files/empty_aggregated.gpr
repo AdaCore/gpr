@@ -1,0 +1,3 @@
+aggregate project empty_aggregated is
+   for Project_Files use ("");
+end empty_aggregated;

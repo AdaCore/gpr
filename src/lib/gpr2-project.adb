@@ -213,6 +213,14 @@ package body GPR2.Project is
 
          return Name & Project_File_Extension;
       end if;
+   exception
+      when others =>
+         if Config_File then
+            return Name & Config_File_Extension;
+         else
+            --  The default is the .gpr extension
+            return Name & Project_File_Extension;
+         end if;
    end Ensure_Extension;
 
    ------------------

@@ -1,0 +1,196 @@
+library project Library_Empty_Space_Value_Checks is
+   for Archive_Builder use ("", " ");
+   for Archive_Builder_Append_Option use ("", " ");
+   for Archive_Indexer use ("", " ");
+   for Archive_Suffix use " ";
+   for Canonical_Target use " ";
+   for Config_Prj_File use " ";
+   for Create_Missing_Dirs use " ";
+   for Default_Language use " ";
+   for Excluded_Source_Dirs use ("");
+   for Excluded_Source_Files use ("", " ");
+   --for Excluded_Source_List_File use ""; -- dynamic predicate
+   for Exec_Dir use " ";
+   --for Externally_Built use ""; -- error invalid value for externally_built
+   for Ignore_Source_Sub_Dirs use ("", " ");
+   for Include_Switches_Via_Spec ("") use ("", " ");
+   for Inherit_Source_Path ("") use ("", " ");
+   for Interfaces use ();
+   for Languages use (" ");
+   for Leading_Library_Options use ("", " ");
+   for Library_Ali_Dir use " ";
+   for Library_Auto_Init use " ";
+   for Library_Auto_Init_Supported use " ";
+   for Library_Builder use " ";
+   for Library_Dir use " ";
+   for Library_Encapsulated_Options use ("", " ");
+   for Library_Gcc use " ";
+   for Library_Install_Name_Option use " ";
+   for Library_Interface use ();
+   --for Library_Kind use ""; -- error invalid value for library_kind
+   for Library_Major_Minor_Id_Supported use " ";
+   for Library_Name use " ";
+   for Library_Options use ("", " ");
+   for Library_Partial_Linker use ("", " ");
+   for Library_Reference_Symbol_File use " ";
+   for Library_Rpath_Options ("") use ("", " ");
+   for Library_Src_Dir use " ";
+   for Library_Standalone use " ";
+   for Library_Support use " ";
+   --for Library_Symbol_File use ""; -- contraint_error bad input
+   --for Library_Symbol_Policy use ""; -- constraint_error bad input
+   for Library_Version use " ";
+   for Library_Version_Switches use ("", " ");
+   for Locally_Removed_Files use (" ");
+   for Main use ("", " ");
+   --for Name use ""; -- read-only
+   for Object_Dir use " ";
+   for Object_Generated ("") use " ";
+   for Object_Lister use ("", " ");
+   for Object_Lister_Matcher use " ";
+   for Objects_Linked ("") use " ";
+   for Only_Dirs_With_Sources ("") use " ";
+   for Origin_Project use " ";
+   --for Project_Dir use ""; -- read-only
+   for Required_Toolchain_Version ("") use " ";
+   for Roots ("") use ("", " ");
+   for Run_Path_Option use ("", " ");
+   for Run_Path_Origin use " ";
+   for Runtime ("") use " ";
+   for Runtime_Dir ("") use " ";
+   for Runtime_Library_Dir ("") use " ";
+   for Runtime_Source_Dir ("") use " ";
+   for Runtime_Source_Dirs ("") use ("", " ");
+   for Separate_Run_Path_Options use " ";
+   for Shared_Library_Minimum_Switches use ("", " ");
+   for Shared_Library_Prefix use " ";
+   for Shared_Library_Suffix use " ";
+   for Source_Dirs use ("");
+   for Source_Files use (" ");
+   --for Source_List_File use ""; --dynamic_predicate
+   for Symbolic_Link_Supported use " ";
+   for Target use " ";
+   for Toolchain_Description ("") use " ";
+   for Toolchain_Name ("") use " ";
+   for Toolchain_Path ("") use " ";
+   for Toolchain_Version ("") use " ";
+   --for Warning_Message use ""; -- dynamic_predicate
+   package Binder is
+      for Default_Switches ("") use ("", " ");
+      for Driver ("") use " ";
+      for Objects_Path ("") use " ";
+      for Objects_Path_File ("")  use " ";
+      for Prefix ("") use " ";
+      for Required_Switches ("")  use ("", " ");
+      for Switches ("") use ("", " ");
+   end Binder;
+   package Builder is
+      for Default_Switches ("") use ("", " ");
+      for Executable ("") use " ";
+      for Executable_Suffix use " ";
+      for Global_Compilation_Switches ("") use ("", " ");
+      for Global_Config_File ("") use " ";
+      for Global_Configuration_Pragmas use " ";
+      for Switches ("") use ("", " ");
+   end Builder;
+   package Clean is
+      for Artifacts_In_Exec_Dir use ("", " ");
+      for Artifacts_In_Object_Dir use ("", " ");
+      for Object_Artifact_Extensions ("") use ("", " ");
+      for Source_Artifact_Extensions ("") use ("", " ");
+      for Switches use ("", " ");
+   end Clean;
+   package Compiler is 
+      for Config_Body_File_Name ("") use " ";
+      for Config_Body_File_Name_Index ("") use " ";
+      for Config_Body_File_Name_Pattern ("") use " ";
+      for Config_File_Switches ("") use ("", " ");
+      for Config_File_Unique ("") use " ";
+      for Config_Spec_File_Name ("") use " ";
+      for Config_Spec_File_Name_Index ("") use " ";
+      for Config_Spec_File_Name_Pattern ("") use " ";
+      for Default_Switches ("") use ("", " ");
+      for Dependency_Driver ("") use ("", " ");
+      for Dependency_Kind ("") use " ";
+      for Dependency_Switches ("") use ("", " ");
+      for Driver ("") use " ";
+      for Include_Path ("") use ""; 
+      for Include_Path_File ("") use " ";
+      for Include_Switches ("") use ("", " ");
+      for Language_Kind ("") use " ";
+      for Leading_Required_Switches ("") use ("", " ");
+      for Local_Config_File ("") use " ";
+      for Local_Configuration_Pragmas use " ";
+      for Mapping_Body_Suffix ("") use " ";
+      for Mapping_File_Switches ("") use ("", " ");
+      for Mapping_Spec_Suffix ("") use " ";
+      for Max_Command_Line_Length use " ";
+      for Multi_Unit_Object_Separator ("") use " ";
+      for Multi_Unit_Switches ("") use ("", " ");
+      for Object_File_Suffix ("") use " ";
+      for Object_File_Switches ("") use ("", " ");
+      for Object_Path_Switches ("") use ("", " ");
+      for Path_Syntax ("") use " ";
+      for Pic_Option ("") use ("", " ");
+      for Required_Switches ("") use ("", " ");
+      for Response_File_Format ("") use " ";
+      for Response_File_Switches ("") use ("", " ");
+      for Source_File_Switches ("") use ("", " ");
+      for Switches ("") use ("", " ");
+      for Trailing_Required_Switches ("") use ("", " ");
+   end Compiler;
+   package Gnatls is
+      for Switches use ("", " ");
+   end Gnatls;
+   package Install is
+      for Active use " ";
+      for Ali_Subdir use " ";
+      for Artifacts ("") use ("", " ");
+      for Exec_Subdir use " ";
+      for Install_Name use " ";
+      for Install_Project use " ";
+      for Lib_Subdir use " ";
+      for Mode use " ";
+      for Prefix use " ";
+      for Project_Subdir use " ";
+      for Required_Artifacts ("") use ("", " ");
+      for Side_Debug use " ";
+      for Sources_Subdir use ""; 
+   end Install;
+   package Linker is
+      for Default_Switches ("") use ("", " ");
+      for Driver use " ";
+      for Export_File_Format use " ";
+      for Export_File_Switch use " ";
+      for Leading_Switches ("") use ("", " ");
+      for Linker_Options use ("", " ");
+      for Map_File_Option use " ";
+      for Max_Command_Line_Length use " ";
+      for Required_Switches use ("", " ");
+      for Response_File_Format use " ";
+      for Response_File_Switches use ("", " ");
+      for Switches ("") use ("", " ");
+      for Trailing_Switches ("") use ("", " ");
+   end Linker;
+   package Naming is
+      -- for Body ("") use ""; -- dynamic_predicate
+      for Body_Suffix ("") use " ";
+      --for Casing use ""; -- invalid value for casing
+      --for Dot_Replacement use ""; -- naming'dot_replacament cannot be empty
+      --for Implementation ("")  use ""; -- dynamic_predicate
+      for Implementation_Exceptions ("") use (" ");
+      for Implementation_Suffix ("") use " ";
+      --for Separate_Suffix use ""; -- naming'separate_suffix cannot be empty
+      --for Spec ("") use ""; -- dynamic_predicate
+      for Spec_Suffix ("") use " ";
+      --for Specification ("") use "a"; -- dynamic_predicate
+      for Specification_Exceptions ("") use ();
+      for Specification_Suffix ("") use " ";
+   end Naming;
+   package Remote is
+      for Excluded_Patterns use ("", " ");
+      for Included_Artifact_Patterns use ("", " ");
+      for Included_Patterns use ("", " ");
+      for Root_Dir use " ";
+   end Remote;
+end Library_Empty_Space_Value_Checks;
