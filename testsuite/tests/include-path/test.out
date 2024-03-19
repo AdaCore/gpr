@@ -1,0 +1,153 @@
+agglib.gpr:10:24: warning: library directory "lib/agglib" not found
+shared_ada.gpr:4:23: warning: object directory "obj/shared_ada" not found
+shared_c.gpr:6:23: warning: object directory "obj/shared_c" not found
+withagglib.gpr:8:23: warning: object directory "obj/withagglib" not found
+base.gpr:8:23: warning: object directory "obj/base" not found
+ext.gpr:5:23: warning: object directory "obj/ext" not found
+extall.gpr:4:23: warning: object directory "obj" not found
+=========================================
+Testing trees/base.gpr
+=========================================
+* <runtine dir>/runtime.gpr
+  - Ada:
+    <runtine dir>/adainclude/
+* trees/base.gpr
+  - Ada:
+    trees/src/base/
+    <runtine dir>/adainclude/
+    trees/src/shared_ada/
+* trees/shared_ada.gpr
+  - Ada:
+    trees/src/shared_ada/
+    <runtine dir>/adainclude/
+* trees/shared_c.gpr
+  - C:
+    trees/src/shared_c/
+=========================================
+Testing trees/ext.gpr
+=========================================
+* <runtine dir>/runtime.gpr
+  - Ada:
+    <runtine dir>/adainclude/
+* trees/ext.gpr
+  - Ada:
+    trees/src/ext/
+    trees/src/base/
+    <runtine dir>/adainclude/
+  - C:
+    trees/src/ext/
+=========================================
+Testing trees/extall.gpr
+=========================================
+* <runtine dir>/runtime.gpr
+  - Ada:
+    <runtine dir>/adainclude/
+* trees/extall.gpr
+  - Ada:
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext2/
+    <runtine dir>/adainclude/
+  - C:
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext2/
+  - C++:
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext1/
+=========================================
+Testing trees/agglib.gpr
+=========================================
+* trees/agglib.gpr
+* trees/base.gpr
+  - Ada:
+    trees/src/base/
+    <runtine dir>/adainclude/
+    trees/src/shared_ada/
+* trees/ext.gpr
+  - Ada:
+    trees/src/ext/
+    trees/src/base/
+    <runtine dir>/adainclude/
+  - C:
+    trees/src/ext/
+* trees/extall.gpr
+  - Ada:
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext2/
+    <runtine dir>/adainclude/
+  - C:
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext2/
+  - C++:
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext1/
+=========================================
+Testing trees/withagglib.gpr
+=========================================
+* <runtine dir>/runtime.gpr
+  - Ada:
+    <runtine dir>/adainclude/
+* trees/agglib.gpr
+* trees/base.gpr
+  - Ada:
+    trees/src/base/
+    <runtine dir>/adainclude/
+    trees/src/shared_ada/
+* trees/ext.gpr
+  - Ada:
+    trees/src/ext/
+    trees/src/base/
+    <runtine dir>/adainclude/
+  - C:
+    trees/src/ext/
+* trees/extall.gpr
+  - Ada:
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext2/
+    <runtine dir>/adainclude/
+  - C:
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext2/
+  - C++:
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext1/
+* trees/withagglib.gpr
+  - Ada:
+    trees/src/withagglib/
+    <runtine dir>/adainclude/
+    trees/src/base/
+    trees/src/ext/
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext2/
+  - C:
+    trees/src/withagglib/
+    trees/src/ext/
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext2/
+  - C++:
+    trees/src/withagglib/
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext1/

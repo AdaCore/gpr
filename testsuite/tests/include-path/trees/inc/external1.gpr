@@ -1,0 +1,12 @@
+project External1 is
+
+   for Languages use ("C++");
+
+   for Source_Dirs use ("src/ext1");
+   for Object_Dir use "obj/ext1";
+
+   for Externally_Built use "true";
+   for Library_Name use "ext1";
+   for Library_Dir use "lib/ext1";
+
+end External1;

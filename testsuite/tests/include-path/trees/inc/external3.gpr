@@ -1,0 +1,14 @@
+with "external2";
+
+project External3 is
+
+   for Languages use ("Ada", "C", "C++");
+
+   for Source_Dirs use ("src/ext3");
+   for Object_Dir use "obj/ext3";
+
+   for Externally_Built use "true";
+   for Library_Name use "ext3";
+   for Library_Dir use "lib/ext3";
+
+end External3;
