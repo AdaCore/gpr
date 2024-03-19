@@ -3288,15 +3288,12 @@ package body GPR2.Project.Tree is
             end Check_Directory;
 
          begin
-            if View.Kind in K_Standard | K_Library | K_Aggregate_Library
-              and then not View.Is_Aggregated_In_Library
-            then
+            if View.Kind in K_Standard | K_Library then
                Check_Directory
                  (PRA.Object_Dir,
                   "object",
                   Project.View.Object_Directory'Access,
-                  Must_Exist => not View.Is_Aggregated_In_Library
-                                  and then not View.Is_Extended);
+                  Must_Exist => not View.Is_Extended);
             end if;
 
             if View.Is_Library
@@ -3307,15 +3304,13 @@ package body GPR2.Project.Tree is
                   "library",
                   Project.View.Library_Directory'Access,
                   Mandatory  => True,
-                  Must_Exist => not View.Is_Aggregated_In_Library
-                                  and then not View.Is_Extended);
+                  Must_Exist => not View.Is_Extended);
 
                Check_Directory
                  (PRA.Library_Ali_Dir,
                   "library ALI",
                   Project.View.Library_Ali_Directory'Access,
-                  Must_Exist => not View.Is_Aggregated_In_Library
-                                  and then not View.Is_Extended);
+                  Must_Exist => not View.Is_Extended);
 
                if View.Has_Library_Interface
                  or else View.Has_Attribute (PRA.Interfaces)
