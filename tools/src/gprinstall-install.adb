@@ -1966,8 +1966,7 @@ package body GPRinstall.Install is
 
             procedure Linker_For (View : GPR2.Project.View.Object) is
             begin
-               if View.Has_Attribute (A.Linker.Linker_Options)
-               then
+               if View.Has_Attribute (A.Linker.Linker_Options) then
                   Append (View.Attribute (A.Linker.Linker_Options));
                end if;
             end Linker_For;
