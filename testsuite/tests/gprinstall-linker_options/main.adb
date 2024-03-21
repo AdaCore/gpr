@@ -76,6 +76,7 @@ procedure Main is
    end Print_Attributes;
 
 begin
+   --  Check Library_Option present in original project
    Tree1.Load_Autoconf
      (Filename => GPR2.Path_Name.Create_File
         (GPR2.Project.Ensure_Extension ("prj/lib2"),
@@ -83,33 +84,19 @@ begin
       Context  => Context);
    Library_Options := Tree1.Root_Project.Attribute
      (Name => GPR2.Project.Registry.Attribute.Library_Options).Values;
+
+   --  Check Linker_Option is not present in generated project
    Tree2.Load_Autoconf
      (Filename => GPR2.Path_Name.Create_File
         (GPR2.Project.Ensure_Extension ("inst/share/gpr/lib2"),
          GPR2.Path_Name.No_Resolution),
       Context  => Context);
-   Linker_Options := Tree2.Root_Project.Attribute
-     (Name => GPR2.Project.Registry.Attribute.Linker.Linker_Options).Values;
-   for Library_Option of Library_Options loop
-      declare
-         Found : Boolean := False;
-      begin
-         for Linker_Option of Linker_Options loop
-            if Linker_Option.Text = Library_Option.Text then
-               Found := True;
-               exit;
-            end if;
-         end loop;
-         if not Found then
-            Print_Attributes
-              (Tree => Tree1,
-               Name => GPR2.Project.Registry.Attribute.Library_Options);
-            Print_Attributes
-              (Tree => Tree2,
-               Name => GPR2.Project.Registry.Attribute.Linker.Linker_Options);
-            return;
-         end if;
-      end;
-   end loop;
+
+   if Tree2.Root_Project.Has_Attribute
+     (Name => GPR2.Project.Registry.Attribute.Linker.Linker_Options)
+   then
+      Ada.Text_IO.Put_Line ("NOK");
+   end if;
+
    Ada.Text_IO.Put_Line ("OK");
 end Main;
