@@ -102,8 +102,9 @@ In autoconf mode a configuration project is automatically generated.
 A configuration, a runtime project and all imported,
 extended or aggregated projects are recursively loaded.
 
-All of these projects are available through ``GPR2.Project.View.Object`` objects.
-After a successful load, ``Tree.Root_Project`` contains the project passed when loading the tree.
+All of these projects are available through ``GPR2.Project.View.Object``
+objects. After a successful load, ``Tree.Root_Project`` contains the project
+passed when loading the tree.
 
 .. code-block:: ada
 
@@ -144,7 +145,8 @@ After a successful load, ``Tree.Root_Project`` contains the project passed when 
       
    end Views;
 
-As for all tutorial examples don't forget to add procedure call in ``Main`` procedure.
+As for all tutorial examples don't forget to add procedure call in ``Main``
+procedure.
 
 .. code-block:: ada
 
@@ -335,7 +337,8 @@ This tutorial shows how variables types can be accessed/listed.
 Variables
 =========
 
-This tutorial shows how project level or packages variables can be accessed/listed.
+This tutorial shows how project-level and package-level variables can be
+listed and accessed.
 
 .. code-block:: ada
 
@@ -395,7 +398,7 @@ This tutorial shows how project level or packages variables can be accessed/list
 Sources
 =======
 
-This tutorial shows how projects sources are parsed, listed, accessed.
+This tutorial shows how projects sources are parsed, listed, and accessed.
 
 .. code-block:: ada
 
@@ -448,7 +451,7 @@ This tutorial shows how projects sources are parsed, listed, accessed.
 Units
 =====
 
-This tutorial shows how units are listed & accessed
+This tutorial shows how units are listed and accessed.
 
 .. code-block:: ada
 
@@ -505,10 +508,10 @@ This tutorial shows how units are listed & accessed
     end Units;
 
 
-Custom packages & attributes
-============================
+Custom packages and attributes
+==============================
 
-This tutorial shows as custom packages & attributes can be added to gpr2
+This tutorial shows how custom packages and attributes can be added to gpr2
 package/attribute registry. This should be done before loading projects.
 
 .. code-block:: ada
