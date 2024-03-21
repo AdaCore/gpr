@@ -163,6 +163,8 @@ ${KB_BUILD_DIR}/config.kb: ${KB_BUILD_DIR} $(wildcard $(GPR2KBDIR)/*)
 	${KB_BUILD_DIR}/collect_kb -o $@ ${GPR2KBDIR}
 
 # Libgpr2
+build-libs: ${LIBGPR2_TYPES:%=build-lib-%}
+
 build-lib-%: ${KB_BUILD_DIR}/config.kb
 ifneq (${GPR2_BUILD},gnatcov)
 	${BUILDER} -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
