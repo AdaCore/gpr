@@ -108,7 +108,7 @@ Testing trees/agg2/agg.gpr
 included.gpr:4:23: warning: object directory "objinc" not found
 prj1.gpr:6:23: warning: object directory "obj1" not found
 prj1.gpr:3:24: warning: library directory "lib1" not found
-prj2.gpr:5:23: warning: object directory "obj2" not found
+prj3.gpr:6:23: warning: object directory "obj3" not found
 prj2.gpr:3:24: warning: library directory "lib2" not found
 * Views:
  - Agg (K_AGGREGATE) **
@@ -280,7 +280,7 @@ foo__bar.ads: error: invalid name for unit 'FOO__BAR', two consecutive underscor
 =========================================
 Testing trees/separates/lib.gpr
 =========================================
-lib.gpr:6:23: warning: object directory "obj2" not found
+prj.gpr:2:23: warning: object directory "obj" not found
 lib.gpr:7:24: warning: library directory "lib" not found
 * Views:
  - Lib (K_AGGREGATE_LIBRARY) **
