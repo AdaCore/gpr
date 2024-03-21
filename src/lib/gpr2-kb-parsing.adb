@@ -6,7 +6,6 @@
 
 with Ada.Directories;
 with Ada.Exceptions;
-with Ada.Strings.Fixed;
 
 with GNAT.Directory_Operations;
 with GNAT.Regpat;
@@ -24,18 +23,11 @@ with Unicode.CES.Utf8;
 with GNATCOLL.Traces;
 
 with GPR2.Containers;
+with GPR2.KB.Embedded;
 with GPR2.Message;
 with GPR2.Source_Reference;
 
 package body GPR2.KB.Parsing is
-
-   function Default_Content return GPR2.Containers.Name_Value_Map
-     with Post => not Default_Content'Result.Is_Empty;
-   --  Returns default contents of the knowledge base embedded
-   --  into the library. Result maps name of the file used for embedding
-   --  to its contents.
-   --  Result maps base names of files used to create the embedded knowledge
-   --  base to their contents.
 
    function Get_Attribute
      (N         : DOM.Core.Node;
@@ -183,73 +175,6 @@ package body GPR2.KB.Parsing is
          Free_Reader (Reader);
    end Add;
 
-   ---------------------
-   -- Default_Content --
-   ---------------------
-
-   function Default_Content return GPR2.Containers.Name_Value_Map is
-      use Ada.Strings.Fixed;
-      use GPR2.Containers;
-
-      KB_Start    : constant Character
-                      with Import     => True,
-                           Convention => C,
-                           Link_Name  => "_binary_config_kb_start";
-      KB_Length   : constant Integer
-                      with Import     => True,
-                           Convention => C,
-                           Link_Name  => "_binary_config_kb_size";
-
-      Result      : Name_Value_Map;
-      KB          : String (1 .. KB_Length) with Address => KB_Start'Address;
-      Idx1        : Integer;
-      Idx2        : Integer;
-      Idx3        : Integer;
-      File_Length : Positive;
-
-   begin
-      --  Embedded knowledge base is expected to be a string representing all
-      --  individual files forming the knowledge base in the following format:
-      --
-      --  <file_name>:<length>:<content>{<file_name>:<length>:<content>}
-      --
-      --  where <length> indicates the length of the <content> field and
-      --  <file_name> is the base name of the file included in the base.
-
-      Idx1 := KB'First;
-
-      while Idx1 in KB'First .. KB'Last - 2 loop
-         Idx2 := Index (KB, ":", Idx1);
-
-         if Idx2 <= Idx1 or else Idx2 = KB'Last then
-            raise Invalid_KB with "malformed default knowledge base at"
-              & Idx1'Img;
-         end if;
-
-         Idx3 := Index (KB, ":", Idx2 + 1);
-
-         if Idx3 <= Idx2 then
-            raise Invalid_KB with "malformed default knowledge base at"
-              & Idx2'Img;
-         end if;
-
-         File_Length := Positive'Value (KB (Idx2 + 1 .. Idx3 - 1));
-
-         if Idx3 + File_Length > KB'Last then
-            raise Invalid_KB with "malformed default knowledge base at"
-              & Idx3'Img;
-         end if;
-
-         Result.Include
-           (Name_Type (KB (Idx1 .. Idx2 - 1)),
-            Value_Type (KB (Idx3 + 1 .. Idx3  + File_Length)));
-
-         Idx1 := Idx3 + File_Length + 1;
-      end loop;
-
-      return Result;
-   end Default_Content;
-
    -----------------
    -- Free_Reader --
    -----------------
@@ -301,7 +226,8 @@ package body GPR2.KB.Parsing is
       use Schema.Validators;
       use GPR2.Containers.Name_Value_Map_Package;
 
-      KB_Content : constant GPR2.Containers.Name_Value_Map := Default_Content;
+      KB_Content : GPR2.Containers.Name_Value_Map renames
+                     GPR2.KB.Embedded.Knowledge_Base;
       Cur        : Cursor := KB_Content.First;
       Schema     : Schema_Reader;
       Input      : String_Input;
@@ -482,7 +408,7 @@ package body GPR2.KB.Parsing is
    begin
       Result.Initialized := True;
       Result.Is_Default := True;
-      KB_Content := Default_Content;
+      KB_Content := GPR2.KB.Embedded.Knowledge_Base;
 
       if Flags (Validation) then
          Grammar := Get_Default_Schema_Grammar (Result);
