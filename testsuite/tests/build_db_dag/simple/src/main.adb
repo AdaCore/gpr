@@ -57,7 +57,7 @@ begin
             if not Tree.Artifacts_Database.Has_Action (A.UID) then
                Tree.Artifacts_Database.Add_Action (A, Log);
                if Log.Has_Error then
-                  Log.Output_Messages;
+                  Log.Output_Messages (Warning => False);
                   return 0;
                end if;
             end if;
@@ -75,7 +75,7 @@ begin
                if not Tree.Artifacts_Database.Has_Action (A.UID) then
                   Tree.Artifacts_Database.Add_Action (A, Log);
                   if Log.Has_Error then
-                     Log.Output_Messages;
+                     Log.Output_Messages (Warning => False);
                      return 0;
                   end if;
                end if;

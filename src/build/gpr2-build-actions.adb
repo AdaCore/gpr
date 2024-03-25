@@ -13,7 +13,7 @@ package body GPR2.Build.Actions is
    ------------
 
    procedure Attach (Self : in out Object;
-                     Db   : in  out GPR2.Build.Tree_Db.Object)
+                     Db   : in out GPR2.Build.Tree_Db.Object)
    is
    begin
       Self.Tree := Db.Ref;

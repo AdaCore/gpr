@@ -19,6 +19,9 @@ package GPR2.Build.Actions is
    --  A representation of Self that can be displayed to the end user for e.g.
    --  error reporting or inspection reporting.
 
+   function Db_Filename (Self : Action_Id) return Simple_Name is abstract;
+   --  The filename that is used to store the action signature
+
    function "<" (L, R : Action_Id) return Boolean is abstract;
 
    function Less (L, R : Action_Id'Class) return Boolean;
@@ -40,6 +43,10 @@ package GPR2.Build.Actions is
    --  contain references to its inputs or outputs depending on what is
    --  relevant to make it unique.
 
+   function Valid_Signature (Self : Object) return Boolean is abstract;
+   --  Returns whether or not the action is inhibited. This means the loaded
+   --  signature match the current action signature.
+
    function View (Self : Object) return GPR2.Project.View.Object is abstract;
    --  The view that is used for the context of the action's execution. The
    --  view is used to retrieve the switches for the tool, and to know where
@@ -52,6 +59,14 @@ package GPR2.Build.Actions is
    with Pre'Class => not Messages.Has_Error;
    --  procedure called when Self is added to the tree's database. Allows the
    --  action to add its input and output artifacts and dependencies.
+
+   procedure Compute_Signature (Self : in out Object) is abstract;
+   --  Compute the action signature from all its artifacts and hard store it
+
+   procedure Compare_Signature
+     (Self     : in out Object;
+      Messages : in out GPR2.Log.Object) is abstract;
+   --  Compare the current action signature to the loaded signature
 
    procedure Attach
      (Self : in out Object;

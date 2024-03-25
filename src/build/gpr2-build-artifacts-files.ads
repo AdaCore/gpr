@@ -18,7 +18,7 @@ package GPR2.Build.Artifacts.Files is
      (Self : Object) return Source_Reference.Object'Class;
 
    overriding function Checksum
-     (Self : Object) return GNAT.SHA256.Message_Digest;
+     (Self : Object) return Utils.Hash.Hash_Digest;
 
    function Path (Self : Object) return GPR2.Path_Name.Object;
 
@@ -26,9 +26,12 @@ package GPR2.Build.Artifacts.Files is
 
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type;
 
+   overriding function UID (Self : Object) return B3_Hash_Digest;
+
 private
 
    type Object is new Artifacts.Object with record
+      UID  : B3_Hash_Digest;
       Path : GPR2.Path_Name.Object;
    end record;
 
@@ -47,5 +50,8 @@ private
 
    overriding function "<" (L, R : Object) return Boolean is
      (L.Path.Value < R.Path.Value);
+
+   overriding function UID (Self : Object) return B3_Hash_Digest is
+      (Self.UID);
 
 end GPR2.Build.Artifacts.Files;

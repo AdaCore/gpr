@@ -11,6 +11,7 @@ with GPR2.Build.Artifacts;
 with GPR2.Build.View_Db;
 with GPR2.Log;
 limited with GPR2.Project.Tree;
+with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.View_Ids;
 
@@ -98,7 +99,7 @@ package GPR2.Build.Tree_Db is
      with Pre => Self.Is_Defined;
 
    procedure Add_Artifact
-     (Self : in out Object;
+     (Self     : in out Object;
       Artifact : Artifacts.Object'Class)
      with Pre => Self.Is_Defined;
 
@@ -119,6 +120,16 @@ package GPR2.Build.Tree_Db is
       Artifact : Artifacts.Object'Class;
       Messages : in out GPR2.Log.Object)
      with Pre => Self.Is_Defined and then Self.Has_Action (Action);
+
+   --  ACTION MANAGEMENT
+
+   function Db_Filename_Path
+     (Self   : in out Object;
+      Action : Actions.Action_Id'Class) return Path_Name.Object;
+
+   procedure Execute
+     (Self   : in out Object;
+      Action : Actions.Action_Id'Class);
 
    ----------------------------
    -- Iteration on artifacts --
@@ -186,13 +197,13 @@ package GPR2.Build.Tree_Db is
 
    function All_Actions (Self : Object) return Actions_List'Class;
 
-      function Inputs
-        (Self : Object;
-         Action : Actions.Action_Id'Class) return Artifacts_List'Class;
+   function Inputs
+     (Self   : Object;
+      Action : Actions.Action_Id'Class) return Artifacts_List'Class;
 
-      function Outputs
-        (Self : Object;
-         Action : Actions.Action_Id'Class) return Artifacts_List'Class;
+   function Outputs
+     (Self   : Object;
+      Action : Actions.Action_Id'Class) return Artifacts_List'Class;
 
 private
 

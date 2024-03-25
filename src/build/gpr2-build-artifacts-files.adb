@@ -11,13 +11,10 @@ package body GPR2.Build.Artifacts.Files is
    --------------
 
    overriding function Checksum
-     (Self : Object) return GNAT.SHA256.Message_Digest
+     (Self : Object) return Utils.Hash.Hash_Digest
    is
-      Context : GNAT.SHA256.Context := GNAT.SHA256.Initial_Context;
    begin
-      GNAT.SHA256.Update (Context, "TODO");
-      return GNAT.SHA256.Digest (Context);
-      --  ??? TODO
+      return Utils.Hash.Hash (Path => Self.Path.Name);
    end Checksum;
 
    ------------
@@ -26,7 +23,8 @@ package body GPR2.Build.Artifacts.Files is
 
    function Create (Path : GPR2.Path_Name.Object) return Object is
    begin
-      return (Path   => Path);
+      return (UID  => Utils.Hash.Hash (Str => String (Path.Name)),
+              Path => Path);
    end Create;
 
 end GPR2.Build.Artifacts.Files;

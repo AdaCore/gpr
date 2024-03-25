@@ -5,16 +5,23 @@
 --
 
 with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Signature;
 with GPR2.Containers;
 with GPR2.Path_Name;
+with GPR2.Project.Registry.Attribute;
 
 private with GPR2.View_Ids;
 
 package GPR2.Build.Actions.Ada_Compile is
 
+   package PRA renames GPR2.Project.Registry.Attribute;
+
    type Ada_Compile_Id (<>) is new Actions.Action_Id with private;
 
    overriding function Image (Self : Ada_Compile_Id) return String;
+
+   overriding function Db_Filename
+     (Self : Ada_Compile_Id) return Simple_Name;
 
    overriding function "<" (L, R : Ada_Compile_Id) return Boolean;
 
@@ -22,6 +29,8 @@ package GPR2.Build.Actions.Ada_Compile is
    --  Action responsible for building Ada sources
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
+
+   overriding function Valid_Signature (Self : Object) return Boolean;
 
    function Create
      (Src : GPR2.Build.Compilation_Unit.Object) return Object;
@@ -42,6 +51,12 @@ package GPR2.Build.Actions.Ada_Compile is
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object);
 
+   overriding procedure Compute_Signature (Self : in out Object);
+
+   overriding procedure Compare_Signature
+     (Self     : in out Object;
+      Messages : in out GPR2.Log.Object);
+
 private
 
    use type GPR2.View_Ids.View_Id;
@@ -56,23 +71,28 @@ private
      ("Compile Ada: " & String (Self.Unit_Name) &
         " (" & String (Self.Ctxt.Path_Name.Simple_Name) & ")");
 
+   overriding function Db_Filename
+     (Self : Ada_Compile_Id) return Simple_Name is
+     (Simple_Name ("compile_ada_" & To_Lower (Self.Unit_Name) & "_"
+      & To_Lower (Self.Ctxt.Name) & ".json"));
+
    overriding function "<" (L, R : Ada_Compile_Id) return Boolean is
      (if L.Ctxt.Id = R.Ctxt.Id then L.Unit_Name < R.Unit_Name
       else L.Ctxt.Id < R.Ctxt.Id);
 
    type Object (Input_Len : Natural) is new Actions.Object with record
-      Ali_File : GPR2.Path_Name.Object;
+      Ali_File  : GPR2.Path_Name.Object;
       --  Unit's ALI file. Can be undefined if not existing on disk
 
-      Obj_File : GPR2.Path_Name.Object;
+      Obj_File  : GPR2.Path_Name.Object;
       --  Compiled object file, can be undefined if not compiled yet
 
-      Deps     : GPR2.Containers.Name_Set;
+      Deps      : GPR2.Containers.Name_Set;
       --  List of known dependencies for this unit
 
-      --  ??? Add the action's signature
+      Signature : GPR2.Build.Signature.Object;
 
-      UID      : Ada_Compile_Id (Input_Len);
+      UID       : Ada_Compile_Id (Input_Len);
    end record;
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class is
@@ -93,4 +113,7 @@ private
 
    function Ali_File (Self : Object) return GPR2.Path_Name.Object is
      (Self.Ali_File);
+
+   overriding function Valid_Signature (Self : Object) return Boolean is
+     (Self.Signature.Valid);
 end GPR2.Build.Actions.Ada_Compile;
