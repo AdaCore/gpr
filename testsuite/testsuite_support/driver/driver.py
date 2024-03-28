@@ -404,6 +404,9 @@ class ObjProject:
                                 r.group(0).replace('"', "")
                                 for r in re.finditer('"(.*?)"', value)
                             ]
+                            # If the group is empty, we have an empty value for the attribute
+                            if not self.attribute_value:
+                                self.attribute_value.append("")
         else:
             if options.SCN_OPTION_USE_ALT_ATTR_VALUE not in options:
                 logging.error("Reading attribute value from project file in "

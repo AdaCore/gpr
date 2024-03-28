@@ -1,0 +1,9 @@
+[INFO] - Creating a test for Project_Level.Archive_Builder attribute
+[INFO] - Running Project_Level.Archive_Builder attribute test
+[INFO] - [ Testcase 1 - SCN_CASE_VALUE_EMPTY ]
+[INFO] - Launching : "gprclean -p -r -Pprj.gpr -n"
+[INFO] - Expects - [ SCN_RES_FOR_ANY - ['empty Archive_builder is not supported yet.'] ]
+[INFO] - Test OK !
+[INFO] - Launching : "gprinstall -Pprj.gpr -p --prefix=inst"
+[INFO] - Expects - [ SCN_RES_FOR_ANY - ['empty Archive_builder is not supported yet.'] ]
+[INFO] - Test OK !

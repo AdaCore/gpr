@@ -197,8 +197,14 @@ Project Level Attributes
 
   * **Archive_Builder**: list value, not inherited from extended project
 
+    .. warning::
+
+    	Empty value is not supported yet in non GNATcoll.Project-based tools
+
     Value is the name of the application to be used to create a static library
-    (archive), followed by the options to be used.
+    (archive), followed by the options to be used. If an empty value is provided,
+    object files used as a recipe for the archive are copied to the library
+    directory instead.
 
   .. index:: Attributes - Project Level Attributes; Archive_Builder_Append_Option
 
@@ -1360,7 +1366,7 @@ Package Naming Attributes
 
   .. warning::
 
-  	Also has case-insensitive values in gprbuild and GNATcool.Project-based tools
+  	Also has case-insensitive values in gprbuild and GNATcoll.Project-based tools
 
   Index is a language name. Value is the extension of file names for bodies of
   the language.
@@ -1399,7 +1405,7 @@ Package Naming Attributes
 
   .. warning::
 
-  	Also has case-insensitive values in gprbuild and GNATcool.Project-based tools
+  	Also has case-insensitive values in gprbuild and GNATcoll.Project-based tools
 
   Equivalent to attribute Body_Suffix.
 
@@ -1421,7 +1427,7 @@ Package Naming Attributes
 
   .. warning::
 
-  	Also has case-insensitive values in gprbuild and GNATcool.Project-based tools
+  	Also has case-insensitive values in gprbuild and GNATcoll.Project-based tools
 
   Index is a language name. Value is the extension of file names for specs of the
   language.
@@ -1446,7 +1452,7 @@ Package Naming Attributes
 
   .. warning::
 
-  	Also has case-insensitive values in gprbuild and GNATcool.Project-based tools
+  	Also has case-insensitive values in gprbuild and GNATcoll.Project-based tools
 
   Equivalent to attribute Spec_Suffix.
 
