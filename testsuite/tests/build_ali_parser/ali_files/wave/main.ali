@@ -1,0 +1,30 @@
+V "GNAT Lib v23.20220510"
+M F W=b
+A -gnatA
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U main%b		main.adb		a93ccfe7 NE OO SU
+W foo%s			"this is foo with a long name.2.ada"  "this is foo with a long name.2.ali"
+W k%s			multi.ada		multi~2.ali
+
+D "this is foo with a long name.1.ada"  20220509134732 bc4e36d2 foo%s
+D multi.ada		20220509114040 7860a714 k%s
+D main.adb		20220510114510 6d125e21 main%b
+D system.ads		20220511085110 426dafb8 system%s
+G a e
+G c Z b b [main standard 4 10 none]
+G r c none [main standard 4 10 none] [k standard 1 11 none]
+G r c none [main standard 4 10 none] [bar foo 3 14 none]
+X 1 this is foo with a long name.1.ada
+1K9*Foo 5e8 3|2w6 7r4
+3U14*Bar 3|7s8
+X 2 multi.ada
+1U11*K 3|1w6 6s4
+X 3 main.adb
+4V10*Main{integer} 4b10 9l5 9t9
+
