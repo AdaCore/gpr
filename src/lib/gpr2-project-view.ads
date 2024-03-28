@@ -592,6 +592,11 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns whether the library is standalone
 
+   function Include_Path
+     (Self : Object; Language : Language_Id) return GPR2.Path_Name.Set.Object
+     with Pre => Self.Is_Defined;
+   --  Returns the list of source paths visible for Self for a given language.
+
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre =>
        Self.Is_Defined

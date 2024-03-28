@@ -1,0 +1,10 @@
+aggregate project Agg is
+
+   for Project_Files use
+     ("base.gpr",
+      "ext.gpr",
+      "extall.gpr",
+      "agglib.gpr",
+      "withagglib.gpr");
+
+end Agg;

@@ -1551,6 +1551,63 @@ package body GPR2.Project.View is
       return Result;
    end Imports;
 
+   ------------------
+   -- Include_Path --
+   ------------------
+
+   function Include_Path
+     (Self : Object; Language : Language_Id) return GPR2.Path_Name.Set.Object
+   is
+      procedure Add_For_View (V : Object);
+
+      Check  : GPR2.Containers.Filename_Set;
+      Result : GPR2.Path_Name.Set.Object;
+
+      procedure Add_For_View (V : Object) is
+         Pos      : GPR2.Containers.Filename_Type_Set.Cursor;
+         Inserted : Boolean;
+      begin
+         if V.Kind = K_Aggregate_Library then
+            for A of V.Aggregated loop
+               Add_For_View (A);
+            end loop;
+         end if;
+
+         if V.Kind not in With_Source_Dirs_Kind
+           or else not V.Has_Language (Name (Language))
+         then
+            return;
+         end if;
+
+         for Src_Dir of V.Source_Directories loop
+            --  We use a set to check for duplicated path, but return a
+            --  vector to preserve the order.
+            Check.Insert (Src_Dir.Value, Pos, Inserted);
+
+            if Inserted then
+               Result.Append (Src_Dir);
+            end if;
+         end loop;
+
+         if V.Is_Extending then
+            for E of V.Extended loop
+               --  Need to recurse here in case extended project is also
+               --  extending...
+               Add_For_View (E);
+            end loop;
+         end if;
+      end Add_For_View;
+
+   begin
+      Add_For_View (Self);
+
+      for C of Self.Closure loop
+         Add_For_View (C);
+      end loop;
+
+      return Result;
+   end Include_Path;
+
    ------------------------------
    -- Is_Aggregated_In_Library --
    ------------------------------

@@ -1,0 +1,8 @@
+project Shared_C is
+
+   for Languages use ("C");
+
+   for Source_Dirs use ("src/shared_c");
+   for Object_Dir use "obj/shared_c";
+
+end Shared_C;

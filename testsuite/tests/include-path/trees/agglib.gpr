@@ -1,0 +1,12 @@
+aggregate library project AggLib is
+
+   for Project_Files use
+     ("base.gpr",
+      "ext.gpr",
+      "extall.gpr");
+
+   for Library_Name use "agglib";
+   for Object_Dir use "obj/agglib";
+   for Library_Dir use "lib/agglib";
+
+end AggLib;
