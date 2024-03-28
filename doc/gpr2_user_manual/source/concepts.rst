@@ -8,8 +8,8 @@ Types used when loading a project into a ``GPR2.Project.Tree.Object``
 
  * ``GPR2.Path_Name.Object``
  
-   Handle filesystem paths. ``GPR2.Path_Name`` package contains conversions from
-   and to ``GNATCOLL.VFS.Virtual_File`` type.
+   Handle filesystem paths. ``GPR2.Path_Name`` package contains conversions
+   from and to ``GNATCOLL.VFS.Virtual_File`` type.
    
  * ``GPR2.Path_Name.Set.Object``
 
@@ -17,12 +17,14 @@ Types used when loading a project into a ``GPR2.Project.Tree.Object``
 
  * ``GPR2.Project.Tree.Object``
  
-   Handle a project tree. Project file used to load project tree is available as ``Tree.Root_Project``.
+   Handle a project tree. Project file used to load project tree is available
+   as ``Tree.Root_Project``.
  
  * ``GPR2.Project.Tree.View_Builder.Object``
 
    Used to load a project as a project file path alternative.
-   Attributes (for example ``Source_Dirs``) can be defined for this object before it is used to load a project tree.
+   Attributes (for example ``Source_Dirs``) can be defined for this object
+   before it is used to load a project tree.
 
  * ``GPR2.Context.Object``
  
@@ -44,8 +46,9 @@ Types used when loading a project into a ``GPR2.Project.Tree.Object``
  
    Base object to report information at the end user level.
 
-Types used to handle loaded gpr files. A loaded gpr project is stored in a tree
-containing views. The tree contains root, imported, extended, aggregated, configuration and runtime views.
+Types used to handle loaded gpr files. A loaded gpr project is stored in a
+tree containing views. The tree contains root, imported, extended, aggregated,
+configuration and runtime views.
 
  * ``GPR2.Project.View.Object``
  
@@ -60,7 +63,7 @@ containing views. The tree contains root, imported, extended, aggregated, config
  
    Handle the configuration object for a project tree.
 
-Types used to handle types, variables, attributes and packages
+Types used to handle types, variables, attributes and packages.
 
  * ``GPR2.Project.Typ.Object``
  
@@ -114,14 +117,21 @@ Type used to handle standard gpr tools switches.
 
  * ``GPR2.Options.Object``
  
-   Handle loading a project using common GPR tools switches (``-aP``, ``--autoconf``, ``--config``, ``--db``, ``--db-``, ``--implicit-with``, ``--no-project``, ``-P``, ``--relocate-build-tree``, ``--root-dir``, ``--RTS``, ``--src-subdirs``, ``-subdirs``, ``--target``, ``--unchecked-shared-lib-imports``, ``-X``)
+   Handle loading a project using common GPR tools switches (``-aP``,
+   ``--autoconf``, ``--config``, ``--db``, ``--db-``, ``--implicit-with``,
+   ``--no-project``, ``-P``, ``--relocate-build-tree``, ``--root-dir``,
+   ``--RTS``, ``--src-subdirs``, ``-subdirs``, ``--target``,
+   ``--unchecked-shared-lib-imports``, ``-X``).
 
-Memory management of GPR2 objects is easy as all references are using reference counting.
+Memory management of GPR2 objects is easy as all references are using
+reference counting.
 
-API proper use is ensured using pre condition aspect.
-These checks are activated using ``debug`` or ``release_checks`` values for ``GPR2_BUILD`` scenario variable. 
-Usually object's function calls should be protected by a corresponding ``Has_XXX`` or ``Is_XXX`` check.
-Some object's function calls are using a "function Check_XXX (Object, out Result) return Boolean;" pattern.
+API proper use is ensured using precondition aspect.
+These checks are activated using ``debug`` or ``release_checks`` values for
+``GPR2_BUILD`` scenario variable. Usually object's function calls should be
+protected by a corresponding ``Has_XXX`` or ``Is_XXX`` check.
+Some object's function calls are using a
+``function Check_XXX (Object, out Result) return Boolean;`` pattern.
 
 .. code-block:: ada
 
@@ -148,7 +158,8 @@ Some object's function calls are using a "function Check_XXX (Object, out Result
      with Pre => Self.Is_Defined;
 
 All sets handled by the GPR2 library can be easily iterated.
-They are returned as iterable objects (``GPR2.Path_Name.Set.Object``, ``GPR2.Project.View.Set.Object``, and any ``GPR2.<child_name>.Set.Object``)
+They are returned as iterable objects (``GPR2.Path_Name.Set.Object``,
+``GPR2.Project.View.Set.Object``, and any ``GPR2.<child_name>.Set.Object``)
 or they define a ``Iterate`` API.
 
 .. code-block:: ada
@@ -178,25 +189,32 @@ or they define a ``Iterate`` API.
 GPR2.Path_Name.Object - Files and directories
 #############################################
 
-Files and directories are handled in GPR2 using Object type defined in ``GPR2.Path_Name`` package.
+Files and directories are handled in GPR2 using Object type defined in
+``GPR2.Path_Name`` package.
 
-Objects can be created directly using ``Create_File`` or ``Create_Directory`` API, or from an existing ``Object`` using Compose API.
+Objects can be created directly using ``Create_File`` or ``Create_Directory``
+API, or from an existing ``Object`` using Compose API.
 
-An API is provided to easily interface these objects with ``Filesystem_String`` and ``Virtual_File`` types defined in ``GNATCOLL.VFS``.
+An API is provided to easily interface these objects with ``Filesystem_String``
+and ``Virtual_File`` types defined in ``GNATCOLL.VFS``.
 
 A complete API is provided to manipulate files and directories.
 
 GPR2.Project.Configuration.Object - Configuration
 #################################################
 
-Configuration files (``.cgpr`` files) generated usually by ``gprconfig`` and provided using ``--config`` switch,
-can be loaded using ``GPR2.Project.Configuration.Load`` function. These objects are then used at project file tree load time.
+Configuration files (``.cgpr`` files) generated usually by ``gprconfig`` and
+provided using ``--config`` switch, can be loaded using
+``GPR2.Project.Configuration.Load`` function. These objects are then used at
+project file tree load time.
 
 GPR2.Project.Tree.Object - Loaded project tree
 ##############################################
 
-Handling a project file using GPR2 starts loading a ``GPR2.Project.Tree.Object``.
-All imported, extended, aggregated subprojects, selected ada runtime and used configuration file will be loaded as well.
+Handling a project file using GPR2 starts loading a
+``GPR2.Project.Tree.Object``. All dependency projects (imported, extended,
+aggregated), selected Ada runtime and used configuration project will be
+loaded as well.
 
 ``GPR2.Options`` package provides a ``Load_Project`` function.
 
@@ -212,7 +230,8 @@ All imported, extended, aggregated subprojects, selected ada runtime and used co
       Loaded := Options.Load_Project (Tree);
    end;
 
-Tree can also be loaded using ``Load`` and ``Load_Autoconf`` primitives located in ``GPR2.Project.Tree package``.
+Tree can also be loaded using ``Load`` and ``Load_Autoconf`` primitives
+located in ``GPR2.Project.Tree package``.
 
 .. code-block:: ada
 
@@ -253,8 +272,8 @@ Tree can also be loaded using ``Load`` and ``Load_Autoconf`` primitives located 
     end Test_Project;
 
 Tree can also be loaded from ``GPR2.Project.Tree.View_Builder.Object``
-instead of ``GPR2.Path_Name.Object``. This feature is useful when you need to load a Tree
-but no project file is available.
+instead of ``GPR2.Path_Name.Object``. This feature is useful when you need to
+load a Tree but no project file is available.
 
 .. code-block:: ada
 
@@ -282,7 +301,8 @@ Scenario variables are defined using ``GPR2.Context.Object``.
 
 Key/Value are added or update using ``Include`` primitive.
 
-A loaded Tree can be updated calling ``Set_Context`` primitive when scenario variables need to be changed.
+A loaded Tree can be updated calling ``Set_Context`` primitive when scenario
+variables need to be changed.
 
 .. code-block:: ada
     
@@ -297,10 +317,12 @@ A loaded Tree can be updated calling ``Set_Context`` primitive when scenario var
 GPR2.Log.Object - Messages
 ##########################
 
-GPR2 is reporting project and configuration file messages through ``GPR2.Log.Object``.
+GPR2 is reporting project and configuration file messages through
+``GPR2.Log.Object``.
 
-``GPR2.Log`` package provides an configurable iterator to list selected messages.
-``Output_Messages`` primitive is provided to print filtered messages.
+``GPR2.Log`` package provides an configurable iterator to list selected
+messages. ``Output_Messages`` primitive is provided to print filtered
+messages.
 
 A message contains the following properties.
 
@@ -312,26 +334,34 @@ A message contains the following properties.
 GPR2.Project.View.Object - Project file
 #######################################
 
-Any project file (root, imported, extended, etc...) parsed during ``Load`` or ``Load_Autoconf`` execution is reported as ``GPR2.Project.View.Object``.
+Any project file (root, imported, extended, etc...) parsed during ``Load`` or
+``Load_Autoconf`` execution is reported as ``GPR2.Project.View.Object``.
  
-A View object contains attributes, types, variables, sources, units and any extra data defined in project file.
+A View object contains attributes, types, variables, sources, units and any
+extra data defined in project file.
 
-When sources files are added/deleted, ``Tree.Invalidate_Sources (View);`` should be used to update sources related data.
-Calling ``Tree.Invalidate_Sources;`` updates all sources for all views in the Tree.
+When sources files are added/deleted, ``Tree.Invalidate_Sources (View);``
+should be used to update sources related data. Calling
+``Tree.Invalidate_Sources;`` updates all sources for all views in the Tree.
 
 GPR2.Project.Attribute.Object - Attributes
 ##########################################
 
-View's attributes can be accessed using a name, an index and a position. A name is mandatory.
+View's attributes can be accessed using a name, an index and a position. A
+name is mandatory.
 
 Name parameter uses ``GPR2.Q_Attribute_Id`` type.
-Predefined ``Q_Attribute_Id`` values can be found in ``GPR2.Project.Registry.Attribute`` package.
+Predefined ``Q_Attribute_Id`` values can be found in
+``GPR2.Project.Registry.Attribute`` package.
 
-``Q_Attribute_Id`` value for Source_Dirs is attribute is ``GPR2.Project.Registry.Attribute.Source_Dirs``.
+``Q_Attribute_Id`` value for Source_Dirs is attribute is
+``GPR2.Project.Registry.Attribute.Source_Dirs``.
 
-``Q_Attribute_Id`` value for Builder'Executable attribute is ``GPR2.Project.Registry.Attribute.Builder.Executable``.
+``Q_Attribute_Id`` value for Builder'Executable attribute is
+``GPR2.Project.Registry.Attribute.Builder.Executable``.
 
-New ``Q_Attribute_Id`` values (for external tools) can be defined/registered as follow:
+New ``Q_Attribute_Id`` values (for external tools) can be defined/registered
+as follows:
 
 .. code-block:: ada
 
@@ -366,12 +396,15 @@ As an example to get Builder'Executable ("mains.adb" at 2) attribute use:
 GPR2.Project.Variable.Object - Variables
 ########################################
 
-Variables defined in a gpr file can be accessed using ``Variables`` and ``Variable`` primitives of ``GPR2.Projet.View.Object``
-``Variables`` function returns the variables set in ``GPR2.Project.Variable.Set.Object``.
-``Variable`` function return the requested variable.
+Variables defined in a gpr file can be accessed using ``Variables`` and
+``Variable`` primitives of ``GPR2.Project.View.Object``.
+``Variables`` function returns the variables set in
+``GPR2.Project.Variable.Set.Object``. ``Variable`` function returns the
+requested variable.
 
 As usual, requests should be protected by corresponding ``Has_XXX`` requests.
-If a variable has a type, its type can be stored in a ``GPR2.Project.Typ.Object``.
+If a variable has a type, its type can be stored in a
+``GPR2.Project.Typ.Object``.
 
 .. code-block:: ada
 
@@ -407,23 +440,26 @@ GPR2.Project.Source.Object - Sources
 
 Sources of a project file are handled by ``GPR2.Project.Source.Object`` type.
 
-They can be accessed through ``View.Sources`` or ``View.Source (Path_Name)`` functions.
+They can be accessed through ``View.Sources`` or ``View.Source (Path_Name)``
+functions.
 
-GPR2 parses the source file using libadalang or the corresponding ali file generated previously by gnat
-to report contained unit(s) or dependencies list.
+GPR2 parses the source file using libadalang or the corresponding ALI file
+generated previously by gnat to report contained unit(s) or dependencies list.
 
 GPR2.Project.Unit_Info.Object - Units
 #####################################
 
 Units of a project file are handled by ``GPR2.Project.Unit_Info.Object`` type.
 
-They can be accessed through ``View.Units`` or ``View.Unit (Unit_Name)`` functions.
+They can be accessed through ``View.Units`` or ``View.Unit (Unit_Name)``
+functions.
 
 Note that the list of units is populated only when
 ``Tree.Update_Sources``, ``View_Has_Sources`` or ``View.Sources`` is called.
 
-As a performance optimization, if you doesn't care about units and source dependencies,
-don't forget when updating sources to explicitly ask for using no backends. (all backends are used as default)
+As a performance optimization, if you don't care about units and source
+dependencies, don't forget when updating sources to explicitly ask for using
+no backends. (all backends are used as default)
 
 .. code-block:: ada
 
@@ -433,7 +469,8 @@ don't forget when updating sources to explicitly ask for using no backends. (all
 GPR2.Options.Object - GPR tools common switches support
 #######################################################
 
-Using this ``GPR2.Options.Object``, normalize & simplify GPR tools common switches support (development & maintenance)
+Using this ``GPR2.Options.Object``, normalize & simplify GPR tools common
+switches support (development & maintenance)
 
 The following code show how this object is used.
  
@@ -454,67 +491,66 @@ The following code show how this object is used.
 
 GPR tools common supported switches are:
    
-   * ``-aP`` (``GPR2.Options.AP``)
+   * ``-aP<dir>`` (``GPR2.Options.AP``)
 
       -aP<dir> or -aP <dir> Add directory dir to project search path
 
-   * ``--autoconf`` (``GPR2.Options.Autoconf``)
+   * ``--autoconf=<file.cgpr>`` (``GPR2.Options.Autoconf``)
 
-      --autoconf=file.cgpr Specify/create the main config project file name
+      Specify/create the main config project file name
 
-   * ``--config`` (``GPR2.Options.Config``)
+   * ``--config=<file.cgpr>`` (``GPR2.Options.Config``)
 
-      --config=file.cgpr Specify the configuration project file name
+      Specify the configuration project file name
 
-   * ``--db`` (``GPR2.Options.Db``)
+   * ``--db <dir>`` (``GPR2.Options.Db``)
 
-      --db dir Parse dir as an additional knowledge base
+      Parse dir as an additional knowledge base
 
    * ``--db-`` (``GPR2.Options.Db_Minus``)
 
-      --db- Do not load the standard knowledge base
+      Do not load the standard knowledge base
 
    * ``--implicit-with`` (``GPR2.Options.Implicit_With``)
 
-      --implicit-with=filename Add the given projects as a dependency on all loaded projects
+      Add the given projects as a dependency on all loaded projects
 
    * ``--no-project`` (``GPR2.Options.No_Project``)
 
-      --no-project Do not use project file
+      Do not use project file
 
-   * ``-P`` (``GPR2.Options.P``)
+   * ``-P<proj[.gpr]>`` (``GPR2.Options.P``)
 
-      -Pproj<.gpr> or -P proj<.gpr> Use Project File <proj>
+      Use Project File <proj>
 
-   * ``--relocate-build-tree`` (``GPR2.Options.Relocate_Build_Tree``)
+   * ``--relocate-build-tree[=dir]`` (``GPR2.Options.Relocate_Build_Tree``)
 
-      --relocate-build-tree[=dir] Root obj/lib/exec dirs are current-directory or dir
+      Root obj/lib/exec dirs are current-directory or dir
 
    * ``--root-dir`` (``GPR2.Options.Root_Dir``)
 
-      --root-dir=dir Root directory of obj/lib/exec to relocate
+      Root directory of obj/lib/exec to relocate
 
-   * ``--RTS`` (``GPR2.Options.RTS``)
+   * ``--RTS[:lang]=<runtime>`` (``GPR2.Options.RTS``)
 
-      | --RTS=<runtime> Use runtime <runtime> for language Ada
-      | --RTS:<lang>=<runtime> Use runtime <runtime> for language <lang>
+      Use runtime <runtime> for language Ada or for language <lang>
 
-   * ``--src-subdirs`` (``GPR2.Options.Src_Subdirs``)
+   * ``--src-subdirs=<dir>`` (``GPR2.Options.Src_Subdirs``)
 
-      --src-subdirs=dir Prepend <obj>/dir to the list of source dirs for each project
+      Prepend <obj>/dir to the list of source dirs for each project
 
-   * ``-subdirs`` (``GPR2.Options.Subdirs``)
+   * ``-subdirs=<dir>`` (``GPR2.Options.Subdirs``)
 
-      -subdirs=dir Use dir as suffix to obj/lib/exec directories
+      Use dir as suffix to obj/lib/exec directories
 
-   * ``--target`` (``GPR2.Options.Target``)
+   * ``--target=<targetname>`` (``GPR2.Options.Target``)
 
-      --target=targetname Specify a target for cross platforms
+      Specify a target for cross platforms
 
    * ``--unchecked-shared-lib-imports`` (``GPR2.Options.Unchecked_Shared_Lib_Imports``)
 
-      --unchecked-shared-lib-imports Shared lib projects may import any project
+      Shared lib projects may import any project
 
-   * ``-X`` (``GPR2.Options.X``)
+   * ``-X<nm>=<val>`` (``GPR2.Options.X``)
 
-      -Xnm=val or -X nm=val Specify an external reference for Project Files
+      Specify a value for an external reference for project files

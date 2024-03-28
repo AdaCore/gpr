@@ -696,7 +696,7 @@ Here is the command we would use from the command line:
 
   .. index:: -P (gprbuild)
 
-  .. code-block:: sh
+  .. code-block:: none
 
        gprbuild -Pbuild
 
@@ -710,7 +710,7 @@ The *GPRbuild* builder can automatically manage C files the
 same way: create the file :file:`utils.c` in the :file:`common` directory,
 set the attribute *Languages* to `"(Ada, C)"`, and re-run
 
-  .. code-block:: sh
+  .. code-block:: none
 
       gprbuild -Pbuild
 
@@ -721,32 +721,36 @@ project file, which describes the project properties rather than a
 set of actions to be executed. Here is the invocation of
 *GPRbuild* when building a multi-language program:
 
-  .. code-block:: sh
+  .. code-block:: none
 
       $ gprbuild -Pbuild
-      gcc -c proc.adb
-      gcc -c pack.adb
-      gcc -c utils.c
-      gprbind proc
-      ...
-      gcc proc.o -o proc
+      Compile
+         [Ada]          proc.adb
+         [Ada]          pack.adb
+         [C]            utils.c
+      Bind
+         [gprbind]      proc.bexch
+         [Ada]          proc.ali
+      Link
+         [archive]      libproc.a
+         [index]        libproc.a
+         [link]         proc.adb
 
 Notice the three steps described earlier:
 
-* The first three gcc commands correspond to the compilation phase.
-* The gprbind command corresponds to the post-compilation phase.
-* The last gcc command corresponds to the final link.
+* The first three commands correspond to the compilation phase.
+* The bind commands correspond to the post-compilation phase.
+* The remaining commands correspond to the final link.
 
 
 .. index:: -v (gprbuild)
 
-The default output of *GPRbuild* is reasonably simple and easy
-to understand. In particular, some of the less frequently used commands are not
-shown, and some parameters are abbreviated. Thus it is not possible to rerun the
-effect of the *GPRbuild* command by cut-and-pasting its output.
-The :samp:`-v` option to *GPRbuild* provides a much more verbose output which includes,
-among other information, more complete compilation, post-compilation and link
-commands.
+The default output of *GPRbuild* is intended for a quick at-a-glance view
+of the actions taken, with details such as underlying tool invocations hidden.
+The :samp:`-v` option to *GPRbuild* provides a more verbose output which
+includes, more complete compilation, post-compilation and link
+commands. The :samp:`-vh` option provides even more information, such as
+reasons for (re)build decisions.
 
 
 .. _Executable_File_Names:
@@ -761,9 +765,9 @@ computed from the main source file name. Through the attribute
 **Executable** in package ``Builder``, it is possible to change
 this default.
 
-For instance, instead of building an executable named ``"proc"`` (or ``"proc.exe"``
-on Windows), we could configure our project file to build ``proc1``
-(respectively ``proc1.exe``) as follows:
+For instance, instead of building an executable named ``"proc"`` (or
+``"proc.exe"`` on Windows), we could configure our project file to build
+``proc1`` (respectively ``proc1.exe``) as follows:
 
   .. code-block:: gpr
 
@@ -779,13 +783,14 @@ on Windows), we could configure our project file to build ``proc1``
 Attribute **Executable_Suffix**, when specified, changes the suffix
 of the executable files when no attribute ``Executable`` applies:
 its value replaces the platform-specific executable suffix.
-The default executable suffix is the empty string empty on Unix and ``".exe"`` on Windows.
+The default executable suffix is the empty string empty on Unix and ``".exe"``
+on Windows.
 
 It is also possible to change the name of the produced executable by using the
-command line switch :samp:`-o`. However, when several main programs are defined in the project,
-it is not possible to use the :samp:`-o` switch; then the only way to change the
-names of the executable is through the attributes ``Executable`` and
-``Executable_Suffix``.
+command line switch :samp:`-o`. However, when several main programs are
+defined in the project, it is not possible to use the :samp:`-o` switch; then
+the only way to change the names of the executable is through the attributes
+``Executable`` and ``Executable_Suffix``.
 
 
 .. _Using_Variables_to_Avoid_Duplication:
@@ -820,7 +825,8 @@ The most noticeable difference is the use of a variable in the
 ``Compiler`` package to store settings used in several attributes.
 This avoids text duplication and eases maintenance (a single place to
 modify if we want to add new switches for C files). We will later revisit
-the use of variables in the context of scenarios (see :ref:`Scenarios_in_Projects`).
+the use of variables in the context of scenarios (see
+:ref:`Scenarios_in_Projects`).
 
 In this example, we see that the file :file:`main.c` will be compiled with
 the switches used for all the other C files, plus :samp:`-g`.
@@ -831,7 +837,8 @@ replaced by a reference to the ``Default_Switches`` attribute:
 
        for Switches ("c_main.c") use Compiler'Default_Switches ("C") & ("-g");
 
-Note the tick character "``'``", which is used to refer to attributes defined in a package.
+Note the tick character "``'``", which is used to refer to attributes defined
+in a package.
 
 Here is the output of the *GPRbuild* command using this project:
 
@@ -859,11 +866,11 @@ account.
 Naming Schemes
 --------------
 
-Sometimes an Ada software system needs to be ported from one compilation environment to
-another (such as GNAT), but the files might not be named using the default GNAT
-conventions. Instead of changing all the file names, which for a variety of
-reasons might not be possible, you can define the relevant file naming scheme
-in the **Naming** package of your project file.
+Sometimes an Ada software system needs to be ported from one compilation
+environment to another (such as GNAT), but the files might not be named using
+the default GNAT conventions. Instead of changing all the file names, which
+for a variety of reasons might not be possible, you can define the relevant
+file naming scheme in the **Naming** package of your project file.
 
 The naming scheme has two distinct goals for the Project Manager: it
 allows source files to be located when searching in the source
@@ -930,7 +937,8 @@ The following attributes can be defined in package `Naming`:
   specifications. For other languages, they give the extension for files
   that contain declarations (header files in C for instance). The attribute
   is indexed by the language name.
-  The two attributes are equivalent, but ``Specification_Suffix`` is obsolescent.
+  The two attributes are equivalent, but ``Specification_Suffix`` is
+  obsolescent.
 
   If the value of the attribute is the empty string, it indicates to the
   Project Manager that the only specifications/header files for the language
@@ -951,9 +959,10 @@ The following attributes can be defined in package `Naming`:
 
 **Body_Suffix** and **Implementation_Suffix**:
 
-  These attributes are equivalent and specify the extension used for file names that contain
-  code (bodies in Ada). They are indexed by the language name.
-  ``Implementation_Suffix`` is obsolescent and fully replaced by the first attribute.
+  These attributes are equivalent and specify the extension used for file
+  names that contain code (bodies in Ada). They are indexed by the language
+  name. ``Implementation_Suffix`` is obsolescent and fully replaced by the
+  first attribute.
 
   For each language of a project, one of these two attributes needs to be
   specified, either in the project itself or in the configuration project file.
@@ -974,9 +983,9 @@ The following attributes can be defined in package `Naming`:
   suffixes will be a body if the longest suffix is ``Body_Suffix ("Ada")``,
   or a spec if the longest suffix is ``Spec_Suffix ("Ada")``.
 
-  If the suffix does not start with a ``'.'``, a file with a name exactly equal to
-  the suffix will also be part of the project (for instance if you define the
-  suffix as ``Makefile.in``, a file called :file:`Makefile.in` will be part
+  If the suffix does not start with a ``'.'``, a file with a name exactly equal
+  to the suffix will also be part of the project (for instance if you define
+  the suffix as ``Makefile.in``, a file called :file:`Makefile.in` will be part
   of the project. This capability is usually not of interest when building.
   However, it might become useful when a project is also used to
   find the list of source files in an editor, like the GNAT Programming System
@@ -984,8 +993,9 @@ The following attributes can be defined in package `Naming`:
 
   .. note::
 
-    Attributes ``Body_Suffix`` and ``Spec_Suffix`` have case-insensitive values.
-    This means different languages should not share the same attribute value in a single project.
+    Attributes ``Body_Suffix`` and ``Spec_Suffix`` have case-insensitive
+    values. This means different languages should not share the same attribute
+    value in a single project.
 
     For instance :
 
@@ -1005,16 +1015,16 @@ The following attributes can be defined in package `Naming`:
       Body_Suffix (".c") for language c is also defined for language c++.
       Spec_Suffix (".h") for language c is also defined for language c++.
 
-    In that case, having each language inside its own project and individually imported to a master
-    project allows such project architecture.
+    In that case, having each language inside its own project and individually
+    imported to a master project allows such project architecture.
 
 .. index:: Attributes - Package Naming Attributes; Separate_Suffix
 
 **Separate_Suffix**:
 
-  This attribute is specific to Ada. It denotes the suffix used in file names for files
-  that contain subunits (separate bodies). If it is not specified, then it defaults to
-  same value as ``Body_Suffix ("Ada")``.
+  This attribute is specific to Ada. It denotes the suffix used in file names
+  for files that contain subunits (separate bodies). If it is not specified,
+  then it defaults to same value as ``Body_Suffix ("Ada")``.
 
   The value of this attribute cannot be the empty string.
 
@@ -1132,11 +1142,11 @@ Organizing Projects into Subsystems
 A **subsystem** is a coherent part of the complete system to be built. It is
 represented by a set of sources and a single object directory. A system can
 consist of a single subsystem when it is simple as we have seen in the
-earlier examples. Complex systems are usually composed of several interdependent
-subsystems. A subsystem is dependent on another subsystem if knowledge of the
-other one is required to build it, and in particular if visibility on some of
-the sources of this other subsystem is required. Each subsystem is usually
-represented by its own project file.
+earlier examples. Complex systems are usually composed of several
+interdependent subsystems. A subsystem is dependent on another subsystem if
+knowledge of the other one is required to build it, and in particular if
+visibility on some of the sources of this other subsystem is required. Each
+subsystem is usually represented by its own project file.
 
 In this section, we'll enhance the previous example. Let's assume some
 sources of our ``Build`` project depend on other sources.
@@ -1153,10 +1163,10 @@ Importing Projects
 
 GtkAda comes with its own project file (appropriately called
 :file:`gtkada.gpr`), and we will assume we have already built a project
-called :file:`logging.gpr` for the logging module. With the information provided
-so far in :file:`build.gpr`, building the application would fail with an error
-indicating that the gtkada and logging units that are relied upon by the sources
-of this project cannot be found.
+called :file:`logging.gpr` for the logging module. With the information
+provided so far in :file:`build.gpr`, building the application would fail with
+an error indicating that the gtkada and logging units that are relied upon by
+the sources of this project cannot be found.
 
 This is solved by defining :file:`build.gpr` to *import* the gtkada and
 logging projects: this is done by adding the following |with| clauses
@@ -1181,8 +1191,8 @@ executable.
 In some cases, the implementation units needed to recompile a
 project are not available, or come from some third party and you do not want to
 recompile it yourself. In this case, set the attribute **Externally_Built** to
-:samp:`"true"`, indicating to the builder that this project can be assumed to be
-up-to-date, and should not be considered for recompilation. In Ada, if the
+:samp:`"true"`, indicating to the builder that this project can be assumed to
+be up-to-date, and should not be considered for recompilation. In Ada, if the
 sources of this externally built project were compiled with another version of
 the compiler or with incompatible options, the binder will issue an error.
 
@@ -1224,13 +1234,14 @@ file is used:
 
 * Then it is searched relative to all the directories specified in the
   environment variables :envvar:`GPR_PROJECT_PATH_FILE`,
-  :envvar:`GPR_PROJECT_PATH` and :envvar:`ADA_PROJECT_PATH` (in that order) if they exist.
-  The value of :envvar:`GPR_PROJECT_PATH_FILE`, when defined, is the path name of
-  a text file that contains project directory path names, one per line.
-  :envvar:`GPR_PROJECT_PATH` and :envvar:`ADA_PROJECT_PATH`, when defined, contain
-  project directory path names separated by directory separators.
-  :envvar:`ADA_PROJECT_PATH` is used for compatibility, it is recommended to
-  use :envvar:`GPR_PROJECT_PATH_FILE` or :envvar:`GPR_PROJECT_PATH`.
+  :envvar:`GPR_PROJECT_PATH` and :envvar:`ADA_PROJECT_PATH` (in that order) if
+  they exist. The value of :envvar:`GPR_PROJECT_PATH_FILE`, when defined, is
+  the path name of a text file that contains project directory path names, one
+  per line. :envvar:`GPR_PROJECT_PATH` and :envvar:`ADA_PROJECT_PATH`, when
+  defined, contain project directory path names separated by directory
+  separators. :envvar:`ADA_PROJECT_PATH` is used for compatibility, it is
+  recommended to use :envvar:`GPR_PROJECT_PATH_FILE` or
+  :envvar:`GPR_PROJECT_PATH`.
 
 * Finally, it is searched relative to the default project directories.
   The following locations are searched, in the specified order:
@@ -1291,11 +1302,11 @@ a |limited_with|.
    (otherwise the project manager
    would not know which settings apply to it and when to recompile it).
    Thus different project files do not usually share source directories, or,
-   when they do, they need to specify precisely which project owns which sources
-   using the attribute *Source_Files* or equivalent. By contrast, two projects
-   can each own a source with the same base file name as long as they reside in
-   different directories. The latter is not true for Ada sources because of the
-   correlation between source files and Ada units.
+   when they do, they need to specify precisely which project owns which
+   sources using the attribute *Source_Files* or equivalent. By contrast, two
+   projects can each own a source with the same base file name as long as they
+   reside in different directories. The latter is not true for Ada sources
+   because of the correlation between source files and Ada units.
 
 .. index:: Cyclic project dependencies
 .. index:: Limited with (project import)
@@ -1355,16 +1366,17 @@ they might all have the same compilation switches.
 As seen above (see :ref:`Tools_Options_in_Project_Files`), setting compilation
 switches for all sources of a subsystem is simple: it is just a matter of
 adding a ``Compiler'Default_Switches`` attribute to each project file with
-the same value. However, that would entail duplication of data, and both places would need
-to be changed in order to recompile the whole application with different
-switches. This may be a serious issue if there are many subsystems and thus
-many project files to edit.
+the same value. However, that would entail duplication of data, and both
+places would need to be changed in order to recompile the whole application
+with different switches. This may be a serious issue if there are many
+subsystems and thus many project files to edit.
 
 There are two main approaches to avoiding this duplication:
 
-* Since :file:`build.gpr` imports :file:`logging.gpr`, we could change the former
-  to reference the attribute in Logging, either through a package renaming,
-  or by referencing the attribute. The following example shows both cases:
+* Since :file:`build.gpr` imports :file:`logging.gpr`, we could change the
+  former to reference the attribute in Logging, either through a package
+  renaming, or by referencing the attribute. The following example shows both
+  cases:
 
   .. code-block:: gpr
 
@@ -1449,14 +1461,15 @@ Global Attributes
 
 We have already seen many examples of attributes used to specify a particular
 option for one of the tools involved in the build process. Most of those
-attributes are project specific. That is to say, they only affect the invocation
-of tools on the sources of the project where they are defined.
+attributes are project specific. That is to say, they only affect the
+invocation of tools on the sources of the project where they are defined.
 
 .. index:: Main project
 
 There are a few additional attributes that, when defined for a "main" project
-`proj`, also apply to all other projects in the project import closure of `proj`.
-A :dfn:`main project` is a project explicitly specified on the command line.
+`proj`, also apply to all other projects in the project import closure of
+`proj`. A :dfn:`main project` is a project explicitly specified on the command
+line.
 
 Such attributes are known as :dfn:`global attributes`;
 here are several that are commonly used:
@@ -1562,8 +1575,9 @@ order of priority):
   Once an external variable is defined, its value needs to be obtained by
   the project. The general form is to use
   the predefined function :samp:`external`, which returns the current value of
-  the external variable. For instance, we could set up the object directory to point to
-  either :file:`obj/debug` or :file:`obj/release` by changing our project to
+  the external variable. For instance, we could set up the object directory to
+  point to either :file:`obj/debug` or :file:`obj/release` by changing our
+  project to
 
   .. code-block:: gpr
 
@@ -1573,9 +1587,10 @@ order of priority):
        end Build;
 
   The second parameter to :samp:`external` is optional, and is the default
-  value to use if :samp:`mode` is not set from the command line or the environment.
-  If the second parameter is not supplied, and there is no external or
-  environment variable named by the first parameter, then an error is reported.
+  value to use if :samp:`mode` is not set from the command line or the
+  environment. If the second parameter is not supplied, and there is no
+  external or environment variable named by the first parameter, then an error
+  is reported.
 
 In order to set the switches according to the different scenarios, other
 constructs are needed, such as typed variables and case constructions.
@@ -1617,8 +1632,8 @@ project is considered as invalid.
 
 The ``Mode`` variable is initialized with an external value
 defaulting to :samp:`"debug"`. This default could be omitted and that would
-force the user to define the value. Finally, we can use a case construction to set the
-switches depending on the scenario the user has chosen.
+force the user to define the value. Finally, we can use a case construction to
+set the switches depending on the scenario the user has chosen.
 
 Most aspects of a project can depend on scenarios. The notable exception
 is the identity of an imported project (via a |with| or |limited_with|
@@ -1658,8 +1673,8 @@ import non-library projects or static library projects.
 
 The GNAT Project Manager takes complete care of the library build, rebuild and
 installation tasks, including recompilation of the source files for which
-objects do not exist or are not up to date, assembly of the library archive, and
-installation of the library (i.e., copying associated source, object and
+objects do not exist or are not up to date, assembly of the library archive,
+and installation of the library (i.e., copying associated source, object and
 :file:`ALI` files to the specified location).
 
 
@@ -1693,12 +1708,12 @@ in front of the `project` keyword.
 
   This attribute  is the path (absolute or relative) of the directory where
   the library is to be installed. In the process of building a library,
-  the sources are compiled and the object files are placed in the explicitly- or
-  implicitly specified :file:`Object_Dir` directory. When all sources of a library
-  are compiled, some of the compilation artifacts, including the library itself,
-  are copied to the library_dir directory. This directory must exist and be
-  writable. It must also be different from the object directory so that cleanup
-  activities in the Library_Dir do not affect recompilation needs.
+  the sources are compiled and the object files are placed in the explicitly or
+  implicitly specified :file:`Object_Dir` directory. When all sources of a
+  library are compiled, some of the compilation artifacts, including the
+  library itself, are copied to the library_dir directory. This directory must
+  be different from the object directory so that cleanup activities inside
+  Library_Dir do not affect recompilation needs.
 
 Here is the new version of :file:`logging.gpr` that makes it a library:
 
@@ -1747,8 +1762,8 @@ Other library-related attributes can be used to change the defaults:
   files of the library are installed. By default, they are copied into the
   :file:`Library_Dir` directory, but as for the executables where we have a
   separate `Exec_Dir` attribute, you might want to put them in a separate
-  directory since there may be hundreds of such files. The same restrictions as for
-  the :samp:`Library_Dir` attribute apply.
+  directory since there may be hundreds of such files. The same restrictions
+  as for the :samp:`Library_Dir` attribute apply.
 
 .. index:: Attributes - Project Level Attributes; Library_Version
 
@@ -1783,10 +1798,10 @@ Other library-related attributes can be used to change the defaults:
 
 **Library_GCC**:
 
-  This attribute is the name of the tool to use instead of ``gcc`` to link shared
-  libraries. A common use of this attribute is to define a wrapper script that
-  accomplishes specific actions before calling ``gcc`` (which itself calls the
-  linker to build the library image).
+  This attribute is the name of the tool to use instead of ``gcc`` to link
+  shared libraries. A common use of this attribute is to define a wrapper
+  script that accomplishes specific actions before calling ``gcc`` (which
+  itself calls the linker to build the library image).
 
 .. index:: Attributes - Project Level Attributes; Library_Options
 
@@ -1816,16 +1831,16 @@ recompiles all sources of the project that need recompilation and rebuilds the
 library if any of the sources have been recompiled. It then groups all object
 files into a single file, which is a shared or a static library. This library
 can later on be linked with multiple executables. Note that the use
-of shared libraries reduces the size of the final executable and can also reduce
-the memory footprint at execution time when the library is shared among several
-executables.
+of shared libraries reduces the size of the final executable and can also
+reduce the memory footprint at execution time when the library is shared among
+several executables.
 
 *GPRbuild* also allows building **multi-language libraries** when specifying
 sources from multiple languages.
 
 A non-library project `NLP` can import a library project `LP`. When the builder
-is invoked on `NLP`, it always rebuilds `LP` even if all of the latter's files are
-up to date. For instance, let's assume in our example that ``logging`` has
+is invoked on `NLP`, it always rebuilds `LP` even if all of the latter's files
+are up to date. For instance, let's assume in our example that ``logging`` has
 the following sources: :file:`log1.ads`, :file:`log1.adb`, :file:`log2.ads` and
 :file:`log2.adb`. If :file:`log1.adb` has been modified, then the library
 :file:`liblogging` will be rebuilt when compiling all the sources of
@@ -1874,11 +1889,11 @@ in the project corresponding to the subsystem needing this external library.
 This latter method is more straightforward in simple cases but when several
 subsystems depend upon the same external library, finding the proper place
 for the ``Linker'Linker_Options`` might not be easy and if it is
-not placed properly, the final link command is likely to present ordering issues.
-In such a situation, it is better to use the externally built library project
-so that all other subsystems depending on it can declare this dependency through
-a project |with| clause, which in turn will trigger the builder to find
-the proper order of libraries in the final link command.
+not placed properly, the final link command is likely to present ordering
+issues. In such a situation, it is better to use the externally built library
+project so that all other subsystems depending on it can declare this
+dependency through a project |with| clause, which in turn will trigger the
+builder to find the proper order of libraries in the final link command.
 
 
 .. _Stand-alone_Library_Projects:
@@ -1888,8 +1903,8 @@ Stand-alone Library Projects
 
 .. index:: Stand-alone library
 
-A **stand-alone library** (SAL) is a library that contains the necessary code to
-elaborate the Ada units that are included in the library. A stand-alone
+A **stand-alone library** (SAL) is a library that contains the necessary code
+to elaborate the Ada units that are included in the library. A stand-alone
 library is a convenient way to add an Ada subsystem to a more global system
 whose main is not in Ada since it makes the elaboration of the Ada part mostly
 transparent. However, stand-alone libraries are also useful when the main is in
@@ -1948,7 +1963,9 @@ source file names).
   build. Values are either ``standard`` (the default), ``no`` or
   ``encapsulated``. When ``standard`` is used the code to elaborate and
   finalize the library is embedded, when ``encapsulated`` is used the
-  library is an encapsulated library (see :ref:`Encapsulated_Stand-alone_Library_Projects`). This attribute can be set to ``no`` to make it clear
+  library is an encapsulated library
+  (see :ref:`Encapsulated_Stand-alone_Library_Projects`). This attribute can
+  be set to ``no`` to make it clear
   that the library should not be stand-alone in which case attributes
   ``Library_Interface`` or ``Interfaces`` should not be defined.
 
@@ -2109,8 +2126,8 @@ corresponding object files.
 
 .. rubric:: Building aggregate library projects
 
-For example, we can define an aggregate project ``Agg`` that groups ``A``, ``B``
-and ``C``:
+For example, we can define an aggregate project ``Agg`` that groups ``A``,
+``B`` and ``C``:
 
   .. code-block:: gpr
 
@@ -2126,8 +2143,8 @@ Then, when you build with:
 
        gprbuild agg.gpr
 
-this will build all units from projects ``A``, ``B`` and ``C`` and will create a
-static library named :file:`libagg.a` in the :file:`lagg`
+this will build all units from projects ``A``, ``B`` and ``C`` and will create
+a static library named :file:`libagg.a` in the :file:`lagg`
 directory. An aggregate library project has the same properties as a standard
 library project; in particular it can be of any kind, which can be different
 from the kind(s) of library projects that it aggregates.
@@ -2175,7 +2192,8 @@ included into the aggregate library. The environment variables
 An aggregate library project can only |with| abstract projects that can be used
 to share attribute values.
 
-When creating an aggregate stand-alone library, the attributes :samp:`Library_Interface`/:samp:`Interfaces` can be used as usual, referring to
+When creating an aggregate stand-alone library, the attributes
+:samp:`Library_Interface`/:samp:`Interfaces` can be used as usual, referring to
 sources from the aggregated projects.
 
 An aggregate library project does not have any source files directly (only
@@ -2284,7 +2302,8 @@ Each of these can be implemented in GNAT using **project extension**:
 This facility is somewhat analogous to class extension (with single
 inheritance) in object-oriented programming. Project extension hierarchies
 are permitted (an extending project may itself serve as a base project and
-be extended), and a project that extends a project can also import other projects.
+be extended), and a project that extends a project can also import other
+projects.
 
 All tool packages that are not declared in the extending project are inherited
 from the base project, with their attributes, with the exception of
@@ -2374,8 +2393,8 @@ Importing and Project Extension
 
 One of the fundamental restrictions for project extension is the following:
 
-  **A project is not allowed to import, directly or indirectly, both an extending
-  project P and also some project that P extends either directly or
+  **A project is not allowed to import, directly or indirectly, both an
+  extending project P and also some project that P extends either directly or
   indirectly**
 
 In the absence of this rule, two imports might access different versions of the
@@ -2436,16 +2455,18 @@ projects.
                 |                |                        |
                 +-imports--> c_ext.gpr-----extends----> c.gpr
 
-This violates the restriction above, since :file:`main.gpr` imports the extending project
-:file:`a_ext.gpr` and also (indirectly through :file:`c_ext.gpr` and :file:`b.gpr`)
-the project :file:`a.gpr` that :file:`a_ext.gpr` extends.
-The problem is that the import path through :file:`c_ext.gpr` and :file:`b.gpr` would build with the version
-of :file:`foo.adb` from :file:`a.gpr`, whereas the import path through :file:`a_ext.gpr` would use that project's
+This violates the restriction above, since :file:`main.gpr` imports the
+extending project :file:`a_ext.gpr` and also (indirectly through
+:file:`c_ext.gpr` and :file:`b.gpr`) the project :file:`a.gpr`
+that :file:`a_ext.gpr` extends.
+The problem is that the import path through :file:`c_ext.gpr` and :file:`b.gpr`
+would build with the version of :file:`foo.adb` from :file:`a.gpr`, whereas the
+import path through :file:`a_ext.gpr` would use that project's
 version of :file:`foo.adb`.
 The error will be detected and reported by ``gprbuild``.
 
-A solution is to introduce an "empty" extension of :file:`b.gpr`, which is imported by
-:file:`c_ext.gpr` and imports :file:`a_ext.gpr`:
+A solution is to introduce an "empty" extension of :file:`b.gpr`, which is
+imported by :file:`c_ext.gpr` and imports :file:`a_ext.gpr`:
 
   .. code-block:: gpr
 
@@ -2495,8 +2516,8 @@ it is possible to create an **implicit extension** of an entire hierarchy
 using the **extends all** relationship.
 
 When a project ``P`` is extended using `extends all` inheritance, all projects
-that are imported by ``P``, both directly and indirectly, are considered virtually
-extended. That is, the project manager creates implicit projects
+that are imported by ``P``, both directly and indirectly, are considered
+virtually extended. That is, the project manager creates implicit projects
 that extend every project in the project import closure; all these implicit
 projects do not control sources on their own and use the object directory of
 the `extends all` project.
@@ -2572,8 +2593,8 @@ and :file:`c_ext.gpr` as well as the relevant import relationships:
 .. only:: html or latex
 
    The resulting project structure is shown in :numref:`fig-extends_all`,
-   where the italicized labels, dashed arrows, and dashed boxes indicate what was
-   added implicitly as an effect of the ``extends_all``.
+   where the italicized labels, dashed arrows, and dashed boxes indicate what
+   was added implicitly as an effect of the ``extends_all``.
 
    .. _fig-extends_all:
 
@@ -2609,8 +2630,8 @@ and :file:`c_ext.gpr` as well as the relevant import relationships:
      where the bracketed elements indicate what was created
      automatically as an effect of the ``extends_all``.
 
-When project :file:`main_ext.gpr` is built, the entire modified project space is
-considered for recompilation, including the sources from :file:`b.gpr` and
+When project :file:`main_ext.gpr` is built, the entire modified project space
+is considered for recompilation, including the sources from :file:`b.gpr` and
 :file:`c.gpr` that are affected by the changes to :file:`a.gpr`.
 
 
@@ -2707,7 +2728,8 @@ Very often, modules will build their own executables (for testing
 purposes for instance) or libraries (for easier reuse in various
 contexts).
 
-However, if you build your project through *GPRbuild*, using a syntax similar to
+However, if you build your project through *GPRbuild*, using a syntax similar
+to
 
   ::
 
@@ -2758,8 +2780,8 @@ Building a set of projects with a single command
 Another application of aggregate projects is when you have multiple
 applications and libraries that are built independently
 (but can be built in parallel). For instance, you might have a project graph
-rooted at ``A``, and another one (which might share some subprojects) rooted
-at ``B``.
+rooted at ``A``, and another one rooted at ``B``, potentially sharing some
+project dependencies with ``A``.
 
 Using only *GPRbuild*, you could do
 
@@ -2773,7 +2795,7 @@ those files that are shared between the two, and cannot truly build
 things in parallel efficiently.
 
 If the two projects are really independent, share no sources other
-than through a common subproject, and have no source files with a
+than through a common project dependency, and have no source files with a
 common basename, you could create a project ``C`` that imports ``A`` and
 ``B``. But these restrictions are often too strong, and one has to build
 them independently. An aggregate project does not have these
@@ -2892,7 +2914,8 @@ An aggregate project cannot |with| any other project (standard or
 aggregate), except an abstract project (which can be used to share attribute
 values). Also, aggregate projects cannot be extended or imported though a
 |with| clause by any other project. Building other aggregate projects from
-an aggregate project is done through the ``Project_Files`` attribute (see below).
+an aggregate project is done through the ``Project_Files`` attribute (see
+below).
 
 An aggregate project does not have any source files directly (only
 through other standard projects). Therefore a number of the standard
@@ -2949,8 +2972,8 @@ The following three attributes can be used only in an aggregate project:
   the location of the aggregate project file itself (if you use a base name,
   the :file:`.gpr` file is expected in the same directory as the aggregate
   project file). The environment variables :envvar:`ADA_PROJECT_PATH`,
-  :envvar:`GPR_PROJECT_PATH` and :envvar:`GPR_PROJECT_PATH_FILE` are not used to
-  find the project files. The extension :file:`.gpr` is mandatory, since
+  :envvar:`GPR_PROJECT_PATH` and :envvar:`GPR_PROJECT_PATH_FILE` are not used
+  to find the project files. The extension :file:`.gpr` is mandatory, since
   this attribute contains file names, not project names.
 
   Paths can also include the ``"*"`` and ``"**"`` globbing patterns. The
@@ -3010,9 +3033,9 @@ The following three attributes can be used only in an aggregate project:
 
   * and finally the predefined directories.
 
-  In the example above, the project path for :file:`agg2.gpr` is not influenced by
-  the attribute `agg1'Project_Path`, nor is `agg1` influenced by
-  `agg2'Project_Path`.
+  In the example above, the project path for :file:`agg2.gpr` is not influenced
+  by the attribute ``agg1'Project_Path``, nor is ``agg1`` influenced by
+  ``agg2'Project_Path``.
 
 
   .. only:: html or latex
@@ -3158,8 +3181,8 @@ package are valid:
   has priority.
 
   The rules are meant to avoid ambiguities when compiling. For
-  instance, aggregate project ``Agg`` groups the projects ``A`` and ``B``, which
-  both depend on ``C``. Here is an example for all of these projects:
+  instance, aggregate project ``Agg`` groups the projects ``A`` and ``B``,
+  which both depend on ``C``. Here is an example for all of these projects:
 
   .. code-block:: gpr
 
@@ -3242,12 +3265,12 @@ package are valid:
 **Global_Config_File**
 
   This attribute, indexed with a language name, can be used to specify a config
-  when compiling sources of the language. For Ada, these files are configuration
-  pragmas files.
+  when compiling sources of the language. For Ada, these files are
+  configuration pragmas files.
 
-For projects that are built through the aggregate mechanism, the package ``Builder``
-is ignored, except for the ``Executable`` attribute which specifies the
-name of the executables resulting from the link of the main programs, and
+For projects that are built through the aggregate mechanism, the package
+``Builder`` is ignored, except for the ``Executable`` attribute which specifies
+the name of the executables resulting from the link of the main programs, and
 for the ``Executable_Suffix``.
 
 
@@ -3283,19 +3306,23 @@ Glossary
 
    Abstract project
      A project with no source files, typically used to define common attributes
-     that are shared by other project files. See :ref:`Sharing_between_Projects`.
+     that are shared by other project files. See
+     :ref:`Sharing_between_Projects`.
 
    Aggregate project
-     A project that in effect combines several projects in order to efficiently support
-     concurrent builds or builds of all main programs from the constituent projects,
-     or the convenient definition of a common environment for the constituent projects.
+     A project that in effect combines several projects in order to efficiently
+     support concurrent builds or builds of all main programs from the
+     constituent projects,      or the convenient definition of a common
+     environment for the constituent projects.
      See :ref:`Aggregate_Projects`.
 
    Attribute
-     A named property of a project or one of its packages.  See :ref:`Attributes`.
+     A named property of a project or one of its packages. 
+     See :ref:`Attributes`.
 
    Base project
-     A project that is extended by some other project. See :ref:`Project_Extension`.
+     A project that is extended by some other project.
+     See :ref:`Project_Extension`.
 
    Child project
      A project that is defined by a name ``Parent_proj.Child_proj``
@@ -3309,9 +3336,9 @@ Glossary
      See :ref:`Configuration Project<Configuration_Project>`.
 
    External variable
-     A variable that is defined on the command line (by the :samp:`-X` switch), as the
-     value of an environment variable, or, by default, as the second parameter to the
-     ``external`` function. See :ref:`Scenarios_in_Projects`.
+     A variable that is defined on the command line (by the :samp:`-X` switch),
+     as the value of an environment variable, or, by default, as the second
+     parameter to the ``external`` function. See :ref:`Scenarios_in_Projects`.
 
    Global attribute
      An attribute that applies to all projects in the project import closure
@@ -3319,18 +3346,21 @@ Glossary
 
    Importing a project
      The usage of a |with| or |limited_with| clause on a project file in order
-     to reuse properties of some other project file. See :ref:`Importing_Projects`.
+     to reuse properties of some other project file.
+     See :ref:`Importing_Projects`.
 
    Independent project
-     A project defined by a single project file and thus not dependent on any other
-     projects. See :ref:`Independent Project<Independent_Project>`.
+     A project defined by a single project file and thus not dependent on any
+     other projects. See :ref:`Independent Project<Independent_Project>`.
 
    Library project
-     A project that is used to define a library rather than an executable program.
+     A project that is used to define a library rather than an executable
+     program.
      See :ref:`Library_Projects`.
 
    Main project
-     A project that is specified on the command line. See :ref:`Global_Attributes`.
+     A project that is specified on the command line.
+     See :ref:`Global_Attributes`.
 
    Package
      A grouping of attribute definitions related to a particular GNAT tool.
@@ -3340,11 +3370,11 @@ Glossary
      A project that has one or more child projects.  See :ref:`Child_Projects`.
 
    Project
-     A set of named properties and their values, associated with the GNAT tools that
-     are used during the development of software in Ada and other languages.
-     Properties include directories for source files, object files, and executables;
-     the switch settings for the various tools; and the naming scheme for source
-     files.
+     A set of named properties and their values, associated with the GNAT tools
+     that are used during the development of software in Ada and other
+     languages. Properties include directories for source files, object files,
+     and executables; the switch settings for the various tools; and the naming
+     scheme for source files.
 
    Project extension
      The reuse and possible adaptation by one project of the source files from
@@ -3369,13 +3399,15 @@ Glossary
      See :ref:`Scenarios_in_Projects`.
 
    Scenario variable
-     An external variable, typically assigned to a typed variable and queried in
-     a `case construction`. See :ref:`Scenario variable<Scenario_Variable>`.
+     An external variable, typically assigned to a typed variable and queried
+     in a `case construction`. See :ref:`Scenario variable<Scenario_Variable>`.
 
    Standard project
-     A non-library project with source files. See :ref:`Standard project<Standard_Project>`
+     A non-library project with source files.
+     See :ref:`Standard project<Standard_Project>`
 
    Typed variable
-     A project variable that can take any of a specified set of values, analogous
-     to a variable of an Ada enumeration type but where the values are string literals.
+     A project variable that can take any of a specified set of values,
+     analogous to a variable of an Ada enumeration type but where the values
+     are string literals.
      See :ref:`Scenarios_in_Projects`.

@@ -17,7 +17,7 @@
 ------------------------------------------------------------------------------
 
 project Collect_KB is
-   Build_Dir := external ("KB_BUILD_DIR", ".build/kb");
+   Build_Dir := external ("KB_BUILD_DIR", Project'Project_Dir & "/../.build/kb");
 
    for Source_Dirs use ("tool");
    for Object_Dir use Build_Dir & "/obj";

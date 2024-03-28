@@ -88,7 +88,7 @@ BUILD_TYPES       := debug release release_checks gnatcov
 # Location of the project files
 GPR2              := ${SOURCE_DIR}/gpr2.gpr
 GPR2TOOLS         := ${SOURCE_DIR}/tools/gpr2-tools.gpr
-GPR2KB            := ${SOURCE_DIR}/src/kb/collect_kb.gpr
+GPR2KB            := ${SOURCE_DIR}/kb/collect_kb.gpr
 
 # adapt build dirs to out-of-tree builds
 ifeq (${SOURCE_DIR},.)
@@ -158,12 +158,19 @@ all: ${LIBGPR2_TYPES:%=build-lib-%} build-tools
 ${KB_BUILD_DIR}:
 	mkdir -p ${KB_BUILD_DIR}
 
-${KB_BUILD_DIR}/config.kb: ${KB_BUILD_DIR} $(wildcard $(GPR2KBDIR)/*)
+${KB_BUILD_DIR}/collect_kb: ${KB_BUILD_DIR} $(wildcard ${SOURCE_DIR}/kb/tool/*.ad[bs]) ${GPR2KB}
 	gprbuild -p -P ${GPR2KB} -XKB_BUILD_DIR=${KB_BUILD_DIR} --relocate-build-tree
-	${KB_BUILD_DIR}/collect_kb -o $@ ${GPR2KBDIR}
+
+${KB_BUILD_DIR}/gpr2-kb-embedded.adb: ${KB_BUILD_DIR}/collect_kb $(wildcard $(GPR2KBDIR)/*)
+	${KB_BUILD_DIR}/collect_kb -o ${KB_BUILD_DIR} ${GPR2KBDIR}
+
+${KB_BUILD_DIR}/gpr2-kb-embedded.ads: ${KB_BUILD_DIR} ${SOURCE_DIR}/kb/gpr2-kb-embedded.ads
+	cp ${SOURCE_DIR}/kb/gpr2-kb-embedded.ads ${KB_BUILD_DIR}
 
 # Libgpr2
-build-lib-%: ${KB_BUILD_DIR}/config.kb
+build-libs: ${LIBGPR2_TYPES:%=build-lib-%}
+
+build-lib-%: ${KB_BUILD_DIR}/gpr2-kb-embedded.ads ${KB_BUILD_DIR}/gpr2-kb-embedded.adb
 ifneq (${GPR2_BUILD},gnatcov)
 	${BUILDER} -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		${GPR2}
