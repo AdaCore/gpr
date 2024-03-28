@@ -14,13 +14,10 @@ library project GPR2 extends "shared.gpr" is
    Is_Externally_Built : Bool := external ("EXTERNALLY_BUILT", "false");
    for Externally_Built use Is_Externally_Built;
 
-   KB_Build   := Build_Root & "/kb";
-
-   for Languages use ("Ada", "C", "Asm_Cpp");
+   for Languages use ("Ada", "C");
    for Source_Dirs use ("src/lib",
                         "src/build",
-                        "src/kb",
-                        KB_Build,
+                        Build_Root & "/kb",
                         "langkit/gen/src");
    for Library_Name use "gpr2";
 
@@ -52,6 +49,9 @@ library project GPR2 extends "shared.gpr" is
       for Switches ("gpr_parser.*") use Langkit_Parser_Options & ("-gnatws");
       for Switches ("gpr_parser-gdb.c") use Langkit_Parser_Options;
 
+      --  generated knowledge base
+      for Switches ("gpr2-kb-embedded.adb") use
+        Compiler'Default_Switches ("Ada") & ("-gnatws", "-gnatyN");
    end Compiler;
 
    --------------
