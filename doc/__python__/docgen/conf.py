@@ -10,15 +10,10 @@ attribute_key_value_translation = {
     ("index_type", "NO_INDEX"): "",
     ("index_type", "UNIT_INDEX"): "indexed by a unit",
     ("index_type", "ENV_VAR_NAME_INDEX"): "indexed by an external reference",
-    (
-        "index_type",
-        "FILE_INDEX",
-    ): "indexed by a file name",
+    ("index_type", "FILE_INDEX"): "indexed by a file name",
     ("index_type", "FILEGLOB_INDEX"): "indexed by a source glob",
     ("index_type", "LANGUAGE_INDEX"): "indexed by a language",
-    ("index_type", "FILEGLOB_OR_LANGUAGE_INDEX"): (
-        "indexed by a source glob or language"
-    ),
+    ("index_type", "FILEGLOB_OR_LANGUAGE_INDEX"): "indexed by a source glob or language",
     ("index_optional", True): '"others" index allowed',
     ("index_optional", False): "",
     ("value", "SINGLE"): "single value",
@@ -47,10 +42,11 @@ attribute_key_value_translation = {
 
 attributes_warnings = {
     "Linker.Default_Switches": 'Index "others" is not supported yet in gprbuild or GNATcoll.Projects-based tools',
-    "Naming.Specification_Suffix" : 'Also has case-insensitive values in gprbuild and GNATcool.Project-based tools',
-    "Naming.Spec_Suffix" : 'Also has case-insensitive values in gprbuild and GNATcool.Project-based tools',
-    "Naming.Implementation_Suffix" : 'Also has case-insensitive values in gprbuild and GNATcool.Project-based tools',
-    "Naming.Body_Suffix" : 'Also has case-insensitive values in gprbuild and GNATcool.Project-based tools',
+    "Naming.Specification_Suffix" : 'Also has case-insensitive values in gprbuild and GNATcoll.Project-based tools',
+    "Naming.Spec_Suffix" : 'Also has case-insensitive values in gprbuild and GNATcoll.Project-based tools',
+    "Naming.Implementation_Suffix" : 'Also has case-insensitive values in gprbuild and GNATcoll.Project-based tools',
+    "Naming.Body_Suffix" : 'Also has case-insensitive values in gprbuild and GNATcoll.Project-based tools',
+    "Project_Level.Archive_Builder": 'Empty value is not supported yet in non GNATcoll.Project-based tools'
 }
 
 attribute_additionnal_ref = {
