@@ -41,6 +41,7 @@ list of mains:
 src/demo7.adb
 list of executables:
 ./demo7
+  src/demo7.adb
 Demo8    K_STANDARD
 demo8.gpr:3:26: warning: demo8.adb is not a source of project Demo8
 list of mains:
@@ -51,6 +52,7 @@ list of mains:
 src/demo9.1.ada
 list of executables:
 ./demo9
+  src/demo9.1.ada
 Demo10   K_STANDARD
 demo10.gpr:4:26: warning: demo10.1.ada is not a source of project Demo10
 list of mains:
@@ -79,3 +81,15 @@ src/demo14.myc
 list of executables:
 ./demo14
   src/demo14.myc
+Demo15   K_STANDARD
+list of mains:
+src/demo15.c
+list of executables:
+./demo15
+  src/demo15.c
+Demo16   K_STANDARD
+list of mains:
+src/call1.adb
+list of executables:
+./call_me
+  src/call1.adb
