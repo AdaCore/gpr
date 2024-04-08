@@ -4550,7 +4550,8 @@ package body GPR2.Project.Parser is
      (Self      : Object;
       Tree      : GPR2.Project.Tree.Object;
       Type_Node : Identifier_List)
-     return GPR2.Project.Typ.Object is
+      return GPR2.Project.Typ.Object
+   is
       package PTS renames GPR2.Project.Typ.Set.Set;
 
       CT : PTS.Cursor;
@@ -4574,9 +4575,7 @@ package body GPR2.Project.Parser is
       -- Get_Type_Def_From --
       -----------------------
 
-      procedure Get_Type_Def_From
-         (Imp : GPR2.Project.Import.Object)
-      is
+      procedure Get_Type_Def_From (Imp : GPR2.Project.Import.Object) is
          Path    : constant GPR2.Path_Name.Object :=
                      GPR2.Project.Create
                      (Imp.Path_Name.Name, Search_Paths);
@@ -4585,7 +4584,6 @@ package body GPR2.Project.Parser is
 
          use GPR2.Path_Name;
       begin
-
          if Path.Exists then
 
             --  Obtain the project parser if it is in cache, during the parsing
@@ -4612,7 +4610,6 @@ package body GPR2.Project.Parser is
       end Get_Type_Def_From;
 
    begin
-
       if Num_Childs > 1 then
          --  We have a project prefix for the type name
 
@@ -4620,8 +4617,8 @@ package body GPR2.Project.Parser is
             package PIS renames GPR2.Project.Import.Set;
             Position : constant PIS.Cursor :=
                            Self.Imports.Find
-                           (Get_Name_Type
-                              (Type_Node, 1, Num_Childs - 1, "-"));
+                             (Get_Name_Type
+                                (Type_Node, 1, Num_Childs - 1, "-"));
          begin
             if PIS.Has_Element (Position) then
                Get_Type_Def_From (PIS.Element (Position));
@@ -4661,10 +4658,9 @@ package body GPR2.Project.Parser is
                   exit when Dot_Position = Prj_Id'Last;
 
                   I_Cursor := Self.Imports.Find
-                     (Name_Type (Prj_Id (1 .. Dot_Position - 1)));
-                  if GPR2.Project.Import.Set.Has_Element
-                                                (I_Cursor)
-                  then
+                    (Name_Type (Prj_Id (1 .. Dot_Position - 1)));
+
+                  if GPR2.Project.Import.Set.Has_Element (I_Cursor) then
                      Get_Type_Def_From
                         (GPR2.Project.Import.Set.Element
                            (I_Cursor));

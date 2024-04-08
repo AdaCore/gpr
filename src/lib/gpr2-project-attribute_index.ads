@@ -131,8 +131,8 @@ private
                (Source_Reference.Builtin, Value_Type (Name (Value)))),
               False, False));
 
-   function Is_Case_Sensitive (Self : Object) return Boolean
-     is (Self.Case_Sensitive);
+   function Is_Case_Sensitive (Self : Object) return Boolean is
+     (Self.Case_Sensitive);
 
    function Value
      (Self          : Object;

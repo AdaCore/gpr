@@ -4,18 +4,19 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.Message;
-with GPR2.Project.Definition;
-with GPR2.Project.External.Set;
-with GPR2.Project.Parser;
+with Ada.Characters.Conversions;
+with Ada.Containers;
 
 with Gpr_Parser.Common;
 with Gpr_Parser.Analysis;
 with Gpr_Parser_Support.Slocs;
 with Gpr_Parser_Support.Text;
 
-with Ada.Characters.Conversions;
-with Ada.Containers;
+with GPR2.Message;
+with GPR2.Project.Definition;
+with GPR2.Project.External.Set;
+with GPR2.Project.Parser;
+
 package body GPR2.Project.External is
 
    use Gpr_Parser.Common;
@@ -34,12 +35,11 @@ package body GPR2.Project.External is
       Root_Only : Boolean := False)
       return External_Arr
    is
-
       procedure Assign_Type_To_External
-         (Ext              : GPR2.Project.External.Set.Set.Reference_Type;
-          Typ              : Identifier_List;
-          Assignment_Sloc  : GPR2.Source_Reference.Object;
-          Parser           : PP.Object);
+         (Ext             : GPR2.Project.External.Set.Set.Reference_Type;
+          Typ             : Identifier_List;
+          Assignment_Sloc : GPR2.Source_Reference.Object;
+          Parser          : PP.Object);
       --  Assign type to external. If assigned type may be conflicting with
       --  current external types, then the external is tagged as conflicting.
       --  All type assignments are tracked so their position in source code
@@ -51,7 +51,7 @@ package body GPR2.Project.External is
       --  Parse typed externals, and update them in "Externals"
 
       procedure Populate_Externals
-         (Exts             : in out GPR2.Project.External.Set.Object;
+         (Exts            : in out GPR2.Project.External.Set.Object;
          Parsed_Externals : PP.Externals_Map;
          Parser           : PP.Object);
       --  Populate externals with explicit typed externals and untyped
@@ -69,16 +69,14 @@ package body GPR2.Project.External is
       -----------------------------
 
       procedure Assign_Type_To_External
-         (Ext              : GPR2.Project.External.Set.Set.Reference_Type;
-          Typ              : Identifier_List;
-          Assignment_Sloc  : GPR2.Source_Reference.Object;
-          Parser           : PP.Object)
+         (Ext             : GPR2.Project.External.Set.Set.Reference_Type;
+          Typ             : Identifier_List;
+          Assignment_Sloc : GPR2.Source_Reference.Object;
+          Parser          : PP.Object)
       is
-         Type_Def :
-            constant GPR2.Project.Typ.Object :=
-              Parser.Type_Definition_From (Tree, Typ);
+         Type_Def : constant GPR2.Project.Typ.Object :=
+                      Parser.Type_Definition_From (Tree, Typ);
       begin
-
          --  Type_Def can not be undefined at this stage.
          --  Otherwise, the previous parsing stages would
          --  have failed.
@@ -92,30 +90,23 @@ package body GPR2.Project.External is
 
             for T of Type_Def.Values loop
                declare
-                  T_Unbounded :
-                     constant Unbounded_String :=
-                     To_Unbounded_String
-                        (String (T.Text));
+                  T_Unbounded : constant Unbounded_String :=
+                                  To_Unbounded_String (String (T.Text));
                begin
-
-                  if not Ext.Possible_Values
-                        .Contains
-                        (T_Unbounded)
-                  then
+                  if not Ext.Possible_Values.Contains (T_Unbounded) then
                      Ext.Conflicting := True;
                   end if;
 
-                  Ext.Possible_Values.Include
-                     (T_Unbounded);
+                  Ext.Possible_Values.Include (T_Unbounded);
                end;
             end loop;
 
          else
             Ext.Typed := True;
+
             for T of Type_Def.Values loop
                Ext.Possible_Values.Include
-                  (To_Unbounded_String
-                     (String (T.Text)));
+                 (To_Unbounded_String (String (T.Text)));
             end loop;
          end if;
 
@@ -126,7 +117,7 @@ package body GPR2.Project.External is
          --  know which type cause the ambiguity.
 
          Ext.Types_Assignments.Append
-            ((Typ             => Type_Def,
+           ((Typ             => Type_Def,
              Assignment_Sloc => Assignment_Sloc));
       end Assign_Type_To_External;
 
@@ -137,7 +128,8 @@ package body GPR2.Project.External is
       procedure Log_Warn_For_Conflicting_Ext (Ext : Object) is
          Msg               : Unbounded_String;
          First_Assign_Sloc : constant GPR2.Source_Reference.Object :=
-           Ext.Types_Assignments.First_Element.Assignment_Sloc;
+                               Ext.Types_Assignments.
+                                 First_Element.Assignment_Sloc;
 
       begin
          Msg := "set of values for " & Ext.Name & " is conflicting";
@@ -149,11 +141,10 @@ package body GPR2.Project.External is
                Message => To_String (Msg)));
 
          for Type_Assign of Ext.Types_Assignments loop
-            Msg :=
-              To_Unbounded_String
-                ("  type " & String (Type_Assign.Typ.Name.Text) &
-                 " is defined at " & Type_Assign.Typ.Format &
-                 " and used at " & Type_Assign.Assignment_Sloc.Format);
+            Msg := To_Unbounded_String
+              ("  type " & String (Type_Assign.Typ.Name.Text)
+               & " is defined at " & Type_Assign.Typ.Format
+               & " and used at " & Type_Assign.Assignment_Sloc.Format);
 
             Tree.Log_Messages.Append
               (Message.Create
@@ -172,7 +163,6 @@ package body GPR2.Project.External is
         (Parser    : PP.Object;
          Externals : in out GPR2.Project.External.Set.Object)
       is
-
          function Internal (Node : Gpr_Node'Class) return Visit_Status;
          --  Internal function provided to Traverse to parse each node
 
@@ -193,8 +183,8 @@ package body GPR2.Project.External is
 
             procedure Parse_Variable_Decl (Node : Variable_Decl) is
 
-               Expr     : constant Term_List      := F_Expr (Node);
-               V_Type   : constant Type_Reference := F_Var_Type (Node);
+               Expr   : constant Term_List      := F_Expr (Node);
+               V_Type : constant Type_Reference := F_Var_Type (Node);
 
                function Get_String_Literal
                  (N : Gpr_Node'Class; Error : out Boolean) return Value_Type;
@@ -227,9 +217,9 @@ package body GPR2.Project.External is
                   -- Parser --
                   ------------
 
-                  function Parser (Node : Gpr_Node'Class) return Visit_Status
+                  function Parser
+                    (Node : Gpr_Node'Class) return Visit_Status
                   is
-
                      function Handle_String
                        (Node : String_Literal) return Unbounded_String;
                      --  A simple static string
@@ -239,8 +229,7 @@ package body GPR2.Project.External is
                      -------------------
 
                      function Handle_String
-                       (Node : String_Literal) return Unbounded_String
-                     is
+                       (Node : String_Literal) return Unbounded_String is
                      begin
                         return
                           To_Unbounded_String
@@ -248,7 +237,6 @@ package body GPR2.Project.External is
                      end Handle_String;
 
                   begin
-
                      --  Only Gpr_String_Literal, Gpr_String_Literal_At
                      --  and Gpr_Base_List nodes can appear here. Other
                      --  cases have already been detected as an error
@@ -268,12 +256,16 @@ package body GPR2.Project.External is
                   return Value_Type (To_String (Result));
                end Get_String_Literal;
 
+               --------------------
+               -- Get_Value_Type --
+               --------------------
+
                function Get_Value_Type
                  (Node : Single_Tok_Node'Class) return Value_Type
                is
                   use Ada.Characters.Conversions;
 
-                  V      : constant Wide_Wide_String := Text (Node);
+                  V : constant Wide_Wide_String := Text (Node);
 
                begin
                   return To_String (V (V'First .. V'Last));
@@ -286,7 +278,6 @@ package body GPR2.Project.External is
                procedure Parse_External
                  (BFC : Builtin_Function_Call; Type_Node : Identifier_List)
                is
-
                   function External_Variable_Name
                     (Node  : Builtin_Function_Call;
                      Error : out Boolean) return Value_Type;
@@ -302,7 +293,6 @@ package body GPR2.Project.External is
                     (Node  : Builtin_Function_Call;
                      Error : out Boolean) return Value_Type
                   is
-
                      Exprs : constant Term_List_List :=
                                F_Terms (F_Parameters (Node));
 
@@ -329,8 +319,8 @@ package body GPR2.Project.External is
                            Typ : constant Term_List :=
                                    Exprs.First_Child.As_Term_List;
                         begin
-
-                           if Kind (Typ.First_Child) = Gpr_Variable_Reference
+                           if Kind (Typ.First_Child)
+                             = Gpr_Variable_Reference
                            then
                               return As_Variable_Reference
                                 (Typ.First_Child).F_Variable_Name;
@@ -340,7 +330,7 @@ package body GPR2.Project.External is
                         end;
                      end External_Explicit_Type;
 
-                     Var : Term_List;
+                     Var       : Term_List;
                      Var_Index : Natural;
 
                   begin
@@ -358,13 +348,14 @@ package body GPR2.Project.External is
                   end External_Variable_Name;
 
                   Parameters         : constant Term_List_List   :=
-                    F_Terms (F_Parameters (BFC));
+                                         F_Terms (F_Parameters (BFC));
                   Error              : Boolean;
                   Ext_Name           : constant Name_Type        :=
-                    Name_Type
-                      (External_Variable_Name (BFC, Error));
+                                         Name_Type
+                                           (External_Variable_Name
+                                              (BFC, Error));
                   Default_Value_Node : constant Term_List        :=
-                    Last_Child (Parameters).As_Term_List;
+                                         Last_Child (Parameters).As_Term_List;
 
                begin
                   Status := Over;
@@ -377,12 +368,12 @@ package body GPR2.Project.External is
                   end if;
 
                   declare
-                     Ext :
-                       constant GPR2.Project.External.Set.Set
-                         .Reference_Type :=
-                       Externals.Reference (Ext_Name);
+                     Ext      : constant GPR2.Project.External.
+                                  Set.Set.Reference_Type :=
+                                     Externals.Reference (Ext_Name);
                      Type_Def : constant GPR2.Project.Typ.Object :=
-                       Parser.Type_Definition_From (Tree, Type_Node);
+                                                Parser.Type_Definition_From
+                                                  (Tree, Type_Node);
 
                   begin
                      --  Type_Def can not be undefined at this stage.
@@ -390,7 +381,6 @@ package body GPR2.Project.External is
                      --  have failed.
 
                      if Ext.Is_Typed then
-
                         --  If external is already tagged as typed, union of
                         --  all assigned types values are used as external
                         --  possible values. If values differ between types,
@@ -399,22 +389,22 @@ package body GPR2.Project.External is
                         for T of Type_Def.Values loop
                            declare
                               T_Unbounded : constant Unbounded_String :=
-                                 To_Unbounded_String (String (T.Text));
+                                              To_Unbounded_String
+                                                (String (T.Text));
                            begin
-
                               if not Ext.Possible_Values.
                                  Contains (T_Unbounded)
                               then
                                  Ext.Conflicting := True;
                               end if;
 
-                              Ext.Possible_Values.
-                                 Include (T_Unbounded);
+                              Ext.Possible_Values.Include (T_Unbounded);
                            end;
                         end loop;
 
                      else
                         Ext.Typed := True;
+
                         for T of Type_Def.Values loop
                            Ext.Possible_Values.Include
                              (To_Unbounded_String (String (T.Text)));
@@ -428,8 +418,8 @@ package body GPR2.Project.External is
                      --  know which type cause the ambiguity.
 
                      declare
-                        Slr     : constant Source_Location_Range :=
-                          Sloc_Range (Parameters);
+                        Slr : constant Source_Location_Range :=
+                                Sloc_Range (Parameters);
 
                      begin
                         Ext.Types_Assignments.Append
@@ -457,10 +447,12 @@ package body GPR2.Project.External is
                   then
                      declare
                         Default_Val_BFC : constant Builtin_Function_Call :=
-                          First_Child (Default_Value_Node)
-                            .As_Builtin_Function_Call;
+                                            First_Child (Default_Value_Node)
+                                            .As_Builtin_Function_Call;
                         Function_Name   : constant Name_Type             :=
-                          Name_Type (Get_Value_Type (F_Function_Name (BFC)));
+                                            Name_Type
+                                              (Get_Value_Type
+                                                 (F_Function_Name (BFC)));
                      begin
 
                         --  Reuse the same type as for the previously
@@ -474,20 +466,21 @@ package body GPR2.Project.External is
                end Parse_External;
 
             begin
-
                --  Only typed externals are parsed. Untyped externals
                --  will be the externals whose names are only in the
                --  list obtained from the first stage parsing
                --  (Parse_Stage_1).
 
                if not V_Type.Is_Null then
-
                   if First_Child (Expr).Kind = Gpr_Builtin_Function_Call then
                      declare
                         BFC           : constant Builtin_Function_Call :=
-                          First_Child (Expr).As_Builtin_Function_Call;
+                                          First_Child (Expr).
+                                            As_Builtin_Function_Call;
                         Function_Name : constant Name_Type             :=
-                          Name_Type (Get_Value_Type (F_Function_Name (BFC)));
+                                          Name_Type
+                                            (Get_Value_Type
+                                               (F_Function_Name (BFC)));
 
                      begin
                         --  Only simple cases like
@@ -498,15 +491,15 @@ package body GPR2.Project.External is
 
                         if Function_Name = "external" then
                            declare
-                              Type_Node     : constant Identifier_List :=
-                                F_Var_Type_Name (V_Type);
+                              Type_Node : constant Identifier_List :=
+                                            F_Var_Type_Name (V_Type);
                            begin
                               Parse_External (BFC, Type_Node);
                            end;
                         end if;
                      end;
-                  else
 
+                  else
                      Status := Over;
                   end if;
                end if;
@@ -537,12 +530,11 @@ package body GPR2.Project.External is
             declare
                Name : constant Name_Type := PP.Externals_Map_Package.Key (C);
             begin
-
                if not Exts.Contains (Name) then
                   Exts.Include
                     (Name,
                       (Name              =>
-                        To_Unbounded_String (String (Name)),
+                           To_Unbounded_String (String (Name)),
                        Typed             => False,
                        Conflicting       => False,
                        Possible_Values   => <>,
@@ -550,7 +542,6 @@ package body GPR2.Project.External is
                end if;
 
                for Parsed_Ext of Parsed_Externals (C) loop
-
                   --  Assign type for explicitly typed externals
 
                   if Parsed_Ext.Type_Node /= No_Identifier_List then
@@ -565,11 +556,11 @@ package body GPR2.Project.External is
          end loop;
       end Populate_Externals;
 
-      Def : constant Definition.Ref := Definition.Get (Tree.Root_Project);
+      Def       : constant Definition.Ref :=
+                    Definition.Get (Tree.Root_Project);
       Externals : GPR2.Project.External.Set.Object;
 
    begin
-
       if Root_Only then
          Populate_Externals
            (Externals,
@@ -580,8 +571,8 @@ package body GPR2.Project.External is
       else
          for V of Tree.Ordered_Views loop
             declare
-               Parser : constant PP.Object :=
-                 Definition.Get_RO (V).Trees.Project;
+               Parser      : constant PP.Object :=
+                               Definition.Get_RO (V).Trees.Project;
                Parsed_Exts : constant PP.Externals_Map := Parser.Externals;
 
             begin
@@ -594,7 +585,6 @@ package body GPR2.Project.External is
       declare
          Exts  : External_Arr (1 .. Integer (Externals.Length));
          Index : Positive := 1;
-
       begin
          for Ext of Externals loop
             if Ext.Is_Conflicting then
@@ -643,8 +633,8 @@ package body GPR2.Project.External is
    function Possible_Values_Of
      (Ext  : Object) return Unbounded_String_Array
    is
-      Values :
-        Unbounded_String_Array (1 .. Integer (Ext.Possible_Values.Length));
+      Values : Unbounded_String_Array
+                 (1 .. Integer (Ext.Possible_Values.Length));
       Index  : Positive := 1;
 
    begin

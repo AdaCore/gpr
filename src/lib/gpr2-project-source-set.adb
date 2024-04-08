@@ -78,8 +78,7 @@ package body GPR2.Project.Source.Set is
      (Self   : Object;
       Source : Project.Source.Object;
       Kind   : Search_Kind := Full_Path)
-      return Cursor
-   is
+      return Cursor is
    begin
       if Source.Is_Ada or else Kind = Full_Path then
          return Self.Find_By_Ada_Key_Or_Full_Path (Source => Source);

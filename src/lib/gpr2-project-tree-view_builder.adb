@@ -101,8 +101,7 @@ package body GPR2.Project.Tree.View_Builder is
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
       Environment      : GPR2.Environment.Object :=
-                           GPR2.Environment.Process_Environment)
-   is
+                           GPR2.Environment.Process_Environment) is
    begin
       GPR2.Project.Parser.Clear_Cache;
 
@@ -144,8 +143,7 @@ package body GPR2.Project.Tree.View_Builder is
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
                             GPR2.File_Readers.No_File_Reader_Reference;
       Environment       : GPR2.Environment.Object :=
-                            GPR2.Environment.Process_Environment)
-   is
+                            GPR2.Environment.Process_Environment) is
    begin
       Self.Load_Autoconf
         (Root_Project      => (Project_Definition, Project.Data),
@@ -172,8 +170,7 @@ package body GPR2.Project.Tree.View_Builder is
    procedure Set_Attribute
      (Self   : in out Object;
       Q_Name : Q_Attribute_Id;
-      Attr   : GPR2.Project.Attribute.Object)
-   is
+      Attr   : GPR2.Project.Attribute.Object) is
    begin
       if Q_Name.Pack = Project_Level_Scope then
          Self.Data.Attrs.Include (Attr);
@@ -200,8 +197,7 @@ package body GPR2.Project.Tree.View_Builder is
    procedure Set_Attribute
      (Self  : in out Object;
       Attr  : Q_Attribute_Id;
-      Value : Value_Type)
-   is
+      Value : Value_Type) is
    begin
       Self.Set_Attribute
         (Attr,
@@ -212,8 +208,7 @@ package body GPR2.Project.Tree.View_Builder is
    procedure Set_Attribute
      (Self   : in out Object;
       Attr   : Q_Attribute_Id;
-      Values : Containers.Value_List)
-   is
+      Values : Containers.Value_List) is
    begin
       Self.Set_Attribute
         (Attr,
@@ -226,8 +221,7 @@ package body GPR2.Project.Tree.View_Builder is
      (Self  : in out Object;
       Attr  : Q_Attribute_Id;
       Index : Value_Type;
-      Value : Value_Type)
-   is
+      Value : Value_Type) is
    begin
       Self.Set_Attribute
         (Attr,
@@ -241,8 +235,7 @@ package body GPR2.Project.Tree.View_Builder is
      (Self   : in out Object;
       Attr   : Q_Attribute_Id;
       Index  : Value_Type;
-      Values : Containers.Value_List)
-   is
+      Values : Containers.Value_List) is
    begin
       Self.Set_Attribute
         (Attr,

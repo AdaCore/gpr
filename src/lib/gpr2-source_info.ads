@@ -21,6 +21,7 @@ with GNATCOLL.Refcount;
 
 package GPR2.Source_Info is
 
+   use Ada;
    use type Containers.Count_Type;
    use type GPR2.Unit.Library_Unit_Type;
 
@@ -54,12 +55,14 @@ package GPR2.Source_Info is
 
    function Is_Parsed (Self : Object) return Parse_State;
 
-   function Is_Parsed (Self  : Object;
-                       Index : Unit_Index) return Boolean;
+   function Is_Parsed
+     (Self  : Object;
+      Index : Unit_Index) return Boolean;
    --  Returns True when the Unit in the source has been computed
 
-   function Used_Backend (Self  : Object;
-                          Index : Unit_Index) return Implemented_Backend
+   function Used_Backend
+     (Self  : Object;
+      Index : Unit_Index) return Implemented_Backend
      with Pre => Self.Is_Defined and then Self.Is_Parsed (Index);
    --  Returns the backend used to compute the source information
 
@@ -71,8 +74,9 @@ package GPR2.Source_Info is
      with Pre => Self.Is_Defined;
    --  Returns the language of the source
 
-   function Build_Timestamp (Self  : Object;
-                             Index : Unit_Index) return Ada.Calendar.Time
+   function Build_Timestamp
+     (Self  : Object;
+      Index : Unit_Index) return Calendar.Time
      with Inline,
           Pre => Self.Is_Defined;
    --  Returns last modification of the source file from the time point when
@@ -122,8 +126,9 @@ package GPR2.Source_Info is
    --  Returns True if source contains one or more units declared in Naming
    --  package with "at" Index.
 
-   function Unit (Self  : Object;
-                  Index : Unit_Index) return GPR2.Unit.Object
+   function Unit
+     (Self  : Object;
+      Index : Unit_Index) return GPR2.Unit.Object
      with Pre => Self.Is_Defined
                    and then Self.Has_Units and then Self.Has_Unit_At (Index);
 
@@ -299,9 +304,10 @@ private
 
    function Has_Units (Self : Object) return Boolean is (Self.Is_Ada);
 
-   function Used_Backend (Self  : Object;
-                          Index : Unit_Index)
-                          return Implemented_Backend
+   function Used_Backend
+     (Self  : Object;
+      Index : Unit_Index)
+      return Implemented_Backend
    is (if Index = No_Index
        then Self.Parsed
        else Self.CU_Info (Index).Parsed);
@@ -321,8 +327,10 @@ private
    function Is_Runtime (Self : Object) return Boolean is
      (Self.Is_RTS_Source);
 
-   function Is_Parsed (Self  : Object;
-                       Index : Unit_Index) return Boolean is
+   function Is_Parsed
+     (Self  : Object;
+      Index : Unit_Index) return Boolean
+   is
      (if Index = No_Index
       then Self.Parsed /= None
       else

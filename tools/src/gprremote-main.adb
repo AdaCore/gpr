@@ -79,8 +79,8 @@ function GPRremote.Main return Ada.Command_Line.Exit_Status is
    Status : Exit_Code_Type := E_Success;
    --  GPRremote's exit status
 
-   Project     : GPR2.Project.Tree.Object;
-   Options     : GPRtools.Options.Base_Options;
+   Project : GPR2.Project.Tree.Object;
+   Options : GPRtools.Options.Base_Options;
 
    type Command_Kind is (Info, Exec, Syncto, Syncfrom, Syncexec);
 

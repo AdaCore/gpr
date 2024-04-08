@@ -51,6 +51,7 @@ begin
    --  Parse arguments and load the project tree
 
    Opt.Tree := Tree.Reference;
+
    if not Opt.Build_From_Command_Line then
       Handle_Program_Termination
         (Opt     => Opt,

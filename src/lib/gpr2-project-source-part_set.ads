@@ -22,6 +22,7 @@ package GPR2.Project.Source.Part_Set is
    type Cursor is private;
 
    function Has_Element (Position : Cursor) return Boolean;
+
    function Element (Position : Cursor) return Source_Part with Inline;
 
    type Constant_Reference_Type
@@ -72,9 +73,8 @@ private
 
    use type Ada.Containers.Hash_Type;
 
-   function Hash (Object : Source_Part) return Ada.Containers.Hash_Type
-   is (Object.Source.Path_Name.Hash +
-         Ada.Containers.Hash_Type (Object.Index));
+   function Hash (Object : Source_Part) return Ada.Containers.Hash_Type is
+     (Object.Source.Path_Name.Hash + Ada.Containers.Hash_Type (Object.Index));
 
    package Source_Part_Hashed_Sets is new Ada.Containers.Hashed_Sets
      (Source_Part, Hash, "=");
@@ -127,7 +127,9 @@ private
      (if Iter.Sorted
       then (Sorted => True, SC => Iter.SRoot.First)
       else (Sorted => False, HC => Iter.HRoot.First));
-   overriding function Next (Iter : Iterator; Position : Cursor) return Cursor
+
+   overriding function Next
+     (Iter : Iterator; Position : Cursor) return Cursor
    is (if Iter.Sorted
        then (Sorted => True,
              SC     => Source_Part_Ordered_Sets.Next (Position.SC))

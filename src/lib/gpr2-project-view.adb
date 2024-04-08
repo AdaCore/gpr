@@ -98,8 +98,9 @@ package body GPR2.Project.View is
    -- Aggregated --
    ----------------
 
-   function Aggregated (Self      : Object;
-                        Recursive : Boolean := True) return Set.Object is
+   function Aggregated
+     (Self      : Object;
+      Recursive : Boolean := True) return Set.Object is
    begin
       return Set : GPR2.Project.View.Set.Object do
          for Agg of Definition.Get_RO (Self).Aggregated loop
@@ -601,10 +602,10 @@ package body GPR2.Project.View is
       end Get_Default_Index;
 
       Cache_Cursor : constant Project.Attribute_Cache.Cursor :=
-         Definition.Get_RO (Self).Cache.Check_Cache
-            (Name   => Name,
-             Index  => Index,
-             At_Pos => At_Pos);
+                       Definition.Get_RO (Self).Cache.Check_Cache
+                         (Name   => Name,
+                          Index  => Index,
+                          At_Pos => At_Pos);
    begin
       if Project.Attribute_Cache.Has_Element (Cache_Cursor) then
          return Project.Attribute_Cache.Element (Cache_Cursor);
@@ -616,7 +617,7 @@ package body GPR2.Project.View is
 
       if not PRA.Exists (Name) then
          raise Attribute_Error
-            with Image (Name) & " attribute does not exist";
+           with Image (Name) & " attribute does not exist";
       end if;
 
       --  Fetch the attribute definition
@@ -796,10 +797,9 @@ package body GPR2.Project.View is
       Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Source_Reference.Object'Class
    is
-      Attr : Project.Attribute.Object;
+      Attr : constant Project.Attribute.Object :=
+               Self.Attribute (Name => Name, Index => Index);
    begin
-      Attr := Self.Attribute (Name => Name, Index => Index);
-
       if Attr.Is_Defined then
          return Attr;
       else
@@ -973,8 +973,7 @@ package body GPR2.Project.View is
       if With_Config
         and then Self.Tree.Has_Configuration
       then
-         for Attr of Config.Attributes_Internal (Name, False, False)
-         loop
+         for Attr of Config.Attributes_Internal (Name, False, False) loop
             Add_Attr (Attr, Def.Config_Concatenable);
          end loop;
       end if;
@@ -1234,19 +1233,22 @@ package body GPR2.Project.View is
       end Check_View;
 
    begin
-      --  look in self first
+      --  Look in self first
+
       if Check_View (Self) then
          return True;
       end if;
 
-      --  then search all visible views
+      --  Then search all visible views
+
       for V of Get_RO (Self).Closure loop
          if Check_View (V) then
             return True;
          end if;
       end loop;
 
-      --  finally look at the implicit runtime project
+      --  Finally look at the implicit runtime project
+
       if Self.Tree.Has_Runtime_Project
         and then Check_View (Self.Tree.Runtime_Project)
       then
@@ -1283,10 +1285,9 @@ package body GPR2.Project.View is
       Result : in out Project.Source.Object) return Boolean
    is
       Def : constant Definition.Const_Ref := Get_RO (Self);
-      Pos : Definition.Unit_Source.Cursor;
+      Pos : constant Definition.Unit_Source.Cursor :=
+              Def.Units_Map.Find (Definition.Key (Unit));
    begin
-      Pos := Def.Units_Map.Find (Definition.Key (Unit));
-
       if Definition.Unit_Source.Has_Element (Pos) then
          Result := Project.Source.Set.Element
            (Definition.Unit_Source.Element (Pos));
@@ -1397,10 +1398,10 @@ package body GPR2.Project.View is
           or else
             (Source /= Simple_Name (BN)
              and then Self.Check_Attribute
-               (PRA.Builder.Executable,
-                BN_Index,
-                At_Pos,
-                Attr)))
+                        (PRA.Builder.Executable,
+                         BN_Index,
+                         At_Pos,
+                         Attr)))
         and then At_Pos = At_Pos_Or (Attr.Index, 0)
       then
          return Executable (Attr.Value.Text);
@@ -2299,8 +2300,8 @@ package body GPR2.Project.View is
       Src  : GPR2.Project.Source.Object;
    begin
       --  Check executable attribute
-      for Attr of Self.Attributes (Name => PRA.Builder.Executable)
-      loop
+
+      for Attr of Self.Attributes (Name => PRA.Builder.Executable) loop
          if Simple_Name (Attr.Value.Text) = Executable
            and then Self.Check_Source (Simple_Name (Attr.Index.Value), Src)
          then
@@ -2309,10 +2310,9 @@ package body GPR2.Project.View is
       end loop;
 
       --  Try the Project'Main attributes
-      if Self.Has_Attribute (PRA.Main)
-      then
-         for Value of Self.Attribute (PRA.Main).Values
-         loop
+
+      if Self.Has_Attribute (PRA.Main) then
+         for Value of Self.Attribute (PRA.Main).Values loop
             Path := Self.Executable (Simple_Name (Value.Text), Value.At_Pos);
 
             if Path.Simple_Name = Executable
@@ -2413,9 +2413,8 @@ package body GPR2.Project.View is
 
       return Project.Pack.Object'
         (Source_Reference.Pack.Object
-           (Source_Reference.Pack.Create (Source_Reference.Builtin, Name)) with
-         Project.Attribute.Set.Empty_Set,
-         Project.Variable.Set.Empty_Set);
+           (Source_Reference.Pack.Create (Source_Reference.Builtin, Name))
+         with Project.Attribute.Set.Empty_Set, Project.Variable.Set.Empty_Set);
    end Pack;
 
    --------------
@@ -2566,8 +2565,8 @@ package body GPR2.Project.View is
    ---------------------
 
    function Skipped_Sources
-     (View : Project.View.Object) return Containers.Filename_Source_Reference
-   is (Get_RO (View).Trees.Project.Skip_Sources);
+     (Self : Object) return Containers.Filename_Source_Reference
+   is (Get_RO (Self).Trees.Project.Skip_Sources);
 
    ------------
    -- Source --
@@ -2615,7 +2614,11 @@ package body GPR2.Project.View is
    is
       procedure Dir_Cb (Dir_Name : GPR2.Path_Name.Object);
 
-      Result                   : GPR2.Path_Name.Set.Object;
+      Result : GPR2.Path_Name.Set.Object;
+
+      ------------
+      -- Dir_Cb --
+      ------------
 
       procedure Dir_Cb (Dir_Name : GPR2.Path_Name.Object) is
       begin
@@ -2635,7 +2638,7 @@ package body GPR2.Project.View is
    -----------------------------
 
    procedure Source_Directories_Walk
-     (View      : Project.View.Object;
+     (Self      : Object;
       Source_CB : access procedure
                    (Dir_Reference : GPR2.Source_Reference.Value.Object;
                     Source        : GPR2.Path_Name.Object;
@@ -2645,10 +2648,10 @@ package body GPR2.Project.View is
       Visited_Dirs               : GPR2.Containers.Filename_Set;
       Dir_Ref                    : GPR2.Source_Reference.Value.Object;
       Ignored_Sub_Dirs           : constant GPR2.Project.Attribute.Object :=
-                                   View.Attribute (PRA.Ignore_Source_Sub_Dirs);
+                                   Self.Attribute (PRA.Ignore_Source_Sub_Dirs);
       Ignored_Sub_Dirs_Regexps   : Regexp_List.Vector;
       Excluded_Dirs              : constant GPR2.Project.Attribute.Object :=
-                                     View.Attribute (PRA.Excluded_Source_Dirs);
+                                     Self.Attribute (PRA.Excluded_Source_Dirs);
       Excluded_Dirs_List         : GPR2.Path_Name.Set.Object;
       Excluded_Recurse_Dirs_List : GPR2.Path_Name.Set.Object;
       --  Ignore_Source_Sub_Dirs attribute values. In case the directory ends
@@ -2712,13 +2715,11 @@ package body GPR2.Project.View is
          --  Do_Subdir_Visit is set to False if we already have visited
          --  this source directory:
 
-         Visited_Dirs.Insert
-           (Directory.Name, Position, Inserted);
+         Visited_Dirs.Insert (Directory.Name, Position, Inserted);
 
          if not Inserted then
             --  Already visited
-            Do_Dir_Visit    := False;
-
+            Do_Dir_Visit := False;
          elsif Dir_CB /= null then
             Dir_CB (Directory);
          end if;
@@ -2730,14 +2731,13 @@ package body GPR2.Project.View is
 
       procedure On_File
         (File      : GPR2.Path_Name.Object;
-         Timestamp : Ada.Calendar.Time)
-      is
+         Timestamp : Ada.Calendar.Time) is
       begin
          Source_CB (Dir_Ref, File, Timestamp);
       end On_File;
 
    begin
-      if View.Kind not in With_Source_Dirs_Kind then
+      if Self.Kind not in With_Source_Dirs_Kind then
          return;
       end if;
 
@@ -2753,37 +2753,38 @@ package body GPR2.Project.View is
       if Excluded_Dirs.Is_Defined then
          for V of Excluded_Dirs.Values loop
             declare
-               Val          : constant Value_Type := V.Text;
-               Recursive    : constant Boolean :=
-                                Val'Length >= 2
-                                    and then
-                                      Val (Val'Last - 1 .. Val'Last) = "**";
-               Last         : constant Natural :=
-                                (if Recursive then Val'Last - 2 else Val'Last);
-               Dir_Val      : constant Value_Type := Val (Val'First .. Last);
+               Val       : constant Value_Type := V.Text;
+               Recursive : constant Boolean :=
+                             Val'Length >= 2
+                                 and then
+                                   Val (Val'Last - 1 .. Val'Last) = "**";
+               Last      : constant Natural :=
+                             (if Recursive then Val'Last - 2 else Val'Last);
+               Dir_Val   : constant Value_Type := Val (Val'First .. Last);
             begin
                if Dir_Val'Length = 0 then
                   if Recursive then
-                     Excluded_Recurse_Dirs_List.Append (View.Dir_Name);
+                     Excluded_Recurse_Dirs_List.Append (Self.Dir_Name);
                   else
-                     Excluded_Dirs_List.Append (View.Dir_Name);
+                     Excluded_Dirs_List.Append (Self.Dir_Name);
                   end if;
+
                else
                   declare
                      Dir_Name     : constant GPR2.Path_Name.Object :=
                                       GPR2.Path_Name.Create_Directory
                                         (Filename_Type (Dir_Val),
-                                         View.Dir_Name.Name);
+                                         Self.Dir_Name.Name);
                      Relative_Dir : constant Filename_Type :=
                                       Dir_Name.Relative_Path
-                                        (From => View.Dir_Name);
+                                        (From => Self.Dir_Name);
                   begin
                      if Recursive then
                         Excluded_Recurse_Dirs_List.Append
-                          (View.Dir_Name.Compose (Relative_Dir, True));
+                          (Self.Dir_Name.Compose (Relative_Dir, True));
                      else
                         Excluded_Dirs_List.Append
-                          (View.Dir_Name.Compose (Relative_Dir, True));
+                          (Self.Dir_Name.Compose (Relative_Dir, True));
                      end if;
                   end;
                end if;
@@ -2791,21 +2792,22 @@ package body GPR2.Project.View is
          end loop;
       end if;
 
-      for S of View.Attribute (PRA.Source_Dirs).Values loop
+      for S of Self.Attribute (PRA.Source_Dirs).Values loop
          --  If S denotes the view's source dir corresponding to
          --  --src-subdir, just skip if the dir does not exist (it is
          --  optional).
-         if not (View.Has_Source_Subdirectory
-                 and then S.Text = View.Source_Subdirectory.Value
-                 and then not Ada.Directories.Exists (S.Text))
+         if not (Self.Has_Source_Subdirectory
+                 and then S.Text = Self.Source_Subdirectory.Value
+                 and then not Directories.Exists (S.Text))
          then
             Dir_Ref := S;
             Definition.Foreach
-              (Base_Dir          => View.Dir_Name,
-               Messages          => Get_RO (View).Tree.Log_Messages.all,
+              (Base_Dir          => Self.Dir_Name,
+               Messages          => Get_RO (Self).Tree.Log_Messages.all,
                Directory_Pattern => Filename_Optional (S.Text),
                Source            => S,
-               File_CB           => (if Source_CB = null then null
+               File_CB           => (if Source_CB = null
+                                     then null
                                      else On_File'Access),
                Directory_CB      => On_Directory'Access);
          end if;
@@ -2908,24 +2910,21 @@ package body GPR2.Project.View is
    -------------------------
 
    function Source_Subdirectory (Self : Object) return GPR2.Path_Name.Object is
+      P : constant GPR2.Path_Name.Object :=
+            Self.Object_Directory.Compose
+              (Filename_Type (To_Lower (Self.Name))
+               & "-" & Self.Tree.Src_Subdirs, Directory => True);
    begin
       --  First check for <obj>/<project.lowercase_name>-<src_subdirs>
 
-      declare
-         P : constant GPR2.Path_Name.Object :=
-               Self.Object_Directory.Compose
-                 (Filename_Type (To_Lower (Self.Name))
-                  & "-" & Self.Tree.Src_Subdirs, Directory => True);
-      begin
-         if P.Exists then
-            return P;
-         end if;
-      end;
+      if P.Exists then
+         return P;
+      else
+         --  Then default to <obj>/<src_subdirs>
 
-      --  Then default to <obj>/<src_subdirs>
-
-      return Self.Object_Directory.Compose
-        (Self.Tree.Src_Subdirs, Directory => True);
+         return Self.Object_Directory.Compose
+           (Self.Tree.Src_Subdirs, Directory => True);
+      end if;
    end Source_Subdirectory;
 
    -------------
@@ -2939,13 +2938,10 @@ package body GPR2.Project.View is
    is
       use type Ada.Streams.Stream_Element_Array;
 
-      Data : constant Project.Definition.Ref := Project.Definition.Get (Self);
-      Add  : Boolean;
-
       function Is_Compilable (S : Project.Source.Object) return Boolean;
-
-      function Is_Interface (S : Project.Source.Object) return Boolean
-      is (S.Is_Interface);
+      --  ??? Is that really needed? Why not use S.Is_Compilable? And this
+      --  ??? unit if it has a different semantic should probably be renamed
+      --  ??? and moved into Project.Source package.
 
       -------------------
       -- Is_Compilable --
@@ -2967,6 +2963,8 @@ package body GPR2.Project.View is
          end if;
       end Is_Compilable;
 
+      Data : constant Project.Definition.Ref := Project.Definition.Get (Self);
+
    begin
       if not Definition.Are_Sources_Loaded (Data.Tree.all) then
          Data.Tree.Update_Sources (With_Runtime => Self.Is_Runtime);
@@ -2978,25 +2976,18 @@ package body GPR2.Project.View is
 
       if not Interface_Only and then not Compilable_Only then
          return Data.Sources;
+
+      else
+         return S_Set : Project.Source.Set.Object do
+            for S of Data.Sources loop
+               if (not Interface_Only or else S.Is_Interface)
+                 and then (not Compilable_Only or else Is_Compilable (S))
+               then
+                  S_Set.Insert (S);
+               end if;
+            end loop;
+         end return;
       end if;
-
-      return S_Set : Project.Source.Set.Object do
-         for S of Data.Sources loop
-            Add := True;
-
-            if Interface_Only and then not Is_Interface (S) then
-               Add := False;
-            end if;
-
-            if Compilable_Only and then not Is_Compilable (S) then
-               Add := False;
-            end if;
-
-            if Add then
-               S_Set.Insert (S);
-            end if;
-         end loop;
-      end return;
    end Sources;
 
    ------------
@@ -3071,9 +3062,10 @@ package body GPR2.Project.View is
       return Definition.Get_RO (Self).Vars (Name);
    end Variable;
 
-   function Variable (Self : Object;
-                      Pack : Package_Id;
-                      Name : Name_Type) return Project.Variable.Object is
+   function Variable
+     (Self : Object;
+      Pack : Package_Id;
+      Name : Name_Type) return Project.Variable.Object is
    begin
       return Self.Pack (Pack).Vars.Element (Name);
    end Variable;

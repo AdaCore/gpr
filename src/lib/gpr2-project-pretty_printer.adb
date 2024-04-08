@@ -641,8 +641,7 @@ package body GPR2.Project.Pretty_Printer is
       procedure Write_Identifier_List
         (List      : Identifier_List;
          Indent    : Natural;
-         Separator : String := ".")
-      is
+         Separator : String := ".") is
       begin
          for C in 1 .. Children_Count (List) loop
             if C /= 1 then
@@ -787,7 +786,6 @@ package body GPR2.Project.Pretty_Printer is
       is
          Formatted : constant String :=
                        (if Lower_Case then To_Lower (S) else S);
-
       begin
          --  TODO: split according to some characters (dots, spaces... spaces
          --        shouldn't be repeated on the new line)

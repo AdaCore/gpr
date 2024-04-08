@@ -22,6 +22,8 @@ with GPRtools.Options;
 
 package GPRtools.Program_Termination is
 
+   use Ada;
+
    E_Program_Termination : exception;
 
    type Exit_Code_Type is
@@ -67,7 +69,7 @@ package GPRtools.Program_Termination is
    --     - Message : Error message to be displayed.
 
    function To_Exit_Status
-     (Code : Exit_Code_Type) return Ada.Command_Line.Exit_Status;
+     (Code : Exit_Code_Type) return Command_Line.Exit_Status;
    --  Translate Code as Exit_Status
 
 end GPRtools.Program_Termination;

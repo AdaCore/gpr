@@ -20,24 +20,28 @@ with GPR2.Project.Registry.Pack;
 
 package GPR2.Project.Registry.Exchange is
 
+   use Ada;
+   use Ada.Strings.Unbounded;
+
    type Export_Format is (K_TEXT, K_JSON, K_JSON_COMPACT);
    --  Supported export format
 
    procedure Export
-     (Included : GPR2.Containers.Package_Id_List :=
-                    GPR2.Project.Registry.Pack.All_Packages;
-      Excluded : GPR2.Containers.Package_Id_List :=
-                    GPR2.Project.Registry.Pack.Predefined_Packages;
+     (Included : Containers.Package_Id_List :=
+                   Registry.Pack.All_Packages;
+      Excluded : Containers.Package_Id_List :=
+                   Registry.Pack.Predefined_Packages;
       Format   : Export_Format := K_JSON_COMPACT;
-      Output   : access procedure (Item : String) := Ada.Text_IO.Put'Access);
+      Output   : access procedure (Item : String) := Text_IO.Put'Access);
    --  Export Packages filtered by Included/Excluded using right formating
    --  By default export all packages added after gpr2 initialization.
 
-   procedure Import (Definitions : Ada.Strings.Unbounded.Unbounded_String;
-                     Included    : GPR2.Containers.Package_Id_List :=
-                       GPR2.Containers.Package_Id_Type_List.Empty;
-                     Excluded    : GPR2.Containers.Package_Id_List :=
-                       GPR2.Project.Registry.Pack.Predefined_Packages);
+   procedure Import
+     (Definitions : Unbounded_String;
+      Included    : Containers.Package_Id_List :=
+                      Containers.Package_Id_Type_List.Empty;
+      Excluded    : Containers.Package_Id_List :=
+                      Registry.Pack.Predefined_Packages);
    --  Import in registry Definitions (in JSON format) filtered by
    --  Included/Excluded parameters.
    --  By default import all definitions except project scope and gpr2

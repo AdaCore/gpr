@@ -50,7 +50,6 @@ package body GPR2.Project.Variable is
      (Self     : Object;
       Name_Len : Natural := 0) return String
    is
-
       use GPR2.Project.Registry.Attribute;
       use all type GPR2.Project.Name_Values.Object;
 

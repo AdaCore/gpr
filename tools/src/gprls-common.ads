@@ -16,7 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Vectors;
+with Ada.Containers;
 with Ada.Strings.Equal_Case_Insensitive;
 with Ada.Strings.Less_Case_Insensitive;
 with Ada.Strings.Hash_Case_Insensitive;
@@ -26,6 +26,7 @@ with GPR2;
 
 package GPRls.Common is
 
+   use Ada;
    use Ada.Strings.Unbounded;
 
    use GPR2;
@@ -33,20 +34,18 @@ package GPRls.Common is
    function "+"
      (Str : String) return Unbounded_String renames To_Unbounded_String;
 
-   package String_Vector is
-     new Ada.Containers.Indefinite_Vectors (Positive, String);
-
    type Value_Case_Insens is new Value_Type;
 
    overriding function "=" (Left, Right : Value_Case_Insens) return Boolean is
-     (Ada.Strings.Equal_Case_Insensitive (String (Left), String (Right)));
+     (Strings.Equal_Case_Insensitive (String (Left), String (Right)));
 
    overriding function "<" (Left, Right : Value_Case_Insens) return Boolean is
-     (Ada.Strings.Less_Case_Insensitive (String (Left), String (Right)));
+     (Strings.Less_Case_Insensitive (String (Left), String (Right)));
 
    function Str_Hash_Case_Insensitive
-     (Key : Value_Case_Insens) return Ada.Containers.Hash_Type is
-     (Ada.Strings.Hash_Case_Insensitive (String (Key)));
+     (Key : Value_Case_Insens) return Containers.Hash_Type
+   is
+     (Strings.Hash_Case_Insensitive (String (Key)));
 
    No_String : constant String := "";
 

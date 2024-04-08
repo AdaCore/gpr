@@ -32,6 +32,11 @@ with GPR2.Project.Registry.Pack;
 with GPR2.Project.Registry.Pack.Description;
 
 package body GPRinspect.External_Tools_Support is
+
+   use Ada;
+   use Ada.Strings.Unbounded;
+
+   use GNAT;
    use GPR2;
 
    package PRP renames GPR2.Project.Registry.Pack;
@@ -73,26 +78,25 @@ package body GPRinspect.External_Tools_Support is
    ----------------------
 
    procedure Import_From_File (File : GPR2.Path_Name.Object) is
+      use Ada.Exceptions;
    begin
       if File.Is_Defined and then File.Exists then
          declare
-            use Ada.Strings.Unbounded;
-            use Ada.Text_IO;
-
             Definitions : Unbounded_String;
-            F       : File_Type;
+            F           : Text_IO.File_Type;
          begin
-            Open (F, In_File, File.Value);
-            while not End_Of_File (F) loop
-               Append (Definitions, Get_Line (F) & ASCII.LF);
-            end loop;
-            GPR2.Project.Registry.Exchange.Import (Definitions);
+            Text_IO.Open (F, Text_IO.In_File, File.Value);
 
+            while not Text_IO.End_Of_File (F) loop
+               Append (Definitions, Text_IO.Get_Line (F) & ASCII.LF);
+            end loop;
+
+            GPR2.Project.Registry.Exchange.Import (Definitions);
          exception
             when E : others =>
                Ada.Text_IO.Put_Line
-                 ("Warning: Cannot import attribute registry from file: " &
-                    Ada.Exceptions.Exception_Information (E));
+                 ("Warning: Cannot import attribute registry from file: "
+                  & Exception_Information (E));
          end;
       end if;
    end Import_From_File;
@@ -103,19 +107,21 @@ package body GPRinspect.External_Tools_Support is
 
    procedure Import_From_Tool
      (Tool_Name       : String;
-      Legacy_Callback : access procedure := null) is
-      Exec_Name   : GNAT.OS_Lib.String_Access :=
-                      GNAT.OS_Lib.Locate_Exec_On_Path (Tool_Name);
+      Legacy_Callback : access procedure := null)
+   is
       use type GNAT.OS_Lib.String_Access;
+
+      Exec_Name : GNAT.OS_Lib.String_Access :=
+                    OS_Lib.Locate_Exec_On_Path (Tool_Name);
    begin
       if Exec_Name /= null then
          declare
             Args_Vector : GNATCOLL.OS.Process.Argument_List;
-            Output      : Ada.Strings.Unbounded.Unbounded_String;
+            Output      : Unbounded_String;
             Dummy       : Integer;
          begin
             Args_Vector.Append (Exec_Name.all);
-            GNAT.OS_Lib.Free (Exec_Name);
+            OS_Lib.Free (Exec_Name);
             Args_Vector.Append (GPR2.Options.Print_GPR_Registry_Option);
 
             Output := GNATCOLL.OS.Process.Run
@@ -128,7 +134,6 @@ package body GPRinspect.External_Tools_Support is
                GPR2.Project.Registry.Exchange.Import (Output);
                return;
             end if;
-
          exception
             when E : others =>
                Ada.Text_IO.Put_Line
@@ -166,12 +171,13 @@ package body GPRinspect.External_Tools_Support is
       if PRPD.Get_Package_Description (Check_Package) = "" then
          PRPD.Set_Package_Description
            (Key         => Check_Package,
-            Description => "This package specifies the options used when " &
-              "calling the checking tool gnatcheck. Its attribute " &
-              "Default_Switches has the same semantics as for the package " &
-              "Builder. The first string should always be -rules to specify " &
-              "that all the other options belong to the -rules section of " &
-              "the parameters to gnatcheck.");
+            Description =>
+              "This package specifies the options used when "
+            & "calling the checking tool gnatcheck. Its attribute "
+            & "Default_Switches has the same semantics as for the package "
+            & "Builder. The first string should always be -rules to specify "
+            & "that all the other options belong to the -rules section of "
+            & "the parameters to gnatcheck.");
       end if;
 
       if not PRA.Exists (Check_Default_Switches) then
@@ -187,9 +193,10 @@ package body GPRinspect.External_Tools_Support is
       if PRAD.Get_Attribute_Description (Check_Default_Switches) = "" then
          PRAD.Set_Attribute_Description
            (Key         => Check_Default_Switches,
-            Description => "Index is a language name. Value is a list of " &
-              "switches to be used when invoking gnatcheck for a source of " &
-              "the language, if there is no applicable attribute Switches.");
+            Description =>
+              "Index is a language name. Value is a list of "
+            & "switches to be used when invoking gnatcheck for a source of "
+            & "the language, if there is no applicable attribute Switches.");
       end if;
 
       if not PRA.Exists (Check_Switches) then
@@ -206,9 +213,10 @@ package body GPRinspect.External_Tools_Support is
       if PRAD.Get_Attribute_Description (Check_Switches) = "" then
          PRAD.Set_Attribute_Description
            (Key         => Check_Switches,
-            Description => "Index is a source file name. Value is the list " &
-              "of switches to be used when invoking gnatcheck for the " &
-              "source.");
+            Description =>
+              "Index is a source file name. Value is the list "
+            & "of switches to be used when invoking gnatcheck for the "
+            & "source.");
       end if;
 
       if not PRP.Exists (Codepeer_Package) then
@@ -220,12 +228,13 @@ package body GPRinspect.External_Tools_Support is
       if PRPD.Get_Package_Description (Codepeer_Package) = "" then
          PRPD.Set_Package_Description
            (Key         => Codepeer_Package,
-            Description => "This package specifies the options used when " &
-              "calling codepeer or calling gnatcheck with --simple-project " &
-              "switch. Default_Switches has the same semantics as for the " &
-              "package Builder. The first string should always be -rules to " &
-              "specify that all the other options belong to the -rules " &
-              "section of the parameters to gnatcheck.");
+            Description =>
+              "This package specifies the options used when "
+            & "calling codepeer or calling gnatcheck with --simple-project "
+            & "switch. Default_Switches has the same semantics as for the "
+            & "package Builder. The first string should always be -rules to "
+            & "specify that all the other options belong to the -rules "
+            & "section of the parameters to gnatcheck.");
       end if;
 
       if not PRA.Exists (Codepeer_File_Patterns) then
@@ -240,15 +249,16 @@ package body GPRinspect.External_Tools_Support is
       if PRAD.Get_Attribute_Description (Codepeer_File_Patterns) = "" then
          PRAD.Set_Attribute_Description
            (Key         => Codepeer_File_Patterns,
-            Description => "If you want to override ada default file " &
-              "extensions (ada, ads, adb, spc & bdy), use this attribute " &
-              "which includes a list of file patterns where you can specify " &
-              "the following meta characters: * : matches any string of 0 " &
-              "or more characters, ? : matches any character, " &
-              " [list of chars] : matches any character listed, [char-char] " &
-              ": matches any character in given range, [^list of chars] : " &
-              "matches any character not listed. These patterns are case " &
-              "insensitive.");
+            Description =>
+              "If you want to override ada default file "
+            & "extensions (ada, ads, adb, spc & bdy), use this attribute "
+            & "which includes a list of file patterns where you can specify "
+            & "the following meta characters: * : matches any string of 0 "
+            & "or more characters, ? : matches any character, "
+            & " [list of chars] : matches any character listed, [char-char] "
+            & ": matches any character in given range, [^list of chars] : "
+            & "matches any character not listed. These patterns are case "
+            & "insensitive.");
       end if;
 
    end Register_Legacy_Gnatcheck;
@@ -275,8 +285,9 @@ package body GPRinspect.External_Tools_Support is
       if PRPD.Get_Package_Description (Prove_Package) = "" then
          PRPD.Set_Package_Description
            (Key         => Prove_Package,
-            Description => "This package specifies the options used when " &
-              "calling gnatprove");
+            Description =>
+              "This package specifies the options used when "
+            & "calling gnatprove");
       end if;
 
       if not PRA.Exists (Prove_Proof_Switches) then
@@ -291,11 +302,12 @@ package body GPRinspect.External_Tools_Support is
       if PRAD.Get_Attribute_Description (Prove_Proof_Switches) = "" then
          PRAD.Set_Attribute_Description
            (Key         => Prove_Proof_Switches,
-            Description => "Defines additional command line switches that " &
-              "are used for the invokation of GNATprove. Only the following " &
-              "switches are allowed for file-specific switches: --steps, " &
-              "--timeout, --memlimit, --proof, --prover, --level, --mode, " &
-              "--counterexamples, --no-inlining, --no-loop-unrolling");
+            Description =>
+              "Defines additional command line switches that "
+            & "are used for the invokation of GNATprove. Only the following "
+            & "switches are allowed for file-specific switches: --steps, "
+            & "--timeout, --memlimit, --proof, --prover, --level, --mode, "
+            & "--counterexamples, --no-inlining, --no-loop-unrolling");
       end if;
 
       if not PRA.Exists (Prove_Switches) then
@@ -310,8 +322,9 @@ package body GPRinspect.External_Tools_Support is
       if PRAD.Get_Attribute_Description (Prove_Switches) = "" then
          PRAD.Set_Attribute_Description
            (Key         => Prove_Switches,
-            Description => "This deprecated attribute is the same as " &
-              "Proof_Switches (""Ada"").");
+            Description =>
+              "This deprecated attribute is the same as "
+            & "Proof_Switches (""Ada"").");
       end if;
 
       if not PRA.Exists (Prove_Proof_Dir) then
@@ -326,18 +339,19 @@ package body GPRinspect.External_Tools_Support is
       if PRAD.Get_Attribute_Description (Prove_Proof_Dir) = "" then
          PRAD.Set_Attribute_Description
            (Key         => Prove_Proof_Dir,
-            Description => "Defines the directory where are stored the " &
-              "files concerning the state of the proof of a project. This " &
-              "directory contains a sub-directory sessions with one " &
-              "directory per source package analyzed for proof. Each of " &
-              "these package directories contains a Why3 session file. If a " &
-              "manual prover is used to prove some VCs, then a " &
-              "sub-directory called by the name of the prover is created " &
-              "next to sessions, with the same organization of " &
-              "sub-directories. Each of these package directories contains " &
-              "manual proof files. Common proof files to be used across " &
-              "various proofs can be stored at the toplevel of the " &
-              "prover-specific directory.");
+            Description =>
+              "Defines the directory where are stored the "
+            & "files concerning the state of the proof of a project. This "
+            & "directory contains a sub-directory sessions with one "
+            & "directory per source package analyzed for proof. Each of "
+            & "these package directories contains a Why3 session file. If a "
+            & "manual prover is used to prove some VCs, then a "
+            & "sub-directory called by the name of the prover is created "
+            & "next to sessions, with the same organization of "
+            & "sub-directories. Each of these package directories contains "
+            & "manual proof files. Common proof files to be used across "
+            & "various proofs can be stored at the toplevel of the "
+            & "prover-specific directory.");
       end if;
    end Register_Legacy_Gnatprove;
 

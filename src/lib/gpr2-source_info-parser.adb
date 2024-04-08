@@ -19,9 +19,9 @@ package body GPR2.Source_Info.Parser is
          Month   => Month_Number'Value (S (5 .. 6)),
          Day     => Day_Number'Value (S (7 .. 8)),
          Seconds => Day_Duration
-           (3600 * Natural'Value (S (9 .. 10)) +
-              60 * Natural'Value (S (11 .. 12)) +
-              Natural'Value (S (13 .. 14))));
+                      (3600 * Natural'Value (S (9 .. 10))
+                       + 60 * Natural'Value (S (11 .. 12))
+                       + Natural'Value (S (13 .. 14))));
    end To_Time;
 
 end GPR2.Source_Info.Parser;

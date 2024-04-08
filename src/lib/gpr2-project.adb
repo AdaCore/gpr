@@ -175,8 +175,8 @@ package body GPR2.Project is
    function Default_Search_Paths
      (Current_Directory : Boolean;
       Environment       : GPR2.Environment.Object :=
-                             GPR2.Environment.Process_Environment
-     ) return Path_Name.Set.Object
+                            GPR2.Environment.Process_Environment)
+      return Path_Name.Set.Object
    is
       Result : Path_Name.Set.Object;
    begin

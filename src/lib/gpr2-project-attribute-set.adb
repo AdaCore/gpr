@@ -205,8 +205,7 @@ package body GPR2.Project.Attribute.Set is
 
    function Find
      (Self      : Object;
-      Attribute : Project.Attribute.Object) return Cursor
-   is
+      Attribute : Project.Attribute.Object) return Cursor is
    begin
       return Self.Find
         (Attribute.Name.Id.Attr,
@@ -302,8 +301,7 @@ package body GPR2.Project.Attribute.Set is
    -----------------
 
    function Is_Matching
-     (Iter : Iterator'Class; Position : Cursor) return Boolean
-   is
+     (Iter : Iterator'Class; Position : Cursor) return Boolean is
    begin
       if Iter.Name = No_Attribute and then Iter.With_Defaults then
          return True;
@@ -360,7 +358,6 @@ package body GPR2.Project.Attribute.Set is
    overriding function Next
      (Iter : Iterator; Position : Cursor) return Cursor
    is
-
       procedure Next (Position : in out Cursor)
         with Post => Position'Old /= Position;
       --  Move Position to next element

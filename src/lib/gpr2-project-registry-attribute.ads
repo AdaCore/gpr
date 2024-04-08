@@ -107,7 +107,8 @@ package GPR2.Project.Registry.Attribute is
    --  Returns value for key Key in Map. If Key is not present looks first for
    --  the Any_Index key. If no value is defined for Any_Index, returns empty.
 
-   type Default_Value (Kind : Default_Value_Kind := D_Attribute_Reference)
+   type Default_Value
+     (Kind : Default_Value_Kind := D_Attribute_Reference)
    is record
       case Kind is
          when D_Attribute_Reference =>

@@ -74,11 +74,6 @@ package GPR2.Project.Source is
    --  Returns True if the source is taken into aggregating library source set
    --  from the aggregated project.
 
-   function Is_Compilable (Self : Object) return Boolean
-     with Pre => Self.Is_Defined;
-   --  Returns True if the source is compilable, meaning that a compiler is
-   --  defined for this language.
-
    function Is_Interface (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if Self is part of the project view interface
@@ -108,8 +103,15 @@ package GPR2.Project.Source is
      with Pre => Self.Is_Defined;
    --  Returns whether the source is the main file to create executable
 
-   function Is_Compilable (Self : Object;
-                           Index : Unit_Index) return Boolean;
+   function Is_Compilable (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if the source is compilable, meaning that a compiler is
+   --  defined for this language.
+
+   function Is_Compilable
+     (Self  : Object;
+      Index : Unit_Index) return Boolean
+     with Pre => Self.Is_Defined;
    --  Tells if the unit identified by index, or the source (if no units)
    --  is compilable (e.g. is a body unit, or a spec_only unit)
 
@@ -239,8 +241,9 @@ private
      (not Definition_References."="
         (Self.Aggregated, Definition_References.Null_Weak_Ref));
 
-   function Is_Compilable (Self : Object;
-                           Index : Unit_Index) return Boolean
+   function Is_Compilable
+     (Self  : Object;
+      Index : Unit_Index) return Boolean
    is (Kind (Self, Index) in GPR2.Unit.Body_Kind
        or else (Self.Language = Ada_Language
          and then Kind (Self, Index) in GPR2.Unit.Spec_Kind

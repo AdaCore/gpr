@@ -26,7 +26,8 @@ package body GPR2.Source_Info.Parser.Ada_Language is
    overriding procedure Compute
      (Self   :        not null access Object;
       Data   : in out Source_Info.Object'Class;
-      Source :        Project.Source.Object) is
+      Source :        Project.Source.Object)
+   is
       use Gpr_Parser.Analysis;
       use Gpr_Parser.Basic_Ada_Parser;
       use GPR2.Unit;
@@ -130,7 +131,6 @@ package body GPR2.Source_Info.Parser.Ada_Language is
          L_Type  : GPR2.Unit.Library_Item_Type;
 
       begin
-
          case Lib_Item_Type is
             when Is_Package =>
                L_Type := Is_Package;
@@ -160,7 +160,6 @@ package body GPR2.Source_Info.Parser.Ada_Language is
          U_Flags (Is_Generic) := Generic_Unit;
 
          if Separate_From /= "" then
-
             U_Name := To_Unbounded_String (Separate_From & '.' & Unit_Name);
 
          else
@@ -199,7 +198,6 @@ package body GPR2.Source_Info.Parser.Ada_Language is
 
             Parsed := True;
          end;
-
       end Unit_Name_CB;
 
       --------------------

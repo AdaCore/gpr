@@ -152,8 +152,9 @@ package GPR2.Project.View is
    --  Whether this view is either the root of the tree or the root
    --  project of an aggregated subtree.
 
-   function Aggregated (Self      : Object;
-                        Recursive : Boolean := True) return Set.Object
+   function Aggregated
+     (Self      : Object;
+      Recursive : Boolean := True) return Set.Object
      with Pre => Self.Is_Defined and then Self.Kind in Aggregate_Kind;
    --  Get the aggregated views.
    --  In case Self is an aggregate project and recursive is set, if
@@ -390,18 +391,20 @@ package GPR2.Project.View is
    --  Returns the source dir paths for a given project
 
    procedure Source_Directories_Walk
-     (View      : Project.View.Object;
+     (Self      : Object;
       Source_CB : access procedure
-                    (Dir_Reference : GPR2.Source_Reference.Value.Object;
+                    (Dir_Reference : Source_Reference.Value.Object;
                      Source        : GPR2.Path_Name.Object;
                      Timestamp     : Ada.Calendar.Time);
-      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object));
+      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Object))
+     with Pre => Self.Is_Defined;
    --  Walks the source directories of Self and calls Source_CB on every
    --  file found, and Dir_CB on each directory found, if the callbacks are
    --  defined.
 
    function Skipped_Sources
-     (View : Project.View.Object) return Containers.Filename_Source_Reference;
+     (Self : Object) return Containers.Filename_Source_Reference
+     with Pre => Self.Is_Defined;
    --  List of source basenames to ignore when loading the list of sources:
    --  they are mentioned in ignored case statements, so should be skipped so
    --  as to not interfere with the case statement that is selected.
@@ -474,6 +477,7 @@ package GPR2.Project.View is
       Filename : GPR2.Simple_Name;
       Result   : out Project.Source.Constant_Access) return Boolean
      with Pre => Self.Is_Defined;
+
    function Check_Source
      (Self     : Object;
       Filename : GPR2.Simple_Name;

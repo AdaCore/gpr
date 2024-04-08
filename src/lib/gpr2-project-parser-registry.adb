@@ -8,9 +8,8 @@ with Ada.Containers.Ordered_Maps;
 
 package body GPR2.Project.Parser.Registry is
 
-   package Project_Store is
-     new Ada.Containers.Ordered_Maps (GPR2.Path_Name.Object,
-                                      GPR2.Project.Parser.Object);
+   package Project_Store is new Ada.Containers.Ordered_Maps
+     (GPR2.Path_Name.Object, GPR2.Project.Parser.Object);
 
    protected Shared is
 
@@ -79,8 +78,8 @@ package body GPR2.Project.Parser.Registry is
    --------------
 
    procedure Register
-     (Pathname : GPR2.Path_Name.Object; Project : GPR2.Project.Parser.Object)
-   is
+     (Pathname : GPR2.Path_Name.Object;
+      Project  : GPR2.Project.Parser.Object) is
    begin
       Shared.Register (Pathname, Project);
    end Register;
@@ -108,6 +107,7 @@ package body GPR2.Project.Parser.Registry is
             begin
                Project := Ref;
             end;
+
          else
             Project := GPR2.Project.Parser.Undefined;
          end if;
@@ -136,8 +136,7 @@ package body GPR2.Project.Parser.Registry is
       ---------
 
       function Get
-        (Pathname : GPR2.Path_Name.Object) return Project.Parser.Object
-      is
+        (Pathname : GPR2.Path_Name.Object) return Project.Parser.Object is
       begin
          return Store (Pathname);
       end Get;

@@ -17,10 +17,10 @@
 ------------------------------------------------------------------------------
 
 with Ada.Calendar;
-with Ada.Text_IO;  use Ada.Text_IO;
-with GNAT.Strings; use GNAT.Strings;
+with Ada.Text_IO;
+with GNAT.Strings;
 
-with GPR2.Path_Name;    use GPR2;
+with GPR2.Path_Name;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -29,10 +29,16 @@ with GPR2.Unit;
 
 package body GPRls.Gnatdist is
 
+   use Ada.Text_IO;
+   use GNAT.Strings;
+   use GPR2;
+
    procedure Write_Char (Char : Character) renames Ada.Text_IO.Put;
+
    procedure Write_Str (Str : String) renames Ada.Text_IO.Put;
-   procedure Write_Eol (Spacing : Positive_Count := 1)
-                        renames Ada.Text_IO.New_Line;
+
+   procedure Write_Eol
+     (Spacing : Positive_Count := 1) renames Ada.Text_IO.New_Line;
 
    N_Flags   : Natural;
    N_Indents : Natural := 0;
@@ -134,7 +140,8 @@ package body GPRls.Gnatdist is
    ----------------
 
    procedure Output_ALI
-     (Source : GPR2.Project.Source.Object; Index : GPR2.Unit_Index)
+     (Source : GPR2.Project.Source.Object;
+      Index  : GPR2.Unit_Index)
    is
       use type GPR2.Unit.Main_Type;
       Unit : constant GPR2.Unit.Object :=
@@ -142,17 +149,19 @@ package body GPRls.Gnatdist is
       Part : GPR2.Unit.Object;
       Main : constant GPR2.Unit.Main_Type := Unit.Main_Kind;
 
-      procedure Print_Dependency (Source    : GPR2.Project.Source.Object;
-                                  Unit      : GPR2.Unit.Object;
-                                  Timestamp : Ada.Calendar.Time);
+      procedure Print_Dependency
+        (Source    : GPR2.Project.Source.Object;
+         Unit      : GPR2.Unit.Object;
+         Timestamp : Ada.Calendar.Time);
 
       ----------------------
       -- Print_Dependency --
       ----------------------
 
-      procedure Print_Dependency (Source    : GPR2.Project.Source.Object;
-                                  Unit      : GPR2.Unit.Object;
-                                  Timestamp : Ada.Calendar.Time)
+      procedure Print_Dependency
+        (Source    : GPR2.Project.Source.Object;
+         Unit      : GPR2.Unit.Object;
+         Timestamp : Ada.Calendar.Time)
       is
          pragma Unreferenced (Unit, Timestamp);
       begin
@@ -171,14 +180,16 @@ package body GPRls.Gnatdist is
 
       if Main /= GPR2.Unit.None then
          Output_Token (T_Main);
-         Output_Token
-           (if Main = GPR2.Unit.Is_Procedure then T_Procedure else T_Function);
+         Output_Token (if Main = GPR2.Unit.Is_Procedure
+                       then T_Procedure
+                       else T_Function);
          Write_Eol;
       end if;
 
       --  Output Units
 
       Output_Unit (Unit, Source);
+
       declare
          Other : constant GPR2.Project.Source.Object :=
                    Source.Other_Part_Unchecked (Index).Source;
@@ -309,8 +320,6 @@ package body GPRls.Gnatdist is
    procedure Output_Unit
      (Unit : GPR2.Unit.Object; S : Project.Source.Object)
    is
-      Tree : constant access Project.Tree.Object := S.View.Tree;
-
       use type GPR2.Unit.Library_Item_Type;
 
       procedure Check_Flag (Flag : GPR2.Unit.Flag; Token : Token_Type);
@@ -325,6 +334,8 @@ package body GPRls.Gnatdist is
             Output_Token (Token);
          end if;
       end Check_Flag;
+
+      Tree : constant access Project.Tree.Object := S.View.Tree;
 
    begin
       --  Do not list No_Body sources
@@ -389,6 +400,7 @@ package body GPRls.Gnatdist is
    -----------------
 
    procedure Output_With (Tree : Project.Tree.Object; W : Name_Type) is
+
       View  : constant Project.View.Object := Tree.Get_View (Unit => W);
       pragma Assert (View.Is_Defined, "unit undefined: " & String (W));
       UI    : constant Project.Unit_Info.Object := View.Unit (W);
