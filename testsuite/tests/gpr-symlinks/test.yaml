@@ -1,0 +1,3 @@
+description:
+    check for resolve links option (-eL)
+driver: python_script

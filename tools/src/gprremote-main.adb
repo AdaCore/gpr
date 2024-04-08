@@ -363,7 +363,8 @@ function GPRremote.Main return Ada.Command_Line.Exit_Status is
 
       procedure Load_Project (Filename : String) is
          Pathname : constant GPR2.Path_Name.Object :=
-                      GPR2.Project.Create (GPR2.Filename_Type (Filename));
+                      GPR2.Project.Create (GPR2.Filename_Type (Filename),
+                                           Options.Resolve_Links);
          Context  : GPR2.Context.Object;
       begin
          if Options.Verbose then
@@ -372,7 +373,8 @@ function GPRremote.Main return Ada.Command_Line.Exit_Status is
 
          Project.Load
            (Pathname, Context,
-            Check_Shared_Lib => Options.Check_Shared_Lib);
+            Check_Shared_Lib => Options.Check_Shared_Lib,
+            Resolve_Links    => Options.Resolve_Links);
       end Load_Project;
 
       Project_Name : constant String := To_String (Args (Arg_Project));

@@ -365,18 +365,25 @@ package body GPR2.Path_Name is
    -- Create --
    ------------
 
-   function Create (Name, Path_Name : Filename_Type) return Object is
-      Value : constant Unbounded_String := +String (Path_Name);
+   function Create
+     (Name          : Filename_Type;
+      Path_Name     : Filename_Type;
+      Resolve_Links : Boolean := False) return Object
+   is
+      NN : constant String :=
+             (if Resolve_Links
+              then Make_Absolute (Path_Name, Resolve_Links => Resolve_Links)
+              else String (Path_Name));
+      VN : constant Unbounded_String := +NN;
    begin
       return Object'
         (Is_Dir    => False,
          In_Memory => False,
          As_Is     => +String (Name),
-         Value     => Value,
-         Comparing => To_OS_Case (Value),
-         Base_Name => +Base_Name (String (Path_Name)),
-         Dir_Name  =>
-           +Ensure_Directory (Containing_Directory (String (Path_Name))));
+         Value     => VN,
+         Comparing => To_OS_Case (VN),
+         Base_Name => +Base_Name (NN),
+         Dir_Name  => +Ensure_Directory (Containing_Directory (NN)));
    end Create;
 
    ----------------------

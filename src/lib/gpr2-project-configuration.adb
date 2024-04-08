@@ -105,7 +105,7 @@ package body GPR2.Project.Configuration is
 
       Project_Path : constant Path_Name.Object :=
                        (if Project.Has_Dir_Name then Project
-                        else Create (Project.Name));
+                        else Create (Project.Name, False));
       --  Project may be not even found at this stage, but since we ignore
       --  all errors at first parsing we don't know it yet. We need to resolve
       --  the Project path name for proper error reporting.

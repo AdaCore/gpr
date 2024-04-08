@@ -17,6 +17,7 @@ procedure Load_Autoconf
    Absent_Dir_Error  : Error_Level             := Warning;
    Implicit_With     : GPR2.Path_Name.Set.Object :=
                          GPR2.Path_Name.Set.Empty_Set;
+   Resolve_Links     : Boolean                 := False;
    Target            : Optional_Name_Type      := No_Name;
    Language_Runtimes : Containers.Lang_Value_Map :=
                          Containers.Lang_Value_Maps.Empty_Map;
@@ -795,6 +796,7 @@ begin
       Check_Shared_Lib => Check_Shared_Lib,
       Absent_Dir_Error => Absent_Dir_Error,
       Implicit_With    => Implicit_With,
+      Resolve_Links    => Resolve_Links,
       Environment      => Environment);
 
    if Default_Cfg.Is_Defined and then Default_Cfg.Exists then
@@ -863,6 +865,7 @@ begin
       Check_Shared_Lib => Check_Shared_Lib,
       Absent_Dir_Error => Absent_Dir_Error,
       Implicit_With    => Implicit_With,
+      Resolve_Links    => Resolve_Links,
       Environment      => Environment);
 
    GPR2.Project.Parser.Clear_Cache;

@@ -77,6 +77,7 @@ package GPR2.Project.Tree is
       Absent_Dir_Error : Error_Level               := Warning;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
+      Resolve_Links    : Boolean                   := False;
       Pre_Conf_Mode    : Boolean                   := False;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
@@ -130,6 +131,7 @@ package GPR2.Project.Tree is
       Absent_Dir_Error  : Error_Level             := Warning;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
+      Resolve_Links     : Boolean                 := False;
       Target            : Optional_Name_Type      := No_Name;
       Language_Runtimes : Containers.Lang_Value_Map :=
                             Containers.Lang_Value_Maps.Empty_Map;
@@ -532,6 +534,10 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined;
    --  Returns used environment.
 
+   function Resolve_Links (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns whether the project should be resolving links
+
 private
 
    procedure Set_Environment
@@ -597,6 +603,7 @@ private
       Messages          : aliased Log.Object;
       Search_Paths      : All_Search_Paths;
       Implicit_With     : Path_Name.Set.Object;
+      Resolve_Links     : Boolean := False;
       Build_Path        : Path_Name.Object;
       Root_Path         : Path_Name.Object;
       Subdirs           : Unbounded_String;
@@ -634,6 +641,7 @@ private
       Absent_Dir_Error : Error_Level               := Warning;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
+      Resolve_Links    : Boolean                   := False;
       Pre_Conf_Mode    : Boolean                   := False;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
@@ -654,6 +662,7 @@ private
       Absent_Dir_Error  : Error_Level               := Warning;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
+      Resolve_Links     : Boolean                   := False;
       Target            : Optional_Name_Type        := No_Name;
       Language_Runtimes : Containers.Lang_Value_Map :=
                             Containers.Lang_Value_Maps.Empty_Map;
@@ -759,5 +768,8 @@ private
 
    function Are_Sources_Loaded (Self : Object) return Boolean is
      (Self.Sources_Loaded);
+
+   function Resolve_Links (Self : Object) return Boolean is
+     (Self.Resolve_Links);
 
 end GPR2.Project.Tree;

@@ -4578,7 +4578,7 @@ package body GPR2.Project.Parser is
       procedure Get_Type_Def_From (Imp : GPR2.Project.Import.Object) is
          Path    : constant GPR2.Path_Name.Object :=
                      GPR2.Project.Create
-                     (Imp.Path_Name.Name, Search_Paths);
+                     (Imp.Path_Name.Name, Tree.Resolve_Links, Search_Paths);
          Types   : GPR2.Project.Typ.Set.Object;
          Project : GPR2.Project.Parser.Object := GPR2.Project.Parser.Undefined;
 

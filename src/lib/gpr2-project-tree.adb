@@ -1141,6 +1141,7 @@ package body GPR2.Project.Tree is
       Absent_Dir_Error : Error_Level               := Warning;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
+      Resolve_Links    : Boolean                   := False;
       Pre_Conf_Mode    : Boolean                   := False;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
@@ -1234,6 +1235,7 @@ package body GPR2.Project.Tree is
       Self.Src_Subdirs      := To_Unbounded_String (String (Src_Subdirs));
       Self.Check_Shared_Lib := Check_Shared_Lib;
       Self.Implicit_With    := Implicit_With;
+      Self.Resolve_Links    := Resolve_Links;
       Self.Absent_Dir_Error := Absent_Dir_Error;
       Self.Pre_Conf_Mode    := Pre_Conf_Mode;
 
@@ -1248,7 +1250,9 @@ package body GPR2.Project.Tree is
          --  of search paths.
 
          Gpr_Path := Create
-           (Root_Project.Path.Name, Self.Search_Paths.All_Paths);
+           (Root_Project.Path.Name,
+            Resolve_Links,
+            Self.Search_Paths.All_Paths);
       end if;
 
       --  Add full project path in the message log
@@ -1373,6 +1377,7 @@ package body GPR2.Project.Tree is
       Absent_Dir_Error : Error_Level               := Warning;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
+      Resolve_Links    : Boolean                   := False;
       Pre_Conf_Mode    : Boolean                   := False;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
@@ -1393,6 +1398,7 @@ package body GPR2.Project.Tree is
             Check_Shared_Lib => Check_Shared_Lib,
             Absent_Dir_Error => Absent_Dir_Error,
             Implicit_With    => Implicit_With,
+            Resolve_Links    => Resolve_Links,
             Pre_Conf_Mode    => Pre_Conf_Mode,
             File_Reader      => File_Reader,
             Environment      => Environment);
@@ -1413,6 +1419,7 @@ package body GPR2.Project.Tree is
             Check_Shared_Lib => Check_Shared_Lib,
             Absent_Dir_Error => Absent_Dir_Error,
             Implicit_With    => Implicit_With,
+            Resolve_Links    => Resolve_Links,
             Pre_Conf_Mode    => Pre_Conf_Mode,
             File_Reader      => File_Reader,
             Environment      => Environment);
@@ -1435,6 +1442,7 @@ package body GPR2.Project.Tree is
       Absent_Dir_Error  : Error_Level               := Warning;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
+      Resolve_Links     : Boolean                   := False;
       Target            : Optional_Name_Type        := No_Name;
       Language_Runtimes : Containers.Lang_Value_Map :=
                             Containers.Lang_Value_Maps.Empty_Map;
@@ -1459,6 +1467,7 @@ package body GPR2.Project.Tree is
       Absent_Dir_Error  : Error_Level             := Warning;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
+      Resolve_Links     : Boolean                 := False;
       Target            : Optional_Name_Type      := No_Name;
       Language_Runtimes : Containers.Lang_Value_Map :=
                             Containers.Lang_Value_Maps.Empty_Map;
@@ -1480,6 +1489,7 @@ package body GPR2.Project.Tree is
             Check_Shared_Lib  => Check_Shared_Lib,
             Absent_Dir_Error  => Absent_Dir_Error,
             Implicit_With     => Implicit_With,
+            Resolve_Links     => Resolve_Links,
             Target            => Target,
             Language_Runtimes => Language_Runtimes,
             Base              => Base,
@@ -1498,6 +1508,7 @@ package body GPR2.Project.Tree is
             Check_Shared_Lib  => Check_Shared_Lib,
             Absent_Dir_Error  => Absent_Dir_Error,
             Implicit_With     => Implicit_With,
+            Resolve_Links     => Resolve_Links,
             Target            => Target,
             Language_Runtimes => Language_Runtimes,
             Base              => Base,
@@ -2147,7 +2158,9 @@ package body GPR2.Project.Tree is
             for Import of Data.Trees.Project.Imports loop
                declare
                   Import_Filename : constant Path_Name.Object :=
-                                      Create (Import.Path_Name.Name, Paths);
+                                      Create (Import.Path_Name.Name,
+                                              Self.Resolve_Links,
+                                              Paths);
                begin
                   if Import_Filename.Exists then
                      Data.Trees.Imports.Insert
@@ -2179,7 +2192,9 @@ package body GPR2.Project.Tree is
                   Extended_Name     : constant Filename_Type :=
                                         Extended.Path_Name.Name;
                   Extended_Filename : constant Path_Name.Object :=
-                                        Create (Extended_Name, Paths);
+                                        Create (Extended_Name,
+                                                Self.Resolve_Links,
+                                                Paths);
                begin
                   if Extended_Filename.Exists then
                      Data.Trees.Extended := GPR2.Project.Parser.Parse
