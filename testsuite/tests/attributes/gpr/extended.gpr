@@ -5,6 +5,6 @@ library project Extended is
    for Archive_Suffix use ".aaaa";
 
    package Install is
-      for Mode use "my_wrong_mode";
+      for Mode use "usage";
    end Install;
 end Extended;

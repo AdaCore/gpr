@@ -3184,6 +3184,9 @@ package body GPR2.Project.Tree is
          --  Check Library_Version attribute format
 
          declare
+            procedure Check_Not_Empty (Name : Q_Attribute_Id);
+            --  Check if attribute value is not empty
+
             procedure Check_Directory
               (Name          : Q_Attribute_Id;
                Human_Name    : String;
@@ -3287,6 +3290,24 @@ package body GPR2.Project.Tree is
                end if;
             end Check_Directory;
 
+            ---------------------
+            -- Check_Not_Empty --
+            ---------------------
+
+            procedure Check_Not_Empty (Name : Q_Attribute_Id) is
+            begin
+               if View.Check_Attribute (Name, Result => Attr)
+                 and then Attr.Value.Text'Length = 0
+               then
+                  Self.Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Source_Reference.Object (Attr.Value),
+                        Message => "attribute """ & Image (Name)
+                        & """ cannot be empty"));
+               end if;
+            end Check_Not_Empty;
+
          begin
             if View.Kind in K_Standard | K_Library then
                Check_Directory
@@ -3299,6 +3320,9 @@ package body GPR2.Project.Tree is
             if View.Is_Library
               and then not View.Is_Aggregated_In_Library
             then
+               Check_Not_Empty (PRA.Library_Name);
+               Check_Not_Empty (PRA.Library_Dir);
+
                Check_Directory
                  (PRA.Library_Dir,
                   "library",

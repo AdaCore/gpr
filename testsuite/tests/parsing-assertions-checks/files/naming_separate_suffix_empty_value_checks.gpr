@@ -1,0 +1,7 @@
+library project Naming_Separate_Suffix_Empty_Value_Checks is
+   for Library_Name use "a";
+   for Library_Dir use "..";
+   package Naming is
+      for Separate_Suffix use ""; -- naming'separate_suffix cannot be empty
+   end Naming;
+end Naming_Separate_Suffix_Empty_Value_Checks;

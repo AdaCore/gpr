@@ -1178,12 +1178,21 @@ package body GPR2.Project.Parser is
             --  Check if we have an extends declaration
 
             if Present (Ext) then
-               Project.Extended :=
-                 GPR2.Project.Import.Create
-                   (Get_Raw_Path (F_Path_Name (Ext)),
-                    Get_Source_Reference (Filename, Ext),
-                    Is_Limited => False);
-               Project.Is_All := F_Is_All (Ext);
+               if Get_Value_Type (F_Path_Name (Ext))'Length > 0 then
+                  Project.Extended :=
+                    GPR2.Project.Import.Create
+                      (Get_Raw_Path (F_Path_Name (Ext)),
+                       Get_Source_Reference (Filename, Ext),
+                       Is_Limited => False);
+                  Project.Is_All := F_Is_All (Ext);
+               else
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference (Filename, Ext),
+                        Message => "extended project name cannot be empty"));
+               end if;
             end if;
          end Parse_Project_Declaration;
 
@@ -1262,53 +1271,61 @@ package body GPR2.Project.Parser is
             for J in 1 .. Num_Childs loop
                Cur_Child := Child (Gpr_Node (Path_Names), J);
 
-               declare
-                  Path : constant GPR2.Path_Name.Object :=
-                           Get_Raw_Path (Cur_Child.As_String_Literal);
-                  CI   : constant GPR2.Project.Import.Set.Cursor :=
-                           Project.Imports.Find (Path);
-               begin
-                  if GPR2.Project.Import.Set.Has_Element (CI) then
-                     declare
-                        Prev : constant GPR2.Project.Import.Object :=
-                                 GPR2.Project.Import.Set.Element (CI);
-                     begin
-                        if Prev.Path_Name = Path then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Warning,
-                                 Message => "duplicate with clause """
-                                 & String (Path.Base_Name) & '"',
-                                 Sloc    => Get_Source_Reference
-                                   (Filename, Cur_Child)));
+               if Get_Value_Type (Cur_Child.As_String_Literal)'Length > 0 then
+                  declare
+                     Path : constant GPR2.Path_Name.Object :=
+                              Get_Raw_Path (Cur_Child.As_String_Literal);
+                     CI   : constant GPR2.Project.Import.Set.Cursor :=
+                              Project.Imports.Find (Path);
+                  begin
+                     if GPR2.Project.Import.Set.Has_Element (CI) then
+                        declare
+                           Prev : constant GPR2.Project.Import.Object :=
+                                    GPR2.Project.Import.Set.Element (CI);
+                        begin
+                           if Prev.Path_Name = Path then
+                              Messages.Append
+                                (GPR2.Message.Create
+                                   (Level   => Message.Warning,
+                                    Message => "duplicate with clause """
+                                    & String (Path.Base_Name) & '"',
+                                    Sloc    => Get_Source_Reference
+                                      (Filename, Cur_Child)));
 
-                        else
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Warning,
-                                 Message => "duplicate project name """
-                                 & String (Path.Base_Name) & '"',
-                                 Sloc    => Get_Source_Reference
-                                   (Filename, Cur_Child)));
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Warning,
-                                 Message => "already in """
-                                 & String (Prev.Path_Name.Name)
-                                 & '"',
-                                 Sloc    => Get_Source_Reference
-                                   (Filename, Cur_Child)));
-                        end if;
-                     end;
+                           else
+                              Messages.Append
+                                (GPR2.Message.Create
+                                   (Level   => Message.Warning,
+                                    Message => "duplicate project name """
+                                    & String (Path.Base_Name) & '"',
+                                    Sloc    => Get_Source_Reference
+                                      (Filename, Cur_Child)));
+                              Messages.Append
+                                (GPR2.Message.Create
+                                   (Level   => Message.Warning,
+                                    Message => "already in """
+                                    & String (Prev.Path_Name.Name)
+                                    & '"',
+                                    Sloc    => Get_Source_Reference
+                                      (Filename, Cur_Child)));
+                           end if;
+                        end;
 
-                  else
-                     Project.Imports.Insert
-                       (GPR2.Project.Import.Create
-                          (Path,
-                           Get_Source_Reference (Filename, Cur_Child),
-                           F_Is_Limited (N)));
-                  end if;
-               end;
+                     else
+                        Project.Imports.Insert
+                          (GPR2.Project.Import.Create
+                             (Path,
+                              Get_Source_Reference (Filename, Cur_Child),
+                              F_Is_Limited (N)));
+                     end if;
+                  end;
+               else
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, Cur_Child),
+                        Message => "missing project file for with clause"));
+               end if;
             end loop;
          end Parse_With_Decl;
 
@@ -3426,10 +3443,58 @@ package body GPR2.Project.Parser is
                      Value => Values.First_Element);
 
                else
-                  A := PA.Create
-                         (Name   => Id,
-                          Index  => Index,
-                          Values => Values);
+                  declare
+                     Created : Boolean := False;
+                  begin
+                     if PRA.Exists (Q_Name) then
+                        declare
+                           Def : constant PRA.Def := PRA.Get (Q_Name);
+                        begin
+                           if Def.Empty_Value /= PRA.Allow then
+                              declare
+                                 Filtered : Containers.Source_Value_List;
+                              begin
+                                 for L of Values loop
+                                    if L.Text'Length > 0 then
+                                       Filtered.Append (L);
+                                    else
+                                       if Def.Empty_Value = PRA.Error then
+                                          Non_Fatal_Error.Append
+                                            (Message.Create
+                                               (Level   => Message.Error,
+                                                Sloc    => Sloc,
+                                                Message =>
+                                                  "empty value in attribute """
+                                                & Image (Q_Name)
+                                                & """ not allowed."));
+                                       else
+                                          Non_Fatal_Error.Append
+                                            (Message.Create
+                                               (Level   => Message.Warning,
+                                                Sloc    => Sloc,
+                                                Message =>
+                                                  "empty value in attribute """
+                                                & Image (Q_Name)
+                                                & """ ignored."));
+                                       end if;
+                                    end if;
+                                 end loop;
+                                 A := PA.Create
+                                   (Name   => Id,
+                                    Index  => Index,
+                                    Values => Filtered);
+                                 Created := True;
+                              end;
+                           end if;
+                        end;
+                     end if;
+                     if not Created then
+                        A := PA.Create
+                          (Name   => Id,
+                           Index  => Index,
+                           Values => Values);
+                     end if;
+                  end;
                end if;
 
                --  Record attribute with proper casing definition if found
@@ -3440,7 +3505,7 @@ package body GPR2.Project.Parser is
 
                   begin
                      if Def.Builtin then
-                        Tree.Log_Messages.Append
+                        Non_Fatal_Error.Append
                           (Message.Create
                              (Level   => Message.Error,
                               Sloc    => Sloc,
@@ -3508,17 +3573,30 @@ package body GPR2.Project.Parser is
                                 else Project.Attribute.Undefined);
                   begin
                      if In_Pack then
-                        Record_Attribute (Pack_Ref.Attrs, A);
 
-                        if A2.Is_Defined
-                          and then Pack_Ref.Attrs.Contains (A2)
+                        if Is_Name_Exception
+                          and then A.Value.Text'Length = 0
                         then
-                           --  Need to update the value
-                           Record_Attribute (Pack_Ref.Attrs, A2);
-                        end if;
+                           Non_Fatal_Error.Append
+                             (Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    => Sloc,
+                                 Message => "empty filename not allowed for "
+                                 & "attribute """ & Image (Q_Name) & """"));
 
-                        if Is_Name_Exception then
-                           Actual.Include (Filename_Type (A.Value.Text));
+                        else
+                           Record_Attribute (Pack_Ref.Attrs, A);
+
+                           if A2.Is_Defined
+                             and then Pack_Ref.Attrs.Contains (A2)
+                           then
+                              --  Need to update the value
+                              Record_Attribute (Pack_Ref.Attrs, A2);
+                           end if;
+
+                           if Is_Name_Exception then
+                              Actual.Include (Filename_Type (A.Value.Text));
+                           end if;
                         end if;
 
                      else
@@ -4170,6 +4248,7 @@ package body GPR2.Project.Parser is
          Q_Name  : constant Q_Attribute_Id := A.Name.Id;
          Def     : PRA.Def;
 
+         use type PRA.Index_Value_Type;
       begin
          --  Check that a definition exists
 
@@ -4177,7 +4256,7 @@ package body GPR2.Project.Parser is
             if Q_Name.Pack = Project_Level_Scope
               or else PRP.Attributes_Are_Checked (Q_Name.Pack)
             then
-               Tree.Log_Messages.Append
+               Non_Fatal_Error.Append
                  (Message.Create
                     (Level => Message.Error,
                      Sloc  => Source_Reference.Object (A),
@@ -4198,14 +4277,14 @@ package body GPR2.Project.Parser is
 
             if Def.Value /= A.Kind then
                if Def.Value = PRA.Single then
-                  Tree.Log_Messages.Append
+                  Non_Fatal_Error.Append
                     (Message.Create
                        (Level => Message.Error,
                         Sloc  => Source_Reference.Object (A),
                         Message => "attribute """ & Image (Q_Name) &
                                    """ expects a single value"));
                else
-                  Tree.Log_Messages.Append
+                  Non_Fatal_Error.Append
                     (Message.Create
                        (Level => Message.Error,
                         Sloc  => Source_Reference.Object (A),
@@ -4220,7 +4299,7 @@ package body GPR2.Project.Parser is
               and then Length (A.Value.Unchecked_Text) = 0
             then
                if Def.Empty_Value = PRA.Error then
-                  Tree.Log_Messages.Append
+                  Non_Fatal_Error.Append
                     (Message.Create
                        (Level   => Message.Error,
                         Sloc    => Source_Reference.Object (A.Value),
@@ -4265,7 +4344,7 @@ package body GPR2.Project.Parser is
             case Def.Index_Type is
                when PRA.No_Index =>
                   if A.Has_Index then
-                     Tree.Log_Messages.Append
+                     Non_Fatal_Error.Append
                        (Message.Create
                           (Level => Message.Error,
                            Sloc  => Source_Reference.Object (A.Index),
@@ -4276,7 +4355,7 @@ package body GPR2.Project.Parser is
 
                when others =>
                   if not A.Has_Index then
-                     Tree.Log_Messages.Append
+                     Non_Fatal_Error.Append
                        (Message.Create
                           (Level => Message.Error,
                            Sloc  => Source_Reference.Object (A),
@@ -4287,13 +4366,24 @@ package body GPR2.Project.Parser is
                   elsif A.Index.Is_Others
                     and then not Def.Index_Optional
                   then
-                     Tree.Log_Messages.Append
+                     Non_Fatal_Error.Append
                        (Message.Create
                           (Level => Message.Error,
                            Sloc  => Source_Reference.Object (A),
                            Message => "'others' index not allowed with """ &
                                       Image (Q_Name) & """"));
                      Include := False;
+                  elsif Def.Index_Type = PRA.Env_Var_Name_Index
+                    and then A.Index.Text'Length = 0
+                  then
+                     Non_Fatal_Error.Append
+                       (Message.Create
+                          (Level => Message.Error,
+                           Sloc  => Source_Reference.Object (A),
+                           Message => "attribute """ & Image (Q_Name) &
+                             """ expects a non empty index"));
+                     Include := False;
+
                   end if;
             end case;
 
@@ -4333,7 +4423,7 @@ package body GPR2.Project.Parser is
                         end loop;
 
                         if not Found then
-                           Tree.Log_Messages.Append
+                           Non_Fatal_Error.Append
                                  (Message.Create
                                     (Level => Message.Error,
                                     Sloc  => Source_Reference.Object (A),
@@ -4354,7 +4444,7 @@ package body GPR2.Project.Parser is
                        Set.Element (A.Name.Id.Attr, A.Index);
             begin
                if Old.Is_Frozen then
-                  Tree.Log_Messages.Append
+                  Non_Fatal_Error.Append
                     (Message.Create
                        (Level => Message.Error,
                         Sloc  => Source_Reference.Object (A),

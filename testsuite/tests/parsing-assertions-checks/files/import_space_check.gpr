@@ -1,0 +1,3 @@
+with " ";
+project Import_Space_Check is
+end Import_Space_Check;

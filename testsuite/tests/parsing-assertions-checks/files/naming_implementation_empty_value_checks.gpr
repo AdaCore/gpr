@@ -1,0 +1,7 @@
+library project Naming_Implementation_Empty_Value_Checks is
+   for Library_Name use "a";
+   for Library_Dir use "..";
+   package Naming is
+      for Implementation ("")  use ""; -- dynamic_predicate
+   end Naming;
+end Naming_Implementation_Empty_Value_Checks;

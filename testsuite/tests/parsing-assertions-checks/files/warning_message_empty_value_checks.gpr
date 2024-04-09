@@ -1,0 +1,5 @@
+library project Warning_Message_Empty_Value_Checks is
+   for Library_Name use "a";
+   for Library_Dir use "..";
+   for Warning_Message use ""; -- dynamic_predicate
+end Warning_Message_Empty_Value_Checks;

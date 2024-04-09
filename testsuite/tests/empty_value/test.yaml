@@ -1,0 +1,5 @@
+description:
+    Test attribute registry empty_value handling
+driver: build_and_run
+project_file: prj
+main: main

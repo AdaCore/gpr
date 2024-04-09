@@ -1,0 +1,7 @@
+library project Naming_Specification_Exceptions_Empty_String_Checks is
+   for Library_Name use "a";
+   for Library_Dir use "..";
+   package Naming is
+      for Specification_Exceptions ("") use ("");
+    end Naming;
+end Naming_Specification_Exceptions_Empty_String_Checks;

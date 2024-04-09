@@ -174,7 +174,7 @@
             "index_type": "NO_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -186,6 +186,10 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "false",
+              "true"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -208,7 +212,7 @@
             "value": "SINGLE",
             "value_case_sensitive": true,
             "value_is_set": false,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": true,
@@ -272,7 +276,7 @@
             "value": "LIST",
             "value_case_sensitive": true,
             "value_is_set": false,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": true,
@@ -336,7 +340,7 @@
             "value": "SINGLE",
             "value_case_sensitive": true,
             "value_is_set": false,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": true,
@@ -572,7 +576,7 @@
             "value": "LIST",
             "value_case_sensitive": true,
             "value_is_set": true,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": true,
@@ -604,7 +608,7 @@
             "value": "LIST",
             "value_case_sensitive": false,
             "value_is_set": true,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": true,
@@ -706,7 +710,7 @@
             "index_type": "NO_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -718,6 +722,10 @@
               "aggregate": false,
               "aggregate_library": true
             },
+            "type_def": [
+              "false",
+              "true"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": true,
@@ -742,7 +750,7 @@
             "index_type": "NO_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -754,6 +762,10 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "false",
+              "true"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -870,7 +882,7 @@
             "index_type": "NO_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -882,6 +894,10 @@
               "aggregate": false,
               "aggregate_library": false
             },
+            "type_def": [
+              "false",
+              "true"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -968,7 +984,7 @@
             "value": "LIST",
             "value_case_sensitive": false,
             "value_is_set": true,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": false,
@@ -1040,7 +1056,7 @@
             "index_type": "NO_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -1052,6 +1068,10 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "false",
+              "true"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -1280,6 +1300,11 @@
               "aggregate": false,
               "aggregate_library": true
             },
+            "type_def": [
+              "encapsulated",
+              "no",
+              "standard"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": true,
@@ -1304,7 +1329,7 @@
             "index_type": "NO_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -1316,6 +1341,11 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "full",
+              "none",
+              "static_only"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -1338,7 +1368,7 @@
             "value": "SINGLE",
             "value_case_sensitive": true,
             "value_is_set": false,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": false,
@@ -1368,7 +1398,7 @@
             "index_type": "NO_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -1380,6 +1410,10 @@
               "aggregate": false,
               "aggregate_library": true
             },
+            "type_def": [
+              "restricted",
+              "unrestricted"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -1466,7 +1500,7 @@
             "value": "LIST",
             "value_case_sensitive": true,
             "value_is_set": false,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": true,
@@ -1596,7 +1630,7 @@
             "index_type": "LANGUAGE_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -1608,6 +1642,10 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "false",
+              "true"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -1628,7 +1666,7 @@
             "index_type": "LANGUAGE_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -1640,6 +1678,10 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "false",
+              "true"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -2172,7 +2214,7 @@
             "index_type": "NO_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -2184,6 +2226,10 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "false",
+              "true"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -2346,7 +2392,7 @@
             "value": "LIST",
             "value_case_sensitive": true,
             "value_is_set": false,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": true,
@@ -2378,7 +2424,7 @@
             "value": "SINGLE",
             "value_case_sensitive": true,
             "value_is_set": false,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": true,
@@ -2408,7 +2454,7 @@
             "index_type": "NO_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -2420,6 +2466,10 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "false",
+              "true"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -2606,7 +2656,7 @@
             "value": "SINGLE",
             "value_case_sensitive": true,
             "value_is_set": false,
-            "empty_value": "ALLOW",
+            "empty_value": "IGNORE",
             "builtin": false,
             "is_allowed_in": {
               "configuration": true,
@@ -3588,7 +3638,7 @@
             "index_type": "LANGUAGE_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -3600,6 +3650,10 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "false",
+              "true"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -3748,7 +3802,7 @@
             "index_type": "LANGUAGE_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -3760,6 +3814,12 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "ali_closure",
+              "ali_file",
+              "makefile",
+              "none"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -3908,7 +3968,7 @@
             "index_type": "LANGUAGE_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -3920,6 +3980,10 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "file_based",
+              "unit_based"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -4392,7 +4456,7 @@
             "index_type": "LANGUAGE_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -4404,6 +4468,14 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "gcc_gnu",
+              "gcc_object_list",
+              "gcc_option_list",
+              "gnu",
+              "none",
+              "object_list"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -4784,6 +4856,10 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "false",
+              "true"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -4836,7 +4912,7 @@
             "index_type": "NO_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -4848,6 +4924,10 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "dev",
+              "usage"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -4944,6 +5024,10 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "false",
+              "true"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -5170,7 +5254,7 @@
             "index_type": "NO_INDEX",
             "index_optional": false,
             "value": "SINGLE",
-            "value_case_sensitive": true,
+            "value_case_sensitive": false,
             "value_is_set": false,
             "empty_value": "ALLOW",
             "builtin": false,
@@ -5182,6 +5266,14 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "gcc_gnu",
+              "gcc_object_list",
+              "gcc_option_list",
+              "gnu",
+              "none",
+              "object_list"
+            ],
             "has_default_in": {
               "configuration": false,
               "abstract": false,
@@ -5442,7 +5534,7 @@
             "value": "SINGLE",
             "value_case_sensitive": true,
             "value_is_set": false,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": true,
@@ -5521,6 +5613,11 @@
               "aggregate": true,
               "aggregate_library": true
             },
+            "type_def": [
+              "lowercase",
+              "mixedcase",
+              "uppercase"
+            ],
             "has_default_in": {
               "configuration": true,
               "abstract": true,
@@ -5583,7 +5680,7 @@
             "value": "SINGLE",
             "value_case_sensitive": true,
             "value_is_set": false,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": true,
@@ -5615,7 +5712,7 @@
             "value": "LIST",
             "value_case_sensitive": true,
             "value_is_set": false,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": true,
@@ -5720,7 +5817,7 @@
             "value": "SINGLE",
             "value_case_sensitive": true,
             "value_is_set": false,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": true,
@@ -5789,7 +5886,7 @@
             "value": "SINGLE",
             "value_case_sensitive": true,
             "value_is_set": false,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": true,
@@ -5821,7 +5918,7 @@
             "value": "LIST",
             "value_case_sensitive": true,
             "value_is_set": false,
-            "empty_value": "ALLOW",
+            "empty_value": "ERROR",
             "builtin": false,
             "is_allowed_in": {
               "configuration": true,

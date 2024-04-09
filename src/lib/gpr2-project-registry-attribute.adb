@@ -404,7 +404,13 @@ package body GPR2.Project.Registry.Attribute is
       end case;
    end Is_Case_Sensitive;
 
+   Boolean_Type_Def : Attribute_Type;
+
 begin
+
+   Boolean_Type_Def.Include ("true");
+   Boolean_Type_Def.Include ("false");
+
    --  name
    Add
      (Name                  => Name,
@@ -439,6 +445,7 @@ begin
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => False,
+      Empty_Value           => Error,
       Is_Allowed_In         => No_Aggregates,
       Default               => Create ("Ada"),
       Has_Default_In        => No_Aggregates_Abstract,
@@ -451,6 +458,7 @@ begin
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
+      Empty_Value          => Error,
       Is_Allowed_In        => Everywhere);
 
    --  roots
@@ -461,25 +469,17 @@ begin
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates);
 
-
-   declare
-      Type_Def : Attribute_Type;
-   begin
-      Type_Def.Include ("true");
-      Type_Def.Include ("false");
-
-      --  externally_built
-      Add
-      (Name                  => Externally_Built,
-         Index_Type            => No_Index,
-         Value                 => Single,
-         Value_Case_Sensitive  => False,
-         Is_Allowed_In         => No_Aggregates,
-         Inherit_From_Extended => Not_Inherited,
-         Default               => Create ("false"),
-         Has_Default_In        => Everywhere,
-         Type_Def              => Type_Def);
-   end;
+   --  externally_built
+   Add
+     (Name                  => Externally_Built,
+      Index_Type            => No_Index,
+      Value                 => Single,
+      Value_Case_Sensitive  => False,
+      Is_Allowed_In         => No_Aggregates,
+      Inherit_From_Extended => Not_Inherited,
+      Default               => Create ("false"),
+      Has_Default_In        => Everywhere,
+      Type_Def              => Boolean_Type_Def);
 
    --  object_dir
    Add
@@ -544,6 +544,7 @@ begin
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => True,
+      Empty_Value           => Error,
       Is_Allowed_In         => No_Aggregates,
       Inherit_From_Extended => Not_Inherited);
 
@@ -553,6 +554,7 @@ begin
       Index_Type           => No_Index,
       Value                => List,
       Value_Case_Sensitive => True,
+      Empty_Value          => Error,
       Is_Allowed_In        => No_Aggregates,
       Inherit_From_Extended => Not_Inherited);
    Add_Alias (Name     => Locally_Removed_Files,
@@ -564,6 +566,7 @@ begin
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
+      Empty_Value           => Error,
       Is_Allowed_In         => No_Aggregates,
       Inherit_From_Extended => Not_Inherited);
 
@@ -573,6 +576,7 @@ begin
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
+      Empty_Value           => Error,
       Is_Allowed_In         => No_Aggregates,
       Inherit_From_Extended => Not_Inherited);
 
@@ -582,6 +586,7 @@ begin
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => GPR2.File_Names_Case_Sensitive,
+      Empty_Value           => Error,
       Is_Allowed_In         => Everywhere,
       Inherit_From_Extended => Inherited,
       Is_Set                => True);
@@ -663,19 +668,31 @@ begin
       Index_Type            => No_Index,
       Value                 => List,
       Value_Case_Sensitive  => False,
+      Empty_Value           => Error,
       Is_Allowed_In         => In_Library,
       Inherit_From_Extended => Inherited,
       Is_Set                => True);
 
-   --  library_standalone
-   Add
-     (Name                  => Library_Standalone,
-      Index_Type            => No_Index,
-      Value                 => Single,
-      Value_Case_Sensitive  => False,
-      Is_Allowed_In         => In_Library,
-      Default               => (D_Callback, Default_Library_Standalone'Access),
-      Inherit_From_Extended => Not_Inherited);
+
+   declare
+      Type_Def : Attribute_Type;
+   begin
+      Type_Def.Include ("standard");
+      Type_Def.Include ("encapsulated");
+      Type_Def.Include ("no");
+
+      --  library_standalone
+      Add
+        (Name                  => Library_Standalone,
+         Index_Type            => No_Index,
+         Value                 => Single,
+         Value_Case_Sensitive  => False,
+         Is_Allowed_In         => In_Library,
+         Default               => (D_Callback,
+                                   Default_Library_Standalone'Access),
+         Inherit_From_Extended => Not_Inherited,
+         Type_Def              => Type_Def);
+   end;
 
    --  library_encapsulated_options
    Add
@@ -692,20 +709,22 @@ begin
      (Name                  => Library_Encapsulated_Supported,
       Index_Type            => No_Index,
       Value                 => Single,
-      Value_Case_Sensitive  => True,
+      Value_Case_Sensitive  => False,
       Is_Allowed_In         => In_Configuration,
       Config_Concatenable   => False,
-      Inherit_From_Extended => Not_Inherited);
+      Inherit_From_Extended => Not_Inherited,
+      Type_Def              => Boolean_Type_Def);
 
    --  library_auto_init
    Add
      (Name                  => Library_Auto_Init,
       Index_Type            => No_Index,
       Value                 => Single,
-      Value_Case_Sensitive  => True,
+      Value_Case_Sensitive  => False,
       Is_Allowed_In         => In_Library,
       Default               => Create ("false"),
-      Inherit_From_Extended => Not_Inherited);
+      Inherit_From_Extended => Not_Inherited,
+      Type_Def              => Boolean_Type_Def);
 
    --  leading_library_options
    Add
@@ -771,17 +790,27 @@ begin
       Index_Type            => No_Index,
       Value                 => Single,
       Value_Case_Sensitive  => True,
+      Empty_Value           => Error,
       Is_Allowed_In         => In_Library,
       Inherit_From_Extended => Not_Inherited);
 
-   --  library_symbol_policy
-   Add
-     (Name                  => Library_Symbol_Policy,
-      Index_Type            => No_Index,
-      Value                 => Single,
-      Value_Case_Sensitive  => True,
-      Is_Allowed_In         => In_Library,
-      Inherit_From_Extended => Not_Inherited);
+   declare
+      Type_Def : Attribute_Type;
+   begin
+      Type_Def.Include ("restricted");
+      Type_Def.Include ("unrestricted");
+
+      --  library_symbol_policy
+      Add
+        (Name                  => Library_Symbol_Policy,
+         Index_Type            => No_Index,
+         Value                 => Single,
+         Value_Case_Sensitive  => False,
+         Is_Allowed_In         => In_Library,
+         Inherit_From_Extended => Not_Inherited,
+         Type_Def              => Type_Def);
+   end;
+
 
    --  library_reference_symbol_file
    Add
@@ -824,9 +853,10 @@ begin
      (Name                  => Separate_Run_Path_Options,
       Index_Type            => No_Index,
       Value                 => Single,
-      Value_Case_Sensitive  => True,
+      Value_Case_Sensitive  => False,
       Is_Allowed_In         => Everywhere,
-      Inherit_From_Extended => Not_Inherited);
+      Inherit_From_Extended => Not_Inherited,
+      Type_Def              => Boolean_Type_Def);
 
    --  toolchain_version
    Add
@@ -877,16 +907,18 @@ begin
      (Name                 => Object_Generated,
       Index_Type           => Language_Index,
       Value                => Single,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere);
+      Value_Case_Sensitive => False,
+      Is_Allowed_In        => Everywhere,
+      Type_Def             => Boolean_Type_Def);
 
    --  objects_linked
    Add
      (Name                 => Objects_Linked,
       Index_Type           => Language_Index,
       Value                => Single,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere);
+      Value_Case_Sensitive => False,
+      Is_Allowed_In        => Everywhere,
+      Type_Def             => Boolean_Type_Def);
 
    --  target
    Add
@@ -918,13 +950,22 @@ begin
       Inherit_From_Extended => Not_Inherited);
 
    --  library_support
-   Add
-     (Name                  => Library_Support,
-      Index_Type            => No_Index,
-      Value                 => Single,
-      Value_Case_Sensitive  => True,
-      Is_Allowed_In         => Everywhere,
-      Inherit_From_Extended => Not_Inherited);
+   declare
+      Type_Def : Attribute_Type;
+   begin
+      Type_Def.Include ("static_only");
+      Type_Def.Include ("full");
+      Type_Def.Include ("none");
+
+      Add
+        (Name                  => Library_Support,
+         Index_Type            => No_Index,
+         Value                 => Single,
+         Value_Case_Sensitive  => False,
+         Is_Allowed_In         => Everywhere,
+         Inherit_From_Extended => Not_Inherited,
+         Type_Def              => Type_Def);
+   end;
 
    --  archive_builder
    Add
@@ -1013,27 +1054,30 @@ begin
      (Name                  => Symbolic_Link_Supported,
       Index_Type            => No_Index,
       Value                 => Single,
-      Value_Case_Sensitive  => True,
+      Value_Case_Sensitive  => False,
       Is_Allowed_In         => Everywhere,
-      Inherit_From_Extended => Not_Inherited);
+      Inherit_From_Extended => Not_Inherited,
+      Type_Def              => Boolean_Type_Def);
 
    --  library_major_minor_id_supported
    Add
      (Name                  => Library_Major_Minor_Id_Supported,
       Index_Type            => No_Index,
       Value                 => Single,
-      Value_Case_Sensitive  => True,
+      Value_Case_Sensitive  => False,
       Is_Allowed_In         => Everywhere,
-      Inherit_From_Extended => Not_Inherited);
+      Inherit_From_Extended => Not_Inherited,
+      Type_Def              => Boolean_Type_Def);
 
    --  library_auto_init_supported
    Add
      (Name                  => Library_Auto_Init_Supported,
       Index_Type            => No_Index,
       Value                 => Single,
-      Value_Case_Sensitive  => True,
+      Value_Case_Sensitive  => False,
       Is_Allowed_In         => Everywhere,
-      Inherit_From_Extended => Not_Inherited);
+      Inherit_From_Extended => Not_Inherited,
+      Type_Def              => Boolean_Type_Def);
 
    --  shared_library_minimum_switches
    Add
@@ -1128,14 +1172,24 @@ begin
       Is_Allowed_In        => Everywhere,
       Default              => Create (Naming.Body_Suffix));
 
-   --  naming.casing
-   Add
-     (Name                 => Naming.Casing,
-      Index_Type           => No_Index,
-      Value                => Single,
-      Value_Case_Sensitive => False,
-      Is_Allowed_In        => Everywhere,
-      Default              => Create ("lowercase"));
+   declare
+      Type_Def : Attribute_Type;
+   begin
+      Type_Def.Include ("lowercase");
+      Type_Def.Include ("uppercase");
+      Type_Def.Include ("mixedcase");
+
+      --  naming.casing
+      Add
+        (Name                 => Naming.Casing,
+         Index_Type           => No_Index,
+         Value                => Single,
+         Value_Case_Sensitive => False,
+         Is_Allowed_In        => Everywhere,
+         Default              => Create ("lowercase"),
+         Type_Def             => Type_Def);
+   end;
+
 
    --  naming.dot_replacement
    Add
@@ -1153,6 +1207,7 @@ begin
       Index_Type           => Unit_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
+      Empty_Value          => Error,
       Is_Allowed_In        => Everywhere);
    Add_Alias (Name => Naming.Spec, Alias_Of => Naming.Specification);
 
@@ -1162,6 +1217,7 @@ begin
       Index_Type           => Unit_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
+      Empty_Value          => Error,
       Is_Allowed_In        => Everywhere);
    Add_Alias (Name => Naming.Body_N, Alias_Of => Naming.Implementation);
 
@@ -1171,6 +1227,7 @@ begin
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
+      Empty_Value          => Error,
       Is_Allowed_In        => Everywhere);
 
    --  naming.implementation_exceptions
@@ -1179,6 +1236,7 @@ begin
       Index_Type           => Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
+      Empty_Value          => Error,
       Is_Allowed_In        => Everywhere);
 
    --  compiler.default_switches
@@ -1219,20 +1277,39 @@ begin
       Is_Allowed_In        => Everywhere);
 
    --  compiler.language_kind
-   Add
-     (Name                 => Compiler.Language_Kind,
-      Index_Type           => Language_Index,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere);
+   declare
+      Type_Def : Attribute_Type;
+   begin
+      Type_Def.Include ("unit_based");
+      Type_Def.Include ("file_based");
+
+      Add
+        (Name                 => Compiler.Language_Kind,
+         Index_Type           => Language_Index,
+         Value                => Single,
+         Value_Case_Sensitive => False,
+         Is_Allowed_In        => Everywhere,
+         Type_Def             => Type_Def);
+   end;
 
    --  compiler.dependency_kind
-   Add
-     (Name                 => Compiler.Dependency_Kind,
-      Index_Type           => Language_Index,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere);
+   declare
+      Type_Def : Attribute_Type;
+   begin
+      Type_Def.Include ("makefile");
+      Type_Def.Include ("ali_file");
+      Type_Def.Include ("ali_closure");
+      Type_Def.Include ("none");
+
+      Add
+        (Name                 => Compiler.Dependency_Kind,
+         Index_Type           => Language_Index,
+         Value                => Single,
+         Value_Case_Sensitive => False,
+         Is_Allowed_In        => Everywhere,
+         Type_Def             => Type_Def);
+   end;
+
 
    --  compiler.required_switches
    Add
@@ -1407,8 +1484,9 @@ begin
      (Name                 => Compiler.Config_File_Unique,
       Index_Type           => Language_Index,
       Value                => Single,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere);
+      Value_Case_Sensitive => False,
+      Is_Allowed_In        => Everywhere,
+      Type_Def             => Boolean_Type_Def);
 
    --  compiler.dependency_switches
    Add
@@ -1470,12 +1548,24 @@ begin
       Is_Allowed_In        => Everywhere);
 
    --  compiler.response_file_format
-   Add
-     (Name                 => Compiler.Response_File_Format,
-      Index_Type           => Language_Index,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere);
+   declare
+      Type_Def : Attribute_Type;
+   begin
+      Type_Def.Include ("none");
+      Type_Def.Include ("gnu");
+      Type_Def.Include ("object_list");
+      Type_Def.Include ("gcc_gnu");
+      Type_Def.Include ("gcc_option_list");
+      Type_Def.Include ("gcc_object_list");
+
+      Add
+        (Name                 => Compiler.Response_File_Format,
+         Index_Type           => Language_Index,
+         Value                => Single,
+         Value_Case_Sensitive => False,
+         Is_Allowed_In        => Everywhere,
+         Type_Def             => Type_Def);
+   end;
 
    --  compiler.response_file_switches
    Add
@@ -1690,12 +1780,25 @@ begin
       Is_Allowed_In        => Everywhere);
 
    --  linker.response_file_format
-   Add
+   declare
+      Type_Def : Attribute_Type;
+   begin
+      Type_Def.Include ("none");
+      Type_Def.Include ("gnu");
+      Type_Def.Include ("object_list");
+      Type_Def.Include ("gcc_gnu");
+      Type_Def.Include ("gcc_option_list");
+      Type_Def.Include ("gcc_object_list");
+
+      Add
      (Name                 => Linker.Response_File_Format,
       Index_Type           => No_Index,
       Value                => Single,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere);
+      Value_Case_Sensitive => False,
+      Is_Allowed_In        => Everywhere,
+      Type_Def             => Type_Def);
+   end;
+
 
    --  linker.response_file_switches
    Add
@@ -1836,12 +1939,20 @@ begin
       Is_Allowed_In        => Everywhere);
 
    --  install.mode
-   Add
-     (Name                 => Install.Mode,
-      Index_Type           => No_Index,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere);
+   declare
+      Type_Def : Attribute_Type;
+   begin
+      Type_Def.Include ("dev");
+      Type_Def.Include ("usage");
+
+      Add
+        (Name                 => Install.Mode,
+         Index_Type           => No_Index,
+         Value                => Single,
+         Value_Case_Sensitive => False,
+         Is_Allowed_In        => Everywhere,
+         Type_Def             => Type_Def);
+   end;
 
    --  install.install_name
    Add
@@ -1897,7 +2008,8 @@ begin
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Type_Def             => Boolean_Type_Def);
 
    --  include_switches_via_spec
    Add
@@ -1921,6 +2033,7 @@ begin
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
+      Empty_Value          => Ignore,
       Is_Allowed_In        => Everywhere);
 
    --  canonical_target
@@ -1937,8 +2050,9 @@ begin
      (Name                 => Create_Missing_Dirs,
       Index_Type           => No_Index,
       Value                => Single,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere);
+      Value_Case_Sensitive => False,
+      Is_Allowed_In        => Everywhere,
+      Type_Def             => Boolean_Type_Def);
 
    --  install_project
    Add
@@ -1946,6 +2060,7 @@ begin
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Type_Def             => Boolean_Type_Def);
 
 end GPR2.Project.Registry.Attribute;

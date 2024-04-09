@@ -1,0 +1,6 @@
+project Warning is
+   for Allow_Single use "";
+   for Allow_List use ("");
+   for Ignore_Single use "";
+   for Ignore_List use ("");
+end Warning;
