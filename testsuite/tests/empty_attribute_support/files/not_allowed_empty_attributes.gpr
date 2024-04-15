@@ -1,0 +1,196 @@
+project Not_Allowed_Empty_Attributes is
+type Allowed_Empty_Attributes_Type is ("");
+for Archive_Builder use ("");
+for Archive_Builder_Append_Option use ("");
+for Archive_Indexer use ("");
+for Archive_Suffix use "";
+for Canonical_Target use "";
+--for Config_Prj_File use ""; -- 19.2
+for Create_Missing_Dirs use "true";
+for Default_Language use "";
+for Excluded_Source_Dirs use ("");
+for Excluded_Source_Files use ("", " ");
+--for Excluded_Source_List_File use "";
+for Exec_Dir use "";
+for Externally_Built use "true";
+for Ignore_Source_Sub_Dirs use ("", " ");
+for Include_Switches_Via_Spec ("Ada") use (""); -- 19.2
+for Inherit_Source_Path ("Ada") use ("", " ");
+for Interfaces use ("", " ");
+for Languages use ("", " ", "Ada");
+for Leading_Library_Options use ("");
+for Library_Auto_Init_Supported use "";
+for Library_Builder use "";
+for Library_Encapsulated_Options use ("");
+for Library_Gcc use "";
+for Library_Install_Name_Option use "";
+for Library_Major_Minor_Id_Supported use "true";
+for Library_Partial_Linker use ("");
+for Library_Reference_Symbol_File use "";
+for Library_Rpath_Options ("Ada") use ("");
+for Library_Support use "";
+for Library_Version_Switches use ("");
+for Locally_Removed_Files use ("");
+for Main use ("");
+--  read only for Name use "";
+for Object_Dir use "";
+for Object_Generated ("Ada") use "";
+for Object_Lister use ("");
+for Object_Lister_Matcher use "";
+for Objects_Linked ("Ada") use "";
+for Only_Dirs_With_Sources ("Ada") use "";
+for Origin_Project use "";
+--  read only for Project_Dir use "";
+for Required_Toolchain_Version ("Ada") use ""; -- 19.2
+for Roots ("Ada") use ("");
+for Run_Path_Option use ("");
+for Run_Path_Origin use "";
+for Runtime ("Ada") use "";
+for Runtime_Dir ("Ada") use "";
+for Runtime_Library_Dir ("Ada") use "";
+for Runtime_Source_Dir ("Ada") use "";
+for Runtime_Source_Dirs ("Ada") use ("");
+for Separate_Run_Path_Options use "true";
+for Shared_Library_Minimum_Switches use ("");
+for Shared_Library_Prefix use "";
+for Shared_Library_Suffix use "";
+for Source_Dirs use ("");
+for Source_Files use ("");
+--for Source_List_File use "";
+for Symbolic_Link_Supported use "true";
+for Target use "";
+for Toolchain_Description ("Ada") use "";
+for Toolchain_Name ("Ada") use ""; -- 19.2
+for Toolchain_Path ("Ada") use ""; -- 19.2
+for Toolchain_Version ("Ada") use "";
+for Warning_Message use "";
+
+package Install is
+    for Active use "";
+    for Ali_Subdir use "";
+    for Artifacts ("Ada") use ("");
+    for Exec_Subdir use "";
+    for Install_Name use "";
+    for Install_Project use "";
+    for Lib_Subdir use "";
+    for Mode use "";
+    for Prefix use "";
+    for Project_Subdir use "";
+    for Required_Artifacts ("Ada") use ("");
+    for Side_Debug use "";
+    for Sources_Subdir use "";
+end Install;
+
+package Binder is
+   for Bindfile_Option_Substitution ("Ada") use (""); -- 19.2
+   for Default_Switches ("Ada") use ("");
+   for Driver ("Ada") use "";
+   for Objects_Path ("Ada") use "";
+   for Objects_Path_File ("Ada") use "";
+   for Prefix ("Ada") use "";
+   for Required_Switches ("Ada") use ("");
+   for Switches ("Ada") use ("");
+end Binder;
+
+package Builder is
+    for Default_Switches ("Ada") use ("");
+    for Executable ("Ada") use "a";
+    for Executable_Suffix use "";
+    for Global_Compilation_Switches ("Ada") use ("");
+    for Global_Config_File ("Ada") use "";
+    for Global_Configuration_Pragmas use "";
+    for Switches ("Ada") use ("");
+end Builder;
+
+package Clean is
+    for Artifacts_In_Exec_Dir use ("");
+    for Artifacts_In_Object_Dir use ("");
+    for Object_Artifact_Extensions ("Ada") use ("");
+    for Source_Artifact_Extensions ("Ada") use ("");
+    for Switches use ("");
+end Clean;
+
+package Gnatls is
+    for Switches use ("");
+end Gnatls;
+
+package Linker is
+    for Default_Switches ("Ada") use ("");
+    for Driver use "";
+    for Export_File_Format use "GNU";
+    for Export_File_Switch use "";
+    for Leading_Switches ("Ada") use ("");
+    for Linker_Options use ("");
+    for Map_File_Option use "";
+    for Max_Command_Line_Length use "128";
+    for Required_Switches use ("");
+    for Response_File_Format use "GNU";
+    for Response_File_Switches use ("");
+    for Switches ("Ada") use ("");
+    for Trailing_Switches ("Ada") use ("");
+end Linker;
+
+package Compiler is
+    for Config_Body_File_Name ("Ada") use "";
+    for Config_Body_File_Name_Index ("Ada") use "";
+    for Config_Body_File_Name_Pattern ("Ada") use "";
+    for Config_File_Switches ("Ada") use ("");
+    for Config_File_Unique ("Ada") use "";
+    for Config_Spec_File_Name ("Ada") use "";
+    for Config_Spec_File_Name_Index ("Ada") use "";
+    for Config_Spec_File_Name_Pattern ("Ada") use "";
+    for Default_Switches ("Ada") use ("");
+    for Dependency_Driver ("Ada") use ("");
+    for Dependency_Kind ("Ada") use "";
+    for Dependency_Switches ("Ada") use ("");
+    for Driver ("Ada") use "";
+    for Include_Path ("Ada") use "";
+    for Include_Path_File ("Ada") use "";
+    for Include_Switches ("Ada") use ("");
+    for Language_Kind ("Ada") use "";
+    for Leading_Required_Switches ("Ada") use ("");
+    for Local_Config_File ("Ada") use "";
+    for Local_Configuration_Pragmas use "";
+    for Mapping_Body_Suffix ("Ada") use "";
+    for Mapping_File_Switches ("Ada") use ("");
+    for Max_Command_Line_Length use "10";
+    for Multi_Unit_Object_Separator ("Ada") use "";
+    for Multi_Unit_Switches ("Ada") use ("");
+    for Object_File_Suffix ("Ada") use "";
+    for Object_File_Switches ("Ada") use ("");
+    for Object_Path_Switches ("Ada") use ("");
+--    for Path_Syntax ("Ada") use ""; -- gprbuild
+    for Pic_Option ("Ada") use ("");
+    for Required_Switches ("Ada") use ("");
+    for Response_File_Format ("Ada") use "";
+    for Response_File_Switches ("Ada") use ("");
+    for Source_File_Switches ("Ada") use ("");
+    for Switches ("Ada") use ("");
+    for Trailing_Required_Switches ("Ada") use ("");
+end Compiler;
+
+package Naming is
+    for Body ("Ada") use ".a" ;
+    for Body_Suffix ("Ada") use "";
+    for Casing use "LowerCase";
+    for Dot_Replacement use "-";
+    for Implementation ("Ada") use "a";
+    for Implementation_Exceptions ("Ada") use ("");
+    for Implementation_Suffix ("Ada") use ".b";
+    for Separate_Suffix use ".a";
+    for Spec ("Ada") use "a";
+    for Spec_Suffix ("Ada") use "";
+    for Specification ("Ada") use "a";
+    for Specification_Exceptions ("Ada") use ("");
+    for Specification_Suffix ("Ada") use "";
+end Naming;
+
+package Remote is
+    for Excluded_Patterns use ("");
+    for Included_Artifact_Patterns use ("");
+    for Included_Patterns use ("");
+    for Root_Dir use "";
+end Remote;
+
+end Not_Allowed_Empty_Attributes;
+

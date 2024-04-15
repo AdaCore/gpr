@@ -1,0 +1,5 @@
+aggregate project Aggregate_Space_Value_Checks is
+   for Project_Files use ("", " ");
+   for Project_Path use ("", " ");
+   for External (" ") use ""; -- dynamic_predicate
+end Aggregate_Space_Value_Checks;

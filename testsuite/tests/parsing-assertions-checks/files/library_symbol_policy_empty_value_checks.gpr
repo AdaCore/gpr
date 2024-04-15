@@ -1,0 +1,6 @@
+library project Library_Symbol_Policy_Empty_Value_Checks is
+   for Library_Dir use "..";
+   for Library_Name use "a";
+   for Library_Standalone use "";
+   for Library_Symbol_Policy use ""; -- constraint_error bad input
+end Library_Symbol_Policy_Empty_Value_Checks;

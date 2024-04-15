@@ -38,4 +38,5 @@ begin
    Test ("abst.gpr");
    Test ("abst2.gpr");
    Test ("agg.gpr");
+   Test ("invalidcasing.gpr");
 end Main;

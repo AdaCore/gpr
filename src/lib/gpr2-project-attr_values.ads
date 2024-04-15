@@ -66,6 +66,8 @@ package GPR2.Project.Attr_Values is
      with Pre => Self.Is_Defined and then Self.Kind = List;
    --  Returns true whether the list of value contains Value
 
+   function Empty_Values (Self : Object) return Boolean;
+
    function Value (Self : Object) return Source_Reference.Value.Object
      with Pre => Self.Is_Defined and then Self.Kind = Single;
    --  Returns the value for the Name/Values pair object
@@ -108,5 +110,8 @@ private
 
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
+
+   function Empty_Values (Self : Object) return Boolean is
+      (Self.Count_Values = 0);
 
 end GPR2.Project.Attr_Values;

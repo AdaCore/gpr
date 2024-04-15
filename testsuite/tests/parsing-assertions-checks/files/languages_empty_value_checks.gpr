@@ -1,0 +1,5 @@
+library project Languages_Empty_Value_Checks is
+   for Library_Name use "a";
+   for Library_Dir use "..";
+   for Languages use (); -- warning no language 
+end Languages_Empty_Value_Checks;

@@ -1,0 +1,5 @@
+library project Project_Dir_Empty_Value_Checks is
+   for Library_Name use "a";
+   for Library_Dir use "..";
+   for Project_Dir use ""; -- read-only
+end Project_Dir_Empty_Value_Checks;

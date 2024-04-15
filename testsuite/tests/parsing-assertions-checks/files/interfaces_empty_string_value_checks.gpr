@@ -1,0 +1,5 @@
+library project Interfaces_Empty_String_Value_Checks is
+   for Library_Name use "a";
+   for Library_Dir use "..";
+   for Interfaces use ("");
+end Interfaces_Empty_String_Value_Checks;

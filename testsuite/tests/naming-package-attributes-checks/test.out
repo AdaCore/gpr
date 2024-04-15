@@ -1,5 +1,6 @@
 testing abst.gpr
 abst.gpr:6:32: error: attribute "Naming'Dot_Replacement" cannot be empty
+abst.gpr:9:32: error: attribute "Naming'Separate_Suffix" cannot be empty
 testing abst2.gpr
 abst2.gpr:6:32: error: attribute "Naming'Separate_Suffix" cannot be empty
 testing agg.gpr
@@ -12,4 +13,5 @@ extending.gpr:7:12: error: "a" is illegal for Spec_Suffix: must have a dot
 extending.gpr:8:12: error: "b" is illegal for Body_Suffix: must have a dot
 extending.gpr:9:12: error: "c" is illegal for Separate_Suffix: must have a dot
 import8.gpr:3:13: error: ".a." is illegal for Dot_Replacement
-aggregated.gpr:7:12: error: invalid value for casing
+testing invalidcasing.gpr
+invalidcasing.gpr:3:12: error: Value invalidcasing is invalid for attribute Naming'Casing

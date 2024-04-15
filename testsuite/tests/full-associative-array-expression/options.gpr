@@ -14,5 +14,5 @@ project Options is
       for Switches ("Ada") use Linker'Switches ("ada") & ("text9");
       for Switches ("C") use Linker'Switches ("c") & ("text10", "text11");
    end Linker;
-   for Object_Generated ("C") use "text15";
+   for Object_Generated ("C") use "true";
 end Options;

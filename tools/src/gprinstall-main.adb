@@ -98,6 +98,16 @@ begin
          end if;
       end if;
 
+      if Tree.Is_Defined
+        and then Tree.Root_Project.Has_Archive_Builder
+        and then Tree.Root_Project.Archive_Builder.Empty_Values
+      then
+         Handle_Program_Termination
+           (Opt       => Options,
+            Exit_Code => E_Success,
+            Message   => "empty Archive_builder is not supported yet.");
+      end if;
+
       Install.Process (Tree, Options);
    end if;
 
