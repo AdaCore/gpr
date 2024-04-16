@@ -565,7 +565,9 @@ begin
      (Key          => PRA.Archive_Builder,
       Description  =>
         "Value is the name of the application to be used to create a static " &
-        "library (archive), followed by the options to be used."
+        "library (archive), followed by the options to be used. If an empty " &
+        "value is provided, object files used as a recipe for the archive " &
+        "are copied to the library directory instead."
      );
 
    --  Archive_Builder_Append_Option

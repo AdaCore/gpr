@@ -1,0 +1,4 @@
+aggregate project External_Empty_Value_Checks is
+   for Project_Files use ();
+   for External ("") use ""; --  dynamic_predicate
+end External_Empty_Value_Checks;

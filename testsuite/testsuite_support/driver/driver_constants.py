@@ -9,6 +9,7 @@ class ObjScnTool(Enum):
     SCN_TOOL_GPRDOC = 3
     SCN_TOOL_GPRCONFIG = 4
     SCN_TOOL_GPRLS = 5
+    SCN_TOOL_GPRINSTALL = 6
     SCN_TOOL_CUSTOM = 99
 
     def tool_name(self):
@@ -28,6 +29,8 @@ class ObjScnTool(Enum):
             return f"{to_print} : GPRConfig will be executed."
         if self is ObjScnTool.SCN_TOOL_GPRLS:
             return f"{to_print} : GPRls will be executed."
+        if self is ObjScnTool.SCN_TOOL_GPRINSTALL:
+            return f"{to_print} : GPRinstall will be executed."
         if self is ObjScnTool.SCN_TOOL_CUSTOM:
             return f"{to_print} : Test custom command will be executed. Sometime a " \
                    + "test requires something that cannot be done with GPRTools "\
@@ -45,6 +48,7 @@ class ObjScnPhase(Enum):
     SCN_PHASE_GPRBUILD_ALL = 4
     SCN_PHASE_GPRCLEAN_ALL = 5
     SCN_PHASE_GPRLS_SOURCE_PARSING = 6
+    SCN_PHASE_GPRINSTALL_ALL = 7
     SCN_PHASE_CUSTOM_SLOT_1 = 101
     SCN_PHASE_CUSTOM_SLOT_2 = 102
     SCN_PHASE_CUSTOM_SLOT_3 = 103
@@ -76,6 +80,9 @@ class ObjScnPhase(Enum):
         if self is ObjScnPhase.SCN_PHASE_GPRLS_SOURCE_PARSING:
             return f"{to_print} : Only works when executing Tool.SCN_TOOL_GPRLS. "\
                    + "List the sources."
+        if self is ObjScnPhase.SCN_PHASE_GPRINSTALL_ALL:
+            return f"{to_print} : Only works when executing Tool.SCN_TOOL_GPRINSTALL. "\
+                   + " Do the whole process."
         if self is ObjScnPhase.SCN_PHASE_CUSTOM_SLOT_1:
             return f"{to_print} : Only works when using Tool.SCN_TOOL_CUSTOM. This " \
                    + " slot can be filled by calling " \
@@ -138,6 +145,7 @@ class ObjScnCaseValue(Enum):
     SCN_CASE_VALUE_DEFAULT = 0
     SCN_CASE_VALUE_UNDEF = 1
     SCN_CASE_VALUE_DEF = 2
+    SCN_CASE_VALUE_EMPTY = 3
     SCN_CASE_VALUE_INVALID = 4
 
     def doc(self):
@@ -151,6 +159,9 @@ class ObjScnCaseValue(Enum):
         if self is ObjScnCaseValue.SCN_CASE_VALUE_DEF:
             return f"{to_print} : This describes the case when the attribute is "\
                    + "defined with a valid value."
+        if self is ObjScnCaseValue.SCN_CASE_VALUE_EMPTY:
+            return f"{to_print} : This describes the case when the attribute is "\
+                   + "defined with an empty value."
         if self is ObjScnCaseValue.SCN_CASE_VALUE_INVALID:
             return f"{to_print} : This describes the case when the attribute is "\
                    + "defined with an invalid value."
@@ -385,5 +396,9 @@ SCN_TOOLS_CMD = {
     f"{tool.SCN_TOOL_GPRLS}.{phase.SCN_PHASE_GPRLS_SOURCE_PARSING}":
         {"cmd": ['gprls', '--source-parser', '-s',
                  f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
+         "output": output.SCN_OUTPUT_FILE_LIST},
+    f"{tool.SCN_TOOL_GPRINSTALL}.{phase.SCN_PHASE_GPRINSTALL_ALL}":
+        {"cmd": ['gprinstall', f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}', '-p',
+                 '--prefix=inst'],
          "output": output.SCN_OUTPUT_FILE_LIST}
 }

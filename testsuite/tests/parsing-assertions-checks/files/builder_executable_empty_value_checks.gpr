@@ -1,0 +1,7 @@
+library project Builder_Executable_Empty_Value_Checks is
+   for Library_Name use "a";
+   for Library_Dir use "..";
+   package Builder is
+      for Executable ("") use ""; -- empty attribute ignored
+   end Builder;
+end Builder_Executable_Empty_Value_Checks;

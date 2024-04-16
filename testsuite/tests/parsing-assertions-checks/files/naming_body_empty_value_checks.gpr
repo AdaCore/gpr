@@ -1,0 +1,7 @@
+library project Naming_Body_Empty_Value_Checks is
+   for Library_Name use "a";
+   for Library_Dir use "..";
+   package Naming is
+      for Body ("") use ""; -- dynamic_predicate
+   end Naming;
+end Naming_Body_Empty_Value_Checks;

@@ -1,3 +1,5 @@
 description:
    Test the handling of Excluded_Source_Dirs
 driver: python_script
+control:
+- ["SKIP", "True", "gprls not transitioned to next"]

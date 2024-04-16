@@ -371,7 +371,8 @@ package GPR2.Project.View is
                     (Dir_Reference : GPR2.Source_Reference.Value.Object;
                      Source        : GPR2.Path_Name.Full_Name;
                      Timestamp     : Ada.Calendar.Time);
-      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Full_Name));
+      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Full_Name);
+      Messages  : in out GPR2.Log.Object);
    --  Walks the source directories of Self and calls Source_CB on every
    --  file found, and Dir_CB on each directory found, if the callbacks are
    --  defined.
@@ -658,6 +659,17 @@ package GPR2.Project.View is
           Post => Spec_Suffix'Result.Is_Defined;
    --  Handles Spec_Suffix and Specification_Suffix
 
+   function Has_Archive_Builder
+     (Self : Object) return Boolean
+     with Pre  => Self.Is_Defined;
+   --  Returns True if Self contains an Archive_Builder attribute
+
+   function Archive_Builder (Self : Object) return Project.Attribute.Object
+     with Pre  => Self.Is_Defined
+                  and then Self.Has_Archive_Builder,
+          Post => Archive_Builder'Result.Is_Defined;
+   --  Handles Archive_Builder
+
    function Has_Body_Suffix
      (Self     : Object;
       Language : Language_Id) return Boolean
@@ -813,6 +825,13 @@ private
      (Self     : Object;
       Language : Language_Id) return Boolean
    is (Self.Has_Attribute (PRA.Naming.Spec_Suffix, PAI.Create (Language)));
+
+   function Has_Archive_Builder
+     (Self : Object) return Boolean
+   is (Self.Has_Attribute (PRA.Archive_Builder));
+
+   function Archive_Builder (Self : Object) return Project.Attribute.Object is
+     (Self.Attribute (PRA.Archive_Builder));
 
    function Spec_Suffix
      (Self     : Object;

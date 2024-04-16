@@ -228,7 +228,8 @@ package GPR2.Project.Registry.Attribute is
    --    automatically by libgpr.
    --  Index_Optional: whether the attribute's index is mandatory or optional.
    --    Ignored if Index_Type is No_Index.
-   --  Empty_Value: whether empty values are allowed for the attribute.
+   --  Empty_Value: whether empty values are allowed for the attribute. If
+   --    Value holds a list, whether empty values are allowed for list items.
    --  Default: the description of the default value taken by the attribute,
    --    if any.
    --  Has_Default_In: lists of project kind where this attribute has a

@@ -1,0 +1,7 @@
+library project Naming_Dot_Replacement_Empty_Value_Checks is
+   for Library_Name use "a";
+   for Library_Dir use "..";
+   package Naming is
+      for Dot_Replacement use ""; -- naming'dot_replacament cannot be empty
+   end Naming;
+end Naming_Dot_Replacement_Empty_Value_Checks;

@@ -1,0 +1,7 @@
+library project Naming_Casing_Empty_Value_Checks is
+   for Library_Name use "a";
+   for Library_Dir use "..";
+   package Naming is
+      for Casing use ""; -- invalid value for casing
+   end Naming;
+end Naming_Casing_Empty_Value_Checks;

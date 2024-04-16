@@ -1,0 +1,3 @@
+with "";
+project empty_imported is
+end empty_imported;

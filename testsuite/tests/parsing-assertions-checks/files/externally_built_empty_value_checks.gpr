@@ -1,0 +1,5 @@
+library project Externally_Built_Empty_Value_Checks is
+   for Library_Name use "a";
+   for Library_Dir use "..";
+   for Externally_Built use ""; -- error invalid value for externally_built
+end Externally_Built_Empty_Value_Checks;

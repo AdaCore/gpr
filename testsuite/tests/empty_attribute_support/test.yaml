@@ -1,0 +1,5 @@
+description:
+    empty attribute value should be allowed or should return an error message
+driver: python_script
+control:
+- ["SKIP", "True", "test relies on gprls that is not yet built from gpr2-next"]

@@ -1966,8 +1966,7 @@ package body GPRinstall.Install is
 
             procedure Linker_For (View : GPR2.Project.View.Object) is
             begin
-               if View.Has_Attribute (A.Linker.Linker_Options)
-               then
+               if View.Has_Attribute (A.Linker.Linker_Options) then
                   Append (View.Attribute (A.Linker.Linker_Options));
                end if;
             end Linker_For;
@@ -2000,21 +1999,6 @@ package body GPRinstall.Install is
             end if;
 
             Append_Imported_External_Libraries (Project);
-
-            --  Append Library_Options to Opts list
-
-            if Proj.Is_Library then
-               declare
-                  Library_Options : constant GPR2.Project.Attribute.Object :=
-                                      Proj.Attribute (A.Library_Options);
-               begin
-                  if Library_Options.Is_Defined then
-                     for Value of Library_Options.Values loop
-                        Opts_Append (Value.Text);
-                     end loop;
-                  end if;
-               end;
-            end if;
 
             if Opts.Length = 0 then
                --  No linker alternative found, add null statement

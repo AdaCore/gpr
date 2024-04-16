@@ -1,0 +1,32 @@
+not_allowed_empty_attributes.gpr:12:01: error: empty value in attribute "Excluded_Source_Files" not allowed.
+not_allowed_empty_attributes.gpr:19:01: error: empty value in attribute "Interfaces" not allowed.
+not_allowed_empty_attributes.gpr:20:01: error: empty value in attribute "Languages" not allowed.
+not_allowed_empty_attributes.gpr:22:05: error: Value  is invalid for attribute Library_Auto_Init_Supported
+not_allowed_empty_attributes.gpr:31:05: error: Value  is invalid for attribute Library_Support
+not_allowed_empty_attributes.gpr:33:01: error: empty value in attribute "Locally_Removed_Files" not allowed.
+not_allowed_empty_attributes.gpr:37:05: error: Value  is invalid for attribute Object_Generated
+not_allowed_empty_attributes.gpr:40:05: error: Value  is invalid for attribute Objects_Linked
+not_allowed_empty_attributes.gpr:58:01: error: empty value in attribute "Source_Files" not allowed.
+not_allowed_empty_attributes.gpr:74:09: error: Value  is invalid for attribute Install'Install_Project
+not_allowed_empty_attributes.gpr:76:09: error: Value  is invalid for attribute Install'Mode
+not_allowed_empty_attributes.gpr:80:09: error: Value  is invalid for attribute Install'Side_Debug
+not_allowed_empty_attributes.gpr:138:09: error: Value  is invalid for attribute Compiler'Config_File_Unique
+not_allowed_empty_attributes.gpr:144:09: error: Value  is invalid for attribute Compiler'Dependency_Kind
+not_allowed_empty_attributes.gpr:150:09: error: Value  is invalid for attribute Compiler'Language_Kind
+not_allowed_empty_attributes.gpr:165:09: error: Value  is invalid for attribute Compiler'Response_File_Format
+not_allowed_empty_attributes.gpr:178:05: error: empty value in attribute "Naming'Implementation_Exceptions" not allowed.
+not_allowed_empty_attributes.gpr:184:05: error: empty value in attribute "Naming'Specification_Exceptions" not allowed.
+gprls: "not_allowed_empty_attributes.gpr" processing failed
+allowed_empty_attributes.gpr:66:25: warning: empty attribute "Warning_Message" ignored
+empty_imported.gpr:1:06: error: missing project file for with clause
+gprls: "empty_imported.gpr" processing failed
+empty_extended.gpr:1:24: error: extended project name cannot be empty
+gprls: "empty_extended.gpr" processing failed
+empty_aggregated.gpr:2:27: error: file "" not found
+gprls: "empty_aggregated.gpr" processing failed
+space_imported.gpr:1:06: error: imported project file " .gpr" not found
+gprls: "space_imported.gpr" processing failed
+space_extended.gpr:1:24: error: extended project file " .gpr" not found
+gprls: "space_extended.gpr" processing failed
+space_aggregated.gpr:2:27: error: file " " not found
+gprls: "space_aggregated.gpr" processing failed

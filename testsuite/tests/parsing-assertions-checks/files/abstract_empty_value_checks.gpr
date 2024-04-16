@@ -1,0 +1,5 @@
+abstract project Abstract_Empty_Value_Checks is
+   package Binder is
+      for Bindfile_Option_Substitution ("") use ();
+   end Binder;
+end Abstract_Empty_Value_Checks;

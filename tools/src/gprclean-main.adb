@@ -38,19 +38,6 @@ with GPR2.Project.Attribute;
 with GPR2.Project.Configuration;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Source.Artifact;
-
-pragma Warnings (Off, "unit ""GPR2.Project.Source.Set"" is not referenced");
---  This pragma need to workaround GNAT bug U622-047 when unit is necessary,
---  but when set, issues warning that it is not referenced.
---
-with GPR2.Project.Source.Set;
---  Without this import
---  gprclean-main.adb:386:20: error: cannot call function that returns limited
---             view of type "Object" defined at gpr2-project-source-set.ads:32
---  gprclean-main.adb:386:20: error: there must be a regular with_clause for
---            package "Set" in the current unit, or in some unit in its context
-pragma Warnings (On);
-
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source_Reference;
@@ -348,13 +335,13 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
             --  is not from list.
             In_Mains : Boolean := False;
             Is_Main  : constant Boolean := Has_Mains and then S.Is_Main;
-            C_Main   : Containers.Filename_Type_Set.Cursor :=
+            C_Main   : GPR2.Containers.Filename_Type_Set.Cursor :=
                          Mains_In_View.Find (S.Path_Name.Simple_Name);
          begin
             --  Remove source simple name from Options.Mains as all Mains found
             --  is handled at Tree level not View level.
 
-            if Containers.Filename_Type_Set.Has_Element (C_Main) then
+            if GPR2.Containers.Filename_Type_Set.Has_Element (C_Main) then
                In_Mains := True;
                Mains_In_View.Delete (C_Main);
             end if;
@@ -681,6 +668,16 @@ begin
            then String (Options.Config_Project.Simple_Name)
            else String (Options.Filename.Value))
          & """ processing failed");
+   end if;
+
+   if Project_Tree.Is_Defined
+     and then Project_Tree.Root_Project.Has_Archive_Builder
+     and then Project_Tree.Root_Project.Archive_Builder.Empty_Values
+   then
+      Handle_Program_Termination
+        (Opt       => Options,
+         Exit_Code => E_Success,
+         Message   => "empty Archive_builder is not supported yet.");
    end if;
 
    --  Check gprclean's Switch attribute from loaded project

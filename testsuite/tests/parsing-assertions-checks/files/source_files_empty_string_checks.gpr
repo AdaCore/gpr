@@ -1,0 +1,5 @@
+library project Source_Files_Empty_String_Checks is
+   for Library_Name use "a";
+   for Library_Dir use "..";
+   for Source_Files use ("", " ");
+end Source_Files_Empty_String_Checks;
