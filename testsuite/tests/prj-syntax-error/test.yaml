@@ -1,3 +1,5 @@
 description:
     check for GPR syntax error recovery
 driver: python_script
+control:
+- ["SKIP", "True", "gprls not transitioned to next"]

@@ -2332,6 +2332,7 @@ package body GPR2.Project.View is
       procedure Dir_Cb (Dir_Name : GPR2.Path_Name.Full_Name);
 
       Result : GPR2.Path_Name.Set.Object;
+      Ign    : GPR2.Log.Object;
 
       ------------
       -- Dir_Cb --
@@ -2343,9 +2344,13 @@ package body GPR2.Project.View is
       end Dir_Cb;
 
    begin
+      --  Ignore at this stage messages about incorrect source directories,
+      --  since those messages are reported when the sources are loaded.
+
       Self.Source_Directories_Walk
         (Source_CB => null,
-         Dir_CB    => Dir_Cb'Unrestricted_Access);
+         Dir_CB    => Dir_Cb'Unrestricted_Access,
+         Messages  => Ign);
 
       return Result;
    end Source_Directories;
@@ -2360,7 +2365,8 @@ package body GPR2.Project.View is
                     (Dir_Reference : GPR2.Source_Reference.Value.Object;
                      Source        : GPR2.Path_Name.Full_Name;
                      Timestamp     : Ada.Calendar.Time);
-      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Full_Name))
+      Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Full_Name);
+      Messages  : in out GPR2.Log.Object)
    is
       Visited_Dirs               : GPR2.Containers.Filename_Set;
       Dir_Ref                    : GPR2.Source_Reference.Value.Object;
@@ -2516,6 +2522,7 @@ package body GPR2.Project.View is
          --  If S denotes the view's source dir corresponding to
          --  --src-subdir, just skip if the dir does not exist (it is
          --  optional).
+
          if not (View.Has_Source_Subdirectory
                  and then S.Text = View.Source_Subdirectory.String_Value
                  and then not Ada.Directories.Exists (S.Text))
@@ -2523,7 +2530,7 @@ package body GPR2.Project.View is
             Dir_Ref := S;
             Definition.Foreach
               (Base_Dir          => View.Dir_Name,
-               Messages          => Get_RO (View).Tree.Log_Messages.all,
+               Messages          => Messages,
                Directory_Pattern => Filename_Optional (S.Text),
                Source            => S,
                File_CB           => (if Source_CB = null then null

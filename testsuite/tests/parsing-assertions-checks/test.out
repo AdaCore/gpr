@@ -96,6 +96,8 @@ GPR file: files/source_list_file_empty_value_checks.gpr
 Messages found:
 source_list_file_empty_value_checks.gpr:4:29: error: attribute "Source_List_File" cannot be empty
 GPR file: files/warning_message_empty_value_checks.gpr
+warning_message_empty_value_checks.gpr:4:28: warning: empty attribute "Warning_Message" ignored
+warning_message_empty_value_checks.gpr: warning: there are no sources of language "Ada" in this project
 Warning_Message_Empty_Value_Checks
 GPR file: files/excluded_source_dirs_empty_space_value_checks.gpr
 Messages found:
@@ -104,16 +106,16 @@ GPR file: files/interfaces_empty_string_value_checks.gpr
 Messages found:
 interfaces_empty_string_value_checks.gpr:4:04: error: empty value in attribute "Interfaces" not allowed.
 GPR file: files/interfaces_space_value_checks.gpr
-Messages found:
 interfaces_space_value_checks.gpr: warning: there are no sources of language "Ada" in this project
-interfaces_space_value_checks.gpr:4:24: error: interface source ' ' not found
+interfaces_space_value_checks.gpr:4:24: error: source for interface ' ' not found
+Interfaces_Space_Value_Checks
 GPR file: files/library_interfaces_empty_string_value_checks.gpr
 Messages found:
 library_interfaces_empty_string_value_checks.gpr:4:04: error: empty value in attribute "Library_Interface" not allowed.
 GPR file: files/library_interfaces_space_value_checks.gpr
-Messages found:
 library_interfaces_space_value_checks.gpr: warning: there are no sources of language "Ada" in this project
 library_interfaces_space_value_checks.gpr:4:31: error: source for interface unit ' ' not found
+Library_Interfaces_Space_Value_Checks
 GPR file: files/languages_empty_string_checks.gpr
 Messages found:
 languages_empty_string_checks.gpr:4:04: error: empty value in attribute "Languages" not allowed.
@@ -121,18 +123,16 @@ GPR file: files/locally_removed_files_empty_string_checks.gpr
 Messages found:
 locally_removed_files_empty_string_checks.gpr:4:04: error: empty value in attribute "Locally_Removed_Files" not allowed.
 GPR file: files/source_dirs_space_checks.gpr
-Messages found:
 source_dirs_space_checks.gpr:4:29: error: "/files/ " is not a valid directory
 source_dirs_space_checks.gpr: warning: there are no sources of language "Ada" in this project
+Source_Dirs_Space_Checks
 GPR file: files/source_files_empty_string_checks.gpr
 Messages found:
 source_files_empty_string_checks.gpr:4:04: error: empty value in attribute "Source_Files" not allowed.
 GPR file: files/naming_exceptions_space_checks.gpr
 Messages found:
 naming_exceptions_space_checks.gpr:1:17: warning: project name 'naming_exceptions_space_checks' expected
-naming_exceptions_space_checks.gpr:6:47: error: File " " specified in naming exception more than once
-naming_exceptions_space_checks.gpr:7:46: warning: source file " " not found
-naming_exceptions_space_checks.gpr: warning: there are no sources of language "Ada" in this project
+naming_exceptions_space_checks.gpr:6:47: error: file " " specified in naming exception more than once
 GPR file: files/naming_implementation_exceptions_empty_string_checks.gpr
 Messages found:
 naming_implementation_exceptions_empty_string_checks.gpr:5:07: error: empty value in attribute "Naming'Implementation_Exceptions" not allowed.

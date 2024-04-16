@@ -1103,7 +1103,9 @@ package body Update_Sources_List is
       Data.Src_Files.Clear;
 
       Data.View.Source_Directories_Walk
-        (Source_CB => Handle_File'Access, Dir_CB => null);
+        (Source_CB => Handle_File'Access,
+         Dir_CB    => null,
+         Messages  => Messages);
 
       Changed_Sources.Clear;
 

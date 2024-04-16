@@ -1,19 +1,19 @@
 /default.cgpr:1:01: error: Expected Identifier, got Termination
-gprls: unable to process project file p.gpr
+gprls: "p.gpr" processing failed
 /foo.cgpr:1:01: error: Expected Identifier, got Termination
-gprls: unable to process project file p.gpr
+gprls: "p.gpr" processing failed
 /foo-bar.cgpr:1:01: error: Expected Identifier, got Termination
-gprls: unable to process project file p.gpr
+gprls: "p.gpr" processing failed
 /bar.cgpr:1:01: error: Expected Identifier, got Termination
-gprls: unable to process project file p.gpr
+gprls: "p.gpr" processing failed
 Can't find ALI file for /a.ads
 /conf/foo.cgpr:1:01: error: Expected Identifier, got Termination
-gprls: unable to process project file p.gpr
+gprls: "p.gpr" processing failed
 /conf/foo-bar.cgpr:1:01: error: Expected Identifier, got Termination
-gprls: unable to process project file p.gpr
+gprls: "p.gpr" processing failed
 /conf/bar.cgpr:1:01: error: Expected Identifier, got Termination
-gprls: unable to process project file p.gpr
+gprls: "p.gpr" processing failed
 /conf.cgpr:1:01: error: Expected Identifier, got Termination
-gprls: unable to process project file p.gpr
+gprls: "p.gpr" processing failed
 /light.cgpr: warning: runtimes are taken into account only in auto-configuration
 Can't find ALI file for /a.ads
