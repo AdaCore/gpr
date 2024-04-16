@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Text_IO;
 with Ada.Exceptions;
 with GNATCOLL.Buffer;
 with GPR2.Message;
@@ -93,7 +92,8 @@ package body GPR2.Build.ALI_Parser is
                      --  a single double quote.
 
                      declare
-                        Token  : String := GB.Token (File, First, Last);
+                        Token  : constant String :=
+                                   GB.Token (File, First, Last);
                         Result : String := Token;
                         Tok_Idx, Result_Idx : Natural := Token'First;
                      begin
@@ -102,7 +102,7 @@ package body GPR2.Build.ALI_Parser is
 
                            if Token (Tok_Idx) = '"' then
 
-                              -- Skip the second double quote
+                              --  Skip the second double quote
 
                               Tok_Idx := Tok_Idx + 1;
                            end if;
@@ -110,7 +110,7 @@ package body GPR2.Build.ALI_Parser is
                            Tok_Idx := Tok_Idx + 1;
                            Result_Idx := Result_Idx + 1;
                         end loop;
-                        return Result (Result'First .. Result_Idx-1);
+                        return Result (Result'First .. Result_Idx - 1);
                      end;
                   else
 
@@ -239,11 +239,10 @@ package body GPR2.Build.ALI_Parser is
       ---------------
 
       procedure Parse_Dep (Reader : in out GB.Reader) is
-         Char_After_D : Character;
       begin
          if not GB.Check (Reader, " ") then
             raise Scan_ALI_Error with "space expected after the 'D'"
-            & " dependency character";
+              & " dependency character";
          end if;
 
          declare
@@ -253,7 +252,7 @@ package body GPR2.Build.ALI_Parser is
                raise Scan_ALI_Error with "missed dependency source file";
             end if;
 
-            Dep_Names.Append(Source_File);
+            Dep_Names.Append (Source_File);
          end;
       end Parse_Dep;
 
@@ -287,11 +286,11 @@ package body GPR2.Build.ALI_Parser is
          when E : others =>
 
             Messages.Append
-              (GPR2.Message.Create (
-               GPR2.Message.Error,
-               "ALI parser error: " & Ada.Exceptions.Exception_Message (E),
-               GPR2.Source_Reference.Object
-                 (GPR2.Source_Reference.Create (ALI_File.Value, 0, 0))));
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  "ALI parser error: " & Ada.Exceptions.Exception_Message (E),
+                  GPR2.Source_Reference.Object
+                    (GPR2.Source_Reference.Create (ALI_File.Value, 0, 0))));
 
             GB.Finalize (Reader);
       end;
