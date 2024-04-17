@@ -23,8 +23,6 @@ with GPRtools.Util;
 
 package body GPRtools.Program_Termination is
 
-   use Ada;
-
    --------------------------------
    -- Handle_Program_Termination --
    --------------------------------
@@ -36,8 +34,7 @@ package body GPRtools.Program_Termination is
       Force_Exit                : Boolean := True;
       Exit_Code                 : Exit_Code_Type  := E_Fatal;
       Exit_Cause                : Exit_Cause_Type := E_Tool;
-      Message                   : String := "")
-   is
+      Message                   : String := "") is
    begin
       if Display_Tree_Messages then
          GPRtools.Util.Output_Messages (Opt);

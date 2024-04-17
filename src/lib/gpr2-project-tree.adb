@@ -274,15 +274,17 @@ package body GPR2.Project.Tree is
 
    function Artifacts_Dir (Self : Object) return Path_Name.Object is
    begin
+      --  Object_Directory has a precondition to prevent its use when the view
+      --  don't expect one (aggregate, abstract). But Apply_Root_And_Subdirs
+      --  doesn't, and object_directory will default to Project_Dir in such
+      --  case.
+
       if Self.Root_Project.Kind in With_Object_Dir_Kind then
          return Self.Root_Project.Object_Directory;
       else
          return Self.Root_Project.Apply_Root_And_Subdirs (PRA.Object_Dir);
       end if;
    end Artifacts_Dir;
-   --  Object_Directory has a precondition to prevent its use when the view
-   --  don't expect one (aggregate, abstract). But Apply_Root_And_Subdirs
-   --  doesn't, and object_directory will default to Project_Dir in such case.
 
    ----------------
    -- Clear_View --
@@ -540,8 +542,8 @@ package body GPR2.Project.Tree is
       View             : Project.View.Object := Project.View.Undefined;
       Action           : access procedure (Source : Project.Source.Object);
       Language         : Language_Id := No_Language;
-      Externally_Built : Boolean := False) is
-
+      Externally_Built : Boolean := False)
+   is
       procedure Do_Action (View : Project.View.Object)
         with Pre => View.Is_Defined;
       --  Call Action for all View's source object having a valid language
@@ -761,6 +763,7 @@ package body GPR2.Project.Tree is
 
       if Project.Ensure_Extension (Base_Name) = Base_Name then
          Handle_Project_File;
+
       else
          --  Handle source file
 
@@ -1264,7 +1267,9 @@ package body GPR2.Project.Tree is
          for P of Self.Search_Paths.All_Paths loop
             Append (Search_Paths, GNAT.OS_Lib.Path_Separator & P.Value);
          end loop;
+
          --  Remove first path separator
+
          Delete (Search_Paths, 1, 1);
 
          Self.Messages.Append
@@ -1438,9 +1443,9 @@ package body GPR2.Project.Tree is
                             GPR2.Path_Name.Undefined;
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
                             GPR2.File_Readers.No_File_Reader_Reference;
-      Environment      : GPR2.Environment.Object :=
+      Environment       : GPR2.Environment.Object :=
                             GPR2.Environment.Process_Environment)
-       is separate;
+   is separate;
 
    procedure Load_Autoconf
      (Self              : in out Object;
@@ -1540,8 +1545,7 @@ package body GPR2.Project.Tree is
    ----------
 
    overriding function Next
-     (Iter : Iterator; Position : Cursor) return Cursor
-   is
+     (Iter : Iterator; Position : Cursor) return Cursor is
    begin
       return (Current => Project_View_Store.Next (Position.Current),
               Tree    => Position.Tree);
@@ -1585,8 +1589,8 @@ package body GPR2.Project.Tree is
       View             : Project.View.Object := Project.View.Undefined;
       Externally_Built : Boolean := False;
       Do_Action        : not null access procedure
-                           (View : Project.View.Object)) is
-
+                           (View : Project.View.Object))
+   is
       Processed : GPR2.Project.View.Set.Object;
 
       procedure Process (View : Project.View.Object)
@@ -1996,7 +2000,7 @@ package body GPR2.Project.Tree is
                      Extended_View : constant GPR2.Project.View.Object :=
                                        Internal
                                          ((Project_Path,
-                                          Data.Trees.Extended.Path_Name),
+                                           Data.Trees.Extended.Path_Name),
                                           Aggregate     =>
                                             GPR2.Project.View.Undefined,
                                           Status        => Extended,
@@ -2509,9 +2513,9 @@ package body GPR2.Project.Tree is
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)
    is
-      Root        : constant Definition.Ref := Definition.Get_RW (Self.Root);
-      Def         : Definition.Ref;
-      Attr        : Attribute.Object;
+      Root : constant Definition.Ref := Definition.Get_RW (Self.Root);
+      Def  : Definition.Ref;
+      Attr : Attribute.Object;
 
    begin
       --  Register the root context for this project tree
@@ -2537,9 +2541,9 @@ package body GPR2.Project.Tree is
             Def.Disable_Cache;
 
             declare
-               SD  : constant Attribute.Object    :=
-                       V.Attribute (PRA.Source_Dirs);
-               SV  : Containers.Source_Value_List := SD.Values;
+               SD : constant Attribute.Object    :=
+                      V.Attribute (PRA.Source_Dirs);
+               SV : Containers.Source_Value_List := SD.Values;
             begin
                SV.Prepend
                  (Source_Reference.Value.Object
@@ -2916,7 +2920,8 @@ package body GPR2.Project.Tree is
 
             Paths.Append (View.Path_Name);
 
-            for Project of P_Data.Attrs.Element (PRA.Project_Files.Attr).Values
+            for Project
+              of P_Data.Attrs.Element (PRA.Project_Files.Attr).Values
             loop
                declare
                   Found : Boolean := False;
@@ -3434,6 +3439,10 @@ package body GPR2.Project.Tree is
          declare
             procedure Check_Library_Is_Standalone (Name : Q_Attribute_Id);
 
+            ---------------------------------
+            -- Check_Library_Is_Standalone --
+            ---------------------------------
+
             procedure Check_Library_Is_Standalone (Name : Q_Attribute_Id) is
                Attr : Attribute.Object;
             begin
@@ -3454,6 +3463,7 @@ package body GPR2.Project.Tree is
                   end;
                end if;
             end Check_Library_Is_Standalone;
+
          begin
             if View.Is_Library then
                Check_Library_Is_Standalone (PRA.Library_Symbol_File);
@@ -3768,8 +3778,7 @@ package body GPR2.Project.Tree is
                --  fetch its value from the environment and insert it in the
                --  context.
 
-               Context.Insert
-                 (External, External_Value, Position, Inserted);
+               Context.Insert (External, External_Value, Position, Inserted);
             end if;
          end;
       end loop;

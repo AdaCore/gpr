@@ -19,10 +19,13 @@ package body GPR2.Project.Source.Part_Set is
       end if;
    end Clear;
 
+   ------------------------
+   -- Constant_Reference --
+   ------------------------
+
    function Constant_Reference
      (Self     : aliased Object;
-      Position : Cursor) return Constant_Reference_Type
-   is
+      Position : Cursor) return Constant_Reference_Type is
    begin
       if Self.Sorted then
          declare
@@ -33,6 +36,7 @@ package body GPR2.Project.Source.Part_Set is
                     Sorted => True,
                     SRef   => Ref);
          end;
+
       else
          declare
             Ref : constant Source_Part_Hashed_Sets.Constant_Reference_Type :=
@@ -81,8 +85,9 @@ package body GPR2.Project.Source.Part_Set is
    -- Iterate --
    -------------
 
-   function Iterate (Self : Object)
-                     return Source_Part_Iterator.Forward_Iterator'Class is
+   function Iterate
+     (Self : Object)
+      return Source_Part_Iterator.Forward_Iterator'Class is
    begin
       if Self.Sorted then
          return Iterator'(Sorted => True, SRoot => Self.SS'Unchecked_Access);

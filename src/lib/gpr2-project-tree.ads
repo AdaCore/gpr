@@ -342,7 +342,8 @@ package GPR2.Project.Tree is
    --  If Update is True and view with this source is not found, than Update
    --  sources in all views and try to find again.
 
-   function Are_Sources_Loaded (Tree : Object) return Boolean;
+   function Are_Sources_Loaded (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
    --  Whether the sources are loaded in the tree or not
 
    procedure Invalidate_Sources
@@ -756,7 +757,7 @@ private
    function Environment (Self : Object) return GPR2.Environment.Object is
       (Self.Environment);
 
-   function Are_Sources_Loaded (Tree : Object) return Boolean is
-     (Tree.Sources_Loaded);
+   function Are_Sources_Loaded (Self : Object) return Boolean is
+     (Self.Sources_Loaded);
 
 end GPR2.Project.Tree;

@@ -396,17 +396,19 @@ package body GPR2.Project.Source is
       Closure  : Boolean := False;
       Sorted   : Boolean := True)
    is
-      procedure Action (Source    : Object;
-                        Unit      : GPR2.Unit.Object;
-                        Timestamp : Ada.Calendar.Time);
+      procedure Action
+        (Source    : Object;
+         Unit      : GPR2.Unit.Object;
+         Timestamp : Ada.Calendar.Time);
 
       ------------
       -- Action --
       ------------
 
-      procedure Action (Source    : Object;
-                        Unit      : GPR2.Unit.Object;
-                        Timestamp : Ada.Calendar.Time) is
+      procedure Action
+        (Source    : Object;
+         Unit      : GPR2.Unit.Object;
+         Timestamp : Ada.Calendar.Time) is
       begin
          if Unit.Is_Defined then
             For_Each (Source, Unit.Index, Timestamp);

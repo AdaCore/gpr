@@ -12,9 +12,9 @@ package body GPR2.Project.Attribute_Cache is
    use type Project.Attribute_Index.Object;
 
    function Cache_Key
-      (Name   : Q_Attribute_Id;
-       Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
-       At_Pos : Unit_Index                     := No_Index)
+     (Name   : Q_Attribute_Id;
+      Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index                     := No_Index)
       return String;
    --  Given the Get_Attribute parameters return a unique key.
 
@@ -41,6 +41,7 @@ package body GPR2.Project.Attribute_Cache is
          Needed_Extra_Capacity => 0);
 
       --  Ensure cache capacity is at least Min_Cache_Size
+
       if Cache.Inner.Table.Capacity < Min_Cache_Size then
          Cache.Inner.Table.Reserve_Capacity (Min_Cache_Size);
       end if;
@@ -51,11 +52,10 @@ package body GPR2.Project.Attribute_Cache is
    ---------------
 
    function Cache_Key
-      (Name   : Q_Attribute_Id;
-       Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
-       At_Pos : Unit_Index                     := No_Index)
-      return String
-   is
+     (Name   : Q_Attribute_Id;
+      Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index                     := No_Index)
+      return String is
    begin
       if Index /= Attribute_Index.Undefined then
          return Name.Attr'Img & ":" & Name.Pack'Img & ":" &
@@ -71,10 +71,10 @@ package body GPR2.Project.Attribute_Cache is
    -----------------
 
    function Check_Cache
-      (Self   : Object;
-       Name   : Q_Attribute_Id;
-       Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
-       At_Pos : Unit_Index                     := No_Index)
+     (Self   : Object;
+      Name   : Q_Attribute_Id;
+      Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index                     := No_Index)
       return Cursor
    is
       Key : constant String := Cache_Key (Name, Index, At_Pos);
@@ -107,8 +107,7 @@ package body GPR2.Project.Attribute_Cache is
    -------------
 
    overriding function Element
-      (C : Cursor) return GPR2.Project.Attribute.Object
-   is
+     (C : Cursor) return GPR2.Project.Attribute.Object is
    begin
       return Attribute_Cache_Maps.Element (Attribute_Cache_Maps.Cursor (C));
    end Element;
@@ -129,7 +128,6 @@ package body GPR2.Project.Attribute_Cache is
    overriding procedure Finalize (Cache : in out Object) is
       procedure Free is new Ada.Unchecked_Deallocation
          (Attribute_Cache_Maps.Map, Map_Access);
-
    begin
       if Cache.Inner /= null then
          if Cache.Inner.Table /= null then
@@ -142,7 +140,6 @@ package body GPR2.Project.Attribute_Cache is
 
          Free (Cache.Inner);
       end if;
-
    end Finalize;
 
    -----------------
@@ -159,8 +156,7 @@ package body GPR2.Project.Attribute_Cache is
    -- Initialize --
    ----------------
 
-   overriding procedure Initialize (Cache : in out Object)
-   is
+   overriding procedure Initialize (Cache : in out Object) is
    begin
       Cache.Inner := new Inner_Object'
         (Enabled               => True,
@@ -188,10 +184,11 @@ package body GPR2.Project.Attribute_Cache is
       then
          --  We have reached the maximum capacity. Increase the table size
          declare
-            New_Table : constant Map_Access :=
-               new Attribute_Cache_Maps.Map'(Self.Inner.Table.all.Copy);
-            New_Capacity : Ada.Containers.Count_Type :=
-               Self.Inner.Table.Capacity * 2;
+            New_Table    : constant Map_Access :=
+                             new Attribute_Cache_Maps.Map'
+                               (Self.Inner.Table.all.Copy);
+            New_Capacity : Containers.Count_Type :=
+                             Self.Inner.Table.Capacity * 2;
          begin
             while New_Capacity <
                Self.Inner.Table.Length + Self.Inner.Needed_Extra_Capacity
@@ -223,11 +220,11 @@ package body GPR2.Project.Attribute_Cache is
    ------------------
 
    procedure Update_Cache
-      (Self   : Object;
-       Name   : Q_Attribute_Id;
-       Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
-       At_Pos : Unit_Index                     := No_Index;
-       Attr   : GPR2.Project.Attribute.Object)
+     (Self   : Object;
+      Name   : Q_Attribute_Id;
+      Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index                     := No_Index;
+      Attr   : GPR2.Project.Attribute.Object)
    is
       Key : constant String := Cache_Key (Name, Index, At_Pos);
    begin

@@ -80,7 +80,7 @@ package body GPR2.Source is
    is
       use all type GPR2.Unit.Library_Unit_Type;
 
-      Key          : Unbounded_String;
+      Key : Unbounded_String;
    begin
       for CU of Units loop
          Append
@@ -104,7 +104,6 @@ package body GPR2.Source is
       Is_RTS_Source : Boolean;
       Timestamp     : Ada.Calendar.Time) return Object'Class  is
    begin
-      pragma Assert (Unit.Index = No_Index);
       return Result : Object do
          Result.Path_Name := Filename;
          Result.Timestamp := Timestamp;
@@ -125,7 +124,6 @@ package body GPR2.Source is
       if Self.Is_Ada then
          --  In this case, the relevant information is unit name + unit kind
          return To_String (Self.Ada_Key);
-
       else
          --  Not unit based: just use the full path
          return Self.Path_Name.Value;

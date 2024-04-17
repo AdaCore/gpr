@@ -68,8 +68,10 @@ package GPR2.Source is
       Unit          : GPR2.Unit.Object;
       Is_RTS_Source : Boolean;
       Timestamp     : Ada.Calendar.Time) return Object'Class
-     with Pre  => Filename.Is_Defined and then Unit.Is_Defined,
-     Post => Create_Ada'Result.Is_Defined;
+     with Pre  => Filename.Is_Defined
+                    and then Unit.Is_Defined
+                    and then Unit.Index = No_Index,
+          Post => Create_Ada'Result.Is_Defined;
    --  Constructor for a single-unit Ada source object
 
 private
@@ -91,7 +93,8 @@ private
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
 
-   function Timestamp (Self : Object; ALI : Boolean) return Ada.Calendar.Time
+   function Timestamp
+     (Self : Object; ALI : Boolean) return Ada.Calendar.Time
    is (if ALI then To_ALI_Timestamp (Self.Timestamp) else Self.Timestamp);
 
    function Path_Name (Self : Object) return GPR2.Path_Name.Object is

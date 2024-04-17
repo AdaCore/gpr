@@ -10,8 +10,9 @@ package body GPR2.Source_Info is
    -- Build_Timestamp --
    ---------------------
 
-   function Build_Timestamp (Self  : Object;
-                             Index : Unit_Index) return Ada.Calendar.Time is
+   function Build_Timestamp
+     (Self  : Object;
+      Index : Unit_Index) return Ada.Calendar.Time is
    begin
       if Index = No_Index then
          return Self.LI_Timestamp;
@@ -74,7 +75,7 @@ package body GPR2.Source_Info is
                  (Unit_Name : Name_Type;
                   Sfile     : Simple_Name;
                   Kind      : GPR2.Unit.Library_Unit_Type;
-                  Stamp     : Ada.Calendar.Time))
+                  Stamp     : Calendar.Time))
    is
       C_Idx : constant Unit_Dependencies.Cursor :=
                 Self.Dependencies.Find (Index);
@@ -157,8 +158,7 @@ package body GPR2.Source_Info is
    -- Is_Parsed --
    ---------------
 
-   function Is_Parsed (Self : Object) return Parse_State
-   is
+   function Is_Parsed (Self : Object) return Parse_State is
       Fully_Parsed : Boolean := True;
       Not_Parsed   : Boolean := True;
    begin
@@ -168,6 +168,7 @@ package body GPR2.Source_Info is
          else
             return No;
          end if;
+
       else
          for CU of Self.Units loop
             if Self.Is_Parsed (CU.Index) then
@@ -281,7 +282,7 @@ package body GPR2.Source_Info is
    ----------------------------
 
    procedure Update_Build_Timestamp
-     (Self : in out Object; Stamp : Ada.Calendar.Time) is
+     (Self : in out Object; Stamp : Calendar.Time) is
    begin
       Self.LI_Timestamp := Stamp;
    end Update_Build_Timestamp;

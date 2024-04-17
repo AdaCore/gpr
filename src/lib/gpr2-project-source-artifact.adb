@@ -77,8 +77,8 @@ package body GPR2.Project.Source.Artifact is
       Filter     : Artifact.Filter := All_Artifacts) return Artifact.Object
    is
       procedure Get_Object_Artifacts
-        (BN      : Filename_Type;
-         Index   : Unit_Index);
+        (BN    : Filename_Type;
+         Index : Unit_Index);
       --  Retrieve object and ali files for a given unit, if any
 
       procedure Get_Source_Artifacts;
@@ -338,13 +338,14 @@ package body GPR2.Project.Source.Artifact is
               or else (Maybe_No_Body and then CU.Kind = GPR2.Unit.S_Spec)
             then
                declare
-                  Base : constant Filename_Type :=
-                           BN & At_Suffix (Index);
+                  Base : constant Filename_Type := BN & At_Suffix (Index);
                begin
                   return Get_Dep (Base);
                end;
+
             elsif Source.Has_Other_Part (Index) then
                Other := Source.Other_Part (Index);
+
                return Dependency
                  (Other.Source,
                   Other.Index,

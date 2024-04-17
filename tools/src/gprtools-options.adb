@@ -16,6 +16,10 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+pragma Warnings (Off);
+with System.OS_Constants;
+pragma Warnings (On);
+
 with GNAT.Directory_Operations;
 
 with GPR2.Compilation.Registry;
@@ -23,10 +27,6 @@ with GPR2.Log;
 with GPR2.Project.Registry.Pack;
 
 with GPRtools.Program_Termination;
-
-pragma Warnings (Off);
-with System.OS_Constants;
-pragma Warnings (On);
 
 package body GPRtools.Options is
 
@@ -338,8 +338,7 @@ package body GPRtools.Options is
 
    overriding procedure Get_Opt
      (Parser : Command_Line_Parser;
-      Result : in out GPRtools.Command_Line.Command_Line_Result'Class)
-   is
+      Result : in out GPRtools.Command_Line.Command_Line_Result'Class) is
    begin
       Get_Opt_Internal (Parser, Base_Options'Class (Result));
    end Get_Opt;
@@ -350,8 +349,7 @@ package body GPRtools.Options is
 
    procedure Get_Opt_Internal
      (Parser : Command_Line_Parser;
-      Result : in out Base_Options'Class)
-   is
+      Result : in out Base_Options'Class) is
    begin
       GPRtools.Command_Line.Command_Line_Parser (Parser).Get_Opt (Result);
 
@@ -423,8 +421,8 @@ package body GPRtools.Options is
       end Display;
 
       Loaded : Boolean := False;
-   begin
 
+   begin
       Loaded := Opt.Load_Project
         (Tree             => Opt.Tree.all,
          Absent_Dir_Error => Absent_Dir_Error);
@@ -438,9 +436,11 @@ package body GPRtools.Options is
                               else False);
          begin
             Display (Opt.Config_Project_Log);
+
             if Opt.Tree /= null and then Has_Messages then
                Display (Opt.Tree.all.Log_Messages.all);
             end if;
+
             if not Loaded
               and then Opt.Config_Project_Has_Error
             then
@@ -449,6 +449,7 @@ package body GPRtools.Options is
                   Message    => '"' & String (Opt.Config_Project.Simple_Name)
                   & """ processing failed");
             end if;
+
             if not Loaded
               and then Opt.Tree /= null
               and then Has_Messages
@@ -463,7 +464,6 @@ package body GPRtools.Options is
       end if;
 
       return Loaded;
-
    end Load_Project;
 
    ---------------
@@ -672,8 +672,6 @@ package body GPRtools.Options is
          when Ls | Inspect =>
             null;
       end case;
-      --  GPR tree handling
-
    end Setup;
 
 end GPRtools.Options;

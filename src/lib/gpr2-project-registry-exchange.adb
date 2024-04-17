@@ -15,6 +15,7 @@ with GPR2.Project.Registry.Pack.Description;
 with GPR2.Project.View;
 
 package body GPR2.Project.Registry.Exchange is
+
    use GNATCOLL.JSON;
 
    --  constant strings used in exchange data JSON & Textual
@@ -65,12 +66,12 @@ package body GPR2.Project.Registry.Exchange is
    VALUE_CASE_INSENSITIVE     : constant UTF8_String := "value_case_sensitive";
    VALUE_IS_SET               : constant UTF8_String := "value_is_set";
 
-   function Dummy_Callback
-     (View : GPR2.Project.View.Object) return Value_Type;
+   function Dummy_Callback (View : GPR2.Project.View.Object) return Value_Type;
    --  callback used when importing a callback based default value.
 
    function Dummy_Callback
-     (View : GPR2.Project.View.Object) return Value_Type is
+     (View : GPR2.Project.View.Object) return Value_Type
+   is
      ("WARNING: stub created by registry import. Not the real default value");
 
    ------------
@@ -78,13 +79,13 @@ package body GPR2.Project.Registry.Exchange is
    ------------
 
    procedure Export
-     (Included : GPR2.Containers.Package_Id_List :=
-        GPR2.Project.Registry.Pack.All_Packages;
-      Excluded : GPR2.Containers.Package_Id_List :=
-        GPR2.Project.Registry.Pack.Predefined_Packages;
+     (Included : Containers.Package_Id_List :=
+                   Project.Registry.Pack.All_Packages;
+      Excluded : Containers.Package_Id_List :=
+                   Project.Registry.Pack.Predefined_Packages;
       Format   : Export_Format := K_JSON_COMPACT;
-      Output : access procedure (Item : String) := Ada.Text_IO.Put'Access) is
-
+      Output   : access procedure (Item : String) := Ada.Text_IO.Put'Access)
+   is
       use GNATCOLL;
       use GPR2.Project.Registry.Attribute;
 
@@ -142,8 +143,7 @@ package body GPR2.Project.Registry.Exchange is
          --  Documentation output. Useful in order to compare the actual code
          --  attributes definitions to the existing documentation.
 
-         procedure Generate_Package_Attributes
-           (Pack : Package_Id);
+         procedure Generate_Package_Attributes (Pack : Package_Id);
          --  Look for all attributes for a given package
 
          ------------------------
@@ -156,23 +156,19 @@ package body GPR2.Project.Registry.Exchange is
          is
             K_Separator : constant String := ", ";
          begin
-
             Append (Item => Image (Attr_Name.Attr) & ": ");
 
-            if Attr_Def.Value = GPR2.Project.Registry.Attribute.Single
-            then
+            if Attr_Def.Value = GPR2.Project.Registry.Attribute.Single then
                Append (Item => SINGLE);
             else
                Append (Item => LIST);
             end if;
 
-            if Attr_Def.Builtin
-            then
+            if Attr_Def.Builtin then
                Append (Item => K_Separator & READ_ONLY);
             end if;
 
-            if Attr_Def.Index_Type /= PRA.No_Index
-            then
+            if Attr_Def.Index_Type /= PRA.No_Index then
                if Attr_Def.Index_Optional
                then
                   Append (Item => K_Separator & OPTIONAL_INDEX);
@@ -182,20 +178,19 @@ package body GPR2.Project.Registry.Exchange is
             end if;
 
             case Attr_Def.Index_Type is
-            when PRA.No_Index | PRA.String_Index | PRA.Env_Var_Name_Index =>
-               null;
+               when PRA.No_Index | PRA.String_Index | PRA.Env_Var_Name_Index =>
+                  null;
 
-            when PRA.Unit_Index | PRA.Language_Index =>
-               Append (Item => K_Separator & CASE_INSENSITIVE_INDEX);
-
-            when PRA.File_Index |
-                 PRA.FileGlob_Index |
-                 PRA.FileGlob_Or_Language_Index =>
-
-               if not GPR2.File_Names_Case_Sensitive
-               then
+               when PRA.Unit_Index | PRA.Language_Index =>
                   Append (Item => K_Separator & CASE_INSENSITIVE_INDEX);
-               end if;
+
+               when PRA.File_Index |
+                    PRA.FileGlob_Index |
+                    PRA.FileGlob_Or_Language_Index =>
+
+                  if not GPR2.File_Names_Case_Sensitive then
+                     Append (Item => K_Separator & CASE_INSENSITIVE_INDEX);
+                  end if;
             end case;
 
             if  Attr_Def.Index_Type = PRA.File_Index
@@ -205,13 +200,11 @@ package body GPR2.Project.Registry.Exchange is
                Append (Item => K_Separator & FILE_NAME_INDEX);
             end if;
 
-            if Attr_Def.Index_Optional
-            then
+            if Attr_Def.Index_Optional then
                Append (Item => K_Separator & OTHERS_ALLOWED);
             end if;
 
-            if Attr_Def.Config_Concatenable
-            then
+            if Attr_Def.Config_Concatenable then
                Append (Item => K_Separator & CONFIGURATION_CONCATENABLE);
             end if;
 
@@ -227,9 +220,7 @@ package body GPR2.Project.Registry.Exchange is
          -- Generate_Package_Attributes --
          ---------------------------------
 
-         procedure Generate_Package_Attributes
-           (Pack : Package_Id)
-         is
+         procedure Generate_Package_Attributes (Pack : Package_Id) is
             Package_Name         : constant String :=
                                      (if Pack = Project_Level_Scope
                                       then PROJECT_LEVEL
@@ -237,12 +228,9 @@ package body GPR2.Project.Registry.Exchange is
             Package_Name_Shown   : Boolean := False;
             Attribute_Definition : Def;
          begin
-
             --  For every attributes of a given package
 
-            for Attr_Id of PRA.All_Attributes (Pack => Pack)
-            loop
-
+            for Attr_Id of PRA.All_Attributes (Pack => Pack) loop
                --  Get the attribute information
                Attribute_Definition :=
                  PRA.Get (Q_Name => Attr_Id);
@@ -262,13 +250,10 @@ package body GPR2.Project.Registry.Exchange is
                   Attr_Def  => Attribute_Definition);
 
                Append_Line;
-
             end loop;
-
          end Generate_Package_Attributes;
 
       begin
-
          --  First retrieve all attributes from the Top-Level package
 
          if Is_Included (Project_Level_Scope) then
@@ -277,13 +262,11 @@ package body GPR2.Project.Registry.Exchange is
 
          --  Then retrieve all attributes from all registered packages
 
-         for Pack of PRP.All_Packages
-         loop
+         for Pack of PRP.All_Packages loop
             if Is_Included (Pack) then
                Generate_Package_Attributes (Pack => Pack);
             end if;
          end loop;
-
       end Generate_IO_Textual_Documentation;
 
       ----------------------------
@@ -292,24 +275,26 @@ package body GPR2.Project.Registry.Exchange is
 
       procedure Generate_JSON_Documentation (Compact : Boolean) is
 
-         function Attribute_Object (Attr_Name  : Q_Attribute_Id;
-                                    Attr_Def   : Def;
-                                    Attr_Descr : String) return JSON_Value;
+         function Attribute_Object
+           (Attr_Name  : Q_Attribute_Id;
+            Attr_Def   : Def;
+            Attr_Descr : String) return JSON_Value;
          --  The attribute JSON object description
 
-         function Package_Object (Pack      : Package_Id;
-                                  Attr_List : JSON_Array) return JSON_Value;
+         function Package_Object
+           (Pack      : Package_Id;
+            Attr_List : JSON_Array) return JSON_Value;
          --  The package JSON object description
 
          ----------------------
          -- Attribute_Object --
          ----------------------
 
-         function Attribute_Object (Attr_Name  : Q_Attribute_Id;
-                                    Attr_Def   : Def;
-                                    Attr_Descr : String) return JSON_Value
+         function Attribute_Object
+           (Attr_Name  : Q_Attribute_Id;
+            Attr_Def   : Def;
+            Attr_Descr : String) return JSON_Value
          is
-
             function Attribute_Def_Object (Attr_Def : Def) return JSON_Value;
             --  The attribute definition JSON object description
 
@@ -317,8 +302,7 @@ package body GPR2.Project.Registry.Exchange is
             -- Attribute_Def_Object --
             --------------------------
 
-            function Attribute_Def_Object (Attr_Def : Def) return JSON_Value
-            is
+            function Attribute_Def_Object (Attr_Def : Def) return JSON_Value is
                function Array_Object (A : Allowed_In) return JSON_Value;
                --  The Allowed_In JSON object description
 
@@ -360,10 +344,10 @@ package body GPR2.Project.Registry.Exchange is
                --------------------
 
                function Variant_Record
-                 (VR : Default_Value) return JSON_Value is
+                 (VR : Default_Value) return JSON_Value
+               is
                   Obj : constant JSON_Value := Create_Object;
                begin
-
                   Set_Field
                     (Val        => Obj,
                      Field_Name => DEFAULT_VALUE_KIND,
@@ -372,31 +356,31 @@ package body GPR2.Project.Registry.Exchange is
                   --  To get rid of "D_"
 
                   case VR.Kind is
-                  when D_Attribute_Reference =>
-                     Set_Field (Val        => Obj,
-                                Field_Name => ATTR,
-                                Field      => Image (VR.Attr));
+                     when D_Attribute_Reference =>
+                        Set_Field (Val        => Obj,
+                                   Field_Name => ATTR,
+                                   Field      => Image (VR.Attr));
 
-                  when D_Value =>
-                     if Attr_Def.Index_Type =
-                       GPR2.Project.Registry.Attribute.No_Index
-                     then
-                        Set_Field (Val => Obj,
-                                   Field_Name => VALUE,
-                                   Field      => VR.Values.First_Element);
-                     else
-                        for Elt in VR.Values.Iterate loop
-                           Set_Field
-                             (Val        => Obj,
-                              Field_Name => Value_Map.Key (Elt),
-                              Field      => Value_Map.Element (Elt));
-                        end loop;
-                     end if;
+                     when D_Value =>
+                        if Attr_Def.Index_Type =
+                          GPR2.Project.Registry.Attribute.No_Index
+                        then
+                           Set_Field (Val        => Obj,
+                                      Field_Name => VALUE,
+                                      Field      => VR.Values.First_Element);
+                        else
+                           for Elt in VR.Values.Iterate loop
+                              Set_Field
+                                (Val        => Obj,
+                                 Field_Name => Value_Map.Key (Elt),
+                                 Field      => Value_Map.Element (Elt));
+                           end loop;
+                        end if;
 
-                  when D_Callback =>
-                     Set_Field (Val        => Obj,
-                                Field_Name => CALLBACK,
-                                Field      => SPECIAL);
+                     when D_Callback =>
+                        Set_Field (Val        => Obj,
+                                   Field_Name => CALLBACK,
+                                   Field      => SPECIAL);
 
                   end case;
 
@@ -432,19 +416,20 @@ package body GPR2.Project.Registry.Exchange is
                           Field_Name => IS_ALLOWED_IN,
                           Field      => Array_Object
                             (A => Attr_Def.Is_Allowed_In));
+
                if Attr_Def.Type_Def /= No_Attribute_Type then
                   Set_Field (Val        => Obj,
                              Field_Name => TYPE_DEF,
                              Field      => Array_Object
                                (A =>  Attr_Def.Type_Def));
                end if;
+
                Set_Field (Val        => Obj,
                           Field_Name => HAS_DEFAULT_IN,
                           Field      => Array_Object
                             (A =>  Attr_Def.Has_Default_In));
 
-               if Attr_Def.Has_Default_In /= Nowhere
-               then
+               if Attr_Def.Has_Default_In /= Nowhere then
                   Set_Field (Val        => Obj,
                              Field_Name => DEFAULT_ATTRIBUTE,
                              Field      => Variant_Record
@@ -484,10 +469,10 @@ package body GPR2.Project.Registry.Exchange is
          -- Package_Object --
          --------------------
 
-         function Package_Object (Pack      : Package_Id;
-                                  Attr_List : JSON_Array) return JSON_Value
+         function Package_Object
+           (Pack      : Package_Id;
+            Attr_List : JSON_Array) return JSON_Value
          is
-
             function Projects_Kind_Object
               (Pack : Package_Id) return JSON_Value;
             --  Create a JSON value containing project kinds in which the
@@ -498,7 +483,8 @@ package body GPR2.Project.Registry.Exchange is
             --------------------------
 
             function Projects_Kind_Object
-              (Pack : Package_Id) return JSON_Value is
+              (Pack : Package_Id) return JSON_Value
+            is
                Obj : constant JSON_Value := Create_Object;
             begin
                if Pack /= Project_Level_Scope and then
@@ -524,7 +510,7 @@ package body GPR2.Project.Registry.Exchange is
             --  'Pack' package name or PROJECT_LEVEL for project level
             --  attributes
 
-            Obj   : constant JSON_Value := Create_Object;
+            Obj  : constant JSON_Value := Create_Object;
             --  Created JSON object that is returned.
 
          begin
@@ -555,7 +541,6 @@ package body GPR2.Project.Registry.Exchange is
          --  The JSON package's array
 
       begin
-
          --  First retrieve all attributes from the Top-Level package
 
          if Is_Included (Project_Level_Scope) then
@@ -569,9 +554,9 @@ package body GPR2.Project.Registry.Exchange is
 
                --  Fill Top-Level package's attributes
 
-               for Attr_Id of PRA.All_Attributes (Pack => Project_Level_Scope)
+               for Attr_Id of
+                 PRA.All_Attributes (Pack => Project_Level_Scope)
                loop
-
                   --  Get the attribute information
                   Attr_Def :=
                     PRA.Get (Q_Name => Attr_Id);
@@ -585,7 +570,6 @@ package body GPR2.Project.Registry.Exchange is
                         Attr_Def   => Attr_Def,
                         Attr_Descr => PRAD.Get_Attribute_Description
                           (Key => Attr_Id)));
-
                end loop;
 
                --  Create the JSON package with the attribute list
@@ -599,8 +583,7 @@ package body GPR2.Project.Registry.Exchange is
 
          --  Then retrieve all attributes from all registered packages
 
-         for Pack of PRP.All_Packages
-         loop
+         for Pack of PRP.All_Packages loop
             if Is_Included (Pack) then
                declare
                   Attr_Def : Def;
@@ -612,12 +595,9 @@ package body GPR2.Project.Registry.Exchange is
 
                   --  Fill 'Pack' package's attributes
 
-                  for Attr_Id of PRA.All_Attributes (Pack => Pack)
-                  loop
-
+                  for Attr_Id of PRA.All_Attributes (Pack => Pack) loop
                      --  Get the attribute information
-                     Attr_Def :=
-                       PRA.Get (Q_Name => Attr_Id);
+                     Attr_Def := PRA.Get (Q_Name => Attr_Id);
 
                      --  Create the JSON Attributes list
 
@@ -627,7 +607,7 @@ package body GPR2.Project.Registry.Exchange is
                           (Attr_Name  => Attr_Id,
                            Attr_Def   => Attr_Def,
                            Attr_Descr => PRAD.Get_Attribute_Description
-                             (Key => Attr_Id)));
+                                           (Key => Attr_Id)));
 
                   end loop;
 
@@ -648,9 +628,7 @@ package body GPR2.Project.Registry.Exchange is
 
          --  Output JSON document
 
-         Append_Line
-           (Item => JSON.Write (Item => J_Doc, Compact => Compact));
-
+         Append_Line (Item => JSON.Write (Item => J_Doc, Compact => Compact));
       end Generate_JSON_Documentation;
 
    begin
@@ -670,12 +648,13 @@ package body GPR2.Project.Registry.Exchange is
    -- Import --
    ------------
 
-   procedure Import (Definitions : Ada.Strings.Unbounded.Unbounded_String;
-                     Included : GPR2.Containers.Package_Id_List :=
-                       GPR2.Containers.Package_Id_Type_List.Empty;
-                     Excluded : GPR2.Containers.Package_Id_List :=
-                       GPR2.Project.Registry.Pack.Predefined_Packages) is
-
+   procedure Import
+     (Definitions : Unbounded_String;
+      Included    : Containers.Package_Id_List :=
+                      Containers.Package_Id_Type_List.Empty;
+      Excluded    : Containers.Package_Id_List :=
+                      Project.Registry.Pack.Predefined_Packages)
+   is
       use GPR2.Project.Registry.Attribute;
 
       -------------------
@@ -700,16 +679,16 @@ package body GPR2.Project.Registry.Exchange is
       function Get_Allowed_In
         (Value   : JSON_Value;
          Field   : UTF8_String;
-         Default : GPR2.Project.Registry.Attribute.Allowed_In :=
-           GPR2.Project.Registry.Attribute.Everywhere)
-         return GPR2.Project.Registry.Attribute.Allowed_In;
+         Default : Project.Registry.Attribute.Allowed_In :=
+                     Project.Registry.Attribute.Everywhere)
+         return Project.Registry.Attribute.Allowed_In;
 
       function Get_Projects_Kind
         (Value   : JSON_Value;
          Field   : UTF8_String;
-         Default : GPR2.Project.Registry.Pack.Projects_Kind :=
-           GPR2.Project.Registry.Pack.Everywhere)
-         return GPR2.Project.Registry.Pack.Projects_Kind;
+         Default : Project.Registry.Pack.Projects_Kind :=
+                     Project.Registry.Pack.Everywhere)
+         return Project.Registry.Pack.Projects_Kind;
 
       function Get_Array
         (Value   : JSON_Value;
@@ -772,14 +751,16 @@ package body GPR2.Project.Registry.Exchange is
       function Get_Allowed_In
         (Value   : JSON_Value;
          Field   : UTF8_String;
-         Default : GPR2.Project.Registry.Attribute.Allowed_In :=
-           GPR2.Project.Registry.Attribute.Everywhere)
-         return GPR2.Project.Registry.Attribute.Allowed_In is
+         Default : Project.Registry.Attribute.Allowed_In :=
+                     Project.Registry.Attribute.Everywhere)
+         return Project.Registry.Attribute.Allowed_In
+      is
          Result : GPR2.Project.Registry.Attribute.Allowed_In := Default;
-         V : JSON_Value;
+         V      : JSON_Value;
       begin
          if Value.Kind = JSON_Object_Type and then Value.Has_Field (Field) then
             V := Value.Get (Field);
+
             if V.Kind = JSON_Object_Type then
                Result (K_Configuration) := Get_Bool
                  (Value   => V,
@@ -805,11 +786,12 @@ package body GPR2.Project.Registry.Exchange is
                  (Value   => V,
                   Field   => AGGREGATE_LIBRARY,
                   Default => Default (K_Aggregate_Library));
-
                return Result;
+
             else
                return Result;
             end if;
+
          else
             return Result;
          end if;
@@ -822,7 +804,8 @@ package body GPR2.Project.Registry.Exchange is
       function Get_Array
         (Value   : JSON_Value;
          Field   : UTF8_String;
-         Default : JSON_Array := Empty_Array) return JSON_Array is
+         Default : JSON_Array := Empty_Array) return JSON_Array
+      is
          V : JSON_Value;
       begin
          if Value.Kind = JSON_Object_Type and then Value.Has_Field (Field) then
@@ -844,7 +827,8 @@ package body GPR2.Project.Registry.Exchange is
       function Get_Attribute_Type
         (Val     : JSON_Value;
          Default : Attribute_Type := No_Attribute_Type)
-         return Attribute_Type is
+         return Attribute_Type
+      is
          A_Array : constant JSON_Array := Get_Array (Val, TYPE_DEF);
       begin
          if A_Array /= Empty_Array then
@@ -856,9 +840,11 @@ package body GPR2.Project.Registry.Exchange is
                      Result.Insert (Attribute_Value.Get);
                   end if;
                end loop;
+
                return Result;
             end;
          end if;
+
          return Default;
       end Get_Attribute_Type;
 
@@ -869,16 +855,19 @@ package body GPR2.Project.Registry.Exchange is
       function Get_Bool
         (Value   : JSON_Value;
          Field   : UTF8_String;
-         Default : Boolean := False) return Boolean is
+         Default : Boolean := False) return Boolean
+      is
          V : JSON_Value;
       begin
          if Value.Kind = JSON_Object_Type and then Value.Has_Field (Field) then
             V := Value.Get (Field);
+
             if V.Kind = JSON_Boolean_Type then
                return V.Get;
             else
                return Default;
             end if;
+
          else
             return Default;
          end if;
@@ -889,9 +878,10 @@ package body GPR2.Project.Registry.Exchange is
       -----------------------
 
       function Get_Default_Value
-        (Val   : JSON_Value;
+        (Val     : JSON_Value;
          Default : Default_Value := No_Default_Value)
-         return Default_Value is
+         return Default_Value
+      is
 
          Def_Value : constant JSON_Value :=
                        Get_JSON_Value (Val, DEFAULT_ATTRIBUTE);
@@ -923,13 +913,16 @@ package body GPR2.Project.Registry.Exchange is
          if Kind = VALUE then
             Map_JSON_Object (Def_Value, Handle_Value'Access);
             return (D_Value, Values);
+
          elsif Kind = ATTRIBUTE_REFERENCE then
             return (D_Attribute_Reference,
                                   +Optional_Name_Type
-                                    (Get_String (Def_Value, ATTR)));
+                      (Get_String (Def_Value, ATTR)));
+
          elsif Kind = CALLBACK then
             return ((D_Callback, Dummy_Callback'Access));
          end if;
+
          return Default;
       end Get_Default_Value;
 
@@ -991,16 +984,19 @@ package body GPR2.Project.Registry.Exchange is
       function Get_JSON_Value
         (Value   : JSON_Value;
          Field   : UTF8_String;
-         Default : JSON_Value := JSON_Null) return JSON_Value is
+         Default : JSON_Value := JSON_Null) return JSON_Value
+      is
          V : JSON_Value;
       begin
          if Value.Kind = JSON_Object_Type and then Value.Has_Field (Field) then
             V := Value.Get (Field);
+
             if V.Kind = JSON_Object_Type then
                return V;
             else
                return Default;
             end if;
+
          else
             return Default;
          end if;
@@ -1013,14 +1009,16 @@ package body GPR2.Project.Registry.Exchange is
       function Get_Projects_Kind
         (Value   : JSON_Value;
          Field   : UTF8_String;
-         Default : GPR2.Project.Registry.Pack.Projects_Kind :=
-           GPR2.Project.Registry.Pack.Everywhere)
-         return GPR2.Project.Registry.Pack.Projects_Kind is
-         Result : GPR2.Project.Registry.Pack.Projects_Kind := Default;
+         Default : Project.Registry.Pack.Projects_Kind :=
+                     Project.Registry.Pack.Everywhere)
+         return Project.Registry.Pack.Projects_Kind
+      is
+         Result : Project.Registry.Pack.Projects_Kind := Default;
          V      : JSON_Value;
       begin
          if Value.Kind = JSON_Object_Type and then Value.Has_Field (Field) then
             V := Value.Get (Field);
+
             if V.Kind = JSON_Object_Type then
                Result (K_Configuration) := Get_Bool
                  (Value   => V,
@@ -1048,6 +1046,7 @@ package body GPR2.Project.Registry.Exchange is
                   Default => Default (K_Aggregate_Library));
 
                return Result;
+
             else
                return Result;
             end if;
@@ -1063,7 +1062,8 @@ package body GPR2.Project.Registry.Exchange is
       function Get_String
         (Value   : JSON_Value;
          Field   : UTF8_String;
-         Default : String := "") return String is
+         Default : String := "") return String
+      is
          V : JSON_Value;
       begin
          if Value.Kind = JSON_Object_Type and then Value.Has_Field (Field) then
@@ -1073,6 +1073,7 @@ package body GPR2.Project.Registry.Exchange is
             else
                return Default;
             end if;
+
          else
             return Default;
          end if;
@@ -1088,8 +1089,7 @@ package body GPR2.Project.Registry.Exchange is
          Default : Value_Kind := Project.Registry.Attribute.Single)
          return Value_Kind is
       begin
-         return Value_Kind'Value
-           (Get_String (Value, Field, Default'Img));
+         return Value_Kind'Value (Get_String (Value, Field, Default'Img));
       exception
          when Constraint_Error =>
             return Default;
@@ -1189,10 +1189,11 @@ package body GPR2.Project.Registry.Exchange is
       --------------------
 
       procedure Import_Package (Pack : JSON_Value) is
-         Current_Package : Package_Id;
+         package PRPD renames GPR2.Project.Registry.Pack.Description;
+
          Name            : constant String := Get_String (Pack, PACKAGE_NAME);
          Descr           : constant String := Get_String (Pack, PACKAGE_DESCR);
-         package PRPD renames GPR2.Project.Registry.Pack.Description;
+         Current_Package : Package_Id;
 
       begin
          if Name = "" then
@@ -1211,8 +1212,7 @@ package body GPR2.Project.Registry.Exchange is
             return;
          end if;
 
-         if not GPR2.Project.Registry.Pack.Exists (Current_Package)
-         then
+         if not GPR2.Project.Registry.Pack.Exists (Current_Package) then
             GPR2.Project.Registry.Pack.Add
               (Name     => Current_Package,
                Projects => Get_Projects_Kind (Pack, PROJECTS_KIND));
@@ -1238,6 +1238,7 @@ package body GPR2.Project.Registry.Exchange is
          for Pack of Get_Array (Result.Value, PACKAGES) loop
             Import_Package (Pack);
          end loop;
+
       else
          raise Invalid_JSON_Stream with To_String (Result.Error.Message);
       end if;

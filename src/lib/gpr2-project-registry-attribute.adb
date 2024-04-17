@@ -16,26 +16,27 @@ package body GPR2.Project.Registry.Attribute is
    Defaults : Pack_Defaults.Map;
    Aliases  : Attribute_Aliases.Map;
 
-   In_Library       : constant Allowed_In :=
-                        (K_Library           |
-                         K_Aggregate_Library |
-                         K_Abstract => True,
-                         others     => False);
+   In_Library            : constant Allowed_In :=
+                             (K_Library
+                              | K_Aggregate_Library
+                              | K_Abstract => True,
+                              others       => False);
 
-   In_Aggregates    : constant Allowed_In :=
-                        (Aggregate_Kind => True,
-                         others         => False);
+   In_Aggregates         : constant Allowed_In :=
+                             (Aggregate_Kind => True,
+                              others         => False);
 
-   No_Aggregates    : constant Allowed_In :=
-                        (Aggregate_Kind => False,
-                         others         => True);
+   No_Aggregates          : constant Allowed_In :=
+                              (Aggregate_Kind => False,
+                               others         => True);
 
-   In_Configuration : constant Allowed_In :=
-                        (K_Configuration => True, others => False);
+   In_Configuration       : constant Allowed_In :=
+                              (K_Configuration => True,
+                               others          => False);
 
    No_Aggregates_Abstract : constant Allowed_In :=
-                        (Aggregate_Kind | K_Abstract => False,
-                         others         => True);
+                              (Aggregate_Kind | K_Abstract => False,
+                               others                      => True);
 
    --  Constants for some common attribute definitions
 
@@ -97,8 +98,8 @@ package body GPR2.Project.Registry.Attribute is
       -------------------
 
       procedure Index_Default is
-         CP     : Pack_Defaults.Cursor;
-         OK     : Boolean;
+         CP : Pack_Defaults.Cursor;
+         OK : Boolean;
       begin
          Defaults.Insert (Name.Pack, Default_References.Empty_Map, CP, OK);
          Defaults (CP).Insert (Name, Store (Name).Element);
@@ -139,8 +140,7 @@ package body GPR2.Project.Registry.Attribute is
 
    procedure Add_Alias
      (Name     : Q_Attribute_Id;
-      Alias_Of : Q_Attribute_Id)
-   is
+      Alias_Of : Q_Attribute_Id) is
    begin
       Aliases.Include (Name, Alias_Of);
       Aliases.Include (Alias_Of, Name);
@@ -150,8 +150,7 @@ package body GPR2.Project.Registry.Attribute is
    -- Alias --
    -----------
 
-   function Alias (Name : Q_Attribute_Id) return Q_Optional_Attribute_Id
-   is
+   function Alias (Name : Q_Attribute_Id) return Q_Optional_Attribute_Id is
       C : constant Attribute_Aliases.Cursor := Aliases.Find (Name);
    begin
       if not Attribute_Aliases.Has_Element (C) then
@@ -248,7 +247,7 @@ package body GPR2.Project.Registry.Attribute is
    procedure For_Each_Default
      (Rules  : Default_Rules;
       Action : not null access procedure
-        (Attribute : Q_Attribute_Id; Definition : Def))
+                 (Attribute : Q_Attribute_Id; Definition : Def))
    is
       procedure Each_Element (C : Default_References.Cursor);
 
@@ -271,8 +270,7 @@ package body GPR2.Project.Registry.Attribute is
    -- Get --
    ---------
 
-   function Get (Q_Name : Q_Attribute_Id) return Def
-   is
+   function Get (Q_Name : Q_Attribute_Id) return Def is
       C : constant Attribute_Definitions.Cursor := Store.Find (Q_Name);
    begin
       if Attribute_Definitions.Has_Element (C) then
@@ -326,8 +324,7 @@ package body GPR2.Project.Registry.Attribute is
    -- Get_Packages_With_Default --
    -------------------------------
 
-   function Get_Packages_With_Default return Containers.Package_Id_List
-   is
+   function Get_Packages_With_Default return Containers.Package_Id_List is
       Result : Containers.Package_Id_List;
    begin
       for C in Defaults.Iterate loop
@@ -343,8 +340,7 @@ package body GPR2.Project.Registry.Attribute is
    -- Has_Alias --
    ---------------
 
-   function Has_Alias (Name : Q_Attribute_Id) return Boolean
-   is
+   function Has_Alias (Name : Q_Attribute_Id) return Boolean is
    begin
       return Aliases.Contains (Name);
    end Has_Alias;
@@ -643,7 +639,7 @@ begin
 
       --  library_kind
       Add
-      (Name                  => Library_Kind,
+        (Name                  => Library_Kind,
          Index_Type            => No_Index,
          Value                 => Single,
          Value_Case_Sensitive  => False,

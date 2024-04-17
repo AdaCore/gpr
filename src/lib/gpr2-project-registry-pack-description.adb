@@ -24,15 +24,16 @@ package body GPR2.Project.Registry.Pack.Description is
    -- Hash --
    ----------
 
-   function Hash (Key : Package_Id)
-                  return Hash_Type is (Ada.Strings.Hash (Image (Key)));
+   function Hash (Key : Package_Id) return Hash_Type is
+     (Strings.Hash (Image (Key)));
 
    -----------------------------
    -- Set_Package_Description --
    -----------------------------
 
    procedure Set_Package_Description
-     (Key : Package_Id; Description : String) is
+     (Key : Package_Id; Description : String)
+   is
       use Pack_Package_Description;
 
       C : constant Cursor := Find (Package_Description, Key);
@@ -45,7 +46,6 @@ package body GPR2.Project.Registry.Pack.Description is
    end Set_Package_Description;
 
 begin
-
    --  Binder
    Set_Package_Description
      (Binder,
