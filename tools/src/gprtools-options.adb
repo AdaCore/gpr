@@ -502,8 +502,10 @@ package body GPRtools.Options is
             Index  => "");
 
       elsif Arg = "-eL" then
-         --  ??? TODO
-         null;
+         Result.Add_Switch
+           (Switch => GPR2.Options.Resolve_Links,
+            Param  => Param,
+            Index  => "");
 
       elsif Arg = "--no-project" then
          Result.Add_Switch

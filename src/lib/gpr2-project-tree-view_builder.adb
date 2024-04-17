@@ -97,6 +97,7 @@ package body GPR2.Project.Tree.View_Builder is
       Absent_Dir_Error : Error_Level               := Warning;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
+      Resolve_Links    : Boolean                   := False;
       Pre_Conf_Mode    : Boolean                   := False;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
@@ -115,6 +116,7 @@ package body GPR2.Project.Tree.View_Builder is
                  Check_Shared_Lib => Check_Shared_Lib,
                  Absent_Dir_Error => Absent_Dir_Error,
                  Implicit_With    => Implicit_With,
+                 Resolve_Links    => Resolve_Links,
                  Pre_Conf_Mode    => Pre_Conf_Mode,
                  File_Reader      => File_Reader,
                  Environment      => Environment);
@@ -134,6 +136,7 @@ package body GPR2.Project.Tree.View_Builder is
       Absent_Dir_Error  : Error_Level             := Warning;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
+      Resolve_Links     : Boolean                 := False;
       Target            : Optional_Name_Type      := No_Name;
       Language_Runtimes : Containers.Lang_Value_Map :=
                             Containers.Lang_Value_Maps.Empty_Map;
@@ -155,6 +158,7 @@ package body GPR2.Project.Tree.View_Builder is
          Check_Shared_Lib  => Check_Shared_Lib,
          Absent_Dir_Error  => Absent_Dir_Error,
          Implicit_With     => Implicit_With,
+         Resolve_Links     => Resolve_Links,
          Target            => Target,
          Language_Runtimes => Language_Runtimes,
          Base              => Base,

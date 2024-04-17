@@ -62,6 +62,9 @@ package GPR2.Options is
       --  --implicit-with=filename
       --      Add the given projects as a dependency on all loaded projects
 
+      Resolve_Links,
+      --  -eL, follows symlinks for project files
+
       No_Project,
       --  --no-project Do not use project file
 
@@ -178,6 +181,10 @@ package GPR2.Options is
      with Pre => Self.Is_Finalized;
    --  Returns Context argument used loading the project
 
+   function Resolve_Links (Self : Object) return Boolean
+     with Pre => Self.Is_Finalized;
+   --  Whether the symlinks resolution is activated (option -eL)
+
    function Config_Project (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self.Is_Finalized;
    --  Returns path name object used as configuration file used loading
@@ -265,6 +272,7 @@ private
       Context                  : GPR2.Context.Object;
       Project_File             : GPR2.Path_Name.Object;
       Project_Is_Defined       : Boolean := False;
+      Resolve_Links            : Boolean := False;
 
       Prj_Got_On_Extra_Arg     : Boolean := False;
       --  True if project defined not using -P option
@@ -367,6 +375,9 @@ private
 
    function Target (Self : Object) return GPR2.Name_Type is
      (GPR2.Name_Type (To_String (Self.Target)));
+
+   function Resolve_Links (Self : Object) return Boolean is
+     (Self.Resolve_Links);
 
    Empty_Options : constant Object := (others => <>);
 

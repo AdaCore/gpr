@@ -133,6 +133,9 @@ package body GPR2.Options is
          when Target =>
             Self.Target := To_Unbounded_String (Param);
 
+         when Resolve_Links =>
+            Self.Resolve_Links := True;
+
          when Unchecked_Shared_Lib_Imports =>
             Self.Unchecked_Shared_Lib := True;
 
@@ -226,7 +229,7 @@ package body GPR2.Options is
             end loop;
 
             Self.Project_File := GPR2.Project.Create
-              (Self.Project_File.Name, Search_Paths);
+              (Self.Project_File.Name, Self.Resolve_Links, Search_Paths);
          end;
       end if;
 
@@ -322,6 +325,7 @@ package body GPR2.Options is
             Check_Shared_Lib => Self.Check_Shared_Lib,
             Absent_Dir_Error => Absent_Dir_Error,
             Implicit_With    => Self.Implicit_With,
+            Resolve_Links    => Self.Resolve_Links,
             File_Reader      => File_Reader,
             Environment      => Self.Environment);
 
@@ -394,6 +398,7 @@ package body GPR2.Options is
             Check_Shared_Lib  => Self.Check_Shared_Lib,
             Absent_Dir_Error  => Absent_Dir_Error,
             Implicit_With     => Self.Implicit_With,
+            Resolve_Links     => Self.Resolve_Links,
             Target            => Target (Self),
             Language_Runtimes => Self.RTS_Map,
             Base              => Self.Base,
