@@ -5,6 +5,7 @@
 --
 
 with Ada.Strings.Hash;
+with GPR2.Project;
 
 package body GPR2.View_Ids is
 
@@ -55,7 +56,6 @@ package body GPR2.View_Ids is
       Extending    : View_Id := Undefined)
       return View_Id
    is
-      Id_Str : Unbounded_String;
    begin
       if not Project_File.Is_Defined then
          raise View_Id_Error with "cannot create view id from empty path";
@@ -65,15 +65,23 @@ package body GPR2.View_Ids is
          raise View_Id_Error with "cannot create view id from relative path";
       end if;
 
-      Append (Id_Str, GPR2.Path_Name.To_OS_Case (Project_File.Value));
+      declare
+         Normalized : constant GPR2.Path_Name.Object :=
+                        GPR2.Project.Create
+                          (Filename_Type (Project_File.Value),
+                           Resolve_Links => True);
+         Id_Str     : Unbounded_String;
+      begin
+         Append (Id_Str, GPR2.Path_Name.To_OS_Case (Normalized.Value));
 
-      return (Kind      => Project_Id,
-              Id        => Id_Str,
-              Context   => Context,
-              Extending => (if Is_Defined (Extending)
-                            then To_Unbounded_String (String
-                              (Image (Extending)))
-                            else Null_Unbounded_String));
+         return (Kind      => Project_Id,
+                 Id        => Id_Str,
+                 Context   => Context,
+                 Extending => (if Is_Defined (Extending)
+                               then To_Unbounded_String (String
+                                   (Image (Extending)))
+                               else Null_Unbounded_String));
+      end;
    end Create;
 
    ----------

@@ -1,0 +1,7 @@
+limited with "link_to_import_B/imported_prj_b";
+--  Not used in code, only here to simulate the circular dependency
+
+project Imported_Prj_A is
+  for Source_Dirs use ("src");
+  for Object_Dir use "obj";
+end Imported_Prj_A;
