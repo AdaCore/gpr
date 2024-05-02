@@ -347,7 +347,10 @@ begin
             Output : GPR2.Containers.Value_Type_List.Vector;
          begin
             for R of Closures loop
-               if not R.Source.Is_Runtime then
+               if Opt.With_Predefined_Units or else
+                 not R.Source.Is_Runtime
+               then
+
                   if not GPR2.Project.Source.Artifact.Dependency
                            (R.Source, R.Index).Is_Defined
                   then
@@ -361,10 +364,17 @@ begin
                   end if;
 
                   if R.Index not in Multi_Unit_Index then
-                     Output.Append (R.Source.Path_Name.Value);
+                     if R.Source.Is_Runtime and then
+                       Opt.Hide_Runtime_Directory
+                     then
+                        Output.Append
+                          (String (R.Source.Path_Name.Simple_Name));
+                     else
+                        Output.Append (R.Source.Path_Name.Value);
+                     end if;
                   else
                      Output.Append
-                       (R.Source.Path_Name.Value & " @" & R.Index'Image);
+                        (R.Source.Path_Name.Value & " @" & R.Index'Image);
                   end if;
                end if;
             end loop;
@@ -515,7 +525,13 @@ begin
 
             if Opt.Verbose then
                Text_IO.Put ("     Source => ");
-               Text_IO.Put (S.Path_Name.Value);
+
+               if S.Is_Runtime and then Opt.Hide_Runtime_Directory then
+                  Text_IO.Put (String (S.Path_Name.Simple_Name));
+               else
+                  Text_IO.Put (S.Path_Name.Value);
+               end if;
+
                if S.Has_Index then
                   Text_IO.Put (" @");
                   Text_IO.Put (Idx'Image);
@@ -603,6 +619,11 @@ begin
                   Index      : Unit_Index;
                   Timestamp  : Ada.Calendar.Time);
 
+               procedure Runtime_Output
+                 (Dep_Source : Project.Source.Object;
+                  Index      : Unit_Index;
+                  Timestamp  : Ada.Calendar.Time);
+
                function Has_Dependency (Index : Unit_Index) return Boolean is
                  (Artifacts.Has_Dependency (Index)
                   and then
@@ -618,8 +639,7 @@ begin
                   Index      : Unit_Index;
                   Timestamp  : Ada.Calendar.Time) is
                begin
-                  if Opt.With_Predefined_Units
-                    or else not Dep_Source.Is_Runtime
+                  if not Dep_Source.Is_Runtime
                   then
                      Text_IO.Put ("   ");
                      Output_Source (S          => Dep_Source,
@@ -756,6 +776,24 @@ begin
                   end if;
                end Print_Unit_From;
 
+               --------------------
+               -- Runtime_Output --
+               --------------------
+
+               procedure Runtime_Output
+                 (Dep_Source : Project.Source.Object;
+                  Index      : Unit_Index;
+                  Timestamp  : Ada.Calendar.Time) is
+               begin
+                  if Dep_Source.Is_Runtime
+                  then
+                     Text_IO.Put ("   ");
+                     Output_Source (S          => Dep_Source,
+                                    Idx        => Index,
+                                    Build_Time => Timestamp);
+                  end if;
+               end Runtime_Output;
+
             begin
                if not S.Source.Has_Units then
                   Print_Object (No_Index);
@@ -779,6 +817,16 @@ begin
                   Print_Object (S.Source.Unit (S.Index));
                end if;
 
+               if Opt.With_Predefined_Units and then Opt.Print_Sources then
+                  if Opt.Verbose then
+                     Text_IO.Put_Line ("   depends upon runtime");
+                  end if;
+
+                  S.Source.Dependencies (Index    => S.Index,
+                                         For_Each => Runtime_Output'Access,
+                                         Closure  => False,
+                                         Sorted   => False);
+               end if;
                if Opt.Dependency_Mode and then Opt.Print_Sources then
                   if Opt.Verbose then
                      Text_IO.Put_Line ("   depends upon");
