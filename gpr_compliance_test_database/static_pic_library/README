@@ -1,0 +1,5 @@
+prj.gpr generates a static_pic library.
+
+   for Library_Kind use "static-pic";
+-- default for Library_Standalone use "standard"; 
+

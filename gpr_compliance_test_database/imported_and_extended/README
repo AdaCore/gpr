@@ -1,0 +1,4 @@
+prj.gpr generates a project importing (limited and not) & entending prj.
+
+It tests also extends/import capability.
+Project contains ada & c source files.

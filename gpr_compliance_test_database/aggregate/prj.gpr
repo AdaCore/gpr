@@ -1,0 +1,4 @@
+aggregate project Prj is
+   for Object_Dir use "obj" & project'Name;
+   for Project_Files use ("aggregated.gpr", "prj1.gpr");
+end Prj;
