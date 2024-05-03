@@ -1,0 +1,12 @@
+project Prj is
+   type Mode_Type is ("debug", "release");
+   Mode : Mode_Type := external ("MODE", "debug");
+   case Mode is
+      when "debug" =>
+         for Source_Dirs use ("debug");
+      when "release" =>
+         for Source_Dirs use ("release");
+   end case;
+   for Main use ("main");
+   for Object_Dir use "obj";
+end Prj;

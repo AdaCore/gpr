@@ -1,0 +1,5 @@
+prj/subdir/prj.gpr requires --relocate-build-tree --root-dir & --src-subdirs to access main.adb
+
+root-dir should be 'relocate_build_tree_root_dir_support' directory
+relocate-build-tree should be 'relocate_build_tree_root_dir_support/build' directory
+src-subdirs should be 'src_subdirs'
