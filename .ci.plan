@@ -3,3 +3,9 @@ def build():
     anod_build("libgpr2", qualifier="bare,next")
     anod_build("libgpr2", qualifier="next")
     anod_build("gpr2", qualifier="next")
+
+def debug_build():
+    # customer scenario
+    anod_build("libgpr2", qualifier="bare,next,dbg")
+    anod_build("libgpr2", qualifier="next,dbg")
+    anod_build("gpr2", qualifier="next,dbg")
