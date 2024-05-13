@@ -174,9 +174,14 @@ begin
       Display (Prj.Runtime_Project, Full => True);
 
       for Source of Prj.Runtime_Project.Sources loop
+         if Source.Path_Name.Base_Name = "memtrack" then
+            Text_IO.Put_Line
+              ("!!! ERROR !!!: memtrack should not be listed as rts source");
+         end if;
+
          if Strings.Fixed.Head
            (String (Source.Path_Name.Base_Name), 8) in
-           "a-calend" | "a-strunb" | "a-tags  " | "a-calend" | "a-contai"
+           "a-calend" | "a-strunb" | "a-tags  " | "a-contai"
              | "a-string" | "a-strunb" | "a-tags  " | "a-uncdea" | "ada     "
          then
             declare
