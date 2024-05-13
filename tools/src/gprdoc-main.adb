@@ -64,8 +64,9 @@ function GPRdoc.Main return Ada.Command_Line.Exit_Status is
    is
       pragma Unreferenced (Parser, Index);
       use type GPRtools.Command_Line.Switch_Type;
+
       Result : constant access GPRdoc_Options :=
-        GPRdoc_Options (Res.all)'Access;
+                 GPRdoc_Options (Res.all)'Access;
    begin
       Result.Verbosity := GPRtools.Quiet;
       --  We want a clean output to be JSON compliant
@@ -73,35 +74,37 @@ function GPRdoc.Main return Ada.Command_Line.Exit_Status is
       if Arg = "--display" then
          if Param = "json" then
             Options.Kind_Of_Display := GPRtools.K_JSON;
+
          elsif Param = "json-compact" then
             Options.Kind_Of_Display := GPRtools.K_JSON_Compact;
+
          elsif Param = "textual" then
             Options.Kind_Of_Display := GPRtools.K_Textual_IO;
+
          else
-            raise GPR2.Options.Usage_Error with "use --display=<value> "
+            raise GPR2.Options.Usage_Error with
+              "use --display=<value> "
               & "with <value>=[json, json-compact, textual]";
          end if;
       end if;
-
    end On_Switch;
 
    ------------------------
    -- Parse_Command_Line --
    ------------------------
 
-   procedure Parse_Command_Line
-   is
+   procedure Parse_Command_Line is
       use GPRtools.Command_Line;
       use GPRtools.Options;
-      Parser : GPRtools.Options.Command_Line_Parser :=
-        Create
-        (Initial_Year       => "2022",
-         No_Project_Support => True,
-         Allow_Quiet        => False);
-      Group  : constant GPRtools.Command_Line.Argument_Group :=
-        Parser.Add_Argument_Group
-          ("gprdoc", On_Switch'Unrestricted_Access);
 
+      Parser : GPRtools.Options.Command_Line_Parser :=
+                 Create
+                   (Initial_Year       => "2022",
+                    No_Project_Support => True,
+                    Allow_Quiet        => False);
+      Group  : constant GPRtools.Command_Line.Argument_Group :=
+                 Parser.Add_Argument_Group
+                   ("gprdoc", On_Switch'Unrestricted_Access);
    begin
       Setup (Tool => GPRtools.Inspect);
 
@@ -134,7 +137,6 @@ begin
    GPRdoc.Process (Options => Options);
 
    return To_Exit_Status (E_Success);
-
 exception
    when E : GPR2.Options.Usage_Error =>
       Handle_Program_Termination

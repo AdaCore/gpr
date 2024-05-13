@@ -161,8 +161,7 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
       ----------------------------
 
       function In_Library_Directories
-        (File : Path_Name.Object) return Boolean
-      is
+        (File : Path_Name.Object) return Boolean is
       begin
          if Lib_Dir.Is_Defined then
             declare
@@ -199,8 +198,7 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
       function Partial_Path
         (View         : Project.View.Object;
          Library_Name : GPR2.Simple_Name;
-         Number       : Natural) return Path_Name.Object
-      is
+         Number       : Natural) return Path_Name.Object is
       begin
          return View.Object_Directory.Compose
            (GPRtools.Util.Partial_Name

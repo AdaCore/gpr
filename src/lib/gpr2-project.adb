@@ -109,8 +109,9 @@ package body GPR2.Project is
    ------------
 
    function Create
-     (Name  : Filename_Type;
-      Paths : Path_Name.Set.Object := Path_Name.Set.Empty_Set)
+     (Name          : Filename_Type;
+      Resolve_Links : Boolean              := False;
+      Paths         : Path_Name.Set.Object := Path_Name.Set.Empty_Set)
       return GPR2.Path_Name.Object
    is
       DS       : constant Character := OS_Lib.Directory_Separator;
@@ -126,7 +127,8 @@ package body GPR2.Project is
            (GPR_Name,
             Filename_Type
               (OS_Lib.Normalize_Pathname
-                 (String (GPR_Name), Resolve_Links => False)));
+                 (String (GPR_Name), Resolve_Links => False)),
+           Resolve_Links => Resolve_Links);
 
       else
          --  If we have an empty Paths set, this is the root project and it is
@@ -141,7 +143,8 @@ package body GPR2.Project is
                   Filename_Type
                     (OS_Lib.Normalize_Pathname
                        (Directories.Current_Directory & DS & String (GPR_Name),
-                        Resolve_Links => False)));
+                        Resolve_Links => False)),
+                  Resolve_Links => Resolve_Links);
             end if;
 
          else
@@ -155,7 +158,8 @@ package body GPR2.Project is
                        (GPR_Name,
                         Filename_Type
                           (OS_Lib.Normalize_Pathname
-                             (String (F_Name), Resolve_Links => False)));
+                             (String (F_Name), Resolve_Links => False)),
+                        Resolve_Links => Resolve_Links);
                   end if;
                exception
                   when Ada.IO_Exceptions.Name_Error =>
@@ -175,8 +179,8 @@ package body GPR2.Project is
    function Default_Search_Paths
      (Current_Directory : Boolean;
       Environment       : GPR2.Environment.Object :=
-                             GPR2.Environment.Process_Environment
-     ) return Path_Name.Set.Object
+                            GPR2.Environment.Process_Environment)
+      return Path_Name.Set.Object
    is
       Result : Path_Name.Set.Object;
    begin

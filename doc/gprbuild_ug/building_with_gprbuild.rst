@@ -565,6 +565,73 @@ package Builder of the main project:
   when processing project files. Switch :samp:`-eL` changes this default
   behavior.
 
+  .. code-block::
+
+      .
+      ├── p.gpr
+      ├── Q
+      │   ├── q.gpr
+      │   └── src
+      │       ├── foo.adb
+      │       └── foo.ads
+      ├── q.gpr -> Q/q.gpr
+      └── srcP
+          ├── main.adb
+          ├── pkg.adb
+          └── pkg.ads
+
+p.gpr:
+
+ .. code-block:: gpr
+
+      with "q.gpr";
+
+      project P is
+        for Source_Dirs use ("srcP");
+        for Object_Dir use "objP";
+        for Main use ("main.adb");
+      end P;
+
+q.gpr:
+
+ .. code-block:: gpr
+
+      project Q is
+        for Source_Dirs use ("src");
+        for Object_Dir use "obj";
+      end Q;
+
+:samp:`gprbuild -Pp.gpr -p` would fail with the following error:
+
+ .. code-block:: gpr
+
+      Setup
+        [mkdir]        object directory for project Q
+        [mkdir]        object directory for project P
+      q.gpr:2:24: "src" is not a valid directory
+      gprbuild: "p.gpr" processing failed
+
+as there is no :samp:`src` directory in the symbolic link directory. :samp:`gprbuild -Pp.gpr -p -eL` would compile correctly and produce the following tree:
+
+  .. code-block::
+
+      .
+      ├── objP
+      │   └── [compilation artifacts]
+      ├── p.gpr
+      ├── Q
+      │   ├── obj
+      |   |   └── [compilation artifacts]
+      │   ├── q.gpr
+      │   └── src
+      │       ├── foo.adb
+      │       └── foo.ads
+      ├── q.gpr -> Q/q.gpr
+      └── srcP
+          ├── main.adb
+          ├── pkg.adb
+          └── pkg.ads
+
 * :samp:`-eS` (no effect)
 
   This switch is only accepted for compatibility with gnatmake, but it has

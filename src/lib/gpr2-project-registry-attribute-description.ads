@@ -11,8 +11,7 @@ with Ada.Containers; use Ada.Containers;
 
 package GPR2.Project.Registry.Attribute.Description is
 
-   function Get_Attribute_Description (Key : Q_Attribute_Id)
-                                       return String;
+   function Get_Attribute_Description (Key : Q_Attribute_Id) return String;
    --  Retrieves a description for a given attribute and package
 
    procedure Set_Attribute_Description

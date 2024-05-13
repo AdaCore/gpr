@@ -76,8 +76,9 @@ package GPR2.Project is
    Default_Status : constant Status_Control;
 
    function Create
-     (Name  : Filename_Type;
-      Paths : Path_Name.Set.Object := Path_Name.Set.Empty_Set)
+     (Name          : Filename_Type;
+      Resolve_Links : Boolean              := False;
+      Paths         : Path_Name.Set.Object := Path_Name.Set.Empty_Set)
       return Path_Name.Object
      with Post => Create'Result.Is_Defined;
    --  Given a filename (possibly a full pathname) returns a Path_Name_Type. If
@@ -101,8 +102,8 @@ package GPR2.Project is
    function Default_Search_Paths
      (Current_Directory : Boolean;
       Environment       : GPR2.Environment.Object :=
-                             GPR2.Environment.Process_Environment
-     ) return Path_Name.Set.Object;
+                             GPR2.Environment.Process_Environment)
+      return Path_Name.Set.Object;
    --  Get the search paths common for all targets.
    --  If Current_Directory is True then the current directory is included at
    --  the first place in the result set.

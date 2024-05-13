@@ -199,14 +199,15 @@ package body GPR2.Path_Name is
       P2 : constant Filename_Type := Filename_Type (To_String (Path.Dir_Name));
       I1 : Positive := P1'First;
       I2 : Positive := P2'First;
-      N1, N2 : Natural;
+      N1 : Natural;
+      N2 : Natural;
 
    begin
       loop
          --  Object.Dir_Name always end with a dir separator, so no need to
          --  check for the case where P1 or P2 end with a subdir name.
-         N1 := Ada.Strings.Fixed.Index (String (P1), Dir_Seps, I1);
-         N2 := Ada.Strings.Fixed.Index (String (P2), Dir_Seps, I2);
+         N1 := Strings.Fixed.Index (String (P1), Dir_Seps, I1);
+         N2 := Strings.Fixed.Index (String (P2), Dir_Seps, I2);
 
          declare
             Sub1 : constant Filename_Optional := P1 (I1 .. N1 - 1);
@@ -225,9 +226,11 @@ package body GPR2.Path_Name is
          --  No common directory at all: happens on windows when the
          --  paths are on two different drives
          return Undefined;
+
       elsif Is_Root_Directory_Name (String (P1 (P1'First .. I1 - 1))) then
          --  root dir is the only thing remaining: keep the final /
          return Create_Directory (P1 (P1'First .. I1 - 1));
+
       else
          --  remove last dir separator
          return Create_Directory (P1 (P1'First .. I1 - 2));
@@ -298,8 +301,10 @@ package body GPR2.Path_Name is
       if Self.Is_Directory then
          return Create_Directory
            (Containing_Directory (Remove_Last_DS (Dir_Name (Self))));
+
       elsif Self.Has_Dir_Name then
          return Create_Directory (Dir_Name (Self));
+
       else
          return Create_Directory
            (Containing_Directory (Name (Self)));
@@ -352,18 +357,25 @@ package body GPR2.Path_Name is
    -- Create --
    ------------
 
-   function Create (Name, Path_Name : Filename_Type) return Object is
-      Value : constant Unbounded_String := +String (Path_Name);
+   function Create
+     (Name          : Filename_Type;
+      Path_Name     : Filename_Type;
+      Resolve_Links : Boolean := False) return Object
+   is
+      NN : constant Filename_Type :=
+               (if Resolve_Links
+                then Make_Absolute (Path_Name, Resolve_Links => Resolve_Links)
+                else Path_Name);
+      VN : constant Unbounded_String := +NN;
    begin
       return Object'
         (Is_Dir    => False,
          In_Memory => False,
          As_Is     => +String (Name),
-         Value     => Value,
-         Comparing => To_OS_Case (Value),
-         Base_Name => +String (Base_Name (Path_Name)),
-         Dir_Name  =>
-           +Ensure_Directory (Containing_Directory (Path_Name)));
+         Value     => VN,
+         Comparing => To_OS_Case (VN),
+         Base_Name => +String (Base_Name (NN)),
+         Dir_Name  => +Ensure_Directory (Containing_Directory (NN)));
    end Create;
 
    ----------------------
@@ -378,7 +390,6 @@ package body GPR2.Path_Name is
       NN : constant Filename_Type :=
              Ensure_Directory (Make_Absolute (Name, Directory, Resolve_Links));
       VN : constant Unbounded_String := +NN;
-
    begin
       return Object'
         (Is_Dir    => True,
@@ -396,8 +407,7 @@ package body GPR2.Path_Name is
 
    function Create_File
      (Name      : Filename_Type;
-      Directory : Filename_Optional := Resolve_On_Current) return Object
-   is
+      Directory : Filename_Optional := Resolve_On_Current) return Object is
    begin
       if Directory = No_Resolution
         and then not OS_Lib.Is_Absolute_Path (String (Name))
@@ -407,6 +417,7 @@ package body GPR2.Path_Name is
             Comparing => +To_OS_Case (Name),
             Base_Name => +Base_Name (Name),
             others    => <>);
+
       else
          declare
             NN : constant Filename_Type := Make_Absolute (Name, Directory);
@@ -503,10 +514,9 @@ package body GPR2.Path_Name is
       -----------------------
 
       function Check_Environment (Name : String) return Boolean is
-         use Ada.Environment_Variables;
       begin
-         if Exists (Name) then
-            return Check_Directory (Value (Name));
+         if Environment_Variables.Exists (Name) then
+            return Check_Directory (Environment_Variables.Value (Name));
          end if;
 
          return False;
@@ -579,6 +589,7 @@ package body GPR2.Path_Name is
          else
             return VFS.Filesystem_String (Simple_Name (Self));
          end if;
+
       else
          return "";
       end if;
@@ -603,8 +614,8 @@ package body GPR2.Path_Name is
       Extension : Boolean := True) return Filename_Type
    is
       Name : constant String := To_String (Self.As_Is);
-      Ext : Natural;
-      Sep : Natural;
+      Ext  : Natural;
+      Sep  : Natural;
    begin
       if Extension or else Self.Is_Dir then
          return Filename_Type (Name);
@@ -724,8 +735,8 @@ package body GPR2.Path_Name is
       Cut_Start := (if Cut_Start = 0 then Path'First else Cut_Start + 1);
 
       Check_For_Standard_Dirs : declare
-         BN : constant Filename_Type := Path (Cut_Start .. Cut_End);
-
+         BN               : constant Filename_Type :=
+                              Path (Cut_Start .. Cut_End);
          Has_Drive_Letter : constant Boolean :=
                               OS_Lib.Path_Separator /= ':';
          --  If Path separator is not ':' then we are on a DOS based OS

@@ -104,7 +104,7 @@ package body GPR2.Project.Configuration is
 
       Project_Path : constant Path_Name.Object :=
                        (if Project.Has_Dir_Name then Project
-                        else Create (Project.Name));
+                        else Create (Project.Name, False));
       --  Project may be not even found at this stage, but since we ignore
       --  all errors at first parsing we don't know it yet. We need to resolve
       --  the Project path name for proper error reporting.
@@ -143,7 +143,8 @@ package body GPR2.Project.Configuration is
       --------------------
 
       function Locate_Runtime
-        (Dir : Filename_Optional; Path : String) return Path_Name.Object is
+        (Dir : Filename_Optional; Path : String) return Path_Name.Object
+      is
          use GNAT;
 
          Paths       : GNAT.String_Split.Slice_Set;
@@ -328,8 +329,8 @@ package body GPR2.Project.Configuration is
    -- Externals --
    ---------------
 
-   function Externals (Self : Object) return GPR2.Project.Parser.Externals_Map
-   is
+   function Externals
+     (Self : Object) return GPR2.Project.Parser.Externals_Map is
    begin
       return Self.Project.Externals;
    end Externals;

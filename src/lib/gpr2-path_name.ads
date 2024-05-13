@@ -92,9 +92,13 @@ package GPR2.Path_Name is
    --  All possible path information is ignored, and resulting object gets
    --  a pseudo-path /<ram>/Base_Name (Name).
 
-   function Create (Name, Path_Name : Filename_Type) return Object
+   function Create
+     (Name          : Filename_Type;
+      Path_Name     : Filename_Type;
+      Resolve_Links : Boolean := False) return Object
      with Post => Create'Result.Is_Defined;
-   --  Creates a path-name object
+   --  Creates a path-name object. If Resolve_Links is set the returned
+   --  path-name object will be fully resolved to point to the actual file.
 
    subtype Full_Name is Filename_Type
      with Dynamic_Predicate => (for some C of Full_Name => C in '/' | '\');

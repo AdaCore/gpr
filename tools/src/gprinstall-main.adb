@@ -91,6 +91,7 @@ begin
          for M of Options.Config_Project_Log loop
             M.Output;
          end loop;
+
          if Tree.Has_Messages then
             for M of Tree.Log_Messages.all loop
                M.Output;

@@ -98,12 +98,12 @@ package body GPR2.Project.Tree.View_Builder is
       Absent_Dir_Error : Error_Level               := Warning;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
+      Resolve_Links    : Boolean                   := False;
       Pre_Conf_Mode    : Boolean                   := False;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
       Environment      : GPR2.Environment.Object :=
-                           GPR2.Environment.Process_Environment)
-   is
+                           GPR2.Environment.Process_Environment) is
    begin
       GPR2.Project.Parser.Clear_Cache;
 
@@ -118,6 +118,7 @@ package body GPR2.Project.Tree.View_Builder is
                  Check_Shared_Lib => Check_Shared_Lib,
                  Absent_Dir_Error => Absent_Dir_Error,
                  Implicit_With    => Implicit_With,
+                 Resolve_Links    => Resolve_Links,
                  Pre_Conf_Mode    => Pre_Conf_Mode,
                  File_Reader      => File_Reader,
                  Environment      => Environment);
@@ -138,6 +139,7 @@ package body GPR2.Project.Tree.View_Builder is
       Absent_Dir_Error  : Error_Level             := Warning;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
+      Resolve_Links     : Boolean                 := False;
       Target            : Optional_Name_Type      := No_Name;
       Language_Runtimes : Containers.Lang_Value_Map :=
                             Containers.Lang_Value_Maps.Empty_Map;
@@ -147,8 +149,7 @@ package body GPR2.Project.Tree.View_Builder is
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
                             GPR2.File_Readers.No_File_Reader_Reference;
       Environment       : GPR2.Environment.Object :=
-                            GPR2.Environment.Process_Environment)
-   is
+                            GPR2.Environment.Process_Environment) is
    begin
       Self.Load_Autoconf
         (Root_Project      => (Project_Definition, Project.Data),
@@ -161,6 +162,7 @@ package body GPR2.Project.Tree.View_Builder is
          Check_Shared_Lib  => Check_Shared_Lib,
          Absent_Dir_Error  => Absent_Dir_Error,
          Implicit_With     => Implicit_With,
+         Resolve_Links     => Resolve_Links,
          Target            => Target,
          Language_Runtimes => Language_Runtimes,
          Base              => Base,
@@ -176,8 +178,7 @@ package body GPR2.Project.Tree.View_Builder is
    procedure Set_Attribute
      (Self   : in out Object;
       Q_Name : Q_Attribute_Id;
-      Attr   : GPR2.Project.Attribute.Object)
-   is
+      Attr   : GPR2.Project.Attribute.Object) is
    begin
       if Q_Name.Pack = Project_Level_Scope then
          Self.Data.Attrs.Include (Attr);
@@ -204,8 +205,7 @@ package body GPR2.Project.Tree.View_Builder is
    procedure Set_Attribute
      (Self  : in out Object;
       Attr  : Q_Attribute_Id;
-      Value : Value_Type)
-   is
+      Value : Value_Type) is
    begin
       Self.Set_Attribute
         (Attr,
@@ -216,8 +216,7 @@ package body GPR2.Project.Tree.View_Builder is
    procedure Set_Attribute
      (Self   : in out Object;
       Attr   : Q_Attribute_Id;
-      Values : Containers.Value_List)
-   is
+      Values : Containers.Value_List) is
    begin
       Self.Set_Attribute
         (Attr,
@@ -230,8 +229,7 @@ package body GPR2.Project.Tree.View_Builder is
      (Self  : in out Object;
       Attr  : Q_Attribute_Id;
       Index : Value_Type;
-      Value : Value_Type)
-   is
+      Value : Value_Type) is
    begin
       Self.Set_Attribute
         (Attr,
@@ -245,8 +243,7 @@ package body GPR2.Project.Tree.View_Builder is
      (Self   : in out Object;
       Attr   : Q_Attribute_Id;
       Index  : Value_Type;
-      Values : Containers.Value_List)
-   is
+      Values : Containers.Value_List) is
    begin
       Self.Set_Attribute
         (Attr,

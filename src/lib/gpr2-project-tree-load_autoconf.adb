@@ -18,6 +18,7 @@ procedure Load_Autoconf
    Absent_Dir_Error  : Error_Level             := Warning;
    Implicit_With     : GPR2.Path_Name.Set.Object :=
                          GPR2.Path_Name.Set.Empty_Set;
+   Resolve_Links     : Boolean                 := False;
    Target            : Optional_Name_Type      := No_Name;
    Language_Runtimes : Containers.Lang_Value_Map :=
                          Containers.Lang_Value_Maps.Empty_Map;
@@ -283,7 +284,6 @@ is
       else
          Result := Extended;
       end if;
-
    end Compare_Configurations;
 
    -----------------------
@@ -341,28 +341,29 @@ is
    -------------------------
 
    function Default_Config_File
-     (Environment : GPR2.Environment.Object) return Filename_Type is
-      Ada_RTS_Val : constant Value_Type :=
-                      Containers.Value_Or_Default
-                        (Language_Runtimes, Ada_Language);
-      Ada_RTS     : constant Filename_Optional :=
-                      (if Ada_RTS_Val = No_Value then No_Filename
-                       else Filename_Optional
-                         (Directories.Simple_Name (Ada_RTS_Val)));
+     (Environment : GPR2.Environment.Object) return Filename_Type
+   is
+      Ada_RTS_Val  :  constant Value_Type :=
+                       Containers.Value_Or_Default
+                         (Language_Runtimes, Ada_Language);
+      Ada_RTS      : constant Filename_Optional :=
+                       (if Ada_RTS_Val = No_Value then No_Filename
+                        else Filename_Optional
+                          (Directories.Simple_Name (Ada_RTS_Val)));
 
-      Target_Val  : constant Filename_Optional :=
-                        (if Target not in No_Name | "all" then
-                            Filename_Type (Target)
-                         else No_Filename);
+      Target_Val   : constant Filename_Optional :=
+                       (if Target not in No_Name | "all" then
+                                          Filename_Type (Target)
+                        else No_Filename);
 
-      Platform    : constant Filename_Type :=
-                      (if Target_Val /= No_Filename then
-                         (if Ada_RTS = No_Filename then Target_Val
-                          else Target_Val & "-" & Ada_RTS)
-                         & Config_File_Extension
-                       elsif Ada_RTS /= No_Filename then
-                          Ada_RTS & Config_File_Extension
-                       else Default_Config_Name);
+      Platform     : constant Filename_Type :=
+                       (if Target_Val /= No_Filename then
+                          (if Ada_RTS = No_Filename then Target_Val
+                           else Target_Val & "-" & Ada_RTS)
+                        & Config_File_Extension
+                        elsif Ada_RTS /= No_Filename then
+                           Ada_RTS & Config_File_Extension
+                        else Default_Config_Name);
 
       GPR_Config_V : constant String := "GPR_CONFIG";
 
@@ -431,8 +432,9 @@ is
             if GNAT.OS_Lib.Is_Absolute_Path (Value) then
                return Name_Type (Value);
             else
-               return Name_Type (GNAT.OS_Lib.Normalize_Pathname
-                                 (Value, View.Dir_Name.String_Value));
+               return Name_Type
+                 (GNAT.OS_Lib.Normalize_Pathname
+                    (Value, View.Dir_Name.String_Value));
             end if;
          else
             return Optional_Name_Type (Value);
@@ -579,8 +581,8 @@ begin
    Self.Messages.Clear;
 
    if not Has_Errors then
-
       --  First, check for Config_Prj_File declaration
+
       if not Default_Cfg.Is_Defined then
          declare
             CPF_Attr : Project.Attribute.Object;
@@ -608,6 +610,7 @@ begin
 
       --  Then check for legacy way of specifying --config among
       --  Builder.Switches or Builder.Default_Switches.
+
       if not Default_Cfg.Is_Defined then
          declare
             Attr_Sloc             : Project.Attribute.Object;
@@ -661,6 +664,7 @@ begin
             if Report_Obsolete_Usage then
                --  The warning should go into Old_Messages because
                --  Self.Messages will be reset after applying configuration.
+
                Old_Messages.Append
                  (Message.Create
                     (Level   => Message.Warning,
@@ -673,6 +677,7 @@ begin
       end if;
 
       --  Finally, check if default config file is present
+
       if not Default_Cfg.Is_Defined then
          Default_Cfg :=
            Path_Name.Create_File (Default_Config_File (Environment));
@@ -708,6 +713,7 @@ begin
          --     * the list of languages
          --     and we load a configuration for the above.
          --  3- we then reload the project with the configuration
+
          for C in Self.Iterate
            (Filter =>
               (F_Aggregate | F_Aggregate_Library => False, others => True))
@@ -795,6 +801,7 @@ begin
       Check_Shared_Lib => Check_Shared_Lib,
       Absent_Dir_Error => Absent_Dir_Error,
       Implicit_With    => Implicit_With,
+      Resolve_Links    => Resolve_Links,
       Environment      => Environment);
 
    if Default_Cfg.Is_Defined and then Default_Cfg.Exists then
@@ -865,6 +872,7 @@ begin
       Check_Shared_Lib => Check_Shared_Lib,
       Absent_Dir_Error => Absent_Dir_Error,
       Implicit_With    => Implicit_With,
+      Resolve_Links    => Resolve_Links,
       Environment      => Environment);
 
    GPR2.Project.Parser.Clear_Cache;

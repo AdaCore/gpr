@@ -26,8 +26,10 @@
 # ----------------
 #
 # Setup:                   make [VAR=VALUE] setup (see below)
-# Build libgpr2:           make
-# Install libgpr2:         make install
+# Build libgpr2 & tools:   make
+# Build libgpr2:           make build-libs
+# Install libgpr2 & tools: make install
+# Install libgpr2:         make install-libs
 
 # Variables which can be set:
 #

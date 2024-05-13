@@ -27,7 +27,6 @@ package body GPR2.Options is
       Switch : Option;
       Param  : String := "";
       Index  : String := "") is
-
    begin
       case Switch is
          when AP =>
@@ -134,12 +133,15 @@ package body GPR2.Options is
          when Target =>
             Self.Target := To_Unbounded_String (Param);
 
+         when Resolve_Links =>
+            Self.Resolve_Links := True;
+
          when Unchecked_Shared_Lib_Imports =>
             Self.Unchecked_Shared_Lib := True;
 
          when X =>
             declare
-               Idx : constant Natural := Ada.Strings.Fixed.Index (Param, "=");
+               Idx : constant Natural := Strings.Fixed.Index (Param, "=");
             begin
                if Idx = 0 then
                   raise Usage_Error with
@@ -158,7 +160,8 @@ package body GPR2.Options is
    -------------------------------
 
    function Check_For_Default_Project
-     (Directory : String := "") return GPR2.Path_Name.Object is
+     (Directory : String := "") return GPR2.Path_Name.Object
+   is
       use Directories;
       Default_Name : constant String :=
                        (if Directory = ""
@@ -226,7 +229,7 @@ package body GPR2.Options is
             end loop;
 
             Self.Project_File := GPR2.Project.Create
-              (Self.Project_File.Name, Search_Paths);
+              (Self.Project_File.Name, Self.Resolve_Links, Search_Paths);
          end;
       end if;
 
@@ -235,7 +238,7 @@ package body GPR2.Options is
       if not Self.Project_File.Is_Defined then
          if Self.No_Project then
             Self.Project_Base := GPR2.Path_Name.Create_Directory
-              (GPR2.Filename_Type (Ada.Directories.Current_Directory));
+              (GPR2.Filename_Type (Directories.Current_Directory));
 
          elsif Allow_Implicit_Project then
             Self.Project_File := Check_For_Default_Project;
@@ -243,7 +246,7 @@ package body GPR2.Options is
             if not Self.Project_File.Is_Defined then
                Self.Project_Base :=
                  GPR2.Path_Name.Create_Directory
-                   (GPR2.Filename_Type (Ada.Directories.Current_Directory));
+                   (GPR2.Filename_Type (Directories.Current_Directory));
 
                if not Quiet then
                   Ada.Text_IO.Put_Line
@@ -286,7 +289,6 @@ package body GPR2.Options is
                            GPR2.File_Readers.No_File_Reader_Reference;
       Quiet            : Boolean := False) return Boolean
    is
-
       Conf        : GPR2.Project.Configuration.Object;
       Create_Cgpr : Boolean := False;
 
@@ -326,6 +328,7 @@ package body GPR2.Options is
             Check_Shared_Lib => Self.Check_Shared_Lib,
             Absent_Dir_Error => Absent_Dir_Error,
             Implicit_With    => Self.Implicit_With,
+            Resolve_Links    => Self.Resolve_Links,
             File_Reader      => File_Reader,
             Environment      => Self.Environment);
 
@@ -381,7 +384,7 @@ package body GPR2.Options is
            and then not Self.Config_Project.Exists
          then
             if not Quiet then
-               Ada.Text_IO.Put_Line
+               Text_IO.Put_Line
                  ("creating configuration project " &
                     String (Self.Config_Project.Name));
             end if;
@@ -399,6 +402,7 @@ package body GPR2.Options is
             Check_Shared_Lib  => Self.Check_Shared_Lib,
             Absent_Dir_Error  => Absent_Dir_Error,
             Implicit_With     => Self.Implicit_With,
+            Resolve_Links     => Self.Resolve_Links,
             Target            => Target (Self),
             Language_Runtimes => Self.RTS_Map,
             Base              => Self.Base,
@@ -407,11 +411,9 @@ package body GPR2.Options is
                                   else GPR2.Path_Name.Undefined),
             File_Reader       => File_Reader,
             Environment       => Self.Environment);
-
       end if;
 
       return True;
-
    exception
       when GPR2.Project_Error | GPR2.Processing_Error =>
          return False;
@@ -455,9 +457,9 @@ package body GPR2.Options is
    ------------------------
 
    procedure Print_GPR_Registry
-     (Self : Object;
-      Format   : GPR2.Project.Registry.Exchange.Export_Format :=
-                    GPR2.Project.Registry.Exchange.K_JSON_COMPACT) is
+     (Self   : Object;
+      Format : GPR2.Project.Registry.Exchange.Export_Format :=
+                 GPR2.Project.Registry.Exchange.K_JSON_COMPACT) is
    begin
       if Self.Print_GPR_Registry then
          GPR2.Project.Registry.Exchange.Export (Format => Format);
@@ -477,6 +479,5 @@ package body GPR2.Options is
          Tree.Register_Project_Search_Path (Path);
       end loop;
    end Register_Project_Search_Paths;
-
 
 end GPR2.Options;

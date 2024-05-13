@@ -75,7 +75,7 @@ private
 
    type Map_Access is access Attribute_Cache_Maps.Map;
 
-   type Count_Type_Access is access Ada.Containers.Count_Type;
+   type Count_Type_Access is access Containers.Count_Type;
 
    type Cursor is new Attribute_Cache_Maps.Cursor;
 
@@ -96,5 +96,6 @@ private
    overriding procedure Finalize (Cache : in out Object);
    overriding procedure Adjust (Cache : in out Object);
 
-   Min_Cache_Size : constant Ada.Containers.Count_Type := 128;
+   Min_Cache_Size : constant Containers.Count_Type := 128;
+
 end GPR2.Project.Attribute_Cache;

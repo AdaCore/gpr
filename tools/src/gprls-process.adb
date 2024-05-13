@@ -39,12 +39,10 @@ with GPR2.Version;
 with GPRtools.Options;
 with GPRtools.Program_Termination;
 
-with GPRls.Common;
 with GPRls.Gnatdist;
 with GPRls.Options;
 
-procedure GPRls.Process (Opt : in out GPRls.Options.Object)
-is
+procedure GPRls.Process (Opt : in out GPRls.Options.Object) is
 
    use Ada;
 
@@ -52,7 +50,6 @@ is
    use GPR2.Project.Source.Set;
    use all type GPR2.Unit.Library_Unit_Type;
 
-   use GPRls.Common;
    use GPRls.Options;
 
    use GPRtools;
@@ -82,7 +79,8 @@ is
 
       function Mask_Current (Dir : String) return String is
         (if Dir (Dir'First .. Dir'Last - 1) = Curr_Dir
-         then "<Current_Directory>" else Dir);
+         then "<Current_Directory>"
+         else Dir);
 
    begin
       Text_IO.New_Line;
@@ -184,6 +182,7 @@ is
          loop
             Put_Line (Log.Element (C).Format, Quiet);
          end loop;
+
       else
          for C in Tree.Log_Messages.Iterate
            (Information => Opt.Verbose,
@@ -342,9 +341,10 @@ begin
          end loop;
 
          declare
-            package String_Sorting is new String_Vector.Generic_Sorting;
+            package String_Sorting is
+              new GPR2.Containers.Value_Type_List.Generic_Sorting;
 
-            Output : String_Vector.Vector;
+            Output : GPR2.Containers.Value_Type_List.Vector;
          begin
             for R of Closures loop
                if not R.Source.Is_Runtime then
@@ -509,7 +509,6 @@ begin
                         Artifacts.Object_Code (Index => Idx).Modification_Time)
             then
                Status := OK;
-
             else
                Status := Not_Same;
             end if;
@@ -785,8 +784,7 @@ begin
                      Text_IO.Put_Line ("   depends upon");
                   end if;
 
-                  S.Source.Dependencies
-                    (S.Index, Dependency_Output'Access);
+                  S.Source.Dependencies (S.Index, Dependency_Output'Access);
                end if;
             end;
          end loop;
@@ -835,8 +833,7 @@ begin
                      -- Do_Insert --
                      ---------------
 
-                     procedure Do_Insert (Index : Unit_Index)
-                     is
+                     procedure Do_Insert (Index : Unit_Index) is
                         Position : Sources_By_Path.Cursor;
                         Inserted : Boolean;
 
@@ -1045,10 +1042,10 @@ begin
                         Text_IO.Put_Line
                           (File => Text_IO.Standard_Error,
                            Item =>
-                             String (S.Source.View.Path_Name.Simple_Name) &
-                             ": WARNING: the closure for " &
-                             String (S.Source.Path_Name.Simple_Name) &
-                             " is incomplete");
+                             String (S.Source.View.Path_Name.Simple_Name)
+                           & ": WARNING: the closure for "
+                           & String (S.Source.Path_Name.Simple_Name)
+                           & " is incomplete");
                      end if;
 
                      if S.Source.Has_Naming_Exception
@@ -1062,15 +1059,15 @@ begin
                         --  unknown.
 
                         Text_IO.Put_Line
-                          ("UNKNOWN status for unit " &
-                             String (S.Source.Unit_Name (S.Index)) & " in " &
-                             S.Source.Path_Name.Value & " at index" &
-                             S.Index'Image);
+                          ("UNKNOWN status for unit "
+                           & String (S.Source.Unit_Name (S.Index)) & " in "
+                           & S.Source.Path_Name.Value & " at index"
+                           & S.Index'Image);
 
                      else
                         Text_IO.Put_Line
-                          ("Can't find ALI file for " &
-                             S.Source.Path_Name.Value);
+                          ("Can't find ALI file for "
+                           & S.Source.Path_Name.Value);
                      end if;
                   end if;
                end;

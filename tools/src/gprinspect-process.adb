@@ -104,10 +104,6 @@ is
       Conf_Logs   : GPR2.Log.Object;
       Only_Errors : Boolean)
    is
-      Messages_Obj   : constant JSON_Value := Create_Object;
-      Tree_Mes_Array : JSON_Array;
-      Conf_Mes_Array : JSON_Array;
-
       procedure Populate_Array
         (Arr  : in out JSON_Array;
          Logs : GPR2.Log.Object);
@@ -119,8 +115,7 @@ is
 
       procedure Populate_Array
         (Arr  : in out JSON_Array;
-         Logs : GPR2.Log.Object)
-      is
+         Logs : GPR2.Log.Object) is
       begin
          for C in Logs.Iterate
            (Information => (not Only_Errors) and then Options.Verbose,
@@ -137,6 +132,10 @@ is
             end;
          end loop;
       end Populate_Array;
+
+      Messages_Obj   : constant JSON_Value := Create_Object;
+      Tree_Mes_Array : JSON_Array;
+      Conf_Mes_Array : JSON_Array;
 
    begin
       Populate_Array (Conf_Mes_Array, Conf_Logs);
@@ -162,8 +161,7 @@ is
       -- Display --
       -------------
 
-      procedure Display (Logs : GPR2.Log.Object)
-      is
+      procedure Display (Logs : GPR2.Log.Object) is
       begin
          for C in Logs.Iterate
            (Information => (not Only_Errors) and then Options.Verbose,
@@ -178,7 +176,6 @@ is
       end Display;
 
    begin
-
       Indent (0, "+--------------------------------------+");
       Indent (0, "|               Messages               |");
       Indent (0, "+--------------------------------------+");
@@ -214,7 +211,6 @@ is
      (JSON_Res : JSON_Value;
       Tree     : Project.Tree.Object)
    is
-
       O_Array : GPR2.Containers.Value_Set;
       --  Object search-paths, global array with all project's object
       --  directories and the possible runtime object directory.
@@ -223,7 +219,7 @@ is
       --  Sources search-paths, global array with all project's sources
       --  directories.
 
-      Handled      : Project.View.Set.Object;
+      Handled : Project.View.Set.Object;
 
       function Info_Object return JSON_Value;
       --  Information node (date, toolset version, ...)
@@ -486,7 +482,6 @@ is
             begin
                Set_Field (E, "extending-all", Create (View.Is_Extending_All));
                Set_Field (E, "project-id", Create (View_Id (View.Extending)));
-
                Set_Field (F_Prj, "extending", E);
             end;
          end if;
@@ -641,7 +636,6 @@ is
          Stat    : constant JSON_Value := Create_Object;
          P_Array : JSON_Array;
       begin
-
          --  Some stats about the tree
 
          Set_Field (Stat, "project-count", Create (Integer (Handled.Length)));
@@ -693,11 +687,11 @@ is
          Parse_Project (Prjs   => P_Array,
                         View   => Tree.Root_Project,
                         Parent => Project.View.Undefined);
+
          Set_Field (JSON_Res, "info", Info_Object);
          Set_Field (JSON_Res, "tree", Tree_Object);
          Set_Field (JSON_Res, "projects", P_Array);
       end;
-
    end Inspect_Project_JSON_Output;
 
    ------------------------------------
@@ -780,7 +774,6 @@ is
          end Print_Attributes;
 
       begin
-
          Indent (0, "+--------------------------------------+");
          Indent (0, "|         Projects Information         |");
          Indent (0, "+--------------------------------------+");
@@ -1034,7 +1027,6 @@ is
                   declare
                      View : constant Project.View.Object :=
                               Project.Tree.Element (V);
-
                   begin
                      if (Options.All_Projects
                          and then No_View_Restriction
@@ -1123,6 +1115,7 @@ is
    end View_Id;
 
    Success : Boolean;
+
 begin
    Options.Tree := Project_Tree.Reference;
 

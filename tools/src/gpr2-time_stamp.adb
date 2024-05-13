@@ -30,8 +30,7 @@ package body GPR2.Time_Stamp is
    -- From_Time --
    ---------------
 
-   function From_Time
-     (Time : Calendar.Time) return Data is
+   function From_Time (Time : Calendar.Time) return Data is
    begin
       return Data (Image (Time, "%Y%m%d%H%M%S"));
    end From_Time;

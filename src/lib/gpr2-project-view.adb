@@ -122,8 +122,9 @@ package body GPR2.Project.View is
    -- Aggregated --
    ----------------
 
-   function Aggregated (Self      : Object;
-                        Recursive : Boolean := True) return Set.Object is
+   function Aggregated
+     (Self      : Object;
+      Recursive : Boolean := True) return Set.Object is
    begin
       return Set : GPR2.Project.View.Set.Object do
          for Agg of Definition.Get_RO (Self).Aggregated loop
@@ -571,10 +572,10 @@ package body GPR2.Project.View is
       end Get_Default_Index;
 
       Cache_Cursor : constant Project.Attribute_Cache.Cursor :=
-         Definition.Get_RO (Self).Cache.Check_Cache
-            (Name   => Name,
-             Index  => Index,
-             At_Pos => At_Pos);
+                       Definition.Get_RO (Self).Cache.Check_Cache
+                         (Name   => Name,
+                          Index  => Index,
+                          At_Pos => At_Pos);
    begin
       if Project.Attribute_Cache.Has_Element (Cache_Cursor) then
          return Project.Attribute_Cache.Element (Cache_Cursor);
@@ -586,7 +587,7 @@ package body GPR2.Project.View is
 
       if not PRA.Exists (Name) then
          raise Attribute_Error
-            with Image (Name) & " attribute does not exist";
+           with Image (Name) & " attribute does not exist";
       end if;
 
       --  Fetch the attribute definition
@@ -924,8 +925,7 @@ package body GPR2.Project.View is
       if With_Config
         and then Self.Tree.Has_Configuration
       then
-         for Attr of Config.Attributes_Internal (Name, False, False)
-         loop
+         for Attr of Config.Attributes_Internal (Name, False, False) loop
             Add_Attr (Attr, Def.Config_Concatenable);
          end loop;
       end if;
@@ -1175,10 +1175,10 @@ package body GPR2.Project.View is
           or else
             (Source /= Simple_Name (BN)
              and then Self.Check_Attribute
-               (PRA.Builder.Executable,
-                BN_Index,
-                At_Pos,
-                Attr)))
+                        (PRA.Builder.Executable,
+                         BN_Index,
+                         At_Pos,
+                         Attr)))
         and then At_Pos = At_Pos_Or (Attr.Index, 0)
       then
          return Executable (Attr.Value.Text);
@@ -1925,6 +1925,7 @@ package body GPR2.Project.View is
 
    begin
       --  Check executable attribute
+
       for Attr of Self.Attributes (Name => PRA.Builder.Executable) loop
          if Simple_Name (Attr.Value.Text) = Executable
            or else Simple_Name (Attr.Value.Text) = Exc_BN
@@ -1951,6 +1952,7 @@ package body GPR2.Project.View is
                        (Remove_Body_Suffix (Self, Simple_Name (Value.Text)));
             Exec : constant Simple_Name := BN & Self.Executable_Suffix;
          begin
+
             if Exec = Executable or else BN = Executable then
                for Lang of Self.Language_Ids loop
                   Src := Db.Visible_Source
@@ -2172,9 +2174,8 @@ package body GPR2.Project.View is
 
       return Project.Pack.Object'
         (Source_Reference.Pack.Object
-           (Source_Reference.Pack.Create (Source_Reference.Builtin, Name)) with
-         Project.Attribute.Set.Empty_Set,
-         Project.Variable.Set.Empty_Set);
+           (Source_Reference.Pack.Create (Source_Reference.Builtin, Name))
+         with Project.Attribute.Set.Empty_Set, Project.Variable.Set.Empty_Set);
    end Pack;
 
    --------------
@@ -2300,8 +2301,8 @@ package body GPR2.Project.View is
    ---------------------
 
    function Skipped_Sources
-     (View : Project.View.Object) return Containers.Filename_Source_Reference
-   is (Get_RO (View).Trees.Project.Skip_Sources);
+     (Self : Object) return Containers.Filename_Source_Reference
+   is (Get_RO (Self).Trees.Project.Skip_Sources);
 
    ------------
    -- Source --
@@ -2360,7 +2361,7 @@ package body GPR2.Project.View is
    -----------------------------
 
    procedure Source_Directories_Walk
-     (View      : Project.View.Object;
+     (Self      : Object;
       Source_CB : access procedure
                     (Dir_Reference : GPR2.Source_Reference.Value.Object;
                      Source        : GPR2.Path_Name.Full_Name;
@@ -2371,10 +2372,10 @@ package body GPR2.Project.View is
       Visited_Dirs               : GPR2.Containers.Filename_Set;
       Dir_Ref                    : GPR2.Source_Reference.Value.Object;
       Ignored_Sub_Dirs           : constant GPR2.Project.Attribute.Object :=
-                                   View.Attribute (PRA.Ignore_Source_Sub_Dirs);
+                                   Self.Attribute (PRA.Ignore_Source_Sub_Dirs);
       Ignored_Sub_Dirs_Regexps   : Regexp_List.Vector;
       Excluded_Dirs              : constant GPR2.Project.Attribute.Object :=
-                                     View.Attribute (PRA.Excluded_Source_Dirs);
+                                     Self.Attribute (PRA.Excluded_Source_Dirs);
       Excluded_Dirs_List         : GPR2.Containers.Filename_Set;
       Excluded_Recurse_Dirs_List : GPR2.Containers.Filename_Set;
       --  Ignore_Source_Sub_Dirs attribute values. In case the directory ends
@@ -2439,13 +2440,11 @@ package body GPR2.Project.View is
          --  Do_Subdir_Visit is set to False if we already have visited
          --  this source directory:
 
-         Visited_Dirs.Insert
-           (Directory.Value, Position, Inserted);
+         Visited_Dirs.Insert (Directory.Value, Position, Inserted);
 
          if not Inserted then
             --  Already visited
-            Do_Dir_Visit    := False;
-
+            Do_Dir_Visit := False;
          elsif Dir_CB /= null then
             Dir_CB (Directory.Value);
          end if;
@@ -2463,7 +2462,7 @@ package body GPR2.Project.View is
       end On_File;
 
    begin
-      if View.Kind not in With_Source_Dirs_Kind then
+      if Self.Kind not in With_Source_Dirs_Kind then
          return;
       end if;
 
@@ -2490,9 +2489,9 @@ package body GPR2.Project.View is
             begin
                if Dir_Val'Length = 0 then
                   if Recursive then
-                     Excluded_Recurse_Dirs_List.Include (View.Dir_Name.Value);
+                     Excluded_Recurse_Dirs_List.Include (Self.Dir_Name.Value);
                   else
-                     Excluded_Dirs_List.Include (View.Dir_Name.Value);
+                     Excluded_Dirs_List.Include (Self.Dir_Name.Value);
                   end if;
 
                else
@@ -2500,17 +2499,17 @@ package body GPR2.Project.View is
                      Dir_Name     : constant GPR2.Path_Name.Object :=
                                       GPR2.Path_Name.Create_Directory
                                         (Filename_Type (Dir_Val),
-                                         View.Dir_Name.Name);
+                                         Self.Dir_Name.Name);
                      Relative_Dir : constant Filename_Type :=
                                       Dir_Name.Relative_Path
-                                        (From => View.Dir_Name);
+                                        (From => Self.Dir_Name);
                   begin
                      if Recursive then
                         Excluded_Recurse_Dirs_List.Include
-                          (View.Dir_Name.Compose (Relative_Dir, True).Value);
+                          (Self.Dir_Name.Compose (Relative_Dir, True).Value);
                      else
                         Excluded_Dirs_List.Include
-                          (View.Dir_Name.Compose (Relative_Dir, True).Value);
+                          (Self.Dir_Name.Compose (Relative_Dir, True).Value);
                      end if;
                   end;
                end if;
@@ -2518,22 +2517,22 @@ package body GPR2.Project.View is
          end loop;
       end if;
 
-      for S of View.Attribute (PRA.Source_Dirs).Values loop
+      for S of Self.Attribute (PRA.Source_Dirs).Values loop
          --  If S denotes the view's source dir corresponding to
          --  --src-subdir, just skip if the dir does not exist (it is
          --  optional).
-
-         if not (View.Has_Source_Subdirectory
-                 and then S.Text = View.Source_Subdirectory.String_Value
+         if not (Self.Has_Source_Subdirectory
+                 and then S.Text = Self.Source_Subdirectory.String_Value
                  and then not Ada.Directories.Exists (S.Text))
          then
             Dir_Ref := S;
             Definition.Foreach
-              (Base_Dir          => View.Dir_Name,
+              (Base_Dir          => Self.Dir_Name,
                Messages          => Messages,
                Directory_Pattern => Filename_Optional (S.Text),
                Source            => S,
-               File_CB           => (if Source_CB = null then null
+               File_CB           => (if Source_CB = null
+                                     then null
                                      else On_File'Access),
                Directory_CB      => On_Directory'Access);
          end if;
@@ -2695,24 +2694,21 @@ package body GPR2.Project.View is
    -------------------------
 
    function Source_Subdirectory (Self : Object) return GPR2.Path_Name.Object is
+      P : constant GPR2.Path_Name.Object :=
+            Self.Object_Directory.Compose
+              (Filename_Type (To_Lower (Self.Name))
+               & "-" & Self.Tree.Src_Subdirs, Directory => True);
    begin
       --  First check for <obj>/<project.lowercase_name>-<src_subdirs>
 
-      declare
-         P : constant GPR2.Path_Name.Object :=
-               Self.Object_Directory.Compose
-                 (Filename_Type (To_Lower (Self.Name))
-                  & "-" & Self.Tree.Src_Subdirs, Directory => True);
-      begin
-         if P.Exists then
-            return P;
-         end if;
-      end;
+      if P.Exists then
+         return P;
+      else
+         --  Then default to <obj>/<src_subdirs>
 
-      --  Then default to <obj>/<src_subdirs>
-
-      return Self.Object_Directory.Compose
-        (Self.Tree.Src_Subdirs, Directory => True);
+         return Self.Object_Directory.Compose
+           (Self.Tree.Src_Subdirs, Directory => True);
+      end if;
    end Source_Subdirectory;
 
    -------------

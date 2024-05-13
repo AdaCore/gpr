@@ -65,6 +65,7 @@ function GPRinspect.Main return Ada.Command_Line.Exit_Status is
    is
       pragma Unreferenced (Parser, Index);
       use type GPRtools.Command_Line.Switch_Type;
+
       Result : constant access GPRinspect_Options :=
                  GPRinspect_Options (Res.all)'Access;
    begin
@@ -79,18 +80,25 @@ function GPRinspect.Main return Ada.Command_Line.Exit_Status is
             raise GPR2.Options.Usage_Error with "use --display=<value> "
               & "with <value>=[json, json-compact, textual]";
          end if;
+
       elsif Arg = "-r" then
          Result.All_Projects := True;
+
       elsif Arg = "--all" then
          Result.Display_Everything := True;
+
       elsif Arg = "--attributes" then
          Result.Display_Attributes := True;
+
       elsif Arg = "-c" then
          Result.Display_Config_Attributes := True;
+
       elsif Arg = "--packages" then
          Result.Display_Packages := True;
+
       elsif Arg = "--variables" then
          Result.Display_Variables := True;
+
       elsif Arg = "--views" then
          declare
             Scope : Restricted_Scope (Restrict => True);
@@ -100,6 +108,7 @@ function GPRinspect.Main return Ada.Command_Line.Exit_Status is
             Result.All_Projects := True;
             Result.Restricted_Views := Scope;
          end;
+
       elsif Arg = "--gpr-registry-file" then
          if Param /= "" then
             Result.Gpr_Registry_File :=
@@ -115,6 +124,7 @@ function GPRinspect.Main return Ada.Command_Line.Exit_Status is
    procedure Parse_Command_Line is
       use GPRtools.Command_Line;
       use GPRtools.Options;
+
       Parser : GPRtools.Options.Command_Line_Parser :=
                  Create
                    (Initial_Year => "2022",
@@ -179,7 +189,6 @@ function GPRinspect.Main return Ada.Command_Line.Exit_Status is
    end Parse_Command_Line;
 
 begin
-
    GNATCOLL.Traces.Parse_Config_File;
 
    --  Set program name
@@ -196,7 +205,6 @@ begin
    GPRinspect.Process (Options => Options);
 
    return To_Exit_Status (E_Success);
-
 exception
    when E : GPR2.Options.Usage_Error =>
       Handle_Program_Termination

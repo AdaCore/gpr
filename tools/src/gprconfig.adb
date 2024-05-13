@@ -128,8 +128,6 @@ procedure GPRconfig is
       Compilers  : in out Compiler_Array;
       For_Target : Name_Type)
    is
-      Comp   : Compiler;
-
       function "&" (L : String; R : Optional_Name_Type) return String is
         (L & String (R));
 
@@ -150,11 +148,12 @@ procedure GPRconfig is
          end if;
       end Put_Rank;
 
+      Comp : Compiler;
+
    begin
       Base.Filter_Compilers_List (Compilers, For_Target);
 
       for Idx in Compilers'Range loop
-
          Comp := Compilers (Idx);
 
          if Is_Selectable (Comp) and then Requires_Compiler (Comp) then
@@ -245,7 +244,8 @@ procedure GPRconfig is
         (Slices : Slice_Set; Pos : Slice_Number) return Optional_Name_Type
       is
         (if not Has_Element (Slices, Pos) or else Slice (Slices, Pos) = ""
-         then No_Name else Optional_Name_Type (Slice (Slices, Pos)));
+         then No_Name
+         else Optional_Name_Type (Slice (Slices, Pos)));
       --  Returns parameter of configuration for given position or No_Name
       --  if corresponding position is empty/absent. Reports error ans fails
       --  if prefix is not followed by a value.
@@ -396,6 +396,7 @@ procedure GPRconfig is
       end Positional_Parameters;
 
       Result : Description;
+
    begin
       if Slice_Count (Slices) > 5 then
          Report_Error_And_Exit
@@ -421,6 +422,7 @@ procedure GPRconfig is
             Path     => Filename_Optional
                           (Get_Description_Param (Slices, "path")),
             Name     => Get_Description_Param (Slices, "name"));
+
       else
          if Get_Description_Param (Slices, 1) = No_Name then
             Report_Error_And_Exit
@@ -540,7 +542,6 @@ procedure GPRconfig is
          Argument    => "config");
 
       Set_Usage (Cmd_Config, Usage => "[switches]");
-
    end Register_Cmd_Options;
 
    ---------------------------
@@ -619,7 +620,6 @@ procedure GPRconfig is
                     (Image (Language (Comp)) &
                        " (no compiler required)");
                end if;
-
             end if;
          end loop;
 
@@ -645,12 +645,10 @@ procedure GPRconfig is
                   Set_Selection (Compilers (Choice), True);
                end if;
             end if;
-
          exception
             when Constraint_Error =>
                Text_IO.Put_Line ("Unrecognized choice");
          end;
-
       end loop;
    end Select_Compilers_Interactively;
 
@@ -735,6 +733,7 @@ procedure GPRconfig is
             Report_Error_And_Exit
               ("Multiple --config specified for " & Image (Language (Descr)));
          end if;
+
          Description_Map.Include (Language (Descr), Descr);
 
       elsif Switch = "-q" then
@@ -742,7 +741,6 @@ procedure GPRconfig is
 
       elsif Switch = "-v" then
          Opt_Verbosity := Verbose;
-
       end if;
    end Value_Callback;
 
@@ -766,6 +764,7 @@ begin
            (Text_IO.Standard_Error,
             Ada.Exceptions.Exception_Message (E));
    end;
+
    GPRtools.Util.Set_Program_Name ("gprconfig");
 
    Register_Cmd_Options;
@@ -872,10 +871,11 @@ begin
       end if;
 
       declare
-         Compilers : Compiler_Array := Knowledge_Base.All_Compilers
-           (Settings => Get_Settings (Description_Map),
-            Target   => Name_Type (To_String (Selected_Target)),
-            Messages => Config_Log);
+         Compilers : Compiler_Array :=
+                       Knowledge_Base.All_Compilers
+                         (Settings => Get_Settings (Description_Map),
+                          Target   => Name_Type (To_String (Selected_Target)),
+                          Messages => Config_Log);
 
          Set_Of_Targets : GPR2.Containers.Name_Set;
       begin
@@ -894,7 +894,6 @@ begin
          end if;
 
          if Opt_Show_Targets or else Opt_Verbosity = Verbose then
-
             Text_IO.Put_Line ("List of targets supported by a compiler:");
 
             for Comp of Compilers loop
@@ -903,7 +902,6 @@ begin
             end loop;
 
             for Tgt of Set_Of_Targets loop
-
                Text_IO.Put (String (Tgt));
 
                if Tgt = Default_Target then
@@ -912,7 +910,6 @@ begin
                   Text_IO.New_Line;
                end if;
             end loop;
-
          end if;
 
          if Opt_Show_Targets then
@@ -969,7 +966,6 @@ begin
       GNAT.OS_Lib.OS_Exit (1);
 
    elsif Knowledge_Base.Has_Error then
-
       for Msg_Cur in Knowledge_Base.Log_Messages.Iterate
         (Information => Opt_Verbosity > Quiet,
          Warning     => Opt_Verbosity > Quiet)
@@ -1015,7 +1011,6 @@ begin
    end if;
 
    GNAT.Command_Line.Free (Config => Cmd_Config);
-
 exception
    when Ada.Directories.Name_Error | Ada.IO_Exceptions.Use_Error =>
       GNAT.Command_Line.Free (Config => Cmd_Config);

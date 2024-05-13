@@ -141,13 +141,14 @@ package body GPRtools.Util is
    -------------------------
 
    function Locate_Exec_On_Path (Exec_Name : String) return String is
+      use GNAT;
       use type GNAT.OS_Lib.String_Access;
 
-      Path     : GNAT.OS_Lib.String_Access
-        := GNAT.OS_Lib.Locate_Exec_On_Path (Exec_Name);
+      Path     : OS_Lib.String_Access :=
+                   OS_Lib.Locate_Exec_On_Path (Exec_Name);
       Path_Str : constant String := (if Path = null then "" else Path.all);
    begin
-      GNAT.OS_Lib.Free (Path);
+      OS_Lib.Free (Path);
       return Path_Str;
    end Locate_Exec_On_Path;
 
@@ -156,8 +157,7 @@ package body GPRtools.Util is
    ---------------------
 
    procedure Output_Messages
-     (Options : GPRtools.Options.Base_Options'Class)
-   is
+     (Options : GPRtools.Options.Base_Options'Class) is
    begin
       Options.Config_Project_Log.Output_Messages
         (Information    => Options.Verbosity = Very_Verbose,

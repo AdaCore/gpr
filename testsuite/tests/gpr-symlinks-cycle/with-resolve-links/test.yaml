@@ -1,0 +1,6 @@
+description:
+    Check cycles between two project files with symbolic links as directories
+    containing the project files. Project file links are not resolved ( with -eL).
+driver: python_script
+control:
+- [SKIP, "'windows' in env.host.platform", "DEAD on windows, avoid symbolic links tests"]
