@@ -9,7 +9,6 @@ with Ada.Strings.Maps.Constants;
 with Ada.Text_IO;
 with GNAT.OS_Lib;
 
-with GPR2.Build.Source_Base.Ada_Parser;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.Unit_Info;
 with GPR2.Project.Attribute;

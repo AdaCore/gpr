@@ -7,6 +7,7 @@
 with Ada.Containers.Doubly_Linked_Lists;
 
 with GPR2.Build.Unit_Info.List;
+with GPR2.Build.Source_Base.Ada_Parser;
 with GPR2.Containers;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
@@ -960,18 +961,27 @@ package body Update_Sources_List is
                         --  Check unit name from convention is the same as
                         --  the parsed one.
 
-                        if not Data.View.Is_Runtime
-                          and then Source.Kind /= S_No_Body
+                        if Source.Kind /= S_No_Body
                           and then Unit_Name /= Source.Unit.Full_Name
                           and then Path_Name.Base_Name (File.Path) /=
-                            Krunch (Source.Unit.Full_Name)
+                          Krunch (Source.Unit.Full_Name)
                         then
-                           Messages.Append
-                             (Message.Create
-                                (Message.Warning,
-                                 "unit name """ & String (Source.Unit.Name) &
-                                   """ does not match source name",
-                                 SR.Create (File.Path, 0, 0)));
+                           if Data.View.Is_Runtime then
+                              --  Ignore sources from the runtime that don't
+                              --  follow the naming convention: they're not
+                              --  part of the runtime library.
+                              Match := No_Match;
+                              Source := Build.Source_Base.Undefined;
+
+                           else
+                              Messages.Append
+                                (Message.Create
+                                   (Message.Warning,
+                                    "unit name """ &
+                                      String (Source.Unit.Name) &
+                                      """ does not match source name",
+                                    SR.Create (File.Path, 0, 0)));
+                           end if;
                         end if;
 
                      elsif Kind = S_Separate then
