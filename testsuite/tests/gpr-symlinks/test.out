@@ -1,6 +1,8 @@
-OK inst1 not created
-OK inst2 created
-OK foo.ads installed
-OK foo.ali installed
-OK foo.o removed
-OK foo.ads found
+## Loading WITHOUT symlinks support
+imported_prj.gpr:3:24: error: "/project/subdir/src" is not a valid directory
+imported_prj.gpr: warning: there are no sources of language "Ada" in this project
+Imported_Prj
+## Loading WITH symlinks support
+Imported_Prj
+ - src/foo.adb
+ - src/foo.ads
