@@ -18,7 +18,7 @@ pragma Elaborate (GPR2.Project.Configuration);
 --  Elaborate to avoid a circular dependency due to default Elaborate_Body
 
 with GPR2.Project.Registry.Attribute;
-with GPR2.Project.Source;
+with GPR2.Project.Source.Set;
 with GPR2.Project.Unit_Info;
 with GPR2.Project.View.Set;
 with GPR2.Project.View.Vector;
@@ -528,6 +528,17 @@ package GPR2.Project.Tree is
    --  If Externally_Built is False then source directories belonging
    --  to project marked "Externally_Built" will not be returned.
    --  Note that this routine ensure that the sources are loaded.
+
+   function Sources_Closure
+     (Self          : Object;
+      Source        : Filename_Optional := "";
+      No_Subproject : Boolean := False)
+      return Project.Source.Set.Object
+     with Pre => Self.Is_Defined;
+   --  Returns the source closure for the project or starting from Source
+   --  which must be a main or an interface of the project. If No_Subproject
+   --  is specified only the main or interface from the root project view (Self
+   --  here) will be reported.
 
    function Environment (Self : Object) return GPR2.Environment.Object
      with Pre => Self.Is_Defined;

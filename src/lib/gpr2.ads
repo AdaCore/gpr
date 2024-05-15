@@ -185,7 +185,7 @@ package GPR2 is
    type Unit_Index is new Integer range 0 .. Integer'Last;
    --  Index of a compilation unit part in a source file
 
-   No_Index          : constant Unit_Index := 0;
+   No_Index : constant Unit_Index := 0;
    --  Value of the unit index in case the source contains a single unit or
    --  is not unit based.
 

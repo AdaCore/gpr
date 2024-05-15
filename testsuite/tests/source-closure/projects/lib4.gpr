@@ -1,0 +1,14 @@
+
+with "lib1";
+with "lib2";
+
+library project Lib4 is
+
+   for Source_Dirs use ("../src3");
+
+   for Object_Dir use "obj/lib4";
+   for Library_Dir use "lib/lib4";
+   for Library_Name use "lib4";
+   for Library_Interface use ("call3");
+
+end Lib4;

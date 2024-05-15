@@ -24,6 +24,11 @@ with GPR2.Source_Info;
 with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Pack;
 
+pragma Warnings (Off);
+--  Needed to get full view of limited object returned by Source.Dependencies
+with GPR2.Project.Source.Part_Set;
+pragma Warnings (On);
+
 package body GPR2.Project.View is
 
    package PRP renames GPR2.Project.Registry.Pack;
@@ -2989,6 +2994,63 @@ package body GPR2.Project.View is
          end return;
       end if;
    end Sources;
+
+   ---------------------
+   -- Sources_Closure --
+   ---------------------
+
+   function Sources_Closure
+     (Self   : Object;
+      Source : Filename_Optional := "")
+      return Project.Source.Set.Object
+   is
+      use type Ada.Streams.Stream_Element_Array;
+
+      Kind  : constant Project_Kind := Self.Kind;
+      Data  : constant Project.Definition.Ref := Project.Definition.Get (Self);
+      S_Set : Project.Source.Set.Object;
+   begin
+      if not Definition.Are_Sources_Loaded (Data.Tree.all) then
+         Data.Tree.Update_Sources (With_Runtime => Self.Is_Runtime);
+
+      elsif Data.Sources_Signature = GPR2.Context.Default_Signature then
+         Data.Update_Sources
+           (Self, Stop_On_Error => True, Backends => Source_Info.All_Backends);
+      end if;
+
+      if Kind = K_Standard and then not Self.Has_Mains then
+         --  A standard project with main, returns the full source set
+         return Self.Sources;
+
+      elsif Kind in K_Configuration | K_Abstract | K_Aggregate then
+         --  There is no sources for abstract, configuration or aggregate
+         --  projects.
+         return S_Set;
+
+      else
+         for S of Data.Sources loop
+            --  Checking if source can be part of a sub-project and only for
+            --  mains or source part of the library interface.
+            if (Self.Kind = K_Library and then S.Is_Interface)
+              or else (Self.Kind = K_Standard and then S.Is_Main)
+            then
+               --  And only for the given source if specified
+               if Source = ""
+                 or else Source = S.Path_Name.Simple_Name
+               then
+                  --  Get the full closure of this source, append if needed the
+                  --  source object into the final set.
+
+                  for D of S.Dependencies (Closure => True) loop
+                     S_Set.Include (D.Source);
+                  end loop;
+               end if;
+            end if;
+         end loop;
+
+         return S_Set;
+      end if;
+   end Sources_Closure;
 
    ------------
    -- Strong --

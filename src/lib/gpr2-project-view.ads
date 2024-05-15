@@ -436,6 +436,16 @@ package GPR2.Project.View is
    --  Interface_Only: only sources part of a library interface are returned
    --  Compilable_Only: only sources that can be compiled are returned
 
+   function Sources_Closure
+     (Self   : Object;
+      Source : Filename_Optional := "")
+      return Project.Source.Set.Object
+     with Pre => Self.Is_Defined;
+   --  Returns the source closure for the project or starting from Source
+   --  which must be a main or an interface of the project. If No_Subproject
+   --  is specified only the main or interface from the root project view (Self
+   --  here) will be reported.
+
    function Source
      (Self : Object; File : GPR2.Path_Name.Object) return Project.Source.Object
      with Pre => Self.Is_Defined;
