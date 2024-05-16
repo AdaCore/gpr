@@ -77,8 +77,6 @@ class BuildAndRunDriver(BaseDriver):
                     tgt = Env().host.triplet
                 else:
                     is_cross = True
-                if not is_cross:
-                    rts = ["native", "sjlj", "light"]
 
                 create_fake_ada_compiler(
                     self,
