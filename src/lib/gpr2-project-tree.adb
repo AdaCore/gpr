@@ -2548,6 +2548,9 @@ package body GPR2.Project.Tree is
          Def := Definition.Get (V);
          Def.Clear_Cache;
 
+         --  If --src-subdirs is used, prepend the proper source dir for all
+         --  views containing sources.
+
          if Self.Has_Src_Subdirs
            and then V.Kind not in K_Configuration | K_Abstract | Aggregate_Kind
            and then V /= Self.Runtime
@@ -3538,21 +3541,24 @@ package body GPR2.Project.Tree is
          Definition.Get (V).Clear_Cache;
       end loop;
 
-      --  Now the first step is to set the configuration project view if any
-      --  and to create the runtime project if possible.
-
-      if Self.Has_Configuration then
-         Set_View (Self.Conf.Corresponding_View);
-
-         Self.Runtime := Create_Runtime_View (Self);
-      end if;
-
       declare
          Closure_Found : Boolean := True;
          Closure       : GPR2.View_Ids.Set.Set;
          Position      : GPR2.View_Ids.Set.Cursor;
          Inserted      : Boolean;
       begin
+         --  In case we have an aggregate project, we need to rpocess it first
+         --  so that its externals are added to the context before processing
+         --  any other view (including the configuration project that may
+         --  requier those externals).
+
+         if Self.Root_Project.Kind /= K_Aggregate
+           and then Self.Has_Configuration
+         then
+            Set_View (Self.Conf.Corresponding_View);
+            Self.Runtime := Create_Runtime_View (Self);
+         end if;
+
          --  First do a pass on the subtree that starts from root of
          --  projects not part of any aggregates. In case there is an
          --  aggregate, the root project will be an aggregate and after
@@ -3560,13 +3566,29 @@ package body GPR2.Project.Tree is
          --  set correctly.
 
          for View of Self.Ordered_Views loop
-            if not View.Has_Aggregate_Context then
+            --  Do not process aggregated views at this stage. Also handle
+            --  case where the root aggregate project has already been
+            --  processed (see above).
+            if not View.Has_Aggregate_Context
+              and then (View /= Self.Root_Project
+                        or else not Closure.Contains (View.Id))
+            then
                Set_View (View);
                Closure.Insert (View.Id);
 
                exit when Has_Error;
             end if;
          end loop;
+
+         --  if not done already, load the configuration and create the runtime
+         --  project
+
+         if Self.Root_Project.Kind = K_Aggregate
+           and then Self.Has_Configuration
+         then
+            Set_View (Self.Conf.Corresponding_View);
+            Self.Runtime := Create_Runtime_View (Self);
+         end if;
 
          --  Now evaluate the remaining views
 
