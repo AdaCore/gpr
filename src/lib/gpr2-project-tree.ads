@@ -169,9 +169,8 @@ package GPR2.Project.Tree is
       Full : Boolean := True)
      with Post => not Self.Is_Defined;
    --  Unloads the tree and free all associated objects (projects, sources,
-   --  etc...).
-   --  If Full is set, then the cached parsed projects objects will also be
-   --  unloaded.
+   --  etc...). If Full is set, then the cached parsed projects, knowledge
+   --  base, and list of languages will also are unloaded.
 
    function Root_Project (Self : Object) return View.Object
      with Pre  => Self.Is_Defined,

@@ -3743,6 +3743,8 @@ package body GPR2.Project.Tree is
    begin
       if Full then
          GPR2.Project.Parser.Clear_Cache;
+         Self.Langs_Of_Interest.Clear;
+         Self.Base := Undefined.Base;
       end if;
 
       Self.Self             := Undefined.Self;
@@ -3769,6 +3771,10 @@ package body GPR2.Project.Tree is
       Self.View_Ids.Clear;
       Self.View_DAG.Clear;
       Self.Explicit_Runtimes.Clear;
+
+      Self.Resolve_Links := Undefined.Resolve_Links;
+      Self.Root_Path     := Undefined.Root_Path;
+      Self.Context       := Undefined.Context;
    end Unload;
 
    --------------------
