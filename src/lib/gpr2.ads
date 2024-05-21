@@ -132,6 +132,13 @@ package GPR2 is
    subtype Filename_Type is Filename_Optional
      with Dynamic_Predicate => Filename_Type'Length > 0;
 
+   type External_Name_Type is new String
+     with Dynamic_Predicate => External_Name_Type'Length > 0;
+
+   overriding function "=" (Left, Right : External_Name_Type) return Boolean;
+   overriding function "<" (Left, Right : External_Name_Type) return Boolean;
+
+
    subtype Simple_Name is Filename_Type
      with Dynamic_Predicate =>
        (for all C of Simple_Name => C not in '/' | '\');

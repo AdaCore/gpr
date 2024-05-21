@@ -26,7 +26,7 @@ package GPR2.Builtin is
 
    function External
      (Context       : GPR2.Context.Object;
-      Variable      : Name_Type;
+      Variable      : External_Name_Type;
       Default_Value : Source_Reference.Value.Object :=
                         Source_Reference.Value.Undefined;
       Sloc          : Source_Reference.Object :=
@@ -41,7 +41,7 @@ package GPR2.Builtin is
 
    function External_As_List
      (Context   : GPR2.Context.Object;
-      Variable  : Name_Type;
+      Variable  : External_Name_Type;
       Separator : Value_Not_Empty) return Containers.Value_List;
    --  The External_As_List built-in. Returns a list of values corresponding
    --  to the data found in context's Variable split using the given separator.

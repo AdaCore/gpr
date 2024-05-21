@@ -49,7 +49,7 @@ package body GPR2.Builtin is
 
    function External
      (Context       : GPR2.Context.Object;
-      Variable      : Name_Type;
+      Variable      : External_Name_Type;
       Default_Value : Source_Reference.Value.Object :=
                         Source_Reference.Value.Undefined;
       Sloc          : Source_Reference.Object :=
@@ -79,7 +79,7 @@ package body GPR2.Builtin is
 
    function External_As_List
      (Context   : GPR2.Context.Object;
-      Variable  : Name_Type;
+      Variable  : External_Name_Type;
       Separator : Value_Not_Empty) return Containers.Value_List
    is
       use GNAT.String_Split;

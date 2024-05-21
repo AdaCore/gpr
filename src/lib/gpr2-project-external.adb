@@ -349,14 +349,14 @@ package body GPR2.Project.External is
                      return Get_String_Literal (Var, Error);
                   end External_Variable_Name;
 
-                  Parameters         : constant Term_List_List   :=
+                  Parameters         : constant Term_List_List     :=
                                          F_Terms (F_Parameters (BFC));
                   Error              : Boolean;
-                  Ext_Name           : constant Name_Type        :=
-                                         Name_Type
+                  Ext_Name           : constant External_Name_Type :=
+                                         External_Name_Type
                                            (External_Variable_Name
                                               (BFC, Error));
-                  Default_Value_Node : constant Term_List        :=
+                  Default_Value_Node : constant Term_List          :=
                                          Last_Child (Parameters).As_Term_List;
 
                begin
@@ -535,7 +535,8 @@ package body GPR2.Project.External is
       begin
          for C in Parsed_Externals.Iterate loop
             declare
-               Name : constant Name_Type := PP.Externals_Map_Package.Key (C);
+               Name : constant External_Name_Type :=
+                        PP.Externals_Map_Package.Key (C);
             begin
                if not Exts.Contains (Name) then
                   Exts.Include

@@ -149,7 +149,7 @@ package body GPR2.Options is
                end if;
 
                Self.Context.Include
-                 (GPR2.Name_Type (Param (Param'First .. Idx - 1)),
+                 (GPR2.External_Name_Type (Param (Param'First .. Idx - 1)),
                   Param (Idx + 1 .. Param'Last));
             end;
       end case;

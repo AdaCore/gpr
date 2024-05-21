@@ -327,7 +327,8 @@ package body GPRls.Options is
 
       for Curs in Self.Project_Context.Iterate loop
          declare
-            K : constant Name_Type := GPR2.Context.Key_Value.Key (Curs);
+            K : constant External_Name_Set :=
+                  GPR2.Context.Key_Value.Key (Curs);
             V : constant Value_Type := GPR2.Context.Key_Value.Element (Curs);
          begin
             Text_IO.Put_Line ("   " & String (K) & " => " & V);

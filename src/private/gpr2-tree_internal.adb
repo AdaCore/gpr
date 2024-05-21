@@ -100,7 +100,7 @@ package body GPR2.Tree_Internal is
 
    procedure Update_Context
      (Context     : in out GPR2.Context.Object;
-      Externals   : Containers.Name_Set;
+      Externals   : Containers.External_Name_Set;
       Environment : GPR2.Environment.Object);
    --  For all externals in Externals, if external is not already present in
    --  the context, fetch its value from the environment and insert it into the
@@ -707,7 +707,7 @@ package body GPR2.Tree_Internal is
 
          if Config.Has_Externals then
             declare
-               External_Names : Containers.Name_Set;
+               External_Names : Containers.External_Name_Set;
             begin
                for C in
                  View_Internal.Configuration_Externals (Config).Iterate
@@ -867,7 +867,7 @@ package body GPR2.Tree_Internal is
            and then Self.Root.Kind in Aggregate_Kind
          then
             declare
-               External_Names : Containers.Name_Set;
+               External_Names : Containers.External_Name_Set;
 
             begin
                for C in
@@ -1508,7 +1508,7 @@ package body GPR2.Tree_Internal is
             Data.Kind := Project.Qualifier;
 
             declare
-               External_Names : Containers.Name_Set;
+               External_Names : Containers.External_Name_Set;
 
             begin
                for C in Project.Externals.Iterate loop
@@ -2240,11 +2240,12 @@ package body GPR2.Tree_Internal is
             if P_Data.Is_Root then
                for C in P_Data.Attrs.Iterate (Name => PRA.External.Attr) loop
                   declare
-                     P : Containers.Name_Type_Set.Cursor :=
+                     P : Containers.External_Name_Type_Set.Cursor :=
                            P_Data.Externals.Find
-                             (Name_Type (P_Data.Attrs (C).Index.Text));
+                             (External_Name_Type
+                                (P_Data.Attrs (C).Index.Text));
                   begin
-                     if Containers.Name_Type_Set.Has_Element (P) then
+                     if Containers.External_Name_Type_Set.Has_Element (P) then
                         P_Data.Externals.Delete (P);
                      end if;
                   end;
@@ -2276,7 +2277,7 @@ package body GPR2.Tree_Internal is
 
                      if External.Kind = Single then
                         Self.Context (Aggregate).Insert
-                          (Name_Type (External.Index.Text),
+                          (External_Name_Type (External.Index.Text),
                            External.Value.Text,
                            Position, Inserted);
                      end if;
@@ -3072,7 +3073,7 @@ package body GPR2.Tree_Internal is
 
    procedure Update_Context
      (Context     : in out GPR2.Context.Object;
-      Externals   : Containers.Name_Set;
+      Externals   : Containers.External_Name_Set;
       Environment : GPR2.Environment.Object) is
    begin
       for External of Externals loop

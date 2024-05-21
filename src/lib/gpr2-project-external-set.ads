@@ -8,10 +8,9 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 
 package GPR2.Project.External.Set is
 
-   --  The type names must not be case-sensitive
 
    package Set is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, Object, "<");
+     (External_Name_Type, Object, "<");
 
    subtype Object is Set.Map;
 

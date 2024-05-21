@@ -43,6 +43,14 @@ package GPR2.Containers is
 
    Empty_Filename_Set : Filename_Set renames Filename_Type_Set.Empty_Set;
 
+   package External_Name_Type_Set is
+     new Ada.Containers.Indefinite_Ordered_Sets (External_Name_Type);
+
+   subtype External_Name_Set is External_Name_Type_Set.Set;
+
+   Empty_External_Name_Set :
+     External_Name_Set renames External_Name_Type_Set.Empty_Set;
+
    package Value_Type_List is
      new Ada.Containers.Indefinite_Vectors (Positive, Value_Type);
 
@@ -76,6 +84,12 @@ package GPR2.Containers is
      new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Value_Type);
 
    subtype Name_Value_Map is Name_Value_Map_Package.Map;
+
+   package External_Name_Value_Map_Package is
+     new Ada.Containers.Indefinite_Ordered_Maps
+       (External_Name_Type, Value_Type);
+
+   subtype External_Name_Value_Map is External_Name_Value_Map_Package.Map;
 
    function "=" (Left, Right : Source_Reference.Value.Object) return Boolean
      renames GPR2.Source_Reference.Value."=";

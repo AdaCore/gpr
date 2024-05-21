@@ -138,7 +138,7 @@ private package GPR2.Project_Parser is
 
    package Externals_Map_Package is
      new Ada.Containers.Indefinite_Ordered_Maps
-       (Key_Type     => Optional_Name_Type,
+       (Key_Type     => External_Name_Type,
         Element_Type => External_List,
         "="          => External_List_Package."=");
 
