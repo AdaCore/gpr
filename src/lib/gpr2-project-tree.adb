@@ -3671,6 +3671,98 @@ package body GPR2.Project.Tree is
       return Result;
    end Source_Directories;
 
+   ---------------------
+   -- Sources_Closure --
+   ---------------------
+
+   function Sources_Closure
+     (Self          : Object;
+      Source        : Filename_Optional := "";
+      No_Subproject : Boolean := False)
+      return Project.Source.Set.Object
+   is
+      procedure Do_Action (View : Project.View.Object)
+        with Pre => View.Is_Defined;
+      --  Add to S_Set all view's sources closure
+
+      type Filter_Kind is (None, Libraries, Mains);
+
+      Filter : Filter_Kind := None;
+
+      S_Set : Project.Source.Set.Object;
+
+
+      ---------------
+      -- Do_Action --
+      ---------------
+
+      procedure Do_Action (View : Project.View.Object) is
+      begin
+         if Filter = None
+           or else (Filter = Libraries
+                    and then View.Kind in K_Library | K_Aggregate_Library
+                    and then (View.Has_Interfaces
+                              or else View.Has_Library_Interface))
+           or else (Filter = Mains
+                    and then View.Kind = K_Standard
+                    and then View.Has_Mains)
+         then
+            for S of View.Sources_Closure (Source) loop
+               S_Set.Include (S);
+            end loop;
+         end if;
+      end Do_Action;
+
+      Root_Project : constant Project.View.Object := Self.Root_Project;
+
+   begin
+      if No_Subproject then
+         Do_Action (Root_Project);
+
+      else
+         --  Setup filter for the subtree's views. The filter is based on the
+         --  root project. If the root project is a library with interface then
+         --  we want to report only the interfaces of the sub-tree. Likewise
+         --  for the mains.
+
+         case Root_Project.Kind is
+            when K_Library | K_Aggregate_Library =>
+               if Root_Project.Has_Library_Interface
+                 or else Root_Project.Has_Interfaces
+               then
+                  Filter := Libraries;
+               end if;
+
+            when K_Standard =>
+               if Root_Project.Has_Mains then
+                  Filter := Mains;
+               else
+                  Filter := None;
+               end if;
+
+            when K_Aggregate =>
+               --  Nothing done for a root aggregate module. Such module could
+               --  be aggregating multiple unrelated modules. Having all the
+               --  sources for all the aggregated modules is not semantically
+               --  clear. If one need to get the sources of all aggregated
+               --  module it is necessary to manually iterate over aggregated
+               --  modules.
+               null;
+
+            when K_Configuration | K_Abstract =>
+               --  There is no sources on those projects
+               null;
+         end case;
+
+         Process_Subtree
+           (Self,
+            Externally_Built => True,
+            Do_Action        => Do_Action'Access);
+      end if;
+
+      return S_Set;
+   end Sources_Closure;
+
    ------------
    -- Target --
    ------------

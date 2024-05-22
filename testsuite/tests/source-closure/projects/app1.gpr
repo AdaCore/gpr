@@ -1,0 +1,10 @@
+project App1 is
+
+   for Source_Dirs use ("../src1", "../src2");
+
+   for Object_Dir use "obj/app1";
+   for Exec_Dir use "exe/app1";
+
+   for Main use ("main1.adb");
+
+end App1;

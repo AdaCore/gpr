@@ -1,0 +1,5 @@
+description:
+    check project view source closure
+driver: build_and_run
+project_file: test
+main: main

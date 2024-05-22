@@ -1,0 +1,136 @@
+========== For view Std
+main1.adb
+main2.adb
+mainfull.adb
+pck1.ads
+pck2.adb
+pck2.ads
+pck34.adb
+pck34.ads
+pck3.adb
+pck3.ads
+pck4.adb
+pck4.ads
+
+========== For view App1
+main1.adb
+pck1.ads
+
+========== For view App2
+main1.adb
+mainfull.adb
+pck1.ads
+pck2.adb
+pck2.ads
+pck34.adb
+pck34.ads
+pck3.adb
+pck3.ads
+pck4.adb
+pck4.ads
+
+========== For view App2 main1.adb
+main1.adb
+pck1.ads
+
+========== For view App2 mainfull.adb
+mainfull.adb
+pck1.ads
+pck2.adb
+pck2.ads
+pck34.adb
+pck34.ads
+pck3.adb
+pck3.ads
+pck4.adb
+pck4.ads
+
+========== For view Lib1
+
+========== For view Lib1 pck2.ads
+
+========== For view Lib2 pck2.ads
+pck2.adb
+pck2.ads
+
+========== For view Lib3 pck2.ads
+
+========== For view Lib3
+pck1.ads
+pck34.adb
+pck34.ads
+pck3.adb
+pck3.ads
+pck4.adb
+pck4.ads
+
+========== For view Lib3 pck34.ads
+pck34.adb
+pck34.ads
+pck3.adb
+pck3.ads
+pck4.adb
+pck4.ads
+
+========== For view App3
+main3.adb
+pck1.ads
+
+========== For view Lib4
+call3.ads
+
+========== For tree App1 Subproject FALSE
+main1.adb
+pck1.ads
+
+========== For tree App2 Subproject FALSE
+main1.adb
+mainfull.adb
+pck1.ads
+pck2.adb
+pck2.ads
+pck34.adb
+pck34.ads
+pck3.adb
+pck3.ads
+pck4.adb
+pck4.ads
+
+========== For tree Lib4 Subproject FALSE
+call3.ads
+
+========== For tree Lib4 Subproject TRUE
+call3.ads
+pck2.adb
+pck2.ads
+
+========== For tree Std2 Subproject FALSE
+main1.adb
+main2.adb
+mainfull.adb
+pck1.ads
+pck2.adb
+pck2.ads
+pck34.adb
+pck34.ads
+pck3.adb
+pck3.ads
+pck4.adb
+pck4.ads
+
+========== For tree Std2 Subproject TRUE
+call3.ads
+main1.adb
+main2.adb
+main3.adb
+mainfull.adb
+pck1.ads
+pck2.adb
+pck2.ads
+pck34.adb
+pck34.ads
+pck3.adb
+pck3.ads
+pck4.adb
+pck4.ads
+
