@@ -2,7 +2,7 @@ with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
 with GPR2.Build.Source.Sets;
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
@@ -71,18 +71,21 @@ procedure Main is
    end Output_Filename;
 
    Prj1, Prj2 : Project.Tree.Object;
-   Ctx        : Context.Object;
+   Opt        : GPR2.Options.Object;
    Log        : GPR2.Log.Object;
 begin
-   Project.Tree.Load (Prj1, Project.Create ("prj1.gpr"), Ctx);
-   Prj1.Log_Messages.Output_Messages (Information => False);
-   Prj1.Update_Sources (Messages => Log);
-   Log.Output_Messages;
+   Opt.Add_Switch (Options.P, "prj1.gpr");
+   if Prj1.Load (Opt, Absent_Dir_Error => No_Error) then
+      Prj1.Update_Sources (Messages => Log);
+      Log.Output_Messages;
+   end if;
 
-   Project.Tree.Load (Prj2, Project.Create ("prj2.gpr"), Ctx);
-   Prj2.Log_Messages.Output_Messages (Information => False);
-   Prj2.Update_Sources (Messages => Log);
-   Log.Output_Messages;
+   Opt := Options.Empty_Options;
+   Opt.Add_Switch (Options.P, "prj2.gpr");
+   if Prj2.Load (Opt, Absent_Dir_Error => No_Error) then
+      Prj2.Update_Sources (Messages => Log);
+      Log.Output_Messages;
+   end if;
 
    Text_IO.Put_Line ("**************** Iterator Prj1");
 

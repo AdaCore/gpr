@@ -1,4 +1,5 @@
 //// OS set to Linux
+demo.gpr: warning: no language for the projects tree: configuration skipped
 A        K_ABSTRACT
 A:   Object_Dir -> linux-obj
 Demo     K_AGGREGATE

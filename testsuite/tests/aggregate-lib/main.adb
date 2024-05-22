@@ -2,6 +2,7 @@ with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GPR2.Context;
+with GPR2.Options;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
@@ -39,11 +40,15 @@ procedure Main is
       use GPR2.Project.Attribute.Set;
       use GPR2.Project.Variable.Set.Set;
    begin
+      if Prj.Is_Runtime then
+         return;
+      end if;
+
       Text_IO.Put (String (Prj.Name) & " ");
       Text_IO.Set_Col (10);
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
-      for A in Prj.Attributes (With_Defaults => False).Iterate loop
+      for A in Prj.Attributes (With_Defaults => False, With_Config => False).Iterate loop
          Text_IO.Put
            ("A:   " & Image (Attribute.Set.Element (A).Name.Id.Attr));
          Text_IO.Put (" ->");
@@ -68,14 +73,19 @@ procedure Main is
    end Output_Filename;
 
    Prj : Project.Tree.Object;
+   Opt : GPR2.Options.Object;
    Ctx : Context.Object;
    Log : GPR2.Log.Object;
 
 begin
    Text_IO.Put_Line ("//// OS set to Linux");
-   Ctx.Include ("OS", "Linux");
+   Opt.Add_Switch (Options.P, "demo.gpr");
+   Opt.Add_Switch (Options.X, "OS=Linux");
 
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
+   if not Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Text_IO.Put_Line ("!!! Failed to load project");
+      return;
+   end if;
 
    for P of Prj loop
       Display (P);

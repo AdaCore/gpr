@@ -1,10 +1,11 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
-with GPR2.Context;
+pragma Warnings (On);
+with GPR2.Options;
 with GPR2.Log;
-with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -13,9 +14,8 @@ procedure Main is
 
    use Ada;
    use GPR2;
-   use GPR2.Project;
 
-   procedure Check (Project_Name : Filename_Type);
+   procedure Check (Project_Name : String);
    --  Do check the given project's sources
 
    procedure Output_Filename (Filename : Path_Name.Full_Name);
@@ -25,46 +25,43 @@ procedure Main is
    -- Check --
    -----------
 
-   procedure Check (Project_Name : Filename_Type) is
+   procedure Check (Project_Name : String) is
       Prj  : Project.Tree.Object;
-      Ctx  : Context.Object;
+      Opt  : Options.Object;
       View : Project.View.Object;
       Log  : GPR2.Log.Object;
    begin
-      Project.Tree.Load (Prj, Create (Project_Name), Ctx);
-      View := Prj.Root_Project;
-      Text_IO.Put_Line ("Project: " & String (View.Name));
+      Opt.Add_Switch (Options.P, Project_Name);
+      if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+         View := Prj.Root_Project;
+         Text_IO.Put_Line ("Project: " & String (View.Name));
 
-      Prj.Update_Sources (Messages => Log);
-      Log.Output_Messages;
+         Prj.Update_Sources (Messages => Log);
+         Log.Output_Messages;
 
-      for Source of View.Sources loop
-         declare
-            U : constant Optional_Name_Type :=
-                  (if Source.Has_Unit_At (No_Index)
-                   then Source.Unit.Name else "");
-         begin
-            Output_Filename (Source.Path_Name.Value);
+         for Source of View.Sources loop
+            declare
+               U : constant Optional_Name_Type :=
+                     (if Source.Has_Unit_At (No_Index)
+                      then Source.Unit.Name else "");
+            begin
+               Output_Filename (Source.Path_Name.Value);
 
-            Text_IO.Set_Col (16);
-            Text_IO.Put ("   language: " & Image (Source.Language));
+               Text_IO.Set_Col (16);
+               Text_IO.Put ("   language: " & Image (Source.Language));
 
-            Text_IO.Set_Col (33);
-            Text_IO.Put
-              ("   Kind: " & Source.Kind'Image);
+               Text_IO.Set_Col (33);
+               Text_IO.Put
+                 ("   Kind: " & Source.Kind'Image);
 
-            if U /= "" then
-               Text_IO.Put ("   unit: " & String (U));
-            end if;
+               if U /= "" then
+                  Text_IO.Put ("   unit: " & String (U));
+               end if;
 
-            Text_IO.New_Line;
-         end;
-      end loop;
-
-   exception
-      when E : GPR2.Project_Error =>
-         Prj.Log_Messages.Output_Messages
-           (Information => False, Warning => False);
+               Text_IO.New_Line;
+            end;
+         end loop;
+      end if;
    end Check;
 
    ---------------------

@@ -1,55 +1,51 @@
-with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
 procedure Main is
 
-   use Ada;
    use GPR2;
-   use GPR2.Project;
 
-   procedure Display (Prj : Project.View.Object);
-
-   function Filter_Path (Filename : Path_Name.Full_Name) return String;
+   CWD : constant GPR2.Path_Name.Object := Path_Name.Create_Directory (".");
 
    -------------
    -- Display --
    -------------
 
    procedure Display (Prj : Project.View.Object) is
+      use Ada;
    begin
       Text_IO.Put (String (Prj.Name) & " ");
       Text_IO.Set_Col (10);
       Text_IO.Put_Line (Prj.Qualifier'Img);
-      Text_IO.Put_Line (Filter_Path (Prj.Object_Directory.Value));
+      Text_IO.Put_Line (String (Prj.Object_Directory.Relative_Path (CWD)));
    end Display;
 
-   -----------------
-   -- Filter_Path --
-   -----------------
+   ----------
+   -- Test --
+   ----------
 
-   function Filter_Path (Filename : Path_Name.Full_Name) return String is
-      S : constant String := String (Filename);
-      Test : constant String := "object-directory";
-      I : constant Positive := Strings.Fixed.Index (S, Test);
+   procedure Test (Gpr : String; Subdirs : String := "") is
+      Tree : Project.Tree.Object;
+      Opt  : Options.Object;
+
    begin
-      return S (I + Test'Length + 1 .. S'Last);
-   end Filter_Path;
+      Opt.Add_Switch (Options.P, Gpr);
 
-   Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+      if Subdirs'Length > 0 then
+         Opt.Add_Switch (Options.Subdirs, Subdirs);
+      end if;
+
+      if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+         Display (Tree.Root_Project);
+      end if;
+   end Test;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo1.gpr"), Ctx);
-   Display (Prj.Root_Project);
-
-   Project.Tree.Load (Prj, Create ("demo2.gpr"), Ctx);
-   Display (Prj.Root_Project);
-
-   Project.Tree.Load (Prj, Create ("demo2.gpr"), Ctx, Subdirs => "debug");
-   Display (Prj.Root_Project);
+   Test ("demo1.gpr");
+   Test ("demo2.gpr");
+   Test ("demo2.gpr", "debug");
 end Main;

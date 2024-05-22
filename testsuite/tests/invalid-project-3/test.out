@@ -68,4 +68,5 @@ same_suffix3.gpr:4:11: error: Body_Suffix (Ada) value already used for this lang
 
 ** configuration:
 
+use implicit project in /config
 default.cgpr:3:19: error: undefined variable "linux"

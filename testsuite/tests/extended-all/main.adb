@@ -1,6 +1,6 @@
 with Ada.Text_IO;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 
@@ -27,8 +27,10 @@ procedure Main is
    end Display;
 
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Opt : Options.Object;
 begin
-   Project.Tree.Load (Prj, Project.Create ("prj2.gpr"), Ctx);
-   Display (Prj.Root_Project);
+   Opt.Add_Switch (Options.P, "prj2.gpr");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
+   end if;
 end Main;

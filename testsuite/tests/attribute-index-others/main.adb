@@ -4,11 +4,11 @@ with Ada.Strings.Fixed;
 
 with GPR2.Log;
 with GPR2.Message;
+with GPR2.Options;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Variable.Set;
-with GPR2.Context;
 
 procedure Main is
 
@@ -49,52 +49,36 @@ procedure Main is
 
    procedure Display (Prj : Project.View.Object) is
       use GPR2.Project.Attribute.Set;
+      First : Boolean;
    begin
       Text_IO.Put (String (Prj.Name) & " ");
       Text_IO.Set_Col (10);
       Text_IO.Put_Line (Prj.Kind'Img);
 
-      for A of Prj.Attributes (With_Defaults => False) loop
+      for A of Prj.Attributes (With_Defaults => False, With_Config => False) loop
          Display (A);
       end loop;
 
       for Pck of Prj.Packages (With_Defaults => False) loop
-         Text_IO.Put_Line (" " & Image (Pck));
+         First := True;
 
-         for A of Prj.Attributes (Pack => Pck, With_Defaults => False) loop
+         for A of Prj.Attributes (Pack => Pck, With_Defaults => False, With_Config => False) loop
+            if First then
+               First := False;
+               Text_IO.Put_Line (" " & Image (Pck));
+            end if;
+
             Display (A);
          end loop;
       end loop;
    end Display;
 
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Opt : Options.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
-
-   Display (Prj.Root_Project);
-
-exception
-   when GPR2.Project_Error =>
-      if Prj.Has_Messages then
-         Text_IO.Put_Line ("Messages found:");
-
-         for C in Prj.Log_Messages.Iterate
-           (False, False, True, True, True)
-         loop
-            declare
-               M   : constant Message.Object := Log.Element (C);
-               Mes : constant String := M.Format;
-               L   : constant Natural :=
-                       Strings.Fixed.Index (Mes, "/attribute-index-others");
-            begin
-               if L /= 0 then
-                  Text_IO.Put_Line (Mes (L .. Mes'Last));
-               else
-                  Text_IO.Put_Line (Mes);
-               end if;
-            end;
-         end loop;
-      end if;
+   Opt.Add_Switch (Options.P, "demo.gpr");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
+   end if;
 end Main;

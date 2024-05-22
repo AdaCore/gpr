@@ -21,7 +21,8 @@ procedure Test is
                         Ada.Environment_Variables.Value
                           ("ADA_PROJECT_PATH", "");
    function Environment
-     (Root : GPR2.Filename_Optional) return GPR2.Environment.Object is
+     (Root : GPR2.Filename_Optional) return GPR2.Environment.Object
+   is
       Environment : GPR2.Environment.Object;
       Project_Path_File : constant GPR2.Path_Name.Object :=
                             GPR2.Path_Name.Create_File
@@ -77,11 +78,15 @@ begin
    Options.Add_Switch (GPR2.Options.P, "./files/prj");
    Options.Add_Switch (GPR2.Options.AP, "./files/registered");
    Options.Add_Switch (GPR2.Options.Autoconf, "./files/autoconf.cgpr");
-   Options.Finalize (Allow_Implicit_Project => False,
-                     Quiet                  => True,
-                     Environment            => Environment ("files"));
-   if not Options.Load_Project (Tree,
-                                Quiet => True) then
+   Options.Finalize
+     (Allow_Implicit_Project => False,
+      Quiet                  => True,
+      Environment            => Environment ("files"));
+
+   if not Tree.Load (Options,
+                     Absent_Dir_Error => GPR2.No_Error,
+                     Verbosity        => GPR2.Project.Tree.Quiet)
+   then
       GPR2.Log.Output_Messages (Tree.Log_Messages.all);
    end if;
 

@@ -3,7 +3,7 @@ with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GPR2.Build.Source.Sets;
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
@@ -15,50 +15,44 @@ procedure Main is
    use GPR2;
    use GPR2.Project;
 
-   procedure Check (Project_Name : Filename_Type);
+   procedure Check (Project_Name : String);
    --  Do check the given project's sources
 
    -----------
    -- Check --
    -----------
 
-   procedure Check (Project_Name : Filename_Type) is
+   procedure Check (Project_Name : String) is
       Prj  : Project.Tree.Object;
-      Ctx  : Context.Object;
+      Opt  : Options.Object;
       View : Project.View.Object;
       Log  : GPR2.Log.Object;
    begin
-      Project.Tree.Load_Autoconf (Prj, Create (Project_Name), Ctx);
+      Opt.Add_Switch (Options.P, Project_Name);
+      if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+         View := Prj.Root_Project;
+         Text_IO.Put_Line ("Project: " & String (View.Name));
 
-      View := Prj.Root_Project;
-      Text_IO.Put_Line ("Project: " & String (View.Name));
+         Prj.Log_Messages.Output_Messages (Information => False);
+         Prj.Update_Sources (GPR2.Sources_Only, Log);
+         Log.Output_Messages;
 
-      Prj.Log_Messages.Output_Messages (Information => False);
-      Prj.Update_Sources (GPR2.Sources_Only, Log);
-      Log.Output_Messages;
+         for Source of View.Sources loop
+            Text_IO.Put (" > " & String (Source.Path_Name.Relative_Path (View.Path_Name)));
 
-      for Source of View.Sources loop
-         Text_IO.Put (" > " & String (Source.Path_Name.Relative_Path (View.Path_Name)));
+            Text_IO.Set_Col (20);
+            Text_IO.Put ("   language: " & Image (Source.Language));
 
-         Text_IO.Set_Col (20);
-         Text_IO.Put ("   language: " & Image (Source.Language));
+            Text_IO.Set_Col (37);
+            Text_IO.Put ("   Kind: " & Source.Kind'Image);
 
-         Text_IO.Set_Col (37);
-         Text_IO.Put ("   Kind: " & Source.Kind'Image);
+            if Source.Has_Units then
+               Text_IO.Put ("   unit: " & String (Source.Unit.Name));
+            end if;
 
-         if Source.Has_Units then
-            Text_IO.Put ("   unit: " & String (Source.Unit.Name));
-         end if;
-
-         Text_IO.New_Line;
-      end loop;
-   exception
-      when Project_Error =>
-         if Prj.Log_Messages.Has_Error then
-            Prj.Log_Messages.Output_Messages
-              (Information => False,
-               Warning     => False);
-         end if;
+            Text_IO.New_Line;
+         end loop;
+      end if;
    end Check;
 
 begin

@@ -1,6 +1,7 @@
 with Ada.Text_IO;
 
 with GPR2.Context;
+with GPR2.Options;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
@@ -50,13 +51,18 @@ procedure Main is
    end Display;
 
    Prj : Project.Tree.Object;
+   Opt : GPR2.Options.Object;
    Ctx : Context.Object;
 
 begin
    Text_IO.Put_Line ("//// OS set to Linux");
-   Ctx.Include ("OS", "Linux");
+   Opt.Add_Switch (Options.X, "OS=Linux");
+   Opt.Add_Switch (Options.P, "demo.gpr");
 
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
+   if not Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Text_IO.Put_Line ("!!! Failed to load project");
+      return;
+   end if;
 
    for P of Prj loop
       Display (P);

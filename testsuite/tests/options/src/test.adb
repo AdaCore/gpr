@@ -527,13 +527,14 @@ procedure test is
    procedure Test_Load_Project is
       Tree : GPR2.Project.Tree.Object;
 
-      procedure Test (Name : String;
-                      Tree             : in out GPR2.Project.Tree.Object;
-                      Absent_Dir_Error : GPR2.Project.Tree.Error_Level :=
-                        GPR2.Project.Tree.Warning;
-                      File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                        GPR2.File_Readers.No_File_Reader_Reference;
-                      Quiet            : Boolean := False) is
+      procedure Test
+        (Name : String;
+         Tree             : in out GPR2.Project.Tree.Object;
+         Absent_Dir_Error : GPR2.Error_Level := GPR2.Warning;
+         File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
+           GPR2.File_Readers.No_File_Reader_Reference;
+         Quiet            : Boolean := False)
+      is
          Loaded : Boolean;
 
       begin
@@ -594,7 +595,7 @@ procedure test is
       Options.Add_Switch (GPR2.Options.Autoconf, "other-autoconf.cgpr");
       Options.Add_Switch (GPR2.Options.X, "BUILD=Debug");
       Options.Finalize;
-      Test ("-aP added-path -aP load-project --root-dir=. --relocate-build-tree=relocated -Ptest --autoconf=autoconf.cgpr -XBUILD=Debug", Tree, Quiet => True);
+      Test ("-aP added-path -aP load-project --root-dir=. --relocate-build-tree=relocated -Ptest --autoconf=autoconf.cgpr -XBUILD=Debug", Tree);
 
       Options := GPR2.Options.Empty_Options;
       Options.Add_Switch (GPR2.Options.AP, "added-path");

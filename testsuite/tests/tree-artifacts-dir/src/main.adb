@@ -1,6 +1,6 @@
 with Ada.Text_IO;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 
@@ -12,27 +12,22 @@ procedure Main is
                    Reloc_Tree : String := "")
    is
       Tree : Project.Tree.Object;
-      Ctx  : Context.Object;
+      Opt  : Options.Object;
       Cwd  : constant Path_Name.Object := Path_Name.Create_Directory (".");
    begin
-      Project.Tree.Load_Autoconf
-        (Tree,
-         Path_Name.Create_File (Filename_Type (Gpr)),
-         Context => Ctx,
-         Subdirs => Optional_Name_Type (Subdirs),
-         Build_Path => (if Reloc_Tree'Length > 0
-                        then Path_Name.Create_Directory
-                               (Filename_Type (Reloc_Tree))
-                        else Path_Name.Undefined));
-
-      if Tree.Log_Messages.Has_Error then
-         Tree.Log_Messages.Output_Messages (Information => False);
-         return;
+      Opt.Add_Switch (Options.P, Gpr);
+      if Subdirs'Length > 0 then
+         Opt.Add_Switch (Options.Subdirs, Subdirs);
       end if;
-      Ada.Text_IO.Put_Line
-        (String (Tree.Root_Project.Name) & " => " &
-           String (Tree.Artifacts_Dir.Relative_Path (Cwd)));
-      Tree.Unload;
+      if Reloc_Tree'Length > 0 then
+         Opt.Add_Switch (Options.Relocate_Build_Tree, Reloc_Tree);
+      end if;
+
+      if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+         Ada.Text_IO.Put_Line
+           (String (Tree.Root_Project.Name) & " => " &
+              String (Tree.Artifacts_Dir.Relative_Path (Cwd)));
+      end if;
    end Test;
 
 begin

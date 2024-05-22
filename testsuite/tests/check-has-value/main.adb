@@ -1,12 +1,10 @@
-with Ada.Directories;
 with Ada.Text_IO;
-with Ada.Strings.Fixed;
 
 with GPR2.Project.Attribute;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Registry.Attribute;
-with GPR2.Context;
+with GPR2.Options;
 
 procedure Main is
 
@@ -48,28 +46,11 @@ procedure Main is
    end Display;
 
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Opt : Options.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
-   Display (Prj.Root_Project);
-exception
-   when GPR2.Project_Error =>
-      if Prj.Has_Messages then
-         Text_IO.Put_Line ("Messages found:");
-
-         for M of Prj.Log_Messages.all loop
-            declare
-               Mes : constant String := M.Format;
-               L   : constant Natural :=
-                       Strings.Fixed.Index (Mes, "/check-has-value");
-            begin
-               if L /= 0 then
-                  Text_IO.Put_Line (Mes (L .. Mes'Last));
-               else
-                  Text_IO.Put_Line (Mes);
-               end if;
-            end;
-         end loop;
-      end if;
+   Opt.Add_Switch (Options.P, "demo.gpr");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
+   end if;
 end Main;

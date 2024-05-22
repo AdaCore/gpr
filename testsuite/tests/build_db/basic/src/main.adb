@@ -5,7 +5,7 @@ with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source.Sets;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -15,12 +15,12 @@ procedure Main is
    use GPR2;
    use GPR2.Build;
 
-   procedure Test (Gpr : Filename_Type)
+   procedure Test (Gpr : String)
    is
       Tree        : Project.Tree.Object;
       Log         : GPR2.Log.Object;
       Root        : Path_Name.Object;
-      Ctx         : Context.Object := Context.Empty;
+      Opt         : GPR2.Options.Object;
       Src_Count   : Natural := 0;
       Src_Count_2 : Natural := 0;
 
@@ -96,19 +96,10 @@ procedure Main is
       Ada.Text_IO.Put_Line ("Testing " & String (Gpr));
       Ada.Text_IO.Put_Line ("=========================================");
 
-      begin
-         Project.Tree.Load_Autoconf
-           (Tree,
-            Path_Name.Create_File (Gpr),
-            Ctx);
-
-         Tree.Log_Messages.Output_Messages (Information => False);
-      exception
-         when GPR2.Project_Error =>
-            Tree.Log_Messages.Output_Messages (Information => False);
-
-            return;
-      end;
+      Opt.Add_Switch (Options.P, Gpr);
+      if not Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+         return;
+      end if;
 
       Tree.Log_Messages.Output_Messages (Information => False);
 
@@ -289,6 +280,6 @@ begin
       return;
    end if;
 
-   Test (Filename_Type (Ada.Command_Line.Argument (1)));
+   Test (Ada.Command_Line.Argument (1));
 
 end Main;

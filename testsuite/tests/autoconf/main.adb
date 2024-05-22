@@ -7,6 +7,7 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -25,7 +26,7 @@ procedure Main is
    package PRP renames Project.Registry.Pack;
 
    Project_Tree : Project.Tree.Object;
-   Ctx          : Context.Object := Context.Empty;
+   Opt          : Options.Object;
    RTS          : Lang_Value_Map := Lang_Value_Maps.Empty_Map;
    This_Target  : constant String := System.OS_Constants.Target_Name;
 
@@ -47,7 +48,7 @@ procedure Main is
       Target           : constant String :=
                            Config_View.Attribute (PRA.Target).Value.Text;
       Canonical_Target : constant String :=
-                           Config_View.Attribute 
+                           Config_View.Attribute
                              (PRA.Canonical_Target).Value.Text;
       Languages        : constant GPR2.Containers.Source_Value_List :=
                            Project_Tree.Root_Project.Languages;
@@ -76,7 +77,7 @@ procedure Main is
                Driver_Attr     : constant Project.Attribute.Object :=
                                    Config_View.Attribute
                                      (Name  => PRA.Compiler.Driver,
-                                      Index => PAI.Create 
+                                      Index => PAI.Create
                                                  (+Name_Type (Value.Text)));
                Compiler_Driver : constant Path_Name.Object :=
                                    Path_Name.Create_File
@@ -118,17 +119,14 @@ begin
    --  Equivalent to command line options:
    --     --RTS=rtp -Xtarget=x86_64-wrs-vxworks7
 
-   RTS.Insert (Ada_Language, "rtp");
-   Ctx.Insert ("VSB_DIR", ".");
-   Ctx.Insert ("target", "x86_64-wrs-vxworks7");
-
-   Project_Tree.Load_Autoconf
-     (Filename          => Project.Create ("projects/a.gpr"),
-      Context           => Ctx,
-      Language_Runtimes => RTS);
-
-   Print_Config_Info;
-
+   Opt := Options.Empty_Options;
+   Opt.Add_Switch (Options.P, "projects/a.gpr");
+   Opt.Add_Switch (Options.RTS, "rtp", "Ada");
+   Opt.Add_Switch (Options.X, "VSB_DIR=.");
+   Opt.Add_Switch (Options.X, "target=x86_64-wrs-vxworks7");
+   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+      Print_Config_Info;
+   end if;
    Project_Tree.Unload;
 
    Text_IO.New_Line;
@@ -136,33 +134,26 @@ begin
    --  --RTS=rtp -Xtarget=x86-linux --target=x86_64-wrs-vxworks7
    --  --target will take precedence over Target definition in the project
 
-   Ctx.Clear;
-   Ctx.Insert ("VSB_DIR", ".");
-   Ctx.Insert ("target", This_Target);
-
-   Project_Tree.Load_Autoconf
-     (Filename          => Project.Create ("projects/a.gpr"),
-      Context           => Ctx,
-      Target            => "x86_64-wrs-vxworks7",
-      Language_Runtimes => RTS);
-
-   Print_Config_Info;
-
+   Opt := Options.Empty_Options;
+   Opt.Add_Switch (Options.P, "projects/a.gpr");
+   Opt.Add_Switch (Options.RTS, "rtp", "Ada");
+   Opt.Add_Switch (Options.X, "VSB_DIR=.");
+   Opt.Add_Switch (Options.X, "target=" & This_Target);
+   Opt.Add_Switch (Options.Target, "x86_64-wrs-vxworks7");
+   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+      Print_Config_Info;
+   end if;
    Project_Tree.Unload;
 
    Text_IO.New_Line;
 
    --  Equivalent to command line without --RTS / --target
 
-   Project_Tree.Load_Autoconf
-     (Filename => Project.Create ("projects/a.gpr"),
-      Context  => Ctx);
-
-   Print_Config_Info;
-
-exception
-   when Project_Error =>
-      for M of Project_Tree.Log_Messages.all loop
-         Text_IO.Put_Line (M.Format);
-      end loop;
+   Opt := Options.Empty_Options;
+   Opt.Add_Switch (Options.P, "projects/a.gpr");
+   Opt.Add_Switch (Options.X, "VSB_DIR=.");
+   Opt.Add_Switch (Options.X, "target=" & This_Target);
+   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+      Print_Config_Info;
+   end if;
 end Main;

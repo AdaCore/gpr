@@ -1,19 +1,19 @@
 with Ada.Text_IO;
 with GPR2.Build.Compilation_Unit;
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
 procedure Main is
-   Tree         : GPR2.Project.Tree.Object;
-   Context      : GPR2.Context.Object;
-   Filename     : constant GPR2.Path_Name.Object :=
-                    GPR2.Path_Name.Create_File
-                      (GPR2.Project.Ensure_Extension ("file/prj.gpr"),
-                       GPR2.Path_Name.No_Resolution);
-   Log          : GPR2.Log.Object;
+   Tree     : GPR2.Project.Tree.Object;
+   Opt      : GPR2.Options.Object;
+   Filename : constant GPR2.Path_Name.Object :=
+                GPR2.Path_Name.Create_File
+                  (GPR2.Project.Ensure_Extension ("file/prj.gpr"),
+                   GPR2.Path_Name.No_Resolution);
+   Log      : GPR2.Log.Object;
    use GPR2;
 
    procedure Test
@@ -37,8 +37,11 @@ procedure Main is
    end Test;
 
 begin
-   Tree.Load_Autoconf (Filename => Filename, Context  => Context);
-   Tree.Log_Messages.Output_Messages (Information => False);
+   Opt.Add_Switch (Options.P, "file/prj.gpr");
+   if not Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+      return;
+   end if;
+
    Tree.Update_Sources (Messages => Log);
    Log.Output_Messages (Information => False);
 
@@ -59,7 +62,4 @@ begin
    Test ("root.child.child", True, True);
    --  check spec not returned when unit name used
    Test ("root.child.child", False, True);
-exception
-   when Project_Error =>
-      Tree.Log_Messages.Output_Messages (Information => False);
 end Main;

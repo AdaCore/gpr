@@ -2,18 +2,15 @@ with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GPR2.Context;
-with GPR2.Message;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
-with GPR2.Project.Attribute.Set;
 
 procedure Main is
 
    use Ada;
    use GPR2;
-   use GPR2.Project;
-   use GPR2.Message;
 
    procedure Display (Prj : Project.View.Object);
 
@@ -21,6 +18,7 @@ procedure Main is
    --  Remove the tmp directory where test is processing
 
    Prj : Project.Tree.Object;
+   Opt : Options.Object;
    Ctx : Context.Object;
 
    -------------
@@ -28,7 +26,6 @@ procedure Main is
    -------------
 
    procedure Display (Prj : Project.View.Object) is
-      use GPR2.Project.Attribute.Set;
    begin
       Text_IO.Put (String (Prj.Name) & " ");
       Text_IO.Set_Col (10);
@@ -72,25 +69,29 @@ procedure Main is
    end Filter_Path;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
+   Opt.Add_Switch (Options.P, "demo.gpr");
 
-   Display (Prj.Root_Project);
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
 
-   Ctx.Insert ("VERSION", "1.4");
-   Prj.Set_Context (Ctx);
+      Ctx.Insert ("VERSION", "1.4");
+      Prj.Set_Context (Ctx);
 
-   Display (Prj.Root_Project);
+      Display (Prj.Root_Project);
+   end if;
 
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx, Subdirs => "release");
+   Opt := Options.Empty_Options;
+   Opt.Add_Switch (Options.P, "demo.gpr");
+   Opt.Add_Switch (Options.Subdirs, "release");
+   Opt.Add_Switch (Options.X, "VERSION=1.4");
 
-   Display (Prj.Root_Project);
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
 
-   Ctx.Replace ("VERSION", "A.B");
-   Prj.Set_Context (Ctx);
+      Display (Prj.Root_Project);
 
-   Display (Prj.Root_Project);
+      Ctx.Replace ("VERSION", "A.B");
+      Prj.Set_Context (Ctx);
 
-exception
-   when Project_Error =>
-      Prj.Log_Messages.Output_Messages (Information => False);
+      Display (Prj.Root_Project);
+   end if;
 end Main;

@@ -1,6 +1,6 @@
 with GPR2; use GPR2;
 with GPR2.Project.Tree;
-with GPR2.Context; use GPR2.Context;
+with GPR2.Options;
 with GPR2.Log;
 
 with Ada.Strings.Fixed;
@@ -8,8 +8,8 @@ with Ada.Text_IO;
 
 procedure Main is
 
-   Ctx          : Context.Object := Context.Empty;
    Project_Tree : Project.Tree.Object;
+   Opt          : Options.Object;
 
    procedure Check_Messages
      (Name    : Boolean := False;
@@ -23,7 +23,7 @@ procedure Main is
    is
       use Ada.Strings.Fixed;
    begin
-      for C in Project_Tree.Log_Messages.Iterate
+      for C in Project_Tree.Configuration.Log_Messages.Iterate
         (Information => False,
          Warning     => True,
          Error	     => True,
@@ -54,54 +54,44 @@ procedure Main is
 
 begin
 
-   Project_Tree.Load_Autoconf
-     (Filename          => Project.Create ("prj.gpr"),
-      Context           => Ctx);
-
-   Check_Messages;
-
+   Opt.Add_Switch (Options.P, "prj.gpr");
+   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error, Verbosity => Project.Tree.Quiet) then
+      Check_Messages;
+   end if;
    Project_Tree.Unload;
 
-   Ctx.Include ("TC_NAME", "toto");
-
-   Project_Tree.Load_Autoconf
-     (Filename          => Project.Create ("prj.gpr"),
-      Context           => Ctx);
-
-   Check_Messages (Name => True);
-
+   Opt := Options.Empty_Options;
+   Opt.Add_Switch (Options.P, "prj.gpr");
+   Opt.Add_Switch (Options.X, "TC_NAME=toto");
+   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error, Verbosity => Project.Tree.Quiet) then
+      Check_Messages (Name => True);
+   end if;
    Project_Tree.Unload;
 
-   Ctx.Clear;
-   Ctx.Include ("TC_PATH", "toto");
-
-   Project_Tree.Load_Autoconf
-     (Filename          => Project.Create ("prj.gpr"),
-      Context           => Ctx);
-
-   Check_Messages (Path => True);
-
+   Opt := Options.Empty_Options;
+   Opt.Add_Switch (Options.P, "prj.gpr");
+   Opt.Add_Switch (Options.X, "TC_PATH=toto");
+   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error, Verbosity => Project.Tree.Quiet) then
+      Check_Messages (Path => True);
+   end if;
    Project_Tree.Unload;
 
-   Ctx.Clear;
-   Ctx.Include ("TC_VERSION", "toto");
-
-   Project_Tree.Load_Autoconf
-     (Filename          => Project.Create ("prj.gpr"),
-      Context           => Ctx);
-
-   Check_Messages (Version => True);
-
+   Opt := Options.Empty_Options;
+   Opt.Add_Switch (Options.P, "prj.gpr");
+   Opt.Add_Switch (Options.X, "TC_VERSION=toto");
+   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error, Verbosity => Project.Tree.Quiet) then
+      Check_Messages (Version => True);
+   end if;
    Project_Tree.Unload;
-   Ctx.Include ("TC_NAME", "toto");
-   Ctx.Include ("TC_PATH", "toto");
 
-   Project_Tree.Load_Autoconf
-     (Filename          => Project.Create ("prj.gpr"),
-      Context           => Ctx);
-
-
-   Check_Messages (True, True, True);
+   Opt := Options.Empty_Options;
+   Opt.Add_Switch (Options.P, "prj.gpr");
+   Opt.Add_Switch (Options.X, "TC_NAME=toto");
+   Opt.Add_Switch (Options.X, "TC_PATH=toto");
+   Opt.Add_Switch (Options.X, "TC_VERSION=toto");
+   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error, Verbosity => Project.Tree.Quiet) then
+      Check_Messages (True, True, True);
+   end if;
    Project_Tree.Unload;
 
 end Main;

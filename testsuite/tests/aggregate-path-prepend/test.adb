@@ -1,6 +1,6 @@
 with Ada.Text_IO;        use Ada.Text_IO;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Path_Name;
@@ -32,56 +32,53 @@ procedure Test is
       end if;
    end Show_Tree;
 
-   Ctx  : GPR2.Context.Object;
    Tree : GPR2.Project.Tree.Object;
+   Opt  : GPR2.Options.Object;
 
 
 begin
    Put_Line ("append.gpr, no project path from command line");
-   GPR2.Project.Tree.Load_Autoconf
-     (Tree,
-      GPR2.Path_Name.Create_File ("./data/append.gpr"),
-      Context => Ctx);
-   Show_Tree (Tree);
+
+   Opt.Add_Switch (GPR2.Options.P, "./data/append.gpr");
+   if Tree.Load (Opt, Absent_Dir_Error => GPR2.No_Error) then
+      Show_Tree (Tree);
+   end if;
    Tree.Unload;
 
    Put_Line ("prepend.gpr, no project path from command line");
-   GPR2.Project.Tree.Load_Autoconf
-     (Tree,
-      GPR2.Path_Name.Create_File ("./data/prepend.gpr"),
-      Context => Ctx);
-   Show_Tree (Tree);
+   Opt := GPR2.Options.Empty_Options;
+   Opt.Add_Switch (GPR2.Options.P, "./data/prepend.gpr");
+   if Tree.Load (Opt, Absent_Dir_Error => GPR2.No_Error) then
+      Show_Tree (Tree);
+   end if;
    Tree.Unload;
 
    --  Equivalent to using the -aP switch
    Put_Line ("append.gpr, 'dep' in search path");
-   Tree.Register_Project_Search_Path
-     (GPR2.Path_Name.Create_Directory ("./data/dep"));
-   GPR2.Project.Tree.Load_Autoconf
-     (Tree,
-      GPR2.Path_Name.Create_File ("./data/append.gpr"),
-      Context => Ctx);
-   Show_Tree (Tree);
+   Opt := GPR2.Options.Empty_Options;
+   Opt.Add_Switch (GPR2.Options.P, "./data/append.gpr");
+   Opt.Add_Switch (GPR2.Options.AP, "./data/dep");
+   if Tree.Load (Opt, Absent_Dir_Error => GPR2.No_Error) then
+      Show_Tree (Tree);
+   end if;
    Tree.Unload;
 
    Put_Line ("prepend.gpr, 'dep' in search path");
-   Tree.Register_Project_Search_Path
-     (GPR2.Path_Name.Create_Directory ("./data/dep"));
-   GPR2.Project.Tree.Load_Autoconf
-     (Tree,
-      GPR2.Path_Name.Create_File ("./data/prepend.gpr"),
-      Context => Ctx);
-   Show_Tree (Tree);
+   Opt := GPR2.Options.Empty_Options;
+   Opt.Add_Switch (GPR2.Options.P, "./data/prepend.gpr");
+   Opt.Add_Switch (GPR2.Options.AP, "./data/dep");
+   if Tree.Load (Opt, Absent_Dir_Error => GPR2.No_Error) then
+      Show_Tree (Tree);
+   end if;
    Tree.Unload;
 
    Put_Line ("prj.gpr, 'dep' in search path");
-   Tree.Register_Project_Search_Path
-     (GPR2.Path_Name.Create_Directory ("./data/dep"));
-   GPR2.Project.Tree.Load_Autoconf
-     (Tree,
-      GPR2.Path_Name.Create_File ("./data/prj.gpr"),
-      Context => Ctx);
-   Show_Tree (Tree);
+   Opt := GPR2.Options.Empty_Options;
+   Opt.Add_Switch (GPR2.Options.P, "./data/prj.gpr");
+   Opt.Add_Switch (GPR2.Options.AP, "./data/dep");
+   if Tree.Load (Opt, Absent_Dir_Error => GPR2.No_Error) then
+      Show_Tree (Tree);
+   end if;
    Tree.Unload;
 
 end Test;

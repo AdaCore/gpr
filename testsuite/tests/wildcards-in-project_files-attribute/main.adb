@@ -1,11 +1,9 @@
-with Ada.Exceptions;
 with Ada.Text_IO;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
-with GPR2.Log;
 
 procedure main is
    function Get_File_Names_Case_Sensitive return Integer
@@ -15,7 +13,7 @@ procedure main is
    Absolute1       : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File ("files/absolute1.gpr");
    Tree            : GPR2.Project.Tree.Object;
-   Context         : GPR2.Context.Object;
+   Opt             : GPR2.Options.Object;
    Aggr_Found      : Boolean := False;
    Absolute1_Found : Boolean := False;
    Regexp3_Found   : Boolean := False;
@@ -28,14 +26,6 @@ procedure main is
    Project9_Found  : Boolean := Get_File_Names_Case_Sensitive /= 0;
    Project10_Found : Boolean := False;
    Runtime_Found   : Boolean := False;
-   procedure Show_Tree_Log is
-   begin
-      for C in Tree.Log_Messages.Iterate
-        (False, True, True, True, True)
-      loop
-         Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-      end loop;
-   end Show_Tree_Log;
 
 begin
    Ada.Text_IO.Create (File => File, Name => "files/aggr.gpr");
@@ -66,17 +56,11 @@ begin
 
    --  Load the project (if defined) and its configuration
 
-   begin
-      Tree.Load_Autoconf
-        (Filename  => GPR2.Path_Name.Create_File ("files/aggr.gpr"),
-         Context   => Context);
-   exception
-      when E : GPR2.Project_Error =>
-         Ada.Text_IO.Put_Line (Ada.Exceptions.Exception_Message (E));
-   end;
-   if Tree.Has_Messages  then
-      Show_Tree_Log;
+   Opt.Add_Switch (GPR2.Options.P, "files/aggr.gpr");
+   if not Tree.Load (Opt, Absent_Dir_Error => GPR2.No_Error) then
+      return;
    end if;
+
    for Cursor in Tree.Iterate loop
       declare
          use type GPR2.Name_Type;
@@ -112,6 +96,7 @@ begin
          end if;
       end;
    end loop;
+
    if not Aggr_Found
      or else not Absolute1_Found
      or else not Regexp3_Found

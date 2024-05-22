@@ -2,7 +2,7 @@ with Ada.Text_IO;
 with Ada.Directories;
 with Ada.Strings.Fixed;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Log;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
@@ -85,17 +85,13 @@ procedure Main is
    end Display;
 
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Opt : Options.Object;
 
 begin
-   Ctx.Include ("OS", "Linux");
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
-   Project.Tree.Load_Configuration (Prj, Create ("config.cgpr"));
-
-   Display (Prj.Root_Project);
-
-exception
-   when GPR2.Project_Error =>
-      Text_IO.Put_Line ("Messages found:");
-      Prj.Log_Messages.Output_Messages (Information => False);
+   Opt.Add_Switch (Options.P, "demo.gpr");
+   Opt.Add_Switch (Options.Config, "config.cgpr");
+   Opt.Add_Switch (Options.X, "OS=Linux");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
+   end if;
 end Main;

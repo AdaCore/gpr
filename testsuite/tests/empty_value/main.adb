@@ -85,6 +85,9 @@ procedure main is
          Print_Attributes (Allow_List);
          Print_Attributes (Ignore_Single);
          Print_Attributes (Ignore_List);
+      else
+         --  Also print the warnings
+         Tree.Log_Messages.Output_Messages (Information => False);
       end if;
    end Test;
    Default_Value : GPR2.Project.Registry.Attribute.Default_Value

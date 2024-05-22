@@ -1,8 +1,4 @@
-Messages found:
 Build    K_STANDARD
 
- Binder
-   Switches (Ada) -> -E
- Compiler
-   Switches (Ada) -> -O2
-Messages found:
+   Binder'Switches (Ada) -> -E
+   Compiler'Switches (Ada) -> -O2

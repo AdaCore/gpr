@@ -2,6 +2,7 @@ with Ada.Text_IO;
 with Ada.Directories;
 
 with GPR2.Context;
+with GPR2.Options;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
@@ -17,26 +18,18 @@ procedure Main is
    package PRA renames GPR2.Project.Registry.Attribute;
 
    Prj : Project.Tree.Object;
+   Opt : Options.Object;
    Ctx : Context.Object;
 
 begin
-   Ctx.Include ("OS", "Linux");
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
+   Opt.Add_Switch (Options.P, "demo");
+   Opt.Add_Switch (Options.X, "OS=Linux");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Text_IO.Put_Line (Prj.Root_Project.Attribute (PRA.Object_Dir).Value.Text);
 
-   Text_IO.Put_Line (Prj.Root_Project.Attribute (PRA.Object_Dir).Value.Text);
+      Ctx.Include ("OS", "Windows");
+      Prj.Set_Context (Ctx);
 
-   Ctx.Include ("OS", "Windows");
-   Prj.Set_Context (Ctx);
-
-   Text_IO.Put_Line (Prj.Root_Project.Attribute (PRA.Object_Dir).Value.Text);
-
-exception
-   when GPR2.Project_Error =>
-      if Prj.Has_Messages then
-         Text_IO.Put_Line ("Messages found:");
-
-         for M of Prj.Log_Messages.all loop
-            Text_IO.Put_Line (M.Format);
-         end loop;
-      end if;
+      Text_IO.Put_Line (Prj.Root_Project.Attribute (PRA.Object_Dir).Value.Text);
+   end if;
 end Main;

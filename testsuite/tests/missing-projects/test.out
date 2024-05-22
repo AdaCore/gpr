@@ -1,15 +1,5 @@
-Messages found for demo.gpr
 demo.gpr:2:06: error: imported project file "imp_missing.gpr" not found
-
-Messages found for demo2.gpr
 demo.gpr:2:06: error: imported project file "imp_missing.gpr" not found
-
-Messages found for demo3.gpr
 demo.gpr:2:06: error: imported project file "imp_missing.gpr" not found
-
-Messages found for demo4.gpr
 demo4.gpr:2:15: error: extended project file "ext_undef.gpr" not found
-
-Messages found for demo5.gpr
 demo.gpr:2:06: error: imported project file "imp_missing.gpr" not found
-

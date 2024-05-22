@@ -3,4 +3,8 @@ project Test is
    for Object_Dir use "obj";
    for Exec_Dir use ".";
    for main use ("main.adb");
+
+   package Compiler is
+      for Switches ("Ada") use ("-gnatwu", "-g", "-O1");
+   end Compiler;
 end Test;

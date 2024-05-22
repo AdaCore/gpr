@@ -1,12 +1,8 @@
 Demo           K_STANDARD
- Compiler
- Linker
-   Default_Switches (Ada) -> -a -g
+   Linker'Default_Switches (Ada) -> -a -g
 
 Demo1          K_STANDARD
- Compiler
- Linker
-   Default_Switches (Ada) -> -a -compiler
+   Linker'Default_Switches (Ada) -> -a -compiler
 
 TypeDef.Demo2  K_STANDARD
    Externally_Built -> False

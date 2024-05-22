@@ -1,6 +1,3 @@
-Messages found:
 a.gpr:4:25: error: cannot have a reference to a limited project
-Messages found:
 b.gpr:4:21: error: cannot have a reference to a limited project
-Messages found:
 c.gpr:4:19: error: cannot have a reference to a limited project

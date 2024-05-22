@@ -1,20 +1,23 @@
 Project: Demo1
    imports:
-     > demo2.gpr
+     > runtime
+     > Demo2
    imports recursively:
-     > demo2.gpr
-     > demo3.gpr
+     > Demo2
+     > Demo3
 Project: Demo2
    imports:
-     > demo3.gpr
+     > runtime
+     > Demo3
    imports recursively:
-     > demo3.gpr
+     > Demo3
 Project: Demo4
    imports:
-     > demo1.gpr
-     > demo2.gpr
-     > demo3.gpr
+     > runtime
+     > Demo1
+     > Demo2
+     > Demo3
    imports recursively:
-     > demo1.gpr
-     > demo2.gpr
-     > demo3.gpr
+     > Demo1
+     > Demo2
+     > Demo3

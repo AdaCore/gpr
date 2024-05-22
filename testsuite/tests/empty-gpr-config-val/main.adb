@@ -12,6 +12,6 @@ procedure Main is
 
 begin
    Ada.Environment_Variables.Set ("GPR_CONFIG", "");
-   Opt.Add_Switch (Options.P, "demo.gpr");
+   Opt.Add_Switch (Options.P, "prj1.gpr");
    Res := Prj.Load (Opt, Absent_Dir_Error => No_Error);
 end Main;

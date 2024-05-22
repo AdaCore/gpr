@@ -1,26 +1,21 @@
 with GPR2.Log;
+with GPR2.Options;
 with GPR2.Project.Tree;
-with GPR2.Context;
-with GPR2.Path_Name;
-
-with Ada.Text_IO;
 
 procedure Main is
    Tree : GPR2.Project.Tree.Object;
-   Log  : GPR2.Log.Object;
+   Log   : GPR2.Log.Object;
+   Opts : array (1..2) of GPR2.Options.Object;
+   use GPR2;
 
 begin
-   Tree.Load_Autoconf
-     (Filename => GPR2.Path_Name.Create_File ("p.gpr"),
-      Context  => GPR2.Context.Empty);
-   Tree.Log_Messages.Output_Messages (Information => False);
-   Tree.Update_Sources (Messages => Log);
-   Log.Output_Messages;
+   Opts (1).Add_Switch (Options.P, "p.gpr");
+   Opts (2).Add_Switch (Options.P, "p2.gpr");
 
-   Tree.Load_Autoconf
-     (Filename => GPR2.Path_Name.Create_File ("p2.gpr"),
-      Context  => GPR2.Context.Empty);
-   Tree.Log_Messages.Output_Messages (Information => False);
-   Tree.Update_Sources (Messages => Log);
-   Log.Output_Messages;
+   for Opt of Opts loop
+      if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+         Tree.Update_Sources (Messages => Log);
+         Log.Output_Messages;
+      end if;
+   end loop;
 end Main;

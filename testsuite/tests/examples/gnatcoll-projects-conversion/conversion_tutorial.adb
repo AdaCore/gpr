@@ -14,11 +14,8 @@ pragma Warnings (Off, ".* is not referenced");
 --  as the Project.View package only has limited visibility on it.
 with GPR2.Build.Source.Sets;
 pragma Warnings (On, ".* is not referenced");
-with GPR2.Containers;
-with GPR2.Context;
-with GPR2.Log;
+with GPR2.Options;
 with GPR2.Path_Name;
-with GPR2.Project.Configuration;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
@@ -29,12 +26,11 @@ procedure Conversion_Tutorial is
    --  command line argument handling
 
    package Args is
-
       Parser : Argument_Parser := Create_Argument_Parser
         (Help =>
            "GPR2 Project parsing example for GNATCOLL.Projects tools.");
 
-      package Project_Arg is new Parse_Option
+      package Project is new Parse_Option
         (Parser      => Parser,
          Short       => "-P",
          Long        => "--project",
@@ -50,18 +46,13 @@ procedure Conversion_Tutorial is
          Accumulate => True,
          Help       => "Scenario variables to pass to the project file");
 
-      package Target_Arg is new Parse_Option
+      package Target is new Parse_Option
         (Parser       => Parser,
          Short       => "-t",
          Long         => "--target",
          Arg_Type     => Unbounded_String,
          Default_Val  => Null_Unbounded_String,
          Help         => "Custom target to use");
-
-      function Target return GPR2.Optional_Name_Type is
-        (if Target_Arg.Get = Null_Unbounded_String then GPR2.No_Name
-         else GPR2.Optional_Name_Type (To_String (Target_Arg.Get)));
-      --  target provided in command line (default GPR2.No_Name)
 
       package Runtime is new Parse_Option
         (Parser       => Parser,
@@ -76,45 +67,27 @@ procedure Conversion_Tutorial is
          Long   => "--recursive",
          Help   => "Include sources from all dependencies");
 
-      package Config_File_Arg is new Parse_Option
+      package Config_File is new Parse_Option
         (Parser       => Parser,
          Long         => "--config",
          Arg_Type     => Unbounded_String,
          Default_Val  => Null_Unbounded_String,
          Help         => "Specify the main config project file name");
 
-      function Config_File return GPR2.Path_Name.Object is
-        (if Config_File_Arg.Get = Null_Unbounded_String then
-            GPR2.Path_Name.Undefined
-         else
-            GPR2.Path_Name.Create_File (GPR2.Filename_Type
-                                        (To_String (Config_File_Arg.Get))));
-      --  The GPR2 project file object (default GPR2.Path_Name.Undefined)
-
-      package Subdirs_Arg is new Parse_Option
+      package Subdirs is new Parse_Option
         (Parser       => Parser,
          Long         => "--subdirs",
          Arg_Type     => Unbounded_String,
          Default_Val  => Null_Unbounded_String,
          Help         => "Use dir as suffix to obj/lib/exec directories");
 
-      function Subdirs return GPR2.Optional_Name_Type is
-        (if Subdirs_Arg.Get = Null_Unbounded_String then GPR2.No_Name
-         else GPR2.Optional_Name_Type (To_String (Subdirs_Arg.Get)));
-      --  subdirs provided in command line (default GPR2.No_Name)
-
-      package Src_Subdirs_Arg is new Parse_Option
+      package Src_Subdirs is new Parse_Option
         (Parser       => Parser,
          Long         => "--src-subdirs",
          Arg_Type     => Unbounded_String,
          Default_Val  => Null_Unbounded_String,
          Help         =>
             "Prepend <obj>/dir to the list of source dirs for each project");
-
-      function Src_Subdirs return GPR2.Optional_Name_Type is
-        (if Src_Subdirs_Arg.Get = Null_Unbounded_String then GPR2.No_Name
-         else GPR2.Optional_Name_Type (To_String (Src_Subdirs_Arg.Get)));
-      --  src-subdirs provided in command line (default GPR2.No_Name)
 
       package Unchecked_Shared_Lib is new Parse_Flag
         (Parser => Parser,
@@ -126,22 +99,8 @@ procedure Conversion_Tutorial is
    --  Initializes the project tree using command line options supplied by
    --  Args. Returns True on success, or False otherwise.
 
-   procedure Insert_Scenario_Vars (Context : in out GPR2.Context.Object);
-   --  insert in context scenario variables passed in command line
-
-   function Project_File return GPR2.Path_Name.Object is
-     (if Args.Project_Arg.Get = Null_Unbounded_String  then
-         GPR2.Path_Name.Undefined
-      else GPR2.Path_Name.Create_File
-        (GPR2.Project.Ensure_Extension (GPR2.Filename_Type
-                                        (To_String (Args.Project_Arg.Get)))));
-   --  The GPR2 project file object (default GPR2.Path_Name.Undefined)
-
    Project_Tree : GPR2.Project.Tree.Object;
    --  GPR2 project tree object.
-
-   Project_Env  : GPR2.Context.Object;
-   --  gnatcoll.projects environment should be converted to context objects
 
    --  GNATCOLL.Projects.Project_Type is converted to GPR2.Project.View.Object
 
@@ -150,92 +109,45 @@ procedure Conversion_Tutorial is
    ------------------
 
    function Init_Project return Boolean is
+      Opt               : GPR2.Options.Object;
+
+      use GPR2;
    begin
-      declare
-         Language_Runtimes : GPR2.Containers.Lang_Value_Map :=
-           GPR2.Containers.Lang_Value_Maps.Empty_Map;
-         Config            : GPR2.Project.Configuration.Object;
-         Log               : GPR2.Log.Object;
+      if Args.Project.Get /= Null_Unbounded_String then
+         Opt.Add_Switch (Options.P, To_String (Args.Project.Get));
+      end if;
 
-         use GPR2;
-      begin
-         if not Project_File.Is_Defined then
-            Put_Line ("Project file not specified.");
-            return False;
-         end if;
-
-         Insert_Scenario_Vars (Project_Env);
-
-         Language_Runtimes.Insert (+GPR2.Optional_Name_Type'("ada"),
-                                   GPR2.Value_Type'
-                                     (To_String (Args.Runtime.Get)));
-
-         if Args.Config_File.Is_Defined then
-            Config := GPR2.Project.Configuration.Load (Args.Config_File);
-
-            if Config.Has_Error then
-               Output_Messages (Config.Log_Messages);
-               return False;
-            end if;
-
-            Project_Tree.Load
-              (Filename         => Project_File,
-               Context          => Project_Env,
-               Config           => Config,
-               Subdirs          => Args.Subdirs,
-               Src_Subdirs      => Args.Src_Subdirs,
-               Check_Shared_Lib => not Args.Unchecked_Shared_Lib.Get);
-         else
-
-            Project_Tree.Load_Autoconf
-              (Filename          => Project_File,
-               Context           => Project_Env,
-               Subdirs           => Args.Subdirs,
-               Src_Subdirs       => Args.Src_Subdirs,
-               Target            => Args.Target,
-               Language_Runtimes => Language_Runtimes);
-         end if;
-
-         Project_Tree.Log_Messages.Output_Messages
-           (Information => False);
-
-         Project_Tree.Update_Sources (Messages => Log);
-         Log.Output_Messages;
-
-         return True;
-      end;
-   exception
-      when GPR2.Project_Error =>
-         Project_Tree.Log_Messages.Output_Messages
-           (Information => False, Warning => False);
-
-         return False;
-   end Init_Project;
-
-   --------------------------
-   -- Insert_Scenario_Vars --
-   --------------------------
-
-   procedure Insert_Scenario_Vars (Context : in out GPR2.Context.Object) is
-   begin
       for Assoc of Args.Scenario_Vars.Get loop
-         declare
-            A        : constant String := To_String (Assoc);
-            Eq_Index : Natural := A'First;
-         begin
-            while Eq_Index <= A'Length and then A (Eq_Index) /= '=' loop
-               Eq_Index := Eq_Index + 1;
-            end loop;
-            if Eq_Index not in A'Range then
-               Put_Line ("Invalid scenario variable: -X" & A);
-            else
-               Context.Insert
-                 (GPR2.Optional_Name_Type (A (A'First .. Eq_Index - 1)),
-                  A (Eq_Index + 1 .. A'Last));
-            end if;
-         end;
+         Opt.Add_Switch (Options.X, To_String (Assoc));
       end loop;
-   end Insert_Scenario_Vars;
+
+      if Args.Target.Get /= Null_Unbounded_String then
+         Opt.Add_Switch (Options.Target, To_String (Args.Target.Get));
+      end if;
+
+      if Args.Runtime.Get /= Null_Unbounded_String then
+         Opt.Add_Switch (Options.RTS, To_String (Args.Runtime.Get), "Ada");
+      end if;
+
+      if Args.Config_File.Get /= Null_Unbounded_String then
+         Opt.Add_Switch (Options.Config, To_String (Args.Config_File.Get));
+      end if;
+
+      if Args.Subdirs.Get /= Null_Unbounded_String then
+         Opt.Add_Switch (Options.Subdirs, To_String (Args.Subdirs.Get));
+      end if;
+
+      if Args.Src_Subdirs.Get /= Null_Unbounded_String then
+         Opt.Add_Switch (Options.Src_Subdirs,
+                         To_String (Args.Src_Subdirs.Get));
+      end if;
+
+      if Args.Unchecked_Shared_Lib.Get then
+         Opt.Add_Switch (Options.Unchecked_Shared_Lib_Imports);
+      end if;
+
+      return Project_Tree.Load (Opt, Absent_Dir_Error => GPR2.No_Error);
+   end Init_Project;
 
    Last_Source : GPR2.Path_Name.Object;
 

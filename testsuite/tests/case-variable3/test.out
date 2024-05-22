@@ -1,2 +1,1 @@
-Messages found:
 demo.gpr:3:09: error: undefined variable "DoesNOTexists"

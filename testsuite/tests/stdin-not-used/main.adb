@@ -4,9 +4,8 @@ with Ada.Strings.Unbounded;
 
 with GNAT.OS_Lib;
 
-with GPR2.Context;
-with GPR2.Path_Name;
-with GPR2.Project.Tree.View_Builder;
+with GPR2.Options;
+with GPR2.Project.Tree;
 
 with Interfaces.C;
 
@@ -103,36 +102,16 @@ procedure Main is
    Input_Task : Input_Task_Type;
 
    Tree : GPR2.Project.Tree.Object;
-   Context : GPR2.Context.Object;
-   Root : constant GPR2.Project.Tree.View_Builder.Object :=
-     GPR2.Project.Tree.View_Builder.Create
-       (GPR2.Path_Name.Create_Directory ("demo"), "Custom_Project");
+   Opt  : GPR2.Options.Object;
+   Res  : Boolean;
 
 begin
    Input_Task.Start;
    delay 0.1;
 
-   GPR2.Project.Tree.View_Builder.Load_Autoconf
-     (Tree, Root, Context, With_Runtime => False);
-   if Tree.Log_Messages.Has_Error then
-      Tree.Log_Messages.Output_Messages;
-   end if;
-
-   Tree.Unload;
-
-   Tree.Load_Autoconf
-     (GPR2.Path_Name.Create_File ("test.gpr"), Context, With_Runtime => False);
-
-   if Tree.Log_Messages.Has_Error then
-      Tree.Log_Messages.Output_Messages;
-   end if;
-
+   Opt.Add_Switch (GPR2.Options.P, "test.gpr");
+   Res := Tree.Load (Opt, Absent_Dir_Error => GPR2.No_Error);
    Tree.Unload;
 
    GNAT.OS_Lib.OS_Exit (0);
-exception
-   when others =>
-      if Tree.Log_Messages.Has_Error then
-         Tree.Log_Messages.Output_Messages;
-      end if;
 end Main;

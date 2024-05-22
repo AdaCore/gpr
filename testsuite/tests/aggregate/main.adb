@@ -5,6 +5,7 @@ with GNAT.OS_Lib;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
+with GPR2.Options;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
@@ -55,17 +56,20 @@ procedure Main is
    end Display;
 
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Opt : Options.Object;
 
 begin
+   Opt.Add_Switch (Options.P, "demo.gpr");
+
    Text_IO.Put_Line ("//// OS set to Linux");
-   Ctx.Include ("OS", "Linux");
+   Opt.Add_Switch (Options.X, "OS=Linux");
+   Opt.Finalize;
 
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
-
-   for P of Prj loop
-      Display (P);
-   end loop;
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      for P of Prj loop
+         Display (P);
+      end loop;
+   end if;
 
    Text_IO.Put_Line ("//// OS set to Windows");
    Prj.Set_Context (Context.Empty, Changed_Callback'Access);
@@ -73,32 +77,4 @@ begin
    for P of Prj loop
       Display (P);
    end loop;
-
-exception
-   when Project_Error =>
-
-      Text_IO.Put_Line ("Messages found:");
-
-      for C in Prj.Log_Messages.Iterate (False, True, True, True, True) loop
-         declare
-            use Ada.Strings;
-            use Ada.Strings.Fixed;
-            DS  : Character renames GNAT.OS_Lib.Directory_Separator;
-            M   : constant Message.Object := Log.Element (C);
-            Mes : constant String := M.Format;
-            L   : constant Natural :=
-                    Fixed.Index (Mes, DS & "aggregate-dup-src" & DS);
-         begin
-            if L /= 0 then
-               Text_IO.Put_Line
-                 (Replace_Slice
-                    (Mes,
-                     Fixed.Index (Mes (1 .. L), """", Going => Backward) + 1,
-                     L - 1,
-                     "<path>"));
-            else
-               Text_IO.Put_Line (Mes);
-            end if;
-         end;
-      end loop;
 end Main;

@@ -1,31 +1,28 @@
 with Ada.Text_IO;
 
-with GPR2.Context;
-with GPR2.Log;
-with GPR2.Message;
+with GPR2.Options;
 with GPR2.Project.Tree;
 
 procedure Main is
 
    use Ada;
    use GPR2;
-   use GPR2.Project;
 
-   Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   procedure Load (Filename : String);
+
+   ----------
+   -- Load --
+   ----------
+
+   procedure Load (Filename : String) is
+      Prj : Project.Tree.Object;
+      Opt : Options.Object;
+      Res : Boolean;
+   begin
+      Opt.Add_Switch (Options.P, Filename);
+      Res := Prj.Load (Opt, Absent_Dir_Error => No_Error);
+   end Load;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
-
-exception
-   when GPR2.Project_Error =>
-      for C in Prj.Log_Messages.Iterate
-        (False, False, True, True, True)
-      loop
-         declare
-            M : constant Message.Object := Log.Element (C);
-         begin
-            Text_IO.Put_Line (M.Message);
-         end;
-      end loop;
+   Load ("demo.gpr");
 end Main;

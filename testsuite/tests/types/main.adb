@@ -1,17 +1,13 @@
 with Ada.Text_IO;
-with Ada.Strings.Fixed;
 
-with GPR2.Context;
-with GPR2.Log;
-with GPR2.Message;
+with GPR2.Options;
 with GPR2.Project.Tree;
-with GPR2.Project.Typ;
+--  with GPR2.Project.Typ;
 
 procedure Main is
 
    use Ada;
    use GPR2;
-   use GPR2.Project;
 
    procedure Load (Filename : String);
 
@@ -21,43 +17,22 @@ procedure Main is
 
    procedure Load (Filename : String) is
       Prj : Project.Tree.Object;
-      Ctx : Context.Object;
+      Opt : Options.Object;
    begin
-      Project.Tree.Load (Prj, Create (Filename_Type (Filename)), Ctx);
-      Text_IO.Put_Line ("All good, no message.");
+      Opt.Add_Switch (Options.P, Filename);
+      if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+         Text_IO.Put_Line ("All good, no message.");
 
-      for T of Prj.Root_Project.Types loop
-         Text_IO.Put ("Type : " & String (T.Name.Text) & " -");
+         for T of Prj.Root_Project.Types loop
+            Text_IO.Put ("Type : " & String (T.Name.Text) & " -");
 
-         for V of T.Values loop
-            Text_IO.Put (' ' & V.Text);
-         end loop;
-
-         Text_IO.New_Line;
-      end loop;
-
-   exception
-      when GPR2.Project_Error =>
-         if Prj.Has_Messages then
-            Text_IO.Put_Line ("Messages found:");
-
-            for C in Prj.Log_Messages.Iterate
-              (False, False, True, True, True)
-            loop
-               declare
-                  M   : constant Message.Object := Log.Element (C);
-                  Mes : constant String := M.Format;
-                  L   : constant Natural :=
-                    Strings.Fixed.Index (Mes, "/types");
-               begin
-                  if L /= 0 then
-                     Text_IO.Put_Line (Mes (L .. Mes'Last));
-                  else
-                     Text_IO.Put_Line (Mes);
-                  end if;
-               end;
+            for V of T.Values loop
+               Text_IO.Put (' ' & V.Text);
             end loop;
-         end if;
+
+            Text_IO.New_Line;
+         end loop;
+      end if;
    end Load;
 
 begin

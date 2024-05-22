@@ -1,6 +1,6 @@
 with Ada.Text_IO;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 
@@ -10,15 +10,10 @@ procedure Main is
 
    procedure Test (Gpr : String) is
       Tree : Project.Tree.Object;
-      Ctx  : Context.Object;
+      Opt  : Options.Object;
    begin
-      Project.Tree.Load_Autoconf
-        (Tree,
-         Path_Name.Create_File (Filename_Type (Gpr)),
-         Context => Ctx);
-
-      if Tree.Log_Messages.Has_Error then
-         Tree.Log_Messages.Output_Messages (Information => False);
+      Opt.Add_Switch (Options.P, Gpr);
+      if not Tree.Load (Opt, Absent_Dir_Error => No_Error) then
          return;
       end if;
 

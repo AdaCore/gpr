@@ -5,15 +5,14 @@
 --
 
 with Ada.Text_IO;
-with Ada.Exceptions;
 
+with GPR2.Context;
+with GPR2.Log;
+with GPR2.Options;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Variable.Set;
-with GPR2.Context;
-with GPR2.Message;
-with GPR2.Log;
 
 procedure Main is
 
@@ -45,7 +44,7 @@ procedure Main is
 
       procedure Display (Att : Project.Attribute.Object) is
       begin
-         Text_IO.Put ("A:   " & String (Image (Att.Name.Id.Attr)));
+         Text_IO.Put ("A:   " & Image (Att.Name.Id));
 
          if Att.Has_Index then
             Text_IO.Put (" (" & Att.Index.Value & ")");
@@ -58,15 +57,18 @@ procedure Main is
          end loop;
          Text_IO.New_Line;
       end Display;
+
    begin
       Text_IO.Put (String (Prj.Name) & " ");
       Text_IO.Set_Col (10);
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       if Full then
-            for A of Prj.Attributes loop
-               Display (A);
-            end loop;
+         for A of Prj.Attributes (With_Defaults => False,
+                                  With_Config   => False)
+         loop
+            Display (A);
+         end loop;
 
          if Prj.Has_Variables then
             for V in Prj.Variables.Iterate loop
@@ -82,38 +84,43 @@ procedure Main is
 
    Prj1, Prj2 : Project.Tree.Object;
    Ctx        : Context.Object;
-
-   procedure Print_Messages (Prj : Project.Tree.Object) is
-   begin
-      if Prj.Has_Messages then
-         for C in Prj.Log_Messages.Iterate
-           (False, True, True, True, True)
-         loop
-            Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-         end loop;
-      end if;
-   end Print_Messages;
+   Opt        : Options.Object;
 
 begin
-   Project.Tree.Load
-     (Self => Prj1, Filename  => Create ("demo.gpr"), Context => Ctx);
-   Project.Tree.Load
-     (Self => Prj2, Filename  => Create ("demo.gpr"), Context => Ctx);
+   Opt.Add_Switch (Options.P, "demo.gpr");
+
+   if not Prj1.Load (Opt, Absent_Dir_Error => No_Error) then
+      return;
+   end if;
+
+   if not Prj2.Load (Opt, Absent_Dir_Error => No_Error) then
+      return;
+   end if;
 
    Ctx := Prj1.Context;
    Ctx.Include ("OS", "Linux");
-   Prj1.Set_Context (Ctx, Changed_Callback'Access);
+
+   if not Prj1.Set_Context (Ctx, Changed_Callback'Access) then
+      Prj1.Log_Messages.Output_Messages (Information => False);
+   end if;
 
    Ctx := Prj2.Context;
    Ctx.Include ("OS", "Windows");
-   Prj2.Set_Context (Ctx, Changed_Callback'Access);
+
+   if not Prj2.Set_Context (Ctx, Changed_Callback'Access) then
+      Prj2.Log_Messages.Output_Messages (Information => False);
+   end if;
 
    Display (Prj1.Root_Project);
    Display (Prj2.Root_Project);
 
    Ctx.Clear;
    Ctx.Include ("OS", "Linux-2");
-   Prj2.Set_Context (Ctx, Changed_Callback'Access);
+
+   if not Prj2.Set_Context (Ctx, Changed_Callback'Access) then
+      Prj2.Log_Messages.Output_Messages (Information => False);
+   end if;
+
    Display (Prj2.Root_Project);
 
    --  Iterator
@@ -146,10 +153,4 @@ begin
    for P of Prj2 loop
       Display (P, Full => False);
    end loop;
-
-exception
-   when Ex : others =>
-      Text_IO.Put_Line (Ada.Exceptions.Exception_Message (Ex));
-      Print_Messages (Prj1);
-      Print_Messages (Prj2);
 end Main;

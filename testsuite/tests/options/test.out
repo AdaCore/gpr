@@ -43,9 +43,7 @@ Implicit_With pre check => ADA.ASSERTIONS.ASSERTION_ERROR
 Test OK
 
 Testing Load_Project pre check
-Load_Project pre check => ADA.ASSERTIONS.ASSERTION_ERROR
-Test OK
-
+using project file /test.gpr
 Testing On_Extra_Arg pre check
 On_Extra_Arg pre check => ADA.ASSERTIONS.ASSERTION_ERROR
 Test OK
@@ -249,6 +247,7 @@ test.gpr:6:32: warning: object directory "obj-Debug" not found
 Test OK
 
 Testing Load Project -aP added-path -aP load-project --root-dir=. --relocate-build-tree=relocated -Ptest --autoconf=autoconf.cgpr -XBUILD=Debug
+creating configuration project other-autoconf.cgpr
 Load_Project returned TRUE
 test.gpr:6:32: warning: object directory "obj-Debug" not found
 Test OK

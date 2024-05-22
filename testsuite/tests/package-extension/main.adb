@@ -1,18 +1,15 @@
-with Ada.Directories;
 with Ada.Text_IO;
-with Ada.Strings.Fixed;
 
-with GPR2.Project.View;
-with GPR2.Project.Tree;
+with GPR2.Options;
 with GPR2.Project.Attribute.Set;
+with GPR2.Project.Tree;
 with GPR2.Project.Variable.Set;
-with GPR2.Context;
+with GPR2.Project.View;
 
 procedure Main is
 
    use Ada;
    use GPR2;
-   use GPR2.Project;
 
    procedure Display (Prj : Project.View.Object; Full : Boolean := True);
 
@@ -24,7 +21,7 @@ procedure Main is
 
    procedure Display (Att : Project.Attribute.Object) is
    begin
-      Text_IO.Put ("   " & Image (Att.Name.Id.Attr));
+      Text_IO.Put ("   " & Image (Att.Name.Id));
 
       if Att.Has_Index then
          Text_IO.Put (" (" & Att.Index.Text & ")");
@@ -47,7 +44,7 @@ procedure Main is
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       if Full then
-         for A of Prj.Attributes (With_Defaults => False) loop
+         for A of Prj.Attributes (With_Defaults => False, With_Config => False) loop
             Display (A);
          end loop;
 
@@ -61,9 +58,8 @@ procedure Main is
          end if;
          Text_IO.New_Line;
 
-         for Pck of Prj.Packages (With_Defaults => False) Loop
-            Text_IO.Put_Line (" " & Image (Pck));
-            for A of Prj.Attributes (Pack => Pck, With_Defaults => False) loop
+         for Pck of Prj.Packages Loop
+            for A of Prj.Attributes (Pack => Pck, With_Defaults => False, With_Config => False) loop
                Display (A);
             end loop;
          end loop;
@@ -71,19 +67,11 @@ procedure Main is
    end Display;
 
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Opt : Options.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("build.gpr"), Ctx);
-
-   Display (Prj.Root_Project);
-exception
-   when GPR2.Project_Error =>
-      if Prj.Has_Messages then
-         Text_IO.Put_Line ("Messages found:");
-
-         for M of Prj.Log_Messages.all loop
-            Text_IO.Put_Line (M.Format);
-         end loop;
-      end if;
+   Opt.Add_Switch (Options.P, "build.gpr");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
+   end if;
 end Main;

@@ -5,4 +5,7 @@ project test is
    for Exec_Dir use ".";
    for Main use ("main.adb");
 
+   package Compiler is
+      for Switches ("Ada") use ("-gnatwu", "-g", "-O1");
+   end Compiler;
 end test;

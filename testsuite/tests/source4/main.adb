@@ -2,20 +2,21 @@ with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
-with GPR2.Context;
+pragma Warnings (On);
 with GPR2.Log;
+with GPR2.Options;
 with GPR2.Path_Name;
-with GPR2.Project.View;
 with GPR2.Project.Tree;
+with GPR2.Project.View;
 
 procedure Main is
 
    use Ada;
    use GPR2;
-   use GPR2.Project;
 
-   procedure Check (Project_Name : Filename_Type);
+   procedure Check (Project_Name : String);
    --  Do check the given project's sources
 
    procedure Output_Filename (Filename : Path_Name.Full_Name);
@@ -25,7 +26,7 @@ procedure Main is
    -- Check --
    -----------
 
-   procedure Check (Project_Name : Filename_Type) is
+   procedure Check (Project_Name : String) is
 
       procedure List_Sources (View : Project.View.Object);
 
@@ -38,7 +39,6 @@ procedure Main is
       ------------------
 
       procedure List_Sources (View : Project.View.Object) is
-         use GPR2.Build;
       begin
          Text_IO.Put_Line ("----------");
 
@@ -80,18 +80,19 @@ procedure Main is
       end Copy_Source;
 
       Prj  : Project.Tree.Object;
-      Ctx  : Context.Object;
-      View : Project.View.Object;
+      Opt  : Options.Object;
       Log  : GPR2.Log.Object;
 
    begin
+      Opt.Add_Switch (options.P, Project_Name);
+
+      if not Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+         return;
+      end if;
+
+      Text_IO.Put_Line ("Project: " & String (Prj.Root_Project.Name));
+
       --  Create api-call.adb as a separate
-
-      Project.Tree.Load (Prj, Create (Project_Name), Ctx);
-
-      View := Prj.Root_Project;
-      Text_IO.Put_Line ("Project: " & String (View.Name));
-
       Copy_Source ("src1", "api.ads");
       Copy_Source ("src1", "api.adb");
       Copy_Source ("src1", "api-call.adb");
@@ -99,7 +100,7 @@ procedure Main is
       Prj.Update_Sources (Messages => Log);
       Log.Output_Messages;
 
-      List_Sources (View);
+      List_Sources (Prj.Root_Project);
 
       --  Wait 1 second so that timestamp check works
       delay (1.0);
@@ -111,7 +112,7 @@ procedure Main is
       Prj.Update_Sources (Messages => Log);
       Log.Output_Messages;
 
-      List_Sources (View);
+      List_Sources (Prj.Root_Project);
    end Check;
 
    ---------------------

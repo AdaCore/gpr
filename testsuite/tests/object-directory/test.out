@@ -1,6 +1,6 @@
 Demo1    K_STANDARD
-obj
+obj/
 Demo2    K_STANDARD
-
+./
 Demo2    K_STANDARD
-debug
+debug/

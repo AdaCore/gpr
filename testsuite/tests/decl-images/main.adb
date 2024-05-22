@@ -1,7 +1,7 @@
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.Variable.Set;
@@ -11,11 +11,10 @@ procedure Main is
 
    use Ada;
    use GPR2;
-   use GPR2.Project;
 
    procedure Display (Prj : Project.View.Object);
 
-   procedure Load (Filename : Filename_Type);
+   procedure Load (Filename : String);
 
    -------------
    -- Display --
@@ -30,12 +29,12 @@ procedure Main is
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       Text_IO.New_Line;
-      for A of Prj.Attributes (With_Defaults => False) loop
+      for A of Prj.Attributes (With_Defaults => False, With_Config => False) loop
          Text_IO.Put_Line (A.Image);
       end loop;
 
       Text_IO.New_Line;
-      for A of Prj.Attributes (With_Defaults => False) loop
+      for A of Prj.Attributes (With_Defaults => False, With_Config => False) loop
          Text_IO.Put_Line (A.Image (15));
       end loop;
 
@@ -63,34 +62,14 @@ procedure Main is
    -- Load --
    ----------
 
-   procedure Load (Filename : Filename_Type) is
+   procedure Load (Filename : String) is
       Prj : Project.Tree.Object;
-      Ctx : Context.Object;
+      Opt : Options.Object;
    begin
-      Project.Tree.Load (Prj, Create (Filename), Ctx);
-      Display (Prj.Root_Project);
-
-   exception
-      when GPR2.Project_Error =>
-         if Prj.Has_Messages then
-            Text_IO.Put_Line ("Messages found for " & String (Filename));
-
-            for M of Prj.Log_Messages.all loop
-               declare
-                  Mes : constant String := M.Format;
-                  L   : constant Natural :=
-                          Strings.Fixed.Index (Mes, "decl-images");
-               begin
-                  if L /= 0 then
-                     Text_IO.Put_Line (Mes (L - 1 .. Mes'Last));
-                  else
-                     Text_IO.Put_Line (Mes);
-                  end if;
-               end;
-            end loop;
-
-            Text_IO.New_Line;
-         end if;
+      Opt.Add_Switch (Options.P, Filename);
+      if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+         Display (Prj.Root_Project);
+      end if;
    end Load;
 
 begin

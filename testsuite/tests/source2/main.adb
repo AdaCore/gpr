@@ -1,20 +1,20 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
-with GPR2.Context;
+pragma Warnings (On);
 with GPR2.Log;
+with GPR2.Options;
 with GPR2.Path_Name;
-with GPR2.Project.View;
 with GPR2.Project.Tree;
 
 procedure Main is
 
    use Ada;
    use GPR2;
-   use GPR2.Project;
 
-   procedure Check (Project_Name : Filename_Type);
+   procedure Check (Project_Name : String);
    --  Do check the given project's sources
 
    procedure Output_Filename (Filename : Path_Name.Full_Name);
@@ -24,21 +24,22 @@ procedure Main is
    -- Check --
    -----------
 
-   procedure Check (Project_Name : Filename_Type) is
+   procedure Check (Project_Name : String) is
       Prj  : Project.Tree.Object;
-      Ctx  : Context.Object;
-      View : Project.View.Object;
+      Opt  : Options.Object;
       Log  : GPR2.Log.Object;
    begin
-      Project.Tree.Load (Prj, Create (Project_Name), Ctx);
-      Prj.Load_Configuration (Create ("config.cgpr"));
+      Opt.Add_Switch (Options.P, Project_Name);
+      Opt.Add_Switch (Options.Config, "config.cgpr");
+      if not Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+         return;
+      end if;
 
-      View := Prj.Root_Project;
-      Text_IO.Put_Line ("Project: " & String (View.Name));
+      Text_IO.Put_Line ("Project: " & String (Prj.Root_Project.Name));
       Prj.Update_Sources (Messages => Log);
       Log.Output_Messages;
 
-      for Source of View.Sources loop
+      for Source of Prj.Root_Project.Sources loop
          declare
             U : constant Optional_Name_Type := Source.Unit.Name;
          begin

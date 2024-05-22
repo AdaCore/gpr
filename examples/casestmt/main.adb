@@ -7,10 +7,11 @@
 with Ada.Text_IO;
 with Ada.Exceptions;
 
+with GPR2.Context;
+with GPR2.Options;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
-with GPR2.Context;
 with GPR2.Source_Reference.Value;
 with GPR2.Message;
 with GPR2.Log;
@@ -45,13 +46,16 @@ procedure Main is
          end loop;
          Text_IO.New_Line;
       end Display;
+
    begin
       Text_IO.Put (String (Prj.Name) & " ");
       Text_IO.Set_Col (10);
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       if Full then
-         for A of Prj.Attributes loop
+         for A of Prj.Attributes (With_Defaults => False,
+                                  With_Config   => False)
+         loop
             Display (A);
          end loop;
          Text_IO.New_Line;
@@ -59,35 +63,30 @@ procedure Main is
    end Display;
 
    Prj : Project.Tree.Object;
+   Opt : Options.Object;
    Ctx : Context.Object;
 
-   procedure Print_Messages is
-   begin
-      if Prj.Has_Messages then
-         for C in Prj.Log_Messages.Iterate
-           (False, True, True, True, True)
-         loop
-            Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-         end loop;
-      end if;
-   end Print_Messages;
-
 begin
-   Project.Tree.Load
-     (Self => Prj, Filename => Create ("demo.gpr"), Context => Ctx);
+   Opt.Add_Switch (Options.P, "demo.gpr");
 
-   Ctx.Include ("CASESTMT_OS", "Linux");
-   Prj.Set_Context (Ctx);
-   Display (Prj.Root_Project);
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Ctx.Include ("CASESTMT_OS", "Linux");
 
-   Ctx.Clear;
-   Ctx.Include ("CASESTMT_OS", "Windows");
-   Prj.Set_Context (Ctx);
-   Display (Prj.Root_Project);
+      if Prj.Set_Context (Ctx) then
+         Display (Prj.Root_Project);
+      else
+         Text_IO.Put_Line ("!!! Error occurred");
+         Prj.Log_Messages.Output_Messages (Information => False);
+      end if;
 
-exception
-   when Ex : others =>
-      Text_IO.Put_Line (Ada.Exceptions.Exception_Message (Ex));
-      Print_Messages;
+      Ctx.Clear;
+      Ctx.Include ("CASESTMT_OS", "Windows");
 
+      if Prj.Set_Context (Ctx) then
+         Display (Prj.Root_Project);
+      else
+         Text_IO.Put_Line ("!!! Error occurred");
+         Prj.Log_Messages.Output_Messages (Information => False);
+      end if;
+   end if;
 end Main;

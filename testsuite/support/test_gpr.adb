@@ -2,6 +2,7 @@ with GNAT.IO;
 with GPR2;
 with GPR2.Log;
 with GPR2.Message;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
@@ -20,10 +21,6 @@ package body Test_GPR is
 
    use type PRA.Value_Kind;
    use type Ada.Containers.Count_Type;
-
-   function Put_Tree_Messages
-      (Tree : GPR2.Project.Tree.Object)
-      return Integer;
 
    ----------------------
    -- Assert_Attribute --
@@ -241,28 +238,6 @@ package body Test_GPR is
       end;
    end Assert_Variable;
 
-   -----------------------
-   -- Put_Tree_Messages --
-   -----------------------
-
-   function Put_Tree_Messages
-      (Tree : GPR2.Project.Tree.Object)
-      return Integer
-   is
-      use all type GPR2.Message.Level_Value;
-      Error_Message_Count : Integer := 0;
-   begin
-      if Tree.Has_Messages then
-         for M of Tree.Log_Messages.all loop
-            if M.Level = GPR2.Message.Error then
-               Error_Message_Count := Error_Message_Count + 1;
-            end if;
-            IO.Put_Line (M.Format);
-         end loop;
-      end if;
-      return Error_Message_Count;
-   end Put_Tree_Messages;
-
    -------------------------
    -- Load_With_No_Errors --
    -------------------------
@@ -275,47 +250,30 @@ package body Test_GPR is
        Load_Source_List : Boolean := False)
    is
       use type GPR2.Message.Level_Value;
-      Error_Message_Count : Integer := 0;
-      Config_Project      : GPR2.Project.Configuration.Object;
-      Log                 : GPR2.Log.Object;
+      Opt : GPR2.Options.Object;
+      Log : GPR2.Log.Object;
+      Res : Boolean;
    begin
       if Config_Filename'Length > 0 then
-         Config_Project := GPR2.Project.Configuration.Load
-            (GPR2.Path_Name.Create_File
-               (GPR2.Filename_Optional (Config_Filename)));
+         Opt.Add_Switch (GPR2.Options.Config, Config_Filename);
       end if;
 
-      begin
-         Tree.Load
-            (GPR2.Path_Name.Create_File (GPR2.Filename_Optional (Filename)),
-             Context,
-             Config => Config_Project);
-      exception
-         when GPR2.Project_Error =>
-            IO.Put_Line ("messages during project loading error" & Filename);
-            Error_Message_Count := Put_Tree_Messages (Tree);
-            A.Assert (Error_Message_Count > 0,
-                      "got at least 1 error message");
-            raise GPR2.Project_Error;
-      end;
+      Opt.Add_Switch (GPR2.Options.P, Filename);
 
-      IO.Put_Line ("messages during project loading " & Filename);
-      Error_Message_Count := Put_Tree_Messages (Tree);
-      A.Assert (Error_Message_Count, 0,
-                "expect no error messages");
+      Res := Tree.Load (Opt);
+
+      A.Assert (Res, "could not load the project");
+
+      if not Res then
+         raise GPR2.Project_Error;
+      end if;
+
       if Load_Source_List then
          Tree.Update_Sources (Messages => Log);
          IO.Put_Line ("messages during sources loading " & Filename);
-         Error_Message_Count := 0;
 
-         for M of Log loop
-            if M.Level = GPR2.Message.Error then
-               Error_Message_Count := Error_Message_Count + 1;
-            end if;
-            IO.Put_Line (M.Format);
-         end loop;
-         A.Assert (Error_Message_Count, 0,
-                   "expect no error messages");
+         A.Assert (not Log.Has_Error, "loading sources caused errors");
+         Log.Output_Messages (Information => False);
       end if;
    end Load_With_No_Errors;
 

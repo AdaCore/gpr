@@ -1,5 +1,5 @@
 with Ada.Text_IO;
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
@@ -7,21 +7,8 @@ with GPR2.Project.Tree;
 with GPR2.Project.Variable;
 
 procedure Main is
-   Tree         : GPR2.Project.Tree.Object;
-   Context      : GPR2.Context.Object;
-   Project_Name : constant GPR2.Filename_Type := "prj";
+   Tree : GPR2.Project.Tree.Object;
    use GPR2;
-
-   procedure Print_Message is
-   begin
-      if Tree.Has_Messages then
-         for C in Tree.Log_Messages.Iterate
-           (False, True, True, True, True)
-         loop
-            Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-         end loop;
-      end if;
-   end Print_Message;
 
    procedure Print_Variable
      (Variable : GPR2.Project.Variable.Object;
@@ -44,30 +31,22 @@ procedure Main is
       end if;
    end Print_Variable;
 
-   procedure Test (Project : GPR2.Filename_Type) is
+   procedure Test (Project : String) is
+      Opt  : Options.Object;
    begin
       Ada.Text_IO.Put_Line (String (Project) & ".gpr:");
-      Tree.Unload;
-      Tree.Load_Autoconf
-        (Filename => GPR2.Path_Name.Create_File
-           (GPR2.Project.Ensure_Extension (Project),
-            GPR2.Path_Name.No_Resolution),
-         Context  => Context);
-      Print_Message;
-
-      for V of Tree.Root_Project.Variables loop
-         Print_Variable (V);
-      end loop;
-
-      for Pack of Tree.Root_Project.Packages loop
-         for V of Tree.Root_Project.Variables (Pack) loop
-            Print_Variable (V, Pack);
+      Opt.Add_Switch (Options.P, Project);
+      if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+         for V of Tree.Root_Project.Variables loop
+            Print_Variable (V);
          end loop;
-      end loop;
 
-   exception
-      when Project_Error =>
-         Print_Message;
+         for Pack of Tree.Root_Project.Packages loop
+            for V of Tree.Root_Project.Variables (Pack) loop
+               Print_Variable (V, Pack);
+            end loop;
+         end loop;
+      end if;
    end Test;
 
 begin
@@ -78,7 +57,4 @@ begin
    Test ("prj4");
    Test ("prj5");
    Test ("prj6");
-exception
-   when Project_Error =>
-      Print_Message;
 end Main;

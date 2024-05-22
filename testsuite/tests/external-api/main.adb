@@ -1,6 +1,6 @@
 with Ada.Environment_Variables;
 with Ada.Text_IO;
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
@@ -23,7 +23,7 @@ procedure Main is
       end if;
    end Print_Messages;
 
-   procedure Test (Project_Name : GPR2.Filename_Type) is
+   procedure Test (Project_Name : String) is
 
       procedure Print_Externals (Root_Only : Boolean) is
          Exts : External_Arr := Externals (Tree, Root_Only);
@@ -82,28 +82,19 @@ procedure Main is
 
       end Print_Externals;
 
-      Context      : GPR2.Context.Object;
+      Opt : Options.Object;
 
    begin
 
-      Ada.Text_IO.Put_Line ("Testing " & String (Project_Name));
+      Ada.Text_IO.Put_Line ("Testing " & Project_Name);
       Tree.Unload;
       Ada.Environment_Variables.Set ("NO_DEFAULT", "No_Default_Value");
-
-      Tree.Load_Autoconf
-        (Filename =>
-           GPR2.Path_Name.Create_File
-             (GPR2.Project.Ensure_Extension (Project_Name),
-              GPR2.Path_Name.No_Resolution),
-         Context  => Context);
-
-      Print_Externals (True);
-      Tree.Log_Messages.Clear;
-      Print_Externals (False);
-
-   exception
-      when Project_Error =>
-         Print_Messages;
+      Opt.Add_Switch (Options.P, Project_Name);
+      if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+         Print_Externals (True);
+         Tree.Log_Messages.Clear;
+         Print_Externals (False);
+      end if;
    end Test;
 
 begin

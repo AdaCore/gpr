@@ -19,13 +19,7 @@ begin
 
    Options.Add_Switch (GPR2.Options.P, "tree/agg.gpr");
    Options.Finalize;
-   Result := Options.Load_Project
-     (Tree,
-      With_Runtime     => True,
-      Absent_Dir_Error => GPR2.Project.Tree.No_Error);
-
-   if not Result then
-      Tree.Log_Messages.Output_Messages (Information => False);
+   if not Tree.Load (Options, True, No_Error) then
       return;
    end if;
 

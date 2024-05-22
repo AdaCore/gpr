@@ -1,5 +1,5 @@
 with Ada.Text_IO;
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
@@ -7,20 +7,8 @@ with GPR2.Project.Tree;
 with GPR2.Project.Variable;
 
 procedure Main is
-   Tree         : GPR2.Project.Tree.Object;
-   Context      : GPR2.Context.Object;
+   Tree : GPR2.Project.Tree.Object;
    use GPR2;
-
-   procedure Print_Message is
-   begin
-      if Tree.Has_Messages then
-         for C in Tree.Log_Messages.Iterate
-           (False, True, True, True, True)
-         loop
-            Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-         end loop;
-      end if;
-   end Print_Message;
 
    procedure Print_Variable (Variable : GPR2.Project.Variable.Object) is
       use GPR2.Project.Registry.Attribute;
@@ -36,21 +24,17 @@ procedure Main is
       end if;
    end Print_Variable;
 
-   procedure Test (Prj : GPR2.Filename_Type) is
+   procedure Test (Prj : String) is
+      Opt  : GPR2.Options.Object;
    begin
-      Ada.Text_IO.Put_Line (String (Prj) & ".gpr:");
+      Ada.Text_IO.Put_Line (Prj & ".gpr:");
+      Opt.Add_Switch (Options.P, Prj);
+      if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+         for V of Tree.Root_Project.Variables loop
+            Print_Variable (V);
+         end loop;
+      end if;
       Tree.Unload;
-      Tree.Load_Autoconf
-        (Filename => GPR2.Path_Name.Create_File
-           (GPR2.Project.Ensure_Extension (Prj),
-            GPR2.Path_Name.No_Resolution),
-         Context  => Context);
-      for V of Tree.Root_Project.Variables loop
-         Print_Variable (V);
-      end loop;
-   exception
-      when Project_Error =>
-         Print_Message;
    end Test;
 
 begin
