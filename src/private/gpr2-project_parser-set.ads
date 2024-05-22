@@ -8,7 +8,7 @@ with Ada.Containers.Ordered_Maps;
 
 with GPR2.Path_Name;
 
-package GPR2.Project.Parser.Set is
+package GPR2.Project_Parser.Set is
 
    use type GPR2.Path_Name.Object;
 
@@ -17,4 +17,4 @@ package GPR2.Project.Parser.Set is
 
    subtype Object is Set.Map;
 
-end GPR2.Project.Parser.Set;
+end GPR2.Project_Parser.Set;

@@ -63,11 +63,6 @@ package GPR2 is
    --  raised with a minimal message but the actual messages are to be found in
    --  the Tree log messages.
 
-   Processing_Error : exception;
-   --  Raised when an error related to project processing occurs. Exception is
-   --  raised with a minimal message but the actual messages are to be found in
-   --  the Tree log messages.
-
    Attribute_Error : exception;
    --  Raised when querying an invalid attribute (not in the registry,
    --  invalid context, ...).
@@ -88,6 +83,13 @@ package GPR2 is
 
    function Image (Kind : Project_Kind) return String;
    --  Returns a human representation of kind value
+
+   type Error_Level is
+     (No_Error,
+      Warning,
+      Error);
+   --  For certain categories of messages, tells if we ignore them, raise a
+   --  warning or an error.
 
    --
    --  Name / Value

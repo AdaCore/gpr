@@ -12,16 +12,14 @@ with GNAT.OS_Lib;
 with GNATCOLL.OS.Dir;
 with GNATCOLL.OS.Stat;
 
-with GPR2.Containers;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
-with GPR2.Project.Tree;
-with GPR2.Source_Reference.Value;
+with GPR2.Tree_Internal;
 
-package body GPR2.Project.Definition is
+package body GPR2.View_Internal is
 
    package ACH renames Ada.Characters.Handling;
    package ASF renames Ada.Strings.Fixed;
@@ -33,24 +31,15 @@ package body GPR2.Project.Definition is
    -- Check_Aggregate_Library_Dirs --
    ----------------------------------
 
-   procedure Check_Aggregate_Library_Dirs (View : Project.View.Object) is
-      procedure Process_Aggregate (Proj : Project.View.Object);
-      --  Recursive procedure to check the aggregated projects, as they may
-      --  also be aggregated library projects.
-
-      -----------------------
-      -- Process_Aggregate --
-      -----------------------
-
-      procedure Process_Aggregate (Proj : Project.View.Object) is
-      begin
-         if Proj.Kind = K_Aggregate_Library then
-            for V of Get_RO (Proj).Aggregated loop
-               if V.Kind not in K_Aggregate_Library | K_Configuration
-                 | K_Abstract
+   procedure Check_Aggregate_Library_Dirs (Tree : Tree_Internal.Object) is
+   begin
+      for V of Tree.Ordered_Views loop
+         if V.Is_Aggregated_In_Library then
+            for View of V.Aggregate_Libraries loop
+               if V.Kind in With_Object_Dir_Kind
                  and then View.Library_Ali_Directory = V.Object_Directory
                then
-                  View.Tree.Log_Messages.Append
+                  Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
                         Sloc    => SR.Value.Create
@@ -60,13 +49,13 @@ package body GPR2.Project.Definition is
                            Text     => ""),
                         Message =>
                           "aggregate library ALI directory cannot be shared "
-                          & "with object directory of aggregated project """
-                          & String (V.Path_Name.Base_Name) & """"));
+                        & "with object directory of aggregated project """
+                        & String (V.Path_Name.Base_Name) & """"));
 
                elsif V.Is_Library
                  and then View.Library_Ali_Directory = V.Library_Directory
                then
-                  View.Tree.Log_Messages.Append
+                  Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
                         Sloc    => SR.Value.Create
@@ -76,14 +65,13 @@ package body GPR2.Project.Definition is
                            Text     => ""),
                         Message =>
                           "aggregate library ALI directory cannot be shared "
-                          & "with library directory of aggregated project """
-                          & String (V.Path_Name.Base_Name) & """"));
+                        & "with library directory of aggregated project """
+                        & String (V.Path_Name.Base_Name) & """"));
 
-               elsif V.Kind not in K_Aggregate_Library | K_Configuration
-                                   | K_Abstract
+               elsif V.Kind in With_Object_Dir_Kind
                  and then View.Library_Directory = V.Object_Directory
                then
-                  View.Tree.Log_Messages.Append
+                  Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
                         Sloc    => SR.Value.Create
@@ -93,13 +81,13 @@ package body GPR2.Project.Definition is
                            Text     => ""),
                         Message =>
                           "aggregate library directory cannot be shared "
-                          & "with object directory of aggregated project """
-                          & String (V.Path_Name.Base_Name) & """"));
+                        & "with object directory of aggregated project """
+                        & String (V.Path_Name.Base_Name) & """"));
 
                elsif V.Is_Library
                  and then View.Library_Directory = V.Library_Directory
                then
-                  View.Tree.Log_Messages.Append
+                  Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
                         Sloc    => SR.Value.Create
@@ -109,24 +97,19 @@ package body GPR2.Project.Definition is
                            Text     => ""),
                         Message =>
                           "aggregate library directory cannot be shared "
-                          & "with library directory of aggregated project """
-                          & String (V.Path_Name.Base_Name) & """"));
+                        & "with library directory of aggregated project """
+                        & String (V.Path_Name.Base_Name) & """"));
                end if;
-
-               Process_Aggregate (V);
-
             end loop;
          end if;
-      end Process_Aggregate;
-   begin
-      Process_Aggregate (View);
+      end loop;
    end Check_Aggregate_Library_Dirs;
 
    --------------------------------
    -- Check_Excluded_Source_Dirs --
    --------------------------------
 
-   procedure Check_Excluded_Source_Dirs (View : Project.View.Object) is
+   procedure Check_Excluded_Source_Dirs (Tree : Tree_Internal.Object) is
 
       function Exists
         (View_Path : Path_Name.Object;
@@ -170,7 +153,7 @@ package body GPR2.Project.Definition is
       end Exists;
 
    begin
-      for V of View.Tree.Ordered_Views loop
+      for V of Tree.Ordered_Views loop
          if V.Kind in With_Source_Dirs_Kind then
             declare
                V_Path : constant Path_Name.Object := V.Dir_Name;
@@ -180,7 +163,7 @@ package body GPR2.Project.Definition is
                if Attr.Is_Defined then
                   for Val of Attr.Values loop
                      if not Exists (V_Path, Val.Text) then
-                        View.Tree.Log_Messages.Append
+                        Tree.Log_Messages.Append
                           (Message.Create
                              (Level   => Message.Error,
                               Sloc    => Val,
@@ -199,7 +182,7 @@ package body GPR2.Project.Definition is
    -- Check_Package_Naming --
    --------------------------
 
-   procedure Check_Package_Naming (View : Project.View.Object) is
+   procedure Check_Package_Naming (Tree : Tree_Internal.Object) is
 
       procedure Check_View (View : Project.View.Object);
       --  Checks in View tree Casing, Dot_Replacement and Suffix attributes
@@ -419,9 +402,7 @@ package body GPR2.Project.Definition is
                for Attr of View.Attributes (Attr_Id) loop
                   for V of Attr.Values loop
                      Sources.Insert
-                       (Filename_Type (V.Text),
-                        Source_Reference.Value.Object (V),
-                        C, Ok);
+                       (Filename_Type (V.Text), V, C, Ok);
                      if not Ok then
                         Log_Error
                           (Message.Error,
@@ -447,7 +428,7 @@ package body GPR2.Project.Definition is
             Msg   : String;
             Sloc  : Source_Reference.Object'Class) is
          begin
-            View.Tree.Log_Messages.Append
+            Tree.Log_Messages.Append
               (Message.Create
                  (Level   => Level,
                   Sloc    => Sloc,
@@ -509,87 +490,10 @@ package body GPR2.Project.Definition is
       end Check_View;
 
    begin
-      for C in View.Tree.Iterate loop
-         Check_View (Project.Tree.Element (C));
+      for View of Tree.Ordered_Views loop
+         Check_View (View);
       end loop;
    end Check_Package_Naming;
-
-   ------------------------------
-   -- Check_Same_Name_Extended --
-   ------------------------------
-
-   procedure Check_Same_Name_Extended (View : Project.View.Object) is
-
-      procedure Check_View (View : Project.View.Object);
-      --  Checks in View tree (extended, aggregated, imported) that
-      --  any extending list contains unique project name.
-
-      ----------------
-      -- Check_View --
-      ----------------
-
-      procedure Check_View (View : Project.View.Object) is
-         OK    : Boolean;
-         CN    : Containers.Name_Type_Set.Cursor;
-
-         Names : Containers.Name_Set;
-         --  Set of already found extended projects' names
-
-         procedure Check_Extending (View : Project.View.Object);
-         --  If View is extending, checks that extended projects list contains
-         --  unique project names.
-
-         ---------------------
-         -- Check_Extending --
-         ---------------------
-
-         procedure Check_Extending (View : Project.View.Object) is
-         begin
-            if View.Is_Extending then
-               Names.Insert (View.Name, CN, OK);
-
-               if not OK then
-                  declare
-                     Extending : constant Project.View.Object :=
-                                   (if View.Is_Extended
-                                    then View.Extending
-                                    else View);
-                  begin
-                     View.Tree.Log_Messages.Append
-                       (Message.Create
-                          (Level   => Message.Error,
-                           Sloc    => SR.Value.Create
-                             (Filename => Extending.Path_Name.Value,
-                              Line     => 0,
-                              Column   => 0,
-                              Text     => ""),
-                           Message =>
-                             "cannot extend a project with the same name"));
-                  end;
-               end if;
-
-               Check_Extending (View.Extended_Root);
-            end if;
-         end Check_Extending;
-
-         Def  : constant Const_Ref := Get_RO (View);
-
-      begin
-         Check_Extending (View);
-
-         for V of Def.Imports loop
-            Check_View (V);
-         end loop;
-
-         for V of Def.Aggregated loop
-            Check_View (V);
-         end loop;
-
-      end Check_View;
-
-   begin
-      Check_View (View);
-   end Check_Same_Name_Extended;
 
    -----------------
    -- Clear_Cache --
@@ -808,4 +712,8 @@ package body GPR2.Project.Definition is
       Free (States);
    end Foreach;
 
-end GPR2.Project.Definition;
+   function Get_Context
+     (View : Project.View.Object) return Context.Object
+   is (Get_RO (View).Tree.Contexts (View.Context));
+
+end GPR2.View_Internal;

@@ -15,6 +15,7 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.View;
 with GPR2.Source_Reference.Value;
+with GPR2.View_Internal;
 
 separate (GPR2.Build.View_Tables)
 package body Update_Sources_List is
@@ -593,6 +594,9 @@ package body Update_Sources_List is
 
       function Process_File (File : File_Info) return Boolean;
 
+      Tree          : constant not null access Tree_Internal.Object :=
+                        View_Internal.Get_RO (Data.View).Tree;
+
       Previous_Files     : File_Sets.Set := Data.Src_Files;
       --  List of files that were present in the source dirs during last call
       --  to Process. Used for delta updates
@@ -610,9 +614,6 @@ package body Update_Sources_List is
       --  Collection of source simple names for a given Source_Dirs value
 
       Naming_Schema_Map       : Naming_Schema_Maps.Map;
-
-      Tree                    : constant not null access Project.Tree.Object :=
-                                  Data.View.Tree;
 
       Ada_Naming_Exceptions   : Source_Path_To_Attribute_List.Map;
       Attr                    : Project.Attribute.Object;
@@ -911,7 +912,7 @@ package body Update_Sources_List is
                --  needed.
 
                Build.Source_Base.Ada_Parser.Compute
-                 (Tree             => Tree,
+                 (File_Reader      => Tree.File_Reader,
                   Data             => Source,
                   Get_Withed_Units =>
                     Data.Tree_Db.Source_Option >= Sources_Units_Artifacts,
@@ -1183,7 +1184,7 @@ package body Update_Sources_List is
 
                         if not Src_Ref.Has_Naming_Exception then
                            Source_Base.Ada_Parser.Compute
-                             (Tree             => Tree,
+                             (File_Reader      => Tree.File_Reader,
                               Data             => Src_Ref,
                               Get_Withed_Units =>
                                 Data.Tree_Db.Source_Option >=

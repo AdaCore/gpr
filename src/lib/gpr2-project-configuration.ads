@@ -9,7 +9,7 @@
 limited with GPR2.KB;
 with GPR2.Environment;
 with GPR2.Log;
-with GPR2.Project.Parser;
+private with GPR2.Project_Parser;
 with GPR2.Project.View;
 
 with GNATCOLL.Refcount;
@@ -17,7 +17,7 @@ with GNATCOLL.Refcount;
 private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Containers.Vectors;
 
-limited with GPR2.Project.Tree;
+limited private with GPR2.Tree_Internal;
 
 package GPR2.Project.Configuration is
 
@@ -138,11 +138,6 @@ package GPR2.Project.Configuration is
      with Pre => Self.Is_Defined;
    --  Returns whether Externals where found during configuration project load
 
-   function Externals (Self : Object) return GPR2.Project.Parser.Externals_Map
-     with Pre  => Self.Is_Defined and then Self.Has_Externals,
-          Post => not Externals'Result.Is_Empty;
-   --  Returns externals found in parsed configuration project
-
 private
 
    type Description is record
@@ -193,7 +188,7 @@ private
 
    type Object is tagged record
       Messages           : Log.Object;
-      Project            : GPR2.Project.Parser.Object;
+      Project            : GPR2.Project_Parser.Object;
       Conf               : GPR2.Project.View.Object;
       Descriptions       : Configuration.Descriptions.Vector;
 
@@ -203,7 +198,7 @@ private
 
    procedure Bind_To_Tree
      (Self : in out Object;
-      Tree : not null access Project.Tree.Object);
+      Tree : not null access Tree_Internal.Object);
    --  Bind configuration to Tree
 
    Undefined : constant Object := (others => <>);

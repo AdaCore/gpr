@@ -13,7 +13,7 @@ with GPR2.Containers;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
-with GPR2.Project.Tree;
+with GPR2.Tree_Internal;
 with GPR2.View_Ids.Set;
 
 package body GPR2.Build.Tree_Db is
@@ -274,7 +274,7 @@ package body GPR2.Build.Tree_Db is
 
    procedure Create
      (Self                 : in out Object;
-      Tree                 : GPR2.Project.Tree.Object;
+      Tree                 : GPR2.Tree_Internal.Object;
       With_Runtime_Sources : Boolean)
    is
       Db_Inst : View_Db.Object;
@@ -624,13 +624,6 @@ package body GPR2.Build.Tree_Db is
       end if;
    end Refresh;
 
-   ----------
-   -- Tree --
-   ----------
-
-   function Tree (Self : Object) return access GPR2.Project.Tree.Object is
-     (Self.Tree);
-
    ------------
    -- Unload --
    ------------
@@ -643,5 +636,9 @@ package body GPR2.Build.Tree_Db is
       Self.Src_Option := No_Source;
       Self.With_RTS   := False;
    end Unload;
+
+begin
+
+   GPR2.Tree_Internal.Init_Tree_Database := Create'Access;
 
 end GPR2.Build.Tree_Db;

@@ -6,25 +6,24 @@
 
 with Ada.Containers.Ordered_Maps;
 
-package body GPR2.Project.Parser.Registry is
+package body GPR2.Project_Parser.Registry is
 
    package Project_Store is new Ada.Containers.Ordered_Maps
-     (GPR2.Path_Name.Object, GPR2.Project.Parser.Object);
+     (GPR2.Path_Name.Object, Object);
 
    protected Shared is
 
       function Exist (Pathname : GPR2.Path_Name.Object) return Boolean;
 
-      function Get
-        (Pathname : GPR2.Path_Name.Object) return Project.Parser.Object;
+      function Get (Pathname : GPR2.Path_Name.Object) return Object;
 
       procedure Register
         (Pathname : GPR2.Path_Name.Object;
-         Project  : GPR2.Project.Parser.Object);
+         Project  : Object);
 
       procedure Check_Registry
         (Pathname : GPR2.Path_Name.Object;
-         Project  : out GPR2.Project.Parser.Object);
+         Project  : out Object);
 
       procedure Clear;
 
@@ -38,7 +37,7 @@ package body GPR2.Project.Parser.Registry is
 
    function Check_Project
      (Pathname : GPR2.Path_Name.Object;
-      Project  : out GPR2.Project.Parser.Object) return Boolean is
+      Project  : out Object) return Boolean is
    begin
       Shared.Check_Registry (Pathname, Project);
       return Project.Is_Defined;
@@ -66,8 +65,7 @@ package body GPR2.Project.Parser.Registry is
    -- Get --
    ---------
 
-   function Get
-     (Pathname : GPR2.Path_Name.Object) return GPR2.Project.Parser.Object
+   function Get  (Pathname : GPR2.Path_Name.Object) return Object
    is
    begin
       return Shared.Get (Pathname);
@@ -79,7 +77,7 @@ package body GPR2.Project.Parser.Registry is
 
    procedure Register
      (Pathname : GPR2.Path_Name.Object;
-      Project  : GPR2.Project.Parser.Object) is
+      Project  : Object) is
    begin
       Shared.Register (Pathname, Project);
    end Register;
@@ -96,7 +94,7 @@ package body GPR2.Project.Parser.Registry is
 
       procedure Check_Registry
         (Pathname : GPR2.Path_Name.Object;
-         Project  : out GPR2.Project.Parser.Object)
+         Project  : out Object)
       is
          CP : constant Project_Store.Cursor := Store.Find (Pathname);
       begin
@@ -109,7 +107,7 @@ package body GPR2.Project.Parser.Registry is
             end;
 
          else
-            Project := GPR2.Project.Parser.Undefined;
+            Project := Undefined;
          end if;
       end Check_Registry;
 
@@ -135,8 +133,7 @@ package body GPR2.Project.Parser.Registry is
       -- Get --
       ---------
 
-      function Get
-        (Pathname : GPR2.Path_Name.Object) return Project.Parser.Object is
+      function Get (Pathname : GPR2.Path_Name.Object) return Object is
       begin
          return Store (Pathname);
       end Get;
@@ -147,7 +144,7 @@ package body GPR2.Project.Parser.Registry is
 
       procedure Register
         (Pathname : GPR2.Path_Name.Object;
-         Project  : GPR2.Project.Parser.Object)
+         Project  : Object)
       is
          use type Project_Store.Cursor;
          Pos : constant Project_Store.Cursor := Store.Find (Pathname);
@@ -159,4 +156,4 @@ package body GPR2.Project.Parser.Registry is
 
    end Shared;
 
-end GPR2.Project.Parser.Registry;
+end GPR2.Project_Parser.Registry;

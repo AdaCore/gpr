@@ -334,7 +334,7 @@ package body GPRtools.Options is
 
    function Load_Project
      (Opt                : in out Base_Options'Class;
-      Absent_Dir_Error   : GPR2.Project.Tree.Error_Level;
+      Absent_Dir_Error   : GPR2.Error_Level;
       Handle_Information : Boolean := False;
       Handle_Errors      : Boolean := True;
       Handle_Lint        : Boolean := False) return Boolean
@@ -387,22 +387,18 @@ package body GPRtools.Options is
 
    begin
       Loaded := Opt.Load_Project
-        (Tree             => Opt.Tree.all,
+        (Tree             => Opt.Tree,
          Absent_Dir_Error => Absent_Dir_Error);
 
       if Handle_Errors then
          declare
-            Has_Messages : constant Boolean := Opt.Tree.Has_Messages;
             Has_Error    : constant Boolean :=
-                             (if Has_Messages
+                             (if Opt.Tree.Is_Defined
                               then Opt.Tree.Log_Messages.Has_Error
                               else False);
          begin
             Display (Opt.Config_Project_Log);
-
-            if Opt.Tree /= null and then Has_Messages then
-               Display (Opt.Tree.all.Log_Messages.all);
-            end if;
+            Display (Opt.Tree.Log_Messages.all);
 
             if not Loaded
               and then Opt.Config_Project_Has_Error
@@ -414,8 +410,8 @@ package body GPRtools.Options is
             end if;
 
             if not Loaded
-              and then Opt.Tree /= null
-              and then Has_Messages
+              and then Opt.Tree.Is_Defined
+              and then Opt.Tree.Has_Messages
               and then Has_Error
             then
                Handle_Program_Termination

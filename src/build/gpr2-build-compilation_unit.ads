@@ -10,7 +10,6 @@ with Ada.Containers.Vectors;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
-limited with GPR2.Project.Tree;
 
 package GPR2.Build.Compilation_Unit is
 
@@ -153,8 +152,7 @@ package GPR2.Build.Compilation_Unit is
    --  If Self needs its own body (e.g. is a generic), then return also the
    --  units withed by the body.
 
-   function Object_File (Self : Object;
-                         Tree : GPR2.Project.Tree.Object) return Simple_Name;
+   function Object_File (Self : Object) return Simple_Name;
    --  Returns the .o's simple name for Self.
 
 private

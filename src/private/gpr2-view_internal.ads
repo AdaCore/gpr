@@ -7,26 +7,31 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Vectors;
 
+with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
+with GPR2.Path_Name;
+with GPR2.Pack_Internal;
+with GPR2.Project_Parser.Set;
 with GPR2.Project.Attribute_Cache;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Configuration;
-with GPR2.Project.Pack;
-with GPR2.Project.Parser.Set;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
 with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
+with GPR2.Source_Reference.Value;
+with GPR2.View_Base_Internal;
 with GPR2.View_Ids;
 with GPR2.View_Ids.Set;
 
-limited with GPR2.Project.Tree;
+limited with GPR2.Tree_Internal;
 
-private package GPR2.Project.Definition is
+private package GPR2.View_Internal is
 
-   use type View.Object;
+   use GPR2.Project;
+   use type Project.View.Object;
    use type Path_Name.Object;
 
    --  Tree contains the Project parser object. This is shared by all projects
@@ -35,9 +40,9 @@ private package GPR2.Project.Definition is
    --  Imports contains the list of all imported projects for Project.
 
    type Tree is record
-      Project  : GPR2.Project.Parser.Object;
-      Imports  : GPR2.Project.Parser.Set.Object;
-      Extended : GPR2.Project.Parser.Object;
+      Project  : GPR2.Project_Parser.Object;
+      Imports  : GPR2.Project_Parser.Set.Object;
+      Extended : GPR2.Project_Parser.Object;
    end record;
 
    package Project_Vector is new Ada.Containers.Vectors
@@ -71,17 +76,17 @@ private package GPR2.Project.Definition is
    --  projects have a context. All other projects are referencing a project
    --  which own a context.
 
-   type Data is new Definition_Base with record
+   type Data is new View_Base_Internal.Definition_Base with record
       Trees           : Tree;
       --  Raw parsed values for the project
 
       --  View hierarchy:
 
-      Tree              : access Project.Tree.Object;
+      Tree              : access Tree_Internal.Object;
       --  The project tree for this view
       Root_Views        : View_Ids.Set.Set;
       --  Either root aggregated project view, or just root view of the tree
-      Extending         : Weak_Reference;
+      Extending         : View_Base_Internal.Weak_Reference;
       --  If defined, the view that is extending this definition
       Extended_Root     : View.Object;
       --  If defined, the root view (in case of extends all) of the extended
@@ -105,7 +110,7 @@ private package GPR2.Project.Definition is
       --  The view's raw attributes
       Vars              : Project.Variable.Set.Object;
       --  The view's variables
-      Packs             : Project.Pack.Set.Map;
+      Packs             : Pack_Internal.Set.Map;
       --  The view's raw packages
       Types             : Project.Typ.Set.Object;
       --  The view's type definitions
@@ -142,19 +147,15 @@ private package GPR2.Project.Definition is
    --------------------------------------------------------------
 
    Register : access function
-     (Def : in out Definition.Data) return Project.View.Object;
+     (Def : in out View_Internal.Data) return Project.View.Object;
    --  Register view definition in the project tree
-
-   Get_Context : access function
-     (View : Project.View.Object) return Context.Object;
-   --  Returns context of the project view
 
    --------------------------------------------------------------
    -- Private routines exported from GPR2.Project.View package --
    --------------------------------------------------------------
 
    Set : access procedure
-     (Ref : out View.Object; Def : Definition_Base'Class);
+     (Ref : out View.Object; Def : Data);
    --  Convert definition to view to register
 
    Get : access function (View : Project.View.Object) return Ref;
@@ -172,23 +173,33 @@ private package GPR2.Project.Definition is
    Refcount : access function (View : Project.View.Object) return Natural;
    --  Returns reference counter of the view
 
-   Weak : access function (View : Project.View.Object) return Weak_Reference;
+   Weak : access function (View : Project.View.Object)
+            return View_Base_Internal.Weak_Reference;
    --  Get weak reference from view. Need to avoid circular references
 
-   Strong : access function (View : Weak_Reference) return Project.View.Object;
+   Strong : access function
+              (View : View_Base_Internal.Weak_Reference)
+                return Project.View.Object;
    --  Get view from weak reference
 
    -----------------------------------------------------------------------
    -- Private routines exported from GPR2.Project.Configuration package --
    -----------------------------------------------------------------------
 
-   Bind_Configuration_To_Tree : access procedure
-     (Config : in out Configuration.Object;
-      Tree   : not null access Project.Tree.Object);
+   Bind_Configuration_To_Tree : access
+     procedure (Config : in out Project.Configuration.Object;
+                Tree   : not null access Tree_Internal.Object);
+
+   Configuration_Externals : access
+     function (Config : Project.Configuration.Object)
+       return GPR2.Project_Parser.Externals_Map;
 
    -------------------------------------------
    -- Helper routines for GPR2.Project.View --
    -------------------------------------------
+
+   function Get_Context
+     (View : Project.View.Object) return Context.Object;
 
    function Has_Packages
      (Def  : Data;
@@ -234,17 +245,14 @@ private package GPR2.Project.Definition is
    --  File_CB is called for each regular file found.
    --  Source reference is used when messages added to Self.Tree's log
 
-   procedure Check_Same_Name_Extended (View : Project.View.Object);
-   --  Report "cannot extend a project with the same name" errors
-
-   procedure Check_Aggregate_Library_Dirs (View : Project.View.Object);
+   procedure Check_Aggregate_Library_Dirs (Tree : Tree_Internal.Object);
    --  Report aggregate library (ALI)? directory cannot be shared with
    --  (object|library) directory of aggregated project errors
 
-   procedure Check_Excluded_Source_Dirs (View : Project.View.Object);
+   procedure Check_Excluded_Source_Dirs (Tree : Tree_Internal.Object);
    --  Check that excluded source dirs are actual directories.
 
-   procedure Check_Package_Naming (View : Project.View.Object);
+   procedure Check_Package_Naming (Tree : Tree_Internal.Object);
    --  For all tree's views check Casing, Dot_Replacement, Spec_Suffix,
    --  Body_Suffix and Separate_Suffix naming package attributes value.
 
@@ -257,4 +265,4 @@ private package GPR2.Project.Definition is
    procedure Enable_Cache (Def : in out Data);
    --  Start using cache to store attribute values
 
-end GPR2.Project.Definition;
+end GPR2.View_Internal;

@@ -15,6 +15,8 @@ with GPR2.Project.Attribute;
 with GPR2.Project.Configuration;
 with GPR2.Project.Registry;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Tree;
+with GPR2.Tree_Internal;
 
 package body GPR2.Options is
 
@@ -283,19 +285,28 @@ package body GPR2.Options is
      (Self             : in out Object;
       Tree             : in out GPR2.Project.Tree.Object;
       With_Runtime     : Boolean := False;
-      Absent_Dir_Error : GPR2.Project.Tree.Error_Level :=
-                           GPR2.Project.Tree.Warning;
+      Absent_Dir_Error : GPR2.Error_Level := GPR2.Warning;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
       Quiet            : Boolean := False) return Boolean
    is
+      Tree_Int    : GPR2.Tree_Internal.Object_Access;
       Conf        : GPR2.Project.Configuration.Object;
       Create_Cgpr : Boolean := False;
 
    begin
-      if Tree.Is_Defined then
-         Tree.Unload;
+      if not Self.Is_Finalized then
+         Self.Finalize;
       end if;
+
+      if Tree.Is_Defined then
+         Tree_Int := Tree_Internal.Get (Tree);
+         Tree_Int.Unload (Full => False);
+      else
+         Tree.Create;
+         Tree_Int := Tree_Internal.Get (Tree);
+      end if;
+
 
       Self.Register_Project_Search_Paths (Tree);
 
@@ -316,7 +327,7 @@ package body GPR2.Options is
             return False;
          end if;
 
-         Tree.Load
+         Tree_Int.Load
            (Filename         => Self.Filename,
             Context          => Self.Context,
             With_Runtime     => With_Runtime,
@@ -346,8 +357,8 @@ package body GPR2.Options is
                                  Attribute (PRA.Target);
                Conf_Target : constant Value_Type := Target_Attr.Value.Text;
                Base        : constant GPR2.KB.Object :=
-                               (if Tree.Get_KB.Is_Defined
-                                then Tree.Get_KB
+                               (if Tree_Int.Get_KB.Is_Defined
+                                then Tree_Int.Get_KB
                                 else GPR2.KB.Create_Default
                                   (GPR2.KB.Targetset_Only_Flags,
                                    Self.Environment));
@@ -391,7 +402,7 @@ package body GPR2.Options is
             Create_Cgpr := True;
          end if;
 
-         Tree.Load_Autoconf
+         Tree_Int.Load_Autoconf
            (Filename          => Self.Filename,
             Context           => Self.Context,
             With_Runtime      => With_Runtime,
@@ -415,7 +426,7 @@ package body GPR2.Options is
 
       return True;
    exception
-      when GPR2.Project_Error | GPR2.Processing_Error =>
+      when GPR2.Project_Error =>
          return False;
    end Load_Project;
 

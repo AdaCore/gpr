@@ -4,16 +4,17 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Pack_Internal;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Variable.Set;
-with GPR2.Project.Pack;
-with GPR2.Project.Parser.Create;
+with GPR2.Project_Parser.Create;
 with GPR2.Source_Reference.Attribute;
+with GPR2.Source_Reference.Value;
 with GPR2.Source_Reference.Pack;
 
-package body GPR2.Project.Tree.View_Builder is
+package body GPR2.Tree_Internal.View_Builder is
 
    procedure Set_Attribute
      (Self   : in out Object;
@@ -72,10 +73,11 @@ package body GPR2.Project.Tree.View_Builder is
       Result.Data.Path          := Project_Dir;
       Result.Data.Is_Root       := True;
       Result.Data.Unique_Id     := GPR2.View_Ids.Create (Gpr_Path);
-      Result.Data.Trees.Project := GPR2.Project.Parser.Create
-        (Name      => Name,
-         File      => Gpr_Path,
-         Qualifier => Qualifier);
+      Result.Data.Trees.Project :=
+        GPR2.Project_Parser.Create
+          (Name      => Name,
+           File      => Gpr_Path,
+           Qualifier => Qualifier);
 
       return Result;
    end Create;
@@ -85,7 +87,7 @@ package body GPR2.Project.Tree.View_Builder is
    ----------
 
    procedure Load
-     (Self             : in out Tree.Object;
+     (Self             : in out Tree_Internal.Object;
       Project          : Object;
       Context          : GPR2.Context.Object;
       With_Runtime     : Boolean;
@@ -105,7 +107,7 @@ package body GPR2.Project.Tree.View_Builder is
       Environment      : GPR2.Environment.Object :=
                            GPR2.Environment.Process_Environment) is
    begin
-      GPR2.Project.Parser.Clear_Cache;
+      GPR2.Project_Parser.Clear_Cache;
 
       Self.Load ((Project_Definition, Project.Data),
                  Context          => Context,
@@ -123,11 +125,11 @@ package body GPR2.Project.Tree.View_Builder is
                  File_Reader      => File_Reader,
                  Environment      => Environment);
 
-      GPR2.Project.Parser.Clear_Cache;
+      GPR2.Project_Parser.Clear_Cache;
    end Load;
 
    procedure Load_Autoconf
-     (Self              : in out Tree.Object;
+     (Self              : in out Tree_Internal.Object;
       Project           : Object;
       Context           : GPR2.Context.Object;
       With_Runtime      : Boolean;
@@ -185,9 +187,9 @@ package body GPR2.Project.Tree.View_Builder is
 
       elsif not Self.Data.Packs.Contains (Q_Name.Pack) then
          declare
-            Pack : GPR2.Project.Pack.Object;
+            Pack : GPR2.Pack_Internal.Object;
          begin
-            Pack := GPR2.Project.Pack.Object'
+            Pack := GPR2.Pack_Internal.Object'
               (Source_Reference.Pack.Object
                  (Source_Reference.Pack.Create
                       (Attr.Filename, 0, 0, Q_Name.Pack)) with
@@ -270,4 +272,4 @@ package body GPR2.Project.Tree.View_Builder is
       return Result;
    end SR_Values;
 
-end GPR2.Project.Tree.View_Builder;
+end GPR2.Tree_Internal.View_Builder;

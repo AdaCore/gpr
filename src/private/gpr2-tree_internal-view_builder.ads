@@ -4,7 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-package GPR2.Project.Tree.View_Builder is
+package GPR2.Tree_Internal.View_Builder is
 
    type Object is tagged private;
 
@@ -38,7 +38,7 @@ package GPR2.Project.Tree.View_Builder is
       Values : Containers.Value_List);
 
    procedure Load_Autoconf
-     (Self              : in out Tree.Object;
+     (Self              : in out Tree_Internal.Object;
       Project           : View_Builder.Object;
       Context           : GPR2.Context.Object;
       With_Runtime      : Boolean;
@@ -64,7 +64,7 @@ package GPR2.Project.Tree.View_Builder is
        with Pre => Project.Is_Defined;
 
    procedure Load
-     (Self             : in out Tree.Object;
+     (Self             : in out Tree_Internal.Object;
       Project          : View_Builder.Object;
       Context          : GPR2.Context.Object;
       With_Runtime     : Boolean;
@@ -91,10 +91,10 @@ package GPR2.Project.Tree.View_Builder is
 private
 
    type Object is tagged record
-      Data : GPR2.Project.Definition.Data;
+      Data : GPR2.View_Internal.Data;
    end record;
 
    function Is_Defined (Self : Object) return Boolean is
      (Self.Data.Path.Is_Defined);
 
-end GPR2.Project.Tree.View_Builder;
+end GPR2.Tree_Internal.View_Builder;

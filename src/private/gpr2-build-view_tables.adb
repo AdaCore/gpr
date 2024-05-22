@@ -15,7 +15,7 @@ with GPR2.Project.Attribute;
 with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
-with GPR2.Project.Tree;
+with GPR2.Tree_Internal;
 
 package body GPR2.Build.View_Tables is
 

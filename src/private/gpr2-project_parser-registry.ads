@@ -6,7 +6,7 @@
 
 with GPR2.Path_Name;
 
-private package GPR2.Project.Parser.Registry is
+private package GPR2.Project_Parser.Registry is
 
    use type GPR2.Path_Name.Object;
 
@@ -16,14 +16,12 @@ private package GPR2.Project.Parser.Registry is
    --  the registry.
 
    procedure Register
-     (Pathname : GPR2.Path_Name.Object; Project : GPR2.Project.Parser.Object)
-     with Pre  => Pathname.Is_Defined,
-          Post => Exists (Pathname);
+     (Pathname : GPR2.Path_Name.Object; Project : Object);
    --  Registers a new project syntactic tree for Pathname
 
    function Check_Project
      (Pathname : GPR2.Path_Name.Object;
-      Project  : out GPR2.Project.Parser.Object) return Boolean
+      Project  : out Object) return Boolean
      with Pre  => Pathname.Is_Defined,
           Post => Check_Project'Result = Project.Is_Defined;
    --  Returns True if the project file given by its full path-name is known in
@@ -31,11 +29,10 @@ private package GPR2.Project.Parser.Registry is
    --  Returns False otherwise and puts Undefined into Project out parameter.
 
    function Get
-     (Pathname : GPR2.Path_Name.Object) return GPR2.Project.Parser.Object
-     with Pre => Exists (Pathname);
+     (Pathname : GPR2.Path_Name.Object) return Object;
    --  Returns the syntactic tree for project Pathname
 
    procedure Clear_Cache;
    --  Clears the parsed objects cache
 
-end GPR2.Project.Parser.Registry;
+end GPR2.Project_Parser.Registry;

@@ -52,9 +52,6 @@ is
 
    package PRA renames Project.Registry.Attribute;
 
-   --  Variables for tool's options
-   Project_Tree : aliased Project.Tree.Object;
-
    procedure Display_Messages_JSON_Output
      (JSON_Res    : JSON_Value;
       Tree_Logs   : GPR2.Log.Object;
@@ -960,7 +957,7 @@ is
             declare
                First_Message : Boolean := False;
             begin
-               for C in Project_Tree.Log_Messages.Iterate
+               for C in Options.Tree.Log_Messages.Iterate
                  (Information => Options.Verbose,
                   Warning     => True,
                   Error       => True,
@@ -1117,11 +1114,9 @@ is
    Success : Boolean;
 
 begin
-   Options.Tree := Project_Tree.Reference;
-
    Success := GPRtools.Options.Load_Project
                 (Opt                => Options,
-                 Absent_Dir_Error   => Project.Tree.No_Error,
+                 Absent_Dir_Error   => No_Error,
                  Handle_Information => False,
                  Handle_Errors      => False,
                  Handle_Lint        => False);
@@ -1144,7 +1139,7 @@ begin
             if Success then
                Inspect_Project_JSON_Output
                  (JSON_Res => J_Res,
-                  Tree     => Project_Tree);
+                  Tree     => Options.Tree);
             end if;
 
             Text_IO.Put_Line
@@ -1160,7 +1155,7 @@ begin
             Only_Errors => not Success);
 
          if Success then
-            Inspect_Project_Textual_Output (Tree => Project_Tree);
+            Inspect_Project_Textual_Output (Tree => Options.Tree);
          end if;
    end case;
 

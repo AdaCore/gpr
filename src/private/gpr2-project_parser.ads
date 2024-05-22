@@ -18,12 +18,12 @@ with GPR2.Project.Typ.Set;
 with GPR2.Project.View;
 with GPR2.Source_Reference;
 
-limited with GPR2.Project.Tree;
+limited with GPR2.Tree_Internal;
 
 with Gpr_Parser.Analysis;
 with Gpr_Parser_Support.File_Readers;
 
-package GPR2.Project.Parser is
+private package GPR2.Project_Parser is
 
    use Gpr_Parser.Analysis;
 
@@ -67,7 +67,7 @@ package GPR2.Project.Parser is
 
    procedure Process
      (Self          : in out Object;
-      Tree          : in out GPR2.Project.Tree.Object;
+      Tree          : in out GPR2.Tree_Internal.Object;
       Context       : GPR2.Context.Object;
       View          : GPR2.Project.View.Object;
       Pre_Conf_Mode : Boolean := False;
@@ -161,7 +161,7 @@ package GPR2.Project.Parser is
 
    function Type_Definition_From
      (Self      : Object;
-      Tree      : GPR2.Project.Tree.Object;
+      Tree      : GPR2.Tree_Internal.Object;
       Type_Node : Identifier_List)
     return GPR2.Project.Typ.Object
     with Pre => Self.Is_Defined;
@@ -202,4 +202,4 @@ private
    function Explicit_Qualifier (Self : Object) return Boolean is
      (Self.Expl_Qual);
 
-end GPR2.Project.Parser;
+end GPR2.Project_Parser;

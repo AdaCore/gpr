@@ -13,9 +13,10 @@ with Gpr_Parser_Support.Slocs;
 with Gpr_Parser_Support.Text;
 
 with GPR2.Message;
-with GPR2.Project.Definition;
+with GPR2.View_Internal;
 with GPR2.Project.External.Set;
-with GPR2.Project.Parser;
+with GPR2.Project_Parser;
+with GPR2.Tree_Internal;
 
 package body GPR2.Project.External is
 
@@ -24,7 +25,7 @@ package body GPR2.Project.External is
    use Gpr_Parser_Support.Text;
    use Gpr_Parser_Support.Slocs;
 
-   package PP renames GPR2.Project.Parser;
+   package PP renames GPR2.Project_Parser;
 
    -----------------------
    -- Externals --
@@ -75,7 +76,8 @@ package body GPR2.Project.External is
           Parser          : PP.Object)
       is
          Type_Def : constant GPR2.Project.Typ.Object :=
-                      Parser.Type_Definition_From (Tree, Typ);
+                      Parser.Type_Definition_From
+                        (Tree_Internal.Get (Tree).all, Typ);
       begin
          --  Type_Def can not be undefined at this stage.
          --  Otherwise, the previous parsing stages would
@@ -370,10 +372,10 @@ package body GPR2.Project.External is
                   declare
                      Ext      : constant GPR2.Project.External.
                                   Set.Set.Reference_Type :=
-                                     Externals.Reference (Ext_Name);
+                                    Externals.Reference (Ext_Name);
                      Type_Def : constant GPR2.Project.Typ.Object :=
-                                                Parser.Type_Definition_From
-                                                  (Tree, Type_Node);
+                                  Parser.Type_Definition_From
+                                    (Tree_Internal.Get (Tree).all, Type_Node);
 
                   begin
                      --  Type_Def can not be undefined at this stage.
@@ -561,8 +563,8 @@ package body GPR2.Project.External is
          end loop;
       end Populate_Externals;
 
-      Def       : constant Definition.Ref :=
-                    Definition.Get (Tree.Root_Project);
+      Def       : constant View_Internal.Ref :=
+                    View_Internal.Get (Tree.Root_Project);
       Externals : GPR2.Project.External.Set.Object;
 
    begin
@@ -577,7 +579,7 @@ package body GPR2.Project.External is
          for V of Tree.Ordered_Views loop
             declare
                Parser      : constant PP.Object :=
-                               Definition.Get_RO (V).Trees.Project;
+                               View_Internal.Get_RO (V).Trees.Project;
                Parsed_Exts : constant PP.Externals_Map := Parser.Externals;
 
             begin

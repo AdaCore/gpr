@@ -12,7 +12,7 @@ with GPR2.Project.Attribute.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Source_Reference.Pack;
 
-private package GPR2.Project.Pack is
+private package GPR2.Pack_Internal is
 
    type Object is new Source_Reference.Pack.Object with record
       Attrs : Project.Attribute.Set.Object;
@@ -37,4 +37,4 @@ private
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
 
-end GPR2.Project.Pack;
+end GPR2.Pack_Internal;

@@ -11,8 +11,7 @@ with Gpr_Parser.Common;
 
 with Gpr_Parser_Support.Text;
 
-with GPR2.Project.Definition;
-with GPR2.Project.Parser;
+with GPR2.View_Internal;
 with GPR2.Project.Registry.Attribute;
 
 package body GPR2.Project.Pretty_Printer is
@@ -820,7 +819,7 @@ package body GPR2.Project.Pretty_Printer is
       Self.Buffer := Null_Unbounded_String;
 
       if Unit = No_Analysis_Unit then
-         Unit := GPR2.Project.Definition.Get_RO (View).Trees.Project.Unit;
+         Unit := GPR2.View_Internal.Get_RO (View).Trees.Project.Unit;
       end if;
 
       Print (Root (Unit), Self.Initial_Indent);

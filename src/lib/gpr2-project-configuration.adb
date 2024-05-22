@@ -13,14 +13,19 @@ with GPR2.KB;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
-with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Source_Reference.Value;
 with GPR2.View_Ids;
+with GPR2.View_Internal;
 
 package body GPR2.Project.Configuration is
 
    package PRA renames Project.Registry.Attribute;
+
+   function Externals
+     (Self : Project.Configuration.Object)
+      return GPR2.Project_Parser.Externals_Map
+   is (Self.Project.Externals);
 
    --------------------
    -- Archive_Suffix --
@@ -37,9 +42,9 @@ package body GPR2.Project.Configuration is
 
    procedure Bind_To_Tree
      (Self : in out Object;
-      Tree : not null access Project.Tree.Object)
+      Tree : not null access Tree_Internal.Object)
    is
-      Data : Definition.Data;
+      Data : View_Internal.Data;
    begin
       Data.Trees.Project := Self.Project;
       Data.Kind          := K_Configuration;
@@ -48,7 +53,7 @@ package body GPR2.Project.Configuration is
                               (Filename_Type
                                  (Self.Project.Path_Name.Dir_Name));
       Data.Unique_Id     := GPR2.View_Ids.Config_View_Id;
-      Self.Conf          := Definition.Register (Data);
+      Self.Conf          := View_Internal.Register (Data);
    end Bind_To_Tree;
 
    ------------------------
@@ -275,7 +280,7 @@ package body GPR2.Project.Configuration is
          end if;
 
          Result.Project :=
-           GPR2.Project.Parser.Parse
+           GPR2.Project_Parser.Parse
              (Contents        => Configuration_String,
               Messages        => Parsing_Messages,
               Pseudo_Filename =>
@@ -325,16 +330,6 @@ package body GPR2.Project.Configuration is
       end if;
    end Dependency_File_Suffix;
 
-   ---------------
-   -- Externals --
-   ---------------
-
-   function Externals
-     (Self : Object) return GPR2.Project.Parser.Externals_Map is
-   begin
-      return Self.Project.Externals;
-   end Externals;
-
    -------------------
    -- Has_Externals --
    -------------------
@@ -363,7 +358,7 @@ package body GPR2.Project.Configuration is
       Result : Object;
    begin
       Result.Project :=
-        Project.Parser.Parse
+        Project_Parser.Parse
           (Filename, GPR2.Path_Name.Set.Empty_Set, Result.Messages);
 
       --  Continue only if there is no parsing error on the configuration
@@ -420,5 +415,6 @@ package body GPR2.Project.Configuration is
    end Runtime;
 
 begin
-   Definition.Bind_Configuration_To_Tree := Bind_To_Tree'Access;
+   View_Internal.Bind_Configuration_To_Tree := Bind_To_Tree'Access;
+   View_Internal.Configuration_Externals := Externals'Access;
 end GPR2.Project.Configuration;

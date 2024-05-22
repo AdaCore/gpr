@@ -24,19 +24,21 @@ with GPR2.KB;
 with GPR2.Message;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Attribute_Index;
-with GPR2.Project.Definition;
-with GPR2.Project.Pack;
-with GPR2.Project.Parser.Registry;
+with GPR2.View_Internal;
+with GPR2.Pack_Internal;
+with GPR2.Project_Parser.Registry;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
-with GPR2.Project.Tree;
+with GPR2.Tree_Internal;
 with GPR2.Project.Variable.Set;
 with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Pack;
 with GPR2.Source_Reference.Value;
 
-package body GPR2.Project.Parser is
+package body GPR2.Project_Parser is
+
+   use type Ada.Containers.Count_Type;
 
    use Ada.Exceptions;
 
@@ -187,7 +189,7 @@ package body GPR2.Project.Parser is
 
    procedure Clear_Cache is
    begin
-      GPR2.Project.Parser.Registry.Clear_Cache;
+      GPR2.Project_Parser.Registry.Clear_Cache;
    end Clear_Cache;
 
    --------------
@@ -1400,7 +1402,7 @@ package body GPR2.Project.Parser is
 
    procedure Process
      (Self          : in out Object;
-      Tree          : in out GPR2.Project.Tree.Object;
+      Tree          : in out GPR2.Tree_Internal.Object;
       Context       : GPR2.Context.Object;
       View          : GPR2.Project.View.Object;
       Pre_Conf_Mode : Boolean := False;
@@ -1517,11 +1519,11 @@ package body GPR2.Project.Parser is
       function Has_Error return Boolean is
         (Tree.Log_Messages.Has_Error);
 
-      View_Def    : GPR2.Project.Definition.Ref renames
-                      Definition.Get (View);
+      View_Def    : GPR2.View_Internal.Ref renames
+                      View_Internal.Get (View);
       Attrs       : GPR2.Project.Attribute.Set.Object renames View_Def.Attrs;
       Vars        : GPR2.Project.Variable.Set.Object  renames View_Def.Vars;
-      Packs       : GPR2.Project.Pack.Set.Map         renames View_Def.Packs;
+      Packs       : GPR2.Pack_Internal.Set.Map         renames View_Def.Packs;
       Types       : GPR2.Project.Typ.Set.Object       renames View_Def.Types;
       --  Easy access to the view's attributes, variables, packs and type
       --  definitions.
@@ -1546,7 +1548,7 @@ package body GPR2.Project.Parser is
 
       In_Pack     : Boolean := False;
       Pack_Name   : Package_Id := Project_Level_Scope;
-      Pack_Ref    : access GPR2.Project.Pack.Object;
+      Pack_Ref    : access GPR2.Pack_Internal.Object;
       --  Package-oriented state, when parsing is in a package In_Pack is
       --  set and Pack_Name contains the name of the package and Pack_Ref
       --  will point to the view's package object.
@@ -2893,9 +2895,9 @@ package body GPR2.Project.Parser is
          procedure Record_Values (Values : Item_Values) is
             use type Project.Attribute_Index.Object;
 
-            function Has_Index (Index : Attribute_Index.Object) return Boolean
-              is (for some V of Result.Indexed_Values.Values
-                    => V.Index = Index);
+            function Has_Index
+              (Index : Project.Attribute_Index.Object) return Boolean
+            is (for some V of Result.Indexed_Values.Values => V.Index = Index);
 
          begin
             --  If we already have a list of indexed values, or If we already
@@ -3845,7 +3847,7 @@ package body GPR2.Project.Parser is
             --  to it.
             Packs.Include
               (P_Name,
-               GPR2.Project.Pack.Object'
+               GPR2.Pack_Internal.Object'
                  (Source_Reference.Pack.Object
                     (Source_Reference.Pack.Create
                        (Get_Source_Reference (Self.File, Node), P_Name)) with
@@ -4414,7 +4416,7 @@ package body GPR2.Project.Parser is
 
                         for Typ of Def.Type_Def loop
                            if Def.Value_Case_Sensitive then
-                              if String (Val.Text) = String (Typ) then
+                              if Val.Text = Typ then
                                  Found := True;
 
                                  exit;
@@ -4422,10 +4424,7 @@ package body GPR2.Project.Parser is
 
                            else
 
-                              if
-                                To_Lower (String (Val.Text)) =
-                                To_Lower (String (Typ))
-                              then
+                              if To_Lower (Val.Text) = To_Lower (Typ) then
                                  Found := True;
 
                                  exit;
@@ -4511,14 +4510,14 @@ package body GPR2.Project.Parser is
               (Source_Reference.Attribute.Create (Sloc, Name)));
 
       begin
-         Attrs.Insert
+         Attrs.Include
            (PA.Create
               (Name    => Create_Attr (PRA.Name),
                Value   => Get_Value_Reference
                             (To_Lower (To_String (Self.Name)), Sloc),
                Default => True));
 
-         Attrs.Insert
+         Attrs.Include
            (PA.Create
               (Name    => Create_Attr (PRA.Project_Dir),
                Value   => Get_Value_Reference
@@ -4529,9 +4528,9 @@ package body GPR2.Project.Parser is
       Types := Self.Types;
 
       if Is_Parsed_Project then
-         Definition.Get (View).Disable_Cache;
+         View_Internal.Get (View).Disable_Cache;
          Traverse (Root (Self.Unit), Parser'Access);
-         Definition.Get (View).Enable_Cache;
+         View_Internal.Get (View).Enable_Cache;
       end if;
 
       --  Fill possible non-fatal errors into the tree now
@@ -4560,7 +4559,7 @@ package body GPR2.Project.Parser is
 
    function Type_Definition_From
      (Self      : Object;
-      Tree      : GPR2.Project.Tree.Object;
+      Tree      : GPR2.Tree_Internal.Object;
       Type_Node : Identifier_List)
       return GPR2.Project.Typ.Object
    is
@@ -4592,7 +4591,7 @@ package body GPR2.Project.Parser is
                      GPR2.Project.Create
                      (Imp.Path_Name.Name, Tree.Resolve_Links, Search_Paths);
          Types   : GPR2.Project.Typ.Set.Object;
-         Project : GPR2.Project.Parser.Object := GPR2.Project.Parser.Undefined;
+         Project : GPR2.Project_Parser.Object := GPR2.Project_Parser.Undefined;
 
          use GPR2.Path_Name;
       begin
@@ -4604,7 +4603,7 @@ package body GPR2.Project.Parser is
             if not Registry.Check_Project (Path, Project) then
                for V of Tree.Ordered_Views loop
                   if V.Is_Defined and then V.Path_Name = Path then
-                     Project := Definition.Get_RO (V).Trees.Project;
+                     Project := View_Internal.Get_RO (V).Trees.Project;
                      exit;
                   end if;
                end loop;
@@ -4696,4 +4695,4 @@ package body GPR2.Project.Parser is
       return Self.Unit;
    end Unit;
 
-end GPR2.Project.Parser;
+end GPR2.Project_Parser;

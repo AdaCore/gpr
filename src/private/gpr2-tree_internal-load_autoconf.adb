@@ -4,7 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-separate (GPR2.Project.Tree)
+separate (GPR2.Tree_Internal)
 procedure Load_Autoconf
   (Self              : in out Object;
    Root_Project      : Project_Descriptor;
@@ -545,7 +545,7 @@ is
    --  stage.
 
 begin
-   GPR2.Project.Parser.Clear_Cache;
+   GPR2.Project_Parser.Clear_Cache;
 
    if Base.Is_Defined then
       Self.Base := Base;
@@ -601,7 +601,7 @@ begin
                           "could not locate main configuration project " &
                           Default_Cfg.String_Value,
                         Sloc    => CPF_Attr));
-                  GPR2.Project.Parser.Clear_Cache;
+                  GPR2.Project_Parser.Clear_Cache;
                   raise Project_Error with "cannot locate configuration";
                end if;
             end if;
@@ -657,7 +657,7 @@ begin
                        "could not locate main configuration project " &
                        Default_Cfg.String_Value,
                      Sloc    => Attr_Sloc));
-               GPR2.Project.Parser.Clear_Cache;
+               GPR2.Project_Parser.Clear_Cache;
                raise Project_Error with "cannot locate configuration";
             end if;
 
@@ -734,7 +734,7 @@ begin
                                    (Self.Root.Path_Name.Value, 0, 0))));
             end if;
 
-            GPR2.Project.Parser.Clear_Cache;
+            GPR2.Project_Parser.Clear_Cache;
             return;
          end if;
 
@@ -775,7 +775,7 @@ begin
          Self.Append_Message (M);
       end loop;
 
-      GPR2.Project.Parser.Clear_Cache;
+      GPR2.Project_Parser.Clear_Cache;
       raise Project_Error with "cannot create configuration";
    end if;
 
@@ -807,7 +807,7 @@ begin
    if Default_Cfg.Is_Defined and then Default_Cfg.Exists then
       --  No need for reconfiguration if explicit default configuration
       --  project has been specified.
-      GPR2.Project.Parser.Clear_Cache;
+      GPR2.Project_Parser.Clear_Cache;
       return;
    end if;
 
@@ -835,12 +835,12 @@ begin
 
       if Reconf_Status = Unchanged then
          --  Nothing changed, no need for reconfiguration
-         GPR2.Project.Parser.Clear_Cache;
+         GPR2.Project_Parser.Clear_Cache;
          return;
       end if;
 
       if Reconf_Status = Incompatible then
-         GPR2.Project.Parser.Clear_Cache;
+         GPR2.Project_Parser.Clear_Cache;
          raise Project_Error with "reconfiguration error";
       end if;
    end if;
@@ -875,5 +875,5 @@ begin
       Resolve_Links    => Resolve_Links,
       Environment      => Environment);
 
-   GPR2.Project.Parser.Clear_Cache;
+   GPR2.Project_Parser.Clear_Cache;
 end Load_Autoconf;
