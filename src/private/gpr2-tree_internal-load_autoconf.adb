@@ -574,12 +574,6 @@ begin
 
    Has_Errors := Self.Messages.Has_Error;
 
-   --  Ignore messages issued with this initial load: as we don't have
-   --  a valid configuration here, we can't really know whether they
-   --  are meaningful or not.
-
-   Self.Messages.Clear;
-
    if not Has_Errors then
       --  First, check for Config_Prj_File declaration
 

@@ -179,8 +179,7 @@ package body GPR2.Project_Parser is
    function Parse_Stage_1
      (Unit          : Analysis_Unit;
       Filename      : GPR2.Path_Name.Object;
-      Implicit_With : GPR2.Path_Name.Set.Object;
-      Messages      : in out Log.Object) return Object;
+      Implicit_With : GPR2.Path_Name.Set.Object) return Object;
    --  Analyzes the project, recording all external references and imports
 
    -----------------
@@ -506,7 +505,11 @@ package body GPR2.Project_Parser is
       --  create the project tree and setup the project context.
 
       Project := Parse_Stage_1
-        (Unit, Filename, GPR2.Path_Name.Set.Empty_Set, Messages);
+        (Unit, Filename, GPR2.Path_Name.Set.Empty_Set);
+
+      for Msg of Project.Messages loop
+         Messages.Append (Msg);
+      end loop;
 
       --  Then record langkit tree data with project. Those data will be
       --  used for later parsing when creating view of projects with a
@@ -552,6 +555,10 @@ package body GPR2.Project_Parser is
 
    begin
       if Registry.Check_Project (Filename, Project) then
+         for Msg of Project.Messages loop
+            Messages.Append (Msg);
+         end loop;
+
          return Project;
 
       else
@@ -619,7 +626,11 @@ package body GPR2.Project_Parser is
          --  and the project dependencies. This is the minimum to be able to
          --  create the project tree and setup the project context.
 
-         Project := Parse_Stage_1 (Unit, Filename, Implicit_With, Messages);
+         Project := Parse_Stage_1 (Unit, Filename, Implicit_With);
+
+         for Msg of Project.Messages loop
+            Messages.Append (Msg);
+         end loop;
 
          --  Then record langkit tree data with project. Those data will be
          --  used for later parsing when creating view of projects with a
@@ -666,8 +677,7 @@ package body GPR2.Project_Parser is
    function Parse_Stage_1
      (Unit          : Analysis_Unit;
       Filename      : GPR2.Path_Name.Object;
-      Implicit_With : GPR2.Path_Name.Set.Object;
-      Messages      : in out Log.Object) return Object
+      Implicit_With : GPR2.Path_Name.Set.Object) return Object
    is
       use type GPR2.Path_Name.Object;
 
@@ -742,7 +752,7 @@ package body GPR2.Project_Parser is
                --  case statement.
 
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
-                  Messages.Append
+                  Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, N),
@@ -751,7 +761,7 @@ package body GPR2.Project_Parser is
                         & " built-in"));
 
                elsif Exprs.Children_Count < 2 then
-                     Messages.Append
+                     Project.Messages.Append
                        (GPR2.Message.Create
                           (Level   => Message.Error,
                            Sloc    =>
@@ -761,7 +771,7 @@ package body GPR2.Project_Parser is
                            & "parameters"));
 
                elsif Exprs.Children_Count > 2 then
-                  Messages.Append
+                  Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    =>
@@ -782,7 +792,7 @@ package body GPR2.Project_Parser is
                                   Get_String_Literal (Var_Node, Error);
                   begin
                      if Error then
-                        Messages.Append
+                        Project.Messages.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
@@ -792,7 +802,7 @@ package body GPR2.Project_Parser is
                               & "a simple string"));
 
                      elsif Var = "" then
-                        Messages.Append
+                        Project.Messages.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
@@ -813,7 +823,7 @@ package body GPR2.Project_Parser is
                                   Get_String_Literal (Sep_Node, Error);
                   begin
                      if Error then
-                        Messages.Append
+                        Project.Messages.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
@@ -824,7 +834,7 @@ package body GPR2.Project_Parser is
                                 & "be a simple string"));
 
                      elsif Sep = "" then
-                        Messages.Append
+                        Project.Messages.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
@@ -847,7 +857,7 @@ package body GPR2.Project_Parser is
                Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
             begin
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
-                  Messages.Append
+                  Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, N),
@@ -855,7 +865,7 @@ package body GPR2.Project_Parser is
                           "missing parameter for external built-in"));
 
                elsif Exprs.Children_Count > 3 then
-                     Messages.Append
+                     Project.Messages.Append
                        (GPR2.Message.Create
                           (Level   => Message.Error,
                            Sloc    =>
@@ -876,7 +886,7 @@ package body GPR2.Project_Parser is
                                External_Explicit_Type (N);
                   begin
                      if Error then
-                        Messages.Append
+                        Project.Messages.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
@@ -886,7 +896,7 @@ package body GPR2.Project_Parser is
                               & "simple string"));
 
                      elsif Var = "" then
-                        Messages.Append
+                        Project.Messages.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
@@ -897,7 +907,7 @@ package body GPR2.Project_Parser is
                      elsif Typ = No_Identifier_List
                        and then Exprs.Children_Count = 3
                      then
-                        Messages.Append
+                        Project.Messages.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
@@ -956,7 +966,7 @@ package body GPR2.Project_Parser is
                --  of the split built-in.
 
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
-                  Messages.Append
+                  Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, N),
@@ -965,7 +975,7 @@ package body GPR2.Project_Parser is
                --  Check that the second parameter exists
 
                elsif Exprs.Children_Count < 2 then
-                  Messages.Append
+                  Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, Exprs),
@@ -974,7 +984,7 @@ package body GPR2.Project_Parser is
                --  Check that we don't have more than two parameters
 
                elsif Exprs.Children_Count > 3 then
-                  Messages.Append
+                  Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    =>
@@ -998,7 +1008,7 @@ package body GPR2.Project_Parser is
                --  of the split built-in.
 
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
-                  Messages.Append
+                  Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, N),
@@ -1008,7 +1018,7 @@ package body GPR2.Project_Parser is
                --  Check that we don't have more than two parameters
 
                elsif Exprs.Children_Count > 1 then
-                  Messages.Append
+                  Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    =>
@@ -1029,7 +1039,7 @@ package body GPR2.Project_Parser is
                --  of the split built-in.
 
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
-                  Messages.Append
+                  Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, N),
@@ -1038,7 +1048,7 @@ package body GPR2.Project_Parser is
                --  Check that the second parameter exists
 
                elsif Exprs.Children_Count = 1 then
-                  Messages.Append
+                  Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, Exprs),
@@ -1047,7 +1057,7 @@ package body GPR2.Project_Parser is
                --  Check that we don't have more than two parameters
 
                elsif Exprs.Children_Count > 2 then
-                  Messages.Append
+                  Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    =>
@@ -1071,7 +1081,7 @@ package body GPR2.Project_Parser is
                --  of the split built-in.
 
                if Exprs.Is_Null or else Exprs.Children_Count < 2 then
-                  Messages.Append
+                  Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, N),
@@ -1081,7 +1091,7 @@ package body GPR2.Project_Parser is
                --  Check that we don't have more than two parameters
 
                elsif Exprs.Children_Count > 2 then
-                  Messages.Append
+                  Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    =>
@@ -1131,7 +1141,7 @@ package body GPR2.Project_Parser is
                Parse_Two_Parameter_Reference (N, "remove_suffix");
 
             else
-               Messages.Append
+               Project.Messages.Append
                  (GPR2.Message.Create
                     (Level   => Message.Error,
                      Sloc    => Get_Source_Reference (Filename, N),
@@ -1155,7 +1165,7 @@ package body GPR2.Project_Parser is
             --  Check that project name is consistent with the end declaration
 
             if Name (Project) /= Name_Type (To_UTF8 (F_End_Name (N).Text)) then
-               Messages.Append
+               Project.Messages.Append
                  (GPR2.Message.Create
                     (Level   => Message.Error,
                      Sloc    =>
@@ -1199,7 +1209,7 @@ package body GPR2.Project_Parser is
                        Is_Limited => False);
                   Project.Is_All := F_Is_All (Ext);
                else
-                  Messages.Append
+                  Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    =>
@@ -1224,7 +1234,7 @@ package body GPR2.Project_Parser is
             List       : Containers.Source_Value_List;
          begin
             if Project.Types.Contains (Name) then
-               Messages.Append
+               Project.Messages.Append
                  (GPR2.Message.Create
                     (Level   => Message.Error,
                      Sloc    =>
@@ -1243,7 +1253,7 @@ package body GPR2.Project_Parser is
                                     (Cur_Child.As_String_Literal);
                      begin
                         if Set.Contains (Value) then
-                           Messages.Append
+                           Project.Messages.Append
                              (GPR2.Message.Create
                                 (Level   => Message.Error,
                                  Sloc    =>
@@ -1297,7 +1307,7 @@ package body GPR2.Project_Parser is
                                     GPR2.Project.Import.Set.Element (CI);
                         begin
                            if Prev.Path_Name = Path then
-                              Messages.Append
+                              Project.Messages.Append
                                 (GPR2.Message.Create
                                    (Level   => Message.Warning,
                                     Message => "duplicate with clause """
@@ -1306,14 +1316,14 @@ package body GPR2.Project_Parser is
                                       (Filename, Cur_Child)));
 
                            else
-                              Messages.Append
+                              Project.Messages.Append
                                 (GPR2.Message.Create
                                    (Level   => Message.Warning,
                                     Message => "duplicate project name """
                                     & String (Path.Base_Name) & '"',
                                     Sloc    => Get_Source_Reference
                                       (Filename, Cur_Child)));
-                              Messages.Append
+                              Project.Messages.Append
                                 (GPR2.Message.Create
                                    (Level   => Message.Warning,
                                     Message => "already in """
@@ -1333,7 +1343,7 @@ package body GPR2.Project_Parser is
                      end if;
                   end;
                else
-                  Messages.Append
+                  Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, Cur_Child),

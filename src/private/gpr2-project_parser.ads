@@ -185,6 +185,7 @@ private
       Types     : GPR2.Project.Typ.Set.Object;
       Context   : Analysis_Context := No_Analysis_Context;
       Skip_Src  : Containers.Filename_Source_Reference;
+      Messages  : GPR2.Log.Object;
       --  Naming exception source files to be ignored due to inactive case
       --  alternatives.
    end record;
