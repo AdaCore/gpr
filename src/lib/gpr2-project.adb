@@ -81,7 +81,7 @@ package body GPR2.Project is
                            ("GPR_PROJECT_PATH_FILE");
             File     : Text_IO.File_Type;
          begin
-            if Directories.Exists (Filename) then
+            if Filename'Length > 0 and then Directories.Exists (Filename) then
                Text_IO.Open (File, Text_IO.In_File, Filename);
 
                while not Text_IO.End_Of_File (File) loop
