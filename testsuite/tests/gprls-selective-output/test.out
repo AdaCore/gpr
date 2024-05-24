@@ -19,3 +19,7 @@
 /p.o
 /src/p.ads
 
+runtime correctly printed [1/4]
+runtime correctly printed [2/4]
+runtime correctly printed [3/4]
+runtime correctly printed [4/4]
