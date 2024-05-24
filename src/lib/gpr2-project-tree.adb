@@ -337,6 +337,20 @@ package body GPR2.Project.Tree is
    -- Set_Context --
    -----------------
 
+   function Set_Context
+     (Self    : in out Object;
+      Context : GPR2.Context.Object;
+      Changed : access procedure (Project : View.Object) := null)
+      return Boolean
+   is
+   begin
+      Set_Context (Self, Context, Changed);
+      return True;
+   exception
+      when Project_Error =>
+         return False;
+   end Set_Context;
+
    procedure Set_Context
      (Self : in out Object; Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)

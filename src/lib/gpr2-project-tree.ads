@@ -179,15 +179,26 @@ package GPR2.Project.Tree is
           Post => Self.Has_Context = (Context'Result /= GPR2.Context.Empty);
    --  Returns the Context for the given project tree
 
-   procedure Set_Context
+   function Set_Context
      (Self    : in out Object;
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)
+     return Boolean
      with Pre => Self.Is_Defined;
    --  Sets the context for the project tree. The callback Changed is called
    --  for any project view which is impacted by this change of context, i.e.
    --  if the project view references directly or indirectly an external
    --  variable.
+   --  If the new context generate an error while re-loading the project tree
+   --  then False is returned.
+
+   procedure Set_Context
+     (Self    : in out Object;
+      Context : GPR2.Context.Object;
+      Changed : access procedure (Project : View.Object) := null)
+     with Pre => Self.Is_Defined;
+   --  Same as the Set_Context function, but raises Project_Error if an
+   --  error occurs while setting the context
 
    --  Iterator
 
