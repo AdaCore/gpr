@@ -18,7 +18,6 @@ with GPR2.Project.Configuration;
 pragma Elaborate (GPR2.Project.Configuration);
 --  Elaborate to avoid a circular dependency due to default Elaborate_Body
 
-with GPR2.Build.Source;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
 with GPR2.Path_Name.Set;
@@ -475,30 +474,6 @@ private package GPR2.Tree_Internal is
    function File_Reader
      (Self : Object) return GPR2.File_Readers.File_Reader_Reference
      with Pre => Self.Is_Defined;
-
-   function Source_Directories
-     (Self             : Object;
-      View             : Project.View.Object := Project.View.Undefined;
-      Externally_Built : Boolean := False) return GPR2.Path_Name.Set.Object
-     with Pre => Self.Is_Defined;
-   --  Returns the source directories for a given View subtree
-   --  If View is undefined use root project.
-   --  If Externally_Built is False then source directories belonging
-   --  to project marked "Externally_Built" will not be returned.
-
-   procedure For_Each_Source
-     (Self             : Object;
-      View             : Project.View.Object := Project.View.Undefined;
-      Action           : access procedure (Source : Build.Source.Object);
-      Language         : Language_Id := No_Language;
-      Externally_Built : Boolean := False)
-     with Pre => Self.Is_Defined;
-   --  Call Action for all the sources for a given View subtree.
-   --  If View is undefined use root project.
-   --  If Language is No_Language then all sources are returned.
-   --  If Externally_Built is False then source directories belonging
-   --  to project marked "Externally_Built" will not be returned.
-   --  Note that this routine ensure that the sources are loaded.
 
    function Environment (Self : Object) return GPR2.Environment.Object
      with Pre => Self.Is_Defined;
