@@ -11,7 +11,6 @@ procedure Main is
    use type GPR2.View_Ids.View_Id;
 
    Tree    : GPR2.Project.Tree.Object;
-   Log     : GPR2.Log.Object;
    Options : GPR2.Options.Object;
    Result  : Boolean;
    First   : Boolean := True;
@@ -23,8 +22,7 @@ begin
       return;
    end if;
 
-   Tree.Update_Sources (Sources_Units_Artifacts, Log);
-   Log.Output_Messages;
+   Tree.Update_Sources (Sources_Units_Artifacts);
 
    for NS of Tree.Namespace_Root_Projects loop
       if not First then

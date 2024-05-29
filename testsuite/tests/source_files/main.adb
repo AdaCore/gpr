@@ -5,7 +5,6 @@ pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
 with GPR2.Options;
-with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 
@@ -26,7 +25,6 @@ procedure Main is
    is
       Prj : Project.Tree.Object;
       Opt : Options.Object;
-      Log : GPR2.Log.Object;
 
    begin
       Text_IO.Put_Line ("GPR file: " & Fname);
@@ -35,8 +33,7 @@ procedure Main is
          return;
       end if;
 
-      Prj.Update_Sources (Messages => Log);
-      Log.Output_Messages;
+      Prj.Update_Sources;
 
       for V of reverse Prj.Ordered_Views loop
          Text_IO.Put_Line (String (V.Name));

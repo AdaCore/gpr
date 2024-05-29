@@ -9,7 +9,7 @@ project Prj is
    for Main use ("main.adb");
 
    package Compiler is
-      for Switches ("Ada") use ("-O2", "-g");
+      for Switches ("Ada") use ("-O2", "-g", "-gnatwu");
    end Compiler;
 
 end Prj;

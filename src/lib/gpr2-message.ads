@@ -57,30 +57,15 @@ package GPR2.Message is
    --  Short : short output of level, I, W, E
    --  Long  : long output of level (info, warning, error)
 
-   type Level_Output is array (Level_Value) of Level_Format;
-   --  Control all level output
-
    function Format
      (Self           : Object;
       Full_Path_Name : Boolean := False;
-      Levels         : Level_Output := (Long, Long, Long, Long)) return String
+      Level_Fmt      : Level_Format := Long) return String
      with Pre => Self.Is_Defined;
    --  Returns the message with a standard message as expected by compiler
    --  tools: <filename>:<line>:<col>: <message>
    --  <filename> format controlled by Full_Path_Name parameter. Default False
    --  is for simple file name, True is for full path name format.
-
-   procedure Output
-     (Self           : Object;
-      Full_Path_Name : Boolean := False;
-      Levels         : Level_Output := (Long, Long, Long, Long))
-     with Pre => Self.Is_Defined;
-   --  Outputs the message to console as expected by compiler
-   --  tools: <filename>:<line>:<col>: <message>
-   --  <filename> format controlled by Full_Path_Name parameter. Default False
-   --  is for simple file name, True is for full path name format.
-   --  Errors and Warnings messages are printed to standard error output,
-   --  informational messages are printed to standard output.
 
    procedure Set_Status (Self : in out Object; Status : Status_Type)
      with Pre  => Self.Is_Defined,

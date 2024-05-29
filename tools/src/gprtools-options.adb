@@ -23,6 +23,7 @@ pragma Warnings (On);
 with GNAT.Directory_Operations;
 
 with GPR2.Log;
+with GPR2.Message.Reporter;
 with GPR2.Project.Registry.Pack;
 
 with GPRtools.Program_Termination;
@@ -355,31 +356,18 @@ package body GPRtools.Options is
             --  If there are errors, just display them: any warning may just
             --  be a consequence of the initial error and thus be false
             --  negatives.
-
-            for C in Logs.Iterate
+            Logs.Output_Messages
               (Information => False,
                Warning     => False,
                Error       => True,
-               Lint        => False,
-               Read        => False,
-               Unread      => True)
-            loop
-               GPR2.Log.Element (C).Output
-                 (Full_Path_Name => Opt.Full_Path_Name_For_Brief);
-            end loop;
+               Lint        => False);
 
          elsif not Opt.Quiet then
-            for C in Logs.Iterate
+            Logs.Output_Messages
               (Information => Handle_Information,
                Warning     => Opt.Warnings,
                Error       => False,
-               Lint        => Handle_Lint,
-               Read        => False,
-               Unread      => True)
-            loop
-               GPR2.Log.Element (C).Output
-                 (Full_Path_Name => Opt.Full_Path_Name_For_Brief);
-            end loop;
+               Lint        => Handle_Lint);
          end if;
       end Display;
 
@@ -538,7 +526,8 @@ package body GPRtools.Options is
             Index  => "");
 
       elsif Arg = "-F" then
-         Result.Full_Path_Name_For_Brief := True;
+         GPR2.Message.Reporter.Configure_Default_Reporter
+           (Use_Full_Pathname => True);
 
       elsif Arg = "-q" then
          Result.Verbosity := Quiet;

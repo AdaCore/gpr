@@ -162,8 +162,7 @@ package body GPRtools.Util is
       Options.Tree.Log_Messages.Output_Messages
         (Information    => Options.Verbosity = Very_Verbose,
          Warning        => Options.Warnings,
-         Lint           => Options.Verbosity = Very_Verbose,
-         Full_Path_Name => Options.Full_Path_Name_For_Brief);
+         Lint           => Options.Verbosity = Very_Verbose);
    end Output_Messages;
 
    ------------------

@@ -251,7 +251,6 @@ package body Test_GPR is
    is
       use type GPR2.Message.Level_Value;
       Opt : GPR2.Options.Object;
-      Log : GPR2.Log.Object;
       Res : Boolean;
    begin
       if Config_Filename'Length > 0 then
@@ -269,11 +268,7 @@ package body Test_GPR is
       end if;
 
       if Load_Source_List then
-         Tree.Update_Sources (Messages => Log);
-         IO.Put_Line ("messages during sources loading " & Filename);
-
-         A.Assert (not Log.Has_Error, "loading sources caused errors");
-         Log.Output_Messages (Information => False);
+         Tree.Update_Sources;
       end if;
    end Load_With_No_Errors;
 

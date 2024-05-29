@@ -344,19 +344,17 @@ package body GPR2.Project.Tree is
       return Boolean
    is
    begin
-      Set_Context (Self, Context, Changed);
+      Self.Tree.Set_Context (Context, Changed);
+      Self.Log_Messages.Output_Messages (Information => False);
+
       return True;
+
    exception
       when Project_Error =>
+         Self.Log_Messages.Output_Messages
+           (Information => False,
+            Warning     => False);
          return False;
-   end Set_Context;
-
-   procedure Set_Context
-     (Self : in out Object; Context : GPR2.Context.Object;
-      Changed : access procedure (Project : View.Object) := null)
-   is
-   begin
-      Self.Tree.Set_Context (Context, Changed);
    end Set_Context;
 
    ------------
@@ -376,11 +374,12 @@ package body GPR2.Project.Tree is
    --------------------
 
    procedure Update_Sources
-     (Self     :     Object; Option : Source_Info_Option := Sources_Units;
-      Messages : out GPR2.Log.Object)
+     (Self     :     Object; Option : Source_Info_Option := Sources_Units)
    is
+      Log : GPR2.Log.Object;
    begin
-      Self.Tree.Update_Sources (Option => Option, Messages => Messages);
+      Self.Tree.Update_Sources (Option => Option, Messages => Log);
+      Log.Output_Messages;
    end Update_Sources;
 
 begin

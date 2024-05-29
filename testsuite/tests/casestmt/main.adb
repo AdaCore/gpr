@@ -52,6 +52,7 @@ begin
 
    Ctx.Clear;
    Ctx.Include ("OS", "Windows");
-   Prj.Set_Context (Ctx);
-   Display (Prj.Root_Project);
+   if Prj.Set_Context (Ctx) then
+      Display (Prj.Root_Project);
+   end if;
 end Main;

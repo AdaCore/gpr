@@ -3,7 +3,6 @@ with Ada.Text_IO;
 
 with GPR2.Build.Source.Sets;
 with GPR2.Options;
-with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 
@@ -14,7 +13,6 @@ procedure Main is
    Opt        : GPR2.Options.Object;
    Main_Found : Integer := 0;
    Test_Found : Integer := 0;
-   Log        : GPR2.Log.Object;
 
    use GPR2;
 
@@ -22,8 +20,7 @@ begin
    Opt.Add_Switch (Options.P, "test");
 
    if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
-      Tree.Update_Sources (Messages => Log);
-      Log.Output_Messages;
+      Tree.Update_Sources;
 
       for Prj of Tree loop
          for S of Prj.Sources loop

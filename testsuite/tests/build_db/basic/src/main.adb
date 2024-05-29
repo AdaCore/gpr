@@ -2,23 +2,21 @@ with Ada.Command_Line;
 with Ada.Text_IO;
 
 with GPR2.Build.Compilation_Unit;
+pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
-with GPR2.Build.Tree_Db;
+pragma Warnings (On);
 with GPR2.Build.View_Db;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
-with GPR2.Log;
 
 procedure Main is
    use GPR2;
-   use GPR2.Build;
 
    procedure Test (Gpr : String)
    is
       Tree        : Project.Tree.Object;
-      Log         : GPR2.Log.Object;
       Root        : Path_Name.Object;
       Opt         : GPR2.Options.Object;
       Src_Count   : Natural := 0;
@@ -103,8 +101,7 @@ procedure Main is
 
       Tree.Log_Messages.Output_Messages (Information => False);
 
-      Tree.Update_Sources (Messages => Log);
-      Log.Output_Messages (Information => False);
+      Tree.Update_Sources;
 
       Root := Tree.Root_Project.Dir_Name;
 

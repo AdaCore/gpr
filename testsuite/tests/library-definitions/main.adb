@@ -73,10 +73,11 @@ begin
 
    if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
       Display (Prj.Root_Project);
+   end if;
 
-      Ctx.Insert ("VERSION", "1.4");
-      Prj.Set_Context (Ctx);
+   Ctx.Insert ("VERSION", "1.4");
 
+   if Prj.Set_Context (Ctx) then
       Display (Prj.Root_Project);
    end if;
 
@@ -86,12 +87,12 @@ begin
    Opt.Add_Switch (Options.X, "VERSION=1.4");
 
    if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
-
       Display (Prj.Root_Project);
+   end if;
 
-      Ctx.Replace ("VERSION", "A.B");
-      Prj.Set_Context (Ctx);
+   Ctx.Replace ("VERSION", "A.B");
 
+   if Prj.Set_Context (Ctx) then
       Display (Prj.Root_Project);
    end if;
 end Main;

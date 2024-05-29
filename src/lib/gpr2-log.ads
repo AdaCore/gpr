@@ -116,13 +116,7 @@ package GPR2.Log is
       Information    : Boolean := True;
       Warning        : Boolean := True;
       Error          : Boolean := True;
-      Lint           : Boolean := False;
-      Full_Path_Name : Boolean := False;
-      Output_Levels  : GPR2.Message.Level_Output :=
-                         (GPR2.Message.Long,
-                          GPR2.Message.Long,
-                          GPR2.Message.Long,
-                          GPR2.Message.Long));
+      Lint           : Boolean := False);
    --  Print Log selected messages using format parameters
 private
 
@@ -160,7 +154,7 @@ private
      (Self : Object; Message : GPR2.Message.Object) return Boolean
    is
      (Self.Index.Contains
-        (Message.Format (Levels => (others => GPR2.Message.Short))));
+        (Message.Format (Level_Fmt => GPR2.Message.Short)));
 
    function Has_Error (Self : Object) return Boolean is
      (Self.Has_Element

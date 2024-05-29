@@ -4,6 +4,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Message.Reporter;
+
 package body GPR2.Log is
 
    use type Message.Level_Value;
@@ -55,7 +57,7 @@ package body GPR2.Log is
 
    procedure Append (Self : in out Object; Message : GPR2.Message.Object) is
       Index    : constant String :=
-                   Message.Format (Levels => (others => GPR2.Message.Short));
+                   Message.Format (Level_Fmt => GPR2.Message.Short);
       Position : Containers.Value_Type_Set.Cursor;
       Inserted : Boolean;
    begin
@@ -229,13 +231,10 @@ package body GPR2.Log is
       Information    : Boolean := True;
       Warning        : Boolean := True;
       Error          : Boolean := True;
-      Lint           : Boolean := False;
-      Full_Path_Name : Boolean := False;
-      Output_Levels  : GPR2.Message.Level_Output :=
-                         (GPR2.Message.Long,
-                          GPR2.Message.Long,
-                          GPR2.Message.Long,
-                          GPR2.Message.Long)) is
+      Lint           : Boolean := False)
+   is
+      Reporter : GPR2.Message.Reporter.Object'Class renames
+                   GPR2.Message.Reporter.Active_Reporter;
    begin
       for C in Log.Iterate
         (Information => Information,
@@ -245,7 +244,7 @@ package body GPR2.Log is
          Read        => False,
          Unread      => True)
       loop
-         Log (C).Output (Full_Path_Name, Output_Levels);
+         Reporter.Report (Log (C));
       end loop;
    end Output_Messages;
 

@@ -5,7 +5,6 @@ pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
 with GPR2.Options;
-with GPR2.Log;
 with GPR2.Containers;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
@@ -139,14 +138,12 @@ procedure Main is
 
    Prj : Project.Tree.Object;
    Opt : Options.Object;
-   Log : GPR2.Log.Object;
 
 begin
    Opt.Add_Switch (Options.P, "demo.gpr");
 
    if Prj.Load (Opt, With_Runtime => True, Absent_Dir_Error => No_Error) then
-      Prj.Update_Sources (Messages => Log);
-      Log.Output_Messages;
+      Prj.Update_Sources;
 
       Display (Prj.Root_Project);
 

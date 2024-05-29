@@ -5,7 +5,6 @@ with Ada.Text_IO;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
-with GPR2.Log;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
@@ -81,7 +80,6 @@ procedure Main is
 
       Prj  : Project.Tree.Object;
       Opt  : Options.Object;
-      Log  : GPR2.Log.Object;
 
    begin
       Opt.Add_Switch (options.P, Project_Name);
@@ -97,8 +95,7 @@ procedure Main is
       Copy_Source ("src1", "api.adb");
       Copy_Source ("src1", "api-call.adb");
 
-      Prj.Update_Sources (Messages => Log);
-      Log.Output_Messages;
+      Prj.Update_Sources;
 
       List_Sources (Prj.Root_Project);
 
@@ -109,8 +106,7 @@ procedure Main is
       Copy_Source ("src2", "api.adb");
       Copy_Source ("src2", "api-call.adb");
 
-      Prj.Update_Sources (Messages => Log);
-      Log.Output_Messages;
+      Prj.Update_Sources;
 
       List_Sources (Prj.Root_Project);
    end Check;

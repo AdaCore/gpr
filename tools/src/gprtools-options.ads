@@ -47,7 +47,6 @@ package GPRtools.Options is
       --  Verbosity control
 
       Verbosity                : GPRtools.Verbosity_Level := GPRtools.Regular;
-      Full_Path_Name_For_Brief : Boolean := False;
       Warnings                 : aliased Boolean := True;
 
       --  Distributed mode

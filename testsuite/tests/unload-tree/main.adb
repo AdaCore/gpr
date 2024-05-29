@@ -5,7 +5,6 @@ pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
 with GPR2.Options;
-with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Tree;
@@ -81,7 +80,6 @@ procedure Main is
    Prj1, Prj2 : Project.Tree.Object;
    Prj_Copy   : Project.Tree.Object;
    Opt1, Opt2 : Options.Object;
-   Log        : GPR2.Log.Object;
 
 begin
    Opt1.Add_Switch (Options.P, "first.gpr");
@@ -97,11 +95,8 @@ begin
       return;
    end if;
 
-   Prj1.Update_Sources (Messages => Log);
-   Log.Output_Messages (Information => False);
-
-   Prj2.Update_Sources (Messages => Log);
-   Log.Output_Messages (Information => False);
+   Prj1.Update_Sources;
+   Prj2.Update_Sources;
 
    Text_IO.Put_Line ("**************** Iterator Prj1");
 

@@ -7,7 +7,6 @@ with GPR2.Path_Name;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
 with GPR2.Build.Source.Sets;
-with GPR2.Log;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
@@ -76,7 +75,6 @@ package body Scenario is
       Old_Dir       : constant Virtual_File := Get_Current_Dir;
       Artifacts     : VFS_Vectors.Vector;
       Loaded        : Boolean := False;
-      Log           : GPR2.Log.Object;
 
    begin
       Scenario_Path.Get_Parent.Change_Dir;
@@ -108,8 +106,7 @@ package body Scenario is
                   begin
                      Opt.Add_Switch (Options.P, Tokens (2).To_String);
                      if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
-                        Tree.Update_Sources (Messages => Log);
-                        Log.Output_Messages (Information => False);
+                        Tree.Update_Sources;
                         Loaded := True;
                      end if;
                   end;
@@ -123,8 +120,7 @@ package body Scenario is
                elsif Cmd = Tok_Refresh then
                   Ada.Text_IO.Put_Line
                     ("--- Refresh list of sources");
-                  Tree.Update_Sources (Messages => Log);
-                  Log.Output_Messages (Information => False);
+                  Tree.Update_Sources;
 
                elsif Cmd = Tok_Dump then
                   Ada.Text_IO.Put_Line ("-----------------------------------");

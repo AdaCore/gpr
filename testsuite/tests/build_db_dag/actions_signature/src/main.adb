@@ -4,21 +4,19 @@ with Ada.Text_IO;
 with GPR2.Build.Actions.Ada_Compile;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.File_Part;
-
 with GPR2.Log;
 with GPR2.Options;
-
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
 function Main return Natural is
-   Tree        : GPR2.Project.Tree.Object;
-   Opts        : GPR2.Options.Object;
-   Log         : GPR2.Log.Object;
-   Project     : constant String :=
-                   (if Ada.Command_Line.Argument_Count > 0
-                    then Ada.Command_Line.Argument (1)
-                    else "tree/agg.gpr");
+   Tree    : GPR2.Project.Tree.Object;
+   Opts    : GPR2.Options.Object;
+   Log     : GPR2.Log.Object;
+   Project : constant String :=
+               (if Ada.Command_Line.Argument_Count > 0
+                then Ada.Command_Line.Argument (1)
+                else "tree/agg.gpr");
 
 begin
    Opts.Add_Switch (GPR2.Options.P, Project);
@@ -29,12 +27,7 @@ begin
       return 1;
    end if;
 
-   Tree.Update_Sources
-     (Option   => GPR2.Sources_Units_Artifacts,
-      Messages => Log);
-   Log.Output_Messages;
-
-   Log.Clear;
+   Tree.Update_Sources (Option   => GPR2.Sources_Units_Artifacts);
 
    for NS of Tree.Namespace_Root_Projects loop
       for Unit of NS.Units loop

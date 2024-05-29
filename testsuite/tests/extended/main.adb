@@ -3,7 +3,6 @@ with Ada.Strings.Fixed;
 
 with GPR2.Build.Source.Sets;
 with GPR2.Options;
-with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
@@ -72,19 +71,16 @@ procedure Main is
 
    Prj1, Prj2 : Project.Tree.Object;
    Opt        : GPR2.Options.Object;
-   Log        : GPR2.Log.Object;
 begin
    Opt.Add_Switch (Options.P, "prj1.gpr");
    if Prj1.Load (Opt, Absent_Dir_Error => No_Error) then
-      Prj1.Update_Sources (Messages => Log);
-      Log.Output_Messages;
+      Prj1.Update_Sources;
    end if;
 
    Opt := Options.Empty_Options;
    Opt.Add_Switch (Options.P, "prj2.gpr");
    if Prj2.Load (Opt, Absent_Dir_Error => No_Error) then
-      Prj2.Update_Sources (Messages => Log);
-      Log.Output_Messages;
+      Prj2.Update_Sources;
    end if;
 
    Text_IO.Put_Line ("**************** Iterator Prj1");

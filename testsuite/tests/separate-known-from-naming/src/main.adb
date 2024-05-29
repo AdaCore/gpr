@@ -1,6 +1,5 @@
 with Ada.Text_IO;
 with GPR2.Build.Compilation_Unit;
-with GPR2.Log;
 with GPR2.Options;
 with GPR2.Project.Tree;
 
@@ -11,7 +10,7 @@ procedure Main is
    procedure Test (Project_Name : String; Ext : String) is
       Tree : Project.Tree.Object;
       Opt  : Options.Object;
-      Log  : GPR2.Log.Object;
+
    begin
       Opt.Add_Switch (Options.P, Project_Name);
       if Ext'Length > 0 then
@@ -19,8 +18,7 @@ procedure Main is
       end if;
 
       if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
-         Tree.Update_Sources (Messages => Log);
-         Log.Output_Messages;
+         Tree.Update_Sources;
 
          for U of Tree.Root_Project.Units loop
             Ada.Text_IO.Put_Line (String (U.Name));

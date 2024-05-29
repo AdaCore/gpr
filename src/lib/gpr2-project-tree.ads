@@ -192,14 +192,6 @@ package GPR2.Project.Tree is
    --  If the new context generate an error while re-loading the project tree
    --  then False is returned.
 
-   procedure Set_Context
-     (Self    : in out Object;
-      Context : GPR2.Context.Object;
-      Changed : access procedure (Project : View.Object) := null)
-     with Pre => Self.Is_Defined;
-   --  Same as the Set_Context function, but raises Project_Error if an
-   --  error occurs while setting the context
-
    --  Iterator
 
    type Cursor is private;
@@ -278,13 +270,11 @@ package GPR2.Project.Tree is
 
    procedure Update_Sources
      (Self     : Object;
-      Option   : Source_Info_Option := Sources_Units;
-      Messages : out GPR2.Log.Object)
+      Option   : Source_Info_Option := Sources_Units)
      with Pre => Self.Is_Defined;
    --  Ensures that all views' sources are up-to-date.
    --  Option selects the information that will be gathered on the sources. The
    --   more information is requested, the slower is the update operation.
-   --  Messages is used to report errors or info about the update.
 
    function Project_Search_Paths (Self : Object) return Path_Name.Set.Object
      with Pre => Self.Is_Defined;

@@ -1,5 +1,4 @@
 with GPR2.Build.Source.Sets;
-with GPR2.Log;
 with GPR2.Project.Tree;
 with GPR2.Options;
 with GPR2.Path_Name;
@@ -9,12 +8,11 @@ with Ada.Text_IO;
 procedure Main is
    Tree : GPR2.Project.Tree.Object;
    Opt  : GPR2.Options.Object;
-   Log  : GPR2.Log.Object;
    use GPR2;
 begin
    Opt.Add_Switch (Options.P, "g");
    if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
-      Tree.Update_Sources (Messages => Log);
+      Tree.Update_Sources;
 
       for S of Tree.Root_Project.Sources loop
          Ada.Text_IO.Put_Line (String (S.Path_Name.Simple_Name));

@@ -1,24 +1,20 @@
 with Ada.Text_IO;
+with GPR2.Build.Compilation_Unit;
 with GPR2.Project.Tree;
 with GPR2.Build;
-with GPR2.Build.Compilation_Unit;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
 with GPR2.Options;
-with GPR2.Log;
-with GPR2.Path_Name;
 
 procedure Main is
    Tree : GPR2.Project.Tree.Object;
    Opt  : GPR2.Options.Object;
-   Log  : GPR2.Log.Object;
 
 begin
    Opt.Add_Switch (GPR2.Options.P, "default.gpr");
    if Tree.Load (Opt, Absent_Dir_Error => GPR2.No_Error) then
-      Tree.Update_Sources (Messages => Log);
-      Log.Output_Messages (Information => False);
+      Tree.Update_Sources;
 
       for Source of Tree.Root_Project.Sources loop
          Ada.Text_IO.Put_Line (String (Source.Path_Name.Name));

@@ -1,10 +1,6 @@
 with Ada.Text_IO;
-with Ada.Strings.Fixed;
-
-with GNAT.OS_Lib;
 
 with GPR2.Options;
-with GPR2.Log;
 with GPR2.Message;
 with GPR2.Build.Source;
 with GPR2.Project.Tree;
@@ -16,7 +12,6 @@ procedure Main is
 
    Prj : Project.Tree.Object;
    Opt : Options.Object;
-   Log : GPR2.Log.Object;
 
    procedure Display_Source (Name : Simple_Name);
 
@@ -34,7 +29,7 @@ procedure Main is
 begin
    Opt.Add_Switch (Options.P, "./data/prj.gpr");
    if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
-      Prj.Update_Sources (Messages => Log);
+      Prj.Update_Sources;
       Display_Source ("pkg.a");
       Display_Source ("pkg_b.a");
       Display_Source ("pkg-execute_s_b.a");

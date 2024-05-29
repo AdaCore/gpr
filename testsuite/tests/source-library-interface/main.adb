@@ -3,7 +3,6 @@ with Ada.Text_IO;
 
 with GPR2.Build.Source.Sets;
 with GPR2.Options;
-with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
@@ -78,7 +77,6 @@ procedure Main is
       Prj  : Project.Tree.Object;
       Opt  : Options.Object;
       View : Project.View.Object;
-      Log  : GPR2.Log.Object;
 
    begin
       Opt.Add_Switch (Options.P, Project_Name);
@@ -89,8 +87,7 @@ procedure Main is
       View := Prj.Root_Project;
       Text_IO.Put_Line ("Project: " & String (View.Name));
 
-      Prj.Update_Sources (Messages => Log);
-      Log.Output_Messages;
+      Prj.Update_Sources;
       List_Sources (View);
    end Check;
 

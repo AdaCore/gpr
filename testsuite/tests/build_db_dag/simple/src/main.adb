@@ -34,8 +34,7 @@ begin
    end if;
 
    Tree.Update_Sources
-     (Option   => GPR2.Sources_Units_Artifacts,
-      Messages => Log);
+     (Option   => GPR2.Sources_Units_Artifacts);
 
    if Log.Has_Error then
       Log.Output_Messages;

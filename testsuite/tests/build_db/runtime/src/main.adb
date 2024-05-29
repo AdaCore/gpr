@@ -7,7 +7,6 @@ with GNATCOLL.OS.FSUtil;
 
 with GPR2.Build.Compilation_Unit;
 with GPR2.Containers;
-with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Options;
@@ -18,7 +17,6 @@ procedure Main is
    use type GPR2.View_Ids.View_Id;
 
    Tree     : GPR2.Project.Tree.Object;
-   Log      : GPR2.Log.Object;
    Options  : GPR2.Options.Object;
    Result   : Boolean;
    RTS_Dir  : GPR2.Path_Name.Object;
@@ -69,8 +67,7 @@ begin
    Options.Add_Switch (GPR2.Options.P, "rts/rts.gpr");
    Options.Finalize;
    if Tree.Load (Options, Absent_Dir_Error => No_Error) then
-      Tree.Update_Sources (Sources_Units_Artifacts, Log);
-      Log.Output_Messages;
+      Tree.Update_Sources (Sources_Units_Artifacts);
 
       declare
          RTS_Unit : constant String := "Ada.Streams";

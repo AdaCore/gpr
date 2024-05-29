@@ -1,7 +1,6 @@
 with Ada.Text_IO;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Options;
-with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -13,7 +12,6 @@ procedure Main is
                 GPR2.Path_Name.Create_File
                   (GPR2.Project.Ensure_Extension ("file/prj.gpr"),
                    GPR2.Path_Name.No_Resolution);
-   Log      : GPR2.Log.Object;
    use GPR2;
 
    procedure Test
@@ -42,8 +40,7 @@ begin
       return;
    end if;
 
-   Tree.Update_Sources (Messages => Log);
-   Log.Output_Messages (Information => False);
+   Tree.Update_Sources;
 
    --  check full filename works
    Test ("main.2.ada", True, True);

@@ -26,10 +26,11 @@ begin
    Opt.Add_Switch (Options.X, "OS=Linux");
    if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
       Text_IO.Put_Line (Prj.Root_Project.Attribute (PRA.Object_Dir).Value.Text);
+   end if;
 
-      Ctx.Include ("OS", "Windows");
-      Prj.Set_Context (Ctx);
+   Ctx.Include ("OS", "Windows");
 
+   if Prj.Set_Context (Ctx) then
       Text_IO.Put_Line (Prj.Root_Project.Attribute (PRA.Object_Dir).Value.Text);
    end if;
 end Main;

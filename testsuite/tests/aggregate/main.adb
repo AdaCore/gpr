@@ -72,9 +72,9 @@ begin
    end if;
 
    Text_IO.Put_Line ("//// OS set to Windows");
-   Prj.Set_Context (Context.Empty, Changed_Callback'Access);
-
-   for P of Prj loop
-      Display (P);
-   end loop;
+   if Prj.Set_Context (Context.Empty, Changed_Callback'Access) then
+      for P of Prj loop
+         Display (P);
+      end loop;
+   end if;
 end Main;

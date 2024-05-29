@@ -1,7 +1,6 @@
 with Ada.Text_IO;
 
 with GPR2.Build.Source.Sets;
-with GPR2.Log;
 with GPR2.Options;
 with GPR2.Project.Tree;
 
@@ -10,15 +9,12 @@ procedure Main is
 
    procedure Test (Opt : in out GPR2.Options.Object) is
       Prj : GPR2.Project.Tree.Object;
-      Log : GPR2.Log.Object;
    begin
       if not Prj.Load (Opt, Absent_Dir_Error => GPR2.No_Error) then
          return;
       end if;
 
-      Prj.Update_Sources (Messages => Log);
-
-      Log.Output_Messages;
+      Prj.Update_Sources;
 
       for V of Prj.Root_Project.Imports loop
          if not V.Is_Runtime then

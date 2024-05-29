@@ -2,7 +2,6 @@ with Ada.Exceptions;
 with Ada.Text_IO;
 with GNAT.Directory_Operations;
 with GPR2.Options;
-with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 
@@ -22,7 +21,7 @@ procedure Main is
                     else GPR2.Path_Name.Create_Directory (Project_Name));
       Gpr_Dir : constant GNAT.Directory_Operations.Dir_Name_Str :=
                    String (Gpr_Path.Dir_Name);
-      Log     : GPR2.Log.Object;
+
    begin
       GNAT.Directory_Operations.Change_Dir (Gpr_Dir);
 
@@ -31,8 +30,7 @@ procedure Main is
       end if;
 
       if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
-         Tree.Update_Sources (Messages => Log);
-         Log.Output_Messages;
+         Tree.Update_Sources;
       end if;
 
       GNAT.Directory_Operations.Change_Dir (Old_Cwd);

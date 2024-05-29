@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Text_IO;
 with GNAT.Formatted_String;
 
 package body GPR2.Message is
@@ -31,12 +30,12 @@ package body GPR2.Message is
    function Format
      (Self           : Object;
       Full_Path_Name : Boolean := False;
-      Levels         : Level_Output := (Long, Long, Long, Long)) return String
+      Level_Fmt      : Level_Format := Long) return String
    is
       use GNAT.Formatted_String;
 
       function Level_Image return String is
-        (case Levels (Self.Level) is
+        (case Level_Fmt is
             when None =>
                "",
             when Short =>
@@ -85,24 +84,6 @@ package body GPR2.Message is
    begin
       return To_String (Self.Message);
    end Message;
-
-   ------------
-   -- Output --
-   ------------
-
-   procedure Output
-     (Self           : Object;
-      Full_Path_Name : Boolean := False;
-      Levels         : Level_Output := (Long, Long, Long, Long))
-   is
-      use Ada.Text_IO;
-   begin
-      Put_Line
-        ((case Self.Level is
-            when Information | Lint => Current_Output,
-            when Error | Warning    => Current_Error),
-         Self.Format (Full_Path_Name, Levels));
-   end Output;
 
    ----------------
    -- Set_Status --
