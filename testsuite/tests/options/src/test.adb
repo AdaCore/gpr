@@ -64,20 +64,6 @@ procedure test is
       null;
    end Config_Project_Pre_Check;
 
-   procedure Config_Project_Has_Error_Pre_Check is
-      Config_Project_Has_Error :Boolean := Options.Config_Project_Has_Error;
-      pragma Unreferenced (Config_Project_Has_Error);
-   begin
-      null;
-   end Config_Project_Has_Error_Pre_Check;
-
-   procedure Config_Project_Log_Pre_Check is
-      Config_Project_Log : GPR2.Log.Object := Options.Config_Project_Log;
-      pragma Unreferenced (Config_Project_Log);
-   begin
-      null;
-   end Config_Project_Log_Pre_Check;
-
    procedure Context_Pre_Check is
       Context : GPR2.Context.Object := Options.Context;
       pragma Unreferenced (Context);
@@ -106,7 +92,9 @@ procedure test is
 
    procedure Load_Project_Pre_Check is
       Tree : GPR2.Project.Tree.Object;
-      Loaded : Boolean := Options.Load_Project (Tree);
+      Loaded : Boolean :=
+                 Tree.Load
+                   (Options, Verbosity => GPR2.Project.Tree.Minimal);
       pragma Unreferenced (Loaded);
    begin
       null;
@@ -200,8 +188,6 @@ procedure test is
       Pre_Check_Test (Build_Path_Pre_Check'Access, "Build_Path pre check", False);
       Pre_Check_Test (Check_Shared_Lib_Pre_Check'Access, "Check_Shared_Lib pre check", False);
       Pre_Check_Test (Config_Project_Pre_Check'Access, "Config_Project_Pre_Check pre check", False);
-      Pre_Check_Test (Config_Project_Has_Error_Pre_Check'Access, "Config_Project_Has_Error pre check", False);
-      Pre_Check_Test (Config_Project_Log_Pre_Check'Access, "Config_Project_Log pre check", False);
       Pre_Check_Test (Context_Pre_Check'Access, "Context pre check", False);
       Pre_Check_Test (Filename_Pre_Check'Access, "Filename pre check", False);
       Pre_Check_Test (Finalize_Pre_Check'Access, "Finalize pre check", True);
@@ -532,26 +518,20 @@ procedure test is
          Tree             : in out GPR2.Project.Tree.Object;
          Absent_Dir_Error : GPR2.Error_Level := GPR2.Warning;
          File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-           GPR2.File_Readers.No_File_Reader_Reference;
-         Quiet            : Boolean := False)
+                              GPR2.File_Readers.No_File_Reader_Reference;
+         Verbosity        : GPR2.Project.Tree.Verbosity_Level :=
+                              GPR2.Project.Tree.Minimal)
       is
          Loaded : Boolean;
 
       begin
          Put_Line ("Testing Load Project " & Name);
-         Loaded := Options.Load_Project
-                     (Tree             => Tree,
+         Loaded := Tree.Load
+                     (Options,
                       Absent_Dir_Error => Absent_Dir_Error,
                       File_Reader      => File_Reader,
-                      Quiet            => Quiet);
+                      Verbosity        => Verbosity);
          Put_Line ("Load_Project returned " & Loaded'Image);
-
-         if Options.Config_Project_Has_Error then
-            Options.Config_Project_Log.Output_Messages (Information => False,
-                                                        Warning     => False);
-         else
-            Options.Config_Project_Log.Output_Messages;
-         end if;
 
          if Tree.Log_Messages.Has_Error then
             Tree.Log_Messages.Output_Messages (Information => False,

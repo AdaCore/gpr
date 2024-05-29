@@ -15,9 +15,7 @@ with Ada.Strings.Unbounded;
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Environment;
-with GPR2.File_Readers;
 with GPR2.KB;
-with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Registry.Exchange;
@@ -145,26 +143,6 @@ package GPR2.Options is
    --  Note: This procedure is called automatically if during Load_Project call
    --        Tree parameter is undefined.
 
-   function Load_Project
-     (Self             : in out Object;
-      Tree             : in out GPR2.Project.Tree.Object;
-      With_Runtime     : Boolean := False;
-      Absent_Dir_Error : GPR2.Error_Level :=
-                           GPR2.Warning;
-      File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference;
-      Quiet            : Boolean := False) return Boolean;
-   --  Load a project tree using configured options.
-   --  If successful, Tree contains loaded project tree.
-   --  If Tree is undefined on entry, project search paths are automatically
-   --   registered.
-   --  Load messages are appended to Log.
-   --  With_Runtime: whether the runtime sources are looked for when updating
-   --   the sources.
-   --  Absent_Dir_Error: whether a missing directory should be treated as an
-   --   error or a warning.
-   --  If Quiet is true no output is printed.
-
    -----------------------------------------------------
    --  Object's getters. (Requires finalized options) --
    -----------------------------------------------------
@@ -178,15 +156,6 @@ package GPR2.Options is
      with Pre => Self.Is_Finalized;
    --  Returns Filename argument used loading the project
    --  Self.Project_File if defined otherwise the current directory.
-
-   function Config_Project_Log (Self : Object) return GPR2.Log.Object
-     with Pre => Self.Is_Finalized;
-   --  Returns log object filled during Config_Project Load done loading the
-   --  project.
-
-   function Config_Project_Has_Error (Self : Object) return Boolean
-     with Pre => Self.Is_Finalized;
-   --  Returns True if configuration cannot be loaded successfully
 
    function Context (Self : Object) return GPR2.Context.Object
      with Pre => Self.Is_Finalized;
@@ -323,11 +292,6 @@ private
 
       Search_Paths             : GPR2.Path_Name.Set.Object;
 
-      Config_Project_Has_Error : Boolean := False;
-      --  configuration file that cannot be loaded.
-
-      Config_Project_Log       : GPR2.Log.Object;
-
       Environment              : GPR2.Environment.Object;
    end record;
 
@@ -355,12 +319,6 @@ private
 
    function Create_Config_Project (Self : Object) return Boolean is
      (Self.Create_Missing_Config);
-
-   function Config_Project_Has_Error (Self : Object) return Boolean is
-     (Self.Config_Project_Has_Error);
-
-   function Config_Project_Log (Self : Object) return GPR2.Log.Object is
-     (Self.Config_Project_Log);
 
    function Context (Self : Object) return GPR2.Context.Object is
      (Self.Context);

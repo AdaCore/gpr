@@ -14,10 +14,7 @@ procedure Main is
       CWD : constant GPR2.Path_Name.Object :=
               GPR2.Path_Name.Create_Directory (".");
    begin
-      if not Opt.Load_Project
-        (Tree         => Prj,
-         With_Runtime => False)
-      then
+      if not Prj.Load (Opt, Absent_Dir_Error => GPR2.No_Error) then
          return;
       end if;
 

@@ -1,7 +1,6 @@
 +--------------------------------------+
 |               Messages               |
 +--------------------------------------+
-* Configuration:
 * Tree:
     - lib.gpr: lint: project qualifier could be explicitly set to library project
 

@@ -5,7 +5,6 @@ with Ada.Text_IO; use Ada.Text_IO;
 with GNAT.OS_Lib;
 
 with GPR2.Environment;
-with GPR2.Log;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
@@ -71,7 +70,8 @@ procedure Test is
    end Environment;
 
    Options : GPR2.Options.Object;
-   Tree : GPR2.Project.Tree.Object;
+   Tree    : GPR2.Project.Tree.Object;
+   Res     : Boolean;
 begin
 
    --  testing load_autoconf
@@ -83,12 +83,7 @@ begin
       Quiet                  => True,
       Environment            => Environment ("files"));
 
-   if not Tree.Load (Options,
-                     Absent_Dir_Error => GPR2.No_Error,
-                     Verbosity        => GPR2.Project.Tree.Quiet)
-   then
-      GPR2.Log.Output_Messages (Tree.Log_Messages.all);
-   end if;
+   Res := Tree.Load (Options, Absent_Dir_Error => GPR2.No_Error);
 
    --  testing load using default project in ./files directory
    Options := GPR2.Options.Empty_Options;
@@ -101,9 +96,7 @@ begin
    Options.Finalize (Allow_Implicit_Project => True,
                      Quiet                  => True,
                      Environment            => Environment ("files"));
-   if not Options.Load_Project (Tree) then
-      GPR2.Log.Output_Messages (Tree.Log_Messages.all);
-   end if;
+   Res := Tree.Load (Options, Absent_Dir_Error => GPR2.No_Error);
 
    --  testing load_autoconf on default project
    Options := GPR2.Options.Empty_Options;
@@ -112,8 +105,5 @@ begin
    Options.Finalize (Allow_Implicit_Project => True,
                      Quiet                  => True,
                      Environment            => Environment ("."));
-   if not Options.Load_Project (Tree) then
-      GPR2.Log.Output_Messages (Tree.Log_Messages.all);
-   end if;
-
+   Res := Tree.Load (Options, Absent_Dir_Error => GPR2.No_Error);
 end Test;

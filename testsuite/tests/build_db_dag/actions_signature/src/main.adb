@@ -24,11 +24,8 @@ begin
    Opts.Add_Switch (GPR2.Options.P, Project);
    Opts.Finalize;
 
-   if not Opts.Load_Project
-     (Tree             => Tree,
-      With_Runtime     => False)
+   if not Tree.Load (Opts, With_Runtime => False)
    then
-      Tree.Log_Messages.Output_Messages (Information => False);
       return 1;
    end if;
 

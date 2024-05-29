@@ -384,11 +384,14 @@ package body GPRtools.Options is
       end Display;
 
       Loaded : Boolean := False;
+      Tree   : GPR2.Project.Tree.Object := Opt.Tree;
 
    begin
-      Loaded := Opt.Load_Project
-        (Tree             => Opt.Tree,
-         Absent_Dir_Error => Absent_Dir_Error);
+      Loaded := Tree.Load
+        (Opt,
+         Absent_Dir_Error => Absent_Dir_Error,
+         Verbosity        => GPR2.Project.Tree.Minimal);
+      Opt.Tree := Tree;
 
       if Handle_Errors then
          declare
@@ -397,17 +400,7 @@ package body GPRtools.Options is
                               then Opt.Tree.Log_Messages.Has_Error
                               else False);
          begin
-            Display (Opt.Config_Project_Log);
             Display (Opt.Tree.Log_Messages.all);
-
-            if not Loaded
-              and then Opt.Config_Project_Has_Error
-            then
-               Handle_Program_Termination
-                 (Opt        => Opt,
-                  Message    => '"' & String (Opt.Config_Project.Simple_Name)
-                  & """ processing failed");
-            end if;
 
             if not Loaded
               and then Opt.Tree.Is_Defined

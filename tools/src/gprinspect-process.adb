@@ -55,7 +55,6 @@ is
    procedure Display_Messages_JSON_Output
      (JSON_Res    : JSON_Value;
       Tree_Logs   : GPR2.Log.Object;
-      Conf_Logs   : GPR2.Log.Object;
       Only_Errors : Boolean)
    with Pre => JSON_Res.Kind = JSON_Object_Type;
    --  Add a "messages" field to the provided JSON object,
@@ -75,7 +74,6 @@ is
 
    procedure Display_Messages_Textual_Output
      (Tree_Logs   : GPR2.Log.Object;
-      Conf_Logs   : GPR2.Log.Object;
       Only_Errors : Boolean);
    --  Display tree messages. If Only_Errors is true, only errors
    --  are displayed.
@@ -98,7 +96,6 @@ is
    procedure Display_Messages_JSON_Output
      (JSON_Res    : JSON_Value;
       Tree_Logs   : GPR2.Log.Object;
-      Conf_Logs   : GPR2.Log.Object;
       Only_Errors : Boolean)
    is
       procedure Populate_Array
@@ -135,7 +132,6 @@ is
       Conf_Mes_Array : JSON_Array;
 
    begin
-      Populate_Array (Conf_Mes_Array, Conf_Logs);
       Populate_Array (Tree_Mes_Array, Tree_Logs);
 
       Set_Field (Messages_Obj, "configuration", Conf_Mes_Array);
@@ -149,7 +145,6 @@ is
 
    procedure Display_Messages_Textual_Output
      (Tree_Logs   : GPR2.Log.Object;
-      Conf_Logs   : GPR2.Log.Object;
       Only_Errors : Boolean)
    is
       procedure Display (Logs : GPR2.Log.Object);
@@ -176,9 +171,6 @@ is
       Indent (0, "+--------------------------------------+");
       Indent (0, "|               Messages               |");
       Indent (0, "+--------------------------------------+");
-
-      Indent (1, "Configuration:");
-      Display (Conf_Logs);
 
       Indent (1, "Tree:");
       Display (Tree_Logs);
@@ -1121,10 +1113,6 @@ begin
                  Handle_Errors      => False,
                  Handle_Lint        => False);
 
-   if Options.Config_Project_Has_Error then
-      Success := False;
-   end if;
-
    case Options.Kind_Of_Display is
       when GPRtools.K_JSON | GPRtools.K_JSON_Compact =>
          declare
@@ -1133,7 +1121,6 @@ begin
             Display_Messages_JSON_Output
               (JSON_Res    => J_Res,
                Tree_Logs   => Options.Tree.Log_Messages.all,
-               Conf_Logs   => Options.Config_Project_Log,
                Only_Errors => not Success);
 
             if Success then
@@ -1151,7 +1138,6 @@ begin
       when GPRtools.K_Textual_IO =>
          Display_Messages_Textual_Output
            (Tree_Logs   => Options.Tree.Log_Messages.all,
-            Conf_Logs   => Options.Config_Project_Log,
             Only_Errors => not Success);
 
          if Success then

@@ -12,10 +12,7 @@ procedure Main is
       Prj : GPR2.Project.Tree.Object;
       Log : GPR2.Log.Object;
    begin
-      if not Opt.Load_Project
-        (Tree         => Prj,
-         With_Runtime => False)
-      then
+      if not Prj.Load (Opt, Absent_Dir_Error => GPR2.No_Error) then
          return;
       end if;
 

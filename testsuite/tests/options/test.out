@@ -18,14 +18,6 @@ Testing Config_Project_Pre_Check pre check
 Config_Project_Pre_Check pre check => ADA.ASSERTIONS.ASSERTION_ERROR
 Test OK
 
-Testing Config_Project_Has_Error pre check
-Config_Project_Has_Error pre check => ADA.ASSERTIONS.ASSERTION_ERROR
-Test OK
-
-Testing Config_Project_Log pre check
-Config_Project_Log pre check => ADA.ASSERTIONS.ASSERTION_ERROR
-Test OK
-
 Testing Context pre check
 Context pre check => ADA.ASSERTIONS.ASSERTION_ERROR
 Test OK
