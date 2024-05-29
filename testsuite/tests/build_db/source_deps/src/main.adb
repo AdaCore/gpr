@@ -42,12 +42,14 @@ begin
       end;
 
       for U of NS.Units loop
-         Ada.Text_IO.Put_Line
-           ("* " & String (U.Name) & ": " & String (U.Main_Part.Source.Relative_Path (NS.Dir_Name)));
-         for Dep of U.Known_Dependencies loop
+         if not U.Owning_View.Is_Runtime then
             Ada.Text_IO.Put_Line
-              ("  - depends on " & String (Dep.Name));
-         end loop;
+              ("* " & String (U.Name) & ": " & String (U.Main_Part.Source.Relative_Path (NS.Dir_Name)));
+            for Dep of U.Known_Dependencies loop
+               Ada.Text_IO.Put_Line
+                 ("  - depends on " & String (Dep.Name));
+            end loop;
+         end if;
       end loop;
    end loop;
 end Main;

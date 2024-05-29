@@ -95,8 +95,9 @@
           - <gnat rts>/adalib"
        - Externally_Built [ SINGLE ]
           - Value : "true"
-       - Languages [ SINGLE ]
-          - Value : "ada"
+       - Languages [ LIST ]
+          - Values : 
+             - "ada"
        - Name [ SINGLE ]
           - Value : "runtime"
        - Object_Dir [ SINGLE ]

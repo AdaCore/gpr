@@ -6,9 +6,12 @@
 
 package GPR2.Tree_Internal.View_Builder is
 
-   type Object is tagged private;
+   type Object is tagged record
+      Data : GPR2.View_Internal.Data;
+   end record;
 
-   function Is_Defined (Self : Object) return Boolean;
+   function Is_Defined (Self : Object) return Boolean is
+     (Self.Data.Path.Is_Defined);
 
    function Create
      (Project_Dir : GPR2.Path_Name.Object;
@@ -36,65 +39,5 @@ package GPR2.Tree_Internal.View_Builder is
       Attr   : Q_Attribute_Id;
       Index  : Value_Type;
       Values : Containers.Value_List);
-
-   procedure Load_Autoconf
-     (Self              : in out Tree_Internal.Object;
-      Project           : View_Builder.Object;
-      Context           : GPR2.Context.Object;
-      With_Runtime      : Boolean;
-      Build_Path        : Path_Name.Object          := Path_Name.Undefined;
-      Root_Path         : Path_Name.Object          := Path_Name.Undefined;
-      Subdirs           : Optional_Name_Type        := No_Name;
-      Src_Subdirs       : Optional_Name_Type        := No_Name;
-      Check_Shared_Lib  : Boolean                   := True;
-      Absent_Dir_Error  : Error_Level               := Warning;
-      Implicit_With     : GPR2.Path_Name.Set.Object :=
-                            GPR2.Path_Name.Set.Empty_Set;
-      Resolve_Links     : Boolean                   := False;
-      Target            : Optional_Name_Type        := No_Name;
-      Language_Runtimes : Containers.Lang_Value_Map :=
-                            Containers.Lang_Value_Maps.Empty_Map;
-      Base              : GPR2.KB.Object            := GPR2.KB.Undefined;
-      Config_Project    : GPR2.Path_Name.Object     :=
-                            GPR2.Path_Name.Undefined;
-      File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
-                            GPR2.File_Readers.No_File_Reader_Reference;
-      Environment       : GPR2.Environment.Object :=
-                            GPR2.Environment.Process_Environment)
-       with Pre => Project.Is_Defined;
-
-   procedure Load
-     (Self             : in out Tree_Internal.Object;
-      Project          : View_Builder.Object;
-      Context          : GPR2.Context.Object;
-      With_Runtime     : Boolean;
-      Config           : GPR2.Project.Configuration.Object :=
-                           GPR2.Project.Configuration.Undefined;
-      Build_Path       : Path_Name.Object        := Path_Name.Undefined;
-      Root_Path        : Path_Name.Object        := Path_Name.Undefined;
-      Subdirs          : Optional_Name_Type      := No_Name;
-      Src_Subdirs      : Optional_Name_Type      := No_Name;
-      Check_Shared_Lib : Boolean                 := True;
-      Absent_Dir_Error : Error_Level             := Warning;
-      Implicit_With    : GPR2.Path_Name.Set.Object :=
-                           GPR2.Path_Name.Set.Empty_Set;
-      Resolve_Links    : Boolean                   := False;
-      Pre_Conf_Mode    : Boolean                   := False;
-      File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference;
-      Environment      : GPR2.Environment.Object :=
-                           GPR2.Environment.Process_Environment)
-       with Pre => Project.Is_Defined;
-   --  Loads a root project. Similar to Tree.Load, using a View_Builder
-   --  object as root project.
-
-private
-
-   type Object is tagged record
-      Data : GPR2.View_Internal.Data;
-   end record;
-
-   function Is_Defined (Self : Object) return Boolean is
-     (Self.Data.Path.Is_Defined);
 
 end GPR2.Tree_Internal.View_Builder;

@@ -8,6 +8,7 @@ with GPR2.Pack_Internal;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Attribute_Index;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Variable.Set;
 with GPR2.Project_Parser.Create;
 with GPR2.Source_Reference.Attribute;
@@ -82,97 +83,6 @@ package body GPR2.Tree_Internal.View_Builder is
       return Result;
    end Create;
 
-   ----------
-   -- Load --
-   ----------
-
-   procedure Load
-     (Self             : in out Tree_Internal.Object;
-      Project          : Object;
-      Context          : GPR2.Context.Object;
-      With_Runtime     : Boolean;
-      Config           : PC.Object                 := PC.Undefined;
-      Build_Path       : Path_Name.Object          := Path_Name.Undefined;
-      Root_Path        : Path_Name.Object          := Path_Name.Undefined;
-      Subdirs          : Optional_Name_Type        := No_Name;
-      Src_Subdirs      : Optional_Name_Type        := No_Name;
-      Check_Shared_Lib : Boolean                   := True;
-      Absent_Dir_Error : Error_Level               := Warning;
-      Implicit_With    : GPR2.Path_Name.Set.Object :=
-                           GPR2.Path_Name.Set.Empty_Set;
-      Resolve_Links    : Boolean                   := False;
-      Pre_Conf_Mode    : Boolean                   := False;
-      File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference;
-      Environment      : GPR2.Environment.Object :=
-                           GPR2.Environment.Process_Environment) is
-   begin
-      GPR2.Project_Parser.Clear_Cache;
-
-      Self.Load ((Project_Definition, Project.Data),
-                 Context          => Context,
-                 Config           => Config,
-                 With_Runtime     => With_Runtime,
-                 Build_Path       => Build_Path,
-                 Root_Path        => Root_Path,
-                 Subdirs          => Subdirs,
-                 Src_Subdirs      => Src_Subdirs,
-                 Check_Shared_Lib => Check_Shared_Lib,
-                 Absent_Dir_Error => Absent_Dir_Error,
-                 Implicit_With    => Implicit_With,
-                 Resolve_Links    => Resolve_Links,
-                 Pre_Conf_Mode    => Pre_Conf_Mode,
-                 File_Reader      => File_Reader,
-                 Environment      => Environment);
-
-      GPR2.Project_Parser.Clear_Cache;
-   end Load;
-
-   procedure Load_Autoconf
-     (Self              : in out Tree_Internal.Object;
-      Project           : Object;
-      Context           : GPR2.Context.Object;
-      With_Runtime      : Boolean;
-      Build_Path        : Path_Name.Object        := Path_Name.Undefined;
-      Root_Path         : Path_Name.Object        := Path_Name.Undefined;
-      Subdirs           : Optional_Name_Type      := No_Name;
-      Src_Subdirs       : Optional_Name_Type      := No_Name;
-      Check_Shared_Lib  : Boolean                 := True;
-      Absent_Dir_Error  : Error_Level             := Warning;
-      Implicit_With     : GPR2.Path_Name.Set.Object :=
-                            GPR2.Path_Name.Set.Empty_Set;
-      Resolve_Links     : Boolean                 := False;
-      Target            : Optional_Name_Type      := No_Name;
-      Language_Runtimes : Containers.Lang_Value_Map :=
-                            Containers.Lang_Value_Maps.Empty_Map;
-      Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
-      Config_Project    : GPR2.Path_Name.Object   :=
-                            GPR2.Path_Name.Undefined;
-      File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
-                            GPR2.File_Readers.No_File_Reader_Reference;
-      Environment       : GPR2.Environment.Object :=
-                            GPR2.Environment.Process_Environment) is
-   begin
-      Self.Load_Autoconf
-        (Root_Project      => (Project_Definition, Project.Data),
-         Context           => Context,
-         With_Runtime      => With_Runtime,
-         Build_Path        => Build_Path,
-         Root_Path         => Root_Path,
-         Subdirs           => Subdirs,
-         Src_Subdirs       => Src_Subdirs,
-         Check_Shared_Lib  => Check_Shared_Lib,
-         Absent_Dir_Error  => Absent_Dir_Error,
-         Implicit_With     => Implicit_With,
-         Resolve_Links     => Resolve_Links,
-         Target            => Target,
-         Language_Runtimes => Language_Runtimes,
-         Base              => Base,
-         Config_Project    => Config_Project,
-         File_Reader       => File_Reader,
-         Environment       => Environment);
-   end Load_Autoconf;
-
    -------------------
    -- Set_Attribute --
    -------------------
@@ -180,7 +90,8 @@ package body GPR2.Tree_Internal.View_Builder is
    procedure Set_Attribute
      (Self   : in out Object;
       Q_Name : Q_Attribute_Id;
-      Attr   : GPR2.Project.Attribute.Object) is
+      Attr   : GPR2.Project.Attribute.Object)
+   is
    begin
       if Q_Name.Pack = Project_Level_Scope then
          Self.Data.Attrs.Include (Attr);
@@ -207,12 +118,24 @@ package body GPR2.Tree_Internal.View_Builder is
    procedure Set_Attribute
      (Self  : in out Object;
       Attr  : Q_Attribute_Id;
-      Value : Value_Type) is
+      Value : Value_Type)
+   is
+      use Project.Registry.Attribute;
+      Attr_Def : constant Def := Project.Registry.Attribute.Get (Attr);
    begin
-      Self.Set_Attribute
-        (Attr,
-         GPR2.Project.Attribute.Create
-           (SR_Attr (Self, Attr), SR_Value (Self, Value)));
+      if Attr_Def.Value = Single then
+         Self.Set_Attribute
+           (Attr,
+            GPR2.Project.Attribute.Create
+              (SR_Attr (Self, Attr), SR_Value (Self, Value)));
+      else
+         declare
+            Values : Containers.Value_List;
+         begin
+            Values.Append (Value);
+            Self.Set_Attribute (Attr, Values);
+         end;
+      end if;
    end Set_Attribute;
 
    procedure Set_Attribute
@@ -231,14 +154,26 @@ package body GPR2.Tree_Internal.View_Builder is
      (Self  : in out Object;
       Attr  : Q_Attribute_Id;
       Index : Value_Type;
-      Value : Value_Type) is
+      Value : Value_Type)
+   is
+      use Project.Registry.Attribute;
+      Attr_Def : constant Def := Project.Registry.Attribute.Get (Attr);
    begin
-      Self.Set_Attribute
-        (Attr,
-         GPR2.Project.Attribute.Create
-           (SR_Attr (Self, Attr),
-            SR_Index (Self, Index),
-            SR_Value (Self, Value)));
+      if Attr_Def.Value = Single then
+         Self.Set_Attribute
+           (Attr,
+            GPR2.Project.Attribute.Create
+              (SR_Attr (Self, Attr),
+               SR_Index (Self, Index),
+               SR_Value (Self, Value)));
+      else
+         declare
+            Values : Containers.Value_List;
+         begin
+            Values.Append (Value);
+            Self.Set_Attribute (Attr, Index, Values);
+         end;
+      end if;
    end Set_Attribute;
 
    procedure Set_Attribute

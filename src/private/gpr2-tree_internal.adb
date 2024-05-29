@@ -22,7 +22,7 @@ pragma Warnings (Off, ".* is not referenced");
 with GPR2.Build.Source.Sets;
 pragma Warnings (On, ".* is not referenced");
 
-with GPR2.Project_Parser.Create;
+with GPR2.Project_Parser;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Import.Set;
@@ -93,7 +93,7 @@ package body GPR2.Tree_Internal is
    --  Starting_From if set is the aggregate or aggregate library starting
    --  point for the parsing.
 
-   function Create_Runtime_View (Self : Object) return View.Object
+   function Create_Runtime_View (Self : in out Object) return View.Object
      with Pre => Self.Is_Defined
                  and then Self.Has_Configuration;
    --  Create the runtime view given the configuration project
@@ -221,33 +221,11 @@ package body GPR2.Tree_Internal is
    -- Create_Runtime_View --
    -------------------------
 
-   function Create_Runtime_View (Self : Object) return View.Object is
-      CV   : constant View.Object := Self.Conf.Corresponding_View;
-      Data : View_Internal.Data;
-      Attr : Attribute.Object;
-      RTD  : Path_Name.Object;
-      RTF  : Path_Name.Object;
-
-      procedure Add_Attribute (Name : Q_Attribute_Id; Value : Value_Type);
-      --  Add builtin attribute into Data.Attrs
-
-      -------------------
-      -- Add_Attribute --
-      -------------------
-
-      procedure Add_Attribute (Name : Q_Attribute_Id; Value : Value_Type) is
-      begin
-         Data.Attrs.Insert
-           (Project.Attribute.Create
-              (Name  => Source_Reference.Attribute.Object
-                          (Source_Reference.Attribute.Create
-                             (Source_Reference.Builtin, Name)),
-               Value => Source_Reference.Value.Object
-                          (Source_Reference.Value.Create
-                             (Source_Reference.Object
-                                (Source_Reference.Create (RTF.Value, 0, 0)),
-                              Value))));
-      end Add_Attribute;
+   function Create_Runtime_View (Self : in out Object) return View.Object is
+      CV       : constant View.Object := Self.Conf.Corresponding_View;
+      RTS_View : View_Builder.Object;
+      Attr     : Attribute.Object;
+      RTD      : Path_Name.Object;
 
    begin
       --  Check runtime path
@@ -260,10 +238,16 @@ package body GPR2.Tree_Internal is
          --  and Object_Dir for the Runtime project view.
 
          RTD := Path_Name.Create_Directory (Filename_Type (Attr.Value.Text));
-         RTF := RTD.Compose ("runtime.gpr");
+
+         RTS_View := View_Builder.Create
+           (Project_Dir => RTD,
+            Name        => "runtime",
+            Qualifier   => K_Standard);
+         RTS_View.Data.Unique_Id := View_Ids.Runtime_View_Id;
+         RTS_View.Data.Tree      := Self.Self;
 
          declare
-            Dirs : Containers.Source_Value_List;
+            Dirs : Containers.Value_List;
 
             procedure Add_If_Exists (Dir_Name : Path_Name.Object);
             --  Add directory name into Dirs if it exists
@@ -275,12 +259,7 @@ package body GPR2.Tree_Internal is
             procedure Add_If_Exists (Dir_Name : Path_Name.Object) is
             begin
                if Dir_Name.Exists then
-                  Dirs.Append
-                    (Source_Reference.Value.Object
-                       (Source_Reference.Value.Create
-                          (Source_Reference.Object
-                             (Source_Reference.Create (RTF.Value, 0, 0)),
-                              Dir_Name.String_Value)));
+                  Dirs.Append (Dir_Name.String_Value);
                end if;
             end Add_If_Exists;
 
@@ -321,39 +300,21 @@ package body GPR2.Tree_Internal is
                Add_If_Exists (RTD.Compose ("adainclude", Directory => True));
             end if;
 
-            Data.Attrs.Insert
-              (Project.Attribute.Create
-                 (Name => Source_Reference.Attribute.Object
-                            (Source_Reference.Attribute.Create
-                               (Source_Reference.Builtin, PRA.Source_Dirs)),
-                  Values => Dirs));
+            RTS_View.Set_Attribute (PRA.Source_Dirs, Dirs);
          end;
 
-         Add_Attribute
-           (PRA.Object_Dir,
-            RTD.Compose ("adalib", True).String_Value);
+         RTS_View.Set_Attribute
+           (PRA.Object_Dir, RTD.Compose ("adalib", True).String_Value);
 
          --  The only language supported is Ada
 
-         Add_Attribute (PRA.Languages, "ada");
+         RTS_View.Set_Attribute (PRA.Languages, "ada");
 
          --  The runtime is externally built
 
-         Add_Attribute (PRA.Externally_Built, "true");
+         RTS_View.Set_Attribute (PRA.Externally_Built, "true");
 
-         Data.Tree      := Self.Self;
-         Data.Kind      := K_Standard;
-         Data.Path      := RTD;
-         Data.Is_Root   := True;
-         Data.Unique_Id := GPR2.View_Ids.Runtime_View_Id;
-
-         Data.Trees.Project := Project_Parser.Create
-           (Name      => Name (PRA.Runtime.Attr),
-            File      => RTF,
-            Qualifier => K_Standard);
-
-         return Register_View (Data);
-
+         return Register_View (RTS_View.Data);
       else
          return Project.View.Undefined;
       end if;
@@ -987,52 +948,30 @@ package body GPR2.Tree_Internal is
       Environment      : GPR2.Environment.Object :=
                            GPR2.Environment.Process_Environment) is
    begin
-      if Self.Is_Defined then
-         Self.Unload;
-      end if;
+      GPR2.Project_Parser.Clear_Cache;
 
-      if not Filename.Is_Directory then
-         GPR2.Project_Parser.Clear_Cache;
+      Self.Load
+        (Root_Project     => (if not Filename.Is_Directory
+                              then (Project_Path, Filename)
+                              else (Project_Definition,
+                                    View_Builder.Create
+                                      (Filename, "Default").Data)),
+         Context          => Context,
+         With_Runtime     => With_Runtime,
+         Config           => Config,
+         Build_Path       => Build_Path,
+         Root_Path        => Root_Path,
+         Subdirs          => Subdirs,
+         Src_Subdirs      => Src_Subdirs,
+         Check_Shared_Lib => Check_Shared_Lib,
+         Absent_Dir_Error => Absent_Dir_Error,
+         Implicit_With    => Implicit_With,
+         Resolve_Links    => Resolve_Links,
+         Pre_Conf_Mode    => Pre_Conf_Mode,
+         File_Reader      => File_Reader,
+         Environment      => Environment);
 
-         Self.Load
-           (Project_Descriptor'(Project_Path, Filename),
-            Context          => Context,
-            With_Runtime     => With_Runtime,
-            Config           => Config,
-            Build_Path       => Build_Path,
-            Root_Path        => Root_Path,
-            Subdirs          => Subdirs,
-            Src_Subdirs      => Src_Subdirs,
-            Check_Shared_Lib => Check_Shared_Lib,
-            Absent_Dir_Error => Absent_Dir_Error,
-            Implicit_With    => Implicit_With,
-            Resolve_Links    => Resolve_Links,
-            Pre_Conf_Mode    => Pre_Conf_Mode,
-            File_Reader      => File_Reader,
-            Environment      => Environment);
-
-         GPR2.Project_Parser.Clear_Cache;
-      else
-         --  Load an empty project in directory "Filename"
-
-         View_Builder.Load
-           (Self,
-            View_Builder.Create (Filename, "Default"),
-            With_Runtime     => With_Runtime,
-            Context          => Context,
-            Config           => Config,
-            Build_Path       => Build_Path,
-            Root_Path        => Root_Path,
-            Subdirs          => Subdirs,
-            Src_Subdirs      => Src_Subdirs,
-            Check_Shared_Lib => Check_Shared_Lib,
-            Absent_Dir_Error => Absent_Dir_Error,
-            Implicit_With    => Implicit_With,
-            Resolve_Links    => Resolve_Links,
-            Pre_Conf_Mode    => Pre_Conf_Mode,
-            File_Reader      => File_Reader,
-            Environment      => Environment);
-      end if;
+      GPR2.Project_Parser.Clear_Cache;
    end Load;
 
    -------------------
@@ -1089,50 +1028,28 @@ package body GPR2.Tree_Internal is
       Environment       : GPR2.Environment.Object :=
                             GPR2.Environment.Process_Environment) is
    begin
-      if Self.Is_Defined then
-         Self.Unload;
-      end if;
-
-      if not Filename.Is_Directory then
-         Self.Load_Autoconf
-           (Root_Project      => (Project_Path, Filename),
-            Context           => Context,
-            With_Runtime      => With_Runtime,
-            Build_Path        => Build_Path,
-            Root_Path         => Root_Path,
-            Subdirs           => Subdirs,
-            Src_Subdirs       => Src_Subdirs,
-            Check_Shared_Lib  => Check_Shared_Lib,
-            Absent_Dir_Error  => Absent_Dir_Error,
-            Implicit_With     => Implicit_With,
-            Resolve_Links     => Resolve_Links,
-            Target            => Target,
-            Language_Runtimes => Language_Runtimes,
-            Base              => Base,
-            Config_Project    => Config_Project,
-            File_Reader       => File_Reader,
-            Environment       => Environment);
-      else
-         View_Builder.Load_Autoconf
-           (Self,
-            View_Builder.Create (Filename, "Default"),
-            With_Runtime      => With_Runtime,
-            Context           => Context,
-            Build_Path        => Build_Path,
-            Root_Path         => Root_Path,
-            Subdirs           => Subdirs,
-            Src_Subdirs       => Src_Subdirs,
-            Check_Shared_Lib  => Check_Shared_Lib,
-            Absent_Dir_Error  => Absent_Dir_Error,
-            Implicit_With     => Implicit_With,
-            Resolve_Links     => Resolve_Links,
-            Target            => Target,
-            Language_Runtimes => Language_Runtimes,
-            Base              => Base,
-            Config_Project    => Config_Project,
-            File_Reader       => File_Reader,
-            Environment       => Environment);
-      end if;
+      Self.Load_Autoconf
+        (Root_Project      => (if not Filename.Is_Directory
+                               then (Project_Path, Filename)
+                               else (Project_Definition,
+                                     View_Builder.Create
+                                       (Filename, "Default").Data)),
+         Context           => Context,
+         With_Runtime      => With_Runtime,
+         Build_Path        => Build_Path,
+         Root_Path         => Root_Path,
+         Subdirs           => Subdirs,
+         Src_Subdirs       => Src_Subdirs,
+         Check_Shared_Lib  => Check_Shared_Lib,
+         Absent_Dir_Error  => Absent_Dir_Error,
+         Implicit_With     => Implicit_With,
+         Resolve_Links     => Resolve_Links,
+         Target            => Target,
+         Language_Runtimes => Language_Runtimes,
+         Base              => Base,
+         Config_Project    => Config_Project,
+         File_Reader       => File_Reader,
+         Environment       => Environment);
    end Load_Autoconf;
 
    ------------------------
