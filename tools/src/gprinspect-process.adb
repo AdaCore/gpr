@@ -1148,7 +1148,7 @@ begin
    if not Success then
       Handle_Program_Termination
         (Opt     => Options,
-         Message => '"' & String (Options.Filename.Name)
+         Message => '"' & String (Options.Project_File.Name)
          & """ processing failed");
    end if;
 end GPRinspect.Process;

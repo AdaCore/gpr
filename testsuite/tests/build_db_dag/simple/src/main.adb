@@ -27,7 +27,6 @@ function Main return Natural is
 
 begin
    Opts.Add_Switch (GPR2.Options.P, Project);
-   Opts.Finalize;
 
    if not Tree.Load (Opts) then
       return 1;

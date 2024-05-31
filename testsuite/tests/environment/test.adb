@@ -78,32 +78,30 @@ begin
    Options.Add_Switch (GPR2.Options.P, "./files/prj");
    Options.Add_Switch (GPR2.Options.AP, "./files/registered");
    Options.Add_Switch (GPR2.Options.Autoconf, "./files/autoconf.cgpr");
-   Options.Finalize
-     (Allow_Implicit_Project => False,
-      Quiet                  => True,
+   Res := Tree.Load
+     (Options,
+      Absent_Dir_Error       => GPR2.No_Error,
+      Allow_Implicit_Project => False,
       Environment            => Environment ("files"));
-
-   Res := Tree.Load (Options, Absent_Dir_Error => GPR2.No_Error);
 
    --  testing load using default project in ./files directory
    Options := GPR2.Options.Empty_Options;
-   Options.Add_Switch (GPR2.Options.P,
-                       GPR2.Options.Check_For_Default_Project
-                         (GPR2.Path_Name.Create_Directory
-                            ("./files").String_Value).String_Value);
+   Options.Add_Switch (GPR2.Options.P, "./files/");
    Options.Add_Switch (GPR2.Options.AP, "./files/registered");
    Options.Add_Switch (GPR2.Options.Config, "./files/autoconf.cgpr");
-   Options.Finalize (Allow_Implicit_Project => True,
-                     Quiet                  => True,
-                     Environment            => Environment ("files"));
-   Res := Tree.Load (Options, Absent_Dir_Error => GPR2.No_Error);
+   Res := Tree.Load
+     (Options,
+      Absent_Dir_Error       => GPR2.No_Error,
+      Allow_Implicit_Project => True,
+      Environment            => Environment ("files"));
 
    --  testing load_autoconf on default project
    Options := GPR2.Options.Empty_Options;
    Ada.Directories.Set_Directory ("./files");
    Options.Add_Switch (GPR2.Options.AP, "./registered");
-   Options.Finalize (Allow_Implicit_Project => True,
-                     Quiet                  => True,
-                     Environment            => Environment ("."));
-   Res := Tree.Load (Options, Absent_Dir_Error => GPR2.No_Error);
+   Res := Tree.Load
+     (Options,
+      Absent_Dir_Error       => GPR2.No_Error,
+      Allow_Implicit_Project => True,
+      Environment            => Environment ("."));
 end Test;

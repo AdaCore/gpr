@@ -23,8 +23,8 @@ begin
    Opt.Add_Switch (Options.X, "VSB_DIR=.");
    Opt.Add_Switch (Options.Target, "x86_64-wrs-vxworks7");
    Opt.Add_Switch (Options.RTS, "rtp", "Ada");
-   Opt.Finalize (Environment => Env);
-   if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+
+   if Tree.Load (Opt, Absent_Dir_Error => No_Error, Environment => Env) then
       Ada.Text_IO.Put_Line ("Cross:");
       Ada.Text_IO.Put_Line (Tree.Root_Project.Path_Name.String_Value);
    end if;
@@ -43,8 +43,8 @@ begin
    Opt := Options.Empty_Options;
    Opt.Add_Switch (Options.P, "preinstalled.gpr");
    Opt.Add_Switch (Options.Target, "all");
-   Opt.Finalize (Environment => Env);
-   if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+
+   if Tree.Load (Opt, Absent_Dir_Error => No_Error, Environment => Env) then
       Ada.Text_IO.Put_Line ("Native:");
       Ada.Text_IO.Put_Line (Tree.Root_Project.Path_Name.String_Value);
    end if;

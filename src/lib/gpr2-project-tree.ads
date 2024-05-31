@@ -80,13 +80,16 @@ package GPR2.Project.Tree is
    --  Linter: also display gpr linter messages
 
    function Load
-     (Self             : in out Object;
-      Options          : in out GPR2.Options.Object'Class;
-      With_Runtime     : Boolean := False;
-      Absent_Dir_Error : GPR2.Error_Level := GPR2.Warning;
-      File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference;
-      Verbosity        : Verbosity_Level := Warnings_And_Errors)
+     (Self                   : in out Object;
+      Options                : in out GPR2.Options.Object'Class;
+      With_Runtime           : Boolean := False;
+      Absent_Dir_Error       : GPR2.Error_Level := GPR2.Warning;
+      Allow_Implicit_Project : Boolean := True;
+      Environment            : GPR2.Environment.Object :=
+                                 GPR2.Environment.Process_Environment;
+      File_Reader            : GPR2.File_Readers.File_Reader_Reference :=
+                                 GPR2.File_Readers.No_File_Reader_Reference;
+      Verbosity              : Verbosity_Level := Warnings_And_Errors)
       return Boolean;
    --  Load a project tree using configured options.
    --  If successful, Tree contains loaded project tree.
@@ -420,7 +423,7 @@ private
      (Self.Tree.Ordered_Views);
 
    function Has_Messages (Self : Object) return Boolean is
-     (Self.Is_Defined and then Self.Tree.Has_Messages);
+     (Self.Is_Defined and then not Self.Tree.Log_Messages.Is_Empty);
 
    function Log_Messages (Self : Object) return not null access Log.Object is
      (Self.Tree.Log_Messages);

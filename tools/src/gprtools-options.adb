@@ -323,10 +323,7 @@ package body GPRtools.Options is
          end if;
       end loop;
 
-      Result.Finalize
-        (Allow_Implicit_Project => Parser.Find_Implicit_Project,
-         Quiet                  => Result.Quiet);
-
+      Result.Find_Implicit_Project := Parser.Find_Implicit_Project;
    end Get_Opt_Internal;
 
    ------------------
@@ -377,8 +374,9 @@ package body GPRtools.Options is
    begin
       Loaded := Tree.Load
         (Opt,
-         Absent_Dir_Error => Absent_Dir_Error,
-         Verbosity        => GPR2.Project.Tree.Minimal);
+         Absent_Dir_Error       => Absent_Dir_Error,
+         Allow_Implicit_Project => Opt.Find_Implicit_Project,
+         Verbosity              => GPR2.Project.Tree.Minimal);
       Opt.Tree := Tree;
 
       if Handle_Errors then
@@ -397,7 +395,7 @@ package body GPRtools.Options is
             then
                Handle_Program_Termination
                  (Opt        => Opt,
-                  Message    => '"' & String (Opt.Filename.Simple_Name)
+                  Message    => '"' & String (Opt.Project_File.Simple_Name)
                   & """ processing failed");
             end if;
          end;

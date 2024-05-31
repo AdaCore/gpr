@@ -40,6 +40,10 @@ package GPRtools.Options is
 
       Args                     : GPR2.Containers.Value_Set;
 
+      --  Whether the tool allows finding implicit projects
+
+      Find_Implicit_Project : Boolean := True;
+
       --  The project tree once loaded
 
       Tree                     : GPR2.Project.Tree.Object;

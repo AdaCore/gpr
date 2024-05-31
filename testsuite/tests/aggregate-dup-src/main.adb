@@ -10,7 +10,7 @@ procedure Main is
 
 begin
    Opt.Add_Switch (Options.P, "demo.gpr");
-   Opt.Finalize;
+
    if Prj.Load  (Opt, Absent_Dir_Error => No_Error) then
       Prj.Update_Sources;
    end if;

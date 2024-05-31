@@ -86,8 +86,7 @@ private package GPR2.Tree_Internal is
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
       Environment      : GPR2.Environment.Object :=
-                           GPR2.Environment.Process_Environment)
-     with Pre => Filename.Is_Defined;
+                           GPR2.Environment.Process_Environment);
    --  Loads a root project
    --  Filename: if Filename is a file path, then Load_Autoconf will use it as
    --   root project. If Filename is a directory path, then implicit projects
@@ -146,8 +145,7 @@ private package GPR2.Tree_Internal is
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
                             GPR2.File_Readers.No_File_Reader_Reference;
       Environment       : GPR2.Environment.Object :=
-                            GPR2.Environment.Process_Environment)
-       with Pre => Filename.Is_Defined;
+                            GPR2.Environment.Process_Environment);
    --  Loads a tree in autoconf mode.
    --  If Filename is a file path, then Load_Autoconf will use it as
    --  root project. If Filename is a directory path, then implicit projects
@@ -172,8 +170,7 @@ private package GPR2.Tree_Internal is
 
    procedure Unload
      (Self : in out Object;
-      Full : Boolean := True)
-     with Post => not Self.Is_Defined;
+      Full : Boolean := True);
    --  Unloads the tree and free all associated objects (projects, sources,
    --  etc...).
    --  If Full is set, then the cached parsed projects objects will also be
@@ -182,40 +179,33 @@ private package GPR2.Tree_Internal is
    function Root_Project (Self : Object) return View.Object;
    --  Returns the root project for the given tree
 
-   function Namespace_Root_Projects (Self : Object) return View.Set.Object
-     with Pre  => Self.Is_Defined;
+   function Namespace_Root_Projects (Self : Object) return View.Set.Object;
    --  Returns the list of namespace root projects: either the root project
    --  for regular trees, or the root of the subtrees for an aggregate project.
 
-   function Has_Configuration (Self : Object) return Boolean
-     with Pre => Self.Is_Defined;
+   function Has_Configuration (Self : Object) return Boolean;
    --  Returns True if a configuration project is loaded on this tree
 
-   function Configuration (Self : Object) return Configuration.Object
-     with Pre => Self.Is_Defined and then Self.Has_Configuration;
+   function Configuration (Self : Object) return Configuration.Object;
    --  Returns the configuration project for the given tree
 
    function Has_Runtime_Project (Self : Object) return Boolean;
    --  Returns True if a runtime project is loaded on this tree
 
-   function Runtime_Project (Self : Object) return View.Object
-     with Pre => Self.Is_Defined;
+   function Runtime_Project (Self : Object) return View.Object;
    --  Returns the runtime project for the given tree
 
    function Target
      (Self      : Object;
-      Canonical : Boolean := False) return Name_Type
-     with Pre => Self.Is_Defined;
+      Canonical : Boolean := False) return Name_Type;
    --  Returns the target for the project tree
 
    function Runtime
-     (Self : Object; Language : Language_Id) return Optional_Name_Type
-     with Pre => Self.Is_Defined;
+     (Self : Object; Language : Language_Id) return Optional_Name_Type;
    --  Returns the runtime selected for the given language or the empty string
    --  if no specific runtime has been configured for this project tree.
 
-   function Artifacts_Dir (Self : Object) return Path_Name.Object
-     with Pre => Self.Is_Defined;
+   function Artifacts_Dir (Self : Object) return Path_Name.Object;
    --  Tries to return a directory that can be used to store artifacts that
    --  are global to the tree.
    --  This returns the object directory of the root view if available, else
@@ -224,24 +214,15 @@ private package GPR2.Tree_Internal is
    --  object dirs are required to have read/write access. So this function
    --  needs to be used with care.
 
-   function Ordered_Views (Self : Object) return View.Vector.Object
-     with Pre => Self.Is_Defined;
+   function Ordered_Views (Self : Object) return View.Vector.Object;
 
-   function Has_Messages (Self : Object) return Boolean;
-   --  Returns whether some messages are present for this project tree
-
-   function Log_Messages (Self : Object) return not null access Log.Object
-     with Post => not Self.Has_Messages
-                  or else not Log_Messages'Result.Is_Empty;
+   function Log_Messages (Self : Object) return not null access Log.Object;
    --  Returns the Logs, this contains information, warning and error messages
    --  found while handling the project.
 
    procedure Append_Message
      (Self    : in out Object;
-      Message : GPR2.Message.Object)
-     with Pre  => Self.Is_Defined,
-          Post => Self.Log_Messages.Count in Self.Log_Messages.Count'Old
-                                          .. Self.Log_Messages.Count'Old + 1;
+      Message : GPR2.Message.Object);
    --  Adds new message into the Log of Self, does nothing if message already
    --  present.
 
@@ -250,29 +231,24 @@ private package GPR2.Tree_Internal is
    --  Note that the context of the project tree corresponds to the context of
    --  the root project view.
 
-   function Has_Context (Self : Object) return Boolean
-     with Pre  => Self.Is_Defined;
+   function Has_Context (Self : Object) return Boolean;
    --  Returns True if the project tree has some context. If any of the project
    --  in the tree has some external variables then a context is present. A
    --  project without context is fully static has it does not reference any
    --  external (and so modifiable) variables.
 
-   function Context (Self : Object) return Context.Object
-     with Pre  => Self.Is_Defined,
-          Post => Self.Has_Context = (Context'Result /= GPR2.Context.Empty);
+   function Context (Self : Object) return Context.Object;
    --  Returns the Context for the given project tree
 
    type Two_Contexts is array (Context_Kind) of GPR2.Context.Object;
    --  Root and Aggregate contexts
 
-   function Contexts (Self : Object) return Two_Contexts
-     with Pre  => Self.Is_Defined;
+   function Contexts (Self : Object) return Two_Contexts;
 
    procedure Set_Context
      (Self    : in out Object;
       Context : GPR2.Context.Object;
-      Changed : access procedure (Project : View.Object) := null)
-     with Pre => Self.Is_Defined;
+      Changed : access procedure (Project : View.Object) := null);
    --  Sets the context for the project tree. The callback Changed is called
    --  for any project view which is impacted by this change of context, i.e.
    --  if the project view references directly or indirectly an external
@@ -284,11 +260,7 @@ private package GPR2.Tree_Internal is
 
    No_Element : constant Cursor;
 
-   function Element (Position : Cursor) return View.Object
-     with Post =>
-       (if Has_Element (Position)
-        then Element'Result.Is_Defined
-        else not Element'Result.Is_Defined);
+   function Element (Position : Cursor) return View.Object;
 
    function Has_Element (Position : Cursor) return Boolean;
 
@@ -308,16 +280,14 @@ private package GPR2.Tree_Internal is
 
    function Constant_Reference
      (Self     : aliased Object;
-      Position : Cursor) return View.Object
-     with Pre => Self.Is_Defined and then Position /= No_Element;
+      Position : Cursor) return View.Object;
 
    function Iterate
      (Self   : Object;
       Kind   : Project.Iterator_Control := Project.Default_Iterator;
       Filter : Project.Filter_Control   := Project.Default_Filter;
       Status : Project.Status_Control   := Project.Default_Status)
-      return Project_Iterator.Forward_Iterator'Class
-     with Pre => Self.Is_Defined;
+      return Project_Iterator.Forward_Iterator'Class;
    --  Iterates over all project views in the tree given the iterator kind
    --  (only the project with or without imports) and the filter which can be
    --  used to iterate over only some specific projects (only the library
@@ -334,23 +304,20 @@ private package GPR2.Tree_Internal is
    --  Private view of Tree_Db's initialization procedure
 
    function Artifacts_Database
-     (Self : Object) return Build.Tree_Db.Object_Access
-     with Pre => Self.Is_Defined;
+     (Self : Object) return Build.Tree_Db.Object_Access;
 
    function Has_Artifacts_Database
-     (Self : Object) return Boolean
-     with Pre => Self.Is_Defined;
+     (Self : Object) return Boolean;
 
    function Artifacts_Database
      (Self : Object;
       View : GPR2.Project.View.Object) return Build.View_Db.Object
-     with Pre => Self.Is_Defined and then View.Kind in With_Object_Dir_Kind,
-          Inline;
+     with Inline;
 
    function Artifacts_Database
      (Self : Object;
       View : GPR2.View_Ids.View_Id) return Build.View_Db.Object
-     with Pre => Self.Is_Defined, Inline;
+     with Inline;
 
    function Source_Option (Self : Object) return Optional_Source_Info_Option;
    --  Retrieve the level of source information currently requested for
@@ -358,10 +325,7 @@ private package GPR2.Tree_Internal is
 
    procedure Clear_Sources
      (Self : Object;
-      View : Project.View.Object := Project.View.Undefined)
-     with Pre  => Self.Is_Defined,
-          Post => (if not View.Is_Defined
-                   then Self.Source_Option = No_Source);
+      View : Project.View.Object := Project.View.Undefined);
    --  Invalidates the sources for all views in the tree if View is undefined
    --  or the source in the given view otherwise. This is needed when some
    --  sources are added or removed from the view. It is not required to call
@@ -371,8 +335,7 @@ private package GPR2.Tree_Internal is
    procedure Update_Sources
      (Self     : Object;
       Option   : Source_Info_Option := Sources_Units;
-      Messages : out GPR2.Log.Object)
-     with Pre => Self.Is_Defined;
+      Messages : out GPR2.Log.Object);
    --  Ensures that all views' sources are up-to-date.
    --  Option selects the information that will be gathered on the sources. The
    --   more information is requested, the slower is the update operation.
@@ -380,52 +343,42 @@ private package GPR2.Tree_Internal is
 
    procedure Register_Project_Search_Path
      (Self : in out Object;
-      Dir  : Path_Name.Object)
-     with Pre => Dir.Is_Defined;
+      Dir  : Path_Name.Object);
    --  Adds a project search path for this tree
 
-   function Project_Search_Paths (Self : Object) return Path_Name.Set.Object
-     with Pre => Self.Is_Defined;
+   function Project_Search_Paths (Self : Object) return Path_Name.Set.Object;
    --  Returns the Tree project search paths
 
-   function Archive_Suffix (Self : Object) return Filename_Type
-     with Pre => Self.Is_Defined;
+   function Archive_Suffix (Self : Object) return Filename_Type;
    --  Returns archive suffix for the project tree
 
    function Object_Suffix
      (Self     : Object;
-      Language : Language_Id := Ada_Language) return Filename_Type
-     with Pre => Self.Is_Defined;
+      Language : Language_Id := Ada_Language) return Filename_Type;
    --  Returns object suffix for language in project tree
 
    function Dependency_Suffix
      (Self     : Object;
-      Language : Language_Id := Ada_Language) return Filename_Type
-     with Pre => Self.Is_Defined;
+      Language : Language_Id := Ada_Language) return Filename_Type;
    --  Returns dependency suffix for language in project tree
 
-   function Subdirs (Self : Object) return Filename_Optional
-     with Pre => Self.Is_Defined;
+   function Subdirs (Self : Object) return Filename_Optional;
    --  Returns the subdirs parameter <sub> of the project tree such that, for
    --  each project, the actual {executable,object,library} directories are
    --  {<exec>,<obj>,<lib>}/<sub>.
 
-   function Has_Src_Subdirs (Self : Object) return Boolean
-     with Pre => Self.Is_Defined;
+   function Has_Src_Subdirs (Self : Object) return Boolean;
    --  Returns True if the Src_Subdirs has been defined
 
-   function Src_Subdirs (Self : Object) return Filename_Optional
-     with Pre => Self.Is_Defined and then Self.Has_Src_Subdirs;
+   function Src_Subdirs (Self : Object) return Filename_Optional;
    --  Returns the src_subdirs parameter <sub> of the project tree such that,
    --  for each project, the actual source directories list will be prepended
    --  with {object_dir}/<sub>.
 
-   function Build_Path (Self : Object) return Path_Name.Object
-     with Pre => Self.Is_Defined;
+   function Build_Path (Self : Object) return Path_Name.Object;
    --  Path to build tree
 
-   function Root_Path (Self : Object) return Path_Name.Object
-     with Pre => Self.Is_Defined;
+   function Root_Path (Self : Object) return Path_Name.Object;
    --  Path to root to consider for the build tree
 
    function Reference (Self : Object) return access Object;
@@ -433,8 +386,7 @@ private package GPR2.Tree_Internal is
 
    function Find_Project
      (Self      : Object;
-      Base_Name : Simple_Name) return Path_Name.Object
-     with Pre => Self.Is_Defined;
+      Base_Name : Simple_Name) return Path_Name.Object;
    --  Search for the project file named "Base_Name" through the tree's
    --  hierarchy or the project paths. If not found, Path_Name.Undefined is
    --  returned
@@ -457,26 +409,21 @@ private package GPR2.Tree_Internal is
 
    function Target_From_Command_Line
      (Self       : Object;
-      Normalized : Boolean := False) return Name_Type
-     with Pre => Self.Is_Defined;
+      Normalized : Boolean := False) return Name_Type;
    --  Returns the target specified via --target. If not specified, then
    --  return "all";
 
    function Runtime_From_Command_Line
-     (Self : Object; Language : Language_Id) return Optional_Name_Type
-     with Pre => Self.Is_Defined;
+     (Self : Object; Language : Language_Id) return Optional_Name_Type;
    --  Returns the runtime selected for the given language by the command
    --  line via --RTS:lang. Returns No_Name if not specified.
 
-   function Get_KB (Self : Object) return GPR2.KB.Object
-     with Pre => Self.Is_Defined;
+   function Get_KB (Self : Object) return GPR2.KB.Object;
 
    function File_Reader
-     (Self : Object) return GPR2.File_Readers.File_Reader_Reference
-     with Pre => Self.Is_Defined;
+     (Self : Object) return GPR2.File_Readers.File_Reader_Reference;
 
-   function Environment (Self : Object) return GPR2.Environment.Object
-     with Pre => Self.Is_Defined;
+   function Environment (Self : Object) return GPR2.Environment.Object;
    --  Returns used environment.
 
    function Get_View
@@ -486,8 +433,7 @@ private package GPR2.Tree_Internal is
    --  Given a View_Id Id returns the associated view if it exists. Returns
    --  Project.View.Undefined otherwise.
 
-   function Resolve_Links (Self : Object) return Boolean
-     with Pre => Self.Is_Defined;
+   function Resolve_Links (Self : Object) return Boolean;
    --  Returns whether the project should be resolving links
 
 private
@@ -524,14 +470,14 @@ private
    end record;
 
    type All_Search_Paths is record
-      Default   : Path_Name.Set.Object :=
-                    Default_Search_Paths
-                      (True, GPR2.Environment.Process_Environment);
-      Prepended : Path_Name.Set.Object;
-      Appended  : Path_Name.Set.Object;
-      All_Paths : Path_Name.Set.Object :=
-                    Default_Search_Paths
-                      (True, GPR2.Environment.Process_Environment);
+      Default    : Path_Name.Set.Object :=
+                     Default_Search_Paths
+                       (True, GPR2.Environment.Process_Environment);
+      Registered : Path_Name.Set.Object;
+      Appended   : Path_Name.Set.Object;
+      All_Paths  : Path_Name.Set.Object :=
+                     Default_Search_Paths
+                       (True, GPR2.Environment.Process_Environment);
    end record;
 
    type Object is tagged limited record

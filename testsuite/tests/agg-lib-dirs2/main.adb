@@ -14,7 +14,7 @@ procedure Main is
       Ada.Text_IO.Put_Line ("testing " & Project_Name);
       Tree.Unload;
       Opt.Add_Switch (GPR2.Options.P, String (Project_Name));
-      Opt.Finalize;
+
       if not Tree.Load (Opt, Absent_Dir_Error => No_Error) then
          Ada.Text_IO.Put_Line ("Cannot load project");
       else

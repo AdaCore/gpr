@@ -34,14 +34,10 @@ procedure Main is
    Opt : GPR2.Options.Object;
 begin
    Opt.Add_Switch (GPR2.Options.P, "project/prj.gpr");
-   Opt.Finalize;
    Ada.Text_IO.Put_Line ("## Loading WITHOUT symlinks support");
    Test (Opt);
 
-   Opt := GPR2.Options.Empty_Options;
-   Opt.Add_Switch (GPR2.Options.P, "project/prj.gpr");
    Opt.Add_Switch (GPR2.Options.Resolve_Links);
-   Opt.Finalize;
    Ada.Text_IO.Put_Line ("## Loading WITH symlinks support");
    Test (Opt);
 end Main;

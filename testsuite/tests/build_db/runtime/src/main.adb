@@ -53,7 +53,7 @@ begin
    --  project
 
    Options.Add_Switch (GPR2.Options.P, "test.gpr");
-   Options.Finalize;
+
    if Tree.Load (Options, Absent_Dir_Error => No_Error) then
       RTS_Dir := Tree.Runtime_Project.Source_Directories.First_Element;
    end if;
@@ -65,7 +65,7 @@ begin
 
    Options := GPR2.Options.Empty_Options;
    Options.Add_Switch (GPR2.Options.P, "rts/rts.gpr");
-   Options.Finalize;
+
    if Tree.Load (Options, Absent_Dir_Error => No_Error) then
       Tree.Update_Sources (Sources_Units_Artifacts);
 

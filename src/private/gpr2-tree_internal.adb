@@ -112,10 +112,6 @@ package body GPR2.Tree_Internal is
      with Pre => Conf.Is_Defined;
    --  Update project search path with directories relevant to
 
-   procedure Prepend_Search_Paths
-     (Self : in out Object; Dir : GPR2.Path_Name.Object)
-     with Pre => Dir.Is_Defined;
-
    procedure Append_Search_Paths
      (Self : in out Object; Dir : GPR2.Path_Name.Object)
      with Pre => Dir.Is_Defined;
@@ -426,15 +422,6 @@ package body GPR2.Tree_Internal is
    begin
       return Project_View_Store.Has_Element (Position.Current);
    end Has_Element;
-
-   ------------------
-   -- Has_Messages --
-   ------------------
-
-   function Has_Messages (Self : Object) return Boolean is
-   begin
-      return not Self.Messages.Is_Empty;
-   end Has_Messages;
 
    -------------------------
    -- Has_Runtime_Project --
@@ -1131,17 +1118,6 @@ package body GPR2.Tree_Internal is
 
       return Result;
    end Ordered_Views;
-
-   --------------------------
-   -- Prepend_Search_Paths --
-   --------------------------
-
-   procedure Prepend_Search_Paths
-     (Self : in out Object; Dir : GPR2.Path_Name.Object) is
-   begin
-      Self.Search_Paths.Prepended.Prepend (Dir);
-      Self.Update_Search_Paths;
-   end Prepend_Search_Paths;
 
    --------------------------
    -- Project_Search_Paths --
@@ -1909,7 +1885,8 @@ package body GPR2.Tree_Internal is
    procedure Register_Project_Search_Path
      (Self : in out Object; Dir : Path_Name.Object) is
    begin
-      Prepend_Search_Paths (Self, Dir);
+      Self.Search_Paths.Registered.Prepend (Dir);
+      Self.Update_Search_Paths;
    end Register_Project_Search_Path;
 
    -------------------
@@ -3146,6 +3123,9 @@ package body GPR2.Tree_Internal is
          Self.Environment  := Undefined.Environment;
          Self.Search_Paths := Undefined.Search_Paths;
          Self.Base         := Undefined.Base;
+      else
+         Self.Search_Paths.Appended.Clear;
+         Self.Update_Search_Paths;
       end if;
 
       Self.Self             := Undefined.Self;
@@ -3391,7 +3371,7 @@ package body GPR2.Tree_Internal is
 
    procedure Update_Search_Paths (Self : in out Object) is
    begin
-      Self.Search_Paths.All_Paths := Self.Search_Paths.Prepended;
+      Self.Search_Paths.All_Paths := Self.Search_Paths.Registered;
 
       for P of Self.Search_Paths.Default loop
          Self.Search_Paths.All_Paths.Append (P);

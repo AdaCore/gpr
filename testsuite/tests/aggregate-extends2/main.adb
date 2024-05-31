@@ -158,7 +158,7 @@ procedure Main is
 
 begin
    Opt.Add_Switch (Options.P, "agg.gpr");
-   Opt.Finalize;
+
    if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
       Display (Prj.Root_Project);
    end if;

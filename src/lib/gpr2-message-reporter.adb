@@ -68,4 +68,13 @@ package body GPR2.Message.Reporter is
          Message.Format (Self.Full_Path, Self.Level_Fmt));
    end Report;
 
+   overriding procedure Report
+     (Self     : Text_Reporter;
+      Message  : String)
+   is
+      use Ada.Text_IO;
+   begin
+      Put_Line (Current_Output, Message);
+   end Report;
+
 end GPR2.Message.Reporter;

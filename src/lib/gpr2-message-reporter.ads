@@ -21,6 +21,12 @@ package GPR2.Message.Reporter is
    procedure Report (Self : Object; Message : GPR2.Message.Object) is abstract;
    --  Used to report Message, to be implemnted by the reporter.
 
+   procedure Report
+     (Self     : Object;
+      Message  : String) is abstract;
+   --  Used to report information messages as string, such as usage if
+   --  implicit projects or generation of config files.
+
    procedure Register_Reporter (Instance : Object'Class)
      with Post => Active_Reporter = Instance;
    --  Use a specific reporter "Instance" instead of the default console
@@ -44,5 +50,9 @@ private
    overriding procedure Report
      (Self    : Text_Reporter;
       Message : GPR2.Message.Object);
+
+   overriding procedure Report
+     (Self     : Text_Reporter;
+      Message  : String);
 
 end GPR2.Message.Reporter;

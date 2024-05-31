@@ -63,7 +63,6 @@ begin
 
    Text_IO.Put_Line ("//// OS set to Linux");
    Opt.Add_Switch (Options.X, "OS=Linux");
-   Opt.Finalize;
 
    if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
       for P of Prj loop

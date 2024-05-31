@@ -54,7 +54,6 @@ procedure Main is
       Ada.Text_IO.Put_Line ("loading " & Project_Name);
       Tree.Unload;
       Opt.Add_Switch (GPR2.Options.P, String (Project_Name));
-      Opt.Finalize;
       Dead := Tree.Load (Opt, Absent_Dir_Error => No_Error);
    end Load;
 

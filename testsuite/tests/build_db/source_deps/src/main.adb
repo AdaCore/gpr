@@ -17,7 +17,7 @@ procedure Main is
 begin
 
    Options.Add_Switch (GPR2.Options.P, "tree/agg.gpr");
-   Options.Finalize;
+
    if not Tree.Load (Options, True, No_Error) then
       return;
    end if;
