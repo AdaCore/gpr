@@ -53,9 +53,10 @@ procedure Main is
    end Check_Messages;
 
 begin
+   GPR2.Project.Tree.Verbosity := Project.Tree.Quiet;
 
    Opt.Add_Switch (Options.P, "prj.gpr");
-   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error, Verbosity => Project.Tree.Quiet) then
+   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error) then
       Check_Messages;
    end if;
    Project_Tree.Unload;
@@ -63,7 +64,7 @@ begin
    Opt := Options.Empty_Options;
    Opt.Add_Switch (Options.P, "prj.gpr");
    Opt.Add_Switch (Options.X, "TC_NAME=toto");
-   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error, Verbosity => Project.Tree.Quiet) then
+   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error) then
       Check_Messages (Name => True);
    end if;
    Project_Tree.Unload;
@@ -71,7 +72,7 @@ begin
    Opt := Options.Empty_Options;
    Opt.Add_Switch (Options.P, "prj.gpr");
    Opt.Add_Switch (Options.X, "TC_PATH=toto");
-   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error, Verbosity => Project.Tree.Quiet) then
+   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error) then
       Check_Messages (Path => True);
    end if;
    Project_Tree.Unload;
@@ -79,7 +80,7 @@ begin
    Opt := Options.Empty_Options;
    Opt.Add_Switch (Options.P, "prj.gpr");
    Opt.Add_Switch (Options.X, "TC_VERSION=toto");
-   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error, Verbosity => Project.Tree.Quiet) then
+   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error) then
       Check_Messages (Version => True);
    end if;
    Project_Tree.Unload;
@@ -89,7 +90,7 @@ begin
    Opt.Add_Switch (Options.X, "TC_NAME=toto");
    Opt.Add_Switch (Options.X, "TC_PATH=toto");
    Opt.Add_Switch (Options.X, "TC_VERSION=toto");
-   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error, Verbosity => Project.Tree.Quiet) then
+   if Project_Tree.Load (Opt, Absent_Dir_Error => No_Error) then
       Check_Messages (True, True, True);
    end if;
    Project_Tree.Unload;

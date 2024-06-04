@@ -31,6 +31,27 @@ package GPR2.Project.Tree is
 
    use type GPR2.Context.Object;
 
+   type Verbosity_Level is
+     (Quiet,
+      Minimal,
+      Errors,
+      Warnings_And_Errors,
+      Info,
+      Linter);
+   --  Quiet: do not display anything
+   --  Minimal: display only messages concerning new files or directories
+   --  Warnings_And_Errors: in case the configuration or tree logs contain
+   --    warnings or errors, display them
+   --  Info: also display informational messages
+   --  Linter: also display gpr linter messages
+
+   Verbosity : Verbosity_Level := Warnings_And_Errors;
+   --  Indicates the global verbosity expected by the user of this library.
+   --  Logs will be displayed only if the verbosity level is verbose enough
+   --  according to the message level (see GPR2.Message).
+   --  The active message reporter is used to report such message, that will
+   --  be displayed on the console by default (see GPR2.Message.Reporter).
+
    type Object is tagged private
      with Constant_Indexing => Constant_Reference,
           Default_Iterator  => Iterate,
@@ -71,25 +92,16 @@ package GPR2.Project.Tree is
    --  from the actual set of languages used in project tree. Empty set of
    --  languages means regular auto-configuration with no reductions.
 
-   type Verbosity_Level is (Quiet, Minimal, Warnings_And_Errors, Info, Linter);
-   --  Quiet: do not display anything
-   --  Minimal: display only messages concerning new files or directories
-   --  Warnings_And_Errors: in case the configuration or tree logs contain
-   --    warnings or errors, display them
-   --  Info: also display informational messages
-   --  Linter: also display gpr linter messages
-
    function Load
      (Self                   : in out Object;
-      Options                : in out GPR2.Options.Object'Class;
+      Options                : GPR2.Options.Object'Class;
       With_Runtime           : Boolean := False;
       Absent_Dir_Error       : GPR2.Error_Level := GPR2.Warning;
       Allow_Implicit_Project : Boolean := True;
       Environment            : GPR2.Environment.Object :=
                                  GPR2.Environment.Process_Environment;
       File_Reader            : GPR2.File_Readers.File_Reader_Reference :=
-                                 GPR2.File_Readers.No_File_Reader_Reference;
-      Verbosity              : Verbosity_Level := Warnings_And_Errors)
+                                 GPR2.File_Readers.No_File_Reader_Reference)
       return Boolean;
    --  Load a project tree using configured options.
    --  If successful, Tree contains loaded project tree.
@@ -100,7 +112,10 @@ package GPR2.Project.Tree is
    --   the sources.
    --  Absent_Dir_Error: whether a missing directory should be treated as an
    --   error or a warning.
-   --  If Quiet is true no output is printed.
+   --  Environment allows passing explictely environment variables to the
+   --   tree.
+   --  Verbosiuty indicates the level of messages that can be displayed
+   --   to the active mexsage reporter (by default the console).
 
    procedure Unload (Self : in out Object);
    --  Clears the internal structure of the Object
@@ -278,6 +293,14 @@ package GPR2.Project.Tree is
    --  Ensures that all views' sources are up-to-date.
    --  Option selects the information that will be gathered on the sources. The
    --   more information is requested, the slower is the update operation.
+
+   procedure Update_Sources
+     (Self     : Object;
+      Messages : out GPR2.Log.Object;
+      Option   : Source_Info_Option := Sources_Units)
+     with Pre => Self.Is_Defined;
+   --  Same as above and returns the messages generated during the load
+   --  operation.
 
    function Project_Search_Paths (Self : Object) return Path_Name.Set.Object
      with Pre => Self.Is_Defined;

@@ -372,11 +372,13 @@ package body GPRtools.Options is
       Tree   : GPR2.Project.Tree.Object := Opt.Tree;
 
    begin
+      GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Minimal;
+      --  Handle manually the logs for the GPR tools
+
       Loaded := Tree.Load
         (Opt,
          Absent_Dir_Error       => Absent_Dir_Error,
-         Allow_Implicit_Project => Opt.Find_Implicit_Project,
-         Verbosity              => GPR2.Project.Tree.Minimal);
+         Allow_Implicit_Project => Opt.Find_Implicit_Project);
       Opt.Tree := Tree;
 
       if Handle_Errors then

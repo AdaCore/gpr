@@ -175,13 +175,14 @@ procedure test is
       begin
          Ada.Directories.Set_Directory (Current_Directory);
          Put_Line ("Testing Finalize no arguments at " & Ada.Directories.Current_Directory
-                  & " with Allow_Implicit_Project=" & Allow_Implicit_Project'Image );
+                   & " with Allow_Implicit_Project=" & Allow_Implicit_Project'Image );
+         GPR2.Project.Tree.Verbosity :=
+           (if Quiet then GPR2.Project.Tree.Quiet
+            else GPR2.Project.Tree.Minimal);
          Options := GPR2.Options.Empty_Options;
          Res := Tree.Load
            (Options,
-            Allow_Implicit_Project => Allow_Implicit_Project,
-            Verbosity              => (if Quiet then GPR2.Project.Tree.Quiet
-                                       else GPR2.Project.Tree.Minimal));
+            Allow_Implicit_Project => Allow_Implicit_Project);
          Print_Paths;
          Print_Test_OK;
       exception
@@ -223,10 +224,12 @@ procedure test is
       Test ("../no-gpr");
       Test ("../..", Allow_Implicit_Project => False);
 
+      GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Quiet;
+
       Put_Line ("Testing Finalize -Ptest");
       Options := GPR2.Options.Empty_Options;
       Options.Add_Switch (GPR2.Options.P, "test");
-      Res := Tree.Load (Options, Verbosity => GPR2.Project.Tree.Quiet);
+      Res := Tree.Load (Options);
       Print_Paths;
       Print_Test_OK;
 
@@ -234,7 +237,7 @@ procedure test is
       Options := GPR2.Options.Empty_Options;
       Options.Add_Switch (GPR2.Options.P, "test");
       Options.Add_Switch (GPR2.Options.Relocate_Build_Tree, "relocated");
-      Res := Tree.Load (Options, Verbosity => GPR2.Project.Tree.Quiet);
+      Res := Tree.Load (Options);
       Print_Paths;
       Print_Test_OK;
 
@@ -242,7 +245,7 @@ procedure test is
       Options := GPR2.Options.Empty_Options;
       Options.Add_Switch (GPR2.Options.No_Project);
       Options.Add_Switch (GPR2.Options.Relocate_Build_Tree, "relocated");
-      Res := Tree.Load (Options, Verbosity => GPR2.Project.Tree.Quiet);
+      Res := Tree.Load (Options);
       Print_Paths;
       Print_Test_OK;
 
@@ -251,7 +254,7 @@ procedure test is
       Options.Add_Switch (GPR2.Options.No_Project);
       Options.Add_Switch (GPR2.Options.Relocate_Build_Tree, "relocated");
       Options.Add_Switch (GPR2.Options.Root_Dir, Ada.Directories.Current_Directory & ".");
-      Res := Tree.Load (Options, Verbosity => GPR2.Project.Tree.Quiet);
+      Res := Tree.Load (Options);
       Print_Paths;
       Print_Test_OK;
    end Test_Finalize;
@@ -272,12 +275,13 @@ procedure test is
          Loaded : Boolean;
 
       begin
+         GPR2.Project.Tree.Verbosity := Verbosity;
+
          Put_Line ("Testing Load Project " & Name);
          Loaded := Tree.Load
                      (Options,
                       Absent_Dir_Error => Absent_Dir_Error,
-                      File_Reader      => File_Reader,
-                      Verbosity        => Verbosity);
+                      File_Reader      => File_Reader);
          Put_Line ("Load_Project returned " & Loaded'Image);
 
          if Tree.Log_Messages.Has_Error then

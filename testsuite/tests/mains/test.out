@@ -10,8 +10,8 @@ src/call2.adb
 list of executables:
 ./call2
   src/call2.adb
-Demo3    K_STANDARD
 demo3.gpr:3:20: warning: exec directory "exec" not found
+Demo3    K_STANDARD
 demo3.gpr:4:17: warning: not_found.adb is not a source of project Demo3
 list of mains:
 src/call3_2.adb
@@ -19,8 +19,8 @@ list of executables:
 exec/not_found
 exec/call3_2
   src/call3_2.adb
-Demo4    K_STANDARD
 demo4.gpr:3:20: warning: exec directory "exec4" not found
+Demo4    K_STANDARD
 demo4.gpr:4:17: warning: not_found.adb is not a source of project Demo4
 list of mains:
 list of executables:

@@ -53,7 +53,7 @@ begin
       begin
          Opt.Add_Switch (Options.P, Prj_File);
 
-         if Tree.Load (Opt, Verbosity => Project.Tree.Quiet) then
+         if Tree.Load (Opt) then
             Text_IO.Put (String (Tree.Root_Project.Name) & " ");
             Text_IO.Set_Col (10);
             Text_IO.Put_Line (Tree.Root_Project.Qualifier'Img);

@@ -27,6 +27,8 @@ package body GPR2.Project.Tree is
    function Check_For_Default_Project
      (Directory : String := "") return GPR2.Path_Name.Object;
 
+   procedure Report_Messages (Log : GPR2.Log.Object);
+
    ------------
    -- Adjust --
    ------------
@@ -138,19 +140,17 @@ package body GPR2.Project.Tree is
 
    function Load
      (Self                   : in out Object;
-      Options                : in out GPR2.Options.Object'Class;
+      Options                : GPR2.Options.Object'Class;
       With_Runtime           : Boolean := False;
       Absent_Dir_Error       : GPR2.Error_Level := GPR2.Warning;
       Allow_Implicit_Project : Boolean := True;
       Environment            : GPR2.Environment.Object :=
                                  GPR2.Environment.Process_Environment;
       File_Reader            : GPR2.File_Readers.File_Reader_Reference :=
-                                 GPR2.File_Readers.No_File_Reader_Reference;
-      Verbosity              : Verbosity_Level := Warnings_And_Errors)
+                                 GPR2.File_Readers.No_File_Reader_Reference)
       return Boolean
    is
       Conf         : GPR2.Project.Configuration.Object;
-      Create_Cgpr  : Boolean := False;
       Project_File : GPR2.Path_Name.Object := Options.Project_File;
 
    begin
@@ -234,27 +234,6 @@ package body GPR2.Project.Tree is
       then
          Conf := GPR2.Project.Configuration.Load (Options.Config_Project);
 
-         if Conf.Has_Error then
-            if Verbosity >= Warnings_And_Errors then
-               Conf.Log_Messages.Output_Messages
-                 (Information => False,
-                  Warning     => False);
-            end if;
-
-            return False;
-         end if;
-
-         case Verbosity is
-            when Quiet | Minimal =>
-               null;
-
-            when Warnings_And_Errors =>
-               Conf.Log_Messages.Output_Messages (Information => False);
-
-            when Info | Linter =>
-               Conf.Log_Messages.Output_Messages;
-         end case;
-
          Self.Tree.Load
            (Filename         => Project_File,
             Context          => Options.Context,
@@ -316,28 +295,13 @@ package body GPR2.Project.Tree is
             end;
          end if;
 
-         case Verbosity is
-            when Quiet | Minimal =>
-               null;
-
-            when Warnings_And_Errors =>
-               Self.Tree.Log_Messages.Output_Messages (Information => False);
-
-            when Info =>
-               Self.Tree.Log_Messages.Output_Messages;
-
-            when Linter =>
-               Self.Tree.Log_Messages.Output_Messages (Lint => True);
-         end case;
+         Report_Messages (Self.Tree.Log_Messages.all);
 
       else
-         if Options.Config_Project.Is_Defined then
-            if Verbosity > Quiet then
-               Ada.Text_IO.Put_Line
-                 ("creating configuration project " &
-                    String (Options.Config_Project.Name));
-            end if;
-            Create_Cgpr := True;
+         if Options.Config_Project.Is_Defined and then Verbosity > Quiet then
+            Ada.Text_IO.Put_Line
+              ("creating configuration project " &
+                 String (Options.Config_Project.Name));
          end if;
 
          Self.Tree.Load_Autoconf
@@ -355,42 +319,20 @@ package body GPR2.Project.Tree is
             Target            => Options.Target,
             Language_Runtimes => Options.RTS_Map,
             Base              => Options.Base (Environment),
-            Config_Project    => (if Create_Cgpr
-                                  then Options.Config_Project
-                                  else GPR2.Path_Name.Undefined),
+            Config_Project    => Options.Config_Project,
             File_Reader       => File_Reader,
             Environment       => Environment);
 
-         case Verbosity is
-            when Quiet | Minimal =>
-               null;
-
-            when Warnings_And_Errors =>
-               Self.Tree.Log_Messages.Output_Messages (Information => False);
-
-            when Info =>
-               Self.Tree.Log_Messages.Output_Messages;
-
-            when Linter =>
-               Self.Tree.Log_Messages.Output_Messages (Lint => True);
-         end case;
+         Report_Messages (Self.Tree.Log_Messages.all);
       end if;
 
       return True;
    exception
       when GPR2.Project_Error =>
-         if Verbosity >= Warnings_And_Errors then
-            if Self.Tree.Has_Configuration
-              and then Self.Tree.Configuration.Has_Error
-            then
-               Self.Tree.Configuration.Log_Messages.Output_Messages
-                 (Information => False,
-                  Warning     => False);
-            else
-               Self.Tree.Log_Messages.Output_Messages
-                 (Information => False,
-                  Warning     => False);
-            end if;
+         if Verbosity >= Errors then
+            Self.Tree.Log_Messages.Output_Messages
+              (Information => False,
+               Warning     => False);
          end if;
 
          return False;
@@ -410,6 +352,31 @@ package body GPR2.Project.Tree is
 
       Self.Tree.Register_Project_Search_Path (Dir => Dir);
    end Register_Project_Search_Path;
+
+   ---------------------
+   -- Report_Messages --
+   ---------------------
+
+   procedure Report_Messages (Log : GPR2.Log.Object) is
+   begin
+      case Verbosity is
+         when Quiet | Minimal =>
+            null;
+
+         when Errors =>
+            Log.Output_Messages (Information => False,
+                                 Warning     => False);
+
+         when Warnings_And_Errors =>
+            Log.Output_Messages (Information => False);
+
+         when Info =>
+            Log.Output_Messages;
+
+         when Linter =>
+            Log.Output_Messages (Lint => True);
+      end case;
+   end Report_Messages;
 
    ------------------------------------
    -- Restrict_Autoconf_To_Languages --
@@ -455,16 +422,20 @@ package body GPR2.Project.Tree is
       return Boolean
    is
    begin
+      Self.Tree.Log_Messages.Clear;
       Self.Tree.Set_Context (Context, Changed);
-      Self.Log_Messages.Output_Messages (Information => False);
+      Report_Messages (Self.Tree.Log_Messages.all);
 
       return True;
 
    exception
       when Project_Error =>
-         Self.Log_Messages.Output_Messages
-           (Information => False,
-            Warning     => False);
+         if Verbosity >= Errors then
+            Self.Log_Messages.Output_Messages
+              (Information => False,
+               Warning     => False);
+         end if;
+
          return False;
    end Set_Context;
 
@@ -485,12 +456,22 @@ package body GPR2.Project.Tree is
    --------------------
 
    procedure Update_Sources
-     (Self     :     Object; Option : Source_Info_Option := Sources_Units)
+     (Self     : Object;
+      Messages : out GPR2.Log.Object;
+      Option   : Source_Info_Option := Sources_Units)
+   is
+   begin
+      Self.Tree.Update_Sources (Option => Option, Messages => Messages);
+      Report_Messages (Messages);
+   end Update_Sources;
+
+   procedure Update_Sources
+     (Self     : Object;
+      Option   : Source_Info_Option := Sources_Units)
    is
       Log : GPR2.Log.Object;
    begin
-      Self.Tree.Update_Sources (Option => Option, Messages => Log);
-      Log.Output_Messages;
+      Self.Update_Sources (Log, Option);
    end Update_Sources;
 
 begin
