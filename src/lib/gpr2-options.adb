@@ -4,17 +4,11 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Directories;
 with Ada.Strings.Fixed;
-with Ada.Text_IO;
 
 with GNAT.OS_Lib;
 
-with GPR2.Message;
-with GPR2.Project.Attribute;
-with GPR2.Project.Configuration;
 with GPR2.Project.Registry;
-with GPR2.Project.Registry.Attribute;
 
 package body GPR2.Options is
 
@@ -81,10 +75,18 @@ package body GPR2.Options is
 
          when P =>
             if not Self.Project_File.Is_Defined then
-               Self.Project_File :=
-                 GPR2.Path_Name.Create_File
-                   (GPR2.Project.Ensure_Extension (GPR2.Filename_Type (Param)),
-                    GPR2.Path_Name.No_Resolution);
+               if GNAT.OS_Lib.Is_Directory (Param) then
+                  Self.Project_File :=
+                    GPR2.Path_Name.Create_Directory
+                      (GPR2.Filename_Type (Param),
+                        GPR2.Path_Name.No_Resolution);
+               else
+                  Self.Project_File :=
+                    GPR2.Path_Name.Create_File
+                      (GPR2.Project.Ensure_Extension
+                         (GPR2.Filename_Type (Param)),
+                       GPR2.Path_Name.No_Resolution);
+               end if;
             else
                if Self.Prj_Got_On_Extra_Arg then
                   raise GPR2.Options.Usage_Error with
@@ -155,270 +157,6 @@ package body GPR2.Options is
       end case;
    end Add_Switch;
 
-   -------------------------------
-   -- Check_For_Default_Project --
-   -------------------------------
-
-   function Check_For_Default_Project
-     (Directory : String := "") return GPR2.Path_Name.Object
-   is
-      use Directories;
-      Default_Name : constant String :=
-                       (if Directory = ""
-                        then "default.gpr"
-                       else Directory
-                        & GNAT.OS_Lib.Directory_Separator
-                        & "default.gpr");
-      Search       : Search_Type;
-      Item         : Directory_Entry_Type;
-
-   begin
-      if Exists (Default_Name)
-        and then Kind (Default_Name) = Ordinary_File
-      then
-         return Path_Name.Create_File (Filename_Type (Default_Name));
-      end if;
-
-      Start_Search
-        (Search,
-         (if Directory = "" then "." else Directory),
-         "*.gpr",
-         (Ordinary_File => True, others => False));
-
-      if More_Entries (Search) then
-         Get_Next_Entry (Search, Item);
-
-         if not More_Entries (Search) then
-            --  Only one project in current directory can be default one
-
-            return Path_Name.Create_File (Filename_Type (Full_Name (Item)));
-         end if;
-      end if;
-
-      return Path_Name.Undefined;
-   end Check_For_Default_Project;
-
-   --------------
-   -- Finalize --
-   --------------
-
-   procedure Finalize
-     (Self                   : in out Object;
-      Allow_Implicit_Project : Boolean := True;
-      Quiet                  : Boolean := False;
-      Environment            : GPR2.Environment.Object :=
-                                 GPR2.Environment.Process_Environment) is
-   begin
-      Self.Environment := Environment;
-
-      if Self.Project_File.Is_Defined
-        and then not Self.Project_File.Has_Dir_Name
-        and then Self.Root_Path.Is_Defined
-      then
-         --  We have to resolve the project directory without target specific
-         --  directories in search path because --root-dir exists in command
-         --  line parameters.
-
-         declare
-            Search_Paths : Path_Name.Set.Object :=
-                             GPR2.Project.Default_Search_Paths
-                               (True, Self.Environment);
-         begin
-            for P of Self.Search_Paths loop
-               Search_Paths.Prepend (P);
-            end loop;
-
-            Self.Project_File := GPR2.Project.Create
-              (Self.Project_File.Name, Self.Resolve_Links, Search_Paths);
-         end;
-      end if;
-
-      Self.Project_Is_Defined := Self.Project_File.Is_Defined;
-
-      if not Self.Project_File.Is_Defined then
-         if Self.No_Project then
-            Self.Project_Base := GPR2.Path_Name.Create_Directory
-              (GPR2.Filename_Type (Directories.Current_Directory));
-
-         elsif Allow_Implicit_Project then
-            Self.Project_File := Check_For_Default_Project;
-
-            if not Self.Project_File.Is_Defined then
-               Self.Project_Base :=
-                 GPR2.Path_Name.Create_Directory
-                   (GPR2.Filename_Type (Directories.Current_Directory));
-
-               if not Quiet then
-                  Ada.Text_IO.Put_Line
-                    ("use implicit project in " &
-                       Self.Project_Base.String_Value);
-               end if;
-
-            elsif not Quiet then
-               Ada.Text_IO.Put_Line
-                 ("using project file " & Self.Project_File.String_Value);
-            end if;
-         end if;
-
-      elsif Self.No_Project then
-         raise Usage_Error with
-           "cannot specify --no-project with a project file";
-      end if;
-
-      if not Self.Build_Path.Is_Defined
-        and then Self.Root_Path.Is_Defined
-      then
-         raise Usage_Error with
-           "cannot use --root-dir without --relocate-build-tree option";
-      end if;
-
-      Self.Finalized := True;
-   end Finalize;
-
-   ------------------
-   -- Load_Project --
-   ------------------
-
-   function Load_Project
-     (Self             : in out Object;
-      Tree             : in out GPR2.Project.Tree.Object;
-      With_Runtime     : Boolean := False;
-      Absent_Dir_Error : GPR2.Project.Tree.Error_Level :=
-                           GPR2.Project.Tree.Warning;
-      File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference;
-      Quiet            : Boolean := False) return Boolean
-   is
-      Conf        : GPR2.Project.Configuration.Object;
-      Create_Cgpr : Boolean := False;
-
-   begin
-      if Tree.Is_Defined then
-         Tree.Unload;
-      end if;
-
-      Self.Register_Project_Search_Paths (Tree);
-
-      Self.Config_Project_Has_Error := False;
-      Self.Config_Project_Log.Clear;
-
-      if Self.Config_Project.Is_Defined
-        and then
-          (not Self.Create_Missing_Config
-           or else Self.Config_Project.Exists)
-      then
-         Conf := GPR2.Project.Configuration.Load (Self.Config_Project);
-
-         Self.Config_Project_Log := Conf.Log_Messages;
-
-         if Conf.Has_Error then
-            Self.Config_Project_Has_Error := True;
-            return False;
-         end if;
-
-         Tree.Load
-           (Filename         => Self.Filename,
-            Context          => Self.Context,
-            With_Runtime     => With_Runtime,
-            Config           => Conf,
-            Build_Path       => Self.Build_Path,
-            Root_Path        => Self.Root_Path,
-            Subdirs          => Subdirs (Self),
-            Src_Subdirs      => Src_Subdirs (Self),
-            Check_Shared_Lib => Self.Check_Shared_Lib,
-            Absent_Dir_Error => Absent_Dir_Error,
-            Implicit_With    => Self.Implicit_With,
-            Resolve_Links    => Self.Resolve_Links,
-            File_Reader      => File_Reader,
-            Environment      => Self.Environment);
-
-
-         if To_String (Self.Target) /= "all" then
-            --  if target is defined on the command line, and a config
-            --  file is specified, issue an error if the target of the config
-            --  is different from the command line.
-
-            declare
-               package PRA renames GPR2.Project.Registry.Attribute;
-
-               Target_Attr : constant GPR2.Project.Attribute.Object :=
-                               Tree.Configuration.Corresponding_View.
-                                 Attribute (PRA.Target);
-               Conf_Target : constant Value_Type := Target_Attr.Value.Text;
-               Base        : constant GPR2.KB.Object :=
-                               (if Tree.Get_KB.Is_Defined
-                                then Tree.Get_KB
-                                else GPR2.KB.Create_Default
-                                  (GPR2.KB.Targetset_Only_Flags,
-                                   Self.Environment));
-               Conf_Norm   : constant Name_Type :=
-                               Base.Normalized_Target
-                                 (Name_Type (Conf_Target));
-               Self_Norm   : constant Name_Type :=
-                               Base.Normalized_Target
-                                  (Name_Type (To_String (Self.Target)));
-            begin
-               if Conf_Norm /= Self_Norm then
-                  Tree.Log_Messages.Append
-                    (GPR2.Message.Create
-                       (Level   =>  GPR2.Message.Error,
-                        Message =>  "--target: '" &
-                          To_String (Self.Target) &
-                          "' is different from the target value in the" &
-                          " configuration project '" &
-                          String (Conf_Norm) & "'",
-                        Sloc    => Target_Attr.Value));
-               else
-                  Tree.Log_Messages.Append
-                    (GPR2.Message.Create
-                       (Level   =>  GPR2.Message.Warning,
-                        Message =>  "--target is not used when a " &
-                          "configuration project is specified.",
-                        Sloc    => Target_Attr.Value));
-               end if;
-            end;
-         end if;
-
-      else
-         if Self.Create_Missing_Config
-           and then not Self.Config_Project.Exists
-         then
-            if not Quiet then
-               Text_IO.Put_Line
-                 ("creating configuration project " &
-                    String (Self.Config_Project.Name));
-            end if;
-            Create_Cgpr := True;
-         end if;
-
-         Tree.Load_Autoconf
-           (Filename          => Self.Filename,
-            Context           => Self.Context,
-            With_Runtime      => With_Runtime,
-            Build_Path        => Self.Build_Path,
-            Root_Path         => Self.Root_Path,
-            Subdirs           => Subdirs (Self),
-            Src_Subdirs       => Src_Subdirs (Self),
-            Check_Shared_Lib  => Self.Check_Shared_Lib,
-            Absent_Dir_Error  => Absent_Dir_Error,
-            Implicit_With     => Self.Implicit_With,
-            Resolve_Links     => Self.Resolve_Links,
-            Target            => Target (Self),
-            Language_Runtimes => Self.RTS_Map,
-            Base              => Self.Base,
-            Config_Project    => (if Create_Cgpr
-                                  then Self.Config_Project
-                                  else GPR2.Path_Name.Undefined),
-            File_Reader       => File_Reader,
-            Environment       => Self.Environment);
-      end if;
-
-      return True;
-   exception
-      when GPR2.Project_Error | GPR2.Processing_Error =>
-         return False;
-   end Load_Project;
-
    ------------------
    -- On_Extra_Arg --
    ------------------
@@ -466,18 +204,5 @@ package body GPR2.Options is
          GNAT.OS_Lib.OS_Exit (0);
       end if;
    end Print_GPR_Registry;
-
-   -----------------------------------
-   -- Register_Project_Search_Paths --
-   -----------------------------------
-
-   procedure Register_Project_Search_Paths
-     (Self : Object;
-      Tree : in out GPR2.Project.Tree.Object) is
-   begin
-      for Path of Self.Search_Paths loop
-         Tree.Register_Project_Search_Path (Path);
-      end loop;
-   end Register_Project_Search_Paths;
 
 end GPR2.Options;

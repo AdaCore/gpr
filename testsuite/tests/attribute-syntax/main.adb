@@ -1,8 +1,6 @@
 with Ada.Text_IO;
 
-with GPR2.Context;
-with GPR2.Log;
-with GPR2.Path_Name;
+with GPR2.Options;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
 
@@ -10,24 +8,14 @@ procedure Main is
    use GPR2;
    package PRP renames GPR2.Project.Registry.Pack;
 
-   Tree         : GPR2.Project.Tree.Object;
-   Context      : GPR2.Context.Object;
-
-   procedure Test (Project_Name : GPR2.Filename_Type);
-
-   procedure Test (Project_Name : GPR2.Filename_Type) is
+   procedure Test (Project_Name : String) is
+      Tree : GPR2.Project.Tree.Object;
+      Opt  : Options.Object;
+      Res  : Boolean;
    begin
-      Ada.Text_IO.Put_Line ("testing " & String (Project_Name));
-      Tree.Unload;
-      Tree.Load_Autoconf
-        (Filename => GPR2.Path_Name.Create_File
-           (GPR2.Project.Ensure_Extension (Project_Name),
-            GPR2.Path_Name.No_Resolution),
-         Context  => Context);
-      Tree.Log_Messages.Output_Messages (Information => False);
-   exception
-      when Project_Error =>
-         Tree.Log_Messages.Output_Messages (Information => False);
+      Ada.Text_IO.Put_Line ("testing " & Project_Name);
+      Opt.Add_Switch (Options.P, Project_Name);
+      Res := Tree.Load (Opt, Absent_Dir_Error => No_Error);
    end Test;
 
 begin

@@ -214,7 +214,7 @@ exception
          Message                   => Exception_Message (E));
       return To_Exit_Status (E_Fatal);
 
-   when E : Project_Error | Processing_Error =>
+   when E : Project_Error =>
       Handle_Program_Termination
         (Opt                   => Options,
          Display_Tree_Messages => True,

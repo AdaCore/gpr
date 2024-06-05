@@ -84,12 +84,12 @@ package GPR2_GNATCOLL_Projects is
       Output_Information : Boolean := False);
    --  print Log content
 
-   function Get_Target
-     (Tree : GPR2.Project.Tree.Object) return String
-   is
-     (if Tree.Add_Tool_Prefix ("x") = "x"
-      then ""
-      else String (Tree.Target));
+   --  function Get_Target
+   --    (Tree : GPR2.Project.Tree.Object) return String
+   --  is
+   --    (if Tree.Add_Tool_Prefix ("x") = "x"
+   --     then ""
+   --     else String (Tree.Target));
    --  GNATCOLL.Projects.Get_Target conversion
 
 end GPR2_GNATCOLL_Projects;

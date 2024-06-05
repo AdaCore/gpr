@@ -8,7 +8,7 @@ with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Variable.Set;
-with GPR2.Context;
+with GPR2.Options;
 
 procedure Main is
 
@@ -123,10 +123,11 @@ procedure Main is
    end Display;
 
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Opt : GPR2.Options.Object;
 
 begin
-   Project.Tree.Load_Autoconf (Prj, Create ("demo.gpr"), Ctx);
-
-   Display (Prj.Root_Project);
+   Opt.Add_Switch (Options.P, "demo.gpr");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
+   end if;
 end Main;

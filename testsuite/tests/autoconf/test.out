@@ -6,6 +6,7 @@ language: Ada
 language: C
 - compiler driver = x86_64-wrs-vxworks7-gcc
 
+a.gpr:5:04: warning: target attribute '(host)' not used, overridden by the configuration's target: x86_64-wrs-vxworks7
 target = x86_64-wrs-vxworks7
 canonical_target = x86_64-vx7
 language: Ada

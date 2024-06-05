@@ -7,7 +7,6 @@ with GNATCOLL.OS.FSUtil;
 
 with GPR2.Build.Compilation_Unit;
 with GPR2.Containers;
-with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Options;
@@ -18,7 +17,6 @@ procedure Main is
    use type GPR2.View_Ids.View_Id;
 
    Tree     : GPR2.Project.Tree.Object;
-   Log      : GPR2.Log.Object;
    Options  : GPR2.Options.Object;
    Result   : Boolean;
    RTS_Dir  : GPR2.Path_Name.Object;
@@ -55,11 +53,10 @@ begin
    --  project
 
    Options.Add_Switch (GPR2.Options.P, "test.gpr");
-   Options.Finalize;
-   Result := Options.Load_Project
-     (Tree,
-      Absent_Dir_Error => GPR2.Project.Tree.No_Error);
-   RTS_Dir := Tree.Runtime_Project.Source_Directories.First_Element;
+
+   if Tree.Load (Options, Absent_Dir_Error => No_Error) then
+      RTS_Dir := Tree.Runtime_Project.Source_Directories.First_Element;
+   end if;
    Tree.Unload;
 
    GNATCOLL.OS.Dir.Walk
@@ -68,31 +65,26 @@ begin
 
    Options := GPR2.Options.Empty_Options;
    Options.Add_Switch (GPR2.Options.P, "rts/rts.gpr");
-   Options.Finalize;
-   Result := Options.Load_Project
-     (Tree,
-      Absent_Dir_Error => GPR2.Project.Tree.No_Error);
-   Tree.Log_Messages.Output_Messages (Information => False);
 
-   Tree.Update_Sources (Sources_Units_Artifacts, Log);
-   Log.Output_Messages;
+   if Tree.Load (Options, Absent_Dir_Error => No_Error) then
+      Tree.Update_Sources (Sources_Units_Artifacts);
 
-   declare
-      RTS_Unit : constant String := "Ada.Streams";
-      CU       : constant GPR2.Build.Compilation_Unit.Object :=
-                   Tree.Root_Project.Unit (Name_Type (RTS_Unit));
-   begin
-      if not CU.Is_Defined then
-         Ada.Text_IO.Put_Line ("Could not find unit " & RTS_Unit);
-      else
-         Ada.Text_IO.Put_Line (RTS_Unit & " located");
-      end if;
+      declare
+         RTS_Unit : constant String := "Ada.Streams";
+         CU       : constant GPR2.Build.Compilation_Unit.Object :=
+                      Tree.Root_Project.Unit (Name_Type (RTS_Unit));
+      begin
+         if not CU.Is_Defined then
+            Ada.Text_IO.Put_Line ("Could not find unit " & RTS_Unit);
+         else
+            Ada.Text_IO.Put_Line (RTS_Unit & " located");
+         end if;
 
-      for Dep of CU.Known_Dependencies loop
-         Ada.Text_IO.Put_Line (" dep: " & String (Dep.Name));
-      end loop;
-   end;
-
+         for Dep of CU.Known_Dependencies loop
+            Ada.Text_IO.Put_Line (" dep: " & String (Dep.Name));
+         end loop;
+      end;
+   end if;
    Tree.Unload;
 
    for Path of Added loop

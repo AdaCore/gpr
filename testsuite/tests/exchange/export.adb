@@ -220,7 +220,6 @@ begin
       then
          Options.Add_Switch (GPR2.Options.Print_GPR_Registry);
          Options.Add_Switch (GPR2.Options.No_Project);
-         Options.Finalize;
          Options.Print_GPR_Registry (Format => PRE.K_JSON);
       end if;
    else

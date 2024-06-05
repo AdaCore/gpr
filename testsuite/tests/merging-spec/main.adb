@@ -1,9 +1,6 @@
-with Ada.Directories;
-with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
-with GPR2.Context;
-with GPR2.Project.Attribute.Set;
+with GPR2.Options;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -12,7 +9,6 @@ procedure Main is
 
    use Ada;
    use GPR2;
-   use GPR2.Project;
 
    procedure Display (Prj : Project.View.Object);
 
@@ -21,8 +17,6 @@ procedure Main is
    -------------
 
    procedure Display (Prj : Project.View.Object) is
-      use GPR2.Project.Attribute.Set;
-
       Naming : Package_Id renames Project.Registry.Pack.Naming;
    begin
       Text_IO.Put (String (Prj.Name) & " ");
@@ -42,40 +36,17 @@ procedure Main is
    end Display;
 
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Opt : Options.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("p.gpr"), Ctx);
+   Opt.Add_Switch (Options.P, "p");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
 
-   Display (Prj.Root_Project);
-
-   if Prj.Has_Messages then
       Prj.Log_Messages.Output_Messages
         (Information => False,
          Warning     => False,
          Error       => False,
          Lint        => True);
-   else
-      Text_IO.Put_Line ("Missing lint-message about duplicate index");
    end if;
-
-exception
-   when GPR2.Project_Error =>
-      if Prj.Has_Messages then
-         Text_IO.Put_Line ("Messages found:");
-
-         for M of Prj.Log_Messages.all loop
-            declare
-               Mes : constant String := M.Format;
-               L   : constant Natural :=
-                       Strings.Fixed.Index (Mes, "/merging-spec");
-            begin
-               if L /= 0 then
-                  Text_IO.Put_Line (Mes (L .. Mes'Last));
-               else
-                  Text_IO.Put_Line (Mes);
-               end if;
-            end;
-         end loop;
-      end if;
 end Main;

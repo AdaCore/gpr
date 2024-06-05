@@ -1,17 +1,14 @@
 with Ada.Text_IO;
-with Ada.Directories;
-with Ada.Exceptions;
 with Ada.Strings.Fixed;
 
-with GPR2.Context;
-with GPR2.KB;
-with GPR2.Log;
+pragma Warnings (Off);
+with GPR2.Build.Source.Sets;
+pragma Warnings (On);
+with GPR2.Options;
 with GPR2.Containers;
-with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Configuration;
-with GPR2.Build.Source.Sets;
 with GPR2.Project.Tree;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
@@ -19,9 +16,7 @@ with GPR2.Project.View;
 procedure Main is
 
    use Ada;
-   use Ada.Exceptions;
    use GPR2;
-   use GPR2.Project;
 
    procedure Display (Prj : Project.View.Object; Full : Boolean := True);
 
@@ -36,7 +31,7 @@ procedure Main is
 
    procedure Display (Att : Project.Attribute.Object) is
    begin
-      Text_IO.Put ("   " & Image (Att.Name.Id.Attr));
+      Text_IO.Put ("   " & Image (Att.Name.Id));
 
       if Att.Has_Index then
          Text_IO.Put (" (" & Att.Index.Text & ")");
@@ -78,7 +73,7 @@ procedure Main is
                   if K = 0 then
                      Text_IO.Put (" " & Val (Val'First .. Val'Last));
                   else
-                     Text_IO.Put (" ..." & Val (K - 1 .. Val'Last));
+                     Text_IO.Put (" <rtsdir>" & Val (K - 1 .. Val'Last));
                   end if;
                end;
             end loop;
@@ -119,8 +114,6 @@ procedure Main is
          for Pck of Prj.Packages (With_Defaults => False,
                                   With_Config   => False)
          Loop
-            Text_IO.Put_Line (" " & Image (Pck));
-
             for A of Prj.Attributes (Pack => Pck,
                                      With_Defaults => False,
                                      With_Config   => False)
@@ -143,66 +136,49 @@ procedure Main is
       Text_IO.Put (" > " & S (I .. S'Last));
    end Output_Filename;
 
-   Gpr : constant Path_Name.Object := Create ("demo.gpr");
-   Des : constant Configuration.Description :=
-           Configuration.Create (Language => Ada_Language);
-   KB  : GPR2.KB.Object := GPR2.KB.Create (GPR2.KB.Default_Flags);
-   Cnf : constant Configuration.Object :=
-           Configuration.Create
-             (Configuration.Description_Set'(1 => Des), "all", Gpr,
-              Base => KB);
-
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
-   Log : GPR2.Log.Object;
+   Opt : Options.Object;
 
 begin
-   if Cnf.Has_Messages then
-      Cnf.Log_Messages.Output_Messages (Information => False);
+   Opt.Add_Switch (Options.P, "demo.gpr");
+
+   if Prj.Load (Opt, With_Runtime => True, Absent_Dir_Error => No_Error) then
+      Prj.Update_Sources;
+
+      Display (Prj.Root_Project);
+
+      if Prj.Has_Configuration then
+         Display (Prj.Configuration.Corresponding_View, Full => False);
+      end if;
+
+      if Prj.Has_Runtime_Project then
+         Display (Prj.Runtime_Project, Full => True);
+
+         for Source of Prj.Runtime_Project.Sources loop
+            if Source.Path_Name.Base_Name = "memtrack" then
+               Text_IO.Put_Line
+                 ("!!! ERROR !!!: memtrack should not be listed as rts source");
+            end if;
+
+            if Strings.Fixed.Head
+              (String (Source.Path_Name.Base_Name), 8) in
+                "a-calend" | "a-strunb" | "a-tags  " | "a-contai"
+                  | "a-string" | "a-strunb" | "a-tags  " | "a-uncdea" | "ada     "
+            then
+               declare
+                  U : constant Optional_Name_Type :=
+                        (if Source.Has_Units then Source.Unit.Name else "");
+               begin
+                  Output_Filename (Source.Path_Name.Value);
+
+                  Text_IO.Set_Col (27);
+                  Text_IO.Put
+                    ("   Kind: " & Source.Kind'Image);
+                  Text_IO.Put ("   unit: " & String (U));
+                  Text_IO.New_Line;
+               end;
+            end if;
+         end loop;
+      end if;
    end if;
-
-   Project.Tree.Load (Prj, Gpr, Ctx, With_Runtime => True, Config => Cnf);
-   Prj.Update_Sources (Messages => Log);
-
-   Display (Prj.Root_Project);
-
-   if Prj.Has_Configuration then
-      Display (Prj.Configuration.Corresponding_View, Full => False);
-   end if;
-
-   if Prj.Has_Runtime_Project then
-      Display (Prj.Runtime_Project, Full => True);
-
-      for Source of Prj.Runtime_Project.Sources loop
-         if Source.Path_Name.Base_Name = "memtrack" then
-            Text_IO.Put_Line
-              ("!!! ERROR !!!: memtrack should not be listed as rts source");
-         end if;
-
-         if Strings.Fixed.Head
-           (String (Source.Path_Name.Base_Name), 8) in
-           "a-calend" | "a-strunb" | "a-tags  " | "a-contai"
-             | "a-string" | "a-strunb" | "a-tags  " | "a-uncdea" | "ada     "
-         then
-            declare
-               U : constant Optional_Name_Type :=
-                     (if Source.Has_Units then Source.Unit.Name else "");
-            begin
-               Output_Filename (Source.Path_Name.Value);
-
-               Text_IO.Set_Col (27);
-               Text_IO.Put
-                 ("   Kind: " & Source.Kind'Image);
-               Text_IO.Put ("   unit: " & String (U));
-               Text_IO.New_Line;
-            end;
-         end if;
-      end loop;
-   end if;
-
-exception
-   when E : GPR2.Project_Error =>
-      Text_IO.Put_Line (Exception_Information (E));
-      Text_IO.Put_Line ("Messages found:");
-      Prj.Log_Messages.Output_Messages (Information => False);
 end Main;

@@ -1,55 +1,34 @@
 with Ada.Text_IO;
+with GPR2.Build.Compilation_Unit;
 with GPR2.Project.Tree;
 with GPR2.Build;
-with GPR2.Build.Compilation_Unit;
+pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
-with GPR2.Context;
-with GPR2.Log;
-with GPR2.Path_Name;
-with Ada.Containers.Doubly_Linked_Lists;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+pragma Warnings (On);
+with GPR2.Options;
 
 procedure Main is
-   Ctx  : GPR2.Context.Object;
    Tree : GPR2.Project.Tree.Object;
-   package Set is new Ada.Containers.Doubly_Linked_Lists (Unbounded_String);
-   package Sort is new Set.Generic_Sorting;
-   List : Set.List;
-   Log  : GPR2.Log.Object;
-
-   procedure Print_And_Clean_List;
-   procedure Print_And_Clean_List is
-   begin
-      Sort.Sort (List);
-      for S of List loop
-         Ada.Text_IO.Put_Line (To_String (S));
-      end loop;
-      List.Clear;
-   end Print_And_Clean_List;
+   Opt  : GPR2.Options.Object;
 
 begin
-   Tree.Load_Autoconf
-     (GPR2.Path_Name.Create_File ("default.gpr"), Ctx);
+   Opt.Add_Switch (GPR2.Options.P, "default.gpr");
+   if Tree.Load (Opt, Absent_Dir_Error => GPR2.No_Error) then
+      Tree.Update_Sources;
 
-   Tree.Update_Sources (Messages => Log);
-   Log.Output_Messages (Information => False);
+      for Source of Tree.Root_Project.Sources loop
+         Ada.Text_IO.Put_Line (String (Source.Path_Name.Name));
+      end loop;
 
-   for Source of Tree.Root_Project.Sources loop
-      List.Append (To_Unbounded_String (String (Source.Path_Name.Name)));
-   end loop;
-   Print_And_Clean_List;
-
-   for Unit of Tree.Root_Project.Units loop
-      List.Append (To_Unbounded_String (String (Unit.Name)));
-      if Unit.Has_Part (GPR2.S_Separate) then
-         for S in Unit.Separates.Iterate loop
-            List.Append
-              (To_Unbounded_String
+      for Unit of Tree.Root_Project.Units loop
+         Ada.Text_IO.Put_Line (String (Unit.Name));
+         if Unit.Has_Part (GPR2.S_Separate) then
+            for S in Unit.Separates.Iterate loop
+               Ada.Text_IO.Put_Line
                  (String (Unit.Name) & "." &
-                  String (GPR2.Build.Compilation_Unit.Separate_Maps.Key (S))));
-         end loop;
-      end if;
-   end loop;
-   Print_And_Clean_List;
-
+                  String (GPR2.Build.Compilation_Unit.Separate_Maps.Key (S)));
+            end loop;
+         end if;
+      end loop;
+   end if;
 end Main;

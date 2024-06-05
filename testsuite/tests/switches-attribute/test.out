@@ -6,7 +6,6 @@ A:   Name ~> demo
 A:   Object_Dir ~> .
 A:   Project_Dir ~> {Current_Directory}
 A:   Source_Dirs ~> .
-Compiler
-A:   Switches [.lang] -> -g1 -g2
-A:   Switches [Capital.adb] -> -g -gnata
-A:   Switches [capital.adb] -> -g -gnata -g0
+A:   Compiler'Switches [.lang] -> -g1 -g2
+A:   Compiler'Switches [Capital.adb] -> -g -gnata
+A:   Compiler'Switches [capital.adb] -> -g -gnata -g0

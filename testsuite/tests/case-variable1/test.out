@@ -1,2 +1,1 @@
-Messages found:
 demo.gpr:9:04: error: variable "sTarget" must be a simple value

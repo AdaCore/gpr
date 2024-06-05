@@ -1,32 +1,17 @@
-with Ada.Text_IO;
-with Ada.Strings.Fixed;
-
-with GNAT.OS_Lib;
-
-with GPR2.Context;
-with GPR2.Log;
-with GPR2.Message;
+with GPR2.Options;
 with GPR2.Project.Tree;
 
 procedure Main is
 
-   use Ada;
    use GPR2;
-   use GPR2.Project;
 
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
-   Log : GPR2.Log.Object;
+   Opt : GPR2.Options.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
+   Opt.Add_Switch (Options.P, "demo.gpr");
 
-   Prj.Update_Sources (Messages => Log);
-   Log.Output_Messages (Information => False);
-
-exception
-   when Project_Error =>
-
-      Text_IO.Put_Line ("Messages found:");
-      Prj.Log_Messages.Output_Messages (Information => False);
+   if Prj.Load  (Opt, Absent_Dir_Error => No_Error) then
+      Prj.Update_Sources;
+   end if;
 end Main;

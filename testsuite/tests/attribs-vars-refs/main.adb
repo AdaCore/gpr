@@ -1,12 +1,12 @@
 with Ada.Directories;
 with Ada.Text_IO;
+with GPR2.Options;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Variable.Set;
-with GPR2.Context;
 
 procedure Main is
 
@@ -32,7 +32,7 @@ procedure Main is
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       if Full then
-         for A in Prj.Attributes (With_Defaults => False).Iterate loop
+         for A in Prj.Attributes (With_Defaults => False, With_Config => False).Iterate loop
             Text_IO.Put
               ("A:   " & Image (Attribute.Set.Element (A).Name.Id.Attr));
             Text_IO.Put (" ->");
@@ -90,17 +90,12 @@ procedure Main is
    end Display;
 
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Opt : GPR2.Options.Object;
 
 begin
-   Ctx.Include ("OS", "Linux");
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
-
-   Display (Prj.Root_Project);
-
-exception
-   when Project_Error =>
-      for M of Prj.Log_Messages.all loop
-         Text_IO.Put_Line (M.Format);
-      end loop;
+   Opt.Add_Switch (Options.P, "demo.gpr");
+   Opt.Add_Switch (Options.X, "OS=Linux");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
+   end if;
 end Main;

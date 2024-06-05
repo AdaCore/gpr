@@ -1,9 +1,7 @@
+Project: runtime   K_STANDARD
 Project: c         K_STANDARD
- Compiler
-   Driver (Ada) -> toto
+ Compiler'Driver (Ada) -> toto
 Project: b         K_STANDARD
- Compiler
-   Driver (Ada) -> toto
+ Compiler'Driver (Ada) -> toto
 Project: a         K_STANDARD
- Compiler
-   Driver (Ada) -> toto
+ Compiler'Driver (Ada) -> toto

@@ -1,7 +1,7 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -10,7 +10,6 @@ procedure Main is
 
    use Ada;
    use GPR2;
-   use GPR2.Project;
 
    procedure Display (Prj : Project.View.Object);
 
@@ -41,21 +40,36 @@ procedure Main is
    end Filter_Path;
 
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Opt : Options.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo1.gpr"), Ctx);
-   Display (Prj.Root_Project);
+   Opt.Add_Switch (Options.P, "demo1.gpr");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
+   end if;
 
-   Project.Tree.Load (Prj, Create ("demo2.gpr"), Ctx);
-   Display (Prj.Root_Project);
+   Opt := Options.Empty_Options;
+   Opt.Add_Switch (Options.P, "demo2.gpr");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
+   end if;
 
-   Project.Tree.Load (Prj, Create ("demo3.gpr"), Ctx);
-   Display (Prj.Root_Project);
+   Opt := Options.Empty_Options;
+   Opt.Add_Switch (Options.P, "demo3.gpr");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
+   end if;
 
-   Project.Tree.Load (Prj, Create ("demo4.gpr"), Ctx);
-   Display (Prj.Root_Project);
+   Opt := Options.Empty_Options;
+   Opt.Add_Switch (Options.P, "demo4.gpr");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
+   end if;
 
-   Project.Tree.Load (Prj, Create ("demo1.gpr"), Ctx, Subdirs => "experiment");
-   Display (Prj.Root_Project);
+   Opt := Options.Empty_Options;
+   Opt.Add_Switch (Options.P, "demo1.gpr");
+   Opt.Add_Switch (Options.Subdirs, "experiment");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
+   end if;
 end Main;

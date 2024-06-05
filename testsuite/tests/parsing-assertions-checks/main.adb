@@ -1,14 +1,9 @@
 with Ada.Text_IO;
-with Ada.Strings.Fixed;
-with Ada.Exceptions;
-with GNAT.OS_Lib;
 
-with GPR2.Context;
-with GPR2.Log;
-with GPR2.Message;
-with GPR2.Path_Name;
-with GPR2.Build.Source;
+pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
+pragma Warnings (On);
+with GPR2.Options;
 with GPR2.Project.Tree;
 
 procedure Main is
@@ -18,44 +13,39 @@ procedure Main is
    use GPR2.Build;
 
    procedure Display_Source (Src : Source.Object'Class);
-   procedure Test_Prj (Fname : Filename_Type);
+   procedure Test_Prj (Fname : String);
+
+   --------------------
+   -- Display_Source --
+   --------------------
 
    procedure Display_Source (Src : Source.Object'Class) is
    begin
       Text_IO.Put_Line (String (Src.Path_Name.Simple_Name) & ": " & Src.Kind'Image);
    end Display_Source;
 
-   procedure Test_Prj (Fname : Filename_Type)
+   --------------
+   -- Test_Prj --
+   --------------
+
+   procedure Test_Prj (Fname : String)
    is
       Prj : Project.Tree.Object;
-      Ctx : Context.Object;
-      Log : GPR2.Log.Object;
+      Opt : Options.Object;
 
    begin
       Text_IO.Put_Line ("GPR file: " & String (Fname));
-      Project.Tree.Load (Prj, Project.Create (Fname), Ctx);
-      Prj.Log_Messages.Output_Messages (Information => False);
-      Prj.Update_Sources (Messages => Log);
-      Log.Output_Messages;
+      Opt.Add_Switch (Options.P, Fname);
+      if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+         Prj.Update_Sources;
 
-      for V of reverse Prj.Ordered_Views loop
-         Text_IO.Put_Line (String (V.Name));
-         for S of V.Sources loop
-            Display_Source (S);
+         for V of reverse Prj.Ordered_Views loop
+            Text_IO.Put_Line (String (V.Name));
+            for S of V.Sources loop
+               Display_Source (S);
+            end loop;
          end loop;
-      end loop;
-   exception
-      when Project_Error =>
-         Text_IO.Put_Line ("Messages found:");
-         Prj.Log_Messages.Output_Messages
-           (Information => False);
-      when E : others =>
-         Ada.Text_IO.Put_Line
-           ("Exception raised " & Ada.Exceptions.Exception_Name (E) & " : " &
-              Ada.Exceptions.Exception_Message (E));
-
-         Prj.Log_Messages.Output_Messages
-           (Information => False);
+      end if;
     end Test_Prj;
 
 begin

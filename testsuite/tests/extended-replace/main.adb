@@ -2,8 +2,7 @@ with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
 with GPR2.Build.Source.Sets;
-with GPR2.Context;
-with GPR2.Log;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
@@ -62,26 +61,28 @@ procedure Main is
    end Output_Filename;
 
    Prj1, Prj2 : Project.Tree.Object;
-   Ctx        : Context.Object;
-   Log        : GPR2.Log.Object;
+   Opt1, Opt2 : Options.Object;
 
 begin
-   Project.Tree.Load (Prj1, Project.Create ("prj1.gpr"), Ctx);
-   Prj1.Update_Sources (Messages => Log);
-   Log.Output_Messages;
-   Project.Tree.Load (Prj2, Project.Create ("prj2.gpr"), Ctx);
-   Prj2.Update_Sources (Messages => Log);
-   Log.Output_Messages;
+   Opt1.Add_Switch (Options.P, "prj1");
+   Opt2.Add_Switch (Options.P, "prj2");
 
-   Text_IO.Put_Line ("**************** Iterator Prj1");
+   if Prj1.Load (Opt1, Absent_Dir_Error => No_Error)
+     and then Prj2.Load (Opt2, Absent_Dir_Error => No_Error)
+   then
+      Prj1.Update_Sources;
+      Prj2.Update_Sources;
 
-   for P of Prj1 loop
-      Display (P, Full => False);
-   end loop;
+      Text_IO.Put_Line ("**************** Iterator Prj1");
 
-   Text_IO.Put_Line ("**************** Iterator Prj2");
+      for P of Prj1 loop
+         Display (P, Full => False);
+      end loop;
 
-   for P of Prj2 loop
-      Display (P, Full => False);
-   end loop;
+      Text_IO.Put_Line ("**************** Iterator Prj2");
+
+      for P of Prj2 loop
+         Display (P, Full => False);
+      end loop;
+   end if;
 end Main;

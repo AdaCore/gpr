@@ -1,3 +1,5 @@
+runtime  K_STANDARD
+standard project
 lib1     K_STANDARD
 library project
 lib4     K_STANDARD
@@ -10,6 +12,5 @@ lib6     K_STANDARD
 library project
 Demo     K_ABSTRACT
 abstract project
-Messages found:
 lib2.gpr:2:08: warning: attribute "Library_Dir" cannot be used in standard projects
 lib3.gpr:2:08: warning: attribute "Library_Kind" cannot be used in standard projects

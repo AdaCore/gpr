@@ -1,7 +1,7 @@
 with Ada.Text_IO;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
@@ -23,19 +23,9 @@ procedure main is
    Allow_List     : constant GPR2.Q_Attribute_Id :=
                       (GPR2.Project_Level_Scope, +"allow_list");
 
-   procedure Test (Name : GPR2.Filename_Type) is
+   procedure Test (Name : String) is
       Tree : GPR2.Project.Tree.Object;
-
-      procedure Print_Messages is
-      begin
-         if Tree.Has_Messages then
-            for C in Tree.Log_Messages.Iterate
-              (False, True, True, False, True, True)
-            loop
-               Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-            end loop;
-         end if;
-      end Print_Messages;
+      Opt  : Options.Object;
 
       procedure Print_Attributes (Name : Q_Attribute_Id) is
          Attributes : GPR2.Project.Attribute.Set.Object;
@@ -89,18 +79,16 @@ procedure main is
          end loop;
       end Print_Attributes;
    begin
-      Tree.Load_Autoconf
-        (Filename => GPR2.Path_Name.Create_File (Name),
-         Context  => GPR2.Context.Empty);
-      Print_Messages;
-      Print_Attributes (Allow_Single);
-      Print_Attributes (Allow_List);
-      Print_Attributes (Ignore_Single);
-      Print_Attributes (Ignore_List);
-   exception
-      when GPR2.Project_Error =>
-         Ada.Text_IO.Put_Line ("Project_Error raised");
-         Print_Messages;
+      Opt.Add_Switch (Options.P, Name);
+      if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+         Print_Attributes (Allow_Single);
+         Print_Attributes (Allow_List);
+         Print_Attributes (Ignore_Single);
+         Print_Attributes (Ignore_List);
+      else
+         --  Also print the warnings
+         Tree.Log_Messages.Output_Messages (Information => False);
+      end if;
    end Test;
    Default_Value : GPR2.Project.Registry.Attribute.Default_Value
      (GPR2.Project.Registry.Attribute.D_Value);

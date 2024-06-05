@@ -1,5 +1,6 @@
 Test1
 aggr.gpr:2:22: error: undefined external reference "TEST"
+Could not load project
 Test2
 b.gpr:4:23: warning: object directory "B" not found
 Test3

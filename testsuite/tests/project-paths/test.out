@@ -1,7 +1,5 @@
 === Prj1
-Messages found:
 demo.gpr:2:06: error: imported project file "first.gpr" not found
 === Prj2
-Messages found:
 first.gpr:2:06: error: imported project file "second.gpr" not found
 === Prj3

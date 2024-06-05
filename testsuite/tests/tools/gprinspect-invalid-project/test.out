@@ -1,0 +1,8 @@
++--------------------------------------+
+|               Messages               |
++--------------------------------------+
+* Tree:
+    - prj1.gpr:3:23: error: Expected Identifier, got ')'
+
+gprinspect: "prj1.gpr" processing failed
+

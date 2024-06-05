@@ -1,20 +1,20 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+pragma Warnings (Off);
+with GPR2.Build.Source.Sets;
+pragma Warnings (On);
 with GPR2.Context;
-with GPR2.Log;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
-with GPR2.Build.Source.Sets;
 with GPR2.Project.Tree;
-with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
 
 procedure Main is
 
    use Ada;
    use GPR2;
-   use GPR2.Project;
 
    procedure Display (Prj : Project.View.Object);
 
@@ -37,15 +37,18 @@ procedure Main is
 
    procedure Display (Prj : Project.View.Object) is
       use GPR2.Project.Attribute.Set;
-      use GPR2.Project.Variable.Set.Set;
    begin
+      if Prj.Is_Runtime then
+         return;
+      end if;
+
       Text_IO.Put (String (Prj.Name) & " ");
       Text_IO.Set_Col (10);
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
-      for A in Prj.Attributes (With_Defaults => False).Iterate loop
+      for A in Prj.Attributes (With_Defaults => False, With_Config => False).Iterate loop
          Text_IO.Put
-           ("A:   " & Image (Attribute.Set.Element (A).Name.Id.Attr));
+           ("A:   " & Image (Project.Attribute.Set.Element (A).Name.Id.Attr));
          Text_IO.Put (" ->");
 
          for V of Element (A).Values loop
@@ -68,21 +71,24 @@ procedure Main is
    end Output_Filename;
 
    Prj : Project.Tree.Object;
+   Opt : GPR2.Options.Object;
    Ctx : Context.Object;
-   Log : GPR2.Log.Object;
 
 begin
    Text_IO.Put_Line ("//// OS set to Linux");
-   Ctx.Include ("OS", "Linux");
+   Opt.Add_Switch (Options.P, "demo.gpr");
+   Opt.Add_Switch (Options.X, "OS=Linux");
 
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
+   if not Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Text_IO.Put_Line ("!!! Failed to load project");
+      return;
+   end if;
 
    for P of Prj loop
       Display (P);
    end loop;
 
-   Prj.Update_Sources (Messages => Log);
-   Log.Output_Messages (Information => False);
+   Prj.Update_Sources;
 
    Text_IO.Put_Line ("sources:");
    for Agg of Prj.Root_Project.Aggregated loop
@@ -96,14 +102,16 @@ begin
 
    Ctx := Prj.Context;
    Ctx.Include ("OS", "Windows");
-   Prj.Set_Context (Ctx, Changed_Callback'Access);
+   if not Prj.Set_Context (Ctx, Changed_Callback'Access) then
+      Text_IO.Put_Line ("!!! failed to set OS to Windows in the context");
+      return;
+   end if;
 
    for P of Prj loop
       Display (P);
    end loop;
 
-   Prj.Update_Sources (Messages => Log);
-   Log.Output_Messages (Information => False);
+   Prj.Update_Sources;
 
    Text_IO.Put_Line ("sources:");
    for Agg of Prj.Root_Project.Aggregated loop

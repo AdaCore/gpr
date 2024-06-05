@@ -1,5 +1,5 @@
 with Ada.Text_IO;
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
@@ -13,8 +13,7 @@ with GPR2.Source_Reference;
 with GPR2.Source_Reference.Value;
 
 procedure Main is
-   Tree         : GPR2.Project.Tree.Object;
-   Context      : GPR2.Context.Object;
+   Tree : GPR2.Project.Tree.Object;
    use GPR2;
    use GPR2.Project.Registry.Attribute;
 
@@ -125,18 +124,13 @@ procedure Main is
          Print_Messages;
    end Test;
 
-   procedure Load (Project_Name : GPR2.Filename_Type) is
+   procedure Load (Project_Name : String) is
+      Opt : GPR2.Options.Object;
+      Res : Boolean;
    begin
       Tree.Unload;
-      Tree.Load_Autoconf
-        (Filename => GPR2.Path_Name.Create_File
-           (GPR2.Project.Ensure_Extension (Project_Name),
-            GPR2.Path_Name.No_Resolution),
-         Context  => Context);
-      Print_Messages;
-   exception
-      when Project_Error =>
-         Print_Messages;
+      Opt.Add_Switch (Options.P, Project_Name);
+      Res := Tree.Load (Opt, Absent_Dir_Error => No_Error);
    end Load;
 
 begin

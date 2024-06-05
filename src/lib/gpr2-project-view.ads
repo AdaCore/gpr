@@ -20,6 +20,7 @@ with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Registry.Attribute;
+limited with GPR2.Project.Tree;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Source_Reference.Value;
@@ -30,10 +31,10 @@ limited with GPR2.Build.Compilation_Unit.Maps;
 limited with GPR2.Build.Source.Sets;
 limited with GPR2.Build.Source;
 limited with GPR2.Build.View_Db;
-limited with GPR2.Project.Tree;
 limited with GPR2.Project.View.Set;
 
-private with GPR2.Project.Pack;
+private with GPR2.Pack_Internal;
+private with GPR2.View_Base_Internal;
 
 package GPR2.Project.View is
 
@@ -69,6 +70,9 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  The name of the project
 
+   function Tree (Self : Object) return GPR2.Project.Tree.Object
+     with Pre => Self.Is_Defined;
+
    function Qualifier (Self : Object) return Project_Kind
      with Pre => Self.Is_Defined;
    --  The qualifier as specified in the project file
@@ -79,10 +83,6 @@ package GPR2.Project.View is
                   or else Self.Qualifier = K_Standard;
    --  The actual kind of the project file. This may be different if the
    --  Qualifier is not specified.
-
-   function Tree (Self : Object) return not null access Project.Tree.Object
-     with Pre => Self.Is_Defined;
-   --  Returns the corresponding project tree
 
    function Has_Imports (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -760,11 +760,14 @@ package GPR2.Project.View is
 
 private
 
-   type Object is new Definition_References.Ref with null record;
+   use View_Base_Internal;
+
+   type Object is new Definition_References.Ref with
+     null record;
 
    function Pack
      (Self : Object;
-      Name : Package_Id) return Project.Pack.Object;
+      Name : Package_Id) return Pack_Internal.Object;
    --  Get the package with the given Name
 
    Undefined : constant Object :=

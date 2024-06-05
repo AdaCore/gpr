@@ -1,22 +1,15 @@
-with Ada.Strings.Fixed;
-with Ada.Text_IO;
-
-with GPR2.Context;
-with GPR2.Path_Name;
+with GPR2.Options;
 with GPR2.Project.Tree;
 
 procedure Main is
 
-   use Ada;
    use GPR2;
-   use GPR2.Project;
 
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Opt : Options.Object;
+   Res : Boolean;
 
 begin
-   Project.Tree.Load (Prj, Create ("prj.gpr"), Ctx);
-exception
-   when GPR2.Project_Error =>
-      Prj.Log_Messages.Output_Messages (Information => False);
+   Opt.Add_Switch (Options.P, "prj");
+   Res := Prj.Load (Opt, Absent_Dir_Error => No_Error);
 end Main;

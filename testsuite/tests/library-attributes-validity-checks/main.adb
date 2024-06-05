@@ -1,7 +1,7 @@
 with Ada.Exceptions;
 with Ada.Text_IO;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -9,26 +9,15 @@ with GPR2.Log;
 
 procedure Main is
 
-   procedure Test (Filename : GPR2.Filename_Type) is
-      Tree    : GPR2.Project.Tree.Object;
-      Context : GPR2.Context.Object;
+   procedure Test (Filename : String) is
+      Tree : GPR2.Project.Tree.Object;
+      Opt  : GPR2.Options.Object;
+      Res  : Boolean;
+      use GPR2;
    begin
-      begin
-         Ada.Text_IO.Put_Line (String (Filename));
-         Tree.Load_Autoconf
-           (Filename  => GPR2.Path_Name.Create_File (Filename),
-            Context   => Context);
-      exception
-         when E : others =>
-            Ada.Text_IO.Put_Line (Ada.Exceptions.Exception_Message (E));
-      end;
-      if Tree.Has_Messages  then
-         for C in Tree.Log_Messages.Iterate
-           (False, True, True, False, True, True)
-         loop
-            Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-         end loop;
-      end if;
+      Ada.Text_IO.Put_Line (Filename);
+      Opt.Add_Switch (Options.P, Filename);
+      Res := Tree.Load (Opt);
    end Test;
 
 begin

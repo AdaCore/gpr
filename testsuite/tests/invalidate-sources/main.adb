@@ -3,8 +3,7 @@ with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GPR2.Build.Source.Sets;
-with GPR2.Context;
-with GPR2.Log;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
@@ -15,7 +14,7 @@ procedure Main is
    use GPR2;
    use GPR2.Project;
 
-   procedure Check (Project_Name : Filename_Type);
+   procedure Check (Project_Name : String);
    --  Do check the given project's sources
 
    procedure Output_Filename (Filename : Path_Name.Full_Name);
@@ -25,7 +24,7 @@ procedure Main is
    -- Check --
    -----------
 
-   procedure Check (Project_Name : Filename_Type) is
+   procedure Check (Project_Name : String) is
 
       procedure List_Sources (View : Project.View.Object);
 
@@ -65,9 +64,8 @@ procedure Main is
       end List_Sources;
 
       Prj  : Project.Tree.Object;
-      Ctx  : Context.Object;
+      Opt  : Options.Object;
       View : Project.View.Object;
-      Log  : GPR2.Log.Object;
 
    begin
       --  Create api-call.adb as a separate
@@ -84,8 +82,13 @@ procedure Main is
          Text_IO.Close (File);
       end;
 
-      Project.Tree.Load (Prj, Create (Project_Name), Ctx);
-      Prj.Update_Sources (Messages => Log);
+      Opt.Add_Switch (Options.P, Project_Name);
+
+      if not Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+         return;
+      end if;
+
+      Prj.Update_Sources;
       View := Prj.Root_Project;
       Text_IO.Put_Line ("Project: " & String (View.Name));
 
@@ -115,7 +118,7 @@ procedure Main is
          Directories.Delete_File ("src/api-call.adb");
       end;
 
-      Prj.Update_Sources (Messages => Log);
+      Prj.Update_Sources;
       List_Sources (View);
    end Check;
 

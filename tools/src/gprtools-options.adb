@@ -23,6 +23,7 @@ pragma Warnings (On);
 with GNAT.Directory_Operations;
 
 with GPR2.Log;
+with GPR2.Message.Reporter;
 with GPR2.Project.Registry.Pack;
 
 with GPRtools.Program_Termination;
@@ -322,10 +323,7 @@ package body GPRtools.Options is
          end if;
       end loop;
 
-      Result.Finalize
-        (Allow_Implicit_Project => Parser.Find_Implicit_Project,
-         Quiet                  => Result.Quiet);
-
+      Result.Find_Implicit_Project := Parser.Find_Implicit_Project;
    end Get_Opt_Internal;
 
    ------------------
@@ -334,7 +332,7 @@ package body GPRtools.Options is
 
    function Load_Project
      (Opt                : in out Base_Options'Class;
-      Absent_Dir_Error   : GPR2.Project.Tree.Error_Level;
+      Absent_Dir_Error   : GPR2.Error_Level;
       Handle_Information : Boolean := False;
       Handle_Errors      : Boolean := True;
       Handle_Lint        : Boolean := False) return Boolean
@@ -355,72 +353,51 @@ package body GPRtools.Options is
             --  If there are errors, just display them: any warning may just
             --  be a consequence of the initial error and thus be false
             --  negatives.
-
-            for C in Logs.Iterate
+            Logs.Output_Messages
               (Information => False,
                Warning     => False,
                Error       => True,
-               Lint        => False,
-               Read        => False,
-               Unread      => True)
-            loop
-               GPR2.Log.Element (C).Output
-                 (Full_Path_Name => Opt.Full_Path_Name_For_Brief);
-            end loop;
+               Lint        => False);
 
          elsif not Opt.Quiet then
-            for C in Logs.Iterate
+            Logs.Output_Messages
               (Information => Handle_Information,
                Warning     => Opt.Warnings,
                Error       => False,
-               Lint        => Handle_Lint,
-               Read        => False,
-               Unread      => True)
-            loop
-               GPR2.Log.Element (C).Output
-                 (Full_Path_Name => Opt.Full_Path_Name_For_Brief);
-            end loop;
+               Lint        => Handle_Lint);
          end if;
       end Display;
 
       Loaded : Boolean := False;
+      Tree   : GPR2.Project.Tree.Object := Opt.Tree;
 
    begin
-      Loaded := Opt.Load_Project
-        (Tree             => Opt.Tree.all,
-         Absent_Dir_Error => Absent_Dir_Error);
+      GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Minimal;
+      --  Handle manually the logs for the GPR tools
+
+      Loaded := Tree.Load
+        (Opt,
+         Absent_Dir_Error       => Absent_Dir_Error,
+         Allow_Implicit_Project => Opt.Find_Implicit_Project);
+      Opt.Tree := Tree;
 
       if Handle_Errors then
          declare
-            Has_Messages : constant Boolean := Opt.Tree.Has_Messages;
             Has_Error    : constant Boolean :=
-                             (if Has_Messages
+                             (if Opt.Tree.Is_Defined
                               then Opt.Tree.Log_Messages.Has_Error
                               else False);
          begin
-            Display (Opt.Config_Project_Log);
-
-            if Opt.Tree /= null and then Has_Messages then
-               Display (Opt.Tree.all.Log_Messages.all);
-            end if;
+            Display (Opt.Tree.Log_Messages.all);
 
             if not Loaded
-              and then Opt.Config_Project_Has_Error
-            then
-               Handle_Program_Termination
-                 (Opt        => Opt,
-                  Message    => '"' & String (Opt.Config_Project.Simple_Name)
-                  & """ processing failed");
-            end if;
-
-            if not Loaded
-              and then Opt.Tree /= null
-              and then Has_Messages
+              and then Opt.Tree.Is_Defined
+              and then Opt.Tree.Has_Messages
               and then Has_Error
             then
                Handle_Program_Termination
                  (Opt        => Opt,
-                  Message    => '"' & String (Opt.Filename.Simple_Name)
+                  Message    => '"' & String (Opt.Project_File.Simple_Name)
                   & """ processing failed");
             end if;
          end;
@@ -549,7 +526,8 @@ package body GPRtools.Options is
             Index  => "");
 
       elsif Arg = "-F" then
-         Result.Full_Path_Name_For_Brief := True;
+         GPR2.Message.Reporter.Configure_Default_Reporter
+           (Use_Full_Pathname => True);
 
       elsif Arg = "-q" then
          Result.Verbosity := Quiet;

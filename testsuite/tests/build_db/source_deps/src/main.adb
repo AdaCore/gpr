@@ -11,26 +11,18 @@ procedure Main is
    use type GPR2.View_Ids.View_Id;
 
    Tree    : GPR2.Project.Tree.Object;
-   Log     : GPR2.Log.Object;
    Options : GPR2.Options.Object;
    Result  : Boolean;
    First   : Boolean := True;
 begin
 
    Options.Add_Switch (GPR2.Options.P, "tree/agg.gpr");
-   Options.Finalize;
-   Result := Options.Load_Project
-     (Tree,
-      With_Runtime     => True,
-      Absent_Dir_Error => GPR2.Project.Tree.No_Error);
 
-   if not Result then
-      Tree.Log_Messages.Output_Messages (Information => False);
+   if not Tree.Load (Options, True, No_Error) then
       return;
    end if;
 
-   Tree.Update_Sources (Sources_Units_Artifacts, Log);
-   Log.Output_Messages;
+   Tree.Update_Sources (Sources_Units_Artifacts);
 
    for NS of Tree.Namespace_Root_Projects loop
       if not First then
@@ -48,12 +40,14 @@ begin
       end;
 
       for U of NS.Units loop
-         Ada.Text_IO.Put_Line
-           ("* " & String (U.Name) & ": " & String (U.Main_Part.Source.Relative_Path (NS.Dir_Name)));
-         for Dep of U.Known_Dependencies loop
+         if not U.Owning_View.Is_Runtime then
             Ada.Text_IO.Put_Line
-              ("  - depends on " & String (Dep.Name));
-         end loop;
+              ("* " & String (U.Name) & ": " & String (U.Main_Part.Source.Relative_Path (NS.Dir_Name)));
+            for Dep of U.Known_Dependencies loop
+               Ada.Text_IO.Put_Line
+                 ("  - depends on " & String (Dep.Name));
+            end loop;
+         end if;
       end loop;
    end loop;
 end Main;

@@ -26,11 +26,8 @@ procedure Main is
 begin
    Ada.Directories.Set_Directory ("tree");
    Opt.Add_Switch (Options.RTS, "rts-ext");
-   Opt.Finalize
-     (Allow_Implicit_Project => True);
-   if Opt.Load_Project (Tree) then
-      Tree.Log_Messages.Output_Messages (Information => False);
 
+   if Tree.Load (Opt, Allow_Implicit_Project => True) then
       for Attr of Tree.Runtime_Project.Attributes
         (With_Defaults => False, With_Config => False)
       loop
@@ -55,8 +52,5 @@ begin
             end if;
          end if;
       end loop;
-   else
-      Tree.Log_Messages.Output_Messages (Information => False,
-                                         Warning     => False);
    end if;
 end Main;

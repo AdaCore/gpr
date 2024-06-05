@@ -1,13 +1,13 @@
 with Ada.Text_IO;
 with GPR2.Context;
 with GPR2.Log;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
 procedure Main is
    Tree         : GPR2.Project.Tree.Object;
-   Context      : GPR2.Context.Object;
    use GPR2;
 
    procedure Print_Messages is
@@ -47,18 +47,14 @@ procedure Main is
          Print_Messages;
    end Test;
 
-   procedure Load (Project_Name : GPR2.Filename_Type) is
+   procedure Load (Project_Name : String) is
+      Opt  : GPR2.Options.Object;
+      Dead : Boolean with Unreferenced;
    begin
-      Ada.Text_IO.Put_Line ("loading " & String (Project_Name));
+      Ada.Text_IO.Put_Line ("loading " & Project_Name);
       Tree.Unload;
-      Tree.Load_Autoconf
-        (Filename => GPR2.Path_Name.Create_File
-           (GPR2.Project.Ensure_Extension (Project_Name),
-            GPR2.Path_Name.No_Resolution),
-         Context  => Context);
-   exception
-      when Project_Error =>
-         Print_Messages;
+      Opt.Add_Switch (GPR2.Options.P, String (Project_Name));
+      Dead := Tree.Load (Opt, Absent_Dir_Error => No_Error);
    end Load;
 
 begin

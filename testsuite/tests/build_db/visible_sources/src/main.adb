@@ -6,8 +6,7 @@ with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
 with GPR2.Build.Source.Sets;
-with GPR2.Context;
-with GPR2.Log;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -17,11 +16,10 @@ procedure Main is
    use GPR2.Build;
    use type GPR2.Project.View.Object;
 
-   procedure Test (Gpr : Filename_Type)
+   procedure Test (Gpr : String)
    is
       Tree        : Project.Tree.Object;
-      Log         : GPR2.Log.Object;
-      Ctx         : Context.Object := Context.Empty;
+      Opt         : Options.Object;
       Src_Count   : Natural := 0;
       Src_Count_2 : Natural := 0;
 
@@ -65,27 +63,18 @@ procedure Main is
       end Print_Source;
 
    begin
-      begin
-         Project.Tree.Load_Autoconf
-           (Tree,
-            Path_Name.Create_File (Gpr),
-            Ctx);
+      Opt.Add_Switch (Options.P, Gpr);
 
-         Tree.Log_Messages.Output_Messages (Information => False);
-      exception
-         when GPR2.Project_Error =>
-            Tree.Log_Messages.Output_Messages (Information => False);
-
-            return;
-      end;
+      if not Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+         return;
+      end if;
 
       Ada.Text_IO.Put_Line
         ("*** checking sources of project " &
            String (Tree.Root_Project.Path_Name.Relative_Path
              (Path_Name.Create_Directory ("."))));
 
-      Tree.Update_Sources (Messages => Log);
-      Log.Output_Messages (Information => False);
+      Tree.Update_Sources;
 
       Ada.Text_IO.New_Line;
       Ada.Text_IO.Put_Line ("* Views *");
@@ -226,5 +215,5 @@ begin
       return;
    end if;
 
-   Test (Filename_Type (Ada.Command_Line.Argument (1)));
+   Test (Ada.Command_Line.Argument (1));
 end Main;

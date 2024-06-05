@@ -1,6 +1,7 @@
 with Ada.Text_IO;
 
 with GPR2.Context;
+with GPR2.Options;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
@@ -77,16 +78,20 @@ procedure Main is
    procedure Display (Prj : Project.View.Object) is
       use GPR2.Project.Attribute.Set;
       use GPR2.Project.Variable.Set.Set;
+      First : Boolean;
+      Saved_Indent : Natural;
    begin
       Text_IO.Put_Line ('[' & String (Prj.Name) & "] " & Prj.Qualifier'Img);
       Indent := Indent + 3;
 
       for I of Prj.Imports loop
-         Put_Indent;
-         Text_IO.Put ("with       ");
-         Indent := Indent + 3;
-         Display (I);
-         Indent := Indent - 3;
+         if not I.Is_Runtime then
+            Put_Indent;
+            Text_IO.Put ("with       ");
+            Indent := Indent + 3;
+            Display (I);
+            Indent := Indent - 3;
+         end if;
       end loop;
 
       if Prj.Is_Extending then
@@ -97,7 +102,7 @@ procedure Main is
          Indent := Indent - 3;
       end if;
 
-      for A of Prj.Attributes (With_Defaults => False) loop
+      for A of Prj.Attributes (With_Defaults => False, With_Config => False) loop
          Display (A);
       end loop;
 
@@ -105,18 +110,33 @@ procedure Main is
          Display (V);
       end loop;
 
-      for Pck of Prj.Packages (With_Defaults => False) loop
-         Put_Indent;
-         Text_IO.Put_Line ("Pck:   " & Image (Pck));
-         Indent := Indent + 3;
-         for A of Prj.Attributes (Pack => Pck, With_Defaults => False) loop
+      for Pck of Prj.Packages (With_Defaults => False, With_Config => False) loop
+         Saved_Indent := Indent;
+         First := True;
+
+         for A of Prj.Attributes (Pack => Pck, With_Defaults => False, With_Config => False) loop
+            if First then
+               First := False;
+               Put_Indent;
+               Text_IO.Put_Line ("Pck:   " & Image (Pck));
+               Indent := Indent + 3;
+            end if;
+
             Display (A);
          end loop;
 
          for Var of Prj.Variables (Pck) loop
+            if First then
+               First := False;
+               Put_Indent;
+               Text_IO.Put_Line ("Pck:   " & Image (Pck));
+               Indent := Indent + 3;
+            end if;
+
             Display (Var);
          end loop;
-         Indent := Indent - 3;
+
+         Indent := Saved_Indent;
       end loop;
 
       if Prj.Kind in Aggregate_Kind then
@@ -134,10 +154,12 @@ procedure Main is
    end Display;
 
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Opt : Options.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("agg.gpr"), Ctx);
+   Opt.Add_Switch (Options.P, "agg.gpr");
 
-   Display (Prj.Root_Project);
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
+   end if;
 end Main;

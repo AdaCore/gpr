@@ -1,6 +1,6 @@
 with Ada.Text_IO;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
@@ -9,13 +9,8 @@ with GPR2.Project.Tree;
 with GPR2.Source_Reference.Value;
 
 procedure Main is
-   Tree         : GPR2.Project.Tree.Object;
-   Context      : GPR2.Context.Object;
+   Tree: GPR2.Project.Tree.Object;
    use GPR2;
-
-   procedure Print_Attributes (Name : Q_Attribute_Id);
-   procedure Print_Messages;
-   procedure Test (Project_Name : GPR2.Filename_Type);
 
    procedure Print_Attributes (Name : Q_Attribute_Id) is
       Attributes : GPR2.Project.Attribute.Set.Object;
@@ -69,30 +64,15 @@ procedure Main is
       end loop;
    end Print_Attributes;
 
-   procedure Print_Messages is
+   procedure Test (Project_Name : String) is
+      Opt : Options.Object;
    begin
-      if Tree.Has_Messages then
-         for C in Tree.Log_Messages.Iterate
-           (False, True, True, True, True)
-         loop
-            Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-         end loop;
-      end if;
-   end Print_Messages;
-
-   procedure Test (Project_Name : GPR2.Filename_Type) is
-   begin
-      Ada.Text_IO.Put_Line ("testing " & String (Project_Name));
+      Ada.Text_IO.Put_Line ("testing " & Project_Name);
       Tree.Unload;
-      Tree.Load_Autoconf
-        (Filename => GPR2.Path_Name.Create_File
-           (GPR2.Project.Ensure_Extension (Project_Name),
-            GPR2.Path_Name.No_Resolution),
-         Context  => Context);
-      Print_Attributes ((+"Compiler", +"Default_Switches"));
-   exception
-      when Project_Error =>
-         Print_Messages;
+      Opt.Add_Switch (Options.P, Project_Name);
+      if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+         Print_Attributes ((+"Compiler", +"Default_Switches"));
+      end if;
    end Test;
 
 begin

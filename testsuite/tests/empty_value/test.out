@@ -3,8 +3,7 @@ warning.gpr:5:04: warning: empty value in attribute "Ignore_List" ignored.
 Allow_Single=""
 Allow_List=("")
 Ignore_List=()
-Project_Error raised
-error.gpr:4:26: warning: empty attribute "Ignore_Single" ignored
-error.gpr:5:04: warning: empty value in attribute "Ignore_List" ignored.
 error.gpr:6:25: error: attribute "Error_Single" cannot be empty
 error.gpr:7:04: error: empty value in attribute "Error_List" not allowed.
+error.gpr:4:26: warning: empty attribute "Ignore_Single" ignored
+error.gpr:5:04: warning: empty value in attribute "Ignore_List" ignored.

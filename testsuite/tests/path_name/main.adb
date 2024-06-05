@@ -6,7 +6,7 @@ with GNAT.OS_Lib;
 
 with GPR2.Path_Name; use GPR2.Path_Name;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Project.Tree;
 
 procedure Main is
@@ -80,6 +80,7 @@ procedure Main is
    On_Windows : constant Boolean := GNAT.OS_Lib.Directory_Separator = '\';
 
    PT         : GPR2.Project.Tree.Object;
+   Opt        : GPR2.Options.Object;
 
 begin
    Check_Path ("Root dir:", Create_Directory ("/"));
@@ -130,10 +131,10 @@ begin
                      "D:\foo\baz"));
    end if;
 
-   PT.Load_Autoconf (GPR2.Project.Create ("a.gpr"), GPR2.Context.Empty);
-
-   Check_Path ("Check in-memory autoconf file",
-               PT.Configuration.Corresponding_View.Path_Name);
-
+   Opt.Add_Switch (GPR2.Options.P, "a");
+   if PT.Load (Opt, Absent_Dir_Error => GPR2.No_Error) then
+      Check_Path ("Check in-memory autoconf file",
+                  PT.Configuration.Corresponding_View.Path_Name);
+   end if;
    PT.Unload;
 end Main;

@@ -1,9 +1,10 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
-with GPR2.Context;
-with GPR2.Log;
+pragma Warnings (On);
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
@@ -12,9 +13,8 @@ procedure Main is
 
    use Ada;
    use GPR2;
-   use GPR2.Project;
 
-   procedure Check (Project_Name : Filename_Type);
+   procedure Check (Project_Name : String);
    --  Do check the given project's sources
 
    procedure Output_Filename (Filename : Path_Name.Full_Name);
@@ -24,19 +24,21 @@ procedure Main is
    -- Check --
    -----------
 
-   procedure Check (Project_Name : Filename_Type) is
+   procedure Check (Project_Name : String) is
       Prj  : Project.Tree.Object;
-      Ctx  : Context.Object;
+      Opt  : Options.Object;
       View : Project.View.Object;
-      Log  : GPR2.Log.Object;
+
    begin
-      Project.Tree.Load (Prj, Create (Project_Name), Ctx);
+      Opt.Add_Switch (Options.P, Project_Name);
+      if not Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+         return;
+      end if;
 
       View := Prj.Root_Project;
       Text_IO.Put_Line ("Project: " & String (View.Name));
 
-      Prj.Update_Sources (Messages => Log);
-      Log.Output_Messages;
+      Prj.Update_Sources;
 
       for Source of View.Sources loop
          Output_Filename (Source.Path_Name.Value);

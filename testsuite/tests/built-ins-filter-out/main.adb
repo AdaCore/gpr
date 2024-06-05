@@ -2,7 +2,7 @@ with Ada.Directories;
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Log;
 with GPR2.Message;
 with GPR2.Project.View;
@@ -31,7 +31,7 @@ procedure Main is
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       if Full then
-         for A of Prj.Attributes (With_Defaults => False) loop
+         for A of Prj.Attributes (With_Defaults => False, With_Config => False) loop
             Text_IO.Put
               ("A:   " & Image (A.Name.Id.Attr));
             Text_IO.Put (" ->");
@@ -61,27 +61,13 @@ procedure Main is
 
    procedure Test (Project_Name : String) is
       Prj : Project.Tree.Object;
-      Ctx : Context.Object;
+      Opt : Options.Object;
    begin
-      Project.Tree.Load (Prj, Create (Filename_Type (Project_Name)), Ctx);
-      Display (Prj.Root_Project);
-      Project.Tree.Unload (Prj);
-   exception
-      when GPR2.Project_Error =>
-         if Prj.Has_Messages then
-            Text_IO.Put_Line ("Messages found:");
-
-            for C in Prj.Log_Messages.Iterate
-              (Information => False,
-               Warning     => False)
-            loop
-                declare
-                   M : constant Message.Object := Log.Element (C);
-                begin
-                   Text_IO.Put_Line (M.Format);
-                end;
-            end loop;
-         end if;
+      Opt.Add_Switch (Options.P, Project_Name);
+      if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+         Display (Prj.Root_Project);
+      end if;
+      Prj.Unload;
    end Test;
 
 begin

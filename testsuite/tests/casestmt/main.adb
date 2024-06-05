@@ -1,7 +1,6 @@
 with Ada.Text_IO;
-with Ada.Strings.Fixed;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
@@ -27,7 +26,7 @@ procedure Main is
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       if Full then
-         for A of Prj.Attributes (With_Defaults => False) loop
+         for A of Prj.Attributes (With_Defaults => False, With_Config => False) loop
             Text_IO.Put
               ("   " & Image (A.Name.Id.Attr));
             Text_IO.Put (" ->");
@@ -41,26 +40,19 @@ procedure Main is
    end Display;
 
    Prj : Project.Tree.Object;
+   Opt : Options.Object;
    Ctx : Context.Object;
 
 begin
-   Ctx.Include ("OS", "Linux");
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
-
-   Display (Prj.Root_Project);
+   Opt.Add_Switch (Options.P, "demo.gpr");
+   Opt.Add_Switch (Options.X, "OS=Linux");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
+   end if;
 
    Ctx.Clear;
    Ctx.Include ("OS", "Windows");
-   Prj.Set_Context (Ctx);
-   Display (Prj.Root_Project);
-
-exception
-   when GPR2.Project_Error =>
-      if Prj.Has_Messages then
-         Text_IO.Put_Line ("Messages found:");
-
-         for M of Prj.Log_Messages.all loop
-            Text_IO.Put_Line (M.Format);
-         end loop;
-      end if;
+   if Prj.Set_Context (Ctx) then
+      Display (Prj.Root_Project);
+   end if;
 end Main;

@@ -2,5 +2,5 @@ aggregate library project Aggl1 is
    for Project_Files use ("a.gpr");
    for Library_Name use "aggl1";
    for Library_Dir use "lib1";
+   for Object_Dir use "obj1";
 end Aggl1;
-

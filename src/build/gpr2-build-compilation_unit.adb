@@ -8,10 +8,11 @@ with Ada.Containers.Ordered_Sets;
 with Ada.Strings.Maps.Constants;
 
 with GPR2.Message;
-with GPR2.Project.Tree;
+with GPR2.Tree_Internal;
 with GPR2.Source_Reference;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Tables;
+with GPR2.View_Internal;
 
 package body GPR2.Build.Compilation_Unit is
 
@@ -259,7 +260,8 @@ package body GPR2.Build.Compilation_Unit is
 
       Result  : Units_Set.Set;
       Tree_Db : constant Build.Tree_Db.Object_Access :=
-                  Self.Root_View.Tree.Artifacts_Database;
+                  View_Internal.Get_RO
+                    (Self.Root_View).Tree.Artifacts_Database;
 
       procedure Add_Deps (Part : Unit_Location) is
          Db : constant Build.View_Tables.View_Data_Ref :=
@@ -309,10 +311,10 @@ package body GPR2.Build.Compilation_Unit is
    -- Object_File --
    -----------------
 
-   function Object_File
-     (Self : Object;
-      Tree : GPR2.Project.Tree.Object) return Simple_Name
+   function Object_File (Self : Object) return Simple_Name
    is
+      Tree : constant access GPR2.Tree_Internal.Object :=
+               View_Internal.Get_RO (Self.Root_View).Tree;
       Main : constant Unit_Location := Self.Main_Part;
       BN   : constant Simple_Name := Main.Source.Base_Filename;
    begin

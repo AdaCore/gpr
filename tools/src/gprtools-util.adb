@@ -159,18 +159,10 @@ package body GPRtools.Util is
    procedure Output_Messages
      (Options : GPRtools.Options.Base_Options'Class) is
    begin
-      Options.Config_Project_Log.Output_Messages
+      Options.Tree.Log_Messages.Output_Messages
         (Information    => Options.Verbosity = Very_Verbose,
          Warning        => Options.Warnings,
-         Lint           => Options.Verbosity = Very_Verbose,
-         Full_Path_Name => Options.Full_Path_Name_For_Brief);
-      if Options.Tree /= null and then Options.Tree.Has_Messages then
-         Options.Tree.all.Log_Messages.Output_Messages
-           (Information    => Options.Verbosity = Very_Verbose,
-            Warning        => Options.Warnings,
-            Lint           => Options.Verbosity = Very_Verbose,
-            Full_Path_Name => Options.Full_Path_Name_For_Brief);
-      end if;
+         Lint           => Options.Verbosity = Very_Verbose);
    end Output_Messages;
 
    ------------------

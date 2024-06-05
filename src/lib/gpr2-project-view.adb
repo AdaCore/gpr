@@ -17,11 +17,12 @@ with GPR2.Build.Source.Sets;
 with GPR2.Build.View_Db;
 with GPR2.Message;
 with GPR2.Project.Attribute_Cache;
-with GPR2.Project.Definition;
 with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
 with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Pack;
+with GPR2.Tree_Internal;
+with GPR2.View_Internal;
 
 package body GPR2.Project.View is
 
@@ -42,25 +43,31 @@ package body GPR2.Project.View is
    --  is applied to the value. If no suffixes are defined for this language,
    --  then it returns the value as is.
 
-   function Get_Ref (View : Object) return Definition.Ref is
-     (Definition.Data (View.Get.Element.all)'Unchecked_Access);
+   function Get_Ref (View : Object) return View_Internal.Ref is
+     (View_Internal.Data (View.Get.Element.all)'Unchecked_Access);
 
-   function Get_RO (View : Object) return Definition.Const_Ref is
-     (Definition.Data (View.Get.Element.all)'Unchecked_Access);
+   function Get_RO (View : Object) return View_Internal.Const_Ref is
+     (View_Internal.Data (View.Get.Element.all)'Unchecked_Access);
 
-   function Get_RW (View : in out Object) return Definition.Ref is
-     (Definition.Data (View.Get.Element.all)'Unchecked_Access);
+   function Get_RW (View : in out Object) return View_Internal.Ref is
+     (View_Internal.Data (View.Get.Element.all)'Unchecked_Access);
 
    function Refcount (Self : Object) return Natural is
      (Definition_References.Get_Refcount (Self));
    --  Get view refcount
 
+   function Tree_Int (Self : Object) return access GPR2.Tree_Internal.Object is
+     (Get_RO (Self).Tree);
+
+   function Tree (Self : Object) return GPR2.Project.Tree.Object is
+     (Tree_Internal.Set (Get_RO (Self).Tree));
+
    function View_DB (Self : Object) return Build.View_Db.Object is
-     (if Self.Tree.Has_Artifacts_Database
-      then Self.Tree.Artifacts_Database.View_Database (Self.Id)
+     (if Self.Tree_Int.Has_Artifacts_Database
+      then Self.Tree_Int.Artifacts_Database.View_Database (Self.Id)
       else Build.View_Db.Undefined);
 
-   procedure Set_Def (Ref : out View.Object; Def : Definition_Base'Class);
+   procedure Set_Def (Ref : out View.Object; Def : View_Internal.Data);
    --  Convert definition to view
 
    function Weak (View : Object) return Weak_Reference is
@@ -111,8 +118,8 @@ package body GPR2.Project.View is
    function Aggregate_Libraries (Self : Object) return Set.Object is
       Result : Set.Object;
    begin
-      for Id of Definition.Get_RO (Self).Agg_Libraries loop
-         Result.Include (Self.Tree.Instance_Of (Id));
+      for Id of View_Internal.Get_RO (Self).Agg_Libraries loop
+         Result.Include (Self.Tree_Int.Instance_Of (Id));
       end loop;
 
       return Result;
@@ -127,7 +134,7 @@ package body GPR2.Project.View is
       Recursive : Boolean := True) return Set.Object is
    begin
       return Set : GPR2.Project.View.Set.Object do
-         for Agg of Definition.Get_RO (Self).Aggregated loop
+         for Agg of View_Internal.Get_RO (Self).Aggregated loop
             if Agg.Kind /= K_Aggregate or else not Recursive then
                Set.Insert (Agg);
             else
@@ -155,7 +162,7 @@ package body GPR2.Project.View is
                       Self.Attribute (Dir_Attr).Value.Text;
          Subdirs  : constant Filename_Optional :=
                       (if Self.Is_Runtime then ""
-                       else Self.Tree.Subdirs);
+                       else Self.Tree_Int.Subdirs);
          Dir_Name : constant Filename_Type :=
                       (if Dir = "" then "." else Filename_Type (Dir));
          Root     : GPR2.Path_Name.Object;
@@ -165,16 +172,16 @@ package body GPR2.Project.View is
          if OS_Lib.Is_Absolute_Path (Dir) then
             Result := GPR2.Path_Name.Create_Directory (Dir_Name);
 
-         elsif Self.Tree.Build_Path.Is_Defined then
-            if Self.Tree.Root_Path.Is_Defined then
-               Root := Self.Tree.Root_Path;
+         elsif Self.Tree_Int.Build_Path.Is_Defined then
+            if Self.Tree_Int.Root_Path.Is_Defined then
+               Root := Self.Tree_Int.Root_Path;
             else
-               Root := Self.Tree.Root_Project.Dir_Name;
+               Root := Self.Tree_Int.Root_Project.Dir_Name;
             end if;
 
             Result := GPR2.Path_Name.Create_Directory
               (Self.Dir_Name.Relative_Path (Root),
-               Self.Tree.Build_Path.Value);
+               Self.Tree_Int.Build_Path.Value);
 
             Result := GPR2.Path_Name.Create_Directory
               (Dir_Name, Result.Value);
@@ -192,20 +199,20 @@ package body GPR2.Project.View is
            (Subdirs, Result.Value);
       end Compute;
 
-      Def      : Definition.Ref renames Self.Get_Ref;
-      Def_Attr : Definition.Cacheable_Dir_Attrs;
+      Def      : View_Internal.Ref renames Self.Get_Ref;
+      Def_Attr : View_Internal.Cacheable_Dir_Attrs;
 
    begin
       if Dir_Attr = PRA.Object_Dir then
-         Def_Attr := Definition.Object_Dir;
+         Def_Attr := View_Internal.Object_Dir;
       elsif Dir_Attr = PRA.Library_Ali_Dir then
-         Def_Attr := Definition.Library_Ali_Dir;
+         Def_Attr := View_Internal.Library_Ali_Dir;
       elsif Dir_Attr = PRA.Library_Dir then
-         Def_Attr := Definition.Library_Dir;
+         Def_Attr := View_Internal.Library_Dir;
       elsif Dir_Attr = PRA.Exec_Dir then
-         Def_Attr := Definition.Exec_Dir;
+         Def_Attr := View_Internal.Exec_Dir;
       elsif Dir_Attr = PRA.Library_Src_Dir then
-         Def_Attr := Definition.Library_Src_Dir;
+         Def_Attr := View_Internal.Library_Src_Dir;
       end if;
 
       if not Def.Dir_Cache (Def_Attr).Is_Set then
@@ -299,7 +306,7 @@ package body GPR2.Project.View is
       function Get_Attribute_From_View
         (View : Object) return Project.Attribute.Object
       is
-         function Get_Pack return Project.Pack.Set.Cursor with Inline;
+         function Get_Pack return Pack_Internal.Set.Cursor with Inline;
          function Get_Attrs return Project.Attribute.Set.Object with Inline;
 
          ---------------
@@ -313,10 +320,10 @@ package body GPR2.Project.View is
             end if;
 
             declare
-               Cursor : Project.Pack.Set.Cursor renames Get_Pack;
+               Cursor : Pack_Internal.Set.Cursor renames Get_Pack;
             begin
-               if Project.Pack.Set.Has_Element (Cursor) then
-                  return Project.Pack.Set.Element (Cursor).Attrs;
+               if Pack_Internal.Set.Has_Element (Cursor) then
+                  return Pack_Internal.Set.Element (Cursor).Attrs;
                else
                   return Project.Attribute.Set.Empty_Set;
                end if;
@@ -327,13 +334,13 @@ package body GPR2.Project.View is
          -- Get_Pack --
          --------------
 
-         function Get_Pack return Project.Pack.Set.Cursor is
-            Def    : Definition.Const_Ref := View.Get_RO;
-            Result : Project.Pack.Set.Cursor;
+         function Get_Pack return Pack_Internal.Set.Cursor is
+            Def    : View_Internal.Const_Ref := View.Get_RO;
+            Result : Pack_Internal.Set.Cursor;
          begin
             loop
                Result := Def.Packs.Find (Name.Pack);
-               if Project.Pack.Set.Has_Element (Result) then
+               if Pack_Internal.Set.Has_Element (Result) then
                   return Result;
                end if;
 
@@ -474,11 +481,11 @@ package body GPR2.Project.View is
             if Name = PRA.Target
               or else Name = PRA.Canonical_Target
             then
-               if Self.Tree.Target_From_Command_Line /= "all"
-                 and then Self.Tree.Target_From_Command_Line /= ""
+               if Self.Tree_Int.Target_From_Command_Line /= "all"
+                 and then Self.Tree_Int.Target_From_Command_Line /= ""
                then
                   return Value_Type
-                    (Self.Tree.Target_From_Command_Line
+                    (Self.Tree_Int.Target_From_Command_Line
                        (Normalized => Name = PRA.Canonical_Target));
                end if;
 
@@ -489,8 +496,8 @@ package body GPR2.Project.View is
                   Lang : constant Language_Id :=
                            +Optional_Name_Type (Index.Value);
                begin
-                  return
-                    Value_Type (Self.Tree.Runtime_From_Command_Line (Lang));
+                  return Value_Type
+                      (Self.Tree_Int.Runtime_From_Command_Line (Lang));
                end;
             end if;
 
@@ -517,11 +524,11 @@ package body GPR2.Project.View is
          --  view: the user may override such value from the command line
          --  (--RTS) or via an explicit config project.
 
-         if Self.Tree.Has_Configuration
-           and then Self.Tree.Configuration.Corresponding_View /= Self
+         if Self.Tree_Int.Has_Configuration
+           and then Self.Tree_Int.Configuration.Corresponding_View /= Self
          then
             Result := Get_Attribute_From_View
-                        (Self.Tree.Configuration.Corresponding_View);
+                        (Self.Tree_Int.Configuration.Corresponding_View);
 
             if Result.Is_Defined and then not Result.Is_Default then
                --  Set the From_Config flag for the attribute
@@ -539,7 +546,7 @@ package body GPR2.Project.View is
                declare
                   Value : constant Value_Type :=
                             Value_Type
-                              (Self.Tree.Configuration.Runtime
+                              (Self.Tree_Int.Configuration.Runtime
                                  (+Optional_Name_Type (Index.Value)));
                begin
                   if Value'Length > 0 then
@@ -572,7 +579,7 @@ package body GPR2.Project.View is
       end Get_Default_Index;
 
       Cache_Cursor : constant Project.Attribute_Cache.Cursor :=
-                       Definition.Get_RO (Self).Cache.Check_Cache
+                       View_Internal.Get_RO (Self).Cache.Check_Cache
                          (Name   => Name,
                           Index  => Index,
                           At_Pos => At_Pos);
@@ -581,7 +588,7 @@ package body GPR2.Project.View is
          return Project.Attribute_Cache.Element (Cache_Cursor);
       end if;
 
-      Definition.Get_RO (Self).Cache.Schedule_Update_Cache;
+      View_Internal.Get_RO (Self).Cache.Schedule_Update_Cache;
 
       --  First check if the attribute is defined in the registry
 
@@ -617,15 +624,15 @@ package body GPR2.Project.View is
 
       --  Handle configuration project
 
-      if GPR2.Project.Tree.Has_Configuration (Self.Tree.all)
-        and then Self.Tree.Configuration.Corresponding_View /= Self
+      if GPR2.Tree_Internal.Has_Configuration (Self.Tree_Int.all)
+        and then Self.Tree_Int.Configuration.Corresponding_View /= Self
       then
          if not Found (Result) then
             --  If at this stage Result is not defined try to fetch the value
             --  from the configuration project.
 
             Result := Get_Attribute_From_View
-              (View => Self.Tree.Configuration.Corresponding_View);
+              (View => Self.Tree_Int.Configuration.Corresponding_View);
 
             if Result.Is_Defined then
                --  Set the From_Config flag for the attribute
@@ -640,7 +647,7 @@ package body GPR2.Project.View is
                Result2 : Project.Attribute.Object;
             begin
                Result2 := Get_Attribute_From_View
-                 (View => Self.Tree.all.Configuration.Corresponding_View);
+                 (View => Self.Tree_Int.all.Configuration.Corresponding_View);
 
                if Found (Result2) then
                   Result.Prepend_Vector (Result2);
@@ -749,7 +756,7 @@ package body GPR2.Project.View is
       end if;
 
       --  Finally return the result
-      Definition.Get_RO (Self).Cache.Update_Cache
+      View_Internal.Get_RO (Self).Cache.Update_Cache
          (Name   => Name,
           Index  => Index,
           At_Pos => At_Pos,
@@ -820,7 +827,7 @@ package body GPR2.Project.View is
                           Concat : Boolean);
 
       function Config return Object is
-        (Self.Tree.Configuration.Corresponding_View);
+        (Self.Tree_Int.Configuration.Corresponding_View);
       --  Configuration View. To be used only when the tree has a configuration
 
       --------------
@@ -904,7 +911,7 @@ package body GPR2.Project.View is
       else
          declare
             --  Self.Pack resolves inheritance
-            Pack_Inst : Project.Pack.Object renames Self.Pack (Name.Pack);
+            Pack_Inst : Pack_Internal.Object renames Self.Pack (Name.Pack);
          begin
             if not Pack_Inst.Attrs.Is_Empty then
                Result := Pack_Inst.Attrs.Filter (Name.Attr);
@@ -923,7 +930,7 @@ package body GPR2.Project.View is
       --  Query configuration project
 
       if With_Config
-        and then Self.Tree.Has_Configuration
+        and then Self.Tree_Int.Has_Configuration
       then
          for Attr of Config.Attributes_Internal (Name, False, False) loop
             Add_Attr (Attr, Def.Config_Concatenable);
@@ -1078,7 +1085,7 @@ package body GPR2.Project.View is
    function Check_Parent (Self : Object; Parent : out Object) return Boolean is
       use Ada.Strings;
 
-      Ref  : constant Definition.Const_Ref := Definition.Get_RO (Self);
+      Ref  : constant View_Internal.Const_Ref := View_Internal.Get_RO (Self);
       Name : constant Name_Type := Ref.Trees.Project.Name;
       Dot  : constant Natural := Fixed.Index (String (Name), ".", Backward);
    begin
@@ -1123,12 +1130,12 @@ package body GPR2.Project.View is
 
    function Context (Self : Object) return GPR2.Context.Object is
    begin
-      return Definition.Get_Context (Self);
+      return View_Internal.Get_Context (Self);
    end Context;
 
    function Context (Self : Object) return Context_Kind is
    begin
-      return Definition.Get_RO (Self).Context;
+      return View_Internal.Get_RO (Self).Context;
    end Context;
 
    ----------------
@@ -1230,7 +1237,7 @@ package body GPR2.Project.View is
 
    function Extended (Self : Object) return Set.Object is
    begin
-      return Definition.Get_RO (Self).Extended;
+      return View_Internal.Get_RO (Self).Extended;
    end Extended;
 
    -------------------
@@ -1239,7 +1246,7 @@ package body GPR2.Project.View is
 
    function Extended_Root (Self : Object) return Object is
    begin
-      return Definition.Get_RO (Self).Extended_Root;
+      return View_Internal.Get_RO (Self).Extended_Root;
    end Extended_Root;
 
    ---------------
@@ -1248,7 +1255,7 @@ package body GPR2.Project.View is
 
    function Extending (Self : Object) return Object is
    begin
-      return Definition.Strong (Definition.Get_RO (Self).Extending);
+      return View_Internal.Strong (View_Internal.Get_RO (Self).Extending);
    end Extending;
 
    ---------------------------
@@ -1257,7 +1264,7 @@ package body GPR2.Project.View is
 
    function Has_Aggregate_Context (Self : Object) return Boolean is
    begin
-      return Definition.Get_RO (Self).Context = Aggregate;
+      return View_Internal.Get_RO (Self).Context = Aggregate;
    end Has_Aggregate_Context;
 
    -------------------
@@ -1282,7 +1289,7 @@ package body GPR2.Project.View is
 
    function Has_Context (Self : Object) return Boolean is
    begin
-      return not Definition.Get_Context (Self).Is_Empty;
+      return not View_Internal.Get_Context (Self).Is_Empty;
    end Has_Context;
 
    -----------------
@@ -1291,7 +1298,7 @@ package body GPR2.Project.View is
 
    function Has_Imports (Self : Object) return Boolean is
    begin
-      return not Definition.Get_RO (Self).Trees.Imports.Is_Empty;
+      return not View_Internal.Get_RO (Self).Trees.Imports.Is_Empty;
    end Has_Imports;
 
    ------------------
@@ -1395,13 +1402,13 @@ package body GPR2.Project.View is
       end For_Rule;
 
    begin
-      if Definition.Get_RO (Self).Has_Packages (Name) then
+      if View_Internal.Get_RO (Self).Has_Packages (Name) then
          return True;
       end if;
 
       if With_Config
-        and then Self.Tree.Has_Configuration
-        and then Self.Tree.Configuration.Corresponding_View.
+        and then Self.Tree_Int.Has_Configuration
+        and then Self.Tree_Int.Configuration.Corresponding_View.
                    Get_RO.Has_Packages (Name)
       then
          return True;
@@ -1428,7 +1435,7 @@ package body GPR2.Project.View is
 
          View := View.Extended_Root;
 
-         if Definition.Get_RO (View).Has_Packages (Name) then
+         if View_Internal.Get_RO (View).Has_Packages (Name) then
             return True;
          end if;
       end loop;
@@ -1467,7 +1474,7 @@ package body GPR2.Project.View is
 
    function Has_Source_Subdirectory (Self : Object) return Boolean is
    begin
-      return Self.Tree.all.Has_Src_Subdirs;
+      return Self.Tree_Int.all.Has_Src_Subdirs;
    end Has_Source_Subdirectory;
 
    ---------------
@@ -1478,7 +1485,7 @@ package body GPR2.Project.View is
      (Self : Object;
       Name : Optional_Name_Type := No_Name) return Boolean is
    begin
-      return Definition.Get_RO (Self).Has_Types (Name);
+      return View_Internal.Get_RO (Self).Has_Types (Name);
    end Has_Types;
 
    -------------------
@@ -1490,9 +1497,9 @@ package body GPR2.Project.View is
       Name : Optional_Name_Type := No_Name) return Boolean is
    begin
       if Name = No_Name then
-         return not Definition.Get_RO (Self).Vars.Is_Empty;
+         return not View_Internal.Get_RO (Self).Vars.Is_Empty;
       else
-         return Definition.Get_RO (Self).Vars.Contains (Name);
+         return View_Internal.Get_RO (Self).Vars.Contains (Name);
       end if;
    end Has_Variables;
 
@@ -1521,7 +1528,7 @@ package body GPR2.Project.View is
 
    function Id (Self : Object) return GPR2.View_Ids.View_Id is
    begin
-      return Definition.Get_RO (Self).Unique_Id;
+      return View_Internal.Get_RO (Self).Unique_Id;
    end Id;
 
    -------------
@@ -1544,7 +1551,7 @@ package body GPR2.Project.View is
          Position : Set.Set.Cursor;
          Inserted : Boolean;
       begin
-         for Import of Definition.Get_RO (Self).Imports loop
+         for Import of View_Internal.Get_RO (Self).Imports loop
             Result.Insert (Import, Position, Inserted);
 
             if Inserted and then Recursive then
@@ -1620,7 +1627,7 @@ package body GPR2.Project.View is
    ------------------------------
 
    function Is_Aggregated_In_Library (Self : Object) return Boolean is
-      Ref : constant Definition.Const_Ref := Definition.Get_RO (Self);
+      Ref : constant View_Internal.Const_Ref := View_Internal.Get_RO (Self);
    begin
       return not Ref.Agg_Libraries.Is_Empty;
    end Is_Aggregated_In_Library;
@@ -1631,7 +1638,7 @@ package body GPR2.Project.View is
 
    function Is_Extended (Self : Object) return Boolean is
    begin
-      return Definition.Get_RO (Self).Is_Extended;
+      return View_Internal.Get_RO (Self).Is_Extended;
    end Is_Extended;
 
    ------------------
@@ -1641,7 +1648,7 @@ package body GPR2.Project.View is
    function Is_Extending
      (Self : Object; Parent : Object'Class := Undefined) return Boolean
    is
-      Def : constant Definition.Const_Ref := Definition.Get_RO (Self);
+      Def : constant View_Internal.Const_Ref := View_Internal.Get_RO (Self);
    begin
       if not Def.Extended_Root.Is_Defined then
          return False;
@@ -1651,7 +1658,7 @@ package body GPR2.Project.View is
          return True;
       end if;
 
-      for Ext of Definition.Get_RO (Self).Extended loop
+      for Ext of View_Internal.Get_RO (Self).Extended loop
          if Ext = Object (Parent) then
             return True;
          end if;
@@ -1672,7 +1679,7 @@ package body GPR2.Project.View is
 
    function Is_Extending_All (Self : Object) return Boolean is
    begin
-      return Definition.Get_RO (Self).Trees.Project.Is_Extending_All;
+      return View_Internal.Get_RO (Self).Trees.Project.Is_Extending_All;
    end Is_Extending_All;
 
    -------------------------
@@ -1718,7 +1725,7 @@ package body GPR2.Project.View is
 
    function Kind (Self : Object) return Project_Kind is
    begin
-      return Definition.Get_RO (Self).Kind;
+      return View_Internal.Get_RO (Self).Kind;
    end Kind;
 
    ------------------
@@ -1726,7 +1733,7 @@ package body GPR2.Project.View is
    ------------------
 
    function Language_Ids (Self : Object) return Containers.Language_Set is
-      Def : constant Definition.Ref := Get_Ref (Self);
+      Def : constant View_Internal.Ref := Get_Ref (Self);
    begin
       if Def.Kind in K_Standard | K_Library then
          if Def.Languages.Is_Empty then
@@ -1778,7 +1785,7 @@ package body GPR2.Project.View is
       --  Library suffix
 
       if Self.Is_Static_Library then
-         Append (File_Name, String (Self.Tree.Archive_Suffix));
+         Append (File_Name, String (Self.Tree_Int.Archive_Suffix));
 
       else
          Append
@@ -1896,7 +1903,7 @@ package body GPR2.Project.View is
          Position : Set.Set.Cursor;
          Inserted : Boolean;
       begin
-         for Import of Definition.Get_RO (Self).Limited_Imports loop
+         for Import of View_Internal.Get_RO (Self).Limited_Imports loop
             Result.Insert (Import, Position, Inserted);
 
             if Inserted and then Recursive then
@@ -2107,7 +2114,7 @@ package body GPR2.Project.View is
 
    function Name (Self : Object) return Name_Type is
    begin
-      return Definition.Get_RO (Self).Trees.Project.Name;
+      return View_Internal.Get_RO (Self).Trees.Project.Name;
    end Name;
 
    --------------------
@@ -2118,7 +2125,7 @@ package body GPR2.Project.View is
       Result : Set.Object;
    begin
       for Id of Get_RO (Self).Root_Views loop
-         Result.Include (Self.Tree.Instance_Of (Id));
+         Result.Include (Self.Tree_Int.Instance_Of (Id));
       end loop;
 
       return Result;
@@ -2155,16 +2162,16 @@ package body GPR2.Project.View is
 
    function Pack
      (Self : Object;
-      Name : Package_Id) return Project.Pack.Object
+      Name : Package_Id) return Pack_Internal.Object
    is
       View   : Object := Self;
-      Cursor : Project.Pack.Set.Cursor;
+      Cursor : Pack_Internal.Set.Cursor;
    begin
       loop
-         Cursor := Definition.Get_RO (View).Packs.Find (Name);
+         Cursor := View_Internal.Get_RO (View).Packs.Find (Name);
 
-         if Project.Pack.Set.Has_Element (Cursor) then
-            return Project.Pack.Set.Element (Cursor);
+         if Pack_Internal.Set.Has_Element (Cursor) then
+            return Pack_Internal.Set.Element (Cursor);
          end if;
 
          exit when not View.Is_Extending;
@@ -2172,7 +2179,7 @@ package body GPR2.Project.View is
          View := View.Extended_Root;
       end loop;
 
-      return Project.Pack.Object'
+      return Pack_Internal.Object'
         (Source_Reference.Pack.Object
            (Source_Reference.Pack.Create (Source_Reference.Builtin, Name))
          with Project.Attribute.Set.Empty_Set, Project.Variable.Set.Empty_Set);
@@ -2193,15 +2200,15 @@ package body GPR2.Project.View is
          Result := Self.Extended_Root.Packages (With_Defaults => False);
       end if;
 
-      for Pack of Definition.Get_RO (Self).Packs loop
+      for Pack of View_Internal.Get_RO (Self).Packs loop
          Result.Include (Pack.Id);
       end loop;
 
       if With_Config
-        and then Self.Tree.Has_Configuration
+        and then Self.Tree_Int.Has_Configuration
       then
-         for Pack of Definition.Get_RO
-           (Self.Tree.Configuration.Corresponding_View).Packs
+         for Pack of View_Internal.Get_RO
+           (Self.Tree_Int.Configuration.Corresponding_View).Packs
          loop
             Result.Include (Pack.Id);
          end loop;
@@ -2234,7 +2241,7 @@ package body GPR2.Project.View is
 
    function Path_Name (Self : Object) return GPR2.Path_Name.Object is
    begin
-      return Definition.Get_RO (Self).Trees.Project.Path_Name;
+      return View_Internal.Get_RO (Self).Trees.Project.Path_Name;
    end Path_Name;
 
    ---------------
@@ -2243,7 +2250,7 @@ package body GPR2.Project.View is
 
    function Qualifier (Self : Object) return Project_Kind is
    begin
-      return Definition.Get_RO (Self).Trees.Project.Qualifier;
+      return View_Internal.Get_RO (Self).Trees.Project.Qualifier;
    end Qualifier;
 
    ------------------------
@@ -2290,7 +2297,7 @@ package body GPR2.Project.View is
    -- Set_Def --
    -------------
 
-   procedure Set_Def (Ref : out View.Object; Def : Definition_Base'Class) is
+   procedure Set_Def (Ref : out View.Object; Def : View_Internal.Data) is
    begin
       Definition_References.Set (Ref, Def);
       pragma Assert (Ref.Get_Refcount = 1);
@@ -2526,7 +2533,7 @@ package body GPR2.Project.View is
                  and then not Ada.Directories.Exists (S.Text))
          then
             Dir_Ref := S;
-            Definition.Foreach
+            View_Internal.Foreach
               (Base_Dir          => Self.Dir_Name,
                Messages          => Messages,
                Directory_Pattern => Filename_Optional (S.Text),
@@ -2596,8 +2603,8 @@ package body GPR2.Project.View is
          Result := False;
 
          declare
-            Def : constant Definition.Const_Ref :=
-                    Definition.Get_RO (Self);
+            Def : constant View_Internal.Const_Ref :=
+                    View_Internal.Get_RO (Self);
          begin
             if Def.Interface_Sources.Contains (S.Path_Name.Simple_Name) then
 
@@ -2697,7 +2704,7 @@ package body GPR2.Project.View is
       P : constant GPR2.Path_Name.Object :=
             Self.Object_Directory.Compose
               (Filename_Type (To_Lower (Self.Name))
-               & "-" & Self.Tree.Src_Subdirs, Directory => True);
+               & "-" & Self.Tree_Int.Src_Subdirs, Directory => True);
    begin
       --  First check for <obj>/<project.lowercase_name>-<src_subdirs>
 
@@ -2707,7 +2714,7 @@ package body GPR2.Project.View is
          --  Then default to <obj>/<src_subdirs>
 
          return Self.Object_Directory.Compose
-           (Self.Tree.Src_Subdirs, Directory => True);
+           (Self.Tree_Int.Src_Subdirs, Directory => True);
       end if;
    end Source_Subdirectory;
 
@@ -2749,22 +2756,13 @@ package body GPR2.Project.View is
       return Result;
    end Strong;
 
-   ----------
-   -- Tree --
-   ----------
-
-   function Tree (Self : Object) return not null access Project.Tree.Object is
-   begin
-      return Definition.Get_RO (Self).Tree;
-   end Tree;
-
    -----------
    -- Types --
    -----------
 
    function Types (Self : Object) return Project.Typ.Set.Object is
    begin
-      return Definition.Get_RO (Self).Types;
+      return View_Internal.Get_RO (Self).Types;
    end Types;
 
    -----------
@@ -2805,7 +2803,7 @@ package body GPR2.Project.View is
    function Variable
      (Self : Object; Name : Name_Type) return Project.Variable.Object is
    begin
-      return Definition.Get_RO (Self).Vars (Name);
+      return View_Internal.Get_RO (Self).Vars (Name);
    end Variable;
 
    function Variable
@@ -2822,7 +2820,7 @@ package body GPR2.Project.View is
 
    function Variables (Self : Object) return Project.Variable.Set.Object is
    begin
-      return Definition.Get_RO (Self).Vars;
+      return View_Internal.Get_RO (Self).Vars;
    end Variables;
 
    function Variables
@@ -2836,9 +2834,9 @@ package body GPR2.Project.View is
    --------------
 
    function View_For (Self : Object; Name : Name_Type) return View.Object is
-      Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
+      Data : constant View_Internal.Const_Ref := View_Internal.Get_RO (Self);
       Dad  : Object := Data.Extended_Root;
-      C    : Definition.Project_View_Store.Cursor;
+      C    : View_Internal.Project_View_Store.Cursor;
    begin
       --  Lookup in the ancestors first
 
@@ -2847,15 +2845,15 @@ package body GPR2.Project.View is
             return Dad;
          end if;
 
-         Dad := Definition.Get_RO (Dad).Extended_Root;
+         Dad := View_Internal.Get_RO (Dad).Extended_Root;
       end loop;
 
       --  Lookup in the imported next
 
       C := Data.Imports.Find (Name);
 
-      if Definition.Project_View_Store.Has_Element (C) then
-         return Definition.Project_View_Store.Element (C);
+      if View_Internal.Project_View_Store.Has_Element (C) then
+         return View_Internal.Project_View_Store.Element (C);
       end if;
 
       --  Try configuration project
@@ -2879,11 +2877,11 @@ package body GPR2.Project.View is
    end View_For;
 
 begin
-   Definition.Get_RO   := Get_RO'Access;
-   Definition.Get_RW   := Get_RW'Access;
-   Definition.Get      := Get_Ref'Access;
-   Definition.Set      := Set_Def'Access;
-   Definition.Refcount := Refcount'Access;
-   Definition.Weak     := Weak'Access;
-   Definition.Strong   := Strong'Access;
+   View_Internal.Get_RO   := Get_RO'Access;
+   View_Internal.Get_RW   := Get_RW'Access;
+   View_Internal.Get      := Get_Ref'Access;
+   View_Internal.Set      := Set_Def'Access;
+   View_Internal.Refcount := Refcount'Access;
+   View_Internal.Weak     := Weak'Access;
+   View_Internal.Strong   := Strong'Access;
 end GPR2.Project.View;

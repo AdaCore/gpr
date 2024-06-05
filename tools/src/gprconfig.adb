@@ -37,7 +37,6 @@ with GNATCOLL.Traces;
 with GPR2.Containers;
 with GPR2.KB;
 with GPR2.Log;
-with GPR2.Message;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Configuration;
 with GPR2.Version;
@@ -816,12 +815,9 @@ begin
       Knowledge_Base.Add (KB_Flags, KB_Location);
    end loop;
 
-   for Msg_Cur in Knowledge_Base.Log_Messages.Iterate
+   Knowledge_Base.Log_Messages.Output_Messages
      (Information => Opt_Verbosity = Verbose,
-      Warning     => Opt_Verbosity = Verbose)
-   loop
-      Log.Element (Msg_Cur).Output;
-   end loop;
+      Warning     => Opt_Verbosity = Verbose);
 
    if Knowledge_Base.Has_Error then
       Text_IO.Put_Line
@@ -880,12 +876,9 @@ begin
          Set_Of_Targets : GPR2.Containers.Name_Set;
       begin
          if Knowledge_Base.Has_Error then
-            for Msg_Cur in Knowledge_Base.Log_Messages.Iterate
+            Knowledge_Base.Log_Messages.Output_Messages
               (Information => Opt_Verbosity > Quiet,
-               Warning     => Opt_Verbosity > Quiet)
-            loop
-               Log.Element (Msg_Cur).Output;
-            end loop;
+               Warning     => Opt_Verbosity > Quiet);
 
             Text_IO.Put_Line
               (Text_IO.Standard_Error,
@@ -951,13 +944,9 @@ begin
    end if;
 
    if Config_Log.Has_Error then
-      for Msg_Cur in Config_Log.Iterate
+      Config_Log.Output_Messages
         (Information => Opt_Verbosity > Quiet,
-         Warning     => Opt_Verbosity > Quiet,
-         Read        => False)
-      loop
-         Log.Element (Msg_Cur).Output;
-      end loop;
+         Warning     => Opt_Verbosity > Quiet);
 
       Text_IO.Put_Line
         (Text_IO.Standard_Error,
@@ -966,12 +955,9 @@ begin
       GNAT.OS_Lib.OS_Exit (1);
 
    elsif Knowledge_Base.Has_Error then
-      for Msg_Cur in Knowledge_Base.Log_Messages.Iterate
+      Knowledge_Base.Log_Messages.Output_Messages
         (Information => Opt_Verbosity > Quiet,
-         Warning     => Opt_Verbosity > Quiet)
-      loop
-         Log.Element (Msg_Cur).Output;
-      end loop;
+         Warning     => Opt_Verbosity > Quiet);
 
       Text_IO.Put_Line
         (Text_IO.Standard_Error,
@@ -980,11 +966,8 @@ begin
       GNAT.OS_Lib.OS_Exit (1);
 
    else
-      for Msg_Cur in Config_Log.Iterate
-        (Information => Opt_Verbosity > Quiet)
-      loop
-         Log.Element (Msg_Cur).Output;
-      end loop;
+      Config_Log.Output_Messages
+        (Information => Opt_Verbosity > Quiet);
    end if;
 
    if Config_Contents /= Null_Unbounded_String then

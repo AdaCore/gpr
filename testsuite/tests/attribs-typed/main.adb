@@ -1,42 +1,25 @@
-with Ada.Directories;
-with Ada.Exceptions;
 with Ada.Text_IO;
-with GPR2.Project.View;
+with GPR2.Options;
 with GPR2.Project.Tree;
-with GPR2.Project.Attribute_Index;
-with GPR2.Project.Attribute.Set;
-with GPR2.Project.Name_Values;
-with GPR2.Project.Registry.Attribute;
-with GPR2.Project.Registry.Pack;
-with GPR2.Project.Variable.Set;
-with GPR2.Context;
 
 procedure Main is
 
    use Ada;
    use GPR2;
-   use GPR2.Project;
-   use GPR2.Project.Registry.Attribute;
-
-   use all type GPR2.Project.Name_Values.Value_Kind;
 
 
-   procedure Test (Project_File : Filename_Type);
+   procedure Test (Project_File : String);
 
-   procedure Test (Project_File : Filename_Type) is
+   procedure Test (Project_File : String) is
       Prj : Project.Tree.Object;
-      Ctx : Context.Object;
+      Opt : Options.Object;
+      Res : Boolean;
 
    begin
-
-      begin
-         Project.Tree.Load_Autoconf (Prj, Create (Project_File), Ctx);
-      exception
-         when E : others =>
-            Ada.Text_IO.Put_Line (Ada.Exceptions.Exception_Message (E));
-            Prj.Log_Messages.Output_Messages (Information => False);
-      end;
-
+      Opt.Add_Switch (Options.P, Project_File);
+      if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+         Ada.Text_IO.Put_Line ("Successfully loaded " & Project_File);
+      end if;
       Prj.Unload;
    end Test;
 

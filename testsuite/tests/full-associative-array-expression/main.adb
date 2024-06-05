@@ -1,7 +1,7 @@
 with Ada.Exceptions;
 with Ada.Text_IO;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute.Set;
@@ -17,9 +17,9 @@ procedure Main is
 
    use GPR2;
 
-   procedure Test (Filename : GPR2.Filename_Type) is
+   procedure Test (Filename : String) is
       Tree    : GPR2.Project.Tree.Object;
-      Context : GPR2.Context.Object;
+      Opt     : Options.Object;
 
       procedure Print_Attributes (Name : Q_Attribute_Id) is
          Attributes : GPR2.Project.Attribute.Set.Object;
@@ -74,23 +74,12 @@ procedure Main is
       end Print_Attributes;
 
    begin
-      begin
-         Ada.Text_IO.Put_Line (String (Filename));
-         Tree.Load_Autoconf
-           (Filename  => GPR2.Path_Name.Create_File (Filename),
-            Context   => Context);
-      exception
-         when E : others =>
-            Ada.Text_IO.Put_Line (Ada.Exceptions.Exception_Message (E));
-      end;
-      Print_Attributes ((+"", +"Runtime"));
-      Print_Attributes ((+"Compiler", +"Switches"));
-      if Tree.Has_Messages  then
-         for C in Tree.Log_Messages.Iterate
-           (False, True, True, True, True)
-         loop
-            Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-         end loop;
+      Opt.Add_Switch (Options.P, Filename);
+      Ada.Text_IO.Put_Line (Filename);
+
+      if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+         Print_Attributes ((+"", +"Runtime"));
+         Print_Attributes ((+"Compiler", +"Switches"));
       end if;
    end Test;
 

@@ -79,18 +79,9 @@ function Main return Natural is
          Opts.Add_Switch (GPR2.Options.Src_Subdirs, Src_Subdir);
       end if;
 
-      Opts.Finalize;
-
-      if not Opts.Load_Project
-        (Tree             => Tree,
-         With_Runtime     => False)
-      then
-         Tree.Log_Messages.Output_Messages (Information => False,
-                                            Warning     => False);
+      if not Tree.Load (Opts) then
          return 1;
       end if;
-
-      Tree.Log_Messages.Output_Messages (Information => False);
 
       for NS of Tree.Namespace_Root_Projects loop
          Ada.Text_IO.Put_Line ("=========================================");

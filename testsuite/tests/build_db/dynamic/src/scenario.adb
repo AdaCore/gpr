@@ -7,8 +7,7 @@ with GPR2.Path_Name;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
 with GPR2.Build.Source.Sets;
-with GPR2.Context;
-with GPR2.Log;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -48,8 +47,6 @@ package body Scenario is
    Tok_Remove  : constant XString := To_XString ("remove");
    --  Remove a file
 
-   Ctx         : Context.Object := Context.Empty;
-
    package VFS_Vectors is new Ada.Containers.Vectors (Positive, Virtual_File);
 
    -------------
@@ -78,7 +75,6 @@ package body Scenario is
       Old_Dir       : constant Virtual_File := Get_Current_Dir;
       Artifacts     : VFS_Vectors.Vector;
       Loaded        : Boolean := False;
-      Log           : GPR2.Log.Object;
 
    begin
       Scenario_Path.Get_Parent.Change_Dir;
@@ -101,41 +97,30 @@ package body Scenario is
                     ("--- Loading project " & Tokens (2).To_String);
 
                   if Loaded then
-                     Tree.Unload (True);
+                     Tree.Unload;
                      Loaded := False;
                   end if;
 
+                  declare
+                     Opt : GPR2.Options.Object;
                   begin
-                     Project.Tree.Load_Autoconf
-                       (Tree,
-                        Path_Name.Create_File
-                          (Filename_Type (Tokens (2).To_String)),
-                        Ctx);
-                     Tree.Log_Messages.Output_Messages (Information => False);
-
-                  exception
-                     when GPR2.Project_Error =>
-                        Tree.Log_Messages.Output_Messages
-                          (Information => False);
-
-                        exit;
+                     Opt.Add_Switch (Options.P, Tokens (2).To_String);
+                     if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+                        Tree.Update_Sources;
+                        Loaded := True;
+                     end if;
                   end;
-
-                  Tree.Update_Sources (Messages => Log);
-                  Log.Output_Messages (Information => False);
-                  Loaded := True;
 
                elsif Cmd = Tok_Unload then
                   Ada.Text_IO.Put_Line
                     ("--- Unloading project");
-                  Tree.Unload (Full => True);
+                  Tree.Unload;
                   Loaded := False;
 
                elsif Cmd = Tok_Refresh then
                   Ada.Text_IO.Put_Line
                     ("--- Refresh list of sources");
-                  Tree.Update_Sources (Messages => Log);
-                  Log.Output_Messages (Information => False);
+                  Tree.Update_Sources;
 
                elsif Cmd = Tok_Dump then
                   Ada.Text_IO.Put_Line ("-----------------------------------");

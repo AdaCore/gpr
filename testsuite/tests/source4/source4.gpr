@@ -6,6 +6,6 @@ project Source4 is
    for Main use ("main.adb");
 
    package Compiler is
-      for Switches ("Ada") use ("-g");
+      for Switches ("Ada") use ("-gnatwu", "-g", "-O1");
    end Compiler;
 end Source4;

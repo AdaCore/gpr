@@ -1,12 +1,10 @@
-with Ada.Directories;
 with Ada.Text_IO;
-with Ada.Strings.Fixed;
 
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Variable.Set;
-with GPR2.Context;
+with GPR2.Options;
 
 procedure Main is
 
@@ -29,7 +27,7 @@ procedure Main is
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       if Full then
-         for A of Prj.Attributes (With_Defaults => False) loop
+         for A of Prj.Attributes (With_Defaults => False, With_Config => False) loop
             Text_IO.Put
               ("A:   " & Image (A.Name.Id.Attr));
             Text_IO.Put (" ->");
@@ -53,35 +51,20 @@ procedure Main is
    end Display;
 
    Prj1, Prj2 : Project.Tree.Object;
-   Ctx        : Context.Object;
+   Opt        : Options.Object;
+   Res        : Boolean;
 
 begin
-   Ctx.Include ("DEF", "MyDefault");
-   Project.Tree.Load (Prj1, Create ("demo.gpr"), Ctx);
+   Opt.Add_Switch (Options.P, "demo.gpr");
+   Opt.Add_Switch (Options.X, "DEF=MyDefault");
+   Res := Prj1.Load (Opt, Absent_Dir_Error => No_Error);
 
-   Ctx.Include ("arch", "Linux");
-   Project.Tree.Load (Prj2, Create ("demo.gpr"), Ctx);
+   Opt := Options.Empty_Options;
+   Opt.Add_Switch (Options.P, "demo.gpr");
+   Opt.Add_Switch (Options.X, "DEF=MyDefault");
+   Opt.Add_Switch (Options.X, "arch=Linux");
+   Res := Prj2.Load (Opt, Absent_Dir_Error => No_Error);
 
    Display (Prj1.Root_Project);
-
    Display (Prj2.Root_Project);
-exception
-   when GPR2.Project_Error =>
-      if Prj1.Has_Messages then
-         Text_IO.Put_Line ("Messages found:");
-
-         for M of Prj1.Log_Messages.all loop
-            declare
-               Mes : constant String := M.Format;
-               L   : constant Natural :=
-                       Strings.Fixed.Index (Mes, "/case-variable2");
-            begin
-               if L /= 0 then
-                  Text_IO.Put_Line (Mes (L .. Mes'Last));
-               else
-                  Text_IO.Put_Line (Mes);
-               end if;
-            end;
-         end loop;
-      end if;
 end Main;

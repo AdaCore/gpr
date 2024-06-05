@@ -1,4 +1,9 @@
 **************** Iterator Prj1
+runtime  K_STANDARD
+A:   Externally_Built -> true
+A:   Languages -> ada
+A:   Object_Dir -> <gcc>/lib/gcc/(host)/(gcc-version)/adalib
+A:   Source_Dirs -> <gcc>/lib/gcc/(host)/(gcc-version)/adainclude
 Lib      K_LIBRARY
 A:   Library_Dir -> lib
 A:   Library_Name -> l
@@ -12,6 +17,11 @@ A:   Source_Dirs -> fsrc
                   language: Ada    Kind: spec   unit: FIRST
    is root
 **************** Iterator Prj2
+runtime  K_STANDARD
+A:   Externally_Built -> true
+A:   Languages -> ada
+A:   Object_Dir -> <gcc>/lib/gcc/(host)/(gcc-version)/adalib
+A:   Source_Dirs -> <gcc>/lib/gcc/(host)/(gcc-version)/adainclude
 Lib      K_LIBRARY
 A:   Library_Dir -> lib
 A:   Library_Name -> l

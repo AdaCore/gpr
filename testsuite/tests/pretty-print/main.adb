@@ -1,6 +1,6 @@
 with Ada.Text_IO;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.Log;
 with GPR2.Message;
 with GPR2.Path_Name;
@@ -42,7 +42,7 @@ procedure Main is
       Backward_Compatibility : Boolean              := False
      ) is
       Prj : Project.Tree.Object;
-      Ctx : Context.Object;
+      Opt : Options.Object;
       PP  : Project.Pretty_Printer.Object :=
               Project.Pretty_Printer.Create
                 (With_Comments          => With_Comments,
@@ -52,27 +52,15 @@ procedure Main is
                  Minimize_Empty_Lines   => Minimize_Empty_Lines,
                  Backward_Compatibility => Backward_Compatibility);
    begin
-      Project.Tree.Load (Prj, Create (Filename_Type (Filename)), Ctx);
-      PP.Pretty_Print
-        (View            => Prj.Root_Project,
-         Write_Character => Write_Character,
-         Write_String    => Write_String,
-         Write_EOL       => Write_EOL);
-      Ada.Text_IO.Put (PP.Result);
-
-   exception
-      when GPR2.Project_Error =>
-         Text_IO.Put_Line ("Error: failed to load the tree");
-         for C in Prj.Log_Messages.Iterate
-           (False, False, True, True, True)
-         loop
-            declare
-               M   : constant Message.Object := Log.Element (C);
-               Mes : constant String := M.Format;
-            begin
-               Text_IO.Put_Line (Mes);
-            end;
-         end loop;
+      Opt.Add_Switch (Options.P, Filename);
+      if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+         PP.Pretty_Print
+           (View            => Prj.Root_Project,
+            Write_Character => Write_Character,
+            Write_String    => Write_String,
+            Write_EOL       => Write_EOL);
+         Ada.Text_IO.Put (PP.Result);
+      end if;
    end Test;
 
    procedure Write_C (C : Character) is

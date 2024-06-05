@@ -1,26 +1,17 @@
 with Ada.Directories;
-with Ada.Exceptions;
 with Ada.Text_IO;
-with GPR2.Project.View;
-with GPR2.Project.Tree;
+
+with GPR2.Options;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
-with GPR2.Project.Name_Values;
-with GPR2.Project.Registry.Attribute;
-with GPR2.Project.Registry.Pack;
-with GPR2.Project.Variable.Set;
-with GPR2.Context;
-
-with GNAT.Traceback.Symbolic;
+with GPR2.Project.Tree;
+with GPR2.Project.View;
 
 procedure Main is
 
    use Ada;
    use GPR2;
    use GPR2.Project;
-   use GPR2.Project.Registry.Attribute;
-
-   use all type GPR2.Project.Name_Values.Value_Kind;
 
    procedure Display (Prj : Project.View.Object; Full : Boolean := True);
 
@@ -30,7 +21,6 @@ procedure Main is
 
    procedure Display (Prj : Project.View.Object; Full : Boolean := True) is
       use GPR2.Project.Attribute.Set;
-      use GPR2.Project.Variable.Set.Set;
 
       procedure Put_Attributes (Attrs : Attribute.Set.Object);
 
@@ -43,7 +33,7 @@ procedure Main is
       begin
          for A in Attrs.Iterate (With_Defaults => True) loop
             Attr := Attribute.Set.Element (A);
-            Text_IO.Put ("A:   " & Image (Attr.Name.Id.Attr));
+            Text_IO.Put ("A:   " & Image (Attr.Name.Id));
 
             if Attr.Has_Index then
                if Attr.Index.Is_Any_Index then
@@ -82,7 +72,6 @@ procedure Main is
          Put_Attributes (Prj.Attributes (With_Config => False));
 
          for P of Prj.Packages (With_Defaults => False, With_Config => False) loop
-            Text_IO.Put_Line (Image (P));
             Put_Attributes (Prj.Attributes (Pack => P, With_Defaults => False, With_Config => False));
          end loop;
       end if;
@@ -90,10 +79,11 @@ procedure Main is
    end Display;
 
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Opt : Options.Object;
 
 begin
-   Project.Tree.Load_Autoconf (Prj, Create ("demo.gpr"), Ctx);
-
-   Display (Prj.Root_Project);
+   Opt.Add_Switch (Options.P, "demo.gpr");
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
+   end if;
 end Main;

@@ -1,42 +1,15 @@
-with Ada.Text_IO;
-with Ada.Strings.Fixed;
-
-with GPR2.Context;
-with GPR2.Log;
-with GPR2.Message;
+with GPR2.Options;
 with GPR2.Project.Tree;
 
 procedure Main is
 
-   use Ada;
    use GPR2;
-   use GPR2.Project;
 
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Opt : Options.Object;
+   Res : Boolean;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
-exception
-   when GPR2.Project_Error =>
-      if Prj.Has_Messages then
-         Text_IO.Put_Line ("Messages found:");
-
-         for C in Prj.Log_Messages.Iterate
-           (False, False, True, True, True)
-         loop
-            declare
-               M   : constant Message.Object := Log.Element (C);
-               Mes : constant String := M.Format;
-               L   : constant Natural :=
-                       Strings.Fixed.Index (Mes, "/variables3");
-            begin
-               if L /= 0 then
-                  Text_IO.Put_Line (Mes (L .. Mes'Last));
-               else
-                  Text_IO.Put_Line (Mes);
-               end if;
-            end;
-         end loop;
-      end if;
+   Opt.Add_Switch (Options.P, "demo.gpr");
+   Res := Prj.Load (Opt, Absent_Dir_Error => No_Error);
 end Main;

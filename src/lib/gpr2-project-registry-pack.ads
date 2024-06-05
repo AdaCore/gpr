@@ -8,6 +8,8 @@
 --  and some of their properties.
 --  Custom packages can be added by custom tools.
 
+with GPR2.Containers;
+
 package GPR2.Project.Registry.Pack is
 
    type Projects_Kind is array (Project_Kind) of Boolean

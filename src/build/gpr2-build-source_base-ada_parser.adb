@@ -11,12 +11,11 @@ with Gpr_Parser.Basic_Ada_Parser;
 
 with GPR2.Build.Unit_Info;
 with GPR2.Containers;
-with GPR2.File_Readers;
 
 package body GPR2.Build.Source_Base.Ada_Parser is
 
    procedure Compute
-     (Tree             : access GPR2.Project.Tree.Object;
+     (File_Reader      : GPR2.File_Readers.File_Reader_Reference;
       Data             : in out Source_Base.Object'Class;
       Get_Withed_Units : Boolean;
       Success          : out Boolean)
@@ -182,7 +181,7 @@ package body GPR2.Build.Source_Base.Ada_Parser is
       Ctx : constant Analysis_Context :=
             Create_Context
                (File_Reader =>
-                  GPR2.File_Readers.Convert (Tree.File_Reader));
+                  GPR2.File_Readers.Convert (File_Reader));
 
    begin
       Gpr_Parser.Basic_Ada_Parser.Parse_Context_Clauses

@@ -10,7 +10,6 @@ with GPR2.Build.Actions;
 with GPR2.Build.Artifacts;
 with GPR2.Build.View_Db;
 with GPR2.Log;
-limited with GPR2.Project.Tree;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.View_Ids;
@@ -18,6 +17,8 @@ with GPR2.View_Ids;
 private with Ada.Containers.Hashed_Maps;
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Indefinite_Ordered_Sets;
+
+limited private with GPR2.Tree_Internal;
 
 package GPR2.Build.Tree_Db is
 
@@ -28,20 +29,7 @@ package GPR2.Build.Tree_Db is
 
    function Is_Defined (Self : Object) return Boolean;
 
-   function Tree (Self : Object) return access GPR2.Project.Tree.Object
-     with Pre => Self.Is_Defined;
-
    --  CREATING/UNLOADING/REFRESHING THE TREE DATABASE:
-
-   procedure Create
-     (Self                 : in out Object;
-      Tree                 : GPR2.Project.Tree.Object;
-      With_Runtime_Sources : Boolean)
-     with Pre => not Self.Is_Defined;
-   --  Initializes the object.
-   --  The artifacts are not loaded at this stage, Refresh needs to be called
-   --  With_Runtime_Sources indicates whether the database should consider the
-   --  sources of the Ada runtime attached to the tree or not.
 
    procedure Check_Tree (Self : in out Object)
      with Pre => Self.Is_Defined;
@@ -246,7 +234,7 @@ private
       Self            : access Object;
       --  Handy self-reference
 
-      Tree            : access GPR2.Project.Tree.Object;
+      Tree            : access GPR2.Tree_Internal.Object;
       --  The project tree
 
       Build_Dbs       : Build_DB_Maps.Map;
@@ -265,6 +253,12 @@ private
       Successors      : Artifact_Actions_Maps.Map;
       Predecessor     : Artifact_Action_Maps.Map;
    end record;
+
+   procedure Create
+     (Self                 : in out Object;
+      Tree                 : GPR2.Tree_Internal.Object;
+      With_Runtime_Sources : Boolean)
+     with Pre => not Self.Is_Defined;
 
    Undefined : constant Object := (others => <>);
 

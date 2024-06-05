@@ -4,12 +4,12 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.Project.Tree;
-private with GPR2.Project.Typ;
-
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 private with Ada.Containers.Ordered_Sets;
 private with Ada.Containers.Vectors;
+
+with GPR2.Project.Tree;
+private with GPR2.Project.Typ;
 
 package GPR2.Project.External is
 

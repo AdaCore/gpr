@@ -3,7 +3,7 @@ with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
 
-with GPR2.Context;
+with GPR2.Options;
 with GPR2.KB;
 with GPR2.Log;
 with GPR2.Context;
@@ -91,33 +91,32 @@ procedure Main is
       end if;
    end Display;
 
-   Gpr : constant GPR2.Path_Name.Object := Create ("demo.gpr");
    Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   Opt : Options.Object;
 
    Des : Configuration.Description :=
            Configuration.Create (Language => Ada_Language);
    KB  : GPR2.KB.Object := GPR2.KB.Create (GPR2.KB.Default_Flags);
    Cnf : Configuration.Object :=
            Configuration.Create
-            (Configuration.Description_Set'(1 => Des), "all", Gpr,
-             Base => KB);
+             (Configuration.Description_Set'(1 => Des), "all",
+              Path_Name.Create_File ("demo.gpr"),
+              Base      => KB,
+              Save_Name => Path_Name.Create_File ("conf.cgpr"));
 begin
    if Cnf.Has_Messages then
       Cnf.Log_Messages.Output_Messages (Information => False);
    end if;
 
-   Ctx.Include ("OS", "Linux");
-   Project.Tree.Load (Prj, Gpr, Ctx, Config => Cnf);
+   Opt.Add_Switch (Options.P, "demo.gpr");
+   Opt.Add_Switch (Options.X, "OS=Linux");
+   Opt.Add_Switch (Options.Config, "conf.cgpr");
 
-   Display (Prj.Root_Project);
+   if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+      Display (Prj.Root_Project);
 
-   if Prj.Has_Configuration then
-      Display (Prj.Configuration.Corresponding_View, Full => False);
+      if Prj.Has_Configuration then
+         Display (Prj.Configuration.Corresponding_View, Full => False);
+      end if;
    end if;
-
-exception
-   when E : GPR2.Project_Error =>
-      Text_IO.Put_Line (Exception_Information (E));
-      Prj.Log_Messages.Output_Messages (Information => False);
 end Main;

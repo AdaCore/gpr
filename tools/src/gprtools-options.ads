@@ -40,14 +40,17 @@ package GPRtools.Options is
 
       Args                     : GPR2.Containers.Value_Set;
 
+      --  Whether the tool allows finding implicit projects
+
+      Find_Implicit_Project : Boolean := True;
+
       --  The project tree once loaded
 
-      Tree                     : access GPR2.Project.Tree.Object;
+      Tree                     : GPR2.Project.Tree.Object;
 
       --  Verbosity control
 
       Verbosity                : GPRtools.Verbosity_Level := GPRtools.Regular;
-      Full_Path_Name_For_Brief : aliased Boolean := False;
       Warnings                 : aliased Boolean := True;
 
       --  Distributed mode
@@ -101,11 +104,10 @@ package GPRtools.Options is
 
    function Load_Project
      (Opt                : in out Base_Options'Class;
-      Absent_Dir_Error   : GPR2.Project.Tree.Error_Level;
+      Absent_Dir_Error   : GPR2.Error_Level;
       Handle_Information : Boolean := False;
       Handle_Errors      : Boolean := True;
-      Handle_Lint        : Boolean := False) return Boolean
-     with Pre => Opt.Tree /= null;
+      Handle_Lint        : Boolean := False) return Boolean;
    --  Load project given in the options and display errors based on the
    --  selection given by Handle_{Error|Lint|Information).
 

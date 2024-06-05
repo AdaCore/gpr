@@ -1,4 +1,3 @@
-Messages found:
 demo.gpr:7:17: error: parameters of Default built-in must be of the same type
 demo.gpr:8:17: error: parameters of Default built-in must be of the same type
 demo.gpr:9:17: error: parameters of Default built-in must be of the same type
