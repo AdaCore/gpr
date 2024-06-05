@@ -5,6 +5,7 @@ include:
 stages:
   - build
   - test
+  - post
 
 .gpr2_test_template:
   extends: .test_template
@@ -134,3 +135,29 @@ test_gpr2_cov:
       coverage_report:
         coverage_format: cobertura
         path: coverage/cobertura.xml
+
+####################
+## POSTPROCESSING ##
+####################
+
+post:
+  extends: .job_template
+  stage: post
+  when: always
+  services:
+    - cpu:1
+    - image:pe-base
+  script:
+    # generate badge
+    - cd $CI_PROJECT_DIR
+    - rm -f test-count.svg
+    - if ls test*_result.xml &> /dev/null; then
+        create_xunit_badge --xunit_reports test*_result.xml ;
+      else
+        anybadge -l "Tests Passing" -v "Error" -f test-count.svg -c red ;
+      fi
+  artifacts:
+    when:
+      always
+    paths:
+      - test-count.svg
