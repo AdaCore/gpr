@@ -92,25 +92,34 @@ test_gpr2:
 test_gpr2_cov:
   extends: .test_template
   needs: []
-  script:
-    - anod build gpr2 -Qcoverage,next
+  script: |
+    exec anod build gpr2 -Qcoverage,next
 
     # do a normal testsuite run but save the exit code instead of just exiting
     # so that coverage artifacts can be saved and used.
-    - result=0
-    - run_testsuite gpr2 -Qcoverage,next test_gpr2_cov || result=$?
+    result=0
+    run_testsuite gpr2 -Qcoverage,next test_gpr2_cov || result=$?
 
-    - mkdir $CI_PROJECT_DIR/coverage
+    mkdir $CI_PROJECT_DIR/coverage
 
     # save coverage results
-    - mv $RESULTS_DIR/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
-    - mv $RESULTS_DIR/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
+    exec mv $RESULTS_DIR/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
+    exec mv $RESULTS_DIR/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
+
+    # export to gitlab pages
+    if [[ $CI_PIPELINE_SOURCE = "merge_request_event" ]]; then
+      target_subdir=MRs/$CI_MERGE_REQUEST_IID
+    else
+      target_subdir=$CI_COMMIT_BRANCH
+    fi
+    exec publish-pages $CI_PROJECT_DIR/coverage/dhtml/ --target-subdir $target_subdir --expires 30
+    echo "Coverage report: https://pages.gitlab.adacore-it.com/eng/gpr/gpr/$target_subdir/index.html"
 
     # display coverage stats for global reporting
-    - echo_coverage_stats --coverage-file $RESULTS_DIR/coverage-xml/index.xml
+    echo_coverage_stats --coverage-file $RESULTS_DIR/coverage-xml/index.xml
 
     # report initial test status code
-    - exit $result
+    exit $result
 
   coverage: '/^Stmt Coverage:\s+(\d+\.\d+\%) \(\d+ \/ \d+\)$/'
   artifacts:
