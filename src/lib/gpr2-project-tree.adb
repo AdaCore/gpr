@@ -3248,8 +3248,23 @@ package body GPR2.Project.Tree is
                  and then not Attr.Is_Default
                then
                   declare
-                     AV : constant Source_Reference.Value.Object := Attr.Value;
-                     PN : constant Path_Name.Object := Get_Directory (View);
+                     AV  : Source_Reference.Value.Object renames Attr.Value;
+                     PN  : constant Path_Name.Object := Get_Directory (View);
+                     Val : constant String := String (Attr.Value.Text);
+                     Rel : constant String :=
+                             String (PN.Relative_Path (View.Dir_Name));
+
+                     --  If the attribute value is an absolute path, use it
+                     --  as-is in the error message, else use a relative
+                     --  path, ensuring the trailing slash is removed for
+                     --  homogeneity with old gprbuild.
+                     --  ??? Relative path is not really appropriate if the
+                     --  build tree is relocated...
+                     Dir : constant String :=
+                             (if GNAT.OS_Lib.Is_Absolute_Path (Val)
+                              then Val
+                              else Rel (Rel'First .. Rel'Last - 1));
+
                   begin
                      if Must_Exist
                        and then Self.Absent_Dir_Error /= No_Error
@@ -3258,49 +3273,49 @@ package body GPR2.Project.Tree is
                         Self.Messages.Append
                           (Message.Create
                              ((if Self.Absent_Dir_Error = Error
-                              then Message.Error
-                              else Message.Warning),
+                               then Message.Error
+                               else Message.Warning),
                               (if Human_Name = ""
                                then "D"
                                else Human_Name & " d") & "irectory """
-                              & AV.Text & """ not found",
+                              & Dir  & """ not found",
                               Sloc => AV));
 
-                     elsif Self.Build_Path.Is_Defined
+                     end if;
+
+                     if Self.Build_Path.Is_Defined
                        and then not View.Is_Externally_Built
-                       and then OS_Lib.Is_Absolute_Path (AV.Text)
-                       and then Self.Build_Path /= Self.Root.Dir_Name
                      then
-                        Self.Messages.Append
-                          (Message.Create
-                             (Message.Warning,
-                                  '"'
-                              & PN.Value
-                              & """ cannot relocate absolute "
-                              & (if Human_Name = ""
-                                then ""
-                                else Human_Name & ' ')
-                              & "directory",
-                              Sloc => AV));
+                        if OS_Lib.Is_Absolute_Path (AV.Text)
+                          and then Self.Build_Path /= Self.Root.Dir_Name
+                        then
+                           Self.Messages.Append
+                             (Message.Create
+                                (Message.Warning,
+                                 '"' & PN.Value
+                                 & """ cannot relocate absolute "
+                                 & (if Human_Name = ""
+                                   then ""
+                                   else Human_Name & ' ')
+                                 & "directory",
+                                 Sloc => AV));
 
-                     elsif Self.Build_Path.Is_Defined
-                       and then not View.Is_Externally_Built
-                       and then Self.Build_Path /= Self.Root.Dir_Name
-                       and then not Self.Build_Path.Contains (PN)
-                     then
-                        Self.Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              '"'
-                              & String (Self.Build_Path.Dir_Name)
-                              & String (PN.Relative_Path (Self.Build_Path))
-                              & """ cannot relocate "
-                              & (if Human_Name = ""
-                                 then ""
-                                 else Human_Name & ' ')
-                              & "directory deeper than relocated build tree,",
-                              Sloc => AV));
-
+                        elsif Self.Build_Path /= Self.Root.Dir_Name
+                          and then not Self.Build_Path.Contains (PN)
+                        then
+                           Self.Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 '"' & String (Self.Build_Path.Dir_Name)
+                                 & String (PN.Relative_Path (Self.Build_Path))
+                                 & """ cannot relocate "
+                                 & (if Human_Name = ""
+                                   then ""
+                                   else Human_Name & ' ')
+                                 & "directory deeper than relocated build "
+                                 & "tree,",
+                                 Sloc => AV));
+                        end if;
                      end if;
                   end;
 

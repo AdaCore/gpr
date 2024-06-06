@@ -1,0 +1,19 @@
+=== test with --subdirs="" ===
+Project Prj K_STANDARD
+ - Obj: /trees/obj/prj
+Project Prebuilt K_LIBRARY
+ - Obj: /trees/obj/prebuilt
+ - Lib: /trees/lib
+=== test with --subdirs="subdir" ===
+Project Prj K_STANDARD
+ - Obj: /trees/obj/prj/subdir
+Project Prebuilt K_LIBRARY
+ - Obj: /trees/obj/prebuilt
+ - Lib: /trees/lib
+=== test with --subdirs="non_existing" ===
+prj.gpr:5:23: warning: object directory "obj/prj/non_existing" not found
+Project Prj K_STANDARD
+ - Obj: /trees/obj/prj/non_existing
+Project Prebuilt K_LIBRARY
+ - Obj: /trees/obj/prebuilt
+ - Lib: /trees/lib

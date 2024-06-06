@@ -1,0 +1,7 @@
+with "prebuilt";
+
+project Prj is
+
+   for Object_Dir use "obj/prj";
+
+end Prj;
