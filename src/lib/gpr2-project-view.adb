@@ -161,7 +161,7 @@ package body GPR2.Project.View is
          Dir      : constant Value_Type :=
                       Self.Attribute (Dir_Attr).Value.Text;
          Subdirs  : constant Filename_Optional :=
-                      (if Self.Is_Runtime then ""
+                      (if Self.Is_Externally_Built then ""
                        else Self.Tree_Int.Subdirs);
          Dir_Name : constant Filename_Type :=
                       (if Dir = "" then "." else Filename_Type (Dir));

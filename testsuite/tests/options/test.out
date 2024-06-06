@@ -105,18 +105,18 @@ Test OK
 Testing Load Project -aP added-path -Pload-project/test --autoconf=other-autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug
 creating configuration project autoconf.cgpr
 Load_Project returned TRUE
-test.gpr:6:32: warning: object directory "obj-Debug" not found
+test.gpr:6:32: warning: object directory "obj-Debug/subdirs" not found
 Test OK
 
 Testing Load Project -aP added-path -aP load-project --root-dir=. --relocate-build-tree=relocated -Ptest --autoconf=autoconf.cgpr -XBUILD=Debug
 creating configuration project other-autoconf.cgpr
 Load_Project returned TRUE
-test.gpr:6:32: warning: object directory "obj-Debug" not found
+test.gpr:6:32: warning: object directory "../relocated/load-project/obj-Debug" not found
 Test OK
 
 Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug
 Load_Project returned TRUE
-test.gpr:6:32: warning: object directory "obj-Release" not found
+test.gpr:6:32: warning: object directory "obj-Release/subdirs" not found
 Test OK
 
 Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug --target (host)
