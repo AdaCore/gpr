@@ -78,7 +78,7 @@ class GNATcov(object):
         logging.info('Consolidating coverage results')
         ckpt_file = os.path.join(self.temp_dir, 'report.ckpt')
         self.checked_run(['gnatcov', 'coverage', '--level', self.covlevel,
-                          '-P', 'gpr2-tools',
+                          '-P', 'gpr2',
                           '-XGPR2_BUILD=gnatcov',
                           '--externally-built-projects',
                           '--save-checkpoint', ckpt_file,
@@ -101,7 +101,7 @@ class GNATcov(object):
                 '--annotate', fmt,
                 '--level', self.covlevel,
                 '--output-dir', report_dir,
-                '-P', 'gpr2-tools',
+                '-P', 'gpr2',
                 '--externally-built-projects',
                 '-XGPR2_BUILD=gnatcov',
                 '--checkpoint', ckpt_file] + path_opt)
