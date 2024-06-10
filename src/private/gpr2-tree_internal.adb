@@ -2660,9 +2660,6 @@ package body GPR2.Tree_Internal is
          --  Check Library_Version attribute format
 
          declare
-            procedure Check_Not_Empty (Name : Q_Attribute_Id);
-            --  Check if attribute value is not empty
-
             procedure Check_Directory
               (Name          : Q_Attribute_Id;
                Human_Name    : String;
@@ -2679,8 +2676,6 @@ package body GPR2.Tree_Internal is
             --  Must_Exist: when set, check that the directory exists on the
             --    filesystem.
 
-            Attr : Attribute.Object;
-
             ---------------------
             -- Check_Directory --
             ---------------------
@@ -2692,98 +2687,97 @@ package body GPR2.Tree_Internal is
                                  (Self : Project.View.Object)
                                   return Path_Name.Object;
                Mandatory     : Boolean := False;
-               Must_Exist    : Boolean := True) is
+               Must_Exist    : Boolean := True)
+            is
+               Attr : constant Attribute.Object := View.Attribute (Name);
+
             begin
                --  We don't warn for default attributes (such as exec dir
                --  defaulting to a non-existing object dir), as we already
                --  warn for the referenced attribute.
-               if View.Check_Attribute (Name, Result => Attr)
-                 and then not Attr.Is_Default
-               then
-                  declare
-                     AV : constant Source_Reference.Value.Object := Attr.Value;
-                     PN : constant Path_Name.Object := Get_Directory (View);
-                  begin
-                     if Must_Exist
-                       and then Self.Absent_Dir_Error /= No_Error
-                       and then not PN.Exists
-                     then
-                        Self.Messages.Append
-                          (Message.Create
-                             ((if Self.Absent_Dir_Error = Error
-                              then Message.Error
-                              else Message.Warning),
-                              (if Human_Name = ""
-                               then "D"
-                               else Human_Name & " d") & "irectory """
-                              & AV.Text & """ not found",
-                              Sloc => AV));
 
-                     elsif Self.Build_Path.Is_Defined
-                       and then not View.Is_Externally_Built
-                       and then OS_Lib.Is_Absolute_Path (AV.Text)
+               if not Attr.Is_Defined or else Attr.Is_Default then
+                  if Mandatory then
+                     Self.Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "attribute " & Image (Name.Attr) & " not declared",
+                           Source_Reference.Create
+                             (View.Path_Name.Value, 0, 0)));
+                  end if;
+
+                  return;
+               end if;
+
+               declare
+                  AV  : Source_Reference.Value.Object renames Attr.Value;
+                  PN  : constant Path_Name.Object := Get_Directory (View);
+                  Val : constant String := String (Attr.Value.Text);
+                  Rel : constant String :=
+                          String (PN.Relative_Path (View.Dir_Name));
+
+                  --  If the attribute value is an absolute path, use it
+                  --  as-is in the error message, else use a relative
+                  --  path, ensuring the trailing slash is removed for
+                  --  homogeneity with old gprbuild.
+                  --  ??? Relative path is not really appropriate if the
+                  --  build tree is relocated...
+                  Dir : constant String :=
+                          (if GNAT.OS_Lib.Is_Absolute_Path (Val)
+                           then Val
+                           else Rel (Rel'First .. Rel'Last - 1));
+
+               begin
+                  if Must_Exist
+                    and then Self.Absent_Dir_Error /= No_Error
+                    and then not PN.Exists
+                  then
+                     Self.Messages.Append
+                       (Message.Create
+                          ((if Self.Absent_Dir_Error = Error
+                            then Message.Error
+                            else Message.Warning),
+                           (if Human_Name = "" then "D"
+                            else Human_Name & " d") & "irectory """
+                           & Dir & """ not found",
+                           Sloc => AV));
+                  end if;
+
+                  if Self.Build_Path.Is_Defined
+                    and then not View.Is_Externally_Built
+                  then
+                     if OS_Lib.Is_Absolute_Path (AV.Text)
                        and then Self.Build_Path /= Self.Root.Dir_Name
                        and then not View.Is_Externally_Built
                      then
                         Self.Messages.Append
                           (Message.Create
                              (Message.Warning,
-                                  '"'
-                              & PN.String_Value
+                              '"' & PN.String_Value
                               & """ cannot relocate absolute "
-                              & (if Human_Name = ""
-                                then ""
+                              & (if Human_Name = "" then ""
                                 else Human_Name & ' ')
                               & "directory",
                               Sloc => AV));
 
-                     elsif Self.Build_Path.Is_Defined
-                       and then not View.Is_Externally_Built
-                       and then Self.Build_Path /= Self.Root.Dir_Name
+                     elsif Self.Build_Path /= Self.Root.Dir_Name
                        and then not Self.Build_Path.Contains (PN)
                      then
                         Self.Messages.Append
                           (Message.Create
                              (Message.Error,
-                              '"'
-                              & String (Self.Build_Path.Dir_Name)
+                              '"' & String (Self.Build_Path.Dir_Name)
                               & String (PN.Relative_Path (Self.Build_Path))
                               & """ cannot relocate "
-                              & (if Human_Name = ""
-                                 then ""
+                              & (if Human_Name = "" then ""
                                  else Human_Name & ' ')
-                              & "directory deeper than relocated build tree,",
+                              & "directory deeper than relocated build "
+                              & "tree,",
                               Sloc => AV));
-
                      end if;
-                  end;
-
-               elsif Mandatory then
-                  Self.Messages.Append
-                    (Message.Create
-                       (Message.Error,
-                        "attribute " & Image (Name.Attr) & " not declared",
-                        Source_Reference.Create (View.Path_Name.Value, 0, 0)));
-               end if;
+                  end if;
+               end;
             end Check_Directory;
-
-            ---------------------
-            -- Check_Not_Empty --
-            ---------------------
-
-            procedure Check_Not_Empty (Name : Q_Attribute_Id) is
-            begin
-               if View.Check_Attribute (Name, Result => Attr)
-                 and then Attr.Value.Text'Length = 0
-               then
-                  Self.Messages.Append
-                    (Message.Create
-                       (Level   => Message.Error,
-                        Sloc    => Source_Reference.Object (Attr.Value),
-                        Message => "attribute """ & Image (Name)
-                        & """ cannot be empty"));
-               end if;
-            end Check_Not_Empty;
 
          begin
             if View.Kind in K_Standard | K_Library then
@@ -2797,9 +2791,6 @@ package body GPR2.Tree_Internal is
             if View.Is_Library
               and then not View.Is_Aggregated_In_Library
             then
-               Check_Not_Empty (PRA.Library_Name);
-               Check_Not_Empty (PRA.Library_Dir);
-
                Check_Directory
                  (PRA.Library_Dir,
                   "library",
@@ -2822,9 +2813,7 @@ package body GPR2.Tree_Internal is
                      Project.View.Library_Src_Directory'Access);
                end if;
 
-               if not View.Check_Attribute
-                 (PRA.Library_Name, Result => Attr)
-               then
+               if not View.Attribute (PRA.Library_Name).Is_Defined then
                   Self.Messages.Append
                     (Message.Create
                        (Message.Error,

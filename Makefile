@@ -272,7 +272,7 @@ ${DOCOUT}: force
 
 docgen:
 	${GPRDOC} > ${DOCOUT}
-	${GPRDOC} --display=json > ${SOURCE_DIR}/testsuite/tests/gprdoc/attrs.json
+	${GPRDOC} --display=json > ${SOURCE_DIR}/testsuite/tests/tools/gprdoc/attrs.json
 	make -C ${SOURCE_DIR}/doc gen GPRDOC_FILE="../${DOCOUT}"
 
 
