@@ -1,0 +1,3 @@
+project C_Ext extends "c" is
+    for Object_Dir use "obj_c_ext";
+end C_Ext;

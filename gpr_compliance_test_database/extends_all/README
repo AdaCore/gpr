@@ -1,0 +1,25 @@
+prj.gpr is a project using extends all feature.
+
+It is based on:
+GPRbuild and GPR Companion Tools User’s Guide
+ 2. GNAT Project Manager
+  2.6. Project Extension
+   2.6.1. Importing and Project Extension
+
+see https://docs.adacore.com/gprbuild-docs/html/gprbuild_ug/gnat_project_manager.html#importing-and-project-extension
+
+This project generates obj_main_ext/main executable
+
+$ gprls -P prj.gpr  -U
+extends_all/obj_main_ext/b.o
+   B
+      OK extends_all/src_b/b.adb
+extends_all/obj_c_ext/c.o
+   C
+      OK extends_all/src_c/c.adb
+extends_all/obj_a_ext/foo_ext.o
+   FOO
+      OK extends_all/src_a_ext/foo_ext.adb
+extends_all/obj_main_ext/main.o
+   MAIN
+      OK extends_all/src_main/main.adb
