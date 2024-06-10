@@ -1,0 +1,5 @@
+description:
+    A test for --subdirs and its handling of externally_built projects
+driver: build_and_run
+project_file: test
+main: main
