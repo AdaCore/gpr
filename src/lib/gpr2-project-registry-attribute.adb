@@ -619,14 +619,16 @@ begin
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
+      Empty_Value          => Error,
       Is_Allowed_In        => In_Library);
 
    --  library_name
    Add
-     (Name                  => Library_Name,
+     (Name                 => Library_Name,
       Index_Type           => No_Index,
       Value                => Single,
       Value_Case_Sensitive => True,
+      Empty_Value          => Error,
       Is_Allowed_In        => In_Library);
 
    declare
