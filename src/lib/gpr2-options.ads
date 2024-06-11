@@ -161,9 +161,6 @@ package GPR2.Options is
      (Self : Object) return GPR2.Optional_Name_Type;
    --  Returns Subdirs argument used loading the project
 
-   function Src_Subdirs (Self : Object) return Unbounded_String;
-   --  Returns Src_Subdirs argument used loading the project
-
    function Src_Subdirs (Self : Object) return GPR2.Optional_Name_Type;
    --  Returns Src_Subdirs argument used loading the project
 
@@ -274,9 +271,6 @@ private
 
    function RTS_Map (Self : Object) return GPR2.Containers.Lang_Value_Map is
      (Self.RTS_Map);
-
-   function Src_Subdirs (Self : Object) return Unbounded_String is
-     (Self.Src_Subdirs);
 
    function Src_Subdirs (Self : Object) return Optional_Name_Type is
      (GPR2.Optional_Name_Type (To_String (Self.Src_Subdirs)));
