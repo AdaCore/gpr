@@ -21,8 +21,10 @@ package body GPR2.Build.ALI_Parser is
       --  Return next token available. The result is "" if LF or EOF are
       --  encountered before being able to read a token.
 
-      procedure Next_Line (File : in out GB.Reader; Header : in out Character);
+      procedure Next_Line (File : in out GB.Reader; Header : out Character);
       --  Skip to the next (non-empty) line and sets Header.
+      --  If no lines have been read before this call, then skip to the
+      --  first non-empty and set Header.
       --  If no such line exists, Header is set to NUL.
 
    end IO;
@@ -197,18 +199,38 @@ package body GPR2.Build.ALI_Parser is
       -- Next_Line --
       ---------------
 
-      procedure Next_Line (File : in out GB.Reader; Header : in out Character)
+      procedure Next_Line (File : in out GB.Reader; Header : out Character)
       is
       begin
-         loop
+
+         if File.Is_End_Of_Data then
+            Header := ASCII.NUL;
+
+            return;
+         end if;
+
+         if File.Current_Position = 0 then
+
+            --  No character have been read by the reader
+
             if not GB.Next (File, Header) then
                Header := ASCII.NUL;
 
                return;
             end if;
+         else
+            Header := File.Current_Char;
 
-            exit when Header = ASCII.LF;
-         end loop;
+            loop
+               exit when Header = ASCII.LF;
+
+               if not GB.Next (File, Header) then
+                  Header := ASCII.NUL;
+
+                  return;
+               end if;
+            end loop;
+         end if;
 
          loop
             if not GB.Next (File, Header) then
