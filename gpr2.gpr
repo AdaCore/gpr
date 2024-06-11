@@ -4,7 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0
 --
 
-with "gnatcoll";
+with "gnatcoll_core";
 with "gnatcoll_iconv";
 with "gnatcoll_gmp";
 
