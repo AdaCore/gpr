@@ -106,11 +106,15 @@ package GPR2.Project.Tree is
       File_Reader            : GPR2.File_Readers.File_Reader_Reference :=
                                  GPR2.File_Readers.No_File_Reader_Reference)
       return Boolean;
-   --  Load a project tree using configured options.
-   --  If successful, Tree contains loaded project tree.
-   --  If Tree is undefined on entry, project search paths are automatically
-   --   registered.
-   --  Load messages are appended to Log.
+   --  Load a project tree using configured options, and report the warning
+   --   and errors if any. The verbosity level of such report can be adjusted
+   --   by setting GPR2.Project.Tree.Verbosity to the desired level. If
+   --   non-console output is desired, the default reporter can be changed
+   --   in GPR2.Messages.Reporter.
+   --
+   --  Self: the tree to load
+   --  Options: the options to use to load the tree. See below to see how
+   --   the options are checked.
    --  With_Runtime: whether the runtime sources are looked for when updating
    --   the sources.
    --  Absent_Dir_Error: whether a missing directory should be treated as an
@@ -119,8 +123,12 @@ package GPR2.Project.Tree is
    --   tree.
    --  Config allows passing explictely the configuration project. If defined
    --   then options --config or --autoconf are ignored.
-   --  Verbosiuty indicates the level of messages that can be displayed
-   --   to the active mexsage reporter (by default the console).
+   --  File_Reader: if set, this file reader is used instead of the standard
+   --   text file reader to load the projects.
+   --
+   --  raises GPR2.Options.Usage_Error in case the set of Options given as
+   --   parameter is invalid, The reason for the failure is given in the
+   --   exception message.
 
    function Load_Virtual_View
      (Self             : in out Object;
