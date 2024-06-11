@@ -1,5 +1,7 @@
 with Ada.Text_IO;
 
+with GNATCOLL.OS.FSUtil;
+
 with GPR2.Log;
 with GPR2.Options;
 with GPR2.Path_Name;
@@ -31,7 +33,14 @@ procedure Main is
    end Test;
 
    Opt : GPR2.Options.Object;
+   Ign : Boolean with Unreferenced;
 begin
+   --  Setup the symlinks
+   Ign := GNATCOLL.OS.FSUtil.Create_Symbolic_Link
+     ("import_A/link_to_import_B", "../import_B");
+   Ign := GNATCOLL.OS.FSUtil.Create_Symbolic_Link
+     ("import_B/link_to_import_A", "../import_A");
+
    Opt.Add_Switch (GPR2.Options.P, "project/prj.gpr");
    Ada.Text_IO.Put_Line ("## Loading WITHOUT symlinks support");
    Test (Opt);
@@ -39,4 +48,9 @@ begin
    Opt.Add_Switch (GPR2.Options.Resolve_Links);
    Ada.Text_IO.Put_Line ("## Loading WITH symlinks support");
    Test (Opt);
+
+   --  cleanup before exiting
+
+   Ign := GNATCOLL.OS.FSUtil.Remove_File ("import_A/link_to_import_B");
+   Ign := GNATCOLL.OS.FSUtil.Remove_File ("import_B/link_to_import_A");
 end Main;
