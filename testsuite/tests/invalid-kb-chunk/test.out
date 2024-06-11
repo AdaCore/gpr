@@ -1,1 +1,1 @@
-autoconf.cgpr:43:04: error: Expected ':=', got 'package'
+autoconf.cgpr: Expected ':=', got 'package'

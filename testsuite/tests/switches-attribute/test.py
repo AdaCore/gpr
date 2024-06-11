@@ -16,6 +16,6 @@ for line in open("run.out"):
     li = line[:-1]
     # Windows has a non case-sensitive filesystem, we add there on
     # attribute to match the linux expected output.
-    if is_win and li == 'A:   Switches [capital.adb] -> -g -gnata -g0':
-        print('A:   Switches [Capital.adb] -> -g -gnata')
+    if is_win and li == "A:   Compiler'Switches [capital.adb] -> -g -gnata -g0":
+        print("A:   Compiler'Switches [Capital.adb] -> -g -gnata")
     print(li)

@@ -142,6 +142,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 --- create body src/pkg.adb
 --- create separate src/pkg-sub.adb
 --- Refresh list of sources
+extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
  - sources of Base extended by Extending
@@ -161,6 +162,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 -----------------------------------
 --- create separate ext/pkg-sub.adb
 --- Refresh list of sources
+extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
  - sources of Base extended by Extending
@@ -180,6 +182,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 -----------------------------------
 --- rm ext/pkg-sub.adb
 --- Refresh list of sources
+extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
  - sources of Base extended by Extending
@@ -199,6 +202,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 -----------------------------------
 --- rm src/pkg-sub.adb
 --- Refresh list of sources
+extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
  - sources of Base extended by Extending
@@ -215,6 +219,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 -----------------------------------
 --- rm src/pkg.adb
 --- Refresh list of sources
+extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
  - sources of Base extended by Extending
@@ -228,6 +233,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 -----------------------------------
 --- create body ext/pkg.adb
 --- Refresh list of sources
+extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
  - sources of Base extended by Extending
@@ -272,6 +278,7 @@ extending2.gpr:3:30: warning: there are no sources of language "C" in this proje
 --- create body src2/pkg2.adb
 --- rm src2/pkg.ads
 --- Refresh list of sources
+extending2.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
  - sources of Base extended by Extending2
@@ -378,6 +385,7 @@ prj1.gpr: warning: there are no sources of language "Ada" in this project
 --- cp ../projects/source.ada src3
 --- cp ../projects/agglib_multi.gpr .
 --- Loading project agglib_multi.gpr
+prj1.gpr: warning: there are no sources of language "Ada" in this project
 -----------------------------------
 * Sources:
  - sources of Prj1
@@ -393,6 +401,7 @@ prj1.gpr: warning: there are no sources of language "Ada" in this project
 --- rm src1/foo.ads
 --- rm src1/foo.adb
 --- Refresh list of sources
+prj1.gpr: warning: there are no sources of language "Ada" in this project
 -----------------------------------
 * Sources:
  - sources of Prj1
