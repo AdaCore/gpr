@@ -1,4 +1,3 @@
-with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GPR2.Context;
@@ -14,12 +13,12 @@ procedure Main is
 
    procedure Display (Prj : Project.View.Object);
 
-   function Filter_Path (Line : Filename_Type) return String;
-   --  Remove the tmp directory where test is processing
+   function Filter_Dll_Ext (Path : Filename_Type) return String;
 
    Prj : Project.Tree.Object;
    Opt : Options.Object;
    Ctx : Context.Object;
+   CWD : constant GPR2.Path_Name.Object := Path_Name.Create_Directory (".");
 
    -------------
    -- Display --
@@ -35,38 +34,42 @@ procedure Main is
       Text_IO.Put_Line
         ("Library_Directory : " & String (Prj.Library_Directory.Name));
       Text_IO.Put_Line
-        ("                  : " & Filter_Path (Prj.Library_Directory.Value));
+        ("                  : " &
+           String (Prj.Library_Directory.Relative_Path (CWD)));
       Text_IO.Put_Line
-        ("Library Filename : " & String (Prj.Library_Filename.Name));
+        ("Library Filename : " &
+           Filter_Dll_Ext (Prj.Library_Filename.Name));
       Text_IO.Put_Line
-        ("                 : " & Filter_Path (Prj.Library_Filename.Value));
+        ("                 : " &
+           Filter_Dll_Ext (Prj.Library_Filename.Relative_Path (CWD)));
       Text_IO.Put_Line
         ("Library Version Filename : "
          & String (Prj.Library_Version_Filename.Name));
       Text_IO.Put_Line
         ("                         : "
-         & Filter_Path (Prj.Library_Version_Filename.Value));
+         & String (Prj.Library_Version_Filename.Relative_Path (CWD)));
        Text_IO.Put_Line
         ("Library Major Version Filename : "
          & String (Prj.Library_Major_Version_Filename.Name));
        Text_IO.Put_Line
         ("                               : "
-         & Filter_Path (Prj.Library_Major_Version_Filename.Value));
+         & String (Prj.Library_Major_Version_Filename.Relative_Path (CWD)));
       Text_IO.Put_Line
         ("Library_Standalone : " & Prj.Library_Standalone'Img);
    end Display;
 
-   -----------------
-   -- Filter_Path --
-   -----------------
+   --------------------
+   -- Filter_Dll_Ext --
+   --------------------
 
-   function Filter_Path (Line : Filename_Type) return String is
-      S : constant String := String (Line);
-      Test : constant String := "library-definitions";
-      I : constant Positive := Strings.Fixed.Index (S, Test);
+   function Filter_Dll_Ext (Path : Filename_Type) return String is
    begin
-      return S (I + Test'Length + 1 .. S'Last);
-   end Filter_Path;
+      if Path (Path'Last - 3 .. Path'Last) = ".dll" then
+         return String (Path (Path'First .. Path'Last - 3)) & "so";
+      else
+         return String (Path);
+      end if;
+   end Filter_Dll_Ext;
 
 begin
    Opt.Add_Switch (Options.P, "demo.gpr");
