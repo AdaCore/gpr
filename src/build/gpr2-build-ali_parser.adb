@@ -150,6 +150,7 @@ package body GPR2.Build.ALI_Parser is
                --  Two consecutive space means end of token
                if C = ' ' then
                   if Previous_Token_Is_Space then
+                     Last := Last - 1;
                      exit;
                   else
                      Previous_Token_Is_Space := True;
