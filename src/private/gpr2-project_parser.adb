@@ -3110,7 +3110,7 @@ package body GPR2.Project_Parser is
                   Tree.Log_Messages.Append
                     (Message.Create
                        (Missing_Project_Error_Level,
-                        "undefined project " & String (Project) & '"',
+                        "undefined project """ & String (Project) & '"',
                         Source_Ref));
                end if;
             end;
