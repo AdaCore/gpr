@@ -74,7 +74,7 @@ package GPR2.Build.Tree_Db is
 
    procedure Add_Action
      (Self     : in out Object;
-      Action   : Actions.Object'Class;
+      Action   : in out Actions.Object'Class;
       Messages : in out GPR2.Log.Object)
      with Pre =>
        Self.Is_Defined

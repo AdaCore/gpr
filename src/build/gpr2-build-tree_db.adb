@@ -88,7 +88,7 @@ package body GPR2.Build.Tree_Db is
 
    procedure Add_Action
      (Self     : in out Object;
-      Action   : Actions.Object'Class;
+      Action   : in out Actions.Object'Class;
       Messages : in out GPR2.Log.Object)
    is
       Curs : Action_Maps.Cursor;
@@ -103,6 +103,12 @@ package body GPR2.Build.Tree_Db is
       Self.Actions.Reference (Curs).Attach (Self);
       Self.Actions.Reference (Curs).On_Tree_Insertion (Self, Messages);
       Self.Actions.Reference (Curs).Compare_Signature (Messages);
+
+      --  `Attach` modifies the Tree field of the action. The provided action
+      --  needs to be updated, as some action subprograms may require the
+      --  internal tree field.
+
+      Action := Self.Actions.Reference (Curs);
    end Add_Action;
 
    ------------------
