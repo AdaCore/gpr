@@ -7,6 +7,7 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Vectors;
 
+with GPR2.Containers;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
@@ -147,10 +148,11 @@ package GPR2.Build.Compilation_Unit is
    --  Execute Action for all parts of the given compilation unit
 
    function Known_Dependencies
-     (Self : Object) return Object_List;
-   --  Extract the list of units withed by the spec of Self and return them.
-   --  If Self needs its own body (e.g. is a generic), then return also the
-   --  units withed by the body.
+     (Self      : Object;
+      Spec_Only : Boolean := False) return Containers.Name_Set;
+   --  Return the list of unit names withed by Self.
+   --  If Spec_Only is set, only the units withed by the spec of Self are
+   --  returned.
 
    function Object_File (Self : Object) return Simple_Name;
    --  Returns the .o's simple name for Self.

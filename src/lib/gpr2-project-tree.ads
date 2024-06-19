@@ -7,6 +7,7 @@
 with Ada.Finalization;
 with Ada.Iterator_Interfaces;
 
+with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
 with GPR2.Containers;
@@ -301,6 +302,34 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined;
    --  Same as above and returns the messages generated during the load
    --  operation.
+
+   procedure For_Each_Ada_Closure
+     (Self              : Object;
+      Action            : access procedure
+                            (Unit : Build.Compilation_Unit.Object);
+      Mains             : Containers.Filename_Set :=
+                            Containers.Empty_Filename_Set;
+      All_Sources       : Boolean := False;
+      Root_Project_Only : Boolean := False;
+      Externally_Built  : Boolean := False)
+     with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Units;
+   --  Call action for each source of the closure of the loaded tree (Mains
+   --  or library interfaces and their dependencies).
+   --.
+   --  Mains:
+   --    used to limit the entry points of the closure to the sources or
+   --    units specified in this parameter
+   --  All_Sources (-U command line option):
+   --    process also sources that are not in Main
+   --  Root_Project_Only (--no-subproject command line option):
+   --    will return only sources from the root project.
+   --  Externally_Built:
+   --    if not set, units defined in externally built views will be ignored.
+   --
+   --  Note that if Root_Project_Only is set and the root project is an
+   --    aggregate project, then the closure is considered empty
+   --
+   --  Raises Usage_Error when Mains is specified and All_Sources is set.
 
    function Project_Search_Paths (Self : Object) return Path_Name.Set.Object
      with Pre => Self.Is_Defined;

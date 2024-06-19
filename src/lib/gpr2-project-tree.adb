@@ -10,6 +10,9 @@ with Ada.Unchecked_Deallocation;
 with GNAT.OS_Lib;
 with GNATCOLL.Atomic;
 
+pragma Warnings (Off);
+with GPR2.Build.Source.Sets;
+pragma Warnings (On);
 with GPR2.Message.Reporter;
 with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
@@ -133,6 +136,205 @@ package body GPR2.Project.Tree is
          end if;
       end if;
    end Finalize;
+
+   ----------------------
+   -- For_Each_Closure --
+   ----------------------
+
+   procedure For_Each_Ada_Closure
+     (Self              : Object;
+      Action            : access procedure
+                            (Unit : Build.Compilation_Unit.Object);
+      Mains             : Containers.Filename_Set :=
+                            Containers.Empty_Filename_Set;
+      All_Sources       : Boolean := False;
+      Root_Project_Only : Boolean := False;
+      Externally_Built  : Boolean := False)
+   is
+     --  ??? This closure computation uses only our fast ada parser to compute
+     --  the list of units to process. This means that implicit withs are not
+     --  processed (so we miss some runtime units), and multi-unit sources are
+     --  not properly processed either.
+
+      use type Project.View.Object;
+
+      procedure Process
+        (Root : Project.View.Object;
+         Name : Name_Type;
+         Unit : Build.Compilation_Unit.Object);
+
+      Processed_Units   : Containers.Name_Set;
+      Stack             : Containers.Name_Set;
+      Processed_Views   : Project.View.Set.Object;
+      Subtree_Views     : Project.View.Set.Object;
+
+      -------------
+      -- Process --
+      -------------
+
+      procedure Process
+        (Root : Project.View.Object;
+         Name : Name_Type;
+         Unit : Build.Compilation_Unit.Object) is
+      begin
+         if Processed_Units.Contains (Name) then
+            return;
+         end if;
+
+         Processed_Units.Include (Name);
+
+         if not Unit.Is_Defined then
+            return;
+         end if;
+
+         --  Mark current unit as processed in the subtree
+         Subtree_Views.Include (Unit.Owning_View);
+
+         --  Check the Externally_Built status
+
+         if not Externally_Built
+           and then Unit.Owning_View.Is_Externally_Built
+         then
+            return;
+         end if;
+
+         --  Prune:
+         --  - Units not belonging to root if --root-project is specified
+         --  - Units belonging to a View already processed as part of an
+         --    aggregated subtree
+         if (Root_Project_Only and then Unit.Owning_View /= Root)
+           or else Processed_Views.Contains (Unit.Owning_View)
+         then
+            return;
+         end if;
+
+
+         if Unit.Is_Defined
+           and then (not Root_Project_Only
+                     or else Unit.Owning_View = Root)
+         then
+            Action (Unit);
+
+            --  Adjust list of remaining units to process: remove from
+            --  the known dependencies the processed units (so that only
+            --  unprocessed units remain, and make a union with current
+            --  stack to add new unprocessed items.
+
+            Stack := Stack.Union
+              (Unit.Known_Dependencies.Difference (Processed_Units));
+         end if;
+      end Process;
+
+      Source : Build.Source.Object;
+      Unit   : Build.Compilation_Unit.Object;
+
+   begin
+      if Root_Project_Only
+        and then Self.Root_Project.Kind in Aggregate_Kind
+      then
+         return;
+      end if;
+
+      for Root of Self.Namespace_Root_Projects loop
+         --  In an aggregate, units are independant from each others so we
+         --  need to reset the list of processed units. However views are
+         --  consistent by construction (you can't have the same view with
+         --  different units) by construction, so in Process we prune the
+         --  already processed views and keep the list across namespace roots.
+
+         Processed_Units := Containers.Name_Type_Set.Empty_Set;
+
+         --  First phase: we check the initial list of entry points: so Mains
+         --  for an application and Interface for a library.
+
+         if not Mains.Is_Empty then
+            --  Try to find all mains specified on the command line
+
+            for Main of Mains loop
+               Source := Root.View_Db.Visible_Source (Main);
+
+               if not Source.Is_Defined then
+                  Unit := Root.Unit (Name_Type (Main));
+
+                  if Unit.Is_Defined then
+                     Source := Unit.Main_Part.View.Source
+                       (Unit.Main_Part.Source.Simple_Name);
+                  end if;
+               end if;
+
+               if not Source.Is_Defined then
+                  raise GPR2.Options.Usage_Error with
+                    "cannot find """ & String (Main) & '"';
+               end if;
+
+               if Source.Has_Units then
+                  for U of Source.Units loop
+                     Stack.Include (U.Name);
+                  end loop;
+               end if;
+            end loop;
+
+         elsif not All_Sources
+           and then Root.Has_Mains
+         then
+            --  no -U switch case, root project defines mains
+            for Main of Root.Mains loop
+               Source := Main.View.Source (Main.Source.Simple_Name);
+
+               if Source.Has_Units then
+                  for U of Source.Units loop
+                     Stack.Include (U.Name);
+                  end loop;
+               end if;
+            end loop;
+
+         elsif not All_Sources
+           and then Root.Is_Library
+           and then Root.Has_Any_Interfaces
+         then
+            --  no -U switch case, standalone library case
+            for C in Root.Interface_Units.Iterate loop
+               --  ??? should handle also case where ada sources are defined
+               --  in Root.Interface_Sources.
+
+               declare
+                  Unit_Name : constant Name_Type :=
+                                Containers.Unit_Name_To_Sloc.Key (C);
+               begin
+                  Stack.Include (Unit_Name);
+               end;
+            end loop;
+
+         else
+            --  No mains and no library interface is defined, or -U is used
+            --  so we use all units of the root project as a starting point.
+
+            for Unit of Root.Units loop
+               if not Root_Project_Only
+                 or else Unit.Owning_View = Root
+               then
+                  Stack.Include (Unit.Name);
+               end if;
+            end loop;
+         end if;
+
+         --  Second phase, we process each entry point, and amend the list of
+         --  units to analyze with their dependencies. Processing ends when
+         --  all dependencies are processed.
+
+         while not Stack.Is_Empty loop
+            declare
+               U_Name : constant Name_Type := Stack.First_Element;
+            begin
+               Stack.Delete_First;
+               Process (Root, U_Name, Root.Unit (U_Name));
+            end;
+         end loop;
+
+         --  Update the list of processed views
+         Processed_Views := Subtree_Views;
+      end loop;
+   end For_Each_Ada_Closure;
 
    ----------
    -- Load --

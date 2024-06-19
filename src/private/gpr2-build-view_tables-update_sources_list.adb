@@ -915,7 +915,7 @@ package body Update_Sources_List is
                  (File_Reader      => Tree.File_Reader,
                   Data             => Source,
                   Get_Withed_Units =>
-                    Data.Tree_Db.Source_Option >= Sources_Units_Artifacts,
+                    Data.Tree_Db.Source_Option >= Sources_Units,
                   Success          => Parsed);
 
                if Parsed and then Match = Naming_Exception then
@@ -1187,8 +1187,7 @@ package body Update_Sources_List is
                              (File_Reader      => Tree.File_Reader,
                               Data             => Src_Ref,
                               Get_Withed_Units =>
-                                Data.Tree_Db.Source_Option >=
-                                  Sources_Units_Artifacts,
+                                Data.Tree_Db.Source_Option >= Sources_Units,
                               Success          => Success);
                         end if;
                      end if;

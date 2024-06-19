@@ -1,4 +1,5 @@
 with Ada.Text_IO;
+with Foo;
 with Pkg;
 
 procedure Main is
