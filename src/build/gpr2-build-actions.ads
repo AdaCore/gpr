@@ -12,6 +12,7 @@ limited with GPR2.Build.Tree_Db;
 
 private with GPR2.Build.Signature;
 private with Ada.Tags;
+private with GNATCOLL.Traces;
 
 package GPR2.Build.Actions is
 
@@ -84,11 +85,14 @@ package GPR2.Build.Actions is
 private
 
    use type Ada.Tags.Tag;
+   use GNATCOLL.Traces;
 
    type Object is abstract tagged record
       Tree      : access Tree_Db.Object;
 
       Signature : GPR2.Build.Signature.Object;
+
+      Traces    : Trace_Handle := Create ("TRACE_NAME_TO_OVERRIDE");
    end record;
 
    function Less (L, R : Action_Id'Class) return Boolean is
