@@ -3,42 +3,31 @@
 ------------------
 Compile Ada: MAIN (p1.gpr)
   inputs:
-  - /tree/src/p1/main.adb
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
 Compile Ada: PKG (p1.gpr)
   inputs:
-  - /tree/src/p1/pkg.adb
-  - /tree/src/p1/pkg.ads
   outputs:
   - /tree/obj/p1/pkg.ali
   - /tree/obj/p1/pkg.o
 Compile Ada: FOO (p2.gpr)
   inputs:
-  - /tree/src/p2/foo.ada at 2
-  - /tree/src/p2/foo.ada at 1
   outputs:
-  - /tree/lib/p2/foo~2.ali
+  - /tree/obj/p2/foo~2.ali
   - /tree/obj/p2/foo~2.o
 Compile Ada: PKG (p2.gpr)
   inputs:
-  - /tree/src/p2/pkg.adb
-  - /tree/src/base2/pkg.ads
   outputs:
-  - /tree/lib/p2/pkg.ali
+  - /tree/obj/p2/pkg.ali
   - /tree/obj/p2/pkg.o
 Compile Ada: PKG3 (p2.gpr)
   inputs:
-  - /tree/src/base2/pkg3.adb
-  - /tree/src/base2/pkg3.ads
   outputs:
   - /tree/obj/base2/pkg3.ali
   - /tree/obj/base2/pkg3.o
 Compile Ada: PKG2 (shared.gpr)
   inputs:
-  - /tree/src/shared/pkg2.adb
-  - /tree/src/shared/pkg2.ads
   outputs:
   - /tree/obj/shared/pkg2.ali
   - /tree/obj/shared/pkg2.o

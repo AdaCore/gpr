@@ -31,9 +31,10 @@ begin
    for NS of Tree.Namespace_Root_Projects loop
       for Unit of NS.Units loop
          declare
-            A : GPR2.Build.Actions.Ada_Compile.Object :=
-                  GPR2.Build.Actions.Ada_Compile.Create (Unit);
+            A : GPR2.Build.Actions.Ada_Compile.Object;
          begin
+            A.Initialize (Unit);
+
             if not Tree.Artifacts_Database.Has_Action (A.UID) then
                Tree.Artifacts_Database.Add_Action (A, Log);
                Log.Output_Messages;
