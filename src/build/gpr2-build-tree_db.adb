@@ -701,6 +701,23 @@ package body GPR2.Build.Tree_Db is
       Self.With_RTS   := False;
    end Unload;
 
+   --------------------
+   -- Views_Database --
+   --------------------
+
+   function Views_Database
+     (Self : Object) return Build_DB_Vectors.Vector
+   is
+      use Build_DB_Vectors;
+      Result : Vector := Empty_Vector;
+   begin
+      for View of Self.Build_Dbs loop
+         Result.Append (View);
+      end loop;
+
+      return Result;
+   end Views_Database;
+
 begin
 
    GPR2.Tree_Internal.Init_Tree_Database := Create'Access;

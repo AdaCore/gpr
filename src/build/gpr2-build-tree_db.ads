@@ -15,6 +15,7 @@ with GPR2.Project.View;
 with GPR2.View_Ids;
 
 with GNATCOLL.Directed_Graph;
+with Ada.Containers.Vectors;
 private with Ada.Containers.Hashed_Maps;
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Indefinite_Ordered_Sets;
@@ -29,6 +30,9 @@ package GPR2.Build.Tree_Db is
    Undefined : constant Object;
 
    package DG renames GNATCOLL.Directed_Graph;
+
+   package Build_DB_Vectors is new Ada.Containers.Vectors
+     (Natural, Build.View_Db.Object, "=" => Build.View_Db."=");
 
    function Is_Defined (Self : Object) return Boolean;
 
@@ -67,6 +71,11 @@ package GPR2.Build.Tree_Db is
    function View_Database
      (Self : Object;
       View : GPR2.View_Ids.View_Id) return Build.View_Db.Object
+     with Pre => Self.Is_Defined,
+          Inline;
+
+   function Views_Database
+     (Self : Object) return Build_DB_Vectors.Vector
      with Pre => Self.Is_Defined,
           Inline;
 
