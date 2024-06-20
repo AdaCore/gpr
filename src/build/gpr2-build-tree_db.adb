@@ -68,6 +68,19 @@ package body GPR2.Build.Tree_Db is
                        then Artifact_Sets.No_Element
                        else List.Artifact)));
 
+   ----------------------------
+   -- Action_Id_To_Reference --
+   ----------------------------
+
+   function Action_Id_To_Reference
+     (Self : in out Object;
+      Id   : Actions.Action_Id'Class) return Action_Reference_Type
+   is
+      Ref : constant Action_Maps.Reference_Type := Self.Actions.Reference (Id);
+   begin
+      return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
+   end Action_Id_To_Reference;
+
    ----------------------
    -- Action_Reference --
    ----------------------

@@ -170,6 +170,11 @@ package GPR2.Build.Tree_Db is
      (Element : not null access Actions.Object'Class) is private
      with Implicit_Dereference => Element;
 
+   function Action_Id_To_Reference
+     (Self : in out Object;
+      Id   : Actions.Action_Id'Class) return Action_Reference_Type
+     with Pre => Self.Is_Defined;
+
    function Action_Reference
      (Iterator : access Actions_List;
       Pos      : Action_Cursor) return Action_Reference_Type;
