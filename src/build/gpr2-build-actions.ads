@@ -60,7 +60,7 @@ package GPR2.Build.Actions is
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object) is abstract
    with Pre'Class => not Messages.Has_Error;
-   --  procedure called when Self is added to the tree's database. Allows the
+   --  Procedure called when Self is added to the tree's database. Allows the
    --  action to add its input and output artifacts and dependencies.
 
    procedure Compute_Signature (Self : in out Object) is abstract;
