@@ -47,12 +47,22 @@
 # Supports symlink of Makefile to the build directory
 # Supports building with make -f <gpr path>/Makefile from the build directory
 #
-# first let's check if Makefile is symlinked: realpath will return the actual
-# (after link resolution) relative path of the Makefile from PWD.
-MFILE      := $(shell realpath --relative-to=. "$(firstword ${MAKEFILE_LIST})"))
+
+HAS_REALPATH := $(shell command -v realpath >/dev/null 2>&1 && echo yes || echo no)
+
 # as Makefile is in the root dir, SOURCE_DIR is just dirname of the Makefile
 # path above.
-SOURCE_DIR := $(shell dirname "${MFILE}")
+ifeq ($(HAS_REALPATH),yes)
+# first let's check if Makefile is symlinked: realpath will return the actual
+# (after link resolution) relative path of the Makefile from PWD.
+# On macOS, the `realpath` command does not support the `--relative-to` option.
+# To handle this, you can specify the Makefile explicitly by calling:
+# make MFILE="./Makefile"
+	MFILE      := $(shell realpath --relative-to=. "$(firstword ${MAKEFILE_LIST})"))
+	SOURCE_DIR := $(shell dirname "${MFILE}")
+else
+	SOURCE_DIR := $(shell dirname $(dir ${MAKEFILE_LIST}))
+endif
 
 # Load current setup if any
 -include makefile.setup
