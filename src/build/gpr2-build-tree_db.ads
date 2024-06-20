@@ -223,6 +223,10 @@ package GPR2.Build.Tree_Db is
      (Self   : Object;
       Action : Actions.Action_Id'Class) return Artifacts_List'Class;
 
+   function Successors
+     (Self     : Object;
+      Artifact : Artifacts.Object'Class) return Actions_List'Class;
+
 private
 
    use all type DG.Node_Id;
@@ -434,5 +438,13 @@ private
          (Kind   => Outputs,
           Db     => Self.Self,
           Action => Self.Actions.Find (Action)));
+
+   function Successors
+     (Self     : Object;
+      Artifact : Artifacts.Object'Class) return Actions_List'Class
+   is (Actions_List'
+         (Kind     => Successors,
+          Db       => Self.Self,
+          Artifact => Self.Artifacts.Find (Artifact)));
 
 end GPR2.Build.Tree_Db;
