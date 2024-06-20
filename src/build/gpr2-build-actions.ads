@@ -6,6 +6,7 @@
 
 with GPR2.Log;
 with GPR2.Project.View;
+with GNATCOLL.OS.Process;
 
 limited with GPR2.Build.Tree_Db;
 
@@ -72,6 +73,13 @@ package GPR2.Build.Actions is
    procedure Attach
      (Self : in out Object;
       Db   : in out GPR2.Build.Tree_Db.Object);
+
+   function Command (Self : Object)
+     return GNATCOLL.OS.Process.Argument_List is abstract;
+   --  Return the command line corresponding to the action
+
+   procedure Post_Command (Self : in out Object);
+   --  Post-processing that should occur after executing the command
 
 private
 

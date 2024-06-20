@@ -83,4 +83,14 @@ package body GPR2.Build.Actions is
 
    end Compare_Signature;
 
+   ------------------
+   -- Post_Command --
+   ------------------
+
+   procedure Post_Command (Self : in out Object)
+   is
+   begin
+      null;
+   end Post_Command;
+
 end GPR2.Build.Actions;
