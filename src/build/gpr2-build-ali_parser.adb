@@ -15,6 +15,14 @@ package body GPR2.Build.ALI_Parser is
 
    package GB renames GNATCOLL.Buffer;
 
+   overriding function "=" (Left, Right : Import_Info) return Boolean is
+   begin
+      return
+        Left.Source = Right.Source and then
+        Left.ALI = Right.ALI and then
+        Left.Unit_Name = Right.Unit_Name;
+   end "=";
+
    package IO is
 
       function Get_Token (File : in out GB.Reader) return String;
@@ -318,4 +326,101 @@ package body GPR2.Build.ALI_Parser is
             GB.Finalize (Reader);
       end;
    end Dependencies;
+
+   ------------------
+   -- Imports --
+   ------------------
+
+   procedure Imports
+     (ALI_File : GPR2.Path_Name.Object;
+      Imports  : in out Import_Info_Vectors.Vector;
+      Messages : in out GPR2.Log.Object)
+   is
+
+      procedure Parse_With (Reader : in out GB.Reader);
+      --  Parse the source file name of the current dependency line
+
+      ---------------
+      -- Parse_Dep --
+      ---------------
+
+      procedure Parse_With (Reader : in out GB.Reader) is
+      begin
+         if not GB.Check (Reader, " ") then
+            raise Scan_ALI_Error with "space expected after the 'W'"
+              & " withed unit character";
+         end if;
+
+         --  ??? Not backward compatible with ali files produced by
+         --  the oldest compilers.
+
+         declare
+            Unit_Name : constant String := IO.Get_Token (Reader);
+            Source    : constant String := IO.Get_Token (Reader);
+            ALI       : constant String := IO.Get_Token (Reader);
+         begin
+            if Unit_Name = "" then
+               raise Scan_ALI_Error with "missed withed unit name";
+            end if;
+
+            if Unit_Name'Length > 3 and then
+               Unit_Name (Unit_Name'Last) = 's' and then
+               Unit_Name (Unit_Name'Last - 1) = '%'
+            then
+               Imports.Append
+                 ((Unit_Name => To_Unbounded_String (Unit_Name
+                                  (Unit_Name'First .. Unit_Name'Last - 2)),
+                   Source    => To_Unbounded_String (Source),
+                   ALI       => To_Unbounded_String (ALI)));
+            else
+               raise Scan_ALI_Error with
+                 "withed unit name does not end with '%s'";
+            end if;
+         end;
+      end Parse_With;
+
+      Reader : GB.Reader :=  GB.Open (String (ALI_File.Value));
+   begin
+      declare
+         Word : Character := ASCII.NUL;
+      begin
+
+         --  Only the dependencies lines "D" are of interest, as they contain
+         --  dependencies source names.
+
+         loop
+            IO.Next_Line (Reader, Word);
+
+            case Word is
+               when ASCII.NUL =>
+                  exit;
+
+               when 'D' =>
+                  exit;
+               --  ??? Add other cases that are after the withed units
+
+               when 'W' =>
+                  Parse_With (Reader);
+
+               when others =>
+                  null;
+            end case;
+         end loop;
+
+         GB.Finalize (Reader);
+
+      exception
+         when E : others =>
+
+            Messages.Append
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  "ALI parser error: " & Ada.Exceptions.Exception_Message (E),
+                  GPR2.Source_Reference.Object
+                    (GPR2.Source_Reference.Create (ALI_File.Value, 0, 0))));
+
+            GB.Finalize (Reader);
+      end;
+   end Imports;
+
 end GPR2.Build.ALI_Parser;
