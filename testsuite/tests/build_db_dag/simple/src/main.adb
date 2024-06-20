@@ -63,9 +63,10 @@ begin
            and then Src.Kind = S_Body
          then
             declare
-               A : GPR2.Build.Actions.Compile.Object :=
-                     GPR2.Build.Actions.Compile.Create (Src);
+               A : GPR2.Build.Actions.Compile.Object;
             begin
+               A.Initialize (Src);
+
                if not Tree.Artifacts_Database.Has_Action (A.UID) then
                   Tree.Artifacts_Database.Add_Action (A, Log);
                   if Log.Has_Error then

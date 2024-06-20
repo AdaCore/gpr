@@ -44,7 +44,6 @@ Compile Ada: PKG2 (shared.gpr)
   - /tree/obj/shared/pkg2.o
 Compile C: foo.c (p1.gpr)
   inputs:
-  - /tree/src/p1/foo.c
   outputs:
   - /tree/obj/p1/foo.o
 

@@ -6,11 +6,9 @@
 
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Tree_Db;
-with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.View.Set;
-with GPR2.Utils.Hash;
 
 package body GPR2.Build.Actions.Compile is
 
@@ -20,7 +18,30 @@ package body GPR2.Build.Actions.Compile is
      (V          : GPR2.Project.View.Object;
       BN         : Simple_Name;
       Must_Exist : Boolean) return GPR2.Path_Name.Object;
-   --  Look for BN in V's hierarchy of object/lib directories
+   --  Look for the basename BN in V's hierarchy of object/lib directories
+
+   -------------
+   -- Command --
+   -------------
+
+   overriding function Command (Self : Object)
+     return GNATCOLL.OS.Process.Argument_List
+   is
+      Args : GNATCOLL.OS.Process.Argument_List;
+   begin
+      Args.Append ("gcc");
+      Args.Append ("-c");
+
+      --  ??? Add flags dynamically
+
+      Args.Append
+        (String
+           (Self.Ctxt.Source
+              (Simple_Name (To_String (Self.Src_Name))).Path_Name.Value));
+      --  ??? Check that path_name has a value.
+
+      return Args;
+   end Command;
 
    -----------------------
    -- Compute_Signature --
@@ -28,51 +49,53 @@ package body GPR2.Build.Actions.Compile is
 
    overriding procedure Compute_Signature (Self : in out Object) is
       use GPR2.Build.Signature;
+      Art : Artifacts.Files.Object;
    begin
-      for Input of Self.Tree.Inputs (Self.UID) loop
-         Self.Signature.Update_Artifact
-           (Input.UID, Input.Image, Input.Checksum);
-      end loop;
+      Self.Signature.Clear;
 
-      for Output of Self.Tree.Outputs (Self.UID) loop
-         Self.Signature.Update_Artifact
-           (Output.UID, Output.Image, Output.Checksum);
-      end loop;
+      --  ??? Need to process deps units
 
-      Self.Signature.Store (Self.Tree.Db_Filename_Path (Self.UID));
+      Art := Artifacts.Files.Create (Self.Input.Path_Name);
+      Self.Signature.Update_Artifact (Art.UID, Art.Image, Art.Checksum);
+
+      Art := Artifacts.Files.Create (Self.Obj_File);
+      Self.Signature.Update_Artifact (Art.UID, Art.Image, Art.Checksum);
+
+      Self.Signature.Store
+        (Self.Tree.Db_Filename_Path (Object'Class (Self).UID));
    end Compute_Signature;
 
-   ------------
-   -- Create --
-   ------------
+   ----------------
+   -- Initialize --
+   ----------------
 
-   function Create (Src : GPR2.Build.Source.Object) return Object is
+   procedure Initialize (Self : in out Object; Src : GPR2.Build.Source.Object)
+   is
       Src_Name : constant Simple_Name :=
                    Src.Path_Name.Simple_Name;
-      UID      : constant Compile_Id :=
-                   (Name_Len => Src_Name'Length,
-                    Lang     => Src.Language,
-                    Ctxt     => Src.Owning_View,
-                    Src_Name => Src_Name);
+
       BN       : constant Simple_Name := Src.Path_Name.Base_Filename;
       O_Suff   : constant Simple_Name :=
                    Simple_Name
-                     (UID.Ctxt.Attribute
+                     (Src.Owning_View.Attribute
                         (PRA.Compiler.Object_File_Suffix,
                          PAI.Create (Src.Language)).Value.Text);
-      Result   : Object :=
-                   (Input_Len => UID.Name_Len,
-                    UID       => UID,
-                    others    => <>);
    begin
-      Result.Obj_File := Lookup (UID.Ctxt, BN & O_Suff, True);
+      Self.Ctxt     := Src.Owning_View;
+      Self.Src_Name := To_Unbounded_String (String (Src_Name));
+      Self.Lang     := Src.Language;
+      Self.Traces   := Create ("ACTION_COMPILE");
 
-      if not Result.Obj_File.Is_Defined then
-         Result.Obj_File := UID.Ctxt.Object_Directory.Compose (BN & O_Suff);
+      Self.Obj_File := Lookup (Self.Ctxt, BN & O_Suff, True);
+
+      if not Self.Obj_File.Is_Defined then
+         Self.Obj_File := Self.Ctxt.Object_Directory.Compose (BN & O_Suff);
       end if;
+   end Initialize;
 
-      return Result;
-   end Create;
+   ------------
+   -- Lookup --
+   ------------
 
    function Lookup
      (V          : GPR2.Project.View.Object;
@@ -114,20 +137,26 @@ package body GPR2.Build.Actions.Compile is
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object)
    is
+      UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      Db.Add_Output
-        (Self.UID,
-         Artifacts.Files.Create (Self.Obj_File),
-         Messages);
+      Db.Add_Output (UID, Artifacts.Files.Create (Self.Obj_File), Messages);
 
       if Messages.Has_Error then
          return;
       end if;
-
-      Db.Add_Input
-        (Self.UID,
-         Artifacts.Files.Create (Self.Input.Path_Name),
-         True);
    end On_Tree_Insertion;
 
+   ---------
+   -- UID --
+   ---------
+
+   overriding function UID (Self : Object) return Actions.Action_Id'Class is
+      Result : constant Compile_Id :=
+                 (Name_Len => Ada.Strings.Unbounded.Length (Self.Src_Name),
+                  Lang     => Self.Lang,
+                  Ctxt     => Self.Ctxt,
+                  Src_Name => Filename_Optional (To_String (Self.Src_Name)));
+   begin
+      return Result;
+   end UID;
 end GPR2.Build.Actions.Compile;
