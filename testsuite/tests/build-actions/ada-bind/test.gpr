@@ -1,0 +1,6 @@
+with "gpr2";
+
+project Test is
+   for Object_Dir use "obj";
+   for Main use ("test.adb");
+end Test;
