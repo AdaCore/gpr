@@ -14,6 +14,7 @@ with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.View_Ids;
 
+with GNATCOLL.Directed_Graph;
 private with Ada.Containers.Hashed_Maps;
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Indefinite_Ordered_Sets;
@@ -26,6 +27,8 @@ package GPR2.Build.Tree_Db is
    type Object_Access is access all Object;
 
    Undefined : constant Object;
+
+   package DG renames GNATCOLL.Directed_Graph;
 
    function Is_Defined (Self : Object) return Boolean;
 
@@ -86,6 +89,12 @@ package GPR2.Build.Tree_Db is
       Id   : Actions.Action_Id'Class) return Boolean
      with Pre => Self.Is_Defined;
 
+   function Action
+     (Self : Object;
+      Id   : Actions.Action_Id'Class) return Actions.Object'Class
+     with Pre => Self.Is_Defined;
+   --  ???
+
    procedure Add_Artifact
      (Self     : in out Object;
       Artifact : Artifacts.Object'Class)
@@ -119,6 +128,13 @@ package GPR2.Build.Tree_Db is
      (Self   : in out Object;
       Action : Actions.Action_Id'Class);
 
+   function Actions_Graph_Access
+     (Self : in out Object) return access DG.Directed_Graph;
+   --  ???
+
+   function Action_Id
+     (Self : in out Object; Node : DG.Node_Id) return Actions.Action_Id'Class;
+   --  ???
    ----------------------------
    -- Iteration on artifacts --
    ----------------------------
@@ -200,6 +216,8 @@ package GPR2.Build.Tree_Db is
 
 private
 
+   use all type DG.Node_Id;
+
    function Hash (A : Artifacts.Object'Class) return Ada.Containers.Hash_Type
    is (A.Hash);
 
@@ -231,6 +249,13 @@ private
      (GPR2.Build.Artifacts.Object'Class, Actions.Action_Id'Class, Hash,
       GPR2.Build.Artifacts."=", Actions."=");
 
+   package Action_Node_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (GPR2.Build.Actions.Action_Id'Class, DG.Node_Id, GPR2.Build.Actions.Less);
+
+   package Node_Action_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (DG.Node_Id, GPR2.Build.Actions.Action_Id'Class,
+      "=" => GPR2.Build.Actions."=");
+
    type Object is tagged limited record
    --  Options:
       Src_Option      : Optional_Source_Info_Option := No_Source;
@@ -257,6 +282,10 @@ private
 
       Successors      : Artifact_Actions_Maps.Map;
       Predecessor     : Artifact_Action_Maps.Map;
+
+      Actions_Graph   : aliased GNATCOLL.Directed_Graph.Directed_Graph;
+      Node_To_Action  : Node_Action_Maps.Map;
+      Action_To_Node  : Action_Node_Maps.Map;
    end record;
 
    procedure Create
@@ -293,6 +322,11 @@ private
      (Self : Object;
       Id   : Actions.Action_Id'Class) return Boolean
    is (Self.Actions.Contains (Id));
+
+   function Action
+     (Self : Object;
+      Id   : Actions.Action_Id'Class) return Actions.Object'Class
+   is (Self.Actions (Id));
 
    function Has_Artifact
      (Self     : Object;

@@ -15,6 +15,7 @@ with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Tree_Internal;
 with GPR2.View_Ids.Set;
+with GNATCOLL.Directed_Graph; use GNATCOLL.Directed_Graph;
 
 package body GPR2.Build.Tree_Db is
 
@@ -59,6 +60,19 @@ package body GPR2.Build.Tree_Db is
      (Iter : Action_Internal_Iterator;
       Position : Action_Cursor) return Action_Cursor;
 
+   ---------------
+   -- Action_Id --
+   ---------------
+
+   function Action_Id
+     (Self : in out Object; Node : DG.Node_Id) return Actions.Action_Id'Class
+   is
+   begin
+      --  ??? Add checks
+
+      return Self.Node_To_Action (Node);
+   end Action_Id;
+
    function Action_Iterate
      (List : Actions_List) return Action_Iterators.Forward_Iterator'Class
    is (Action_Internal_Iterator'
@@ -95,6 +109,17 @@ package body GPR2.Build.Tree_Db is
       return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
    end Action_Reference;
 
+   --------------------------
+   -- Actions_Graph_Access --
+   --------------------------
+
+   function Actions_Graph_Access
+     (Self : in out Object) return access DG.Directed_Graph
+   is
+   begin
+      return Self.Actions_Graph'Unchecked_Access;
+   end Actions_Graph_Access;
+
    ----------------
    -- Add_Action --
    ----------------
@@ -106,9 +131,14 @@ package body GPR2.Build.Tree_Db is
    is
       Curs : Action_Maps.Cursor;
       Done : Boolean;
+      Node : GNATCOLL.Directed_Graph.Node_Id;
    begin
       Self.Actions.Insert (Action.UID, Action, Curs, Done);
-      pragma Assert (Done, "duplicated action detected");
+
+      Node := Self.Actions_Graph.Add_Node;
+      Self.Node_To_Action.Insert (Node, Action.UID);
+      Self.Action_To_Node.Insert (Action.UID, Node);
+
       Self.Implicit_Inputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
       Self.Inputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
       Self.Outputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
@@ -151,6 +181,7 @@ package body GPR2.Build.Tree_Db is
       Action   : Actions.Action_Id'Class;
       Artifact : Artifacts.Object'Class;
       Explicit : Boolean) is
+      Pred     : Artifact_Action_Maps.Cursor;
    begin
       Self.Add_Artifact (Artifact);
 
@@ -161,6 +192,14 @@ package body GPR2.Build.Tree_Db is
       end if;
 
       Self.Successors.Reference (Artifact).Include (Action);
+
+      Pred := Self.Predecessor.Find (Artifact);
+      if Artifact_Action_Maps.Has_Element (Pred) then
+         Self.Actions_Graph.Add_Predecessor
+               (Node        => Self.Action_To_Node (Action),
+                Predecessor => Self.Action_To_Node
+                                 (Artifact_Action_Maps.Element (Pred)));
+      end if;
    end Add_Input;
 
    ----------------
@@ -200,6 +239,12 @@ package body GPR2.Build.Tree_Db is
       end if;
 
       Self.Outputs.Reference (Action).Include (Artifact);
+
+      for Successor_Id of Self.Successors (Artifact) loop
+         Self.Actions_Graph.Add_Predecessor
+               (Node        => Self.Action_To_Node (Successor_Id),
+                Predecessor => Self.Action_To_Node (Action));
+      end loop;
    end Add_Output;
 
    ----------------
