@@ -9,6 +9,7 @@ with GPR2.Project.View;
 
 limited with GPR2.Build.Tree_Db;
 
+private with GPR2.Build.Signature;
 private with Ada.Tags;
 
 package GPR2.Build.Actions is
@@ -65,7 +66,7 @@ package GPR2.Build.Actions is
 
    procedure Compare_Signature
      (Self     : in out Object;
-      Messages : in out GPR2.Log.Object) is abstract;
+      Messages : in out GPR2.Log.Object);
    --  Compare the current action signature to the loaded signature
 
    procedure Attach
@@ -77,7 +78,9 @@ private
    use type Ada.Tags.Tag;
 
    type Object is abstract tagged record
-      Tree : access Tree_Db.Object;
+      Tree      : access Tree_Db.Object;
+
+      Signature : GPR2.Build.Signature.Object;
    end record;
 
    function Less (L, R : Action_Id'Class) return Boolean is

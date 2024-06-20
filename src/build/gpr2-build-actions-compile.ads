@@ -47,10 +47,6 @@ package GPR2.Build.Actions.Compile is
 
    overriding procedure Compute_Signature (Self : in out Object);
 
-   overriding procedure Compare_Signature
-     (Self     : in out Object;
-      Messages : in out GPR2.Log.Object);
-
 private
 
    use type GPR2.View_Ids.View_Id;
@@ -80,8 +76,6 @@ private
 
       Deps     : GPR2.Containers.Name_Set;
       --  List of known dependencies for this unit
-
-      Signature : GPR2.Build.Signature.Object;
 
       UID      : Compile_Id (Input_Len);
    end record;
