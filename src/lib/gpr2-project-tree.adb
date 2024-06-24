@@ -348,6 +348,8 @@ package body GPR2.Project.Tree is
       Allow_Implicit_Project : Boolean := True;
       Environment            : GPR2.Environment.Object :=
                                  GPR2.Environment.Process_Environment;
+      Config                 : GPR2.Project.Configuration.Object :=
+                                 GPR2.Project.Configuration.Undefined;
       File_Reader            : GPR2.File_Readers.File_Reader_Reference :=
                                  GPR2.File_Readers.No_File_Reader_Reference)
       return Boolean
@@ -430,11 +432,17 @@ package body GPR2.Project.Tree is
          Self.Register_Project_Search_Path (Path);
       end loop;
 
-      if Options.Config_Project.Is_Defined
-        and then (not Options.Create_Config_Project
-                  or else Options.Config_Project.Exists)
+      if Config.Is_Defined
+        or else
+          (Options.Config_Project.Is_Defined
+           and then (not Options.Create_Config_Project
+                     or else Options.Config_Project.Exists))
       then
-         Conf := GPR2.Project.Configuration.Load (Options.Config_Project);
+         if Config.Is_Defined then
+            Conf := Config;
+         else
+            Conf := GPR2.Project.Configuration.Load (Options.Config_Project);
+         end if;
 
          Self.Tree.Load
            (Filename         => Project_File,

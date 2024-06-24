@@ -101,6 +101,8 @@ package GPR2.Project.Tree is
       Allow_Implicit_Project : Boolean := True;
       Environment            : GPR2.Environment.Object :=
                                  GPR2.Environment.Process_Environment;
+      Config                 : GPR2.Project.Configuration.Object :=
+                                 GPR2.Project.Configuration.Undefined;
       File_Reader            : GPR2.File_Readers.File_Reader_Reference :=
                                  GPR2.File_Readers.No_File_Reader_Reference)
       return Boolean;
@@ -115,6 +117,8 @@ package GPR2.Project.Tree is
    --   error or a warning.
    --  Environment allows passing explictely environment variables to the
    --   tree.
+   --  Config allows passing explictely the configuration project. If defined
+   --   then options --config or --autoconf are ignored.
    --  Verbosiuty indicates the level of messages that can be displayed
    --   to the active mexsage reporter (by default the console).
 
