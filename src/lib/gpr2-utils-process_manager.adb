@@ -129,9 +129,9 @@ package body GPR2.Utils.Process_Manager is
    end Effective_Job_Number;
 
 
-   -------------------
-   -- Execute_Graph --
-   -------------------
+   -------------
+   -- Execute --
+   -------------
 
    procedure Execute
      (Self  : in out Process_Manager'Class;
@@ -337,6 +337,10 @@ package body GPR2.Utils.Process_Manager is
    begin
       return Self.Data.Max_Active_Jobs;
    end Max_Active_Jobs;
+
+   ----------------
+   -- Total_Jobs --
+   ----------------
 
    function Total_Jobs (Self : Process_Manager) return Natural is
    begin
