@@ -17,10 +17,11 @@ package body GPR2.Options is
    ----------------
 
    procedure Add_Switch
-     (Self   : in out Object;
-      Switch : Option;
-      Param  : String := "";
-      Index  : String := "") is
+     (Self     : in out Object;
+      Switch   : Option;
+      Param    : String := "";
+      Index    : String := "";
+      Override : Boolean := False) is
    begin
       case Switch is
          when AP =>
@@ -74,7 +75,7 @@ package body GPR2.Options is
             Self.No_Project := True;
 
          when P =>
-            if not Self.Project_File.Is_Defined then
+            if not Self.Project_File.Is_Defined or else Override then
                if GNAT.OS_Lib.Is_Directory (Param) then
                   Self.Project_File :=
                     GPR2.Path_Name.Create_Directory

@@ -103,13 +103,18 @@ package GPR2.Options is
      );
 
    procedure Add_Switch
-     (Self   : in out Object;
-      Switch : Option;
-      Param  : String := "";
-      Index  : String := "");
+     (Self     : in out Object;
+      Switch   : Option;
+      Param    : String := "";
+      Index    : String := "";
+      Override : Boolean := False);
    --  Add a switch to options.
    --  Switches format is -[-]<Switch>[ ][:<Index>][=]<Param>
    --  Usage_Error exception is raised if options set in invalid.
+   --
+   --  If you need to redefine an already defined switch that is supposed
+   --  to not appear several times on the command line, then you need to
+   --  set the "Override" parameter.
 
    function On_Extra_Arg (Self : in out Object; Arg : String) return Boolean;
    --  Use this function if gpr file can be provided directly.
