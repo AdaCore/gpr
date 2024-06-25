@@ -684,6 +684,23 @@ package body GPR2.Project.Tree is
       Self.Update_Sources (Log, Option);
    end Update_Sources;
 
+   function Update_Sources
+     (Self     : Object;
+      Option   : Source_Info_Option := Sources_Units) return Boolean
+   is
+      Log : GPR2.Log.Object;
+   begin
+      Self.Update_Sources (Log, Option);
+
+      return not Log.Has_Element
+        (Information => False,
+         Warning     => False,
+         Error       => True,
+         Lint        => False,
+         Read        => True,
+         Unread      => True);
+   end Update_Sources;
+
 begin
 
    Tree_Internal.Get := Get'Access;

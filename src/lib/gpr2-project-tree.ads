@@ -299,6 +299,12 @@ package GPR2.Project.Tree is
    --  Option selects the information that will be gathered on the sources. The
    --   more information is requested, the slower is the update operation.
 
+   function Update_Sources
+     (Self     : Object;
+      Option   : Source_Info_Option := Sources_Units) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Same as above, and returns False upon error detected.
+
    procedure Update_Sources
      (Self     : Object;
       Messages : out GPR2.Log.Object;
