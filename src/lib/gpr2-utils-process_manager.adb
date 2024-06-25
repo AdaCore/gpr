@@ -327,7 +327,19 @@ package body GPR2.Utils.Process_Manager is
             Free (State.Stderr_Listener);
          end if;
       end loop;
+
+      Self.Execution_Post_Process;
    end Execute;
+
+   ----------------------------
+   -- Execution_Post_Process --
+   ----------------------------
+
+   procedure Execution_Post_Process (Self : in out Process_Manager)
+   is
+   begin
+      null;
+   end Execution_Post_Process;
 
    ---------------------
    -- Max_Active_Jobs --

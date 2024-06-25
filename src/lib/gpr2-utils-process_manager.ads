@@ -72,6 +72,10 @@ package GPR2.Utils.Process_Manager is
    --  Jobs: the maximum number of jobs that can execute in parallel.
    --    If set to 0, then the number of CPU of the host is used.
 
+   procedure Execution_Post_Process (Self : in out Process_Manager);
+   --  ??? Did not manage to have this subprogram in the private part
+   --  and to be overrided by childs
+
    ----------------------------------------
    -- Process scheduler data information --
    ----------------------------------------
@@ -80,7 +84,9 @@ package GPR2.Utils.Process_Manager is
 
    function Total_Jobs (Self : Process_Manager) return Natural;
 
+
 private
+
 
    type Process_Manager_Data is record
       Max_Active_Jobs : Natural := 0;
