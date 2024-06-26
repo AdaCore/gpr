@@ -14,8 +14,10 @@ pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
 with GPR2.Message.Reporter;
+with GPR2.Project_Parser;
 with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Tree_Internal.View_Builder;
 
 package body GPR2.Project.Tree is
 
@@ -354,10 +356,21 @@ package body GPR2.Project.Tree is
                                  GPR2.File_Readers.No_File_Reader_Reference)
       return Boolean
    is
+      use Tree_Internal;
+
       Conf         : GPR2.Project.Configuration.Object;
+      Prj_Kind     : Project_Descriptor_Kind := Project_Path;
       Project_File : GPR2.Path_Name.Object := Options.Project_File;
+      Root_Data    : GPR2.View_Internal.Data;
+
+      function Prj_Descriptor return Tree_Internal.Project_Descriptor is
+        (case Prj_Kind is
+            when Project_Path => (Project_Path, Project_File),
+            when Project_Definition => (Project_Definition, Root_Data));
 
    begin
+      GPR2.Project_Parser.Clear_Cache;
+
       if not Self.Is_Defined then
          Self.Create;
       else
@@ -405,10 +418,13 @@ package body GPR2.Project.Tree is
                --  See comment in No_Project case as to how we handle projects
                --  as project directories.
 
-               Project_File := Path_Name.Create_Directory
-                 (Filename_Type (Ada.Directories.Current_Directory));
                Message.Reporter.Active_Reporter.Report
                  ("use implicit project in " & Directories.Current_Directory);
+               Root_Data := Tree_Internal.View_Builder.Create
+                 (Project_Dir => Path_Name.Create_Directory
+                    (Filename_Type (Ada.Directories.Current_Directory)),
+                  Name        => "Default").Data;
+               Prj_Kind := Project_Definition;
             end if;
 
          else
@@ -445,7 +461,7 @@ package body GPR2.Project.Tree is
          end if;
 
          Self.Tree.Load
-           (Filename         => Project_File,
+           (Root_Project     => Prj_Descriptor,
             Context          => Options.Context,
             With_Runtime     => With_Runtime,
             Config           => Conf,
@@ -515,7 +531,160 @@ package body GPR2.Project.Tree is
          end if;
 
          Self.Tree.Load_Autoconf
-           (Filename          => Project_File,
+           (Root_Project      => Prj_Descriptor,
+            Context           => Options.Context,
+            With_Runtime      => With_Runtime,
+            Build_Path        => Options.Build_Path,
+            Root_Path         => Options.Root_Path,
+            Subdirs           => Options.Subdirs,
+            Src_Subdirs       => Options.Src_Subdirs,
+            Check_Shared_Lib  => Options.Check_Shared_Lib,
+            Absent_Dir_Error  => Absent_Dir_Error,
+            Implicit_With     => Options.Implicit_With,
+            Resolve_Links     => Options.Resolve_Links,
+            Target            => Options.Target,
+            Language_Runtimes => Options.RTS_Map,
+            Base              => Options.Base (Environment),
+            Config_Project    => Options.Config_Project,
+            File_Reader       => File_Reader,
+            Environment       => Environment);
+
+         Report_Messages (Self.Tree.Log_Messages.all);
+      end if;
+
+      GPR2.Project_Parser.Clear_Cache;
+
+      return True;
+   exception
+      when GPR2.Project_Error =>
+         if Verbosity >= Errors then
+            Self.Tree.Log_Messages.Output_Messages
+              (Information => False,
+               Warning     => False);
+         end if;
+
+         GPR2.Project_Parser.Clear_Cache;
+
+         return False;
+   end Load;
+
+   -----------------------
+   -- Load_Virtual_View --
+   -----------------------
+
+   function Load_Virtual_View
+     (Self             : in out Object;
+      Root_Project     : View_Builder.Object;
+      Options          : GPR2.Options.Object'Class;
+      With_Runtime     : Boolean := False;
+      Absent_Dir_Error : GPR2.Error_Level := GPR2.Warning;
+      Environment      : GPR2.Environment.Object :=
+                           GPR2.Environment.Process_Environment;
+      Config           : GPR2.Project.Configuration.Object :=
+                           GPR2.Project.Configuration.Undefined;
+      File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
+                           GPR2.File_Readers.No_File_Reader_Reference)
+      return Boolean
+   is
+      Conf         : GPR2.Project.Configuration.Object;
+
+   begin
+      if not Self.Is_Defined then
+         Self.Create;
+      else
+         Self.Tree.Unload (Full => False);
+      end if;
+
+      for Path of Options.User_Specified_Project_Search_Path loop
+         Self.Register_Project_Search_Path (Path);
+      end loop;
+
+      if Config.Is_Defined
+        or else
+          (Options.Config_Project.Is_Defined
+           and then (not Options.Create_Config_Project
+                     or else Options.Config_Project.Exists))
+      then
+         if Config.Is_Defined then
+            Conf := Config;
+         else
+            Conf := GPR2.Project.Configuration.Load (Options.Config_Project);
+         end if;
+
+         Self.Tree.Load
+           (Root_Project     => (Kind => Tree_Internal.Project_Definition,
+                                 Data => Get_View_Data (Root_Project)),
+            Context          => Options.Context,
+            With_Runtime     => With_Runtime,
+            Config           => Conf,
+            Build_Path       => Options.Build_Path,
+            Root_Path        => Options.Root_Path,
+            Subdirs          => Options.Subdirs,
+            Src_Subdirs      => Options.Src_Subdirs,
+            Check_Shared_Lib => Options.Check_Shared_Lib,
+            Absent_Dir_Error => Absent_Dir_Error,
+            Implicit_With    => Options.Implicit_With,
+            Resolve_Links    => Options.Resolve_Links,
+            File_Reader      => File_Reader,
+            Environment      => Environment);
+
+         if Options.Target /= "all" then
+            --  if target is defined on the command line, and a config
+            --  file is specified, issue an error if the target of the config
+            --  is different from the command line.
+
+            declare
+               package PRA renames GPR2.Project.Registry.Attribute;
+
+               Target_Attr : constant GPR2.Project.Attribute.Object :=
+                               Self.Tree.Configuration.Corresponding_View.
+                                 Attribute (PRA.Target);
+               Conf_Target : constant Value_Type := Target_Attr.Value.Text;
+               Base        : constant GPR2.KB.Object :=
+                               (if Self.Tree.Get_KB.Is_Defined
+                                then Self.Tree.Get_KB
+                                else GPR2.KB.Create_Default
+                                  (GPR2.KB.Targetset_Only_Flags,
+                                   Environment));
+               Conf_Norm   : constant Name_Type :=
+                               Base.Normalized_Target
+                                 (Name_Type (Conf_Target));
+               Self_Norm   : constant Name_Type :=
+                               Base.Normalized_Target (Options.Target);
+            begin
+               if Conf_Norm /= Self_Norm then
+                  Self.Tree.Log_Messages.Append
+                    (GPR2.Message.Create
+                       (Level   =>  GPR2.Message.Error,
+                        Message =>  "--target: '" &
+                          String (Options.Target) &
+                          "' is different from the target value in the" &
+                          " configuration project '" &
+                          String (Conf_Norm) & "'",
+                        Sloc    => Target_Attr.Value));
+               else
+                  Self.Tree.Log_Messages.Append
+                    (GPR2.Message.Create
+                       (Level   =>  GPR2.Message.Warning,
+                        Message =>  "--target is not used when a " &
+                          "configuration project is specified.",
+                        Sloc    => Target_Attr.Value));
+               end if;
+            end;
+         end if;
+
+         Report_Messages (Self.Tree.Log_Messages.all);
+
+      else
+         if Options.Config_Project.Is_Defined and then Verbosity > Quiet then
+            Ada.Text_IO.Put_Line
+              ("creating configuration project " &
+                 String (Options.Config_Project.Name));
+         end if;
+
+         Self.Tree.Load_Autoconf
+           (Root_Project      => (Kind => Tree_Internal.Project_Definition,
+                                  Data => Get_View_Data (Root_Project)),
             Context           => Options.Context,
             With_Runtime      => With_Runtime,
             Build_Path        => Options.Build_Path,
@@ -546,7 +715,7 @@ package body GPR2.Project.Tree is
          end if;
 
          return False;
-   end Load;
+   end Load_Virtual_View;
 
    ----------------------------------
    -- Register_Project_Search_Path --

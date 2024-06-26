@@ -32,7 +32,6 @@ with GPR2.View_Internal;
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Indefinite_Hashed_Maps;
 
-
 private package GPR2.Tree_Internal is
 
    use GPR2.Context;
@@ -46,6 +45,17 @@ private package GPR2.Tree_Internal is
           Default_Iterator  => Iterate,
      Iterator_Element  => View.Object;
    type Object_Access is access all Object;
+
+   type Project_Descriptor_Kind is (Project_Path, Project_Definition);
+
+   type Project_Descriptor (Kind : Project_Descriptor_Kind) is record
+      case Kind is
+         when Project_Path =>
+            Path : GPR2.Path_Name.Object;
+         when Project_Definition =>
+            Data : GPR2.View_Internal.Data;
+      end case;
+   end record;
 
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
@@ -69,7 +79,7 @@ private package GPR2.Tree_Internal is
 
    procedure Load
      (Self             : in out Object;
-      Filename         : Path_Name.Object;
+      Root_Project     : Project_Descriptor;
       Context          : GPR2.Context.Object;
       With_Runtime     : Boolean                   := False;
       Config           : Configuration.Object      := Configuration.Undefined;
@@ -103,7 +113,7 @@ private package GPR2.Tree_Internal is
    --   obj/<value> to the list of source directories, if they exist.
    --  Check_Shared_Lib: checks for shared library compatibilities
    --  Absent_Dir_Error: whether a missing directory should be treated as an
-   --   error or a warning.
+   --   error or a warning.(
    --  Implicit_With: a list of implicitly withed projects.
    --  Pre_Conf_Mode: set in autoconf mode to disable most errors when trying
    --   to load a tree without configuration.
@@ -125,7 +135,7 @@ private package GPR2.Tree_Internal is
 
    procedure Load_Autoconf
      (Self              : in out Object;
-      Filename          : Path_Name.Object;
+      Root_Project      : Project_Descriptor;
       Context           : GPR2.Context.Object;
       With_Runtime      : Boolean                 := False;
       Build_Path        : Path_Name.Object        := Path_Name.Undefined;
@@ -458,17 +468,6 @@ private
       Equivalent_Keys => GPR2.View_Ids."=");
    --  Maps View_Ids to View objects
 
-   type Project_Descriptor_Kind is (Project_Path, Project_Definition);
-
-   type Project_Descriptor (Kind : Project_Descriptor_Kind) is record
-      case Kind is
-         when Project_Path =>
-            Path : GPR2.Path_Name.Object;
-         when Project_Definition =>
-            Data : GPR2.View_Internal.Data;
-      end case;
-   end record;
-
    type All_Search_Paths is record
       Default    : Path_Name.Set.Object :=
                      Default_Search_Paths
@@ -513,54 +512,6 @@ private
       Environment       : GPR2.Environment.Object :=
                             GPR2.Environment.Process_Environment;
    end record;
-
-   procedure Load
-     (Self             : in out Object;
-      Root_Project     : Project_Descriptor;
-      Context          : GPR2.Context.Object;
-      With_Runtime     : Boolean;
-      Config           : PC.Object                 := PC.Undefined;
-      Build_Path       : Path_Name.Object          := Path_Name.Undefined;
-      Root_Path        : Path_Name.Object          := Path_Name.Undefined;
-      Subdirs          : Optional_Name_Type        := No_Name;
-      Src_Subdirs      : Optional_Name_Type        := No_Name;
-      Check_Shared_Lib : Boolean                   := True;
-      Absent_Dir_Error : Error_Level               := Warning;
-      Implicit_With    : GPR2.Path_Name.Set.Object :=
-                           GPR2.Path_Name.Set.Empty_Set;
-      Resolve_Links    : Boolean                   := False;
-      Pre_Conf_Mode    : Boolean                   := False;
-      File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference;
-      Environment      : GPR2.Environment.Object :=
-                           GPR2.Environment.Process_Environment);
-   --  Common implementation for loading a project either from an actual
-   --  file or from a manually built root project data.
-
-   procedure Load_Autoconf
-     (Self              : in out Object;
-      Root_Project      : Project_Descriptor;
-      Context           : GPR2.Context.Object;
-      With_Runtime      : Boolean;
-      Build_Path        : Path_Name.Object          := Path_Name.Undefined;
-      Root_Path         : Path_Name.Object          := Path_Name.Undefined;
-      Subdirs           : Optional_Name_Type        := No_Name;
-      Src_Subdirs       : Optional_Name_Type        := No_Name;
-      Check_Shared_Lib  : Boolean                   := True;
-      Absent_Dir_Error  : Error_Level               := Warning;
-      Implicit_With     : GPR2.Path_Name.Set.Object :=
-                            GPR2.Path_Name.Set.Empty_Set;
-      Resolve_Links     : Boolean                   := False;
-      Target            : Optional_Name_Type        := No_Name;
-      Language_Runtimes : Containers.Lang_Value_Map :=
-                            Containers.Lang_Value_Maps.Empty_Map;
-      Base              : GPR2.KB.Object            := GPR2.KB.Undefined;
-      Config_Project    : GPR2.Path_Name.Object     :=
-                            GPR2.Path_Name.Undefined;
-      File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
-                            GPR2.File_Readers.No_File_Reader_Reference;
-      Environment       : GPR2.Environment.Object   :=
-                            GPR2.Environment.Process_Environment);
 
    function "=" (Left, Right : Object) return Boolean is
      (Left.Self = Right.Self);

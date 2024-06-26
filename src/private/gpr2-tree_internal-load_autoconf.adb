@@ -9,7 +9,7 @@ procedure Load_Autoconf
   (Self              : in out Object;
    Root_Project      : Project_Descriptor;
    Context           : GPR2.Context.Object;
-   With_Runtime      : Boolean;
+   With_Runtime      : Boolean                 := False;
    Build_Path        : Path_Name.Object        := Path_Name.Undefined;
    Root_Path         : Path_Name.Object        := Path_Name.Undefined;
    Subdirs           : Optional_Name_Type      := No_Name;

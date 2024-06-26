@@ -656,7 +656,7 @@ package body GPR2.Tree_Internal is
      (Self             : in out Object;
       Root_Project     : Project_Descriptor;
       Context          : GPR2.Context.Object;
-      With_Runtime     : Boolean;
+      With_Runtime     : Boolean                   := False;
       Config           : PC.Object                 := PC.Undefined;
       Build_Path       : Path_Name.Object          := Path_Name.Undefined;
       Root_Path        : Path_Name.Object          := Path_Name.Undefined;
@@ -910,56 +910,6 @@ package body GPR2.Tree_Internal is
       end if;
    end Load;
 
-   ----------
-   -- Load --
-   ----------
-
-   procedure Load
-     (Self             : in out Object;
-      Filename         : Path_Name.Object;
-      Context          : GPR2.Context.Object;
-      With_Runtime     : Boolean                   := False;
-      Config           : PC.Object                 := PC.Undefined;
-      Build_Path       : Path_Name.Object          := Path_Name.Undefined;
-      Root_Path        : Path_Name.Object          := Path_Name.Undefined;
-      Subdirs          : Optional_Name_Type        := No_Name;
-      Src_Subdirs      : Optional_Name_Type        := No_Name;
-      Check_Shared_Lib : Boolean                   := True;
-      Absent_Dir_Error : Error_Level               := Warning;
-      Implicit_With    : GPR2.Path_Name.Set.Object :=
-                           GPR2.Path_Name.Set.Empty_Set;
-      Resolve_Links    : Boolean                   := False;
-      Pre_Conf_Mode    : Boolean                   := False;
-      File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference;
-      Environment      : GPR2.Environment.Object :=
-                           GPR2.Environment.Process_Environment) is
-   begin
-      GPR2.Project_Parser.Clear_Cache;
-
-      Self.Load
-        (Root_Project     => (if not Filename.Is_Directory
-                              then (Project_Path, Filename)
-                              else (Project_Definition,
-                                    View_Builder.Create
-                                      (Filename, "Default").Data)),
-         Context          => Context,
-         With_Runtime     => With_Runtime,
-         Config           => Config,
-         Build_Path       => Build_Path,
-         Root_Path        => Root_Path,
-         Subdirs          => Subdirs,
-         Src_Subdirs      => Src_Subdirs,
-         Check_Shared_Lib => Check_Shared_Lib,
-         Absent_Dir_Error => Absent_Dir_Error,
-         Implicit_With    => Implicit_With,
-         Resolve_Links    => Resolve_Links,
-         Pre_Conf_Mode    => Pre_Conf_Mode,
-         File_Reader      => File_Reader,
-         Environment      => Environment);
-
-      GPR2.Project_Parser.Clear_Cache;
-   end Load;
 
    -------------------
    -- Load_Autoconf --
@@ -969,7 +919,7 @@ package body GPR2.Tree_Internal is
      (Self              : in out Object;
       Root_Project      : Project_Descriptor;
       Context           : GPR2.Context.Object;
-      With_Runtime      : Boolean;
+      With_Runtime      : Boolean                   := False;
       Build_Path        : Path_Name.Object          := Path_Name.Undefined;
       Root_Path         : Path_Name.Object          := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type        := No_Name;
@@ -990,54 +940,6 @@ package body GPR2.Tree_Internal is
       Environment       : GPR2.Environment.Object :=
                             GPR2.Environment.Process_Environment)
    is separate;
-
-   procedure Load_Autoconf
-     (Self              : in out Object;
-      Filename          : Path_Name.Object;
-      Context           : GPR2.Context.Object;
-      With_Runtime      : Boolean                 := False;
-      Build_Path        : Path_Name.Object        := Path_Name.Undefined;
-      Root_Path         : Path_Name.Object          := Path_Name.Undefined;
-      Subdirs           : Optional_Name_Type      := No_Name;
-      Src_Subdirs       : Optional_Name_Type      := No_Name;
-      Check_Shared_Lib  : Boolean                 := True;
-      Absent_Dir_Error  : Error_Level             := Warning;
-      Implicit_With     : GPR2.Path_Name.Set.Object :=
-                            GPR2.Path_Name.Set.Empty_Set;
-      Resolve_Links     : Boolean                 := False;
-      Target            : Optional_Name_Type      := No_Name;
-      Language_Runtimes : Containers.Lang_Value_Map :=
-                            Containers.Lang_Value_Maps.Empty_Map;
-      Base              : GPR2.KB.Object          := GPR2.KB.Undefined;
-      Config_Project    : GPR2.Path_Name.Object   := GPR2.Path_Name.Undefined;
-      File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
-                            GPR2.File_Readers.No_File_Reader_Reference;
-      Environment       : GPR2.Environment.Object :=
-                            GPR2.Environment.Process_Environment) is
-   begin
-      Self.Load_Autoconf
-        (Root_Project      => (if not Filename.Is_Directory
-                               then (Project_Path, Filename)
-                               else (Project_Definition,
-                                     View_Builder.Create
-                                       (Filename, "Default").Data)),
-         Context           => Context,
-         With_Runtime      => With_Runtime,
-         Build_Path        => Build_Path,
-         Root_Path         => Root_Path,
-         Subdirs           => Subdirs,
-         Src_Subdirs       => Src_Subdirs,
-         Check_Shared_Lib  => Check_Shared_Lib,
-         Absent_Dir_Error  => Absent_Dir_Error,
-         Implicit_With     => Implicit_With,
-         Resolve_Links     => Resolve_Links,
-         Target            => Target,
-         Language_Runtimes => Language_Runtimes,
-         Base              => Base,
-         Config_Project    => Config_Project,
-         File_Reader       => File_Reader,
-         Environment       => Environment);
-   end Load_Autoconf;
 
    ------------------------
    -- Load_Configuration --

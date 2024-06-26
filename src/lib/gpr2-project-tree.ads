@@ -19,14 +19,14 @@ with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Configuration;
-pragma Elaborate (GPR2.Project.Configuration);
---  Elaborate to avoid a circular dependency due to default Elaborate_Body
+limited with GPR2.Project.Tree.View_Builder;
 with GPR2.Project.View.Set;
 with GPR2.Project.View.Vector;
 with GPR2.View_Ids;
 
 private with GNATCOLL.Refcount;
 private with GPR2.Tree_Internal;
+private with GPR2.View_Internal;
 
 package GPR2.Project.Tree is
 
@@ -121,6 +121,22 @@ package GPR2.Project.Tree is
    --   then options --config or --autoconf are ignored.
    --  Verbosiuty indicates the level of messages that can be displayed
    --   to the active mexsage reporter (by default the console).
+
+   function Load_Virtual_View
+     (Self             : in out Object;
+      Root_Project     : View_Builder.Object;
+      Options          : GPR2.Options.Object'Class;
+      With_Runtime     : Boolean := False;
+      Absent_Dir_Error : GPR2.Error_Level := GPR2.Warning;
+      Environment      : GPR2.Environment.Object :=
+                           GPR2.Environment.Process_Environment;
+      Config           : GPR2.Project.Configuration.Object :=
+                           GPR2.Project.Configuration.Undefined;
+      File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
+                           GPR2.File_Readers.No_File_Reader_Reference)
+      return Boolean;
+   --  Same as above, but uses a virtual project view as a root project.
+   --  -P option is ignored if set in Options.
 
    procedure Unload (Self : in out Object);
    --  Clears the internal structure of the Object
@@ -387,6 +403,10 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined;
 
 private
+
+   Get_View_Data : access
+     function (Public : GPR2.Project.Tree.View_Builder.Object)
+     return GPR2.View_Internal.Data;
 
    package Pools is new GNATCOLL.Refcount.Headers.Typed (Tree_Internal.Object);
    subtype Tree_Internal_Access is Pools.Element_Access;
