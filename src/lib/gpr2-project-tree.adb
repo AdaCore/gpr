@@ -378,6 +378,7 @@ package body GPR2.Project.Tree is
       end if;
 
       if Project_File.Is_Defined
+        and then not Project_File.Is_Directory
         and then not Project_File.Has_Dir_Name
         and then Options.Root_Path.Is_Defined
       then
@@ -399,30 +400,42 @@ package body GPR2.Project.Tree is
          end;
       end if;
 
-      if not Project_File.Is_Defined then
+      if not Project_File.Is_Defined
+        or else Project_File.Is_Directory
+      then
          if Options.No_Project then
             --  Specifying a directory as project file will create the default
             --  project in there, so expecting all sources and artifacts to
             --  share the same folder.
 
-            Project_File := Path_Name.Create_Directory
-              (Filename_Type (Ada.Directories.Current_Directory));
+            Root_Data := Tree_Internal.View_Builder.Create
+              (Project_Dir => Path_Name.Create_Directory ("."),
+               Name        => "Default").Data;
+            Prj_Kind := Project_Definition;
 
          elsif Allow_Implicit_Project then
-            Project_File := Check_For_Default_Project;
+            Project_File := Check_For_Default_Project
+              (if Project_File.Is_Defined
+               then String (Project_File.Name)
+               else "");
 
             if Project_File.Is_Defined then
-               Message.Reporter.Active_Reporter.Report
-                 ("using project file " & Project_File.String_Value);
+               if Verbosity > Quiet then
+                  Message.Reporter.Active_Reporter.Report
+                    ("using project file " & Project_File.String_Value);
+               end if;
             else
                --  See comment in No_Project case as to how we handle projects
                --  as project directories.
 
-               Message.Reporter.Active_Reporter.Report
-                 ("use implicit project in " & Directories.Current_Directory);
+               if Verbosity > Quiet then
+                  Message.Reporter.Active_Reporter.Report
+                    ("use implicit project in " &
+                       Directories.Current_Directory);
+               end if;
+
                Root_Data := Tree_Internal.View_Builder.Create
-                 (Project_Dir => Path_Name.Create_Directory
-                    (Filename_Type (Ada.Directories.Current_Directory)),
+                 (Project_Dir => Path_Name.Create_Directory ("."),
                   Name        => "Default").Data;
                Prj_Kind := Project_Definition;
             end if;
@@ -525,7 +538,7 @@ package body GPR2.Project.Tree is
 
       else
          if Options.Config_Project.Is_Defined and then Verbosity > Quiet then
-            Ada.Text_IO.Put_Line
+            Message.Reporter.Active_Reporter.Report
               ("creating configuration project " &
                  String (Options.Config_Project.Name));
          end if;

@@ -69,7 +69,6 @@ Build_Path is Undefined
 Test OK
 
 Testing Finalize no arguments at /new-current-directory/two-gpr with Allow_Implicit_Project=TRUE
-use implicit project in /new-current-directory/two-gpr
 Filename:/new-current-directory/two-gpr/default.gpr
 Build_Path is Undefined
 Test OK
