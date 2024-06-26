@@ -62,6 +62,9 @@ package GPR2.Build.Signature is
       Checksum     : Hash_Digest);
    --  Add or update an artifact in the signature
 
+   procedure Clear (Self : in out Object);
+   --  Clear all the signature artifacts and invalidate it
+
    function Load
      (Db_File  : Path_Name.Object;
       Messages : in out GPR2.Log.Object) return Object;

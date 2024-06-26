@@ -28,6 +28,16 @@ package body GPR2.Build.Signature is
       return Checksum;
    end Artifact_Checksum;
 
+   -----------
+   -- Clear --
+   -----------
+
+   procedure Clear (Self : in out Object) is
+   begin
+      Self.Artifacts.Clear;
+      Self.Valid := False;
+   end Clear;
+
    ----------
    -- Load --
    ----------
