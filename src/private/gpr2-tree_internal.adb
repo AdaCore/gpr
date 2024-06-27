@@ -1357,6 +1357,15 @@ package body GPR2.Tree_Internal is
                   end loop;
                end if;
 
+               for Lib of Data.Agg_Libraries loop
+                  declare
+                     V : GPR2.Project.View.Object := Self.Get_View (Lib);
+                  begin
+                     View_Internal.Get_RW (V).Closure.Include
+                       (View.Name, View);
+                  end;
+               end loop;
+
                if Status = Extended then
                   --  Remove Parent from New_Extends_Ctx: simple extension
                   --  don't propagate to the subtree.
