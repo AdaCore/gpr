@@ -3,3 +3,6 @@ description:
 driver: build_and_run
 project_file: test
 main: main
+output:
+- ["test.out.win", "'windows' in env.host.platform"]
+- ["test.out.2", "env.platform == 'aarch64-linux'"]
