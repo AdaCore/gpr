@@ -29,6 +29,9 @@ package GPR2.Build.Source.Sets is
      with Constant_Indexing => Constant_Reference,
           Default_Iterator  => Iterate,
           Iterator_Element  => Source.Object;
+   --  Represents the list of sources contained in a single View_Db. This
+   --  Set cannot be used as a generic holder for sources. See
+   --  GPR2.Build.Source.Lists for such container.
 
    Empty_Set : constant Object;
 

@@ -1,38 +1,95 @@
 with Ada.Text_IO;
-with Ada.Directories;
 
-pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
-pragma Warnings (On);
+with GPR2.Containers;
+with GPR2.Context;
 with GPR2.Options;
-with GPR2.Project.Tree;
+with GPR2.Path_Name;
+with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Registry.Pack;
+with GPR2.Project.Tree.View_Builder;
 
 procedure Main
 is
-   use GPR2;
+   use GPR2, GPR2.Path_Name, GPR2.Project.Tree;
+   package PRA renames GPR2.Project.Registry.Attribute;
+   package PRP renames GPR2.Project.Registry.Pack;
 
-   procedure Test (Dir : String) is
-      Old_CWD : constant String := Ada.Directories.Current_Directory;
-      Tree    : Project.Tree.Object;
-      Opt     : Options.Object;
+   Root : View_Builder.Object :=
+            View_Builder.Create (Create_Directory ("demo"), "Custom_Project");
+   Src_Dirs : Containers.Value_List;
+   Mains    : Containers.Value_List;
+   Tree     : Project.Tree.Object;
+   Ctxt     : GPR2.Context.Object;
+
+   procedure Print_Attrs (Pck : GPR2.Package_Id) is
    begin
-      Ada.Directories.Set_Directory ("demo/src1");
+      for A of Tree.Root_Project.Attributes (Pack        => Pck,
+                                             With_Config => False)
+      loop
+         declare
+            use type PRA.Value_Kind;
+            Attr_Name : constant String := Image (A.Name.Id.Attr);
+            First     : Boolean := True;
+         begin
+            if Pck /= Project_Level_Scope then
+               Ada.Text_IO.Put (Image (Pck) & "'");
+            end if;
 
-      --  Load implicit project created via the view_builder
-      if Tree.Load (Opt) then
-         Ada.Text_IO.Put_Line (String (Tree.Root_Project.Name) & " loaded");
+            Ada.Text_IO.Put (Attr_Name);
 
-         Tree.Update_Sources;
+            if A.Has_Index then
+               Ada.Text_IO.Put (" (""" & String (A.Index.Value) & """)");
+            end if;
 
-         for S of Tree.Root_Project.Sources loop
-            Ada.Text_IO.Put_Line ("  " & String (S.Path_Name.Simple_Name));
-         end loop;
-      end if;
+            Ada.Text_IO.Put (": ");
 
-      Ada.Directories.Set_Directory (Old_CWD);
-   end Test;
+            if A.Kind = PRA.Single then
+               Ada.Text_IO.Put_Line
+                 ("""" & String (A.Value.Text) & """");
+            else
+               for V of A.Values loop
+                  if not First then
+                     Ada.Text_IO.Put (", ");
+                  else
+                     First := False;
+                  end if;
+
+                  Ada.Text_IO.Put ("""" & V.Text & """");
+               end loop;
+
+               Ada.Text_IO.New_Line;
+            end if;
+         end;
+      end loop;
+   end Print_Attrs;
 
 begin
-   Test ("demo/src1");
-   Test ("demo/src2");
+   Src_Dirs.Append ("src1");
+   Src_Dirs.Append ("src2");
+   Root.Set_Attribute (PRA.Source_Dirs, Src_Dirs);
+   Root.Set_Attribute (PRA.Object_Dir, "obj");
+   Mains.Append ("main.adb");
+   Root.Set_Attribute (PRA.Main, Mains);
+   Root.Set_Attribute (PRA.Builder.Executable,
+                       "main.adb", "mymain");
+
+   if not Tree.Load_Virtual_View
+     (Root,
+      GPR2.Options.Empty_Options,
+      Absent_Dir_Error => No_Error)
+   then
+      return;
+   end if;
+
+   Ada.Text_IO.Put_Line ("Attributes:");
+   Print_Attrs (Project_Level_Scope);
+   Print_Attrs (PRP.Builder);
+
+   Ada.Text_IO.Put_Line ("Sources:");
+   Tree.Update_Sources;
+
+   for S of Tree.Root_Project.Sources loop
+      Ada.Text_IO.Put_Line (String (S.Path_Name.Value));
+   end loop;
 end Main;

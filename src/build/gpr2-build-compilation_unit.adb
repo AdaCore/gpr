@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Containers.Ordered_Sets;
 with Ada.Strings.Maps.Constants;
 
 with GPR2.Message;
@@ -15,6 +14,11 @@ with GPR2.Build.View_Tables;
 with GPR2.View_Internal;
 
 package body GPR2.Build.Compilation_Unit is
+
+   procedure Check_Name_Validity
+     (Name     : Name_Type;
+      Sloc     : Source_Reference.Object'Class;
+      Messages : in out GPR2.Log.Object);
 
    ---------
    -- Add --
@@ -75,13 +79,13 @@ package body GPR2.Build.Compilation_Unit is
    -------------------------
 
    procedure Check_Name_Validity
-     (Self     : Object;
+     (Name     : Name_Type;
+      Sloc     : Source_Reference.Object'Class;
       Messages : in out GPR2.Log.Object)
    is
       use Ada.Strings.Maps;
 
       procedure Error (Message : String);
-      function Sloc return GPR2.Source_Reference.Object'Class;
 
       procedure Error (Message : String)
       is
@@ -90,35 +94,14 @@ package body GPR2.Build.Compilation_Unit is
            (GPR2.Message.Create (GPR2.Message.Error, Message, Sloc));
       end Error;
 
-      function Sloc return GPR2.Source_Reference.Object'Class
-      is
-         Path : GPR2.Path_Name.Object;
-      begin
-         if Self.Implem /= No_Unit then
-            Path := Self.Implem.Source;
-         elsif Self.Spec /= No_Unit then
-            Path := Self.Spec.Source;
-         elsif not Self.Separates.Is_Empty then
-            Path := Self.Separates.First_Element.Source;
-         end if;
-
-         if Path.Is_Defined then
-            return GPR2.Source_Reference.Create (Path.Value, 0, 0);
-         else
-            return GPR2.Source_Reference.Undefined;
-         end if;
-      end Sloc;
-
-      Unit_Name : constant String := To_String (Self.Name);
-
       Not_Valid : constant String :=
-                    "invalid name for unit '" & Unit_Name & "', ";
+                    "invalid name for unit '" & String (Name) & "', ";
 
    begin
       --  Must start with a letter
 
       if not Is_In
-        (Unit_Name (Unit_Name'First),
+        (Name (Name'First),
          Constants.Letter_Set or To_Set ("_"))
       then
          Error (Not_Valid & "should start with a letter or an underscore");
@@ -128,9 +111,9 @@ package body GPR2.Build.Compilation_Unit is
       --  Cannot have dots and underscores one after another and should
       --  contain only alphanumeric characters.
 
-      for K in Unit_Name'First + 1 .. Unit_Name'Last loop
+      for K in Name'First + 1 .. Name'Last loop
          declare
-            Two_Chars : constant String := Unit_Name (K - 1 .. K);
+            Two_Chars : constant String := String (Name (K - 1 .. K));
          begin
             if Two_Chars = "_." then
                Error (Not_Valid & "cannot contain dot after underscore");
@@ -148,14 +131,45 @@ package body GPR2.Build.Compilation_Unit is
                Error (Not_Valid & "two consecutive dots not permitted");
                return;
 
-            elsif not Characters.Handling.Is_Alphanumeric (Unit_Name (K))
-              and then Unit_Name (K) not in '.' | '_'
+            elsif not Characters.Handling.Is_Alphanumeric (Name (K))
+              and then Name (K) not in '.' | '_'
             then
                Error (Not_Valid & "should have only alpha numeric characters");
                return;
             end if;
          end;
       end loop;
+   end Check_Name_Validity;
+
+   procedure Check_Name_Validity
+     (Name     : Name_Type;
+      Messages : in out GPR2.Log.Object) is
+   begin
+      Check_Name_Validity (Name, Source_Reference.Undefined, Messages);
+   end Check_Name_Validity;
+
+   procedure Check_Name_Validity
+     (Self     : Object;
+      Messages : in out GPR2.Log.Object)
+   is
+      Path : GPR2.Path_Name.Object;
+      SR   : Source_Reference.Object;
+   begin
+      if Self.Implem /= No_Unit then
+         Path := Self.Implem.Source;
+      elsif Self.Spec /= No_Unit then
+         Path := Self.Spec.Source;
+      elsif not Self.Separates.Is_Empty then
+         Path := Self.Separates.First_Element.Source;
+      end if;
+
+      if Path.Is_Defined then
+         SR := Source_Reference.Object
+           (GPR2.Source_Reference.Create (Path.Value, 0, 0));
+      end if;
+
+      Check_Name_Validity
+        (Name => Name (Self), Sloc => SR, Messages => Messages);
    end Check_Name_Validity;
 
    ------------
@@ -247,18 +261,13 @@ package body GPR2.Build.Compilation_Unit is
    ------------------------
 
    function Known_Dependencies
-     (Self : Object) return Object_List
+     (Self      : Object;
+      Spec_Only : Boolean := False) return Containers.Name_Set
    is
       procedure Add_Deps (Part : Unit_Location);
       --  Add with clauses from Part
 
-      function Less (L, R : Object) return Boolean is
-         (L.Name < R.Name);
-
-      package Units_Set is new Ada.Containers.Ordered_Sets
-        (Object, Less);
-
-      Result  : Units_Set.Set;
+      Result  : Containers.Name_Set;
       Tree_Db : constant Build.Tree_Db.Object_Access :=
                   View_Internal.Get_RO
                     (Self.Root_View).Tree.Artifacts_Database;
@@ -267,17 +276,9 @@ package body GPR2.Build.Compilation_Unit is
          Db : constant Build.View_Tables.View_Data_Ref :=
                 View_Tables.Get_Data (Tree_Db, Part.View);
       begin
-         for Dep of Db.Src_Infos.Element
-                      (Part.Source.Value).Unit (Part.Index).Dependencies
-         loop
-            declare
-               Unit : constant Object := Self.Root_View.Unit (Dep);
-            begin
-               if Unit.Is_Defined then
-                  Result.Include (Self.Root_View.Unit (Dep));
-               end if;
-            end;
-         end loop;
+         Result := Result.Union
+           (Db.Src_Infos.Element
+              (Part.Source.Value).Unit (Part.Index).Dependencies);
       end Add_Deps;
 
    begin
@@ -285,26 +286,15 @@ package body GPR2.Build.Compilation_Unit is
          Add_Deps (Self.Spec);
       end if;
 
-      if Self.Implem.Source.Is_Defined then
+      if not Spec_Only and then Self.Implem.Source.Is_Defined then
          Add_Deps (Self.Implem);
+
+         for S of Self.Separates loop
+            Add_Deps (S);
+         end loop;
       end if;
 
-      for S of Self.Separates loop
-         Add_Deps (S);
-      end loop;
-
-
-      declare
-         List : Object_List (1 .. Natural (Result.Length));
-         Idx  : Natural := 1;
-      begin
-         for Dep of Result loop
-            List (Idx) := Dep;
-            Idx := Idx + 1;
-         end loop;
-
-         return List;
-      end;
+      return Result;
    end Known_Dependencies;
 
    -----------------

@@ -1,1 +1,1 @@
-/media/psf/Home/src/gpr-next/testsuite/tests/environment/files/gpr_project_path_file
+/media/psf/Home/src/lal-next/gpr-next/testsuite/tests/environment/files/gpr_project_path_file

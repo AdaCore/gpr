@@ -7,6 +7,7 @@
 with Ada.Finalization;
 with Ada.Iterator_Interfaces;
 
+with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
 with GPR2.Containers;
@@ -18,14 +19,14 @@ with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Configuration;
-pragma Elaborate (GPR2.Project.Configuration);
---  Elaborate to avoid a circular dependency due to default Elaborate_Body
+limited with GPR2.Project.Tree.View_Builder;
 with GPR2.Project.View.Set;
 with GPR2.Project.View.Vector;
 with GPR2.View_Ids;
 
 private with GNATCOLL.Refcount;
 private with GPR2.Tree_Internal;
+private with GPR2.View_Internal;
 
 package GPR2.Project.Tree is
 
@@ -100,6 +101,8 @@ package GPR2.Project.Tree is
       Allow_Implicit_Project : Boolean := True;
       Environment            : GPR2.Environment.Object :=
                                  GPR2.Environment.Process_Environment;
+      Config                 : GPR2.Project.Configuration.Object :=
+                                 GPR2.Project.Configuration.Undefined;
       File_Reader            : GPR2.File_Readers.File_Reader_Reference :=
                                  GPR2.File_Readers.No_File_Reader_Reference)
       return Boolean;
@@ -114,8 +117,26 @@ package GPR2.Project.Tree is
    --   error or a warning.
    --  Environment allows passing explictely environment variables to the
    --   tree.
+   --  Config allows passing explictely the configuration project. If defined
+   --   then options --config or --autoconf are ignored.
    --  Verbosiuty indicates the level of messages that can be displayed
    --   to the active mexsage reporter (by default the console).
+
+   function Load_Virtual_View
+     (Self             : in out Object;
+      Root_Project     : View_Builder.Object;
+      Options          : GPR2.Options.Object'Class;
+      With_Runtime     : Boolean := False;
+      Absent_Dir_Error : GPR2.Error_Level := GPR2.Warning;
+      Environment      : GPR2.Environment.Object :=
+                           GPR2.Environment.Process_Environment;
+      Config           : GPR2.Project.Configuration.Object :=
+                           GPR2.Project.Configuration.Undefined;
+      File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
+                           GPR2.File_Readers.No_File_Reader_Reference)
+      return Boolean;
+   --  Same as above, but uses a virtual project view as a root project.
+   --  -P option is ignored if set in Options.
 
    procedure Unload (Self : in out Object);
    --  Clears the internal structure of the Object
@@ -294,6 +315,12 @@ package GPR2.Project.Tree is
    --  Option selects the information that will be gathered on the sources. The
    --   more information is requested, the slower is the update operation.
 
+   function Update_Sources
+     (Self     : Object;
+      Option   : Source_Info_Option := Sources_Units) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Same as above, and returns False upon error detected.
+
    procedure Update_Sources
      (Self     : Object;
       Messages : out GPR2.Log.Object;
@@ -301,6 +328,34 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined;
    --  Same as above and returns the messages generated during the load
    --  operation.
+
+   procedure For_Each_Ada_Closure
+     (Self              : Object;
+      Action            : access procedure
+                            (Unit : Build.Compilation_Unit.Object);
+      Mains             : Containers.Filename_Set :=
+                            Containers.Empty_Filename_Set;
+      All_Sources       : Boolean := False;
+      Root_Project_Only : Boolean := False;
+      Externally_Built  : Boolean := False)
+     with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Units;
+   --  Call action for each source of the closure of the loaded tree (Mains
+   --  or library interfaces and their dependencies).
+   --.
+   --  Mains:
+   --    used to limit the entry points of the closure to the sources or
+   --    units specified in this parameter
+   --  All_Sources (-U command line option):
+   --    process also sources that are not in Main
+   --  Root_Project_Only (--no-subproject command line option):
+   --    will return only sources from the root project.
+   --  Externally_Built:
+   --    if not set, units defined in externally built views will be ignored.
+   --
+   --  Note that if Root_Project_Only is set and the root project is an
+   --    aggregate project, then the closure is considered empty
+   --
+   --  Raises Usage_Error when Mains is specified and All_Sources is set.
 
    function Project_Search_Paths (Self : Object) return Path_Name.Set.Object
      with Pre => Self.Is_Defined;
@@ -348,6 +403,10 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined;
 
 private
+
+   Get_View_Data : access
+     function (Public : GPR2.Project.Tree.View_Builder.Object)
+     return GPR2.View_Internal.Data;
 
    package Pools is new GNATCOLL.Refcount.Headers.Typed (Tree_Internal.Object);
    subtype Tree_Internal_Access is Pools.Element_Access;

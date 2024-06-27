@@ -1,21 +1,94 @@
 ROOT VIEW: A
 ------------
+* FOO: srcshared/foo.ads
+  - depends on Ada
+  - depends on Ada.Text_IO
 * MAIN: srca/main.adb
-  - depends on ADA
-  - depends on ADA.TEXT_IO
-  - depends on PKG
+  - depends on Ada
+  - depends on Ada.Text_IO
+  - depends on Foo
+  - depends on Pkg
 * MY_STRING: srca/my_string.ads
 * PKG: srca/pkg.adb
-  - depends on ADA
-  - depends on ADA.DIRECT_IO
-  - depends on INTERFACES
-  - depends on INTERFACES.C
-  - depends on MY_STRING
+  - depends on Ada
+  - depends on Ada.Direct_IO
+  - depends on Interfaces
+  - depends on Interfaces.C
+  - depends on My_String
 
 ROOT VIEW: B
 ------------
+* FOO: srcshared/foo.ads
+  - depends on Ada
+  - depends on Ada.Text_IO
 * MAIN: srcb/main.adb
-  - depends on ADA
-  - depends on ADA.TEXT_IO
-  - depends on PKG
+  - depends on Ada
+  - depends on Ada.Text_IO
+  - depends on Pkg
 * PKG: srcb/pkg.adb
+  - depends on Foo
+  - depends on My_String
+
+TREE_CLOSURE: Agg
+ MAIN
+ - tree/srca/main.adb
+ FOO
+ - tree/srcshared/foo.ads
+ PKG
+ - tree/srca/pkg.adb
+ MY_STRING
+ - tree/srca/my_string.ads
+ MAIN
+ - tree/srcb/main.adb
+ PKG
+ - tree/srcb/pkg.adb
+
+TREE_CLOSURE: Agg
+
+tree/c.gpr
+TREE_CLOSURE: C
+ P1
+ - tree/srcc/p1.ads
+ P2
+ - tree/srcc/p2.adb
+ P3
+ - tree/srcc/p3.ads
+ P4
+ - tree/srcc/p4.ads
+TREE_CLOSURE: C (lookup p1)
+ P1
+ - tree/srcc/p1.ads
+ P3
+ - tree/srcc/p3.ads
+TREE_CLOSURE: C (lookup unknown)
+error: cannot find "unknown"
+TREE_CLOSURE: C (option -U)
+ FOO
+ - tree/srcshared/foo.ads
+ MAIN
+ - tree/srca/main.adb
+ MY_STRING
+ - tree/srca/my_string.ads
+ P1
+ - tree/srcc/p1.ads
+ P2
+ - tree/srcc/p2.adb
+ P3
+ - tree/srcc/p3.ads
+ P4
+ - tree/srcc/p4.ads
+ P5
+ - tree/srcc/p5.ads
+ PKG
+ - tree/srca/pkg.adb
+TREE_CLOSURE: C (option -U, --no-subprojects)
+ P1
+ - tree/srcc/p1.ads
+ P2
+ - tree/srcc/p2.adb
+ P3
+ - tree/srcc/p3.ads
+ P4
+ - tree/srcc/p4.ads
+ P5
+ - tree/srcc/p5.ads

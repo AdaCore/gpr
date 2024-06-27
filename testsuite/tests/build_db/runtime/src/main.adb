@@ -81,7 +81,7 @@ begin
          end if;
 
          for Dep of CU.Known_Dependencies loop
-            Ada.Text_IO.Put_Line (" dep: " & String (Dep.Name));
+            Ada.Text_IO.Put_Line (" dep: " & String (Dep));
          end loop;
       end;
    end if;

@@ -1,3 +1,4 @@
+with Foo;
 with My_String;
 --  Intentionally not existing
 
