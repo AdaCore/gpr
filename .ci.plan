@@ -1,7 +1,6 @@
 def build():
-    anod_install("libadalang")
-    anod_build("libgpr2")
-    anod_build("gpr2-bindings")
+    anod_install("gprname")
+    anod_build("gpr2", qualifier="legacy")
     anod_build("gprbuild", qualifier="gpr1")
     anod_build("gprbuild")
 
