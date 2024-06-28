@@ -458,6 +458,13 @@ package body GPR2.Project.Tree is
            "cannot use --root-dir without --relocate-build-tree option";
       end if;
 
+      if Options.Src_Subdirs'Length > 0
+        and then GNAT.OS_Lib.Is_Absolute_Path (String (Options.Src_Subdirs))
+      then
+         raise GPR2.Options.Usage_Error with
+           "cannot use an absolute path as --src-subdirs parameter";
+      end if;
+
       for Path of Options.User_Specified_Project_Search_Path loop
          Self.Register_Project_Search_Path (Path);
       end loop;

@@ -188,6 +188,7 @@ procedure test is
       exception
          when E : GPR2.Options.Usage_Error =>
             Put_Line (Ada.Exceptions.Exception_Name (E) & " => " & Ada.Exceptions.Exception_Message (E));
+            Print_Test_OK;
       end Test;
 
    begin
@@ -223,6 +224,18 @@ procedure test is
       Test ("../two-gpr", Quiet => True);
       Test ("../no-gpr");
       Test ("../..", Allow_Implicit_Project => False);
+
+      Put_Line ("Testing with --src-subdirs being an absolute path");
+      Options := GPR2.Options.Empty_Options;
+      Options.Add_Switch (GPR2.Options.Src_Subdirs, "/tmp/subdir");
+      Options.Add_Switch (GPR2.Options.P, "test");
+      begin
+         Res := Tree.Load (Options);
+      exception
+         when E : GPR2.Options.Usage_Error =>
+            Put_Line (Ada.Exceptions.Exception_Name (E) & " = > " & Ada.Exceptions.Exception_Message (E));
+            Print_Test_OK;
+      end;
 
       GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Quiet;
 

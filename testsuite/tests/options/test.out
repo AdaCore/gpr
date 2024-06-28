@@ -81,6 +81,12 @@ Test OK
 
 Testing Finalize no arguments at  with Allow_Implicit_Project=FALSE
 GPR2.OPTIONS.USAGE_ERROR => no project file specified
+Test OK
+
+Testing with --src-subdirs being an absolute path
+GPR2.OPTIONS.USAGE_ERROR = > cannot use an absolute path as --src-subdirs parameter
+Test OK
+
 Testing Finalize -Ptest
 Filename:test.gpr
 Build_Path is Undefined
