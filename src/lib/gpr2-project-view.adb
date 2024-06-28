@@ -1119,6 +1119,12 @@ package body GPR2.Project.View is
 
       for V of Get_RO (Self).Closure loop
          Closure_Views.Insert (V);
+
+         if V.Kind = K_Aggregate_Library then
+            --  ??? In case of aggregate libraries, the closure is not properly
+            --  escalated to the upper views. So add it manually here.
+            Closure_Views := Closure_Views.Union (V.Closure);
+         end if;
       end loop;
 
       return Closure_Views;

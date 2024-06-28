@@ -253,10 +253,11 @@ package body GPR2.Project.Tree is
             --  Try to find all mains specified on the command line
 
             for Main of Mains loop
-               Source := Root.View_Db.Visible_Source (Main);
+               Source := Root.View_Db.Visible_Source
+                 (GPR2.Path_Name.Simple_Name (Main));
 
                if not Source.Is_Defined then
-                  Unit := Root.Unit (Name_Type (Main));
+                  Unit := Root.Unit (Name_Type (Path_Name.Simple_Name (Main)));
 
                   if Unit.Is_Defined then
                      Source := Unit.Main_Part.View.Source
