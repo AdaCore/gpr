@@ -139,9 +139,6 @@ package body GPR2.Options is
          when Resolve_Links =>
             Self.Resolve_Links := True;
 
-         when Unchecked_Shared_Lib_Imports =>
-            Self.Unchecked_Shared_Lib := True;
-
          when X =>
             declare
                Idx : constant Natural := Strings.Fixed.Index (Param, "=");

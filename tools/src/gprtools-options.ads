@@ -40,6 +40,10 @@ package GPRtools.Options is
 
       Args                     : GPR2.Containers.Value_Set;
 
+      --  Whether shared libs importing static libs should be checked
+
+      Unchecked_Shared_Lib     : Boolean := False;
+
       --  Whether the tool allows finding implicit projects
 
       Find_Implicit_Project : Boolean := True;

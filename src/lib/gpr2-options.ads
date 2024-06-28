@@ -93,10 +93,6 @@ package GPR2.Options is
       Target,
       --  --target=targetname Specify a target for cross platforms
 
-      Unchecked_Shared_Lib_Imports,
-      --  --unchecked-shared-lib-imports
-      --      Shared lib projects may import any project
-
       X
       --  -Xnm=val or -X nm=val Specify an external reference for Project Files
 
@@ -167,9 +163,6 @@ package GPR2.Options is
    function Context (Self : Object) return GPR2.Context.Object;
    --  Load context for the project as specified by the user via the -X option
 
-   function Check_Shared_Lib (Self : Object) return Boolean;
-   --  Returns Check_Shared_Lib argument used loading the project
-
    function Implicit_With (Self : Object) return GPR2.Path_Name.Set.Object;
    --  Returns Implicit_With argument used loading the project
 
@@ -214,7 +207,6 @@ private
       Src_Subdirs              : Ada.Strings.Unbounded.Unbounded_String;
       Subdirs                  : Ada.Strings.Unbounded.Unbounded_String;
       Implicit_With            : GPR2.Path_Name.Set.Object;
-      Unchecked_Shared_Lib     : Boolean := False;
 
       Context                  : GPR2.Context.Object;
 
@@ -250,9 +242,6 @@ private
 
    function Root_Path (Self : Object) return GPR2.Path_Name.Object is
      (Self.Root_Path);
-
-   function Check_Shared_Lib (Self : Object) return Boolean is
-     (not Self.Unchecked_Shared_Lib);
 
    function Config_Project (Self : Object) return GPR2.Path_Name.Object is
      (Self.Config_Project);

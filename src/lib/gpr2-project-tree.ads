@@ -94,17 +94,18 @@ package GPR2.Project.Tree is
    --  languages means regular auto-configuration with no reductions.
 
    function Load
-     (Self                   : in out Object;
-      Options                : GPR2.Options.Object'Class;
-      With_Runtime           : Boolean := False;
-      Absent_Dir_Error       : GPR2.Error_Level := GPR2.Warning;
-      Allow_Implicit_Project : Boolean := True;
-      Environment            : GPR2.Environment.Object :=
-                                 GPR2.Environment.Process_Environment;
-      Config                 : GPR2.Project.Configuration.Object :=
-                                 GPR2.Project.Configuration.Undefined;
-      File_Reader            : GPR2.File_Readers.File_Reader_Reference :=
-                                 GPR2.File_Readers.No_File_Reader_Reference)
+     (Self                     : in out Object;
+      Options                  : GPR2.Options.Object'Class;
+      With_Runtime             : Boolean := False;
+      Absent_Dir_Error         : GPR2.Error_Level := GPR2.Warning;
+      Allow_Implicit_Project   : Boolean := True;
+      Environment              : GPR2.Environment.Object :=
+                                   GPR2.Environment.Process_Environment;
+      Config                   : GPR2.Project.Configuration.Object :=
+                                   GPR2.Project.Configuration.Undefined;
+      Check_Shared_Libs_Import : Boolean := False;
+      File_Reader              : GPR2.File_Readers.File_Reader_Reference :=
+                                   GPR2.File_Readers.No_File_Reader_Reference)
       return Boolean;
    --  Load a project tree using configured options, and report the warning
    --   and errors if any. The verbosity level of such report can be adjusted
@@ -119,10 +120,19 @@ package GPR2.Project.Tree is
    --   the sources.
    --  Absent_Dir_Error: whether a missing directory should be treated as an
    --   error or a warning.
+   --  Allow_Implicit_Project: if set and no project is specified in the
+   --   load options, or the project designates a directory, and then only
+   --   one project file is present in current directory (or the designated
+   --   directory), then it is loaded.
    --  Environment allows passing explictely environment variables to the
    --   tree.
    --  Config allows passing explictely the configuration project. If defined
    --   then options --config or --autoconf are ignored.
+   --  Check_Shared_Libs_Import: when set, libgpr2 will check for shared
+   --   library projects importing static libraries and will report an error.
+   --   This prevents having a static library being imported both on the
+   --   application side and by the shared library and thus ending up with
+   --   duplicated global states for this static library.
    --  File_Reader: if set, this file reader is used instead of the standard
    --   text file reader to load the projects.
    --
