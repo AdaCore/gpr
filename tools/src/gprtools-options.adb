@@ -377,8 +377,9 @@ package body GPRtools.Options is
 
       Loaded := Tree.Load
         (Opt,
-         Absent_Dir_Error       => Absent_Dir_Error,
-         Allow_Implicit_Project => Opt.Find_Implicit_Project);
+         Absent_Dir_Error         => Absent_Dir_Error,
+         Allow_Implicit_Project   => Opt.Find_Implicit_Project,
+         Check_Shared_Libs_Import => not Opt.Unchecked_Shared_Lib);
       Opt.Tree := Tree;
 
       if Handle_Errors then
@@ -460,10 +461,7 @@ package body GPRtools.Options is
             Index  => "");
 
       elsif Arg = "--unchecked-shared-lib-imports" then
-         Result.Add_Switch
-           (Switch => GPR2.Options.Unchecked_Shared_Lib_Imports,
-            Param  => Param,
-            Index  => "");
+         Result.Unchecked_Shared_Lib := True;
 
       elsif Arg = "--relocate-build-tree" then
          Result.Add_Switch

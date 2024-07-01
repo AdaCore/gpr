@@ -344,17 +344,18 @@ package body GPR2.Project.Tree is
    ----------
 
    function Load
-     (Self                   : in out Object;
-      Options                : GPR2.Options.Object'Class;
-      With_Runtime           : Boolean := False;
-      Absent_Dir_Error       : GPR2.Error_Level := GPR2.Warning;
-      Allow_Implicit_Project : Boolean := True;
-      Environment            : GPR2.Environment.Object :=
-                                 GPR2.Environment.Process_Environment;
-      Config                 : GPR2.Project.Configuration.Object :=
-                                 GPR2.Project.Configuration.Undefined;
-      File_Reader            : GPR2.File_Readers.File_Reader_Reference :=
-                                 GPR2.File_Readers.No_File_Reader_Reference)
+     (Self                     : in out Object;
+      Options                  : GPR2.Options.Object'Class;
+      With_Runtime             : Boolean := False;
+      Absent_Dir_Error         : GPR2.Error_Level := GPR2.Warning;
+      Allow_Implicit_Project   : Boolean := True;
+      Environment              : GPR2.Environment.Object :=
+                                   GPR2.Environment.Process_Environment;
+      Config                   : GPR2.Project.Configuration.Object :=
+                                   GPR2.Project.Configuration.Undefined;
+      Check_Shared_Libs_Import : Boolean := False;
+      File_Reader              : GPR2.File_Readers.File_Reader_Reference :=
+                                   GPR2.File_Readers.No_File_Reader_Reference)
       return Boolean
    is
       use Tree_Internal;
@@ -490,7 +491,7 @@ package body GPR2.Project.Tree is
             Root_Path        => Options.Root_Path,
             Subdirs          => Options.Subdirs,
             Src_Subdirs      => Options.Src_Subdirs,
-            Check_Shared_Lib => Options.Check_Shared_Lib,
+            Check_Shared_Lib => Check_Shared_Libs_Import,
             Absent_Dir_Error => Absent_Dir_Error,
             Implicit_With    => Options.Implicit_With,
             Resolve_Links    => Options.Resolve_Links,
@@ -559,7 +560,7 @@ package body GPR2.Project.Tree is
             Root_Path         => Options.Root_Path,
             Subdirs           => Options.Subdirs,
             Src_Subdirs       => Options.Src_Subdirs,
-            Check_Shared_Lib  => Options.Check_Shared_Lib,
+            Check_Shared_Lib  => Check_Shared_Libs_Import,
             Absent_Dir_Error  => Absent_Dir_Error,
             Implicit_With     => Options.Implicit_With,
             Resolve_Links     => Options.Resolve_Links,
@@ -642,7 +643,7 @@ package body GPR2.Project.Tree is
             Root_Path        => Options.Root_Path,
             Subdirs          => Options.Subdirs,
             Src_Subdirs      => Options.Src_Subdirs,
-            Check_Shared_Lib => Options.Check_Shared_Lib,
+            Check_Shared_Lib => False,
             Absent_Dir_Error => Absent_Dir_Error,
             Implicit_With    => Options.Implicit_With,
             Resolve_Links    => Options.Resolve_Links,
@@ -712,7 +713,7 @@ package body GPR2.Project.Tree is
             Root_Path         => Options.Root_Path,
             Subdirs           => Options.Subdirs,
             Src_Subdirs       => Options.Src_Subdirs,
-            Check_Shared_Lib  => Options.Check_Shared_Lib,
+            Check_Shared_Lib  => False,
             Absent_Dir_Error  => Absent_Dir_Error,
             Implicit_With     => Options.Implicit_With,
             Resolve_Links     => Options.Resolve_Links,

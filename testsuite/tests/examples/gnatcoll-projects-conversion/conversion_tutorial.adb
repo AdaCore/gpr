@@ -88,11 +88,6 @@ procedure Conversion_Tutorial is
          Default_Val  => Null_Unbounded_String,
          Help         =>
             "Prepend <obj>/dir to the list of source dirs for each project");
-
-      package Unchecked_Shared_Lib is new Parse_Flag
-        (Parser => Parser,
-         Long   => "--unchecked-shared-lib-imports",
-         Help   => "Shared lib projects may import any project");
    end Args;
 
    function Init_Project return Boolean;
@@ -140,10 +135,6 @@ procedure Conversion_Tutorial is
       if Args.Src_Subdirs.Get /= Null_Unbounded_String then
          Opt.Add_Switch (Options.Src_Subdirs,
                          To_String (Args.Src_Subdirs.Get));
-      end if;
-
-      if Args.Unchecked_Shared_Lib.Get then
-         Opt.Add_Switch (Options.Unchecked_Shared_Lib_Imports);
       end if;
 
       return Project_Tree.Load (Opt, Absent_Dir_Error => GPR2.No_Error);
