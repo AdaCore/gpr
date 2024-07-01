@@ -27,7 +27,7 @@ build:
   cache:
     - key: $CI_COMMIT_REF_SLUG
       fallback_keys:
-        - master
+        - legacy
       paths:
         - cache
   script:
@@ -42,7 +42,7 @@ build:
         rm -rf $CI_PROJECT_DIR/cache ;
       fi
 
-    # Just build gprbuild/libgpr2/gpr2-bindings
+    # This does a minimal build.
     # Full gnat bootstrap is tested though, but in the testing phase
     - anod run build
 
@@ -58,7 +58,7 @@ debug_build:
   script:
 
     # build gpr2 in debug mode without rebuilding dependencies
-    - anod build gpr2 -Qdbg
+    - anod build gpr2 -Qlegacy,dbg
 
 ###############################
 # CHECK WE CAN BOOTSTRAP GNAT #
@@ -106,9 +106,7 @@ test_bootstrap:
     - result=0
     # Install gprbuild wrappers for the gprbuild bootstrap part
     - anod install stable-gprbuild
-    # - anod install stable-gnat
     - install_build_wrapper stable-gprbuild
-    # - install_build_wrapper stable-gnat
     # Build gprbuild
     - anod build gprbuild
     # install the wrapper for the newly built gprbuild
@@ -134,7 +132,7 @@ test_gpr2:
   extends: .gpr2_test_template
   script:
     - install_cache gnat
-    - run_testsuite gpr2 -Qfrom_gnat test_gpr2
+    - run_testsuite gpr2 -Qfrom_gnat,legacy test_gpr2
   artifacts:
     when:
       always
@@ -156,7 +154,7 @@ test_gpr2_cov:
     # do a normal testsuite run but save the exit code instead of just exiting
     # so that coverage artifacts can be saved and used.
     - result=0
-    - run_testsuite gpr2 -Qcoverage test_gpr2_cov || result=$?
+    - run_testsuite gpr2 -Qcoverage,legacy test_gpr2_cov || result=$?
 
     - mkdir $CI_PROJECT_DIR/coverage
 
@@ -240,25 +238,6 @@ test_gpr2ls:
       - testgpr2ls_result.xml
     reports:
       junit: testgpr2ls_result.xml
-
-#############################
-## GPR2 BINDINGS TESTSUITE ##
-#############################
-
-test_gpr2bindings:
-  extends: .gpr2_test_template
-  script:
-    - install_cache
-
-    - anod test gpr2-bindings --minimal
-    # TODO: adjust this when this testsuite supports e3-testsuite-report
-    - work_dir=$(anod info test gpr2-bindings --show working_dir)
-    - OUTPUT=$(sed $work_dir/results/results -e '/.*OK[:]$/d' -e '/.*XFAIL[:]$/d' -e '/^$/d')
-    - if [ -n "$OUTPUT" ] ; then
-         echo "the following tests fail:" ;
-         echo "$OUTPUT" ;
-         exit 1 ;
-      fi
 
 ####################
 ## POSTPROCESSING ##
