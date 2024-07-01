@@ -70,7 +70,8 @@ package body GPR2.Build.Compilation_Unit is
       end case;
 
       if not Success then
-         Self.Duplicates.Append ((Sep_Name'Length, UL, Kind, Sep_Name));
+         Self.Duplicates.Append
+           (Clashing_Unit'(Sep_Name'Length, UL, Kind, Sep_Name));
       end if;
    end Add;
 

@@ -47,9 +47,9 @@ build:
     # (re)build gpr2
     - anod run build
 
-    # Save gpr builds and libadalang in cache to speed up a re-build
+    # Save gpr builds in cache to speed up a re-build
     - mkdir -p $CI_PROJECT_DIR/cache
-    - rsync -a $SANDBOX/$HOST/*gpr*next* $CI_PROJECT_DIR/cache/
+    - rsync -a $SANDBOX/$HOST/*gpr2* $CI_PROJECT_DIR/cache/
 
 ######################
 ## DEBUG MODE BUILD ##
@@ -77,7 +77,7 @@ test_gpr2:
   extends: .gpr2_test_template
   script:
     - install_cache
-    - run_testsuite gpr2 -Qnext test_gpr2
+    - run_testsuite gpr2 "" test_gpr2
   artifacts:
     when:
       always
@@ -94,12 +94,12 @@ test_gpr2_cov:
   extends: .test_template
   needs: []
   script: |
-    exec anod build gpr2 -Qcoverage,next
+    exec anod build gpr2 -Qcoverage
 
     # do a normal testsuite run but save the exit code instead of just exiting
     # so that coverage artifacts can be saved and used.
     result=0
-    run_testsuite gpr2 -Qcoverage,next test_gpr2_cov || result=$?
+    run_testsuite gpr2 -Qcoverage test_gpr2_cov || result=$?
 
     mkdir $CI_PROJECT_DIR/coverage
 
@@ -135,6 +135,66 @@ test_gpr2_cov:
       coverage_report:
         coverage_format: cobertura
         path: coverage/cobertura.xml
+
+###############################
+# CHECK WE CAN BOOTSTRAP GNAT #
+###############################
+
+test_bootstrap:
+  services:
+     - image:e3
+     - cpu:16
+  extends: .gpr2_test_template
+  allow_failure: false
+  variables:
+    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb eng/gpr/gprname
+  cache:
+    - key: $CI_COMMIT_REF_SLUG
+      policy: pull
+      paths:
+        - cache
+    - key: bootstrap-$CI_COMMIT_REF_SLUG
+      fallback_keys:
+        - bootstrap-next
+      paths:
+        - bootstrap_cache
+  script:
+    - install_cache full
+    - if [[ $CI_PIPELINE_SOURCE != "schedule" && -d $CI_PROJECT_DIR/bootstrap_cache ]]; then
+        exec rsync -a $CI_PROJECT_DIR/bootstrap_cache/* $SANDBOX/$HOST/ ;
+      fi
+    - rm -rf $CI_PROJECT_DIR/bootstrap_cache ;
+    # JOB_SUBPROJECTS and repos identified by a "depends-on" in the MR are
+    # locally cloned and used by anod. However git don't preserve timestamps
+    # which lead to very long rebuild times (gprbuild then considers all sources
+    # as being modified), so caching the builds is highly ineffective.
+    # So in order to have a reasonable rebuild, we install a wrapper to gprbuild
+    # ensuring that -m is enforced for all packages.
+    - install_build_wrapper() {
+        bindir=$SANDBOX/$HOST/$1/install/bin ;
+        exec mv $bindir/gprbuild $bindir/gprbuild-saved ;
+        echo '#!'$SHELL > $bindir/gprbuild ;
+        echo 'gprbuild-saved -m $@' >> $bindir/gprbuild ;
+        exec cat $bindir/gprbuild ;
+        exec chmod a+x $bindir/gprbuild ;
+      }
+    - anod tune --plan $CI_PROJECT_DIR/.ci.plan
+    - result=0
+    # Install gprbuild wrappers for the gprbuild bootstrap part
+    - anod install stable-gprbuild
+    - install_build_wrapper stable-gprbuild
+    # and run the gnat bootstrap
+    - anod build gnat || result=$?
+    - mkdir -p $CI_PROJECT_DIR/bootstrap_cache
+    # save build for packages that take a long time to build: only a re-build
+    # will be performed on following runs, which assumably will be faster
+    # (than the time it takes to save/restore them).
+    # ??? the build space name is forged in stone here, while we know it can
+    # change anytime: maybe a hard to maintain choice
+    - for pkg in libadalang-internal laltools ; do
+        rsync -a $SANDBOX/$HOST/$pkg $CI_PROJECT_DIR/bootstrap_cache/ ;
+      done
+    - exit $result
 
 ####################
 ## POSTPROCESSING ##
