@@ -1,5 +1,6 @@
 with Ada.Command_Line;
 with Ada.Text_IO;
+with Ada.Containers.Indefinite_Vectors;
 
 with GPR2.Build.Actions.Ada_Compile;
 with GPR2.Build.Artifacts.Files;
@@ -14,30 +15,48 @@ function Main return Natural is
    Opts    : GPR2.Options.Object;
    Log     : GPR2.Log.Object;
    Project : constant String :=
-               (if Ada.Command_Line.Argument_Count > 0
-                then Ada.Command_Line.Argument (1)
-                else "tree/agg.gpr");
+     (if Ada.Command_Line.Argument_Count > 0 then Ada.Command_Line.Argument (1)
+      else "tree/agg.gpr");
+
+   package String_Vectors is new Ada.Containers.Indefinite_Vectors
+     (Positive, String);
+   package String_Vectors_Sorting is new String_Vectors.Generic_Sorting;
 
 begin
    Opts.Add_Switch (GPR2.Options.P, Project);
 
-   if not Tree.Load (Opts, With_Runtime => False)
-   then
+   if not Tree.Load (Opts, With_Runtime => False) then
       return 1;
    end if;
 
-   Tree.Update_Sources (Option   => GPR2.Sources_Units_Artifacts);
+   Tree.Update_Sources (Option => GPR2.Sources_Units_Artifacts);
 
    for NS of Tree.Namespace_Root_Projects loop
       for Unit of NS.Units loop
          declare
-            A : GPR2.Build.Actions.Ada_Compile.Object;
+            A               : GPR2.Build.Actions.Ada_Compile.Object;
+            Sorted_Messages : String_Vectors.Vector;
          begin
             A.Initialize (Unit);
 
             if not Tree.Artifacts_Database.Has_Action (A.UID) then
                Tree.Artifacts_Database.Add_Action (A, Log);
-               Log.Output_Messages;
+
+               --  Sort the messages to ensure that the test output comparison
+               --  always has the same result.
+
+               for Message_Curs in Log.Iterate loop
+                  Sorted_Messages.Append
+                    (GPR2.Log.Element (Message_Curs).Format);
+               end loop;
+               Log.Clear;
+
+               String_Vectors_Sorting.Sort (Sorted_Messages);
+
+               for Message of Sorted_Messages loop
+                  Ada.Text_IO.Put_Line (Message);
+               end loop;
+
             end if;
          end;
       end loop;
