@@ -1664,7 +1664,7 @@ package body GPR2.Project.View is
          return True;
       end if;
 
-      for Ext of View_Internal.Get_RO (Self).Extended loop
+      for Ext of Def.Extended loop
          if Ext = Object (Parent) then
             return True;
          end if;

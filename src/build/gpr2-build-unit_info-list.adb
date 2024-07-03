@@ -40,6 +40,22 @@ package body GPR2.Build.Unit_Info.List is
       return Self.Constant_Reference (Cursor (Self.Units.Find (Position)));
    end Constant_Reference;
 
+   ------------
+   -- Delete --
+   ------------
+
+   procedure Delete
+     (Self  : in out Object;
+      Index : Unit_Index)
+   is
+   begin
+      Self.Units.Delete (Index);
+
+      if Self.Units.Is_Empty then
+         Self.Has_Index := False;
+      end if;
+   end Delete;
+
    -----------
    -- First --
    -----------

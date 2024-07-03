@@ -1,0 +1,13 @@
+project A is
+
+   for Object_Dir use "obj" & Project'Name;
+
+   package Naming is
+      for Spec_Suffix ("Ada") use ".spec";
+      for Body_Suffix ("Ada") use ".body";
+      for Spec ("Pkg2") use "multi1.adb" at 1;
+      for Spec ("Pkg3") use "multi2.adb" at 1;
+      for Body ("Pkg3") use "multi2.adb" at 2;
+   end Naming;
+
+end A;

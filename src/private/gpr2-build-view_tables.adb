@@ -193,6 +193,7 @@ package body GPR2.Build.View_Tables is
       Cursor := NS_Db.CUs.Find (CU);
 
       if not Compilation_Unit_Maps.Has_Element (Cursor) then
+         --  Compilation unit name is not known: new unit, so simply add it
          declare
             CU_Instance : Compilation_Unit.Object :=
                             Compilation_Unit.Create (CU, NS_Db.View);
@@ -231,10 +232,10 @@ package body GPR2.Build.View_Tables is
 
                if Other.View.Is_Runtime then
                   --  ??? Special case for the runtime, where we allow some
-                  --  runtime units to be overriden by project sources
+                  --  runtime units to be overriden by project sources.
+
                   CU_Instance.Remove
                     (Kind, Other.View, Other.Source, Other.Index);
-
                   CU_Instance.Add
                     (Kind, View_Db.View, Path, Index, Sep_Name, Success);
 
@@ -251,16 +252,74 @@ package body GPR2.Build.View_Tables is
                           (View_Db.View.Path_Name.Value, 0, 0)));
 
                else
-                  Messages.Append
-                    (Message.Create
-                       (Level   => Message.Warning,
-                        Message => "duplicated " &
-                          Image (Kind) & " for unit """ & String (CU) &
-                          """ in " & Other.Source.String_Value & " and " &
-                          String (Path.Value),
-                        Sloc    =>
-                          Source_Reference.Create
-                            (NS_Db.View.Path_Name.Value, 0, 0)));
+                  --  Clashing unit case: we need to check if project extension
+                  --  is involved to hide the extended unit.
+
+                  declare
+                     Other_Db  : constant View_Data_Ref :=
+                                   Get_Data (NS_Db.Tree_Db, Other.View);
+                     Other_Loc : constant Source_Proxy :=
+                                   Other_Db.Sources (Other.Source.Simple_Name);
+                     Remove_Src  : Boolean;
+
+                  begin
+                     if Other_Loc.Inh_From.Is_Defined
+                       and then NS_Db.View.Is_Extending (Other_Loc.Inh_From)
+                     then
+                        --  Replace the unit in the compilation unit
+                        CU_Instance.Remove
+                          (Kind, Other.View, Other.Source, Other.Index);
+                        CU_Instance.Add
+                          (Kind, View_Db.View, Path, Index, Sep_Name, Success);
+
+                        --  If the source is multi-unit, remove this unit from
+                        --  it, else completely remove the source.
+
+                        if Other.Index /= No_Index then
+                           declare
+                              use Src_Info_Maps;
+
+                              Owning_Db : constant View_Data_Ref :=
+                                            Get_Data (NS_Db.Tree_Db,
+                                                      Other_Loc.View);
+                              Other_Src : constant Reference_Type :=
+                                            Owning_Db.Src_Infos.Reference
+                                              (Other.Source.Value);
+                           begin
+                              Other_Src.Remove_Unit (Other.Index);
+
+                              Remove_Src := Other_Src.Units.Is_Empty;
+                           end;
+
+                        else
+                           Remove_Src := True;
+                        end if;
+
+                        if Remove_Src then
+                           Remove_Source (View_Db,
+                                          Other_Loc.View,
+                                          Other_Loc.Path_Name,
+                                          Other_Loc.Inh_From,
+                                          True,
+                                          Messages);
+                        end if;
+
+                     else
+                        --  Two sources in the closure declare the same unit
+                        --  part, so issue a warning.
+
+                        Messages.Append
+                          (Message.Create
+                             (Level   => Message.Warning,
+                              Message => "duplicated " &
+                                Image (Kind) & " for unit """ & String (CU) &
+                                """ in " & Other.Source.String_Value &
+                                " and " & String (Path.Value),
+                              Sloc    =>
+                                Source_Reference.Create
+                                  (NS_Db.View.Path_Name.Value, 0, 0)));
+                     end if;
+                  end;
                end if;
             end if;
 
@@ -531,7 +590,7 @@ package body GPR2.Build.View_Tables is
                          Db.Src_Infos.Reference (Proxy.Path_Name);
             begin
                if S_Ref.Has_Units
-                 and then S_Ref.Has_Single_Unit
+                 and then not S_Ref.Has_Index
                  and then S_Ref.Unit.Kind = S_Separate
                then
                   for Root of Data.View.Namespace_Roots loop

@@ -56,6 +56,12 @@ package GPR2.Build.Source_Base is
                    and then Self.Language = Ada_Language;
    --  Change the unit info stored in Self with updated information in Unit
 
+   procedure Remove_Unit
+     (Self : in out Object;
+      Index : Unit_Index)
+     with Pre => Self.Has_Unit_At (Index),
+          Post => not Self.Has_Unit_At (Index);
+
    function Path_Name (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined;
    --  Returns the path-name for the given source

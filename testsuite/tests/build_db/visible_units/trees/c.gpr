@@ -1,0 +1,10 @@
+project C extends "b" is
+
+   for Object_Dir use "obj" & Project'Name;
+
+   package Naming is
+      for Spec_Suffix ("Ada") use ".sp";
+      for Body_Suffix ("Ada") use ".bo";
+   end Naming;
+
+end C;

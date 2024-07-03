@@ -37,6 +37,10 @@ package GPR2.Build.Unit_Info.List is
      (Self    : in out Object;
       Element : Unit_Info.Object);
 
+   procedure Delete
+     (Self  : in out Object;
+      Index : Unit_Index);
+
    type Cursor is private;
 
    No_Element : constant Cursor;

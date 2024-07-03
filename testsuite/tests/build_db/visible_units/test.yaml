@@ -1,0 +1,5 @@
+description:
+    Check unit hiding related to project extensions
+driver: build_and_run
+project_file: test
+main: main
