@@ -1,0 +1,5 @@
+description:
+    Test looking up units from one of the separate fully qualified names.
+driver: build_and_run
+project_file: test
+main: main
