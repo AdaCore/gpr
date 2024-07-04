@@ -14,7 +14,7 @@ package body GPR2.Build.Artifacts.Files is
      (Self : Object) return Utils.Hash.Hash_Digest
    is
    begin
-      return Utils.Hash.Hash (Path => Self.Path.Name);
+      return Utils.Hash.Hash (Path => Self.Path.Value);
    end Checksum;
 
    ------------
@@ -23,7 +23,7 @@ package body GPR2.Build.Artifacts.Files is
 
    function Create (Path : GPR2.Path_Name.Object) return Object is
    begin
-      return (UID  => Utils.Hash.Hash (Str => String (Path.Name)),
+      return (UID  => Utils.Hash.Hash (Str => String (Path.Value)),
               Path => Path);
    end Create;
 
