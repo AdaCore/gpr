@@ -19,7 +19,7 @@ package GPR2.Build.Process_Manager.JSON is
    function Collect_Job
         (Self           : in out Object;
          Job            : DG.Node_Id;
-         Proc_Status    : Integer;
+         Proc_Status    : Process_Status;
          Stdout, Stderr : Unbounded_String)
         return Collect_Status;
 

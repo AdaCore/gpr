@@ -18,7 +18,7 @@ package body GPR2.Build.Process_Manager.JSON is
    function Collect_Job
       (Self           : in out Object;
        Job            : DG.Node_Id;
-       Proc_Status    : Integer;
+       Proc_Status    : Process_Status;
        Stdout, Stderr : Unbounded_String)
       return Collect_Status
    is
@@ -26,7 +26,7 @@ package body GPR2.Build.Process_Manager.JSON is
               Self.Tree_Db.Action
                 (Self.Tree_Db.Action_Id (Job));
       Job_Summary : constant JSON_Value := Create_Object;
-      Cmd : Unbounded_String;
+      Cmd         : Unbounded_String;
    begin
 
       for Arg of Act.Command loop
@@ -36,11 +36,13 @@ package body GPR2.Build.Process_Manager.JSON is
       Set_Field (Val        => Job_Summary,
                  Field_Name => TEXT_COMMAND,
                  Field      => Ada.Strings.Fixed.Trim
-                                 (To_String (Cmd), Ada.Strings.Right));
+                   (To_String (Cmd), Ada.Strings.Right));
       Set_Field (Val        => Job_Summary,
                  Field_Name => TEXT_STATUS,
-                 Field      => Ada.Strings.Fixed.Trim
-                                 (Proc_Status'Img, Ada.Strings.Left));
+                 Field      => (if Proc_Status.Skip then "SKIPPED"
+                                else Ada.Strings.Fixed.Trim
+                                  (Proc_Status.Status'Img, Ada.Strings.Left)
+                               ));
       Set_Field (Val        => Job_Summary,
                  Field_Name => TEXT_STDOUT,
                  Field      => To_String (Stdout));
@@ -50,7 +52,7 @@ package body GPR2.Build.Process_Manager.JSON is
       GNATCOLL.JSON.Append (Arr => Self.JSON, Val => Job_Summary);
 
       return GPR2.Build.Process_Manager.Object (Self).Collect_Job
-               (Job, Proc_Status, Stdout, Stderr);
+        (Job, Proc_Status, Stdout, Stderr);
    end Collect_Job;
 
    -------------

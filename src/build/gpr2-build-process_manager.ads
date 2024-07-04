@@ -6,7 +6,6 @@
 
 with GNATCOLL.Directed_Graph;
 with GPR2.Utils.Process_Manager; use GPR2.Utils.Process_Manager;
-with GNATCOLL.OS.Process;
 with GNATCOLL.OS.FS; use GNATCOLL.OS.FS;
 with GPR2.Build.Tree_Db;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
@@ -21,19 +20,19 @@ package GPR2.Build.Process_Manager is
 
    overriding
    function Collect_Job
-        (Self           : in out Object;
-         Job            : DG.Node_Id;
-         Process_Status : Integer;
-         Stdout, Stderr : Unbounded_String)
-        return Collect_Status;
+     (Self           : in out Object;
+      Job            : DG.Node_Id;
+      Proc_Status    : Process_Status;
+      Stdout, Stderr : Unbounded_String)
+      return Collect_Status;
 
    overriding
    procedure Launch_Job
-      (Self           : in out Object;
-       Job            : DG.Node_Id;
-       Proc_Handle    : out Process_Handle;
-       Capture_Stdout : out File_Descriptor;
-       Capture_Stderr : out File_Descriptor);
+     (Self           : in out Object;
+      Job            : DG.Node_Id;
+      Proc_Handler   : out Process_Handler;
+      Capture_Stdout : out File_Descriptor;
+      Capture_Stderr : out File_Descriptor);
 
    procedure Execute
      (Self    : in out Object;

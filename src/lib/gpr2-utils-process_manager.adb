@@ -107,7 +107,7 @@ package body GPR2.Utils.Process_Manager is
    function Collect_Job
       (Self           : in out Process_Manager;
        Job            : DG.Node_Id;
-       Process_Status : Integer;
+       Proc_Status    : Process_Status;
        Stdout, Stderr : Unbounded_String)
       return Collect_Status
    is
@@ -139,7 +139,6 @@ package body GPR2.Utils.Process_Manager is
       Jobs  : Natural := 0)
    is
       use type DG.Node_Id;
-      use type Proc.Process_Handle;
       use type FS.File_Descriptor;
 
       Max_Jobs : constant Natural := Effective_Job_Number (Jobs);
@@ -187,15 +186,15 @@ package body GPR2.Utils.Process_Manager is
       Active_Jobs : Natural := 0;
       --  Current number of active jobs
 
-      Node     : DG.Node_Id;
-      PID      : Proc.Process_Handle;
-      P_Stdout : FS.File_Descriptor;
-      P_Stderr : FS.File_Descriptor;
-      Proc_Id    : Integer;
-      Job_Status : Collect_Status;
-      Proc_Status : Integer;
+      Node             : DG.Node_Id;
+      Proc_Handler     : Process_Handler;
+      Proc_Status      : Process_Status;
+      P_Stdout         : FS.File_Descriptor;
+      P_Stderr         : FS.File_Descriptor;
+      Proc_Id          : Integer;
+      Job_Status       : Collect_Status;
       End_Of_Iteration : Boolean := False;
-      Stdout, Stderr : Unbounded_String;
+      Stdout, Stderr   : Unbounded_String;
    begin
       Self.Clear_Data;
       Graph.Start_Iterator (Enable_Visiting_State => True);
@@ -209,27 +208,27 @@ package body GPR2.Utils.Process_Manager is
                exit when Node = DG.No_Node;
 
                begin
-                  Self.Launch_Job (Node, PID, P_Stdout, P_Stderr);
+                  Self.Launch_Job (Node, Proc_Handler, P_Stdout, P_Stderr);
                   Self.Data.Total_Jobs := Self.Data.Total_Jobs + 1;
                exception
                   when GNATCOLL.OS.OS_Error =>
-                     PID := Proc.Invalid_Handle;
+                     Proc_Handler := (Skip => True);
                end;
 
-               if PID /= Proc.Invalid_Handle then
+               if not Proc_Handler.Skip then
                   --  If the process was launched successfully add it to the
                   --  list of active jobs
                   Active_Jobs := Active_Jobs + 1;
-                  Active_Procs (Active_Jobs) := PID;
+                  Active_Procs (Active_Jobs) := Proc_Handler.Handle;
                   States (Active_Jobs).Node := Node;
                   Allocate_Listeners (Active_Jobs, P_Stdout, P_Stderr);
                else
                   --  Call collect on that job with a process status of 127
                   Job_Status := Self.Collect_Job
-                     (Job            => Node,
-                      Process_Status => 127,
-                      Stdout => To_Unbounded_String (""),
-                      Stderr => To_Unbounded_String (""));
+                    (Job         => Node,
+                     Proc_Status => (Skip => True),
+                     Stdout      => To_Unbounded_String (""),
+                     Stderr      => To_Unbounded_String (""));
                   if Job_Status = Abort_Execution then
                      End_Of_Iteration := True;
                   elsif Job_Status = Retry_Job then
@@ -259,7 +258,9 @@ package body GPR2.Utils.Process_Manager is
 
                --  A process has finished. Call wait to finalize it and get
                --  the final process status.
-               Proc_Status := Proc.Wait (Active_Procs (Proc_Id));
+               Proc_Status :=
+                 (Skip   => False,
+                  Status => Proc.Wait (Active_Procs (Proc_Id)));
 
                --  Fetch captured stdout and stderr if necessary
                if States (Proc_Id).Stdout_Active then
@@ -278,10 +279,10 @@ package body GPR2.Utils.Process_Manager is
 
                --  Call collect
                Job_Status := Self.Collect_Job
-                  (Job            => States (Proc_Id).Node,
-                   Process_Status => Proc_Status,
-                   Stdout         => Stdout,
-                   Stderr         => Stderr);
+                  (Job         => States (Proc_Id).Node,
+                   Proc_Status => Proc_Status,
+                   Stdout      => Stdout,
+                   Stderr      => Stderr);
 
                --  Adjust execution depending on returned value
                if Job_Status = Abort_Execution then
