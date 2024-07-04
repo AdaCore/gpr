@@ -65,6 +65,17 @@ package body GPR2.Build.Source_Base is
       end if;
    end Kind;
 
+   -----------------
+   -- Remove_Unit --
+   -----------------
+
+   procedure Remove_Unit
+     (Self : in out Object;
+      Index : Unit_Index) is
+   begin
+      Self.CU_List.Delete (Index);
+   end Remove_Unit;
+
    ----------------------
    -- To_ALI_Timestamp --
    ----------------------

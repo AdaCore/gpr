@@ -1,0 +1,20 @@
+LIST OF UNITS
+ - PKG
+   S_SPEC: trees/pkg.sp
+   S_BODY: trees/pkg.body
+ - PKG2
+   S_SPEC: trees/pkg2.spe
+ - PKG3
+   S_SPEC: trees/multi2.adb @ 1
+   S_BODY: trees/pkg3.bo
+LIST OF SOURCES
+ - multi2.adb
+   @ 1 S_SPEC PKG3
+ - pkg.body
+   S_BODY PKG
+ - pkg.sp
+   S_SPEC PKG
+ - pkg2.spe
+   S_SPEC PKG2
+ - pkg3.bo
+   S_BODY PKG3

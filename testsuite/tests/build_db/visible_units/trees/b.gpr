@@ -1,0 +1,10 @@
+project B extends "a" is
+
+   for Object_Dir use "obj" & Project'Name;
+
+   package Naming is
+      for Spec_Suffix ("Ada") use ".spe";
+      for Body_Suffix ("Ada") use ".bod";
+   end Naming;
+
+end B;
