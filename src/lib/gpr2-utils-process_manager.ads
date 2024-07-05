@@ -30,10 +30,30 @@ package GPR2.Utils.Process_Manager is
 
    type Process_Manager is abstract tagged limited private;
 
+   PROCESS_STATUS_OK : constant Integer;
+
+   type Process_Handler (Skip : Boolean := False) is record
+      case Skip is
+         when True =>
+            null;
+         when False =>
+            Handle : Proc.Process_Handle;
+      end case;
+   end record;
+
+   type Process_Status (Skip : Boolean := False) is record
+      case Skip is
+         when True =>
+            null;
+         when False =>
+            Status : Integer;
+      end case;
+   end record;
+
    procedure Launch_Job
       (Self           : in out Process_Manager;
        Job            : DG.Node_Id;
-       Process        : out Proc.Process_Handle;
+       Proc_Handler   : out Process_Handler;
        Capture_Stdout : out FS.File_Descriptor;
        Capture_Stderr : out FS.File_Descriptor) is abstract;
    --  Launch a job in background and return its Handle
@@ -54,7 +74,7 @@ package GPR2.Utils.Process_Manager is
    function Collect_Job
       (Self           : in out Process_Manager;
        Job            : DG.Node_Id;
-       Process_Status : Integer;
+       Proc_Status    : Process_Status;
        Stdout, Stderr : Unbounded_String)
       return Collect_Status;
    --  Called on each job termination. Stdout, Stderr are set to the captured
@@ -72,6 +92,10 @@ package GPR2.Utils.Process_Manager is
    --  Jobs: the maximum number of jobs that can execute in parallel.
    --    If set to 0, then the number of CPU of the host is used.
 
+   procedure Execution_Post_Process (Self : in out Process_Manager);
+   --  ??? Did not manage to have this subprogram in the private part
+   --  and to be overrided by childs
+
    ----------------------------------------
    -- Process scheduler data information --
    ----------------------------------------
@@ -80,7 +104,9 @@ package GPR2.Utils.Process_Manager is
 
    function Total_Jobs (Self : Process_Manager) return Natural;
 
+
 private
+
 
    type Process_Manager_Data is record
       Max_Active_Jobs : Natural := 0;
@@ -90,6 +116,8 @@ private
    No_Data : constant Process_Manager_Data :=
                (Max_Active_Jobs => 0,
                 Total_Jobs      => 0);
+
+   PROCESS_STATUS_OK : constant Integer := 0;
 
    type Process_Manager is abstract tagged limited record
       Data : Process_Manager_Data := No_Data;

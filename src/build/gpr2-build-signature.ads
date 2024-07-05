@@ -6,6 +6,7 @@
 
 with Ada.Containers;
 with Ada.Containers.Ordered_Maps;
+with Ada.Strings.Unbounded;
 
 with GNATCOLL;
 with GNATCOLL.JSON;
@@ -19,7 +20,21 @@ package GPR2.Build.Signature is
    use Ada.Containers;
    use Utils.Hash;
 
+   package UB renames Ada.Strings.Unbounded;
+
    type Object is tagged private;
+
+   type Artifact_Signature is record
+      Path        : UB.Unbounded_String;
+      Checksum    : Hash_Digest := (others => 'X');
+   end record;
+
+   package Artifact_Maps is new Ada.Containers.Ordered_Maps
+     (B3_Hash_Digest, Artifact_Signature);
+
+   function Artifacts_Signatures (Self : Object) return Artifact_Maps.Map;
+   --  Return the artifacts signatures stored in the previously loaded
+   --  build DB.
 
    function Artifact_Checksum
      (Self : Object; Id : B3_Hash_Digest) return Hash_Digest;
@@ -47,6 +62,9 @@ package GPR2.Build.Signature is
       Checksum     : Hash_Digest);
    --  Add or update an artifact in the signature
 
+   procedure Clear (Self : in out Object);
+   --  Clear all the signature artifacts and invalidate it
+
    function Load
      (Db_File  : Path_Name.Object;
       Messages : in out GPR2.Log.Object) return Object;
@@ -62,20 +80,14 @@ private
    TEXT_PLAIN_ID  : constant UTF8_String := "plain_id";
    TEXT_CHECKSUM  : constant UTF8_String := "checksum";
 
-   type Artifact_Signature is record
-      Path_Length : Integer;
-      Path        : UTF8_String (1 .. 1024);
-      Checksum    : Hash_Digest := (others => 'X');
-   end record;
-
-   package Artifact_Maps is new Ada.Containers.Ordered_Maps
-     (B3_Hash_Digest, Artifact_Signature);
-
    type Object is tagged record
       Artifacts : Artifact_Maps.Map := Artifact_Maps.Empty_Map;
       Coherent  : Boolean := True;
       Valid     : Boolean := False;
    end record;
+
+   function Artifacts_Signatures (Self : Object) return Artifact_Maps.Map is
+     (Self.Artifacts);
 
    function Coherent (Self : Object) return Boolean is (Self.Coherent);
 

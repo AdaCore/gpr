@@ -6,10 +6,13 @@
 
 with GPR2.Log;
 with GPR2.Project.View;
+with GNATCOLL.OS.Process;
 
 limited with GPR2.Build.Tree_Db;
 
+private with GPR2.Build.Signature;
 private with Ada.Tags;
+private with GNATCOLL.Traces;
 
 package GPR2.Build.Actions is
 
@@ -57,7 +60,7 @@ package GPR2.Build.Actions is
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object) is abstract
    with Pre'Class => not Messages.Has_Error;
-   --  procedure called when Self is added to the tree's database. Allows the
+   --  Procedure called when Self is added to the tree's database. Allows the
    --  action to add its input and output artifacts and dependencies.
 
    procedure Compute_Signature (Self : in out Object) is abstract;
@@ -65,19 +68,31 @@ package GPR2.Build.Actions is
 
    procedure Compare_Signature
      (Self     : in out Object;
-      Messages : in out GPR2.Log.Object) is abstract;
+      Messages : in out GPR2.Log.Object);
    --  Compare the current action signature to the loaded signature
 
    procedure Attach
      (Self : in out Object;
       Db   : in out GPR2.Build.Tree_Db.Object);
 
+   function Command (Self : Object)
+     return GNATCOLL.OS.Process.Argument_List is abstract;
+   --  Return the command line corresponding to the action
+
+   procedure Post_Command (Self : in out Object);
+   --  Post-processing that should occur after executing the command
+
 private
 
    use type Ada.Tags.Tag;
+   use GNATCOLL.Traces;
 
    type Object is abstract tagged record
-      Tree : access Tree_Db.Object;
+      Tree      : access Tree_Db.Object;
+
+      Signature : GPR2.Build.Signature.Object;
+
+      Traces    : Trace_Handle := Create ("TRACE_NAME_TO_OVERRIDE");
    end record;
 
    function Less (L, R : Action_Id'Class) return Boolean is

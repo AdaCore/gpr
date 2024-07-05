@@ -24,18 +24,17 @@ package GPR2.Build.Actions.Compile is
 
    overriding function "<" (L, R : Compile_Id) return Boolean;
 
-   type Object (<>) is new Actions.Object with private;
+   type Object is new Actions.Object with private;
    --  Action responsible for building Ada sources
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
 
    overriding function Valid_Signature (Self : Object) return Boolean;
 
-   function Create (Src  : GPR2.Build.Source.Object) return Object;
+   procedure Initialize (Self : in out Object; Src : GPR2.Build.Source.Object);
 
    overriding function View (Self : Object) return GPR2.Project.View.Object;
 
-   function Input (Self : Object) return Simple_Name;
    function Input (Self : Object) return GPR2.Build.Source.Object;
 
    function Object_File (Self : Object) return GPR2.Path_Name.Object;
@@ -47,9 +46,8 @@ package GPR2.Build.Actions.Compile is
 
    overriding procedure Compute_Signature (Self : in out Object);
 
-   overriding procedure Compare_Signature
-     (Self     : in out Object;
-      Messages : in out GPR2.Log.Object);
+   overriding function Command (Self : Object)
+    return GNATCOLL.OS.Process.Argument_List;
 
 private
 
@@ -74,32 +72,31 @@ private
      (if L.Ctxt.Id = R.Ctxt.Id then L.Src_Name < R.Src_Name
       else L.Ctxt.Id < R.Ctxt.Id);
 
-   type Object (Input_Len : Natural) is new Actions.Object with record
+   type Object is new Actions.Object with record
       Obj_File : GPR2.Path_Name.Object;
       --  Compiled object file, can be undefined if not compiled yet
 
       Deps     : GPR2.Containers.Name_Set;
       --  List of known dependencies for this unit
 
-      Signature : GPR2.Build.Signature.Object;
+      Lang     : GPR2.Language_Id;
+      --  Language of the source
 
-      UID      : Compile_Id (Input_Len);
+      Src_Name : Unbounded_String;
+      --  Source name
+
+      Ctxt     : GPR2.Project.View.Object;
+      --  View owning the source
    end record;
-
-   overriding function UID (Self : Object) return Actions.Action_Id'Class is
-     (Self.UID);
 
    overriding function Valid_Signature (Self : Object) return Boolean is
      (Self.Signature.Valid);
 
    overriding function View (Self : Object) return GPR2.Project.View.Object is
-     (Self.UID.Ctxt);
-
-   function Input (Self : Object) return Simple_Name is
-     (Self.UID.Src_Name);
+     (Self.Ctxt);
 
    function Input (Self : Object) return GPR2.Build.Source.Object is
-     (Self.UID.Ctxt.Source (Self.UID.Src_Name));
+     (Self.Ctxt.Source (Simple_Name (To_String (Self.Src_Name))));
 
    function Object_File (Self : Object) return GPR2.Path_Name.Object is
      (Self.Obj_File);

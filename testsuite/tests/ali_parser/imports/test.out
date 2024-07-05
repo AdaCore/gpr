@@ -1,0 +1,13 @@
+using project file /test.gpr
+=== Parsing file gnatcoll-memory.ali
+ada, ada.ads, ada.ali
+ada.exceptions, a-except.adb, a-except.ali
+gnatcoll, gnatcoll.ads, gnatcoll.ali
+system, system.ads, system.ali
+system.crtl, s-crtl.ads, s-crtl.ali
+system.memory, s-memory.adb, s-memory.ali
+system.storage_elements, s-stoele.ads, s-stoele.ali
+gnat, gnat.ads, gnat.ali
+gnat.debug_pools, g-debpoo.adb, g-debpoo.ali
+gnatcoll, gnatcoll.ads, gnatcoll.ali
+system, system.ads, system.ali

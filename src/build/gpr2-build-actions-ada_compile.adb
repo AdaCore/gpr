@@ -3,19 +3,18 @@
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
-
-with GPR2.Build.Artifacts.File_Part;
+with GPR2.Build.ALI_Parser;
 with GPR2.Build.Artifacts.Files;
+with GPR2.Build.Source;
 with GPR2.Build.Tree_Db;
-with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.View.Set;
-with GPR2.Utils.Hash;
 
 package body GPR2.Build.Actions.Ada_Compile is
 
    package PAI renames GPR2.Project.Attribute_Index;
+   package Actions renames GPR2.Build.Actions;
 
    function Artifacts_Base_Name
      (Unit : GPR2.Build.Compilation_Unit.Object) return Simple_Name;
@@ -23,15 +22,18 @@ package body GPR2.Build.Actions.Ada_Compile is
    function Lookup
      (V          : GPR2.Project.View.Object;
       BN         : Simple_Name;
-      In_Lib_Dir : Boolean;
-      Must_Exist : Boolean) return GPR2.Path_Name.Object;
-   --  Look for BN in V's hierarchy of object/lib directories
+      Must_Exist : Boolean)
+      return GPR2.Path_Name.Object;
+   --  Look for BN in V's hierarchy of object directories
 
    function Get_Attr
      (V       : GPR2.Project.View.Object;
       Name    : Q_Attribute_Id;
       Idx     : Language_Id;
       Default : Value_Type) return Value_Type;
+
+   procedure Update_Deps_From_Ali (Self : in out Object);
+   --  Parse the ALI file produced by the action to update dependencies
 
    -------------------------
    -- Artifacts_Base_Name --
@@ -40,8 +42,7 @@ package body GPR2.Build.Actions.Ada_Compile is
    function Artifacts_Base_Name
      (Unit : GPR2.Build.Compilation_Unit.Object) return Simple_Name
    is
-      Main : constant Compilation_Unit.Unit_Location :=
-               Unit.Main_Part;
+      Main : constant Compilation_Unit.Unit_Location := Unit.Main_Part;
       BN   : constant Simple_Name := Simple_Name (Main.Source.Base_Name);
 
    begin
@@ -51,75 +52,37 @@ package body GPR2.Build.Actions.Ada_Compile is
          declare
             Img : constant String := Main.Index'Image;
             Sep : constant String :=
-                    Get_Attr (Main.View,
-                              PRA.Compiler.Multi_Unit_Object_Separator,
-                              Ada_Language,
-                              "~");
+              Get_Attr
+                (Main.View, PRA.Compiler.Multi_Unit_Object_Separator,
+                 Ada_Language, "~");
          begin
             return BN & Simple_Name (Sep & Img (Img'First + 1 .. Img'Last));
          end;
       end if;
    end Artifacts_Base_Name;
 
-   -----------------------
-   -- Compare_Signature --
-   -----------------------
+   -------------
+   -- Command --
+   -------------
 
-   overriding procedure Compare_Signature
-     (Self     : in out Object;
-      Messages : in out GPR2.Log.Object)
+   overriding function Command
+     (Self : Object) return GNATCOLL.OS.Process.Argument_List
    is
-      use Build.Signature;
-      use Utils.Hash;
 
-      Db_File : constant Path_Name.Object :=
-                  Self.Tree.Db_Filename_Path (Self.UID);
+      --  ??? Does not work for non-root namespaces
+
+      Action_Unit : constant GPR2.Build.Compilation_Unit.Object :=
+        Self.Ctxt.Unit (Name_Type (To_String (Self.Unit_Name)));
+      Args        : GNATCOLL.OS.Process.Argument_List;
    begin
-      Self.Signature := Load (Db_File, Messages);
+      Args.Append ("gcc");
+      Args.Append ("-c");
+      Args.Append (String (Action_Unit.Main_Part.Source.Value));
+      Args.Append ("-o");
+      Args.Append (Self.Object_File.String_Value);
 
-      if Self.Signature.Coherent then
-         Self.Signature.Set_Valid_State (True);
-      else
-         Self.Signature.Set_Valid_State (False);
-
-         return;
-      end if;
-
-      for Input of Self.Tree.Inputs (Self.UID) loop
-         declare
-            Checksum : constant Hash_Digest :=
-                         Self.Signature.Artifact_Checksum (Input.UID);
-         begin
-            if not (Input.Checksum = Checksum)
-            then
-               Self.Signature.Set_Valid_State (False);
-               Messages.Append
-                 (Message.Create
-                    (Message.Information,
-                     "not up-to-date",
-                     Input.SLOC));
-            end if;
-         end;
-      end loop;
-
-      for Output of Self.Tree.Outputs (Self.UID) loop
-         declare
-            Checksum : constant Hash_Digest :=
-                         Self.Signature.Artifact_Checksum (Output.UID);
-         begin
-            if not (Output.Checksum = Checksum)
-            then
-               Self.Signature.Set_Valid_State (False);
-               Messages.Append
-                 (Message.Create
-                    (Message.Information,
-                     "not up-to-date",
-                     Output.SLOC));
-            end if;
-         end;
-      end loop;
-
-   end Compare_Signature;
+      return Args;
+   end Command;
 
    -----------------------
    -- Compute_Signature --
@@ -127,76 +90,53 @@ package body GPR2.Build.Actions.Ada_Compile is
 
    overriding procedure Compute_Signature (Self : in out Object) is
       use GPR2.Build.Signature;
+
+      UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+      Art : Artifacts.Files.Object;
    begin
-      for Input of Self.Tree.Inputs (Self.UID) loop
-         Self.Signature.Update_Artifact
-           (Input.UID, Input.Image, Input.Checksum);
+      for Dep of Self.Dependencies loop
+         Art := Artifacts.Files.Create (Dep);
+         Self.Signature.Update_Artifact (Art.UID, Art.Image, Art.Checksum);
       end loop;
 
-      for Output of Self.Tree.Outputs (Self.UID) loop
-         Self.Signature.Update_Artifact
-           (Output.UID, Output.Image, Output.Checksum);
-      end loop;
+      Art := Artifacts.Files.Create (Self.Ali_File);
+      Self.Signature.Update_Artifact (Art.UID, Art.Image, Art.Checksum);
 
-      Self.Signature.Store (Self.Tree.Db_Filename_Path (Self.UID));
+      Art := Artifacts.Files.Create (Self.Obj_File);
+      Self.Signature.Update_Artifact (Art.UID, Art.Image, Art.Checksum);
+
+      Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
    end Compute_Signature;
 
-   ------------
-   -- Create --
-   ------------
+   ------------------
+   -- Dependencies --
+   ------------------
 
-   function Create
-     (Src : GPR2.Build.Compilation_Unit.Object) return Object
+   function Dependencies
+     (Self : in out Object) return GPR2.Path_Name.Set.Object
    is
-      UID    : constant Ada_Compile_Id :=
-                 (Name_Len  => Src.Name'Length,
-                  Unit_Name => Src.Name,
-                  Ctxt      => Src.Main_Part.View);
-      Result : Object :=
-                 (Input_Len => UID.Name_Len,
-                  UID       => UID,
-                  others    => <>);
-      BN     : constant Simple_Name := Artifacts_Base_Name (Src);
-      O_Suff : constant Simple_Name :=
-                 Simple_Name
-                   (Get_Attr
-                      (Result.UID.Ctxt,
-                       PRA.Compiler.Object_File_Suffix,
-                       Ada_Language,
-                       ".o"));
-
    begin
-      --  ??? Once we can save/restore, we shouldn't need this lookup, or
-      --  at least we need it only when signature is incorrect
-
-      --  Lookup existing obj file in the hierarchy
-      Result.Obj_File := Lookup
-        (Result.UID.Ctxt, BN & O_Suff,
-         In_Lib_Dir => False,
-         Must_Exist => True);
-
-      --  If not found, set the value to the object created after compilation
-      if not Result.Obj_File.Is_Defined then
-         Result.Obj_File := Lookup
-           (Result.UID.Ctxt, BN & O_Suff,
-            In_Lib_Dir => False,
-            Must_Exist => False);
+      if not Self.Is_Defined then
+         raise Program_Error with "Ada_Compile action is undefined";
       end if;
 
-      Result.Ali_File :=  Lookup
-        (Result.UID.Ctxt, BN & ".ali",
-         In_Lib_Dir => True,
-         Must_Exist => True);
-
-      if not Result.Ali_File.Is_Defined then
-         Result.Ali_File :=  Lookup
-           (Result.UID.Ctxt, BN & ".ali",
-            In_Lib_Dir => True,
-            Must_Exist => False);
+      if Self.Tree = null then
+         raise Program_Error
+           with Object'Class (Self).UID.Image & " has not been included to a" &
+           " tree database. Please call the `Add_Action` procedure before" &
+           " querying dependencies";
       end if;
 
-      return Result;
-   end Create;
+      --  A unit has at least a dependency towards its own sources, so an
+      --  an empty dependencies set means that the ALI file has not
+      --  been parsed.
+
+      if Self.Deps.Is_Empty then
+         Self.Update_Deps_From_Ali;
+      end if;
+
+      return Self.Deps;
+   end Dependencies;
 
    --------------
    -- Get_Attr --
@@ -218,6 +158,48 @@ package body GPR2.Build.Actions.Ada_Compile is
       end if;
    end Get_Attr;
 
+   ----------------
+   -- Initialize --
+   ----------------
+
+   procedure Initialize
+     (Self : in out Object; Src : GPR2.Build.Compilation_Unit.Object)
+   is
+   begin
+      Self.Ctxt      := Src.Main_Part.View;
+      Self.Unit_Name := To_Unbounded_String (String (Src.Name));
+      Self.Traces    := Create ("ACTION_ADA_COMPILE");
+
+      declare
+         BN     : constant Simple_Name := Artifacts_Base_Name (Src);
+         O_Suff : constant Simple_Name :=
+           Simple_Name
+             (Get_Attr
+                (Self.Ctxt, PRA.Compiler.Object_File_Suffix, Ada_Language,
+                 ".o"));
+      begin
+
+         --  Lookup if the object file exists in the hierarchy
+
+         Self.Obj_File := Lookup (Self.Ctxt, BN & O_Suff, Must_Exist => True);
+
+         --  If not found, set the value to the object generated by the
+         --  compilation.
+
+         if not Self.Obj_File.Is_Defined then
+            Self.Obj_File :=
+              Lookup (Self.Ctxt, BN & O_Suff, Must_Exist => False);
+         end if;
+
+         Self.Ali_File := Lookup (Self.Ctxt, BN & ".ali", Must_Exist => True);
+
+         if not Self.Ali_File.Is_Defined then
+            Self.Ali_File :=
+              Lookup (Self.Ctxt, BN & ".ali", Must_Exist => False);
+         end if;
+      end;
+   end Initialize;
+
    ------------
    -- Lookup --
    ------------
@@ -225,7 +207,6 @@ package body GPR2.Build.Actions.Ada_Compile is
    function Lookup
      (V          : GPR2.Project.View.Object;
       BN         : Simple_Name;
-      In_Lib_Dir : Boolean;
       Must_Exist : Boolean) return GPR2.Path_Name.Object
    is
       Todo      : GPR2.Project.View.Set.Object;
@@ -235,11 +216,6 @@ package body GPR2.Build.Actions.Ada_Compile is
 
    begin
       loop
-         if In_Lib_Dir and then Current.Is_Library then
-            Candidate := Current.Library_Ali_Directory.Compose (BN);
-            exit when not Must_Exist or else Candidate.Exists;
-         end if;
-
          Candidate := Current.Object_Directory.Compose (BN);
          exit when not Must_Exist or else Candidate.Exists;
 
@@ -269,47 +245,86 @@ package body GPR2.Build.Actions.Ada_Compile is
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object)
    is
-      Unit     : constant Compilation_Unit.Object := Self.Input_Unit;
-      Explicit : Boolean;
-      Part     : Compilation_Unit.Unit_Location;
+      UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      Db.Add_Output
-        (Self.UID,
-         Artifacts.Files.Create (Self.Obj_File),
-         Messages);
+      Db.Add_Output (UID, Artifacts.Files.Create (Self.Obj_File), Messages);
 
       if Messages.Has_Error then
          return;
       end if;
 
       if Self.Ali_File.Is_Defined then
-         Db.Add_Output
-           (Self.UID,
-            Artifacts.Files.Create (Self.Ali_File),
-            Messages);
+         Db.Add_Output (UID, Artifacts.Files.Create (Self.Ali_File), Messages);
       end if;
 
       if Messages.Has_Error then
          return;
       end if;
-
-      for Kind in S_Spec .. S_Body loop
-         if Unit.Has_Part (Kind) then
-            Explicit := Unit.Main_Part = Kind;
-            Part     := Unit.Get (Kind);
-            Db.Add_Input
-              (Self.UID,
-               Artifacts.File_Part.Create (Part.Source, Part.Index),
-               Explicit);
-         end if;
-      end loop;
-
-      for Sep of Unit.Separates loop
-         Db.Add_Input
-           (Self.UID,
-            Artifacts.File_Part.Create (Sep.Source, Sep.Index),
-            False);
-      end loop;
    end On_Tree_Insertion;
+
+   ------------------
+   -- Post_Command --
+   ------------------
+
+   overriding procedure Post_Command (Self : in out Object) is
+   begin
+      Self.Update_Deps_From_Ali;
+   end Post_Command;
+
+   ---------
+   -- UID --
+   ---------
+
+   overriding function UID (Self : Object) return Actions.Action_Id'Class is
+      Result : constant Ada_Compile_Id :=
+        (Name_Len  => Ada.Strings.Unbounded.Length (Self.Unit_Name),
+         Unit_Name => Name_Type (To_String (Self.Unit_Name)),
+         Ctxt      => Self.Ctxt);
+   begin
+      return Result;
+   end UID;
+
+   --------------------------
+   -- Update_Deps_From_Ali --
+   --------------------------
+
+   procedure Update_Deps_From_Ali (Self : in out Object) is
+      Deps_Src : GPR2.Build.ALI_Parser.Dep_Vectors.Vector;
+      Messages : GPR2.Log.Object;
+      UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+   begin
+
+      if not Self.Ali_File.Is_Defined or else not Self.Ali_File.Exists then
+         --  ??? Use a custom exception
+         raise Program_Error
+           with "ALI file for action " & UID.Image & " does not exist";
+      end if;
+
+      GPR2.Build.ALI_Parser.Dependencies (Self.Ali_File, Deps_Src, Messages);
+
+      for Dep_Src of Deps_Src loop
+         for V of Self.Tree.Views_Database loop
+            if V.Source_Option > No_Source
+              and then V.Has_Source (Simple_Name (Dep_Src))
+            then
+               declare
+                  Source : constant GPR2.Build.Source.Object :=
+                    V.Visible_Source (Simple_Name (Dep_Src));
+               begin
+                  if Source.Is_Defined then
+                     Trace
+                       (Self.Traces,
+                        "Add " & String (Source.Path_Name.Name) &
+                        " to the action " & UID.Image & " dependencies");
+                     if not Self.Deps.Contains (Source.Path_Name) then
+                        Self.Deps.Append (Source.Path_Name);
+                     end if;
+                     exit;
+                  end if;
+               end;
+            end if;
+         end loop;
+      end loop;
+   end Update_Deps_From_Ali;
 
 end GPR2.Build.Actions.Ada_Compile;

@@ -28,6 +28,16 @@ package body GPR2.Build.Signature is
       return Checksum;
    end Artifact_Checksum;
 
+   -----------
+   -- Clear --
+   -----------
+
+   procedure Clear (Self : in out Object) is
+   begin
+      Self.Artifacts.Clear;
+      Self.Valid := False;
+   end Clear;
+
    ----------
    -- Load --
    ----------
@@ -100,11 +110,7 @@ package body GPR2.Build.Signature is
                                       Utils.Hash.Hash_Digest (Chck_Txt);
                                  end if;
 
-                                 Item.Path_Length := Id_Txt'Length;
-                                 Item.Path
-                                   (Item.Path'First ..
-                                      Item.Path'First + Item.Path_Length - 1)
-                                     := Id_Txt;
+                                 Item.Path := UB.To_Unbounded_String (Id_Txt);
 
                                  if Id'Length = B3_Hash_Digest'Length then
                                     Signature.Artifacts.Insert
@@ -216,9 +222,7 @@ package body GPR2.Build.Signature is
                     Field      => String (Artifact_Maps.Key (Position)));
          Set_Field (Val        => Artifact,
                     Field_Name => TEXT_PLAIN_ID,
-                    Field      => Item.Path
-                      (Item.Path'First ..
-                         Item.Path'First + Item.Path_Length - 1));
+                    Field      => UB.To_String (Item.Path));
          Set_Field (Val        => Artifact,
                     Field_Name => TEXT_CHECKSUM,
                     Field      => String (Item.Checksum));
@@ -254,11 +258,7 @@ package body GPR2.Build.Signature is
    is
       Item : Artifact_Signature;
    begin
-      Item.Path_Length := Plain_Id'Length;
-      Item.Path
-        (Item.Path'First ..
-           Item.Path'First + Item.Path_Length - 1)
-          := Plain_Id;
+      Item.Path := UB.To_Unbounded_String (Plain_Id);
       Item.Checksum := Checksum;
 
       if Self.Artifacts.Contains (Id) then

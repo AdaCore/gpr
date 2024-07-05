@@ -45,9 +45,10 @@ begin
    for NS of Tree.Namespace_Root_Projects loop
       for Unit of NS.Units loop
          declare
-            A    : GPR2.Build.Actions.Ada_Compile.Object :=
-                     GPR2.Build.Actions.Ada_Compile.Create (Unit);
+            A    : GPR2.Build.Actions.Ada_Compile.Object;
          begin
+            A.Initialize (Unit);
+
             if not Tree.Artifacts_Database.Has_Action (A.UID) then
                Tree.Artifacts_Database.Add_Action (A, Log);
                if Log.Has_Error then
@@ -63,9 +64,10 @@ begin
            and then Src.Kind = S_Body
          then
             declare
-               A : GPR2.Build.Actions.Compile.Object :=
-                     GPR2.Build.Actions.Compile.Create (Src);
+               A : GPR2.Build.Actions.Compile.Object;
             begin
+               A.Initialize (Src);
+
                if not Tree.Artifacts_Database.Has_Action (A.UID) then
                   Tree.Artifacts_Database.Add_Action (A, Log);
                   if Log.Has_Error then
