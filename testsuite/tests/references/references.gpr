@@ -1,0 +1,71 @@
+with "root";
+with "root-child";
+
+project References is
+
+   type T is ("T OK", "project.T OK", "References.T OK");
+
+   V0 := "V0 OK";
+   V1 := "project.V1 OK";
+   V2 := "References.V2 OK";
+
+   for Object_Dir use "project'Object_Dir OK";
+   for Exec_Dir use "References'Exec_Dir OK";
+
+   package Builder is
+      V0 := "Builder.V1 OK";
+      V1 := V0;
+      V2 := "project.Builder.V2 OK";
+      V3 := "References.Builder.V3 OK";
+      for Executable_Suffix use "Builder'Executable_Suffix OK";
+      for Executable ("main.adb") use "project.Executable (""main.adb"") OK";
+      for Global_Configuration_Pragmas use "References.Builder'Global_Configuration_Pragmas OK";
+   end Builder;
+
+   package Test1 renames Root.Builder;
+   package Test2 extends Root.Builder is
+   end Test2;
+   package Test3 renames Root.Child.Builder;
+   package Test4 extends Root.Child.Builder is
+   end Test4;
+
+   -- type references tests
+
+   Test1 : T := "T OK";
+   Test2 : project.T := "project.T OK";
+   Test3 : References.T := "References.T OK";
+   Test4 : Root.T := "Root.T OK";
+   Test5 : Root.Child.T := "Root.Child.T OK";
+
+   -- variable references tests
+
+   Test6 := V0;
+   Test7 := project.V1;
+   Test8 := References.V2;
+   Test9 := Builder.V1;
+   Test10 := project.Builder.V2;
+   Test11 := References.Builder.V3;
+   Test12 := Root.V;
+   Test13 := Root.Builder.V;
+   Test14 := Root.Child.V;
+   Test15 := Root.Child.Builder.V;
+
+   -- attribute reference tests
+
+   Test16 := project'Object_Dir;
+   Test17 := References'Exec_Dir;
+   Test18 := Builder'Executable_Suffix;
+   Test19 := project.Builder'Executable ("main.adb");
+   Test20 := References.Builder'Global_Configuration_Pragmas;
+   Test21 := Root'Object_Dir;
+   Test22 := Root.Builder'Global_Configuration_Pragmas;
+   Test23 := Root.Child'Object_Dir;
+   Test24 := Root.Child.Builder'Global_Configuration_Pragmas;
+
+   -- package rename/extend reference tests
+   Test25 := Test1.Test1;
+   Test26 := Test2.Test2;
+   Test27 := Test3.Test3;
+   Test28 := Test4.Test4;
+
+end References;

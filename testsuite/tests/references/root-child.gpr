@@ -1,0 +1,13 @@
+with "root";
+project Root.Child is
+   type T is ("Root.Child.T OK", "Root.Child.V OK");
+   V : T := "Root.Child.V OK";
+   for Source_Dirs use ("root.child");
+   for Object_Dir use "Root.Child'Object_Dir OK";
+   package Builder is
+      V := "Root.Child.Builder.V OK";
+      for Global_Configuration_Pragmas use "Root.Child.Builder'Global_Configuration_Pragmas OK";
+      Test3 := "renames Root.Child.Builder OK";
+      Test4 := "extends Root.Child.Builder OK";
+   end Builder;
+end Root.Child ;

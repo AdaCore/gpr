@@ -48,7 +48,7 @@ unexpected_index2.gpr:3:19: error: attribute "Object_Dir" cannot have index
 
 ** variables:
 
-undef_project_ref.gpr:3:11: error: undefined project Undef"
+undef_project_ref.gpr:3:11: error: undefined project "Undef"
 in_pack.gpr:4:14: error: undefined variable "Naming.Var2"
 
 ** projects:

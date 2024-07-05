@@ -2844,7 +2844,13 @@ package body GPR2.Project.View is
       Dad  : Object := Data.Extended_Root;
       C    : View_Internal.Project_View_Store.Cursor;
    begin
-      --  Lookup in the ancestors first
+      --  First, check the name of the project itself
+
+      if Self.Name = Name then
+         return Self;
+      end if;
+
+      --  Lookup in the ancestors next
 
       while Dad.Is_Defined loop
          if Dad.Name = Name then
