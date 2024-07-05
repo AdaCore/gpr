@@ -134,12 +134,8 @@ private
    function Has_Compilation_Unit
      (Self : Object;
       Name : Name_Type) return Boolean
-   is (Self.Get.CUs.Contains (Name));
-
-   function Compilation_Unit
-     (Self : Object;
-      Name : Name_Type) return Build.Compilation_Unit.Object
-   is (Self.Get.CUs.Element (Name));
+   is (Self.Get.CUs.Contains (Name)
+       or else Self.Get.Separates.Contains (Name));
 
    function Has_Source
      (Self     : Object;

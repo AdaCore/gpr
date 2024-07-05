@@ -23,6 +23,25 @@ package body GPR2.Build.View_Db is
      (Inst.Get);
    --  Extracts a reference to view_tables data from a View_Base instance
 
+   ----------------------
+   -- Compilation_Unit --
+   ----------------------
+
+   function Compilation_Unit
+     (Self : Object;
+      Name : Name_Type) return Build.Compilation_Unit.Object
+   is
+      Internal : constant View_Tables.View_Data_Ref := Ref (Self);
+      Cursor   : constant Compilation_Unit_Maps.Cursor :=
+                   Internal.CUs.Find (Name);
+   begin
+      if Compilation_Unit_Maps.Has_Element (Cursor) then
+         return Compilation_Unit_Maps.Element (Cursor);
+      else
+         return Self.Compilation_Unit (Internal.Separates (Name));
+      end if;
+   end Compilation_Unit;
+
    -----------------------
    -- Compilation_Units --
    -----------------------
