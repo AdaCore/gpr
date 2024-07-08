@@ -12,6 +12,7 @@ with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
+with GPR2.Project.Tree;
 
 package body GPR2.Build.Actions.Ada_Bind is
 
@@ -249,22 +250,27 @@ package body GPR2.Build.Actions.Ada_Bind is
       function Import_View_Db (Imp : GPR2.Build.ALI_Parser.Import_Info)
         return GPR2.Build.View_Db.Object
       is
+         V_Db : GPR2.Build.View_Db.Object;
       begin
-         for V_Db of Self.Tree.Views_Database loop
-            if V_Db.View.Is_Runtime then
-               if V_Db.Has_Source
-                 (Simple_Name (To_String (Imp.Source)))
-               then
-                  --  We do not want to recompile the runtime
+         for V of Self.Ctxt.Tree.Ordered_Views loop
+            if  V.Is_Defined and then V.Kind in With_Object_Dir_Kind then
+               V_Db := Self.Tree.View_Database (V);
 
-                  return V_Db;
-               end if;
-            elsif V_Db.View.Is_Namespace_Root then
-               if V_Db.Source_Option >= Sources_Units and then
-                  V_Db.Has_Compilation_Unit
-                    (Name_Type (To_String (Imp.Unit_Name)))
-               then
-                  return V_Db;
+               if V_Db.View.Is_Runtime then
+                  if V_Db.Has_Source
+                  (Simple_Name (To_String (Imp.Source)))
+                  then
+                     --  We do not want to recompile the runtime
+
+                     return V_Db;
+                  end if;
+               elsif V_Db.View.Is_Namespace_Root then
+                  if V_Db.Source_Option >= Sources_Units and then
+                     V_Db.Has_Compilation_Unit
+                     (Name_Type (To_String (Imp.Unit_Name)))
+                  then
+                     return V_Db;
+                  end if;
                end if;
             end if;
          end loop;

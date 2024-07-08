@@ -7,8 +7,10 @@ with GPR2.Build.ALI_Parser;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Source;
 with GPR2.Build.Tree_Db;
+with GPR2.Build.View_Db;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
+with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
 
 package body GPR2.Build.Actions.Ada_Compile is
@@ -292,6 +294,7 @@ package body GPR2.Build.Actions.Ada_Compile is
       Deps_Src : GPR2.Build.ALI_Parser.Dep_Vectors.Vector;
       Messages : GPR2.Log.Object;
       UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+      V_Db : GPR2.Build.View_Db.Object;
    begin
 
       if not Self.Ali_File.Is_Defined or else not Self.Ali_File.Exists then
@@ -303,25 +306,29 @@ package body GPR2.Build.Actions.Ada_Compile is
       GPR2.Build.ALI_Parser.Dependencies (Self.Ali_File, Deps_Src, Messages);
 
       for Dep_Src of Deps_Src loop
-         for V of Self.Tree.Views_Database loop
-            if V.Source_Option > No_Source
-              and then V.Has_Source (Simple_Name (Dep_Src))
-            then
-               declare
-                  Source : constant GPR2.Build.Source.Object :=
-                    V.Visible_Source (Simple_Name (Dep_Src));
-               begin
-                  if Source.Is_Defined then
-                     Trace
-                       (Self.Traces,
-                        "Add " & String (Source.Path_Name.Name) &
-                        " to the action " & UID.Image & " dependencies");
-                     if not Self.Deps.Contains (Source.Path_Name) then
-                        Self.Deps.Append (Source.Path_Name);
+         for V of Self.Ctxt.Tree.Ordered_Views loop
+            if  V.Is_Defined and then V.Kind in With_Object_Dir_Kind then
+               V_Db := Self.Tree.View_Database (V);
+
+               if V_Db.Source_Option > No_Source
+               and then V_Db.Has_Source (Simple_Name (Dep_Src))
+               then
+                  declare
+                     Source : constant GPR2.Build.Source.Object :=
+                     V_Db.Visible_Source (Simple_Name (Dep_Src));
+                  begin
+                     if Source.Is_Defined then
+                        Trace
+                        (Self.Traces,
+                           "Add " & String (Source.Path_Name.Name) &
+                           " to the action " & UID.Image & " dependencies");
+                        if not Self.Deps.Contains (Source.Path_Name) then
+                           Self.Deps.Append (Source.Path_Name);
+                        end if;
+                        exit;
                      end if;
-                     exit;
-                  end if;
-               end;
+                  end;
+               end if;
             end if;
          end loop;
       end loop;
