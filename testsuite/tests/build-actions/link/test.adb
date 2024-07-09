@@ -13,6 +13,7 @@ with GPR2.Path_Name.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
+with GNAT.OS_Lib;
 with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
 with GNATCOLL.VFS;        use GNATCOLL.VFS;
 with Test_Assert;         use Test_Assert;
@@ -67,6 +68,15 @@ function Test return Integer is
       return False;
    end Init_Action;
 
+   procedure Execute_Command (Cmd : Argument_List; Cwd : String := "") is
+      Ret     : Integer;
+      Process : Process_Handle;
+   begin
+      Process := Start (Args => Cmd, Cwd => Cwd, Stdout => FS.Standout, Stderr => FS.Standerr);
+      Ret := Wait (Process);
+      Assert (Ret = 0, "Check action return code");
+   end Execute_Command;
+
    Obj_Dir      : Virtual_File;
 begin
    Opts.Add_Switch (GPR2.Options.P, Project);
@@ -84,12 +94,56 @@ begin
    end if;
 
    Messages.Clear;
-
    Obj_Dir := GNATCOLL.VFS.Create
                 (Filesystem_String
                    (Tree.Root_Project.Object_Directory.Value));
    Make_Dir (Obj_Dir);
    Assert (Is_Directory (Obj_Dir));
+
+   declare
+      Args : Argument_List;
+   begin
+      Args.Append ("gcc");
+      Args.Append ("-c");
+      Args.Append (".." & GNAT.OS_Lib.Directory_Separator & "src" & GNAT.OS_Lib.Directory_Separator & "main.adb");
+      Execute_Command (Args, Obj_Dir.Display_Full_Name);
+   end;
+
+   declare
+      Args : Argument_List;
+   begin
+      Args.Append ("gcc");
+      Args.Append ("-c");
+      Args.Append (".." & GNAT.OS_Lib.Directory_Separator & "src" & GNAT.OS_Lib.Directory_Separator & "pkg.adb");
+      Execute_Command (Args, Obj_Dir.Display_Full_Name);
+   end;
+      declare
+      Args : Argument_List;
+   begin
+      Args.Append ("gcc");
+      Args.Append ("-c");
+      Args.Append (".." & GNAT.OS_Lib.Directory_Separator & "src" & GNAT.OS_Lib.Directory_Separator & "dep_two.adb");
+      Execute_Command (Args, Obj_Dir.Display_Full_Name);
+   end;
+
+   declare
+      Args : Argument_List;
+   begin
+      Args.Append ("gnatbind");
+      Args.Append ("main.ali");
+      Args.Append ("-o");
+      Args.Append ("b__main.adb");
+      Execute_Command (Args, Obj_Dir.Display_Full_Name);
+   end;
+
+   declare
+      Args : Argument_List;
+   begin
+      Args.Append ("gcc");
+      Args.Append ("-c");
+      Args.Append ("b__main.adb");
+      Execute_Command (Args, Obj_Dir.Display_Full_Name);
+   end;
 
    Assert (Init_Action, "Initialize the Ada compile action");
 
@@ -111,20 +165,7 @@ begin
      ((for all Obj of Action.Input_Object_Files => Obj.Exists),
       "Check that all input object files exist");
 
-   declare
-      Args    : constant Argument_List := Action.Command;
-      P_Wo    : FS.File_Descriptor;
-      P_Ro    : FS.File_Descriptor;
-      Ret     : Integer;
-      Process : Process_Handle;
-   begin
-      FS.Open_Pipe (P_Ro, P_Wo);
-      Process := Start (Args => Args, Stdout => P_Wo, Stderr => FS.Standerr);
-      FS.Close (P_Wo);
-
-      Ret := Wait (Process);
-      Assert (Ret = 0, "Check action return code");
-   end;
+   Execute_Command (Action.Command);
 
    Assert
      (GPR2.Path_Name.Create_File
