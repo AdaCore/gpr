@@ -92,6 +92,7 @@ package body GPR2.Build.Actions.Link is
 
       Args.Append ("-o");
       Args.Append (Self.Executable.String_Value);
+      Args.Append ("-ldl");
 
       return Args;
    end Command;
