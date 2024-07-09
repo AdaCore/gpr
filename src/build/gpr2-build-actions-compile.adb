@@ -29,11 +29,10 @@ package body GPR2.Build.Actions.Compile is
    is
       Args : GNATCOLL.OS.Process.Argument_List;
    begin
+      --  ??? Replace hard coded values
+
       Args.Append ("gcc");
       Args.Append ("-c");
-
-      --  ??? Add flags dynamically
-
       Args.Append
         (String
            (Self.Ctxt.Source

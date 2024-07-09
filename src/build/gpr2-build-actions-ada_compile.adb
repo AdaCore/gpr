@@ -70,13 +70,14 @@ package body GPR2.Build.Actions.Ada_Compile is
    overriding function Command
      (Self : Object) return GNATCOLL.OS.Process.Argument_List
    is
-
       --  ??? Does not work for non-root namespaces
 
       Action_Unit : constant GPR2.Build.Compilation_Unit.Object :=
         Self.Ctxt.Unit (Name_Type (To_String (Self.Unit_Name)));
       Args        : GNATCOLL.OS.Process.Argument_List;
    begin
+      --  ??? Replace hard coded values
+
       Args.Append ("gcc");
       Args.Append ("-c");
       Args.Append (String (Action_Unit.Main_Part.Source.Value));
