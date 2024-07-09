@@ -20,6 +20,8 @@ package body GPR2.Build.Actions.Ada_Compile.Post_Bind is
    is
       Args : GNATCOLL.OS.Process.Argument_List;
    begin
+      --  ??? Replace hard coded values
+
       if Self.Unit.Has_Part (S_Body) then
          Args.Append ("gcc");
          Args.Append ("-c");

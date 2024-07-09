@@ -65,6 +65,7 @@ package body GPR2.Build.Actions.Link is
            (Name  => Runtime_Dir,
             Index => GPR2.Project.Attribute_Index.Create (Ada_Language));
    begin
+      --  ??? Replace hard coded values
 
       Args.Append ("gcc");
 

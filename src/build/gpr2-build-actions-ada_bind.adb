@@ -28,6 +28,9 @@ package body GPR2.Build.Actions.Ada_Bind is
       Args : GNATCOLL.OS.Process.Argument_List;
    begin
       if Self.Unit.Has_Part (S_Body) then
+
+         --  ??? Replace hard coded values
+
          Args.Append ("gnatbind");
 
          Args.Append  (Self.Main_Ali.String_Value);
