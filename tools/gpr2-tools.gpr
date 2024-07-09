@@ -33,7 +33,8 @@ project GPR2.Tools extends "../shared.gpr" is
       --  "gprclean-main.adb",
       "gprconfig.adb",
       "gprdoc-main.adb",
-      "gprinspect-main.adb"
+      "gprinspect-main.adb",
+      "processes_wrapper-main.adb"
      );
 
    -------------
@@ -49,6 +50,7 @@ project GPR2.Tools extends "../shared.gpr" is
       for Executable ("gprinstall-main.adb") use "gprinstall";
       for Executable ("gprls-main.adb")      use "gprls";
       for Executable ("gprremote-main.adb")  use "gprremote";
+      for Executable ("processes_wrapper-main.adb")   use "processes-wrapper";
    end Builder;
 
    -------------
