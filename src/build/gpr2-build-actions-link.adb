@@ -50,6 +50,15 @@ package body GPR2.Build.Actions.Link is
       end if;
    end Add_Object_File;
 
+   ----------------
+   -- Add_Option --
+   ----------------
+
+   procedure Add_Option (Self : in out Object; Option : String) is
+   begin
+         Self.Static_Options.Append (Option);
+   end Add_Option;
+
    -------------
    -- Command --
    -------------
@@ -91,9 +100,23 @@ package body GPR2.Build.Actions.Link is
          end;
       end if;
 
+      for Option of Self.Static_Options loop
+         Args.Append (Option);
+      end loop;
+
+      declare
+         Required_Switches : constant Project.Attribute.Object :=
+           Self.Ctxt.Attribute (PRA.Linker.Required_Switches);
+      begin
+         if Required_Switches.Is_Defined then
+            for Switch of Required_Switches.Values loop
+               Args.Append ((Switch.Text));
+            end loop;
+         end if;
+      end;
+
       Args.Append ("-o");
       Args.Append (Self.Executable.String_Value);
-      Args.Append ("-ldl");
 
       return Args;
    end Command;

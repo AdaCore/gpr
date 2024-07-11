@@ -7,7 +7,7 @@ main.gpr:4:23: warning: object directory "obj" not found
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': '0', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': '0', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -20,7 +20,7 @@ Case 2 - Missing main.o
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -33,7 +33,7 @@ Case 3 - Modified main.o (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -46,7 +46,7 @@ Case 4 - Missing main.ali
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -59,7 +59,7 @@ Case 5 - Modified main.ali (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -72,7 +72,7 @@ Case 6 - Missing pkg.o
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -85,7 +85,7 @@ Case 7 - Modified pkg.o (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -98,7 +98,7 @@ Case 8 - Missing pkg.ali
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -111,7 +111,7 @@ Case 9 - Modified pkg.ali (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -124,7 +124,7 @@ Case 10 - Missing dep_two.o
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -137,7 +137,7 @@ Case 11 - Modified dep_two.o (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -150,7 +150,7 @@ Case 12 - Missing dep_two.ali
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -163,7 +163,7 @@ Case 13 - Modified dep_two.ali (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -176,7 +176,7 @@ Case 14 - Missing b__main.o
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -189,7 +189,7 @@ Case 15 - Modified b__main.o (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -202,7 +202,7 @@ Case 16 - Missing b__main.ali
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -215,7 +215,7 @@ Case 17 - Modified b__main.ali (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -228,7 +228,7 @@ Case 18 - Missing main
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': '0', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': '0', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -241,7 +241,7 @@ Case 19 - Modified main (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': '0', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': '0', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -260,7 +260,7 @@ Case 21 - Modified main.adb (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -273,7 +273,7 @@ Case 22 - Missing pkg.adb
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 Error detected in jobs.json
 
 ================================================================
@@ -284,7 +284,7 @@ Case 23 - Modified pkg.adb (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -297,7 +297,7 @@ Case 24 - Missing pkg.ads
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 Error detected in jobs.json
 
 ================================================================
@@ -308,7 +308,7 @@ Case 25 - Modified pkg.ads (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -321,7 +321,7 @@ Case 26 - Missing dep_two.adb
 {'command': 'gcc -c /tree/src/dep_two.ads -o /tree/obj/dep_two.o', 'status': '1', 'stderr': 'cannot generate code for file dep_two.ads (package spec)/n', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 Error detected in jobs.json
 
 ================================================================
@@ -332,7 +332,7 @@ Case 27 - Modified dep_two.adb (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -345,7 +345,7 @@ Case 28 - Missing dep_two.ads
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '1', 'stderr': 'dep_two.adb:3:14: error: file "dep_two.ads" not found/n', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 Error detected in jobs.json
 
 ================================================================
@@ -356,7 +356,7 @@ Case 29 - Modified dep_two.ads (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -369,7 +369,7 @@ Case 30 - Missing b__main.ads
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -382,7 +382,7 @@ Case 31 - Modified b__main.ads (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -395,7 +395,7 @@ Case 32 - Missing b__main.adb
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -408,7 +408,7 @@ Case 33 - Modified b__main.adb (comments only)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -421,7 +421,7 @@ Case 34 - Modified main.adb with different return code
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': '0', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': '0', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -433,7 +433,7 @@ Case 35 - Modified pkg.adb without dep_two dependency
 {'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': '0', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': '0', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 
@@ -445,7 +445,7 @@ Case 36 - Modified dep_two.adb (new output)
 {'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
 {'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -o /tree/obj/main -ldl', 'status': '0', 'stderr': '', 'stdout': ''}
+{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': '0', 'stderr': '', 'stdout': ''}
 == Executable output:
 Hello from Pkg
 Hello from modified Dep_Two
