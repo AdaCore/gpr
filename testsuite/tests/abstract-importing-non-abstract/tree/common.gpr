@@ -1,0 +1,9 @@
+abstract project Common is
+   
+   type Mode_Type is ("debug", "release", "profile");
+   Mode : Mode_Type := external ("mode", "debug");
+
+   Out_Dir := "./out/" & Mode & "/";
+
+end Common;
+
