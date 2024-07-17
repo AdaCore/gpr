@@ -69,6 +69,11 @@ package GPR2.Build.Actions.Ada_Bind is
    overriding function Command (Self : Object)
      return GNATCOLL.OS.Process.Argument_List;
 
+   overriding procedure Post_Command (Self : in out Object);
+   --  Parse the object file and the options listed as a comment at the end of
+   --  the main output source, then add them as switches to the related
+   --  linking action.
+
 private
 
    use type GPR2.View_Ids.View_Id;

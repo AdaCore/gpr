@@ -17,6 +17,11 @@ with GNAT.OS_Lib;
 with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
 with GNATCOLL.VFS;        use GNATCOLL.VFS;
 with Test_Assert;         use Test_Assert;
+
+with Ada.Text_IO;
+with Ada.Strings;
+with Ada.Strings.Fixed;
+
 use GPR2;
 
 function Test return Integer is
@@ -31,6 +36,10 @@ function Test return Integer is
 
 
    Action : GBA.Link.Object := GBA.Link.Undefined;
+
+   -----------------
+   -- Init_Action --
+   -----------------
 
    function Init_Action return Boolean
    is
@@ -68,6 +77,10 @@ function Test return Integer is
       return False;
    end Init_Action;
 
+   ---------------------
+   -- Execute_Command --
+   ---------------------
+
    procedure Execute_Command (Cmd : Argument_List; Cwd : String := "") is
       Ret     : Integer;
       Process : Process_Handle;
@@ -76,6 +89,76 @@ function Test return Integer is
       Ret := Wait (Process);
       Assert (Ret = 0, "Check action return code");
    end Execute_Command;
+
+   ---------------------------
+   -- Update_Linker_Options --
+   ---------------------------
+
+   procedure Update_Linker_Options (GNATBind_Src : String) is
+      use Ada.Text_IO;
+      use Ada.Strings;
+      use Ada.Strings.Fixed;
+
+
+      procedure Process_Option_Or_Object_Line
+        (Line : String);
+      --  Pass options to the linker. Do not pass object file lines
+
+      -----------------------------------
+      -- Process_Option_Or_Object_Line --
+      -----------------------------------
+
+      procedure Process_Option_Or_Object_Line
+         (Line : String)
+      is
+         Switch_Index : Natural := Index (Line, "--");
+      begin
+         if Switch_Index = 0 then
+            raise Program_Error
+              with "Failed parsing line " & Line & " from " & GNATBind_Src;
+         end if;
+
+         --  Skip the "--" comment prefix
+
+         Switch_Index := Switch_Index + 2;
+
+         declare
+            Trimed_Line : constant String :=
+              Trim (Line (Switch_Index .. Line'Last), Both);
+         begin
+
+            --  Pass only options to the link action
+
+            if Trimed_Line (Trimed_Line'First) = '-' then
+                  Action.Add_Option (Trimed_Line);
+            end if;
+
+         end;
+      end Process_Option_Or_Object_Line;
+
+      Src_File     : File_Type;
+      Reading      : Boolean         := False;
+      Begin_Marker : constant String := "--  BEGIN Object file/option list";
+      End_Marker   : constant String := "--  END Object file/option list";
+   begin
+      Open (File => Src_File,
+            Mode => In_File,
+            Name => GNATBind_Src);
+
+      while not End_Of_File (Src_File) loop
+         declare
+            Line : constant String := Get_Line (Src_File);
+         begin
+            if Index (Line, Begin_Marker) = Line'First then
+               Reading := True;
+            elsif Index (Line, End_Marker) = Line'First then
+               Reading := False;
+            elsif Reading then
+               Process_Option_Or_Object_Line (Line);
+            end if;
+         end;
+      end loop;
+   end Update_Linker_Options;
 
    Obj_Dir      : Virtual_File;
 begin
@@ -158,6 +241,10 @@ begin
    Action.Add_Object_File
      (GPR2.Path_Name.Create_File
         ("b__main.o", Filename_Optional (Obj_Dir.Dir_Name)));
+
+   Update_Linker_Options
+     (GPR2.Path_Name.Create_File
+        ("b__main.adb", Filename_Optional (Obj_Dir.Dir_Name)).String_Value);
 
    Assert (Action.Input_Object_Files.Length = 4);
 
