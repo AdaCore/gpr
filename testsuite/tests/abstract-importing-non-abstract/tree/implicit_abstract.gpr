@@ -1,0 +1,5 @@
+with "common.gpr";
+
+project Implicit_Abstract is
+    for Source_Dirs use ();
+end Implicit_Abstract;

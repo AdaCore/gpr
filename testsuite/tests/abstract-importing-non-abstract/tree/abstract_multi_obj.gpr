@@ -1,0 +1,8 @@
+with "project1.gpr";
+with "project2.gpr";
+with "implicit_abstract.gpr";
+with "common.gpr";
+
+abstract project Abstract_Multi_Obj is
+
+end Abstract_Multi_Obj;

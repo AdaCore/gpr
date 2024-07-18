@@ -1,0 +1,10 @@
+with "common.gpr";
+
+project Project2 is
+   
+   for Source_Dirs use ("src/" & Project'Name);
+   for Object_Dir use Common.Out_Dir & Project'Name & "/obj";
+   for Main use (Project'Name & ".adb");
+
+end Project2;
+

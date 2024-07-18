@@ -1,0 +1,2 @@
+description: Test loading an abstract project importing non-abstract projects
+driver: basic
