@@ -2,12 +2,12 @@
 Case 1 - Build from scratch
 main.gpr:4:23: warning: object directory "obj" not found
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': '0', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : '0', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -15,12 +15,12 @@ Hello from Dep_Two
 ================================================================
 Case 2 - Missing main.o
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -28,12 +28,12 @@ Hello from Dep_Two
 ================================================================
 Case 3 - Modified main.o (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -41,12 +41,12 @@ Hello from Dep_Two
 ================================================================
 Case 4 - Missing main.ali
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -54,12 +54,12 @@ Hello from Dep_Two
 ================================================================
 Case 5 - Modified main.ali (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -67,12 +67,12 @@ Hello from Dep_Two
 ================================================================
 Case 6 - Missing pkg.o
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -80,12 +80,12 @@ Hello from Dep_Two
 ================================================================
 Case 7 - Modified pkg.o (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -93,12 +93,12 @@ Hello from Dep_Two
 ================================================================
 Case 8 - Missing pkg.ali
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -106,12 +106,12 @@ Hello from Dep_Two
 ================================================================
 Case 9 - Modified pkg.ali (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -119,12 +119,12 @@ Hello from Dep_Two
 ================================================================
 Case 10 - Missing dep_two.o
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -132,12 +132,12 @@ Hello from Dep_Two
 ================================================================
 Case 11 - Modified dep_two.o (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -145,12 +145,12 @@ Hello from Dep_Two
 ================================================================
 Case 12 - Missing dep_two.ali
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -158,12 +158,12 @@ Hello from Dep_Two
 ================================================================
 Case 13 - Modified dep_two.ali (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -171,12 +171,12 @@ Hello from Dep_Two
 ================================================================
 Case 14 - Missing b__main.o
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -184,12 +184,12 @@ Hello from Dep_Two
 ================================================================
 Case 15 - Modified b__main.o (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -197,12 +197,12 @@ Hello from Dep_Two
 ================================================================
 Case 16 - Missing b__main.ali
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -210,12 +210,12 @@ Hello from Dep_Two
 ================================================================
 Case 17 - Modified b__main.ali (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -223,12 +223,12 @@ Hello from Dep_Two
 ================================================================
 Case 18 - Missing main
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': '0', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : '0', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -236,12 +236,12 @@ Hello from Dep_Two
 ================================================================
 Case 19 - Modified main (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': '0', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : '0', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -255,12 +255,12 @@ Test return value: 6
 ================================================================
 Case 21 - Modified main.adb (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -268,23 +268,24 @@ Hello from Dep_Two
 ================================================================
 Case 22 - Missing pkg.adb
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.ads -o /tree/obj/pkg.o', 'status': '1', 'stderr': 'cannot generate code for file pkg.ads (package spec)/n', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '1', stdout: '', stderr: 'cannot generate code for file pkg.ads (package spec)
+'
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 Error detected in jobs.json
 
 ================================================================
 Case 23 - Modified pkg.adb (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -292,23 +293,27 @@ Hello from Dep_Two
 ================================================================
 Case 24 - Missing pkg.ads
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': '1', 'stderr': 'main.adb:1:06: error: "Main (body)" depends on "Pkg (body)"/nmain.adb:1:06: error: "Pkg (body)" depends on "Pkg (spec)"/nmain.adb:1:06: error: file "pkg.ads" not found/n', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': '1', 'stderr': 'pkg.adb:4:14: error: file "pkg.ads" not found/n', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : '1', stdout: '', stderr: 'main.adb:1:06: error: "Main (body)" depends on "Pkg (body)"
+main.adb:1:06: error: "Pkg (body)" depends on "Pkg (spec)"
+main.adb:1:06: error: file "pkg.ads" not found
+'
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '1', stdout: '', stderr: 'pkg.adb:4:14: error: file "pkg.ads" not found
+'
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 Error detected in jobs.json
 
 ================================================================
 Case 25 - Modified pkg.ads (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -316,23 +321,24 @@ Hello from Dep_Two
 ================================================================
 Case 26 - Missing dep_two.adb
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.ads -o /tree/obj/dep_two.o', 'status': '1', 'stderr': 'cannot generate code for file dep_two.ads (package spec)/n', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : '1', stdout: '', stderr: 'cannot generate code for file dep_two.ads (package spec)
+'
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 Error detected in jobs.json
 
 ================================================================
 Case 27 - Modified dep_two.adb (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -340,23 +346,27 @@ Hello from Dep_Two
 ================================================================
 Case 28 - Missing dep_two.ads
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': '1', 'stderr': 'pkg.adb:2:06: error: "Pkg (body)" depends on "Dep_Two (body)"/npkg.adb:2:06: error: "Dep_Two (body)" depends on "Dep_Two (spec)"/npkg.adb:2:06: error: file "dep_two.ads" not found/n', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '1', 'stderr': 'dep_two.adb:3:14: error: file "dep_two.ads" not found/n', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '1', stdout: '', stderr: 'pkg.adb:2:06: error: "Pkg (body)" depends on "Dep_Two (body)"
+pkg.adb:2:06: error: "Dep_Two (body)" depends on "Dep_Two (spec)"
+pkg.adb:2:06: error: file "dep_two.ads" not found
+'
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : '1', stdout: '', stderr: 'dep_two.adb:3:14: error: file "dep_two.ads" not found
+'
+uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 Error detected in jobs.json
 
 ================================================================
 Case 29 - Modified dep_two.ads (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -364,12 +374,12 @@ Hello from Dep_Two
 ================================================================
 Case 30 - Missing b__main.ads
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -377,12 +387,12 @@ Hello from Dep_Two
 ================================================================
 Case 31 - Modified b__main.ads (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -390,12 +400,12 @@ Hello from Dep_Two
 ================================================================
 Case 32 - Missing b__main.adb
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -403,12 +413,12 @@ Hello from Dep_Two
 ================================================================
 Case 33 - Modified b__main.adb (comments only)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -416,12 +426,12 @@ Hello from Dep_Two
 ================================================================
 Case 34 - Modified main.adb with different return code
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': '0', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : '0', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from Dep_Two
@@ -429,23 +439,23 @@ Hello from Dep_Two
 ================================================================
 Case 35 - Modified pkg.adb without dep_two dependency
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': '0', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : '0', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 
 ================================================================
 Case 36 - Modified dep_two.adb (new output)
 == Content of tree/obj/jobs.json:
-{'command': 'gcc -c /tree/src/main.adb -o /tree/obj/main.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/pkg.adb -o /tree/obj/pkg.o', 'status': 'SKIPPED', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/src/dep_two.adb -o /tree/obj/dep_two.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gnatbind /tree/obj/main.ali -o b__main.adb', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc -c /tree/obj/b__main.adb -o /tree/obj/b__main.o', 'status': '0', 'stderr': '', 'stdout': ''}
-{'command': 'gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main', 'status': '0', 'stderr': '', 'stdout': ''}
+uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Bind Ada: main (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Link: main (main.gpr)', status : '0', stdout: '', stderr: ''
 == Executable output:
 Hello from Pkg
 Hello from modified Dep_Two
