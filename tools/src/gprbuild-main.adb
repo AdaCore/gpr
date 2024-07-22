@@ -20,16 +20,16 @@ with Ada.Command_Line;
 with Ada.Containers;
 with Ada.Exceptions;
 
+with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Source;
 with GPR2.Interrupt_Handler;
+with GPR2.Log;
 with GPR2.Options;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
-with GPR2.Project.Source;
 with GPR2.Project.Tree;
-with GPR2.Source_Info;
-with GPR2.Unit;
 
 with GPRtools.Options;
 with GPRtools.Program_Termination;
@@ -59,6 +59,7 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
    Opt     : Options.Object;
    Tree    : Project.Tree.Object;
    Sw_Attr : GPR2.Project.Attribute.Object;
+   Messages : GPR2.Log.Object;
 
 begin
    --  Install the Ctrl-C handler
@@ -71,24 +72,30 @@ begin
 
    --  Parse arguments
 
-   Opt.Tree := Tree.Reference;
    Parser.Get_Opt (Opt);
 
    --  Load the project tree
 
-   if not GPRtools.Options.Load_Project (Opt, Project.Tree.No_Error) then
+   if not GPRtools.Options.Load_Project (Opt, GPR2.No_Error) then
       Handle_Program_Termination
         (Opt     => Opt,
          Message => "");
    end if;
 
-   Tree.Update_Sources (Backends => Source_Info.No_Backends);
+   Tree := Opt.Tree;
+   Tree.Update_Sources (Messages => Messages);
+
+   if Opt.Verbose then
+      if Tree.Has_Messages then
+         Tree.Log_Messages.Output_Messages;
+      end if;
+   end if;
 
    --  Check if we have a Builder'Switches attribute in the root project
 
    if Tree.Root_Project.Has_Package (PRP.Builder) then
       declare
-         Mains : constant GPR2.Unit.Source_Unit_Vectors.Vector :=
+         Mains : constant GPR2.Build.Compilation_Unit.Unit_Location_Vector :=
                    (if Opt.Mains.Is_Empty
                     then Tree.Root_Project.Mains
                     else Opt.Mains);
@@ -98,8 +105,9 @@ begin
 
          if Mains.Length = 1 then
             declare
-               Source_Part : constant GPR2.Unit.Source_Unit_Identifier :=
-                               Mains.First_Element;
+               Source_Part :
+                 constant GPR2.Build.Compilation_Unit.Unit_Location :=
+                   Mains.First_Element;
             begin
                Sw_Attr := Tree.Root_Project.Attribute
                  (Name   => PRA.Builder.Switches,
@@ -117,10 +125,10 @@ begin
          then
             declare
                Lang : GPR2.Language_Id := No_Language;
-               Src  : GPR2.Project.Source.Object;
+               Src  : GPR2.Build.Source.Object;
             begin
                for Main of Mains loop
-                  Src := Tree.Root_Project.Source (Main.Source);
+                  Src := Tree.Root_Project.Source (Main.Source.Simple_Name);
 
                   if Src.Is_Defined then
                      if Lang = No_Language then
@@ -196,7 +204,7 @@ begin
       if Sw_Attr.Is_Defined then
          Opt := Options.Object'(GPRtools.Options.Empty_Options
                                 with others => <>);
-         Opt.Tree := Tree.Reference;
+         Opt.Tree := Tree;
          Parser.Get_Opt (From_Pack => PRP.Builder,
                          Values    => Sw_Attr.Values,
                          Result    => Opt);
@@ -205,7 +213,14 @@ begin
    end if;
 
    Tree.Update_Sources
-     (With_Runtime => True);
+     (Option   => Sources_Units_Artifacts,
+      Messages => Messages);
+
+   if Opt.Verbose then
+      if Tree.Has_Messages then
+         Tree.Log_Messages.Output_Messages;
+      end if;
+   end if;
 
    return To_Exit_Status (E_Success);
 
