@@ -46,17 +46,16 @@ function Test return Integer is
       Source : GPR2.Build.Source.Object;
       Log    : GPR2.Log.Object;
    begin
-
       for Root of Tree.Namespace_Root_Projects loop
          for Main of Root.Mains loop
             Action.Initialize
-               (Executable  => Root.Executable_Directory.Compose
-                                 (Filename_Type
-                                   (String (Main.Source.Base_Name))),
+               (Executable       => Root.Executable
+                                      (Main.Source.Simple_Name, Main.Index),
                 Main_Object_File => Root.Object_Directory.Compose
-                                 (Filename_Type
-                                   (String (Main.Source.Base_Name) & ".o")),
-                Context     => Root);
+                                      (Filename_Type
+                                         (String (Main.Source.Base_Name)
+                                       & ".o")),
+                Context          => Root);
             Assert
                (not Tree.Artifacts_Database.Has_Action (Action.UID),
                 "Check that action is not already in the Tree DB");
@@ -254,9 +253,7 @@ begin
 
    Execute_Command (Action.Command);
 
-   Assert
-     (GPR2.Path_Name.Create_File
-        ("main", Filename_Optional (Obj_Dir.Dir_Name)).Exists);
+   Assert (Action.Output_Executable.Exists, "Check that the output executable exists");
 
    return Report;
 end Test;

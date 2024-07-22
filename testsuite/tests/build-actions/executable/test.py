@@ -1,5 +1,6 @@
 import json
 import os.path
+from e3.env import Env
 
 from testsuite_support.builder_and_runner import BuilderAndRunner
 
@@ -80,7 +81,11 @@ testsuite(os.path.join("tree", "obj", "dep_two.o"))
 testsuite(os.path.join("tree", "obj", "dep_two.ali"))
 testsuite(os.path.join("tree", "obj", "b__main.o"))
 testsuite(os.path.join("tree", "obj", "b__main.ali"))
-testsuite(os.path.join("tree", "obj", "main"))
+
+if "windows" in Env().host.platform:
+    testsuite(os.path.join("tree", "obj", "main.exe"))
+else:
+    testsuite(os.path.join("tree", "obj", "main"))
 
 testsuite(os.path.join("tree", "src", "main.adb"))
 testsuite(os.path.join("tree", "src", "pkg.adb"))
