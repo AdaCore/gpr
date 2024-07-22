@@ -21,6 +21,7 @@ with Ada.Containers;
 with Ada.Exceptions;
 
 with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Process_Manager.JSON;
 with GPR2.Build.Source;
 with GPR2.Interrupt_Handler;
 with GPR2.Log;
@@ -35,8 +36,12 @@ with GPRtools.Options;
 with GPRtools.Program_Termination;
 with GPRtools.Sigint;
 with GPRtools.Util;
+with GPRtools.Actions;
 
 with GPRbuild.Options;
+
+with GNATCOLL.VFS; use GNATCOLL.VFS;
+with GNATCOLL.Traces;
 
 -------------------
 -- GPRbuild.Main --
@@ -55,13 +60,17 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
    package PRP renames GPR2.Project.Registry.Pack;
    package PRA renames GPR2.Project.Registry.Attribute;
 
-   Parser  : constant Options.GPRBuild_Parser := Options.Create;
-   Opt     : Options.Object;
-   Tree    : Project.Tree.Object;
-   Sw_Attr : GPR2.Project.Attribute.Object;
-   Messages : GPR2.Log.Object;
+   Parser    : constant Options.GPRBuild_Parser := Options.Create;
+   Opt       : Options.Object;
+   Tree      : Project.Tree.Object;
+   Sw_Attr   : GPR2.Project.Attribute.Object;
+   Messages  : GPR2.Log.Object;
+   Process_M : GPR2.Build.Process_Manager.JSON.Object;
 
 begin
+
+   GNATCOLL.Traces.Parse_Config_File;
+
    --  Install the Ctrl-C handler
 
    GPR2.Interrupt_Handler.Install_Sigint (GPRtools.Sigint.Handler'Access);
@@ -221,6 +230,30 @@ begin
          Tree.Log_Messages.Output_Messages;
       end if;
    end if;
+
+   Make_Dir
+     (GNATCOLL.VFS.Create
+        (Filesystem_String (Tree.Root_Project.Object_Directory.Value)));
+
+   Messages.Clear;
+   if Tree.Root_Project.Is_Library then
+
+      --  Create actions to build a lib
+
+      null;
+   else
+      if not GPRtools.Actions.Add_Actions_To_Build_Mains (Tree, Messages) then
+         Messages.Output_Messages
+           (Information => True, Warning => True, Error => True);
+         return To_Exit_Status (E_Abort);
+      end if;
+   end if;
+
+   Change_Dir
+     (GNATCOLL.VFS.Create
+       (Filesystem_String (Tree.Root_Project.Object_Directory.Value)));
+
+   Process_M.Execute (Tree.Artifacts_Database, 1);
 
    return To_Exit_Status (E_Success);
 
