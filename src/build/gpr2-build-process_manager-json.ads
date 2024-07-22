@@ -47,10 +47,11 @@ package GPR2.Build.Process_Manager.JSON is
 private
    use GNATCOLL.JSON;
 
-   TEXT_COMMAND : constant UTF8_String := "command";
-   TEXT_STATUS  : constant UTF8_String := "status";
-   TEXT_STDOUT  : constant UTF8_String := "stdout";
-   TEXT_STDERR  : constant UTF8_String := "stderr";
+   TEXT_ACTION_UID : constant UTF8_String := "uid";
+   TEXT_COMMAND    : constant UTF8_String := "command";
+   TEXT_STATUS     : constant UTF8_String := "status";
+   TEXT_STDOUT     : constant UTF8_String := "stdout";
+   TEXT_STDERR     : constant UTF8_String := "stderr";
 
    type Object is new GPR2.Build.Process_Manager.Object with record
       JSON      : JSON_Array := Empty_Array;

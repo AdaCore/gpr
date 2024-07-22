@@ -34,14 +34,18 @@ package body GPR2.Build.Process_Manager.JSON is
       end loop;
 
       Set_Field (Val        => Job_Summary,
+                 Field_Name => TEXT_ACTION_UID,
+                 Field      => Ada.Strings.Fixed.Trim
+                   (Act.UID.Image, Ada.Strings.Both));
+      Set_Field (Val        => Job_Summary,
                  Field_Name => TEXT_COMMAND,
                  Field      => Ada.Strings.Fixed.Trim
-                   (To_String (Cmd), Ada.Strings.Right));
+                   (To_String (Cmd), Ada.Strings.Both));
       Set_Field (Val        => Job_Summary,
                  Field_Name => TEXT_STATUS,
                  Field      => (if Proc_Status.Skip then "SKIPPED"
                                 else Ada.Strings.Fixed.Trim
-                                  (Proc_Status.Status'Img, Ada.Strings.Left)
+                                  (Proc_Status.Status'Img, Ada.Strings.Both)
                                ));
       Set_Field (Val        => Job_Summary,
                  Field_Name => TEXT_STDOUT,

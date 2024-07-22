@@ -17,15 +17,24 @@ def test(header):
         print("Test return value: " + str(proc.status))
     else:
         print("== Content of " + os.path.join("tree", "obj", "jobs.json") + ":")
-        with open(os.path.join("tree", "obj", "jobs.json"), "r") as file:
-            for job in json.load(file):
-                print(job)
-
+        json_file = open(os.path.join("tree", "obj", "jobs.json"))
+        jobs = json.load(json_file)
         error = False
-        with open(os.path.join("tree", "obj", "jobs.json"), "r") as file:
-            for obj in json.load(file):
-                if "stderr" in obj and obj["stderr"]:
-                    error = True
+
+        for job in jobs:
+            print(
+                "uid: '"
+                + job["uid"]
+                + "', status : '"
+                + job["status"]
+                + "', stdout: '"
+                + job["stdout"]
+                + "', stderr: '"
+                + job["stderr"]
+                + "'"
+            )
+            if job["status"] != "SKIPPED" and job["status"] != "0":
+                error = True
 
         if error:
             print("Error detected in jobs.json")
