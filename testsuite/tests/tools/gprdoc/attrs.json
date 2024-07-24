@@ -520,38 +520,6 @@
             "inherit_from_extended": "INHERITED",
             "is_allowed_in": {
               "abstract": true,
-              "aggregate": true,
-              "aggregate_library": true,
-              "configuration": true,
-              "library": true,
-              "standard": true
-            },
-            "is_toolchain_config": false,
-            "value": "LIST",
-            "value_case_sensitive": true,
-            "value_is_set": false
-          },
-          "attribute_descr": "",
-          "attribute_name": "Include_Switches_Via_Spec"
-        },
-        {
-          "attribute_def": {
-            "builtin": false,
-            "config_concatenable": false,
-            "empty_value": "ALLOW",
-            "has_default_in": {
-              "abstract": false,
-              "aggregate": false,
-              "aggregate_library": false,
-              "configuration": false,
-              "library": false,
-              "standard": false
-            },
-            "index_optional": false,
-            "index_type": "LANGUAGE_INDEX",
-            "inherit_from_extended": "INHERITED",
-            "is_allowed_in": {
-              "abstract": true,
               "aggregate": false,
               "aggregate_library": false,
               "configuration": true,
@@ -3959,6 +3927,38 @@
           },
           "attribute_descr": "Index is a language name. Value is the list of switches to specify to the compiler of the language to indicate a directory to look for sources.",
           "attribute_name": "Include_Switches"
+        },
+        {
+          "attribute_def": {
+            "builtin": false,
+            "config_concatenable": false,
+            "empty_value": "ALLOW",
+            "has_default_in": {
+              "abstract": false,
+              "aggregate": false,
+              "aggregate_library": false,
+              "configuration": false,
+              "library": false,
+              "standard": false
+            },
+            "index_optional": false,
+            "index_type": "LANGUAGE_INDEX",
+            "inherit_from_extended": "NOT_INHERITED",
+            "is_allowed_in": {
+              "abstract": true,
+              "aggregate": true,
+              "aggregate_library": true,
+              "configuration": true,
+              "library": true,
+              "standard": true
+            },
+            "is_toolchain_config": false,
+            "value": "LIST",
+            "value_case_sensitive": true,
+            "value_is_set": false
+          },
+          "attribute_descr": "",
+          "attribute_name": "Include_Switches_Via_Spec"
         },
         {
           "attribute_def": {

@@ -303,9 +303,6 @@ package GPR2.Project.Registry.Attribute is
    Ignore_Source_Sub_Dirs           : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"ignore_source_sub_dirs");
-   Include_Switches_Via_Spec        : constant Q_Attribute_Id :=
-                                        (Project_Level_Scope,
-                                         +"include_switches_via_spec");
    Inherit_Source_Path              : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"inherit_source_path");
@@ -585,6 +582,9 @@ package GPR2.Project.Registry.Attribute is
                                         (Pack.Compiler, +"include_path_file");
       Include_Switches              : constant Q_Attribute_Id :=
                                         (Pack.Compiler, +"include_switches");
+      Include_Switches_Via_Spec     : constant Q_Attribute_Id :=
+                                        (Pack.Compiler,
+                                         +"include_switches_via_spec");
       Language_Kind                 : constant Q_Attribute_Id :=
                                         (Pack.Compiler, +"language_kind");
       Leading_Required_Switches     : constant Q_Attribute_Id :=

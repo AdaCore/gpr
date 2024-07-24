@@ -6,19 +6,19 @@ Aggregate_Empty_Value_Checks
 GPR file: files/library_empty_value_checks.gpr
 library_empty_value_checks.gpr:7:28: error: attribute "Config_Prj_File" cannot be empty
 library_empty_value_checks.gpr:8:08: error: Value  is invalid for attribute Create_Missing_Dirs
-library_empty_value_checks.gpr:22:08: error: Value  is invalid for attribute Library_Auto_Init
-library_empty_value_checks.gpr:23:08: error: Value  is invalid for attribute Library_Auto_Init_Supported
-library_empty_value_checks.gpr:25:24: error: attribute "Library_Dir" cannot be empty
-library_empty_value_checks.gpr:31:08: error: Value  is invalid for attribute Library_Major_Minor_Id_Supported
-library_empty_value_checks.gpr:32:25: error: attribute "Library_Name" cannot be empty
-library_empty_value_checks.gpr:38:08: error: Value  is invalid for attribute Library_Standalone
-library_empty_value_checks.gpr:39:08: error: Value  is invalid for attribute Library_Support
-library_empty_value_checks.gpr:48:08: error: Value  is invalid for attribute Object_Generated
-library_empty_value_checks.gpr:51:08: error: Value  is invalid for attribute Objects_Linked
-library_empty_value_checks.gpr:64:08: error: Value  is invalid for attribute Separate_Run_Path_Options
-library_empty_value_checks.gpr:71:08: error: Value  is invalid for attribute Symbolic_Link_Supported
-library_empty_value_checks.gpr:108:11: error: Value  is invalid for attribute Compiler'Config_File_Unique
-library_empty_value_checks.gpr:114:11: error: Value  is invalid for attribute Compiler'Dependency_Kind
+library_empty_value_checks.gpr:21:08: error: Value  is invalid for attribute Library_Auto_Init
+library_empty_value_checks.gpr:22:08: error: Value  is invalid for attribute Library_Auto_Init_Supported
+library_empty_value_checks.gpr:24:24: error: attribute "Library_Dir" cannot be empty
+library_empty_value_checks.gpr:30:08: error: Value  is invalid for attribute Library_Major_Minor_Id_Supported
+library_empty_value_checks.gpr:31:25: error: attribute "Library_Name" cannot be empty
+library_empty_value_checks.gpr:37:08: error: Value  is invalid for attribute Library_Standalone
+library_empty_value_checks.gpr:38:08: error: Value  is invalid for attribute Library_Support
+library_empty_value_checks.gpr:47:08: error: Value  is invalid for attribute Object_Generated
+library_empty_value_checks.gpr:50:08: error: Value  is invalid for attribute Objects_Linked
+library_empty_value_checks.gpr:63:08: error: Value  is invalid for attribute Separate_Run_Path_Options
+library_empty_value_checks.gpr:70:08: error: Value  is invalid for attribute Symbolic_Link_Supported
+library_empty_value_checks.gpr:107:11: error: Value  is invalid for attribute Compiler'Config_File_Unique
+library_empty_value_checks.gpr:113:11: error: Value  is invalid for attribute Compiler'Dependency_Kind
 library_empty_value_checks.gpr:120:11: error: Value  is invalid for attribute Compiler'Language_Kind
 library_empty_value_checks.gpr:136:11: error: Value  is invalid for attribute Compiler'Response_File_Format
 library_empty_value_checks.gpr:151:11: error: Value  is invalid for attribute Install'Install_Project
@@ -28,17 +28,17 @@ library_empty_value_checks.gpr:170:11: error: Value  is invalid for attribute Li
 GPR file: files/library_empty_space_value_checks.gpr
 library_empty_space_value_checks.gpr:8:08: error: Value   is invalid for attribute Create_Missing_Dirs
 library_empty_space_value_checks.gpr:11:04: error: empty value in attribute "Excluded_Source_Files" not allowed.
-library_empty_space_value_checks.gpr:22:08: error: Value   is invalid for attribute Library_Auto_Init
-library_empty_space_value_checks.gpr:23:08: error: Value   is invalid for attribute Library_Auto_Init_Supported
-library_empty_space_value_checks.gpr:31:08: error: Value   is invalid for attribute Library_Major_Minor_Id_Supported
-library_empty_space_value_checks.gpr:38:08: error: Value   is invalid for attribute Library_Standalone
-library_empty_space_value_checks.gpr:39:08: error: Value   is invalid for attribute Library_Support
-library_empty_space_value_checks.gpr:48:08: error: Value   is invalid for attribute Object_Generated
-library_empty_space_value_checks.gpr:51:08: error: Value   is invalid for attribute Objects_Linked
-library_empty_space_value_checks.gpr:64:08: error: Value   is invalid for attribute Separate_Run_Path_Options
-library_empty_space_value_checks.gpr:71:08: error: Value   is invalid for attribute Symbolic_Link_Supported
-library_empty_space_value_checks.gpr:108:11: error: Value   is invalid for attribute Compiler'Config_File_Unique
-library_empty_space_value_checks.gpr:114:11: error: Value   is invalid for attribute Compiler'Dependency_Kind
+library_empty_space_value_checks.gpr:21:08: error: Value   is invalid for attribute Library_Auto_Init
+library_empty_space_value_checks.gpr:22:08: error: Value   is invalid for attribute Library_Auto_Init_Supported
+library_empty_space_value_checks.gpr:30:08: error: Value   is invalid for attribute Library_Major_Minor_Id_Supported
+library_empty_space_value_checks.gpr:37:08: error: Value   is invalid for attribute Library_Standalone
+library_empty_space_value_checks.gpr:38:08: error: Value   is invalid for attribute Library_Support
+library_empty_space_value_checks.gpr:47:08: error: Value   is invalid for attribute Object_Generated
+library_empty_space_value_checks.gpr:50:08: error: Value   is invalid for attribute Objects_Linked
+library_empty_space_value_checks.gpr:63:08: error: Value   is invalid for attribute Separate_Run_Path_Options
+library_empty_space_value_checks.gpr:70:08: error: Value   is invalid for attribute Symbolic_Link_Supported
+library_empty_space_value_checks.gpr:107:11: error: Value   is invalid for attribute Compiler'Config_File_Unique
+library_empty_space_value_checks.gpr:113:11: error: Value   is invalid for attribute Compiler'Dependency_Kind
 library_empty_space_value_checks.gpr:120:11: error: Value   is invalid for attribute Compiler'Language_Kind
 library_empty_space_value_checks.gpr:136:11: error: Value   is invalid for attribute Compiler'Response_File_Format
 library_empty_space_value_checks.gpr:151:11: error: Value   is invalid for attribute Install'Install_Project

@@ -1512,6 +1512,14 @@ begin
       Is_Allowed_In        => Everywhere,
       Config_Concatenable  => True);
 
+   --  compiler.include_switches_via_spec
+   Add
+     (Name                 => Compiler.Include_Switches_Via_Spec,
+      Index_Type           => Language_Index,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Is_Allowed_In        => Everywhere);
+
    --  compiler.include_path
    Add
      (Name                 => Compiler.Include_Path,
@@ -2008,14 +2016,6 @@ begin
       Value_Case_Sensitive => False,
       Is_Allowed_In        => Everywhere,
       Type_Def             => Boolean_Type_Def);
-
-   --  include_switches_via_spec
-   Add
-     (Name                 => Include_Switches_Via_Spec,
-      Index_Type           => Language_Index,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere);
 
    --  only_dirs_with_sources
    Add

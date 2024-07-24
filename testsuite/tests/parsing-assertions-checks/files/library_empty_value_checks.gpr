@@ -13,7 +13,6 @@ library project Library_Empty_Value_Checks is
    for Exec_Dir use "";
    --for Externally_Built use ""; -- error invalid value for externally_built
    for Ignore_Source_Sub_Dirs use ();
-   for Include_Switches_Via_Spec ("") use ();
    for Inherit_Source_Path ("") use ();
    for Interfaces use ();
    for Languages use ();
@@ -117,6 +116,7 @@ library project Library_Empty_Value_Checks is
       for Include_Path ("") use ""; 
       for Include_Path_File ("") use "";
       for Include_Switches ("") use ();
+      for Include_Switches_Via_Spec ("") use ();
       for Language_Kind ("") use "";
       for Leading_Required_Switches ("") use ();
       for Local_Config_File ("") use "";
