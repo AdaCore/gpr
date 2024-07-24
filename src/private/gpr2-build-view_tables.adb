@@ -235,7 +235,7 @@ package body GPR2.Build.View_Tables is
                   --  runtime units to be overriden by project sources.
 
                   CU_Instance.Remove
-                    (Kind, Other.View, Other.Source, Other.Index);
+                    (Kind, Other.View, Other.Source, Other.Index, Sep_Name);
                   CU_Instance.Add
                     (Kind, View_Db.View, Path, Index, Sep_Name, Success);
 
