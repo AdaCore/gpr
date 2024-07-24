@@ -2444,6 +2444,7 @@ package body GPR2.Tree_Internal is
 
       procedure Validity_Check (View : Project.View.Object) is
          use type PRA.Index_Value_Type;
+         use type View_Ids.View_Id;
 
          P_Kind : constant Project_Kind := View.Kind;
          P_Data : constant View_Internal.Const_Ref :=
@@ -2457,6 +2458,20 @@ package body GPR2.Tree_Internal is
               ("project qualifier could be explicitly set to "
                & Image (View.Kind),
                Source_Reference.Create (View.Path_Name.Value, 0, 0));
+         end if;
+
+         --  Check no concrete view is in the closure of an aggregate project
+
+         if Self.Root_Project.Kind = K_Aggregate
+           and then View_Internal.Get (View).Context = Root
+           and then View.Kind not in K_Abstract | K_Aggregate
+           and then View.Id /= View_Ids.Runtime_View_Id
+         then
+            Self.Error
+              ("can only import abstract projects, not """
+               & String (View.Name) & '"',
+               Source_Reference.Create
+                 (Self.Root_Project.Path_Name.Value, 0, 0));
          end if;
 
          --  Check packages
@@ -2740,22 +2755,6 @@ package body GPR2.Tree_Internal is
                               Sloc => View.Attribute (PRA.Project_Files)));
                      end if;
                   end loop;
-
-                  --  aggregate library project can have regular imports,
-                  --  while aggregate projects can't.
-
-                  if View.Kind = K_Aggregate and then View.Has_Imports then
-                     for Imported of View.Imports loop
-                        if not Imported.Is_Abstract then
-                           Self.Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 "can only import abstract projects, not """
-                                 & String (Imported.Name) & '"',
-                                 Sloc => View.Attribute (PRA.Project_Files)));
-                        end if;
-                     end loop;
-                  end if;
 
                when K_Abstract =>
                   declare
