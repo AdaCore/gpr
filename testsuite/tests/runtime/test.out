@@ -2,7 +2,6 @@ Demo     K_STANDARD
 A:   Main -> main.adb
 A:   Object_Dir -> obj
 A:   Source_Dirs -> .
-V:   RTL -> .../adainclude
 
 Config   K_CONFIGURATION
 runtime  K_STANDARD

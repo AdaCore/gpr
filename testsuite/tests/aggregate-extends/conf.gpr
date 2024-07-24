@@ -1,4 +1,5 @@
 project Conf is
+   for Languages use ();
    type Value is ("one", "two");
    K : Value := external("KVAL", "one");
 end Conf;

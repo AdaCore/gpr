@@ -377,6 +377,7 @@ package body GPRtools.Options is
 
       Loaded := Tree.Load
         (Opt,
+         With_Runtime             => True,
          Absent_Dir_Error         => Absent_Dir_Error,
          Allow_Implicit_Project   => Opt.Find_Implicit_Project,
          Check_Shared_Libs_Import => not Opt.Unchecked_Shared_Lib);

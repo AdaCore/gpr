@@ -4,11 +4,6 @@ A:   Object_Dir -> obj
 V:   Model -> mdl
 V:   V -> prj1
 **************** Iterator Prj2
-runtime  K_STANDARD
-A:   Externally_Built -> true
-A:   Languages -> ada
-A:   Object_Dir -> <gcc>/lib/gcc/(host)/(gcc-version)/adalib
-A:   Source_Dirs -> <gcc>/lib/gcc/(host)/(gcc-version)/adainclude
 Prj2     K_STANDARD
 A:   Object_Dir -> obj2
 A:   Source_Dirs -> p2-mdl

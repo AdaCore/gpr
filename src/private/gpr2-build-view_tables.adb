@@ -235,7 +235,7 @@ package body GPR2.Build.View_Tables is
                   --  runtime units to be overriden by project sources.
 
                   CU_Instance.Remove
-                    (Kind, Other.View, Other.Source, Other.Index);
+                    (Kind, Other.View, Other.Source, Other.Index, Sep_Name);
                   CU_Instance.Add
                     (Kind, View_Db.View, Path, Index, Sep_Name, Success);
 
@@ -814,18 +814,18 @@ package body GPR2.Build.View_Tables is
 
             for U of Src_Info.Units loop
                for Root of Src.View.Namespace_Roots loop
-                  if not Root.Is_Abstract then
-                     if U.Kind /= S_No_Body then
-                        Add_Unit_Part
-                        (NS_Db    => Get_Data (Data.Tree_Db, Root),
-                           CU       => U.Name,
-                           Kind     => U.Kind,
-                           Sep_Name => U.Separate_Name,
-                           View_Db  => Data,
-                           Path     => Src_Info.Path_Name,
-                           Index    => U.Index,
-                           Messages => Messages);
-                     end if;
+                  if Root.Kind in With_View_Db
+                    and then U.Kind /= S_No_Body
+                  then
+                     Add_Unit_Part
+                       (NS_Db    => Get_Data (Data.Tree_Db, Root),
+                        CU       => U.Name,
+                        Kind     => U.Kind,
+                        Sep_Name => U.Separate_Name,
+                        View_Db  => Data,
+                        Path     => Src_Info.Path_Name,
+                        Index    => U.Index,
+                        Messages => Messages);
                   end if;
                end loop;
             end loop;
@@ -845,14 +845,16 @@ package body GPR2.Build.View_Tables is
          if Src_Info.Has_Units and then not Data.View.Is_Extended then
             for U of Src_Info.Units loop
                for Root of Src.View.Namespace_Roots loop
-                  Remove_Unit_Part
-                    (Get_Data (Data.Tree_Db, Root),
-                     CU       => U.Name,
-                     Kind     => U.Kind,
-                     Sep_Name => U.Separate_Name,
-                     View_Db  => Data,
-                     Path     => Src_Info.Path_Name,
-                     Index    => U.Index);
+                  if Root.Kind in With_View_Db then
+                     Remove_Unit_Part
+                       (Get_Data (Data.Tree_Db, Root),
+                        CU       => U.Name,
+                        Kind     => U.Kind,
+                        Sep_Name => U.Separate_Name,
+                        View_Db  => Data,
+                        Path     => Src_Info.Path_Name,
+                        Index    => U.Index);
+                  end if;
                end loop;
             end loop;
          end if;

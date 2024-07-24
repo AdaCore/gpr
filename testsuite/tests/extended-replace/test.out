@@ -1,10 +1,8 @@
 **************** Iterator Prj1
-runtime  K_STANDARD
 Prj1     K_STANDARD
  > p1/pck1.adb    language: Ada    Kind: S_BODY   unit: PCK1
  > p1/pck1.ads    language: Ada    Kind: S_SPEC   unit: PCK1
 **************** Iterator Prj2
-runtime  K_STANDARD
 Prj1     K_STANDARD
  > p1/pck1.adb    language: Ada    Kind: S_BODY   unit: PCK1
  > p1/pck1.ads    language: Ada    Kind: S_SPEC   unit: PCK1

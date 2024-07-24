@@ -79,7 +79,10 @@ function Main return Natural is
          Opts.Add_Switch (GPR2.Options.Src_Subdirs, Src_Subdir);
       end if;
 
-      if not Tree.Load (Opts) then
+      if not Tree.Load (Opts,
+                        With_Runtime     => True,
+                        Absent_Dir_Error => No_Error)
+      then
          return 1;
       end if;
 

@@ -28,6 +28,10 @@ private package GPR2.Build.View_Tables is
 
    use type Ada.Containers.Hash_Type;
 
+   subtype With_View_Db is GPR2.Project_Kind
+     with Static_Predicate =>
+       With_View_Db not in K_Aggregate | K_Configuration;
+
    --  generic file object: can represent any file found on the filesystem
 
    type File_Info (Path_Len : Natural) is record

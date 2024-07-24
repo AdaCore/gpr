@@ -1,5 +1,3 @@
-runtime  K_STANDARD
-standard project
 lib1     K_STANDARD
 library project
 lib4     K_STANDARD

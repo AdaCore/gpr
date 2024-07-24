@@ -308,9 +308,8 @@ private package GPR2.Tree_Internal is
    --  Artifacts database
 
    Init_Tree_Database : access procedure
-     (Self                 : in out Build.Tree_Db.Object;
-      Tree                 : Object;
-      With_Runtime_Sources : Boolean);
+     (Self : in out Build.Tree_Db.Object;
+      Tree : Object);
    --  Private view of Tree_Db's initialization procedure
 
    function Artifacts_Database

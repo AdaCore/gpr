@@ -87,9 +87,6 @@
     - <gnat rts>/adalib/
     - Source directory  :
        - <gnat rts>/adainclude
-    - Imported-by        : 
-       - Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr)
-       - Base ($<cwd>/base.gpr>$<cwd>/prj.gpr)
     - Attributes        : 
        - Exec_Dir [ SINGLE ]
           - <gnat rts>/adalib"
@@ -152,7 +149,6 @@
     - Imported-by        : 
        - Base ($<cwd>/base.gpr>$<cwd>/prj.gpr)
     - Imports           : 
-       - runtime (!runtime)
        - Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr)
     - Attributes        : 
        - Exec_Dir [ SINGLE ]
@@ -194,7 +190,6 @@
        - <cwd>/src
     - Extended by       : Prj ($<cwd>/prj.gpr)
     - Imports           : 
-       - runtime (!runtime)
        - Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr)
        - Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr)
     - Attributes        : 

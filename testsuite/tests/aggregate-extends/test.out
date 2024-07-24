@@ -1,8 +1,10 @@
 [Agg] K_AGGREGATE
    with       [B] K_ABSTRACT
          extends   [Conf] K_STANDARD
+               Languages ->
                K = one
 
+         Languages ->
          Var = var is one
 
    External (KVAL) -> two
@@ -11,8 +13,10 @@
    aggregates [A] K_STANDARD
          with       [B] K_ABSTRACT
                extends   [Conf] K_STANDARD
+                     Languages ->
                      K = two
 
+               Languages ->
                Var = var is two
 
          Object_Dir -> a

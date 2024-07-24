@@ -167,7 +167,7 @@ private package GPR2.View_Internal is
    --  Returns the project data definition constant reference for the given
    --  view.
 
-   Get_RW : access function (View : in out Project.View.Object) return Ref;
+   Get_RW : access function (View : Project.View.Object) return Ref;
    --  Returns the project data definition reference to modify view
 
    Refcount : access function (View : Project.View.Object) return Natural;
