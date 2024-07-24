@@ -107,7 +107,7 @@ package body GPR2.Utils.Process_Manager is
    function Collect_Job
       (Self           : in out Process_Manager;
        Job            : DG.Node_Id;
-       Proc_Status    : Process_Status;
+       Proc_Handler   : Process_Handler;
        Stdout, Stderr : Unbounded_String)
       return Collect_Status
    is
@@ -188,7 +188,6 @@ package body GPR2.Utils.Process_Manager is
 
       Node             : DG.Node_Id;
       Proc_Handler     : Process_Handler;
-      Proc_Status      : Process_Status;
       P_Stdout         : FS.File_Descriptor;
       P_Stderr         : FS.File_Descriptor;
       Proc_Id          : Integer;
@@ -205,45 +204,58 @@ package body GPR2.Utils.Process_Manager is
             --  Launch as many process as possible
             while Active_Jobs < Max_Jobs loop
                End_Of_Iteration := not Graph.Next (Node);
-               exit when Node = DG.No_Node;
+               exit when End_Of_Iteration or else Node = DG.No_Node;
 
-               begin
-                  Self.Launch_Job (Node, Proc_Handler, P_Stdout, P_Stderr);
-                  Self.Data.Total_Jobs := Self.Data.Total_Jobs + 1;
-               exception
-                  when GNATCOLL.OS.OS_Error =>
-                     Proc_Handler := (Skip => True);
-               end;
+               Self.Launch_Job (Node, Proc_Handler, P_Stdout, P_Stderr);
+               Self.Data.Total_Jobs := Self.Data.Total_Jobs + 1;
 
-               if not Proc_Handler.Skip then
+               if Proc_Handler.Status = Running then
+
                   --  If the process was launched successfully add it to the
                   --  list of active jobs
+
                   Active_Jobs := Active_Jobs + 1;
                   Active_Procs (Active_Jobs) := Proc_Handler.Handle;
-                  States (Active_Jobs).Node := Node;
+                  States (Active_Jobs).Node  := Node;
                   Allocate_Listeners (Active_Jobs, P_Stdout, P_Stderr);
+
+                  if Active_Jobs > Self.Max_Active_Jobs then
+                     Self.Data.Max_Active_Jobs := Active_Jobs;
+                  end if;
                else
-                  --  Call collect on that job with a process status of 127
-                  Job_Status := Self.Collect_Job
-                    (Job         => Node,
-                     Proc_Status => (Skip => True),
-                     Stdout      => To_Unbounded_String (""),
-                     Stderr      => To_Unbounded_String (""));
+                  if Proc_Handler.Status = Failed_To_Launch then
+                     Job_Status :=
+                       Self.Collect_Job
+                         (Job          => Node,
+                          Proc_Handler => Proc_Handler,
+                          Stdout       => To_Unbounded_String (""),
+                          Stderr       => Proc_Handler.Error_Message);
+                  elsif Proc_Handler.Status = Skipped then
+                     Job_Status :=
+                       Self.Collect_Job
+                         (Job          => Node,
+                          Proc_Handler => Proc_Handler,
+                          Stdout       => To_Unbounded_String (""),
+                          Stderr       => To_Unbounded_String (""));
+                  elsif Proc_Handler.Status = Finished then
+                     raise Program_Error with
+                       "Process handler status shall not be 'Finished' " &
+                       "at this state";
+                  end if;
+
                   if Job_Status = Abort_Execution then
                      End_Of_Iteration := True;
+                     exit;
                   elsif Job_Status = Retry_Job then
+
                      --  ??? add API to pass node from visiting to non visited
                      --  state
+
                      raise Program_Error;
                   else
                      Graph.Complete_Visit (Node);
                   end if;
                end if;
-
-               if Active_Jobs > Self.Max_Active_Jobs then
-                  Self.Data.Max_Active_Jobs := Active_Jobs;
-               end if;
-
             end loop;
          end if;
 
@@ -258,9 +270,9 @@ package body GPR2.Utils.Process_Manager is
 
                --  A process has finished. Call wait to finalize it and get
                --  the final process status.
-               Proc_Status :=
-                 (Skip   => False,
-                  Status => Proc.Wait (Active_Procs (Proc_Id)));
+               Proc_Handler :=
+                 (Status         => Finished,
+                  Process_Status => Proc.Wait (Active_Procs (Proc_Id)));
 
                --  Fetch captured stdout and stderr if necessary
                if States (Proc_Id).Stdout_Active then
@@ -279,10 +291,10 @@ package body GPR2.Utils.Process_Manager is
 
                --  Call collect
                Job_Status := Self.Collect_Job
-                  (Job         => States (Proc_Id).Node,
-                   Proc_Status => Proc_Status,
-                   Stdout      => Stdout,
-                   Stderr      => Stderr);
+                  (Job          => States (Proc_Id).Node,
+                   Proc_Handler => Proc_Handler,
+                   Stdout       => Stdout,
+                   Stderr       => Stderr);
 
                --  Adjust execution depending on returned value
                if Job_Status = Abort_Execution then

@@ -18,7 +18,7 @@ package body GPR2.Build.Process_Manager.JSON is
    function Collect_Job
       (Self           : in out Object;
        Job            : DG.Node_Id;
-       Proc_Status    : Process_Status;
+       Proc_Handler   : Process_Handler;
        Stdout, Stderr : Unbounded_String)
       return Collect_Status
    is
@@ -41,12 +41,37 @@ package body GPR2.Build.Process_Manager.JSON is
                  Field_Name => TEXT_COMMAND,
                  Field      => Ada.Strings.Fixed.Trim
                    (To_String (Cmd), Ada.Strings.Both));
-      Set_Field (Val        => Job_Summary,
-                 Field_Name => TEXT_STATUS,
-                 Field      => (if Proc_Status.Skip then "SKIPPED"
-                                else Ada.Strings.Fixed.Trim
-                                  (Proc_Status.Status'Img, Ada.Strings.Both)
-                               ));
+
+      declare
+         Status : Unbounded_String;
+      begin
+         case Proc_Handler.Status is
+            when Running =>
+
+            --  ??? Use a custom exception
+
+               raise Program_Error with
+               "The process linked to the action '" & Act.UID.Image &
+               "' is still running. Cannot collect the job before it finishes";
+
+            when Finished =>
+               Status :=
+               To_Unbounded_String
+                  (Ada.Strings.Fixed.Trim
+                     (Proc_Handler.Process_Status'Img, Ada.Strings.Both));
+
+            when Skipped =>
+               Status := To_Unbounded_String ("SKIPPED");
+
+            when Failed_To_Launch =>
+               Status := To_Unbounded_String ("FAILED_TO_LAUNCH");
+         end case;
+
+         Set_Field (Val        => Job_Summary,
+                    Field_Name => TEXT_STATUS,
+                    Field      => To_String (Status));
+      end;
+
       Set_Field (Val        => Job_Summary,
                  Field_Name => TEXT_STDOUT,
                  Field      => To_String (Stdout));
@@ -56,7 +81,7 @@ package body GPR2.Build.Process_Manager.JSON is
       GNATCOLL.JSON.Append (Arr => Self.JSON, Val => Job_Summary);
 
       return GPR2.Build.Process_Manager.Object (Self).Collect_Job
-        (Job, Proc_Status, Stdout, Stderr);
+        (Job, Proc_Handler, Stdout, Stderr);
    end Collect_Job;
 
    -------------

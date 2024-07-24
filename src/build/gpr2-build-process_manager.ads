@@ -22,7 +22,7 @@ package GPR2.Build.Process_Manager is
    function Collect_Job
      (Self           : in out Object;
       Job            : DG.Node_Id;
-      Proc_Status    : Process_Status;
+      Proc_Handler   : Process_Handler;
       Stdout, Stderr : Unbounded_String)
       return Collect_Status;
 
