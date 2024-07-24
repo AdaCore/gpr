@@ -255,8 +255,8 @@ package body GPR2.Build.Tree_Db is
       --  Check for new views
 
       for V of Self.Tree.Ordered_Views loop
-         if V.Kind in With_Object_Dir_Kind
-           and then not Self.Build_Dbs.Contains (V.Id)
+         if not Self.Build_Dbs.Contains (V.Id)
+           and then V.Kind in GPR2.Build.View_Tables.With_View_Db
          then
             declare
                Db_Data : View_Tables.View_Data
@@ -352,7 +352,7 @@ package body GPR2.Build.Tree_Db is
       --  to populate the sources.
 
       for V of Tree.Ordered_Views loop
-         if V.Kind in With_Object_Dir_Kind then
+         if V.Kind in GPR2.Build.View_Tables.With_View_Db then
             declare
                Db_Data : View_Tables.View_Data
                            (Is_Root => V.Is_Namespace_Root);
@@ -378,8 +378,7 @@ package body GPR2.Build.Tree_Db is
    begin
       return (GPR2.Path_Name.Create_File
               (Self.Actions.Reference (Curs).UID.Db_Filename,
-               Self.Actions.Reference (Curs).View.Object_Directory.Value)
-             );
+               Self.Actions.Reference (Curs).View.Object_Directory.Value));
    end Db_Filename_Path;
 
    -------------
@@ -573,7 +572,7 @@ package body GPR2.Build.Tree_Db is
       --  Refresh each tree's views
 
       for V of Self.Tree.Ordered_Views loop
-         if V.Kind in With_Object_Dir_Kind then
+         if V.Kind in With_Source_Dirs_Kind then
             View_Tables.Check_Source_Lists
               (View_Tables.Get_Data (Self.Self, V), Messages);
          end if;
@@ -625,12 +624,14 @@ package body GPR2.Build.Tree_Db is
       end loop;
 
       for V of Self.Tree.Namespace_Root_Projects loop
-         V.Check_Mains (Messages);
+         if V.Kind in GPR2.Build.View_Tables.With_View_Db then
+            V.Check_Mains (Messages);
+         end if;
       end loop;
 
       if Self.Src_Option >= Sources_Units then
          for V of Self.Tree.Namespace_Root_Projects loop
-            if V.Kind in With_Object_Dir_Kind then
+            if V.Kind in GPR2.Build.View_Tables.With_View_Db then
                declare
                   V_Db : constant View_Tables.View_Data_Ref :=
                            View_Tables.Get_Data (Self.Self, V);
@@ -643,7 +644,7 @@ package body GPR2.Build.Tree_Db is
          end loop;
 
          for V of Self.Tree.Ordered_Views loop
-            if V.Kind in With_Object_Dir_Kind then
+            if V.Kind in GPR2.Build.View_Tables.With_View_Db then
                declare
                   use GPR2.Containers;
                   V_Db : constant View_Tables.View_Data_Ref :=

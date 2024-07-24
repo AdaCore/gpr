@@ -58,7 +58,7 @@ package GPR2.Build.Tree_Db is
       View : GPR2.Project.View.Object) return Build.View_Db.Object
      with Pre => Self.Is_Defined
                    and then View.Is_Defined
-                   and then View.Kind in With_Object_Dir_Kind,
+                   and then View.Kind not in K_Aggregate | K_Configuration,
           Inline;
 
    function View_Database
