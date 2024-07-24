@@ -19,7 +19,7 @@ procedure Main is
          Opt.Add_Switch (Options.Subdirs, Subdir);
       end if;
 
-      if Tree.Load (Opt) then
+      if Tree.Load (Opt, With_Runtime => True) then
          for V of reverse Tree.Ordered_Views loop
             Ada.Text_IO.Put_Line ("Project " & String (V.Name) & " " & V.Kind'Image);
             if V.Kind in With_Object_Dir_Kind then

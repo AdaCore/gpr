@@ -21,8 +21,6 @@ package body GPR2.Build.Tree_Db is
 
    package PRA renames GPR2.Project.Registry.Attribute;
 
-   use type GPR2.View_Ids.View_Id;
-
    type Artifact_Internal_Iterator is limited new
      Artifact_Iterators.Forward_Iterator with record
       Db     : access Object;
@@ -337,16 +335,14 @@ package body GPR2.Build.Tree_Db is
    ------------
 
    procedure Create
-     (Self                 : in out Object;
-      Tree                 : GPR2.Tree_Internal.Object;
-      With_Runtime_Sources : Boolean)
+     (Self : in out Object;
+      Tree : GPR2.Tree_Internal.Object)
    is
       Db_Inst : View_Db.Object;
 
    begin
       Self.Self := Self'Unrestricted_Access;
       Self.Tree := Tree.Reference;
-      Self.With_RTS := With_Runtime_Sources;
 
       --  Source files are propagated from the source owner (e.g. the view that
       --  defines the source directory where we found the source) to
@@ -584,9 +580,7 @@ package body GPR2.Build.Tree_Db is
       end loop;
 
       for V of Self.Tree.Ordered_Views loop
-         if V.Kind in With_Object_Dir_Kind
-           and then (Self.With_RTS or else V.Id /= View_Ids.Runtime_View_Id)
-         then
+         if V.Kind in With_Object_Dir_Kind then
             View_Tables.Refresh
               (View_Tables.Get_Data (Self.Self, V), Messages);
          end if;
@@ -698,7 +692,6 @@ package body GPR2.Build.Tree_Db is
       Self.Tree := null;
       Self.Self := null;
       Self.Src_Option := No_Source;
-      Self.With_RTS   := False;
    end Unload;
 
 begin

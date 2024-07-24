@@ -625,10 +625,6 @@ package body GPR2.Tree_Internal is
       Iter := (Project_View_Store.Empty, Self.Self);
       For_Project (Self.Root);
 
-      if Self.Has_Runtime_Project and then Kind (I_Runtime) then
-         For_Project (Self.Runtime);
-      end if;
-
       if Self.Has_Configuration and then Kind (I_Configuration) then
          For_Project (Self.Configuration.Corresponding_View);
       end if;
@@ -726,7 +722,8 @@ package body GPR2.Tree_Internal is
          View_Internal.Bind_Configuration_To_Tree (Self.Conf, Self.Self);
 
          declare
-            C_View : GPR2.Project.View.Object := Self.Conf.Corresponding_View;
+            C_View : constant GPR2.Project.View.Object :=
+                       Self.Conf.Corresponding_View;
             P_Data : constant View_Internal.Ref :=
                        View_Internal.Get_RW (C_View);
          begin
@@ -758,10 +755,12 @@ package body GPR2.Tree_Internal is
       end if;
 
       if Self.Has_Configuration
+        and then With_Runtime
         and then not Self.Runtime.Is_Defined
       then
          --  Create the runtime view
          Self.Runtime := Self.Create_Runtime_View;
+         Self.View_DAG.Add_Vertex (View_Ids.Runtime_View_Id);
       end if;
 
       Self.Build_Path       := Build_Path;
@@ -896,7 +895,7 @@ package body GPR2.Tree_Internal is
          --  Tree is now fully loaded, we can create the artifacts database
          --  object.
          if not Self.Tree_Db.Is_Defined then
-            Init_Tree_Database (Self.Tree_Db, Self, With_Runtime);
+            Init_Tree_Database (Self.Tree_Db, Self);
          else
             --  Tree has been reloaded: update the database in case views
             --  have changed.
@@ -1344,22 +1343,10 @@ package body GPR2.Tree_Internal is
                   end;
                end loop;
 
-               if Data.Kind in With_Source_Dirs_Kind
-                 and then Self.Has_Runtime_Project
-                 and then not Data.Imports.Contains (Self.Runtime.Name)
-               then
-                  Data.Imports.Insert (Self.Runtime.Name, Self.Runtime);
-                  Data.Closure.Include (Self.Runtime.Name, Self.Runtime);
-
-                  for Root of Data.Root_Views loop
-                     View_Internal.Get_RW
-                       (Self.Runtime).Root_Views.Include (Root);
-                  end loop;
-               end if;
-
                for Lib of Data.Agg_Libraries loop
                   declare
-                     V : GPR2.Project.View.Object := Self.Get_View (Lib);
+                     V : constant GPR2.Project.View.Object :=
+                           Self.Get_View (Lib);
                   begin
                      View_Internal.Get_RW (V).Closure.Include
                        (View.Name, View);
@@ -2901,10 +2888,36 @@ package body GPR2.Tree_Internal is
       end;
 
       if not Has_Error and then not Self.Pre_Conf_Mode then
-         --  We now have an up-to-date tree, do some validity checks if there
-         --  is no issue detected yet.
-
          for View of Self.Ordered_Views loop
+            --  Finally add a dependency over the runtime view if the view has
+            --  Ada language
+
+            declare
+               Data : constant View_Internal.Ref :=
+                        View_Internal.Get_RW (View);
+            begin
+               if Self.Has_Runtime_Project
+                 and then View.Kind in With_Source_Dirs_Kind
+                 and then View.Language_Ids.Contains (Ada_Language)
+                 and then
+                   (Self.Root_Project.Kind /= K_Aggregate
+                    or else Data.Context = Aggregate)
+                 and then not Data.Limited_Imports.Contains (Self.Runtime.Name)
+               then
+                  Data.Limited_Imports.Insert
+                    (Self.Runtime.Name, Self.Runtime);
+                  Data.Closure.Insert
+                    (Self.Runtime.Name, Self.Runtime);
+                  for Root of Data.Root_Views loop
+                     View_Internal.Get_RW
+                       (Self.Runtime).Root_Views.Include (Root);
+                  end loop;
+               end if;
+            end;
+
+            --  We now have an up-to-date tree, do some validity checks if
+            --  there is no issue detected yet.
+
             Validity_Check (View);
          end loop;
       end if;

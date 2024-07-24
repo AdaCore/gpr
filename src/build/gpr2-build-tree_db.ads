@@ -40,9 +40,6 @@ package GPR2.Build.Tree_Db is
    --  database structure is updated accordingly (proper view databases
    --  added or removed when appropriate).
 
-   function Use_Runtime_Sources (Self : Object) return Boolean;
-   --  Whether sources of the runtime are considered
-
    procedure Unload (Self : in out Object)
      with Post => not Self.Is_Defined;
 
@@ -263,7 +260,6 @@ private
    type Object is tagged limited record
    --  Options:
       Src_Option      : Optional_Source_Info_Option := No_Source;
-      With_RTS        : Boolean := False;
 
       Self            : access Object;
       --  Handy self-reference
@@ -293,9 +289,8 @@ private
    end record;
 
    procedure Create
-     (Self                 : in out Object;
-      Tree                 : GPR2.Tree_Internal.Object;
-      With_Runtime_Sources : Boolean)
+     (Self : in out Object;
+      Tree : GPR2.Tree_Internal.Object)
      with Pre => not Self.Is_Defined;
 
    Undefined : constant Object := (others => <>);
@@ -305,9 +300,6 @@ private
 
    function Ref (Self : Object) return access Object is
      (Self.Self);
-
-   function Use_Runtime_Sources (Self : Object) return Boolean is
-     (Self.With_RTS);
 
    function Source_Option (Self : Object) return Optional_Source_Info_Option is
      (Self.Src_Option);

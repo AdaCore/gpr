@@ -54,7 +54,10 @@ begin
 
    Options.Add_Switch (GPR2.Options.P, "test.gpr");
 
-   if Tree.Load (Options, Absent_Dir_Error => No_Error) then
+   if Tree.Load (Options,
+                 With_Runtime     => True,
+                 Absent_Dir_Error => No_Error)
+   then
       RTS_Dir := Tree.Runtime_Project.Source_Directories.First_Element;
    end if;
    Tree.Unload;

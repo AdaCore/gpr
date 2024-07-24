@@ -36,7 +36,7 @@ begin
    Ada.Text_IO.Close (F);
 
    Opt.Add_Switch (Options.P, "prj1.gpr");
-   if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+   if Tree.Load (Opt, With_Runtime => True, Absent_Dir_Error => No_Error) then
       Ada.Text_IO.Put_Line
         (String
            (Tree.Runtime_Project.Path_Name.Containing_Directory.Simple_Name));
@@ -45,7 +45,7 @@ begin
 
    Opt := Options.Empty_Options;
    Opt.Add_Switch (Options.P, "prj2.gpr");
-   if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+   if Tree.Load (Opt, With_Runtime => True, Absent_Dir_Error => No_Error) then
       Ada.Text_IO.Put_Line
         (String
            (Tree.Runtime_Project.Path_Name.Containing_Directory.Simple_Name));

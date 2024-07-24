@@ -1,10 +1,3 @@
-agglib.gpr:10:24: warning: library directory "lib/agglib" not found
-shared_ada.gpr:4:23: warning: object directory "obj/shared_ada" not found
-shared_c.gpr:6:23: warning: object directory "obj/shared_c" not found
-withagglib.gpr:8:23: warning: object directory "obj/withagglib" not found
-base.gpr:8:23: warning: object directory "obj/base" not found
-ext.gpr:5:23: warning: object directory "obj/ext" not found
-extall.gpr:4:23: warning: object directory "obj" not found
 =========================================
 Testing trees/base.gpr
 =========================================

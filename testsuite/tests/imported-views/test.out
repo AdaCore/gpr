@@ -1,19 +1,16 @@
 Project: Demo1
    imports:
-     > runtime
      > Demo2
    imports recursively:
      > Demo2
      > Demo3
 Project: Demo2
    imports:
-     > runtime
      > Demo3
    imports recursively:
      > Demo3
 Project: Demo4
    imports:
-     > runtime
      > Demo1
      > Demo2
      > Demo3

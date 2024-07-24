@@ -37,11 +37,9 @@ V:   Dir3 -> one
 
 **************** Iterator Prj1
 first    K_LIBRARY
-runtime  K_STANDARD
 Demo     K_STANDARD
    is root
 **************** Iterator Prj2
-runtime  K_STANDARD
 second   K_AGGREGATE_LIBRARY
 third    K_LIBRARY
 first    K_LIBRARY
@@ -50,7 +48,6 @@ Demo     K_STANDARD
 third    K_LIBRARY
 first    K_LIBRARY
 **************** Iterator Prj4
-runtime  K_STANDARD
 second   K_AGGREGATE_LIBRARY
 third    K_LIBRARY
 first    K_LIBRARY

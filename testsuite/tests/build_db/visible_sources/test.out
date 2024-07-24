@@ -2,9 +2,6 @@
 
 * Views *
 
-** runtime (K_STANDARD) **
-- Root project(s):
-  - Simple
 ** B (K_STANDARD) **
 - Root project(s):
   - Simple
@@ -63,9 +60,6 @@ PKG2
 
 * Views *
 
-** runtime (K_STANDARD) **
-- Root project(s):
-  - Ext
 ** P (K_STANDARD) **
 - Root project(s):
   - Ext

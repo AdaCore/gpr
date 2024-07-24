@@ -2,11 +2,6 @@
 Prj1     K_ABSTRACT
 **************** Iterator Prj2
 common   K_ABSTRACT
-runtime  K_STANDARD
-A:   Externally_Built -> true
-A:   Languages -> ada
-A:   Object_Dir -> <gcc>/lib/gcc/(host)/(gcc-version)/adalib
-A:   Source_Dirs -> <gcc>/lib/gcc/(host)/(gcc-version)/adainclude
 Prj2     K_STANDARD
 V:   V0 -> debug
 V:   V1 -> yes

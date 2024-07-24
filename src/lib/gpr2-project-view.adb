@@ -38,7 +38,7 @@ package body GPR2.Project.View is
    function Get_RO (View : Object) return View_Internal.Const_Ref is
      (View_Internal.Data (View.Get.Element.all)'Unchecked_Access);
 
-   function Get_RW (View : in out Object) return View_Internal.Ref is
+   function Get_RW (View : Object) return View_Internal.Ref is
      (View_Internal.Data (View.Get.Element.all)'Unchecked_Access);
 
    function Refcount (Self : Object) return Natural is

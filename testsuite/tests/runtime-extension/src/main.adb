@@ -27,7 +27,7 @@ begin
    Ada.Directories.Set_Directory ("tree");
    Opt.Add_Switch (Options.RTS, "rts-ext");
 
-   if Tree.Load (Opt, Allow_Implicit_Project => True) then
+   if Tree.Load (Opt, With_Runtime => True, Allow_Implicit_Project => True) then
       for Attr of Tree.Runtime_Project.Attributes
         (With_Defaults => False, With_Config => False)
       loop
