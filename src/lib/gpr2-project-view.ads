@@ -468,6 +468,13 @@ package GPR2.Project.View is
    --  Lookup the compilation unit "Name" in the subtree whose root view is
    --  Self.
 
+   function Unit_Part
+     (Self : Object; Name : Name_Type; Is_Spec : Boolean)
+      return Build.Compilation_Unit.Unit_Location
+     with Pre => Self.Is_Defined and then Self.Is_Namespace_Root;
+   --  Lookup the specified compilation unit part, and return the
+   --  corresponding source file location.
+
    function Own_Unit
      (Self : Object; Name : Name_Type) return Build.Compilation_Unit.Object
      with Pre => Self.Is_Defined;

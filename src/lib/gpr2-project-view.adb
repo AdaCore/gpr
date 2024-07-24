@@ -2777,6 +2777,49 @@ package body GPR2.Project.View is
       end if;
    end Unit;
 
+   ---------------
+   -- Unit_Part --
+   ---------------
+
+   function Unit_Part
+     (Self : Object; Name : Name_Type; Is_Spec : Boolean)
+      return Build.Compilation_Unit.Unit_Location
+   is
+      Db : constant Build.View_Db.Object := Self.View_Db;
+      CU : Build.Compilation_Unit.Object;
+   begin
+      if Db.Has_Compilation_Unit (Name) then
+         CU := Db.Compilation_Unit (Name);
+      else
+         return Build.Compilation_Unit.No_Unit;
+      end if;
+
+      if Is_Spec then
+         if CU.Has_Part (S_Spec) then
+            return CU.Spec;
+         else
+            return Build.Compilation_Unit.No_Unit;
+         end if;
+
+      elsif CU.Name = Name then
+         if CU.Has_Part (S_Body) then
+            return CU.Main_Body;
+         else
+            return Build.Compilation_Unit.No_Unit;
+         end if;
+
+      else
+         --  Queried unit is a separate. We need to extract the separate name
+         --  from the fully qualified name.
+         declare
+            S_Name : constant Name_Type :=
+                       Name (Name'First + 1 + CU.Name'Length .. Name'Last);
+         begin
+            return CU.Get (S_Separate, S_Name);
+         end;
+      end if;
+   end Unit_Part;
+
    -----------
    -- Units --
    -----------
