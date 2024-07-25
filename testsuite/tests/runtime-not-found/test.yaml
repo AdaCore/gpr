@@ -1,0 +1,7 @@
+description:
+    Test libgpr2 gracefully exiting when an actual config for specified target
+    runtime cannot be found for Ada (so no runtime project is loaded even if
+    expected by the tool).
+driver: build_and_run
+project_file: test
+main: main
