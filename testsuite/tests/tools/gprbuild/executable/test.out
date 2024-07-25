@@ -1,6 +1,5 @@
 ================================================================
 Case 1 - Build from scratch
-main.gpr:4:23: warning: object directory "obj" not found
 == Content of tree/obj/jobs.json:
 uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -249,8 +248,8 @@ Hello from Dep_Two
 ================================================================
 Case 20 - Missing main.adb
 main.gpr:5:18: error: main.adb is not a source of project Main
-[ERROR] No main unit found
-Test return value: 6
+gprbuild: Failed to update sources
+Test return value: 4
 
 ================================================================
 Case 21 - Modified main.adb (comments only)
