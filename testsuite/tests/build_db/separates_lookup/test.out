@@ -1,4 +1,21 @@
 Lookup compilation unit for Pkg.Child
-PKG
+... found CU: PKG
+    spec: pkg.ads
+    body: pkg.adb
+    sep.: pkg-child.adb
 Lookup compilation unit for PKG.CHILD.child2
-PKG
+... found CU: PKG
+    spec: pkg.ads
+    body: pkg.adb
+    sep.: pkg-child-child2.adb
+Lookup compilation unit for Pkg2.Child
+... found CU: PKG2
+    no spec for PKG2
+    body: pkg2.adb
+    sep.: pkg2-child.adb
+Lookup compilation unit for Pkg3
+... found CU: PKG3
+    spec: pkg3.ads
+    no body for PKG3
+Lookup compilation unit for PkgUnk
+... not found
