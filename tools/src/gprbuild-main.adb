@@ -94,7 +94,24 @@ begin
    Tree := Opt.Tree;
    Tree.Update_Sources (Messages => Messages);
 
+   if Messages.Has_Error then
+      Messages.Output_Messages
+        (Information => False, Warning => True, Error => True);
+      Handle_Program_Termination
+        (Opt        => Opt,
+         Force_Exit => True,
+         Exit_Cause => E_Tool,
+         Message    => "Failed to update sources");
+      return To_Exit_Status (E_Fatal);
+   end if;
+
+   Messages.Output_Messages
+     (Information => False, Warning => True, Error => False);
+
    if Opt.Verbose then
+      Messages.Output_Messages
+        (Information => True, Warning => False, Error => False);
+
       if Tree.Has_Messages then
          Tree.Log_Messages.Output_Messages;
       end if;
@@ -225,7 +242,24 @@ begin
      (Option   => Sources_Units_Artifacts,
       Messages => Messages);
 
+   if Messages.Has_Error then
+      Messages.Output_Messages
+        (Information => False, Warning => True, Error => True);
+      Handle_Program_Termination
+        (Opt        => Opt,
+         Force_Exit => True,
+         Exit_Cause => E_Tool,
+         Message    => "Failed to update sources");
+      return To_Exit_Status (E_Fatal);
+   end if;
+
+   Messages.Output_Messages
+     (Information => False, Warning => True, Error => False);
+
    if Opt.Verbose then
+      Messages.Output_Messages
+        (Information => True, Warning => False, Error => False);
+
       if Tree.Has_Messages then
          Tree.Log_Messages.Output_Messages;
       end if;
