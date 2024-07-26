@@ -760,7 +760,10 @@ package body GPR2.Tree_Internal is
       then
          --  Create the runtime view
          Self.Runtime := Self.Create_Runtime_View;
-         Self.View_DAG.Add_Vertex (View_Ids.Runtime_View_Id);
+
+         if Self.Runtime.Is_Defined then
+            Self.View_DAG.Add_Vertex (View_Ids.Runtime_View_Id);
+         end if;
       end if;
 
       Self.Build_Path       := Build_Path;
