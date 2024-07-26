@@ -1,0 +1,2 @@
+description: Test the -p option of gprbuild
+driver: python_script

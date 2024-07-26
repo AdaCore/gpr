@@ -265,27 +265,46 @@ begin
       end if;
    end if;
 
-   Make_Dir
-     (GNATCOLL.VFS.Create
-        (Filesystem_String (Tree.Root_Project.Object_Directory.Value)));
+   if Opt.Create_Missing_Dirs then
+      Make_Dir
+        (GNATCOLL.VFS.Create
+           (Filesystem_String (Tree.Root_Project.Object_Directory.Value)));
+   end if;
 
    Messages.Clear;
+
    if Tree.Root_Project.Is_Library then
 
       --  Create actions to build a lib
 
       null;
    else
+      declare
+         Obj_Dir : constant Virtual_File :=
+           GNATCOLL.VFS.Create
+             (Filesystem_String
+                (Tree.Root_Project.Object_Directory.Value));
+      begin
+         if not Obj_Dir.Is_Directory then
+            Handle_Program_Termination
+              (Opt     => Opt, Force_Exit => True,
+               Message =>
+                 "The object directory '" &
+                 String (Tree.Root_Project.Object_Directory.Name) &
+                 "' does not exist");
+
+            return To_Exit_Status (E_Fatal);
+         end if;
+
+         Change_Dir (Obj_Dir);
+      end;
+
       if not GPRtools.Actions.Add_Actions_To_Build_Mains (Tree, Messages) then
          Messages.Output_Messages
            (Information => True, Warning => True, Error => True);
          return To_Exit_Status (E_Abort);
       end if;
    end if;
-
-   Change_Dir
-     (GNATCOLL.VFS.Create
-       (Filesystem_String (Tree.Root_Project.Object_Directory.Value)));
 
    Process_M.Execute (Tree.Artifacts_Database, 1);
 
