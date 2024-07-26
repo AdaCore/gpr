@@ -215,6 +215,10 @@ private package GPR2.Tree_Internal is
    --  Returns the runtime selected for the given language or the empty string
    --  if no specific runtime has been configured for this project tree.
 
+   function With_Runtime (Self : Object) return Boolean;
+   --  Whether creation of the runtime project was requested when loading the
+   --  tree.
+
    function Artifacts_Dir (Self : Object) return Path_Name.Object;
    --  Tries to return a directory that can be used to store artifacts that
    --  are global to the tree.
@@ -485,6 +489,7 @@ private
       Base              : GPR2.KB.Object;
       Tree_Db           : Build.Tree_Db.Object;
       Runtime           : View.Object;
+      With_Runtime      : Boolean := False;
       Messages          : aliased Log.Object;
       Search_Paths      : All_Search_Paths;
       Implicit_With     : Path_Name.Set.Object;
@@ -601,6 +606,9 @@ private
      (if Self.Explicit_Runtimes.Contains (Language)
       then Optional_Name_Type (Self.Explicit_Runtimes.Element (Language))
       else No_Name);
+
+   function With_Runtime (Self : Object) return Boolean is
+     (Self.With_Runtime);
 
    function Has_Artifacts_Database
      (Self : Object) return Boolean is

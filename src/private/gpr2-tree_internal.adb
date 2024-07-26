@@ -675,6 +675,7 @@ package body GPR2.Tree_Internal is
 
    begin
       Self.Self := Self'Unchecked_Access;
+      Self.With_Runtime := With_Runtime;
 
       Self.Set_Environment (Environment);
 
