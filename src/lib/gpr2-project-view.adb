@@ -1452,7 +1452,9 @@ package body GPR2.Project.View is
       if Self.Kind in With_Object_Dir_Kind then
          Db := Self.View_Db;
 
-         if Db.Is_Defined then
+         if Db.Is_Defined
+           and then Db.Source_Option > No_Source
+         then
             return Db.Has_Source (Filename);
          else
             return False;
