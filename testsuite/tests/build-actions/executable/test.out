@@ -248,7 +248,7 @@ Hello from Dep_Two
 
 ================================================================
 Case 20 - Missing main.adb
-main.gpr:5:18: warning: main.adb is not a source of project Main
+main.gpr:5:18: error: main.adb is not a source of project Main
 [ERROR] No main unit found
 Test return value: 6
 

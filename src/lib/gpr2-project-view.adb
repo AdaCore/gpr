@@ -1057,7 +1057,7 @@ package body GPR2.Project.View is
                if not Src.Is_Defined then
                   Messages.Append
                     (Message.Create
-                       (Level   => Message.Warning,
+                       (Level   => Message.Error,
                         Message => String (Main) &
                         " is not a source of project " & String (Self.Name),
                         Sloc    => Value));
