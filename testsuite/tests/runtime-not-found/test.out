@@ -1,2 +1,16 @@
+With_RTS : TRUE
+  Tree loaded
+  Project has rts: TRUE
+  Project requested rts: TRUE
+Target: not_a_target
+With_RTS : TRUE
 kb: warning: can't find a toolchain for the following configuration: language 'Ada', target 'not_a_target', default runtime
-Project has rts: FALSE
+  Tree loaded
+  Project has rts: FALSE
+  Project requested rts: TRUE
+Target: not_a_target
+With_RTS : FALSE
+kb: warning: can't find a toolchain for the following configuration: language 'Ada', target 'not_a_target', default runtime
+  Tree loaded
+  Project has rts: FALSE
+  Project requested rts: FALSE

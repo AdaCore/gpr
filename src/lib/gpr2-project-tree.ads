@@ -184,6 +184,10 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined;
    --  Returns the runtime project for the given tree
 
+   function Runtime_Requested (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns whether With_Runtime was set while loading the tree
+
    function Target
      (Self      : Object;
       Canonical : Boolean := False) return Name_Type
@@ -507,6 +511,9 @@ private
 
    function Runtime_Project (Self : Object) return View.Object is
      (Self.Tree.Runtime_Project);
+
+   function Runtime_Requested (Self : Object) return Boolean is
+     (Self.Tree.With_Runtime);
 
    function Target
      (Self : Object; Canonical : Boolean := False) return Name_Type
