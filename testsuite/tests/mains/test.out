@@ -12,7 +12,7 @@ list of executables:
   src/call2.adb
 demo3.gpr:3:20: warning: exec directory "exec" not found
 Demo3    K_STANDARD
-demo3.gpr:4:17: warning: not_found.adb is not a source of project Demo3
+demo3.gpr:4:17: error: not_found.adb is not a source of project Demo3
 list of mains:
 src/call3_2.adb
 list of executables:
@@ -21,7 +21,7 @@ exec/call3_2
   src/call3_2.adb
 demo4.gpr:3:20: warning: exec directory "exec4" not found
 Demo4    K_STANDARD
-demo4.gpr:4:17: warning: not_found.adb is not a source of project Demo4
+demo4.gpr:4:17: error: not_found.adb is not a source of project Demo4
 list of mains:
 list of executables:
 exec4/not_found
@@ -32,7 +32,7 @@ list of executables:
 ./call
   demo/call.adb
 Demo6    K_STANDARD
-demo6.gpr:4:18: warning: not_found.adb is not a source of project Demo6
+demo6.gpr:4:18: error: not_found.adb is not a source of project Demo6
 list of mains:
 list of executables:
 ./not_found
@@ -43,7 +43,7 @@ list of executables:
 ./demo7
   src/demo7.adb
 Demo8    K_STANDARD
-demo8.gpr:3:26: warning: demo8.adb is not a source of project Demo8
+demo8.gpr:3:26: error: demo8.adb is not a source of project Demo8
 list of mains:
 list of executables:
 ./demo8
@@ -54,7 +54,7 @@ list of executables:
 ./demo9
   src/demo9.1.ada
 Demo10   K_STANDARD
-demo10.gpr:4:26: warning: demo10.1.ada is not a source of project Demo10
+demo10.gpr:4:26: error: demo10.1.ada is not a source of project Demo10
 list of mains:
 list of executables:
 ./demo10
@@ -65,7 +65,7 @@ list of executables:
 ./demo11
   src/demo11.1.ada
 Demo12   K_STANDARD
-demo12.gpr:4:33: warning: demo12_not_found.1.ada is not a source of project Demo12
+demo12.gpr:4:33: error: demo12_not_found.1.ada is not a source of project Demo12
 list of mains:
 list of executables:
 ./demo12_not_found

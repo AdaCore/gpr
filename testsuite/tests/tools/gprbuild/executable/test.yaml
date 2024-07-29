@@ -1,0 +1,2 @@
+description: Compile an executable with gprbuild
+driver: python_script

@@ -1,0 +1,3 @@
+Without -p:
+gprbuild: The object directory 'obj' does not exist
+With -p:

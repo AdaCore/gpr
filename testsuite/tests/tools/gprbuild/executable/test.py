@@ -12,7 +12,7 @@ def test(header):
     global test_number
     print("================================================================")
     print("Case " + str(test_number) + " - " + header)
-    proc = bnr.call(["./test"])
+    proc = bnr.call(["gpr2build", "-P", os.path.join ("tree", "main.gpr"), "-p"])
 
     if proc.status:
         print("Test return value: " + str(proc.status))
@@ -59,7 +59,7 @@ def testsuite(file_path):
             file.write(file_content)
 
     # Restore state of the project after a correct compilation
-    bnr.call(["./test"])
+    bnr.call(["gpr2build", "-P", os.path.join ("tree", "main.gpr"), "-p"])
 
     with open(file_path, "a") as file:
         file.write("--  Comment that will not prevent a compilation for Ada files")
@@ -67,10 +67,9 @@ def testsuite(file_path):
     test("Modified " + os.path.basename(file_path) + " (comments only)")
 
     # Restore state of the project after a correct compilation
-    bnr.call(["./test"])
+    bnr.call(["gpr2build", "-P", os.path.join ("tree", "main.gpr"), "-p"])
 
 
-bnr.build(project="test.gpr", args=["-p", "-q"])
 test("Build from scratch")
 
 testsuite(os.path.join("tree", "obj", "main.o"))
@@ -134,7 +133,7 @@ test("Modified pkg.adb without dep_two dependency")
 # Restore state of the project after a correct compilation
 with open(file_path, "w") as file:
     file.write(file_save)
-bnr.call(["./test"])
+bnr.call(["gpr2build", "-P", os.path.join ("tree", "main.gpr"), "-p"])
 
 
 file_path = os.path.join("tree", "src", "dep_two.adb")
@@ -160,4 +159,4 @@ test("Modified dep_two.adb (new output)")
 # Restore state of the project after a correct compilation
 with open(file_path, "w") as file:
     file.write(file_save)
-bnr.call(["./test"])
+bnr.call(["gpr2build", "-P", os.path.join ("tree", "main.gpr"), "-p"])
