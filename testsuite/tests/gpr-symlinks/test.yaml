@@ -1,5 +1,7 @@
 description:
     check for resolve links option (-eL)
-driver: python_script
+driver: build_and_run
+project_file: test
+main: main
 control:
 - [SKIP, "'windows' in env.host.platform", "DEAD on windows"]

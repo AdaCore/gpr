@@ -1,0 +1,1 @@
+This subdir directory is needed to add a symbolic link in it afterwards. Add a file because empty directories can not be added to git

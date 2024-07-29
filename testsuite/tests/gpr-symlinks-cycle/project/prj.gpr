@@ -1,4 +1,4 @@
-with "imported_prj_b.gpr";
+with "../import_A/imported_prj_a.gpr";
 
 project Prj is
   for Source_Dirs use ("src");

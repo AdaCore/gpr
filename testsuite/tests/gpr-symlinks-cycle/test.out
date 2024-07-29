@@ -1,0 +1,14 @@
+## Loading WITHOUT symlinks support
+Imported_Prj_A
+  project dir: import_A/
+Imported_Prj_B
+  project dir: import_A/link_to_import_B/
+Prj
+  project dir: project/
+## Loading WITH symlinks support
+Imported_Prj_A
+  project dir: import_A/
+Imported_Prj_B
+  project dir: import_B/
+Prj
+  project dir: project/
