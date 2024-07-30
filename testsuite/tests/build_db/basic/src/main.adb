@@ -247,13 +247,11 @@ procedure Main is
                Src_Name : constant Simple_Name :=
                              Simple_Name (Ada.Command_Line.Argument (J));
                Src      : Build.Source.Object;
-               View_Db  : Build.View_Db.Object;
+
             begin
                Ada.Text_IO.Put_Line ("* query source " & String (Src_Name));
                for NS of Tree.Namespace_Root_Projects loop
-                  View_Db := Tree.Artifacts_Database (NS);
-
-                  Src := View_Db.Visible_Source (Src_Name);
+                  Src := NS.Visible_Source (Src_Name);
                   Ada.Text_IO.Put_Line (" - query for NS " & String (NS.Name));
 
                   if Src.Is_Defined then

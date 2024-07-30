@@ -434,6 +434,13 @@ package GPR2.Project.View is
    --  If the source with such simple filename is not found in the subtree,
    --  then GPR2.Project.Source.Undefined is returned.
 
+   function Visible_Source
+     (Self : Object; Filename : GPR2.Simple_Name)
+      return Build.Source.Object
+     with Pre => Self.Is_Defined;
+   --  Similar to Source but the source is looked up in the complete closure
+   --  of Self.
+
    function Interface_Units
      (Self : Object) return GPR2.Containers.Unit_Name_To_Sloc.Map
      with Pre => Self.Is_Defined;

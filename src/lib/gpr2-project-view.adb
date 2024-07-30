@@ -2922,6 +2922,15 @@ package body GPR2.Project.View is
       return Undefined;
    end View_For;
 
+   --------------------
+   -- Visible_Source --
+   --------------------
+
+   function Visible_Source
+     (Self : Object; Filename : GPR2.Simple_Name)
+      return Build.Source.Object
+   is (Self.View_Db.Visible_Source (Filename));
+
 begin
    View_Internal.Get_RO   := Get_RO'Access;
    View_Internal.Get_RW   := Get_RW'Access;
