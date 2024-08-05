@@ -71,8 +71,13 @@ package GPR2.Build.Actions.Link is
 
    overriding procedure Compute_Signature (Self : in out Object);
 
-   overriding function Command (Self : Object)
-     return GNATCOLL.OS.Process.Argument_List;
+   overriding procedure Compute_Command
+     (Self : Object;
+      Args : out GNATCOLL.OS.Process.Argument_List;
+      Env  : out GNATCOLL.OS.Process.Environment_Dict);
+
+   overriding function Working_Directory
+     (Self : Object) return Path_Name.Object;
 
 private
 
@@ -133,5 +138,10 @@ private
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
+
+   overriding function Working_Directory
+     (Self : Object) return Path_Name.Object is
+     (if Self.Ctxt.Is_Library then Self.Ctxt.Library_Directory
+      else Self.Ctxt.Executable_Directory);
 
 end GPR2.Build.Actions.Link;

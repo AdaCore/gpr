@@ -46,8 +46,13 @@ package GPR2.Build.Actions.Compile is
 
    overriding procedure Compute_Signature (Self : in out Object);
 
-   overriding function Command (Self : Object)
-    return GNATCOLL.OS.Process.Argument_List;
+   overriding procedure Compute_Command
+     (Self : Object;
+      Args : out GNATCOLL.OS.Process.Argument_List;
+      Env  : out GNATCOLL.OS.Process.Environment_Dict);
+
+   overriding function Working_Directory
+     (Self : Object) return Path_Name.Object;
 
 private
 
@@ -100,5 +105,9 @@ private
 
    function Object_File (Self : Object) return GPR2.Path_Name.Object is
      (Self.Obj_File);
+
+   overriding function Working_Directory
+     (Self : Object) return Path_Name.Object is
+     (Self.Ctxt.Object_Directory);
 
 end GPR2.Build.Actions.Compile;

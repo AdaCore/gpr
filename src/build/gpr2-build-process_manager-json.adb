@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GNATCOLL.OS.Process;
 with GPR2.Build.Actions; use GPR2.Build.Actions;
 with Ada.Text_IO;        use Ada.Text_IO;
 with Ada.Strings.Fixed;
@@ -26,59 +27,69 @@ package body GPR2.Build.Process_Manager.JSON is
               Self.Tree_Db.Action
                 (Self.Tree_Db.Action_Id (Job));
       Job_Summary : constant JSON_Value := Create_Object;
+      Env_Summary : JSON_Value;
       Cmd         : Unbounded_String;
-   begin
+      Args        : GNATCOLL.OS.Process.Argument_List;
+      Env         : GNATCOLL.OS.Process.Environment_Dict;
 
-      for Arg of Act.Command loop
-         Ada.Strings.Unbounded.Append (Cmd, To_Unbounded_String (Arg & " "));
+   begin
+      Job_Summary.Set_Field (TEXT_ACTION_UID, Act.UID.Image);
+
+      Act.Compute_Command (Args, Env);
+
+      for Arg of Args loop
+         if Length (Cmd) > 0 then
+            Append (Cmd, " ");
+         end if;
+
+         Append (Cmd, Arg);
       end loop;
 
-      Set_Field (Val        => Job_Summary,
-                 Field_Name => TEXT_ACTION_UID,
-                 Field      => Ada.Strings.Fixed.Trim
-                   (Act.UID.Image, Ada.Strings.Both));
-      Set_Field (Val        => Job_Summary,
-                 Field_Name => TEXT_COMMAND,
-                 Field      => Ada.Strings.Fixed.Trim
-                   (To_String (Cmd), Ada.Strings.Both));
+      Job_Summary.Set_Field (TEXT_COMMAND, Cmd);
 
-      declare
-         Status : Unbounded_String;
-      begin
-         case Proc_Handler.Status is
-            when Running =>
+      if not Env.Is_Empty then
+         Env_Summary := Create_Object;
 
+         for C in Env.Iterate loop
+            declare
+               Key  : constant UTF8_String :=
+                        GNATCOLL.OS.Process.Env_Dicts.Key (C);
+               Elem : constant UTF8_String :=
+                        GNATCOLL.OS.Process.Env_Dicts.Key (C);
+            begin
+               Env_Summary.Set_Field (Key, Elem);
+            end;
+         end loop;
+
+         Job_Summary.Set_Field (TEXT_ENV, Env_Summary);
+      end if;
+
+      Job_Summary.Set_Field (TEXT_CWD, Act.Working_Directory.String_Value);
+
+      case Proc_Handler.Status is
+         when Running =>
             --  ??? Use a custom exception
+            raise Program_Error with
+              "The process linked to the action '" & Act.UID.Image &
+              "' is still running. Cannot collect the job before it finishes";
 
-               raise Program_Error with
-               "The process linked to the action '" & Act.UID.Image &
-               "' is still running. Cannot collect the job before it finishes";
+         when Finished =>
+            Job_Summary.Set_Field
+              (TEXT_STATUS,
+               Ada.Strings.Fixed.Trim
+                 (Proc_Handler.Process_Status'Image, Ada.Strings.Left));
 
-            when Finished =>
-               Status :=
-               To_Unbounded_String
-                  (Ada.Strings.Fixed.Trim
-                     (Proc_Handler.Process_Status'Img, Ada.Strings.Both));
+         when Skipped =>
+            Job_Summary.Set_Field (TEXT_STATUS, "SKIPPED");
 
-            when Skipped =>
-               Status := To_Unbounded_String ("SKIPPED");
+         when Failed_To_Launch =>
+            Job_Summary.Set_Field (TEXT_STATUS, "FAILED_TO_LAUNCH");
+      end case;
 
-            when Failed_To_Launch =>
-               Status := To_Unbounded_String ("FAILED_TO_LAUNCH");
-         end case;
+      Job_Summary.Set_Field (TEXT_STDOUT, Stdout);
+      Job_Summary.Set_Field (TEXT_STDERR, Stderr);
 
-         Set_Field (Val        => Job_Summary,
-                    Field_Name => TEXT_STATUS,
-                    Field      => To_String (Status));
-      end;
-
-      Set_Field (Val        => Job_Summary,
-                 Field_Name => TEXT_STDOUT,
-                 Field      => To_String (Stdout));
-      Set_Field (Val        => Job_Summary,
-                 Field_Name => TEXT_STDERR,
-                 Field      => To_String (Stderr));
-      GNATCOLL.JSON.Append (Arr => Self.JSON, Val => Job_Summary);
+      GNATCOLL.JSON.Append (Self.JSON, Job_Summary);
 
       return GPR2.Build.Process_Manager.Object (Self).Collect_Job
         (Job, Proc_Handler, Stdout, Stderr);

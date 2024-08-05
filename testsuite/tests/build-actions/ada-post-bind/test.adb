@@ -103,14 +103,23 @@ begin
    Assert (Init_Action, "Initialize the Ada post-bind action");
 
    declare
-      Args    : constant Argument_List := Action.Command;
+      Args    : Argument_List;
+      Env     : Environment_Dict;
       P_Wo    : FS.File_Descriptor;
       P_Ro    : FS.File_Descriptor;
       Ret     : Integer;
       Process : Process_Handle;
    begin
+      Action.Compute_Command (Args, Env);
+
       FS.Open_Pipe (P_Ro, P_Wo);
-      Process := Start (Args => Args, Stdout => P_Wo, Stderr => FS.Standerr);
+      Process := Start
+        (Args        => Args,
+         Env         => Env,
+         Cwd         => Action.Working_Directory.String_Value,
+         Stdin       => P_Wo,
+         Stderr      => FS.Standerr,
+         Inherit_Env => True);
       FS.Close (P_Wo);
 
       Ret := Wait (Process);

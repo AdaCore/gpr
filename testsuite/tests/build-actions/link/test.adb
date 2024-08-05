@@ -251,7 +251,13 @@ begin
      ((for all Obj of Action.Input_Object_Files => Obj.Exists),
       "Check that all input object files exist");
 
-   Execute_Command (Action.Command);
+   declare
+      Args : Argument_List;
+      Env  : Environment_Dict;
+   begin
+      Action.Compute_Command (Args, Env);
+      Execute_Command (Args, Action.Working_Directory.String_Value);
+   end;
 
    Assert (Action.Output_Executable.Exists, "Check that the output executable exists");
 

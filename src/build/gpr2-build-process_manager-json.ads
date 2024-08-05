@@ -45,10 +45,13 @@ package GPR2.Build.Process_Manager.JSON is
    --  by the process manager but needs to be public to be overridden.
 
 private
+
    use GNATCOLL.JSON;
 
    TEXT_ACTION_UID : constant UTF8_String := "uid";
    TEXT_COMMAND    : constant UTF8_String := "command";
+   TEXT_ENV        : constant UTF8_String := "environment";
+   TEXT_CWD        : constant UTF8_String := "cwd";
    TEXT_STATUS     : constant UTF8_String := "status";
    TEXT_STDOUT     : constant UTF8_String := "stdout";
    TEXT_STDERR     : constant UTF8_String := "stderr";

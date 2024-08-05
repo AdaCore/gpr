@@ -7,7 +7,6 @@
 with GPR2.Build.Tree_Db;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Message;
-with GPR2.Path_Name;
 with GPR2.Utils.Hash;
 
 package body GPR2.Build.Actions is
@@ -82,15 +81,5 @@ package body GPR2.Build.Actions is
       end loop;
 
    end Compare_Signature;
-
-   ------------------
-   -- Post_Command --
-   ------------------
-
-   procedure Post_Command (Self : in out Object)
-   is
-   begin
-      null;
-   end Post_Command;
 
 end GPR2.Build.Actions;

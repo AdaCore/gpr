@@ -26,32 +26,29 @@ package body GPR2.Build.Actions.Ada_Bind is
    --  Find the link action in the bind successors and return it. If no linker
    --  is found, a No_Linker_Found exception will be raised.
 
-   -------------
-   -- Command --
-   -------------
+   ---------------------
+   -- Compute_Command --
+   ---------------------
 
-   overriding function Command (Self : Object)
-     return GNATCOLL.OS.Process.Argument_List
+   overriding procedure Compute_Command
+     (Self : Object;
+      Args : out GNATCOLL.OS.Process.Argument_List;
+      Env  : out GNATCOLL.OS.Process.Environment_Dict)
    is
-      Args : GNATCOLL.OS.Process.Argument_List;
+      pragma Unreferenced (Env);
    begin
       if Self.Unit.Has_Part (S_Body) then
-
          --  ??? Replace hard coded values
 
          Args.Append ("gnatbind");
-
          Args.Append  (Self.Main_Ali.String_Value);
-
          Args.Append ("-o");
          --  Directories separator are not allowed. We must be in the correct
          --  directory and only use the source base name with extension.
 
          Args.Append (String (Self.Unit.Main_Body.Source.Simple_Name));
       end if;
-
-      return Args;
-   end Command;
+   end Compute_Command;
 
    -----------------------
    -- Compute_Signature --

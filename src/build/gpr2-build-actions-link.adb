@@ -63,19 +63,21 @@ package body GPR2.Build.Actions.Link is
    -- Command --
    -------------
 
-   overriding function Command (Self : Object)
-     return GNATCOLL.OS.Process.Argument_List
+   overriding procedure Compute_Command
+     (Self : Object;
+      Args : out GNATCOLL.OS.Process.Argument_List;
+      Env  : out GNATCOLL.OS.Process.Environment_Dict)
    is
+      pragma Unreferenced (Env);
       use GPR2.Project.Registry.Attribute;
 
-      Args : GNATCOLL.OS.Process.Argument_List;
       Ada_Run_Dir : constant GPR2.Project.Attribute.Object :=
-         Self.Ctxt.Attribute
-           (Name  => Runtime_Dir,
-            Index => GPR2.Project.Attribute_Index.Create (Ada_Language));
+                      Self.Ctxt.Attribute
+                        (Name  => Runtime_Dir,
+                         Index => GPR2.Project.Attribute_Index.Create
+                           (Ada_Language));
    begin
       --  ??? Replace hard coded values
-
       Args.Append ("gcc");
 
       for Obj of Self.Object_Files loop
@@ -117,9 +119,7 @@ package body GPR2.Build.Actions.Link is
 
       Args.Append ("-o");
       Args.Append (Self.Executable.String_Value);
-
-      return Args;
-   end Command;
+   end Compute_Command;
 
    -----------------------
    -- Compute_Signature --

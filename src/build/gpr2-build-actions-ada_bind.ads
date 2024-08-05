@@ -66,8 +66,13 @@ package GPR2.Build.Actions.Ada_Bind is
 
    overriding procedure Compute_Signature (Self : in out Object);
 
-   overriding function Command (Self : Object)
-     return GNATCOLL.OS.Process.Argument_List;
+   overriding procedure Compute_Command
+     (Self : Object;
+      Args : out GNATCOLL.OS.Process.Argument_List;
+      Env  : out GNATCOLL.OS.Process.Environment_Dict);
+
+   overriding function Working_Directory
+     (Self : Object) return Path_Name.Object;
 
    overriding procedure Post_Command (Self : in out Object);
    --  Parse the object file and the options listed as a comment at the end of
@@ -126,4 +131,10 @@ private
 
    overriding function Valid_Signature (Self : Object) return Boolean is
      (Self.Signature.Valid);
+
+   overriding function Working_Directory
+     (Self : Object) return Path_Name.Object is
+     (Self.Ctxt.Object_Directory);
+
+
 end GPR2.Build.Actions.Ada_Bind;

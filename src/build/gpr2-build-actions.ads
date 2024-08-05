@@ -4,15 +4,15 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+limited with GPR2.Build.Tree_Db;
 with GPR2.Log;
+with GPR2.Path_Name;
 with GPR2.Project.View;
 with GNATCOLL.OS.Process;
 
-limited with GPR2.Build.Tree_Db;
-
-private with GPR2.Build.Signature;
 private with Ada.Tags;
 private with GNATCOLL.Traces;
+private with GPR2.Build.Signature;
 
 package GPR2.Build.Actions is
 
@@ -23,7 +23,8 @@ package GPR2.Build.Actions is
    --  error reporting or inspection reporting.
 
    function Db_Filename (Self : Action_Id) return Simple_Name is abstract;
-   --  The filename that is used to store the action signature
+   --  The filename that is used to store the action signature. Must be unique
+   --  for actions of the involved view.
 
    function "<" (L, R : Action_Id) return Boolean is abstract;
 
@@ -75,11 +76,16 @@ package GPR2.Build.Actions is
      (Self : in out Object;
       Db   : in out GPR2.Build.Tree_Db.Object);
 
-   function Command (Self : Object)
-     return GNATCOLL.OS.Process.Argument_List is abstract;
-   --  Return the command line corresponding to the action
+   procedure Compute_Command
+     (Self : Object;
+      Args : out GNATCOLL.OS.Process.Argument_List;
+      Env  : out GNATCOLL.OS.Process.Environment_Dict) is abstract;
+   --  Return the command line and environment corresponding to the action
 
-   procedure Post_Command (Self : in out Object);
+   function Working_Directory
+     (Self : Object) return Path_Name.Object is abstract;
+
+   procedure Post_Command (Self : in out Object) is null;
    --  Post-processing that should occur after executing the command
 
 private

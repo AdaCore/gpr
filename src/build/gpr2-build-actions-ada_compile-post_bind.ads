@@ -42,8 +42,10 @@ package GPR2.Build.Actions.Ada_Compile.Post_Bind is
 
    overriding procedure Compute_Signature (Self : in out Object);
 
-   overriding function Command (Self : Object)
-     return GNATCOLL.OS.Process.Argument_List;
+   overriding procedure Compute_Command
+     (Self : Object;
+      Args : out GNATCOLL.OS.Process.Argument_List;
+      Env  : out GNATCOLL.OS.Process.Environment_Dict);
 
 private
 

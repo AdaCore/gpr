@@ -69,14 +69,16 @@ package body GPR2.Build.Actions.Ada_Compile is
    -- Command --
    -------------
 
-   overriding function Command
-     (Self : Object) return GNATCOLL.OS.Process.Argument_List
+   overriding procedure Compute_Command
+     (Self : Object;
+      Args : out GNATCOLL.OS.Process.Argument_List;
+      Env  : out GNATCOLL.OS.Process.Environment_Dict)
    is
+      pragma Unreferenced (Env);
       --  ??? Does not work for non-root namespaces
 
       Action_Unit : constant GPR2.Build.Compilation_Unit.Object :=
-        Self.Ctxt.Unit (Name_Type (To_String (Self.Unit_Name)));
-      Args        : GNATCOLL.OS.Process.Argument_List;
+                      Self.Ctxt.Unit (Name_Type (To_String (Self.Unit_Name)));
    begin
       --  ??? Replace hard coded values
 
@@ -85,9 +87,7 @@ package body GPR2.Build.Actions.Ada_Compile is
       Args.Append (String (Action_Unit.Main_Part.Source.Value));
       Args.Append ("-o");
       Args.Append (Self.Object_File.String_Value);
-
-      return Args;
-   end Command;
+   end Compute_Command;
 
    -----------------------
    -- Compute_Signature --

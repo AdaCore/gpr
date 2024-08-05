@@ -15,10 +15,12 @@ package body GPR2.Build.Actions.Ada_Compile.Post_Bind is
    -- Command --
    -------------
 
-   overriding function Command (Self : Object)
-     return GNATCOLL.OS.Process.Argument_List
+   overriding procedure Compute_Command
+     (Self : Object;
+      Args : out GNATCOLL.OS.Process.Argument_List;
+      Env  : out GNATCOLL.OS.Process.Environment_Dict)
    is
-      Args : GNATCOLL.OS.Process.Argument_List;
+      pragma Unreferenced (Env);
    begin
       --  ??? Replace hard coded values
 
@@ -29,9 +31,7 @@ package body GPR2.Build.Actions.Ada_Compile.Post_Bind is
          Args.Append ("-o");
          Args.Append (Self.Object_File.String_Value);
       end if;
-
-      return Args;
-   end Command;
+   end Compute_Command;
 
    -----------------------
    -- Compute_Signature --

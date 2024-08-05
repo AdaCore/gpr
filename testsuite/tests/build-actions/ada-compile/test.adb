@@ -94,14 +94,16 @@ begin
    Assert (Init_Action (Ada_Comp, Tree), "Initialize the Ada compile action");
 
    declare
-      Args    : constant Argument_List := Ada_Comp.Command;
+      Args    : Argument_List;
+      Env     : Environment_Dict;
       P_Wo    : FS.File_Descriptor;
       P_Ro    : FS.File_Descriptor;
       Ret     : Integer;
       Process : Process_Handle;
    begin
+      Ada_Comp.Compute_Command (Args, Env);
       FS.Open_Pipe (P_Ro, P_Wo);
-      Process := Start (Args => Args, Stdout => P_Wo, Stderr => FS.Standerr);
+      Process := Start (Args => Args, Env => Env, Cwd => Ada_Comp.Working_Directory.String_Value, Stdout => P_Wo, Stderr => FS.Standerr, Inherit_Env => True);
       FS.Close (P_Wo);
 
       Ret := Wait (Process);

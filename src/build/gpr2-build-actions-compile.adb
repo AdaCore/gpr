@@ -24,10 +24,12 @@ package body GPR2.Build.Actions.Compile is
    -- Command --
    -------------
 
-   overriding function Command (Self : Object)
-     return GNATCOLL.OS.Process.Argument_List
+   overriding procedure Compute_Command
+     (Self : Object;
+      Args : out GNATCOLL.OS.Process.Argument_List;
+      Env  : out GNATCOLL.OS.Process.Environment_Dict)
    is
-      Args : GNATCOLL.OS.Process.Argument_List;
+      pragma Unreferenced (Env);
    begin
       --  ??? Replace hard coded values
 
@@ -38,9 +40,7 @@ package body GPR2.Build.Actions.Compile is
            (Self.Ctxt.Source
               (Simple_Name (To_String (Self.Src_Name))).Path_Name.Value));
       --  ??? Check that path_name has a value.
-
-      return Args;
-   end Command;
+   end Compute_Command;
 
    -----------------------
    -- Compute_Signature --
