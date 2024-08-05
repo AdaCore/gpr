@@ -3,6 +3,8 @@
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
+
+with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.ALI_Parser;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Source;
@@ -270,8 +272,25 @@ package body GPR2.Build.Actions.Ada_Compile is
    ------------------
 
    overriding procedure Post_Command (Self : in out Object) is
+      Bind_Action : Actions.Ada_Bind.Object;
+      Found       : Boolean := False;
    begin
       Self.Update_Deps_From_Ali;
+
+      for Successor of Self.Tree.Successors
+         (Artifacts.Files.Create (Self.Ali_File))
+      loop
+         if Successor in Actions.Ada_Bind.Object'Class then
+            Bind_Action := Actions.Ada_Bind.Object (Successor);
+            Found       := True;
+
+            exit;
+         end if;
+      end loop;
+
+      if Found then
+         Bind_Action.Parse_Ali (Self.Ali_File);
+      end if;
    end Post_Command;
 
    ---------

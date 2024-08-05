@@ -1,6 +1,5 @@
 with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.Actions.Ada_Compile.Post_Bind;
-with GPR2.Build.Actions.Ada_Compile.Pre_Bind;
 with GPR2.Build.Actions.Compile;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
@@ -34,14 +33,14 @@ package body GPRtools.Actions is
       function Add_Actions_To_Build_Main
         (Main : GPR2.Build.Compilation_Unit.Unit_Location) return Boolean
       is
-         A      : GBA.Ada_Compile.Pre_Bind.Object;
+         A      : GBA.Ada_Compile.Object;
          Source : constant GPR2.Build.Source.Object :=
-           Main.View.Source (Main.Source.Simple_Name);
+                    Main.View.Source (Main.Source.Simple_Name);
+
       begin
          A.Initialize
            (Main.View.Unit
-              (GPR2.Build.Unit_Info.List.Element (Source.Units.Iterate.First)
-                 .Name));
+              (Source.Units.Element (No_Index).Name));
 
          if not Tree.Artifacts_Database.Has_Action (A.UID) then
             Tree.Artifacts_Database.Add_Action (A, Log);

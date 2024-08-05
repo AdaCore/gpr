@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.Build.Actions.Ada_Compile.Pre_Bind;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Actions.Ada_Compile.Post_Bind;
 with GPR2.Build.ALI_Parser;
@@ -204,7 +203,7 @@ package body GPR2.Build.Actions.Ada_Bind is
       --  Return the view database containing the imported unit
 
       procedure Add_Action_If_Not_Already_Done
-        (Action : in out GBA.Ada_Compile.Pre_Bind.Object);
+        (Action : in out GBA.Ada_Compile.Object);
       --  Add the action to the current object tree database if it has not
       --  already be done.
 
@@ -213,7 +212,7 @@ package body GPR2.Build.Actions.Ada_Bind is
       ------------------------------------
 
       procedure Add_Action_If_Not_Already_Done
-        (Action : in out GBA.Ada_Compile.Pre_Bind.Object) is
+        (Action : in out GBA.Ada_Compile.Object) is
          Messages : GPR2.Log.Object;
       begin
          if not GPR2.Build.Tree_Db.Has_Action (Self.Tree.all, Action.UID) then
@@ -332,8 +331,8 @@ package body GPR2.Build.Actions.Ada_Bind is
 
             elsif Imp_View_Db.View.Is_Namespace_Root then
                declare
-                  Action    : GBA.Ada_Compile.Pre_Bind.Object :=
-                        GBA.Ada_Compile.Pre_Bind.Undefined;
+                  Action : GBA.Ada_Compile.Object :=
+                             GBA.Ada_Compile.Undefined;
                begin
                   Action.Initialize
                     (Imp_View_Db.Compilation_Unit
