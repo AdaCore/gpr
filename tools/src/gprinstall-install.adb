@@ -1453,7 +1453,9 @@ package body GPRinstall.Install is
          procedure Read_Project;
          --  Read project and set Content accordingly
 
-         procedure With_External_Imports (Project : GPR2.Project.View.Object);
+         procedure With_External_Imports
+           (Project       : GPR2.Project.View.Object;
+            Aggregate_Lib : Boolean := False);
          --  Add all imports of externally built projects into install project
          --  imports.
 
@@ -2144,14 +2146,36 @@ package body GPRinstall.Install is
          ---------------------------
 
          procedure With_External_Imports
-           (Project : GPR2.Project.View.Object) is
+           (Project       : GPR2.Project.View.Object;
+            Aggregate_Lib : Boolean := False)
+         is
          begin
-            for L of Project.Imports (Recursive => True) loop
-               if L.Has_Sources and then L.Is_Externally_Built then
-                  Content.Append
-                    ("with """ & String (L.Path_Name.Base_Name) & """;");
-               end if;
-            end loop;
+            if Aggregate_Lib then
+               declare
+                  Result   : GPR2.Project.View.Set.Object;
+               begin
+                  for V of Project.Aggregated loop
+                     for L of V.Imports (Recursive => True) loop
+                        Result.Include (L);
+                     end loop;
+                  end loop;
+
+                  for L of Result loop
+                     if L.Has_Sources and then L.Is_Externally_Built then
+                        Content.Append
+                          ("with """ & String (L.Path_Name.Base_Name)
+                           & """;");
+                     end if;
+                  end loop;
+               end;
+            else
+               for L of Project.Imports (Recursive => True) loop
+                  if L.Has_Sources and then L.Is_Externally_Built then
+                     Content.Append
+                       ("with """ & String (L.Path_Name.Base_Name) & """;");
+                  end if;
+               end loop;
+            end if;
          end With_External_Imports;
 
          -------------------
@@ -2491,10 +2515,7 @@ package body GPRinstall.Install is
             Add_Empty_Line;
 
             if Project.Qualifier = K_Aggregate_Library then
-               for V of Project.Aggregated loop
-                  With_External_Imports (V);
-               end loop;
-
+               With_External_Imports (Project, Aggregate_Lib => True);
                Add_Empty_Line;
 
             elsif Project.Has_Imports then

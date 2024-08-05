@@ -1,0 +1,7 @@
+aggregate library project Agg is
+   for Project_Files use ("./prj1.gpr", "./prj2.gpr");
+
+   for Library_Name use "agg";
+   for Library_Kind use "static";
+   for Library_Dir  use "agg_lib";
+end Agg;
