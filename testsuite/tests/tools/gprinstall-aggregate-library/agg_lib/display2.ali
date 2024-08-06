@@ -1,0 +1,34 @@
+V "GNAT Lib v25.20240804"
+A -gnatA
+A -mtune=generic
+A -march=x86-64
+P SS ZX
+
+RN
+RV NO_SECONDARY_STACK
+RV NO_STANDARD_STORAGE_POOLS
+RV NO_DYNAMIC_SIZED_OBJECTS
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U display2%s		display2.ads		88cad381 NE OO PK
+W displaylib%s		displaylib.ads		displaylib.ali
+Z system.concat_3%s	s-conca3.adb		s-conca3.ali
+Z system.secondary_stack%s  s-secsta.adb	s-secsta.ali
+
+D display2.ads		20240805093026 baea8af7 display2%s
+D displaylib.ads	20240805093026 32205976 displaylib%s
+D system.ads		20240716013845 14286b0f system%s
+D s-conca3.ads		20240716013845 8a7a19a2 system.concat_3%s
+D s-parame.ads		20240716013845 3597fc11 system.parameters%s
+D s-secsta.ads		20240716013845 578279f5 system.secondary_stack%s
+D s-stoele.ads		20240716013845 ccded4e8 system.storage_elements%s
+G a e
+G c Z s s [hello display2 4 18 none]
+G r c none [hello display2 4 18 none] [world displaylib 2 18 none]
+X 1 display2.ads
+3K9*Display2 7l5 7e13
+4V18*Hello{string} 5b13
+X 2 displaylib.ads
+1K9*Displaylib 1|1w6 5r48 2|4e15
+2V18*World{string} 1|5s59
+
