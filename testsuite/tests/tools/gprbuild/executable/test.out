@@ -266,14 +266,12 @@ Hello from Dep_Two
 
 ================================================================
 Case 22 - Missing pkg.adb
+Job 'Compile Ada pre-bind : PKG (main.gpr)' failed. Status: 1, output: '', stderr: 'cannot generate code for file pkg.ads (package spec)
+'
 == Content of tree/obj/jobs.json:
 uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '1', stdout: '', stderr: 'cannot generate code for file pkg.ads (package spec)
 '
-uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 Error detected in jobs.json
 
 ================================================================
@@ -291,17 +289,15 @@ Hello from Dep_Two
 
 ================================================================
 Case 24 - Missing pkg.ads
+Job 'Compile Ada pre-bind : MAIN (main.gpr)' failed. Status: 1, output: '', stderr: 'main.adb:1:06: error: "Main (body)" depends on "Pkg (body)"
+main.adb:1:06: error: "Pkg (body)" depends on "Pkg (spec)"
+main.adb:1:06: error: file "pkg.ads" not found
+'
 == Content of tree/obj/jobs.json:
 uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : '1', stdout: '', stderr: 'main.adb:1:06: error: "Main (body)" depends on "Pkg (body)"
 main.adb:1:06: error: "Pkg (body)" depends on "Pkg (spec)"
 main.adb:1:06: error: file "pkg.ads" not found
 '
-uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '1', stdout: '', stderr: 'pkg.adb:4:14: error: file "pkg.ads" not found
-'
-uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 Error detected in jobs.json
 
 ================================================================
@@ -319,14 +315,13 @@ Hello from Dep_Two
 
 ================================================================
 Case 26 - Missing dep_two.adb
+Job 'Compile Ada pre-bind : DEP_TWO (main.gpr)' failed. Status: 1, output: '', stderr: 'cannot generate code for file dep_two.ads (package spec)
+'
 == Content of tree/obj/jobs.json:
 uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : '1', stdout: '', stderr: 'cannot generate code for file dep_two.ads (package spec)
 '
-uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 Error detected in jobs.json
 
 ================================================================
@@ -344,17 +339,16 @@ Hello from Dep_Two
 
 ================================================================
 Case 28 - Missing dep_two.ads
+Job 'Compile Ada pre-bind : PKG (main.gpr)' failed. Status: 1, output: '', stderr: 'pkg.adb:2:06: error: "Pkg (body)" depends on "Dep_Two (body)"
+pkg.adb:2:06: error: "Dep_Two (body)" depends on "Dep_Two (spec)"
+pkg.adb:2:06: error: file "dep_two.ads" not found
+'
 == Content of tree/obj/jobs.json:
 uid: 'Compile Ada pre-bind : MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: 'Compile Ada pre-bind : PKG (main.gpr)', status : '1', stdout: '', stderr: 'pkg.adb:2:06: error: "Pkg (body)" depends on "Dep_Two (body)"
 pkg.adb:2:06: error: "Dep_Two (body)" depends on "Dep_Two (spec)"
 pkg.adb:2:06: error: file "dep_two.ads" not found
 '
-uid: 'Compile Ada pre-bind : DEP_TWO (main.gpr)', status : '1', stdout: '', stderr: 'dep_two.adb:3:14: error: file "dep_two.ads" not found
-'
-uid: 'Bind Ada: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: 'Compile Ada post-bind: ADA_MAIN (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: 'Link: main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 Error detected in jobs.json
 
 ================================================================

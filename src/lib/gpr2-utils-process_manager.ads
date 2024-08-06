@@ -32,21 +32,20 @@ package GPR2.Utils.Process_Manager is
 
    PROCESS_STATUS_OK : constant Integer;
 
-   type Process_Handler (Skip : Boolean := False) is record
-      case Skip is
-         when True =>
-            null;
-         when False =>
-            Handle : Proc.Process_Handle;
-      end case;
-   end record;
+   type Process_Handler_Status is
+     (Skipped, Failed_To_Launch, Running, Finished);
 
-   type Process_Status (Skip : Boolean := False) is record
-      case Skip is
-         when True =>
+   type Process_Handler (Status : Process_Handler_Status := Running) is
+   record
+      case Status is
+         when Running =>
+            Handle : Proc.Process_Handle;
+         when Failed_To_Launch =>
+            Error_Message : Unbounded_String;
+         when Finished =>
+            Process_Status : Integer;
+         when others =>
             null;
-         when False =>
-            Status : Integer;
       end case;
    end record;
 
@@ -74,7 +73,7 @@ package GPR2.Utils.Process_Manager is
    function Collect_Job
       (Self           : in out Process_Manager;
        Job            : DG.Node_Id;
-       Proc_Status    : Process_Status;
+       Proc_Handler   : Process_Handler;
        Stdout, Stderr : Unbounded_String)
       return Collect_Status;
    --  Called on each job termination. Stdout, Stderr are set to the captured

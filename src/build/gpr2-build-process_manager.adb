@@ -22,7 +22,7 @@ package body GPR2.Build.Process_Manager is
    function Collect_Job
       (Self           : in out Object;
        Job            : DG.Node_Id;
-       Proc_Status    : Process_Status;
+       Proc_Handler   : Process_Handler;
        Stdout, Stderr : Unbounded_String)
       return Collect_Status
    is
@@ -30,22 +30,39 @@ package body GPR2.Build.Process_Manager is
         Self.Tree_Db.Action (Self.Tree_Db.Action_Id (Job));
    begin
 
-      if not Proc_Status.Skip then
+      if Proc_Handler.Status = Running then
+
+         --  ??? Use a custom exception
+
+         raise Program_Error with
+           "The process linked to the action '" & Act.UID.Image &
+           "' is still running. Cannot collect the job before it finishes";
+      end if;
+
+      if Proc_Handler.Status = Failed_To_Launch then
+         return Abort_Execution;
+      end if;
+
+      if Proc_Handler.Status = Finished then
          Trace
            (Self.Traces,
             "Job '" & Act.UID.Image & "' returned. Status:" &
-            Proc_Status.Status'Img & ", output: '" & To_String (Stdout) &
-            "'" & ", stderr: '" & To_String (Stderr) & "'");
-      elsif not Proc_Status.Skip
-        and then Proc_Status.Status /= PROCESS_STATUS_OK
-      then
-         --  ??? Move this message in the log system
-         Ada.Text_IO.Put_Line
-           ("Job '" & Act.UID.Image & "' failed. Status:" &
-            Proc_Status.Status'Img & ", output: '" &
+            Proc_Handler.Process_Status'Img & ", output: '" &
             To_String (Stdout) & "'" & ", stderr: '" &
             To_String (Stderr) & "'");
-         return Abort_Execution;
+
+         if Proc_Handler.Process_Status /= PROCESS_STATUS_OK then
+
+            --  ??? Move this message in the log system
+
+            Ada.Text_IO.Put_Line
+            ("Job '" & Act.UID.Image & "' failed. Status:" &
+               Proc_Handler.Process_Status'Img & ", output: '" &
+               To_String (Stdout) & "'" & ", stderr: '" &
+               To_String (Stderr) & "'");
+
+            return Abort_Execution;
+         end if;
       end if;
 
       Act.Post_Command;
@@ -109,7 +126,7 @@ package body GPR2.Build.Process_Manager is
            (Self.Traces,
             "Signature is valid, do not execute the job '" &
             Self.Tree_Db.Action_Id (Job).Image & "'");
-         Proc_Handler := Process_Handler'(Skip => True);
+         Proc_Handler := Process_Handler'(Status => Skipped);
          return;
       end if;
 
@@ -125,19 +142,29 @@ package body GPR2.Build.Process_Manager is
 
       FS.Open_Pipe (P_Ro, P_Wo);
       FS.Open_Pipe (P_Re, P_We);
-      Proc_Handler :=
-        (Skip   => False,
-         Handle => Start (Args => Args, Stdout => P_Wo, Stderr => P_We));
+
+      begin
+         Proc_Handler :=
+           (Status => Running,
+            Handle => Start (Args => Args, Stdout => P_Wo, Stderr => P_We));
+      exception
+         when Ex : GNATCOLL.OS.OS_Error =>
+            FS.Close (P_Wo);
+            FS.Close (P_We);
+
+            Proc_Handler :=
+              (Status        => Failed_To_Launch,
+               Error_Message => To_Unbounded_String
+                 ("Command '" & To_String (Command) & "' failed: " &
+                  Ada.Exceptions.Exception_Message (Ex)));
+            return;
+      end;
+
       FS.Close (P_Wo);
       FS.Close (P_We);
 
       Capture_Stdout := P_Ro;
       Capture_Stderr := P_Re;
-
-      exception
-         when Ex : others =>
-            Text_IO.Put_Line (Ada.Exceptions.Exception_Message (Ex));
-            raise;
    end Launch_Job;
 
 end GPR2.Build.Process_Manager;

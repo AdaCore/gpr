@@ -1,0 +1,44 @@
+================================================================
+Case 1 - No errors
+== Content of jobs.json:
+uid: 'Write_File '1' (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Write_File '2' (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Write_File '3' (main.gpr)', status : '0', stdout: '', stderr: ''
+
+================================================================
+Case 2 - No errors with already existing artifacts
+== Content of jobs.json:
+uid: 'Write_File '1' (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Write_File '2' (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: 'Write_File '3' (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+
+================================================================
+Case 3 - Action n. 2 returns an erroneous code
+Job 'Write_File '2' (main.gpr)' failed. Status: 1, output: '', stderr: 'File has been created, but return code is  1
+'
+== Content of jobs.json:
+uid: 'Write_File '1' (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Write_File '2' (main.gpr)', status : '1', stdout: '', stderr: 'File has been created, but return code is  1
+'
+
+================================================================
+Case 4 - Action n. 5 does not depend on action n. 4
+== Content of jobs.json:
+uid: 'Write_File '5' (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Write_File '6' (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Write_File '7' (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Write_File '8' (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Write_File '9' (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Write_File '10' (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Write_File '1' (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Write_File '2' (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Write_File '3' (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Write_File '4' (main.gpr)', status : '0', stdout: '', stderr: ''
+
+================================================================
+Case 5 - Action n. 3 does not have a valid executable
+== Content of jobs.json:
+uid: 'Write_File '1' (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Write_File '2' (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: 'Write_File '3' (main.gpr)', status : 'FAILED_TO_LAUNCH', stdout: '', stderr: 'Command '/exec_that_does_not_exist 0 /3.txt 3 ' failed: cannot spawn process (status: 2)'
+
