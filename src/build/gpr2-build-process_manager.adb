@@ -38,7 +38,9 @@ package body GPR2.Build.Process_Manager is
          "The process linked to the action '" & Act.UID.Image &
            "' is still running. Cannot collect the job before it finishes");
 
-      if Proc_Handler.Status = Failed_To_Launch then
+      if Proc_Handler.Status = Failed_To_Launch
+        and then Self.Stop_On_Fail
+      then
          return Abort_Execution;
       end if;
 
@@ -68,7 +70,7 @@ package body GPR2.Build.Process_Manager is
          if Proc_Handler.Process_Status = PROCESS_STATUS_OK then
             Act.Compute_Signature;
 
-         else
+         elsif Self.Stop_On_Fail then
             return Abort_Execution;
          end if;
       end if;
@@ -89,10 +91,12 @@ package body GPR2.Build.Process_Manager is
    procedure Execute
      (Self         : in out Object;
       Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
-      Jobs         : Natural := 0)
+      Jobs         : Natural := 0;
+      Stop_On_Fail : Boolean := True)
    is
    begin
       Self.Tree_Db := Tree_Db;
+      Self.Stop_On_Fail := Stop_On_Fail;
       Self.Execute (Self.Tree_Db.Actions_Graph_Access.all, Jobs);
    end Execute;
 

@@ -37,15 +37,17 @@ package GPR2.Build.Process_Manager is
    procedure Execute
      (Self    : in out Object;
       Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      Jobs    : Natural := 0);
+      Jobs    : Natural := 0;
+      Stop_On_Fail : Boolean := True);
 
 private
 
    use GNATCOLL.Traces;
 
    type Object is new GPR2.Utils.Process_Manager.Process_Manager with record
-      Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      Traces  : Trace_Handle := Create ("PROCESS_MANAGER");
+      Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
+      Traces       : Trace_Handle := Create ("PROCESS_MANAGER");
+      Stop_On_Fail : Boolean := True;
    end record;
 
 end GPR2.Build.Process_Manager;

@@ -33,9 +33,10 @@ package GPR2.Build.Process_Manager.JSON is
 
    overriding
    procedure Execute
-     (Self    : in out Object;
-      Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      Jobs    : Natural := 0);
+     (Self         : in out Object;
+      Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
+      Jobs         : Natural := 0;
+      Stop_On_Fail : Boolean := True);
    --  Same as above, but store the jobs results in the default JSON file
    --  ``<current_directory>/jobs.json``.
 

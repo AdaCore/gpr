@@ -101,15 +101,17 @@ package body GPR2.Build.Process_Manager.JSON is
 
    overriding
    procedure Execute
-     (Self      : in out Object;
-      Tree_Db   : GPR2.Build.Tree_Db.Object_Access;
-      Jobs      : Natural := 0)
+     (Self         : in out Object;
+      Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
+      Jobs         : Natural := 0;
+      Stop_On_Fail : Boolean := True)
    is
       JSON_File : constant GPR2.Path_Name.Object :=
                     GPR2.Path_Name.Create_File ("jobs.json");
    begin
       Self.JSON_File := JSON_File;
-      GPR2.Build.Process_Manager.Object (Self).Execute (Tree_Db, Jobs);
+      GPR2.Build.Process_Manager.Object (Self).Execute
+        (Tree_Db, Jobs, Stop_On_Fail);
    end Execute;
 
    procedure Execute
