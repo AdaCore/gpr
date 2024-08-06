@@ -132,17 +132,4 @@ package body GPR2.Build.Actions.Ada_Compile.Post_Bind is
       end loop;
    end On_Tree_Insertion;
 
-   ---------
-   -- UID --
-   ---------
-
-   overriding function UID (Self : Object) return Actions.Action_Id'Class is
-      Result : constant Ada_Compile_Post_Bind_Id :=
-                 (Name_Len  => Ada.Strings.Unbounded.Length (Self.Unit_Name),
-                  Unit_Name => Name_Type (To_String (Self.Unit_Name)),
-                  Ctxt      => Self.Ctxt);
-   begin
-      return Result;
-   end UID;
-
 end GPR2.Build.Actions.Ada_Compile.Post_Bind;
