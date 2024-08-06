@@ -68,8 +68,8 @@ begin
                Ret_Code   : Integer               := 0;
                With_Deps  : Boolean               := True;
                Executable : GPR2.Path_Name.Object :=
-                 GPR2.Path_Name.Create_File
-                   (Name => "write_file", Directory => "write_file");
+                              GPR2.Path_Name.Create_File
+                                (Name => "write_file", Directory => "write_file");
             begin
                A.Initialize
                  (Root_View, Action_Index, Executable, Ret_Code, With_Deps);
@@ -96,8 +96,8 @@ begin
                Ret_Code   : Integer;
                With_Deps  : Boolean               := True;
                Executable : GPR2.Path_Name.Object :=
-                 GPR2.Path_Name.Create_File
-                   (Name => "write_file", Directory => "write_file");
+                              GPR2.Path_Name.Create_File
+                                (Name => "write_file", Directory => "write_file");
             begin
                if Action_Index = 2 then
                   Ret_Code := 1;
@@ -181,11 +181,12 @@ begin
                Ret_Code           : Integer               := 0;
                With_Deps          : Boolean               := True;
                Valid_Executable   : GPR2.Path_Name.Object :=
-                 GPR2.Path_Name.Create_File
-                   (Name => "write_file", Directory => "write_file");
+                                      GPR2.Path_Name.Create_File
+                                        (Name      => "write_file",
+                                         Directory => "write_file");
                Invalid_Executable : GPR2.Path_Name.Object :=
-                 GPR2.Path_Name.Create_File
-                   (Name => "exec_that_does_not_exist");
+                                      GPR2.Path_Name.Create_File
+                                        (Name => "exec_that_does_not_exist");
             begin
                if Action_Index = 3 then
                   A.Initialize
