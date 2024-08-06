@@ -40,7 +40,8 @@ package GPR2.Build.Actions.Write_File is
       Index      : Integer;
       Executable : GPR2.Path_Name.Object;
       Ret_Code   : Integer := 0;
-      With_Deps  : Boolean := True);
+      With_Deps  : Boolean := True;
+      With_Wait  : Natural := 0);
    --  Initialize the action with several testing parameters to pass to
    --  the executable. The executable used by test.py is mostly the one
    --  coming from the "directory" write_file.
@@ -84,6 +85,7 @@ private
       Index      : Integer;
       Ret_Code   : Integer;
       With_Deps  : Boolean;
+      With_Wait  : Natural;
       Executable : GPR2.Path_Name.Object;
    end record;
 

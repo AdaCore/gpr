@@ -1,4 +1,4 @@
-with "gpr2";
+with "gnatcoll_core";
 
 project Write_File is
    for Object_Dir use "obj";

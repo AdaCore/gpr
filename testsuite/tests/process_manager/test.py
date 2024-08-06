@@ -47,7 +47,10 @@ def clean_artifacts_and_signatures():
         os.remove(f)
 
 
-bnr.build(project=os.path.join("write_file", "write_file.gpr"), args=["-p", "-q"])
+# Build the driver used during testing
+Run(["gprbuild", "-p", "-q", os.path.join("write_file", "write_file.gpr")])
+
+# Test with instrumentation if any
 bnr.build(project="test.gpr", args=["-p", "-q"])
 
 # Build the tree project to produce object directories used to store signatures

@@ -30,6 +30,10 @@ package body GPR2.Build.Actions.Write_File is
       Args.Append (Output_File (Self.Index).String_Value);
       Args.Append (Ada.Strings.Fixed.Trim (Self.Index'Img, Both));
 
+      if Self.With_Wait > 0 then
+         Args.Append (String (Output_File (Self.With_Wait).Simple_Name));
+      end if;
+
       return Args;
    end Command;
 
@@ -60,7 +64,8 @@ package body GPR2.Build.Actions.Write_File is
      Index      : Integer;
      Executable : GPR2.Path_Name.Object;
      Ret_Code   : Integer := 0;
-     With_Deps  : Boolean := True)
+     With_Deps  : Boolean := True;
+     With_Wait  : Natural := 0)
    is
    begin
       Self.Ctxt       := Ctxt;
@@ -68,6 +73,7 @@ package body GPR2.Build.Actions.Write_File is
       Self.Ret_Code   := Ret_Code;
       Self.With_Deps  := With_Deps;
       Self.Executable := Executable;
+      Self.With_Wait  := With_Wait;
       Self.Traces     := Create ("ACTION_WRITE_FILE");
    end Initialize;
 

@@ -124,23 +124,40 @@ begin
          --  Action n. 5 does not depend on action n. 4
          ----
 
-         for Action_Index in 1 .. 10 loop
-            declare
-               A          : GBA.Write_File.Object;
-               Ret_Code   : Integer               := 0;
-               With_Deps  : Boolean;
-               Executable : GPR2.Path_Name.Object :=
-                 GPR2.Path_Name.Create_File
-                   (Name => "write_file", Directory => "write_file");
-            begin
+         --  To have repeatable output, we ensure that Write_File wait
+         --  other instances to be finished before actually executing.
+
+         declare
+            A          : GBA.Write_File.Object;
+            Ret_Code   : Integer               := 0;
+            With_Deps  : Boolean;
+            Executable : GPR2.Path_Name.Object :=
+                           GPR2.Path_Name.Create_File
+                             (Name      => "write_file",
+                              Directory => "write_file");
+            With_Wait  : Natural;
+
+         begin
+            for Action_Index in 1 .. 10 loop
                if Action_Index = 5 then
                   With_Deps := False;
                else
                   With_Deps := True;
                end if;
 
+               if Action_Index = 1 then
+                  With_Wait := 10;
+               else
+                  With_Wait := 0;
+               end if;
+
                A.Initialize
-                 (Root_View, Action_Index, Executable, Ret_Code, With_Deps);
+                 (Root_View,
+                  Action_Index,
+                  Executable,
+                  Ret_Code,
+                  With_Deps,
+                  With_Wait);
                Tree.Artifacts_Database.Add_Action (A, Log);
 
                if Log.Has_Error then
@@ -148,8 +165,8 @@ begin
 
                   return 1;
                end if;
-            end;
-         end loop;
+            end loop;
+         end;
 
       when 4 =>
          ----
