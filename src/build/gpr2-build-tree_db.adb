@@ -381,19 +381,6 @@ package body GPR2.Build.Tree_Db is
                Self.Actions.Reference (Curs).View.Object_Directory.Value));
    end Db_Filename_Path;
 
-   -------------
-   -- Execute --
-   -------------
-
-   procedure Execute
-     (Self   : in out Object;
-      Action : Actions.Action_Id'Class)
-   is
-      Curs : constant Action_Maps.Cursor := Self.Actions.Find (Action);
-   begin
-      Self.Actions.Reference (Curs).Compute_Signature;
-   end Execute;
-
    -----------
    -- First --
    -----------

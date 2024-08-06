@@ -121,10 +121,6 @@ package GPR2.Build.Tree_Db is
      (Self   : in out Object;
       Action : Actions.Action_Id'Class) return Path_Name.Object;
 
-   procedure Execute
-     (Self   : in out Object;
-      Action : Actions.Action_Id'Class);
-
    function Actions_Graph_Access
      (Self : in out Object) return access DG.Directed_Graph;
    --  ???
