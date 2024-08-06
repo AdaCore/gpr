@@ -76,6 +76,8 @@ package GPR2.Build.Actions.Ada_Compile is
 
    overriding procedure Post_Command (Self : in out Object);
 
+   overriding function Skip (Self : Object) return Boolean;
+
 private
 
    use type GPR2.View_Ids.View_Id;

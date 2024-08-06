@@ -74,11 +74,87 @@ package body GPR2.Build.Actions.Ada_Compile is
    is
       pragma Unreferenced (Env);
 
-   begin
-      --  ??? Replace hard coded values
+      procedure Add_Attr
+        (Id      : Q_Attribute_Id;
+         Idx     : PAI.Object;
+         Is_List : Boolean);
 
-      Args.Append ("gcc");
-      Args.Append ("-c");
+      procedure Add_Dependency_Options;
+
+      Ada_Idx : constant PAI.Object := PAI.Create (Ada_Language);
+      Src_Idx : constant PAI.Object :=
+                  PAI.Create
+                    (Value_Type (Self.CU.Main_Part.Source.Simple_Name),
+                     GPR2.File_Names_Case_Sensitive,
+                     Self.CU.Main_Part.Index);
+
+      --------------
+      -- Add_Attr --
+      --------------
+
+      procedure Add_Attr
+        (Id      : Q_Attribute_Id;
+         Idx     : PAI.Object;
+         Is_List : Boolean)
+      is
+         Attr : constant GPR2.Project.Attribute.Object :=
+                  Self.View.Attribute (Id, Idx);
+      begin
+         if not Attr.Is_Defined then
+            return;
+         end if;
+
+         if Is_List then
+            for Val of Attr.Values loop
+               Args.Append (Val.Text);
+            end loop;
+         else
+            Args.Append (Attr.Value.Text);
+         end if;
+      end Add_Attr;
+
+      ----------------------------
+      -- Add_Dependency_Options --
+      ----------------------------
+
+      procedure Add_Dependency_Options is
+         Attr : constant GPR2.Project.Attribute.Object :=
+                  Self.View.Attribute
+                    (PRA.Compiler.Dependency_Switches, Ada_Idx);
+      begin
+         if not Attr.Is_Defined then
+            return;
+         end if;
+
+         for Val of Attr.Values loop
+            if Val.Text'Length > 0 then
+               Args.Append (Val.Text);
+            else
+               Args.Append (String (Self.CU.Dependency_File));
+            end if;
+         end loop;
+      end Add_Dependency_Options;
+
+   begin
+      Add_Attr (PRA.Compiler.Driver, Ada_Idx, False);
+      Add_Attr (PRA.Compiler.Leading_Required_Switches, Ada_Idx, True);
+      --  ??? TODO: add builder switches from command line
+      Add_Attr (PRA.Builder.Switches, Ada_Idx, True);
+      Add_Attr (PRA.Compiler.Switches, Src_Idx, True);
+      --  ??? TODO: command line -cargs options
+      --  ??? TODO: command line -cargs:ada options
+
+      if Self.View.Is_Library
+        and then Self.View.Library_Kind /= "static"
+      then
+         Add_Attr (PRA.Compiler.Pic_Option, Ada_Idx, True);
+      end if;
+
+      Add_Dependency_Options;
+
+      --  ??? TODO: create include_path file once for each language of the view
+
+      --  ??? Replace hard coded values
       Args.Append (Self.CU.Main_Part.Source.String_Value);
       Args.Append ("-o");
       Args.Append (String (Self.Object_File.Simple_Name));
@@ -286,6 +362,16 @@ package body GPR2.Build.Actions.Ada_Compile is
          Bind_Action.Parse_Ali (Self.Ali_File);
       end if;
    end Post_Command;
+
+   ----------
+   -- Skip --
+   ----------
+
+   overriding function Skip (Self : Object) return Boolean is
+   begin
+      return not Self.View.Attribute
+        (PRA.Compiler.Driver, PAI.Create (Ada_Language)).Is_Defined;
+   end Skip;
 
    ---------
    -- UID --

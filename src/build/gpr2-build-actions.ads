@@ -64,6 +64,11 @@ package GPR2.Build.Actions is
    --  Procedure called when Self is added to the tree's database. Allows the
    --  action to add its input and output artifacts and dependencies.
 
+   function Skip (Self : Object) return Boolean is
+     (False);
+   --  Indicates whether the action should be skipped. By default this returns
+   --  False.
+
    procedure Compute_Signature (Self : in out Object) is abstract;
    --  Compute the action signature from all its artifacts and hard store it
 

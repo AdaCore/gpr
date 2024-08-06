@@ -79,7 +79,6 @@ package body GPR2.Build.Actions is
             end if;
          end;
       end loop;
-
    end Compare_Signature;
 
 end GPR2.Build.Actions;

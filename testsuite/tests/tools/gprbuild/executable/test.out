@@ -1,11 +1,11 @@
 ================================================================
 Case 1 - Build from scratch
 [Compile Ada] main.adb (main.gpr)
-gcc -c /tree/src/main.adb -o main.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/main.adb -o main.o
 [Compile Ada] pkg.adb (main.gpr)
-gcc -c /tree/src/pkg.adb -o pkg.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/pkg.adb -o pkg.o
 [Compile Ada] dep_two.adb (main.gpr)
-gcc -c /tree/src/dep_two.adb -o dep_two.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/dep_two.adb -o dep_two.o
 Bind Ada: main (main.gpr)
 gnatbind /tree/obj/main.ali -o b__main.adb
 [Compile Ada] b__main.adb (main.gpr)
@@ -26,7 +26,7 @@ Hello from Dep_Two
 ================================================================
 Case 2 - Missing main.o
 [Compile Ada] main.adb (main.gpr)
-gcc -c /tree/src/main.adb -o main.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/main.adb -o main.o
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -41,7 +41,7 @@ Hello from Dep_Two
 ================================================================
 Case 3 - Modified main.o (comments only)
 [Compile Ada] main.adb (main.gpr)
-gcc -c /tree/src/main.adb -o main.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/main.adb -o main.o
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -56,7 +56,7 @@ Hello from Dep_Two
 ================================================================
 Case 4 - Missing main.ali
 [Compile Ada] main.adb (main.gpr)
-gcc -c /tree/src/main.adb -o main.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/main.adb -o main.o
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -71,7 +71,7 @@ Hello from Dep_Two
 ================================================================
 Case 5 - Modified main.ali (comments only)
 [Compile Ada] main.adb (main.gpr)
-gcc -c /tree/src/main.adb -o main.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/main.adb -o main.o
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -86,7 +86,7 @@ Hello from Dep_Two
 ================================================================
 Case 6 - Missing pkg.o
 [Compile Ada] pkg.adb (main.gpr)
-gcc -c /tree/src/pkg.adb -o pkg.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/pkg.adb -o pkg.o
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -101,7 +101,7 @@ Hello from Dep_Two
 ================================================================
 Case 7 - Modified pkg.o (comments only)
 [Compile Ada] pkg.adb (main.gpr)
-gcc -c /tree/src/pkg.adb -o pkg.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/pkg.adb -o pkg.o
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -116,7 +116,7 @@ Hello from Dep_Two
 ================================================================
 Case 8 - Missing pkg.ali
 [Compile Ada] pkg.adb (main.gpr)
-gcc -c /tree/src/pkg.adb -o pkg.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/pkg.adb -o pkg.o
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -131,7 +131,7 @@ Hello from Dep_Two
 ================================================================
 Case 9 - Modified pkg.ali (comments only)
 [Compile Ada] pkg.adb (main.gpr)
-gcc -c /tree/src/pkg.adb -o pkg.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/pkg.adb -o pkg.o
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -146,7 +146,7 @@ Hello from Dep_Two
 ================================================================
 Case 10 - Missing dep_two.o
 [Compile Ada] dep_two.adb (main.gpr)
-gcc -c /tree/src/dep_two.adb -o dep_two.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/dep_two.adb -o dep_two.o
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -161,7 +161,7 @@ Hello from Dep_Two
 ================================================================
 Case 11 - Modified dep_two.o (comments only)
 [Compile Ada] dep_two.adb (main.gpr)
-gcc -c /tree/src/dep_two.adb -o dep_two.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/dep_two.adb -o dep_two.o
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -176,7 +176,7 @@ Hello from Dep_Two
 ================================================================
 Case 12 - Missing dep_two.ali
 [Compile Ada] dep_two.adb (main.gpr)
-gcc -c /tree/src/dep_two.adb -o dep_two.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/dep_two.adb -o dep_two.o
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -191,7 +191,7 @@ Hello from Dep_Two
 ================================================================
 Case 13 - Modified dep_two.ali (comments only)
 [Compile Ada] dep_two.adb (main.gpr)
-gcc -c /tree/src/dep_two.adb -o dep_two.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/dep_two.adb -o dep_two.o
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -302,7 +302,7 @@ Test return value: 4
 ================================================================
 Case 21 - Modified main.adb (comments only)
 [Compile Ada] main.adb (main.gpr)
-gcc -c /tree/src/main.adb -o main.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/main.adb -o main.o
 Bind Ada: main (main.gpr)
 gnatbind /tree/obj/main.ali -o b__main.adb
 == Content of tree/obj/jobs.json:
@@ -319,7 +319,7 @@ Hello from Dep_Two
 ================================================================
 Case 22 - Missing pkg.adb
 [Compile Ada] pkg.ads (main.gpr)
-gcc -c /tree/src/pkg.ads -o pkg.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/pkg.ads -o pkg.o
 main.gpr: warning: [Compile Ada] pkg.ads (main.gpr) failed with status 1
 cannot generate code for file pkg.ads (package spec)
 
@@ -332,7 +332,7 @@ Error detected in jobs.json
 ================================================================
 Case 23 - Modified pkg.adb (comments only)
 [Compile Ada] pkg.adb (main.gpr)
-gcc -c /tree/src/pkg.adb -o pkg.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/pkg.adb -o pkg.o
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -347,7 +347,7 @@ Hello from Dep_Two
 ================================================================
 Case 24 - Missing pkg.ads
 [Compile Ada] main.adb (main.gpr)
-gcc -c /tree/src/main.adb -o main.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/main.adb -o main.o
 main.gpr: warning: [Compile Ada] main.adb (main.gpr) failed with status 1
 main.adb:1:06: error: "Main (body)" depends on "Pkg (body)"
 main.adb:1:06: error: "Pkg (body)" depends on "Pkg (spec)"
@@ -363,9 +363,9 @@ Error detected in jobs.json
 ================================================================
 Case 25 - Modified pkg.ads (comments only)
 [Compile Ada] main.adb (main.gpr)
-gcc -c /tree/src/main.adb -o main.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/main.adb -o main.o
 [Compile Ada] pkg.adb (main.gpr)
-gcc -c /tree/src/pkg.adb -o pkg.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/pkg.adb -o pkg.o
 Bind Ada: main (main.gpr)
 gnatbind /tree/obj/main.ali -o b__main.adb
 == Content of tree/obj/jobs.json:
@@ -382,7 +382,7 @@ Hello from Dep_Two
 ================================================================
 Case 26 - Missing dep_two.adb
 [Compile Ada] dep_two.ads (main.gpr)
-gcc -c /tree/src/dep_two.ads -o dep_two.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/dep_two.ads -o dep_two.o
 main.gpr: warning: [Compile Ada] dep_two.ads (main.gpr) failed with status 1
 cannot generate code for file dep_two.ads (package spec)
 
@@ -396,7 +396,7 @@ Error detected in jobs.json
 ================================================================
 Case 27 - Modified dep_two.adb (comments only)
 [Compile Ada] dep_two.adb (main.gpr)
-gcc -c /tree/src/dep_two.adb -o dep_two.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/dep_two.adb -o dep_two.o
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -411,7 +411,7 @@ Hello from Dep_Two
 ================================================================
 Case 28 - Missing dep_two.ads
 [Compile Ada] pkg.adb (main.gpr)
-gcc -c /tree/src/pkg.adb -o pkg.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/pkg.adb -o pkg.o
 main.gpr: warning: [Compile Ada] pkg.adb (main.gpr) failed with status 1
 pkg.adb:2:06: error: "Pkg (body)" depends on "Dep_Two (body)"
 pkg.adb:2:06: error: "Dep_Two (body)" depends on "Dep_Two (spec)"
@@ -428,9 +428,9 @@ Error detected in jobs.json
 ================================================================
 Case 29 - Modified dep_two.ads (comments only)
 [Compile Ada] pkg.adb (main.gpr)
-gcc -c /tree/src/pkg.adb -o pkg.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/pkg.adb -o pkg.o
 [Compile Ada] dep_two.adb (main.gpr)
-gcc -c /tree/src/dep_two.adb -o dep_two.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/dep_two.adb -o dep_two.o
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -505,7 +505,7 @@ Hello from Dep_Two
 ================================================================
 Case 34 - Modified main.adb with different return code
 [Compile Ada] main.adb (main.gpr)
-gcc -c /tree/src/main.adb -o main.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/main.adb -o main.o
 Bind Ada: main (main.gpr)
 gnatbind /tree/obj/main.ali -o b__main.adb
 [Compile Ada] b__main.adb (main.gpr)
@@ -526,7 +526,7 @@ Hello from Dep_Two
 ================================================================
 Case 35 - Modified pkg.adb without dep_two dependency
 [Compile Ada] pkg.adb (main.gpr)
-gcc -c /tree/src/pkg.adb -o pkg.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/pkg.adb -o pkg.o
 Link: main (main.gpr)
 gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main
 main.gpr: warning: Link: main (main.gpr) failed with status 1
@@ -548,13 +548,13 @@ collect2: error: ld returned 1 exit status
 Error detected in jobs.json
 
 [Compile Ada] pkg.adb (main.gpr)
-gcc -c /tree/src/pkg.adb -o pkg.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/pkg.adb -o pkg.o
 Link: main (main.gpr)
 gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main
 ================================================================
 Case 36 - Modified dep_two.adb (new output)
 [Compile Ada] dep_two.adb (main.gpr)
-gcc -c /tree/src/dep_two.adb -o dep_two.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/dep_two.adb -o dep_two.o
 Link: main (main.gpr)
 gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main
 == Content of tree/obj/jobs.json:
@@ -569,6 +569,6 @@ Hello from Pkg
 Hello from modified Dep_Two
 
 [Compile Ada] dep_two.adb (main.gpr)
-gcc -c /tree/src/dep_two.adb -o dep_two.o
+<gcc>/bin/gcc -c -x ada -gnatA /tree/src/dep_two.adb -o dep_two.o
 Link: main (main.gpr)
 gcc /tree/obj/main.o /tree/obj/b__main.o /tree/obj/pkg.o /tree/obj/dep_two.o -L<gcc>/lib/gcc/(host)/(gcc-version)//adalib <gcc>/lib/gcc/(host)/(gcc-version)//adalib/libgnat.a -L/tree/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -o /tree/obj/main

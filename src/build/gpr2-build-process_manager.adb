@@ -165,7 +165,14 @@ package body GPR2.Build.Process_Manager is
       Act.Compute_Command (Args, Env);
       Cwd := Act.Working_Directory;
 
-      if Args.Is_Empty then
+      if Act.Skip then
+         Self.Traces.Trace
+           ("job asked to be skipped: " & Act.UID.Image);
+         Proc_Handler := Process_Handler'(Status => Skipped);
+
+         return;
+
+      elsif Args.Is_Empty then
          Self.Traces.Trace
            ("job arguments is empty, skipping '"  & Act.UID.Image & "'");
          Proc_Handler := Process_Handler'(Status => Skipped);

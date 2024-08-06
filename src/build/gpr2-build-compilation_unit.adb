@@ -189,6 +189,30 @@ package body GPR2.Build.Compilation_Unit is
          others    => <>);
    end Create;
 
+   ---------------------
+   -- Dependency_File --
+   ---------------------
+
+   function Dependency_File (Self : Object) return Simple_Name
+   is
+      Tree : constant access GPR2.Tree_Internal.Object :=
+               View_Internal.Get_RO (Self.Root_View).Tree;
+      Main : constant Unit_Location := Self.Main_Part;
+      BN   : constant Simple_Name := Main.Source.Base_Filename;
+   begin
+      if Main.Index = No_Index then
+         return BN & Tree.Dependency_Suffix (Ada_Language);
+      else
+         declare
+            Idx_Img : constant String := Main.Index'Image;
+         begin
+            return BN & "~" &
+              Simple_Name (Idx_Img (Idx_Img'First + 1 .. Idx_Img'Last)) &
+              Tree.Dependency_Suffix (Ada_Language);
+         end;
+      end if;
+   end Dependency_File;
+
    ------------------
    -- For_All_Part --
    ------------------
