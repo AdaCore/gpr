@@ -170,11 +170,11 @@ package GPR2.Build.Tree_Db is
    package Action_Iterators is new Ada.Iterator_Interfaces
      (Action_Cursor, Has_Element);
 
-   type Actions_List (<>) is tagged private
-     with Default_Iterator  => Action_Iterate,
-          Iterator_Element  => Actions.Object'Class,
+   type Actions_List is tagged private
+     with Variable_Indexing => Action_Reference,
           Constant_Indexing => Constant_Action_Reference,
-          Variable_Indexing => Action_Reference;
+          Default_Iterator  => Action_Iterate,
+          Iterator_Element  => Actions.Object'Class;
 
    function Action_Iterate
      (List : Actions_List) return Action_Iterators.Forward_Iterator'Class;
@@ -189,7 +189,7 @@ package GPR2.Build.Tree_Db is
      with Pre => Self.Is_Defined;
 
    function Action_Reference
-     (Iterator : access Actions_List;
+     (Iterator : aliased in out Actions_List;
       Pos      : Action_Cursor) return Action_Reference_Type;
 
    type Constant_Action_Reference_Type
@@ -392,19 +392,16 @@ private
    type Action_List_Kind is (Global_List,
                              Successors);
 
-   type Actions_List (Kind : Action_List_Kind) is tagged record
-      Db : access Object;
-
-      case Kind is
-         when Global_List =>
-            null;
-         when others =>
-            Artifact : Artifact_Sets.Cursor;
-      end case;
+   type Actions_List is tagged record
+      Kind     : Action_List_Kind := Global_List;
+      Db       : access Object;
+      Artifact : Artifact_Sets.Cursor := Artifact_Sets.No_Element;
    end record;
 
    function All_Actions (Self : Object) return Actions_List'Class is
-     (Actions_List'(Kind => Global_List, Db => Self.Self));
+     (Actions_List'(Kind     => Global_List,
+                    Db       => Self.Self,
+                    Artifact => Artifact_Sets.No_Element));
 
    function Inputs
      (Self : Object;

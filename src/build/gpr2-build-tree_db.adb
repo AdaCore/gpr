@@ -98,7 +98,7 @@ package body GPR2.Build.Tree_Db is
    ----------------------
 
    function Action_Reference
-     (Iterator : access Actions_List;
+     (Iterator : aliased in out Actions_List;
       Pos      : Action_Cursor) return Action_Reference_Type
    is
       Ref : constant Action_Maps.Reference_Type :=
