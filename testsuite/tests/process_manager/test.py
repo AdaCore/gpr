@@ -30,9 +30,9 @@ def test(header, scenario_idx):
                 + "', status : '"
                 + job["status"]
                 + "', stdout: '"
-                + job["stdout"]
+                + job["stdout"].replace('\r', '').strip()
                 + "', stderr: '"
-                + job["stderr"]
+                + job["stderr"].replace('\r', '').strip()
                 + "'"
             )
 

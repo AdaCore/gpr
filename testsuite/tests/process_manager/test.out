@@ -18,8 +18,7 @@ Job 'Write_File '2' (main.gpr)' failed. Status: 1, output: '', stderr: 'File has
 '
 == Content of jobs.json:
 uid: 'Write_File '1' (main.gpr)', status : '0', stdout: '', stderr: ''
-uid: 'Write_File '2' (main.gpr)', status : '1', stdout: '', stderr: 'File has been created, but return code is  1
-'
+uid: 'Write_File '2' (main.gpr)', status : '1', stdout: '', stderr: 'File has been created, but return code is  1'
 
 ================================================================
 Case 4 - Action n. 5 does not depend on action n. 4
