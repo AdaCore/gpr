@@ -18,7 +18,8 @@ of different targets, runtimes, compilers, etc.:
 
 * [GPRCONFIG KB](https://github.com/AdaCore/gprconfig_kb)
 
-To regenerate the GPR parser from the Langkit grammar the following additional
+A GPR parser generated from the Langkit grammar is already available
+in `langkit/gen/src`. To regenerate this parser, the following additional
 external modules are required:
 
 * Python
