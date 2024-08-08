@@ -23,8 +23,8 @@ package body GPR2.Build.Process_Manager.JSON is
        Stdout, Stderr : Unbounded_String)
       return Collect_Status
    is
-      Act : constant GPR2.Build.Actions.Object'Class :=
-              Self.Tree_Db.Action
+      Act : constant Tree_Db.Action_Reference_Type :=
+              Self.Tree_Db.Action_Id_To_Reference
                 (Self.Tree_Db.Action_Id (Job));
       Job_Summary : constant JSON_Value := Create_Object;
       Env_Summary : JSON_Value;

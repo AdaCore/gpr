@@ -47,7 +47,7 @@ package GPR2.Build.Actions.Compile is
    overriding procedure Compute_Signature (Self : in out Object);
 
    overriding procedure Compute_Command
-     (Self : Object;
+     (Self : in out Object;
       Args : out GNATCOLL.OS.Process.Argument_List;
       Env  : out GNATCOLL.OS.Process.Environment_Dict);
 

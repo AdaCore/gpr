@@ -312,7 +312,15 @@ package body GPR2.Build.Process_Manager is
                   Job          => States (Proc_Id).Node,
                    Proc_Handler => Proc_Handler,
                    Stdout       => Stdout,
-                   Stderr       => Stderr);
+                  Stderr       => Stderr);
+
+               declare
+                  Act : constant Build.Tree_Db.Action_Reference_Type :=
+                          Self.Tree_Db.Action_Id_To_Reference
+                            (Self.Tree_Db.Action_Id (States (Proc_Id).Node));
+               begin
+                  Act.Cleanup_Temp_Files (Scope => Actions.Local);
+               end;
 
                --  Adjust execution depending on returned value
                if Job_Status = Abort_Execution then
@@ -348,6 +356,17 @@ package body GPR2.Build.Process_Manager is
 
          exit when End_Of_Iteration and then Active_Jobs = 0;
       end loop;
+
+      --  Cleanup the temporary files with global scope
+
+      declare
+         Actions : Build.Tree_Db.Actions_List'Class :=
+                     Self.Tree_Db.All_Actions;
+      begin
+         for A of Actions loop
+            A.Cleanup_Temp_Files (Build.Actions.Global);
+         end loop;
+      end;
 
       --  End the allocated listeners.
       for State of States loop

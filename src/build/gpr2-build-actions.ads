@@ -4,14 +4,20 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-limited with GPR2.Build.Tree_Db;
+with GNATCOLL.OS.FS;
+with GNATCOLL.OS.Process;
+
+with GPR2.Containers;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
-with GNATCOLL.OS.Process;
+
+limited with GPR2.Build.Tree_Db;
 
 private with Ada.Tags;
+
 private with GNATCOLL.Traces;
+
 private with GPR2.Build.Signature;
 
 package GPR2.Build.Actions is
@@ -82,7 +88,7 @@ package GPR2.Build.Actions is
       Db   : in out GPR2.Build.Tree_Db.Object);
 
    procedure Compute_Command
-     (Self : Object;
+     (Self : in out Object;
       Args : out GNATCOLL.OS.Process.Argument_List;
       Env  : out GNATCOLL.OS.Process.Environment_Dict) is abstract;
    --  Return the command line and environment corresponding to the action
@@ -93,20 +99,55 @@ package GPR2.Build.Actions is
    procedure Post_Command (Self : in out Object) is null;
    --  Post-processing that should occur after executing the command
 
+   ---------------------------
+   -- Temp files management --
+   ---------------------------
+
+   type Temp_File (Path_Len : Natural) is record
+      FD   : GNATCOLL.OS.FS.File_Descriptor;
+      Path : Filename_Type (1 .. Path_Len);
+   end record;
+
+   type Temp_File_Scope is (Local, Global);
+
+   function Get_Or_Create_Temp_File
+     (Self    : in out Object'Class;
+      Purpose : Filename_Type;
+      Scope   : Temp_File_Scope) return Temp_File;
+   --  Create a temporary file. If the scope is local, it will be automatically
+   --  recalled upon termination of the Action, otherwise the cleanup is done
+   --  at the end of the DAG execution.
+   --  Purpose is used to differenciate temp files within the same action.
+   --  If the temp file for the specified purpose already exists, path is set
+   --  in the returned record but FD is set to Null_FD. Else FD is in write
+   --  mode so can be used to generate the temp file.
+
+   procedure Cleanup_Temp_Files
+     (Self : in out Object'Class;
+      Scope : Temp_File_Scope);
+   --  Cleanup any existing temp file for the given scope.
+
 private
 
    use type Ada.Tags.Tag;
    use GNATCOLL.Traces;
 
+   type Tmp_Files_Array is
+     array (Temp_File_Scope) of GPR2.Containers.Filename_Set;
+
    type Object is abstract tagged record
-      Tree      : access Tree_Db.Object;
-
-      Signature : GPR2.Build.Signature.Object;
-
-      Traces    : Trace_Handle := Create ("TRACE_NAME_TO_OVERRIDE");
+      Tree       : access Tree_Db.Object;
+      --  Owning Tree
+      Signature  : GPR2.Build.Signature.Object;
+      --  Stored signature for the action
+      Traces     : Trace_Handle := Create ("TRACE_NAME_TO_OVERRIDE");
+      --  Used for debug info
+      Tmp_Files  : Tmp_Files_Array;
+      --  List of tmp files to be cleaned up
    end record;
 
    function Less (L, R : Action_Id'Class) return Boolean is
      (if L'Tag = R'Tag then L < R
       else Ada.Tags.External_Tag (L'Tag) < Ada.Tags.External_Tag (R'Tag));
+
 end GPR2.Build.Actions;

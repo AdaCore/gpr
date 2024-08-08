@@ -31,7 +31,7 @@ package body GPR2.Build.Actions.Ada_Bind is
    ---------------------
 
    overriding procedure Compute_Command
-     (Self : Object;
+     (Self : in out Object;
       Args : out GNATCOLL.OS.Process.Argument_List;
       Env  : out GNATCOLL.OS.Process.Environment_Dict)
    is
