@@ -4,6 +4,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Assertions;
+
 with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.ALI_Parser;
 with GPR2.Build.Artifacts.Files;
@@ -72,14 +74,14 @@ package body GPR2.Build.Actions.Ada_Compile is
       Args : out GNATCOLL.OS.Process.Argument_List;
       Env  : out GNATCOLL.OS.Process.Environment_Dict)
    is
-      pragma Unreferenced (Env);
-
       procedure Add_Attr
         (Id      : Q_Attribute_Id;
          Idx     : PAI.Object;
          Is_List : Boolean);
 
       procedure Add_Dependency_Options;
+
+      procedure Add_Include_Path;
 
       Ada_Idx : constant PAI.Object := PAI.Create (Ada_Language);
       Src_Idx : constant PAI.Object :=
@@ -135,11 +137,120 @@ package body GPR2.Build.Actions.Ada_Compile is
          end loop;
       end Add_Dependency_Options;
 
+      ----------------------
+      -- Add_Include_Path --
+      ----------------------
+
+      procedure Add_Include_Path is
+         Attr : GPR2.Project.Attribute.Object;
+
+         function Inc_Path_File return Filename_Type;
+         --  Get or create a temporary include path file for the view
+
+         -------------------
+         -- Inc_Path_File --
+         -------------------
+
+         function Inc_Path_File return Filename_Type is
+            use GNATCOLL.OS.FS;
+            Tmp : constant Actions.Temp_File :=
+                    Self.Get_Or_Create_Temp_File
+                      ("ada_inc_path", Actions.Global);
+         begin
+            if Tmp.FD /= Null_FD then
+               for P of Self.View.Include_Path (Ada_Language) loop
+                  Write (Tmp.FD, P.String_Value & ASCII.LF);
+               end loop;
+
+               Close (Tmp.FD);
+            end if;
+
+            return Tmp.Path;
+         end Inc_Path_File;
+
+         use type Ada.Containers.Count_Type;
+      begin
+         Attr := Self.View.Attribute (PRA.Compiler.Include_Path_File, Ada_Idx);
+
+         if Attr.Is_Defined then
+            declare
+               Inc_File  : constant Filename_Type := Inc_Path_File;
+               Full_Path : constant GPR2.Path_Name.Object :=
+                             Self.View.Object_Directory.Compose (Inc_File);
+            begin
+               Env.Include (String (Attr.Value.Text), Full_Path.String_Value);
+            end;
+
+            return;
+         end if;
+
+         Attr :=
+           Self.View.Attribute
+             (PRA.Compiler.Include_Switches_Via_Spec, Ada_Idx);
+
+         if Attr.Is_Defined then
+            --  need to create a temp file with the
+            --  paht, and then another temp file used as gcc spec in the form:
+            --
+            --  * cc1 :
+            --  + @-I <tempfile>
+            --
+            --  Where 'cc1' is the first value in the list, and '-I' the second
+            --  one.
+            --
+            --  Finally (and it's hardcoded in gpr1) add switch
+            --  "-spec=<the spec temp file>
+
+            declare
+               Inc_File  : constant Filename_Type := Inc_Path_File;
+               Full_Path : constant GPR2.Path_Name.Object :=
+                             Self.View.Object_Directory.Compose (Inc_File);
+               Spec_File : constant Temp_File :=
+                             Self.Get_Or_Create_Temp_File
+                               ("ada_spec_inc_path", Global);
+               use GNATCOLL.OS.FS;
+
+            begin
+               if Spec_File.FD /= Null_FD then
+                  Write (Spec_File.FD, "* " & Attr.Values.First_Element.Text &
+                           " :" & ASCII.LF);
+                  Write (Spec_File.FD, "+@-I " & Full_Path.String_Value &
+                           ASCII.LF);
+                  Close (Spec_File.FD);
+               end if;
+
+               Args.Append ("-spec=" & String (Spec_File.Path));
+            end;
+
+            return;
+         end if;
+
+         Attr := Self.View.Attribute (PRA.Compiler.Include_Switches, Ada_Idx);
+
+         if Attr.Is_Defined then
+            for Path of Self.View.Include_Path (Ada_Language) loop
+               if Attr.Values.Length > 1 then
+                  for J in
+                    Attr.Values.First_Index .. Attr.Values.Last_Index - 1
+                  loop
+                     Args.Append (Attr.Values.Element (J).Text);
+                  end loop;
+               end if;
+
+               Args.Append
+                 (Attr.Values.Last_Element.Text & Path.String_Value);
+            end loop;
+         end if;
+
+         raise Ada.Assertions.Assertion_Error with
+           "Cannot determine ways to transmit include path to the toolchain";
+      end Add_Include_Path;
+
    begin
       Add_Attr (PRA.Compiler.Driver, Ada_Idx, False);
       Add_Attr (PRA.Compiler.Leading_Required_Switches, Ada_Idx, True);
-      --  ??? TODO: add builder switches from command line
-      Add_Attr (PRA.Builder.Switches, Ada_Idx, True);
+      --  ??? need to filter out builder switches from command line
+      --  Add_Attr (PRA.Builder.Switches, Ada_Idx, True);
       Add_Attr (PRA.Compiler.Switches, Src_Idx, True);
       --  ??? TODO: command line -cargs options
       --  ??? TODO: command line -cargs:ada options
@@ -151,11 +262,12 @@ package body GPR2.Build.Actions.Ada_Compile is
       end if;
 
       Add_Dependency_Options;
-
-      --  ??? TODO: create include_path file once for each language of the view
+      Add_Include_Path;
 
       --  ??? Replace hard coded values
-      Args.Append (Self.CU.Main_Part.Source.String_Value);
+      Args.Append
+        (String
+           (Self.CU.Main_Part.Source.Relative_Path (Self.Working_Directory)));
       Args.Append ("-o");
       Args.Append (String (Self.Object_File.Simple_Name));
    end Compute_Command;
