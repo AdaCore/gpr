@@ -16,10 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Unbounded;
-with Ada.Text_IO;
-
-with GPR2.Compilation.Registry;
 with GPR2.Options;
 with GPR2.Project.Registry.Pack;
 
@@ -91,8 +87,6 @@ package body GPRclean.Options is
      (Parser       : GPRtools.Options.Command_Line_Parser;
       Options      : in out Object)
    is
-      use Ada.Strings.Unbounded;
-
    begin
       Parser.Get_Opt (Options);
 
@@ -103,19 +97,6 @@ package body GPRclean.Options is
       end loop;
 
       Options.Arg_Mains := not Options.Mains.Is_Empty;
-
-      if Options.Slave_Env = Null_Unbounded_String
-        and then Options.Distributed_Mode
-      then
-         Options.Slave_Env := To_Unbounded_String
-           (GPR2.Compilation.Registry.Compute_Env
-              (Options.Tree.all, Options.Slave_Env_Auto));
-
-         if Options.Slave_Env_Auto and then Options.Verbose then
-            Ada.Text_IO.Put_Line
-              ("slave environment is " & To_String (Options.Slave_Env));
-         end if;
-      end if;
    end Parse_Command_Line;
 
    -----------
@@ -134,7 +115,6 @@ package body GPRclean.Options is
         ("2018",
          Cmd_Line          => "[-P<proj>|<proj.gpr>] [opts] [mains]",
          Help              => "'mains' being zero or more file names",
-         Allow_Distributed => True,
          Allow_Autoconf    => False);
 
       Clean_Group := Parser.Add_Argument_Group
