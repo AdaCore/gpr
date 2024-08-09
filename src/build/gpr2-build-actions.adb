@@ -34,17 +34,21 @@ package body GPR2.Build.Actions is
    is
       use GNATCOLL.OS.FSUtil;
    begin
-      for F of Self.Tmp_Files (Scope) loop
-         if not Remove_File
-           (Self.View.Object_Directory.Compose (F).String_Value)
-         then
-            Self.Traces.Trace
-              ("error: could not remove temp file " & String (F) & " in " &
-                 Self.View.Object_Directory.String_Value);
-         end if;
-      end loop;
+      if Scope = Global then
+         Self.Tree.Clear_Temp_Files;
+      else
+         for F of Self.Tmp_Files loop
+            if not Remove_File
+              (Self.View.Object_Directory.Compose (F).String_Value)
+            then
+               Self.Traces.Trace
+                 ("error: could not remove temp file " & String (F) & " in " &
+                    Self.View.Object_Directory.String_Value);
+            end if;
+         end loop;
+      end if;
 
-      Self.Tmp_Files (Scope).Clear;
+      Self.Tmp_Files.Clear;
    end Cleanup_Temp_Files;
 
    -----------------------
@@ -101,35 +105,38 @@ package body GPR2.Build.Actions is
    function Get_Or_Create_Temp_File
      (Self    : in out Object'Class;
       Purpose : Filename_Type;
-      Scope   : Temp_File_Scope) return Temp_File
+      Scope   : Temp_File_Scope) return Tree_Db.Temp_File
    is
-      --  ??? Naive implementation as first try
-      BN   : constant Filename_Type :=
-               "." &
-              (if Scope = Local then Self.UID.Db_Filename & "~" else "") &
-              Purpose & ".tmp";
-      Dest : constant GPR2.Path_Name.Object :=
-               Self.View.Object_Directory.Compose (BN, Directory => False);
-      FD   : GNATCOLL.OS.FS.File_Descriptor;
-      use GNATCOLL.OS.FS;
-
    begin
-      if Self.Tmp_Files (Scope).Contains (BN) then
-         return (Path_Len => BN'Length,
-                 FD       => Null_FD,
-                 Path     => BN);
+      if Scope = Global then
+         return Self.Tree.Get_Or_Create_Temp_File
+           (Self.View, Purpose);
       else
-         FD := GNATCOLL.OS.FS.Open
-           (Dest.String_Value,
-            GNATCOLL.OS.FS.Write_Mode);
+         declare
+            --  ??? Naive implementation as first try
+            BN   : constant Filename_Type :=
+                     "." & Self.UID.Db_Filename & "-" & Purpose & ".tmp";
+            Dest : constant GPR2.Path_Name.Object :=
+                     Self.View.Object_Directory.Compose (BN);
+            FD   : GNATCOLL.OS.FS.File_Descriptor;
+            use GNATCOLL.OS.FS;
 
-         pragma Assert (FD /= Null_FD and then FD /= Invalid_FD,
-                        "could not create " & Dest.String_Value);
-         Self.Tmp_Files (Scope).Insert (BN);
+         begin
+            if Self.Tmp_Files.Contains (BN) then
+               FD := Null_FD;
+            else
+               FD := GNATCOLL.OS.FS.Open
+                 (Dest.String_Value,
+                  GNATCOLL.OS.FS.Write_Mode);
+               pragma Assert (FD /= Null_FD and then FD /= Invalid_FD,
+                              "could not create " & Dest.String_Value);
+               Self.Tmp_Files.Insert (BN);
+            end if;
 
-         return (Path_Len => BN'Length,
-                 FD       => FD,
-                 Path     => BN);
+            return (Path_Len => BN'Length,
+                    FD       => FD,
+                    Path     => BN);
+         end;
       end if;
    end Get_Or_Create_Temp_File;
 

@@ -155,7 +155,7 @@ package body GPR2.Build.Actions.Ada_Compile is
 
          function Inc_Path_File return Filename_Type is
             use GNATCOLL.OS.FS;
-            Tmp : constant Actions.Temp_File :=
+            Tmp : constant Tree_Db.Temp_File :=
                     Self.Get_Or_Create_Temp_File
                       ("ada_inc_path", Actions.Global);
          begin
@@ -207,7 +207,7 @@ package body GPR2.Build.Actions.Ada_Compile is
                Inc_File  : constant Filename_Type := Inc_Path_File;
                Full_Path : constant GPR2.Path_Name.Object :=
                              Self.View.Object_Directory.Compose (Inc_File);
-               Spec_File : constant Temp_File :=
+               Spec_File : constant Tree_Db.Temp_File :=
                              Self.Get_Or_Create_Temp_File
                                ("ada_spec_inc_path", Global);
                use GNATCOLL.OS.FS;

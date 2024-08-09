@@ -6,6 +6,9 @@
 
 with Ada.Iterator_Interfaces;
 
+with GNATCOLL.Directed_Graph;
+with GNATCOLL.OS.FS;
+
 with GPR2.Build.Actions;
 with GPR2.Build.Artifacts;
 with GPR2.Build.View_Db;
@@ -14,7 +17,6 @@ with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.View_Ids;
 
-with GNATCOLL.Directed_Graph;
 private with Ada.Containers.Hashed_Maps;
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Indefinite_Ordered_Sets;
@@ -210,6 +212,24 @@ package GPR2.Build.Tree_Db is
    function Successors
      (Self     : Object;
       Artifact : Artifacts.Object'Class) return Actions_List'Class;
+
+   -------------------------
+   -- Temp files handling --
+   -------------------------
+
+   type Temp_File (Path_Len : Natural) is record
+      FD   : GNATCOLL.OS.FS.File_Descriptor;
+      Path : Filename_Type (1 .. Path_Len);
+   end record;
+
+   function Get_Or_Create_Temp_File
+     (Self     : Object;
+      For_View : GPR2.Project.View.Object;
+      Purpose  : Simple_Name) return Temp_File
+   with Pre => For_View.Kind in With_Object_Dir_Kind;
+
+   procedure Clear_Temp_Files (Self : Object);
+   --  Make sure all temp files are cleaned up
 
 private
 

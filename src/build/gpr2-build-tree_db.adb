@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GNATCOLL.OS.FSUtil;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
@@ -289,6 +290,26 @@ package body GPR2.Build.Tree_Db is
       end loop;
    end Check_Tree;
 
+   ----------------------
+   -- Clear_Temp_Files --
+   ----------------------
+
+   procedure Clear_Temp_Files (Self : Object) is
+   begin
+      for V_Db of Self.Build_Dbs loop
+         declare
+            Data_Ref : constant View_Tables.View_Data_Ref :=
+                         View_Tables.Get_Ref (V_Db);
+            Dead     : Boolean with Unreferenced;
+         begin
+            for Temp of Data_Ref.Temp_Files loop
+               Dead := GNATCOLL.OS.FSUtil.Remove_File
+                 (Data_Ref.View.Object_Directory.Compose (Temp).String_Value);
+            end loop;
+         end;
+      end loop;
+   end Clear_Temp_Files;
+
    -------------------------------
    -- Constant_Action_Reference --
    -------------------------------
@@ -487,6 +508,53 @@ package body GPR2.Build.Tree_Db is
       end case;
    end First;
 
+   -----------------------------
+   -- Get_Or_Create_Temp_File --
+   -----------------------------
+
+   function Get_Or_Create_Temp_File
+     (Self     : Object;
+      For_View : GPR2.Project.View.Object;
+      Purpose  : Simple_Name) return Temp_File
+   is
+      Data : constant View_Tables.View_Data_Ref :=
+               View_Tables.Get_Ref (Self.Build_Dbs (For_View.Id));
+      C    : View_Tables.Temp_File_Maps.Cursor;
+      Dest : Path_Name.Object;
+      Done : Boolean;
+
+   begin
+      C := Data.Temp_Files.Find (Purpose);
+
+      if not View_Tables.Temp_File_Maps.Has_Element (C) then
+         declare
+            BN : constant Simple_Name :=
+                   "." & Purpose & ".tmp";
+         begin
+            Dest := For_View.Object_Directory.Compose (BN);
+            Data.Temp_Files.Insert (Purpose, BN, C, Done);
+
+            pragma Assert (Done);
+
+            return
+              (Path_Len => BN'Length,
+               FD       => GNATCOLL.OS.FS.Open
+                             (Dest.String_Value,
+                              GNATCOLL.OS.FS.Write_Mode),
+               Path     => BN);
+         end;
+      else
+         declare
+            BN : Simple_Name renames View_Tables.Temp_File_Maps.Element (C);
+         begin
+            return
+              (Path_Len => BN'Length,
+               FD       => GNATCOLL.OS.FS.Null_FD,
+               Path     => BN);
+         end;
+      end if;
+   end Get_Or_Create_Temp_File;
+
    ----------
    -- Next --
    ----------
@@ -676,6 +744,7 @@ package body GPR2.Build.Tree_Db is
 
    procedure Unload (Self : in out Object) is
    begin
+      Self.Clear_Temp_Files;
       Self.Build_Dbs.Clear;
       Self.Tree := null;
       Self.Self := null;

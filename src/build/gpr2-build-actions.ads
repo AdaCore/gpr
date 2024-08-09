@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GNATCOLL.OS.FS;
 with GNATCOLL.OS.Process;
 
 with GPR2.Containers;
@@ -101,17 +100,12 @@ package GPR2.Build.Actions is
    -- Temp files management --
    ---------------------------
 
-   type Temp_File (Path_Len : Natural) is record
-      FD   : GNATCOLL.OS.FS.File_Descriptor;
-      Path : Filename_Type (1 .. Path_Len);
-   end record;
-
    type Temp_File_Scope is (Local, Global);
 
    function Get_Or_Create_Temp_File
      (Self    : in out Object'Class;
       Purpose : Filename_Type;
-      Scope   : Temp_File_Scope) return Temp_File;
+      Scope   : Temp_File_Scope) return Tree_Db.Temp_File;
    --  Create a temporary file. If the scope is local, it will be automatically
    --  recalled upon termination of the Action, otherwise the cleanup is done
    --  at the end of the DAG execution.
@@ -130,9 +124,6 @@ private
    use type Ada.Tags.Tag;
    use GNATCOLL.Traces;
 
-   type Tmp_Files_Array is
-     array (Temp_File_Scope) of GPR2.Containers.Filename_Set;
-
    type Object is abstract tagged record
       Tree       : access Tree_Db.Object;
       --  Owning Tree
@@ -140,7 +131,7 @@ private
       --  Stored signature for the action
       Traces     : Trace_Handle := Create ("TRACE_NAME_TO_OVERRIDE");
       --  Used for debug info
-      Tmp_Files  : Tmp_Files_Array;
+      Tmp_Files  : GPR2.Containers.Filename_Set;
       --  List of tmp files to be cleaned up
    end record;
 
