@@ -7,9 +7,6 @@
 with Ada.Directories; use Ada.Directories;
 with Ada.Text_IO; use Ada.Text_IO;
 
-with GPR2.Message;
-with GPR2.Source_Reference;
-
 package body GPR2.Build.Signature is
 
    -----------------------
@@ -42,9 +39,7 @@ package body GPR2.Build.Signature is
    -- Load --
    ----------
 
-   function Load
-     (Db_File  : Path_Name.Object;
-      Messages : in out GPR2.Log.Object) return Object
+   function Load (Db_File : Path_Name.Object) return Object
    is
       File        : File_Type;
       JSON_Result : Read_Result;
@@ -122,27 +117,12 @@ package body GPR2.Build.Signature is
 
                                  if not Inserted then
                                     Signature.Coherent := False;
-                                    Messages.Append
-                                      (Message.Create
-                                         (Message.Warning,
-                                          "duplicated artifact or invalid "
-                                          & "artifact id",
-                                          Source_Reference.Create
-                                            (Db_File.Value, 0, 0)));
 
                                     exit;
                                  end if;
                               end;
                            else
                               Signature.Coherent := False;
-                              Messages.Append
-                                (Message.Create
-                                   (Message.Warning,
-                                    "missing mandatory artifact field in"
-                                    & " artifacts list",
-                                    Source_Reference.Create
-                                      (Db_File.Value, 0, 0)));
-
                               exit;
                            end if;
                         end;
@@ -150,43 +130,17 @@ package body GPR2.Build.Signature is
                   end;
                else
                   Signature.Coherent := False;
-                  Messages.Append
-                    (Message.Create
-                       (Message.Warning,
-                        "missing mandatory artifact list field",
-                        Source_Reference.Create
-                          (Db_File.Value, 0, 0)));
                end if;
             else
                Signature.Coherent := False;
-               Messages.Append
-                 (Message.Create
-                    (Message.Warning,
-                     To_String (JSON_Result.Error.Message),
-                     Source_Reference.Create
-                       (Db_File.Value,
-                        JSON_Result.Error.Line,
-                        JSON_Result.Error.Column)));
             end if;
          exception
             when End_Error =>
                Signature.Coherent := False;
-               Messages.Append
-                 (Message.Create
-                    (Message.Warning,
-                     "cannot be loaded",
-                     Source_Reference.Create
-                       (Db_File.Value, 0, 0)));
                Close (File);
          end;
       else
          Signature.Coherent := False;
-         Messages.Append
-           (Message.Create
-              (Message.Warning,
-               "file does not exist",
-               Source_Reference.Create
-                 (Db_File.Value, 0, 0)));
       end if;
 
       return Signature;

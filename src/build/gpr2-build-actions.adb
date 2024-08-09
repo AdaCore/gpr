@@ -4,11 +4,11 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GNATCOLL.OS.FS;
 with GNATCOLL.OS.FSUtil;
 
 with GPR2.Build.Tree_Db;
 with GPR2.Build.Artifacts.Files;
-with GPR2.Message;
 with GPR2.Utils.Hash;
 
 package body GPR2.Build.Actions is
@@ -51,9 +51,7 @@ package body GPR2.Build.Actions is
    -- Compare_Signature --
    -----------------------
 
-   procedure Compare_Signature
-     (Self     : in out Object;
-      Messages : in out GPR2.Log.Object)
+   procedure Compare_Signature (Self : in out Object)
    is
       use Build.Signature;
       use Utils.Hash;
@@ -63,7 +61,7 @@ package body GPR2.Build.Actions is
       Db_File : constant GPR2.Path_Name.Object :=
                   Self.Tree.Db_Filename_Path (UID);
    begin
-      Self.Signature := Load (Db_File, Messages);
+      Self.Signature := Load (Db_File);
 
       if Self.Signature.Coherent then
          Self.Signature.Set_Valid_State (True);
@@ -88,19 +86,9 @@ package body GPR2.Build.Actions is
             if Artifact.Path.Exists then
                if Artifact.Checksum /= Artifact_Sign.Checksum then
                   Self.Signature.Set_Valid_State (False);
-                  Messages.Append
-                    (Message.Create
-                      (Message.Information,
-                       "not up-to-date",
-                       Artifact.SLOC));
                end if;
             else
                Self.Signature.Set_Valid_State (False);
-               Messages.Append
-                 (Message.Create
-                    (Message.Information,
-                     "does not exist ",
-                     Artifact.SLOC));
             end if;
          end;
       end loop;

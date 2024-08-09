@@ -53,7 +53,7 @@ package GPR2.Build.Actions is
    --  contain references to its inputs or outputs depending on what is
    --  relevant to make it unique.
 
-   function Valid_Signature (Self : Object) return Boolean is abstract;
+   function Valid_Signature (Self : Object) return Boolean;
    --  Returns whether or not the action is inhibited. This means the loaded
    --  signature match the current action signature.
 
@@ -78,9 +78,7 @@ package GPR2.Build.Actions is
    procedure Compute_Signature (Self : in out Object) is abstract;
    --  Compute the action signature from all its artifacts and hard store it
 
-   procedure Compare_Signature
-     (Self     : in out Object;
-      Messages : in out GPR2.Log.Object);
+   procedure Compare_Signature (Self : in out Object);
    --  Compare the current action signature to the loaded signature
 
    procedure Attach
@@ -150,4 +148,6 @@ private
      (if L'Tag = R'Tag then L < R
       else Ada.Tags.External_Tag (L'Tag) < Ada.Tags.External_Tag (R'Tag));
 
+   function Valid_Signature (Self : Object) return Boolean is
+      (Self.Signature.Valid);
 end GPR2.Build.Actions;

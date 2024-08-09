@@ -15,7 +15,6 @@ with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
 with GNATCOLL.Directed_Graph; use GNATCOLL.Directed_Graph;
 
 with GPR2.Build.Actions; use GPR2.Build.Actions;
-with GPR2.Log;
 with GPR2.Message.Reporter;
 with GPR2.Path_Name;
 with GPR2.Source_Reference;
@@ -110,10 +109,9 @@ package body GPR2.Build.Process_Manager is
          end if;
       end if;
 
-      Act.Post_Command;
-
       if Proc_Handler.Status = Finished then
          if Proc_Handler.Process_Status = PROCESS_STATUS_OK then
+            Act.Post_Command;
             Act.Compute_Signature;
 
          elsif Self.Stop_On_Fail then
@@ -427,11 +425,10 @@ package body GPR2.Build.Process_Manager is
       Args     : Argument_List;
       Env      : Environment_Dict;
       Cwd      : GPR2.Path_Name.Object;
-      Messages : GPR2.Log.Object;
 
    begin
 
-      Act.Compare_Signature (Messages);
+      Act.Compare_Signature;
 
       --  ??? Process Messages
 

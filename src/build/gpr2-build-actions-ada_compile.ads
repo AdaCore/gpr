@@ -33,8 +33,6 @@ package GPR2.Build.Actions.Ada_Compile is
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
 
-   overriding function Valid_Signature (Self : Object) return Boolean;
-
    function Is_Defined (Self : Object) return Boolean;
 
    procedure Initialize

@@ -11,7 +11,6 @@ with Ada.Strings.Unbounded;
 with GNATCOLL;
 with GNATCOLL.JSON;
 
-with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Utils.Hash;
 
@@ -65,9 +64,7 @@ package GPR2.Build.Signature is
    procedure Clear (Self : in out Object);
    --  Clear all the signature artifacts and invalidate it
 
-   function Load
-     (Db_File  : Path_Name.Object;
-      Messages : in out GPR2.Log.Object) return Object;
+   function Load (Db_File  : Path_Name.Object) return Object;
    --  Loads the build DB file Db_File
 
    procedure Store (Self : Object; Db_File : Path_Name.Object);

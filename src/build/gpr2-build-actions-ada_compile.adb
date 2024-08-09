@@ -6,6 +6,8 @@
 
 with Ada.Assertions;
 
+with GNATCOLL.OS.FS;
+
 with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.ALI_Parser;
 with GPR2.Build.Artifacts.Files;
