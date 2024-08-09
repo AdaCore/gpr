@@ -1,7 +1,8 @@
 with GPR2.Build.Actions.Ada_Bind;
-with GPR2.Build.Actions.Ada_Compile.Post_Bind;
+with GPR2.Build.Actions.Ada_Compile;
 with GPR2.Build.Actions.Compile;
 with GPR2.Build.Actions.Link;
+with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source;
 pragma Warnings (Off);
@@ -52,42 +53,34 @@ package body GPRtools.Actions is
 
          declare
             Bind_Action : GBA.Ada_Bind.Object;
-            C           : GBA.Ada_Compile.Post_Bind.Object;
+            PB_Id       : GBA.Post_Bind.Post_Bind_Id;
          begin
             Bind_Action.Initialize (A.Ali_File, Main.View);
-            C.Initialize (Bind_Action.Output_Unit);
+            Tree.Artifacts_Database.Add_Action (Bind_Action, Log);
+
+            if Log.Has_Error then
+               return False;
+            end if;
+
+            PB_Id := GBA.Post_Bind.Post_Bind_Id
+              (Bind_Action.Post_Bind_Action);
 
             declare
-               L : GBA.Link.Object;
+               L  : GBA.Link.Object;
+               PB : constant GBA.Post_Bind.Object :=
+                      GBA.Post_Bind.Object
+                        (Tree.Artifacts_Database.Action (PB_Id));
             begin
                L.Initialize
                  (Main.View.Executable (Main.Source.Simple_Name, Main.Index),
                   A.Object_File, Main.View);
 
-               L.Add_Object_File (C.Object_File);
+               L.Add_Object_File (PB.Object_File);
 
-               if not Tree.Artifacts_Database.Has_Action (Bind_Action.UID) then
-                  Tree.Artifacts_Database.Add_Action (Bind_Action, Log);
+               Tree.Artifacts_Database.Add_Action (L, Log);
 
-                  if Log.Has_Error then
-                     return False;
-                  end if;
-               end if;
-
-               if not Tree.Artifacts_Database.Has_Action (C.UID) then
-                  Tree.Artifacts_Database.Add_Action (C, Log);
-
-                  if Log.Has_Error then
-                     return False;
-                  end if;
-               end if;
-
-               if not Tree.Artifacts_Database.Has_Action (L.UID) then
-                  Tree.Artifacts_Database.Add_Action (L, Log);
-
-                  if Log.Has_Error then
-                     return False;
-                  end if;
+               if Log.Has_Error then
+                  return False;
                end if;
             end;
          end;
@@ -122,6 +115,8 @@ package body GPRtools.Actions is
                end;
             end if;
          end loop;
+
+         Tree.Artifacts_Database.Propagate_Actions;
       end loop;
 
       return True;

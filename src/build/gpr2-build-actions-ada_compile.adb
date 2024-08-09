@@ -5,13 +5,18 @@
 --
 
 with Ada.Assertions;
+with Ada.Characters.Handling;
+with Ada.Containers.Indefinite_Ordered_Sets;
 
 with GNATCOLL.OS.FS;
+with GNATCOLL.OS.FSUtil;
 
 with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.ALI_Parser;
 with GPR2.Build.Artifacts.Files;
-with GPR2.Build.Source;
+pragma Warnings (Off, ".* is not referenced");
+with GPR2.Build.Source.Sets;
+pragma Warnings (On, ".* is not referenced");
 with GPR2.Build.Tree_Db;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
@@ -21,6 +26,11 @@ package body GPR2.Build.Actions.Ada_Compile is
 
    package PAI renames GPR2.Project.Attribute_Index;
    package Actions renames GPR2.Build.Actions;
+
+   use type GPR2.Build.Actions.Ada_Bind.Ada_Bind_Id;
+
+   package Bind_Actions_Set is new Ada.Containers.Indefinite_Ordered_Sets
+     (Ada_Bind.Ada_Bind_Id);
 
    function Artifacts_Base_Name
      (Unit : GPR2.Build.Compilation_Unit.Object) return Simple_Name;
@@ -84,6 +94,8 @@ package body GPR2.Build.Actions.Ada_Compile is
       procedure Add_Dependency_Options;
 
       procedure Add_Include_Path;
+
+      procedure Add_Mapping_File;
 
       Ada_Idx : constant PAI.Object := PAI.Create (Ada_Language);
       Src_Idx : constant PAI.Object :=
@@ -248,6 +260,73 @@ package body GPR2.Build.Actions.Ada_Compile is
            "Cannot determine ways to transmit include path to the toolchain";
       end Add_Include_Path;
 
+      ----------------------
+      -- Add_Mapping_File --
+      ----------------------
+
+      procedure Add_Mapping_File
+      is
+         use GNATCOLL.OS.FS;
+         Attr     : constant Project.Attribute.Object :=
+                      Self.View.Attribute
+                        (PRA.Compiler.Mapping_File_Switches, Ada_Idx);
+      begin
+         if not Attr.Is_Defined then
+            --  Nothing to do
+            return;
+         end if;
+
+         declare
+            Map_File : constant Tree_Db.Temp_File :=
+                         Self.Get_Or_Create_Temp_File ("ada_mapping", Global);
+            S_Suffix : constant String :=
+                         Self.View.Attribute
+                           (PRA.Compiler.Mapping_Spec_Suffix,
+                            Ada_Idx).Value.Text;
+            B_Suffix : constant String :=
+                         Self.View.Attribute
+                           (PRA.Compiler.Mapping_Body_Suffix,
+                            Ada_Idx).Value.Text;
+            use Ada.Characters.Handling;
+         begin
+            if Map_File.FD /= Null_FD then
+               for S of Self.View.Visible_Sources loop
+                  if S.Has_Naming_Exception
+                    and then S.Language = Ada_Language
+                  then
+                     for U of S.Units loop
+                        declare
+                           Key : constant String :=
+                                   To_Lower (String (U.Full_Name)) &
+                                   (if U.Kind = S_Spec
+                                    then S_Suffix else B_Suffix);
+                        begin
+                           Write (Map_File.FD, Key & ASCII.LF);
+                           Write (Map_File.FD,
+                                  String (S.Path_Name.Simple_Name) &
+                                    ASCII.LF);
+                           Write (Map_File.FD,
+                                  S.Path_Name.String_Value & ASCII.LF);
+                        end;
+                     end loop;
+                  end if;
+               end loop;
+
+               --  ??? Missing the list of excluded sources
+
+               Close (Map_File.FD);
+            end if;
+
+            for I in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
+               Args.Append (Attr.Values.Element (I).Text);
+            end loop;
+
+            Args.Append
+              (Attr.Values.Last_Element.Text &
+                 String (Map_File.Path));
+         end;
+      end Add_Mapping_File;
+
    begin
       Add_Attr (PRA.Compiler.Driver, Ada_Idx, False);
       Add_Attr (PRA.Compiler.Leading_Required_Switches, Ada_Idx, True);
@@ -265,6 +344,7 @@ package body GPR2.Build.Actions.Ada_Compile is
 
       Add_Dependency_Options;
       Add_Include_Path;
+      Add_Mapping_File;
 
       --  ??? Replace hard coded values
       Args.Append
@@ -360,31 +440,58 @@ package body GPR2.Build.Actions.Ada_Compile is
       Self.Traces := Create ("ACTION_ADA_COMPILE");
 
       declare
-         BN     : constant Simple_Name := Artifacts_Base_Name (Src);
-         O_Suff : constant Simple_Name :=
-           Simple_Name
-             (Get_Attr
-                (Self.View, PRA.Compiler.Object_File_Suffix, Ada_Language,
-                 ".o"));
+         BN        : constant Simple_Name := Artifacts_Base_Name (Src);
+         O_Suff    : constant Simple_Name :=
+                       Simple_Name
+                         (Get_Attr
+                            (Self.View, PRA.Compiler.Object_File_Suffix,
+                             Ada_Language,
+                             ".o"));
+         Local_O   : GPR2.Path_Name.Object;
+         Local_Ali : GPR2.Path_Name.Object;
+         Check_Sig : Boolean := True;
       begin
+         Local_O := Self.View.Object_Directory.Compose (BN & O_Suff);
 
-         --  Lookup if the object file exists in the hierarchy
-
-         Self.Obj_File := Lookup (Self.View, BN & O_Suff, Must_Exist => True);
-
-         --  If not found, set the value to the object generated by the
-         --  compilation.
-
-         if not Self.Obj_File.Is_Defined then
-            Self.Obj_File :=
-              Lookup (Self.View, BN & O_Suff, Must_Exist => False);
+         if Self.View.Is_Library then
+            Local_Ali := Self.View.Library_Ali_Directory.Compose (BN & ".ali");
+         else
+            Local_Ali := Self.View.Object_Directory.Compose (BN & ".ali");
          end if;
 
-         Self.Ali_File := Lookup (Self.View, BN & ".ali", Must_Exist => True);
+         if not Self.View.Is_Extending then
+            --  Simple case: just use the local .o and .ali
+            Self.Obj_File := Local_O;
+            Self.Ali_File := Local_Ali;
 
-         if not Self.Ali_File.Is_Defined then
+         else
+            --  Lookup if the object file exists in the hierarchy
+
+            Self.Obj_File :=
+              Lookup (Self.View, BN & O_Suff, Must_Exist => True);
+
+            --  If not found, set the value to the object generated by the
+            --  compilation.
+
+            if not Self.Obj_File.Is_Defined then
+               Self.Obj_File := Local_O;
+               Check_Sig := False;
+            end if;
+
             Self.Ali_File :=
-              Lookup (Self.View, BN & ".ali", Must_Exist => False);
+              Lookup (Self.View, BN & ".ali", Must_Exist => True);
+
+            if not Self.Ali_File.Is_Defined then
+               Self.Ali_File := Local_Ali;
+               Check_Sig := False;
+            end if;
+
+            if Check_Sig and then not Self.Valid_Signature then
+               --  Since we'll need to recompute, make sure we use any local
+               --  .ali and .o here.
+               Self.Obj_File := Local_O;
+               Self.Ali_File := Local_Ali;
+            end if;
          end if;
       end;
    end Initialize;
@@ -430,11 +537,12 @@ package body GPR2.Build.Actions.Ada_Compile is
    -----------------------
 
    overriding procedure On_Tree_Insertion
-     (Self     : Object;
+     (Self     : in out Object;
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object)
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+
    begin
       Db.Add_Output (UID, Artifacts.Files.Create (Self.Obj_File), Messages);
 
@@ -451,30 +559,139 @@ package body GPR2.Build.Actions.Ada_Compile is
       end if;
    end On_Tree_Insertion;
 
-   ------------------
-   -- Post_Command --
-   ------------------
+   -------------------------
+   -- On_Tree_Propagation --
+   -------------------------
 
-   overriding procedure Post_Command (Self : in out Object) is
-      Bind_Action : Actions.Ada_Bind.Object;
-      Found       : Boolean := False;
+   overriding procedure On_Tree_Propagation
+     (Self : in out Object)
+   is
+      Binds    : Bind_Actions_Set.Set;
+      Imports  : GPR2.Containers.Name_Set;
+      Messages : GPR2.Log.Object;
    begin
-      Self.Update_Deps_From_Ali;
+      --  Check the bind actions that depend on Self
 
       for Successor of Self.Tree.Successors
          (Artifacts.Files.Create (Self.Ali_File))
       loop
          if Successor in Actions.Ada_Bind.Object'Class then
-            Bind_Action := Actions.Ada_Bind.Object (Successor);
-            Found       := True;
-
-            exit;
+            Binds.Insert (Ada_Bind.Ada_Bind_Id (Successor.UID));
          end if;
       end loop;
 
-      if Found then
-         Bind_Action.Parse_Ali (Self.Ali_File);
+      if Binds.Is_Empty then
+         --  No more things to do here
+         return;
       end if;
+
+      if Self.Ali_File.Exists then
+         Trace (Self.Traces,
+                "Parse " & String (Self.Ali_File.Simple_Name));
+
+         GPR2.Build.ALI_Parser.Imports (Self.Ali_File, Imports, Messages);
+
+         if Messages.Has_Error then
+            Messages.Output_Messages
+              (Information => False,
+               Warning     => False);
+            --  ??? Should return a status that tells the compilation went
+            --  wrong
+
+            return;
+         end if;
+      else
+         Imports := Self.CU.Known_Dependencies;
+      end if;
+
+      for Imp of Imports loop
+         Trace (Self.Traces, "Found import " & String (Imp));
+
+         --  Lookup the corresponding unit
+
+         declare
+            CU       : constant Build.Compilation_Unit.Object :=
+                         Self.View.Namespace_Roots.First_Element.Unit (Imp);
+            Id       : Ada_Compile_Id;
+            Action   : Object;
+            Messages : GPR2.Log.Object;
+            Continue : Boolean := True;
+
+         begin
+            if not CU.Is_Defined then
+               Trace
+                  (Self.Traces,
+                    "Did not find a view containing unit " &
+                     String (Imp));
+               Continue := False;
+
+            elsif CU.Owning_View.Is_Externally_Built then
+               --  Do not build externally built projects
+               Continue := False;
+            end if;
+
+            if Continue then
+               Id := Create (CU);
+
+               if Self.Tree.Has_Action (Id) then
+                  --  Action already in the DAG
+                  Continue := False;
+               end if;
+            end if;
+
+            if Continue then
+               Action.Initialize (CU);
+               Self.Tree.Add_Action (Action, Messages);
+
+               declare
+                  Ali : constant Artifacts.Files.Object :=
+                          Artifacts.Files.Create (Action.Ali_File);
+                  Obj : constant Artifacts.Files.Object :=
+                          Artifacts.Files.Create (Action.Obj_File);
+               begin
+                  Self.Tree.Add_Artifact (Ali);
+                  Self.Tree.Add_Artifact (Obj);
+
+                  Self.Tree.Add_Output (Action.UID, Ali, Messages);
+                  Self.Tree.Add_Output (Action.UID, Obj, Messages);
+
+                  for Id of Binds loop
+                     Self.Tree.Add_Input (Id, Ali, False);
+                  end loop;
+               end;
+
+               Messages.Output_Messages;
+            end if;
+         end;
+      end loop;
+   end On_Tree_Propagation;
+
+   ------------------
+   -- Post_Command --
+   ------------------
+
+   overriding procedure Post_Command (Self : in out Object) is
+      use GPR2.Path_Name;
+
+   begin
+      --  Copy the ali file in the library dir if needed
+      if Self.View.Is_Library
+        and then GNATCOLL.OS.FSUtil.Copy_File
+          (Self.View.Object_Directory.Compose
+             (Self.Ali_File.Simple_Name).String_Value,
+           Self.Ali_File.String_Value)
+      then
+         --  ??? Should return some erroneous status to stop execution
+         return;
+      end if;
+
+      --  Update the signature of the action
+
+      Self.Update_Deps_From_Ali;
+
+      --  Update the tree with potential new imports from ALI
+
+      Self.On_Tree_Propagation;
    end Post_Command;
 
    ----------
@@ -499,7 +716,7 @@ package body GPR2.Build.Actions.Ada_Compile is
    --------------------------
 
    procedure Update_Deps_From_Ali (Self : in out Object) is
-      Deps_Src : GPR2.Build.ALI_Parser.Dep_Vectors.Vector;
+      Deps_Src : GPR2.Containers.Filename_Set;
       Messages : GPR2.Log.Object;
       UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
 
@@ -515,7 +732,8 @@ package body GPR2.Build.Actions.Ada_Compile is
       for Dep_Src of Deps_Src loop
          declare
             Source : constant GPR2.Build.Source.Object :=
-                       Self.View.Visible_Source (Simple_Name (Dep_Src));
+                       Self.View.Visible_Source
+                         (Path_Name.Simple_Name (Dep_Src));
          begin
             if Source.Is_Defined then
                Trace

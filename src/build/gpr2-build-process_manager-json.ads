@@ -17,11 +17,11 @@ package GPR2.Build.Process_Manager.JSON is
 
    overriding
    function Collect_Job
-        (Self           : in out Object;
-         Job            : DG.Node_Id;
-         Proc_Handler   : Process_Handler;
-         Stdout, Stderr : Unbounded_String)
-        return Collect_Status;
+     (Self           : in out Object;
+       Job            : in out Actions.Object'Class;
+       Proc_Handler   : Process_Handler;
+       Stdout, Stderr : Unbounded_String)
+      return Collect_Status;
 
    procedure Execute
      (Self      : in out Object;

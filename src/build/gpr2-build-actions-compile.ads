@@ -40,7 +40,7 @@ package GPR2.Build.Actions.Compile is
    function Object_File (Self : Object) return GPR2.Path_Name.Object;
 
    overriding procedure On_Tree_Insertion
-     (Self     : Object;
+     (Self     : in out Object;
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object);
 

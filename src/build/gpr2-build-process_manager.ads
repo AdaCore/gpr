@@ -6,10 +6,10 @@
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
-with GNATCOLL.Directed_Graph;
 with GNATCOLL.OS.FS; use GNATCOLL.OS.FS;
 with GNATCOLL.OS.Process;
 
+with GPR2.Build.Actions;
 with GPR2.Build.Tree_Db;
 
 private with GNATCOLL.Traces;
@@ -49,14 +49,14 @@ package GPR2.Build.Process_Manager is
 
    function Collect_Job
      (Self           : in out Object;
-      Job            : GNATCOLL.Directed_Graph.Node_Id;
+      Job            : in out Actions.Object'Class;
       Proc_Handler   : Process_Handler;
       Stdout, Stderr : Unbounded_String)
       return Collect_Status;
 
    procedure Launch_Job
      (Self           : in out Object;
-      Job            : GNATCOLL.Directed_Graph.Node_Id;
+      Job            : in out Actions.Object'Class;
       Proc_Handler   : out Process_Handler;
       Capture_Stdout : out File_Descriptor;
       Capture_Stderr : out File_Descriptor);

@@ -15,14 +15,6 @@ package body GPR2.Build.ALI_Parser is
 
    package GB renames GNATCOLL.Buffer;
 
-   overriding function "=" (Left, Right : Import_Info) return Boolean is
-   begin
-      return
-        Left.Source = Right.Source and then
-        Left.ALI = Right.ALI and then
-        Left.Unit_Name = Right.Unit_Name;
-   end "=";
-
    package IO is
 
       function Get_Token (File : in out GB.Reader) return String;
@@ -258,8 +250,8 @@ package body GPR2.Build.ALI_Parser is
 
    procedure Dependencies
      (ALI_File  : GPR2.Path_Name.Object;
-      Dep_Names : in out Dep_Vectors.Vector;
-      Messages : in out GPR2.Log.Object)
+      Dep_Names : in out GPR2.Containers.Filename_Set;
+      Messages  : in out GPR2.Log.Object)
    is
 
       procedure Parse_Dep (Reader : in out GB.Reader);
@@ -283,7 +275,7 @@ package body GPR2.Build.ALI_Parser is
                raise Scan_ALI_Error with "missed dependency source file";
             end if;
 
-            Dep_Names.Append (Source_File);
+            Dep_Names.Include (Filename_Type (Source_File));
          end;
       end Parse_Dep;
 
@@ -333,7 +325,7 @@ package body GPR2.Build.ALI_Parser is
 
    procedure Imports
      (ALI_File : GPR2.Path_Name.Object;
-      Imports  : in out Import_Info_Vectors.Vector;
+      Imports  : in out GPR2.Containers.Name_Set;
       Messages : in out GPR2.Log.Object)
    is
 
@@ -356,22 +348,18 @@ package body GPR2.Build.ALI_Parser is
 
          declare
             Unit_Name : constant String := IO.Get_Token (Reader);
-            Source    : constant String := IO.Get_Token (Reader);
-            ALI       : constant String := IO.Get_Token (Reader);
          begin
             if Unit_Name = "" then
                raise Scan_ALI_Error with "missed withed unit name";
             end if;
 
             if Unit_Name'Length > 3 and then
-               Unit_Name (Unit_Name'Last) = 's' and then
+               Unit_Name (Unit_Name'Last) in 's' | 'b' and then
                Unit_Name (Unit_Name'Last - 1) = '%'
             then
-               Imports.Append
-                 ((Unit_Name => To_Unbounded_String (Unit_Name
-                                  (Unit_Name'First .. Unit_Name'Last - 2)),
-                   Source    => To_Unbounded_String (Source),
-                   ALI       => To_Unbounded_String (ALI)));
+               Imports.Include
+                 (Name_Type
+                    (Unit_Name (Unit_Name'First .. Unit_Name'Last - 2)));
             else
                raise Scan_ALI_Error with
                  "withed unit name does not end with '%s'";

@@ -68,19 +68,16 @@ package body GPR2.Build.Process_Manager is
    -----------------
 
    function Collect_Job
-      (Self           : in out Object;
-       Job            : GDG.Node_Id;
-       Proc_Handler   : Process_Handler;
-       Stdout, Stderr : Unbounded_String)
+     (Self           : in out Object;
+      Job            : in out Actions.Object'Class;
+      Proc_Handler   : Process_Handler;
+      Stdout, Stderr : Unbounded_String)
       return Collect_Status
    is
-      Act : GPR2.Build.Actions.Object'Class :=
-              Self.Tree_Db.Action (Self.Tree_Db.Action_Id (Job));
-
    begin
       pragma Assert
         (Proc_Handler.Status /= Running,
-         "The process linked to the action '" & Act.UID.Image &
+         "The process linked to the action '" & Job.UID.Image &
            "' is still running. Cannot collect the job before it finishes");
 
       if Proc_Handler.Status = Failed_To_Launch
@@ -92,7 +89,7 @@ package body GPR2.Build.Process_Manager is
       if Proc_Handler.Status = Finished then
          if Self.Traces.Is_Active then
             Self.Traces.Trace
-              ("Job '" & Act.UID.Image & "' returned. Status:" &
+              ("Job '" & Job.UID.Image & "' returned. Status:" &
                  Proc_Handler.Process_Status'Img & ", output: '" &
                  To_String (Stdout) & "'" & ", stderr: '" &
                  To_String (Stderr) & "'");
@@ -102,17 +99,17 @@ package body GPR2.Build.Process_Manager is
             Message.Reporter.Active_Reporter.Report
               (Message.Create
                  (Message.Warning,
-                  Act.UID.Image & " failed with status" &
+                  Job.UID.Image & " failed with status" &
                     Proc_Handler.Process_Status'Image & ASCII.LF &
                     To_String (Stdout) & To_String (Stderr),
-                  Source_Reference.Create (Act.View.Path_Name.Value, 0, 0)));
+                  Source_Reference.Create (Job.View.Path_Name.Value, 0, 0)));
          end if;
       end if;
 
       if Proc_Handler.Status = Finished then
          if Proc_Handler.Process_Status = PROCESS_STATUS_OK then
-            Act.Post_Command;
-            Act.Compute_Signature;
+            Job.Post_Command;
+            Job.Compute_Signature;
 
          elsif Self.Stop_On_Fail then
             return Abort_Execution;
@@ -121,9 +118,6 @@ package body GPR2.Build.Process_Manager is
 
       --  We do not want to manipulate reference types during post commands
       --  procedure as it would prevent actions addition / deletion.
-
-      Self.Tree_Db.Action_Id_To_Reference
-        (Self.Tree_Db.Action_Id (Job)) := Act;
 
       return Continue_Execution;
    end Collect_Job;
@@ -222,55 +216,60 @@ package body GPR2.Build.Process_Manager is
 
                exit when End_Of_Iteration or else Node = GDG.No_Node;
 
-               Self.Launch_Job (Node, Proc_Handler, P_Stdout, P_Stderr);
-               Self.Stats.Total_Jobs := Self.Stats.Total_Jobs + 1;
+               declare
+                  Act : constant Build.Tree_Db.Action_Reference_Type :=
+                          Tree_Db.Action_Id_To_Reference
+                            (Tree_Db.Action_Id (Node));
+               begin
+                  Self.Launch_Job (Act, Proc_Handler, P_Stdout, P_Stderr);
+                  Self.Stats.Total_Jobs := Self.Stats.Total_Jobs + 1;
 
-               if Proc_Handler.Status = Running then
-                  Active_Jobs := Active_Jobs + 1;
-                  Active_Procs (Active_Jobs) := Proc_Handler.Handle;
-                  States (Active_Jobs).Node  := Node;
-                  Allocate_Listeners (Active_Jobs, P_Stdout, P_Stderr);
+                  if Proc_Handler.Status = Running then
+                     Active_Jobs := Active_Jobs + 1;
+                     Active_Procs (Active_Jobs) := Proc_Handler.Handle;
+                     States (Active_Jobs).Node  := Node;
+                     Allocate_Listeners (Active_Jobs, P_Stdout, P_Stderr);
 
-                  if Active_Jobs > Self.Max_Active_Jobs then
-                     Self.Stats.Max_Active_Jobs := Active_Jobs;
-                  end if;
-               else
-                  if Proc_Handler.Status = Failed_To_Launch then
-                     Job_Status :=
-                       Collect_Job
-                         (Object'Class (Self),
-                          Job          => Node,
-                          Proc_Handler => Proc_Handler,
-                          Stdout       => To_Unbounded_String (""),
-                          Stderr       => Proc_Handler.Error_Message);
-                  elsif Proc_Handler.Status = Skipped then
-                     Job_Status :=
-                       Collect_Job
-                         (Object'Class (Self),
-                          Job          => Node,
-                          Proc_Handler => Proc_Handler,
-                          Stdout       => To_Unbounded_String (""),
-                          Stderr       => To_Unbounded_String (""));
-                  elsif Proc_Handler.Status = Finished then
-                     raise Program_Error with
-                       "Process handler status shall not be 'Finished' " &
-                       "at this state";
-                  end if;
-
-                  if Job_Status = Abort_Execution then
-                     End_Of_Iteration := True;
-                     exit;
-                  elsif Job_Status = Retry_Job then
-
-                     --  ??? add API to pass node from visiting to non visited
-                     --  state
-
-                     raise Program_Error;
-
+                     if Active_Jobs > Self.Max_Active_Jobs then
+                        Self.Stats.Max_Active_Jobs := Active_Jobs;
+                     end if;
                   else
-                     Graph.Complete_Visit (Node);
+                     if Proc_Handler.Status = Failed_To_Launch then
+                        Job_Status :=
+                          Collect_Job
+                            (Object'Class (Self),
+                             Job          => Act,
+                             Proc_Handler => Proc_Handler,
+                             Stdout       => To_Unbounded_String (""),
+                             Stderr       => Proc_Handler.Error_Message);
+                     elsif Proc_Handler.Status = Skipped then
+                        Job_Status :=
+                          Collect_Job
+                            (Object'Class (Self),
+                             Job          => Act,
+                             Proc_Handler => Proc_Handler,
+                             Stdout       => To_Unbounded_String (""),
+                             Stderr       => To_Unbounded_String (""));
+                     elsif Proc_Handler.Status = Finished then
+                        raise Program_Error with
+                          "Process handler status shall not be 'Finished' " &
+                          "at this state";
+                     end if;
+
+                     if Job_Status = Abort_Execution then
+                        End_Of_Iteration := True;
+                        exit;
+                     elsif Job_Status = Retry_Job then
+                        --  ??? add API to pass node from visiting to non
+                        --  visited state
+
+                        raise Program_Error;
+
+                     else
+                        Graph.Complete_Visit (Node);
+                     end if;
                   end if;
-               end if;
+               end;
             end loop;
          end if;
 
@@ -304,20 +303,24 @@ package body GPR2.Build.Process_Manager is
                   Stderr := To_Unbounded_String ("");
                end if;
 
-               --  Call collect
-               Job_Status := Collect_Job
-                 (Object'Class (Self),
-                  Job          => States (Proc_Id).Node,
-                   Proc_Handler => Proc_Handler,
-                   Stdout       => Stdout,
-                  Stderr       => Stderr);
-
                declare
-                  Act : constant Build.Tree_Db.Action_Reference_Type :=
-                          Self.Tree_Db.Action_Id_To_Reference
-                            (Self.Tree_Db.Action_Id (States (Proc_Id).Node));
+                  UID : constant Actions.Action_Id'Class :=
+                          Tree_Db.Action_Id (States (Proc_Id).Node);
+                  Act : Actions.Object'Class := Self.Tree_Db.Action (UID);
                begin
+                  --  Call collect
+                  Job_Status := Collect_Job
+                    (Object'Class (Self),
+                     Job          => Act,
+                     Proc_Handler => Proc_Handler,
+                     Stdout       => Stdout,
+                     Stderr       => Stderr);
+
+                  --  Cleanup the temporary files that are local to the job
                   Act.Cleanup_Temp_Files (Scope => Actions.Local);
+
+                  --  Push back the potentially modified action to the tree_db
+                  Tree_Db.Action_Id_To_Reference (UID) := Act;
                end;
 
                --  Adjust execution depending on returned value
@@ -388,7 +391,7 @@ package body GPR2.Build.Process_Manager is
 
    procedure Launch_Job
       (Self           : in out Object;
-       Job            : GDG.Node_Id;
+       Job            : in out Actions.Object'Class;
        Proc_Handler   : out Process_Handler;
        Capture_Stdout : out File_Descriptor;
        Capture_Stderr : out File_Descriptor)
@@ -420,40 +423,36 @@ package body GPR2.Build.Process_Manager is
       P_We : FS.File_Descriptor;
       P_Re : FS.File_Descriptor;
 
-      Act      : GPR2.Build.Actions.Object'Class :=
-                   Self.Tree_Db.Action (Self.Tree_Db.Action_Id (Job));
       Args     : Argument_List;
       Env      : Environment_Dict;
       Cwd      : GPR2.Path_Name.Object;
 
    begin
+      if Job.Valid_Signature then
+         if Self.Traces.Is_Active then
+            Self.Traces.Trace
+              ("Signature is valid, do not execute the job '" &
+                 Job.UID.Image & "'");
+         end if;
 
-      Act.Compare_Signature;
-
-      --  ??? Process Messages
-
-      if Act.Valid_Signature then
-         Self.Traces.Trace
-           ("Signature is valid, do not execute the job '" &
-            Self.Tree_Db.Action_Id (Job).Image & "'");
          Proc_Handler := Process_Handler'(Status => Skipped);
 
          return;
       end if;
 
-      Act.Compute_Command (Args, Env);
-      Cwd := Act.Working_Directory;
+      Job.Compute_Command (Args, Env);
+      Cwd := Job.Working_Directory;
 
-      if Act.Skip then
+      if Job.Skip then
          Self.Traces.Trace
-           ("job asked to be skipped: " & Act.UID.Image);
+           ("job asked to be skipped: " & Job.UID.Image);
          Proc_Handler := Process_Handler'(Status => Skipped);
 
          return;
 
       elsif Args.Is_Empty then
          Self.Traces.Trace
-           ("job arguments is empty, skipping '"  & Act.UID.Image & "'");
+           ("job arguments is empty, skipping '"  & Job.UID.Image & "'");
          Proc_Handler := Process_Handler'(Status => Skipped);
 
          return;
@@ -462,7 +461,7 @@ package body GPR2.Build.Process_Manager is
       if Self.Traces.Is_Active then
          Self.Traces.Trace
            ("Signature is invalid. Execute the job " &
-              Self.Tree_Db.Action_Id (Job).Image & ", command: " &
+              Job.UID.Image & ", command: " &
               Image (Args));
       end if;
 
@@ -474,7 +473,7 @@ package body GPR2.Build.Process_Manager is
          --  tooling messages that need quiet/normal/detailed info. Let's go
          --  for the default one *and* verbose one for now
          Message.Reporter.Active_Reporter.Report
-           (Act.UID.Image);
+           (Job.UID.Image);
          Message.Reporter.Active_Reporter.Report
            (Image (Args));
          Proc_Handler :=
@@ -497,7 +496,7 @@ package body GPR2.Build.Process_Manager is
                   Args.First_Element & ": " &
                     Ada.Exceptions.Exception_Message (Ex),
                   GPR2.Source_Reference.Create
-                    (Act.View.Path_Name.Value, 0, 0)));
+                    (Job.View.Path_Name.Value, 0, 0)));
 
             Proc_Handler :=
               (Status        => Failed_To_Launch,

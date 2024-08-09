@@ -306,7 +306,7 @@ begin
       end if;
    end if;
 
-   Process_M.Execute (Tree.Artifacts_Database, 1);
+   Process_M.Execute (Tree.Artifacts_Database, Opt.Parallel_Compilation);
 
    return To_Exit_Status (E_Success);
 
@@ -327,6 +327,6 @@ exception
         (Opt        => Opt,
          Force_Exit => False,
          Exit_Cause => E_Generic,
-         Message    => Exception_Message (E));
+         Message    => Exception_Information (E));
       return To_Exit_Status (E_Fatal);
 end GPRbuild.Main;

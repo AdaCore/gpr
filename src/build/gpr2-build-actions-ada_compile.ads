@@ -4,12 +4,13 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GNATCOLL.OS.Process;
+
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Signature;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Registry.Attribute;
-with GNATCOLL.OS.Process;
 
 private with GPR2.View_Ids;
 
@@ -18,6 +19,10 @@ package GPR2.Build.Actions.Ada_Compile is
    package PRA renames GPR2.Project.Registry.Attribute;
 
    type Ada_Compile_Id is new Actions.Action_Id with private;
+
+   function Create
+     (Src : GPR2.Build.Compilation_Unit.Object) return Ada_Compile_Id;
+   --  Create an Action_Id without having to create the full action object
 
    overriding function Image (Self : Ada_Compile_Id) return String;
 
@@ -58,9 +63,12 @@ package GPR2.Build.Actions.Ada_Compile is
    --  dependencies comes from it.
 
    overriding procedure On_Tree_Insertion
-     (Self     : Object;
+     (Self     : in out Object;
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object);
+
+   overriding procedure On_Tree_Propagation
+     (Self : in out Object);
 
    overriding procedure Compute_Signature (Self : in out Object);
 
@@ -85,6 +93,10 @@ private
      with record
       Main      : Compilation_Unit.Unit_Location;
    end record;
+
+   function Create
+     (Src : GPR2.Build.Compilation_Unit.Object) return Ada_Compile_Id
+   is ((Main => Src.Main_Part));
 
    function Idx_Image (Idx : Unit_Index) return String is
      (Idx'Image (2 .. Idx'Image'Last));

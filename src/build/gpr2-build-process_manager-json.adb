@@ -18,14 +18,11 @@ package body GPR2.Build.Process_Manager.JSON is
    overriding
    function Collect_Job
       (Self           : in out Object;
-       Job            : DG.Node_Id;
+       Job            : in out Actions.Object'Class;
        Proc_Handler   : Process_Handler;
        Stdout, Stderr : Unbounded_String)
       return Collect_Status
    is
-      Act : constant Tree_Db.Action_Reference_Type :=
-              Self.Tree_Db.Action_Id_To_Reference
-                (Self.Tree_Db.Action_Id (Job));
       Job_Summary : constant JSON_Value := Create_Object;
       Env_Summary : JSON_Value;
       Cmd         : Unbounded_String;
@@ -33,9 +30,9 @@ package body GPR2.Build.Process_Manager.JSON is
       Env         : GNATCOLL.OS.Process.Environment_Dict;
 
    begin
-      Job_Summary.Set_Field (TEXT_ACTION_UID, Act.UID.Image);
+      Job_Summary.Set_Field (TEXT_ACTION_UID, Job.UID.Image);
 
-      Act.Compute_Command (Args, Env);
+      Job.Compute_Command (Args, Env);
 
       for Arg of Args loop
          if Length (Cmd) > 0 then
@@ -64,13 +61,13 @@ package body GPR2.Build.Process_Manager.JSON is
          Job_Summary.Set_Field (TEXT_ENV, Env_Summary);
       end if;
 
-      Job_Summary.Set_Field (TEXT_CWD, Act.Working_Directory.String_Value);
+      Job_Summary.Set_Field (TEXT_CWD, Job.Working_Directory.String_Value);
 
       case Proc_Handler.Status is
          when Running =>
             --  ??? Use a custom exception
             raise Program_Error with
-              "The process linked to the action '" & Act.UID.Image &
+              "The process linked to the action '" & Job.UID.Image &
               "' is still running. Cannot collect the job before it finishes";
 
          when Finished =>

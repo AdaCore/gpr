@@ -62,12 +62,15 @@ package GPR2.Build.Actions is
    --  the output is stored (the Object_Dir attribute).
 
    procedure On_Tree_Insertion
-     (Self     : Object;
+     (Self     : in out Object;
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object) is abstract
    with Pre'Class => not Messages.Has_Error;
    --  Procedure called when Self is added to the tree's database. Allows the
    --  action to add its input and output artifacts and dependencies.
+
+   procedure On_Tree_Propagation
+     (Self : in out Object) is null;
 
    function Skip (Self : Object) return Boolean is
      (False);

@@ -130,6 +130,10 @@ package GPR2.Build.Tree_Db is
    function Action_Id
      (Self : in out Object; Node : DG.Node_Id) return Actions.Action_Id'Class;
    --  ???
+
+   procedure Propagate_Actions (Self : Object);
+   --  ???
+
    ----------------------------
    -- Iteration on artifacts --
    ----------------------------
@@ -288,6 +292,7 @@ private
 
       Actions         : Action_Maps.Map;
       Artifacts       : Artifact_Sets.Set;
+      New_Actions     : Action_Sets.Set;
 
       Inputs          : Action_Artifacts_Maps.Map;
       --  Explicit input(s) in the command line

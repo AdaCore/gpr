@@ -72,6 +72,10 @@ package body GPR2.Build.Tree_Db is
       return Self.Node_To_Action (Node);
    end Action_Id;
 
+   --------------------
+   -- Action_Iterate --
+   --------------------
+
    function Action_Iterate
      (List : Actions_List) return Action_Iterators.Forward_Iterator'Class
    is (Action_Internal_Iterator'
@@ -132,7 +136,14 @@ package body GPR2.Build.Tree_Db is
       Done : Boolean;
       Node : GNATCOLL.Directed_Graph.Node_Id;
    begin
+      Action.Attach (Self);
       Self.Actions.Insert (Action.UID, Action, Curs, Done);
+
+      if not Done then
+         return;
+      end if;
+
+      Self.New_Actions.Include (Action.UID);
 
       Node := Self.Actions_Graph.Add_Node;
       Self.Node_To_Action.Insert (Node, Action.UID);
@@ -142,15 +153,11 @@ package body GPR2.Build.Tree_Db is
       Self.Inputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
       Self.Outputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
 
-      Self.Actions.Reference (Curs).Attach (Self);
-      Self.Actions.Reference (Curs).On_Tree_Insertion (Self, Messages);
+      Action.On_Tree_Insertion (Self, Messages);
+      --  On_Tree_Insertion may modify Action, so copy it back
+      Self.Actions.Reference (Curs) := Action;
+
       Self.Actions.Reference (Curs).Compare_Signature;
-
-      --  `Attach` modifies the Tree field of the action. The provided action
-      --  needs to be updated, as some action subprograms may require the
-      --  internal tree field.
-
-      Action := Self.Actions.Reference (Curs);
    end Add_Action;
 
    ------------------
@@ -193,6 +200,7 @@ package body GPR2.Build.Tree_Db is
       Self.Successors.Reference (Artifact).Include (Action);
 
       Pred := Self.Predecessor.Find (Artifact);
+
       if Artifact_Action_Maps.Has_Element (Pred) then
          Self.Actions_Graph.Add_Predecessor
                (Node        => Self.Action_To_Node (Action),
@@ -612,6 +620,34 @@ package body GPR2.Build.Tree_Db is
 
       return Res;
    end Next;
+
+   -----------------------
+   -- Propagate_Actions --
+   -----------------------
+
+   procedure Propagate_Actions (Self : Object) is
+      New_Actions : Action_Sets.Set;
+   begin
+      loop
+         if not Self.New_Actions.Is_Empty then
+            New_Actions.Union (Self.New_Actions);
+            Self.Self.New_Actions.Clear;
+         end if;
+
+         exit when New_Actions.Is_Empty;
+
+         declare
+            Item : constant Actions.Action_Id'Class :=
+                     New_Actions.First_Element;
+            Act  : Actions.Object'Class :=
+                     Self.Actions.Element (Item);
+         begin
+            New_Actions.Delete_First;
+            Act.On_Tree_Propagation;
+            Self.Self.Action_Id_To_Reference (Item) := Act;
+         end;
+      end loop;
+   end Propagate_Actions;
 
    -------------
    -- Refresh --
