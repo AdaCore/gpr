@@ -1,2 +1,4 @@
 description: Compile an executable with gprbuild
 driver: python_script
+control:
+- [XFAIL, "'windows' in env.host.platform", "Carriage returns are not properly copied from test.out to test.expected"]
