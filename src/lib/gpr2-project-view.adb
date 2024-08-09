@@ -2931,6 +2931,14 @@ package body GPR2.Project.View is
       return Build.Source.Object
    is (Self.View_Db.Visible_Source (Filename));
 
+   ---------------------
+   -- Visible_Sources --
+   ---------------------
+
+   function Visible_Sources
+     (Self : Object) return GPR2.Build.Source.Sets.Object
+   is (Self.View_Db.Visible_Sources);
+
 begin
    View_Internal.Get_RO   := Get_RO'Access;
    View_Internal.Get_RW   := Get_RW'Access;

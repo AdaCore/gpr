@@ -441,6 +441,10 @@ package GPR2.Project.View is
    --  Similar to Source but the source is looked up in the complete closure
    --  of Self.
 
+   function Visible_Sources
+     (Self : Object) return GPR2.Build.Source.Sets.Object;
+   --  Return all sources visible by Self
+
    function Interface_Units
      (Self : Object) return GPR2.Containers.Unit_Name_To_Sloc.Map
      with Pre => Self.Is_Defined;
