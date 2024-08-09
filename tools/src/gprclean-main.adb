@@ -35,6 +35,7 @@ with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source_Reference;
 
+with GPRtools.Actions;
 with GPRtools.Options;
 with GPRtools.Program_Termination;
 with GPRtools.Util;
@@ -190,6 +191,33 @@ begin
          Message    => "Failed to update sources");
       return To_Exit_Status (E_Fatal);
    end if;
+
+   --  Create actions that will be used to iterate and obtain artifacts
+   --  for removal.
+
+   if Project_Tree.Root_Project.Is_Library then
+
+      --  Create actions to build a lib
+
+      null;
+   else
+      if not GPRtools.Actions.Add_Actions_To_Build_Mains
+        (Project_Tree, Messages)
+      then
+         Messages.Output_Messages
+           (Information => True, Warning => True, Error => True);
+         return To_Exit_Status (E_Abort);
+      end if;
+   end if;
+
+   --  Iterate on all actions, and clean their output artifacts
+
+   for Action of Project_Tree.Artifacts_Database.All_Actions loop
+      for Artifact of Project_Tree.Artifacts_Database.Outputs (Action.UID)
+      loop
+         Delete_File (String (Artifact.SLOC.Filename), Opt);
+      end loop;
+   end loop;
 
    if Opt.Arg_Mains and then not Opt.Mains.Is_Empty then
       Handle_Program_Termination
