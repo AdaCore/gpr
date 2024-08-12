@@ -145,7 +145,7 @@ class BuilderAndRunner(object):
                 env = {}
             file = str(getrandbits(128)) + ".srctrace"
             env["GNATCOV_TRACE_FILE"] = os.path.join(self.traces_dir, file)
-        
+
         if self.valgrind:
             run_cmd = (
                 ["valgrind", "-q", "--leak-check=full", "--show-possibly-lost=no",
@@ -163,12 +163,13 @@ class BuilderAndRunner(object):
         """
         return self.run(cmd, catch_error=True)
 
-    def call(self, cmd):
+    def call(self, cmd, quiet=False):
         """subprocess.call wrapper handling coverage & valgrind
         modes.
         """
         p = self.run(cmd)
-        print(p.out, end="")
+        if not quiet:
+            print(p.out, end="")
         return p
 
     def check_call(self, cmd):

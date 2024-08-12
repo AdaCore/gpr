@@ -13,7 +13,7 @@ def test(header, scenario_idx):
     global test_number
     print("================================================================")
     print("Case " + str(test_number) + " - " + header)
-    proc = bnr.call(["./test", str(scenario_idx)])
+    proc = bnr.call(["./test", str(scenario_idx)], quiet=True)
 
     if proc.status:
         print("Test returned erroneous value: " + str(proc.status))
@@ -24,17 +24,16 @@ def test(header, scenario_idx):
         error = False
 
         for job in jobs:
-            print(
-                "uid: '"
-                + job["uid"]
-                + "', status : '"
-                + job["status"]
-                + "', stdout: '"
-                + job["stdout"].replace('\r', '').strip()
-                + "', stderr: '"
-                + job["stderr"].replace('\r', '').strip()
-                + "'"
-            )
+            status = job["status"]
+
+            # If the provided command does not exist, the process creation may
+            # still be successful, but the command will fail later with exit
+            # code 127. This behavior is specific to Unix-like systems
+            # with bash. To maintain consistency, the status is printed in the
+            # same way for both Windows and Unix.
+            if status == "FAILED_TO_LAUNCH" or status == "127":
+                status = "FAILED_TO_LAUNCH or 127"
+            print("uid: '" + job["uid"] + "', status : '" + status + "'")
 
     print("")
     test_number += 1
@@ -56,7 +55,10 @@ bnr.build(project="test.gpr", args=["-p", "-q"])
 # Build the tree project to produce object directories used to store signatures
 Run(["gprbuild", "-p", "-q", os.path.join("tree", "main.gpr")])
 
-test("No errors", 1)
+test(
+    "No errors",
+    1,
+)
 test("No errors with already existing artifacts", 1)
 clean_artifacts_and_signatures()
 test("Action n. 2 returns an erroneous code", 2)
