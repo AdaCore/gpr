@@ -1,4 +1,2 @@
 description: Compile an executable
 driver: python_script
-output:
-- ["test.out.win", "'windows' in env.host.platform"]
