@@ -88,7 +88,7 @@ is
    procedure Delete_External_Variable (Ctx : in out GPR_Context; Name : String)
    is
    begin
-      Ctx.Exclude (Optional_Name_Type (Name));
+      Ctx.Exclude (External_Name_Type (Name));
    end Delete_External_Variable;
 
    ------------------
@@ -305,7 +305,7 @@ is
      (Ctx : in out GPR_Context; Name : String; Value : String)
    is
    begin
-      Ctx.Include (Optional_Name_Type (Name), Value);
+      Ctx.Include (Filename_Optional (Name), Value);
    end Set_External_Variable;
 
    -----------------

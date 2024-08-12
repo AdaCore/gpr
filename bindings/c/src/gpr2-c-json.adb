@@ -321,7 +321,7 @@ package body GPR2.C.JSON is
          Value : GNATCOLL.JSON.JSON_Value) is
       begin
          Result.Insert
-            (Optional_Name_Type (Name), Value_Type (To_String (Value)));
+            (External_Name_Type (Name), Value_Type (To_String (Value)));
       end CB;
 
    begin

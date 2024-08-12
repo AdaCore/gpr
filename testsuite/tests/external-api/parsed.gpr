@@ -19,6 +19,10 @@ project parsed is
    Var1_2 : Mode_Type := external ("MODE_5", external ("MODE_6", "") & "debug");
    Var1_2 : Mode_Type := external ("MODE_7", external ("MODE_8", external ("MODE_9", external ("MODE_10", "")) & "debug"));
 
+   --  Check case sensitivity of the external
+
+   Var1_3 : Mode_Type := external ("Case_Sensitive_External", "debug");
+
    --  Typed external used in concatenation are considered as untyped,
    --  because possible values are not easily computable.
 

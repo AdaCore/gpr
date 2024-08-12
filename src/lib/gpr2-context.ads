@@ -15,7 +15,7 @@ package GPR2.Context is
    use type GPR2.Containers.Count_Type;
    use type MD5.Binary_Message_Digest;
 
-   package Key_Value renames Containers.Name_Value_Map_Package;
+   package Key_Value renames Containers.External_Name_Value_Map_Package;
 
    type Object is new Key_Value.Map with private;
    --  A parsing context containing the external values for a given project
@@ -34,7 +34,7 @@ package GPR2.Context is
 
    function Signature
      (Self      : Object;
-      Externals : Containers.Name_Set) return Context.Binary_Signature
+      Externals : Containers.External_Name_Set) return Context.Binary_Signature
      with Post =>
        (if Externals.Length = 0
            or else (for all E of Externals => not Self.Contains (E))

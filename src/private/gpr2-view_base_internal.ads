@@ -15,7 +15,7 @@ private package GPR2.View_Base_Internal is
    type Definition_Base is abstract tagged record
       Id                : Natural := 0;
       Path              : Path_Name.Object;
-      Externals         : Containers.Name_Set;
+      Externals         : Containers.External_Name_Set;
       --  List of externals directly or indirectly visible
       Signature         : Context.Binary_Signature :=
                             Context.Default_Signature;

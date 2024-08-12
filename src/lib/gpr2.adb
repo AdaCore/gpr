@@ -36,6 +36,14 @@ package body GPR2 is
                      (String (Left), String (Right)));
    end "<";
 
+   overriding function "<" (Left, Right : External_Name_Type) return Boolean is
+   begin
+      return (if File_Names_Case_Sensitive
+              then String (Left) < String (Right)
+              else Ada.Strings.Less_Case_Insensitive
+                     (String (Left), String (Right)));
+   end "<";
+
    ---------
    -- "=" --
    ---------
@@ -47,6 +55,14 @@ package body GPR2 is
    end "=";
 
    overriding function "=" (Left, Right : Filename_Optional) return Boolean is
+   begin
+      return (if File_Names_Case_Sensitive
+              then String (Left) = String (Right)
+              else Ada.Strings.Equal_Case_Insensitive
+                     (String (Left), String (Right)));
+   end "=";
+
+   overriding function "=" (Left, Right : External_Name_Type) return Boolean is
    begin
       return (if File_Names_Case_Sensitive
               then String (Left) = String (Right)

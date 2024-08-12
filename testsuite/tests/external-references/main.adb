@@ -11,7 +11,7 @@ procedure Main is
    use GPR2;
 
    procedure Test (Project_Name : String) is
-      procedure Check (Name : Name_Type) is
+      procedure Check (Name : External_Name_Type) is
       begin
          if Tree.Configuration.Has_Externals
            and then Tree.Configuration.Corresponding_View.Context.Contains (Name)

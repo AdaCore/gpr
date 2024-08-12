@@ -918,10 +918,10 @@ package body GPR2.Project_Parser is
                      else
 
                         if not Project.Externals.Contains
-                                 (Optional_Name_Type (Var))
+                                 (External_Name_Type (Var))
                         then
                            Project.Externals.Insert
-                           (Key      => Optional_Name_Type (Var),
+                           (Key      => External_Name_Type (Var),
                             New_Item => External_List_Package.Empty_Vector);
                         end if;
 
@@ -929,7 +929,7 @@ package body GPR2.Project_Parser is
                            Ext :
                              constant Externals_Map_Package.Reference_Type :=
                                Project.Externals.Reference
-                                 (Optional_Name_Type (Var));
+                                 (External_Name_Type (Var));
                         begin
                            Ext.Append
                              ((Type_Node  => Typ,
@@ -2040,7 +2040,8 @@ package body GPR2.Project_Parser is
                        (Child (Parameters, Index), Error => Ignore);
                   end Get_Parameter;
 
-                  Var : constant Name_Type  := Name_Type (Get_Parameter (1));
+                  Var : constant External_Name_Type  :=
+                          External_Name_Type (Get_Parameter (1));
                   Sep : constant Value_Type := Get_Parameter (2);
 
                begin
@@ -2070,8 +2071,8 @@ package body GPR2.Project_Parser is
                   Parameters : constant Term_List_List :=
                                  F_Terms (F_Parameters (Node));
                   Error      : Boolean;
-                  Var        : constant Name_Type :=
-                                 Name_Type
+                  Var        : constant External_Name_Type :=
+                                 External_Name_Type
                                    (External_Variable_Name (Node, Error));
                   Value_Node : constant Term_List :=
                                  External_Value_Node (Node);
