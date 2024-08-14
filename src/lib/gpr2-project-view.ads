@@ -486,6 +486,12 @@ package GPR2.Project.View is
    --  Lookup the specified compilation unit part, and return the
    --  corresponding source file location.
 
+   function Own_Units
+     (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
+     with Pre => Self.Is_Defined;
+   --  Returns all the units owned by the view. Note that the list of units
+   --  is populated only when Update_Sources is called.
+
    function Own_Unit
      (Self : Object; Name : Name_Type) return Build.Compilation_Unit.Object
      with Pre => Self.Is_Defined;

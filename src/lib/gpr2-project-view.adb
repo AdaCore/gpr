@@ -2056,6 +2056,23 @@ package body GPR2.Project.View is
       end if;
    end Own_Unit;
 
+   ---------------
+   -- Own_Units --
+   ---------------
+
+   function Own_Units
+     (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
+   is
+      Db : Build.View_Db.Object;
+   begin
+      if Self.Kind in With_Object_Dir_Kind then
+         Db := Self.View_Db;
+         return Db.Own_Units;
+      else
+         return Build.Compilation_Unit.Maps.Empty_Map;
+      end if;
+   end Own_Units;
+
    ----------
    -- Pack --
    ----------

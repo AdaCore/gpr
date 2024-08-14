@@ -96,6 +96,9 @@ package GPR2.Build.View_Db is
       Name : Name_Type) return Build.Compilation_Unit.Object
      with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Units;
 
+   function Own_Units (Self : Object) return Build.Compilation_Unit.Maps.Map
+     with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Units;
+
    function View (Self : Object) return GPR2.Project.View.Object
      with Pre => Self.Is_Defined;
 
