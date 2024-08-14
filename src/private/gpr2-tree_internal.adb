@@ -2901,6 +2901,7 @@ package body GPR2.Tree_Internal is
                         View_Internal.Get_RW (View);
             begin
                if Self.Has_Runtime_Project
+                 and then not View.Is_Runtime
                  and then View.Kind in With_Source_Dirs_Kind
                  and then View.Language_Ids.Contains (Ada_Language)
                  and then
