@@ -193,8 +193,10 @@ package body GPR2.Build.Tree_Db is
 
       if Explicit then
          Self.Inputs.Reference (Action).Include (Artifact);
-      else
+      elsif not Self.Inputs.Reference (Action).Contains (Artifact) then
          Self.Implicit_Inputs.Reference (Action).Include (Artifact);
+      else
+         return;
       end if;
 
       Self.Successors.Reference (Artifact).Include (Action);
