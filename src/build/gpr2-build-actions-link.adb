@@ -4,51 +4,10 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.Build.Artifacts.File_Part;
-with GPR2.Build.Artifacts.Files;
-with GPR2.Build.Tree_Db;
 with GPR2.Project.Attribute;
-with GPR2.Project.Attribute_Index;
-with GNAT.OS_Lib;
+--  with GPR2.Project.Attribute_Index;
 
 package body GPR2.Build.Actions.Link is
-
-   ---------------------
-   -- Add_Object_File --
-   ---------------------
-
-   procedure Add_Object_File
-     (Self : in out Object; Obj : GPR2.Path_Name.Object) is
-      UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
-   begin
-
-      if not Obj.Is_Defined then
-
-         --  ??? Use a custom exception
-
-         raise Program_Error with
-           "Object file to add to " & UID.Image &
-           " does not exist";
-      end if;
-
-      if not Self.Object_Files.Contains (Obj) then
-         Self.Object_Files.Append (Obj);
-      end if;
-
-      if Self.Tree /= null and then Self.Tree.Is_Defined then
-         if Obj.Is_Defined then
-            Trace (
-              Self.Traces,
-              "Add " & String (Obj.Simple_Name) & " as an input for " &
-                UID.Image);
-
-            Self.Tree.Add_Input
-              (UID,
-               Artifacts.Files.Create (Obj),
-               True);
-         end if;
-      end if;
-   end Add_Object_File;
 
    ----------------
    -- Add_Option --
@@ -69,96 +28,139 @@ package body GPR2.Build.Actions.Link is
       Env  : out GNATCOLL.OS.Process.Environment_Dict)
    is
       pragma Unreferenced (Env);
-      use GPR2.Project.Registry.Attribute;
 
-      Ada_Run_Dir : constant GPR2.Project.Attribute.Object :=
-                      Self.Ctxt.Attribute
-                        (Name  => Runtime_Dir,
-                         Index => GPR2.Project.Attribute_Index.Create
-                           (Ada_Language));
+      Objects     : Tree_Db.Artifact_Sets.Set;
+
    begin
-      --  ??? Replace hard coded values
-      Args.Append ("gcc");
+      Objects := Self.Embedded_Objects;
 
-      for Obj of Self.Object_Files loop
-         Args.Append (Obj.String_Value);
+      for Lib of Self.Library_Dependencies loop
+         declare
+            Link : constant Object'Class :=
+                     Object'Class (Self.Tree.Action (Lib));
+         begin
+            Objects.Difference (Link.Embedded_Objects);
+         end;
       end loop;
 
-      --  ??? We will need a better way to obtain the link options depending
-      --  on enabled runtimes.
+      --  ??? Replace hard coded values
+      if Self.Is_Library then
+         Args.Append ("ar");
+         Args.Append ("crs");
+         Args.Append (String (Self.Output.Path.Simple_Name));
+      else
+         Args.Append ("gcc");
+         Args.Append ("-o");
+         Args.Append (Self.Output.Path.String_Value);
+      end if;
 
-      if Ada_Run_Dir.Is_Defined then
+      for Obj of Objects loop
+         Args.Append (Artifacts.Files.Object'Class (Obj).Path.String_Value);
+      end loop;
+
+      if not Self.Is_Library then
+         for Lib of Self.Library_Dependencies loop
+            declare
+               Link : constant Object'Class :=
+                        Object'Class (Self.Tree.Action (Lib));
+               Opt  : constant Project.Attribute.Object :=
+                        Link.View.Attribute (PRA.Linker.Linker_Options);
+            begin
+               Args.Append (Link.Library.Path.String_Value);
+
+               if Opt.Is_Defined then
+                  for Val of Opt.Values loop
+                     Args.Append (Val.Text);
+                  end loop;
+               end if;
+            end;
+         end loop;
+
+         for Option of Self.Static_Options loop
+            Args.Append (Option);
+         end loop;
+
          declare
-            Run_Dir : constant String := String (Ada_Run_Dir.Value.Text);
+            Required_Switches : constant Project.Attribute.Object :=
+                                  Self.Ctxt.Attribute
+                                    (PRA.Linker.Required_Switches);
          begin
-            --  ??? We may want to check that the directory exists
-
-            Args.Append
-              ("-L" & Run_Dir & GNAT.OS_Lib.Directory_Separator & "adalib");
-
-            Args.Append
-              (Run_Dir & GNAT.OS_Lib.Directory_Separator & "adalib" &
-               GNAT.OS_Lib.Directory_Separator & "libgnat.a");
+            if Required_Switches.Is_Defined then
+               for Switch of Required_Switches.Values loop
+                  Args.Append ((Switch.Text));
+               end loop;
+            end if;
          end;
       end if;
 
-      for Option of Self.Static_Options loop
-         Args.Append (Option);
-      end loop;
-
-      declare
-         Required_Switches : constant Project.Attribute.Object :=
-           Self.Ctxt.Attribute (PRA.Linker.Required_Switches);
-      begin
-         if Required_Switches.Is_Defined then
-            for Switch of Required_Switches.Values loop
-               Args.Append ((Switch.Text));
-            end loop;
-         end if;
-      end;
-
-      Args.Append ("-o");
-      Args.Append (Self.Executable.String_Value);
    end Compute_Command;
 
-   -----------------------
-   -- Compute_Signature --
-   -----------------------
+   ----------------------
+   -- Embedded_Objects --
+   ----------------------
 
-   overriding procedure Compute_Signature (Self : in out Object) is
-      use GPR2.Build.Signature;
-      Art : Artifacts.Files.Object;
+   function Embedded_Objects
+     (Self : Object) return Build.Tree_Db.Artifact_Sets.Set
+   is
+      Result : Tree_Db.Artifact_Sets.Set;
    begin
-      Self.Signature.Clear;
-
-      for Obj_File of Self.Object_Files loop
-         Art := Artifacts.Files.Create (Obj_File);
-         Self.Signature.Update_Artifact (Art.UID, Art.Image, Art.Checksum);
+      for Input of Self.Tree.Inputs (Self.UID) loop
+         --  Inputs are either objects or libraries. Libraries are represented
+         --  by an Artifact.Library class.
+         if Input not in Artifacts.Library.Object'Class then
+            Result.Include (Input);
+         end if;
       end loop;
 
-      Art := Artifacts.Files.Create (Self.Output_Executable);
-      Self.Signature.Update_Artifact (Art.UID, Art.Image, Art.Checksum);
-
-      Self.Signature.Store
-        (Self.Tree.Db_Filename_Path (Object'Class (Self).UID));
-   end Compute_Signature;
+      return Result;
+   end Embedded_Objects;
 
    ----------------
    -- Initialize --
    ---------------
 
-   procedure Initialize
-     (Self             : in out Object;
-      Executable       : GPR2.Path_Name.Object;
-      Main_Object_File : GPR2.Path_Name.Object;
-      Context          : GPR2.Project.View.Object)
-   is
+   procedure Initialize_Executable
+     (Self       : in out Object;
+      Executable : GPR2.Path_Name.Object;
+      Context    : GPR2.Project.View.Object) is
    begin
-      Self.Object_Files.Append (Main_Object_File);
-      Self.Executable := Executable;
-      Self.Ctxt := Context;
-      Self.Traces := Create ("ACTION_LINK");
-   end Initialize;
+      Self.Is_Library := False;
+      Self.Executable := Artifacts.Files.Create (Executable);
+      Self.Ctxt       := Context;
+      Self.Traces     := Create ("ACTION_LINK");
+   end Initialize_Executable;
+
+   ------------------------
+   -- Initialize_Library --
+   ------------------------
+
+   procedure Initialize_Library
+     (Self    : in out Object;
+      Context : GPR2.Project.View.Object) is
+   begin
+      Self.Is_Library := True;
+      Self.Library    := Artifacts.Library.Create (Context.Library_Filename);
+      Self.Ctxt       := Context;
+      Self.Traces     := Create ("ACTION_LINK");
+   end Initialize_Library;
+
+   --------------------------
+   -- Library_Dependencies --
+   --------------------------
+
+   function Library_Dependencies
+     (Self : Object) return Actions.Action_Id_Sets.Set
+   is
+      Result : Action_Id_Sets.Set;
+   begin
+      for Input of Self.Tree.Inputs (Self.UID) loop
+         if Input in Artifacts.Library.Object'Class then
+            Result.Insert (Self.Tree.Predecessor (Input).UID);
+         end if;
+      end loop;
+
+      return Result;
+   end Library_Dependencies;
 
    -----------------------
    -- On_Tree_Insertion --
@@ -171,29 +173,14 @@ package body GPR2.Build.Actions.Link is
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-
       Db.Add_Output
         (UID,
-         Artifacts.File_Part.Create (Self.Executable),
+         Self.Output,
          Messages);
 
       if Messages.Has_Error then
          return;
       end if;
-
-      for Obj of Self.Object_Files loop
-         if Obj.Is_Defined then
-            Trace (
-              Self.Traces,
-              "Add " & String (Obj.Simple_Name) & " as an input for " &
-               UID.Image);
-
-            Db.Add_Input
-              (UID,
-               Artifacts.Files.Create (Obj),
-               True);
-         end if;
-      end loop;
    end On_Tree_Insertion;
 
    ---------
@@ -201,11 +188,12 @@ package body GPR2.Build.Actions.Link is
    ---------
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class is
+      BN     : constant Simple_Name := Self.Output.Path.Simple_Name;
       Result : constant Link_Id :=
-                 (Name_Len  => Self.Executable.Simple_Name'Length,
-                  Exec_Name =>
-                    Optional_Name_Type (Self.Executable.Simple_Name),
-                  Ctxt      => Self.Ctxt);
+                 (Name_Len  => BN'Length,
+                  Is_Lib    => Self.Is_Library,
+                  View      => Self.Ctxt,
+                  Exec_Name => BN);
    begin
       return Result;
    end UID;
