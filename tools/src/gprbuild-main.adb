@@ -18,7 +18,11 @@
 
 with Ada.Command_Line;
 with Ada.Containers;
+with Ada.Directories;
 with Ada.Exceptions;
+with Ada.Text_IO;
+
+with GNATCOLL.Traces;
 
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Process_Manager.JSON;
@@ -26,6 +30,7 @@ with GPR2.Build.Source;
 with GPR2.Interrupt_Handler;
 with GPR2.Log;
 with GPR2.Options;
+with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
@@ -40,9 +45,6 @@ with GPRtools.Actions;
 
 with GPRbuild.Options;
 
-with GNATCOLL.VFS; use GNATCOLL.VFS;
-with GNATCOLL.Traces;
-
 -------------------
 -- GPRbuild.Main --
 -------------------
@@ -54,14 +56,109 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
    use Ada.Exceptions;
 
    use GPR2;
-
+   use GPRtools;
    use GPRtools.Program_Termination;
 
    package PRP renames GPR2.Project.Registry.Pack;
    package PRA renames GPR2.Project.Registry.Attribute;
 
-   Parser    : constant Options.GPRBuild_Parser := Options.Create;
+   function Ensure_Directories
+     (Tree : GPR2.Project.Tree.Object) return Boolean;
+
    Opt       : Options.Object;
+
+   ------------------------
+   -- Ensure_Directories --
+   ------------------------
+
+   function Ensure_Directories
+     (Tree : GPR2.Project.Tree.Object) return Boolean
+   is
+      procedure Ensure (Path : GPR2.Path_Name.Object);
+      procedure Mkdir_Recursive (Path : GPR2.Path_Name.Object);
+
+      All_Ok : Boolean := True;
+
+      ----------------------
+      -- Create_Or_Report --
+      ----------------------
+
+      procedure Ensure (Path : GPR2.Path_Name.Object)
+      is
+         function Path_Img return String;
+
+         --------------
+         -- Path_Img --
+         --------------
+
+         function Path_Img return String is
+            Relative : constant Filename_Type :=
+                         Path.Relative_Path (Tree.Root_Project.Dir_Name);
+            Absolute : constant Filename_Type := Path.Value;
+         begin
+            if Relative'Length < Absolute'Length then
+               return String (Relative);
+            else
+               return String (Absolute);
+            end if;
+         end Path_Img;
+
+      begin
+         if not Path.Exists then
+            if Opt.Create_Missing_Dirs then
+               Mkdir_Recursive (Path);
+               if Opt.Verbosity > GPRtools.Quiet then
+                  Text_IO.Put_Line ('"' & Path_Img & """ created");
+               end if;
+            else
+               Handle_Program_Termination
+                 (Opt        => Opt,
+                  Force_Exit => False,
+                  Message    => '"' & Path_Img & """ does not exist");
+               All_Ok := False;
+            end if;
+         end if;
+      end Ensure;
+
+      ---------------------
+      -- Mkdir_Recursive --
+      ---------------------
+
+      procedure Mkdir_Recursive (Path : GPR2.Path_Name.Object) is
+         Parent : constant GPR2.Path_Name.Object :=
+                    Path.Containing_Directory;
+      begin
+         if not Parent.Exists then
+            Mkdir_Recursive (Parent);
+         end if;
+
+         Ada.Directories.Create_Directory (Path.String_Value);
+      end Mkdir_Recursive;
+
+   begin
+      for V of Tree.Ordered_Views loop
+         if not V.Is_Externally_Built then
+            if V.Kind in GPR2.With_Object_Dir_Kind then
+               Ensure (V.Object_Directory);
+            end if;
+
+            if V.Is_Library then
+               Ensure (V.Library_Directory);
+               Ensure (V.Library_Ali_Directory);
+            end if;
+         end if;
+      end loop;
+
+      for V of Tree.Namespace_Root_Projects loop
+         if V.Has_Mains then
+            Ensure (V.Executable_Directory);
+         end if;
+      end loop;
+
+      return All_Ok;
+   end Ensure_Directories;
+
+   Parser    : constant Options.GPRBuild_Parser := Options.Create;
    Tree      : Project.Tree.Object;
    Sw_Attr   : GPR2.Project.Attribute.Object;
    Messages  : GPR2.Log.Object;
@@ -91,30 +188,24 @@ begin
          Message => "");
    end if;
 
-   Tree := Opt.Tree;
-   Tree.Update_Sources (Messages => Messages);
+   case Opt.Verbosity is
+      when Quiet =>
+         GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Errors;
+      when Regular | Verbose =>
+         GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Warnings_And_Errors;
+      when Very_Verbose =>
+         GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Linter;
+   end case;
 
-   if Messages.Has_Error then
-      Messages.Output_Messages
-        (Information => False, Warning => True, Error => True);
+   Tree := Opt.Tree;
+
+   if not Tree.Update_Sources then
       Handle_Program_Termination
         (Opt        => Opt,
          Force_Exit => True,
          Exit_Cause => E_Tool,
          Message    => "Failed to update sources");
       return To_Exit_Status (E_Fatal);
-   end if;
-
-   Messages.Output_Messages
-     (Information => False, Warning => True, Error => False);
-
-   if Opt.Verbose then
-      Messages.Output_Messages
-        (Information => True, Warning => False, Error => False);
-
-      if Tree.Has_Messages then
-         Tree.Log_Messages.Output_Messages;
-      end if;
    end if;
 
    --  Check if we have a Builder'Switches attribute in the root project
@@ -265,48 +356,36 @@ begin
       end if;
    end if;
 
-   if Opt.Create_Missing_Dirs then
-      Make_Dir
-        (GNATCOLL.VFS.Create
-           (Filesystem_String (Tree.Root_Project.Object_Directory.Value)));
+   if not Ensure_Directories (Tree) then
+      Handle_Program_Termination
+        (Opt     => Opt, Force_Exit => False);
+
+      return To_Exit_Status (E_Abort);
    end if;
 
    Messages.Clear;
 
-   if Tree.Root_Project.Is_Library then
-
-      --  Create actions to build a lib
-
-      null;
-   else
-      declare
-         Obj_Dir : constant Virtual_File :=
-           GNATCOLL.VFS.Create
-             (Filesystem_String
-                (Tree.Root_Project.Object_Directory.Value));
-      begin
-         if not Obj_Dir.Is_Directory then
-            Handle_Program_Termination
-              (Opt     => Opt, Force_Exit => True,
-               Message =>
-                 "The object directory '" &
-                 String (Tree.Root_Project.Object_Directory.Name) &
-                 "' does not exist");
-
-            return To_Exit_Status (E_Fatal);
-         end if;
-
-         Change_Dir (Obj_Dir);
-      end;
-
-      if not GPRtools.Actions.Add_Actions_To_Build_Mains (Tree, Messages) then
-         Messages.Output_Messages
-           (Information => True, Warning => True, Error => True);
-         return To_Exit_Status (E_Abort);
-      end if;
+   if not GPRtools.Actions.Add_Actions_To_Build_Mains (Tree, Messages) then
+      Messages.Output_Messages
+        (Information => True, Warning => True, Error => True);
+      return To_Exit_Status (E_Abort);
    end if;
 
-   Process_M.Execute (Tree.Artifacts_Database, Opt.Parallel_Compilation);
+   declare
+      use GPR2.Build.Process_Manager;
+      Convert_Verbosity : constant array (Verbosity_Level) of
+                            Execution_Verbosity :=
+                              (Quiet        => Quiet,
+                               Regular      => Minimal,
+                               Verbose      => Verbose,
+                               Very_Verbose => Very_Verbose);
+   begin
+      Process_M.Execute
+        (Tree.Artifacts_Database,
+         Jobs         => Opt.Parallel_Compilation,
+         Verbosity    => Convert_Verbosity (Opt.Verbosity),
+         Stop_On_Fail => not Opt.Keep_Going);
+   end;
 
    return To_Exit_Status (E_Success);
 
