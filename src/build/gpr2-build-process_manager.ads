@@ -26,6 +26,12 @@ package GPR2.Build.Process_Manager is
    --  Retry_Job: job should be requeued.
    --  Abort_Execution: abort process manager
 
+   type Execution_Verbosity is
+     (Quiet,
+      Minimal,
+      Verbose,
+      Very_Verbose);
+
    type Object is tagged limited private;
 
    PROCESS_STATUS_OK : constant Integer;
@@ -62,9 +68,10 @@ package GPR2.Build.Process_Manager is
       Capture_Stderr : out File_Descriptor);
 
    procedure Execute
-     (Self    : in out Object;
-      Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      Jobs    : Natural := 0;
+     (Self         : in out Object;
+      Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
+      Jobs         : Natural := 0;
+      Verbosity    : Execution_Verbosity := Minimal;
       Stop_On_Fail : Boolean := True);
 
    procedure Execution_Post_Process (Self : in out Object) is null;
@@ -98,6 +105,7 @@ private
       Traces       : GNATCOLL.Traces.Trace_Handle :=
                        GNATCOLL.Traces.Create ("PROCESS_MANAGER");
       Stop_On_Fail : Boolean := True;
+      Verbosity    : Execution_Verbosity;
    end record;
 
 end GPR2.Build.Process_Manager;

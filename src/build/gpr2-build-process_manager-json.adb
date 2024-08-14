@@ -30,63 +30,66 @@ package body GPR2.Build.Process_Manager.JSON is
       Env         : GNATCOLL.OS.Process.Environment_Dict;
 
    begin
-      Job_Summary.Set_Field (TEXT_ACTION_UID, Job.UID.Image);
+      if not Job.View.Is_Externally_Built then
+         Job_Summary.Set_Field (TEXT_ACTION_UID, Job.UID.Image);
 
-      Job.Compute_Command (Args, Env);
+         Job.Compute_Command (Args, Env);
 
-      for Arg of Args loop
-         if Length (Cmd) > 0 then
-            Append (Cmd, " ");
-         end if;
+         for Arg of Args loop
+            if Length (Cmd) > 0 then
+               Append (Cmd, " ");
+            end if;
 
-         Append (Cmd, Arg);
-      end loop;
-
-      Job_Summary.Set_Field (TEXT_COMMAND, Cmd);
-
-      if not Env.Is_Empty then
-         Env_Summary := Create_Object;
-
-         for C in Env.Iterate loop
-            declare
-               Key  : constant UTF8_String :=
-                        GNATCOLL.OS.Process.Env_Dicts.Key (C);
-               Elem : constant UTF8_String :=
-                        GNATCOLL.OS.Process.Env_Dicts.Key (C);
-            begin
-               Env_Summary.Set_Field (Key, Elem);
-            end;
+            Append (Cmd, Arg);
          end loop;
 
-         Job_Summary.Set_Field (TEXT_ENV, Env_Summary);
+         Job_Summary.Set_Field (TEXT_COMMAND, Cmd);
+
+         if not Env.Is_Empty then
+            Env_Summary := Create_Object;
+
+            for C in Env.Iterate loop
+               declare
+                  Key  : constant UTF8_String :=
+                           GNATCOLL.OS.Process.Env_Dicts.Key (C);
+                  Elem : constant UTF8_String :=
+                           GNATCOLL.OS.Process.Env_Dicts.Key (C);
+               begin
+                  Env_Summary.Set_Field (Key, Elem);
+               end;
+            end loop;
+
+            Job_Summary.Set_Field (TEXT_ENV, Env_Summary);
+         end if;
+
+         Job_Summary.Set_Field (TEXT_CWD, Job.Working_Directory.String_Value);
+
+         case Proc_Handler.Status is
+            when Running =>
+               --  ??? Use a custom exception
+               raise Program_Error with
+                 "The process linked to the action '" & Job.UID.Image &
+                 "' is still running. Cannot collect the job before it " &
+                 "finishes";
+
+            when Finished =>
+               Job_Summary.Set_Field
+                 (TEXT_STATUS,
+                  Ada.Strings.Fixed.Trim
+                    (Proc_Handler.Process_Status'Image, Ada.Strings.Left));
+
+            when Skipped =>
+               Job_Summary.Set_Field (TEXT_STATUS, "SKIPPED");
+
+            when Failed_To_Launch =>
+               Job_Summary.Set_Field (TEXT_STATUS, "FAILED_TO_LAUNCH");
+         end case;
+
+         Job_Summary.Set_Field (TEXT_STDOUT, Stdout);
+         Job_Summary.Set_Field (TEXT_STDERR, Stderr);
+
+         GNATCOLL.JSON.Append (Self.JSON, Job_Summary);
       end if;
-
-      Job_Summary.Set_Field (TEXT_CWD, Job.Working_Directory.String_Value);
-
-      case Proc_Handler.Status is
-         when Running =>
-            --  ??? Use a custom exception
-            raise Program_Error with
-              "The process linked to the action '" & Job.UID.Image &
-              "' is still running. Cannot collect the job before it finishes";
-
-         when Finished =>
-            Job_Summary.Set_Field
-              (TEXT_STATUS,
-               Ada.Strings.Fixed.Trim
-                 (Proc_Handler.Process_Status'Image, Ada.Strings.Left));
-
-         when Skipped =>
-            Job_Summary.Set_Field (TEXT_STATUS, "SKIPPED");
-
-         when Failed_To_Launch =>
-            Job_Summary.Set_Field (TEXT_STATUS, "FAILED_TO_LAUNCH");
-      end case;
-
-      Job_Summary.Set_Field (TEXT_STDOUT, Stdout);
-      Job_Summary.Set_Field (TEXT_STDERR, Stderr);
-
-      GNATCOLL.JSON.Append (Self.JSON, Job_Summary);
 
       return GPR2.Build.Process_Manager.Object (Self).Collect_Job
         (Job, Proc_Handler, Stdout, Stderr);
@@ -101,6 +104,7 @@ package body GPR2.Build.Process_Manager.JSON is
      (Self         : in out Object;
       Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
       Jobs         : Natural := 0;
+      Verbosity    : Execution_Verbosity := Minimal;
       Stop_On_Fail : Boolean := True)
    is
       JSON_File : constant GPR2.Path_Name.Object :=
@@ -108,7 +112,7 @@ package body GPR2.Build.Process_Manager.JSON is
    begin
       Self.JSON_File := JSON_File;
       GPR2.Build.Process_Manager.Object (Self).Execute
-        (Tree_Db, Jobs, Stop_On_Fail);
+        (Tree_Db, Jobs, Verbosity, Stop_On_Fail);
    end Execute;
 
    procedure Execute

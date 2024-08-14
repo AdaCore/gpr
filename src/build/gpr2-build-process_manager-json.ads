@@ -15,8 +15,7 @@ package GPR2.Build.Process_Manager.JSON is
 
    type Object is new GPR2.Build.Process_Manager.Object with private;
 
-   overriding
-   function Collect_Job
+   overriding function Collect_Job
      (Self           : in out Object;
        Job            : in out Actions.Object'Class;
        Proc_Handler   : Process_Handler;
@@ -31,11 +30,11 @@ package GPR2.Build.Process_Manager.JSON is
    --  Execute the process manager and store the jobs results in the provided
    --  JSON file ``JSON_FILE``.
 
-   overriding
-   procedure Execute
+   overriding procedure Execute
      (Self         : in out Object;
       Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
       Jobs         : Natural := 0;
+      Verbosity    : Execution_Verbosity := Minimal;
       Stop_On_Fail : Boolean := True);
    --  Same as above, but store the jobs results in the default JSON file
    --  ``<current_directory>/jobs.json``.

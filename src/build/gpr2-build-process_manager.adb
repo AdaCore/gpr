@@ -143,6 +143,7 @@ package body GPR2.Build.Process_Manager is
      (Self         : in out Object;
       Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
       Jobs         : Natural := 0;
+      Verbosity    : Execution_Verbosity := Minimal;
       Stop_On_Fail : Boolean := True)
    is
       Max_Jobs : constant Natural := Effective_Job_Number (Jobs);
@@ -205,6 +206,7 @@ package body GPR2.Build.Process_Manager is
       Self.Tree_Db      := Tree_Db;
       Self.Stop_On_Fail := Stop_On_Fail;
       Self.Stats        := Empty_Stats;
+      Self.Verbosity    := Verbosity;
 
       Graph.Start_Iterator (Enable_Visiting_State => True);
 
@@ -444,15 +446,21 @@ package body GPR2.Build.Process_Manager is
       Cwd := Job.Working_Directory;
 
       if Job.Skip then
-         Self.Traces.Trace
-           ("job asked to be skipped: " & Job.UID.Image);
+         if Self.Traces.Is_Active then
+            Self.Traces.Trace
+              ("job asked to be skipped: " & Job.UID.Image);
+         end if;
+
          Proc_Handler := Process_Handler'(Status => Skipped);
 
          return;
 
       elsif Args.Is_Empty then
-         Self.Traces.Trace
-           ("job arguments is empty, skipping '"  & Job.UID.Image & "'");
+         if Self.Traces.Is_Active then
+            Self.Traces.Trace
+              ("job arguments is empty, skipping '"  & Job.UID.Image & "'");
+         end if;
+
          Proc_Handler := Process_Handler'(Status => Skipped);
 
          return;
@@ -472,10 +480,15 @@ package body GPR2.Build.Process_Manager is
          --  ??? Both message level and Project tree verbosity don't cope with
          --  tooling messages that need quiet/normal/detailed info. Let's go
          --  for the default one *and* verbose one for now
-         Message.Reporter.Active_Reporter.Report
-           (Job.UID.Image);
-         Message.Reporter.Active_Reporter.Report
-           (Image (Args));
+         case Self.Verbosity is
+            when Quiet =>
+               null;
+            when Minimal =>
+               Message.Reporter.Active_Reporter.Report (Job.UID.Image);
+            when Verbose | Very_Verbose =>
+               Message.Reporter.Active_Reporter.Report (Image (Args));
+         end case;
+
          Proc_Handler :=
            (Status => Running,
             Handle => Start
@@ -485,6 +498,7 @@ package body GPR2.Build.Process_Manager is
                Stdout      => P_Wo,
                Stderr      => P_We,
                Inherit_Env => True));
+
       exception
          when Ex : GNATCOLL.OS.OS_Error =>
             FS.Close (P_Wo);
