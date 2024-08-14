@@ -106,14 +106,26 @@ package body GPR2.Build.Process_Manager is
          end if;
       end if;
 
-      if Proc_Handler.Status = Finished then
-         if Proc_Handler.Process_Status = PROCESS_STATUS_OK then
-            Job.Post_Command;
-            Job.Compute_Signature;
+      if (Proc_Handler.Status = Finished
+          and then Proc_Handler.Process_Status = PROCESS_STATUS_OK)
+        or else (Proc_Handler.Status = Skipped and then Job.Valid_Signature)
+      then
+         Job.Post_Command;
+         --  Propagate any newly created action
+         Self.Tree_Db.Propagate_Actions;
+      end if;
 
-         elsif Self.Stop_On_Fail then
-            return Abort_Execution;
-         end if;
+      if Proc_Handler.Status = Finished
+        and then Proc_Handler.Process_Status = PROCESS_STATUS_OK
+      then
+         Job.Compute_Signature;
+      end if;
+
+      if Proc_Handler.Status = Finished
+        and then Proc_Handler.Process_Status /= PROCESS_STATUS_OK
+        and then Self.Stop_On_Fail
+      then
+         return Abort_Execution;
       end if;
 
       --  We do not want to manipulate reference types during post commands

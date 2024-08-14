@@ -31,7 +31,7 @@ package GPR2.Build.Artifacts.Files is
 private
 
    type Object is new Artifacts.Object with record
-      UID  : B3_Hash_Digest;
+      UID  : B3_Hash_Digest := (others => ' ');
       Path : GPR2.Path_Name.Object;
    end record;
 
