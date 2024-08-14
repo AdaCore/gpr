@@ -30,8 +30,6 @@ package GPR2.Build.Actions.Post_Bind is
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object);
 
-   overriding procedure Compute_Signature (Self : in out Object);
-
    overriding procedure Compute_Command
      (Self : in out Object;
       Args : out GNATCOLL.OS.Process.Argument_List;

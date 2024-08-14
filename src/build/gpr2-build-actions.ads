@@ -4,6 +4,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Containers.Indefinite_Ordered_Sets;
+
 with GNATCOLL.OS.Process;
 
 with GPR2.Containers;
@@ -35,6 +37,9 @@ package GPR2.Build.Actions is
 
    function Less (L, R : Action_Id'Class) return Boolean;
    --  Class-wide comparison
+
+   package Action_Id_Sets is new Ada.Containers.Indefinite_Ordered_Sets
+     (Action_Id'Class);
 
    type Object is abstract tagged private;
    --  Actions are atomic steps in a compilation process, where an external
@@ -77,8 +82,10 @@ package GPR2.Build.Actions is
    --  Indicates whether the action should be skipped. By default this returns
    --  False.
 
-   procedure Compute_Signature (Self : in out Object) is abstract;
+   procedure Compute_Signature (Self : in out Object);
    --  Compute the action signature from all its artifacts and hard store it
+   --  By default this uses the inputs and outputs of the Build_Db graph to
+   --  compute the signature. To be refined when needed.
 
    procedure Compare_Signature (Self : in out Object);
    --  Compare the current action signature to the loaded signature
@@ -143,5 +150,7 @@ private
       else Ada.Tags.External_Tag (L'Tag) < Ada.Tags.External_Tag (R'Tag));
 
    function Valid_Signature (Self : Object) return Boolean is
-      (Self.Signature.Valid);
+     (Object'Class (Self).View.Is_Externally_Built
+      or else Self.Signature.Valid);
+
 end GPR2.Build.Actions;

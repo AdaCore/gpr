@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.Build.Signature;
 with GPR2.Path_Name; use GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
 
@@ -33,8 +32,6 @@ package GPR2.Build.Actions.Ada_Bind is
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
 
-   overriding function Valid_Signature (Self : Object) return Boolean;
-
    procedure Initialize
      (Self     : in out Object;
       Main_Ali : GPR2.Path_Name.Object;
@@ -58,8 +55,6 @@ package GPR2.Build.Actions.Ada_Bind is
      (Self     : in out Object;
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object);
-
-   overriding procedure Compute_Signature (Self : in out Object);
 
    overriding procedure Compute_Command
      (Self : in out Object;
@@ -136,6 +131,5 @@ private
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object is
      (Self.Ctxt.Object_Directory);
-
 
 end GPR2.Build.Actions.Ada_Bind;

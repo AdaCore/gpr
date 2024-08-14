@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.Build.Signature;
 with GPR2.Build.Source;
 with GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
@@ -28,8 +27,6 @@ package GPR2.Build.Actions.Compile is
    --  Action responsible for building Ada sources
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
-
-   overriding function Valid_Signature (Self : Object) return Boolean;
 
    procedure Initialize (Self : in out Object; Src : GPR2.Build.Source.Object);
 
@@ -93,9 +90,6 @@ private
       Ctxt     : GPR2.Project.View.Object;
       --  View owning the source
    end record;
-
-   overriding function Valid_Signature (Self : Object) return Boolean is
-     (Self.Signature.Valid);
 
    overriding function View (Self : Object) return GPR2.Project.View.Object is
      (Self.Ctxt);

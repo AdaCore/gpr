@@ -11,6 +11,7 @@ with Ada.Strings.Unbounded;
 with GNATCOLL;
 with GNATCOLL.JSON;
 
+with GPR2.Build.Artifacts;
 with GPR2.Path_Name;
 with GPR2.Utils.Hash;
 
@@ -55,10 +56,8 @@ package GPR2.Build.Signature is
    --  of how each owner of a signature considers what a valid signature is.
 
    procedure Update_Artifact
-     (Self         : in out Object;
-      Id           : B3_Hash_Digest;
-      Plain_Id     : UTF8_String;
-      Checksum     : Hash_Digest);
+     (Self : in out Object;
+      Art  : Artifacts.Object'Class);
    --  Add or update an artifact in the signature
 
    procedure Clear (Self : in out Object);

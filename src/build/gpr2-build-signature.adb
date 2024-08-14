@@ -205,20 +205,18 @@ package body GPR2.Build.Signature is
    ---------------------
 
    procedure Update_Artifact
-     (Self         : in out Object;
-      Id           : B3_Hash_Digest;
-      Plain_Id     : String;
-      Checksum     : Utils.Hash.Hash_Digest)
+     (Self : in out Object;
+      Art  : Artifacts.Object'Class)
    is
       Item : Artifact_Signature;
    begin
-      Item.Path := UB.To_Unbounded_String (Plain_Id);
-      Item.Checksum := Checksum;
+      Item.Path := UB.To_Unbounded_String (Art.Image);
+      Item.Checksum := Art.Checksum;
 
-      if Self.Artifacts.Contains (Id) then
-         Self.Artifacts.Replace (Id, Item);
+      if Self.Artifacts.Contains (Art.UID) then
+         Self.Artifacts.Replace (Art.UID, Item);
       else
-         Self.Artifacts.Insert (Id, Item);
+         Self.Artifacts.Insert (Art.UID, Item);
       end if;
    end Update_Artifact;
 

@@ -98,6 +98,30 @@ package body GPR2.Build.Actions is
       end loop;
    end Compare_Signature;
 
+   -----------------------
+   -- Compute_Signature --
+   -----------------------
+
+   procedure Compute_Signature (Self : in out Object)
+   is
+      UID : constant Action_Id'Class := Object'Class (Self).UID;
+   begin
+      Self.Signature.Clear;
+
+      for Input of Self.Tree.Inputs (UID) loop
+         Self.Signature.Update_Artifact (Input);
+      end loop;
+
+      for Output of Self.Tree.Outputs (UID) loop
+         Self.Signature.Update_Artifact (Output);
+      end loop;
+
+      --  ??? Should be done in Signature.Store
+      Self.Signature.Set_Valid_State (True);
+
+      Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
+   end Compute_Signature;
+
    -----------------------------
    -- Get_Or_Create_Temp_File --
    -----------------------------

@@ -7,7 +7,6 @@
 with GNATCOLL.OS.Process;
 
 with GPR2.Build.Compilation_Unit;
-with GPR2.Build.Signature;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Registry.Attribute;
@@ -151,9 +150,6 @@ private
 
    function Ali_File (Self : Object) return GPR2.Path_Name.Object is
      (Self.Ali_File);
-
-   overriding function Valid_Signature (Self : Object) return Boolean is
-     (Self.Signature.Valid);
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
