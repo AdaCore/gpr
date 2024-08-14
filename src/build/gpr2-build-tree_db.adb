@@ -203,9 +203,9 @@ package body GPR2.Build.Tree_Db is
 
       if Artifact_Action_Maps.Has_Element (Pred) then
          Self.Actions_Graph.Add_Predecessor
-               (Node        => Self.Action_To_Node (Action),
-                Predecessor => Self.Action_To_Node
-                                 (Artifact_Action_Maps.Element (Pred)));
+           (Node        => Self.Action_To_Node (Action),
+            Predecessor => Self.Action_To_Node
+                             (Artifact_Action_Maps.Element (Pred)));
       end if;
    end Add_Input;
 
@@ -249,8 +249,8 @@ package body GPR2.Build.Tree_Db is
 
       for Successor_Id of Self.Successors (Artifact) loop
          Self.Actions_Graph.Add_Predecessor
-               (Node        => Self.Action_To_Node (Successor_Id),
-                Predecessor => Self.Action_To_Node (Action));
+           (Node        => Self.Action_To_Node (Successor_Id),
+            Predecessor => Self.Action_To_Node (Action));
       end loop;
    end Add_Output;
 

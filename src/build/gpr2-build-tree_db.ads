@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Iterator_Interfaces;
 
 with GNATCOLL.Directed_Graph;
@@ -19,7 +20,6 @@ with GPR2.View_Ids;
 
 private with Ada.Containers.Hashed_Maps;
 private with Ada.Containers.Indefinite_Ordered_Maps;
-private with Ada.Containers.Indefinite_Ordered_Sets;
 
 limited private with GPR2.Tree_Internal;
 
@@ -164,6 +164,10 @@ package GPR2.Build.Tree_Db is
       Pos      : Artifact_Cursor)
       return Constant_Artifact_Reference_Type;
 
+   package Artifact_Sets is new Ada.Containers.Indefinite_Ordered_Sets
+     (GPR2.Build.Artifacts.Object'Class,
+      GPR2.Build.Artifacts.Less, GPR2.Build.Artifacts."=");
+
    type Action_Cursor is private;
    No_Action_Element : constant Action_Cursor;
 
@@ -217,6 +221,10 @@ package GPR2.Build.Tree_Db is
      (Self     : Object;
       Artifact : Artifacts.Object'Class) return Actions_List'Class;
 
+   function Predecessor
+     (Self     : Object;
+      Artifact : Artifacts.Object'Class) return Actions.Object'Class;
+
    -------------------------
    -- Temp files handling --
    -------------------------
@@ -249,10 +257,6 @@ private
    package Action_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (GPR2.Build.Actions.Action_Id'Class, GPR2.Build.Actions.Object'Class,
       GPR2.Build.Actions.Less, GPR2.Build.Actions."=");
-
-   package Artifact_Sets is new Ada.Containers.Indefinite_Ordered_Sets
-     (GPR2.Build.Artifacts.Object'Class,
-      GPR2.Build.Artifacts.Less, GPR2.Build.Artifacts."=");
 
    package Action_Sets is new Ada.Containers.Indefinite_Ordered_Sets
      (GPR2.Build.Actions.Action_Id'Class,
@@ -439,6 +443,11 @@ private
          (Kind   => Outputs,
           Db     => Self.Self,
           Action => Self.Actions.Find (Action)));
+
+   function Predecessor
+     (Self     : Object;
+      Artifact : Artifacts.Object'Class) return Actions.Object'Class
+   is (Self.Actions (Self.Predecessor (Artifact)));
 
    function Successors
      (Self     : Object;
