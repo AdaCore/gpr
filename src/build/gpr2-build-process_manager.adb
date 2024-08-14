@@ -214,7 +214,18 @@ package body GPR2.Build.Process_Manager is
          if not End_Of_Iteration then
             --  Launch as many process as possible
             while Active_Jobs < Max_Jobs loop
-               End_Of_Iteration := not Graph.Next (Node);
+               begin
+                  End_Of_Iteration := not Graph.Next (Node);
+               exception
+                  when E : GNATCOLL.Directed_Graph.DG_Error =>
+                     GPR2.Message.Reporter.Active_Reporter.Report
+                       ("error: internal error in the process manager (" &
+                          Ada.Exceptions.Exception_Message (E) & ")");
+                     Self.Traces.Trace ("!!! Internal error in the DAG");
+                     Self.Traces.Trace
+                       (Ada.Exceptions.Exception_Information (E));
+                     End_Of_Iteration := True;
+               end;
 
                exit when End_Of_Iteration or else Node = GDG.No_Node;
 
@@ -236,39 +247,34 @@ package body GPR2.Build.Process_Manager is
                         Self.Stats.Max_Active_Jobs := Active_Jobs;
                      end if;
                   else
-                     if Proc_Handler.Status = Failed_To_Launch then
-                        Job_Status :=
-                          Collect_Job
-                            (Object'Class (Self),
-                             Job          => Act,
-                             Proc_Handler => Proc_Handler,
-                             Stdout       => To_Unbounded_String (""),
-                             Stderr       => Proc_Handler.Error_Message);
-                     elsif Proc_Handler.Status = Skipped then
-                        Job_Status :=
-                          Collect_Job
-                            (Object'Class (Self),
-                             Job          => Act,
-                             Proc_Handler => Proc_Handler,
-                             Stdout       => To_Unbounded_String (""),
-                             Stderr       => To_Unbounded_String (""));
-                     elsif Proc_Handler.Status = Finished then
-                        raise Program_Error with
-                          "Process handler status shall not be 'Finished' " &
-                          "at this state";
-                     end if;
+
+                     Graph.Complete_Visit (Node);
+
+                     pragma Assert
+                       (Proc_Handler.Status /= Finished,
+                        "Process handler status shall not be 'Finished' " &
+                          "at this stage");
+
+                     Job_Status :=
+                       Collect_Job
+                         (Object'Class (Self),
+                          Job          => Act,
+                          Proc_Handler => Proc_Handler,
+                          Stdout       => Null_Unbounded_String,
+                          Stderr       =>
+                            (if Proc_Handler.Status = Failed_To_Launch
+                             then Proc_Handler.Error_Message
+                             else Null_Unbounded_String));
 
                      if Job_Status = Abort_Execution then
                         End_Of_Iteration := True;
                         exit;
+
                      elsif Job_Status = Retry_Job then
                         --  ??? add API to pass node from visiting to non
                         --  visited state
 
                         raise Program_Error;
-
-                     else
-                        Graph.Complete_Visit (Node);
                      end if;
                   end if;
                end;
@@ -282,6 +288,8 @@ package body GPR2.Build.Process_Manager is
                (Active_Procs (1 .. Active_Jobs), Timeout => 3600.0);
 
             if Proc_Id > 0 then
+               Graph.Complete_Visit (States (Proc_Id).Node);
+
                --  A process has finished. Call wait to finalize it and get
                --  the final process status.
                Proc_Handler :=
@@ -333,9 +341,6 @@ package body GPR2.Build.Process_Manager is
                   --  ??? add API to pass node from visiting to non visited
                   --  state
                   raise Program_Error;
-
-               else
-                  Graph.Complete_Visit (States (Proc_Id).Node);
                end if;
 
                --  Remove job from the list of active jobs.
@@ -353,7 +358,6 @@ package body GPR2.Build.Process_Manager is
                      States (Active_Jobs + 1) := Tmp;
                   end;
                end if;
-
             end if;
          end if;
 
@@ -425,9 +429,9 @@ package body GPR2.Build.Process_Manager is
       P_We : FS.File_Descriptor;
       P_Re : FS.File_Descriptor;
 
-      Args     : Argument_List;
-      Env      : Environment_Dict;
-      Cwd      : GPR2.Path_Name.Object;
+      Args : Argument_List;
+      Env  : Environment_Dict;
+      Cwd  : GPR2.Path_Name.Object;
 
    begin
       if Job.Valid_Signature then
