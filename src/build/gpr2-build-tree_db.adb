@@ -157,7 +157,7 @@ package body GPR2.Build.Tree_Db is
       --  On_Tree_Insertion may modify Action, so copy it back
       Self.Actions.Reference (Curs) := Action;
 
-      Self.Actions.Reference (Curs).Compare_Signature;
+      Self.Actions.Reference (Curs).Load_Signature;
    end Add_Action;
 
    ------------------

@@ -95,6 +95,31 @@ package body GPR2.Build.Actions.Link is
 
    end Compute_Command;
 
+   -----------------------
+   -- Compute_Signature --
+   -----------------------
+
+   overriding procedure Compute_Signature (Self : in out Object) is
+      UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+   begin
+      Self.Signature.Clear;
+
+      for Obj of Self.Embedded_Objects loop
+         Self.Signature.Add_Artifact (Obj);
+      end loop;
+
+      if not Self.Is_Library then
+         --  ??? TODO dynamic libraries also need their library dependencies
+         for Lib of Self.Library_Dependencies loop
+            Self.Signature.Add_Artifact (Object'Class (Self).Output);
+         end loop;
+      end if;
+
+      Self.Signature.Add_Artifact (Self.Output);
+
+      Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
+   end Compute_Signature;
+
    ----------------------
    -- Embedded_Objects --
    ----------------------

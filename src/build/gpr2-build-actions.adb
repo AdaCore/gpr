@@ -8,8 +8,6 @@ with GNATCOLL.OS.FS;
 with GNATCOLL.OS.FSUtil;
 
 with GPR2.Build.Tree_Db;
-with GPR2.Build.Artifacts.Files;
-with GPR2.Utils.Hash;
 
 package body GPR2.Build.Actions is
 
@@ -52,53 +50,6 @@ package body GPR2.Build.Actions is
    end Cleanup_Temp_Files;
 
    -----------------------
-   -- Compare_Signature --
-   -----------------------
-
-   procedure Compare_Signature (Self : in out Object)
-   is
-      use Build.Signature;
-      use Utils.Hash;
-
-      UID     : constant Actions.Action_Id'Class
-                  := Actions.Object'Class (Self).UID;
-      Db_File : constant GPR2.Path_Name.Object :=
-                  Self.Tree.Db_Filename_Path (UID);
-   begin
-      Self.Signature := Load (Db_File);
-
-      if Self.Signature.Coherent then
-         Self.Signature.Set_Valid_State (True);
-      else
-         Self.Signature.Set_Valid_State (False);
-
-         return;
-      end if;
-
-      for Artifact_Sign of Self.Signature.Artifacts_Signatures loop
-         declare
-            Artifact : constant GPR2.Build.Artifacts.Files.Object :=
-                         GPR2.Build.Artifacts.Files.Create
-                           (GPR2.Path_Name.Create
-                              (Name      =>
-                                 Filename_Type
-                                  (UB.To_String (Artifact_Sign.Path)),
-                               Path_Name =>
-                                 Filename_Type
-                                  (UB.To_String (Artifact_Sign.Path))));
-         begin
-            if Artifact.Path.Exists then
-               if Artifact.Checksum /= Artifact_Sign.Checksum then
-                  Self.Signature.Set_Valid_State (False);
-               end if;
-            else
-               Self.Signature.Set_Valid_State (False);
-            end if;
-         end;
-      end loop;
-   end Compare_Signature;
-
-   -----------------------
    -- Compute_Signature --
    -----------------------
 
@@ -109,15 +60,12 @@ package body GPR2.Build.Actions is
       Self.Signature.Clear;
 
       for Input of Self.Tree.Inputs (UID) loop
-         Self.Signature.Update_Artifact (Input);
+         Self.Signature.Add_Artifact (Input);
       end loop;
 
       for Output of Self.Tree.Outputs (UID) loop
-         Self.Signature.Update_Artifact (Output);
+         Self.Signature.Add_Artifact (Output);
       end loop;
-
-      --  ??? Should be done in Signature.Store
-      Self.Signature.Set_Valid_State (True);
 
       Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
    end Compute_Signature;
@@ -163,6 +111,18 @@ package body GPR2.Build.Actions is
          end;
       end if;
    end Get_Or_Create_Temp_File;
+
+   --------------------
+   -- Load_Signature --
+   --------------------
+
+   procedure Load_Signature (Self : in out Object)
+   is
+      Db_File : constant GPR2.Path_Name.Object :=
+                  Self.Tree.Db_Filename_Path (Object'Class (Self).UID);
+   begin
+      Self.Signature := Build.Signature.Load (Db_File);
+   end Load_Signature;
 
 
 end GPR2.Build.Actions;

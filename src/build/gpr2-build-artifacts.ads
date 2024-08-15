@@ -22,9 +22,13 @@ package GPR2.Build.Artifacts is
    --  artifacts (so for example source artifacts generate object file
    --  artifacts).
 
+   function Create (Uri : String) return Object is abstract;
+   --  Used to deserialize an artifact. The protocol part is removed from the
+   --  uri before Create is called.
+
    function Image (Self : Object) return String is abstract;
-   --  A representation of Self that can be used to report messages to the
-   --  end user: must be user understandable.
+   --  This value is used when unserializing the artifact (see Create above).
+   --  It is also used to report artifact-related messages to the end user.
 
    function SLOC (Self : Object) return GPR2.Source_Reference.Object'Class
                   is abstract;
@@ -38,12 +42,28 @@ package GPR2.Build.Artifacts is
 
    function Hash (Self : Object) return Ada.Containers.Hash_Type is abstract;
 
-   function UID (Self : Object) return B3_Hash_Digest is abstract;
-   --  The UID of the artifact
-
    function Less (L, R : Object'Class) return Boolean;
    --  Class wide comparison, compares object type's external tags if L and R
    --  are not of the same type.
+
+   function Protocol (Self : Object) return String is abstract;
+   --  Must be constant for a class of artifacts. Is used to
+   --  serialize / unserialize artifacts.
+
+   procedure Register_Artifact_Class
+     (Artifact : Object'Class);
+   --  Used to register a new artifact class. The artifacts handled by
+   --  libgpr2 are all registered at elaboration time in the body of this
+   --  package.
+
+   subtype Uri_Type is String;
+
+   function Serialize (Artifact : Object'Class) return Uri_Type;
+
+   function Unserialize (Uri : Uri_Type) return Object'Class;
+   --  Translates an Uri into object. Raises Constraint_Error if the protocol
+   --  was not registered before.
+
 
 private
 

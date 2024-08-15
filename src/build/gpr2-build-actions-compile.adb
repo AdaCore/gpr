@@ -55,10 +55,10 @@ package body GPR2.Build.Actions.Compile is
       --  ??? Need to process deps units
 
       Art := Artifacts.Files.Create (Self.Input.Path_Name);
-      Self.Signature.Update_Artifact (Art);
+      Self.Signature.Add_Artifact (Art);
 
       Art := Artifacts.Files.Create (Self.Obj_File);
-      Self.Signature.Update_Artifact (Art);
+      Self.Signature.Add_Artifact (Art);
 
       Self.Signature.Store
         (Self.Tree.Db_Filename_Path (Object'Class (Self).UID));

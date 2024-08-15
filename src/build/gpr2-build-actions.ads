@@ -87,7 +87,7 @@ package GPR2.Build.Actions is
    --  By default this uses the inputs and outputs of the Build_Db graph to
    --  compute the signature. To be refined when needed.
 
-   procedure Compare_Signature (Self : in out Object);
+   procedure Load_Signature (Self : in out Object);
    --  Compare the current action signature to the loaded signature
 
    procedure Attach

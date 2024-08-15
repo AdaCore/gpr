@@ -9,21 +9,17 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body GPR2.Build.Signature is
 
-   -----------------------
-   -- Artifact_Checksum --
-   -----------------------
+   ------------------
+   -- Add_Artifact --
+   ------------------
 
-   function Artifact_Checksum
-     (Self : Object; Id : B3_Hash_Digest) return Utils.Hash.Hash_Digest
+   procedure Add_Artifact
+     (Self : in out Object;
+      Art  : Artifacts.Object'Class)
    is
-      Checksum : Utils.Hash.Hash_Digest := (others => 'X');
    begin
-      if Self.Artifacts.Contains (Id) then
-         Checksum := Self.Artifacts.Element (Id).Checksum;
-      end if;
-
-      return Checksum;
-   end Artifact_Checksum;
+      Self.Artifacts.Include (Art, Art.Checksum);
+   end Add_Artifact;
 
    -----------
    -- Clear --
@@ -31,8 +27,7 @@ package body GPR2.Build.Signature is
 
    procedure Clear (Self : in out Object) is
    begin
-      Self.Artifacts.Clear;
-      Self.Valid := False;
+      Self := (others => <>);
    end Clear;
 
    ----------
@@ -44,149 +39,90 @@ package body GPR2.Build.Signature is
       File        : File_Type;
       JSON_Result : Read_Result;
       Signature   : Object;
+
+      procedure Extract
+        (Key   : UTF8_String;
+         Value : JSON_Value);
+
+      -------------
+      -- Extract --
+      -------------
+
+      procedure Extract
+        (Key   : UTF8_String;
+         Value : JSON_Value)
+      is
+         A      : constant Artifacts.Object'Class :=
+                    Artifacts.Unserialize (Key);
+         Digest : constant UTF8_String := Get (Value);
+      begin
+         Signature.Artifacts.Insert (A, Hash_Digest (Digest));
+      end Extract;
    begin
-      if Exists (String (Db_File.Value)) then
-         Text_IO.Open
-           (File => File,
-            Mode => In_File,
-            Name => String (Db_File.Value));
+      Signature.Clear;
 
-         begin
-            JSON_Result := Read (Get_Line (File));
+      Text_IO.Open
+        (File => File,
+         Mode => In_File,
+         Name => String (Db_File.Value));
+
+      begin
+         JSON_Result := Read (Get_Line (File));
+         Close (File);
+      exception
+         when End_Error =>
             Close (File);
+      end;
 
-            if JSON_Result.Success then
-               if Has_Field (JSON_Result.Value, TEXT_ARTIFACTS)
-                 and then
-                   (Kind (Get (Val => JSON_Result.Value,
-                               Field => TEXT_ARTIFACTS))
-                    = JSON_Array_Type)
-               then
-                  declare
-                     List : constant JSON_Array :=
-                              Get (JSON_Result.Value, TEXT_ARTIFACTS);
-                  begin
-                     for Index in Array_First (List) .. Length (List) loop
-                        declare
-                           Element  : constant JSON_Value  :=
-                                        Array_Element (List, Index);
-                        begin
-                           if (Has_Field (Element, TEXT_ID)
-                               and then
-                                 (Kind (Get (Val => Element, Field => TEXT_ID))
-                                  = JSON_String_Type))
-                             and then
-                               (Has_Field (Element, TEXT_PLAIN_ID)
-                                and then
-                                  (Kind (Get (Val => Element,
-                                              Field => TEXT_PLAIN_ID))
-                                   = JSON_String_Type))
-                             and then
-                               (Has_Field (Element, TEXT_CHECKSUM)
-                                and then
-                                  (Kind (Get (Val => Element,
-                                              Field => TEXT_CHECKSUM))
-                                   = JSON_String_Type))
-                           then
-                              declare
-                                 Id       : constant String :=
-                                              Get (Element, TEXT_ID);
-                                 Id_Txt   : constant String  :=
-                                              Get (Element, TEXT_PLAIN_ID);
-                                 Chck_Txt : constant String  :=
-                                              Get (Element, TEXT_CHECKSUM);
-                                 Item     : Artifact_Signature;
+      if not JSON_Result.Success then
+         return Signature;
+      end if;
 
-                                 Position : Artifact_Maps.Cursor;
-                                 Inserted : Boolean := False;
-                              begin
-                                 if Chck_Txt'Length = Item.Checksum'Length then
-                                    Item.Checksum :=
-                                      Utils.Hash.Hash_Digest (Chck_Txt);
-                                 end if;
-
-                                 Item.Path := UB.To_Unbounded_String (Id_Txt);
-
-                                 if Id'Length = B3_Hash_Digest'Length then
-                                    Signature.Artifacts.Insert
-                                      (Key       => B3_Hash_Digest (Id),
-                                       New_Item  => Item,
-                                       Position  => Position,
-                                       Inserted  => Inserted);
-                                 end if;
-
-                                 if not Inserted then
-                                    Signature.Coherent := False;
-
-                                    exit;
-                                 end if;
-                              end;
-                           else
-                              Signature.Coherent := False;
-                              exit;
-                           end if;
-                        end;
-                     end loop;
-                  end;
-               else
-                  Signature.Coherent := False;
-               end if;
-            else
-               Signature.Coherent := False;
-            end if;
-         exception
-            when End_Error =>
-               Signature.Coherent := False;
-               Close (File);
+      if Has_Field (JSON_Result.Value, TEXT_SIGNATURE)
+        and then (Kind (Get (Val   => JSON_Result.Value,
+                             Field => TEXT_SIGNATURE))
+                  = JSON_Object_Type)
+      then
+         declare
+            List : constant JSON_Value :=
+                     Get (JSON_Result.Value, TEXT_SIGNATURE);
+         begin
+            Map_JSON_Object (List, Extract'Access);
          end;
-      else
-         Signature.Coherent := False;
       end if;
 
       return Signature;
+
+   exception
+      when others =>
+         Signature.Clear;
+         return Signature;
    end Load;
-
-   ---------------------
-   -- Set_Valid_State --
-   ---------------------
-
-   procedure Set_Valid_State (Self : in out Object; Valid : Boolean) is
-   begin
-      Self.Valid := Valid;
-   end Set_Valid_State;
 
    -----------
    -- Store --
    -----------
 
-   procedure Store (Self : Object; Db_File : Path_Name.Object) is
+   procedure Store (Self : in out Object; Db_File : Path_Name.Object) is
       File : File_Type;
       JSON : constant JSON_Value := Create_Object;
-      List : JSON_Array;
+      List : constant JSON_Value := Create_Object;
 
       procedure Create_Artifact_Element (Position : Artifact_Maps.Cursor);
 
       procedure Create_Artifact_Element (Position : Artifact_Maps.Cursor) is
-         Artifact : constant JSON_Value := Create_Object;
-         Item     : constant Artifact_Signature :=
-                      Artifact_Maps.Element (Position);
+         Key : constant Artifacts.Object'Class :=
+                 Artifact_Maps.Key (Position);
       begin
-         Set_Field (Val        => Artifact,
-                    Field_Name => TEXT_ID,
-                    Field      => String (Artifact_Maps.Key (Position)));
-         Set_Field (Val        => Artifact,
-                    Field_Name => TEXT_PLAIN_ID,
-                    Field      => UB.To_String (Item.Path));
-         Set_Field (Val        => Artifact,
-                    Field_Name => TEXT_CHECKSUM,
-                    Field      => String (Item.Checksum));
-         Append (Arr => List, Val => Artifact);
+         Set_Field (Val        => List,
+                    Field_Name => Artifacts.Serialize (Key),
+                    Field      => String (Key.Checksum));
       end Create_Artifact_Element;
    begin
       Self.Artifacts.Iterate (Create_Artifact_Element'Access);
 
       Set_Field (Val        => JSON,
-                 Field_Name => TEXT_ARTIFACTS,
+                 Field_Name => TEXT_SIGNATURE,
                  Field      => List);
 
       if Exists (String (Db_File.Value)) then
@@ -200,24 +136,30 @@ package body GPR2.Build.Signature is
       end if;
    end Store;
 
-   ---------------------
-   -- Update_Artifact --
-   ---------------------
+   -----------
+   -- Valid --
+   -----------
 
-   procedure Update_Artifact
-     (Self : in out Object;
-      Art  : Artifacts.Object'Class)
-   is
-      Item : Artifact_Signature;
+   function Valid (Self : Object) return Boolean is
    begin
-      Item.Path := UB.To_Unbounded_String (Art.Image);
-      Item.Checksum := Art.Checksum;
-
-      if Self.Artifacts.Contains (Art.UID) then
-         Self.Artifacts.Replace (Art.UID, Item);
-      else
-         Self.Artifacts.Insert (Art.UID, Item);
+      if Self.Artifacts.Is_Empty then
+         return False;
       end if;
-   end Update_Artifact;
+
+      for C in Self.Artifacts.Iterate loop
+         declare
+            Art    : constant Artifacts.Object'Class :=
+                       Artifact_Maps.Key (C);
+            Digest : constant Hash_Digest :=
+                       Artifact_Maps.Element (C);
+         begin
+            if Art.Checksum /= Digest then
+               return False;
+            end if;
+         end;
+      end loop;
+
+      return True;
+   end Valid;
 
 end GPR2.Build.Signature;

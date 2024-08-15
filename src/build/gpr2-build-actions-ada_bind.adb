@@ -5,6 +5,7 @@
 --
 
 with GPR2.Build.Actions.Post_Bind;
+with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Tree_Db;
 with Ada.Strings.Fixed;
 with Ada.Strings;
@@ -44,6 +45,32 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       Args.Append (String (Self.Output_Body.Path.Simple_Name));
    end Compute_Command;
+
+   -----------------------
+   -- Compute_Signature --
+   -----------------------
+
+   overriding procedure Compute_Signature (Self : in out Object) is
+      UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+   begin
+      Self.Signature.Clear;
+
+      for Pred of Self.Tree.Inputs (UID) loop
+         if Pred in Artifacts.Library.Object'Class then
+            Self.Signature.Add_Artifact (Pred);
+         end if;
+      end loop;
+
+      for D of Self.Obj_Deps loop
+         Self.Signature.Add_Artifact
+           (Artifacts.Files.Create (Path_Name.Create_File (D)));
+      end loop;
+
+      Self.Signature.Add_Artifact (Self.Generated_Spec);
+      Self.Signature.Add_Artifact (Self.Generated_Body);
+
+      Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
+   end Compute_Signature;
 
    ----------------
    -- Initialize --
@@ -144,9 +171,10 @@ package body GPR2.Build.Actions.Ada_Bind is
             Trimed_Line : constant String :=
                             Trim (Line (Switch_Index .. Line'Last), Both);
          begin
-            --  Pass only options to the link action (??? to be assessed)
             if Trimed_Line (Trimed_Line'First) = '-' then
                Self.Linker_Opts.Append (Trimed_Line);
+            else
+               Self.Obj_Deps.Include (Filename_Type (Trimed_Line));
             end if;
          end;
       end Process_Option_Or_Object_Line;

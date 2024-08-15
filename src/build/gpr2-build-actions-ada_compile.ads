@@ -70,8 +70,6 @@ package GPR2.Build.Actions.Ada_Compile is
    overriding procedure On_Tree_Propagation
      (Self : in out Object);
 
-   overriding procedure Compute_Signature (Self : in out Object);
-
    overriding procedure Compute_Command
      (Self : in out Object;
       Args : out GNATCOLL.OS.Process.Argument_List;
@@ -140,6 +138,8 @@ private
       CU        : GPR2.Build.Compilation_Unit.Object;
       --  The Unit to build
    end record;
+
+   overriding procedure Compute_Signature (Self : in out Object);
 
    Undefined : constant Object := (others => <>);
 

@@ -372,13 +372,11 @@ package body GPR2.Build.Actions.Ada_Compile is
 
       for Dep of Self.Dependencies loop
          Art := Artifacts.Files.Create (Dep);
-         Self.Signature.Update_Artifact (Art);
+         Self.Signature.Add_Artifact (Art);
       end loop;
 
-      Self.Signature.Update_Artifact (Self.Ali_File);
-      Self.Signature.Update_Artifact (Self.Obj_File);
-
-      Self.Signature.Set_Valid_State (True);
+      Self.Signature.Add_Artifact (Self.Ali_File);
+      Self.Signature.Add_Artifact (Self.Obj_File);
 
       Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
    end Compute_Signature;

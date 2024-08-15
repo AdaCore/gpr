@@ -110,7 +110,8 @@ private
 
    overriding function Db_Filename
      (Self : Link_Id) return Simple_Name is
-     (Simple_Name ("link_" & Self.Exec_Name & ".json"));
+     ((if Self.Is_Lib then "archive_" else "link_") &
+        Simple_Name (Self.Exec_Name & ".json"));
 
    overriding function "<" (L, R : Link_Id) return Boolean is
      (if L.View.Id /= R.View.Id
@@ -137,6 +138,8 @@ private
       Static_Options : String_Vectors.Vector := String_Vectors.Empty_Vector;
       --  Command line options added manually with the Add_Option procedure
    end record;
+
+   overriding procedure Compute_Signature (Self : in out Object);
 
    function Is_Library (Self : Object) return Boolean is
      (Self.Is_Library);
