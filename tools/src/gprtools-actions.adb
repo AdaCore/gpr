@@ -60,22 +60,24 @@ package body GPRtools.Actions is
 
          --  ??? TODO: Take care of Library_Interface
 
-         for CU of View.Own_Units loop
-            declare
-               Comp : GPR2.Build.Actions.Ada_Compile.Object;
-            begin
-               Comp.Initialize (CU);
-               Tree_Db.Add_Action (Comp, Log);
+         if not View.Is_Externally_Built then
+            for CU of View.Own_Units loop
+               declare
+                  Comp : GPR2.Build.Actions.Ada_Compile.Object;
+               begin
+                  Comp.Initialize (CU);
+                  Tree_Db.Add_Action (Comp, Log);
 
-               if Log.Has_Error then
-                  Log.Output_Messages;
-                  return False;
-               end if;
+                  if Log.Has_Error then
+                     Log.Output_Messages;
+                     return False;
+                  end if;
 
-               Tree_Db.Add_Input
-                 (L.UID, Comp.Object_File, False);
-            end;
-         end loop;
+                  Tree_Db.Add_Input
+                    (L.UID, Comp.Object_File, False);
+               end;
+            end loop;
+         end if;
 
          Tree_Db.Propagate_Actions;
 
@@ -121,7 +123,6 @@ package body GPRtools.Actions is
          end if;
 
          Tree_Db.Add_Input (Bind.UID, Comp.Ali_File, True);
-
          Tree_Db.Add_Input (Link.UID, Comp.Object_File, False);
          Tree_Db.Add_Input (Link.UID, Bind.Post_Bind.Object_File, False);
 

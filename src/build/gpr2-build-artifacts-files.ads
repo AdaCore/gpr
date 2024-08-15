@@ -12,6 +12,8 @@ package GPR2.Build.Artifacts.Files is
 
    Undefined : constant Object;
 
+   overriding function Is_Defined (Self : Object) return Boolean;
+
    function Create (Path : GPR2.Path_Name.Object) return Object with Inline;
 
    overriding function Create (S : String) return Object;
@@ -43,6 +45,9 @@ private
       (L.Path < R.Path);
 
    Undefined : constant Object := (Path => Path_Name.Undefined);
+
+   overriding function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
    function Create (Path : GPR2.Path_Name.Object) return Object is
      (Path => Path);

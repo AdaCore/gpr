@@ -22,6 +22,8 @@ package GPR2.Build.Artifacts is
    --  artifacts (so for example source artifacts generate object file
    --  artifacts).
 
+   function Is_Defined (Self : Object) return Boolean is abstract;
+
    function Create (Uri : String) return Object is abstract;
    --  Used to deserialize an artifact. The protocol part is removed from the
    --  uri before Create is called.
@@ -29,6 +31,9 @@ package GPR2.Build.Artifacts is
    function Image (Self : Object) return String is abstract;
    --  This value is used when unserializing the artifact (see Create above).
    --  It is also used to report artifact-related messages to the end user.
+   --
+   --  ??? May require two similar primitives here: one for the end user and
+   --  one for the serialization.
 
    function SLOC (Self : Object) return GPR2.Source_Reference.Object'Class
                   is abstract;

@@ -108,14 +108,18 @@ package GPR2.Build.Tree_Db is
       Action   : Actions.Action_Id'Class;
       Artifact : Artifacts.Object'Class;
       Explicit : Boolean)
-     with Pre => Self.Is_Defined and then Self.Has_Action (Action);
+     with Pre => Self.Is_Defined
+                   and then Self.Has_Action (Action)
+                   and then Artifact.Is_Defined;
 
    procedure Add_Output
      (Self     : in out Object;
       Action   : Actions.Action_Id'Class;
       Artifact : Artifacts.Object'Class;
       Messages : in out GPR2.Log.Object)
-     with Pre => Self.Is_Defined and then Self.Has_Action (Action);
+     with Pre => Self.Is_Defined
+                   and then Self.Has_Action (Action)
+                   and then Artifact.Is_Defined;
 
    --  ACTION MANAGEMENT
 

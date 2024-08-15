@@ -438,7 +438,13 @@ package body GPR2.Build.Actions.Ada_Compile is
    procedure Initialize
      (Self : in out Object; Src : GPR2.Build.Compilation_Unit.Object)
    is
+      View   : constant GPR2.Project.View.Object := Src.Owning_View;
+      No_Obj : constant Boolean :=
+                 (View.Is_Library and then View.Is_Externally_Built)
+                   or else View.Is_Runtime;
+
    begin
+
       Self.CU     := Src;
       Self.Traces := Create ("ACTION_ADA_COMPILE");
 
@@ -456,7 +462,11 @@ package body GPR2.Build.Actions.Ada_Compile is
          Lkup_Ali  : GPR2.Path_Name.Object;
          Check_Sig : Boolean := True;
       begin
-         Local_O := Self.View.Object_Directory.Compose (BN & O_Suff);
+         if not No_Obj then
+            Local_O := Self.View.Object_Directory.Compose (BN & O_Suff);
+         else
+            Self.Obj_File := Artifacts.Files.Undefined;
+         end if;
 
          if Self.View.Is_Library then
             Local_Ali := Self.View.Library_Ali_Directory.Compose (BN & ".ali");
@@ -466,7 +476,10 @@ package body GPR2.Build.Actions.Ada_Compile is
 
          if not Self.View.Is_Extending then
             --  Simple case: just use the local .o and .ali
-            Self.Obj_File := Artifacts.Files.Create (Local_O);
+            if not No_Obj then
+               Self.Obj_File := Artifacts.Files.Create (Local_O);
+            end if;
+
             Self.Ali_File := Artifacts.Files.Create (Local_Ali);
 
          else
@@ -553,10 +566,12 @@ package body GPR2.Build.Actions.Ada_Compile is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
 
    begin
-      Db.Add_Output (UID, Self.Obj_File, Messages);
+      if Self.Obj_File.Is_Defined then
+         Db.Add_Output (UID, Self.Obj_File, Messages);
 
-      if Messages.Has_Error then
-         return;
+         if Messages.Has_Error then
+            return;
+         end if;
       end if;
 
       Db.Add_Output (UID, Self.Ali_File, Messages);
@@ -665,7 +680,9 @@ package body GPR2.Build.Actions.Ada_Compile is
                   end loop;
 
                   for Link of Links loop
-                     Self.Tree.Add_Input (Link, Action.Obj_File, False);
+                     if Action.Obj_File.Is_Defined then
+                        Self.Tree.Add_Input (Link, Action.Obj_File, False);
+                     end if;
                   end loop;
                else
                   declare
@@ -694,7 +711,10 @@ package body GPR2.Build.Actions.Ada_Compile is
                         end loop;
 
                         for Link of Links loop
-                           Self.Tree.Add_Input (Link, Action.Obj_File, False);
+                           if Action.Obj_File.Is_Defined then
+                              Self.Tree.Add_Input
+                                (Link, Action.Obj_File, False);
+                           end if;
                         end loop;
 
                         Closure := Action.Closure.Difference (Done_Actions);
