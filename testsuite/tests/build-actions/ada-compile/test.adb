@@ -122,10 +122,10 @@ begin
       Expected_Obj : Filesystem_String := Obj_Dir.Join ("main.o").Full_Name;
    begin
       Assert
-        (Ada_Comp.Object_File.String_Value = String (Expected_Obj),
+        (Ada_Comp.Object_File.Path.String_Value = String (Expected_Obj),
          "Check object file path");
       Assert
-        (Ada_Comp.Object_File.Exists,
+        (Ada_Comp.Object_File.Path.Exists,
          "Check that object file has been correctly created");
    end;
 
@@ -134,10 +134,10 @@ begin
                         Obj_Dir.Join ("main.ali").Full_Name;
    begin
       Assert
-        (Ada_Comp.Ali_File.String_Value = String (Expected_Ali),
+        (Ada_Comp.Ali_File.Path.String_Value = String (Expected_Ali),
          "Check ALI file path");
       Assert
-        (Ada_Comp.Ali_File.Exists,
+        (Ada_Comp.Ali_File.Path.Exists,
          "Check that ALI file has been correctly created");
    end;
 

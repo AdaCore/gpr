@@ -1,11 +1,5 @@
 ================================================================
 Case 1 - No errors
-Write_File '1' (main.gpr)
-/write_file/write_file 0 1.txt 1
-Write_File '2' (main.gpr)
-/write_file/write_file 0 2.txt 2
-Write_File '3' (main.gpr)
-/write_file/write_file 0 3.txt 3
 == Content of jobs.json:
 uid: 'Write_File '1' (main.gpr)', status : '0'
 uid: 'Write_File '2' (main.gpr)', status : '0'
@@ -20,41 +14,13 @@ uid: 'Write_File '3' (main.gpr)', status : 'SKIPPED'
 
 ================================================================
 Case 3 - Action n. 2 returns an erroneous code
-Write_File '1' (main.gpr)
-/write_file/write_file 0 1.txt 1
-Write_File '2' (main.gpr)
-/write_file/write_file 1 2.txt 2
-main.gpr: warning: Write_File '2' (main.gpr) failed with status 1
-File has been created, but return code is  1
-
 == Content of jobs.json:
 uid: 'Write_File '1' (main.gpr)', status : '0'
 uid: 'Write_File '2' (main.gpr)', status : '1'
 
 ================================================================
 Case 4 - Action n. 5 does not depend on action n. 4
-Write_File '1' (main.gpr)
-/write_file/write_file 0 1.txt 1 10.txt
-Write_File '5' (main.gpr)
-/write_file/write_file 0 5.txt 5
-Write_File '6' (main.gpr)
-/write_file/write_file 0 6.txt 6
-Write_File '7' (main.gpr)
-/write_file/write_file 0 7.txt 7
-Write_File '8' (main.gpr)
-/write_file/write_file 0 8.txt 8
-Write_File '9' (main.gpr)
-/write_file/write_file 0 9.txt 9
-Write_File '10' (main.gpr)
-/write_file/write_file 0 10.txt 10
-Write_File '2' (main.gpr)
-/write_file/write_file 0 2.txt 2
-Write_File '3' (main.gpr)
-/write_file/write_file 0 3.txt 3
-Write_File '4' (main.gpr)
-/write_file/write_file 0 4.txt 4
 == Content of jobs.json:
-uid: 'Write_File '5' (main.gpr)', status : '0'
 uid: 'Write_File '6' (main.gpr)', status : '0'
 uid: 'Write_File '7' (main.gpr)', status : '0'
 uid: 'Write_File '8' (main.gpr)', status : '0'
@@ -64,23 +30,12 @@ uid: 'Write_File '1' (main.gpr)', status : '0'
 uid: 'Write_File '2' (main.gpr)', status : '0'
 uid: 'Write_File '3' (main.gpr)', status : '0'
 uid: 'Write_File '4' (main.gpr)', status : '0'
+uid: 'Write_File '5' (main.gpr)', status : '0'
 
 ================================================================
 Case 5 - Action n. 3 does not have a valid executable
-Write_File '1' (main.gpr)
-/write_file/write_file 0 1.txt 1
-Write_File '2' (main.gpr)
-/write_file/write_file 0 2.txt 2
-Write_File '3' (main.gpr)
-/exec_that_does_not_exist 0 3.txt 3
-main.gpr: error: /exec_that_does_not_exist: cannot spawn process (status: 2)
 == Content of jobs.json:
-<<<<<<< HEAD
 uid: 'Write_File '1' (main.gpr)', status : '0'
 uid: 'Write_File '2' (main.gpr)', status : '0'
 uid: 'Write_File '3' (main.gpr)', status : 'FAILED_TO_LAUNCH or 127'
-=======
-uid: 'Write_File '1' (main.gpr)', status : '0', stdout: '', stderr: ''
-uid: 'Write_File '2' (main.gpr)', status : '0', stdout: '', stderr: ''
-uid: 'Write_File '3' (main.gpr)', status : 'FAILED_TO_LAUNCH', stdout: '', stderr: 'Command '/exec_that_does_not_exist 0 3.txt 3' failed: cannot spawn process (status: 2)'
->>>>>>> 3908171b (Build.Actions: allow defining cwd and env when spawning processes)
+

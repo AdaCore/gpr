@@ -2,6 +2,7 @@ with Ada.Directories;
 with Ada.Containers;
 
 with GPR2.Build.Actions.Link;
+with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source;
 
@@ -14,15 +15,15 @@ with GPR2.Project.Tree;
 with GPR2.Project.View;
 
 with GNAT.OS_Lib;
+with GNATCOLL.OS.FSUtil;  use GNATCOLL.OS;
 with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
-with GNATCOLL.VFS;        use GNATCOLL.VFS;
 with Test_Assert;         use Test_Assert;
 
 with Ada.Text_IO;
 with Ada.Strings;
 with Ada.Strings.Fixed;
 
-use GPR2;
+use GPR2, GPR2.Build;
 
 function Test return Integer is
    use type GPR2.Language_Id;
@@ -48,14 +49,10 @@ function Test return Integer is
    begin
       for Root of Tree.Namespace_Root_Projects loop
          for Main of Root.Mains loop
-            Action.Initialize
-               (Executable       => Root.Executable
-                                      (Main.Source.Simple_Name, Main.Index),
-                Main_Object_File => Root.Object_Directory.Compose
-                                      (Filename_Type
-                                         (String (Main.Source.Base_Name)
-                                       & ".o")),
-                Context          => Root);
+            Action.Initialize_Executable
+               (Executable => Root.Executable
+                               (Main.Source.Simple_Name, Main.Index),
+                Context    => Root);
             Assert
                (not Tree.Artifacts_Database.Has_Action (Action.UID),
                 "Check that action is not already in the Tree DB");
@@ -83,6 +80,7 @@ function Test return Integer is
    procedure Execute_Command (Cmd : Argument_List; Cwd : String := "") is
       Ret     : Integer;
       Process : Process_Handle;
+      First   : Boolean := True;
    begin
       Process := Start (Args => Cmd, Cwd => Cwd, Stdout => FS.Standout, Stderr => FS.Standerr);
       Ret := Wait (Process);
@@ -159,7 +157,9 @@ function Test return Integer is
       end loop;
    end Update_Linker_Options;
 
-   Obj_Dir      : Virtual_File;
+   Obj_Dir : Path_Name.Object;
+   Count   : Natural;
+
 begin
    Opts.Add_Switch (GPR2.Options.P, Project);
 
@@ -176,11 +176,10 @@ begin
    end if;
 
    Messages.Clear;
-   Obj_Dir := GNATCOLL.VFS.Create
-                (Filesystem_String
-                   (Tree.Root_Project.Object_Directory.Value));
-   Make_Dir (Obj_Dir);
-   Assert (Is_Directory (Obj_Dir));
+   Obj_Dir := Tree.Root_Project.Object_Directory;
+   if not Obj_Dir.Exists then
+      Assert (FSUtil.Create_Directory (Obj_Dir.String_Value));
+   end if;
 
    declare
       Args : Argument_List;
@@ -188,7 +187,7 @@ begin
       Args.Append ("gcc");
       Args.Append ("-c");
       Args.Append (".." & GNAT.OS_Lib.Directory_Separator & "src" & GNAT.OS_Lib.Directory_Separator & "main.adb");
-      Execute_Command (Args, Obj_Dir.Display_Full_Name);
+      Execute_Command (Args, Obj_Dir.String_Value);
    end;
 
    declare
@@ -197,7 +196,7 @@ begin
       Args.Append ("gcc");
       Args.Append ("-c");
       Args.Append (".." & GNAT.OS_Lib.Directory_Separator & "src" & GNAT.OS_Lib.Directory_Separator & "pkg.adb");
-      Execute_Command (Args, Obj_Dir.Display_Full_Name);
+      Execute_Command (Args, Obj_Dir.String_Value);
    end;
       declare
       Args : Argument_List;
@@ -205,7 +204,7 @@ begin
       Args.Append ("gcc");
       Args.Append ("-c");
       Args.Append (".." & GNAT.OS_Lib.Directory_Separator & "src" & GNAT.OS_Lib.Directory_Separator & "dep_two.adb");
-      Execute_Command (Args, Obj_Dir.Display_Full_Name);
+      Execute_Command (Args, Obj_Dir.String_Value);
    end;
 
    declare
@@ -215,7 +214,7 @@ begin
       Args.Append ("main.ali");
       Args.Append ("-o");
       Args.Append ("b__main.adb");
-      Execute_Command (Args, Obj_Dir.Display_Full_Name);
+      Execute_Command (Args, Obj_Dir.String_Value);
    end;
 
    declare
@@ -224,32 +223,34 @@ begin
       Args.Append ("gcc");
       Args.Append ("-c");
       Args.Append ("b__main.adb");
-      Execute_Command (Args, Obj_Dir.Display_Full_Name);
+      Execute_Command (Args, Obj_Dir.String_Value);
    end;
 
    Assert (Init_Action, "Initialize the Ada compile action");
 
-   Action.Add_Object_File
-     (GPR2.Path_Name.Create_File
-        ("pkg.o", Filename_Optional (Obj_Dir.Dir_Name)));
-
-   Action.Add_Object_File
-     (GPR2.Path_Name.Create_File
-        ("dep_two.o", Filename_Optional (Obj_Dir.Dir_Name)));
-
-   Action.Add_Object_File
-     (GPR2.Path_Name.Create_File
-        ("b__main.o", Filename_Optional (Obj_Dir.Dir_Name)));
+   Tree.Artifacts_Database.Add_Input
+     (Action.UID, Artifacts.Files.Create (Obj_Dir.Compose ("main.o")), False);
+   Tree.Artifacts_Database.Add_Input
+     (Action.UID, Artifacts.Files.Create (Obj_Dir.Compose ("pkg.o")), False);
+   Tree.Artifacts_Database.Add_Input
+     (Action.UID, Artifacts.Files.Create (Obj_Dir.Compose ("dep_two.o")), False);
+   Tree.Artifacts_Database.Add_Input
+     (Action.UID, Artifacts.Files.Create (Obj_Dir.Compose ("b__main.o")), False);
 
    Update_Linker_Options
-     (GPR2.Path_Name.Create_File
-        ("b__main.adb", Filename_Optional (Obj_Dir.Dir_Name)).String_Value);
+     (Obj_Dir.Compose ("b__main.adb").String_Value);
 
-   Assert (Action.Input_Object_Files.Length = 4);
+   Count := 0;
 
-   Assert
-     ((for all Obj of Action.Input_Object_Files => Obj.Exists),
-      "Check that all input object files exist");
+   for Input of Tree.Artifacts_Database.Inputs (Action.UID) loop
+      Count := Count + 1;
+      Assert
+        (Artifacts.Files.Object'Class (Input).Path.Exists,
+         "Check that all input object " & Input.Image & " exists");
+   end loop;
+
+   Assert (Count = 4);
+
 
    declare
       Args : Argument_List;
@@ -259,7 +260,7 @@ begin
       Execute_Command (Args, Action.Working_Directory.String_Value);
    end;
 
-   Assert (Action.Output_Executable.Exists, "Check that the output executable exists");
+   Assert (Action.Output.Path.Exists, "Check that the output executable exists");
 
    return Report;
 end Test;

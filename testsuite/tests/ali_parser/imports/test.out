@@ -1,4 +1,4 @@
-using project file test.gpr
+using project file /test.gpr
 === Parsing file gnatcoll-memory.ali
 ada
 ada.exceptions

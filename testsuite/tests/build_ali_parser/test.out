@@ -1,32 +1,32 @@
 == ALI file: ali_files/5.04a1/main.ali
-this is foo with a long name.1.ada
-multi.ada
 main.adb
+multi.ada
 system.ads
+this is foo with a long name.1.ada
 
 == ALI file: ali_files/7.2.2/main.ali
-this is foo with a long name.1.ada
-multi.ada
 main.adb
+multi.ada
 system.ads
+this is foo with a long name.1.ada
 
 == ALI file: ali_files/7.3.2/main.ali
-this is foo with a long name.1.ada
-multi.ada
 main.adb
+multi.ada
 system.ads
+this is foo with a long name.1.ada
 
 == ALI file: ali_files/wave/main.ali
-this is foo with a long name.1.ada
-multi.ada
 main.adb
+multi.ada
 system.ads
+this is foo with a long name.1.ada
 
 == ALI file: ali_files/name_with_quote.ali
-this is a name with a "quote.1.ada
 anotherquote".ada
 main.adb
 system.ads
+this is a name with a "quote.1.ada
 
 == ALI file: ali_files/invalid/character_after_ending_quote.ali
 character_after_ending_quote.ali: error: ALI parser error: wrong quoted format of 'this is foo with a long name.1.ada'
@@ -41,10 +41,10 @@ unclosed_quote.ali: error: ALI parser error: end of file encountered during the 
 missing_dependency_field.ali: error: ALI parser error: missed dependency source file
 
 == ALI file: ali_files/invalid/no_blank_line_at_the_end.ali
-this is foo with a long name.1.ada
-multi.ada
 main.adb
+multi.ada
 system.ads
+this is foo with a long name.1.ada
 
 == ALI file: ali_files/invalid/dependency_concatenated.ali
 dependency_concatenated.ali: error: ALI parser error: space expected after the 'D' dependency character

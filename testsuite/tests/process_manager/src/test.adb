@@ -38,6 +38,8 @@ function Test return Integer is
 begin
    Opts.Add_Switch (GPR2.Options.P, Project);
 
+   GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Quiet;
+
    if not Tree.Load (Opts, With_Runtime => True) then
       return 1;
    end if;
@@ -139,11 +141,12 @@ begin
 
          begin
             for Action_Index in 1 .. 10 loop
-               if Action_Index = 5 then
-                  With_Deps := False;
-               else
-                  With_Deps := True;
-               end if;
+               --  make DAG:
+               --  1->2->3->4->5
+               --  6->7->8->9->10
+               --  while under the hood action 1 will wait for action 10 to be
+               --  done before executing
+               With_Deps := Action_Index /= 6;
 
                if Action_Index = 1 then
                   With_Wait := 10;
@@ -211,7 +214,9 @@ begin
          null;
    end case;
 
-   Process_M.Execute (Tree.Artifacts_Database, 2);
+   Process_M.Execute
+     (Tree.Artifacts_Database, 2,
+      Verbosity => GPR2.Build.Process_Manager.Quiet);
 
    return 0;
 end Test;

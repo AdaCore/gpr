@@ -2,6 +2,7 @@ import glob
 import json
 import random
 import os.path
+import re
 
 from testsuite_support.builder_and_runner import BuilderAndRunner
 
@@ -38,9 +39,9 @@ def get_json_file(name, project):
     jf_list = get_all_json_file(project)
     if jf_list:
         for fname in jf_list:
-            if name in fname:
+            if re.search(name, os.path.basename(fname)):
                 return fname
-    return "none"
+    assert False, f"could not find a json file matching {name}"
 
 
 def valid_json_fname(name):
@@ -75,106 +76,102 @@ def create_json_dict(name, kind, project):
 def overwrite_artifact_element(name, kind, project):
     fname = get_json_file(name, project)
     if valid_json_fname(fname):
+        found = False
         data = read_json_file (fname)
 
-        element = {}
-        if kind == "random":
-            element = {"bar": "foobar"}
-        elif kind == "duplicate":
-            element = data["artifacts"][0]
+        for key in data["signature"].keys():
+            if key.endswith(name):
+                data["signature"][key] = "deadcaferand0m"
+                print(f"signature for {key} replaced")
+                found = True
+        write_json_file(fname, data)
+        if not found:
+            print(f"cannot find artifact '{name}'")
+    else:
+        print(f"cannot find a signature file for '{project}'")
 
-        data["artifacts"].append(element)
+def overwrite_checksum(name, ext, checksum, project):
+    jf_list = None
+    if name != "":
+        fname = get_json_file(name, project)
+        jf_list = [fname]
+    else:
+        jf_list = get_all_json_file(project)
+
+    assert jf_list, f"cannot determine the json inputs"
+    for fname in jf_list:
+        assert valid_json_fname(fname), f"not a valid json {fname}"
+        replaced = False
+        data = read_json_file (fname)
+        for uri in data["signature"].keys():
+            if (ext != "" and uri.endswith(ext)) or ext == "":
+                data["signature"][uri] = checksum
+                replaced = True
+                break
+        assert replaced, f"could not replace '{ext}'"
         write_json_file(fname, data)
 
 
-def overwrite_checksum(name, ext, checksum, project):
-    if name != "":
-        fname = get_json_file(name, project)
-        if valid_json_fname(fname):
-            data = read_json_file (fname)
-            for index,artifact in enumerate(data["artifacts"]):
-                if ext != "" and artifact["plain_id"].endswith(ext):
-                    data["artifacts"][index]["checksum"] = checksum
-                elif ext == "":
-                    data["artifacts"][index]["checksum"] = checksum
-            write_json_file(fname, data)
-    else:
-        jf_list = get_all_json_file(project)
-        if jf_list:
-            for fname in jf_list:
-                data = read_json_file (fname)
-                for index,artifact in enumerate(data["artifacts"]):
-                    if ext != "" and artifact["plain_id"].endswith(ext):
-                        data["artifacts"][index]["checksum"] = checksum
-                    elif ext == "":
-                        data["artifacts"][index]["checksum"] = checksum
-                write_json_file(fname, data)
-
-
-# ensure .ali and .o files are there for the trees used to test
-bnr.call(["gprbuild", "-Ptree/p1.gpr", "-p", "-q"])
+# ensure .ali and .o files are there for the trees used to test, together
+# with gpr2's signatures
+bnr.call(["gpr2build", "-Ptree/p1.gpr", "-p", "-q"])
 # base1 is extended by p2: ensure it has ali and object files on its own to
 # demonstrate that they're inherited
-bnr.call(["gprbuild", "-Ptree/base1.gpr", "-p", "-q"])
-bnr.call(["gprbuild", "-Ptree/p2.gpr", "-p", "-q"])
+bnr.call(["gpr2build", "-Ptree/base1.gpr", "-p", "-q"])
+bnr.call(["gpr2build", "-Ptree/p2.gpr", "-p", "-q"])
 
 # now build and run the test (using bnr.build and bnr.run to have proper
 # coverage when requested).
 bnr.build(project="test.gpr", args=["-p", "-q"])
 
+MAIN_COMP = r"compile_main.adb.*"
+
 print("================================================================")
-print("Case 1 - Initial DAG")
+print("Case 1 - Initial DAG without changes")
 bnr.call(['./main'])
 print("================================================================")
-print("Case 2 - Build DAG without changes")
+print("Case 2 - Altered DAG with empty JSON dictionnary (p1: main)")
+create_json_dict(MAIN_COMP, "empty", "p1")
 bnr.call(['./main'])
 print("================================================================")
-print("Case 3 - Altered DAG with empty JSON dictionnary (p1: main)")
-create_json_dict("main.adb", "empty", "p1")
+print("Case 3 - Altered DAG with empty JSON file (p1: main)")
+empty_json_file(MAIN_COMP, "p1")
 bnr.call(['./main'])
 print("================================================================")
-print("Case 4 - Altered DAG with empty JSON file (p1: main)")
-empty_json_file("main.adb", "p1")
+print("Case 4 - Altered DAG with random JSON dictionnary (p1: main)")
+create_json_dict(MAIN_COMP, "random", "p1")
 bnr.call(['./main'])
 print("================================================================")
-print("Case 5 - Altered DAG with random JSON dictionnary (p1: main)")
-create_json_dict("main.adb", "random", "p1")
+print("Case 5 - Altered DAG with modified checksums (p1: main)")
+overwrite_checksum(MAIN_COMP, "", "X"*10, "p1")
 bnr.call(['./main'])
 print("================================================================")
-print("Case 6 - Altered DAG with modified checksums (p1: main)")
-overwrite_checksum("main.adb", "", "X"*40, "p1")
+print("Case 6 - Altered DAG with single modified checksum (p1: main)")
+overwrite_checksum(MAIN_COMP, ".o", "X"*40, "p1")
 bnr.call(['./main'])
 print("================================================================")
-print("Case 7 - Altered DAG with single modified checksum (p1: main)")
-overwrite_checksum("main.adb", ".o", "X"*40, "p1")
+print("Case 7 - Altered DAG with modified checksums (p2: pkg3 - pkg)")
+overwrite_checksum(r".*pkg3.adb.*", "", "X"*40, "p2")
+overwrite_checksum(r".*pkg.adb.*", ".adb", "X"*40, "p1")
 bnr.call(['./main'])
 print("================================================================")
-print("Case 8 - Altered DAG with modified checksums (p2: pkg3 - pkg)")
-overwrite_checksum("pkg3.ada", "", "X"*40, "p2")
-overwrite_checksum("pkg.adb", ".adb", "X"*40, "p1")
+print("Case 8 - Altered DAG with shorter checksum (p1: main)")
+overwrite_checksum(MAIN_COMP, "", "X"*39, "p1")
 bnr.call(['./main'])
 print("================================================================")
-print("Case 9 - Altered DAG with shorter checksum (p1: main)")
-overwrite_checksum("main.adb", "", "X"*39, "p1")
+print("Case 9 - Altered DAG with longer checksum (p1: main)")
+overwrite_checksum(MAIN_COMP, "", "X"*41, "p1")
 bnr.call(['./main'])
 print("================================================================")
-print("Case 10 - Altered DAG with longer checksum (p1: main)")
-overwrite_checksum("main.adb", "", "X"*41, "p1")
-bnr.call(['./main'])
-print("================================================================")
-print("Case 11 - Altered DAG with modified checksums (all)")
+print("Case 10 - Altered DAG with modified checksums (all)")
 overwrite_checksum("", "", "X"*40, "*")
 bnr.call(['./main'])
 print("================================================================")
-print("Case 12 - Duplicated artifact (p1: main)")
-overwrite_artifact_element ("main.adb", "duplicate", "p1")
+print("Case 11 - random artifact element (p1: main)")
+overwrite_artifact_element (MAIN_COMP, "random", "p1")
 bnr.call(['./main'])
 print("================================================================")
-print("Case 13 - random artifact element (p1: main)")
-overwrite_artifact_element ("main.adb", "random", "p1")
-bnr.call(['./main'])
-print("================================================================")
-print("Case 14 - wrong JSON format (p1: main)")
-create_json_dict ("main.adb", "invalid", "p1")
+print("Case 12 - wrong JSON format (p1: main)")
+create_json_dict (MAIN_COMP, "invalid", "p1")
 bnr.call(['./main'])
 print("================================================================")

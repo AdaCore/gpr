@@ -1,6 +1,8 @@
 with Ada.Directories;
 
-with GPR2.Build.Actions.Ada_Compile.Post_Bind;
+with GPR2.Build.Actions.Ada_Bind;
+with GPR2.Build.Actions.Post_Bind;
+with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source;
 
@@ -27,43 +29,29 @@ function Test return Integer is
    Opts        : GPR2.Options.Object;
    Messages    : GPR2.Log.Object;
    Project     : constant String := "tree/main.gpr";
+   Ali_Path    : GPR2.Path_Name.Object;
 
-   Action : GBA.Ada_Compile.Post_Bind.Object :=
-                GBA.Ada_Compile.Post_Bind.Undefined;
+   Bind_Action : GBA.Ada_Bind.Object;
+   Action      : GBA.Post_Bind.Object;
 
    function Init_Action return Boolean
    is
       Source  : GPR2.Build.Source.Object;
       Log     : GPR2.Log.Object;
-      Unit    : GPR2.Build.Compilation_Unit.Object;
       Context : GPR2.Project.View.Object :=
                   Tree.Namespace_Root_Projects.First_Element;
       Success : Boolean := False;
 
    begin
-      Unit := GPR2.Build.Compilation_Unit.Create
-                       (Name    => "ada_main",
-                        Context => Context);
+      Ali_Path := Context.Object_Directory.Compose ("main.ali");
+      Bind_Action.Initialize (Build.Artifacts.Files.Create (Ali_Path),
+                              Context);
+      Tree.Artifacts_Database.Add_Action (Bind_Action, Log);
+      Action := Bind_Action.Post_Bind;
 
-      GPR2.Build.Compilation_Unit.Add
-        (Self     => Unit,
-         Kind     => S_Body,
-         View     => Context,
-         Path     => Context.Object_Directory.Compose ("b__main.adb"),
-         Success  => Success);
-
-      GPR2.Build.Compilation_Unit.Add
-        (Self     => Unit,
-         Kind     => S_Spec,
-         View     => Context,
-         Path     => Context.Object_Directory.Compose ("b__main.ads"),
-         Success  => Success);
-
-      Action.Initialize (Unit);
       Assert
-        (not Tree.Artifacts_Database.Has_Action (Action.UID),
-         "Check that action is not already in the Tree DB");
-      Tree.Artifacts_Database.Add_Action (Action, Log);
+        (Tree.Artifacts_Database.Has_Action (Action.UID),
+         "Check that action is added by the binder action in the Tree DB");
 
       if Log.Has_Error then
          Log.Output_Messages (Warning => False);
@@ -127,35 +115,14 @@ begin
    end;
 
    declare
-      Unit : GPR2.Build.Compilation_Unit.Object := Action.Input_Unit;
-   begin
-      Assert (Unit.Is_Defined, "Check that input unit is defined");
-      Assert
-        (Unit.Main_Part.Source.Base_Name = "b__main", "Check unit basename");
-      Assert (Unit.Name = "ADA_MAIN", "Check unit name");
-   end;
-
-   declare
       Expected_Obj : Filesystem_String := Obj_Dir.Join ("b__main.o").Full_Name;
    begin
       Assert
-        (Action.Object_File.String_Value = String (Expected_Obj),
+        (Action.Object_File.Path.String_Value = String (Expected_Obj),
          "Check object file path");
       Assert
-        (Action.Object_File.Exists,
+        (Action.Object_File.Path.Exists,
          "Check that object file has been correctly created");
-   end;
-
-   declare
-      Expected_Ali : Filesystem_String :=
-                       Obj_Dir.Join ("b__main.ali").Full_Name;
-   begin
-      Assert
-        (Action.Ali_File.String_Value = String (Expected_Ali),
-         "Check ALI file path");
-      Assert
-        (Action.Ali_File.Exists,
-         "Check that ALI file has been correctly created");
    end;
 
    return A.Report;
