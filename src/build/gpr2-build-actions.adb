@@ -116,12 +116,22 @@ package body GPR2.Build.Actions is
    -- Load_Signature --
    --------------------
 
-   procedure Load_Signature (Self : in out Object)
+   procedure Load_Signature (Self : in out Object'Class)
    is
       Db_File : constant GPR2.Path_Name.Object :=
-                  Self.Tree.Db_Filename_Path (Object'Class (Self).UID);
+                  Self.View.Object_Directory.Compose (Self.UID.Db_Filename);
+      Found   : Boolean;
    begin
-      Self.Signature := Build.Signature.Load (Db_File);
+      if Db_File.Exists then
+         Self.Signature := Build.Signature.Load (Db_File);
+         Found := True;
+
+         --  ??? We also need to check the extended DB file somehow
+      end if;
+
+      if not Found then
+         Self.Signature.Clear;
+      end if;
    end Load_Signature;
 
 
