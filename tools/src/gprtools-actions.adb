@@ -1,5 +1,6 @@
 with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.Actions.Ada_Compile;
+with GPR2.Build.Actions.Compile;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
@@ -77,6 +78,27 @@ package body GPRtools.Actions is
                     (L.UID, Comp.Object_File, False);
                end;
             end loop;
+
+            for Src of View.Sources loop
+               if not Src.Has_Units
+                 and then Src.Is_Compilable
+                 and then Src.Kind = S_Body
+               then
+                  declare
+                     Comp : GPR2.Build.Actions.Compile.Object;
+                  begin
+                     Comp.Initialize (Src);
+
+                     if not Tree_Db.Has_Action (Comp.UID) then
+                        Tree_Db.Add_Action (Comp, Log);
+                        Log.Output_Messages;
+                     end if;
+
+                     Tree_Db.Add_Input
+                       (L.UID, Comp.Object_File, False);
+                  end;
+               end if;
+            end loop;
          end if;
 
          Tree_Db.Propagate_Actions;
@@ -101,6 +123,9 @@ package body GPRtools.Actions is
          Link.Initialize_Executable
            (Main.View.Executable (Main.Source.Simple_Name, Main.Index),
             Main.View);
+         if Tree_Db.Has_Action (Link.UID) then
+            return True;
+         end if;
          Tree_Db.Add_Action (Link, Log);
 
          Comp.Initialize
@@ -125,6 +150,27 @@ package body GPRtools.Actions is
          Tree_Db.Add_Input (Bind.UID, Comp.Ali_File, True);
          Tree_Db.Add_Input (Link.UID, Comp.Object_File, False);
          Tree_Db.Add_Input (Link.UID, Bind.Post_Bind.Object_File, False);
+
+         for Src of Main.View.Sources loop
+            if not Src.Has_Units
+              and then Src.Is_Compilable
+              and then Src.Kind = S_Body
+            then
+               declare
+                  Comp : GPR2.Build.Actions.Compile.Object;
+               begin
+                  Comp.Initialize (Src);
+
+                  if not Tree_Db.Has_Action (Comp.UID) then
+                     Tree_Db.Add_Action (Comp, Log);
+                     Log.Output_Messages;
+                  end if;
+
+                  Tree_Db.Add_Input
+                    (Link.UID, Comp.Object_File, False);
+               end;
+            end if;
+         end loop;
 
          --  Add the libraries present in the closure as dependencies
 
@@ -192,15 +238,54 @@ package body GPRtools.Actions is
       end loop;
 
       for Root of Tree.Namespace_Root_Projects loop
-         for Main of Root.Mains loop
-            if not Add_Actions_To_Build_Main (Main) then
-               return False;
-            end if;
-         end loop;
+         if Root.Has_Mains then
+            for Main of Root.Mains loop
+               if not Add_Actions_To_Build_Main (Main) then
+                  return False;
+               end if;
+            end loop;
 
-         --  ??? TODO handle non Ada sources
+            --  ??? TODO handle non Ada sources
 
-         Tree.Artifacts_Database.Propagate_Actions;
+            Tree.Artifacts_Database.Propagate_Actions;
+         elsif not Root.Is_Library then
+            for Source of Root.Sources loop
+               if Source.Is_Compilable then
+                  if not Source.Has_Units then
+                     if Source.Kind = S_Body then
+                        declare
+                           Comp : GPR2.Build.Actions.Compile.Object;
+                        begin
+                           Comp.Initialize (Source);
+                           Tree.Artifacts_Database.Add_Action (Comp, Log);
+                           if Log.Has_Error then
+                              return False;
+                           end if;
+                        end;
+                     end if;
+
+                  elsif Source.Language = Ada_Language then
+                     for Unit of Source.Units loop
+                        if Unit.Kind = S_Body then
+                           declare
+                              Comp : GPR2.Build.Actions.Ada_Compile.Object;
+                           begin
+                              Comp.Initialize
+                                (Root.Unit (Unit.Name));
+                              Tree.Artifacts_Database.Add_Action (Comp, Log);
+                              if Log.Has_Error then
+                                 return False;
+                              end if;
+                           end;
+                        end if;
+                     end loop;
+                  else
+                     raise Program_Error with
+                       "unexpected source with units not being Ada";
+                  end if;
+               end if;
+            end loop;
+         end if;
       end loop;
 
       return True;
