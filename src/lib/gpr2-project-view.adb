@@ -1167,9 +1167,8 @@ package body GPR2.Project.View is
                      then ""
                      else Value_Type (Self.Executable_Suffix));
       begin
-         return GPR2.Path_Name.Create_File
-                  (Filename_Type (Base_Name & Suffix),
-                   Filename_Optional (Self.Executable_Directory.Dir_Name));
+         return Self.Executable_Directory.Compose
+                  (Filename_Type (Base_Name & Suffix));
       end Executable;
 
    begin
