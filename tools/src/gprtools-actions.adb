@@ -1,6 +1,5 @@
 with GPR2.Build.Actions.Ada_Bind;
-with GPR2.Build.Actions.Ada_Compile;
-with GPR2.Build.Actions.Compile;
+with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
@@ -64,7 +63,7 @@ package body GPRtools.Actions is
          if not View.Is_Externally_Built then
             for CU of View.Own_Units loop
                declare
-                  Comp : GPR2.Build.Actions.Ada_Compile.Object;
+                  Comp : GPR2.Build.Actions.Compile.Ada.Object;
                begin
                   Comp.Initialize (CU);
                   Tree_Db.Add_Action (Comp, Log);
@@ -113,7 +112,7 @@ package body GPRtools.Actions is
       function Add_Actions_To_Build_Main
         (Main : GPR2.Build.Compilation_Unit.Unit_Location) return Boolean
       is
-         Comp   : GBA.Ada_Compile.Object;
+         Comp   : GBA.Compile.Ada.Object;
          Bind   : GBA.Ada_Bind.Object;
          Link   : GBA.Link.Object;
          Source : constant GPR2.Build.Source.Object :=
@@ -268,7 +267,7 @@ package body GPRtools.Actions is
                      for Unit of Source.Units loop
                         if Unit.Kind = S_Body then
                            declare
-                              Comp : GPR2.Build.Actions.Ada_Compile.Object;
+                              Comp : GPR2.Build.Actions.Compile.Ada.Object;
                            begin
                               Comp.Initialize
                                 (Root.Unit (Unit.Name));

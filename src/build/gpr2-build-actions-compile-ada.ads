@@ -12,9 +12,7 @@ with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Registry.Attribute;
 
-private with GPR2.View_Ids;
-
-package GPR2.Build.Actions.Ada_Compile is
+package GPR2.Build.Actions.Compile.Ada is
 
    package PRA renames GPR2.Project.Registry.Attribute;
 
@@ -78,13 +76,14 @@ package GPR2.Build.Actions.Ada_Compile is
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object;
 
-   overriding procedure Post_Command (Self : in out Object);
+   overriding procedure Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status);
 
    overriding function Skip (Self : Object) return Boolean;
 
 private
 
-   use type GPR2.View_Ids.View_Id;
    use type GPR2.Path_Name.Object;
 
    type Ada_Compile_Id is new Actions.Action_Id
@@ -163,4 +162,4 @@ private
      (Self : Object) return Path_Name.Object is
      (Self.View.Object_Directory);
 
-end GPR2.Build.Actions.Ada_Compile;
+end GPR2.Build.Actions.Compile.Ada;

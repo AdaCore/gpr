@@ -21,7 +21,7 @@ with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.View.Set;
 
-package body GPR2.Build.Actions.Ada_Compile is
+package body GPR2.Build.Actions.Compile.Ada is
 
    package PAI renames GPR2.Project.Attribute_Index;
    package Actions renames GPR2.Build.Actions;
@@ -422,7 +422,7 @@ package body GPR2.Build.Actions.Ada_Compile is
             return Tmp.Path;
          end Inc_Path_File;
 
-         use type Ada.Containers.Count_Type;
+         use type Standard.Ada.Containers.Count_Type;
       begin
          Attr := Self.View.Attribute (PRA.Compiler.Include_Path_File, Ada_Idx);
 
@@ -496,7 +496,7 @@ package body GPR2.Build.Actions.Ada_Compile is
             end loop;
          end if;
 
-         raise Ada.Assertions.Assertion_Error with
+         raise Standard.Ada.Assertions.Assertion_Error with
            "Cannot determine ways to transmit include path to the toolchain";
       end Add_Include_Path;
 
@@ -527,7 +527,7 @@ package body GPR2.Build.Actions.Ada_Compile is
                          Self.View.Attribute
                            (PRA.Compiler.Mapping_Body_Suffix,
                             Ada_Idx).Value.Text;
-            use Ada.Characters.Handling;
+            use Standard.Ada.Characters.Handling;
          begin
             if Map_File.FD /= Null_FD then
                for S of Self.View.Visible_Sources loop
@@ -1096,4 +1096,4 @@ package body GPR2.Build.Actions.Ada_Compile is
       end loop;
    end Update_Deps_From_Ali;
 
-end GPR2.Build.Actions.Ada_Compile;
+end GPR2.Build.Actions.Compile.Ada;
