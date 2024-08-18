@@ -86,6 +86,8 @@ package body GPR2.Build.Actions.Ada_Compile is
          Idx     : PAI.Object;
          Is_List : Boolean);
 
+      procedure Add_Config_File;
+
       procedure Add_Dependency_Options;
 
       procedure Add_Include_Path;
@@ -123,6 +125,249 @@ package body GPR2.Build.Actions.Ada_Compile is
             Args.Append (Attr.Value.Text);
          end if;
       end Add_Attr;
+
+      ---------------------
+      -- Add_Config_File --
+      ---------------------
+
+      procedure Add_Config_File
+      is
+         use GNATCOLL.OS.FS;
+
+         procedure Check_Exceptions_For
+           (View : GPR2.Project.View.Object;
+            FD   : GNATCOLL.OS.FS.File_Descriptor);
+
+         procedure Write_Exception
+           (FD        : GNATCOLL.OS.FS.File_Descriptor;
+            Is_Spec   : Boolean;
+            Unit_Name : String;
+            Src       : String;
+            Index     : Unit_Index);
+
+         procedure Write_Tmpl
+           (FD      : GNATCOLL.OS.FS.File_Descriptor;
+            Attr_Id : Q_Attribute_Id);
+
+         Cfg_File_Opt : constant GPR2.Project.Attribute.Object :=
+                          Self.View.Attribute
+                            (PRA.Compiler.Config_File_Switches, Ada_Idx);
+         Spec_Ext     : constant Project.Attribute.Object :=
+                          Self.View.Attribute (PRA.Naming.Spec_Suffix,
+                                               Ada_Idx);
+         Body_Ext     : constant Project.Attribute.Object :=
+                          Self.View.Attribute (PRA.Naming.Body_Suffix,
+                                               Ada_Idx);
+         Dot_Repl     : constant Project.Attribute.Object :=
+                          Self.View.Attribute (PRA.Naming.Dot_Replacement);
+         Casing       : constant Project.Attribute.Object :=
+                          Self.View.Attribute (PRA.Naming.Casing);
+         Done_Except  : Containers.Name_Set;
+
+         --------------------------
+         -- Check_Exceptions_For --
+         --------------------------
+
+         procedure Check_Exceptions_For
+           (View : GPR2.Project.View.Object;
+            FD   : GNATCOLL.OS.FS.File_Descriptor)
+         is
+         begin
+            for Attr of View.Attributes (PRA.Naming.Spec) loop
+               declare
+                  Unit : constant String := Attr.Index.Value;
+                  Src  : constant String := Attr.Value.Text;
+                  Idx  : constant Unit_Index := (if Attr.Value.Has_At_Pos
+                                                 then Attr.Value.At_Pos
+                                                 else No_Index);
+               begin
+                  if not Done_Except.Contains (Name_Type (Unit & "%s")) then
+                     Write_Exception
+                       (FD        => FD,
+                        Is_Spec   => True,
+                        Unit_Name => Unit,
+                        Src       => Src,
+                        Index     => Idx);
+                     Done_Except.Include (Name_Type (Unit & "%s"));
+                  end if;
+               end;
+            end loop;
+
+            for Attr of View.Attributes (PRA.Naming.Body_N) loop
+               declare
+                  Unit : constant String := Attr.Index.Value;
+                  Src  : constant String := Attr.Value.Text;
+                  Idx  : constant Unit_Index := (if Attr.Value.Has_At_Pos
+                                                 then Attr.Value.At_Pos
+                                                 else No_Index);
+               begin
+                  if not Done_Except.Contains (Name_Type (Unit & "%b")) then
+                     Write_Exception
+                       (FD        => FD,
+                        Is_Spec   => False,
+                        Unit_Name => Unit,
+                        Src       => Src,
+                        Index     => Idx);
+                     Done_Except.Include (Name_Type (Unit & "%b"));
+                  end if;
+               end;
+            end loop;
+
+         end Check_Exceptions_For;
+
+         ---------------------
+         -- Write_Exception --
+         ---------------------
+
+         procedure Write_Exception
+           (FD        : GNATCOLL.OS.FS.File_Descriptor;
+            Is_Spec   : Boolean;
+            Unit_Name : String;
+            Src       : String;
+            Index     : Unit_Index)
+         is
+            Attr : Project.Attribute.Object;
+            Last : Natural;
+         begin
+            if Is_Spec then
+               if Index = No_Index then
+                  Attr :=
+                    Self.View.Attribute
+                      (PRA.Compiler.Config_Spec_File_Name, Ada_Idx);
+               else
+                  Attr :=
+                    Self.View.Attribute
+                      (PRA.Compiler.Config_Spec_File_Name_Index, Ada_Idx);
+               end if;
+            else
+               if Index = No_Index then
+                  Attr :=
+                    Self.View.Attribute
+                      (PRA.Compiler.Config_Body_File_Name, Ada_Idx);
+               else
+                  Attr :=
+                    Self.View.Attribute
+                      (PRA.Compiler.Config_Body_File_Name_Index, Ada_Idx);
+               end if;
+            end if;
+
+            if not Attr.Is_Defined then
+               return;
+            end if;
+
+            declare
+               Cnt : constant String := Attr.Value.Text;
+               Idx : constant String :=
+                       (if Index = No_Index then ""
+                        else Index'Image);
+            begin
+
+               Last := Cnt'First;
+
+               for J in Cnt'First .. Cnt'Last - 1 loop
+                  if Cnt (J) = '%' then
+                     Write (FD, Cnt (Last .. J - 1));
+                     Last := J + 2;
+
+                     case Cnt (J + 1) is
+                        when 'u' =>
+                           Write (FD, Unit_Name);
+                        when 'f' =>
+                           Write (FD, Src);
+                        when 'i' =>
+                           Write (FD, Idx (Idx'First + 1 .. Idx'Last));
+                        when others =>
+                           Write (FD, "%" & Cnt (J + 1));
+                     end case;
+                  end if;
+               end loop;
+
+               Write (FD, Cnt (Last .. Cnt'Last));
+            end;
+         end Write_Exception;
+
+         ----------------
+         -- Write_Tmpl --
+         ----------------
+
+         procedure Write_Tmpl
+           (FD      : GNATCOLL.OS.FS.File_Descriptor;
+            Attr_Id : Q_Attribute_Id)
+         is
+            Attr : constant Project.Attribute.Object :=
+                     Self.View.Attribute (Attr_Id, Ada_Idx);
+            Last     : Natural;
+         begin
+            if not Attr.Is_Defined then
+               return;
+            end if;
+
+            declare
+               Cnt : String renames Attr.Value.Text;
+            begin
+               Last := Cnt'First;
+
+               for J in Cnt'First .. Cnt'Last - 1 loop
+                  if Cnt (J) = '%' then
+                     Write (FD, Cnt (Last .. J - 1));
+                     Last := J + 2;
+
+                     case Cnt (J + 1) is
+                        when 'b' =>
+                           Write (FD, Body_Ext.Value.Text);
+                        when 's' =>
+                           Write (FD, Spec_Ext.Value.Text);
+                        when 'c' =>
+                           Write (FD, Casing.Value.Text);
+                        when 'd' =>
+                           Write (FD, Dot_Repl.Value.Text);
+                        when others =>
+                           Write (FD, "%" & Cnt (J + 1));
+                     end case;
+                  end if;
+               end loop;
+
+               Write (FD, Cnt (Last .. Cnt'Last) & ASCII.LF);
+            end;
+         end Write_Tmpl;
+
+      begin
+         if not Cfg_File_Opt.Is_Defined then
+            return;
+         end if;
+
+         declare
+            File     : constant Tree_Db.Temp_File :=
+                         Self.Get_Or_Create_Temp_File ("ada_config", Global);
+         begin
+            if File.FD /= Null_FD then
+               Write_Tmpl (File.FD,
+                           PRA.Compiler.Config_Spec_File_Name_Pattern);
+               Write_Tmpl (File.FD,
+                           PRA.Compiler.Config_Body_File_Name_Pattern);
+
+               Check_Exceptions_For (Self.View, File.FD);
+
+               if Self.View.Is_Extending then
+                  for V of Self.View.Extended loop
+                     Check_Exceptions_For (V, File.FD);
+                  end loop;
+               end if;
+
+               Close (File.FD);
+            end if;
+
+            for I in Cfg_File_Opt.Values.First_Index ..
+              Cfg_File_Opt.Values.Last_Index - 1
+            loop
+               Args.Append (Cfg_File_Opt.Values.Element (I).Text);
+            end loop;
+
+            Args.Append
+              (Cfg_File_Opt.Values.Last_Element.Text &
+                 String (File.Path));
+         end;
+      end Add_Config_File;
 
       ----------------------------
       -- Add_Dependency_Options --
@@ -340,6 +585,7 @@ package body GPR2.Build.Actions.Ada_Compile is
       Add_Dependency_Options;
       Add_Include_Path;
       Add_Mapping_File;
+      Add_Config_File;
 
       --  ??? Replace hard coded values
       declare
@@ -347,11 +593,34 @@ package body GPR2.Build.Actions.Ada_Compile is
                     Self.CU.Main_Part.Source;
          Rel   : constant Filename_Type :=
                    Input.Relative_Path (Self.Working_Directory);
+         Index : constant Unit_Index := Self.CU.Main_Part.Index;
+         Idx   : constant String :=
+                   (if Index = No_Index then ""
+                    else Index'Image);
       begin
          if Rel'Length < Input.Value'Length then
             Args.Append (String (Rel));
          else
             Args.Append (Input.String_Value);
+         end if;
+
+         if Index /= No_Index then
+            declare
+               Sw : constant GPR2.Project.Attribute.Object :=
+                      Self.View.Attribute (PRA.Compiler.Multi_Unit_Switches,
+                                           Ada_Idx);
+            begin
+               pragma Assert
+                 (Sw.Is_Defined,
+                  "Compiler'Multi_Unit_Switches is not defined in the " &
+                    "config project");
+               for J in Sw.Values.First_Index .. Sw.Values.Last_Index - 1 loop
+                  Args.Append (Sw.Values.Element (J).Text);
+               end loop;
+
+               Args.Append (Sw.Values.Last_Element.Text &
+                              Idx (Idx'First + 1 .. Idx'Last));
+            end;
          end if;
       end;
 
