@@ -154,10 +154,9 @@ package body GPR2.Build.Tree_Db is
       Self.Outputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
 
       Action.On_Tree_Insertion (Self, Messages);
-      --  On_Tree_Insertion may modify Action, so copy it back
-      Self.Actions.Reference (Curs) := Action;
 
       Self.Actions.Reference (Curs).Load_Signature;
+      Action := Self.Actions.Reference (Curs);
    end Add_Action;
 
    ------------------
@@ -316,6 +315,8 @@ package body GPR2.Build.Tree_Db is
                Dead := GNATCOLL.OS.FSUtil.Remove_File
                  (Data_Ref.View.Object_Directory.Compose (Temp).String_Value);
             end loop;
+
+            Data_Ref.Temp_Files.Clear;
          end;
       end loop;
    end Clear_Temp_Files;

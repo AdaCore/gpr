@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Tree_Db;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
@@ -57,7 +56,7 @@ package body GPR2.Build.Actions.Compile is
       Art := Artifacts.Files.Create (Self.Input.Path_Name);
       Self.Signature.Add_Artifact (Art);
 
-      Art := Artifacts.Files.Create (Self.Obj_File);
+      Art := Self.Obj_File;
       Self.Signature.Add_Artifact (Art);
 
       Self.Signature.Store
@@ -79,17 +78,21 @@ package body GPR2.Build.Actions.Compile is
                      (Src.Owning_View.Attribute
                         (PRA.Compiler.Object_File_Suffix,
                          PAI.Create (Src.Language)).Value.Text);
+      Obj_Path : GPR2.Path_Name.Object;
+
    begin
       Self.Ctxt     := Src.Owning_View;
       Self.Src_Name := To_Unbounded_String (String (Src_Name));
       Self.Lang     := Src.Language;
       Self.Traces   := Create ("ACTION_COMPILE");
 
-      Self.Obj_File := Lookup (Self.Ctxt, BN & O_Suff, True);
+      Obj_Path      := Lookup (Self.Ctxt, BN & O_Suff, True);
 
-      if not Self.Obj_File.Is_Defined then
-         Self.Obj_File := Self.Ctxt.Object_Directory.Compose (BN & O_Suff);
+      if not Obj_Path.Is_Defined then
+         Obj_Path := Self.Ctxt.Object_Directory.Compose (BN & O_Suff);
       end if;
+
+      Self.Obj_File := Artifacts.Files.Create (Obj_Path);
    end Initialize;
 
    ------------
@@ -132,13 +135,13 @@ package body GPR2.Build.Actions.Compile is
    -----------------------
 
    overriding procedure On_Tree_Insertion
-     (Self     : in out Object;
+     (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object)
    is
       UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      Db.Add_Output (UID, Artifacts.Files.Create (Self.Obj_File), Messages);
+      Db.Add_Output (UID, Self.Obj_File, Messages);
 
       if Messages.Has_Error then
          return;

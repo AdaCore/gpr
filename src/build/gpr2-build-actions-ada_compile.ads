@@ -63,7 +63,7 @@ package GPR2.Build.Actions.Ada_Compile is
    --  dependencies comes from it.
 
    overriding procedure On_Tree_Insertion
-     (Self     : in out Object;
+     (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object);
 

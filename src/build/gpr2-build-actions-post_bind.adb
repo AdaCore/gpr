@@ -69,7 +69,7 @@ package body GPR2.Build.Actions.Post_Bind is
    -----------------------
 
    overriding procedure On_Tree_Insertion
-     (Self     : in out Object;
+     (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object)
    is

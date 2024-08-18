@@ -46,7 +46,7 @@ package GPR2.Build.Actions.Ada_Bind is
         Equivalent_Elements => GPR2.Path_Name."=");
 
    overriding procedure On_Tree_Insertion
-     (Self     : in out Object;
+     (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object);
 

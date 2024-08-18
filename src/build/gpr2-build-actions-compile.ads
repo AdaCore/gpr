@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Source;
 with GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
@@ -34,10 +35,10 @@ package GPR2.Build.Actions.Compile is
 
    function Input (Self : Object) return GPR2.Build.Source.Object;
 
-   function Object_File (Self : Object) return GPR2.Path_Name.Object;
+   function Object_File (Self : Object) return Artifacts.Files.Object;
 
    overriding procedure On_Tree_Insertion
-     (Self     : in out Object;
+     (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object);
 
@@ -75,7 +76,7 @@ private
       else L.Ctxt.Id < R.Ctxt.Id);
 
    type Object is new Actions.Object with record
-      Obj_File : GPR2.Path_Name.Object;
+      Obj_File : Artifacts.Files.Object;
       --  Compiled object file, can be undefined if not compiled yet
 
       Deps     : GPR2.Containers.Name_Set;
@@ -97,7 +98,7 @@ private
    function Input (Self : Object) return GPR2.Build.Source.Object is
      (Self.Ctxt.Source (Simple_Name (To_String (Self.Src_Name))));
 
-   function Object_File (Self : Object) return GPR2.Path_Name.Object is
+   function Object_File (Self : Object) return Artifacts.Files.Object is
      (Self.Obj_File);
 
    overriding function Working_Directory

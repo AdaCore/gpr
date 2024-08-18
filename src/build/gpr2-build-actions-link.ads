@@ -45,10 +45,6 @@ package GPR2.Build.Actions.Link is
       Executable : GPR2.Path_Name.Object;
       Context    : GPR2.Project.View.Object);
    --  Initialize a link action.
-   --  Self : ???
-   --  Executable : ???
-   --  Main_Object_File : ???
-   --  Context : ???
 
    procedure Initialize_Library
      (Self    : in out Object;
@@ -75,7 +71,7 @@ package GPR2.Build.Actions.Link is
    --  List of libraries this action uses
 
    overriding procedure On_Tree_Insertion
-     (Self     : in out Object;
+     (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object);
 

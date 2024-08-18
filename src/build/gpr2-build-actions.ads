@@ -67,7 +67,7 @@ package GPR2.Build.Actions is
    --  the output is stored (the Object_Dir attribute).
 
    procedure On_Tree_Insertion
-     (Self     : in out Object;
+     (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object) is abstract
    with Pre'Class => not Messages.Has_Error;
