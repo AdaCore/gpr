@@ -109,7 +109,9 @@ private
      ("b__" & Self.Main_Ali.Path.Base_Filename);
 
    overriding procedure Compute_Signature (Self : in out Object);
-   overriding procedure Post_Command (Self : in out Object);
+   overriding procedure Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status);
 
    function Generated_Spec (Self : Object) return Artifacts.Files.Object is
       (Self.Output_Spec);

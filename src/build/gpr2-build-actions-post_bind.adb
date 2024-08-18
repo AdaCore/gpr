@@ -88,7 +88,8 @@ package body GPR2.Build.Actions.Post_Bind is
    -- Post_Command --
    ------------------
 
-   overriding procedure Post_Command (Self : in out Object) is
+   overriding procedure Post_Command (Self   : in out Object;
+                                      Status : Execution_Status) is
       Binder_Action   : constant Ada_Bind.Object :=
                           Ada_Bind.Object
                             (Self.View.Tree.Artifacts_Database.Action

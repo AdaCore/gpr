@@ -110,7 +110,8 @@ package body GPR2.Build.Process_Manager is
           and then Proc_Handler.Process_Status = PROCESS_STATUS_OK)
         or else (Proc_Handler.Status = Skipped and then Job.Valid_Signature)
       then
-         Job.Post_Command;
+         Job.Post_Command
+           ((if Proc_Handler.Status = Skipped then Skipped else Success));
          --  Propagate any newly created action
          Self.Tree_Db.Propagate_Actions;
       end if;

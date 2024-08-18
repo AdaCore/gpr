@@ -68,7 +68,8 @@ private
 
    overriding function UID (Self : Object) return Action_Id'Class;
 
-   overriding procedure Post_Command (Self : in out Object);
+   overriding procedure Post_Command (Self   : in out Object;
+                                      Status : Execution_Status);
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object

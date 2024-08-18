@@ -1017,20 +1017,25 @@ package body GPR2.Build.Actions.Compile.Ada is
    -- Post_Command --
    ------------------
 
-   overriding procedure Post_Command (Self : in out Object) is
+   overriding procedure Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status)
+   is
       use GPR2.Path_Name;
 
    begin
       --  Copy the ali file in the library dir if needed
-      if Self.View.Is_Library
-        and then not GNATCOLL.OS.FSUtil.Copy_File
-          (Self.View.Object_Directory.Compose
-             (Self.Ali_File.Path.Simple_Name).String_Value,
-           Self.Ali_File.Path.String_Value)
-      then
-         pragma Assert (False, "could not copy ali to lib");
-         --  ??? Should return some erroneous status to stop execution
-         return;
+      if Status /= Skipped then
+         if Self.View.Is_Library
+           and then not GNATCOLL.OS.FSUtil.Copy_File
+             (Self.View.Object_Directory.Compose
+                (Self.Ali_File.Path.Simple_Name).String_Value,
+              Self.Ali_File.Path.String_Value)
+         then
+            pragma Assert (False, "could not copy ali to lib");
+            --  ??? Should return some erroneous status to stop execution
+            return;
+         end if;
       end if;
 
       --  Update the signature of the action

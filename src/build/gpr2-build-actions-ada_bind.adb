@@ -140,7 +140,9 @@ package body GPR2.Build.Actions.Ada_Bind is
    -- Post_Command --
    ------------------
 
-   overriding procedure Post_Command (Self : in out Object)
+   overriding procedure Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status)
    is
       use Ada.Text_IO;
       use Ada.Strings;

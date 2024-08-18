@@ -103,7 +103,10 @@ package GPR2.Build.Actions is
    function Working_Directory
      (Self : Object) return Path_Name.Object is abstract;
 
-   procedure Post_Command (Self : in out Object) is null;
+   type Execution_Status is (Skipped, Success);
+
+   procedure Post_Command (Self   : in out Object;
+                           Status : Execution_Status) is null;
    --  Post-processing that should occur after executing the command
 
    ---------------------------
