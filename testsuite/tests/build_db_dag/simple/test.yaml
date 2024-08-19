@@ -1,4 +1,2 @@
 description: basic check the population of the build database DAG
 driver: python_script
-control:
-- [XFAIL, "env.valgrind is not None", "Tag as XFAIL while investigating eng/gpr/gpr-issues#333"]
