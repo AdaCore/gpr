@@ -2,7 +2,7 @@ with Ada.Command_Line;
 with Ada.Text_IO;
 with Ada.Containers.Indefinite_Vectors;
 
-with GPR2.Build.Actions.Ada_Compile;
+with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Tree_Db;
@@ -36,7 +36,7 @@ begin
    for NS of Tree.Namespace_Root_Projects loop
       for Unit of NS.Units loop
          declare
-            A               : GPR2.Build.Actions.Ada_Compile.Object;
+            A               : GPR2.Build.Actions.Compile.Ada.Object;
             Sorted_Messages : String_Vectors.Vector;
          begin
             A.Initialize (Unit);

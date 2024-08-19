@@ -1,6 +1,6 @@
 with Ada.Directories;
 
-with GPR2.Build.Actions.Ada_Compile;
+with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source;
 
@@ -28,14 +28,14 @@ function Test return Integer is
    Project     : constant String := "tree/main.gpr";
 
 
-   Ada_Comp : GBA.Ada_Compile.Object := GBA.Ada_Compile.Undefined;
+   Ada_Comp : GBA.Compile.Ada.Object := GBA.Compile.Ada.Undefined;
 
    function Init_Action
-     (Action : in out GBA.Ada_Compile.Object; Tree : GPR2.Project.Tree.Object)
+     (Action : in out GBA.Compile.Ada.Object; Tree : GPR2.Project.Tree.Object)
    return Boolean;
 
    function Init_Action
-     (Action : in out GBA.Ada_Compile.Object; Tree : GPR2.Project.Tree.Object)
+     (Action : in out GBA.Compile.Ada.Object; Tree : GPR2.Project.Tree.Object)
    return Boolean is
       Source : GPR2.Build.Source.Object;
       Log    : GPR2.Log.Object;

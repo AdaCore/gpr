@@ -4,8 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GNATCOLL.OS.Process;
-
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Path_Name;
@@ -16,20 +14,15 @@ package GPR2.Build.Actions.Compile.Ada is
 
    package PRA renames GPR2.Project.Registry.Attribute;
 
-   type Ada_Compile_Id is new Actions.Action_Id with private;
+   type Ada_Compile_Id is new Actions.Compile.Compile_Id with private;
 
    function Create
      (Src : GPR2.Build.Compilation_Unit.Object) return Ada_Compile_Id;
    --  Create an Action_Id without having to create the full action object
 
-   overriding function Image (Self : Ada_Compile_Id) return String;
-
-   overriding function Db_Filename
-     (Self : Ada_Compile_Id) return Simple_Name;
-
    overriding function "<" (L, R : Ada_Compile_Id) return Boolean;
 
-   type Object is new Actions.Object with private;
+   type Object is new Compile.Object with private;
    --  Action responsible for building Ada sources
 
    Undefined : constant Object;
@@ -48,9 +41,6 @@ package GPR2.Build.Actions.Compile.Ada is
      (Self : Object) return GPR2.Build.Compilation_Unit.Object;
    --  Return the name of the compiled unit
 
-   function Object_File (Self : Object) return Artifacts.Files.Object;
-   --  Return the path of the generated object file
-
    function Ali_File (Self : Object) return Artifacts.Files.Object;
    --  Return the path of the generated ALI file
 
@@ -68,14 +58,6 @@ package GPR2.Build.Actions.Compile.Ada is
    overriding procedure On_Tree_Propagation
      (Self : in out Object);
 
-   overriding procedure Compute_Command
-     (Self : in out Object;
-      Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict);
-
-   overriding function Working_Directory
-     (Self : Object) return Path_Name.Object;
-
    overriding procedure Post_Command
      (Self   : in out Object;
       Status : Execution_Status);
@@ -86,49 +68,53 @@ private
 
    use type GPR2.Path_Name.Object;
 
-   type Ada_Compile_Id is new Actions.Action_Id
-     with record
-      Main      : Compilation_Unit.Unit_Location;
+   type Ada_Compile_Id is new Compile_Id with record
+      Index : Unit_Index;
    end record;
+
+   function Part_Image (Self : Ada_Compile_Id) return String;
+   overriding function Image (Self : Ada_Compile_Id) return String;
+   overriding function Db_Filename (Self : Ada_Compile_Id) return Simple_Name;
+
+   overriding function Create
+     (Main_Src : Simple_Name;
+      Lang     : Language_Id;
+      View     : GPR2.Project.View.Object) return Ada_Compile_Id is
+     (raise Program_Error with
+        "wrong primitive called for Actions.Compile.Ada.Ada_Compile_id");
 
    function Create
      (Src : GPR2.Build.Compilation_Unit.Object) return Ada_Compile_Id
-   is ((Main => Src.Main_Part));
+   is (Compile.Create
+         (Main_Src => Src.Main_Part.Source.Simple_Name,
+          Lang     => Ada_Language,
+          View     => Src.Owning_View)
+       with Index => Src.Main_Part.Index);
 
    function Idx_Image (Idx : Unit_Index) return String is
      (Idx'Image (2 .. Idx'Image'Last));
 
-   function Part_Image (Part : Compilation_Unit.Unit_Location) return String
-   is (String (Part.Source.Simple_Name) &
-       (if Part.Index /= No_Index then "@" & Idx_Image (Part.Index) else ""));
-
-   overriding function Image (Self : Ada_Compile_Id) return String is
-     ("[Compile Ada] " & Part_Image (Self.Main) &
-      " ("  & String (Self.Main.View.Path_Name.Simple_Name) & ')');
-
-   overriding function Db_Filename
-     (Self : Ada_Compile_Id) return Simple_Name is
-       (Simple_Name
-         ("compile_ada_" & Part_Image (Self.Main) & ".json"));
+   function Part_Image (Self : Ada_Compile_Id) return String
+   is (String (Self.Src_Name) &
+       (if Self.Index /= No_Index then "@" & Idx_Image (Self.Index) else ""));
 
    overriding function "<" (L, R : Ada_Compile_Id) return Boolean is
-     (if L.Main.View.Id /= R.Main.View.Id
-      then L.Main.View.Id < R.Main.View.Id
-      elsif L.Main.Source /= R.Main.Source
-      then L.Main.Source < R.Main.Source
-      else L.Main.Index < R.Main.Index);
+     (if L.Ctxt.Id /= R.Ctxt.Id
+      then L.Ctxt.Id < R.Ctxt.Id
+      elsif L.Src_Name /= R.Src_Name
+      then L.Src_Name < R.Src_Name
+      else L.Index < R.Index);
 
-   type Object is new Actions.Object with record
+   overriding function Image (Self : Ada_Compile_Id) return String is
+     ("[Compile Ada] " & Self.Part_Image &
+        " (" & String (Self.Ctxt.Path_Name.Simple_Name) & ")");
+
+   overriding function Db_Filename (Self : Ada_Compile_Id) return Simple_Name
+   is (Simple_Name ("compile_" &  Self.Part_Image & ".json"));
+
+   type Object is new Compile.Object with record
       Ali_File  : Artifacts.Files.Object;
       --  Unit's ALI file. Can be undefined if not existing on disk
-
-      Obj_File  : Artifacts.Files.Object;
-      --  Compiled object file, can be undefined if not existing on disk
-
-      Deps      : GPR2.Path_Name.Set.Object := GPR2.Path_Name.Set.Empty_Set;
-      --  List of known dependencies for this unit. It is obtained from
-      --  the parsing of the ALI file generated by the action. Remains empty
-      --  before the action post command
 
       Closure   : Action_Id_Sets.Set;
       --  List of all object files that are needed to have Self's symbols
@@ -137,6 +123,12 @@ private
       CU        : GPR2.Build.Compilation_Unit.Object;
       --  The Unit to build
    end record;
+
+   overriding function Src_Index (Self : Object) return Unit_Index is
+     (Self.CU.Main_Part.Index);
+
+   overriding function Dependency_File (Self : Object) return Simple_Name is
+      (Self.CU.Dependency_File);
 
    overriding procedure Compute_Signature (Self : in out Object);
 
@@ -149,17 +141,10 @@ private
      (Self : Object) return GPR2.Build.Compilation_Unit.Object
    is (Self.CU);
 
-   function Object_File (Self : Object) return Artifacts.Files.Object is
-     (Self.Obj_File);
-
    function Ali_File (Self : Object) return Artifacts.Files.Object is
      (Self.Ali_File);
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
-
-   overriding function Working_Directory
-     (Self : Object) return Path_Name.Object is
-     (Self.View.Object_Directory);
 
 end GPR2.Build.Actions.Compile.Ada;
