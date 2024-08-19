@@ -130,7 +130,7 @@ package GPR2.Build.Actions is
    procedure Cleanup_Temp_Files
      (Self : in out Object'Class;
       Scope : Temp_File_Scope);
-   --  Cleanup any existing temp file for the given scope.
+   --  Cleanup any existing temp file for the given scope
 
 private
 

@@ -371,7 +371,7 @@ package body GPR2.Build.Actions.Compile is
 
          if Attr.Is_Defined then
             --  need to create a temp file with the
-            --  paht, and then another temp file used as gcc spec in the form:
+            --  path, and then another temp file used as gcc spec in the form:
             --
             --  * cc1 :
             --  + @-I <tempfile>
