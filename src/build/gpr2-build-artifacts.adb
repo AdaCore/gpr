@@ -17,30 +17,11 @@ package body GPR2.Build.Artifacts is
 
    Map : Protocol_Artifacts_Map.Map;
 
-   -----------------------------
-   -- Register_Artifact_Class --
-   -----------------------------
+   --------------
+   -- From_Uri --
+   --------------
 
-   procedure Register_Artifact_Class
-     (Artifact : Object'Class) is
-   begin
-      Map.Insert (Artifact.Protocol, Artifact);
-   end Register_Artifact_Class;
-
-   ---------------
-   -- Serialize --
-   ---------------
-
-   function Serialize (Artifact : Object'Class) return Uri_Type is
-   begin
-      return Artifact.Protocol & "://" & Artifact.Image;
-   end Serialize;
-
-   -----------------
-   -- Unserialize --
-   -----------------
-
-   function Unserialize (Uri : Uri_Type) return Object'Class
+   function From_Uri (Uri : Uri_Type) return Object'Class
    is
       Del_Index : Integer := -1;
    begin
@@ -70,10 +51,29 @@ package body GPR2.Build.Artifacts is
          end if;
 
          return Result : Object'Class := Protocol_Artifacts_Map.Element (C) do
-            Result := Create (Img);
+            Unserialize (Img, Result);
          end return;
       end;
-   end Unserialize;
+   end From_Uri;
+
+   -----------------------------
+   -- Register_Artifact_Class --
+   -----------------------------
+
+   procedure Register_Artifact_Class
+     (Artifact : Object'Class) is
+   begin
+      Map.Insert (Artifact.Protocol, Artifact);
+   end Register_Artifact_Class;
+
+   ------------
+   -- To_Uri --
+   ------------
+
+   function To_Uri (Artifact : Object'Class) return Uri_Type is
+   begin
+      return Artifact.Protocol & "://" & Artifact.Image;
+   end To_Uri;
 
 begin
 

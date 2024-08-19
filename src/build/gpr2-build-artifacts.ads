@@ -24,9 +24,11 @@ package GPR2.Build.Artifacts is
 
    function Is_Defined (Self : Object) return Boolean is abstract;
 
-   function Create (Uri : String) return Object is abstract;
+   procedure Unserialize
+     (Uri : String;
+      Val : out Object) is abstract;
    --  Used to deserialize an artifact. The protocol part is removed from the
-   --  uri before Create is called.
+   --  uri before Unserialize is called.
 
    function Image (Self : Object) return String is abstract;
    --  This value is used when unserializing the artifact (see Create above).
@@ -63,9 +65,9 @@ package GPR2.Build.Artifacts is
 
    subtype Uri_Type is String;
 
-   function Serialize (Artifact : Object'Class) return Uri_Type;
+   function To_Uri (Artifact : Object'Class) return Uri_Type;
 
-   function Unserialize (Uri : Uri_Type) return Object'Class;
+   function From_Uri (Uri : Uri_Type) return Object'Class;
    --  Translates an Uri into object. Raises Constraint_Error if the protocol
    --  was not registered before.
 

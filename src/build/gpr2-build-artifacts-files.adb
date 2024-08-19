@@ -22,4 +22,15 @@ package body GPR2.Build.Artifacts.Files is
         (GNATCOLL.File_Indexes.Hash (File_Table, Self.Path.String_Value));
    end Checksum;
 
+   -----------------
+   -- Unserialize --
+   -----------------
+
+   overriding procedure Unserialize
+     (S : String;
+      Val : out Object) is
+   begin
+      Val := (Path => Path_Name.Create_File (Filename_Type (S)));
+   end Unserialize;
+
 end GPR2.Build.Artifacts.Files;

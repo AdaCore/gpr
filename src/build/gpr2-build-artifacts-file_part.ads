@@ -26,6 +26,10 @@ package GPR2.Build.Artifacts.File_Part is
 
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type;
 
+   overriding procedure Unserialize
+     (S   : String;
+      Val : out Object);
+
 private
 
    use type GPR2.Path_Name.Object;
@@ -33,8 +37,6 @@ private
    type Object is new Files.Object with record
       Index : Unit_Index := No_Index;
    end record;
-
-   overriding function Create (S : String) return Object;
 
    overriding function Protocol (Self : Object) return String is
      ("indexed_file");

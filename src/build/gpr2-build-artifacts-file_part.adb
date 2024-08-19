@@ -6,7 +6,10 @@
 
 package body GPR2.Build.Artifacts.File_Part is
 
-   overriding function Create (S : String) return Object is
+   overriding procedure Unserialize
+     (S   : String;
+      Val : out Object)
+   is
       Idx : Natural := 0;
    begin
       for J in reverse S'Range loop
@@ -19,11 +22,12 @@ package body GPR2.Build.Artifacts.File_Part is
       end loop;
 
       if Idx = 0 then
-         return (Files.Create (S) with Index => No_Index);
+         Files.Unserialize (S, Files.Object (Val));
+         Val.Index := No_Index;
       else
-         return (Files.Create (S (S'First .. Idx - 1))
-                 with Index => Unit_Index'Value (S (Idx + 1 .. S'Last)));
+         Files.Unserialize (S (S'First .. Idx - 1), Files.Object (Val));
+         Val.Index := Unit_Index'Value (S (Idx + 1 .. S'Last));
       end if;
-   end Create;
+   end Unserialize;
 
 end GPR2.Build.Artifacts.File_Part;

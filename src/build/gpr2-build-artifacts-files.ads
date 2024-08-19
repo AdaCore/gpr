@@ -16,7 +16,9 @@ package GPR2.Build.Artifacts.Files is
 
    function Create (Path : GPR2.Path_Name.Object) return Object with Inline;
 
-   overriding function Create (S : String) return Object;
+   overriding procedure Unserialize
+     (S   : String;
+      Val : out Object);
 
    overriding function Image (Self : Object) return String;
 
@@ -51,9 +53,6 @@ private
 
    function Create (Path : GPR2.Path_Name.Object) return Object is
      (Path => Path);
-
-   overriding function Create (S : String) return Object is
-     (Path => Path_Name.Create_File (Filename_Type (S)));
 
    function Path (Self : Object) return GPR2.Path_Name.Object is
      (Self.Path);

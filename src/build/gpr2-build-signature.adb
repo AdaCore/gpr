@@ -53,7 +53,7 @@ package body GPR2.Build.Signature is
          Value : JSON_Value)
       is
          A      : constant Artifacts.Object'Class :=
-                    Artifacts.Unserialize (Key);
+                    Artifacts.From_Uri (Key);
          Digest : constant UTF8_String := Get (Value);
       begin
          Signature.Artifacts.Insert (A, Hash_Digest (Digest));
@@ -115,7 +115,7 @@ package body GPR2.Build.Signature is
                  Artifact_Maps.Key (Position);
       begin
          Set_Field (Val        => List,
-                    Field_Name => Artifacts.Serialize (Key),
+                    Field_Name => Artifacts.To_Uri (Key),
                     Field      => String (Key.Checksum));
       end Create_Artifact_Element;
    begin
