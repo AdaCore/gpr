@@ -116,10 +116,12 @@ package body GPR2.Build.Process_Manager.JSON is
    end Execute;
 
    procedure Execute
-     (Self      : in out Object;
-      Tree_Db   : GPR2.Build.Tree_Db.Object_Access;
-      Jobs      : Natural := 0;
-      JSON_File : GPR2.Path_Name.Object)
+     (Self         : in out Object;
+      Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
+      Jobs         : Natural := 0;
+      JSON_File    : GPR2.Path_Name.Object;
+      Verbosity    : Execution_Verbosity := Minimal;
+      Stop_On_Fail : Boolean := True)
    is
    begin
       if not JSON_File.Is_Defined then
@@ -128,7 +130,8 @@ package body GPR2.Build.Process_Manager.JSON is
       end if;
 
       Self.JSON_File := JSON_File;
-      GPR2.Build.Process_Manager.Object (Self).Execute (Tree_Db, Jobs);
+      GPR2.Build.Process_Manager.Object (Self).Execute
+        (Tree_Db, Jobs, Verbosity, Stop_On_Fail);
    end Execute;
 
    overriding

@@ -23,12 +23,14 @@ package GPR2.Build.Process_Manager.JSON is
       return Collect_Status;
 
    procedure Execute
-     (Self      : in out Object;
-      Tree_Db   : GPR2.Build.Tree_Db.Object_Access;
-      Jobs      : Natural := 0;
-      JSON_File : GPR2.Path_Name.Object);
+     (Self         : in out Object;
+      Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
+      Jobs         : Natural := 0;
+      JSON_File    : GPR2.Path_Name.Object;
+      Verbosity    : Execution_Verbosity := Minimal;
+      Stop_On_Fail : Boolean := True);
    --  Execute the process manager and store the jobs results in the provided
-   --  JSON file ``JSON_FILE``.
+   --  JSON file ``JSON_File``.
 
    overriding procedure Execute
      (Self         : in out Object;
