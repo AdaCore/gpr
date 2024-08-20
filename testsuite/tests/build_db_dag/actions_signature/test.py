@@ -28,15 +28,17 @@ def write_file(file, data):
         write_file.write(data)
 
 
-def get_all_json_file(project):
+def get_all_signature_json_files(project):
     json_file_list = []
-    for filename in glob.glob(f'tree/obj/{project}/*.json', recursive=True):
-        json_file_list.append(filename)
+    for filename in glob.glob(f"tree/obj/{project}/*.json", recursive=True):
+        # "jobs.json" files contain information about processes execution
+        if not os.path.basename(filename) == "jobs.json":
+            json_file_list.append(filename)
     return json_file_list
 
 
 def get_json_file(name, project):
-    jf_list = get_all_json_file(project)
+    jf_list = get_all_signature_json_files(project)
     if jf_list:
         for fname in jf_list:
             if re.search(name, os.path.basename(fname)):
@@ -96,7 +98,7 @@ def overwrite_checksum(name, ext, checksum, project):
         fname = get_json_file(name, project)
         jf_list = [fname]
     else:
-        jf_list = get_all_json_file(project)
+        jf_list = get_all_signature_json_files(project)
 
     assert jf_list, f"cannot determine the json inputs"
     for fname in jf_list:
