@@ -1167,9 +1167,8 @@ package body GPR2.Project.View is
                      then ""
                      else Value_Type (Self.Executable_Suffix));
       begin
-         return GPR2.Path_Name.Create_File
-                  (Filename_Type (Base_Name & Suffix),
-                   Filename_Optional (Self.Executable_Directory.Dir_Name));
+         return Self.Executable_Directory.Compose
+                  (Filename_Type (Base_Name & Suffix));
       end Executable;
 
    begin
@@ -2056,6 +2055,23 @@ package body GPR2.Project.View is
       end if;
    end Own_Unit;
 
+   ---------------
+   -- Own_Units --
+   ---------------
+
+   function Own_Units
+     (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
+   is
+      Db : Build.View_Db.Object;
+   begin
+      if Self.Kind in With_Object_Dir_Kind then
+         Db := Self.View_Db;
+         return Db.Own_Units;
+      else
+         return Build.Compilation_Unit.Maps.Empty_Map;
+      end if;
+   end Own_Units;
+
    ----------
    -- Pack --
    ----------
@@ -2930,6 +2946,14 @@ package body GPR2.Project.View is
      (Self : Object; Filename : GPR2.Simple_Name)
       return Build.Source.Object
    is (Self.View_Db.Visible_Source (Filename));
+
+   ---------------------
+   -- Visible_Sources --
+   ---------------------
+
+   function Visible_Sources
+     (Self : Object) return GPR2.Build.Source.Sets.Object
+   is (Self.View_Db.Visible_Sources);
 
 begin
    View_Internal.Get_RO   := Get_RO'Access;

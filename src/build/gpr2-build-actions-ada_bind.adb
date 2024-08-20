@@ -4,91 +4,72 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.Build.Actions.Ada_Compile.Pre_Bind;
-with GPR2.Build.Actions.Link;
-with GPR2.Build.Actions.Ada_Compile.Post_Bind;
-with GPR2.Build.ALI_Parser;
-with GPR2.Build.Artifacts.File_Part;
-with GPR2.Build.Artifacts.Files;
+with GPR2.Build.Actions.Post_Bind;
+with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Tree_Db;
-with GPR2.Build.View_Db;
-with GPR2.Project.Tree;
 with Ada.Strings.Fixed;
 with Ada.Strings;
 with Ada.Text_IO;
 
 package body GPR2.Build.Actions.Ada_Bind is
 
-   package GBA renames GPR2.Build.Actions;
+   ---------------------
+   -- Compute_Command --
+   ---------------------
 
-   No_Linker_Found : exception;
-
-   function Linker_UID (Self : Object) return Actions.Action_Id'Class;
-   --  Find the link action in the bind successors and return it. If no linker
-   --  is found, a No_Linker_Found exception will be raised.
-
-   -------------
-   -- Command --
-   -------------
-
-   overriding function Command (Self : Object)
-     return GNATCOLL.OS.Process.Argument_List
+   overriding procedure Compute_Command
+     (Self : in out Object;
+      Args : out GNATCOLL.OS.Process.Argument_List;
+      Env  : out GNATCOLL.OS.Process.Environment_Dict)
    is
-      Args : GNATCOLL.OS.Process.Argument_List;
+      pragma Unreferenced (Env);
    begin
-      if Self.Unit.Has_Part (S_Body) then
+      Args.Append ("gnatbind");
+      Args.Append  (Self.Main_Ali.Path.String_Value);
 
-         --  ??? Replace hard coded values
+      for C of Self.View.Closure loop
+         if C.Is_Runtime then
+            --  Lookup of runtime lib is done automatically by gnatbind
+            null;
+         elsif C.Is_Library then
+            Args.Append ("-I" & C.Library_Ali_Directory.String_Value);
+         elsif C.Kind in With_Object_Dir_Kind then
+            Args.Append ("-I" & C.Object_Directory.String_Value);
+         end if;
+      end loop;
 
-         Args.Append ("gnatbind");
+      Args.Append ("-o");
 
-         Args.Append  (Self.Main_Ali.String_Value);
+      --  Directories separator are not allowed. We must be in the correct
+      --  directory and only use the source base name with extension.
 
-         Args.Append ("-o");
-         --  Directories separator are not allowed. We must be in the correct
-         --  directory and only use the source base name with extension.
-
-         Args.Append (String (Self.Unit.Main_Body.Source.Simple_Name));
-      end if;
-
-      return Args;
-   end Command;
+      Args.Append (String (Self.Output_Body.Path.Simple_Name));
+   end Compute_Command;
 
    -----------------------
    -- Compute_Signature --
    -----------------------
 
    overriding procedure Compute_Signature (Self : in out Object) is
-      use GPR2.Build.Signature;
-
-      Part     : Compilation_Unit.Unit_Location;
+      UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-
       Self.Signature.Clear;
-      for Kind in S_Spec .. S_Body loop
-         if Self.Unit.Has_Part (Kind) then
-            Part := Self.Unit.Get (Kind);
-            declare
-               Art : constant Artifacts.File_Part.Object :=
-                       Artifacts.File_Part.Create (Part.Source, Part.Index);
-            begin
-               Self.Signature.Update_Artifact
-                 (Art.UID, Art.Image, Art.Checksum);
-            end;
+
+      for Pred of Self.Tree.Inputs (UID) loop
+         if Pred in Artifacts.Library.Object'Class then
+            Self.Signature.Add_Artifact (Pred);
          end if;
       end loop;
 
-      for Ali of Self.Ali_Files loop
-         declare
-               Art : constant Artifacts.Files.Object :=
-                       Artifacts.Files.Create (Ali);
-         begin
-            Self.Signature.Update_Artifact (Art.UID, Art.Image, Art.Checksum);
-         end;
+      for D of Self.Obj_Deps loop
+         Self.Signature.Add_Artifact
+           (Artifacts.Files.Create (Path_Name.Create_File (D)));
       end loop;
 
-      Self.Signature.Store
-        (Self.Tree.Db_Filename_Path (Object'Class (Self).UID));
+      Self.Signature.Add_Artifact (Self.Generated_Spec);
+      Self.Signature.Add_Artifact (Self.Generated_Body);
+
+      Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
    end Compute_Signature;
 
    ----------------
@@ -97,65 +78,21 @@ package body GPR2.Build.Actions.Ada_Bind is
 
    procedure Initialize
      (Self     : in out Object;
-      Main_Ali : GPR2.Path_Name.Object;
+      Main_Ali : Artifacts.Files.Object;
       Context  : GPR2.Project.View.Object)
    is
-      BN       : constant Simple_Name :=
-                   "b__" & Simple_Name (Main_Ali.Base_Name);
-      Success  : Boolean := False;
    begin
       Self.Ctxt := Context;
       Self.Main_Ali := Main_Ali;
-      Self.Ali_Files.Insert (Main_Ali);
+      Self.Output_Spec :=
+        Artifacts.Files.Create
+          (Context.Object_Directory.Compose (Self.BN & ".ads"));
+      Self.Output_Body :=
+        Artifacts.Files.Create
+          (Context.Object_Directory.Compose (Self.BN & ".adb"));
       Self.Traces := Create ("ACTION_ADA_BIND");
-
-      Self.Unit := GPR2.Build.Compilation_Unit.Create
-                       (Name    => "ADA_MAIN",
-                        Context => Context);
-
-      GPR2.Build.Compilation_Unit.Add
-        (Self     => Self.Unit,
-         Kind     => S_Body,
-         View     => Context,
-         Path     => Context.Object_Directory.Compose (BN & ".adb"),
-         Success  => Success);
-
-      GPR2.Build.Compilation_Unit.Add
-        (Self     => Self.Unit,
-         Kind     => S_Spec,
-         View     => Context,
-         Path     => Context.Object_Directory.Compose (BN & ".ads"),
-         Success  => Success);
    end Initialize;
 
-   ----------------
-   -- Linker_UID --
-   ----------------
-
-   function Linker_UID (Self : Object) return Actions.Action_Id'Class
-   is
-      Output_Unit_Src :
-        constant GPR2.Build.Compilation_Unit.Unit_Location :=
-        Self.Unit.Main_Part;
-   begin
-      for Action of Self.Tree.Successors
-        (Artifacts.File_Part.Create
-           (Output_Unit_Src.Source, Output_Unit_Src.Index))
-      loop
-         if Action in GBA.Ada_Compile.Post_Bind.Object'Class then
-            for Post_Bind_Succ of Self.Tree.Successors
-              (Artifacts.Files.Create
-                 (GBA.Ada_Compile.Post_Bind.Object (Action).Object_File))
-            loop
-               if Post_Bind_Succ in GBA.Link.Object'Class then
-                  return Post_Bind_Succ.UID;
-               end if;
-            end loop;
-         end if;
-      end loop;
-
-      raise No_Linker_Found;
-   end Linker_UID;
    -----------------------
    -- On_Tree_Insertion --
    -----------------------
@@ -165,265 +102,53 @@ package body GPR2.Build.Actions.Ada_Bind is
       Db       : in out GPR2.Build.Tree_Db.Object;
       Messages : in out GPR2.Log.Object)
    is
-      Part : Compilation_Unit.Unit_Location;
-      UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+      UID       : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+      Post_Bind : Actions.Post_Bind.Object;
+
    begin
+      Db.Add_Output
+        (UID,
+         Self.Output_Spec,
+         Messages);
+      Db.Add_Output
+        (UID,
+         Self.Output_Body,
+         Messages);
 
-      for Kind in S_Spec .. S_Body loop
-         if Self.Unit.Has_Part (Kind) then
-            Part := Self.Unit.Get (Kind);
-            Db.Add_Output
-              (UID,
-               Artifacts.File_Part.Create (Part.Source, Part.Index),
-               Messages);
-         end if;
-      end loop;
+      Db.Add_Input (UID, Self.Main_Ali, True);
 
-      if Messages.Has_Error then
-         return;
-      end if;
-
-      for Ali_File of Self.Ali_Files loop
-         if Ali_File.Is_Defined then
-            Db.Add_Input
-              (UID,
-               Artifacts.Files.Create (Ali_File),
-               True);
-         end if;
-      end loop;
+      Post_Bind :=
+        Actions.Post_Bind.Create (Self.Output_Body, Self.View, Self);
+      Db.Add_Action (Post_Bind, Messages);
+      Db.Add_Input (Post_Bind.UID, Self.Output_Body, True);
    end On_Tree_Insertion;
 
    ---------------
-   -- Parse_Ali --
+   -- Post_Bind --
    ---------------
 
-   procedure Parse_Ali (Self : in out Object; Ali : GPR2.Path_Name.Object)
-   is
-      function Import_View_Db (Imp : GPR2.Build.ALI_Parser.Import_Info)
-        return GPR2.Build.View_Db.Object;
-      --  Return the view database containing the imported unit
-
-      procedure Add_Action_If_Not_Already_Done
-        (Action : in out GBA.Ada_Compile.Pre_Bind.Object);
-      --  Add the action to the current object tree database if it has not
-      --  already be done.
-
-      ------------------------------------
-      -- Add_Action_If_Not_Already_Done --
-      ------------------------------------
-
-      procedure Add_Action_If_Not_Already_Done
-        (Action : in out GBA.Ada_Compile.Pre_Bind.Object) is
-         Messages : GPR2.Log.Object;
-      begin
-         if not GPR2.Build.Tree_Db.Has_Action (Self.Tree.all, Action.UID) then
-            Trace
-               (Self.Traces, "Add the action '" & Action.UID.Image &
-                  " to the tree database.");
-            GPR2.Build.Tree_Db.Add_Action (Self.Tree.all, Action, Messages);
-
-            if Messages.Has_Error then
-               Messages.Output_Messages (Information => False,
-                                         Warning     => False);
-
-               --  ??? Use custom exception
-
-               raise Program_Error with
-                 "Failed to add " & Action.UID.Image &
-                 " to the tree database";
-            end if;
-         end if;
-      end Add_Action_If_Not_Already_Done;
-
-      --------------------
-      -- Import_View_Db --
-      --------------------
-
-      function Import_View_Db (Imp : GPR2.Build.ALI_Parser.Import_Info)
-        return GPR2.Build.View_Db.Object
-      is
-         V_Db : GPR2.Build.View_Db.Object;
-      begin
-         for V of Self.Ctxt.Tree.Ordered_Views loop
-            if  V.Is_Defined and then V.Kind in With_Object_Dir_Kind then
-               V_Db := Self.Tree.View_Database (V);
-
-               if V_Db.View.Is_Runtime then
-                  if V_Db.Has_Source
-                  (Simple_Name (To_String (Imp.Source)))
-                  then
-                     --  We do not want to recompile the runtime
-
-                     return V_Db;
-                  end if;
-               elsif V_Db.View.Is_Namespace_Root then
-                  if V_Db.Source_Option >= Sources_Units and then
-                     V_Db.Has_Compilation_Unit
-                     (Name_Type (To_String (Imp.Unit_Name)))
-                  then
-                     return V_Db;
-                  end if;
-               end if;
-            end if;
-         end loop;
-
-         return GPR2.Build.View_Db.Undefined;
-      end Import_View_Db;
-
-
-      Messages : GPR2.Log.Object;
-      Imports  : GPR2.Build.ALI_Parser.Import_Info_Vectors.Vector;
-      UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+   function Post_Bind (Self : Object) return Actions.Post_Bind.Object is
    begin
-
-
-      Trace (Self.Traces,
-               "Parse " & String (Ali.Simple_Name));
-      GPR2.Build.ALI_Parser.Imports
-         (Ali, Imports, Messages);
-
-      if Messages.Has_Error then
-         Messages.Output_Messages (Information => False,
-                                   Warning     => False);
-
-         --  ??? Use a custom exception
-
-         raise Program_Error with "Parsing error";
-      end if;
-
-      for Imp of Imports loop
-         Trace (Self.Traces, "Found import " & To_String (Imp.ALI));
-
-         declare
-            Imp_View_Db : constant GPR2.Build.View_Db.Object :=
-                            Import_View_Db (Imp);
-            Import_Ali : GPR2.Path_Name.Object;
-         begin
-
-            if not Imp_View_Db.Is_Defined then
-               Trace
-                  (Self.Traces,
-                    "Did not find a view containing unit " &
-                     To_String (Imp.Unit_Name));
-                     goto Next_Import;
-            end if;
-
-            if Imp_View_Db.View.Is_Runtime then
-
-               --  We do not want to create a compile action for the runtime
-               --  units.
-
-               if Imp_View_Db.View.Is_Library then
-                  Import_Ali :=
-                    Imp_View_Db.View.Library_Ali_Directory.Compose
-                      (Filename_Type (To_String (Imp.ALI)));
-               else
-                  Import_Ali :=
-                    Imp_View_Db.View.Object_Directory.Compose
-                     (Filename_Type (To_String (Imp.ALI)));
-               end if;
-
-               if not Import_Ali.Is_Defined or else not Import_Ali.Exists then
-                  Trace
-                    (Self.Traces, "Did not find the runtime ALI file " &
-                     To_String (Imp.ALI));
-                  goto Next_Import;
-               end if;
-
-            elsif Imp_View_Db.View.Is_Namespace_Root then
-               declare
-                  Action    : GBA.Ada_Compile.Pre_Bind.Object :=
-                        GBA.Ada_Compile.Pre_Bind.Undefined;
-               begin
-                  Action.Initialize
-                    (Imp_View_Db.Compilation_Unit
-                       (Name_Type (To_String (Imp.Unit_Name))));
-
-                  Add_Action_If_Not_Already_Done (Action);
-
-                  if String (Action.Ali_File.Simple_Name) = To_String (Imp.ALI)
-                  then
-                     Import_Ali := Action.Ali_File;
-
-                     --  If Bind action already contains the new import's ALI,
-                     --  then another ALI previously parsed already contained
-                     --  this import.
-
-                     if Import_Ali.Is_Defined and then
-                        not Self.Ali_Files.Contains (Import_Ali)
-                     then
-                        begin
-                           declare
-                              Link :
-                              constant
-                                 GPR2.Build.Tree_Db.Action_Reference_Type :=
-                                    Self.Tree.Action_Id_To_Reference
-                                    (Self.Linker_UID);
-                           begin
-                              Trace
-                                (Self.Traces,
-                                 "Add the object file " &
-                                 String
-                                 (Action.Object_File.Simple_Name) &
-                                 " to the action " &
-                                 Link.UID.Image);
-                              GBA.Link.Object'Class
-                                (Link.Element.all).Add_Object_File
-                                   (Action.Object_File);
-                           end;
-                        exception
-                           when No_Linker_Found =>
-                              Trace
-                                (Self.Traces,
-                                 "No link action found for the bind action " &
-                                 Self.UID.Image & ". Can not add the object " &
-                                 "file '" &
-                                  String (Action.Object_File.Simple_Name) &
-                                  " to the former");
-                        end;
-                     end if;
-                  else
-                     --  ??? Use a custom exception
-
-                     raise Program_Error with
-                        "Parsed ALI file """ &
-                        String (Action.Ali_File.Simple_Name) &
-                        " "" and computed ALI file """ & To_String (Imp.ALI) &
-                        """ do not match";
-                  end if;
-               end;
-            end if;
-
-            if Import_Ali.Is_Defined and then
-               not Self.Ali_Files.Contains (Import_Ali)
-            then
-               Trace
-                  (Self.Traces, "Add " &
-                  String (Import_Ali.Simple_Name) &
-                  " as an input of the action " & UID.Image);
-               GPR2.Build.Tree_Db.Add_Input
-                 (Self.Tree.all, UID,
-                  Artifacts.Files.Create (Import_Ali), True);
-               Self.Ali_Files.Insert (Import_Ali);
-            end if;
-         end;
-
-         <<Next_Import>>
+      for Succ of Self.Tree.Successors (Self.Output_Body) loop
+         return Actions.Post_Bind.Object (Succ);
       end loop;
-   end Parse_Ali;
+
+      return Actions.Post_Bind.Undefined;
+   end Post_Bind;
 
    ------------------
    -- Post_Command --
    ------------------
 
-   overriding procedure Post_Command (Self : in out Object) is
+   overriding procedure Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status)
+   is
       use Ada.Text_IO;
       use Ada.Strings;
       use Ada.Strings.Fixed;
 
-
-      procedure Process_Option_Or_Object_Line
-        (Line : String; Linker : GPR2.Build.Tree_Db.Action_Reference_Type);
+      procedure Process_Option_Or_Object_Line (Line : String);
       --  Pass options to the linker. Do not pass object file lines,
       --  as the objects to link are already obtained by parsing ALI files.
 
@@ -431,15 +156,13 @@ package body GPR2.Build.Actions.Ada_Bind is
       -- Process_Option_Or_Object_Line --
       -----------------------------------
 
-      procedure Process_Option_Or_Object_Line
-         (Line : String; Linker : GPR2.Build.Tree_Db.Action_Reference_Type)
-      is
+      procedure Process_Option_Or_Object_Line (Line : String) is
          Switch_Index : Natural := Index (Line, "--");
       begin
          if Switch_Index = 0 then
             raise Program_Error
               with "Failed parsing line " & Line & " from " &
-              Self.Unit.Main_Body.Source.String_Value;
+              Self.Output_Body.Path.String_Value;
          end if;
 
          --  Skip the "--" comment prefix
@@ -448,20 +171,13 @@ package body GPR2.Build.Actions.Ada_Bind is
 
          declare
             Trimed_Line : constant String :=
-              Trim (Line (Switch_Index .. Line'Last), Both);
+                            Trim (Line (Switch_Index .. Line'Last), Both);
          begin
-
-            --  Pass only options to the link action
-
             if Trimed_Line (Trimed_Line'First) = '-' then
-                  Trace
-                  (Self.Traces,
-                     "Add the option """ & Trimed_Line &
-                     """ to the action " & Linker.UID.Image);
-                  GBA.Link.Object'Class (Linker.Element.all).Add_Option
-                  (Trimed_Line);
+               Self.Linker_Opts.Append (Trimed_Line);
+            else
+               Self.Obj_Deps.Include (Filename_Type (Trimed_Line));
             end if;
-
          end;
       end Process_Option_Or_Object_Line;
 
@@ -469,39 +185,34 @@ package body GPR2.Build.Actions.Ada_Bind is
       Reading      : Boolean         := False;
       Begin_Marker : constant String := "--  BEGIN Object file/option list";
       End_Marker   : constant String := "--  END Object file/option list";
-   begin
-      declare
-         Linker : constant GPR2.Build.Tree_Db.Action_Reference_Type :=
-            Self.Tree.Action_Id_To_Reference (Self.Linker_UID);
-      begin
-         Trace (Self.Traces,
-                "Parsing file '" & Self.Unit.Main_Body.Source.String_Value &
-                "' generated by " & Self.UID.Image &
-                " to obtain linker options");
-         Open (File => Src_File,
-               Mode => In_File,
-               Name => Self.Unit.Main_Body.Source.String_Value);
 
-         while not End_Of_File (Src_File) loop
-            declare
-               Line : constant String := Get_Line (Src_File);
-            begin
-               if Index (Line, Begin_Marker) = Line'First then
-                  Reading := True;
-               elsif Index (Line, End_Marker) = Line'First then
-                  Reading := False;
-               elsif Reading then
-                  Process_Option_Or_Object_Line (Line, Linker);
-               end if;
-            end;
-         end loop;
-      exception
-         when No_Linker_Found =>
-            Trace (Self.Traces,
-                   "No link action found for the bind action " &
-                   Self.UID.Image & ". Can not add options found in '"  &
-                   Self.Unit.Main_Body.Source.String_Value);
-      end;
+   begin
+      Self.Traces.Trace
+        ("Parsing file '" & Self.Output_Body.Path.String_Value &
+           "' generated by " & Self.UID.Image &
+           " to obtain linker options");
+
+      Open
+        (File => Src_File,
+         Mode => In_File,
+         Name => Self.Output_Body.Path.String_Value);
+
+      while not End_Of_File (Src_File) loop
+         declare
+            Line : constant String := Get_Line (Src_File);
+         begin
+            if Index (Line, Begin_Marker) = Line'First then
+               Reading := True;
+            elsif Index (Line, End_Marker) = Line'First then
+               Reading := False;
+               exit;
+            elsif Reading then
+               Process_Option_Or_Object_Line (Line);
+            end if;
+         end;
+      end loop;
+
+      Close (Src_File);
    end Post_Command;
 
    ---------
@@ -509,9 +220,10 @@ package body GPR2.Build.Actions.Ada_Bind is
    ---------
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class is
+      BN     : constant Simple_Name := Self.Main_Ali.Path.Simple_Name;
       Result : constant Ada_Bind_Id :=
-                 (Name_Len  => Self.Main_Ali.Base_Name'Length,
-                  Ali_Name  => Self.Main_Ali.Base_Name,
+                 (Name_Len  => BN'Length,
+                  Ali_Name  => BN,
                   Ctxt      => Self.Ctxt);
    begin
       return Result;

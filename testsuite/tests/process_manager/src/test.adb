@@ -38,6 +38,8 @@ function Test return Integer is
 begin
    Opts.Add_Switch (GPR2.Options.P, Project);
 
+   GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Quiet;
+
    if not Tree.Load (Opts, With_Runtime => True) then
       return 1;
    end if;
@@ -68,8 +70,8 @@ begin
                Ret_Code   : Integer               := 0;
                With_Deps  : Boolean               := True;
                Executable : GPR2.Path_Name.Object :=
-                 GPR2.Path_Name.Create_File
-                   (Name => "write_file", Directory => "write_file");
+                              GPR2.Path_Name.Create_File
+                                (Name => "write_file", Directory => "write_file");
             begin
                A.Initialize
                  (Root_View, Action_Index, Executable, Ret_Code, With_Deps);
@@ -96,8 +98,8 @@ begin
                Ret_Code   : Integer;
                With_Deps  : Boolean               := True;
                Executable : GPR2.Path_Name.Object :=
-                 GPR2.Path_Name.Create_File
-                   (Name => "write_file", Directory => "write_file");
+                              GPR2.Path_Name.Create_File
+                                (Name => "write_file", Directory => "write_file");
             begin
                if Action_Index = 2 then
                   Ret_Code := 1;
@@ -139,11 +141,12 @@ begin
 
          begin
             for Action_Index in 1 .. 10 loop
-               if Action_Index = 5 then
-                  With_Deps := False;
-               else
-                  With_Deps := True;
-               end if;
+               --  make DAG:
+               --  1->2->3->4->5
+               --  6->7->8->9->10
+               --  while under the hood action 1 will wait for action 10 to be
+               --  done before executing
+               With_Deps := Action_Index /= 6;
 
                if Action_Index = 1 then
                   With_Wait := 10;
@@ -181,11 +184,12 @@ begin
                Ret_Code           : Integer               := 0;
                With_Deps          : Boolean               := True;
                Valid_Executable   : GPR2.Path_Name.Object :=
-                 GPR2.Path_Name.Create_File
-                   (Name => "write_file", Directory => "write_file");
+                                      GPR2.Path_Name.Create_File
+                                        (Name      => "write_file",
+                                         Directory => "write_file");
                Invalid_Executable : GPR2.Path_Name.Object :=
-                 GPR2.Path_Name.Create_File
-                   (Name => "exec_that_does_not_exist");
+                                      GPR2.Path_Name.Create_File
+                                        (Name => "exec_that_does_not_exist");
             begin
                if Action_Index = 3 then
                   A.Initialize
@@ -210,7 +214,9 @@ begin
          null;
    end case;
 
-   Process_M.Execute (Tree.Artifacts_Database, 2);
+   Process_M.Execute
+     (Tree.Artifacts_Database, 2,
+      Verbosity => GPR2.Build.Process_Manager.Quiet);
 
    return 0;
 end Test;

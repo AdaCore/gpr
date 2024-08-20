@@ -10,7 +10,7 @@ with GPR2.Message;
 with GPR2.Tree_Internal;
 with GPR2.Source_Reference;
 with GPR2.Build.Tree_Db;
-with GPR2.Build.View_Tables;
+with GPR2.Build.View_Db;
 with GPR2.View_Internal;
 
 package body GPR2.Build.Compilation_Unit is
@@ -189,6 +189,30 @@ package body GPR2.Build.Compilation_Unit is
          others    => <>);
    end Create;
 
+   ---------------------
+   -- Dependency_File --
+   ---------------------
+
+   function Dependency_File (Self : Object) return Simple_Name
+   is
+      Tree : constant access GPR2.Tree_Internal.Object :=
+               View_Internal.Get_RO (Self.Root_View).Tree;
+      Main : constant Unit_Location := Self.Main_Part;
+      BN   : constant Simple_Name := Main.Source.Base_Filename;
+   begin
+      if Main.Index = No_Index then
+         return BN & Tree.Dependency_Suffix (Ada_Language);
+      else
+         declare
+            Idx_Img : constant String := Main.Index'Image;
+         begin
+            return BN & "~" &
+              Simple_Name (Idx_Img (Idx_Img'First + 1 .. Idx_Img'Last)) &
+              Tree.Dependency_Suffix (Ada_Language);
+         end;
+      end if;
+   end Dependency_File;
+
    ------------------
    -- For_All_Part --
    ------------------
@@ -274,12 +298,12 @@ package body GPR2.Build.Compilation_Unit is
                     (Self.Root_View).Tree.Artifacts_Database;
 
       procedure Add_Deps (Part : Unit_Location) is
-         Db : constant Build.View_Tables.View_Data_Ref :=
-                View_Tables.Get_Data (Tree_Db, Part.View);
+         Db : constant Build.View_Db.Object :=
+                Tree_Db.View_Database (Part.View);
       begin
          Result := Result.Union
-           (Db.Src_Infos.Element
-              (Part.Source.Value).Unit (Part.Index).Dependencies);
+           (Db.Source (Part.Source.Simple_Name).Unit
+              (Part.Index).Dependencies);
       end Add_Deps;
 
    begin

@@ -1,3 +1,5 @@
 Without -p:
-gprbuild: The object directory 'obj' does not exist
+gprbuild: "obj/" does not exist
 With -p:
+"obj/" created
+[Compile Ada] A.adb (main.gpr)

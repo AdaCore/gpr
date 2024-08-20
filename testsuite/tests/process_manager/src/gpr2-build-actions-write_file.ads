@@ -32,8 +32,6 @@ package GPR2.Build.Actions.Write_File is
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
 
-   overriding function Valid_Signature (Self : Object) return Boolean;
-
    procedure Initialize
      (Self       : in out Object;
       Ctxt       : GPR2.Project.View.Object;
@@ -55,8 +53,13 @@ package GPR2.Build.Actions.Write_File is
 
    overriding procedure Compute_Signature (Self : in out Object);
 
-   overriding function Command (Self : Object)
-    return GNATCOLL.OS.Process.Argument_List;
+   overriding procedure Compute_Command
+     (Self : in out Object;
+      Args : out GNATCOLL.OS.Process.Argument_List;
+      Env  : out GNATCOLL.OS.Process.Environment_Dict);
+
+   overriding function Working_Directory
+     (Self : Object) return Path_Name.Object;
 
 private
 
@@ -89,10 +92,11 @@ private
       Executable : GPR2.Path_Name.Object;
    end record;
 
-   overriding function Valid_Signature (Self : Object) return Boolean is
-     (Self.Signature.Valid);
-
    overriding function View (Self : Object) return GPR2.Project.View.Object is
      (Self.Ctxt);
+
+   overriding function Working_Directory
+     (Self : Object) return Path_Name.Object
+   is (Path_Name.Create_Directory ("."));
 
 end GPR2.Build.Actions.Write_File;

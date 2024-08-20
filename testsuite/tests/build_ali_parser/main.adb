@@ -1,5 +1,6 @@
 with Ada.Text_IO;
 with GPR2.Build.ALI_Parser;
+with GPR2.Containers;
 with GPR2.Log;
 with GPR2.Path_Name;
 
@@ -9,8 +10,8 @@ procedure Main is
    -- Print dependencies name
 
    procedure Test (ALI_File : String) is
-      Dep_Names : GPR2.Build.ALI_Parser.Dep_Vectors.Vector;
-      Messages : GPR2.Log.Object;
+      Dep_Names : GPR2.Containers.Filename_Set;
+      Messages  : GPR2.Log.Object;
    begin
       Ada.Text_IO.Put_Line ("== ALI file: " & ALI_File);
 
@@ -24,7 +25,7 @@ procedure Main is
             Warning     => False);
       else
          for Dep of Dep_Names loop
-            Ada.Text_IO.Put_Line (Dep);
+            Ada.Text_IO.Put_Line (String (Dep));
          end loop;
       end if;
       Ada.Text_IO.Put_Line ("");

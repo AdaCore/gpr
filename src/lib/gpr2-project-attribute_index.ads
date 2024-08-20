@@ -38,7 +38,8 @@ package GPR2.Project.Attribute_Index is
 
    function Create
      (Value          : Value_Type;
-      Case_Sensitive : Boolean := False) return Object
+      Case_Sensitive : Boolean := False;
+      At_Pos         : Unit_Index := No_Index) return Object
      with Post => Create'Result.Is_Defined;
    --  Creates a built-in attribute index
 
@@ -116,11 +117,12 @@ private
 
    function Create
      (Value          : Value_Type;
-      Case_Sensitive : Boolean := False) return Object
+      Case_Sensitive : Boolean := False;
+      At_Pos         : Unit_Index := No_Index) return Object
    is
      (Create (Source_Reference.Value.Object
               (Source_Reference.Value.Create
-               (Source_Reference.Builtin, Value)),
+               (Source_Reference.Builtin, Value, At_Pos)),
               False, Case_Sensitive));
 
    function Create

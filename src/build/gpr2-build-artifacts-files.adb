@@ -4,7 +4,11 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GNATCOLL.File_Indexes;
+
 package body GPR2.Build.Artifacts.Files is
+
+   File_Table : GNATCOLL.File_Indexes.File_Index;
 
    --------------
    -- Checksum --
@@ -14,17 +18,19 @@ package body GPR2.Build.Artifacts.Files is
      (Self : Object) return Utils.Hash.Hash_Digest
    is
    begin
-      return Utils.Hash.Hash (Path => Self.Path.Value);
+      return Utils.Hash.Hash_Digest
+        (GNATCOLL.File_Indexes.Hash (File_Table, Self.Path.String_Value));
    end Checksum;
 
-   ------------
-   -- Create --
-   ------------
+   -----------------
+   -- Unserialize --
+   -----------------
 
-   function Create (Path : GPR2.Path_Name.Object) return Object is
+   overriding procedure Unserialize
+     (S : String;
+      Val : out Object) is
    begin
-      return (UID  => Utils.Hash.Hash (Str => String (Path.Value)),
-              Path => Path);
-   end Create;
+      Val := (Path => Path_Name.Create_File (Filename_Type (S)));
+   end Unserialize;
 
 end GPR2.Build.Artifacts.Files;

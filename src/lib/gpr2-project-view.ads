@@ -441,6 +441,10 @@ package GPR2.Project.View is
    --  Similar to Source but the source is looked up in the complete closure
    --  of Self.
 
+   function Visible_Sources
+     (Self : Object) return GPR2.Build.Source.Sets.Object;
+   --  Return all sources visible by Self
+
    function Interface_Units
      (Self : Object) return GPR2.Containers.Unit_Name_To_Sloc.Map
      with Pre => Self.Is_Defined;
@@ -481,6 +485,12 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined and then Self.Is_Namespace_Root;
    --  Lookup the specified compilation unit part, and return the
    --  corresponding source file location.
+
+   function Own_Units
+     (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
+     with Pre => Self.Is_Defined;
+   --  Returns all the units owned by the view. Note that the list of units
+   --  is populated only when Update_Sources is called.
 
    function Own_Unit
      (Self : Object; Name : Name_Type) return Build.Compilation_Unit.Object

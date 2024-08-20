@@ -1,205 +1,104 @@
 ================================================================
-Case 1 - Initial DAG
-compile_ada_main_p1.json: warning: file does not exist
-compile_ada_pkg_p1.json: warning: file does not exist
-compile_ada_pkg2_shared.json: warning: file does not exist
-compile_ada_foo_p2.json: warning: file does not exist
-compile_ada_pkg_p2.json: warning: file does not exist
-compile_ada_pkg3_p2.json: warning: file does not exist
-Compile Ada: MAIN (p1.gpr)
+Case 1 - Initial DAG without changes
+================================================================
+Case 2 - Altered DAG with empty JSON dictionnary (p1: main)
+[Compile Ada] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
-Compile Ada: PKG (p1.gpr)
+================================================================
+Case 3 - Altered DAG with empty JSON file (p1: main)
+[Compile Ada] main.adb (p1.gpr)
+  inputs:
+  outputs:
+  - /tree/obj/p1/main.ali
+  - /tree/obj/p1/main.o
+================================================================
+Case 4 - Altered DAG with random JSON dictionnary (p1: main)
+[Compile Ada] main.adb (p1.gpr)
+  inputs:
+  outputs:
+  - /tree/obj/p1/main.ali
+  - /tree/obj/p1/main.o
+================================================================
+Case 5 - Altered DAG with modified checksums (p1: main)
+[Compile Ada] main.adb (p1.gpr)
+  inputs:
+  outputs:
+  - /tree/obj/p1/main.ali
+  - /tree/obj/p1/main.o
+================================================================
+Case 6 - Altered DAG with single modified checksum (p1: main)
+[Compile Ada] main.adb (p1.gpr)
+  inputs:
+  outputs:
+  - /tree/obj/p1/main.ali
+  - /tree/obj/p1/main.o
+================================================================
+Case 7 - Altered DAG with modified checksums (p2: pkg3 - pkg)
+[Compile Ada] pkg.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/pkg.ali
   - /tree/obj/p1/pkg.o
-Compile Ada: FOO (p2.gpr)
+[Compile Ada] pkg3.adb (p2.gpr)
   inputs:
   outputs:
-  - /tree/obj/p2/foo~2.ali
+  - /tree/lib/p2/pkg3.ali
+  - /tree/obj/p2/pkg3.o
+================================================================
+Case 8 - Altered DAG with shorter checksum (p1: main)
+[Compile Ada] main.adb (p1.gpr)
+  inputs:
+  outputs:
+  - /tree/obj/p1/main.ali
+  - /tree/obj/p1/main.o
+================================================================
+Case 9 - Altered DAG with longer checksum (p1: main)
+[Compile Ada] main.adb (p1.gpr)
+  inputs:
+  outputs:
+  - /tree/obj/p1/main.ali
+  - /tree/obj/p1/main.o
+================================================================
+Case 10 - Altered DAG with modified checksums (all)
+[Compile Ada] main.adb (p1.gpr)
+  inputs:
+  outputs:
+  - /tree/obj/p1/main.ali
+  - /tree/obj/p1/main.o
+[Compile Ada] pkg.adb (p1.gpr)
+  inputs:
+  outputs:
+  - /tree/obj/p1/pkg.ali
+  - /tree/obj/p1/pkg.o
+[Compile Ada] foo.ada@2 (p2.gpr)
+  inputs:
+  outputs:
+  - /tree/lib/p2/foo~2.ali
   - /tree/obj/p2/foo~2.o
-Compile Ada: PKG (p2.gpr)
+[Compile Ada] pkg.adb (p2.gpr)
   inputs:
   outputs:
-  - /tree/obj/p2/pkg.ali
+  - /tree/lib/p2/pkg.ali
   - /tree/obj/p2/pkg.o
-Compile Ada: PKG3 (p2.gpr)
+[Compile Ada] pkg3.adb (p2.gpr)
   inputs:
   outputs:
-  - /tree/obj/base2/pkg3.ali
-  - /tree/obj/base2/pkg3.o
-Compile Ada: PKG2 (shared.gpr)
+  - /tree/lib/p2/pkg3.ali
+  - /tree/obj/p2/pkg3.o
+[Compile Ada] pkg2.adb (shared.gpr)
   inputs:
   outputs:
   - /tree/obj/shared/pkg2.ali
   - /tree/obj/shared/pkg2.o
 ================================================================
-Case 2 - Build DAG without changes
+Case 11 - random artifact element (p1: main)
+cannot find artifact 'compile_main.adb.*'
 ================================================================
-Case 3 - Altered DAG with empty JSON dictionnary (main_p1)
-compile_ada_main_p1.json: warning: missing mandatory artifact list field
-Compile Ada: MAIN (p1.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p1/main.ali
-  - /tree/obj/p1/main.o
-================================================================
-Case 4 - Altered DAG with empty JSON file (main_p1)
-compile_ada_main_p1.json: warning: cannot be loaded
-Compile Ada: MAIN (p1.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p1/main.ali
-  - /tree/obj/p1/main.o
-================================================================
-Case 5 - Altered DAG with random JSON dictionnary (main_p1)
-compile_ada_main_p1.json: warning: missing mandatory artifact list field
-Compile Ada: MAIN (p1.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p1/main.ali
-  - /tree/obj/p1/main.o
-================================================================
-Case 6 - Altered DAG with modified checksums (main_p1)
-main.adb: info: not up-to-date
-main.ali: info: not up-to-date
-main.o: info: not up-to-date
-pkg.ads: info: not up-to-date
-pkg2.ads: info: not up-to-date
-Compile Ada: MAIN (p1.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p1/main.ali
-  - /tree/obj/p1/main.o
-================================================================
-Case 7 - Altered DAG with single modified checksum (main_p1)
-main.o: info: not up-to-date
-Compile Ada: MAIN (p1.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p1/main.ali
-  - /tree/obj/p1/main.o
-================================================================
-Case 8 - Altered DAG with modified checksums (pkg3_p2 - pkg_p1)
-pkg.adb: info: not up-to-date
-pkg3.adb: info: not up-to-date
-pkg3.ads: info: not up-to-date
-pkg3.ali: info: not up-to-date
-pkg3.o: info: not up-to-date
-Compile Ada: PKG (p1.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p1/pkg.ali
-  - /tree/obj/p1/pkg.o
-Compile Ada: PKG3 (p2.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/base2/pkg3.ali
-  - /tree/obj/base2/pkg3.o
-================================================================
-Case 9 - Altered DAG with shorter checksum (main_p1)
-main.adb: info: not up-to-date
-main.ali: info: not up-to-date
-main.o: info: not up-to-date
-pkg.ads: info: not up-to-date
-pkg2.ads: info: not up-to-date
-Compile Ada: MAIN (p1.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p1/main.ali
-  - /tree/obj/p1/main.o
-================================================================
-Case 10 - Altered DAG with longer checksum (main_p1)
-main.adb: info: not up-to-date
-main.ali: info: not up-to-date
-main.o: info: not up-to-date
-pkg.ads: info: not up-to-date
-pkg2.ads: info: not up-to-date
-Compile Ada: MAIN (p1.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p1/main.ali
-  - /tree/obj/p1/main.o
-================================================================
-Case 11 - Altered DAG with modified checksums (all)
-main.adb: info: not up-to-date
-main.ali: info: not up-to-date
-main.o: info: not up-to-date
-pkg.ads: info: not up-to-date
-pkg2.ads: info: not up-to-date
-pkg.adb: info: not up-to-date
-pkg.ads: info: not up-to-date
-pkg.ali: info: not up-to-date
-pkg.o: info: not up-to-date
-pkg2.adb: info: not up-to-date
-pkg2.ads: info: not up-to-date
-pkg2.ali: info: not up-to-date
-pkg2.o: info: not up-to-date
-foo.ada: info: not up-to-date
-foo~2.ali: info: not up-to-date
-foo~2.o: info: not up-to-date
-pkg.adb: info: not up-to-date
-pkg.ads: info: not up-to-date
-pkg.ali: info: not up-to-date
-pkg.o: info: not up-to-date
-pkg2.ads: info: not up-to-date
-pkg3.adb: info: not up-to-date
-pkg3.ads: info: not up-to-date
-pkg3.ali: info: not up-to-date
-pkg3.o: info: not up-to-date
-Compile Ada: MAIN (p1.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p1/main.ali
-  - /tree/obj/p1/main.o
-Compile Ada: PKG (p1.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p1/pkg.ali
-  - /tree/obj/p1/pkg.o
-Compile Ada: FOO (p2.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p2/foo~2.ali
-  - /tree/obj/p2/foo~2.o
-Compile Ada: PKG (p2.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p2/pkg.ali
-  - /tree/obj/p2/pkg.o
-Compile Ada: PKG3 (p2.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/base2/pkg3.ali
-  - /tree/obj/base2/pkg3.o
-Compile Ada: PKG2 (shared.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/shared/pkg2.ali
-  - /tree/obj/shared/pkg2.o
-================================================================
-Case 12 - Duplicated artifact (main_p1)
-compile_ada_main_p1.json: warning: duplicated artifact or invalid artifact id
-Compile Ada: MAIN (p1.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p1/main.ali
-  - /tree/obj/p1/main.o
-================================================================
-Case 13 - random artifact element (main_p1)
-compile_ada_main_p1.json: warning: missing mandatory artifact field in artifacts list
-Compile Ada: MAIN (p1.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p1/main.ali
-  - /tree/obj/p1/main.o
-================================================================
-Case 14 - wrong JSON format (main_p1)
-compile_ada_main_p1.json:1:34: warning: coma or } expected
-Compile Ada: MAIN (p1.gpr)
+Case 12 - wrong JSON format (p1: main)
+[Compile Ada] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali

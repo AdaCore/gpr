@@ -13,29 +13,28 @@ with GPR2.Project.View.Set;
 
 package body GPR2.Build.Actions.Write_File is
 
-   function Output_File (Index : Integer) return GPR2.Path_Name.Object;
+   function Output_File (Index : Integer) return Artifacts.Files.Object;
    --  Return output file "<index>.txt"
 
    -------------
    -- Command --
    -------------
 
-   overriding function Command (Self : Object)
-     return GNATCOLL.OS.Process.Argument_List
+   overriding procedure Compute_Command
+     (Self : in out Object;
+      Args : out GNATCOLL.OS.Process.Argument_List;
+      Env  : out GNATCOLL.OS.Process.Environment_Dict)
    is
-      Args : GNATCOLL.OS.Process.Argument_List;
    begin
       Args.Append (Self.Executable.String_Value);
       Args.Append (Ada.Strings.Fixed.Trim (Self.Ret_Code'Img, Both));
-      Args.Append (Output_File (Self.Index).String_Value);
+      Args.Append (String (Output_File (Self.Index).Path.Simple_Name));
       Args.Append (Ada.Strings.Fixed.Trim (Self.Index'Img, Both));
 
       if Self.With_Wait > 0 then
-         Args.Append (String (Output_File (Self.With_Wait).Simple_Name));
+         Args.Append (String (Output_File (Self.With_Wait).Path.Simple_Name));
       end if;
-
-      return Args;
-   end Command;
+   end Compute_Command;
 
    -----------------------
    -- Compute_Signature --
@@ -47,8 +46,11 @@ package body GPR2.Build.Actions.Write_File is
    begin
       Self.Signature.Clear;
 
-      Art := Artifacts.Files.Create (Output_File (Self.Index));
-      Self.Signature.Update_Artifact (Art.UID, Art.Image, Art.Checksum);
+      for Art of Self.Tree.Inputs (Self.UID) loop
+         Self.Signature.Add_Artifact (Art);
+      end loop;
+
+      Self.Signature.Add_Artifact (Output_File (Self.Index));
 
       Self.Signature.Store
         (Self.Tree.Db_Filename_Path (Object'Class (Self).UID));
@@ -90,26 +92,25 @@ package body GPR2.Build.Actions.Write_File is
       if Self.With_Deps and then Self.Index > 1 then
          Db.Add_Input
             (Self.UID,
-             Artifacts.Files.Create (Output_File (Self.Index - 1)),
+             Output_File (Self.Index - 1),
              True);
       end if;
 
       Db.Add_Output
-        (Self.UID,
-         Artifacts.Files.Create (Output_File (Self.Index)),
-         Messages);
+        (Self.UID, Output_File (Self.Index), Messages);
    end On_Tree_Insertion;
 
    -----------------
    -- Output_File --
    -----------------
 
-   function Output_File (Index : Integer) return GPR2.Path_Name.Object
+   function Output_File (Index : Integer) return Artifacts.Files.Object
    is
+      Idx : constant String := Index'Image;
    begin
-      return
-        GPR2.Path_Name.Create_File
-          (Filename_Type (Ada.Strings.Fixed.Trim (Index'Img, Both) & ".txt"));
+      return Artifacts.Files.Create
+        (GPR2.Path_Name.Create_Directory (".").Compose
+          (Filename_Type (Idx (Idx'First + 1 .. Idx'Last)) & ".txt"));
    end Output_File;
 
    ---------

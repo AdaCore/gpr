@@ -1,5 +1,6 @@
 --  with Test_Assert;
 
+with GPR2.Containers;
 with GPR2.Log;
 with GPR2.Options;
 with GPR2.Path_Name;
@@ -14,8 +15,7 @@ procedure Main is
    procedure Print_Imports (ALI_File : GPR2.Path_Name.Object);
 
    procedure Print_Imports (ALI_File : GPR2.Path_Name.Object) is
-      Imports  : Import_Info_Vectors.Vector :=
-                   Import_Info_Vectors.Empty_Vector;
+      Imports  : GPR2.Containers.Name_Set;
       Messages : GPR2.Log.Object;
    begin
 
@@ -28,9 +28,7 @@ procedure Main is
       end if;
 
       for Imp of Imports loop
-         Ada.Text_IO.Put_Line
-           (To_String (Imp.Unit_Name) & ", " & To_String (Imp.Source) & ", " &
-            To_String (Imp.ALI));
+         Ada.Text_IO.Put_Line (String (Imp));
       end loop;
    end Print_Imports;
 

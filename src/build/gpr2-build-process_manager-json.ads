@@ -15,13 +15,12 @@ package GPR2.Build.Process_Manager.JSON is
 
    type Object is new GPR2.Build.Process_Manager.Object with private;
 
-   overriding
-   function Collect_Job
-        (Self           : in out Object;
-         Job            : DG.Node_Id;
-         Proc_Handler   : Process_Handler;
-         Stdout, Stderr : Unbounded_String)
-        return Collect_Status;
+   overriding function Collect_Job
+     (Self           : in out Object;
+       Job            : in out Actions.Object'Class;
+       Proc_Handler   : Process_Handler;
+       Stdout, Stderr : Unbounded_String)
+      return Collect_Status;
 
    procedure Execute
      (Self      : in out Object;
@@ -31,11 +30,12 @@ package GPR2.Build.Process_Manager.JSON is
    --  Execute the process manager and store the jobs results in the provided
    --  JSON file ``JSON_FILE``.
 
-   overriding
-   procedure Execute
-     (Self    : in out Object;
-      Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      Jobs    : Natural := 0);
+   overriding procedure Execute
+     (Self         : in out Object;
+      Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
+      Jobs         : Natural := 0;
+      Verbosity    : Execution_Verbosity := Minimal;
+      Stop_On_Fail : Boolean := True);
    --  Same as above, but store the jobs results in the default JSON file
    --  ``<current_directory>/jobs.json``.
 
@@ -45,10 +45,13 @@ package GPR2.Build.Process_Manager.JSON is
    --  by the process manager but needs to be public to be overridden.
 
 private
+
    use GNATCOLL.JSON;
 
    TEXT_ACTION_UID : constant UTF8_String := "uid";
    TEXT_COMMAND    : constant UTF8_String := "command";
+   TEXT_ENV        : constant UTF8_String := "environment";
+   TEXT_CWD        : constant UTF8_String := "cwd";
    TEXT_STATUS     : constant UTF8_String := "status";
    TEXT_STDOUT     : constant UTF8_String := "stdout";
    TEXT_STDERR     : constant UTF8_String := "stderr";

@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GNATCOLL.OS.FSUtil;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
@@ -71,6 +72,10 @@ package body GPR2.Build.Tree_Db is
       return Self.Node_To_Action (Node);
    end Action_Id;
 
+   --------------------
+   -- Action_Iterate --
+   --------------------
+
    function Action_Iterate
      (List : Actions_List) return Action_Iterators.Forward_Iterator'Class
    is (Action_Internal_Iterator'
@@ -98,7 +103,7 @@ package body GPR2.Build.Tree_Db is
    ----------------------
 
    function Action_Reference
-     (Iterator : access Actions_List;
+     (Iterator : aliased in out Actions_List;
       Pos      : Action_Cursor) return Action_Reference_Type
    is
       Ref : constant Action_Maps.Reference_Type :=
@@ -131,7 +136,14 @@ package body GPR2.Build.Tree_Db is
       Done : Boolean;
       Node : GNATCOLL.Directed_Graph.Node_Id;
    begin
+      Action.Attach (Self);
       Self.Actions.Insert (Action.UID, Action, Curs, Done);
+
+      if not Done then
+         return;
+      end if;
+
+      Self.New_Actions.Include (Action.UID);
 
       Node := Self.Actions_Graph.Add_Node;
       Self.Node_To_Action.Insert (Node, Action.UID);
@@ -141,14 +153,9 @@ package body GPR2.Build.Tree_Db is
       Self.Inputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
       Self.Outputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
 
-      Self.Actions.Reference (Curs).Attach (Self);
-      Self.Actions.Reference (Curs).On_Tree_Insertion (Self, Messages);
-      Self.Actions.Reference (Curs).Compare_Signature (Messages);
+      Action.On_Tree_Insertion (Self, Messages);
 
-      --  `Attach` modifies the Tree field of the action. The provided action
-      --  needs to be updated, as some action subprograms may require the
-      --  internal tree field.
-
+      Self.Actions.Reference (Curs).Load_Signature;
       Action := Self.Actions.Reference (Curs);
    end Add_Action;
 
@@ -185,18 +192,21 @@ package body GPR2.Build.Tree_Db is
 
       if Explicit then
          Self.Inputs.Reference (Action).Include (Artifact);
-      else
+      elsif not Self.Inputs.Reference (Action).Contains (Artifact) then
          Self.Implicit_Inputs.Reference (Action).Include (Artifact);
+      else
+         return;
       end if;
 
       Self.Successors.Reference (Artifact).Include (Action);
 
       Pred := Self.Predecessor.Find (Artifact);
+
       if Artifact_Action_Maps.Has_Element (Pred) then
          Self.Actions_Graph.Add_Predecessor
-               (Node        => Self.Action_To_Node (Action),
-                Predecessor => Self.Action_To_Node
-                                 (Artifact_Action_Maps.Element (Pred)));
+           (Node        => Self.Action_To_Node (Action),
+            Predecessor => Self.Action_To_Node
+                             (Artifact_Action_Maps.Element (Pred)));
       end if;
    end Add_Input;
 
@@ -240,8 +250,8 @@ package body GPR2.Build.Tree_Db is
 
       for Successor_Id of Self.Successors (Artifact) loop
          Self.Actions_Graph.Add_Predecessor
-               (Node        => Self.Action_To_Node (Successor_Id),
-                Predecessor => Self.Action_To_Node (Action));
+           (Node        => Self.Action_To_Node (Successor_Id),
+            Predecessor => Self.Action_To_Node (Action));
       end loop;
    end Add_Output;
 
@@ -288,6 +298,28 @@ package body GPR2.Build.Tree_Db is
          Self.Build_Dbs.Delete (Id);
       end loop;
    end Check_Tree;
+
+   ----------------------
+   -- Clear_Temp_Files --
+   ----------------------
+
+   procedure Clear_Temp_Files (Self : Object) is
+   begin
+      for V_Db of Self.Build_Dbs loop
+         declare
+            Data_Ref : constant View_Tables.View_Data_Ref :=
+                         View_Tables.Get_Ref (V_Db);
+            Dead     : Boolean with Unreferenced;
+         begin
+            for Temp of Data_Ref.Temp_Files loop
+               Dead := GNATCOLL.OS.FSUtil.Remove_File
+                 (Data_Ref.View.Object_Directory.Compose (Temp).String_Value);
+            end loop;
+
+            Data_Ref.Temp_Files.Clear;
+         end;
+      end loop;
+   end Clear_Temp_Files;
 
    -------------------------------
    -- Constant_Action_Reference --
@@ -380,19 +412,6 @@ package body GPR2.Build.Tree_Db is
               (Self.Actions.Reference (Curs).UID.Db_Filename,
                Self.Actions.Reference (Curs).View.Object_Directory.Value));
    end Db_Filename_Path;
-
-   -------------
-   -- Execute --
-   -------------
-
-   procedure Execute
-     (Self   : in out Object;
-      Action : Actions.Action_Id'Class)
-   is
-      Curs : constant Action_Maps.Cursor := Self.Actions.Find (Action);
-   begin
-      Self.Actions.Reference (Curs).Compute_Signature;
-   end Execute;
 
    -----------
    -- First --
@@ -500,6 +519,53 @@ package body GPR2.Build.Tree_Db is
       end case;
    end First;
 
+   -----------------------------
+   -- Get_Or_Create_Temp_File --
+   -----------------------------
+
+   function Get_Or_Create_Temp_File
+     (Self     : Object;
+      For_View : GPR2.Project.View.Object;
+      Purpose  : Simple_Name) return Temp_File
+   is
+      Data : constant View_Tables.View_Data_Ref :=
+               View_Tables.Get_Ref (Self.Build_Dbs (For_View.Id));
+      C    : View_Tables.Temp_File_Maps.Cursor;
+      Dest : Path_Name.Object;
+      Done : Boolean;
+
+   begin
+      C := Data.Temp_Files.Find (Purpose);
+
+      if not View_Tables.Temp_File_Maps.Has_Element (C) then
+         declare
+            BN : constant Simple_Name :=
+                   "." & Purpose & ".tmp";
+         begin
+            Dest := For_View.Object_Directory.Compose (BN);
+            Data.Temp_Files.Insert (Purpose, BN, C, Done);
+
+            pragma Assert (Done);
+
+            return
+              (Path_Len => BN'Length,
+               FD       => GNATCOLL.OS.FS.Open
+                             (Dest.String_Value,
+                              GNATCOLL.OS.FS.Write_Mode),
+               Path     => BN);
+         end;
+      else
+         declare
+            BN : Simple_Name renames View_Tables.Temp_File_Maps.Element (C);
+         begin
+            return
+              (Path_Len => BN'Length,
+               FD       => GNATCOLL.OS.FS.Null_FD,
+               Path     => BN);
+         end;
+      end if;
+   end Get_Or_Create_Temp_File;
+
    ----------
    -- Next --
    ----------
@@ -557,6 +623,34 @@ package body GPR2.Build.Tree_Db is
 
       return Res;
    end Next;
+
+   -----------------------
+   -- Propagate_Actions --
+   -----------------------
+
+   procedure Propagate_Actions (Self : Object) is
+      New_Actions : Action_Sets.Set;
+   begin
+      loop
+         if not Self.New_Actions.Is_Empty then
+            New_Actions.Union (Self.New_Actions);
+            Self.Self.New_Actions.Clear;
+         end if;
+
+         exit when New_Actions.Is_Empty;
+
+         declare
+            Item : constant Actions.Action_Id'Class :=
+                     New_Actions.First_Element;
+            Act  : Actions.Object'Class :=
+                     Self.Actions.Element (Item);
+         begin
+            New_Actions.Delete_First;
+            Act.On_Tree_Propagation;
+            Self.Self.Action_Id_To_Reference (Item) := Act;
+         end;
+      end loop;
+   end Propagate_Actions;
 
    -------------
    -- Refresh --
@@ -689,6 +783,7 @@ package body GPR2.Build.Tree_Db is
 
    procedure Unload (Self : in out Object) is
    begin
+      Self.Clear_Temp_Files;
       Self.Build_Dbs.Clear;
       Self.Tree := null;
       Self.Self := null;

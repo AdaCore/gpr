@@ -162,6 +162,9 @@ package GPR2.Build.Compilation_Unit is
    function Object_File (Self : Object) return Simple_Name;
    --  Returns the .o's simple name for Self.
 
+   function Dependency_File (Self : Object) return Simple_Name;
+   --  Returns the .ali's simple name for Self.
+
 private
 
    type Clashing_Unit (Sep_Name_Len : Natural) is record

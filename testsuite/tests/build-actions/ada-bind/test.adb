@@ -4,6 +4,8 @@ with Ada.Containers;
 with GNAT.OS_Lib;
 
 with GPR2.Build.Actions.Ada_Bind;
+with GPR2.Build.Actions.Post_Bind;
+with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source;
 
@@ -19,7 +21,7 @@ with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
 with GNATCOLL.VFS;        use GNATCOLL.VFS;
 with Test_Assert;         use Test_Assert;
 
-use GPR2;
+use GPR2, GPR2.Build;
 
 function Test return Integer is
    use type GPR2.Language_Id;
@@ -65,12 +67,13 @@ function Test return Integer is
       for Root of Tree.Namespace_Root_Projects loop
          for Main of Root.Mains loop
             Action.Initialize
-               (Main_Ali => Root.Object_Directory.Compose
-                              (Filename_Type
-                                 (String (Main.Source.Base_Name) & ".ali")),
-                Context   => Root);
+              (Main_Ali => Artifacts.Files.Create
+                 (Root.Object_Directory.Compose
+                      (Filename_Type
+                           (String (Main.Source.Base_Name) & ".ali"))),
+               Context   => Root);
             Assert
-               (not Tree.Artifacts_Database.Has_Action (Action.UID),
+              (not Tree.Artifacts_Database.Has_Action (Action.UID),
                "Check that action is not already in the Tree DB");
             Tree.Artifacts_Database.Add_Action (Action, Log);
 
@@ -90,6 +93,7 @@ function Test return Integer is
    end Init_Action;
 
    Obj_Dir      : Virtual_File;
+   Count        : Natural;
 begin
    Opts.Add_Switch (GPR2.Options.P, Project);
 
@@ -124,62 +128,52 @@ begin
    Assert (Init_Action, "Initialize the Ada compile action");
 
    declare
-      Args    : constant Argument_List := Action.Command;
+      Args    : Argument_List;
+      Env     : Environment_Dict;
       P_Wo    : FS.File_Descriptor;
       P_Ro    : FS.File_Descriptor;
       Ret     : Integer;
       Process : Process_Handle;
    begin
+      Action.Compute_Command (Args, Env);
       FS.Open_Pipe (P_Ro, P_Wo);
-      Process := Start (Args => Args, Stdout => P_Wo, Stderr => FS.Standerr);
+      Process := Start
+        (Args        => Args,
+         Env         => Env,
+         Cwd         => Action.Working_Directory.String_Value,
+         Stdin       => P_Wo,
+         Stderr      => FS.Standerr,
+         Inherit_Env => True);
       FS.Close (P_Wo);
 
       Ret := Wait (Process);
       Assert (Ret = 0, "Check action return code");
    end;
 
+   Assert (Action.Generated_Spec.Path.Extension = ".ads",
+           "Check output spec has .ads extension");
+   Assert (Action.Generated_Body.Path.Extension = ".adb",
+           "Check output body has .adb extension");
+   Assert (Action.Generated_Body.Path.Base_Name = Action.Generated_Spec.Path.Base_Name,
+           "Check output base name coherence");
+   Assert (Action.Generated_Body.Path.Base_Name = "b__main",
+           "Check output base name");
+
+   Count := 0;
+   for Input of Tree.Artifacts_Database.Inputs (Action.UID) loop
+      Count := Count + 1;
+      Assert (Artifacts.Files.Object (Input).Path.Simple_Name = "main.ali",
+              "Check that the initial ALI file is main.ali");
+   end loop;
+
+   Assert (Count = 1, "Check length of input ALIs");
+
    declare
-      Unit : GPR2.Build.Compilation_Unit.Object := Action.Output_Unit;
+      PB  : GPR2.Build.Actions.Post_Bind.Object := Action.Post_Bind;
    begin
-      Assert (Unit.Is_Defined, "Check that input unit is defined");
-      Assert (Unit.Main_Part.Source.Base_Name = "b__main", "Check unit");
-      Assert (Unit.Name = "ADA_MAIN", "Check unit name");
+      Assert (PB.Is_Defined,
+              "Check that post-binding action is defined");
    end;
-
-   Assert (Action.Input_Alis.Length = 1);
-   Assert
-     ((for all Ali of Action.Input_Alis => Ali.Simple_Name = "main.ali"),
-      "Check that the initial ALI file is main.ali");
-
-   Action.Parse_Ali
-     (GPR2.Path_Name.Create_File
-        ("main.ali", Filename_Optional (Obj_Dir.Dir_Name)));
-
-   Assert (Action.Input_Alis.Length = 2);
-
-   Assert
-     ((for all Ali of Action.Input_Alis =>
-         Ali.Simple_Name = "main.ali" or else
-         Ali.Simple_Name = "pkg.ali"),
-      "Check after main.ali parsing");
-
-   Action.Parse_Ali
-     (GPR2.Path_Name.Create_File
-        ("pkg.ali", Filename_Optional (Obj_Dir.Dir_Name)));
-
-   Assert (Action.Input_Alis.Length = 5);
-   Assert
-     ((for all Ali of Action.Input_Alis =>
-       Ali.Simple_Name = "main.ali" or else
-       Ali.Simple_Name = "pkg.ali" or else
-       Ali.Simple_Name = "ada.ali" or else
-       Ali.Simple_Name = "a-textio.ali" or else
-       Ali.Simple_Name = "dep_two.ali"),
-    "Check after pkg.ali parsing");
-
-   Assert
-     ((for all Ali of Action.Input_Alis => Ali.Exists),
-      "Check that all ALI files exist");
 
    return Report;
 end Test;

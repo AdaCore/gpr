@@ -44,6 +44,8 @@ def clean_artifacts_and_signatures():
         os.remove(f)
     for f in glob.glob("*.json"):
         os.remove(f)
+    for f in glob.glob("tree/obj/*.json"):
+        os.remove(f)
 
 
 # Build the driver used during testing

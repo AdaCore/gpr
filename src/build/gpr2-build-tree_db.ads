@@ -4,7 +4,11 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Iterator_Interfaces;
+
+with GNATCOLL.Directed_Graph;
+with GNATCOLL.OS.FS;
 
 with GPR2.Build.Actions;
 with GPR2.Build.Artifacts;
@@ -14,10 +18,8 @@ with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.View_Ids;
 
-with GNATCOLL.Directed_Graph;
 private with Ada.Containers.Hashed_Maps;
 private with Ada.Containers.Indefinite_Ordered_Maps;
-private with Ada.Containers.Indefinite_Ordered_Sets;
 
 limited private with GPR2.Tree_Internal;
 
@@ -106,24 +108,24 @@ package GPR2.Build.Tree_Db is
       Action   : Actions.Action_Id'Class;
       Artifact : Artifacts.Object'Class;
       Explicit : Boolean)
-     with Pre => Self.Is_Defined and then Self.Has_Action (Action);
+     with Pre => Self.Is_Defined
+                   and then Self.Has_Action (Action)
+                   and then Artifact.Is_Defined;
 
    procedure Add_Output
      (Self     : in out Object;
       Action   : Actions.Action_Id'Class;
       Artifact : Artifacts.Object'Class;
       Messages : in out GPR2.Log.Object)
-     with Pre => Self.Is_Defined and then Self.Has_Action (Action);
+     with Pre => Self.Is_Defined
+                   and then Self.Has_Action (Action)
+                   and then Artifact.Is_Defined;
 
    --  ACTION MANAGEMENT
 
    function Db_Filename_Path
      (Self   : in out Object;
       Action : Actions.Action_Id'Class) return Path_Name.Object;
-
-   procedure Execute
-     (Self   : in out Object;
-      Action : Actions.Action_Id'Class);
 
    function Actions_Graph_Access
      (Self : in out Object) return access DG.Directed_Graph;
@@ -132,6 +134,10 @@ package GPR2.Build.Tree_Db is
    function Action_Id
      (Self : in out Object; Node : DG.Node_Id) return Actions.Action_Id'Class;
    --  ???
+
+   procedure Propagate_Actions (Self : Object);
+   --  ???
+
    ----------------------------
    -- Iteration on artifacts --
    ----------------------------
@@ -162,6 +168,10 @@ package GPR2.Build.Tree_Db is
       Pos      : Artifact_Cursor)
       return Constant_Artifact_Reference_Type;
 
+   package Artifact_Sets is new Ada.Containers.Indefinite_Ordered_Sets
+     (GPR2.Build.Artifacts.Object'Class,
+      GPR2.Build.Artifacts.Less, GPR2.Build.Artifacts."=");
+
    type Action_Cursor is private;
    No_Action_Element : constant Action_Cursor;
 
@@ -170,11 +180,11 @@ package GPR2.Build.Tree_Db is
    package Action_Iterators is new Ada.Iterator_Interfaces
      (Action_Cursor, Has_Element);
 
-   type Actions_List (<>) is tagged private
-     with Default_Iterator  => Action_Iterate,
-          Iterator_Element  => Actions.Object'Class,
+   type Actions_List is tagged private
+     with Variable_Indexing => Action_Reference,
           Constant_Indexing => Constant_Action_Reference,
-          Variable_Indexing => Action_Reference;
+          Default_Iterator  => Action_Iterate,
+          Iterator_Element  => Actions.Object'Class;
 
    function Action_Iterate
      (List : Actions_List) return Action_Iterators.Forward_Iterator'Class;
@@ -189,7 +199,7 @@ package GPR2.Build.Tree_Db is
      with Pre => Self.Is_Defined;
 
    function Action_Reference
-     (Iterator : access Actions_List;
+     (Iterator : aliased in out Actions_List;
       Pos      : Action_Cursor) return Action_Reference_Type;
 
    type Constant_Action_Reference_Type
@@ -215,6 +225,28 @@ package GPR2.Build.Tree_Db is
      (Self     : Object;
       Artifact : Artifacts.Object'Class) return Actions_List'Class;
 
+   function Predecessor
+     (Self     : Object;
+      Artifact : Artifacts.Object'Class) return Actions.Object'Class;
+
+   -------------------------
+   -- Temp files handling --
+   -------------------------
+
+   type Temp_File (Path_Len : Natural) is record
+      FD   : GNATCOLL.OS.FS.File_Descriptor;
+      Path : Filename_Type (1 .. Path_Len);
+   end record;
+
+   function Get_Or_Create_Temp_File
+     (Self     : Object;
+      For_View : GPR2.Project.View.Object;
+      Purpose  : Simple_Name) return Temp_File
+   with Pre => For_View.Kind in With_Object_Dir_Kind;
+
+   procedure Clear_Temp_Files (Self : Object);
+   --  Make sure all temp files are cleaned up
+
 private
 
    use all type DG.Node_Id;
@@ -229,10 +261,6 @@ private
    package Action_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (GPR2.Build.Actions.Action_Id'Class, GPR2.Build.Actions.Object'Class,
       GPR2.Build.Actions.Less, GPR2.Build.Actions."=");
-
-   package Artifact_Sets is new Ada.Containers.Indefinite_Ordered_Sets
-     (GPR2.Build.Artifacts.Object'Class,
-      GPR2.Build.Artifacts.Less, GPR2.Build.Artifacts."=");
 
    package Action_Sets is new Ada.Containers.Indefinite_Ordered_Sets
      (GPR2.Build.Actions.Action_Id'Class,
@@ -272,6 +300,7 @@ private
 
       Actions         : Action_Maps.Map;
       Artifacts       : Artifact_Sets.Set;
+      New_Actions     : Action_Sets.Set;
 
       Inputs          : Action_Artifacts_Maps.Map;
       --  Explicit input(s) in the command line
@@ -392,19 +421,16 @@ private
    type Action_List_Kind is (Global_List,
                              Successors);
 
-   type Actions_List (Kind : Action_List_Kind) is tagged record
-      Db : access Object;
-
-      case Kind is
-         when Global_List =>
-            null;
-         when others =>
-            Artifact : Artifact_Sets.Cursor;
-      end case;
+   type Actions_List is tagged record
+      Kind     : Action_List_Kind := Global_List;
+      Db       : access Object;
+      Artifact : Artifact_Sets.Cursor := Artifact_Sets.No_Element;
    end record;
 
    function All_Actions (Self : Object) return Actions_List'Class is
-     (Actions_List'(Kind => Global_List, Db => Self.Self));
+     (Actions_List'(Kind     => Global_List,
+                    Db       => Self.Self,
+                    Artifact => Artifact_Sets.No_Element));
 
    function Inputs
      (Self : Object;
@@ -421,6 +447,11 @@ private
          (Kind   => Outputs,
           Db     => Self.Self,
           Action => Self.Actions.Find (Action)));
+
+   function Predecessor
+     (Self     : Object;
+      Artifact : Artifacts.Object'Class) return Actions.Object'Class
+   is (Self.Actions (Self.Predecessor (Artifact)));
 
    function Successors
      (Self     : Object;

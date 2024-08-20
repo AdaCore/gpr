@@ -2,9 +2,10 @@ with Ada.Command_Line;
 with Ada.Text_IO;
 with Ada.Containers.Indefinite_Vectors;
 
-with GPR2.Build.Actions.Ada_Compile;
+with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.File_Part;
+with GPR2.Build.Tree_Db;
 with GPR2.Log;
 with GPR2.Options;
 with GPR2.Project.Tree;
@@ -14,6 +15,7 @@ function Main return Natural is
    Tree    : GPR2.Project.Tree.Object;
    Opts    : GPR2.Options.Object;
    Log     : GPR2.Log.Object;
+   Actions : GPR2.Build.Tree_Db.Actions_List;
    Project : constant String :=
      (if Ada.Command_Line.Argument_Count > 0 then Ada.Command_Line.Argument (1)
       else "tree/agg.gpr");
@@ -34,7 +36,7 @@ begin
    for NS of Tree.Namespace_Root_Projects loop
       for Unit of NS.Units loop
          declare
-            A               : GPR2.Build.Actions.Ada_Compile.Object;
+            A               : GPR2.Build.Actions.Compile.Ada.Object;
             Sorted_Messages : String_Vectors.Vector;
          begin
             A.Initialize (Unit);
@@ -62,7 +64,10 @@ begin
       end loop;
    end loop;
 
-   for A of Tree.Artifacts_Database.All_Actions loop
+   Actions := GPR2.Build.Tree_Db.Actions_List
+                (Tree.Artifacts_Database.All_Actions);
+
+   for A of Actions loop
       if not A.Valid_Signature then
          Ada.Text_IO.Put_Line (A.UID.Image);
          Ada.Text_IO.Put_Line ("  inputs:");
@@ -75,7 +80,7 @@ begin
             Ada.Text_IO.Put_Line ("  - " & Output.Image);
          end loop;
 
-         Tree.Artifacts_Database.Execute (A.UID);
+         A.Compute_Signature;
       end if;
    end loop;
 
