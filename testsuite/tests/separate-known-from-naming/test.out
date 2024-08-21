@@ -1,4 +1,4 @@
-PACK-Functions_Test.ada: warning: invalid file name: no '.' in deduced separate unit name "PACK-Functions_Test"
+PACK-Functions_Test.ada: info: invalid name for unit 'PACK-Functions_Test', should have only alpha numeric characters
 PACK
 - S_SPEC: pack.ads
 - S_BODY: pack.adb

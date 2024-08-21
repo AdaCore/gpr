@@ -11,6 +11,7 @@ with GPR2.Containers;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
+with GPR2.Source_Reference;
 
 package GPR2.Build.Compilation_Unit is
 
@@ -56,6 +57,14 @@ package GPR2.Build.Compilation_Unit is
      (Name     : Name_Type;
       Messages : in out GPR2.Log.Object);
    --  Same as above but using a generic name
+
+   function Check_Name_Validity
+     (Name     : Name_Type;
+      Sloc     : Source_Reference.Object'Class;
+      As_Error : Boolean := False;
+      Messages : in out GPR2.Log.Object) return Boolean;
+   --  Same as above but allow specifying a source location and whether
+   --  the messages should be errors. Returns the status of the validity check.
 
    function Is_Defined (Self : Object) return Boolean;
    --  Whether Self is defined

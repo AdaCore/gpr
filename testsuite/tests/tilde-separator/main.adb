@@ -12,12 +12,13 @@ procedure Main is
    Opt  : GPR2.Options.Object;
 
 begin
-   Opt.Add_Switch (GPR2.Options.P, "default.gpr");
+   Opt.Add_Switch (GPR2.Options.P, "tree/default.gpr");
    if Tree.Load (Opt, Absent_Dir_Error => GPR2.No_Error) then
+      GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Info;
       Tree.Update_Sources;
 
       for Source of Tree.Root_Project.Sources loop
-         Ada.Text_IO.Put_Line (String (Source.Path_Name.Name));
+         Ada.Text_IO.Put_Line (String (Source.Path_Name.Simple_Name));
       end loop;
 
       for Unit of Tree.Root_Project.Units loop

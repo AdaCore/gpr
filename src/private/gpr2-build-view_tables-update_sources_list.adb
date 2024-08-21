@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Characters.Handling;
 with Ada.Containers.Doubly_Linked_Lists;
 
 with GPR2.Build.Unit_Info.List;
@@ -610,15 +611,15 @@ package body Update_Sources_List is
                    Data.View.Attribute (PRA.Naming.Dot_Replacement).Value.Text;
       --  Get Dot_Replacement value
 
-      Source_Name_Set    : GPR2.Containers.Filename_Set;
+      Source_Name_Set       : GPR2.Containers.Filename_Set;
       --  Collection of source simple names for a given Source_Dirs value
 
-      Naming_Schema_Map       : Naming_Schema_Maps.Map;
+      Naming_Schema_Map     : Naming_Schema_Maps.Map;
 
-      Ada_Naming_Exceptions   : Source_Path_To_Attribute_List.Map;
-      Attr                    : Project.Attribute.Object;
+      Ada_Naming_Exceptions : Source_Path_To_Attribute_List.Map;
+      Attr                  : Project.Attribute.Object;
 
-      Compilable_Language     : Lang_Boolean_Map.Map;
+      Compilable_Language   : Lang_Boolean_Map.Map;
       --  List of compilable languages for the view
 
       -----------------
@@ -955,6 +956,15 @@ package body Update_Sources_List is
 
                   begin
                      if not Success then
+                        return False;
+                     end if;
+
+                     if not Compilation_Unit.Check_Name_Validity
+                       (Unit_Name,
+                        Source_Reference.Create (File.Path, 0, 0),
+                        False,
+                        Messages)
+                     then
                         return False;
                      end if;
 

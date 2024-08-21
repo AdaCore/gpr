@@ -1,0 +1,8 @@
+project Prj is
+   type Variant_Type is ("v1", "v2");
+   Variant : Variant_Type := external ("VARIANT");
+
+   package Naming is
+      for Spec ("foo") use "foo__" & Variant & ".ads";
+   end Naming;
+end Prj;
