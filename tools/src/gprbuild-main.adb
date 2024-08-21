@@ -379,10 +379,18 @@ begin
                                Regular      => Minimal,
                                Verbose      => Verbose,
                                Very_Verbose => Very_Verbose);
+      Jobs_Json : GPR2.Path_Name.Object;
    begin
+      if Tree.Root_Project.Kind in With_Object_Dir_Kind then
+         Jobs_Json := Tree.Root_Project.Object_Directory.Compose ("jobs.json");
+      else
+         Jobs_Json := Tree.Root_Project.Dir_Name.Compose ("jobs.json");
+      end if;
+
       Process_M.Execute
         (Tree.Artifacts_Database,
          Jobs         => Opt.Parallel_Compilation,
+         JSON_File    => Jobs_Json,
          Verbosity    => Convert_Verbosity (Opt.Verbosity),
          Stop_On_Fail => not Opt.Keep_Going);
    end;
