@@ -97,10 +97,3 @@ Case 10 - Altered DAG with modified checksums (all)
 Case 11 - random artifact element (p1: main)
 cannot find artifact 'compile_main.adb.*'
 ================================================================
-Case 12 - wrong JSON format (p1: main)
-[Compile Ada] main.adb (p1.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p1/main.ali
-  - /tree/obj/p1/main.o
-================================================================

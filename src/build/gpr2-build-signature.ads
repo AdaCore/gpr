@@ -50,6 +50,8 @@ private
      (Artifacts.Object'Class, Hash_Digest, Artifacts."<");
 
    TEXT_SIGNATURE : constant UTF8_String := "signature";
+   TEXT_URI       : constant UTF8_String := "uri";
+   TEXT_CHECKSUM  : constant UTF8_String := "checksum";
 
    type Object is tagged record
       Artifacts : Artifact_Maps.Map := Artifact_Maps.Empty_Map;

@@ -40,24 +40,6 @@ package body GPR2.Build.Signature is
       JSON_Result : Read_Result;
       Signature   : Object;
 
-      procedure Extract
-        (Key   : UTF8_String;
-         Value : JSON_Value);
-
-      -------------
-      -- Extract --
-      -------------
-
-      procedure Extract
-        (Key   : UTF8_String;
-         Value : JSON_Value)
-      is
-         A      : constant Artifacts.Object'Class :=
-                    Artifacts.From_Uri (Key);
-         Digest : constant UTF8_String := Get (Value);
-      begin
-         Signature.Artifacts.Insert (A, Hash_Digest (Digest));
-      end Extract;
    begin
       Signature.Clear;
 
@@ -78,18 +60,22 @@ package body GPR2.Build.Signature is
          return Signature;
       end if;
 
-      if Has_Field (JSON_Result.Value, TEXT_SIGNATURE)
-        and then (Kind (Get (Val   => JSON_Result.Value,
-                             Field => TEXT_SIGNATURE))
-                  = JSON_Object_Type)
-      then
-         declare
-            List : constant JSON_Value :=
-                     Get (JSON_Result.Value, TEXT_SIGNATURE);
-         begin
-            Map_JSON_Object (List, Extract'Access);
-         end;
-      end if;
+      declare
+         List : constant JSON_Array :=
+                  Get (JSON_Result.Value, TEXT_SIGNATURE);
+      begin
+         for Obj of List loop
+            declare
+               Art_Uri : constant UTF8_String := Get (Obj, TEXT_URI);
+               Art_Chk : constant UTF8_String := Get (Obj, TEXT_CHECKSUM);
+            begin
+               Signature.Artifacts.Include
+                 (Artifacts.From_Uri (Art_Uri), Hash_Digest (Art_Chk));
+            end;
+         end loop;
+      end;
+
+      JSON_Result.Value.Finalize;
 
       return Signature;
 
@@ -106,17 +92,22 @@ package body GPR2.Build.Signature is
    procedure Store (Self : in out Object; Db_File : Path_Name.Object) is
       File : File_Type;
       JSON : constant JSON_Value := Create_Object;
-      List : constant JSON_Value := Create_Object;
+      List : JSON_Array;
 
       procedure Create_Artifact_Element (Position : Artifact_Maps.Cursor);
 
       procedure Create_Artifact_Element (Position : Artifact_Maps.Cursor) is
-         Key : constant Artifacts.Object'Class :=
+         Art : constant Artifacts.Object'Class :=
                  Artifact_Maps.Key (Position);
+         Val : constant JSON_Value := Create_Object;
       begin
-         Set_Field (Val        => List,
-                    Field_Name => Artifacts.To_Uri (Key),
-                    Field      => String (Key.Checksum));
+         Set_Field (Val => Val,
+                    Field_Name => TEXT_URI,
+                    Field      => Artifacts.To_Uri (Art));
+         Set_Field (Val => Val,
+                    Field_Name => TEXT_CHECKSUM,
+                    Field      => String (Art.Checksum));
+         Append (List, Val);
       end Create_Artifact_Element;
    begin
       Self.Artifacts.Iterate (Create_Artifact_Element'Access);
