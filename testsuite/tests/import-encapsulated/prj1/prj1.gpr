@@ -1,0 +1,5 @@
+with "../encaps/encaps.gpr";
+
+project Prj1 is
+
+end Prj1;

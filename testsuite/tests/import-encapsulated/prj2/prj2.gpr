@@ -1,0 +1,6 @@
+limited with "../encaps/encaps.gpr";
+with "../prj1/prj1.gpr";
+
+project Prj2 is
+
+end Prj2;

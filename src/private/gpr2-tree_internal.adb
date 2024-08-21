@@ -2479,6 +2479,32 @@ package body GPR2.Tree_Internal is
                  (Self.Root_Project.Path_Name.Value, 0, 0));
          end if;
 
+         --  Check for import of the encapsulated standalone library project
+
+         for Imported of View.Imports loop
+            if Imported.Is_Library
+              and then Imported.Library_Standalone = Encapsulated
+            then
+               Self.Warning
+                 ("encapsulated standalone library project """
+                  & String (Imported.Name)
+                  & """ can't be imported",
+                  Source_Reference.Create (View.Path_Name.Value, 0, 0));
+            end if;
+         end loop;
+
+         for Imported of View.Limited_Imports loop
+            if Imported.Is_Library
+              and then Imported.Library_Standalone = Encapsulated
+            then
+               Self.Warning
+                 ("encapsulated standalone library project """
+                  & String (Imported.Name)
+                  & """ can't be imported",
+                  Source_Reference.Create (View.Path_Name.Value, 0, 0));
+            end if;
+         end loop;
+
          --  Check packages
 
          for P of P_Data.Packs loop
