@@ -1,0 +1,4 @@
+description: Importing of encapsulated standalone library project
+driver: build_and_run
+project_file: test
+main: main

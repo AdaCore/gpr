@@ -1,0 +1,8 @@
+
+library project Encaps is
+
+   for Library_Standalone use "encapsulated";
+   for Library_Name use "encapslib";
+   for Library_Dir use ".";
+
+end Encaps;
