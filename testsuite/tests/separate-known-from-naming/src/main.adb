@@ -17,7 +17,10 @@ procedure Main is
          Opt.Add_Switch (Options.X, Ext);
       end if;
 
+      GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Warnings_And_Errors;
+
       if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+         GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Info;
          Tree.Update_Sources;
 
          for U of Tree.Root_Project.Units loop

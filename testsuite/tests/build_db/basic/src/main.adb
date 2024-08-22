@@ -95,11 +95,13 @@ procedure Main is
       Ada.Text_IO.Put_Line ("=========================================");
 
       Opt.Add_Switch (Options.P, Gpr);
+      GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Warnings_And_Errors;
+
       if not Tree.Load (Opt, Absent_Dir_Error => No_Error) then
          return;
       end if;
 
-      Tree.Log_Messages.Output_Messages (Information => False);
+      GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Info;
 
       Tree.Update_Sources;
 

@@ -8,17 +8,11 @@ with Ada.Strings.Maps.Constants;
 
 with GPR2.Message;
 with GPR2.Tree_Internal;
-with GPR2.Source_Reference;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
 with GPR2.View_Internal;
 
 package body GPR2.Build.Compilation_Unit is
-
-   procedure Check_Name_Validity
-     (Name     : Name_Type;
-      Sloc     : Source_Reference.Object'Class;
-      Messages : in out GPR2.Log.Object);
 
    ---------
    -- Add --
@@ -79,10 +73,11 @@ package body GPR2.Build.Compilation_Unit is
    -- Check_Name_Validity --
    -------------------------
 
-   procedure Check_Name_Validity
+   function Check_Name_Validity
      (Name     : Name_Type;
       Sloc     : Source_Reference.Object'Class;
-      Messages : in out GPR2.Log.Object)
+      As_Error : Boolean := False;
+      Messages : in out GPR2.Log.Object) return Boolean
    is
       use Ada.Strings.Maps;
 
@@ -92,7 +87,10 @@ package body GPR2.Build.Compilation_Unit is
       is
       begin
          Messages.Append
-           (GPR2.Message.Create (GPR2.Message.Error, Message, Sloc));
+           (GPR2.Message.Create
+              ((if As_Error then GPR2.Message.Error
+                else GPR2.Message.Information),
+               Message, Sloc));
       end Error;
 
       Not_Valid : constant String :=
@@ -106,7 +104,7 @@ package body GPR2.Build.Compilation_Unit is
          Constants.Letter_Set or To_Set ("_"))
       then
          Error (Not_Valid & "should start with a letter or an underscore");
-         return;
+         return False;
       end if;
 
       --  Cannot have dots and underscores one after another and should
@@ -118,35 +116,40 @@ package body GPR2.Build.Compilation_Unit is
          begin
             if Two_Chars = "_." then
                Error (Not_Valid & "cannot contain dot after underscore");
-               return;
+               return False;
 
             elsif Two_Chars = "__" then
                Error (Not_Valid & "two consecutive underscores not permitted");
-               return;
+               return False;
 
             elsif Two_Chars = "._" then
                Error (Not_Valid & "cannot contain underscore after dot");
-               return;
+               return False;
 
             elsif Two_Chars = ".." then
                Error (Not_Valid & "two consecutive dots not permitted");
-               return;
+               return False;
 
             elsif not Characters.Handling.Is_Alphanumeric (Name (K))
               and then Name (K) not in '.' | '_'
             then
                Error (Not_Valid & "should have only alpha numeric characters");
-               return;
+               return False;
             end if;
          end;
       end loop;
+
+      return True;
    end Check_Name_Validity;
 
    procedure Check_Name_Validity
      (Name     : Name_Type;
-      Messages : in out GPR2.Log.Object) is
+      Messages : in out GPR2.Log.Object)
+   is
+      Dead : Boolean with Unreferenced;
    begin
-      Check_Name_Validity (Name, Source_Reference.Undefined, Messages);
+      Dead := Check_Name_Validity
+        (Name, Source_Reference.Undefined, True, Messages);
    end Check_Name_Validity;
 
    procedure Check_Name_Validity
@@ -155,6 +158,7 @@ package body GPR2.Build.Compilation_Unit is
    is
       Path : GPR2.Path_Name.Object;
       SR   : Source_Reference.Object;
+      Dead : Boolean with Unreferenced;
    begin
       if Self.Implem /= No_Unit then
          Path := Self.Implem.Source;
@@ -169,8 +173,11 @@ package body GPR2.Build.Compilation_Unit is
            (GPR2.Source_Reference.Create (Path.Value, 0, 0));
       end if;
 
-      Check_Name_Validity
-        (Name => Name (Self), Sloc => SR, Messages => Messages);
+      Dead := Check_Name_Validity
+        (Name => Name (Self),
+         Sloc     => SR,
+         As_Error => True,
+         Messages => Messages);
    end Check_Name_Validity;
 
    ------------
