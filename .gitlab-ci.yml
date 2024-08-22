@@ -86,6 +86,23 @@ test_gpr2:
     reports:
       junit: testgpr2_result.xml
 
+##################
+## MEMORY LEAKS ##
+##################
+
+test_gpr2_valgrind:
+  extends: .test_template
+  needs: []
+  script:
+    - run_testsuite gpr2 -Qvalgrind test_gpr2_vg
+  artifacts:
+    when:
+      always
+    paths:
+      - testgpr2vg_result.xml
+    reports:
+      junit: testgpr2vg_result.xml
+
 ##############
 ## COVERAGE ##
 ##############
