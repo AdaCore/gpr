@@ -2724,7 +2724,10 @@ package body GPR2.Tree_Internal is
             end Check_Directory;
 
          begin
-            if View.Kind in K_Standard | K_Library then
+            if View.Kind = K_Standard
+              or else (View.Kind = K_Library
+                       and then not View.Is_Externally_Built)
+            then
                Check_Directory
                  (PRA.Object_Dir,
                   "object",
