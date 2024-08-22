@@ -3347,7 +3347,10 @@ package body GPR2.Project.Tree is
             end Check_Not_Empty;
 
          begin
-            if View.Kind in K_Standard | K_Library then
+            if View.Kind = K_Standard
+              or else (View.Kind = K_Library
+                       and then not View.Is_Externally_Built)
+            then
                Check_Directory
                  (PRA.Object_Dir,
                   "object",
