@@ -13,6 +13,7 @@ with GPR2.Build.View_Tables;
 with GPR2.Containers;
 with GPR2.Message;
 with GPR2.Project.Attribute;
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Tree_Internal;
 with GPR2.View_Ids.Set;
@@ -21,6 +22,7 @@ with GNATCOLL.Directed_Graph; use GNATCOLL.Directed_Graph;
 package body GPR2.Build.Tree_Db is
 
    package PRA renames GPR2.Project.Registry.Attribute;
+   package PAI renames GPR2.Project.Attribute_Index;
 
    type Artifact_Internal_Iterator is limited new
      Artifact_Iterators.Forward_Iterator with record
@@ -700,8 +702,10 @@ package body GPR2.Build.Tree_Db is
                      declare
                         Lang : constant Language_Id := +Name_Type (L.Text);
                      begin
-                        if not V_Db.Langs_Usage.Contains (Lang)
-                          or else V_Db.Langs_Usage (Lang) = 0
+                        if (not V_Db.Langs_Usage.Contains (Lang)
+                            or else V_Db.Langs_Usage (Lang) = 0)
+                          and then V.Attribute (PRA.Compiler.Driver,
+                                                PAI.Create (Lang)).Is_Defined
                         then
                            Messages.Append
                              (Message.Create
