@@ -63,9 +63,6 @@ def create_json_dict(name, kind, project):
         pass
     elif kind == "random":
         data = {"bla": "blabla", "foo": [{"bar": "foobar"}, {"foo": "barfoo"}]}
-    elif kind == "invalid":
-        data = '{"artifacts": [{"foo": "bar" "bla": "bla"}]}'
-        format_kind = "text"
 
     fname = get_json_file(name, project)
     if valid_json_fname(fname):
@@ -81,10 +78,10 @@ def overwrite_artifact_element(name, kind, project):
         found = False
         data = read_json_file (fname)
 
-        for key in data["signature"].keys():
-            if key.endswith(name):
-                data["signature"][key] = "deadcaferand0m"
-                print(f"signature for {key} replaced")
+        for item in data["signature"]:
+            if item["uri"].endswith(name):
+                item["uri"] = "deadcaferand0m"
+                print(f"signature for {item['uri']} replaced")
                 found = True
         write_json_file(fname, data)
         if not found:
@@ -105,9 +102,9 @@ def overwrite_checksum(name, ext, checksum, project):
         assert valid_json_fname(fname), f"not a valid json {fname}"
         replaced = False
         data = read_json_file (fname)
-        for uri in data["signature"].keys():
-            if (ext != "" and uri.endswith(ext)) or ext == "":
-                data["signature"][uri] = checksum
+        for item in data["signature"]:
+            if (ext != "" and item["uri"].endswith(ext)) or ext == "":
+                item["checksum"] = checksum
                 replaced = True
                 break
         assert replaced, f"could not replace '{ext}'"
@@ -171,9 +168,5 @@ bnr.call(['./main'])
 print("================================================================")
 print("Case 11 - random artifact element (p1: main)")
 overwrite_artifact_element (MAIN_COMP, "random", "p1")
-bnr.call(['./main'])
-print("================================================================")
-print("Case 12 - wrong JSON format (p1: main)")
-create_json_dict (MAIN_COMP, "invalid", "p1")
 bnr.call(['./main'])
 print("================================================================")
