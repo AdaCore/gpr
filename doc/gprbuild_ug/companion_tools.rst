@@ -2431,10 +2431,10 @@ For a more complete description of the syntax of Naming Patterns,
 see the second kind of regular expressions described in :file:`g-regexp.ads`
 (the 'Glob' regular expressions).
 
-.. _Switches_for_pgprname:
+.. _Switches_for_gprname:
 
 Switches for GPRname
----------------------
+--------------------
 
 Switches for `gprname` must precede any specified Naming Pattern.
 
@@ -2802,7 +2802,7 @@ Switches for GPRls
 
 .. index:: --RTS (gprls)
 
-:samp:`--RTS={rts-path}``
+:samp:`--RTS={rts-path}`
   Specifies the default location of the Ada runtime library.
   Same meaning as the equivalent *gprbuild* switch.
 
@@ -2891,3 +2891,133 @@ Examples of `gprls` Usage
       $ gprls -s -P prj.gpr main.o
          main
       main.adb
+
+
+.. _Viewing_Project_Properties_GPRinspect:
+
+Viewing the Project's Properties with GPRinspect
+================================================
+
+The tool `gprinspect` can be used to display the various properties of a
+project or a project hierarchy, such as the values of attributes, variables,
+and so on, in human-readable or JSON format. The tool also displays
+recommendations on how the project can be refactored to follow best practices.
+
+.. _Running_gprinspect:
+
+Running `gprinspect`
+--------------------
+
+The usual form of the `gprname` command is:
+
+.. code-block:: sh
+
+      $ gprinspect `project switches` `display switches`
+
+All arguments are optional.
+
+
+.. _Switches_for_gprinspect:
+
+Switches for GPRinspect
+-----------------------
+
+GPRinspect recognizes all common project switches, such as :samp:`-P`,
+:samp:`-X`, :samp:`--target`, and so on. Additionally, the following switches
+are recognized:
+
+* :samp:`--version`
+
+  Display copyright and version, then exit ignoring other switches.
+
+* :samp:`--help`
+
+  Display usage, then exit ignoring other switches.
+
+* :samp:`-c`, :samp:`--from-config`
+
+  Display attributes inherited from configuration.
+
+* :samp:`-r`, :samp:`--recursive`
+
+  Display information for all non-externally-built projects in the project
+  hierarchy recursively.
+
+* :samp:`--all`
+
+  Display all available information about a project.
+
+* :samp:`--attributes`
+
+  Display attributes.
+
+* :samp:`--packages`
+
+  Display packages.
+
+* :samp:`--variables`
+
+  Display variables and types.
+
+* :samp:`--display[=json|json-compact|textual]`
+
+  Output using human-readable or JSON format.
+
+* :samp:`--views=view1[,view2...]`
+
+  Select the project view to display. Only available when using :samp:`--display=textual`.
+
+* :samp:`-F`
+
+  Full project path name in brief error messages.
+
+* :samp:`-v`
+
+  Verbose output.
+
+* :samp:`-ws`
+
+  Suppress all warnings.
+
+.. _Example_of_gprinspect_Usage:
+
+Example of `gprinspect` Usage
+-----------------------------
+
+The following command displays all project attributes, including those defined
+in a current configuration project (i.e. specific to the currently selected
+toolchain), in JSON format:
+
+.. code-block:: none
+
+  $ gprinspect -Pshare/examples/gprbuild/first_steps/ada_main -c --attributes --display=json
+  ...
+  "projects": [
+    {
+      "attributes": [
+  ...
+        {
+          "kind": "list",
+          "name": "Source_Files",
+          "values": [
+            "ada_main.adb",
+            "c_lib.ads",
+            "lib.h",
+            "lib.c"
+          ]
+        },
+  ...
+        {
+          "kind": "single",
+          "name": "Target",
+          "value": "x86_64-linux"
+        },
+        {
+          "index": "Ada",
+          "kind": "single",
+          "name": "Toolchain_Version",
+          "value": "GNAT 25.0"
+        }
+      ],
+  ...
+
