@@ -1,0 +1,5 @@
+description:
+    Check unit that only has a separate component
+driver: build_and_run
+project_file: test
+main: main

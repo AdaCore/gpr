@@ -60,6 +60,10 @@ package body GPR2.Build.Compilation_Unit is
                C  : Separate_Maps.Cursor;
             begin
                Self.Separates.Insert (Name_Type (Up), UL, C, Success);
+
+               if not Self.Owner.Is_Defined then
+                  Self.Owner := UL.View;
+               end if;
             end;
       end case;
 
