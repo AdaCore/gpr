@@ -74,15 +74,6 @@ def testsuite(file_path):
 
 test("Build from scratch")
 
-testsuite(os.path.join("tree", "obj", "main.o"))
-testsuite(os.path.join("tree", "obj", "main.ali"))
-testsuite(os.path.join("tree", "obj", "pkg.o"))
-testsuite(os.path.join("tree", "obj", "pkg.ali"))
-testsuite(os.path.join("tree", "obj", "dep_two.o"))
-testsuite(os.path.join("tree", "obj", "dep_two.ali"))
-testsuite(os.path.join("tree", "obj", "b__main.o"))
-testsuite(os.path.join("tree", "obj", "b__main.ali"))
-
 if "windows" in Env().host.platform:
     testsuite(os.path.join("tree", "obj", "main.exe"))
 else:
@@ -95,7 +86,6 @@ testsuite(os.path.join("tree", "src", "dep_two.adb"))
 testsuite(os.path.join("tree", "src", "dep_two.ads"))
 testsuite(os.path.join("tree", "obj", "b__main.ads"))
 testsuite(os.path.join("tree", "obj", "b__main.adb"))
-
 # Now, add content to source files that changes the code execution
 file_path = os.path.join("tree", "src", "main.adb")
 
