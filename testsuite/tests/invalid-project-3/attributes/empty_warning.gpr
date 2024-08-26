@@ -1,5 +1,7 @@
 project Empty_Warning is
 
+   for Languages use ("Ada", "New_Language_No_Driver");
+
    package Builder is
       for Executable ("myadaunit.ads") use "";
    end Builder;
