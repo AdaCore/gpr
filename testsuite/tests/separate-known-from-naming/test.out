@@ -4,7 +4,7 @@ PACK
 - S_BODY: pack.adb
 - SEP. FUNCTIONS_TEST: PACK.Functions_TEST.ada
 DOT_REPLACEMENT="-"
-PACK.Functions_TEST.ada:1:01: warning: invalid file name, contains dot
+PACK.Functions_TEST.ada:1:01: info: invalid file name, contains dot
 PACK
 - S_SPEC: pack.ads
 - S_BODY: pack.adb
