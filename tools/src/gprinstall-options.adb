@@ -77,6 +77,12 @@ package body GPRinstall.Options is
       elsif Arg = "-d" then
          Result.Dry_Run := True;
 
+      elsif Arg = "--autoconf" then
+         Result.Add_Switch
+           (Switch => GPR2.Options.Autoconf,
+            Param  => Param,
+            Index  => "");
+
       elsif Arg = "--stat" then
          Result.Output_Stats := True;
 
@@ -242,6 +248,14 @@ package body GPRinstall.Options is
            (Name     => "-d",
             Alt_Name => "--dry-run",
             Help     => "Execute nothing, display commands"));
+      Parser.Add_Argument
+        (Install_Group,
+         Create
+           (Name           => "--autoconf",
+            Help           => "Specify generated config project file name",
+            In_Switch_Attr => False,
+            Delimiter      => Equal,
+            Parameter      => "file.cgpr"));
       Parser.Add_Argument
         (Install_Group,
          Create

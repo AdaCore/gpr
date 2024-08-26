@@ -162,6 +162,8 @@ install switches:
  -r        Recursive
  --ali-subdir=<dir>
            The ALI directory/sub-directory
+ --autoconf=file.cgpr
+           Specify generated config project file name
  --build-name=<name>
            Build name value (default is "Default")
  --build-var=<name>
@@ -404,6 +406,8 @@ install switches:
  -r        Recursive
  --ali-subdir=<dir>
            The ALI directory/sub-directory
+ --autoconf=file.cgpr
+           Specify generated config project file name
  --build-name=<name>
            Build name value (default is "Default")
  --build-var=<name>
