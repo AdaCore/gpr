@@ -1445,8 +1445,9 @@ package body GPR2.Tree_Internal is
                end if;
             end;
 
-         elsif Parent.Is_Defined then
-            if Parent.Kind = K_Aggregate_Library
+         else
+            if Parent.Is_Defined
+              and then Parent.Kind = K_Aggregate_Library
               and then Status = Aggregated
             then
                --  We need to keep track of aggregate libraries
@@ -1455,7 +1456,7 @@ package body GPR2.Tree_Internal is
                Propagate_Aggregate (View, Parent.Id, True);
             end if;
 
-            if Parent.Kind /= K_Aggregate then
+            if Parent.Is_Defined and then Parent.Kind /= K_Aggregate then
                for Root of Parent.Namespace_Roots loop
                   Propagate_Aggregate (View, Root.Id, False);
                end loop;

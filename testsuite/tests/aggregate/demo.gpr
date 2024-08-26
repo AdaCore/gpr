@@ -3,5 +3,5 @@ with "a.gpr";
 
 aggregate project Demo is
    for External ("OS") use "Linux";
-   for Project_Files use ("a.gpr");
+   for Project_Files use ("a.gpr", "first.gpr", "second.gpr");
 end Demo;

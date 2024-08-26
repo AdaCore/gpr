@@ -1,17 +1,33 @@
 //// OS set to Linux
-demo.gpr: warning: no language for the projects tree: configuration skipped
 A        K_ABSTRACT
-A:   Object_Dir -> linux-obj
+         Object_Dir -> linux-obj
 Demo     K_AGGREGATE
-A:   External -> Linux
-A:   Project_Files -> a.gpr
+         External -> Linux
+         Project_Files -> a.gpr first.gpr second.gpr
 A        K_ABSTRACT
-A:   Object_Dir -> linux-obj
+         Object_Dir -> linux-obj
+second   K_STANDARD
+first    K_LIBRARY
+         Library_Dir -> lib
+         Library_Name -> mylib
+         Object_Dir -> obj
+         Source_Dirs -> libsrc
 //// OS set to Windows
 A        K_ABSTRACT
-A:   Object_Dir -> windows-obj
+         Object_Dir -> windows-obj
 Demo     K_AGGREGATE
-A:   External -> Linux
-A:   Project_Files -> a.gpr
+         External -> Linux
+         Project_Files -> a.gpr first.gpr second.gpr
 A        K_ABSTRACT
-A:   Object_Dir -> linux-obj
+         Object_Dir -> linux-obj
+second   K_STANDARD
+first    K_LIBRARY
+         Library_Dir -> lib
+         Library_Name -> mylib
+         Object_Dir -> obj
+         Source_Dirs -> libsrc
+A is namespace root
+A is namespace root
+second is namespace root
+first is namespace root
+Demo is namespace root
