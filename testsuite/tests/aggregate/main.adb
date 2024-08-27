@@ -44,8 +44,9 @@ procedure Main is
 
       for A in Prj.Attributes (With_Defaults => False,
                                With_Config   => False).Iterate loop
+         Text_IO.Set_Col (10);
          Text_IO.Put
-           ("A:   " & Image (Attribute.Set.Element (A).Name.Id.Attr));
+           (Image (Attribute.Set.Element (A).Name.Id.Attr));
          Text_IO.Put (" ->");
 
          for V of Element (A).Values loop
@@ -76,4 +77,10 @@ begin
          Display (P);
       end loop;
    end if;
+
+   for V of Prj.Ordered_Views loop
+      if V.Is_Namespace_Root then
+         Text_IO.Put_Line (String (V.Name) & " is namespace root");
+      end if;
+   end loop;
 end Main;
