@@ -1,0 +1,11 @@
+
+project Demo3 is
+   OS := "win";
+   for Languages use ("ada");
+   for Source_Dirs use ("src2");
+   for Object_Dir use "obj";
+
+   package Naming is
+      for Body ("pck") use "pck_" & OS & ".adb";
+   end Naming;
+end Demo3;
