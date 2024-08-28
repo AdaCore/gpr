@@ -77,4 +77,5 @@ procedure Main is
 begin
    Check ("demo1.gpr");
    Check ("demo2.gpr");
+   Check ("demo3.gpr");
 end Main;

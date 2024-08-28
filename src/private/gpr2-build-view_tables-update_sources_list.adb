@@ -22,6 +22,7 @@ separate (GPR2.Build.View_Tables)
 package body Update_Sources_List is
 
    use type Project.Attribute.Object;
+   package PAI renames GPR2.Project.Attribute_Index;
 
    use GPR2.Containers;
    use GPR2.Path_Name;
@@ -62,13 +63,6 @@ package body Update_Sources_List is
 
    package Lang_Boolean_Map is new Ada.Containers.Hashed_Maps
      (Language_Id, Boolean, Hash, "=");
-
-   function Naming_Exception_Equal
-     (A : Project.Attribute.Object;
-      B : Value_Type;
-      I : Unit_Index) return Boolean
-   is (A.Value.Text = B and then A.Value.At_Pos = I);
-   --  Check if two naming exception attributes are equal
 
    procedure Fill_Ada_Naming_Exceptions
      (View         : GPR2.Project.View.Object;
@@ -900,18 +894,139 @@ package body Update_Sources_List is
 
             --  Check Unit names and kind for Ada:
 
-            if Match /= No_Match
-              and then not Units.Is_Indexed_List
+            if Match = Naming_Convention and then Language = Ada_Language then
+               declare
+                  Last_Dot  : Natural;
+                  Success   : Boolean;
+                  Unit_Name : constant Name_Type :=
+                                Compute_Unit_From_Filename
+                                  (File     => File.Path,
+                                   Kind     => Kind,
+                                   NS       =>
+                                     Naming_Schema_Map (Ada_Language),
+                                   Dot_Repl => Dot_Repl,
+                                   Messages => Messages,
+                                   Last_Dot => Last_Dot,
+                                   Success  => Success);
+
+               begin
+                  if not Success then
+                     return False;
+                  end if;
+
+                  if not Compilation_Unit.Check_Name_Validity
+                    (Unit_Name,
+                     Source_Reference.Create (File.Path, 0, 0),
+                     False,
+                     Messages)
+                  then
+                     return False;
+                  end if;
+
+                  --  There can be ambiguities in Ada with the default naming
+                  --  convention or with naming exception with regards to
+                  --  separate and child bodies. In order to disambiguate that
+                  --  we need to parse the source.
+
+                  --  Parse the source to get unit and update its kind if
+                  --  needed.
+
+                  Build.Source_Base.Ada_Parser.Compute
+                    (File_Reader      => Tree.File_Reader,
+                     Data             => Source,
+                     Get_Withed_Units =>
+                       Data.Tree_Db.Source_Option >= Sources_Units,
+                     Success          => Parsed);
+
+                  --  Check if we have a conflicting naming exception with the
+                  --  same unit but a different source
+
+                  if Parsed and then Source.Kind /= S_No_Body then
+                     declare
+                        Attr : GPR2.Project.Attribute.Object;
+                     begin
+                        if Source.Kind = S_Spec then
+                           Attr := Data.View.Attribute
+                             (PRA.Naming.Spec,
+                              PAI.Create (Value_Type (Source.Unit.Full_Name)));
+                        else
+                           Attr := Data.View.Attribute
+                             (PRA.Naming.Body_N,
+                              PAI.Create (Value_Type (Source.Unit.Full_Name)));
+                        end if;
+
+                        if Attr.Is_Defined
+                          and then Attr.Value.Text /=
+                            String (Source.Path_Name.Simple_Name)
+                        then
+                           --  We have a naming exception on the unit name for
+                           --  a different source, so ignore the other sources
+                           --  with the same unit.
+                           return False;
+                        end if;
+                     end;
+
+                     if Unit_Name /= Source.Unit.Full_Name
+                       and then Path_Name.Base_Name (File.Path) /=
+                         Krunch (Source.Unit.Full_Name)
+                     then
+                        if Data.View.Is_Runtime then
+                           --  Ignore sources from the runtime that don't
+                           --  follow the naming convention: they're not
+                           --  part of the runtime library.
+                           return False;
+
+                        else
+                           Messages.Append
+                             (Message.Create
+                                (Message.Warning,
+                                 "unit name """ &
+                                   String (Source.Unit.Name) &
+                                   """ does not match source name",
+                                 SR.Create (File.Path, 0, 0)));
+                        end if;
+                     end if;
+
+                  elsif not Parsed and then Kind = S_Separate then
+                     --  Separates must have a doted unit name
+
+                     if Last_Dot > 0 then
+                        Source.Update_Unit
+                          (Unit_Info.Create
+                             (Unit_Name     => Unit_Name
+                                  (Unit_Name'First .. Last_Dot - 1),
+                              Index         => No_Index,
+                              Kind          => Kind,
+                              Separate_Name => Unit_Name
+                                (Last_Dot + 1 .. Unit_Name'Last),
+                              Parsed        => False));
+                     else
+                        Messages.Append
+                          (Message.Create
+                             (Message.Warning,
+                              "invalid file name: no '.' in deduced " &
+                                "separate unit name """ &
+                                String (Unit_Name) & '"',
+                              SR.Create (File.Path, 0, 0)));
+
+                        return False;
+                     end if;
+
+                  elsif not Parsed then
+                     Source.Update_Unit
+                       (Unit_Info.Create
+                          (Unit_Name     => Unit_Name,
+                           Index         => No_Index,
+                           Kind          => Kind,
+                           Separate_Name => "",
+                           Parsed        => False));
+                  end if;
+               end;
+
+            elsif Match = Naming_Exception
               and then Language = Ada_Language
+              and then not Units.Is_Indexed_List
             then
-               --  There can be ambiguities in Ada with the default naming
-               --  convention or with naming exception with regards to
-               --  separate and child bodies. In order to disambiguate that
-               --  we need to parse the source.
-
-               --  Parse the source to get unit and update its kind if
-               --  needed.
-
                Build.Source_Base.Ada_Parser.Compute
                  (File_Reader      => Tree.File_Reader,
                   Data             => Source,
@@ -938,155 +1053,7 @@ package body Update_Sources_List is
                              String (Units (No_Index).Full_Name) & '"',
                            Exc_Attr));
                   end if;
-
-               elsif Match = Naming_Convention then
-                  declare
-                     Last_Dot  : Natural;
-                     Success   : Boolean;
-                     Unit_Name : constant Name_Type :=
-                                   Compute_Unit_From_Filename
-                                     (File     => File.Path,
-                                      Kind     => Kind,
-                                      NS       =>
-                                        Naming_Schema_Map (Ada_Language),
-                                      Dot_Repl => Dot_Repl,
-                                      Messages => Messages,
-                                      Last_Dot => Last_Dot,
-                                      Success  => Success);
-
-                  begin
-                     if not Success then
-                        return False;
-                     end if;
-
-                     if not Compilation_Unit.Check_Name_Validity
-                       (Unit_Name,
-                        Source_Reference.Create (File.Path, 0, 0),
-                        False,
-                        Messages)
-                     then
-                        return False;
-                     end if;
-
-                     if Parsed then
-                        --  Check unit name from convention is the same as
-                        --  the parsed one.
-
-                        if Source.Kind /= S_No_Body
-                          and then Unit_Name /= Source.Unit.Full_Name
-                          and then Path_Name.Base_Name (File.Path) /=
-                          Krunch (Source.Unit.Full_Name)
-                        then
-                           if Data.View.Is_Runtime then
-                              --  Ignore sources from the runtime that don't
-                              --  follow the naming convention: they're not
-                              --  part of the runtime library.
-                              Match := No_Match;
-                              Source := Build.Source_Base.Undefined;
-
-                           else
-                              Messages.Append
-                                (Message.Create
-                                   (Message.Warning,
-                                    "unit name """ &
-                                      String (Source.Unit.Name) &
-                                      """ does not match source name",
-                                    SR.Create (File.Path, 0, 0)));
-                           end if;
-                        end if;
-
-                     elsif Kind = S_Separate then
-                        --  Separates must have a doted unit name
-
-                        if Last_Dot > 0 then
-                           Source.Update_Unit
-                             (Unit_Info.Create
-                                (Unit_Name     => Unit_Name
-                                     (Unit_Name'First .. Last_Dot - 1),
-                                 Index         => No_Index,
-                                 Kind          => Kind,
-                                 Separate_Name => Unit_Name
-                                   (Last_Dot + 1 .. Unit_Name'Last),
-                                 Parsed        => False));
-                        else
-                           Messages.Append
-                             (Message.Create
-                                (Message.Warning,
-                                 "invalid file name: no '.' in deduced " &
-                                   "separate unit name """ &
-                                   String (Unit_Name) & '"',
-                                 SR.Create (File.Path, 0, 0)));
-
-                           return False;
-                        end if;
-
-                     else
-                        Source.Update_Unit
-                          (Unit_Info.Create
-                             (Unit_Name     => Unit_Name,
-                              Index         => No_Index,
-                              Kind          => Kind,
-                              Separate_Name => "",
-                              Parsed        => False));
-                     end if;
-                  end;
                end if;
-            end if;
-
-            --  Now check for conflicts between naming exceptions and naming
-            --  convention.
-
-            if Match = Naming_Convention and then Language = Ada_Language then
-               declare
-                  function Has_Conflict_NE
-                    (Attr_Name : Q_Attribute_Id) return Boolean;
-                  --  Search the Naming package for attributes with name
-                  --  Attr_Name and index Unit_Name, and return True if
-                  --  at least one of the matching attributes references
-                  --  a different (source,index) than the current one.
-
-                  ---------------------
-                  -- Has_Conflict_NE --
-                  ---------------------
-
-                  function Has_Conflict_NE
-                    (Attr_Name : Q_Attribute_Id) return Boolean
-                  is
-                     Cursor : Source_Path_To_Attribute_List.Cursor;
-                     use Source_Path_To_Attribute_List;
-                  begin
-                     Cursor := Ada_Naming_Exceptions.Find
-                       (Filename_Optional (Source.Unit.Name));
-
-                     if Has_Element (Cursor) then
-                        for Attr of Element (Cursor) loop
-                           if Attr.Name.Id = Attr_Name then
-                              if not Naming_Exception_Equal
-                                (Attr, Value_Type (Basename), 1)
-                              then
-                                 return True;
-                              end if;
-                           end if;
-                        end loop;
-                     end if;
-
-                     return False;
-                  end Has_Conflict_NE;
-
-               begin
-                  --  Check if we have conflicting naming exceptions:
-                  --  same (unit,kind) but different source.
-                  --  In this case we skip this source.
-
-                  if (Source.Kind = S_Spec
-                      and then Has_Conflict_NE (PRA.Naming.Spec))
-                    or else
-                      (Source.Kind = S_Body
-                       and then Has_Conflict_NE (PRA.Naming.Body_N))
-                  then
-                     return False;
-                  end if;
-               end;
             end if;
 
             if Match /= No_Match then

@@ -6,3 +6,7 @@ Project: Demo2
  > src/pck.ads    language: Ada    Kind: S_SPEC   unit: PCK excep: FALSE
  > src/pck__win.adb
                   language: Ada    Kind: S_BODY   unit: PCK excep: TRUE
+Project: Demo3
+ > src2/pck.ads   language: Ada    Kind: S_SPEC   unit: PCK excep: FALSE
+ > src2/pck_win.adb
+                  language: Ada    Kind: S_BODY   unit: PCK excep: TRUE
