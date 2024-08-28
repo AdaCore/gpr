@@ -39,6 +39,13 @@ Unit name: My_Generic_Procedure
 Loading files-to-parse/iso_8859_1.adb
 Unit name: My_Package_Body
 
+===== FILE line-break.ads=====
+Loading files-to-parse/line-break.ads
+Withed unit name: Line.Break
+Withed unit name: A.B
+Withed unit name: A.B.C
+Unit name: Another.Line.Break
+
 ===== FILE long-package-name.ads=====
 Loading files-to-parse/long-package-name.ads
 Unit name: Looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong.
@@ -84,7 +91,8 @@ Separate from: Toto.S_Unit
 ===== FILE space.adb=====
 Loading files-to-parse/space.adb
 Withed unit name: A.B.C
-Unit name: My_Package
+Withed unit name: D.E.F
+Unit name: My_Package.Subpackage
 
 ===== FILE task_body.adb=====
 Loading files-to-parse/task_body.adb
