@@ -188,7 +188,7 @@ test_bootstrap:
     # So in order to have a reasonable rebuild, we install a wrapper to gprbuild
     # ensuring that -m is enforced for all packages.
     - install_build_wrapper() {
-        bindir=$SANDBOX/$HOST/$1/install/bin ;
+        bindir=$(anod info install $* --show working_dir)/install/bin ;
         exec mv $bindir/gprbuild $bindir/gprbuild-saved ;
         echo '#!'$SHELL > $bindir/gprbuild ;
         echo 'gprbuild-saved -m $@' >> $bindir/gprbuild ;
@@ -198,8 +198,8 @@ test_bootstrap:
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
     - result=0
     # Install gprbuild wrappers for the gprbuild bootstrap part
-    - anod install stable-gprbuild
-    - install_build_wrapper stable-gprbuild
+    - anod install gprbuild -Qstable
+    - install_build_wrapper gprbuild -Qstable
     # and run the gnat bootstrap
     - anod build gnat || result=$?
     - mkdir -p $CI_PROJECT_DIR/bootstrap_cache
