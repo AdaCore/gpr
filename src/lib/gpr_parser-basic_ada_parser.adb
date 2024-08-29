@@ -7,6 +7,8 @@ with System;
 
 with Ada.Characters.Conversions;
 with Ada.Exceptions;
+with Ada.Containers.Vectors;
+with Ada.Strings.Unbounded;
 
 with Gpr_Parser_Support.File_Readers; use Gpr_Parser_Support.File_Readers;
 with Gpr_Parser_Support.Diagnostics;  use Gpr_Parser_Support.Diagnostics;
@@ -23,6 +25,67 @@ with Gpr_Parser.Analysis;
 package body Gpr_Parser.Basic_Ada_Parser is
 
    package GPS renames Gpr_Parser_Support;
+
+   package Lexed_Token_Vectors is new
+     Ada.Containers.Vectors
+       (Index_Type   => Natural,
+        Element_Type => Lexed_Token);
+
+   subtype Lexed_Token_Vector is Lexed_Token_Vectors.Vector;
+
+   function Encode_String_Without_Whitespaces
+     (Contents            : Decoded_File_Contents;
+      First_Idx, Last_Idx : Natural;
+      Whitespaces         : Lexed_Token_Vector) return String;
+   --  Encode the substring from the first to the last specified index,
+   --  excluding any whitespace characters. The indexes of these whitespace
+   --  characters are contained in `Whitespaces`.
+
+   ---------------------------------------
+   -- Encode_String_Without_Whitespaces --
+   ---------------------------------------
+
+   function Encode_String_Without_Whitespaces
+     (Contents            : Decoded_File_Contents;
+      First_Idx, Last_Idx : Natural;
+      Whitespaces         : Lexed_Token_Vector) return String
+   is
+      use Ada.Strings.Unbounded;
+
+      Current_Idx : Natural := First_Idx;
+      Result : Unbounded_String;
+   begin
+      if Whitespaces.Is_Empty then
+         return Gpr_Parser_Support.Text.Encode
+                  (Contents.Buffer (First_Idx .. Last_Idx), "UTF-8");
+      end if;
+
+      --  Remove all whitespace characters
+
+      for Wspace of Whitespaces loop
+         if Current_Idx < Wspace.Text_First then
+            Append
+              (Result,
+               Gpr_Parser_Support.Text.Encode
+                 (Contents.Buffer (Current_Idx .. Wspace.Text_First - 1),
+                  "UTF-8"));
+         end if;
+
+         Current_Idx := Wspace.Text_Last + 1;
+      end loop;
+
+      --  Encode the remaining text
+
+      if Current_Idx <= Last_Idx then
+         Append
+           (Result,
+            Gpr_Parser_Support.Text.Encode
+              (Contents.Buffer (Current_Idx .. Last_Idx),
+               "UTF-8"));
+      end if;
+
+      return To_String (Result);
+   end Encode_String_Without_Whitespaces;
 
    --------------------------
    -- Parse_Context_Clause --
@@ -93,10 +156,13 @@ package body Gpr_Parser.Basic_Ada_Parser is
       --  Parse the library item unit name, or the subunit and the parent unit
       --  name. Call Unit_Name_CB if it is not null.
 
-      function Parse_Static_Name (T : in out Lexed_Token) return Natural with
+      function Parse_Static_Name
+        (T           : in out Lexed_Token;
+         Whitespaces : out Lexed_Token_Vector) return Natural with
         Pre => Last_Token (State).Kind = Gpr_Identifier;
       --  Return the last token text of the static name which begins at the
-      --  current identifier token.
+      --  current identifier token. Whitespaces contains the indexes of all
+      --  the whitespace characters tokens encountered.
 
       procedure Parse_With_Clause with
         Pre =>
@@ -124,10 +190,11 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
       procedure Parse_Library_Item_And_Subunit is
 
-         T                   : Lexed_Token := Last_Token (State);
-         Separate_From_First : Natural     := 0;
-         Separate_From_Last  : Natural     := 0;
-         Generic_Unit        : Boolean     := False;
+         T                    : Lexed_Token := Last_Token (State);
+         Separate_From_First  : Natural     := 0;
+         Separate_From_Last   : Natural     := 0;
+         Separate_Whitespaces : Lexed_Token_Vector;
+         Generic_Unit         : Boolean     := False;
 
          procedure Skip_Generic with
            Pre =>
@@ -170,7 +237,7 @@ package body Gpr_Parser.Basic_Ada_Parser is
             end if;
 
             Separate_From_First := T.Text_First;
-            Separate_From_Last  := Parse_Static_Name (T);
+            Separate_From_Last  := Parse_Static_Name (T, Separate_Whitespaces);
 
             if not Skip_Until
               ((Gpr_Identifier, Gpr_Package), T,
@@ -188,6 +255,7 @@ package body Gpr_Parser.Basic_Ada_Parser is
          ----------------
 
          procedure Parse_Unit is
+            Whitespaces : Lexed_Token_Vector;
          begin
             --  At this step, current token is either "function", "procedure",
             --  "package", "protected" or "task". Skip token until the next
@@ -206,23 +274,24 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
             declare
                Unit_First : Positive := T.Text_First;
-               Unit_Last  : Positive := Parse_Static_Name (T);
+               Unit_Last  : Positive := Parse_Static_Name (T, Whitespaces);
 
             begin
                declare
-                  use Gpr_Parser_Support.Text;
-
                   U_Name : String :=
-                             Gpr_Parser_Support.Text.Encode
-                               (Contents.Buffer (Unit_First .. Unit_Last),
-                                "UTF-8");
+                             Encode_String_Without_Whitespaces
+                               (Contents    => Contents,
+                                First_Idx   => Unit_First,
+                                Last_Idx    => Unit_Last,
+                                Whitespaces => Whitespaces);
                   Sep_Name : constant String :=
                                (if Separate_From_First /= 0
-                                then Encode (Contents.Buffer
-                                  (Separate_From_First .. Separate_From_Last),
-                                  "UTF-8")
+                                then Encode_String_Without_Whitespaces
+                                   (Contents    => Contents,
+                                    First_Idx   => Separate_From_First,
+                                    Last_Idx    => Separate_From_Last,
+                                    Whitespaces => Separate_Whitespaces)
                                 else "");
-
                begin
                   Unit_Name_CB
                     (Unit_Name     => U_Name,
@@ -387,25 +456,30 @@ package body Gpr_Parser.Basic_Ada_Parser is
       -- Parse_Static_Name --
       -----------------------
 
-      function Parse_Static_Name (T : in out Lexed_Token) return Natural is
+      function Parse_Static_Name
+        (T           : in out Lexed_Token;
+         Whitespaces : out Lexed_Token_Vector) return Natural is
          Static_Name_Expected_Token : Token_Kind := Gpr_Dot;
          Last                       : Natural    := T.Text_Last;
-
       begin
+         Whitespaces.Clear;
+
          while Has_Next (State) loop
             Next_Token (State, T);
 
-            if T.Kind /= Static_Name_Expected_Token then
-               return Last;
-
+            if T.Kind = Gpr_Whitespace then
+               Whitespaces.Append (T);
             else
-               Last := T.Text_Last;
-
-               if Static_Name_Expected_Token = Gpr_Dot then
-                  Static_Name_Expected_Token := Gpr_Identifier;
-
+               if T.Kind /= Static_Name_Expected_Token then
+                  return Last;
                else
-                  Static_Name_Expected_Token := Gpr_Dot;
+                  Last := T.Text_Last;
+
+                  if Static_Name_Expected_Token = Gpr_Dot then
+                     Static_Name_Expected_Token := Gpr_Identifier;
+                  else
+                     Static_Name_Expected_Token := Gpr_Dot;
+                  end if;
                end if;
             end if;
          end loop;
@@ -423,6 +497,7 @@ package body Gpr_Parser.Basic_Ada_Parser is
          Withed_Unit_First : Positive;
          Withed_Unit_Last  : Positive;
          Lim               : Boolean     := False;
+         Whitespaces       : Lexed_Token_Vector;
 
       begin
          if T.Kind = Gpr_Limited then
@@ -449,18 +524,16 @@ package body Gpr_Parser.Basic_Ada_Parser is
             --  Current token shall be an identifier
 
             Withed_Unit_First := T.Text_First;
-            Withed_Unit_Last  := Parse_Static_Name (T);
+            Withed_Unit_Last  := Parse_Static_Name (T, Whitespaces);
 
             if With_Clause_CB /= null then
-               declare
-                  Name : String :=
-                    Gpr_Parser_Support.Text.Encode
-                      (Contents.Buffer (Withed_Unit_First .. Withed_Unit_Last),
-                       "UTF-8");
-
-               begin
-                  With_Clause_CB (Name, Lim);
-               end;
+               With_Clause_CB
+                  (Encode_String_Without_Whitespaces
+                     (Contents    => Contents,
+                     First_Idx   => Withed_Unit_First,
+                     Last_Idx    => Withed_Unit_Last,
+                     Whitespaces => Whitespaces),
+                  Lim);
             end if;
 
             if T.Kind /= Gpr_Semicolon and then T.Kind /= Gpr_Comma then
