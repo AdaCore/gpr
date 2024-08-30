@@ -380,7 +380,6 @@ package body GPR2.Project.Tree is
       end if;
 
       if Project_File.Is_Defined
-        and then not Project_File.Is_Directory
         and then not Project_File.Has_Dir_Name
         and then Options.Root_Path.Is_Defined
       then
@@ -402,10 +401,12 @@ package body GPR2.Project.Tree is
          end;
       end if;
 
-      if not Project_File.Is_Defined
-        or else Project_File.Is_Directory
-      then
+      if not Project_File.Is_Defined then
          if Options.No_Project then
+            pragma Assert
+              (Allow_Implicit_Project,
+               "The switch --no-project requires allowing implicit projects");
+
             --  Specifying a directory as project file will create the default
             --  project in there, so expecting all sources and artifacts to
             --  share the same folder.
@@ -415,7 +416,7 @@ package body GPR2.Project.Tree is
                Name        => "Default").Data;
             Prj_Kind := Project_Definition;
 
-         elsif Allow_Implicit_Project then
+         else
             Project_File := Check_For_Default_Project
               (if Project_File.Is_Defined
                then String (Project_File.Name)
@@ -426,7 +427,8 @@ package body GPR2.Project.Tree is
                   Message.Reporter.Active_Reporter.Report
                     ("using project file " & Project_File.String_Value);
                end if;
-            else
+
+            elsif Allow_Implicit_Project then
                --  See comment in No_Project case as to how we handle projects
                --  as project directories.
 
@@ -440,11 +442,11 @@ package body GPR2.Project.Tree is
                  (Project_Dir => Path_Name.Create_Directory ("."),
                   Name        => "Default").Data;
                Prj_Kind := Project_Definition;
-            end if;
 
-         else
-            raise GPR2.Options.Usage_Error with
-              "no project file specified";
+            else
+               raise GPR2.Options.Usage_Error with
+                 "no project file specified";
+            end if;
          end if;
 
       elsif Options.No_Project then
