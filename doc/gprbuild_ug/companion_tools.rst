@@ -2908,7 +2908,7 @@ recommendations on how the project can be refactored to follow best practices.
 Running `gprinspect`
 --------------------
 
-The usual form of the `gprname` command is:
+The usual form of the `gprinspect` command is:
 
 .. code-block:: sh
 
