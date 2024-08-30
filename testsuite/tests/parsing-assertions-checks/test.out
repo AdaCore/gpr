@@ -108,7 +108,10 @@ Source_Dirs_Space_Checks
 GPR file: files/source_files_empty_string_checks.gpr
 source_files_empty_string_checks.gpr:4:04: error: empty value in attribute "Source_Files" not allowed.
 GPR file: files/naming_exceptions_space_checks.gpr
-naming_exceptions_space_checks.gpr:6:47: error: file " " specified in naming exception more than once
+naming_exceptions_space_checks.gpr:1:17: warning: project name 'naming_exceptions_space_checks' expected
+naming_exceptions_space_checks.gpr:6:47: warning: file " " specified in naming exception more than once
+naming_exceptions_space_checks.gpr: warning: there are no sources of language "Ada" in this project
+Naming_Exceptions_Empty_String_Checks
 GPR file: files/naming_implementation_exceptions_empty_string_checks.gpr
 naming_implementation_exceptions_empty_string_checks.gpr:5:07: error: empty value in attribute "Naming'Implementation_Exceptions" not allowed.
 GPR file: files/naming_specification_exceptions_empty_string_checks.gpr
