@@ -405,7 +405,7 @@ package body GPR2.View_Internal is
                        (Filename_Type (V.Text), V, C, Ok);
                      if not Ok then
                         Log_Error
-                          (Message.Error,
+                          (Message.Warning,
                            "file """ & String (V.Text) & """ "
                            &  "specified in naming exception more than once",
                            V);

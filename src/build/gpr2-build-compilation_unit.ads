@@ -53,10 +53,10 @@ package GPR2.Build.Compilation_Unit is
      with Pre => Self.Is_Defined and then not Self.Is_Empty;
    --  Check that the unit name is valid.
 
-   procedure Check_Name_Validity
-     (Name     : Name_Type;
-      Messages : in out GPR2.Log.Object);
-   --  Same as above but using a generic name
+   function Check_Name_Validity
+     (Name : Name_Type) return Boolean;
+   --  Same as above but using a generic name and just returning whether the
+   --  name is valid or not
 
    function Check_Name_Validity
      (Name     : Name_Type;

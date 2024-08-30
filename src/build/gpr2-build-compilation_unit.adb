@@ -90,11 +90,13 @@ package body GPR2.Build.Compilation_Unit is
       procedure Error (Message : String)
       is
       begin
-         Messages.Append
-           (GPR2.Message.Create
-              ((if As_Error then GPR2.Message.Error
-                else GPR2.Message.Information),
-               Message, Sloc));
+         if Messages.Is_Defined then
+            Messages.Append
+              (GPR2.Message.Create
+                 ((if As_Error then GPR2.Message.Error
+                  else GPR2.Message.Information),
+                  Message, Sloc));
+         end if;
       end Error;
 
       Not_Valid : constant String :=
@@ -146,14 +148,13 @@ package body GPR2.Build.Compilation_Unit is
       return True;
    end Check_Name_Validity;
 
-   procedure Check_Name_Validity
-     (Name     : Name_Type;
-      Messages : in out GPR2.Log.Object)
+   function Check_Name_Validity
+     (Name : Name_Type) return Boolean
    is
-      Dead : Boolean with Unreferenced;
+      Dead : Log.Object := Log.Undefined;
    begin
-      Dead := Check_Name_Validity
-        (Name, Source_Reference.Undefined, True, Messages);
+      return Check_Name_Validity
+        (Name, Source_Reference.Undefined, True, Dead);
    end Check_Name_Validity;
 
    procedure Check_Name_Validity
