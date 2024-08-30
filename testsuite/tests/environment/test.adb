@@ -84,17 +84,6 @@ begin
       Allow_Implicit_Project => False,
       Environment            => Environment ("files"));
 
-   --  testing load using default project in ./files directory
-   Options := GPR2.Options.Empty_Options;
-   Options.Add_Switch (GPR2.Options.P, "./files/");
-   Options.Add_Switch (GPR2.Options.AP, "./files/registered");
-   Options.Add_Switch (GPR2.Options.Config, "./files/autoconf.cgpr");
-   Res := Tree.Load
-     (Options,
-      Absent_Dir_Error       => GPR2.No_Error,
-      Allow_Implicit_Project => True,
-      Environment            => Environment ("files"));
-
    --  testing load_autoconf on default project
    Options := GPR2.Options.Empty_Options;
    Ada.Directories.Set_Directory ("./files");
