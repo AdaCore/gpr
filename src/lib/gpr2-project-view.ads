@@ -368,15 +368,21 @@ package GPR2.Project.View is
    procedure Source_Directories_Walk
      (Self      : Object;
       Source_CB : access procedure
-                    (Dir_Reference : GPR2.Source_Reference.Value.Object;
-                     Source        : GPR2.Path_Name.Full_Name;
-                     Timestamp     : Ada.Calendar.Time);
+                    (Dir_Index : Natural;
+                     Source    : GPR2.Path_Name.Full_Name;
+                     Timestamp : Ada.Calendar.Time);
       Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Full_Name);
       Messages  : in out GPR2.Log.Object)
      with Pre => Self.Is_Defined;
    --  Walks the source directories of Self and calls Source_CB on every
    --  file found, and Dir_CB on each directory found, if the callbacks are
    --  defined.
+   --  Parameters for Source_CB:
+   --  * Dir_index : the index of the Source_Dirs list that triggers the call.
+   --    It is used to determine visibility of the source in case of
+   --    overriding.
+   --  * Source: the path to the source.
+   --  * Timestamp: the timestamp of the source at the time we found it.
 
    function Skipped_Sources
      (Self : Object) return Containers.Filename_Source_Reference

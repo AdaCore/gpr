@@ -2286,14 +2286,14 @@ package body GPR2.Project.View is
    procedure Source_Directories_Walk
      (Self      : Object;
       Source_CB : access procedure
-                    (Dir_Reference : GPR2.Source_Reference.Value.Object;
-                     Source        : GPR2.Path_Name.Full_Name;
-                     Timestamp     : Ada.Calendar.Time);
+                    (Dir_Index : Natural;
+                     Source    : GPR2.Path_Name.Full_Name;
+                     Timestamp : Ada.Calendar.Time);
       Dir_CB    : access procedure (Dir_Name : GPR2.Path_Name.Full_Name);
       Messages  : in out GPR2.Log.Object)
    is
       Visited_Dirs               : GPR2.Containers.Filename_Set;
-      Dir_Ref                    : GPR2.Source_Reference.Value.Object;
+      Dir_Index                  : Natural;
       Ignored_Sub_Dirs           : constant GPR2.Project.Attribute.Object :=
                                    Self.Attribute (PRA.Ignore_Source_Sub_Dirs);
       Ignored_Sub_Dirs_Regexps   : Regexp_List.Vector;
@@ -2381,7 +2381,7 @@ package body GPR2.Project.View is
         (File      : GPR2.Path_Name.Full_Name;
          Timestamp : Ada.Calendar.Time) is
       begin
-         Source_CB (Dir_Ref, File, Timestamp);
+         Source_CB (Dir_Index, File, Timestamp);
       end On_File;
 
    begin
@@ -2440,6 +2440,8 @@ package body GPR2.Project.View is
          end loop;
       end if;
 
+      Dir_Index := 1;
+
       for S of Self.Attribute (PRA.Source_Dirs).Values loop
          --  If S denotes the view's source dir corresponding to
          --  --src-subdir, just skip if the dir does not exist (it is
@@ -2448,7 +2450,6 @@ package body GPR2.Project.View is
                  and then S.Text = Self.Source_Subdirectory.String_Value
                  and then not Ada.Directories.Exists (S.Text))
          then
-            Dir_Ref := S;
             View_Internal.Foreach
               (Base_Dir          => Self.Dir_Name,
                Messages          => Messages,
@@ -2458,6 +2459,7 @@ package body GPR2.Project.View is
                                      then null
                                      else On_File'Access),
                Directory_CB      => On_Directory'Access);
+            Dir_Index := Dir_Index + 1;
          end if;
       end loop;
    end Source_Directories_Walk;

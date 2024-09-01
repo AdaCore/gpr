@@ -9,7 +9,6 @@ with Ada.Calendar;
 limited with GPR2.Build.Tree_Db;
 with GPR2.Build.Unit_Info.List;
 with GPR2.Path_Name;
-with GPR2.Source_Reference.Value;
 
 package GPR2.Build.Source_Base is
 
@@ -42,7 +41,7 @@ package GPR2.Build.Source_Base is
       Timestamp        : Ada.Calendar.Time;
       Tree_Db          : access GPR2.Build.Tree_Db.Object;
       Naming_Exception : Boolean;
-      Source_Ref       : Source_Reference.Value.Object;
+      Source_Dir_Idx   : Natural;
       Is_Compilable    : Boolean := False)
       return Object'Class
      with Pre  => Filename.Is_Defined,
@@ -131,9 +130,10 @@ package GPR2.Build.Source_Base is
    function Is_Compilable (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
 
-   function Source_Reference
-     (Self : Object) return Source_Reference.Value.Object
+   function Source_Dir_Value_Index
+     (Self : Object) return Natural
      with Pre => Self.Is_Defined;
+   --  Used to determine internally if a source overrides another.
 
 private
 
@@ -159,7 +159,7 @@ private
       Is_Compilable     : Boolean := False;
       --  Whether the source can be compiled (e.g. we need a compiler to
       --  build a source for the specified language)
-      SR                : GPR2.Source_Reference.Value.Object;
+      Source_Dir_Idx    : Natural := 0;
       --  The value of Source_Dirs responsible for loading this value
    end record;
 
@@ -209,8 +209,8 @@ private
    function Has_Naming_Exception (Self : Object) return Boolean is
      (Self.Naming_Exception);
 
-   function Source_Reference
-     (Self : Object) return GPR2.Source_Reference.Value.Object is
-     (Self.SR);
+   function Source_Dir_Value_Index
+     (Self : Object) return Natural is
+     (Self.Source_Dir_Idx);
 
 end GPR2.Build.Source_Base;
