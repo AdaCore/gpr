@@ -724,9 +724,13 @@ package body Update_Sources_List is
          --  Stop here if it's one of the excluded sources, or it's not in the
          --  included sources if those are given explicitely.
 
-         if Data.Excluded_Sources.Contains (Basename)
-           or else (not Data.Listed_Sources.Is_Empty
-                    and then not Data.Listed_Sources.Contains (Basename))
+         if Data.Excluded_Sources.Contains (Basename) then
+            Data.Actually_Excluded.Include (Basename);
+
+            return False;
+
+         elsif not Data.Listed_Sources.Is_Empty
+           and then not Data.Listed_Sources.Contains (Basename)
          then
             return False;
          end if;
@@ -1201,6 +1205,27 @@ package body Update_Sources_List is
                    then Data.View.Attribute (PRA.Source_List_File)
                    else Data.View.Attribute (PRA.Source_Files))));
          end if;
+      end loop;
+
+      --  Check that we found all the excluded sources
+
+      for C in Data.Excluded_Sources.Iterate loop
+         declare
+            Name : constant Filename_Type :=
+                     Containers.Source_Path_To_Sloc.Key (C);
+            Sloc : constant Source_Reference.Object'Class :=
+                     Containers.Source_Path_To_Sloc.Element (C);
+         begin
+            if Sloc.Is_Defined
+              and then not Data.Actually_Excluded.Contains (Name)
+            then
+               Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "unknown file """ & String (Name) & '"',
+                     Sloc));
+            end if;
+         end;
       end loop;
 
       if Data.View.Has_Package (PRP.Naming,
