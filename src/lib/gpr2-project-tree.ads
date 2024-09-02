@@ -188,6 +188,10 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined;
    --  Returns whether With_Runtime was set while loading the tree
 
+   function Languages (Self : Object) return Containers.Language_Set
+     with Pre => Self.Is_Defined;
+   --  Returns the list of all the languages used in the loaded tree
+
    function Target
      (Self      : Object;
       Canonical : Boolean := False) return Name_Type

@@ -1,0 +1,13 @@
+project Subp is
+
+   for Source_Dirs use ("src1");
+   for Languages use ("Ada", "Makefile");
+
+   package Naming is
+      for Implementation_Suffix ("Makefile") use ".mk";
+   end Naming;
+
+   package Compiler is
+      for Driver ("Makefile") use "";
+   end Compiler;
+end Subp;

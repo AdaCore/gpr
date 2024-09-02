@@ -1,0 +1,4 @@
+with "subp";
+with "subp2";
+abstract project Demo is
+end Demo;

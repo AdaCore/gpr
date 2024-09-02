@@ -339,6 +339,21 @@ package body GPR2.Project.Tree is
       end loop;
    end For_Each_Ada_Closure;
 
+   ---------------
+   -- Languages --
+   ---------------
+
+   function Languages (Self : Object) return Containers.Language_Set is
+   begin
+      return Result : Containers.Language_Set do
+         for V of Self.Ordered_Views loop
+            if V.Has_Languages then
+               Result.Union (V.Language_Ids);
+            end if;
+         end loop;
+      end return;
+   end Languages;
+
    ----------
    -- Load --
    ----------
