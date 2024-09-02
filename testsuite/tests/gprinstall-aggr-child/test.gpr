@@ -1,0 +1,6 @@
+with "inst/share/gpr/gnatcoll-gprinstall_bug.gpr";
+project Test is
+   for Source_Dirs use ("src2");
+   for Object_Dir use "obj2";
+   for Main use ("tmain.adb");
+end Test;
