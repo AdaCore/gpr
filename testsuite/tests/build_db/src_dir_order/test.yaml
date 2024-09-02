@@ -1,0 +1,6 @@
+description:
+    Test for source resolution based on the order of the source_dirs
+    declarations
+driver: build_and_run
+project_file: test
+main: main

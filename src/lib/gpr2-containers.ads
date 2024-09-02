@@ -117,11 +117,6 @@ package GPR2.Containers is
 
    subtype Filename_Source_Reference is Filename_Source_Reference_Package.Map;
 
-   package Source_Value_Type_Set is new Ada.Containers.Indefinite_Ordered_Sets
-     (Source_Reference.Value.Object);
-
-   subtype Source_Value_Set is Source_Value_Type_Set.Set;
-
    package Attribute_Id_Type_List is new Ada.Containers.Ordered_Sets
      (Q_Attribute_Id);
 

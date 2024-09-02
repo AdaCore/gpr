@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Containers.Ordered_Sets;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps.Constants;
 with Ada.Text_IO;
@@ -13,6 +14,7 @@ with GPR2.Build.Tree_Db;
 with GPR2.Build.Unit_Info;
 with GPR2.Project.Attribute;
 with GPR2.Message;
+with GPR2.Source_Reference.Value;
 with GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Tree_Internal;
@@ -766,7 +768,6 @@ package body GPR2.Build.View_Tables is
    is
       use type Ada.Containers.Count_Type;
       use type Project.View.Object;
-      use type Source_Reference.Value.Object;
 
       procedure Propagate_Visible_Source_Removal (Src : Source_Proxy);
       procedure Propagate_Visible_Source_Added (Src : Source_Proxy);
@@ -867,6 +868,8 @@ package body GPR2.Build.View_Tables is
          end if;
       end Propagate_Visible_Source_Removal;
 
+      package Natural_Sets is new Ada.Containers.Ordered_Sets (Natural);
+
       Basename  : constant Simple_Name :=
                     Basename_Source_List_Maps.Key (Cursor);
       Set       : constant Basename_Source_List_Maps.Constant_Reference_Type :=
@@ -877,8 +880,8 @@ package body GPR2.Build.View_Tables is
                     Data.Sources.Find (Basename);
       C_Info    : Src_Info_Maps.Cursor;
       C_Info2   : Src_Info_Maps.Cursor;
-      SR1, SR2  : Source_Reference.Value.Object;
-      Clashes   : GPR2.Containers.Source_Value_Set;
+      SR1, SR2  : Natural;
+      Clashes   : Natural_Sets.Set;
 
    begin
       if Set.Is_Empty then
@@ -932,8 +935,10 @@ package body GPR2.Build.View_Tables is
 
                   C_Info2 := Data.Src_Infos.Find (C.Path_Name);
 
-                  SR1 := Src_Info_Maps.Element (C_Info).Source_Reference;
-                  SR2 := Src_Info_Maps.Element (C_Info2).Source_Reference;
+                  SR1 :=
+                    Src_Info_Maps.Element (C_Info).Source_Dir_Value_Index;
+                  SR2 :=
+                    Src_Info_Maps.Element (C_Info2).Source_Dir_Value_Index;
 
                   if SR1 = SR2 then
                      Clashes.Include (SR1);
@@ -1013,7 +1018,8 @@ package body GPR2.Build.View_Tables is
                      '"' & String (Basename) & '"' &
                        " is found multiple times for the same source" &
                        " directory",
-                     SR));
+                     Data.View.Attribute
+                       (Project.Registry.Attribute.Source_Dirs)));
             end loop;
 
             Candidate := null;

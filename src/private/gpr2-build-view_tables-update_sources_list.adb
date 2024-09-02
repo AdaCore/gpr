@@ -24,7 +24,6 @@ package body Update_Sources_List is
    use type Project.Attribute.Object;
    package PAI renames GPR2.Project.Attribute_Index;
 
-   use GPR2.Containers;
    use GPR2.Path_Name;
 
    package PRA renames GPR2.Project.Registry.Attribute;
@@ -581,7 +580,7 @@ package body Update_Sources_List is
       --  that this routine caches the result into a map.
 
       procedure Handle_File
-        (Dir_Ref   : SR.Value.Object;
+        (Dir_Index : Natural;
          File      : GPR2.Path_Name.Full_Name;
          Timestamp : Ada.Calendar.Time);
       --  Callback to Source_Directories_Walk: update the list of files found
@@ -598,7 +597,7 @@ package body Update_Sources_List is
 
       Changed_Sources    : Basename_Sets.Set;
 
-      Current_Src_Dir_SR : GPR2.Source_Reference.Value.Object;
+      Current_Src_Dir_Idx   : Natural := 0;
       --  Identifies the Source_Dirs value being processed
 
       Dot_Repl : constant String :=
@@ -621,12 +620,12 @@ package body Update_Sources_List is
       -----------------
 
       procedure Handle_File
-        (Dir_Ref   : SR.Value.Object;
+        (Dir_Index : Natural;
          File      : GPR2.Path_Name.Full_Name;
          Timestamp : Ada.Calendar.Time)
       is
       begin
-         Data.Src_Files.Include ((File'Length, Timestamp, Dir_Ref, File));
+         Data.Src_Files.Include ((File'Length, Timestamp, Dir_Index, File));
       end Handle_File;
 
       -------------------
@@ -732,8 +731,8 @@ package body Update_Sources_List is
             return False;
          end if;
 
-         if File.Dir_Ref /= Current_Src_Dir_SR then
-            Current_Src_Dir_SR := File.Dir_Ref;
+         if File.Dir_Idx /= Current_Src_Dir_Idx then
+            Current_Src_Dir_Idx := File.Dir_Idx;
             Source_Name_Set.Clear;
          end if;
 
@@ -881,7 +880,7 @@ package body Update_Sources_List is
                      Timestamp        => File.Stamp,
                      Tree_Db          => Data.Tree_Db,
                      Naming_Exception => Match = Naming_Exception,
-                     Source_Ref       => File.Dir_Ref,
+                     Source_Dir_Idx   => File.Dir_Idx,
                      Is_Compilable    => Is_Compilable (Language)));
 
                --  If we know the units in the source (from naming exception),

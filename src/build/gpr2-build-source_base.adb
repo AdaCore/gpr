@@ -22,7 +22,7 @@ package body GPR2.Build.Source_Base is
       Timestamp        : Ada.Calendar.Time;
       Tree_Db          : access GPR2.Build.Tree_Db.Object;
       Naming_Exception : Boolean;
-      Source_Ref       : GPR2.Source_Reference.Value.Object;
+      Source_Dir_Idx   : Natural;
       Is_Compilable    : Boolean := False)
       return Object'Class
    is
@@ -37,7 +37,7 @@ package body GPR2.Build.Source_Base is
                 Inherited         => False,
                 Naming_Exception  => Naming_Exception,
                 Is_Compilable     => Is_Compilable,
-                SR                => Source_Ref);
+                Source_Dir_Idx    => Source_Dir_Idx);
    end Create;
 
    -----------------

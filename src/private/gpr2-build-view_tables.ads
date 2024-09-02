@@ -19,7 +19,6 @@ with GPR2.Project.View.Set;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source_Base;
 with GPR2.Build.Source;
-with GPR2.Source_Reference.Value;
 with GPR2.View_Ids;
 
 limited with GPR2.Build.View_Db;
@@ -38,8 +37,9 @@ private package GPR2.Build.View_Tables is
    type File_Info (Path_Len : Natural) is record
       Stamp   : Ada.Calendar.Time;
       --  Modification time at the moment we've read the source dir
-      Dir_Ref : Source_Reference.Value.Object;
-      --  Attribute value that made us read this file
+      Dir_Idx : Natural;
+      --  Index in the Source_Dirs attribute that designes the subdir this
+      --  source belongs to.
       Path    : Filename_Optional (1 .. Path_Len);
       --  Full path to the file
    end record;
