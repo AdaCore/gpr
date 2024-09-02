@@ -1,0 +1,5 @@
+project Subp2 is
+
+   for Source_Dirs use ("src2");
+   for Languages use ("C", "Ada");
+end Subp2;

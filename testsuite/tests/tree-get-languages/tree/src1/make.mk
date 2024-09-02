@@ -1,0 +1,2 @@
+all:
+	/dev/null
