@@ -164,9 +164,11 @@ private package GPR2.Build.View_Tables is
       --  unused languages.
       Listed_Sources   : Source_Set.Set;
       --  content of Source_Files and Source_List_File attributes
-      Excluded_Sources : Source_Set.Set;
+      Excluded_Sources : Containers.Source_Path_To_Sloc.Map;
       --  content of Excluded_Source_Files and Excluded_Source_List_File
       --  attributes.
+      Actually_Excluded : Source_Set.Set;
+      --  list of excluded_sources items that matched at least one source
 
       Own_CUs         : Unit_Maps.Map;
       --  The compilation units whose main unit belongs to the table's view

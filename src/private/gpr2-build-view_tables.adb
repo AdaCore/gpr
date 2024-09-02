@@ -403,6 +403,7 @@ package body GPR2.Build.View_Tables is
       package PRA renames Project.Registry.Attribute;
 
       Attr : Project.Attribute.Object;
+      Exc_List : Source_Set.Set;
 
    begin
       Data.Excluded_Sources.Clear;
@@ -414,7 +415,13 @@ package body GPR2.Build.View_Tables is
 
       if Attr.Is_Defined then
          Read_Source_List
-           (Data.View, Attr, Data.Excluded_Sources, Messages);
+           (Data.View, Attr, Exc_List, Messages);
+         if not Messages.Has_Error then
+            for Src of Exc_List loop
+               Data.Excluded_Sources.Include
+                 (Src, Source_Reference.Object (Attr.Value));
+            end loop;
+         end if;
       end if;
 
       --  If we have attribute Excluded_Source_Files
@@ -423,16 +430,26 @@ package body GPR2.Build.View_Tables is
 
       if Attr.Is_Defined then
          for File of Attr.Values loop
+            Exc_List.Clear;
             Include_Simple_Filename
-              (Data.Excluded_Sources, File.Text, File, Messages);
+              (Exc_List, File.Text, File, Messages);
+            if not Exc_List.Is_Empty then
+               Data.Excluded_Sources.Include
+                 (Exc_List.First_Element, Source_Reference.Object (File));
+            end if;
          end loop;
       end if;
 
       --  Remove naming exception sources from inactive case alternatives
 
       for File of Data.View.Skipped_Sources loop
+         Exc_List.Clear;
          Include_Simple_Filename
-           (Data.Excluded_Sources, File.Text, File, Messages);
+           (Exc_List, File.Text, File, Messages);
+         if not Exc_List.Is_Empty then
+            Data.Excluded_Sources.Include
+              (Exc_List.First_Element, Source_Reference.Undefined);
+         end if;
       end loop;
 
       --  If we have attribute Source_List_File
@@ -553,7 +570,7 @@ package body GPR2.Build.View_Tables is
               and then not GNATCOLL.Utils.Starts_With (Line, "--")
             then
                Include_Simple_Filename
-                 (Set, Line, Attr, Messages);
+                 (Set, Line, Attr.Value, Messages);
             end if;
          end;
       end loop;
@@ -781,16 +798,20 @@ package body GPR2.Build.View_Tables is
                       Get_Data (Data.Tree_Db, Src.View);
          Src_Info : constant Src_Info_Maps.Reference_Type :=
                       View_Db.Src_Infos.Reference (Src.Path_Name);
+
       begin
          if Data.View.Is_Extended then
-            --  ??? Check the view's list of excluded sources before doing that
             declare
                Ext_Data : constant View_Data_Ref :=
                             Get_Data (Data.Tree_Db, Data.View.Extending);
+               Name     : constant Simple_Name :=
+                            GPR2.Path_Name.Simple_Name (Src.Path_Name);
             begin
-               if not Ext_Data.Excluded_Sources.Contains
-                 (GPR2.Path_Name.Simple_Name (Src.Path_Name))
-               then
+               --  Check if the extending project excludes the source
+               if Ext_Data.Excluded_Sources.Contains (Name) then
+                  Ext_Data.Actually_Excluded.Include (Name);
+
+               else
                   Add_Source
                     (Ext_Data,
                      Src.View,
@@ -858,13 +879,26 @@ package body GPR2.Build.View_Tables is
          end if;
 
          if Data.View.Is_Extended then
-            Remove_Source
-              (Get_Data (Data.Tree_Db, Data.View.Extending),
-               Src.View,
-               Src.Path_Name,
-               Extended_View      => Data.View,
-               Resolve_Visibility => True,
-               Messages           => Messages);
+            declare
+               Ext_Data : constant View_Data_Ref :=
+                            Get_Data (Data.Tree_Db, Data.View.Extending);
+               Name     : constant Simple_Name :=
+                            GPR2.Path_Name.Simple_Name (Src.Path_Name);
+            begin
+               --  Check if the extending project excludes the source
+               if Ext_Data.Excluded_Sources.Contains (Name) then
+                  Ext_Data.Actually_Excluded.Delete (Name);
+
+               else
+                  Remove_Source
+                    (Get_Data (Data.Tree_Db, Data.View.Extending),
+                     Src.View,
+                     Src.Path_Name,
+                     Extended_View      => Data.View,
+                     Resolve_Visibility => True,
+                     Messages           => Messages);
+               end if;
+            end;
          end if;
       end Propagate_Visible_Source_Removal;
 
