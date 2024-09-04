@@ -419,11 +419,17 @@ package GPR2.Project.View is
    --
    --  In the above example. "foo__not_ok.adb" needs to be skipped.
 
-   function Has_Sources (Self : Object) return Boolean
+   function Has_Sources
+     (Self      : Object;
+      Recursive : Boolean := False)
+      return Boolean
      with Pre  => Self.Is_Defined,
-          Post => (if Self.Kind in K_Abstract | K_Aggregate
+          Post => (if not Recursive
+                     and then Self.Kind in K_Abstract | K_Aggregate
                    then not Has_Sources'Result);
-   --  Returns true if the project view has some sources
+   --  Returns true if the project view has some sources. If Recursive is
+   --  set returns True if project has sources or any imported projects has
+   --  sources.
 
    function Sources
      (Self            : Object;

@@ -1809,13 +1809,26 @@ package body GPR2.Project.View is
    -- Has_Sources --
    -----------------
 
-   function Has_Sources (Self : Object) return Boolean is
+   function Has_Sources
+     (Self      : Object;
+      Recursive : Boolean := False)
+      return Boolean
+   is
       S : constant Project.Source.Set.Object := Self.Sources with Unreferenced;
       --  Let's compute the set of sources to be able to get the right answer
       --  below. Remember the sources are cached and computed only when
       --  requested.
+
+      R : Boolean := not Definition.Get_RO (Self).Sources.Is_Empty;
    begin
-      return not Definition.Get_RO (Self).Sources.Is_Empty;
+      if not R and then Recursive then
+         for I of Self.Imports loop
+            R := I.Has_Sources (Recursive);
+            exit when R;
+         end loop;
+      end if;
+
+      return R;
    end Has_Sources;
 
    ---------------
