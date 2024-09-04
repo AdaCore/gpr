@@ -8,6 +8,7 @@ dump
 
 create_spec Pkg src/pkg.ads
 create_body Pkg src/pkg.adb
+create_spec Pkg src/pkg2.ads
 create_separate Pkg Sub src/pkg-sub.adb
 refresh
 dump
@@ -31,6 +32,7 @@ dump
 # remove body of pkg from extended project: source list of both views
 # should be updated accordingly
 remove src/pkg.adb
+remove src/pkg2.ads
 refresh
 dump
 

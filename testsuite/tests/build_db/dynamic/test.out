@@ -126,6 +126,7 @@ Executing scenario/extending.txt
 --- cp ../projects/base.gpr .
 --- cp ../projects/extending.gpr .
 --- Loading project extending.gpr
+extending.gpr:7:35: error: unknown file "pkg2.ads"
 base.gpr: warning: there are no sources of language "Ada" in this project
 extending.gpr:3:23: warning: there are no sources of language "Ada" in this project
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
@@ -140,8 +141,10 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 -----------------------------------
 --- create spec src/pkg.ads
 --- create body src/pkg.adb
+--- create spec src/pkg2.ads
 --- create separate src/pkg-sub.adb
 --- Refresh list of sources
+pkg2.ads: warning: unit name "PKG" does not match source name
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
@@ -149,6 +152,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
    - src/pkg-sub.adb (sep.)
    - src/pkg.adb (body)
    - src/pkg.ads (spec)
+   - src/pkg2.ads (spec)
  - sources of Extending
    - src/pkg-sub.adb (sep.)
    - src/pkg.adb (body)
@@ -169,6 +173,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
    - src/pkg-sub.adb (sep.)
    - src/pkg.adb (body)
    - src/pkg.ads (spec)
+   - src/pkg2.ads (spec)
  - sources of Extending
    - ext/pkg-sub.adb (sep.)
    - src/pkg.adb (body)
@@ -189,6 +194,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
    - src/pkg-sub.adb (sep.)
    - src/pkg.adb (body)
    - src/pkg.ads (spec)
+   - src/pkg2.ads (spec)
  - sources of Extending
    - src/pkg-sub.adb (sep.)
    - src/pkg.adb (body)
@@ -208,6 +214,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
  - sources of Base extended by Extending
    - src/pkg.adb (body)
    - src/pkg.ads (spec)
+   - src/pkg2.ads (spec)
  - sources of Extending
    - src/pkg.adb (body)
    - src/pkg.ads (spec)
@@ -218,7 +225,9 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
      body: src/pkg.adb (from view Extending)
 -----------------------------------
 --- rm src/pkg.adb
+--- rm src/pkg2.ads
 --- Refresh list of sources
+extending.gpr:7:35: error: unknown file "pkg2.ads"
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
@@ -233,6 +242,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 -----------------------------------
 --- create body ext/pkg.adb
 --- Refresh list of sources
+extending.gpr:7:35: error: unknown file "pkg2.ads"
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
