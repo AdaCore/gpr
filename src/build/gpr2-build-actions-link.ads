@@ -145,6 +145,12 @@ private
 
    overriding procedure Compute_Signature (Self : in out Object);
 
+   function Check_Archive_Driver (Self : Object) return Boolean;
+   --  True if the archive driver is found
+
+   function Check_Linker_Driver (Self : Object) return Boolean;
+   --  True if the linker driver is found
+
    function Is_Library (Self : Object) return Boolean is
      (Self.Is_Library);
 
@@ -163,14 +169,18 @@ private
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
 
+   function Check_Archive_Driver (Self : Object) return Boolean is
+     (Self.View.Attribute (PRA.Archive_Builder).Is_Defined
+      and then not Self.View.Attribute (PRA.Archive_Builder).Values.Is_Empty);
+
+   function Check_Linker_Driver (Self : Object) return Boolean is
+     (Self.View.Attribute (PRA.Linker.Driver).Is_Defined
+      and then Self.View.Attribute (PRA.Linker.Driver).Value.Text'Length > 0);
+
    overriding function Skip (Self : Object) return Boolean is
-     (Self.View.Is_Externally_Built
-      or else
-        (Self.Is_Static_Library
-         and then not Self.View.Attribute
-           (PRA.Archive_Builder).Is_Defined)
-      or else not Self.View.Attribute
-        (PRA.Linker.Driver).Is_Defined);
+     (if Self.View.Is_Externally_Built then True
+      elsif Self.Is_Static_Library then not Self.Check_Archive_Driver
+      else not Self.Check_Linker_Driver);
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object is
