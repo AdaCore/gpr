@@ -8,12 +8,11 @@ with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Source;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Attribute_Index;
 
 private with GPR2.View_Ids;
 
 package GPR2.Build.Actions.Compile is
-
-   package PRA renames GPR2.Project.Registry.Attribute;
 
    type Compile_Id (<>) is new Actions.Action_Id with private;
 
@@ -53,12 +52,16 @@ package GPR2.Build.Actions.Compile is
       Args : out GNATCOLL.OS.Process.Argument_List;
       Env  : out GNATCOLL.OS.Process.Environment_Dict);
 
+   overriding function Skip (Self : Object) return Boolean;
+
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object;
 
 private
 
    use type GPR2.View_Ids.View_Id;
+   package PRA renames GPR2.Project.Registry.Attribute;
+   package PAI renames GPR2.Project.Attribute_Index;
 
    type Compile_Id (Name_Len : Natural) is new Actions.Action_Id with record
       Lang     : Language_Id;
@@ -127,6 +130,13 @@ private
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object is
      (Self.Ctxt.Object_Directory);
+
+   overriding function Skip (Self : Object) return Boolean is
+     (Self.View.Is_Externally_Built
+      or else not Self.View.Attribute
+        (PRA.Compiler.Driver, PAI.Create (Self.Lang)).Is_Defined
+      or else Self.View.Attribute
+        (PRA.Compiler.Driver, PAI.Create (Self.Lang)).Value.Text'Length = 0);
 
    function Lookup
      (V          : GPR2.Project.View.Object;

@@ -441,17 +441,6 @@ package body GPR2.Build.Actions.Compile.Ada is
       Self.On_Tree_Propagation;
    end Post_Command;
 
-   ----------
-   -- Skip --
-   ----------
-
-   overriding function Skip (Self : Object) return Boolean is
-   begin
-      return Self.View.Is_Externally_Built
-        or else not Self.View.Attribute
-          (PRA.Compiler.Driver, PAI.Create (Ada_Language)).Is_Defined;
-   end Skip;
-
    ---------
    -- UID --
    ---------
