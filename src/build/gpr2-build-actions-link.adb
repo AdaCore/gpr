@@ -5,7 +5,6 @@
 --
 
 with GPR2.Project.Attribute;
---  with GPR2.Project.Attribute_Index;
 
 package body GPR2.Build.Actions.Link is
 
@@ -29,10 +28,60 @@ package body GPR2.Build.Actions.Link is
    is
       pragma Unreferenced (Env);
 
-      Objects     : Tree_Db.Artifact_Sets.Set;
+      function Add_Attr
+        (Id      : Q_Attribute_Id;
+         Index   : PAI.Object;
+         Is_List : Boolean;
+         Param   : String := "") return Boolean;
+
+      --------------
+      -- Add_Attr --
+      --------------
+
+      function Add_Attr
+        (Id      : Q_Attribute_Id;
+         Index   : PAI.Object;
+         Is_List : Boolean;
+         Param   : String := "") return Boolean
+      is
+         Attr : constant Project.Attribute.Object :=
+                  Self.View.Attribute (Id, Index);
+      begin
+         if not Attr.Is_Defined then
+            return False;
+         end if;
+
+         if Is_List then
+            for Idx in Attr.Values.First_Index .. Attr.Values.Last_Index loop
+               if Idx < Attr.Values.Last_Index then
+                  Args.Append (Attr.Values.Element (Idx).Text);
+               else
+                  Args.Append (Attr.Values.Element (Idx).Text & Param);
+               end if;
+            end loop;
+         else
+            Args.Append (Attr.Value.Text & Param);
+         end if;
+
+         return True;
+      end Add_Attr;
+
+      Objects    : Tree_Db.Artifact_Sets.Set;
+      Status     : Boolean;
+      Src_Idx    : constant PAI.Object :=
+                     (if not Self.Is_Library
+                      then PAI.Create
+                        (String (Self.Main_Src.Path.Simple_Name),
+                         Case_Sensitive => File_Names_Case_Sensitive,
+                         At_Pos         => Self.Main_Src.Index)
+                      else PAI.Undefined);
+
 
    begin
       Objects := Self.Embedded_Objects;
+
+      --  Remove from this list of objects the ones that come from
+      --  libraries.
 
       for Lib of Self.Library_Dependencies loop
          declare
@@ -44,55 +93,84 @@ package body GPR2.Build.Actions.Link is
       end loop;
 
       --  ??? Replace hard coded values
-      if Self.Is_Library then
-         Args.Append ("ar");
-         Args.Append ("crs");
-         Args.Append (String (Self.Output.Path.Simple_Name));
+      if Self.Is_Static_Library then
+         Status := Add_Attr (PRA.Archive_Builder, PAI.Undefined, True);
+         pragma Assert (Status, "No archiver is defined");
+
+         --  ??? Hack to speed up and ease the generation of archives:
+         --  instead of using "ar cr" then use ranlib, we generate directly
+         --  the symbol table by using "ar csr".
+
+         if Args.Last_Element = "cr" then
+            Args.Delete_Last;
+            Args.Append ("csr");
+            Args.Append (String (Self.Output.Path.Simple_Name));
+         end if;
+
       else
-         Args.Append ("gcc");
+         Status := Add_Attr (PRA.Linker.Driver, PAI.Undefined, False);
+         pragma Assert (Status, "No linker driver is defined");
+
+         if Src_Idx.Is_Defined then
+            Status := Add_Attr (PRA.Linker.Leading_Switches, Src_Idx, True);
+         end if;
+
+         if Self.Is_Library then
+            --  shared lib case, add the minimal options
+            Status := Add_Attr
+              (PRA.Shared_Library_Minimum_Switches, PAI.Undefined, True);
+         end if;
+
+         --  ??? This shouldn't be hardcoded
          Args.Append ("-o");
-         Args.Append (Self.Output.Path.String_Value);
+         Args.Append (String (Self.Output.Path.Simple_Name));
       end if;
 
       for Obj of Objects loop
          Args.Append (Artifacts.Files.Object'Class (Obj).Path.String_Value);
       end loop;
 
-      if not Self.Is_Library then
+      if not Self.Is_Static_Library then
          for Lib of Self.Library_Dependencies loop
             declare
                Link : constant Object'Class :=
                         Object'Class (Self.Tree.Action (Lib));
                Opt  : constant Project.Attribute.Object :=
                         Link.View.Attribute (PRA.Linker.Linker_Options);
+
             begin
                Args.Append (Link.Library.Path.String_Value);
 
-               if Opt.Is_Defined then
+               if Opt.Is_Defined and then not Self.Is_Library then
                   for Val of Opt.Values loop
                      Args.Append (Val.Text);
                   end loop;
                end if;
             end;
          end loop;
+      end if;
+
+      if Src_Idx.Is_Defined then
+         --  Add switches for linking an executable
+         Status :=
+           Add_Attr (PRA.Linker.Required_Switches, PAI.Undefined, True);
+
+         Status := Add_Attr (PRA.Linker.Switches, Src_Idx, True);
+
+         if not Status then
+            Status := Add_Attr
+              (PRA.Linker.Default_Switches,
+               PAI.Create
+                 (Self.View.Source (Self.Main_Src.Path.Simple_Name).Language),
+               True);
+         end if;
 
          for Option of Self.Static_Options loop
             Args.Append (Option);
          end loop;
 
-         declare
-            Required_Switches : constant Project.Attribute.Object :=
-                                  Self.Ctxt.Attribute
-                                    (PRA.Linker.Required_Switches);
-         begin
-            if Required_Switches.Is_Defined then
-               for Switch of Required_Switches.Values loop
-                  Args.Append ((Switch.Text));
-               end loop;
-            end if;
-         end;
+         Status := Add_Attr (PRA.Linker.Trailing_Switches, Src_Idx, True);
       end if;
-
    end Compute_Command;
 
    -----------------------
@@ -146,11 +224,15 @@ package body GPR2.Build.Actions.Link is
 
    procedure Initialize_Executable
      (Self       : in out Object;
-      Executable : GPR2.Path_Name.Object;
-      Context    : GPR2.Project.View.Object) is
+      Src        : Artifacts.File_Part.Object;
+      Context    : GPR2.Project.View.Object)
+   is
+      Exec : constant GPR2.Path_Name.Object :=
+               Context.Executable (Src.Path.Simple_Name, Src.Index);
    begin
       Self.Is_Library := False;
-      Self.Executable := Artifacts.Files.Create (Executable);
+      Self.Main_Src   := Src;
+      Self.Executable := Artifacts.Files.Create (Exec);
       Self.Ctxt       := Context;
       Self.Traces     := Create ("ACTION_LINK");
    end Initialize_Executable;
