@@ -1,0 +1,8 @@
+with "gnatcoll.gpr";
+library project GNATCOLL.Gprinstall_Bug is
+   for Source_Dirs use ("src");
+   for Object_Dir use ".obj";
+   for Library_Dir use "lib";
+   for Library_Name use "gprinstall_bug";
+   for Source_Files use ("gprinstall_bug.ads");
+end GNATCOLL.Gprinstall_Bug;

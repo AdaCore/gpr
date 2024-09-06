@@ -1,0 +1,5 @@
+with "gnatcoll";
+with "gnatcoll_core";
+with "gnatcoll_minimal";
+with "gnatcoll_projects";
+OK

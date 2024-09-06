@@ -2524,7 +2524,9 @@ package body GPRinstall.Install is
                --  for doing this for aggregate projects.
 
                for L of Project.Imports loop
-                  if L.Has_Sources and then Is_Install_Active (L) then
+                  if Is_Install_Active (L)
+                    and then L.Has_Sources (Recursive => True)
+                  then
                      Content.Append
                        ("with """ & String (L.Path_Name.Base_Name) & """;");
                   end if;
