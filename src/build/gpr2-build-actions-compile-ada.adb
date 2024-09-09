@@ -28,7 +28,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       Idx     : Language_Id;
       Default : Value_Type) return Value_Type;
 
-   procedure Update_Deps_From_Ali (Self : in out Object);
+   function Update_Deps_From_Ali (Self : in out Object) return Boolean;
    --  Parse the ALI file produced by the action to update dependencies
 
    -------------------------
@@ -103,8 +103,10 @@ package body GPR2.Build.Actions.Compile.Ada is
       --  an empty dependencies set means that the ALI file has not
       --  been parsed.
 
-      if Self.Deps.Is_Empty then
-         Self.Update_Deps_From_Ali;
+      if Self.Deps.Is_Empty and then not Self.Update_Deps_From_Ali then
+         raise Program_Error with
+          "Failed to obtain dependencies from the ALI file produced by the " &
+            "action " & Object'Class (Self).UID.Image;
       end if;
 
       return Self.Deps;
@@ -293,16 +295,9 @@ package body GPR2.Build.Actions.Compile.Ada is
          Trace (Self.Traces,
                 "Parse " & String (Self.Ali_File.Path.Simple_Name));
 
-         GPR2.Build.ALI_Parser.Imports (Self.Ali_File.Path, Imports, Messages);
-
-         if Messages.Has_Error then
-            Messages.Output_Messages
-              (Information => False,
-               Warning     => False);
-            --  ??? Should return a status that tells the compilation went
-            --  wrong
-
-            return;
+         if not GPR2.Build.ALI_Parser.Imports (Self.Ali_File.Path, Imports)
+         then
+            Imports := Self.CU.Known_Dependencies;
          end if;
       else
          Imports := Self.CU.Known_Dependencies;
@@ -434,7 +429,14 @@ package body GPR2.Build.Actions.Compile.Ada is
 
       --  Update the signature of the action
 
-      Self.Update_Deps_From_Ali;
+      if not Self.Update_Deps_From_Ali then
+         Trace
+           (Self.Traces,
+            "Failed to obtain dependencies from the ALI file produced " &
+              "by the action " & Object'Class (Self).UID.Image);
+
+         return;
+      end if;
 
       --  Update the tree with potential new imports from ALI
 
@@ -452,18 +454,28 @@ package body GPR2.Build.Actions.Compile.Ada is
    -- Update_Deps_From_Ali --
    --------------------------
 
-   procedure Update_Deps_From_Ali (Self : in out Object) is
+   function Update_Deps_From_Ali (Self : in out Object) return Boolean is
       Deps_Src : GPR2.Containers.Filename_Set;
-      Messages : GPR2.Log.Object;
       UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
 
    begin
-      pragma Assert
-        (Self.Ali_File.Path.Exists,
-         "ALI file for action " & UID.Image & " does not exist");
 
-      GPR2.Build.ALI_Parser.Dependencies
-        (Self.Ali_File.Path, Deps_Src, Messages);
+      if not Self.Ali_File.Path.Exists then
+         Trace
+           (Self.Traces,
+            "The ALI file for action " & UID.Image & " does not exist");
+
+         return False;
+      end if;
+
+      if not GPR2.Build.ALI_Parser.Dependencies (Self.Ali_File.Path, Deps_Src)
+      then
+         Trace
+           (Self.Traces, "Failed to parse dependencies from the ALI file " &
+            Self.Ali_File.Path.String_Value);
+
+         return False;
+      end if;
 
       for Dep_Src of Deps_Src loop
          declare
@@ -482,6 +494,8 @@ package body GPR2.Build.Actions.Compile.Ada is
             end if;
          end;
       end loop;
+
+      return True;
    end Update_Deps_From_Ali;
 
 end GPR2.Build.Actions.Compile.Ada;
