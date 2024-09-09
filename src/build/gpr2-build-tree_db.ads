@@ -16,6 +16,7 @@ with GPR2.Build.View_Db;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
+with GPR2.Reporter;
 with GPR2.View_Ids;
 
 private with Ada.Containers.Hashed_Maps;
@@ -53,6 +54,10 @@ package GPR2.Build.Tree_Db is
 
    function Source_Option (Self : Object) return Optional_Source_Info_Option;
 
+   function Reporter
+     (Self : Object) return GPR2.Reporter.Object'Class;
+   --  Returns the tree's reporter
+
    --  VIEW DATABASE LOOKUP:
 
    function View_Database
@@ -74,14 +79,12 @@ package GPR2.Build.Tree_Db is
 
    --  BUILD GRAPH SUPPORT
 
-   procedure Add_Action
+   function Add_Action
      (Self     : in out Object;
-      Action   : in out Actions.Object'Class;
-      Messages : in out GPR2.Log.Object)
+      Action   : in out Actions.Object'Class) return Boolean
      with Pre =>
        Self.Is_Defined
-       and then not Self.Has_Action (Action.UID)
-       and then not Messages.Has_Error;
+       and then not Self.Has_Action (Action.UID);
 
    function Has_Action
      (Self : Object;
@@ -112,11 +115,10 @@ package GPR2.Build.Tree_Db is
                    and then Self.Has_Action (Action)
                    and then Artifact.Is_Defined;
 
-   procedure Add_Output
+   function Add_Output
      (Self     : in out Object;
       Action   : Actions.Action_Id'Class;
-      Artifact : Artifacts.Object'Class;
-      Messages : in out GPR2.Log.Object)
+      Artifact : Artifacts.Object'Class) return Boolean
      with Pre => Self.Is_Defined
                    and then Self.Has_Action (Action)
                    and then Artifact.Is_Defined;
@@ -135,7 +137,7 @@ package GPR2.Build.Tree_Db is
      (Self : in out Object; Node : DG.Node_Id) return Actions.Action_Id'Class;
    --  ???
 
-   procedure Propagate_Actions (Self : Object);
+   function Propagate_Actions (Self : Object) return Boolean;
    --  ???
 
    ----------------------------

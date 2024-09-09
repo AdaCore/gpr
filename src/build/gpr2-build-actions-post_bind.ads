@@ -28,10 +28,9 @@ package GPR2.Build.Actions.Post_Bind is
       View   : GPR2.Project.View.Object;
       Binder : GPR2.Build.Actions.Ada_Bind.Object) return Object;
 
-   overriding procedure On_Tree_Insertion
+   overriding function On_Tree_Insertion
      (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object;
-      Messages : in out GPR2.Log.Object);
+      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
    overriding procedure Compute_Command
      (Self : in out Object;
@@ -68,8 +67,9 @@ private
 
    overriding function UID (Self : Object) return Action_Id'Class;
 
-   overriding procedure Post_Command (Self   : in out Object;
-                                      Status : Execution_Status);
+   overriding function Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status) return Boolean;
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object

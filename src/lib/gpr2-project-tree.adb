@@ -5,7 +5,6 @@
 --
 
 with Ada.Directories;
-with Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 with GNAT.OS_Lib;
 with GNATCOLL.Atomic;
@@ -13,11 +12,12 @@ with GNATCOLL.Atomic;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
-with GPR2.Message.Reporter;
+with GPR2.Reporter; use GPR2.Reporter;
 with GPR2.Project_Parser;
 with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Tree_Internal.View_Builder;
+with GPR2.Message; use GPR2.Message;
 
 package body GPR2.Project.Tree is
 
@@ -31,8 +31,6 @@ package body GPR2.Project.Tree is
 
    function Check_For_Default_Project
      (Directory : String := "") return GPR2.Path_Name.Object;
-
-   procedure Report_Messages (Log : GPR2.Log.Object);
 
    ------------
    -- Adjust --
@@ -362,6 +360,8 @@ package body GPR2.Project.Tree is
      (Self                     : in out Object;
       Options                  : GPR2.Options.Object'Class;
       With_Runtime             : Boolean := False;
+      Reporter                 : GPR2.Reporter.Object'Class :=
+                                   GPR2.Reporter.Console.Create;
       Absent_Dir_Error         : GPR2.Error_Level := GPR2.Warning;
       Allow_Implicit_Project   : Boolean := True;
       Environment              : GPR2.Environment.Object :=
@@ -393,6 +393,8 @@ package body GPR2.Project.Tree is
       else
          Self.Tree.Unload (Full => False);
       end if;
+
+      Self.Tree.Set_Reporter (Reporter);
 
       if Project_File.Is_Defined
         and then not Project_File.Has_Dir_Name
@@ -438,20 +440,15 @@ package body GPR2.Project.Tree is
                else "");
 
             if Project_File.Is_Defined then
-               if Verbosity > Quiet then
-                  Message.Reporter.Active_Reporter.Report
-                    ("using project file " & Project_File.String_Value);
-               end if;
-
+               Self.Reporter.Report
+                 ("using project file " & Project_File.String_Value);
             elsif Allow_Implicit_Project then
+
                --  See comment in No_Project case as to how we handle projects
                --  as project directories.
 
-               if Verbosity > Quiet then
-                  Message.Reporter.Active_Reporter.Report
-                    ("use implicit project in " &
-                       Directories.Current_Directory);
-               end if;
+               Self.Reporter.Report
+                 ("use implicit project in " & Directories.Current_Directory);
 
                Root_Data := Tree_Internal.View_Builder.Create
                  (Project_Dir => Path_Name.Create_Directory ("."),
@@ -560,11 +557,11 @@ package body GPR2.Project.Tree is
             end;
          end if;
 
-         Report_Messages (Self.Tree.Log_Messages.all);
+         Self.Reporter.Report (Self.Tree.Log_Messages.all);
 
       else
-         if Options.Config_Project.Is_Defined and then Verbosity > Quiet then
-            Message.Reporter.Active_Reporter.Report
+         if Options.Config_Project.Is_Defined then
+            Self.Reporter.Report
               ("creating configuration project " &
                  String (Options.Config_Project.Name));
          end if;
@@ -588,7 +585,7 @@ package body GPR2.Project.Tree is
             File_Reader       => File_Reader,
             Environment       => Environment);
 
-         Report_Messages (Self.Tree.Log_Messages.all);
+         Self.Reporter.Report (Self.Tree.Log_Messages.all);
       end if;
 
       GPR2.Project_Parser.Clear_Cache;
@@ -596,11 +593,7 @@ package body GPR2.Project.Tree is
       return True;
    exception
       when GPR2.Project_Error =>
-         if Verbosity >= Errors then
-            Self.Tree.Log_Messages.Output_Messages
-              (Information => False,
-               Warning     => False);
-         end if;
+         Self.Reporter.Report (Self.Tree.Log_Messages.all);
 
          GPR2.Project_Parser.Clear_Cache;
 
@@ -622,7 +615,9 @@ package body GPR2.Project.Tree is
       Config           : GPR2.Project.Configuration.Object :=
                            GPR2.Project.Configuration.Undefined;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference)
+                           GPR2.File_Readers.No_File_Reader_Reference;
+      Reporter         : GPR2.Reporter.Object'Class :=
+                           GPR2.Reporter.Console.Create)
       return Boolean
    is
       Conf         : GPR2.Project.Configuration.Object;
@@ -633,6 +628,8 @@ package body GPR2.Project.Tree is
       else
          Self.Tree.Unload (Full => False);
       end if;
+
+      Self.Tree.Set_Reporter (Reporter);
 
       for Path of Options.User_Specified_Project_Search_Path loop
          Self.Register_Project_Search_Path (Path);
@@ -712,11 +709,11 @@ package body GPR2.Project.Tree is
             end;
          end if;
 
-         Report_Messages (Self.Tree.Log_Messages.all);
+         Self.Reporter.Report (Self.Tree.Log_Messages.all);
 
       else
-         if Options.Config_Project.Is_Defined and then Verbosity > Quiet then
-            Ada.Text_IO.Put_Line
+         if Options.Config_Project.Is_Defined then
+            Self.Reporter.Report
               ("creating configuration project " &
                  String (Options.Config_Project.Name));
          end if;
@@ -741,17 +738,13 @@ package body GPR2.Project.Tree is
             File_Reader       => File_Reader,
             Environment       => Environment);
 
-         Report_Messages (Self.Tree.Log_Messages.all);
+         Self.Reporter.Report (Self.Tree.Log_Messages.all);
       end if;
 
       return True;
    exception
       when GPR2.Project_Error =>
-         if Verbosity >= Errors then
-            Self.Tree.Log_Messages.Output_Messages
-              (Information => False,
-               Warning     => False);
-         end if;
+         Self.Reporter.Report (Self.Tree.Log_Messages.all);
 
          return False;
    end Load_Virtual_View;
@@ -770,31 +763,6 @@ package body GPR2.Project.Tree is
 
       Self.Tree.Register_Project_Search_Path (Dir => Dir);
    end Register_Project_Search_Path;
-
-   ---------------------
-   -- Report_Messages --
-   ---------------------
-
-   procedure Report_Messages (Log : GPR2.Log.Object) is
-   begin
-      case Verbosity is
-         when Quiet | Minimal =>
-            null;
-
-         when Errors =>
-            Log.Output_Messages (Information => False,
-                                 Warning     => False);
-
-         when Warnings_And_Errors =>
-            Log.Output_Messages (Information => False);
-
-         when Info =>
-            Log.Output_Messages;
-
-         when Linter =>
-            Log.Output_Messages (Lint => True);
-      end case;
-   end Report_Messages;
 
    ------------------------------------
    -- Restrict_Autoconf_To_Languages --
@@ -842,20 +810,27 @@ package body GPR2.Project.Tree is
    begin
       Self.Tree.Log_Messages.Clear;
       Self.Tree.Set_Context (Context, Changed);
-      Report_Messages (Self.Tree.Log_Messages.all);
+      Self.Reporter.Report (Self.Tree.Log_Messages.all);
 
       return True;
 
    exception
       when Project_Error =>
-         if Verbosity >= Errors then
-            Self.Log_Messages.Output_Messages
-              (Information => False,
-               Warning     => False);
-         end if;
+         Self.Reporter.Report (Self.Tree.Log_Messages.all);
 
          return False;
    end Set_Context;
+
+   ------------------
+   -- Set_Reporter --
+   ------------------
+
+   procedure Set_Reporter
+     (Self : in out Object; Reporter : GPR2.Reporter.Object'Class)
+   is
+   begin
+      Self.Tree.Set_Reporter (Reporter);
+   end Set_Reporter;
 
    ------------
    -- Unload --
@@ -875,38 +850,26 @@ package body GPR2.Project.Tree is
 
    procedure Update_Sources
      (Self     : Object;
-      Messages : out GPR2.Log.Object;
-      Option   : Source_Info_Option := Sources_Units)
-   is
-   begin
-      Self.Tree.Update_Sources (Option => Option, Messages => Messages);
-      Report_Messages (Messages);
-   end Update_Sources;
-
-   procedure Update_Sources
-     (Self     : Object;
       Option   : Source_Info_Option := Sources_Units)
    is
       Log : GPR2.Log.Object;
    begin
-      Self.Update_Sources (Log, Option);
+      Self.Tree.Update_Sources (Option => Option, Messages => Log);
+      Self.Reporter.Report (Log);
    end Update_Sources;
 
    function Update_Sources
      (Self     : Object;
       Option   : Source_Info_Option := Sources_Units) return Boolean
    is
-      Log : GPR2.Log.Object;
+      Log     : GPR2.Log.Object;
+      Success : Boolean;
    begin
-      Self.Update_Sources (Log, Option);
+      Self.Tree.Update_Sources (Option => Option, Messages => Log);
+      Success := not Log.Has_Error;
+      Self.Reporter.Report (Log);
 
-      return not Log.Has_Element
-        (Information => False,
-         Warning     => False,
-         Error       => True,
-         Lint        => False,
-         Read        => True,
-         Unread      => True);
+      return Success;
    end Update_Sources;
 
 begin

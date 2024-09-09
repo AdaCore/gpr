@@ -129,10 +129,9 @@ package body GPR2.Build.Tree_Db is
    -- Add_Action --
    ----------------
 
-   procedure Add_Action
+   function Add_Action
      (Self     : in out Object;
-      Action   : in out Actions.Object'Class;
-      Messages : in out GPR2.Log.Object)
+      Action   : in out Actions.Object'Class) return Boolean
    is
       Curs : Action_Maps.Cursor;
       Done : Boolean;
@@ -142,7 +141,8 @@ package body GPR2.Build.Tree_Db is
       Self.Actions.Insert (Action.UID, Action, Curs, Done);
 
       if not Done then
-         return;
+         Action := Self.Actions.Reference (Curs);
+         return True;
       end if;
 
       Self.New_Actions.Include (Action.UID);
@@ -155,10 +155,14 @@ package body GPR2.Build.Tree_Db is
       Self.Inputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
       Self.Outputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
 
-      Action.On_Tree_Insertion (Self, Messages);
+      if not Action.On_Tree_Insertion (Self) then
+         return False;
+      end if;
 
       Self.Actions.Reference (Curs).Load_Signature;
       Action := Self.Actions.Reference (Curs);
+
+      return True;
    end Add_Action;
 
    ------------------
@@ -216,11 +220,10 @@ package body GPR2.Build.Tree_Db is
    -- Add_Output --
    ----------------
 
-   procedure Add_Output
+   function Add_Output
      (Self     : in out Object;
       Action   : Actions.Action_Id'Class;
-      Artifact : Artifacts.Object'Class;
-      Messages : in out GPR2.Log.Object)
+      Artifact : Artifacts.Object'Class) return Boolean
    is
       use type Actions.Action_Id;
       Pred     : Artifact_Action_Maps.Cursor;
@@ -233,7 +236,7 @@ package body GPR2.Build.Tree_Db is
       if Artifact_Action_Maps.Has_Element (Pred) then
          if Self.Predecessor (Pred) /= Action then
             --  Two actions produce the same output, raise an error
-            Messages.Append
+            Self.Reporter.Report
               (GPR2.Message.Create
                  (GPR2.Message.Error,
                   '"' & Action.Image & """ and """ &
@@ -241,20 +244,20 @@ package body GPR2.Build.Tree_Db is
                     """ produce the same output """ &
                     Artifact.Image & '"',
                   Artifact.SLOC));
-
-            return;
+            return False;
          end if;
       else
          Self.Predecessor.Insert (Artifact, Action);
       end if;
 
       Self.Outputs.Reference (Action).Include (Artifact);
-
       for Successor_Id of Self.Successors (Artifact) loop
          Self.Actions_Graph.Add_Predecessor
            (Node        => Self.Action_To_Node (Successor_Id),
             Predecessor => Self.Action_To_Node (Action));
       end loop;
+
+      return True;
    end Add_Output;
 
    ----------------
@@ -630,7 +633,7 @@ package body GPR2.Build.Tree_Db is
    -- Propagate_Actions --
    -----------------------
 
-   procedure Propagate_Actions (Self : Object) is
+   function Propagate_Actions (Self : Object) return Boolean is
       New_Actions : Action_Sets.Set;
    begin
       loop
@@ -648,10 +651,16 @@ package body GPR2.Build.Tree_Db is
                      Self.Actions.Element (Item);
          begin
             New_Actions.Delete_First;
-            Act.On_Tree_Propagation;
+
+            if not Act.On_Tree_Propagation then
+               return False;
+            end if;
+
             Self.Self.Action_Id_To_Reference (Item) := Act;
          end;
       end loop;
+
+      return True;
    end Propagate_Actions;
 
    -------------
@@ -780,6 +789,17 @@ package body GPR2.Build.Tree_Db is
          end loop;
       end if;
    end Refresh;
+
+   --------------
+   -- Reporter --
+   --------------
+
+   function Reporter
+     (Self : Object) return GPR2.Reporter.Object'Class
+   is
+   begin
+      return Self.Tree.Reporter;
+   end Reporter;
 
    ------------
    -- Unload --

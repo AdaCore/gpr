@@ -25,12 +25,15 @@ with GPR2.Project.Registry.Attribute;
 limited with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
 with GPR2.Project.View.Vector;
+with GPR2.Reporter;
+with GPR2.Reporter.Console;
 with GPR2.View_Ids;
 with GPR2.View_Ids.DAGs;
 with GPR2.View_Internal;
 
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Indefinite_Hashed_Maps;
+private with Ada.Containers.Indefinite_Holders;
 
 private package GPR2.Tree_Internal is
 
@@ -239,6 +242,14 @@ private package GPR2.Tree_Internal is
       Message : GPR2.Message.Object);
    --  Adds new message into the Log of Self, does nothing if message already
    --  present.
+
+   procedure Set_Reporter
+     (Self : in out Object; Reporter : GPR2.Reporter.Object'Class);
+   --  Sets the reporter used by the tree and all tree-related operations,
+   --  such as loading or working with sources, to output the logs.
+
+   function Reporter (Self : Object) return GPR2.Reporter.Object'Class;
+   --  Returns the tree reporter
 
    --  Context
 
@@ -482,6 +493,10 @@ private
                        (True, GPR2.Environment.Process_Environment);
    end record;
 
+   use GPR2.Reporter;
+   package Reporter_Holders is new Ada.Containers.Indefinite_Holders
+     (GPR2.Reporter.Object'Class);
+
    type Object is tagged limited record
       Self              : access Object := null;
       Root              : View.Object;
@@ -515,6 +530,9 @@ private
       File_Reader_Ref   : GPR2.File_Readers.File_Reader_Reference;
       Environment       : GPR2.Environment.Object :=
                             GPR2.Environment.Process_Environment;
+      Reporter_Holder   : Reporter_Holders.Holder :=
+                            Reporter_Holders.To_Holder
+                              (GPR2.Reporter.Console.Create);
    end record;
 
    function "=" (Left, Right : Object) return Boolean is
@@ -640,5 +658,8 @@ private
 
    function Resolve_Links (Self : Object) return Boolean is
      (Self.Resolve_Links);
+
+   function Reporter (Self : Object) return GPR2.Reporter.Object'Class is
+     (Self.Reporter_Holder.Element);
 
 end GPR2.Tree_Internal;

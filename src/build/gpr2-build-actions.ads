@@ -9,7 +9,6 @@ with Ada.Containers.Indefinite_Ordered_Sets;
 with GNATCOLL.OS.Process;
 
 with GPR2.Containers;
-with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 
@@ -66,16 +65,15 @@ package GPR2.Build.Actions is
    --  view is used to retrieve the switches for the tool, and to know where
    --  the output is stored (the Object_Dir attribute).
 
-   procedure On_Tree_Insertion
+   function On_Tree_Insertion
      (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object;
-      Messages : in out GPR2.Log.Object) is abstract
-   with Pre'Class => not Messages.Has_Error;
-   --  Procedure called when Self is added to the tree's database. Allows the
+      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean is abstract;
+   --  Function called when Self is added to the tree's database. Allows the
    --  action to add its input and output artifacts and dependencies.
+   --  Returns True on success.
 
-   procedure On_Tree_Propagation
-     (Self : in out Object) is null;
+   function On_Tree_Propagation
+     (Self : in out Object) return Boolean;
 
    function Skip (Self : Object) return Boolean is
      (False);
@@ -105,8 +103,8 @@ package GPR2.Build.Actions is
 
    type Execution_Status is (Skipped, Success);
 
-   procedure Post_Command (Self   : in out Object;
-                           Status : Execution_Status) is null;
+   function Post_Command
+     (Self   : in out Object; Status : Execution_Status) return Boolean;
    --  Post-processing that should occur after executing the command
 
    ---------------------------
@@ -155,5 +153,13 @@ private
    function Valid_Signature (Self : Object) return Boolean is
      (Object'Class (Self).View.Is_Externally_Built
       or else Self.Signature.Valid);
+
+   function On_Tree_Propagation
+     (Self : in out Object) return Boolean is
+     (True);
+
+   function Post_Command
+     (Self   : in out Object; Status : Execution_Status) return Boolean is
+     (True);
 
 end GPR2.Build.Actions;

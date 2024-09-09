@@ -273,21 +273,13 @@ package body GPR2.Build.Actions.Link is
    -- On_Tree_Insertion --
    -----------------------
 
-   overriding procedure On_Tree_Insertion
+   overriding function On_Tree_Insertion
      (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object;
-      Messages : in out GPR2.Log.Object)
+      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      Db.Add_Output
-        (UID,
-         Self.Output,
-         Messages);
-
-      if Messages.Has_Error then
-         return;
-      end if;
+      return Db.Add_Output (UID, Self.Output);
    end On_Tree_Insertion;
 
    ---------

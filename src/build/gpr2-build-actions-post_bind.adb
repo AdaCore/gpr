@@ -68,28 +68,29 @@ package body GPR2.Build.Actions.Post_Bind is
    -- On_Tree_Insertion --
    -----------------------
 
-   overriding procedure On_Tree_Insertion
+   overriding function On_Tree_Insertion
      (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object;
-      Messages : in out GPR2.Log.Object)
+      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      Db.Add_Output (UID, Self.Output, Messages);
-
-      if Messages.Has_Error then
-         return;
+      if not Db.Add_Output (UID, Self.Output) then
+         return False;
       end if;
 
       Db.Add_Input (UID, Self.Input, True);
+
+      return True;
    end On_Tree_Insertion;
 
    ------------------
    -- Post_Command --
    ------------------
 
-   overriding procedure Post_Command (Self   : in out Object;
-                                      Status : Execution_Status) is
+   overriding function Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status) return Boolean
+   is
       Binder_Action   : constant Ada_Bind.Object :=
                           Ada_Bind.Object
                             (Self.View.Tree.Artifacts_Database.Action
@@ -105,6 +106,8 @@ package body GPR2.Build.Actions.Post_Bind is
             end loop;
          end if;
       end loop;
+
+      return True;
    end Post_Command;
 
    ---------

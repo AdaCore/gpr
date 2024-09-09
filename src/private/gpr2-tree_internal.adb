@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Containers.Indefinite_Holders;
 with Ada.Directories;
 with Ada.IO_Exceptions;
 with Ada.Strings.Fixed;
@@ -2979,6 +2978,17 @@ package body GPR2.Tree_Internal is
       Self.Search_Paths.Default := Default_Search_Paths (True, Environment);
       Self.Update_Search_Paths;
    end Set_Environment;
+
+   ------------------
+   -- Set_Reporter --
+   ------------------
+
+   procedure Set_Reporter
+     (Self : in out Object; Reporter : GPR2.Reporter.Object'Class)
+   is
+   begin
+      Self.Reporter_Holder.Replace_Element (Reporter);
+   end Set_Reporter;
 
    ------------
    -- Target --

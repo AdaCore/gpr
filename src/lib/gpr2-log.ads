@@ -111,13 +111,6 @@ package GPR2.Log is
    --  keep all messages into the list (no need to call Clear) and yet be able
    --  to check for new Unread messages.
 
-   procedure Output_Messages
-     (Log            : GPR2.Log.Object;
-      Information    : Boolean := True;
-      Warning        : Boolean := True;
-      Error          : Boolean := True;
-      Lint           : Boolean := False);
-   --  Print Log selected messages using format parameters
 private
 
    package Message_Set is

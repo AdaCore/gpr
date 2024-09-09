@@ -15,9 +15,10 @@ with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
 with GNATCOLL.Directed_Graph; use GNATCOLL.Directed_Graph;
 
 with GPR2.Build.Actions; use GPR2.Build.Actions;
-with GPR2.Message.Reporter;
 with GPR2.Path_Name;
+with GPR2.Reporter;
 with GPR2.Source_Reference;
+with GPR2.Message;
 
 package body GPR2.Build.Process_Manager is
 
@@ -96,7 +97,7 @@ package body GPR2.Build.Process_Manager is
          end if;
 
          if Proc_Handler.Process_Status /= PROCESS_STATUS_OK then
-            Message.Reporter.Active_Reporter.Report
+            Self.Tree_Db.Reporter.Report
               (Message.Create
                  (Message.Warning,
                   Job.UID.Image & " failed with status" &
@@ -110,10 +111,16 @@ package body GPR2.Build.Process_Manager is
           and then Proc_Handler.Process_Status = PROCESS_STATUS_OK)
         or else (Proc_Handler.Status = Skipped and then Job.Valid_Signature)
       then
-         Job.Post_Command
-           ((if Proc_Handler.Status = Skipped then Skipped else Success));
+         if not Job.Post_Command
+           ((if Proc_Handler.Status = Skipped then Skipped else Success))
+         then
+            return Abort_Execution;
+         end if;
+
          --  Propagate any newly created action
-         Self.Tree_Db.Propagate_Actions;
+         if not Self.Tree_Db.Propagate_Actions then
+            return Abort_Execution;
+         end if;
       end if;
 
       if Proc_Handler.Status = Finished
@@ -156,7 +163,6 @@ package body GPR2.Build.Process_Manager is
      (Self         : in out Object;
       Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
       Jobs         : Natural := 0;
-      Verbosity    : Execution_Verbosity := Minimal;
       Stop_On_Fail : Boolean := True)
    is
       Max_Jobs : constant Natural := Effective_Job_Number (Jobs);
@@ -219,7 +225,6 @@ package body GPR2.Build.Process_Manager is
       Self.Tree_Db      := Tree_Db;
       Self.Stop_On_Fail := Stop_On_Fail;
       Self.Stats        := Empty_Stats;
-      Self.Verbosity    := Verbosity;
 
       Graph.Start_Iterator (Enable_Visiting_State => True);
 
@@ -231,7 +236,7 @@ package body GPR2.Build.Process_Manager is
                   End_Of_Iteration := not Graph.Next (Node);
                exception
                   when E : GNATCOLL.Directed_Graph.DG_Error =>
-                     GPR2.Message.Reporter.Active_Reporter.Report
+                     Tree_Db.Reporter.Report
                        ("error: internal error in the process manager (" &
                           Ada.Exceptions.Exception_Message (E) & ")");
                      Self.Traces.Trace ("!!! Internal error in the DAG");
@@ -416,6 +421,7 @@ package body GPR2.Build.Process_Manager is
        Capture_Stderr : out File_Descriptor)
    is
       package FS renames GNATCOLL.OS.FS;
+      use GPR2.Reporter;
 
       function Image (Command : Argument_List) return String;
 
@@ -497,14 +503,11 @@ package body GPR2.Build.Process_Manager is
          --  ??? Both message level and Project tree verbosity don't cope with
          --  tooling messages that need quiet/normal/detailed info. Let's go
          --  for the default one *and* verbose one for now
-         case Self.Verbosity is
-            when Quiet =>
-               null;
-            when Minimal =>
-               Message.Reporter.Active_Reporter.Report (Job.UID.Image);
-            when Verbose | Very_Verbose =>
-               Message.Reporter.Active_Reporter.Report (Image (Args));
-         end case;
+         if Self.Tree_Db.Reporter.Verbosity >= Verbose then
+            Self.Tree_Db.Reporter.Report (Image (Args));
+         else
+            Self.Tree_Db.Reporter.Report (Job.UID.Image);
+         end if;
 
          Proc_Handler :=
            (Status => Running,
@@ -521,7 +524,7 @@ package body GPR2.Build.Process_Manager is
             FS.Close (P_Wo);
             FS.Close (P_We);
 
-            GPR2.Message.Reporter.Active_Reporter.Report
+            Self.Tree_Db.Reporter.Report
               (GPR2.Message.Create
                  (GPR2.Message.Error,
                   Args.First_Element & ": " &

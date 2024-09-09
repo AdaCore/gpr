@@ -4,8 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.Message.Reporter;
-
 package body GPR2.Log is
 
    use type Message.Level_Value;
@@ -221,32 +219,6 @@ package body GPR2.Log is
 
       return New_Position;
    end Next;
-
-   ---------------------
-   -- Output_Messages --
-   ---------------------
-
-   procedure Output_Messages
-     (Log            : GPR2.Log.Object;
-      Information    : Boolean := True;
-      Warning        : Boolean := True;
-      Error          : Boolean := True;
-      Lint           : Boolean := False)
-   is
-      Reporter : GPR2.Message.Reporter.Object'Class renames
-                   GPR2.Message.Reporter.Active_Reporter;
-   begin
-      for C in Log.Iterate
-        (Information => Information,
-         Warning     => Warning,
-         Error       => Error,
-         Lint        => Lint,
-         Read        => False,
-         Unread      => True)
-      loop
-         Reporter.Report (Log (C));
-      end loop;
-   end Output_Messages;
 
    ---------------
    -- Reference --

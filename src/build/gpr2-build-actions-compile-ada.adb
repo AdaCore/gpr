@@ -10,9 +10,11 @@ with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.ALI_Parser;
 with GPR2.Build.Tree_Db;
+with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.View.Set;
+with GPR2.Source_Reference;
 
 package body GPR2.Build.Actions.Compile.Ada is
 
@@ -232,38 +234,29 @@ package body GPR2.Build.Actions.Compile.Ada is
    -- On_Tree_Insertion --
    -----------------------
 
-   overriding procedure On_Tree_Insertion
+   overriding function On_Tree_Insertion
      (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object;
-      Messages : in out GPR2.Log.Object)
+      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
-
    begin
       if Self.Obj_File.Is_Defined then
-         Db.Add_Output (UID, Self.Obj_File, Messages);
-
-         if Messages.Has_Error then
-            return;
+         if not Db.Add_Output (UID, Self.Obj_File) then
+            return False;
          end if;
       end if;
 
-      Db.Add_Output (UID, Self.Ali_File, Messages);
-
-      if Messages.Has_Error then
-         return;
-      end if;
+      return Db.Add_Output (UID, Self.Ali_File);
    end On_Tree_Insertion;
 
    -------------------------
    -- On_Tree_Propagation --
    -------------------------
 
-   overriding procedure On_Tree_Propagation
-     (Self : in out Object)
+   overriding function On_Tree_Propagation
+     (Self : in out Object) return Boolean
    is
       Imports  : GPR2.Containers.Name_Set;
-      Messages : GPR2.Log.Object;
       Binds    : Action_Id_Sets.Set;
       Links    : Action_Id_Sets.Set;
 
@@ -271,7 +264,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       --  Check the bind actions that depend on Self
 
       if Self.View.Is_Externally_Built then
-         return;
+         return True;
       end if;
 
       for Successor of Self.Tree.Successors (Self.Ali_File) loop
@@ -288,7 +281,7 @@ package body GPR2.Build.Actions.Compile.Ada is
 
       if Binds.Is_Empty and then Links.Is_Empty then
          --  No more things to do here
-         return;
+         return True;
       end if;
 
       if Self.Ali_File.Path.Exists then
@@ -312,7 +305,6 @@ package body GPR2.Build.Actions.Compile.Ada is
             CU       : constant Build.Compilation_Unit.Object :=
                          Self.View.Namespace_Roots.First_Element.Unit (Imp);
             Action   : Object;
-            Messages : GPR2.Log.Object;
             Continue : Boolean := True;
 
          begin
@@ -337,7 +329,9 @@ package body GPR2.Build.Actions.Compile.Ada is
                begin
                   if not Self.Tree.Has_Action (Id) then
                      Action.Initialize (CU);
-                     Self.Tree.Add_Action (Action, Messages);
+                     if not Self.Tree.Add_Action (Action) then
+                        return False;
+                     end if;
 
                      Self.Closure.Include (Action.UID);
 
@@ -392,20 +386,20 @@ package body GPR2.Build.Actions.Compile.Ada is
                      end;
                   end if;
                end;
-
-               Messages.Output_Messages;
             end if;
          end;
       end loop;
+
+      return True;
    end On_Tree_Propagation;
 
    ------------------
    -- Post_Command --
    ------------------
 
-   overriding procedure Post_Command
+   overriding function Post_Command
      (Self   : in out Object;
-      Status : Execution_Status)
+      Status : Execution_Status) return Boolean
    is
       use GPR2.Path_Name;
 
@@ -420,11 +414,16 @@ package body GPR2.Build.Actions.Compile.Ada is
            Preserve_Timestamps => False,
            Preserve_Permissions => False)
       then
-         pragma Assert
-           (False,
-            "could not copy ali file " &
-              String (Self.Ali_File.Path.Simple_Name) &
-              " to the library directory");
+         Self.Tree.Reporter.Report
+           (GPR2.Message.Create
+              (GPR2.Message.Error,
+               "could not copy ali file " &
+                 String (Self.Ali_File.Path.Simple_Name) &
+                 " to the library directory",
+               GPR2.Source_Reference.Object
+                 (GPR2.Source_Reference.Create
+                    (Self.Ali_File.Path.Value, 0, 0))));
+         return False;
       end if;
 
       --  Update the signature of the action
@@ -435,12 +434,12 @@ package body GPR2.Build.Actions.Compile.Ada is
             "Failed to obtain dependencies from the ALI file produced " &
               "by the action " & Object'Class (Self).UID.Image);
 
-         return;
+         return False;
       end if;
 
       --  Update the tree with potential new imports from ALI
 
-      Self.On_Tree_Propagation;
+      return Self.On_Tree_Propagation;
    end Post_Command;
 
    ---------
