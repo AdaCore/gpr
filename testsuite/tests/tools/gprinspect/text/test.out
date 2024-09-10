@@ -642,6 +642,12 @@
               "value": ".f"
             },
             {
+              "index": "Rust",
+              "kind": "single",
+              "name": "Body_Suffix",
+              "value": ".rs"
+            },
+            {
               "kind": "single",
               "name": "Dot_Replacement",
               "value": "~"
