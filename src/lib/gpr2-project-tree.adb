@@ -869,10 +869,9 @@ package body GPR2.Project.Tree is
      (Self     : Object;
       Option   : Source_Info_Option := Sources_Units)
    is
-      Log : GPR2.Log.Object;
+      Dead : Boolean with Unreferenced;
    begin
-      Self.Tree.Update_Sources (Option => Option, Messages => Log);
-      Self.Reporter.Report (Log);
+      Dead := Self.Update_Sources (Option);
    end Update_Sources;
 
    function Update_Sources
@@ -884,7 +883,7 @@ package body GPR2.Project.Tree is
    begin
       Self.Tree.Update_Sources (Option => Option, Messages => Log);
       Success := not Log.Has_Error;
-      Self.Reporter.Report (Log);
+      Self.Reporter.Report (Log, Warn_If_Errors => True);
 
       return Success;
    end Update_Sources;

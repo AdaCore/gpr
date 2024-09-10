@@ -14,8 +14,10 @@ package body GPR2.Reporter is
    -- Report --
    ------------
 
-   procedure Report (Self : Object'Class; Messages : GPR2.Log.Object)
-   is
+   procedure Report
+     (Self           : Object'Class;
+      Messages       : GPR2.Log.Object;
+      Warn_If_Errors : Boolean := False) is
    begin
       if Self.Verbosity = Quiet then
          return;
@@ -25,7 +27,8 @@ package body GPR2.Reporter is
       for C in Messages.Iterate
         (Information => Self.Verbosity >= Verbose,
          Warning     => Self.Verbosity > No_Warnings
-                          and then not Messages.Has_Error,
+                          and then (Warn_If_Errors
+                                      or else not Messages.Has_Error),
          Error       => True,
          Lint        => Self.Verbosity >= Verbose)
       loop

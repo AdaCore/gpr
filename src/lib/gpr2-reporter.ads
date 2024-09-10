@@ -18,10 +18,13 @@ package GPR2.Reporter is
    type Verbosity_Level is
      (Quiet, No_Warnings, Regular, Verbose, Very_Verbose);
 
-   procedure Report (Self : Object'Class; Messages : GPR2.Log.Object);
+   procedure Report
+     (Self           : Object'Class;
+      Messages       : GPR2.Log.Object;
+      Warn_If_Errors : Boolean := False);
   --  Report messages from the provided log based on the reporter's verbosity.
-  --  If the log contains error messages and the Error flag is set to True,
-  --  only errors will be reported.
+  --  If Warn_If_Errors is unset and the log contains error messages, then the
+  --  warnings are not displayed.
 
    procedure Report (Self : Object'Class; Message : GPR2.Message.Object);
    --  Report the message based on the reporter's verbosity
