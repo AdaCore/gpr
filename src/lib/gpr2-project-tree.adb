@@ -32,6 +32,8 @@ package body GPR2.Project.Tree is
    function Check_For_Default_Project
      (Directory : String := "") return GPR2.Path_Name.Object;
 
+   procedure Report_Logs (Self : Object);
+
    ------------
    -- Adjust --
    ------------
@@ -557,8 +559,6 @@ package body GPR2.Project.Tree is
             end;
          end if;
 
-         Self.Reporter.Report (Self.Tree.Log_Messages.all);
-
       else
          if Options.Config_Project.Is_Defined then
             Self.Reporter.Report
@@ -584,18 +584,19 @@ package body GPR2.Project.Tree is
             Config_Project    => Options.Config_Project,
             File_Reader       => File_Reader,
             Environment       => Environment);
-
-         Self.Reporter.Report (Self.Tree.Log_Messages.all);
       end if;
 
       GPR2.Project_Parser.Clear_Cache;
 
+      Report_Logs (Self);
+
       return True;
+
    exception
       when GPR2.Project_Error =>
-         Self.Reporter.Report (Self.Tree.Log_Messages.all);
-
          GPR2.Project_Parser.Clear_Cache;
+
+         Report_Logs (Self);
 
          return False;
    end Load;
@@ -709,8 +710,6 @@ package body GPR2.Project.Tree is
             end;
          end if;
 
-         Self.Reporter.Report (Self.Tree.Log_Messages.all);
-
       else
          if Options.Config_Project.Is_Defined then
             Self.Reporter.Report
@@ -737,14 +736,15 @@ package body GPR2.Project.Tree is
             Config_Project    => Options.Config_Project,
             File_Reader       => File_Reader,
             Environment       => Environment);
-
-         Self.Reporter.Report (Self.Tree.Log_Messages.all);
       end if;
 
+      Report_Logs (Self);
+
       return True;
+
    exception
       when GPR2.Project_Error =>
-         Self.Reporter.Report (Self.Tree.Log_Messages.all);
+         Report_Logs (Self);
 
          return False;
    end Load_Virtual_View;
@@ -763,6 +763,23 @@ package body GPR2.Project.Tree is
 
       Self.Tree.Register_Project_Search_Path (Dir => Dir);
    end Register_Project_Search_Path;
+
+   -----------------
+   -- Report_Logs --
+   -----------------
+
+   procedure Report_Logs (Self : Object) is
+      Ok : Boolean := True;
+   begin
+      if Self.Has_Configuration then
+         Ok := not Self.Configuration.Log_Messages.Has_Error;
+         Self.Reporter.Report (Self.Configuration.Log_Messages);
+      end if;
+
+      if Ok then
+         Self.Reporter.Report (Self.Log_Messages.all);
+      end if;
+   end Report_Logs;
 
    ------------------------------------
    -- Restrict_Autoconf_To_Languages --

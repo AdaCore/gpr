@@ -701,11 +701,7 @@ package body GPR2.Tree_Internal is
 
          Self.Conf := Config;
 
-         for M of Config.Log_Messages loop
-            Self.Messages.Append (M);
-         end loop;
-
-         if Self.Messages.Has_Error then
+         if Self.Conf.Log_Messages.Has_Error then
             raise Project_Error with "configuration project has errors";
          end if;
 
@@ -961,13 +957,9 @@ package body GPR2.Tree_Internal is
       Self.Conf := PC.Load (Filename);
       View_Internal.Bind_Configuration_To_Tree (Self.Conf, Self.Self);
 
-      --  Copy all configuration message into the main tree's log message list
-
-      for M of Self.Conf.Log_Messages loop
-         Self.Messages.Append (M);
-      end loop;
-
-      if not Self.Messages.Has_Error then
+      if not Self.Conf.Log_Messages.Has_Error
+        and then not Self.Messages.Has_Error
+      then
          Set_Context (Self);
       end if;
    end Load_Configuration;
