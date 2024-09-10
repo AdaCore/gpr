@@ -8,11 +8,8 @@ with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
-with GPR2.Project.Registry.Attribute;
 
 package GPR2.Build.Actions.Compile.Ada is
-
-   package PRA renames GPR2.Project.Registry.Attribute;
 
    type Ada_Compile_Id is new Actions.Compile.Compile_Id with private;
 
@@ -61,8 +58,6 @@ package GPR2.Build.Actions.Compile.Ada is
    overriding procedure Post_Command
      (Self   : in out Object;
       Status : Execution_Status);
-
-   overriding function Skip (Self : Object) return Boolean;
 
 private
 

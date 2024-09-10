@@ -2,6 +2,7 @@ with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Actions.Post_Bind;
+with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source;
 pragma Warnings (Off);
@@ -120,7 +121,7 @@ package body GPRtools.Actions is
 
       begin
          Link.Initialize_Executable
-           (Main.View.Executable (Main.Source.Simple_Name, Main.Index),
+           (GPR2.Build.Artifacts.File_Part.Create (Main.Source, Main.Index),
             Main.View);
          if Tree_Db.Has_Action (Link.UID) then
             return True;

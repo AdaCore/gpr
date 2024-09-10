@@ -14,12 +14,9 @@ with GPR2.Build.Source.Sets;
 pragma Warnings (On, ".* is not referenced");
 with GPR2.Build.Tree_Db;
 with GPR2.Project.Attribute;
-with GPR2.Project.Attribute_Index;
 with GPR2.Project.View.Set;
 
 package body GPR2.Build.Actions.Compile is
-
-   package PAI renames GPR2.Project.Attribute_Index;
 
    function Lang_Img (Lang : Language_Id) return Filename_Type is
       (Filename_Type (Ada.Characters.Handling.To_Lower (GPR2.Image (Lang))));
@@ -574,6 +571,7 @@ package body GPR2.Build.Actions.Compile is
             Add_Options_With_Arg
               (Sw, String (Self.Object_File.Path.Simple_Name));
          else
+            --  ??? TODO modify the KB to have a proper default here
             Args.Append ("-o");
             Args.Append (String (Self.Object_File.Path.Simple_Name));
          end if;
