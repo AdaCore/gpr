@@ -17,7 +17,7 @@ output = "output.txt"
 
 bnr.run(["gprbuild", "-p", "-Pgnatcoll-gprinstall_bug.gpr"])
 
-prefix_switch = "--prefix=" + os.getcwd() + "/inst"
+prefix_switch = "--prefix=" + os.path.join(os.getcwd(), "inst")
 
 status = bnr.run([GPRINSTALL, prefix_switch, "-f", "-p",
                   "-Pgnatcoll-gprinstall_bug.gpr"],
@@ -25,9 +25,14 @@ status = bnr.run([GPRINSTALL, prefix_switch, "-f", "-p",
 
 printwiths()
 
+if os.name == 'nt':
+    exeext = ".exe"
+else:
+    exeext = ""
+
 bnr.run(["gprbuild", "-p", "-Ptest.gpr"])
 
-if os.path.exists("obj2/tmain"):
+if os.path.exists(os.path.join("obj2", "tmain" + exeext):
     print("OK")
 else:
     print("NOK")
