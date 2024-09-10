@@ -32,7 +32,7 @@ else:
 
 bnr.run(["gprbuild", "-p", "-Ptest.gpr"])
 
-if os.path.exists(os.path.join("obj2", "tmain" + exeext):
+if os.path.exists(os.path.join("obj2", "tmain" + exeext)):
     print("OK")
 else:
     print("NOK")
