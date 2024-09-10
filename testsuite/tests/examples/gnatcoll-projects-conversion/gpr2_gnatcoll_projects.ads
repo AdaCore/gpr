@@ -20,7 +20,6 @@ with GNAT.Strings;
 with GNATCOLL.VFS;
 
 with GPR2; use GPR2;
-with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -77,12 +76,6 @@ package GPR2_GNATCOLL_Projects is
       Use_Extended : Boolean := False)
       return GNAT.Strings.String_List_Access;
    --  GNATCOLL.Projects.Attribute_Value conversion (string list attribute)
-
-   procedure Output_Messages
-     (Log                : GPR2.Log.Object;
-      Output_Warnings    : Boolean := True;
-      Output_Information : Boolean := False);
-   --  print Log content
 
    --  function Get_Target
    --    (Tree : GPR2.Project.Tree.Object) return String

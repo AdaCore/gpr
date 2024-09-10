@@ -26,6 +26,7 @@ library_empty_value_checks.gpr:153:11: error: Value  is invalid for attribute In
 library_empty_value_checks.gpr:157:11: error: Value  is invalid for attribute Install'Side_Debug
 library_empty_value_checks.gpr:170:11: error: Value  is invalid for attribute Linker'Response_File_Format
 GPR file: files/library_empty_space_value_checks.gpr
+kb: warning: can't find a toolchain for the following configuration: language 'Ada', target ' ', default runtime
 library_empty_space_value_checks.gpr:8:08: error: Value   is invalid for attribute Create_Missing_Dirs
 library_empty_space_value_checks.gpr:11:04: error: empty value in attribute "Excluded_Source_Files" not allowed.
 library_empty_space_value_checks.gpr:21:08: error: Value   is invalid for attribute Library_Auto_Init

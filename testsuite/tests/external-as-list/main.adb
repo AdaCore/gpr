@@ -69,8 +69,6 @@ begin
 
       if Prj.Set_Context (Ctx) then
          Display (Prj.Root_Project);
-      else
-         Prj.Log_Messages.Output_Messages (Information => False);
       end if;
 
       Ctx.Clear;
@@ -78,8 +76,6 @@ begin
 
       if Prj.Set_Context (Ctx) then
          Display (Prj.Root_Project);
-      else
-         Prj.Log_Messages.Output_Messages (Information => False);
       end if;
 
       Ctx.Clear;
@@ -87,8 +83,6 @@ begin
 
       if Prj.Set_Context (Ctx) then
          Display (Prj.Root_Project);
-      else
-         Prj.Log_Messages.Output_Messages (Information => False);
       end if;
 
       Ctx.Clear;
@@ -96,8 +90,6 @@ begin
 
       if Prj.Set_Context (Ctx) then
          Display (Prj.Root_Project);
-      else
-         Prj.Log_Messages.Output_Messages (Information => False);
       end if;
    end if;
 end Main;

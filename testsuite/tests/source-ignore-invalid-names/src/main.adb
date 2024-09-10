@@ -7,6 +7,7 @@ with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
+with GPR2.Reporter.Console;
 
 procedure Main is
 
@@ -30,7 +31,6 @@ procedure Main is
    begin
       Opt.Add_Switch (Options.P, Project_Name);
       Opt.Add_Switch (Options.X, "VARIANT=" & Variant);
-      GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Warnings_And_Errors;
 
       if not Prj.Load (Opt, Absent_Dir_Error => No_Error) then
          return;
@@ -40,7 +40,7 @@ procedure Main is
       Text_IO.Put_Line ("Project: " & String (View.Name) &
                           " with variant=" & Variant);
 
-      GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Info;
+      Prj.Set_Reporter (GPR2.Reporter.Console.Create (GPR2.Reporter.Verbose));
 
       if Prj.Update_Sources then
          for Source of View.Sources loop

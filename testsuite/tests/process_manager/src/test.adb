@@ -11,21 +11,20 @@ with Ada.Text_IO;
 with GPR2.Build.Actions.Write_File;
 with GPR2.Build.Process_Manager.JSON;
 
-with GPR2.Log;
 with GPR2.Options;
 with GPR2.Path_Name;
 
 with GPR2.Project.Tree;
 with GPR2.Project.View;
+with GPR2.Reporter.Console;
 
 with GNATCOLL.VFS; use GNATCOLL.VFS;
 
-use GPR2;
+use GPR2, GPR2.Reporter;
 
 function Test return Integer is
    Tree      : GPR2.Project.Tree.Object;
    Opts      : GPR2.Options.Object;
-   Log       : GPR2.Log.Object;
    Project   : constant String := "tree/main.gpr";
    Process_M : GPR2.Build.Process_Manager.JSON.Object;
    Root_View : GPR2.Project.View.Object;
@@ -38,21 +37,11 @@ function Test return Integer is
 begin
    Opts.Add_Switch (GPR2.Options.P, Project);
 
-   GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Quiet;
-
-   if not Tree.Load (Opts, With_Runtime => True) then
+   if not Tree.Load (Opts, True, Console.Create (Quiet))
+     or else not Tree.Update_Sources (GPR2.Sources_Units_Artifacts)
+   then
       return 1;
    end if;
-
-   Tree.Update_Sources
-     (Option => GPR2.Sources_Units_Artifacts, Messages => Log);
-
-   if Log.Has_Error then
-      Log.Output_Messages;
-      return 1;
-   end if;
-
-   Log.Clear;
 
    Root_View := Tree.Namespace_Root_Projects.First_Element;
 
@@ -75,11 +64,7 @@ begin
             begin
                A.Initialize
                  (Root_View, Action_Index, Executable, Ret_Code, With_Deps);
-               Tree.Artifacts_Database.Add_Action (A, Log);
-
-               if Log.Has_Error then
-                  Log.Output_Messages (Warning => False);
-
+               if not Tree.Artifacts_Database.Add_Action (A) then
                   return 1;
                end if;
             end;
@@ -109,11 +94,8 @@ begin
 
                A.Initialize
                  (Root_View, Action_Index, Executable, Ret_Code, With_Deps);
-               Tree.Artifacts_Database.Add_Action (A, Log);
 
-               if Log.Has_Error then
-                  Log.Output_Messages (Warning => False);
-
+               if not Tree.Artifacts_Database.Add_Action (A) then
                   return 1;
                end if;
             end;
@@ -161,11 +143,8 @@ begin
                   Ret_Code,
                   With_Deps,
                   With_Wait);
-               Tree.Artifacts_Database.Add_Action (A, Log);
 
-               if Log.Has_Error then
-                  Log.Output_Messages (Warning => False);
-
+               if not Tree.Artifacts_Database.Add_Action (A) then
                   return 1;
                end if;
             end loop;
@@ -201,11 +180,7 @@ begin
                      Ret_Code, With_Deps);
                end if;
 
-               Tree.Artifacts_Database.Add_Action (A, Log);
-
-               if Log.Has_Error then
-                  Log.Output_Messages (Warning => False);
-
+               if not Tree.Artifacts_Database.Add_Action (A) then
                   return 1;
                end if;
             end;
@@ -215,8 +190,7 @@ begin
    end case;
 
    Process_M.Execute
-     (Tree.Artifacts_Database, 2,
-      Verbosity => GPR2.Build.Process_Manager.Quiet);
+     (Tree.Artifacts_Database, 2);
 
    return 0;
 end Test;
