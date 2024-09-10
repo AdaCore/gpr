@@ -18,8 +18,6 @@
 
 with Ada.Command_Line;
 
-with GPRtools.Options;
-
 package GPRtools.Program_Termination is
 
    use Ada;
@@ -40,20 +38,15 @@ package GPRtools.Program_Termination is
       E_Tool);      -- Tool error, will prefix the message with the tool name
 
    procedure Handle_Program_Termination
-     (Opt                       : GPRtools.Options.Base_Options'Class;
-      Display_Tree_Messages     : Boolean := False;
-      Display_Command_Line_Help : Boolean := False;
+     (Display_Command_Line_Help : Boolean := False;
       Force_Exit                : Boolean := True;
       Exit_Code                 : Exit_Code_Type  := E_Fatal;
       Exit_Cause                : Exit_Cause_Type := E_Tool;
       Message                   : String := "");
    --  This procedure handles how should a program be terminated, it can
-   --  display error messages, command line help, set exit code and force the
-   --  exit of the program.
+   --  display command line help, set exit code and force the exit of the
+   --  program.
    --  The exact process will be determined by the parameters.
-   --     - Opt : Contains information about the Tree
-   --     - Display_Tree_Messages : Whether or not it should print the tree
-   --                               messages.
    --     - Display_Command_Line_Help : Whether or not it should print the
    --                                   command line help.
    --     - Force_Exit : Whether or not it should force program exit.

@@ -39,6 +39,8 @@ with GPR2.KB;
 with GPR2.Log;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Configuration;
+with GPR2.Reporter;
+with GPR2.Reporter.Console;
 with GPR2.Version;
 
 with GPRtools.Util;
@@ -54,12 +56,10 @@ procedure GPRconfig is
    use GPR2;
    use GPR2.KB;
    use GPR2.Project.Configuration;
+   use GPR2.Reporter;
 
    Knowledge_Base : KB.Object;
 
-   type Verbosity_Kind is (Quiet, Default, Verbose);
-
-   Opt_Verbosity    : Verbosity_Kind := Default;
    Opt_Version      : aliased Boolean;
    Opt_Target       : aliased GNAT.OS_Lib.String_Access;
    Opt_Show_Targets : aliased Boolean;
@@ -70,6 +70,9 @@ procedure GPRconfig is
    Opt_DB           : Boolean := False;
    Opt_Validate     : aliased Boolean;
    Opt_Fallback     : aliased Boolean;
+   Console_Reporter : GPR2.Reporter.Console.Object :=
+                        GPR2.Reporter.Console.Create
+                          (Verbosity => GPR2.Reporter.Regular);
 
    KB_Flags         : Parsing_Flags := Default_Flags;
 
@@ -736,10 +739,14 @@ procedure GPRconfig is
          Description_Map.Include (Language (Descr), Descr);
 
       elsif Switch = "-q" then
-         Opt_Verbosity := Quiet;
+         Console_Reporter.Set_Verbosity (GPR2.Reporter.Quiet);
 
       elsif Switch = "-v" then
-         Opt_Verbosity := Verbose;
+         if Console_Reporter.Verbosity = GPR2.Reporter.Verbose then
+            Console_Reporter.Set_Verbosity (GPR2.Reporter.Very_Verbose);
+         else
+            Console_Reporter.Set_Verbosity (GPR2.Reporter.Verbose);
+         end if;
       end if;
    end Value_Callback;
 
@@ -778,7 +785,7 @@ begin
    end if;
 
    if Opt_Batch and then Opt_Target.all = "all" then
-      if Opt_Verbosity > Quiet then
+      if Console_Reporter.Verbosity > GPR2.Reporter.Quiet then
          Text_IO.Put_Line
            (Text_IO.Standard_Error,
             "--target=all ignored in --batch mode");
@@ -790,7 +797,7 @@ begin
 
    KB_Flags (Validation) := Opt_Validate;
 
-   if Opt_Verbosity = Verbose then
+   if Console_Reporter.Verbosity >= GPR2.Reporter.Verbose then
       GNATCOLL.Traces.Set_Active
         (GNATCOLL.Traces.Create
            ("KNOWLEDGE_BASE"), True);
@@ -815,9 +822,19 @@ begin
       Knowledge_Base.Add (KB_Flags, KB_Location);
    end loop;
 
-   Knowledge_Base.Log_Messages.Output_Messages
-     (Information => Opt_Verbosity = Verbose,
-      Warning     => Opt_Verbosity = Verbose);
+   --  Don't report warnings when loading the KB, they may refer to
+   --  env variables not initialized but unused in the end.
+
+   declare
+      Verbosity : constant GPR2.Reporter.Verbosity_Level :=
+                    Console_Reporter.Verbosity;
+   begin
+      if Verbosity = Regular then
+         Console_Reporter.Set_Verbosity (No_Warnings);
+      end if;
+      Console_Reporter.Report (Knowledge_Base.Log_Messages);
+      Console_Reporter.Set_Verbosity (Verbosity);
+   end;
 
    if Knowledge_Base.Has_Error then
       Text_IO.Put_Line
@@ -876,9 +893,7 @@ begin
          Set_Of_Targets : GPR2.Containers.Name_Set;
       begin
          if Knowledge_Base.Has_Error then
-            Knowledge_Base.Log_Messages.Output_Messages
-              (Information => Opt_Verbosity > Quiet,
-               Warning     => Opt_Verbosity > Quiet);
+            Console_Reporter.Report (Knowledge_Base.Log_Messages);
 
             Text_IO.Put_Line
               (Text_IO.Standard_Error,
@@ -886,7 +901,7 @@ begin
             GNAT.OS_Lib.OS_Exit (1);
          end if;
 
-         if Opt_Show_Targets or else Opt_Verbosity = Verbose then
+         if Opt_Show_Targets or else Console_Reporter.Verbosity >= Verbose then
             Text_IO.Put_Line ("List of targets supported by a compiler:");
 
             for Comp of Compilers loop
@@ -944,9 +959,7 @@ begin
    end if;
 
    if Config_Log.Has_Error then
-      Config_Log.Output_Messages
-        (Information => Opt_Verbosity > Quiet,
-         Warning     => Opt_Verbosity > Quiet);
+      Console_Reporter.Report (Config_Log);
 
       Text_IO.Put_Line
         (Text_IO.Standard_Error,
@@ -955,9 +968,7 @@ begin
       GNAT.OS_Lib.OS_Exit (1);
 
    elsif Knowledge_Base.Has_Error then
-      Knowledge_Base.Log_Messages.Output_Messages
-        (Information => Opt_Verbosity > Quiet,
-         Warning     => Opt_Verbosity > Quiet);
+      Console_Reporter.Report (Knowledge_Base.Log_Messages);
 
       Text_IO.Put_Line
         (Text_IO.Standard_Error,
@@ -966,8 +977,7 @@ begin
       GNAT.OS_Lib.OS_Exit (1);
 
    else
-      Config_Log.Output_Messages
-        (Information => Opt_Verbosity > Quiet);
+      Console_Reporter.Report (Config_Log);
    end if;
 
    if Config_Contents /= Null_Unbounded_String then

@@ -22,8 +22,6 @@ pragma Warnings (On);
 
 with GNAT.Directory_Operations;
 
-with GPR2.Log;
-with GPR2.Message.Reporter;
 with GPR2.Project.Registry.Pack;
 
 with GPRtools.Program_Termination;
@@ -333,76 +331,26 @@ package body GPRtools.Options is
    function Load_Project
      (Opt                : in out Base_Options'Class;
       Absent_Dir_Error   : GPR2.Error_Level;
-      Handle_Information : Boolean := False;
-      Handle_Errors      : Boolean := True;
-      Handle_Lint        : Boolean := False) return Boolean
+      Handle_Errors      : Boolean := True) return Boolean
    is
-
-      procedure Display (Logs : GPR2.Log.Object);
-      --  Display errors and/or warnings messages in Logs. Warnings are only
-      --  displayed if tool not run in quiet mode and Handle_Warnings is set
-      --  to True.
-
-      -------------
-      -- Display --
-      -------------
-
-      procedure Display (Logs : GPR2.Log.Object) is
-      begin
-         if Logs.Has_Error then
-            --  If there are errors, just display them: any warning may just
-            --  be a consequence of the initial error and thus be false
-            --  negatives.
-            Logs.Output_Messages
-              (Information => False,
-               Warning     => False,
-               Error       => True,
-               Lint        => False);
-
-         elsif not Opt.Quiet then
-            Logs.Output_Messages
-              (Information => Handle_Information,
-               Warning     => Opt.Warnings,
-               Error       => False,
-               Lint        => Handle_Lint);
-         end if;
-      end Display;
 
       Loaded : Boolean := False;
       Tree   : GPR2.Project.Tree.Object := Opt.Tree;
 
    begin
-      GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Minimal;
-      --  Handle manually the logs for the GPR tools
-
       Loaded := Tree.Load
         (Opt,
          With_Runtime             => True,
+         Reporter                 => Opt.Console_Reporter,
          Absent_Dir_Error         => Absent_Dir_Error,
          Allow_Implicit_Project   => Opt.Find_Implicit_Project,
          Check_Shared_Libs_Import => not Opt.Unchecked_Shared_Lib);
       Opt.Tree := Tree;
 
-      if Handle_Errors then
-         declare
-            Has_Error    : constant Boolean :=
-                             (if Opt.Tree.Is_Defined
-                              then Opt.Tree.Log_Messages.Has_Error
-                              else False);
-         begin
-            Display (Opt.Tree.Log_Messages.all);
-
-            if not Loaded
-              and then Opt.Tree.Is_Defined
-              and then Opt.Tree.Has_Messages
-              and then Has_Error
-            then
-               Handle_Program_Termination
-                 (Opt        => Opt,
-                  Message    => '"' & String (Opt.Project_File.Simple_Name)
-                  & """ processing failed");
-            end if;
-         end;
+      if Handle_Errors and then not Loaded then
+         Handle_Program_Termination
+           (Message => '"' & String (Opt.Project_File.Simple_Name)
+            & """ processing failed");
       end if;
 
       return Loaded;
@@ -525,24 +473,20 @@ package body GPRtools.Options is
             Index  => "");
 
       elsif Arg = "-F" then
-         GPR2.Message.Reporter.Configure_Default_Reporter
-           (Use_Full_Pathname => True);
+         Result.Console_Reporter.Set_Full_Pathname (True);
 
       elsif Arg = "-q" then
-         Result.Verbosity := Quiet;
+         Result.Console_Reporter.Set_Verbosity (Quiet);
 
       elsif Arg = "-v" then
-         case Result.Verbosity is
-            when Very_Verbose =>
-               null;
-            when Verbose =>
-               Result.Verbosity := Very_Verbose;
-            when others =>
-               Result.Verbosity := Verbose;
-         end case;
+         if Result.Console_Reporter.Verbosity = Verbose then
+            Result.Console_Reporter.Set_Verbosity (Very_Verbose);
+         else
+            Result.Console_Reporter.Set_Verbosity (Verbose);
+         end if;
 
       elsif Arg = "-ws" then
-         Result.Warnings := False;
+         Result.Console_Reporter.Set_Verbosity (No_Warnings);
 
       elsif Arg = "--debug" then
          for C of Param loop

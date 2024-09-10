@@ -19,7 +19,6 @@
 --  Common utilities for all gpr tools
 
 with GPR2;
-with GPRtools.Options;
 
 package GPRtools.Util is
 
@@ -32,10 +31,6 @@ package GPRtools.Util is
 
    function Get_Program_Name return String;
    --  Get the internal value of the program name
-
-   procedure Output_Messages
-     (Options : GPRtools.Options.Base_Options'Class);
-   --  Output errors and if Verbose is True other messages from Log.
 
    function Is_Ada_Predefined_Unit (Unit : Name_Type) return Boolean;
    --  Return True if Unit is an Ada runtime unit

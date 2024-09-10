@@ -20,7 +20,6 @@ with Ada.Command_Line;
 with Ada.Containers;
 with Ada.Directories;
 with Ada.Exceptions;
-with Ada.Text_IO;
 
 with GNATCOLL.Traces;
 
@@ -107,13 +106,10 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
          if not Path.Exists then
             if Opt.Create_Missing_Dirs then
                Mkdir_Recursive (Path);
-               if Opt.Verbosity > GPRtools.Quiet then
-                  Text_IO.Put_Line ('"' & Path_Img & """ created");
-               end if;
+               Tree.Reporter.Report ('"' & Path_Img & """ created");
             else
                Handle_Program_Termination
-                 (Opt        => Opt,
-                  Force_Exit => False,
+                 (Force_Exit => False,
                   Message    => '"' & Path_Img & """ does not exist");
                All_Ok := False;
             end if;
@@ -183,26 +179,14 @@ begin
    --  Load the project tree
 
    if not GPRtools.Options.Load_Project (Opt, GPR2.No_Error) then
-      Handle_Program_Termination
-        (Opt     => Opt,
-         Message => "");
+      Handle_Program_Termination (Message => "");
    end if;
-
-   case Opt.Verbosity is
-      when Quiet =>
-         GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Errors;
-      when Regular | Verbose =>
-         GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Warnings_And_Errors;
-      when Very_Verbose =>
-         GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Linter;
-   end case;
 
    Tree := Opt.Tree;
 
    if not Tree.Update_Sources then
       Handle_Program_Termination
-        (Opt        => Opt,
-         Force_Exit => True,
+        (Force_Exit => True,
          Exit_Cause => E_Tool,
          Message    => "Failed to update sources");
       return To_Exit_Status (E_Fatal);
@@ -329,56 +313,27 @@ begin
       end if;
    end if;
 
-   Tree.Update_Sources
-     (Option   => Sources_Units_Artifacts,
-      Messages => Messages);
-
-   if Messages.Has_Error then
-      Messages.Output_Messages
-        (Information => False, Warning => True, Error => True);
+   if not Tree.Update_Sources (Option => Sources_Units_Artifacts) then
       Handle_Program_Termination
-        (Opt        => Opt,
-         Force_Exit => True,
+        (Force_Exit => True,
          Exit_Cause => E_Tool,
          Message    => "Failed to update sources");
       return To_Exit_Status (E_Fatal);
    end if;
 
-   Messages.Output_Messages
-     (Information => False, Warning => True, Error => False);
-
-   if Opt.Verbose then
-      Messages.Output_Messages
-        (Information => True, Warning => False, Error => False);
-
-      if Tree.Has_Messages then
-         Tree.Log_Messages.Output_Messages;
-      end if;
-   end if;
-
    if not Ensure_Directories (Tree) then
-      Handle_Program_Termination
-        (Opt     => Opt, Force_Exit => False);
+      Handle_Program_Termination (Force_Exit => False);
 
       return To_Exit_Status (E_Abort);
    end if;
 
    Messages.Clear;
 
-   if not GPRtools.Actions.Add_Actions_To_Build_Mains (Tree, Messages) then
-      Messages.Output_Messages
-        (Information => True, Warning => True, Error => True);
+   if not GPRtools.Actions.Add_Actions_To_Build_Mains (Tree) then
       return To_Exit_Status (E_Abort);
    end if;
 
    declare
-      use GPR2.Build.Process_Manager;
-      Convert_Verbosity : constant array (Verbosity_Level) of
-                            Execution_Verbosity :=
-                              (Quiet        => Quiet,
-                               Regular      => Minimal,
-                               Verbose      => Verbose,
-                               Very_Verbose => Very_Verbose);
       Jobs_Json : GPR2.Path_Name.Object;
    begin
       if Tree.Root_Project.Kind in With_Object_Dir_Kind then
@@ -391,7 +346,6 @@ begin
         (Tree.Artifacts_Database,
          Jobs         => Opt.Parallel_Compilation,
          JSON_File    => Jobs_Json,
-         Verbosity    => Convert_Verbosity (Opt.Verbosity),
          Stop_On_Fail => not Opt.Keep_Going);
    end;
 
@@ -400,8 +354,7 @@ begin
 exception
    when E : GPR2.Options.Usage_Error =>
       Handle_Program_Termination
-        (Opt                       => Opt,
-         Display_Command_Line_Help => True,
+        (Display_Command_Line_Help => True,
          Force_Exit                => False,
          Message                   => Exception_Message (E));
       return To_Exit_Status (E_Fatal);
@@ -411,8 +364,7 @@ exception
 
    when E : others =>
       Handle_Program_Termination
-        (Opt        => Opt,
-         Force_Exit => False,
+        (Force_Exit => False,
          Exit_Cause => E_Generic,
          Message    => Exception_Information (E));
       return To_Exit_Status (E_Fatal);

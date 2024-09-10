@@ -152,19 +152,6 @@ package body GPRtools.Util is
       return Path_Str;
    end Locate_Exec_On_Path;
 
-   ---------------------
-   -- Output_Messages --
-   ---------------------
-
-   procedure Output_Messages
-     (Options : GPRtools.Options.Base_Options'Class) is
-   begin
-      Options.Tree.Log_Messages.Output_Messages
-        (Information    => Options.Verbosity = Very_Verbose,
-         Warning        => Options.Warnings,
-         Lint           => Options.Verbosity = Very_Verbose);
-   end Output_Messages;
-
    ------------------
    -- Partial_Name --
    ------------------

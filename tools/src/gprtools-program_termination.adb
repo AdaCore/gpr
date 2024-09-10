@@ -28,18 +28,12 @@ package body GPRtools.Program_Termination is
    --------------------------------
 
    procedure Handle_Program_Termination
-     (Opt                       : GPRtools.Options.Base_Options'Class;
-      Display_Tree_Messages     : Boolean := False;
-      Display_Command_Line_Help : Boolean := False;
+     (Display_Command_Line_Help : Boolean := False;
       Force_Exit                : Boolean := True;
       Exit_Code                 : Exit_Code_Type  := E_Fatal;
       Exit_Cause                : Exit_Cause_Type := E_Tool;
       Message                   : String := "") is
    begin
-      if Display_Tree_Messages then
-         GPRtools.Util.Output_Messages (Opt);
-      end if;
-
       if Message'Length > 0 then
          declare
             Output_Kind : constant Text_IO.File_Type :=

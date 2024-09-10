@@ -1109,9 +1109,7 @@ begin
    Success := GPRtools.Options.Load_Project
                 (Opt                => Options,
                  Absent_Dir_Error   => No_Error,
-                 Handle_Information => False,
-                 Handle_Errors      => False,
-                 Handle_Lint        => False);
+                 Handle_Errors      => False);
 
    case Options.Kind_Of_Display is
       when GPRtools.K_JSON | GPRtools.K_JSON_Compact =>
@@ -1147,8 +1145,7 @@ begin
 
    if not Success then
       Handle_Program_Termination
-        (Opt     => Options,
-         Message => '"' & String (Options.Project_File.Name)
+        (Message => '"' & String (Options.Project_File.Name)
          & """ processing failed");
    end if;
 end GPRinspect.Process;

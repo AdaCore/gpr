@@ -208,18 +208,15 @@ begin
 exception
    when E : GPR2.Options.Usage_Error =>
       Handle_Program_Termination
-        (Opt                       => Options,
-         Display_Command_Line_Help => True,
+        (Display_Command_Line_Help => True,
          Force_Exit                => False,
          Message                   => Exception_Message (E));
       return To_Exit_Status (E_Fatal);
 
    when E : Project_Error =>
       Handle_Program_Termination
-        (Opt                   => Options,
-         Display_Tree_Messages => True,
-         Force_Exit            => False,
-         Message               => Exception_Message (E));
+        (Force_Exit => False,
+         Message    => Exception_Message (E));
       return To_Exit_Status (E_Fatal);
 
    when E_Program_Termination =>
@@ -227,8 +224,7 @@ exception
 
    when E : others =>
       Handle_Program_Termination
-        (Opt        => Options,
-         Force_Exit => False,
+        (Force_Exit => False,
          Exit_Cause => E_Generic,
          Message    => Exception_Message (E));
       return To_Exit_Status (E_Fatal);
