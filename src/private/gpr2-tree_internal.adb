@@ -1818,6 +1818,17 @@ package body GPR2.Tree_Internal is
       return View;
    end Register_View;
 
+   --------------
+   -- Reporter --
+   --------------
+
+   function Reporter
+     (Self : in out Object) return Reporter_Holders.Reference_Type
+   is
+   begin
+      return Self.Reporter_Holder.Reference;
+   end Reporter;
+
    ------------------------------------
    -- Restrict_Autoconf_To_Languages --
    ------------------------------------

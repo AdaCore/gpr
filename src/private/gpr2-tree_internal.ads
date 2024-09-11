@@ -5,6 +5,7 @@
 --
 
 with Ada.Iterator_Interfaces;
+with Ada.Containers.Indefinite_Holders;
 
 with GPR2.Environment;
 with GPR2.Containers;
@@ -33,7 +34,6 @@ with GPR2.View_Internal;
 
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Indefinite_Hashed_Maps;
-private with Ada.Containers.Indefinite_Holders;
 
 private package GPR2.Tree_Internal is
 
@@ -243,13 +243,19 @@ private package GPR2.Tree_Internal is
    --  Adds new message into the Log of Self, does nothing if message already
    --  present.
 
+   use GPR2.Reporter;
+
+   package Reporter_Holders is new Ada.Containers.Indefinite_Holders
+     (GPR2.Reporter.Object'Class);
+
    procedure Set_Reporter
      (Self : in out Object; Reporter : GPR2.Reporter.Object'Class);
    --  Sets the reporter used by the tree and all tree-related operations,
    --  such as loading or working with sources, to output the logs.
 
-   function Reporter (Self : Object) return GPR2.Reporter.Object'Class;
-   --  Returns the tree reporter
+   function Reporter
+     (Self : in out Object) return Reporter_Holders.Reference_Type;
+   --  Returns the tree reporter reference
 
    --  Context
 
@@ -493,10 +499,6 @@ private
                        (True, GPR2.Environment.Process_Environment);
    end record;
 
-   use GPR2.Reporter;
-   package Reporter_Holders is new Ada.Containers.Indefinite_Holders
-     (GPR2.Reporter.Object'Class);
-
    type Object is tagged limited record
       Self              : access Object := null;
       Root              : View.Object;
@@ -658,8 +660,5 @@ private
 
    function Resolve_Links (Self : Object) return Boolean is
      (Self.Resolve_Links);
-
-   function Reporter (Self : Object) return GPR2.Reporter.Object'Class is
-     (Self.Reporter_Holder.Element);
 
 end GPR2.Tree_Internal;
