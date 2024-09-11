@@ -1,0 +1,6 @@
+limited with "limitedimported";
+project ExtendedRoot is
+   for Languages use ("Ada", "C");
+   for Source_Dirs use ("src" & project'Name);
+   for Object_Dir use "obj" & project'Name;
+end ExtendedRoot;

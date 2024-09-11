@@ -1,0 +1,1 @@
+prj.gpr requires -aP ./add_dir_to_project_path_support/dir_added to access test project

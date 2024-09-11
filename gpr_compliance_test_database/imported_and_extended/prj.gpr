@@ -1,0 +1,50 @@
+with "imported";
+project Prj extends "extended" is
+
+   for Languages use ("Ada");
+   for Main use ("main.adb");
+   for Source_Dirs use ("src/**");
+   for Object_Dir use "obj";
+   type Target_Type is
+      ("native");
+   Target : Target_Type := external ("GPR_TARGET", "native");
+   type Runtime_X86_64_W64_Mingw32_Type is
+      ("default", "zfp");
+   Runtime_X86_64_W64_Mingw32 : Runtime_X86_64_W64_Mingw32_Type := external ("RUNTIME_X86_64_W64_MINGW32", "default");
+
+   case Target is
+
+      when "native" =>
+
+         case Runtime_X86_64_W64_Mingw32 is
+
+            when "default" =>
+
+            when others =>
+               for Runtime ("ada") use Runtime_X86_64_W64_Mingw32;
+         end case;
+
+      when others =>
+
+   end case;
+
+   package Compiler is
+      for Default_Switches ("ada") use ("-g", "-gnato", "-gnatwa", "-gnatQ", "-gnat12");
+      for Default_Switches ("c") use ("-g", "-Wall");
+      for Default_Switches ("c++") use ("-g", "-Wall");
+   end Compiler;
+
+   package Builder is
+      for Default_Switches ("ada") use ("-g");
+   end Builder;
+
+   package Linker is
+      for Default_Switches ("ada") use ();
+   end Linker;
+
+   package Ide is
+      for Compiler_Command ("ada") use "gnatmake";
+      for Compiler_Command ("c") use "gcc";
+   end Ide;
+
+end Prj;

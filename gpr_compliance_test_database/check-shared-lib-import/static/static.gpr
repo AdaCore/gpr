@@ -1,0 +1,6 @@
+project Static is
+   for Library_Name use "static";
+   for Library_Dir  use "lib";
+   for Object_Dir use "obj";
+end Static;
+
