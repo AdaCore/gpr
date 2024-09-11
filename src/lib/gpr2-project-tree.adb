@@ -364,6 +364,7 @@ package body GPR2.Project.Tree is
       With_Runtime             : Boolean := False;
       Reporter                 : GPR2.Reporter.Object'Class :=
                                    GPR2.Reporter.Console.Create;
+      Artifacts_Info_Level     : Optional_Source_Info_Option := No_Source;
       Absent_Dir_Error         : GPR2.Error_Level := GPR2.Warning;
       Allow_Implicit_Project   : Boolean := True;
       Environment              : GPR2.Environment.Object :=
@@ -590,8 +591,11 @@ package body GPR2.Project.Tree is
 
       Report_Logs (Self);
 
-      return True;
+      if Artifacts_Info_Level > No_Source then
+         return Self.Update_Sources (Artifacts_Info_Level);
+      end if;
 
+      return True;
    exception
       when GPR2.Project_Error =>
          GPR2.Project_Parser.Clear_Cache;

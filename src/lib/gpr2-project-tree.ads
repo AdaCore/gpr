@@ -92,6 +92,7 @@ package GPR2.Project.Tree is
       With_Runtime             : Boolean := False;
       Reporter                 : GPR2.Reporter.Object'Class :=
                                    GPR2.Reporter.Console.Create;
+      Artifacts_Info_Level     : Optional_Source_Info_Option := No_Source;
       Absent_Dir_Error         : GPR2.Error_Level := GPR2.Warning;
       Allow_Implicit_Project   : Boolean := True;
       Environment              : GPR2.Environment.Object :=
@@ -113,6 +114,9 @@ package GPR2.Project.Tree is
    --   the options are checked.
    --  Reporter: reporter used by the tree and all tree-related operations,
    --   such as loading or working with sources, to output the logs.
+   --  Artifacts_Info_Level: specify the types of artifacts to retrieve.
+   --   If the level is set to fetch at Sources_Only, it will ensure that
+   --   all views' sources are up to date.
    --  With_Runtime: whether the runtime sources are looked for when updating
    --   the sources.
    --  Absent_Dir_Error: whether a missing directory should be treated as an
@@ -133,6 +137,9 @@ package GPR2.Project.Tree is
    --  File_Reader: if set, this file reader is used instead of the standard
    --   text file reader to load the projects.
    --
+   --  Returns True if both project loading and artifact fetching
+   --  were successful.
+
    --  raises GPR2.Options.Usage_Error in case the set of Options given as
    --   parameter is invalid, The reason for the failure is given in the
    --   exception message.
@@ -338,7 +345,9 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined;
    --  Ensures that all views' sources are up-to-date.
    --  Option selects the information that will be gathered on the sources. The
-   --   more information is requested, the slower is the update operation.
+   --  more information is requested, the slower is the update operation.
+   --  Used by the Load function when its Artifacts_Info_Level is set
+   --  to fetch sources.
 
    function Update_Sources
      (Self     : Object;
