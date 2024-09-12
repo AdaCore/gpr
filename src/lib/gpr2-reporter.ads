@@ -30,9 +30,8 @@ package GPR2.Reporter is
    --  Report the message based on the reporter's verbosity
 
    procedure Report (Self : Object'Class; Message : String);
-   --  Report the provided string if the reporter's verbosity is not set to
-   --  Quiet. This is used to report informational messages, such as the use
-   --  of implicit projects or the generation of configuration files.
+   --  A wrapper around the Report procedure that creates an end-user
+   --  GPR2.Message.Object and reports it.
 
    function Verbosity (Self : Object) return Verbosity_Level is abstract;
    --  Obtain the reporter's verbosity level
@@ -44,10 +43,5 @@ package GPR2.Reporter is
    procedure Internal_Report
      (Self : Object; Message : GPR2.Message.Object) is abstract;
    --  Internal message reporting function to be implemented by the reporter.
-
-   procedure Internal_Report
-     (Self : Object; Message : String) is abstract;
-   --  Internal string message reporting function to be implemented by the
-   --  reporter.
 
 end GPR2.Reporter;

@@ -10,12 +10,13 @@ package body GPR2.Log is
    use type Message.Status_Type;
 
    type Iterator
-     (Information : Boolean;
-      Warning     : Boolean;
-      Error       : Boolean;
-      Lint        : Boolean;
-      Read        : Boolean;
-      Unread      : Boolean)
+     (Error    : Boolean;
+      End_User : Boolean;
+      Warning  : Boolean;
+      Hint     : Boolean;
+      Lint     : Boolean;
+      Read     : Boolean;
+      Unread   : Boolean)
    is new Log_Iterator.Forward_Iterator with record
      Store : not null access Message_Set.Vector;
    end record;
@@ -27,21 +28,23 @@ package body GPR2.Log is
      (Iter : Iterator; Position : Cursor) return Cursor;
 
    function Match_Filter
-     (Message     : GPR2.Message.Object;
-      Information : Boolean;
-      Warning     : Boolean;
-      Error       : Boolean;
-      Lint        : Boolean;
-      Read        : Boolean;
-      Unread      : Boolean) return Boolean is
-     (((Message.Level = GPR2.Message.Information and then Information)
-       or else (Message.Level = GPR2.Message.Warning and then Warning)
+     (Message  : GPR2.Message.Object;
+      Error    : Boolean;
+      End_User : Boolean;
+      Warning  : Boolean;
+      Hint     : Boolean;
+      Lint     : Boolean;
+      Read     : Boolean;
+      Unread   : Boolean) return Boolean is
+     (((Message.Level = GPR2.Message.Warning and then Warning)
        or else (Message.Level = GPR2.Message.Error and then Error)
+       or else (Message.Level = GPR2.Message.End_User and then End_User)
+       or else (Message.Level = GPR2.Message.Hint and then Hint)
        or else (Message.Level = GPR2.Message.Lint and then Lint))
       and then
         ((Message.Status = GPR2.Message.Read and then Read)
          or else (Message.Status = GPR2.Message.Unread and then Unread)));
-   --  Returns True is the Message's Level match the information/warning/error
+   --  Returns True is the Message's Level match the provided
    --  values with the corresponding Read/Unread status.
 
    procedure Set_Read (Position : Cursor)
@@ -122,8 +125,13 @@ package body GPR2.Log is
         or else
           Match_Filter
             (Element (Position),
-             Iter.Information, Iter.Warning, Iter.Error, Iter.Lint,
-             Iter.Read, Iter.Unread)
+             Error    => Iter.Error,
+             End_User => Iter.End_User,
+             Warning  => Iter.Warning,
+             Hint     => Iter.Hint,
+             Lint     => Iter.Lint,
+             Read     => Iter.Read,
+             Unread   => Iter.Unread)
       then
          Set_Read (Position);
          return Position;
@@ -143,17 +151,25 @@ package body GPR2.Log is
    end Has_Element;
 
    function Has_Element
-     (Self        : Object;
-      Information : Boolean := True;
-      Warning     : Boolean := True;
-      Error       : Boolean := True;
-      Lint        : Boolean := True;
-      Read        : Boolean := True;
-      Unread      : Boolean := True) return Boolean is
+     (Self     : Object;
+      Error    : Boolean := True;
+      End_User : Boolean := True;
+      Warning  : Boolean := True;
+      Hint     : Boolean := True;
+      Lint     : Boolean := True;
+      Read     : Boolean := True;
+      Unread   : Boolean := True) return Boolean is
    begin
       for M of Self.Store loop
          if Match_Filter
-           (M, Information, Warning, Error, Lint, Read, Unread)
+           (M,
+            Error    => Error,
+            End_User => End_User,
+            Warning  => Warning,
+            Hint     => Hint,
+            Lint     => Lint,
+            Read     => Read,
+            Unread   => Unread)
          then
             return True;
          end if;
@@ -176,23 +192,25 @@ package body GPR2.Log is
    -------------
 
    function Iterate
-     (Self        : Object;
-      Information : Boolean := True;
-      Warning     : Boolean := True;
-      Error       : Boolean := True;
-      Lint        : Boolean := False;
-      Read        : Boolean := True;
-      Unread      : Boolean := True)
+     (Self     : Object;
+      Error    : Boolean := True;
+      Warning  : Boolean := True;
+      End_User : Boolean := True;
+      Hint     : Boolean := True;
+      Lint     : Boolean := False;
+      Read     : Boolean := True;
+      Unread   : Boolean := True)
       return Log_Iterator.Forward_Iterator'Class is
    begin
       return Iterator'
-        (Information => Information,
-         Warning     => Warning,
-         Error       => Error,
-         Lint        => Lint,
-         Read        => Read,
-         Unread      => Unread,
-         Store       => Self.Store'Unrestricted_Access);
+        (Error    => Error,
+         End_User => End_User,
+         Warning  => Warning,
+         Hint     => Hint,
+         Lint     => Lint,
+         Read     => Read,
+         Unread   => Unread,
+         Store    => Self.Store'Unrestricted_Access);
    end Iterate;
 
    ----------
@@ -211,8 +229,13 @@ package body GPR2.Log is
            or else
              Match_Filter
                (Element (New_Position),
-                Iter.Information, Iter.Warning, Iter.Error, Iter.Lint,
-                Iter.Read, Iter.Unread);
+                Error    => Iter.Error,
+                End_User => Iter.End_User,
+                Warning  => Iter.Warning,
+                Hint     => Iter.Hint,
+                Lint     => Iter.Lint,
+                Read     => Iter.Read,
+                Unread   => Iter.Unread);
       end loop;
 
       Set_Read (New_Position);

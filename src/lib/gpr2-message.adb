@@ -15,7 +15,7 @@ package body GPR2.Message is
    function Create
      (Level   : Level_Value;
       Message : String;
-      Sloc    : Source_Reference.Object'Class;
+      Sloc    : Source_Reference.Object'Class := Source_Reference.Undefined;
       Indent  : Natural := 0) return Object is
    begin
       return Object'
@@ -40,31 +40,40 @@ package body GPR2.Message is
                "",
             when Short =>
                (case Self.Level is
-                   when Error       => "E",
-                   when Warning     => "W",
-                   when Information => "I",
-                   when Lint        => "L"),
+                   when Error    => "E",
+                   when Warning  => "W",
+                   when Hint     => "I",
+                   when Lint     => "L",
+                   when End_User => ""),
            when Long =>
                (case Self.Level is
-                   when Error       => "error",
-                   when Warning     => "warning",
-                   when Information => "info",
-                   when Lint        => "lint"));
+                   when Error    => "error",
+                   when Warning  => "warning",
+                   when Hint     => "hint",
+                   when Lint     => "lint",
+                   when End_User => ""));
 
       Indent   : constant String := (1 .. Self.Indent * 2 => ' ');
 
       Indented : constant String := Indent
-                   & (if Self.Indent < 1
+                   & (if Level_Image /= "" and then Self.Indent = 0
                       then Level_Image & ": "
                       else "")
                    & To_String (Self.Message);
       --  Need to distinguish warnings from errors because they are both going
       --  to the error output.
 
-      Format : constant Formatted_String := +"%s: %s";
-
    begin
-      return -(Format & Self.Sloc.Format (Full_Path_Name) & Indented);
+
+      if Self.Level = End_User or else not Self.Sloc.Is_Defined then
+         return Indented;
+      else
+         declare
+            Format : constant Formatted_String := +"%s: %s";
+         begin
+            return -(Format & Self.Sloc.Format (Full_Path_Name) & Indented);
+         end;
+      end if;
    end Format;
 
    -----------

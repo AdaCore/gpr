@@ -797,7 +797,7 @@ package body GPR2.Tree_Internal is
 
       Self.Messages.Append
         (Message.Create
-           (Message.Information,
+           (Message.Hint,
             "Parsing """ & Gpr_Path.String_Value & """",
             Source_Reference.Create (Gpr_Path.Value, 0, 0)));
 
@@ -817,7 +817,7 @@ package body GPR2.Tree_Internal is
 
          Self.Messages.Append
            (Message.Create
-              (Message.Information,
+              (Message.Hint,
                "project search path: " & To_String (Search_Paths),
                Source_Reference.Create (Gpr_Path.Value, 0, 0)));
       end;

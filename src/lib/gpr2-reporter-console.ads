@@ -15,10 +15,6 @@ package GPR2.Reporter.Console is
      (Self    : Object;
       Message : GPR2.Message.Object);
 
-   overriding procedure Internal_Report
-     (Self     : Object;
-      Message  : String);
-
    overriding
    function Verbosity (Self : Object) return Verbosity_Level;
 

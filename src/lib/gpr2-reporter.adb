@@ -23,13 +23,13 @@ package body GPR2.Reporter is
          return;
       end if;
 
-      --  If the log contains errors, then only these errors are displayed.
       for C in Messages.Iterate
-        (Information => Self.Verbosity >= Verbose,
+        (Error       => True,
+         End_User    => Self.Verbosity >= No_Warnings,
          Warning     => Self.Verbosity > No_Warnings
                           and then (Warn_If_Errors
                                       or else not Messages.Has_Error),
-         Error       => True,
+         Hint        => Self.Verbosity >= Verbose,
          Lint        => Self.Verbosity >= Verbose)
       loop
          Self.Internal_Report (GPR2.Log.Element (C));
@@ -52,11 +52,11 @@ package body GPR2.Reporter is
          use all type GPR2.Message.Level_Value;
       begin
          case Severity is
-            when Error =>
+            when Error | End_User =>
                return Self.Verbosity >= No_Warnings;
             when Warning =>
                return Self.Verbosity > No_Warnings;
-            when Information | Lint =>
+            when Hint | Lint =>
                return Self.Verbosity >= Verbose;
 
          end case;
@@ -69,9 +69,10 @@ package body GPR2.Reporter is
 
    procedure Report (Self : Object'Class; Message : String)
    is
+      use all type GPR2.Message.Level_Value;
+      Msg : constant GPR2.Message.Object :=
+         GPR2.Message.Create (Level => End_User, Message => Message);
    begin
-      if Self.Verbosity > Quiet then
-         Self.Internal_Report (Message);
-      end if;
+      Self.Report (Msg);
    end Report;
 end GPR2.Reporter;

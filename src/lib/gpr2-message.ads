@@ -10,7 +10,21 @@ with GPR2.Source_Reference;
 
 package GPR2.Message is
 
-   type Level_Value is (Information, Warning, Error, Lint);
+   type Level_Value is (Warning, Error, End_User, Hint, Lint);
+   --  Severity levels of messages:
+   --
+   --  Warning and Error:
+   --     Self-explanatory.
+   --  End_User:
+   --     Used for messages displayed directly to the user without
+   --     formatting, such as "Creating object directory 'obj'" or
+   --     "Using project file p.gpr".
+   --  Hint:
+   --     Provides useful, but non-essential, information to help the user
+   --     better understand the situation or context.
+   --  Lint:
+   --     Indicates possible stylistic and structural improvements
+   --     to the project file.
 
    type Status_Type is (Read, Unread);
    --  Read/Unread status for the messages. This is used for example by the Log
@@ -21,13 +35,10 @@ package GPR2.Message is
    function Create
      (Level   : Level_Value;
       Message : String;
-      Sloc    : Source_Reference.Object'Class;
+      Sloc    : Source_Reference.Object'Class := Source_Reference.Undefined;
       Indent  : Natural := 0) return Object
-     with Pre  => Sloc.Is_Defined,
-          Post => Create'Result.Status = Unread;
-   --  Constructor for a log message.
-   --  Raw parameter mean that message should be displayed as is, without
-   --  source reference.
+     with Post => Create'Result.Status = Unread;
+   --  Constructor for a log message
 
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
@@ -66,6 +77,8 @@ package GPR2.Message is
    --  tools: <filename>:<line>:<col>: <message>
    --  <filename> format controlled by Full_Path_Name parameter. Default False
    --  is for simple file name, True is for full path name format.
+   --  Formatting does not apply to End_User messages, as they are intended to
+   --  be displayed as simple strings to the user.
 
    procedure Set_Status (Self : in out Object; Status : Status_Type)
      with Pre  => Self.Is_Defined,

@@ -34,18 +34,9 @@ package body GPR2.Reporter.Console is
    begin
       Put_Line
         ((case Message.Level is
-            when GPR2.Message.Information | Lint => Current_Output,
+            when End_User | Hint | Lint => Current_Output,
             when Error | Warning    => Current_Error),
          Message.Format (Self.Full_Path, Self.Level_Fmt));
-   end Internal_Report;
-
-   overriding procedure Internal_Report
-     (Self     : Object;
-      Message  : String)
-   is
-      use Ada.Text_IO;
-   begin
-      Put_Line (Current_Output, Message);
    end Internal_Report;
 
    -----------------------
