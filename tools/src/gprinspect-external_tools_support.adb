@@ -194,15 +194,16 @@ package body GPRinspect.External_Tools_Support is
          PRAD.Set_Attribute_Description
            (Key         => Check_Default_Switches,
             Description =>
-              "Index is a language name. Value is a list of "
-            & "switches to be used when invoking gnatcheck for a source of "
-            & "the language, if there is no applicable attribute Switches.");
+              "Index is a language name. Value is a "
+            & "list of switches to be used when invoking 'gnatcheck' for a "
+            & "source of the language, if there is no applicable attribute "
+            & "Switches.");
       end if;
 
       if not PRA.Exists (Check_Switches) then
          PRA.Add
            (Name                  => Check_Switches,
-            Index_Type            => PRA.File_Index,
+            Index_Type            => PRA.Language_Index,
             Value                 => PRA.List,
             Value_Case_Sensitive  => True,
             Is_Allowed_In         => PRA.Everywhere,
@@ -214,9 +215,10 @@ package body GPRinspect.External_Tools_Support is
          PRAD.Set_Attribute_Description
            (Key         => Check_Switches,
             Description =>
-              "Index is a source file name. Value is the list "
-            & "of switches to be used when invoking gnatcheck for the "
-            & "source.");
+              "Index is a language name. Value is a "
+            & "list of switches to be used when invoking 'gnatcheck' for a "
+            & "source of the language, if there is no applicable attribute "
+            & "Switches.");
       end if;
 
       if not PRP.Exists (Codepeer_Package) then
