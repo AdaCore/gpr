@@ -12,6 +12,25 @@ with GPR2.Project.Registry;
 
 package body GPR2.Options is
 
+   -----------------
+   -- Add_Context --
+   -----------------
+
+   procedure Add_Context
+     (Self    : in out Object;
+      Context : GPR2.Context.Object) is
+   begin
+      for C in Context.Iterate loop
+         declare
+            Key : constant External_Name_Type :=
+                    GPR2.Context.Key_Value.Key (C);
+            Val : constant Value_Type := GPR2.Context.Key_Value.Element (C);
+         begin
+            Self.Context.Include (Key, Val);
+         end;
+      end loop;
+   end Add_Context;
+
    ----------------
    -- Add_Switch --
    ----------------
