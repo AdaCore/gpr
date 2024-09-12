@@ -116,12 +116,12 @@ is
          Logs : GPR2.Log.Object) is
       begin
          for C in Logs.Iterate
-           (Information => (not Only_Errors) and then Options.Verbose,
-            Warning     => not Only_Errors,
-            Error       => True,
-            Lint        => not Only_Errors,
-            Read        => False,
-            Unread      => True)
+           (Hint     => (not Only_Errors) and then Options.Verbose,
+            Warning  => not Only_Errors,
+            Error    => True,
+            Lint     => not Only_Errors,
+            Read     => False,
+            Unread   => True)
          loop
             declare
                M : constant Message.Object := GPR2.Log.Element (C);
@@ -162,12 +162,12 @@ is
       procedure Display (Logs : GPR2.Log.Object) is
       begin
          for C in Logs.Iterate
-           (Information => (not Only_Errors) and then Options.Verbose,
-            Warning     => not Only_Errors,
-            Error       => True,
-            Lint        => not Only_Errors,
-            Read        => False,
-            Unread      => True)
+           (Hint    => (not Only_Errors) and then Options.Verbose,
+            Warning => not Only_Errors,
+            Error   => True,
+            Lint    => not Only_Errors,
+            Read    => False,
+            Unread  => True)
          loop
             Indent (2, GPR2.Log.Element (C).Format);
          end loop;
@@ -961,12 +961,12 @@ is
                First_Message : Boolean := False;
             begin
                for C in Options.Tree.Log_Messages.Iterate
-                 (Information => Options.Verbose,
-                  Warning     => True,
-                  Error       => True,
-                  Lint        => True,
-                  Read        => False,
-                  Unread      => True)
+                 (Hint    => Options.Verbose,
+                  Warning => True,
+                  Error   => True,
+                  Lint    => True,
+                  Read    => False,
+                  Unread  => True)
                loop
                   if not First_Message then
                      Indent (1, "Messages :");

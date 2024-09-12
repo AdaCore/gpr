@@ -28,7 +28,7 @@ package body GPR2.Reporter.Console is
    ---------------------
 
    overriding procedure Internal_Report
-     (Self : Object; Message : GPR2.Message.Object)
+     (Self : in out Object; Message : GPR2.Message.Object)
    is
       use Ada.Text_IO;
    begin

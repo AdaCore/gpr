@@ -12,7 +12,7 @@ package GPR2.Reporter.Console is
    type Object is new GPR2.Reporter.Object with private;
 
    overriding procedure Internal_Report
-     (Self    : Object;
+     (Self    : in out Object;
       Message : GPR2.Message.Object);
 
    overriding

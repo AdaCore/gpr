@@ -217,7 +217,7 @@ test_bootstrap:
 ## CHECK USERS OF THE LIBGPR2 LIBRARY (optional) ##
 ###################################################
 
-test_gpr2_users:
+test_libgpr2_users:
   services:
      - image:e3
      - cpu:16

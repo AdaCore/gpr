@@ -97,7 +97,7 @@ package body GPR2.Build.Process_Manager is
          end if;
 
          if Proc_Handler.Process_Status /= PROCESS_STATUS_OK then
-            Self.Tree_Db.Reporter.Report
+            Self.Tree_Db.Report
               (Message.Create
                  (Message.Warning,
                   Job.UID.Image & " failed with status" &
@@ -236,7 +236,7 @@ package body GPR2.Build.Process_Manager is
                   End_Of_Iteration := not Graph.Next (Node);
                exception
                   when E : GNATCOLL.Directed_Graph.DG_Error =>
-                     Tree_Db.Reporter.Report
+                     Tree_Db.Report
                        ("error: internal error in the process manager (" &
                           Ada.Exceptions.Exception_Message (E) & ")");
                      Self.Traces.Trace ("!!! Internal error in the DAG");
@@ -503,10 +503,10 @@ package body GPR2.Build.Process_Manager is
          --  ??? Both message level and Project tree verbosity don't cope with
          --  tooling messages that need quiet/normal/detailed info. Let's go
          --  for the default one *and* verbose one for now
-         if Self.Tree_Db.Reporter.Verbosity >= Verbose then
-            Self.Tree_Db.Reporter.Report (Image (Args));
+         if Self.Tree_Db.Reporter_Verbosity >= Verbose then
+            Self.Tree_Db.Report (Image (Args));
          else
-            Self.Tree_Db.Reporter.Report (Job.UID.Image);
+            Self.Tree_Db.Report (Job.UID.Image);
          end if;
 
          Proc_Handler :=
@@ -524,7 +524,7 @@ package body GPR2.Build.Process_Manager is
             FS.Close (P_Wo);
             FS.Close (P_We);
 
-            Self.Tree_Db.Reporter.Report
+            Self.Tree_Db.Report
               (GPR2.Message.Create
                  (GPR2.Message.Error,
                   Args.First_Element & ": " &

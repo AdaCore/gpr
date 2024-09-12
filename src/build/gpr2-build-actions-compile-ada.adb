@@ -414,7 +414,7 @@ package body GPR2.Build.Actions.Compile.Ada is
            Preserve_Timestamps => False,
            Preserve_Permissions => False)
       then
-         Self.Tree.Reporter.Report
+         Self.Tree.Report
            (GPR2.Message.Create
               (GPR2.Message.Error,
                "could not copy ali file " &

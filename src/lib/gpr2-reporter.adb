@@ -8,14 +8,12 @@
 
 package body GPR2.Reporter is
 
-
-
    ------------
    -- Report --
    ------------
 
    procedure Report
-     (Self           : Object'Class;
+     (Self           : in out Object'Class;
       Messages       : GPR2.Log.Object;
       Warn_If_Errors : Boolean := False) is
    begin
@@ -36,7 +34,7 @@ package body GPR2.Reporter is
       end loop;
    end Report;
 
-   procedure Report (Self : Object'Class; Message : GPR2.Message.Object)
+   procedure Report (Self : in out Object'Class; Message : GPR2.Message.Object)
    is
 
       function Printable (Severity : GPR2.Message.Level_Value) return Boolean;
@@ -67,7 +65,7 @@ package body GPR2.Reporter is
       end if;
    end Report;
 
-   procedure Report (Self : Object'Class; Message : String)
+   procedure Report (Self : in out Object'Class; Message : String)
    is
       use all type GPR2.Message.Level_Value;
       Msg : constant GPR2.Message.Object :=
@@ -75,4 +73,5 @@ package body GPR2.Reporter is
    begin
       Self.Report (Msg);
    end Report;
+
 end GPR2.Reporter;

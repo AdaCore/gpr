@@ -19,17 +19,18 @@ package GPR2.Reporter is
      (Quiet, No_Warnings, Regular, Verbose, Very_Verbose);
 
    procedure Report
-     (Self           : Object'Class;
+     (Self           : in out Object'Class;
       Messages       : GPR2.Log.Object;
       Warn_If_Errors : Boolean := False);
   --  Report messages from the provided log based on the reporter's verbosity.
   --  If Warn_If_Errors is unset and the log contains error messages, then the
   --  warnings are not displayed.
 
-   procedure Report (Self : Object'Class; Message : GPR2.Message.Object);
+   procedure Report
+     (Self : in out Object'Class; Message : GPR2.Message.Object);
    --  Report the message based on the reporter's verbosity
 
-   procedure Report (Self : Object'Class; Message : String);
+   procedure Report (Self : in out Object'Class; Message : String);
    --  A wrapper around the Report procedure that creates an end-user
    --  GPR2.Message.Object and reports it.
 
@@ -41,7 +42,7 @@ package GPR2.Reporter is
    --------------------------
 
    procedure Internal_Report
-     (Self : Object; Message : GPR2.Message.Object) is abstract;
+     (Self : in out Object; Message : GPR2.Message.Object) is abstract;
    --  Internal message reporting function to be implemented by the reporter.
 
 end GPR2.Reporter;

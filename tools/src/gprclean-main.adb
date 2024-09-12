@@ -148,9 +148,9 @@ begin
 
    if Project_Tree.Has_Configuration
      and then Project_Tree.Configuration.Log_Messages.Has_Element
-       (Warning     => True,
-        Information => False,
-        Error       => False)
+       (Warning  => True,
+        Hint     => False,
+        Error    => False)
    then
       Project_Tree.Log_Messages.Append
         (GPR2.Message.Create
@@ -174,13 +174,7 @@ begin
         (Message => "problems with main sources");
    end if;
 
-   if not Project_Tree.Update_Sources then
-      Handle_Program_Termination
-        (Force_Exit => True,
-         Exit_Cause => E_Tool,
-         Message    => "Failed to update sources");
-      return To_Exit_Status (E_Fatal);
-   end if;
+   Project_Tree.Update_Sources;
 
    --  Create actions that will be used to iterate and obtain artifacts
    --  for removal.

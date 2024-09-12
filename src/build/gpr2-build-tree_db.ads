@@ -14,6 +14,7 @@ with GPR2.Build.Actions;
 with GPR2.Build.Artifacts;
 with GPR2.Build.View_Db;
 with GPR2.Log;
+with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.Reporter;
@@ -53,10 +54,6 @@ package GPR2.Build.Tree_Db is
      with Pre => Self.Is_Defined;
 
    function Source_Option (Self : Object) return Optional_Source_Info_Option;
-
-   function Reporter
-     (Self : Object) return GPR2.Reporter.Object'Class;
-   --  Returns the tree's reporter
 
    --  VIEW DATABASE LOOKUP:
 
@@ -248,6 +245,18 @@ package GPR2.Build.Tree_Db is
 
    procedure Clear_Temp_Files (Self : Object);
    --  Make sure all temp files are cleaned up
+
+   -----------------------------------------------
+   -- Message reporting for the Build hierarchy --
+   -----------------------------------------------
+
+   procedure Report (Self : Object; Msg  : GPR2.Message.Object);
+   procedure Report (Self : Object; Msg  : String);
+   function Reporter_Verbosity
+     (Self : Object) return GPR2.Reporter.Verbosity_Level;
+   --  Wrappers around GPR2.Reporter.Report used to fix otherwise visibility
+   --  and elaboration circularity issues if we make Project.Tree.Reporter
+   --  visible from this spec.
 
 private
 

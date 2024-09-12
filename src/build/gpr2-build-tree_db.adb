@@ -11,7 +11,6 @@ pragma Warnings (On);
 
 with GPR2.Build.View_Tables;
 with GPR2.Containers;
-with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
@@ -236,7 +235,7 @@ package body GPR2.Build.Tree_Db is
       if Artifact_Action_Maps.Has_Element (Pred) then
          if Self.Predecessor (Pred) /= Action then
             --  Two actions produce the same output, raise an error
-            Self.Reporter.Report
+            Self.Report
               (GPR2.Message.Create
                  (GPR2.Message.Error,
                   '"' & Action.Image & """ and """ &
@@ -790,16 +789,27 @@ package body GPR2.Build.Tree_Db is
       end if;
    end Refresh;
 
-   --------------
-   -- Reporter --
-   --------------
+   ------------
+   -- Report --
+   ------------
 
-   function Reporter
-     (Self : Object) return GPR2.Reporter.Object'Class
-   is
+   procedure Report (Self : Object; Msg  : GPR2.Message.Object) is
    begin
-      return Self.Tree.Reporter;
-   end Reporter;
+      Self.Tree.Reporter.Report (Msg);
+   end Report;
+
+   procedure Report (Self : Object; Msg  : String) is
+   begin
+      Self.Tree.Reporter.Report (Msg);
+   end Report;
+
+   ------------------------
+   -- Reporter_Verbosity --
+   ------------------------
+
+   function Reporter_Verbosity
+     (Self : Object) return GPR2.Reporter.Verbosity_Level
+   is (Self.Tree.Reporter.Verbosity);
 
    ------------
    -- Unload --
