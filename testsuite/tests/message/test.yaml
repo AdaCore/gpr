@@ -1,0 +1,4 @@
+description: Test the message object
+driver: build_and_run
+project_file: test
+main: test
