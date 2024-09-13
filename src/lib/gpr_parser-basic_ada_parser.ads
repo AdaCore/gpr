@@ -4,15 +4,28 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 --
 
+with GNATCOLL.Iconv;
+
 with Gpr_Parser_Support.Diagnostics;
 with Gpr_Parser_Support.Text;
 with Gpr_Parser.Analysis;
 
 package Gpr_Parser.Basic_Ada_Parser is
 
+   type Iconv_States is record
+      From_State : GNATCOLL.Iconv.Iconv_T;
+      To_State   : GNATCOLL.Iconv.Iconv_T;
+   end record;
+
+   function Create
+     (From_Charset : String;
+      To_Charset   : String) return Iconv_States;
+   procedure Close (States : in out Iconv_States);
+
    procedure Parse_Context_Clauses
      (Filename       : String;
       Context        : Gpr_Parser.Analysis.Analysis_Context'Class;
+      States         : Iconv_States;
       Log_Error      : access procedure (Message : String);
       With_Clause_CB : access procedure (Unit_Name  : String;
                                          Is_Limited : Boolean) := null;

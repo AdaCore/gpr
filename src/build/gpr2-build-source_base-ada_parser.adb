@@ -7,15 +7,29 @@
 with Ada.Directories;
 
 with Gpr_Parser.Analysis;
-with Gpr_Parser.Basic_Ada_Parser;
 
 with GPR2.Build.Unit_Info;
 with GPR2.Containers;
 
 package body GPR2.Build.Source_Base.Ada_Parser is
 
+   -----------
+   -- Close --
+   -----------
+
+   overriding procedure Close (State : in out Parser_State) is
+   begin
+      Gpr_Parser.Basic_Ada_Parser.Close
+        (Gpr_Parser.Basic_Ada_Parser.Iconv_States (State));
+   end Close;
+
+   -------------
+   -- Compute --
+   -------------
+
    procedure Compute
      (File_Reader      : GPR2.File_Readers.File_Reader_Reference;
+      State            : Parser_State;
       Data             : in out Source_Base.Object'Class;
       Get_Withed_Units : Boolean;
       Success          : out Boolean)
@@ -187,6 +201,7 @@ package body GPR2.Build.Source_Base.Ada_Parser is
       Gpr_Parser.Basic_Ada_Parser.Parse_Context_Clauses
         (Filename       => Data.Path_Name.String_Value,
          Context        => Ctx,
+         States         => Gpr_Parser.Basic_Ada_Parser.Iconv_States (State),
          Log_Error      => null, --  Ignore parsing errors for now
          With_Clause_CB => (if Get_Withed_Units
                             then With_Clause_CB'Access
@@ -208,5 +223,11 @@ package body GPR2.Build.Source_Base.Ada_Parser is
 
       Success := Parsed;
    end Compute;
+
+   function Create_New_State return Parser_State is
+   begin
+      return Parser_State (Gpr_Parser.Basic_Ada_Parser.Create
+                             ("iso-8859-15", "UTF-8"));
+   end Create_New_State;
 
 end GPR2.Build.Source_Base.Ada_Parser;

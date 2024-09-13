@@ -33,13 +33,62 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
    subtype Lexed_Token_Vector is Lexed_Token_Vectors.Vector;
 
+   function Encode (Text  : Gpr_Parser.Text.Text_Type;
+                    State : GNATCOLL.Iconv.Iconv_T) return String;
+
    function Encode_String_Without_Whitespaces
      (Contents            : Decoded_File_Contents;
       First_Idx, Last_Idx : Natural;
-      Whitespaces         : Lexed_Token_Vector) return String;
+      Whitespaces         : Lexed_Token_Vector;
+      States              : Iconv_States) return String;
    --  Encode the substring from the first to the last specified index,
    --  excluding any whitespace characters. The indexes of these whitespace
    --  characters are contained in `Whitespaces`.
+
+   -----------
+   -- Close --
+   -----------
+
+   procedure Close (States : in out Iconv_States) is
+   begin
+      GNATCOLL.Iconv.Iconv_Close (States.From_State);
+      GNATCOLL.Iconv.Iconv_Close (States.To_State);
+   end Close;
+
+   ------------
+   -- Create --
+   ------------
+
+   function Create
+     (From_Charset : String;
+      To_Charset   : String) return Iconv_States is
+   begin
+      return Result : Iconv_States do
+         Result := (From_State  =>
+                      GNATCOLL.Iconv.Iconv_Open
+                        (To_Code   => Gpr_Parser_Support.Text.Text_Charset,
+                         From_Code => From_Charset),
+                    To_State    =>
+                      GNATCOLL.Iconv.Iconv_Open
+                        (To_Code   => To_Charset,
+                         From_Code => Gpr_Parser_Support.Text.Text_Charset));
+      end return;
+   end Create;
+
+   ------------
+   -- Encode --
+   ------------
+
+   function Encode (Text  : Gpr_Parser.Text.Text_Type;
+                    State : GNATCOLL.Iconv.Iconv_T) return String
+   is
+      S : String (1 .. 4 * Text'Length) with Import, Address => Text'Address;
+   begin
+      GNATCOLL.Iconv.Reset (State);
+      return GNATCOLL.Iconv.Iconv
+        (State     => State,
+         Input     => S);
+   end Encode;
 
    ---------------------------------------
    -- Encode_String_Without_Whitespaces --
@@ -48,7 +97,8 @@ package body Gpr_Parser.Basic_Ada_Parser is
    function Encode_String_Without_Whitespaces
      (Contents            : Decoded_File_Contents;
       First_Idx, Last_Idx : Natural;
-      Whitespaces         : Lexed_Token_Vector) return String
+      Whitespaces         : Lexed_Token_Vector;
+      States              : Iconv_States) return String
    is
       use Ada.Strings.Unbounded;
 
@@ -56,8 +106,9 @@ package body Gpr_Parser.Basic_Ada_Parser is
       Result : Unbounded_String;
    begin
       if Whitespaces.Is_Empty then
-         return Gpr_Parser_Support.Text.Encode
-                  (Contents.Buffer (First_Idx .. Last_Idx), "UTF-8");
+         return Encode
+                  (Contents.Buffer (First_Idx .. Last_Idx),
+                   States.To_State);
       end if;
 
       --  Remove all whitespace characters
@@ -66,9 +117,9 @@ package body Gpr_Parser.Basic_Ada_Parser is
          if Current_Idx < Wspace.Text_First then
             Append
               (Result,
-               Gpr_Parser_Support.Text.Encode
+               Encode
                  (Contents.Buffer (Current_Idx .. Wspace.Text_First - 1),
-                  "UTF-8"));
+                  States.To_State));
          end if;
 
          Current_Idx := Wspace.Text_Last + 1;
@@ -79,9 +130,9 @@ package body Gpr_Parser.Basic_Ada_Parser is
       if Current_Idx <= Last_Idx then
          Append
            (Result,
-            Gpr_Parser_Support.Text.Encode
+            Encode
               (Contents.Buffer (Current_Idx .. Last_Idx),
-               "UTF-8"));
+               States.To_State));
       end if;
 
       return To_String (Result);
@@ -94,13 +145,14 @@ package body Gpr_Parser.Basic_Ada_Parser is
    procedure Parse_Context_Clauses
      (Filename       : String;
       Context        : Gpr_Parser.Analysis.Analysis_Context'Class;
+      States         : Iconv_States;
       Log_Error      : access procedure (Message : String);
       With_Clause_CB : access procedure (Unit_Name  : String;
                                          Is_Limited : Boolean) := null;
       Unit_Name_CB   : access procedure (Unit_Name     : String;
                                          Separate_From : String;
                                          Generic_Unit  : Boolean) := null;
-      No_Body_CB     : access procedure := null)
+      No_Body_CB               : access procedure := null)
    is
       Contents     : Decoded_File_Contents;
       State        : Lexer_State;
@@ -283,14 +335,16 @@ package body Gpr_Parser.Basic_Ada_Parser is
                                (Contents    => Contents,
                                 First_Idx   => Unit_First,
                                 Last_Idx    => Unit_Last,
-                                Whitespaces => Whitespaces);
+                                Whitespaces => Whitespaces,
+                                States      => States);
                   Sep_Name : constant String :=
                                (if Separate_From_First /= 0
                                 then Encode_String_Without_Whitespaces
                                    (Contents    => Contents,
                                     First_Idx   => Separate_From_First,
                                     Last_Idx    => Separate_From_Last,
-                                    Whitespaces => Separate_Whitespaces)
+                                    Whitespaces => Separate_Whitespaces,
+                                    States      => States)
                                 else "");
                begin
                   Unit_Name_CB
@@ -530,9 +584,10 @@ package body Gpr_Parser.Basic_Ada_Parser is
                With_Clause_CB
                   (Encode_String_Without_Whitespaces
                      (Contents    => Contents,
-                     First_Idx   => Withed_Unit_First,
-                     Last_Idx    => Withed_Unit_Last,
-                     Whitespaces => Whitespaces),
+                      First_Idx   => Withed_Unit_First,
+                      Last_Idx    => Withed_Unit_Last,
+                      Whitespaces => Whitespaces,
+                      States      => States),
                   Lim);
             end if;
 
@@ -647,7 +702,7 @@ package body Gpr_Parser.Basic_Ada_Parser is
               (Internal_Ctx.File_Reader.all, Filename, "iso-8859-15", True,
                Contents, Diagnostics);
          else
-            Direct_Read (Filename, "iso-8859-15", True, Contents, Diagnostics);
+            Direct_Read (Filename, States.From_State, True, Contents, Diagnostics);
          end if;
 
          if not Diagnostics.Is_Empty then
