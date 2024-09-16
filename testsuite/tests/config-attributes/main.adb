@@ -25,11 +25,11 @@ procedure Main is
       use Ada.Strings.Fixed;
    begin
       for C in Project_Tree.Configuration.Log_Messages.Iterate
-        (Information => False,
-         Warning     => True,
-         Error	     => True,
-         Read        => True,
-         Unread      => True)
+        (Hint    => False,
+         Warning => True,
+         Error   => True,
+         Read    => True,
+         Unread  => True)
       loop
          declare
             Msg      : constant String := GPR2.Log.Element (C).Format;

@@ -9,16 +9,6 @@ procedure Main is
    Tree         : GPR2.Project.Tree.Object;
    use GPR2;
 
-   procedure Print_Messages is
-   begin
-      if Tree.Has_Messages then
-         for C in Tree.Log_Messages.Iterate (Information => False)
-         loop
-            Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-         end loop;
-      end if;
-   end Print_Messages;
-
    procedure Test
      (Name       : String;
       Test_Value : String := "";

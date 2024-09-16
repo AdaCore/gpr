@@ -1,10 +1,10 @@
-PACK-Functions_Test.ada: info: invalid name for unit 'PACK-Functions_Test', should have only alpha numeric characters
+PACK-Functions_Test.ada: hint: invalid name for unit 'PACK-Functions_Test', should have only alpha numeric characters
 PACK
 - S_SPEC: pack.ads
 - S_BODY: pack.adb
 - SEP. FUNCTIONS_TEST: PACK.Functions_TEST.ada
 DOT_REPLACEMENT="-"
-PACK.Functions_TEST.ada:1:01: info: invalid file name, contains dot
+PACK.Functions_TEST.ada:1:01: hint: invalid file name, contains dot
 PACK
 - S_SPEC: pack.ads
 - S_BODY: pack.adb

@@ -1,7 +1,7 @@
 Log is empty: TRUE
 
 Log is empty: FALSE
-Has_Element (info) TRUE
+Has_Element (hint) TRUE
 Has_Element (warn) TRUE
 Has_Element (error) TRUE
 Has_Element (read) FALSE
@@ -9,7 +9,7 @@ Has_Element (unread) TRUE
 prj2.gpr:2:03: error: test error
 
 Log is empty: FALSE
-Has_Element (info) TRUE
+Has_Element (hint) TRUE
 Has_Element (warn) TRUE
 Has_Element (error) FALSE
 Has_Element (read) TRUE
@@ -17,15 +17,15 @@ Has_Element (unread) TRUE
 prj1.gpr:1:02: warning: test warning
 
 Log is empty: FALSE
-Has_Element (info) TRUE
+Has_Element (hint) TRUE
 Has_Element (warn) FALSE
 Has_Element (error) FALSE
 Has_Element (read) TRUE
 Has_Element (unread) TRUE
-prj3.gpr:3:04: info: test information
+prj3.gpr:3:04: hint: test hint
 
 Log is empty: FALSE
-Has_Element (info) FALSE
+Has_Element (hint) FALSE
 Has_Element (warn) FALSE
 Has_Element (error) FALSE
 Has_Element (read) TRUE

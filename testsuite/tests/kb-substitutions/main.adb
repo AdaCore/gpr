@@ -39,7 +39,13 @@ procedure Main is
    procedure Print_Logs (Logs : Log.Object ; Warnings : Boolean) is
    begin
       for C in Logs.Iterate
-         (False, Warnings, True, True, True)
+        (Error    => True,
+         End_User => True,
+         Warning  => Warnings,
+         Hint     => False,
+         Lint     => True,
+         Read     => False,
+         Unread   => True)
       loop
          declare
             M : constant GPR2.Message.Object := GPR2.Log.Element (C);

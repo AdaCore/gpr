@@ -44,10 +44,10 @@ begin
    if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
       Display (Prj.Root_Project);
 
-      for C in Prj.Log_Messages.Iterate (Information => False,
-                                         Warning     => False,
-                                         Error       => False,
-                                         Lint        => True)
+      for C in Prj.Log_Messages.Iterate (Hint    => False,
+                                         Warning => False,
+                                         Error   => False,
+                                         Lint    => True)
       loop
          Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
       end loop;

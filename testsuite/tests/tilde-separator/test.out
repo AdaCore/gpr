@@ -1,4 +1,4 @@
-h~foo.ads: info: invalid name for unit 'h~foo', should have only alpha numeric characters
+h~foo.ads: hint: invalid name for unit 'h~foo', should have only alpha numeric characters
 a-foo2.adb
 a-p1.adb
 a-p2.ads

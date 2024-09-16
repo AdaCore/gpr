@@ -17,16 +17,6 @@ procedure Main is
    use GPR2;
    use GPR2.Project.Registry.Attribute;
 
-   procedure Print_Messages is
-   begin
-      if Tree.Has_Messages then
-         for C in Tree.Log_Messages.Iterate (Information => False)
-         loop
-            Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-         end loop;
-      end if;
-   end Print_Messages;
-
    procedure Print_Attributes (Name : Q_Attribute_Id) is
       Attributes : GPR2.Project.Attribute.Set.Object;
       use GPR2;
@@ -119,9 +109,6 @@ procedure Main is
       Print_Variable ("C");
       Print_Variable ("D");
       Print_Variable ("E");
-   exception
-      when Project_Error =>
-         Print_Messages;
    end Test;
 
    procedure Load (Project_Name : String) is

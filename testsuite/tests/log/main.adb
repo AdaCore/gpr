@@ -20,40 +20,40 @@ procedure Main is
       Put_Line ("Log is empty: " & Boolean'Image (Log.Is_Empty));
 
       Put_Line
-        ("Has_Element (info) "
-           & Boolean'Image (Log.Has_Element (Information => True,
-                                             Warning     => False,
-                                             Error       => False,
-                                             Read        => False,
-                                             Unread      => True)));
+        ("Has_Element (hint) "
+           & Boolean'Image (Log.Has_Element (Hint    => True,
+                                             Warning => False,
+                                             Error   => False,
+                                             Read    => False,
+                                             Unread  => True)));
       Put_Line
         ("Has_Element (warn) "
-           & Boolean'Image (Log.Has_Element (Information => False,
-                                             Warning     => True,
-                                             Error       => False,
-                                             Read        => False,
-                                             Unread      => True)));
+           & Boolean'Image (Log.Has_Element (Hint    => False,
+                                             Warning => True,
+                                             Error   => False,
+                                             Read    => False,
+                                             Unread  => True)));
       Put_Line
         ("Has_Element (error) "
-           & Boolean'Image (Log.Has_Element (Information => False,
-                                             Warning     => False,
-                                             Error       => True,
-                                             Read        => False,
-                                             Unread      => True)));
+           & Boolean'Image (Log.Has_Element (Hint    => False,
+                                             Warning => False,
+                                             Error   => True,
+                                             Read    => False,
+                                             Unread  => True)));
       Put_Line
         ("Has_Element (read) "
-           & Boolean'Image (Log.Has_Element (Information => True,
-                                             Warning     => True,
-                                             Error       => True,
-                                             Read        => True,
-                                             Unread      => False)));
+           & Boolean'Image (Log.Has_Element (Hint    => True,
+                                             Warning => True,
+                                             Error   => True,
+                                             Read    => True,
+                                             Unread  => False)));
       Put_Line
         ("Has_Element (unread) "
-           & Boolean'Image (Log.Has_Element (Information => True,
-                                             Warning     => True,
-                                             Error       => True,
-                                             Read        => False,
-                                             Unread      => True)));
+         & Boolean'Image (Log.Has_Element (Hint    => True,
+                                           Warning => True,
+                                           Error   => True,
+                                           Read    => False,
+                                           Unread  => True)));
    end Display_Status;
 
    Log : GPR2.Log.Object;
@@ -71,18 +71,18 @@ begin
          Source_Reference.Create ("/ada/prj2.gpr", 2, 3)));
    Log.Append
      (Message.Create
-        (Message.Information, "test information",
+        (Message.Hint, "test hint",
          Source_Reference.Create ("/ada/prj3.gpr", 3, 4)));
 
    Display_Status (Log);
 
    --  Read errors
 
-   for E in Log.Iterate (Error       => True,
-                         Warning     => False,
-                         Information => False,
-                         Read        => False,
-                         Unread      => True)
+   for E in Log.Iterate (Error   => True,
+                         Warning => False,
+                         Hint    => False,
+                         Read    => False,
+                         Unread  => True)
    loop
       Put_Line (Log (E).Format);
    end loop;
@@ -91,11 +91,11 @@ begin
 
    --  Read warning
 
-   for E in Log.Iterate (Error       => False,
-                         Warning     => True,
-                         Information => False,
-                         Read        => False,
-                         Unread      => True)
+   for E in Log.Iterate (Error   => False,
+                         Warning => True,
+                         Hint    => False,
+                         Read    => False,
+                         Unread  => True)
    loop
       Put_Line (Log (E).Format);
    end loop;
@@ -104,11 +104,11 @@ begin
 
    --  Read information
 
-   for E in Log.Iterate (Error       => False,
-                         Warning     => False,
-                         Information => True,
-                         Read        => False,
-                         Unread      => True)
+   for E in Log.Iterate (Error   => False,
+                         Warning => False,
+                         Hint    => True,
+                         Read    => False,
+                         Unread  => True)
    loop
       Put_Line (Log (E).Format);
    end loop;

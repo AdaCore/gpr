@@ -69,15 +69,15 @@ procedure Main is
 
          if Tree.Has_Messages then
             for C in Tree.Log_Messages.Iterate
-              (Information => False,
+              (Hint    => False,
                Warning => True,
-               Error => True,
-               Lint => True,
-               Read => False,
-               Unread => True)
-               loop
-                  Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-               end loop;
+               Error   => True,
+               Lint    => True,
+               Read    => False,
+               Unread  => True)
+            loop
+               Ada.Text_IO.Put_Line (GPR2.Log.Element (C).Format);
+            end loop;
          end if;
 
       end Print_Externals;
