@@ -1037,25 +1037,24 @@ package body Update_Sources_List is
                     Data.Tree_Db.Source_Option >= Sources_Units,
                   Success          => Parsed);
 
-               if Parsed and then Match = Naming_Exception then
-                  --  Check parsed unit name is the same as the one declared
-                  --  in the gpr project.
+               --  Check parsed unit name is the same as the one declared
+               --  in the gpr project.
 
-                  if Source.Unit.Kind /= S_No_Body
-                    and then Source.Unit.Full_Name /=
-                               Units (No_Index).Full_Name
-                  then
-                     Messages.Append
-                       (Message.Create
-                          (Message.Warning,
-                           "actual unit name """ &
-                             String
-                               (Source.Unit.Full_Name) &
-                             """ differs from the one declared in the " &
-                             "project : """ &
-                             String (Units (No_Index).Full_Name) & '"',
-                           Exc_Attr));
-                  end if;
+               if Parsed
+                 and then Source.Unit.Kind /= S_No_Body
+                 and then Source.Unit.Full_Name /=
+                   Units (No_Index).Full_Name
+               then
+                  Messages.Append
+                    (Message.Create
+                       (Message.Warning,
+                        "actual unit name """ &
+                          String
+                          (Source.Unit.Full_Name) &
+                          """ differs from the one declared in the " &
+                          "project : """ &
+                          String (Units (No_Index).Full_Name) & '"',
+                        Exc_Attr));
                end if;
             end if;
 
