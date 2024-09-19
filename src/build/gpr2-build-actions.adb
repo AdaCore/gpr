@@ -53,7 +53,10 @@ package body GPR2.Build.Actions is
    -- Compute_Signature --
    -----------------------
 
-   procedure Compute_Signature (Self : in out Object)
+   procedure Compute_Signature
+     (Self   : in out Object;
+      Stdout : Unbounded_String;
+      Stderr : Unbounded_String)
    is
       UID : constant Action_Id'Class := Object'Class (Self).UID;
    begin
@@ -66,6 +69,8 @@ package body GPR2.Build.Actions is
       for Output of Self.Tree.Outputs (UID) loop
          Self.Signature.Add_Artifact (Output);
       end loop;
+
+      Self.Signature.Add_Output (Stdout, Stderr);
 
       Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
    end Compute_Signature;

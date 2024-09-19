@@ -107,7 +107,10 @@ private
    function BN (Self : Object) return Simple_Name is
      ("b__" & Self.Main_Ali.Path.Base_Filename);
 
-   overriding procedure Compute_Signature (Self : in out Object);
+   overriding procedure Compute_Signature
+     (Self   : in out Object;
+      Stdout : Unbounded_String;
+      Stderr : Unbounded_String);
 
    overriding function Post_Command
      (Self   : in out Object;

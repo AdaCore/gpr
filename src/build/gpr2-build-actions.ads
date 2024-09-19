@@ -5,9 +5,11 @@
 --
 
 with Ada.Containers.Indefinite_Ordered_Sets;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 with GNATCOLL.OS.Process;
 
+with GPR2.Build.Signature;
 with GPR2.Containers;
 with GPR2.Path_Name;
 with GPR2.Project.View;
@@ -15,10 +17,7 @@ with GPR2.Project.View;
 limited with GPR2.Build.Tree_Db;
 
 private with Ada.Tags;
-
 private with GNATCOLL.Traces;
-
-private with GPR2.Build.Signature;
 
 package GPR2.Build.Actions is
 
@@ -80,13 +79,21 @@ package GPR2.Build.Actions is
    --  Indicates whether the action should be skipped. By default this returns
    --  False.
 
-   procedure Compute_Signature (Self : in out Object);
+   procedure Compute_Signature
+     (Self   : in out Object;
+      Stdout : Unbounded_String;
+      Stderr : Unbounded_String);
    --  Compute the action signature from all its artifacts and hard store it
    --  By default this uses the inputs and outputs of the Build_Db graph to
    --  compute the signature. To be refined when needed.
+   --  Stdout and stderr are stored in the signature for so they can be
+   --  replayed if the action is skipped
 
    procedure Load_Signature (Self : in out Object'Class);
    --  Compare the current action signature to the loaded signature
+
+   function Signature (Self : Object'Class) return GPR2.Build.Signature.Object;
+   --  Return the object representing the signature of the action
 
    procedure Attach
      (Self : in out Object;
@@ -162,4 +169,6 @@ private
      (Self   : in out Object; Status : Execution_Status) return Boolean is
      (True);
 
+   function Signature (Self : Object'Class) return GPR2.Build.Signature.Object
+   is (Self.Signature);
 end GPR2.Build.Actions;

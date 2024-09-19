@@ -13,14 +13,15 @@ package body GPR2.Message is
    ------------
 
    function Create
-     (Level   : Level_Value;
-      Message : String;
-      Sloc    : Source_Reference.Object'Class := Source_Reference.Undefined;
-      Indent  : Natural := 0) return Object is
+     (Level     : Level_Value;
+      Message   : String;
+      Sloc      : Source_Reference.Object'Class := Source_Reference.Undefined;
+      Indent    : Natural := 0;
+      To_Stderr : Boolean := False) return Object is
    begin
       return Object'
         (Level, Unread, To_Unbounded_String (Message),
-         Source_Reference.Object (Sloc), Indent);
+         Source_Reference.Object (Sloc), Indent, To_Stderr);
    end Create;
 
    ------------
@@ -60,8 +61,6 @@ package body GPR2.Message is
                       then Level_Image & ": "
                       else "")
                    & To_String (Self.Message);
-      --  Need to distinguish warnings from errors because they are both going
-      --  to the error output.
 
    begin
 

@@ -142,7 +142,10 @@ private
       --  Command line options added manually with the Add_Option procedure
    end record;
 
-   overriding procedure Compute_Signature (Self : in out Object);
+   overriding procedure Compute_Signature
+     (Self   : in out Object;
+      Stdout : Unbounded_String;
+      Stderr : Unbounded_String);
 
    function Check_Archive_Driver (Self : Object) return Boolean;
    --  True if the archive driver is found

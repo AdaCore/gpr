@@ -137,9 +137,9 @@ package GPR2.Project.Tree is
    --  File_Reader: if set, this file reader is used instead of the standard
    --   text file reader to load the projects.
    --
-   --  Returns True if both project loading and artifact fetching
-   --  were successful.
-
+   --  Returns True if both project loading and artifact fetching (if
+   --  requested) were successful.
+   --
    --  raises GPR2.Options.Usage_Error in case the set of Options given as
    --   parameter is invalid, The reason for the failure is given in the
    --   exception message.
@@ -260,8 +260,9 @@ package GPR2.Project.Tree is
    --  for any project view which is impacted by this change of context, i.e.
    --  if the project view references directly or indirectly an external
    --  variable.
-   --  If the new context generate an error while re-loading the project tree
-   --  then False is returned.
+   --
+   --  Returns False if the new context generate an error while re-loading the
+   --  project tree.
 
    --  Iterator
 
@@ -346,6 +347,7 @@ package GPR2.Project.Tree is
    --  Ensures that all views' sources are up-to-date.
    --  Option selects the information that will be gathered on the sources. The
    --  more information is requested, the slower is the update operation.
+   --
    --  Used by the Load function when its Artifacts_Info_Level is set
    --  to fetch sources.
 

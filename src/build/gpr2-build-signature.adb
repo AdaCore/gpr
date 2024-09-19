@@ -15,11 +15,23 @@ package body GPR2.Build.Signature is
 
    procedure Add_Artifact
      (Self : in out Object;
-      Art  : Artifacts.Object'Class)
-   is
+      Art  : Artifacts.Object'Class) is
    begin
       Self.Artifacts.Include (Art, Art.Checksum);
    end Add_Artifact;
+
+   ----------------
+   -- Add_Output --
+   ----------------
+
+   procedure Add_Output
+     (Self   : in out Object;
+      Stdout : UB.Unbounded_String;
+      Stderr : UB.Unbounded_String) is
+   begin
+      Self.Stdout := Stdout;
+      Self.Stderr := Stderr;
+   end Add_Output;
 
    -----------
    -- Clear --
@@ -75,6 +87,9 @@ package body GPR2.Build.Signature is
          end loop;
       end;
 
+      Signature.Stdout := Get (JSON_Result.Value, TEXT_STDOUT);
+      Signature.Stderr := Get (JSON_Result.Value, TEXT_STDERR);
+
       JSON_Result.Value.Finalize;
 
       return Signature;
@@ -115,6 +130,12 @@ package body GPR2.Build.Signature is
       Set_Field (Val        => JSON,
                  Field_Name => TEXT_SIGNATURE,
                  Field      => List);
+      Set_Field (Val        => JSON,
+                 Field_Name => TEXT_STDOUT,
+                 Field      => Self.Stdout);
+      Set_Field (Val        => JSON,
+                 Field_Name => TEXT_STDERR,
+                 Field      => Self.Stderr);
 
       if Exists (String (Db_File.Value)) then
          Open (File, Out_File, String (Db_File.Value));

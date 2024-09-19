@@ -798,9 +798,13 @@ package body GPR2.Build.Tree_Db is
       Self.Tree.Reporter.Report (Msg);
    end Report;
 
-   procedure Report (Self : Object; Msg  : String) is
+   procedure Report
+     (Self      : Object;
+      Msg       : String;
+      To_Stderr : Boolean := False)
+   is
    begin
-      Self.Tree.Reporter.Report (Msg);
+      Self.Tree.Reporter.Report (Msg, To_Stderr);
    end Report;
 
    ------------------------

@@ -124,7 +124,10 @@ private
    overriding function Dependency_File (Self : Object) return Simple_Name is
       (Self.CU.Dependency_File);
 
-   overriding procedure Compute_Signature (Self : in out Object);
+   overriding procedure Compute_Signature
+     (Self   : in out Object;
+      Stdout : Unbounded_String;
+      Stderr : Unbounded_String);
 
    Undefined : constant Object := (others => <>);
 

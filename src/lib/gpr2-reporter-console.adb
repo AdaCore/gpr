@@ -31,12 +31,16 @@ package body GPR2.Reporter.Console is
      (Self : in out Object; Message : GPR2.Message.Object)
    is
       use Ada.Text_IO;
+      Stream : constant File_Type :=
+                 (case Message.Level is
+                   when Error | Warning => Current_Error,
+                   when others          =>
+                    (if Message.To_Stderr
+                     then Current_Error
+                     else Current_Output));
    begin
       Put_Line
-        ((case Message.Level is
-            when End_User | Hint | Lint => Current_Output,
-            when Error | Warning    => Current_Error),
-         Message.Format (Self.Full_Path, Self.Level_Fmt));
+        (Stream, Message.Format (Self.Full_Path, Self.Level_Fmt));
    end Internal_Report;
 
    -----------------------
