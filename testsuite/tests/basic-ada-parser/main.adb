@@ -61,15 +61,18 @@ begin
 
    declare
       File : String := Ada.Command_Line.Argument (1);
+      States : Iconv_States := Create ("iso-8859-16", "utf-8");
    begin
       Ada.Text_IO.Put_Line ("Loading " & File);
 
       Parse_Context_Clauses
         (Filename       => File,
          Context        => Ctx,
+         States         => States,
          Log_Error      => On_Error'Access,
          With_Clause_CB => With_Clause_CB'Access,
          Unit_Name_CB   => Unit_Name_CB'Access,
          No_Body_CB     => On_No_Body_CB'Access);
+      Close (States);
    end;
 end Main;
