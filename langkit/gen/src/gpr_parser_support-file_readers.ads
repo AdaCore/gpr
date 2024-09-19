@@ -8,6 +8,7 @@
 --  bytes-to-text decoding and preprocess sources (before actual
 --  lexing/parsing).
 
+with GNATCOLL.Iconv;
 with GNATCOLL.Refcount;
 
 with Gpr_Parser_Support.Diagnostics; use Gpr_Parser_Support.Diagnostics;
@@ -61,9 +62,30 @@ package Gpr_Parser_Support.File_Readers is
    --  If there is an error during this process, append an error message to
    --  Diagnostics. In that case, Contents is considered uninitialized.
 
+   procedure Decode_Buffer
+     (Buffer      : String;
+      State       : GNATCOLL.Iconv.Iconv_T;
+      Read_BOM    : Boolean;
+      Contents    : out Decoded_File_Contents;
+      Diagnostics : in out Diagnostics_Vectors.Vector);
+   --  Decode the bytes in Buffer according to State/Read_BOM into Contents.
+   --  The bytes decoding itself is delegated to GNATCOLL.Iconv.
+   --
+   --  If there is an error during this process, append an error message to
+   --  Diagnostics. In that case, Contents is considered uninitialized.
+
    procedure Direct_Read
      (Filename    : String;
       Charset     : String;
+      Read_BOM    : Boolean;
+      Contents    : out Decoded_File_Contents;
+      Diagnostics : in out Diagnostics_Vectors.Vector);
+   --  Simple implementation of Read to read the source file through
+   --  GNATCOLL.Mmap and to decode it using GNATCOLL.Iconv.
+
+   procedure Direct_Read
+     (Filename    : String;
+      State       : GNATCOLL.Iconv.Iconv_T;
       Read_BOM    : Boolean;
       Contents    : out Decoded_File_Contents;
       Diagnostics : in out Diagnostics_Vectors.Vector);

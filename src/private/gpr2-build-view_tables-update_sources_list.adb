@@ -615,6 +615,8 @@ package body Update_Sources_List is
       Compilable_Language   : Lang_Boolean_Map.Map;
       --  List of compilable languages for the view
 
+      Parser_State          : GPR2.Build.Source_Base.Ada_Parser.Parser_State;
+
       -----------------
       -- Handle_File --
       -----------------
@@ -936,6 +938,7 @@ package body Update_Sources_List is
 
                   Build.Source_Base.Ada_Parser.Compute
                     (File_Reader      => Tree.File_Reader,
+                     State            => Parser_State,
                      Data             => Source,
                      Get_Withed_Units =>
                        Data.Tree_Db.Source_Option >= Sources_Units,
@@ -1032,30 +1035,30 @@ package body Update_Sources_List is
             then
                Build.Source_Base.Ada_Parser.Compute
                  (File_Reader      => Tree.File_Reader,
+                  State            => Parser_State,
                   Data             => Source,
                   Get_Withed_Units =>
                     Data.Tree_Db.Source_Option >= Sources_Units,
                   Success          => Parsed);
 
-               if Parsed and then Match = Naming_Exception then
-                  --  Check parsed unit name is the same as the one declared
-                  --  in the gpr project.
+               --  Check parsed unit name is the same as the one declared
+               --  in the gpr project.
 
-                  if Source.Unit.Kind /= S_No_Body
-                    and then Source.Unit.Full_Name /=
-                               Units (No_Index).Full_Name
-                  then
-                     Messages.Append
-                       (Message.Create
-                          (Message.Warning,
-                           "actual unit name """ &
-                             String
-                               (Source.Unit.Full_Name) &
-                             """ differs from the one declared in the " &
-                             "project : """ &
-                             String (Units (No_Index).Full_Name) & '"',
-                           Exc_Attr));
-                  end if;
+               if Parsed
+                 and then Source.Unit.Kind /= S_No_Body
+                 and then Source.Unit.Full_Name /=
+                   Units (No_Index).Full_Name
+               then
+                  Messages.Append
+                    (Message.Create
+                       (Message.Warning,
+                        "actual unit name """ &
+                          String
+                          (Source.Unit.Full_Name) &
+                          """ differs from the one declared in the " &
+                          "project : """ &
+                          String (Units (No_Index).Full_Name) & '"',
+                        Exc_Attr));
                end if;
             end if;
 
@@ -1128,6 +1131,8 @@ package body Update_Sources_List is
 
       --  Check new or updated sources
 
+      Parser_State := GPR2.Build.Source_Base.Ada_Parser.Create_New_State;
+
       for F of Data.Src_Files loop
          declare
             use type Ada.Calendar.Time;
@@ -1165,6 +1170,7 @@ package body Update_Sources_List is
                         if not Src_Ref.Has_Naming_Exception then
                            Source_Base.Ada_Parser.Compute
                              (File_Reader      => Tree.File_Reader,
+                              State            => Parser_State,
                               Data             => Src_Ref,
                               Get_Withed_Units =>
                                 Data.Tree_Db.Source_Option >= Sources_Units,
@@ -1177,6 +1183,7 @@ package body Update_Sources_List is
          end;
       end loop;
 
+      GPR2.Build.Source_Base.Ada_Parser.Close (Parser_State);
       --  All source changes have been processed: now resolve potential
       --  visibility issues
 
