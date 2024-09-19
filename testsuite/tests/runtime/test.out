@@ -5,6 +5,7 @@ A:   Source_Dirs -> .
 
 Config   K_CONFIGURATION
 runtime  K_STANDARD
+A:   Excluded_Source_Files -> memtrack.adb
 A:   Externally_Built -> true
 A:   Languages -> ada
 A:   Object_Dir -> <rtsdir>/adalib

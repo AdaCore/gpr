@@ -1,4 +1,6 @@
 use implicit project in /tree
+Excluded_Source_Files : 
+  memtrack.adb
 Externally_Built : true
 Languages : 
   ada

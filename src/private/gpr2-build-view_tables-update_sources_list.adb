@@ -947,30 +947,36 @@ package body Update_Sources_List is
                   --  Check if we have a conflicting naming exception with the
                   --  same unit but a different source
 
-                  if Parsed and then Source.Kind /= S_No_Body then
-                     declare
-                        Attr : GPR2.Project.Attribute.Object;
-                     begin
-                        if Source.Kind = S_Spec then
-                           Attr := Data.View.Attribute
-                             (PRA.Naming.Spec,
-                              PAI.Create (Value_Type (Source.Unit.Full_Name)));
-                        else
-                           Attr := Data.View.Attribute
-                             (PRA.Naming.Body_N,
-                              PAI.Create (Value_Type (Source.Unit.Full_Name)));
-                        end if;
+                  if Parsed
+                    and then Source.Kind /= S_No_Body
+                  then
+                     if not Ada_Naming_Exceptions.Is_Empty then
+                        declare
+                           Attr : GPR2.Project.Attribute.Object;
+                        begin
+                           if Source.Kind = S_Spec then
+                              Attr := Data.View.Attribute
+                                (PRA.Naming.Spec,
+                                 PAI.Create
+                                   (Value_Type (Source.Unit.Full_Name)));
+                           else
+                              Attr := Data.View.Attribute
+                                (PRA.Naming.Body_N,
+                                 PAI.Create
+                                   (Value_Type (Source.Unit.Full_Name)));
+                           end if;
 
-                        if Attr.Is_Defined
-                          and then Attr.Value.Text /=
-                            String (Source.Path_Name.Simple_Name)
-                        then
-                           --  We have a naming exception on the unit name for
-                           --  a different source, so ignore the other sources
-                           --  with the same unit.
-                           return False;
-                        end if;
-                     end;
+                           if Attr.Is_Defined
+                             and then Attr.Value.Text /=
+                               String (Source.Path_Name.Simple_Name)
+                           then
+                              --  We have a naming exception on the unit name
+                              --  for a different source, so ignore the other
+                              --  sources with the same unit.
+                              return False;
+                           end if;
+                        end;
+                     end if;
 
                      if Unit_Name /= Source.Unit.Full_Name
                        and then Path_Name.Base_Name (File.Path) /=

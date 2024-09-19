@@ -310,6 +310,11 @@ package body GPR2.Tree_Internal is
 
          RTS_View.Set_Attribute (PRA.Externally_Built, "true");
 
+         --  Exclude memtrack.adb from the runtime as it's a duplicate unit
+         --  of System.Memory
+
+         RTS_View.Set_Attribute (PRA.Excluded_Source_Files, "memtrack.adb");
+
          return Register_View (RTS_View.Data);
       else
          return Project.View.Undefined;
