@@ -14,7 +14,8 @@ def test(header):
     global test_number
     print("================================================================")
     print("Case " + str(test_number) + " - " + header)
-    proc = bnr.call(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p"])
+    proc = bnr.call(
+        ["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p", "--json-summary"])
 
     if proc.status:
         print("Test return value: " + str(proc.status))

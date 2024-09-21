@@ -256,7 +256,7 @@ package body GPRbuild.Options is
       Parser.Add_Argument
         (Build_Group,
          Create
-           ("--display-paths", "",
+           ("--json-summary", "",
             In_Switch_Attr => False,
             Hidden         => True));
 
@@ -575,6 +575,9 @@ package body GPRbuild.Options is
       elsif Arg = "-U" then
          Result.Unique_Recompilation := True;
          Result.Force_Recursive_Build := True;
+
+      elsif Arg = "--json-summary" then
+         Result.Json_Summary := True;
 
       elsif Arg = "-nostdlib" then
          if not Result.Compiler_Args.Contains (GPR2.Ada_Language) then

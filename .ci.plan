@@ -12,7 +12,7 @@ def debug_build():
 def libgpr2_users():
     wave_pkg = ("spark2014", "gnatcheck", "gnatfuzz", "lkql")
     edge_pkg = ("als", "gnatcov", "gnatdoc4", "gnatformat",
-                "lal-refactor")
+                "lal-refactor", "gnathub")
 
     # gnat boostrap is checked in test_bootstrap, so just install it here
     # to check the packages that are not part of gnat

@@ -136,6 +136,10 @@ package body GPR2.Build.Process_Manager.JSON is
    procedure Execution_Post_Process (Self : in out Object) is
       File : File_Type;
    begin
+      if not Self.JSON_File.Is_Defined then
+         return;
+      end if;
+
       Create (File, Out_File, Self.JSON_File.String_Value);
       Put_Line (File, Write (Create (Self.JSON)) & ASCII.CR & ASCII.LF);
       Close (File);
