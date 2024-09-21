@@ -18,6 +18,7 @@ with GPR2.Source_Reference.Value;
 with GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Tree_Internal;
+with GPR2.View_Internal;
 
 package body GPR2.Build.View_Tables is
 
@@ -90,6 +91,11 @@ package body GPR2.Build.View_Tables is
      with Pre => Root_Db.Is_Root
                    and then File.Has_Single_Unit
                    and then File.Unit.Kind = S_Separate;
+
+   function Source
+     (Data : View_Data_Ref;
+      Pos  : Basename_Source_Maps.Cursor) return Build.Source.Object
+     with Inline;
 
    ----------------
    -- Add_Source --
@@ -1093,6 +1099,36 @@ package body GPR2.Build.View_Tables is
    ------------
 
    function Source
+     (Data : View_Data_Ref;
+      Pos  : Basename_Source_Maps.Cursor) return Build.Source.Object
+   is
+      Proxy : Source_Proxy renames Basename_Source_Maps.Element (Pos);
+      use type GPR2.Project.View.Object;
+
+   begin
+      if Proxy.View = Data.View then
+         return Build.Source.Create
+           (Base_Source    => Data.Src_Infos.Element (Proxy.Path_Name),
+            Defining_View  => Proxy.View,
+            Owning_View    => Data.View,
+            Inherited_From => Proxy.Inh_From);
+      else
+         return Build.Source.Create
+           (Base_Source    => Get_Data
+              (Data.Tree_Db,
+               Proxy.View).Src_Infos.Element
+              (Proxy.Path_Name),
+            Defining_View  => Proxy.View,
+            Owning_View    => Data.View,
+            Inherited_From => Proxy.Inh_From);
+      end if;
+   end Source;
+
+   ------------
+   -- Source --
+   ------------
+
+   function Source
      (Data     : View_Data_Ref;
       Basename : Simple_Name) return Build.Source.Object
    is
@@ -1103,28 +1139,7 @@ package body GPR2.Build.View_Tables is
          return Build.Source.Undefined;
 
       else
-         declare
-            Proxy : Source_Proxy renames Basename_Source_Maps.Element (C);
-            use type GPR2.Project.View.Object;
-
-         begin
-            if Proxy.View = Data.View then
-               return Build.Source.Create
-                 (Base_Source    => Data.Src_Infos.Element (Proxy.Path_Name),
-                  Defining_View  => Proxy.View,
-                  Owning_View    => Data.View,
-                  Inherited_From => Proxy.Inh_From);
-            else
-               return Build.Source.Create
-                 (Base_Source    => Get_Data
-                                     (Data.Tree_Db,
-                                      Proxy.View).Src_Infos.Element
-                                        (Proxy.Path_Name),
-                  Defining_View  => Proxy.View,
-                  Owning_View    => Data.View,
-                  Inherited_From => Proxy.Inh_From);
-            end if;
-         end;
+         return Source (Data, C);
       end if;
    end Source;
 
@@ -1138,27 +1153,31 @@ package body GPR2.Build.View_Tables is
      (Data     : View_Data_Ref;
       Basename : Simple_Name) return Build.Source.Object
    is
-      Result : GPR2.Build.Source.Object;
+      C   : Basename_Source_Maps.Cursor :=
+              Data.Sources.Find (Basename);
    begin
       --  Look for the source in the view's closure (withed or limited withed
       --  views)
 
-      Result := Source (Data, Basename);
-
-      if not Result.Is_Defined then
-         for V of Data.View.Closure (Include_Self => False) loop
-            if V.Kind in With_Object_Dir_Kind then
-               declare
-                  V_Data : View_Data_Ref renames Get_Data (Data.Tree_Db, V);
-               begin
-                  Result := Source (V_Data, Basename);
-
-                  exit when Result.Is_Defined;
-               end;
-            end if;
-         end loop;
+      if Basename_Source_Maps.Has_Element (C) then
+         return Source (Data, C);
       end if;
 
-      return Result;
+      for V of View_Internal.Get_RO (Data.View).Closure loop
+         if V.Kind in With_View_Db then
+            declare
+               V_Data : View_Data_Ref renames Get_Data (Data.Tree_Db, V);
+            begin
+
+               C := V_Data.Sources.Find (Basename);
+
+               if Basename_Source_Maps.Has_Element (C) then
+                  return Source (V_Data, C);
+               end if;
+            end;
+         end if;
+      end loop;
+
+      return Build.Source.Undefined;
    end Visible_Source;
 end GPR2.Build.View_Tables;
