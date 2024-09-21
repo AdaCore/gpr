@@ -283,11 +283,11 @@ package body GPR2.Build.Process_Manager is
                          (Object'Class (Self),
                           Job          => Act,
                           Proc_Handler => Proc_Handler,
-                          Stdout       => Act.Signature.Stdout,
+                          Stdout       => Act.Saved_Stdout,
                           Stderr       =>
                             (if Proc_Handler.Status = Failed_To_Launch
                              then Proc_Handler.Error_Message
-                             else Act.Signature.Stderr));
+                             else Act.Saved_Stderr));
 
                      if Job_Status = Abort_Execution then
                         End_Of_Iteration := True;

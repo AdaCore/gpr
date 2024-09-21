@@ -92,8 +92,12 @@ package GPR2.Build.Actions is
    procedure Load_Signature (Self : in out Object'Class);
    --  Compare the current action signature to the loaded signature
 
-   function Signature (Self : Object'Class) return GPR2.Build.Signature.Object;
+   function Signature (Self : Object'Class) return GPR2.Build.Signature.Object
+     with Inline;
    --  Return the object representing the signature of the action
+
+   function Saved_Stdout (Self : Object'Class) return Unbounded_String;
+   function Saved_Stderr (Self : Object'Class) return Unbounded_String;
 
    procedure Attach
      (Self : in out Object;
@@ -169,6 +173,12 @@ private
      (Self   : in out Object; Status : Execution_Status) return Boolean is
      (True);
 
-   function Signature (Self : Object'Class) return GPR2.Build.Signature.Object
-   is (Self.Signature);
+   function Signature (Self : Object'Class) return Build.Signature.Object is
+     (Self.Signature);
+
+   function Saved_Stdout (Self : Object'Class) return Unbounded_String is
+     (Self.Signature.Stdout);
+   function Saved_Stderr (Self : Object'Class) return Unbounded_String is
+     (Self.Signature.Stderr);
+
 end GPR2.Build.Actions;
