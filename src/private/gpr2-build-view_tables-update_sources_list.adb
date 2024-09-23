@@ -1230,6 +1230,7 @@ package body Update_Sources_List is
                      Containers.Source_Path_To_Sloc.Element (C);
          begin
             if Sloc.Is_Defined
+              and then not Data.View.Is_Runtime
               and then not Data.Actually_Excluded.Contains (Name)
             then
                Messages.Append
