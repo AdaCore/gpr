@@ -1,4 +1,8 @@
 project Demo2 is
+  --  See gpr-issues#417: the loop through the list of languages caused mains with
+  --  a properly suffixed basename to be matched several times, leading to duplicates.
+  --  So addition of C here is on purpose.
+  for Languages use ("Ada", "C");
   for Source_Dirs use ("src");
   for Main use ("call2.adb");
 end Demo2;

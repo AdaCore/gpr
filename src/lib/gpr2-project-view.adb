@@ -1990,6 +1990,7 @@ package body GPR2.Project.View is
       return Set : GPR2.Build.Compilation_Unit.Unit_Location_Vector do
          if Attr.Is_Defined then
             for Value of Attr.Values loop
+               Lang_Loop :
                for Lang of Self.Language_Ids loop
                   Src := Db.Visible_Source
                            (Suffixed_Simple_Name (Self, Value.Text, Lang));
@@ -2000,8 +2001,9 @@ package body GPR2.Project.View is
                           (Src.Owning_View,
                            Src.Path_Name,
                            Value.At_Pos));
+                     exit Lang_Loop;
                   end if;
-               end loop;
+               end loop Lang_Loop;
             end loop;
          end if;
       end return;
