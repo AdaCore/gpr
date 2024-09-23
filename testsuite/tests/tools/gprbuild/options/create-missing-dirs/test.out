@@ -2,4 +2,4 @@ Without -p:
 gprbuild: "obj/" does not exist
 With -p:
 "obj/" created
-[Compile Ada] A.adb (main.gpr)
+[Compile Ada] a.adb (main.gpr)

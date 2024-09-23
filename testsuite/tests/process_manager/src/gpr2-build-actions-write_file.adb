@@ -40,7 +40,9 @@ package body GPR2.Build.Actions.Write_File is
    -- Compute_Signature --
    -----------------------
 
-   overriding procedure Compute_Signature (Self : in out Object) is
+   overriding procedure Compute_Signature (Self : in out Object;
+                                           Stdout : Unbounded_String;
+                                           Stderr : Unbounded_String) is
       use GPR2.Build.Signature;
       Art : Artifacts.Files.Object;
    begin
@@ -51,6 +53,8 @@ package body GPR2.Build.Actions.Write_File is
       end loop;
 
       Self.Signature.Add_Artifact (Output_File (Self.Index));
+
+      Self.Signature.Add_Output (Stdout, Stderr);
 
       Self.Signature.Store
         (Self.Tree.Db_Filename_Path (Object'Class (Self).UID));

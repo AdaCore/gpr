@@ -50,7 +50,9 @@ package GPR2.Build.Actions.Write_File is
      (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
-   overriding procedure Compute_Signature (Self : in out Object);
+   overriding procedure Compute_Signature (Self : in out Object;
+                                           Stdout : Unbounded_String;
+                                           Stderr : Unbounded_String);
 
    overriding procedure Compute_Command
      (Self : in out Object;

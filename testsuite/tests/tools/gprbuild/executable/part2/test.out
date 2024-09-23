@@ -61,9 +61,9 @@ uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 ================================================================
 Case 6 - Missing pkg.adb
 [Compile Ada] pkg.ads (main.gpr)
-main.gpr: warning: [Compile Ada] pkg.ads (main.gpr) failed with status 1
 cannot generate code for file pkg.ads (package spec)
 
+main.gpr: warning: [Compile Ada] pkg.ads (main.gpr) failed with status 1
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.ads (main.gpr)', status : '1', stdout: '', stderr: 'cannot generate code for file pkg.ads (package spec)
@@ -85,11 +85,11 @@ uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 ================================================================
 Case 8 - Missing pkg.ads
 [Compile Ada] main.adb (main.gpr)
-main.gpr: warning: [Compile Ada] main.adb (main.gpr) failed with status 1
 main.adb:1:06: error: "Main (body)" depends on "Pkg (body)"
 main.adb:1:06: error: "Pkg (body)" depends on "Pkg (spec)"
 main.adb:1:06: error: file "pkg.ads" not found
 
+main.gpr: warning: [Compile Ada] main.adb (main.gpr) failed with status 1
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : '1', stdout: '', stderr: 'main.adb:1:06: error: "Main (body)" depends on "Pkg (body)"
 main.adb:1:06: error: "Pkg (body)" depends on "Pkg (spec)"
@@ -113,9 +113,9 @@ uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 ================================================================
 Case 10 - Missing dep_two.adb
 [Compile Ada] dep_two.ads (main.gpr)
-main.gpr: warning: [Compile Ada] dep_two.ads (main.gpr) failed with status 1
 cannot generate code for file dep_two.ads (package spec)
 
+main.gpr: warning: [Compile Ada] dep_two.ads (main.gpr) failed with status 1
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -138,11 +138,11 @@ uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 ================================================================
 Case 12 - Missing dep_two.ads
 [Compile Ada] pkg.adb (main.gpr)
-main.gpr: warning: [Compile Ada] pkg.adb (main.gpr) failed with status 1
 pkg.adb:2:06: error: "Pkg (body)" depends on "Dep_Two (body)"
 pkg.adb:2:06: error: "Dep_Two (body)" depends on "Dep_Two (spec)"
 pkg.adb:2:06: error: file "dep_two.ads" not found
 
+main.gpr: warning: [Compile Ada] pkg.adb (main.gpr) failed with status 1
 == Content of tree/obj/jobs.json:
 uid: '[Compile Ada] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Compile Ada] pkg.adb (main.gpr)', status : '1', stdout: '', stderr: 'pkg.adb:2:06: error: "Pkg (body)" depends on "Dep_Two (body)"
