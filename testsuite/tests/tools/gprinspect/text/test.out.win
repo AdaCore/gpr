@@ -88,6 +88,9 @@
     - Source directory  :
        - <gnat rts>/adainclude
     - Attributes        : 
+       - Excluded_Source_Files [ LIST ]
+          - Values : 
+             - "memtrack.adb"
        - Exec_Dir [ SINGLE ]
           - <gnat rts>/adalib"
        - Externally_Built [ SINGLE ]
