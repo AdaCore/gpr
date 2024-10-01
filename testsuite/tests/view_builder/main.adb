@@ -24,8 +24,9 @@ is
 
    procedure Print_Attrs (Pck : GPR2.Package_Id) is
    begin
-      for A of Tree.Root_Project.Attributes (Pack        => Pck,
-                                             With_Config => False)
+      for A of Tree.Root_Project.Attributes (Pack          => Pck,
+                                             With_Config   => False,
+					     With_Defaults => False)
       loop
          declare
             use type PRA.Value_Kind;
