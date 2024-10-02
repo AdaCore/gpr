@@ -1,7 +1,6 @@
 +--------------------------------------+
 |               Messages               |
 +--------------------------------------+
-* Configuration:
 * Tree:
     - lib.gpr: lint: project qualifier could be explicitly set to library project
 
@@ -14,15 +13,17 @@
 +--------------------------------------+
 |       Project Tree Information       |
 +--------------------------------------+
-* Project count        :  6
+* Project count        :  7
 * Project search paths :
     - <filtered-out>
 * Object search paths  :
+    - <gnat rts>/adalib/
     - <cwd>/
     - <cwd>/obj/
     - <cwd>/obj2/
     - <gnat rts>/adalib/
 * Source search paths  :
+    - <gnat rts>/adainclude
     - <cwd>
     - <cwd>/src
     - <cwd>/src2
@@ -79,6 +80,33 @@
           - Values : 
              - "yes"
              - "no"
+
+* runtime (!runtime) [ standard project ]
+    - Project file      : <gcc>/lib/gcc/(host)/(gcc-version)/runtime.gpr
+    - Project directory : <gcc>/lib/gcc/(host)/(gcc-version)/
+    - <gnat rts>/adalib/
+    - Source directory  :
+       - <gnat rts>/adainclude
+    - Attributes        : 
+       - Excluded_Source_Files [ LIST ]
+          - Values : 
+             - "memtrack.adb"
+       - Exec_Dir [ SINGLE ]
+          - <gnat rts>/adalib"
+       - Externally_Built [ SINGLE ]
+          - Value : "true"
+       - Languages [ LIST ]
+          - Values : 
+             - "ada"
+       - Name [ SINGLE ]
+          - Value : "runtime"
+       - Object_Dir [ SINGLE ]
+          - <gnat rts>/adalib"
+       - Project_Dir [ SINGLE ]
+          - Value : "<gcc>/lib/gcc/(host)/(gcc-version)/"
+       - Source_Dirs [ LIST ]
+          - Values : 
+             - <gnat rts>/adainclude"
 
 * Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr) [ abstract project ]
     - Project file      : <cwd>/shared.gpr
@@ -620,6 +648,12 @@
               "kind": "single",
               "name": "Body_Suffix",
               "value": ".f"
+            },
+            {
+              "index": "Rust",
+              "kind": "single",
+              "name": "Body_Suffix",
+              "value": ".rs"
             },
             {
               "kind": "single",
