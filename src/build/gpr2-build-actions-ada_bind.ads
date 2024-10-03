@@ -45,10 +45,9 @@ package GPR2.Build.Actions.Ada_Bind is
        (GPR2.Path_Name.Object, Hash => GPR2.Path_Name.Hash,
         Equivalent_Elements => GPR2.Path_Name."=");
 
-   overriding procedure On_Tree_Insertion
+   overriding function On_Tree_Insertion
      (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object;
-      Messages : in out GPR2.Log.Object);
+      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
    overriding procedure Compute_Command
      (Self : in out Object;
@@ -109,9 +108,10 @@ private
      ("b__" & Self.Main_Ali.Path.Base_Filename);
 
    overriding procedure Compute_Signature (Self : in out Object);
-   overriding procedure Post_Command
+
+   overriding function Post_Command
      (Self   : in out Object;
-      Status : Execution_Status);
+      Status : Execution_Status) return Boolean;
 
    function Generated_Spec (Self : Object) return Artifacts.Files.Object is
       (Self.Output_Spec);

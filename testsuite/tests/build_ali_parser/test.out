@@ -29,16 +29,20 @@ system.ads
 this is a name with a "quote.1.ada
 
 == ALI file: ali_files/invalid/character_after_ending_quote.ali
-character_after_ending_quote.ali: error: ALI parser error: wrong quoted format of 'this is foo with a long name.1.ada'
+[PARSER.ALI] ALI parser error: wrong quoted format of 'this is foo with a long name.1.ada'
+Failed to parse dependencies
 
 == ALI file: ali_files/invalid/line_feed_before_closing_quote.ali
-line_feed_before_closing_quote.ali: error: ALI parser error: wrong quoted format of 'this is foo with a long name.1.'
+[PARSER.ALI] ALI parser error: wrong quoted format of 'this is foo with a long name.1.'
+Failed to parse dependencies
 
 == ALI file: ali_files/invalid/unclosed_quote.ali
-unclosed_quote.ali: error: ALI parser error: end of file encountered during the parsing of quoted word 'unclosed_quote_name.ads'
+[PARSER.ALI] ALI parser error: end of file encountered during the parsing of quoted word 'unclosed_quote_name.ads'
+Failed to parse dependencies
 
 == ALI file: ali_files/invalid/missing_dependency_field.ali
-missing_dependency_field.ali: error: ALI parser error: missed dependency source file
+[PARSER.ALI] ALI parser error: missed dependency source file
+Failed to parse dependencies
 
 == ALI file: ali_files/invalid/no_blank_line_at_the_end.ali
 main.adb
@@ -47,5 +51,6 @@ system.ads
 this is foo with a long name.1.ada
 
 == ALI file: ali_files/invalid/dependency_concatenated.ali
-dependency_concatenated.ali: error: ALI parser error: space expected after the 'D' dependency character
+[PARSER.ALI] ALI parser error: space expected after the 'D' dependency character
+Failed to parse dependencies
 

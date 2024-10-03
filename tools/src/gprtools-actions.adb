@@ -18,8 +18,7 @@ use GPR2, GPR2.Build;
 package body GPRtools.Actions is
 
    function Add_Actions_To_Build_Mains
-     (Tree : GPR2.Project.Tree.Object; Log : out GPR2.Log.Object)
-      return Boolean
+     (Tree : GPR2.Project.Tree.Object) return Boolean
    is
 
       package GBA renames GPR2.Build.Actions;
@@ -41,21 +40,15 @@ package body GPRtools.Actions is
         (View : GPR2.Project.View.Object) return Boolean
       is
          L       : GPR2.Build.Actions.Link.Object;
-         Log     : GPR2.Log.Object;
 
       begin
          L.Initialize_Library (View);
-         Tree_Db.Add_Action (L, Log);
 
-         if Log.Has_Error then
-            Log.Output_Messages;
+         if not Tree_Db.Add_Action (L) then
             return False;
          end if;
 
-         Tree_Db.Add_Output (L.UID, L.Output, Log);
-
-         if Log.Has_Error then
-            Log.Output_Messages;
+         if not Tree_Db.Add_Output (L.UID, L.Output) then
             return False;
          end if;
 
@@ -67,10 +60,7 @@ package body GPRtools.Actions is
                   Comp : GPR2.Build.Actions.Compile.Ada.Object;
                begin
                   Comp.Initialize (CU);
-                  Tree_Db.Add_Action (Comp, Log);
-
-                  if Log.Has_Error then
-                     Log.Output_Messages;
+                  if not Tree_Db.Add_Action (Comp) then
                      return False;
                   end if;
 
@@ -90,8 +80,9 @@ package body GPRtools.Actions is
                      Comp.Initialize (Src);
 
                      if not Tree_Db.Has_Action (Comp.UID) then
-                        Tree_Db.Add_Action (Comp, Log);
-                        Log.Output_Messages;
+                        if not Tree_Db.Add_Action (Comp) then
+                           return False;
+                        end if;
                      end if;
 
                      Tree_Db.Add_Input
@@ -101,9 +92,7 @@ package body GPRtools.Actions is
             end loop;
          end if;
 
-         Tree_Db.Propagate_Actions;
-
-         return True;
+         return Tree_Db.Propagate_Actions;
       end Add_Actions_To_Build_Lib;
 
       -------------------------------
@@ -126,26 +115,26 @@ package body GPRtools.Actions is
          if Tree_Db.Has_Action (Link.UID) then
             return True;
          end if;
-         Tree_Db.Add_Action (Link, Log);
+
+         if not Tree_Db.Add_Action (Link) then
+            return False;
+         end if;
 
          Comp.Initialize
            (Main.View.Unit
               (Source.Units.Element (Main.Index).Name));
 
          if not Tree.Artifacts_Database.Has_Action (Comp.UID) then
-            Tree_Db.Add_Action (Comp, Log);
-
-            if Log.Has_Error then
+            if not Tree_Db.Add_Action (Comp) then
                return False;
             end if;
          end if;
 
          Bind.Initialize (Comp.Ali_File, Main.View);
-         Tree_Db.Add_Action (Bind, Log);
-
-         if Log.Has_Error then
+         if not Tree_Db.Add_Action (Bind) then
             return False;
          end if;
+
 
          Tree_Db.Add_Input (Bind.UID, Comp.Ali_File, True);
          Tree_Db.Add_Input (Link.UID, Comp.Object_File, False);
@@ -162,8 +151,9 @@ package body GPRtools.Actions is
                   Comp.Initialize (Src);
 
                   if not Tree_Db.Has_Action (Comp.UID) then
-                     Tree_Db.Add_Action (Comp, Log);
-                     Log.Output_Messages;
+                     if not Tree_Db.Add_Action (Comp) then
+                        return False;
+                     end if;
                   end if;
 
                   Tree_Db.Add_Input
@@ -247,7 +237,9 @@ package body GPRtools.Actions is
 
             --  ??? TODO handle non Ada sources
 
-            Tree.Artifacts_Database.Propagate_Actions;
+            if not Tree.Artifacts_Database.Propagate_Actions then
+               return False;
+            end if;
          elsif not Root.Is_Library then
             for Source of Root.Sources loop
                if Source.Is_Compilable then
@@ -257,8 +249,8 @@ package body GPRtools.Actions is
                            Comp : GPR2.Build.Actions.Compile.Object;
                         begin
                            Comp.Initialize (Source);
-                           Tree.Artifacts_Database.Add_Action (Comp, Log);
-                           if Log.Has_Error then
+                           if not Tree.Artifacts_Database.Add_Action (Comp)
+                           then
                               return False;
                            end if;
                         end;
@@ -272,8 +264,8 @@ package body GPRtools.Actions is
                            begin
                               Comp.Initialize
                                 (Root.Unit (Unit.Name));
-                              Tree.Artifacts_Database.Add_Action (Comp, Log);
-                              if Log.Has_Error then
+                              if not Tree.Artifacts_Database.Add_Action (Comp)
+                              then
                                  return False;
                               end if;
                            end;

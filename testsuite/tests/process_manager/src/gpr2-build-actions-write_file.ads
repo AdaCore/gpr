@@ -46,10 +46,9 @@ package GPR2.Build.Actions.Write_File is
 
    overriding function View (Self : Object) return GPR2.Project.View.Object;
 
-   overriding procedure On_Tree_Insertion
+   overriding function On_Tree_Insertion
      (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object;
-      Messages : in out GPR2.Log.Object);
+      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
    overriding procedure Compute_Signature (Self : in out Object);
 

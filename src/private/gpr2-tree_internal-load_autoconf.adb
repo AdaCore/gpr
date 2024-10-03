@@ -765,10 +765,7 @@ begin
    end if;
 
    if Conf.Has_Error then
-      for M of Conf.Log_Messages loop
-         Self.Append_Message (M);
-      end loop;
-
+      Self.Conf := Conf;
       GPR2.Project_Parser.Clear_Cache;
       raise Project_Error with "cannot create configuration";
    end if;

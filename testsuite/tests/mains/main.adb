@@ -58,7 +58,6 @@ begin
             Text_IO.Set_Col (10);
             Text_IO.Put_Line (Tree.Root_Project.Qualifier'Img);
 
-            Tree.Log_Messages.Output_Messages (Information => False);
             Tree.Update_Sources;
             Display (Tree.Root_Project);
          end if;

@@ -3,6 +3,7 @@ with GPR2.Message;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
+with GPR2.Reporter.Console; use GPR2.Reporter;
 
 with Ada.Text_IO;
 
@@ -14,12 +15,11 @@ procedure Main is
 begin
    Opt.Add_Switch (Options.P, "a");
    Opt.Add_Switch (Options.Db, "./kb");
-   GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Quiet;
 
-   if PT.Load (Opt) then
+   if PT.Load (Opt, Reporter => Console.Create (Quiet)) then
       Ada.Text_IO.Put_Line ("Invalid KB chunk ignored");
    else
-      for M of PT.Log_Messages.all loop
+      for M of PT.Configuration.Log_Messages loop
          if M.Level = GPR2.Message.Error then
             --  Ignore line/column to have the output not dependent on
             --  the actual autoconf project that depends on the host/kb

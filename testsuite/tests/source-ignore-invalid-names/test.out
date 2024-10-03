@@ -1,6 +1,6 @@
 Project: Prj with variant=v1
-foo__v2.ads: info: invalid name for unit 'foo__v2', two consecutive underscores not permitted
+foo__v2.ads: hint: invalid name for unit 'foo__v2', two consecutive underscores not permitted
  - foo__v1.ads        language: Ada    Kind: S_SPEC   unit: FOO
 Project: Prj with variant=v2
-foo__v1.ads: info: invalid name for unit 'foo__v1', two consecutive underscores not permitted
+foo__v1.ads: hint: invalid name for unit 'foo__v1', two consecutive underscores not permitted
  - foo__v2.ads        language: Ada    Kind: S_SPEC   unit: FOO

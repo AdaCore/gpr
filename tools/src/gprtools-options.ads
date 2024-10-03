@@ -21,6 +21,7 @@ with Ada.Strings.Unbounded;
 with GPR2.Containers;
 with GPR2.Options;
 with GPR2.Project.Tree;
+with GPR2.Reporter.Console;
 
 with GPRtools.Command_Line;
 
@@ -52,10 +53,8 @@ package GPRtools.Options is
 
       Tree                     : GPR2.Project.Tree.Object;
 
-      --  Verbosity control
-
-      Verbosity                : GPRtools.Verbosity_Level := GPRtools.Regular;
-      Warnings                 : aliased Boolean := True;
+      Console_Reporter : GPR2.Reporter.Console.Object :=
+                           GPR2.Reporter.Console.Create;
 
       --  Distributed mode
 
@@ -109,11 +108,8 @@ package GPRtools.Options is
    function Load_Project
      (Opt                : in out Base_Options'Class;
       Absent_Dir_Error   : GPR2.Error_Level;
-      Handle_Information : Boolean := False;
-      Handle_Errors      : Boolean := True;
-      Handle_Lint        : Boolean := False) return Boolean;
-   --  Load project given in the options and display errors based on the
-   --  selection given by Handle_{Error|Lint|Information).
+      Handle_Errors      : Boolean := True) return Boolean;
+   --  Load project given in the options and display logs .
 
    function Quiet (Self : Base_Options) return Boolean;
 
@@ -122,20 +118,20 @@ package GPRtools.Options is
    function Very_Verbose (Self : Base_Options) return Boolean;
 
 private
+   use GPR2.Reporter;
 
    type Command_Line_Parser is new Command_Line.Command_Line_Parser with record
       Find_Implicit_Project : Boolean := True;
    end record;
 
    function Quiet (Self : Base_Options) return Boolean is
-     (Self.Verbosity = GPRtools.Quiet);
+     (Self.Console_Reporter.Verbosity = GPR2.Reporter.Quiet);
 
    function Verbose (Self : Base_Options) return Boolean is
-     (Self.Verbosity = GPRtools.Verbose
-      or else Self.Verbosity = GPRtools.Very_Verbose);
+     (Self.Console_Reporter.Verbosity = GPR2.Reporter.Verbose);
 
    function Very_Verbose (Self : Base_Options) return Boolean is
-     (Self.Verbosity = GPRtools.Very_Verbose);
+     (Self.Console_Reporter.Verbosity = GPR2.Reporter.Very_Verbose);
 
    Empty_Options : constant Base_Options :=
                      (GPR2.Options.Empty_Options with others => <>);

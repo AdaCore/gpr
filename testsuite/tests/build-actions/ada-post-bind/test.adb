@@ -6,7 +6,6 @@ with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source;
 
-with GPR2.Log;
 with GPR2.Options;
 with GPR2.Path_Name;
 
@@ -27,17 +26,15 @@ function Test return Integer is
 
    Tree        : GPR2.Project.Tree.Object;
    Opts        : GPR2.Options.Object;
-   Messages    : GPR2.Log.Object;
    Project     : constant String := "tree/main.gpr";
    Ali_Path    : GPR2.Path_Name.Object;
 
    Bind_Action : GBA.Ada_Bind.Object;
    Action      : GBA.Post_Bind.Object;
 
-   function Init_Action return Boolean
+   procedure Init_Action
    is
       Source  : GPR2.Build.Source.Object;
-      Log     : GPR2.Log.Object;
       Context : GPR2.Project.View.Object :=
                   Tree.Namespace_Root_Projects.First_Element;
       Success : Boolean := False;
@@ -46,22 +43,14 @@ function Test return Integer is
       Ali_Path := Context.Object_Directory.Compose ("main.ali");
       Bind_Action.Initialize (Build.Artifacts.Files.Create (Ali_Path),
                               Context);
-      Tree.Artifacts_Database.Add_Action (Bind_Action, Log);
+      Assert
+        (Tree.Artifacts_Database.Add_Action (Bind_Action),
+         "Insert bind action to the database");
       Action := Bind_Action.Post_Bind;
 
       Assert
         (Tree.Artifacts_Database.Has_Action (Action.UID),
          "Check that action is added by the binder action in the Tree DB");
-
-      if Log.Has_Error then
-         Log.Output_Messages (Warning => False);
-         Assert
-            (False, "Failed to insert action to the tree database");
-
-         return False;
-      end if;
-
-      return True;
    end Init_Action;
 
    Obj_Dir : Virtual_File;
@@ -71,16 +60,9 @@ begin
    Assert
      (Tree.Load (Opts, With_Runtime => True), "Load the tree");
 
-   Tree.Update_Sources
-     (Option   => GPR2.Sources_Units_Artifacts,
-      Messages => Messages);
-
-   if Messages.Has_Error then
-      Messages.Output_Messages;
-      Assert (False, "Update sources");
-   end if;
-
-   Messages.Clear;
+   Assert
+     (Tree.Update_Sources (Option   => GPR2.Sources_Units_Artifacts),
+      "Update sources");
 
    Obj_Dir := GNATCOLL.VFS.Create
                 (Filesystem_String
@@ -88,7 +70,7 @@ begin
    Make_Dir (Obj_Dir);
    Assert (Is_Directory (Obj_Dir));
 
-   Assert (Init_Action, "Initialize the Ada post-bind action");
+   Init_Action;
 
    declare
       Args    : Argument_List;

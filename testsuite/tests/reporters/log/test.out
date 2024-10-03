@@ -1,0 +1,99 @@
+=== Verbosity : Regular ===
+ * Single message reporting:
+error: An single error message
+An end user message
+A simple string
+warning: A warning message
+ * Single error message + Log without error messages:
+error: A single error message
+An end user message
+warning: A warning message
+ * Single error message + Log with error messages:
+error: A single error message
+error: An error message
+An end user message
+ * Single message + Log with error messages and Warn_If_Errors set:
+error: A single error message
+error: An error message
+An end user message
+warning: A warning message
+
+=== Verbosity : Quiet ===
+ * Single message reporting:
+ * Single error message + Log without error messages:
+ * Single error message + Log with error messages:
+ * Single message + Log with error messages and Warn_If_Errors set:
+
+=== Verbosity : No_Warnings ===
+ * Single message reporting:
+error: An single error message
+An end user message
+A simple string
+ * Single error message + Log without error messages:
+error: A single error message
+An end user message
+ * Single error message + Log with error messages:
+error: A single error message
+error: An error message
+An end user message
+ * Single message + Log with error messages and Warn_If_Errors set:
+error: A single error message
+error: An error message
+An end user message
+
+=== Verbosity : Verbose ===
+ * Single message reporting:
+error: An single error message
+An end user message
+A simple string
+warning: A warning message
+hint: A hint message
+lint: A lint message
+ * Single error message + Log without error messages:
+error: A single error message
+An end user message
+warning: A warning message
+hint: A hint message
+lint: A lint message
+ * Single error message + Log with error messages:
+error: A single error message
+error: An error message
+An end user message
+hint: A hint message
+lint: A lint message
+ * Single message + Log with error messages and Warn_If_Errors set:
+error: A single error message
+error: An error message
+An end user message
+warning: A warning message
+hint: A hint message
+lint: A lint message
+
+=== Verbosity : Very verbose ===
+ * Single message reporting:
+error: An single error message
+An end user message
+A simple string
+warning: A warning message
+hint: A hint message
+lint: A lint message
+ * Single error message + Log without error messages:
+error: A single error message
+An end user message
+warning: A warning message
+hint: A hint message
+lint: A lint message
+ * Single error message + Log with error messages:
+error: A single error message
+error: An error message
+An end user message
+hint: A hint message
+lint: A lint message
+ * Single message + Log with error messages and Warn_If_Errors set:
+error: A single error message
+error: An error message
+An end user message
+warning: A warning message
+hint: A hint message
+lint: A lint message
+

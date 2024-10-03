@@ -1,0 +1,160 @@
+===  error messages
+* Message content
+error message without sloc nor indent
+* Full path name : True
+error message without sloc nor indent
+E: error message without sloc nor indent
+error: error message without sloc nor indent
+* Full path name : False
+error message without sloc nor indent
+E: error message without sloc nor indent
+error: error message without sloc nor indent
+* Message content
+error message without sloc and with one indent
+* Full path name : True
+  error message without sloc and with one indent
+  error message without sloc and with one indent
+  error message without sloc and with one indent
+* Full path name : False
+  error message without sloc and with one indent
+  error message without sloc and with one indent
+  error message without sloc and with one indent
+* Message content
+error message with sloc
+* Full path name : True
+path/to/source.ads: error message with sloc
+path/to/source.ads: E: error message with sloc
+path/to/source.ads: error: error message with sloc
+* Full path name : False
+source.ads: error message with sloc
+source.ads: E: error message with sloc
+source.ads: error: error message with sloc
+
+===  end-user messages
+* Message content
+end-user message without sloc nor indent
+* Full path name : True
+end-user message without sloc nor indent
+end-user message without sloc nor indent
+end-user message without sloc nor indent
+* Full path name : False
+end-user message without sloc nor indent
+end-user message without sloc nor indent
+end-user message without sloc nor indent
+* Message content
+end-user message without sloc and with one indent
+* Full path name : True
+  end-user message without sloc and with one indent
+  end-user message without sloc and with one indent
+  end-user message without sloc and with one indent
+* Full path name : False
+  end-user message without sloc and with one indent
+  end-user message without sloc and with one indent
+  end-user message without sloc and with one indent
+* Message content
+end-user message with sloc
+* Full path name : True
+end-user message with sloc
+end-user message with sloc
+end-user message with sloc
+* Full path name : False
+end-user message with sloc
+end-user message with sloc
+end-user message with sloc
+
+===  warning messages
+* Message content
+warning message without sloc nor indent
+* Full path name : True
+warning message without sloc nor indent
+W: warning message without sloc nor indent
+warning: warning message without sloc nor indent
+* Full path name : False
+warning message without sloc nor indent
+W: warning message without sloc nor indent
+warning: warning message without sloc nor indent
+* Message content
+warning message without sloc and with one indent
+* Full path name : True
+  warning message without sloc and with one indent
+  warning message without sloc and with one indent
+  warning message without sloc and with one indent
+* Full path name : False
+  warning message without sloc and with one indent
+  warning message without sloc and with one indent
+  warning message without sloc and with one indent
+* Message content
+warning message with sloc
+* Full path name : True
+path/to/source.ads: warning message with sloc
+path/to/source.ads: W: warning message with sloc
+path/to/source.ads: warning: warning message with sloc
+* Full path name : False
+source.ads: warning message with sloc
+source.ads: W: warning message with sloc
+source.ads: warning: warning message with sloc
+
+===  hint messages
+* Message content
+hint message without sloc nor indent
+* Full path name : True
+hint message without sloc nor indent
+I: hint message without sloc nor indent
+hint: hint message without sloc nor indent
+* Full path name : False
+hint message without sloc nor indent
+I: hint message without sloc nor indent
+hint: hint message without sloc nor indent
+* Message content
+hint message without sloc and with one indent
+* Full path name : True
+  hint message without sloc and with one indent
+  hint message without sloc and with one indent
+  hint message without sloc and with one indent
+* Full path name : False
+  hint message without sloc and with one indent
+  hint message without sloc and with one indent
+  hint message without sloc and with one indent
+* Message content
+hint message with sloc
+* Full path name : True
+path/to/source.ads: hint message with sloc
+path/to/source.ads: I: hint message with sloc
+path/to/source.ads: hint: hint message with sloc
+* Full path name : False
+source.ads: hint message with sloc
+source.ads: I: hint message with sloc
+source.ads: hint: hint message with sloc
+
+===  lint messages
+* Message content
+lint message without sloc nor indent
+* Full path name : True
+lint message without sloc nor indent
+L: lint message without sloc nor indent
+lint: lint message without sloc nor indent
+* Full path name : False
+lint message without sloc nor indent
+L: lint message without sloc nor indent
+lint: lint message without sloc nor indent
+* Message content
+lint message without sloc and with one indent
+* Full path name : True
+  lint message without sloc and with one indent
+  lint message without sloc and with one indent
+  lint message without sloc and with one indent
+* Full path name : False
+  lint message without sloc and with one indent
+  lint message without sloc and with one indent
+  lint message without sloc and with one indent
+* Message content
+lint message with sloc
+* Full path name : True
+path/to/source.ads: lint message with sloc
+path/to/source.ads: L: lint message with sloc
+path/to/source.ads: lint: lint message with sloc
+* Full path name : False
+source.ads: lint message with sloc
+source.ads: L: lint message with sloc
+source.ads: lint: lint message with sloc
+

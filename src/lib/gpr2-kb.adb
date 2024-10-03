@@ -923,7 +923,7 @@ package body GPR2.KB is
          elsif not Self.Languages_Known.Contains (Language (Setting)) then
             Messages.Append
               (Message.Create
-                 (Message.Information,
+                 (Message.Hint,
                   "unknown language '"
                   & Image (Language (Setting)) & "'",
                   Source_Reference.Create ("embedded_kb/kb", 0, 0)));

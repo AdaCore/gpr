@@ -1,9 +1,8 @@
 with Ada.Text_IO;
 with GPR2.Build.ALI_Parser;
 with GPR2.Containers;
-with GPR2.Log;
 with GPR2.Path_Name;
-
+with GNATCOLL.Traces;
 
 procedure Main is
    procedure Test (ALI_File : String);
@@ -11,27 +10,26 @@ procedure Main is
 
    procedure Test (ALI_File : String) is
       Dep_Names : GPR2.Containers.Filename_Set;
-      Messages  : GPR2.Log.Object;
    begin
       Ada.Text_IO.Put_Line ("== ALI file: " & ALI_File);
 
-      GPR2.Build.ALI_Parser.Dependencies
+      if GPR2.Build.ALI_Parser.Dependencies
         (GPR2.Path_Name.Create_File (GPR2.Filename_Type (ALI_File)),
-         Dep_Names, Messages);
-
-      if Messages.Has_Error then
-         Messages.Output_Messages
-           (Information => False,
-            Warning     => False);
-      else
+         Dep_Names)
+      then
          for Dep of Dep_Names loop
             Ada.Text_IO.Put_Line (String (Dep));
          end loop;
+      else
+         Ada.Text_IO.Put_Line ("Failed to parse dependencies");
       end if;
       Ada.Text_IO.Put_Line ("");
    end Test;
 
 begin
+
+   GNATCOLL.Traces.Parse_Config_File;
+
    Test ("ali_files/5.04a1/main.ali");
    Test ("ali_files/7.2.2/main.ali");
    Test ("ali_files/7.3.2/main.ali");

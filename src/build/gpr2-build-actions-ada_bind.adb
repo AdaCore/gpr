@@ -97,30 +97,32 @@ package body GPR2.Build.Actions.Ada_Bind is
    -- On_Tree_Insertion --
    -----------------------
 
-   overriding procedure On_Tree_Insertion
+   overriding function On_Tree_Insertion
      (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object;
-      Messages : in out GPR2.Log.Object)
+      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean
    is
       UID       : constant Actions.Action_Id'Class := Object'Class (Self).UID;
       Post_Bind : Actions.Post_Bind.Object;
 
    begin
-      Db.Add_Output
-        (UID,
-         Self.Output_Spec,
-         Messages);
-      Db.Add_Output
-        (UID,
-         Self.Output_Body,
-         Messages);
+      if not Db.Add_Output (UID, Self.Output_Spec)
+         or else not Db.Add_Output (UID, Self.Output_Body)
+      then
+         return False;
+      end if;
 
       Db.Add_Input (UID, Self.Main_Ali, True);
 
       Post_Bind :=
         Actions.Post_Bind.Create (Self.Output_Body, Self.View, Self);
-      Db.Add_Action (Post_Bind, Messages);
+
+      if not Db.Add_Action (Post_Bind) then
+         return False;
+      end if;
+
       Db.Add_Input (Post_Bind.UID, Self.Output_Body, True);
+
+      return True;
    end On_Tree_Insertion;
 
    ---------------
@@ -140,9 +142,8 @@ package body GPR2.Build.Actions.Ada_Bind is
    -- Post_Command --
    ------------------
 
-   overriding procedure Post_Command
-     (Self   : in out Object;
-      Status : Execution_Status)
+   overriding function Post_Command
+     (Self : in out Object; Status : Execution_Status) return Boolean
    is
       use Ada.Text_IO;
       use Ada.Strings;
@@ -213,6 +214,8 @@ package body GPR2.Build.Actions.Ada_Bind is
       end loop;
 
       Close (Src_File);
+
+      return True;
    end Post_Command;
 
    ---------

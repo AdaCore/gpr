@@ -7,7 +7,6 @@
 with Ada.Text_IO;
 
 with GPR2.Context;
-with GPR2.Log;
 with GPR2.Options;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
@@ -101,14 +100,14 @@ begin
    Ctx.Include ("OS", "Linux");
 
    if not Prj1.Set_Context (Ctx, Changed_Callback'Access) then
-      Prj1.Log_Messages.Output_Messages (Information => False);
+      Text_IO.Put_Line ("!! Could not change the context");
    end if;
 
    Ctx := Prj2.Context;
    Ctx.Include ("OS", "Windows");
 
    if not Prj2.Set_Context (Ctx, Changed_Callback'Access) then
-      Prj2.Log_Messages.Output_Messages (Information => False);
+      Text_IO.Put_Line ("!! Could not change the context");
    end if;
 
    Display (Prj1.Root_Project);
@@ -118,7 +117,7 @@ begin
    Ctx.Include ("OS", "Linux-2");
 
    if not Prj2.Set_Context (Ctx, Changed_Callback'Access) then
-      Prj2.Log_Messages.Output_Messages (Information => False);
+      Text_IO.Put_Line ("!! Could not change the context");
    end if;
 
    Display (Prj2.Root_Project);

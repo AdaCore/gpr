@@ -660,7 +660,7 @@ package body GPR2.KB.Compiler_Iterator is
                then
                   Base.Messages.Append
                     (GPR2.Message.Create
-                       (GPR2.Message.Information,
+                       (GPR2.Message.Hint,
                         "Variable '"
                         & To_String (Ext.Extracted_From)
                         & "' is already defined",

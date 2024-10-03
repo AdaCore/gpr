@@ -1,0 +1,5 @@
+description:
+    Test the load function
+driver: build_and_run
+project_file: test
+main: main

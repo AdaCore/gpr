@@ -1,7 +1,3 @@
-with Ada.Text_IO;
-
-with GPR2.Containers;
-with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
@@ -303,50 +299,6 @@ package body GPR2_GNATCOLL_Projects is
          return null;
       end if;
    end Attribute_Value;
-
-   ---------------------
-   -- Output_Messages --
-   ---------------------
-
-   procedure Output_Messages
-     (Log                : GPR2.Log.Object;
-      Output_Warnings    : Boolean := True;
-      Output_Information : Boolean := False)
-   is
-      use GPR2.Log;
-      Displayed : GPR2.Containers.Value_Set;
-   begin
-      for C in Log.Iterate
-        (Information => Output_Information,
-         Warning     => Output_Warnings,
-         Error       => True,
-         Read        => True,
-         Unread      => True)
-      loop
-         declare
-            use Ada.Text_IO;
-            use GPR2.Message;
-
-            Msg      : constant GPR2.Log.Constant_Reference_Type :=
-                         Log.Constant_Reference (C);
-            Text     : constant String := Msg.Format;
-            Dummy    : GPR2.Containers.Value_Type_Set.Cursor;
-            Inserted : Boolean;
-
-         begin
-            Displayed.Insert (Text, Dummy, Inserted);
-
-            if Inserted then
-               Put_Line
-                 (File_Access'
-                    (case Msg.Level is
-                        when Information | Lint => Current_Output,
-                        when Warning | Error    => Current_Error).all,
-                  Text);
-            end if;
-         end;
-      end loop;
-   end Output_Messages;
 
    ----------------------------
    -- Register_New_Attribute --

@@ -83,11 +83,9 @@ package body GPR2.Build.Actions.Write_File is
    -- On_Tree_Insertion --
    -----------------------
 
-   overriding procedure On_Tree_Insertion
-     (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object;
-      Messages : in out GPR2.Log.Object)
-   is
+   overriding function On_Tree_Insertion
+     (Self : Object;
+      Db   : in out GPR2.Build.Tree_Db.Object) return Boolean is
    begin
       if Self.With_Deps and then Self.Index > 1 then
          Db.Add_Input
@@ -96,8 +94,8 @@ package body GPR2.Build.Actions.Write_File is
              True);
       end if;
 
-      Db.Add_Output
-        (Self.UID, Output_File (Self.Index), Messages);
+      return Db.Add_Output
+        (Self.UID, Output_File (Self.Index));
    end On_Tree_Insertion;
 
    -----------------

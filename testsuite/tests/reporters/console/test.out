@@ -1,0 +1,87 @@
+=== Verbosity : Regular ===
+ * Single message reporting:
+error: An error message
+An end user message
+A simple string
+warning: A warning message
+ * Log without error messages:
+An end user message
+warning: A warning message
+ * Log with error messages:
+error: An error message
+An end user message
+ * Log with error messages and Warn_If_Errors set:
+error: An error message
+An end user message
+warning: A warning message
+
+=== Verbosity : Quiet ===
+ * Single message reporting:
+ * Log without error messages:
+ * Log with error messages:
+ * Log with error messages and Warn_If_Errors set:
+
+=== Verbosity : No_Warnings ===
+ * Single message reporting:
+error: An error message
+An end user message
+A simple string
+ * Log without error messages:
+An end user message
+ * Log with error messages:
+error: An error message
+An end user message
+ * Log with error messages and Warn_If_Errors set:
+error: An error message
+An end user message
+
+=== Verbosity : Verbose ===
+ * Single message reporting:
+error: An error message
+An end user message
+A simple string
+warning: A warning message
+hint: A hint message
+lint: A lint message
+ * Log without error messages:
+An end user message
+warning: A warning message
+hint: A hint message
+lint: A lint message
+ * Log with error messages:
+error: An error message
+An end user message
+hint: A hint message
+lint: A lint message
+ * Log with error messages and Warn_If_Errors set:
+error: An error message
+An end user message
+warning: A warning message
+hint: A hint message
+lint: A lint message
+
+=== Verbosity : Very verbose ===
+ * Single message reporting:
+error: An error message
+An end user message
+A simple string
+warning: A warning message
+hint: A hint message
+lint: A lint message
+ * Log without error messages:
+An end user message
+warning: A warning message
+hint: A hint message
+lint: A lint message
+ * Log with error messages:
+error: An error message
+An end user message
+hint: A hint message
+lint: A lint message
+ * Log with error messages and Warn_If_Errors set:
+error: An error message
+An end user message
+warning: A warning message
+hint: A hint message
+lint: A lint message
+

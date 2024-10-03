@@ -22,6 +22,7 @@ with Ada.Exceptions;
 
 with GPR2.Interrupt_Handler;
 with GPR2.Options;
+with GPR2.Reporter;
 
 with GPRdoc.Process;
 
@@ -68,7 +69,8 @@ function GPRdoc.Main return Ada.Command_Line.Exit_Status is
       Result : constant access GPRdoc_Options :=
                  GPRdoc_Options (Res.all)'Access;
    begin
-      Result.Verbosity := GPRtools.Quiet;
+      Result.Console_Reporter.Set_Verbosity (GPR2.Reporter.Quiet);
+
       --  We want a clean output to be JSON compliant
 
       if Arg = "--display" then
@@ -140,8 +142,7 @@ begin
 exception
    when E : GPR2.Options.Usage_Error =>
       Handle_Program_Termination
-        (Opt                       => Options,
-         Display_Command_Line_Help => True,
+        (Display_Command_Line_Help => True,
          Force_Exit                => False,
          Message                   => Exception_Message (E));
       return To_Exit_Status (E_Fatal);
@@ -151,8 +152,7 @@ exception
 
    when E : others =>
       Handle_Program_Termination
-        (Opt        => Options,
-         Force_Exit => False,
+        (Force_Exit => False,
          Exit_Cause => E_Generic,
          Message    => Exception_Message (E));
       return To_Exit_Status (E_Fatal);

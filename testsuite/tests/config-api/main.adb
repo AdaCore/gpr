@@ -13,6 +13,7 @@ with GPR2.Project.Configuration;
 with GPR2.Project.Tree;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
+with GPR2.Reporter.Console;
 
 procedure Main is
 
@@ -20,6 +21,7 @@ procedure Main is
    use Ada.Exceptions;
    use GPR2;
    use GPR2.Project;
+   use GPR2.Reporter;
 
    procedure Display (Prj : Project.View.Object; Full : Boolean := True);
 
@@ -94,18 +96,20 @@ procedure Main is
    Prj : Project.Tree.Object;
    Opt : Options.Object;
 
-   Des : Configuration.Description :=
-           Configuration.Create (Language => Ada_Language);
-   KB  : GPR2.KB.Object := GPR2.KB.Create (GPR2.KB.Default_Flags);
-   Cnf : Configuration.Object :=
-           Configuration.Create
-             (Configuration.Description_Set'(1 => Des), "all",
-              Path_Name.Create_File ("demo.gpr"),
-              Base      => KB,
-              Save_Name => Path_Name.Create_File ("conf.cgpr"));
+   Des      : Configuration.Description :=
+                Configuration.Create (Language => Ada_Language);
+   KB       : GPR2.KB.Object := GPR2.KB.Create (GPR2.KB.Default_Flags);
+   Reporter : GPR2.Reporter.Console.Object := Console.Create;
+   Cnf      : Configuration.Object :=
+                Configuration.Create
+                  (Configuration.Description_Set'(1 => Des), "all",
+                   Path_Name.Create_File ("demo.gpr"),
+                   Base      => KB,
+                   Save_Name => Path_Name.Create_File ("conf.cgpr"));
+
 begin
    if Cnf.Has_Messages then
-      Cnf.Log_Messages.Output_Messages (Information => False);
+      Reporter.Report (Cnf.Log_Messages);
    end if;
 
    Opt.Add_Switch (Options.P, "demo.gpr");

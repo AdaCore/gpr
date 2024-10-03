@@ -7,7 +7,6 @@ with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Source.Sets;
 
-with GPR2.Log;
 with GPR2.Options;
 
 with GPR2.Project.Tree;
@@ -19,7 +18,6 @@ function Main return Natural is
    use type GPR2.Language_Id;
    Tree        : GPR2.Project.Tree.Object;
    Opts        : GPR2.Options.Object;
-   Log         : GPR2.Log.Object;
    Project     : constant String :=
                    (if Ada.Command_Line.Argument_Count > 0
                     then Ada.Command_Line.Argument (1)
@@ -32,27 +30,17 @@ begin
       return 1;
    end if;
 
-   Tree.Update_Sources
-     (Option   => GPR2.Sources_Units_Artifacts);
-
-   if Log.Has_Error then
-      Log.Output_Messages;
-      return 1;
-   end if;
-
-   Log.Clear;
+   Tree.Update_Sources (Option   => GPR2.Sources_Units_Artifacts);
 
    for NS of Tree.Namespace_Root_Projects loop
       for Unit of NS.Units loop
          declare
-            A    : GPR2.Build.Actions.Compile.Ada.Object;
+            A : GPR2.Build.Actions.Compile.Ada.Object;
          begin
             A.Initialize (Unit);
 
             if not Tree.Artifacts_Database.Has_Action (A.UID) then
-               Tree.Artifacts_Database.Add_Action (A, Log);
-               if Log.Has_Error then
-                  Log.Output_Messages (Warning => False);
+               if not Tree.Artifacts_Database.Add_Action (A) then
                   return 0;
                end if;
             end if;
@@ -69,9 +57,7 @@ begin
                A.Initialize (Src);
 
                if not Tree.Artifacts_Database.Has_Action (A.UID) then
-                  Tree.Artifacts_Database.Add_Action (A, Log);
-                  if Log.Has_Error then
-                     Log.Output_Messages (Warning => False);
+                  if not Tree.Artifacts_Database.Add_Action (A) then
                      return 0;
                   end if;
                end if;

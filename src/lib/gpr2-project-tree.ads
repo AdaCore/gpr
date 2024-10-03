@@ -23,6 +23,8 @@ limited with GPR2.Project.Tree.View_Builder;
 with GPR2.Project.View.Set;
 with GPR2.Project.View.Vector;
 with GPR2.View_Ids;
+with GPR2.Reporter;
+with GPR2.Reporter.Console;
 
 private with GNATCOLL.Refcount;
 private with GPR2.Tree_Internal;
@@ -31,27 +33,6 @@ private with GPR2.View_Internal;
 package GPR2.Project.Tree is
 
    use type GPR2.Context.Object;
-
-   type Verbosity_Level is
-     (Quiet,
-      Minimal,
-      Errors,
-      Warnings_And_Errors,
-      Info,
-      Linter);
-   --  Quiet: do not display anything
-   --  Minimal: display only messages concerning new files or directories
-   --  Warnings_And_Errors: in case the configuration or tree logs contain
-   --    warnings or errors, display them
-   --  Info: also display informational messages
-   --  Linter: also display gpr linter messages
-
-   Verbosity : Verbosity_Level := Warnings_And_Errors;
-   --  Indicates the global verbosity expected by the user of this library.
-   --  Logs will be displayed only if the verbosity level is verbose enough
-   --  according to the message level (see GPR2.Message).
-   --  The active message reporter is used to report such message, that will
-   --  be displayed on the console by default (see GPR2.Message.Reporter).
 
    type Object is tagged private
      with Constant_Indexing => Constant_Reference,
@@ -93,10 +74,25 @@ package GPR2.Project.Tree is
    --  from the actual set of languages used in project tree. Empty set of
    --  languages means regular auto-configuration with no reductions.
 
+   type Reporter_Reference_Type
+     (Element : not null access GPR2.Reporter.Object'Class) is private
+     with Implicit_Dereference => Element;
+
+   procedure Set_Reporter
+     (Self : in out Object; Reporter : GPR2.Reporter.Object'Class);
+   --  Set the reporter used by the tree and all tree-related operations,
+   --  such as loading or working with sources, to output the logs.
+
+   function Reporter (Self : Object) return Reporter_Reference_Type;
+   --  Returns a reference to the reporter
+
    function Load
      (Self                     : in out Object;
       Options                  : GPR2.Options.Object'Class;
       With_Runtime             : Boolean := False;
+      Reporter                 : GPR2.Reporter.Object'Class :=
+                                   GPR2.Reporter.Console.Create;
+      Artifacts_Info_Level     : Optional_Source_Info_Option := No_Source;
       Absent_Dir_Error         : GPR2.Error_Level := GPR2.Warning;
       Allow_Implicit_Project   : Boolean := True;
       Environment              : GPR2.Environment.Object :=
@@ -116,6 +112,11 @@ package GPR2.Project.Tree is
    --  Self: the tree to load
    --  Options: the options to use to load the tree. See below to see how
    --   the options are checked.
+   --  Reporter: reporter used by the tree and all tree-related operations,
+   --   such as loading or working with sources, to output the logs.
+   --  Artifacts_Info_Level: specify the types of artifacts to retrieve.
+   --   If the level is set to fetch at Sources_Only, it will ensure that
+   --   all views' sources are up to date.
    --  With_Runtime: whether the runtime sources are looked for when updating
    --   the sources.
    --  Absent_Dir_Error: whether a missing directory should be treated as an
@@ -136,6 +137,9 @@ package GPR2.Project.Tree is
    --  File_Reader: if set, this file reader is used instead of the standard
    --   text file reader to load the projects.
    --
+   --  Returns True if both project loading and artifact fetching
+   --  were successful.
+
    --  raises GPR2.Options.Usage_Error in case the set of Options given as
    --   parameter is invalid, The reason for the failure is given in the
    --   exception message.
@@ -151,7 +155,9 @@ package GPR2.Project.Tree is
       Config           : GPR2.Project.Configuration.Object :=
                            GPR2.Project.Configuration.Undefined;
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
-                           GPR2.File_Readers.No_File_Reader_Reference)
+                           GPR2.File_Readers.No_File_Reader_Reference;
+      Reporter         : GPR2.Reporter.Object'Class :=
+                           GPR2.Reporter.Console.Create)
       return Boolean;
    --  Same as above, but uses a virtual project view as a root project.
    --  -P option is ignored if set in Options.
@@ -339,21 +345,15 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined;
    --  Ensures that all views' sources are up-to-date.
    --  Option selects the information that will be gathered on the sources. The
-   --   more information is requested, the slower is the update operation.
+   --  more information is requested, the slower is the update operation.
+   --  Used by the Load function when its Artifacts_Info_Level is set
+   --  to fetch sources.
 
    function Update_Sources
      (Self     : Object;
       Option   : Source_Info_Option := Sources_Units) return Boolean
      with Pre => Self.Is_Defined;
    --  Same as above, and returns False upon error detected.
-
-   procedure Update_Sources
-     (Self     : Object;
-      Messages : out GPR2.Log.Object;
-      Option   : Source_Info_Option := Sources_Units)
-     with Pre => Self.Is_Defined;
-   --  Same as above and returns the messages generated during the load
-   --  operation.
 
    procedure For_Each_Ada_Closure
      (Self              : Object;
@@ -592,5 +592,11 @@ private
    is (Iterator'(Internal =>
                     Tree_Internal.Iterator
                       (Self.Tree.Iterate (Kind, Filter, Status))));
+
+   type Reporter_Reference_Type
+     (Element : not null access GPR2.Reporter.Object'Class)
+   is record
+      Ref : GPR2.Tree_Internal.Reporter_Holders.Reference_Type (Element);
+   end record;
 
 end GPR2.Project.Tree;

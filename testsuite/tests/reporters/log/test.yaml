@@ -1,0 +1,4 @@
+description: Test the log reporter
+driver: build_and_run
+project_file: test
+main: test

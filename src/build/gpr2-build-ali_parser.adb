@@ -6,14 +6,16 @@
 
 with Ada.Exceptions;
 with GNATCOLL.Buffer;
-with GPR2.Message;
-with GPR2.Source_Reference;
+with GNATCOLL.Traces;
 
 package body GPR2.Build.ALI_Parser is
 
    Scan_ALI_Error : exception;
 
    package GB renames GNATCOLL.Buffer;
+   package GT renames GNATCOLL.Traces;
+
+   Traces : constant GT.Trace_Handle := GT.Create ("PARSER.ALI");
 
    package IO is
 
@@ -248,10 +250,9 @@ package body GPR2.Build.ALI_Parser is
    -- Dependencies --
    ------------------
 
-   procedure Dependencies
+   function Dependencies
      (ALI_File  : GPR2.Path_Name.Object;
-      Dep_Names : in out GPR2.Containers.Filename_Set;
-      Messages  : in out GPR2.Log.Object)
+      Dep_Names : in out GPR2.Containers.Filename_Set) return Boolean
    is
 
       procedure Parse_Dep (Reader : in out GB.Reader);
@@ -305,17 +306,16 @@ package body GPR2.Build.ALI_Parser is
 
          GB.Finalize (Reader);
 
+         return True;
+
       exception
          when E : others =>
-
-            Messages.Append
-              (GPR2.Message.Create
-                 (GPR2.Message.Error,
-                  "ALI parser error: " & Ada.Exceptions.Exception_Message (E),
-                  GPR2.Source_Reference.Object
-                    (GPR2.Source_Reference.Create (ALI_File.Value, 0, 0))));
-
+            GNATCOLL.Traces.Trace
+              (Traces,
+               "ALI parser error: " & Ada.Exceptions.Exception_Message (E));
             GB.Finalize (Reader);
+
+            return False;
       end;
    end Dependencies;
 
@@ -323,10 +323,9 @@ package body GPR2.Build.ALI_Parser is
    -- Imports --
    ------------------
 
-   procedure Imports
+   function Imports
      (ALI_File : GPR2.Path_Name.Object;
-      Imports  : in out GPR2.Containers.Name_Set;
-      Messages : in out GPR2.Log.Object)
+      Imports  : in out GPR2.Containers.Name_Set) return Boolean
    is
 
       procedure Parse_With (Reader : in out GB.Reader);
@@ -397,17 +396,15 @@ package body GPR2.Build.ALI_Parser is
 
          GB.Finalize (Reader);
 
+         return True;
       exception
          when E : others =>
-
-            Messages.Append
-              (GPR2.Message.Create
-                 (GPR2.Message.Error,
-                  "ALI parser error: " & Ada.Exceptions.Exception_Message (E),
-                  GPR2.Source_Reference.Object
-                    (GPR2.Source_Reference.Create (ALI_File.Value, 0, 0))));
-
+            GNATCOLL.Traces.Trace
+              (Traces,
+               "ALI parser error: " & Ada.Exceptions.Exception_Message (E));
             GB.Finalize (Reader);
+
+            return False;
       end;
    end Imports;
 

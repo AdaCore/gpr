@@ -112,6 +112,12 @@ package GPR2.Options is
    --  to not appear several times on the command line, then you need to
    --  set the "Override" parameter.
 
+   procedure Add_Context
+     (Self    : in out Object;
+      Context : GPR2.Context.Object);
+   --  Adds the context to the options. Equivalent to adding the -X switch
+   --  for each of the context items.
+
    function On_Extra_Arg (Self : in out Object; Arg : String) return Boolean;
    --  Use this function if gpr file can be provided directly.
    --  If Arg is not a valid file name with a gpr extension False is returned.

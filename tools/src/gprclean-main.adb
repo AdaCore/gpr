@@ -33,6 +33,7 @@ with GPR2.Project.Configuration;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
+with GPR2.Reporter;
 with GPR2.Source_Reference;
 
 with GPRtools.Actions;
@@ -69,6 +70,7 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
      (Name : String; Opts : GPRclean.Options.Object)
    is
       use GNAT.OS_Lib;
+      use GPR2.Reporter;
       Success : Boolean := False;
    begin
       if Is_Regular_File (Name) then
@@ -85,12 +87,10 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
             end if;
 
             if Success then
-               if Opts.Verbosity > Regular then
-                  Text_IO.Put_Line ('"' & Name & """ has been deleted");
-               end if;
-
-            elsif Opts.Verbosity > Quiet and then Opts.Warnings then
-               Text_IO.Put_Line
+                  Opts.Tree.Reporter.Report
+                    ('"' & Name & """ has been deleted");
+            elsif Opts.Tree.Reporter.Verbosity > No_Warnings then
+               Opts.Tree.Reporter.Report
                  ("Warning: """ & Name & """ could not be deleted");
             end if;
          end if;
@@ -100,7 +100,6 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    Project_Tree : Project.Tree.Object;
    Opt          : GPRclean.Options.Object;
    Parser       : GPRtools.Options.Command_Line_Parser;
-   Messages     : GPR2.Log.Object;
 
 begin
    GNATCOLL.Traces.Parse_Config_File;
@@ -109,9 +108,7 @@ begin
    GPRclean.Options.Parse_Command_Line (Parser, Opt);
 
    if not GPRtools.Options.Load_Project (Opt, GPR2.No_Error) then
-      Handle_Program_Termination
-        (Opt     => Opt,
-         Message => "");
+      Handle_Program_Termination (Message => "");
    end if;
 
    Project_Tree := Opt.Tree;
@@ -121,8 +118,7 @@ begin
      and then Project_Tree.Root_Project.Archive_Builder.Empty_Values
    then
       Handle_Program_Termination
-        (Opt       => Opt,
-         Exit_Code => E_Success,
+        (Exit_Code => E_Success,
          Message   => "empty Archive_builder is not supported yet.");
    end if;
 
@@ -152,9 +148,9 @@ begin
 
    if Project_Tree.Has_Configuration
      and then Project_Tree.Configuration.Log_Messages.Has_Element
-       (Warning     => True,
-        Information => False,
-        Error       => False)
+       (Warning  => True,
+        Hint     => False,
+        Error    => False)
    then
       Project_Tree.Log_Messages.Append
         (GPR2.Message.Create
@@ -175,22 +171,10 @@ begin
               (Project_Tree.Root_Project.Path_Name.Value, 0, 0)));
 
       Handle_Program_Termination
-        (Opt                   => Opt,
-         Display_Tree_Messages => True,
-         Message               => "problems with main sources");
+        (Message => "problems with main sources");
    end if;
 
-   Project_Tree.Update_Sources (Messages => Messages);
-   if Messages.Has_Error then
-      Messages.Output_Messages
-        (Information => False, Warning => True, Error => True);
-      Handle_Program_Termination
-        (Opt        => Opt,
-         Force_Exit => True,
-         Exit_Cause => E_Tool,
-         Message    => "Failed to update sources");
-      return To_Exit_Status (E_Fatal);
-   end if;
+   Project_Tree.Update_Sources;
 
    --  Create actions that will be used to iterate and obtain artifacts
    --  for removal.
@@ -201,11 +185,8 @@ begin
 
       null;
    else
-      if not GPRtools.Actions.Add_Actions_To_Build_Mains
-        (Project_Tree, Messages)
+      if not GPRtools.Actions.Add_Actions_To_Build_Mains (Project_Tree)
       then
-         Messages.Output_Messages
-           (Information => True, Warning => True, Error => True);
          return To_Exit_Status (E_Abort);
       end if;
    end if;
@@ -221,8 +202,7 @@ begin
 
    if Opt.Arg_Mains and then not Opt.Mains.Is_Empty then
       Handle_Program_Termination
-        (Opt     => Opt,
-         Message => '"' & String (Opt.Mains.First_Element)
+        (Message => '"' & String (Opt.Mains.First_Element)
          & """ was not found in " & "the sources of any project");
    end if;
 
@@ -230,23 +210,20 @@ begin
       Delete_File (Opt.Config_Project.String_Value, Opt);
    end if;
 
-   Util.Output_Messages (Opt);
-
    return To_Exit_Status (E_Success);
 
 exception
    when E : GPR2.Options.Usage_Error =>
       Handle_Program_Termination
-        (Opt                       => Opt,
-         Display_Command_Line_Help => True,
+        (Display_Command_Line_Help => True,
          Force_Exit                => False,
          Message                   => Exception_Message (E));
       return To_Exit_Status (E_Fatal);
 
    when Project_Error  =>
    Handle_Program_Termination
-     (Opt     => Opt, Display_Tree_Messages => True, Force_Exit => False,
-      Message =>
+     (Force_Exit => False,
+      Message    =>
         '"' & String (Opt.Project_File.Simple_Name) &
         """ processing failed");
       return To_Exit_Status (E_Fatal);
@@ -256,8 +233,7 @@ exception
 
    when E : others =>
       Handle_Program_Termination
-        (Opt        => Opt,
-         Force_Exit => False,
+        (Force_Exit => False,
          Exit_Cause => E_Generic,
          Message    => Exception_Message (E));
       return To_Exit_Status (E_Fatal);

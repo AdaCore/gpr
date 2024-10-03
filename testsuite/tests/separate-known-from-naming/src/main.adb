@@ -2,6 +2,7 @@ with Ada.Text_IO;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Options;
 with GPR2.Project.Tree;
+with GPR2.Reporter.Console;
 
 procedure Main is
    use GPR2;
@@ -17,10 +18,9 @@ procedure Main is
          Opt.Add_Switch (Options.X, Ext);
       end if;
 
-      GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Warnings_And_Errors;
-
       if Tree.Load (Opt, Absent_Dir_Error => No_Error) then
-         GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Info;
+         Tree.Set_Reporter
+           (GPR2.Reporter.Console.Create (GPR2.Reporter.Verbose));
          Tree.Update_Sources;
 
          for U of Tree.Root_Project.Units loop

@@ -6,7 +6,6 @@ with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Tree_Db;
-with GPR2.Log;
 with GPR2.Options;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -14,7 +13,6 @@ with GPR2.Project.View;
 function Main return Natural is
    Tree    : GPR2.Project.Tree.Object;
    Opts    : GPR2.Options.Object;
-   Log     : GPR2.Log.Object;
    Actions : GPR2.Build.Tree_Db.Actions_List;
    Project : constant String :=
      (if Ada.Command_Line.Argument_Count > 0 then Ada.Command_Line.Argument (1)
@@ -36,29 +34,14 @@ begin
    for NS of Tree.Namespace_Root_Projects loop
       for Unit of NS.Units loop
          declare
-            A               : GPR2.Build.Actions.Compile.Ada.Object;
-            Sorted_Messages : String_Vectors.Vector;
+            A : GPR2.Build.Actions.Compile.Ada.Object;
          begin
             A.Initialize (Unit);
 
             if not Tree.Artifacts_Database.Has_Action (A.UID) then
-               Tree.Artifacts_Database.Add_Action (A, Log);
-
-               --  Sort the messages to ensure that the test output comparison
-               --  always has the same result.
-
-               for Message_Curs in Log.Iterate loop
-                  Sorted_Messages.Append
-                    (GPR2.Log.Element (Message_Curs).Format);
-               end loop;
-               Log.Clear;
-
-               String_Vectors_Sorting.Sort (Sorted_Messages);
-
-               for Message of Sorted_Messages loop
-                  Ada.Text_IO.Put_Line (Message);
-               end loop;
-
+               if not Tree.Artifacts_Database.Add_Action (A) then
+                  Ada.Text_IO.Put_Line ("Failed to add action");
+               end if;
             end if;
          end;
       end loop;

@@ -213,6 +213,28 @@ test_bootstrap:
       done
     - exit $result
 
+###################################################
+## CHECK USERS OF THE LIBGPR2 LIBRARY (optional) ##
+###################################################
+
+test_libgpr2_users:
+  services:
+     - image:e3
+     - cpu:16
+  extends: .gpr2_test_template
+  when: manual
+  variables:
+    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb eng/gpr/gprname
+  cache:
+    - key: $CI_COMMIT_REF_SLUG
+      policy: pull
+      paths:
+        - cache
+  script:
+    - install_cache full
+    - anod tune --plan $CI_PROJECT_DIR/.ci.plan
+    - anod run libgpr2_users
+
 ####################
 ## POSTPROCESSING ##
 ####################

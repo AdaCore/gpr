@@ -10,6 +10,8 @@ with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
+with GPR2.Reporter;
+with GPR2.Reporter.Console;
 
 procedure Main is
    use GPR2;
@@ -89,19 +91,26 @@ procedure Main is
          end if;
       end Print_Source;
 
+      Reporter : GPR2.Reporter.Console.Object :=
+                   GPR2.Reporter.Console.Create
+                     (Verbosity => GPR2.Reporter.Regular);
    begin
       Ada.Text_IO.Put_Line ("=========================================");
       Ada.Text_IO.Put_Line ("Testing " & String (Gpr));
       Ada.Text_IO.Put_Line ("=========================================");
 
       Opt.Add_Switch (Options.P, Gpr);
-      GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Warnings_And_Errors;
 
-      if not Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+      if not Tree.Load
+        (Opt, Absent_Dir_Error => No_Error, Reporter => Reporter)
+      then
+         Ada.Text_IO.Put_Line ("Failed to load the tree");
+
          return;
       end if;
 
-      GPR2.Project.Tree.Verbosity := GPR2.Project.Tree.Info;
+      Reporter.Set_Verbosity (GPR2.Reporter.Verbose);
+      Tree.Set_Reporter (Reporter);
 
       Tree.Update_Sources;
 

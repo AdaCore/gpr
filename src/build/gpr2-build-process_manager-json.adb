@@ -104,7 +104,6 @@ package body GPR2.Build.Process_Manager.JSON is
      (Self         : in out Object;
       Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
       Jobs         : Natural := 0;
-      Verbosity    : Execution_Verbosity := Minimal;
       Stop_On_Fail : Boolean := True)
    is
       JSON_File : constant GPR2.Path_Name.Object :=
@@ -112,7 +111,7 @@ package body GPR2.Build.Process_Manager.JSON is
    begin
       Self.JSON_File := JSON_File;
       GPR2.Build.Process_Manager.Object (Self).Execute
-        (Tree_Db, Jobs, Verbosity, Stop_On_Fail);
+        (Tree_Db, Jobs, Stop_On_Fail);
    end Execute;
 
    procedure Execute
@@ -120,7 +119,6 @@ package body GPR2.Build.Process_Manager.JSON is
       Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
       Jobs         : Natural := 0;
       JSON_File    : GPR2.Path_Name.Object;
-      Verbosity    : Execution_Verbosity := Minimal;
       Stop_On_Fail : Boolean := True)
    is
    begin
@@ -131,7 +129,7 @@ package body GPR2.Build.Process_Manager.JSON is
 
       Self.JSON_File := JSON_File;
       GPR2.Build.Process_Manager.Object (Self).Execute
-        (Tree_Db, Jobs, Verbosity, Stop_On_Fail);
+        (Tree_Db, Jobs, Stop_On_Fail);
    end Execute;
 
    overriding

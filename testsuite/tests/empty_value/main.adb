@@ -1,4 +1,5 @@
 with Ada.Text_IO;
+with GPR2.Message;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
 with GPR2.Options;
@@ -9,6 +10,7 @@ with GPR2.Project.Attribute.Set;
 with GPR2.Source_Reference.Value;
 procedure main is
    use GPR2;
+   use type GPR2.Message.Level_Value;
 
    Ignore_Single : constant GPR2.Q_Attribute_Id :=
                       (GPR2.Project_Level_Scope, +"ignore_single");
@@ -85,11 +87,17 @@ procedure main is
          Print_Attributes (Allow_List);
          Print_Attributes (Ignore_Single);
          Print_Attributes (Ignore_List);
+
       else
          --  Also print the warnings
-         Tree.Log_Messages.Output_Messages (Information => False);
+         for Log of Tree.Log_Messages.all loop
+            if Log.Level = GPR2.Message.Warning then
+               Ada.Text_IO.Put_Line (Log.Format);
+            end if;
+         end loop;
       end if;
    end Test;
+
    Default_Value : GPR2.Project.Registry.Attribute.Default_Value
      (GPR2.Project.Registry.Attribute.D_Value);
 

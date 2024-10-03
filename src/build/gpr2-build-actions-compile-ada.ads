@@ -47,17 +47,16 @@ package GPR2.Build.Actions.Compile.Ada is
    --  must be up-to-date before calling this function, as the list of
    --  dependencies comes from it.
 
-   overriding procedure On_Tree_Insertion
+   overriding function On_Tree_Insertion
      (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object;
-      Messages : in out GPR2.Log.Object);
+      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
-   overriding procedure On_Tree_Propagation
-     (Self : in out Object);
+   overriding function On_Tree_Propagation
+     (Self : in out Object) return Boolean;
 
-   overriding procedure Post_Command
+   overriding function Post_Command
      (Self   : in out Object;
-      Status : Execution_Status);
+      Status : Execution_Status) return Boolean;
 
 private
 

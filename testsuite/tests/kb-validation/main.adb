@@ -33,7 +33,7 @@ begin
    Base1.Add (Flags, GPR2.Path_Name.Create_File ("valid.xml"));
    Base1.Add (Flags, Invalid_Chunk);
    for Msg in Base1.Log_Messages.Iterate
-     (Information => False, Warning => False)
+     (Hint => False, Warning => False)
    loop
       Put_Line (GPR2.Log.Element (Msg).Format);
    end loop;
@@ -44,7 +44,7 @@ begin
    Base2.Add (Flags, GPR2.Path_Name.Create_File ("invalid.xml"));
 
    for Msg in Base2.Log_Messages.Iterate
-     (Information => False, Warning => False)
+     (Hint => False, Warning => False)
    loop
       Put_Line (GPR2.Log.Element (Msg).Format);
    end loop;
@@ -54,7 +54,7 @@ begin
    Base3.Add (Flags, GPR2.Path_Name.Create_File ("valid.xml"));
    Base3.Add (Flags, Invalid_Chunk);
    for Msg in Base3.Log_Messages.Iterate
-     (Information => False, Warning => False)
+     (Hint => False, Warning => False)
    loop
       Put_Line (GPR2.Log.Element (Msg).Format);
    end loop;
@@ -65,7 +65,7 @@ begin
    Base4.Add (Flags, GPR2.Path_Name.Create_File ("invalid.xml"));
 
    for Msg in Base2.Log_Messages.Iterate
-     (Information => False, Warning => False)
+     (Hint => False, Warning => False)
    loop
       Put_Line (GPR2.Log.Element (Msg).Format);
    end loop;

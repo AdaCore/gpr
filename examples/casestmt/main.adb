@@ -76,7 +76,6 @@ begin
          Display (Prj.Root_Project);
       else
          Text_IO.Put_Line ("!!! Error occurred");
-         Prj.Log_Messages.Output_Messages (Information => False);
       end if;
 
       Ctx.Clear;
@@ -86,7 +85,6 @@ begin
          Display (Prj.Root_Project);
       else
          Text_IO.Put_Line ("!!! Error occurred");
-         Prj.Log_Messages.Output_Messages (Information => False);
       end if;
    end if;
 end Main;

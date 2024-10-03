@@ -58,6 +58,7 @@ Test OK
 
 Testing Finalize no arguments at /new-current-directory/default with Allow_Implicit_Project=TRUE
 using project file /new-current-directory/default/default.gpr
+default.gpr:1:01: error: Expected Identifier, got Termination
 Filename is Undefined
 Build_Path is Undefined
 Test OK
@@ -75,6 +76,7 @@ Test OK
 
 Testing Finalize no arguments at /new-current-directory/no-gpr with Allow_Implicit_Project=TRUE
 use implicit project in /new-current-directory/no-gpr
+default.cgpr:1:01: error: Expected Identifier, got Termination
 Filename:/new-current-directory/no-gpr/default.gpr
 Build_Path is Undefined
 Test OK
@@ -109,31 +111,31 @@ Filename:/default.gpr
 Build_Path:relocated
 Test OK
 
-Testing Load Project -aP added-path -Pload-project/test --autoconf=other-autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug
+Testing Load Project -aP added-path -Pload-project/test --autoconf=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug
 creating configuration project autoconf.cgpr
-Load_Project returned TRUE
 test.gpr:6:32: warning: object directory "obj-Debug/subdirs" not found
+Load_Project returned TRUE
 Test OK
 
-Testing Load Project -aP added-path -aP load-project --root-dir=. --relocate-build-tree=relocated -Ptest --autoconf=autoconf.cgpr -XBUILD=Debug
+Testing Load Project -aP added-path -aP load-project --root-dir=. --relocate-build-tree=relocated -Ptest --autoconf=other-autoconf.cgpr -XBUILD=Debug
 creating configuration project other-autoconf.cgpr
-Load_Project returned TRUE
 test.gpr:6:32: warning: object directory "../relocated/load-project/obj-Debug" not found
+Load_Project returned TRUE
 Test OK
 
 Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug
-Load_Project returned TRUE
 test.gpr:6:32: warning: object directory "obj-Release/subdirs" not found
+Load_Project returned TRUE
 Test OK
 
 Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug --target (host)
-Load_Project returned TRUE
 test.gpr:6:32: warning: object directory "obj-Release" not found
 autoconf.cgpr:2:19: warning: --target is not used when a configuration project is specified.
+Load_Project returned TRUE
 Test OK
 
 Testing Load Project -aP added-path -Pload-project/test --config=autoconf.cgpr --subdirs=subdirs --src_subdirs=srcsubdirs -XBUILD=Debug --target unknown-target
-Load_Project returned TRUE
 autoconf.cgpr:2:19: error: --target: 'unknown-target' is different from the target value in the configuration project '(host)'
+Load_Project returned TRUE
 Test OK
 

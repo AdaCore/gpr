@@ -7,7 +7,6 @@ with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source;
 
-with GPR2.Log;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
@@ -33,7 +32,6 @@ function Test return Integer is
 
    Tree        : GPR2.Project.Tree.Object;
    Opts        : GPR2.Options.Object;
-   Messages    : GPR2.Log.Object;
    Project     : constant String := "tree/main.gpr";
 
 
@@ -43,10 +41,9 @@ function Test return Integer is
    -- Init_Action --
    -----------------
 
-   function Init_Action return Boolean
+   procedure Init_Action
    is
       Source : GPR2.Build.Source.Object;
-      Log    : GPR2.Log.Object;
    begin
       for Root of Tree.Namespace_Root_Projects loop
          for Main of Root.Mains loop
@@ -56,21 +53,11 @@ function Test return Integer is
             Assert
                (not Tree.Artifacts_Database.Has_Action (Action.UID),
                 "Check that action is not already in the Tree DB");
-            Tree.Artifacts_Database.Add_Action (Action, Log);
-
-            if Log.Has_Error then
-               Log.Output_Messages (Warning => False);
-               Assert
-                  (False, "Failed to insert action to the tree database");
-
-               return False;
-            end if;
-
-            return True;
+            Assert
+              (Tree.Artifacts_Database.Add_Action (Action),
+               "Insert action to the database");
          end loop;
       end loop;
-
-      return False;
    end Init_Action;
 
    ---------------------
@@ -127,7 +114,7 @@ function Test return Integer is
             --  Pass only options to the link action
 
             if Trimed_Line (Trimed_Line'First) = '-' then
-                  Action.Add_Option (Trimed_Line);
+               Action.Add_Option (Trimed_Line);
             end if;
 
          end;
@@ -166,16 +153,10 @@ begin
    Assert
      (Tree.Load (Opts, With_Runtime => True), "Load the tree");
 
-   Tree.Update_Sources
-     (Option   => GPR2.Sources_Units_Artifacts,
-      Messages => Messages);
+   Assert
+     (Tree.Update_Sources (Option => GPR2.Sources_Units_Artifacts),
+      "Update sources");
 
-   if Messages.Has_Error then
-      Messages.Output_Messages;
-      Assert (False, "Update sources");
-   end if;
-
-   Messages.Clear;
    Obj_Dir := Tree.Root_Project.Object_Directory;
    if not Obj_Dir.Exists then
       Assert (FSUtil.Create_Directory (Obj_Dir.String_Value));
@@ -226,7 +207,7 @@ begin
       Execute_Command (Args, Obj_Dir.String_Value);
    end;
 
-   Assert (Init_Action, "Initialize the Ada compile action");
+   Init_Action;
 
    Tree.Artifacts_Database.Add_Input
      (Action.UID, Artifacts.Files.Create (Obj_Dir.Compose ("main.o")), False);

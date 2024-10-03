@@ -53,15 +53,16 @@ package GPR2.Log is
    --  Removes all message from the log
 
    function Has_Element
-     (Self        : Object;
-      Information : Boolean := True;
-      Warning     : Boolean := True;
-      Error       : Boolean := True;
-      Lint        : Boolean := True;
-      Read        : Boolean := True;
-      Unread      : Boolean := True) return Boolean;
-   --  Returns True if the log contains some information/warning/error
-   --  depending on the value specified.
+     (Self     : Object;
+      Error    : Boolean := True;
+      End_User : Boolean := True;
+      Warning  : Boolean := True;
+      Hint     : Boolean := True;
+      Lint     : Boolean := True;
+      Read     : Boolean := True;
+      Unread   : Boolean := True) return Boolean;
+   --  Returns True if the log contains messages with levels matching the
+   --  specified values.
 
    function Has_Error (Self : Object) return Boolean;
    --  Returns True if the log contains unread errors
@@ -97,13 +98,14 @@ package GPR2.Log is
       Position : Cursor) return Reference_Type;
 
    function Iterate
-     (Self        : Object;
-      Information : Boolean := True;
-      Warning     : Boolean := True;
-      Error       : Boolean := True;
-      Lint        : Boolean := False;
-      Read        : Boolean := True;
-      Unread      : Boolean := True)
+     (Self     : Object;
+      Error    : Boolean := True;
+      Warning  : Boolean := True;
+      End_User : Boolean := True;
+      Hint     : Boolean := True;
+      Lint     : Boolean := False;
+      Read     : Boolean := True;
+      Unread   : Boolean := True)
       return Log_Iterator.Forward_Iterator'Class;
    --  Iterates over all log messages corresponding to the given Filter. The
    --  Unread messages are marked as Read after this call (either explicit call
@@ -111,13 +113,6 @@ package GPR2.Log is
    --  keep all messages into the list (no need to call Clear) and yet be able
    --  to check for new Unread messages.
 
-   procedure Output_Messages
-     (Log            : GPR2.Log.Object;
-      Information    : Boolean := True;
-      Warning        : Boolean := True;
-      Error          : Boolean := True;
-      Lint           : Boolean := False);
-   --  Print Log selected messages using format parameters
 private
 
    package Message_Set is
@@ -158,12 +153,13 @@ private
 
    function Has_Error (Self : Object) return Boolean is
      (Self.Has_Element
-        (Information => False,
-         Warning     => False,
-         Error       => True,
-         Lint        => False,
-         Read        => False,
-         Unread      => True));
+        (Error    => True,
+         Warning  => False,
+         End_User => False,
+         Hint     => False,
+         Lint     => False,
+         Read     => False,
+         Unread   => True));
 
    Undefined : constant Object :=
                  (Store   => Message_Set.Empty_Vector,

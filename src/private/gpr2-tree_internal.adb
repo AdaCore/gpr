@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Containers.Indefinite_Holders;
 with Ada.Directories;
 with Ada.IO_Exceptions;
 with Ada.Strings.Fixed;
@@ -702,11 +701,7 @@ package body GPR2.Tree_Internal is
 
          Self.Conf := Config;
 
-         for M of Config.Log_Messages loop
-            Self.Messages.Append (M);
-         end loop;
-
-         if Self.Messages.Has_Error then
+         if Self.Conf.Log_Messages.Has_Error then
             raise Project_Error with "configuration project has errors";
          end if;
 
@@ -802,7 +797,7 @@ package body GPR2.Tree_Internal is
 
       Self.Messages.Append
         (Message.Create
-           (Message.Information,
+           (Message.Hint,
             "Parsing """ & Gpr_Path.String_Value & """",
             Source_Reference.Create (Gpr_Path.Value, 0, 0)));
 
@@ -822,7 +817,7 @@ package body GPR2.Tree_Internal is
 
          Self.Messages.Append
            (Message.Create
-              (Message.Information,
+              (Message.Hint,
                "project search path: " & To_String (Search_Paths),
                Source_Reference.Create (Gpr_Path.Value, 0, 0)));
       end;
@@ -962,13 +957,9 @@ package body GPR2.Tree_Internal is
       Self.Conf := PC.Load (Filename);
       View_Internal.Bind_Configuration_To_Tree (Self.Conf, Self.Self);
 
-      --  Copy all configuration message into the main tree's log message list
-
-      for M of Self.Conf.Log_Messages loop
-         Self.Messages.Append (M);
-      end loop;
-
-      if not Self.Messages.Has_Error then
+      if not Self.Conf.Log_Messages.Has_Error
+        and then not Self.Messages.Has_Error
+      then
          Set_Context (Self);
       end if;
    end Load_Configuration;
@@ -1826,6 +1817,17 @@ package body GPR2.Tree_Internal is
 
       return View;
    end Register_View;
+
+   --------------
+   -- Reporter --
+   --------------
+
+   function Reporter
+     (Self : in out Object) return Reporter_Holders.Reference_Type
+   is
+   begin
+      return Self.Reporter_Holder.Reference;
+   end Reporter;
 
    ------------------------------------
    -- Restrict_Autoconf_To_Languages --
@@ -2979,6 +2981,17 @@ package body GPR2.Tree_Internal is
       Self.Search_Paths.Default := Default_Search_Paths (True, Environment);
       Self.Update_Search_Paths;
    end Set_Environment;
+
+   ------------------
+   -- Set_Reporter --
+   ------------------
+
+   procedure Set_Reporter
+     (Self : in out Object; Reporter : GPR2.Reporter.Object'Class)
+   is
+   begin
+      Self.Reporter_Holder.Replace_Element (Reporter);
+   end Set_Reporter;
 
    ------------
    -- Target --

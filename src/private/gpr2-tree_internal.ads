@@ -5,6 +5,7 @@
 --
 
 with Ada.Iterator_Interfaces;
+with Ada.Containers.Indefinite_Holders;
 
 with GPR2.Environment;
 with GPR2.Containers;
@@ -25,6 +26,8 @@ with GPR2.Project.Registry.Attribute;
 limited with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
 with GPR2.Project.View.Vector;
+with GPR2.Reporter;
+with GPR2.Reporter.Console;
 with GPR2.View_Ids;
 with GPR2.View_Ids.DAGs;
 with GPR2.View_Internal;
@@ -239,6 +242,20 @@ private package GPR2.Tree_Internal is
       Message : GPR2.Message.Object);
    --  Adds new message into the Log of Self, does nothing if message already
    --  present.
+
+   use GPR2.Reporter;
+
+   package Reporter_Holders is new Ada.Containers.Indefinite_Holders
+     (GPR2.Reporter.Object'Class);
+
+   procedure Set_Reporter
+     (Self : in out Object; Reporter : GPR2.Reporter.Object'Class);
+   --  Sets the reporter used by the tree and all tree-related operations,
+   --  such as loading or working with sources, to output the logs.
+
+   function Reporter
+     (Self : in out Object) return Reporter_Holders.Reference_Type;
+   --  Returns the tree reporter reference
 
    --  Context
 
@@ -515,6 +532,9 @@ private
       File_Reader_Ref   : GPR2.File_Readers.File_Reader_Reference;
       Environment       : GPR2.Environment.Object :=
                             GPR2.Environment.Process_Environment;
+      Reporter_Holder   : Reporter_Holders.Holder :=
+                            Reporter_Holders.To_Holder
+                              (GPR2.Reporter.Console.Create);
    end record;
 
    function "=" (Left, Right : Object) return Boolean is

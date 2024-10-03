@@ -34,6 +34,7 @@ with GPR2.Project.Tree;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View.Set;
+with GPR2.Reporter;
 with GPR2.Version;
 with GPR2.View_Ids;
 
@@ -54,6 +55,7 @@ is
 
    procedure Display_Messages_JSON_Output
      (JSON_Res    : JSON_Value;
+      Conf_Logs   : GPR2.Log.Object;
       Tree_Logs   : GPR2.Log.Object;
       Only_Errors : Boolean)
    with Pre => JSON_Res.Kind = JSON_Object_Type;
@@ -73,7 +75,8 @@ is
    --  others with a "-".
 
    procedure Display_Messages_Textual_Output
-     (Tree_Logs   : GPR2.Log.Object;
+     (Conf_Logs   : GPR2.Log.Object;
+      Tree_Logs   : GPR2.Log.Object;
       Only_Errors : Boolean);
    --  Display tree messages. If Only_Errors is true, only errors
    --  are displayed.
@@ -95,6 +98,7 @@ is
 
    procedure Display_Messages_JSON_Output
      (JSON_Res    : JSON_Value;
+      Conf_Logs   : GPR2.Log.Object;
       Tree_Logs   : GPR2.Log.Object;
       Only_Errors : Boolean)
    is
@@ -112,12 +116,12 @@ is
          Logs : GPR2.Log.Object) is
       begin
          for C in Logs.Iterate
-           (Information => (not Only_Errors) and then Options.Verbose,
-            Warning     => not Only_Errors,
-            Error       => True,
-            Lint        => not Only_Errors,
-            Read        => False,
-            Unread      => True)
+           (Hint     => (not Only_Errors) and then Options.Verbose,
+            Warning  => not Only_Errors,
+            Error    => True,
+            Lint     => not Only_Errors,
+            Read     => False,
+            Unread   => True)
          loop
             declare
                M : constant Message.Object := GPR2.Log.Element (C);
@@ -132,6 +136,7 @@ is
       Conf_Mes_Array : JSON_Array;
 
    begin
+      Populate_Array (Conf_Mes_Array, Conf_Logs);
       Populate_Array (Tree_Mes_Array, Tree_Logs);
 
       Set_Field (Messages_Obj, "configuration", Conf_Mes_Array);
@@ -144,7 +149,8 @@ is
    -------------------------------------
 
    procedure Display_Messages_Textual_Output
-     (Tree_Logs   : GPR2.Log.Object;
+     (Conf_Logs   : GPR2.Log.Object;
+      Tree_Logs   : GPR2.Log.Object;
       Only_Errors : Boolean)
    is
       procedure Display (Logs : GPR2.Log.Object);
@@ -156,12 +162,12 @@ is
       procedure Display (Logs : GPR2.Log.Object) is
       begin
          for C in Logs.Iterate
-           (Information => (not Only_Errors) and then Options.Verbose,
-            Warning     => not Only_Errors,
-            Error       => True,
-            Lint        => not Only_Errors,
-            Read        => False,
-            Unread      => True)
+           (Hint    => (not Only_Errors) and then Options.Verbose,
+            Warning => not Only_Errors,
+            Error   => True,
+            Lint    => not Only_Errors,
+            Read    => False,
+            Unread  => True)
          loop
             Indent (2, GPR2.Log.Element (C).Format);
          end loop;
@@ -171,6 +177,11 @@ is
       Indent (0, "+--------------------------------------+");
       Indent (0, "|               Messages               |");
       Indent (0, "+--------------------------------------+");
+
+      if Conf_Logs.Is_Defined and then not Conf_Logs.Is_Empty then
+         Indent (1, "Configuration:");
+         Display (Conf_Logs);
+      end if;
 
       Indent (1, "Tree:");
       Display (Tree_Logs);
@@ -950,12 +961,12 @@ is
                First_Message : Boolean := False;
             begin
                for C in Options.Tree.Log_Messages.Iterate
-                 (Information => Options.Verbose,
-                  Warning     => True,
-                  Error       => True,
-                  Lint        => True,
-                  Read        => False,
-                  Unread      => True)
+                 (Hint    => Options.Verbose,
+                  Warning => True,
+                  Error   => True,
+                  Lint    => True,
+                  Read    => False,
+                  Unread  => True)
                loop
                   if not First_Message then
                      Indent (1, "Messages :");
@@ -1103,52 +1114,71 @@ is
       return String (GPR2.View_Ids.Image (View.Id));
    end View_Id;
 
-   Success : Boolean;
+   Verbosity : GPR2.Reporter.Verbosity_Level;
+   Success   : Boolean;
 
 begin
+   --  Ensure the reporter used to load the tree is quiet: we need to handle
+   --  the messages manually
+
+   --  Save the verbosity that was set according to command line
+   Verbosity := Options.Console_Reporter.Verbosity;
+   Options.Console_Reporter.Set_Verbosity (GPR2.Reporter.Quiet);
+
    Success := GPRtools.Options.Load_Project
                 (Opt                => Options,
                  Absent_Dir_Error   => No_Error,
-                 Handle_Information => False,
-                 Handle_Errors      => False,
-                 Handle_Lint        => False);
+                 Handle_Errors      => False);
 
-   case Options.Kind_Of_Display is
-      when GPRtools.K_JSON | GPRtools.K_JSON_Compact =>
-         declare
-            J_Res : constant JSON_Value := Create_Object;
-         begin
-            Display_Messages_JSON_Output
-              (JSON_Res    => J_Res,
+   --  And restore so that we can use the verbosity to manually handle the
+   --  logs.
+
+   Options.Console_Reporter.Set_Verbosity (Verbosity);
+
+   declare
+      Conf_Logs : constant GPR2.Log.Object :=
+                    (if Options.Tree.Has_Configuration
+                     then Options.Tree.Configuration.Log_Messages
+                     else GPR2.Log.Undefined);
+   begin
+      case Options.Kind_Of_Display is
+         when GPRtools.K_JSON | GPRtools.K_JSON_Compact =>
+            declare
+               J_Res : constant JSON_Value := Create_Object;
+            begin
+               Display_Messages_JSON_Output
+                 (JSON_Res    => J_Res,
+                  Conf_Logs   => Conf_Logs,
+                  Tree_Logs   => Options.Tree.Log_Messages.all,
+                  Only_Errors => not Success);
+
+               if Success then
+                  Inspect_Project_JSON_Output
+                    (JSON_Res => J_Res,
+                     Tree     => Options.Tree);
+               end if;
+
+               Text_IO.Put_Line
+                 (JSON.Write
+                    (J_Res, Compact =>
+                         Options.Kind_Of_Display = GPRtools.K_JSON_Compact));
+            end;
+
+         when GPRtools.K_Textual_IO =>
+            Display_Messages_Textual_Output
+              (Conf_Logs   => Conf_Logs,
                Tree_Logs   => Options.Tree.Log_Messages.all,
                Only_Errors => not Success);
 
             if Success then
-               Inspect_Project_JSON_Output
-                 (JSON_Res => J_Res,
-                  Tree     => Options.Tree);
+               Inspect_Project_Textual_Output (Tree => Options.Tree);
             end if;
-
-            Text_IO.Put_Line
-              (JSON.Write
-                (J_Res, Compact =>
-                   Options.Kind_Of_Display = GPRtools.K_JSON_Compact));
-         end;
-
-      when GPRtools.K_Textual_IO =>
-         Display_Messages_Textual_Output
-           (Tree_Logs   => Options.Tree.Log_Messages.all,
-            Only_Errors => not Success);
-
-         if Success then
-            Inspect_Project_Textual_Output (Tree => Options.Tree);
-         end if;
-   end case;
+      end case;
+   end;
 
    if not Success then
       Handle_Program_Termination
-        (Opt     => Options,
-         Message => '"' & String (Options.Project_File.Name)
+        (Message => '"' & String (Options.Project_File.Name)
          & """ processing failed");
    end if;
 end GPRinspect.Process;

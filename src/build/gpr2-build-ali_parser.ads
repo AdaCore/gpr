@@ -6,22 +6,20 @@
 
 
 with GPR2.Containers;
-with GPR2.Log;
 with GPR2.Path_Name;
 
 package GPR2.Build.ALI_Parser is
 
-   procedure Dependencies
+   function Dependencies
      (ALI_File  : GPR2.Path_Name.Object;
-      Dep_Names : in out GPR2.Containers.Filename_Set;
-      Messages  : in out GPR2.Log.Object);
-   --  Parse the the dependency files names and store them in the provided
-   --  "Dep_Names" vector. Errors of parsing are stored in "Messages".
+      Dep_Names : in out GPR2.Containers.Filename_Set) return Boolean;
+   --  Parse the dependency file names and store them in the provided
+   --  'Dep_Names' vector. Returns True upon success.
 
-   procedure Imports
+   function Imports
      (ALI_File : GPR2.Path_Name.Object;
-      Imports  : in out GPR2.Containers.Name_Set;
-      Messages : in out GPR2.Log.Object);
-   --  Parse the explicit imports lines beginning with the 'W' character.
+      Imports  : in out GPR2.Containers.Name_Set) return Boolean;
+   --  Parse the explicit import lines that begin with the 'W' character.
+   --  Returns True upon success.
 
 end GPR2.Build.ALI_Parser;

@@ -21,9 +21,6 @@ package GPRtools is
    type Which is (Build, Clean, Ls, Install, Remote, Inspect);
    --  Names of the supported tools
 
-   type Verbosity_Level is (Quiet, Regular, Verbose, Very_Verbose);
-   --  Verbosilty level of logging to standard and/or error/warning output
-
    type Display_Kind is (K_JSON_Compact, K_JSON, K_Textual_IO);
    --  Kind of display to be used by any tool that uses it.
 

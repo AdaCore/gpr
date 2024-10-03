@@ -72,10 +72,9 @@ package GPR2.Build.Actions.Link is
      (Self : Object) return Actions.Action_Id_Sets.Set;
    --  List of libraries this action uses
 
-   overriding procedure On_Tree_Insertion
+   overriding function On_Tree_Insertion
      (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object;
-      Messages : in out GPR2.Log.Object);
+      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
    overriding procedure Compute_Command
      (Self : in out Object;

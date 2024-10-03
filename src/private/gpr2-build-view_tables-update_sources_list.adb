@@ -152,7 +152,7 @@ package body Update_Sources_List is
          if Index (Result, ".") /= 0 then
             Messages.Append
               (Message.Create
-                 (Message.Information, "invalid file name, contains dot",
+                 (Message.Hint, "invalid file name, contains dot",
                   SR.Create (Full_Name (File), 1, 1)));
             Last_Dot := 0;
             goto Invalid;

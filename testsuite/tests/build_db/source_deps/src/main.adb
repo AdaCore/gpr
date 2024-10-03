@@ -8,6 +8,7 @@ with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Options;
 with GPR2.View_Ids;
+with GPR2.Reporter;
 
 procedure Main is
    use GPR2;
@@ -26,11 +27,13 @@ procedure Main is
    Result  : Boolean;
    First   : Boolean := True;
    Names   : GPR2.Containers.Filename_Set;
+
+   use GPR2.Reporter;
 begin
 
    Options.Add_Switch (GPR2.Options.P, "tree/agg.gpr");
 
-   if not Tree.Load (Options, True, No_Error) then
+   if not Tree.Load (Options, True, Absent_Dir_Error => No_Error) then
       return;
    end if;
 

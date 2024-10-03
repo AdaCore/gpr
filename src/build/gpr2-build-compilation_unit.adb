@@ -94,7 +94,7 @@ package body GPR2.Build.Compilation_Unit is
             Messages.Append
               (GPR2.Message.Create
                  ((if As_Error then GPR2.Message.Error
-                  else GPR2.Message.Information),
+                  else GPR2.Message.Hint),
                   Message, Sloc));
          end if;
       end Error;
