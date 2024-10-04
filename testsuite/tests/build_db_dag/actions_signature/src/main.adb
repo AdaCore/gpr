@@ -1,6 +1,7 @@
 with Ada.Command_Line;
-with Ada.Text_IO;
 with Ada.Containers.Indefinite_Vectors;
+with Ada.Text_IO;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Artifacts.Files;
@@ -63,7 +64,7 @@ begin
             Ada.Text_IO.Put_Line ("  - " & Output.Image);
          end loop;
 
-         A.Compute_Signature;
+         A.Compute_Signature (Null_Unbounded_String, Null_Unbounded_String);
       end if;
    end loop;
 

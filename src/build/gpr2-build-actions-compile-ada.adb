@@ -63,7 +63,11 @@ package body GPR2.Build.Actions.Compile.Ada is
    -- Compute_Signature --
    -----------------------
 
-   overriding procedure Compute_Signature (Self : in out Object) is
+   overriding procedure Compute_Signature
+     (Self   : in out Object;
+      Stdout : Unbounded_String;
+      Stderr : Unbounded_String)
+   is
       use GPR2.Build.Signature;
 
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
@@ -78,6 +82,8 @@ package body GPR2.Build.Actions.Compile.Ada is
 
       Self.Signature.Add_Artifact (Self.Ali_File);
       Self.Signature.Add_Artifact (Self.Obj_File);
+
+      Self.Signature.Add_Output (Stdout, Stderr);
 
       Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
    end Compute_Signature;

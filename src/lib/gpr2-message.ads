@@ -33,12 +33,21 @@ package GPR2.Message is
    type Object is tagged private;
 
    function Create
-     (Level   : Level_Value;
-      Message : String;
-      Sloc    : Source_Reference.Object'Class := Source_Reference.Undefined;
-      Indent  : Natural := 0) return Object
+     (Level     : Level_Value;
+      Message   : String;
+      Sloc      : Source_Reference.Object'Class := Source_Reference.Undefined;
+      Indent    : Natural := 0;
+      To_Stderr : Boolean := False) return Object
      with Post => Create'Result.Status = Unread;
    --  Constructor for a log message
+   --  Level:     the severity level of the message.
+   --  Message:   the actual message to display
+   --  Sloc:      the source location related to the message if any
+   --  Indent:    if non-zero, "Format" won't print the prefix and will indent
+   --             the message. Used to split a message into two messages.
+   --  To_Stderr: will force the message to stderr (if supported by the
+   --             reporter that actually displays the message). Else only
+   --             warnings and errors go to stderr.
 
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
@@ -85,14 +94,17 @@ package GPR2.Message is
           Post => Self.Status = Status;
    --  Sets message as Read or Unread as specified by Status
 
+   function To_Stderr (Self : Object) return Boolean;
+
 private
 
    type Object is tagged record
-      Level   : Level_Value := Warning;
-      Status  : Status_Type := Read;
-      Message : Unbounded_String := To_Unbounded_String ((1 => ASCII.NUL));
-      Sloc    : Source_Reference.Object;
-      Indent  : Natural := 0;
+      Level     : Level_Value := Warning;
+      Status    : Status_Type := Read;
+      Message   : Unbounded_String := To_Unbounded_String ((1 => ASCII.NUL));
+      Sloc      : Source_Reference.Object;
+      Indent    : Natural := 0;
+      To_Stderr : Boolean := False;
    end record
      with Dynamic_Predicate => Message /= Null_Unbounded_String;
 
@@ -101,4 +113,6 @@ private
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
 
+   function To_Stderr (Self : Object) return Boolean is
+      (Self.To_Stderr);
 end GPR2.Message;

@@ -35,6 +35,11 @@ package GPR2.Build.Signature is
       Art  : Artifacts.Object'Class);
    --  Add or update an artifact in the signature
 
+   procedure Add_Output
+     (Self   : in out Object;
+      Stdout : UB.Unbounded_String;
+      Stderr : UB.Unbounded_String);
+
    procedure Clear (Self : in out Object);
    --  Clear all the signature artifacts and invalidate it
 
@@ -44,6 +49,9 @@ package GPR2.Build.Signature is
    procedure Store (Self : in out Object; Db_File : Path_Name.Object);
    --  Store the signature into the build DB file Db_File
 
+   function Stdout (Self : Object) return UB.Unbounded_String;
+   function Stderr (Self : Object) return UB.Unbounded_String;
+
 private
 
    package Artifact_Maps is new Ada.Containers.Indefinite_Ordered_Maps
@@ -52,12 +60,22 @@ private
    TEXT_SIGNATURE : constant UTF8_String := "signature";
    TEXT_URI       : constant UTF8_String := "uri";
    TEXT_CHECKSUM  : constant UTF8_String := "checksum";
+   TEXT_STDOUT    : constant UTF8_String := "stdout";
+   TEXT_STDERR    : constant UTF8_String := "stderr";
 
    type Object is tagged record
       Artifacts : Artifact_Maps.Map := Artifact_Maps.Empty_Map;
+      Stdout    : Unbounded_String;
+      Stderr    : Unbounded_String;
    end record;
 
    function Artifacts_Signatures (Self : Object) return Artifact_Maps.Map is
      (Self.Artifacts);
+
+   function Stdout (Self : Object) return Unbounded_String is
+     (Self.Stdout);
+
+   function Stderr (Self : Object) return Unbounded_String is
+     (Self.Stderr);
 
 end GPR2.Build.Signature;

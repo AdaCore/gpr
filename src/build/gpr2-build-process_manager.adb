@@ -81,6 +81,14 @@ package body GPR2.Build.Process_Manager is
          "The process linked to the action '" & Job.UID.Image &
            "' is still running. Cannot collect the job before it finishes");
 
+      if Length (Stdout) > 0 then
+         Self.Tree_Db.Report (-Stdout);
+      end if;
+
+      if Length (Stderr) > 0 then
+         Self.Tree_Db.Report (-Stderr, To_Stderr => True);
+      end if;
+
       if Proc_Handler.Status = Failed_To_Launch
         and then Self.Stop_On_Fail
       then
@@ -91,9 +99,7 @@ package body GPR2.Build.Process_Manager is
          if Self.Traces.Is_Active then
             Self.Traces.Trace
               ("Job '" & Job.UID.Image & "' returned. Status:" &
-                 Proc_Handler.Process_Status'Img & ", output: '" &
-                 To_String (Stdout) & "'" & ", stderr: '" &
-                 To_String (Stderr) & "'");
+                 Proc_Handler.Process_Status'Img);
          end if;
 
          if Proc_Handler.Process_Status /= PROCESS_STATUS_OK then
@@ -101,8 +107,7 @@ package body GPR2.Build.Process_Manager is
               (Message.Create
                  (Message.Warning,
                   Job.UID.Image & " failed with status" &
-                    Proc_Handler.Process_Status'Image & ASCII.LF &
-                    To_String (Stdout) & To_String (Stderr),
+                    Proc_Handler.Process_Status'Image,
                   Source_Reference.Create (Job.View.Path_Name.Value, 0, 0)));
          end if;
       end if;
@@ -126,7 +131,7 @@ package body GPR2.Build.Process_Manager is
       if Proc_Handler.Status = Finished
         and then Proc_Handler.Process_Status = PROCESS_STATUS_OK
       then
-         Job.Compute_Signature;
+         Job.Compute_Signature (Stdout, Stderr);
       end if;
 
       if Proc_Handler.Status = Finished
@@ -278,11 +283,11 @@ package body GPR2.Build.Process_Manager is
                          (Object'Class (Self),
                           Job          => Act,
                           Proc_Handler => Proc_Handler,
-                          Stdout       => Null_Unbounded_String,
+                          Stdout       => Act.Signature.Stdout,
                           Stderr       =>
                             (if Proc_Handler.Status = Failed_To_Launch
                              then Proc_Handler.Error_Message
-                             else Null_Unbounded_String));
+                             else Act.Signature.Stderr));
 
                      if Job_Status = Abort_Execution then
                         End_Of_Iteration := True;
@@ -573,7 +578,7 @@ package body GPR2.Build.Process_Manager is
 
             --  And then make the result available
             accept Fetch_Content (Content : out Unbounded_String) do
-               Content := Result;
+               Content := Trim (Result, Ada.Strings.Right);
             end Fetch_Content;
 
          else

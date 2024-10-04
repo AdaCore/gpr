@@ -34,7 +34,9 @@ package body GPR2.Reporter is
       end loop;
    end Report;
 
-   procedure Report (Self : in out Object'Class; Message : GPR2.Message.Object)
+   procedure Report
+     (Self      : in out Object'Class;
+      Message   : GPR2.Message.Object)
    is
 
       function Printable (Severity : GPR2.Message.Level_Value) return Boolean;
@@ -59,17 +61,24 @@ package body GPR2.Reporter is
 
          end case;
       end Printable;
+
    begin
       if Printable (Message.Level) then
          Self.Internal_Report (Message);
       end if;
    end Report;
 
-   procedure Report (Self : in out Object'Class; Message : String)
+   procedure Report
+     (Self    : in out Object'Class;
+      Message : String;
+      To_Stderr : Boolean := False)
    is
       use all type GPR2.Message.Level_Value;
       Msg : constant GPR2.Message.Object :=
-         GPR2.Message.Create (Level => End_User, Message => Message);
+              GPR2.Message.Create
+                (Level     => End_User,
+                 Message   => Message,
+                 To_Stderr => To_Stderr);
    begin
       Self.Report (Msg);
    end Report;
