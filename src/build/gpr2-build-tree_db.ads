@@ -79,9 +79,7 @@ package GPR2.Build.Tree_Db is
    function Add_Action
      (Self     : in out Object;
       Action   : in out Actions.Object'Class) return Boolean
-     with Pre =>
-       Self.Is_Defined
-       and then not Self.Has_Action (Action.UID);
+     with Pre => Self.Is_Defined;
 
    function Has_Action
      (Self : Object;
