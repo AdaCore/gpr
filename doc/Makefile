@@ -50,15 +50,7 @@ clean:
 		share/__pycache__
 
 html: force
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
-
-	# Add arbitrary ids to the <h1> ... <h6> HTML elements, as they are used
-	# by pagefind to generate indexes.
-	./add-id.py './html/*.html'
-	./add-id.py './html/gprbuild_ug/*.html'
-
-	# Generate pagefind indexes on generated html files
-	pagefind --site html
+	PAGEFIND_SITE=$(BUILDDIR)/html $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 pdf: force
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/pdf
