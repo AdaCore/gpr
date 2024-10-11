@@ -6,6 +6,7 @@ import sys
 import os
 import time
 import re
+import shutil
 
 sys.path.append('.')
 
@@ -69,12 +70,11 @@ html_theme_options = {
 
 html_static_path = ["_static"]
 
-html_css_files = ["custom.css"]
+html_css_files = []
 
 # Search page using pagefind indexing
-html_additional_pages = {
-  'search': 'search.html', # relative to the _templates directory
-}
+#html_additional_pages = {}
+
 # General information about the project.
 project = DOCS[doc_name]['title']
 
@@ -110,6 +110,12 @@ texinfo_documents = [
 
 latex_table_style = ["standard", "colorrows"]
 
+# If the "pagefind" binary is available, we use it to generate an improved
+# search experience.
+if shutil.which("pagefind") is not None:
+    extensions.append("pagefind-sphinx")
+    templates_path.append("_templates_pagefind") # Overrides the default search.html
+    html_css_files.append("pagefind.css") # Relative to html_static_path
 
 def setup(app):
     app.add_lexer('ada', ada_pygments.AdaLexer)
