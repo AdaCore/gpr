@@ -1,7 +1,7 @@
 import os
 
 from e3.os.process import Run
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS, GPRBUILD
 
 bnr = BuilderAndRunner()
 os.mkdir('obj')
@@ -12,7 +12,7 @@ r = bnr.check_output([GPRLS, '-d', '-Pmulti'])
 print('No build')
 print(r.out)
 
-Run(['gprbuild', '-p', '-q', 'multi.gpr'])
+Run([GPRBUILD, '-p', '-q', 'multi.gpr'])
 
 # second run with .ali (after compilation)
 r = bnr.check_output([GPRLS, '-d', '-Pmulti'])

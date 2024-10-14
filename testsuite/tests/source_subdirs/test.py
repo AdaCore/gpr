@@ -1,4 +1,4 @@
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS, GPRBUILD
 
 
 def execute(cmd):
@@ -11,5 +11,5 @@ def execute(cmd):
 bnr = BuilderAndRunner()
 
 for prj in "prj1", "prj2":
-    bnr.call(["gprbuild", f"-P{prj}", "--src-subdirs=src2", "-q"])
+    bnr.call([GPRBUILD, f"-P{prj}", "--src-subdirs=src2", "-q"])
     execute([GPRLS, f"-P{prj}", "-s", "--src-subdirs=src2"])

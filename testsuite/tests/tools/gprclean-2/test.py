@@ -1,6 +1,6 @@
 import os
 from e3.env import Env
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRCLEAN
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRCLEAN, GPRBUILD
 
 
 def check_paths_deleted(paths):
@@ -19,12 +19,12 @@ else:
     test = 'test'
 
 # build/clean 'files/test' project
-bnr.check_output(['gprbuild', '-p', '-q', '-Pfiles/test'])
+bnr.check_output([GPRBUILD, '-p', '-q', '-Pfiles/test'])
 bnr.check_output([GPRCLEAN, '-r', '-p', '-q', '-Pfiles/test', main_adb])
 check_paths_deleted(['obj', 'obj1'])
 
 # build/clean 'files/test' project
-bnr.check_output(['gprbuild', '-p', '-q', '-Pfiles/test'])
+bnr.check_output([GPRBUILD, '-p', '-q', '-Pfiles/test'])
 bnr.check_output([GPRCLEAN, '-r', '-p', '-q', '-Pfiles/test', test, 'test1'])
 check_paths_deleted(['obj1/test1.o'])
 check_paths_deleted(['obj/test.o'])

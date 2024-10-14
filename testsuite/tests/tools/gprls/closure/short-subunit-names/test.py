@@ -1,10 +1,10 @@
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS, GPRBUILD
 
 bnr = BuilderAndRunner()
 
 try:
 
-    bnr.run(["gprbuild", "-p", "-q", "-Pp.gpr"])
+    bnr.run([GPRBUILD, "-p", "-q", "-Pp.gpr"])
     bnr.call([GPRLS, "-P", "p.gpr", "--closure"])
 
 except Exception as E:

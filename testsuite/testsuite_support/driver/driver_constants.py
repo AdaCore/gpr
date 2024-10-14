@@ -1,6 +1,8 @@
 from enum import IntFlag, Enum
 from e3.env import Env
 
+from testsuite_support.builder_and_runner import GPRBUILD, GPRLS, GPRCONFIG, GPRINSTALL, GPRCLEAN
+
 
 class ObjScnTool(Enum):
     SCN_TOOL_NONE = 0
@@ -367,38 +369,38 @@ SCN_TOOLS_CMD = {
     f"{tool.SCN_TOOL_CUSTOM}.{phase.SCN_PHASE_CUSTOM_SLOT_8}":
         {"cmd": None, "output": None},
     f"{tool.SCN_TOOL_GPRBUILD}.{phase.SCN_PHASE_GPRBUILD_COMPILATION}":
-        {"cmd": ['gprbuild', '-c', f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
+        {"cmd": [GPRBUILD, '-c', f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
                  f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
          "output": output.SCN_OUTPUT_CMD_LINE},
     f"{tool.SCN_TOOL_GPRBUILD}.{phase.SCN_PHASE_GPRBUILD_BIND}":
-        {"cmd": ['gprbuild', '-b', f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
+        {"cmd": [GPRBUILD, '-b', f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
                  f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
          "output": output.SCN_OUTPUT_CMD_LINE},
     f"{tool.SCN_TOOL_GPRBUILD}.{phase.SCN_PHASE_GPRBUILD_LINK}":
-        {"cmd": ['gprbuild', '-l', f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
+        {"cmd": [GPRBUILD, '-l', f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
                  f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
          "output": output.SCN_OUTPUT_CMD_LINE},
     f"{tool.SCN_TOOL_GPRBUILD}.{phase.SCN_PHASE_GPRBUILD_ALL}":
-        {"cmd": ['gprbuild', f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
+        {"cmd": [GPRBUILD, f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
                  f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
          "output": output.SCN_OUTPUT_CMD_LINE},
     f"{tool.SCN_TOOL_GPRCONFIG}.{phase.SCN_PHASE_NONE}":
-        {"cmd": ['gprconfig', '--batch', '--config=Ada', '-o',
+        {"cmd": [GPRCONFIG, '--batch', '--config=Ada', '-o',
                  f'{cmd.SCN_CMD_CONFIG_FILE.value}'],
          "output": None},
     f"{tool.SCN_TOOL_GPRCLEAN}.{phase.SCN_PHASE_NONE}":
-        {"cmd": ['gprclean', '-p', '-r', f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
+        {"cmd": [GPRCLEAN, '-p', '-r', f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
          "output": None},
     f"{tool.SCN_TOOL_GPRCLEAN}.{phase.SCN_PHASE_GPRCLEAN_ALL}":
-        {"cmd": ['gprclean', '-p', '-r', f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}',
+        {"cmd": [GPRCLEAN, '-p', '-r', f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}',
                  '-n'],
          "output": output.SCN_OUTPUT_CMD_LINE},
     f"{tool.SCN_TOOL_GPRLS}.{phase.SCN_PHASE_GPRLS_SOURCE_PARSING}":
-        {"cmd": ['gprls', '--source-parser', '-s',
+        {"cmd": [GPRLS, '--source-parser', '-s',
                  f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
          "output": output.SCN_OUTPUT_FILE_LIST},
     f"{tool.SCN_TOOL_GPRINSTALL}.{phase.SCN_PHASE_GPRINSTALL_ALL}":
-        {"cmd": ['gprinstall', f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}', '-p',
+        {"cmd": [GPRINSTALL, f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}', '-p',
                  '--prefix=inst'],
          "output": output.SCN_OUTPUT_FILE_LIST}
 }

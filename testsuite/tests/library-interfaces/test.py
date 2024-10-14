@@ -1,11 +1,11 @@
 import os
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL, GPRLS
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL, GPRLS, GPRBUILD
 
 
 bnr = BuilderAndRunner()
 OK = True
 
-bnr.run(['gprbuild', '-p', '-q', '-aPmylib', '-Pmain/main.gpr'],
+bnr.run([GPRBUILD, '-p', '-q', '-aPmylib', '-Pmain/main.gpr'],
         output='run.out')
 
 for line in open("run.out"):
@@ -19,7 +19,7 @@ bnr.call([GPRLS, '-U', '-aPmylib', '-Pmain/main.gpr', '--debugF'])
 print('----------')
 bnr.call([GPRLS, '-aPmylib', '-Pmain/main.gpr', '--debugF'])
 
-bnr.run(['gprbuild', '-p', '-q', '-Pmylib/mylib.gpr'], output='run.out')
+bnr.run([GPRBUILD, '-p', '-q', '-Pmylib/mylib.gpr'], output='run.out')
 
 for line in open("run.out"):
     OK = False
@@ -32,7 +32,7 @@ for line in open("run.out"):
     OK = False
     print('3:' + line)
 
-bnr.run(['gprbuild', '-p', '-q',
+bnr.run([GPRBUILD, '-p', '-q',
          '-aPinstall/share/gpr', '-Pmain/main.gpr'], output='run.out')
 for line in open("run.out"):
     OK = False

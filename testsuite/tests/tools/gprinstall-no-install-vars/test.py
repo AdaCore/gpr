@@ -1,6 +1,6 @@
 import os
 
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL, GPRBUILD
 
 
 def printvars():
@@ -18,7 +18,7 @@ def printvars():
 bnr = BuilderAndRunner()
 output = "output.txt"
 
-bnr.run(["gprbuild", "-p", "-Pprj.gpr"])
+bnr.run([GPRBUILD, "-p", "-Pprj.gpr"])
 
 prefix_switch = "--prefix=" + os.getcwd() + "/inst"
 

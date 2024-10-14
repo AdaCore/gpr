@@ -1,14 +1,14 @@
 import os
 
 from e3.os.process import Run
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL, GPRBUILD
 
 bnr = BuilderAndRunner()
 
 os.mkdir('obj')
 os.mkdir('obj/foo')
 
-p = Run(['gprbuild', '-Pp', '--src-subdirs=foo', '-q'])
+p = Run([GPRBUILD, '-Pp', '--src-subdirs=foo', '-q'])
 
 p = bnr.run([GPRINSTALL, '-Pp',
              '--prefix=' + os.path.join(os.getcwd(), 'inst'),

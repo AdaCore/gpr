@@ -1,19 +1,19 @@
 import os
 import subprocess
-from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL, GPRBUILD
 
 bnr = BuilderAndRunner()
 
 # GPRbuild
-subprocess.run("gprbuild -p -q libtst.gpr", shell=True)
+bnr.run([GPRBUILD, "-p", "-q", "libtst.gpr"])
 
 # GPRinstall
-subprocess.run("gprinstall --prefix=install -p libtst.gpr", shell=True)
-subprocess.run("gprinstall --prefix=installm -m -p libtst.gpr", shell=True)
+bnr.run([GPRINSTALL, "--prefix=install", "-p", "libtst.gpr"])
+bnr.run([GPRINSTALL, "--prefix=installm", "-m", "-p", "libtst.gpr"])
 
 # Test installation
-subprocess.run("gprbuild -q -f -aPinstall/share/gpr use/usel.gpr", shell=True)
+bnr.run([GPRBUILD, "-q", "-f", "-aPinstall/share/gpr", "use/usel.gpr"])
 bnr.run(["./use/obj/main"], output=True)
 
-subprocess.run("gprbuild -q -f -aPinstallm/share/gpr use/usel.gpr", shell=True)
+bnr.run([GPRBUILD, "-q", "-f", "-aPinstallm/share/gpr", "use/usel.gpr"])
 bnr.run(["./use/obj/main"], output=True)

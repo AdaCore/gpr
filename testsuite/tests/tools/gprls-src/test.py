@@ -1,4 +1,4 @@
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS, GPRCLEAN
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS, GPRCLEAN, GPRBUILD
 
 
 def execute(cmd):
@@ -15,7 +15,7 @@ execute([GPRLS, "-d", "-P", "pa.gpr", "p0"])
 execute([GPRLS, "-s", "-d", "-P", "pa.gpr", "p0"])
 
 print("building...")
-bnr.call(["gprbuild", "-q", "-P", "pa.gpr"])
+bnr.call([GPRBUILD, "-q", "-P", "pa.gpr"])
 execute([GPRLS, "-d", "-P", "pa.gpr", "p0"])
 execute([GPRLS, "-d", "-a0", "--debugF", "-P", "pa.gpr", "p0"])
 execute([GPRLS, "-s", "--closure", "-P", "pa.gpr", "p6_2"])

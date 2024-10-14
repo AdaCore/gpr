@@ -1,8 +1,8 @@
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS, GPRBUILD
 
 bnr = BuilderAndRunner()
 
-bnr.run(["gprbuild", "-p", "-q", "-Pprj.gpr"])
+bnr.run([GPRBUILD, "-p", "-q", "-Pprj.gpr"])
 
 output = "output.txt"
 

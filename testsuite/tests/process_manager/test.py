@@ -3,7 +3,7 @@ import os.path
 import glob, os
 from e3.os.process import Run
 
-from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRBUILD
 
 bnr = BuilderAndRunner()
 test_number = 1
@@ -49,13 +49,13 @@ def clean_artifacts_and_signatures():
 
 
 # Build the driver used during testing
-Run(["gprbuild", "-p", "-q", os.path.join("write_file", "write_file.gpr")])
+Run([GPRBUILD, "-p", "-q", os.path.join("write_file", "write_file.gpr")])
 
 # Test with instrumentation if any
 bnr.build(project="test.gpr", args=["-p", "-q"])
 
 # Build the tree project to produce object directories used to store signatures
-Run(["gprbuild", "-p", "-q", os.path.join("tree", "main.gpr")])
+Run([GPRBUILD, "-p", "-q", os.path.join("tree", "main.gpr")])
 
 test(
     "No errors",

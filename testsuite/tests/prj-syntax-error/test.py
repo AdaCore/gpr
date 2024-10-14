@@ -1,8 +1,12 @@
 import os
 import subprocess
 
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRBUILD, GPRLS
+
+bnr = BuilderAndRunner()
+
 # GPRbuild
-subprocess.run("gprbuild -p -q prj.gpr", shell=True)
+bnr.run([GPRBUILD, "-p", "-q", "prj.gpr"])
 
 # GPRls
-subprocess.run("gprls prj.gpr", shell=True)
+bnr.run([GPRLS, "prj.gpr"])

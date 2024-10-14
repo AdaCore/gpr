@@ -1,10 +1,10 @@
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS, GPRCLEAN
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS, GPRCLEAN, GPRBUILD
 
 
 bnr = BuilderAndRunner()
 
-bnr.run(["gprbuild", "-p", "-q", "-Padd_body.gpr"])
-bnr.run(["gprbuild", "-p", "-q", "-Padd_spec.gpr"])
+bnr.run([GPRBUILD, "-p", "-q", "-Padd_body.gpr"])
+bnr.run([GPRBUILD, "-p", "-q", "-Padd_spec.gpr"])
 
 bnr.call([GPRLS, "-P", "add_body.gpr"])
 print("------------")
