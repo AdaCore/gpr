@@ -6,8 +6,8 @@ from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL
 bnr = BuilderAndRunner()
 
 # build lib1 & lib2 library
-subprocess.check_output('gprbuild -p -q prj/lib1.gpr', shell=True)
-subprocess.check_output('gprbuild -p -q prj/lib2.gpr', shell=True)
+bnr.check_output([GPRBUILD, '-p', '-q', 'prj/lib1.gpr'])
+bnr.check_output([GPRBUILD, '-p', '-q', 'prj/lib2.gpr'])
 
 # install lib2 library
 bnr.check_output(

@@ -6,6 +6,8 @@ import time
 import json
 import tempfile
 
+from testsuite_support.builder_and_runner import GPRBUILD
+
 
 MAX_COMMAND_LENGTH = 32768
 UNITS_NUMBER = 1000
@@ -88,7 +90,7 @@ end Main;
 
 def compile_with_gprbuild():
     project_file = os.path.join("data", "main.gpr")
-    build_command = f"gprbuild -P {project_file} -j1"
+    build_command = f"{GPRBUILD} -P {project_file} -j1"
     result = subprocess.run(
         build_command,
         shell=True,
@@ -238,7 +240,7 @@ def execute_commands(commands):
 
 def build_gpr2build():
     project_file = os.path.join("gpr2build", "main.gpr")
-    build_command = f"gprbuild -P {project_file}"
+    build_command = f"{GPRBUILD} -P {project_file}"
     result = subprocess.run(
         build_command,
         shell=True,

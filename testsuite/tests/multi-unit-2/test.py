@@ -1,12 +1,11 @@
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS, GPRBUILD
 import subprocess
 
 
-def build():
-    subprocess.check_call("gprbuild -p -q files/p.gpr", shell=True)
-
-
 bnr = BuilderAndRunner()
+
+def build():
+    bnr.check_call([GPRBUILD, "-p", "-q", "files/p.gpr"])
 
 build()
 bnr.build("p.gpr", args=["-p"])

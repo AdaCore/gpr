@@ -1,10 +1,12 @@
 import os
 import subprocess
 
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL, GPRBUILD
+
+bnr = BuilderAndRunner()
 
 
-subprocess.check_output('gprbuild -p -q main_naming.gpr', shell=True)
+bnr.check_output([GPRBUILD, '-p', '-q', 'main_naming.gpr'])
 
 BuilderAndRunner().check_output(
     [GPRINSTALL, '-p', '--prefix=' + os.getcwd() + '/inst',

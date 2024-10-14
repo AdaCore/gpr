@@ -1,6 +1,7 @@
 import os
-import subprocess
-from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL, GPRBUILD
+
+bnr = BuilderAndRunner()
 
 def check_bin(main):
     prefix='install/bin/'
@@ -10,22 +11,19 @@ def check_bin(main):
         print("NOK: "  + main + " not installed")
 
 # For default
-subprocess.run("gprbuild -p -q a2.gpr", shell=True)
+bnr.run([GPRBUILD, "-p", "-q", "a2.gpr"])
 
 #  Standard install
-subprocess.run("gprinstall -q  -p --prefix=install a2.gpr",
-               shell=True)
+bnr.run([GPRINSTALL, "-q", "-p", "--prefix=install", "a2.gpr"])
 
 check_bin("main1")
 check_bin("main2")
 check_bin("main3")
 
-subprocess.run("gprinstall -q --uninstall --prefix=install -r a2.gpr",
-               shell=True)
+bnr.run([GPRINSTALL, "-q", "--uninstall", "--prefix=install", "-r", "a2.gpr"])
 
 #  Mode usage install
-subprocess.run("gprinstall -q  -p --prefix=install --mode=usage a2.gpr",
-               shell=True)
+bnr.run([GPRINSTALL, "-q", "-p", "--prefix=install", "--mode=usage", "a2.gpr"])
 
 check_bin("main1")
 check_bin("main2")

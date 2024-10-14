@@ -1,13 +1,13 @@
 import os
 import subprocess
 
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL, GPRBUILD
 
 bnr = BuilderAndRunner()
 
 # build code.c & lib1 library
 subprocess.check_output('gcc -c prj/code.c -o prj/code.o', shell=True)
-subprocess.check_output('gprbuild -p -q prj/lib1.gpr', shell=True)
+bnr.check_output([GPRBUILD, '-p', '-q', 'prj/lib1.gpr'])
 
 # install lib1 library
 bnr.check_output(

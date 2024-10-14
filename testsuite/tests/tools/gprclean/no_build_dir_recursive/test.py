@@ -1,4 +1,4 @@
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRCLEAN
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRCLEAN, GPRBUILD
 import re
 import os
 
@@ -6,7 +6,7 @@ bnr = BuilderAndRunner()
 
 # Build the imported project (so that it has something to clean), but not
 # the toplevel project (which does not even have its object directory)
-bnr.run(["gprbuild", "-p", "-q", "-Pprj2", "-u"])
+bnr.run([GPRBUILD, "-p", "-q", "-Pprj2", "-u"])
 
 # Running gprclean recursively should still clean the imported project)
 # gprclean should not complain (ie warning, not error) that the object

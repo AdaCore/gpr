@@ -18,7 +18,9 @@ GPRCONFIG = GPR + "config"
 GPRREMOTE = GPR + "remote"
 GPRDOC = GPR + "doc"
 GPRINSPECT = GPR + "inspect"
-GPRTOOLS = [GPRLS, GPRCLEAN, GPRINSTALL, GPRCONFIG, GPRREMOTE, GPRDOC, GPRINSPECT]
+GPRBUILD = GPR + "build"
+GPR2BUILD = "gpr2build"
+GPRTOOLS = [GPRLS, GPRCLEAN, GPRINSTALL, GPRCONFIG, GPRREMOTE, GPRDOC, GPRINSPECT, GPRBUILD, GPR2BUILD]
 
 
 class BuilderAndRunner(object):
@@ -127,14 +129,14 @@ class BuilderAndRunner(object):
             # the installed one from libgpr2. This means we need to ensure
             # that some scenario variables are properly set.
             gprbuild_cmd = (
-                ["gprbuild", "-P", project,
+                [GPRBUILD, "-P", project,
                  "-XGPR2_BUILD=gnatcov", "-XXMLADA_BUILD=static"]
                 + vars
                 + ["--src-subdirs=gnatcov-instr", "--implicit-with=gnatcov_rts"]
                 + args
             )
         else:
-            gprbuild_cmd = ["gprbuild", "-P", project] + vars + args
+            gprbuild_cmd = [GPRBUILD, "-P", project] + vars + args
 
         return self.simple_run(gprbuild_cmd, env=env, output=output)
 

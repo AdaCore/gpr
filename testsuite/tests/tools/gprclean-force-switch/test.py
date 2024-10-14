@@ -1,12 +1,12 @@
 import os
 import stat
 
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRCLEAN
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRCLEAN, GPRBUILD
 
 bnr = BuilderAndRunner()
 
 # build 'p' project
-bnr.run(['gprbuild', '-p', '-q', '-Pp'])
+bnr.run([GPRBUILD, '-p', '-q', '-Pp'])
 
 # set main.ali read only
 os.chmod('main.ali', stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
