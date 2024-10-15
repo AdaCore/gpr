@@ -1,5 +1,5 @@
 description:
     Test for source update
 driver: build_and_run
-project_file: source4
+project_file: test
 main: main

@@ -29,7 +29,6 @@ procedure Main is
 
    begin
       Opt.Add_Switch (Options.P, Project_Name);
-      Opt.Add_Switch (Options.Config, "config.cgpr");
       if not Prj.Load (Opt, Absent_Dir_Error => No_Error) then
          return;
       end if;
@@ -39,17 +38,18 @@ procedure Main is
 
       for Source of Prj.Root_Project.Sources loop
          declare
-            U : constant Optional_Name_Type := Source.Unit.Name;
+            U : constant Optional_Name_Type := Source.Unit.Full_Name;
          begin
             Output_Filename (Source.Path_Name.Value);
 
-            Text_IO.Set_Col (16);
+            Text_IO.Set_Col (20);
             Text_IO.Put ("   language: " & Image (Source.Language));
 
-            Text_IO.Set_Col (33);
+            Text_IO.Set_Col (36);
             Text_IO.Put ("   Kind: " & Source.Kind'Image);
 
             if U /= "" then
+               Text_IO.Set_Col (57);
                Text_IO.Put ("   unit: " & String (U));
             end if;
 
@@ -64,7 +64,7 @@ procedure Main is
 
    procedure Output_Filename (Filename : Path_Name.Full_Name) is
       S : constant String := String (Filename);
-      Test : constant String := "source2";
+      Test : constant String := "separate-parsing";
       I : constant Positive := Strings.Fixed.Index (S, Test);
    begin
       Text_IO.Put (" > " & S (I + Test'Length + 1 .. S'Last));

@@ -6,7 +6,6 @@ with GPR2.Build.Source.Sets;
 pragma Warnings (On);
 with GPR2.Options;
 with GPR2.Path_Name;
-with GPR2.Project.View;
 with GPR2.Project.Tree;
 
 procedure Main is
@@ -27,33 +26,35 @@ procedure Main is
    procedure Check (Project_Name : String) is
       Prj  : Project.Tree.Object;
       Opt  : Options.Object;
-      View : Project.View.Object;
 
    begin
       Opt.Add_Switch (Options.P, Project_Name);
+      Opt.Add_Switch (Options.Config, "config.cgpr");
       if not Prj.Load (Opt, Absent_Dir_Error => No_Error) then
          return;
       end if;
 
-      View := Prj.Root_Project;
-      Text_IO.Put_Line ("Project: " & String (View.Name));
-
+      Text_IO.Put_Line ("Project: " & String (Prj.Root_Project.Name));
       Prj.Update_Sources;
 
-      for Source of View.Sources loop
-         Output_Filename (Source.Path_Name.Value);
+      for Source of Prj.Root_Project.Sources loop
+         declare
+            U : constant Optional_Name_Type := Source.Unit.Name;
+         begin
+            Output_Filename (Source.Path_Name.Value);
 
-         Text_IO.Set_Col (20);
-         Text_IO.Put ("   language: " & Image (Source.Language));
+            Text_IO.Set_Col (16);
+            Text_IO.Put ("   language: " & Image (Source.Language));
 
-         Text_IO.Set_Col (37);
-         Text_IO.Put ("   Kind: " & Source.Kind'Image);
+            Text_IO.Set_Col (33);
+            Text_IO.Put ("   Kind: " & Source.Kind'Image);
 
-         if Source.Has_Units then
-            Text_IO.Put ("   unit: " & String (Source.Unit.Name));
-         end if;
+            if U /= "" then
+               Text_IO.Put ("   unit: " & String (U));
+            end if;
 
-         Text_IO.New_Line;
+            Text_IO.New_Line;
+         end;
       end loop;
    end Check;
 
@@ -63,13 +64,12 @@ procedure Main is
 
    procedure Output_Filename (Filename : Path_Name.Full_Name) is
       S : constant String := String (Filename);
-      Test : constant String := "source1";
+      Test : constant String := "naming-with-cgpr";
       I : constant Positive := Strings.Fixed.Index (S, Test);
    begin
       Text_IO.Put (" > " & S (I + Test'Length + 1 .. S'Last));
    end Output_Filename;
 
 begin
-   Check ("demo1.gpr");
-   Check ("demo2.gpr");
+   Check ("demo.gpr");
 end Main;

@@ -78,7 +78,7 @@ procedure Main is
 
    procedure Output_Filename (Filename : Path_Name.Full_Name) is
       S : constant String := String (Filename);
-      Test : constant String := "extended-definitions3";
+      Test : constant String := "definitions3";
       I : constant Positive := Strings.Fixed.Index (S, Test);
    begin
       Text_IO.Put (" > " & S (I + Test'Length + 1 .. S'Last));

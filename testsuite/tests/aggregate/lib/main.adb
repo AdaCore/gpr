@@ -64,7 +64,7 @@ procedure Main is
 
    procedure Output_Filename (Filename : Path_Name.Full_Name) is
       S : constant String := String (Filename);
-      Test : constant String := "aggregate-lib";
+      Test : constant String := "lib";
       I : constant Positive := Strings.Fixed.Index (S, Test);
    begin
       Text_IO.Put_Line (" > " & S (I + Test'Length + 1 .. S'Last));
