@@ -738,7 +738,7 @@ package Builder of the main project (attribute Switches):
   in order to be instructed when it is allowed to spawn another simultaneous
   compilation jobs.
   
-  If :samp:`-j{num}` is set alongside :samp:`--gnu-make-jobserver`
+  If :samp:`-j{num}` is set alongside :samp:`--autodetect-jobserver`
   the former will be ignored.
 
 * :samp:`--no-indirect-imports`
@@ -1177,7 +1177,7 @@ possibly different languages are spawned concurrently.
 
 Furthermore, GPRbuild is GNU make jobserver compatible when using the switch
 :samp:`--autodetect-jobserver`. This means if GPRbuild is embedded in a GNU make 
-recursive invocation and :samp:`--gnu-make-jobserver` is set, then GPRbuild
+recursive invocation and :samp:`--autodetect-jobserver` is set, then GPRbuild
 will only spawn an additionnal compilation process if GNU make's jobserver
 allows it. This is particularly useful to ensure that GPRbuild comply to the
 ressource management of GNU make.
