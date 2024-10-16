@@ -15,7 +15,49 @@ Case 3 - Altered DAG with empty JSON file (p1: main)
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
 ================================================================
-Case 4 - Altered DAG with random JSON dictionnary (p1: main)
+Case 4a - Altered DAG with random JSON dictionnary (p1: main)
+[Compile Ada] main.adb (p1.gpr)
+  inputs:
+  outputs:
+  - /tree/obj/p1/main.ali
+  - /tree/obj/p1/main.o
+================================================================
+Case 4b - Altered DAG with corrupted signature (1) (p1: main)
+[Compile Ada] main.adb (p1.gpr)
+  inputs:
+  outputs:
+  - /tree/obj/p1/main.ali
+  - /tree/obj/p1/main.o
+================================================================
+Case 4c - Altered DAG with corrupted signature (2) (p1: main)
+[Compile Ada] main.adb (p1.gpr)
+  inputs:
+  outputs:
+  - /tree/obj/p1/main.ali
+  - /tree/obj/p1/main.o
+================================================================
+Case 4d - Altered DAG with corrupted signature (3) (p1: main)
+[Compile Ada] main.adb (p1.gpr)
+  inputs:
+  outputs:
+  - /tree/obj/p1/main.ali
+  - /tree/obj/p1/main.o
+================================================================
+Case 4e - Altered DAG with corrupted signature (4) (p1: main)
+[Compile Ada] main.adb (p1.gpr)
+  inputs:
+  outputs:
+  - /tree/obj/p1/main.ali
+  - /tree/obj/p1/main.o
+================================================================
+Case 4f - Altered DAG with corrupted signature (5) (p1: main)
+[Compile Ada] main.adb (p1.gpr)
+  inputs:
+  outputs:
+  - /tree/obj/p1/main.ali
+  - /tree/obj/p1/main.o
+================================================================
+Case 4g - Altered DAG with corrupted signature (6) (p1: main)
 [Compile Ada] main.adb (p1.gpr)
   inputs:
   outputs:
