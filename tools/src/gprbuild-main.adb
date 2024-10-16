@@ -344,7 +344,7 @@ begin
 
       Process_M.Execute
         (Tree.Artifacts_Database,
-         Jobs         => Opt.Parallel_Compilation,
+         Jobs         => Opt.Parallel_Tasks,
          JSON_File    => Jobs_Json,
          Stop_On_Fail => not Opt.Keep_Going);
    end;

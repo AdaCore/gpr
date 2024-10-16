@@ -33,8 +33,6 @@ package GPRbuild.Options is
       GPR2."<",
       GPR2.Containers.Value_Type_List."=");
 
-   type Compilation_Mode is (Normal, Minimal, Checksum);
-
    type Object is new GPRtools.Options.Base_Options with record
       Single_Build_Per_Obj_Dir : Boolean := False;
       Build_Script             : GPR2.Path_Name.Object;
@@ -48,7 +46,6 @@ package GPRbuild.Options is
       Build_If_Switch_Changes  : Boolean := False;
       Force                    : Boolean := False;
       Keep_Going               : Boolean := False;
-      Mode                     : Compilation_Mode := Normal;
       Multi_Unit_Index         : GPR2.Unit_Index := GPR2.No_Index;
       Output_File              : GPR2.Path_Name.Object;
       Create_Missing_Dirs      : Boolean := False;
@@ -60,9 +57,8 @@ package GPRbuild.Options is
       Link_Phase_Mandated      : Boolean := False;
       Unique_Recompilation     : Boolean := False;
 
-      Parallel_Compilation     : Natural := 1;
-      Parallel_Bind            : Natural := 1;
-      Parallel_Link            : Natural := 1;
+      Parallel_Tasks           : Natural := 1;
+      Json_Summary             : Boolean := False;
 
       Compiler_Args            : Lang_Args.Map;
       Binder_Args              : Lang_Args.Map;
