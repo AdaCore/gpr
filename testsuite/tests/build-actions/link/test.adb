@@ -237,7 +237,7 @@ begin
       Args : Argument_List;
       Env  : Environment_Dict;
    begin
-      Action.Compute_Command (Args, Env);
+      Action.Compute_Command (Args, Env, 1);
       Execute_Command (Args, Action.Working_Directory.String_Value);
    end;
 

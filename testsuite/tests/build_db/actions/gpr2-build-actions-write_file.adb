@@ -7,9 +7,6 @@
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
-with GPR2.Project.Attribute;
-with GPR2.Project.Attribute_Index;
-with GPR2.Project.View.Set;
 
 package body GPR2.Build.Actions.Write_File is
 
@@ -23,8 +20,10 @@ package body GPR2.Build.Actions.Write_File is
    overriding procedure Compute_Command
      (Self : in out Object;
       Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict)
+      Env  : out GNATCOLL.OS.Process.Environment_Dict;
+      Slot : Positive)
    is
+      pragma Unreferenced (Self, Env);
    begin
       Args.Append ("Does-Not-Work!");
    end Compute_Command;
@@ -37,7 +36,6 @@ package body GPR2.Build.Actions.Write_File is
                                            Stdout : Unbounded_String;
                                            Stderr : Unbounded_String) is
       use GPR2.Build.Signature;
-      Art : Artifacts.Files.Object;
    begin
       Self.Signature.Clear;
 

@@ -82,7 +82,7 @@ begin
       Ret     : Integer;
       Process : Process_Handle;
    begin
-      Ada_Comp.Compute_Command (Args, Env);
+      Ada_Comp.Compute_Command (Args, Env, 1);
       FS.Open_Pipe (P_Ro, P_Wo);
       Process := Start (Args => Args, Env => Env, Cwd => Ada_Comp.Working_Directory.String_Value, Stdout => P_Wo, Stderr => FS.Standerr, Inherit_Env => True);
       FS.Close (P_Wo);

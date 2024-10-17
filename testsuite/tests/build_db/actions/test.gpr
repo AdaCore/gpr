@@ -1,6 +1,6 @@
 with "gpr2";
 
-project Prj is
+project Test is
 
    for Object_Dir use "obj";
    for Exec_Dir use ".";
@@ -11,4 +11,4 @@ project Prj is
       for Switches ("Ada") use ("-O2", "-g", "-gnatwu");
    end Compiler;
 
-end Prj;
+end Test;

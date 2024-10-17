@@ -4,12 +4,9 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.Build.Signature;
-with GPR2.Build.Source;
 with GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
 
-private with GPR2.Containers;
 private with GPR2.View_Ids;
 private with Ada.Strings;
 private with Ada.Strings.Fixed;
@@ -52,7 +49,8 @@ package GPR2.Build.Actions.Write_File is
    overriding procedure Compute_Command
      (Self : in out Object;
       Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict);
+      Env  : out GNATCOLL.OS.Process.Environment_Dict;
+      Slot : Positive);
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object;
