@@ -62,7 +62,19 @@ def create_json_dict(name, kind, project):
     if kind == "empty":
         pass
     elif kind == "random":
-        data = {"bla": "blabla", "foo": [{"bar": "foobar"}, {"foo": "barfoo"}]}
+        data = {"bla": 123, "foo": [{"bar": "foobar"}, {"foo": "barfoo"}]}
+    elif kind == "invalid_signature_1":
+        data = {"signature": "foobar"}
+    elif kind == "invalid_signature_2":
+        data = {"signature": [123, 456]}
+    elif kind == "invalid_signature_3":
+        data = {"signature": [{"uri": "not_an_uri"}]}
+    elif kind == "invalid_signature_4":
+        data = {"signature": [{"uri": "file://foo.txt", "checksum": "bad_checksum"}]}
+    elif kind == "invalid_signature_5":
+        data = {"signature": [{"unexpected": 123}]}
+    elif kind == "invalid_signature_6":
+        data = {"signature": [{123: 123}]}
 
     fname = get_json_file(name, project)
     if valid_json_fname(fname):
@@ -137,8 +149,32 @@ print("Case 3 - Altered DAG with empty JSON file (p1: main)")
 empty_json_file(MAIN_COMP, "p1")
 bnr.call(['./main'])
 print("================================================================")
-print("Case 4 - Altered DAG with random JSON dictionnary (p1: main)")
+print("Case 4a - Altered DAG with random JSON dictionnary (p1: main)")
 create_json_dict(MAIN_COMP, "random", "p1")
+bnr.call(['./main'])
+print("================================================================")
+print("Case 4b - Altered DAG with corrupted signature (1) (p1: main)")
+create_json_dict(MAIN_COMP, "invalid_signature_1", "p1")
+bnr.call(['./main'])
+print("================================================================")
+print("Case 4c - Altered DAG with corrupted signature (2) (p1: main)")
+create_json_dict(MAIN_COMP, "invalid_signature_2", "p1")
+bnr.call(['./main'])
+print("================================================================")
+print("Case 4d - Altered DAG with corrupted signature (3) (p1: main)")
+create_json_dict(MAIN_COMP, "invalid_signature_3", "p1")
+bnr.call(['./main'])
+print("================================================================")
+print("Case 4e - Altered DAG with corrupted signature (4) (p1: main)")
+create_json_dict(MAIN_COMP, "invalid_signature_4", "p1")
+bnr.call(['./main'])
+print("================================================================")
+print("Case 4f - Altered DAG with corrupted signature (5) (p1: main)")
+create_json_dict(MAIN_COMP, "invalid_signature_5", "p1")
+bnr.call(['./main'])
+print("================================================================")
+print("Case 4g - Altered DAG with corrupted signature (6) (p1: main)")
+create_json_dict(MAIN_COMP, "invalid_signature_6", "p1")
 bnr.call(['./main'])
 print("================================================================")
 print("Case 5 - Altered DAG with modified checksums (p1: main)")

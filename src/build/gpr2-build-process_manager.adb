@@ -114,7 +114,7 @@ package body GPR2.Build.Process_Manager is
 
       if (Proc_Handler.Status = Finished
           and then Proc_Handler.Process_Status = PROCESS_STATUS_OK)
-        or else (Proc_Handler.Status = Skipped and then Job.Valid_Signature)
+        or else Proc_Handler.Status = Skipped
       then
          if not Job.Post_Command
            ((if Proc_Handler.Status = Skipped then Skipped else Success))
@@ -123,7 +123,9 @@ package body GPR2.Build.Process_Manager is
          end if;
 
          --  Propagate any newly created action
-         if not Self.Tree_Db.Propagate_Actions then
+         if Proc_Handler.Status = Finished
+           and then not Self.Tree_Db.Propagate_Actions
+         then
             return Abort_Execution;
          end if;
       end if;
@@ -283,11 +285,11 @@ package body GPR2.Build.Process_Manager is
                          (Object'Class (Self),
                           Job          => Act,
                           Proc_Handler => Proc_Handler,
-                          Stdout       => Act.Signature.Stdout,
+                          Stdout       => Act.Saved_Stdout,
                           Stderr       =>
                             (if Proc_Handler.Status = Failed_To_Launch
                              then Proc_Handler.Error_Message
-                             else Act.Signature.Stderr));
+                             else Act.Saved_Stderr));
 
                      if Job_Status = Abort_Execution then
                         End_Of_Iteration := True;

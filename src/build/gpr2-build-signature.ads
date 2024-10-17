@@ -7,9 +7,6 @@
 with Ada.Containers;
 with Ada.Strings.Unbounded;
 
-with GNATCOLL;
-with GNATCOLL.JSON;
-
 with GPR2.Build.Artifacts;
 with GPR2.Path_Name;
 with GPR2.Utils.Hash;
@@ -17,7 +14,6 @@ with GPR2.Utils.Hash;
 private with Ada.Containers.Indefinite_Ordered_Maps;
 
 package GPR2.Build.Signature is
-   use GNATCOLL.JSON;
    use Ada.Containers;
    use Utils.Hash;
 
@@ -57,11 +53,11 @@ private
    package Artifact_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (Artifacts.Object'Class, Hash_Digest, Artifacts."<");
 
-   TEXT_SIGNATURE : constant UTF8_String := "signature";
-   TEXT_URI       : constant UTF8_String := "uri";
-   TEXT_CHECKSUM  : constant UTF8_String := "checksum";
-   TEXT_STDOUT    : constant UTF8_String := "stdout";
-   TEXT_STDERR    : constant UTF8_String := "stderr";
+   TEXT_SIGNATURE : constant String := "signature";
+   TEXT_URI       : constant String := "uri";
+   TEXT_CHECKSUM  : constant String := "checksum";
+   TEXT_STDOUT    : constant String := "stdout";
+   TEXT_STDERR    : constant String := "stderr";
 
    type Object is tagged record
       Artifacts : Artifact_Maps.Map := Artifact_Maps.Empty_Map;

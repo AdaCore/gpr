@@ -21,6 +21,15 @@ package body GPR2.Build.Actions.Compile.Ada is
    package PAI renames GPR2.Project.Attribute_Index;
    package Actions renames GPR2.Build.Actions;
 
+   type Reference_Type (Element : not null access Object) is record
+      Ref : Tree_Db.Action_Reference_Type (Element);
+   end record
+     with Implicit_Dereference => Element;
+
+   function Reference
+     (Self : Object;
+      Id   : Action_Id'Class) return Reference_Type;
+
    function Artifacts_Base_Name
      (Unit : GPR2.Build.Compilation_Unit.Object) return Simple_Name;
 
@@ -320,9 +329,12 @@ package body GPR2.Build.Actions.Compile.Ada is
                     "Did not find a view containing unit " &
                      String (Imp));
                Continue := False;
+
+               --  ??? if the CU comes from ALI file, we should fallback to
+               --  getting the dependencies from the source
             end if;
 
-            if CU.Owning_View.Is_Runtime then
+            if Continue and then CU.Owning_View.Is_Runtime then
                --  Since we're linking with libgnarl/libgnat anyway, don't
                --  add runtime units there.
                --  ??? Need to be generalized for library projects
@@ -358,36 +370,43 @@ package body GPR2.Build.Actions.Compile.Ada is
                         Done_Actions : Action_Id_Sets.Set;
 
                      begin
-                        Action := Object (Self.Tree.Action (Id));
-
                         --  The compilation is already existing, need to be
                         --  attached to the current link/bind phases, together
                         --  with all the objects it relies upon
 
-                        New_Actions := Action.Closure;
-                        New_Actions.Include (Action.UID);
+                        New_Actions := Self.Reference (Id).Closure;
+                        New_Actions.Include (Id);
 
                         while not New_Actions.Is_Empty loop
-                           Action :=
-                             Object
-                               (Self.Tree.Action (New_Actions.Last_Element));
-                           New_Actions.Delete_Last;
-                           Done_Actions.Include (Action.UID);
+                           declare
+                              Ref : constant Reference_Type :=
+                                      Self.Reference
+                                        (New_Actions.Last_Element);
+                              Added : Boolean := False;
+                           begin
+                              New_Actions.Delete_Last;
+                              Done_Actions.Include (Ref.UID);
 
-                           for Bind of Binds loop
-                              Self.Tree.Add_Input
-                                (Bind, Action.Ali_File, False);
-                           end loop;
-
-                           for Link of Links loop
-                              if Action.Obj_File.Is_Defined then
+                              for Bind of Binds loop
                                  Self.Tree.Add_Input
-                                   (Link, Action.Obj_File, False);
-                              end if;
-                           end loop;
+                                   (Bind, Ref.Ali_File, False);
+                                 Added := True;
+                              end loop;
 
-                           Closure := Action.Closure.Difference (Done_Actions);
-                           New_Actions.Union (Closure);
+                              for Link of Links loop
+                                 if Ref.Obj_File.Is_Defined then
+                                    Self.Tree.Add_Input
+                                      (Link, Ref.Obj_File, False);
+                                    Added := True;
+                                 end if;
+                              end loop;
+
+                              if Added then
+                                 Closure :=
+                                   Ref.Closure.Difference (Done_Actions);
+                                 New_Actions.Union (Closure);
+                              end if;
+                           end;
                         end loop;
                      end;
                   end if;
@@ -410,15 +429,17 @@ package body GPR2.Build.Actions.Compile.Ada is
       use GPR2.Path_Name;
 
    begin
+      if Status = Skipped then
+         --  No need to post-process anything if the action was skipped
+         return True;
+      end if;
+
       --  Copy the ali file in the library dir if needed
-      if Status /= Skipped
-        and then Self.View.Is_Library
+      if Self.View.Is_Library
         and then not GNATCOLL.OS.FSUtil.Copy_File
           (Self.View.Object_Directory.Compose
              (Self.Ali_File.Path.Simple_Name).String_Value,
-           Self.Ali_File.Path.String_Value,
-           Preserve_Timestamps => False,
-           Preserve_Permissions => False)
+           Self.Ali_File.Path.String_Value)
       then
          Self.Tree.Report
            (GPR2.Message.Create
@@ -447,6 +468,21 @@ package body GPR2.Build.Actions.Compile.Ada is
 
       return Self.On_Tree_Propagation;
    end Post_Command;
+
+   ---------------
+   -- Reference --
+   ---------------
+
+   function Reference
+     (Self : Object;
+      Id   : Action_Id'Class) return Reference_Type
+   is
+      Ref : constant GPR2.Build.Tree_Db.Action_Reference_Type :=
+              Self.Tree.Action_Id_To_Reference (Id);
+   begin
+      return (Element => Object (Ref.Element.all)'Access,
+              Ref     => Ref);
+   end Reference;
 
    ---------
    -- UID --

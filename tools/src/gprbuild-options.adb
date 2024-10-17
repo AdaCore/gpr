@@ -155,21 +155,24 @@ package body GPRbuild.Options is
                  Help      => "Use <nn> processes to compile." &
                               " If 0, use the number of CPUs on the host.",
                  Delimiter => None,
-                 Parameter => "<nn>"));
+                 Parameter => "<nn>",
+                 Hidden    => True));
       Parser.Add_Argument
         (Build_Group,
          Create (Name      => "-jb",
                  Help      => "Use <nn> processes to bind." &
                               " If 0, use the number of CPUs on the host.",
                  Delimiter => None,
-                 Parameter => "<nn>"));
+                 Parameter => "<nn>",
+                 Hidden    => True));
       Parser.Add_Argument
         (Build_Group,
          Create (Name      => "-jl",
                  Help      => "Use <nn> processes to link." &
                               " If 0, use the number of CPUs on the host.",
                  Delimiter => None,
-                 Parameter => "<nn>"));
+                 Parameter => "<nn>",
+                 Hidden    => True));
       Parser.Add_Argument
         (Build_Group,
          Create (Name => "-k",
@@ -180,12 +183,14 @@ package body GPRbuild.Options is
                  Help => "Link only"));
       Parser.Add_Argument
         (Build_Group,
-         Create (Name => "-m",
-                 Help => "Minimum Ada recompilation"));
+         Create (Name   => "-m",
+                 Help   => "Minimum Ada recompilation",
+                 Hidden => True));
       Parser.Add_Argument
         (Build_Group,
-         Create (Name => "-m2",
-                 Help => "Checksum based Ada recompilation"));
+         Create (Name   => "-m2",
+                 Help   => "Checksum based Ada recompilation",
+                 Hidden => True));
       Parser.Add_Argument
         (Build_Group,
          Create (Name           => "-o",
@@ -251,7 +256,7 @@ package body GPRbuild.Options is
       Parser.Add_Argument
         (Build_Group,
          Create
-           ("--display-paths", "",
+           ("--json-summary", "",
             In_Switch_Attr => False,
             Hidden         => True));
 
@@ -521,41 +526,20 @@ package body GPRbuild.Options is
             Val : Natural;
          begin
             Val := Natural'Value (Param);
-            Result.Parallel_Compilation := Val;
-            Result.Parallel_Bind := Val;
-            Result.Parallel_Link := Val;
+            Result.Parallel_Tasks := Val;
          exception
             when Constraint_Error =>
                raise GPR2.Options.Usage_Error with
                  "'" & Param & "' is not a valid parameter for -j";
          end;
 
-      elsif Arg = "-jc" then
-         begin
-            Result.Parallel_Compilation := Natural'Value (Param);
-         exception
-            when Constraint_Error =>
-               raise GPR2.Options.Usage_Error with
-                 "'" & Param & "' is not a valid parameter for -jc";
-         end;
-
-      elsif Arg = "-jb" then
-         begin
-            Result.Parallel_Bind := Natural'Value (Param);
-         exception
-            when Constraint_Error =>
-               raise GPR2.Options.Usage_Error with
-                 "'" & Param & "' is not a valid parameter for -jb";
-         end;
-
-      elsif Arg = "-jl" then
-         begin
-            Result.Parallel_Link := Natural'Value (Param);
-         exception
-            when Constraint_Error =>
-               raise GPR2.Options.Usage_Error with
-                 "'" & Param & "' is not a valid parameter for -jl";
-         end;
+      elsif Arg = "-jc"
+        or else Arg = "-jb"
+        or else Arg = "-jl"
+      then
+         --  Ignore, not applicable with gprbuild2, only there for
+         --  compatibility reason
+         null;
 
       elsif Arg = "-k" then
          Result.Keep_Going := True;
@@ -564,11 +548,10 @@ package body GPRbuild.Options is
          Result.Restricted_Build_Phase := True;
          Result.Link_Phase_Mandated := True;
 
-      elsif Arg = "-m" then
-         Result.Mode := Minimal;
-
-      elsif Arg = "-m2" then
-         Result.Mode := Checksum;
+      elsif Arg = "-m"
+        or else Arg = "-m2"
+      then
+         null;
 
       elsif Arg = "-o" then
          Result.Output_File :=
@@ -592,6 +575,9 @@ package body GPRbuild.Options is
       elsif Arg = "-U" then
          Result.Unique_Recompilation := True;
          Result.Force_Recursive_Build := True;
+
+      elsif Arg = "--json-summary" then
+         Result.Json_Summary := True;
 
       elsif Arg = "-nostdlib" then
          if not Result.Compiler_Args.Contains (GPR2.Ada_Language) then

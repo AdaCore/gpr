@@ -74,13 +74,16 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
      (Tree : GPR2.Project.Tree.Object) return Boolean
    is
       procedure Ensure (Path : GPR2.Path_Name.Object);
+      --  Make sure Path exists and is a directory.
+
       procedure Mkdir_Recursive (Path : GPR2.Path_Name.Object);
+      --  Creates Path recursively
 
       All_Ok : Boolean := True;
 
-      ----------------------
-      -- Create_Or_Report --
-      ----------------------
+      ------------
+      -- Ensure --
+      ------------
 
       procedure Ensure (Path : GPR2.Path_Name.Object)
       is
@@ -159,6 +162,7 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
    Sw_Attr   : GPR2.Project.Attribute.Object;
    Messages  : GPR2.Log.Object;
    Process_M : GPR2.Build.Process_Manager.JSON.Object;
+   Jobs_JSON : GPR2.Path_Name.Object;
 
 begin
 
@@ -333,21 +337,24 @@ begin
       return To_Exit_Status (E_Abort);
    end if;
 
-   declare
-      Jobs_Json : GPR2.Path_Name.Object;
-   begin
+   if Opt.Json_Summary then
       if Tree.Root_Project.Kind in With_Object_Dir_Kind then
-         Jobs_Json := Tree.Root_Project.Object_Directory.Compose ("jobs.json");
+         Jobs_JSON := Tree.Root_Project.Object_Directory.Compose ("jobs.json");
       else
-         Jobs_Json := Tree.Root_Project.Dir_Name.Compose ("jobs.json");
+         Jobs_JSON := Tree.Root_Project.Dir_Name.Compose ("jobs.json");
       end if;
 
       Process_M.Execute
         (Tree.Artifacts_Database,
-         Jobs         => Opt.Parallel_Compilation,
-         JSON_File    => Jobs_Json,
+         Jobs         => Opt.Parallel_Tasks,
+         JSON_File    => Jobs_JSON,
          Stop_On_Fail => not Opt.Keep_Going);
-   end;
+   else
+      GPR2.Build.Process_Manager.Object (Process_M).Execute
+        (Tree.Artifacts_Database,
+         Jobs         => Opt.Parallel_Tasks,
+         Stop_On_Fail => not Opt.Keep_Going);
+   end if;
 
    return To_Exit_Status (E_Success);
 
