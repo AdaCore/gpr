@@ -35,7 +35,8 @@ package GPR2.Build.Actions.Post_Bind is
    overriding procedure Compute_Command
      (Self : in out Object;
       Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict);
+      Env  : out GNATCOLL.OS.Process.Environment_Dict;
+      Slot : Positive);
 
    function Object_File (Self : Object) return Artifacts.Files.Object;
 

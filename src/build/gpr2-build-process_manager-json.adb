@@ -33,7 +33,7 @@ package body GPR2.Build.Process_Manager.JSON is
       if not Job.View.Is_Externally_Built then
          Job_Summary.Set_Field (TEXT_ACTION_UID, Job.UID.Image);
 
-         Job.Compute_Command (Args, Env);
+         Job.Compute_Command (Args, Env, 1);
 
          for Arg of Args loop
             if Length (Cmd) > 0 then

@@ -24,9 +24,10 @@ package body GPR2.Build.Actions.Link is
    overriding procedure Compute_Command
      (Self : in out Object;
       Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict)
+      Env  : out GNATCOLL.OS.Process.Environment_Dict;
+      Slot : Positive)
    is
-      pragma Unreferenced (Env);
+      pragma Unreferenced (Env, Slot);
 
       function Add_Attr
         (Id      : Q_Attribute_Id;

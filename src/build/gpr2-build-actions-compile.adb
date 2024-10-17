@@ -28,7 +28,8 @@ package body GPR2.Build.Actions.Compile is
    overriding procedure Compute_Command
      (Self : in out Object;
       Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict)
+      Env  : out GNATCOLL.OS.Process.Environment_Dict;
+      Slot : Positive)
    is
       procedure Add_Attr
         (Id      : Q_Attribute_Id;
@@ -424,9 +425,13 @@ package body GPR2.Build.Actions.Compile is
       procedure Add_Mapping_File
       is
          use GNATCOLL.OS.FS;
-         Attr     : constant Project.Attribute.Object :=
-                      Self.View.Attribute
-                        (PRA.Compiler.Mapping_File_Switches, Lang_Idx);
+         Attr         : constant Project.Attribute.Object :=
+                          Self.View.Attribute
+                            (PRA.Compiler.Mapping_File_Switches, Lang_Idx);
+         Slot_Img_Raw : constant Filename_Type := Filename_Type (Slot'Image);
+         Slot_Img     : constant Filename_Type :=
+                          Slot_Img_Raw
+                            (Slot_Img_Raw'First + 1 .. Slot_Img_Raw'Last);
       begin
          if not Attr.Is_Defined then
             --  Nothing to do
@@ -435,7 +440,9 @@ package body GPR2.Build.Actions.Compile is
 
          declare
             Map_File : constant Tree_Db.Temp_File :=
-                         Self.Get_Or_Create_Temp_File ("ada_mapping", Global);
+                         Self.Get_Or_Create_Temp_File
+                           (Lang_Img (Self.Lang) & "_mapping_" & Slot_Img,
+                            Global);
             S_Suffix : constant String :=
                          Self.View.Attribute
                            (PRA.Compiler.Mapping_Spec_Suffix,
@@ -448,23 +455,22 @@ package body GPR2.Build.Actions.Compile is
          begin
             if Map_File.FD /= Null_FD then
                for S of Self.View.Visible_Sources loop
-                  if S.Has_Naming_Exception
-                    and then S.Language = Ada_Language
-                  then
+                  if S.Language = Ada_Language then
                      for U of S.Units loop
-                        declare
-                           Key : constant String :=
-                                   To_Lower (String (U.Full_Name)) &
-                                   (if U.Kind = S_Spec
-                                    then S_Suffix else B_Suffix);
-                        begin
-                           Write (Map_File.FD, Key & ASCII.LF);
-                           Write (Map_File.FD,
-                                  String (S.Path_Name.Simple_Name) &
-                                    ASCII.LF);
-                           Write (Map_File.FD,
-                                  S.Path_Name.String_Value & ASCII.LF);
-                        end;
+                        if U.Kind /= S_No_Body then
+                           declare
+                              Key : constant String :=
+                                      To_Lower (String (U.Full_Name)) &
+                              (if U.Kind = S_Spec
+                               then S_Suffix else B_Suffix);
+                           begin
+                              Write
+                                (Map_File.FD,
+                                 Key & ASCII.LF &
+                                 String (S.Path_Name.Simple_Name) & ASCII.LF &
+                                 S.Path_Name.String_Value & ASCII.LF);
+                           end;
+                        end if;
                      end loop;
                   end if;
                end loop;

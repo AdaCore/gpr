@@ -57,9 +57,10 @@ package GPR2.Build.Process_Manager is
    procedure Launch_Job
      (Self           : in out Object;
       Job            : in out Actions.Object'Class;
-      Proc_Handler   : out Process_Handler;
-      Capture_Stdout : out File_Descriptor;
-      Capture_Stderr : out File_Descriptor);
+      Slot_Id        :        Positive;
+      Proc_Handler   :    out Process_Handler;
+      Capture_Stdout :    out File_Descriptor;
+      Capture_Stderr :    out File_Descriptor);
 
    procedure Execute
      (Self         : in out Object;

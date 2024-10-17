@@ -106,7 +106,8 @@ package GPR2.Build.Actions is
    procedure Compute_Command
      (Self : in out Object;
       Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict) is abstract;
+      Env  : out GNATCOLL.OS.Process.Environment_Dict;
+      Slot : Positive) is abstract;
    --  Return the command line and environment corresponding to the action
 
    function Working_Directory
