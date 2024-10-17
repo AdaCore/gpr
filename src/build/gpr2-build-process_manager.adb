@@ -167,10 +167,11 @@ package body GPR2.Build.Process_Manager is
    -------------
 
    procedure Execute
-     (Self         : in out Object;
-      Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
-      Jobs         : Natural := 0;
-      Stop_On_Fail : Boolean := True)
+     (Self            : in out Object;
+      Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
+      Jobs            : Natural := 0;
+      Stop_On_Fail    : Boolean := True;
+      Keep_Temp_Files : Boolean := False)
    is
       Max_Jobs        : constant Natural := Effective_Job_Number (Jobs);
       --  Effective max number of silmutaneous jobs
@@ -381,7 +382,9 @@ package body GPR2.Build.Process_Manager is
                   Stderr       => Stderr);
 
                --  Cleanup the temporary files that are local to the job
-               Act.Cleanup_Temp_Files (Scope => Actions.Local);
+               if not Keep_Temp_Files then
+                  Act.Cleanup_Temp_Files (Scope => Actions.Local);
+               end if;
 
                --  Push back the potentially modified action to the tree_db
                Tree_Db.Action_Id_To_Reference (UID) := Act;
@@ -423,7 +426,9 @@ package body GPR2.Build.Process_Manager is
       end loop;
 
       --  Cleanup the temporary files with global scope
-      Tree_Db.Clear_Temp_Files;
+      if not Keep_Temp_Files then
+         Tree_Db.Clear_Temp_Files;
+      end if;
 
       --  End the allocated listeners.
       for State of States loop

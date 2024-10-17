@@ -63,10 +63,11 @@ package GPR2.Build.Process_Manager is
       Capture_Stderr :    out File_Descriptor);
 
    procedure Execute
-     (Self         : in out Object;
-      Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
-      Jobs         : Natural := 0;
-      Stop_On_Fail : Boolean := True);
+     (Self            : in out Object;
+      Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
+      Jobs            : Natural := 0;
+      Stop_On_Fail    : Boolean := True;
+      Keep_Temp_Files : Boolean := False);
 
    procedure Execution_Post_Process (Self : in out Object) is null;
    --  ??? Did not manage to have this subprogram in the private part

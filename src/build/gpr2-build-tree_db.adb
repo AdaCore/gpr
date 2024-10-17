@@ -316,8 +316,7 @@ package body GPR2.Build.Tree_Db is
             Dead     : Boolean with Unreferenced;
          begin
             for Temp of Data_Ref.Temp_Files loop
-               Dead := GNATCOLL.OS.FSUtil.Remove_File
-                 (Data_Ref.View.Object_Directory.Compose (Temp).String_Value);
+               Dead := GNATCOLL.OS.FSUtil.Remove_File (String (Temp));
             end loop;
 
             Data_Ref.Temp_Files.Clear;
@@ -547,25 +546,26 @@ package body GPR2.Build.Tree_Db is
                    "." & Purpose & ".tmp";
          begin
             Dest := For_View.Object_Directory.Compose (BN);
-            Data.Temp_Files.Insert (Purpose, BN, C, Done);
+            Data.Temp_Files.Insert (Purpose, Dest.Value, C, Done);
 
             pragma Assert (Done);
 
             return
-              (Path_Len => BN'Length,
+              (Path_Len => Dest.Value'Length,
                FD       => GNATCOLL.OS.FS.Open
                              (Dest.String_Value,
                               GNATCOLL.OS.FS.Write_Mode),
-               Path     => BN);
+               Path     => Dest.Value);
          end;
       else
          declare
-            BN : Simple_Name renames View_Tables.Temp_File_Maps.Element (C);
+            Path : Filename_Type renames
+                     View_Tables.Temp_File_Maps.Element (C);
          begin
             return
-              (Path_Len => BN'Length,
+              (Path_Len => Path'Length,
                FD       => GNATCOLL.OS.FS.Null_FD,
-               Path     => BN);
+               Path     => Path);
          end;
       end if;
    end Get_Or_Create_Temp_File;
@@ -821,7 +821,6 @@ package body GPR2.Build.Tree_Db is
 
    procedure Unload (Self : in out Object) is
    begin
-      Self.Clear_Temp_Files;
       Self.Build_Dbs.Clear;
       Self.Tree := null;
       Self.Self := null;

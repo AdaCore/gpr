@@ -101,25 +101,27 @@ package body GPR2.Build.Process_Manager.JSON is
 
    overriding
    procedure Execute
-     (Self         : in out Object;
-      Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
-      Jobs         : Natural := 0;
-      Stop_On_Fail : Boolean := True)
+     (Self            : in out Object;
+      Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
+      Jobs            : Natural := 0;
+      Stop_On_Fail    : Boolean := True;
+      Keep_Temp_Files : Boolean := False)
    is
       JSON_File : constant GPR2.Path_Name.Object :=
                     GPR2.Path_Name.Create_File ("jobs.json");
    begin
       Self.JSON_File := JSON_File;
       GPR2.Build.Process_Manager.Object (Self).Execute
-        (Tree_Db, Jobs, Stop_On_Fail);
+        (Tree_Db, Jobs, Stop_On_Fail, Keep_Temp_Files);
    end Execute;
 
    procedure Execute
-     (Self         : in out Object;
-      Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
-      Jobs         : Natural := 0;
-      JSON_File    : GPR2.Path_Name.Object;
-      Stop_On_Fail : Boolean := True)
+     (Self            : in out Object;
+      Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
+      Jobs            : Natural := 0;
+      JSON_File       : GPR2.Path_Name.Object;
+      Stop_On_Fail    : Boolean := True;
+      Keep_Temp_Files : Boolean := False)
    is
    begin
       if not JSON_File.Is_Defined then
@@ -129,7 +131,7 @@ package body GPR2.Build.Process_Manager.JSON is
 
       Self.JSON_File := JSON_File;
       GPR2.Build.Process_Manager.Object (Self).Execute
-        (Tree_Db, Jobs, Stop_On_Fail);
+        (Tree_Db, Jobs, Stop_On_Fail, Keep_Temp_Files);
    end Execute;
 
    overriding

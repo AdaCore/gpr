@@ -46,6 +46,7 @@ package GPRbuild.Options is
       Build_If_Switch_Changes  : Boolean := False;
       Force                    : Boolean := False;
       Keep_Going               : Boolean := False;
+      Keep_Temp_Files          : Boolean := False;
       Multi_Unit_Index         : GPR2.Unit_Index := GPR2.No_Index;
       Output_File              : GPR2.Path_Name.Object;
       Create_Missing_Dirs      : Boolean := False;
