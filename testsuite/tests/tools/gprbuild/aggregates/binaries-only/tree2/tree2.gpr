@@ -1,0 +1,10 @@
+project Tree2 is
+   for Main use ("a.adb");
+   for Object_Dir use "obj";
+   for Exec_Dir use ".";
+
+   package Compiler is
+      for Switches ("Ada") use ("-O1");
+   end Compiler;
+
+end Tree2;

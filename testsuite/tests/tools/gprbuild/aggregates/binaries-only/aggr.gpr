@@ -1,0 +1,6 @@
+aggregate project Aggr is
+   --  Aggregates two projects with sources that have the same name
+
+   for Project_Files use ("tree1/tree1.gpr", "tree2/tree2.gpr");
+
+end Aggr;

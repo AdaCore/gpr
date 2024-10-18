@@ -1,0 +1,2 @@
+description: check aggregate binary projects with same source names
+driver: python_script
