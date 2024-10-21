@@ -16,14 +16,14 @@ private with GNATCOLL.Traces;
 
 package GPR2.Build.Process_Manager is
 
+   Process_Manager_Error : exception;
+
    type Collect_Status is
       (Continue_Execution,
-       Abort_Execution,
-       Retry_Job);
+       Abort_Execution);
    --  Status return by Collect_Job method.
    --
    --  Continue_Execution: iteration can continue,
-   --  Retry_Job: job should be requeued.
    --  Abort_Execution: abort process manager
 
    type Object is tagged limited private;
