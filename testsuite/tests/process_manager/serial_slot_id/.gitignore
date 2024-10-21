@@ -1,0 +1,6 @@
+jobs.json
+test
+obj
+*.txt
+tree/*.json
+write_file/write_file
