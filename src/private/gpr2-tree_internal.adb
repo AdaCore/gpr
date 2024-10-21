@@ -2487,9 +2487,8 @@ package body GPR2.Tree_Internal is
                  (Self.Root_Project.Path_Name.Value, 0, 0));
          end if;
 
-         --  Check for import of the encapsulated standalone library project
-
-         for Imported of View.Imports loop
+         for Imported of View.Imports.Union (View.Limited_Imports) loop
+            --  Check for import of the encapsulated standalone library project
             if Imported.Is_Library
               and then Imported.Library_Standalone = Encapsulated
             then
@@ -2499,16 +2498,15 @@ package body GPR2.Tree_Internal is
                   & """ can't be imported",
                   Source_Reference.Create (View.Path_Name.Value, 0, 0));
             end if;
-         end loop;
 
-         for Imported of View.Limited_Imports loop
-            if Imported.Is_Library
-              and then Imported.Library_Standalone = Encapsulated
+            --  Check for import of aggregate project
+            if View.Kind /= K_Aggregate
+              and then Imported.Kind = K_Aggregate
             then
-               Self.Warning
-                 ("encapsulated standalone library project """
+               Self.Error
+                 ("aggregate project """
                   & String (Imported.Name)
-                  & """ can't be imported",
+                  & """ can only be imported by an aggregate project",
                   Source_Reference.Create (View.Path_Name.Value, 0, 0));
             end if;
          end loop;

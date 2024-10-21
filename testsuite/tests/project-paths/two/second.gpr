@@ -1,4 +1,6 @@
 
-aggregate project second is
+aggregate library project second is
    for Project_Files use ("last.gpr");
+   for Library_Name use "two";
+   for Library_Dir use "lib";
 end second;
