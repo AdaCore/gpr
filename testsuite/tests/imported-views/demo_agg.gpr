@@ -1,0 +1,5 @@
+aggregate project Demo_Agg is
+
+   for Project_Files use ("demo1.gpr");
+
+end Demo_Agg;

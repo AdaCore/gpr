@@ -1,0 +1,4 @@
+with "demo_agg.gpr";
+project Demo_Error_Aggimport is
+
+end Demo_Error_Aggimport;
