@@ -340,7 +340,7 @@ is
                  Name     => Toolchain_Name (L));
 
             GPR2.Configuration_Internal.Resolve_Runtime_Dir
-              (Settings     => Result (Descr_Index),
+              (Descriptor   => Result (Descr_Index),
                Project_Path => Project_Path,
                Environment  => Environment,
                Message      => Error);

@@ -17,7 +17,7 @@ package body GPR2.Configuration_Internal is
    -------------------------
 
    procedure Resolve_Runtime_Dir
-     (Settings     : in out GPR2.Project.Configuration.Description;
+     (Descriptor   : in out GPR2.Project.Configuration.Description;
       Project_Path : GPR2.Path_Name.Object;
       Environment  : GPR2.Environment.Object;
       Message      : out GPR2.Message.Object)
@@ -91,41 +91,48 @@ package body GPR2.Configuration_Internal is
 
       Message := GPR2.Message.Undefined;
 
-      if Language (Settings) = Ada_Language
-        and then Runtime (Settings) /= No_Name
-        and then not GNAT.OS_Lib.Is_Absolute_Path (String (Runtime (Settings)))
+      if Language (Descriptor) = Ada_Language
+        and then Runtime (Descriptor) /= No_Name
+        and then not GNAT.OS_Lib.Is_Absolute_Path
+                       (String (Runtime (Descriptor)))
       then
          declare
-            Runtime_Dir : Path_Name.Object :=
-              Path_Name.Create_Directory
-                (Filename_Optional (Runtime (Settings)),
-                 Filename_Optional (Project_Path.Dir_Name));
+            Runtime_Dir : Path_Name.Object;
          begin
-            if Runtime_Dir.Exists and then Check_Runtime_Dir (Runtime_Dir) then
-               Settings :=
-                 Project.Configuration.Create
-                   (Language => Language (Settings),
-                    Version  => Version (Settings),
-                    Runtime  => Optional_Name_Type (Runtime_Dir.Value),
-                    Path     => Path (Settings),
-                    Name     => Name (Settings));
+            if Project_Path.Is_Defined then
+               Runtime_Dir :=
+                 Path_Name.Create_Directory
+                   (Filename_Optional (Runtime (Descriptor)),
+                    Filename_Optional (Project_Path.Dir_Name));
+
+               if Runtime_Dir.Exists
+                 and then Check_Runtime_Dir (Runtime_Dir)
+               then
+                  Descriptor :=
+                    Project.Configuration.Create
+                      (Language => Language (Descriptor),
+                       Version  => Version (Descriptor),
+                       Runtime  => Optional_Name_Type (Runtime_Dir.Value),
+                       Path     => Path (Descriptor),
+                       Name     => Name (Descriptor));
+               end if;
             end if;
 
             if Environment.Exists ("GPR_RUNTIME_PATH") then
                Runtime_Dir := Locate_Runtime
-                 (Filename_Optional (Runtime (Settings)),
+                 (Filename_Optional (Runtime (Descriptor)),
                   Environment.Value ("GPR_RUNTIME_PATH"));
 
                if Runtime_Dir.Is_Defined and then Runtime_Dir.Exists then
                   if Check_Runtime_Dir (Runtime_Dir) then
-                     Settings :=
+                     Descriptor :=
                        Project.Configuration.Create
-                         (Language => Language (Settings),
-                          Version  => Version (Settings),
+                         (Language => Language (Descriptor),
+                          Version  => Version (Descriptor),
                           Runtime  =>
                             Optional_Name_Type (Runtime_Dir.Value),
-                          Path     => Path (Settings),
-                          Name     => Name (Settings));
+                          Path     => Path (Descriptor),
+                          Name     => Name (Descriptor));
 
                   else
                      Message :=
@@ -133,8 +140,11 @@ package body GPR2.Configuration_Internal is
                          (GPR2.Message.Error,
                           "invalid runtime directory " &
                             Runtime_Dir.String_Value,
-                          Sloc => Source_Reference.Create
-                            (Project_Path.Value, 0, 0));
+                          Sloc =>
+                            (if Project_Path.Is_Defined
+                             then Source_Reference.Create
+                               (Project_Path.Value, 0, 0)
+                             else Source_Reference.Undefined));
                   end if;
                end if;
             end if;
