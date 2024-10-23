@@ -46,4 +46,5 @@ begin
    Check ("demo1.gpr");
    Check ("demo2.gpr");
    Check ("demo4.gpr");
+   Check ("demo_error_aggimport.gpr");
 end Main;
