@@ -167,24 +167,33 @@ package body GPR2.Build.Process_Manager is
    -------------
 
    procedure Execute
-     (Self         : in out Object;
-      Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
-      Jobs         : Natural := 0;
-      Stop_On_Fail : Boolean := True)
+     (Self            : in out Object;
+      Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
+      Jobs            : Natural := 0;
+      Stop_On_Fail    : Boolean := True;
+      Keep_Temp_Files : Boolean := False)
    is
-      Max_Jobs : constant Natural := Effective_Job_Number (Jobs);
+      Max_Jobs        : constant Natural := Effective_Job_Number (Jobs);
       --  Effective max number of silmutaneous jobs
 
-      Active_Procs : GOP.Process_Array (1 .. Max_Jobs) :=
-                       (others => GOP.Invalid_Handle);
+      Active_Procs    : GOP.Process_Array (1 .. Max_Jobs) :=
+                          (others => GOP.Invalid_Handle);
       --  Associate a job slot to a process in the graph. Current active PID
       --  are in the 1 .. Active_Jobs range.
 
-      States : array (1 .. Max_Jobs) of Proc_State;
+      Serialized_Slot : array (1 .. Max_Jobs) of Boolean := (others => False);
+      --  Slot id used to ensure each action has access to an id ensuring that
+      --  no two actions with the same id can be executed at the same time.
+
+      Slot_Ids        : array (1 .. Max_Jobs) of Natural :=
+                          (others => 0);
+      --  Translates a slot in Active_Procs as a slot in Serialized_Slots
+
+      States          : array (1 .. Max_Jobs) of Proc_State;
       --  State associated with each active processes
 
       procedure Allocate_Listeners
-         (Proc_Id : Natural; Stdout_FD, Stderr_FD : FS.File_Descriptor);
+        (Proc_Id : Natural; Stdout_FD, Stderr_FD : FS.File_Descriptor);
       --  Allocate listeners
 
       ------------------------
@@ -195,23 +204,24 @@ package body GPR2.Build.Process_Manager is
          (Proc_Id : Natural; Stdout_FD, Stderr_FD : FS.File_Descriptor)
       is
       begin
-         --  Allocate listener for stdout
-         if Stdout_FD /= FS.Invalid_FD then
-            if States (Proc_Id).Stdout_Listener = null then
-               States (Proc_Id).Stdout_Listener := new Listener;
-            end if;
-            States (Proc_Id).Stdout_Active := True;
-            States (Proc_Id).Stdout_Listener.Listen (Stdout_FD);
+         if Stdout_FD = FS.Invalid_FD or else Stderr_FD = FS.Invalid_FD then
+            raise Process_Manager_Error with
+              "Error when spawning a subprocess: cannot redirect I/O";
          end if;
 
-         --  Likewise for stderr
-         if Stderr_FD /= FS.Invalid_FD then
-            if States (Proc_Id).Stderr_Listener = null then
-               States (Proc_Id).Stderr_Listener := new Listener;
-            end if;
-            States (Proc_Id).Stderr_Active := True;
-            States (Proc_Id).Stderr_Listener.Listen (Stderr_FD);
+         --  Allocate listener for stdout
+         if States (Proc_Id).Stdout_Listener = null then
+            States (Proc_Id).Stdout_Listener := new Listener;
          end if;
+         States (Proc_Id).Stdout_Active := True;
+         States (Proc_Id).Stdout_Listener.Listen (Stdout_FD);
+
+         --  Likewise for stderr
+         if States (Proc_Id).Stderr_Listener = null then
+            States (Proc_Id).Stderr_Listener := new Listener;
+         end if;
+         States (Proc_Id).Stderr_Active := True;
+         States (Proc_Id).Stderr_Listener.Listen (Stderr_FD);
       end Allocate_Listeners;
 
       Active_Jobs : Natural := 0;
@@ -224,6 +234,11 @@ package body GPR2.Build.Process_Manager is
       Proc_Id          : Integer;
       Job_Status       : Collect_Status;
       End_Of_Iteration : Boolean := False;
+      Available_Slot   : Natural;
+      --  This slot allows to get some Id where we know the previous action
+      --  having used it is done. So serialized calls can be performed on this
+      --  basis if needed.
+
       Stdout, Stderr   : Unbounded_String;
       Graph            : constant access GDG.Directed_Graph :=
                            Tree_Db.Actions_Graph_Access;
@@ -236,153 +251,164 @@ package body GPR2.Build.Process_Manager is
       Graph.Start_Iterator (Enable_Visiting_State => True);
 
       loop
-         if not End_Of_Iteration then
-            --  Launch as many process as possible
-            while Active_Jobs < Max_Jobs loop
-               begin
-                  End_Of_Iteration := not Graph.Next (Node);
-               exception
-                  when E : GNATCOLL.Directed_Graph.DG_Error =>
-                     Tree_Db.Report
-                       ("error: internal error in the process manager (" &
-                          Ada.Exceptions.Exception_Message (E) & ")");
-                     Self.Traces.Trace ("!!! Internal error in the DAG");
-                     Self.Traces.Trace
-                       (Ada.Exceptions.Exception_Information (E));
-                     End_Of_Iteration := True;
-               end;
+         --  Launch as many process as possible
+         while Active_Jobs < Max_Jobs and then not End_Of_Iteration loop
+            begin
+               End_Of_Iteration := not Graph.Next (Node);
+            exception
+               when E : GNATCOLL.Directed_Graph.DG_Error =>
+                  Tree_Db.Report
+                    ("error: internal error in the process manager (" &
+                       Ada.Exceptions.Exception_Message (E) & ")");
+                  Self.Traces.Trace ("!!! Internal error in the DAG");
+                  Self.Traces.Trace
+                    (Ada.Exceptions.Exception_Information (E));
+                  End_Of_Iteration := True;
+            end;
 
-               exit when End_Of_Iteration or else Node = GDG.No_Node;
+            exit when End_Of_Iteration or else Node = GDG.No_Node;
 
-               declare
-                  Act : constant Build.Tree_Db.Action_Reference_Type :=
-                          Tree_Db.Action_Id_To_Reference
-                            (Tree_Db.Action_Id (Node));
-               begin
-                  Self.Launch_Job (Act, Proc_Handler, P_Stdout, P_Stderr);
-                  Self.Stats.Total_Jobs := Self.Stats.Total_Jobs + 1;
+            declare
+               Act : constant Build.Tree_Db.Action_Reference_Type :=
+                       Tree_Db.Action_Id_To_Reference
+                         (Tree_Db.Action_Id (Node));
+            begin
+               for J in Serialized_Slot'Range loop
+                  if not Serialized_Slot (J) then
+                     Available_Slot := J;
 
-                  if Proc_Handler.Status = Running then
-                     Active_Jobs := Active_Jobs + 1;
-                     Active_Procs (Active_Jobs) := Proc_Handler.Handle;
-                     States (Active_Jobs).Node  := Node;
-                     Allocate_Listeners (Active_Jobs, P_Stdout, P_Stderr);
-
-                     if Active_Jobs > Self.Max_Active_Jobs then
-                        Self.Stats.Max_Active_Jobs := Active_Jobs;
-                     end if;
-                  else
-
-                     Graph.Complete_Visit (Node);
-
-                     pragma Assert
-                       (Proc_Handler.Status /= Finished,
-                        "Process handler status shall not be 'Finished' " &
-                          "at this stage");
-
-                     Job_Status :=
-                       Collect_Job
-                         (Object'Class (Self),
-                          Job          => Act,
-                          Proc_Handler => Proc_Handler,
-                          Stdout       => Act.Saved_Stdout,
-                          Stderr       =>
-                            (if Proc_Handler.Status = Failed_To_Launch
-                             then Proc_Handler.Error_Message
-                             else Act.Saved_Stderr));
-
-                     if Job_Status = Abort_Execution then
-                        End_Of_Iteration := True;
-                        exit;
-
-                     elsif Job_Status = Retry_Job then
-                        --  ??? add API to pass node from visiting to non
-                        --  visited state
-
-                        raise Program_Error;
-                     end if;
+                     exit;
                   end if;
-               end;
-            end loop;
-         end if;
+               end loop;
+
+               Self.Launch_Job
+                 (Act, Available_Slot, Proc_Handler, P_Stdout, P_Stderr);
+               Self.Stats.Total_Jobs := Self.Stats.Total_Jobs + 1;
+
+               if Proc_Handler.Status = Running then
+                  Active_Jobs := Active_Jobs + 1;
+                  Active_Procs (Active_Jobs) := Proc_Handler.Handle;
+                  States (Active_Jobs).Node  := Node;
+                  Allocate_Listeners (Active_Jobs, P_Stdout, P_Stderr);
+                  Serialized_Slot (Available_Slot) := True;
+                  Slot_Ids (Active_Jobs) := Available_Slot;
+
+                  if Active_Jobs > Self.Max_Active_Jobs then
+                     Self.Stats.Max_Active_Jobs := Active_Jobs;
+                  end if;
+
+               else
+                  Graph.Complete_Visit (Node);
+
+                  if Proc_Handler.Status = Finished then
+                     Self.Traces.Trace
+                       ("Error: Process handler status shall not be " &
+                          "'Finished' at this stage");
+                     raise Process_Manager_Error with
+                       "Invalid process manager internal state, aborting";
+                  end if;
+
+                  Job_Status :=
+                    Collect_Job
+                      (Object'Class (Self),
+                       Job          => Act,
+                       Proc_Handler => Proc_Handler,
+                       Stdout       => Act.Saved_Stdout,
+                       Stderr       =>
+                         (if Proc_Handler.Status = Failed_To_Launch
+                          then Proc_Handler.Error_Message
+                          else Act.Saved_Stderr));
+
+                  if Job_Status = Abort_Execution then
+                     End_Of_Iteration := True;
+                     exit;
+                  end if;
+               end if;
+            exception
+               when E : Process_Manager_Error =>
+                  End_Of_Iteration := True;
+                  Tree_Db.Report ("Fatal error: " &
+                                    Ada.Exceptions.Exception_Message (E));
+               when E : others =>
+                  End_Of_Iteration := True;
+                  Tree_Db.Report ("Unexpected exception:");
+                  Tree_Db.Report (Ada.Exceptions.Exception_Information (E));
+            end;
+         end loop;
+
+         --  Exit when no active jobs
+
+         exit when Active_Jobs = 0;
 
          --  Wait for a job to finish
-         if Active_Jobs > 0 then
-            --  ??? Set a timeout as infinite is not working well on linux
-            Proc_Id := GOP.Wait_For_Processes
-               (Active_Procs (1 .. Active_Jobs), Timeout => 3600.0);
 
-            if Proc_Id > 0 then
-               Graph.Complete_Visit (States (Proc_Id).Node);
+         --  ??? Set a timeout as infinite is not working well on linux
+         Proc_Id := GOP.Wait_For_Processes
+           (Active_Procs (1 .. Active_Jobs), Timeout => 3600.0);
 
-               --  A process has finished. Call wait to finalize it and get
-               --  the final process status.
-               Proc_Handler :=
-                 (Status         => Finished,
-                  Process_Status => GOP.Wait (Active_Procs (Proc_Id)));
+         if Proc_Id > 0 then
+            Graph.Complete_Visit (States (Proc_Id).Node);
 
-               --  Fetch captured stdout and stderr if necessary
+            --  A process has finished. Call wait to finalize it and get
+            --  the final process status.
+            Proc_Handler :=
+              (Status         => Finished,
+               Process_Status => GOP.Wait (Active_Procs (Proc_Id)));
 
-               if States (Proc_Id).Stdout_Active then
-                  States (Proc_Id).Stdout_Listener.Fetch_Content (Stdout);
-                  States (Proc_Id).Stdout_Active := False;
+            --  Fetch captured stdout and stderr if necessary
 
-               else
-                  Stdout := To_Unbounded_String ("");
-               end if;
+            States (Proc_Id).Stdout_Listener.Fetch_Content (Stdout);
+            States (Proc_Id).Stdout_Active := False;
 
-               if States (Proc_Id).Stderr_Active then
-                  States (Proc_Id).Stderr_Listener.Fetch_Content (Stderr);
-                  States (Proc_Id).Stderr_Active := False;
-               else
-                  Stderr := To_Unbounded_String ("");
-               end if;
+            States (Proc_Id).Stderr_Listener.Fetch_Content (Stderr);
+            States (Proc_Id).Stderr_Active := False;
 
-               declare
-                  UID : constant Actions.Action_Id'Class :=
-                          Tree_Db.Action_Id (States (Proc_Id).Node);
-                  Act : Actions.Object'Class := Self.Tree_Db.Action (UID);
-               begin
-                  --  Call collect
-                  Job_Status := Collect_Job
-                    (Object'Class (Self),
-                     Job          => Act,
-                     Proc_Handler => Proc_Handler,
-                     Stdout       => Stdout,
-                     Stderr       => Stderr);
+            declare
+               UID : constant Actions.Action_Id'Class :=
+                       Tree_Db.Action_Id (States (Proc_Id).Node);
+               Act : Actions.Object'Class := Self.Tree_Db.Action (UID);
+            begin
+               --  Call collect
+               Job_Status := Collect_Job
+                 (Object'Class (Self),
+                  Job          => Act,
+                  Proc_Handler => Proc_Handler,
+                  Stdout       => Stdout,
+                  Stderr       => Stderr);
 
-                  --  Cleanup the temporary files that are local to the job
+               --  Cleanup the temporary files that are local to the job
+               if not Keep_Temp_Files then
                   Act.Cleanup_Temp_Files (Scope => Actions.Local);
+               end if;
 
-                  --  Push back the potentially modified action to the tree_db
-                  Tree_Db.Action_Id_To_Reference (UID) := Act;
+               --  Push back the potentially modified action to the tree_db
+               Tree_Db.Action_Id_To_Reference (UID) := Act;
+            end;
+
+            --  Adjust execution depending on returned value
+            if Job_Status = Abort_Execution then
+               End_Of_Iteration := True;
+            end if;
+
+            --  Remove job from the list of active jobs.
+            Active_Jobs := Active_Jobs - 1;
+
+            if Active_Jobs > 0 and then Proc_Id <= Active_Jobs then
+               declare
+                  Tmp : constant Proc_State := States (Proc_Id);
+               begin
+                  Active_Procs (Proc_Id) := Active_Procs (Active_Jobs + 1);
+
+                  --  Real swap of state is necessarty in order not to lose
+                  --  track of already allocated listeners.
+                  States (Proc_Id) := States (Active_Jobs + 1);
+                  States (Active_Jobs + 1) := Tmp;
+
+                  --  Available slot for serialization is now free
+                  Serialized_Slot (Slot_Ids (Proc_Id)) := False;
+                  --  Adjust the translation table
+                  Slot_Ids (Proc_Id) := Slot_Ids (Active_Jobs + 1);
                end;
-
-               --  Adjust execution depending on returned value
-               if Job_Status = Abort_Execution then
-                  End_Of_Iteration := True;
-
-               elsif Job_Status = Retry_Job then
-                  --  ??? add API to pass node from visiting to non visited
-                  --  state
-                  raise Program_Error;
-               end if;
-
-               --  Remove job from the list of active jobs.
-               Active_Jobs := Active_Jobs - 1;
-
-               if Active_Jobs > 0 and then Proc_Id <= Active_Jobs then
-                  declare
-                     Tmp : constant Proc_State := States (Proc_Id);
-                  begin
-                     Active_Procs (Proc_Id) := Active_Procs (Active_Jobs + 1);
-
-                     --  Real swap of state is necessarty in order not to lose
-                     --  track of already allocated listeners.
-                     States (Proc_Id) := States (Active_Jobs + 1);
-                     States (Active_Jobs + 1) := Tmp;
-                  end;
-               end if;
             end if;
          end if;
 
@@ -390,15 +416,9 @@ package body GPR2.Build.Process_Manager is
       end loop;
 
       --  Cleanup the temporary files with global scope
-
-      declare
-         Actions : Build.Tree_Db.Actions_List'Class :=
-                     Self.Tree_Db.All_Actions;
-      begin
-         for A of Actions loop
-            A.Cleanup_Temp_Files (Build.Actions.Global);
-         end loop;
-      end;
+      if not Keep_Temp_Files then
+         Tree_Db.Clear_Temp_Files;
+      end if;
 
       --  End the allocated listeners.
       for State of States loop
@@ -421,11 +441,12 @@ package body GPR2.Build.Process_Manager is
    ----------------
 
    procedure Launch_Job
-      (Self           : in out Object;
-       Job            : in out Actions.Object'Class;
-       Proc_Handler   : out Process_Handler;
-       Capture_Stdout : out File_Descriptor;
-       Capture_Stderr : out File_Descriptor)
+     (Self           : in out Object;
+      Job            : in out Actions.Object'Class;
+      Slot_Id        :        Positive;
+      Proc_Handler   :    out Process_Handler;
+      Capture_Stdout :    out File_Descriptor;
+      Capture_Stderr :    out File_Descriptor)
    is
       package FS renames GNATCOLL.OS.FS;
       use GPR2.Reporter;
@@ -472,9 +493,6 @@ package body GPR2.Build.Process_Manager is
          return;
       end if;
 
-      Job.Compute_Command (Args, Env);
-      Cwd := Job.Working_Directory;
-
       if Job.Skip then
          if Self.Traces.Is_Active then
             Self.Traces.Trace
@@ -485,15 +503,21 @@ package body GPR2.Build.Process_Manager is
 
          return;
 
-      elsif Args.Is_Empty then
-         if Self.Traces.Is_Active then
-            Self.Traces.Trace
-              ("job arguments is empty, skipping '"  & Job.UID.Image & "'");
+      else
+         Job.Compute_Command (Args, Env, Slot_Id);
+         Cwd := Job.Working_Directory;
+
+
+         if Args.Is_Empty then
+            if Self.Traces.Is_Active then
+               Self.Traces.Trace
+                 ("job arguments is empty, skipping '"  & Job.UID.Image & "'");
+            end if;
+
+            Proc_Handler := Process_Handler'(Status => Skipped);
+
+            return;
          end if;
-
-         Proc_Handler := Process_Handler'(Status => Skipped);
-
-         return;
       end if;
 
       if Self.Traces.Is_Active then

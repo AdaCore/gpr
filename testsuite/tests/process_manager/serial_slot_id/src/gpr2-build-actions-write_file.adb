@@ -23,13 +23,19 @@ package body GPR2.Build.Actions.Write_File is
    overriding procedure Compute_Command
      (Self : in out Object;
       Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict)
+      Env  : out GNATCOLL.OS.Process.Environment_Dict;
+      Slot : Positive)
    is
+      function Img (J : Integer) return String is
+         Ret : constant String := J'Image;
+      begin
+         return Ret (Ret'First + 1 .. Ret'Last);
+      end Img;
    begin
       Args.Append (Self.Executable.String_Value);
-      Args.Append (Ada.Strings.Fixed.Trim (Self.Ret_Code'Img, Both));
-      Args.Append (String (Output_File (Self.Index).Path.Simple_Name));
-      Args.Append (Ada.Strings.Fixed.Trim (Self.Index'Img, Both));
+      Args.Append (Img (Self.Ret_Code));
+      Args.Append (Img (Self.Index));
+      Args.Append (Img (Slot));
 
       if Self.With_Wait > 0 then
          Args.Append (String (Output_File (Self.With_Wait).Path.Simple_Name));

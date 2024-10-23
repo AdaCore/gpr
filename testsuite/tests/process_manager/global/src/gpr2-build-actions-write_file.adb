@@ -7,6 +7,9 @@
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
+with GPR2.Project.Attribute;
+with GPR2.Project.Attribute_Index;
+with GPR2.Project.View.Set;
 
 package body GPR2.Build.Actions.Write_File is
 
@@ -23,9 +26,15 @@ package body GPR2.Build.Actions.Write_File is
       Env  : out GNATCOLL.OS.Process.Environment_Dict;
       Slot : Positive)
    is
-      pragma Unreferenced (Self, Env);
    begin
-      Args.Append ("Does-Not-Work!");
+      Args.Append (Self.Executable.String_Value);
+      Args.Append (Ada.Strings.Fixed.Trim (Self.Ret_Code'Img, Both));
+      Args.Append (String (Output_File (Self.Index).Path.Simple_Name));
+      Args.Append (Ada.Strings.Fixed.Trim (Self.Index'Img, Both));
+
+      if Self.With_Wait > 0 then
+         Args.Append (String (Output_File (Self.With_Wait).Path.Simple_Name));
+      end if;
    end Compute_Command;
 
    -----------------------
@@ -36,6 +45,7 @@ package body GPR2.Build.Actions.Write_File is
                                            Stdout : Unbounded_String;
                                            Stderr : Unbounded_String) is
       use GPR2.Build.Signature;
+      Art : Artifacts.Files.Object;
    begin
       Self.Signature.Clear;
 
@@ -58,11 +68,19 @@ package body GPR2.Build.Actions.Write_File is
    procedure Initialize
     (Self       : in out Object;
      Ctxt       : GPR2.Project.View.Object;
-     Index      : Integer)
+     Index      : Integer;
+     Executable : GPR2.Path_Name.Object;
+     Ret_Code   : Integer := 0;
+     With_Deps  : Boolean := True;
+     With_Wait  : Natural := 0)
    is
    begin
       Self.Ctxt       := Ctxt;
       Self.Index      := Index;
+      Self.Ret_Code   := Ret_Code;
+      Self.With_Deps  := With_Deps;
+      Self.Executable := Executable;
+      Self.With_Wait  := With_Wait;
       Self.Traces     := Create ("ACTION_WRITE_FILE");
    end Initialize;
 
@@ -74,7 +92,7 @@ package body GPR2.Build.Actions.Write_File is
      (Self : Object;
       Db   : in out GPR2.Build.Tree_Db.Object) return Boolean is
    begin
-      if Self.Index > 1 then
+      if Self.With_Deps and then Self.Index > 1 then
          Db.Add_Input
             (Self.UID,
              Output_File (Self.Index - 1),

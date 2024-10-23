@@ -346,14 +346,16 @@ begin
 
       Process_M.Execute
         (Tree.Artifacts_Database,
-         Jobs         => Opt.Parallel_Tasks,
-         JSON_File    => Jobs_JSON,
-         Stop_On_Fail => not Opt.Keep_Going);
+         Jobs            => Opt.Parallel_Tasks,
+         JSON_File       => Jobs_JSON,
+         Stop_On_Fail    => not Opt.Keep_Going,
+         Keep_Temp_Files => Opt.Keep_Temp_Files);
    else
       GPR2.Build.Process_Manager.Object (Process_M).Execute
         (Tree.Artifacts_Database,
-         Jobs         => Opt.Parallel_Tasks,
-         Stop_On_Fail => not Opt.Keep_Going);
+         Jobs            => Opt.Parallel_Tasks,
+         Stop_On_Fail    => not Opt.Keep_Going,
+         Keep_Temp_Files => Opt.Keep_Temp_Files);
    end if;
 
    return To_Exit_Status (E_Success);

@@ -1,0 +1,2 @@
+description: check that slot_id used in the command line is actually serialized
+driver: python_script

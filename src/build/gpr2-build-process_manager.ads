@@ -16,14 +16,14 @@ private with GNATCOLL.Traces;
 
 package GPR2.Build.Process_Manager is
 
+   Process_Manager_Error : exception;
+
    type Collect_Status is
       (Continue_Execution,
-       Abort_Execution,
-       Retry_Job);
+       Abort_Execution);
    --  Status return by Collect_Job method.
    --
    --  Continue_Execution: iteration can continue,
-   --  Retry_Job: job should be requeued.
    --  Abort_Execution: abort process manager
 
    type Object is tagged limited private;
@@ -57,15 +57,17 @@ package GPR2.Build.Process_Manager is
    procedure Launch_Job
      (Self           : in out Object;
       Job            : in out Actions.Object'Class;
-      Proc_Handler   : out Process_Handler;
-      Capture_Stdout : out File_Descriptor;
-      Capture_Stderr : out File_Descriptor);
+      Slot_Id        :        Positive;
+      Proc_Handler   :    out Process_Handler;
+      Capture_Stdout :    out File_Descriptor;
+      Capture_Stderr :    out File_Descriptor);
 
    procedure Execute
-     (Self         : in out Object;
-      Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
-      Jobs         : Natural := 0;
-      Stop_On_Fail : Boolean := True);
+     (Self            : in out Object;
+      Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
+      Jobs            : Natural := 0;
+      Stop_On_Fail    : Boolean := True;
+      Keep_Temp_Files : Boolean := False);
 
    procedure Execution_Post_Process (Self : in out Object) is null;
    --  ??? Did not manage to have this subprogram in the private part

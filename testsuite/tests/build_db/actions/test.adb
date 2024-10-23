@@ -14,8 +14,6 @@ with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Reporter.Console;
 
-with GNATCOLL.VFS; use GNATCOLL.VFS;
-
 with Test_Assert; use Test_Assert;
 
 use GPR2, GPR2.Reporter;

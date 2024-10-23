@@ -227,6 +227,11 @@ package body GPRbuild.Options is
                  Help           => "Unique compilation for all sources of" &
                                    " all projects",
                  In_Switch_Attr => False));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name => "--keep-temp-files",
+                 Help => "Do not delete temporary files"));
+
 
       Parser.Add_Section_Argument
         (Name     => "-gargs",
@@ -576,19 +581,7 @@ package body GPRbuild.Options is
          Result.Unique_Recompilation := True;
          Result.Force_Recursive_Build := True;
 
-      elsif Arg = "--json-summary" then
-         Result.Json_Summary := True;
-
-      elsif Arg = "-nostdlib" then
-         if not Result.Compiler_Args.Contains (GPR2.Ada_Language) then
-            Result.Compiler_Args.Include
-              (GPR2.Ada_Language,
-               GPR2.Containers.Value_Type_List.Empty_Vector);
-         end if;
-
-         Result.Compiler_Args (GPR2.Ada_Language).Append (String (Arg));
-
-      elsif Arg = "-nostdinc" then
+      elsif Arg = "-fno-inline" then
          if not Result.Compiler_Args.Contains (GPR2.Ada_Language) then
             Result.Compiler_Args.Include
               (GPR2.Ada_Language,
@@ -606,7 +599,22 @@ package body GPRbuild.Options is
 
          Result.Compiler_Args (GPR2.Ada_Language).Append (String (Arg));
 
-      elsif Arg = "-fno-inline" then
+      elsif Arg = "--json-summary" then
+         Result.Json_Summary := True;
+
+      elsif Arg = "--keep-temp-files" then
+         Result.Keep_Temp_Files := True;
+
+      elsif Arg = "-nostdinc" then
+         if not Result.Compiler_Args.Contains (GPR2.Ada_Language) then
+            Result.Compiler_Args.Include
+              (GPR2.Ada_Language,
+               GPR2.Containers.Value_Type_List.Empty_Vector);
+         end if;
+
+         Result.Compiler_Args (GPR2.Ada_Language).Append (String (Arg));
+
+      elsif Arg = "-nostdlib" then
          if not Result.Compiler_Args.Contains (GPR2.Ada_Language) then
             Result.Compiler_Args.Include
               (GPR2.Ada_Language,

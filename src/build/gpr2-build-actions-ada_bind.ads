@@ -52,7 +52,8 @@ package GPR2.Build.Actions.Ada_Bind is
    overriding procedure Compute_Command
      (Self : in out Object;
       Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict);
+      Env  : out GNATCOLL.OS.Process.Environment_Dict;
+      Slot : Positive);
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object;

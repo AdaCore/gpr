@@ -80,7 +80,7 @@ begin
       Ret     : Integer;
       Process : Process_Handle;
    begin
-      Action.Compute_Command (Args, Env);
+      Action.Compute_Command (Args, Env, 1);
 
       FS.Open_Pipe (P_Ro, P_Wo);
       Process := Start

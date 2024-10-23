@@ -4,9 +4,12 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Build.Signature;
+with GPR2.Build.Source;
 with GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
 
+private with GPR2.Containers;
 private with GPR2.View_Ids;
 private with Ada.Strings;
 private with Ada.Strings.Fixed;
@@ -24,17 +27,22 @@ package GPR2.Build.Actions.Write_File is
    overriding function "<" (L, R : Write_File_Id) return Boolean;
 
    type Object is new Actions.Object with private;
-   --  Action is intended to write its index to a file named <index>.txt.
-   --  However, the executable responsible for creating the file is missing,
-   --  as it is not needed for this particular test.
+   --  Action that writes its index in a file named <index>.txt thanks
+   --  to the executable contained in the "write_file" directory.
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
 
    procedure Initialize
      (Self       : in out Object;
       Ctxt       : GPR2.Project.View.Object;
-      Index      : Integer);
-   --  Initialize the action with the provided index
+      Index      : Integer;
+      Executable : GPR2.Path_Name.Object;
+      Ret_Code   : Integer := 0;
+      With_Deps  : Boolean := True;
+      With_Wait  : Natural := 0);
+   --  Initialize the action with several testing parameters to pass to
+   --  the executable. The executable used by test.py is mostly the one
+   --  coming from the "directory" write_file.
 
    overriding function View (Self : Object) return GPR2.Project.View.Object;
 
@@ -80,6 +88,10 @@ private
    type Object is new Actions.Object with record
       Ctxt       : GPR2.Project.View.Object;
       Index      : Integer;
+      Ret_Code   : Integer;
+      With_Deps  : Boolean;
+      With_Wait  : Natural;
+      Executable : GPR2.Path_Name.Object;
    end record;
 
    overriding function View (Self : Object) return GPR2.Project.View.Object is
