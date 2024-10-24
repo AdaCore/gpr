@@ -30,10 +30,8 @@ def write_file(file, data):
 
 def get_all_signature_json_files(project):
     json_file_list = []
-    for filename in glob.glob(f"tree/obj/{project}/*.json", recursive=True):
-        # "jobs.json" files contain information about processes execution
-        if not os.path.basename(filename) == "jobs.json":
-            json_file_list.append(filename)
+    for filename in glob.glob(f"tree/obj/{project}/.*.json", recursive=True):
+        json_file_list.append(filename)
     return json_file_list
 
 
