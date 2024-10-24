@@ -480,7 +480,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       Ref : constant GPR2.Build.Tree_Db.Action_Reference_Type :=
               Self.Tree.Action_Id_To_Reference (Id);
    begin
-      return (Element => Object (Ref.Element.all)'Access,
+      return (Element => Object (Ref.Element.all)'Unchecked_Access,
               Ref     => Ref);
    end Reference;
 

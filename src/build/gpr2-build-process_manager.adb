@@ -451,7 +451,47 @@ package body GPR2.Build.Process_Manager is
       package FS renames GNATCOLL.OS.FS;
       use GPR2.Reporter;
 
+      procedure Display (Action : Action_Id'Class);
+      procedure Display (Command : Argument_List);
       function Image (Command : Argument_List) return String;
+
+      -------------
+      -- Display --
+      -------------
+
+      procedure Display (Action : Action_Id'Class) is
+         Res : Unbounded_String;
+         Action_Class_Max : constant Natural := 18;
+
+      begin
+         Append (Res, '[');
+
+         if Action.Language /= No_Language then
+            Append (Res, Image (Action.Language));
+            Append (Res, ' ');
+         end if;
+
+         Append (Res, Action.Action_Class);
+         Append (Res, ']');
+
+         if Length (Res) < Action_Class_Max then
+            Append (Res, (Action_Class_Max - Length (Res)) * ' ');
+         else
+            Append (Res, ' ');
+         end if;
+
+         Append (Res, Action.Action_Parameter);
+         Self.Tree_Db.Report (-Res);
+      end Display;
+
+      -------------
+      -- Display --
+      -------------
+
+      procedure Display (Command : Argument_List) is
+      begin
+         Self.Tree_Db.Report (Image (Command));
+      end Display;
 
       -----------
       -- Image --
@@ -535,9 +575,9 @@ package body GPR2.Build.Process_Manager is
          --  tooling messages that need quiet/normal/detailed info. Let's go
          --  for the default one *and* verbose one for now
          if Self.Tree_Db.Reporter_Verbosity >= Verbose then
-            Self.Tree_Db.Report (Image (Args));
+            Display (Args);
          else
-            Self.Tree_Db.Report (Job.UID.Image);
+            Display (Job.UID);
          end if;
 
          Proc_Handler :=

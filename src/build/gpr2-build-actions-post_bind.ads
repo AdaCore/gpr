@@ -44,16 +44,20 @@ private
 
    type Post_Bind_Id (Name_Len : Natural) is new Action_Id with record
       Input : Filename_Type (1 .. Name_Len);
+      View  : Project.View.Object;
    end record;
 
-   overriding function Image (Self : Post_Bind_Id) return String is
-      ("[Compile Ada] " & String (Self.Input));
+   overriding function View (Self : Post_Bind_Id) return Project.View.Object is
+     (Self.View);
 
-   overriding function Db_Filename (Self : Post_Bind_Id) return Simple_Name is
-     ("ada_post_bind" & Self.Input & ".json");
+   overriding function Action_Class (Self : Post_Bind_Id) return Value_Type is
+     ("Post-Bind");
 
-   overriding function "<" (L, R : Post_Bind_Id) return Boolean is
-     (L.Input < R.Input);
+   overriding function Language (Self : Post_Bind_Id) return Language_Id is
+     (Ada_Language);
+
+   overriding function Action_Parameter (Self : Post_Bind_Id) return Value_Type
+   is (Value_Type (Self.Input));
 
    type Object is new Actions.Object with record
       Input  : Artifacts.Files.Object;

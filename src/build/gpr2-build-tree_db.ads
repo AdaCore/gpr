@@ -261,6 +261,7 @@ package GPR2.Build.Tree_Db is
 private
 
    use all type DG.Node_Id;
+   use type GPR2.Build.Actions.Action_Id'Class;
 
    function Hash (A : Artifacts.Object'Class) return Ada.Containers.Hash_Type
    is (A.Hash);
@@ -271,15 +272,15 @@ private
 
    package Action_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (GPR2.Build.Actions.Action_Id'Class, GPR2.Build.Actions.Object'Class,
-      GPR2.Build.Actions.Less, GPR2.Build.Actions."=");
+      GPR2.Build.Actions."<", GPR2.Build.Actions."=");
 
    package Action_Sets is new Ada.Containers.Indefinite_Ordered_Sets
      (GPR2.Build.Actions.Action_Id'Class,
-      GPR2.Build.Actions.Less, GPR2.Build.Actions."=");
+      GPR2.Build.Actions."<", GPR2.Build.Actions."=");
 
    package Action_Artifacts_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (GPR2.Build.Actions.Action_Id'Class, Artifact_Sets.Set,
-      GPR2.Build.Actions.Less, Artifact_Sets."=");
+      GPR2.Build.Actions."<", Artifact_Sets."=");
 
    package Artifact_Actions_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (GPR2.Build.Artifacts.Object'Class, Action_Sets.Set, Hash,
@@ -290,7 +291,7 @@ private
       GPR2.Build.Artifacts."=", Actions."=");
 
    package Action_Node_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (GPR2.Build.Actions.Action_Id'Class, DG.Node_Id, GPR2.Build.Actions.Less);
+     (GPR2.Build.Actions.Action_Id'Class, DG.Node_Id, GPR2.Build.Actions."<");
 
    package Node_Action_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (DG.Node_Id, GPR2.Build.Actions.Action_Id'Class,
