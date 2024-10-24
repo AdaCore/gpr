@@ -83,12 +83,12 @@ package body GPR2.Build.Source_Base is
    function To_ALI_Timestamp (Stamp : Calendar.Time) return Calendar.Time is
       use Interfaces;
       use Ada.Calendar;
-      use type C.long;
+      use type C.long_long;
 
-      Timestamp : constant C.long := Conversions.To_Unix_Time (Stamp);
+      Timestamp : constant C.long_long := Conversions.To_Unix_Time_64 (Stamp);
 
    begin
-      return Conversions.To_Ada_Time
+      return Conversions.To_Ada_Time_64
         (Timestamp
          + (if On_Windows
             then Timestamp mod 2
