@@ -25,7 +25,7 @@ build:
   extends: .job_template
   stage: build
   variables:
-    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb eng/toolchain/gnatcoll-core
+    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
   cache:
     - key: $CI_COMMIT_REF_SLUG
       fallback_keys:
@@ -61,7 +61,6 @@ debug_build:
   variables:
     JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
   script:
-
     # Tune to use our build & test plan
     - anod tune --plan $CI_PROJECT_DIR/.ci.plan
 
@@ -94,9 +93,11 @@ test_gpr2_valgrind:
   extends: .test_template
   needs: []
   variables:
-    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb eng/toolchain/gnatcoll-core
-  script:
-    - run_testsuite gpr2 -Qvalgrind test_gpr2_vg
+    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
+  script: |
+    # Tune to use our build & test plan
+    exec anod build gpr2 -Qvalgrind
+    run_testsuite gpr2 -Qvalgrind test_gpr2_vg
   artifacts:
     when:
       always
@@ -113,7 +114,7 @@ test_gpr2_cov:
   extends: .test_template
   needs: []
   variables:
-    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb eng/toolchain/gnatcoll-core
+    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
   script: |
     exec anod build gpr2 -Qcoverage
 
