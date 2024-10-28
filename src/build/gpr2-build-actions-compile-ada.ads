@@ -72,19 +72,13 @@ private
    is (String (Self.Src_Name) &
        (if Self.Index /= No_Index then "@" & Idx_Image (Self.Index) else ""));
 
-   overriding function Create
-     (Main_Src : Simple_Name;
-      Lang     : Language_Id;
-      View     : GPR2.Project.View.Object) return Ada_Compile_Id is
-     (raise Program_Error with
-        "wrong primitive called for Actions.Compile.Ada.Ada_Compile_id");
-
    function Create
      (Src : GPR2.Build.Compilation_Unit.Object) return Ada_Compile_Id
-   is (Compile.Create
-         (Main_Src => Src.Main_Part.Source.Simple_Name,
-          Lang     => Ada_Language,
-          View     => Src.Owning_View)
+   is (Compile_Id
+         (Compile.Create
+            (Main_Src => Src.Main_Part.Source.Simple_Name,
+             Lang     => Ada_Language,
+             View     => Src.Owning_View))
        with Index => Src.Main_Part.Index);
 
    type Object is new Compile.Object with record

@@ -17,7 +17,7 @@ package GPR2.Build.Actions.Compile is
    function Create
      (Main_Src : Simple_Name;
       Lang     : Language_Id;
-      View     : GPR2.Project.View.Object) return Compile_Id;
+      View     : GPR2.Project.View.Object) return Compile_Id'Class;
 
    type Object is new Actions.Object with private;
    --  Action responsible for building Ada sources
@@ -78,11 +78,11 @@ private
    function Create
      (Main_Src : Simple_Name;
       Lang     : Language_Id;
-      View     : GPR2.Project.View.Object) return Compile_Id
-   is (Name_Len => Main_Src'Length,
-       Lang     => Lang,
-       Ctxt     => View,
-       Src_Name => Main_Src);
+      View     : GPR2.Project.View.Object) return Compile_Id'Class
+   is (Compile_Id'(Name_Len => Main_Src'Length,
+                   Lang     => Lang,
+                   Ctxt     => View,
+                   Src_Name => Main_Src));
 
    type Object is new Actions.Object with record
       Obj_File : Artifacts.Files.Object;
