@@ -189,7 +189,7 @@ package body GPR2.Build.Actions is
    is
       Db_File : constant GPR2.Path_Name.Object :=
                   Self.View.Object_Directory.Compose (Self.UID.Db_Filename);
-      Found   : Boolean;
+      Found   : Boolean := False;
    begin
       if Db_File.Exists then
          Self.Signature := Build.Signature.Load (Db_File);
