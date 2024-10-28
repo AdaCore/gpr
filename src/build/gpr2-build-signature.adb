@@ -249,16 +249,9 @@ package body GPR2.Build.Signature is
       end if;
 
       for C in Self.Artifacts.Iterate loop
-         declare
-            Art    : constant Artifacts.Object'Class :=
-                       Artifact_Maps.Key (C);
-            Digest : constant Hash_Digest :=
-                       Artifact_Maps.Element (C);
-         begin
-            if Art.Checksum /= Digest then
-               return False;
-            end if;
-         end;
+         if Artifact_Maps.Key (C).Checksum /= Artifact_Maps.Element (C) then
+            return False;
+         end if;
       end loop;
 
       return True;

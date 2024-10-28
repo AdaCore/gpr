@@ -5,6 +5,8 @@
 --
 
 with GPR2.Path_Name;
+with GPR2.Utils.Hash;
+
 
 package GPR2.Build.Artifacts.Files is
 
@@ -53,6 +55,10 @@ private
 
    function Create (Path : GPR2.Path_Name.Object) return Object is
      (Path => Path);
+
+   overriding function Checksum
+     (Self : Object) return Utils.Hash.Hash_Digest
+   is (Utils.Hash.Hash (Self.Path.Value));
 
    function Path (Self : Object) return GPR2.Path_Name.Object is
      (Self.Path);
