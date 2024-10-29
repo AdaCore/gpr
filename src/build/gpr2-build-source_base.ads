@@ -65,14 +65,10 @@ package GPR2.Build.Source_Base is
      with Pre => Self.Is_Defined;
    --  Returns the path-name for the given source
 
-   function Modification_Time
-     (Self       : Object;
-      ALI_Format : Boolean := False) return Ada.Calendar.Time
+   function Modification_Time (Self : Object) return Ada.Calendar.Time
      with Inline, Pre => Self.Is_Defined;
    --  Returns last modification of the source file from the time point when
    --  the last successful build was done.
-   --  If ALI_Format is set, the returned value is adjusted to match the
-   --  ALI files time precision.
 
    procedure Update_Modification_Time
      (Self : in out Object;
@@ -137,8 +133,6 @@ package GPR2.Build.Source_Base is
 
 private
 
-   function To_ALI_Timestamp (Stamp : Calendar.Time) return Calendar.Time;
-
    type Object is tagged record
       Db                : access Build.Tree_Db.Object;
       --  The view's build database
@@ -167,11 +161,8 @@ private
 
    function Is_Defined (Self : Object) return Boolean is (Self /= Undefined);
 
-   function Modification_Time
-     (Self       : Object;
-      ALI_Format : Boolean := False) return Ada.Calendar.Time
-   is (if ALI_Format then To_ALI_Timestamp (Self.Modification_Time)
-       else Self.Modification_Time);
+   function Modification_Time (Self : Object) return Ada.Calendar.Time
+   is (Self.Modification_Time);
 
    function Path_Name (Self : Object) return GPR2.Path_Name.Object is
      (Self.Path_Name);

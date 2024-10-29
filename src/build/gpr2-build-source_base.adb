@@ -4,9 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Interfaces.C;
-with Ada.Calendar.Conversions;
-
 with GPR2.Build.Tree_Db;
 
 package body GPR2.Build.Source_Base is
@@ -75,25 +72,6 @@ package body GPR2.Build.Source_Base is
    begin
       Self.CU_List.Delete (Index);
    end Remove_Unit;
-
-   ----------------------
-   -- To_ALI_Timestamp --
-   ----------------------
-
-   function To_ALI_Timestamp (Stamp : Calendar.Time) return Calendar.Time is
-      use Interfaces;
-      use Ada.Calendar;
-      use type C.long_long;
-
-      Timestamp : constant C.long_long := Conversions.To_Unix_Time_64 (Stamp);
-
-   begin
-      return Conversions.To_Ada_Time_64
-        (Timestamp
-         + (if On_Windows
-            then Timestamp mod 2
-            else 0));
-   end To_ALI_Timestamp;
 
    ------------------------------
    -- Update_Modification_Time --
