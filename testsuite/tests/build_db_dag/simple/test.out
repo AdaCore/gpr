@@ -1,43 +1,43 @@
 ------------------
 -- tree/agg.gpr --
 ------------------
-[Compile Ada] main.adb (p1.gpr)
+[Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
-[Compile Ada] pkg.adb (p1.gpr)
+[Ada Compile] pkg.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/pkg.ali
   - /tree/obj/p1/pkg.o
-[Compile Ada] foo.ada@2 (p2.gpr)
+[C Compile] foo.c (p1.gpr)
+  inputs:
+  outputs:
+  - /tree/obj/p1/foo.o
+[Ada Compile] foo.ada@2 (p2.gpr)
   inputs:
   outputs:
   - /tree/lib/p2/foo~2.ali
   - /tree/obj/p2/foo~2.o
-[Compile Ada] pkg.adb (p2.gpr)
+[Ada Compile] pkg.adb (p2.gpr)
   inputs:
   outputs:
   - /tree/lib/p2/pkg.ali
   - /tree/obj/p2/pkg.o
-[Compile Ada] pkg3.adb (p2.gpr)
+[Ada Compile] pkg3.adb (p2.gpr)
   inputs:
   outputs:
   - /tree/lib/p2/pkg3.ali
   - /tree/obj/p2/pkg3.o
-[Compile Ada] pkg2.adb (shared.gpr)
+[Ada Compile] pkg2.adb (shared.gpr)
   inputs:
   outputs:
   - /tree/obj/shared/pkg2.ali
   - /tree/obj/shared/pkg2.o
-[Compile C] foo.c (p1.gpr)
-  inputs:
-  outputs:
-  - /tree/obj/p1/foo.o
 
 ------------------------------
 -- clashing_objects/agg.gpr --
 ------------------------------
-main.o: error: "[Compile C] main.c (b.gpr)" and "[Compile Ada] main.adb (a.gpr)" produce the same output "/clashing_objects/main.o"
+main.o: error: "[C Compile] main.c (b.gpr)" and "[Ada Compile] main.adb (a.gpr)" produce the same output "/clashing_objects/main.o"
 

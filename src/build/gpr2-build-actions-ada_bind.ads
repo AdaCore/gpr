@@ -12,20 +12,12 @@ with GPR2.Project.Registry.Attribute;
 with Ada.Containers.Hashed_Sets;
 
 with GNATCOLL.OS.Process;
-private with GPR2.View_Ids;
 
 package GPR2.Build.Actions.Ada_Bind is
 
    package PRA renames GPR2.Project.Registry.Attribute;
 
    type Ada_Bind_Id (<>) is new Actions.Action_Id with private;
-
-   overriding function Image (Self : Ada_Bind_Id) return String;
-
-   overriding function Db_Filename
-     (Self : Ada_Bind_Id) return Simple_Name;
-
-   overriding function "<" (L, R : Ada_Bind_Id) return Boolean;
 
    type Object is new Actions.Object with private;
 
@@ -68,26 +60,23 @@ package GPR2.Build.Actions.Ada_Bind is
 
 private
 
-   use type GPR2.View_Ids.View_Id;
-
    type Ada_Bind_Id (Name_Len : Natural) is new Actions.Action_Id
      with record
       Ctxt      : GPR2.Project.View.Object;
       Ali_Name  : Filename_Type (1 .. Name_Len);
    end record;
 
-   overriding function Image (Self : Ada_Bind_Id) return String is
-     ("[Bind Ada] " & String (Self.Ali_Name) &
-        " (" & String (Self.Ctxt.Path_Name.Simple_Name) & ")");
+   overriding function View (Self : Ada_Bind_Id) return Project.View.Object is
+     (Self.Ctxt);
 
-   overriding function Db_Filename
-     (Self : Ada_Bind_Id) return Simple_Name is
-     (Simple_Name ("bind_ada_" & To_Lower (Self.Ali_Name) & "_"
-      & To_Lower (Self.Ctxt.Name) & ".json"));
+   overriding function Action_Class (Self : Ada_Bind_Id) return Value_Type is
+     ("Bind");
 
-   overriding function "<" (L, R : Ada_Bind_Id) return Boolean is
-     (if L.Ctxt.Id = R.Ctxt.Id then L.Ali_Name < R.Ali_Name
-      else L.Ctxt.Id < R.Ctxt.Id);
+   overriding function Language (Self : Ada_Bind_Id) return Language_Id is
+     (Ada_Language);
+
+   overriding function Action_Parameter (Self : Ada_Bind_Id) return Value_Type
+   is (Value_Type (Self.Ali_Name));
 
    type Object is new Actions.Object with record
       Main_Ali    : Artifacts.Files.Object;

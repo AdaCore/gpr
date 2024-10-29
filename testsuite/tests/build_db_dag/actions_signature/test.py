@@ -30,10 +30,8 @@ def write_file(file, data):
 
 def get_all_signature_json_files(project):
     json_file_list = []
-    for filename in glob.glob(f"tree/obj/{project}/*.json", recursive=True):
-        # "jobs.json" files contain information about processes execution
-        if not os.path.basename(filename) == "jobs.json":
-            json_file_list.append(filename)
+    for filename in glob.glob(f"tree/obj/{project}/.*.json", recursive=True):
+        json_file_list.append(filename)
     return json_file_list
 
 
@@ -125,11 +123,11 @@ def overwrite_checksum(name, ext, checksum, project):
 
 # ensure .ali and .o files are there for the trees used to test, together
 # with gpr2's signatures
-bnr.call(["gpr2build", "-Ptree/p1.gpr", "-p", "-q"])
+bnr.simple_run(["gpr2build", "-Ptree/p1.gpr", "-p", "-q"])
 # base1 is extended by p2: ensure it has ali and object files on its own to
 # demonstrate that they're inherited
-bnr.call(["gpr2build", "-Ptree/base1.gpr", "-p", "-q"])
-bnr.call(["gpr2build", "-Ptree/p2.gpr", "-p", "-q"])
+bnr.simple_run(["gpr2build", "-Ptree/base1.gpr", "-p", "-q"])
+bnr.simple_run(["gpr2build", "-Ptree/p2.gpr", "-p", "-q"])
 
 # now build and run the test (using bnr.build and bnr.run to have proper
 # coverage when requested).

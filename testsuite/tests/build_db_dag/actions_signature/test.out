@@ -2,135 +2,135 @@
 Case 1 - Initial DAG without changes
 ================================================================
 Case 2 - Altered DAG with empty JSON dictionnary (p1: main)
-[Compile Ada] main.adb (p1.gpr)
+[Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
 ================================================================
 Case 3 - Altered DAG with empty JSON file (p1: main)
-[Compile Ada] main.adb (p1.gpr)
+[Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
 ================================================================
 Case 4a - Altered DAG with random JSON dictionnary (p1: main)
-[Compile Ada] main.adb (p1.gpr)
+[Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
 ================================================================
 Case 4b - Altered DAG with corrupted signature (1) (p1: main)
-[Compile Ada] main.adb (p1.gpr)
+[Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
 ================================================================
 Case 4c - Altered DAG with corrupted signature (2) (p1: main)
-[Compile Ada] main.adb (p1.gpr)
+[Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
 ================================================================
 Case 4d - Altered DAG with corrupted signature (3) (p1: main)
-[Compile Ada] main.adb (p1.gpr)
+[Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
 ================================================================
 Case 4e - Altered DAG with corrupted signature (4) (p1: main)
-[Compile Ada] main.adb (p1.gpr)
+[Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
 ================================================================
 Case 4f - Altered DAG with corrupted signature (5) (p1: main)
-[Compile Ada] main.adb (p1.gpr)
+[Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
 ================================================================
 Case 4g - Altered DAG with corrupted signature (6) (p1: main)
-[Compile Ada] main.adb (p1.gpr)
+[Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
 ================================================================
 Case 5 - Altered DAG with modified checksums (p1: main)
-[Compile Ada] main.adb (p1.gpr)
+[Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
 ================================================================
 Case 6 - Altered DAG with single modified checksum (p1: main)
-[Compile Ada] main.adb (p1.gpr)
+[Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
 ================================================================
 Case 7 - Altered DAG with modified checksums (p2: pkg3 - pkg)
-[Compile Ada] pkg.adb (p1.gpr)
+[Ada Compile] pkg.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/pkg.ali
   - /tree/obj/p1/pkg.o
-[Compile Ada] pkg3.adb (p2.gpr)
+[Ada Compile] pkg3.adb (p2.gpr)
   inputs:
   outputs:
   - /tree/lib/p2/pkg3.ali
   - /tree/obj/p2/pkg3.o
 ================================================================
 Case 8 - Altered DAG with shorter checksum (p1: main)
-[Compile Ada] main.adb (p1.gpr)
+[Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
 ================================================================
 Case 9 - Altered DAG with longer checksum (p1: main)
-[Compile Ada] main.adb (p1.gpr)
+[Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
 ================================================================
 Case 10 - Altered DAG with modified checksums (all)
-[Compile Ada] main.adb (p1.gpr)
+[Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
-[Compile Ada] pkg.adb (p1.gpr)
+[Ada Compile] pkg.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/pkg.ali
   - /tree/obj/p1/pkg.o
-[Compile Ada] foo.ada@2 (p2.gpr)
+[Ada Compile] foo.ada@2 (p2.gpr)
   inputs:
   outputs:
   - /tree/lib/p2/foo~2.ali
   - /tree/obj/p2/foo~2.o
-[Compile Ada] pkg.adb (p2.gpr)
+[Ada Compile] pkg.adb (p2.gpr)
   inputs:
   outputs:
   - /tree/lib/p2/pkg.ali
   - /tree/obj/p2/pkg.o
-[Compile Ada] pkg3.adb (p2.gpr)
+[Ada Compile] pkg3.adb (p2.gpr)
   inputs:
   outputs:
   - /tree/lib/p2/pkg3.ali
   - /tree/obj/p2/pkg3.o
-[Compile Ada] pkg2.adb (shared.gpr)
+[Ada Compile] pkg2.adb (shared.gpr)
   inputs:
   outputs:
   - /tree/obj/shared/pkg2.ali

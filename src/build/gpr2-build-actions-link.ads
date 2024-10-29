@@ -14,8 +14,6 @@ with GPR2.Project.Registry.Attribute;
 
 with GNATCOLL.OS.Process;
 
-private with GPR2.View_Ids;
-
 package GPR2.Build.Actions.Link is
 
    type Link_Id (<>) is new Actions.Action_Id with private;
@@ -23,13 +21,6 @@ package GPR2.Build.Actions.Link is
    function Create (View       : GPR2.Project.View.Object;
                     Output     : Simple_Name;
                     Is_Library : Boolean) return Link_Id;
-
-   overriding function Image (Self : Link_Id) return String;
-
-   overriding function Db_Filename
-     (Self : Link_Id) return Simple_Name;
-
-   overriding function "<" (L, R : Link_Id) return Boolean;
 
    type Object is new Actions.Object with private;
    --  Action responsible for linking Ada sources
@@ -89,8 +80,6 @@ package GPR2.Build.Actions.Link is
 
 private
 
-   use type GPR2.View_Ids.View_Id;
-
    package PRA renames GPR2.Project.Registry.Attribute;
    package PAI renames GPR2.Project.Attribute_Index;
 
@@ -101,27 +90,24 @@ private
       Exec_Name : Filename_Type (1 .. Name_Len);
    end record;
 
+   overriding function View (Self : Link_Id) return Project.View.Object is
+     (Self.View);
+
+   overriding function Action_Class (Self : Link_Id) return Value_Type is
+     (if Self.Is_Lib
+      then "Archive"
+      else "Link");
+
+   overriding function Language (Self : Link_Id) return Language_Id is
+     (No_Language);
+
+   overriding function Action_Parameter (Self : Link_Id) return Value_Type
+   is (Value_Type (Self.Exec_Name));
+
    function Create (View       : GPR2.Project.View.Object;
                     Output     : Simple_Name;
                     Is_Library : Boolean) return Link_Id is
-      (Output'Length, Is_Library, View, Output);
-
-   overriding function Image (Self : Link_Id) return String is
-     ((if Self.Is_Lib then "[Archive] " else "[Link] ") &
-        String (Self.Exec_Name) & " (" &
-        String (Self.View.Path_Name.Simple_Name) & ')');
-
-   overriding function Db_Filename
-     (Self : Link_Id) return Simple_Name is
-     ((if Self.Is_Lib then "archive_" else "link_") &
-        Simple_Name (Self.Exec_Name & ".json"));
-
-   overriding function "<" (L, R : Link_Id) return Boolean is
-     (if L.View.Id /= R.View.Id
-      then L.View.Id < R.View.Id
-      elsif L.Is_Lib < R.Is_Lib
-      then L.Is_Lib
-      else L.Exec_Name < R.Exec_Name);
+     (Output'Length, Is_Library, View, Output);
 
    package String_Vectors is new Ada.Containers.Indefinite_Vectors
     (Index_Type => Positive, Element_Type => String);

@@ -20,12 +20,6 @@ package GPR2.Build.Actions.Write_File is
 
    type Write_File_Id (<>) is new Actions.Action_Id with private;
 
-   overriding function Image (Self : Write_File_Id) return String;
-
-   overriding function Db_Filename (Self : Write_File_Id) return Simple_Name;
-
-   overriding function "<" (L, R : Write_File_Id) return Boolean;
-
    type Object is new Actions.Object with private;
    --  Action that writes its index in a file named <index>.txt thanks
    --  to the executable contained in the "write_file" directory.
@@ -73,17 +67,18 @@ private
       Index : Integer;
    end record;
 
-   overriding function Image (Self : Write_File_Id) return String is
-     ("Write_File '" & Ada.Strings.Fixed.Trim (Self.Index'Img, Both) & "' (" &
-      String (Self.Ctxt.Path_Name.Simple_Name) & ")");
+   overriding function View (Self : Write_File_Id) return Project.View.Object
+   is (Self.Ctxt);
 
-   overriding function Db_Filename (Self : Write_File_Id) return Simple_Name is
-     (Simple_Name ("Write_File" & Ada.Strings.Fixed.Trim (Self.Index'Img, Both) &
-      "_" & To_Lower (Self.Ctxt.Name) & ".json"));
+   overriding function Action_Class (Self : Write_File_Id) return Value_Type is
+     ("Write File");
 
-   overriding function "<" (L, R : Write_File_Id) return Boolean is
-     (if L.Ctxt.Id = R.Ctxt.Id then L.Index < R.Index
-      else L.Ctxt.Id < R.Ctxt.Id);
+   overriding function Language (Self : Write_File_Id) return Language_Id is
+     (No_Language);
+
+   overriding function Action_Parameter
+     (Self : Write_File_Id) return Value_Type is
+     (Self.Index'Image (2 .. Self.Index'Image'Last));
 
    type Object is new Actions.Object with record
       Ctxt       : GPR2.Project.View.Object;

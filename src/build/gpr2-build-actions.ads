@@ -13,27 +13,43 @@ with GPR2.Build.Signature;
 with GPR2.Containers;
 with GPR2.Path_Name;
 with GPR2.Project.View;
+with GPR2.View_Ids;
 
 limited with GPR2.Build.Tree_Db;
 
-private with Ada.Tags;
 private with GNATCOLL.Traces;
 
 package GPR2.Build.Actions is
 
    type Action_Id is interface;
+   --  An Action_Id is a unique identifier of an Action instance for the whole
+   --  tree. It is composed of three to four visible parts:
+   --  * the view id
+   --  * the action class (e.g. "Compile", "Bind", "Link", etc...
+   --  * the programming langage of the action (Ada, C, etc.) if applicable
+   --  * The action parameter used to differentiate it from the other actions
+   --    of the same class within a given view. Typically the input source
+   --    file for a compilation or the output for a link operation.
 
-   function Image (Self : Action_Id) return String is abstract;
-   --  A representation of Self that can be displayed to the end user for e.g.
-   --  error reporting or inspection reporting.
+   function View
+     (Self : Action_Id) return GPR2.Project.View.Object is abstract;
+   function Action_Class (Self : Action_Id) return Value_Type is abstract;
+   function Language (Self : Action_Id) return Language_Id is abstract;
+   function Action_Parameter (Self : Action_Id) return Value_Type is abstract;
 
-   function Db_Filename (Self : Action_Id) return Simple_Name is abstract;
+   function Image
+     (Self      : Action_Id'Class;
+      With_View : Boolean := True) return String;
+   --  A string representation of Self that can be displayed to the end-user,
+   --  The description will omit the owning view if With_View is not set, This
+   --  is used typically in case the view is already referenced in a
+   --  GPR2.Message object and the Image is used in the Messages textual part.
+
+   function Db_Filename (Self : Action_Id'Class) return Simple_Name;
    --  The filename that is used to store the action signature. Must be unique
    --  for actions of the involved view.
 
-   function "<" (L, R : Action_Id) return Boolean is abstract;
-
-   function Less (L, R : Action_Id'Class) return Boolean;
+   function "<" (L, R : Action_Id'Class) return Boolean;
    --  Class-wide comparison
 
    package Action_Id_Sets is new Ada.Containers.Indefinite_Ordered_Sets
@@ -144,8 +160,8 @@ package GPR2.Build.Actions is
 
 private
 
-   use type Ada.Tags.Tag;
    use GNATCOLL.Traces;
+   use type GPR2.View_Ids.View_Id;
 
    type Object is abstract tagged record
       Tree       : access Tree_Db.Object;
@@ -158,9 +174,14 @@ private
       --  List of tmp files to be cleaned up
    end record;
 
-   function Less (L, R : Action_Id'Class) return Boolean is
-     (if L'Tag = R'Tag then L < R
-      else Ada.Tags.External_Tag (L'Tag) < Ada.Tags.External_Tag (R'Tag));
+   function "<" (L, R : Action_Id'Class) return Boolean is
+     (if L.View.Id /= R.View.Id
+      then L.View.Id < R.View.Id
+      elsif L.Action_Class /= R.Action_Class
+      then L.Action_Class < R.Action_Class
+      elsif L.Language /= R.Language
+      then L.Language < R.Language
+      else L.Action_Parameter < R.Action_Parameter);
 
    function Valid_Signature (Self : Object) return Boolean is
      (Object'Class (Self).View.Is_Externally_Built

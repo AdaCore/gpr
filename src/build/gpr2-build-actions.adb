@@ -4,6 +4,10 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Characters.Handling;
+with Ada.Strings.Maps;
+with Ada.Strings.Fixed;
+
 with GNATCOLL.OS.FS;
 with GNATCOLL.OS.FSUtil;
 
@@ -75,6 +79,37 @@ package body GPR2.Build.Actions is
       Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
    end Compute_Signature;
 
+   -----------------
+   -- Db_Filename --
+   -----------------
+
+   function Db_Filename (Self : Action_Id'Class) return Simple_Name is
+      use Ada.Characters.Handling;
+      use Ada.Strings;
+
+      Space_Repl : constant Ada.Strings.Maps.Character_Mapping :=
+                     Maps.To_Mapping (" ", "_");
+      Res : Unbounded_String;
+   begin
+      --  A Build_Db file item is stored in the view's object directory so
+      --  there's no need to add the View identifier in it.
+      Append (Res, '.');
+
+      if Self.Language /= No_Language then
+         Append (Res, To_Lower (Image (Self.Language)));
+         Append (Res, '_');
+      end if;
+
+      Append (Res, Fixed.Translate (To_Lower (Self.Action_Class), Space_Repl));
+      Append (Res, '_');
+
+      Append (Res, Self.Action_Parameter);
+
+      Append (Res, ".json");
+
+      return Simple_Name (To_String (Res));
+   end Db_Filename;
+
    -----------------------------
    -- Get_Or_Create_Temp_File --
    -----------------------------
@@ -117,6 +152,35 @@ package body GPR2.Build.Actions is
       end if;
    end Get_Or_Create_Temp_File;
 
+   -----------
+   -- Image --
+   -----------
+
+   function Image
+     (Self      : Action_Id'Class;
+      With_View : Boolean := True) return String
+   is
+      Res : Unbounded_String;
+   begin
+      Append (Res, "[");
+      if Self.Language /= No_Language then
+         Append (Res, Image (Self.Language));
+         Append (Res, ' ');
+      end if;
+
+      Append (Res, Self.Action_Class);
+      Append (Res, "] ");
+      Append (Res, Self.Action_Parameter);
+
+      if With_View then
+         Append (Res, " (");
+         Append (Res, String (Self.View.Path_Name.Simple_Name));
+         Append (Res, ")");
+      end if;
+
+      return -Res;
+   end Image;
+
    --------------------
    -- Load_Signature --
    --------------------
@@ -125,7 +189,7 @@ package body GPR2.Build.Actions is
    is
       Db_File : constant GPR2.Path_Name.Object :=
                   Self.View.Object_Directory.Compose (Self.UID.Db_Filename);
-      Found   : Boolean;
+      Found   : Boolean := False;
    begin
       if Db_File.Exists then
          Self.Signature := Build.Signature.Load (Db_File);
@@ -138,6 +202,5 @@ package body GPR2.Build.Actions is
          Self.Signature.Clear;
       end if;
    end Load_Signature;
-
 
 end GPR2.Build.Actions;

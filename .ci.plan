@@ -1,13 +1,11 @@
 def build():
-    # customer scenario
-    anod_build("libgpr2", qualifier="bare")
+    anod_build("libgpr2", qualifier={"bare": True})
     anod_build("libgpr2")
     anod_build("gpr2")
 
 def debug_build():
-    # customer scenario
-    anod_build("libgpr2", qualifier="bare,dbg")
-    anod_build("gpr2", qualifier="dbg")
+    anod_build("libgpr2", qualifier={"bare": True, "dbg": True})
+    anod_build("gpr2", qualifier={"dbg": "True"})
 
 def libgpr2_users():
     wave_pkg = ("spark2014", "gnatcheck", "gnatfuzz", "lkql")

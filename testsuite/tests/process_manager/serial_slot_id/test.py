@@ -18,7 +18,7 @@ for f in glob.glob("*.txt"):
     os.remove(f)
 for f in glob.glob("*.json"):
     os.remove(f)
-for f in glob.glob("tree/*.json"):
+for f in glob.glob("tree/.*.json"):
     os.remove(f)
 
 # Test with instrumentation if any
@@ -33,7 +33,7 @@ else:
     exec_log = json.load(json_file)
     jobs = {}
     for log in exec_log:
-        m = re.match(r"Write_File \'([0-9]*)\'.*", log['uid'])
+        m = re.match(r"\[Write File\] ([0-9]*) .*", log['uid'])
         uid = int(m.group(1))
         jobs[uid] = {"uid": log["uid"],
                      "status": log["status"],

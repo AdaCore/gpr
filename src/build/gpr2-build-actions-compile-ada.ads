@@ -17,8 +17,6 @@ package GPR2.Build.Actions.Compile.Ada is
      (Src : GPR2.Build.Compilation_Unit.Object) return Ada_Compile_Id;
    --  Create an Action_Id without having to create the full action object
 
-   overriding function "<" (L, R : Ada_Compile_Id) return Boolean;
-
    type Object is new Compile.Object with private;
    --  Action responsible for building Ada sources
 
@@ -62,49 +60,26 @@ private
 
    use type GPR2.Path_Name.Object;
 
+   function Idx_Image (Idx : Unit_Index) return String is
+     (Idx'Image (2 .. Idx'Image'Last));
+
    type Ada_Compile_Id is new Compile_Id with record
       Index : Unit_Index;
    end record;
 
-   function Part_Image (Self : Ada_Compile_Id) return String;
-   overriding function Image (Self : Ada_Compile_Id) return String;
-   overriding function Db_Filename (Self : Ada_Compile_Id) return Simple_Name;
-
-   overriding function Create
-     (Main_Src : Simple_Name;
-      Lang     : Language_Id;
-      View     : GPR2.Project.View.Object) return Ada_Compile_Id is
-     (raise Program_Error with
-        "wrong primitive called for Actions.Compile.Ada.Ada_Compile_id");
-
-   function Create
-     (Src : GPR2.Build.Compilation_Unit.Object) return Ada_Compile_Id
-   is (Compile.Create
-         (Main_Src => Src.Main_Part.Source.Simple_Name,
-          Lang     => Ada_Language,
-          View     => Src.Owning_View)
-       with Index => Src.Main_Part.Index);
-
-   function Idx_Image (Idx : Unit_Index) return String is
-     (Idx'Image (2 .. Idx'Image'Last));
-
-   function Part_Image (Self : Ada_Compile_Id) return String
+   overriding function Action_Parameter
+     (Self : Ada_Compile_Id) return Value_Type
    is (String (Self.Src_Name) &
        (if Self.Index /= No_Index then "@" & Idx_Image (Self.Index) else ""));
 
-   overriding function "<" (L, R : Ada_Compile_Id) return Boolean is
-     (if L.Ctxt.Id /= R.Ctxt.Id
-      then L.Ctxt.Id < R.Ctxt.Id
-      elsif L.Src_Name /= R.Src_Name
-      then L.Src_Name < R.Src_Name
-      else L.Index < R.Index);
-
-   overriding function Image (Self : Ada_Compile_Id) return String is
-     ("[Compile Ada] " & Self.Part_Image &
-        " (" & String (Self.Ctxt.Path_Name.Simple_Name) & ")");
-
-   overriding function Db_Filename (Self : Ada_Compile_Id) return Simple_Name
-   is (Simple_Name ("compile_" &  Self.Part_Image & ".json"));
+   function Create
+     (Src : GPR2.Build.Compilation_Unit.Object) return Ada_Compile_Id
+   is (Compile_Id
+         (Compile.Create
+            (Main_Src => Src.Main_Part.Source.Simple_Name,
+             Lang     => Ada_Language,
+             View     => Src.Owning_View))
+       with Index => Src.Main_Part.Index);
 
    type Object is new Compile.Object with record
       Ali_File  : Artifacts.Files.Object;

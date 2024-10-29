@@ -10,8 +10,6 @@ with GPR2.Path_Name.Set;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Attribute_Index;
 
-private with GPR2.View_Ids;
-
 package GPR2.Build.Actions.Compile is
 
    type Compile_Id (<>) is new Actions.Action_Id with private;
@@ -19,13 +17,7 @@ package GPR2.Build.Actions.Compile is
    function Create
      (Main_Src : Simple_Name;
       Lang     : Language_Id;
-      View     : GPR2.Project.View.Object) return Compile_Id;
-
-   overriding function Image (Self : Compile_Id) return String;
-
-   overriding function Db_Filename (Self : Compile_Id) return Simple_Name;
-
-   overriding function "<" (L, R : Compile_Id) return Boolean;
+      View     : GPR2.Project.View.Object) return Compile_Id'Class;
 
    type Object is new Actions.Object with private;
    --  Action responsible for building Ada sources
@@ -62,7 +54,6 @@ package GPR2.Build.Actions.Compile is
 
 private
 
-   use type GPR2.View_Ids.View_Id;
    package PRA renames GPR2.Project.Registry.Attribute;
    package PAI renames GPR2.Project.Attribute_Index;
 
@@ -72,27 +63,26 @@ private
       Src_Name : Simple_Name (1 .. Name_Len);
    end record;
 
+   overriding function View (Self : Compile_Id) return Project.View.Object is
+     (Self.Ctxt);
+
+   overriding function Action_Class (Self : Compile_Id) return Value_Type is
+     ("Compile");
+
+   overriding function Language (Self : Compile_Id) return Language_Id is
+     (Self.Lang);
+
+   overriding function Action_Parameter (Self : Compile_Id) return Value_Type
+   is (Value_Type (Self.Src_Name));
+
    function Create
      (Main_Src : Simple_Name;
       Lang     : Language_Id;
-      View     : GPR2.Project.View.Object) return Compile_Id
-   is (Name_Len => Main_Src'Length,
-       Lang     => Lang,
-       Ctxt     => View,
-       Src_Name => Main_Src);
-
-   overriding function Image (Self : Compile_Id) return String is
-     ("[Compile " & Image (Self.Lang) & "] " & String (Self.Src_Name) &
-        " (" & String (Self.Ctxt.Path_Name.Simple_Name) & ")");
-
-   overriding function Db_Filename (Self : Compile_Id) return Simple_Name is
-     (Simple_Name ("compile_" & To_Lower (Self.Src_Name)
-      & ".json"));
-
-   overriding function "<" (L, R : Compile_Id) return Boolean is
-     (if L.Ctxt.Id = R.Ctxt.Id
-      then L.Src_Name < R.Src_Name
-      else L.Ctxt.Id < R.Ctxt.Id);
+      View     : GPR2.Project.View.Object) return Compile_Id'Class
+   is (Compile_Id'(Name_Len => Main_Src'Length,
+                   Lang     => Lang,
+                   Ctxt     => View,
+                   Src_Name => Main_Src));
 
    type Object is new Actions.Object with record
       Obj_File : Artifacts.Files.Object;

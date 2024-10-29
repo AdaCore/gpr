@@ -118,7 +118,7 @@ package body GPR2.Build.Actions.Post_Bind is
    overriding function UID (Self : Object) return Action_Id'Class is
       BN : constant Filename_Type := Self.Input.Path.Simple_Name;
    begin
-      return Post_Bind_Id'(BN'Length, BN);
+      return Post_Bind_Id'(BN'Length, BN, Self.View);
    end UID;
 
 end GPR2.Build.Actions.Post_Bind;

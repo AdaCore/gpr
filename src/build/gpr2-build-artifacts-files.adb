@@ -4,20 +4,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.Utils.Hash;
 
 package body GPR2.Build.Artifacts.Files is
-
-   --------------
-   -- Checksum --
-   --------------
-
-   overriding function Checksum
-     (Self : Object) return Utils.Hash.Hash_Digest
-   is
-   begin
-      return Utils.Hash.Hash (Self.Path.Value);
-   end Checksum;
 
    -----------------
    -- Unserialize --

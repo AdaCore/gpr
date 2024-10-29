@@ -198,12 +198,16 @@ begin
 
    --  Check if we have a Builder'Switches attribute in the root project
 
-   if Tree.Root_Project.Has_Package (PRP.Builder) then
+   if Tree.Root_Project.Has_Package (PRP.Builder)
+     and then not Tree.Root_Project.Attributes (PRA.Builder.Switches).Is_Empty
+   then
       declare
          Mains : constant GPR2.Build.Compilation_Unit.Unit_Location_Vector :=
-                   (if Opt.Mains.Is_Empty
+                   (if not Opt.Mains.Is_Empty
+                    then Opt.Mains
+                    elsif Tree.Root_Project.Has_Mains
                     then Tree.Root_Project.Mains
-                    else Opt.Mains);
+                    else GPR2.Build.Compilation_Unit.Empty_Vector);
       begin
          --  #1: If one main is defined, from the Main top-level attribute or
          --  from the command line, we fetch Builder'Switches(<main>).
