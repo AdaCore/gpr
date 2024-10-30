@@ -4,6 +4,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Configuration_Internal;
+with GPR2.Project.Configuration;
 separate (GPR2.Tree_Internal)
 procedure Load_Autoconf
   (Self              : in out Object;
@@ -51,7 +53,9 @@ is
    --  Adds project languages into the Languages container to configure.
    --  Warns about project has no languages.
 
-   function Conf_Descriptions return Project.Configuration.Description_Set;
+   function Conf_Descriptions
+     (Project_Path : Path_Name.Object)
+      return Project.Configuration.Description_Set;
    --  Returns set of descriptions for configuration creation
 
    function Default_Config_File
@@ -291,7 +295,8 @@ is
    -----------------------
 
    function Conf_Descriptions
-     return Project.Configuration.Description_Set
+     (Project_Path : Path_Name.Object)
+      return Project.Configuration.Description_Set
    is
       Descr_Index : Natural := 0;
       Restricted  : constant Boolean := not Self.Langs_Of_Interest.Is_Empty;
@@ -302,6 +307,9 @@ is
                               (Self.Langs_Of_Interest).Length)
                          else Languages.Length);
       Result      : Project.Configuration.Description_Set (1 .. Length);
+
+      Error       : GPR2.Message.Object;
+
    begin
       if Restricted and then
         Languages.Intersection (Self.Langs_Of_Interest).Is_Empty
@@ -330,6 +338,16 @@ is
                  Runtime  => Runtime (L),
                  Path     => Toolchain_Path (L),
                  Name     => Toolchain_Name (L));
+
+            GPR2.Configuration_Internal.Resolve_Runtime_Dir
+              (Descriptor   => Result (Descr_Index),
+               Project_Path => Project_Path,
+               Environment  => Environment,
+               Message      => Error);
+
+            if Error.Is_Defined then
+               Self.Messages.Append (Error);
+            end if;
          end if;
       end loop;
 
@@ -544,7 +562,19 @@ is
    --  so we need to keep the original search paths for the reconfiguration
    --  stage.
 
+   Project_Path : Path_Name.Object :=
+                    (if Self.Root.Is_Defined then Self.Root.Path_Name
+                     elsif Root_Project.Kind = Project_Definition
+                     then Root_Project.Data.Trees.Project.Path_Name
+                     else Root_Project.Path);
 begin
+   Project_Path :=
+     (if Project_Path.Has_Dir_Name then Project_Path
+      else Create (Project_Path.Name, False));
+   --  Project may be not even found at this stage, but since we ignore all
+   --  errors at first parsing we don't know it yet. We need to resolve the
+   --  Project path name for proper error reporting.
+
    GPR2.Project_Parser.Clear_Cache;
 
    if Base.Is_Defined then
@@ -745,7 +775,7 @@ begin
          Languages.Include (Ada_Language);
       end if;
 
-      Pre_Conf_Description := To_Holder (Conf_Descriptions);
+      Pre_Conf_Description := To_Holder (Conf_Descriptions (Project_Path));
 
       if not Self.Base.Is_Defined then
          Self.Base := GPR2.KB.Create
@@ -755,10 +785,7 @@ begin
       Conf := Project.Configuration.Create
         (Pre_Conf_Description.Element,
          Actual_Target,
-         (if Self.Root.Is_Defined then Self.Root.Path_Name
-          elsif Root_Project.Kind = Project_Definition
-          then Root_Project.Data.Trees.Project.Path_Name
-          else Root_Project.Path),
+         Project_Path,
          Self.Base,
          Save_Name   => Config_Project,
          Environment => Environment);
@@ -816,7 +843,7 @@ begin
       Add_Languages (Element (C));
    end loop;
 
-   Post_Conf_Description := To_Holder (Conf_Descriptions);
+   Post_Conf_Description := To_Holder (Conf_Descriptions (Project_Path));
 
    if not Pre_Conf_Description.Is_Empty then
       Compare_Configurations

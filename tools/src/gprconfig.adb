@@ -34,9 +34,12 @@ with GNAT.String_Split;
 
 with GNATCOLL.Traces;
 
+with GPR2.Configuration_Internal;
 with GPR2.Containers;
+with GPR2.Environment;
 with GPR2.KB;
 with GPR2.Log;
+with GPR2.Message;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Configuration;
 with GPR2.Reporter;
@@ -398,6 +401,7 @@ procedure GPRconfig is
       end Positional_Parameters;
 
       Result : Description;
+      Error  : GPR2.Message.Object;
 
    begin
       if Slice_Count (Slices) > 5 then
@@ -439,6 +443,16 @@ procedure GPRconfig is
             Runtime  => Get_Description_Param (Slices, 3),
             Path     => Filename_Optional (Get_Description_Param (Slices, 4)),
             Name     => Get_Description_Param (Slices, 5));
+      end if;
+
+      GPR2.Configuration_Internal.Resolve_Runtime_Dir
+        (Descriptor   => Result,
+         Project_Path => GPR2.Path_Name.Undefined,
+         Environment  => GPR2.Environment.Process_Environment,
+         Message      => Error);
+
+      if Error.Is_Defined then
+         Report_Error_And_Exit (Error.Format);
       end if;
 
       return Result;
