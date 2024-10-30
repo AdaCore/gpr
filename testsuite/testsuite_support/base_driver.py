@@ -132,22 +132,14 @@ end gnatmake;
         )
 
     if comp_target == "dotnet":
-        for dir in ("adalib", "adainclude"):
-            mkdir(os.path.join(comp_dir, "lib", "dotgnat", dir))
+        create_fake_ada_runtime(os.path.join(comp_dir, "lib", "dotgnat"))
     else:
         for runtime in runtimes:
-            for dir in ("adalib", "adainclude"):
-                mkdir(
-                    os.path.join(
-                        comp_dir,
-                        "lib",
-                        "gcc",
-                        comp_target,
-                        gcc_version,
-                        "rts-%s" % runtime,
-                        dir,
-                    )
+            create_fake_ada_runtime(
+                os.path.join(
+                    comp_dir, "lib", "gcc", comp_target, gcc_version, "rts-%s" % runtime
                 )
+            )
 
     libdir = os.path.join(comp_dir, "lib", "gcc", comp_target, gcc_version)
 
@@ -166,6 +158,11 @@ end gnatmake;
     if create_ada_object_path:
         with open(os.path.join(libdir, "ada_object_path"), "w") as ada_obj:
             ada_obj.write("rts-%s/adalib" % runtimes[0])
+
+
+def create_fake_ada_runtime(path):
+    for dir in ("adalib", "adainclude"):
+        mkdir(os.path.join(path, dir))
 
 
 class BaseDriver(DiffTestDriver):
