@@ -1,3 +1,0 @@
-project Prj extends all "main" is
-  for Object_Dir use "obj_main_ext";
-end Prj;

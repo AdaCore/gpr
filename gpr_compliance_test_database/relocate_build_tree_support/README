@@ -1,1 +1,0 @@
-prj.gpr requires --relocate-build-tree=./relocate_build_tree_support/build --src-subdirs=src_subdirs

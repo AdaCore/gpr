@@ -1,3 +1,0 @@
-prj.gpr project aggregates lib1 & lib2 directly or through aggregated
-
-aggregate library contains lib1 & lib2 packages.

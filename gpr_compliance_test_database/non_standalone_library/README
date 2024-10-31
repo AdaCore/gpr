@@ -1,5 +1,0 @@
-test.gpr generates a non standalone library.
-
--- default  for Library_Kind use "static";
-   for Library_Standalone use "no";
-
