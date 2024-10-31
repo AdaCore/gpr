@@ -1,4 +1,0 @@
-prj.gpr requires --implicit-with=test1 --implicit-with=test2 switches
-
-As gprbuild support currently only one --implicit-with argument use
-gprbuild -P prj4gprbuild --implicit-with=test1 to build it.

@@ -1,4 +1,0 @@
-aggregate project Aggregated is
-   for Object_Dir use "obj" & project'Name;
-   for Project_Files use ("prj2.gpr");
-end Aggregated;

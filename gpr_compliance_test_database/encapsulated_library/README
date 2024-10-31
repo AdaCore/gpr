@@ -1,4 +1,0 @@
-prj.gpr generates a encapsulated library.
-
-for Library_Kind use "dynamic";
-for Library_Standalone use "encapsulated";
