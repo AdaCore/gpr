@@ -1,0 +1,23 @@
+project Prj is
+
+   for Languages use ("Ada", "C");
+
+   for Source_Dirs use ("src");
+   for Main use ("main.ada" at 2);
+   for Object_Dir use "obj";
+   for Exec_Dir use ".";
+
+   package Builder is
+      for Executable ("main.ada" at 2) use "main";
+   end Builder;
+
+   package Naming is
+      for Implementation ("Main") use "main.ada" at 2;
+      for Specification ("Pkg") use "main.ada" at 1;
+      for Implementation ("Pkg") use "pkg+.a";
+      for Implementation ("Pkg.Msg") use "pkg+msg.a";
+      for Implementation_Exceptions ("C") use ("foo.myc");
+      for Specification_Exceptions ("C") use ("foo.inc");
+   end Naming;
+
+end Prj;

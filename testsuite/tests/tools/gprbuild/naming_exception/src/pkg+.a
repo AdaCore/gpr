@@ -1,0 +1,14 @@
+package Body Pkg is
+
+   package Msg is
+      function Get return String;
+   end Msg;
+
+   package body Msg is separate;
+
+   function Get_Message return String is
+   begin
+      return Msg.Get;
+   end Get_Message;
+
+end Pkg;
