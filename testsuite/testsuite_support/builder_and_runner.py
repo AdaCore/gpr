@@ -20,8 +20,6 @@ GPRDOC = GPR + "doc"
 GPRINSPECT = GPR + "inspect"
 GPRBUILD = GPR + "build"
 GPR2BUILD = "gpr2build"
-GPRTOOLS = [GPRLS, GPRCLEAN, GPRINSTALL, GPRCONFIG, GPRREMOTE, GPRDOC, GPRINSPECT, GPRBUILD, GPR2BUILD]
-
 
 class BuilderAndRunner(object):
     """
