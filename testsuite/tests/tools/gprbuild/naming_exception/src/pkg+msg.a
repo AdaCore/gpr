@@ -1,0 +1,9 @@
+separate (Pkg)
+package body Msg is
+
+   function Get return String is
+   begin
+      return "Hello there!";
+   end Get;
+
+end Msg;
