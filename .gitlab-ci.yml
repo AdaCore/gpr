@@ -85,6 +85,26 @@ test_gpr2:
     reports:
       junit: testgpr2_result.xml
 
+###################
+## GPR1 TESTSUITE #
+###################
+
+# Test the gpr1 testsuite with gpr2build.
+# Should be run only if gpr2build is available
+test_gpr1_testsuite:
+  extends: .gpr2_test_template
+  script:
+    - install_cache
+    - run_testsuite gprbuild "-Qgpr2build" test_gpr1_testsuite
+  when: manual
+  artifacts:
+    when:
+      always
+    paths:
+      - testgpr1testsuite_result.xml
+    reports:
+      junit: testgpr1testsuite_result.xml
+
 ##################
 ## MEMORY LEAKS ##
 ##################
