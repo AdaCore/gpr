@@ -1,8 +1,7 @@
 import re
 
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS, \
-                                                 GPRINSTALL, GPRCLEAN, GPRCONFIG, \
-                                                 GPRREMOTE
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRLS, GPRINSTALL, GPRCONFIG, GPRREMOTE, GPRCLEAN
 
 bnr = BuilderAndRunner()
 

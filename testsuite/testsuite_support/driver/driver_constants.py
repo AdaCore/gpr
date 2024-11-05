@@ -1,7 +1,7 @@
 from enum import IntFlag, Enum
 from e3.env import Env
 
-from testsuite_support.builder_and_runner import GPRBUILD, GPRLS, GPRCONFIG, GPRINSTALL, GPRCLEAN
+from testsuite_support.tools import GPRLS, GPRBUILD, GPRCONFIG, GPRINSTALL, GPRCLEAN
 
 
 class ObjScnTool(Enum):

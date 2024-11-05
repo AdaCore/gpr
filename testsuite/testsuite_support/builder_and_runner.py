@@ -2,6 +2,7 @@ import os
 from e3.os.process import PIPE, Run, STDOUT
 from random import getrandbits
 from e3.testsuite.driver.classic import TestAbortWithFailure
+from testsuite_support.tools import GPRBUILD, GPRBUILD_NAME
 
 # environment variables definition
 
@@ -9,17 +10,6 @@ USE_VALGRIND = "USE_VALGRIND"
 USE_GNATCOV = "USE_GNATCOV"
 COV_TRACES_DIR = "GNATCOV_TRACES_DIR"
 COV_LEVEL = "GNATCOV_LEVEL"
-
-GPR = os.environ["GPR2_TOOLS_PREFIX"] if "GPR2_TOOLS_PREFIX" in os.environ else "gpr"
-GPRLS = GPR + "ls"
-GPRCLEAN = GPR + "clean"
-GPRINSTALL = GPR + "install"
-GPRCONFIG = GPR + "config"
-GPRREMOTE = GPR + "remote"
-GPRDOC = GPR + "doc"
-GPRINSPECT = GPR + "inspect"
-GPRBUILD = GPR + "build"
-GPR2BUILD = "gpr2build"
 
 class BuilderAndRunner(object):
     """

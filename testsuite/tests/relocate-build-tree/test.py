@@ -3,7 +3,8 @@ import os
 import re
 import subprocess
 
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSPECT
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRINSPECT
 
 
 bnr = BuilderAndRunner()

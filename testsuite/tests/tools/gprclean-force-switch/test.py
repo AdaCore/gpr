@@ -1,7 +1,8 @@
 import os
 import stat
 
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRCLEAN, GPRBUILD
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRCLEAN, GPRBUILD
 
 bnr = BuilderAndRunner()
 

@@ -1,4 +1,5 @@
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRCONFIG, GPRCLEAN
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRCLEAN, GPRCONFIG
 
 
 def filter(file):
