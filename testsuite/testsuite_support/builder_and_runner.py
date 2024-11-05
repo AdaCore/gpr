@@ -42,6 +42,9 @@ class BuilderAndRunner(object):
             # valgrind mode enabled status
             self.valgrind = driver.env.valgrind
 
+            # Use gpr2build instead of gprbuild
+            self.use_gpr2build = driver.env.use_gpr2build
+
             # coverage mode enabled status
             self.gnatcov = driver.env.gnatcov is not None
 
@@ -59,6 +62,7 @@ class BuilderAndRunner(object):
             self.gnatcov = USE_GNATCOV in os.environ
             self.traces_dir = os.environ.get(COV_TRACES_DIR)
             self.level = os.environ.get(COV_LEVEL)
+            self.use_gpr2build = False
 
     def simple_run(
         self,
@@ -94,6 +98,13 @@ class BuilderAndRunner(object):
 
     def build(self, project, vars=[], args=[], env=None, output=PIPE):
         """ gprbuild wrapper for normal & coverage modes """
+
+        gprbuild=""
+        if self.use_gpr2build:
+            gprbuild="gpr2build"
+        else:
+            gprbuild = GPRBUILD
+
         # If code coverage is requested, leave a chance to gnatcov to decorate
         # the execution of the subprogram in order to make it contribute to
         # code coverage.
@@ -117,14 +128,14 @@ class BuilderAndRunner(object):
             # the installed one from libgpr2. This means we need to ensure
             # that some scenario variables are properly set.
             gprbuild_cmd = (
-                [GPRBUILD, "-P", project,
+                [gprbuild, "-P", project,
                  "-XGPR2_BUILD=gnatcov", "-XXMLADA_BUILD=static"]
                 + vars
                 + ["--src-subdirs=gnatcov-instr", "--implicit-with=gnatcov_rts"]
                 + args
             )
         else:
-            gprbuild_cmd = [GPRBUILD, "-P", project] + vars + args
+            gprbuild_cmd = [gprbuild, "-P", project] + vars + args
 
         return self.simple_run(gprbuild_cmd, env=env, output=output)
 
@@ -176,6 +187,8 @@ class BuilderAndRunner(object):
         """
         if self.valgrind:
             env[USE_VALGRIND] = "true"
+        if self.use_gpr2build:
+            env[GPRBUILD_NAME] = "gpr2build"
         if self.gnatcov:
             env[USE_GNATCOV] = "true"
             env[COV_TRACES_DIR] = self.traces_dir
