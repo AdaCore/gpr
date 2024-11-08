@@ -1,4 +1,5 @@
 with Ada.Strings.Fixed;
+with Ada.Exceptions;
 with Ada.Text_IO;
 
 with GPR2.Context;
@@ -57,4 +58,25 @@ begin
 
    Project.Tree.Load (Prj, Create ("demo1.gpr"), Ctx, Subdirs => "experiment");
    Display (Prj.Root_Project);
+
+   Project.Tree.Load (Prj, Create ("lib.gpr"), Ctx);
+   begin
+      Display (Prj.Root_Project);
+   exception
+      when Ex : others =>
+         Text_IO.Put_Line
+           ("Exec_Directory raised an exception as expected for "
+            & "lib projects");
+   end;
+
+   Project.Tree.Load (Prj, Create ("agglib.gpr"), Ctx);
+   begin
+      Display (Prj.Root_Project);
+   exception
+      when Ex : others =>
+         Text_IO.Put_Line
+           ("Exec_Directory raised an exception as expected for "
+            & "aggregate lib projects");
+   end;
+
 end Main;

@@ -8,3 +8,7 @@ Demo4    K_STANDARD
 executable-directory/exec4
 Demo1    K_STANDARD
 executable-directory/experiment
+lib      K_LIBRARY
+Exec_Directory raised an exception as expected for lib projects
+agglib   K_AGGREGATE_LIBRARY
+Exec_Directory raised an exception as expected for aggregate lib projects
