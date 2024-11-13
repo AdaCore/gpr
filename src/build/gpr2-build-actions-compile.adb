@@ -311,7 +311,7 @@ package body GPR2.Build.Actions.Compile is
             end if;
 
             Add_Options_With_Arg
-              (Cfg_File_Opt, String (File.Path));
+              (Cfg_File_Opt, String (GPR2.Path_Name.Simple_Name (File.Path)));
          end;
       end Add_Config_File;
 
@@ -399,7 +399,8 @@ package body GPR2.Build.Actions.Compile is
                   Close (Spec_File.FD);
                end if;
 
-               Args.Append ("-specs=" & String (Spec_File.Path));
+               Args.Append
+                 ("-specs=" & String (Path_Name.Simple_Name (Spec_File.Path)));
             end;
 
             return;
@@ -480,7 +481,8 @@ package body GPR2.Build.Actions.Compile is
                Close (Map_File.FD);
             end if;
 
-            Add_Options_With_Arg (Attr, String (Map_File.Path));
+            Add_Options_With_Arg
+              (Attr, String (Path_Name.Simple_Name (Map_File.Path)));
          end;
       end Add_Mapping_File;
 
