@@ -23,6 +23,7 @@ with Ada.Exceptions;
 
 with GNATCOLL.Traces;
 
+with GPR2.Build.Actions_Population;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Process_Manager.JSON;
 with GPR2.Build.Source;
@@ -40,7 +41,6 @@ with GPRtools.Options;
 with GPRtools.Program_Termination;
 with GPRtools.Sigint;
 with GPRtools.Util;
-with GPRtools.Actions;
 
 with GPRbuild.Options;
 
@@ -337,7 +337,7 @@ begin
 
    Messages.Clear;
 
-   if not GPRtools.Actions.Add_Actions_To_Build_Mains (Tree) then
+   if not GPR2.Build.Actions_Population.Populate_Actions (Tree) then
       return To_Exit_Status (E_Abort);
    end if;
 

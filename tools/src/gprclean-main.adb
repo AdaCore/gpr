@@ -24,6 +24,7 @@ with GNAT.OS_Lib;
 
 with GNATCOLL.Traces;
 
+with GPR2.Build.Actions_Population;
 with GPR2.Log;
 with GPR2.Message;
 with GPR2.Options;
@@ -36,7 +37,6 @@ with GPR2.Project.View;
 with GPR2.Reporter;
 with GPR2.Source_Reference;
 
-with GPRtools.Actions;
 with GPRtools.Options;
 with GPRtools.Program_Termination;
 with GPRtools.Util;
@@ -185,8 +185,7 @@ begin
 
       null;
    else
-      if not GPRtools.Actions.Add_Actions_To_Build_Mains (Project_Tree)
-      then
+      if not GPR2.Build.Actions_Population.Populate_Actions (Project_Tree) then
          return To_Exit_Status (E_Abort);
       end if;
    end if;
