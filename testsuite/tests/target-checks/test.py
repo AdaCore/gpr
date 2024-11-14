@@ -1,4 +1,5 @@
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS, GPRCONFIG
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRLS, GPRCONFIG
 
 CGPR = "config.cgpr"
 

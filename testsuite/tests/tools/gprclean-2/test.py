@@ -1,6 +1,7 @@
 import os
 from e3.env import Env
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRCLEAN, GPRBUILD
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRCLEAN, GPRBUILD
 
 
 def check_paths_deleted(paths):

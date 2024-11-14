@@ -1,4 +1,5 @@
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS, GPRBUILD
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRBUILD, GPRLS
 
 bnr = BuilderAndRunner()
 bnr.check_call([GPRBUILD, "-Pprj", "-q"])

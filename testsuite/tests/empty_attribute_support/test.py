@@ -1,4 +1,5 @@
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRLS
 
 BuilderAndRunner().call([GPRLS, "-Pfiles/not_allowed_empty_attributes.gpr"])
 BuilderAndRunner().call([GPRLS, "-Pfiles/allowed_empty_attributes.gpr"])

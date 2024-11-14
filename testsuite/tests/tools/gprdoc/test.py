@@ -1,6 +1,7 @@
 import json
 from e3.env import Env
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRDOC
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRDOC
 
 
 bnr = BuilderAndRunner()

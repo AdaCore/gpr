@@ -1,6 +1,7 @@
 import os
 
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRCLEAN
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRCLEAN
 
 # Set environment with paths starting or terminated by path separator ':' or ';'
 for var in ["PATH", "GPR_PROJECT_PATH", "ADA_PROJECT_PATH"]:

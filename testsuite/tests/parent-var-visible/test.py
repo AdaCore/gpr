@@ -1,4 +1,5 @@
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRCLEAN, GPRLS, GPRBUILD
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRLS, GPRCLEAN, GPRBUILD
 
 
 ROOTDIR_Def = "-XROOTDIR=build"

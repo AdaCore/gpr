@@ -1,6 +1,7 @@
 import os
 import re
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSPECT
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRINSPECT
 
 bnr = BuilderAndRunner()
 

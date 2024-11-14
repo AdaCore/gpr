@@ -3,7 +3,8 @@ import os.path
 import glob, os
 from e3.os.process import Run
 
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRBUILD
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRBUILD
 
 bnr = BuilderAndRunner()
 test_number = 1

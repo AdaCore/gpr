@@ -1,6 +1,7 @@
 import os
 from e3.fs import mkdir, sync_tree
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRLS
 
 dest = 'dst'
 

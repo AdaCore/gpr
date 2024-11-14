@@ -1,5 +1,6 @@
 import os
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSPECT
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRINSPECT
 from e3.env import Env
 
 env = Env()

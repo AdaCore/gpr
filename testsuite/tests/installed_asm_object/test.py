@@ -1,7 +1,8 @@
 import os
 import subprocess
 
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL, GPRLS, GPRBUILD
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRLS, GPRINSTALL, GPRBUILD
 
 bnr = BuilderAndRunner()
 
