@@ -72,8 +72,10 @@ function GPRinspect.Main return Ada.Command_Line.Exit_Status is
       if Arg = "--display" then
          if Param = "json" then
             Result.Kind_Of_Display := GPRtools.K_JSON;
+            Result.Verbosity := GPRtools.Quiet;
          elsif Param = "json-compact" then
             Result.Kind_Of_Display := GPRtools.K_JSON_Compact;
+            Result.Verbosity := GPRtools.Quiet;
          elsif Param = "textual" then
             Result.Kind_Of_Display := GPRtools.K_Textual_IO;
          else
