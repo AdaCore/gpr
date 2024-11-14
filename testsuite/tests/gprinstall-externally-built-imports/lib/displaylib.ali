@@ -1,0 +1,24 @@
+V "GNAT Lib v26.20241113"
+A -gnatA
+A -mtune=generic
+A -march=x86-64
+P SS ZX
+
+RN
+RV NO_SECONDARY_STACK
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U displaylib%s		displaylib.ads		32205976 NE OO PK
+Z system.secondary_stack%s  s-secsta.adb	s-secsta.ali
+
+D displaylib.ads	20241114114220 32205976 displaylib%s
+D system.ads		20241113013901 14286b0f system%s
+D s-parame.ads		20241113013901 3597fc11 system.parameters%s
+D s-secsta.ads		20241113013901 578279f5 system.secondary_stack%s
+D s-stoele.ads		20241113013901 ccded4e8 system.storage_elements%s
+G a e
+G c Z s s [world displaylib 2 18 none]
+X 1 displaylib.ads
+1K9*Displaylib 4l5 4e15
+2V18*World{string} 3b18
+
