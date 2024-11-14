@@ -11,6 +11,7 @@ with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Actions.Sets;
 with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Artifacts.Library;
+with GPR2.Build.Compilation_Unit;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
@@ -39,7 +40,8 @@ package body GPR2.Build.Actions_Population is
 
    function Populate_Mains
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      View    : GPR2.Project.View.Object) return Boolean;
+      View    : GPR2.Project.View.Object;
+      Options : Build_Options) return Boolean;
 
    function Populate_Withed_Units
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
@@ -51,7 +53,8 @@ package body GPR2.Build.Actions_Population is
    ----------------------
 
    function Populate_Actions
-     (Tree : GPR2.Project.Tree.Object) return Boolean
+     (Tree    : GPR2.Project.Tree.Object;
+      Options : Build_Options) return Boolean
    is
       Tree_Db     : GPR2.Build.Tree_Db.Object_Access renames
                       Tree.Artifacts_Database;
@@ -63,7 +66,6 @@ package body GPR2.Build.Actions_Population is
       Lib         : Artifacts.Library.Object;
 
    begin
-
       for V of Tree.Namespace_Root_Projects loop
          Visited.Insert (V.Id, Pos, Inserted);
 
@@ -76,8 +78,8 @@ package body GPR2.Build.Actions_Population is
          if Inserted then
             case V.Kind is
                when K_Standard =>
-                  if V.Has_Mains then
-                     Result := Populate_Mains (Tree_Db, V);
+                  if V.Has_Mains or else not Options.Mains.Is_Empty then
+                     Result := Populate_Mains (Tree_Db, V, Options);
                   else
                      Result := Populate_All (Tree_Db, V, Actions_Set);
                   end if;
@@ -296,24 +298,118 @@ package body GPR2.Build.Actions_Population is
 
    function Populate_Mains
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      View    : GPR2.Project.View.Object) return Boolean
+      View    : GPR2.Project.View.Object;
+      Options : Build_Options) return Boolean
    is
+      function As_Unit_Location
+        (Basename : Value_Type;
+         Index    : Unit_Index) return Compilation_Unit.Unit_Location;
+
+      ----------------------
+      -- As_Unit_Location --
+      ----------------------
+
+      function As_Unit_Location
+        (Basename : Value_Type;
+         Index    : Unit_Index) return Compilation_Unit.Unit_Location
+      is
+         use Compilation_Unit;
+         Src : GPR2.Build.Source.Object;
+      begin
+         Src := View.Visible_Source (Simple_Name (Basename));
+
+         if not Src.Is_Defined then
+            for Lang of View.Language_Ids loop
+               Src := View.Visible_Source
+                 (View.Suffixed_Simple_Name (Basename, Lang));
+               exit when Src.Is_Defined;
+            end loop;
+         end if;
+
+         if not Src.Is_Defined then
+            Tree_Db.Report
+              ('"' & Basename &
+                 """ was not found in the sources of any project",
+               To_Stderr => True);
+            return No_Unit;
+         end if;
+
+         if Index /= No_Index then
+            if not Src.Has_Units then
+               Tree_Db.Report
+                 ('"' & String (Src.Path_Name.Simple_Name) &
+                    """ is not a multi-unit source",
+                  To_Stderr => True);
+               return No_Unit;
+
+            elsif not Src.Has_Unit_At (Index) then
+               Tree_Db.Report
+                 ('"' & String (Src.Path_Name.Simple_Name) &
+                    """ don't contain a unit at the index" & Index'Image,
+                  To_Stderr => True);
+               return No_Unit;
+            end if;
+
+         elsif Src.Has_Units
+           and then not Src.Has_Single_Unit
+         then
+            Tree_Db.Report
+              ('"' & String (Src.Path_Name.Simple_Name) &
+                 """ contains multiple units, a unit index is required",
+               To_Stderr => True);
+               return No_Unit;
+
+         end if;
+
+         return (View => Src.Owning_View,
+                 Source => Src.Path_Name,
+                 Index => Index);
+      end As_Unit_Location;
+
       A_Comp  : Actions.Compile.Ada.Object;
       Comp    : Actions.Compile.Object;
       Bind    : Actions.Ada_Bind.Object;
       Link    : Actions.Link.Object;
       Source  : GPR2.Build.Source.Object;
       Is_Main : Boolean;
+      Mains   : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
 
+      use type Ada.Containers.Count_Type;
+      use type Compilation_Unit.Unit_Location;
       use type GPR2.Path_Name.Object;
 
    begin
-      for Main of View.Mains loop
+      if Options.Mains.Is_Empty then
+         Mains := View.Mains;
+
+      else
+         if Options.Mains.Length = 1 then
+            Mains.Append
+              (As_Unit_Location
+                 (Options.Mains.First_Element,
+                  Options.Unit_Index));
+
+         else
+            for M of Options.Mains loop
+               Mains.Append (As_Unit_Location (M, No_Index));
+            end loop;
+         end if;
+
+         --  Check that we could find all mains
+         for M of Mains loop
+            if M = Compilation_Unit.No_Unit then
+               return False;
+            end if;
+         end loop;
+      end if;
+
+      for Main of Mains loop
          Source := Main.View.Source (Main.Source.Simple_Name);
 
          Link.Initialize_Executable
            (GPR2.Build.Artifacts.File_Part.Create (Main.Source, Main.Index),
-            Main.View);
+            Main.View,
+            -Options.Output_File);
 
          if Tree_Db.Has_Action (Link.UID) then
             return True;

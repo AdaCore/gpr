@@ -33,25 +33,19 @@ package GPRtools.Options is
      new Command_Line.Command_Line_Parser with private;
 
    type Base_Options is new GPR2.Options.Object
-     and Command_Line.Command_Line_Result with record
-
-      Remaining : GPR2.Containers.Value_List;
-
+     and Command_Line.Command_Line_Result
+   with record
+      Args                     : GPR2.Containers.Value_List;
       --  Non-switch arguments
 
-      Args                     : GPR2.Containers.Value_Set;
-
+      Unchecked_Shared_Lib     : Boolean := False;
       --  Whether shared libs importing static libs should be checked
 
-      Unchecked_Shared_Lib     : Boolean := False;
-
+      Find_Implicit_Project : Boolean := True;
       --  Whether the tool allows finding implicit projects
 
-      Find_Implicit_Project : Boolean := True;
-
-      --  The project tree once loaded
-
       Tree                     : GPR2.Project.Tree.Object;
+      --  The project tree once loaded
 
       Console_Reporter : GPR2.Reporter.Console.Object :=
                            GPR2.Reporter.Console.Create;
@@ -70,7 +64,7 @@ package GPRtools.Options is
 
    overriding function Remaining_Arguments
      (Result : Base_Options) return GPR2.Containers.Value_List
-     is (Result.Remaining);
+     is (Result.Args);
 
    overriding procedure Append_Argument
      (Result : in out Base_Options; Value : GPR2.Value_Type);
@@ -106,9 +100,12 @@ package GPRtools.Options is
    --   one exist, or the empty project.
 
    function Load_Project
-     (Opt                : in out Base_Options'Class;
-      Absent_Dir_Error   : GPR2.Error_Level;
-      Handle_Errors      : Boolean := True) return Boolean;
+     (Opt                      : in out Base_Options'Class;
+      Absent_Dir_Error         : GPR2.Error_Level;
+      Handle_Errors            : Boolean := True;
+      Restricted_To_Languages  : GPR2.Containers.Language_Set :=
+                                   GPR2.Containers.Empty_Language_Set)
+      return Boolean;
    --  Load project given in the options and display logs .
 
    function Quiet (Self : Base_Options) return Boolean;

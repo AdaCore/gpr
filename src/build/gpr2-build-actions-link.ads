@@ -34,7 +34,8 @@ package GPR2.Build.Actions.Link is
    procedure Initialize_Executable
      (Self       : in out Object;
       Src        : Artifacts.File_Part.Object;
-      Context    : GPR2.Project.View.Object);
+      Context    : GPR2.Project.View.Object;
+      Output     : Filename_Optional := "");
    --  Initialize a link action.
 
    procedure Initialize_Library

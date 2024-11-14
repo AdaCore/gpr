@@ -28,7 +28,6 @@ with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Process_Manager.JSON;
 with GPR2.Build.Source;
 with GPR2.Interrupt_Handler;
-with GPR2.Log;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
@@ -80,6 +79,7 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
       --  Creates Path recursively
 
       All_Ok : Boolean := True;
+      Force  : Boolean := False;
 
       ------------
       -- Ensure --
@@ -107,7 +107,7 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
 
       begin
          if not Path.Exists then
-            if Opt.Create_Missing_Dirs then
+            if Opt.Create_Missing_Dirs or else Force then
                Mkdir_Recursive (Path);
                Tree.Reporter.Report ('"' & Path_Img & """ created");
             else
@@ -134,11 +134,39 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
          Ada.Directories.Create_Directory (Path.String_Value);
       end Mkdir_Recursive;
 
+      use type GPR2.Path_Name.Object;
+
    begin
+      --  gprbuild creates obj/lib/exec dirs even without -p in case of
+      --  "simple" project tree: no aggregate root project, root project
+      --  importing only.
+
+      Force := False;
+
+      if Tree.Root_Project.Kind /= K_Aggregate then
+         Force := True;
+
+         for V of Tree.Root_Project.Closure loop
+            if not V.Is_Externally_Built
+              and then V.Kind /= K_Abstract
+            then
+               Force := False;
+               exit;
+            end if;
+         end loop;
+      end if;
+
       for V of Tree.Ordered_Views loop
          if not V.Is_Externally_Built then
             if V.Kind in GPR2.With_Object_Dir_Kind then
                Ensure (V.Object_Directory);
+
+               if V.Kind = K_Standard
+                 and then V.Is_Namespace_Root
+                 and then V.Executable_Directory /= V.Object_Directory
+               then
+                  Ensure (V.Executable_Directory);
+               end if;
             end if;
 
             if V.Is_Library then
@@ -148,21 +176,16 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
          end if;
       end loop;
 
-      for V of Tree.Namespace_Root_Projects loop
-         if V.Has_Mains then
-            Ensure (V.Executable_Directory);
-         end if;
-      end loop;
-
       return All_Ok;
    end Ensure_Directories;
 
-   Parser    : constant Options.GPRBuild_Parser := Options.Create;
+   Parser    : constant Options.GPRbuild_Parser := Options.Create;
    Tree      : Project.Tree.Object;
    Sw_Attr   : GPR2.Project.Attribute.Object;
-   Messages  : GPR2.Log.Object;
    Process_M : GPR2.Build.Process_Manager.JSON.Object;
    Jobs_JSON : GPR2.Path_Name.Object;
+
+   use GPR2.Build;
 
 begin
 
@@ -180,15 +203,19 @@ begin
 
    Parser.Get_Opt (Opt);
 
-   --  Load the project tree
+   --  Load the project tree and sources
 
-   if not GPRtools.Options.Load_Project (Opt, GPR2.No_Error) then
+   if not GPRtools.Options.Load_Project
+     (Opt,
+      Absent_Dir_Error => GPR2.No_Error,
+      Restricted_To_Languages => Opt.Restricted_To_Languages)
+   then
       Handle_Program_Termination (Message => "");
    end if;
 
    Tree := Opt.Tree;
 
-   if not Tree.Update_Sources then
+   if not Tree.Update_Sources (Option => Sources_Units_Artifacts) then
       Handle_Program_Termination
         (Force_Exit => True,
          Exit_Cause => E_Tool,
@@ -196,16 +223,21 @@ begin
       return To_Exit_Status (E_Fatal);
    end if;
 
+   if not Ensure_Directories (Tree) then
+      Handle_Program_Termination (Force_Exit => False);
+
+      return To_Exit_Status (E_Abort);
+   end if;
+
    --  Check if we have a Builder'Switches attribute in the root project
 
    if Tree.Root_Project.Has_Package (PRP.Builder)
-     and then not Tree.Root_Project.Attributes (PRA.Builder.Switches).Is_Empty
+     and then not Tree.Root_Project.Attributes
+       (PRA.Builder.Switches).Is_Empty
    then
       declare
-         Mains : constant GPR2.Build.Compilation_Unit.Unit_Location_Vector :=
-                   (if not Opt.Mains.Is_Empty
-                    then Opt.Mains
-                    elsif Tree.Root_Project.Has_Mains
+         Mains : constant Compilation_Unit.Unit_Location_Vector :=
+                   (if Tree.Root_Project.Has_Mains
                     then Tree.Root_Project.Mains
                     else GPR2.Build.Compilation_Unit.Empty_Vector);
       begin
@@ -214,9 +246,8 @@ begin
 
          if Mains.Length = 1 then
             declare
-               Source_Part :
-                 constant GPR2.Build.Compilation_Unit.Unit_Location :=
-                   Mains.First_Element;
+               Source_Part : constant Compilation_Unit.Unit_Location :=
+                               Mains.First_Element;
             begin
                Sw_Attr := Tree.Root_Project.Attribute
                  (Name   => PRA.Builder.Switches,
@@ -298,15 +329,15 @@ begin
                end if;
             end;
          end if;
+
+         --  #4 check Switches (others)
+
+         if not Sw_Attr.Is_Defined then
+            Sw_Attr := Tree.Root_Project.Attribute
+              (Name  => PRA.Builder.Switches,
+               Index => Project.Attribute_Index.I_Others);
+         end if;
       end;
-
-      --  #4 check Switches (others)
-
-      if not Sw_Attr.Is_Defined then
-         Sw_Attr := Tree.Root_Project.Attribute
-           (Name  => PRA.Builder.Switches,
-            Index => Project.Attribute_Index.I_Others);
-      end if;
 
       --  Finally, if we found a Switches attribute, apply it
 
@@ -321,23 +352,9 @@ begin
       end if;
    end if;
 
-   if not Tree.Update_Sources (Option => Sources_Units_Artifacts) then
-      Handle_Program_Termination
-        (Force_Exit => True,
-         Exit_Cause => E_Tool,
-         Message    => "Failed to update sources");
-      return To_Exit_Status (E_Fatal);
-   end if;
-
-   if not Ensure_Directories (Tree) then
-      Handle_Program_Termination (Force_Exit => False);
-
-      return To_Exit_Status (E_Abort);
-   end if;
-
-   Messages.Clear;
-
-   if not GPR2.Build.Actions_Population.Populate_Actions (Tree) then
+   if not GPR2.Build.Actions_Population.Populate_Actions
+     (Tree, Opt.Build_Options)
+   then
       return To_Exit_Status (E_Abort);
    end if;
 

@@ -100,6 +100,7 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    Project_Tree : Project.Tree.Object;
    Opt          : GPRclean.Options.Object;
    Parser       : GPRtools.Options.Command_Line_Parser;
+   Build_Opt    : GPR2.Build.Actions_Population.Build_Options;
 
 begin
    GNATCOLL.Traces.Parse_Config_File;
@@ -185,7 +186,9 @@ begin
 
       null;
    else
-      if not GPR2.Build.Actions_Population.Populate_Actions (Project_Tree) then
+      if not GPR2.Build.Actions_Population.Populate_Actions
+               (Project_Tree, Build_Opt)
+      then
          return To_Exit_Status (E_Abort);
       end if;
    end if;

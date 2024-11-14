@@ -16,30 +16,22 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Ordered_Maps;
-
 with GPR2;
 with GPR2.Build;
-with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Actions_Population;
 with GPR2.Containers;
 with GPR2.Path_Name;
 
+with GPRtools.Command_Line;
 with GPRtools.Options;
 
 package GPRbuild.Options is
 
-   package Lang_Args is new Ada.Containers.Ordered_Maps
-     (GPR2.Language_Id, GPR2.Containers.Value_List,
-      GPR2."<",
-      GPR2.Containers.Value_Type_List."=");
-
    type Object is new GPRtools.Options.Base_Options with record
+      Build_Options            : GPR2.Build.Actions_Population.Build_Options;
       Single_Build_Per_Obj_Dir : Boolean := False;
       Build_Script             : GPR2.Path_Name.Object;
-      Indirect_Imports         : Boolean := True;
       No_Object_Check          : Boolean := False;
-      No_SAL_Binding           : Boolean := False;
-      No_Run_Path              : Boolean := False;
       Restricted_To_Languages  : GPR2.Containers.Language_Set;
       Display_Progress         : Boolean := False;
 
@@ -47,57 +39,23 @@ package GPRbuild.Options is
       Force                    : Boolean := False;
       Keep_Going               : Boolean := False;
       Keep_Temp_Files          : Boolean := False;
-      Multi_Unit_Index         : GPR2.Unit_Index := GPR2.No_Index;
-      Output_File              : GPR2.Path_Name.Object;
       Create_Missing_Dirs      : Boolean := False;
       Force_Recursive_Build    : Boolean := False;
-
-      Restricted_Build_Phase   : Boolean := False;
-      Bind_Phase_Mandated      : Boolean := False;
-      Compile_Phase_Mandated   : Boolean := False;
-      Link_Phase_Mandated      : Boolean := False;
-      Unique_Recompilation     : Boolean := False;
 
       Parallel_Tasks           : Natural := 1;
       Json_Summary             : Boolean := False;
 
-      Compiler_Args            : Lang_Args.Map;
-      Binder_Args              : Lang_Args.Map;
-      Linker_Args              : GPR2.Containers.Value_List;
       Config_Args              : GPR2.Containers.Value_List;
    end record;
    --  Options for gprls
 
-   type GPRBuild_Parser is
+   type GPRbuild_Parser is
      new GPRtools.Options.Command_Line_Parser with null record;
 
-   function Create return GPRBuild_Parser;
+   function Create return GPRbuild_Parser;
 
-   function Mains (Options : Object)
-     return GPR2.Build.Compilation_Unit.Unit_Location_Vector;
-   --  The list of main units to compile
-
-   function Recursive_Build (Options : Object) return Boolean is
-     (not Options.Unique_Recompilation
-      or else Options.Force_Recursive_Build);
-   --  Whether we should build the whole tree (except of course Extrnally_Built
-   --  projects.
-
-   function Do_Compilation (Options : Object) return Boolean is
-     (not Options.Restricted_Build_Phase
-      or else Options.Compile_Phase_Mandated);
-   --  Whether the compilation phase is to be considered
-
-   function Do_Binding (Options : Object) return Boolean is
-     (not Options.Unique_Recompilation
-      and then (not Options.Restricted_Build_Phase
-        or else Options.Bind_Phase_Mandated));
-   --  Whether the bindibg phase is to be considered
-
-   function Do_Link (Options : Object) return Boolean is
-     (not Options.Unique_Recompilation
-      and then (not Options.Restricted_Build_Phase
-        or else Options.Link_Phase_Mandated));
-   --  Whether the linking phase is to be considered
+   overriding procedure Get_Opt
+     (Parser : GPRbuild_Parser;
+      Result : in out GPRtools.Command_Line.Command_Line_Result'Class);
 
 end GPRbuild.Options;
