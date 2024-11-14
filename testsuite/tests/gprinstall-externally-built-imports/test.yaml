@@ -1,0 +1,3 @@
+description:
+    check gprinstall a project with externally built libs
+driver: python_script
