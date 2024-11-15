@@ -1,0 +1,4 @@
+project Simple is
+   for Source_Dirs use ("others");
+   for Object_Dir use "obj2";
+end Simple;

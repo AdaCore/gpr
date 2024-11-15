@@ -1,3 +1,6 @@
+Automatic for simple projects:
+"obj2/" created
+[Ada Compile]     pkg.ads
 Without -p:
 gprbuild: "obj/" does not exist
 With -p:
