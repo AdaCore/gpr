@@ -1,3 +1,4 @@
+import json
 import os
 import re
 from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSPECT
@@ -74,3 +75,27 @@ def test(cmd):
 
 test([GPRINSPECT, "-Proot.gpr", "--all", "-r"])
 test([GPRINSPECT, "-Proot.gpr", "--all", "-r", "--display=json"])
+
+print("Check JSON validity :")
+
+JSON_File = "output.json"
+
+p = bnr.run([GPRINSPECT, "-Proot.gpr", "--all", "-r", "--display=json"], output=JSON_File)
+
+with open(JSON_File) as jfile:
+    try:
+        json.load(jfile)
+        print ("   Valid JSON output")
+    except ValueError as e:
+        print(f"   Invalid JSON output : {e}")
+
+print("Check JSON validity for default project :")
+
+p = bnr.run([GPRINSPECT, "--all", "-r", "--display=json"], output=JSON_File)
+
+with open(JSON_File) as jfile:
+    try:
+        json.load(jfile)
+        print ("   Valid JSON output")
+    except ValueError as e:
+        print(f"   Invalid JSON output : {e}")
