@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+--  with GPR2.External_Options;
 with GPRtools.Command_Line;
 
 with GPR2.Build.Source;
@@ -227,6 +228,11 @@ package body GPRbuild.Options is
                  Help           => "Unique compilation for all sources of" &
                                    " all projects",
                  In_Switch_Attr => False));
+      --  Parser.Add_Argument
+      --    (Build_Group,
+      --     Create (Name           => "-z",
+      --             Help           => "No main subprogram (zero main)",
+      --             In_Switch_Attr => False));
       Parser.Add_Argument
         (Build_Group,
          Create (Name => "--keep-temp-files",
@@ -580,6 +586,12 @@ package body GPRbuild.Options is
       elsif Arg = "-U" then
          Result.Unique_Recompilation := True;
          Result.Force_Recursive_Build := True;
+
+      --  elsif Arg = "-z" then
+      --     Result.Register_External_Options
+      --          (GPR2.External_Options.Custom_No_Main_Subprogram,
+      --           GPR2.Ada_Language,
+      --           String (Arg));
 
       elsif Arg = "-fno-inline" then
          if not Result.Compiler_Args.Contains (GPR2.Ada_Language) then
