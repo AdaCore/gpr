@@ -398,6 +398,9 @@ package body GPR2.Build.Actions_Population is
       use type GPR2.Path_Name.Object;
 
    begin
+      --  Compute the actual list of Mains, that depend on command line or
+      --  -if none provided- the attribute Main.
+
       if Options.Mains.Is_Empty then
          Mains := View.Mains;
 
@@ -421,6 +424,8 @@ package body GPR2.Build.Actions_Population is
             end if;
          end loop;
       end if;
+
+      --  Now process the mains one by one
 
       for Main of Mains loop
          Source := Main.View.Source (Main.Source.Simple_Name);
@@ -467,8 +472,6 @@ package body GPR2.Build.Actions_Population is
             end if;
 
             Tree_Db.Add_Input (Link.UID, Comp.Object_File, True);
-
-            return False;
          end if;
 
          --  Add all non-ada sources as dependency of the link as we cannot
@@ -502,10 +505,45 @@ package body GPR2.Build.Actions_Population is
             end if;
          end loop;
 
-         --  Add the libraries present in the closure as dependencies
+         --  In case the main is non-ada and we have Ada sources in the
+         --  view, we need to add a binding phase and an explicit dependency
+         --  from the link phase to the ada objects.
+
+         if Source.Language /= Ada_Language
+           and then View.Language_Ids.Contains (Ada_Language)
+         then
+            --  Make sure we have a binding phase for the ada sources
+            --  that generates a binder file with external main.
+
+            Bind.Initialize_No_Main
+              (Source.Path_Name.Base_Filename,
+               View);
+
+            if not Tree_Db.Has_Action (Bind.UID)
+              and then not Tree_Db.Add_Action (Bind)
+            then
+               return False;
+            end if;
+
+            Tree_Db.Add_Input (Link.UID, Bind.Post_Bind.Object_File, True);
+
+            for U of View.Own_Units loop
+               A_Comp.Initialize (U);
+
+               if not Tree_Db.Has_Action (A_Comp.UID)
+                 and then not Tree_Db.Add_Action (A_Comp)
+               then
+                  return False;
+               end if;
+
+               Tree_Db.Add_Input (Bind.UID, A_Comp.Ali_File, True);
+               Tree_Db.Add_Input (Link.UID, A_Comp.Object_File, True);
+            end loop;
+         end if;
 
          for V of View.Closure loop
             if V.Is_Library then
+               --  Add the libraries present in the closure as dependencies
                declare
                   Lib_Id : constant Actions.Link.Link_Id :=
                              Actions.Link.Create
@@ -520,6 +558,25 @@ package body GPR2.Build.Actions_Population is
                      Tree_Db.Add_Input (Bind.UID, Lib_A.Output, False);
                   end if;
                end;
+
+            else
+               --  Add the non-Ada objects as dependencies
+               for Src of V.Sources loop
+                  if not Src.Has_Units
+                    and then Src.Is_Compilable
+                    and then Src.Kind = S_Body
+                  then
+                     Comp.Initialize (Src);
+
+                     if not Tree_Db.Has_Action (Comp.UID)
+                       and then not Tree_Db.Add_Action (Comp)
+                     then
+                        return False;
+                     end if;
+
+                     Tree_Db.Add_Input (Link.UID, Comp.Object_File, True);
+                  end if;
+               end loop;
             end if;
          end loop;
       end loop;

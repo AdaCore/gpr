@@ -34,6 +34,13 @@ package GPR2.Build.Actions.Ada_Bind is
         Containers.Empty_Value_List;
       Context            : GPR2.Project.View.Object);
 
+   procedure Initialize_No_Main
+     (Self : in out Object;
+      Basename : Simple_Name;
+      Context  : GPR2.Project.View.Object);
+   --  Binding phase that generates no main file (main is defined in a foreign
+   --  language).
+
    overriding function View (Self : Object) return GPR2.Project.View.Object;
 
    package Path_Name_Sets is
@@ -71,8 +78,8 @@ private
 
    type Ada_Bind_Id (Name_Len : Natural) is new Actions.Action_Id
      with record
-      Ctxt      : GPR2.Project.View.Object;
-      Ali_Name  : Filename_Type (1 .. Name_Len);
+      Ctxt : GPR2.Project.View.Object;
+      BN   : Filename_Type (1 .. Name_Len);
    end record;
 
    overriding function View (Self : Ada_Bind_Id) return Project.View.Object is
@@ -85,13 +92,12 @@ private
      (Ada_Language);
 
    overriding function Action_Parameter (Self : Ada_Bind_Id) return Value_Type
-   is (Value_Type (Self.Ali_Name));
+   is (Value_Type (Self.BN));
 
    type Object is new Actions.Object with record
-      Main_Ali           : Artifacts.Files.Object;
-      --  ALI file given as argument to the binder
-      Output_Spec        : Artifacts.Files.Object;
-      Output_Body        : Artifacts.Files.Object;
+      Basename    : Unbounded_String;
+      Output_Spec : Artifacts.Files.Object;
+      Output_Body : Artifacts.Files.Object;
 
       Is_Library         : Boolean := False;
       Is_Shared_Library  : Boolean := False;
@@ -110,10 +116,10 @@ private
       Dep_File_Dirs      : Containers.Value_List :=
                              Containers.Empty_Value_List;
       --  All directory to be searched for sources and ALI files
-   end record;
 
-   function BN (Self : Object) return Simple_Name is
-     ("b__" & Self.Main_Ali.Path.Base_Filename);
+      Extra_Opts  : GNATCOLL.OS.Process.Argument_List;
+      --  Extra options to give to the binder
+   end record;
 
    overriding procedure Compute_Signature
      (Self   : in out Object;
