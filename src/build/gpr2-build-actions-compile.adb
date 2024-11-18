@@ -322,23 +322,40 @@ package body GPR2.Build.Actions.Compile is
       procedure Add_Include_Path is
          Attr : GPR2.Project.Attribute.Object;
 
-         function Inc_Path_File return Filename_Type;
+         function Inc_Path_File (Sw : String := "") return Filename_Type;
          --  Get or create a temporary include path file for the view
 
          -------------------
          -- Inc_Path_File --
          -------------------
 
-         function Inc_Path_File return Filename_Type is
+         function Inc_Path_File (Sw : String := "") return Filename_Type is
             use GNATCOLL.OS.FS;
             Tmp : constant Tree_Db.Temp_File :=
                     Self.Get_Or_Create_Temp_File
                       (Lang_Img (Self.Lang) & "_inc_path",
                        Actions.Global);
+
+            function Quoted (S : String) return String;
+
+            function Quoted (S : String) return String is
+               Res : Unbounded_String;
+            begin
+               for C of S loop
+                  if C = ' ' then
+                     Append (Res, "\ ");
+                  else
+                     Append (Res, C);
+                  end if;
+               end loop;
+
+               return -Res;
+            end Quoted;
+
          begin
             if Tmp.FD /= Null_FD then
-               for P of Self.View.Include_Path (Ada_Language) loop
-                  Write (Tmp.FD, P.String_Value & ASCII.LF);
+               for P of Self.View.Include_Path (Self.Lang) loop
+                  Write (Tmp.FD, Sw & Quoted (P.String_Value) & ASCII.LF);
                end loop;
 
                Close (Tmp.FD);
@@ -372,7 +389,7 @@ package body GPR2.Build.Actions.Compile is
             --  path, and then another temp file used as gcc spec in the form:
             --
             --  * cc1 :
-            --  + @-I <tempfile>
+            --  + @<tempfile>
             --
             --  Where 'cc1' is the first value in the list, and '-I' the second
             --  one.
@@ -381,9 +398,8 @@ package body GPR2.Build.Actions.Compile is
             --  "-spec=<the spec temp file>
 
             declare
-               Inc_File  : constant Filename_Type := Inc_Path_File;
-               Full_Path : constant GPR2.Path_Name.Object :=
-                             Self.View.Object_Directory.Compose (Inc_File);
+               Inc_File  : constant Filename_Type :=
+                             Inc_Path_File (Attr.Values.Element (2).Text);
                Spec_File : constant Tree_Db.Temp_File :=
                              Self.Get_Or_Create_Temp_File
                                (Lang_Img (Self.Lang) & "_spec_inc_path",
@@ -392,9 +408,9 @@ package body GPR2.Build.Actions.Compile is
 
             begin
                if Spec_File.FD /= Null_FD then
-                  Write (Spec_File.FD, "* " & Attr.Values.First_Element.Text &
-                           " :" & ASCII.LF);
-                  Write (Spec_File.FD, "+@-I " & Full_Path.String_Value &
+                  Write (Spec_File.FD, "*" & Attr.Values.First_Element.Text &
+                           ":" & ASCII.LF);
+                  Write (Spec_File.FD, "+ @" & String (Inc_File) &
                            ASCII.LF);
                   Close (Spec_File.FD);
                end if;
@@ -409,7 +425,7 @@ package body GPR2.Build.Actions.Compile is
          Attr := Self.View.Attribute (PRA.Compiler.Include_Switches, Lang_Idx);
 
          if Attr.Is_Defined then
-            for Path of Self.View.Include_Path (Ada_Language) loop
+            for Path of Self.View.Include_Path (Self.Lang) loop
                Add_Options_With_Arg
                  (Attr, Path.String_Value);
             end loop;
