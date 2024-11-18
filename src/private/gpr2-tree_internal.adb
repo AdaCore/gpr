@@ -341,6 +341,16 @@ package body GPR2.Tree_Internal is
       Self.Messages.Append (Message.Create (Message.Error, Msg, Sloc));
    end Error;
 
+   ----------------------
+   -- External_Options --
+   ----------------------
+
+   function External_Options
+     (Self : Object) return GPR2.External_Options.Object is
+   begin
+      return Self.External_Options;
+   end External_Options;
+
    ------------------
    -- Find_Project --
    ------------------
@@ -2979,6 +2989,18 @@ package body GPR2.Tree_Internal is
       Self.Search_Paths.Default := Default_Search_Paths (True, Environment);
       Self.Update_Search_Paths;
    end Set_Environment;
+
+   --------------------------
+   -- Set_External_Options --
+   --------------------------
+
+   procedure Set_External_Options
+     (Self    : in out Object;
+      Options : GPR2.External_Options.Object) is
+   begin
+      Self.External_Options := Options;
+   end Set_External_Options;
+
 
    ------------------
    -- Set_Reporter --

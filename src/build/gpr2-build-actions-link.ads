@@ -110,9 +110,6 @@ private
                     Is_Library : Boolean) return Link_Id is
      (Output'Length, Is_Library, View, Output);
 
-   package String_Vectors is new Ada.Containers.Indefinite_Vectors
-    (Index_Type => Positive, Element_Type => String);
-
    type Object is new Actions.Object with record
       Is_Library      : Boolean := False;
 
@@ -126,7 +123,8 @@ private
       Ctxt            : GPR2.Project.View.Object;
       --  The view defining the Main, or the library
 
-      Static_Options  : String_Vectors.Vector := String_Vectors.Empty_Vector;
+      Static_Options  : Containers.String_Vectors.Vector :=
+                          Containers.String_Vectors.Empty_Vector;
       --  Command line options added manually with the Add_Option procedure
    end record;
 

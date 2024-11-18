@@ -13,7 +13,9 @@ pragma Warnings (Off, ".* is not referenced");
 with GPR2.Build.Source.Sets;
 pragma Warnings (On, ".* is not referenced");
 with GPR2.Build.Tree_Db;
+with GPR2.External_Options;
 with GPR2.Project.Attribute;
+with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
 
 package body GPR2.Build.Actions.Compile is
@@ -529,8 +531,22 @@ package body GPR2.Build.Actions.Compile is
       --  Add_Attr (PRA.Builder.Switches, Lang_Idx, True);
       Add_Attr (PRA.Compiler.Required_Switches, Lang_Idx, True);
       Add_Attr (PRA.Compiler.Switches, Src_Idx, True);
-      --  ??? TODO: command line -cargs options
-      --  ??? TODO: command line -cargs:ada options
+
+      --  Add -cargs and -cargs:<lang>
+
+      for Arg
+        of Self.View.Tree.External_Options.Fetch
+          (GPR2.External_Options.Custom_Compiler_Options, GPR2.No_Language)
+      loop
+         Args.Append (Arg);
+      end loop;
+
+      for Arg
+        of Self.View.Tree.External_Options.Fetch
+          (GPR2.External_Options.Custom_Compiler_Options, Self.Lang)
+      loop
+         Args.Append (Arg);
+      end loop;
 
       if Self.View.Is_Library
         and then Self.View.Library_Kind /= "static"
@@ -595,7 +611,8 @@ package body GPR2.Build.Actions.Compile is
             Add_Options_With_Arg
               (Sw, String (Self.Object_File.Path.Simple_Name));
          else
-            --  ??? TODO modify the KB to have a proper default here
+            --  [eng/gpr/gpr-issues#446] TODO modify the KB to have a proper
+            --  default here.
             Args.Append ("-o");
             Args.Append (String (Self.Object_File.Path.Simple_Name));
          end if;

@@ -9,6 +9,7 @@ with Ada.Iterator_Interfaces;
 with GPR2.Environment;
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.External_Options;
 with GPR2.File_Readers;
 with GPR2.KB;
 with GPR2.Log;
@@ -242,6 +243,14 @@ private package GPR2.Tree_Internal is
       Message : GPR2.Message.Object);
    --  Adds new message into the Log of Self, does nothing if message already
    --  present.
+
+   procedure Set_External_Options
+     (Self : in out Object; Options : GPR2.External_Options.Object);
+   --  Adds external options into the External_Options of Self
+
+   function External_Options
+     (Self : Object) return GPR2.External_Options.Object;
+   --  Returns the tree external options object
 
    procedure Set_Reporter
      (Self : in out Object; Reporter : GPR2.Reporter.Object'Class);
@@ -530,6 +539,7 @@ private
       Reporter_Holder   : GPR2.Reporter.Holders.Holder :=
                             GPR2.Reporter.Holders.To_Holder
                               (GPR2.Reporter.Console.Create);
+      External_Options  : GPR2.External_Options.Object;
    end record;
 
    function "=" (Left, Right : Object) return Boolean is

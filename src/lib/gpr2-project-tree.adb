@@ -398,6 +398,7 @@ package body GPR2.Project.Tree is
       end if;
 
       Self.Tree.Set_Reporter (Reporter);
+      Self.Tree.Set_External_Options (Options.Fetch_External_Options);
 
       if Project_File.Is_Defined
         and then not Project_File.Has_Dir_Name
