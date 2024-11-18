@@ -15,8 +15,8 @@ with Gpr_Parser_Support.Text;
 with GPR2.Message;
 with GPR2.View_Internal;
 with GPR2.Project.External.Set;
+with GPR2.Project.View;
 with GPR2.Project_Parser;
-with GPR2.Tree_Internal;
 
 package body GPR2.Project.External is
 
@@ -40,7 +40,7 @@ package body GPR2.Project.External is
          (Ext             : GPR2.Project.External.Set.Set.Reference_Type;
           Typ             : Identifier_List;
           Assignment_Sloc : GPR2.Source_Reference.Object;
-          Parser          : PP.Object);
+          View            : GPR2.Project.View.Object);
       --  Assign type to external. If assigned type may be conflicting with
       --  current external types, then the external is tagged as conflicting.
       --  All type assignments are tracked so their position in source code
@@ -48,13 +48,14 @@ package body GPR2.Project.External is
 
       procedure Parse_Simple_Typed_Externals
         (Parser    : PP.Object;
+         View      : GPR2.Project.View.Object;
          Externals : in out GPR2.Project.External.Set.Object);
       --  Parse typed externals, and update them in "Externals"
 
       procedure Populate_Externals
-         (Exts            : in out GPR2.Project.External.Set.Object;
+        (Exts            : in out GPR2.Project.External.Set.Object;
          Parsed_Externals : PP.Externals_Map;
-         Parser           : PP.Object);
+         View             : GPR2.Project.View.Object);
       --  Populate externals with explicit typed externals and untyped
       --  externals parsed during the semantic parsing stage of
       --  GPR2.Project.Parser parser.
@@ -70,14 +71,13 @@ package body GPR2.Project.External is
       -----------------------------
 
       procedure Assign_Type_To_External
-         (Ext             : GPR2.Project.External.Set.Set.Reference_Type;
-          Typ             : Identifier_List;
-          Assignment_Sloc : GPR2.Source_Reference.Object;
-          Parser          : PP.Object)
+        (Ext             : GPR2.Project.External.Set.Set.Reference_Type;
+         Typ             : Identifier_List;
+         Assignment_Sloc : GPR2.Source_Reference.Object;
+         View            : GPR2.Project.View.Object)
       is
          Type_Def : constant GPR2.Project.Typ.Object :=
-                      Parser.Type_Definition_From
-                        (Tree_Internal.Get (Tree).all, Typ);
+                      Project_Parser.Type_Definition_From (View, Typ);
       begin
          --  Type_Def can not be undefined at this stage.
          --  Otherwise, the previous parsing stages would
@@ -163,6 +163,7 @@ package body GPR2.Project.External is
 
       procedure Parse_Simple_Typed_Externals
         (Parser    : PP.Object;
+         View      : GPR2.Project.View.Object;
          Externals : in out GPR2.Project.External.Set.Object)
       is
          function Internal (Node : Gpr_Node'Class) return Visit_Status;
@@ -374,8 +375,8 @@ package body GPR2.Project.External is
                                   Set.Set.Reference_Type :=
                                     Externals.Reference (Ext_Name);
                      Type_Def : constant GPR2.Project.Typ.Object :=
-                                  Parser.Type_Definition_From
-                                    (Tree_Internal.Get (Tree).all, Type_Node);
+                                  Project_Parser.Type_Definition_From
+                                    (View, Type_Node);
 
                   begin
                      --  Type_Def can not be undefined at this stage.
@@ -531,7 +532,7 @@ package body GPR2.Project.External is
       procedure Populate_Externals
         (Exts             : in out GPR2.Project.External.Set.Object;
          Parsed_Externals : PP.Externals_Map;
-         Parser           : PP.Object) is
+         View             : GPR2.Project.View.Object) is
       begin
          for C in Parsed_Externals.Iterate loop
             declare
@@ -556,7 +557,8 @@ package body GPR2.Project.External is
                      Assign_Type_To_External
                        (Exts.Reference (Name),
                         Parsed_Ext.Type_Node,
-                        Parsed_Ext.Source_Ref, Parser);
+                        Parsed_Ext.Source_Ref,
+                        View);
                   end if;
                end loop;
             end;
@@ -573,8 +575,10 @@ package body GPR2.Project.External is
          Populate_Externals
            (Externals,
             Def.Trees.Project.Externals,
-            Def.Trees.Project);
-         Parse_Simple_Typed_Externals (Def.Trees.Project, Externals);
+            Tree.Root_Project);
+         Parse_Simple_Typed_Externals (Def.Trees.Project,
+                                       Tree.Root_Project,
+                                       Externals);
 
       else
          for V of Tree.Ordered_Views loop
@@ -584,8 +588,8 @@ package body GPR2.Project.External is
                Parsed_Exts : constant PP.Externals_Map := Parser.Externals;
 
             begin
-               Populate_Externals (Externals, Parsed_Exts, Parser);
-               Parse_Simple_Typed_Externals (Parser, Externals);
+               Populate_Externals (Externals, Parsed_Exts, V);
+               Parse_Simple_Typed_Externals (Parser, V, Externals);
             end;
          end loop;
       end if;
