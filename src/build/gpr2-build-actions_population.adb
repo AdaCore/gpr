@@ -16,8 +16,10 @@ pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
 with GPR2.Build.Tree_Db;
+with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.View;
+with GPR2.Source_Reference;
 with GPR2.View_Ids.Set;
 
 package body GPR2.Build.Actions_Population is
@@ -90,6 +92,18 @@ package body GPR2.Build.Actions_Population is
                when K_Aggregate_Library =>
                   Result :=
                     Populate_Aggregated_Library (Tree_Db, V, Lib, Visited);
+
+               when K_Abstract =>
+                  if not Options.Mains.Is_Empty then
+                     Tree.Reporter.Report
+                       (Message.Create
+                          (Message.Error,
+                           "cannot build '" & Options.Mains.First_Element &
+                             "' with an abstract project",
+                           Sloc => GPR2.Source_Reference.Create
+                             (V.Path_Name.Value, 0, 0)));
+                     return False;
+                  end if;
 
                when others =>
                   null;
@@ -328,25 +342,29 @@ package body GPR2.Build.Actions_Population is
 
          if not Src.Is_Defined then
             Tree_Db.Report
-              ('"' & Basename &
-                 """ was not found in the sources of any project",
-               To_Stderr => True);
+              (Message.Create
+                 (Message.Error,
+                  '"' & Basename &
+                    """ was not found in the sources of any project",
+                  Source_Reference.Create (View.Path_Name.Value, 0, 0)));
             return No_Unit;
          end if;
 
          if Index /= No_Index then
             if not Src.Has_Units then
                Tree_Db.Report
-                 ('"' & String (Src.Path_Name.Simple_Name) &
-                    """ is not a multi-unit source",
-                  To_Stderr => True);
+                 (Message.Create
+                    (Message.Error,
+                     "unit index specified with a non unit-based source",
+                     Source_Reference.Create (Src.Path_Name.Value, 0, 0)));
                return No_Unit;
 
             elsif not Src.Has_Unit_At (Index) then
                Tree_Db.Report
-                 ('"' & String (Src.Path_Name.Simple_Name) &
-                    """ don't contain a unit at the index" & Index'Image,
-                  To_Stderr => True);
+                 (Message.Create
+                    (Message.Error,
+                     " no unit for the index" & Index'Image,
+                     Source_Reference.Create (Src.Path_Name.Value, 0, 0)));
                return No_Unit;
             end if;
 
@@ -354,9 +372,10 @@ package body GPR2.Build.Actions_Population is
            and then not Src.Has_Single_Unit
          then
             Tree_Db.Report
-              ('"' & String (Src.Path_Name.Simple_Name) &
-                 """ contains multiple units, a unit index is required",
-               To_Stderr => True);
+              (Message.Create
+                 (Message.Error,
+                  "multi-unit source used without a unit index",
+                  Source_Reference.Create (Src.Path_Name.Value, 0, 0)));
                return No_Unit;
 
          end if;
