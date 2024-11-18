@@ -139,6 +139,13 @@ package GPR2.Containers is
      new Ada.Containers.Indefinite_Ordered_Maps (Language_Id, Value_Type);
    subtype Lang_Value_Map is Lang_Value_Maps.Map;
 
+   package Lang_Value_List_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (Language_Id, Value_List, GPR2."<",  Value_Type_List."=");
+   subtype Lang_Value_List_Map is Lang_Value_List_Maps.Map;
+
+   Empty_Lang_Value_List_Map : Lang_Value_List_Map renames
+                                 Lang_Value_List_Maps.Empty_Map;
+
    package Unit_Name_To_Sloc is new
      Ada.Containers.Indefinite_Hashed_Maps
        (Name_Type, Source_Reference.Object, GPR2.Hash, GPR2."=",

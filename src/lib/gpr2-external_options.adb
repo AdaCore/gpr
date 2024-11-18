@@ -14,7 +14,7 @@ package body GPR2.External_Options is
                    Action : Action_Class;
                    Lang   : Language_Id) return GPR2.Containers.Value_List
    is
-      Result : GPR2.Containers.Value_List := GPR2.Containers.Empty_Vector;
+      Result : GPR2.Containers.Value_List := GPR2.Containers.Empty_Value_List;
    begin
       if Self.Ext_Opt.Contains (Action)
         and then Self.Ext_Opt (Action).Contains (Lang)

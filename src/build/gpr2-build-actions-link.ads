@@ -123,8 +123,8 @@ private
       Ctxt            : GPR2.Project.View.Object;
       --  The view defining the Main, or the library
 
-      Static_Options  : Containers.String_Vectors.Vector :=
-                          Containers.String_Vectors.Empty_Vector;
+      Static_Options  : Containers.Value_List :=
+                          Containers.Empty_Value_List;
       --  Command line options added manually with the Add_Option procedure
    end record;
 

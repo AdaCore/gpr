@@ -341,16 +341,6 @@ package body GPR2.Tree_Internal is
       Self.Messages.Append (Message.Create (Message.Error, Msg, Sloc));
    end Error;
 
-   ----------------------
-   -- External_Options --
-   ----------------------
-
-   function External_Options
-     (Self : Object) return GPR2.External_Options.Object is
-   begin
-      return Self.External_Options;
-   end External_Options;
-
    ------------------
    -- Find_Project --
    ------------------
@@ -681,7 +671,8 @@ package body GPR2.Tree_Internal is
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
       Environment      : GPR2.Environment.Object :=
-                           GPR2.Environment.Process_Environment)
+                           GPR2.Environment.Process_Environment;
+      External_Options : GPR2.External_Options.Object)
    is
       Gpr_Path     : Path_Name.Object;
       Root_Context : GPR2.Context.Object := Context;
@@ -909,7 +900,7 @@ package body GPR2.Tree_Internal is
          --  Tree is now fully loaded, we can create the artifacts database
          --  object.
          if not Self.Tree_Db.Is_Defined then
-            Init_Tree_Database (Self.Tree_Db, Self);
+            Init_Tree_Database (Self.Tree_Db, Self, External_Options);
          else
             --  Tree has been reloaded: update the database in case views
             --  have changed.
@@ -951,7 +942,8 @@ package body GPR2.Tree_Internal is
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
                             GPR2.File_Readers.No_File_Reader_Reference;
       Environment       : GPR2.Environment.Object :=
-                            GPR2.Environment.Process_Environment)
+                            GPR2.Environment.Process_Environment;
+      External_Options  : GPR2.External_Options.Object)
    is separate;
 
    ------------------------
@@ -2989,18 +2981,6 @@ package body GPR2.Tree_Internal is
       Self.Search_Paths.Default := Default_Search_Paths (True, Environment);
       Self.Update_Search_Paths;
    end Set_Environment;
-
-   --------------------------
-   -- Set_External_Options --
-   --------------------------
-
-   procedure Set_External_Options
-     (Self    : in out Object;
-      Options : GPR2.External_Options.Object) is
-   begin
-      Self.External_Options := Options;
-   end Set_External_Options;
-
 
    ------------------
    -- Set_Reporter --

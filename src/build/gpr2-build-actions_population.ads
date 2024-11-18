@@ -39,10 +39,7 @@ package GPR2.Build.Actions_Population is
       --  Do not bind standalone libraries if a binder file already exists
       No_Run_Path                    : Boolean := False;
       --  Do not set the Run_Path for shared libraries resolution
-      Compiler_Args                  : Lang_Args.Map;
-      Binder_Args                    : Lang_Args.Map;
-      Linker_Args                    : GPR2.Containers.Value_List;
-      --  Extra arguments for the compile/bind/link actions
+      No_Main_Subprogram             : Boolean := False;
 
       --  Restrictions on the actions to execute
 

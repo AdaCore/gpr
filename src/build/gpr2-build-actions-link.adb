@@ -6,7 +6,6 @@
 
 with GPR2.External_Options;
 with GPR2.Project.Attribute;
-with GPR2.Project.Tree;
 
 package body GPR2.Build.Actions.Link is
 
@@ -172,8 +171,8 @@ package body GPR2.Build.Actions.Link is
          --  Add -largs
 
          for Arg
-           of Self.View.Tree.External_Options.Fetch
-             (GPR2.External_Options.Custom_Linker_Options, GPR2.No_Language)
+           of Self.Tree.External_Options.Fetch
+             (GPR2.External_Options.Linker, GPR2.No_Language)
          loop
             Args.Append (Arg);
          end loop;

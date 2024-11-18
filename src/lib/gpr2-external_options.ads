@@ -17,12 +17,9 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 package GPR2.External_Options is
 
    type Action_Class is new String;
-   Custom_Binder_Options     : constant Action_Class := "builder";
-   Custom_Compiler_Options   : constant Action_Class := "compiler";
-   Custom_Linker_Options     : constant Action_Class := "linker";
-   Custom_No_Main_Subprogram : constant Action_Class := "no_main_subprogram";
-   --  Temporary until actions creation are done in GPR2 and not in GPRtools,
-   --  this option should be passed directly from GPRbuild.
+   Binder   : constant Action_Class := "binder";
+   Compiler : constant Action_Class := "compiler";
+   Linker   : constant Action_Class := "linker";
 
    type Object is tagged private;
    --  This object handles all external GPR switches.

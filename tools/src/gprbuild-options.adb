@@ -20,6 +20,7 @@ with Ada.Containers;
 with Ada.Strings.Unbounded;
 
 with GPR2.Options;
+with GPR2.External_Options;
 with GPR2.Reporter.Console;
 
 package body GPRbuild.Options is
@@ -233,11 +234,11 @@ package body GPRbuild.Options is
                  Help           => "Unique compilation for all sources of" &
                                    " all projects",
                  In_Switch_Attr => False));
-      --  Parser.Add_Argument
-      --    (Build_Group,
-      --     Create (Name           => "-z",
-      --             Help           => "No main subprogram (zero main)",
-      --             In_Switch_Attr => False));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name           => "-z",
+                 Help           => "No main subprogram (zero main)",
+                 In_Switch_Attr => False));
       Parser.Add_Argument
         (Build_Group,
          Create (Name => "--keep-temp-files",
@@ -389,27 +390,25 @@ package body GPRbuild.Options is
 
    begin
       if Section = "-cargs" then
-         if not Result.Build_Options.Compiler_Args.Contains (Lang_Idx) then
-            Result.Build_Options.Compiler_Args.Insert
-              (Lang_Idx,
-               GPR2.Containers.Value_Type_List.Empty_Vector);
-         end if;
-
-         Result.Build_Options.Compiler_Args (Lang_Idx).Append (String (Arg));
+         Result.Register_External_Options
+           (GPR2.External_Options.Compiler,
+            Lang_Idx,
+            String (Arg));
 
       elsif Section = "-bargs" then
-         if not Result.Build_Options.Binder_Args.Contains (Lang_Idx) then
-            Result.Build_Options.Binder_Args.Insert
-              (Lang_Idx,
-               GPR2.Containers.Value_Type_List.Empty_Vector);
-         end if;
-
-         Result.Build_Options.Binder_Args (Lang_Idx).Append (String (Arg));
+         Result.Register_External_Options
+           (GPR2.External_Options.Binder,
+            Lang_Idx,
+            String (Arg));
 
       elsif Section = "-largs" then
-         Result.Build_Options.Linker_Args.Append (String (Arg));
+         Result.Register_External_Options
+           (GPR2.External_Options.Linker,
+            GPR2.No_Language,
+            String (Arg));
 
       elsif Section = "-kargs" then
+         --  [eng/gpr/gpr-issues#444] TBD
          Result.Config_Args.Append (String (Arg));
 
       else
@@ -437,17 +436,12 @@ package body GPRbuild.Options is
       Result : constant access Object := Object (Res.all)'Access;
       Failed : Boolean := False;
 
-      procedure Add_Ada_Compiler_Option (Sw : String)
-      is
-         Pos  : GPR2.Build.Actions_Population.Lang_Args.Cursor;
-         Done : Boolean;
+      procedure Add_Ada_Compiler_Option (Sw : String) is
       begin
-         Result.Build_Options.Compiler_Args.Insert
-           (GPR2.Ada_Language, GPR2.Containers.Value_Type_List.Empty_Vector,
-            Pos,
-            Done);
-
-         Result.Build_Options.Compiler_Args.Reference (Pos).Append (Sw);
+         Result.Register_External_Options
+           (GPR2.External_Options.Compiler,
+            GPR2.Ada_Language,
+            Sw);
       end Add_Ada_Compiler_Option;
 
    begin
@@ -561,35 +555,14 @@ package body GPRbuild.Options is
       elsif Arg = "-U" then
          Result.Build_Options.Unique_Recompilation_Recursive := True;
 
-      --  elsif Arg = "-z" then
-      --     Result.Register_External_Options
-      --          (GPR2.External_Options.Custom_No_Main_Subprogram,
-      --           GPR2.Ada_Language,
-      --           String (Arg));
+      elsif Arg = "-z" then
+         Result.Build_Options.No_Main_Subprogram := True;
 
       elsif Arg = "-fno-inline" then
-         if not Result.Build_Options.Compiler_Args.Contains
-           (GPR2.Ada_Language)
-         then
-            Result.Build_Options.Compiler_Args.Include
-              (GPR2.Ada_Language,
-               GPR2.Containers.Value_Type_List.Empty_Vector);
-         end if;
-
-         Result.Build_Options.Compiler_Args
-           (GPR2.Ada_Language).Append (String (Arg));
+         Add_Ada_Compiler_Option (String (Arg));
 
       elsif Arg = "-fstack-check" then
-         if not Result.Build_Options.Compiler_Args.Contains
-           (GPR2.Ada_Language)
-         then
-            Result.Build_Options.Compiler_Args.Include
-              (GPR2.Ada_Language,
-               GPR2.Containers.Value_Type_List.Empty_Vector);
-         end if;
-
-         Result.Build_Options.Compiler_Args
-           (GPR2.Ada_Language).Append (String (Arg));
+         Add_Ada_Compiler_Option (String (Arg));
 
       elsif Arg = "--json-summary" then
          Result.Json_Summary := True;

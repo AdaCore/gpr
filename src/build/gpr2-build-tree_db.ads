@@ -13,6 +13,7 @@ with GNATCOLL.OS.FS;
 with GPR2.Build.Actions;
 with GPR2.Build.Artifacts;
 with GPR2.Build.View_Db;
+with GPR2.External_Options;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
@@ -252,6 +253,18 @@ package GPR2.Build.Tree_Db is
    function Reporter
      (Self : Object) return GPR2.Reporter.Holders.Reference_Type;
 
+   ----------------------
+   -- External options --
+   ----------------------
+
+   function External_Options
+     (Self : Object) return GPR2.External_Options.Object;
+   --  Returns the tree external options object
+
+   procedure Set_External_Options
+     (Self : in out Object; Options : GPR2.External_Options.Object);
+   --  Adds external options into the External_Options of Self
+
 private
 
    use all type DG.Node_Id;
@@ -293,39 +306,41 @@ private
 
    type Object is tagged limited record
    --  Options:
-      Src_Option      : Optional_Source_Info_Option := No_Source;
+      Src_Option       : Optional_Source_Info_Option := No_Source;
 
-      Self            : access Object;
+      Self             : access Object;
       --  Handy self-reference
 
-      Tree            : access GPR2.Tree_Internal.Object;
+      Tree             : access GPR2.Tree_Internal.Object;
       --  The project tree
 
-      Build_Dbs       : Build_DB_Maps.Map;
+      Build_Dbs        : Build_DB_Maps.Map;
       --  Distributed database objects sources from the views
 
-      Actions         : Action_Maps.Map;
-      Artifacts       : Artifact_Sets.Set;
-      New_Actions     : Action_Sets.Set;
+      Actions          : Action_Maps.Map;
+      Artifacts        : Artifact_Sets.Set;
+      New_Actions      : Action_Sets.Set;
 
-      Inputs          : Action_Artifacts_Maps.Map;
+      Inputs           : Action_Artifacts_Maps.Map;
       --  Explicit input(s) in the command line
-      Implicit_Inputs : Action_Artifacts_Maps.Map;
+      Implicit_Inputs  : Action_Artifacts_Maps.Map;
       --  Implicit input(s): included by the explicit ones.
-      Outputs         : Action_Artifacts_Maps.Map;
+      Outputs          : Action_Artifacts_Maps.Map;
       --  Artifacts produced by a given action
 
-      Successors      : Artifact_Actions_Maps.Map;
-      Predecessor     : Artifact_Action_Maps.Map;
+      Successors       : Artifact_Actions_Maps.Map;
+      Predecessor      : Artifact_Action_Maps.Map;
 
-      Actions_Graph   : aliased GNATCOLL.Directed_Graph.Directed_Graph;
-      Node_To_Action  : Node_Action_Maps.Map;
-      Action_To_Node  : Action_Node_Maps.Map;
+      Actions_Graph    : aliased GNATCOLL.Directed_Graph.Directed_Graph;
+      Node_To_Action   : Node_Action_Maps.Map;
+      Action_To_Node   : Action_Node_Maps.Map;
+      External_Options : GPR2.External_Options.Object;
    end record;
 
    procedure Create
-     (Self : in out Object;
-      Tree : GPR2.Tree_Internal.Object)
+     (Self             : in out Object;
+      Tree             : GPR2.Tree_Internal.Object;
+      External_Options : GPR2.External_Options.Object)
      with Pre => not Self.Is_Defined;
 
    Undefined : constant Object := (others => <>);

@@ -12,7 +12,6 @@ with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
 with GPR2.Containers;
 with GPR2.Context;
-with GPR2.External_Options;
 with GPR2.File_Readers;
 with GPR2.KB;
 with GPR2.Log;
@@ -84,10 +83,6 @@ package GPR2.Project.Tree is
    function Reporter
      (Self : Object) return GPR2.Reporter.Holders.Reference_Type;
    --  Returns a reference to the reporter
-
-   function External_Options
-     (Self : Object) return GPR2.External_Options.Object;
-   --  Returns the external options object
 
    function Load
      (Self                     : in out Object;
@@ -569,10 +564,6 @@ private
 
    function Element (Position : Cursor) return View.Object is
      (Tree_Internal.Element (Position.Internal));
-
-   function External_Options
-     (Self : Object) return GPR2.External_Options.Object
-   is (Self.Tree.External_Options);
 
    function Is_Root (Position : Cursor) return Boolean is
      (Tree_Internal.Is_Root (Position.Internal));

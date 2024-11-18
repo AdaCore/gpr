@@ -100,7 +100,8 @@ private package GPR2.Tree_Internal is
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
       Environment      : GPR2.Environment.Object :=
-                           GPR2.Environment.Process_Environment);
+                           GPR2.Environment.Process_Environment;
+      External_Options : GPR2.External_Options.Object);
    --  Loads a root project
    --  Filename: if Filename is a file path, then Load_Autoconf will use it as
    --   root project. If Filename is a directory path, then implicit projects
@@ -159,7 +160,8 @@ private package GPR2.Tree_Internal is
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
                             GPR2.File_Readers.No_File_Reader_Reference;
       Environment       : GPR2.Environment.Object :=
-                            GPR2.Environment.Process_Environment);
+                            GPR2.Environment.Process_Environment;
+      External_Options  : GPR2.External_Options.Object);
    --  Loads a tree in autoconf mode.
    --  If Filename is a file path, then Load_Autoconf will use it as
    --  root project. If Filename is a directory path, then implicit projects
@@ -244,14 +246,6 @@ private package GPR2.Tree_Internal is
    --  Adds new message into the Log of Self, does nothing if message already
    --  present.
 
-   procedure Set_External_Options
-     (Self : in out Object; Options : GPR2.External_Options.Object);
-   --  Adds external options into the External_Options of Self
-
-   function External_Options
-     (Self : Object) return GPR2.External_Options.Object;
-   --  Returns the tree external options object
-
    procedure Set_Reporter
      (Self : in out Object; Reporter : GPR2.Reporter.Object'Class);
    --  Sets the reporter used by the tree and all tree-related operations,
@@ -333,8 +327,9 @@ private package GPR2.Tree_Internal is
    --  Artifacts database
 
    Init_Tree_Database : access procedure
-     (Self : in out Build.Tree_Db.Object;
-      Tree : Object);
+     (Self             : in out Build.Tree_Db.Object;
+      Tree             : Object;
+      External_Options : GPR2.External_Options.Object);
    --  Private view of Tree_Db's initialization procedure
 
    function Artifacts_Database
@@ -539,7 +534,6 @@ private
       Reporter_Holder   : GPR2.Reporter.Holders.Holder :=
                             GPR2.Reporter.Holders.To_Holder
                               (GPR2.Reporter.Console.Create);
-      External_Options  : GPR2.External_Options.Object;
    end record;
 
    function "=" (Left, Right : Object) return Boolean is
