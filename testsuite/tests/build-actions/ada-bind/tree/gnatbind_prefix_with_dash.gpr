@@ -1,0 +1,5 @@
+project Gnatbind_Prefix_With_Dash extends "main.gpr" is
+	package Binder is
+		for Required_Switches ("Ada") use ("gnatbind_prefix=bla-");
+	end Binder;
+end Gnatbind_Prefix_With_Dash;

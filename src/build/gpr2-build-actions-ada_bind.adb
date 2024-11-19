@@ -250,17 +250,16 @@ package body GPR2.Build.Actions.Ada_Bind is
             GNAT.OS_Lib.Free (Tmp_Binder_Path);
          end if;
 
-         pragma Assert
-           ((True_Binder_Path /= null and then True_Binder_Path.all /= ""),
-            raise No_Binder_Found with "could not locate " & Tmp_Binder.all);
-
-         --  Normalize the path, so that gnaampbind does not complain about not
-         --  being in a "bin" directory. But don't resolve symbolic links,
-         --  because in GNAT 5.01a1 and previous releases, gnatbind was a
-         --  symbolic link for .gnat_wrapper.
+         --  Try to Normalize the path, so that gnaampbind does not complain
+         --  about not being in a "bin" directory. But don't resolve symbolic
+         --  links, because in GNAT 5.01a1 and previous releases, gnatbind was
+         --  a symbolic link for .gnat_wrapper.
+         --  If the specified tool does not exist, return the its raw value.
          Normalized_True_Binder_Path := new String'
-           (OS_Lib.Normalize_Pathname
-              (True_Binder_Path.all, Resolve_Links => False));
+           (if True_Binder_Path.all /= ""
+            then OS_Lib.Normalize_Pathname
+              (True_Binder_Path.all, Resolve_Links => False)
+            else Tmp_Binder.all);
 
          Add_Arg (Normalized_True_Binder_Path.all);
 

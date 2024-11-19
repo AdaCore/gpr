@@ -1,0 +1,5 @@
+project Ada_Binder extends "main.gpr" is
+	package Binder is
+		for Required_Switches ("Ada") use ("ada_binder=bla-gnatbind");
+	end Binder;
+end Ada_Binder;

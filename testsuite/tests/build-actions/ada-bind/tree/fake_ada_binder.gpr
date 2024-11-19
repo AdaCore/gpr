@@ -1,0 +1,5 @@
+project Fake_Ada_Binder extends "main.gpr" is
+	package Binder is
+		for Required_Switches ("Ada") use ("ada_binder=fake-gnatbind");
+	end Binder;
+end Fake_Ada_Binder;
