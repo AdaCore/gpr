@@ -1,0 +1,8 @@
+$ gpr2build -q -Pdemo.gpr -p --json-summary
+[Archive] liba.a (liba.gpr)
+[Archive] libb.a (libb.gpr)
+$ gpr2build -q -Papp.gpr -p
+$ ./main
+Hello from liba
+Hello from libb
+
