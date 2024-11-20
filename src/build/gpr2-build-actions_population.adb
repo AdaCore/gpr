@@ -93,25 +93,9 @@ package body GPR2.Build.Actions_Population is
                   Result :=
                     Populate_Aggregated_Library (Tree_Db, V, Lib, Visited);
 
-               when K_Abstract =>
-                  if not Options.Mains.Is_Empty then
-                     Tree.Reporter.Report
-                       (Message.Create
-                          (Message.Error,
-                           "cannot build '" & Options.Mains.First_Element &
-                             "' with an abstract project",
-                           Sloc => GPR2.Source_Reference.Create
-                             (V.Path_Name.Value, 0, 0)));
-                     return False;
-                  end if;
-
                when others =>
                   null;
             end case;
-         end if;
-
-         if Result then
-            Result := Populate_Withed_Units (Tree_Db, V, Visited);
          end if;
 
          if not Result then
