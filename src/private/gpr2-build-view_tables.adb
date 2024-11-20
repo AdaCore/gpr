@@ -165,7 +165,7 @@ package body GPR2.Build.View_Tables is
       C := To.Own_CUs.Find (CU);
 
       if Unit_Maps.Has_Element (C) then
-         To.Own_CUs.Reference (C).Insert (Root.View);
+         To.Own_CUs.Reference (C).Include (Root.View);
       else
          New_Set.Insert (Root.View);
          To.Own_CUs.Include (CU, New_Set);
