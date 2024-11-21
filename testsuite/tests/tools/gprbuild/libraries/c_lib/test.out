@@ -1,0 +1,11 @@
+$ gpr2build -q -Pdemo.gpr -p --json-summary
+$ gpr2build -q -Papp.gpr -p --json-summary
+lib:
+uid: '[C Compile] pkg.c (demo.gpr)', status : '0'
+uid: '[Archive] libdemo.a (demo.gpr)', status : '0'
+lib has been created, good!
+bin:
+Ok so far
+$ ./main
+from the C lib: Hello there
+
