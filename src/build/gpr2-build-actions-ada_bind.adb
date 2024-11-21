@@ -409,30 +409,42 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       Add_Binder (PRA.Binder.Required_Switches, Lang_Ada_Idx);
 
-      if Self.Is_Shared_Library then
+      if Self.Ctxt.Is_Library and then Self.Ctxt.Is_Shared_Library then
          Add_Arg ("-shared");
       end if;
 
       Add_Arg ("-o");
+      Add_Arg (String (Self.Output_Body.Path.Simple_Name));
 
       --  Directory separators are not allowed. We must be in the correct
       --  directory and only use the source base name with extension.
 
-      for Ali of Tree_Db.Inputs (Self.UID, Explicit_Only => True) loop
+      for Ali of Self.Tree.Inputs (Self.UID, Explicit_Only => True) loop
          Add_Arg
-           (String (GPR2.Build.Artifacts.Files.Object (Ali).Path.Simple_Name));
+           (GPR2.Build.Artifacts.Files.Object (Ali).Path.String_Value);
       end loop;
 
       for Extra of Self.Extra_Opts loop
          Add_Arg (Extra);
       end loop;
 
-      if Self.Has_SAL_In_Closure then
-         Add_Arg ("-F");
-      end if;
+      for View of Self.Ctxt.Closure (True) loop
+         if View.Is_Library and then View.Is_Library_Standalone then
+            --  Force checking of elaboration flags
+            Add_Arg ("-F");
+            exit;
+         end if;
+      end loop;
 
-      for Dep_File_Dir of Self.Dep_File_Dirs loop
-         Add_Arg ("-I" & Dep_File_Dir);
+      for View of Self.Ctxt.Closure loop
+         --  Make sure all ALI directories are visible
+         if View.Language_Ids.Contains (Ada_Language) then
+            if View.Is_Library then
+               Add_Arg ("-I" & View.Library_Ali_Directory.String_Value);
+            elsif View.Kind in With_Object_Dir_Kind then
+               Add_Arg ("-I" & View.Object_Directory.String_Value);
+            end if;
+         end if;
       end loop;
 
       --  [eng/gpr/gpr-issues#446] : This may include "-v"
@@ -524,14 +536,9 @@ package body GPR2.Build.Actions.Ada_Bind is
    ----------------
 
    procedure Initialize
-     (Self               : in out Object;
-      Main_Ali           : Artifacts.Files.Object;
-      Is_Library         : Boolean := False;
-      Is_Shared_Lib      : Boolean := False;
-      Has_SAL_In_Closure : Boolean := False;
-      Dep_File_Dirs      : Containers.Value_List :=
-        Containers.Empty_Value_List;
-      Context            : GPR2.Project.View.Object)
+     (Self     : in out Object;
+      Main_Ali : Artifacts.Files.Object;
+      Context  : GPR2.Project.View.Object)
    is
 
       BN : constant Simple_Name := Main_Ali.Path.Base_Filename;
@@ -545,10 +552,6 @@ package body GPR2.Build.Actions.Ada_Bind is
         Artifacts.Files.Create
           (Context.Object_Directory.Compose ("b__" & BN & ".adb"));
       Self.Traces := Create ("ACTION_ADA_BIND");
-      Self.Is_Library         := Is_Library;
-      Self.Is_Shared_Library  := Is_Shared_Lib;
-      Self.Has_SAL_In_Closure := Has_SAL_In_Closure;
-      Self.Dep_File_Dirs      := Dep_File_Dirs;
 
       Initialize_Linker_Options (Self);
    end Initialize;
@@ -561,8 +564,8 @@ package body GPR2.Build.Actions.Ada_Bind is
       Idx  : PAI.Object;
       Attr : Project.Attribute.Object;
    begin
-      if Self.Is_Library then
-         if Self.Is_Shared_Library then
+      if Self.Ctxt.Is_Library then
+         if Self.Ctxt.Is_Shared_Library then
             Idx := PAI.Create ("-shared");
          else
             Idx := PAI.Create ("-static");

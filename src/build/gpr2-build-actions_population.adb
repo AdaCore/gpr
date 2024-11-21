@@ -419,10 +419,9 @@ package body GPR2.Build.Actions_Population is
             Main.View,
             -Options.Output_File);
 
-         if Tree_Db.Has_Action (Link.UID) then
-            return True;
-
-         elsif not Tree_Db.Add_Action (Link) then
+         if not Tree_Db.Has_Action (Link.UID)
+           and then not Tree_Db.Add_Action (Link)
+         then
             return False;
          end if;
 

@@ -25,14 +25,9 @@ package GPR2.Build.Actions.Ada_Bind is
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
 
    procedure Initialize
-     (Self               : in out Object;
-      Main_Ali           : Artifacts.Files.Object;
-      Is_Library         : Boolean := False;
-      Is_Shared_Lib      : Boolean := False;
-      Has_SAL_In_Closure : Boolean := False;
-      Dep_File_Dirs      : Containers.Value_List :=
-        Containers.Empty_Value_List;
-      Context            : GPR2.Project.View.Object);
+     (Self     : in out Object;
+      Main_Ali : Artifacts.Files.Object;
+      Context  : GPR2.Project.View.Object);
 
    procedure Initialize_No_Main
      (Self : in out Object;
@@ -99,11 +94,6 @@ private
       Output_Spec : Artifacts.Files.Object;
       Output_Body : Artifacts.Files.Object;
 
-      Is_Library         : Boolean := False;
-      Is_Shared_Library  : Boolean := False;
-      Has_SAL_In_Closure : Boolean := False;
-      --  Binding options
-
       Ctxt               : GPR2.Project.View.Object;
       --  View referenced by the generated compilation unit
 
@@ -112,10 +102,6 @@ private
 
       Obj_Deps           : GPR2.Containers.Filename_Set;
       --  List of objects coming from the binder in the generated body
-
-      Dep_File_Dirs      : Containers.Value_List :=
-                             Containers.Empty_Value_List;
-      --  All directory to be searched for sources and ALI files
 
       Extra_Opts  : GNATCOLL.OS.Process.Argument_List;
       --  Extra options to give to the binder

@@ -1,0 +1,15 @@
+project Stub is
+
+   for Source_Dirs use ("stub");
+   for Object_Dir use "obj";
+   for Exec_Dir use "tree/bin";
+
+   for Main use ("stub.adb");
+
+   Prefix := external ("PREFIX", "");
+
+   package Builder is
+      for Executable ("stub.adb") use Prefix & "gnatbind";
+   end Builder;
+
+end Stub;

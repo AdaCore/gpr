@@ -1,5 +1,4 @@
 [ Test case 1 ] - [ Binder action process ]
-main.gpr:4:23: warning: object directory "obj" not found
 [ Setup ] tree/main.gpr Loaded
 [ Setup ] Sources updated
 [ Setup ] main.ali Created

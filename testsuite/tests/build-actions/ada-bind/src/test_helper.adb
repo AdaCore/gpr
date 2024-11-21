@@ -74,18 +74,23 @@ package body Test_Helper is
    begin
       for Root of Tree.Namespace_Root_Projects loop
          for Main of Root.Mains loop
-            Action.Initialize
-              (Main_Ali  => Build.Artifacts.Files.Create
-                 (Root.Object_Directory.Compose
-                      (Filename_Type
-                           (String (Main.Source.Base_Name) & ".ali"))),
-               Context   => Root);
-            Assert
-              (not Tree.Artifacts_Database.Has_Action (Action.UID),
-               "New binder action", Topic => Setup);
-            Assert
-              (Tree.Artifacts_Database.Add_Action (Action),
-               "Action inserted in Tree_DB", Topic => Setup);
+            declare
+               Ali : constant Build.Artifacts.Files.Object :=
+                       Build.Artifacts.Files.Create
+                         (Root.Object_Directory.Compose
+                            (Main.Source.Base_Filename & ".ali"));
+            begin
+               Action.Initialize
+                 (Main_Ali  => Ali,
+                  Context   => Root);
+               Assert
+                 (not Tree.Artifacts_Database.Has_Action (Action.UID),
+                  "New binder action", Topic => Setup);
+               Assert
+                 (Tree.Artifacts_Database.Add_Action (Action),
+                  "Action inserted in Tree_DB", Topic => Setup);
+               Tree.Artifacts_Database.Add_Input (Action.UID, Ali, True);
+            end;
          end loop;
       end loop;
 
@@ -98,13 +103,9 @@ package body Test_Helper is
 
    function Launch_Action (Args : Argument_List) return Integer
    is
-      P_Wo    : FS.File_Descriptor;
-      P_Ro    : FS.File_Descriptor;
       Process : Process_Handle;
    begin
-      FS.Open_Pipe (P_Ro, P_Wo);
-      Process := Start (Args => Args, Stdout => P_Wo, Stderr => FS.Standerr);
-      FS.Close (P_Wo);
+      Process := Start (Args => Args);
       return Wait (Process);
    end Launch_Action;
 
@@ -120,7 +121,8 @@ package body Test_Helper is
       Opt.Add_Switch (GPR2.Options.P, Project);
 
       Assert
-        (Tree.Load (Opt, With_Runtime => True),
+        (Tree.Load
+           (Opt, With_Runtime => True, Absent_Dir_Error => GPR2.No_Error),
          Project & " Loaded", Topic => Setup);
 
       Assert

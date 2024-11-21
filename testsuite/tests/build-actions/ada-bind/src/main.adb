@@ -42,9 +42,7 @@ begin
    begin
       Test_Helper.New_Test_Case ("Binder action process");
       Tree := Test_Helper.Load_Project ("tree/main.gpr");
-      Obj_Dir := GNATCOLL.VFS.Create
-        (Filesystem_String
-           (Tree.Root_Project.Object_Directory.Value));
+      Obj_Dir := Tree.Root_Project.Object_Directory.Virtual_File;
       Make_Dir (Obj_Dir);
       Test_Helper.Assert (Is_Directory (Obj_Dir));
 
@@ -61,22 +59,15 @@ begin
       declare
          Args    : Argument_List;
          Env     : Environment_Dict;
-         P_Wo    : FS.File_Descriptor;
-         P_Ro    : FS.File_Descriptor;
          Ret     : Integer;
          Process : Process_Handle;
       begin
          Action.Compute_Command (Args, Env, 1);
-         FS.Open_Pipe (P_Ro, P_Wo);
          Process := Start
            (Args        => Args,
             Env         => Env,
             Cwd         => Action.Working_Directory.String_Value,
-            Stdin       => P_Wo,
-            Stderr      => FS.Standerr,
             Inherit_Env => True);
-         FS.Close (P_Wo);
-
          Ret := Wait (Process);
          Test_Helper.Assert (Ret = 0, "Successful action");
       end;
