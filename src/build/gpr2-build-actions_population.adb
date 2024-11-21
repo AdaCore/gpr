@@ -12,6 +12,7 @@ with GPR2.Build.Actions.Sets;
 with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Compilation_Unit.Maps;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
@@ -484,7 +485,104 @@ package body GPR2.Build.Actions_Population is
       View    : GPR2.Project.View.Object;
       Lib     : out Artifacts.Library.Object) return Boolean
    is
-      L : GPR2.Build.Actions.Link.Object;
+      use GPR2.Build.Compilation_Unit;
+
+      procedure Interface_Units
+        (Units : out GPR2.Build.Compilation_Unit.Maps.Map);
+      --  Provide the compilation units provided by either Library_Interface
+      --  or Interfaces attributes.
+
+      function Add_Comp_To_Tree_And_Linker
+        (CU     : GPR2.Build.Compilation_Unit.Object;
+         Linker : GPR2.Build.Actions.Link.Object) return Boolean;
+      --  Create an Ada compile action from the provided CU, add its to the
+      --  tree and add its object file as a linker input.
+      --  Return True on success.
+
+      ---------------------------------
+      -- Add_Comp_To_Tree_And_Linker --
+      ---------------------------------
+
+      function Add_Comp_To_Tree_And_Linker
+        (CU     : GPR2.Build.Compilation_Unit.Object;
+         Linker : GPR2.Build.Actions.Link.Object) return Boolean
+      is
+         Comp : GPR2.Build.Actions.Compile.Ada.Object;
+      begin
+         Comp.Initialize (CU);
+
+         if not Tree_Db.Add_Action (Comp) then
+            return False;
+         end if;
+
+         Tree_Db.Add_Input (Linker.UID, Comp.Object_File, False);
+         return True;
+      end Add_Comp_To_Tree_And_Linker;
+
+      ---------------------
+      -- Interface_Units --
+      ---------------------
+
+      procedure Interface_Units
+        (Units : out GPR2.Build.Compilation_Unit.Maps.Map)
+      is
+         use GPR2.Build.Compilation_Unit.Maps;
+         CU : GPR2.Build.Compilation_Unit.Object;
+         use GPR2.Containers;
+      begin
+         Units := Empty_Map;
+
+         if View.Has_Library_Interface then
+            for Unit_Name_Curs in View.Interface_Units.Iterate loop
+               CU :=
+                 View.Own_Unit
+                   (Name => Unit_Name_To_Sloc.Key (Unit_Name_Curs));
+               Units.Include (CU.Name, CU);
+            end loop;
+         else
+            pragma Assert (View.Has_Interfaces);
+            for Interface_Source_Cursor in View.Interface_Sources.Iterate loop
+               declare
+                  Source_Name : constant Simple_Name :=
+                    Simple_Name
+                      (Source_Path_To_Sloc.Key (Interface_Source_Cursor));
+                  Source      : constant GPR2.Build.Source.Object :=
+                    View.Source (Filename => Source_Name);
+
+               begin
+                  --  If the file does not contain units, it does not need
+                  --  elaboration nor finalization.
+
+                  if not Source.Has_Units then
+                     goto Next_Interface;
+                  end if;
+
+                  if Source.Has_Single_Unit then
+                     CU := View.Own_Unit (Name => Source.Unit.Name);
+                     Units.Include (CU.Name, CU);
+                  else
+                     --  Process all the units contained in the source file.
+                     --  An ALI file is generated for each unit. If a source is
+                     --  multi units, then a ~<index> suffix is added to the
+                     --  source name to produce the ali file name.For instance,
+                     --  if the file foo.adb contains unit A and B, then two
+                     --  files will be produced: foo~1.ali and foo~2.ali.
+
+                     for Unit_Info of Source.Units loop
+                        CU := View.Own_Unit (Name => Unit_Info.Name);
+                        Units.Include (CU.Name, CU);
+                     end loop;
+                  end if;
+               end;
+
+               <<Next_Interface>>
+            end loop;
+         end if;
+      end Interface_Units;
+
+      L            : GPR2.Build.Actions.Link.Object;
+      Bind         : GPR2.Build.Actions.Ada_Bind.Object;
+      Interf_Units : GPR2.Build.Compilation_Unit.Maps.Map;
    begin
       L.Initialize_Library (View);
 
@@ -498,10 +596,36 @@ package body GPR2.Build.Actions_Population is
 
       Lib := Artifacts.Library.Object (L.Output);
 
-      --  ??? TODO: Take care of Library_Interface
+      if View.Is_Externally_Built then
+         return True;
+      end if;
 
-      if not View.Is_Externally_Built then
-         for CU of View.Own_Units loop
+      if View.Is_Library_Standalone then
+
+         --  Create the binder action that will create the file in charge of
+         --  elaborating and finalizing the lib. Used for standalone libraries.
+
+         declare
+            Binding_Extra_Opts : GPR2.Containers.Value_List :=
+              GPR2.Containers.Empty_Value_List;
+         begin
+            Binding_Extra_Opts.Append ("-a");
+            Binding_Extra_Opts.Append ("-n");
+
+            Bind.Initialize
+              (Basename   => View.Library_Name,
+               Context    => View,
+               Extra_Opts => Binding_Extra_Opts);
+         end;
+
+         if not Tree_Db.Add_Action (Bind) then
+            return False;
+         end if;
+
+         Tree_Db.Add_Input (L.UID, Bind.Post_Bind.Object_File, True);
+         Interface_Units (Interf_Units);
+
+         for CU of Interf_Units loop
             declare
                Comp : GPR2.Build.Actions.Compile.Ada.Object;
             begin
@@ -511,31 +635,40 @@ package body GPR2.Build.Actions_Population is
                   return False;
                end if;
 
-               Tree_Db.Add_Input
-                 (L.UID, Comp.Object_File, False);
+               Tree_Db.Add_Input (L.UID, Comp.Object_File, False);
+               Tree_Db.Add_Input (Bind.UID, Comp.Ali_File, True);
+
+               if Interf_Units.First_Element = CU then
+                  Tree_Db.Add_Input (L.UID, Bind.Post_Bind.Object_File, True);
+               end if;
             end;
          end loop;
-
-         for Src of View.Sources loop
-            if not Src.Has_Units
-              and then Src.Is_Compilable
-              and then Src.Kind = S_Body
-            then
-               declare
-                  Comp : GPR2.Build.Actions.Compile.Object;
-               begin
-                  Comp.Initialize (Src);
-
-                  if not Tree_Db.Add_Action (Comp) then
-                     return False;
-                  end if;
-
-                  Tree_Db.Add_Input
-                    (L.UID, Comp.Object_File, False);
-               end;
+      else
+         for CU of View.Own_Units loop
+            if not Add_Comp_To_Tree_And_Linker (CU, L) then
+               return False;
             end if;
          end loop;
       end if;
+
+      for Src of View.Sources loop
+         if not Src.Has_Units
+           and then Src.Is_Compilable
+           and then Src.Kind = S_Body
+         then
+            declare
+               Comp : GPR2.Build.Actions.Compile.Object;
+            begin
+               Comp.Initialize (Src);
+
+               if not Tree_Db.Add_Action (Comp) then
+                  return False;
+               end if;
+
+               Tree_Db.Add_Input (L.UID, Comp.Object_File, False);
+            end;
+         end if;
+      end loop;
 
       return True;
    end Populate_Library;
