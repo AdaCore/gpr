@@ -1,0 +1,50 @@
+$ gpr2build main.adb -q
+$ ada/main
+Hello there
+
+$ gpr2build main -q
+$ ada/main
+Hello there
+
+$ gpr2build hello.c -q -o main
+$ c/main
+hello from C
+
+$ gpr2build hello.c main.adb -q
+$ mixed/main
+hello from C
+
+$ mixed/hello
+hello from C
+
+$ gpr2build -Pmulti src.ada -eI1 -o main -q
+$ multi/main
+I'm first unit
+
+$ gpr2build -Pmulti src.ada -eI2 -o main -q
+$ multi/main
+I'm first unit
+
+$ gpr2build -Pmulti src.ada -eI3 -o main -q
+$ multi/main
+I'm first unit
+
+$ gpr2build hello.c -eI1
+using project file /c/default.gpr
+hello.c: error: unit index specified with a non unit-based source
+$ gpr2build main.adb -eI1
+use implicit project in /ada
+main.adb: error:  no unit for the index 1
+$ gpr2build non_existing.adb
+use implicit project in /ada
+default.gpr: error: "non_existing.adb" was not found in the sources of any project
+$ gpr2build main.adb hello.c -eI1
+gprbuild: only one source can be specified with multi-unit index specified with '-eI'
+try "gpr2build --help" for more information.
+$ gpr2build non_existing.adb
+use implicit project in /ada
+default.gpr: error: "non_existing.adb" was not found in the sources of any project
+$ gpr2build -Pmulti src.ada -eI4 -o main
+src.ada: error:  no unit for the index 4
+$ gpr2build -Pmulti src.ada -o p4
+src.ada: error: multi-unit source used without a unit index
