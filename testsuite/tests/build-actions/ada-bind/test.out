@@ -1,0 +1,74 @@
+[ Test case 1 ] - [ Binder action process ]
+main.gpr:4:23: warning: object directory "obj" not found
+[ Setup ] tree/main.gpr Loaded
+[ Setup ] Sources updated
+[ Setup ] main.ali Created
+[ Setup ] pkg.ali Created
+[ Setup ] dep_two.ali Created
+[ Setup ] New binder action
+[ Setup ] Action inserted in Tree_DB
+[ OK ] Successful action
+[ OK ] Spec has .ads extension
+[ OK ] Body has .adb extension
+[ OK ] Coherent base name
+[ OK ] Expected base name
+[ OK ] Artifact file is main.ali
+[ OK ] Correct number of inputs
+[ OK ] Post-Bind action correctly created
+[ Test case 2 ] - [ Parse gnatbind_prefix ]
+[ Setup ] tree/gnatbind_prefix.gpr Loaded
+[ Setup ] Sources updated
+[ Setup ] New binder action
+[ Setup ] Action inserted in Tree_DB
+[ OK ] Correctly found binder tool with gnatbind_prefix=bla
+[ OK ] Successfully launched process
+[ Test case 3 ] - [ Parse gnatbind_prefix with dash ]
+[ Setup ] tree/gnatbind_prefix_with_dash.gpr Loaded
+[ Setup ] Sources updated
+[ Setup ] New binder action
+[ Setup ] Action inserted in Tree_DB
+[ OK ] Correctly found binder tool with gnatbind_prefix=bla-
+[ OK ] Successfully launched process
+[ Test case 4 ] - [ Parse ada_binder ]
+[ Setup ] tree/ada_binder.gpr Loaded
+[ Setup ] Sources updated
+[ Setup ] New binder action
+[ Setup ] Action inserted in Tree_DB
+[ OK ] Correctly found binder tool with ada_binder=bla-gnatbind
+[ OK ] Successfully launched process
+[ Test case 5 ] - [ Parse gnatbind_path ]
+[ Setup ] tree/gnatbind_path.gpr Loaded
+[ Setup ] Sources updated
+[ Setup ] New binder action
+[ Setup ] Action inserted in Tree_DB
+[ OK ] Correctly found binder tool define in gnatbind_path=<path>/bla-gnatbind
+[ OK ] Successfully launched process
+[ Test case 6 ] - [ Parse empty required switches ]
+[ Setup ] tree/empty_required_switches.gpr Loaded
+[ Setup ] Sources updated
+[ Setup ] New binder action
+[ Setup ] Action inserted in Tree_DB
+[ OK ] Correctly defaulted to binder tool in Compiler.Driver install directory
+[ OK ] Successfully launched process
+[ Test case 7 ] - [ Fake gnatbind path ]
+[ Setup ] tree/fake_gnatbind_path.gpr Loaded
+[ Setup ] Sources updated
+[ Setup ] New binder action
+[ Setup ] Action inserted in Tree_DB
+[ OK ] Unknown tool
+[ OK ] Process error expected due to a fake gnatbind being used
+[ Test case 8 ] - [ Fake gnatbind prefix ]
+[ Setup ] tree/fake_gnatbind_prefix.gpr Loaded
+[ Setup ] Sources updated
+[ Setup ] New binder action
+[ Setup ] Action inserted in Tree_DB
+[ OK ] Unknown tool
+[ OK ] Process error expected due to a fake gnatbind being used
+[ Test case 9 ] - [ Fake ada binder ]
+[ Setup ] tree/fake_ada_binder.gpr Loaded
+[ Setup ] Sources updated
+[ Setup ] New binder action
+[ Setup ] Action inserted in Tree_DB
+[ OK ] Unknown tool
+[ OK ] Process error expected due to a fake gnatbind being used
+

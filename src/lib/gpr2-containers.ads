@@ -56,6 +56,8 @@ package GPR2.Containers is
 
    subtype Value_List is Value_Type_List.Vector;
 
+   Empty_Value_List : Value_List renames Value_Type_List.Empty_Vector;
+
    function Create
      (Value     : Value_Type;
       Separator : Value_Not_Empty) return Containers.Value_List;

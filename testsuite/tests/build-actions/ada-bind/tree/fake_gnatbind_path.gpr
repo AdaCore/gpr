@@ -1,0 +1,5 @@
+project Fake_Gnatbind_Path extends "main.gpr" is
+	package Binder is
+		for Required_Switches ("Ada") use ("--gnatbind_path=" & Project'Project_Dir & "fake/fake-gnatbind");
+	end Binder;
+end Fake_Gnatbind_Path;

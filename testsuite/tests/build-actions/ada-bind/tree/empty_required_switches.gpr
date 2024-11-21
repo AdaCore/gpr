@@ -1,0 +1,8 @@
+project Empty_Required_Switches extends "main.gpr" is
+	package Compiler is
+		for Driver ("Ada") use Project'Project_Dir & "bin/gcc";
+	end Compiler;
+	package Binder is
+		for Required_Switches ("Ada") use ("");
+	end Binder;
+end Empty_Required_Switches;

@@ -1,2 +1,2 @@
 description: Test the Ada Bind action
-driver: basic
+driver: python_script

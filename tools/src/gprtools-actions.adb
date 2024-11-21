@@ -4,6 +4,7 @@ with GPR2.Build.Actions.Link;
 with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
+with GPR2.Containers;
 with GPR2.Build.Source;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
@@ -130,7 +131,39 @@ package body GPRtools.Actions is
             end if;
          end if;
 
-         Bind.Initialize (Comp.Ali_File, Main.View);
+         Binder_Action : declare
+            Is_Library         : constant Boolean := Main.View.Is_Library;
+            Is_Shared_Library  : constant Boolean :=
+                                   (if Is_Library
+                                    then Main.View.Is_Shared_Library
+                                    else False);
+            Has_SAL_In_Closure : Boolean := False;
+            Dep_File_Dirs      : Containers.Value_List;
+         begin
+            for View of Main.View.Closure loop
+               if View.Is_Runtime then
+                  null;
+               elsif View.Is_Library then
+                  Dep_File_Dirs.Append
+                    (View.Library_Ali_Directory.String_Value);
+
+                  if View.Is_Library_Standalone then
+                     Has_SAL_In_Closure := True;
+                  end if;
+               elsif View.Kind in With_Object_Dir_Kind then
+                  Dep_File_Dirs.Append (View.Object_Directory.String_Value);
+               end if;
+            end loop;
+
+            Bind.Initialize
+              (Main_Ali           => Comp.Ali_File,
+               Is_Library         => Is_Library,
+               Is_Shared_Lib      => Is_Shared_Library,
+               Has_SAL_In_Closure => Has_SAL_In_Closure,
+               Dep_File_Dirs      => Dep_File_Dirs,
+               Context            => Main.View);
+         end Binder_Action;
+
          if not Tree_Db.Add_Action (Bind) then
             return False;
          end if;

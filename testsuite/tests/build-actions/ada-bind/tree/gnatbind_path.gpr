@@ -1,0 +1,5 @@
+project Gnatbind_Path extends "main.gpr" is
+	package Binder is
+		for Required_Switches ("Ada") use ("--gnatbind_path=" & Project'Project_Dir & "/bin/bla-gnatbind");
+	end Binder;
+end Gnatbind_Path;

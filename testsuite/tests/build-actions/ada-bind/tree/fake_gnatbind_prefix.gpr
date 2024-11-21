@@ -1,0 +1,5 @@
+project Fake_Gnatbind_Prefix extends "main.gpr" is
+	package Binder is
+		for Required_Switches ("Ada") use ("gnatbind_prefix=fake");
+	end Binder;
+end Fake_Gnatbind_Prefix;
