@@ -785,17 +785,6 @@ package body GPR2.Project.Tree is
       end if;
    end Report_Logs;
 
-   --------------
-   -- Reporter --
-   --------------
-
-   function Reporter (Self : Object) return Reporter_Reference_Type is
-      Ref : constant GPR2.Tree_Internal.Reporter_Holders.Reference_Type :=
-              Self.Tree.Reporter;
-   begin
-      return (Element => Ref.Element, Ref => Ref);
-   end Reporter;
-
    ------------------------------------
    -- Restrict_Autoconf_To_Languages --
    ------------------------------------

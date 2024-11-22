@@ -1823,7 +1823,7 @@ package body GPR2.Tree_Internal is
    --------------
 
    function Reporter
-     (Self : in out Object) return Reporter_Holders.Reference_Type
+     (Self : in out Object) return GPR2.Reporter.Holders.Reference_Type
    is
    begin
       return Self.Reporter_Holder.Reference;

@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Containers.Indefinite_Holders;
 with GPR2.Configuration_Internal;
 with GPR2.Project.Configuration;
 separate (GPR2.Tree_Internal)
