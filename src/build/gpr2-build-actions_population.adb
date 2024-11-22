@@ -93,6 +93,19 @@ package body GPR2.Build.Actions_Population is
                   Result :=
                     Populate_Aggregated_Library (Tree_Db, V, Lib, Visited);
 
+               when K_Abstract =>
+                  if not Options.Mains.Is_Empty then
+                     for Main of Options.Mains loop
+                        Tree.Reporter.Report
+                          (GPR2.Message.Create
+                             (GPR2.Message.Error,
+                              "cannot build '" & Main &
+                                "' with an abstract project",
+                              GPR2.Source_Reference.Create
+                                (V.Path_Name.Value, 0, 0)));
+                     end loop;
+                  end if;
+
                when others =>
                   null;
             end case;
