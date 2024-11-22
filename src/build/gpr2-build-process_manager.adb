@@ -9,6 +9,7 @@ with System.Multiprocessors;
 pragma Warnings (On);
 
 with Ada.Exceptions;
+with Ada.Strings.Fixed;
 with Ada.Unchecked_Deallocation;
 
 with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
@@ -86,7 +87,8 @@ package body GPR2.Build.Process_Manager is
       end if;
 
       if Length (Stderr) > 0 then
-         Self.Tree_Db.Report (-Stderr, To_Stderr => True);
+         Self.Tree_Db.Report
+           (-Stderr, To_Stderr => True, Level => GPR2.Message.Important);
       end if;
 
       if Proc_Handler.Status = Failed_To_Launch
@@ -505,7 +507,13 @@ package body GPR2.Build.Process_Manager is
                Append (Result, " ");
             end if;
 
-            Append (Result, Arg);
+            if Ada.Strings.Fixed.Index (Arg, " ") > 0 then
+               Append (Result, '"');
+               Append (Result, Arg);
+               Append (Result, '"');
+            else
+               Append (Result, Arg);
+            end if;
          end loop;
 
          return -Result;
