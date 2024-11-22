@@ -227,7 +227,7 @@ package body GPRtools.Command_Line is
 
       if Callback = null then
          if Length (Self.Default_Section) > 0 then
-            raise Command_Line_Definition_Error with
+            raise GPR2.Options.Usage_Error with
               "Cannot define multiple section arguments: " &
               (-Self.Default_Section) & ", " & String (Name);
          end if;

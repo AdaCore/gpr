@@ -50,10 +50,6 @@ private with Ada.Containers.Indefinite_Ordered_Sets;
 
 package GPRtools.Command_Line is
 
-   Command_Line_Definition_Error : exception;
-   --  Raised when there's issues with the definition of switches in the
-   --  command line parser.
-
    type Switch_Type is new String
      with Dynamic_Predicate =>
             Switch_Type'Length > 0

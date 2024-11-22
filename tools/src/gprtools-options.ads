@@ -41,14 +41,15 @@ package GPRtools.Options is
       Unchecked_Shared_Lib     : Boolean := False;
       --  Whether shared libs importing static libs should be checked
 
-      Find_Implicit_Project : Boolean := True;
+      Find_Implicit_Project    : Boolean := True;
       --  Whether the tool allows finding implicit projects
 
       Tree                     : GPR2.Project.Tree.Object;
       --  The project tree once loaded
 
-      Console_Reporter : GPR2.Reporter.Console.Object :=
-                           GPR2.Reporter.Console.Create;
+      Console_Reporter         : GPR2.Reporter.Console.Object :=
+                                   GPR2.Reporter.Console.Create;
+      No_Warnings              : Boolean := False;
 
       --  Distributed mode
 
