@@ -335,7 +335,7 @@ package body GPR2.Build.Actions_Population is
          end if;
 
          if not Src.Is_Defined then
-            Tree_Db.Report
+            Tree_Db.Reporter.Report
               (Message.Create
                  (Message.Error,
                   '"' & Basename &
@@ -346,7 +346,7 @@ package body GPR2.Build.Actions_Population is
 
          if Index /= No_Index then
             if not Src.Has_Units then
-               Tree_Db.Report
+               Tree_Db.Reporter.Report
                  (Message.Create
                     (Message.Error,
                      "unit index specified with a non unit-based source",
@@ -354,7 +354,7 @@ package body GPR2.Build.Actions_Population is
                return No_Unit;
 
             elsif not Src.Has_Unit_At (Index) then
-               Tree_Db.Report
+               Tree_Db.Reporter.Report
                  (Message.Create
                     (Message.Error,
                      " no unit for the index" & Index'Image,
@@ -365,7 +365,7 @@ package body GPR2.Build.Actions_Population is
          elsif Src.Has_Units
            and then not Src.Has_Single_Unit
          then
-            Tree_Db.Report
+            Tree_Db.Reporter.Report
               (Message.Create
                  (Message.Error,
                   "multi-unit source used without a unit index",
