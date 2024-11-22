@@ -1035,8 +1035,9 @@ package body GPR2.Project.View is
      (Self     : Object;
       Messages : in out Log.Object)
    is
-      Attr : Project.Attribute.Object;
-      Src  : GPR2.Build.Source.Object;
+      Attr  : Project.Attribute.Object;
+      Src   : GPR2.Build.Source.Object;
+      Found : Boolean;
 
    begin
       Attr := Self.Attribute (PRA.Main);
@@ -1046,7 +1047,9 @@ package body GPR2.Project.View is
       end if;
 
       for Value of Attr.Values loop
-         for Lang of Self.Language_Ids loop
+         Found := False;
+
+         Lang_Loop : for Lang of Self.Language_Ids loop
             declare
                Main : constant Simple_Name :=
                         Suffixed_Simple_Name (Self, Value.Text, Lang);
@@ -1054,16 +1057,21 @@ package body GPR2.Project.View is
             begin
                Src := Db.Visible_Source (Main);
 
-               if not Src.Is_Defined then
-                  Messages.Append
-                    (Message.Create
-                       (Level   => Message.Error,
-                        Message => String (Main) &
-                        " is not a source of project " & String (Self.Name),
-                        Sloc    => Value));
+               if Src.Is_Defined then
+                  Found := True;
+                  exit Lang_Loop;
                end if;
             end;
-         end loop;
+         end loop Lang_Loop;
+
+         if not Found then
+            Messages.Append
+              (Message.Create
+                 (Level   => Message.Error,
+                  Message => String (Value.Text) &
+                    " is not a source of project " & String (Self.Name),
+                  Sloc    => Value));
+         end if;
       end loop;
    end Check_Mains;
 
@@ -1107,7 +1115,7 @@ package body GPR2.Project.View is
       end if;
 
       for V of Get_RO (Self).Closure loop
-         Closure_Views.Insert (V);
+         Closure_Views.Include (V);
 
          if V.Kind = K_Aggregate_Library then
             --  ??? In case of aggregate libraries, the closure is not properly
@@ -2702,20 +2710,18 @@ package body GPR2.Project.View is
 
       function Ends_With_One_Language (Name : String) return Boolean is
       begin
-         for Lang of Self.Language_Ids loop
-            declare
-               Index  : constant Attribute_Index.Object :=
-                          Attribute_Index.Create (Lang);
-               Attr   : constant Project.Attribute.Object :=
-                          Self.Attribute (PRA.Naming.Body_Suffix, Index);
-            begin
-               if Attr.Is_Defined
-                 and then Ends_With (Name, Attr.Value.Text)
-               then
-                  return True;
-               end if;
-            end;
-         end loop;
+         declare
+            Index  : constant Attribute_Index.Object :=
+                       Attribute_Index.Create (Body_Suffix_Lang);
+            Attr   : constant Project.Attribute.Object :=
+                       Self.Attribute (PRA.Naming.Body_Suffix, Index);
+         begin
+            if Attr.Is_Defined
+              and then Ends_With (Name, Attr.Value.Text)
+            then
+               return True;
+            end if;
+         end;
 
          return False;
       end Ends_With_One_Language;
@@ -2763,8 +2769,7 @@ package body GPR2.Project.View is
             Attr   : constant Project.Attribute.Object :=
                         Self.Attribute (PRA.Naming.Body_Suffix, Index);
          begin
-            if Attr.Is_Defined
-            then
+            if Attr.Is_Defined then
                return Simple_Name (Name & Attr.Value.Text);
             else
                return Simple_Name (Name);
