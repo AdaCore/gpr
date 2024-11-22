@@ -252,7 +252,9 @@ package GPR2.Build.Tree_Db is
    procedure Report (Self : Object; Msg  : GPR2.Message.Object);
    procedure Report (Self      : Object;
                      Msg       : String;
-                     To_Stderr : Boolean := False);
+                     To_Stderr : Boolean := False;
+                     Level     : GPR2.Message.User_Level_Value :=
+                                   GPR2.Message.Regular);
    function Reporter_Verbosity
      (Self : Object) return GPR2.Reporter.Verbosity_Level;
    --  Wrappers around GPR2.Reporter.Report used to fix otherwise visibility

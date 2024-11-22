@@ -801,10 +801,11 @@ package body GPR2.Build.Tree_Db is
    procedure Report
      (Self      : Object;
       Msg       : String;
-      To_Stderr : Boolean := False)
+      To_Stderr : Boolean := False;
+      Level     : Message.User_Level_Value := Message.Regular)
    is
    begin
-      Self.Tree.Reporter.Report (Msg, To_Stderr);
+      Self.Tree.Reporter.Report (Msg, To_Stderr, Level);
    end Report;
 
    ------------------------

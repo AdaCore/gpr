@@ -18,9 +18,10 @@ package body GPR2.Reporter.Console is
    is
    begin
       return
-        (Verbosity => Verbosity,
-         Full_Path => Use_Full_Pathname,
-         Level_Fmt => Level_Report_Format);
+        (Verbosity      => Verbosity,
+         Full_Path      => Use_Full_Pathname,
+         Level_Fmt      => Level_Report_Format,
+         User_Verbosity => Unset);
    end Create;
 
    ---------------------
@@ -65,6 +66,17 @@ package body GPR2.Reporter.Console is
       Self.Level_Fmt := Level_Report_Format;
    end Set_Level_Report_Format;
 
+   ------------------------
+   -- Set_User_Verbosity --
+   ------------------------
+
+   procedure Set_User_Verbosity
+     (Self : in out Object;
+      Verbosity : User_Verbosity_Level) is
+   begin
+      Self.User_Verbosity := Verbosity;
+   end Set_User_Verbosity;
+
    -------------------
    -- Set_Verbosity --
    -------------------
@@ -74,6 +86,16 @@ package body GPR2.Reporter.Console is
    begin
       Self.Verbosity := Verbosity;
    end Set_Verbosity;
+
+   --------------------
+   -- User_Verbosity --
+   --------------------
+
+   overriding
+   function User_Verbosity (Self : Object) return User_Verbosity_Level is
+   begin
+      return Self.User_Verbosity;
+   end User_Verbosity;
 
    ---------------
    -- Verbosity --

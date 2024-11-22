@@ -13,14 +13,15 @@ package body GPR2.Message is
    ------------
 
    function Create
-     (Level     : Level_Value;
-      Message   : String;
-      Sloc      : Source_Reference.Object'Class := Source_Reference.Undefined;
-      Indent    : Natural := 0;
-      To_Stderr : Boolean := False) return Object is
+     (Level      : Level_Value;
+      Message    : String;
+      Sloc       : Source_Reference.Object'Class := Source_Reference.Undefined;
+      Indent     : Natural := 0;
+      To_Stderr  : Boolean := False;
+      User_Level : User_Level_Value := Regular) return Object is
    begin
       return Object'
-        (Level, Unread, To_Unbounded_String (Message),
+        (Level, User_Level, Unread, To_Unbounded_String (Message),
          Source_Reference.Object (Sloc), Indent, To_Stderr);
    end Create;
 
@@ -119,5 +120,14 @@ package body GPR2.Message is
    begin
       return Self.Status;
    end Status;
+
+   ----------------
+   -- User_Level --
+   ----------------
+
+   function User_Level (Self : Object) return User_Level_Value is
+   begin
+      return Self.User_Level;
+   end User_Level;
 
 end GPR2.Message;
