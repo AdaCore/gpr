@@ -209,8 +209,7 @@ package body GPR2.Build.Actions_Population is
             then
                Comp.Initialize (Src);
 
-               if not Tree_Db.Has_Action (Comp.UID)
-                 and then not Tree_Db.Add_Action (Comp)
+               if not Tree_Db.Add_Action (Comp)
                then
                   return False;
                end if;
@@ -274,10 +273,8 @@ package body GPR2.Build.Actions_Population is
                begin
                   Comp.Initialize (Src);
 
-                  if not Tree_Db.Has_Action (Comp.UID) then
-                     if not Tree_Db.Add_Action (Comp) then
-                        return False;
-                     end if;
+                  if not Tree_Db.Add_Action (Comp) then
+                     return False;
                   end if;
 
                   Tree_Db.Add_Input
@@ -429,9 +426,7 @@ package body GPR2.Build.Actions_Population is
             A_Comp.Initialize
               (View.Unit (Source.Units.Element (Main.Index).Name));
 
-            if not Tree_Db.Has_Action (A_Comp.UID)
-              and then not Tree_Db.Add_Action (A_Comp)
-            then
+            if not Tree_Db.Add_Action (A_Comp) then
                return False;
             end if;
 
@@ -448,9 +443,7 @@ package body GPR2.Build.Actions_Population is
          else
             Comp.Initialize (Source);
 
-            if not Tree_Db.Has_Action (Comp.UID)
-              and then not Tree_Db.Add_Action (Comp)
-            then
+            if not Tree_Db.Add_Action (Comp) then
                return False;
             end if;
 
@@ -477,9 +470,7 @@ package body GPR2.Build.Actions_Population is
                if not Is_Main then
                   Comp.Initialize (Src);
 
-                  if not Tree_Db.Has_Action (Comp.UID)
-                    and then not Tree_Db.Add_Action (Comp)
-                  then
+                  if not Tree_Db.Add_Action (Comp) then
                      return False;
                   end if;
 
@@ -502,9 +493,7 @@ package body GPR2.Build.Actions_Population is
               (Source.Path_Name.Base_Filename,
                View);
 
-            if not Tree_Db.Has_Action (Bind.UID)
-              and then not Tree_Db.Add_Action (Bind)
-            then
+            if not Tree_Db.Add_Action (Bind) then
                return False;
             end if;
 
@@ -513,9 +502,7 @@ package body GPR2.Build.Actions_Population is
             for U of View.Own_Units loop
                A_Comp.Initialize (U);
 
-               if not Tree_Db.Has_Action (A_Comp.UID)
-                 and then not Tree_Db.Add_Action (A_Comp)
-               then
+               if not Tree_Db.Add_Action (A_Comp) then
                   return False;
                end if;
 
@@ -551,9 +538,7 @@ package body GPR2.Build.Actions_Population is
                   then
                      Comp.Initialize (Src);
 
-                     if not Tree_Db.Has_Action (Comp.UID)
-                       and then not Tree_Db.Add_Action (Comp)
-                     then
+                     if not Tree_Db.Add_Action (Comp) then
                         return False;
                      end if;
 
