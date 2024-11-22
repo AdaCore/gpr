@@ -43,7 +43,7 @@ list of executables:
 ./demo7
   src/demo7.adb
 Demo8    K_STANDARD
-demo8.gpr:3:26: error: demo8.adb is not a source of project Demo8
+demo8.gpr:3:26: error: demo8 is not a source of project Demo8
 list of mains:
 list of executables:
 ./demo8
@@ -54,7 +54,7 @@ list of executables:
 ./demo9
   src/demo9.1.ada
 Demo10   K_STANDARD
-demo10.gpr:4:26: error: demo10.1.ada is not a source of project Demo10
+demo10.gpr:4:26: error: demo10 is not a source of project Demo10
 list of mains:
 list of executables:
 ./demo10
@@ -93,3 +93,9 @@ src/call1.adb
 list of executables:
 ./call_me
   src/call1.adb
+Demo17   K_STANDARD
+list of mains:
+src/call2.adb
+list of executables:
+./call2
+  src/call2.adb

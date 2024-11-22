@@ -1,0 +1,8 @@
+project Demo17 is
+  --  See gpr-issues#468: the loop through the list of languages caused mains with
+  --  incomplete suffix to be reported as not present in case one of the language
+  --  is unknown/does not provide a suffix.
+  for Languages use ("Ada", "Other");
+  for Source_Dirs use ("src");
+  for Main use ("call2");
+end Demo17;
