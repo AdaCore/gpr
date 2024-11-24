@@ -6,7 +6,6 @@
 
 limited with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Artifacts.Files;
-with GPR2.Build.Source;
 with GPR2.Path_Name; use GPR2.Path_Name;
 
 with Ada.Containers.Hashed_Sets;
@@ -17,18 +16,6 @@ package GPR2.Build.Actions.Ada_Bind is
 
    type Ada_Bind_Id (<>) is new Actions.Action_Id with private;
 
-   type Main_Kind is
-     (Ada_Main_Program, No_Ada_Main_Program, No_Main_Subprogram);
-
-   type Output_Basename_Info (Kind : Main_Kind) is record
-      case Kind is
-         when Ada_Main_Program =>
-            Main_Ali : Artifacts.Files.Object;
-         when No_Ada_Main_Program | No_Main_Subprogram =>
-            Src      : Source.Object;
-      end case;
-   end record;
-
    type Object is new Actions.Object with private;
 
    Undefined : constant Object;
@@ -38,14 +25,13 @@ package GPR2.Build.Actions.Ada_Bind is
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
 
    procedure Initialize
-     (Self    : in out Object;
-      Info    : Output_Basename_Info;
-      Context : GPR2.Project.View.Object);
-   --  Info.Kind = Ada_Main_Program :
-   --  Binding phase hat generates a main.
-   --  Info.Kind = No_Ada_Main_Program | No_Main_Subprogram
-   --  Binding phase that generates no main file (main is defined in a foreign
-   --  language) or that explicitely doesn't generate a main file.
+     (Self      : in out Object;
+      Basename  : Simple_Name;
+      Context   : GPR2.Project.View.Object;
+      Extra_Opt : String := "");
+   --  Basename: will produce b__<basename>.ad[bs]
+   --  Context: the view responsible for the bind action
+   --  Extra_Opt: added to gnatbind command line, like -n or -z
 
    package Path_Name_Sets is
      new Ada.Containers.Hashed_Sets

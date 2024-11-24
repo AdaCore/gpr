@@ -535,29 +535,23 @@ package body GPR2.Build.Actions.Ada_Bind is
    ----------------
 
    procedure Initialize
-     (Self    : in out Object;
-      Info    : Output_Basename_Info;
-      Context : GPR2.Project.View.Object)
-   is
-      BN : constant Simple_Name :=
-             (if Info.Kind = Ada_Main_Program
-              then Info.Main_Ali.Path.Base_Filename
-              else Info.Src.Path_Name.Base_Filename);
+     (Self      : in out Object;
+      Basename  : Simple_Name;
+      Context   : GPR2.Project.View.Object;
+      Extra_Opt : String := "") is
    begin
       Self.Ctxt := Context;
-      Self.Basename := +BN;
+      Self.Basename := +Basename;
       Self.Output_Spec :=
         Artifacts.Files.Create
-          (Context.Object_Directory.Compose ("b__" & BN & ".ads"));
+          (Context.Object_Directory.Compose ("b__" & Basename & ".ads"));
       Self.Output_Body :=
         Artifacts.Files.Create
-          (Context.Object_Directory.Compose ("b__" & BN & ".adb"));
+          (Context.Object_Directory.Compose ("b__" & Basename & ".adb"));
       Self.Traces := Create ("ACTION_ADA_BIND");
 
-      if Info.Kind = No_Ada_Main_Program then
-         Self.Extra_Opts.Append ("-n");
-      elsif Info.Kind = No_Main_Subprogram then
-         Self.Extra_Opts.Append ("-z");
+      if Extra_Opt'Length > 0 then
+         Self.Extra_Opts.Append (Extra_Opt);
       end if;
 
       Initialize_Linker_Options (Self);
