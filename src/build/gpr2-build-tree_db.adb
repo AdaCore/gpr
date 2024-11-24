@@ -61,19 +61,6 @@ package body GPR2.Build.Tree_Db is
      (Iter : Action_Internal_Iterator;
       Position : Action_Cursor) return Action_Cursor;
 
-   ---------------
-   -- Action_Id --
-   ---------------
-
-   function Action_Id
-     (Self : in out Object; Node : DG.Node_Id) return Actions.Action_Id'Class
-   is
-   begin
-      --  ??? Add checks
-
-      return Self.Node_To_Action (Node);
-   end Action_Id;
-
    --------------------
    -- Action_Iterate --
    --------------------
@@ -114,17 +101,6 @@ package body GPR2.Build.Tree_Db is
       return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
    end Action_Reference;
 
-   --------------------------
-   -- Actions_Graph_Access --
-   --------------------------
-
-   function Actions_Graph_Access
-     (Self : in out Object) return access DG.Directed_Graph
-   is
-   begin
-      return Self.Actions_Graph'Unchecked_Access;
-   end Actions_Graph_Access;
-
    ----------------
    -- Add_Action --
    ----------------
@@ -147,10 +123,6 @@ package body GPR2.Build.Tree_Db is
 
       Self.New_Actions.Include (Action.UID);
 
-      Node := Self.Actions_Graph.Add_Node;
-      Self.Node_To_Action.Insert (Node, Action.UID);
-      Self.Action_To_Node.Insert (Action.UID, Node);
-
       Self.Implicit_Inputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
       Self.Inputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
       Self.Outputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
@@ -161,6 +133,14 @@ package body GPR2.Build.Tree_Db is
 
       Self.Actions.Reference (Curs).Load_Signature;
       Action := Self.Actions.Reference (Curs);
+
+      if Self.Executing then
+         --  Adding a new action while executing the graph: we need to
+         --  amend the Execution context
+         Node := Self.Exec_Ctxt.Graph.Add_Node;
+         Self.Exec_Ctxt.Actions.Insert (Node, Action.UID);
+         Self.Exec_Ctxt.Nodes.Insert (Action.UID, Node);
+      end if;
 
       return True;
    end Add_Action;
@@ -191,8 +171,9 @@ package body GPR2.Build.Tree_Db is
      (Self     : in out Object;
       Action   : Actions.Action_Id'Class;
       Artifact : Artifacts.Object'Class;
-      Explicit : Boolean) is
-      Pred     : Artifact_Action_Maps.Cursor;
+      Explicit : Boolean)
+   is
+      Pred : Artifact_Action_Maps.Cursor;
    begin
       Self.Add_Artifact (Artifact);
 
@@ -206,13 +187,16 @@ package body GPR2.Build.Tree_Db is
 
       Self.Successors.Reference (Artifact).Include (Action);
 
-      Pred := Self.Predecessor.Find (Artifact);
+      if Self.Executing then
+         --  need to amend the execution context dependencies
+         Pred := Self.Predecessor.Find (Artifact);
 
-      if Artifact_Action_Maps.Has_Element (Pred) then
-         Self.Actions_Graph.Add_Predecessor
-           (Node        => Self.Action_To_Node (Action),
-            Predecessor => Self.Action_To_Node
-                             (Artifact_Action_Maps.Element (Pred)));
+         if Artifact_Action_Maps.Has_Element (Pred) then
+            Self.Exec_Ctxt.Graph.Add_Predecessor
+              (Node        => Self.Exec_Ctxt.Nodes (Action),
+               Predecessor =>
+                 Self.Exec_Ctxt.Nodes (Artifact_Action_Maps.Element (Pred)));
+         end if;
       end if;
    end Add_Input;
 
@@ -251,11 +235,14 @@ package body GPR2.Build.Tree_Db is
       end if;
 
       Self.Outputs.Reference (Action).Include (Artifact);
-      for Successor_Id of Self.Successors (Artifact) loop
-         Self.Actions_Graph.Add_Predecessor
-           (Node        => Self.Action_To_Node (Successor_Id),
-            Predecessor => Self.Action_To_Node (Action));
-      end loop;
+
+      if Self.Executing then
+         for Id of Self.Successors (Artifact) loop
+            Self.Exec_Ctxt.Graph.Add_Predecessor
+              (Node        => Self.Exec_Ctxt.Nodes (Id),
+               Predecessor => Self.Exec_Ctxt.Nodes (Action));
+         end loop;
+      end if;
 
       return True;
    end Add_Output;
@@ -420,15 +407,68 @@ package body GPR2.Build.Tree_Db is
                Self.Actions.Reference (Curs).View.Object_Directory.Value));
    end Db_Filename_Path;
 
-   ----------------------
-   -- External_Options --
-   ----------------------
+   -------------
+   -- Execute --
+   -------------
 
-   function External_Options
-     (Self : Object) return GPR2.External_Options.Object is
+   procedure Execute
+     (Self            : in out Object;
+      PM              : in out GPR2.Build.Process_Manager.Object'Class;
+      Jobs            : Natural := 0;
+      Stop_On_Fail    : Boolean := True;
+      Keep_Temp_Files : Boolean := False)
+   is
+      Node : GNATCOLL.Directed_Graph.Node_Id;
+      Pred : Artifact_Action_Maps.Cursor;
+
    begin
-      return Self.External_Options;
-   end External_Options;
+      --  Populate the DAG used for the execution
+
+      --  First ensure all actions correspond to a node in the DAG
+
+      for Action of Self.Actions loop
+         Node := Self.Exec_Ctxt.Graph.Add_Node;
+         Self.Exec_Ctxt.Actions.Insert (Node, Action.UID);
+         Self.Exec_Ctxt.Nodes.Insert (Action.UID, Node);
+      end loop;
+
+      --  Now propagate the dependencies
+
+      for Action of Self.Actions loop
+         for Input of Self.Inputs (Action.UID) loop
+            --  Find the action that generated this input
+            Pred := Self.Predecessor.Find (Input);
+
+            if Artifact_Action_Maps.Has_Element (Pred) then
+               Self.Exec_Ctxt.Graph.Add_Predecessor
+                 (Node        => Self.Exec_Ctxt.Nodes (Action.UID),
+                  Predecessor =>
+                    Self.Exec_Ctxt.Nodes
+                      (Artifact_Action_Maps.Element (Pred)));
+            end if;
+         end loop;
+
+         for Output of Self.Outputs (Action.UID) loop
+            for Suc of Self.Successors (Output) loop
+               Self.Exec_Ctxt.Graph.Add_Predecessor
+                 (Node        => Self.Exec_Ctxt.Nodes (Suc),
+                  Predecessor => Self.Exec_Ctxt.Nodes (Action.UID));
+            end loop;
+         end loop;
+      end loop;
+
+      Self.Executing := True;
+      PM.Execute
+        (Self.Self,
+         Context         => Self.Exec_Ctxt'Access,
+         Jobs            => Jobs,
+         Stop_On_Fail    => Stop_On_Fail,
+         Keep_Temp_Files => Keep_Temp_Files);
+      Self.Executing := False;
+      Self.Exec_Ctxt.Graph.Clear;
+      Self.Exec_Ctxt.Actions.Clear;
+      Self.Exec_Ctxt.Nodes.Clear;
+   end Execute;
 
    -----------
    -- First --

@@ -12,6 +12,7 @@ with GNATCOLL.OS.FS;
 
 with GPR2.Build.Actions;
 with GPR2.Build.Artifacts;
+with GPR2.Build.Process_Manager;
 with GPR2.Build.View_Db;
 with GPR2.External_Options;
 with GPR2.Log;
@@ -119,19 +120,18 @@ package GPR2.Build.Tree_Db is
                    and then Self.Has_Action (Action)
                    and then Artifact.Is_Defined;
 
+   procedure Execute
+     (Self            : in out Object;
+      PM              : in out GPR2.Build.Process_Manager.Object'Class;
+      Jobs            : Natural := 0;
+      Stop_On_Fail    : Boolean := True;
+      Keep_Temp_Files : Boolean := False);
+
    --  ACTION MANAGEMENT
 
    function Db_Filename_Path
      (Self   : in out Object;
       Action : Actions.Action_Id'Class) return Path_Name.Object;
-
-   function Actions_Graph_Access
-     (Self : in out Object) return access DG.Directed_Graph;
-   --  ???
-
-   function Action_Id
-     (Self : in out Object; Node : DG.Node_Id) return Actions.Action_Id'Class;
-   --  ???
 
    function Propagate_Actions (Self : Object) return Boolean;
    --  Call the On_Tree_Propagation subprogram for each new action of the tree
@@ -267,7 +267,6 @@ package GPR2.Build.Tree_Db is
 
 private
 
-   use all type DG.Node_Id;
    use type GPR2.Build.Actions.Action_Id'Class;
 
    function Hash (A : Artifacts.Object'Class) return Ada.Containers.Hash_Type
@@ -297,16 +296,10 @@ private
      (GPR2.Build.Artifacts.Object'Class, Actions.Action_Id'Class, Hash,
       GPR2.Build.Artifacts."=", Actions."=");
 
-   package Action_Node_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (GPR2.Build.Actions.Action_Id'Class, DG.Node_Id, GPR2.Build.Actions."<");
-
-   package Node_Action_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (DG.Node_Id, GPR2.Build.Actions.Action_Id'Class,
-      "=" => GPR2.Build.Actions."=");
-
    type Object is tagged limited record
    --  Options:
       Src_Option       : Optional_Source_Info_Option := No_Source;
+      External_Options : GPR2.External_Options.Object;
 
       Self             : access Object;
       --  Handy self-reference
@@ -331,10 +324,8 @@ private
       Successors       : Artifact_Actions_Maps.Map;
       Predecessor      : Artifact_Action_Maps.Map;
 
-      Actions_Graph    : aliased GNATCOLL.Directed_Graph.Directed_Graph;
-      Node_To_Action   : Node_Action_Maps.Map;
-      Action_To_Node   : Action_Node_Maps.Map;
-      External_Options : GPR2.External_Options.Object;
+      Executing        : Boolean := False;
+      Exec_Ctxt        : aliased Process_Manager.Process_Execution_Context;
    end record;
 
    procedure Create
@@ -353,6 +344,10 @@ private
 
    function Source_Option (Self : Object) return Optional_Source_Info_Option is
      (Self.Src_Option);
+
+   function External_Options
+     (Self : Object) return GPR2.External_Options.Object
+   is (Self.External_Options);
 
    function View_Database
      (Self : Object; View : GPR2.Project.View.Object)

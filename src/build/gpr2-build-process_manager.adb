@@ -16,6 +16,7 @@ with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
 with GNATCOLL.Directed_Graph; use GNATCOLL.Directed_Graph;
 
 with GPR2.Build.Actions; use GPR2.Build.Actions;
+with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
 with GPR2.Reporter;
 with GPR2.Source_Reference;
@@ -171,6 +172,7 @@ package body GPR2.Build.Process_Manager is
    procedure Execute
      (Self            : in out Object;
       Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
+      Context         : access Process_Execution_Context;
       Jobs            : Natural := 0;
       Stop_On_Fail    : Boolean := True;
       Keep_Temp_Files : Boolean := False)
@@ -242,21 +244,19 @@ package body GPR2.Build.Process_Manager is
       --  basis if needed.
 
       Stdout, Stderr   : Unbounded_String;
-      Graph            : constant access GDG.Directed_Graph :=
-                           Tree_Db.Actions_Graph_Access;
 
    begin
       Self.Tree_Db      := Tree_Db;
       Self.Stop_On_Fail := Stop_On_Fail;
       Self.Stats        := Empty_Stats;
 
-      Graph.Start_Iterator (Enable_Visiting_State => True);
+      Context.Graph.Start_Iterator (Enable_Visiting_State => True);
 
       loop
          --  Launch as many process as possible
          while Active_Jobs < Max_Jobs and then not End_Of_Iteration loop
             begin
-               End_Of_Iteration := not Graph.Next (Node);
+               End_Of_Iteration := not Context.Graph.Next (Node);
             exception
                when E : GNATCOLL.Directed_Graph.DG_Error =>
                   Tree_Db.Reporter.Report
@@ -273,7 +273,7 @@ package body GPR2.Build.Process_Manager is
             declare
                Act : constant Build.Tree_Db.Action_Reference_Type :=
                        Tree_Db.Action_Id_To_Reference
-                         (Tree_Db.Action_Id (Node));
+                         (Context.Actions (Node));
             begin
                for J in Serialized_Slot'Range loop
                   if not Serialized_Slot (J) then
@@ -300,7 +300,7 @@ package body GPR2.Build.Process_Manager is
                   end if;
 
                else
-                  Graph.Complete_Visit (Node);
+                  Context.Graph.Complete_Visit (Node);
 
                   if Proc_Handler.Status = Finished then
                      Self.Traces.Trace
@@ -355,7 +355,7 @@ package body GPR2.Build.Process_Manager is
            (Active_Procs (1 .. Active_Jobs), Timeout => 3600.0);
 
          if Proc_Id > 0 then
-            Graph.Complete_Visit (States (Proc_Id).Node);
+            Context.Graph.Complete_Visit (States (Proc_Id).Node);
 
             --  A process has finished. Call wait to finalize it and get
             --  the final process status.
@@ -373,7 +373,7 @@ package body GPR2.Build.Process_Manager is
 
             declare
                UID : constant Actions.Action_Id'Class :=
-                       Tree_Db.Action_Id (States (Proc_Id).Node);
+                       Context.Actions (States (Proc_Id).Node);
                Act : Actions.Object'Class := Self.Tree_Db.Action (UID);
             begin
                --  Call collect

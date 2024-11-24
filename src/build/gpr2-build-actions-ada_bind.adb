@@ -4,21 +4,23 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+
+with Ada.Strings.Fixed;
+with Ada.Strings;
+with Ada.Text_IO;
+
 with GNAT.Directory_Operations;
+with GNAT.OS_Lib;
+
+with GNATCOLL.Utils; use GNATCOLL.Utils;
+with GNATCOLL.OS.FS;
+
 with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Tree_Db;
 with GPR2.External_Options;
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
-
-with Ada.Strings.Fixed;
-with Ada.Strings;
-with Ada.Text_IO;
-
-with GNAT.OS_Lib;
-with GNATCOLL.Utils; use GNATCOLL.Utils;
-with GNATCOLL.OS.FS;
 
 package body GPR2.Build.Actions.Ada_Bind is
 

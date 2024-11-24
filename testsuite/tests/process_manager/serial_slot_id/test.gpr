@@ -5,4 +5,8 @@ project Test is
    for Source_Dirs use ("src");
    for Exec_Dir use ".";
    for Main use ("test.adb");
+
+   package Compiler is
+      for Switches (others) use ("-g", "-O0");
+   end Compiler;
 end Test;

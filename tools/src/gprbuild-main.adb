@@ -365,15 +365,16 @@ begin
          Jobs_JSON := Tree.Root_Project.Dir_Name.Compose ("jobs.json");
       end if;
 
-      Process_M.Execute
-        (Tree.Artifacts_Database,
+      Process_M.Set_JSON_File (Jobs_JSON);
+
+      Tree.Artifacts_Database.Execute
+        (Process_M,
          Jobs            => Opt.Parallel_Tasks,
-         JSON_File       => Jobs_JSON,
          Stop_On_Fail    => not Opt.Keep_Going,
          Keep_Temp_Files => Opt.Keep_Temp_Files);
    else
-      GPR2.Build.Process_Manager.Object (Process_M).Execute
-        (Tree.Artifacts_Database,
+      Tree.Artifacts_Database.Execute
+        (GPR2.Build.Process_Manager.Object (Process_M),
          Jobs            => Opt.Parallel_Tasks,
          Stop_On_Fail    => not Opt.Keep_Going,
          Keep_Temp_Files => Opt.Keep_Temp_Files);

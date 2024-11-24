@@ -189,8 +189,8 @@ begin
          null;
    end case;
 
-   Process_M.Execute
-     (Tree.Artifacts_Database, 2);
+   Process_M.Set_JSON_File (Path_Name.Create_File ("jobs.json"));
+   Tree.Artifacts_Database.Execute (Process_M, 2);
 
    return 0;
 end Test;
