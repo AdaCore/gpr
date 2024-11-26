@@ -107,7 +107,7 @@ package GPR2.Build.Actions is
    --  Stdout and stderr are stored in the signature for so they can be
    --  replayed if the action is skipped
 
-   procedure Load_Signature (Self : in out Object'Class);
+   procedure Load_Signature (Self : in out Object);
    --  Compare the current action signature to the loaded signature
 
    function Signature (Self : Object'Class) return GPR2.Build.Signature.Object

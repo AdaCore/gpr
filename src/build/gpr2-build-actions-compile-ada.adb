@@ -245,6 +245,35 @@ package body GPR2.Build.Actions.Compile.Ada is
       end;
    end Initialize;
 
+   --------------------
+   -- Load_Signature --
+   --------------------
+
+   overriding procedure Load_Signature (Self : in out Object) is
+      Deps_Src : GPR2.Containers.Filename_Set;
+      Source   : GPR2.Build.Source.Object;
+   begin
+      GPR2.Build.Actions.Object (Self).Load_Signature;
+
+      if Self.Ali_File.Path.Exists
+        and then Self.Signature.Has_Artifact (Self.Ali_File)
+        and then ALI_Parser.Dependencies (Self.Ali_File.Path, Deps_Src)
+      then
+         for Dep_Src of Deps_Src loop
+            Source := Self.View.Visible_Source
+              (Path_Name.Simple_Name (Dep_Src));
+            if not Source.Is_Defined
+              and then Self.Signature.Has_Artifact
+                (Artifacts.Files.Create (Path_Name.Create_File (Dep_Src)))
+            then
+               --  A source present in the signature is not there anymore
+               Self.Signature.Clear;
+               return;
+            end if;
+         end loop;
+      end if;
+   end Load_Signature;
+
    -----------------------
    -- On_Tree_Insertion --
    -----------------------
@@ -500,7 +529,6 @@ package body GPR2.Build.Actions.Compile.Ada is
       UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
 
    begin
-
       if not Self.Ali_File.Path.Exists then
          Trace
            (Self.Traces,

@@ -185,10 +185,11 @@ package body GPR2.Build.Actions is
    -- Load_Signature --
    --------------------
 
-   procedure Load_Signature (Self : in out Object'Class)
+   procedure Load_Signature (Self : in out Object)
    is
       Db_File : constant GPR2.Path_Name.Object :=
-                  Self.View.Object_Directory.Compose (Self.UID.Db_Filename);
+                  Object'Class (Self).View.Object_Directory.Compose
+                    (Object'Class (Self).UID.Db_Filename);
       Found   : Boolean := False;
    begin
       if Db_File.Exists then

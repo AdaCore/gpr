@@ -31,6 +31,11 @@ package GPR2.Build.Signature is
       Art  : Artifacts.Object'Class);
    --  Add or update an artifact in the signature
 
+   function Has_Artifact
+     (Self : in out Object;
+      Art  : Artifacts.Object'Class) return Boolean;
+   --  Check that the artifact is part of the closure of the signature
+
    procedure Add_Output
      (Self   : in out Object;
       Stdout : UB.Unbounded_String;
@@ -67,6 +72,11 @@ private
 
    function Artifacts_Signatures (Self : Object) return Artifact_Maps.Map is
      (Self.Artifacts);
+
+   function Has_Artifact
+     (Self : in out Object;
+      Art  : Artifacts.Object'Class) return Boolean is
+      (Self.Artifacts.Contains (Art));
 
    function Stdout (Self : Object) return Unbounded_String is
      (Self.Stdout);
