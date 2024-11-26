@@ -25,6 +25,7 @@ with GNAT.OS_Lib;
 with GNATCOLL.Traces;
 
 with GPR2.Build.Actions_Population;
+with GPR2.Build.Actions;
 with GPR2.Log;
 with GPR2.Message;
 with GPR2.Options;
@@ -104,7 +105,7 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
 
 begin
    GNATCOLL.Traces.Parse_Config_File;
-   GPRtools.Util.Set_Program_Name ("gpr2clean");
+   GPRtools.Util.Set_Program_Name ("gprclean");
    GPRclean.Options.Setup (Parser);
    GPRclean.Options.Parse_Command_Line (Parser, Opt);
 
@@ -180,26 +181,26 @@ begin
    --  Create actions that will be used to iterate and obtain artifacts
    --  for removal.
 
-   if Project_Tree.Root_Project.Is_Library then
-
-      --  Create actions to build a lib
-
-      null;
-   else
-      if not GPR2.Build.Actions_Population.Populate_Actions
-               (Project_Tree, Build_Opt)
-      then
-         return To_Exit_Status (E_Abort);
-      end if;
+   if not GPR2.Build.Actions_Population.Populate_Actions
+     (Project_Tree, Build_Opt)
+   then
+      return To_Exit_Status (E_Abort);
    end if;
 
    --  Iterate on all actions, and clean their output artifacts
 
    for Action of Project_Tree.Artifacts_Database.All_Actions loop
-      for Artifact of Project_Tree.Artifacts_Database.Outputs (Action.UID)
-      loop
-         Delete_File (String (Artifact.SLOC.Filename), Opt);
-      end loop;
+      if not Action.View.Is_Externally_Built then
+         for Artifact of Project_Tree.Artifacts_Database.Outputs (Action.UID)
+         loop
+            Delete_File (String (Artifact.SLOC.Filename), Opt);
+         end loop;
+
+         Delete_File
+           (Action.View.Object_Directory.Compose
+              (GPR2.Build.Actions.Db_Filename (Action.UID)).String_Value,
+            Opt);
+      end if;
    end loop;
 
    if Opt.Arg_Mains and then not Opt.Mains.Is_Empty then
