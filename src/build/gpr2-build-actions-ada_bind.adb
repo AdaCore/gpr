@@ -20,11 +20,17 @@ with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Tree_Db;
 with GPR2.External_Options;
 with GPR2.Project.Attribute;
+with GPR2.Project.Attribute_Index;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
 
 package body GPR2.Build.Actions.Ada_Bind is
 
    use GNAT;
+
+   package PRA renames GPR2.Project.Registry.Attribute;
+   package PAI renames GPR2.Project.Attribute_Index;
+
 
    procedure Initialize_Linker_Options (Self : in out Object);
    --  Adjust the linker options in case of shared or static cases

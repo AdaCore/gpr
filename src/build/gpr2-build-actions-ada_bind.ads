@@ -8,8 +8,6 @@ limited with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Source;
 with GPR2.Path_Name; use GPR2.Path_Name;
-with GPR2.Project.Attribute_Index;
-with GPR2.Project.Registry.Attribute;
 
 with Ada.Containers.Hashed_Sets;
 
@@ -35,6 +33,8 @@ package GPR2.Build.Actions.Ada_Bind is
 
    Undefined : constant Object;
 
+   function Is_Defined (Self : Object) return Boolean;
+
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
 
    procedure Initialize
@@ -46,8 +46,6 @@ package GPR2.Build.Actions.Ada_Bind is
    --  Info.Kind = No_Ada_Main_Program | No_Main_Subprogram
    --  Binding phase that generates no main file (main is defined in a foreign
    --  language) or that explicitely doesn't generate a main file.
-
-   overriding function View (Self : Object) return GPR2.Project.View.Object;
 
    package Path_Name_Sets is
      new Ada.Containers.Hashed_Sets
@@ -78,9 +76,6 @@ package GPR2.Build.Actions.Ada_Bind is
 private
 
    No_Binder_Found : exception;
-
-   package PRA renames GPR2.Project.Registry.Attribute;
-   package PAI renames GPR2.Project.Attribute_Index;
 
    type Ada_Bind_Id (Name_Len : Natural) is new Actions.Action_Id
      with record
@@ -127,6 +122,9 @@ private
      (Self   : in out Object;
       Status : Execution_Status) return Boolean;
 
+   overriding function View (Self : Object) return GPR2.Project.View.Object is
+     (Self.Ctxt);
+
    function Generated_Spec (Self : Object) return Artifacts.Files.Object is
       (Self.Output_Spec);
 
@@ -135,8 +133,8 @@ private
 
    Undefined : constant Object := (others => <>);
 
-   overriding function View (Self : Object) return GPR2.Project.View.Object is
-     (Self.Ctxt);
+   function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
    function Linker_Options
      (Self : Object) return GNATCOLL.OS.Process.Argument_List is
