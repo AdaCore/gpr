@@ -381,6 +381,9 @@ package GPR2.Project.Registry.Attribute is
    Library_Version_Switches         : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"library_version_switches");
+   Linker_Lib_Dir_Option            : constant Q_Attribute_Id :=
+                                        (Project_Level_Scope,
+                                         +"linker_lib_dir_option");
    Locally_Removed_Files            : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"locally_removed_files");

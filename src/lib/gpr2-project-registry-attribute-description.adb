@@ -358,6 +358,12 @@ begin
       Description  =>
         "Value is the name of the reference symbol file.");
 
+   --  Linker_Lib_Dir_Option
+   Set_Attribute_Description
+     (Key => PRA.Linker_Lib_Dir_Option,
+      Description => "Option used to add a library directory to the linker "
+        & "search path.");
+
    --  Default_Language
    Set_Attribute_Description
      (Key          => PRA.Default_Language,
