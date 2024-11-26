@@ -23,7 +23,7 @@ package GPR2.Log is
      with Constant_Indexing => Constant_Reference,
           Variable_Indexing => Reference,
           Default_Iterator  => Iterate,
-          Iterator_Element  => Message.Object;
+          Iterator_Element  => GPR2.Message.Object;
 
    Undefined : constant Object;
 
