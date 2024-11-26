@@ -341,9 +341,14 @@ package body GPRtools.Options is
       Opt.Tree := Tree;
 
       if Handle_Errors and then not Loaded then
-         Handle_Program_Termination
-           (Message => '"' & String (Opt.Project_File.Simple_Name)
-            & """ processing failed");
+         if Opt.Project_File.Is_Defined then
+            Handle_Program_Termination
+              (Message => '"' & String (Opt.Project_File.Simple_Name)
+               & """ processing failed");
+         else
+            Handle_Program_Termination
+              (Message => "processing failed");
+         end if;
       end if;
 
       return Loaded;
