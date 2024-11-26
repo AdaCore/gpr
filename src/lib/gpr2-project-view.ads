@@ -851,9 +851,6 @@ private
    function Dir_Name (Self : Object) return GPR2.Path_Name.Object is
      (Self.Get.Path);
 
-   function Languages (Self : Object) return Containers.Source_Value_List is
-     (Self.Attribute (PRA.Languages).Values);
-
    --  Naming package accessor
 
    package PA  renames Project.Attribute;
