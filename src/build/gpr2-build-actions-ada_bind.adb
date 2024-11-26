@@ -70,9 +70,6 @@ package body GPR2.Build.Actions.Ada_Bind is
       Status       : Boolean;
       CL_Size      : Integer := 0;
 
-      CL_Maximum_Size : Integer;
-      pragma Import (C, CL_Maximum_Size, "__gnat_link_max");
-
       -------------
       -- Add_Arg --
       -------------
@@ -493,7 +490,7 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       Add_Mapping_File;
 
-      if CL_Size > CL_Maximum_Size then
+      if CL_Size > Command_Line_Limit then
          Create_Response_File;
       end if;
    end Compute_Command;
