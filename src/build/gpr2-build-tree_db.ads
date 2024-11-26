@@ -275,6 +275,14 @@ package GPR2.Build.Tree_Db is
      (Self : in out Object; Options : GPR2.External_Options.Object);
    --  Adds external options into the External_Options of Self
 
+   --------------------------------------
+   -- Helper functions for the Actions --
+   --------------------------------------
+
+   function Linker_Lib_Dir_Option (Self : Object) return Value_Type;
+   --  returns -L for ld and family, or whatever option for the linker
+   --  in use for the build.
+
 private
 
    use type GPR2.Build.Actions.Action_Id'Class;
@@ -336,6 +344,8 @@ private
 
       Executing        : Boolean := False;
       Exec_Ctxt        : aliased Process_Manager.Process_Execution_Context;
+
+      Linker_Lib_Dir_Opt : Unbounded_String;
    end record;
 
    procedure Create

@@ -127,11 +127,12 @@ package body GPR2.Build.Tree_Db is
       Self.Inputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
       Self.Outputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
 
+      Self.Actions.Reference (Curs).Load_Signature;
+
       if not Action.On_Tree_Insertion (Self) then
          return False;
       end if;
 
-      Self.Actions.Reference (Curs).Load_Signature;
       Action := Self.Actions.Reference (Curs);
 
       if Self.Executing then
@@ -625,6 +626,29 @@ package body GPR2.Build.Tree_Db is
          end;
       end if;
    end Get_Or_Create_Temp_File;
+
+   ---------------------------
+   -- Linker_Lib_Dir_Option --
+   ---------------------------
+
+   function Linker_Lib_Dir_Option (Self : Object) return Value_Type is
+      Attr : GPR2.Project.Attribute.Object;
+   begin
+      if Length (Self.Linker_Lib_Dir_Opt) = 0 then
+         if Self.Tree.Has_Configuration then
+            Attr := Self.Tree.Configuration.Corresponding_View.Attribute
+              (PRA.Linker_Lib_Dir_Option);
+         end if;
+
+         if Attr.Is_Defined then
+            Self.Self.Linker_Lib_Dir_Opt := +Attr.Value.Text;
+         else
+            Self.Self.Linker_Lib_Dir_Opt := To_Unbounded_String ("-L");
+         end if;
+      end if;
+
+      return -Self.Linker_Lib_Dir_Opt;
+   end Linker_Lib_Dir_Option;
 
    ----------
    -- Next --
