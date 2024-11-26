@@ -5,7 +5,6 @@
 --
 
 with Ada.Characters.Handling;
-with Ada.Assertions;
 
 with GNATCOLL.OS.FS;
 
@@ -431,9 +430,6 @@ package body GPR2.Build.Actions.Compile is
                  (Attr, Path.String_Value);
             end loop;
          end if;
-
-         raise Standard.Ada.Assertions.Assertion_Error with
-           "Cannot determine ways to transmit include path to the toolchain";
       end Add_Include_Path;
 
       ----------------------
@@ -735,7 +731,21 @@ package body GPR2.Build.Actions.Compile is
    is
       UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      return Db.Add_Output (UID, Self.Obj_File);
+      if not Db.Add_Output (UID, Self.Obj_File) then
+         return False;
+      end if;
+
+      if Object'Class (Self).Dependency_File'Length > 0
+        and then not Db.Add_Output
+          (UID,
+           Artifacts.Files.Create
+             (Self.View.Object_Directory.Compose
+                (Object'Class (Self).Dependency_File)))
+      then
+         return False;
+      end if;
+
+      return True;
    end On_Tree_Insertion;
 
    ---------

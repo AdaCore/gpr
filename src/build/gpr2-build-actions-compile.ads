@@ -109,7 +109,7 @@ private
    --  Need that for indexed sources, for now only Ada multi-unit sources
 
    function Dependency_File (Self : Object) return Simple_Name is
-      (Self.Src_Name.Base_Filename & ".dep");
+      (Self.Src_Name.Base_Filename & ".d");
 
    overriding function View (Self : Object) return GPR2.Project.View.Object is
      (Self.Ctxt);
