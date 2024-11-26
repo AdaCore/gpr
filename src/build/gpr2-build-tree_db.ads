@@ -83,6 +83,12 @@ package GPR2.Build.Tree_Db is
       Action   : in out Actions.Object'Class) return Boolean
      with Pre => Self.Is_Defined;
 
+   procedure Remove_Action
+     (Self : in out Object;
+      Id   : Actions.Action_Id'Class)
+     with Pre => Self.Has_Action (Id)
+       and then not Self.Is_Executing;
+
    function Has_Action
      (Self : Object;
       Id   : Actions.Action_Id'Class) return Boolean
@@ -126,6 +132,8 @@ package GPR2.Build.Tree_Db is
       Jobs            : Natural := 0;
       Stop_On_Fail    : Boolean := True;
       Keep_Temp_Files : Boolean := False);
+
+   function Is_Executing (Self : Object) return Boolean;
 
    --  ACTION MANAGEMENT
 
@@ -208,6 +216,8 @@ package GPR2.Build.Tree_Db is
      (Iterator : aliased Actions_List;
       Pos      : Action_Cursor)
       return Constant_Action_Reference_Type;
+
+   function Element (Pos : Action_Cursor) return Actions.Object'Class;
 
    function All_Actions (Self : Object) return Actions_List'Class;
 
@@ -374,6 +384,9 @@ private
       Artifact : Artifacts.Object'Class) return Boolean
    is (Self.Artifacts.Contains (Artifact));
 
+   function Is_Executing (Self : Object) return Boolean is
+     (Self.Executing);
+
    type Artifact_List_Kind is (Global_List,
                                Explicit_Inputs,
                                Implicit_Inputs,
@@ -421,6 +434,9 @@ private
 
    function Has_Element (Position : Action_Cursor) return Boolean
    is (Action_Maps.Has_Element (Position.Pos));
+
+   function Element (Pos : Action_Cursor) return Actions.Object'Class is
+     (Action_Maps.Element (Pos.Pos));
 
    type Action_Reference_Type
      (Element : not null access Actions.Object'Class)

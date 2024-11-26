@@ -435,7 +435,9 @@ package body GPR2.Build.Tree_Db is
       --  Now propagate the dependencies
 
       for Action of Self.Actions loop
-         for Input of Self.Inputs (Action.UID) loop
+         for Input of Self.Inputs (Action.UID).Union
+           (Self.Implicit_Inputs (Action.UID))
+         loop
             --  Find the action that generated this input
             Pred := Self.Predecessor.Find (Input);
 
@@ -842,6 +844,40 @@ package body GPR2.Build.Tree_Db is
          end loop;
       end if;
    end Refresh;
+
+   -------------------
+   -- Remove_Action --
+   -------------------
+
+   procedure Remove_Action
+     (Self : in out Object;
+      Id   : Actions.Action_Id'Class)
+   is
+      C : Action_Sets.Cursor;
+   begin
+      Self.Actions.Delete (Id);
+
+      for Input of Self.Inputs (Id) loop
+         Self.Successors (Input).Delete (Id);
+      end loop;
+
+      for Input of Self.Implicit_Inputs (Id) loop
+         Self.Successors (Input).Delete (Id);
+      end loop;
+
+      for Output of Self.Outputs (Id) loop
+         Self.Predecessor.Delete (Output);
+      end loop;
+
+      Self.Implicit_Inputs.Delete (Id);
+      Self.Inputs.Delete (Id);
+      Self.Outputs.Delete (Id);
+
+      C := Self.New_Actions.Find (Id);
+      if Action_Sets.Has_Element (C) then
+         Self.New_Actions.Delete (C);
+      end if;
+   end Remove_Action;
 
    --------------
    -- Reporter --
