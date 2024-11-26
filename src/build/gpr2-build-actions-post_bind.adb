@@ -61,6 +61,9 @@ package body GPR2.Build.Actions.Post_Bind is
       Self.Output :=
         Artifacts.Files.Create
           (View.Object_Directory.Compose (Impl.Path.Base_Filename & O_Suff));
+      Self.Ali :=
+        Artifacts.Files.Create
+          (View.Object_Directory.Compose (Impl.Path.Base_Filename & ".ali"));
 
       return Self;
    end Create;
@@ -76,6 +79,10 @@ package body GPR2.Build.Actions.Post_Bind is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
       if not Db.Add_Output (UID, Self.Output) then
+         return False;
+      end if;
+
+      if not Db.Add_Output (UID, Self.Ali) then
          return False;
       end if;
 
