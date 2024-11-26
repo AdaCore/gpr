@@ -81,6 +81,15 @@ package GPR2.Build.Process_Manager is
       Proc_Handler   :    out Process_Handler;
       Capture_Stdout :    out File_Descriptor;
       Capture_Stderr :    out File_Descriptor);
+   --  Execute the Action "Job", possibly using a response file if the
+   --    command line exceeds the maximum size authorized on the host.
+   --  Response_File indicates the kind of response file the tool allows.
+   --  Slot_Id identifies an Id that is unique during execution (cannot be
+   --    re-used until the action is finished).
+   --  Proc_Handler indicates the status of the operation, in particular if
+   --    the job was skipped, is launched, or if an error occurred.
+   --  Capture_Stdout/err are file descriptors used to capture the spawned
+   --    process standard output and error.
 
    procedure Execute
      (Self            : in out Object;
