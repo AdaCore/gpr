@@ -581,7 +581,9 @@ package body GPR2.Build.Actions.Ada_Bind is
          return;
       end if;
 
-      Self.Linker_Opts.Append (Attr.Value.Text);
+      for Value of Attr.Values loop
+         Self.Linker_Opts.Append (Value.Text);
+      end loop;
    end Initialize_Linker_Options;
 
    ------------------------
