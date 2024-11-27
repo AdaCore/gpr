@@ -24,6 +24,9 @@ package body GPR2.Build.Actions.Ada_Bind is
 
    use GNAT;
 
+   procedure Initialize_Linker_Options (Self : in out Object);
+   --  Adjust the linker options in case of shared or static cases
+
    ---------------------
    -- Compute_Command --
    ---------------------
@@ -406,28 +409,42 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       Add_Binder (PRA.Binder.Required_Switches, Lang_Ada_Idx);
 
-      if Self.Is_Shared_Library then
+      if Self.Ctxt.Is_Library and then Self.Ctxt.Is_Shared_Library then
          Add_Arg ("-shared");
       end if;
 
       Add_Arg ("-o");
+      Add_Arg (String (Self.Output_Body.Path.Simple_Name));
 
-      --  Directories separator are not allowed. We must be in the correct
+      --  Directory separators are not allowed. We must be in the correct
       --  directory and only use the source base name with extension.
 
-      if Self.Main_Ali.Path /= Path_Name.Undefined then
-         Add_Arg (String (Self.Output_Body.Path.Simple_Name));
-         Add_Arg (Self.Main_Ali.Path.String_Value);
-      else
-         Add_Arg ("-n");
-      end if;
+      for Ali of Self.Tree.Inputs (Self.UID, Explicit_Only => True) loop
+         Add_Arg
+           (GPR2.Build.Artifacts.Files.Object (Ali).Path.String_Value);
+      end loop;
 
-      if Self.Has_SAL_In_Closure then
-         Add_Arg ("-F");
-      end if;
+      for Extra of Self.Extra_Opts loop
+         Add_Arg (Extra);
+      end loop;
 
-      for Dep_File_Dir of Self.Dep_File_Dirs loop
-         Add_Arg ("-I" & Dep_File_Dir);
+      for View of Self.Ctxt.Closure (True) loop
+         if View.Is_Library and then View.Is_Library_Standalone then
+            --  Force checking of elaboration flags
+            Add_Arg ("-F");
+            exit;
+         end if;
+      end loop;
+
+      for View of Self.Ctxt.Closure loop
+         --  Make sure all ALI directories are visible
+         if View.Language_Ids.Contains (Ada_Language) then
+            if View.Is_Library then
+               Add_Arg ("-I" & View.Library_Ali_Directory.String_Value);
+            elsif View.Kind in With_Object_Dir_Kind then
+               Add_Arg ("-I" & View.Object_Directory.String_Value);
+            end if;
+         end if;
       end loop;
 
       --  [eng/gpr/gpr-issues#446] : This may include "-v"
@@ -519,64 +536,75 @@ package body GPR2.Build.Actions.Ada_Bind is
    ----------------
 
    procedure Initialize
-     (Self               : in out Object;
-      Main_Ali           : Artifacts.Files.Object;
-      Is_Library         : Boolean := False;
-      Is_Shared_Lib      : Boolean := False;
-      Has_SAL_In_Closure : Boolean := False;
-      Dep_File_Dirs      : Containers.Value_List :=
-        Containers.Empty_Value_List;
-      Context            : GPR2.Project.View.Object)
+     (Self     : in out Object;
+      Main_Ali : Artifacts.Files.Object;
+      Context  : GPR2.Project.View.Object)
    is
 
-      procedure Initialize_Linker_Options;
-      --
-
-      -------------------------------
-      -- Initialize_Linker_Options --
-      -------------------------------
-
-      procedure Initialize_Linker_Options is
-         Idx  : PAI.Object;
-         Attr : Project.Attribute.Object;
-      begin
-         if Self.Is_Library then
-            if Self.Is_Shared_Library then
-               Idx := PAI.Create ("-shared");
-            else
-               Idx := PAI.Create ("-static");
-            end if;
-         else
-            return;
-         end if;
-
-         Attr :=
-           Self.View.Attribute (PRA.Binder.Bindfile_Option_Substitution, Idx);
-
-         if not Attr.Is_Defined then
-            return;
-         end if;
-
-         Self.Linker_Opts.Append (Attr.Value.Text);
-      end Initialize_Linker_Options;
-
+      BN : constant Simple_Name := Main_Ali.Path.Base_Filename;
    begin
       Self.Ctxt := Context;
-      Self.Main_Ali := Main_Ali;
+      Self.Basename := +BN;
       Self.Output_Spec :=
         Artifacts.Files.Create
-          (Context.Object_Directory.Compose (Self.BN & ".ads"));
+          (Context.Object_Directory.Compose ("b__" & BN & ".ads"));
       Self.Output_Body :=
         Artifacts.Files.Create
-          (Context.Object_Directory.Compose (Self.BN & ".adb"));
+          (Context.Object_Directory.Compose ("b__" & BN & ".adb"));
       Self.Traces := Create ("ACTION_ADA_BIND");
-      Self.Is_Library         := Is_Library;
-      Self.Is_Shared_Library  := Is_Shared_Lib;
-      Self.Has_SAL_In_Closure := Has_SAL_In_Closure;
-      Self.Dep_File_Dirs      := Dep_File_Dirs;
 
-      Initialize_Linker_Options;
+      Initialize_Linker_Options (Self);
    end Initialize;
+
+   -------------------------------
+   -- Initialize_Linker_Options --
+   -------------------------------
+
+   procedure Initialize_Linker_Options (Self : in out Object) is
+      Idx  : PAI.Object;
+      Attr : Project.Attribute.Object;
+   begin
+      if Self.Ctxt.Is_Library then
+         if Self.Ctxt.Is_Shared_Library then
+            Idx := PAI.Create ("-shared");
+         else
+            Idx := PAI.Create ("-static");
+         end if;
+      else
+         return;
+      end if;
+
+      Attr :=
+        Self.View.Attribute (PRA.Binder.Bindfile_Option_Substitution, Idx);
+
+      if not Attr.Is_Defined then
+         return;
+      end if;
+
+      Self.Linker_Opts.Append (Attr.Value.Text);
+   end Initialize_Linker_Options;
+
+   ------------------------
+   -- Initialize_No_Main --
+   ------------------------
+
+   procedure Initialize_No_Main
+     (Self : in out Object;
+      Basename : Simple_Name;
+      Context  : GPR2.Project.View.Object) is
+   begin
+      Self.Ctxt := Context;
+      Self.Basename := +Basename;
+      Self.Output_Spec :=
+        Artifacts.Files.Create
+          (Context.Object_Directory.Compose ("b__" & Basename & ".ads"));
+      Self.Output_Body :=
+        Artifacts.Files.Create
+          (Context.Object_Directory.Compose ("b__" & Basename & ".adb"));
+      Self.Traces := Create ("ACTION_ADA_BIND");
+      Self.Extra_Opts.Append ("-n");
+      Initialize_Linker_Options (Self);
+   end Initialize_No_Main;
 
    -----------------------
    -- On_Tree_Insertion --
@@ -595,8 +623,6 @@ package body GPR2.Build.Actions.Ada_Bind is
       then
          return False;
       end if;
-
-      Db.Add_Input (UID, Self.Main_Ali, True);
 
       Post_Bind :=
         Actions.Post_Bind.Create (Self.Output_Body, Self.View, Self);
@@ -708,10 +734,10 @@ package body GPR2.Build.Actions.Ada_Bind is
    ---------
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class is
-      BN     : constant Simple_Name := Self.Main_Ali.Path.Simple_Name;
+      BN     : constant Simple_Name := -Self.Basename;
       Result : constant Ada_Bind_Id :=
                  (Name_Len  => BN'Length,
-                  Ali_Name  => BN,
+                  BN        => BN,
                   Ctxt      => Self.Ctxt);
    begin
       return Result;

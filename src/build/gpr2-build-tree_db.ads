@@ -211,8 +211,9 @@ package GPR2.Build.Tree_Db is
    function All_Actions (Self : Object) return Actions_List'Class;
 
    function Inputs
-     (Self   : Object;
-      Action : Actions.Action_Id'Class) return Artifacts_List'Class;
+     (Self          : Object;
+      Action        : Actions.Action_Id'Class;
+      Explicit_Only : Boolean := False) return Artifacts_List'Class;
 
    function Outputs
      (Self   : Object;
@@ -446,11 +447,17 @@ private
 
    function Inputs
      (Self : Object;
-      Action : Actions.Action_Id'Class) return Artifacts_List'Class
-   is (Artifacts_List'
-         (Kind   => Inputs,
-          Db     => Self.Self,
-          Action => Self.Actions.Find (Action)));
+      Action : Actions.Action_Id'Class;
+      Explicit_Only : Boolean := False) return Artifacts_List'Class
+   is ((if Explicit_Only
+        then Artifacts_List'
+          (Kind   => Explicit_Inputs,
+           Db     => Self.Self,
+           Action => Self.Actions.Find (Action))
+        else Artifacts_List'
+          (Kind   => Inputs,
+           Db     => Self.Self,
+           Action => Self.Actions.Find (Action))));
 
    function Outputs
      (Self   : Object;

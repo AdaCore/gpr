@@ -5,9 +5,14 @@ from testsuite_support.tools import GPRBUILD
 
 bnr = BuilderAndRunner()
 
-bnr.build("prj.gpr")
 current_path = os.environ['PATH']
-os.environ['PATH'] = f"{os.path.join(os.getcwd(), 'tree/bin')}:{current_path}"
+
+bindir = os.path.join(os.getcwd(), 'tree/bin')
+os.environ['PATH'] = f"{bindir}:{current_path}"
+bnr.simple_run([GPRBUILD, "stub.gpr"])
+bnr.simple_run([GPRBUILD, "-XPREFIX=bla-", "stub.gpr"])
+
+bnr.build("prj.gpr")
 out = bnr.run(["obj/main"])
 for line in out.out.split("\n"):
 	print(line)

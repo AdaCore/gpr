@@ -22,19 +22,22 @@ with Gpr_Parser.Common;
 with GPR2.Builtin;
 with GPR2.KB;
 with GPR2.Message;
+with GPR2.Pack_Internal;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Attribute_Index;
-with GPR2.View_Internal;
-with GPR2.Pack_Internal;
 with GPR2.Project_Parser.Registry;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
-with GPR2.Tree_Internal;
+with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Pack;
 with GPR2.Source_Reference.Value;
+pragma Warnings (Off);
+with GPR2.Tree_Internal;
+pragma Warnings (On);
+with GPR2.View_Internal;
 
 package body GPR2.Project_Parser is
 
@@ -704,9 +707,6 @@ package body GPR2.Project_Parser is
          procedure Parse_With_Decl (N : With_Decl);
          --  Add the name of the withed project into the Imports list
 
-         procedure Parse_Typed_String_Decl (N : Typed_String_Decl);
-         --  A typed string declaration
-
          -------------------
          -- Parse_Builtin --
          -------------------
@@ -1219,68 +1219,6 @@ package body GPR2.Project_Parser is
             end if;
          end Parse_Project_Declaration;
 
-         -----------------------------
-         -- Parse_Typed_String_Decl --
-         -----------------------------
-
-         procedure Parse_Typed_String_Decl (N : Typed_String_Decl) is
-            Name       : constant Name_Type :=
-                           Get_Name_Type (F_Type_Id (N));
-            Values     : constant String_Literal_List :=
-                           F_String_Literals (N);
-            Num_Childs : constant Natural := Children_Count (Values);
-            Cur_Child  : Gpr_Node;
-            Set        : Containers.Value_Set;
-            List       : Containers.Source_Value_List;
-         begin
-            if Project.Types.Contains (Name) then
-               Project.Messages.Append
-                 (GPR2.Message.Create
-                    (Level   => Message.Error,
-                     Sloc    =>
-                       Get_Source_Reference (Filename, F_Type_Id (N)),
-                     Message =>
-                       "type """ & String (Name) & """ already defined"));
-
-            else
-               for J in 1 .. Num_Childs loop
-                  Cur_Child := Child (Gpr_Node (Values), J);
-
-                  if not Cur_Child.Is_Null then
-                     declare
-                        Value : constant Value_Type :=
-                                  Get_Value_Type
-                                    (Cur_Child.As_String_Literal);
-                     begin
-                        if Set.Contains (Value) then
-                           Project.Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    =>
-                                   Get_Source_Reference
-                                     (Filename, Cur_Child),
-                                 Message =>
-                                   '"' & String (Name)
-                                 & """ has duplicate value """
-                                 & String (Value) & '"'));
-                        else
-                           Set.Insert (Value);
-                           List.Append
-                             (Get_Value_Reference
-                                (Filename, Sloc_Range (Cur_Child), Value));
-                        end if;
-                     end;
-                  end if;
-               end loop;
-
-               Project.Types.Insert
-                 (Name,
-                  GPR2.Project.Typ.Create
-                    (Get_Identifier_Reference
-                         (Filename, Sloc_Range (F_Type_Id (N)), Name), List));
-            end if;
-         end Parse_Typed_String_Decl;
-
          ---------------------
          -- Parse_With_Decl --
          ---------------------
@@ -1363,10 +1301,6 @@ package body GPR2.Project_Parser is
 
             when Gpr_With_Decl =>
                Parse_With_Decl (Node.As_With_Decl);
-               Status := Over;
-
-            when Gpr_Typed_String_Decl =>
-               Parse_Typed_String_Decl (Node.As_Typed_String_Decl);
                Status := Over;
 
             when others =>
@@ -1526,14 +1460,11 @@ package body GPR2.Project_Parser is
       --  increment the Empty_Attribute_Count if this attribute has an empty
       --  value. This is used to check whether we need to reparse the tree.
 
-      function Has_Error return Boolean is
-        (Tree.Log_Messages.Has_Error);
-
       View_Def    : GPR2.View_Internal.Ref renames
                       View_Internal.Get (View);
       Attrs       : GPR2.Project.Attribute.Set.Object renames View_Def.Attrs;
       Vars        : GPR2.Project.Variable.Set.Object  renames View_Def.Vars;
-      Packs       : GPR2.Pack_Internal.Set.Map         renames View_Def.Packs;
+      Packs       : GPR2.Pack_Internal.Set.Map        renames View_Def.Packs;
       Types       : GPR2.Project.Typ.Set.Object       renames View_Def.Types;
       --  Easy access to the view's attributes, variables, packs and type
       --  definitions.
@@ -1562,10 +1493,6 @@ package body GPR2.Project_Parser is
       --  Package-oriented state, when parsing is in a package In_Pack is
       --  set and Pack_Name contains the name of the package and Pack_Ref
       --  will point to the view's package object.
-
-      Non_Fatal_Error : GPR2.Log.Object;
-      --  Store non fatal errors that we record while parsing. This avoids
-      --  stopping the parsing at the first error.
 
       function Is_Open return Boolean is
         (Case_Values.Is_Empty
@@ -2121,9 +2048,9 @@ package body GPR2.Project_Parser is
                         else
                            declare
                               Type_Def : constant GPR2.Project.Typ.Object :=
-                              Type_Definition_From
-                                 (Self, Tree, Ext_Type);
-                              Found : Boolean := False;
+                                           Type_Definition_From
+                                             (View, Ext_Type);
+                              Found    : Boolean := False;
 
                            begin
                               for Type_Value of Type_Def.Values loop
@@ -2192,7 +2119,7 @@ package body GPR2.Project_Parser is
                      P2 : constant Item_Values := Get_Term_List (P2_Node);
                   begin
                      if P1.Single then
-                        Non_Fatal_Error.Append
+                        Tree.Log_Messages.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
@@ -2205,7 +2132,7 @@ package body GPR2.Project_Parser is
                      --  Check that 2nd parameter is a simple value
 
                      if not P2.Single then
-                        Non_Fatal_Error.Append
+                        Tree.Log_Messages.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
@@ -2304,7 +2231,7 @@ package body GPR2.Project_Parser is
                      P2 : constant Item_Values := Get_Term_List (P2_Node);
                   begin
                      if P1.Single xor P2.Single then
-                        Non_Fatal_Error.Append
+                        Tree.Log_Messages.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
@@ -2366,7 +2293,7 @@ package body GPR2.Project_Parser is
                      P2 : constant Item_Values := Get_Term_List (P2_Node);
                   begin
                      if not P2.Single then
-                        Non_Fatal_Error.Append
+                        Tree.Log_Messages.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
@@ -2437,7 +2364,7 @@ package body GPR2.Project_Parser is
                      P2 : constant Item_Values := Get_Term_List (P2_Node);
                   begin
                      if P1.Single then
-                        Non_Fatal_Error.Append
+                        Tree.Log_Messages.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
@@ -2457,7 +2384,7 @@ package body GPR2.Project_Parser is
                               or Strings.Maps.To_Set ("-"),
                             Strings.Outside) /= 0
                      then
-                        Non_Fatal_Error.Append
+                        Tree.Log_Messages.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
@@ -2475,7 +2402,7 @@ package body GPR2.Project_Parser is
                            if abs (Index) > Positive (P1.Values.Length)
                              or else Index = 0
                            then
-                              Non_Fatal_Error.Append
+                              Tree.Log_Messages.Append
                                 (GPR2.Message.Create
                                    (Level   => Message.Error,
                                     Sloc    =>
@@ -3371,6 +3298,9 @@ package body GPR2.Project_Parser is
            with Pre => Is_Open;
          --  Parse variable declaration and append it into the Vars set
 
+         procedure Parse_Typed_String_Decl (N : Typed_String_Decl);
+         --  A typed string declaration
+
          procedure Parse_Package_Decl (Node : Package_Decl)
            with Pre => Is_Open;
          --  Parse variable declaration and append it into the Vars set
@@ -3483,7 +3413,7 @@ package body GPR2.Project_Parser is
                                        Filtered.Append (L);
                                     else
                                        if Def.Empty_Value = PRA.Error then
-                                          Non_Fatal_Error.Append
+                                          Tree.Log_Messages.Append
                                             (Message.Create
                                                (Level   => Message.Error,
                                                 Sloc    => Sloc,
@@ -3492,7 +3422,7 @@ package body GPR2.Project_Parser is
                                                 & Image (Q_Name)
                                                 & """ not allowed."));
                                        else
-                                          Non_Fatal_Error.Append
+                                          Tree.Log_Messages.Append
                                             (Message.Create
                                                (Level   => Message.Warning,
                                                 Sloc    => Sloc,
@@ -3529,7 +3459,7 @@ package body GPR2.Project_Parser is
 
                   begin
                      if Def.Builtin then
-                        Non_Fatal_Error.Append
+                        Tree.Log_Messages.Append
                           (Message.Create
                              (Level   => Message.Error,
                               Sloc    => Sloc,
@@ -3601,7 +3531,7 @@ package body GPR2.Project_Parser is
                         if Is_Name_Exception
                           and then A.Value.Text'Length = 0
                         then
-                           Non_Fatal_Error.Append
+                           Tree.Log_Messages.Append
                              (Message.Create
                                 (Level   => Message.Error,
                                  Sloc    => Sloc,
@@ -3751,6 +3681,8 @@ package body GPR2.Project_Parser is
                      Sloc    => Get_Source_Reference (Self.File, Att_Ref),
                      Message => "attribute reference not allowed here"));
 
+               Status := Stop;
+
             elsif Value.Length = 1 then
                Case_Values.Append ('-' & Value.First_Element.Text);
 
@@ -3774,7 +3706,13 @@ package body GPR2.Project_Parser is
 
                Status := Over;
 
-            elsif not Has_Error then
+            elsif Value.Is_Empty then
+               --  This case happens when Get_Variable_Values could not
+               --  resolve the variable name. An error message has already
+               --  been logged in this case so just stop analysis.
+               Status := Stop;
+
+            else
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Missing_Project_Error_Level,
@@ -3782,8 +3720,11 @@ package body GPR2.Project_Parser is
                      Message => "variable """
                      & String (Get_Name_Type (F_Variable_Name (Var), 1, 1))
                      & """ must be a simple value"));
+
                if Pre_Conf_Mode then
                   Status := Over;
+               else
+                  Status := Stop;
                end if;
             end if;
          end Parse_Case_Construction;
@@ -4054,6 +3995,68 @@ package body GPR2.Project_Parser is
             end if;
          end Parse_Project_Declaration;
 
+         -----------------------------
+         -- Parse_Typed_String_Decl --
+         -----------------------------
+
+         procedure Parse_Typed_String_Decl (N : Typed_String_Decl) is
+            Name       : constant Name_Type :=
+                           Get_Name_Type (F_Type_Id (N));
+            Values     : constant String_Literal_List :=
+                           F_String_Literals (N);
+            Num_Childs : constant Natural := Children_Count (Values);
+            Cur_Child  : Gpr_Node;
+            Set        : Containers.Value_Set;
+            List       : Containers.Source_Value_List;
+         begin
+            if Types.Contains (Name) then
+               Tree.Log_Messages.Append
+                 (GPR2.Message.Create
+                    (Level   => Message.Error,
+                     Sloc    =>
+                       Get_Source_Reference (Self.File, F_Type_Id (N)),
+                     Message =>
+                       "type """ & String (Name) & """ already defined"));
+
+            else
+               for J in 1 .. Num_Childs loop
+                  Cur_Child := Child (Gpr_Node (Values), J);
+
+                  if not Cur_Child.Is_Null then
+                     declare
+                        Value : constant Value_Type :=
+                                  Get_Value_Type
+                                    (Cur_Child.As_String_Literal);
+                     begin
+                        if Set.Contains (Value) then
+                           Tree.Log_Messages.Append
+                             (GPR2.Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    =>
+                                   Get_Source_Reference
+                                     (Self.File, Cur_Child),
+                                 Message =>
+                                   '"' & String (Name)
+                                 & """ has duplicate value """
+                                 & String (Value) & '"'));
+                        else
+                           Set.Insert (Value);
+                           List.Append
+                             (Get_Value_Reference
+                                (Self.File, Sloc_Range (Cur_Child), Value));
+                        end if;
+                     end;
+                  end if;
+               end loop;
+
+               Types.Insert
+                 (Name,
+                  GPR2.Project.Typ.Create
+                    (Get_Identifier_Reference
+                         (Self.File, Sloc_Range (F_Type_Id (N)), Name), List));
+            end if;
+         end Parse_Typed_String_Decl;
+
          -------------------------
          -- Parse_Variable_Decl --
          -------------------------
@@ -4081,7 +4084,7 @@ package body GPR2.Project_Parser is
                   Get_Name_Type (Type_Node, Num_Childs, Num_Childs);
                begin
 
-                  Type_Def := Self.Type_Definition_From (Tree, Type_Node);
+                  Type_Def := Type_Definition_From (View, Type_Node);
 
                   --  Check that the type has been defined
 
@@ -4145,9 +4148,7 @@ package body GPR2.Project_Parser is
                --  expected, so this is just a safe guard, not expected to be
                --  covered by tests.
 
-               if not Tree.Log_Messages.Has_Error
-                 and then Non_Fatal_Error.Is_Empty
-               then
+               if not Tree.Log_Messages.Has_Error then
                   Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
@@ -4227,6 +4228,9 @@ package body GPR2.Project_Parser is
                when Gpr_Case_Item =>
                   Parse_Case_Item (Node.As_Case_Item);
 
+               when Gpr_Typed_String_Decl =>
+                  Parse_Typed_String_Decl (Node.As_Typed_String_Decl);
+
                when others =>
                   null;
             end case;
@@ -4250,9 +4254,9 @@ package body GPR2.Project_Parser is
             end case;
          end if;
 
-         if Has_Error then
-            Status := Stop;
-         end if;
+         --  if Has_Error then
+         --     Status := Stop;
+         --  end if;
 
          return Status;
       end Parser;
@@ -4280,7 +4284,7 @@ package body GPR2.Project_Parser is
             if Q_Name.Pack = Project_Level_Scope
               or else PRP.Attributes_Are_Checked (Q_Name.Pack)
             then
-               Non_Fatal_Error.Append
+               Tree.Log_Messages.Append
                  (Message.Create
                     (Level => Message.Error,
                      Sloc  => Source_Reference.Object (A),
@@ -4294,21 +4298,21 @@ package body GPR2.Project_Parser is
          --  error (such as missing variable). So only perform the next
          --  checks if there's no critical error.
 
-         elsif not Tree.Log_Messages.Has_Error then
+         else
             --  Check value kind
 
             Def := PRA.Get (Q_Name);
 
             if Def.Value /= A.Kind then
                if Def.Value = PRA.Single then
-                  Non_Fatal_Error.Append
+                  Tree.Log_Messages.Append
                     (Message.Create
                        (Level => Message.Error,
                         Sloc  => Source_Reference.Object (A),
                         Message => "attribute """ & Image (Q_Name) &
                                    """ expects a single value"));
                else
-                  Non_Fatal_Error.Append
+                  Tree.Log_Messages.Append
                     (Message.Create
                        (Level => Message.Error,
                         Sloc  => Source_Reference.Object (A),
@@ -4323,7 +4327,7 @@ package body GPR2.Project_Parser is
               and then Length (A.Value.Unchecked_Text) = 0
             then
                if Def.Empty_Value = PRA.Error then
-                  Non_Fatal_Error.Append
+                  Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
                         Sloc    => Source_Reference.Object (A.Value),
@@ -4368,7 +4372,7 @@ package body GPR2.Project_Parser is
             case Def.Index_Type is
                when PRA.No_Index =>
                   if A.Has_Index then
-                     Non_Fatal_Error.Append
+                     Tree.Log_Messages.Append
                        (Message.Create
                           (Level => Message.Error,
                            Sloc  => Source_Reference.Object (A.Index),
@@ -4379,7 +4383,7 @@ package body GPR2.Project_Parser is
 
                when others =>
                   if not A.Has_Index then
-                     Non_Fatal_Error.Append
+                     Tree.Log_Messages.Append
                        (Message.Create
                           (Level => Message.Error,
                            Sloc  => Source_Reference.Object (A),
@@ -4390,7 +4394,7 @@ package body GPR2.Project_Parser is
                   elsif A.Index.Is_Others
                     and then not Def.Index_Optional
                   then
-                     Non_Fatal_Error.Append
+                     Tree.Log_Messages.Append
                        (Message.Create
                           (Level => Message.Error,
                            Sloc  => Source_Reference.Object (A),
@@ -4400,7 +4404,7 @@ package body GPR2.Project_Parser is
                   elsif Def.Index_Type = PRA.Env_Var_Name_Index
                     and then A.Index.Text'Length = 0
                   then
-                     Non_Fatal_Error.Append
+                     Tree.Log_Messages.Append
                        (Message.Create
                           (Level => Message.Error,
                            Sloc  => Source_Reference.Object (A),
@@ -4444,7 +4448,7 @@ package body GPR2.Project_Parser is
                         end loop;
 
                         if not Found then
-                           Non_Fatal_Error.Append
+                           Tree.Log_Messages.Append
                                  (Message.Create
                                     (Level => Message.Error,
                                     Sloc  => Source_Reference.Object (A),
@@ -4465,7 +4469,7 @@ package body GPR2.Project_Parser is
                        Set.Element (A.Name.Id.Attr, A.Index);
             begin
                if Old.Is_Frozen then
-                  Non_Fatal_Error.Append
+                  Tree.Log_Messages.Append
                     (Message.Create
                        (Level => Message.Error,
                         Sloc  => Source_Reference.Object (A),
@@ -4503,6 +4507,7 @@ package body GPR2.Project_Parser is
          Attrs.Clear;
          Vars.Clear;
          Packs.Clear;
+         Types.Clear;
       end if;
 
       --  Insert intrinsic attributes Name and Project_Dir
@@ -4536,19 +4541,11 @@ package body GPR2.Project_Parser is
                Default => True));
       end;
 
-      Types := Self.Types;
-
       if Is_Parsed_Project then
          View_Internal.Get (View).Disable_Cache;
          Traverse (Root (Self.Unit), Parser'Access);
          View_Internal.Get (View).Enable_Cache;
       end if;
-
-      --  Fill possible non-fatal errors into the tree now
-
-      for M of Non_Fatal_Error loop
-         Tree.Log_Messages.Append (M);
-      end loop;
 
       for F of Actual loop
          Self.Skip_Src.Exclude (F);
@@ -4569,8 +4566,7 @@ package body GPR2.Project_Parser is
    --------------------------
 
    function Type_Definition_From
-     (Self      : Object;
-      Tree      : GPR2.Tree_Internal.Object;
+     (View      : GPR2.Project.View.Object;
       Type_Node : Identifier_List)
       return GPR2.Project.Typ.Object
    is
@@ -4584,66 +4580,33 @@ package body GPR2.Project_Parser is
                         (Type_Node, Num_Childs, Num_Childs);
       Type_Def   : GPR2.Project.Typ.Object := GPR2.Project.Typ.Undefined;
 
-      function Search_Paths return GPR2.Path_Name.Set.Object is
-         (GPR2.Project.Search_Paths
-           (Self.File, Tree.Project_Search_Paths));
-
-      procedure Get_Type_Def_From
-         (Imp : GPR2.Project.Import.Object);
-      --  Try to find type definition from Imp by name T_Name and
+      procedure Get_Type_Def_From (V : GPR2.Project.View.Object);
+      --  Try to find type definition from V by name T_Name and
       --  store it to Type_Def if found.
 
       -----------------------
       -- Get_Type_Def_From --
       -----------------------
 
-      procedure Get_Type_Def_From (Imp : GPR2.Project.Import.Object) is
-         Path    : constant GPR2.Path_Name.Object :=
-                     GPR2.Project.Create
-                     (Imp.Path_Name.Name, Tree.Resolve_Links, Search_Paths);
-         Types   : GPR2.Project.Typ.Set.Object;
-         Project : GPR2.Project_Parser.Object := GPR2.Project_Parser.Undefined;
-
-         use GPR2.Path_Name;
+      procedure Get_Type_Def_From (V : GPR2.Project.View.Object) is
       begin
-         if Path.Exists then
-
-            --  Obtain the project parser if it is in cache, during the parsing
-            --  for example. Otherwise, obtain it with the views.
-
-            if not Registry.Check_Project (Path, Project) then
-               for V of Tree.Ordered_Views loop
-                  if V.Is_Defined and then V.Path_Name = Path then
-                     Project := View_Internal.Get_RO (V).Trees.Project;
-                     exit;
-                  end if;
-               end loop;
-            end if;
-
-            if Project.Is_Defined then
-               Types := Project.Types;
-               CT := Types.Find (T_Name);
-
-               if PTS.Has_Element (CT) then
-                  Type_Def := PTS.Element (CT);
-               end if;
-            end if;
+         CT := View_Internal.Get_RO (V).Types.Find (T_Name);
+         if PTS.Has_Element (CT) then
+            Type_Def := PTS.Element (CT);
          end if;
       end Get_Type_Def_From;
 
    begin
       if Num_Childs > 1 then
          --  We have a project prefix for the type name
-
          declare
-            package PIS renames GPR2.Project.Import.Set;
-            Position : constant PIS.Cursor :=
-                           Self.Imports.Find
-                             (Get_Name_Type
-                                (Type_Node, 1, Num_Childs - 1, "-"));
+            Name : constant Name_Type :=
+                     Get_Name_Type (Type_Node, 1, Num_Childs - 1);
+            V    : constant GPR2.Project.View.Object :=
+                     View.View_For (Name);
          begin
-            if PIS.Has_Element (Position) then
-               Get_Type_Def_From (PIS.Element (Position));
+            if V.Is_Defined then
+               Get_Type_Def_From (V);
             end if;
          end;
       end if;
@@ -4651,25 +4614,27 @@ package body GPR2.Project_Parser is
       if not Type_Def.Is_Defined
          or else Type_Def.Count_Values = 0
       then
-         CT := Self.Types.Find (T_Name);
+         CT := View_Internal.Get_RO (View).Types.Find (T_Name);
 
          if PTS.Has_Element (CT) then
             Type_Def := PTS.Element (CT);
 
-         elsif Self.Has_Extended then
-            Get_Type_Def_From (Self.Extended);
+         elsif View.Is_Extending then
+            --  ??? Do we expect recursion here?
+            Get_Type_Def_From (View.Extended_Root);
          end if;
 
          --  Type definition from "parent" project
 
          if not Type_Def.Is_Defined
-            and then Self.Has_Imports
-            and then Count (Self.Name, ".") > 0
+            and then View.Has_Imports
+            and then Ada.Strings.Fixed.Count (String (View.Name), ".") > 0
          then
             declare
-               Prj_Id       : constant String := -Self.Name;
+               Prj_Id       : constant Name_Type := View.Name;
                Dot_Position : Natural := Prj_Id'First;
-               I_Cursor     : GPR2.Project.Import.Set.Cursor;
+               V            : GPR2.Project.View.Object;
+
             begin
                loop
                   for J in Dot_Position .. Prj_Id'Last loop
@@ -4679,13 +4644,11 @@ package body GPR2.Project_Parser is
 
                   exit when Dot_Position = Prj_Id'Last;
 
-                  I_Cursor := Self.Imports.Find
+                  V := View.View_For
                     (Name_Type (Prj_Id (1 .. Dot_Position - 1)));
 
-                  if GPR2.Project.Import.Set.Has_Element (I_Cursor) then
-                     Get_Type_Def_From
-                        (GPR2.Project.Import.Set.Element
-                           (I_Cursor));
+                  if V.Is_Defined then
+                     Get_Type_Def_From (V);
                   end if;
 
                   exit when Type_Def.Is_Defined;

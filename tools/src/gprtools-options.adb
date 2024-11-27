@@ -32,10 +32,6 @@ package body GPRtools.Options is
 
    package PRP renames GPR2.Project.Registry.Pack;
 
-   procedure Get_Opt_Internal
-     (Parser : Command_Line_Parser;
-      Result : in out Base_Options'Class);
-
    procedure On_Switch
      (Parser : GPRtools.Command_Line.Command_Line_Parser'Class;
       Res    : not null access GPRtools.Command_Line.Command_Line_Result'Class;
@@ -50,7 +46,9 @@ package body GPRtools.Options is
    overriding procedure Append_Argument
      (Result : in out Base_Options; Value : GPR2.Value_Type) is
    begin
-      Result.Remaining.Append (Value);
+      if not Result.On_Extra_Arg (Value) then
+         Result.Args.Append (Value);
+      end if;
    end Append_Argument;
 
 
@@ -302,42 +300,32 @@ package body GPRtools.Options is
      (Parser : Command_Line_Parser;
       Result : in out GPRtools.Command_Line.Command_Line_Result'Class) is
    begin
-      Get_Opt_Internal (Parser, Base_Options'Class (Result));
-   end Get_Opt;
-
-   ----------------------
-   -- Get_Opt_Internal --
-   ----------------------
-
-   procedure Get_Opt_Internal
-     (Parser : Command_Line_Parser;
-      Result : in out Base_Options'Class) is
-   begin
       GPRtools.Command_Line.Command_Line_Parser (Parser).Get_Opt (Result);
-
-      for Arg of Result.Remaining_Arguments loop
-         if not Result.On_Extra_Arg (Arg) then
-            Result.Args.Include (Arg);
-         end if;
-      end loop;
-
-      Result.Find_Implicit_Project := Parser.Find_Implicit_Project;
-   end Get_Opt_Internal;
+      Base_Options (Result).Find_Implicit_Project :=
+        Parser.Find_Implicit_Project;
+   end Get_Opt;
 
    ------------------
    -- Load_Project --
    ------------------
 
    function Load_Project
-     (Opt                : in out Base_Options'Class;
-      Absent_Dir_Error   : GPR2.Error_Level;
-      Handle_Errors      : Boolean := True) return Boolean
+     (Opt                      : in out Base_Options'Class;
+      Absent_Dir_Error         : GPR2.Error_Level;
+      Handle_Errors            : Boolean := True;
+      Restricted_To_Languages  : GPR2.Containers.Language_Set :=
+                                   GPR2.Containers.Empty_Language_Set)
+      return Boolean
    is
 
       Loaded : Boolean := False;
       Tree   : GPR2.Project.Tree.Object := Opt.Tree;
 
    begin
+      if not Restricted_To_Languages.Is_Empty then
+         Tree.Restrict_Autoconf_To_Languages (Restricted_To_Languages);
+      end if;
+
       Loaded := Tree.Load
         (Opt,
          With_Runtime             => True,

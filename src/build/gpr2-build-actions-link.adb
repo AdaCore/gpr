@@ -232,10 +232,13 @@ package body GPR2.Build.Actions.Link is
    procedure Initialize_Executable
      (Self       : in out Object;
       Src        : Artifacts.File_Part.Object;
-      Context    : GPR2.Project.View.Object)
+      Context    : GPR2.Project.View.Object;
+      Output     : Filename_Optional := "")
    is
       Exec : constant GPR2.Path_Name.Object :=
-               Context.Executable (Src.Path.Simple_Name, Src.Index);
+               (if Output'Length = 0
+                then Context.Executable (Src.Path.Simple_Name, Src.Index)
+                else Context.Executable_Directory.Compose (Output));
    begin
       Self.Is_Library := False;
       Self.Main_Src   := Src;

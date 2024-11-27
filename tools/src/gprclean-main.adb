@@ -24,6 +24,7 @@ with GNAT.OS_Lib;
 
 with GNATCOLL.Traces;
 
+with GPR2.Build.Actions_Population;
 with GPR2.Log;
 with GPR2.Message;
 with GPR2.Options;
@@ -36,7 +37,6 @@ with GPR2.Project.View;
 with GPR2.Reporter;
 with GPR2.Source_Reference;
 
-with GPRtools.Actions;
 with GPRtools.Options;
 with GPRtools.Program_Termination;
 with GPRtools.Util;
@@ -100,6 +100,7 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    Project_Tree : Project.Tree.Object;
    Opt          : GPRclean.Options.Object;
    Parser       : GPRtools.Options.Command_Line_Parser;
+   Build_Opt    : GPR2.Build.Actions_Population.Build_Options;
 
 begin
    GNATCOLL.Traces.Parse_Config_File;
@@ -185,7 +186,8 @@ begin
 
       null;
    else
-      if not GPRtools.Actions.Add_Actions_To_Build_Mains (Project_Tree)
+      if not GPR2.Build.Actions_Population.Populate_Actions
+               (Project_Tree, Build_Opt)
       then
          return To_Exit_Status (E_Abort);
       end if;

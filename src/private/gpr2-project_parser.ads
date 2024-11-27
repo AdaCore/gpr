@@ -14,7 +14,7 @@ with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Import.Set;
-with GPR2.Project.Typ.Set;
+with GPR2.Project.Typ;
 with GPR2.Project.View;
 with GPR2.Source_Reference;
 
@@ -160,15 +160,14 @@ private package GPR2.Project_Parser is
    --  Source filenames to skip due to inactive case items
 
    function Type_Definition_From
-     (Self      : Object;
-      Tree      : GPR2.Tree_Internal.Object;
+     (View      : GPR2.Project.View.Object;
       Type_Node : Identifier_List)
     return GPR2.Project.Typ.Object
-    with Pre => Self.Is_Defined;
+    with Pre => View.Is_Defined;
     --  Find the type definition corresponding to the specified node,
-    --  either from the parsed project file, an imported project file
-    --  or a parent project file. If the type definition is not found,
-    --  GPR2.Project.Typ.Undefined is returned.
+    --  either from View, an imported project file or a parent project file.
+    --  If the type definition is not found, GPR2.Project.Typ.Undefined is
+    --  returned.
 
 private
 
@@ -182,7 +181,6 @@ private
       Extended  : GPR2.Project.Import.Object;
       Is_All    : Boolean := False;
       Unit      : Analysis_Unit := No_Analysis_Unit;
-      Types     : GPR2.Project.Typ.Set.Object;
       Context   : Analysis_Context := No_Analysis_Context;
       Skip_Src  : Containers.Filename_Source_Reference;
       Messages  : GPR2.Log.Object;

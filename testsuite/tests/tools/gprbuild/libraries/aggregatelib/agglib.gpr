@@ -1,0 +1,13 @@
+aggregate library project Agglib is
+
+   for Library_Name use "demo";
+   for Library_Dir use "lib/agglib";
+   for Object_Dir use "obj/agglib";
+
+   for Project_Files use
+     ("aggs/prj1.gpr",
+      "aggs/prj2.gpr",
+      "aggs/prj3.gpr",
+      "aggs/prj4.gpr");
+
+end Agglib;

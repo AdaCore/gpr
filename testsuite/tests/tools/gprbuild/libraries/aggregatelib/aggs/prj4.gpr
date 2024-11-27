@@ -1,0 +1,6 @@
+aggregate library project Prj4 is
+   for Library_Name use "prj4";
+   for Library_Dir use "../lib/prj4";
+   for Object_Dir use "../obj/prj4";
+   for Project_Files use ("prj4_1.gpr", "prj4_2.gpr");
+end Prj4;

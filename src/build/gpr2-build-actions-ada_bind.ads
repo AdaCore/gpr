@@ -25,14 +25,16 @@ package GPR2.Build.Actions.Ada_Bind is
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
 
    procedure Initialize
-     (Self               : in out Object;
-      Main_Ali           : Artifacts.Files.Object;
-      Is_Library         : Boolean := False;
-      Is_Shared_Lib      : Boolean := False;
-      Has_SAL_In_Closure : Boolean := False;
-      Dep_File_Dirs      : Containers.Value_List :=
-        Containers.Empty_Value_List;
-      Context            : GPR2.Project.View.Object);
+     (Self     : in out Object;
+      Main_Ali : Artifacts.Files.Object;
+      Context  : GPR2.Project.View.Object);
+
+   procedure Initialize_No_Main
+     (Self : in out Object;
+      Basename : Simple_Name;
+      Context  : GPR2.Project.View.Object);
+   --  Binding phase that generates no main file (main is defined in a foreign
+   --  language).
 
    overriding function View (Self : Object) return GPR2.Project.View.Object;
 
@@ -71,8 +73,8 @@ private
 
    type Ada_Bind_Id (Name_Len : Natural) is new Actions.Action_Id
      with record
-      Ctxt      : GPR2.Project.View.Object;
-      Ali_Name  : Filename_Type (1 .. Name_Len);
+      Ctxt : GPR2.Project.View.Object;
+      BN   : Filename_Type (1 .. Name_Len);
    end record;
 
    overriding function View (Self : Ada_Bind_Id) return Project.View.Object is
@@ -85,18 +87,12 @@ private
      (Ada_Language);
 
    overriding function Action_Parameter (Self : Ada_Bind_Id) return Value_Type
-   is (Value_Type (Self.Ali_Name));
+   is (Value_Type (Self.BN));
 
    type Object is new Actions.Object with record
-      Main_Ali           : Artifacts.Files.Object;
-      --  ALI file given as argument to the binder
-      Output_Spec        : Artifacts.Files.Object;
-      Output_Body        : Artifacts.Files.Object;
-
-      Is_Library         : Boolean := False;
-      Is_Shared_Library  : Boolean := False;
-      Has_SAL_In_Closure : Boolean := False;
-      --  Binding options
+      Basename    : Unbounded_String;
+      Output_Spec : Artifacts.Files.Object;
+      Output_Body : Artifacts.Files.Object;
 
       Ctxt               : GPR2.Project.View.Object;
       --  View referenced by the generated compilation unit
@@ -107,13 +103,9 @@ private
       Obj_Deps           : GPR2.Containers.Filename_Set;
       --  List of objects coming from the binder in the generated body
 
-      Dep_File_Dirs      : Containers.Value_List :=
-                             Containers.Empty_Value_List;
-      --  All directory to be searched for sources and ALI files
+      Extra_Opts  : GNATCOLL.OS.Process.Argument_List;
+      --  Extra options to give to the binder
    end record;
-
-   function BN (Self : Object) return Simple_Name is
-     ("b__" & Self.Main_Ali.Path.Base_Filename);
 
    overriding procedure Compute_Signature
      (Self   : in out Object;

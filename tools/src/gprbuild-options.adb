@@ -16,24 +16,15 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  with GPR2.External_Options;
-with GPRtools.Command_Line;
+with Ada.Containers;
+with Ada.Strings.Unbounded;
 
-with GPR2.Build.Source;
-with GPR2.Build.Unit_Info;
-with GPR2.Build.Unit_Info.List;
-with GPR2.Build.View_Db;
 with GPR2.Options;
-with GPR2.Project.Tree;
-with GPR2.Project.View;
 
 package body GPRbuild.Options is
 
    use GPRtools;
    use GPR2;
-   use GPR2.Build.Compilation_Unit;
-
-   package BCU renames GPR2.Build.Compilation_Unit;
 
    procedure On_Switch
      (Parser : GPRtools.Command_Line.Command_Line_Parser'Class;
@@ -54,16 +45,17 @@ package body GPRbuild.Options is
    -- Build_From_Command_Line --
    -----------------------------
 
-   function Create return GPRBuild_Parser is
+   function Create return GPRbuild_Parser is
       use GPRtools.Command_Line;
-      Parser : GPRtools.Options.Command_Line_Parser :=
-                 GPRtools.Options.Create
-                   ("2022",
-                    Cmd_Line => "[-P<proj>|<proj.gpr>] [opts] [source]" &
-                      ASCII.LF &
-                      "     [-cargs[:lang] opts] [-largs opts] [-kargs opts]" &
-                      " [-gargs opts]",
-                    Allow_Autoconf    => True);
+      Parser : GPRbuild.Options.GPRbuild_Parser :=
+                 (GPRtools.Options.Create
+                    ("2022",
+                     Cmd_Line =>
+                       "[-P<proj>|<proj.gpr>] [opts] [source]" &
+                       ASCII.LF &
+                       "     [-cargs[:lang] opts] [-largs opts]" &
+                       " [-kargs opts] [-gargs opts]",
+                     Allow_Autoconf    => True) with null record);
       Build_Group    : GPRtools.Command_Line.Argument_Group;
       Compiler_Group : GPRtools.Command_Line.Argument_Group;
 
@@ -130,6 +122,13 @@ package body GPRbuild.Options is
                  Help => "Compile only"));
       Parser.Add_Argument
         (Build_Group,
+         Create (Name   => "-C",
+                 Help   => "for compatibility with older gprbuild",
+                 Hidden => True));
+      --  ???-C seems to be historical. There's still a test that checks it so
+      --  we keep backwards compatibility here.
+      Parser.Add_Argument
+        (Build_Group,
          Create (Name           => "-d",
                  Help           => "Display compilation progress",
                  In_Switch_Attr => False));
@@ -158,6 +157,9 @@ package body GPRbuild.Options is
                  Delimiter => None,
                  Parameter => "<nn>",
                  Hidden    => True));
+      --  Cannot be implemented in gpr2: the dag doesn't differentiate actions
+      --  so paralellism cannot be specialized to spedific phases. This remard
+      --  is also valid for below -jb and -jl
       Parser.Add_Argument
         (Build_Group,
          Create (Name      => "-jb",
@@ -187,6 +189,8 @@ package body GPRbuild.Options is
          Create (Name   => "-m",
                  Help   => "Minimum Ada recompilation",
                  Hidden => True));
+      --  -m* involves checking checksum of files which is now the default in
+      --  gpr2. This is kept for compatibility reasons but won't have effects.
       Parser.Add_Argument
         (Build_Group,
          Create (Name   => "-m2",
@@ -295,25 +299,26 @@ package body GPRbuild.Options is
             Delimiter => None,
             Parameter => "<level>"));
 
-      return GPRBuild_Parser'(Parser with null record);
+      return Parser;
    end Create;
 
-   -----------
-   -- Mains --
-   -----------
+   -------------
+   -- Get_Opt --
+   -------------
 
-   function Mains (Options : Object)
-     return BCU.Unit_Location_Vector
+   overriding procedure Get_Opt
+     (Parser : GPRbuild_Parser;
+      Result : in out GPRtools.Command_Line.Command_Line_Result'Class)
    is
+      Options : constant access Object := Object (Result)'Access;
       use type Ada.Containers.Count_Type;
-      Result : BCU.Unit_Location_Vector;
    begin
-      if Options.Args.Is_Empty then
-         return BCU.Empty_Vector;
-      end if;
+      GPRtools.Options.Command_Line_Parser (Parser).Get_Opt (Result);
 
-      if Options.Multi_Unit_Index /= No_Index
-        and then Options.Args.Length > 1
+      --  Sanity check
+      if Options.Build_Options.Unit_Index /= No_Index
+        and then (Options.Args.Is_Empty
+                  or else Options.Args.Length > 1)
       then
          raise GPR2.Options.Usage_Error with
            "only one source can be specified with multi-unit index " &
@@ -321,77 +326,19 @@ package body GPRbuild.Options is
       end if;
 
       for Arg of Options.Args loop
-         declare
-            Found      : Boolean := False;
-            Src        : GPR2.Build.Source.Object;
-            Unit_Loc   : BCU.Unit_Location;
-         begin
-            View_Loop :
-            for C in Options.Tree.Iterate loop
-               declare
-                  View       : constant GPR2.Project.View.Object :=
-                                 GPR2.Project.Tree.Element (C);
-                  View_DB    : constant GPR2.Build.View_Db.Object :=
-                                 Options.Tree.Artifacts_Database (View);
-               begin
-                  if View.Is_Extended then
-                     goto Continue;
-                  end if;
-
-                  if View.Has_Mains then
-                     Unit_Loc := View.Main (Simple_Name (Arg));
-                     if Unit_Loc /= No_Unit then
-                        Result.Append (Unit_Loc);
-                        Found := True;
-                        exit View_Loop;
-                     end if;
-                  end if;
-
-                  --  Provided argument is not known as a main. See if we can
-                  --  find this source with all the supported languages body
-                  --  suffix for the current view.
-
-                  for Lang of View.Language_Ids loop
-                     Src := View_DB.Visible_Source
-                              (GPR2.Project.View.Suffixed_Simple_Name
-                                 (View, Arg, Lang));
-
-                     if Src.Is_Defined then
-                        declare
-                           Index : Unit_Index := No_Index;
-                        begin
-
-                           --  Always set index to the first unit found.
-
-                           if Src.Has_Units then
-                              Index :=
-                                GPR2.Build.Unit_Info.List.Element
-                                  (Src.Units.Iterate.First).Index;
-                           end if;
-
-                           Result.Append
-                           (GPR2.Build.Compilation_Unit.Unit_Location'
-                              (Src.Owning_View,
-                               Src.Path_Name,
-                               Index));
-                           Found := True;
-                           exit View_Loop;
-                        end;
-                     end if;
-                  end loop;
-               end;
-               <<Continue>>
-            end loop View_Loop;
-
-            if not Found then
-               raise GPR2.Options.Usage_Error with
-                 """" & Arg & """ was not found in the sources of any project";
-            end if;
-         end;
+         Options.Build_Options.Mains.Include (Arg);
       end loop;
 
-      return Result;
-   end Mains;
+      Options.Args.Clear;
+
+      if Ada.Strings.Unbounded.Length (Options.Build_Options.Output_File) > 0
+        and then Options.Build_Options.Mains.Length /= 1
+      then
+         raise GPR2.Options.Usage_Error with
+           "only one source can be specified when the output file is " &
+           "specified with '-o'";
+      end if;
+   end Get_Opt;
 
    -----------------------
    -- On_Section_Switch --
@@ -415,25 +362,25 @@ package body GPRbuild.Options is
 
    begin
       if Section = "-cargs" then
-         if not Result.Compiler_Args.Contains (Lang_Idx) then
-            Result.Compiler_Args.Insert
+         if not Result.Build_Options.Compiler_Args.Contains (Lang_Idx) then
+            Result.Build_Options.Compiler_Args.Insert
               (Lang_Idx,
                GPR2.Containers.Value_Type_List.Empty_Vector);
          end if;
 
-         Result.Compiler_Args (Lang_Idx).Append (String (Arg));
+         Result.Build_Options.Compiler_Args (Lang_Idx).Append (String (Arg));
 
       elsif Section = "-bargs" then
-         if not Result.Binder_Args.Contains (Lang_Idx) then
-            Result.Binder_Args.Insert
+         if not Result.Build_Options.Binder_Args.Contains (Lang_Idx) then
+            Result.Build_Options.Binder_Args.Insert
               (Lang_Idx,
                GPR2.Containers.Value_Type_List.Empty_Vector);
          end if;
 
-         Result.Binder_Args (Lang_Idx).Append (String (Arg));
+         Result.Build_Options.Binder_Args (Lang_Idx).Append (String (Arg));
 
       elsif Section = "-largs" then
-         Result.Linker_Args.Append (String (Arg));
+         Result.Build_Options.Linker_Args.Append (String (Arg));
 
       elsif Section = "-kargs" then
          Result.Config_Args.Append (String (Arg));
@@ -458,8 +405,23 @@ package body GPRbuild.Options is
       pragma Unreferenced (Parser, Index);
       use type GPRtools.Command_Line.Switch_Type;
 
+      procedure Add_Ada_Compiler_Option (Sw : String);
+
       Result : constant access Object := Object (Res.all)'Access;
       Failed : Boolean := False;
+
+      procedure Add_Ada_Compiler_Option (Sw : String)
+      is
+         Pos  : GPR2.Build.Actions_Population.Lang_Args.Cursor;
+         Done : Boolean;
+      begin
+         Result.Build_Options.Compiler_Args.Insert
+           (GPR2.Ada_Language, GPR2.Containers.Value_Type_List.Empty_Vector,
+            Pos,
+            Done);
+
+         Result.Build_Options.Compiler_Args.Reference (Pos).Append (Sw);
+      end Add_Ada_Compiler_Option;
 
    begin
       if Arg = "--single-compiler-per-obj-dir" then
@@ -470,16 +432,16 @@ package body GPRbuild.Options is
            GPR2.Path_Name.Create_File (Filename_Type (Param));
 
       elsif Arg = "--no-indirect-imports" then
-         Result.Indirect_Imports := False;
+         Result.Build_Options.No_Indirect_Imports := True;
 
       elsif Arg = "--indirect-imports" then
-         Result.Indirect_Imports := True;
+         Result.Build_Options.No_Indirect_Imports := False;
 
       elsif Arg = "--no-object-check" then
          Result.No_Object_Check := True;
 
       elsif Arg = "--no-sal-binding" then
-         Result.No_SAL_Binding := True;
+         Result.Build_Options.No_SAL_Binding := True;
 
       elsif Arg = "--restricted-to-languages" then
          Result.Restricted_To_Languages.Clear;
@@ -509,20 +471,19 @@ package body GPRbuild.Options is
          end;
 
       elsif Arg = "-b" then
-         Result.Restricted_Build_Phase := True;
-         Result.Bind_Phase_Mandated := True;
+         Result.Build_Options.Restricted_Build_Phase := True;
+         Result.Build_Options.Bind_Phase_Mandated := True;
 
       elsif Arg = "-c" then
-         Result.Restricted_Build_Phase := True;
-         Result.Compile_Phase_Mandated := True;
+         Result.Build_Options.Restricted_Build_Phase := True;
+         Result.Build_Options.Compile_Phase_Mandated := True;
 
       elsif Arg = "-d" then
          Result.Display_Progress := True;
 
       elsif Arg = "-eI" then
          begin
-            Result.Multi_Unit_Index :=
-              GPR2.Unit_Index'Value (Param);
+            Result.Build_Options.Unit_Index := GPR2.Unit_Index'Value (Param);
          exception
             when Constraint_Error =>
                raise GPR2.Options.Usage_Error with
@@ -544,29 +505,16 @@ package body GPRbuild.Options is
                  "'" & Param & "' is not a valid parameter for -j";
          end;
 
-      elsif Arg = "-jc"
-        or else Arg = "-jb"
-        or else Arg = "-jl"
-      then
-         --  Ignore, not applicable with gprbuild2, only there for
-         --  compatibility reason
-         null;
-
       elsif Arg = "-k" then
          Result.Keep_Going := True;
 
       elsif Arg = "-l" then
-         Result.Restricted_Build_Phase := True;
-         Result.Link_Phase_Mandated := True;
-
-      elsif Arg = "-m"
-        or else Arg = "-m2"
-      then
-         null;
+         Result.Build_Options.Restricted_Build_Phase := True;
+         Result.Build_Options.Link_Phase_Mandated := True;
 
       elsif Arg = "-o" then
-         Result.Output_File :=
-           GPR2.Path_Name.Create_File (Filename_Type (Param));
+         Result.Build_Options.Output_File :=
+           Ada.Strings.Unbounded.To_Unbounded_String (Param);
 
       elsif Arg = "-p" then
          Result.Create_Missing_Dirs := True;
@@ -575,17 +523,16 @@ package body GPRbuild.Options is
          Result.Force_Recursive_Build := True;
 
       elsif Arg = "-R" then
-         Result.No_Run_Path := True;
+         Result.Build_Options.No_Run_Path := True;
 
       elsif Arg = "-s" then
          Result.Build_If_Switch_Changes := True;
 
       elsif Arg = "-u" then
-         Result.Unique_Recompilation := True;
+         Result.Build_Options.Unique_Recompilation := True;
 
       elsif Arg = "-U" then
-         Result.Unique_Recompilation := True;
-         Result.Force_Recursive_Build := True;
+         Result.Build_Options.Unique_Recompilation_Recursive := True;
 
       --  elsif Arg = "-z" then
       --     Result.Register_External_Options
@@ -594,22 +541,28 @@ package body GPRbuild.Options is
       --           String (Arg));
 
       elsif Arg = "-fno-inline" then
-         if not Result.Compiler_Args.Contains (GPR2.Ada_Language) then
-            Result.Compiler_Args.Include
+         if not Result.Build_Options.Compiler_Args.Contains
+           (GPR2.Ada_Language)
+         then
+            Result.Build_Options.Compiler_Args.Include
               (GPR2.Ada_Language,
                GPR2.Containers.Value_Type_List.Empty_Vector);
          end if;
 
-         Result.Compiler_Args (GPR2.Ada_Language).Append (String (Arg));
+         Result.Build_Options.Compiler_Args
+           (GPR2.Ada_Language).Append (String (Arg));
 
       elsif Arg = "-fstack-check" then
-         if not Result.Compiler_Args.Contains (GPR2.Ada_Language) then
-            Result.Compiler_Args.Include
+         if not Result.Build_Options.Compiler_Args.Contains
+           (GPR2.Ada_Language)
+         then
+            Result.Build_Options.Compiler_Args.Include
               (GPR2.Ada_Language,
                GPR2.Containers.Value_Type_List.Empty_Vector);
          end if;
 
-         Result.Compiler_Args (GPR2.Ada_Language).Append (String (Arg));
+         Result.Build_Options.Compiler_Args
+           (GPR2.Ada_Language).Append (String (Arg));
 
       elsif Arg = "--json-summary" then
          Result.Json_Summary := True;
@@ -618,35 +571,16 @@ package body GPRbuild.Options is
          Result.Keep_Temp_Files := True;
 
       elsif Arg = "-nostdinc" then
-         if not Result.Compiler_Args.Contains (GPR2.Ada_Language) then
-            Result.Compiler_Args.Include
-              (GPR2.Ada_Language,
-               GPR2.Containers.Value_Type_List.Empty_Vector);
-         end if;
-
-         Result.Compiler_Args (GPR2.Ada_Language).Append (String (Arg));
+         Add_Ada_Compiler_Option (String (Arg));
 
       elsif Arg = "-nostdlib" then
-         if not Result.Compiler_Args.Contains (GPR2.Ada_Language) then
-            Result.Compiler_Args.Include
-              (GPR2.Ada_Language,
-               GPR2.Containers.Value_Type_List.Empty_Vector);
-         end if;
-
-         Result.Compiler_Args (GPR2.Ada_Language).Append (String (Arg));
+         Add_Ada_Compiler_Option (String (Arg));
 
       elsif Arg = "-g" then
-         if not Result.Compiler_Args.Contains (GPR2.Ada_Language) then
-            Result.Compiler_Args.Include
-              (GPR2.Ada_Language,
-               GPR2.Containers.Value_Type_List.Empty_Vector);
-         end if;
-
          if Param = "default" then
-            Result.Compiler_Args (GPR2.Ada_Language).Append (String (Arg));
+            Add_Ada_Compiler_Option (String (Arg));
          else
-            Result.Compiler_Args (GPR2.Ada_Language).Append
-              (String (Arg) & Param);
+            Add_Ada_Compiler_Option (String (Arg) & Param);
          end if;
 
       elsif Arg = "-O" then
@@ -671,14 +605,17 @@ package body GPRbuild.Options is
             end if;
          end if;
 
-         if not Result.Compiler_Args.Contains (GPR2.Ada_Language) then
-            Result.Compiler_Args.Include
-              (GPR2.Ada_Language,
-               GPR2.Containers.Value_Type_List.Empty_Vector);
-         end if;
+         Add_Ada_Compiler_Option (String (Arg) & Param);
 
-         Result.Compiler_Args (GPR2.Ada_Language).Append
-           (String (Arg) & Param);
+      elsif Arg = "-C"
+        or else Arg = "-jc"
+        or else Arg = "-jb"
+        or else Arg = "-jl"
+        or else Arg = "-m"
+        or else Arg = "-m2"
+      then
+         --  Ignore, only there for compatibility reason
+         null;
 
       else
          raise GPRtools.Command_Line.Command_Line_Definition_Error

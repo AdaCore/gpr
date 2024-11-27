@@ -4,8 +4,11 @@ from testsuite_support.builder_and_runner import BuilderAndRunner
 
 bnr = BuilderAndRunner()
 
+print("Automatic for simple projects:")
+bnr.call(["gpr2build", "-P", os.path.join("tree", "simple.gpr")])
+
 print("Without -p:")
-proc = bnr.call(["gpr2build", "-P", os.path.join("tree", "main.gpr")])
+bnr.call(["gpr2build", "-P", os.path.join("tree", "main.gpr")])
 
 print("With -p:")
-proc = bnr.call(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p"])
+bnr.call(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p"])

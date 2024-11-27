@@ -115,6 +115,8 @@ package GPR2.Build.Actions is
    function Saved_Stdout (Self : Object'Class) return Unbounded_String;
    function Saved_Stderr (Self : Object'Class) return Unbounded_String;
 
+   function "<" (L, R : Object'Class) return Boolean;
+
    procedure Attach
      (Self : in out Object;
       Db   : in out GPR2.Build.Tree_Db.Object);
@@ -182,6 +184,9 @@ private
       elsif L.Language /= R.Language
       then L.Language < R.Language
       else L.Action_Parameter < R.Action_Parameter);
+
+   function "<" (L, R : Object'Class) return Boolean is
+      (L.UID < R.UID);
 
    function Valid_Signature (Self : Object) return Boolean is
      (Object'Class (Self).View.Is_Externally_Built

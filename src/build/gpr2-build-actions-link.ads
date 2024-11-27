@@ -34,7 +34,8 @@ package GPR2.Build.Actions.Link is
    procedure Initialize_Executable
      (Self       : in out Object;
       Src        : Artifacts.File_Part.Object;
-      Context    : GPR2.Project.View.Object);
+      Context    : GPR2.Project.View.Object;
+      Output     : Filename_Optional := "");
    --  Initialize a link action.
 
    procedure Initialize_Library
@@ -167,9 +168,9 @@ private
       and then Self.View.Attribute (PRA.Linker.Driver).Value.Text'Length > 0);
 
    overriding function Skip (Self : Object) return Boolean is
-     (if Self.View.Is_Externally_Built then True
-      elsif Self.Is_Static_Library then not Self.Check_Archive_Driver
-      else not Self.Check_Linker_Driver);
+     (Self.View.Is_Externally_Built or else
+      (Self.Is_Static_Library and then not Self.Check_Archive_Driver) or else
+      not Self.Check_Linker_Driver);
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object is

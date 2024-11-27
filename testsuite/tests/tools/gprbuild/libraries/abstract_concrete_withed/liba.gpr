@@ -1,0 +1,6 @@
+library project LibA is
+   for Library_Name use "a";
+   for Library_Dir use "lib/a";
+   for Source_Dirs use ("src/a");
+   for Object_Dir use "obj/a";
+end LibA;

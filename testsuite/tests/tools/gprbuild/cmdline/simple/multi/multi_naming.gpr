@@ -1,0 +1,9 @@
+abstract project Multi_Naming is
+
+   package Naming is
+      for Body ("P1") use "src.ada" at 1;
+      for Body ("P2") use "src.ada" at 2;
+      for Body ("P3") use "src.ada" at 3;
+   end Naming;
+
+end Multi_Naming;

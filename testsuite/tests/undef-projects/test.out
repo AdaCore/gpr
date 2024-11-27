@@ -1,1 +1,2 @@
 demo.gpr:3:12: error: undefined project or package "Myproj"
+demo.gpr:4:23: error: undefined project or package "Whatever"

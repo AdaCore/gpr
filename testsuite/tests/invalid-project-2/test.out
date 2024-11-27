@@ -4,6 +4,7 @@ prj.gpr:7:19: error: attribute "Object_Dir" does not expect an index
 prj.gpr:9:07: error: attribute "Source_Dirs" expects a list of values
 prj.gpr:11:19: error: undefined project "Imported"
 prj.gpr:14:05: error: full associative array expression requires simple attribute reference
+prj.gpr:19:08: error: undefined variable "Var"
 prj.gpr:31:08: error: type "T" already defined
 prj.gpr:35:07: error: unknown string type "U"
 prj.gpr:37:07: error: unknown string type "U"

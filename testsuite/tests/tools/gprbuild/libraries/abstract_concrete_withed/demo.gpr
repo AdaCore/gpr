@@ -1,0 +1,6 @@
+with "liba";
+with "libb";
+
+abstract project Demo is
+
+end Demo;
