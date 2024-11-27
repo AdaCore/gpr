@@ -1462,6 +1462,42 @@
           "attribute_def": {
             "builtin": false,
             "config_concatenable": false,
+            "default": {
+              "default_value_kind": "value",
+              "value": "-L"
+            },
+            "empty_value": "ERROR",
+            "has_default_in": {
+              "abstract": false,
+              "aggregate": false,
+              "aggregate_library": false,
+              "configuration": true,
+              "library": false,
+              "standard": false
+            },
+            "index_optional": false,
+            "index_type": "NO_INDEX",
+            "inherit_from_extended": "NOT_INHERITED",
+            "is_allowed_in": {
+              "abstract": false,
+              "aggregate": false,
+              "aggregate_library": false,
+              "configuration": true,
+              "library": false,
+              "standard": false
+            },
+            "is_toolchain_config": false,
+            "value": "SINGLE",
+            "value_case_sensitive": true,
+            "value_is_set": false
+          },
+          "attribute_descr": "Option used to add a library directory to the linker search path.",
+          "attribute_name": "Linker_Lib_Dir_Option"
+        },
+        {
+          "attribute_def": {
+            "builtin": false,
+            "config_concatenable": false,
             "empty_value": "ERROR",
             "has_default_in": {
               "abstract": false,

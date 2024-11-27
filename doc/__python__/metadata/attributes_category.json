@@ -43,7 +43,7 @@
 				{
 					"category_name": "Configuration - Libraries",
 					"category_to_display": true,
-					"attributes": [{"attribute_name": "Library_Builder"},{"attribute_name": "Library_Support"}]
+					"attributes": [{"attribute_name": "Library_Builder"},{"attribute_name": "Library_Support"},{"attribute_name": "Linker_Lib_Dir_Option"}]
 				},
 				{
 					"category_name": "Configuration - Archives",

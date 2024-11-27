@@ -714,6 +714,12 @@ Project Level Attributes
     Indicates the level of support of libraries. Only authorized case-insensitive
     values are 'static_only', 'full' or 'none' (the default).
 
+  .. index:: Attributes - Project Level Attributes; Linker_Lib_Dir_Option
+
+  * **Linker_Lib_Dir_Option**: single value, not inherited from extended project
+
+    Option used to add a library directory to the linker search path.
+
 .. _Package_Binder_Attributes:
 
 Package Binder Attributes
