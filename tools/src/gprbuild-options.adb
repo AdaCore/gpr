@@ -20,6 +20,7 @@ with Ada.Containers;
 with Ada.Strings.Unbounded;
 
 with GPR2.Options;
+with GPR2.Reporter.Console;
 
 package body GPRbuild.Options is
 
@@ -315,7 +316,8 @@ package body GPRbuild.Options is
    begin
       GPRtools.Options.Command_Line_Parser (Parser).Get_Opt (Result);
 
-      --  Sanity check
+      --  Sanity check mains given on the command line:
+
       if Options.Build_Options.Unit_Index /= No_Index
         and then (Options.Args.Is_Empty
                   or else Options.Args.Length > 1)
@@ -338,6 +340,31 @@ package body GPRbuild.Options is
            "only one source can be specified when the output file is " &
            "specified with '-o'";
       end if;
+
+      --  Adjust console output verbosity to mimick what gprbuild1 does
+
+      case Options.Console_Reporter.Verbosity is
+         when GPR2.Reporter.Quiet =>
+            if Options.No_Warnings then
+               Options.Console_Reporter.Set_Verbosity
+                 (GPR2.Reporter.No_Warnings);
+            else
+               Options.Console_Reporter.Set_Verbosity
+                 (GPR2.Reporter.Regular);
+            end if;
+
+            Options.Console_Reporter.Set_User_Verbosity
+              (GPR2.Reporter.Important_Only);
+
+         when GPR2.Reporter.No_Warnings | GPR2.Reporter.Regular =>
+            null;
+
+         when GPR2.Reporter.Verbose | GPR2.Reporter.Very_Verbose =>
+            Options.Console_Reporter.Set_User_Verbosity
+              (GPR2.Reporter.Verbose);
+            Options.Console_Reporter.Set_Verbosity
+              (GPR2.Reporter.Regular);
+      end case;
    end Get_Opt;
 
    -----------------------
@@ -386,7 +413,7 @@ package body GPRbuild.Options is
          Result.Config_Args.Append (String (Arg));
 
       else
-         raise GPRtools.Command_Line.Command_Line_Definition_Error with
+         raise GPR2.Options.Usage_Error with
            "unexpected arg section " & Section;
       end if;
    end On_Section_Switch;
@@ -618,7 +645,7 @@ package body GPRbuild.Options is
          null;
 
       else
-         raise GPRtools.Command_Line.Command_Line_Definition_Error
+         raise GPR2.Options.Usage_Error
            with "unexpected switch " & String (Arg);
       end if;
    end On_Switch;

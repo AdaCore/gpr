@@ -273,6 +273,11 @@ package body GPRtools.Options is
          Create (Name   =>  "-ws",
                  Help   => "Suppress all warnings"));
 
+      Parser.Add_Argument
+        (Verbosity_Group,
+         Create (Name   =>  "-wn",
+                 Help   => "Treat warnings as warnings"));
+
       --  Internal switch
 
       Hidden_Group :=
@@ -467,14 +472,21 @@ package body GPRtools.Options is
          Result.Console_Reporter.Set_Verbosity (Quiet);
 
       elsif Arg = "-v" then
-         if Result.Console_Reporter.Verbosity = Verbose then
-            Result.Console_Reporter.Set_Verbosity (Very_Verbose);
-         else
-            Result.Console_Reporter.Set_Verbosity (Verbose);
-         end if;
+         Result.Console_Reporter.Set_Verbosity (Verbose);
 
       elsif Arg = "-ws" then
-         Result.Console_Reporter.Set_Verbosity (No_Warnings);
+         if Result.Console_Reporter.Verbosity > Quiet then
+            Result.Console_Reporter.Set_Verbosity (No_Warnings);
+         end if;
+
+         Result.No_Warnings := True;
+
+      elsif Arg = "-wn" then
+         if Result.Console_Reporter.Verbosity = No_Warnings then
+            Result.Console_Reporter.Set_Verbosity (Regular);
+         end if;
+
+         Result.No_Warnings := False;
 
       elsif Arg = "--debug" then
          for C of Param loop
@@ -482,7 +494,7 @@ package body GPRtools.Options is
          end loop;
 
       else
-         raise GPRtools.Command_Line.Command_Line_Definition_Error
+         raise GPR2.Options.Usage_Error
            with "unexpected switch " & String (Arg);
       end if;
    end On_Switch;

@@ -441,7 +441,7 @@ package body GPR2.Build.Actions.Compile.Ada is
              (Self.Ali_File.Path.Simple_Name).String_Value,
            Self.Ali_File.Path.String_Value)
       then
-         Self.Tree.Report
+         Self.Tree.Reporter.Report
            (GPR2.Message.Create
               (GPR2.Message.Error,
                "could not copy ali file " &

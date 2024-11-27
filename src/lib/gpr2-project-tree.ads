@@ -25,6 +25,7 @@ with GPR2.Project.View.Vector;
 with GPR2.View_Ids;
 with GPR2.Reporter;
 with GPR2.Reporter.Console;
+with GPR2.Reporter.Holders;
 
 private with GNATCOLL.Refcount;
 private with GPR2.Tree_Internal;
@@ -74,16 +75,13 @@ package GPR2.Project.Tree is
    --  from the actual set of languages used in project tree. Empty set of
    --  languages means regular auto-configuration with no reductions.
 
-   type Reporter_Reference_Type
-     (Element : not null access GPR2.Reporter.Object'Class) is private
-     with Implicit_Dereference => Element;
-
    procedure Set_Reporter
      (Self : in out Object; Reporter : GPR2.Reporter.Object'Class);
    --  Set the reporter used by the tree and all tree-related operations,
    --  such as loading or working with sources, to output the logs.
 
-   function Reporter (Self : Object) return Reporter_Reference_Type;
+   function Reporter
+     (Self : Object) return GPR2.Reporter.Holders.Reference_Type;
    --  Returns a reference to the reporter
 
    function Load
@@ -595,10 +593,8 @@ private
                     Tree_Internal.Iterator
                       (Self.Tree.Iterate (Kind, Filter, Status))));
 
-   type Reporter_Reference_Type
-     (Element : not null access GPR2.Reporter.Object'Class)
-   is record
-      Ref : GPR2.Tree_Internal.Reporter_Holders.Reference_Type (Element);
-   end record;
+   function Reporter
+     (Self : Object) return GPR2.Reporter.Holders.Reference_Type is
+     (Self.Tree.Reporter);
 
 end GPR2.Project.Tree;

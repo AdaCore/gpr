@@ -26,6 +26,8 @@ package GPR2.Message is
    --     Indicates possible stylistic and structural improvements
    --     to the project file.
 
+   type User_Level_Value is (Optional, Regular, Important);
+
    type Status_Type is (Read, Unread);
    --  Read/Unread status for the messages. This is used for example by the Log
    --  to be able to retrieve only the new unread messages.
@@ -33,11 +35,12 @@ package GPR2.Message is
    type Object is tagged private;
 
    function Create
-     (Level     : Level_Value;
-      Message   : String;
-      Sloc      : Source_Reference.Object'Class := Source_Reference.Undefined;
-      Indent    : Natural := 0;
-      To_Stderr : Boolean := False) return Object
+     (Level      : Level_Value;
+      Message    : String;
+      Sloc       : Source_Reference.Object'Class := Source_Reference.Undefined;
+      Indent     : Natural := 0;
+      To_Stderr  : Boolean := False;
+      User_Level : User_Level_Value := Regular) return Object
      with Post => Create'Result.Status = Unread;
    --  Constructor for a log message
    --  Level:     the severity level of the message.
@@ -59,6 +62,10 @@ package GPR2.Message is
    function Level (Self : Object) return Level_Value
      with Inline, Pre => Self.Is_Defined;
    --  Returns the message level associated with the message
+
+   function User_Level (Self : Object) return User_Level_Value
+     with Inline, Pre => Self.Is_Defined;
+   --  Returns the message level associated with the user-level message
 
    function Status (Self : Object) return Status_Type
      with Inline, Pre => Self.Is_Defined;
@@ -99,12 +106,13 @@ package GPR2.Message is
 private
 
    type Object is tagged record
-      Level     : Level_Value := Warning;
-      Status    : Status_Type := Read;
-      Message   : Unbounded_String := To_Unbounded_String ((1 => ASCII.NUL));
-      Sloc      : Source_Reference.Object;
-      Indent    : Natural := 0;
-      To_Stderr : Boolean := False;
+      Level      : Level_Value := Warning;
+      User_Level : User_Level_Value := Regular;
+      Status     : Status_Type := Read;
+      Message    : Unbounded_String := To_Unbounded_String ((1 => ASCII.NUL));
+      Sloc       : Source_Reference.Object;
+      Indent     : Natural := 0;
+      To_Stderr  : Boolean := False;
    end record
      with Dynamic_Predicate => Message /= Null_Unbounded_String;
 

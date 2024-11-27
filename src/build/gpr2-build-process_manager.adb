@@ -9,6 +9,7 @@ with System.Multiprocessors;
 pragma Warnings (On);
 
 with Ada.Exceptions;
+with Ada.Strings.Fixed;
 with Ada.Unchecked_Deallocation;
 
 with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
@@ -82,11 +83,12 @@ package body GPR2.Build.Process_Manager is
            "' is still running. Cannot collect the job before it finishes");
 
       if Length (Stdout) > 0 then
-         Self.Tree_Db.Report (-Stdout);
+         Self.Tree_Db.Reporter.Report (-Stdout);
       end if;
 
       if Length (Stderr) > 0 then
-         Self.Tree_Db.Report (-Stderr, To_Stderr => True);
+         Self.Tree_Db.Reporter.Report
+           (-Stderr, To_Stderr => True, Level => GPR2.Message.Important);
       end if;
 
       if Proc_Handler.Status = Failed_To_Launch
@@ -103,7 +105,7 @@ package body GPR2.Build.Process_Manager is
          end if;
 
          if Proc_Handler.Process_Status /= PROCESS_STATUS_OK then
-            Self.Tree_Db.Report
+            Self.Tree_Db.Reporter.Report
               (Message.Create
                  (Message.Warning,
                   Job.UID.Image & " failed with status" &
@@ -257,7 +259,7 @@ package body GPR2.Build.Process_Manager is
                End_Of_Iteration := not Graph.Next (Node);
             exception
                when E : GNATCOLL.Directed_Graph.DG_Error =>
-                  Tree_Db.Report
+                  Tree_Db.Reporter.Report
                     ("error: internal error in the process manager (" &
                        Ada.Exceptions.Exception_Message (E) & ")");
                   Self.Traces.Trace ("!!! Internal error in the DAG");
@@ -327,12 +329,18 @@ package body GPR2.Build.Process_Manager is
             exception
                when E : Process_Manager_Error =>
                   End_Of_Iteration := True;
-                  Tree_Db.Report ("Fatal error: " &
-                                    Ada.Exceptions.Exception_Message (E));
+                  Tree_Db.Reporter.Report
+                    ("Fatal error: " &
+                       Ada.Exceptions.Exception_Message (E),
+                     To_Stderr => True);
                when E : others =>
                   End_Of_Iteration := True;
-                  Tree_Db.Report ("Unexpected exception:");
-                  Tree_Db.Report (Ada.Exceptions.Exception_Information (E));
+                  Tree_Db.Reporter.Report
+                    ("Unexpected exception:",
+                     To_Stderr => True);
+                  Tree_Db.Reporter.Report
+                    (Ada.Exceptions.Exception_Information (E),
+                     To_Stderr => True);
             end;
          end loop;
 
@@ -481,7 +489,7 @@ package body GPR2.Build.Process_Manager is
          end if;
 
          Append (Res, Action.Action_Parameter);
-         Self.Tree_Db.Report (-Res);
+         Self.Tree_Db.Reporter.Report (-Res);
       end Display;
 
       -------------
@@ -490,7 +498,7 @@ package body GPR2.Build.Process_Manager is
 
       procedure Display (Command : Argument_List) is
       begin
-         Self.Tree_Db.Report (Image (Command));
+         Self.Tree_Db.Reporter.Report (Image (Command));
       end Display;
 
       -----------
@@ -505,7 +513,13 @@ package body GPR2.Build.Process_Manager is
                Append (Result, " ");
             end if;
 
-            Append (Result, Arg);
+            if Ada.Strings.Fixed.Index (Arg, " ") > 0 then
+               Append (Result, '"');
+               Append (Result, Arg);
+               Append (Result, '"');
+            else
+               Append (Result, Arg);
+            end if;
          end loop;
 
          return -Result;
@@ -574,7 +588,10 @@ package body GPR2.Build.Process_Manager is
          --  ??? Both message level and Project tree verbosity don't cope with
          --  tooling messages that need quiet/normal/detailed info. Let's go
          --  for the default one *and* verbose one for now
-         if Self.Tree_Db.Reporter_Verbosity >= Verbose then
+         if Self.Tree_Db.Reporter.User_Verbosity >= Verbose
+           or else (Self.Tree_Db.Reporter.User_Verbosity = Unset
+                    and then Self.Tree_Db.Reporter.Verbosity >= Verbose)
+         then
             Display (Args);
          else
             Display (Job.UID);
@@ -595,7 +612,7 @@ package body GPR2.Build.Process_Manager is
             FS.Close (P_Wo);
             FS.Close (P_We);
 
-            Self.Tree_Db.Report
+            Self.Tree_Db.Reporter.Report
               (GPR2.Message.Create
                  (GPR2.Message.Error,
                   Args.First_Element & ": " &

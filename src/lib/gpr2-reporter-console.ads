@@ -18,6 +18,9 @@ package GPR2.Reporter.Console is
    overriding
    function Verbosity (Self : Object) return Verbosity_Level;
 
+   overriding
+   function User_Verbosity (Self : Object) return User_Verbosity_Level;
+
    function Create (Verbosity           : Verbosity_Level := Regular;
                     Use_Full_Pathname   : Boolean := False;
                     Level_Report_Format : Level_Format := Long) return Object;
@@ -36,6 +39,10 @@ package GPR2.Reporter.Console is
 
    procedure Set_Verbosity (Self : in out Object; Verbosity : Verbosity_Level);
    --  Sets the verbosity of the reporter
+
+   procedure Set_User_Verbosity
+     (Self : in out Object;
+      Verbosity : User_Verbosity_Level);
 
    procedure Set_Full_Pathname
      (Self : in out Object; Use_Full_Pathname : Boolean);
@@ -57,6 +64,9 @@ private
 
       Verbosity : GPR2.Reporter.Verbosity_Level := Regular;
       --  Used to determine whether a message should be displayed
+
+      User_Verbosity : GPR2.Reporter.User_Verbosity_Level := Unset;
+      --  Tool-specific message verbosity
    end record;
 
    function Full_Pathname (Self : in out Object) return Boolean is

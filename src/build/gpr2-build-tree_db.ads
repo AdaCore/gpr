@@ -14,10 +14,10 @@ with GPR2.Build.Actions;
 with GPR2.Build.Artifacts;
 with GPR2.Build.View_Db;
 with GPR2.Log;
-with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.Reporter;
+with GPR2.Reporter.Holders;
 with GPR2.View_Ids;
 
 private with Ada.Containers.Hashed_Maps;
@@ -249,15 +249,8 @@ package GPR2.Build.Tree_Db is
    -- Message reporting for the Build hierarchy --
    -----------------------------------------------
 
-   procedure Report (Self : Object; Msg  : GPR2.Message.Object);
-   procedure Report (Self      : Object;
-                     Msg       : String;
-                     To_Stderr : Boolean := False);
-   function Reporter_Verbosity
-     (Self : Object) return GPR2.Reporter.Verbosity_Level;
-   --  Wrappers around GPR2.Reporter.Report used to fix otherwise visibility
-   --  and elaboration circularity issues if we make Project.Tree.Reporter
-   --  visible from this spec.
+   function Reporter
+     (Self : Object) return GPR2.Reporter.Holders.Reference_Type;
 
 private
 
