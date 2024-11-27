@@ -634,9 +634,38 @@ package body GPR2.Build.Actions_Population is
             Idx := Idx + 1;
          end loop;
 
+         --  Now add to each link/bind action dependencies to the libraries
 
-         --  We calculate the closure so that we don't go through the
-         --  library projects that already are self-contained
+         for V of View.Closure loop
+            if V.Is_Library then
+               --  Add the libraries present in the closure as
+               --  dependencies.
+
+               declare
+                  Lib_Id  : constant Actions.Link.Link_Id :=
+                              Actions.Link.Create
+                                (V,
+                                 V.Library_Filename.Simple_Name,
+                                 True);
+                  Lib_A   : constant Actions.Link.Object'Class :=
+                              Actions.Link.Object'Class
+                                (Tree_Db.Action (Lib_Id));
+               begin
+                  for J in Link'Range loop
+                     Tree_Db.Add_Input
+                       (Link (J).UID, Lib_A.Output, True);
+
+                     if Bind (J).Is_Defined then
+                        Tree_Db.Add_Input
+                          (Bind (J).UID, Lib_A.Output, False);
+                     end if;
+                  end loop;
+               end;
+            end if;
+         end loop;
+
+         --  Now we need to add the objects from all regular views, filtering
+         --  out libraries (and their imports)
 
          Closure.Clear;
          Seen.Clear;
@@ -654,32 +683,7 @@ package body GPR2.Build.Actions_Population is
                if not Seen.Contains (V) then
                   Seen.Insert (V);
 
-                  if V.Is_Library then
-                     --  Add the libraries present in the closure as
-                     --  dependencies.
-
-                     declare
-                        Lib_Id  : constant Actions.Link.Link_Id :=
-                                    Actions.Link.Create
-                                      (V,
-                                       V.Library_Filename.Simple_Name,
-                                       True);
-                        Lib_A   : constant Actions.Link.Object'Class :=
-                                    Actions.Link.Object'Class
-                                      (Tree_Db.Action (Lib_Id));
-                     begin
-                        for J in Link'Range loop
-                           Tree_Db.Add_Input
-                             (Link (J).UID, Lib_A.Output, True);
-
-                           if Bind (J).Is_Defined then
-                              Tree_Db.Add_Input
-                                (Bind (J).UID, Lib_A.Output, False);
-                           end if;
-                        end loop;
-                     end;
-
-                  else
+                  if not V.Is_Library then
                      Closure.Include (V);
 
                      Todo.Union (V.Imports.Difference (Seen));
