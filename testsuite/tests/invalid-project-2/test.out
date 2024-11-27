@@ -1,4 +1,4 @@
-prj.gpr:3:07: error: unrecognized attribute "Toto"
+prj.gpr:3:07: error: undefined attribute "Toto"
 prj.gpr:5:07: error: attribute "Object_Dir" expects a single value
 prj.gpr:7:19: error: attribute "Object_Dir" does not expect an index
 prj.gpr:9:07: error: attribute "Source_Dirs" expects a list of values

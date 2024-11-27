@@ -1,7 +1,7 @@
 testing gpr/err_unknown_toplevel.gpr
-err_unknown_toplevel.gpr:3:08: error: unrecognized attribute "Undefined_Attribute"
+err_unknown_toplevel.gpr:3:08: error: undefined attribute "Undefined_Attribute"
 testing gpr/err_unknown_package.gpr
-err_unknown_package.gpr:6:11: error: unrecognized attribute "Naming'Undefined_Attribute"
+err_unknown_package.gpr:6:11: error: undefined attribute "Naming'Undefined_Attribute"
 testing gpr/err_single_value.gpr
 err_single_value.gpr:3:08: error: attribute "Object_Dir" expects a single value
 testing gpr/err_list_value.gpr

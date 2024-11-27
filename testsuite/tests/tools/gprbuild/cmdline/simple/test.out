@@ -12,7 +12,7 @@ hello from C
 
 $ gpr2build hello.c main.adb -q
 $ mixed/main
-hello from C
+Hello there
 
 $ mixed/hello
 hello from C

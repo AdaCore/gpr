@@ -49,6 +49,7 @@ Test return value: 4
 ================================================================
 Case 5 - Modified main.adb (comments only)
 [Ada Compile]     main.adb
+"main" up to date
 == Content of tree/obj/jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -74,6 +75,7 @@ Error detected in jobs.json
 ================================================================
 Case 7 - Modified pkg.adb (comments only)
 [Ada Compile]     pkg.adb
+"main" up to date
 == Content of tree/obj/jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -103,6 +105,7 @@ Error detected in jobs.json
 Case 9 - Modified pkg.ads (comments only)
 [Ada Compile]     main.adb
 [Ada Compile]     pkg.adb
+"main" up to date
 == Content of tree/obj/jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -126,6 +129,7 @@ Error detected in jobs.json
 ================================================================
 Case 11 - Modified dep_two.adb (comments only)
 [Ada Compile]     dep_two.adb
+"main" up to date
 == Content of tree/obj/jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -150,6 +154,7 @@ Error detected in jobs.json
 Case 13 - Modified dep_two.ads (comments only)
 [Ada Compile]     dep_two.adb
 [Ada Compile]     pkg.adb
+"main" up to date
 == Content of tree/obj/jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -162,6 +167,7 @@ uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 ================================================================
 Case 14 - Missing b__main.ads
 [Ada Bind]        main
+"main" up to date
 == Content of tree/obj/jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -174,6 +180,7 @@ uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 ================================================================
 Case 15 - Modified b__main.ads (comments only)
 [Ada Bind]        main
+"main" up to date
 == Content of tree/obj/jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -186,6 +193,7 @@ uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 ================================================================
 Case 16 - Missing b__main.adb
 [Ada Bind]        main
+"main" up to date
 == Content of tree/obj/jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -198,6 +206,7 @@ uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 ================================================================
 Case 17 - Modified b__main.adb (comments only)
 [Ada Bind]        main
+"main" up to date
 == Content of tree/obj/jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
