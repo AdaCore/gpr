@@ -1453,12 +1453,6 @@ package body GPRinstall.Install is
          procedure Read_Project;
          --  Read project and set Content accordingly
 
-         procedure With_External_Imports
-           (Project       : GPR2.Project.View.Object;
-            Aggregate_Lib : Boolean := False);
-         --  Add all imports of externally built projects into install project
-         --  imports.
-
          procedure Write_Project;
          --  Write content into project
 
@@ -2141,43 +2135,6 @@ package body GPRinstall.Install is
             Close (File);
          end Read_Project;
 
-         ---------------------------
-         -- With_External_Imports --
-         ---------------------------
-
-         procedure With_External_Imports
-           (Project       : GPR2.Project.View.Object;
-            Aggregate_Lib : Boolean := False)
-         is
-         begin
-            if Aggregate_Lib then
-               declare
-                  Result   : GPR2.Project.View.Set.Object;
-               begin
-                  for V of Project.Aggregated loop
-                     for L of V.Imports (Recursive => True) loop
-                        Result.Include (L);
-                     end loop;
-                  end loop;
-
-                  for L of Result loop
-                     if L.Has_Sources and then L.Is_Externally_Built then
-                        Content.Append
-                          ("with """ & String (L.Path_Name.Base_Name)
-                           & """;");
-                     end if;
-                  end loop;
-               end;
-            else
-               for L of Project.Imports (Recursive => True) loop
-                  if L.Has_Sources and then L.Is_Externally_Built then
-                     Content.Append
-                       ("with """ & String (L.Path_Name.Base_Name) & """;");
-                  end if;
-               end loop;
-            end if;
-         end With_External_Imports;
-
          -------------------
          -- Write_Project --
          -------------------
@@ -2515,7 +2472,23 @@ package body GPRinstall.Install is
             Add_Empty_Line;
 
             if Project.Qualifier = K_Aggregate_Library then
-               With_External_Imports (Project, Aggregate_Lib => True);
+               declare
+                  Result : GPR2.Project.View.Set.Object;
+               begin
+                  for V of Project.Aggregated loop
+                     for L of V.Imports (Recursive => True) loop
+                        if L.Has_Sources and then L.Is_Externally_Built then
+                           Result.Include (L);
+                        end if;
+                     end loop;
+                  end loop;
+
+                  for L of Result loop
+                     Content.Append
+                       ("with """ & String (L.Path_Name.Base_Name) & """;");
+                  end loop;
+               end;
+
                Add_Empty_Line;
 
             elsif Project.Has_Imports then
@@ -2523,23 +2496,36 @@ package body GPRinstall.Install is
                --  project bringing some visibility to sources. No need
                --  for doing this for aggregate projects.
 
-               for L of Project.Imports loop
-                  if L.Has_Sources and then Is_Install_Active (L) then
+               declare
+                  Result : GPR2.Project.View.Set.Object;
+               begin
+                  for L of Project.Imports loop
+                     if Is_Install_Active (L)
+                       and then L.Has_Sources (Recursive => True)
+                     then
+                        Result.Include (L);
+                     end if;
+                  end loop;
+
+                  for L of Project.Imports (Recursive => True) loop
+                     if L.Has_Sources and then L.Is_Externally_Built then
+                        Result.Include (L);
+                     end if;
+                  end loop;
+
+                  --  Also add with for all limited with projects
+
+                  for L of Project.Limited_Imports loop
+                     if Is_Install_Active (L) then
+                        Result.Include (L);
+                     end if;
+                  end loop;
+
+                  for L of Result loop
                      Content.Append
                        ("with """ & String (L.Path_Name.Base_Name) & """;");
-                  end if;
-               end loop;
-
-               With_External_Imports (Project);
-
-               --  Also add with for all limited with projects
-
-               for L of Project.Limited_Imports loop
-                  if Is_Install_Active (L) then
-                     Content.Append
-                       ("with """ & String (L.Path_Name.Base_Name) & """;");
-                  end if;
-               end loop;
+                  end loop;
+               end;
 
                Add_Empty_Line;
             end if;
