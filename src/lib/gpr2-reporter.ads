@@ -18,7 +18,8 @@ package GPR2.Reporter is
    type Verbosity_Level is
      (Quiet, No_Warnings, Regular, Verbose, Very_Verbose);
 
-   type User_Verbosity_Level is (Unset, Quiet, Regular, Verbose);
+   type User_Verbosity_Level is
+     (Unset, Quiet, Important_Only, Regular, Verbose);
 
    procedure Report
      (Self           : in out Object'Class;

@@ -77,7 +77,8 @@ package body GPR2.Reporter is
                   when Unset =>
                      return Self.Verbosity > Quiet;
                   when Quiet =>
-                     --  ??? We would still need a fully quiet mode?
+                     return False;
+                  when Important_Only =>
                      return User_Severity = GPR2.Message.Important;
                   when Regular =>
                      return User_Severity /= GPR2.Message.Optional;

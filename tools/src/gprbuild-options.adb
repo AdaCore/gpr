@@ -353,7 +353,8 @@ package body GPRbuild.Options is
                  (GPR2.Reporter.Regular);
             end if;
 
-            Options.Console_Reporter.Set_User_Verbosity (GPR2.Reporter.Quiet);
+            Options.Console_Reporter.Set_User_Verbosity
+              (GPR2.Reporter.Important_Only);
 
          when GPR2.Reporter.No_Warnings | GPR2.Reporter.Regular =>
             null;
