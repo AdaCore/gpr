@@ -16,6 +16,7 @@ with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
 with GNATCOLL.Directed_Graph; use GNATCOLL.Directed_Graph;
 
 with GPR2.Build.Actions; use GPR2.Build.Actions;
+with GPR2.Build.Actions.Link;
 with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
 with GPR2.Reporter;
@@ -92,28 +93,46 @@ package body GPR2.Build.Process_Manager is
            (-Stderr, To_Stderr => True, Level => GPR2.Message.Important);
       end if;
 
-      if Proc_Handler.Status = Failed_To_Launch
-        and then Self.Stop_On_Fail
-      then
-         return Abort_Execution;
-      end if;
+      case Proc_Handler.Status is
+         when Failed_To_Launch =>
+            if Self.Stop_On_Fail then
+               return Abort_Execution;
+            end if;
 
-      if Proc_Handler.Status = Finished then
-         if Self.Traces.Is_Active then
-            Self.Traces.Trace
-              ("Job '" & Job.UID.Image & "' returned. Status:" &
-                 Proc_Handler.Process_Status'Img);
-         end if;
+         when Finished =>
+            if Self.Traces.Is_Active then
+               Self.Traces.Trace
+                 ("Job '" & Job.UID.Image & "' returned. Status:" &
+                    Proc_Handler.Process_Status'Img);
+            end if;
 
-         if Proc_Handler.Process_Status /= PROCESS_STATUS_OK then
-            Self.Tree_Db.Reporter.Report
-              (Message.Create
-                 (Message.Warning,
-                  Job.UID.Image & " failed with status" &
-                    Proc_Handler.Process_Status'Image,
-                  Source_Reference.Create (Job.View.Path_Name.Value, 0, 0)));
-         end if;
-      end if;
+            if Proc_Handler.Process_Status /= PROCESS_STATUS_OK then
+               Self.Tree_Db.Reporter.Report
+                 (Message.Create
+                    (Message.Warning,
+                     Job.UID.Image & " failed with status" &
+                       Proc_Handler.Process_Status'Image,
+                     Source_Reference.Create
+                       (Job.View.Path_Name.Value, 0, 0)));
+            end if;
+
+         when Skipped =>
+            if Job in Actions.Link.Object'Class then
+               declare
+                  Link : constant Actions.Link.Object'Class :=
+                           Actions.Link.Object'Class (Job);
+               begin
+                  if not Link.Is_Library then
+                     Self.Tree_Db.Reporter.Report
+                       ('"' & String (Link.Output.Path.Simple_Name) &
+                          """ up to date");
+                  end if;
+               end;
+            end if;
+
+         when Running =>
+            null;
+      end case;
 
       if (Proc_Handler.Status = Finished
           and then Proc_Handler.Process_Status = PROCESS_STATUS_OK)
