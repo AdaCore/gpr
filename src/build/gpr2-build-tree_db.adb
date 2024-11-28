@@ -127,8 +127,6 @@ package body GPR2.Build.Tree_Db is
       Self.Inputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
       Self.Outputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
 
-      Self.Actions.Reference (Curs).Load_Signature;
-
       if not Action.On_Tree_Insertion (Self) then
          return False;
       end if;
@@ -650,6 +648,17 @@ package body GPR2.Build.Tree_Db is
       return -Self.Linker_Lib_Dir_Opt;
    end Linker_Lib_Dir_Option;
 
+   ---------------------
+   -- Load_Signatures --
+   ---------------------
+
+   procedure Load_Signatures (Self : Object) is
+   begin
+      for A of Self.Self.Actions loop
+         A.Load_Signature;
+      end loop;
+   end Load_Signatures;
+
    ----------
    -- Next --
    ----------
@@ -902,6 +911,33 @@ package body GPR2.Build.Tree_Db is
          Self.New_Actions.Delete (C);
       end if;
    end Remove_Action;
+
+   ---------------------
+   -- Remove_Artifact --
+   ---------------------
+
+   procedure Remove_Artifact
+     (Self     : in out Object;
+      Artifact : Artifacts.Object'Class)
+   is
+      C : Artifact_Sets.Cursor;
+   begin
+      Self.Artifacts.Delete (Artifact);
+
+      for Succ of Self.Successors (Artifact) loop
+         C := Self.Inputs (Succ).Find (Artifact);
+
+         if Artifact_Sets.Has_Element (C) then
+            Self.Inputs (Succ).Delete (C);
+         end if;
+
+         C := Self.Implicit_Inputs (Succ).Find (Artifact);
+
+         if Artifact_Sets.Has_Element (C) then
+            Self.Implicit_Inputs (Succ).Delete (C);
+         end if;
+      end loop;
+   end Remove_Artifact;
 
    --------------
    -- Reporter --

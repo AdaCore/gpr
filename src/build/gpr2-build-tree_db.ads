@@ -105,6 +105,10 @@ package GPR2.Build.Tree_Db is
       Artifact : Artifacts.Object'Class)
      with Pre => Self.Is_Defined;
 
+   procedure Remove_Artifact
+     (Self     : in out Object;
+      Artifact : Artifacts.Object'Class);
+
    function Has_Artifact
      (Self     : Object;
       Artifact : Artifacts.Object'Class) return Boolean;
@@ -143,6 +147,9 @@ package GPR2.Build.Tree_Db is
 
    function Propagate_Actions (Self : Object) return Boolean;
    --  Call the On_Tree_Propagation subprogram for each new action of the tree
+
+   procedure Load_Signatures (Self : Object);
+   --  Load the actions signatures
 
    ----------------------------
    -- Iteration on artifacts --

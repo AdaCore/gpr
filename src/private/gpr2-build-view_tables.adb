@@ -10,6 +10,7 @@ with Ada.Strings.Maps.Constants;
 with Ada.Text_IO;
 with GNAT.OS_Lib;
 
+with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.Unit_Info;
 with GPR2.Project.Attribute;
@@ -147,6 +148,8 @@ package body GPR2.Build.View_Tables is
       if Resolve_Visibility then
          View_Tables.Resolve_Visibility (Data, C_Overload, Messages);
       end if;
+
+      Data.Tree_Db.Add_Artifact (Artifacts.Files.Create (Path));
    end Add_Source;
 
    ------------------------
@@ -695,6 +698,8 @@ package body GPR2.Build.View_Tables is
       if Resolve_Visibility then
          View_Tables.Resolve_Visibility (Data, C_Overload, Messages);
       end if;
+
+      Data.Tree_Db.Remove_Artifact (Artifacts.Files.Create (Path));
    end Remove_Source;
 
    ---------------------------
