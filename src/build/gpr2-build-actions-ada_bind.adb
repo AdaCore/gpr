@@ -17,6 +17,9 @@ with GNATCOLL.OS.FS;
 
 with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Artifacts.Library;
+pragma Warnings (Off);
+with GPR2.Build.Source.Sets;
+pragma Warnings (On);
 with GPR2.Build.Tree_Db;
 with GPR2.External_Options;
 with GPR2.Project.Attribute;
@@ -283,17 +286,48 @@ package body GPR2.Build.Actions.Ada_Bind is
       procedure Add_Mapping_File
       is
          use GNATCOLL.OS.FS;
-         Slot_Img_Raw : constant Filename_Type := Filename_Type (Slot'Image);
-         Slot_Img     : constant Filename_Type :=
-                          Slot_Img_Raw
-                            (Slot_Img_Raw'First + 1 .. Slot_Img_Raw'Last);
          Map_File     : constant Tree_Db.Temp_File :=
                           Self.Get_Or_Create_Temp_File
-                            ("ada_mapping_" & Slot_Img, Global);
+                            ("bind_mapping", Global);
+         S_Suffix     : constant String :=
+                          Self.View.Attribute
+                            (PRA.Compiler.Mapping_Spec_Suffix,
+                             PAI.Create (Ada_Language)).Value.Text;
+         B_Suffix     : constant String :=
+                          Self.View.Attribute
+                            (PRA.Compiler.Mapping_Body_Suffix,
+                             PAI.Create (Ada_Language)).Value.Text;
+         use Standard.Ada.Characters.Handling;
+
       begin
-         if Map_File.FD = Null_FD and then Map_File.Path_Len > 0 then
-            Add_Arg ("-F=" & String (Map_File.Path));
+         if Map_File.FD /= Invalid_FD and then Map_File.FD /= Null_FD then
+            for Src of Self.View.Visible_Sources loop
+               if not Src.Owning_View.Is_Runtime
+                 and then Src.Language = Ada_Language
+               then
+                  for U of Src.Units loop
+                     if U.Kind /= S_No_Body then
+                        declare
+                           Key : constant String :=
+                                   To_Lower (String (U.Full_Name)) &
+                                   (if U.Kind = S_Spec
+                                    then S_Suffix else B_Suffix);
+                        begin
+                           Write
+                             (Map_File.FD,
+                              Key & ASCII.LF &
+                                String (Src.Path_Name.Simple_Name) & ASCII.LF &
+                                Src.Path_Name.String_Value & ASCII.LF);
+                        end;
+                     end if;
+                  end loop;
+               end if;
+            end loop;
+
+            GNATCOLL.OS.FS.Close (Map_File.FD);
          end if;
+
+         Add_Arg ("-F=" & String (Map_File.Path));
       end Add_Mapping_File;
 
       --------------------------
