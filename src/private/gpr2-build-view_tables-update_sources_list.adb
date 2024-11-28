@@ -1276,7 +1276,16 @@ package body Update_Sources_List is
                      With_Defaults => False,
                      With_Config   => False)
          loop
-            if not Data.Sources.Contains (Simple_Name (A.Value.Text)) then
+            if not Is_Simple_Name (Filename_Type (A.Value.Text)) then
+               Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "source file """ & A.Value.Text
+                     & """ for unit """ & A.Index.Text
+                     & """ must be a simple filename",
+                     A.Value));
+
+            elsif not Data.Sources.Contains (Simple_Name (A.Value.Text)) then
                Messages.Append
                  (Message.Create
                     ((if Data.View.Has_Attribute (PRA.Source_Files)
