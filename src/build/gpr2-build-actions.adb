@@ -127,7 +127,7 @@ package body GPR2.Build.Actions is
          declare
             --  ??? Naive implementation as first try
             BN   : constant Filename_Type :=
-                     "." & Self.UID.Db_Filename & "-" & Purpose & ".tmp";
+                     Self.UID.Db_Filename & "-" & Purpose & ".tmp";
             Dest : constant GPR2.Path_Name.Object :=
                      Self.View.Object_Directory.Compose (BN);
             FD   : GNATCOLL.OS.FS.File_Descriptor;
@@ -145,9 +145,9 @@ package body GPR2.Build.Actions is
                Self.Tmp_Files.Insert (BN);
             end if;
 
-            return (Path_Len => BN'Length,
+            return (Path_Len => Dest.Value'Length,
                     FD       => FD,
-                    Path     => BN);
+                    Path     => Dest.Value);
          end;
       end if;
    end Get_Or_Create_Temp_File;
@@ -190,18 +190,25 @@ package body GPR2.Build.Actions is
       Db_File : constant GPR2.Path_Name.Object :=
                   Object'Class (Self).View.Object_Directory.Compose
                     (Object'Class (Self).UID.Db_Filename);
-      Found   : Boolean := False;
+      Invalidate : Boolean := False;
+      use GPR2.Build.Signature.Artifact_Maps;
    begin
-      if Db_File.Exists then
-         Self.Signature := Build.Signature.Load (Db_File);
-         Found := True;
+      Self.Signature := Build.Signature.Load (Db_File);
 
-         --  ??? We also need to check the extended DB file somehow
-      end if;
+      for C in Self.Signature.Artifacts.Iterate loop
+         if not Self.Tree.Has_Artifact (Key (C)) then
+            Invalidate := True;
+            exit;
+         end if;
+      end loop;
 
-      if not Found then
+      if Invalidate then
          Self.Signature.Clear;
       end if;
+
+   exception
+      when others =>
+         Self.Signature.Clear;
    end Load_Signature;
 
 end GPR2.Build.Actions;

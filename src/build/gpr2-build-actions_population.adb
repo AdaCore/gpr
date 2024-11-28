@@ -302,10 +302,14 @@ package body GPR2.Build.Actions_Population is
       if not Options.Unique_Compilation
         and then not Options.Unique_Compilation_Recursive
       then
-         return Tree_Db.Propagate_Actions;
-      else
-         return True;
+         Result := Tree_Db.Propagate_Actions;
       end if;
+
+      if Result then
+         Tree_Db.Load_Signatures;
+      end if;
+
+      return Result;
    end Populate_Actions;
 
    ---------------------------------

@@ -6,8 +6,8 @@
 
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit;
+with GPR2.Containers;
 with GPR2.Path_Name;
-with GPR2.Path_Name.Set;
 
 package GPR2.Build.Actions.Compile.Ada is
 
@@ -41,7 +41,8 @@ package GPR2.Build.Actions.Compile.Ada is
    --  Return the path of the generated ALI file
 
    function Dependencies
-     (Self : in out Object) return GPR2.Path_Name.Set.Object
+     (Self     : in out Object;
+      With_RTS : Boolean := True) return GPR2.Containers.Filename_Set
      with Pre => Self.In_Build_Tree;
    --  Return the list of known dependencies for this unit. The action ALI file
    --  must be up-to-date before calling this function, as the list of
@@ -105,8 +106,6 @@ private
      (Self   : in out Object;
       Stdout : Unbounded_String;
       Stderr : Unbounded_String);
-
-   overriding procedure Load_Signature (Self : in out Object);
 
    Undefined : constant Object := (others => <>);
 
