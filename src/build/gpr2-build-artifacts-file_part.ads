@@ -14,6 +14,7 @@ package GPR2.Build.Artifacts.File_Part is
    Undefined : constant Object;
 
    overriding function Create (Path : GPR2.Path_Name.Object) return Object;
+   overriding function Create (Path : Filename_Type) return Object;
 
    function Create (Path  : GPR2.Path_Name.Object;
                     Index : GPR2.Unit_Index) return Object;
@@ -52,6 +53,9 @@ private
      (if Index = No_Index then "" else '@' & Index'Image);
 
    overriding function Create (Path : GPR2.Path_Name.Object) return Object is
+     (Files.Create (Path) with Index => No_Index);
+
+   overriding function Create (Path : Filename_Type) return Object is
      (Files.Create (Path) with Index => No_Index);
 
    function Create (Path  : GPR2.Path_Name.Object;

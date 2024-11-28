@@ -17,6 +17,7 @@ package GPR2.Build.Artifacts.Files is
    overriding function Is_Defined (Self : Object) return Boolean;
 
    function Create (Path : GPR2.Path_Name.Object) return Object with Inline;
+   function Create (Path : Filename_Type) return Object with Inline;
 
    overriding procedure Unserialize
      (S   : String;
@@ -55,6 +56,9 @@ private
 
    function Create (Path : GPR2.Path_Name.Object) return Object is
      (Path => Path);
+
+   function Create (Path : Filename_Type) return Object is
+     (Path => Path_Name.Create_File (Path));
 
    overriding function Checksum
      (Self : Object) return Utils.Hash.Hash_Digest
