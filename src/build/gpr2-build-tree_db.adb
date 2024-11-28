@@ -922,7 +922,13 @@ package body GPR2.Build.Tree_Db is
    is
       C : Artifact_Sets.Cursor;
    begin
-      Self.Artifacts.Delete (Artifact);
+      C := Self.Artifacts.Find (Artifact);
+
+      if not Artifact_Sets.Has_Element (C) then
+         return;
+      end if;
+
+      Self.Artifacts.Delete (C);
 
       for Succ of Self.Successors (Artifact) loop
          C := Self.Inputs (Succ).Find (Artifact);
