@@ -7,7 +7,7 @@ Case 1 - Build from scratch
 [Ada Bind]        main
 [Ada Post-Bind]   b__main.adb
 [Link]            main
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -15,11 +15,13 @@ uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : '0', stdout: '', stderr: ''
 == Executable output:
+Hello from Pkg
+Hello from Dep_Two
 
 ================================================================
 Case 2 - Missing main
 [Link]            main
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -27,11 +29,13 @@ uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : '0', stdout: '', stderr: ''
 == Executable output:
+Hello from Pkg
+Hello from Dep_Two
 
 ================================================================
 Case 3 - Modified main (comments only)
 [Link]            main
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -39,6 +43,8 @@ uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : '0', stdout: '', stderr: ''
 == Executable output:
+Hello from Pkg
+Hello from Dep_Two
 
 ================================================================
 Case 4 - Missing main.adb
@@ -50,7 +56,7 @@ Test return value: 4
 Case 5 - Modified main.adb (comments only)
 [Ada Compile]     main.adb
 "main" up to date
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -58,16 +64,19 @@ uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
+Hello from Pkg
+Hello from Dep_Two
 
 ================================================================
 Case 6 - Missing pkg.adb
+[Ada Compile]     main.adb
 [Ada Compile]     pkg.ads
 cannot generate code for file pkg.ads (package spec)
 
 main.gpr: warning: [Ada Compile] pkg.ads (main.gpr) failed with status 1
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.ads (main.gpr)', status : '1', stdout: '', stderr: 'cannot generate code for file pkg.ads (package spec)
 '
 Error detected in jobs.json
@@ -76,7 +85,7 @@ Error detected in jobs.json
 Case 7 - Modified pkg.adb (comments only)
 [Ada Compile]     pkg.adb
 "main" up to date
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -84,6 +93,8 @@ uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
+Hello from Pkg
+Hello from Dep_Two
 
 ================================================================
 Case 8 - Missing pkg.ads
@@ -93,7 +104,7 @@ main.adb:1:06: error: "Pkg (body)" depends on "Pkg (spec)"
 main.adb:1:06: error: file "pkg.ads" not found
 
 main.gpr: warning: [Ada Compile] main.adb (main.gpr) failed with status 1
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : '1', stdout: '', stderr: 'main.adb:1:06: error: "Main (body)" depends on "Pkg (body)"
 main.adb:1:06: error: "Pkg (body)" depends on "Pkg (spec)"
@@ -106,7 +117,7 @@ Case 9 - Modified pkg.ads (comments only)
 [Ada Compile]     main.adb
 [Ada Compile]     pkg.adb
 "main" up to date
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -114,6 +125,8 @@ uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
+Hello from Pkg
+Hello from Dep_Two
 
 ================================================================
 Case 10 - Missing dep_two.adb
@@ -121,7 +134,7 @@ Case 10 - Missing dep_two.adb
 cannot generate code for file dep_two.ads (package spec)
 
 main.gpr: warning: [Ada Compile] dep_two.ads (main.gpr) failed with status 1
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.ads (main.gpr)', status : '1', stdout: '', stderr: 'cannot generate code for file dep_two.ads (package spec)
 '
 Error detected in jobs.json
@@ -129,15 +142,18 @@ Error detected in jobs.json
 ================================================================
 Case 11 - Modified dep_two.adb (comments only)
 [Ada Compile]     dep_two.adb
+[Ada Compile]     pkg.adb
 "main" up to date
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
+Hello from Pkg
+Hello from Dep_Two
 
 ================================================================
 Case 12 - Missing dep_two.ads
@@ -145,7 +161,7 @@ Case 12 - Missing dep_two.ads
 dep_two.adb:3:14: error: file "dep_two.ads" not found
 
 main.gpr: warning: [Ada Compile] dep_two.adb (main.gpr) failed with status 1
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '1', stdout: '', stderr: 'dep_two.adb:3:14: error: file "dep_two.ads" not found
 '
 Error detected in jobs.json
@@ -155,7 +171,7 @@ Case 13 - Modified dep_two.ads (comments only)
 [Ada Compile]     dep_two.adb
 [Ada Compile]     pkg.adb
 "main" up to date
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -163,12 +179,14 @@ uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
+Hello from Pkg
+Hello from Dep_Two
 
 ================================================================
 Case 14 - Missing b__main.ads
 [Ada Bind]        main
 "main" up to date
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -176,12 +194,14 @@ uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
+Hello from Pkg
+Hello from Dep_Two
 
 ================================================================
 Case 15 - Modified b__main.ads (comments only)
 [Ada Bind]        main
 "main" up to date
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -189,12 +209,14 @@ uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
+Hello from Pkg
+Hello from Dep_Two
 
 ================================================================
 Case 16 - Missing b__main.adb
 [Ada Bind]        main
 "main" up to date
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -202,12 +224,14 @@ uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
+Hello from Pkg
+Hello from Dep_Two
 
 ================================================================
 Case 17 - Modified b__main.adb (comments only)
 [Ada Bind]        main
 "main" up to date
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -215,13 +239,15 @@ uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
+Hello from Pkg
+Hello from Dep_Two
 
 ================================================================
 Case 18 - Modified main.adb with different return code
 [Ada Compile]     main.adb
 [Ada Bind]        main
 [Link]            main
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -229,33 +255,40 @@ uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : '0', stdout: '', stderr: ''
 == Executable output:
+Hello from Pkg
+Hello from Dep_Two
 
 ================================================================
 Case 19 - Modified pkg.adb without dep_two dependency
+[Ada Compile]     main.adb
 [Ada Compile]     pkg.adb
 [Ada Bind]        main
 [Ada Post-Bind]   b__main.adb
 [Link]            main
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : '0', stdout: '', stderr: ''
 == Executable output:
+Hello from Pkg
 
 ================================================================
 Case 20 - Modified dep_two.adb (new output)
 [Ada Compile]     dep_two.adb
+[Ada Compile]     pkg.adb
 [Ada Bind]        main
 [Link]            main
-== Content of tree/obj/jobs.json:
+== Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : '0', stdout: '', stderr: ''
 == Executable output:
+Hello from Pkg
+Hello from modified Dep_Two
 

@@ -1,7 +1,12 @@
 Step 1 - Check -cargs
-<gcc>/bin/gcc -c -x ada -gnatA -g -gnatQ -O2 -O1 -gnatem=.ada_mapping_1.tmp -gnatec=.ada_config.tmp ../src/tata.ads -o tata.o
-<gcc>/bin/gcc -c -x c -g -w -O2 -O0 -MMD -MF toto.dep -specs=.c_spec_inc_path.tmp ../src/toto.c -o toto.o
+$ gpr2build -P tree/main.gpr -p -q --json-summary -cargs -O2 -cargs:Ada -O1 -cargs:C -O0
+[Ada Compile] tata.ads (main.gpr): -O2 -O1
+[C Compile] toto.c (main.gpr): -O2 -O0
+
 Step 2 - Check -bargs
-<gcc>/bin/gnatbind -o b__main.adb /tree_2/obj/main.ali -I<gcc>/lib/gcc/(host)/(gcc-version)/adalib -O=1.bind -O=2.bind -O=3.bind -O=4.bind -O=5.bind -O=6.bind -x -F=/tree_2/obj/.ada_mapping_1.tmp
+$ gpr2build -P tree_2/main.gpr -p -q --json-summary -bargs -O=3.bind -bargs:Ada -O=5.bind -bargs -O=4.bind -bargs:Ada -O=6.bind
+[Ada Bind] main (main.gpr): -O=1.bind -O=2.bind -O=3.bind -O=4.bind -O=5.bind -O=6.bind
+
 Step 3 - Check -largs
-<gcc>/bin/gcc -o main /tree_3/obj/b__main.o /tree_3/obj/main.o /tree_3/obj/toto.o -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -Wl,1 -Wl,2 -L/tree_3/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl
+$ gpr2build -P tree_3/main.gpr -p -q --json-summary -largs -Wl,--gc-sections
+[Link] main (main.gpr): -Wl,--no-gc-sections -Wl,--gc-sections

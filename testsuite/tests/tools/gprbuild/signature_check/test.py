@@ -12,7 +12,7 @@ def run(cmd):
 
 def test(variant):
     run(["gpr2build", "-Pprj", "-p", f"-XVARIANT={variant}", "--json-summary", "-q"])
-    with open(os.path.join("obj/jobs.json")) as fp:
+    with open(os.path.join("jobs.json")) as fp:
         cnt = json.load(fp)
 
     uids = dict((job["uid"], job["status"]) for job in cnt)

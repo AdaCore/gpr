@@ -16,14 +16,14 @@ def run(cmd):
 # exe with it only uses libdemo.a and not any of the objects contained in it.
 
 run(["gpr2build", "-q", "-Pagglib.gpr", "-p", "--json-summary"])
-with open("obj/agglib/jobs.json") as fp:
+with open("jobs.json") as fp:
     cnt = json.load(fp)
 uids = [job["uid"] for job in cnt]
 for uid in sorted(uids):
     print(uid)
 
 run(["gpr2build", "-q", "-Pdemo.gpr", "-p", "--json-summary"])
-with open("obj/jobs.json") as fp:
+with open("jobs.json") as fp:
     cnt = json.load(fp)
 for job in cnt:
     if "[Link]" in job["uid"] and "-o main" in job["command"]:
