@@ -443,7 +443,17 @@ package body GPR2.Build.Actions_Population is
                return False;
             end if;
 
-            Bind.Initialize (A_Comp.Ali_File, Main.View);
+            if Options.No_Main_Subprogram then
+               Bind.Initialize
+                 ((Kind  => Actions.Ada_Bind.No_Main_Subprogram,
+                   Src   => Source),
+                  Main.View);
+            else
+               Bind.Initialize
+                 ((Kind     => Actions.Ada_Bind.Ada_Main_Program,
+                   Main_Ali => A_Comp.Ali_File),
+                  Main.View);
+            end if;
 
             if not Tree_Db.Add_Action (Bind) then
                return False;
@@ -502,8 +512,9 @@ package body GPR2.Build.Actions_Population is
             --  Make sure we have a binding phase for the ada sources
             --  that generates a binder file with external main.
 
-            Bind.Initialize_No_Main
-              (Source.Path_Name.Base_Filename,
+            Bind.Initialize
+              ((Kind  => Actions.Ada_Bind.No_Ada_Main_Program,
+                Src   => Source),
                View);
 
             if not Tree_Db.Add_Action (Bind) then

@@ -371,14 +371,17 @@ package body GPR2.Build.Tree_Db is
    ------------
 
    procedure Create
-     (Self : in out Object;
-      Tree : GPR2.Tree_Internal.Object)
+     (Self             : in out Object;
+      Tree             : GPR2.Tree_Internal.Object;
+      External_Options : GPR2.External_Options.Object)
    is
       Db_Inst : View_Db.Object;
 
    begin
       Self.Self := Self'Unrestricted_Access;
       Self.Tree := Tree.Reference;
+
+      Self.External_Options := External_Options;
 
       --  Source files are propagated from the source owner (e.g. the view that
       --  defines the source directory where we found the source) to
@@ -416,6 +419,16 @@ package body GPR2.Build.Tree_Db is
               (Self.Actions.Reference (Curs).UID.Db_Filename,
                Self.Actions.Reference (Curs).View.Object_Directory.Value));
    end Db_Filename_Path;
+
+   ----------------------
+   -- External_Options --
+   ----------------------
+
+   function External_Options
+     (Self : Object) return GPR2.External_Options.Object is
+   begin
+      return Self.External_Options;
+   end External_Options;
 
    -----------
    -- First --
@@ -800,6 +813,17 @@ package body GPR2.Build.Tree_Db is
    begin
       return Self.Tree.Reporter;
    end Reporter;
+
+   --------------------------
+   -- Set_External_Options --
+   --------------------------
+
+   procedure Set_External_Options
+     (Self    : in out Object;
+      Options : GPR2.External_Options.Object) is
+   begin
+      Self.External_Options := Options;
+   end Set_External_Options;
 
    ------------
    -- Unload --

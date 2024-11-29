@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.External_Options;
 with GPR2.Project.Attribute;
 
 package body GPR2.Build.Actions.Link is
@@ -14,7 +15,7 @@ package body GPR2.Build.Actions.Link is
 
    procedure Add_Option (Self : in out Object; Option : String) is
    begin
-         Self.Static_Options.Append (Option);
+      Self.Static_Options.Append (Option);
    end Add_Option;
 
    -------------
@@ -98,7 +99,8 @@ package body GPR2.Build.Actions.Link is
          Status := Add_Attr (PRA.Archive_Builder, PAI.Undefined, True);
          pragma Assert (Status, "No archiver is defined");
 
-         --  ??? Hack to speed up and ease the generation of archives:
+         --  [eng/gpr/gpr-issues#446] Hack to speed up and ease the generation
+         --  of archives :
          --  instead of using "ar cr" then use ranlib, we generate directly
          --  the symbol table by using "ar csr".
 
@@ -165,6 +167,15 @@ package body GPR2.Build.Actions.Link is
                  (Self.View.Source (Self.Main_Src.Path.Simple_Name).Language),
                True);
          end if;
+
+         --  Add -largs
+
+         for Arg
+           of Self.Tree.External_Options.Fetch
+             (GPR2.External_Options.Linker, GPR2.No_Language)
+         loop
+            Args.Append (Arg);
+         end loop;
 
          for Option of Self.Static_Options loop
             Args.Append (Option);

@@ -1,0 +1,7 @@
+Step 1 - Check -cargs
+<gcc>/bin/gcc -c -x ada -gnatA -g -gnatQ -O2 -O1 -gnatem=.ada_mapping_1.tmp -gnatec=.ada_config.tmp ../src/tata.ads -o tata.o
+<gcc>/bin/gcc -c -x c -g -w -O2 -O0 -MMD -MF toto.dep -specs=.c_spec_inc_path.tmp ../src/toto.c -o toto.o
+Step 2 - Check -bargs
+<gcc>/bin/gnatbind -o b__main.adb /tree_2/obj/main.ali -I<gcc>/lib/gcc/(host)/(gcc-version)/adalib -O=1.bind -O=2.bind -O=3.bind -O=4.bind -O=5.bind -O=6.bind -x -F=/tree_2/obj/.ada_mapping_1.tmp
+Step 3 - Check -largs
+<gcc>/bin/gcc -o main /tree_3/obj/b__main.o /tree_3/obj/main.o /tree_3/obj/toto.o -Wl,-rpath-link,<gcc>/lib/gcc/(host)/(gcc-version)//adalib -Wl,1 -Wl,2 -L/tree_3/obj/ -L<gcc>/lib/gcc/(host)/(gcc-version)/adalib/ -static -lgnat -ldl

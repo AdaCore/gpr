@@ -8,7 +8,7 @@ with GNAT.Directory_Operations;
 with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Tree_Db;
---  with GPR2.External_Options;
+with GPR2.External_Options;
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
 
@@ -461,28 +461,19 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       --  Add -bargs and -bargs:Ada
 
-      --  for Arg
-      --    of Self.View.Tree.External_Options.Fetch
-      --      (GPR2.External_Options.Custom_Binder_Options, GPR2.No_Language)
-      --  loop
-      --     Add_Arg (Arg);
-      --  end loop;
+      for Arg
+        of Self.Tree.External_Options.Fetch
+          (GPR2.External_Options.Binder, GPR2.No_Language)
+      loop
+         Add_Arg (Arg);
+      end loop;
 
-      --  for Arg
-      --    of Self.View.Tree.External_Options.Fetch
-      --   (GPR2.External_Options.Custom_No_Main_Subprogram, GPR2.Ada_Language)
-      --  loop
-      --  --  This is "-z", should be directly passed by GPRbuild once actions
-      --  --  creation are done directly in GPR2 and not in GPRtools.
-      --     Add_Arg (Arg);
-      --  end loop;
-
-      --  for Arg
-      --    of Self.View.Tree.External_Options.Fetch
-      --      (GPR2.External_Options.Custom_Binder_Options, GPR2.Ada_Language)
-      --  loop
-      --     Add_Arg (Arg);
-      --  end loop;
+      for Arg
+        of Self.Tree.External_Options.Fetch
+          (GPR2.External_Options.Binder, GPR2.Ada_Language)
+      loop
+         Add_Arg (Arg);
+      end loop;
 
       --  ??? Modify binding option -A=<file> if <file> is not an absolute path
       Enforce_DashA_Absolute_Path;
@@ -536,12 +527,14 @@ package body GPR2.Build.Actions.Ada_Bind is
    ----------------
 
    procedure Initialize
-     (Self     : in out Object;
-      Main_Ali : Artifacts.Files.Object;
-      Context  : GPR2.Project.View.Object)
+     (Self    : in out Object;
+      Info    : Output_Basename_Info;
+      Context : GPR2.Project.View.Object)
    is
-
-      BN : constant Simple_Name := Main_Ali.Path.Base_Filename;
+      BN : constant Simple_Name :=
+             (if Info.Kind = Ada_Main_Program
+              then Info.Main_Ali.Path.Base_Filename
+              else Info.Src.Path_Name.Base_Filename);
    begin
       Self.Ctxt := Context;
       Self.Basename := +BN;
@@ -552,6 +545,12 @@ package body GPR2.Build.Actions.Ada_Bind is
         Artifacts.Files.Create
           (Context.Object_Directory.Compose ("b__" & BN & ".adb"));
       Self.Traces := Create ("ACTION_ADA_BIND");
+
+      if Info.Kind = No_Ada_Main_Program then
+         Self.Extra_Opts.Append ("-n");
+      elsif Info.Kind = No_Main_Subprogram then
+         Self.Extra_Opts.Append ("-z");
+      end if;
 
       Initialize_Linker_Options (Self);
    end Initialize;
@@ -585,28 +584,6 @@ package body GPR2.Build.Actions.Ada_Bind is
          Self.Linker_Opts.Append (Value.Text);
       end loop;
    end Initialize_Linker_Options;
-
-   ------------------------
-   -- Initialize_No_Main --
-   ------------------------
-
-   procedure Initialize_No_Main
-     (Self : in out Object;
-      Basename : Simple_Name;
-      Context  : GPR2.Project.View.Object) is
-   begin
-      Self.Ctxt := Context;
-      Self.Basename := +Basename;
-      Self.Output_Spec :=
-        Artifacts.Files.Create
-          (Context.Object_Directory.Compose ("b__" & Basename & ".ads"));
-      Self.Output_Body :=
-        Artifacts.Files.Create
-          (Context.Object_Directory.Compose ("b__" & Basename & ".adb"));
-      Self.Traces := Create ("ACTION_ADA_BIND");
-      Self.Extra_Opts.Append ("-n");
-      Initialize_Linker_Options (Self);
-   end Initialize_No_Main;
 
    -----------------------
    -- On_Tree_Insertion --
