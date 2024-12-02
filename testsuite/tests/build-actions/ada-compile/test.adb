@@ -1,4 +1,5 @@
 with Ada.Directories;
+with Ada.Text_IO;
 
 with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
@@ -123,9 +124,10 @@ begin
    end;
 
    Assert ((for all Dep of Ada_Comp.Dependencies =>
-             (Dep.Simple_Name = "pkg.ads" or else
-              Dep.Simple_Name = "main.adb" or else
-              Dep.Simple_Name = "system.ads")),
+              (Path_Name.Simple_Name (Dep) = "pkg.ads" or else
+               Path_Name.Simple_Name (Dep) = "pkg.adb" or else
+               Path_Name.Simple_Name (Dep) = "main.adb" or else
+               Path_Name.Simple_Name (Dep) = "system.ads")),
            "Check dependencies");
 
    return A.Report;

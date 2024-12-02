@@ -4288,7 +4288,7 @@ package body GPR2.Project_Parser is
                  (Message.Create
                     (Level => Message.Error,
                      Sloc  => Source_Reference.Object (A),
-                     Message => "unrecognized attribute """ &
+                     Message => "undefined attribute """ &
                                 Image (Q_Name) & """"));
             end if;
 

@@ -254,9 +254,11 @@ package body GPR2.Build.ALI_Parser is
      (ALI_File  : GPR2.Path_Name.Object;
       Dep_Names : in out GPR2.Containers.Filename_Set) return Boolean
    is
-
       procedure Parse_Dep (Reader : in out GB.Reader);
-      --  Parse the source file name of the current dependency line
+      --  Parse a D line to extract the source
+
+      procedure Parse_With (Reader : in out GB.Reader);
+      --  Parse a W line to extract the source
 
       ---------------
       -- Parse_Dep --
@@ -280,6 +282,36 @@ package body GPR2.Build.ALI_Parser is
          end;
       end Parse_Dep;
 
+      ---------------
+      -- Parse_Dep --
+      ---------------
+
+      procedure Parse_With (Reader : in out GB.Reader) is
+      begin
+         if not GB.Check (Reader, " ") then
+            raise Scan_ALI_Error with "space expected after the 'W'"
+              & " withed unit character";
+         end if;
+
+         --  ??? Not backward compatible with ali files produced by
+         --  the oldest compilers.
+
+         declare
+            Unit_Name : constant String := IO.Get_Token (Reader);
+            Filename  : constant String := IO.Get_Token (Reader);
+         begin
+            if Unit_Name = "" then
+               raise Scan_ALI_Error with "missed withed unit name";
+            end if;
+
+            if Filename = "" then
+               raise Scan_ALI_Error with "missing filename";
+            end if;
+
+            Dep_Names.Include (Filename_Type (Filename));
+         end;
+      end Parse_With;
+
       Reader : GB.Reader :=  GB.Open (String (ALI_File.Value));
    begin
       declare
@@ -298,6 +330,12 @@ package body GPR2.Build.ALI_Parser is
 
                when 'D' =>
                   Parse_Dep (Reader);
+
+               when 'W' =>
+                  Parse_With (Reader);
+
+               when 'X' =>
+                  exit;
 
                when others =>
                   null;

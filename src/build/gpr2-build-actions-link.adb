@@ -4,8 +4,13 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Characters.Handling;
+
+with GNATCOLL.Utils;
+
 with GPR2.External_Options;
 with GPR2.Project.Attribute;
+with GPR2.Project.Tree;
 
 package body GPR2.Build.Actions.Link is
 
@@ -138,15 +143,51 @@ package body GPR2.Build.Actions.Link is
             declare
                Link : constant Object'Class :=
                         Object'Class (Self.Tree.Action (Lib));
-               Opt  : constant Project.Attribute.Object :=
-                        Link.View.Attribute (PRA.Linker.Linker_Options);
 
             begin
                Args.Append (Link.Library.Path.String_Value);
+            end;
+         end loop;
 
-               if Opt.Is_Defined and then not Self.Is_Library then
+         for C of Self.View.Closure loop
+            declare
+               Opt     : constant Project.Attribute.Object :=
+                           C.Attribute (PRA.Linker.Linker_Options);
+               Lib_Opt : constant Value_Type :=
+                           Self.Tree.Linker_Lib_Dir_Option;
+               use GNATCOLL.Utils;
+            begin
+               if Opt.Is_Defined then
                   for Val of Opt.Values loop
-                     Args.Append (Val.Text);
+                     declare
+                        Arg  : constant Value_Type := Val.Text;
+                        Path : Path_Name.Object;
+                     begin
+                        --  Need to check that any -L<path> option has an
+                        --  absolute dir
+                        if Arg'Length >= Lib_Opt'Length
+                          and then Starts_With (Arg, Lib_Opt)
+                        then
+                           Path := Path_Name.Create_Directory
+                             (Filename_Type
+                                (Arg (Arg'First + Lib_Opt'Length .. Arg'Last)),
+                              C.Dir_Name.Value);
+                           Args.Append (Lib_Opt & Path.String_Value);
+
+                        elsif Arg (Arg'First) = '-' then
+                           --  Don't touch other switches
+                           Args.Append (Val.Text);
+
+                        else
+                           --  Check for relative paths and translate them
+                           --  as absolute.
+
+                           Args.Append
+                             (Path_Name.Create_File
+                                (Filename_Type (Val.Text),
+                                 C.Dir_Name.Value).String_Value);
+                        end if;
+                     end;
                   end loop;
                end if;
             end;
@@ -258,6 +299,30 @@ package body GPR2.Build.Actions.Link is
       Self.Traces     := Create ("ACTION_LINK");
    end Initialize_Executable;
 
+   -------------------------------
+   -- Initialize_Global_Archive --
+   -------------------------------
+
+   procedure Initialize_Global_Archive
+     (Self    : in out Object;
+      Context : GPR2.Project.View.Object)
+   is
+      Project_Name_Low : constant String :=
+                           Ada.Characters.Handling.To_Lower
+                             (String (Context.Name));
+      Library_Filename : constant Simple_Name :=
+                           "lib" & Filename_Type (Project_Name_Low) &
+                           Context.Tree.Configuration.Archive_Suffix;
+   begin
+      Self.Ctxt       := Context;
+      Self.Is_Library := True;
+      Self.Is_Static  := True;
+      Self.In_Obj     := True;
+      Self.Library    := Artifacts.Library.Create
+        (Context.Object_Directory.Compose (Library_Filename));
+      Self.Traces     := Create ("ACTION_LINK");
+   end Initialize_Global_Archive;
+
    ------------------------
    -- Initialize_Library --
    ------------------------
@@ -266,9 +331,10 @@ package body GPR2.Build.Actions.Link is
      (Self    : in out Object;
       Context : GPR2.Project.View.Object) is
    begin
-      Self.Is_Library := True;
-      Self.Library    := Artifacts.Library.Create (Context.Library_Filename);
       Self.Ctxt       := Context;
+      Self.Is_Library := True;
+      Self.Is_Static  := Context.Library_Kind in "static" | "static-pic";
+      Self.Library    := Artifacts.Library.Create (Context.Library_Filename);
       Self.Traces     := Create ("ACTION_LINK");
    end Initialize_Library;
 

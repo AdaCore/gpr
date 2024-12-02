@@ -16,10 +16,10 @@ def run(cmd):
 # exe with it only uses libdemo.a and not any of the objects contained in it.
 
 run(["gpr2build", "-q", "-Pdemo.gpr", "-p", "--json-summary"])
-with open("obj/lib/jobs.json") as fp:
+with open("jobs.json") as fp:
     cntlib = json.load(fp)
 run(["gpr2build", "-q", "-Papp.gpr", "-p", "--json-summary"])
-with open("obj/app/jobs.json") as fp:
+with open("jobs.json") as fp:
     cntbin = json.load(fp)
 
 

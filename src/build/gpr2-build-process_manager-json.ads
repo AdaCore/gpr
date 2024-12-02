@@ -15,6 +15,11 @@ package GPR2.Build.Process_Manager.JSON is
 
    type Object is new GPR2.Build.Process_Manager.Object with private;
 
+   procedure Set_JSON_File
+     (Self : in out Object;
+      Path : GPR2.Path_Name.Object);
+   --  Sets the location of the JSON report to generate
+
    overriding function Collect_Job
      (Self           : in out Object;
        Job            : in out Actions.Object'Class;
@@ -22,27 +27,7 @@ package GPR2.Build.Process_Manager.JSON is
        Stdout, Stderr : Unbounded_String)
       return Collect_Status;
 
-   procedure Execute
-     (Self            : in out Object;
-      Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
-      Jobs            : Natural := 0;
-      JSON_File       : GPR2.Path_Name.Object;
-      Stop_On_Fail    : Boolean := True;
-      Keep_Temp_Files : Boolean := False);
-   --  Execute the process manager and store the jobs results in the provided
-   --  JSON file ``JSON_File``.
-
-   overriding procedure Execute
-     (Self            : in out Object;
-      Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
-      Jobs            : Natural := 0;
-      Stop_On_Fail    : Boolean := True;
-      Keep_Temp_Files : Boolean := False);
-   --  Same as above, but store the jobs results in the default JSON file
-   --  ``<current_directory>/jobs.json``.
-
-   overriding
-   procedure Execution_Post_Process (Self : in out Object);
+   overriding procedure Execution_Post_Process (Self : in out Object);
    --  Write the summary of all jobs execution in a JSON file. Used internally
    --  by the process manager but needs to be public to be overridden.
 

@@ -31,32 +31,33 @@ package GPR2.Build.Actions_Population is
 
       --  Modification of the actions behavior:
 
-      No_Indirect_Imports            : Boolean := False;
+      No_Indirect_Imports          : Boolean := False;
       --  When set, sources have visibility only on source dirs of views
       --  that are directly imported by their owning view.  By default the
       --  source include path is transitive.
-      No_SAL_Binding                 : Boolean := False;
+      No_SAL_Binding               : Boolean := False;
       --  Do not bind standalone libraries if a binder file already exists
-      No_Run_Path                    : Boolean := False;
+      No_Run_Path                  : Boolean := False;
       --  Do not set the Run_Path for shared libraries resolution
-      No_Main_Subprogram             : Boolean := False;
 
       --  Restrictions on the actions to execute
 
-      Restricted_Build_Phase         : Boolean := False;
+      Restricted_Build_Phase       : Boolean := False;
       --  Some restriction applies to the build phases
-      Compile_Phase_Mandated         : Boolean := False;
+      Compile_Phase_Mandated       : Boolean := False;
       --  Do the compilation phase in Restricted_Build_Phase mode
-      Bind_Phase_Mandated            : Boolean := False;
+      Bind_Phase_Mandated          : Boolean := False;
       --  Do the binding phase in Restricted_Build_Phase mode
-      Link_Phase_Mandated            : Boolean := False;
+      Link_Phase_Mandated          : Boolean := False;
       --  Do the link phase in Restricted_Build_Phase mode
-      Unique_Recompilation           : Boolean := False;
+      Unique_Compilation           : Boolean := False;
       --  Just build the sources from the command line, or if none specified
       --  the sources from the root project
-      Unique_Recompilation_Recursive : Boolean := False;
+      Unique_Compilation_Recursive : Boolean := False;
       --  Similar to Unique_Recompilation, except that if no source is given
       --  on the command line, then this compiles the whole tree.
+      No_Main_Subprogram           : Boolean := False;
+      --  -z option: tell the binder to not generate an actual main subprogram
    end record;
 
    function Populate_Actions

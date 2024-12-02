@@ -25,11 +25,15 @@ with GNAT.OS_Lib;
 with GNATCOLL.Traces;
 
 with GPR2.Build.Actions_Population;
+with GPR2.Build.Actions;
+with GPR2.Build.Actions.Compile;
+with GPR2.Build.Artifacts.Files;
 with GPR2.Log;
 with GPR2.Message;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Configuration;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
@@ -54,6 +58,7 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    use GPR2.Path_Name;
 
    package PRA renames GPR2.Project.Registry.Attribute;
+   package PAI renames GPR2.Project.Attribute_Index;
 
    procedure Delete_File
      (Name : String; Opts : GPRclean.Options.Object);
@@ -97,14 +102,17 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
       end if;
    end Delete_File;
 
-   Project_Tree : Project.Tree.Object;
-   Opt          : GPRclean.Options.Object;
-   Parser       : GPRtools.Options.Command_Line_Parser;
-   Build_Opt    : GPR2.Build.Actions_Population.Build_Options;
+   Project_Tree  : Project.Tree.Object;
+   Opt           : GPRclean.Options.Object;
+   Parser        : GPRtools.Options.Command_Line_Parser;
+   Build_Opt     : GPR2.Build.Actions_Population.Build_Options;
+   Lang          : GPR2.Language_Id;
+   Artifact_Path : Path_Name.Object;
+   Conf          : GPR2.Project.View.Object;
 
 begin
    GNATCOLL.Traces.Parse_Config_File;
-   GPRtools.Util.Set_Program_Name ("gpr2clean");
+   GPRtools.Util.Set_Program_Name ("gprclean");
    GPRclean.Options.Setup (Parser);
    GPRclean.Options.Parse_Command_Line (Parser, Opt);
 
@@ -113,15 +121,6 @@ begin
    end if;
 
    Project_Tree := Opt.Tree;
-
-   if Project_Tree.Is_Defined
-     and then Project_Tree.Root_Project.Has_Archive_Builder
-     and then Project_Tree.Root_Project.Archive_Builder.Empty_Values
-   then
-      Handle_Program_Termination
-        (Exit_Code => E_Success,
-         Message   => "empty Archive_builder is not supported yet.");
-   end if;
 
    --  Check gprclean's Switch attribute from loaded project
 
@@ -162,6 +161,10 @@ begin
               (Project_Tree.Root_Project.Path_Name.Value, 0, 0)));
    end if;
 
+   if Project_Tree.Has_Configuration then
+      Conf := Project_Tree.Configuration.Corresponding_View;
+   end if;
+
    if Project_Tree.Root_Project.Is_Library and then Opt.Arg_Mains then
       Project_Tree.Log_Messages.Append
         (GPR2.Message.Create
@@ -180,26 +183,76 @@ begin
    --  Create actions that will be used to iterate and obtain artifacts
    --  for removal.
 
-   if Project_Tree.Root_Project.Is_Library then
-
-      --  Create actions to build a lib
-
-      null;
-   else
-      if not GPR2.Build.Actions_Population.Populate_Actions
-               (Project_Tree, Build_Opt)
-      then
-         return To_Exit_Status (E_Abort);
-      end if;
+   if not GPR2.Build.Actions_Population.Populate_Actions
+     (Project_Tree, Build_Opt)
+   then
+      return To_Exit_Status (E_Abort);
    end if;
 
    --  Iterate on all actions, and clean their output artifacts
 
    for Action of Project_Tree.Artifacts_Database.All_Actions loop
-      for Artifact of Project_Tree.Artifacts_Database.Outputs (Action.UID)
-      loop
-         Delete_File (String (Artifact.SLOC.Filename), Opt);
-      end loop;
+      if not Action.View.Is_Externally_Built then
+         for Artifact of
+           Project_Tree.Artifacts_Database.Outputs (Action.UID)
+         loop
+            if Artifact in GPR2.Build.Artifacts.Files.Object'Class then
+               Artifact_Path :=
+                 GPR2.Build.Artifacts.Files.Object'Class (Artifact).Path;
+
+               Delete_File (Artifact_Path.String_Value, Opt);
+
+               if Action in GPR2.Build.Actions.Compile.Object'Class then
+                  Lang :=
+                    GPR2.Build.Actions.Compile.Object'Class (Action).Language;
+                  declare
+                     Src_Exts : constant GPR2.Project.Attribute.Object :=
+                                  Conf.Attribute
+                                    (PRA.Clean.Source_Artifact_Extensions,
+                                     PAI.Create (Lang));
+                     Obj_Exts : constant GPR2.Project.Attribute.Object :=
+                                  Conf.Attribute
+                                    (PRA.Clean.Object_Artifact_Extensions,
+                                     PAI.Create (Lang));
+                     Obj_BN   : constant Filename_Type :=
+                                  Artifact_Path.Base_Filename;
+                     Obj_Dir  : constant Path_Name.Object :=
+                                  Artifact_Path.Containing_Directory;
+                     Path     : Path_Name.Object;
+                  begin
+                     if Obj_Exts.Is_Defined then
+                        for Val of Obj_Exts.Values loop
+                           Path := Obj_Dir.Compose
+                             (Obj_BN &
+                              Filename_Type
+                                (if Val.Text (Val.Text'First) = '.'
+                                 then Val.Text
+                                 else "." & Val.Text));
+                           Delete_File (Path.String_Value, Opt);
+                        end loop;
+                     end if;
+
+                     if Src_Exts.Is_Defined then
+                        for Val of Src_Exts.Values loop
+                           Path := Obj_Dir.Compose
+                             (Obj_BN &
+                              Filename_Type
+                                (if Val.Text (Val.Text'First) = '.'
+                                 then Val.Text
+                                 else "." & Val.Text));
+                           Delete_File (Path.String_Value, Opt);
+                        end loop;
+                     end if;
+                  end;
+               end if;
+            end if;
+         end loop;
+
+         Delete_File
+           (Action.View.Object_Directory.Compose
+              (GPR2.Build.Actions.Db_Filename (Action.UID)).String_Value,
+            Opt);
+      end if;
    end loop;
 
    if Opt.Arg_Mains and then not Opt.Mains.Is_Empty then

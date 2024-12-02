@@ -550,10 +550,10 @@ package body GPRbuild.Options is
          Result.Build_If_Switch_Changes := True;
 
       elsif Arg = "-u" then
-         Result.Build_Options.Unique_Recompilation := True;
+         Result.Build_Options.Unique_Compilation := True;
 
       elsif Arg = "-U" then
-         Result.Build_Options.Unique_Recompilation_Recursive := True;
+         Result.Build_Options.Unique_Compilation_Recursive := True;
 
       elsif Arg = "-z" then
          Result.Build_Options.No_Main_Subprogram := True;

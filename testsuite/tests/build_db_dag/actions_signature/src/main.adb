@@ -48,6 +48,8 @@ begin
       end loop;
    end loop;
 
+   Tree.Artifacts_Database.Load_Signatures;
+
    Actions := GPR2.Build.Tree_Db.Actions_List
                 (Tree.Artifacts_Database.All_Actions);
 

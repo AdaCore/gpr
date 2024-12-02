@@ -179,11 +179,12 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
       return All_Ok;
    end Ensure_Directories;
 
-   Parser    : constant Options.GPRbuild_Parser := Options.Create;
-   Tree      : Project.Tree.Object;
-   Sw_Attr   : GPR2.Project.Attribute.Object;
-   Process_M : GPR2.Build.Process_Manager.JSON.Object;
-   Jobs_JSON : GPR2.Path_Name.Object;
+   Parser         : constant Options.GPRbuild_Parser := Options.Create;
+   Tree           : Project.Tree.Object;
+   Sw_Attr        : GPR2.Project.Attribute.Object;
+   Process_M      : GPR2.Build.Process_Manager.Object;
+   Process_M_JSON : GPR2.Build.Process_Manager.JSON.Object;
+   Jobs_JSON      : GPR2.Path_Name.Object;
 
    use GPR2.Build;
 
@@ -359,21 +360,18 @@ begin
    end if;
 
    if Opt.Json_Summary then
-      if Tree.Root_Project.Kind in With_Object_Dir_Kind then
-         Jobs_JSON := Tree.Root_Project.Object_Directory.Compose ("jobs.json");
-      else
-         Jobs_JSON := Tree.Root_Project.Dir_Name.Compose ("jobs.json");
-      end if;
+      Jobs_JSON := Tree.Root_Project.Dir_Name.Compose ("jobs.json");
 
-      Process_M.Execute
-        (Tree.Artifacts_Database,
+      Process_M_JSON.Set_JSON_File (Jobs_JSON);
+
+      Tree.Artifacts_Database.Execute
+        (Process_M_JSON,
          Jobs            => Opt.Parallel_Tasks,
-         JSON_File       => Jobs_JSON,
          Stop_On_Fail    => not Opt.Keep_Going,
          Keep_Temp_Files => Opt.Keep_Temp_Files);
    else
-      GPR2.Build.Process_Manager.Object (Process_M).Execute
-        (Tree.Artifacts_Database,
+      Tree.Artifacts_Database.Execute
+        (Process_M,
          Jobs            => Opt.Parallel_Tasks,
          Stop_On_Fail    => not Opt.Keep_Going,
          Keep_Temp_Files => Opt.Keep_Temp_Files);

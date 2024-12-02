@@ -28,7 +28,7 @@ package GPR2.Build.Compilation_Unit is
      (Positive, Unit_Location);
 
    type Unit_Location_Vector is new Unit_Location_Vectors.Vector
-     with null record;
+   with null record;
    subtype Unit_Location_Cursor is Unit_Location_Vectors.Cursor;
    Empty_Vector : constant Unit_Location_Vector :=
                     Unit_Location_Vector'(Unit_Location_Vectors.Empty_Vector

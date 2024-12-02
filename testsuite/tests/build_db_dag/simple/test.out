@@ -14,6 +14,7 @@
 [C Compile] foo.c (p1.gpr)
   inputs:
   outputs:
+  - /tree/obj/p1/foo.d
   - /tree/obj/p1/foo.o
 [Ada Compile] foo.ada@2 (p2.gpr)
   inputs:

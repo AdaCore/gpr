@@ -1750,6 +1750,21 @@ package body GPR2.Project.View is
       return Def.Languages;
    end Language_Ids;
 
+   ---------------
+   -- Languages --
+   ---------------
+
+   function Languages (Self : Object) return Containers.Source_Value_List is
+      Attr : constant Project.Attribute.Object :=
+               Self.Attribute (PRA.Languages);
+   begin
+      if Attr.Is_Defined then
+         return Attr.Values;
+      else
+         return Containers.Source_Value_Type_List.Empty_Vector;
+      end if;
+   end Languages;
+
    ---------------------------
    -- Library_Ali_Directory --
    ---------------------------

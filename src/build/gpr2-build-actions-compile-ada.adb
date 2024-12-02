@@ -39,9 +39,6 @@ package body GPR2.Build.Actions.Compile.Ada is
       Idx     : Language_Id;
       Default : Value_Type) return Value_Type;
 
-   function Update_Deps_From_Ali (Self : in out Object) return Boolean;
-   --  Parse the ALI file produced by the action to update dependencies
-
    -------------------------
    -- Artifacts_Base_Name --
    -------------------------
@@ -81,10 +78,13 @@ package body GPR2.Build.Actions.Compile.Ada is
 
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
       Art : Artifacts.Files.Object;
+
    begin
       Self.Signature.Clear;
 
-      for Dep of Self.Dependencies loop
+      for Dep of Self.Dependencies (With_RTS => False) loop
+         --  We don't add the runtime sources since it will be checked via the
+         --  compiler version.
          Art := Artifacts.Files.Create (Dep);
          Self.Signature.Add_Artifact (Art);
       end loop;
@@ -102,28 +102,53 @@ package body GPR2.Build.Actions.Compile.Ada is
    ------------------
 
    function Dependencies
-     (Self : in out Object) return GPR2.Path_Name.Set.Object
+     (Self     : in out Object;
+      With_RTS : Boolean := True) return Containers.Filename_Set
    is
+      Deps_Src : GPR2.Containers.Filename_Set;
+      UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+
    begin
-      if not Self.Is_Defined then
-         raise Program_Error with "Ada_Compile action is undefined";
-      end if;
+      if Self.Deps.Is_Empty then
+         if not Self.Ali_File.Path.Exists then
+            Trace
+              (Self.Traces,
+               "The ALI file for action " & UID.Image & " does not exist");
 
-      if Self.Tree = null then
-         raise Program_Error
-           with Object'Class (Self).UID.Image & " has not been included to a" &
-           " tree database. Please call the `Add_Action` procedure before" &
-           " querying dependencies";
-      end if;
+            return Self.Deps;
+         end if;
 
-      --  A unit has at least a dependency towards its own sources, so an
-      --  an empty dependencies set means that the ALI file has not
-      --  been parsed.
+         if not GPR2.Build.ALI_Parser.Dependencies
+           (Self.Ali_File.Path, Deps_Src)
+         then
+            Trace
+              (Self.Traces, "Failed to parse dependencies from the ALI file " &
+                 Self.Ali_File.Path.String_Value);
 
-      if Self.Deps.Is_Empty and then not Self.Update_Deps_From_Ali then
-         raise Program_Error with
-          "Failed to obtain dependencies from the ALI file produced by the " &
-            "action " & Object'Class (Self).UID.Image;
+            return Self.Deps;
+         end if;
+
+         for Dep_Src of Deps_Src loop
+            declare
+               Source : constant GPR2.Build.Source.Object :=
+                          Self.View.Visible_Source
+                            (Path_Name.Simple_Name (Dep_Src));
+            begin
+               if Source.Is_Defined
+                 and then
+                   (With_RTS
+                    or else not Source.Owning_View.Is_Runtime)
+               then
+                  if Self.Traces.Is_Active then
+                     Self.Traces.Trace
+                       ("Add " & String (Source.Path_Name.Name) &
+                          " to the action " & UID.Image & " dependencies");
+                  end if;
+
+                  Self.Deps.Include (Source.Path_Name.Value);
+               end if;
+            end;
+         end loop;
       end if;
 
       return Self.Deps;
@@ -337,7 +362,6 @@ package body GPR2.Build.Actions.Compile.Ada is
             if Continue and then CU.Owning_View.Is_Runtime then
                --  Since we're linking with libgnarl/libgnat anyway, don't
                --  add runtime units there.
-               --  ??? Need to be generalized for library projects
                Continue := False;
             end if;
 
@@ -453,17 +477,6 @@ package body GPR2.Build.Actions.Compile.Ada is
          return False;
       end if;
 
-      --  Update the signature of the action
-
-      if not Self.Update_Deps_From_Ali then
-         Trace
-           (Self.Traces,
-            "Failed to obtain dependencies from the ALI file produced " &
-              "by the action " & Object'Class (Self).UID.Image);
-
-         return False;
-      end if;
-
       --  Update the tree with potential new imports from ALI
 
       return Self.On_Tree_Propagation;
@@ -490,53 +503,5 @@ package body GPR2.Build.Actions.Compile.Ada is
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class is
       (Ada.Create (Src => Self.CU));
-
-   --------------------------
-   -- Update_Deps_From_Ali --
-   --------------------------
-
-   function Update_Deps_From_Ali (Self : in out Object) return Boolean is
-      Deps_Src : GPR2.Containers.Filename_Set;
-      UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
-
-   begin
-
-      if not Self.Ali_File.Path.Exists then
-         Trace
-           (Self.Traces,
-            "The ALI file for action " & UID.Image & " does not exist");
-
-         return False;
-      end if;
-
-      if not GPR2.Build.ALI_Parser.Dependencies (Self.Ali_File.Path, Deps_Src)
-      then
-         Trace
-           (Self.Traces, "Failed to parse dependencies from the ALI file " &
-            Self.Ali_File.Path.String_Value);
-
-         return False;
-      end if;
-
-      for Dep_Src of Deps_Src loop
-         declare
-            Source : constant GPR2.Build.Source.Object :=
-                       Self.View.Visible_Source
-                         (Path_Name.Simple_Name (Dep_Src));
-         begin
-            if Source.Is_Defined then
-               Trace
-                 (Self.Traces,
-                  "Add " & String (Source.Path_Name.Name) &
-                    " to the action " & UID.Image & " dependencies");
-               if not Self.Deps.Contains (Source.Path_Name) then
-                  Self.Deps.Append (Source.Path_Name);
-               end if;
-            end if;
-         end;
-      end loop;
-
-      return True;
-   end Update_Deps_From_Ali;
 
 end GPR2.Build.Actions.Compile.Ada;

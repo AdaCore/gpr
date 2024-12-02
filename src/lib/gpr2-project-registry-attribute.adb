@@ -544,6 +544,16 @@ begin
       Is_Allowed_In         => No_Aggregates,
       Inherit_From_Extended => Not_Inherited);
 
+   Add
+     (Name                  => Linker_Lib_Dir_Option,
+      Index_Type            => No_Index,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Empty_Value           => Error,
+      Is_Allowed_In         => In_Configuration,
+      Default               => Create ("-L"),
+      Inherit_From_Extended => Not_Inherited);
+
    --  excluded_source_files, Locally_Removed_Files
    Add
      (Name                 => Excluded_Source_Files,

@@ -18,11 +18,19 @@ pragma Warnings (On);
 with GPR2.Build.Tree_Db;
 with GPR2.Message;
 with GPR2.Path_Name;
-with GPR2.Project.View;
+with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
 with GPR2.View_Ids.Set;
 
 package body GPR2.Build.Actions_Population is
+
+   function As_Unit_Location
+     (Basename       : Value_Type;
+      Index          : Unit_Index;
+      View           : GPR2.Project.View.Object;
+      Options        : Build_Options;
+      Error_Reported : out Boolean)
+      return Compilation_Unit.Unit_Location_Vector;
 
    function Populate_Aggregated_Library
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
@@ -43,12 +51,114 @@ package body GPR2.Build.Actions_Population is
    function Populate_Mains
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       View    : GPR2.Project.View.Object;
+      Mains   : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
       Options : Build_Options) return Boolean;
 
    function Populate_Withed_Units
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       View    : GPR2.Project.View.Object;
       Visited : in out View_Ids.Set.Set) return Boolean;
+
+   ----------------------
+   -- As_Unit_Location --
+   ----------------------
+
+   function As_Unit_Location
+     (Basename       : Value_Type;
+      Index          : Unit_Index;
+      View           : GPR2.Project.View.Object;
+      Options        : Build_Options;
+      Error_Reported : out Boolean)
+      return Compilation_Unit.Unit_Location_Vector
+   is
+      use Compilation_Unit;
+      Src     : GPR2.Build.Source.Object;
+      Tree_Db : constant GPR2.Build.Tree_Db.Object_Access :=
+                  View.Tree.Artifacts_Database;
+      Res     : Unit_Location_Vector;
+   begin
+      Error_Reported := False;
+
+      if Options.Unique_Compilation
+        or else Options.Unique_Compilation_Recursive
+      then
+         Src := View.Visible_Source
+           (Path_Name.Simple_Name (Filename_Type (Basename)));
+      else
+         Src := View.Source
+           (Path_Name.Simple_Name (Filename_Type (Basename)));
+      end if;
+
+      if not Src.Is_Defined then
+         for Lang of View.Language_Ids loop
+            Src := View.Visible_Source
+              (View.Suffixed_Simple_Name (Basename, Lang));
+            exit when Src.Is_Defined;
+         end loop;
+      end if;
+
+      if not Src.Is_Defined then
+         return Compilation_Unit.Empty_Vector;
+      end if;
+
+      if Src.Owning_View.Is_Library
+        and then not Options.Unique_Compilation
+        and then not Options.Unique_Compilation_Recursive
+      then
+         Tree_Db.Reporter.Report
+           (Message.Create
+              (Message.Error,
+               "main cannot be a source of a library project: """ &
+                 Basename & '"',
+               Source_Reference.Create (View.Path_Name.Value, 0, 0)));
+         Error_Reported := True;
+
+         return Compilation_Unit.Empty_Vector;
+      end if;
+
+      if Index /= No_Index then
+         if not Src.Has_Units then
+            Tree_Db.Reporter.Report
+              (Message.Create
+                 (Message.Error,
+                  "unit index specified with a non unit-based source",
+                  Source_Reference.Create (Src.Path_Name.Value, 0, 0)));
+            Error_Reported := True;
+
+            return Compilation_Unit.Empty_Vector;
+
+         elsif not Src.Has_Unit_At (Index) then
+            Tree_Db.Reporter.Report
+              (Message.Create
+                 (Message.Error,
+                  " no unit for the index" & Index'Image,
+                  Source_Reference.Create (Src.Path_Name.Value, 0, 0)));
+            Error_Reported := True;
+
+            return Compilation_Unit.Empty_Vector;
+         end if;
+      end if;
+
+      if Src.Has_Units
+        and then not Src.Has_Single_Unit
+        and then Index = No_Index
+      then
+         for U of Src.Units loop
+            Res.Append
+              (Unit_Location'(View   => Src.Owning_View,
+                              Source => Src.Path_Name,
+                              Index  => U.Index));
+         end loop;
+
+      else
+         Res.Append
+           (Unit_Location'(View   => Src.Owning_View,
+                           Source => Src.Path_Name,
+                           Index  => Index));
+      end if;
+
+      return Res;
+   end As_Unit_Location;
 
    ----------------------
    -- Populate_Actions --
@@ -66,49 +176,169 @@ package body GPR2.Build.Actions_Population is
       Inserted    : Boolean;
       Actions_Set : Actions.Sets.Set;
       Lib         : Artifacts.Library.Object;
+      Src         : GPR2.Build.Source.Object;
+      Mains       : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
+      To_Remove   : Actions.Sets.Set;
+      Has_Error   : Boolean;
 
    begin
+      --  Lookup the source(s) given explicitly on the command line, if any.
+
+      Inserted := False;
+
+      for Main of Options.Mains loop
+         for V of Tree.Namespace_Root_Projects loop
+            declare
+               M : constant Compilation_Unit.Unit_Location_Vector :=
+                     As_Unit_Location
+                       (Main,
+                        Options.Unit_Index,
+                        V,
+                        Options,
+                        Has_Error);
+            begin
+               if Has_Error then
+                  return False;
+               end if;
+
+               if not M.Is_Empty then
+                  Inserted := True;
+                  Mains.Append (M);
+               end if;
+            end;
+         end loop;
+
+         if not Inserted then
+            if Options.Unique_Compilation
+              or else Options.Unique_Compilation_Recursive
+            then
+               Tree_Db.Reporter.Report
+                 (Message.Create
+                    (Message.Error,
+                     '"' & Main &
+                       """ was not found in the sources of any project",
+                     Source_Reference.Create
+                       (Tree.Root_Project.Path_Name.Value, 0, 0)));
+            else
+               Tree_Db.Reporter.Report
+                 (Message.Create
+                    (Message.Error,
+                     '"' & Main &
+                       """ was not found in the project",
+                     Source_Reference.Create
+                       (Tree.Root_Project.Path_Name.Value, 0, 0)));
+            end if;
+
+            return False;
+         end if;
+      end loop;
+
       for V of Tree.Namespace_Root_Projects loop
          Visited.Insert (V.Id, Pos, Inserted);
 
-         Result := Populate_Withed_Units (Tree_Db, V, Visited);
-
-         if not Result then
-            return False;
-         end if;
-
          if Inserted then
-            case V.Kind is
-               when K_Standard =>
-                  if V.Has_Mains or else not Options.Mains.Is_Empty then
-                     Result := Populate_Mains (Tree_Db, V, Options);
-                  else
+            if Options.Unique_Compilation
+              or else Options.Unique_Compilation_Recursive
+            then
+               --  Handle -u and -U:
+
+               if Mains.Is_Empty then
+                  --  compile all sources, recursively in case -U is set
+                  if Options.Unique_Compilation then
                      Result := Populate_All (Tree_Db, V, Actions_Set);
-                  end if;
-
-               when K_Library =>
-                  Result := Populate_Library (Tree_Db, V, Lib);
-
-               when K_Aggregate_Library =>
-                  Result :=
-                    Populate_Aggregated_Library (Tree_Db, V, Lib, Visited);
-
-               when K_Abstract =>
-                  if not Options.Mains.Is_Empty then
-                     for Main of Options.Mains loop
-                        Tree.Reporter.Report
-                          (GPR2.Message.Create
-                             (GPR2.Message.Error,
-                              "cannot build '" & Main &
-                                "' with an abstract project",
-                              GPR2.Source_Reference.Create
-                                (V.Path_Name.Value, 0, 0)));
+                  else
+                     for C of V.Closure (True) loop
+                        if not C.Is_Externally_Built then
+                           Result := Populate_All (Tree_Db, C, Actions_Set);
+                           exit when not Result;
+                        end if;
                      end loop;
                   end if;
 
-               when others =>
-                  null;
-            end case;
+                  return Result;
+
+               else
+                  --  Only compile the given sources
+
+                  for M of Mains loop
+                     Src := V.Visible_Source (M.Source.Simple_Name);
+
+                     --  Src may not be part of the current subtree
+
+                     if Src.Is_Defined then
+                        if Src.Language = Ada_Language then
+                           declare
+                              Comp : GPR2.Build.Actions.Compile.Ada.Object;
+                           begin
+                              Comp.Initialize
+                                (V.Unit (Src.Unit (M.Index).Name));
+
+                              if not Tree_Db.Add_Action (Comp) then
+                                 return False;
+                              end if;
+                           end;
+
+                        else
+                           declare
+                              Comp : GPR2.Build.Actions.Compile.Object;
+                           begin
+                              Comp.Initialize (Src);
+
+                              if not Tree_Db.Add_Action (Comp) then
+                                 return False;
+                              end if;
+                           end;
+                        end if;
+                     end if;
+                  end loop;
+               end if;
+
+            else
+               --  Handle general case:
+
+               --  Make sure the withed libraries are added to the tree
+               Result := Populate_Withed_Units (Tree_Db, V, Visited);
+
+               case V.Kind is
+                  when K_Standard =>
+                     if V.Has_Mains or else not Mains.Is_Empty then
+                        Result := Populate_Mains (Tree_Db, V, Mains, Options);
+                     else
+                        Result := Populate_All (Tree_Db, V, Actions_Set);
+                     end if;
+
+                  when K_Library =>
+                     Result := Populate_Library (Tree_Db, V, Lib);
+
+                  when K_Aggregate_Library =>
+                     Result :=
+                       Populate_Aggregated_Library (Tree_Db, V, Lib, Visited);
+
+                  when others =>
+                     null;
+               end case;
+
+               if Options.Restricted_Build_Phase then
+                  for A of Tree_Db.All_Actions loop
+                     if not (Options.Compile_Phase_Mandated
+                             and then A in Actions.Compile.Object'Class)
+                       and then not
+                         (Options.Bind_Phase_Mandated
+                          and then
+                            (A in Actions.Ada_Bind.Object'Class
+                             or else A in Actions.Post_Bind.Object'Class))
+                       and then not (Options.Link_Phase_Mandated
+                                     and then A in Actions.Link.Object'Class)
+                     then
+                        To_Remove.Include (A);
+                     end if;
+                  end loop;
+
+                  for A of To_Remove loop
+                     Tree_Db.Action_Id_To_Reference (A.UID).Deactivate;
+                  end loop;
+               end if;
+            end if;
          end if;
 
          if not Result then
@@ -116,7 +346,17 @@ package body GPR2.Build.Actions_Population is
          end if;
       end loop;
 
-      return Tree_Db.Propagate_Actions;
+      if not Options.Unique_Compilation
+        and then not Options.Unique_Compilation_Recursive
+      then
+         Result := Tree_Db.Propagate_Actions;
+      end if;
+
+      if Result then
+         Tree_Db.Load_Signatures;
+      end if;
+
+      return Result;
    end Populate_Actions;
 
    ---------------------------------
@@ -307,271 +547,243 @@ package body GPR2.Build.Actions_Population is
    function Populate_Mains
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       View    : GPR2.Project.View.Object;
+      Mains   : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
       Options : Build_Options) return Boolean
    is
-      function As_Unit_Location
-        (Basename : Value_Type;
-         Index    : Unit_Index) return Compilation_Unit.Unit_Location;
+      A_Comp     : Actions.Compile.Ada.Object;
+      Comp       : Actions.Compile.Object;
+      Source     : GPR2.Build.Source.Object;
+      Archive    : Actions.Link.Object;
+      Closure    : GPR2.Project.View.Set.Object;
+      Todo       : GPR2.Project.View.Set.Object;
+      Seen       : GPR2.Project.View.Set.Object;
+      Actual_Mains : Compilation_Unit.Unit_Location_Vector;
 
-      ----------------------
-      -- As_Unit_Location --
-      ----------------------
-
-      function As_Unit_Location
-        (Basename : Value_Type;
-         Index    : Unit_Index) return Compilation_Unit.Unit_Location
-      is
-         use Compilation_Unit;
-         Src : GPR2.Build.Source.Object;
-      begin
-         Src := View.Visible_Source (Simple_Name (Basename));
-
-         if not Src.Is_Defined then
-            for Lang of View.Language_Ids loop
-               Src := View.Visible_Source
-                 (View.Suffixed_Simple_Name (Basename, Lang));
-               exit when Src.Is_Defined;
-            end loop;
-         end if;
-
-         if not Src.Is_Defined then
-            Tree_Db.Reporter.Report
-              (Message.Create
-                 (Message.Error,
-                  '"' & Basename &
-                    """ was not found in the sources of any project",
-                  Source_Reference.Create (View.Path_Name.Value, 0, 0)));
-            return No_Unit;
-         end if;
-
-         if Index /= No_Index then
-            if not Src.Has_Units then
-               Tree_Db.Reporter.Report
-                 (Message.Create
-                    (Message.Error,
-                     "unit index specified with a non unit-based source",
-                     Source_Reference.Create (Src.Path_Name.Value, 0, 0)));
-               return No_Unit;
-
-            elsif not Src.Has_Unit_At (Index) then
-               Tree_Db.Reporter.Report
-                 (Message.Create
-                    (Message.Error,
-                     " no unit for the index" & Index'Image,
-                     Source_Reference.Create (Src.Path_Name.Value, 0, 0)));
-               return No_Unit;
-            end if;
-
-         elsif Src.Has_Units
-           and then not Src.Has_Single_Unit
-         then
-            Tree_Db.Reporter.Report
-              (Message.Create
-                 (Message.Error,
-                  "multi-unit source used without a unit index",
-                  Source_Reference.Create (Src.Path_Name.Value, 0, 0)));
-               return No_Unit;
-
-         end if;
-
-         return (View => Src.Owning_View,
-                 Source => Src.Path_Name,
-                 Index => Index);
-      end As_Unit_Location;
-
-      A_Comp  : Actions.Compile.Ada.Object;
-      Comp    : Actions.Compile.Object;
-      Bind    : Actions.Ada_Bind.Object;
-      Link    : Actions.Link.Object;
-      Source  : GPR2.Build.Source.Object;
-      Is_Main : Boolean;
-      Mains   : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
-
-      use type Ada.Containers.Count_Type;
-      use type Compilation_Unit.Unit_Location;
       use type GPR2.Path_Name.Object;
+      use type Ada.Containers.Count_Type;
 
    begin
-      --  Compute the actual list of Mains, that depend on command line or
-      --  -if none provided- the attribute Main.
-
-      if Options.Mains.Is_Empty then
-         Mains := View.Mains;
-
+      if Mains.Is_Empty then
+         Actual_Mains := View.Mains;
       else
-         if Options.Mains.Length = 1 then
-            Mains.Append
-              (As_Unit_Location
-                 (Options.Mains.First_Element,
-                  Options.Unit_Index));
-
-         else
-            for M of Options.Mains loop
-               Mains.Append (As_Unit_Location (M, No_Index));
-            end loop;
-         end if;
-
-         --  Check that we could find all mains
-         for M of Mains loop
-            if M = Compilation_Unit.No_Unit then
-               return False;
-            end if;
-         end loop;
+         Actual_Mains := Mains;
       end if;
 
-      --  Now process the mains one by one
+      if Actual_Mains.Length > 1
+        and then Length (Options.Output_File) > 0
+      then
+         Tree_Db.Reporter.Report
+           (GPR2.Message.Create
+              (GPR2.Message.Error,
+               "cannot specify an output filename when there are several " &
+                 "mains.",
+               Source_Reference.Create (View.Path_Name.Value, 0, 0)));
+         return False;
+      end if;
 
-      for Main of Mains loop
-         Source := Main.View.Source (Main.Source.Simple_Name);
+      --  Process the mains one by one
+      declare
+         Bind   : array (1 .. Natural (Actual_Mains.Length)) of
+                    Actions.Ada_Bind.Object;
+         Link   : array (1 .. Natural (Actual_Mains.Length)) of
+                    Actions.Link.Object;
+         Idx    : Natural := 1;
+         Skip   : Boolean := False;
+      begin
+         for Main of Actual_Mains loop
+            Source := Main.View.Source (Main.Source.Simple_Name);
 
-         Link.Initialize_Executable
-           (GPR2.Build.Artifacts.File_Part.Create (Main.Source, Main.Index),
-            Main.View,
-            -Options.Output_File);
+            Link (Idx).Initialize_Executable
+              (GPR2.Build.Artifacts.File_Part.Create (Main.Source, Main.Index),
+               Main.View,
+               -Options.Output_File);
 
-         if not Tree_Db.Has_Action (Link.UID)
-           and then not Tree_Db.Add_Action (Link)
-         then
-            return False;
-         end if;
-
-         if Source.Language = Ada_Language then
-            A_Comp.Initialize
-              (View.Unit (Source.Units.Element (Main.Index).Name));
-
-            if not Tree_Db.Add_Action (A_Comp) then
-               return False;
-            end if;
-
-            if Options.No_Main_Subprogram then
-               Bind.Initialize
-                 ((Kind  => Actions.Ada_Bind.No_Main_Subprogram,
-                   Src   => Source),
-                  Main.View);
-            else
-               Bind.Initialize
-                 ((Kind     => Actions.Ada_Bind.Ada_Main_Program,
-                   Main_Ali => A_Comp.Ali_File),
-                  Main.View);
-            end if;
-
-            if not Tree_Db.Add_Action (Bind) then
-               return False;
-            end if;
-
-            Tree_Db.Add_Input (Bind.UID, A_Comp.Ali_File, True);
-            Tree_Db.Add_Input (Link.UID, A_Comp.Object_File, True);
-            Tree_Db.Add_Input (Link.UID, Bind.Post_Bind.Object_File, True);
-
-         else
-            Comp.Initialize (Source);
-
-            if not Tree_Db.Add_Action (Comp) then
-               return False;
-            end if;
-
-            Tree_Db.Add_Input (Link.UID, Comp.Object_File, True);
-         end if;
-
-         --  Add all non-ada sources as dependency of the link as we cannot
-         --  know the actual dependency
-
-         for Src of View.Sources loop
-            if not Src.Has_Units
-              and then Src.Is_Compilable
-              and then Src.Kind = S_Body
+            if not Tree_Db.Has_Action (Link (Idx).UID)
+              and then not Tree_Db.Add_Action (Link (Idx))
             then
-               Is_Main := False;
+               return False;
+            end if;
 
-               for M of View.Mains loop
-                  if M.Source = Src.Path_Name then
-                     Is_Main := True;
-                     exit;
+            if Source.Language = Ada_Language then
+               A_Comp.Initialize
+                 (View.Unit (Source.Units.Element (Main.Index).Name));
+
+               if not Tree_Db.Add_Action (A_Comp) then
+                  return False;
+               end if;
+
+               Bind (Idx).Initialize
+                 (A_Comp.Ali_File.Path.Base_Filename, Main.View);
+
+               if not Tree_Db.Add_Action (Bind (Idx)) then
+                  return False;
+               end if;
+
+               Tree_Db.Add_Input (Bind (Idx).UID, A_Comp.Ali_File, True);
+               Tree_Db.Add_Input (Link (Idx).UID, A_Comp.Object_File, True);
+               Tree_Db.Add_Input
+                 (Link (Idx).UID, Bind (Idx).Post_Bind.Object_File, True);
+
+            else
+               Comp.Initialize (Source);
+
+               if not Tree_Db.Add_Action (Comp) then
+                  return False;
+               end if;
+
+               Tree_Db.Add_Input (Link (Idx).UID, Comp.Object_File, True);
+
+               --  In case the main is non-ada and we have Ada sources in
+               --  the view, we need to add a binding phase and an explicit
+               --  dependency from the link phase to the ada objects.
+
+               if View.Language_Ids.Contains (Ada_Language) then
+                  --  Make sure we have a binding phase for the ada sources
+                  --  that generates a binder file with external main.
+
+                  Bind (Idx).Initialize
+                    (Source.Path_Name.Base_Filename,
+                     View,
+                     "-n");
+
+                  if not Tree_Db.Add_Action (Bind (Idx)) then
+                     return False;
+                  end if;
+
+                  Tree_Db.Add_Input
+                    (Link (Idx).UID, Bind (Idx).Post_Bind.Object_File, True);
+
+                  for U of View.Own_Units loop
+                     A_Comp.Initialize (U);
+
+                     if not Tree_Db.Add_Action (A_Comp) then
+                        return False;
+                     end if;
+
+                     Tree_Db.Add_Input (Bind (Idx).UID, A_Comp.Ali_File, True);
+                     Tree_Db.Add_Input
+                       (Link (Idx).UID, A_Comp.Object_File, True);
+                  end loop;
+               end if;
+            end if;
+
+            Idx := Idx + 1;
+         end loop;
+
+         --  Now add to each link/bind action dependencies to the libraries
+
+         for V of View.Closure loop
+            if V.Is_Library then
+               --  Add the libraries present in the closure as
+               --  dependencies.
+
+               declare
+                  Lib_Id  : constant Actions.Link.Link_Id :=
+                              Actions.Link.Create
+                                (V,
+                                 V.Library_Filename.Simple_Name,
+                                 True);
+                  Lib_A   : constant Actions.Link.Object'Class :=
+                              Actions.Link.Object'Class
+                                (Tree_Db.Action (Lib_Id));
+               begin
+                  for J in Link'Range loop
+                     Tree_Db.Add_Input
+                       (Link (J).UID, Lib_A.Output, True);
+
+                     if Bind (J).Is_Defined then
+                        Tree_Db.Add_Input
+                          (Bind (J).UID, Lib_A.Output, False);
+                     end if;
+                  end loop;
+               end;
+            end if;
+         end loop;
+
+         --  Now we need to add the objects from all regular views, filtering
+         --  out libraries (and their imports)
+
+         Closure.Clear;
+         Seen.Clear;
+         Todo.Insert (View);
+         Todo.Union (View.Imports);
+         Todo.Union (View.Limited_Imports);
+
+         while not Todo.Is_Empty loop
+            declare
+               V : constant GPR2.Project.View.Object :=
+                     Todo.First_Element;
+            begin
+               Todo.Delete_First;
+
+               if not Seen.Contains (V) then
+                  Seen.Insert (V);
+
+                  if not V.Is_Library then
+                     Closure.Include (V);
+
+                     Todo.Union (V.Imports.Difference (Seen));
+                     Todo.Union (V.Limited_Imports.Difference (Seen));
+                  end if;
+               end if;
+            end;
+         end loop;
+
+         --  Check non-Ada sources: we create an intermedidate library for
+         --  those sources so that the final link only picks up the actually
+         --  used objects. A direct link with an explicit list of objects
+         --  would actually use all those objects.
+
+         for V of Closure loop
+            --  Add the non-Ada objects as dependencies
+            for Src of V.Sources loop
+               Skip := False;
+
+               if Src.Has_Units
+                 or else not Src.Is_Compilable
+                 or else Src.Kind /= S_Body
+               then
+                  Skip := True;
+               end if;
+
+               for Main of Actual_Mains loop
+                  if Src.Path_Name = Main.Source then
+                     --  Don't include mains in the closure of another main
+                     Skip := True;
                   end if;
                end loop;
 
-               if not Is_Main then
+               if not Skip then
+                  if not Archive.Is_Defined then
+                     --  Need to create an intermediate library so that
+                     --  foreign objects can be ignored by the linker
+                     --  if no symbol is used from them. Else the linker
+                     --  uses all objects that are on the command line.
+
+                     Archive.Initialize_Global_Archive (View);
+
+                     if not Tree_Db.Add_Action (Archive) then
+                        return False;
+                     end if;
+
+                     for J in Link'Range loop
+                        --  Add the archive only when the main is in Ada
+
+                        Tree_Db.Add_Input (Link (J).UID, Archive.Output, True);
+                     end loop;
+                  end if;
+
                   Comp.Initialize (Src);
 
                   if not Tree_Db.Add_Action (Comp) then
                      return False;
                   end if;
 
-                  Tree_Db.Add_Input (Link.UID, Comp.Object_File, True);
+                  Tree_Db.Add_Input (Archive.UID, Comp.Object_File, True);
                end if;
-            end if;
-         end loop;
-
-         --  In case the main is non-ada and we have Ada sources in the
-         --  view, we need to add a binding phase and an explicit dependency
-         --  from the link phase to the ada objects.
-
-         if Source.Language /= Ada_Language
-           and then View.Language_Ids.Contains (Ada_Language)
-         then
-            --  Make sure we have a binding phase for the ada sources
-            --  that generates a binder file with external main.
-
-            Bind.Initialize
-              ((Kind  => Actions.Ada_Bind.No_Ada_Main_Program,
-                Src   => Source),
-               View);
-
-            if not Tree_Db.Add_Action (Bind) then
-               return False;
-            end if;
-
-            Tree_Db.Add_Input (Link.UID, Bind.Post_Bind.Object_File, True);
-
-            for U of View.Own_Units loop
-               A_Comp.Initialize (U);
-
-               if not Tree_Db.Add_Action (A_Comp) then
-                  return False;
-               end if;
-
-               Tree_Db.Add_Input (Bind.UID, A_Comp.Ali_File, True);
-               Tree_Db.Add_Input (Link.UID, A_Comp.Object_File, True);
             end loop;
-         end if;
-
-         for V of View.Closure loop
-            if V.Is_Library then
-               --  Add the libraries present in the closure as dependencies
-               declare
-                  Lib_Id : constant Actions.Link.Link_Id :=
-                             Actions.Link.Create
-                               (V, V.Library_Filename.Simple_Name, True);
-                  Lib_A   : constant Actions.Link.Object'Class :=
-                              Actions.Link.Object'Class
-                                (Tree_Db.Action (Lib_Id));
-               begin
-                  Tree_Db.Add_Input (Link.UID, Lib_A.Output, True);
-
-                  if Source.Language = Ada_Language then
-                     Tree_Db.Add_Input (Bind.UID, Lib_A.Output, False);
-                  end if;
-               end;
-
-            else
-               --  Add the non-Ada objects as dependencies
-               for Src of V.Sources loop
-                  if not Src.Has_Units
-                    and then Src.Is_Compilable
-                    and then Src.Kind = S_Body
-                  then
-                     Comp.Initialize (Src);
-
-                     if not Tree_Db.Add_Action (Comp) then
-                        return False;
-                     end if;
-
-                     Tree_Db.Add_Input (Link.UID, Comp.Object_File, True);
-                  end if;
-               end loop;
-            end if;
          end loop;
-      end loop;
+      end;
 
       return True;
    end Populate_Mains;

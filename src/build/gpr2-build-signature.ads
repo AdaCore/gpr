@@ -4,18 +4,19 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Containers;
+with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Strings.Unbounded;
 
 with GPR2.Build.Artifacts;
 with GPR2.Path_Name;
 with GPR2.Utils.Hash;
 
-private with Ada.Containers.Indefinite_Ordered_Maps;
-
 package GPR2.Build.Signature is
    use Ada.Containers;
    use Utils.Hash;
+
+   package Artifact_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (Artifacts.Object'Class, Hash_Digest, Artifacts."<");
 
    package UB renames Ada.Strings.Unbounded;
 
@@ -31,6 +32,11 @@ package GPR2.Build.Signature is
       Art  : Artifacts.Object'Class);
    --  Add or update an artifact in the signature
 
+   function Has_Artifact
+     (Self : in out Object;
+      Art  : Artifacts.Object'Class) return Boolean;
+   --  Check that the artifact is part of the closure of the signature
+
    procedure Add_Output
      (Self   : in out Object;
       Stdout : UB.Unbounded_String;
@@ -45,13 +51,12 @@ package GPR2.Build.Signature is
    procedure Store (Self : in out Object; Db_File : Path_Name.Object);
    --  Store the signature into the build DB file Db_File
 
+   function Artifacts (Self : Object) return Artifact_Maps.Map with Inline;
+
    function Stdout (Self : Object) return UB.Unbounded_String;
    function Stderr (Self : Object) return UB.Unbounded_String;
 
 private
-
-   package Artifact_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Artifacts.Object'Class, Hash_Digest, Artifacts."<");
 
    TEXT_SIGNATURE : constant String := "signature";
    TEXT_URI       : constant String := "uri";
@@ -65,7 +70,12 @@ private
       Stderr    : Unbounded_String;
    end record;
 
-   function Artifacts_Signatures (Self : Object) return Artifact_Maps.Map is
+   function Has_Artifact
+     (Self : in out Object;
+      Art  : Build.Artifacts.Object'Class) return Boolean is
+      (Self.Artifacts.Contains (Art));
+
+   function Artifacts (Self : Object) return Artifact_Maps.Map is
      (Self.Artifacts);
 
    function Stdout (Self : Object) return Unbounded_String is

@@ -4,25 +4,36 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GNAT.Directory_Operations;
-with GPR2.Build.Actions.Post_Bind;
-with GPR2.Build.Artifacts.Library;
-with GPR2.Build.Tree_Db;
-with GPR2.External_Options;
-with GPR2.Project.Attribute;
-with GPR2.Project.Tree;
 
 with Ada.Strings.Fixed;
 with Ada.Strings;
 with Ada.Text_IO;
 
+with GNAT.Directory_Operations;
 with GNAT.OS_Lib;
+
 with GNATCOLL.Utils; use GNATCOLL.Utils;
 with GNATCOLL.OS.FS;
+
+with GPR2.Build.Actions.Post_Bind;
+with GPR2.Build.Artifacts.Library;
+pragma Warnings (Off);
+with GPR2.Build.Source.Sets;
+pragma Warnings (On);
+with GPR2.Build.Tree_Db;
+with GPR2.External_Options;
+with GPR2.Project.Attribute;
+with GPR2.Project.Attribute_Index;
+with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Tree;
 
 package body GPR2.Build.Actions.Ada_Bind is
 
    use GNAT;
+
+   package PRA renames GPR2.Project.Registry.Attribute;
+   package PAI renames GPR2.Project.Attribute_Index;
+
 
    procedure Initialize_Linker_Options (Self : in out Object);
    --  Adjust the linker options in case of shared or static cases
@@ -61,9 +72,6 @@ package body GPR2.Build.Actions.Ada_Bind is
       Lang_Ada_Idx : constant PAI.Object := PAI.Create (GPR2.Ada_Language);
       Status       : Boolean;
       CL_Size      : Integer := 0;
-
-      CL_Maximum_Size : Integer;
-      pragma Import (C, CL_Maximum_Size, "__gnat_link_max");
 
       -------------
       -- Add_Arg --
@@ -278,17 +286,48 @@ package body GPR2.Build.Actions.Ada_Bind is
       procedure Add_Mapping_File
       is
          use GNATCOLL.OS.FS;
-         Slot_Img_Raw : constant Filename_Type := Filename_Type (Slot'Image);
-         Slot_Img     : constant Filename_Type :=
-                          Slot_Img_Raw
-                            (Slot_Img_Raw'First + 1 .. Slot_Img_Raw'Last);
          Map_File     : constant Tree_Db.Temp_File :=
                           Self.Get_Or_Create_Temp_File
-                            ("ada_mapping_" & Slot_Img, Global);
+                            ("bind_mapping", Global);
+         S_Suffix     : constant String :=
+                          Self.View.Attribute
+                            (PRA.Compiler.Mapping_Spec_Suffix,
+                             PAI.Create (Ada_Language)).Value.Text;
+         B_Suffix     : constant String :=
+                          Self.View.Attribute
+                            (PRA.Compiler.Mapping_Body_Suffix,
+                             PAI.Create (Ada_Language)).Value.Text;
+         use Standard.Ada.Characters.Handling;
+
       begin
-         if Map_File.FD = Null_FD and then Map_File.Path_Len > 0 then
-            Add_Arg ("-F=" & String (Map_File.Path));
+         if Map_File.FD /= Invalid_FD and then Map_File.FD /= Null_FD then
+            for Src of Self.View.Visible_Sources loop
+               if not Src.Owning_View.Is_Runtime
+                 and then Src.Language = Ada_Language
+               then
+                  for U of Src.Units loop
+                     if U.Kind /= S_No_Body then
+                        declare
+                           Key : constant String :=
+                                   To_Lower (String (U.Full_Name)) &
+                                   (if U.Kind = S_Spec
+                                    then S_Suffix else B_Suffix);
+                        begin
+                           Write
+                             (Map_File.FD,
+                              Key & ASCII.LF &
+                                String (Src.Path_Name.Simple_Name) & ASCII.LF &
+                                Src.Path_Name.String_Value & ASCII.LF);
+                        end;
+                     end if;
+                  end loop;
+               end if;
+            end loop;
+
+            GNATCOLL.OS.FS.Close (Map_File.FD);
          end if;
+
+         Add_Arg ("-F=" & String (Map_File.Path));
       end Add_Mapping_File;
 
       --------------------------
@@ -485,7 +524,7 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       Add_Mapping_File;
 
-      if CL_Size > CL_Maximum_Size then
+      if CL_Size > Command_Line_Limit then
          Create_Response_File;
       end if;
    end Compute_Command;
@@ -527,29 +566,23 @@ package body GPR2.Build.Actions.Ada_Bind is
    ----------------
 
    procedure Initialize
-     (Self    : in out Object;
-      Info    : Output_Basename_Info;
-      Context : GPR2.Project.View.Object)
-   is
-      BN : constant Simple_Name :=
-             (if Info.Kind = Ada_Main_Program
-              then Info.Main_Ali.Path.Base_Filename
-              else Info.Src.Path_Name.Base_Filename);
+     (Self      : in out Object;
+      Basename  : Simple_Name;
+      Context   : GPR2.Project.View.Object;
+      Extra_Opt : String := "") is
    begin
       Self.Ctxt := Context;
-      Self.Basename := +BN;
+      Self.Basename := +Basename;
       Self.Output_Spec :=
         Artifacts.Files.Create
-          (Context.Object_Directory.Compose ("b__" & BN & ".ads"));
+          (Context.Object_Directory.Compose ("b__" & Basename & ".ads"));
       Self.Output_Body :=
         Artifacts.Files.Create
-          (Context.Object_Directory.Compose ("b__" & BN & ".adb"));
+          (Context.Object_Directory.Compose ("b__" & Basename & ".adb"));
       Self.Traces := Create ("ACTION_ADA_BIND");
 
-      if Info.Kind = No_Ada_Main_Program then
-         Self.Extra_Opts.Append ("-n");
-      elsif Info.Kind = No_Main_Subprogram then
-         Self.Extra_Opts.Append ("-z");
+      if Extra_Opt'Length > 0 then
+         Self.Extra_Opts.Append (Extra_Opt);
       end if;
 
       Initialize_Linker_Options (Self);

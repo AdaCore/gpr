@@ -21,7 +21,7 @@ package body GPR2.Build.Signature is
 
    procedure Add_Artifact
      (Self : in out Object;
-      Art  : Artifacts.Object'Class) is
+      Art  : Build.Artifacts.Object'Class) is
    begin
       Self.Artifacts.Include (Art, Art.Checksum);
    end Add_Artifact;
@@ -142,7 +142,7 @@ package body GPR2.Build.Signature is
                            end if;
 
                            Signature.Artifacts.Include
-                             (Artifacts.From_Uri
+                             (Build.Artifacts.From_Uri
                                 (Data.Token
                                    (URI.First + 1,
                                     URI.Last - 1)),
@@ -202,13 +202,13 @@ package body GPR2.Build.Signature is
       procedure Create_Artifact_Element (Position : Artifact_Maps.Cursor);
 
       procedure Create_Artifact_Element (Position : Artifact_Maps.Cursor) is
-         Art : constant Artifacts.Object'Class :=
+         Art : constant Build.Artifacts.Object'Class :=
                  Artifact_Maps.Key (Position);
          Val : constant JSON.JSON_Value := JSON.Create_Object;
       begin
          JSON.Set_Field (Val => Val,
                     Field_Name => TEXT_URI,
-                    Field      => Artifacts.To_Uri (Art));
+                    Field      => Build.Artifacts.To_Uri (Art));
          JSON.Set_Field (Val => Val,
                     Field_Name => TEXT_CHECKSUM,
                     Field      => String (Art.Checksum));

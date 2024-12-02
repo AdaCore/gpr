@@ -4,13 +4,15 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
+with GNATCOLL.Directed_Graph;
 with GNATCOLL.OS.FS; use GNATCOLL.OS.FS;
 with GNATCOLL.OS.Process;
 
 with GPR2.Build.Actions;
-with GPR2.Build.Tree_Db;
+limited with GPR2.Build.Tree_Db;
 
 private with GNATCOLL.Traces;
 
@@ -47,6 +49,24 @@ package GPR2.Build.Process_Manager is
       end case;
    end record;
 
+   package Action_Node_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (GPR2.Build.Actions.Action_Id'Class,
+      GNATCOLL.Directed_Graph.Node_Id,
+      GPR2.Build.Actions."<",
+      GNATCOLL.Directed_Graph."=");
+
+   package Node_Action_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (GNATCOLL.Directed_Graph.Node_Id,
+      GPR2.Build.Actions.Action_Id'Class,
+      GNATCOLL.Directed_Graph."<",
+      GPR2.Build.Actions."=");
+
+   type Process_Execution_Context is record
+      Graph   : GNATCOLL.Directed_Graph.Directed_Graph;
+      Actions : Node_Action_Maps.Map;
+      Nodes   : Action_Node_Maps.Map;
+   end record;
+
    function Collect_Job
      (Self           : in out Object;
       Job            : in out Actions.Object'Class;
@@ -61,10 +81,20 @@ package GPR2.Build.Process_Manager is
       Proc_Handler   :    out Process_Handler;
       Capture_Stdout :    out File_Descriptor;
       Capture_Stderr :    out File_Descriptor);
+   --  Execute the Action "Job", possibly using a response file if the
+   --    command line exceeds the maximum size authorized on the host.
+   --  Response_File indicates the kind of response file the tool allows.
+   --  Slot_Id identifies an Id that is unique during execution (cannot be
+   --    re-used until the action is finished).
+   --  Proc_Handler indicates the status of the operation, in particular if
+   --    the job was skipped, is launched, or if an error occurred.
+   --  Capture_Stdout/err are file descriptors used to capture the spawned
+   --    process standard output and error.
 
    procedure Execute
      (Self            : in out Object;
       Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
+      Context         : access Process_Execution_Context;
       Jobs            : Natural := 0;
       Stop_On_Fail    : Boolean := True;
       Keep_Temp_Files : Boolean := False);
@@ -96,7 +126,7 @@ private
 
    type Object is tagged limited record
       Stats        : Process_Manager_Stats := Empty_Stats;
-      Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
+      Tree_Db      : access GPR2.Build.Tree_Db.Object;
       Traces       : GNATCOLL.Traces.Trace_Handle :=
                        GNATCOLL.Traces.Create ("PROCESS_MANAGER");
       Stop_On_Fail : Boolean := True;

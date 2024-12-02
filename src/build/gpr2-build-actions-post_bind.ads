@@ -62,6 +62,7 @@ private
    type Object is new Actions.Object with record
       Input  : Artifacts.Files.Object;
       Output : Artifacts.Files.Object;
+      Ali    : Artifacts.Files.Object;
       Binder : Ada_Bind.Object;
       --  ??? Ideally we store Ada_Bind_Id here, but it's unconstrained so
       --  we store the object (so that post-bind object is unconstrained) but

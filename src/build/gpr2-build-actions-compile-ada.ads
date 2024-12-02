@@ -6,8 +6,8 @@
 
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit;
+with GPR2.Containers;
 with GPR2.Path_Name;
-with GPR2.Path_Name.Set;
 
 package GPR2.Build.Actions.Compile.Ada is
 
@@ -25,6 +25,7 @@ package GPR2.Build.Actions.Compile.Ada is
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
 
    function Is_Defined (Self : Object) return Boolean;
+   function In_Build_Tree (Self : Object) return Boolean;
 
    procedure Initialize
      (Self : in out Object; Src : GPR2.Build.Compilation_Unit.Object);
@@ -40,7 +41,9 @@ package GPR2.Build.Actions.Compile.Ada is
    --  Return the path of the generated ALI file
 
    function Dependencies
-     (Self : in out Object) return GPR2.Path_Name.Set.Object;
+     (Self     : in out Object;
+      With_RTS : Boolean := True) return GPR2.Containers.Filename_Set
+     with Pre => Self.In_Build_Tree;
    --  Return the list of known dependencies for this unit. The action ALI file
    --  must be up-to-date before calling this function, as the list of
    --  dependencies comes from it.
@@ -118,5 +121,8 @@ private
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
+
+   function In_Build_Tree (Self : Object) return Boolean is
+     (Self.Is_Defined and then Self.Tree /= null);
 
 end GPR2.Build.Actions.Compile.Ada;

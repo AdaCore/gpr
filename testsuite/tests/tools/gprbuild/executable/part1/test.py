@@ -20,8 +20,8 @@ def test(header):
     if proc.status:
         print("Test return value: " + str(proc.status))
     else:
-        print("== Content of " + os.path.join("tree", "obj", "jobs.json") + ":")
-        json_file = open(os.path.join("tree", "obj", "jobs.json"))
+        print("== Content of jobs.json:")
+        json_file = open(os.path.join("tree", "jobs.json"))
         jobs = json.load(json_file)
         error = False
 
@@ -44,7 +44,7 @@ def test(header):
             print("Error detected in jobs.json")
         else:
             print("== Executable output:")
-            Run([os.path.join("tree", "obj", "main")])
+            print(Run([os.path.join("tree", "obj", "main")]).out.strip())
 
     print("")
     test_number += 1

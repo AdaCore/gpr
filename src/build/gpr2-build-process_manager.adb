@@ -16,6 +16,8 @@ with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
 with GNATCOLL.Directed_Graph; use GNATCOLL.Directed_Graph;
 
 with GPR2.Build.Actions; use GPR2.Build.Actions;
+with GPR2.Build.Actions.Link;
+with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
 with GPR2.Reporter;
 with GPR2.Source_Reference;
@@ -91,28 +93,46 @@ package body GPR2.Build.Process_Manager is
            (-Stderr, To_Stderr => True, Level => GPR2.Message.Important);
       end if;
 
-      if Proc_Handler.Status = Failed_To_Launch
-        and then Self.Stop_On_Fail
-      then
-         return Abort_Execution;
-      end if;
+      case Proc_Handler.Status is
+         when Failed_To_Launch =>
+            if Self.Stop_On_Fail then
+               return Abort_Execution;
+            end if;
 
-      if Proc_Handler.Status = Finished then
-         if Self.Traces.Is_Active then
-            Self.Traces.Trace
-              ("Job '" & Job.UID.Image & "' returned. Status:" &
-                 Proc_Handler.Process_Status'Img);
-         end if;
+         when Finished =>
+            if Self.Traces.Is_Active then
+               Self.Traces.Trace
+                 ("Job '" & Job.UID.Image & "' returned. Status:" &
+                    Proc_Handler.Process_Status'Img);
+            end if;
 
-         if Proc_Handler.Process_Status /= PROCESS_STATUS_OK then
-            Self.Tree_Db.Reporter.Report
-              (Message.Create
-                 (Message.Warning,
-                  Job.UID.Image & " failed with status" &
-                    Proc_Handler.Process_Status'Image,
-                  Source_Reference.Create (Job.View.Path_Name.Value, 0, 0)));
-         end if;
-      end if;
+            if Proc_Handler.Process_Status /= PROCESS_STATUS_OK then
+               Self.Tree_Db.Reporter.Report
+                 (Message.Create
+                    (Message.Warning,
+                     Job.UID.Image & " failed with status" &
+                       Proc_Handler.Process_Status'Image,
+                     Source_Reference.Create
+                       (Job.View.Path_Name.Value, 0, 0)));
+            end if;
+
+         when Skipped =>
+            if Job in Actions.Link.Object'Class then
+               declare
+                  Link : constant Actions.Link.Object'Class :=
+                           Actions.Link.Object'Class (Job);
+               begin
+                  if not Link.Is_Library then
+                     Self.Tree_Db.Reporter.Report
+                       ('"' & String (Link.Output.Path.Simple_Name) &
+                          """ up to date");
+                  end if;
+               end;
+            end if;
+
+         when Running =>
+            null;
+      end case;
 
       if (Proc_Handler.Status = Finished
           and then Proc_Handler.Process_Status = PROCESS_STATUS_OK)
@@ -171,6 +191,7 @@ package body GPR2.Build.Process_Manager is
    procedure Execute
      (Self            : in out Object;
       Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
+      Context         : access Process_Execution_Context;
       Jobs            : Natural := 0;
       Stop_On_Fail    : Boolean := True;
       Keep_Temp_Files : Boolean := False)
@@ -242,21 +263,19 @@ package body GPR2.Build.Process_Manager is
       --  basis if needed.
 
       Stdout, Stderr   : Unbounded_String;
-      Graph            : constant access GDG.Directed_Graph :=
-                           Tree_Db.Actions_Graph_Access;
 
    begin
       Self.Tree_Db      := Tree_Db;
       Self.Stop_On_Fail := Stop_On_Fail;
       Self.Stats        := Empty_Stats;
 
-      Graph.Start_Iterator (Enable_Visiting_State => True);
+      Context.Graph.Start_Iterator (Enable_Visiting_State => True);
 
       loop
          --  Launch as many process as possible
          while Active_Jobs < Max_Jobs and then not End_Of_Iteration loop
             begin
-               End_Of_Iteration := not Graph.Next (Node);
+               End_Of_Iteration := not Context.Graph.Next (Node);
             exception
                when E : GNATCOLL.Directed_Graph.DG_Error =>
                   Tree_Db.Reporter.Report
@@ -273,7 +292,7 @@ package body GPR2.Build.Process_Manager is
             declare
                Act : constant Build.Tree_Db.Action_Reference_Type :=
                        Tree_Db.Action_Id_To_Reference
-                         (Tree_Db.Action_Id (Node));
+                         (Context.Actions (Node));
             begin
                for J in Serialized_Slot'Range loop
                   if not Serialized_Slot (J) then
@@ -300,7 +319,7 @@ package body GPR2.Build.Process_Manager is
                   end if;
 
                else
-                  Graph.Complete_Visit (Node);
+                  Context.Graph.Complete_Visit (Node);
 
                   if Proc_Handler.Status = Finished then
                      Self.Traces.Trace
@@ -355,7 +374,7 @@ package body GPR2.Build.Process_Manager is
            (Active_Procs (1 .. Active_Jobs), Timeout => 3600.0);
 
          if Proc_Id > 0 then
-            Graph.Complete_Visit (States (Proc_Id).Node);
+            Context.Graph.Complete_Visit (States (Proc_Id).Node);
 
             --  A process has finished. Call wait to finalize it and get
             --  the final process status.
@@ -373,7 +392,7 @@ package body GPR2.Build.Process_Manager is
 
             declare
                UID : constant Actions.Action_Id'Class :=
-                       Tree_Db.Action_Id (States (Proc_Id).Node);
+                       Context.Actions (States (Proc_Id).Node);
                Act : Actions.Object'Class := Self.Tree_Db.Action (UID);
             begin
                --  Call collect
@@ -547,7 +566,7 @@ package body GPR2.Build.Process_Manager is
          return;
       end if;
 
-      if Job.Skip then
+      if Job.Skip or else Job.Is_Deactivated then
          if Self.Traces.Is_Active then
             Self.Traces.Trace
               ("job asked to be skipped: " & Job.UID.Image);

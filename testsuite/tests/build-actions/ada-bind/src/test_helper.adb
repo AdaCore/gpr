@@ -81,8 +81,7 @@ package body Test_Helper is
                             (Main.Source.Base_Filename & ".ali"));
             begin
                Action.Initialize
-                 ((Kind     => GBA.Ada_Bind.Ada_Main_Program,
-                   Main_Ali => Ali),
+                 (Basename  => Ali.Path.Base_Filename,
                   Context   => Root);
                Assert
                  (not Tree.Artifacts_Database.Has_Action (Action.UID),

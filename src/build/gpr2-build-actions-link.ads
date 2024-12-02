@@ -43,6 +43,11 @@ package GPR2.Build.Actions.Link is
       Context : GPR2.Project.View.Object);
    --  Initialize a link action to link a library
 
+   procedure Initialize_Global_Archive
+     (Self    : in out Object;
+      Context : GPR2.Project.View.Object);
+   --  Initialize global archive of foreign objects
+
    overriding function View (Self : Object) return GPR2.Project.View.Object;
 
    procedure Add_Option (Self : in out Object; Option : String);
@@ -111,20 +116,22 @@ private
      (Output'Length, Is_Library, View, Output);
 
    type Object is new Actions.Object with record
-      Is_Library      : Boolean := False;
+      Is_Library     : Boolean := False;
+      Is_Static      : Boolean := True;
+      In_Obj         : Boolean := False;
 
-      Executable      : Artifacts.Files.Object;
-      Main_Src        : Artifacts.File_Part.Object;
+      Executable     : Artifacts.Files.Object;
+      Main_Src       : Artifacts.File_Part.Object;
       --  Executable produced by the linker
 
-      Library         : Artifacts.Library.Object;
+      Library        : Artifacts.Library.Object;
       --  Library produced by the linker
 
-      Ctxt            : GPR2.Project.View.Object;
+      Ctxt           : GPR2.Project.View.Object;
       --  The view defining the Main, or the library
 
-      Static_Options  : Containers.Value_List :=
-                          Containers.Empty_Value_List;
+      Static_Options : Containers.Value_List :=
+                         Containers.Empty_Value_List;
       --  Command line options added manually with the Add_Option procedure
    end record;
 
@@ -143,8 +150,7 @@ private
      (Self.Is_Library);
 
    function Is_Static_Library (Self : Object) return Boolean is
-     (Self.Is_Library
-      and then Self.View.Library_Kind in "static" | "static-pic");
+     (Self.Is_Library and then Self.Is_Static);
 
    function Output (Self : Object) return Artifacts.Files.Object'Class is
      (if Self.Is_Library then Self.Library else Self.Executable);
@@ -172,7 +178,10 @@ private
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object is
-     (if Self.Ctxt.Is_Library then Self.Ctxt.Library_Directory
+     (if Self.In_Obj
+      then Self.Ctxt.Object_Directory
+      elsif Self.Ctxt.Is_Library
+      then Self.Ctxt.Library_Directory
       else Self.Ctxt.Executable_Directory);
 
 end GPR2.Build.Actions.Link;

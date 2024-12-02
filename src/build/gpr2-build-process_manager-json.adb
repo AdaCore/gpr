@@ -15,8 +15,7 @@ package body GPR2.Build.Process_Manager.JSON is
    -- Collect_Job --
    -----------------
 
-   overriding
-   function Collect_Job
+   overriding function Collect_Job
       (Self           : in out Object;
        Job            : in out Actions.Object'Class;
        Proc_Handler   : Process_Handler;
@@ -95,47 +94,11 @@ package body GPR2.Build.Process_Manager.JSON is
         (Job, Proc_Handler, Stdout, Stderr);
    end Collect_Job;
 
-   -------------
-   -- Execute --
-   -------------
+     ----------------------------
+     -- Execution_Post_Process --
+     ----------------------------
 
-   overriding
-   procedure Execute
-     (Self            : in out Object;
-      Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
-      Jobs            : Natural := 0;
-      Stop_On_Fail    : Boolean := True;
-      Keep_Temp_Files : Boolean := False)
-   is
-      JSON_File : constant GPR2.Path_Name.Object :=
-                    GPR2.Path_Name.Create_File ("jobs.json");
-   begin
-      Self.JSON_File := JSON_File;
-      GPR2.Build.Process_Manager.Object (Self).Execute
-        (Tree_Db, Jobs, Stop_On_Fail, Keep_Temp_Files);
-   end Execute;
-
-   procedure Execute
-     (Self            : in out Object;
-      Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
-      Jobs            : Natural := 0;
-      JSON_File       : GPR2.Path_Name.Object;
-      Stop_On_Fail    : Boolean := True;
-      Keep_Temp_Files : Boolean := False)
-   is
-   begin
-      if not JSON_File.Is_Defined then
-         raise Program_Error with
-           "Provided JSON file for the process manager is invalid";
-      end if;
-
-      Self.JSON_File := JSON_File;
-      GPR2.Build.Process_Manager.Object (Self).Execute
-        (Tree_Db, Jobs, Stop_On_Fail, Keep_Temp_Files);
-   end Execute;
-
-   overriding
-   procedure Execution_Post_Process (Self : in out Object) is
+   overriding procedure Execution_Post_Process (Self : in out Object) is
       File : File_Type;
    begin
       if not Self.JSON_File.Is_Defined then
@@ -146,5 +109,16 @@ package body GPR2.Build.Process_Manager.JSON is
       Put_Line (File, Write (Create (Self.JSON)) & ASCII.CR & ASCII.LF);
       Close (File);
    end Execution_Post_Process;
+
+   -------------------
+   -- Set_JSON_File --
+   -------------------
+
+   procedure Set_JSON_File
+     (Self : in out Object;
+      Path : GPR2.Path_Name.Object) is
+   begin
+      Self.JSON_File := Path;
+   end Set_JSON_File;
 
 end GPR2.Build.Process_Manager.JSON;
