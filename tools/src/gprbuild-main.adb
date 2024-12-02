@@ -360,11 +360,7 @@ begin
    end if;
 
    if Opt.Json_Summary then
-      if Tree.Root_Project.Kind in With_Object_Dir_Kind then
-         Jobs_JSON := Tree.Root_Project.Object_Directory.Compose ("jobs.json");
-      else
-         Jobs_JSON := Tree.Root_Project.Dir_Name.Compose ("jobs.json");
-      end if;
+      Jobs_JSON := Tree.Root_Project.Dir_Name.Compose ("jobs.json");
 
       Process_M_JSON.Set_JSON_File (Jobs_JSON);
 

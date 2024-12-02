@@ -28,6 +28,8 @@ package GPR2.Build.Actions.Compile is
 
    overriding function View (Self : Object) return GPR2.Project.View.Object;
 
+   function Language (Self : Object) return Language_Id;
+
    function Input (Self : Object) return GPR2.Build.Source.Object;
 
    function Object_File (Self : Object) return Artifacts.Files.Object;
@@ -113,6 +115,9 @@ private
 
    overriding function View (Self : Object) return GPR2.Project.View.Object is
      (Self.Ctxt);
+
+   function Language (Self : Object) return Language_Id is
+     (Self.Lang);
 
    function Input (Self : Object) return GPR2.Build.Source.Object is
      (Self.Ctxt.Source (Self.Src_Name.Simple_Name));

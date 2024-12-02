@@ -110,6 +110,15 @@ package body GPR2.Build.Actions is
       return Simple_Name (To_String (Res));
    end Db_Filename;
 
+   ----------------
+   -- Deactivate --
+   ----------------
+
+   procedure Deactivate (Self : in out Object) is
+   begin
+      Self.Deactivated := True;
+   end Deactivate;
+
    -----------------------------
    -- Get_Or_Create_Temp_File --
    -----------------------------

@@ -92,10 +92,14 @@ package GPR2.Build.Actions is
    function On_Tree_Propagation
      (Self : in out Object) return Boolean;
 
-   function Skip (Self : Object) return Boolean is
-     (False);
+   procedure Deactivate (Self : in out Object);
+   --  Deactivates the action, can be useful to mark the action as skipped.
+
+   function Skip (Self : Object) return Boolean;
    --  Indicates whether the action should be skipped. By default this returns
    --  False.
+
+   function Is_Deactivated (Self : Object) return Boolean;
 
    procedure Compute_Signature
      (Self   : in out Object;
@@ -176,6 +180,8 @@ private
       --  Used for debug info
       Tmp_Files  : GPR2.Containers.Filename_Set;
       --  List of tmp files to be cleaned up
+      Deactivated : Boolean := False;
+      --  Set when the action is deactivated
    end record;
 
    function "<" (L, R : Action_Id'Class) return Boolean is
@@ -201,6 +207,12 @@ private
    function Post_Command
      (Self   : in out Object; Status : Execution_Status) return Boolean is
      (True);
+
+   function Is_Deactivated (Self : Object) return Boolean
+   is (Self.Deactivated);
+
+   function Skip (Self : Object) return Boolean
+   is (False);
 
    function Signature (Self : Object'Class) return Build.Signature.Object is
      (Self.Signature);

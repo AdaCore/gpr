@@ -566,7 +566,7 @@ package body GPR2.Build.Process_Manager is
          return;
       end if;
 
-      if Job.Skip then
+      if Job.Skip or else Job.Is_Deactivated then
          if Self.Traces.Is_Active then
             Self.Traces.Trace
               ("job asked to be skipped: " & Job.UID.Image);

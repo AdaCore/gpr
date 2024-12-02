@@ -508,7 +508,7 @@ package body GPR2.Build.Actions.Compile is
          Arg  : String)
       is
       begin
-         if not Attr.Is_Defined then
+         if not Attr.Is_Defined or else Attr.Values.Is_Empty then
             return;
          end if;
 
