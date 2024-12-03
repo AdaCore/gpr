@@ -1,5 +1,3 @@
 description: Compile a project with mixed C and Ada and space in source dirs
 driver: python_script
 timeout: 800
-control:
-- [XFAIL, "'windows' in env.host.platform", "Carriage returns are not properly copied from test.out to test.expected"]
