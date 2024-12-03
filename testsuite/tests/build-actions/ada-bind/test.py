@@ -8,7 +8,7 @@ bnr = BuilderAndRunner()
 current_path = os.environ['PATH']
 
 bindir = os.path.join(os.getcwd(), 'tree/bin')
-os.environ['PATH'] = f"{bindir}:{current_path}"
+os.environ['PATH'] = os.pathsep.join([bindir, current_path])
 bnr.simple_run([GPRBUILD, "stub.gpr"])
 bnr.simple_run([GPRBUILD, "-XPREFIX=bla-", "stub.gpr"])
 

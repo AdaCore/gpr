@@ -18,14 +18,14 @@ def run(cmd):
     else:
         print(bnr.simple_run([cmd], catch_error=True).out)
 
-def check(root, pattern, switch):
+def check(root, pattern, switch, filter_out=None):
     with open (os.path.join(root, "jobs.json")) as fp:
         cnt = json.load (fp)
     cmds = dict((job['uid'], job['command']) for job in cnt)
 
     for uid in sorted(cmds.keys()):
         if pattern in uid:
-            opts = [arg for arg in cmds[uid].split(" ") if arg.startswith(switch)]
+            opts = [arg for arg in cmds[uid].split(" ") if arg.startswith(switch) and ((not filter_out) or (filter_out not in arg))]
             print(f"{uid}: {' '.join(opts)}")
 
 print("Step 1 - Check -cargs")
@@ -40,4 +40,4 @@ print("")
 
 print("Step 3 - Check -largs")
 run(["gpr2build", "-P", os.path.join("tree_3", "main.gpr"), "-p", "-q", "--json-summary", "-largs", "-Wl,--gc-sections"])
-check("tree_3", "Link", "-Wl,--")
+check("tree_3", "Link", "-Wl,--", "--stack=")

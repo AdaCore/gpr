@@ -3,49 +3,39 @@
   status: 0
   stderr: 1: executing from slot id 1
 1: return with code 0
-
 [Write File] 2 (main.gpr):
   status: 0
   stderr: 2: executing from slot id 1
 2: return with code 0
-
 [Write File] 3 (main.gpr):
   status: 0
   stderr: 3: executing from slot id 1
 3: return with code 0
-
 [Write File] 4 (main.gpr):
   status: 0
   stderr: 4: executing from slot id 1
 4: return with code 0
-
 [Write File] 5 (main.gpr):
   status: 0
   stderr: 5: executing from slot id 1
 5: return with code 0
-
 [Write File] 6 (main.gpr):
   status: 0
   stderr: 6: executing from slot id 2
 6: return with code 0
-
 [Write File] 7 (main.gpr):
   status: 0
   stderr: 7: executing from slot id 2
 7: return with code 0
-
 [Write File] 8 (main.gpr):
   status: 0
   stderr: 8: executing from slot id 2
 8: return with code 0
-
 [Write File] 9 (main.gpr):
   status: 0
   stderr: 9: executing from slot id 2
 9: return with code 0
-
 [Write File] 10 (main.gpr):
   status: 0
   stderr: 10: executing from slot id 2
 10: return with code 0
-

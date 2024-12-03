@@ -4,15 +4,13 @@ Case 1 - Build from scratch
 [Ada Compile]     dep_two.adb
 [Ada Compile]     main.adb
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 [Ada Compile]     pkg.adb
 [Ada Bind]        main
 [Ada Post-Bind]   b__main.adb
 [Link]            main
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '0', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -25,12 +23,10 @@ Hello from Dep_Two
 Case 2 - Missing main.o
 [Ada Compile]     main.adb
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -43,12 +39,10 @@ Hello from Dep_Two
 Case 3 - Modified main.o (comments only)
 [Ada Compile]     main.adb
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -61,12 +55,10 @@ Hello from Dep_Two
 Case 4 - Missing main.ali
 [Ada Compile]     main.adb
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -79,12 +71,10 @@ Hello from Dep_Two
 Case 5 - Modified main.ali (comments only)
 [Ada Compile]     main.adb
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -96,13 +86,11 @@ Hello from Dep_Two
 ================================================================
 Case 6 - Missing pkg.o
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 [Ada Compile]     pkg.adb
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -114,13 +102,11 @@ Hello from Dep_Two
 ================================================================
 Case 7 - Modified pkg.o (comments only)
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 [Ada Compile]     pkg.adb
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -132,13 +118,11 @@ Hello from Dep_Two
 ================================================================
 Case 8 - Missing pkg.ali
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 [Ada Compile]     pkg.adb
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -150,13 +134,11 @@ Hello from Dep_Two
 ================================================================
 Case 9 - Modified pkg.ali (comments only)
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 [Ada Compile]     pkg.adb
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -169,12 +151,10 @@ Hello from Dep_Two
 Case 10 - Missing dep_two.o
 [Ada Compile]     dep_two.adb
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '0', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -187,12 +167,10 @@ Hello from Dep_Two
 Case 11 - Modified dep_two.o (comments only)
 [Ada Compile]     dep_two.adb
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '0', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -205,12 +183,10 @@ Hello from Dep_Two
 Case 12 - Missing dep_two.ali
 [Ada Compile]     dep_two.adb
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '0', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -223,12 +199,10 @@ Hello from Dep_Two
 Case 13 - Modified dep_two.ali (comments only)
 [Ada Compile]     dep_two.adb
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '0', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -240,13 +214,11 @@ Hello from Dep_Two
 ================================================================
 Case 14 - Missing b__main.o
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 [Ada Post-Bind]   b__main.adb
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -258,13 +230,11 @@ Hello from Dep_Two
 ================================================================
 Case 15 - Modified b__main.o (comments only)
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 [Ada Post-Bind]   b__main.adb
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -276,13 +246,11 @@ Hello from Dep_Two
 ================================================================
 Case 16 - Missing b__main.ali
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 [Ada Post-Bind]   b__main.adb
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -294,13 +262,11 @@ Hello from Dep_Two
 ================================================================
 Case 17 - Modified b__main.ali (comments only)
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 [Ada Post-Bind]   b__main.adb
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -312,12 +278,10 @@ Hello from Dep_Two
 ================================================================
 Case 18 - Missing main
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 [Link]            main
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -329,12 +293,10 @@ Hello from Dep_Two
 ================================================================
 Case 19 - Modified main (comments only)
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-
 [Link]            main
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]
-'
+uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: 'main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]'
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
