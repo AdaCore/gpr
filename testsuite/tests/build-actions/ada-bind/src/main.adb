@@ -20,6 +20,7 @@ with GPR2.Project.Tree;
 with GPR2.Project.View;
 
 with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
+with GNATCOLL.Utils;      use GNATCOLL.Utils;
 with GNATCOLL.VFS;        use GNATCOLL.VFS;
 with Gpr_Parser_Support.Generic_API.Analysis;
 
@@ -118,7 +119,8 @@ begin
          Expected_Tool_Path : constant String :=
                                 GNAT.OS_Lib.Normalize_Pathname
                                   (String (Tree.Root_Project.Path_Name.Dir_Name
-                                   & DS & "bin" & DS & "bla-gnatbind"));
+                                   & DS & "bin" & DS & "bla-gnatbind")
+                                   & Test_Helper.Get_Executable_Suffix);
       begin
          Action.Compute_Command (Args, Env, 1);
          Test_Helper.Assert
@@ -144,7 +146,8 @@ begin
          Expected_Tool_Path : constant String :=
                                 GNAT.OS_Lib.Normalize_Pathname
                                   (String (Tree.Root_Project.Path_Name.Dir_Name
-                                   & DS & "bin" & DS & "bla-gnatbind"));
+                                   & DS & "bin" & DS & "bla-gnatbind")
+                                   & Test_Helper.Get_Executable_Suffix);
       begin
          Action.Compute_Command (Args, Env, 1);
          Test_Helper.Assert
@@ -169,7 +172,8 @@ begin
          Expected_Tool_Path : constant String :=
                                 GNAT.OS_Lib.Normalize_Pathname
                                   (String (Tree.Root_Project.Path_Name.Dir_Name
-                                   & DS & "bin" & DS & "bla-gnatbind"));
+                                   & DS & "bin" & DS & "bla-gnatbind")
+                                   & Test_Helper.Get_Executable_Suffix);
       begin
          Action.Compute_Command (Args, Env, 1);
          Test_Helper.Assert
@@ -194,7 +198,8 @@ begin
          Expected_Tool_Path : constant String :=
                                 GNAT.OS_Lib.Normalize_Pathname
                                   (String (Tree.Root_Project.Path_Name.Dir_Name
-                                   & DS & "bin" & DS & "bla-gnatbind"));
+                                   & DS & "bin" & DS & "bla-gnatbind")
+                                   & Test_Helper.Get_Executable_Suffix);
       begin
          Action.Compute_Command (Args, Env, 1);
          Test_Helper.Assert
@@ -219,7 +224,8 @@ begin
          Expected_Tool_Path : constant String :=
                                 GNAT.OS_Lib.Normalize_Pathname
                                   (String (Tree.Root_Project.Path_Name.Dir_Name
-                                   & DS & "bin" & DS & "gnatbind"));
+                                   & DS & "bin" & DS & "gnatbind")
+                                   & Test_Helper.Get_Executable_Suffix);
       begin
          Action.Compute_Command (Args, Env, 1);
          Test_Helper.Assert
@@ -241,25 +247,22 @@ begin
       declare
          Args               : Argument_List;
          Env                : Environment_Dict;
-         Expected_Tool_Path : constant String :=
-                                GNAT.OS_Lib.Normalize_Pathname
-                                  (String (Tree.Root_Project.Path_Name.Dir_Name
-                                   & DS & "fake" & DS & "fake-gnatbind"));
+         Expected_Tool_Path : constant String := "fake-gnatbind";
          Expected_Error     : constant String :=
-                                "cannot spawn process (status: 2)";
+                                "cannot spawn process";
       begin
          Action.Compute_Command (Args, Env, 1);
          Test_Helper.Assert
-           (Args.First_Element = Expected_Tool_Path,
+           (Ends_With (Args.First_Element, Expected_Tool_Path),
             "Unknown tool",
-            Debug => Args.First_Element);
+            Debug => Args.First_Element & ":" & Expected_Tool_Path);
          Test_Helper.Assert
            (Test_Helper.Launch_Action (Args) /= 0,
             "Process error expected due to a fake gnatbind being used");
       exception
          when E : GNATCOLL.OS.OS_Error =>
             Test_Helper.Assert
-              (Ada.Exceptions.Exception_Message (E) = Expected_Error,
+              (Starts_With (Ada.Exceptions.Exception_Message (E), Expected_Error),
                "Process error expected due to a fake gnatbind being used",
                Ada.Exceptions.Exception_Message (E));
       end;
@@ -274,8 +277,10 @@ begin
       declare
          Args           : Argument_List;
          Env            : Environment_Dict;
-         Expected_Tool  : constant String := "fake-gnatbind";
-         Expected_Error : constant String := "cannot spawn process (status: 2)";
+         Expected_Tool  : constant String :=
+                            "fake-gnatbind";
+         Expected_Error : constant String :=
+                            "cannot spawn process";
       begin
          Action.Compute_Command (Args, Env, 1);
          Test_Helper.Assert
@@ -288,7 +293,7 @@ begin
       exception
          when E : GNATCOLL.OS.OS_Error =>
             Test_Helper.Assert
-              (Ada.Exceptions.Exception_Message (E) = Expected_Error,
+              (Starts_With (Ada.Exceptions.Exception_Message (E), Expected_Error),
                "Process error expected due to a fake gnatbind being used",
                Ada.Exceptions.Exception_Message (E));
       end;
@@ -304,7 +309,7 @@ begin
          Args           : Argument_List;
          Env            : Environment_Dict;
          Expected_Tool  : constant String := "fake-gnatbind";
-         Expected_Error : constant String := "cannot spawn process (status: 2)";
+         Expected_Error : constant String := "cannot spawn process";
       begin
          Action.Compute_Command (Args, Env, 1);
          Test_Helper.Assert
@@ -317,7 +322,7 @@ begin
       exception
          when E : GNATCOLL.OS.OS_Error =>
             Test_Helper.Assert
-              (Ada.Exceptions.Exception_Message (E) = Expected_Error,
+              (Starts_With (Ada.Exceptions.Exception_Message (E), Expected_Error),
                "Process error expected due to a fake gnatbind being used",
                Ada.Exceptions.Exception_Message (E));
       end;

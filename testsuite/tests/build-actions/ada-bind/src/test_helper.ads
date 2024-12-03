@@ -29,6 +29,9 @@ package Test_Helper is
    procedure New_Test_Case (Message : String := "");
    
    function Result return Integer;
+
+   function Get_Executable_Suffix return String;
+   --  Get the OS default executable suffix convention
    
 private
    
