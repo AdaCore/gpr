@@ -97,6 +97,20 @@ package body Test_Helper is
       return Action;
    end Create_Binder_Action;
 
+   ---------------------------
+   -- Get_Executable_Suffix --
+   ---------------------------
+
+   function Get_Executable_Suffix return String is
+      Exec_Suffix : GNAT.OS_Lib.String_Access
+        := GNAT.OS_Lib.Get_Executable_Suffix;
+   begin
+      return Result : constant String := Exec_Suffix.all
+      do
+         GNAT.OS_Lib.Free (Exec_Suffix);
+      end return;
+   end Get_Executable_Suffix;
+
    -------------------
    -- Launch_Action --
    -------------------
