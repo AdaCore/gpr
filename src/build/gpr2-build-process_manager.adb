@@ -5,6 +5,7 @@
 --
 
 pragma Warnings (Off);
+with Ada.Strings.Maps;
 with System.Multiprocessors;
 pragma Warnings (On);
 
@@ -661,6 +662,8 @@ package body GPR2.Build.Process_Manager is
    task body Listener is
       Listen_FD : FS.File_Descriptor;
       Result    : Unbounded_String;
+      To_Trim   : constant Ada.Strings.Maps.Character_Set :=
+                    Ada.Strings.Maps.To_Set (" " & ASCII.CR & ASCII.LF);
    begin
       loop
          --  Fetch FD to listen too
@@ -680,7 +683,10 @@ package body GPR2.Build.Process_Manager is
 
             --  And then make the result available
             accept Fetch_Content (Content : out Unbounded_String) do
-               Content := Trim (Result, Ada.Strings.Right);
+               Content := Trim
+                 (Result,
+                  Left  => Ada.Strings.Maps.Null_Set,
+                  Right => To_Trim);
             end Fetch_Content;
 
          else

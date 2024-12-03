@@ -122,7 +122,7 @@ begin
       begin
          Action.Compute_Command (Args, Env, 1);
          Test_Helper.Assert
-           (Args.First_Element = Expected_Tool_Path,
+           (GNAT.OS_Lib.Normalize_Pathname(Args.First_Element) = Expected_Tool_Path,
             "Correctly found binder tool with gnatbind_prefix=bla",
             Debug => Args.First_Element);
          Test_Helper.Assert

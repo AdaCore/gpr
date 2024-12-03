@@ -1,18 +1,15 @@
-$ gpr2build -Pprj -p
+$ gpr2build -j1 -Pprj -p
 "obj/" created
-[Ada Compile]     main.ada@2
-main.ada:9:11: warning: unrecognized pragma "Unexpected" [-gnatwg]
-
-[C Compile]       foo.myc
-[Archive]         libprj.a
-[Ada Compile]     pkg+.a
 [Ada Bind]        main~2
+[Ada Compile]     main.ada@2
+[Ada Compile]     pkg+.a
 [Ada Post-Bind]   b__main~2.adb
+[Archive]         libprj.a
+[C Compile]       foo.myc
 [Link]            main
-$ gpr2build -Pprj -p
 main.ada:9:11: warning: unrecognized pragma "Unexpected" [-gnatwg]
-
+$ gpr2build -j1 -Pprj -p
 "main" up to date
+main.ada:9:11: warning: unrecognized pragma "Unexpected" [-gnatwg]
 $ ./main
 Hello there!
-

@@ -5,10 +5,11 @@ bnr = BuilderAndRunner()
 def run(cmd):
     print("$ " + " ".join(cmd));
     if cmd[0] == "gpr2build":
-        bnr.call(cmd)
+        out = bnr.check_output(cmd).out
     else:
-        print(bnr.simple_run([cmd], catch_error=True).out)
+        out = bnr.simple_run([cmd], catch_error=True).out
+    print('\n'.join(sorted(out.splitlines())))
 
-run(["gpr2build", "-Pprj", "-p"])
-run(["gpr2build", "-Pprj", "-p"])
+run(["gpr2build", "-j1", "-Pprj", "-p"])
+run(["gpr2build", "-j1", "-Pprj", "-p"])
 run(["./main"])

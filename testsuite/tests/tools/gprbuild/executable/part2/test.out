@@ -72,13 +72,11 @@ Case 6 - Missing pkg.adb
 [Ada Compile]     main.adb
 [Ada Compile]     pkg.ads
 cannot generate code for file pkg.ads (package spec)
-
 main.gpr: warning: [Ada Compile] pkg.ads (main.gpr) failed with status 1
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
-uid: '[Ada Compile] pkg.ads (main.gpr)', status : '1', stdout: '', stderr: 'cannot generate code for file pkg.ads (package spec)
-'
+uid: '[Ada Compile] pkg.ads (main.gpr)', status : '1', stdout: '', stderr: 'cannot generate code for file pkg.ads (package spec)'
 Error detected in jobs.json
 
 ================================================================
@@ -102,14 +100,12 @@ Case 8 - Missing pkg.ads
 main.adb:1:06: error: "Main (body)" depends on "Pkg (body)"
 main.adb:1:06: error: "Pkg (body)" depends on "Pkg (spec)"
 main.adb:1:06: error: file "pkg.ads" not found
-
 main.gpr: warning: [Ada Compile] main.adb (main.gpr) failed with status 1
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : '1', stdout: '', stderr: 'main.adb:1:06: error: "Main (body)" depends on "Pkg (body)"
 main.adb:1:06: error: "Pkg (body)" depends on "Pkg (spec)"
-main.adb:1:06: error: file "pkg.ads" not found
-'
+main.adb:1:06: error: file "pkg.ads" not found'
 Error detected in jobs.json
 
 ================================================================
@@ -132,11 +128,9 @@ Hello from Dep_Two
 Case 10 - Missing dep_two.adb
 [Ada Compile]     dep_two.ads
 cannot generate code for file dep_two.ads (package spec)
-
 main.gpr: warning: [Ada Compile] dep_two.ads (main.gpr) failed with status 1
 == Content of jobs.json:
-uid: '[Ada Compile] dep_two.ads (main.gpr)', status : '1', stdout: '', stderr: 'cannot generate code for file dep_two.ads (package spec)
-'
+uid: '[Ada Compile] dep_two.ads (main.gpr)', status : '1', stdout: '', stderr: 'cannot generate code for file dep_two.ads (package spec)'
 Error detected in jobs.json
 
 ================================================================
@@ -159,11 +153,9 @@ Hello from Dep_Two
 Case 12 - Missing dep_two.ads
 [Ada Compile]     dep_two.adb
 dep_two.adb:3:14: error: file "dep_two.ads" not found
-
 main.gpr: warning: [Ada Compile] dep_two.adb (main.gpr) failed with status 1
 == Content of jobs.json:
-uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '1', stdout: '', stderr: 'dep_two.adb:3:14: error: file "dep_two.ads" not found
-'
+uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '1', stdout: '', stderr: 'dep_two.adb:3:14: error: file "dep_two.ads" not found'
 Error detected in jobs.json
 
 ================================================================
