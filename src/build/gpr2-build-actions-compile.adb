@@ -325,6 +325,8 @@ package body GPR2.Build.Actions.Compile is
          function Inc_Path_File (Sw : String := "") return Filename_Type;
          --  Get or create a temporary include path file for the view
 
+         function Quoted (S : String) return String;
+
          -------------------
          -- Inc_Path_File --
          -------------------
@@ -335,22 +337,6 @@ package body GPR2.Build.Actions.Compile is
                     Self.Get_Or_Create_Temp_File
                       (Lang_Img (Self.Lang) & "_inc_path",
                        Actions.Global);
-
-            function Quoted (S : String) return String;
-
-            function Quoted (S : String) return String is
-               Res : Unbounded_String;
-            begin
-               for C of S loop
-                  if C = ' ' then
-                     Append (Res, "\ ");
-                  else
-                     Append (Res, C);
-                  end if;
-               end loop;
-
-               return -Res;
-            end Quoted;
 
          begin
             if Tmp.FD /= Null_FD then
@@ -363,6 +349,26 @@ package body GPR2.Build.Actions.Compile is
 
             return Tmp.Path;
          end Inc_Path_File;
+
+         ------------
+         -- Quoted --
+         ------------
+
+         function Quoted (S : String) return String is
+            Res : Unbounded_String;
+         begin
+            for C of S loop
+               if C = ' ' then
+                  Append (Res, "\ ");
+               elsif C = '\' then
+                  Append (Res, "\\");
+               else
+                  Append (Res, C);
+               end if;
+            end loop;
+
+            return -Res;
+         end Quoted;
 
       begin
          Attr := Self.View.Attribute
@@ -410,7 +416,7 @@ package body GPR2.Build.Actions.Compile is
                if Spec_File.FD /= Null_FD then
                   Write (Spec_File.FD, "*" & Attr.Values.First_Element.Text &
                            ":" & ASCII.LF);
-                  Write (Spec_File.FD, "+ @" & String (Inc_File) &
+                  Write (Spec_File.FD, "+ @" & Quoted (String (Inc_File)) &
                            ASCII.LF);
                   Close (Spec_File.FD);
                end if;
