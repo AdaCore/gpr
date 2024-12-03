@@ -566,10 +566,10 @@ package body GPR2.Build.Actions.Ada_Bind is
    ----------------
 
    procedure Initialize
-     (Self      : in out Object;
-      Basename  : Simple_Name;
-      Context   : GPR2.Project.View.Object;
-      Extra_Opt : String := "") is
+     (Self       : in out Object;
+      Basename   : Simple_Name;
+      Context    : GPR2.Project.View.Object;
+      Extra_Opts : GPR2.Containers.Value_List) is
    begin
       Self.Ctxt := Context;
       Self.Basename := +Basename;
@@ -581,11 +581,27 @@ package body GPR2.Build.Actions.Ada_Bind is
           (Context.Object_Directory.Compose ("b__" & Basename & ".adb"));
       Self.Traces := Create ("ACTION_ADA_BIND");
 
-      if Extra_Opt'Length > 0 then
-         Self.Extra_Opts.Append (Extra_Opt);
-      end if;
+      for Opt of Extra_Opts loop
+         Self.Extra_Opts.Append (Opt);
+      end loop;
 
       Initialize_Linker_Options (Self);
+   end Initialize;
+
+   procedure Initialize
+     (Self      : in out Object;
+      Basename  : Simple_Name;
+      Context   : GPR2.Project.View.Object;
+      Extra_Opt : String := "")
+   is
+      Extra_Opts : GPR2.Containers.Value_List :=
+                     GPR2.Containers.Empty_Value_List;
+   begin
+      if Extra_Opt'Length > 0 then
+         Extra_Opts.Append (Extra_Opt);
+      end if;
+
+      Self.Initialize (Basename, Context, Extra_Opts);
    end Initialize;
 
    -------------------------------
