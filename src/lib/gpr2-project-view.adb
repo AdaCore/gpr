@@ -51,7 +51,7 @@ package body GPR2.Project.View is
    function Tree (Self : Object) return GPR2.Project.Tree.Object is
      (Tree_Internal.Set (Get_RO (Self).Tree));
 
-   function View_DB (Self : Object) return Build.View_Db.Object is
+   function View_Db (Self : Object) return Build.View_Db.Object is
      (if Self.Tree_Int.Has_Artifacts_Database
       then Self.Tree_Int.Artifacts_Database.View_Database (Self.Id)
       else Build.View_Db.Undefined);
