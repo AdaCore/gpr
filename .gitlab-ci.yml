@@ -175,7 +175,6 @@ test_gpr2_cov:
       target_subdir=$CI_COMMIT_BRANCH
     fi
     exec publish-pages $CI_PROJECT_DIR/coverage/dhtml/ --target-subdir $target_subdir --expires 30
-    echo "Coverage report: https://pages.gitlab.adacore-it.com/eng/gpr/gpr/$target_subdir/index.html"
 
     # display coverage stats for global reporting
     echo_coverage_stats --coverage-file $RESULTS_DIR/coverage-xml/index.xml
