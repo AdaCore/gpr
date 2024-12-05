@@ -63,6 +63,12 @@ package GPR2.Message is
      with Inline, Pre => Self.Is_Defined;
    --  Returns the message level associated with the message
 
+   procedure Change_Level
+     (Self : in out Object;
+      Level : Level_Value)
+     with Pre => Self.Is_Defined;
+   --  Changes the level of Self
+
    function User_Level (Self : Object) return User_Level_Value
      with Inline, Pre => Self.Is_Defined;
    --  Returns the message level associated with the user-level message

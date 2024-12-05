@@ -340,18 +340,22 @@ package GPR2.Project.Tree is
 
    procedure Update_Sources
      (Self     : Object;
-      Option   : Source_Info_Option := Sources_Units)
+      Option   : Source_Info_Option := Sources_Units;
+      No_Error : Boolean := False)
      with Pre => Self.Is_Defined;
    --  Ensures that all views' sources are up-to-date.
    --  Option selects the information that will be gathered on the sources. The
-   --  more information is requested, the slower is the update operation.
+   --   more information is requested, the slower is the update operation.
+   --  No_Error: when set prevents the update of sources to generate errors
+   --   The errors are then replaced by warnings.
    --
    --  Used by the Load function when its Artifacts_Info_Level is set
    --  to fetch sources.
 
    function Update_Sources
      (Self     : Object;
-      Option   : Source_Info_Option := Sources_Units) return Boolean
+      Option   : Source_Info_Option := Sources_Units;
+      No_Error : Boolean := False) return Boolean
      with Pre => Self.Is_Defined;
    --  Same as above, and returns False upon error detected.
 
