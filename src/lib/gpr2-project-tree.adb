@@ -97,11 +97,9 @@ package body GPR2.Project.Tree is
    -- Clear_Sources --
    -------------------
 
-   procedure Clear_Sources
-     (Self : Object; View : Project.View.Object := Project.View.Undefined)
-   is
+   procedure Clear_Sources (Self : Object) is
    begin
-      Self.Tree.Clear_Sources (View);
+      Self.Tree.Clear_Sources;
    end Clear_Sources;
 
    ------------
@@ -875,21 +873,32 @@ package body GPR2.Project.Tree is
 
    procedure Update_Sources
      (Self     : Object;
-      Option   : Source_Info_Option := Sources_Units)
+      Option   : Source_Info_Option := Sources_Units;
+      No_Error : Boolean := False)
    is
       Dead : Boolean with Unreferenced;
    begin
-      Dead := Self.Update_Sources (Option);
+      Dead := Self.Update_Sources (Option, No_Error);
    end Update_Sources;
 
    function Update_Sources
      (Self     : Object;
-      Option   : Source_Info_Option := Sources_Units) return Boolean
+      Option   : Source_Info_Option := Sources_Units;
+      No_Error : Boolean := False) return Boolean
    is
       Log     : GPR2.Log.Object;
       Success : Boolean;
    begin
       Self.Tree.Update_Sources (Option => Option, Messages => Log);
+
+      if No_Error then
+         for Msg of Log loop
+            if Msg.Level = Message.Error then
+               Msg.Change_Level (Message.Warning);
+            end if;
+         end loop;
+      end if;
+
       Success := not Log.Has_Error;
       Self.Reporter.Report (Log, Warn_If_Errors => True);
 

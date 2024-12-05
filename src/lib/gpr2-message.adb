@@ -8,6 +8,17 @@ with GNAT.Formatted_String;
 
 package body GPR2.Message is
 
+   ------------------
+   -- Change_Level --
+   ------------------
+
+   procedure Change_Level
+     (Self : in out Object;
+      Level : Level_Value) is
+   begin
+      Self.Level := Level;
+   end Change_Level;
+
    ------------
    -- Create --
    ------------

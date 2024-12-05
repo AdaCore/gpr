@@ -1,0 +1,11 @@
+project Prj is
+   for Languages use ("Ada", "Python");
+   for Source_Dirs use ("src/**", "ada/**");
+   package Compiler is
+      for Driver ("Python") use "";
+   end Compiler;
+
+   package Naming is
+      for Body_Suffix ("Python") use ".py";
+   end Naming;
+end Prj;

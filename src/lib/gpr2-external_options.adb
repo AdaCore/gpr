@@ -7,6 +7,15 @@
 package body GPR2.External_Options is
 
    -----------
+   -- Clear --
+   -----------
+
+   procedure Clear (Self : in out Object) is
+   begin
+      Self.Ext_Opt.Clear;
+   end Clear;
+
+   -----------
    -- Fetch --
    -----------
 

@@ -24,6 +24,8 @@ package body GPR2.Build.Tree_Db is
    package PRA renames GPR2.Project.Registry.Attribute;
    package PAI renames GPR2.Project.Attribute_Index;
 
+   procedure Create_View_Dbs  (Self : in out Object);
+
    type Artifact_Internal_Iterator is limited new
      Artifact_Iterators.Forward_Iterator with record
       Db     : access Object;
@@ -361,22 +363,26 @@ package body GPR2.Build.Tree_Db is
       Tree             : GPR2.Tree_Internal.Object;
       External_Options : GPR2.External_Options.Object)
    is
+   begin
+      if Self.Self = null then
+         Self.Self := Self'Unrestricted_Access;
+         Self.Tree := Tree.Reference;
+
+         Self.External_Options := External_Options;
+      end if;
+
+      Self.Create_View_Dbs;
+   end Create;
+
+   ---------------------
+   -- Create_View_Dbs --
+   ---------------------
+
+   procedure Create_View_Dbs  (Self : in out Object) is
       Db_Inst : View_Db.Object;
 
    begin
-      Self.Self := Self'Unrestricted_Access;
-      Self.Tree := Tree.Reference;
-
-      Self.External_Options := External_Options;
-
-      --  Source files are propagated from the source owner (e.g. the view that
-      --  defines the source directory where we found the source) to
-      --  the other views (aggregate libraries or extending projects).
-      --
-      --  So for this to work efficiently, we need to use a topological order
-      --  to populate the sources.
-
-      for V of Tree.Ordered_Views loop
+      for V of Self.Tree.Ordered_Views loop
          if V.Kind in GPR2.Build.View_Tables.With_View_Db then
             declare
                Db_Data : View_Tables.View_Data
@@ -389,7 +395,7 @@ package body GPR2.Build.Tree_Db is
             end;
          end if;
       end loop;
-   end Create;
+   end Create_View_Dbs;
 
    ----------------------
    -- DB_Filename_Path --
@@ -971,12 +977,19 @@ package body GPR2.Build.Tree_Db is
    -- Unload --
    ------------
 
-   procedure Unload (Self : in out Object) is
+   procedure Unload
+     (Self : in out Object;
+      Complete : Boolean := True) is
    begin
       Self.Build_Dbs.Clear;
-      Self.Tree := null;
-      Self.Self := null;
-      Self.Src_Option := No_Source;
+
+      if Complete then
+         Self.Self := null;
+         Self.Tree := null;
+         Self.External_Options.Clear;
+      else
+         Self.Create_View_Dbs;
+      end if;
    end Unload;
 
 begin

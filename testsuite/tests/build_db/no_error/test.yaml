@@ -1,0 +1,5 @@
+description:
+    Test loading the sources in No_Error mode
+driver: build_and_run
+project_file: test.gpr
+main: main

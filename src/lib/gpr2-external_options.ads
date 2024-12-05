@@ -41,6 +41,9 @@ package GPR2.External_Options is
                    Lang   : Language_Id) return GPR2.Containers.Value_List;
    --  Fetch an external option based on the external Name and Lang
 
+   procedure Clear (Self : in out Object);
+   --  Clears the object
+
 private
 
    package Lang_Value_List_Map_Maps is new

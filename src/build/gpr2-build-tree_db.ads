@@ -46,8 +46,8 @@ package GPR2.Build.Tree_Db is
    --  database structure is updated accordingly (proper view databases
    --  added or removed when appropriate).
 
-   procedure Unload (Self : in out Object)
-     with Post => not Self.Is_Defined;
+   procedure Unload (Self : in out Object; Complete : Boolean := True)
+     with Post => (if Complete then not Self.Is_Defined);
 
    procedure Refresh
      (Self     : in out Object;

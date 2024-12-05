@@ -797,6 +797,10 @@ package body GPR2.Build.View_Tables is
       use type Ada.Containers.Count_Type;
       use type Project.View.Object;
 
+      function Source_Info
+        (Src : Source_Proxy) return Src_Info_Maps.Reference_Type
+      is (Get_Data (Data.Tree_Db,
+          Src.View).Src_Infos.Reference (Src.Path_Name));
       procedure Propagate_Visible_Source_Removal (Src : Source_Proxy);
       procedure Propagate_Visible_Source_Added (Src : Source_Proxy);
 
@@ -805,10 +809,8 @@ package body GPR2.Build.View_Tables is
       ------------------------------------
 
       procedure Propagate_Visible_Source_Added (Src : Source_Proxy) is
-         View_Db  : constant View_Data_Ref :=
-                      Get_Data (Data.Tree_Db, Src.View);
          Src_Info : constant Src_Info_Maps.Reference_Type :=
-                      View_Db.Src_Infos.Reference (Src.Path_Name);
+                      Source_Info (Src);
 
       begin
          if Data.View.Is_Extended then
@@ -867,10 +869,8 @@ package body GPR2.Build.View_Tables is
       --------------------------------------
 
       procedure Propagate_Visible_Source_Removal (Src : Source_Proxy) is
-         View_Db  : constant View_Data_Ref :=
-                      Get_Data (Data.Tree_Db, Src.View);
          Src_Info : constant Source_Base.Object :=
-                      View_Db.Src_Infos (Src.Path_Name);
+                      Source_Info (Src).Element.all;
       begin
          if Src_Info.Has_Units and then not Data.View.Is_Extended then
             for U of Src_Info.Units loop
@@ -927,6 +927,7 @@ package body GPR2.Build.View_Tables is
       C_Info2   : Src_Info_Maps.Cursor;
       SR1, SR2  : Natural;
       Clashes   : Natural_Sets.Set;
+      Err_Level : GPR2.Message.Level_Value;
 
    begin
       if Set.Is_Empty then
@@ -1000,9 +1001,15 @@ package body GPR2.Build.View_Tables is
                else
                   --  Remaining case: inheritance shows two candidate sources
 
+                  if Source_Info (Candidate.all).Is_Compilable then
+                     Err_Level := Message.Error;
+                  else
+                     Err_Level := Message.Warning;
+                  end if;
+
                   Messages.Append
                     (Message.Create
-                       (Message.Error,
+                       (Err_Level,
                         '"' & String (Basename) & '"' &
                           " is found in several extended projects",
                         Source_Reference.Create
@@ -1036,13 +1043,13 @@ package body GPR2.Build.View_Tables is
 
                      Messages.Append
                        (Message.Create
-                          (Message.Error,
+                          (Err_Level,
                            String (P1),
                            Source_Reference.Create (V1.Value, 0, 0),
                            Indent => 1));
                      Messages.Append
                        (Message.Create
-                          (Message.Error,
+                          (Err_Level,
                            String (P2),
                            Source_Reference.Create (V2.Value, 0, 0),
                            Indent => 1));
@@ -1056,10 +1063,16 @@ package body GPR2.Build.View_Tables is
          end loop;
 
          if not Clashes.Is_Empty then
+            if Src_Info_Maps.Element (C_Info).Is_Compilable then
+               Err_Level := Message.Error;
+            else
+               Err_Level := Message.Warning;
+            end if;
+
             for SR of Clashes loop
                Messages.Append
                  (Message.Create
-                    (Message.Error,
+                    (Err_Level,
                      '"' & String (Basename) & '"' &
                        " is found multiple times for the same source" &
                        " directory",

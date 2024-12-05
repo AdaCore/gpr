@@ -176,11 +176,9 @@ package body GPR2.Tree_Internal is
    -- Clear_Sources --
    -------------------
 
-   procedure Clear_Sources
-     (Self : Object;
-      View : Project.View.Object := Project.View.Undefined) is
+   procedure Clear_Sources (Self : Object) is
    begin
-      Self.Self.Tree_Db.Unload;
+      Self.Self.Tree_Db.Unload (Complete => False);
    end Clear_Sources;
 
    -------------------

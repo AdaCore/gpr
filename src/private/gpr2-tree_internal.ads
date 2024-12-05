@@ -352,14 +352,8 @@ private package GPR2.Tree_Internal is
    --  Retrieve the level of source information currently requested for
    --  the tree database.
 
-   procedure Clear_Sources
-     (Self : Object;
-      View : Project.View.Object := Project.View.Undefined);
-   --  Invalidates the sources for all views in the tree if View is undefined
-   --  or the source in the given view otherwise. This is needed when some
-   --  sources are added or removed from the view. It is not required to call
-   --  Update_Sources below, when the routine Sources on one of the views of
-   --  the tree will be called, the set of sources will be recomputed.
+   procedure Clear_Sources (Self : Object);
+   --  Invalidates the sources for all views in the tree
 
    procedure Update_Sources
      (Self     : Object;
