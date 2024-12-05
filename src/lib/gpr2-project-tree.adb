@@ -97,11 +97,9 @@ package body GPR2.Project.Tree is
    -- Clear_Sources --
    -------------------
 
-   procedure Clear_Sources
-     (Self : Object; View : Project.View.Object := Project.View.Undefined)
-   is
+   procedure Clear_Sources (Self : Object) is
    begin
-      Self.Tree.Clear_Sources (View);
+      Self.Tree.Clear_Sources;
    end Clear_Sources;
 
    ------------
