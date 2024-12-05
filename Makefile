@@ -103,7 +103,7 @@ GPR2TOOLS         := ${SOURCE_DIR}/tools/gpr2-tools.gpr
 GPR2KB            := ${SOURCE_DIR}/kb/collect_kb.gpr
 
 # adapt build dirs to out-of-tree builds
-ifeq (${SOURCE_DIR},$(PWD))
+ifeq (${SOURCE_DIR},.)
 BUILD_ROOT        := .build
 else
 BUILD_ROOT        := .
