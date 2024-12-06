@@ -234,12 +234,12 @@ package body GPR2.Build.View_Tables is
                --  Note: the runtime *has* duplicated unit to support
                --  system.memory, now our generated project to add it to the
                --  tree is a bit simple minded, so just kill the warning for
-               --  the runtime view, not user friendly.
+               --  the runtime view.
 
                Other := CU_Instance.Get (Kind, Sep_Name);
 
                if Other.View.Is_Runtime then
-                  --  ??? Special case for the runtime, where we allow some
+                  --  Special case for the runtime, where we allow some
                   --  runtime units to be overriden by project sources.
 
                   CU_Instance.Remove
@@ -276,7 +276,9 @@ package body GPR2.Build.View_Tables is
                      then
                         --  Replace the unit in the compilation unit
                         CU_Instance.Remove
-                          (Kind, Other.View, Other.Source, Other.Index);
+                          (Kind, Other.View, Other.Source, Other.Index,
+                           Sep_Name);
+
                         CU_Instance.Add
                           (Kind, View_Db.View, Path, Index, Sep_Name, Success);
 

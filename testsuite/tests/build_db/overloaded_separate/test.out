@@ -1,0 +1,4 @@
+Name: PKG
+Spec: src/pkg.ads
+Body: src/pkg.adb
+Sep: src2/mysrc.ada
