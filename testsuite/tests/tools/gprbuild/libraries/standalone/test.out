@@ -1,0 +1,48 @@
+$ gpr2build -q -Plibrary_interface/demo.gpr -p --json-summary
+$ gpr2build -q -Plibrary_interface/app.gpr -p --json-summary
+lib [library_interface] has been created
+uid: '[Ada Compile] add.adb (demo.gpr)', status : '0'
+uid: '[Ada Compile] foo.adb (demo.gpr)', status : '0'
+uid: '[Ada Compile] sub.adb (demo.gpr)', status : '0'
+uid: '[Ada Bind] demo (demo.gpr)', status : '0'
+uid: '[Ada Post-Bind] b__demo.adb (demo.gpr)', status : '0'
+uid: '[Archive] libdemo.a (demo.gpr)', status : '0'
+Ok so far
+$ library_interface/main
+1+1 =  2
+1-1 =  0
+
+$ gpr2build -Plibrary_interface/invalid_app.gpr -p --json-summary
+"obj/invalid_app/" created
+main.adb: error: unit "MAIN" can not import unit "FOO": it is not part of the interfaces of the project Demo
+main.adb: error: unit "MAIN" can not import unit "MULT": it is not part of the interfaces of the project Demo
+[Ada Compile]     main.adb
+main.adb: error: unit "MAIN" can not import unit "FOO": it is not part of the interfaces of the project Demo
+main.adb: error: unit "MAIN" can not import unit "MULT": it is not part of the interfaces of the project Demo
+[Ada Bind]        main
+error: "mult.ali" not found, "mult.adb" must be compiled
+invalid_app.gpr: warning: [Ada Bind] main (invalid_app.gpr) failed with status 5
+$ gpr2build -q -Pinterfaces/demo.gpr -p --json-summary
+$ gpr2build -q -Pinterfaces/app.gpr -p --json-summary
+lib [interfaces] has been created
+uid: '[Ada Compile] add.adb (demo.gpr)', status : '0'
+uid: '[Ada Compile] foo.adb (demo.gpr)', status : '0'
+uid: '[Ada Compile] sub.adb (demo.gpr)', status : '0'
+uid: '[Ada Bind] demo (demo.gpr)', status : '0'
+uid: '[Ada Post-Bind] b__demo.adb (demo.gpr)', status : '0'
+uid: '[Archive] libdemo.a (demo.gpr)', status : '0'
+Ok so far
+$ interfaces/main
+1+1 =  2
+1-1 =  0
+
+$ gpr2build -Pinterfaces/invalid_app.gpr -p --json-summary
+"obj/invalid_app/" created
+main.adb: error: unit "MAIN" can not import unit "FOO": it is not part of the interfaces of the project Demo
+main.adb: error: unit "MAIN" can not import unit "MULT": it is not part of the interfaces of the project Demo
+[Ada Compile]     main.adb
+main.adb: error: unit "MAIN" can not import unit "FOO": it is not part of the interfaces of the project Demo
+main.adb: error: unit "MAIN" can not import unit "MULT": it is not part of the interfaces of the project Demo
+[Ada Bind]        main
+error: "mult.ali" not found, "mult.adb" must be compiled
+invalid_app.gpr: warning: [Ada Bind] main (invalid_app.gpr) failed with status 5

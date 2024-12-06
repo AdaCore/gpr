@@ -6,6 +6,7 @@
 
 limited with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Artifacts.Files;
+with GPR2.Containers;
 with GPR2.Path_Name; use GPR2.Path_Name;
 
 with Ada.Containers.Hashed_Sets;
@@ -32,6 +33,13 @@ package GPR2.Build.Actions.Ada_Bind is
    --  Basename: will produce b__<basename>.ad[bs]
    --  Context: the view responsible for the bind action
    --  Extra_Opt: added to gnatbind command line, like -n or -z
+
+   procedure Initialize
+     (Self       : in out Object;
+      Basename   : Simple_Name;
+      Context    : GPR2.Project.View.Object;
+      Extra_Opts : GPR2.Containers.Value_List);
+   --  Same as above, but with a vector of extra options
 
    package Path_Name_Sets is
      new Ada.Containers.Hashed_Sets

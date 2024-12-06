@@ -296,10 +296,67 @@ package body GPR2.Build.Actions.Compile.Ada is
    overriding function On_Tree_Propagation
      (Self : in out Object) return Boolean
    is
-      Imports  : GPR2.Containers.Name_Set;
-      Binds    : Action_Id_Sets.Set;
-      Links    : Action_Id_Sets.Set;
+      Imports : GPR2.Containers.Name_Set;
+      Binds   : Action_Id_Sets.Set;
+      Links   : Action_Id_Sets.Set;
 
+      function Can_Unit_Be_Imported
+        (CU : GPR2.Build.Compilation_Unit.Object) return Boolean;
+      --  Ensure that a unit coming from another project can be imported.
+      --  It is the case, if the unit is part of the Interfaces or the
+      --  Library_Interface attributes. Otherwise, this units is reserved for
+      --  internal project implementation.
+
+      --------------------------
+      -- Can_Unit_Be_Imported --
+      --------------------------
+
+      function Can_Unit_Be_Imported
+        (CU : GPR2.Build.Compilation_Unit.Object) return Boolean
+      is
+         use GPR2.Project.View;
+
+         CU_View : constant GPR2.Project.View.Object := CU.Owning_View;
+         Allowed : Boolean := True;
+      begin
+         --  There is no restriction of units visibility inside the same view
+
+         if Self.View /= CU_View then
+            if CU_View.Is_Library and then CU_View.Has_Library_Interface
+              and then not CU_View.Interface_Units.Contains (CU.Name)
+            then
+               --  If the unit is not listed by the Library_Interface
+               --  attribute, it can not be imported.
+
+               Allowed := False;
+            elsif CU_View.Has_Interfaces
+              and then not CU_View.Interface_Sources.Contains
+                             (CU.Spec.Source.Simple_Name)
+            then
+               --  Similarly, if the unit source is not listed by the
+               --  Interfaces attribute, then it can not be imported.
+
+               Allowed := False;
+            end if;
+
+            if not Allowed then
+               Self.Tree.Reporter.Report
+                 (GPR2.Message.Create
+                    (GPR2.Message.Error,
+                     "unit """
+                     & String (Self.CU.Name)
+                     & """ can not import unit """
+                     & String (CU.Name)
+                     & """: it is not part of the interfaces of the project "
+                     & String (CU_View.Name),
+                     GPR2.Source_Reference.Object
+                       (GPR2.Source_Reference.Create
+                          (Self.Src_Name.Value, 0, 0))));
+            end if;
+         end if;
+
+         return Allowed;
+      end Can_Unit_Be_Imported;
    begin
       --  Check the bind actions that depend on Self
 
@@ -362,6 +419,10 @@ package body GPR2.Build.Actions.Compile.Ada is
             if Continue and then CU.Owning_View.Is_Runtime then
                --  Since we're linking with libgnarl/libgnat anyway, don't
                --  add runtime units there.
+               Continue := False;
+            end if;
+
+            if Continue and then not Can_Unit_Be_Imported (CU) then
                Continue := False;
             end if;
 
