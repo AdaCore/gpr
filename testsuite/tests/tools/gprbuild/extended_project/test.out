@@ -1,0 +1,25 @@
+$ gpr2build -p -Pprj
+"obj/std/" created
+[Ada Bind]        main
+[Ada Compile]     main.adb
+[Ada Compile]     pkg.adb
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ gpr2build -p -Pext
+"obj/ext/" created
+[Ada Bind]        main
+[Ada Compile]     main.adb
+[Ada Compile]     pkg.adb
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ ./main
+Hi, I'm from ext
+$ gpr2build -p -Pext2
+"obj/ext2/" created
+[Ada Bind]        main
+[Ada Compile]     main.adb
+[Ada Compile]     pkg.adb
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ ./main
+Hi, I'm from prj
