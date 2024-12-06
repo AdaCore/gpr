@@ -136,7 +136,11 @@ package body GPR2.Build.Actions.Link is
          end if;
 
          if Self.Is_Library then
-            --  shared lib case, add the minimal options
+
+         --  shared lib case, add the leading and minimal options
+
+            Status := Add_Attr
+              (PRA.Leading_Library_Options, PAI.Undefined, True, True);
             Status := Add_Attr
               (PRA.Shared_Library_Minimum_Switches, PAI.Undefined, True, True);
          end if;
