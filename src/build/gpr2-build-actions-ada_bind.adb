@@ -700,9 +700,11 @@ package body GPR2.Build.Actions.Ada_Bind is
          Switch_Index : Natural := Index (Line, "--");
       begin
          if Switch_Index = 0 then
-            raise Program_Error
+            pragma Annotate (Xcov, Off, "unreachable code");
+            raise Internal_Error
               with "Failed parsing line " & Line & " from " &
               Self.Output_Body.Path.String_Value;
+            pragma Annotate (Xcov, On);
          end if;
 
          --  Skip the "--" comment prefix

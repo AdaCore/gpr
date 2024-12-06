@@ -1195,7 +1195,7 @@ package body GPR2.Project_Parser is
                      when Gpr_Project_Qualifier_Configuration
                        => K_Configuration,
                      when others
-                       => raise Program_Error with "Unreachable");
+                       => raise Project_Error with "Unreachable");
             end if;
 
             --  Check if we have an extends declaration

@@ -67,6 +67,9 @@ package GPR2 is
    --  Raised when querying an invalid attribute (not in the registry,
    --  invalid context, ...).
 
+   Internal_Error : exception;
+   --  Raised when an error related to the internal functioning of the package.
+
    type Project_Kind is
      (K_Configuration, K_Abstract,
       K_Standard, K_Library, K_Aggregate, K_Aggregate_Library);

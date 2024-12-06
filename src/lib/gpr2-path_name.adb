@@ -549,8 +549,11 @@ package body GPR2.Path_Name is
             end if;
 
          when others =>
-            raise Program_Error with
+            pragma Annotate (Xcov, Off, "unreachable code");
+            raise Internal_Error with
               "Unsupported directory separator " & OS_Lib.Directory_Separator;
+            pragma Annotate (Xcov, On);
+
       end case;
    end Determine_Temporary_Directory;
 

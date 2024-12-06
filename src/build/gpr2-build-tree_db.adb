@@ -349,7 +349,7 @@ package body GPR2.Build.Tree_Db is
                   Iterator.Db.Outputs.Constant_Reference
                     (Pos.Map_Pos).Constant_Reference (Pos.Pos),
                when others          =>
-                    raise Program_Error with "Wrong kind of cursor");
+                  raise Internal_Error with "Wrong kind of cursor");
    begin
       return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
    end Constant_Artifact_Reference;

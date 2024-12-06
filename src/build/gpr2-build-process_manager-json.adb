@@ -65,11 +65,13 @@ package body GPR2.Build.Process_Manager.JSON is
 
          case Proc_Handler.Status is
             when Running =>
-               --  ??? Use a custom exception
-               raise Program_Error with
+               pragma Annotate (Xcov, Off, "unreachable code");
+               raise Internal_Error with
                  "The process linked to the action '" & Job.UID.Image &
                  "' is still running. Cannot collect the job before it " &
                  "finishes";
+               pragma Annotate (Xcov, On);
+
 
             when Finished =>
                Job_Summary.Set_Field
