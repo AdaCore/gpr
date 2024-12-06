@@ -1,0 +1,10 @@
+project Ext2 extends "prj.gpr" is
+
+   for Main use ("main.adb");
+
+   for Source_Dirs use Prj'Source_Dirs;
+   --  This overloads the sources and make ownership of Ext2
+
+   for Object_Dir use "obj/ext2";
+   for Exec_Dir use ".";
+end Ext2;

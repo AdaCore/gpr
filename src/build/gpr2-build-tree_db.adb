@@ -926,7 +926,10 @@ package body GPR2.Build.Tree_Db is
      (Self     : in out Object;
       Artifact : Artifacts.Object'Class)
    is
-      C : Artifact_Sets.Cursor;
+      C      : Artifact_Sets.Cursor;
+      C_Succ : Artifact_Actions_Maps.Cursor;
+      C_Pred : Artifact_Action_Maps.Cursor;
+
    begin
       C := Self.Artifacts.Find (Artifact);
 
@@ -936,7 +939,9 @@ package body GPR2.Build.Tree_Db is
 
       Self.Artifacts.Delete (C);
 
-      for Succ of Self.Successors (Artifact) loop
+      C_Succ := Self.Successors.Find (Artifact);
+
+      for Succ of Self.Successors (C_Succ) loop
          C := Self.Inputs (Succ).Find (Artifact);
 
          if Artifact_Sets.Has_Element (C) then
@@ -949,6 +954,20 @@ package body GPR2.Build.Tree_Db is
             Self.Implicit_Inputs (Succ).Delete (C);
          end if;
       end loop;
+
+      Self.Successors.Delete (C_Succ);
+      C_Pred := Self.Predecessor.Find (Artifact);
+
+      if Artifact_Action_Maps.Has_Element (C_Pred) then
+         C := Self.Outputs
+           (Artifact_Action_Maps.Element (C_Pred)).Find (Artifact);
+
+         if Artifact_Sets.Has_Element (C) then
+            Self.Outputs (Artifact_Action_Maps.Element (C_Pred)).Delete (C);
+         end if;
+
+         Self.Predecessor.Delete (C_Pred);
+      end if;
    end Remove_Artifact;
 
    --------------
