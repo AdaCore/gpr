@@ -86,8 +86,7 @@ package body GPR2.Build.Actions.Link is
                          Case_Sensitive => File_Names_Case_Sensitive,
                          At_Pos         => Self.Main_Src.Index)
                       else PAI.Undefined);
-
-
+      Link_Exec  : constant Boolean := Src_Idx.Is_Defined;
    begin
       Objects := Self.Embedded_Objects;
 
@@ -220,7 +219,7 @@ package body GPR2.Build.Actions.Link is
          end loop;
       end if;
 
-      if Src_Idx.Is_Defined then
+      if Link_Exec then
          --  Add switches for linking an executable
          Status :=
            Add_Attr (PRA.Linker.Required_Switches, PAI.Undefined, True, True);
@@ -246,7 +245,13 @@ package body GPR2.Build.Actions.Link is
          end loop;
 
          for Option of Self.Static_Options loop
-            Cmd_Line.Add_Argument (Option);
+
+            --  -shared is only used to create libs.
+            --  ??? Why is -shared added by the binder in that case ?
+
+            if Option /= "-shared" then
+               Cmd_Line.Add_Argument (Option);
+            end if;
          end loop;
 
          Status :=
