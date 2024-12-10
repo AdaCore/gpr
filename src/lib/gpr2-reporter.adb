@@ -8,6 +8,41 @@
 
 package body GPR2.Reporter is
 
+   function Display_User_Message
+     (Self : Object'Class;
+      Message : GPR2.Message.Object) return Boolean;
+
+   function Display_User_Message
+     (Self : Object'Class;
+      Message : GPR2.Message.Object) return Boolean
+   is
+      use GPR2.Message;
+   begin
+      case Self.User_Verbosity is
+         when Unset =>
+            case Message.User_Level is
+               when Optional =>
+                  return Self.Verbosity >= Verbose;
+               when Regular =>
+                  return Self.Verbosity >= No_Warnings;
+               when Important =>
+                  return Self.Verbosity > Quiet;
+            end case;
+
+         when Quiet =>
+            return False;
+
+         when Important_Only =>
+            return Message.User_Level = Important;
+
+         when Regular =>
+            return Message.User_Level >= Regular;
+
+         when Verbose =>
+            return True;
+      end case;
+   end Display_User_Message;
+
    ------------
    -- Report --
    ------------
@@ -37,8 +72,7 @@ package body GPR2.Reporter is
             use GPR2.Message;
          begin
             if Msg.Level /= End_User
-              or else Msg.User_Level = Regular
-              or else Self.User_Verbosity = Verbose
+              or else Display_User_Message (Self, Msg)
             then
                Self.Internal_Report (GPR2.Log.Element (C));
             end if;
@@ -51,9 +85,7 @@ package body GPR2.Reporter is
       Message   : GPR2.Message.Object)
    is
 
-      function Printable
-        (Severity      : GPR2.Message.Level_Value;
-         User_Severity : GPR2.Message.User_Level_Value) return Boolean;
+      function Printable (Msg : GPR2.Message.Object) return Boolean;
    --  Returns True if the reporter's verbosity is sufficient to print a
    --  message with the specified severity.
 
@@ -61,30 +93,16 @@ package body GPR2.Reporter is
       -- Printable --
       ---------------
 
-      function Printable
-        (Severity      : GPR2.Message.Level_Value;
-         User_Severity : GPR2.Message.User_Level_Value) return Boolean
+      function Printable (Msg : GPR2.Message.Object) return Boolean
       is
          use all type GPR2.Message.Level_Value;
-         use type GPR2.Message.User_Level_Value;
       begin
-         case Severity is
+         case Msg.Level is
             when Error =>
                return Self.Verbosity > Quiet;
 
             when End_User =>
-               case Self.User_Verbosity is
-                  when Unset =>
-                     return Self.Verbosity > Quiet;
-                  when Quiet =>
-                     return False;
-                  when Important_Only =>
-                     return User_Severity = GPR2.Message.Important;
-                  when Regular =>
-                     return User_Severity /= GPR2.Message.Optional;
-                  when Verbose =>
-                     return True;
-               end case;
+               return Display_User_Message (Self, Message);
 
             when Warning =>
                return Self.Verbosity > No_Warnings;
@@ -96,7 +114,7 @@ package body GPR2.Reporter is
       end Printable;
 
    begin
-      if Printable (Message.Level, Message.User_Level) then
+      if Printable (Message) then
          Self.Internal_Report (Message);
       end if;
    end Report;
