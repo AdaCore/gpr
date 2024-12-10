@@ -22,7 +22,7 @@ def run(cmd, cwd="", quiet=False):
         os.chdir(old_cwd)
 
 def test(prj, switches, cleanup=True):
-    run(["gpr2build", "-P", prj, "-q", "--json-summary"] + switches)
+    run(["gpr2build", "-P", prj, "-q", "-p", "-k", "--json-summary"] + switches)
     if os.path.exists("jobs.json"):
         with open("jobs.json") as fp:
             cnt = json.load(fp)

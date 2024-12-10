@@ -18,4 +18,4 @@ Project: Demo4
      > Demo1
      > Demo2
      > Demo3
-demo_error_aggimport.gpr: error: aggregate project "Demo_Agg" can only be imported by an aggregate project
+demo_error_aggimport.gpr:1:06: error: aggregate project "Demo_Agg" can only be imported by an aggregate project
