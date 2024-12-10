@@ -279,6 +279,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       Db       : in out GPR2.Build.Tree_Db.Object) return Boolean
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+      Other_Ali : Artifacts.Files.Object;
    begin
       if Self.Obj_File.Is_Defined then
          if not Db.Add_Output (UID, Self.Obj_File) then
@@ -286,7 +287,26 @@ package body GPR2.Build.Actions.Compile.Ada is
          end if;
       end if;
 
-      return Db.Add_Output (UID, Self.Ali_File);
+      if not Db.Add_Output (UID, Self.Ali_File) then
+         return False;
+      end if;
+
+      if Self.View.Kind = K_Library
+        and then not Self.View.Is_Externally_Built
+      then
+         --  Also add the .ali file created in the obj directory so that
+         --  gprclean has visibility over it
+
+         Other_Ali := Artifacts.Files.Create
+           (Self.View.Object_Directory.Compose
+              (Self.Ali_File.Path.Simple_Name));
+
+         if not Db.Add_Output (UID, Other_Ali) then
+            return False;
+         end if;
+      end if;
+
+      return True;
    end On_Tree_Insertion;
 
    -------------------------
