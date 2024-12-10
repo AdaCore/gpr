@@ -65,7 +65,8 @@ package body GPRtools.Options is
       Allow_Autoconf         : Boolean := False;
       Allow_Quiet            : Boolean := True;
       No_Project_Support     : Boolean := False;
-      Allow_Implicit_Project : Boolean := True) return Command_Line_Parser
+      Allow_Implicit_Project : Boolean := True;
+      Check_Shared_Libs      : Boolean := False) return Command_Line_Parser
    is
       use GPRtools.Command_Line;
       Parser            : Command_Line_Parser;
@@ -82,7 +83,8 @@ package body GPRtools.Options is
                  Cmd_Line  => Cmd_Line,
                  Tool_Name => Tool_Name,
                  Help      => Help))
-         with Find_Implicit_Project => Allow_Implicit_Project);
+         with Find_Implicit_Project => Allow_Implicit_Project,
+              Check_Shared_Libs     => Check_Shared_Libs);
 
       if not No_Project_Support then
          Project_Group :=
@@ -140,12 +142,16 @@ package body GPRtools.Options is
                     In_Switch_Attr => False,
                     Delimiter      => Equal,
                     Parameter      => "proj.gpr"));
-         Parser.Add_Argument
-           (Project_Group,
-            Create (Name           => "--unchecked-shared-lib-imports",
-                    Help           => "Shared lib projects may import any" &
-                                      " project",
-                    In_Switch_Attr => False));
+
+         if Check_Shared_Libs then
+            Parser.Add_Argument
+              (Project_Group,
+               Create (Name           => "--unchecked-shared-lib-imports",
+                       Help           => "Shared lib projects may import any" &
+                                         " project",
+                       In_Switch_Attr => False));
+         end if;
+
          Parser.Add_Argument
            (Project_Group,
             Create (Name           => "--relocate-build-tree",
@@ -305,6 +311,12 @@ package body GPRtools.Options is
      (Parser : Command_Line_Parser;
       Result : in out GPRtools.Command_Line.Command_Line_Result'Class) is
    begin
+      if Parser.Check_Shared_Libs then
+         Base_Options (Result).Check_Shared_Libs := True;
+         --  Enable by default in this case. Can be deactivated via
+         --  --unchecked-shared-libs
+      end if;
+
       GPRtools.Command_Line.Command_Line_Parser (Parser).Get_Opt (Result);
       Base_Options (Result).Find_Implicit_Project :=
         Parser.Find_Implicit_Project;
@@ -337,7 +349,7 @@ package body GPRtools.Options is
          Reporter                 => Opt.Console_Reporter,
          Absent_Dir_Error         => Absent_Dir_Error,
          Allow_Implicit_Project   => Opt.Find_Implicit_Project,
-         Check_Shared_Libs_Import => not Opt.Unchecked_Shared_Lib);
+         Check_Shared_Libs_Import => Opt.Check_Shared_Libs);
       Opt.Tree := Tree;
 
       if Handle_Errors and then not Loaded then
@@ -408,7 +420,7 @@ package body GPRtools.Options is
             Index  => "");
 
       elsif Arg = "--unchecked-shared-lib-imports" then
-         Result.Unchecked_Shared_Lib := True;
+         Result.Check_Shared_Libs := False;
 
       elsif Arg = "--relocate-build-tree" then
          Result.Add_Switch

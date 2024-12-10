@@ -57,7 +57,8 @@ package body GPRbuild.Options is
                        ASCII.LF &
                        "     [-cargs[:lang] opts] [-largs opts]" &
                        " [-kargs opts] [-gargs opts]",
-                     Allow_Autoconf    => True) with null record);
+                     Allow_Autoconf    => True,
+                     Check_Shared_Libs => True) with null record);
       Build_Group    : GPRtools.Command_Line.Argument_Group;
       Compiler_Group : GPRtools.Command_Line.Argument_Group;
 
