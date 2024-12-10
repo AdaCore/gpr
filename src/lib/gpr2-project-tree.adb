@@ -30,7 +30,9 @@ package body GPR2.Project.Tree is
    function Set (Tree : Tree_Internal.Object_Access) return Object;
 
    function Check_For_Default_Project
-     (Directory : String := "") return GPR2.Path_Name.Object;
+     (Directory : String := "";
+      No_Match  : out Boolean) return GPR2.Path_Name.Object;
+   --  No_Match: whether no project was found in Directory
 
    procedure Report_Logs (Self : Object);
 
@@ -55,7 +57,8 @@ package body GPR2.Project.Tree is
    -------------------------------
 
    function Check_For_Default_Project
-     (Directory : String := "") return GPR2.Path_Name.Object
+     (Directory : String := "";
+      No_Match  : out Boolean) return GPR2.Path_Name.Object
    is
       use Directories;
       Default_Name : constant String :=
@@ -71,8 +74,11 @@ package body GPR2.Project.Tree is
       if Exists (Default_Name)
         and then Kind (Default_Name) = Ordinary_File
       then
+         No_Match := False;
          return Path_Name.Create_File (Filename_Type (Default_Name));
       end if;
+
+      No_Match := True;
 
       Start_Search
         (Search,
@@ -81,6 +87,7 @@ package body GPR2.Project.Tree is
          (Ordinary_File => True, others => False));
 
       if More_Entries (Search) then
+         No_Match := False;
          Get_Next_Entry (Search, Item);
 
          if not More_Entries (Search) then
@@ -380,6 +387,7 @@ package body GPR2.Project.Tree is
       Prj_Kind     : Project_Descriptor_Kind := Project_Path;
       Project_File : GPR2.Path_Name.Object := Options.Project_File;
       Root_Data    : GPR2.View_Internal.Data;
+      No_Match     : Boolean;
 
       function Prj_Descriptor return Tree_Internal.Project_Descriptor is
         (case Prj_Kind is
@@ -436,14 +444,16 @@ package body GPR2.Project.Tree is
 
          else
             Project_File := Check_For_Default_Project
-              (if Project_File.Is_Defined
-               then String (Project_File.Name)
-               else "");
+              ((if Project_File.Is_Defined
+                then String (Project_File.Name)
+                else ""),
+               No_Match => No_Match);
 
             if Project_File.Is_Defined then
                Self.Reporter.Report
                  ("using project file " & Project_File.String_Value);
-            elsif Allow_Implicit_Project then
+
+            elsif Allow_Implicit_Project and then No_Match then
 
                --  See comment in No_Project case as to how we handle projects
                --  as project directories.
@@ -458,7 +468,7 @@ package body GPR2.Project.Tree is
 
             else
                raise GPR2.Options.Usage_Error with
-                 "no project file specified";
+                 "no project file specified and no default project file";
             end if;
          end if;
 
