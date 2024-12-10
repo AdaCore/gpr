@@ -637,10 +637,6 @@ package body GPR2.Build.Actions_Population is
 
                Tree_Db.Add_Input (L.UID, Comp.Object_File, False);
                Tree_Db.Add_Input (Bind.UID, Comp.Ali_File, True);
-
-               if Interf_Units.First_Element = CU then
-                  Tree_Db.Add_Input (L.UID, Bind.Post_Bind.Object_File, True);
-               end if;
             end;
          end loop;
       else
