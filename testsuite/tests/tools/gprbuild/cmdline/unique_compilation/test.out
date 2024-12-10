@@ -1,0 +1,32 @@
+$ gpr2build -P demo.gpr -q --json-summary -u
+[Ada Compile] main.adb (demo.gpr)
+[Ada Compile] main2.adb (demo.gpr)
+$ gpr2build -P demo.gpr -q --json-summary -U
+[Ada Compile] main.adb (demo.gpr)
+[Ada Compile] main2.adb (demo.gpr)
+[Ada Compile] pkg.ads (lib1.gpr)
+[Ada Compile] pkg2.ads (lib2.gpr)
+$ gpr2build -P abst.gpr -q --json-summary -u pkg2.ads
+[Ada Compile] pkg2.ads (lib2.gpr)
+$ gpr2build -P abst.gpr -q --json-summary -U pkg2.ads
+[Ada Compile] pkg2.ads (lib2.gpr)
+$ gpr2build -P abst.gpr -q --json-summary -U non_existing.ads
+abst.gpr: error: "non_existing.ads" was not found in the sources of any project
+$ gpr2build -P abst.gpr -q --json-summary -c pkg2.ads
+abst.gpr: error: "pkg2.ads" was not found in the project
+$ gpr2build -P demo.gpr -q --json-summary main.adb -c
+[Ada Compile] main.adb (demo.gpr)
+[Ada Compile] pkg.ads (lib1.gpr)
+[Ada Compile] pkg2.ads (lib2.gpr)
+$ gpr2build -P demo.gpr -q --json-summary main.adb -b
+[Ada Bind] main (demo.gpr)
+[Ada Post-Bind] b__main.adb (demo.gpr)
+$ gpr2build -P demo.gpr -q --json-summary main.adb -l
+[Archive] liblib1.a (lib1.gpr)
+[Archive] liblib2.a (lib2.gpr)
+[Link] main (demo.gpr)
+$ ./main
+I'm main
+I'm Pkg
+I'm Pkg2
+
