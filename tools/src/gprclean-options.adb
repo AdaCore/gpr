@@ -56,7 +56,7 @@ package body GPRclean.Options is
             Index  => "");
          Result.Remove_Config  := True;
       elsif Arg = "-c" then
-         Result.Remain_Useful := True;
+         Result.Compil_Only := True;
       elsif Arg = "-p" then
          Result.Remove_Empty_Dirs := True;
       elsif Arg = "-f" then
@@ -78,26 +78,6 @@ package body GPRclean.Options is
       Parser.Get_Opt
         (From_Pack => PRP.Clean, Values => Values, Result => Options);
    end Parse_Attribute_Switches;
-
-   ------------------------
-   -- Parse_Command_Line --
-   ------------------------
-
-   procedure Parse_Command_Line
-     (Parser       : GPRtools.Options.Command_Line_Parser;
-      Options      : in out Object)
-   is
-   begin
-      Parser.Get_Opt (Options);
-
-      --  Now read arguments
-
-      for Arg of Options.Args loop
-         Options.Mains.Insert (Filename_Type (Arg));
-      end loop;
-
-      Options.Arg_Mains := not Options.Mains.Is_Empty;
-   end Parse_Command_Line;
 
    -----------
    -- Setup --

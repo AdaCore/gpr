@@ -92,8 +92,9 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
             end if;
 
             if Success then
-                  Opts.Tree.Reporter.Report
-                    ('"' & Name & """ has been deleted");
+               Opts.Tree.Reporter.Report
+                 ('"' & Name & """ has been deleted",
+                  Level => GPR2.Message.Optional);
             elsif Opts.Tree.Reporter.Verbosity > No_Warnings then
                Opts.Tree.Reporter.Report
                  ("Warning: """ & Name & """ could not be deleted");
@@ -114,7 +115,7 @@ begin
    GNATCOLL.Traces.Parse_Config_File;
    GPRtools.Util.Set_Program_Name ("gprclean");
    GPRclean.Options.Setup (Parser);
-   GPRclean.Options.Parse_Command_Line (Parser, Opt);
+   Parser.Get_Opt (Opt);
 
    if not GPRtools.Options.Load_Project (Opt, GPR2.No_Error) then
       Handle_Program_Termination (Message => "");
@@ -137,7 +138,7 @@ begin
          --  re-parse the command line to allow it to overwrite project
          --  defined Switches attribute.
 
-         GPRclean.Options.Parse_Command_Line (Parser, Opt);
+         Parser.Get_Opt (Opt);
 
          --  Note that we never need to reload the tree, as we ensured that
          --  no switch modifying the configuration of the project or the
@@ -163,19 +164,6 @@ begin
 
    if Project_Tree.Has_Configuration then
       Conf := Project_Tree.Configuration.Corresponding_View;
-   end if;
-
-   if Project_Tree.Root_Project.Is_Library and then Opt.Arg_Mains then
-      Project_Tree.Log_Messages.Append
-        (GPR2.Message.Create
-           (GPR2.Message.Error,
-            "main cannot be a source of a library project: """
-            & String (Opt.Mains.First_Element) & '"',
-            Source_Reference.Create
-              (Project_Tree.Root_Project.Path_Name.Value, 0, 0)));
-
-      Handle_Program_Termination
-        (Message => "problems with main sources");
    end if;
 
    Project_Tree.Update_Sources;
@@ -254,12 +242,6 @@ begin
             Opt);
       end if;
    end loop;
-
-   if Opt.Arg_Mains and then not Opt.Mains.Is_Empty then
-      Handle_Program_Termination
-        (Message => '"' & String (Opt.Mains.First_Element)
-         & """ was not found in " & "the sources of any project");
-   end if;
 
    if Opt.Remove_Config then
       Delete_File (Opt.Config_Project.String_Value, Opt);
