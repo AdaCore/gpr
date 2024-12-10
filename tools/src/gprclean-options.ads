@@ -33,6 +33,10 @@ package GPRclean.Options is
 
    procedure Setup (Parser : out GPRtools.Options.Command_Line_Parser);
 
+   procedure Parse_Command_Line
+     (Parser       : GPRtools.Options.Command_Line_Parser;
+      Options      : in out Object);
+
    procedure Parse_Attribute_Switches
      (Parser  : GPRtools.Options.Command_Line_Parser;
       Options : in out Object;

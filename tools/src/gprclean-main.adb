@@ -170,7 +170,7 @@ begin
    GNATCOLL.Traces.Parse_Config_File;
    GPRtools.Util.Set_Program_Name ("gprclean");
    GPRclean.Options.Setup (Parser);
-   Parser.Get_Opt (Opt);
+   GPRclean.Options.Parse_Command_Line (Parser, Opt);
 
    if not GPRtools.Options.Load_Project (Opt, GPR2.No_Error) then
       Handle_Program_Termination (Message => "");
@@ -193,7 +193,7 @@ begin
          --  re-parse the command line to allow it to overwrite project
          --  defined Switches attribute.
 
-         Parser.Get_Opt (Opt);
+         GPRclean.Options.Parse_Command_Line (Parser, Opt);
 
          --  Note that we never need to reload the tree, as we ensured that
          --  no switch modifying the configuration of the project or the
