@@ -28,6 +28,7 @@ with GNATCOLL.Traces;
 with GPR2.Build.Actions_Population;
 with GPR2.Build.Actions;
 with GPR2.Build.Actions.Compile;
+with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Log;
 with GPR2.Message;
@@ -163,6 +164,8 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    Artifact_Path : Path_Name.Object;
    Conf          : GPR2.Project.View.Object;
 
+   use type GPR2.Project.View.Object;
+
 begin
    GNATCOLL.Traces.Parse_Config_File;
    GPRtools.Util.Set_Program_Name ("gprclean");
@@ -232,7 +235,13 @@ begin
    --  Iterate on all actions, and clean their output artifacts
 
    for Action of Project_Tree.Artifacts_Database.All_Actions loop
-      if not Action.View.Is_Externally_Built then
+      if not Action.View.Is_Externally_Built
+        and then (Opt.All_Projects
+                  or else Action.View = Project_Tree.Root_Project)
+        and then (not Opt.Compil_Only
+                  or else Action in GPR2.Build.Actions.Compile.Object'Class
+                  or else Action in GPR2.Build.Actions.Post_Bind.Object'Class)
+      then
          for Artifact of
            Project_Tree.Artifacts_Database.Outputs (Action.UID)
          loop
