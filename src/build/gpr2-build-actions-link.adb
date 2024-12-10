@@ -149,13 +149,14 @@ package body GPR2.Build.Actions.Link is
             end;
          end loop;
 
-         for C of Self.View.Closure loop
+         for C of Self.View.Closure (True) loop
             declare
                Opt     : constant Project.Attribute.Object :=
                            C.Attribute (PRA.Linker.Linker_Options);
                Lib_Opt : constant Value_Type :=
                            Self.Tree.Linker_Lib_Dir_Option;
                use GNATCOLL.Utils;
+               use type GPR2.Project.View.Object;
             begin
                if Opt.Is_Defined then
                   for Val of Opt.Values loop
@@ -163,11 +164,12 @@ package body GPR2.Build.Actions.Link is
                         Arg  : constant Value_Type := Val.Text;
                         Path : Path_Name.Object;
                      begin
-                        --  Need to check that any -L<path> option has an
-                        --  absolute dir
                         if Arg'Length >= Lib_Opt'Length
                           and then Starts_With (Arg, Lib_Opt)
                         then
+                           --  Need to check that any -L<path> option has an
+                           --  absolute dir.
+
                            Path := Path_Name.Create_Directory
                              (Filename_Type
                                 (Arg (Arg'First + Lib_Opt'Length .. Arg'Last)),
@@ -175,8 +177,15 @@ package body GPR2.Build.Actions.Link is
                            Args.Append (Lib_Opt & Path.String_Value);
 
                         elsif Arg (Arg'First) = '-' then
-                           --  Don't touch other switches
-                           Args.Append (Val.Text);
+                           --  ??? How about case where linker switches don't
+                           --  start with a dash?
+
+                           if C /= Self.View then
+                              --  For self.View, use non-switch parts of
+                              --  the linker option only.
+
+                              Args.Append (Val.Text);
+                           end if;
 
                         else
                            --  Check for relative paths and translate them
