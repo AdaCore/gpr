@@ -63,7 +63,7 @@ package GPRtools.Command_Line is
 
    function Remaining_Arguments
      (Result : Command_Line_Result)
-      return GPR2.Containers.Value_List is abstract;
+      return GPR2.Containers.Value_Set is abstract;
 
    procedure Append_Argument
      (Result : in out Command_Line_Result;

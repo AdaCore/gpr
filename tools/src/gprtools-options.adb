@@ -20,6 +20,7 @@ pragma Warnings (Off);
 with System.OS_Constants;
 pragma Warnings (On);
 
+with Ada.Containers;
 with GNAT.Directory_Operations;
 
 with GPR2.Project.Registry.Pack;
@@ -47,7 +48,7 @@ package body GPRtools.Options is
      (Result : in out Base_Options; Value : GPR2.Value_Type) is
    begin
       if not Result.On_Extra_Arg (Value) then
-         Result.Args.Append (Value);
+         Result.Build_Options.Mains.Include (Value);
       end if;
    end Append_Argument;
 
@@ -309,7 +310,34 @@ package body GPRtools.Options is
 
    overriding procedure Get_Opt
      (Parser : Command_Line_Parser;
-      Result : in out GPRtools.Command_Line.Command_Line_Result'Class) is
+      Result : in out GPRtools.Command_Line.Command_Line_Result'Class)
+   is
+      use type Ada.Containers.Count_Type;
+      use GPR2;
+
+      procedure Mains_Check (Opt : Base_Options'Class);
+      --  Sanity check mains given on the command line:
+
+      procedure Mains_Check (Opt : Base_Options'Class) is
+      begin
+         if Opt.Build_Options.Unit_Index /= No_Index
+           and then (Opt.Build_Options.Mains.Is_Empty
+                     or else Opt.Build_Options.Mains.Length > 1)
+         then
+            raise GPR2.Options.Usage_Error with
+              "only one source can be specified with multi-unit index " &
+              "specified with '-eI'";
+         end if;
+
+         if Ada.Strings.Unbounded.Length (Opt.Build_Options.Output_File) > 0
+           and then Opt.Build_Options.Mains.Length /= 1
+         then
+            raise GPR2.Options.Usage_Error with
+              "only one source can be specified when the output file is " &
+              "specified with '-o'";
+         end if;
+      end Mains_Check;
+
    begin
       if Parser.Check_Shared_Libs then
          Base_Options (Result).Check_Shared_Libs := True;
@@ -320,6 +348,8 @@ package body GPRtools.Options is
       GPRtools.Command_Line.Command_Line_Parser (Parser).Get_Opt (Result);
       Base_Options (Result).Find_Implicit_Project :=
         Parser.Find_Implicit_Project;
+
+      Mains_Check (Base_Options'Class (Result));
    end Get_Opt;
 
    ------------------

@@ -17,8 +17,6 @@
 ------------------------------------------------------------------------------
 
 with GPR2;
-with GPR2.Build;
-with GPR2.Build.Actions_Population;
 with GPR2.Containers;
 with GPR2.Path_Name;
 
@@ -28,7 +26,6 @@ with GPRtools.Options;
 package GPRbuild.Options is
 
    type Object is new GPRtools.Options.Base_Options with record
-      Build_Options            : GPR2.Build.Actions_Population.Build_Options;
       Single_Build_Per_Obj_Dir : Boolean := False;
       Build_Script             : GPR2.Path_Name.Object;
       No_Object_Check          : Boolean := False;

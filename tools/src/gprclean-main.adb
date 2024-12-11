@@ -159,7 +159,6 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    Project_Tree  : Project.Tree.Object;
    Opt           : GPRclean.Options.Object;
    Parser        : GPRtools.Options.Command_Line_Parser;
-   Build_Opt     : GPR2.Build.Actions_Population.Build_Options;
    Lang          : GPR2.Language_Id;
    Artifact_Path : Path_Name.Object;
    Conf          : GPR2.Project.View.Object;
@@ -227,7 +226,7 @@ begin
    --  for removal.
 
    if not GPR2.Build.Actions_Population.Populate_Actions
-     (Project_Tree, Build_Opt)
+     (Project_Tree, Opt.Build_Options)
    then
       return To_Exit_Status (E_Abort);
    end if;

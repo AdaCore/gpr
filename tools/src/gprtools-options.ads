@@ -18,6 +18,7 @@
 
 with Ada.Strings.Unbounded;
 
+with GPR2.Build.Actions_Population;
 with GPR2.Containers;
 with GPR2.Options;
 with GPR2.Project.Tree;
@@ -35,9 +36,6 @@ package GPRtools.Options is
    type Base_Options is new GPR2.Options.Object
      and Command_Line.Command_Line_Result
    with record
-      Args                  : GPR2.Containers.Value_List;
-      --  Non-switch arguments
-
       Check_Shared_Libs     : Boolean := False;
       --  Whether shared libs importing static libs should be checked.
       --  Unset by default for all tools unless specified during creation
@@ -60,14 +58,15 @@ package GPRtools.Options is
       Slave_Env             : Unbounded_String;
       Slave_Env_Auto        : Boolean := False;
       Hash_Value            : Unbounded_String;
+      Build_Options         : GPR2.Build.Actions_Population.Build_Options;
    end record;
    --  Options common to most gpr tools
 
    Empty_Options : constant Base_Options;
 
    overriding function Remaining_Arguments
-     (Result : Base_Options) return GPR2.Containers.Value_List
-     is (Result.Args);
+     (Result : Base_Options) return GPR2.Containers.Value_Set
+     is (Result.Build_Options.Mains);
 
    overriding procedure Append_Argument
      (Result : in out Base_Options; Value : GPR2.Value_Type);
