@@ -154,7 +154,7 @@ different command line separators are:
 * :samp:`-largs`
 
   The arguments that follow up to the next command line separator are
-  options for the linker, when linking an executable.
+  options for the linker, when linking an executable or a dynamic library.
 
 * :samp:`-kargs`
 
