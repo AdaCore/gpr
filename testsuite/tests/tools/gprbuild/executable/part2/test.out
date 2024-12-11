@@ -49,18 +49,19 @@ Hello from Dep_Two
 ================================================================
 Case 4 - Missing main.adb
 main.gpr:5:18: error: main.adb is not a source of project Main
-gprbuild: Failed to update sources
+gprbuild: processing failed
 Test return value: 4
 
 ================================================================
 Case 5 - Modified main.adb (comments only)
 [Ada Compile]     main.adb
+[Ada Bind]        main
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
@@ -82,12 +83,13 @@ Error detected in jobs.json
 ================================================================
 Case 7 - Modified pkg.adb (comments only)
 [Ada Compile]     pkg.adb
+[Ada Bind]        main
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
-uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
@@ -112,12 +114,13 @@ Error detected in jobs.json
 Case 9 - Modified pkg.ads (comments only)
 [Ada Compile]     main.adb
 [Ada Compile]     pkg.adb
+[Ada Bind]        main
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
-uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
@@ -137,12 +140,13 @@ Error detected in jobs.json
 Case 11 - Modified dep_two.adb (comments only)
 [Ada Compile]     dep_two.adb
 [Ada Compile]     pkg.adb
+[Ada Bind]        main
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
-uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:
@@ -162,12 +166,13 @@ Error detected in jobs.json
 Case 13 - Modified dep_two.ads (comments only)
 [Ada Compile]     dep_two.adb
 [Ada Compile]     pkg.adb
+[Ada Bind]        main
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
-uid: '[Ada Bind] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
+uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 == Executable output:

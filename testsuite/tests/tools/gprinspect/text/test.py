@@ -70,9 +70,9 @@ def test(cmd):
 test([GPRINSPECT, "-Proot.gpr", "--all", "-r"])
 test([GPRINSPECT, "-Proot.gpr", "--all", "-r", "--display=json"])
 
-print("Check JSON validity :")
+print("Check JSON validity:")
 
-JSON_File = "output.json"
+JSON_File = os.path.join(os.getcwd(), "output.json")
 
 p = bnr.run([GPRINSPECT, "-Proot.gpr", "--all", "-r", "--display=json"], output=JSON_File)
 
@@ -81,9 +81,26 @@ with open(JSON_File) as jfile:
         json.load(jfile)
         print ("   Valid JSON output")
     except ValueError as e:
-        print(f"   Invalid JSON output : {e}")
+        print(f"   Invalid JSON output: {e}")
 
-print("Check JSON validity for default project :")
+print("Check JSON validity for default project:")
+
+old = os.getcwd()
+os.chdir(os.path.join(old, "with_default"))
+p = bnr.run([GPRINSPECT, "--all", "-r", "--display=json"], output=JSON_File)
+os.chdir(old)
+
+with open(JSON_File) as jfile:
+    try:
+        json.load(jfile)
+        print ("   Valid JSON output")
+    except ValueError as e:
+        print(f"   Invalid JSON output: {e}")
+
+print("Check JSON validity with error:")
+
+# several projects in current directory, so no default is loaded and an error
+# is reported
 
 p = bnr.run([GPRINSPECT, "--all", "-r", "--display=json"], output=JSON_File)
 

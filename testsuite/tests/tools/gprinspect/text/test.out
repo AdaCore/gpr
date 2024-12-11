@@ -880,7 +880,9 @@
     }
   }
 }
-Check JSON validity :
+Check JSON validity:
    Valid JSON output
-Check JSON validity for default project :
+Check JSON validity for default project:
+   Valid JSON output
+Check JSON validity with error:
    Valid JSON output
