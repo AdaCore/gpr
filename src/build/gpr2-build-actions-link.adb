@@ -159,12 +159,67 @@ package body GPR2.Build.Actions.Link is
       if not Self.Is_Static_Library then
          for Lib of Self.Library_Dependencies loop
             declare
-               Link : constant Object'Class :=
-                        Object'Class (Self.Tree.Action (Lib));
-
+               Link         : constant Object'Class :=
+                 Object'Class (Self.Tree.Action (Lib));
+               Lib_Artifact : constant GPR2.Path_Name.Object :=
+                 Link.Output.Path;
             begin
-               Cmd_Line.Add_Argument
-                 (Link.Library.Path, True);
+
+               --  We can not rely on the view to obtain the library
+               --  information, as some libraries dependencies can be created
+               --  dynamically in the tree database. For instance if the
+               --  project view contains a C main that depends on Ada code,
+               --  a standalone Ada library is created to be included by
+               --  the C main.
+
+               if Link.Is_Static then
+
+                  --  Add the static archive
+
+                  Cmd_Line.Add_Argument (Lib_Artifact.String_Value);
+               else
+                  --  Add flags to include the shared library
+
+                  --  ??? -L can be replaced with the value specified with the
+                  --  Linker_Lib_Dir_Option option. Need to investigate
+                  --  to know if this option is required.
+
+                  Cmd_Line.Add_Argument
+                    ("-L" & String (Lib_Artifact.Dir_Name));
+
+                  if not Self.Is_Library then
+
+                     --  Add the library directory to the runtime path of the
+                     --  executable, so that LD_LIBRARY_PATH does not need to
+                     --  be set before execution.
+
+                     Cmd_Line.Add_Argument
+                       ("-Wl,-rpath," & String (Lib_Artifact.Dir_Name));
+                  end if;
+
+                  pragma Assert
+                    (String (Lib_Artifact.Base_Name)'Length >= 4,
+                     "The library artifact name length should be at " &
+                     "least 4 characters (lib<name>)");
+
+                  pragma Assert
+                    (Lib_Artifact.Base_Name
+                       (Lib_Artifact.Base_Name'First ..
+                            Lib_Artifact.Base_Name'First +
+                            2) =
+                     "lib",
+                     "The library artifact name length " &
+                     "should begin with 'lib'");
+
+                  --  ??? -l can be replaced with the value specified with the
+                  --  Linker_Lib_Name_Option option. Need to investigate
+                  --  to know if this option is required.
+
+                  Cmd_Line.Add_Argument
+                    ("-l" & String (Lib_Artifact.Base_Name
+                       (Lib_Artifact.Base_Name'First + 3 ..
+                            Lib_Artifact.Base_Name'Last)));
+               end if;
             end;
          end loop;
 
