@@ -17,6 +17,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Calendar.Formatting;
+with Ada.Exceptions;
 with Ada.Text_IO;
 
 with GNATCOLL.JSON;
@@ -52,6 +53,10 @@ is
    use type Project.Registry.Attribute.Value_Kind;
 
    package PRA renames Project.Registry.Attribute;
+
+   procedure Display_Exception_JSON_Output
+     (JSON_Res    : JSON_Value;
+      Except      : Ada.Exceptions.Exception_Occurrence);
 
    procedure Display_Messages_JSON_Output
      (JSON_Res    : JSON_Value;
@@ -91,6 +96,18 @@ is
      (Views : Restricted_Scope;
       VName : Name_Type) return Boolean;
    --  Return if the view must be processed and displayed or not.
+
+   procedure Display_Exception_JSON_Output
+     (JSON_Res    : JSON_Value;
+      Except      : Ada.Exceptions.Exception_Occurrence)
+   is
+      Except_Obj     : constant JSON_Value := Create_Object;
+   begin
+      Set_Field (Except_Obj,
+                 Ada.Exceptions.Exception_Name (Except),
+                 Ada.Exceptions.Exception_Message (Except));
+      Set_Field (JSON_Res, "exception", Except_Obj);
+   end Display_Exception_JSON_Output;
 
    ----------------------------------
    -- Display_Messages_JSON_Output --
@@ -1181,4 +1198,30 @@ begin
         (Message => '"' & String (Options.Project_File.Name)
          & """ processing failed");
    end if;
+
+exception
+   when GPRtools.Program_Termination.E_Program_Termination =>
+      --  let it go through
+      raise;
+
+   when E : others =>
+      case Options.Kind_Of_Display is
+         when GPRtools.K_JSON | GPRtools.K_JSON_Compact =>
+            declare
+               J_Res : constant JSON_Value := Create_Object;
+            begin
+               Display_Exception_JSON_Output
+                 (JSON_Res    => J_Res,
+                  Except      => E);
+               Text_IO.Put_Line
+                 (JSON.Write
+                    (J_Res, Compact =>
+                         Options.Kind_Of_Display = GPRtools.K_JSON_Compact));
+            end;
+            Handle_Program_Termination
+              (Message => "");
+
+         when others =>
+            raise;
+      end case;
 end GPRinspect.Process;
