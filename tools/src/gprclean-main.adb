@@ -73,6 +73,8 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
      (View : GPR2.Project.View.Object; Opts : GPRclean.Options.Object);
    --  Removes the empty obj/lib/exec dirs of View
 
+   Project_Tree  : Project.Tree.Object;
+
    -----------------
    -- Delete_File --
    -----------------
@@ -109,16 +111,39 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
       end if;
    end Delete_File;
 
+   ---------------------------
+   -- Remove_Artifacts_Dirs --
+   ---------------------------
+
    procedure Remove_Artifacts_Dirs
      (View : GPR2.Project.View.Object; Opts : GPRclean.Options.Object)
    is
       procedure Remove_Dir (Path : GPR2.Path_Name.Object);
 
+      Subdirs  : constant Filename_Optional :=
+                   Project_Tree.Subdirs;
+
+      ----------------
+      -- Remove_Dir --
+      ----------------
+
       procedure Remove_Dir (Path : GPR2.Path_Name.Object) is
          use Ada.Directories;
       begin
+         if Path = View.Dir_Name then
+            return;
+         end if;
+
          if Kind (Path.String_Value) = Directory then
             Delete_Directory (Path.String_Value);
+         end if;
+
+         if Subdirs'Length > 0 then
+            if Path.Containing_Directory = View.Dir_Name then
+               return;
+            end if;
+
+            Delete_Directory (Path.Containing_Directory.String_Value);
          end if;
 
       exception
@@ -135,6 +160,8 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
                     else "") & '.');
             end;
       end Remove_Dir;
+
+
    begin
       if View.Kind in GPR2.With_Object_Dir_Kind then
          Remove_Dir (View.Object_Directory);
@@ -156,7 +183,6 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
       end if;
    end Remove_Artifacts_Dirs;
 
-   Project_Tree  : Project.Tree.Object;
    Opt           : GPRclean.Options.Object;
    Parser        : GPRtools.Options.Command_Line_Parser;
    Lang          : GPR2.Language_Id;
