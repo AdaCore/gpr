@@ -2455,13 +2455,41 @@ package body GPR2.Tree_Internal is
       -- Validity_Check --
       --------------------
 
-      procedure Validity_Check (View : Project.View.Object) is
+      procedure Validity_Check (View : Project.View.Object)
+      is
          use type PRA.Index_Value_Type;
-         use type View_Ids.View_Id;
+
+         function Source_Loc
+           (Imp : Project.View.Object)
+            return Source_Reference.Object'Class;
 
          P_Kind : constant Project_Kind := View.Kind;
          P_Data : constant View_Internal.Const_Ref :=
                     View_Internal.Get_RO (View);
+         To_Check : Project.View.Set.Object;
+         Done     : Project.View.Set.Object;
+         Imported : Project.View.Object;
+
+         ----------------
+         -- Source_Loc --
+         ----------------
+
+         function Source_Loc
+           (Imp : Project.View.Object)
+            return Source_Reference.Object'Class
+         is
+            Imports  : constant Project.Import.Set.Object :=
+                         P_Data.Trees.Project.Imports;
+            Position : constant Project.Import.Set.Cursor :=
+                         Imports.Find (Imp.Path_Name);
+         begin
+            if Project.Import.Set.Has_Element (Position) then
+               return Project.Import.Set.Element (Position);
+            else
+               return Source_Reference.Create
+                 (View.Path_Name.Value, 0, 0);
+            end if;
+         end Source_Loc;
 
       begin
          --  Check global properties
@@ -2478,7 +2506,7 @@ package body GPR2.Tree_Internal is
          if Self.Root_Project.Kind = K_Aggregate
            and then View_Internal.Get (View).Context = Root
            and then View.Kind not in K_Abstract | K_Aggregate
-           and then View.Id /= View_Ids.Runtime_View_Id
+           and then not View.Is_Runtime
          then
             Self.Error
               ("can only import abstract projects, not """
@@ -2487,27 +2515,82 @@ package body GPR2.Tree_Internal is
                  (Self.Root_Project.Path_Name.Value, 0, 0));
          end if;
 
-         for Imported of View.Imports.Union (View.Limited_Imports) loop
-            --  Check for import of the encapsulated standalone library project
-            if Imported.Is_Library
-              and then Imported.Library_Standalone = Encapsulated
-            then
-               Self.Warning
-                 ("encapsulated standalone library project """
-                  & String (Imported.Name)
-                  & """ can't be imported",
-                  Source_Reference.Create (View.Path_Name.Value, 0, 0));
-            end if;
+         To_Check := View.Imports.Union (View.Limited_Imports);
 
-            --  Check for import of aggregate project
-            if View.Kind /= K_Aggregate
-              and then Imported.Kind = K_Aggregate
-            then
-               Self.Error
-                 ("aggregate project """
-                  & String (Imported.Name)
-                  & """ can only be imported by an aggregate project",
-                  Source_Reference.Create (View.Path_Name.Value, 0, 0));
+         while not To_Check.Is_Empty loop
+            Imported := To_Check.First_Element;
+            To_Check.Delete_First;
+
+            if not Done.Contains (Imported) then
+               Done.Include (Imported);
+
+               --  Check for import of the encapsulated standalone library
+               --  project.
+
+               if Imported.Is_Library
+                 and then Imported.Library_Standalone = Encapsulated
+               then
+                  Self.Warning
+                    ("encapsulated standalone library project """
+                     & String (Imported.Name)
+                     & """ can't be imported",
+                     Source_Loc (Imported));
+               end if;
+
+               --  Check for import of aggregate project
+               if View.Kind /= K_Aggregate
+                 and then Imported.Kind = K_Aggregate
+               then
+                  Self.Error
+                    ("aggregate project """
+                     & String (Imported.Name)
+                     & """ can only be imported by an aggregate project",
+                     Source_Loc (Imported));
+               end if;
+
+               if Self.Check_Shared_Lib
+                 and then View.Is_Library
+                 and then View.Is_Shared_Library
+               then
+                  if Imported.Is_Runtime then
+                     --  Ignore the checks here
+                     null;
+
+                  elsif Imported.Is_Abstract then
+                     --  Need to check the importes of the abstract project
+                     To_Check.Union (Imported.Imports);
+                     To_Check.Union (Imported.Limited_Imports);
+
+                  elsif not Imported.Is_Library then
+                     Self.Error
+                       ("shared library project """
+                        & String (View.Name)
+                        & """ cannot import project """
+                        & String (Imported.Name)
+                        & """ that is not a shared library project",
+                        Source_Loc (Imported));
+
+                  elsif Imported.Is_Static_Library
+                    and then View.Library_Standalone /= Encapsulated
+                  then
+                     Self.Error
+                       ("shared library project """
+                        & String (View.Name)
+                        & """ cannot import static library project """
+                        & String (Imported.Name) & '"',
+                     Source_Loc (Imported));
+
+                  elsif not Imported.Is_Shared_Library
+                    and then View.Library_Standalone = Encapsulated
+                  then
+                     Self.Error
+                       ("encapsulated library project """
+                        & String (View.Name)
+                        & """ cannot impomrt shared library project """
+                        & String (Imported.Name),
+                        Source_Loc (Imported));
+                  end if;
+               end if;
             end if;
          end loop;
 

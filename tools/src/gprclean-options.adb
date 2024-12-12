@@ -18,6 +18,7 @@
 
 with GPR2.Options;
 with GPR2.Project.Registry.Pack;
+with GPR2.Reporter;
 
 with GPRtools.Command_Line;
 
@@ -56,7 +57,7 @@ package body GPRclean.Options is
             Index  => "");
          Result.Remove_Config  := True;
       elsif Arg = "-c" then
-         Result.Remain_Useful := True;
+         Result.Compil_Only := True;
       elsif Arg = "-p" then
          Result.Remove_Empty_Dirs := True;
       elsif Arg = "-f" then
@@ -85,18 +86,34 @@ package body GPRclean.Options is
 
    procedure Parse_Command_Line
      (Parser       : GPRtools.Options.Command_Line_Parser;
-      Options      : in out Object)
-   is
+      Options      : in out Object) is
    begin
       Parser.Get_Opt (Options);
 
-      --  Now read arguments
+      --  Adjust console output verbosity to mimick what gprclean(1) does
 
-      for Arg of Options.Args loop
-         Options.Mains.Insert (Filename_Type (Arg));
-      end loop;
+      case Options.Console_Reporter.Verbosity is
+         when GPR2.Reporter.Quiet =>
+            if Options.No_Warnings then
+               Options.Console_Reporter.Set_Verbosity
+                 (GPR2.Reporter.No_Warnings);
+            else
+               Options.Console_Reporter.Set_Verbosity
+                 (GPR2.Reporter.Regular);
+            end if;
 
-      Options.Arg_Mains := not Options.Mains.Is_Empty;
+            Options.Console_Reporter.Set_User_Verbosity
+              (GPR2.Reporter.Important_Only);
+
+         when GPR2.Reporter.No_Warnings | GPR2.Reporter.Regular =>
+            null;
+
+         when GPR2.Reporter.Verbose | GPR2.Reporter.Very_Verbose =>
+            Options.Console_Reporter.Set_User_Verbosity
+              (GPR2.Reporter.Verbose);
+            Options.Console_Reporter.Set_Verbosity
+              (GPR2.Reporter.Regular);
+      end case;
    end Parse_Command_Line;
 
    -----------

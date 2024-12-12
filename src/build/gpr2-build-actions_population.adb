@@ -637,10 +637,6 @@ package body GPR2.Build.Actions_Population is
 
                Tree_Db.Add_Input (L.UID, Comp.Object_File, False);
                Tree_Db.Add_Input (Bind.UID, Comp.Ali_File, True);
-
-               if Interf_Units.First_Element = CU then
-                  Tree_Db.Add_Input (L.UID, Bind.Post_Bind.Object_File, True);
-               end if;
             end;
          end loop;
       else
@@ -767,37 +763,61 @@ package body GPR2.Build.Actions_Population is
                Tree_Db.Add_Input (Link (Idx).UID, Comp.Object_File, True);
 
                --  In case the main is non-ada and we have Ada sources in
-               --  the view, we need to add a binding phase and an explicit
+               --  the closure, we need to add a binding phase and an explicit
                --  dependency from the link phase to the ada objects.
 
-               if View.Language_Ids.Contains (Ada_Language) then
-                  --  Make sure we have a binding phase for the ada sources
-                  --  that generates a binder file with external main.
+               for V of View.Closure (True) loop
+                  if not V.Is_Runtime
+                    and then V.Language_Ids.Contains (Ada_Language)
+                    and then
+                      (V.Kind = K_Standard
+                       or else
+                         (V.Is_Library
+                          and then V.Is_Static_Library
+                          and then not V.Is_Library_Standalone))
+                  then
+                     --  Make sure we have a binding phase for the ada sources
+                     --  that generates a binder file with external main.
 
-                  Bind (Idx).Initialize
-                    (Source.Path_Name.Base_Filename,
-                     View,
-                     "-n");
+                     if not Bind (Idx).Is_Defined then
+                        Bind (Idx).Initialize
+                          (Source.Path_Name.Base_Filename,
+                           View,
+                           "-n");
 
-                  if not Tree_Db.Add_Action (Bind (Idx)) then
-                     return False;
-                  end if;
+                        if not Tree_Db.Add_Action (Bind (Idx)) then
+                           return False;
+                        end if;
 
-                  Tree_Db.Add_Input
-                    (Link (Idx).UID, Bind (Idx).Post_Bind.Object_File, True);
-
-                  for U of View.Own_Units loop
-                     A_Comp.Initialize (U);
-
-                     if not Tree_Db.Add_Action (A_Comp) then
-                        return False;
+                        Tree_Db.Add_Input
+                          (Link (Idx).UID,
+                           Bind (Idx).Post_Bind.Object_File,
+                           True);
                      end if;
 
-                     Tree_Db.Add_Input (Bind (Idx).UID, A_Comp.Ali_File, True);
-                     Tree_Db.Add_Input
-                       (Link (Idx).UID, A_Comp.Object_File, True);
-                  end loop;
-               end if;
+                     for U of V.Own_Units loop
+                        A_Comp.Initialize (U);
+
+                        if V.Kind = K_Standard then
+                           if not Tree_Db.Add_Action (A_Comp) then
+                              return False;
+                           end if;
+
+                           Tree_Db.Add_Input
+                             (Bind (Idx).UID, A_Comp.Ali_File, True);
+                           Tree_Db.Add_Input
+                             (Link (Idx).UID, A_Comp.Object_File, True);
+                        else
+                           --  For archives, we just need to add the dependency
+                           --  to the bind action, the rest is handled like
+                           --  all imported archives.
+
+                           Tree_Db.Add_Input
+                             (Bind (Idx).UID, A_Comp.Ali_File, True);
+                        end if;
+                     end loop;
+                  end if;
+               end loop;
             end if;
 
             Idx := Idx + 1;

@@ -1,3 +1,3 @@
-base.gpr:2:06: error: shared library project "Shared" cannot import project "Nolib" that is not a shared library project
-base.gpr:1:06: error: shared library project "Shared" cannot import static library project "Static"
-gprclean: "prj.gpr" processing failed
+shared.gpr: error: shared library project "Shared" cannot import project "Nolib" that is not a shared library project
+shared.gpr: error: shared library project "Shared" cannot import static library project "Static"
+gprbuild: "prj.gpr" processing failed

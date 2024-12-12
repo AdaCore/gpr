@@ -20,6 +20,7 @@ pragma Warnings (Off);
 with System.OS_Constants;
 pragma Warnings (On);
 
+with Ada.Containers;
 with GNAT.Directory_Operations;
 
 with GPR2.Project.Registry.Pack;
@@ -47,7 +48,7 @@ package body GPRtools.Options is
      (Result : in out Base_Options; Value : GPR2.Value_Type) is
    begin
       if not Result.On_Extra_Arg (Value) then
-         Result.Args.Append (Value);
+         Result.Build_Options.Mains.Include (Value);
       end if;
    end Append_Argument;
 
@@ -65,7 +66,8 @@ package body GPRtools.Options is
       Allow_Autoconf         : Boolean := False;
       Allow_Quiet            : Boolean := True;
       No_Project_Support     : Boolean := False;
-      Allow_Implicit_Project : Boolean := True) return Command_Line_Parser
+      Allow_Implicit_Project : Boolean := True;
+      Check_Shared_Libs      : Boolean := False) return Command_Line_Parser
    is
       use GPRtools.Command_Line;
       Parser            : Command_Line_Parser;
@@ -82,7 +84,8 @@ package body GPRtools.Options is
                  Cmd_Line  => Cmd_Line,
                  Tool_Name => Tool_Name,
                  Help      => Help))
-         with Find_Implicit_Project => Allow_Implicit_Project);
+         with Find_Implicit_Project => Allow_Implicit_Project,
+              Check_Shared_Libs     => Check_Shared_Libs);
 
       if not No_Project_Support then
          Project_Group :=
@@ -140,12 +143,23 @@ package body GPRtools.Options is
                     In_Switch_Attr => False,
                     Delimiter      => Equal,
                     Parameter      => "proj.gpr"));
-         Parser.Add_Argument
-           (Project_Group,
-            Create (Name           => "--unchecked-shared-lib-imports",
-                    Help           => "Shared lib projects may import any" &
-                                      " project",
-                    In_Switch_Attr => False));
+
+         if Check_Shared_Libs then
+            Parser.Add_Argument
+              (Project_Group,
+               Create (Name           => "--unchecked-shared-lib-imports",
+                       Help           => "Shared lib projects may import any" &
+                                         " project",
+                       In_Switch_Attr => False));
+         else
+            Parser.Add_Argument
+              (Project_Group,
+               Create (Name           => "--unchecked-shared-lib-imports",
+                       Help           => "for compatibility only, unused",
+                       In_Switch_Attr => False,
+                       Hidden         => True));
+         end if;
+
          Parser.Add_Argument
            (Project_Group,
             Create (Name           => "--relocate-build-tree",
@@ -303,11 +317,46 @@ package body GPRtools.Options is
 
    overriding procedure Get_Opt
      (Parser : Command_Line_Parser;
-      Result : in out GPRtools.Command_Line.Command_Line_Result'Class) is
+      Result : in out GPRtools.Command_Line.Command_Line_Result'Class)
+   is
+      use type Ada.Containers.Count_Type;
+      use GPR2;
+
+      procedure Mains_Check (Opt : Base_Options'Class);
+      --  Sanity check mains given on the command line:
+
+      procedure Mains_Check (Opt : Base_Options'Class) is
+      begin
+         if Opt.Build_Options.Unit_Index /= No_Index
+           and then (Opt.Build_Options.Mains.Is_Empty
+                     or else Opt.Build_Options.Mains.Length > 1)
+         then
+            raise GPR2.Options.Usage_Error with
+              "only one source can be specified with multi-unit index " &
+              "specified with '-eI'";
+         end if;
+
+         if Ada.Strings.Unbounded.Length (Opt.Build_Options.Output_File) > 0
+           and then Opt.Build_Options.Mains.Length /= 1
+         then
+            raise GPR2.Options.Usage_Error with
+              "only one source can be specified when the output file is " &
+              "specified with '-o'";
+         end if;
+      end Mains_Check;
+
    begin
+      if Parser.Check_Shared_Libs then
+         Base_Options (Result).Check_Shared_Libs := True;
+         --  Enable by default in this case. Can be deactivated via
+         --  --unchecked-shared-libs
+      end if;
+
       GPRtools.Command_Line.Command_Line_Parser (Parser).Get_Opt (Result);
       Base_Options (Result).Find_Implicit_Project :=
         Parser.Find_Implicit_Project;
+
+      Mains_Check (Base_Options'Class (Result));
    end Get_Opt;
 
    ------------------
@@ -337,7 +386,7 @@ package body GPRtools.Options is
          Reporter                 => Opt.Console_Reporter,
          Absent_Dir_Error         => Absent_Dir_Error,
          Allow_Implicit_Project   => Opt.Find_Implicit_Project,
-         Check_Shared_Libs_Import => not Opt.Unchecked_Shared_Lib);
+         Check_Shared_Libs_Import => Opt.Check_Shared_Libs);
       Opt.Tree := Tree;
 
       if Handle_Errors and then not Loaded then
@@ -408,7 +457,7 @@ package body GPRtools.Options is
             Index  => "");
 
       elsif Arg = "--unchecked-shared-lib-imports" then
-         Result.Unchecked_Shared_Lib := True;
+         Result.Check_Shared_Libs := False;
 
       elsif Arg = "--relocate-build-tree" then
          Result.Add_Switch

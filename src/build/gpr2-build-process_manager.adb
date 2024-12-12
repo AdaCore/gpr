@@ -79,6 +79,7 @@ package body GPR2.Build.Process_Manager is
       Stdout, Stderr : Unbounded_String)
       return Collect_Status
    is
+      Failed_Status : Boolean;
    begin
       pragma Assert
         (Proc_Handler.Status /= Running,
@@ -135,10 +136,16 @@ package body GPR2.Build.Process_Manager is
             null;
       end case;
 
-      if (Proc_Handler.Status = Finished
-          and then Proc_Handler.Process_Status = PROCESS_STATUS_OK)
-        or else Proc_Handler.Status = Skipped
-      then
+      Failed_Status :=
+        (Proc_Handler.Status = Finished
+         and then Proc_Handler.Process_Status /= PROCESS_STATUS_OK)
+        or else (Proc_Handler.Status = Skipped and then
+                   not Job.Valid_Signature);
+
+      if Failed_Status and then Self.Stop_On_Fail then
+         return Abort_Execution;
+
+      else
          if not Job.Post_Command
            ((if Proc_Handler.Status = Skipped then Skipped else Success))
          then
@@ -146,24 +153,13 @@ package body GPR2.Build.Process_Manager is
          end if;
 
          --  Propagate any newly created action
-         if Proc_Handler.Status = Finished
-           and then not Self.Tree_Db.Propagate_Actions
-         then
-            return Abort_Execution;
+         if Proc_Handler.Status = Finished then
+            if not Self.Tree_Db.Propagate_Actions then
+               return Abort_Execution;
+            end if;
+
+            Job.Compute_Signature (Stdout, Stderr);
          end if;
-      end if;
-
-      if Proc_Handler.Status = Finished
-        and then Proc_Handler.Process_Status = PROCESS_STATUS_OK
-      then
-         Job.Compute_Signature (Stdout, Stderr);
-      end if;
-
-      if Proc_Handler.Status = Finished
-        and then Proc_Handler.Process_Status /= PROCESS_STATUS_OK
-        and then Self.Stop_On_Fail
-      then
-         return Abort_Execution;
       end if;
 
       --  We do not want to manipulate reference types during post commands

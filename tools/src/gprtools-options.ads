@@ -18,6 +18,7 @@
 
 with Ada.Strings.Unbounded;
 
+with GPR2.Build.Actions_Population;
 with GPR2.Containers;
 with GPR2.Options;
 with GPR2.Project.Tree;
@@ -35,37 +36,37 @@ package GPRtools.Options is
    type Base_Options is new GPR2.Options.Object
      and Command_Line.Command_Line_Result
    with record
-      Args                     : GPR2.Containers.Value_List;
-      --  Non-switch arguments
+      Check_Shared_Libs     : Boolean := False;
+      --  Whether shared libs importing static libs should be checked.
+      --  Unset by default for all tools unless specified during creation
+      --  of the command line parser.
 
-      Unchecked_Shared_Lib     : Boolean := False;
-      --  Whether shared libs importing static libs should be checked
-
-      Find_Implicit_Project    : Boolean := True;
+      Find_Implicit_Project : Boolean := True;
       --  Whether the tool allows finding implicit projects
 
-      Tree                     : GPR2.Project.Tree.Object;
+      Tree                  : GPR2.Project.Tree.Object;
       --  The project tree once loaded
 
-      Console_Reporter         : GPR2.Reporter.Console.Object :=
+      Console_Reporter      : GPR2.Reporter.Console.Object :=
                                    GPR2.Reporter.Console.Create;
-      No_Warnings              : Boolean := False;
+      No_Warnings           : Boolean := False;
 
       --  Distributed mode
 
-      Distributed_Mode         : Boolean := False;
-      Slaves                   : Unbounded_String;
-      Slave_Env                : Unbounded_String;
-      Slave_Env_Auto           : Boolean := False;
-      Hash_Value               : Unbounded_String;
+      Distributed_Mode      : Boolean := False;
+      Slaves                : Unbounded_String;
+      Slave_Env             : Unbounded_String;
+      Slave_Env_Auto        : Boolean := False;
+      Hash_Value            : Unbounded_String;
+      Build_Options         : GPR2.Build.Actions_Population.Build_Options;
    end record;
    --  Options common to most gpr tools
 
    Empty_Options : constant Base_Options;
 
    overriding function Remaining_Arguments
-     (Result : Base_Options) return GPR2.Containers.Value_List
-     is (Result.Args);
+     (Result : Base_Options) return GPR2.Containers.Value_Set
+     is (Result.Build_Options.Mains);
 
    overriding procedure Append_Argument
      (Result : in out Base_Options; Value : GPR2.Value_Type);
@@ -86,7 +87,8 @@ package GPRtools.Options is
       Allow_Autoconf         : Boolean := False;
       Allow_Quiet            : Boolean := True;
       No_Project_Support     : Boolean := False;
-      Allow_Implicit_Project : Boolean := True) return Command_Line_Parser;
+      Allow_Implicit_Project : Boolean := True;
+      Check_Shared_Libs      : Boolean := False) return Command_Line_Parser;
    --  Defines the common switches to handle configuration and project tree
    --  load.
    --  Allow_No_Project: enables working without project files via --no-project
@@ -120,6 +122,7 @@ private
 
    type Command_Line_Parser is new Command_Line.Command_Line_Parser with record
       Find_Implicit_Project : Boolean := True;
+      Check_Shared_Libs     : Boolean := False;
    end record;
 
    function Quiet (Self : Base_Options) return Boolean is

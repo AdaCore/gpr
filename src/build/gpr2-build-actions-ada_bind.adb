@@ -16,7 +16,6 @@ with GNATCOLL.Utils; use GNATCOLL.Utils;
 with GNATCOLL.OS.FS;
 
 with GPR2.Build.Actions.Post_Bind;
-with GPR2.Build.Artifacts.Library;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
@@ -543,14 +542,7 @@ package body GPR2.Build.Actions.Ada_Bind is
       Self.Signature.Clear;
 
       for Pred of Self.Tree.Inputs (UID) loop
-         if Pred in Artifacts.Library.Object'Class then
-            Self.Signature.Add_Artifact (Pred);
-         end if;
-      end loop;
-
-      for D of Self.Obj_Deps loop
-         Self.Signature.Add_Artifact
-           (Artifacts.Files.Create (Path_Name.Create_File (D)));
+         Self.Signature.Add_Artifact (Pred);
       end loop;
 
       Self.Signature.Add_Artifact (Self.Generated_Spec);
@@ -688,6 +680,8 @@ package body GPR2.Build.Actions.Ada_Bind is
       use Ada.Strings;
       use Ada.Strings.Fixed;
 
+      Add_Remaining : Boolean := False;
+
       procedure Process_Option_Or_Object_Line (Line : String);
       --  Pass options to the linker. Do not pass object file lines,
       --  as the objects to link are already obtained by parsing ALI files.
@@ -716,9 +710,11 @@ package body GPR2.Build.Actions.Ada_Bind is
                             Trim (Line (Switch_Index .. Line'Last), Both);
          begin
             if Trimed_Line (Trimed_Line'First) = '-' then
+               Add_Remaining := True;
+            end if;
+
+            if Add_Remaining then
                Self.Linker_Opts.Append (Trimed_Line);
-            else
-               Self.Obj_Deps.Include (Filename_Type (Trimed_Line));
             end if;
          end;
       end Process_Option_Or_Object_Line;

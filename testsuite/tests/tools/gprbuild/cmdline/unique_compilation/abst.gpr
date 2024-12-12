@@ -1,0 +1,6 @@
+with "lib1.gpr";
+with "lib2.gpr";
+
+abstract project Abst is
+
+end Abst;

@@ -16,7 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers;
 with Ada.Strings.Unbounded;
 
 with GPR2.Options;
@@ -57,7 +56,8 @@ package body GPRbuild.Options is
                        ASCII.LF &
                        "     [-cargs[:lang] opts] [-largs opts]" &
                        " [-kargs opts] [-gargs opts]",
-                     Allow_Autoconf    => True) with null record);
+                     Allow_Autoconf    => True,
+                     Check_Shared_Libs => True) with null record);
       Build_Group    : GPRtools.Command_Line.Argument_Group;
       Compiler_Group : GPRtools.Command_Line.Argument_Group;
 
@@ -313,34 +313,8 @@ package body GPRbuild.Options is
       Result : in out GPRtools.Command_Line.Command_Line_Result'Class)
    is
       Options : constant access Object := Object (Result)'Access;
-      use type Ada.Containers.Count_Type;
    begin
       GPRtools.Options.Command_Line_Parser (Parser).Get_Opt (Result);
-
-      --  Sanity check mains given on the command line:
-
-      if Options.Build_Options.Unit_Index /= No_Index
-        and then (Options.Args.Is_Empty
-                  or else Options.Args.Length > 1)
-      then
-         raise GPR2.Options.Usage_Error with
-           "only one source can be specified with multi-unit index " &
-           "specified with '-eI'";
-      end if;
-
-      for Arg of Options.Args loop
-         Options.Build_Options.Mains.Include (Arg);
-      end loop;
-
-      Options.Args.Clear;
-
-      if Ada.Strings.Unbounded.Length (Options.Build_Options.Output_File) > 0
-        and then Options.Build_Options.Mains.Length /= 1
-      then
-         raise GPR2.Options.Usage_Error with
-           "only one source can be specified when the output file is " &
-           "specified with '-o'";
-      end if;
 
       --  Adjust console output verbosity to mimick what gprbuild1 does
 

@@ -29,7 +29,11 @@ def test(command):
             error = True
 
     cnt = "\n".join(cnt)
-    val = json.loads(cnt)
+    try:
+        val = json.loads(cnt)
+    except:
+        print(cnt)
+        raise
     for conf_msg in val["messages"]["configuration"]:
         print(conf_msg)
 

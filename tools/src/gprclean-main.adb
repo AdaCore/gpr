@@ -17,6 +17,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Command_Line;
+with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Text_IO;
 
@@ -27,6 +28,7 @@ with GNATCOLL.Traces;
 with GPR2.Build.Actions_Population;
 with GPR2.Build.Actions;
 with GPR2.Build.Actions.Compile;
+with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Log;
 with GPR2.Message;
@@ -67,6 +69,12 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    --  this routine and could be different for different projects because of
    --  Switches attribute in project package Clean.
 
+   procedure Remove_Artifacts_Dirs
+     (View : GPR2.Project.View.Object; Opts : GPRclean.Options.Object);
+   --  Removes the empty obj/lib/exec dirs of View
+
+   Project_Tree  : Project.Tree.Object;
+
    -----------------
    -- Delete_File --
    -----------------
@@ -92,8 +100,9 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
             end if;
 
             if Success then
-                  Opts.Tree.Reporter.Report
-                    ('"' & Name & """ has been deleted");
+               Opts.Tree.Reporter.Report
+                 ('"' & Name & """ has been deleted",
+                  Level => GPR2.Message.Optional);
             elsif Opts.Tree.Reporter.Verbosity > No_Warnings then
                Opts.Tree.Reporter.Report
                  ("Warning: """ & Name & """ could not be deleted");
@@ -102,13 +111,85 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
       end if;
    end Delete_File;
 
-   Project_Tree  : Project.Tree.Object;
+   ---------------------------
+   -- Remove_Artifacts_Dirs --
+   ---------------------------
+
+   procedure Remove_Artifacts_Dirs
+     (View : GPR2.Project.View.Object; Opts : GPRclean.Options.Object)
+   is
+      procedure Remove_Dir (Path : GPR2.Path_Name.Object);
+
+      Subdirs  : constant Filename_Optional :=
+                   Project_Tree.Subdirs;
+
+      ----------------
+      -- Remove_Dir --
+      ----------------
+
+      procedure Remove_Dir (Path : GPR2.Path_Name.Object) is
+         use Ada.Directories;
+      begin
+         if Path = View.Dir_Name then
+            return;
+         end if;
+
+         if Kind (Path.String_Value) = Directory then
+            Delete_Directory (Path.String_Value);
+         end if;
+
+         if Subdirs'Length > 0 then
+            if Path.Containing_Directory = View.Dir_Name then
+               return;
+            end if;
+
+            Delete_Directory (Path.Containing_Directory.String_Value);
+         end if;
+
+      exception
+         when Use_Error =>
+            declare
+               Search : Search_Type;
+            begin
+               Start_Search (Search, Path.String_Value, "");
+               Opts.Tree.Reporter.Report
+                 ("warning: Directory """ & Path.String_Value
+                  & """ could not be removed"
+                  & (if More_Entries (Search)
+                    then " because it is not empty"
+                    else "") & '.');
+            end;
+      end Remove_Dir;
+
+
+   begin
+      if View.Kind in GPR2.With_Object_Dir_Kind then
+         Remove_Dir (View.Object_Directory);
+
+         if View.Is_Namespace_Root
+           and then View.Has_Mains
+           and then View.Executable_Directory /= View.Object_Directory
+         then
+            Remove_Dir (View.Executable_Directory);
+         end if;
+      end if;
+
+      if View.Is_Library then
+         Remove_Dir (View.Library_Directory);
+
+         if View.Library_Ali_Directory /= View.Library_Directory then
+            Remove_Dir (View.Library_Ali_Directory);
+         end if;
+      end if;
+   end Remove_Artifacts_Dirs;
+
    Opt           : GPRclean.Options.Object;
    Parser        : GPRtools.Options.Command_Line_Parser;
-   Build_Opt     : GPR2.Build.Actions_Population.Build_Options;
    Lang          : GPR2.Language_Id;
    Artifact_Path : Path_Name.Object;
    Conf          : GPR2.Project.View.Object;
+
+   use type GPR2.Project.View.Object;
 
 begin
    GNATCOLL.Traces.Parse_Config_File;
@@ -165,26 +246,13 @@ begin
       Conf := Project_Tree.Configuration.Corresponding_View;
    end if;
 
-   if Project_Tree.Root_Project.Is_Library and then Opt.Arg_Mains then
-      Project_Tree.Log_Messages.Append
-        (GPR2.Message.Create
-           (GPR2.Message.Error,
-            "main cannot be a source of a library project: """
-            & String (Opt.Mains.First_Element) & '"',
-            Source_Reference.Create
-              (Project_Tree.Root_Project.Path_Name.Value, 0, 0)));
-
-      Handle_Program_Termination
-        (Message => "problems with main sources");
-   end if;
-
    Project_Tree.Update_Sources;
 
    --  Create actions that will be used to iterate and obtain artifacts
    --  for removal.
 
    if not GPR2.Build.Actions_Population.Populate_Actions
-     (Project_Tree, Build_Opt)
+     (Project_Tree, Opt.Build_Options)
    then
       return To_Exit_Status (E_Abort);
    end if;
@@ -192,7 +260,13 @@ begin
    --  Iterate on all actions, and clean their output artifacts
 
    for Action of Project_Tree.Artifacts_Database.All_Actions loop
-      if not Action.View.Is_Externally_Built then
+      if not Action.View.Is_Externally_Built
+        and then (Opt.All_Projects
+                  or else Action.View = Project_Tree.Root_Project)
+        and then (not Opt.Compil_Only
+                  or else Action in GPR2.Build.Actions.Compile.Object'Class
+                  or else Action in GPR2.Build.Actions.Post_Bind.Object'Class)
+      then
          for Artifact of
            Project_Tree.Artifacts_Database.Outputs (Action.UID)
          loop
@@ -255,14 +329,21 @@ begin
       end if;
    end loop;
 
-   if Opt.Arg_Mains and then not Opt.Mains.Is_Empty then
-      Handle_Program_Termination
-        (Message => '"' & String (Opt.Mains.First_Element)
-         & """ was not found in " & "the sources of any project");
-   end if;
-
    if Opt.Remove_Config then
       Delete_File (Opt.Config_Project.String_Value, Opt);
+   end if;
+
+   if Opt.Remove_Empty_Dirs then
+      if Opt.All_Projects then
+         for V of Project_Tree.Ordered_Views loop
+            if not V.Is_Externally_Built then
+               Remove_Artifacts_Dirs (Project_Tree.Root_Project, Opt);
+            end if;
+         end loop;
+
+      else
+         Remove_Artifacts_Dirs (Project_Tree.Root_Project, Opt);
+      end if;
    end if;
 
    return To_Exit_Status (E_Success);

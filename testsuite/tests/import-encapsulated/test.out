@@ -1,2 +1,2 @@
-prj1.gpr: warning: encapsulated standalone library project "Encaps" can't be imported
-prj2.gpr: warning: encapsulated standalone library project "Encaps" can't be imported
+prj1.gpr:1:06: warning: encapsulated standalone library project "Encaps" can't be imported
+prj2.gpr:1:14: warning: encapsulated standalone library project "Encaps" can't be imported
