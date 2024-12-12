@@ -220,7 +220,7 @@ begin
       Handle_Program_Termination
         (Force_Exit => True,
          Exit_Cause => E_Tool,
-         Message    => "Failed to update sources");
+         Message    => "processing failed");
       return To_Exit_Status (E_Fatal);
    end if;
 
