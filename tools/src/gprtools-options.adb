@@ -151,6 +151,13 @@ package body GPRtools.Options is
                        Help           => "Shared lib projects may import any" &
                                          " project",
                        In_Switch_Attr => False));
+         else
+            Parser.Add_Argument
+              (Project_Group,
+               Create (Name           => "--unchecked-shared-lib-imports",
+                       Help           => "for compatibility only, unused",
+                       In_Switch_Attr => False,
+                       Hidden         => True));
          end if;
 
          Parser.Add_Argument
