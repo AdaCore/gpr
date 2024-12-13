@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.IO_Exceptions;
 with Ada.Strings.Fixed;
@@ -14,6 +15,7 @@ with GNAT.OS_Lib;
 with GNAT.Regexp;
 with GNAT.String_Split;
 
+with GNATCOLL.Damerau_Levenshtein_Distance;
 with GNATCOLL.OS.Constants;
 with GNATCOLL.Tribooleans;
 
@@ -40,6 +42,8 @@ package body GPR2.Tree_Internal is
 
    package PRP renames Project.Registry.Pack;
    package IDS renames GPR2.View_Ids;
+   function Distance (L, R : String) return Natural renames
+     GNATCOLL.Damerau_Levenshtein_Distance;
 
    Is_Windows_Host : constant Boolean :=
                        GNATCOLL.OS.Constants.OS = GNATCOLL.OS.Windows
@@ -2641,6 +2645,34 @@ package body GPR2.Tree_Internal is
                      end if;
                   end;
                end loop;
+
+            else
+               --  Check if the package name is a potential misspelling of an
+               --  existing package
+               declare
+                  Val    : Natural;
+                  Min    : Natural := Natural'Last;
+                  Min_Id : Package_Id;
+                  package ACL renames Ada.Characters.Handling;
+               begin
+                  for P_Def of PRP.All_Packages loop
+                     Val := Distance
+                       (ACL.To_Lower (Image (P.Id)),
+                        ACL.To_Lower (Image (P_Def)));
+                     if Val < Min then
+                        Min_Id := P_Def;
+                        Min    := Val;
+                     end if;
+                  end loop;
+
+                  if Min < 3 then
+                     Self.Warning
+                       ("package """ & Image (P.Id) & """ is unknown and a "
+                        &
+                          "potential misspelling of """ & Image (Min_Id) & '"',
+                        P);
+                  end if;
+               end;
             end if;
          end loop;
 

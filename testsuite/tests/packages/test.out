@@ -1,3 +1,4 @@
+demo.gpr:16:04: warning: package "Linkers" is unknown and a potential misspelling of "Linker"
 Demo     K_STANDARD
    Main -> main.adb
    Object_Dir -> obj
