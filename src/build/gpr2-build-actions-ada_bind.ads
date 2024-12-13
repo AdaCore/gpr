@@ -51,10 +51,9 @@ package GPR2.Build.Actions.Ada_Bind is
       Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
    overriding procedure Compute_Command
-     (Self : in out Object;
-      Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict;
-      Slot : Positive);
+     (Self     : in out Object;
+      Slot     : Positive;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object);
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object;
@@ -105,9 +104,8 @@ private
    end record;
 
    overriding procedure Compute_Signature
-     (Self   : in out Object;
-      Stdout : Unbounded_String;
-      Stderr : Unbounded_String);
+     (Self      : Object;
+      Signature : in out GPR2.Build.Signature.Object);
 
    overriding function Post_Command
      (Self   : in out Object;

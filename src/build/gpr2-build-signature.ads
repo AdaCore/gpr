@@ -8,6 +8,7 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Strings.Unbounded;
 
 with GPR2.Build.Artifacts;
+with GPR2.Build.Command_Line;
 with GPR2.Path_Name;
 with GPR2.Utils.Hash;
 
@@ -42,6 +43,10 @@ package GPR2.Build.Signature is
       Stdout : UB.Unbounded_String;
       Stderr : UB.Unbounded_String);
 
+   procedure Update_Command_Line_Digest
+     (Self : in out Object;
+      Sig  : GPR2.Build.Command_Line.Object);
+
    procedure Clear (Self : in out Object);
    --  Clear all the signature artifacts and invalidate it
 
@@ -58,16 +63,22 @@ package GPR2.Build.Signature is
 
 private
 
-   TEXT_SIGNATURE : constant String := "signature";
-   TEXT_URI       : constant String := "uri";
-   TEXT_CHECKSUM  : constant String := "checksum";
-   TEXT_STDOUT    : constant String := "stdout";
-   TEXT_STDERR    : constant String := "stderr";
+   TEXT_SIGNATURE   : constant String := "signature";
+   TEXT_URI         : constant String := "uri";
+   TEXT_CHECKSUM    : constant String := "checksum";
+   TEXT_STDOUT      : constant String := "stdout";
+   TEXT_STDERR      : constant String := "stderr";
+   TEXT_CMDLINE     : constant String := "cmdline";
+   TEXT_CMDLINE_CHK : constant String := "cmdline_checksum";
 
    type Object is tagged record
-      Artifacts : Artifact_Maps.Map := Artifact_Maps.Empty_Map;
-      Stdout    : Unbounded_String;
-      Stderr    : Unbounded_String;
+      Artifacts         : Artifact_Maps.Map := Artifact_Maps.Empty_Map;
+      Cmd_Line_Checksum : GPR2.Utils.Hash.Hash_Digest :=
+                            GPR2.Utils.Hash.No_Digest;
+      Cmd_Line_Repr     : Unbounded_String;
+      Cmd_Line_Match    : Boolean := False;
+      Stdout            : Unbounded_String;
+      Stderr            : Unbounded_String;
    end record;
 
    function Has_Artifact

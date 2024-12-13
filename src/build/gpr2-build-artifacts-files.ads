@@ -62,7 +62,7 @@ private
 
    overriding function Checksum
      (Self : Object) return Utils.Hash.Hash_Digest
-   is (Utils.Hash.Hash (Self.Path.Value));
+   is (Utils.Hash.Hash_File (Self.Path.Value));
 
    function Path (Self : Object) return GPR2.Path_Name.Object is
      (Self.Path);

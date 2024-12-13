@@ -158,7 +158,7 @@ package body GPR2.Build.Process_Manager is
                return Abort_Execution;
             end if;
 
-            Job.Compute_Signature (Stdout, Stderr);
+            Job.Write_Signature (Stdout, Stderr);
          end if;
       end if;
 
@@ -546,11 +546,28 @@ package body GPR2.Build.Process_Manager is
       P_We : FS.File_Descriptor;
       P_Re : FS.File_Descriptor;
 
-      Args : Argument_List;
-      Env  : Environment_Dict;
       Cwd  : GPR2.Path_Name.Object;
 
    begin
+      if Job.Skip
+        or else Job.Is_Deactivated
+        or else Job.View.Is_Externally_Built
+      then
+         if Self.Traces.Is_Active then
+            Self.Traces.Trace
+              ("job asked to be skipped: " & Job.UID.Image);
+         end if;
+
+         Proc_Handler := Process_Handler'(Status => Skipped);
+
+         return;
+      end if;
+
+      --  We need to compute the command line before checking the signature
+      --  since the cmd line is part of the signature.
+
+      Job.Update_Command_Line (Slot_Id);
+
       if Job.Valid_Signature then
          if Self.Traces.Is_Active then
             Self.Traces.Trace
@@ -563,38 +580,24 @@ package body GPR2.Build.Process_Manager is
          return;
       end if;
 
-      if Job.Skip or else Job.Is_Deactivated then
+      Cwd := Job.Working_Directory;
+
+      if Job.Command_Line.Argument_List.Is_Empty then
          if Self.Traces.Is_Active then
             Self.Traces.Trace
-              ("job asked to be skipped: " & Job.UID.Image);
+              ("job arguments is empty, skipping '"  & Job.UID.Image & "'");
          end if;
 
          Proc_Handler := Process_Handler'(Status => Skipped);
 
          return;
-
-      else
-         Job.Compute_Command (Args, Env, Slot_Id);
-         Cwd := Job.Working_Directory;
-
-
-         if Args.Is_Empty then
-            if Self.Traces.Is_Active then
-               Self.Traces.Trace
-                 ("job arguments is empty, skipping '"  & Job.UID.Image & "'");
-            end if;
-
-            Proc_Handler := Process_Handler'(Status => Skipped);
-
-            return;
-         end if;
       end if;
 
       if Self.Traces.Is_Active then
          Self.Traces.Trace
            ("Signature is invalid. Execute the job " &
               Job.UID.Image & ", command: " &
-              Image (Args));
+              Image (Job.Command_Line.Argument_List));
       end if;
 
       FS.Open_Pipe (P_Ro, P_Wo);
@@ -608,7 +611,7 @@ package body GPR2.Build.Process_Manager is
            or else (Self.Tree_Db.Reporter.User_Verbosity = Unset
                     and then Self.Tree_Db.Reporter.Verbosity >= Verbose)
          then
-            Display (Args);
+            Display (Job.Command_Line.Argument_List);
          else
             Display (Job.UID);
          end if;
@@ -616,8 +619,8 @@ package body GPR2.Build.Process_Manager is
          Proc_Handler :=
            (Status => Running,
             Handle => Start
-              (Args        => Args,
-               Env         => Env,
+              (Args        => Job.Command_Line.Argument_List,
+               Env         => Job.Command_Line.Environment_Variables,
                Cwd         => Cwd.String_Value,
                Stdout      => P_Wo,
                Stderr      => P_We,
@@ -631,7 +634,7 @@ package body GPR2.Build.Process_Manager is
             Self.Tree_Db.Reporter.Report
               (GPR2.Message.Create
                  (GPR2.Message.Error,
-                  Args.First_Element & ": " &
+                  Job.Command_Line.Argument_List.First_Element & ": " &
                     Ada.Exceptions.Exception_Message (Ex),
                   GPR2.Source_Reference.Create
                     (Job.View.Path_Name.Value, 0, 0)));
@@ -639,7 +642,8 @@ package body GPR2.Build.Process_Manager is
             Proc_Handler :=
               (Status        => Failed_To_Launch,
                Error_Message => To_Unbounded_String
-                 ("Command '" & Image (Args) & "' failed: " &
+                 ("Command '" & Image (Job.Command_Line.Argument_List) &
+                    "' failed: " &
                   Ada.Exceptions.Exception_Message (Ex)));
             return;
       end;

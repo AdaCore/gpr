@@ -24,7 +24,6 @@ with GPR2.External_Options;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
-with GPR2.Project.Tree;
 
 package body GPR2.Build.Actions.Ada_Bind is
 
@@ -42,19 +41,15 @@ package body GPR2.Build.Actions.Ada_Bind is
    ---------------------
 
    overriding procedure Compute_Command
-     (Self : in out Object;
-      Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict;
-      Slot : Positive)
+     (Self     : in out Object;
+      Slot     : Positive;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object)
    is
-      pragma Unreferenced (Env);
-
-      procedure Add_Arg (Arg : String);
-
       function Add_Attr
-        (Id      : Q_Attribute_Id;
-         Index   : PAI.Object;
-         Is_List : Boolean) return Boolean;
+        (Id           : Q_Attribute_Id;
+         Index        : PAI.Object;
+         Is_List      : Boolean;
+         In_Signature : Boolean) return Boolean;
 
       function Add_Attr_RS
         (Id    : Q_Attribute_Id;
@@ -66,36 +61,18 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       procedure Create_Response_File;
 
-      procedure Enforce_DashA_Absolute_Path;
-
       Lang_Ada_Idx : constant PAI.Object := PAI.Create (GPR2.Ada_Language);
       Status       : Boolean;
-      CL_Size      : Integer := 0;
-
-      -------------
-      -- Add_Arg --
-      -------------
-
-      procedure Add_Arg (Arg : String) is
-      begin
-         CL_Size := CL_Size + Arg'Length;
-
-         if not Args.Is_Empty then
-            --  Take into account the need of " " between args
-            CL_Size := CL_Size + 1;
-         end if;
-
-         Args.Append (Arg);
-      end Add_Arg;
 
       --------------
       -- Add_Attr --
       --------------
 
       function Add_Attr
-        (Id      : Q_Attribute_Id;
-         Index   : PAI.Object;
-         Is_List : Boolean) return Boolean
+        (Id           : Q_Attribute_Id;
+         Index        : PAI.Object;
+         Is_List      : Boolean;
+         In_Signature : Boolean) return Boolean
       is
          Attr : constant Project.Attribute.Object :=
                   Self.View.Attribute (Id, Index);
@@ -106,10 +83,11 @@ package body GPR2.Build.Actions.Ada_Bind is
 
          if Is_List then
             for Idx in Attr.Values.First_Index .. Attr.Values.Last_Index loop
-               Add_Arg (Attr.Values.Element (Idx).Text);
+               Cmd_Line.Add_Argument
+                 (Attr.Values.Element (Idx).Text, In_Signature);
             end loop;
          else
-            Add_Arg (Attr.Value.Text);
+            Cmd_Line.Add_Argument (Attr.Value.Text, In_Signature);
          end if;
 
          return True;
@@ -144,7 +122,7 @@ package body GPR2.Build.Actions.Ada_Bind is
                  --  Ignore -C, as the generated sources are always in Ada
                  and then Str /= "-C"
                then
-                  Add_Arg (Str);
+                  Cmd_Line.Add_Argument (Str, True);
                end if;
             end;
          end loop;
@@ -271,7 +249,7 @@ package body GPR2.Build.Actions.Ada_Bind is
               (True_Binder_Path.all, Resolve_Links => False)
             else Tmp_Binder.all);
 
-         Add_Arg (Normalized_True_Binder_Path.all);
+         Cmd_Line.Add_Argument (Normalized_True_Binder_Path.all, True);
 
          GNAT.OS_Lib.Free (Tmp_Binder);
          GNAT.OS_Lib.Free (True_Binder_Path);
@@ -326,7 +304,7 @@ package body GPR2.Build.Actions.Ada_Bind is
             GNATCOLL.OS.FS.Close (Map_File.FD);
          end if;
 
-         Add_Arg ("-F=" & String (Map_File.Path));
+         Cmd_Line.Add_Argument ("-F=" & String (Map_File.Path), False);
       end Add_Mapping_File;
 
       --------------------------
@@ -340,11 +318,11 @@ package body GPR2.Build.Actions.Ada_Bind is
                        Self.Get_Or_Create_Temp_File ("response_file", Local);
          New_Args  : GNATCOLL.OS.Process.Argument_List;
       begin
-         New_Args.Append (Args.First_Element);
+         New_Args.Append (Cmd_Line.Argument_List.First_Element);
 
          if Resp_File.FD /= Null_FD then
-            for Arg of Args loop
-               if not (Arg = Args.First_Element) then
+            for Arg of Cmd_Line.Argument_List loop
+               if Arg /= New_Args.First_Element then
                   declare
                      Char          : Character;
                      Quotes_Needed : Boolean := False;
@@ -396,45 +374,8 @@ package body GPR2.Build.Actions.Ada_Bind is
 
          New_Args.Append ("@" & String (Resp_File.Path));
 
-         Args := New_Args;
+         Cmd_Line.Set_Response_File_Command (New_Args);
       end Create_Response_File;
-
-      ---------------------------------
-      -- Enforce_DashA_Absolute_Path --
-      ---------------------------------
-
-      procedure Enforce_DashA_Absolute_Path is
-         DashA        : constant String := "-A=";
-         Prj_Root_Dir : constant Path_Name.Object :=
-                          Self.Ctxt.Tree.Root_Project.Dir_Name;
-      begin
-         for Cursor in Args.Iterate loop
-            declare
-               Arg : constant String := Args (Cursor);
-            begin
-               if Starts_With (Arg, DashA) and then Arg'Length > DashA'Length
-               then
-                  declare
-                     File : constant String :=
-                              Arg (Arg'First + DashA'Length .. Arg'Last);
-                  begin
-                     if not OS_Lib.Is_Absolute_Path (File) then
-                        declare
-                           NF : constant String :=
-                                  OS_Lib.Normalize_Pathname
-                                    (File, String (Prj_Root_Dir.Name),
-                                     Resolve_Links => False);
-                        begin
-                           CL_Size := CL_Size - Arg'Length;
-                           CL_Size := CL_Size + DashA'Length + NF'Length;
-                           Args.Replace_Element (Cursor, DashA & NF);
-                        end;
-                     end if;
-                  end;
-               end if;
-            end;
-         end loop;
-      end Enforce_DashA_Absolute_Path;
 
    begin
       --  [eng/gpr/gpr-issues#446] We should rework how the binder tools is
@@ -448,28 +389,26 @@ package body GPR2.Build.Actions.Ada_Bind is
       Add_Binder (PRA.Binder.Required_Switches, Lang_Ada_Idx);
 
       if Self.Ctxt.Is_Library and then Self.Ctxt.Is_Shared_Library then
-         Add_Arg ("-shared");
+         Cmd_Line.Add_Argument ("-shared", True);
       end if;
 
-      Add_Arg ("-o");
-      Add_Arg (String (Self.Output_Body.Path.Simple_Name));
-
-      --  Directory separators are not allowed. We must be in the correct
-      --  directory and only use the source base name with extension.
+      Cmd_Line.Add_Argument ("-o", True);
+      Cmd_Line.Add_Argument
+        (String (Self.Output_Body.Path.Simple_Name), True);
 
       for Ali of Self.Tree.Inputs (Self.UID, Explicit_Only => True) loop
-         Add_Arg
-           (GPR2.Build.Artifacts.Files.Object (Ali).Path.String_Value);
+         Cmd_Line.Add_Argument
+           (GPR2.Build.Artifacts.Files.Object (Ali).Path, True);
       end loop;
 
       for Extra of Self.Extra_Opts loop
-         Add_Arg (Extra);
+         Cmd_Line.Add_Argument (Extra, True);
       end loop;
 
       for View of Self.Ctxt.Closure (True) loop
          if View.Is_Library and then View.Is_Library_Standalone then
             --  Force checking of elaboration flags
-            Add_Arg ("-F");
+            Cmd_Line.Add_Argument ("-F");
             exit;
          end if;
       end loop;
@@ -478,9 +417,11 @@ package body GPR2.Build.Actions.Ada_Bind is
          --  Make sure all ALI directories are visible
          if View.Language_Ids.Contains (Ada_Language) then
             if View.Is_Library then
-               Add_Arg ("-I" & View.Library_Ali_Directory.String_Value);
+               Cmd_Line.Add_Argument
+                 ("-I" & View.Library_Ali_Directory.String_Value, True);
             elsif View.Kind in With_Object_Dir_Kind then
-               Add_Arg ("-I" & View.Object_Directory.String_Value);
+               Cmd_Line.Add_Argument
+                 ("-I" & View.Object_Directory.String_Value, True);
             end if;
          end if;
       end loop;
@@ -491,10 +432,11 @@ package body GPR2.Build.Actions.Ada_Bind is
       --  on the GNAT version.
       Status := Add_Attr_RS (PRA.Binder.Required_Switches, Lang_Ada_Idx);
 
-      Status := Add_Attr (PRA.Binder.Switches, Lang_Ada_Idx, True);
+      Status := Add_Attr (PRA.Binder.Switches, Lang_Ada_Idx, True, True);
 
       if not Status then
-         Status := Add_Attr (PRA.Binder.Default_Switches, Lang_Ada_Idx, True);
+         Status :=
+           Add_Attr (PRA.Binder.Default_Switches, Lang_Ada_Idx, True, True);
       end if;
 
       --  Add -bargs and -bargs:Ada
@@ -503,27 +445,27 @@ package body GPR2.Build.Actions.Ada_Bind is
         of Self.Tree.External_Options.Fetch
           (GPR2.External_Options.Binder, GPR2.No_Language)
       loop
-         Add_Arg (Arg);
+         Cmd_Line.Add_Argument (Arg, True);
       end loop;
 
       for Arg
         of Self.Tree.External_Options.Fetch
           (GPR2.External_Options.Binder, GPR2.Ada_Language)
       loop
-         Add_Arg (Arg);
+         Cmd_Line.Add_Argument (Arg);
       end loop;
 
       --  ??? Modify binding option -A=<file> if <file> is not an absolute path
-      Enforce_DashA_Absolute_Path;
+      --  Enforce_DashA_Absolute_Path;
 
       --  [eng/gpr/gpr-issues#446]
       --  Should be in the KB Required_Switches/Default_Switches/Switches and
       --  not hardcoded.
-      Add_Arg ("-x");
+      Cmd_Line.Add_Argument ("-x");
 
       Add_Mapping_File;
 
-      if CL_Size > Command_Line_Limit then
+      if Cmd_Line.Total_Length > Command_Line_Limit then
          Create_Response_File;
       end if;
    end Compute_Command;
@@ -533,24 +475,17 @@ package body GPR2.Build.Actions.Ada_Bind is
    -----------------------
 
    overriding procedure Compute_Signature
-     (Self   : in out Object;
-      Stdout : Unbounded_String;
-      Stderr : Unbounded_String)
+     (Self      : Object;
+      Signature : in out GPR2.Build.Signature.Object)
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      Self.Signature.Clear;
-
       for Pred of Self.Tree.Inputs (UID) loop
-         Self.Signature.Add_Artifact (Pred);
+         Signature.Add_Artifact (Pred);
       end loop;
 
-      Self.Signature.Add_Artifact (Self.Generated_Spec);
-      Self.Signature.Add_Artifact (Self.Generated_Body);
-
-      Self.Signature.Add_Output (Stdout, Stderr);
-
-      Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
+      Signature.Add_Artifact (Self.Generated_Spec);
+      Signature.Add_Artifact (Self.Generated_Body);
    end Compute_Signature;
 
    ----------------

@@ -8,8 +8,6 @@ with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Project.Registry.Attribute;
 
-with GNATCOLL.OS.Process;
-
 package GPR2.Build.Actions.Post_Bind is
 
    package PRA renames GPR2.Project.Registry.Attribute;
@@ -33,10 +31,9 @@ package GPR2.Build.Actions.Post_Bind is
       Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
    overriding procedure Compute_Command
-     (Self : in out Object;
-      Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict;
-      Slot : Positive);
+     (Self     : in out Object;
+      Slot     : Positive;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object);
 
    function Object_File (Self : Object) return Artifacts.Files.Object;
 
@@ -83,6 +80,10 @@ private
 
    overriding function View (Self : Object) return GPR2.Project.View.Object is
       (Self.View);
+
+   overriding procedure Compute_Signature
+     (Self      : Object;
+      Signature : in out GPR2.Build.Signature.Object);
 
    Undefined : constant Object := (others => <>);
 

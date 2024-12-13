@@ -23,33 +23,34 @@ package body GPR2.Build.Actions.Link is
       Self.Static_Options.Append (Option);
    end Add_Option;
 
-   -------------
-   -- Command --
-   -------------
+   ---------------------
+   -- Compute_Command --
+   ---------------------
 
    overriding procedure Compute_Command
-     (Self : in out Object;
-      Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict;
-      Slot : Positive)
+     (Self     : in out Object;
+      Slot     : Positive;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object)
    is
-      pragma Unreferenced (Env, Slot);
+      pragma Unreferenced (Slot);
 
       function Add_Attr
-        (Id      : Q_Attribute_Id;
-         Index   : PAI.Object;
-         Is_List : Boolean;
-         Param   : String := "") return Boolean;
+        (Id           : Q_Attribute_Id;
+         Index        : PAI.Object;
+         Is_List      : Boolean;
+         In_Signature : Boolean;
+         Param        : String := "") return Boolean;
 
       --------------
       -- Add_Attr --
       --------------
 
       function Add_Attr
-        (Id      : Q_Attribute_Id;
-         Index   : PAI.Object;
-         Is_List : Boolean;
-         Param   : String := "") return Boolean
+        (Id           : Q_Attribute_Id;
+         Index        : PAI.Object;
+         Is_List      : Boolean;
+         In_Signature : Boolean;
+         Param        : String := "") return Boolean
       is
          Attr : constant Project.Attribute.Object :=
                   Self.View.Attribute (Id, Index);
@@ -61,13 +62,16 @@ package body GPR2.Build.Actions.Link is
          if Is_List then
             for Idx in Attr.Values.First_Index .. Attr.Values.Last_Index loop
                if Idx < Attr.Values.Last_Index then
-                  Args.Append (Attr.Values.Element (Idx).Text);
+                  Cmd_Line.Add_Argument
+                    (Attr.Values.Element (Idx).Text, In_Signature);
                else
-                  Args.Append (Attr.Values.Element (Idx).Text & Param);
+                  Cmd_Line.Add_Argument
+                    (Attr.Values.Element (Idx).Text & Param, In_Signature);
                end if;
             end loop;
          else
-            Args.Append (Attr.Value.Text & Param);
+            Cmd_Line.Add_Argument
+              (Attr.Value.Text & Param, In_Signature);
          end if;
 
          return True;
@@ -101,41 +105,52 @@ package body GPR2.Build.Actions.Link is
 
       --  ??? Replace hard coded values
       if Self.Is_Static_Library then
-         Status := Add_Attr (PRA.Archive_Builder, PAI.Undefined, True);
-         pragma Assert (Status, "No archiver is defined");
+         declare
+            Attr : constant GPR2.Project.Attribute.Object :=
+                     Self.View.Attribute (PRA.Archive_Builder);
+         begin
+            pragma Assert (Attr.Is_Defined, "No archiver is defined");
 
-         --  [eng/gpr/gpr-issues#446] Hack to speed up and ease the generation
-         --  of archives :
-         --  instead of using "ar cr" then use ranlib, we generate directly
-         --  the symbol table by using "ar csr".
+            for Val of Attr.Values loop
+               --  [eng/gpr/gpr-issues#446] Hack to speed up and ease the
+               --  generation of archives :
+               --  instead of using "ar cr" then use ranlib, we generate
+               --  directly the symbol table by using "ar csr".
 
-         if Args.Last_Element = "cr" then
-            Args.Delete_Last;
-            Args.Append ("csr");
-            Args.Append (String (Self.Output.Path.Simple_Name));
-         end if;
+               if Val.Text = "cr" then
+                  Cmd_Line.Add_Argument ("csr", True);
+               else
+                  Cmd_Line.Add_Argument (Val.Text, True);
+               end if;
+            end loop;
+
+            Cmd_Line.Add_Argument (String (Self.Output.Path.Simple_Name));
+         end;
 
       else
-         Status := Add_Attr (PRA.Linker.Driver, PAI.Undefined, False);
+         Status := Add_Attr (PRA.Linker.Driver, PAI.Undefined, False, True);
          pragma Assert (Status, "No linker driver is defined");
 
          if Src_Idx.Is_Defined then
-            Status := Add_Attr (PRA.Linker.Leading_Switches, Src_Idx, True);
+            Status :=
+              Add_Attr (PRA.Linker.Leading_Switches, Src_Idx, True, True);
          end if;
 
          if Self.Is_Library then
             --  shared lib case, add the minimal options
             Status := Add_Attr
-              (PRA.Shared_Library_Minimum_Switches, PAI.Undefined, True);
+              (PRA.Shared_Library_Minimum_Switches, PAI.Undefined, True, True);
          end if;
 
          --  ??? This shouldn't be hardcoded
-         Args.Append ("-o");
-         Args.Append (String (Self.Output.Path.Simple_Name));
+         Cmd_Line.Add_Argument ("-o", True);
+         Cmd_Line.Add_Argument
+           (String (Self.Output.Path.Simple_Name), True);
       end if;
 
       for Obj of Objects loop
-         Args.Append (Artifacts.Files.Object'Class (Obj).Path.String_Value);
+         Cmd_Line.Add_Argument
+           (Artifacts.Files.Object'Class (Obj).Path, True);
       end loop;
 
       if not Self.Is_Static_Library then
@@ -145,7 +160,8 @@ package body GPR2.Build.Actions.Link is
                         Object'Class (Self.Tree.Action (Lib));
 
             begin
-               Args.Append (Link.Library.Path.String_Value);
+               Cmd_Line.Add_Argument
+                 (Link.Library.Path, True);
             end;
          end loop;
 
@@ -174,7 +190,8 @@ package body GPR2.Build.Actions.Link is
                              (Filename_Type
                                 (Arg (Arg'First + Lib_Opt'Length .. Arg'Last)),
                               C.Dir_Name.Value);
-                           Args.Append (Lib_Opt & Path.String_Value);
+                           Cmd_Line.Add_Argument
+                             (Lib_Opt & Path.String_Value);
 
                         elsif Arg (Arg'First) = '-' then
                            --  ??? How about case where linker switches don't
@@ -184,17 +201,17 @@ package body GPR2.Build.Actions.Link is
                               --  For self.View, use non-switch parts of
                               --  the linker option only.
 
-                              Args.Append (Val.Text);
+                              Cmd_Line.Add_Argument (Val.Text, True);
                            end if;
 
                         else
                            --  Check for relative paths and translate them
                            --  as absolute.
 
-                           Args.Append
+                           Cmd_Line.Add_Argument
                              (Path_Name.Create_File
                                 (Filename_Type (Val.Text),
-                                 C.Dir_Name.Value).String_Value);
+                                 C.Dir_Name.Value).String_Value, True);
                         end if;
                      end;
                   end loop;
@@ -206,15 +223,16 @@ package body GPR2.Build.Actions.Link is
       if Src_Idx.Is_Defined then
          --  Add switches for linking an executable
          Status :=
-           Add_Attr (PRA.Linker.Required_Switches, PAI.Undefined, True);
+           Add_Attr (PRA.Linker.Required_Switches, PAI.Undefined, True, True);
 
-         Status := Add_Attr (PRA.Linker.Switches, Src_Idx, True);
+         Status := Add_Attr (PRA.Linker.Switches, Src_Idx, True, True);
 
          if not Status then
             Status := Add_Attr
               (PRA.Linker.Default_Switches,
                PAI.Create
                  (Self.View.Source (Self.Main_Src.Path.Simple_Name).Language),
+               True,
                True);
          end if;
 
@@ -224,14 +242,15 @@ package body GPR2.Build.Actions.Link is
            of Self.Tree.External_Options.Fetch
              (GPR2.External_Options.Linker, GPR2.No_Language)
          loop
-            Args.Append (Arg);
+            Cmd_Line.Add_Argument (Arg);
          end loop;
 
          for Option of Self.Static_Options loop
-            Args.Append (Option);
+            Cmd_Line.Add_Argument (Option);
          end loop;
 
-         Status := Add_Attr (PRA.Linker.Trailing_Switches, Src_Idx, True);
+         Status :=
+           Add_Attr (PRA.Linker.Trailing_Switches, Src_Idx, True, True);
       end if;
    end Compute_Command;
 
@@ -240,30 +259,22 @@ package body GPR2.Build.Actions.Link is
    -----------------------
 
    overriding procedure Compute_Signature
-     (Self   : in out Object;
-      Stdout : Unbounded_String;
-      Stderr : Unbounded_String)
+     (Self      : Object;
+      Signature : in out GPR2.Build.Signature.Object)
    is
-      UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      Self.Signature.Clear;
-
       for Obj of Self.Embedded_Objects loop
-         Self.Signature.Add_Artifact (Obj);
+         Signature.Add_Artifact (Obj);
       end loop;
 
       if not Self.Is_Library then
          --  ??? TODO dynamic libraries also need their library dependencies
          for Lib of Self.Library_Dependencies loop
-            Self.Signature.Add_Artifact (Object'Class (Self).Output);
+            Signature.Add_Artifact (Object'Class (Self).Output);
          end loop;
       end if;
 
-      Self.Signature.Add_Artifact (Self.Output);
-
-      Self.Signature.Add_Output (Stdout, Stderr);
-
-      Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
+      Signature.Add_Artifact (Self.Output);
    end Compute_Signature;
 
    ----------------------

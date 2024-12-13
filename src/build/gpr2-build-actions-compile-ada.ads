@@ -40,14 +40,6 @@ package GPR2.Build.Actions.Compile.Ada is
    function Ali_File (Self : Object) return Artifacts.Files.Object;
    --  Return the path of the generated ALI file
 
-   function Dependencies
-     (Self     : in out Object;
-      With_RTS : Boolean := True) return GPR2.Containers.Filename_Set
-     with Pre => Self.In_Build_Tree;
-   --  Return the list of known dependencies for this unit. The action ALI file
-   --  must be up-to-date before calling this function, as the list of
-   --  dependencies comes from it.
-
    overriding function On_Tree_Insertion
      (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
@@ -58,6 +50,14 @@ package GPR2.Build.Actions.Compile.Ada is
    overriding function Post_Command
      (Self   : in out Object;
       Status : Execution_Status) return Boolean;
+
+   function Dependencies
+     (Self     : Object;
+      With_RTS : Boolean := True) return GPR2.Containers.Filename_Set
+     with Pre => Self.In_Build_Tree;
+   --  Return the list of known dependencies for this unit. The action ALI file
+   --  must be up-to-date before calling this function, as the list of
+   --  dependencies comes from it.
 
 private
 
@@ -103,9 +103,8 @@ private
       (Self.CU.Dependency_File);
 
    overriding procedure Compute_Signature
-     (Self   : in out Object;
-      Stdout : Unbounded_String;
-      Stderr : Unbounded_String);
+     (Self      : Object;
+      Signature : in out GPR2.Build.Signature.Object);
 
    Undefined : constant Object := (others => <>);
 

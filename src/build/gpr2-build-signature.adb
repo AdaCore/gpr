@@ -157,7 +157,11 @@ package body GPR2.Build.Signature is
                   end case;
                end loop Array_Loop;
 
-            elsif Key = TEXT_STDOUT or else Key = TEXT_STDERR then
+            elsif Key = TEXT_STDOUT
+              or else Key = TEXT_STDERR
+              or else Key = TEXT_CMDLINE
+              or else Key = TEXT_CMDLINE_CHK
+            then
                Event := Parser.Parse_Next (Data => Data);
 
                if Event.Kind /= JSON.STRING_VALUE then
@@ -167,9 +171,15 @@ package body GPR2.Build.Signature is
                if Key = TEXT_STDOUT then
                   Signature.Stdout := To_Unbounded_String
                     (JSON.Decode_As_String (Event, Data));
-               else
+               elsif Key = TEXT_STDERR then
                   Signature.Stderr := To_Unbounded_String
                     (JSON.Decode_As_String (Event, Data));
+               elsif Key = TEXT_CMDLINE_CHK then
+                  Signature.Cmd_Line_Checksum :=
+                   Hash_Digest (Data.Token (Event.First + 1, Event.Last - 1));
+               elsif Key = TEXT_CMDLINE then
+                  Signature.Cmd_Line_Repr :=
+                   +Data.Token (Event.First + 1, Event.Last - 1);
                end if;
             end if;
          end;
@@ -226,6 +236,12 @@ package body GPR2.Build.Signature is
       JSON.Set_Field (Val        => Value,
                       Field_Name => TEXT_STDERR,
                       Field      => Self.Stderr);
+      JSON.Set_Field (Val        => Value,
+                      Field_Name => TEXT_CMDLINE_CHK,
+                      Field      => String (Self.Cmd_Line_Checksum));
+      JSON.Set_Field (Val        => Value,
+                      Field_Name => TEXT_CMDLINE,
+                      Field      => -Self.Cmd_Line_Repr);
 
       if Exists (String (Db_File.Value)) then
          Open (File, Out_File, String (Db_File.Value));
@@ -238,12 +254,32 @@ package body GPR2.Build.Signature is
       end if;
    end Store;
 
+   --------------------------------
+   -- Update_Command_Line_Digest --
+   --------------------------------
+
+   procedure Update_Command_Line_Digest
+     (Self : in out Object;
+      Sig  : GPR2.Build.Command_Line.Object) is
+   begin
+      Self.Cmd_Line_Match := Self.Cmd_Line_Checksum = Sig.Checksum;
+
+      if not Self.Cmd_Line_Match then
+         Self.Cmd_Line_Checksum := Sig.Checksum;
+         Self.Cmd_Line_Repr := +Sig.Signature;
+      end if;
+   end Update_Command_Line_Digest;
+
    -----------
    -- Valid --
    -----------
 
    function Valid (Self : Object) return Boolean is
    begin
+      if not Self.Cmd_Line_Match then
+         return False;
+      end if;
+
       if Self.Artifacts.Is_Empty then
          return False;
       end if;

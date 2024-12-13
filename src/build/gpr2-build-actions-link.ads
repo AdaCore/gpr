@@ -12,8 +12,6 @@ with GPR2.Path_Name;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 
-with GNATCOLL.OS.Process;
-
 package GPR2.Build.Actions.Link is
 
    type Link_Id (<>) is new Actions.Action_Id with private;
@@ -74,10 +72,9 @@ package GPR2.Build.Actions.Link is
       Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
    overriding procedure Compute_Command
-     (Self : in out Object;
-      Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict;
-      Slot : Positive);
+     (Self     : in out Object;
+      Slot     : Positive;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object);
 
    overriding function Skip (Self : Object) return Boolean;
 
@@ -136,9 +133,8 @@ private
    end record;
 
    overriding procedure Compute_Signature
-     (Self   : in out Object;
-      Stdout : Unbounded_String;
-      Stderr : Unbounded_String);
+     (Self      : Object;
+      Signature : in out GPR2.Build.Signature.Object);
 
    function Check_Archive_Driver (Self : Object) return Boolean;
    --  True if the archive driver is found
@@ -172,8 +168,7 @@ private
       and then Self.View.Attribute (PRA.Linker.Driver).Value.Text'Length > 0);
 
    overriding function Skip (Self : Object) return Boolean is
-     (Self.View.Is_Externally_Built or else
-      (Self.Is_Static_Library and then not Self.Check_Archive_Driver) or else
+     ((Self.Is_Static_Library and then not Self.Check_Archive_Driver) or else
       not Self.Check_Linker_Driver);
 
    overriding function Working_Directory
