@@ -237,8 +237,9 @@ begin
       Args : Argument_List;
       Env  : Environment_Dict;
    begin
-      Action.Compute_Command (Args, Env, 1);
-      Execute_Command (Args, Action.Working_Directory.String_Value);
+      Action.Update_Command_Line (1);
+      Execute_Command (Action.Command_Line.Argument_List,
+                       Action.Working_Directory.String_Value);
    end;
 
    Assert (Action.Output.Path.Exists, "Check that the output executable exists");

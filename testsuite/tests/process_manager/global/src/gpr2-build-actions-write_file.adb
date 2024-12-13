@@ -21,19 +21,17 @@ package body GPR2.Build.Actions.Write_File is
    -------------
 
    overriding procedure Compute_Command
-     (Self : in out Object;
-      Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict;
-      Slot : Positive)
-   is
+     (Self     : in out Object;
+      Slot     : Positive;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object) is
    begin
-      Args.Append (Self.Executable.String_Value);
-      Args.Append (Ada.Strings.Fixed.Trim (Self.Ret_Code'Img, Both));
-      Args.Append (String (Output_File (Self.Index).Path.Simple_Name));
-      Args.Append (Ada.Strings.Fixed.Trim (Self.Index'Img, Both));
+      Cmd_Line.Add_Argument (Self.Executable.String_Value);
+      Cmd_Line.Add_Argument (Ada.Strings.Fixed.Trim (Self.Ret_Code'Img, Both));
+      Cmd_Line.Add_Argument (String (Output_File (Self.Index).Path.Simple_Name));
+      Cmd_Line.Add_Argument (Ada.Strings.Fixed.Trim (Self.Index'Img, Both));
 
       if Self.With_Wait > 0 then
-         Args.Append (String (Output_File (Self.With_Wait).Path.Simple_Name));
+         Cmd_Line.Add_Argument (String (Output_File (Self.With_Wait).Path.Simple_Name));
       end if;
    end Compute_Command;
 
@@ -41,24 +39,18 @@ package body GPR2.Build.Actions.Write_File is
    -- Compute_Signature --
    -----------------------
 
-   overriding procedure Compute_Signature (Self : in out Object;
-                                           Stdout : Unbounded_String;
-                                           Stderr : Unbounded_String) is
+   overriding procedure Compute_Signature
+     (Self      : Object;
+      Signature : in out GPR2.Build.Signature.Object)
+   is
       use GPR2.Build.Signature;
       Art : Artifacts.Files.Object;
    begin
-      Self.Signature.Clear;
-
       for Art of Self.Tree.Inputs (Self.UID) loop
-         Self.Signature.Add_Artifact (Art);
+         Signature.Add_Artifact (Art);
       end loop;
 
-      Self.Signature.Add_Artifact (Output_File (Self.Index));
-
-      Self.Signature.Add_Output (Stdout, Stderr);
-
-      Self.Signature.Store
-        (Self.Tree.Db_Filename_Path (Object'Class (Self).UID));
+      Signature.Add_Artifact (Output_File (Self.Index));
    end Compute_Signature;
 
    ----------------

@@ -74,19 +74,17 @@ begin
    Init_Action;
 
    declare
-      Args    : Argument_List;
-      Env     : Environment_Dict;
       P_Wo    : FS.File_Descriptor;
       P_Ro    : FS.File_Descriptor;
       Ret     : Integer;
       Process : Process_Handle;
    begin
-      Action.Compute_Command (Args, Env, 1);
+      Action.Update_Command_Line (1);
 
       FS.Open_Pipe (P_Ro, P_Wo);
       Process := Start
-        (Args        => Args,
-         Env         => Env,
+        (Args        => Action.Command_Line.Argument_List,
+         Env         => Action.Command_Line.Environment_Variables,
          Cwd         => Action.Working_Directory.String_Value,
          Stdin       => P_Wo,
          Stderr      => FS.Standerr,
