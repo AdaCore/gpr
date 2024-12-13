@@ -365,23 +365,19 @@ package body GPR2.Build.Actions.Compile.Ada is
          return Allowed;
       end Can_Unit_Be_Imported;
    begin
-      --  Check the bind actions that depend on Self
-
-      if Self.View.Is_Externally_Built then
-         return True;
-      end if;
-
       for Successor of Self.Tree.Successors (Self.Ali_File) loop
          if Successor in Actions.Ada_Bind.Object'Class then
             Binds.Insert (Successor.UID);
          end if;
       end loop;
 
-      for Successor of Self.Tree.Successors (Self.Obj_File) loop
-         if Successor in Actions.Link.Object'Class then
-            Links.Insert (Successor.UID);
-         end if;
-      end loop;
+      if Self.Obj_File.Is_Defined then
+         for Successor of Self.Tree.Successors (Self.Obj_File) loop
+            if Successor in Actions.Link.Object'Class then
+               Links.Insert (Successor.UID);
+            end if;
+         end loop;
+      end if;
 
       if Binds.Is_Empty and then Links.Is_Empty then
          --  No more things to do here
