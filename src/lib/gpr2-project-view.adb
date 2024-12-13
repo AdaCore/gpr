@@ -1578,12 +1578,15 @@ package body GPR2.Project.View is
    is
       procedure Add_For_View (V : Object);
 
-      Check  : GPR2.Containers.Filename_Set;
-      Result : GPR2.Path_Name.Set.Object;
+      Check     : GPR2.Containers.Filename_Set;
+      Result    : GPR2.Path_Name.Set.Object;
+      Attr      : GPR2.Project.Attribute.Object;
+      Languages : GPR2.Containers.Language_Set;
 
       procedure Add_For_View (V : Object) is
          Pos      : GPR2.Containers.Filename_Type_Set.Cursor;
          Inserted : Boolean;
+         Found    : Boolean := False;
       begin
          if V.Kind = K_Aggregate_Library then
             for A of V.Aggregated loop
@@ -1591,9 +1594,22 @@ package body GPR2.Project.View is
             end loop;
          end if;
 
-         if V.Kind not in With_Source_Dirs_Kind
-           or else not V.Has_Language (Name (Language))
-         then
+         --  No sources in this view case
+
+         if V.Kind not in With_Source_Dirs_Kind then
+            return;
+         end if;
+
+         --  Check that the view has some sources of the language
+
+         for L of V.Language_Ids loop
+            if Languages.Contains (L) then
+               Found := True;
+               exit;
+            end if;
+         end loop;
+
+         if not Found then
             return;
          end if;
 
@@ -1617,6 +1633,16 @@ package body GPR2.Project.View is
       end Add_For_View;
 
    begin
+      Languages.Include (Language);
+
+      Attr := Self.Attribute (PRA.Inherit_Source_Path, PAI.Create (Language));
+
+      if Attr.Is_Defined then
+         for V of Attr.Values loop
+            Languages.Include (+Name_Type (V.Text));
+         end loop;
+      end if;
+
       Add_For_View (Self);
 
       for C of Self.Closure loop
