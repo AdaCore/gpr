@@ -666,6 +666,25 @@ package body GPR2.Build.Actions_Population is
          end if;
       end loop;
 
+      --  Now, ensure that the library depends on its withed libraries
+
+      for V of View.Closure loop
+         if V.Is_Library then
+            declare
+               Lib_Id  : constant Actions.Link.Link_Id :=
+                           Actions.Link.Create
+                              (V,
+                              V.Library_Filename.Simple_Name,
+                              True);
+               Lib_A   : constant Actions.Link.Object'Class :=
+                           Actions.Link.Object'Class
+                              (Tree_Db.Action (Lib_Id));
+            begin
+               Tree_Db.Add_Input (L.UID, Lib_A.Output, True);
+            end;
+         end if;
+      end loop;
+
       return True;
    end Populate_Library;
 
@@ -954,7 +973,11 @@ package body GPR2.Build.Actions_Population is
       Result : Boolean;
    begin
       for Import of View.Imports.Union (View.Limited_Imports) loop
-         Result := True;
+         Result := Populate_Withed_Units (Tree_Db, Import, Visited);
+
+         if not Result then
+            return False;
+         end if;
 
          if not Visited.Contains (Import.Id) then
             Visited.Include (Import.Id);
@@ -970,12 +993,6 @@ package body GPR2.Build.Actions_Population is
             if not Result then
                return False;
             end if;
-         end if;
-
-         Result := Populate_Withed_Units (Tree_Db, Import, Visited);
-
-         if not Result then
-            return False;
          end if;
       end loop;
 
