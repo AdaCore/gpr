@@ -2376,7 +2376,7 @@ package body GPR2.Tree_Internal is
          end if;
 
          if not Has_Error
-           and then P_Data.Kind not in K_Abstract | K_Configuration
+           and then P_Data.Kind not in K_Configuration
          then
             P_Data.Signature := New_Signature;
 
@@ -2440,6 +2440,16 @@ package body GPR2.Tree_Internal is
                        (Message.Error,
                         "a standard project cannot extend a library project",
                         P_Data.Trees.Project.Extended));
+               end if;
+
+            elsif P_Data.Kind = K_Abstract then
+               if View.Check_Attribute (PRA.Source_Dirs, Result => Tmp_Attr)
+                 and then not Tmp_Attr.Values.Is_Empty
+               then
+                  Self.Error
+                    ("an abstract project can only have an empty set of " &
+                       "Sources",
+                     Tmp_Attr);
                end if;
             end if;
 

@@ -7,7 +7,9 @@ A:   Project_Files -> a.gpr
 A        K_ABSTRACT
 A:   Object_Dir -> linux-obj
 //// OS set to Windows
+>>> Changed_Callback for A
 >>> Changed_Callback for Demo
+>>> Changed_Callback for A
 A        K_ABSTRACT
 A:   Object_Dir -> windows-obj
 Demo     K_AGGREGATE

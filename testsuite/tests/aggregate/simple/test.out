@@ -13,6 +13,7 @@ first    K_LIBRARY
          Object_Dir -> obj
          Source_Dirs -> libsrc
 //// OS set to Windows
+>>> Changed_Callback for A
 A        K_ABSTRACT
          Object_Dir -> windows-obj
 Demo     K_AGGREGATE
