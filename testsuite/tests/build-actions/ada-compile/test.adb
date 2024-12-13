@@ -76,16 +76,19 @@ begin
    Init_Action (Ada_Comp, Tree);
 
    declare
-      Args    : Argument_List;
-      Env     : Environment_Dict;
       P_Wo    : FS.File_Descriptor;
       P_Ro    : FS.File_Descriptor;
       Ret     : Integer;
       Process : Process_Handle;
    begin
-      Ada_Comp.Compute_Command (Args, Env, 1);
+      Ada_Comp.Update_Command_Line (1);
       FS.Open_Pipe (P_Ro, P_Wo);
-      Process := Start (Args => Args, Env => Env, Cwd => Ada_Comp.Working_Directory.String_Value, Stdout => P_Wo, Stderr => FS.Standerr, Inherit_Env => True);
+      Process := Start (Args        => Ada_Comp.Command_Line.Argument_List,
+                        Env         => Ada_Comp.Command_Line.Environment_Variables,
+                        Cwd         => Ada_Comp.Working_Directory.String_Value,
+                        Stdout      => P_Wo,
+                        Stderr      => FS.Standerr,
+                        Inherit_Env => True);
       FS.Close (P_Wo);
 
       Ret := Wait (Process);

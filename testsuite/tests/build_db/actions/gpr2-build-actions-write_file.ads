@@ -4,10 +4,9 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Build.Command_Line;
 with GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
-
-private with GPR2.View_Ids;
 
 package GPR2.Build.Actions.Write_File is
 
@@ -34,23 +33,19 @@ package GPR2.Build.Actions.Write_File is
      (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
-   overriding procedure Compute_Signature (Self : in out Object;
-                                           Stdout : Unbounded_String;
-                                           Stderr : Unbounded_String);
+   overriding procedure Compute_Signature
+     (Self      : Object;
+      Signature : in out GPR2.Build.Signature.Object);
 
    overriding procedure Compute_Command
-     (Self : in out Object;
-      Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict;
-      Slot : Positive);
+     (Self     : in out Object;
+      Slot     : Positive;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object);
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object;
 
 private
-
-   use type GPR2.View_Ids.View_Id;
-   use all type Ada.Strings.Trim_End;
 
    type Write_File_Id is new Actions.Action_Id with record
       Ctxt  : GPR2.Project.View.Object;

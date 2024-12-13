@@ -53,32 +53,6 @@ package body GPR2.Build.Actions is
       Self.Tmp_Files.Clear;
    end Cleanup_Temp_Files;
 
-   -----------------------
-   -- Compute_Signature --
-   -----------------------
-
-   procedure Compute_Signature
-     (Self   : in out Object;
-      Stdout : Unbounded_String;
-      Stderr : Unbounded_String)
-   is
-      UID : constant Action_Id'Class := Object'Class (Self).UID;
-   begin
-      Self.Signature.Clear;
-
-      for Input of Self.Tree.Inputs (UID) loop
-         Self.Signature.Add_Artifact (Input);
-      end loop;
-
-      for Output of Self.Tree.Outputs (UID) loop
-         Self.Signature.Add_Artifact (Output);
-      end loop;
-
-      Self.Signature.Add_Output (Stdout, Stderr);
-
-      Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
-   end Compute_Signature;
-
    -----------------
    -- Db_Filename --
    -----------------
@@ -219,5 +193,44 @@ package body GPR2.Build.Actions is
       when others =>
          Self.Signature.Clear;
    end Load_Signature;
+
+   -------------------------
+   -- Update_Command_Line --
+   -------------------------
+
+   procedure Update_Command_Line
+     (Self : in out Object'Class;
+      Slot : Positive)
+   is
+      Cmd_Line : Build.Command_Line.Object;
+   begin
+      Cmd_Line :=
+        GPR2.Build.Command_Line.Create (Self.Working_Directory);
+      Self.Compute_Command (Slot, Cmd_Line);
+      Cmd_Line.Finalize;
+      Self.Signature.Update_Command_Line_Digest (Cmd_Line);
+      Self.Cmd_Line := Cmd_Line;
+   end Update_Command_Line;
+
+   -----------------------
+   -- Compute_Signature --
+   -----------------------
+
+   procedure Write_Signature
+     (Self   : in out Object'Class;
+      Stdout : Unbounded_String;
+      Stderr : Unbounded_String)
+   is
+      UID : constant Action_Id'Class := Self.UID;
+   begin
+      Self.Signature.Clear;
+
+      Self.Signature.Add_Output (Stdout, Stderr);
+      Self.Signature.Update_Command_Line_Digest (Self.Cmd_Line);
+
+      Self.Compute_Signature (Self.Signature);
+
+      Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
+   end Write_Signature;
 
 end GPR2.Build.Actions;

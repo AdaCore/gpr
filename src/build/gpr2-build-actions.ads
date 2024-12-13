@@ -7,8 +7,7 @@
 with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
-with GNATCOLL.OS.Process;
-
+with GPR2.Build.Command_Line;
 with GPR2.Build.Signature;
 with GPR2.Containers;
 with GPR2.Path_Name;
@@ -91,6 +90,8 @@ package GPR2.Build.Actions is
 
    function On_Tree_Propagation
      (Self : in out Object) return Boolean;
+   --  Called after an initial population of the Build database has been done.
+   --  This allows to propagate dependencies among the actions.
 
    procedure Deactivate (Self : in out Object);
    --  Deactivates the action, can be useful to mark the action as skipped.
@@ -101,22 +102,19 @@ package GPR2.Build.Actions is
 
    function Is_Deactivated (Self : Object) return Boolean;
 
-   procedure Compute_Signature
-     (Self   : in out Object;
+   procedure Write_Signature
+     (Self   : in out Object'Class;
       Stdout : Unbounded_String;
       Stderr : Unbounded_String);
-   --  Compute the action signature from all its artifacts and hard store it
-   --  By default this uses the inputs and outputs of the Build_Db graph to
-   --  compute the signature. To be refined when needed.
-   --  Stdout and stderr are stored in the signature for so they can be
-   --  replayed if the action is skipped
+   --  Used to store the signature of the action after it has been executed.
+
+   procedure Compute_Signature
+     (Self      : Object;
+      Signature : in out GPR2.Build.Signature.Object) is abstract;
+   --  This populates the artifacts that are involved in the action.
 
    procedure Load_Signature (Self : in out Object);
    --  Compare the current action signature to the loaded signature
-
-   function Signature (Self : Object'Class) return GPR2.Build.Signature.Object
-     with Inline;
-   --  Return the object representing the signature of the action
 
    function Saved_Stdout (Self : Object'Class) return Unbounded_String;
    function Saved_Stderr (Self : Object'Class) return Unbounded_String;
@@ -127,12 +125,18 @@ package GPR2.Build.Actions is
      (Self : in out Object;
       Db   : in out GPR2.Build.Tree_Db.Object);
 
+   procedure Update_Command_Line
+     (Self : in out Object'Class;
+      Slot : Positive);
+   --  Updates the command line and update the signature accordingly
+
    procedure Compute_Command
-     (Self : in out Object;
-      Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict;
-      Slot : Positive) is abstract;
+     (Self     : in out Object;
+      Slot     : Positive;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object) is abstract;
    --  Return the command line and environment corresponding to the action
+
+   function Command_Line (Self : Object) return GPR2.Build.Command_Line.Object;
 
    function Working_Directory
      (Self : Object) return Path_Name.Object is abstract;
@@ -182,6 +186,8 @@ private
       --  List of tmp files to be cleaned up
       Deactivated : Boolean := False;
       --  Set when the action is deactivated
+      Cmd_Line    : GPR2.Build.Command_Line.Object;
+      --  Command line used to run the action. Used also in the signature.
    end record;
 
    function "<" (L, R : Action_Id'Class) return Boolean is
@@ -214,8 +220,8 @@ private
    function Skip (Self : Object) return Boolean
    is (False);
 
-   function Signature (Self : Object'Class) return Build.Signature.Object is
-     (Self.Signature);
+   function Command_Line (Self : Object) return GPR2.Build.Command_Line.Object
+   is (Self.Cmd_Line);
 
    function Saved_Stdout (Self : Object'Class) return Unbounded_String is
      (Self.Signature.Stdout);

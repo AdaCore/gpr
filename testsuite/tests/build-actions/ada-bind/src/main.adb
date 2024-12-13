@@ -58,15 +58,13 @@ begin
       Action := Test_Helper.Create_Binder_Action (Tree);
 
       declare
-         Args    : Argument_List;
-         Env     : Environment_Dict;
          Ret     : Integer;
          Process : Process_Handle;
       begin
-         Action.Compute_Command (Args, Env, 1);
+         Action.Update_Command_Line (1);
          Process := Start
-           (Args        => Args,
-            Env         => Env,
+           (Args        => Action.Command_Line.Argument_List,
+            Env         => Action.Command_Line.Environment_Variables,
             Cwd         => Action.Working_Directory.String_Value,
             Inherit_Env => True);
          Ret := Wait (Process);
@@ -115,14 +113,14 @@ begin
 
       declare
          Args               : Argument_List;
-         Env                : Environment_Dict;
          Expected_Tool_Path : constant String :=
                                 GNAT.OS_Lib.Normalize_Pathname
                                   (String (Tree.Root_Project.Path_Name.Dir_Name
                                    & DS & "bin" & DS & "bla-gnatbind")
                                    & Test_Helper.Get_Executable_Suffix);
       begin
-         Action.Compute_Command (Args, Env, 1);
+         Action.Update_Command_Line (1);
+         Args := Action.Command_Line.Argument_List;
          Test_Helper.Assert
            (GNAT.OS_Lib.Normalize_Pathname(Args.First_Element) = Expected_Tool_Path,
             "Correctly found binder tool with gnatbind_prefix=bla",
@@ -141,21 +139,19 @@ begin
       Action := Test_Helper.Create_Binder_Action (Tree);
 
       declare
-         Args               : Argument_List;
-         Env                : Environment_Dict;
          Expected_Tool_Path : constant String :=
                                 GNAT.OS_Lib.Normalize_Pathname
                                   (String (Tree.Root_Project.Path_Name.Dir_Name
                                    & DS & "bin" & DS & "bla-gnatbind")
                                    & Test_Helper.Get_Executable_Suffix);
       begin
-         Action.Compute_Command (Args, Env, 1);
+         Action.Update_Command_Line (1);
          Test_Helper.Assert
-           (Args.First_Element = Expected_Tool_Path,
+           (Action.Command_Line.Argument_List.First_Element = Expected_Tool_Path,
             "Correctly found binder tool with gnatbind_prefix=bla-",
-            Debug => Args.First_Element);
+            Debug => Action.Command_Line.Argument_List.First_Element);
          Test_Helper.Assert
-           (Test_Helper.Launch_Action (Args) = 0,
+           (Test_Helper.Launch_Action (Action.Command_Line.Argument_List) = 0,
             "Successfully launched process");
       end;
 
@@ -168,14 +164,14 @@ begin
 
       declare
          Args    : Argument_List;
-         Env     : Environment_Dict;
          Expected_Tool_Path : constant String :=
                                 GNAT.OS_Lib.Normalize_Pathname
                                   (String (Tree.Root_Project.Path_Name.Dir_Name
                                    & DS & "bin" & DS & "bla-gnatbind")
                                    & Test_Helper.Get_Executable_Suffix);
       begin
-         Action.Compute_Command (Args, Env, 1);
+         Action.Update_Command_Line (1);
+         Args := Action.Command_Line.Argument_List;
          Test_Helper.Assert
            (Args.First_Element = Expected_Tool_Path,
             "Correctly found binder tool with ada_binder=bla-gnatbind",
@@ -194,14 +190,14 @@ begin
 
       declare
          Args          : Argument_List;
-         Env           : Environment_Dict;
          Expected_Tool_Path : constant String :=
                                 GNAT.OS_Lib.Normalize_Pathname
                                   (String (Tree.Root_Project.Path_Name.Dir_Name
                                    & DS & "bin" & DS & "bla-gnatbind")
                                    & Test_Helper.Get_Executable_Suffix);
       begin
-         Action.Compute_Command (Args, Env, 1);
+         Action.Update_Command_Line (1);
+         Args := Action.Command_Line.Argument_List;
          Test_Helper.Assert
            (Args.First_Element = Expected_Tool_Path,
             "Correctly found binder tool define in gnatbind_path=<path>/bla-gnatbind",
@@ -220,14 +216,14 @@ begin
 
       declare
          Args    : Argument_List;
-         Env     : Environment_Dict;
          Expected_Tool_Path : constant String :=
                                 GNAT.OS_Lib.Normalize_Pathname
                                   (String (Tree.Root_Project.Path_Name.Dir_Name
                                    & DS & "bin" & DS & "gnatbind")
                                    & Test_Helper.Get_Executable_Suffix);
       begin
-         Action.Compute_Command (Args, Env, 1);
+         Action.Update_Command_Line (1);
+         Args := Action.Command_Line.Argument_List;
          Test_Helper.Assert
            (Args.First_Element = Expected_Tool_Path,
             "Correctly defaulted to binder tool in Compiler.Driver install directory",
@@ -246,12 +242,12 @@ begin
 
       declare
          Args               : Argument_List;
-         Env                : Environment_Dict;
          Expected_Tool_Path : constant String := "fake-gnatbind";
          Expected_Error     : constant String :=
                                 "cannot spawn process";
       begin
-         Action.Compute_Command (Args, Env, 1);
+         Action.Update_Command_Line (1);
+         Args := Action.Command_Line.Argument_List;
          Test_Helper.Assert
            (Ends_With (Args.First_Element, Expected_Tool_Path),
             "Unknown tool",
@@ -276,13 +272,13 @@ begin
 
       declare
          Args           : Argument_List;
-         Env            : Environment_Dict;
          Expected_Tool  : constant String :=
                             "fake-gnatbind";
          Expected_Error : constant String :=
                             "cannot spawn process";
       begin
-         Action.Compute_Command (Args, Env, 1);
+         Action.Update_Command_Line (1);
+         Args := Action.Command_Line.Argument_List;
          Test_Helper.Assert
            (Args.First_Element = Expected_Tool,
             "Unknown tool",
@@ -307,11 +303,11 @@ begin
 
       declare
          Args           : Argument_List;
-         Env            : Environment_Dict;
          Expected_Tool  : constant String := "fake-gnatbind";
          Expected_Error : constant String := "cannot spawn process";
       begin
-         Action.Compute_Command (Args, Env, 1);
+         Action.Update_Command_Line (1);
+         Args := Action.Command_Line.Argument_List;
          Test_Helper.Assert
            (Args.First_Element = Expected_Tool,
             "Unknown tool",

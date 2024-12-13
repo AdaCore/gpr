@@ -70,31 +70,19 @@ package body GPR2.Build.Actions.Compile.Ada is
    -----------------------
 
    overriding procedure Compute_Signature
-     (Self   : in out Object;
-      Stdout : Unbounded_String;
-      Stderr : Unbounded_String)
+     (Self      : Object;
+      Signature : in out GPR2.Build.Signature.Object)
    is
-      use GPR2.Build.Signature;
-
-      UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
       Art : Artifacts.Files.Object;
 
    begin
-      Self.Signature.Clear;
-
-      for Dep of Self.Dependencies (With_RTS => False) loop
-         --  We don't add the runtime sources since it will be checked via the
-         --  compiler version.
+      for Dep of Self.Dependencies loop
          Art := Artifacts.Files.Create (Dep);
-         Self.Signature.Add_Artifact (Art);
+         Signature.Add_Artifact (Art);
       end loop;
 
-      Self.Signature.Add_Artifact (Self.Ali_File);
-      Self.Signature.Add_Artifact (Self.Obj_File);
-
-      Self.Signature.Add_Output (Stdout, Stderr);
-
-      Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
+      Signature.Add_Artifact (Self.Ali_File);
+      Signature.Add_Artifact (Self.Obj_File);
    end Compute_Signature;
 
    ------------------
@@ -102,56 +90,55 @@ package body GPR2.Build.Actions.Compile.Ada is
    ------------------
 
    function Dependencies
-     (Self     : in out Object;
+     (Self     : Object;
       With_RTS : Boolean := True) return Containers.Filename_Set
    is
-      Deps_Src : GPR2.Containers.Filename_Set;
+      All_Deps : GPR2.Containers.Filename_Set;
+      Result   : GPR2.Containers.Filename_Set;
       UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
 
    begin
-      if Self.Deps.Is_Empty then
-         if not Self.Ali_File.Path.Exists then
-            Trace
-              (Self.Traces,
-               "The ALI file for action " & UID.Image & " does not exist");
+      if not Self.Ali_File.Path.Exists then
+         Trace
+           (Self.Traces,
+            "The ALI file for action " & UID.Image & " does not exist");
 
-            return Self.Deps;
-         end if;
-
-         if not GPR2.Build.ALI_Parser.Dependencies
-           (Self.Ali_File.Path, Deps_Src)
-         then
-            Trace
-              (Self.Traces, "Failed to parse dependencies from the ALI file " &
-                 Self.Ali_File.Path.String_Value);
-
-            return Self.Deps;
-         end if;
-
-         for Dep_Src of Deps_Src loop
-            declare
-               Source : constant GPR2.Build.Source.Object :=
-                          Self.View.Visible_Source
-                            (Path_Name.Simple_Name (Dep_Src));
-            begin
-               if Source.Is_Defined
-                 and then
-                   (With_RTS
-                    or else not Source.Owning_View.Is_Runtime)
-               then
-                  if Self.Traces.Is_Active then
-                     Self.Traces.Trace
-                       ("Add " & String (Source.Path_Name.Name) &
-                          " to the action " & UID.Image & " dependencies");
-                  end if;
-
-                  Self.Deps.Include (Source.Path_Name.Value);
-               end if;
-            end;
-         end loop;
+         return Containers.Empty_Filename_Set;
       end if;
 
-      return Self.Deps;
+      if not GPR2.Build.ALI_Parser.Dependencies
+        (Self.Ali_File.Path, All_Deps)
+      then
+         Trace
+           (Self.Traces, "Failed to parse dependencies from the ALI file " &
+              Self.Ali_File.Path.String_Value);
+
+         return Containers.Empty_Filename_Set;
+      end if;
+
+      for Dep_Src of All_Deps loop
+         declare
+            Source : constant GPR2.Build.Source.Object :=
+                       Self.View.Visible_Source
+                         (Path_Name.Simple_Name (Dep_Src));
+         begin
+            if Source.Is_Defined
+              and then
+                (With_RTS
+                 or else not Source.Owning_View.Is_Runtime)
+            then
+               if Self.Traces.Is_Active then
+                  Self.Traces.Trace
+                    ("Add " & String (Source.Path_Name.Name) &
+                       " to the action " & UID.Image & " dependencies");
+               end if;
+
+               Result.Include (Source.Path_Name.Value);
+            end if;
+         end;
+      end loop;
+
+      return Result;
    end Dependencies;
 
    --------------

@@ -21,24 +21,25 @@ package body GPR2.Build.Actions.Compile is
    function Lang_Img (Lang : Language_Id) return Filename_Type is
       (Filename_Type (Ada.Characters.Handling.To_Lower (GPR2.Image (Lang))));
 
-   -------------
-   -- Command --
-   -------------
+   ---------------------
+   -- Compute_Command --
+   ---------------------
 
    overriding procedure Compute_Command
-     (Self : in out Object;
-      Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict;
-      Slot : Positive)
+     (Self     : in out Object;
+      Slot     : Positive;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object)
    is
       procedure Add_Attr
-        (Id      : Q_Attribute_Id;
-         Idx     : PAI.Object;
-         Is_List : Boolean);
+        (Id           : Q_Attribute_Id;
+         Idx          : PAI.Object;
+         Is_List      : Boolean;
+         In_Signature : Boolean);
 
       procedure Add_Options_With_Arg
-        (Attr : Project.Attribute.Object;
-         Arg  : String);
+        (Attr         : Project.Attribute.Object;
+         Arg          : String;
+         In_Signature : Boolean);
 
       procedure Add_Config_File;
 
@@ -58,9 +59,10 @@ package body GPR2.Build.Actions.Compile is
       --------------
 
       procedure Add_Attr
-        (Id      : Q_Attribute_Id;
-         Idx     : PAI.Object;
-         Is_List : Boolean)
+        (Id           : Q_Attribute_Id;
+         Idx          : PAI.Object;
+         Is_List      : Boolean;
+         In_Signature : Boolean)
       is
          Attr : constant GPR2.Project.Attribute.Object :=
                   Self.View.Attribute (Id, Idx);
@@ -71,10 +73,10 @@ package body GPR2.Build.Actions.Compile is
 
          if Is_List then
             for Val of Attr.Values loop
-               Args.Append (Val.Text);
+               Cmd_Line.Add_Argument (Val.Text, In_Signature);
             end loop;
          else
-            Args.Append (Attr.Value.Text);
+            Cmd_Line.Add_Argument (Attr.Value.Text, In_Signature);
          end if;
       end Add_Attr;
 
@@ -311,7 +313,9 @@ package body GPR2.Build.Actions.Compile is
             end if;
 
             Add_Options_With_Arg
-              (Cfg_File_Opt, String (GPR2.Path_Name.Simple_Name (File.Path)));
+              (Cfg_File_Opt,
+               String (GPR2.Path_Name.Simple_Name (File.Path)),
+               False);
          end;
       end Add_Config_File;
 
@@ -380,7 +384,8 @@ package body GPR2.Build.Actions.Compile is
                Full_Path : constant GPR2.Path_Name.Object :=
                              Self.View.Object_Directory.Compose (Inc_File);
             begin
-               Env.Include (String (Attr.Value.Text), Full_Path.String_Value);
+               Cmd_Line.Add_Env_Variable
+                 (String (Attr.Value.Text), Full_Path.String_Value);
             end;
 
             return;
@@ -421,8 +426,9 @@ package body GPR2.Build.Actions.Compile is
                   Close (Spec_File.FD);
                end if;
 
-               Args.Append
-                 ("-specs=" & String (Path_Name.Simple_Name (Spec_File.Path)));
+               Cmd_Line.Add_Argument
+                 ("-specs=" & String (Path_Name.Simple_Name (Spec_File.Path)),
+                  False);
             end;
 
             return;
@@ -433,7 +439,7 @@ package body GPR2.Build.Actions.Compile is
          if Attr.Is_Defined then
             for Path of Self.View.Include_Path (Self.Lang) loop
                Add_Options_With_Arg
-                 (Attr, Path.String_Value);
+                 (Attr, Path.String_Value, True);
             end loop;
          end if;
       end Add_Include_Path;
@@ -501,7 +507,7 @@ package body GPR2.Build.Actions.Compile is
             end if;
 
             Add_Options_With_Arg
-              (Attr, String (Path_Name.Simple_Name (Map_File.Path)));
+              (Attr, String (Path_Name.Simple_Name (Map_File.Path)), False);
          end;
       end Add_Mapping_File;
 
@@ -510,8 +516,9 @@ package body GPR2.Build.Actions.Compile is
       --------------------------
 
       procedure Add_Options_With_Arg
-        (Attr : Project.Attribute.Object;
-         Arg  : String)
+        (Attr         : Project.Attribute.Object;
+         Arg          : String;
+         In_Signature : Boolean)
       is
       begin
          if not Attr.Is_Defined or else Attr.Values.Is_Empty then
@@ -519,19 +526,21 @@ package body GPR2.Build.Actions.Compile is
          end if;
 
          for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
-            Args.Append (Attr.Values.Element (J).Text);
+            Cmd_Line.Add_Argument
+              (Attr.Values.Element (J).Text, In_Signature);
          end loop;
 
-         Args.Append (Attr.Values.Last_Element.Text & Arg);
+         Cmd_Line.Add_Argument
+           (Attr.Values.Last_Element.Text & Arg, In_Signature);
       end Add_Options_With_Arg;
 
    begin
-      Add_Attr (PRA.Compiler.Driver, Lang_Idx, False);
-      Add_Attr (PRA.Compiler.Leading_Required_Switches, Lang_Idx, True);
+      Add_Attr (PRA.Compiler.Driver, Lang_Idx, False, True);
+      Add_Attr (PRA.Compiler.Leading_Required_Switches, Lang_Idx, True, True);
       --  ??? need to filter out builder switches from command line
       --  Add_Attr (PRA.Builder.Switches, Lang_Idx, True);
-      Add_Attr (PRA.Compiler.Required_Switches, Lang_Idx, True);
-      Add_Attr (PRA.Compiler.Switches, Src_Idx, True);
+      Add_Attr (PRA.Compiler.Required_Switches, Lang_Idx, True, True);
+      Add_Attr (PRA.Compiler.Switches, Src_Idx, True, True);
 
       --  Add -cargs and -cargs:<lang>
 
@@ -539,20 +548,20 @@ package body GPR2.Build.Actions.Compile is
         of Self.Tree.External_Options.Fetch
           (GPR2.External_Options.Compiler, GPR2.No_Language)
       loop
-         Args.Append (Arg);
+         Cmd_Line.Add_Argument (Arg, True);
       end loop;
 
       for Arg
         of Self.Tree.External_Options.Fetch
           (GPR2.External_Options.Compiler, Self.Lang)
       loop
-         Args.Append (Arg);
+         Cmd_Line.Add_Argument (Arg, True);
       end loop;
 
       if Self.View.Is_Library
         and then Self.View.Library_Kind /= "static"
       then
-         Add_Attr (PRA.Compiler.Pic_Option, Lang_Idx, True);
+         Add_Attr (PRA.Compiler.Pic_Option, Lang_Idx, True, True);
       end if;
 
       declare
@@ -563,7 +572,8 @@ package body GPR2.Build.Actions.Compile is
          if Attr.Is_Defined then
             Add_Options_With_Arg
               (Attr,
-               String (Object'Class (Self).Dependency_File));
+               String (Object'Class (Self).Dependency_File),
+               True);
          end if;
       end;
 
@@ -572,20 +582,12 @@ package body GPR2.Build.Actions.Compile is
       Add_Config_File;
 
       declare
-         Input : constant Path_Name.Object :=
-                    Self.Src_Name;
-         Rel   : constant Filename_Type :=
-                   Input.Relative_Path (Self.Working_Directory);
          Index : constant Unit_Index := Object'Class (Self).Src_Index;
          Idx   : constant String :=
                    (if Index = No_Index then ""
                     else Index'Image);
       begin
-         if Rel'Length < Input.Value'Length then
-            Args.Append (String (Rel));
-         else
-            Args.Append (Input.String_Value);
-         end if;
+         Cmd_Line.Add_Argument (Self.Src_Name, True);
 
          if Index /= No_Index then
             declare
@@ -598,7 +600,8 @@ package body GPR2.Build.Actions.Compile is
                   "Compiler'Multi_Unit_Switches is not defined in the " &
                     "config project");
 
-               Add_Options_With_Arg (Sw, Idx (Idx'First + 1 .. Idx'Last));
+               Add_Options_With_Arg
+                 (Sw, Idx (Idx'First + 1 .. Idx'Last), True);
             end;
          end if;
       end;
@@ -610,16 +613,17 @@ package body GPR2.Build.Actions.Compile is
       begin
          if Sw.Is_Defined then
             Add_Options_With_Arg
-              (Sw, String (Self.Object_File.Path.Simple_Name));
+              (Sw, String (Self.Object_File.Path.Simple_Name), True);
          else
             --  [eng/gpr/gpr-issues#446] TODO modify the KB to have a proper
             --  default here.
-            Args.Append ("-o");
-            Args.Append (String (Self.Object_File.Path.Simple_Name));
+            Cmd_Line.Add_Argument ("-o");
+            Cmd_Line.Add_Argument
+              (String (Self.Object_File.Path.Simple_Name));
          end if;
       end;
 
-      Add_Attr (PRA.Compiler.Trailing_Required_Switches, Lang_Idx, True);
+      Add_Attr (PRA.Compiler.Trailing_Required_Switches, Lang_Idx, True, True);
    end Compute_Command;
 
    -----------------------
@@ -627,27 +631,19 @@ package body GPR2.Build.Actions.Compile is
    -----------------------
 
    overriding procedure Compute_Signature
-     (Self   : in out Object;
-      Stdout : Unbounded_String;
-      Stderr : Unbounded_String)
+     (Self      : Object;
+      Signature : in out GPR2.Build.Signature.Object)
    is
       use GPR2.Build.Signature;
       Art : Artifacts.Files.Object;
    begin
-      Self.Signature.Clear;
-
       --  ??? Need to process deps units
 
       Art := Artifacts.Files.Create (Self.Input.Path_Name);
-      Self.Signature.Add_Artifact (Art);
+      Signature.Add_Artifact (Art);
 
       Art := Self.Obj_File;
-      Self.Signature.Add_Artifact (Art);
-
-      Self.Signature.Add_Output (Stdout, Stderr);
-
-      Self.Signature.Store
-        (Self.Tree.Db_Filename_Path (Object'Class (Self).UID));
+      Signature.Add_Artifact (Art);
    end Compute_Signature;
 
    ----------------

@@ -20,21 +20,29 @@ package body GPR2.Build.Actions.Post_Bind is
    -------------
 
    overriding procedure Compute_Command
-     (Self : in out Object;
-      Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict;
-      Slot : Positive)
+     (Self     : in out Object;
+      Slot     : Positive;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object)
    is
-      pragma Unreferenced (Env, Slot);
+      pragma Unreferenced (Slot);
    begin
       --  ??? Replace hard coded values
 
-      Args.Append ("gcc");
-      Args.Append ("-c");
-      Args.Append (String (Self.Input.Path.Simple_Name));
-      Args.Append ("-o");
-      Args.Append (String (Self.Output.Path.Simple_Name));
+      Cmd_Line.Add_Argument ("gcc");
+      Cmd_Line.Add_Argument ("-c");
+      Cmd_Line.Add_Argument (String (Self.Input.Path.Simple_Name));
+      Cmd_Line.Add_Argument ("-o");
+      Cmd_Line.Add_Argument (String (Self.Output.Path.Simple_Name));
    end Compute_Command;
+
+   overriding procedure Compute_Signature
+     (Self      : Object;
+      Signature : in out GPR2.Build.Signature.Object) is
+   begin
+      Signature.Add_Artifact (Self.Input);
+      Signature.Add_Artifact (Self.Output);
+      Signature.Add_Artifact (Self.Ali);
+   end Compute_Signature;
 
    ------------
    -- Create --

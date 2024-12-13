@@ -26,7 +26,7 @@ function Main return Natural is
 begin
    Opts.Add_Switch (GPR2.Options.P, Project);
 
-   if not Tree.Load (Opts, With_Runtime => False) then
+   if not Tree.Load (Opts, With_Runtime => True) then
       return 1;
    end if;
 
@@ -54,6 +54,8 @@ begin
                 (Tree.Artifacts_Database.All_Actions);
 
    for A of Actions loop
+      A.Update_Command_Line (1);
+
       if not A.Valid_Signature then
          Ada.Text_IO.Put_Line (A.UID.Image);
          Ada.Text_IO.Put_Line ("  inputs:");
@@ -66,7 +68,7 @@ begin
             Ada.Text_IO.Put_Line ("  - " & Output.Image);
          end loop;
 
-         A.Compute_Signature (Null_Unbounded_String, Null_Unbounded_String);
+         A.Write_Signature (Null_Unbounded_String, Null_Unbounded_String);
       end if;
    end loop;
 

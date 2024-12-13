@@ -18,37 +18,30 @@ package body GPR2.Build.Actions.Write_File is
    -------------
 
    overriding procedure Compute_Command
-     (Self : in out Object;
-      Args : out GNATCOLL.OS.Process.Argument_List;
-      Env  : out GNATCOLL.OS.Process.Environment_Dict;
-      Slot : Positive)
+     (Self     : in out Object;
+      Slot     : Positive;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object)
    is
-      pragma Unreferenced (Self, Env);
+      pragma Unreferenced (Self);
    begin
-      Args.Append ("Does-Not-Work!");
+      Cmd_Line.Add_Argument ("Does-Not-Work!", True);
    end Compute_Command;
 
    -----------------------
    -- Compute_Signature --
    -----------------------
 
-   overriding procedure Compute_Signature (Self : in out Object;
-                                           Stdout : Unbounded_String;
-                                           Stderr : Unbounded_String) is
+   overriding procedure Compute_Signature
+     (Self      : Object;
+      Signature : in out GPR2.Build.Signature.Object)
+   is
       use GPR2.Build.Signature;
    begin
-      Self.Signature.Clear;
-
       for Art of Self.Tree.Inputs (Self.UID) loop
-         Self.Signature.Add_Artifact (Art);
+         Signature.Add_Artifact (Art);
       end loop;
 
-      Self.Signature.Add_Artifact (Output_File (Self.Index));
-
-      Self.Signature.Add_Output (Stdout, Stderr);
-
-      Self.Signature.Store
-        (Self.Tree.Db_Filename_Path (Object'Class (Self).UID));
+      Signature.Add_Artifact (Output_File (Self.Index));
    end Compute_Signature;
 
    ----------------
