@@ -1,3 +1,5 @@
 description: Compile an executable with gprbuild part 2
 driver: python_script
 timeout: 800
+output:
+- ["test.out.win", "'windows' in env.host.platform"]
