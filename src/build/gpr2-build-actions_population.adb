@@ -19,11 +19,15 @@ pragma Warnings (On);
 with GPR2.Build.Tree_Db;
 with GPR2.Message;
 with GPR2.Path_Name;
+with GPR2.Project.Attribute;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
 with GPR2.View_Ids.Set;
 
 package body GPR2.Build.Actions_Population is
+
+   package PRA renames GPR2.Project.Registry.Attribute;
 
    function As_Unit_Location
      (Basename       : Value_Type;
@@ -729,12 +733,48 @@ package body GPR2.Build.Actions_Population is
          return False;
       end if;
 
+      --  Check if we need to generate the mapping file for mains, and perform
+      --  verifications that all parameters are correct in the given context
+
+      if Options.Create_Map_File then
+         declare
+            Attr : constant GPR2.Project.Attribute.Object :=
+                     View.Attribute
+                       (PRA.Linker.Map_File_Option);
+         begin
+            --  Check if there's support from the linker, and then check that
+            --  we have a main to link
+
+            if not Attr.Is_Defined then
+               pragma Annotate (Xcov, Off, "defensive code");
+               Tree_Db.Reporter.Report
+                 ("error: selected linker does not allow creating a map file",
+                  To_Stderr => True,
+                  Level     => GPR2.Message.Important);
+               return False;
+               pragma Annotate (Xcov, On);
+
+            elsif Options.Mapping_File_Name /= Null_Unbounded_String
+              and then Actual_Mains.Length > 1
+            then
+               Tree_Db.Reporter.Report
+                 ("error: map file name is specified while there are " &
+                    "multiple mains",
+                  To_Stderr => True,
+                  Level     => GPR2.Message.Important);
+
+            end if;
+         end;
+      end if;
+
       --  Process the mains one by one
+
       declare
          Bind   : array (1 .. Natural (Actual_Mains.Length)) of
                     Actions.Ada_Bind.Object;
          Link   : array (1 .. Natural (Actual_Mains.Length)) of
                     Actions.Link.Object;
+         Attr   : GPR2.Project.Attribute.Object;
          Idx    : Natural := 1;
          Skip   : Boolean := False;
       begin
@@ -746,9 +786,19 @@ package body GPR2.Build.Actions_Population is
                Main.View,
                -Options.Output_File);
 
-            if not Tree_Db.Has_Action (Link (Idx).UID)
-              and then not Tree_Db.Add_Action (Link (Idx))
-            then
+            if Options.Create_Map_File then
+               Attr := Main.View.Attribute (PRA.Linker.Map_File_Option);
+               if Length (Options.Mapping_File_Name) > 0 then
+                  Link (Idx).Add_Option
+                    (Attr.Value.Text & To_String (Options.Mapping_File_Name));
+               else
+                  Link (Idx).Add_Option
+                    (Attr.Value.Text &
+                       String (Link (Idx).Output.Path.Base_Name) & ".map");
+               end if;
+            end if;
+
+            if not Tree_Db.Add_Action (Link (Idx)) then
                return False;
             end if;
 

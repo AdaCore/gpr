@@ -20,14 +20,19 @@ package GPR2.Build.Actions_Population is
    type Build_Options is record
       --  Input/Output specified explicitly:
 
-      Mains              : GPR2.Containers.Value_Set;
+      Mains               : GPR2.Containers.Value_Set;
       --  List of mains to build, specified explicitly. If empty the list is
       --  retrieved from the root project
-      Unit_Index         : GPR2.Unit_Index := GPR2.No_Index;
+      Unit_Index          : GPR2.Unit_Index := GPR2.No_Index;
       --  Allows specifying an index for the main given on the command line
-      Output_File        : Ada.Strings.Unbounded.Unbounded_String;
+      Output_File         : Ada.Strings.Unbounded.Unbounded_String;
       --  If specified on the command line, the output file basename. This
       --  case supposes a single Main in Mains
+      Create_Map_File     : Boolean := False;
+      Mapping_File_Name   : Ada.Strings.Unbounded.Unbounded_String;
+      --  Whether the linker should create a mapping file. If a specific map
+      --  file name is needed, then Mapping_File_Name is set, otherwise
+      --  <exec_file_name>.map is used.
 
       --  Modification of the actions behavior:
 

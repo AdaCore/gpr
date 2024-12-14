@@ -16,8 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Unbounded;
-
 with GPR2.Options;
 with GPR2.External_Options;
 with GPR2.Reporter.Console;
@@ -239,6 +237,14 @@ package body GPRbuild.Options is
          Create (Name           => "-z",
                  Help           => "No main subprogram (zero main)",
                  In_Switch_Attr => False));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name => "--create-map-file",
+                 Help => "Have the linker generate the map file",
+                 In_Switch_Attr => True,
+                 Delimiter      => Equal,
+                 Parameter      => "file.map",
+                 Default        => "__default__"));
       Parser.Add_Argument
         (Build_Group,
          Create (Name => "--keep-temp-files",
@@ -508,8 +514,7 @@ package body GPRbuild.Options is
          Result.Build_Options.Link_Phase_Mandated := True;
 
       elsif Arg = "-o" then
-         Result.Build_Options.Output_File :=
-           Ada.Strings.Unbounded.To_Unbounded_String (Param);
+         Result.Build_Options.Output_File := To_Unbounded_String (Param);
 
       elsif Arg = "-p" then
          Result.Create_Missing_Dirs := True;
@@ -540,6 +545,14 @@ package body GPRbuild.Options is
 
       elsif Arg = "--json-summary" then
          Result.Json_Summary := True;
+
+      elsif Arg = "--create-map-file" then
+         Result.Build_Options.Create_Map_File := True;
+
+         if Param /= "__default__" then
+            Result.Build_Options.Mapping_File_Name :=
+              To_Unbounded_String (Param);
+         end if;
 
       elsif Arg = "--keep-temp-files" then
          Result.Keep_Temp_Files := True;

@@ -20,6 +20,7 @@ with Ada.Command_Line;
 with Ada.Containers;
 with Ada.Directories;
 with Ada.Exceptions;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 with GNATCOLL.Traces;
 

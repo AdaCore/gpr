@@ -16,6 +16,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+
 with GPR2;
 with GPR2.Containers;
 with GPR2.Path_Name;
