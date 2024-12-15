@@ -12,6 +12,8 @@ with GNATCOLL.OS.FS;
 with GNATCOLL.OS.FSUtil;
 
 with GPR2.Build.Tree_Db;
+with GPR2.Message;
+with GPR2.Source_Reference;
 
 package body GPR2.Build.Actions is
 
@@ -216,10 +218,10 @@ package body GPR2.Build.Actions is
    -- Compute_Signature --
    -----------------------
 
-   procedure Write_Signature
+   function Write_Signature
      (Self   : in out Object'Class;
       Stdout : Unbounded_String;
-      Stderr : Unbounded_String)
+      Stderr : Unbounded_String) return Boolean
    is
       UID : constant Action_Id'Class := Self.UID;
    begin
@@ -230,7 +232,22 @@ package body GPR2.Build.Actions is
 
       Self.Compute_Signature (Self.Signature);
 
+      if Self.Signature.Has_Error then
+         Self.Tree.Reporter.Report
+           (GPR2.Message.Create
+              (GPR2.Message.Error,
+               "this file is missing after execution of """ &
+                 Self.Command_Line.Signature & '"',
+               GPR2.Source_Reference.Create
+                 (Self.Signature.Missing_Artifact.Path.Value, 0, 0)));
+         Self.Signature.Clear;
+
+         return False;
+      end if;
+
       Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
+
+      return True;
    end Write_Signature;
 
 end GPR2.Build.Actions;

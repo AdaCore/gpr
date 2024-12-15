@@ -8,6 +8,7 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Strings.Unbounded;
 
 with GPR2.Build.Artifacts;
+with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Command_Line;
 with GPR2.Path_Name;
 with GPR2.Utils.Hash;
@@ -27,6 +28,14 @@ package GPR2.Build.Signature is
    --  Returns whether or not the signature is valid.
    --  This value is set by the Set_Valid_State which is representative of how
    --  each owner of a signature considers what a valid signature is.
+
+   function Has_Error (Self : Object) return Boolean;
+   --  Whether one or several expected artifacts are missing
+
+   function Missing_Artifact
+     (Self : Object) return GPR2.Build.Artifacts.Files.Object'Class
+     with Pre => Self.Has_Error;
+   --  In case of erroneous artifacts, this returns the first missing artifact
 
    procedure Add_Artifact
      (Self : in out Object;
@@ -73,6 +82,7 @@ private
 
    type Object is tagged record
       Artifacts         : Artifact_Maps.Map := Artifact_Maps.Empty_Map;
+      Has_Error         : Boolean := False;
       Cmd_Line_Checksum : GPR2.Utils.Hash.Hash_Digest :=
                             GPR2.Utils.Hash.No_Digest;
       Cmd_Line_Repr     : Unbounded_String;
@@ -85,6 +95,9 @@ private
      (Self : in out Object;
       Art  : Build.Artifacts.Object'Class) return Boolean is
       (Self.Artifacts.Contains (Art));
+
+   function Has_Error (Self : Object) return Boolean is
+      (Self.Has_Error);
 
    function Artifacts (Self : Object) return Artifact_Maps.Map is
      (Self.Artifacts);

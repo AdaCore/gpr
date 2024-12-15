@@ -18,12 +18,13 @@ $ gpr2build -P demo.gpr -q -p -k --json-summary main.adb -c
 [Ada Compile] main.adb (demo.gpr)
 [Ada Compile] pkg.ads (lib1.gpr)
 [Ada Compile] pkg2.ads (lib2.gpr)
+$ gpr2build -P demo.gpr -q -p -k --json-summary main.adb -l
+[Archive] liblib1.a (lib1.gpr)
+[Archive] liblib2.a (lib2.gpr)
 $ gpr2build -P demo.gpr -q -p -k --json-summary main.adb -b
 [Ada Bind] main (demo.gpr)
 [Ada Post-Bind] b__main.adb (demo.gpr)
 $ gpr2build -P demo.gpr -q -p -k --json-summary main.adb -l
-[Archive] liblib1.a (lib1.gpr)
-[Archive] liblib2.a (lib2.gpr)
 [Link] main (demo.gpr)
 $ ./main
 I'm main

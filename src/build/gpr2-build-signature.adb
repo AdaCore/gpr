@@ -21,9 +21,15 @@ package body GPR2.Build.Signature is
 
    procedure Add_Artifact
      (Self : in out Object;
-      Art  : Build.Artifacts.Object'Class) is
+      Art  : Build.Artifacts.Object'Class)
+   is
+      Chk : constant Hash_Digest := Art.Checksum;
    begin
-      Self.Artifacts.Include (Art, Art.Checksum);
+      if Chk = No_Digest then
+         Self.Has_Error := True;
+      end if;
+
+      Self.Artifacts.Include (Art, Chk);
    end Add_Artifact;
 
    ----------------
@@ -199,6 +205,23 @@ package body GPR2.Build.Signature is
          Signature.Clear;
          return Signature;
    end Load;
+
+   ----------------------
+   -- Missing_Artifact --
+   ----------------------
+
+   function Missing_Artifact
+     (Self : Object) return GPR2.Build.Artifacts.Files.Object'Class is
+   begin
+      for C in Self.Artifacts.Iterate loop
+         if Artifact_Maps.Element (C) = No_Digest then
+            return GPR2.Build.Artifacts.Files.Object'Class
+              (Artifact_Maps.Key (C));
+         end if;
+      end loop;
+
+      raise Internal_Error with "Unexpected call to Missing_Artifact";
+   end Missing_Artifact;
 
    -----------
    -- Store --

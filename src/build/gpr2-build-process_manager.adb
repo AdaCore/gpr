@@ -142,8 +142,10 @@ package body GPR2.Build.Process_Manager is
         or else (Proc_Handler.Status = Skipped and then
                    not Job.Valid_Signature);
 
-      if Failed_Status and then Self.Stop_On_Fail then
-         return Abort_Execution;
+      if Failed_Status then
+         if Self.Stop_On_Fail then
+            return Abort_Execution;
+         end if;
 
       else
          if not Job.Post_Command
@@ -158,7 +160,9 @@ package body GPR2.Build.Process_Manager is
                return Abort_Execution;
             end if;
 
-            Job.Write_Signature (Stdout, Stderr);
+            if not Job.Write_Signature (Stdout, Stderr) then
+               return Abort_Execution;
+            end if;
          end if;
       end if;
 
@@ -316,14 +320,23 @@ package body GPR2.Build.Process_Manager is
                   end if;
 
                else
-                  Context.Graph.Complete_Visit (Node);
-
+                  pragma Annotate (Xcov, Off, "Defensive code");
                   if Proc_Handler.Status = Finished then
                      Self.Traces.Trace
                        ("Error: Process handler status shall not be " &
                           "'Finished' at this stage");
                      raise Process_Manager_Error with
                        "Invalid process manager internal state, aborting";
+                  end if;
+                  pragma Annotate (Xcov, On);
+
+                  if Proc_Handler.Status = Skipped
+                    and then Act.Valid_Signature
+                  then
+                     --  Only consider the visit complete for valid skipped
+                     --  actions, else this will enable the dependent actions
+                     --  that won't have the proper inputs to complete
+                     Context.Graph.Complete_Visit (Node);
                   end if;
 
                   Job_Status :=
@@ -337,7 +350,7 @@ package body GPR2.Build.Process_Manager is
                           then Proc_Handler.Error_Message
                           else Act.Saved_Stderr));
 
-                  if Job_Status = Abort_Execution then
+                  if Job_Status = Abort_Execution and then Stop_On_Fail then
                      End_Of_Iteration := True;
                      exit;
                   end if;
@@ -371,8 +384,6 @@ package body GPR2.Build.Process_Manager is
            (Active_Procs (1 .. Active_Jobs), Timeout => 3600.0);
 
          if Proc_Id > 0 then
-            Context.Graph.Complete_Visit (States (Proc_Id).Node);
-
             --  A process has finished. Call wait to finalize it and get
             --  the final process status.
             Proc_Handler :=
@@ -409,8 +420,11 @@ package body GPR2.Build.Process_Manager is
                Tree_Db.Action_Id_To_Reference (UID) := Act;
             end;
 
-            --  Adjust execution depending on returned value
-            if Job_Status = Abort_Execution then
+            if Job_Status = Continue_Execution then
+               --  Mark as visited only successful executions
+               Context.Graph.Complete_Visit (States (Proc_Id).Node);
+            elsif Stop_On_Fail then
+                  --  Adjust execution depending on returned value
                End_Of_Iteration := True;
             end if;
 
@@ -549,6 +563,11 @@ package body GPR2.Build.Process_Manager is
       Cwd  : GPR2.Path_Name.Object;
 
    begin
+      --  We need to compute the command line before checking the signature
+      --  since the cmd line is part of the signature.
+
+      Job.Update_Command_Line (Slot_Id);
+
       if Job.Skip
         or else Job.Is_Deactivated
         or else Job.View.Is_Externally_Built
@@ -562,11 +581,6 @@ package body GPR2.Build.Process_Manager is
 
          return;
       end if;
-
-      --  We need to compute the command line before checking the signature
-      --  since the cmd line is part of the signature.
-
-      Job.Update_Command_Line (Slot_Id);
 
       if Job.Valid_Signature then
          if Self.Traces.Is_Active then

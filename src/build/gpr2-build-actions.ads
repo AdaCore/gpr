@@ -102,11 +102,12 @@ package GPR2.Build.Actions is
 
    function Is_Deactivated (Self : Object) return Boolean;
 
-   procedure Write_Signature
+   function Write_Signature
      (Self   : in out Object'Class;
       Stdout : Unbounded_String;
-      Stderr : Unbounded_String);
+      Stderr : Unbounded_String) return Boolean;
    --  Used to store the signature of the action after it has been executed.
+   --  Returns false in case an expected artifact is missing.
 
    procedure Compute_Signature
      (Self      : Object;

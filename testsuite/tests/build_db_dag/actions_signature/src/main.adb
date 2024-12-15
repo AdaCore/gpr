@@ -68,7 +68,11 @@ begin
             Ada.Text_IO.Put_Line ("  - " & Output.Image);
          end loop;
 
-         A.Write_Signature (Null_Unbounded_String, Null_Unbounded_String);
+         if not A.Write_Signature
+           (Null_Unbounded_String, Null_Unbounded_String)
+         then
+            return 1;
+         end if;
       end if;
    end loop;
 
