@@ -12,7 +12,7 @@ pragma Warnings (Off, ".* is not referenced");
 with GPR2.Build.Source.Sets;
 pragma Warnings (On, ".* is not referenced");
 with GPR2.Build.Tree_Db;
-with GPR2.External_Options;
+with GPR2.Build.External_Options;
 with GPR2.Project.Attribute;
 with GPR2.Project.View.Set;
 
@@ -546,14 +546,7 @@ package body GPR2.Build.Actions.Compile is
 
       for Arg
         of Self.Tree.External_Options.Fetch
-          (GPR2.External_Options.Compiler, GPR2.No_Language)
-      loop
-         Cmd_Line.Add_Argument (Arg, True);
-      end loop;
-
-      for Arg
-        of Self.Tree.External_Options.Fetch
-          (GPR2.External_Options.Compiler, Self.Lang)
+          (External_Options.Compiler, Self.Lang)
       loop
          Cmd_Line.Add_Argument (Arg, True);
       end loop;

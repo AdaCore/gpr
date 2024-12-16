@@ -359,16 +359,13 @@ package body GPR2.Build.Tree_Db is
    ------------
 
    procedure Create
-     (Self             : in out Object;
-      Tree             : GPR2.Tree_Internal.Object;
-      External_Options : GPR2.External_Options.Object)
+     (Self : in out Object;
+      Tree : GPR2.Tree_Internal.Object)
    is
    begin
       if Self.Self = null then
          Self.Self := Self'Unrestricted_Access;
          Self.Tree := Tree.Reference;
-
-         Self.External_Options := External_Options;
       end if;
 
       Self.Create_View_Dbs;
@@ -984,7 +981,7 @@ package body GPR2.Build.Tree_Db is
 
    procedure Set_External_Options
      (Self    : in out Object;
-      Options : GPR2.External_Options.Object) is
+      Options : GPR2.Build.External_Options.Object) is
    begin
       Self.External_Options := Options;
    end Set_External_Options;

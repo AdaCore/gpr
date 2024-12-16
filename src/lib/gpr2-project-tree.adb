@@ -521,8 +521,7 @@ package body GPR2.Project.Tree is
             Implicit_With    => Options.Implicit_With,
             Resolve_Links    => Options.Resolve_Links,
             File_Reader      => File_Reader,
-            Environment      => Environment,
-            External_Options => Options.Fetch_External_Options);
+            Environment      => Environment);
 
          if Options.Target /= "all" then
             --  if target is defined on the command line, and a config
@@ -593,8 +592,7 @@ package body GPR2.Project.Tree is
             Base              => Options.Base (Environment),
             Config_Project    => Options.Config_Project,
             File_Reader       => File_Reader,
-            Environment       => Environment,
-            External_Options  => Options.Fetch_External_Options);
+            Environment       => Environment);
       end if;
 
       GPR2.Project_Parser.Clear_Cache;
@@ -677,8 +675,7 @@ package body GPR2.Project.Tree is
             Implicit_With    => Options.Implicit_With,
             Resolve_Links    => Options.Resolve_Links,
             File_Reader      => File_Reader,
-            Environment      => Environment,
-            External_Options => Options.Fetch_External_Options);
+            Environment      => Environment);
 
          if Options.Target /= "all" then
             --  if target is defined on the command line, and a config
@@ -750,8 +747,7 @@ package body GPR2.Project.Tree is
             Base              => Options.Base (Environment),
             Config_Project    => Options.Config_Project,
             File_Reader       => File_Reader,
-            Environment       => Environment,
-            External_Options => Options.Fetch_External_Options);
+            Environment       => Environment);
       end if;
 
       Report_Logs (Self);

@@ -8,7 +8,7 @@ with Ada.Characters.Handling;
 
 with GNATCOLL.Utils;
 
-with GPR2.External_Options;
+with GPR2.Build.External_Options;
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
 
@@ -298,7 +298,7 @@ package body GPR2.Build.Actions.Link is
 
          for Arg
            of Self.Tree.External_Options.Fetch
-             (GPR2.External_Options.Linker, GPR2.No_Language)
+             (External_Options.Linker, GPR2.No_Language)
          loop
             Cmd_Line.Add_Argument (Arg);
          end loop;

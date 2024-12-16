@@ -14,7 +14,7 @@ with GPR2.Containers;
 
 with Ada.Containers.Indefinite_Ordered_Maps;
 
-package GPR2.External_Options is
+package GPR2.Build.External_Options is
 
    type Action_Class is new String;
    Binder   : constant Action_Class := "binder";
@@ -56,4 +56,4 @@ private
       Ext_Opt : Lang_Value_List_Map_Map;
    end record;
 
-end GPR2.External_Options;
+end GPR2.Build.External_Options;

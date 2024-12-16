@@ -374,6 +374,12 @@ begin
       end if;
    end if;
 
+   --  Set user-specified cargs/bargs/largs if any
+
+   Opt.Tree.Artifacts_Database.Set_External_Options (Opt.Extra_Args);
+
+   --  Now populate the Build database's actions
+
    if not GPR2.Build.Actions_Population.Populate_Actions
      (Tree, Opt.Build_Options)
    then
@@ -387,15 +393,11 @@ begin
 
       Tree.Artifacts_Database.Execute
         (Process_M_JSON,
-         Jobs            => Opt.Parallel_Tasks,
-         Stop_On_Fail    => not Opt.Keep_Going,
-         Keep_Temp_Files => Opt.Keep_Temp_Files);
+         Opt.PM_Options);
    else
       Tree.Artifacts_Database.Execute
         (Process_M,
-         Jobs            => Opt.Parallel_Tasks,
-         Stop_On_Fail    => not Opt.Keep_Going,
-         Keep_Temp_Files => Opt.Keep_Temp_Files);
+         Opt.PM_Options);
    end if;
 
    return To_Exit_Status (E_Success);

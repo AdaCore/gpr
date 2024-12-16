@@ -17,7 +17,6 @@
 ------------------------------------------------------------------------------
 
 with GPR2.Options;
-with GPR2.External_Options;
 with GPR2.Reporter.Console;
 
 package body GPRbuild.Options is
@@ -370,20 +369,20 @@ package body GPRbuild.Options is
 
    begin
       if Section = "-cargs" then
-         Result.Register_External_Options
-           (GPR2.External_Options.Compiler,
+         Result.Extra_Args.Register
+           (GPR2.Build.External_Options.Compiler,
             Lang_Idx,
             String (Arg));
 
       elsif Section = "-bargs" then
-         Result.Register_External_Options
-           (GPR2.External_Options.Binder,
+         Result.Extra_Args.Register
+           (GPR2.Build.External_Options.Binder,
             Lang_Idx,
             String (Arg));
 
       elsif Section = "-largs" then
-         Result.Register_External_Options
-           (GPR2.External_Options.Linker,
+         Result.Extra_Args.Register
+           (GPR2.Build.External_Options.Linker,
             GPR2.No_Language,
             String (Arg));
 
@@ -418,8 +417,8 @@ package body GPRbuild.Options is
 
       procedure Add_Ada_Compiler_Option (Sw : String) is
       begin
-         Result.Register_External_Options
-           (GPR2.External_Options.Compiler,
+         Result.Extra_Args.Register
+           (GPR2.Build.External_Options.Compiler,
             GPR2.Ada_Language,
             Sw);
       end Add_Ada_Compiler_Option;
@@ -492,14 +491,14 @@ package body GPRbuild.Options is
          end;
 
       elsif Arg = "-f" then
-         Result.Force := True;
+         Result.PM_Options.Force := True;
 
       elsif Arg = "-j" then
          declare
             Val : Natural;
          begin
             Val := Natural'Value (Param);
-            Result.Parallel_Tasks := Val;
+            Result.PM_Options.Jobs := Val;
          exception
             when Constraint_Error =>
                raise GPR2.Options.Usage_Error with
@@ -507,7 +506,7 @@ package body GPRbuild.Options is
          end;
 
       elsif Arg = "-k" then
-         Result.Keep_Going := True;
+         Result.PM_Options.Stop_On_Fail := False;
 
       elsif Arg = "-l" then
          Result.Build_Options.Restricted_Build_Phase := True;
@@ -555,7 +554,7 @@ package body GPRbuild.Options is
          end if;
 
       elsif Arg = "--keep-temp-files" then
-         Result.Keep_Temp_Files := True;
+         Result.PM_Options.Keep_Temp_Files := True;
 
       elsif Arg = "-nostdinc" then
          Add_Ada_Compiler_Option (String (Arg));

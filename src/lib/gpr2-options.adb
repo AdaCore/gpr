@@ -215,17 +215,4 @@ package body GPR2.Options is
       end if;
    end Print_GPR_Registry;
 
-   -------------------------------
-   -- Register_External_Options --
-   -------------------------------
-
-   procedure Register_External_Options
-     (Self   : in out Object;
-      Action : External_Options.Action_Class;
-      Lang   : Language_Id;
-      Option : String) is
-   begin
-      Self.External_Options.Register (Action, Lang, Option);
-   end Register_External_Options;
-
 end GPR2.Options;

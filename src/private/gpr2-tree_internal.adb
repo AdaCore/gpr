@@ -673,8 +673,7 @@ package body GPR2.Tree_Internal is
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
       Environment      : GPR2.Environment.Object :=
-                           GPR2.Environment.Process_Environment;
-      External_Options : GPR2.External_Options.Object)
+                           GPR2.Environment.Process_Environment)
    is
       Gpr_Path     : Path_Name.Object;
       Root_Context : GPR2.Context.Object := Context;
@@ -902,7 +901,7 @@ package body GPR2.Tree_Internal is
          --  Tree is now fully loaded, we can create the artifacts database
          --  object.
          if not Self.Tree_Db.Is_Defined then
-            Init_Tree_Database (Self.Tree_Db, Self, External_Options);
+            Init_Tree_Database (Self.Tree_Db, Self);
          else
             --  Tree has been reloaded: update the database in case views
             --  have changed.
@@ -944,8 +943,7 @@ package body GPR2.Tree_Internal is
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
                             GPR2.File_Readers.No_File_Reader_Reference;
       Environment       : GPR2.Environment.Object :=
-                            GPR2.Environment.Process_Environment;
-      External_Options  : GPR2.External_Options.Object)
+                            GPR2.Environment.Process_Environment)
    is separate;
 
    ------------------------

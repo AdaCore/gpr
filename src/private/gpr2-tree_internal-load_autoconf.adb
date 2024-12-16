@@ -30,8 +30,7 @@ procedure Load_Autoconf
    File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
                          GPR2.File_Readers.No_File_Reader_Reference;
    Environment       : GPR2.Environment.Object :=
-                         GPR2.Environment.Process_Environment;
-   External_Options  : GPR2.External_Options.Object)
+                         GPR2.Environment.Process_Environment)
 is
    Languages   : Containers.Language_Set;
    Conf        : Project.Configuration.Object;
@@ -600,8 +599,7 @@ begin
       Absent_Dir_Error => No_Error,
       Implicit_With    => Implicit_With,
       Pre_Conf_Mode    => True,
-      Environment      => Environment,
-      External_Options => External_Options);
+      Environment      => Environment);
    --  Ignore possible missing dirs and imported projects since they can
    --  depend on the result of auto-configuration.
 
@@ -823,8 +821,7 @@ begin
       Absent_Dir_Error => Absent_Dir_Error,
       Implicit_With    => Implicit_With,
       Resolve_Links    => Resolve_Links,
-      Environment      => Environment,
-      External_Options => External_Options);
+      Environment      => Environment);
 
    if Default_Cfg.Is_Defined and then Default_Cfg.Exists then
       --  No need for reconfiguration if explicit default configuration
@@ -895,8 +892,7 @@ begin
       Absent_Dir_Error => Absent_Dir_Error,
       Implicit_With    => Implicit_With,
       Resolve_Links    => Resolve_Links,
-      Environment      => Environment,
-      External_Options => External_Options);
+      Environment      => Environment);
 
    GPR2.Project_Parser.Clear_Cache;
 end Load_Autoconf;
