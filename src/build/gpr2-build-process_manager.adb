@@ -229,8 +229,10 @@ package body GPR2.Build.Process_Manager is
       is
       begin
          if Stdout_FD = FS.Invalid_FD or else Stderr_FD = FS.Invalid_FD then
+            pragma Annotate (Xcov, Off, "defensive code");
             raise Process_Manager_Error with
               "Error when spawning a subprocess: cannot redirect I/O";
+            pragma Annotate (Xcov, On);
          end if;
 
          --  Allocate listener for stdout
@@ -279,6 +281,7 @@ package body GPR2.Build.Process_Manager is
                End_Of_Iteration := not Context.Graph.Next (Node);
             exception
                when E : GNATCOLL.Directed_Graph.DG_Error =>
+                  pragma Annotate (Xcov, Off, "defensive code");
                   Tree_Db.Reporter.Report
                     ("error: internal error in the process manager (" &
                        Ada.Exceptions.Exception_Message (E) & ")");
@@ -286,6 +289,7 @@ package body GPR2.Build.Process_Manager is
                   Self.Traces.Trace
                     (Ada.Exceptions.Exception_Information (E));
                   End_Of_Iteration := True;
+                  pragma Annotate (Xcov, On);
             end;
 
             exit when End_Of_Iteration or else Node = GDG.No_Node;
@@ -320,15 +324,15 @@ package body GPR2.Build.Process_Manager is
                   end if;
 
                else
-                  pragma Annotate (Xcov, Off, "Defensive code");
                   if Proc_Handler.Status = Finished then
+                     pragma Annotate (Xcov, Off, "Defensive code");
                      Self.Traces.Trace
                        ("Error: Process handler status shall not be " &
                           "'Finished' at this stage");
                      raise Process_Manager_Error with
                        "Invalid process manager internal state, aborting";
+                     pragma Annotate (Xcov, On);
                   end if;
-                  pragma Annotate (Xcov, On);
 
                   if Proc_Handler.Status = Skipped
                     and then Act.Valid_Signature
@@ -357,6 +361,7 @@ package body GPR2.Build.Process_Manager is
                end if;
             exception
                when E : Process_Manager_Error =>
+                  pragma Annotate (Xcov, Off, "defensive code");
                   End_Of_Iteration := True;
                   Tree_Db.Reporter.Report
                     ("Fatal error: " &
@@ -370,6 +375,7 @@ package body GPR2.Build.Process_Manager is
                   Tree_Db.Reporter.Report
                     (Ada.Exceptions.Exception_Information (E),
                      To_Stderr => True);
+                  pragma Annotate (Xcov, On);
             end;
          end loop;
 
@@ -573,8 +579,10 @@ package body GPR2.Build.Process_Manager is
         or else Job.View.Is_Externally_Built
       then
          if Self.Traces.Is_Active then
+            pragma Annotate (Xcov, Off, "debug code");
             Self.Traces.Trace
               ("job asked to be skipped: " & Job.UID.Image);
+            pragma Annotate (Xcov, On);
          end if;
 
          Proc_Handler := Process_Handler'(Status => Skipped);
@@ -584,9 +592,11 @@ package body GPR2.Build.Process_Manager is
 
       if Job.Valid_Signature then
          if Self.Traces.Is_Active then
+            pragma Annotate (Xcov, Off, "debug code");
             Self.Traces.Trace
               ("Signature is valid, do not execute the job '" &
                  Job.UID.Image & "'");
+            pragma Annotate (Xcov, On);
          end if;
 
          Proc_Handler := Process_Handler'(Status => Skipped);
@@ -598,20 +608,15 @@ package body GPR2.Build.Process_Manager is
 
       if Job.Command_Line.Argument_List.Is_Empty then
          if Self.Traces.Is_Active then
+            pragma Annotate (Xcov, Off, "debug code");
             Self.Traces.Trace
               ("job arguments is empty, skipping '"  & Job.UID.Image & "'");
+            pragma Annotate (Xcov, On);
          end if;
 
          Proc_Handler := Process_Handler'(Status => Skipped);
 
          return;
-      end if;
-
-      if Self.Traces.Is_Active then
-         Self.Traces.Trace
-           ("Signature is invalid. Execute the job " &
-              Job.UID.Image & ", command: " &
-              Image (Job.Command_Line.Argument_List));
       end if;
 
       FS.Open_Pipe (P_Ro, P_Wo);
