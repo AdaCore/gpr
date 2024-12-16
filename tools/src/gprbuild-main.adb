@@ -238,11 +238,23 @@ begin
        (PRA.Builder.Switches).Is_Empty
    then
       declare
+         Has_Error : Boolean;
          Mains : constant Compilation_Unit.Unit_Location_Vector :=
-                   (if Tree.Root_Project.Has_Mains
+                   (if not Opt.Build_Options.Mains.Is_Empty
+                    then Actions_Population.Resolve_Mains
+                      (Tree, Opt.Build_Options, Has_Error)
+                    elsif Tree.Root_Project.Has_Mains
                     then Tree.Root_Project.Mains
                     else GPR2.Build.Compilation_Unit.Empty_Vector);
       begin
+         if Has_Error then
+            Handle_Program_Termination
+              (Force_Exit => True,
+               Exit_Cause => E_Tool,
+               Message    => "processing failed");
+            return To_Exit_Status (E_Fatal);
+         end if;
+
          --  #1: If one main is defined, from the Main top-level attribute or
          --  from the command line, we fetch Builder'Switches(<main>).
 
@@ -338,6 +350,14 @@ begin
             Sw_Attr := Tree.Root_Project.Attribute
               (Name  => PRA.Builder.Switches,
                Index => Project.Attribute_Index.I_Others);
+         end if;
+
+         if not Sw_Attr.Is_Defined
+           and then Mains.Length > 1
+         then
+            Tree.Reporter.Report
+              ("warning: Builder'Switches attribute is ignored as there are" &
+                 " several mains");
          end if;
       end;
 

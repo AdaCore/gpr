@@ -11,7 +11,6 @@ with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Actions.Sets;
 with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Artifacts.Library;
-with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Compilation_Unit.Maps;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
@@ -191,52 +190,12 @@ package body GPR2.Build.Actions_Population is
 
       Inserted := False;
 
-      for Main of Options.Mains loop
-         for V of Tree.Namespace_Root_Projects loop
-            declare
-               M : constant Compilation_Unit.Unit_Location_Vector :=
-                     As_Unit_Location
-                       (Main,
-                        Options.Unit_Index,
-                        V,
-                        Options,
-                        Has_Error);
-            begin
-               if Has_Error then
-                  return False;
-               end if;
+      Mains := Resolve_Mains
+        (Tree, Options, Has_Error);
 
-               if not M.Is_Empty then
-                  Inserted := True;
-                  Mains.Append (M);
-               end if;
-            end;
-         end loop;
-
-         if not Inserted then
-            if Options.Unique_Compilation
-              or else Options.Unique_Compilation_Recursive
-            then
-               Tree_Db.Reporter.Report
-                 (Message.Create
-                    (Message.Error,
-                     '"' & Main &
-                       """ was not found in the sources of any project",
-                     Source_Reference.Create
-                       (Tree.Root_Project.Path_Name.Value, 0, 0)));
-            else
-               Tree_Db.Reporter.Report
-                 (Message.Create
-                    (Message.Error,
-                     '"' & Main &
-                       """ was not found in the project",
-                     Source_Reference.Create
-                       (Tree.Root_Project.Path_Name.Value, 0, 0)));
-            end if;
-
-            return False;
-         end if;
-      end loop;
+      if Has_Error then
+         return False;
+      end if;
 
       for V of Tree.Namespace_Root_Projects loop
          Visited.Insert (V.Id, Pos, Inserted);
@@ -1048,5 +1007,76 @@ package body GPR2.Build.Actions_Population is
 
       return True;
    end Populate_Withed_Units;
+
+   -------------------
+   -- Resolve_Mains --
+   -------------------
+
+   function Resolve_Mains
+     (Tree    : GPR2.Project.Tree.Object;
+      Options : Build_Options;
+      Error   : out Boolean)
+      return GPR2.Build.Compilation_Unit.Unit_Location_Vector
+   is
+      Result   : Compilation_Unit.Unit_Location_Vector;
+      Inserted : Boolean;
+   begin
+      Error := False;
+
+      for Main of Options.Mains loop
+         Inserted := False;
+
+         NS_Loop :
+         for V of Tree.Namespace_Root_Projects loop
+            declare
+               M : constant Compilation_Unit.Unit_Location_Vector :=
+                     As_Unit_Location
+                       (Main,
+                        Options.Unit_Index,
+                        V,
+                        Options,
+                        Error);
+            begin
+               if Error then
+                  return Compilation_Unit.Empty_Vector;
+               end if;
+
+               if not M.Is_Empty then
+                  Inserted := True;
+                  Result.Append (M);
+                  exit NS_Loop;
+               end if;
+            end;
+         end loop NS_Loop;
+
+         if not Inserted then
+            if Options.Unique_Compilation
+              or else Options.Unique_Compilation_Recursive
+            then
+               Tree.Reporter.Report
+                 (Message.Create
+                    (Message.Error,
+                     '"' & Main &
+                       """ was not found in the sources of any project",
+                     Source_Reference.Create
+                       (Tree.Root_Project.Path_Name.Value, 0, 0)));
+            else
+               Tree.Reporter.Report
+                 (Message.Create
+                    (Message.Error,
+                     '"' & Main &
+                       """ was not found in the project",
+                     Source_Reference.Create
+                       (Tree.Root_Project.Path_Name.Value, 0, 0)));
+            end if;
+
+            Error := True;
+
+            return Compilation_Unit.Empty_Vector;
+         end if;
+      end loop;
+
+      return Result;
+   end Resolve_Mains;
 
 end GPR2.Build.Actions_Population;

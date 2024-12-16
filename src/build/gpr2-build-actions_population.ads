@@ -7,8 +7,10 @@
 with Ada.Containers.Ordered_Maps;
 with Ada.Strings.Unbounded;
 
+with GPR2.Build.Compilation_Unit;
 with GPR2.Containers;
 with GPR2.Project.Tree;
+with GPR2.Project.View;
 
 package GPR2.Build.Actions_Population is
 
@@ -64,6 +66,15 @@ package GPR2.Build.Actions_Population is
       No_Main_Subprogram           : Boolean := False;
       --  -z option: tell the binder to not generate an actual main subprogram
    end record;
+
+   function Resolve_Mains
+     (Tree    : GPR2.Project.Tree.Object;
+      Options : Build_Options;
+      Error   : out Boolean)
+      return GPR2.Build.Compilation_Unit.Unit_Location_Vector;
+   --  Utility function to resolve the actual list of Mains to consider for
+   --  the given Build_Options. Error is set upon error retrieving an actual
+   --  main.
 
    function Populate_Actions
      (Tree    : GPR2.Project.Tree.Object;
