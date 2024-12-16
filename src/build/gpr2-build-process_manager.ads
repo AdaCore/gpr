@@ -20,6 +20,13 @@ package GPR2.Build.Process_Manager is
 
    Process_Manager_Error : exception;
 
+   type PM_Options is record
+      Jobs            : Natural := 1;
+      Force           : Boolean := False;
+      Stop_On_Fail    : Boolean := True;
+      Keep_Temp_Files : Boolean := False;
+   end record;
+
    type Collect_Status is
       (Continue_Execution,
        Abort_Execution);
@@ -78,6 +85,7 @@ package GPR2.Build.Process_Manager is
      (Self           : in out Object;
       Job            : in out Actions.Object'Class;
       Slot_Id        :        Positive;
+      Force          :        Boolean;
       Proc_Handler   :    out Process_Handler;
       Capture_Stdout :    out File_Descriptor;
       Capture_Stderr :    out File_Descriptor);
@@ -95,9 +103,7 @@ package GPR2.Build.Process_Manager is
      (Self            : in out Object;
       Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
       Context         : access Process_Execution_Context;
-      Jobs            : Natural := 0;
-      Stop_On_Fail    : Boolean := True;
-      Keep_Temp_Files : Boolean := False);
+      Options         : PM_Options);
 
    procedure Execution_Post_Process (Self : in out Object) is null;
    --  ??? Did not manage to have this subprogram in the private part
@@ -129,7 +135,6 @@ private
       Tree_Db      : access GPR2.Build.Tree_Db.Object;
       Traces       : GNATCOLL.Traces.Trace_Handle :=
                        GNATCOLL.Traces.Create ("PROCESS_MANAGER");
-      Stop_On_Fail : Boolean := True;
    end record;
 
 end GPR2.Build.Process_Manager;

@@ -28,6 +28,7 @@ function Test return Integer is
    Project   : constant String := "tree/main.gpr";
    Process_M : GPR2.Build.Process_Manager.JSON.Object;
    Root_View : GPR2.Project.View.Object;
+   Exec_Opts : GPR2.Build.Process_Manager.PM_Options;
 
    Scenario_Idx : Integer := Integer'Value (Ada.Command_Line.Argument (1));
    --  To ease the testing, this file contains all the tests scenarios.
@@ -192,7 +193,10 @@ begin
    Tree.Artifacts_Database.Load_Signatures;
 
    Process_M.Set_JSON_File (Path_Name.Create_File ("jobs.json"));
-   Tree.Artifacts_Database.Execute (Process_M, 2);
+
+   Exec_Opts.Jobs := 2;
+
+   Tree.Artifacts_Database.Execute (Process_M, Exec_Opts);
 
    return 0;
 end Test;

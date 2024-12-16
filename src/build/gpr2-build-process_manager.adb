@@ -97,9 +97,7 @@ package body GPR2.Build.Process_Manager is
 
       case Proc_Handler.Status is
          when Failed_To_Launch =>
-            if Self.Stop_On_Fail then
-               return Abort_Execution;
-            end if;
+            return Abort_Execution;
 
          when Finished =>
             if Self.Traces.Is_Active then
@@ -143,9 +141,7 @@ package body GPR2.Build.Process_Manager is
                    not Job.Valid_Signature);
 
       if Failed_Status then
-         if Self.Stop_On_Fail then
-            return Abort_Execution;
-         end if;
+         return Abort_Execution;
 
       else
          if not Job.Post_Command
@@ -193,11 +189,10 @@ package body GPR2.Build.Process_Manager is
      (Self            : in out Object;
       Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
       Context         : access Process_Execution_Context;
-      Jobs            : Natural := 0;
-      Stop_On_Fail    : Boolean := True;
-      Keep_Temp_Files : Boolean := False)
+      Options         : PM_Options)
    is
-      Max_Jobs        : constant Natural := Effective_Job_Number (Jobs);
+      Max_Jobs        : constant Natural :=
+                          Effective_Job_Number (Options.Jobs);
       --  Effective max number of silmutaneous jobs
 
       Active_Procs    : GOP.Process_Array (1 .. Max_Jobs) :=
@@ -269,7 +264,6 @@ package body GPR2.Build.Process_Manager is
 
    begin
       Self.Tree_Db      := Tree_Db;
-      Self.Stop_On_Fail := Stop_On_Fail;
       Self.Stats        := Empty_Stats;
 
       Context.Graph.Start_Iterator (Enable_Visiting_State => True);
@@ -308,7 +302,8 @@ package body GPR2.Build.Process_Manager is
                end loop;
 
                Self.Launch_Job
-                 (Act, Available_Slot, Proc_Handler, P_Stdout, P_Stderr);
+                 (Act, Available_Slot, Options.Force, Proc_Handler,
+                  P_Stdout, P_Stderr);
                Self.Stats.Total_Jobs := Self.Stats.Total_Jobs + 1;
 
                if Proc_Handler.Status = Running then
@@ -354,7 +349,9 @@ package body GPR2.Build.Process_Manager is
                           then Proc_Handler.Error_Message
                           else Act.Saved_Stderr));
 
-                  if Job_Status = Abort_Execution and then Stop_On_Fail then
+                  if Job_Status = Abort_Execution
+                    and then Options.Stop_On_Fail
+                  then
                      End_Of_Iteration := True;
                      exit;
                   end if;
@@ -418,7 +415,7 @@ package body GPR2.Build.Process_Manager is
                   Stderr       => Stderr);
 
                --  Cleanup the temporary files that are local to the job
-               if not Keep_Temp_Files then
+               if not Options.Keep_Temp_Files then
                   Act.Cleanup_Temp_Files (Scope => Actions.Local);
                end if;
 
@@ -429,7 +426,7 @@ package body GPR2.Build.Process_Manager is
             if Job_Status = Continue_Execution then
                --  Mark as visited only successful executions
                Context.Graph.Complete_Visit (States (Proc_Id).Node);
-            elsif Stop_On_Fail then
+            elsif Options.Stop_On_Fail then
                   --  Adjust execution depending on returned value
                End_Of_Iteration := True;
             end if;
@@ -460,7 +457,7 @@ package body GPR2.Build.Process_Manager is
       end loop;
 
       --  Cleanup the temporary files with global scope
-      if not Keep_Temp_Files then
+      if not Options.Keep_Temp_Files then
          Tree_Db.Clear_Temp_Files;
       end if;
 
@@ -488,6 +485,7 @@ package body GPR2.Build.Process_Manager is
      (Self           : in out Object;
       Job            : in out Actions.Object'Class;
       Slot_Id        :        Positive;
+      Force          :        Boolean;
       Proc_Handler   :    out Process_Handler;
       Capture_Stdout :    out File_Descriptor;
       Capture_Stderr :    out File_Descriptor)
@@ -590,7 +588,7 @@ package body GPR2.Build.Process_Manager is
          return;
       end if;
 
-      if Job.Valid_Signature then
+      if not Force and then Job.Valid_Signature then
          if Self.Traces.Is_Active then
             pragma Annotate (Xcov, Off, "debug code");
             Self.Traces.Trace

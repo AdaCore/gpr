@@ -417,11 +417,9 @@ package body GPR2.Build.Tree_Db is
    -------------
 
    procedure Execute
-     (Self            : in out Object;
-      PM              : in out GPR2.Build.Process_Manager.Object'Class;
-      Jobs            : Natural := 0;
-      Stop_On_Fail    : Boolean := True;
-      Keep_Temp_Files : Boolean := False)
+     (Self    : in out Object;
+      PM      : in out GPR2.Build.Process_Manager.Object'Class;
+      Options : GPR2.Build.Process_Manager.PM_Options)
    is
       Node : GNATCOLL.Directed_Graph.Node_Id;
       Pred : Artifact_Action_Maps.Cursor;
@@ -467,10 +465,9 @@ package body GPR2.Build.Tree_Db is
       Self.Executing := True;
       PM.Execute
         (Self.Self,
-         Context         => Self.Exec_Ctxt'Access,
-         Jobs            => Jobs,
-         Stop_On_Fail    => Stop_On_Fail,
-         Keep_Temp_Files => Keep_Temp_Files);
+         Context => Self.Exec_Ctxt'Access,
+         Options => Options);
+
       Self.Executing := False;
       Self.Exec_Ctxt.Graph.Clear;
       Self.Exec_Ctxt.Actions.Clear;

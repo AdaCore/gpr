@@ -131,11 +131,9 @@ package GPR2.Build.Tree_Db is
                    and then Artifact.Is_Defined;
 
    procedure Execute
-     (Self            : in out Object;
-      PM              : in out GPR2.Build.Process_Manager.Object'Class;
-      Jobs            : Natural := 0;
-      Stop_On_Fail    : Boolean := True;
-      Keep_Temp_Files : Boolean := False);
+     (Self    : in out Object;
+      PM      : in out GPR2.Build.Process_Manager.Object'Class;
+      Options : GPR2.Build.Process_Manager.PM_Options);
 
    function Is_Executing (Self : Object) return Boolean;
 
