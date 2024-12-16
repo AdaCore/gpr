@@ -25,7 +25,38 @@ package body GPR2.Build.Actions.Post_Bind is
       Cmd_Line : in out GPR2.Build.Command_Line.Object)
    is
       pragma Unreferenced (Slot);
+
+      procedure Add_Attr
+        (Id      : Q_Attribute_Id;
+         Idx     : PAI.Object;
+         Is_List : Boolean);
+
+      --------------
+      -- Add_Attr --
+      --------------
+
+      procedure Add_Attr
+        (Id      : Q_Attribute_Id;
+         Idx     : PAI.Object;
+         Is_List : Boolean)
+      is
+         Attr : constant GPR2.Project.Attribute.Object :=
+                  Self.View.Attribute (Id, Idx);
+      begin
+         if not Attr.Is_Defined then
+            return;
+         end if;
+
+         if Is_List then
+            for Val of Attr.Values loop
+               Cmd_Line.Add_Argument (Val.Text);
+            end loop;
+         else
+            Cmd_Line.Add_Argument (Attr.Value.Text);
+         end if;
+      end Add_Attr;
    begin
+
       --  ??? Replace hard coded values
 
       Cmd_Line.Add_Argument ("gcc");
@@ -33,6 +64,15 @@ package body GPR2.Build.Actions.Post_Bind is
       Cmd_Line.Add_Argument (String (Self.Input.Path.Simple_Name));
       Cmd_Line.Add_Argument ("-o");
       Cmd_Line.Add_Argument (String (Self.Output.Path.Simple_Name));
+
+      --  ??? We probably need to add other compilation options.
+
+      if Self.View.Is_Library
+        and then Self.View.Library_Kind /= "static"
+      then
+         Add_Attr (PRA.Compiler.Pic_Option, PAI.Create (Ada_Language), True);
+      end if;
+
    end Compute_Command;
 
    overriding procedure Compute_Signature
