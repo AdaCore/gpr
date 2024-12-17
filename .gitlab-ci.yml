@@ -12,7 +12,7 @@ stages:
   cache:
     - key: $CI_COMMIT_REF_SLUG
       fallback_keys:
-        - next
+        - main
       policy: pull
       paths:
         - cache
@@ -29,7 +29,7 @@ build:
   cache:
     - key: $CI_COMMIT_REF_SLUG
       fallback_keys:
-        - next
+        - main
       paths:
         - cache
   script:
@@ -215,7 +215,7 @@ test_bootstrap:
         - cache
     - key: bootstrap-$CI_COMMIT_REF_SLUG
       fallback_keys:
-        - bootstrap-next
+        - bootstrap-main
       paths:
         - bootstrap_cache
   script:
