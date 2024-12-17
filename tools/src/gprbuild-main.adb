@@ -383,7 +383,11 @@ begin
    if not GPR2.Build.Actions_Population.Populate_Actions
      (Tree, Opt.Build_Options)
    then
-      return To_Exit_Status (E_Abort);
+      Handle_Program_Termination
+        (Force_Exit => True,
+         Exit_Cause => E_Tool,
+         Message    => "processing failed");
+      return To_Exit_Status (E_Fatal);
    end if;
 
    if Opt.Json_Summary then
