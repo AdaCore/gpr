@@ -13,6 +13,7 @@ with GNATCOLL.OS.FS;
 with GPR2.Build.Actions;
 with GPR2.Build.Artifacts;
 with GPR2.Build.External_Options;
+with GPR2.Build.Options;
 with GPR2.Build.Process_Manager;
 with GPR2.Build.View_Db;
 with GPR2.Log;
@@ -277,8 +278,15 @@ package GPR2.Build.Tree_Db is
    --  Returns the tree external options object
 
    procedure Set_External_Options
-     (Self : in out Object; Options : GPR2.Build.External_Options.Object);
-   --  Adds external options into the External_Options of Self
+     (Self    : in out Object;
+      Options : GPR2.Build.External_Options.Object);
+
+   function Build_Options
+     (Self : Object) return GPR2.Build.Options.Build_Options;
+
+   procedure Set_Build_Options
+     (Self : in out Object;
+      Options : GPR2.Build.Options.Build_Options);
 
    --------------------------------------
    -- Helper functions for the Actions --
@@ -323,6 +331,7 @@ private
    --  Options:
       Src_Option       : Optional_Source_Info_Option := No_Source;
       External_Options : Build.External_Options.Object;
+      Build_Options    : Build.Options.Build_Options;
 
       Self             : access Object;
       --  Handy self-reference
@@ -372,6 +381,10 @@ private
    function External_Options
      (Self : Object) return Build.External_Options.Object
    is (Self.External_Options);
+
+   function Build_Options
+     (Self : Object) return Build.Options.Build_Options
+   is (Self.Build_Options);
 
    function View_Database
      (Self : Object; View : GPR2.Project.View.Object)

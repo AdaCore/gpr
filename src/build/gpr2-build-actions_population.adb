@@ -32,7 +32,7 @@ package body GPR2.Build.Actions_Population is
      (Basename       : Value_Type;
       Index          : Unit_Index;
       View           : GPR2.Project.View.Object;
-      Options        : Build_Options;
+      Options        : Build.Options.Build_Options;
       Error_Reported : out Boolean)
       return Compilation_Unit.Unit_Location_Vector;
 
@@ -56,7 +56,7 @@ package body GPR2.Build.Actions_Population is
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       View    : GPR2.Project.View.Object;
       Mains   : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
-      Options : Build_Options) return Boolean;
+      Options : Build.Options.Build_Options) return Boolean;
 
    function Populate_Withed_Units
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
@@ -71,7 +71,7 @@ package body GPR2.Build.Actions_Population is
      (Basename       : Value_Type;
       Index          : Unit_Index;
       View           : GPR2.Project.View.Object;
-      Options        : Build_Options;
+      Options        : Build.Options.Build_Options;
       Error_Reported : out Boolean)
       return Compilation_Unit.Unit_Location_Vector
    is
@@ -170,7 +170,7 @@ package body GPR2.Build.Actions_Population is
 
    function Populate_Actions
      (Tree    : GPR2.Project.Tree.Object;
-      Options : Build_Options) return Boolean
+      Options : Build.Options.Build_Options) return Boolean
    is
       Tree_Db     : GPR2.Build.Tree_Db.Object_Access renames
                       Tree.Artifacts_Database;
@@ -186,6 +186,8 @@ package body GPR2.Build.Actions_Population is
       Has_Error   : Boolean;
 
    begin
+      Tree_Db.Set_Build_Options (Options);
+
       --  Lookup the source(s) given explicitly on the command line, if any.
 
       Inserted := False;
@@ -659,7 +661,7 @@ package body GPR2.Build.Actions_Population is
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       View    : GPR2.Project.View.Object;
       Mains   : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
-      Options : Build_Options) return Boolean
+      Options : Build.Options.Build_Options) return Boolean
    is
       A_Comp     : Actions.Compile.Ada.Object;
       Comp       : Actions.Compile.Object;
@@ -1014,7 +1016,7 @@ package body GPR2.Build.Actions_Population is
 
    function Resolve_Mains
      (Tree    : GPR2.Project.Tree.Object;
-      Options : Build_Options;
+      Options : Build.Options.Build_Options;
       Error   : out Boolean)
       return GPR2.Build.Compilation_Unit.Unit_Location_Vector
    is

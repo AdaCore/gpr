@@ -975,6 +975,17 @@ package body GPR2.Build.Tree_Db is
       return Self.Tree.Reporter;
    end Reporter;
 
+   -----------------------
+   -- Set_Build_Options --
+   -----------------------
+
+   procedure Set_Build_Options
+     (Self : in out Object;
+      Options : GPR2.Build.Options.Build_Options) is
+   begin
+      Self.Build_Options := Options;
+   end Set_Build_Options;
+
    --------------------------
    -- Set_External_Options --
    --------------------------
