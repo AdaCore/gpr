@@ -182,7 +182,7 @@ test_gpr2_cov:
     # report initial test status code
     exit $result
 
-  coverage: '/^Stmt Coverage:\s+(\d+\.\d+\%) \(\d+ \/ \d+\)$/'
+  coverage: '/Stmt Coverage:\s+(?:\d+\.\d+)%/'
   artifacts:
     when:
       always
