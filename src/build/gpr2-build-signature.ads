@@ -59,6 +59,10 @@ package GPR2.Build.Signature is
    procedure Clear (Self : in out Object);
    --  Clear all the signature artifacts and invalidate it
 
+   procedure Invalidate (Self : in out Object);
+   --  Removes the checcksum from Self, but keeps cmd line representation
+   --  and standard output and error
+
    function Load (Db_File  : Path_Name.Object) return Object;
    --  Loads the build DB file Db_File
 

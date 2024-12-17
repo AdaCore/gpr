@@ -360,10 +360,33 @@ package body GPR2.Build.Actions.Compile.Ada is
                        (GPR2.Source_Reference.Create
                           (Self.Src_Name.Value, 0, 0))));
             end if;
+
+            if Allowed then
+               if Self.Tree.Build_Options.No_Indirect_Imports
+                 and then not Self.View.Imports.Contains (CU_View)
+                 and then not Self.View.Limited_Imports.Contains (CU_View)
+               then
+                  Allowed := False;
+
+                  Self.Tree.Reporter.Report
+                    (GPR2.Message.Create
+                       (GPR2.Message.Error,
+                        "unit """ & String (Self.CU.Name) &
+                          """ cannot import unit """ &
+                          String (CU.Name) & ":" &
+                          ASCII.LF &
+                          """" & String (Self.View.Name) &
+                          """ does not directly import project """ &
+                          String (CU_View.Name) & """",
+                        GPR2.Source_Reference.Create
+                          (Self.Src_Name.Value, 0, 0)));
+               end if;
+            end if;
          end if;
 
          return Allowed;
       end Can_Unit_Be_Imported;
+
    begin
       for Successor of Self.Tree.Successors (Self.Ali_File) loop
          if Successor in Actions.Ada_Bind.Object'Class then
@@ -419,13 +442,14 @@ package body GPR2.Build.Actions.Compile.Ada is
                --  getting the dependencies from the source
             end if;
 
+            if Continue and then not Can_Unit_Be_Imported (CU) then
+               Self.Signature.Invalidate;
+               return False;
+            end if;
+
             if Continue and then CU.Owning_View.Is_Runtime then
                --  Since we're linking with libgnarl/libgnat anyway, don't
                --  add runtime units there.
-               Continue := False;
-            end if;
-
-            if Continue and then not Can_Unit_Be_Imported (CU) then
                Continue := False;
             end if;
 

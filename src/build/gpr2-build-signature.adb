@@ -54,6 +54,15 @@ package body GPR2.Build.Signature is
       Self := (others => <>);
    end Clear;
 
+   ----------------
+   -- Invalidate --
+   ----------------
+
+   procedure Invalidate (Self : in out Object) is
+   begin
+      Self.Artifacts.Clear;
+   end Invalidate;
+
    ----------
    -- Load --
    ----------
