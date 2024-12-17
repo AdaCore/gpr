@@ -26,6 +26,7 @@ with GNATCOLL.Traces;
 
 with GPR2.Build.Actions_Population;
 with GPR2.Build.Compilation_Unit;
+with GPR2.Build.External_Options;
 with GPR2.Build.Process_Manager.JSON;
 with GPR2.Build.Source;
 with GPR2.Interrupt_Handler;
@@ -372,6 +373,29 @@ begin
                          Result    => Opt);
          Parser.Get_Opt (Opt);
       end if;
+   end if;
+
+   --  Handle Builder'Global_Compilation_Switches
+
+   if Tree.Root_Project.Has_Package (PRP.Builder)
+     and then not Tree.Root_Project.Attributes
+       (PRA.Builder.Global_Compilation_Switches).Is_Empty
+   then
+      for Attr of Tree.Root_Project.Attributes
+        (PRA.Builder.Global_Compilation_Switches)
+      loop
+         declare
+            Lang : constant GPR2.Language_Id :=
+                     GPR2."+" (Name_Type (Attr.Index.Value));
+         begin
+            for V of Attr.Values loop
+               Opt.Extra_Args.Register
+                 (GPR2.Build.External_Options.Compiler,
+                  Lang,
+                  V.Text);
+            end loop;
+         end;
+      end loop;
    end if;
 
    --  Set user-specified cargs/bargs/largs if any
