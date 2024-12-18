@@ -21,6 +21,7 @@ private with GNATCOLL.Traces;
 package GPR2.Build.Actions is
 
    Command_Line_Limit : constant := 8191;
+   Action_Error       : exception;
 
    type Action_Id is interface;
    --  An Action_Id is a unique identifier of an Action instance for the whole

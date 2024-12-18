@@ -617,6 +617,13 @@ package body GPR2.Build.Actions.Compile is
       end;
 
       Add_Attr (PRA.Compiler.Trailing_Required_Switches, Lang_Idx, True, True);
+
+   exception
+      when GNATCOLL.OS.OS_Error =>
+         Self.Tree.Reporter.Report
+           ("Problem accessing the object directory for project """ &
+              String (Self.View.Name) & '"');
+         raise Action_Error;
    end Compute_Command;
 
    -----------------------

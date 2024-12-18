@@ -567,15 +567,37 @@ package body GPR2.Build.Process_Manager is
       Cwd  : GPR2.Path_Name.Object;
 
    begin
+      if Job.Is_Deactivated
+        or else Job.View.Is_Externally_Built
+      then
+         if Self.Traces.Is_Active then
+            pragma Annotate (Xcov, Off, "debug code");
+            Self.Traces.Trace
+              ("job externally built: " & Job.UID.Image);
+            pragma Annotate (Xcov, On);
+         end if;
+
+         Proc_Handler := Process_Handler'(Status => Skipped);
+
+         return;
+      end if;
+
       --  We need to compute the command line before checking the signature
       --  since the cmd line is part of the signature.
 
-      Job.Update_Command_Line (Slot_Id);
+      begin
+         Job.Update_Command_Line (Slot_Id);
+      exception
+         when Action_Error =>
+            Proc_Handler :=
+              (Status        => Failed_To_Launch,
+               Error_Message => To_Unbounded_String
+                 ("Command '" & Image (Job.UID) &
+                    "' failed."));
+            return;
+      end;
 
-      if Job.Skip
-        or else Job.Is_Deactivated
-        or else Job.View.Is_Externally_Built
-      then
+      if Job.Skip then
          if Self.Traces.Is_Active then
             pragma Annotate (Xcov, Off, "debug code");
             Self.Traces.Trace
@@ -645,8 +667,8 @@ package body GPR2.Build.Process_Manager is
 
       exception
          when Ex : GNATCOLL.OS.OS_Error =>
-            FS.Close (P_Wo);
-            FS.Close (P_We);
+            FS.Close (P_Ro);
+            FS.Close (P_Re);
 
             Self.Tree_Db.Reporter.Report
               (GPR2.Message.Create
@@ -662,7 +684,6 @@ package body GPR2.Build.Process_Manager is
                  ("Command '" & Image (Job.Command_Line.Argument_List) &
                     "' failed: " &
                   Ada.Exceptions.Exception_Message (Ex)));
-            return;
       end;
 
       FS.Close (P_Wo);
