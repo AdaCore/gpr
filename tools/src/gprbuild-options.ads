@@ -33,6 +33,7 @@ package GPRbuild.Options is
       Single_Build_Per_Obj_Dir : Boolean := False;
       Build_Script             : GPR2.Path_Name.Object;
       No_Object_Check          : Boolean := False;
+      No_Split_Units           : Boolean := False;
       Restricted_To_Languages  : GPR2.Containers.Language_Set;
       Display_Progress         : Boolean := False;
 

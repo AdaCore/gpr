@@ -106,6 +106,11 @@ package body GPRbuild.Options is
                  In_Switch_Attr => False));
       Parser.Add_Argument
         (Build_Group,
+         Create (Name           => "--no-split-units",
+                 Help           => "Check that compilation unit parts are " &
+                                   "from the same view"));
+      Parser.Add_Argument
+        (Build_Group,
          Create (Name           => "--restricted-to-languages",
                  Help           => "Restrict the languages of the sources",
                  In_Switch_Attr => False,
@@ -137,6 +142,11 @@ package body GPRbuild.Options is
                  Help      => "Index of main unit in multi-unit source file",
                  Delimiter => None,
                  Parameter => "<nn>"));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name   => "-eS",
+                 Help   => "For compatibility with gnatmake only",
+                 Hidden => True));
       Parser.Add_Argument
         (Build_Group,
          Create (Name => "-f",
@@ -217,8 +227,9 @@ package body GPRbuild.Options is
                  Help => "Do not use run path option"));
       Parser.Add_Argument
         (Build_Group,
-         Create (Name => "-s",
-                 Help => "Recompile if compiler switches have changed"));
+         Create (Name   => "-s",
+                 Help   => "Recompile if compiler switches have changed",
+                 Hidden => True));
       Parser.Add_Argument
         (Build_Group,
          Create (Name           => "-u",
@@ -440,6 +451,9 @@ package body GPRbuild.Options is
       elsif Arg = "--no-object-check" then
          Result.No_Object_Check := True;
 
+      elsif Arg = "--no-split-units" then
+         Result.No_Split_Units := True;
+
       elsif Arg = "--no-sal-binding" then
          Result.Build_Options.No_SAL_Binding := True;
 
@@ -524,9 +538,6 @@ package body GPRbuild.Options is
       elsif Arg = "-R" then
          Result.Build_Options.No_Run_Path := True;
 
-      elsif Arg = "-s" then
-         Result.Build_If_Switch_Changes := True;
-
       elsif Arg = "-u" then
          Result.Build_Options.Unique_Compilation := True;
 
@@ -594,11 +605,13 @@ package body GPRbuild.Options is
          Add_Ada_Compiler_Option (String (Arg) & Param);
 
       elsif Arg = "-C"
+        or else Arg = "-eS"
         or else Arg = "-jc"
         or else Arg = "-jb"
         or else Arg = "-jl"
         or else Arg = "-m"
         or else Arg = "-m2"
+        or else Arg = "-s"
       then
          --  Ignore, only there for compatibility reason
          null;

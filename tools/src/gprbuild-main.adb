@@ -30,6 +30,7 @@ with GPR2.Build.External_Options;
 with GPR2.Build.Process_Manager.JSON;
 with GPR2.Build.Source;
 with GPR2.Interrupt_Handler;
+with GPR2.Message;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
@@ -37,6 +38,8 @@ with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
+with GPR2.Project.View;
+with GPR2.Source_Reference;
 
 with GPRtools.Options;
 with GPRtools.Program_Termination;
@@ -396,6 +399,57 @@ begin
             end loop;
          end;
       end loop;
+   end if;
+
+   if Opt.No_Split_Units then
+      declare
+         use type GPR2.Project.View.Object;
+         Has_Errors : Boolean := False;
+      begin
+         for V of Opt.Tree.Namespace_Root_Projects loop
+            for U of V.Units loop
+               if U.Has_Part (S_Spec)
+                 and then U.Spec.View /= U.Owning_View
+               then
+                  Opt.Tree.Reporter.Report
+                    (GPR2.Message.Create
+                       (GPR2.Message.Error,
+                        "the spec for unit """ & String (U.Name) &
+                          """ does not belong to the view """ &
+                          String (U.Owning_View.Name) &
+                          """ that defines the body",
+                        GPR2.Source_Reference.Create
+                          (U.Spec.View.Path_Name.Value, 0, 0)));
+                  Has_Errors := True;
+               end if;
+
+               for Sep of U.Separates loop
+                  if Sep.View /= U.Owning_View then
+                     Opt.Tree.Reporter.Report
+                       (GPR2.Message.Create
+                          (GPR2.Message.Error,
+                           "the separate """ &
+                             String (Sep.Source.Simple_Name) &
+                             """ for unit """ & String (U.Name) &
+                             """ does not belong to the view """ &
+                             String (U.Owning_View.Name) &
+                             """ that defines the body",
+                           GPR2.Source_Reference.Create
+                             (Sep.View.Path_Name.Value, 0, 0)));
+                     Has_Errors := True;
+                  end if;
+               end loop;
+            end loop;
+         end loop;
+
+         if Has_Errors then
+            Handle_Program_Termination
+              (Force_Exit => True,
+               Exit_Cause => E_Tool,
+               Message    => "processing failed");
+            return To_Exit_Status (E_Fatal);
+         end if;
+      end;
    end if;
 
    --  Set user-specified cargs/bargs/largs if any
