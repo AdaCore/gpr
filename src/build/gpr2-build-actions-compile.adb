@@ -382,7 +382,7 @@ package body GPR2.Build.Actions.Compile is
             declare
                Inc_File  : constant Filename_Type := Inc_Path_File;
                Full_Path : constant GPR2.Path_Name.Object :=
-                             Self.View.Object_Directory.Compose (Inc_File);
+                             Path_Name.Create_File (Inc_File);
             begin
                Cmd_Line.Add_Env_Variable
                  (String (Attr.Value.Text), Full_Path.String_Value);
