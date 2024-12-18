@@ -1578,16 +1578,23 @@ package body GPR2.Project.View is
    is
       procedure Add_For_View (V : Object);
 
-      Check     : GPR2.Containers.Filename_Set;
       Result    : GPR2.Path_Name.Set.Object;
       Attr      : GPR2.Project.Attribute.Object;
       Languages : GPR2.Containers.Language_Set;
+      Seen      : GPR2.Containers.Filename_Set;
 
       procedure Add_For_View (V : Object) is
-         Pos      : GPR2.Containers.Filename_Type_Set.Cursor;
+         C        : GPR2.Containers.Filename_Type_Set.Cursor;
          Inserted : Boolean;
          Found    : Boolean := False;
       begin
+         Seen.Insert (V.Path_Name.Value, C, Inserted);
+
+         if not Inserted then
+            --  Already visited
+            return;
+         end if;
+
          if V.Kind = K_Aggregate_Library then
             for A of V.Aggregated loop
                Add_For_View (A);
@@ -1609,25 +1616,11 @@ package body GPR2.Project.View is
             end if;
          end loop;
 
-         if not Found then
-            return;
-         end if;
-
-         for Src_Dir of V.Source_Directories loop
-            --  We use a set to check for duplicated path, but return a
-            --  vector to preserve the order.
-            Check.Insert (Src_Dir.Value, Pos, Inserted);
-
-            if Inserted then
-               Result.Append (Src_Dir);
-            end if;
-         end loop;
-
-         if V.Is_Extending then
-            for E of V.Extended loop
-               --  Need to recurse here in case extended project is also
-               --  extending...
-               Add_For_View (E);
+         if Found then
+            for Src_Dir of V.Source_Directories loop
+               if not Result.Contains (Src_Dir) then
+                  Result.Append (Src_Dir);
+               end if;
             end loop;
          end if;
       end Add_For_View;

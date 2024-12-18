@@ -567,9 +567,7 @@ package body GPR2.Build.Process_Manager is
       Cwd  : GPR2.Path_Name.Object;
 
    begin
-      if Job.Is_Deactivated
-        or else Job.View.Is_Externally_Built
-      then
+      if Job.View.Is_Externally_Built then
          if Self.Traces.Is_Active then
             pragma Annotate (Xcov, Off, "debug code");
             Self.Traces.Trace
@@ -583,7 +581,9 @@ package body GPR2.Build.Process_Manager is
       end if;
 
       --  We need to compute the command line before checking the signature
-      --  since the cmd line is part of the signature.
+      --  since the cmd line is part of the signature. It is important to do
+      --  it even for deactivated actions, else the signature is considered
+      --  invalid and the following actions are not executed.
 
       begin
          Job.Update_Command_Line (Slot_Id);
@@ -597,7 +597,7 @@ package body GPR2.Build.Process_Manager is
             return;
       end;
 
-      if Job.Skip then
+      if Job.Skip or else Job.Is_Deactivated then
          if Self.Traces.Is_Active then
             pragma Annotate (Xcov, Off, "debug code");
             Self.Traces.Trace

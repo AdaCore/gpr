@@ -265,6 +265,10 @@ package body GPR2.Build.Actions_Population is
                --  Make sure the withed libraries are added to the tree
                Result := Populate_Withed_Units (Tree_Db, V, Visited);
 
+               if not Result then
+                  return False;
+               end if;
+
                case V.Kind is
                   when K_Standard =>
                      if V.Has_Mains or else not Mains.Is_Empty then
@@ -984,12 +988,6 @@ package body GPR2.Build.Actions_Population is
       Result : Boolean;
    begin
       for Import of View.Imports.Union (View.Limited_Imports) loop
-         Result := Populate_Withed_Units (Tree_Db, Import, Visited);
-
-         if not Result then
-            return False;
-         end if;
-
          if not Visited.Contains (Import.Id) then
             Visited.Include (Import.Id);
 
@@ -1004,8 +1002,24 @@ package body GPR2.Build.Actions_Population is
             if not Result then
                return False;
             end if;
+
+            Result := Populate_Withed_Units (Tree_Db, Import, Visited);
+
+            if not Result then
+               return False;
+            end if;
          end if;
       end loop;
+
+      if View.Is_Extending then
+         for V of View.Extended loop
+            Result := Populate_Withed_Units (Tree_Db, V, Visited);
+
+            if not Result then
+               return False;
+            end if;
+         end loop;
+      end if;
 
       return True;
    end Populate_Withed_Units;
