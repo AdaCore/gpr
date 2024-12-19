@@ -1,0 +1,2 @@
+description: Simple build of a shared library
+driver: python_script
