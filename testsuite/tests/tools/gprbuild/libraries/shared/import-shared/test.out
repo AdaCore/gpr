@@ -1,0 +1,15 @@
+$ gpr2build -q -Pmylib1.gpr -p --json-summary
+$ gpr2build -q -Papp.gpr -p --json-summary
+lib:
+uid: '[Ada Compile] pkg1.adb (mylib1.gpr)', status : '0'
+uid: '[Ada Compile] pkg2.adb (mylib2.gpr)', status : '0'
+uid: '[Archive] libmylib2.so (mylib2.gpr)', status : '0'
+uid: '[Archive] libmylib1.so (mylib1.gpr)', status : '0'
+mylib1 has been created, good!
+mylib2 has been created, good!
+bin:
+Ok so far
+$ ./main
+Hello from lib1
+Hello from lib2
+

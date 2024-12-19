@@ -45,7 +45,7 @@ for job in cntbin:
         if "-lmylib" in job["command"]:
             found = True
             if "pkg.o" in job["command"]:
-                print("ERROR: found both mylib.so and pkg.o in the link command")
+                print("ERROR: found both -lmylib and pkg.o in the link command")
                 print(job["command"])
         if "mylib.a" in job["command"]:
                 print("ERROR: The static version of mylib (mylib.a) should not be used in the link command")
