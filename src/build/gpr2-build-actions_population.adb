@@ -287,27 +287,6 @@ package body GPR2.Build.Actions_Population is
                   when others =>
                      null;
                end case;
-
-               if Options.Restricted_Build_Phase then
-                  for A of Tree_Db.All_Actions loop
-                     if not (Options.Compile_Phase_Mandated
-                             and then A in Actions.Compile.Object'Class)
-                       and then not
-                         (Options.Bind_Phase_Mandated
-                          and then
-                            (A in Actions.Ada_Bind.Object'Class
-                             or else A in Actions.Post_Bind.Object'Class))
-                       and then not (Options.Link_Phase_Mandated
-                                     and then A in Actions.Link.Object'Class)
-                     then
-                        To_Remove.Include (A);
-                     end if;
-                  end loop;
-
-                  for A of To_Remove loop
-                     Tree_Db.Action_Id_To_Reference (A.UID).Deactivate;
-                  end loop;
-               end if;
             end if;
          end if;
 
@@ -320,6 +299,27 @@ package body GPR2.Build.Actions_Population is
         and then not Options.Unique_Compilation_Recursive
       then
          Result := Tree_Db.Propagate_Actions;
+      end if;
+
+      if Options.Restricted_Build_Phase then
+         for A of Tree_Db.All_Actions loop
+            if not (Options.Compile_Phase_Mandated
+                    and then A in Actions.Compile.Object'Class)
+              and then not
+                (Options.Bind_Phase_Mandated
+                 and then
+                   (A in Actions.Ada_Bind.Object'Class
+                    or else A in Actions.Post_Bind.Object'Class))
+              and then not (Options.Link_Phase_Mandated
+                            and then A in Actions.Link.Object'Class)
+            then
+               To_Remove.Include (A);
+            end if;
+         end loop;
+
+         for A of To_Remove loop
+            Tree_Db.Action_Id_To_Reference (A.UID).Deactivate;
+         end loop;
       end if;
 
       if Result then
