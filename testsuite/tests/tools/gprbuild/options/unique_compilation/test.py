@@ -43,6 +43,7 @@ test("demo.gpr", ["-U"])
 # check abstract project withing libs
 test("abst.gpr", ["-u", "pkg2.ads"])
 test("abst.gpr", ["-U", "pkg2.ads"])
+test("abst.gpr", ["-U", "hello.c"])
 test("abst.gpr", ["-U", "non_existing.ads"])
 test("abst.gpr", ["-c", "pkg2.ads"])
 

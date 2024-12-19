@@ -13,9 +13,11 @@ hello from C
 $ gpr2build hello.c main.adb -q
 $ mixed/main
 Hello there
+In C!
 
 $ mixed/hello
 hello from C
+In Ada!
 
 $ gpr2build -Pmulti src.ada -eI1 -o main -q
 $ multi/main
@@ -53,4 +55,9 @@ src.ada: error:  no unit for the index 4
 gprbuild: processing failed
 $ gpr2build -Pmulti src.ada -o p4
 multi.gpr: error: cannot specify an output filename when there are several mains.
+gprbuild: processing failed
+$ gpr2build -Plib main.adb
+"obj/" created
+"lib/" created
+lib.gpr: error: main cannot be a source of a library project: "main.adb"
 gprbuild: processing failed

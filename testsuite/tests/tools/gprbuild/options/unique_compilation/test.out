@@ -6,10 +6,13 @@ $ gpr2build -P demo.gpr -q -p -k --json-summary -U
 [Ada Compile] main2.adb (demo.gpr)
 [Ada Compile] pkg.ads (lib1.gpr)
 [Ada Compile] pkg2.ads (lib2.gpr)
+[C Compile] hello.c (lib2.gpr)
 $ gpr2build -P abst.gpr -q -p -k --json-summary -u pkg2.ads
 [Ada Compile] pkg2.ads (lib2.gpr)
 $ gpr2build -P abst.gpr -q -p -k --json-summary -U pkg2.ads
 [Ada Compile] pkg2.ads (lib2.gpr)
+$ gpr2build -P abst.gpr -q -p -k --json-summary -U hello.c
+[C Compile] hello.c (lib2.gpr)
 $ gpr2build -P abst.gpr -q -p -k --json-summary -U non_existing.ads
 abst.gpr: error: "non_existing.ads" was not found in the sources of any project
 gprbuild: processing failed
@@ -20,6 +23,7 @@ $ gpr2build -P demo.gpr -q -p -k --json-summary main.adb -c
 [Ada Compile] main.adb (demo.gpr)
 [Ada Compile] pkg.ads (lib1.gpr)
 [Ada Compile] pkg2.ads (lib2.gpr)
+[C Compile] hello.c (lib2.gpr)
 $ gpr2build -P demo.gpr -q -p -k --json-summary main.adb -l
 [Archive] liblib1.a (lib1.gpr)
 [Archive] liblib2.a (lib2.gpr)
