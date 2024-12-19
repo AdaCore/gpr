@@ -711,13 +711,13 @@ package body GPR2.Build.Actions_Population is
             --  we have a main to link
 
             if not Attr.Is_Defined then
-               pragma Annotate (Xcov, Off, "defensive code");
+               pragma Annotate (Xcov, Exempt_On, "defensive code");
                Tree_Db.Reporter.Report
                  ("error: selected linker does not allow creating a map file",
                   To_Stderr => True,
                   Level     => GPR2.Message.Important);
                return False;
-               pragma Annotate (Xcov, On);
+               pragma Annotate (Xcov, Exempt_Off);
 
             elsif Options.Mapping_File_Name /= Null_Unbounded_String
               and then Actual_Mains.Length > 1

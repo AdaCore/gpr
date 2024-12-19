@@ -66,12 +66,12 @@ package body GPR2.Build.Process_Manager.JSON is
 
          case Proc_Handler.Status is
             when Running =>
-               pragma Annotate (Xcov, Off, "unreachable code");
+               pragma Annotate (Xcov, Exempt_On, "unreachable code");
                raise Internal_Error with
                  "The process linked to the action '" & Job.UID.Image &
                  "' is still running. Cannot collect the job before it " &
                  "finishes";
-               pragma Annotate (Xcov, On);
+               pragma Annotate (Xcov, Exempt_Off);
 
 
             when Finished =>

@@ -639,11 +639,11 @@ package body GPR2.Build.Actions.Ada_Bind is
          Switch_Index : Natural := Index (Line, "--");
       begin
          if Switch_Index = 0 then
-            pragma Annotate (Xcov, Off, "unreachable code");
+            pragma Annotate (Xcov, Exempt_On, "unreachable code");
             raise Internal_Error
               with "Failed parsing line " & Line & " from " &
               Self.Output_Body.Path.String_Value;
-            pragma Annotate (Xcov, On);
+            pragma Annotate (Xcov, Exempt_Off);
          end if;
 
          --  Skip the "--" comment prefix

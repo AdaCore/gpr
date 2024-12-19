@@ -1874,9 +1874,9 @@ package body GPR2.Project.View is
 
          --  Impossible if project view was validated just after parse
 
-         pragma Annotate (Xcov, Off, "unreachable code");
+         pragma Annotate (Xcov, Exempt_On, "unreachable code");
          raise Internal_Error with "cannot get major version";
-         pragma Annotate (Xcov, On);
+         pragma Annotate (Xcov, Exempt_Off);
       end Major_Version_Name;
 
       LV : constant Project.Attribute.Object :=

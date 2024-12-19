@@ -481,7 +481,7 @@ package body GPR2.Build.Actions.Link is
             if not GNATCOLL.OS.FSUtil.Remove_File
               (Self.Output.Path.String_Value)
             then
-               pragma Annotate (Xcov, Off, "defensive code");
+               pragma Annotate (Xcov, Exempt_On, "defensive code");
                Self.Tree.Reporter.Report
                  (GPR2.Message.Create
                     (GPR2.Message.Error,
@@ -490,7 +490,7 @@ package body GPR2.Build.Actions.Link is
                        (Self.Output.Path.Value, 0, 0)));
 
                return False;
-               pragma Annotate (Xcov, On);
+               pragma Annotate (Xcov, Exempt_Off);
             end if;
          end if;
 
@@ -500,7 +500,7 @@ package body GPR2.Build.Actions.Link is
             Result);
 
          if not Result then
-            pragma Annotate (Xcov, Off, "defensive code");
+            pragma Annotate (Xcov, Exempt_On, "defensive code");
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
                  (GPR2.Message.Error,
@@ -509,7 +509,7 @@ package body GPR2.Build.Actions.Link is
                     (Self.Output.Path.Value, 0, 0)));
 
             return False;
-            pragma Annotate (Xcov, On);
+            pragma Annotate (Xcov, Exempt_Off);
          end if;
       end if;
 
