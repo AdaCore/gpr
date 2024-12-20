@@ -68,7 +68,13 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
    function Ensure_Directories
      (Tree : GPR2.Project.Tree.Object) return Boolean;
 
-   Opt       : Options.Object;
+   function Execute
+     (PM : in out GPR2.Build.Process_Manager.Object'Class)
+      return Command_Line.Exit_Status;
+
+   Opt  : Options.Object;
+   Tree : Project.Tree.Object;
+
 
    ------------------------
    -- Ensure_Directories --
@@ -184,8 +190,25 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
       return All_Ok;
    end Ensure_Directories;
 
+   -------------
+   -- Execute --
+   -------------
+
+   function Execute
+     (PM : in out GPR2.Build.Process_Manager.Object'Class)
+      return Command_Line.Exit_Status
+   is
+   begin
+      if not Tree.Artifacts_Database.Execute
+        (PM, Opt.PM_Options)
+      then
+         return To_Exit_Status (E_Errors);
+      end if;
+
+      return To_Exit_Status (E_Success);
+   end Execute;
+
    Parser         : constant Options.GPRbuild_Parser := Options.Create;
-   Tree           : Project.Tree.Object;
    Sw_Attr        : GPR2.Project.Attribute.Object;
    Process_M      : GPR2.Build.Process_Manager.Object;
    Process_M_JSON : GPR2.Build.Process_Manager.JSON.Object;
@@ -447,7 +470,7 @@ begin
               (Force_Exit => True,
                Exit_Cause => E_Tool,
                Message    => "processing failed");
-            return To_Exit_Status (E_Fatal);
+            return To_Exit_Status (E_Errors);
          end if;
       end;
    end if;
@@ -470,19 +493,12 @@ begin
 
    if Opt.Json_Summary then
       Jobs_JSON := Tree.Root_Project.Dir_Name.Compose ("jobs.json");
-
       Process_M_JSON.Set_JSON_File (Jobs_JSON);
 
-      Tree.Artifacts_Database.Execute
-        (Process_M_JSON,
-         Opt.PM_Options);
+      return Execute (Process_M_JSON);
    else
-      Tree.Artifacts_Database.Execute
-        (Process_M,
-         Opt.PM_Options);
+      return Execute (Process_M);
    end if;
-
-   return To_Exit_Status (E_Success);
 
 exception
    when E : GPR2.Options.Usage_Error =>

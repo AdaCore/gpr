@@ -84,7 +84,10 @@ begin
    Process_M.Set_JSON_File (Path_Name.Create_File ("jobs.json"));
 
    Exec_Opts.Jobs := 2;
-   Tree.Artifacts_Database.Execute (Process_M, Exec_Opts);
 
-   return 0;
+   if not Tree.Artifacts_Database.Execute (Process_M, Exec_Opts) then
+      return 1;
+   else
+      return 0;
+   end if;
 end Test;

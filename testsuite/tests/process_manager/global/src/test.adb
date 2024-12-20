@@ -196,7 +196,9 @@ begin
 
    Exec_Opts.Jobs := 2;
 
-   Tree.Artifacts_Database.Execute (Process_M, Exec_Opts);
+   if not Tree.Artifacts_Database.Execute (Process_M, Exec_Opts) then
+      Ada.Text_IO.Put_Line ("execute detected errors");
+   end if;
 
    return 0;
 end Test;

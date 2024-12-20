@@ -71,9 +71,9 @@ package body GPRtools.Program_Termination is
       case Code is
          when E_Success    => return 0;
          when E_Warnings   => return 0;
-         when E_No_Compile => return 1;
-         when E_Fatal      => return 4;
-         when E_Errors     => return 5;
+         when E_General    => return 1;
+         when E_Errors     => return 4;
+         when E_Fatal      => return 5;
          when E_No_Code    => return 6;
          when E_Abort      => return 16#FF#;
       end case;

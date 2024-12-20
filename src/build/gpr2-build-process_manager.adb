@@ -29,6 +29,8 @@ package body GPR2.Build.Process_Manager is
    package GDG renames GNATCOLL.Directed_Graph;
    package GOP renames GNATCOLL.OS.Process;
 
+   PROCESS_STATUS_OK : constant Integer := 0;
+
    function Effective_Job_Number (N : Natural) return Natural;
    --  If N = 0 return the number of CPUs otherwise return N.
 
@@ -349,11 +351,13 @@ package body GPR2.Build.Process_Manager is
                           then Proc_Handler.Error_Message
                           else Act.Saved_Stderr));
 
-                  if Job_Status = Abort_Execution
-                    and then Options.Stop_On_Fail
-                  then
-                     End_Of_Iteration := True;
-                     exit;
+                  if Job_Status = Abort_Execution then
+                     Context.Errors := True;
+
+                     if Options.Stop_On_Fail then
+                        End_Of_Iteration := True;
+                        exit;
+                     end if;
                   end if;
                end if;
 
@@ -427,9 +431,13 @@ package body GPR2.Build.Process_Manager is
             if Job_Status = Continue_Execution then
                --  Mark as visited only successful executions
                Context.Graph.Complete_Visit (States (Proc_Id).Node);
-            elsif Options.Stop_On_Fail then
+            else
+               Context.Errors := True;
+
+               if Options.Stop_On_Fail then
                   --  Adjust execution depending on returned value
-               End_Of_Iteration := True;
+                  End_Of_Iteration := True;
+               end if;
             end if;
 
             --  Remove job from the list of active jobs.
@@ -453,6 +461,7 @@ package body GPR2.Build.Process_Manager is
                end;
             end if;
          end if;
+
 
          exit when End_Of_Iteration and then Active_Jobs = 0;
       end loop;

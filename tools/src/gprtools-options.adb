@@ -337,7 +337,7 @@ package body GPRtools.Options is
          end if;
 
          if Ada.Strings.Unbounded.Length (Opt.Build_Options.Output_File) > 0
-           and then Opt.Build_Options.Mains.Length /= 1
+           and then Opt.Build_Options.Mains.Length > 1
          then
             raise GPR2.Options.Usage_Error with
               "only one source can be specified when the output file is " &

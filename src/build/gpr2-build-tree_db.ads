@@ -131,10 +131,10 @@ package GPR2.Build.Tree_Db is
                    and then Self.Has_Action (Action)
                    and then Artifact.Is_Defined;
 
-   procedure Execute
+   function Execute
      (Self    : in out Object;
       PM      : in out GPR2.Build.Process_Manager.Object'Class;
-      Options : GPR2.Build.Process_Manager.PM_Options);
+      Options : GPR2.Build.Process_Manager.PM_Options) return Boolean;
 
    function Is_Executing (Self : Object) return Boolean;
 

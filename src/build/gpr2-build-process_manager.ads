@@ -37,8 +37,6 @@ package GPR2.Build.Process_Manager is
 
    type Object is tagged limited private;
 
-   PROCESS_STATUS_OK : constant Integer;
-
    type Process_Handler_Status is
      (Skipped, Failed_To_Launch, Running, Finished);
 
@@ -72,6 +70,7 @@ package GPR2.Build.Process_Manager is
       Graph   : GNATCOLL.Directed_Graph.Directed_Graph;
       Actions : Node_Action_Maps.Map;
       Nodes   : Action_Node_Maps.Map;
+      Errors  : Boolean := False;
    end record;
 
    function Collect_Job
@@ -127,8 +126,6 @@ private
    Empty_Stats : constant Process_Manager_Stats :=
                    (Max_Active_Jobs => 0,
                     Total_Jobs      => 0);
-
-   PROCESS_STATUS_OK : constant Integer := 0;
 
    type Object is tagged limited record
       Stats        : Process_Manager_Stats := Empty_Stats;
