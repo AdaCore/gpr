@@ -3391,11 +3391,38 @@ package body GPR2.Project_Parser is
                if Single then
                   pragma Assert (Expr.Children_Count >= 1);
 
-                  A := PA.Create
-                    (Name  => Id,
-                     Index => Index,
-                     Value => Values.First_Element);
+                  if Q_Name in PRA.Builder.Global_Configuration_Pragmas |
+                               PRA.Compiler.Local_Configuration_Pragmas
+                    and then Values.First_Element.Text'Length > 0
+                  then
+                     --  Unlike other attributes, those ones need the value
+                     --  to be expanded to a full path.
 
+                     declare
+                        Filtered : Source_Reference.Value.Object;
+                     begin
+                        Filtered :=
+                          Source_Reference.Value.Object
+                            (Source_Reference.Value.Create
+                               (Values.First_Element.Filename,
+                                Values.First_Element.Line,
+                                Values.First_Element.Column,
+                                GPR2.Path_Name.Create_File
+                                  (Filename_Type (Values.First_Element.Text),
+                                   View.Dir_Name.Value).String_Value));
+
+                        A := PA.Create
+                          (Name  => Id,
+                           Index => Index,
+                           Value => Filtered);
+                     end;
+
+                  else
+                     A := PA.Create
+                       (Name  => Id,
+                        Index => Index,
+                        Value => Values.First_Element);
+                  end if;
                else
                   declare
                      Created : Boolean := False;
@@ -3442,6 +3469,7 @@ package body GPR2.Project_Parser is
                            end if;
                         end;
                      end if;
+
                      if not Created then
                         A := PA.Create
                           (Name   => Id,

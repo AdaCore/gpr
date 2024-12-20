@@ -13,11 +13,14 @@ with GPR2.Build.Tree_Db;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
+with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
 
 package body GPR2.Build.Actions.Compile.Ada is
 
+   package PRA renames GPR2.Project.Registry.Attribute;
    package PAI renames GPR2.Project.Attribute_Index;
    package Actions renames GPR2.Build.Actions;
 
@@ -65,6 +68,47 @@ package body GPR2.Build.Actions.Compile.Ada is
       end if;
    end Artifacts_Base_Name;
 
+   overriding procedure Compute_Command
+     (Self     : in out Object;
+      Slot     : Positive;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object)
+   is
+      Attr : GPR2.Project.Attribute.Object;
+   begin
+      Compile.Object (Self).Compute_Command (Slot, Cmd_Line);
+
+      if Self.Global_Config_Pragmas.Is_Defined
+        or else Self.Local_Config_Pragmas.Is_Defined
+      then
+         Attr := Self.View.Attribute
+           (PRA.Compiler.Config_File_Switches, PAI.Create (Ada_Language));
+      end if;
+
+      if Self.Global_Config_Pragmas.Is_Defined then
+         for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
+            Cmd_Line.Add_Argument
+              (Attr.Values.Element (J).Text, False);
+         end loop;
+
+         Cmd_Line.Add_Argument
+           (Attr.Values.Last_Element.Text &
+              Self.Global_Config_Pragmas.Path.String_Value,
+            False);
+      end if;
+
+      if Self.Local_Config_Pragmas.Is_Defined then
+         for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
+            Cmd_Line.Add_Argument
+              (Attr.Values.Element (J).Text, False);
+         end loop;
+
+         Cmd_Line.Add_Argument
+           (Attr.Values.Last_Element.Text &
+              Self.Local_Config_Pragmas.Path.String_Value,
+            False);
+      end if;
+   end Compute_Command;
+
    -----------------------
    -- Compute_Signature --
    -----------------------
@@ -83,6 +127,14 @@ package body GPR2.Build.Actions.Compile.Ada is
 
       Signature.Add_Artifact (Self.Ali_File);
       Signature.Add_Artifact (Self.Obj_File);
+
+      if Self.Global_Config_Pragmas.Is_Defined then
+         Signature.Add_Artifact (Self.Global_Config_Pragmas);
+      end if;
+
+      if Self.Local_Config_Pragmas.Is_Defined then
+         Signature.Add_Artifact (Self.Local_Config_Pragmas);
+      end if;
    end Compute_Signature;
 
    ------------------
@@ -172,6 +224,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       No_Obj : constant Boolean :=
                  (View.Is_Library and then View.Is_Externally_Built)
                    or else View.Is_Runtime;
+      Attr   : GPR2.Project.Attribute.Object;
 
    begin
 
@@ -255,6 +308,28 @@ package body GPR2.Build.Actions.Compile.Ada is
             end if;
          end if;
       end;
+
+      --  Check the configuration pragmas files
+
+      Attr := Self.View.Tree.Root_Project.Attribute
+        (PRA.Builder.Global_Configuration_Pragmas);
+
+      if Attr.Is_Defined then
+         --  Note: the Global/Local configuration pragmas attribute are
+         --  expanded by the GPR parser to full names, so that they still
+         --  reference the initial project dir when copied/renamed accross
+         --  views.
+
+         Self.Global_Config_Pragmas :=
+           Artifacts.Files.Create (Filename_Type (Attr.Value.Text));
+      end if;
+
+      Attr := Self.View.Attribute (PRA.Compiler.Local_Configuration_Pragmas);
+
+      if Attr.Is_Defined then
+         Self.Local_Config_Pragmas :=
+           Artifacts.Files.Create (Filename_Type (Attr.Value.Text));
+      end if;
    end Initialize;
 
    -----------------------
@@ -262,10 +337,10 @@ package body GPR2.Build.Actions.Compile.Ada is
    -----------------------
 
    overriding function On_Tree_Insertion
-     (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean
+     (Self : Object;
+      Db   : in out GPR2.Build.Tree_Db.Object) return Boolean
    is
-      UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+      UID       : constant Actions.Action_Id'Class := Object'Class (Self).UID;
       Other_Ali : Artifacts.Files.Object;
    begin
       if Self.Obj_File.Is_Defined then

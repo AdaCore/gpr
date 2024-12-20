@@ -40,6 +40,11 @@ package GPR2.Build.Actions.Compile.Ada is
    function Ali_File (Self : Object) return Artifacts.Files.Object;
    --  Return the path of the generated ALI file
 
+   overriding procedure Compute_Command
+     (Self     : in out Object;
+      Slot     : Positive;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object);
+
    overriding function On_Tree_Insertion
      (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
@@ -85,15 +90,23 @@ private
        with Index => Src.Main_Part.Index);
 
    type Object is new Compile.Object with record
-      Ali_File  : Artifacts.Files.Object;
+      Ali_File              : Artifacts.Files.Object;
       --  Unit's ALI file. Can be undefined if not existing on disk
 
-      Closure   : Action_Id_Sets.Set;
+      Closure               : Action_Id_Sets.Set;
       --  List of all object files that are needed to have Self's symbols
       --  fully resolved.
 
-      CU        : GPR2.Build.Compilation_Unit.Object;
+      CU                    : GPR2.Build.Compilation_Unit.Object;
       --  The Unit to build
+
+      Local_Config_Pragmas  : Artifacts.Files.Object;
+      --  The local config file as specified by the view's
+      --  Local_Configuration_Pragmas attribute
+
+      Global_Config_Pragmas : Artifacts.Files.Object;
+      --  The global configuration pragma file specified by the root project
+      --  Global_Configuration_Pragmas attribute
    end record;
 
    overriding function Src_Index (Self : Object) return Unit_Index is
