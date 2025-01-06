@@ -122,8 +122,10 @@ private
       In_Obj         : Boolean := False;
 
       Executable     : Artifacts.Files.Object;
-      Main_Src       : Artifacts.Source.Object;
       --  Executable produced by the linker
+
+      Main_Src       : Artifacts.Source.Object;
+      --  Source of the Main when an executable is produced
 
       Library        : Artifacts.Library.Object;
       --  Library produced by the linker
