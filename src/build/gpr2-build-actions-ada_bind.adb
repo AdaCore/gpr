@@ -388,8 +388,26 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       Add_Binder (PRA.Binder.Required_Switches, Lang_Ada_Idx);
 
-      if Self.Ctxt.Is_Library and then Self.Ctxt.Is_Shared_Library then
-         Cmd_Line.Add_Argument ("-shared", True);
+      if Self.Ctxt.Is_Library then
+         if Self.Ctxt.Is_Shared_Library then
+
+            --  Link against a shared GNAT run time
+
+            Cmd_Line.Add_Argument ("-shared", True);
+         end if;
+      else
+
+         --  If at least one imported library is shared, gnatbind must also be
+         --  called with the -shared flag.
+
+         for Imported_View of Self.Ctxt.Imports (Recursive => True) loop
+            if Imported_View.Is_Library
+              and then Imported_View.Is_Shared_Library
+            then
+               Cmd_Line.Add_Argument ("-shared", True);
+               exit;
+            end if;
+         end loop;
       end if;
 
       Cmd_Line.Add_Argument ("-o", True);

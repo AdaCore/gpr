@@ -1,0 +1,2 @@
+description: Create an executable that depends on a shared library, which itself depends on another shared library.
+driver: python_script

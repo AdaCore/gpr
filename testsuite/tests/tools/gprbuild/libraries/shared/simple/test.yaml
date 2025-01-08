@@ -1,0 +1,2 @@
+description: Build a shared library used by an executable
+driver: python_script

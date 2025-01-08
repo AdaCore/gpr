@@ -1,0 +1,11 @@
+$ gpr2build -q -Pmylib.gpr -p --json-summary
+$ gpr2build -q -Papp.gpr -p --json-summary
+lib:
+uid: '[Ada Compile] pkg.adb (mylib.gpr)', status : '0'
+uid: '[Archive] libmylib.so (mylib.gpr)', status : '0'
+mylib has been created, good!
+bin:
+Ok so far
+$ ./main
+Hello from lib in Ada
+
