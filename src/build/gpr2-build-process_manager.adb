@@ -89,7 +89,8 @@ package body GPR2.Build.Process_Manager is
            "' is still running. Cannot collect the job before it finishes");
 
       if Length (Stdout) > 0 then
-         Self.Tree_Db.Reporter.Report (-Stdout);
+         Self.Tree_Db.Reporter.Report
+           (-Stdout, Level => GPR2.Message.Important);
       end if;
 
       if Length (Stderr) > 0 then
