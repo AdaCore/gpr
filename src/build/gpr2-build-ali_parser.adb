@@ -19,7 +19,9 @@ package body GPR2.Build.ALI_Parser is
 
    package IO is
 
-      function Get_Token (File : in out GB.Reader) return String;
+      function Get_Token
+        (File : in out GB.Reader;
+         EOL  :    out Boolean) return String;
       --  Return next token available. The result is "" if LF or EOF are
       --  encountered before being able to read a token.
 
@@ -41,12 +43,17 @@ package body GPR2.Build.ALI_Parser is
       -- Get_Token --
       ---------------
 
-      function Get_Token (File : in out GB.Reader) return String
+      function Get_Token
+        (File : in out GB.Reader;
+         EOL  :    out Boolean) return String
       is
 
+         subtype End_Of_Line is Character
+           with Static_Predicate =>
+             End_Of_Line in ASCII.CR | ASCII.LF | ASCII.EOT;
          subtype Delimiter is Character
            with Static_Predicate =>
-             Delimiter in ASCII.HT | ASCII.CR | ASCII.LF | ASCII.EOT;
+             Delimiter in ASCII.HT | End_Of_Line;
          subtype Delimiter_Or_Space is Character
            with Static_Predicate =>
              Delimiter_Or_Space in Delimiter | ' ';
@@ -95,6 +102,8 @@ package body GPR2.Build.ALI_Parser is
                      --  Two consecutive double quotes need to be replaced by
                      --  a single double quote.
 
+                     EOL := C in End_Of_Line;
+
                      declare
                         Token  : constant String :=
                                    GB.Token (File, First, Last);
@@ -111,9 +120,10 @@ package body GPR2.Build.ALI_Parser is
                               Tok_Idx := Tok_Idx + 1;
                            end if;
 
-                           Tok_Idx := Tok_Idx + 1;
+                           Tok_Idx    := Tok_Idx + 1;
                            Result_Idx := Result_Idx + 1;
                         end loop;
+
                         return Result (Result'First .. Result_Idx - 1);
                      end;
                   else
@@ -146,7 +156,6 @@ package body GPR2.Build.ALI_Parser is
             Previous_Token_Is_Space : Boolean := False;
          begin
             loop
-
                if not GB.Next (File, C) then
                   return GB.Token (File, First, Last);
                end if;
@@ -155,6 +164,7 @@ package body GPR2.Build.ALI_Parser is
                if C = ' ' then
                   if Previous_Token_Is_Space then
                      Last := Last - 1;
+                     EOL := False;
                      exit;
                   else
                      Previous_Token_Is_Space := True;
@@ -164,6 +174,7 @@ package body GPR2.Build.ALI_Parser is
                end if;
 
                if C in Delimiter then
+                  EOL := C in End_Of_Line;
                   exit;
                end if;
 
@@ -177,6 +188,8 @@ package body GPR2.Build.ALI_Parser is
          C  : Character := ASCII.NUL;
 
       begin
+         EOL := False;
+
          Read_Token : loop
 
             if not GB.Next (File, C) then
@@ -260,6 +273,8 @@ package body GPR2.Build.ALI_Parser is
       procedure Parse_With (Reader : in out GB.Reader);
       --  Parse a W line to extract the source
 
+      EOL : Boolean := False;
+
       ---------------
       -- Parse_Dep --
       ---------------
@@ -272,7 +287,7 @@ package body GPR2.Build.ALI_Parser is
          end if;
 
          declare
-            Source_File : constant String := IO.Get_Token (Reader);
+            Source_File : constant String := IO.Get_Token (Reader, EOL);
          begin
             if Source_File = "" then
                raise Scan_ALI_Error with "missed dependency source file";
@@ -297,18 +312,17 @@ package body GPR2.Build.ALI_Parser is
          --  the oldest compilers.
 
          declare
-            Unit_Name : constant String := IO.Get_Token (Reader);
-            Filename  : constant String := IO.Get_Token (Reader);
+            Unit_Name : constant String := IO.Get_Token (Reader, EOL);
+            Filename  : constant String :=
+                          (if not EOL then IO.Get_Token (Reader, EOL) else "");
          begin
             if Unit_Name = "" then
                raise Scan_ALI_Error with "missed withed unit name";
             end if;
 
-            if Filename = "" then
-               raise Scan_ALI_Error with "missing filename";
+            if Filename /= "" then
+               Dep_Names.Include (Filename_Type (Filename));
             end if;
-
-            Dep_Names.Include (Filename_Type (Filename));
          end;
       end Parse_With;
 
@@ -322,7 +336,11 @@ package body GPR2.Build.ALI_Parser is
          --  dependencies source names.
 
          loop
-            IO.Next_Line (Reader, Word);
+            if not EOL then
+               IO.Next_Line (Reader, Word);
+            end if;
+
+            EOL := False;
 
             case Word is
                when ASCII.NUL   =>
@@ -369,6 +387,8 @@ package body GPR2.Build.ALI_Parser is
       procedure Parse_With (Reader : in out GB.Reader);
       --  Parse the source file name of the current dependency line
 
+      EOL : Boolean := False;
+
       ---------------
       -- Parse_Dep --
       ---------------
@@ -384,7 +404,7 @@ package body GPR2.Build.ALI_Parser is
          --  the oldest compilers.
 
          declare
-            Unit_Name : constant String := IO.Get_Token (Reader);
+            Unit_Name : constant String := IO.Get_Token (Reader, EOL);
          begin
             if Unit_Name = "" then
                raise Scan_ALI_Error with "missed withed unit name";
@@ -414,7 +434,11 @@ package body GPR2.Build.ALI_Parser is
          --  dependencies source names.
 
          loop
-            IO.Next_Line (Reader, Word);
+            if not EOL then
+               IO.Next_Line (Reader, Word);
+            end if;
+
+            EOL := False;
 
             case Word is
                when ASCII.NUL =>
