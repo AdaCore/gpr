@@ -357,7 +357,7 @@ begin
        (PRA.Builder.Switches).Is_Empty
    then
       declare
-         Has_Error : Boolean;
+         Has_Error : Boolean := False;
          Mains : constant Compilation_Unit.Unit_Location_Vector :=
                    (if not Opt.Build_Options.Mains.Is_Empty
                     then Actions_Population.Resolve_Mains
