@@ -172,20 +172,29 @@ package body GPR2.Build.Actions is
 
    procedure Load_Signature (Self : in out Object)
    is
-      Db_File : constant GPR2.Path_Name.Object :=
-                  Object'Class (Self).View.Object_Directory.Compose
-                    (Object'Class (Self).UID.Db_Filename);
+      Db_File    : constant GPR2.Path_Name.Object :=
+                     Self.Tree.Db_Filename_Path
+                       (Object'Class (Self).UID, True);
       Invalidate : Boolean := False;
-      use GPR2.Build.Signature.Artifact_Maps;
-   begin
-      Self.Signature := Build.Signature.Load (Db_File);
 
-      for C in Self.Signature.Artifacts.Iterate loop
-         if not Self.Tree.Has_Artifact (Key (C)) then
-            Invalidate := True;
-            exit;
-         end if;
-      end loop;
+      use GPR2.Build.Signature.Artifact_Maps;
+
+   begin
+      if not Db_File.Is_Defined then
+         Invalidate := True;
+
+      else
+         Self.Signature :=
+           Build.Signature.Load (Db_File, Object'Class (Self).View);
+
+         for C in Self.Signature.Artifacts.Iterate loop
+            if not Key (C).Is_Defined then
+               Invalidate := True;
+
+               exit;
+            end if;
+         end loop;
+      end if;
 
       if Invalidate then
          Self.Signature.Clear;
@@ -245,7 +254,7 @@ package body GPR2.Build.Actions is
          return False;
       end if;
 
-      Self.Signature.Store (Self.Tree.Db_Filename_Path (UID));
+      Self.Signature.Store (Self.Tree.Db_Filename_Path (UID, False));
 
       return True;
    end Write_Signature;

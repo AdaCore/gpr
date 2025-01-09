@@ -67,7 +67,8 @@ package body GPR2.Build.Signature is
    -- Load --
    ----------
 
-   function Load (Db_File : Path_Name.Object) return Object
+   function Load (Db_File : Path_Name.Object;
+                  Ctxt    : GPR2.Project.View.Object) return Object
    is
       use type JSON.JSON_Parser_Event_Kind;
 
@@ -160,7 +161,8 @@ package body GPR2.Build.Signature is
                              (Build.Artifacts.From_Uri
                                 (Data.Token
                                    (URI.First + 1,
-                                    URI.Last - 1)),
+                                      URI.Last - 1),
+                                Ctxt),
                               Hash_Digest
                                 (Data.Token
                                    (Checksum.First + 1,

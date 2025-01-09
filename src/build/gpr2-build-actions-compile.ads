@@ -52,6 +52,10 @@ package GPR2.Build.Actions.Compile is
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object;
 
+   overriding function Is_Extending (Self : Object) return Boolean;
+
+   overriding function Extended (Self : Object) return Object;
+
 private
 
    package PRA renames GPR2.Project.Registry.Attribute;
@@ -94,7 +98,7 @@ private
       Lang     : GPR2.Language_Id;
       --  Language of the source
 
-      Src_Name : GPR2.Path_Name.Object;
+      Src      : GPR2.Build.Source.Object;
       --  Source name
 
       Ctxt     : GPR2.Project.View.Object;
@@ -106,7 +110,7 @@ private
    --  Need that for indexed sources, for now only Ada multi-unit sources
 
    function Dependency_File (Self : Object) return Simple_Name is
-      (Self.Src_Name.Base_Filename & ".d");
+      (Self.Src.Path_Name.Base_Filename & ".d");
 
    overriding function View (Self : Object) return GPR2.Project.View.Object is
      (Self.Ctxt);
@@ -115,7 +119,10 @@ private
      (Self.Lang);
 
    function Input (Self : Object) return GPR2.Build.Source.Object is
-     (Self.Ctxt.Source (Self.Src_Name.Simple_Name));
+     (Self.Src);
+
+   overriding function Is_Extending (Self : Object) return Boolean is
+     (Self.Input.Is_Inherited);
 
    function Object_File (Self : Object) return Artifacts.Files.Object is
      (Self.Obj_File);

@@ -11,6 +11,7 @@ with GPR2.Build.Artifacts;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Command_Line;
 with GPR2.Path_Name;
+with GPR2.Project.View;
 with GPR2.Utils.Hash;
 
 package GPR2.Build.Signature is
@@ -18,7 +19,7 @@ package GPR2.Build.Signature is
    use Utils.Hash;
 
    package Artifact_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Artifacts.Object'Class, Hash_Digest, Artifacts."<");
+     (Artifacts.Object'Class, Hash_Digest, Artifacts.Less);
 
    package UB renames Ada.Strings.Unbounded;
 
@@ -63,7 +64,8 @@ package GPR2.Build.Signature is
    --  Removes the checcksum from Self, but keeps cmd line representation
    --  and standard output and error
 
-   function Load (Db_File  : Path_Name.Object) return Object;
+   function Load (Db_File : Path_Name.Object;
+                  Ctxt    : GPR2.Project.View.Object) return Object;
    --  Loads the build DB file Db_File
 
    procedure Store (Self : in out Object; Db_File : Path_Name.Object);

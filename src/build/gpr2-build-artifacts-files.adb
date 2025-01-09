@@ -12,8 +12,9 @@ package body GPR2.Build.Artifacts.Files is
    -----------------
 
    overriding procedure Unserialize
-     (S : String;
-      Val : out Object) is
+     (Ctxt    : GPR2.Project.View.Object;
+      S       : String;
+      Val     : out Object) is
    begin
       Val := (Path => Path_Name.Create_File (Filename_Type (S)));
    end Unserialize;

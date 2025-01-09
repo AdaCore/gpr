@@ -376,7 +376,7 @@ package body GPR2.Build.Actions.Link is
 
    procedure Initialize_Executable
      (Self       : in out Object;
-      Src        : Artifacts.File_Part.Object;
+      Src        : Artifacts.Source.Object;
       Context    : GPR2.Project.View.Object;
       Output     : Filename_Optional := "")
    is

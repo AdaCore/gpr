@@ -31,7 +31,6 @@ package body GPR2.Build.Source_Base is
                 Language          => Language,
                 Kind              => Kind,
                 CU_List           => Unit_Info.List.Empty_List,
-                Inherited         => False,
                 Naming_Exception  => Naming_Exception,
                 Is_Compilable     => Is_Compilable,
                 Source_Dir_Idx    => Source_Dir_Idx);

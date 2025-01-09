@@ -110,6 +110,11 @@ package GPR2.Build.Tree_Db is
      (Self     : in out Object;
       Artifact : Artifacts.Object'Class);
 
+   procedure Replace_Artifact
+     (Self  : in out Object;
+      Old   : Artifacts.Object'Class;
+      Value : Artifacts.Object'Class);
+
    function Has_Artifact
      (Self     : Object;
       Artifact : Artifacts.Object'Class) return Boolean;
@@ -141,8 +146,9 @@ package GPR2.Build.Tree_Db is
    --  ACTION MANAGEMENT
 
    function Db_Filename_Path
-     (Self   : in out Object;
-      Action : Actions.Action_Id'Class) return Path_Name.Object;
+     (Self       : in out Object;
+      Action     : Actions.Action_Id'Class;
+      Must_Exist : Boolean) return Path_Name.Object;
 
    function Propagate_Actions (Self : Object) return Boolean;
    --  Call the On_Tree_Propagation subprogram for each new action of the tree

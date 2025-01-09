@@ -399,14 +399,40 @@ package body GPR2.Build.Tree_Db is
    ----------------------
 
    function Db_Filename_Path
-     (Self   : in out Object;
-      Action : Actions.Action_Id'Class) return Path_Name.Object
+     (Self       : in out Object;
+      Action     : Actions.Action_Id'Class;
+      Must_Exist : Boolean) return Path_Name.Object
    is
-      Curs : constant Action_Maps.Cursor := Self.Actions.Find (Action);
+      Curs   : constant Action_Maps.Cursor := Self.Actions.Find (Action);
+      Result : Path_Name.Object;
+      Found  : Boolean := False;
+
    begin
-      return (GPR2.Path_Name.Create_File
-              (Self.Actions.Reference (Curs).UID.Db_Filename,
-               Self.Actions.Reference (Curs).View.Object_Directory.Value));
+      Result := Self.Actions.Reference (Curs).View.Object_Directory.Compose
+        (Self.Actions.Reference (Curs).UID.Db_Filename);
+
+      if Must_Exist then
+         Found := Result.Exists;
+
+         declare
+            Action_Instance : Actions.Object'Class :=
+                                Action_Maps.Element (Curs);
+         begin
+            while not Found and then Action_Instance.Is_Extending loop
+               Action_Instance := Action_Instance.Extended;
+               Result := Action_Instance.View.Object_Directory.Compose
+                 (Action_Instance.UID.Db_Filename);
+
+               Found := Result.Exists;
+            end loop;
+         end;
+      end if;
+
+      if not Must_Exist or else Found then
+         return Result;
+      else
+         return Path_Name.Undefined;
+      end if;
    end Db_Filename_Path;
 
    -------------
@@ -969,6 +995,87 @@ package body GPR2.Build.Tree_Db is
          Self.Predecessor.Delete (C_Pred);
       end if;
    end Remove_Artifact;
+
+   ----------------------
+   -- Replace_Artifact --
+   ----------------------
+
+   procedure Replace_Artifact
+     (Self  : in out Object;
+      Old   : Artifacts.Object'Class;
+      Value : Artifacts.Object'Class)
+   is
+      C       : Artifact_Sets.Cursor;
+      C_Succ  : Artifact_Actions_Maps.Cursor;
+      C_New   : Artifact_Actions_Maps.Cursor;
+      C_Pred  : Artifact_Action_Maps.Cursor;
+      Success : Boolean;
+
+   begin
+      --  ??? This is mainly used in case of extended projects. In this context
+      --  it would certainly be desirable to filter on namespace_root views
+      --  so that we don't mess with artifacts expected for a given subtree
+      --  where e.g. the artifact is not inherited with another subtree where
+      --  the artifact is now located in some extending view.
+
+      C := Self.Artifacts.Find (Old);
+      pragma Assert
+        (Artifact_Sets.Has_Element (C),
+         "Replace_Artifact: cannot find old artifact '" & Old.Image & "'");
+
+      Self.Artifacts.Delete (C);
+
+      Self.Artifacts.Insert (Value, C, Success);
+      pragma Assert
+        (Success,
+        "Replace_Artifact: cannot insert new artifact '" & Value.Image & "'");
+
+      C_Succ := Self.Successors.Find (Old);
+
+      Self.Successors.Insert (Value, Action_Sets.Empty_Set, C_New, Success);
+      pragma Assert
+        (Success,
+         "Replace_Artifact: cannot setup list of successors for '" &
+           Value.Image & "'");
+
+      for Succ of Self.Successors (C_Succ) loop
+         Self.Successors (C_New).Include (Succ);
+         C := Self.Inputs (Succ).Find (Old);
+
+         if Artifact_Sets.Has_Element (C) then
+            Self.Inputs (Succ).Delete (C);
+            Self.Inputs (Succ).Include (Value);
+         end if;
+
+         C := Self.Implicit_Inputs (Succ).Find (Old);
+
+         if Artifact_Sets.Has_Element (C) then
+            Self.Implicit_Inputs (Succ).Delete (C);
+            Self.Implicit_Inputs (Succ).Include (Value);
+         end if;
+      end loop;
+
+      Self.Successors.Delete (C_Succ);
+
+      C_Pred := Self.Predecessor.Find (Old);
+
+      if Artifact_Action_Maps.Has_Element (C_Pred) then
+         Self.Predecessor.Include
+           (Value, Artifact_Action_Maps.Element (C_Pred));
+
+         C := Self.Outputs
+           (Artifact_Action_Maps.Element (C_Pred)).Find (Old);
+
+         if Artifact_Sets.Has_Element (C) then
+            Self.Outputs
+              (Artifact_Action_Maps.Element (C_Pred)).Delete (C);
+            Self.Outputs
+              (Artifact_Action_Maps.Element (C_Pred)).Include (Value);
+         end if;
+
+         Self.Predecessor.Delete (C_Pred);
+      end if;
+   end Replace_Artifact;
 
    --------------
    -- Reporter --

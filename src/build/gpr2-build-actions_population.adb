@@ -9,8 +9,8 @@ with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Actions.Sets;
-with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Artifacts.Library;
+with GPR2.Build.Artifacts.Source;
 with GPR2.Build.Compilation_Unit.Maps;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
@@ -751,7 +751,8 @@ package body GPR2.Build.Actions_Population is
             Source := Main.View.Source (Main.Source.Simple_Name);
 
             Link (Idx).Initialize_Executable
-              (GPR2.Build.Artifacts.File_Part.Create (Main.Source, Main.Index),
+              (GPR2.Build.Artifacts.Source.Create
+                 (Main.View, Main.Source.Simple_Name, Main.Index),
                Main.View,
                -Options.Output_File);
 

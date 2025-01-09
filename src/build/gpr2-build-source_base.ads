@@ -146,8 +146,6 @@ private
       --  Source library unit kind in case the language is not unit-based
       CU_List           : Unit_Info.List.Object;
       --  Source's units in case of unit-based language
-      Inherited         : Boolean := False;
-      --  Whether the source has been inherited by project extension
       Naming_Exception  : Boolean := False;
       --  Whether a naming exception concerns this source
       Is_Compilable     : Boolean := False;

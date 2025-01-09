@@ -31,8 +31,6 @@ package GPR2.Build.Actions.Compile.Ada is
      (Self : in out Object; Src : GPR2.Build.Compilation_Unit.Object);
    --  Initialize all object fields according to Src
 
-   overriding function View (Self : Object) return GPR2.Project.View.Object;
-
    function Input_Unit
      (Self : Object) return GPR2.Build.Compilation_Unit.Object;
    --  Return the name of the compiled unit
@@ -63,6 +61,8 @@ package GPR2.Build.Actions.Compile.Ada is
    --  Return the list of known dependencies for this unit. The action ALI file
    --  must be up-to-date before calling this function, as the list of
    --  dependencies comes from it.
+
+   overriding function Extended (Self : Object) return Object;
 
 private
 
@@ -120,9 +120,6 @@ private
       Signature : in out GPR2.Build.Signature.Object);
 
    Undefined : constant Object := (others => <>);
-
-   overriding function View (Self : Object) return GPR2.Project.View.Object is
-     (Self.CU.Owning_View);
 
    function Input_Unit
      (Self : Object) return GPR2.Build.Compilation_Unit.Object
