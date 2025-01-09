@@ -1109,19 +1109,34 @@ package body GPR2.Project.View is
       Include_Self : Boolean := False) return GPR2.Project.View.Set.Object
    is
       Closure_Views : GPR2.Project.View.Set.Object;
+      Todo          : GPR2.Project.View.Set.Object;
+      Done          : GPR2.Project.View.Set.Object;
+      Current       : GPR2.Project.View.Object;
    begin
       if Include_Self then
          Closure_Views.Insert (Self);
       end if;
 
-      for V of Get_RO (Self).Closure loop
-         Closure_Views.Include (V);
+      Todo.Include (Self);
 
-         if V.Kind = K_Aggregate_Library then
-            --  ??? In case of aggregate libraries, the closure is not properly
-            --  escalated to the upper views. So add it manually here.
-            Closure_Views := Closure_Views.Union (V.Closure);
-         end if;
+      while not Todo.Is_Empty loop
+         Current := Todo.First_Element;
+         Todo.Delete_First;
+         Done.Include (Current);
+
+         for V of Get_RO (Current).Closure loop
+            Closure_Views.Include (V);
+
+            if V.Kind = K_Aggregate_Library
+              and then not Done.Contains (V)
+            then
+               --  In case of aggregate libraries, the closure is not
+               --  properly escalated to the upper views as the aggregated
+               --  views are parsed late in the process. So we need to merge
+               --  the closures
+               Todo.Include (V);
+            end if;
+         end loop;
       end loop;
 
       return Closure_Views;
