@@ -1269,8 +1269,10 @@ package body GPR2.Project.View is
       return Set : GPR2.Path_Name.Set.Object do
          if Attr.Is_Defined then
             for Main of Attr.Values loop
-               Set.Append (Self.Executable (Simple_Name (Main.Text),
-                           At_Pos_Or (Main, 0)));
+               Set.Append
+                 (Self.Executable
+                    (Simple_Name (Main.Text),
+                     At_Pos_Or (Main, 0)));
             end loop;
          end if;
       end return;
