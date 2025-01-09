@@ -1357,7 +1357,8 @@ package body GPR2.Project.View is
       Db    : GPR2.Build.View_Db.Object;
 
    begin
-      if Self.Is_Namespace_Root
+      if Self.Kind in K_Standard
+        and then Self.Is_Namespace_Root
         and then (Attr.Is_Defined and then Attr.Count_Values > 0)
       then
          Db := Self.View_Db;
