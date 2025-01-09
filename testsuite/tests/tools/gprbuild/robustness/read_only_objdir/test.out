@@ -1,0 +1,42 @@
+regular run:
+$ gpr2build -Pprj -p
+"obj/prj/" created
+[Ada Compile]     pkg.ads
+$ gpr2clean -Pprj
+
+read only obj dir:
+$ chmod 0x555 obj/prj
+$ gpr2build -Pprj -p
+Problem accessing the object directory for project "Prj"
+Command '[Ada Compile] pkg.ads (prj.gpr)' failed.
+$ gpr2clean -Pprj -v
+
+read only obj dir with built project
+$ chmod 0x777 obj/prj
+$ gpr2build -Pprj -p -q
+$ chmod 0x555 obj/prj
+- with externally built dependency
+$ gpr2build -Plib -XPRJ_RO=True -p
+"obj/lib/" created
+"lib/lib/" created
+[Ada Compile]     pkg2.ads
+[Archive]         liblib.a
+- with regular dependency
+$ gpr2build -Plib -XPRJ_RO=False -p
+Problem accessing the object directory for project "Prj"
+Command '[Ada Compile] pkg.ads (prj.gpr)' failed.
+$ chmod 0x777 obj/prj
+
+read only lib dir
+$ gpr2clean -Plib -r -q
+$ chmod 0x555 lib/lib
+$ gpr2build -Plib
+[Ada Compile]     pkg2.ads
+pkg2.ali: error: could not copy ali file pkg2.ali to the library directory
+$ chmod 0x777 lib/lib
+$ gpr2build -Plib -q
+$ chmod 0x555 lib/lib
+$ gpr2build -Plib -f -l
+[Archive]         liblib.a
+ar: liblib.a.tmp: Permission denied
+lib.gpr: warning: [Archive] liblib.a (lib.gpr) failed with status 1

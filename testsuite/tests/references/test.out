@@ -23,11 +23,11 @@ project'Object_Dir OK
 References'Exec_Dir OK
 Builder'Executable_Suffix OK
 project.Executable ("main.adb") OK
-References.Builder'Global_Configuration_Pragmas OK
+/References.Builder'Global_Configuration_Pragmas OK
 Root'Object_Dir OK
-Root.Builder'Global_Configuration_Pragmas OK
+/Root.Builder'Global_Configuration_Pragmas OK
 Root.Child'Object_Dir OK
-Root.Child.Builder'Global_Configuration_Pragmas OK
+/Root.Child.Builder'Global_Configuration_Pragmas OK
 
 ### package renames/extends references ###
 renames Root.Builder OK

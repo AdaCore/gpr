@@ -11,7 +11,6 @@ with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Actions.Sets;
 with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Artifacts.Library;
-with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Compilation_Unit.Maps;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
@@ -19,17 +18,21 @@ pragma Warnings (On);
 with GPR2.Build.Tree_Db;
 with GPR2.Message;
 with GPR2.Path_Name;
+with GPR2.Project.Attribute;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
 with GPR2.View_Ids.Set;
 
 package body GPR2.Build.Actions_Population is
 
+   package PRA renames GPR2.Project.Registry.Attribute;
+
    function As_Unit_Location
      (Basename       : Value_Type;
       Index          : Unit_Index;
       View           : GPR2.Project.View.Object;
-      Options        : Build_Options;
+      Options        : Build.Options.Build_Options;
       Error_Reported : out Boolean)
       return Compilation_Unit.Unit_Location_Vector;
 
@@ -53,7 +56,7 @@ package body GPR2.Build.Actions_Population is
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       View    : GPR2.Project.View.Object;
       Mains   : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
-      Options : Build_Options) return Boolean;
+      Options : Build.Options.Build_Options) return Boolean;
 
    function Populate_Withed_Units
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
@@ -68,7 +71,7 @@ package body GPR2.Build.Actions_Population is
      (Basename       : Value_Type;
       Index          : Unit_Index;
       View           : GPR2.Project.View.Object;
-      Options        : Build_Options;
+      Options        : Build.Options.Build_Options;
       Error_Reported : out Boolean)
       return Compilation_Unit.Unit_Location_Vector
    is
@@ -167,7 +170,7 @@ package body GPR2.Build.Actions_Population is
 
    function Populate_Actions
      (Tree    : GPR2.Project.Tree.Object;
-      Options : Build_Options) return Boolean
+      Options : Build.Options.Build_Options) return Boolean
    is
       Tree_Db     : GPR2.Build.Tree_Db.Object_Access renames
                       Tree.Artifacts_Database;
@@ -183,56 +186,18 @@ package body GPR2.Build.Actions_Population is
       Has_Error   : Boolean;
 
    begin
+      Tree_Db.Set_Build_Options (Options);
+
       --  Lookup the source(s) given explicitly on the command line, if any.
 
       Inserted := False;
 
-      for Main of Options.Mains loop
-         for V of Tree.Namespace_Root_Projects loop
-            declare
-               M : constant Compilation_Unit.Unit_Location_Vector :=
-                     As_Unit_Location
-                       (Main,
-                        Options.Unit_Index,
-                        V,
-                        Options,
-                        Has_Error);
-            begin
-               if Has_Error then
-                  return False;
-               end if;
+      Mains := Resolve_Mains
+        (Tree, Options, Has_Error);
 
-               if not M.Is_Empty then
-                  Inserted := True;
-                  Mains.Append (M);
-               end if;
-            end;
-         end loop;
-
-         if not Inserted then
-            if Options.Unique_Compilation
-              or else Options.Unique_Compilation_Recursive
-            then
-               Tree_Db.Reporter.Report
-                 (Message.Create
-                    (Message.Error,
-                     '"' & Main &
-                       """ was not found in the sources of any project",
-                     Source_Reference.Create
-                       (Tree.Root_Project.Path_Name.Value, 0, 0)));
-            else
-               Tree_Db.Reporter.Report
-                 (Message.Create
-                    (Message.Error,
-                     '"' & Main &
-                       """ was not found in the project",
-                     Source_Reference.Create
-                       (Tree.Root_Project.Path_Name.Value, 0, 0)));
-            end if;
-
-            return False;
-         end if;
-      end loop;
+      if Has_Error then
+         return False;
+      end if;
 
       for V of Tree.Namespace_Root_Projects loop
          Visited.Insert (V.Id, Pos, Inserted);
@@ -300,6 +265,10 @@ package body GPR2.Build.Actions_Population is
                --  Make sure the withed libraries are added to the tree
                Result := Populate_Withed_Units (Tree_Db, V, Visited);
 
+               if not Result then
+                  return False;
+               end if;
+
                case V.Kind is
                   when K_Standard =>
                      if V.Has_Mains or else not Mains.Is_Empty then
@@ -318,27 +287,6 @@ package body GPR2.Build.Actions_Population is
                   when others =>
                      null;
                end case;
-
-               if Options.Restricted_Build_Phase then
-                  for A of Tree_Db.All_Actions loop
-                     if not (Options.Compile_Phase_Mandated
-                             and then A in Actions.Compile.Object'Class)
-                       and then not
-                         (Options.Bind_Phase_Mandated
-                          and then
-                            (A in Actions.Ada_Bind.Object'Class
-                             or else A in Actions.Post_Bind.Object'Class))
-                       and then not (Options.Link_Phase_Mandated
-                                     and then A in Actions.Link.Object'Class)
-                     then
-                        To_Remove.Include (A);
-                     end if;
-                  end loop;
-
-                  for A of To_Remove loop
-                     Tree_Db.Action_Id_To_Reference (A.UID).Deactivate;
-                  end loop;
-               end if;
             end if;
          end if;
 
@@ -351,6 +299,27 @@ package body GPR2.Build.Actions_Population is
         and then not Options.Unique_Compilation_Recursive
       then
          Result := Tree_Db.Propagate_Actions;
+      end if;
+
+      if Options.Restricted_Build_Phase then
+         for A of Tree_Db.All_Actions loop
+            if not (Options.Compile_Phase_Mandated
+                    and then A in Actions.Compile.Object'Class)
+              and then not
+                (Options.Bind_Phase_Mandated
+                 and then
+                   (A in Actions.Ada_Bind.Object'Class
+                    or else A in Actions.Post_Bind.Object'Class))
+              and then not (Options.Link_Phase_Mandated
+                            and then A in Actions.Link.Object'Class)
+            then
+               To_Remove.Include (A);
+            end if;
+         end loop;
+
+         for A of To_Remove loop
+            Tree_Db.Action_Id_To_Reference (A.UID).Deactivate;
+         end loop;
       end if;
 
       if Result then
@@ -417,6 +386,10 @@ package body GPR2.Build.Actions_Population is
          end case;
 
          if not Result then
+            return False;
+         end if;
+
+         if not Populate_Withed_Units (Tree_Db, Agg, Visited) then
             return False;
          end if;
       end loop;
@@ -696,7 +669,7 @@ package body GPR2.Build.Actions_Population is
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       View    : GPR2.Project.View.Object;
       Mains   : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
-      Options : Build_Options) return Boolean
+      Options : Build.Options.Build_Options) return Boolean
    is
       A_Comp     : Actions.Compile.Ada.Object;
       Comp       : Actions.Compile.Object;
@@ -729,12 +702,48 @@ package body GPR2.Build.Actions_Population is
          return False;
       end if;
 
+      --  Check if we need to generate the mapping file for mains, and perform
+      --  verifications that all parameters are correct in the given context
+
+      if Options.Create_Map_File then
+         declare
+            Attr : constant GPR2.Project.Attribute.Object :=
+                     View.Attribute
+                       (PRA.Linker.Map_File_Option);
+         begin
+            --  Check if there's support from the linker, and then check that
+            --  we have a main to link
+
+            if not Attr.Is_Defined then
+               pragma Annotate (Xcov, Exempt_On, "defensive code");
+               Tree_Db.Reporter.Report
+                 ("error: selected linker does not allow creating a map file",
+                  To_Stderr => True,
+                  Level     => GPR2.Message.Important);
+               return False;
+               pragma Annotate (Xcov, Exempt_Off);
+
+            elsif Options.Mapping_File_Name /= Null_Unbounded_String
+              and then Actual_Mains.Length > 1
+            then
+               Tree_Db.Reporter.Report
+                 ("error: map file name is specified while there are " &
+                    "multiple mains",
+                  To_Stderr => True,
+                  Level     => GPR2.Message.Important);
+
+            end if;
+         end;
+      end if;
+
       --  Process the mains one by one
+
       declare
          Bind   : array (1 .. Natural (Actual_Mains.Length)) of
                     Actions.Ada_Bind.Object;
          Link   : array (1 .. Natural (Actual_Mains.Length)) of
                     Actions.Link.Object;
+         Attr   : GPR2.Project.Attribute.Object;
          Idx    : Natural := 1;
          Skip   : Boolean := False;
       begin
@@ -746,15 +755,25 @@ package body GPR2.Build.Actions_Population is
                Main.View,
                -Options.Output_File);
 
-            if not Tree_Db.Has_Action (Link (Idx).UID)
-              and then not Tree_Db.Add_Action (Link (Idx))
-            then
+            if Options.Create_Map_File then
+               Attr := Main.View.Attribute (PRA.Linker.Map_File_Option);
+               if Length (Options.Mapping_File_Name) > 0 then
+                  Link (Idx).Add_Option
+                    (Attr.Value.Text & To_String (Options.Mapping_File_Name));
+               else
+                  Link (Idx).Add_Option
+                    (Attr.Value.Text &
+                       String (Link (Idx).Output.Path.Base_Name) & ".map");
+               end if;
+            end if;
+
+            if not Tree_Db.Add_Action (Link (Idx)) then
                return False;
             end if;
 
             if Source.Language = Ada_Language then
                A_Comp.Initialize
-                 (View.Unit (Source.Units.Element (Main.Index).Name));
+                 (Main.View.Unit (Source.Units.Element (Main.Index).Name));
 
                if not Tree_Db.Add_Action (A_Comp) then
                   return False;
@@ -973,14 +992,14 @@ package body GPR2.Build.Actions_Population is
       Result : Boolean;
    begin
       for Import of View.Imports.Union (View.Limited_Imports) loop
-         Result := Populate_Withed_Units (Tree_Db, Import, Visited);
-
-         if not Result then
-            return False;
-         end if;
-
          if not Visited.Contains (Import.Id) then
             Visited.Include (Import.Id);
+
+            Result := Populate_Withed_Units (Tree_Db, Import, Visited);
+
+            if not Result then
+               return False;
+            end if;
 
             if Import.Kind = K_Library then
                Result :=
@@ -996,7 +1015,88 @@ package body GPR2.Build.Actions_Population is
          end if;
       end loop;
 
+      if View.Is_Extending then
+         for V of View.Extended loop
+            Result := Populate_Withed_Units (Tree_Db, V, Visited);
+
+            if not Result then
+               return False;
+            end if;
+         end loop;
+      end if;
+
       return True;
    end Populate_Withed_Units;
+
+   -------------------
+   -- Resolve_Mains --
+   -------------------
+
+   function Resolve_Mains
+     (Tree    : GPR2.Project.Tree.Object;
+      Options : Build.Options.Build_Options;
+      Error   : out Boolean)
+      return GPR2.Build.Compilation_Unit.Unit_Location_Vector
+   is
+      Result   : Compilation_Unit.Unit_Location_Vector;
+      Inserted : Boolean;
+   begin
+      Error := False;
+
+      for Main of Options.Mains loop
+         Inserted := False;
+
+         NS_Loop :
+         for V of Tree.Namespace_Root_Projects loop
+            declare
+               M : constant Compilation_Unit.Unit_Location_Vector :=
+                     As_Unit_Location
+                       (Main,
+                        Options.Unit_Index,
+                        V,
+                        Options,
+                        Error);
+            begin
+               if Error then
+                  return Compilation_Unit.Empty_Vector;
+               end if;
+
+               if not M.Is_Empty then
+                  Inserted := True;
+                  Result.Append (M);
+                  exit NS_Loop;
+               end if;
+            end;
+         end loop NS_Loop;
+
+         if not Inserted then
+            if Options.Unique_Compilation
+              or else Options.Unique_Compilation_Recursive
+            then
+               Tree.Reporter.Report
+                 (Message.Create
+                    (Message.Error,
+                     '"' & Main &
+                       """ was not found in the sources of any project",
+                     Source_Reference.Create
+                       (Tree.Root_Project.Path_Name.Value, 0, 0)));
+            else
+               Tree.Reporter.Report
+                 (Message.Create
+                    (Message.Error,
+                     '"' & Main &
+                       """ was not found in the project",
+                     Source_Reference.Create
+                       (Tree.Root_Project.Path_Name.Value, 0, 0)));
+            end if;
+
+            Error := True;
+
+            return Compilation_Unit.Empty_Vector;
+         end if;
+      end loop;
+
+      return Result;
+   end Resolve_Mains;
 
 end GPR2.Build.Actions_Population;

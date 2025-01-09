@@ -27,6 +27,7 @@ function Test return Integer is
    Project   : constant String := "tree/main.gpr";
    Process_M : GPR2.Build.Process_Manager.JSON.Object;
    Root_View : GPR2.Project.View.Object;
+   Exec_Opts : GPR2.Build.Process_Manager.PM_Options;
 
    package GBA renames GPR2.Build.Actions;
 begin
@@ -81,7 +82,12 @@ begin
    end loop;
 
    Process_M.Set_JSON_File (Path_Name.Create_File ("jobs.json"));
-   Tree.Artifacts_Database.Execute (Process_M, 2);
 
-   return 0;
+   Exec_Opts.Jobs := 2;
+
+   if not Tree.Artifacts_Database.Execute (Process_M, Exec_Opts) then
+      return 1;
+   else
+      return 0;
+   end if;
 end Test;

@@ -5,12 +5,16 @@
 --
 
 with Ada.Characters.Handling;
+with GNAT.OS_Lib;
 
+with GNATCOLL.OS.FSUtil;
 with GNATCOLL.Utils;
 
-with GPR2.External_Options;
+with GPR2.Build.External_Options;
+with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
+with GPR2.Source_Reference;
 
 package body GPR2.Build.Actions.Link is
 
@@ -123,7 +127,12 @@ package body GPR2.Build.Actions.Link is
                end if;
             end loop;
 
-            Cmd_Line.Add_Argument (String (Self.Output.Path.Simple_Name));
+            --  We use a temp file for the archive so that we don't re-use
+            --  an old archive. This tmp file will replace the original
+            --  one in the post-command phase.
+
+            Cmd_Line.Add_Argument
+              (String (Self.Output.Path.Simple_Name) & ".tmp");
          end;
 
       else
@@ -298,7 +307,7 @@ package body GPR2.Build.Actions.Link is
 
          for Arg
            of Self.Tree.External_Options.Fetch
-             (GPR2.External_Options.Linker, GPR2.No_Language)
+             (External_Options.Linker, GPR2.No_Language)
          loop
             Cmd_Line.Add_Argument (Arg);
          end loop;
@@ -452,6 +461,60 @@ package body GPR2.Build.Actions.Link is
    begin
       return Db.Add_Output (UID, Self.Output);
    end On_Tree_Insertion;
+
+   ------------------
+   -- Post_Command --
+   ------------------
+
+   overriding function Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status) return Boolean
+   is
+      Result : Boolean;
+   begin
+      if Status = Success
+        and then Self.Is_Static_Library
+      then
+         --  archives are generated as tmp files so that we don't reuse
+         --  the library from previous runs, we thus need to unlink and rename
+         if Self.Output.Path.Exists then
+            if not GNATCOLL.OS.FSUtil.Remove_File
+              (Self.Output.Path.String_Value)
+            then
+               pragma Annotate (Xcov, Exempt_On, "defensive code");
+               Self.Tree.Reporter.Report
+                 (GPR2.Message.Create
+                    (GPR2.Message.Error,
+                     "cannot remove this file",
+                     GPR2.Source_Reference.Create
+                       (Self.Output.Path.Value, 0, 0)));
+
+               return False;
+               pragma Annotate (Xcov, Exempt_Off);
+            end if;
+         end if;
+
+         GNAT.OS_Lib.Rename_File
+           (Self.Output.Path.String_Value & ".tmp",
+            Self.Output.Path.String_Value,
+            Result);
+
+         if not Result then
+            pragma Annotate (Xcov, Exempt_On, "defensive code");
+            Self.Tree.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  "cannot rename this file",
+                  GPR2.Source_Reference.Create
+                    (Self.Output.Path.Value, 0, 0)));
+
+            return False;
+            pragma Annotate (Xcov, Exempt_Off);
+         end if;
+      end if;
+
+      return True;
+   end Post_Command;
 
    ---------
    -- UID --

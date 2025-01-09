@@ -18,7 +18,7 @@
 
 with Ada.Strings.Unbounded;
 
-with GPR2.Build.Actions_Population;
+with GPR2.Build.Options;
 with GPR2.Containers;
 with GPR2.Options;
 with GPR2.Project.Tree;
@@ -58,7 +58,7 @@ package GPRtools.Options is
       Slave_Env             : Unbounded_String;
       Slave_Env_Auto        : Boolean := False;
       Hash_Value            : Unbounded_String;
-      Build_Options         : GPR2.Build.Actions_Population.Build_Options;
+      Build_Options         : GPR2.Build.Options.Build_Options;
    end record;
    --  Options common to most gpr tools
 

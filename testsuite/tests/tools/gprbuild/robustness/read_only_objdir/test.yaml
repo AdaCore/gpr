@@ -1,0 +1,3 @@
+description: check gprbuild handling of read-only obj or lib dir
+driver: python_script
+timeout: 800

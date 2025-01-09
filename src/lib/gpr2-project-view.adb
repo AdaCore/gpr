@@ -1109,19 +1109,34 @@ package body GPR2.Project.View is
       Include_Self : Boolean := False) return GPR2.Project.View.Set.Object
    is
       Closure_Views : GPR2.Project.View.Set.Object;
+      Todo          : GPR2.Project.View.Set.Object;
+      Done          : GPR2.Project.View.Set.Object;
+      Current       : GPR2.Project.View.Object;
    begin
       if Include_Self then
          Closure_Views.Insert (Self);
       end if;
 
-      for V of Get_RO (Self).Closure loop
-         Closure_Views.Include (V);
+      Todo.Include (Self);
 
-         if V.Kind = K_Aggregate_Library then
-            --  ??? In case of aggregate libraries, the closure is not properly
-            --  escalated to the upper views. So add it manually here.
-            Closure_Views := Closure_Views.Union (V.Closure);
-         end if;
+      while not Todo.Is_Empty loop
+         Current := Todo.First_Element;
+         Todo.Delete_First;
+         Done.Include (Current);
+
+         for V of Get_RO (Current).Closure loop
+            Closure_Views.Include (V);
+
+            if V.Kind = K_Aggregate_Library
+              and then not Done.Contains (V)
+            then
+               --  In case of aggregate libraries, the closure is not
+               --  properly escalated to the upper views as the aggregated
+               --  views are parsed late in the process. So we need to merge
+               --  the closures
+               Todo.Include (V);
+            end if;
+         end loop;
       end loop;
 
       return Closure_Views;
@@ -1342,7 +1357,8 @@ package body GPR2.Project.View is
       Db    : GPR2.Build.View_Db.Object;
 
    begin
-      if Self.Is_Namespace_Root
+      if Self.Kind in K_Standard
+        and then Self.Is_Namespace_Root
         and then (Attr.Is_Defined and then Attr.Count_Values > 0)
       then
          Db := Self.View_Db;
@@ -1578,45 +1594,64 @@ package body GPR2.Project.View is
    is
       procedure Add_For_View (V : Object);
 
-      Check  : GPR2.Containers.Filename_Set;
-      Result : GPR2.Path_Name.Set.Object;
+      Result    : GPR2.Path_Name.Set.Object;
+      Attr      : GPR2.Project.Attribute.Object;
+      Languages : GPR2.Containers.Language_Set;
+      Seen      : GPR2.Containers.Filename_Set;
 
       procedure Add_For_View (V : Object) is
-         Pos      : GPR2.Containers.Filename_Type_Set.Cursor;
+         C        : GPR2.Containers.Filename_Type_Set.Cursor;
          Inserted : Boolean;
+         Found    : Boolean := False;
       begin
+         Seen.Insert (V.Path_Name.Value, C, Inserted);
+
+         if not Inserted then
+            --  Already visited
+            return;
+         end if;
+
          if V.Kind = K_Aggregate_Library then
             for A of V.Aggregated loop
                Add_For_View (A);
             end loop;
          end if;
 
-         if V.Kind not in With_Source_Dirs_Kind
-           or else not V.Has_Language (Name (Language))
-         then
+         --  No sources in this view case
+
+         if V.Kind not in With_Source_Dirs_Kind then
             return;
          end if;
 
-         for Src_Dir of V.Source_Directories loop
-            --  We use a set to check for duplicated path, but return a
-            --  vector to preserve the order.
-            Check.Insert (Src_Dir.Value, Pos, Inserted);
+         --  Check that the view has some sources of the language
 
-            if Inserted then
-               Result.Append (Src_Dir);
+         for L of V.Language_Ids loop
+            if Languages.Contains (L) then
+               Found := True;
+               exit;
             end if;
          end loop;
 
-         if V.Is_Extending then
-            for E of V.Extended loop
-               --  Need to recurse here in case extended project is also
-               --  extending...
-               Add_For_View (E);
+         if Found then
+            for Src_Dir of V.Source_Directories loop
+               if not Result.Contains (Src_Dir) then
+                  Result.Append (Src_Dir);
+               end if;
             end loop;
          end if;
       end Add_For_View;
 
    begin
+      Languages.Include (Language);
+
+      Attr := Self.Attribute (PRA.Inherit_Source_Path, PAI.Create (Language));
+
+      if Attr.Is_Defined then
+         for V of Attr.Values loop
+            Languages.Include (+Name_Type (V.Text));
+         end loop;
+      end if;
+
       Add_For_View (Self);
 
       for C of Self.Closure loop
@@ -1855,9 +1890,9 @@ package body GPR2.Project.View is
 
          --  Impossible if project view was validated just after parse
 
-         pragma Annotate (Xcov, Off, "unreachable code");
+         pragma Annotate (Xcov, Exempt_On, "unreachable code");
          raise Internal_Error with "cannot get major version";
-         pragma Annotate (Xcov, On);
+         pragma Annotate (Xcov, Exempt_Off);
       end Major_Version_Name;
 
       LV : constant Project.Attribute.Object :=

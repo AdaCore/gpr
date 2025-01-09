@@ -16,7 +16,11 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+
 with GPR2;
+with GPR2.Build.Process_Manager;
+with GPR2.Build.External_Options;
 with GPR2.Containers;
 with GPR2.Path_Name;
 
@@ -29,20 +33,19 @@ package GPRbuild.Options is
       Single_Build_Per_Obj_Dir : Boolean := False;
       Build_Script             : GPR2.Path_Name.Object;
       No_Object_Check          : Boolean := False;
+      No_Split_Units           : Boolean := False;
       Restricted_To_Languages  : GPR2.Containers.Language_Set;
       Display_Progress         : Boolean := False;
 
       Build_If_Switch_Changes  : Boolean := False;
-      Force                    : Boolean := False;
-      Keep_Going               : Boolean := False;
-      Keep_Temp_Files          : Boolean := False;
       Create_Missing_Dirs      : Boolean := False;
       Force_Recursive_Build    : Boolean := False;
 
-      Parallel_Tasks           : Natural := 1;
       Json_Summary             : Boolean := False;
 
+      Extra_Args               : GPR2.Build.External_Options.Object;
       Config_Args              : GPR2.Containers.Value_List;
+      PM_Options               : GPR2.Build.Process_Manager.PM_Options;
    end record;
    --  Options for gprls
 

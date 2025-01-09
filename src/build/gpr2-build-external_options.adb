@@ -4,7 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-package body GPR2.External_Options is
+package body GPR2.Build.External_Options is
 
    -----------
    -- Clear --
@@ -23,12 +23,18 @@ package body GPR2.External_Options is
                    Action : Action_Class;
                    Lang   : Language_Id) return GPR2.Containers.Value_List
    is
-      Result : GPR2.Containers.Value_List := GPR2.Containers.Empty_Value_List;
+      Result : GPR2.Containers.Value_List;
    begin
-      if Self.Ext_Opt.Contains (Action)
-        and then Self.Ext_Opt (Action).Contains (Lang)
-      then
-         Result := Self.Ext_Opt (Action) (Lang);
+      if Self.Ext_Opt.Contains (Action) then
+         if Lang /= No_Language
+           and then Self.Ext_Opt (Action).Contains (No_Language)
+         then
+            Result.Append_Vector (Self.Ext_Opt (Action) (No_Language));
+         end if;
+
+         if Self.Ext_Opt (Action).Contains (Lang) then
+            Result.Append_Vector (Self.Ext_Opt (Action) (Lang));
+         end if;
       end if;
 
       return Result;
@@ -57,4 +63,4 @@ package body GPR2.External_Options is
       Self.Ext_Opt (Action) (Lang).Append (Option);
    end Register;
 
-end GPR2.External_Options;
+end GPR2.Build.External_Options;

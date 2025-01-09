@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.IO_Exceptions;
 with Ada.Strings.Fixed;
@@ -14,6 +15,7 @@ with GNAT.OS_Lib;
 with GNAT.Regexp;
 with GNAT.String_Split;
 
+with GNATCOLL.Damerau_Levenshtein_Distance;
 with GNATCOLL.OS.Constants;
 with GNATCOLL.Tribooleans;
 
@@ -40,6 +42,8 @@ package body GPR2.Tree_Internal is
 
    package PRP renames Project.Registry.Pack;
    package IDS renames GPR2.View_Ids;
+   function Distance (L, R : String) return Natural renames
+     GNATCOLL.Damerau_Levenshtein_Distance;
 
    Is_Windows_Host : constant Boolean :=
                        GNATCOLL.OS.Constants.OS = GNATCOLL.OS.Windows
@@ -669,8 +673,7 @@ package body GPR2.Tree_Internal is
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
       Environment      : GPR2.Environment.Object :=
-                           GPR2.Environment.Process_Environment;
-      External_Options : GPR2.External_Options.Object)
+                           GPR2.Environment.Process_Environment)
    is
       Gpr_Path     : Path_Name.Object;
       Root_Context : GPR2.Context.Object := Context;
@@ -898,7 +901,7 @@ package body GPR2.Tree_Internal is
          --  Tree is now fully loaded, we can create the artifacts database
          --  object.
          if not Self.Tree_Db.Is_Defined then
-            Init_Tree_Database (Self.Tree_Db, Self, External_Options);
+            Init_Tree_Database (Self.Tree_Db, Self);
          else
             --  Tree has been reloaded: update the database in case views
             --  have changed.
@@ -940,8 +943,7 @@ package body GPR2.Tree_Internal is
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
                             GPR2.File_Readers.No_File_Reader_Reference;
       Environment       : GPR2.Environment.Object :=
-                            GPR2.Environment.Process_Environment;
-      External_Options  : GPR2.External_Options.Object)
+                            GPR2.Environment.Process_Environment)
    is separate;
 
    ------------------------
@@ -1383,6 +1385,10 @@ package body GPR2.Tree_Internal is
                      if Extended_View.Is_Defined then
                         Data.Extended.Include (Extended_View);
                         Data.Extended_Root := Extended_View;
+
+                        for V of Extended_View.Closure loop
+                           Data.Closure.Include (V.Name, V);
+                        end loop;
                      end if;
                   end;
                end if;
@@ -2372,7 +2378,7 @@ package body GPR2.Tree_Internal is
          end if;
 
          if not Has_Error
-           and then P_Data.Kind not in K_Abstract | K_Configuration
+           and then P_Data.Kind not in K_Configuration
          then
             P_Data.Signature := New_Signature;
 
@@ -2436,6 +2442,16 @@ package body GPR2.Tree_Internal is
                        (Message.Error,
                         "a standard project cannot extend a library project",
                         P_Data.Trees.Project.Extended));
+               end if;
+
+            elsif P_Data.Kind = K_Abstract then
+               if View.Check_Attribute (PRA.Source_Dirs, Result => Tmp_Attr)
+                 and then not Tmp_Attr.Values.Is_Empty
+               then
+                  Self.Error
+                    ("an abstract project can only have an empty set of " &
+                       "Sources",
+                     Tmp_Attr);
                end if;
             end if;
 
@@ -2641,6 +2657,34 @@ package body GPR2.Tree_Internal is
                      end if;
                   end;
                end loop;
+
+            else
+               --  Check if the package name is a potential misspelling of an
+               --  existing package
+               declare
+                  Val    : Natural;
+                  Min    : Natural := Natural'Last;
+                  Min_Id : Package_Id;
+                  package ACL renames Ada.Characters.Handling;
+               begin
+                  for P_Def of PRP.All_Packages loop
+                     Val := Distance
+                       (ACL.To_Lower (Image (P.Id)),
+                        ACL.To_Lower (Image (P_Def)));
+                     if Val < Min then
+                        Min_Id := P_Def;
+                        Min    := Val;
+                     end if;
+                  end loop;
+
+                  if Min < 3 then
+                     Self.Warning
+                       ("package """ & Image (P.Id) & """ is unknown and a "
+                        &
+                          "potential misspelling of """ & Image (Min_Id) & '"',
+                        P);
+                  end if;
+               end;
             end if;
          end loop;
 

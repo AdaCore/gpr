@@ -76,6 +76,10 @@ package GPR2.Build.Actions.Link is
       Slot     : Positive;
       Cmd_Line : in out GPR2.Build.Command_Line.Object);
 
+   overriding function Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status) return Boolean;
+
    overriding function Skip (Self : Object) return Boolean;
 
    overriding function Working_Directory

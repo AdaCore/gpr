@@ -16,10 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Unbounded;
-
 with GPR2.Options;
-with GPR2.External_Options;
 with GPR2.Reporter.Console;
 
 package body GPRbuild.Options is
@@ -109,6 +106,11 @@ package body GPRbuild.Options is
                  In_Switch_Attr => False));
       Parser.Add_Argument
         (Build_Group,
+         Create (Name           => "--no-split-units",
+                 Help           => "Check that compilation unit parts are " &
+                                   "from the same view"));
+      Parser.Add_Argument
+        (Build_Group,
          Create (Name           => "--restricted-to-languages",
                  Help           => "Restrict the languages of the sources",
                  In_Switch_Attr => False,
@@ -140,6 +142,11 @@ package body GPRbuild.Options is
                  Help      => "Index of main unit in multi-unit source file",
                  Delimiter => None,
                  Parameter => "<nn>"));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name   => "-eS",
+                 Help   => "For compatibility with gnatmake only",
+                 Hidden => True));
       Parser.Add_Argument
         (Build_Group,
          Create (Name => "-f",
@@ -220,8 +227,9 @@ package body GPRbuild.Options is
                  Help => "Do not use run path option"));
       Parser.Add_Argument
         (Build_Group,
-         Create (Name => "-s",
-                 Help => "Recompile if compiler switches have changed"));
+         Create (Name   => "-s",
+                 Help   => "Recompile if compiler switches have changed",
+                 Hidden => True));
       Parser.Add_Argument
         (Build_Group,
          Create (Name           => "-u",
@@ -239,6 +247,14 @@ package body GPRbuild.Options is
          Create (Name           => "-z",
                  Help           => "No main subprogram (zero main)",
                  In_Switch_Attr => False));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name => "--create-map-file",
+                 Help => "Have the linker generate the map file",
+                 In_Switch_Attr => True,
+                 Delimiter      => Equal,
+                 Parameter      => "file.map",
+                 Default        => "__default__"));
       Parser.Add_Argument
         (Build_Group,
          Create (Name => "--keep-temp-files",
@@ -364,20 +380,20 @@ package body GPRbuild.Options is
 
    begin
       if Section = "-cargs" then
-         Result.Register_External_Options
-           (GPR2.External_Options.Compiler,
+         Result.Extra_Args.Register
+           (GPR2.Build.External_Options.Compiler,
             Lang_Idx,
             String (Arg));
 
       elsif Section = "-bargs" then
-         Result.Register_External_Options
-           (GPR2.External_Options.Binder,
+         Result.Extra_Args.Register
+           (GPR2.Build.External_Options.Binder,
             Lang_Idx,
             String (Arg));
 
       elsif Section = "-largs" then
-         Result.Register_External_Options
-           (GPR2.External_Options.Linker,
+         Result.Extra_Args.Register
+           (GPR2.Build.External_Options.Linker,
             GPR2.No_Language,
             String (Arg));
 
@@ -412,8 +428,8 @@ package body GPRbuild.Options is
 
       procedure Add_Ada_Compiler_Option (Sw : String) is
       begin
-         Result.Register_External_Options
-           (GPR2.External_Options.Compiler,
+         Result.Extra_Args.Register
+           (GPR2.Build.External_Options.Compiler,
             GPR2.Ada_Language,
             Sw);
       end Add_Ada_Compiler_Option;
@@ -434,6 +450,9 @@ package body GPRbuild.Options is
 
       elsif Arg = "--no-object-check" then
          Result.No_Object_Check := True;
+
+      elsif Arg = "--no-split-units" then
+         Result.No_Split_Units := True;
 
       elsif Arg = "--no-sal-binding" then
          Result.Build_Options.No_SAL_Binding := True;
@@ -486,14 +505,14 @@ package body GPRbuild.Options is
          end;
 
       elsif Arg = "-f" then
-         Result.Force := True;
+         Result.PM_Options.Force := True;
 
       elsif Arg = "-j" then
          declare
             Val : Natural;
          begin
             Val := Natural'Value (Param);
-            Result.Parallel_Tasks := Val;
+            Result.PM_Options.Jobs := Val;
          exception
             when Constraint_Error =>
                raise GPR2.Options.Usage_Error with
@@ -501,15 +520,14 @@ package body GPRbuild.Options is
          end;
 
       elsif Arg = "-k" then
-         Result.Keep_Going := True;
+         Result.PM_Options.Stop_On_Fail := False;
 
       elsif Arg = "-l" then
          Result.Build_Options.Restricted_Build_Phase := True;
          Result.Build_Options.Link_Phase_Mandated := True;
 
       elsif Arg = "-o" then
-         Result.Build_Options.Output_File :=
-           Ada.Strings.Unbounded.To_Unbounded_String (Param);
+         Result.Build_Options.Output_File := To_Unbounded_String (Param);
 
       elsif Arg = "-p" then
          Result.Create_Missing_Dirs := True;
@@ -519,9 +537,6 @@ package body GPRbuild.Options is
 
       elsif Arg = "-R" then
          Result.Build_Options.No_Run_Path := True;
-
-      elsif Arg = "-s" then
-         Result.Build_If_Switch_Changes := True;
 
       elsif Arg = "-u" then
          Result.Build_Options.Unique_Compilation := True;
@@ -541,8 +556,16 @@ package body GPRbuild.Options is
       elsif Arg = "--json-summary" then
          Result.Json_Summary := True;
 
+      elsif Arg = "--create-map-file" then
+         Result.Build_Options.Create_Map_File := True;
+
+         if Param /= "__default__" then
+            Result.Build_Options.Mapping_File_Name :=
+              To_Unbounded_String (Param);
+         end if;
+
       elsif Arg = "--keep-temp-files" then
-         Result.Keep_Temp_Files := True;
+         Result.PM_Options.Keep_Temp_Files := True;
 
       elsif Arg = "-nostdinc" then
          Add_Ada_Compiler_Option (String (Arg));
@@ -582,11 +605,13 @@ package body GPRbuild.Options is
          Add_Ada_Compiler_Option (String (Arg) & Param);
 
       elsif Arg = "-C"
+        or else Arg = "-eS"
         or else Arg = "-jc"
         or else Arg = "-jb"
         or else Arg = "-jl"
         or else Arg = "-m"
         or else Arg = "-m2"
+        or else Arg = "-s"
       then
          --  Ignore, only there for compatibility reason
          null;

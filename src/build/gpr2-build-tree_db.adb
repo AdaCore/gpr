@@ -359,16 +359,13 @@ package body GPR2.Build.Tree_Db is
    ------------
 
    procedure Create
-     (Self             : in out Object;
-      Tree             : GPR2.Tree_Internal.Object;
-      External_Options : GPR2.External_Options.Object)
+     (Self : in out Object;
+      Tree : GPR2.Tree_Internal.Object)
    is
    begin
       if Self.Self = null then
          Self.Self := Self'Unrestricted_Access;
          Self.Tree := Tree.Reference;
-
-         Self.External_Options := External_Options;
       end if;
 
       Self.Create_View_Dbs;
@@ -416,18 +413,18 @@ package body GPR2.Build.Tree_Db is
    -- Execute --
    -------------
 
-   procedure Execute
-     (Self            : in out Object;
-      PM              : in out GPR2.Build.Process_Manager.Object'Class;
-      Jobs            : Natural := 0;
-      Stop_On_Fail    : Boolean := True;
-      Keep_Temp_Files : Boolean := False)
+   function Execute
+     (Self    : in out Object;
+      PM      : in out GPR2.Build.Process_Manager.Object'Class;
+      Options : GPR2.Build.Process_Manager.PM_Options) return Boolean
    is
       Node : GNATCOLL.Directed_Graph.Node_Id;
       Pred : Artifact_Action_Maps.Cursor;
 
    begin
       --  Populate the DAG used for the execution
+
+      Self.Exec_Ctxt.Errors := False;
 
       --  First ensure all actions correspond to a node in the DAG
 
@@ -464,17 +461,20 @@ package body GPR2.Build.Tree_Db is
          end loop;
       end loop;
 
-      Self.Executing := True;
-      PM.Execute
-        (Self.Self,
-         Context         => Self.Exec_Ctxt'Access,
-         Jobs            => Jobs,
-         Stop_On_Fail    => Stop_On_Fail,
-         Keep_Temp_Files => Keep_Temp_Files);
-      Self.Executing := False;
-      Self.Exec_Ctxt.Graph.Clear;
-      Self.Exec_Ctxt.Actions.Clear;
-      Self.Exec_Ctxt.Nodes.Clear;
+      if not Self.Actions.Is_Empty then
+         Self.Executing := True;
+         PM.Execute
+           (Self.Self,
+            Context => Self.Exec_Ctxt'Access,
+            Options => Options);
+
+         Self.Executing := False;
+         Self.Exec_Ctxt.Graph.Clear;
+         Self.Exec_Ctxt.Actions.Clear;
+         Self.Exec_Ctxt.Nodes.Clear;
+      end if;
+
+      return not Self.Exec_Ctxt.Errors;
    end Execute;
 
    -----------
@@ -981,13 +981,24 @@ package body GPR2.Build.Tree_Db is
       return Self.Tree.Reporter;
    end Reporter;
 
+   -----------------------
+   -- Set_Build_Options --
+   -----------------------
+
+   procedure Set_Build_Options
+     (Self : in out Object;
+      Options : GPR2.Build.Options.Build_Options) is
+   begin
+      Self.Build_Options := Options;
+   end Set_Build_Options;
+
    --------------------------
    -- Set_External_Options --
    --------------------------
 
    procedure Set_External_Options
      (Self    : in out Object;
-      Options : GPR2.External_Options.Object) is
+      Options : GPR2.Build.External_Options.Object) is
    begin
       Self.External_Options := Options;
    end Set_External_Options;

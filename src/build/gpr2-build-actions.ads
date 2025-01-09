@@ -21,6 +21,7 @@ private with GNATCOLL.Traces;
 package GPR2.Build.Actions is
 
    Command_Line_Limit : constant := 8191;
+   Action_Error       : exception;
 
    type Action_Id is interface;
    --  An Action_Id is a unique identifier of an Action instance for the whole
@@ -72,14 +73,14 @@ package GPR2.Build.Actions is
    --  contain references to its inputs or outputs depending on what is
    --  relevant to make it unique.
 
-   function Valid_Signature (Self : Object) return Boolean;
-   --  Returns whether or not the action is inhibited. This means the loaded
-   --  signature match the current action signature.
-
    function View (Self : Object) return GPR2.Project.View.Object is abstract;
    --  The view that is used for the context of the action's execution. The
    --  view is used to retrieve the switches for the tool, and to know where
    --  the output is stored (the Object_Dir attribute).
+
+   function Working_Directory
+     (Self : Object) return Path_Name.Object is abstract;
+   --  The working directory used in the context of the action's execution
 
    function On_Tree_Insertion
      (Self     : Object;
@@ -87,6 +88,21 @@ package GPR2.Build.Actions is
    --  Function called when Self is added to the tree's database. Allows the
    --  action to add its input and output artifacts and dependencies.
    --  Returns True on success.
+
+   procedure Compute_Command
+     (Self     : in out Object;
+      Slot     : Positive;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object) is abstract;
+   --  Return the command line and environment corresponding to the action
+
+   procedure Compute_Signature
+     (Self      : Object;
+      Signature : in out GPR2.Build.Signature.Object) is abstract;
+   --  This populates the artifacts that are involved in the action.
+
+   function Valid_Signature (Self : Object) return Boolean;
+   --  Returns whether or not the action is inhibited. This means the loaded
+   --  signature match the current action signature.
 
    function On_Tree_Propagation
      (Self : in out Object) return Boolean;
@@ -102,16 +118,12 @@ package GPR2.Build.Actions is
 
    function Is_Deactivated (Self : Object) return Boolean;
 
-   procedure Write_Signature
+   function Write_Signature
      (Self   : in out Object'Class;
       Stdout : Unbounded_String;
-      Stderr : Unbounded_String);
+      Stderr : Unbounded_String) return Boolean;
    --  Used to store the signature of the action after it has been executed.
-
-   procedure Compute_Signature
-     (Self      : Object;
-      Signature : in out GPR2.Build.Signature.Object) is abstract;
-   --  This populates the artifacts that are involved in the action.
+   --  Returns false in case an expected artifact is missing.
 
    procedure Load_Signature (Self : in out Object);
    --  Compare the current action signature to the loaded signature
@@ -130,16 +142,7 @@ package GPR2.Build.Actions is
       Slot : Positive);
    --  Updates the command line and update the signature accordingly
 
-   procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object) is abstract;
-   --  Return the command line and environment corresponding to the action
-
    function Command_Line (Self : Object) return GPR2.Build.Command_Line.Object;
-
-   function Working_Directory
-     (Self : Object) return Path_Name.Object is abstract;
 
    type Execution_Status is (Skipped, Success);
 

@@ -12,4 +12,9 @@ project Demo is
       for Default_Switches ("Ada") use ("-Es");
    end Binder;
 
+   --  package misspelling
+   package Linkers is
+      for Switches (others) use ("-Wl,--gc-sections");
+   end Linkers;
+
 end Demo;

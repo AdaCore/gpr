@@ -12,7 +12,7 @@ pragma Warnings (Off, ".* is not referenced");
 with GPR2.Build.Source.Sets;
 pragma Warnings (On, ".* is not referenced");
 with GPR2.Build.Tree_Db;
-with GPR2.External_Options;
+with GPR2.Build.External_Options;
 with GPR2.Project.Attribute;
 with GPR2.Project.View.Set;
 
@@ -382,7 +382,7 @@ package body GPR2.Build.Actions.Compile is
             declare
                Inc_File  : constant Filename_Type := Inc_Path_File;
                Full_Path : constant GPR2.Path_Name.Object :=
-                             Self.View.Object_Directory.Compose (Inc_File);
+                             Path_Name.Create_File (Inc_File);
             begin
                Cmd_Line.Add_Env_Variable
                  (String (Attr.Value.Text), Full_Path.String_Value);
@@ -546,14 +546,7 @@ package body GPR2.Build.Actions.Compile is
 
       for Arg
         of Self.Tree.External_Options.Fetch
-          (GPR2.External_Options.Compiler, GPR2.No_Language)
-      loop
-         Cmd_Line.Add_Argument (Arg, True);
-      end loop;
-
-      for Arg
-        of Self.Tree.External_Options.Fetch
-          (GPR2.External_Options.Compiler, Self.Lang)
+          (External_Options.Compiler, Self.Lang)
       loop
          Cmd_Line.Add_Argument (Arg, True);
       end loop;
@@ -624,6 +617,13 @@ package body GPR2.Build.Actions.Compile is
       end;
 
       Add_Attr (PRA.Compiler.Trailing_Required_Switches, Lang_Idx, True, True);
+
+   exception
+      when GNATCOLL.OS.OS_Error =>
+         Self.Tree.Reporter.Report
+           ("Problem accessing the object directory for project """ &
+              String (Self.View.Name) & '"');
+         raise Action_Error;
    end Compute_Command;
 
    -----------------------

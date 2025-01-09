@@ -15,7 +15,6 @@ with Ada.Strings.Unbounded;
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Environment;
-with GPR2.External_Options;
 with GPR2.KB;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
@@ -182,17 +181,6 @@ package GPR2.Options is
    function User_Specified_Project_Search_Path
      (Self : Object) return GPR2.Path_Name.Set.Object;
 
-   function Fetch_External_Options
-     (Self : Object) return GPR2.External_Options.Object;
-   --  Returns the external options object
-
-   procedure Register_External_Options
-     (Self   : in out Object;
-      Action : External_Options.Action_Class;
-      Lang   : Language_Id;
-      Option : String);
-   --  Registers the external options into the external options object
-
    procedure Print_GPR_Registry
      (Self   : Object;
       Format : GPR2.Project.Registry.Exchange.Export_Format :=
@@ -244,8 +232,6 @@ private
       Print_GPR_Registry    : Boolean := False;
 
       Search_Paths          : GPR2.Path_Name.Set.Object;
-
-      External_Options      : GPR2.External_Options.Object;
    end record;
 
    function Base
@@ -259,10 +245,6 @@ private
 
    function Build_Path (Self : Object) return GPR2.Path_Name.Object is
      (Self.Build_Path);
-
-   function Fetch_External_Options
-     (Self : Object) return GPR2.External_Options.Object
-   is (Self.External_Options);
 
    function Root_Path (Self : Object) return GPR2.Path_Name.Object is
      (Self.Root_Path);

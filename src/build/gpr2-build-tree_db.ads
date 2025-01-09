@@ -12,9 +12,10 @@ with GNATCOLL.OS.FS;
 
 with GPR2.Build.Actions;
 with GPR2.Build.Artifacts;
+with GPR2.Build.External_Options;
+with GPR2.Build.Options;
 with GPR2.Build.Process_Manager;
 with GPR2.Build.View_Db;
-with GPR2.External_Options;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View;
@@ -130,12 +131,10 @@ package GPR2.Build.Tree_Db is
                    and then Self.Has_Action (Action)
                    and then Artifact.Is_Defined;
 
-   procedure Execute
-     (Self            : in out Object;
-      PM              : in out GPR2.Build.Process_Manager.Object'Class;
-      Jobs            : Natural := 0;
-      Stop_On_Fail    : Boolean := True;
-      Keep_Temp_Files : Boolean := False);
+   function Execute
+     (Self    : in out Object;
+      PM      : in out GPR2.Build.Process_Manager.Object'Class;
+      Options : GPR2.Build.Process_Manager.PM_Options) return Boolean;
 
    function Is_Executing (Self : Object) return Boolean;
 
@@ -275,12 +274,19 @@ package GPR2.Build.Tree_Db is
    ----------------------
 
    function External_Options
-     (Self : Object) return GPR2.External_Options.Object;
+     (Self : Object) return GPR2.Build.External_Options.Object;
    --  Returns the tree external options object
 
    procedure Set_External_Options
-     (Self : in out Object; Options : GPR2.External_Options.Object);
-   --  Adds external options into the External_Options of Self
+     (Self    : in out Object;
+      Options : GPR2.Build.External_Options.Object);
+
+   function Build_Options
+     (Self : Object) return GPR2.Build.Options.Build_Options;
+
+   procedure Set_Build_Options
+     (Self : in out Object;
+      Options : GPR2.Build.Options.Build_Options);
 
    --------------------------------------
    -- Helper functions for the Actions --
@@ -324,7 +330,8 @@ private
    type Object is tagged limited record
    --  Options:
       Src_Option       : Optional_Source_Info_Option := No_Source;
-      External_Options : GPR2.External_Options.Object;
+      External_Options : Build.External_Options.Object;
+      Build_Options    : Build.Options.Build_Options;
 
       Self             : access Object;
       --  Handy self-reference
@@ -356,9 +363,8 @@ private
    end record;
 
    procedure Create
-     (Self             : in out Object;
-      Tree             : GPR2.Tree_Internal.Object;
-      External_Options : GPR2.External_Options.Object)
+     (Self : in out Object;
+      Tree : GPR2.Tree_Internal.Object)
      with Pre => not Self.Is_Defined;
 
    Undefined : constant Object := (others => <>);
@@ -373,8 +379,12 @@ private
      (Self.Src_Option);
 
    function External_Options
-     (Self : Object) return GPR2.External_Options.Object
+     (Self : Object) return Build.External_Options.Object
    is (Self.External_Options);
+
+   function Build_Options
+     (Self : Object) return Build.Options.Build_Options
+   is (Self.Build_Options);
 
    function View_Database
      (Self : Object; View : GPR2.Project.View.Object)

@@ -20,14 +20,19 @@ with Ada.Command_Line;
 with Ada.Containers;
 with Ada.Directories;
 with Ada.Exceptions;
+with Ada.IO_Exceptions;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with GNAT.OS_Lib;
 
 with GNATCOLL.Traces;
 
 with GPR2.Build.Actions_Population;
 with GPR2.Build.Compilation_Unit;
+with GPR2.Build.External_Options;
 with GPR2.Build.Process_Manager.JSON;
 with GPR2.Build.Source;
 with GPR2.Interrupt_Handler;
+with GPR2.Message;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
@@ -35,6 +40,8 @@ with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
+with GPR2.Project.View;
+with GPR2.Source_Reference;
 
 with GPRtools.Options;
 with GPRtools.Program_Termination;
@@ -60,10 +67,28 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
    package PRP renames GPR2.Project.Registry.Pack;
    package PRA renames GPR2.Project.Registry.Attribute;
 
+   function Has_Absolute_Artifacts_Dir
+     (View : GPR2.Project.View.Object) return Boolean;
+
    function Ensure_Directories
      (Tree : GPR2.Project.Tree.Object) return Boolean;
+   --  Ensures all obj/lib/exec directories are in place. If such a directory
+   --  is missing then:
+   --  * if Opt.Create_Missing_Dirs is set, it will try to create them, and
+   --    report an error and return False if such creation was not successful.
+   --  * if the project is simple enough (only relative path, no
+   --    non-externally-built dependency, and simulation is not set, then it
+   --    is created
+   --  * if simulation is set, then it is not created, but the funciton will
+   --    return False upon non-simple project requiring creating of directories
 
-   Opt       : Options.Object;
+   function Execute
+     (PM : in out GPR2.Build.Process_Manager.Object'Class)
+      return Command_Line.Exit_Status;
+
+   Opt  : Options.Object;
+   Tree : Project.Tree.Object;
+
 
    ------------------------
    -- Ensure_Directories --
@@ -75,7 +100,7 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
       procedure Ensure (Path : GPR2.Path_Name.Object);
       --  Make sure Path exists and is a directory.
 
-      procedure Mkdir_Recursive (Path : GPR2.Path_Name.Object);
+      function Mkdir_Recursive (Path : GPR2.Path_Name.Object) return Boolean;
       --  Creates Path recursively
 
       All_Ok : Boolean := True;
@@ -108,8 +133,11 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
       begin
          if not Path.Exists then
             if Opt.Create_Missing_Dirs or else Force then
-               Mkdir_Recursive (Path);
-               Tree.Reporter.Report ('"' & Path_Img & """ created");
+               if Mkdir_Recursive (Path) then
+                  Tree.Reporter.Report ('"' & Path_Img & """ created");
+               else
+                  All_Ok := False;
+               end if;
             else
                Handle_Program_Termination
                  (Force_Exit => False,
@@ -123,27 +151,43 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
       -- Mkdir_Recursive --
       ---------------------
 
-      procedure Mkdir_Recursive (Path : GPR2.Path_Name.Object) is
+      function Mkdir_Recursive (Path : GPR2.Path_Name.Object) return Boolean is
          Parent : constant GPR2.Path_Name.Object :=
                     Path.Containing_Directory;
       begin
-         if not Parent.Exists then
-            Mkdir_Recursive (Parent);
+         if not Parent.Exists
+           and then not Mkdir_Recursive (Parent)
+         then
+            return False;
          end if;
 
          Ada.Directories.Create_Directory (Path.String_Value);
+
+         return True;
+
+      exception
+         when Ada.IO_Exceptions.Use_Error =>
+            Tree.Reporter.Report
+              ("error: could not create directory """ &
+                 Path.String_Value & '"',
+               To_Stderr => True,
+               Level     => GPR2.Message.Important);
+            return False;
       end Mkdir_Recursive;
 
       use type GPR2.Path_Name.Object;
 
    begin
-      --  gprbuild creates obj/lib/exec dirs even without -p in case of
+      --  gprbuild creates obj/lib/exec dirs without requiring -p in case of
       --  "simple" project tree: no aggregate root project, root project
-      --  importing only.
+      --  with no dependencies (or externally built ones), simple relative
+      --  directories
 
       Force := False;
 
-      if Tree.Root_Project.Kind /= K_Aggregate then
+      if Tree.Root_Project.Kind /= K_Aggregate
+        and then not Has_Absolute_Artifacts_Dir (Tree.Root_Project)
+      then
          Force := True;
 
          for V of Tree.Root_Project.Closure loop
@@ -179,8 +223,84 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
       return All_Ok;
    end Ensure_Directories;
 
+   -------------
+   -- Execute --
+   -------------
+
+   function Execute
+     (PM : in out GPR2.Build.Process_Manager.Object'Class)
+      return Command_Line.Exit_Status is
+   begin
+      if not Tree.Artifacts_Database.Execute
+        (PM, Opt.PM_Options)
+      then
+         return To_Exit_Status (E_Errors);
+      end if;
+
+      return To_Exit_Status (E_Success);
+   end Execute;
+
+   --------------------------------
+   -- Has_Absolute_Artifacts_Dir --
+   --------------------------------
+
+   function Has_Absolute_Artifacts_Dir
+     (View : GPR2.Project.View.Object) return Boolean
+   is
+      function Check_Absolute
+        (Attr : GPR2.Project.Attribute.Object) return Boolean;
+
+      --------------------
+      -- Check_Absolute --
+      --------------------
+
+      function Check_Absolute
+        (Attr : GPR2.Project.Attribute.Object) return Boolean is
+      begin
+         if Attr.Is_Defined
+           and then GNAT.OS_Lib.Is_Absolute_Path
+             (Attr.Value.Text)
+         then
+            return True;
+         else
+            return False;
+         end if;
+      end Check_Absolute;
+
+   begin
+      if View.Is_Externally_Built then
+         --  Ignore
+         return False;
+      end if;
+
+      if View.Kind in GPR2.With_Object_Dir_Kind then
+         if Check_Absolute (View.Attribute (PRA.Object_Dir)) then
+            return True;
+         end if;
+
+         if View.Kind = K_Standard
+           and then View.Is_Namespace_Root
+         then
+            if Check_Absolute (View.Attribute (PRA.Exec_Dir)) then
+               return True;
+            end if;
+         end if;
+      end if;
+
+      if View.Is_Library then
+         if Check_Absolute (View.Attribute (PRA.Library_Dir)) then
+            return True;
+         end if;
+
+         if Check_Absolute (View.Attribute (PRA.Library_Ali_Dir)) then
+            return True;
+         end if;
+      end if;
+
+      return False;
+   end Has_Absolute_Artifacts_Dir;
+
    Parser         : constant Options.GPRbuild_Parser := Options.Create;
-   Tree           : Project.Tree.Object;
    Sw_Attr        : GPR2.Project.Attribute.Object;
    Process_M      : GPR2.Build.Process_Manager.Object;
    Process_M_JSON : GPR2.Build.Process_Manager.JSON.Object;
@@ -237,11 +357,23 @@ begin
        (PRA.Builder.Switches).Is_Empty
    then
       declare
+         Has_Error : Boolean := False;
          Mains : constant Compilation_Unit.Unit_Location_Vector :=
-                   (if Tree.Root_Project.Has_Mains
+                   (if not Opt.Build_Options.Mains.Is_Empty
+                    then Actions_Population.Resolve_Mains
+                      (Tree, Opt.Build_Options, Has_Error)
+                    elsif Tree.Root_Project.Has_Mains
                     then Tree.Root_Project.Mains
                     else GPR2.Build.Compilation_Unit.Empty_Vector);
       begin
+         if Has_Error then
+            Handle_Program_Termination
+              (Force_Exit => True,
+               Exit_Cause => E_Tool,
+               Message    => "processing failed");
+            return To_Exit_Status (E_Fatal);
+         end if;
+
          --  #1: If one main is defined, from the Main top-level attribute or
          --  from the command line, we fetch Builder'Switches(<main>).
 
@@ -338,6 +470,14 @@ begin
               (Name  => PRA.Builder.Switches,
                Index => Project.Attribute_Index.I_Others);
          end if;
+
+         if not Sw_Attr.Is_Defined
+           and then Mains.Length > 1
+         then
+            Tree.Reporter.Report
+              ("warning: Builder'Switches attribute is ignored as there are" &
+                 " several mains");
+         end if;
       end;
 
       --  Finally, if we found a Switches attribute, apply it
@@ -353,31 +493,104 @@ begin
       end if;
    end if;
 
+   --  Handle Builder'Global_Compilation_Switches
+
+   if Tree.Root_Project.Has_Package (PRP.Builder)
+     and then not Tree.Root_Project.Attributes
+       (PRA.Builder.Global_Compilation_Switches).Is_Empty
+   then
+      for Attr of Tree.Root_Project.Attributes
+        (PRA.Builder.Global_Compilation_Switches)
+      loop
+         declare
+            Lang : constant GPR2.Language_Id :=
+                     GPR2."+" (Name_Type (Attr.Index.Value));
+         begin
+            for V of Attr.Values loop
+               Opt.Extra_Args.Register
+                 (GPR2.Build.External_Options.Compiler,
+                  Lang,
+                  V.Text);
+            end loop;
+         end;
+      end loop;
+   end if;
+
+   if Opt.No_Split_Units then
+      declare
+         use type GPR2.Project.View.Object;
+         Has_Errors : Boolean := False;
+      begin
+         for V of Opt.Tree.Namespace_Root_Projects loop
+            for U of V.Units loop
+               if U.Has_Part (S_Spec)
+                 and then U.Spec.View /= U.Owning_View
+               then
+                  Opt.Tree.Reporter.Report
+                    (GPR2.Message.Create
+                       (GPR2.Message.Error,
+                        "the spec for unit """ & String (U.Name) &
+                          """ does not belong to the view """ &
+                          String (U.Owning_View.Name) &
+                          """ that defines the body",
+                        GPR2.Source_Reference.Create
+                          (U.Spec.View.Path_Name.Value, 0, 0)));
+                  Has_Errors := True;
+               end if;
+
+               for Sep of U.Separates loop
+                  if Sep.View /= U.Owning_View then
+                     Opt.Tree.Reporter.Report
+                       (GPR2.Message.Create
+                          (GPR2.Message.Error,
+                           "the separate """ &
+                             String (Sep.Source.Simple_Name) &
+                             """ for unit """ & String (U.Name) &
+                             """ does not belong to the view """ &
+                             String (U.Owning_View.Name) &
+                             """ that defines the body",
+                           GPR2.Source_Reference.Create
+                             (Sep.View.Path_Name.Value, 0, 0)));
+                     Has_Errors := True;
+                  end if;
+               end loop;
+            end loop;
+         end loop;
+
+         if Has_Errors then
+            Handle_Program_Termination
+              (Force_Exit => True,
+               Exit_Cause => E_Tool,
+               Message    => "processing failed");
+            return To_Exit_Status (E_Errors);
+         end if;
+      end;
+   end if;
+
+   --  Set user-specified cargs/bargs/largs if any
+
+   Opt.Tree.Artifacts_Database.Set_External_Options (Opt.Extra_Args);
+
+   --  Now populate the Build database's actions
+
    if not GPR2.Build.Actions_Population.Populate_Actions
      (Tree, Opt.Build_Options)
    then
-      return To_Exit_Status (E_Abort);
+      Handle_Program_Termination
+        (Force_Exit => True,
+         Exit_Cause => E_Tool,
+         Message    => "processing failed");
+      return To_Exit_Status (E_Fatal);
    end if;
 
    if Opt.Json_Summary then
       Jobs_JSON := Tree.Root_Project.Dir_Name.Compose ("jobs.json");
-
       Process_M_JSON.Set_JSON_File (Jobs_JSON);
 
-      Tree.Artifacts_Database.Execute
-        (Process_M_JSON,
-         Jobs            => Opt.Parallel_Tasks,
-         Stop_On_Fail    => not Opt.Keep_Going,
-         Keep_Temp_Files => Opt.Keep_Temp_Files);
+      return Execute (Process_M_JSON);
    else
-      Tree.Artifacts_Database.Execute
-        (Process_M,
-         Jobs            => Opt.Parallel_Tasks,
-         Stop_On_Fail    => not Opt.Keep_Going,
-         Keep_Temp_Files => Opt.Keep_Temp_Files);
+      return Execute (Process_M);
    end if;
-
-   return To_Exit_Status (E_Success);
 
 exception
    when E : GPR2.Options.Usage_Error =>

@@ -20,7 +20,7 @@ pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
 with GPR2.Build.Tree_Db;
-with GPR2.External_Options;
+with GPR2.Build.External_Options;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
@@ -459,16 +459,8 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       --  Add -bargs and -bargs:Ada
 
-      for Arg
-        of Self.Tree.External_Options.Fetch
-          (GPR2.External_Options.Binder, GPR2.No_Language)
-      loop
-         Cmd_Line.Add_Argument (Arg, True);
-      end loop;
-
-      for Arg
-        of Self.Tree.External_Options.Fetch
-          (GPR2.External_Options.Binder, GPR2.Ada_Language)
+      for Arg of Self.Tree.External_Options.Fetch
+                   (External_Options.Binder, GPR2.Ada_Language)
       loop
          Cmd_Line.Add_Argument (Arg);
       end loop;
@@ -647,11 +639,11 @@ package body GPR2.Build.Actions.Ada_Bind is
          Switch_Index : Natural := Index (Line, "--");
       begin
          if Switch_Index = 0 then
-            pragma Annotate (Xcov, Off, "unreachable code");
+            pragma Annotate (Xcov, Exempt_On, "unreachable code");
             raise Internal_Error
               with "Failed parsing line " & Line & " from " &
               Self.Output_Body.Path.String_Value;
-            pragma Annotate (Xcov, On);
+            pragma Annotate (Xcov, Exempt_Off);
          end if;
 
          --  Skip the "--" comment prefix

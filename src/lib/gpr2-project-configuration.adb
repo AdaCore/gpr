@@ -6,6 +6,8 @@
 
 with Ada.Text_IO;
 
+with GNATCOLL.OS.FSUtil;
+
 with GPR2.KB;
 with GPR2.Message;
 with GPR2.Project.Attribute;
@@ -94,6 +96,31 @@ package body GPR2.Project.Configuration is
                       GPR2.Environment.Process_Environment)
       return Object
    is
+      procedure Ensure_Directory (Path : Path_Name.Object);
+      --  If Path is a directory, this ensures this exist, and if it is a file
+      --  this ensures its enclosing directory exists, recursively.
+
+      ----------------------
+      -- Ensure_Directory --
+      ----------------------
+
+      procedure Ensure_Directory (Path : Path_Name.Object) is
+      begin
+         if not Path.Is_Directory
+           and then not Path.Containing_Directory.Exists
+         then
+            Ensure_Directory (Path.Containing_Directory);
+         elsif Path.Is_Directory
+           and then not Path.Exists
+         then
+            Ensure_Directory (Path.Containing_Directory);
+            if not GNATCOLL.OS.FSUtil.Create_Directory (Path.String_Value) then
+               raise GPR2.Project_Error with
+                 "cannot create directory " & Path.String_Value;
+            end if;
+         end if;
+      end Ensure_Directory;
+
       Settings_Local : constant Description_Set := Settings;
 
       Native_Target : constant Boolean := Target = "all";
@@ -151,6 +178,7 @@ package body GPR2.Project.Configuration is
             declare
                Output : Text_IO.File_Type;
             begin
+               Ensure_Directory (Save_Name);
                Ada.Text_IO.Create (Output, Ada.Text_IO.Out_File,
                                    Save_Name.String_Value);
                Ada.Text_IO.Put_Line

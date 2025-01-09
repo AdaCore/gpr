@@ -1,0 +1,6 @@
+with "prj2";
+
+project Prj1 is
+   for Source_Dirs use ("src1");
+   for Main use ("p.adb");
+end Prj1;

@@ -28,7 +28,7 @@ package GPRtools.Program_Termination is
      (E_Success,    -- No warnings or errors
       E_Warnings,   -- Compiler warnings generated
       E_No_Code,    -- No code generated
-      E_No_Compile, -- Compilation not needed (smart recompilation)
+      E_General,    -- General missusage error
       E_Errors,     -- Compiler error messages generated
       E_Fatal,      -- Fatal (serious) error, e.g. source file not found
       E_Abort);     -- Internally detected compiler error

@@ -29,6 +29,8 @@ package body GPR2.Build.Process_Manager is
    package GDG renames GNATCOLL.Directed_Graph;
    package GOP renames GNATCOLL.OS.Process;
 
+   PROCESS_STATUS_OK : constant Integer := 0;
+
    function Effective_Job_Number (N : Natural) return Natural;
    --  If N = 0 return the number of CPUs otherwise return N.
 
@@ -87,7 +89,8 @@ package body GPR2.Build.Process_Manager is
            "' is still running. Cannot collect the job before it finishes");
 
       if Length (Stdout) > 0 then
-         Self.Tree_Db.Reporter.Report (-Stdout);
+         Self.Tree_Db.Reporter.Report
+           (-Stdout, Level => GPR2.Message.Important);
       end if;
 
       if Length (Stderr) > 0 then
@@ -97,9 +100,7 @@ package body GPR2.Build.Process_Manager is
 
       case Proc_Handler.Status is
          when Failed_To_Launch =>
-            if Self.Stop_On_Fail then
-               return Abort_Execution;
-            end if;
+            return Abort_Execution;
 
          when Finished =>
             if Self.Traces.Is_Active then
@@ -142,7 +143,7 @@ package body GPR2.Build.Process_Manager is
         or else (Proc_Handler.Status = Skipped and then
                    not Job.Valid_Signature);
 
-      if Failed_Status and then Self.Stop_On_Fail then
+      if Failed_Status then
          return Abort_Execution;
 
       else
@@ -158,7 +159,9 @@ package body GPR2.Build.Process_Manager is
                return Abort_Execution;
             end if;
 
-            Job.Write_Signature (Stdout, Stderr);
+            if not Job.Write_Signature (Stdout, Stderr) then
+               return Abort_Execution;
+            end if;
          end if;
       end if;
 
@@ -189,11 +192,10 @@ package body GPR2.Build.Process_Manager is
      (Self            : in out Object;
       Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
       Context         : access Process_Execution_Context;
-      Jobs            : Natural := 0;
-      Stop_On_Fail    : Boolean := True;
-      Keep_Temp_Files : Boolean := False)
+      Options         : PM_Options)
    is
-      Max_Jobs        : constant Natural := Effective_Job_Number (Jobs);
+      Max_Jobs        : constant Natural :=
+                          Effective_Job_Number (Options.Jobs);
       --  Effective max number of silmutaneous jobs
 
       Active_Procs    : GOP.Process_Array (1 .. Max_Jobs) :=
@@ -225,8 +227,10 @@ package body GPR2.Build.Process_Manager is
       is
       begin
          if Stdout_FD = FS.Invalid_FD or else Stderr_FD = FS.Invalid_FD then
+            pragma Annotate (Xcov, Exempt_On, "defensive code");
             raise Process_Manager_Error with
               "Error when spawning a subprocess: cannot redirect I/O";
+            pragma Annotate (Xcov, Exempt_Off);
          end if;
 
          --  Allocate listener for stdout
@@ -263,7 +267,6 @@ package body GPR2.Build.Process_Manager is
 
    begin
       Self.Tree_Db      := Tree_Db;
-      Self.Stop_On_Fail := Stop_On_Fail;
       Self.Stats        := Empty_Stats;
 
       Context.Graph.Start_Iterator (Enable_Visiting_State => True);
@@ -275,6 +278,7 @@ package body GPR2.Build.Process_Manager is
                End_Of_Iteration := not Context.Graph.Next (Node);
             exception
                when E : GNATCOLL.Directed_Graph.DG_Error =>
+                  pragma Annotate (Xcov, Exempt_On, "defensive code");
                   Tree_Db.Reporter.Report
                     ("error: internal error in the process manager (" &
                        Ada.Exceptions.Exception_Message (E) & ")");
@@ -282,6 +286,7 @@ package body GPR2.Build.Process_Manager is
                   Self.Traces.Trace
                     (Ada.Exceptions.Exception_Information (E));
                   End_Of_Iteration := True;
+                  pragma Annotate (Xcov, Exempt_Off);
             end;
 
             exit when End_Of_Iteration or else Node = GDG.No_Node;
@@ -300,7 +305,8 @@ package body GPR2.Build.Process_Manager is
                end loop;
 
                Self.Launch_Job
-                 (Act, Available_Slot, Proc_Handler, P_Stdout, P_Stderr);
+                 (Act, Available_Slot, Options.Force, Proc_Handler,
+                  P_Stdout, P_Stderr);
                Self.Stats.Total_Jobs := Self.Stats.Total_Jobs + 1;
 
                if Proc_Handler.Status = Running then
@@ -316,14 +322,23 @@ package body GPR2.Build.Process_Manager is
                   end if;
 
                else
-                  Context.Graph.Complete_Visit (Node);
-
                   if Proc_Handler.Status = Finished then
+                     pragma Annotate (Xcov, Exempt_On, "Defensive code");
                      Self.Traces.Trace
                        ("Error: Process handler status shall not be " &
                           "'Finished' at this stage");
                      raise Process_Manager_Error with
                        "Invalid process manager internal state, aborting";
+                     pragma Annotate (Xcov, Exempt_Off);
+                  end if;
+
+                  if Proc_Handler.Status = Skipped
+                    and then Act.Valid_Signature
+                  then
+                     --  Only consider the visit complete for valid skipped
+                     --  actions, else this will enable the dependent actions
+                     --  that won't have the proper inputs to complete
+                     Context.Graph.Complete_Visit (Node);
                   end if;
 
                   Job_Status :=
@@ -338,12 +353,18 @@ package body GPR2.Build.Process_Manager is
                           else Act.Saved_Stderr));
 
                   if Job_Status = Abort_Execution then
-                     End_Of_Iteration := True;
-                     exit;
+                     Context.Errors := True;
+
+                     if Options.Stop_On_Fail then
+                        End_Of_Iteration := True;
+                        exit;
+                     end if;
                   end if;
                end if;
+
             exception
                when E : Process_Manager_Error =>
+                  pragma Annotate (Xcov, Exempt_On, "defensive code");
                   End_Of_Iteration := True;
                   Tree_Db.Reporter.Report
                     ("Fatal error: " &
@@ -357,6 +378,7 @@ package body GPR2.Build.Process_Manager is
                   Tree_Db.Reporter.Report
                     (Ada.Exceptions.Exception_Information (E),
                      To_Stderr => True);
+                  pragma Annotate (Xcov, Exempt_Off);
             end;
          end loop;
 
@@ -371,8 +393,6 @@ package body GPR2.Build.Process_Manager is
            (Active_Procs (1 .. Active_Jobs), Timeout => 3600.0);
 
          if Proc_Id > 0 then
-            Context.Graph.Complete_Visit (States (Proc_Id).Node);
-
             --  A process has finished. Call wait to finalize it and get
             --  the final process status.
             Proc_Handler :=
@@ -401,7 +421,7 @@ package body GPR2.Build.Process_Manager is
                   Stderr       => Stderr);
 
                --  Cleanup the temporary files that are local to the job
-               if not Keep_Temp_Files then
+               if not Options.Keep_Temp_Files then
                   Act.Cleanup_Temp_Files (Scope => Actions.Local);
                end if;
 
@@ -409,9 +429,16 @@ package body GPR2.Build.Process_Manager is
                Tree_Db.Action_Id_To_Reference (UID) := Act;
             end;
 
-            --  Adjust execution depending on returned value
-            if Job_Status = Abort_Execution then
-               End_Of_Iteration := True;
+            if Job_Status = Continue_Execution then
+               --  Mark as visited only successful executions
+               Context.Graph.Complete_Visit (States (Proc_Id).Node);
+            else
+               Context.Errors := True;
+
+               if Options.Stop_On_Fail then
+                  --  Adjust execution depending on returned value
+                  End_Of_Iteration := True;
+               end if;
             end if;
 
             --  Remove job from the list of active jobs.
@@ -436,11 +463,12 @@ package body GPR2.Build.Process_Manager is
             end if;
          end if;
 
+
          exit when End_Of_Iteration and then Active_Jobs = 0;
       end loop;
 
       --  Cleanup the temporary files with global scope
-      if not Keep_Temp_Files then
+      if not Options.Keep_Temp_Files then
          Tree_Db.Clear_Temp_Files;
       end if;
 
@@ -468,6 +496,7 @@ package body GPR2.Build.Process_Manager is
      (Self           : in out Object;
       Job            : in out Actions.Object'Class;
       Slot_Id        :        Positive;
+      Force          :        Boolean;
       Proc_Handler   :    out Process_Handler;
       Capture_Stdout :    out File_Descriptor;
       Capture_Stderr :    out File_Descriptor)
@@ -549,13 +578,12 @@ package body GPR2.Build.Process_Manager is
       Cwd  : GPR2.Path_Name.Object;
 
    begin
-      if Job.Skip
-        or else Job.Is_Deactivated
-        or else Job.View.Is_Externally_Built
-      then
+      if Job.View.Is_Externally_Built then
          if Self.Traces.Is_Active then
+            pragma Annotate (Xcov, Exempt_On, "debug code");
             Self.Traces.Trace
-              ("job asked to be skipped: " & Job.UID.Image);
+              ("job externally built: " & Job.UID.Image);
+            pragma Annotate (Xcov, Exempt_Off);
          end if;
 
          Proc_Handler := Process_Handler'(Status => Skipped);
@@ -564,15 +592,42 @@ package body GPR2.Build.Process_Manager is
       end if;
 
       --  We need to compute the command line before checking the signature
-      --  since the cmd line is part of the signature.
+      --  since the cmd line is part of the signature. It is important to do
+      --  it even for deactivated actions, else the signature is considered
+      --  invalid and the following actions are not executed.
 
-      Job.Update_Command_Line (Slot_Id);
+      begin
+         Job.Update_Command_Line (Slot_Id);
+      exception
+         when Action_Error =>
+            Proc_Handler :=
+              (Status        => Failed_To_Launch,
+               Error_Message => To_Unbounded_String
+                 ("Command '" & Image (Job.UID) &
+                    "' failed."));
+            return;
+      end;
 
-      if Job.Valid_Signature then
+      if Job.Skip or else Job.Is_Deactivated then
          if Self.Traces.Is_Active then
+            pragma Annotate (Xcov, Exempt_On, "debug code");
+            Self.Traces.Trace
+              ("job asked to be skipped: " & Job.UID.Image);
+            pragma Annotate (Xcov, Exempt_Off);
+         end if;
+
+         Proc_Handler := Process_Handler'(Status => Skipped);
+
+         return;
+      end if;
+
+      if not Force and then Job.Valid_Signature then
+         if Self.Traces.Is_Active then
+            pragma Annotate (Xcov, Exempt_On, "debug code");
             Self.Traces.Trace
               ("Signature is valid, do not execute the job '" &
                  Job.UID.Image & "'");
+            pragma Annotate (Xcov, Exempt_Off);
          end if;
 
          Proc_Handler := Process_Handler'(Status => Skipped);
@@ -584,20 +639,15 @@ package body GPR2.Build.Process_Manager is
 
       if Job.Command_Line.Argument_List.Is_Empty then
          if Self.Traces.Is_Active then
+            pragma Annotate (Xcov, Exempt_On, "debug code");
             Self.Traces.Trace
               ("job arguments is empty, skipping '"  & Job.UID.Image & "'");
+            pragma Annotate (Xcov, Exempt_Off);
          end if;
 
          Proc_Handler := Process_Handler'(Status => Skipped);
 
          return;
-      end if;
-
-      if Self.Traces.Is_Active then
-         Self.Traces.Trace
-           ("Signature is invalid. Execute the job " &
-              Job.UID.Image & ", command: " &
-              Image (Job.Command_Line.Argument_List));
       end if;
 
       FS.Open_Pipe (P_Ro, P_Wo);
@@ -628,8 +678,8 @@ package body GPR2.Build.Process_Manager is
 
       exception
          when Ex : GNATCOLL.OS.OS_Error =>
-            FS.Close (P_Wo);
-            FS.Close (P_We);
+            FS.Close (P_Ro);
+            FS.Close (P_Re);
 
             Self.Tree_Db.Reporter.Report
               (GPR2.Message.Create
@@ -645,7 +695,6 @@ package body GPR2.Build.Process_Manager is
                  ("Command '" & Image (Job.Command_Line.Argument_List) &
                     "' failed: " &
                   Ada.Exceptions.Exception_Message (Ex)));
-            return;
       end;
 
       FS.Close (P_Wo);

@@ -9,7 +9,6 @@ with Ada.Iterator_Interfaces;
 with GPR2.Environment;
 with GPR2.Containers;
 with GPR2.Context;
-with GPR2.External_Options;
 with GPR2.File_Readers;
 with GPR2.KB;
 with GPR2.Log;
@@ -100,8 +99,7 @@ private package GPR2.Tree_Internal is
       File_Reader      : GPR2.File_Readers.File_Reader_Reference :=
                            GPR2.File_Readers.No_File_Reader_Reference;
       Environment      : GPR2.Environment.Object :=
-                           GPR2.Environment.Process_Environment;
-      External_Options : GPR2.External_Options.Object);
+                           GPR2.Environment.Process_Environment);
    --  Loads a root project
    --  Filename: if Filename is a file path, then Load_Autoconf will use it as
    --   root project. If Filename is a directory path, then implicit projects
@@ -160,8 +158,7 @@ private package GPR2.Tree_Internal is
       File_Reader       : GPR2.File_Readers.File_Reader_Reference :=
                             GPR2.File_Readers.No_File_Reader_Reference;
       Environment       : GPR2.Environment.Object :=
-                            GPR2.Environment.Process_Environment;
-      External_Options  : GPR2.External_Options.Object);
+                            GPR2.Environment.Process_Environment);
    --  Loads a tree in autoconf mode.
    --  If Filename is a file path, then Load_Autoconf will use it as
    --  root project. If Filename is a directory path, then implicit projects
@@ -327,9 +324,8 @@ private package GPR2.Tree_Internal is
    --  Artifacts database
 
    Init_Tree_Database : access procedure
-     (Self             : in out Build.Tree_Db.Object;
-      Tree             : Object;
-      External_Options : GPR2.External_Options.Object);
+     (Self : in out Build.Tree_Db.Object;
+      Tree : Object);
    --  Private view of Tree_Db's initialization procedure
 
    function Artifacts_Database
