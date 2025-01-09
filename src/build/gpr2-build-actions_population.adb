@@ -388,6 +388,10 @@ package body GPR2.Build.Actions_Population is
          if not Result then
             return False;
          end if;
+
+         if not Populate_Withed_Units (Tree_Db, Agg, Visited) then
+            return False;
+         end if;
       end loop;
 
       return True;
@@ -769,7 +773,7 @@ package body GPR2.Build.Actions_Population is
 
             if Source.Language = Ada_Language then
                A_Comp.Initialize
-                 (View.Unit (Source.Units.Element (Main.Index).Name));
+                 (Main.View.Unit (Source.Units.Element (Main.Index).Name));
 
                if not Tree_Db.Add_Action (A_Comp) then
                   return False;
@@ -991,6 +995,12 @@ package body GPR2.Build.Actions_Population is
          if not Visited.Contains (Import.Id) then
             Visited.Include (Import.Id);
 
+            Result := Populate_Withed_Units (Tree_Db, Import, Visited);
+
+            if not Result then
+               return False;
+            end if;
+
             if Import.Kind = K_Library then
                Result :=
                  Populate_Library (Tree_Db, Import, Lib);
@@ -998,12 +1008,6 @@ package body GPR2.Build.Actions_Population is
                Result :=
                  Populate_Aggregated_Library (Tree_Db, Import, Lib, Visited);
             end if;
-
-            if not Result then
-               return False;
-            end if;
-
-            Result := Populate_Withed_Units (Tree_Db, Import, Visited);
 
             if not Result then
                return False;
