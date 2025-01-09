@@ -5,7 +5,6 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Artifacts.Files;
-with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Tree_Db;
 with GPR2.Options;
 with GPR2.Project.Tree;

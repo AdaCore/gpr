@@ -4,7 +4,6 @@ with Ada.Text_IO;
 with GPR2.Build.Actions.Compile;
 with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Artifacts.Files;
-with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Source.Sets;
 
 with GPR2.Options;
