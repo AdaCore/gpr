@@ -20,7 +20,6 @@ with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Registry.Attribute;
-limited with GPR2.Project.Tree;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Source_Reference.Value;
@@ -31,7 +30,9 @@ limited with GPR2.Build.Compilation_Unit.Maps;
 limited with GPR2.Build.Source.Sets;
 limited with GPR2.Build.Source;
 limited with GPR2.Build.View_Db;
+limited with GPR2.Project.Tree;
 limited with GPR2.Project.View.Set;
+limited with GPR2.Project.View.Vector;
 
 private with GPR2.Pack_Internal;
 private with GPR2.View_Base_Internal;
@@ -90,12 +91,18 @@ package GPR2.Project.View is
    --  limited).
 
    function Closure
-     (Self         : Object;
-      Include_Self : Boolean := False) return GPR2.Project.View.Set.Object
+     (Self               : Object;
+      Include_Self       : Boolean := False;
+      Include_Extended   : Boolean := False;
+      Include_Aggregated : Boolean := False)
+      return GPR2.Project.View.Vector.Object
      with Pre => Self.Is_Defined;
    --  Returns the list of views that are withed or limited withed by Self
-   --  recursively. If Include_Self is set, then Self will be part of the
+   --  recursively.
+   --  If Include_Self is set, then Self will be part of the
    --  returned set.
+   --  If Include_Agglibs is set, then the projects aggregated by any
+   --  aggregate library in the closure will also be part of this closure.
 
    function Imports
      (Self : Object; Recursive : Boolean := False) return Set.Object

@@ -14,7 +14,6 @@ pragma Warnings (On, ".* is not referenced");
 with GPR2.Build.Tree_Db;
 with GPR2.Build.External_Options;
 with GPR2.Project.Attribute;
-with GPR2.Project.View.Set;
 
 package body GPR2.Build.Actions.Compile is
 
@@ -729,50 +728,6 @@ package body GPR2.Build.Actions.Compile is
          Self.Obj_File := Artifacts.Files.Undefined;
       end if;
    end Initialize;
-
-   ------------
-   -- Lookup --
-   ------------
-
-   function Lookup
-     (V          : GPR2.Project.View.Object;
-      BN         : Simple_Name;
-      In_Lib_Dir : Boolean;
-      Must_Exist : Boolean) return GPR2.Path_Name.Object
-   is
-      Todo      : GPR2.Project.View.Set.Object;
-      Done      : GPR2.Project.View.Set.Object;
-      Current   : GPR2.Project.View.Object := V;
-      Candidate : GPR2.Path_Name.Object;
-
-   begin
-      loop
-         if In_Lib_Dir and then Current.Is_Library then
-            Candidate := Current.Library_Ali_Directory.Compose (BN);
-            exit when not Must_Exist or else Candidate.Exists;
-         end if;
-
-         if Current.Kind in With_Object_Dir_Kind then
-            Candidate := Current.Object_Directory.Compose (BN);
-            exit when not Must_Exist or else Candidate.Exists;
-         end if;
-
-         if Current.Is_Extending then
-            Todo.Union (Current.Extended);
-            Todo.Difference (Done);
-         end if;
-
-         if Todo.Is_Empty then
-            return GPR2.Path_Name.Undefined;
-         else
-            Done.Include (Current);
-            Current := Todo.First_Element;
-            Todo.Delete_First;
-         end if;
-      end loop;
-
-      return Candidate;
-   end Lookup;
 
    -----------------------
    -- On_Tree_Insertion --

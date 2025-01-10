@@ -6,7 +6,7 @@
 
 with GPR2.Build.Tree_Db;
 pragma Warnings (Off);
-with GPR2.Project.View.Set;
+with GPR2.Project.View.Vector;
 pragma Warnings (On);
 
 package body GPR2.Build.Source.Sets is
@@ -226,9 +226,11 @@ package body GPR2.Build.Source.Sets is
                --  there's a basename clash.
 
                for V
-                 of Get_Ref (Self.Db).View.Closure (Include_Self => True)
+                 of Get_Ref (Self.Db).View.Closure (True, True, True)
                loop
-                  if V.Kind in With_Object_Dir_Kind then
+                  if V.Kind in With_Object_Dir_Kind
+                    and then not V.Is_Extended
+                  then
                      declare
                         Db   : constant View_Db.Object :=
                                  Get_Ref (Self.Db).Tree_Db.View_Database (V);

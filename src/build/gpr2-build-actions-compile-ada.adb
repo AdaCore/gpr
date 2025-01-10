@@ -16,7 +16,6 @@ with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
-with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
 
 package body GPR2.Build.Actions.Compile.Ada is

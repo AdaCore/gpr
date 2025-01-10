@@ -14,6 +14,9 @@ with GPR2.Build.External_Options;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
+pragma Warnings (Off, "*is not referenced");
+with GPR2.Project.View.Vector;
+pragma Warnings (On);
 with GPR2.Source_Reference;
 
 package body GPR2.Build.Actions.Link is

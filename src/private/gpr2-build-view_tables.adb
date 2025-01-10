@@ -1280,12 +1280,11 @@ package body GPR2.Build.View_Tables is
          return Source (Data, C);
       end if;
 
-      for V of Data.View.Closure loop
+      for V of Data.View.Closure (False, True, True) loop
          if V.Kind in With_View_Db then
             declare
                V_Data : View_Data_Ref renames Get_Data (Data.Tree_Db, V);
             begin
-
                C := V_Data.Sources.Find (Basename);
 
                if Basename_Source_Maps.Has_Element (C) then

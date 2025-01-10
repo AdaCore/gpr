@@ -24,6 +24,9 @@ with GPR2.Build.External_Options;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
+pragma Warnings (Off, "*is not referenced");
+with GPR2.Project.View.Vector;
+pragma Warnings (On);
 
 package body GPR2.Build.Actions.Ada_Bind is
 
@@ -431,7 +434,7 @@ package body GPR2.Build.Actions.Ada_Bind is
          end if;
       end loop;
 
-      for View of Self.Ctxt.Closure loop
+      for View of Self.Ctxt.Closure (True, True, True) loop
          --  Make sure all ALI directories are visible
          if View.Language_Ids.Contains (Ada_Language) then
             if View.Is_Library then

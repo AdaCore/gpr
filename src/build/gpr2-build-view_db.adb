@@ -6,11 +6,7 @@
 
 with GPR2.Build.Source.Sets;
 with GPR2.Build.Tree_Db;
-pragma Warnings (Off);
---  needed for visibility reasons of the object, as it is limited withed
---  otherwise
 with GPR2.Project.View.Set;
-pragma Warnings (On);
 
 package body GPR2.Build.View_Db is
 

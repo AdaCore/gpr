@@ -137,12 +137,4 @@ private
       or else Self.View.Attribute
         (PRA.Compiler.Driver, PAI.Create (Self.Lang)).Value.Text'Length = 0);
 
-   function Lookup
-     (V          : GPR2.Project.View.Object;
-      BN         : Simple_Name;
-      In_Lib_Dir : Boolean;
-      Must_Exist : Boolean)
-      return GPR2.Path_Name.Object;
-   --  Look for BN in V's hierarchy of object directories
-
 end GPR2.Build.Actions.Compile;

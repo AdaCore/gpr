@@ -11,8 +11,14 @@ package GPR2.Project.View.Vector is
    package Vector is new Ada.Containers.Vectors
       (Positive, GPR2.Project.View.Object);
 
-   subtype Object is Vector.Vector;
+   type Object is new Vector.Vector with private;
 
-   Empty_Vector : constant Object := Vector.Empty_Vector;
+   Empty_Vector : constant Object;
+
+private
+
+   type Object is new Vector.Vector with null record;
+
+   Empty_Vector : constant Object := (Vector.Empty_Vector with null record);
 
 end GPR2.Project.View.Vector;
