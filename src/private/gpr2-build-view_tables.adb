@@ -1096,7 +1096,9 @@ package body GPR2.Build.View_Tables is
                else
                   --  Remaining case: inheritance shows two candidate sources
 
-                  if Source_Info (Candidate.all).Is_Compilable then
+                  if Candidate.View.Is_Compilable
+                    (Source_Info (Candidate.all).Language)
+                  then
                      Err_Level := Message.Error;
                   else
                      Err_Level := Message.Warning;
@@ -1158,7 +1160,9 @@ package body GPR2.Build.View_Tables is
          end loop;
 
          if not Clashes.Is_Empty then
-            if Src_Info_Maps.Element (C_Info).Is_Compilable then
+            if Candidate.View.Is_Compilable
+              (Src_Info_Maps.Element (C_Info).Language)
+            then
                Err_Level := Message.Error;
             else
                Err_Level := Message.Warning;

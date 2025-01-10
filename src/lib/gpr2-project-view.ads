@@ -356,6 +356,12 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns the languages used by this project as a set of Language id
 
+   function Is_Compilable
+     (Self : Object;
+      Lang : Language_Id) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Whether the language has a compiler driver defined for the view
+
    function View_Db (Self : Object) return GPR2.Build.View_Db.Object
      with Pre => Self.Is_Defined, Inline;
    --  Return the artifacts database for the view. If the view don't have

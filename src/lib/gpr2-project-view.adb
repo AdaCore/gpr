@@ -1606,20 +1606,10 @@ package body GPR2.Project.View is
       begin
          Seen.Insert (V.Path_Name.Value, C, Inserted);
 
-         if not Inserted then
-            --  Already visited
-            return;
-         end if;
-
-         if V.Kind = K_Aggregate_Library then
-            for A of V.Aggregated loop
-               Add_For_View (A);
-            end loop;
-         end if;
-
-         --  No sources in this view case
-
-         if V.Kind not in With_Source_Dirs_Kind then
+         if not Inserted
+           or else V.Kind not in With_Source_Dirs_Kind
+         then
+            --  Already visited, or project with no source
             return;
          end if;
 
@@ -1628,6 +1618,7 @@ package body GPR2.Project.View is
          for L of V.Language_Ids loop
             if Languages.Contains (L) then
                Found := True;
+
                exit;
             end if;
          end loop;
@@ -1670,6 +1661,35 @@ package body GPR2.Project.View is
    begin
       return not Ref.Agg_Libraries.Is_Empty;
    end Is_Aggregated_In_Library;
+
+   -------------------
+   -- Is_Compilable --
+   -------------------
+
+   function Is_Compilable
+     (Self : Object;
+      Lang : Language_Id) return Boolean
+   is
+      Ref  : constant View_Internal.Ref := View_Internal.Get_RW (Self);
+      C    : constant View_Internal.Lang_Boolean_Map.Cursor :=
+               Ref.Compilable_Languages.Find (Lang);
+      Attr : GPR2.Project.Attribute.Object;
+      Res  : Boolean;
+   begin
+      if not View_Internal.Lang_Boolean_Map.Has_Element (C) then
+         Attr := Self.Attribute
+           (PRA.Compiler.Driver, Project.Attribute_Index.Create (Lang));
+         Res := Attr.Is_Defined
+           and then Length (Attr.Value.Unchecked_Text) > 0;
+
+         Ref.Compilable_Languages.Insert (Lang, Res);
+
+         return Res;
+
+      else
+         return View_Internal.Lang_Boolean_Map.Element (C);
+      end if;
+   end Is_Compilable;
 
    -----------------
    -- Is_Extended --
@@ -2541,7 +2561,7 @@ package body GPR2.Project.View is
 
    begin
       if Opt.Compilable_Only then
-         if not S.Is_Compilable then
+         if not Self.Is_Compilable (S.Language) then
             return False;
          end if;
 

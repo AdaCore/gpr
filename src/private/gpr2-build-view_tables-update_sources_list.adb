@@ -60,9 +60,6 @@ package body Update_Sources_List is
    package Naming_Schema_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (Language_Id, Naming_Schema, GPR2.Hash, GPR2."=");
 
-   package Lang_Boolean_Map is new Ada.Containers.Hashed_Maps
-     (Language_Id, Boolean, Hash, "=");
-
    procedure Fill_Ada_Naming_Exceptions
      (View         : GPR2.Project.View.Object;
       Attr         : Attribute_Id;
@@ -574,11 +571,6 @@ package body Update_Sources_List is
       Stop_On_Error : Boolean;
       Messages      : in out GPR2.Log.Object)
    is
-      function Is_Compilable (Language : Language_Id) return Boolean;
-      --  Check whether the language is compilable on the current View. This
-      --  includes information provided by the Tree (Driver attribute). Note
-      --  that this routine caches the result into a map.
-
       procedure Handle_File
         (Dir_Index : Natural;
          File      : GPR2.Path_Name.Full_Name;
@@ -612,9 +604,6 @@ package body Update_Sources_List is
       Ada_Naming_Exceptions : Source_Path_To_Attribute_List.Map;
       Attr                  : Project.Attribute.Object;
 
-      Compilable_Language   : Lang_Boolean_Map.Map;
-      --  List of compilable languages for the view
-
       Parser_State          : GPR2.Build.Source_Base.Ada_Parser.Parser_State;
 
       -----------------
@@ -629,32 +618,6 @@ package body Update_Sources_List is
       begin
          Data.Src_Files.Include ((File'Length, Timestamp, Dir_Index, File));
       end Handle_File;
-
-      -------------------
-      -- Is_Compilable --
-      -------------------
-
-      function Is_Compilable (Language : Language_Id) return Boolean
-      is
-         C    : constant Lang_Boolean_Map.Cursor :=
-                  Compilable_Language.Find (Language);
-         Attr : GPR2.Project.Attribute.Object;
-         Res  : Boolean;
-      begin
-         if not Lang_Boolean_Map.Has_Element (C) then
-            Attr := Data.View.Attribute
-              (PRA.Compiler.Driver, Project.Attribute_Index.Create (Language));
-            Res := Attr.Is_Defined
-              and then Length (Attr.Value.Unchecked_Text) > 0;
-
-            Compilable_Language.Insert (Language, Res);
-
-            return Res;
-
-         else
-            return Lang_Boolean_Map.Element (C);
-         end if;
-      end Is_Compilable;
 
       ------------------
       -- Process_File --
@@ -886,8 +849,7 @@ package body Update_Sources_List is
                      Timestamp        => File.Stamp,
                      Tree_Db          => Data.Tree_Db,
                      Naming_Exception => Match = Naming_Exception,
-                     Source_Dir_Idx   => File.Dir_Idx,
-                     Is_Compilable    => Is_Compilable (Language)));
+                     Source_Dir_Idx   => File.Dir_Idx));
 
                --  If we know the units in the source (from naming exception),
                --  then add them now.
