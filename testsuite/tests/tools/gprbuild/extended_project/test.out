@@ -3,6 +3,7 @@ $ gpr2build -p -Pprj
 [Ada Bind]        main
 [Ada Compile]     main.adb
 [Ada Compile]     pkg.adb
+[Ada Compile]     pkg2.adb
 [Ada Post-Bind]   b__main.adb
 [Link]            main
 $ gpr2build -p -Pext
@@ -14,12 +15,15 @@ $ gpr2build -p -Pext
 [Link]            main
 $ ./main
 Hi, I'm from ext
+I'm Pkg2 from std
 $ gpr2build -p -Pext2
 "obj/ext2/" created
 [Ada Bind]        main
 [Ada Compile]     main.adb
 [Ada Compile]     pkg.adb
+[Ada Compile]     pkg2.adb
 [Ada Post-Bind]   b__main.adb
 [Link]            main
 $ ./main
 Hi, I'm from prj
+I'm Pkg2 from std

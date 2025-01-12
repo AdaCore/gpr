@@ -690,7 +690,7 @@ package body Update_Sources_List is
          --  included sources if those are given explicitely.
 
          if Data.Excluded_Sources.Contains (Basename) then
-            Data.Actually_Excluded.Include (Basename);
+            Data.Actually_Excluded.Include (Basename, No_Proxy);
 
             return False;
 

@@ -499,7 +499,26 @@ package body GPR2.Build.Actions.Compile is
                   end if;
                end loop;
 
-               --  ??? Missing the list of excluded sources
+               for S of Self.View.View_Db.Excluded_Inherited_Sources loop
+                  if S.Language = Ada_Language then
+                     for U of S.Units loop
+                        if U.Kind /= S_No_Body then
+                           declare
+                              Key : constant String :=
+                                      To_Lower (String (U.Full_Name)) &
+                              (if U.Kind = S_Spec
+                               then S_Suffix else B_Suffix);
+                           begin
+                              Write
+                                (Map_File.FD,
+                                 Key & ASCII.LF &
+                                 String (S.Path_Name.Simple_Name) & ASCII.LF &
+                                 "/" & ASCII.LF);
+                           end;
+                        end if;
+                     end loop;
+                  end if;
+               end loop;
 
                Close (Map_File.FD);
             end if;

@@ -71,10 +71,6 @@ PKG2
 * Sources *
 
 sources visible by P extended by Ext
-- src/main.adb (body)
-  MAIN (body)
-- src/pkg.ads (spec)
-  PKG (spec)
 sources visible by Ext
 - src/main.adb (body)
   MAIN (body)

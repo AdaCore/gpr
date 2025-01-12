@@ -64,6 +64,42 @@ package body GPR2.Build.View_Db is
       end return;
    end Compilation_Units;
 
+   --------------------------------
+   -- Excluded_Inherited_Sources --
+   --------------------------------
+
+   function Excluded_Inherited_Sources
+     (Self : Object) return GPR2.Build.Source_Base.Vectors.Vector
+   is
+      Current : Object := Self;
+      Todo    : GPR2.Project.View.Set.Object;
+      Src     : GPR2.Build.Source_Base.Object;
+   begin
+      Todo.Include (Self.View);
+
+      return Result : Build.Source_Base.Vectors.Vector do
+         while not Todo.Is_Empty loop
+            Current := Self.View_Base_For (Todo.First_Element);
+            Todo.Delete_First;
+
+            for Proxy of Ref (Current).Actually_Excluded loop
+               if Proxy /= No_Proxy then
+                  Src :=
+                    Ref (Proxy.View.View_Db).Src_Infos.Element
+                      (Proxy.Path_Name);
+                  Result.Append (Src);
+               end if;
+            end loop;
+
+            if Current.View.Is_Extending then
+               for V of Current.View.Extended loop
+                  Todo.Include (V);
+               end loop;
+            end if;
+         end loop;
+      end return;
+   end Excluded_Inherited_Sources;
+
    --------------
    -- Own_Unit --
    --------------

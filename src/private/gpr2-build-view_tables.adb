@@ -911,9 +911,11 @@ package body GPR2.Build.View_Tables is
             begin
                --  Check if the extending project excludes the source
                if Ext_Data.Excluded_Sources.Contains (Name) then
-                  Ext_Data.Actually_Excluded.Include (Name);
+                  Ext_Data.Actually_Excluded.Include (Name, Src);
+
                   --  No further propagation, do not use the source as
                   --  unit part, so just return.
+
                   return;
 
                else

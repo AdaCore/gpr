@@ -167,7 +167,7 @@ private package GPR2.Build.View_Tables is
       Excluded_Sources : Containers.Source_Path_To_Sloc.Map;
       --  content of Excluded_Source_Files and Excluded_Source_List_File
       --  attributes.
-      Actually_Excluded : Source_Set.Set;
+      Actually_Excluded : Basename_Source_Maps.Map;
       --  list of excluded_sources items that matched at least one source
 
       Own_CUs         : Unit_Maps.Map;
