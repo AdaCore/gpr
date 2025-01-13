@@ -1,0 +1,7 @@
+project Extending_Prj extends "root_prj" is
+   for Source_Dirs use ("src-extending");
+   for Source_Files use ("pkg1.ads", "pkg4.ads", "pkg5.ads");
+   -- pkg3.ads should not be found, as it is not part of the Root_Prj Source_Files
+
+   for Object_Dir use "obj-extending";
+end Extending_Prj;

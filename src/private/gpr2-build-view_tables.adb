@@ -909,24 +909,36 @@ package body GPR2.Build.View_Tables is
                Name     : constant Simple_Name :=
                             GPR2.Path_Name.Simple_Name (Src.Path_Name);
             begin
+
                --  Check if the extending project excludes the source
-               if Ext_Data.Excluded_Sources.Contains (Name) then
+               if Ext_Data.Excluded_Sources.Contains (Name)
+                 or else (not Ext_Data.Listed_Sources.Is_Empty
+                          and then not Ext_Data.Listed_Sources.Contains (Name))
+               then
+
+                  --  If the sources is excluded then, no further propagation,
+                  --  do not use the source as unit part and just return.
+
+                  --  Otherwise, if the sources does not belong to the listed
+                  --  ones, tagging the source as Actually_Excluded is used by
+                  --  extending projects that need to add extended source
+                  --  directories to their include path while explicitly
+                  --  excluding sources from this directory using the
+                  --  mapping file. In that case,do not propagate as the source
+                  --  has been explicitly not added by the extending project.
+
                   Ext_Data.Actually_Excluded.Include (Name, Src);
 
-                  --  No further propagation, do not use the source as
-                  --  unit part, so just return.
-
                   return;
-
-               else
-                  Add_Source
-                    (Ext_Data,
-                     Src.View,
-                     Src.Path_Name,
-                     Extended_View      => Data.View,
-                     Resolve_Visibility => True,
-                     Messages           => Messages);
                end if;
+
+               Add_Source
+                 (Ext_Data,
+                  Src.View,
+                  Src.Path_Name,
+                  Extended_View      => Data.View,
+                  Resolve_Visibility => True,
+                  Messages           => Messages);
             end;
 
          elsif Src_Info.Has_Units then
@@ -974,12 +986,26 @@ package body GPR2.Build.View_Tables is
                             GPR2.Path_Name.Simple_Name (Src.Path_Name);
             begin
                --  Check if the extending project excludes the source
-               if Ext_Data.Excluded_Sources.Contains (Name) then
-                  Ext_Data.Actually_Excluded.Delete (Name);
-                  --  No further propagation, do not use the source as
-                  --  unit part, so just return.
-                  return;
+               if Ext_Data.Excluded_Sources.Contains (Name)
+                 or else (not Ext_Data.Listed_Sources.Is_Empty
+                          and then not Ext_Data.Listed_Sources.Contains (Name))
+               then
+                  --  If the sources is excluded then, no further propagation,
+                  --  do not use the source as unit part and just return.
 
+                  --  Tagging the source as Actually_Excluded is used by
+                  --  extending projects that need to add extended source
+                  --  directories to their include path while explicitly
+                  --  excluding sources from this directory using the
+                  --  mapping file. Because this has been removed in the
+                  --  extended project, Actually_Excluded is not needed
+                  --  anymore. In that case, the source has been explicitly not
+                  --  added by the extending project, so we do not need to
+                  --  remove it.
+
+                  Ext_Data.Actually_Excluded.Delete (Name);
+
+                  return;
                else
                   Remove_Source
                     (Ext_Data,
