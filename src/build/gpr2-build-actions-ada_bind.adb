@@ -83,8 +83,10 @@ package body GPR2.Build.Actions.Ada_Bind is
 
          if Is_List then
             for Idx in Attr.Values.First_Index .. Attr.Values.Last_Index loop
-               Cmd_Line.Add_Argument
-                 (Attr.Values.Element (Idx).Text, In_Signature);
+               if Attr.Values.Element (Idx).Text'Length > 0 then
+                  Cmd_Line.Add_Argument
+                    (Attr.Values.Element (Idx).Text, In_Signature);
+               end if;
             end loop;
          else
             Cmd_Line.Add_Argument (Attr.Value.Text, In_Signature);

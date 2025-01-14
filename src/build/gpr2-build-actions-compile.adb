@@ -72,7 +72,9 @@ package body GPR2.Build.Actions.Compile is
 
          if Is_List then
             for Val of Attr.Values loop
-               Cmd_Line.Add_Argument (Val.Text, In_Signature);
+               if Val.Text'Length > 0 then
+                  Cmd_Line.Add_Argument (Val.Text, In_Signature);
+               end if;
             end loop;
          else
             Cmd_Line.Add_Argument (Attr.Value.Text, In_Signature);
@@ -561,9 +563,8 @@ package body GPR2.Build.Actions.Compile is
 
       --  Add -cargs and -cargs:<lang>
 
-      for Arg
-        of Self.Tree.External_Options.Fetch
-          (External_Options.Compiler, Self.Lang)
+      for Arg of Self.Tree.External_Options.Fetch
+                   (External_Options.Compiler, Self.Lang)
       loop
          Cmd_Line.Add_Argument (Arg, True);
       end loop;

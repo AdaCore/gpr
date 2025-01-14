@@ -71,14 +71,20 @@ package body GPR2.Build.Actions.Link is
          if Is_List then
             for Idx in Attr.Values.First_Index .. Attr.Values.Last_Index loop
                if Idx < Attr.Values.Last_Index then
-                  Cmd_Line.Add_Argument
-                    (Attr.Values.Element (Idx).Text, In_Signature);
-               else
+                  if Attr.Values.Element (Idx).Text'Length > 0 then
+                     Cmd_Line.Add_Argument
+                       (Attr.Values.Element (Idx).Text, In_Signature);
+                  end if;
+
+               elsif Param'Length > 0
+                 or else Attr.Values.Element (Idx).Text'Length > 0
+               then
                   Cmd_Line.Add_Argument
                     (Attr.Values.Element (Idx).Text & Param, In_Signature);
                end if;
             end loop;
-         else
+
+         elsif Param'Length > 0 or else Attr.Value.Text'Length > 0 then
             Cmd_Line.Add_Argument
               (Attr.Value.Text & Param, In_Signature);
          end if;
