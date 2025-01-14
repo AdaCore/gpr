@@ -1,10 +1,11 @@
 import json
 import os
-from e3.fs import mv
+import distutils.ccompiler
 from testsuite_support.builder_and_runner import BuilderAndRunner
 
-bnr = BuilderAndRunner()
 
+bnr = BuilderAndRunner()
+shared_lib_ext = distutils.ccompiler.new_compiler().shared_lib_extension
 
 def run(cmd):
     print("$ " + " ".join(cmd))
@@ -14,8 +15,9 @@ def run(cmd):
         print(bnr.simple_run([cmd], catch_error=True).out)
 
 
-# Basic check that building mylib1.gpr produces mylib1.so and that building an
-# exe with it only uses mylib1.so and not any of the objects contained in it.
+# Basic check that building mylib1.gpr produces mylib1.so/dll and that building an
+# exe with it only uses mylib1.so/dll and not any of the objects contained in it.
+
 
 run(["gpr2build", "-q", "-Pmylib1.gpr", "-p", "--json-summary"])
 with open("jobs.json") as fp:
@@ -24,24 +26,20 @@ run(["gpr2build", "-q", "-Papp.gpr", "-p", "--json-summary"])
 with open("jobs.json") as fp:
     cntbin = json.load(fp)
 
-
-print("lib:")
-for job in cntlib:
-    print("uid: '" + job["uid"] + "', status : '" + job["status"] + "'")
-
-if os.path.isfile(os.path.join("lib", "libmylib1.so")):
+if os.path.isfile(os.path.join("lib", "libmylib1" + shared_lib_ext)):
     print("mylib1 has been created, good!")
 else:
-    print("ERROR: cannot find the libmylib1.so")
+    print("ERROR: cannot find the libmylib1" + shared_lib_ext)
 
-if os.path.isfile(os.path.join("lib", "libmylib2.so")):
+if os.path.isfile(os.path.join("lib", "libmylib2" + shared_lib_ext)):
     print("mylib2 has been created, good!")
 else:
-    print("ERROR: cannot find the libmylib2.so")
+    print("ERROR: cannot find the libmylib2" + shared_lib_ext)
 
-print("bin:")
 found = False
 error = False
+
+
 for job in cntbin:
     if job["status"] != "SKIPPED":
         if "-lmylib1" in job["command"] and "-lmylib2" in job["command"]:
@@ -55,9 +53,16 @@ for job in cntbin:
                 "ERROR: The static version of the libs should not be used in the link command"
             )
             error = True
-        if "mylib1.so" in job["command"] or "mylib2.so" in job["command"]:
+        if (
+            "mylib1" + shared_lib_ext in job["command"]
+            or "mylib2" + shared_lib_ext in job["command"]
+        ):
             print(
-                "ERROR: mylib1.so and mylib2.so should not be explicitly added to the command line. Instead, -L and -l option should be used."
+                "ERROR: mylib1"
+                + shared_lib_ext
+                + " and mylib2"
+                + shared_lib_ext
+                + "should not be explicitly added to the command line. Instead, -L and -l option should be used."
             )
             error = True
 
@@ -70,4 +75,9 @@ if not found:
     )
 else:
     print("Ok so far")
+
+# Let windows find the dynamic lib
+os.environ["PATH"] = os.pathsep.join(
+    [os.path.join(os.getcwd(), "lib"), os.environ["PATH"]]
+)
 run(["./main"])
