@@ -5,6 +5,7 @@
 --
 
 with Ada.Characters.Handling;
+with Ada.Strings.Fixed;
 with GNAT.OS_Lib;
 
 with GNATCOLL.OS.FSUtil;
@@ -407,11 +408,23 @@ package body GPR2.Build.Actions.Link is
       Context    : GPR2.Project.View.Object;
       Output     : Filename_Optional := "")
    is
-      Exec : constant GPR2.Path_Name.Object :=
-               (if Output'Length = 0
-                then Context.Executable (Src.Path.Simple_Name, Src.Index)
-                else Context.Executable_Directory.Compose (Output));
+      Exec : GPR2.Path_Name.Object;
    begin
+      if Output'Length = 0 then
+         Exec := Context.Executable (Src.Path.Simple_Name, Src.Index);
+      else
+         declare
+            Suff : constant Filename_Optional :=
+                     Context.Executable_Suffix;
+         begin
+            if Ada.Strings.Fixed.Index (String (Output), ".") = 0 then
+               Exec := Context.Executable_Directory.Compose (Output & Suff);
+            else
+               Exec := Context.Executable_Directory.Compose (Output);
+            end if;
+         end;
+      end if;
+
       Self.Is_Library := False;
       Self.Main_Src   := Src;
       Self.Executable := Artifacts.Files.Create (Exec);
