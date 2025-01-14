@@ -29,7 +29,8 @@ package body GPR2.Build.View_Tables is
       Kind     : Unit_Kind;
       Sep_Name : Optional_Name_Type;
       View_Db  : View_Data_Ref;
-      Path     : Path_Name.Object;
+      Path     : GPR2.Path_Name.Object;
+      Src      : Source_Proxy;
       Index    : Unit_Index;
       Messages : in out GPR2.Log.Object)
      with Pre => NS_Db.Is_Root
@@ -110,11 +111,6 @@ package body GPR2.Build.View_Tables is
       Resolve_Visibility : Boolean := False;
       Messages           : in out GPR2.Log.Object)
    is
-      --  function Get_Owner_Db return View_Data_Ref is
-      --    (if View_Owner = Data.View
-      --     then Data
-      --     else Get_Data (Data.Tree_Db, View_Owner));
-
       C_Overload : Basename_Source_List_Maps.Cursor;
       Done       : Boolean;
       Proxy      : constant Source_Proxy :=
@@ -128,10 +124,11 @@ package body GPR2.Build.View_Tables is
                      Owner_Db.Src_Infos.Constant_Reference (Path);
 
    begin
-      Data.Overloaded_Srcs.Insert (Path_Name.Simple_Name (Path),
-                                   Source_Proxy_Sets.Empty_Set,
-                                   C_Overload,
-                                   Done);
+      Data.Overloaded_Srcs.Insert
+        (Path_Name.Simple_Name (Path),
+         Source_Proxy_Sets.Empty_Set,
+         C_Overload,
+         Done);
       Data.Overloaded_Srcs.Reference (C_Overload).Include (Proxy);
 
       if not Data.Langs_Usage.Contains (Src_Info.Language) then
@@ -193,7 +190,8 @@ package body GPR2.Build.View_Tables is
       Kind     : Unit_Kind;
       Sep_Name : Optional_Name_Type;
       View_Db  : View_Data_Ref;
-      Path     : Path_Name.Object;
+      Path     : GPR2.Path_Name.Object;
+      Src      : Source_Proxy;
       Index    : Unit_Index;
       Messages : in out GPR2.Log.Object)
    is
@@ -264,17 +262,81 @@ package body GPR2.Build.View_Tables is
                   --  is involved to hide the extended unit.
 
                   declare
-                     Other_Db  : constant View_Data_Ref :=
-                                   Get_Data (NS_Db.Tree_Db, Other.View);
-                     Other_Loc : constant Source_Proxy :=
-                                   Other_Db.Sources (Other.Source.Simple_Name);
-                     Remove_Src  : Boolean;
+                     Other_Db     : constant View_Data_Ref :=
+                                      Get_Data (NS_Db.Tree_Db, Other.View);
+                     Other_Loc    : constant Source_Proxy :=
+                                      Other_Db.Sources
+                                        (Other.Source.Simple_Name);
+                     Remove_Src   : Boolean := False;
+                     Remove_Other : Boolean := False;
+                     Replace      : Boolean := False;
+                     Error_Case   : Boolean := False;
 
                   begin
-                     if Other_Loc.Inh_From.Is_Defined
-                       and then NS_Db.View.Is_Extending (Other_Loc.Inh_From)
-                     then
+                     if View_Db.View = Other.View then
+                        --  Both sources are reported for the same view, let's
+                        --  see if one in inherited. This may happen if the
+                        --  extending view has a naming exception for the unit.
+
+                        if not Src.Inh_From.Is_Defined
+                          and then not Other_Loc.Inh_From.Is_Defined
+                        then
+                           --  both sources are directly defined for the view,
+                           --  so we raise an error about duplicated units.
+                           Error_Case := True;
+
+                        elsif Src.Inh_From.Is_Defined
+                          and then not Other_Loc.Inh_From.Is_Defined
+                        then
+                           --  new source is inherited. previously analyzed
+                           --  one is not, don't do anything apart of cleaning
+                           --  up Src.
+
+                           Remove_Src := True;
+
+                        elsif not Src.Inh_From.Is_Defined
+                          and then Other_Loc.Inh_From.Is_Defined
+                        then
+                           --  previously analyzed source was inherited while
+                           --  the new one is not: replace by the new source
+                           --  in the unit.
+
+                           Replace := True;
+
+                        elsif Src.View.Is_Extending (Other_Loc.View) then
+                           --  the defining view for the new source is
+                           --  extending the defining view for the old source:
+                           --  replace the old one.
+
+                           Replace := True;
+
+                        elsif Other_Loc.View.Is_Extending (Src.View) then
+                           --  new source was overloaded by the old source, so
+                           --  just remove its unit
+
+                           Remove_Src := True;
+
+                        else
+                           --  Both have been inherited but from different
+                           --  unrelated views: there's a clash.
+
+                           Error_Case := True;
+                        end if;
+
+                     elsif View_Db.View.Is_Extending (Other.View) then
                         --  Replace the unit in the compilation unit
+
+                        Replace := True;
+
+                     elsif Other.View.Is_Extending (View_Db.View) then
+
+                        Remove_Src := True;
+                     else
+                        Error_Case := True;
+                     end if;
+
+
+                     if Replace then
                         CU_Instance.Remove
                           (Kind, Other.View, Other.Source, Other.Index,
                            Sep_Name);
@@ -298,14 +360,14 @@ package body GPR2.Build.View_Tables is
                            begin
                               Other_Src.Remove_Unit (Other.Index);
 
-                              Remove_Src := Other_Src.Units.Is_Empty;
+                              Remove_Other := Other_Src.Units.Is_Empty;
                            end;
 
                         else
-                           Remove_Src := True;
+                           Remove_Other := True;
                         end if;
 
-                        if Remove_Src then
+                        if Remove_Other then
                            Remove_Source (View_Db,
                                           Other_Loc.View,
                                           Other_Loc.Path_Name,
@@ -314,7 +376,36 @@ package body GPR2.Build.View_Tables is
                                           Messages);
                         end if;
 
-                     else
+                     elsif Remove_Src then
+                        if Index /= No_Index then
+                           declare
+                              use Src_Info_Maps;
+
+                              Owning_Db : constant View_Data_Ref :=
+                                            Get_Data (NS_Db.Tree_Db,
+                                                      Src.View);
+                              Ref       : constant Reference_Type :=
+                                            Owning_Db.Src_Infos.Reference
+                                              (Path.Value);
+                           begin
+                              Ref.Remove_Unit (Index);
+                              Remove_Other := Ref.Units.Is_Empty;
+                           end;
+
+                        else
+                           Remove_Other := True;
+                        end if;
+
+                        if Remove_Other then
+                           Remove_Source (View_Db,
+                                          Src.View,
+                                          Src.Path_Name,
+                                          Src.Inh_From,
+                                          True,
+                                          Messages);
+                        end if;
+
+                     elsif Error_Case then
                         --  Two sources in the closure declare the same unit
                         --  part, so issue a warning.
 
@@ -324,7 +415,7 @@ package body GPR2.Build.View_Tables is
                               Message => "duplicated " &
                                 Image (Kind) & " for unit """ & String (CU) &
                                 """ in " & Other.Source.String_Value &
-                                " and " & String (Path.Value),
+                                " and " & Path.String_Value,
                               Sloc    =>
                                 Source_Reference.Create
                                   (NS_Db.View.Path_Name.Value, 0, 0)));
@@ -646,6 +737,7 @@ package body GPR2.Build.View_Tables is
                               S_Ref.Unit.Separate_Name,
                               Data,
                               S_Ref.Path_Name,
+                              Proxy,
                               S_Ref.Unit.Index,
                               Messages);
                         end if;
@@ -825,6 +917,9 @@ package body GPR2.Build.View_Tables is
                --  Check if the extending project excludes the source
                if Ext_Data.Excluded_Sources.Contains (Name) then
                   Ext_Data.Actually_Excluded.Include (Name);
+                  --  No further propagation, do not use the source as
+                  --  unit part, so just return.
+                  return;
 
                else
                   Add_Source
@@ -836,11 +931,8 @@ package body GPR2.Build.View_Tables is
                      Messages           => Messages);
                end if;
             end;
-         end if;
 
-         if Src_Info.Has_Units
-           and then not Data.View.Is_Extended
-         then
+         elsif Src_Info.Has_Units then
             --  Update unit information. Note that we do that on "final"
             --  views only, so not if the view is extended or aggregated in
             --  a library, since that's the extending or aggregating lib
@@ -858,6 +950,7 @@ package body GPR2.Build.View_Tables is
                         Sep_Name => U.Separate_Name,
                         View_Db  => Data,
                         Path     => Src_Info.Path_Name,
+                        Src      => Src,
                         Index    => U.Index,
                         Messages => Messages);
                   end if;
@@ -870,11 +963,38 @@ package body GPR2.Build.View_Tables is
       -- Propagate_Visible_Source_Removal --
       --------------------------------------
 
-      procedure Propagate_Visible_Source_Removal (Src : Source_Proxy) is
+      procedure Propagate_Visible_Source_Removal
+        (Src : Source_Proxy)
+      is
          Src_Info : constant Source_Base.Object :=
                       Source_Info (Src).Element.all;
       begin
-         if Src_Info.Has_Units and then not Data.View.Is_Extended then
+         if Data.View.Is_Extended then
+            declare
+               Ext_Data : constant View_Data_Ref :=
+                            Get_Data (Data.Tree_Db, Data.View.Extending);
+               Name     : constant Simple_Name :=
+                            GPR2.Path_Name.Simple_Name (Src.Path_Name);
+            begin
+               --  Check if the extending project excludes the source
+               if Ext_Data.Excluded_Sources.Contains (Name) then
+                  Ext_Data.Actually_Excluded.Delete (Name);
+                  --  No further propagation, do not use the source as
+                  --  unit part, so just return.
+                  return;
+
+               else
+                  Remove_Source
+                    (Ext_Data,
+                     Src.View,
+                     Src.Path_Name,
+                     Extended_View      => Data.View,
+                     Resolve_Visibility => True,
+                     Messages           => Messages);
+               end if;
+            end;
+
+         elsif Src_Info.Has_Units then
             for U of Src_Info.Units loop
                for Root of Src.View.Namespace_Roots loop
                   if Root.Kind in With_View_Db then
@@ -889,29 +1009,6 @@ package body GPR2.Build.View_Tables is
                   end if;
                end loop;
             end loop;
-         end if;
-
-         if Data.View.Is_Extended then
-            declare
-               Ext_Data : constant View_Data_Ref :=
-                            Get_Data (Data.Tree_Db, Data.View.Extending);
-               Name     : constant Simple_Name :=
-                            GPR2.Path_Name.Simple_Name (Src.Path_Name);
-            begin
-               --  Check if the extending project excludes the source
-               if Ext_Data.Excluded_Sources.Contains (Name) then
-                  Ext_Data.Actually_Excluded.Delete (Name);
-
-               else
-                  Remove_Source
-                    (Get_Data (Data.Tree_Db, Data.View.Extending),
-                     Src.View,
-                     Src.Path_Name,
-                     Extended_View      => Data.View,
-                     Resolve_Visibility => True,
-                     Messages           => Messages);
-               end if;
-            end;
          end if;
       end Propagate_Visible_Source_Removal;
 
@@ -993,7 +1090,8 @@ package body GPR2.Build.View_Tables is
 
                   elsif SR2 < SR1 then
                      --  Source_Ref of C2 is declared before the one of
-                     --  Candidate, so takes precedence.
+                     --  Candidate, so takes precedence (and clears any
+                     --  clashing situation).
 
                      Candidate := C.Element;
                      C_Info := C_Info2;
