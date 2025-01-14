@@ -251,6 +251,9 @@ package body GPR2.Build.Actions.Compile.Ada is
       Self.CU     := Src;
       Self.Traces := Create ("ACTION_ADA_COMPILE");
 
+      --  ??? For Standalone libraries, we should probably not lookup for
+      --  previous compilation artifacts, since we need to amend the ali
+      --  file from the library directory.
       declare
          BN        : constant Simple_Name := Artifacts_Base_Name (Src);
          O_Suff    : constant Simple_Name :=

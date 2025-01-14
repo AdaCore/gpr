@@ -114,6 +114,11 @@ package GPR2.Build.Tree_Db is
      (Self  : in out Object;
       Old   : Artifacts.Object'Class;
       Value : Artifacts.Object'Class);
+   --  Replace Artifact "Old" by "Value", so for each action inputs and
+   --  outputs, if Old is used, Value will be used instead. This is
+   --  particularly useful in case of project extension when an action decides
+   --  to finally exdecute, and thus replace the generated object or dependency
+   --  file from the extended project by its own generated files.
 
    function Has_Artifact
      (Self     : Object;

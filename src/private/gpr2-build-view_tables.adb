@@ -272,7 +272,7 @@ package body GPR2.Build.View_Tables is
                   begin
                      if View_Db.View = Other.View then
                         --  Both sources are reported for the same view, let's
-                        --  see if one in inherited. This may happen if the
+                        --  see if one is inherited. This may happen if the
                         --  extending view has a naming exception for the unit.
 
                         if not Src.Inh_From.Is_Defined

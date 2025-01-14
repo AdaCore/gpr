@@ -117,7 +117,7 @@ package GPR2.Build.Actions is
      with Pre'Class => Self.Is_Extending;
    --  In case the action's owning view is extending another view and the
    --  action is overriding an action of the extended view, the result is
-   --  the overriden action.
+   --  the overridden action.
 
    procedure Deactivate (Self : in out Object);
    --  Deactivates the action, can be useful to mark the action as skipped.
