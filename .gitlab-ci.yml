@@ -17,6 +17,16 @@ stages:
       paths:
         - cache
 
+.windows-test_template:
+  services:
+    - image:e3-windows-2022
+    - platform:x86_64-windows-2022
+    - cpu:2
+    - mem:8 # 8 is required for tests with high memory usage
+    - disk:100
+  stage: test
+  allow_failure: true
+
 ###########
 ## BUILD ##
 ###########
@@ -103,6 +113,24 @@ test_gpr2_with_gpr2build:
     reports:
       junit: testgpr2build_result.xml
 
+############################
+## GPR2 WINDOWS TESTSUITE ##
+############################
+
+build_and_test_gpr2_windows:
+  extends: .windows-test_template
+  needs: []
+  script:
+    - exec anod build gpr2
+    - run_testsuite gpr2 "" test_gpr2
+  when: manual
+  artifacts:
+    when:
+      always
+    paths:
+      - testgpr2windows_result.xml
+    reports:
+      junit: testgpr2windows_result.xml
 
 ###################
 ## GPR1 TESTSUITE #
