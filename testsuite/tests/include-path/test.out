@@ -19,9 +19,6 @@ Testing trees/base.gpr
 =========================================
 Testing trees/ext.gpr
 =========================================
-* <runtine dir>/runtime.gpr
-  - Ada:
-    <runtine dir>/adainclude/
 * trees/shared_ada.gpr
   - Ada:
     trees/src/shared_ada/
@@ -30,10 +27,6 @@ Testing trees/ext.gpr
   - C:
     trees/src/shared_c/
 * trees/ext.gpr
-  - Ada:
-    trees/src/ext/
-    <runtine dir>/adainclude/
-    trees/src/shared_ada/
   - C:
     trees/src/ext/
     trees/src/shared_c/
@@ -77,10 +70,6 @@ Testing trees/agglib.gpr
     <runtine dir>/adainclude/
     trees/src/shared_ada/
 * trees/ext.gpr
-  - Ada:
-    trees/src/ext/
-    <runtine dir>/adainclude/
-    trees/src/shared_ada/
   - C:
     trees/src/ext/
     trees/src/shared_c/
@@ -112,10 +101,6 @@ Testing trees/withagglib.gpr
     <runtine dir>/adainclude/
     trees/src/shared_ada/
 * trees/ext.gpr
-  - Ada:
-    trees/src/ext/
-    <runtine dir>/adainclude/
-    trees/src/shared_ada/
   - C:
     trees/src/ext/
     trees/src/shared_c/
@@ -139,7 +124,6 @@ Testing trees/withagglib.gpr
     trees/src/withagglib/
     <runtine dir>/adainclude/
     trees/src/base/
-    trees/src/ext/
     trees/src/extall1/
     trees/src/extall2/
   - C:

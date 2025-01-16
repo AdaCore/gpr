@@ -482,7 +482,7 @@ Project Level Attributes
 
   .. index:: Attributes - Project Level Attributes; Languages
 
-  * **Languages**: set value, case-insensitive, concatenated with extended value
+  * **Languages**: set value, case-insensitive
 
     The list of languages of the sources of the project.
 
