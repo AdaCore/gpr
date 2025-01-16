@@ -445,7 +445,7 @@ begin
       Is_Allowed_In         => No_Aggregates,
       Default               => Create ("Ada"),
       Has_Default_In        => No_Aggregates_Abstract,
-      Inherit_From_Extended => Concatenated,
+      Inherit_From_Extended => Inherited,
       Is_Set                => True);
 
    --  config_prj_file

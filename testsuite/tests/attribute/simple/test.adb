@@ -53,9 +53,9 @@ begin
    TGPR.Assert_Attribute_Not_Defined
       (Tree.Root_Project, "mode", Pkg => "install");
 
-   IO.Put_Line ("Check languages (inherited and concatenated from extended)");
-   Languages.Append("C");
+   IO.Put_Line ("Check languages");
    Languages.Append("Ada");
+   Languages.Append("C");
    TGPR.Assert_Attribute
       (Tree.Root_Project,
        Name  => "Languages",

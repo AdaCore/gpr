@@ -585,7 +585,7 @@
             },
             "index_optional": false,
             "index_type": "NO_INDEX",
-            "inherit_from_extended": "CONCATENATED",
+            "inherit_from_extended": "INHERITED",
             "is_allowed_in": {
               "abstract": true,
               "aggregate": false,
