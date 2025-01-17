@@ -4,12 +4,16 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Containers.Vectors;
+with Ada.Strings.Fixed;
+
+with GNATCOLL.Directed_Graph;
+
 with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Actions.Sets;
-with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Artifacts.Source;
 with GPR2.Build.Compilation_Unit.Maps;
 pragma Warnings (Off);
@@ -19,14 +23,91 @@ with GPR2.Build.Tree_Db;
 with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.View.Set;
+with GPR2.Project.View.Vector;
 with GPR2.Source_Reference;
 with GPR2.View_Ids.Set;
 
 package body GPR2.Build.Actions_Population is
 
+   --  Some notes on the initial DAG population:
+   --  First step, population of libraries for the tree:
+   --  - the output artifacts is created and added to the tree
+   --  - proper link or archive operation is created for the libs
+   --  - the list of objects that belong the lib is created
+   --    * corresponding compilation actions are populatedw
+
    package PRA renames GPR2.Project.Registry.Attribute;
+   package PAI renames GPR2.Project.Attribute_Index;
+
+   type Link_Array is
+     array (Positive range <>) of GPR2.Build.Actions.Link.Object;
+
+   type Bind_Array is
+     array (Positive range <>) of GPR2.Build.Actions.Ada_Bind.Object;
+
+   type Library_Type is record
+      View : GPR2.Project.View.Object;
+      Link : GPR2.Build.Actions.Link.Object;
+   end record;
+
+   No_Library : constant Library_Type := (others => <>);
+
+   package Library_Map is
+      use GNATCOLL.Directed_Graph;
+      use GPR2.View_Ids;
+
+      package View_Node_Map is new Ada.Containers.Ordered_Maps
+        (Key_Type     => View_Id,
+         Element_Type => Node_Id);
+      package Node_View_Map is new Ada.Containers.Ordered_Maps
+        (Key_Type     => Node_Id,
+         Element_Type => GPR2.View_Ids.View_Id);
+      package View_Id_Library_Map is new Ada.Containers.Ordered_Maps
+        (Key_Type     => View_Id,
+         Element_Type => Library_Type);
+      package Library_Vector is new Ada.Containers.Vectors
+        (Positive, Library_Type);
+
+      type Map is tagged limited record
+         DAG     : Directed_Graph;
+         To_Node : View_Node_Map.Map;
+         To_View : Node_View_Map.Map;
+         Values  : View_Id_Library_Map.Map;
+      end record;
+
+      function Contains
+        (Self : Map; Key : GPR2.Project.View.Object) return Boolean
+      is (Self.Values.Contains (Key.Id));
+
+      procedure Include
+        (Self    : in out Map;
+         Key     : GPR2.Project.View.Object;
+         Element : Library_Type);
+
+      procedure Add_Successor
+        (Self      : in out Map;
+         Key       : GPR2.Project.View.Object;
+         Successor : GPR2.Project.View.Object);
+
+      procedure Replace
+        (Self    : in out Map;
+         Key     : GPR2.Project.View.Object;
+         Element : Library_Type);
+
+      function Serialize (Self : in out Map) return Library_Vector.Vector;
+   end Library_Map;
+
+   function Populate_Library
+     (Tree_Db  : GPR2.Build.Tree_Db.Object_Access;
+      View     : GPR2.Project.View.Object;
+      Libs     : in out Library_Map.Map) return Boolean;
+   --  If previous is set, it indicates the previously withed lib for the
+   --  view that populates its library dependencies. This is used to keep the
+   --  proper topological order of the withed libraries (and thus proper
+   --  symbol resolutions)
 
    function As_Unit_Location
      (Basename       : Value_Type;
@@ -36,21 +117,10 @@ package body GPR2.Build.Actions_Population is
       Error_Reported : out Boolean)
       return Compilation_Unit.Unit_Location_Vector;
 
-   function Populate_Aggregated_Library
-     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      View    : GPR2.Project.View.Object;
-      Lib     : out Artifacts.Library.Object;
-      Visited : in out GPR2.View_Ids.Set.Set) return Boolean;
-
    function Populate_All
-     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      View    : GPR2.Project.View.Object;
-      Actions : out Build.Actions.Sets.Set) return Boolean;
-
-   function Populate_Library
-     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      View    : GPR2.Project.View.Object;
-      Lib     : out Artifacts.Library.Object) return Boolean;
+     (Tree_Db     : GPR2.Build.Tree_Db.Object_Access;
+      View        : GPR2.Project.View.Object;
+      Single_View : Boolean := False) return Boolean;
 
    function Populate_Mains
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
@@ -58,10 +128,89 @@ package body GPR2.Build.Actions_Population is
       Mains   : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
       Options : Build.Options.Build_Options) return Boolean;
 
-   function Populate_Withed_Units
+   function Populate_Withed_Projects
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      View    : GPR2.Project.View.Object;
-      Visited : in out View_Ids.Set.Set) return Boolean;
+      Closure : in out GPR2.Project.View.Set.Object;
+      Libs    : in out Library_Map.Map) return Boolean;
+   --  Handle the population of withed projects
+   --  Closure will contain the list of withed standard views
+   --  Libs is the list of withed libraries
+
+   function Populate_Withed_Projects
+     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      Closure : in out GPR2.Project.View.Set.Object;
+      Ctxt    : Library_Type;
+      Libs    : in out Library_Map.Map) return Boolean;
+
+   function Populate_Withed_Projects_Internal
+     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      Closure : in out GPR2.Project.View.Set.Object;
+      Ctxt    : Library_Type;
+      Libs    : in out Library_Map.Map) return Boolean;
+
+   package body Library_Map is
+
+   -------------------
+   -- Add_Successor --
+   -------------------
+
+      procedure Add_Successor
+        (Self      : in out Map;
+         Key       : GPR2.Project.View.Object;
+         Successor : GPR2.Project.View.Object)
+      is
+         From : constant Node_Id := Self.To_Node.Element (Key.Id);
+         Succ : constant Node_Id := Self.To_Node.Element (Successor.Id);
+      begin
+         Self.DAG.Add_Predecessor (Succ, From);
+      end Add_Successor;
+
+      -------------
+      -- Include --
+      -------------
+
+      procedure Include
+        (Self    : in out Map;
+         Key     : GPR2.Project.View.Object;
+         Element : Library_Type)
+      is
+         New_Node : constant Node_Id := Self.DAG.Add_Node;
+      begin
+         Self.To_Node.Insert (Key.Id, New_Node);
+         Self.To_View.Insert (New_Node, Key.Id);
+         Self.Values.Insert (Key.Id, Element);
+      end Include;
+
+      -------------
+      -- Replace --
+      -------------
+
+      procedure Replace
+        (Self    : in out Map;
+         Key     : GPR2.Project.View.Object;
+         Element : Library_Type) is
+      begin
+         Self.Values.Replace (Key.Id, Element);
+      end Replace;
+
+      ---------------
+      -- Serialize --
+      ---------------
+
+      function Serialize (Self : in out Map) return Library_Vector.Vector
+      is
+         Node : Node_Id;
+      begin
+         return Result : Library_Vector.Vector do
+            Self.DAG.Start_Iterator;
+
+            while Self.DAG.Next (Node) loop
+               Result.Append (Self.Values (Self.To_View (Node)));
+            end loop;
+         end return;
+      end Serialize;
+
+   end Library_Map;
 
    ----------------------
    -- As_Unit_Location --
@@ -178,12 +327,12 @@ package body GPR2.Build.Actions_Population is
       Visited     : View_Ids.Set.Set;
       Pos         : View_Ids.Set.Cursor;
       Inserted    : Boolean;
-      Actions_Set : Actions.Sets.Set;
-      Lib         : Artifacts.Library.Object;
+      Libs        : Library_Map.Map;
       Src         : GPR2.Build.Source.Object;
       Mains       : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
       To_Remove   : Actions.Sets.Set;
       Has_Error   : Boolean;
+      Closure     : GPR2.Project.View.Set.Object;
 
    begin
       Tree_Db.Set_Build_Options (Options);
@@ -206,16 +355,19 @@ package body GPR2.Build.Actions_Population is
             if Options.Unique_Compilation
               or else Options.Unique_Compilation_Recursive
             then
-               --  Handle -u and -U:
+               -----------------------
+               --  Handle -u and -U --
+               -----------------------
 
                if Mains.Is_Empty then
                   --  compile all sources, recursively in case -U is set
                   if Options.Unique_Compilation then
-                     Result := Populate_All (Tree_Db, V, Actions_Set);
+                     Result := Populate_All (Tree_Db, V, True);
                   else
-                     for C of V.Closure (True) loop
+                     for C of V.Closure (True, False, True) loop
                         if not C.Is_Externally_Built then
-                           Result := Populate_All (Tree_Db, C, Actions_Set);
+                           Result := Populate_All
+                             (Tree_Db, C, True);
                            exit when not Result;
                         end if;
                      end loop;
@@ -260,10 +412,9 @@ package body GPR2.Build.Actions_Population is
                end if;
 
             else
-               --  Handle general case:
-
-               --  Make sure the withed libraries are added to the tree
-               Result := Populate_Withed_Units (Tree_Db, V, Visited);
+               --------------------------
+               --  Handle general case --
+               --------------------------
 
                if not Result then
                   return False;
@@ -274,18 +425,16 @@ package body GPR2.Build.Actions_Population is
                      if V.Has_Mains or else not Mains.Is_Empty then
                         Result := Populate_Mains (Tree_Db, V, Mains, Options);
                      else
-                        Result := Populate_All (Tree_Db, V, Actions_Set);
+                        Result := Populate_All (Tree_Db, V);
                      end if;
 
-                  when K_Library =>
-                     Result := Populate_Library (Tree_Db, V, Lib);
-
-                  when K_Aggregate_Library =>
-                     Result :=
-                       Populate_Aggregated_Library (Tree_Db, V, Lib, Visited);
+                  when K_Library | K_Aggregate_Library =>
+                     Result := Populate_Library (Tree_Db, V, Libs);
 
                   when others =>
-                     null;
+                     Closure.Include (V);
+                     Result := Populate_Withed_Projects
+                       (Tree_Db, Closure, Libs);
                end case;
             end if;
          end if;
@@ -329,122 +478,63 @@ package body GPR2.Build.Actions_Population is
       return Result;
    end Populate_Actions;
 
-   ---------------------------------
-   -- Populate_Aggregated_Library --
-   ---------------------------------
-
-   function Populate_Aggregated_Library
-     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      View    : GPR2.Project.View.Object;
-      Lib     :    out Artifacts.Library.Object;
-      Visited : in out GPR2.View_Ids.Set.Set) return Boolean
-   is
-      L          : GPR2.Build.Actions.Link.Object;
-      Action_Set : Actions.Sets.Set;
-      Result     : Boolean;
-      Agg_Lib    : Artifacts.Library.Object;
-
-   begin
-      L.Initialize_Library (View);
-
-      if not Tree_Db.Add_Action (L) then
-         return False;
-      end if;
-
-      if not Tree_Db.Add_Output (L.UID, L.Output) then
-         return False;
-      end if;
-
-      Lib := Artifacts.Library.Object (L.Output);
-
-      for Agg of View.Aggregated loop
-         Visited.Include (Agg.Id);
-         Result := True;
-
-         case Agg.Kind is
-            when K_Standard =>
-               Result := Populate_All (Tree_Db, Agg, Action_Set);
-
-               for A of Action_Set loop
-                  Tree_Db.Add_Input
-                    (L.UID,
-                     Actions.Compile.Object'Class (A).Object_File,
-                     True);
-               end loop;
-
-            when K_Library =>
-               Result := Populate_Library (Tree_Db, Agg, Agg_Lib);
-               Tree_Db.Add_Input (L.UID, Agg_Lib, True);
-
-            when K_Aggregate_Library =>
-               Result :=
-                 Populate_Aggregated_Library (Tree_Db, Agg, Agg_Lib, Visited);
-               Tree_Db.Add_Input (L.UID, Agg_Lib, True);
-
-            when others =>
-               null;
-         end case;
-
-         if not Result then
-            return False;
-         end if;
-
-         if not Populate_Withed_Units (Tree_Db, Agg, Visited) then
-            return False;
-         end if;
-      end loop;
-
-      return True;
-   end Populate_Aggregated_Library;
-
    ------------------
    -- Populate_All --
    ------------------
 
    function Populate_All
-     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      View    : GPR2.Project.View.Object;
-      Actions : out Build.Actions.Sets.Set) return Boolean
+     (Tree_Db     : GPR2.Build.Tree_Db.Object_Access;
+      View        : GPR2.Project.View.Object;
+      Single_View : Boolean := False) return Boolean
    is
+      Closure : GPR2.Project.View.Set.Object;
+      Libs    : Library_Map.Map;
    begin
       if View.Is_Externally_Built then
-         --  Nothing to do
          return True;
       end if;
 
-      declare
-         Comp : GPR2.Build.Actions.Compile.Ada.Object;
-      begin
-         for CU of View.Own_Units loop
-            Comp.Initialize (CU);
+      Closure.Include (View);
 
-            if not Tree_Db.Add_Action (Comp) then
-               return False;
-            end if;
+      if not Single_View
+        and then not Populate_Withed_Projects (Tree_Db, Closure, Libs)
+      then
+         return False;
+      end if;
 
-            Actions.Include (Comp);
-         end loop;
-      end;
+      for V of Closure loop
+         if not V.Is_Externally_Built then
+            declare
+               Comp : GPR2.Build.Actions.Compile.Ada.Object;
+            begin
+               for CU of V.Own_Units loop
+                  Comp.Initialize (CU);
 
-      declare
-         Comp : GPR2.Build.Actions.Compile.Object;
-      begin
-         for Src of View.Sources loop
-            if not Src.Has_Units
-              and then Src.Is_Compilable
-              and then Src.Kind = S_Body
-            then
-               Comp.Initialize (Src);
+                  if not Tree_Db.Add_Action (Comp) then
+                     return False;
+                  end if;
+               end loop;
+            end;
 
-               if not Tree_Db.Add_Action (Comp)
-               then
-                  return False;
-               end if;
+            declare
+               Comp : GPR2.Build.Actions.Compile.Object;
+            begin
+               for Src of V.Sources loop
+                  if not Src.Has_Units
+                    and then Src.Is_Compilable
+                    and then Src.Kind = S_Body
+                  then
+                     Comp.Initialize (Src);
 
-               Actions.Include (Comp);
-            end if;
-         end loop;
-      end;
+                     if not Tree_Db.Add_Action (Comp)
+                     then
+                        return False;
+                     end if;
+                  end if;
+               end loop;
+            end;
+         end if;
+      end loop;
 
       return True;
    end Populate_All;
@@ -454,133 +544,57 @@ package body GPR2.Build.Actions_Population is
    ----------------------
 
    function Populate_Library
-     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      View    : GPR2.Project.View.Object;
-      Lib     : out Artifacts.Library.Object) return Boolean
+     (Tree_Db  : GPR2.Build.Tree_Db.Object_Access;
+      View     : GPR2.Project.View.Object;
+      Libs     : in out Library_Map.Map) return Boolean
    is
-      use GPR2.Build.Compilation_Unit;
-
-      procedure Interface_Units
-        (Units : out GPR2.Build.Compilation_Unit.Maps.Map);
-      --  Provide the compilation units provided by either Library_Interface
-      --  or Interfaces attributes.
-
-      function Add_Comp_To_Tree_And_Linker
-        (CU     : GPR2.Build.Compilation_Unit.Object;
-         Linker : GPR2.Build.Actions.Link.Object) return Boolean;
-      --  Create an Ada compile action from the provided CU, add its to the
-      --  tree and add its object file as a linker input.
-      --  Return True on success.
-
-      ---------------------------------
-      -- Add_Comp_To_Tree_And_Linker --
-      ---------------------------------
-
-      function Add_Comp_To_Tree_And_Linker
-        (CU     : GPR2.Build.Compilation_Unit.Object;
-         Linker : GPR2.Build.Actions.Link.Object) return Boolean
-      is
-         Comp : GPR2.Build.Actions.Compile.Ada.Object;
-      begin
-         Comp.Initialize (CU);
-
-         if not Tree_Db.Add_Action (Comp) then
-            return False;
-         end if;
-
-         Tree_Db.Add_Input (Linker.UID, Comp.Object_File, False);
-         return True;
-      end Add_Comp_To_Tree_And_Linker;
-
-      ---------------------
-      -- Interface_Units --
-      ---------------------
-
-      procedure Interface_Units
-        (Units : out GPR2.Build.Compilation_Unit.Maps.Map)
-      is
-         use GPR2.Build.Compilation_Unit.Maps;
-         CU : GPR2.Build.Compilation_Unit.Object;
-         use GPR2.Containers;
-      begin
-         Units := Empty_Map;
-
-         if View.Has_Library_Interface then
-            for Unit_Name_Curs in View.Interface_Units.Iterate loop
-               CU :=
-                 View.Own_Unit
-                   (Name => Unit_Name_To_Sloc.Key (Unit_Name_Curs));
-               Units.Include (CU.Name, CU);
-            end loop;
-         else
-            pragma Assert (View.Has_Interfaces);
-            for Interface_Source_Cursor in View.Interface_Sources.Iterate loop
-               declare
-                  Source_Name : constant Simple_Name :=
-                    Simple_Name
-                      (Source_Path_To_Sloc.Key (Interface_Source_Cursor));
-                  Source      : constant GPR2.Build.Source.Object :=
-                    View.Source (Filename => Source_Name);
-
-               begin
-                  --  If the file does not contain units, it does not need
-                  --  elaboration nor finalization.
-
-                  if not Source.Has_Units then
-                     goto Next_Interface;
-                  end if;
-
-                  if Source.Has_Single_Unit then
-                     CU := View.Own_Unit (Name => Source.Unit.Name);
-                     Units.Include (CU.Name, CU);
-                  else
-                     --  Process all the units contained in the source file.
-                     --  An ALI file is generated for each unit. If a source is
-                     --  multi units, then a ~<index> suffix is added to the
-                     --  source name to produce the ali file name.For instance,
-                     --  if the file foo.adb contains unit A and B, then two
-                     --  files will be produced: foo~1.ali and foo~2.ali.
-
-                     for Unit_Info of Source.Units loop
-                        CU := View.Own_Unit (Name => Unit_Info.Name);
-                        Units.Include (CU.Name, CU);
-                     end loop;
-                  end if;
-               end;
-
-               <<Next_Interface>>
-            end loop;
-         end if;
-      end Interface_Units;
-
-      L            : GPR2.Build.Actions.Link.Object;
-      Bind         : GPR2.Build.Actions.Ada_Bind.Object;
+      Self         : Library_Type;
       Interf_Units : GPR2.Build.Compilation_Unit.Maps.Map;
+      Closure      : GPR2.Project.View.Set.Object;
+      Bind         : GPR2.Build.Actions.Ada_Bind.Object;
+
    begin
-      L.Initialize_Library (View);
+      if Libs.Contains (View) then
+         return True;
+      end if;
 
-      if not Tree_Db.Add_Action (L) then
+      Self.View := View;
+      Self.Link.Initialize_Library (View);
+
+      if not Tree_Db.Add_Action (Self.Link) then
          return False;
       end if;
 
-      if not Tree_Db.Add_Output (L.UID, L.Output) then
-         return False;
+      --  Add the lib now to prevent infinite recursion in case of
+      --  circular dependencies (e.g. A withes B that limited_withes A)
+
+      Libs.Include (View, Self);
+
+      --  Gather the list of standard view deps and ensure the libs are
+      --  populated.
+
+      if View.Kind /= K_Aggregate_Library then
+         Closure.Include (View);
+      else
+         for V of View.Aggregated loop
+            Closure.Include (V);
+         end loop;
       end if;
 
-      Lib := Artifacts.Library.Object (L.Output);
+      if not Populate_Withed_Projects (Tree_Db, Closure, Self, Libs) then
+         return False;
+      end if;
 
       if View.Is_Externally_Built then
          return True;
       end if;
 
       if View.Is_Library_Standalone then
-
          --  Create the binder action that will create the file in charge of
          --  elaborating and finalizing the lib. Used for standalone libraries.
 
          declare
-            Binding_Extra_Opts : GPR2.Containers.Value_List :=
-              GPR2.Containers.Empty_Value_List;
+            Binding_Extra_Opts : GPR2.Containers.Value_List;
          begin
             Binding_Extra_Opts.Append ("-a");
             Binding_Extra_Opts.Append ("-n");
@@ -595,8 +609,75 @@ package body GPR2.Build.Actions_Population is
             return False;
          end if;
 
-         Tree_Db.Add_Input (L.UID, Bind.Post_Bind.Object_File, True);
-         Interface_Units (Interf_Units);
+         Tree_Db.Add_Input
+           (Self.Link.UID, Bind.Post_Bind.Object_File, True);
+
+         --  Now gather the list of units that compose the interface
+         declare
+            use GPR2.Build.Compilation_Unit.Maps;
+            CU : GPR2.Build.Compilation_Unit.Object;
+            use GPR2.Containers;
+         begin
+            if View.Has_Library_Interface then
+               for C in View.Interface_Units.Iterate loop
+                  CU := GPR2.Build.Compilation_Unit.Undefined;
+
+                  for V of Closure loop
+                     declare
+                        Unit_Name : constant Name_Type :=
+                                      Unit_Name_To_Sloc.Key (C);
+                     begin
+                        CU := V.Own_Unit (Unit_Name);
+                        exit when CU.Is_Defined;
+                     end;
+                  end loop;
+
+                  pragma Assert (CU.Is_Defined);
+                  Interf_Units.Include (CU.Name, CU);
+               end loop;
+
+            else
+               pragma Assert (View.Has_Interfaces);
+
+               for C in View.Interface_Sources.Iterate loop
+                  declare
+                     Source_Name : constant Simple_Name :=
+                                     Simple_Name
+                                       (Source_Path_To_Sloc.Key (C));
+                     Source      : constant GPR2.Build.Source.Object :=
+                                     View.Source (Filename => Source_Name);
+
+                  begin
+                     --  If the file does not contain units, it does not need
+                     --  elaboration nor finalization.
+
+                     if not Source.Has_Units then
+                        goto Next_Interface;
+                     end if;
+
+                     if Source.Has_Single_Unit then
+                        CU := View.Own_Unit (Name => Source.Unit.Name);
+                        Interf_Units.Include (CU.Name, CU);
+                     else
+                        --  Process all the units contained in the source file.
+                        --  An ALI file is generated for each unit. If a source
+                        --  is multi units, then a ~<index> suffix is added to
+                        --  the source name to produce the ali file name.For
+                        --  instance, if the file foo.adb contains unit A and
+                        --  B, then two files will be produced: foo~1.ali and
+                        --  foo~2.ali.
+
+                        for Unit_Info of Source.Units loop
+                           CU := View.Own_Unit (Name => Unit_Info.Name);
+                           Interf_Units.Include (CU.Name, CU);
+                        end loop;
+                     end if;
+                  end;
+
+                  <<Next_Interface>>
+               end loop;
+            end if;
+         end;
 
          for CU of Interf_Units loop
             declare
@@ -608,55 +689,73 @@ package body GPR2.Build.Actions_Population is
                   return False;
                end if;
 
-               Tree_Db.Add_Input (L.UID, Comp.Object_File, False);
+               Tree_Db.Add_Input (Self.Link.UID, Comp.Object_File, False);
                Tree_Db.Add_Input (Bind.UID, Comp.Ali_File, True);
             end;
          end loop;
+
       else
-         for CU of View.Own_Units loop
-            if not Add_Comp_To_Tree_And_Linker (CU, L) then
-               return False;
-            end if;
-         end loop;
+         --  Non standalone libraries: add all Ada units
+         if View.Kind = K_Aggregate_Library then
+            for Agg of View.Aggregated loop
+               for CU of Agg.Own_Units loop
+                  declare
+                     Comp : GPR2.Build.Actions.Compile.Ada.Object;
+                  begin
+                     Comp.Initialize (CU);
+
+                     if not Tree_Db.Add_Action (Comp) then
+                        return False;
+                     end if;
+
+                     Tree_Db.Add_Input
+                       (Self.Link.UID, Comp.Object_File, False);
+                  end;
+               end loop;
+            end loop;
+         else
+            for CU of View.Own_Units loop
+               declare
+                  Comp : GPR2.Build.Actions.Compile.Ada.Object;
+               begin
+                  Comp.Initialize (CU);
+
+                  if not Tree_Db.Add_Action (Comp) then
+                     return False;
+                  end if;
+
+                  Tree_Db.Add_Input (Self.Link.UID, Comp.Object_File, False);
+               end;
+            end loop;
+         end if;
       end if;
 
-      for Src of View.Sources loop
-         if not Src.Has_Units
-           and then Src.Is_Compilable
-           and then Src.Kind = S_Body
-         then
-            declare
-               Comp : GPR2.Build.Actions.Compile.Object;
-            begin
-               Comp.Initialize (Src);
+      --  Now add all non-Ada compilable sources, including the ones from
+      --  the withed standard projects.
 
-               if not Tree_Db.Add_Action (Comp) then
-                  return False;
-               end if;
+      for V of Closure loop
+         for Src of V.Sources loop
+            if not Src.Has_Units
+              and then Src.Is_Compilable
+              and then Src.Kind = S_Body
+            then
+               declare
+                  Comp : GPR2.Build.Actions.Compile.Object;
+               begin
+                  Comp.Initialize (Src);
 
-               Tree_Db.Add_Input (L.UID, Comp.Object_File, False);
-            end;
-         end if;
+                  if not Tree_Db.Add_Action (Comp) then
+                     return False;
+                  end if;
+
+                  Tree_Db.Add_Input (Self.Link.UID, Comp.Object_File, False);
+               end;
+            end if;
+         end loop;
       end loop;
 
-      --  Now, ensure that the library depends on its withed libraries
-
-      for V of View.Closure loop
-         if V.Is_Library then
-            declare
-               Lib_Id  : constant Actions.Link.Link_Id :=
-                           Actions.Link.Create
-                              (V,
-                              V.Library_Filename.Simple_Name,
-                              True);
-               Lib_A   : constant Actions.Link.Object'Class :=
-                           Actions.Link.Object'Class
-                              (Tree_Db.Action (Lib_Id));
-            begin
-               Tree_Db.Add_Input (L.UID, Lib_A.Output, True);
-            end;
-         end if;
-      end loop;
+      --  Update the Library object in Libs
+      Libs.Replace (View, Self);
 
       return True;
    end Populate_Library;
@@ -675,9 +774,6 @@ package body GPR2.Build.Actions_Population is
       Comp       : Actions.Compile.Object;
       Source     : GPR2.Build.Source.Object;
       Archive    : Actions.Link.Object;
-      Closure    : GPR2.Project.View.Set.Object;
-      Todo       : GPR2.Project.View.Set.Object;
-      Seen       : GPR2.Project.View.Set.Object;
       Actual_Mains : Compilation_Unit.Unit_Location_Vector;
 
       use type GPR2.Path_Name.Object;
@@ -739,14 +835,35 @@ package body GPR2.Build.Actions_Population is
       --  Process the mains one by one
 
       declare
-         Bind   : array (1 .. Natural (Actual_Mains.Length)) of
-                    Actions.Ada_Bind.Object;
-         Link   : array (1 .. Natural (Actual_Mains.Length)) of
-                    Actions.Link.Object;
-         Attr   : GPR2.Project.Attribute.Object;
-         Idx    : Natural := 1;
-         Skip   : Boolean := False;
+         Bind      : Bind_Array (1 .. Natural (Actual_Mains.Length));
+         Link      : Link_Array (1 .. Natural (Actual_Mains.Length));
+         Attr      : GPR2.Project.Attribute.Object;
+         Closure   : GPR2.Project.View.Set.Object;
+         Libs      : Library_Map.Map;
+         Idx       : Natural := 1;
+         Skip      : Boolean := False;
+         Has_Ada   : Boolean := False;
+         Has_Other : Boolean := False;
       begin
+         Closure.Include (View);
+
+         if not Populate_Withed_Projects (Tree_Db, Closure, Libs) then
+            return False;
+         end if;
+
+         Closure_Loop :
+         for V of Closure loop
+            for L of V.Language_Ids loop
+               if L = Ada_Language then
+                  Has_Ada := True;
+               elsif V.Is_Compilable (L) then
+                  Has_Other := True;
+               end if;
+
+               exit Closure_Loop when Has_Ada and then Has_Other;
+            end loop;
+         end loop Closure_Loop;
+
          for Main of Actual_Mains loop
             Source := Main.View.Source (Main.Source.Simple_Name);
 
@@ -758,6 +875,10 @@ package body GPR2.Build.Actions_Population is
 
             if Options.Create_Map_File then
                Attr := Main.View.Attribute (PRA.Linker.Map_File_Option);
+
+               --  ??? TODO: Add a primitive to the link object to move the
+               --  below processing there.
+
                if Length (Options.Mapping_File_Name) > 0 then
                   Link (Idx).Add_Option
                     (Attr.Value.Text & To_String (Options.Mapping_File_Name));
@@ -801,28 +922,79 @@ package body GPR2.Build.Actions_Population is
 
                Tree_Db.Add_Input (Link (Idx).UID, Comp.Object_File, True);
 
-               --  In case the main is non-ada and we have Ada sources in
-               --  the closure, we need to add a binding phase and an explicit
-               --  dependency from the link phase to the ada objects.
+               if Has_Ada then
+                  --  ??? We don't need a bind phase per non-Ada main, we just
+                  --  need one for the view. We do that only to remain
+                  --  compatible with what gpr1build does?
 
-               for V of View.Closure (True) loop
-                  if not V.Is_Runtime
-                    and then V.Language_Ids.Contains (Ada_Language)
-                    and then
-                      (V.Kind = K_Standard
-                       or else
-                         (V.Is_Library
-                          and then V.Is_Static_Library
-                          and then not V.Is_Library_Standalone))
-                  then
-                     --  Make sure we have a binding phase for the ada sources
-                     --  that generates a binder file with external main.
+                  Bind (Idx).Initialize
+                    (Source.Path_Name.Base_Filename,
+                     View,
+                     "-n");
 
+                  if not Tree_Db.Add_Action (Bind (Idx)) then
+                     return False;
+                  end if;
+
+                  for V of Closure loop
+                     for CU of V.Own_Units loop
+                        A_Comp.Initialize (CU);
+
+                        if not Tree_Db.Add_Action (A_Comp) then
+                           return False;
+                        end if;
+
+                        Tree_Db.Add_Input
+                          (Bind (Idx).UID, A_Comp.Ali_File, True);
+                        Tree_Db.Add_Input
+                          (Link (Idx).UID, A_Comp.Object_File, True);
+                     end loop;
+                  end loop;
+
+                  Tree_Db.Add_Input
+                    (Link (Idx).UID,
+                     Bind (Idx).Post_Bind.Object_File,
+                     True);
+               end if;
+
+               --  Hendle roots if any
+               declare
+                  procedure Add_CU (CU : Build.Compilation_Unit.Object);
+
+                  ------------
+                  -- Add_CU --
+                  ------------
+
+                  procedure Add_CU (CU : Build.Compilation_Unit.Object) is
+                     Ada_Comp : GPR2.Build.Actions.Compile.Ada.Object;
+                  begin
+                     if CU.Is_Defined then
+                        Ada_Comp.Initialize (CU);
+                        Tree_Db.Add_Input
+                          (Bind (Idx).UID,
+                           Ada_Comp.Ali_File,
+                           True);
+
+                        if Ada_Comp.Object_File.Is_Defined then
+                           Tree_Db.Add_Input
+                             (Link (Idx).UID,
+                              Ada_Comp.Object_File,
+                              True);
+                        end if;
+                     end if;
+                  end Add_CU;
+
+                  Attr     : constant GPR2.Project.Attribute.Object :=
+                               View.Attribute
+                                 (PRA.Roots,
+                                  PAI.Create_Source (Main.Source.Simple_Name));
+                  CU       : GPR2.Build.Compilation_Unit.Object;
+
+               begin
+                  if Attr.Is_Defined then
                      if not Bind (Idx).Is_Defined then
                         Bind (Idx).Initialize
-                          (Source.Path_Name.Base_Filename,
-                           View,
-                           "-n");
+                          (Source.Path_Name.Base_Filename, View, "-n");
 
                         if not Tree_Db.Add_Action (Bind (Idx)) then
                            return False;
@@ -834,91 +1006,31 @@ package body GPR2.Build.Actions_Population is
                            True);
                      end if;
 
-                     for U of V.Own_Units loop
-                        A_Comp.Initialize (U);
-
-                        if V.Kind = K_Standard then
-                           if not Tree_Db.Add_Action (A_Comp) then
-                              return False;
-                           end if;
-
-                           Tree_Db.Add_Input
-                             (Bind (Idx).UID, A_Comp.Ali_File, True);
-                           Tree_Db.Add_Input
-                             (Link (Idx).UID, A_Comp.Object_File, True);
+                     for Val of Attr.Values loop
+                        if Ada.Strings.Fixed.Index (Val.Text, "*") > 0 then
+                           for CU of View.Units loop
+                              if GNATCOLL.Utils.Match
+                                (String (CU.Name), Val.Text)
+                              then
+                                 Add_CU (CU);
+                              end if;
+                           end loop;
                         else
-                           --  For archives, we just need to add the dependency
-                           --  to the bind action, the rest is handled like
-                           --  all imported archives.
-
-                           Tree_Db.Add_Input
-                             (Bind (Idx).UID, A_Comp.Ali_File, True);
+                           CU := View.Unit (Name_Type (Val.Text));
+                           Add_CU (CU);
                         end if;
                      end loop;
                   end if;
-               end loop;
-            end if;
-
-            Idx := Idx + 1;
-         end loop;
-
-         --  Now add to each link/bind action dependencies to the libraries
-
-         for V of View.Closure loop
-            if V.Is_Library then
-               --  Add the libraries present in the closure as
-               --  dependencies.
-
-               declare
-                  Lib_Id  : constant Actions.Link.Link_Id :=
-                              Actions.Link.Create
-                                (V,
-                                 V.Library_Filename.Simple_Name,
-                                 True);
-                  Lib_A   : constant Actions.Link.Object'Class :=
-                              Actions.Link.Object'Class
-                                (Tree_Db.Action (Lib_Id));
-               begin
-                  for J in Link'Range loop
-                     Tree_Db.Add_Input
-                       (Link (J).UID, Lib_A.Output, True);
-
-                     if Bind (J).Is_Defined then
-                        Tree_Db.Add_Input
-                          (Bind (J).UID, Lib_A.Output, False);
-                     end if;
-                  end loop;
                end;
             end if;
-         end loop;
 
-         --  Now we need to add the objects from all regular views, filtering
-         --  out libraries (and their imports)
+            --  Add libraries
 
-         Closure.Clear;
-         Seen.Clear;
-         Todo.Insert (View);
-         Todo.Union (View.Imports);
-         Todo.Union (View.Limited_Imports);
+            for Lib of Libs.Serialize loop
+               Tree_Db.Add_Input (Link (Idx).UID, Lib.Link.Output, True);
+            end loop;
 
-         while not Todo.Is_Empty loop
-            declare
-               V : constant GPR2.Project.View.Object :=
-                     Todo.First_Element;
-            begin
-               Todo.Delete_First;
-
-               if not Seen.Contains (V) then
-                  Seen.Insert (V);
-
-                  if not V.Is_Library then
-                     Closure.Include (V);
-
-                     Todo.Union (V.Imports.Difference (Seen));
-                     Todo.Union (V.Limited_Imports.Difference (Seen));
-                  end if;
-               end if;
-            end;
+            Idx := Idx + 1;
          end loop;
 
          --  Check non-Ada sources: we create an intermedidate library for
@@ -971,7 +1083,9 @@ package body GPR2.Build.Actions_Population is
                      return False;
                   end if;
 
-                  Tree_Db.Add_Input (Archive.UID, Comp.Object_File, True);
+                  if Comp.Object_File.Is_Defined then
+                     Tree_Db.Add_Input (Archive.UID, Comp.Object_File, True);
+                  end if;
                end if;
             end loop;
          end loop;
@@ -980,54 +1094,109 @@ package body GPR2.Build.Actions_Population is
       return True;
    end Populate_Mains;
 
-   ---------------------------
-   -- Populate_Withed_Units --
-   ---------------------------
+   ------------------------------
+   -- Populate_Withed_Projects --
+   ------------------------------
 
-   function Populate_Withed_Units
+   function Populate_Withed_Projects
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      View    : GPR2.Project.View.Object;
-      Visited : in out View_Ids.Set.Set) return Boolean
-   is
-      Lib    : Artifacts.Library.Object;
-      Result : Boolean;
+      Closure : in out GPR2.Project.View.Set.Object;
+      Libs    : in out Library_Map.Map) return Boolean is
    begin
-      for Import of View.Imports.Union (View.Limited_Imports) loop
-         if not Visited.Contains (Import.Id) then
-            Visited.Include (Import.Id);
+      return Populate_Withed_Projects_Internal
+        (Tree_Db, Closure, No_Library, Libs);
+   end Populate_Withed_Projects;
 
-            Result := Populate_Withed_Units (Tree_Db, Import, Visited);
+   ------------------------------
+   -- Populate_Withed_Projects --
+   ------------------------------
 
-            if not Result then
-               return False;
-            end if;
+   function Populate_Withed_Projects
+     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      Closure : in out GPR2.Project.View.Set.Object;
+      Ctxt    : Library_Type;
+      Libs    : in out Library_Map.Map) return Boolean is
+   begin
+      return Populate_Withed_Projects_Internal
+        (Tree_Db, Closure, Ctxt, Libs);
+   end Populate_Withed_Projects;
 
-            if Import.Kind = K_Library then
-               Result :=
-                 Populate_Library (Tree_Db, Import, Lib);
-            elsif Import.Kind = K_Aggregate_Library then
-               Result :=
-                 Populate_Aggregated_Library (Tree_Db, Import, Lib, Visited);
-            end if;
+   ---------------------------------------
+   -- Populate_Withed_Projects_Internal --
+   ---------------------------------------
 
-            if not Result then
-               return False;
-            end if;
-         end if;
-      end loop;
+   function Populate_Withed_Projects_Internal
+     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      Closure : in out GPR2.Project.View.Set.Object;
+      Ctxt    : Library_Type;
+      Libs    : in out Library_Map.Map) return Boolean
+   is
+      procedure Add_Deps (V  : GPR2.Project.View.Object);
 
-      if View.Is_Extending then
-         for V of View.Extended loop
-            Result := Populate_Withed_Units (Tree_Db, V, Visited);
+      Todo         : GPR2.Project.View.Vector.Object;
+      Seen         : GPR2.Project.View.Set.Object;
 
-            if not Result then
-               return False;
+      --------------
+      -- Add_Deps --
+      --------------
+
+      procedure Add_Deps (V : GPR2.Project.View.Object) is
+      begin
+         for Imp of V.Imports.Union (V.Limited_Imports) loop
+            if not Seen.Contains (Imp) then
+               Todo.Append (Imp);
             end if;
          end loop;
-      end if;
+
+         if V.Is_Extending then
+            for Ext of V.Extended loop
+               for Imp of Ext.Imports.Union (Ext.Limited_Imports) loop
+                  if not Seen.Contains (Imp) then
+                     Todo.Append (Imp);
+                  end if;
+               end loop;
+            end loop;
+         end if;
+      end Add_Deps;
+
+      Current : GPR2.Project.View.Object;
+
+   begin
+      for V of Closure loop
+         Add_Deps (V);
+      end loop;
+
+      while not Todo.Is_Empty loop
+         Current := Todo.First_Element;
+         Todo.Delete_First;
+         Seen.Include (Current);
+
+         case Current.Kind is
+            when K_Standard =>
+               if not Current.Is_Runtime then
+                  Closure.Include (Current);
+                  Add_Deps (Current);
+               end if;
+
+            when K_Abstract =>
+               Add_Deps (Current);
+
+            when K_Library | K_Aggregate_Library =>
+               if not Populate_Library (Tree_Db, Current, Libs) then
+                  return False;
+               end if;
+
+               if Ctxt /= No_Library then
+                  Libs.Add_Successor (Ctxt.View, Current);
+               end if;
+
+            when others =>
+               null;
+         end case;
+      end loop;
 
       return True;
-   end Populate_Withed_Units;
+   end Populate_Withed_Projects_Internal;
 
    -------------------
    -- Resolve_Mains --

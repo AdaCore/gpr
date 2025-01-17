@@ -460,7 +460,7 @@ begin
    --  roots
    Add
      (Name                 => Roots,
-      Index_Type           => FileGlob_Index,
+      Index_Type           => FileGlob_Or_Language_Index,
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates);

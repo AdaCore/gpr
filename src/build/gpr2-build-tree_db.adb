@@ -192,7 +192,9 @@ package body GPR2.Build.Tree_Db is
          end if;
 
       elsif not Explicit_List.Contains (Artifact) then
-         Implicit_List.Append (Artifact);
+         if not Implicit_List.Contains (Artifact) then
+            Implicit_List.Append (Artifact);
+         end if;
       else
          return;
       end if;
@@ -1040,13 +1042,15 @@ package body GPR2.Build.Tree_Db is
         (Success,
         "Replace_Artifact: cannot insert new artifact '" & Value.Image & "'");
 
-      C_Succ := Self.Successors.Find (Old);
+      pragma Assert (Success);
 
       Self.Successors.Insert (Value, Action_Sets.Empty_Set, C_New, Success);
       pragma Assert
         (Success,
          "Replace_Artifact: cannot setup list of successors for '" &
            Value.Image & "'");
+
+      C_Succ := Self.Successors.Find (Old);
 
       for Succ of Self.Successors (C_Succ) loop
          Self.Successors (C_New).Include (Succ);
