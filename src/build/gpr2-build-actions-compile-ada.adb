@@ -442,8 +442,15 @@ package body GPR2.Build.Actions.Compile.Ada is
 
                Allowed := False;
             elsif CU_View.Has_Interfaces
-              and then not CU_View.Interface_Sources.Contains
-                             (CU.Spec.Source.Simple_Name)
+              and then not
+                ((CU.Has_Part (S_Spec)
+                  and then CU_View.Interface_Sources.Contains
+                    (CU.Spec.Source.Simple_Name))
+                 or else
+                   (CU.Has_Part (S_Body)
+                    and then CU_View.Interface_Sources.Contains
+                      (CU.Main_Body.Source.Simple_Name)))
+
             then
                --  Similarly, if the unit source is not listed by the
                --  Interfaces attribute, then it can not be imported.
