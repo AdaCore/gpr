@@ -5,6 +5,7 @@
 --
 
 with Ada.Containers.Indefinite_Ordered_Sets;
+with Ada.Containers.Indefinite_Vectors;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 with GPR2.Build.Command_Line;
@@ -56,6 +57,9 @@ package GPR2.Build.Actions is
 
    package Action_Id_Sets is new Ada.Containers.Indefinite_Ordered_Sets
      (Action_Id'Class);
+
+   package Action_Id_Vectors is new Ada.Containers.Indefinite_Vectors
+     (Positive, Action_Id'Class);
 
    type Object is abstract tagged private;
    --  Actions are atomic steps in a compilation process, where an external

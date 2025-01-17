@@ -391,17 +391,16 @@ package body GPR2.Build.Actions.Link is
    function Embedded_Objects
      (Self : Object) return Build.Tree_Db.Artifact_Sets.Set
    is
-      Result : Tree_Db.Artifact_Sets.Set;
    begin
-      for Input of Self.Tree.Inputs (Self.UID) loop
-         --  Inputs are either objects or libraries. Libraries are represented
-         --  by an Artifact.Library class.
-         if Input not in Artifacts.Library.Object'Class then
-            Result.Include (Input);
-         end if;
-      end loop;
-
-      return Result;
+      return Result : Tree_Db.Artifact_Sets.Set do
+         for Input of Self.Tree.Inputs (Self.UID) loop
+            --  Inputs are either objects or libraries. Libraries are
+            --  represented by an Artifact.Library class.
+            if Input not in Artifacts.Library.Object'Class then
+               Result.Include (Input);
+            end if;
+         end loop;
+      end return;
    end Embedded_Objects;
 
    ----------------
@@ -482,17 +481,16 @@ package body GPR2.Build.Actions.Link is
    --------------------------
 
    function Library_Dependencies
-     (Self : Object) return Actions.Action_Id_Sets.Set
+     (Self : Object) return Actions.Action_Id_Vectors.Vector
    is
-      Result : Action_Id_Sets.Set;
    begin
-      for Input of Self.Tree.Inputs (Self.UID) loop
-         if Input in Artifacts.Library.Object'Class then
-            Result.Insert (Self.Tree.Predecessor (Input).UID);
-         end if;
-      end loop;
-
-      return Result;
+      return Result : Action_Id_Vectors.Vector do
+         for Input of Self.Tree.Inputs (Self.UID) loop
+            if Input in Artifacts.Library.Object'Class then
+               Result.Append (Self.Tree.Predecessor (Input).UID);
+            end if;
+         end loop;
+      end return;
    end Library_Dependencies;
 
    -----------------------

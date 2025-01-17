@@ -64,7 +64,7 @@ package GPR2.Build.Actions.Link is
    --  This includes the objects coming from embedded libraries
 
    function Library_Dependencies
-     (Self : Object) return Actions.Action_Id_Sets.Set;
+     (Self : Object) return Actions.Action_Id_Vectors.Vector;
    --  List of libraries this action uses
 
    overriding function On_Tree_Insertion
