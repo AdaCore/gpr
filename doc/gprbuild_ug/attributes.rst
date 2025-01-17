@@ -506,7 +506,7 @@ Project Level Attributes
 
   .. index:: Attributes - Project Level Attributes; Roots
 
-  * **Roots**: list value, indexed by a source glob
+  * **Roots**: list value, indexed by a source glob or language
 
     The index is the file name of an executable source. Indicates the list of units
     from the main project that need to be bound and linked with their closures with

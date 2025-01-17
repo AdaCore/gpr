@@ -4,41 +4,41 @@
 [Ada Compile] main.adb (p1.gpr)
   inputs:
   outputs:
-  - /tree/obj/p1/main.ali
   - /tree/obj/p1/main.o
+  - /tree/obj/p1/main.ali
 [Ada Compile] pkg.adb (p1.gpr)
   inputs:
   outputs:
-  - /tree/obj/p1/pkg.ali
   - /tree/obj/p1/pkg.o
+  - /tree/obj/p1/pkg.ali
 [C Compile] foo.c (p1.gpr)
   inputs:
   outputs:
-  - /tree/obj/p1/foo.d
   - /tree/obj/p1/foo.o
+  - /tree/obj/p1/foo.d
 [Ada Compile] foo.ada@2 (p2.gpr)
   inputs:
   outputs:
+  - /tree/obj/p2/foo~2.o
   - /tree/lib/p2/foo~2.ali
   - /tree/obj/p2/foo~2.ali
-  - /tree/obj/p2/foo~2.o
 [Ada Compile] pkg.adb (p2.gpr)
   inputs:
   outputs:
+  - /tree/obj/p2/pkg.o
   - /tree/lib/p2/pkg.ali
   - /tree/obj/p2/pkg.ali
-  - /tree/obj/p2/pkg.o
 [Ada Compile] pkg3.adb (p2.gpr)
   inputs:
   outputs:
-  - /tree/obj/base2/pkg3.ali
   - /tree/obj/base2/pkg3.o
+  - /tree/obj/base2/pkg3.ali
   - /tree/obj/p2/pkg3.ali
 [Ada Compile] pkg2.adb (shared.gpr)
   inputs:
   outputs:
-  - /tree/obj/shared/pkg2.ali
   - /tree/obj/shared/pkg2.o
+  - /tree/obj/shared/pkg2.ali
 
 ------------------------------
 -- clashing_objects/agg.gpr --
