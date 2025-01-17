@@ -619,22 +619,24 @@ package body GPR2.Build.Actions.Compile is
          end if;
       end;
 
-      declare
-         Sw : constant GPR2.Project.Attribute.Object :=
-                Self.View.Attribute (PRA.Compiler.Object_File_Switches,
-                                     Lang_Idx);
-      begin
-         if Sw.Is_Defined then
-            Add_Options_With_Arg
-              (Sw, String (Self.Object_File.Path.Simple_Name), True);
-         elsif Self.Lang = Ada_Language then
-            --  [eng/gpr/gpr-issues#446] TODO modify the KB to have a proper
-            --  default here.
-            Cmd_Line.Add_Argument ("-o");
-            Cmd_Line.Add_Argument
-              (String (Self.Object_File.Path.Simple_Name));
-         end if;
-      end;
+      if Self.Obj_File.Is_Defined then
+         declare
+            Sw : constant GPR2.Project.Attribute.Object :=
+                   Self.View.Attribute (PRA.Compiler.Object_File_Switches,
+                                        Lang_Idx);
+         begin
+            if Sw.Is_Defined then
+               Add_Options_With_Arg
+                 (Sw, String (Self.Obj_File.Path.Simple_Name), True);
+            elsif Self.Lang = Ada_Language then
+               --  [eng/gpr/gpr-issues#446] TODO modify the KB to have a proper
+               --  default here.
+               Cmd_Line.Add_Argument ("-o");
+               Cmd_Line.Add_Argument
+                 (String (Self.Obj_File.Path.Simple_Name));
+            end if;
+         end;
+      end if;
 
    exception
       when GNATCOLL.OS.OS_Error =>
@@ -655,13 +657,19 @@ package body GPR2.Build.Actions.Compile is
       use GPR2.Build.Signature;
       Art : Artifacts.Files.Object;
    begin
-      --  ??? Need to process deps units
+      if Self.Obj_File.Is_Defined then
+         --  ??? Need to process deps units
 
-      Art := Artifacts.Files.Create (Self.Input.Path_Name);
-      Signature.Add_Artifact (Art);
+         Art := Artifacts.Files.Create (Self.Input.Path_Name);
+         Signature.Add_Artifact (Art);
 
-      Art := Self.Obj_File;
-      Signature.Add_Artifact (Art);
+         Art := Self.Obj_File;
+         Signature.Add_Artifact (Art);
+      else
+         --  In case we have Object_Generated unset for the language, then
+         --  we don't save the signature so that the action is replayed.
+         Signature.Clear;
+      end if;
    end Compute_Signature;
 
    --------------
@@ -692,8 +700,13 @@ package body GPR2.Build.Actions.Compile is
                       (Src.Owning_View.Attribute
                          (PRA.Compiler.Object_File_Suffix,
                           PAI.Create (Src.Language)).Value.Text);
+      Attr      : constant GPR2.Project.Attribute.Object :=
+                    View.Attribute (PRA.Object_Generated,
+                                    PAI.Create (Src.Language));
       No_Obj    : constant Boolean :=
-                    View.Is_Library and then View.Is_Externally_Built;
+                    (View.Is_Library and then View.Is_Externally_Built)
+                      or else (Attr.Is_Defined
+                               and then Name_Type (Attr.Value.Text) = "false");
       Candidate : GPR2.Project.View.Object;
       Inh_Src   : GPR2.Build.Source.Object;
       Found     : Boolean := False;
@@ -759,7 +772,9 @@ package body GPR2.Build.Actions.Compile is
    is
       UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      if not Db.Add_Output (UID, Self.Obj_File) then
+      if Self.Obj_File.Is_Defined
+        and then not Db.Add_Output (UID, Self.Obj_File)
+      then
          return False;
       end if;
 
