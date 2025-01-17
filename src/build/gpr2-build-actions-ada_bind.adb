@@ -27,6 +27,7 @@ with GPR2.Project.Registry.Attribute;
 pragma Warnings (Off, "*is not referenced");
 with GPR2.Project.View.Vector;
 pragma Warnings (On);
+with GPR2.Project.Tree;
 
 package body GPR2.Build.Actions.Ada_Bind is
 
@@ -628,7 +629,15 @@ package body GPR2.Build.Actions.Ada_Bind is
       use Ada.Strings;
       use Ada.Strings.Fixed;
 
-      Add_Remaining : Boolean := False;
+      Runtime          : constant GPR2.Project.View.Object :=
+                           Self.View.Tree.Runtime_Project;
+
+      Add_Remaining    : Boolean := False;
+      Xlinker_Seen     : Boolean := False;
+      Stack_Equal_Seen : Boolean := False;
+      Static_Libs      : Boolean := True;
+      Adalib_Dir       : constant Path_Name.Object :=
+                           Runtime.Object_Directory;
 
       procedure Process_Option_Or_Object_Line (Line : String);
       --  Pass options to the linker. Do not pass object file lines,
@@ -639,38 +648,93 @@ package body GPR2.Build.Actions.Ada_Bind is
       -----------------------------------
 
       procedure Process_Option_Or_Object_Line (Line : String) is
-         Switch_Index : Natural := Index (Line, "--");
+         Idx              : constant PAI.Object :=
+                              PAI.Create (Line, Case_Sensitive => True);
+         Attr             : constant GPR2.Project.Attribute.Object :=
+                              Self.View.Attribute
+                                (PRA.Binder.Bindfile_Option_Substitution, Idx);
       begin
-         if Switch_Index = 0 then
-            pragma Annotate (Xcov, Exempt_On, "unreachable code");
-            raise Internal_Error
-              with "Failed parsing line " & Line & " from " &
-              Self.Output_Body.Path.String_Value;
-            pragma Annotate (Xcov, Exempt_Off);
+         if not Add_Remaining and then Line (Line'First) = '-' then
+            --  We skip the list of objects, not reliable, the Tree_Db
+            --  is more reliable. After the first option we however need
+            --  to take everything since pragma Linker_Options may be
+            --  anything, including non-options
+            Add_Remaining := True;
          end if;
 
-         --  Skip the "--" comment prefix
+         if Line = "-shared" then
+            Static_Libs := False;
+         end if;
 
-         Switch_Index := Switch_Index + 2;
+         if not Add_Remaining
+           and then Path_Name.Simple_Name
+             (Filename_Type (Line)) not in "g-trasym.o" | "g-trasym.obj"
+         then
+            --  g-trasym is a special case as it is not included in libgnat
+            return;
+         end if;
 
-         declare
-            Trimed_Line : constant String :=
-                            Trim (Line (Switch_Index .. Line'Last), Both);
-         begin
-            if Trimed_Line (Trimed_Line'First) = '-' then
-               Add_Remaining := True;
+         if Line = "-Xlinker" then
+            Xlinker_Seen := True;
+
+         elsif Xlinker_Seen then
+            Xlinker_Seen := False;
+
+            --  Make sure that only the first switch --stack= is taken into
+            --  account
+            if Starts_With (Line, "-stack=") then
+               if not Stack_Equal_Seen then
+                  Stack_Equal_Seen := True;
+                  Self.Linker_Opts.Append ("-Xlinker");
+                  Self.Linker_Opts.Append (Line);
+               end if;
+            else
+               Self.Linker_Opts.Append ("-Xlinker");
+               Self.Linker_Opts.Append (Line);
             end if;
 
-            if Add_Remaining then
-               Self.Linker_Opts.Append (Trimed_Line);
+         elsif Starts_With (Line, "-Wl,--stack=") then
+            if not Stack_Equal_Seen then
+               Stack_Equal_Seen := True;
+               Self.Linker_Opts.Append (Line);
             end if;
-         end;
+
+         elsif Attr.Is_Defined then
+            for V of Attr.Values loop
+               Self.Linker_Opts.Append (V.Text);
+            end loop;
+
+            --  For a number of archives, we need to indicate the full path of
+            --  the arghive, if we find it, to be sure that the correct
+            --  archive is used by the linker.
+
+         elsif Line = "-lgnat" then
+            if Static_Libs then
+               Self.Linker_Opts.Append
+                 (Adalib_Dir.Compose ("libgnat.a").String_Value);
+            else
+               Self.Linker_Opts.Append (Line);
+            end if;
+
+         elsif Line = "-lgnarl" then
+            if Static_Libs then
+               Self.Linker_Opts.Append
+                 (Adalib_Dir.Compose ("libgnarl.a").String_Value);
+            else
+               Self.Linker_Opts.Append (Line);
+            end if;
+            --  ??? There are other libs to look for
+
+         else
+            Self.Linker_Opts.Append (Line);
+         end if;
       end Process_Option_Or_Object_Line;
 
       Src_File     : File_Type;
       Reading      : Boolean         := False;
       Begin_Marker : constant String := "--  BEGIN Object file/option list";
       End_Marker   : constant String := "--  END Object file/option list";
+      Switch_Index : Natural;
 
    begin
       Self.Traces.Trace
@@ -693,7 +757,20 @@ package body GPR2.Build.Actions.Ada_Bind is
                Reading := False;
                exit;
             elsif Reading then
-               Process_Option_Or_Object_Line (Line);
+               Switch_Index := Index (Line, "--");
+
+               if Switch_Index = 0 then
+                  pragma Annotate (Xcov, Exempt_On, "unreachable code");
+                  raise Internal_Error
+                    with "Failed parsing line " & Line & " from " &
+                    Self.Output_Body.Path.String_Value;
+                  pragma Annotate (Xcov, Exempt_Off);
+               end if;
+
+               --  Skip the "--" comment prefix
+               Switch_Index := Switch_Index + 2;
+               Process_Option_Or_Object_Line
+                 (Trim (Line (Switch_Index .. Line'Last), Both));
             end if;
          end;
       end loop;
