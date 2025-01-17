@@ -25,7 +25,7 @@ procedure Main is
      (View : GPR2.Project.View.Object; Name : Simple_Name)
       return GPR2.Project.View.Object is
    begin
-      for V of View.Aggregated loop
+      for V of View.Aggregated (False) loop
          if V.Path_Name.Simple_Name = Name then
             return V;
          end if;
