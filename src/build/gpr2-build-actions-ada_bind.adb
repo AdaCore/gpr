@@ -51,10 +51,6 @@ package body GPR2.Build.Actions.Ada_Bind is
          Is_List      : Boolean;
          In_Signature : Boolean) return Boolean;
 
-      function Add_Attr_RS
-        (Id    : Q_Attribute_Id;
-         Index : PAI.Object) return Boolean;
-
       procedure Add_Binder (Id : Q_Attribute_Id; Index : PAI.Object);
 
       procedure Add_Mapping_File;
@@ -74,18 +70,27 @@ package body GPR2.Build.Actions.Ada_Bind is
          Is_List      : Boolean;
          In_Signature : Boolean) return Boolean
       is
-         Attr : constant Project.Attribute.Object :=
-                  Self.View.Attribute (Id, Index);
+         Attr                  : constant Project.Attribute.Object :=
+                                   Self.View.Attribute (Id, Index);
+         Gnatbind_Prefix_Equal : constant String := "gnatbind_prefix=";
+         Gnatbind_Path_Equal   : constant String := "--gnatbind_path=";
+         Ada_Binder_Equal      : constant String := "ada_binder=";
+
       begin
          if not Attr.Is_Defined then
             return False;
          end if;
 
          if Is_List then
-            for Idx in Attr.Values.First_Index .. Attr.Values.Last_Index loop
-               if Attr.Values.Element (Idx).Text'Length > 0 then
-                  Cmd_Line.Add_Argument
-                    (Attr.Values.Element (Idx).Text, In_Signature);
+            for Val of Attr.Values loop
+               if Val.Text'Length > 0
+                 and then not Starts_With (Val.Text, Gnatbind_Path_Equal)
+                 and then not Starts_With (Val.Text, Gnatbind_Prefix_Equal)
+                 and then not Starts_With (Val.Text, Ada_Binder_Equal)
+                 --  Ignore -C, as the generated sources are always in Ada
+                 and then Val.Text /= "-C"
+               then
+                  Cmd_Line.Add_Argument (Val.Text, In_Signature);
                end if;
             end loop;
          else
@@ -94,43 +99,6 @@ package body GPR2.Build.Actions.Ada_Bind is
 
          return True;
       end Add_Attr;
-
-      -----------------
-      -- Add_Attr_RS --
-      -----------------
-
-      function Add_Attr_RS
-        (Id    : Q_Attribute_Id;
-         Index : PAI.Object) return Boolean
-      is
-         Attr : constant Project.Attribute.Object :=
-                  Self.View.Attribute (Id, Index);
-
-         Gnatbind_Prefix_Equal : constant String := "gnatbind_prefix=";
-         Gnatbind_Path_Equal   : constant String := "--gnatbind_path=";
-         Ada_Binder_Equal      : constant String := "ada_binder=";
-      begin
-         if not Attr.Is_Defined then
-            return False;
-         end if;
-
-         for Idx in Attr.Values.First_Index .. Attr.Values.Last_Index loop
-            declare
-               Str : constant String := Attr.Values.Element (Idx).Text;
-            begin
-               if not Starts_With (Str, Gnatbind_Path_Equal)
-                 and then not Starts_With (Str, Gnatbind_Prefix_Equal)
-                 and then not Starts_With (Str, Ada_Binder_Equal)
-                 --  Ignore -C, as the generated sources are always in Ada
-                 and then Str /= "-C"
-               then
-                  Cmd_Line.Add_Argument (Str, True);
-               end if;
-            end;
-         end loop;
-
-         return True;
-      end Add_Attr_RS;
 
       ----------------
       -- Add_Binder --
@@ -450,8 +418,8 @@ package body GPR2.Build.Actions.Ada_Bind is
       --  This switch is historically added for all GNAT version >= 6.4, it
       --  should be in the knowledge base instead of being hardcoded depending
       --  on the GNAT version.
-      Status := Add_Attr_RS (PRA.Binder.Required_Switches, Lang_Ada_Idx);
-
+      Status :=
+        Add_Attr (PRA.Binder.Required_Switches, Lang_Ada_Idx, True, True);
       Status := Add_Attr (PRA.Binder.Switches, Lang_Ada_Idx, True, True);
 
       if not Status then
