@@ -81,8 +81,10 @@ package body Test_Helper is
                             (Main.Source.Base_Filename & ".ali"));
             begin
                Action.Initialize
-                 (Basename  => Ali.Path.Base_Filename,
-                  Context   => Root);
+                 (Basename       => Ali.Path.Base_Filename,
+                  Context        => Root,
+                  Has_Main       => True,
+                  SAL_In_Closure => False);
                Assert
                  (not Tree.Artifacts_Database.Has_Action (Action.UID),
                   "New binder action", Topic => Setup);

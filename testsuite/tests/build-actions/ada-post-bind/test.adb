@@ -42,8 +42,10 @@ function Test return Integer is
    begin
       Ali_Path := Context.Object_Directory.Compose ("main.ali");
       Bind_Action.Initialize
-        (Basename => Ali_Path.Base_Filename,
-         Context  => Context);
+        (Basename       => Ali_Path.Base_Filename,
+         Context        => Context,
+         Has_Main       => True,
+         SAL_In_Closure => False);
       Assert
         (Tree.Artifacts_Database.Add_Action (Bind_Action),
          "Insert bind action to the database");
