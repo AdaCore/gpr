@@ -15,6 +15,7 @@ with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Project.View.Vector;
 with GPR2.Tree_Internal;
 with GPR2.View_Ids.Set;
 with GNATCOLL.Directed_Graph; use GNATCOLL.Directed_Graph;
@@ -885,13 +886,31 @@ package body GPR2.Build.Tree_Db is
             if V.Kind in GPR2.Build.View_Tables.With_View_Db then
                declare
                   use GPR2.Containers;
-                  V_Db : constant View_Tables.View_Data_Ref :=
-                           View_Tables.Get_Data (Self.Self, V);
+                  Closure : GPR2.Project.View.Vector.Object;
+                  Found   : Boolean;
                begin
+                  if V.Kind /= K_Aggregate_Library then
+                     Closure.Append (V);
+                  else
+                     for Agg of V.Aggregated loop
+                        Closure.Append (Agg);
+                     end loop;
+                  end if;
+
                   for C in V.Interface_Units.Iterate loop
-                     if not V_Db.Own_CUs.Contains
-                       (Unit_Name_To_Sloc.Key (C))
-                     then
+                     Found := False;
+
+                     for Sub of Closure loop
+                        if View_Tables.Get_Data
+                          (Self.Self, Sub).Own_CUs.Contains
+                          (Unit_Name_To_Sloc.Key (C))
+                        then
+                           Found := True;
+                           exit;
+                        end if;
+                     end loop;
+
+                     if not Found then
                         Messages.Append
                           (Message.Create
                              (Message.Error,
@@ -903,9 +922,19 @@ package body GPR2.Build.Tree_Db is
                   end loop;
 
                   for C in V.Interface_Sources.Iterate loop
-                     if not V_Db.Sources.Contains
-                       (Source_Path_To_Sloc.Key (C))
-                     then
+                     Found := False;
+
+                     for Sub of Closure loop
+                        if View_Tables.Get_Data
+                          (Self.Self, Sub).Sources.Contains
+                          (Source_Path_To_Sloc.Key (C))
+                        then
+                           Found := True;
+                           exit;
+                        end if;
+                     end loop;
+
+                     if not Found then
                         Messages.Append
                           (Message.Create
                              (Message.Error,

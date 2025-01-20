@@ -301,16 +301,8 @@ package body GPR2.Project.Tree is
            and then Root.Has_Any_Interfaces
          then
             --  no -U switch case, standalone library case
-            for C in Root.Interface_Units.Iterate loop
-               --  ??? should handle also case where ada sources are defined
-               --  in Root.Interface_Sources.
-
-               declare
-                  Unit_Name : constant Name_Type :=
-                                Containers.Unit_Name_To_Sloc.Key (C);
-               begin
-                  Stack.Include (Unit_Name);
-               end;
+            for CU of Root.Interface_Closure loop
+               Stack.Include (CU.Name);
             end loop;
 
          else

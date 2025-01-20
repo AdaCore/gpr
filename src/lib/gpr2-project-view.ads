@@ -476,6 +476,15 @@ package GPR2.Project.View is
    --  Return a map of interface sources defined by the view to their
    --  definition in the project file.
 
+   function Interface_Closure
+     (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
+     with Pre => Self.Is_Defined and then Self.Is_Library;
+   --  Return the set of Ada units that are part of the interface of the
+   --  library (so either part of the Interfaces attribute or part of the
+   --  Interface_Sources attribute).
+   --  If no interface is defined for the library, then the returned map is
+   --  empty.
+
    --  Some common attributes redefined here and when some pathname are
    --  relative to the view, the proper value is returned. Following
    --  routines are for internal use only and convert from a View unique Id.

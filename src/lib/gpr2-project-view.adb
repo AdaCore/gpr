@@ -1670,6 +1670,69 @@ package body GPR2.Project.View is
       return Result;
    end Include_Path;
 
+   -----------------------
+   -- Interface_Closure --
+   -----------------------
+
+   function Interface_Closure
+     (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
+   is
+      CU : Build.Compilation_Unit.Object;
+   begin
+      return Result : GPR2.Build.Compilation_Unit.Maps.Map do
+         for C in Self.Interface_Units.Iterate loop
+            declare
+               U_Name : constant Name_Type :=
+                          Containers.Unit_Name_To_Sloc.Key (C);
+            begin
+               if Self.Kind = K_Aggregate_Library then
+                  for V of Self.Aggregated loop
+                     CU := V.Own_Unit (U_Name);
+                     exit when CU.Is_Defined;
+                  end loop;
+
+               else
+                  CU := Self.Own_Unit (U_Name);
+               end if;
+
+               --  ??? Handle properly the error case
+
+               pragma Assert (CU.Is_Defined);
+
+               Result.Insert (U_Name, CU);
+            end;
+         end loop;
+
+         for C in Self.Interface_Sources.Iterate loop
+            declare
+               BN     : constant Filename_Type :=
+                          Containers.Source_Path_To_Sloc.Key (C);
+               Src    : constant GPR2.Build.Source.Object :=
+                          Self.Visible_Source (BN);
+
+            begin
+               if Src.Has_Units then
+                  for U of Src.Units loop
+                     if Self.Kind = K_Aggregate_Library then
+                        for V of Self.Aggregated loop
+                           CU := V.Own_Unit (U.Name);
+                           exit when CU.Is_Defined;
+                        end loop;
+
+                     else
+                        CU := Self.Own_Unit (U.Name);
+                     end if;
+
+                     pragma Assert (CU.Is_Defined);
+
+                     Result.Insert (U.Name, CU);
+                  end loop;
+               end if;
+            end;
+         end loop;
+      end return;
+   end Interface_Closure;
+
    ------------------------------
    -- Is_Aggregated_In_Library --
    ------------------------------
