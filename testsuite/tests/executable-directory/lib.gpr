@@ -1,0 +1,8 @@
+--  The Exec_Dir attribute is tolerated for library project loading,
+--  but the Executable_Directory function will raise an exception.
+
+library project lib is
+   for Library_Name use "mylib";
+   for Library_Dir use "lib";
+   for Exec_Dir use "exec-lib";
+end lib;

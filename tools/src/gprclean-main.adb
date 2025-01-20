@@ -588,14 +588,18 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
             end Delete_If_Not_Project;
 
          begin
-            if View.Kind in K_Standard | K_Library | K_Aggregate_Library then
+            if View.Kind in
+                K_Standard | K_Library | K_Aggregate_Library
+            then
                if Options.Src_Subdirs /= Null_Unbounded_String then
                   Delete_If_Not_Project (View.Source_Subdirectory);
                end if;
 
                Delete_If_Not_Project (Obj_Dir);
 
-               if View.Executable_Directory /= Obj_Dir then
+               if View.Kind in K_Standard
+                 and then View.Executable_Directory /= Obj_Dir
+               then
                   Delete_If_Not_Project (View.Executable_Directory);
                end if;
             end if;

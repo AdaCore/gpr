@@ -1,0 +1,9 @@
+--  The Exec_Dir attribute is tolerated for aggregate library project loading,
+--  but the Executable_Directory function will raise an exception.
+
+aggregate library project agglib is
+   for Project_Files use ("lib.gpr");
+   for Library_Name use project'Name;
+   for Library_Dir use project'Name & "-lib";
+   for Exec_Dir use "exec-lib";
+end agglib;

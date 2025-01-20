@@ -686,7 +686,7 @@ package GPR2.Project.View is
    function Executable_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre =>
        Self.Is_Defined
-       and then Self.Kind in K_Standard | K_Library | K_Aggregate_Library;
+       and then Self.Kind in K_Standard;
    --  As above but for the Exec_Dir attribute
 
    function Executable_Suffix (Self : Object) return Filename_Optional
