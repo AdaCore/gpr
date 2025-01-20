@@ -838,7 +838,7 @@ package body GPR2.Build.Actions_Population is
 
             if Source.Language = Ada_Language then
                A_Comp.Initialize
-                 (Main.View.Unit (Source.Units.Element (Main.Index).Name));
+                 (Main.View.Own_Unit (Source.Units.Element (Main.Index).Name));
 
                if not Tree_Db.Add_Action (A_Comp) then
                   return False;

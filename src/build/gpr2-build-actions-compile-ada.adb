@@ -4,6 +4,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Text_IO;
+
 with GNATCOLL.OS.FSUtil;
 
 with GPR2.Build.Actions.Ada_Bind;
@@ -277,9 +279,15 @@ package body GPR2.Build.Actions.Compile.Ada is
             Self.Obj_File := Artifacts.Files.Undefined;
          end if;
 
-         if Self.View.Is_Library then
+         if Self.View.Is_Library
+           and then (not Self.View.Is_Library_Standalone
+                     or else Self.View.Interface_Closure.Contains
+                       (Self.CU.Name))
+         then
+            Self.Ali_In_Lib_Dir := True;
             Local_Ali := Self.View.Library_Ali_Directory.Compose (BN & ".ali");
          else
+            Self.Ali_In_Lib_Dir := False;
             Local_Ali := Self.View.Object_Directory.Compose (BN & ".ali");
          end if;
 
@@ -304,25 +312,35 @@ package body GPR2.Build.Actions.Compile.Ada is
                --  there's always supposed to be an object dir and file here.
                Lkup_O := Candidate.Object_Directory.Compose (BN & O_Suff);
 
-               if Candidate.Is_Library then
-                  Lkup_Ali :=
-                    Candidate.Library_Ali_Directory.Compose (BN & ".ali");
-               else
+               if Lkup_O.Exists then
+                  if Candidate.Is_Library then
+                     Lkup_Ali :=
+                       Candidate.Library_Ali_Directory.Compose (BN & ".ali");
+
+                     if Lkup_Ali.Exists then
+                        Found := True;
+
+                        exit;
+                     end if;
+                  end if;
+
                   Lkup_Ali :=
                     Candidate.Object_Directory.Compose (BN & ".ali");
+
+                  if Lkup_Ali.Exists then
+                     Found := True;
+
+                     exit;
+                  end if;
                end if;
 
-               if Lkup_O.Exists and then Lkup_Ali.Exists then
-                  Found := True;
-               else
-                  Inh_Src :=
-                    Candidate.Source (Self.Input.Path_Name.Simple_Name);
+               Inh_Src :=
+                 Candidate.Source (Self.Input.Path_Name.Simple_Name);
 
-                  if Inh_Src.Is_Inherited then
-                     Candidate := Inh_Src.Inherited_From;
-                  else
-                     Candidate := GPR2.Project.View.Undefined;
-                  end if;
+               if Inh_Src.Is_Inherited then
+                  Candidate := Inh_Src.Inherited_From;
+               else
+                  Candidate := GPR2.Project.View.Undefined;
                end if;
             end loop;
 
@@ -383,9 +401,7 @@ package body GPR2.Build.Actions.Compile.Ada is
          return False;
       end if;
 
-      if Self.View.Kind = K_Library
-        and then not Self.View.Is_Externally_Built
-      then
+      if Self.Ali_In_Lib_Dir then
          --  Also add the .ali file created in the obj directory so that
          --  gprclean has visibility over it
 
@@ -434,29 +450,10 @@ package body GPR2.Build.Actions.Compile.Ada is
          --  There is no restriction of units visibility inside the same view
 
          if Self.View /= CU_View then
-            if CU_View.Is_Library and then CU_View.Has_Library_Interface
-              and then not CU_View.Interface_Units.Contains (CU.Name)
-            then
-               --  If the unit is not listed by the Library_Interface
-               --  attribute, it can not be imported.
-
-               Allowed := False;
-            elsif CU_View.Has_Interfaces
-              and then not
-                ((CU.Has_Part (S_Spec)
-                  and then CU_View.Interface_Sources.Contains
-                    (CU.Spec.Source.Simple_Name))
-                 or else
-                   (CU.Has_Part (S_Body)
-                    and then CU_View.Interface_Sources.Contains
-                      (CU.Main_Body.Source.Simple_Name)))
-
-            then
-               --  Similarly, if the unit source is not listed by the
-               --  Interfaces attribute, then it can not be imported.
-
-               Allowed := False;
-            end if;
+            Allowed := not
+              (CU_View.Is_Library
+               and then CU_View.Is_Library_Standalone
+               and then not CU_View.Interface_Closure.Contains (CU.Name));
 
             if not Allowed then
                Self.Tree.Reporter.Report
@@ -695,22 +692,61 @@ package body GPR2.Build.Actions.Compile.Ada is
       end;
 
       --  Copy the ali file in the library dir if needed
-      if Self.View.Is_Library
-        and then not GNATCOLL.OS.FSUtil.Copy_File
-          (Self.View.Object_Directory.Compose
-             (Self.Ali_File.Path.Simple_Name).String_Value,
-           Self.Ali_File.Path.String_Value)
-      then
-         Self.Tree.Reporter.Report
-           (GPR2.Message.Create
-              (GPR2.Message.Error,
-               "could not copy ali file " &
-                 String (Self.Ali_File.Path.Simple_Name) &
-                 " to the library directory",
-               GPR2.Source_Reference.Object
-                 (GPR2.Source_Reference.Create
-                    (Self.Ali_File.Path.Value, 0, 0))));
-         return False;
+      if Self.Ali_In_Lib_Dir then
+         declare
+            From : constant Path_Name.Object :=
+                     Self.View.Object_Directory.Compose
+                       (Self.Ali_File.Path.Simple_Name);
+         begin
+            if not Self.View.Is_Library_Standalone then
+               if not GNATCOLL.OS.FSUtil.Copy_File
+                 (From.String_Value,
+                  Self.Ali_File.Path.String_Value)
+               then
+                  Self.Tree.Reporter.Report
+                    (GPR2.Message.Create
+                       (GPR2.Message.Error,
+                        "could not copy ali file " &
+                          String (Self.Ali_File.Path.Simple_Name) &
+                          " to the library directory",
+                        GPR2.Source_Reference.Object
+                          (GPR2.Source_Reference.Create
+                               (Self.Ali_File.Path.Value, 0, 0))));
+                  return False;
+               end if;
+
+            else
+               --  The ALI file needs to be amended for units part of the
+               --  view's interface.
+               declare
+                  use Standard.Ada.Text_IO;
+                  Input  : File_Type;
+                  Output : File_Type;
+               begin
+                  Open (Input, In_File, From.String_Value);
+                  Create (Output, Out_File, Self.Ali_File.Path.String_Value);
+
+                  while not End_Of_File (Input) loop
+                     declare
+                        Line : constant String := Get_Line (Input);
+                     begin
+                        if Line'Length > 2
+                          and then Line (Line'First .. Line'First + 1) = "P "
+                        then
+                           Put_Line
+                             (Output,
+                              "P SL" & Line (Line'First + 1 .. Line'Last));
+                        else
+                           Put_Line (Output, Line);
+                        end if;
+                     end;
+                  end loop;
+
+                  Close (Input);
+                  Close (Output);
+               end;
+            end if;
+         end;
       end if;
 
       --  Update the tree with potential new imports from ALI

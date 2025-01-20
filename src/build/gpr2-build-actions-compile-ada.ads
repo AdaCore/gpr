@@ -93,6 +93,10 @@ private
       Ali_File              : Artifacts.Files.Object;
       --  Unit's ALI file. Can be undefined if not existing on disk
 
+      Ali_In_Lib_Dir        : Boolean := False;
+      --  Whether the reference Ali file is in the library_ali_directory or
+      --  in the object directory.
+
       Closure               : Action_Id_Sets.Set;
       --  List of all object files that are needed to have Self's symbols
       --  fully resolved.
