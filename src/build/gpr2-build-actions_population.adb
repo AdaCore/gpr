@@ -15,8 +15,8 @@ with GPR2.Build.Actions.Link;
 with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Actions.Sets;
 with GPR2.Build.Artifacts.Source;
-with GPR2.Build.Compilation_Unit.Maps;
 pragma Warnings (Off);
+with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
 with GPR2.Build.Tree_Db;
@@ -101,9 +101,10 @@ package body GPR2.Build.Actions_Population is
    end Library_Map;
 
    function Populate_Library
-     (Tree_Db  : GPR2.Build.Tree_Db.Object_Access;
-      View     : GPR2.Project.View.Object;
-      Libs     : in out Library_Map.Map) return Boolean;
+     (Tree_Db     : GPR2.Build.Tree_Db.Object_Access;
+      View        : GPR2.Project.View.Object;
+      Libs        : in out Library_Map.Map;
+      SAL_Closure : in out Boolean) return Boolean;
    --  If previous is set, it indicates the previously withed lib for the
    --  view that populates its library dependencies. This is used to keep the
    --  proper topological order of the withed libraries (and thus proper
@@ -131,7 +132,8 @@ package body GPR2.Build.Actions_Population is
    function Populate_Withed_Projects
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       Closure : in out GPR2.Project.View.Set.Object;
-      Libs    : in out Library_Map.Map) return Boolean;
+      Libs    : in out Library_Map.Map;
+      Has_SAL : in out Boolean) return Boolean;
    --  Handle the population of withed projects
    --  Closure will contain the list of withed standard views
    --  Libs is the list of withed libraries
@@ -140,13 +142,15 @@ package body GPR2.Build.Actions_Population is
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       Closure : in out GPR2.Project.View.Set.Object;
       Ctxt    : Library_Type;
-      Libs    : in out Library_Map.Map) return Boolean;
+      Libs    : in out Library_Map.Map;
+      Has_SAL : in out Boolean) return Boolean;
 
    function Populate_Withed_Projects_Internal
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       Closure : in out GPR2.Project.View.Set.Object;
       Ctxt    : Library_Type;
-      Libs    : in out Library_Map.Map) return Boolean;
+      Libs    : in out Library_Map.Map;
+      Has_SAL : in out Boolean) return Boolean;
 
    package body Library_Map is
 
@@ -332,6 +336,7 @@ package body GPR2.Build.Actions_Population is
       Mains       : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
       To_Remove   : Actions.Sets.Set;
       Has_Error   : Boolean;
+      Has_SAL     : Boolean := False;
       Closure     : GPR2.Project.View.Set.Object;
 
    begin
@@ -429,12 +434,12 @@ package body GPR2.Build.Actions_Population is
                      end if;
 
                   when K_Library | K_Aggregate_Library =>
-                     Result := Populate_Library (Tree_Db, V, Libs);
+                     Result := Populate_Library (Tree_Db, V, Libs, Has_SAL);
 
                   when others =>
                      Closure.Include (V);
                      Result := Populate_Withed_Projects
-                       (Tree_Db, Closure, Libs);
+                       (Tree_Db, Closure, Libs, Has_SAL);
                end case;
             end if;
          end if;
@@ -489,6 +494,7 @@ package body GPR2.Build.Actions_Population is
    is
       Closure : GPR2.Project.View.Set.Object;
       Libs    : Library_Map.Map;
+      Has_SAL : Boolean := False;
    begin
       if View.Is_Externally_Built then
          return True;
@@ -497,7 +503,8 @@ package body GPR2.Build.Actions_Population is
       Closure.Include (View);
 
       if not Single_View
-        and then not Populate_Withed_Projects (Tree_Db, Closure, Libs)
+        and then not Populate_Withed_Projects
+                       (Tree_Db, Closure, Libs, Has_SAL)
       then
          return False;
       end if;
@@ -544,14 +551,15 @@ package body GPR2.Build.Actions_Population is
    ----------------------
 
    function Populate_Library
-     (Tree_Db  : GPR2.Build.Tree_Db.Object_Access;
-      View     : GPR2.Project.View.Object;
-      Libs     : in out Library_Map.Map) return Boolean
+     (Tree_Db     : GPR2.Build.Tree_Db.Object_Access;
+      View        : GPR2.Project.View.Object;
+      Libs        : in out Library_Map.Map;
+      SAL_Closure : in out Boolean) return Boolean
    is
-      Self         : Library_Type;
-      Interf_Units : GPR2.Build.Compilation_Unit.Maps.Map;
-      Closure      : GPR2.Project.View.Set.Object;
-      Bind         : GPR2.Build.Actions.Ada_Bind.Object;
+      Self    : Library_Type;
+      Closure : GPR2.Project.View.Set.Object;
+      Has_SAL : Boolean := False;
+      Bind    : GPR2.Build.Actions.Ada_Bind.Object;
 
    begin
       if Libs.Contains (View) then
@@ -581,9 +589,14 @@ package body GPR2.Build.Actions_Population is
          end loop;
       end if;
 
-      if not Populate_Withed_Projects (Tree_Db, Closure, Self, Libs) then
+      if not Populate_Withed_Projects
+        (Tree_Db, Closure, Self, Libs, Has_SAL)
+      then
          return False;
       end if;
+
+      SAL_Closure :=
+        SAL_Closure or else Has_SAL or else View.Is_Library_Standalone;
 
       if View.Is_Externally_Built then
          return True;
@@ -593,17 +606,11 @@ package body GPR2.Build.Actions_Population is
          --  Create the binder action that will create the file in charge of
          --  elaborating and finalizing the lib. Used for standalone libraries.
 
-         declare
-            Binding_Extra_Opts : GPR2.Containers.Value_List;
-         begin
-            Binding_Extra_Opts.Append ("-a");
-            Binding_Extra_Opts.Append ("-n");
-
-            Bind.Initialize
-              (Basename   => View.Library_Name,
-               Context    => View,
-               Extra_Opts => Binding_Extra_Opts);
-         end;
+         Bind.Initialize
+           (Basename => View.Library_Name,
+            Context  => View,
+            Has_Main => False,
+            SAL_In_Closure => Has_SAL);
 
          if not Tree_Db.Add_Action (Bind) then
             return False;
@@ -613,73 +620,8 @@ package body GPR2.Build.Actions_Population is
            (Self.Link.UID, Bind.Post_Bind.Object_File, True);
 
          --  Now gather the list of units that compose the interface
-         declare
-            use GPR2.Build.Compilation_Unit.Maps;
-            CU : GPR2.Build.Compilation_Unit.Object;
-            use GPR2.Containers;
-         begin
-            if View.Has_Library_Interface then
-               for C in View.Interface_Units.Iterate loop
-                  CU := GPR2.Build.Compilation_Unit.Undefined;
 
-                  for V of Closure loop
-                     declare
-                        Unit_Name : constant Name_Type :=
-                                      Unit_Name_To_Sloc.Key (C);
-                     begin
-                        CU := V.Own_Unit (Unit_Name);
-                        exit when CU.Is_Defined;
-                     end;
-                  end loop;
-
-                  pragma Assert (CU.Is_Defined);
-                  Interf_Units.Include (CU.Name, CU);
-               end loop;
-
-            else
-               pragma Assert (View.Has_Interfaces);
-
-               for C in View.Interface_Sources.Iterate loop
-                  declare
-                     Source_Name : constant Simple_Name :=
-                                     Simple_Name
-                                       (Source_Path_To_Sloc.Key (C));
-                     Source      : constant GPR2.Build.Source.Object :=
-                                     View.Source (Filename => Source_Name);
-
-                  begin
-                     --  If the file does not contain units, it does not need
-                     --  elaboration nor finalization.
-
-                     if not Source.Has_Units then
-                        goto Next_Interface;
-                     end if;
-
-                     if Source.Has_Single_Unit then
-                        CU := View.Own_Unit (Name => Source.Unit.Name);
-                        Interf_Units.Include (CU.Name, CU);
-                     else
-                        --  Process all the units contained in the source file.
-                        --  An ALI file is generated for each unit. If a source
-                        --  is multi units, then a ~<index> suffix is added to
-                        --  the source name to produce the ali file name.For
-                        --  instance, if the file foo.adb contains unit A and
-                        --  B, then two files will be produced: foo~1.ali and
-                        --  foo~2.ali.
-
-                        for Unit_Info of Source.Units loop
-                           CU := View.Own_Unit (Name => Unit_Info.Name);
-                           Interf_Units.Include (CU.Name, CU);
-                        end loop;
-                     end if;
-                  end;
-
-                  <<Next_Interface>>
-               end loop;
-            end if;
-         end;
-
-         for CU of Interf_Units loop
+         for CU of View.Interface_Closure loop
             declare
                Comp : GPR2.Build.Actions.Compile.Ada.Object;
             begin
@@ -844,10 +786,11 @@ package body GPR2.Build.Actions_Population is
          Skip      : Boolean := False;
          Has_Ada   : Boolean := False;
          Has_Other : Boolean := False;
+         Has_SAL   : Boolean := False;
       begin
          Closure.Include (View);
 
-         if not Populate_Withed_Projects (Tree_Db, Closure, Libs) then
+         if not Populate_Withed_Projects (Tree_Db, Closure, Libs, Has_SAL) then
             return False;
          end if;
 
@@ -902,7 +845,10 @@ package body GPR2.Build.Actions_Population is
                end if;
 
                Bind (Idx).Initialize
-                 (A_Comp.Ali_File.Path.Base_Filename, Main.View);
+                 (A_Comp.Ali_File.Path.Base_Filename,
+                  Main.View,
+                  Has_Main       => True,
+                  SAL_In_Closure => Has_SAL);
 
                if not Tree_Db.Add_Action (Bind (Idx)) then
                   return False;
@@ -930,7 +876,8 @@ package body GPR2.Build.Actions_Population is
                   Bind (Idx).Initialize
                     (Source.Path_Name.Base_Filename,
                      View,
-                     "-n");
+                     Has_Main       => False,
+                     SAL_In_Closure => Has_SAL);
 
                   if not Tree_Db.Add_Action (Bind (Idx)) then
                      return False;
@@ -994,7 +941,10 @@ package body GPR2.Build.Actions_Population is
                   if Attr.Is_Defined then
                      if not Bind (Idx).Is_Defined then
                         Bind (Idx).Initialize
-                          (Source.Path_Name.Base_Filename, View, "-n");
+                          (Source.Path_Name.Base_Filename,
+                           View,
+                           Has_Main       => False,
+                           SAL_In_Closure => Has_SAL);
 
                         if not Tree_Db.Add_Action (Bind (Idx)) then
                            return False;
@@ -1101,10 +1051,11 @@ package body GPR2.Build.Actions_Population is
    function Populate_Withed_Projects
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       Closure : in out GPR2.Project.View.Set.Object;
-      Libs    : in out Library_Map.Map) return Boolean is
+      Libs    : in out Library_Map.Map;
+      Has_SAL : in out Boolean) return Boolean is
    begin
       return Populate_Withed_Projects_Internal
-        (Tree_Db, Closure, No_Library, Libs);
+        (Tree_Db, Closure, No_Library, Libs, Has_SAL);
    end Populate_Withed_Projects;
 
    ------------------------------
@@ -1115,10 +1066,11 @@ package body GPR2.Build.Actions_Population is
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       Closure : in out GPR2.Project.View.Set.Object;
       Ctxt    : Library_Type;
-      Libs    : in out Library_Map.Map) return Boolean is
+      Libs    : in out Library_Map.Map;
+      Has_SAL : in out Boolean) return Boolean is
    begin
       return Populate_Withed_Projects_Internal
-        (Tree_Db, Closure, Ctxt, Libs);
+        (Tree_Db, Closure, Ctxt, Libs, Has_SAL);
    end Populate_Withed_Projects;
 
    ---------------------------------------
@@ -1129,7 +1081,8 @@ package body GPR2.Build.Actions_Population is
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       Closure : in out GPR2.Project.View.Set.Object;
       Ctxt    : Library_Type;
-      Libs    : in out Library_Map.Map) return Boolean
+      Libs    : in out Library_Map.Map;
+      Has_SAL : in out Boolean) return Boolean
    is
       procedure Add_Deps (V  : GPR2.Project.View.Object);
 
@@ -1182,7 +1135,7 @@ package body GPR2.Build.Actions_Population is
                Add_Deps (Current);
 
             when K_Library | K_Aggregate_Library =>
-               if not Populate_Library (Tree_Db, Current, Libs) then
+               if not Populate_Library (Tree_Db, Current, Libs, Has_SAL) then
                   return False;
                end if;
 
