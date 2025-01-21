@@ -59,13 +59,17 @@ package body GPR2.Build.Actions is
    -- Db_Filename --
    -----------------
 
-   function Db_Filename (Self : Action_Id'Class) return Simple_Name is
+   function Db_Filename
+     (Self     : Action_Id'Class;
+      Basename : Boolean := False) return Simple_Name
+   is
       use Ada.Characters.Handling;
       use Ada.Strings;
 
       Space_Repl : constant Ada.Strings.Maps.Character_Mapping :=
                      Maps.To_Mapping (" ", "_");
-      Res : Unbounded_String;
+      Res        : Unbounded_String;
+
    begin
       --  A Build_Db file item is stored in the view's object directory so
       --  there's no need to add the View identifier in it.
@@ -81,7 +85,9 @@ package body GPR2.Build.Actions is
 
       Append (Res, Self.Action_Parameter);
 
-      Append (Res, ".json");
+      if not Basename then
+         Append (Res, ".json");
+      end if;
 
       return Simple_Name (To_String (Res));
    end Db_Filename;
@@ -112,7 +118,7 @@ package body GPR2.Build.Actions is
          declare
             --  ??? Naive implementation as first try
             BN   : constant Filename_Type :=
-                     Self.UID.Db_Filename & "-" & Purpose & ".tmp";
+                     Self.UID.Db_Filename (True) & "-" & Purpose & ".tmp";
             Dest : constant GPR2.Path_Name.Object :=
                      Self.View.Object_Directory.Compose (BN);
             FD   : GNATCOLL.OS.FS.File_Descriptor;
