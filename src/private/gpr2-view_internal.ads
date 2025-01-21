@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Containers.Hashed_Maps;
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Vectors;
 
@@ -64,6 +65,9 @@ private package GPR2.View_Internal is
 
    type Dir_Cache_List is array (Cacheable_Dir_Attrs) of Dir_Cache_Value;
 
+   package Lang_Boolean_Map is new Ada.Containers.Hashed_Maps
+     (Language_Id, Boolean, Hash, "=");
+
    --  Data contains a project view data. We have all the attributes, variables
    --  and packages with the final values as parsed with the project's context
    --  in the given tree. Imports here are the project views corresponding to
@@ -119,21 +123,24 @@ private package GPR2.View_Internal is
 
       --  Some general information
 
-      Context           : GPR2.Context.Context_Kind := GPR2.Context.Root;
+      Context              : GPR2.Context.Context_Kind := GPR2.Context.Root;
       --  Use the aggregate context including External attributes or only the
       --  root context.
 
       --  Cached values for faster retrieval of attributes
 
-      Languages         : Containers.Language_Set;
+      Languages            : Containers.Language_Set;
       --  Languages as Language_Ids defined for the view
-      Interface_Sources : Containers.Source_Path_To_Sloc.Map;
+      Compilable_Languages : Lang_Boolean_Map.Map;
+      --  For languages in the view this lists whether they have a proper
+      --  compiler driver definition.
+      Interface_Sources    : Containers.Source_Path_To_Sloc.Map;
       --  Source basenames that are part of the library interface
-      Interface_Units   : Containers.Unit_Name_To_Sloc.Map;
+      Interface_Units      : Containers.Unit_Name_To_Sloc.Map;
       --  Source unit names that are part of the library interface
-      Cache             : Attribute_Cache.Object;
+      Cache                : Attribute_Cache.Object;
       --  Attribute's final values cache
-      Dir_Cache         : Dir_Cache_List;
+      Dir_Cache            : Dir_Cache_List;
       --  View's directories cache, heavily used when loading sources and
       --  retrieving build artifacts.
    end record;

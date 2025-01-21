@@ -3,7 +3,7 @@ with Ada.Containers;
 
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Artifacts.Files;
-with GPR2.Build.Artifacts.File_Part;
+with GPR2.Build.Artifacts.Source;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source;
 
@@ -48,7 +48,8 @@ function Test return Integer is
       for Root of Tree.Namespace_Root_Projects loop
          for Main of Root.Mains loop
             Action.Initialize_Executable
-              (Src     => Artifacts.File_Part.Create (Main.Source, Main.Index),
+              (Src     => Artifacts.Source.Create
+                            (Main.View, Main.Source.Simple_Name, Main.Index),
                Context => Root);
             Assert
                (not Tree.Artifacts_Database.Has_Action (Action.UID),

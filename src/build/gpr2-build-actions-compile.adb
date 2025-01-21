@@ -14,7 +14,6 @@ pragma Warnings (On, ".* is not referenced");
 with GPR2.Build.Tree_Db;
 with GPR2.Build.External_Options;
 with GPR2.Project.Attribute;
-with GPR2.Project.View.Set;
 
 package body GPR2.Build.Actions.Compile is
 
@@ -50,7 +49,7 @@ package body GPR2.Build.Actions.Compile is
       Lang_Idx : constant PAI.Object := PAI.Create (Self.Lang);
       Src_Idx  : constant PAI.Object :=
                    PAI.Create
-                     (Value_Type (Self.Src_Name.Simple_Name),
+                     (Value_Type (Self.Src.Path_Name.Simple_Name),
                       GPR2.File_Names_Case_Sensitive,
                       Object'Class (Self).Src_Index);
 
@@ -166,7 +165,6 @@ package body GPR2.Build.Actions.Compile is
                   end if;
                end;
             end loop;
-
          end Check_Exceptions_For;
 
          ---------------------
@@ -501,7 +499,26 @@ package body GPR2.Build.Actions.Compile is
                   end if;
                end loop;
 
-               --  ??? Missing the list of excluded sources
+               for S of Self.View.View_Db.Excluded_Inherited_Sources loop
+                  if S.Language = Ada_Language then
+                     for U of S.Units loop
+                        if U.Kind /= S_No_Body then
+                           declare
+                              Key : constant String :=
+                                      To_Lower (String (U.Full_Name)) &
+                              (if U.Kind = S_Spec
+                               then S_Suffix else B_Suffix);
+                           begin
+                              Write
+                                (Map_File.FD,
+                                 Key & ASCII.LF &
+                                 String (S.Path_Name.Simple_Name) & ASCII.LF &
+                                 "/" & ASCII.LF);
+                           end;
+                        end if;
+                     end loop;
+                  end if;
+               end loop;
 
                Close (Map_File.FD);
             end if;
@@ -574,13 +591,15 @@ package body GPR2.Build.Actions.Compile is
       Add_Mapping_File;
       Add_Config_File;
 
+      Add_Attr (PRA.Compiler.Trailing_Required_Switches, Lang_Idx, True, True);
+
       declare
          Index : constant Unit_Index := Object'Class (Self).Src_Index;
          Idx   : constant String :=
                    (if Index = No_Index then ""
                     else Index'Image);
       begin
-         Cmd_Line.Add_Argument (Self.Src_Name, True);
+         Cmd_Line.Add_Argument (Self.Src.Path_Name, True);
 
          if Index /= No_Index then
             declare
@@ -607,7 +626,7 @@ package body GPR2.Build.Actions.Compile is
          if Sw.Is_Defined then
             Add_Options_With_Arg
               (Sw, String (Self.Object_File.Path.Simple_Name), True);
-         else
+         elsif Self.Lang = Ada_Language then
             --  [eng/gpr/gpr-issues#446] TODO modify the KB to have a proper
             --  default here.
             Cmd_Line.Add_Argument ("-o");
@@ -615,8 +634,6 @@ package body GPR2.Build.Actions.Compile is
               (String (Self.Object_File.Path.Simple_Name));
          end if;
       end;
-
-      Add_Attr (PRA.Compiler.Trailing_Required_Switches, Lang_Idx, True, True);
 
    exception
       when GNATCOLL.OS.OS_Error =>
@@ -646,82 +663,90 @@ package body GPR2.Build.Actions.Compile is
       Signature.Add_Artifact (Art);
    end Compute_Signature;
 
+   --------------
+   -- Extended --
+   --------------
+
+   overriding function Extended (Self : Object) return Object
+   is
+   begin
+      return Result : Object do
+         Result.Initialize
+           (Self.Src.Inherited_From.Source (Self.Src.Path_Name.Simple_Name));
+      end return;
+   end Extended;
+
    ----------------
    -- Initialize --
    ----------------
 
-   procedure Initialize (Self : in out Object; Src : GPR2.Build.Source.Object)
+   procedure Initialize
+     (Self : in out Object;
+      Src  : GPR2.Build.Source.Object)
    is
-      BN       : constant Simple_Name := Src.Path_Name.Base_Filename;
-      O_Suff   : constant Simple_Name :=
-                   Simple_Name
-                     (Src.Owning_View.Attribute
-                        (PRA.Compiler.Object_File_Suffix,
-                         PAI.Create (Src.Language)).Value.Text);
-      Obj_Path : GPR2.Path_Name.Object;
+      View      : constant GPR2.Project.View.Object := Src.Owning_View;
+      BN        : constant Simple_Name := Src.Path_Name.Base_Filename;
+      O_Suff    : constant Simple_Name :=
+                    Simple_Name
+                      (Src.Owning_View.Attribute
+                         (PRA.Compiler.Object_File_Suffix,
+                          PAI.Create (Src.Language)).Value.Text);
+      No_Obj    : constant Boolean :=
+                    View.Is_Library and then View.Is_Externally_Built;
+      Candidate : GPR2.Project.View.Object;
+      Inh_Src   : GPR2.Build.Source.Object;
+      Found     : Boolean := False;
+      Lkup_Obj  : GPR2.Path_Name.Object;
+      Obj_Path  : GPR2.Path_Name.Object;
 
    begin
       Self.Ctxt     := Src.Owning_View;
-      Self.Src_Name := Src.Path_Name;
+      Self.Src      := Src;
       Self.Lang     := Src.Language;
       Self.Traces   := Create ("ACTION_COMPILE");
 
-      Obj_Path      := Lookup (Self.Ctxt, BN & O_Suff, False, True);
+      if not No_Obj then
+         Obj_Path := Self.View.Object_Directory.Compose (BN & O_Suff);
 
-      if not Obj_Path.Is_Defined then
-         Obj_Path := Self.Ctxt.Object_Directory.Compose (BN & O_Suff);
-      end if;
+         if not Self.Input.Is_Inherited
+           or else Obj_Path.Exists
+         then
+            Self.Obj_File := Artifacts.Files.Create (Obj_Path);
 
-      Self.Obj_File := Artifacts.Files.Create (Obj_Path);
-   end Initialize;
-
-   ------------
-   -- Lookup --
-   ------------
-
-   ------------
-   -- Lookup --
-   ------------
-
-   function Lookup
-     (V          : GPR2.Project.View.Object;
-      BN         : Simple_Name;
-      In_Lib_Dir : Boolean;
-      Must_Exist : Boolean) return GPR2.Path_Name.Object
-   is
-      Todo      : GPR2.Project.View.Set.Object;
-      Done      : GPR2.Project.View.Set.Object;
-      Current   : GPR2.Project.View.Object := V;
-      Candidate : GPR2.Path_Name.Object;
-
-   begin
-      loop
-         if In_Lib_Dir and then Current.Is_Library then
-            Candidate := Current.Library_Ali_Directory.Compose (BN);
-            exit when not Must_Exist or else Candidate.Exists;
-         end if;
-
-         if Current.Kind in With_Object_Dir_Kind then
-            Candidate := Current.Object_Directory.Compose (BN);
-            exit when not Must_Exist or else Candidate.Exists;
-         end if;
-
-         if Current.Is_Extending then
-            Todo.Union (Current.Extended);
-            Todo.Difference (Done);
-         end if;
-
-         if Todo.Is_Empty then
-            return GPR2.Path_Name.Undefined;
          else
-            Done.Include (Current);
-            Current := Todo.First_Element;
-            Todo.Delete_First;
-         end if;
-      end loop;
+            Candidate := Self.Input.Inherited_From;
 
-      return Candidate;
-   end Lookup;
+            while not Found and then Candidate.Is_Defined loop
+               Lkup_Obj := Candidate.Object_Directory.Compose (BN & O_Suff);
+
+               if Lkup_Obj.Exists then
+                  Found := True;
+               else
+                  Inh_Src :=
+                    Candidate.Source (Self.Input.Path_Name.Simple_Name);
+
+                  if Inh_Src.Is_Inherited then
+                     Candidate := Inh_Src.Inherited_From;
+                  else
+                     Candidate := GPR2.Project.View.Undefined;
+                  end if;
+               end if;
+            end loop;
+
+            --  If not found then set the value to the object generated by
+            --  this action.
+
+            if not Found then
+               Self.Obj_File := Artifacts.Files.Create (Obj_Path);
+            else
+               Self.Obj_File := Artifacts.Files.Create (Lkup_Obj);
+            end if;
+         end if;
+
+      else
+         Self.Obj_File := Artifacts.Files.Undefined;
+      end if;
+   end Initialize;
 
    -----------------------
    -- On_Tree_Insertion --
@@ -756,10 +781,10 @@ package body GPR2.Build.Actions.Compile is
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class is
       Result : constant Compile_Id :=
-                 (Name_Len => Self.Src_Name.Simple_Name'Length,
+                 (Name_Len => Self.Src.Path_Name.Simple_Name'Length,
                   Lang     => Self.Lang,
                   Ctxt     => Self.Ctxt,
-                  Src_Name => Self.Src_Name.Simple_Name);
+                  Src_Name => Self.Src.Path_Name.Simple_Name);
    begin
       return Result;
    end UID;

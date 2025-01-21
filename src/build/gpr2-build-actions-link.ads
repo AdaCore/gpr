@@ -5,8 +5,8 @@
 --
 
 with GPR2.Build.Artifacts.Files;
-with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Artifacts.Library;
+with GPR2.Build.Artifacts.Source;
 with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute_Index;
@@ -31,7 +31,7 @@ package GPR2.Build.Actions.Link is
 
    procedure Initialize_Executable
      (Self       : in out Object;
-      Src        : Artifacts.File_Part.Object;
+      Src        : Artifacts.Source.Object;
       Context    : GPR2.Project.View.Object;
       Output     : Filename_Optional := "");
    --  Initialize a link action.
@@ -122,7 +122,7 @@ private
       In_Obj         : Boolean := False;
 
       Executable     : Artifacts.Files.Object;
-      Main_Src       : Artifacts.File_Part.Object;
+      Main_Src       : Artifacts.Source.Object;
       --  Executable produced by the linker
 
       Library        : Artifacts.Library.Object;
@@ -139,6 +139,9 @@ private
    overriding procedure Compute_Signature
      (Self      : Object;
       Signature : in out GPR2.Build.Signature.Object);
+
+   overriding function Extended (Self : Object) return Object is
+     (raise Internal_Error with "This action is not extending");
 
    function Check_Archive_Driver (Self : Object) return Boolean;
    --  True if the archive driver is found

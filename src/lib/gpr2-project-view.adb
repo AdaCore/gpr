@@ -19,6 +19,7 @@ with GPR2.Message;
 with GPR2.Project.Attribute_Cache;
 with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
+with GPR2.Project.View.Vector;
 with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Pack;
 with GPR2.Tree_Internal;
@@ -1105,39 +1106,66 @@ package body GPR2.Project.View is
    -------------
 
    function Closure
-     (Self         : Object;
-      Include_Self : Boolean := False) return GPR2.Project.View.Set.Object
+     (Self               : Object;
+      Include_Self       : Boolean := False;
+      Include_Extended   : Boolean := False;
+      Include_Aggregated : Boolean := False)
+      return GPR2.Project.View.Vector.Object
    is
-      Closure_Views : GPR2.Project.View.Set.Object;
-      Todo          : GPR2.Project.View.Set.Object;
-      Done          : GPR2.Project.View.Set.Object;
-      Current       : GPR2.Project.View.Object;
-   begin
-      if Include_Self then
-         Closure_Views.Insert (Self);
-      end if;
+      procedure Add (V : GPR2.Project.View.Object);
 
-      Todo.Include (Self);
+      Closure_Views : GPR2.Project.View.Vector.Object;
+      Todo          : GPR2.Project.View.Vector.Object;
+      Done          : GPR2.Project.View.Set.Object;
+      V             : GPR2.Project.View.Object;
+
+      ---------
+      -- Add --
+      ---------
+
+      procedure Add (V : GPR2.Project.View.Object) is
+         C             : GPR2.Project.View.Set.Set.Cursor;
+         Inserted      : Boolean;
+      begin
+         Done.Insert (V, C, Inserted);
+
+         if Inserted then
+            Todo.Append (V);
+         end if;
+      end Add;
+   begin
+      Add (Self);
 
       while not Todo.Is_Empty loop
-         Current := Todo.First_Element;
+         V := Todo.First_Element;
          Todo.Delete_First;
-         Done.Include (Current);
 
-         for V of Get_RO (Current).Closure loop
-            Closure_Views.Include (V);
+         Closure_Views.Append (V);
 
-            if V.Kind = K_Aggregate_Library
-              and then not Done.Contains (V)
-            then
-               --  In case of aggregate libraries, the closure is not
-               --  properly escalated to the upper views as the aggregated
-               --  views are parsed late in the process. So we need to merge
-               --  the closures
-               Todo.Include (V);
-            end if;
+         for Imp of V.Imports loop
+            Add (Imp);
          end loop;
+
+         for Imp of V.Limited_Imports loop
+            Add (Imp);
+         end loop;
+
+         if Include_Extended and then V.Is_Extending then
+            for Ext of V.Extended loop
+               Add (Ext);
+            end loop;
+         end if;
+
+         if Include_Aggregated and then V.Kind = K_Aggregate_Library then
+            for Agg of V.Aggregated loop
+               Add (Agg);
+            end loop;
+         end if;
       end loop;
+
+      if not Include_Self then
+         Closure_Views.Delete_First;
+      end if;
 
       return Closure_Views;
    end Closure;
@@ -1592,54 +1620,10 @@ package body GPR2.Project.View is
    function Include_Path
      (Self : Object; Language : Language_Id) return GPR2.Path_Name.Set.Object
    is
-      procedure Add_For_View (V : Object);
-
       Result    : GPR2.Path_Name.Set.Object;
       Attr      : GPR2.Project.Attribute.Object;
       Languages : GPR2.Containers.Language_Set;
-      Seen      : GPR2.Containers.Filename_Set;
-
-      procedure Add_For_View (V : Object) is
-         C        : GPR2.Containers.Filename_Type_Set.Cursor;
-         Inserted : Boolean;
-         Found    : Boolean := False;
-      begin
-         Seen.Insert (V.Path_Name.Value, C, Inserted);
-
-         if not Inserted then
-            --  Already visited
-            return;
-         end if;
-
-         if V.Kind = K_Aggregate_Library then
-            for A of V.Aggregated loop
-               Add_For_View (A);
-            end loop;
-         end if;
-
-         --  No sources in this view case
-
-         if V.Kind not in With_Source_Dirs_Kind then
-            return;
-         end if;
-
-         --  Check that the view has some sources of the language
-
-         for L of V.Language_Ids loop
-            if Languages.Contains (L) then
-               Found := True;
-               exit;
-            end if;
-         end loop;
-
-         if Found then
-            for Src_Dir of V.Source_Directories loop
-               if not Result.Contains (Src_Dir) then
-                  Result.Append (Src_Dir);
-               end if;
-            end loop;
-         end if;
-      end Add_For_View;
+      Found     : Boolean := False;
 
    begin
       Languages.Include (Language);
@@ -1652,10 +1636,28 @@ package body GPR2.Project.View is
          end loop;
       end if;
 
-      Add_For_View (Self);
+      for V of Self.Closure (True, True, True) loop
+         if V.Kind in With_Source_Dirs_Kind then
+            --  Check that the view has some sources of the language
 
-      for C of Self.Closure loop
-         Add_For_View (C);
+            Found := False;
+
+            for L of V.Language_Ids loop
+               if Languages.Contains (L) then
+                  Found := True;
+
+                  exit;
+               end if;
+            end loop;
+
+            if Found then
+               for Src_Dir of V.Source_Directories loop
+                  if not Result.Contains (Src_Dir) then
+                     Result.Append (Src_Dir);
+                  end if;
+               end loop;
+            end if;
+         end if;
       end loop;
 
       return Result;
@@ -1670,6 +1672,35 @@ package body GPR2.Project.View is
    begin
       return not Ref.Agg_Libraries.Is_Empty;
    end Is_Aggregated_In_Library;
+
+   -------------------
+   -- Is_Compilable --
+   -------------------
+
+   function Is_Compilable
+     (Self : Object;
+      Lang : Language_Id) return Boolean
+   is
+      Ref  : constant View_Internal.Ref := View_Internal.Get_RW (Self);
+      C    : constant View_Internal.Lang_Boolean_Map.Cursor :=
+               Ref.Compilable_Languages.Find (Lang);
+      Attr : GPR2.Project.Attribute.Object;
+      Res  : Boolean;
+   begin
+      if not View_Internal.Lang_Boolean_Map.Has_Element (C) then
+         Attr := Self.Attribute
+           (PRA.Compiler.Driver, Project.Attribute_Index.Create (Lang));
+         Res := Attr.Is_Defined
+           and then Length (Attr.Value.Unchecked_Text) > 0;
+
+         Ref.Compilable_Languages.Insert (Lang, Res);
+
+         return Res;
+
+      else
+         return View_Internal.Lang_Boolean_Map.Element (C);
+      end if;
+   end Is_Compilable;
 
    -----------------
    -- Is_Extended --
@@ -2541,7 +2572,7 @@ package body GPR2.Project.View is
 
    begin
       if Opt.Compilable_Only then
-         if not S.Is_Compilable then
+         if not Self.Is_Compilable (S.Language) then
             return False;
          end if;
 

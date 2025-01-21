@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Project.View;
 with GPR2.Source_Reference;
 with GPR2.Utils.Hash;
 
@@ -25,17 +26,14 @@ package GPR2.Build.Artifacts is
    function Is_Defined (Self : Object) return Boolean is abstract;
 
    procedure Unserialize
-     (Uri : String;
-      Val : out Object) is abstract;
+     (Ctxt : GPR2.Project.View.Object;
+      Uri  : String;
+      Val  : out Object) is abstract;
    --  Used to deserialize an artifact. The protocol part is removed from the
    --  uri before Unserialize is called.
 
    function Image (Self : Object) return String is abstract;
    --  This value is used when unserializing the artifact (see Create above).
-   --  It is also used to report artifact-related messages to the end user.
-   --
-   --  ??? May require two similar primitives here: one for the end user and
-   --  one for the serialization.
 
    function SLOC (Self : Object) return GPR2.Source_Reference.Object'Class
                   is abstract;
@@ -67,7 +65,9 @@ package GPR2.Build.Artifacts is
 
    function To_Uri (Artifact : Object'Class) return Uri_Type;
 
-   function From_Uri (Uri : Uri_Type) return Object'Class;
+   function From_Uri
+     (Uri  : Uri_Type;
+      Ctxt : GPR2.Project.View.Object) return Object'Class;
    --  Translates an Uri into object. Raises Constraint_Error if the protocol
    --  was not registered before.
 

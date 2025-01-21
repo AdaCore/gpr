@@ -46,7 +46,7 @@ begin
          Assert (Tree.Artifacts_Database.Add_Action (A));
          Assert
            (String (Tree.Artifacts_Database.Db_Filename_Path
-              (GBA.Object'Class (A).UID).Simple_Name) =
+              (GBA.Object'Class (A).UID, False).Simple_Name) =
                ".write_file_" & Ada.Strings.Fixed.Trim
                   (Action_Index'Img, Both) & ".json");
       end;

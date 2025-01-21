@@ -114,6 +114,9 @@ private
    overriding function View (Self : Object) return GPR2.Project.View.Object is
      (Self.Ctxt);
 
+   overriding function Extended (Self : Object) return Object is
+     (raise Internal_Error with "This action is not extending");
+
    function Generated_Spec (Self : Object) return Artifacts.Files.Object is
       (Self.Output_Spec);
 

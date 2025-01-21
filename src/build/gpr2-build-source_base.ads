@@ -41,8 +41,7 @@ package GPR2.Build.Source_Base is
       Timestamp        : Ada.Calendar.Time;
       Tree_Db          : access GPR2.Build.Tree_Db.Object;
       Naming_Exception : Boolean;
-      Source_Dir_Idx   : Natural;
-      Is_Compilable    : Boolean := False)
+      Source_Dir_Idx   : Natural)
       return Object'Class
      with Pre  => Filename.Is_Defined,
           Post => Create'Result.Is_Defined;
@@ -123,9 +122,6 @@ package GPR2.Build.Source_Base is
      with Pre => Self.Is_Defined;
    --  Returns whether the source comes from a naming exception
 
-   function Is_Compilable (Self : Object) return Boolean
-     with Pre => Self.Is_Defined;
-
    function Source_Dir_Value_Index
      (Self : Object) return Natural
      with Pre => Self.Is_Defined;
@@ -146,13 +142,8 @@ private
       --  Source library unit kind in case the language is not unit-based
       CU_List           : Unit_Info.List.Object;
       --  Source's units in case of unit-based language
-      Inherited         : Boolean := False;
-      --  Whether the source has been inherited by project extension
       Naming_Exception  : Boolean := False;
       --  Whether a naming exception concerns this source
-      Is_Compilable     : Boolean := False;
-      --  Whether the source can be compiled (e.g. we need a compiler to
-      --  build a source for the specified language)
       Source_Dir_Idx    : Natural := 0;
       --  The value of Source_Dirs responsible for loading this value
    end record;
@@ -193,9 +184,6 @@ private
    --
    --  function Is_Aggregated (Self : Object) return Boolean is
    --    (Self.Aggregated.Is_Defined);
-
-   function Is_Compilable (Self : Object) return Boolean is
-     (Self.Is_Compilable);
 
    function Has_Naming_Exception (Self : Object) return Boolean is
      (Self.Naming_Exception);

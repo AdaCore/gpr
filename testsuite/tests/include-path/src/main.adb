@@ -92,7 +92,7 @@ function Main return Natural is
          Print_Path (NS.Path_Name);
          Ada.Text_IO.Put_Line ("=========================================");
 
-         for V of NS.Closure (True) loop
+         for V of NS.Closure (True, True) loop
             Print_View (V);
          end loop;
       end loop;

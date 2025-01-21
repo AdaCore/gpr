@@ -1386,7 +1386,12 @@ package body GPR2.Tree_Internal is
                         Data.Extended.Include (Extended_View);
                         Data.Extended_Root := Extended_View;
 
-                        for V of Extended_View.Closure loop
+                        Data.Closure.Include
+                          (Extended_View.Name, Extended_View);
+
+                        for V of View_Internal.Get_RO
+                          (Extended_View).Closure
+                        loop
                            Data.Closure.Include (V.Name, V);
                         end loop;
                      end if;

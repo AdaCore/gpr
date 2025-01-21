@@ -20,8 +20,9 @@ package GPR2.Build.Artifacts.Files is
    function Create (Path : Filename_Type) return Object with Inline;
 
    overriding procedure Unserialize
-     (S   : String;
-      Val : out Object);
+     (Ctxt : GPR2.Project.View.Object;
+      S    : String;
+      Val  : out Object);
 
    overriding function Image (Self : Object) return String;
 
@@ -47,7 +48,7 @@ private
      ("file");
 
    overriding function "<" (L, R : Object) return Boolean is
-      (L.Path < R.Path);
+      (L.Path.Value < R.Path.Value);
 
    Undefined : constant Object := (Path => Path_Name.Undefined);
 

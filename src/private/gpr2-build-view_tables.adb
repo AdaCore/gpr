@@ -10,7 +10,6 @@ with Ada.Strings.Maps.Constants;
 with Ada.Text_IO;
 with GNAT.OS_Lib;
 
-with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.Unit_Info;
 with GPR2.Project.Attribute;
@@ -145,8 +144,6 @@ package body GPR2.Build.View_Tables is
       if Resolve_Visibility then
          View_Tables.Resolve_Visibility (Data, C_Overload, Messages);
       end if;
-
-      Data.Tree_Db.Add_Artifact (Artifacts.Files.Create (Path));
    end Add_Source;
 
    ------------------------
@@ -275,7 +272,7 @@ package body GPR2.Build.View_Tables is
                   begin
                      if View_Db.View = Other.View then
                         --  Both sources are reported for the same view, let's
-                        --  see if one in inherited. This may happen if the
+                        --  see if one is inherited. This may happen if the
                         --  extending view has a naming exception for the unit.
 
                         if not Src.Inh_From.Is_Defined
@@ -792,8 +789,6 @@ package body GPR2.Build.View_Tables is
       if Resolve_Visibility then
          View_Tables.Resolve_Visibility (Data, C_Overload, Messages);
       end if;
-
-      Data.Tree_Db.Remove_Artifact (Artifacts.Files.Create (Path));
    end Remove_Source;
 
    ---------------------------
@@ -916,9 +911,11 @@ package body GPR2.Build.View_Tables is
             begin
                --  Check if the extending project excludes the source
                if Ext_Data.Excluded_Sources.Contains (Name) then
-                  Ext_Data.Actually_Excluded.Include (Name);
+                  Ext_Data.Actually_Excluded.Include (Name, Src);
+
                   --  No further propagation, do not use the source as
                   --  unit part, so just return.
+
                   return;
 
                else
@@ -1101,7 +1098,9 @@ package body GPR2.Build.View_Tables is
                else
                   --  Remaining case: inheritance shows two candidate sources
 
-                  if Source_Info (Candidate.all).Is_Compilable then
+                  if Candidate.View.Is_Compilable
+                    (Source_Info (Candidate.all).Language)
+                  then
                      Err_Level := Message.Error;
                   else
                      Err_Level := Message.Warning;
@@ -1163,7 +1162,9 @@ package body GPR2.Build.View_Tables is
          end loop;
 
          if not Clashes.Is_Empty then
-            if Src_Info_Maps.Element (C_Info).Is_Compilable then
+            if Candidate.View.Is_Compilable
+              (Src_Info_Maps.Element (C_Info).Language)
+            then
                Err_Level := Message.Error;
             else
                Err_Level := Message.Warning;
@@ -1281,12 +1282,11 @@ package body GPR2.Build.View_Tables is
          return Source (Data, C);
       end if;
 
-      for V of View_Internal.Get_RO (Data.View).Closure loop
+      for V of Data.View.Closure (False, True, True) loop
          if V.Kind in With_View_Db then
             declare
                V_Data : View_Data_Ref renames Get_Data (Data.Tree_Db, V);
             begin
-
                C := V_Data.Sources.Find (Basename);
 
                if Basename_Source_Maps.Has_Element (C) then

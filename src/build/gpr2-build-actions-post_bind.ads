@@ -85,6 +85,9 @@ private
      (Self      : Object;
       Signature : in out GPR2.Build.Signature.Object);
 
+   overriding function Extended (Self : Object) return Object is
+     (raise Internal_Error with "This action is not extending");
+
    Undefined : constant Object := (others => <>);
 
    function Is_Defined (Self : Object) return Boolean is

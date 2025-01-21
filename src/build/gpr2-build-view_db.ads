@@ -6,11 +6,13 @@
 
 --  limited with GPR2.Build.Compilation_Input.Sets;
 with GPR2.Build.Source;
-limited with GPR2.Build.Source.Sets;
-limited with GPR2.Build.Tree_Db;
+with GPR2.Build.Source_Base.Vectors;
 with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Log;
 with GPR2.Project.View;
+
+limited with GPR2.Build.Source.Sets;
+limited with GPR2.Build.Tree_Db;
 
 private with GPR2.Build.View_Tables;
 
@@ -68,6 +70,12 @@ package GPR2.Build.View_Db is
      with Pre => Self.Is_Defined and then Self.Source_Option > No_Source;
    --  Get the complete list of visible sources: so sources owned by the view
    --  but also all sources made visible by withed or limited withed views.
+
+   function Excluded_Inherited_Sources
+     (Self : Object) return GPR2.Build.Source_Base.Vectors.Vector
+     with Pre => Self.Is_Defined;
+   --  List of inherited sources that have been excluded explicitly by Self's
+   --  View. This list is used to tell the compiler to ignore those sources.
 
    function Has_Compilation_Unit
      (Self : Object;

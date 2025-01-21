@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2024, AdaCore
+--  Copyright (C) 2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -9,13 +9,13 @@ with GNATCOLL.OS.FSUtil;
 with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.ALI_Parser;
+with GPR2.Build.Artifacts.Source;
 with GPR2.Build.Tree_Db;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
-with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
 
 package body GPR2.Build.Actions.Compile.Ada is
@@ -117,12 +117,32 @@ package body GPR2.Build.Actions.Compile.Ada is
      (Self      : Object;
       Signature : in out GPR2.Build.Signature.Object)
    is
-      Art : Artifacts.Files.Object;
+      Art : Artifacts.Source.Object;
+      F   : Artifacts.Files.Object;
 
    begin
       for Dep of Self.Dependencies loop
-         Art := Artifacts.Files.Create (Dep);
-         Signature.Add_Artifact (Art);
+         --  Configuration pragmas are returned as dependency but are
+         --  not sources of the view, so we need to filter them
+
+         if (not Self.Global_Config_Pragmas.Is_Defined
+             or else Dep /= Self.Global_Config_Pragmas.Path.Value)
+           and then (not Self.Local_Config_Pragmas.Is_Defined
+                     or else Dep /= Self.Local_Config_Pragmas.Path.Value)
+         then
+            if Dep in Simple_Name then
+               Art := Artifacts.Source.Create (Self.View, Simple_Name (Dep));
+            else
+               Art := Artifacts.Source.Undefined;
+            end if;
+
+            if Art.Is_Defined then
+               Signature.Add_Artifact (Art);
+            else
+               F := Artifacts.Files.Create (Dep);
+               Signature.Add_Artifact (F);
+            end if;
+         end if;
       end loop;
 
       Signature.Add_Artifact (Self.Ali_File);
@@ -169,29 +189,25 @@ package body GPR2.Build.Actions.Compile.Ada is
       end if;
 
       for Dep_Src of All_Deps loop
-         declare
-            Source : constant GPR2.Build.Source.Object :=
-                       Self.View.Visible_Source
-                         (Path_Name.Simple_Name (Dep_Src));
-         begin
-            if Source.Is_Defined
-              and then
-                (With_RTS
-                 or else not Source.Owning_View.Is_Runtime)
-            then
-               if Self.Traces.Is_Active then
-                  Self.Traces.Trace
-                    ("Add " & String (Source.Path_Name.Name) &
-                       " to the action " & UID.Image & " dependencies");
-               end if;
-
-               Result.Include (Source.Path_Name.Value);
-            end if;
-         end;
+         Result.Include (Dep_Src);
       end loop;
 
       return Result;
    end Dependencies;
+
+   --------------
+   -- Extended --
+   --------------
+
+   overriding function Extended (Self : Object) return Object is
+   begin
+      return Result : Object := Self do
+         Result.Ctxt :=
+           Self.Input.Inherited_From;
+         Result.Src  :=
+           Self.Input.Inherited_From.Source (Self.Input.Path_Name.Simple_Name);
+      end return;
+   end Extended;
 
    --------------
    -- Get_Attr --
@@ -218,7 +234,8 @@ package body GPR2.Build.Actions.Compile.Ada is
    ----------------
 
    procedure Initialize
-     (Self : in out Object; Src : GPR2.Build.Compilation_Unit.Object)
+     (Self : in out Object;
+      Src  : GPR2.Build.Compilation_Unit.Object)
    is
       View   : constant GPR2.Project.View.Object := Src.Owning_View;
       No_Obj : constant Boolean :=
@@ -228,12 +245,15 @@ package body GPR2.Build.Actions.Compile.Ada is
 
    begin
 
-      Self.Ctxt     := Src.Owning_View;
-      Self.Src_Name := Src.Main_Part.Source;
-      Self.Lang     := Ada_Language;
-      Self.CU       := Src;
-      Self.Traces   := Create ("ACTION_ADA_COMPILE");
+      Self.Ctxt   := Src.Owning_View;
+      Self.Src    := Src.Owning_View.Source (Src.Main_Part.Source.Simple_Name);
+      Self.Lang   := Ada_Language;
+      Self.CU     := Src;
+      Self.Traces := Create ("ACTION_ADA_COMPILE");
 
+      --  ??? For Standalone libraries, we should probably not lookup for
+      --  previous compilation artifacts, since we need to amend the ali
+      --  file from the library directory.
       declare
          BN        : constant Simple_Name := Artifacts_Base_Name (Src);
          O_Suff    : constant Simple_Name :=
@@ -242,11 +262,14 @@ package body GPR2.Build.Actions.Compile.Ada is
                             (Self.View, PRA.Compiler.Object_File_Suffix,
                              Ada_Language,
                              ".o"));
+         Candidate : GPR2.Project.View.Object;
+         Inh_Src   : GPR2.Build.Source.Object;
+         Found     : Boolean := False;
          Local_O   : GPR2.Path_Name.Object;
          Local_Ali : GPR2.Path_Name.Object;
          Lkup_O    : GPR2.Path_Name.Object;
          Lkup_Ali  : GPR2.Path_Name.Object;
-         Check_Sig : Boolean := True;
+
       begin
          if not No_Obj then
             Local_O := Self.View.Object_Directory.Compose (BN & O_Suff);
@@ -260,7 +283,10 @@ package body GPR2.Build.Actions.Compile.Ada is
             Local_Ali := Self.View.Object_Directory.Compose (BN & ".ali");
          end if;
 
-         if not Self.View.Is_Extending then
+         if not Self.Input.Is_Inherited
+           or else ((No_Obj or else Local_O.Exists)
+                    and then Local_Ali.Exists)
+         then
             --  Simple case: just use the local .o and .ali
             if not No_Obj then
                Self.Obj_File := Artifacts.Files.Create (Local_O);
@@ -271,40 +297,44 @@ package body GPR2.Build.Actions.Compile.Ada is
          else
             --  Lookup if the object file exists in the hierarchy
 
-            Lkup_O := Lookup
-              (Self.View,
-               BN & O_Suff,
-               In_Lib_Dir => False,
-               Must_Exist => True);
+            Candidate := Self.Input.Inherited_From;
+
+            while not Found and then Candidate.Is_Defined loop
+               --  Note: we cannot extend an externally built project, so
+               --  there's always supposed to be an object dir and file here.
+               Lkup_O := Candidate.Object_Directory.Compose (BN & O_Suff);
+
+               if Candidate.Is_Library then
+                  Lkup_Ali :=
+                    Candidate.Library_Ali_Directory.Compose (BN & ".ali");
+               else
+                  Lkup_Ali :=
+                    Candidate.Object_Directory.Compose (BN & ".ali");
+               end if;
+
+               if Lkup_O.Exists and then Lkup_Ali.Exists then
+                  Found := True;
+               else
+                  Inh_Src :=
+                    Candidate.Source (Self.Input.Path_Name.Simple_Name);
+
+                  if Inh_Src.Is_Inherited then
+                     Candidate := Inh_Src.Inherited_From;
+                  else
+                     Candidate := GPR2.Project.View.Undefined;
+                  end if;
+               end if;
+            end loop;
 
             --  If not found, set the value to the object generated by the
             --  compilation.
 
-            if not Lkup_O.Is_Defined then
+            if not Found then
                Self.Obj_File := Artifacts.Files.Create (Local_O);
-               Check_Sig := False;
+               Self.Ali_File := Artifacts.Files.Create (Local_Ali);
             else
                Self.Obj_File := Artifacts.Files.Create (Lkup_O);
-            end if;
-
-            Lkup_Ali := Lookup
-              (Self.View,
-               BN & ".ali",
-               In_Lib_Dir => True,
-               Must_Exist => True);
-
-            if not Lkup_Ali.Is_Defined then
-               Self.Ali_File := Artifacts.Files.Create (Local_Ali);
-               Check_Sig := False;
-            else
                Self.Ali_File := Artifacts.Files.Create (Lkup_Ali);
-            end if;
-
-            if Check_Sig and then not Self.Valid_Signature then
-               --  Since we'll need to recompute, make sure we use any local
-               --  .ali and .o here.
-               Self.Obj_File := Artifacts.Files.Create (Local_O);
-               Self.Ali_File := Artifacts.Files.Create (Local_Ali);
             end if;
          end if;
       end;
@@ -433,7 +463,7 @@ package body GPR2.Build.Actions.Compile.Ada is
                      & String (CU_View.Name),
                      GPR2.Source_Reference.Object
                        (GPR2.Source_Reference.Create
-                          (Self.Src_Name.Value, 0, 0))));
+                          (Self.Src.Path_Name.Value, 0, 0))));
             end if;
 
             if Allowed then
@@ -454,7 +484,7 @@ package body GPR2.Build.Actions.Compile.Ada is
                           """ does not directly import project """ &
                           String (CU_View.Name) & """",
                         GPR2.Source_Reference.Create
-                          (Self.Src_Name.Value, 0, 0)));
+                          (Self.Src.Path_Name.Value, 0, 0)));
                end if;
             end if;
          end if;
@@ -620,6 +650,42 @@ package body GPR2.Build.Actions.Compile.Ada is
          --  No need to post-process anything if the action was skipped
          return True;
       end if;
+
+      --  If the .o and .ali stored in this action were inherited, and we
+      --  finally decided to compile, we need to now redirect to the new .o
+      --  and .ali
+
+      declare
+         BN        : constant Simple_Name := Artifacts_Base_Name (Self.CU);
+         O_Suff    : constant Simple_Name :=
+                       Simple_Name
+                         (Get_Attr
+                            (Self.View, PRA.Compiler.Object_File_Suffix,
+                             Ada_Language,
+                             ".o"));
+         Local_O   : Artifacts.Files.Object;
+         Local_Ali : Artifacts.Files.Object;
+         use type Artifacts.Files.Object;
+
+      begin
+         Local_O := Artifacts.Files.Create
+           (Self.View.Object_Directory.Compose (BN & O_Suff));
+
+         if Local_O /= Self.Obj_File then
+            if Self.View.Is_Library then
+               Local_Ali := Artifacts.Files.Create
+                 (Self.View.Library_Ali_Directory.Compose (BN & ".ali"));
+            else
+               Local_Ali := Artifacts.Files.Create
+                 (Self.View.Object_Directory.Compose (BN & ".ali"));
+            end if;
+
+            Self.Tree.Replace_Artifact (Self.Obj_File, Local_O);
+            Self.Tree.Replace_Artifact (Self.Ali_File, Local_Ali);
+            Self.Obj_File := Local_O;
+            Self.Ali_File := Local_Ali;
+         end if;
+      end;
 
       --  Copy the ali file in the library dir if needed
       if Self.View.Is_Library

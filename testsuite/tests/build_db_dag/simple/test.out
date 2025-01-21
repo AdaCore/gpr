@@ -31,9 +31,9 @@
 [Ada Compile] pkg3.adb (p2.gpr)
   inputs:
   outputs:
-  - /tree/lib/p2/pkg3.ali
+  - /tree/obj/base2/pkg3.ali
+  - /tree/obj/base2/pkg3.o
   - /tree/obj/p2/pkg3.ali
-  - /tree/obj/p2/pkg3.o
 [Ada Compile] pkg2.adb (shared.gpr)
   inputs:
   outputs:

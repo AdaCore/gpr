@@ -19,8 +19,7 @@ package body GPR2.Build.Source_Base is
       Timestamp        : Ada.Calendar.Time;
       Tree_Db          : access GPR2.Build.Tree_Db.Object;
       Naming_Exception : Boolean;
-      Source_Dir_Idx   : Natural;
-      Is_Compilable    : Boolean := False)
+      Source_Dir_Idx   : Natural)
       return Object'Class
    is
    begin
@@ -31,9 +30,7 @@ package body GPR2.Build.Source_Base is
                 Language          => Language,
                 Kind              => Kind,
                 CU_List           => Unit_Info.List.Empty_List,
-                Inherited         => False,
                 Naming_Exception  => Naming_Exception,
-                Is_Compilable     => Is_Compilable,
                 Source_Dir_Idx    => Source_Dir_Idx);
    end Create;
 

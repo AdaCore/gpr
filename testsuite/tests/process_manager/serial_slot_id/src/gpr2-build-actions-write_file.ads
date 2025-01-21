@@ -56,6 +56,9 @@ package GPR2.Build.Actions.Write_File is
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object;
 
+   overriding function Extended (Self : Object) return Object is
+      (raise Constraint_Error with "Unexpected call to Extended");
+
 private
 
    use type GPR2.View_Ids.View_Id;

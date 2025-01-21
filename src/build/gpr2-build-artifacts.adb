@@ -7,8 +7,8 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
 
 with GPR2.Build.Artifacts.Files;
-with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Artifacts.Library;
+with GPR2.Build.Artifacts.Source;
 
 package body GPR2.Build.Artifacts is
 
@@ -21,7 +21,9 @@ package body GPR2.Build.Artifacts is
    -- From_Uri --
    --------------
 
-   function From_Uri (Uri : Uri_Type) return Object'Class
+   function From_Uri
+     (Uri  : Uri_Type;
+      Ctxt : GPR2.Project.View.Object) return Object'Class
    is
       Del_Index : Integer := -1;
    begin
@@ -51,7 +53,7 @@ package body GPR2.Build.Artifacts is
          end if;
 
          return Result : Object'Class := Protocol_Artifacts_Map.Element (C) do
-            Unserialize (Img, Result);
+            Unserialize (Ctxt, Img, Result);
          end return;
       end;
    end From_Uri;
@@ -78,7 +80,7 @@ package body GPR2.Build.Artifacts is
 begin
 
    Register_Artifact_Class (Files.Undefined);
-   Register_Artifact_Class (File_Part.Undefined);
    Register_Artifact_Class (Library.Undefined);
+   Register_Artifact_Class (Source.Undefined);
 
 end GPR2.Build.Artifacts;
