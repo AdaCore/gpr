@@ -119,11 +119,17 @@ package body GPR2.Build.Actions.Compile.Ada is
      (Self      : Object;
       Signature : in out GPR2.Build.Signature.Object)
    is
-      Art : Artifacts.Source.Object;
-      F   : Artifacts.Files.Object;
+      Art  : Artifacts.Source.Object;
+      F    : Artifacts.Files.Object;
+      Deps : constant GPR2.Containers.Filename_Set := Self.Dependencies;
 
    begin
-      for Dep of Self.Dependencies loop
+      if Deps.Is_Empty then
+         Signature.Clear;
+         return;
+      end if;
+
+      for Dep of Deps loop
          --  Configuration pragmas are returned as dependency but are
          --  not sources of the view, so we need to filter them
 
