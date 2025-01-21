@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2024, AdaCore
+--  Copyright (C) 2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -21,5 +21,9 @@ package GPR2.Build.ALI_Parser is
       Imports  : in out GPR2.Containers.Name_Set) return Boolean;
    --  Parse the explicit import lines that begin with the 'W' character.
    --  Returns True upon success.
+
+   function Version (ALI_File : GPR2.Path_Name.Object) return String;
+   --  Parse the ALI file to obtain the version, and return the
+   --  "vXX.XXXXXXX".
 
 end GPR2.Build.ALI_Parser;

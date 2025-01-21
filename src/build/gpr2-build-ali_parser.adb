@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2024, AdaCore
+--  Copyright (C) 2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -7,6 +7,8 @@
 with Ada.Exceptions;
 with GNATCOLL.Buffer;
 with GNATCOLL.Traces;
+with Ada.Text_IO;
+with Ada.Strings.Fixed;
 
 package body GPR2.Build.ALI_Parser is
 
@@ -469,5 +471,36 @@ package body GPR2.Build.ALI_Parser is
             return False;
       end;
    end Imports;
+
+   -------------
+   -- Version --
+   -------------
+
+   function Version (ALI_File : GPR2.Path_Name.Object) return String is
+      use Ada.Text_IO;
+
+      File : File_Type;
+      Line : String (1 .. 1_000);
+      Last : Natural;
+      Start : Natural;
+   begin
+      if not ALI_File.Exists then
+         return "";
+      end if;
+
+      Open
+         (File,
+         In_File,
+         ALI_File.String_Value);
+      Get_Line (File, Line, Last);
+      Close (File);
+      Start := Ada.Strings.Fixed.Index (Line (1 .. Last), " v");
+
+      if Start /= 0 then
+         return (Line (Start + 2 .. Last - 1));
+      end if;
+
+      return "";
+   end Version;
 
 end GPR2.Build.ALI_Parser;
