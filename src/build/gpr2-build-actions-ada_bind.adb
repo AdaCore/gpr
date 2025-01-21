@@ -36,10 +36,6 @@ package body GPR2.Build.Actions.Ada_Bind is
    package PRA renames GPR2.Project.Registry.Attribute;
    package PAI renames GPR2.Project.Attribute_Index;
 
-
-   procedure Initialize_Linker_Options (Self : in out Object);
-   --  Adjust the linker options in case of shared or static cases
-
    ---------------------
    -- Compute_Command --
    ---------------------
@@ -525,8 +521,6 @@ package body GPR2.Build.Actions.Ada_Bind is
       for Opt of Extra_Opts loop
          Self.Extra_Opts.Append (Opt);
       end loop;
-
-      Initialize_Linker_Options (Self);
    end Initialize;
 
    procedure Initialize
@@ -544,36 +538,6 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       Self.Initialize (Basename, Context, Extra_Opts);
    end Initialize;
-
-   -------------------------------
-   -- Initialize_Linker_Options --
-   -------------------------------
-
-   procedure Initialize_Linker_Options (Self : in out Object) is
-      Idx  : PAI.Object;
-      Attr : Project.Attribute.Object;
-   begin
-      if Self.Ctxt.Is_Library then
-         if Self.Ctxt.Is_Shared_Library then
-            Idx := PAI.Create ("-shared");
-         else
-            Idx := PAI.Create ("-static");
-         end if;
-      else
-         return;
-      end if;
-
-      Attr :=
-        Self.View.Attribute (PRA.Binder.Bindfile_Option_Substitution, Idx);
-
-      if not Attr.Is_Defined then
-         return;
-      end if;
-
-      for Value of Attr.Values loop
-         Self.Linker_Opts.Append (Value.Text);
-      end loop;
-   end Initialize_Linker_Options;
 
    -----------------------
    -- On_Tree_Insertion --

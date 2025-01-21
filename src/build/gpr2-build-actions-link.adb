@@ -11,6 +11,7 @@ with GNATCOLL.OS.FSUtil;
 with GNATCOLL.Utils;
 
 with GPR2.Build.External_Options;
+with GPR2.Build.ALI_Parser;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
@@ -290,6 +291,35 @@ package body GPR2.Build.Actions.Link is
          end loop;
       end if;
 
+      --  Runtime flags usually come from the binder. However, there is no
+      --  binding phase when creating a non-standalone library. Therefore,
+      --  we need to add the runtime flags manually in this case. Note that
+      --  static libraries do not require any runtime flags, so we are
+      --  processing only the shared libraries here.
+
+      if Self.View.Tree.Has_Runtime_Project
+        and then Self.View.Is_Library
+        and then not Self.View.Is_Library_Standalone
+        and then Self.View.Is_Shared_Library
+      then
+         declare
+            Gnat_Version : constant String :=
+              GPR2.Build.ALI_Parser.Version
+                (Self.View.Tree.Runtime_Project.Object_Directory.Compose
+                   ("system.ali"));
+         begin
+            if Gnat_Version /= "" then
+               Cmd_Line.Add_Argument ("-lgnat-" & Gnat_Version);
+            end if;
+         end;
+
+         --  ??? We also need to add the lgnarl-XXX flag if required
+
+         Cmd_Line.Add_Argument
+           (Self.Tree.Linker_Lib_Dir_Option
+            & Self.View.Tree.Runtime_Project.Object_Directory.String_Value);
+      end if;
+
       if Link_Exec then
          --  Add switches for linking an executable
          Status :=
@@ -316,13 +346,7 @@ package body GPR2.Build.Actions.Link is
          end loop;
 
          for Option of Self.Static_Options loop
-
-            --  -shared is only used to create libs.
-            --  ??? Why is -shared added by the binder in that case ?
-
-            if Option /= "-shared" then
                Cmd_Line.Add_Argument (Option);
-            end if;
          end loop;
 
          Status :=
