@@ -1,10 +1,10 @@
 import json
 import os
-from e3.fs import mv
+import distutils.ccompiler
 from testsuite_support.builder_and_runner import BuilderAndRunner
-from testsuite_support.tools import GPRCLEAN
 
 bnr = BuilderAndRunner()
+shared_lib_ext = distutils.ccompiler.new_compiler().shared_lib_extension
 
 
 def run(cmd):
@@ -42,9 +42,6 @@ def test(test_dir):
         print("lib [" + test_dir + "] has been created")
     else:
         print("ERROR: cannot find the lib")
-
-    for job in cntlib:
-        print("uid: '" + job["uid"] + "', status : '" + job["status"] + "'")
 
     found = False
     for job in cntlib:
