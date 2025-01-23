@@ -926,7 +926,7 @@ package body GPR2.Build.Tree_Db is
 
                      for Sub of Closure loop
                         if View_Tables.Get_Data
-                          (Self.Self, Sub).Sources.Contains
+                          (Self.Self, Sub).Basenames.Contains
                           (Source_Path_To_Sloc.Key (C))
                         then
                            Found := True;

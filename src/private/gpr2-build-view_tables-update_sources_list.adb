@@ -1160,7 +1160,10 @@ package body Update_Sources_List is
             C_Overload : Basename_Source_List_Maps.Cursor;
          begin
             C_Overload := Data.Overloaded_Srcs.Find (Base_Name);
-            Resolve_Visibility (Data, C_Overload, Messages);
+
+            if Basename_Source_List_Maps.Has_Element (C_Overload) then
+               Resolve_Visibility (Data, C_Overload, Messages);
+            end if;
          end;
       end loop;
 
@@ -1170,7 +1173,7 @@ package body Update_Sources_List is
       --  Check that we've found all the listed sources
       for S of Data.Listed_Sources loop
          if not Data.Excluded_Sources.Contains (S)
-           and then not Data.Sources.Contains (S)
+           and then not Data.Basenames.Contains (S)
          then
             Messages.Append
               (Message.Create
@@ -1219,7 +1222,7 @@ package body Update_Sources_List is
                      With_Defaults => False,
                      With_Config   => False)
          loop
-            if not Data.Sources.Contains (Simple_Name (A.Value.Text)) then
+            if not Data.Basenames.Contains (Simple_Name (A.Value.Text)) then
                Messages.Append
                  (Message.Create
                     ((if Data.View.Has_Attribute (PRA.Source_Files)
@@ -1247,7 +1250,7 @@ package body Update_Sources_List is
                      & """ must be a simple filename",
                      A.Value));
 
-            elsif not Data.Sources.Contains (Simple_Name (A.Value.Text)) then
+            elsif not Data.Basenames.Contains (Simple_Name (A.Value.Text)) then
                Messages.Append
                  (Message.Create
                     ((if Data.View.Has_Attribute (PRA.Source_Files)
@@ -1268,7 +1271,7 @@ package body Update_Sources_List is
                Result => Attr)
             then
                for V of Attr.Values loop
-                  if not Data.Sources.Contains (Simple_Name (V.Text)) then
+                  if not Data.Basenames.Contains (Simple_Name (V.Text)) then
                      Messages.Append
                        (Message.Create
                           (Message.Warning,
@@ -1284,7 +1287,7 @@ package body Update_Sources_List is
                Result => Attr)
             then
                for V of Attr.Values loop
-                  if not Data.Sources.Contains (Simple_Name (V.Text)) then
+                  if not Data.Basenames.Contains (Simple_Name (V.Text)) then
                      Messages.Append
                        (Message.Create
                           (Message.Warning,

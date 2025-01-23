@@ -86,7 +86,8 @@ package body GPR2.Build.View_Db is
                if Proxy /= No_Proxy then
                   Src :=
                     Ref (Proxy.View.View_Db).Src_Infos.Element
-                      (Proxy.Path_Name);
+                    (Proxy.Path_Name);
+
                   Result.Append (Src);
                end if;
             end loop;

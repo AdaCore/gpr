@@ -5,24 +5,22 @@
 --
 
 with GPR2.Build.Tree_Db;
+with GPR2.Containers;
+with GPR2.Path_Name;
 pragma Warnings (Off);
 with GPR2.Project.View.Vector;
 pragma Warnings (On);
 
 package body GPR2.Build.Source.Sets is
 
-   use type GPR2.Project.View.Object;
-
    function Element
      (Self  : Object;
       Proxy : Source_Proxy) return Source.Object;
 
+   procedure Ensure_Visible (C : in out Cursor);
+
    function "-" (Inst : Build.View_Db.Object) return View_Data_Ref is
      (Get_Ref (Inst));
-
-   function Tree_Db
-     (Db : Build.View_Db.Object) return access GPR2.Build.Tree_Db.Object
-   is (Get_Ref (Db).Tree_Db);
 
    ------------------------
    -- Constant_Reference --
@@ -31,21 +29,14 @@ package body GPR2.Build.Source.Sets is
    function Constant_Reference
      (Self : aliased Object; Position : Cursor) return Source.Object
    is
-      Proxy : constant Source_Proxy :=
-                (if Position.From_View_Db
-                 then  Basename_Source_Maps.Element (Position.Current_Src)
-                 else Path_Source_Maps.Element (Position.Current_Path));
-      Db    : constant View_Data_Ref :=
-                (if Proxy.View /= Position.Db.View
-                 then Get_Data (Tree_Db (Position.Db), Proxy.View)
-                 else -Self.Db);
-
+      C : constant Source_Proxy :=
+            (if Position.From_View_Db
+             then View_Tables.Filename_Source_Maps.Element
+               (Position.Current_Src)
+             else Path_Source_Maps.Element
+               (Position.Current_Path));
    begin
-      return Build.Source.Create
-        (Base_Source => Db.Src_Infos.Element (Proxy.Path_Name),
-         Owning_View => Position.Db.View,
-         Defining_View => Proxy.View,
-         Inherited_From => Proxy.Inh_From);
+      return View_Tables.Source (-Self.Db, C);
    end Constant_Reference;
 
    ------------
@@ -69,16 +60,8 @@ package body GPR2.Build.Source.Sets is
      (Self  : Object;
       Proxy : Source_Proxy) return Source.Object
    is
-      Db : constant View_Data_Ref :=
-             (if Proxy.View /= Self.Db.View
-              then -Self.Db.View_Base_For (Proxy.View)
-              else -Self.Db);
    begin
-      return Source.Create
-        (Base_Source    => Db.Src_Infos.Element (Proxy.Path_Name),
-         Defining_View  => Proxy.View,
-         Owning_View    => Self.Db.View,
-         Inherited_From => Proxy.Inh_From);
+      return View_Tables.Source (-Self.Db, Proxy);
    end Element;
 
    -------------
@@ -86,21 +69,29 @@ package body GPR2.Build.Source.Sets is
    -------------
 
    function Element (Position : Cursor) return Source.Object is
-      Proxy : constant Source_Proxy :=
-                (if Position.From_View_Db
-                 then Basename_Source_Maps.Element (Position.Current_Src)
-                 else Path_Source_Maps.Element (Position.Current_Path));
-      Db    : constant View_Data_Ref :=
-                (if Proxy.View /= Position.Db.View
-                 then Get_Data (Tree_Db (Position.Db), Proxy.View)
-                 else -Position.Db);
+      C : constant Source_Proxy :=
+            (if Position.From_View_Db
+             then View_Tables.Filename_Source_Maps.Element
+               (Position.Current_Src)
+             else Path_Source_Maps.Element (Position.Current_Path));
    begin
-      return Source.Create
-        (Base_Source    => Db.Src_Infos.Element (Proxy.Path_Name),
-         Defining_View  => Proxy.View,
-         Owning_View    => Position.Db.View,
-         Inherited_From => Proxy.Inh_From);
+      return View_Tables.Source (Get_Ref (Position.Db), C);
    end Element;
+
+   --------------------
+   -- Ensure_Visible --
+   --------------------
+
+   procedure Ensure_Visible (C : in out Cursor) is
+   begin
+      if not C.From_View_Db then
+         return;
+      end if;
+
+      while Has_Element (C) and then not Element (C).Is_Visible loop
+         Filename_Source_Maps.Next (C.Current_Src);
+      end loop;
+   end Ensure_Visible;
 
    --------------
    -- Finalize --
@@ -125,17 +116,17 @@ package body GPR2.Build.Source.Sets is
 
       elsif Self.From_View_Db then
          declare
-            List : Basename_Source_Maps.Map renames
-                     Get_Ref (Self.Db).Sources;
+            Db : constant View_Data_Ref := Get_Ref (Self.Db);
          begin
-            if List.Is_Empty then
+            if Db.Sources.Is_Empty then
                return No_Element;
             end if;
 
-            Candidate := (From_View_Db => True,
-                          Db           => Self.Db,
-                          Current_Src  => List.First);
-            return Candidate;
+            Candidate :=
+              (From_View_Db   => True,
+               Db             => Self.Db,
+               Current_Src    => Db.Sources.First);
+            Ensure_Visible (Candidate);
          end;
 
       else
@@ -143,12 +134,14 @@ package body GPR2.Build.Source.Sets is
             return No_Element;
 
          else
-            return
+            Candidate :=
               (From_View_Db => False,
                Db           => Self.Db,
                Current_Path => Self.Paths.First);
          end if;
       end if;
+
+      return Candidate;
    end First;
 
    -----------------
@@ -158,9 +151,10 @@ package body GPR2.Build.Source.Sets is
    function Has_Element (Position : Cursor) return Boolean is
    begin
       if Position.From_View_Db then
-         return Basename_Source_Maps.Has_Element (Position.Current_Src);
+         return Filename_Source_Maps.Has_Element (Position.Current_Src);
       else
-         return Path_Source_Maps.Has_Element (Position.Current_Path);
+         return Path_Source_Maps.Has_Element
+           (Position.Current_Path);
       end if;
    end Has_Element;
 
@@ -178,7 +172,7 @@ package body GPR2.Build.Source.Sets is
    function Iterate
      (Self : Object) return Source_Iterators.Forward_Iterator'Class
    is
-      use View_Tables.Basename_Source_Maps;
+      use View_Tables.Filename_Source_Maps;
       Opt : Source_Set_Option := Self.Option;
 
    begin
@@ -187,38 +181,48 @@ package body GPR2.Build.Source.Sets is
       end if;
 
       if Self = Empty_Set then
-         return Source_Iterator'(Ada.Finalization.Controlled with
-                                 From_View_Db => False,
-                                 Db           => Build.View_Db.Undefined,
-                                 others       => <>);
+         return Source_Iterator'
+           (Ada.Finalization.Controlled with
+            From_View_Db => False,
+            Db           => Build.View_Db.Undefined,
+            others       => <>);
       end if;
 
       case Opt is
          when Unsorted =>
-            return Source_Iterator'(Ada.Finalization.Controlled with
-                                    From_View_Db => True,
-                                    Db           => Self.Db,
-                                    Filter       => Self.Filter);
+            return Source_Iterator'
+              (Ada.Finalization.Controlled with
+               From_View_Db => True,
+               Db           => Self.Db,
+               Filter       => Self.Filter);
 
          when Sorted =>
             return Iter : Source_Iterator (False) do
                Iter.Db := Self.Db;
 
                for C in Get_Ref (Self.Db).Sources.Iterate loop
-                  if Self.Filter = null
-                    or else Self.Filter
-                      (Self.Db.View,
-                       Self.Element (Element (C)),
-                       Filter_Data_Holders.Element (Self.F_Data))
-                  then
-                     Iter.Paths.Insert (Key (C), Element (C));
-                  end if;
+                  declare
+                     Src : constant Build.Source.Object :=
+                             Self.Element (Element (C));
+                  begin
+                     if Src.Is_Visible
+                       and then
+                         (Self.Filter = null
+                          or else Self.Filter
+                            (Self.Db.View,
+                             Src,
+                             Filter_Data_Holders.Element (Self.F_Data)))
+                     then
+                        Iter.Paths.Include (Key (C), Element (C));
+                     end if;
+                  end;
                end loop;
             end return;
 
          when Recurse =>
             declare
                Result : Source_Iterator (False);
+               Basenames : GPR2.Containers.Filename_Set;
             begin
                Result.Db := Self.Db;
 
@@ -232,24 +236,54 @@ package body GPR2.Build.Source.Sets is
                     and then not V.Is_Extended
                   then
                      declare
-                        Db   : constant View_Db.Object :=
-                                 Get_Ref (Self.Db).Tree_Db.View_Database (V);
-                        Pos  : Path_Source_Maps.Cursor;
-                        Done : Boolean;
+                        Db    : constant View_Db.Object :=
+                                  Get_Ref (Self.Db).Tree_Db.View_Database (V);
                      begin
                         for C in Get_Ref (Db).Sources.Iterate loop
-                           if Self.Filter = null
-                             or else Self.Filter
-                               (Self.Db.View,
-                                Self.Element (Element (C)),
-                                Filter_Data_Holders.Element (Self.F_Data))
-                           then
-                              Result.Paths.Insert
-                                (Key       => Basename_Source_Maps.Key (C),
-                                 New_Item  => Basename_Source_Maps.Element (C),
-                                 Position  => Pos,
-                                 Inserted  => Done);
-                           end if;
+                           --  Note: we cannot just use Self.Element (Proxy)
+                           --  here since this would give us a source with a
+                           --  visibility for Self.Db.View, so in case the
+                           --  source is owned by a withed unit, such
+                           --  visibility would be null (e.g. False). We need
+                           --  to use the withed view context here and then
+                           --  filter on the basename to check if it's visible.
+
+                           declare
+                              Proxy    : constant View_Tables.Source_Proxy :=
+                                           Filename_Source_Maps.Element (C);
+                              C_Db     : constant View_Data_Ref :=
+                                           (Get_Ref (V.View_Db));
+                              Src      : constant GPR2.Build.Source.Object :=
+                                           View_Tables.Source (C_Db, Proxy);
+                              C_BN     : Containers.Filename_Type_Set.Cursor;
+                              Inserted : Boolean;
+
+                           begin
+                              if Src.Is_Visible
+                                and then
+                                  (Self.Filter = null
+                                   or else Self.Filter
+                                     (Self.Db.View,
+                                      Src,
+                                      Filter_Data_Holders.Element
+                                        (Self.F_Data)))
+                              then
+                                 if Src.Is_Compilable then
+                                    --  Need to check for simple name clashes
+                                    Basenames.Insert
+                                      (Src.Path_Name.Simple_Name,
+                                       C_BN, Inserted);
+                                 else
+                                    Inserted := True;
+                                 end if;
+
+                                 if Inserted then
+                                    Result.Paths.Include
+                                      (Filename_Source_Maps.Key (C),
+                                       Proxy);
+                                 end if;
+                              end if;
+                           end;
                         end loop;
                      end;
                   end if;
@@ -259,6 +293,20 @@ package body GPR2.Build.Source.Sets is
             end;
       end case;
    end Iterate;
+
+   ----------
+   -- Less --
+   ----------
+
+   function Less (P1, P2 : Filename_Type) return Boolean is
+      BN1 : constant Simple_Name := GPR2.Path_Name.Simple_Name (P1);
+      BN2 : constant Simple_Name := GPR2.Path_Name.Simple_Name (P2);
+   begin
+      --  Prioritize the sort on the simple name, only use the full path when
+      --  the simple names are identical: for developers (in particular in Ada)
+      --  the simple name is the important information.
+      return (if BN1 = BN2 then P1 < P2 else BN1 < BN2);
+   end Less;
 
    ----------
    -- Next --
@@ -272,7 +320,8 @@ package body GPR2.Build.Source.Sets is
 
    begin
       if Self.From_View_Db then
-         Basename_Source_Maps.Next (Result.Current_Src);
+         Filename_Source_Maps.Next (Result.Current_Src);
+         Ensure_Visible (Result);
 
       else
          Path_Source_Maps.Next (Result.Current_Path);

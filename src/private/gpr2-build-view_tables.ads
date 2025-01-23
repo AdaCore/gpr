@@ -111,9 +111,13 @@ private package GPR2.Build.View_Tables is
      (Source_Proxy, Hash, "=");
    --  A set of source reference
 
+   package Filename_Source_Maps is new Ada.Containers.Indefinite_Hashed_Maps
+     (Filename_Type, Source_Proxy, Hash, "=");
+   --  Pathname to source reference maps
+
    package Basename_Source_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (Simple_Name, Source_Proxy, Hash, "=");
-   --  Basename to source reference maps
+   --  Basename to pathname maps
 
    package Basename_Source_List_Maps is new
      Ada.Containers.Indefinite_Hashed_Maps
@@ -148,8 +152,10 @@ private package GPR2.Build.View_Tables is
 
       --  Dynamic data
 
-      Sources         : Basename_Source_Maps.Map;
+      Sources         : Filename_Source_Maps.Map;
       --  Sources to take into account for View after visibility is resolved.
+      Basenames       : Basename_Source_Maps.Map;
+      --  Sources by basename
       Overloaded_Srcs : Basename_Source_List_Maps.Map;
       --  Keeps track of source overloading, to reassess source visibility or
       --  erroneous cases when a source is added or removed.
@@ -236,6 +242,11 @@ private package GPR2.Build.View_Tables is
    function Source
      (Data     : View_Data_Ref;
       Basename : Simple_Name) return Build.Source.Object;
+
+   function Source
+     (Data  : View_Data_Ref;
+      Proxy : Source_Proxy) return Build.Source.Object
+     with Inline;
 
    function Visible_Source
      (Data     : View_Data_Ref;

@@ -121,25 +121,28 @@ package body GPR2.Build.View_Tables is
                      Get_Data (Data.Tree_Db, View_Owner);
       Src_Info   : constant Src_Info_Maps.Constant_Reference_Type :=
                      Owner_Db.Src_Infos.Constant_Reference (Path);
+      C_Lang     : Sources_By_Langs_Maps.Cursor;
 
    begin
+      Data.Sources.Include (Path, Proxy);
+
+      Data.Langs_Usage.Insert (Src_Info.Language, 1, C_Lang, Done);
+
+      if not Done then
+         declare
+            Val : constant Sources_By_Langs_Maps.Reference_Type :=
+                    Data.Langs_Usage.Reference (C_Lang);
+         begin
+            Val.Element.all := Val + 1;
+         end;
+      end if;
+
       Data.Overloaded_Srcs.Insert
         (Path_Name.Simple_Name (Path),
          Source_Proxy_Sets.Empty_Set,
          C_Overload,
          Done);
       Data.Overloaded_Srcs.Reference (C_Overload).Include (Proxy);
-
-      if not Data.Langs_Usage.Contains (Src_Info.Language) then
-         Data.Langs_Usage.Insert (Src_Info.Language, 1);
-      else
-         declare
-            Val : constant Sources_By_Langs_Maps.Reference_Type :=
-                    Data.Langs_Usage.Reference (Src_Info.Language);
-         begin
-            Val.Element.all := Val + 1;
-         end;
-      end if;
 
       if Resolve_Visibility then
          View_Tables.Resolve_Visibility (Data, C_Overload, Messages);
@@ -263,7 +266,7 @@ package body GPR2.Build.View_Tables is
                                       Get_Data (NS_Db.Tree_Db, Other.View);
                      Other_Loc    : constant Source_Proxy :=
                                       Other_Db.Sources
-                                        (Other.Source.Simple_Name);
+                                        (Other.Source.Value);
                      Remove_Src   : Boolean := False;
                      Remove_Other : Boolean := False;
                      Replace      : Boolean := False;
@@ -698,7 +701,7 @@ package body GPR2.Build.View_Tables is
          for C_Proxy in Data.Sources.Iterate loop
             declare
                Proxy : constant Source_Proxy :=
-                         Basename_Source_Maps.Element (C_Proxy);
+                         Filename_Source_Maps.Element (C_Proxy);
                Db    : constant View_Data_Ref :=
                          Get_Data (Data.Tree_Db, Proxy.View);
                S_Ref : constant Src_Info_Maps.Reference_Type :=
@@ -775,6 +778,8 @@ package body GPR2.Build.View_Tables is
                      Owner_Db.Src_Infos.Constant_Reference (Path);
 
    begin
+      Data.Sources.Delete (Proxy.Path_Name);
+
       C_Overload := Data.Overloaded_Srcs.Find (Basename);
       Data.Overloaded_Srcs.Reference (C_Overload).Delete (Proxy);
 
@@ -1043,13 +1048,11 @@ package body GPR2.Build.View_Tables is
                     Data.Overloaded_Srcs.Constant_Reference (Cursor);
       Candidate : access constant Source_Proxy;
       Current   : access constant Source_Proxy;
-      C_Src     : Basename_Source_Maps.Cursor :=
-                    Data.Sources.Find (Basename);
+      C_Path    : Basename_Source_Maps.Cursor;
       C_Info    : Src_Info_Maps.Cursor;
       C_Info2   : Src_Info_Maps.Cursor;
       SR1, SR2  : Natural;
       Clashes   : Natural_Sets.Set;
-      Err_Level : GPR2.Message.Level_Value;
 
    begin
       if Set.Is_Empty then
@@ -1121,20 +1124,18 @@ package body GPR2.Build.View_Tables is
                      Clashes.Clear;
                   end if;
 
-               else
+               elsif Candidate.View.Is_Compilable
+                 (Source_Info (Candidate.all).Language)
+               then
                   --  Remaining case: inheritance shows two candidate sources
 
-                  if Candidate.View.Is_Compilable
-                    (Source_Info (Candidate.all).Language)
-                  then
-                     Err_Level := Message.Error;
-                  else
-                     Err_Level := Message.Warning;
-                  end if;
+                  --  If the source is compilable, then this generates an error
+                  --  since we derive the object file from the source, so
+                  --  cannot handle two sources with the same simple name.
 
                   Messages.Append
                     (Message.Create
-                       (Err_Level,
+                       (Message.Error,
                         '"' & String (Basename) & '"' &
                           " is found in several extended projects",
                         Source_Reference.Create
@@ -1168,13 +1169,13 @@ package body GPR2.Build.View_Tables is
 
                      Messages.Append
                        (Message.Create
-                          (Err_Level,
+                          (Message.Error,
                            String (P1),
                            Source_Reference.Create (V1.Value, 0, 0),
                            Indent => 1));
                      Messages.Append
                        (Message.Create
-                          (Err_Level,
+                          (Message.Error,
                            String (P2),
                            Source_Reference.Create (V2.Value, 0, 0),
                            Indent => 1));
@@ -1187,19 +1188,14 @@ package body GPR2.Build.View_Tables is
             end;
          end loop;
 
-         if not Clashes.Is_Empty then
-            if Candidate.View.Is_Compilable
-              (Src_Info_Maps.Element (C_Info).Language)
-            then
-               Err_Level := Message.Error;
-            else
-               Err_Level := Message.Warning;
-            end if;
-
+         if not Clashes.Is_Empty
+         and then Candidate.View.Is_Compilable
+             (Src_Info_Maps.Element (C_Info).Language)
+         then
             for SR of Clashes loop
                Messages.Append
                  (Message.Create
-                    (Err_Level,
+                    (Message.Error,
                      '"' & String (Basename) & '"' &
                        " is found multiple times for the same source" &
                        " directory",
@@ -1211,8 +1207,10 @@ package body GPR2.Build.View_Tables is
          end if;
       end if;
 
-      if Basename_Source_Maps.Has_Element (C_Src) then
-         Current := Data.Sources.Constant_Reference (C_Src).Element;
+      C_Path := Data.Basenames.Find (Basename);
+
+      if Basename_Source_Maps.Has_Element (C_Path) then
+         Current := Data.Basenames.Constant_Reference (C_Path).Element;
       else
          Current := null;
       end if;
@@ -1223,15 +1221,15 @@ package body GPR2.Build.View_Tables is
             Propagate_Visible_Source_Removal (Current.all);
 
             if Candidate = null then
-               Data.Sources.Delete (C_Src);
+               Data.Basenames.Delete (C_Path);
             end if;
          end if;
 
          if Candidate /= null then
             if Current = null then
-               Data.Sources.Insert (Basename, Candidate.all);
+               Data.Basenames.Insert (Basename, Candidate.all);
             else
-               Data.Sources.Replace_Element (C_Src, Candidate.all);
+               Data.Basenames.Replace_Element (C_Path, Candidate.all);
             end if;
 
             Propagate_Visible_Source_Added (Candidate.all);
@@ -1247,16 +1245,17 @@ package body GPR2.Build.View_Tables is
      (Data : View_Data_Ref;
       Pos  : Basename_Source_Maps.Cursor) return Build.Source.Object
    is
-      Proxy : Source_Proxy renames Basename_Source_Maps.Element (Pos);
-      use type GPR2.Project.View.Object;
+      Proxy : constant Source_Proxy := Basename_Source_Maps.Element (Pos);
 
+      use type GPR2.Project.View.Object;
    begin
       if Proxy.View = Data.View then
          return Build.Source.Create
            (Base_Source    => Data.Src_Infos.Element (Proxy.Path_Name),
             Defining_View  => Proxy.View,
             Owning_View    => Data.View,
-            Inherited_From => Proxy.Inh_From);
+            Inherited_From => Proxy.Inh_From,
+            Is_Visible     => True);
       else
          return Build.Source.Create
            (Base_Source    => Get_Data
@@ -1265,8 +1264,45 @@ package body GPR2.Build.View_Tables is
               (Proxy.Path_Name),
             Defining_View  => Proxy.View,
             Owning_View    => Data.View,
-            Inherited_From => Proxy.Inh_From);
+            Inherited_From => Proxy.Inh_From,
+            Is_Visible     => True);
       end if;
+   end Source;
+
+   ------------
+   -- Source --
+   ------------
+
+   function Source
+     (Data  : View_Data_Ref;
+      Proxy : Source_Proxy) return Build.Source.Object
+   is
+      use type GPR2.Project.View.Object;
+
+      BN            : constant Simple_Name :=
+                        Path_Name.Simple_Name (Proxy.Path_Name);
+      C             : constant Basename_Source_Maps.Cursor :=
+                        Data.Basenames.Find (BN);
+      Base_Src      : constant GPR2.Build.Source_Base.Object :=
+                        (if Proxy.View = Data.View
+                         then Data.Src_Infos.Element (Proxy.Path_Name)
+                         else Get_Data
+                           (Data.Tree_Db, Proxy.View).Src_Infos.Element
+                             (Proxy.Path_Name));
+      Is_Compilable : constant Boolean :=
+                        Data.View.Is_Compilable (Base_Src.Language);
+      Is_Visible    : constant Boolean :=
+                        not Is_Compilable or else
+                            (Basename_Source_Maps.Has_Element (C) and then
+                             Basename_Source_Maps.Element (C) = Proxy);
+
+   begin
+      return Build.Source.Create
+        (Base_Source    => Base_Src,
+         Defining_View  => Proxy.View,
+         Owning_View    => Data.View,
+         Inherited_From => Proxy.Inh_From,
+         Is_Visible     => Is_Visible);
    end Source;
 
    ------------
@@ -1278,7 +1314,7 @@ package body GPR2.Build.View_Tables is
       Basename : Simple_Name) return Build.Source.Object
    is
       C   : constant Basename_Source_Maps.Cursor :=
-              Data.Sources.Find (Basename);
+              Data.Basenames.Find (Basename);
    begin
       if not Basename_Source_Maps.Has_Element (C) then
          return Build.Source.Undefined;
@@ -1299,7 +1335,7 @@ package body GPR2.Build.View_Tables is
       Basename : Simple_Name) return Build.Source.Object
    is
       C   : Basename_Source_Maps.Cursor :=
-              Data.Sources.Find (Basename);
+              Data.Basenames.Find (Basename);
    begin
       --  Look for the source in the view's closure (withed or limited withed
       --  views)
@@ -1313,7 +1349,7 @@ package body GPR2.Build.View_Tables is
             declare
                V_Data : View_Data_Ref renames Get_Data (Data.Tree_Db, V);
             begin
-               C := V_Data.Sources.Find (Basename);
+               C := V_Data.Basenames.Find (Basename);
 
                if Basename_Source_Maps.Has_Element (C) then
                   return Source (V_Data, C);

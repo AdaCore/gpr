@@ -151,7 +151,7 @@ private
    function Has_Source
      (Self     : Object;
       Basename : Simple_Name) return Boolean
-   is (Self.Get.Sources.Contains (Basename));
+   is (Self.Get.Basenames.Contains (Basename));
 
    function Source
      (Self     : Object;
