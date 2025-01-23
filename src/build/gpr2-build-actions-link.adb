@@ -5,6 +5,7 @@
 --
 
 with Ada.Characters.Handling;
+with Ada.Strings.Fixed;
 with GNAT.OS_Lib;
 
 with GNATCOLL.OS.FSUtil;
@@ -70,14 +71,20 @@ package body GPR2.Build.Actions.Link is
          if Is_List then
             for Idx in Attr.Values.First_Index .. Attr.Values.Last_Index loop
                if Idx < Attr.Values.Last_Index then
-                  Cmd_Line.Add_Argument
-                    (Attr.Values.Element (Idx).Text, In_Signature);
-               else
+                  if Attr.Values.Element (Idx).Text'Length > 0 then
+                     Cmd_Line.Add_Argument
+                       (Attr.Values.Element (Idx).Text, In_Signature);
+                  end if;
+
+               elsif Param'Length > 0
+                 or else Attr.Values.Element (Idx).Text'Length > 0
+               then
                   Cmd_Line.Add_Argument
                     (Attr.Values.Element (Idx).Text & Param, In_Signature);
                end if;
             end loop;
-         else
+
+         elsif Param'Length > 0 or else Attr.Value.Text'Length > 0 then
             Cmd_Line.Add_Argument
               (Attr.Value.Text & Param, In_Signature);
          end if;
@@ -384,17 +391,16 @@ package body GPR2.Build.Actions.Link is
    function Embedded_Objects
      (Self : Object) return Build.Tree_Db.Artifact_Sets.Set
    is
-      Result : Tree_Db.Artifact_Sets.Set;
    begin
-      for Input of Self.Tree.Inputs (Self.UID) loop
-         --  Inputs are either objects or libraries. Libraries are represented
-         --  by an Artifact.Library class.
-         if Input not in Artifacts.Library.Object'Class then
-            Result.Include (Input);
-         end if;
-      end loop;
-
-      return Result;
+      return Result : Tree_Db.Artifact_Sets.Set do
+         for Input of Self.Tree.Inputs (Self.UID) loop
+            --  Inputs are either objects or libraries. Libraries are
+            --  represented by an Artifact.Library class.
+            if Input not in Artifacts.Library.Object'Class then
+               Result.Include (Input);
+            end if;
+         end loop;
+      end return;
    end Embedded_Objects;
 
    ----------------
@@ -407,11 +413,23 @@ package body GPR2.Build.Actions.Link is
       Context    : GPR2.Project.View.Object;
       Output     : Filename_Optional := "")
    is
-      Exec : constant GPR2.Path_Name.Object :=
-               (if Output'Length = 0
-                then Context.Executable (Src.Path.Simple_Name, Src.Index)
-                else Context.Executable_Directory.Compose (Output));
+      Exec : GPR2.Path_Name.Object;
    begin
+      if Output'Length = 0 then
+         Exec := Context.Executable (Src.Path.Simple_Name, Src.Index);
+      else
+         declare
+            Suff : constant Filename_Optional :=
+                     Context.Executable_Suffix;
+         begin
+            if Ada.Strings.Fixed.Index (String (Output), ".") = 0 then
+               Exec := Context.Executable_Directory.Compose (Output & Suff);
+            else
+               Exec := Context.Executable_Directory.Compose (Output);
+            end if;
+         end;
+      end if;
+
       Self.Is_Library := False;
       Self.Main_Src   := Src;
       Self.Executable := Artifacts.Files.Create (Exec);
@@ -463,17 +481,16 @@ package body GPR2.Build.Actions.Link is
    --------------------------
 
    function Library_Dependencies
-     (Self : Object) return Actions.Action_Id_Sets.Set
+     (Self : Object) return Actions.Action_Id_Vectors.Vector
    is
-      Result : Action_Id_Sets.Set;
    begin
-      for Input of Self.Tree.Inputs (Self.UID) loop
-         if Input in Artifacts.Library.Object'Class then
-            Result.Insert (Self.Tree.Predecessor (Input).UID);
-         end if;
-      end loop;
-
-      return Result;
+      return Result : Action_Id_Vectors.Vector do
+         for Input of Self.Tree.Inputs (Self.UID) loop
+            if Input in Artifacts.Library.Object'Class then
+               Result.Append (Self.Tree.Predecessor (Input).UID);
+            end if;
+         end loop;
+      end return;
    end Library_Dependencies;
 
    -----------------------

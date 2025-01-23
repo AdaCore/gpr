@@ -15,6 +15,7 @@ with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Project.View.Vector;
 with GPR2.Tree_Internal;
 with GPR2.View_Ids.Set;
 with GNATCOLL.Directed_Graph; use GNATCOLL.Directed_Graph;
@@ -45,9 +46,7 @@ package body GPR2.Build.Tree_Db is
    is (Artifact_Internal_Iterator'
          (Db     => List.Db,
           Kind   => List.Kind,
-          Action => (if List.Kind = Global_List
-                     then Action_Maps.No_Element
-                     else List.Action)));
+          Action => List.Action));
 
    type Action_Internal_Iterator is limited new
      Action_Iterators.Forward_Iterator with record
@@ -125,9 +124,9 @@ package body GPR2.Build.Tree_Db is
 
       Self.New_Actions.Include (Action.UID);
 
-      Self.Implicit_Inputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
-      Self.Inputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
-      Self.Outputs.Insert (Action.UID, Artifact_Sets.Empty_Set);
+      Self.Implicit_Inputs.Insert (Action.UID, Artifact_Vectors.Empty_Vector);
+      Self.Inputs.Insert (Action.UID, Artifact_Vectors.Empty_Vector);
+      Self.Outputs.Insert (Action.UID, Artifact_Vectors.Empty_Vector);
 
       if not Action.On_Tree_Insertion (Self) then
          return False;
@@ -174,14 +173,29 @@ package body GPR2.Build.Tree_Db is
       Artifact : Artifacts.Object'Class;
       Explicit : Boolean)
    is
-      Pred : Artifact_Action_Maps.Cursor;
+      Pred          : Artifact_Action_Maps.Cursor;
+      Implicit_List : constant Action_Artifacts_Maps.Reference_Type :=
+                        Self.Implicit_Inputs.Reference (Action);
+      Explicit_List : constant Action_Artifacts_Maps.Reference_Type :=
+                        Self.Inputs.Reference (Action);
+      C             : Artifact_Vectors.Cursor;
    begin
       Self.Add_Artifact (Artifact);
 
       if Explicit then
-         Self.Inputs.Reference (Action).Include (Artifact);
-      elsif not Self.Inputs.Reference (Action).Contains (Artifact) then
-         Self.Implicit_Inputs.Reference (Action).Include (Artifact);
+         if not Explicit_List.Contains (Artifact) then
+            Explicit_List.Append (Artifact);
+         end if;
+
+         C := Implicit_List.Find (Artifact);
+         if Artifact_Vectors.Has_Element (C) then
+            Implicit_List.Delete (C);
+         end if;
+
+      elsif not Explicit_List.Contains (Artifact) then
+         if not Implicit_List.Contains (Artifact) then
+            Implicit_List.Append (Artifact);
+         end if;
       else
          return;
       end if;
@@ -235,7 +249,9 @@ package body GPR2.Build.Tree_Db is
          Self.Predecessor.Insert (Artifact, Action);
       end if;
 
-      Self.Outputs.Reference (Action).Include (Artifact);
+      if not Self.Outputs.Reference (Action).Contains (Artifact) then
+         Self.Outputs.Reference (Action).Append (Artifact);
+      end if;
 
       if Self.Executing then
          for Id of Self.Successors (Artifact) loop
@@ -335,10 +351,8 @@ package body GPR2.Build.Tree_Db is
      (Iterator : aliased Artifacts_List;
       Pos      : Artifact_Cursor) return Constant_Artifact_Reference_Type
    is
-      Ref : constant Artifact_Sets.Constant_Reference_Type :=
+      Ref : constant Artifact_Vectors.Constant_Reference_Type :=
               (case Pos.Current is
-               when Global_List     =>
-                  Iterator.Db.Artifacts.Constant_Reference (Pos.Pos),
                when Implicit_Inputs =>
                   Iterator.Db.Implicit_Inputs.Constant_Reference
                     (Pos.Map_Pos).Constant_Reference (Pos.Pos),
@@ -446,6 +460,7 @@ package body GPR2.Build.Tree_Db is
    is
       Node : GNATCOLL.Directed_Graph.Node_Id;
       Pred : Artifact_Action_Maps.Cursor;
+      Inputs : Artifact_Vectors.Vector;
 
    begin
       --  Populate the DAG used for the execution
@@ -463,9 +478,10 @@ package body GPR2.Build.Tree_Db is
       --  Now propagate the dependencies
 
       for Action of Self.Actions loop
-         for Input of Self.Inputs (Action.UID).Union
-           (Self.Implicit_Inputs (Action.UID))
-         loop
+         Inputs := Self.Inputs (Action.UID);
+         Inputs.Append (Self.Implicit_Inputs (Action.UID));
+
+         for Input of Inputs loop
             --  Find the action that generated this input
             Pred := Self.Predecessor.Find (Input);
 
@@ -519,14 +535,10 @@ package body GPR2.Build.Tree_Db is
       end if;
 
       case Iter.Kind is
-         when Global_List =>
-            return (Pos     => Iter.Db.Artifacts.First,
-                    Map_Pos => Action_Artifacts_Maps.No_Element,
-                    Current => Iter.Kind);
          when Explicit_Inputs | Inputs =>
             declare
-               Id      : constant Actions.Action_Id'Class :=
-                           Action_Maps.Key (Iter.Action);
+               Id : constant Actions.Action_Id'Class :=
+                      Action_Maps.Key (Iter.Action);
             begin
                Map_Pos := Iter.Db.Inputs.Find (Id);
                Res :=
@@ -534,7 +546,7 @@ package body GPR2.Build.Tree_Db is
                   Map_Pos => Map_Pos,
                   Current => Explicit_Inputs);
 
-               if not Artifact_Sets.Has_Element (Res.Pos)
+               if not Artifact_Vectors.Has_Element (Res.Pos)
                  and then Iter.Kind = Inputs
                then
                   Map_Pos := Iter.Db.Implicit_Inputs.Find (Id);
@@ -554,18 +566,18 @@ package body GPR2.Build.Tree_Db is
               (Pos    => Iter.Db.Implicit_Inputs.Constant_Reference
                            (Map_Pos).First,
                Map_Pos => Map_Pos,
-               Current => Iter.Kind);
+               Current => Implicit_Inputs);
 
          when Outputs =>
             Map_Pos := Iter.Db.Outputs.Find (Action_Maps.Key (Iter.Action));
             Res :=
               (Pos     => Iter.Db.Outputs.Constant_Reference (Map_Pos).First,
                Map_Pos => Map_Pos,
-               Current => Iter.Kind);
+               Current => Outputs);
 
       end case;
 
-      if not Artifact_Sets.Has_Element (Res.Pos) then
+      if not Artifact_Vectors.Has_Element (Res.Pos) then
          return No_Artifact_Element;
       else
          return Res;
@@ -701,20 +713,20 @@ package body GPR2.Build.Tree_Db is
    is
       Res : Artifact_Cursor := Position;
    begin
-      Artifact_Sets.Next (Res.Pos);
+      Artifact_Vectors.Next (Res.Pos);
 
-      if not Artifact_Sets.Has_Element (Res.Pos)
+      if not Artifact_Vectors.Has_Element (Res.Pos)
         and then Iter.Kind = Inputs
         and then Res.Current = Explicit_Inputs
       then
-         Res.Current := Implicit_Inputs;
          Res.Map_Pos :=
            Iter.Db.Implicit_Inputs.Find (Action_Maps.Key (Iter.Action));
          Res.Pos     :=
            Iter.Db.Implicit_Inputs.Constant_Reference (Res.Map_Pos).First;
+         Res.Current := Implicit_Inputs;
       end if;
 
-      if not Artifact_Sets.Has_Element (Res.Pos) then
+      if not Artifact_Vectors.Has_Element (Res.Pos) then
          return No_Artifact_Element;
       end if;
 
@@ -874,13 +886,31 @@ package body GPR2.Build.Tree_Db is
             if V.Kind in GPR2.Build.View_Tables.With_View_Db then
                declare
                   use GPR2.Containers;
-                  V_Db : constant View_Tables.View_Data_Ref :=
-                           View_Tables.Get_Data (Self.Self, V);
+                  Closure : GPR2.Project.View.Vector.Object;
+                  Found   : Boolean;
                begin
+                  if V.Kind /= K_Aggregate_Library then
+                     Closure.Append (V);
+                  else
+                     for Agg of V.Aggregated loop
+                        Closure.Append (Agg);
+                     end loop;
+                  end if;
+
                   for C in V.Interface_Units.Iterate loop
-                     if not V_Db.Own_CUs.Contains
-                       (Unit_Name_To_Sloc.Key (C))
-                     then
+                     Found := False;
+
+                     for Sub of Closure loop
+                        if View_Tables.Get_Data
+                          (Self.Self, Sub).Own_CUs.Contains
+                          (Unit_Name_To_Sloc.Key (C))
+                        then
+                           Found := True;
+                           exit;
+                        end if;
+                     end loop;
+
+                     if not Found then
                         Messages.Append
                           (Message.Create
                              (Message.Error,
@@ -892,9 +922,19 @@ package body GPR2.Build.Tree_Db is
                   end loop;
 
                   for C in V.Interface_Sources.Iterate loop
-                     if not V_Db.Sources.Contains
-                       (Source_Path_To_Sloc.Key (C))
-                     then
+                     Found := False;
+
+                     for Sub of Closure loop
+                        if View_Tables.Get_Data
+                          (Self.Self, Sub).Sources.Contains
+                          (Source_Path_To_Sloc.Key (C))
+                        then
+                           Found := True;
+                           exit;
+                        end if;
+                     end loop;
+
+                     if not Found then
                         Messages.Append
                           (Message.Create
                              (Message.Error,
@@ -952,31 +992,32 @@ package body GPR2.Build.Tree_Db is
      (Self     : in out Object;
       Artifact : Artifacts.Object'Class)
    is
-      C      : Artifact_Sets.Cursor;
+      C_Glob : Artifact_Sets.Cursor;
+      C      : Artifact_Vectors.Cursor;
       C_Succ : Artifact_Actions_Maps.Cursor;
       C_Pred : Artifact_Action_Maps.Cursor;
 
    begin
-      C := Self.Artifacts.Find (Artifact);
+      C_Glob := Self.Artifacts.Find (Artifact);
 
-      if not Artifact_Sets.Has_Element (C) then
+      if not Artifact_Sets.Has_Element (C_Glob) then
          return;
       end if;
 
-      Self.Artifacts.Delete (C);
+      Self.Artifacts.Delete (C_Glob);
 
       C_Succ := Self.Successors.Find (Artifact);
 
       for Succ of Self.Successors (C_Succ) loop
          C := Self.Inputs (Succ).Find (Artifact);
 
-         if Artifact_Sets.Has_Element (C) then
+         if Artifact_Vectors.Has_Element (C) then
             Self.Inputs (Succ).Delete (C);
          end if;
 
          C := Self.Implicit_Inputs (Succ).Find (Artifact);
 
-         if Artifact_Sets.Has_Element (C) then
+         if Artifact_Vectors.Has_Element (C) then
             Self.Implicit_Inputs (Succ).Delete (C);
          end if;
       end loop;
@@ -988,7 +1029,7 @@ package body GPR2.Build.Tree_Db is
          C := Self.Outputs
            (Artifact_Action_Maps.Element (C_Pred)).Find (Artifact);
 
-         if Artifact_Sets.Has_Element (C) then
+         if Artifact_Vectors.Has_Element (C) then
             Self.Outputs (Artifact_Action_Maps.Element (C_Pred)).Delete (C);
          end if;
 
@@ -1005,7 +1046,8 @@ package body GPR2.Build.Tree_Db is
       Old   : Artifacts.Object'Class;
       Value : Artifacts.Object'Class)
    is
-      C       : Artifact_Sets.Cursor;
+      C_Glob  : Artifact_Sets.Cursor;
+      C       : Artifact_Vectors.Cursor;
       C_Succ  : Artifact_Actions_Maps.Cursor;
       C_New   : Artifact_Actions_Maps.Cursor;
       C_Pred  : Artifact_Action_Maps.Cursor;
@@ -1018,19 +1060,18 @@ package body GPR2.Build.Tree_Db is
       --  where e.g. the artifact is not inherited with another subtree where
       --  the artifact is now located in some extending view.
 
-      C := Self.Artifacts.Find (Old);
+      C_Glob := Self.Artifacts.Find (Old);
       pragma Assert
-        (Artifact_Sets.Has_Element (C),
+        (Artifact_Sets.Has_Element (C_Glob),
          "Replace_Artifact: cannot find old artifact '" & Old.Image & "'");
+      Self.Artifacts.Delete (C_Glob);
 
-      Self.Artifacts.Delete (C);
-
-      Self.Artifacts.Insert (Value, C, Success);
+      Self.Artifacts.Insert (Value, C_Glob, Success);
       pragma Assert
         (Success,
         "Replace_Artifact: cannot insert new artifact '" & Value.Image & "'");
 
-      C_Succ := Self.Successors.Find (Old);
+      pragma Assert (Success);
 
       Self.Successors.Insert (Value, Action_Sets.Empty_Set, C_New, Success);
       pragma Assert
@@ -1038,20 +1079,20 @@ package body GPR2.Build.Tree_Db is
          "Replace_Artifact: cannot setup list of successors for '" &
            Value.Image & "'");
 
+      C_Succ := Self.Successors.Find (Old);
+
       for Succ of Self.Successors (C_Succ) loop
          Self.Successors (C_New).Include (Succ);
          C := Self.Inputs (Succ).Find (Old);
 
-         if Artifact_Sets.Has_Element (C) then
-            Self.Inputs (Succ).Delete (C);
-            Self.Inputs (Succ).Include (Value);
+         if Artifact_Vectors.Has_Element (C) then
+            Self.Inputs (Succ).Replace_Element (C, Value);
          end if;
 
          C := Self.Implicit_Inputs (Succ).Find (Old);
 
-         if Artifact_Sets.Has_Element (C) then
-            Self.Implicit_Inputs (Succ).Delete (C);
-            Self.Implicit_Inputs (Succ).Include (Value);
+         if Artifact_Vectors.Has_Element (C) then
+            Self.Implicit_Inputs (Succ).Replace_Element (C, Value);
          end if;
       end loop;
 
@@ -1066,11 +1107,10 @@ package body GPR2.Build.Tree_Db is
          C := Self.Outputs
            (Artifact_Action_Maps.Element (C_Pred)).Find (Old);
 
-         if Artifact_Sets.Has_Element (C) then
+         if Artifact_Vectors.Has_Element (C) then
             Self.Outputs
-              (Artifact_Action_Maps.Element (C_Pred)).Delete (C);
-            Self.Outputs
-              (Artifact_Action_Maps.Element (C_Pred)).Include (Value);
+              (Artifact_Action_Maps.Element
+                 (C_Pred)).Replace_Element (C, Value);
          end if;
 
          Self.Predecessor.Delete (C_Pred);

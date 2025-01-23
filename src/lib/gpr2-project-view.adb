@@ -121,13 +121,18 @@ package body GPR2.Project.View is
 
    function Aggregated
      (Self      : Object;
-      Recursive : Boolean := True) return Set.Object is
+      Recursive : Boolean := True) return Set.Object
+   is
+      Analyzed : Set.Object;
    begin
       return Set : GPR2.Project.View.Set.Object do
+         Analyzed.Insert (Self);
+
          for Agg of View_Internal.Get_RO (Self).Aggregated loop
-            if Agg.Kind /= K_Aggregate or else not Recursive then
+            if Agg.Kind /= Self.Kind or else not Recursive then
                Set.Insert (Agg);
-            else
+            elsif not Analyzed.Contains (Agg) then
+               Analyzed.Insert (Agg);
                Set.Union (Agg.Aggregated);
             end if;
          end loop;
@@ -1269,8 +1274,10 @@ package body GPR2.Project.View is
       return Set : GPR2.Path_Name.Set.Object do
          if Attr.Is_Defined then
             for Main of Attr.Values loop
-               Set.Append (Self.Executable (Simple_Name (Main.Text),
-                           At_Pos_Or (Main, 0)));
+               Set.Append
+                 (Self.Executable
+                    (Simple_Name (Main.Text),
+                     At_Pos_Or (Main, 0)));
             end loop;
          end if;
       end return;
@@ -1662,6 +1669,69 @@ package body GPR2.Project.View is
 
       return Result;
    end Include_Path;
+
+   -----------------------
+   -- Interface_Closure --
+   -----------------------
+
+   function Interface_Closure
+     (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
+   is
+      CU : Build.Compilation_Unit.Object;
+   begin
+      return Result : GPR2.Build.Compilation_Unit.Maps.Map do
+         for C in Self.Interface_Units.Iterate loop
+            declare
+               U_Name : constant Name_Type :=
+                          Containers.Unit_Name_To_Sloc.Key (C);
+            begin
+               if Self.Kind = K_Aggregate_Library then
+                  for V of Self.Aggregated loop
+                     CU := V.Own_Unit (U_Name);
+                     exit when CU.Is_Defined;
+                  end loop;
+
+               else
+                  CU := Self.Own_Unit (U_Name);
+               end if;
+
+               --  ??? Handle properly the error case
+
+               pragma Assert (CU.Is_Defined);
+
+               Result.Insert (U_Name, CU);
+            end;
+         end loop;
+
+         for C in Self.Interface_Sources.Iterate loop
+            declare
+               BN     : constant Filename_Type :=
+                          Containers.Source_Path_To_Sloc.Key (C);
+               Src    : constant GPR2.Build.Source.Object :=
+                          Self.Visible_Source (BN);
+
+            begin
+               if Src.Has_Units then
+                  for U of Src.Units loop
+                     if Self.Kind = K_Aggregate_Library then
+                        for V of Self.Aggregated loop
+                           CU := V.Own_Unit (U.Name);
+                           exit when CU.Is_Defined;
+                        end loop;
+
+                     else
+                        CU := Self.Own_Unit (U.Name);
+                     end if;
+
+                     pragma Assert (CU.Is_Defined);
+
+                     Result.Insert (U.Name, CU);
+                  end loop;
+               end if;
+            end;
+         end loop;
+      end return;
+   end Interface_Closure;
 
    ------------------------------
    -- Is_Aggregated_In_Library --

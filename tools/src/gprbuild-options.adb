@@ -244,6 +244,11 @@ package body GPRbuild.Options is
                  In_Switch_Attr => False));
       Parser.Add_Argument
         (Build_Group,
+         Create (Name   => "-x",
+                 Help   => "obsolete: forces the use of include path file",
+                 Hidden => True));
+      Parser.Add_Argument
+        (Build_Group,
          Create (Name           => "-z",
                  Help           => "No main subprogram (zero main)",
                  In_Switch_Attr => False));
@@ -612,6 +617,7 @@ package body GPRbuild.Options is
         or else Arg = "-m"
         or else Arg = "-m2"
         or else Arg = "-s"
+        or else Arg = "-x"
       then
          --  Ignore, only there for compatibility reason
          null;

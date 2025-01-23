@@ -5,6 +5,7 @@
 --
 
 with Ada.Containers.Indefinite_Ordered_Sets;
+with Ada.Containers.Indefinite_Vectors;
 with Ada.Iterator_Interfaces;
 
 with GNATCOLL.Directed_Graph;
@@ -193,7 +194,10 @@ package GPR2.Build.Tree_Db is
 
    package Artifact_Sets is new Ada.Containers.Indefinite_Ordered_Sets
      (GPR2.Build.Artifacts.Object'Class,
-      GPR2.Build.Artifacts.Less, GPR2.Build.Artifacts."=");
+      GPR2.Build.Artifacts."<", GPR2.Build.Artifacts."=");
+
+   package Artifact_Vectors is new Ada.Containers.Indefinite_Vectors
+     (Positive, GPR2.Build.Artifacts.Object'Class, GPR2.Build.Artifacts."=");
 
    type Action_Cursor is private;
    No_Action_Element : constant Action_Cursor;
@@ -327,8 +331,8 @@ private
       GPR2.Build.Actions."<", GPR2.Build.Actions."=");
 
    package Action_Artifacts_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (GPR2.Build.Actions.Action_Id'Class, Artifact_Sets.Set,
-      GPR2.Build.Actions."<", Artifact_Sets."=");
+     (GPR2.Build.Actions.Action_Id'Class, Artifact_Vectors.Vector,
+      GPR2.Build.Actions."<", Artifact_Vectors."=");
 
    package Artifact_Actions_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (GPR2.Build.Artifacts.Object'Class, Action_Sets.Set, Hash,
@@ -425,18 +429,17 @@ private
    function Is_Executing (Self : Object) return Boolean is
      (Self.Executing);
 
-   type Artifact_List_Kind is (Global_List,
-                               Explicit_Inputs,
+   type Artifact_List_Kind is (Explicit_Inputs,
                                Implicit_Inputs,
                                Inputs,
                                Outputs);
 
    type Artifact_Cursor is record
-      Pos     : Artifact_Sets.Cursor;
-      --  Cursor to the artifact object
+      Pos     : Artifact_Vectors.Cursor;
+      --  Cursor to the artifact vector of an input or output list
       Map_Pos : Action_Artifacts_Maps.Cursor;
       --  Cursor to the action->artifacts map element that contains Pos
-      Current : Artifact_List_Kind := Global_List;
+      Current : Artifact_List_Kind := Artifact_List_Kind'First;
       --  If Kind is Inputs, this field is used to know if we're currently on
       --  the explicit or implicit list
    end record;
@@ -444,23 +447,18 @@ private
    No_Artifact_Element : constant Artifact_Cursor := (others => <>);
 
    function Has_Element (Position : Artifact_Cursor) return Boolean
-   is (Artifact_Sets.Has_Element (Position.Pos));
+   is (Artifact_Vectors.Has_Element (Position.Pos));
 
    type Constant_Artifact_Reference_Type
      (Element : not null access constant Artifacts.Object'Class)
    is record
-      Ref : Artifact_Sets.Constant_Reference_Type (Element);
+      Ref : Artifact_Vectors.Constant_Reference_Type (Element);
    end record;
 
-   type Artifacts_List (Kind : Artifact_List_Kind) is tagged record
-      Db : access Object;
-
-      case Kind is
-         when Global_List =>
-            null;
-         when others =>
-            Action : Action_Maps.Cursor;
-      end case;
+   type Artifacts_List is tagged record
+      Kind   : Artifact_List_Kind;
+      Db     : access Object;
+      Action : Action_Maps.Cursor;
    end record;
 
    type Action_Cursor is record

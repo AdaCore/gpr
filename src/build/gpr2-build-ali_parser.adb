@@ -340,6 +340,8 @@ package body GPR2.Build.ALI_Parser is
          loop
             if not EOL then
                IO.Next_Line (Reader, Word);
+            elsif not GB.Next (Reader, Word) then
+               return True;
             end if;
 
             EOL := False;
@@ -438,6 +440,8 @@ package body GPR2.Build.ALI_Parser is
          loop
             if not EOL then
                IO.Next_Line (Reader, Word);
+            elsif not GB.Next (Reader, Word) then
+               return True;
             end if;
 
             EOL := False;

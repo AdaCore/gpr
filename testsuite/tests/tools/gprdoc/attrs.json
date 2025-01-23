@@ -1968,7 +1968,7 @@
               "standard": false
             },
             "index_optional": false,
-            "index_type": "FILEGLOB_INDEX",
+            "index_type": "FILEGLOB_OR_LANGUAGE_INDEX",
             "inherit_from_extended": "INHERITED",
             "is_allowed_in": {
               "abstract": true,

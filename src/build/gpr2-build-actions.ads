@@ -5,6 +5,7 @@
 --
 
 with Ada.Containers.Indefinite_Ordered_Sets;
+with Ada.Containers.Indefinite_Vectors;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 with GPR2.Build.Command_Line;
@@ -47,15 +48,21 @@ package GPR2.Build.Actions is
    --  is used typically in case the view is already referenced in a
    --  GPR2.Message object and the Image is used in the Messages textual part.
 
-   function Db_Filename (Self : Action_Id'Class) return Simple_Name;
+   function Db_Filename
+     (Self     : Action_Id'Class;
+      Basename : Boolean := False) return Simple_Name;
    --  The filename that is used to store the action signature. Must be unique
    --  for actions of the involved view.
+   --  If basename is set, then the returned value won't have the extension.
 
    function "<" (L, R : Action_Id'Class) return Boolean;
    --  Class-wide comparison
 
    package Action_Id_Sets is new Ada.Containers.Indefinite_Ordered_Sets
      (Action_Id'Class);
+
+   package Action_Id_Vectors is new Ada.Containers.Indefinite_Vectors
+     (Positive, Action_Id'Class);
 
    type Object is abstract tagged private;
    --  Actions are atomic steps in a compilation process, where an external

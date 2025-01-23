@@ -43,6 +43,12 @@ package GPR2.Project.Attribute_Index is
      with Post => Create'Result.Is_Defined;
    --  Creates a built-in attribute index
 
+   function Create_Source
+     (Value          : Simple_Name;
+      At_Pos         : Unit_Index := No_Index) return Object
+     with Post => Create_Source'Result.Is_Defined;
+   --  Creates a built-in attribute index
+
    function Create (Value : Language_Id) return Object;
    --  Creates an attribute index for the given language
 
@@ -124,6 +130,17 @@ private
               (Source_Reference.Value.Create
                (Source_Reference.Builtin, Value, At_Pos)),
               False, Case_Sensitive));
+
+   function Create_Source
+     (Value          : Simple_Name;
+      At_Pos         : Unit_Index := No_Index) return Object
+   is
+     (Create
+        (Source_Reference.Value.Object
+             (Source_Reference.Value.Create
+                  (Source_Reference.Builtin, Value_Type (Value), At_Pos)),
+         False,
+         GPR2.File_Names_Case_Sensitive));
 
    function Create
      (Value : Language_Id) return Object

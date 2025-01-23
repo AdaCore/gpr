@@ -15,6 +15,7 @@ with GNAT.OS_Lib;
 with GNATCOLL.Utils; use GNATCOLL.Utils;
 with GNATCOLL.OS.FS;
 
+with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Actions.Post_Bind;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
@@ -51,10 +52,6 @@ package body GPR2.Build.Actions.Ada_Bind is
          Is_List      : Boolean;
          In_Signature : Boolean) return Boolean;
 
-      function Add_Attr_RS
-        (Id    : Q_Attribute_Id;
-         Index : PAI.Object) return Boolean;
-
       procedure Add_Binder (Id : Q_Attribute_Id; Index : PAI.Object);
 
       procedure Add_Mapping_File;
@@ -74,17 +71,28 @@ package body GPR2.Build.Actions.Ada_Bind is
          Is_List      : Boolean;
          In_Signature : Boolean) return Boolean
       is
-         Attr : constant Project.Attribute.Object :=
-                  Self.View.Attribute (Id, Index);
+         Attr                  : constant Project.Attribute.Object :=
+                                   Self.View.Attribute (Id, Index);
+         Gnatbind_Prefix_Equal : constant String := "gnatbind_prefix=";
+         Gnatbind_Path_Equal   : constant String := "--gnatbind_path=";
+         Ada_Binder_Equal      : constant String := "ada_binder=";
+
       begin
          if not Attr.Is_Defined then
             return False;
          end if;
 
          if Is_List then
-            for Idx in Attr.Values.First_Index .. Attr.Values.Last_Index loop
-               Cmd_Line.Add_Argument
-                 (Attr.Values.Element (Idx).Text, In_Signature);
+            for Val of Attr.Values loop
+               if Val.Text'Length > 0
+                 and then not Starts_With (Val.Text, Gnatbind_Path_Equal)
+                 and then not Starts_With (Val.Text, Gnatbind_Prefix_Equal)
+                 and then not Starts_With (Val.Text, Ada_Binder_Equal)
+                 --  Ignore -C, as the generated sources are always in Ada
+                 and then Val.Text /= "-C"
+               then
+                  Cmd_Line.Add_Argument (Val.Text, In_Signature);
+               end if;
             end loop;
          else
             Cmd_Line.Add_Argument (Attr.Value.Text, In_Signature);
@@ -92,43 +100,6 @@ package body GPR2.Build.Actions.Ada_Bind is
 
          return True;
       end Add_Attr;
-
-      -----------------
-      -- Add_Attr_RS --
-      -----------------
-
-      function Add_Attr_RS
-        (Id    : Q_Attribute_Id;
-         Index : PAI.Object) return Boolean
-      is
-         Attr : constant Project.Attribute.Object :=
-                  Self.View.Attribute (Id, Index);
-
-         Gnatbind_Prefix_Equal : constant String := "gnatbind_prefix=";
-         Gnatbind_Path_Equal   : constant String := "--gnatbind_path=";
-         Ada_Binder_Equal      : constant String := "ada_binder=";
-      begin
-         if not Attr.Is_Defined then
-            return False;
-         end if;
-
-         for Idx in Attr.Values.First_Index .. Attr.Values.Last_Index loop
-            declare
-               Str : constant String := Attr.Values.Element (Idx).Text;
-            begin
-               if not Starts_With (Str, Gnatbind_Path_Equal)
-                 and then not Starts_With (Str, Gnatbind_Prefix_Equal)
-                 and then not Starts_With (Str, Ada_Binder_Equal)
-                 --  Ignore -C, as the generated sources are always in Ada
-                 and then Str /= "-C"
-               then
-                  Cmd_Line.Add_Argument (Str, True);
-               end if;
-            end;
-         end loop;
-
-         return True;
-      end Add_Attr_RS;
 
       ----------------
       -- Add_Binder --
@@ -265,7 +236,7 @@ package body GPR2.Build.Actions.Ada_Bind is
          use GNATCOLL.OS.FS;
          Map_File     : constant Tree_Db.Temp_File :=
                           Self.Get_Or_Create_Temp_File
-                            ("bind_mapping", Global);
+                            ("mapping", Local);
          S_Suffix     : constant String :=
                           Self.View.Attribute
                             (PRA.Compiler.Mapping_Spec_Suffix,
@@ -278,28 +249,64 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       begin
          if Map_File.FD /= Invalid_FD and then Map_File.FD /= Null_FD then
-            for Src of Self.View.Visible_Sources loop
-               if not Src.Owning_View.Is_Runtime
-                 and then Src.Language = Ada_Language
-               then
-                  for U of Src.Units loop
-                     if U.Kind /= S_No_Body then
+            if not Self.Ctxt.Is_Library
+              or else not Self.Ctxt.Has_Any_Interfaces
+            then
+               for V of Self.View.Closure (True, False, False) loop
+                  if not V.Is_Runtime then
+                     for CU of V.Own_Units loop
                         declare
-                           Key : constant String :=
-                                   To_Lower (String (U.Full_Name)) &
-                                   (if U.Kind = S_Spec
-                                    then S_Suffix else B_Suffix);
+                           A_Comp : Compile.Ada.Object;
+                           Key    : constant String :=
+                                      To_Lower (String (CU.Name)) &
+                                      (if CU.Main_Part = S_Spec
+                                       then S_Suffix else B_Suffix);
                         begin
+                           A_Comp.Initialize (CU);
+
                            Write
                              (Map_File.FD,
                               Key & ASCII.LF &
-                                String (Src.Path_Name.Simple_Name) & ASCII.LF &
-                                Src.Path_Name.String_Value & ASCII.LF);
+                                String (A_Comp.Ali_File.Path.Simple_Name) &
+                                ASCII.LF &
+                                A_Comp.Ali_File.Path.String_Value & ASCII.LF);
                         end;
-                     end if;
-                  end loop;
-               end if;
-            end loop;
+                     end loop;
+                  end if;
+               end loop;
+
+            else
+               --  For standalone libraries we just use the main part of the
+               --  interface.
+               --  ??? Need to check what gprlib actually does.
+
+               for CU of Self.Ctxt.Interface_Closure loop
+                  --  Find the compile action corresponding to the unit
+                  declare
+                     A_Comp : Compile.Ada.Object;
+                     Key    : constant String :=
+                                To_Lower (String (CU.Name)) &
+                                (if CU.Main_Part = S_Spec
+                                 then S_Suffix else B_Suffix);
+                  begin
+                     A_Comp.Initialize (CU);
+
+                     --  In case of Standalone library, we need to reference
+                     --  at bind time the ALI in the object directory (the
+                     --  one straight from the compiler) instead of the one
+                     --  in the Library ali directory (with the SP flag set).
+
+                     Write
+                       (Map_File.FD,
+                        Key & ASCII.LF &
+                          String (A_Comp.Ali_File.Path.Simple_Name) &
+                          ASCII.LF &
+                          Self.Ctxt.Object_Directory.Compose
+                          (A_Comp.Ali_File.Path.Simple_Name).String_Value &
+                          ASCII.LF);
+                  end;
+               end loop;
+            end if;
 
             GNATCOLL.OS.FS.Close (Map_File.FD);
          end if;
@@ -388,6 +395,18 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       Add_Binder (PRA.Binder.Required_Switches, Lang_Ada_Idx);
 
+      if not Self.Has_Main then
+         Cmd_Line.Add_Argument ("-n");
+      end if;
+
+      if Self.SAL_Closure then
+         Cmd_Line.Add_Argument ("-F");
+      end if;
+
+      Cmd_Line.Add_Argument ("-o", True);
+      Cmd_Line.Add_Argument
+        (String (Self.Output_Body.Path.Simple_Name), True);
+
       if Self.Ctxt.Is_Library then
          if Self.Ctxt.Is_Shared_Library then
 
@@ -395,6 +414,19 @@ package body GPR2.Build.Actions.Ada_Bind is
 
             Cmd_Line.Add_Argument ("-shared", True);
          end if;
+
+         if Self.Ctxt.Is_Library_Standalone then
+            --  We need to specify the prefix for the init/final procedures.
+            --  Make sure that the init procedure is never "adainit".
+
+            if Self.Ctxt.Library_Name = "ada" then
+               Cmd_Line.Add_Argument ("-Lada_", True);
+            else
+               Cmd_Line.Add_Argument
+                 ("-L" & String (Self.Ctxt.Library_Name), True);
+            end if;
+         end if;
+
       else
 
          --  If at least one imported library is shared, gnatbind must also be
@@ -410,25 +442,15 @@ package body GPR2.Build.Actions.Ada_Bind is
          end loop;
       end if;
 
-      Cmd_Line.Add_Argument ("-o", True);
-      Cmd_Line.Add_Argument
-        (String (Self.Output_Body.Path.Simple_Name), True);
+      if Self.Ctxt.Is_Library
+        and then Self.Ctxt.Is_Library_Standalone
+      then
+         Cmd_Line.Add_Argument ("-a");
+      end if;
 
       for Ali of Self.Tree.Inputs (Self.UID, Explicit_Only => True) loop
          Cmd_Line.Add_Argument
            (GPR2.Build.Artifacts.Files.Object (Ali).Path, True);
-      end loop;
-
-      for Extra of Self.Extra_Opts loop
-         Cmd_Line.Add_Argument (Extra, True);
-      end loop;
-
-      for View of Self.Ctxt.Closure (True) loop
-         if View.Is_Library and then View.Is_Library_Standalone then
-            --  Force checking of elaboration flags
-            Cmd_Line.Add_Argument ("-F");
-            exit;
-         end if;
       end loop;
 
       for View of Self.Ctxt.Closure (True, True, True) loop
@@ -437,6 +459,16 @@ package body GPR2.Build.Actions.Ada_Bind is
             if View.Is_Library then
                Cmd_Line.Add_Argument
                  ("-I" & View.Library_Ali_Directory.String_Value, True);
+
+               if View.Id = Self.Ctxt.Id
+                 and then Self.Ctxt.Is_Library_Standalone
+               then
+                  --  Need visibility on non-interface units
+
+                  Cmd_Line.Add_Argument
+                    ("-I" & View.Object_Directory.String_Value, True);
+               end if;
+
             elsif View.Kind in With_Object_Dir_Kind then
                Cmd_Line.Add_Argument
                  ("-I" & View.Object_Directory.String_Value, True);
@@ -448,8 +480,8 @@ package body GPR2.Build.Actions.Ada_Bind is
       --  This switch is historically added for all GNAT version >= 6.4, it
       --  should be in the knowledge base instead of being hardcoded depending
       --  on the GNAT version.
-      Status := Add_Attr_RS (PRA.Binder.Required_Switches, Lang_Ada_Idx);
-
+      Status :=
+        Add_Attr (PRA.Binder.Required_Switches, Lang_Ada_Idx, True, True);
       Status := Add_Attr (PRA.Binder.Switches, Lang_Ada_Idx, True, True);
 
       if not Status then
@@ -471,7 +503,11 @@ package body GPR2.Build.Actions.Ada_Bind is
       --  [eng/gpr/gpr-issues#446]
       --  Should be in the KB Required_Switches/Default_Switches/Switches and
       --  not hardcoded.
-      Cmd_Line.Add_Argument ("-x");
+      if not (Self.Ctxt.Is_Library
+              and then Self.Ctxt.Is_Library_Standalone)
+      then
+         Cmd_Line.Add_Argument ("-x");
+      end if;
 
       Add_Mapping_File;
 
@@ -503,13 +539,16 @@ package body GPR2.Build.Actions.Ada_Bind is
    ----------------
 
    procedure Initialize
-     (Self       : in out Object;
-      Basename   : Simple_Name;
-      Context    : GPR2.Project.View.Object;
-      Extra_Opts : GPR2.Containers.Value_List) is
+     (Self           : in out Object;
+      Basename       : Simple_Name;
+      Context        : GPR2.Project.View.Object;
+      Has_Main       : Boolean;
+      SAL_In_Closure : Boolean) is
    begin
-      Self.Ctxt := Context;
-      Self.Basename := +Basename;
+      Self.Ctxt        := Context;
+      Self.Basename    := +Basename;
+      Self.Has_Main    := Has_Main;
+      Self.SAL_Closure := SAL_In_Closure;
       Self.Output_Spec :=
         Artifacts.Files.Create
           (Context.Object_Directory.Compose ("b__" & Basename & ".ads"));
@@ -517,26 +556,6 @@ package body GPR2.Build.Actions.Ada_Bind is
         Artifacts.Files.Create
           (Context.Object_Directory.Compose ("b__" & Basename & ".adb"));
       Self.Traces := Create ("ACTION_ADA_BIND");
-
-      for Opt of Extra_Opts loop
-         Self.Extra_Opts.Append (Opt);
-      end loop;
-   end Initialize;
-
-   procedure Initialize
-     (Self      : in out Object;
-      Basename  : Simple_Name;
-      Context   : GPR2.Project.View.Object;
-      Extra_Opt : String := "")
-   is
-      Extra_Opts : GPR2.Containers.Value_List :=
-                     GPR2.Containers.Empty_Value_List;
-   begin
-      if Extra_Opt'Length > 0 then
-         Extra_Opts.Append (Extra_Opt);
-      end if;
-
-      Self.Initialize (Basename, Context, Extra_Opts);
    end Initialize;
 
    -----------------------

@@ -5,8 +5,6 @@ $ gpr2build -q -Pagglib.gpr -p --json-summary
 [Ada Compile] pkg4_1.ads (prj4_1.gpr)
 [Ada Compile] pkg4_2.ads (prj4_2.gpr)
 [Archive] libdemo.a (agglib.gpr)
-[Archive] libprj3.a (prj3.gpr)
-[Archive] libprj4.a (prj4.gpr)
 $ gpr2build -q -Pdemo.gpr -p --json-summary
 Ok: linking with libdemo.a
 Ok: not linking with individual .o's
