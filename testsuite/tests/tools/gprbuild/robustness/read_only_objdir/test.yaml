@@ -1,3 +1,5 @@
 description: check gprbuild handling of read-only obj or lib dir
 driver: python_script
 timeout: 800
+control:
+- [SKIP, "'windows' in env.host.platform", "DEAD on windows. The test modifies some file permissions"]
