@@ -200,8 +200,6 @@ package Builder of the main project:
 
 * :samp:`--build-script=<script_file>`
 
-  This switch is not compatible with :samp:`--distributed=`.
-
   When this switch is specified, a shell script :file:`<script_file>` is created.
   Provided that the temporary files created by gprbuild are not deleted,
   running this script should perform the same build as the invocation of
@@ -230,37 +228,10 @@ package Builder of the main project:
 
 * :samp:`--complete-output`
 
-  This switch is not compatible with :samp:`--distributed=`.
-
   When this switch is specified, if a source is up to date and compilation
   log files exist, their contents are sent to standard output
   and standard error. This allows to redisplay any warning or info from the
   last invocation of gprbuild.
-
-* :samp:`--distributed[={slave1}[,{slave2}]]`
-
-  This switch is not compatible with :samp:`--complete-output`, or with
-  :samp:`--build-script=`.
-
-  Activate the distributed compilation on the listed slaves nodes (IP or
-  name). Or if no slave are specified they are search in :envvar:``GPR_SLAVES`` or
-  :envvar:``GPR_SLAVES_FILE`` environment variables.
-  see :ref:`Distributed_compilation`.
-
-* :samp:`--hash={string}`
-
-  Specify a hash string. This is just a value which is checked against the
-  GPRslave hash value. If GPRslave has a hash value specified this string
-  must match, otherwise it is ignored. For example:
-
-::
-
-  $ gprbuild --hash=$(echo $ADA_PROJECT_PATH | shasum) --distributed=...
-
-* :samp:`--slave-env={name}`
-
-  Use name as the slave's environment directory instead of the default one.
-  This options is only used in distributed mode.
 
 * :samp:`--version`
 
@@ -737,7 +708,7 @@ package Builder of the main project (attribute Switches):
   Specify to GPRbuild that it should attempt to connect to GNU make jobserver
   in order to be instructed when it is allowed to spawn another simultaneous
   compilation jobs.
-  
+
   If :samp:`-j{num}` is set alongside :samp:`--autodetect-jobserver`
   the former will be ignored.
 
@@ -1176,7 +1147,7 @@ compilation process, then several compilation processes for several sources of
 possibly different languages are spawned concurrently.
 
 Furthermore, GPRbuild is GNU make jobserver compatible when using the switch
-:samp:`--autodetect-jobserver`. This means if GPRbuild is embedded in a GNU make 
+:samp:`--autodetect-jobserver`. This means if GPRbuild is embedded in a GNU make
 recursive invocation and :samp:`--autodetect-jobserver` is set, then GPRbuild
 will only spawn an additionnal compilation process if GNU make's jobserver
 allows it. This is particularly useful to ensure that GPRbuild comply to the
@@ -1198,7 +1169,7 @@ Example:
 calling :samp:`make build_all -j4` will spawn two GPRbuild processes, resulting in
 two remaining and available slots for both GPRbuild compilation phase.
 
-Note: if :samp:`--autodetect-jobserver` is set and GNU make jobserver is detected, 
+Note: if :samp:`--autodetect-jobserver` is set and GNU make jobserver is detected,
 then any :samp:`-j{num}` will simply be ignored by GPRbuild and a warning will be issued.
 
 .. _Post-Compilation_Phase:
@@ -1252,205 +1223,3 @@ during the post-compilation phase by the binder drivers.
 
 If switch :samp:`-j{nnn}` is used, with `nnn` other than 1, gprbuild will attempt to link
 simultaneously up to `nnn` executables.
-
-
-.. _Distributed_compilation:
-
-Distributed compilation
-=======================
-
-.. _Introduction_to_distributed_compilation:
-
-Introduction to distributed compilation
----------------------------------------
-
-For large projects the compilation time can become a limitation in
-the development cycle. To cope with that, GPRbuild supports
-distributed compilation.
-
-In the distributed mode, the local machine (called the build master)
-compiles locally but also sends compilation requests to remote
-machines (called the build slaves). The compilation process can use
-one or more build slaves. Once the compilation phase is done, the
-build master will conduct the binding and linking phases locally.
-
-.. _Setup_build_environments:
-
-Setup build environments
-------------------------
-
-The configuration process to be able to use the distributed compilation
-support is the following:
-
-* Optionally add a Remote package in the main project file
-
-  This Remote package is to be placed into the project file that is passed
-  to GPRbuild to build the application.
-
-  The Root_Dir default value is the project's directory. This attribute
-  designates the sources root directory. That is, the directory from which
-  all the sources are to be found to build the application. If the project
-  passed to GPRbuild to build the application is not at the top-level
-  directory but in a direct sub-directory the Remote package should be:
-
-  .. code-block:: gpr
-
-      package Remote is
-         for Root_Dir use "..";
-      end Remote;
-
-* Launch a slave driver on each build slave
-
-  The build master will communicate with each build slave with a specific driver
-  in charge of running the compilation process and returning statuses. This
-  driver is :ref:`GPRslave`.
-
-  The requirement for the slaves are:
-
-  * The same build environment must be setup (same compiler version).
-  * The same libraries must be installed. That is, if the GNAT
-    project makes use of external libraries the corresponding C headers or
-    Ada units must be installed on the remote slaves.
-
-  When all the requirement are set, just launch the slave driver:
-
-  ::
-
-      $ gprslave
-
-When all this is done, the remote compilation can be used simply by
-running GPRbuild in distributed mode from the build master:
-
-::
-
-    $ gprbuild --distributed=comp1.xyz.com,comp2.xyz.com prj.gpr
-
-Alternatively the slaves can be set using the :envvar:`GPR_SLAVES` environment
-variable. So the following command is equivalent to the above:
-
-::
-
-    $ export GPR_SLAVES=comp1.xyz.com,comp2.xyz.com
-    $ gprbuild --distributed prj.gpr
-
-A third alternative is proposed using a list of slaves in a file (one
-per line). In this case the :envvar:`GPR_SLAVES_FILE` environment variable
-must contain the path name to this file:
-
-::
-
-    $ export GPR_SLAVES_FILE=$HOME/slave-list.txt
-    $ gprbuild --distributed prj.gpr
-
-Finally note that the search for the slaves are in this specific
-order. First the command line values, then :samp:`GPR_SLAVES` if set and
-finally :samp:`GPR_SLAVES_FILES`.
-
-The build slaves are specified with the following form:
-
-::
-
-    <machine_name>[:port]
-
-
-.. _GPRslave:
-
-GPRslave
---------
-
-This is the slave driver in charge of running the compilation
-jobs as requested by the build master. One instance of this tool must be
-launched in each build slave referenced in the project file.
-
-Compilations for a specific project are conducted under a sub-directory
-from where the slave is launched by default. This can be overridden
-with the :samp:`-d` option below.
-
-The current options are:
-
-* :samp:`-v, --verbose`
-
-  Activate the verbose mode
-
-* :samp:`-vv`, :samp:`--debug`
-
-  Activate the debug mode (very verbose)
-
-* :samp:`-h`, :samp:`--help`
-
-  Display the usage
-
-* :samp:`-d`, :samp:`--directory=`
-
-  Set the work directory for the
-  slave. This is where the sources will be copied and where the
-  compilation will take place. A sub-directory will be created for each
-  root project built.
-
-* :samp:`-s`, :samp:`--hash={string}`
-
-  Specify an hash string. This is just a value which is checked against the
-  GPRbuild hash value. If set, GPRbuild hash value must match, otherwise the
-  connection with the slave is aborted. For example:
-
-::
-
-  $ gprslave --hash=$(echo $ADA_PROJECT_PATH | shasum)
-
-* :samp:`-j{N}`, :samp:`--jobs={N}`
-
-  Set the maximum simultaneous compilation.
-  The default for `N` is the number of cores.
-
-* :samp:`-p`, :samp:`--port={N}`
-
-  Set the port the slave will listen to.
-  The default value is 8484. The same port must be specified for the
-  build slaves on `GPRbuild` command line.
-
-* :samp:`-r`, :samp:`--response-handler={N}`
-
-  Set maximum number of simultaneous responses.
-  With this option it is possible to control the number of simultaneous
-  responses (sending back object code and ALI files) supported. The
-  value must be between 1 and the maximum number of simultaneous
-  compilations.
-
-Note that a slave can be pinged to see if it is running and in
-response a set of information are delivered. The ping command has the
-following format:
-
-::
-
-   <lower-bound><upper-bound>PG
-
-Where *<lower-bound>* and *<upper-bound>* are 32-bit binary values for the
-PG string command. As an example here is how to send a ping command
-from a UNIX shell using the echo command:
-
-::
-
-   echo -e "\x01\x00\x00\x00\x02\x00\x00\x00PG" | nc <HOSTNAME> 8484
-
-The answer from the ping command has the following format:
-
-::
-
-   OK<GPR Version String>[ASCII.GS]<time-stamp>[ASCII.GS]<slave hash>
-
-ASCII.GS is the Group Separator character whose code is 29.
-
-.. _Exit_code:
-
-Exit code
-=========
-
-* **0** : No errors. Although warnings can be raised.
-
-* **1** : General tool error, such as invalid option, missing file...
-
-* **4** : Underlying tool error.
-
-* **5** : Project parsing error.
-
-* **7** : Critical tool error. Defensive code failures and the like.
