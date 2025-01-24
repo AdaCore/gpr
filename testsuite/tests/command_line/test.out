@@ -123,16 +123,6 @@ Project configuration switches:
  --target=targetname
            Specify a target for cross platforms
 
-Distributed build switches:
-   Distributed compilation mode switches.
-
- --distributed[=node1[,node2]]
-           Activate the remote mode on specified node(s), or automatically.
- --hash=<string>
-           Set a hash string to identified environment
- --slave-env[=node]
-           Use a specific slave's environment
-
 Verbosity switches:
  -F        Full project path name in brief error messages
  -q        Be quiet/terse
@@ -366,16 +356,6 @@ Project configuration switches:
            Specify a runtime for <lang> or Ada (default)
  --target=targetname
            Specify a target for cross platforms
-
-Distributed build switches:
-   Distributed compilation mode switches.
-
- --distributed[=node1[,node2]]
-           Activate the remote mode on specified node(s), or automatically.
- --hash=<string>
-           Set a hash string to identified environment
- --slave-env[=node]
-           Use a specific slave's environment
 
 Verbosity switches:
  -F        Full project path name in brief error messages

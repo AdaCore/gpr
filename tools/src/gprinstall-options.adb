@@ -199,7 +199,6 @@ package body GPRinstall.Options is
       Parser := GPRtools.Options.Create
         (Initial_Year           => "2018",
          Allow_No_Project       => False,
-         Allow_Distributed      => False,
          Allow_Implicit_Project => False);
 
       Options.Tree := Tree.Reference;
