@@ -132,7 +132,7 @@ test_gpr2:
   extends: .gpr2_test_template
   script:
     - install_cache gnat
-    - run_testsuite gpr2 -Qfrom_gnat,legacy test_gpr2
+    - run_testsuite gpr2 -Qlegacy test_gpr2
   artifacts:
     when:
       always
@@ -140,47 +140,6 @@ test_gpr2:
       - testgpr2_result.xml
     reports:
       junit: testgpr2_result.xml
-
-##############
-## COVERAGE ##
-##############
-
-test_gpr2_cov:
-  extends: .gpr2_test_template
-  script:
-    - install_cache
-    - anod tune --full
-    - anod build gpr2 -Qcoverage
-    # do a normal testsuite run but save the exit code instead of just exiting
-    # so that coverage artifacts can be saved and used.
-    - result=0
-    - run_testsuite gpr2 -Qcoverage,legacy test_gpr2_cov || result=$?
-
-    - mkdir $CI_PROJECT_DIR/coverage
-
-    # save coverage results
-    - mv $RESULTS_DIR/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
-    - mv $RESULTS_DIR/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
-
-    # display coverage stats for global reporting
-    - echo_coverage_stats --coverage-file $RESULTS_DIR/coverage-xml/index.xml
-
-    # report initial test status code
-    - exit $result
-
-  coverage: '/^Stmt Coverage:\s+(\d+\.\d+\%) \(\d+ \/ \d+\)$/'
-  artifacts:
-    when:
-      always
-    paths:
-      - coverage/cobertura.xml
-      - coverage/dhtml
-      - testgpr2cov_result.xml
-    reports:
-      junit: testgpr2cov_result.xml
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage/cobertura.xml
 
 ########################
 ## GPRBUILD TESTSUITE ##
