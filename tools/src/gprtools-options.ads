@@ -16,8 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Unbounded;
-
 with GPR2.Containers;
 with GPR2.Options;
 with GPR2.Project.Tree;
@@ -25,8 +23,6 @@ with GPR2.Project.Tree;
 with GPRtools.Command_Line;
 
 package GPRtools.Options is
-
-   use Ada.Strings.Unbounded;
 
    type Command_Line_Parser is
      new Command_Line.Command_Line_Parser with private;
@@ -49,14 +45,6 @@ package GPRtools.Options is
       Verbosity                : GPRtools.Verbosity_Level := GPRtools.Regular;
       Full_Path_Name_For_Brief : aliased Boolean := False;
       Warnings                 : aliased Boolean := True;
-
-      --  Distributed mode
-
-      Distributed_Mode         : Boolean := False;
-      Slaves                   : Unbounded_String;
-      Slave_Env                : Unbounded_String;
-      Slave_Env_Auto           : Boolean := False;
-      Hash_Value               : Unbounded_String;
    end record;
    --  Options common to most gpr tools
 
@@ -83,7 +71,6 @@ package GPRtools.Options is
       Help                   : String := "";
       Allow_No_Project       : Boolean := True;
       Allow_Autoconf         : Boolean := False;
-      Allow_Distributed      : Boolean := False;
       Allow_Quiet            : Boolean := True;
       No_Project_Support     : Boolean := False;
       Allow_Implicit_Project : Boolean := True) return Command_Line_Parser;

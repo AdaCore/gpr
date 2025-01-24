@@ -28,7 +28,6 @@ with GNATCOLL.Traces;
 with GNATCOLL.Tribooleans;
 with GNATCOLL.Utils;
 
-with GPR2.Compilation.Registry;
 with GPR2.Containers;
 with GPR2.Log;
 with GPR2.Message;
@@ -764,12 +763,6 @@ begin
                  others => True))
    loop
       Clean (Project.Tree.Element (V));
-
-      if Options.Distributed_Mode then
-         GPR2.Compilation.Registry.Clean_Up_Remote_Slaves
-           (Project.Tree.Element (V),
-            Options);
-      end if;
    end loop;
 
    if Options.Arg_Mains and then not Options.Mains.Is_Empty then
