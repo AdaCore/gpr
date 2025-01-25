@@ -51,13 +51,6 @@ package GPRtools.Options is
                                    GPR2.Reporter.Console.Create;
       No_Warnings           : Boolean := False;
 
-      --  Distributed mode
-
-      Distributed_Mode      : Boolean := False;
-      Slaves                : Unbounded_String;
-      Slave_Env             : Unbounded_String;
-      Slave_Env_Auto        : Boolean := False;
-      Hash_Value            : Unbounded_String;
       Build_Options         : GPR2.Build.Options.Build_Options;
    end record;
    --  Options common to most gpr tools
