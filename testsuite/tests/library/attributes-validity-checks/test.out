@@ -34,5 +34,4 @@ aggrprj1.gpr:11:08: warning: attribute "Library_Version" cannot be used in aggre
 aggrlibprj1.gpr
 libprj1.gpr:3:23: warning: object directory "obj" not found
 aggrlibprj1.gpr:8:39: warning: library directory "aggrlibprj1.lib" not found
-aggrlibprj1.gpr:10:50: warning: library ALI directory "aggrlibprj1.lib.ali" not found
 aggrlibprj1.gpr:19:50: warning: Directory "aggrlibprj1.lib.src" not found

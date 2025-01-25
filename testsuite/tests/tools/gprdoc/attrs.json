@@ -750,7 +750,7 @@
           "attribute_def": {
             "builtin": false,
             "config_concatenable": false,
-            "empty_value": "ERROR",
+            "empty_value": "ALLOW",
             "has_default_in": {
               "abstract": false,
               "aggregate": false,

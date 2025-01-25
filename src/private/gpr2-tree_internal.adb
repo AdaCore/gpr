@@ -2418,10 +2418,13 @@ package body GPR2.Tree_Internal is
                        (PRA.Library_Name, Result => Tmp_Attr)
                  and then (Tmp_Attr.Value.Text /= ""
                            or else Tmp_Attr.Value.Is_From_Default)
-                 and then View.Check_Attribute
-                            (PRA.Library_Dir, Result => Tmp_Attr)
-                 and then (Tmp_Attr.Value.Text /= ""
-                           or else Tmp_Attr.Value.Is_From_Default)
+                 and then
+                   (View.Is_Externally_Built
+                    or else
+                      (View.Check_Attribute
+                         (PRA.Library_Dir, Result => Tmp_Attr)
+                       and then (Tmp_Attr.Value.Text /= ""
+                                 or else Tmp_Attr.Value.Is_From_Default)))
                then
                   --  If Library_Name, Library_Dir are declared, then the
                   --  project is a library project.
@@ -2881,13 +2884,15 @@ package body GPR2.Tree_Internal is
                   "library",
                   Project.View.Library_Directory'Access,
                   Mandatory  => True,
-                  Must_Exist => not View.Is_Extended);
+                  Must_Exist => not View.Is_Extended
+                    and then not View.Is_Externally_Built);
 
                Check_Directory
                  (PRA.Library_Ali_Dir,
                   "library ALI",
                   Project.View.Library_Ali_Directory'Access,
-                  Must_Exist => not View.Is_Extended);
+                  Must_Exist => not View.Is_Extended
+                    and then View.Language_Ids.Contains (Ada_Language));
 
                if View.Has_Library_Interface
                  or else View.Has_Attribute (PRA.Interfaces)
