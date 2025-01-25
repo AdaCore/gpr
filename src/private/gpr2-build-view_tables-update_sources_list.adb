@@ -571,6 +571,11 @@ package body Update_Sources_List is
       Stop_On_Error : Boolean;
       Messages      : in out GPR2.Log.Object)
    is
+      function Data_Has_Basename (BN : Simple_Name) return Boolean;
+      --  Whether Data.Sources contains a source whose simple name is BN.
+      --  Useful when multiple BN hide each other in order to not bug the end
+      --  user with an issue already detected.
+
       procedure Handle_File
         (Dir_Index : Natural;
          File      : GPR2.Path_Name.Full_Name;
@@ -605,6 +610,30 @@ package body Update_Sources_List is
       Attr                  : Project.Attribute.Object;
 
       Parser_State          : GPR2.Build.Source_Base.Ada_Parser.Parser_State;
+
+      -----------------------
+      -- Data_Has_Basename --
+      -----------------------
+
+      function Data_Has_Basename (BN : Simple_Name) return Boolean is
+      begin
+         if Data.Basenames.Contains (BN) then
+            return True;
+         end if;
+
+         for S of Data.Sources loop
+            declare
+               S_BN : constant Simple_Name :=
+                        Path_Name.Simple_Name (S.Path_Name);
+            begin
+               if S_BN = BN then
+                  return True;
+               end if;
+            end;
+         end loop;
+
+         return False;
+      end Data_Has_Basename;
 
       -----------------
       -- Handle_File --
@@ -1173,7 +1202,7 @@ package body Update_Sources_List is
       --  Check that we've found all the listed sources
       for S of Data.Listed_Sources loop
          if not Data.Excluded_Sources.Contains (S)
-           and then not Data.Basenames.Contains (S)
+           and then not Data_Has_Basename (S)
          then
             Messages.Append
               (Message.Create
@@ -1222,7 +1251,7 @@ package body Update_Sources_List is
                      With_Defaults => False,
                      With_Config   => False)
          loop
-            if not Data.Basenames.Contains (Simple_Name (A.Value.Text)) then
+            if not Data_Has_Basename (Simple_Name (A.Value.Text)) then
                Messages.Append
                  (Message.Create
                     ((if Data.View.Has_Attribute (PRA.Source_Files)
@@ -1250,7 +1279,7 @@ package body Update_Sources_List is
                      & """ must be a simple filename",
                      A.Value));
 
-            elsif not Data.Basenames.Contains (Simple_Name (A.Value.Text)) then
+            elsif not Data_Has_Basename (Simple_Name (A.Value.Text)) then
                Messages.Append
                  (Message.Create
                     ((if Data.View.Has_Attribute (PRA.Source_Files)
@@ -1271,7 +1300,7 @@ package body Update_Sources_List is
                Result => Attr)
             then
                for V of Attr.Values loop
-                  if not Data.Basenames.Contains (Simple_Name (V.Text)) then
+                  if not Data_Has_Basename (Simple_Name (V.Text)) then
                      Messages.Append
                        (Message.Create
                           (Message.Warning,
@@ -1287,7 +1316,7 @@ package body Update_Sources_List is
                Result => Attr)
             then
                for V of Attr.Values loop
-                  if not Data.Basenames.Contains (Simple_Name (V.Text)) then
+                  if not Data_Has_Basename (Simple_Name (V.Text)) then
                      Messages.Append
                        (Message.Create
                           (Message.Warning,
