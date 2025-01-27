@@ -290,7 +290,9 @@ begin
      (Key          => PRA.Library_Auto_Init,
       Description  =>
         "Indicates if a Stand-Alone Library is auto-initialized. Only "
-      & "authorized case-insensitive values are 'true' and 'false'.");
+      & "authorized case-insensitive values are 'true' and 'false'. "
+      & "Default to Library_Auto_Init_Supported value. Can not "
+      & "be set to true if Library_Auto_Init_Supported is false.");
 
    --  Leading_Library_Options
    Set_Attribute_Description

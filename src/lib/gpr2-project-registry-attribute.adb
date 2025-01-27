@@ -729,7 +729,7 @@ begin
       Value                 => Single,
       Value_Case_Sensitive  => False,
       Is_Allowed_In         => In_Library,
-      Default               => Create ("false"),
+      Default               => Create (Library_Auto_Init_Supported),
       Inherit_From_Extended => Not_Inherited,
       Type_Def              => Boolean_Type_Def);
 

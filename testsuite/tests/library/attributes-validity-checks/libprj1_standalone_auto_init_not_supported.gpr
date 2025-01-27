@@ -1,0 +1,10 @@
+library project Libprj1_Standalone_Auto_Init_Not_Supported is
+   for Library_Name use project'Name;
+   for Library_Dir use project'Name & ".lib";
+   for Interfaces use ("pkg1.ads");
+   for Library_Interface use ("pkg2");
+   for Library_Standalone use "standard";
+   for Library_Auto_Init use "True";
+   for Library_Auto_Init_Supported use "False";
+   for Library_Src_Dir use project'Library_Dir & ".src";
+end Libprj1_Standalone_Auto_Init_Not_Supported;

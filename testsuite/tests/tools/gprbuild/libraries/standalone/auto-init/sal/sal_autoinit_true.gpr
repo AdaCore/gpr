@@ -1,0 +1,11 @@
+project SAL_Autoinit_True is
+
+   for Library_Name use "sal";
+   for Library_Dir  use "lib";
+   for Library_Kind use "relocatable";
+   for Library_Interface use ("pkg1");
+   for Library_Auto_Init use "true";
+
+
+end SAL_Autoinit_True;
+

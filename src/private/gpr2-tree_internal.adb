@@ -2950,6 +2950,27 @@ package body GPR2.Tree_Internal is
                end if;
             end if;
 
+            if View.Is_Library
+              and then View.Is_Library_Standalone
+              and then View.Attribute (PRA.Library_Auto_Init).Is_Defined
+            then
+               if Boolean'Value
+                    (View.Attribute (PRA.Library_Auto_Init).Value.Text)
+                 and then not Boolean'Value
+                                (View.Attribute
+                                   (PRA.Library_Auto_Init_Supported)
+                                   .Value
+                                   .Text)
+               then
+                  Self.Messages.Append
+                    (Message.Create
+                       (Message.Warning,
+                        "attribute Library_Auto_Init can not be set to true"
+                        & " if Library_Auto_Init_Supported is false",
+                        Source_Reference.Create (View.Path_Name.Value, 0, 0)));
+               end if;
+            end if;
+
             case View.Kind is
                when K_Standard =>
                   if not View.Is_Aggregated_In_Library then
