@@ -722,6 +722,10 @@ begin
          Conf := Project.Configuration.Load (Default_Cfg);
       end if;
 
+      --  Update absolute path of the project file to be used for runtime
+      --  lookup.
+
+      Project_Path := Self.Root_Project.Path_Name;
    end if;
 
    if not Conf.Is_Defined then
