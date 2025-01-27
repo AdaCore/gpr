@@ -38,3 +38,22 @@ Project: Demo2
  > src/data.ads, Kind: S_SPEC, unit: DATA
  > src/pck.adb, Kind: S_BODY, unit: PCK
  > src/unchdeal.ads, Kind: S_SPEC, unit: UNCHECKED_DEALLOCATION
+Project: Demo3
+
+---------- ALL
+ > src/api.adb, language: Ada, Kind: S_BODY, unit: API
+ > src/api.ads, language: Ada, Kind: S_SPEC, unit: API
+ > src/data.ads, language: Ada, Kind: S_SPEC, unit: DATA
+ > src/pck.adb, language: Ada, Kind: S_BODY, unit: PCK
+ > src/pck.ads, language: Ada, Kind: S_SPEC, unit: PCK
+ > src/unchdeal.ads, language: Ada, Kind: S_SPEC, unit: UNCHECKED_DEALLOCATION
+
+---------- INTERFACE ONLY
+ > src/api.adb, Kind: S_BODY, unit: API
+ > src/data.ads, Kind: S_SPEC, unit: DATA
+
+---------- COMPILABLE ONLY
+ > src/api.adb, Kind: S_BODY, unit: API
+ > src/data.ads, Kind: S_SPEC, unit: DATA
+ > src/pck.adb, Kind: S_BODY, unit: PCK
+ > src/unchdeal.ads, Kind: S_SPEC, unit: UNCHECKED_DEALLOCATION

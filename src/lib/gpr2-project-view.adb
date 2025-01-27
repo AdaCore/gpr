@@ -1700,28 +1700,30 @@ package body GPR2.Project.View is
       CU : Build.Compilation_Unit.Object;
    begin
       return Result : GPR2.Build.Compilation_Unit.Maps.Map do
-         for C in Self.Interface_Units.Iterate loop
-            declare
-               U_Name : constant Name_Type :=
-                          Containers.Unit_Name_To_Sloc.Key (C);
-            begin
-               if Self.Kind = K_Aggregate_Library then
-                  for V of Self.Aggregated loop
-                     CU := V.Own_Unit (U_Name);
-                     exit when CU.Is_Defined;
-                  end loop;
+         if Self.Is_Library then
+            for C in Self.Interface_Units.Iterate loop
+               declare
+                  U_Name : constant Name_Type :=
+                            Containers.Unit_Name_To_Sloc.Key (C);
+               begin
+                  if Self.Kind = K_Aggregate_Library then
+                     for V of Self.Aggregated loop
+                        CU := V.Own_Unit (U_Name);
+                        exit when CU.Is_Defined;
+                     end loop;
 
-               else
-                  CU := Self.Own_Unit (U_Name);
-               end if;
+                  else
+                     CU := Self.Own_Unit (U_Name);
+                  end if;
 
-               --  ??? Handle properly the error case
+                  --  ??? Handle properly the error case
 
-               pragma Assert (CU.Is_Defined);
+                  pragma Assert (CU.Is_Defined);
 
-               Result.Include (U_Name, CU);
-            end;
-         end loop;
+                  Result.Insert (U_Name, CU);
+               end;
+            end loop;
+         end if;
 
          for C in Self.Interface_Sources.Iterate loop
             declare

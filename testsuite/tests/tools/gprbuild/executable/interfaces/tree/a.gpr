@@ -1,0 +1,5 @@
+with "b";
+project A is
+  for Source_Dirs use ("srcA");
+  for Main use ("a.adb");
+end A;

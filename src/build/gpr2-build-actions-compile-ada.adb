@@ -459,10 +459,19 @@ package body GPR2.Build.Actions.Compile.Ada is
          --  There is no restriction of units visibility inside the same view
 
          if Self.View /= CU_View then
-            Allowed := not
-              (CU_View.Is_Library
-               and then CU_View.Is_Library_Standalone
-               and then not CU_View.Interface_Closure.Contains (CU.Name));
+            if CU_View.Has_Any_Interfaces
+              and then not CU_View.Interface_Closure.Contains (CU.Name)
+            then
+               --  Two cases here:
+               --  * The view is a standalone library: if the unit is not
+               --    listed by the Library_Interface, or its source by the
+               --    Interfaces attribute, then it can not be imported.Allowed
+               --  * The view is not a standalone library: if the unit source
+               --    is not listed by the Interfaces attribute, then it can
+               --   not be imported.
+
+               Allowed := False;
+            end if;
 
             if not Allowed then
                Self.Tree.Reporter.Report

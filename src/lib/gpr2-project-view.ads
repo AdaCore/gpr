@@ -486,7 +486,7 @@ package GPR2.Project.View is
 
    function Interface_Units
      (Self : Object) return GPR2.Containers.Unit_Name_To_Sloc.Map
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Return a map of interface units defined by the view to their
    --  definition in the project file.
 
@@ -498,10 +498,11 @@ package GPR2.Project.View is
 
    function Interface_Closure
      (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
-     with Pre => Self.Is_Defined and then Self.Is_Library;
+     with Pre => Self.Is_Defined;
    --  Return the set of Ada units that are part of the interface of the
-   --  library (so either part of the Interfaces attribute or part of the
-   --  Interface_Sources attribute).
+   --  project. If the project is a library, the Interfaces or
+   --  the Library_Interface attributes are checked. Otherwise, only the
+   --  Interfaces attribute is checked.
    --  If no interface is defined for the library, then the returned map is
    --  empty.
 
@@ -621,9 +622,11 @@ package GPR2.Project.View is
    --  Returns whether the optional interfaces attribute is defined
 
    function Has_Any_Interfaces (Self : Object) return Boolean
-     with Pre  => Self.Is_Defined and then Self.Is_Library,
-          Post => Has_Any_Interfaces'Result =
-                    Self.Has_Interfaces or else Self.Has_Library_Interface;
+   with
+     Pre  => Self.Is_Defined,
+     Post =>
+       Has_Any_Interfaces'Result = Self.Has_Interfaces
+       or else (Self.Is_Library and then Self.Has_Library_Interface);
    --  Returns whether any interface is defined either using the
    --  Library_Interface or Interfaces attribute.
 
@@ -878,8 +881,9 @@ private
      (Self.Has_Attribute (PRA.Interfaces)
       and then not Self.Attribute (PRA.Interfaces).Values.Is_Empty);
 
-   function Has_Any_Interfaces (Self : Object) return Boolean is
-     (Self.Has_Library_Interface or else Self.Has_Interfaces);
+   function Has_Any_Interfaces (Self : Object) return Boolean
+   is ((Self.Is_Library and then Self.Has_Library_Interface)
+       or else Self.Has_Interfaces);
 
    function Is_Abstract (Self : Object) return Boolean is
      (Self.Kind = K_Abstract);

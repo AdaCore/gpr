@@ -1,0 +1,4 @@
+project B is
+  for Source_Dirs use ("srcB");
+  for Interfaces use ("foo.ads");
+end B;

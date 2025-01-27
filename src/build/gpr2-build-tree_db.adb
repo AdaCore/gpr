@@ -897,29 +897,31 @@ package body GPR2.Build.Tree_Db is
                      end loop;
                   end if;
 
-                  for C in V.Interface_Units.Iterate loop
-                     Found := False;
+                  if V.Is_Library then
+                     for C in V.Interface_Units.Iterate loop
+                        Found := False;
 
-                     for Sub of Closure loop
-                        if View_Tables.Get_Data
-                          (Self.Self, Sub).Own_CUs.Contains
-                          (Unit_Name_To_Sloc.Key (C))
-                        then
-                           Found := True;
-                           exit;
+                        for Sub of Closure loop
+                           if View_Tables.Get_Data
+                             (Self.Self, Sub).Own_CUs.Contains
+                             (Unit_Name_To_Sloc.Key (C))
+                           then
+                              Found := True;
+                              exit;
+                           end if;
+                        end loop;
+
+                        if not Found then
+                           Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 "source for interface unit '" &
+                                 String (Unit_Name_To_Sloc.Key (C)) &
+                                 "' not found",
+                                 Unit_Name_To_Sloc.Element (C)));
                         end if;
                      end loop;
-
-                     if not Found then
-                        Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              "source for interface unit '" &
-                                String (Unit_Name_To_Sloc.Key (C)) &
-                                "' not found",
-                              Unit_Name_To_Sloc.Element (C)));
-                     end if;
-                  end loop;
+                  end if;
 
                   for C in V.Interface_Sources.Iterate loop
                      Found := False;
