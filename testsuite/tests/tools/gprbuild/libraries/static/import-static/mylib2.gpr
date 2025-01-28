@@ -1,3 +1,5 @@
+with "mylib3";
+
 library project Mylib2 is
 
    for Library_Name use "mylib2";
