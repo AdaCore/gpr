@@ -20,20 +20,20 @@
   inputs:
   outputs:
   - /tree/obj/p2/foo~2.o
-  - /tree/lib/p2/foo~2.ali
   - /tree/obj/p2/foo~2.ali
+  - /tree/lib/p2/foo~2.ali
 [Ada Compile] pkg.adb (p2.gpr)
   inputs:
   outputs:
   - /tree/obj/p2/pkg.o
-  - /tree/lib/p2/pkg.ali
   - /tree/obj/p2/pkg.ali
+  - /tree/lib/p2/pkg.ali
 [Ada Compile] pkg3.adb (p2.gpr)
   inputs:
   outputs:
   - /tree/obj/base2/pkg3.o
   - /tree/obj/base2/pkg3.ali
-  - /tree/obj/p2/pkg3.ali
+  - /tree/lib/p2/pkg3.ali
 [Ada Compile] pkg2.adb (shared.gpr)
   inputs:
   outputs:

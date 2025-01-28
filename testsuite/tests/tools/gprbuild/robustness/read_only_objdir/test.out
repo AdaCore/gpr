@@ -32,7 +32,7 @@ $ gpr2clean -Plib -r -q
 $ chmod 0x555 lib/lib
 $ gpr2build -Plib
 [Ada Compile]     pkg2.ads
-pkg2.ali: error: could not copy ali file pkg2.ali to the library directory
+lib.gpr: error: could not copy ali file pkg2.ali to the library directory
 $ chmod 0x777 lib/lib
 $ gpr2build -Plib -q
 $ chmod 0x555 lib/lib

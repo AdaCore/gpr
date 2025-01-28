@@ -255,19 +255,24 @@ procedure Main is
       if Ada.Command_Line.Argument_Count > 1 then
          for J in 2 .. Ada.Command_Line.Argument_Count loop
             declare
-               Src_Name : constant Simple_Name :=
+               Src_Name  : constant Simple_Name :=
                              Simple_Name (Ada.Command_Line.Argument (J));
-               Src      : Build.Source.Object;
-
+               Src       : Build.Source.Object;
+               Ambiguous : Boolean;
+               use Ada.Text_IO;
             begin
                Ada.Text_IO.Put_Line ("* query source " & String (Src_Name));
                for NS of Tree.Namespace_Root_Projects loop
-                  Src := NS.Visible_Source (Src_Name);
-                  Ada.Text_IO.Put_Line (" - query for NS " & String (NS.Name));
+                  Src := NS.Visible_Source (Src_Name, Ambiguous);
+                  Put_Line (" - query for NS " & String (NS.Name));
 
                   if Src.Is_Defined then
-                     Ada.Text_IO.Put_Line ("   found in " & String (Src.Owning_View.Name));
-                     Ada.Text_IO.Put_Line ("   " & String (Src.Path_Name.Relative_Path (NS.Dir_Name)));
+                     if Ambiguous then
+                        Put_Line ("   found in multiple places");
+                     else
+                        Put_Line ("   found in " & String (Src.Owning_View.Name));
+                        Put_Line ("   " & String (Src.Path_Name.Relative_Path (NS.Dir_Name)));
+                     end if;
                   else
                      Ada.Text_IO.Put_Line ("   not found");
                   end if;

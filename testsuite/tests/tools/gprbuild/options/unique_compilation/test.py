@@ -22,7 +22,7 @@ def run(cmd, cwd="", quiet=False):
         os.chdir(old_cwd)
 
 def test(prj, switches, cleanup=True):
-    run(["gpr2build", "-P", prj, "-q", "-p", "-k", "--json-summary"] + switches)
+    run(["gpr2build", "-P", prj, "-q", "-p", "--json-summary"] + switches)
     if os.path.exists("jobs.json"):
         with open("jobs.json") as fp:
             cnt = json.load(fp)
@@ -30,7 +30,8 @@ def test(prj, switches, cleanup=True):
         uids = dict((job["uid"], job) for job in cnt)
 
         for uid in sorted(uids):
-            if uids[uid]["status"] != "SKIPPED":
+            status = uids[uid]["status"]
+            if status != "SKIPPED" and status != "DEACTIVATED":
                 print(uid)
 
     if cleanup:
