@@ -8,7 +8,6 @@ library_empty_value_checks.gpr:7:28: error: attribute "Config_Prj_File" cannot b
 library_empty_value_checks.gpr:8:08: error: Value  is invalid for attribute Create_Missing_Dirs
 library_empty_value_checks.gpr:21:08: error: Value  is invalid for attribute Library_Auto_Init
 library_empty_value_checks.gpr:22:08: error: Value  is invalid for attribute Library_Auto_Init_Supported
-library_empty_value_checks.gpr:24:24: error: attribute "Library_Dir" cannot be empty
 library_empty_value_checks.gpr:30:08: error: Value  is invalid for attribute Library_Major_Minor_Id_Supported
 library_empty_value_checks.gpr:31:25: error: attribute "Library_Name" cannot be empty
 library_empty_value_checks.gpr:37:08: error: Value  is invalid for attribute Library_Standalone
