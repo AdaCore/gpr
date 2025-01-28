@@ -4,7 +4,11 @@ import os.path
 from e3.testsuite.driver.classic import TestAbortWithError
 from e3.env import Env
 
-from testsuite_support.base_driver import BaseDriver, create_fake_ada_compiler
+from testsuite_support.base_driver import (
+    BaseDriver,
+    create_fake_ada_compiler,
+    create_fake_ada_runtime,
+)
 from testsuite_support.builder_and_runner import BuilderAndRunner
 
 
@@ -42,6 +46,7 @@ class BuildAndRunDriver(BaseDriver):
         self.project_file = project_file
         self.main_program = main
         self.fake_ada_target = self.test_env.get("fake_ada_target", None)
+        self.fake_ada_runtime = self.test_env.get("fake_ada_runtime", None)
 
         self.builder_and_runner = BuilderAndRunner(self)
 
@@ -91,5 +96,9 @@ class BuildAndRunDriver(BaseDriver):
                 )
             paths.append(os.environ.get("PATH"))
             env["PATH"] = os.pathsep.join(paths)
+
+        if self.fake_ada_runtime:
+            print(self.fake_ada_runtime)
+            create_fake_ada_runtime(self.working_dir(self.fake_ada_runtime))
 
         self.builder_and_runner.run([os.path.join(".", self.main_program)], env=env)
