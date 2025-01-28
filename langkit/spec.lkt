@@ -1,0 +1,10 @@
+import parser
+import decl
+import types
+import exprs
+import bodies
+
+@abstract
+@generic_list_type("BaseList")
+class GprNode implements Node[GprNode] {
+}

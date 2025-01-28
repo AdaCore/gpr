@@ -1,0 +1,85 @@
+@qualifier
+enum class AllQualifier: GprNode {
+}
+
+@qualifier
+enum class Limited: GprNode {
+}
+
+class WithDecl: GprNode {
+    @parse_field is_limited: Limited
+    @parse_field path_names: ASTList[StringLiteral]
+}
+
+enum class ProjectQualifier: GprNode {
+    case Abstract,
+    Standard, Library, Aggregate, AggregateLibrary, Configuration
+}
+
+class ProjectExtension: GprNode {
+    @parse_field is_all: AllQualifier
+    @parse_field path_name: StringLiteral
+}
+
+class ProjectDeclaration: GprNode {
+    @parse_field @nullable qualifier: ProjectQualifier
+    @parse_field project_name: Expr
+    @parse_field @nullable extension: ProjectExtension
+    @parse_field decls: ASTList[GprNode]
+    @parse_field end_name: Expr
+}
+
+class Project: GprNode {
+    @parse_field context_clauses: ASTList[WithDecl]
+    @parse_field project_decl: ProjectDeclaration
+}
+
+class VariableDecl: GprNode {
+    @parse_field var_name: Identifier
+    @parse_field @nullable var_type: TypeReference
+    @parse_field expr: TermList
+}
+
+class AttributeDecl: GprNode {
+    @parse_field attr_name: Identifier
+    @parse_field @nullable attr_index: GprNode
+    @parse_field expr: TermList
+}
+
+class PackageExtension: GprNode {
+    @parse_field extended_name: ASTList[Identifier]
+}
+
+class PackageDecl: GprNode {
+    @parse_field pkg_name: Identifier
+    @parse_field pkg_spec: GprNode
+}
+
+class PackageRenaming: GprNode {
+    @parse_field renamed_name: ASTList[Identifier]
+}
+
+class PackageSpec: GprNode {
+    @parse_field @nullable extension: PackageExtension
+    @parse_field decls: ASTList[GprNode]
+    @parse_field end_name: Identifier
+}
+
+class EmptyDecl: GprNode {
+}
+
+class CaseConstruction: GprNode {
+    @parse_field var_ref: VariableReference
+    @parse_field items: ASTList[CaseItem]
+}
+
+class CaseItem: GprNode {
+    @parse_field choice: Choices
+    @parse_field decls: ASTList[GprNode]
+}
+
+class OthersDesignator: GprNode {
+}
+
+class Choices: ASTList[GprNode] {
+}

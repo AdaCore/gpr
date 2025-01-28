@@ -1,0 +1,15 @@
+lkt_spec:
+  entry_point: spec.lkt
+  source_dirs: [.]
+library:
+  language_name: Gpr
+  library_name: Gpr_Parser
+  standalone: true
+  defaults:
+    charset: iso-8859-1
+emission:
+  source_post_processors:
+    ada: plugins.AdaPostProcessor
+    c/c++: plugins.CPostProcessor
+warnings:
+  undocumented-nodes: false

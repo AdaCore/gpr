@@ -31,8 +31,9 @@ PYTHONEXE=python
 
 setup:
 	mkdir -p "${DEST}"
-	$(PYTHONEXE) manage.py generate --build-dir="${DEST}" \
-		--generate-unparser --disable-warning undocumented-nodes
+	$(PYTHONEXE) -m langkit.scripts.lkm generate \
+		--build-dir="${DEST}" \
+		--portable-project
 
 clean:
 	rm -fr "${DEST}"

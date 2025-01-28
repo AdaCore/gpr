@@ -1,0 +1,3 @@
+class CompilationUnit: GprNode {
+    @parse_field project: Project
+}
