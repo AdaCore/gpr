@@ -510,6 +510,7 @@ package body GPR2.Build.View_Tables is
    begin
       Data.Excluded_Sources.Clear;
       Data.Listed_Sources.Clear;
+      Data.No_Sources := False;
 
       --  If we have attribute Excluded_Source_List_File
 
@@ -568,10 +569,14 @@ package body GPR2.Build.View_Tables is
       Attr := Data.View.Attribute (PRA.Source_Files);
 
       if Attr.Is_Defined then
-         for File of Attr.Values loop
-            Include_Simple_Filename
-              (Data.Listed_Sources, File.Text, File, Messages);
-         end loop;
+         if Attr.Values.Is_Empty then
+            Data.No_Sources := True;
+         else
+            for File of Attr.Values loop
+               Include_Simple_Filename
+                 (Data.Listed_Sources, File.Text, File, Messages);
+            end loop;
+         end if;
       end if;
    end Check_Source_Lists;
 

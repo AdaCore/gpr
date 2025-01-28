@@ -718,7 +718,10 @@ package body Update_Sources_List is
          --  Stop here if it's one of the excluded sources, or it's not in the
          --  included sources if those are given explicitely.
 
-         if Data.Excluded_Sources.Contains (Basename) then
+         if Data.No_Sources then
+            return False;
+
+         elsif Data.Excluded_Sources.Contains (Basename) then
             Data.Actually_Excluded.Include (Basename, No_Proxy);
 
             return False;
