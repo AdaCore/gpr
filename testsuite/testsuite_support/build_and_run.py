@@ -75,9 +75,9 @@ class BuildAndRunDriver(BaseDriver):
                 fake_dir = self.working_dir("fake-ada-%s" % tgt)
                 paths.append(os.path.join(fake_dir, "bin"))
 
-                if 'linux' in tgt or 'windows' in tgt:
+                if "linux" in tgt or "windows" in tgt:
                     is_cross = False
-                elif tgt == 'native':
+                elif tgt == "native":
                     is_cross = False
                     tgt = Env().host.triplet
                 else:
