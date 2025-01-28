@@ -394,6 +394,7 @@ package body GPR2.Build.Actions.Link is
          for Input of Self.Tree.Inputs (Self.UID) loop
             --  Inputs are either objects or libraries. Libraries are
             --  represented by an Artifact.Library class.
+
             if Input not in Artifacts.Library.Object'Class then
                Result.Include (Input);
             end if;
@@ -512,11 +513,14 @@ package body GPR2.Build.Actions.Link is
      (Self   : in out Object;
       Status : Execution_Status) return Boolean
    is
-      Result : Boolean;
+      Result  : Boolean;
+
    begin
-      if Status = Success
-        and then Self.Is_Static_Library
-      then
+      if Status /= Success then
+         return True;
+      end if;
+
+      if Self.Is_Static_Library then
          --  archives are generated as tmp files so that we don't reuse
          --  the library from previous runs, we thus need to unlink and rename
          if Self.Output.Path.Exists then

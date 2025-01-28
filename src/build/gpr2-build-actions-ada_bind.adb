@@ -25,6 +25,7 @@ with GPR2.Build.External_Options;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Project.View.Set;
 pragma Warnings (Off, "*is not referenced");
 with GPR2.Project.View.Vector;
 pragma Warnings (On);
@@ -245,68 +246,61 @@ package body GPR2.Build.Actions.Ada_Bind is
                           Self.View.Attribute
                             (PRA.Compiler.Mapping_Body_Suffix,
                              PAI.Create (Ada_Language)).Value.Text;
+         Initial_Closure : GPR2.Project.View.Set.Object;
          use Standard.Ada.Characters.Handling;
 
       begin
          if Map_File.FD /= Invalid_FD and then Map_File.FD /= Null_FD then
-            if not Self.Ctxt.Is_Library
-              or else not Self.Ctxt.Has_Any_Interfaces
-            then
-               for V of Self.View.Closure (True, False, False) loop
+            if Self.View.Kind = K_Aggregate_Library then
+               Initial_Closure := Self.View.Aggregated;
+            else
+               Initial_Closure.Include (Self.View);
+            end if;
+
+            for C of Initial_Closure loop
+               for V of C.Closure (True, False, False) loop
                   if not V.Is_Runtime then
                      for CU of V.Own_Units loop
                         declare
-                           A_Comp : Compile.Ada.Object;
-                           Key    : constant String :=
-                                      To_Lower (String (CU.Name)) &
-                                      (if CU.Main_Part = S_Spec
-                                       then S_Suffix else B_Suffix);
+                           A_Comp   : Compile.Ada.Object;
+                           Key      : constant String :=
+                                        To_Lower (String (CU.Name)) &
+                                          (if CU.Main_Part = S_Spec
+                                           then S_Suffix else B_Suffix);
+                           Ignore   : Boolean;
+                           Ali_File : Path_Name.Object;
+
+                           use type GPR2.Project.View.Object;
+
                         begin
                            A_Comp.Initialize (CU);
 
-                           Write
-                             (Map_File.FD,
-                              Key & ASCII.LF &
-                                String (A_Comp.Ali_File.Path.Simple_Name) &
-                                ASCII.LF &
-                                A_Comp.Ali_File.Path.String_Value & ASCII.LF);
+                           Ignore := V /= Self.Ctxt
+                             and then V.Is_Library
+                             and then V.Is_Library_Standalone
+                             and then not V.Interface_Closure.Contains
+                                            (CU.Name);
+
+                           if V.Is_Library and then V /= Self.Ctxt then
+                              Ali_File := V.Library_Ali_Directory.Compose
+                                (A_Comp.Ali_File.Path.Simple_Name);
+                           else
+                              Ali_File := A_Comp.Ali_File.Path;
+                           end if;
+
+                           if not Ignore then
+                              Write
+                                (Map_File.FD,
+                                 Key & ASCII.LF &
+                                   String (Ali_File.Simple_Name) &
+                                   ASCII.LF &
+                                   Ali_File.String_Value & ASCII.LF);
+                           end if;
                         end;
                      end loop;
                   end if;
                end loop;
-
-            else
-               --  For standalone libraries we just use the main part of the
-               --  interface.
-               --  ??? Need to check what gprlib actually does.
-
-               for CU of Self.Ctxt.Interface_Closure loop
-                  --  Find the compile action corresponding to the unit
-                  declare
-                     A_Comp : Compile.Ada.Object;
-                     Key    : constant String :=
-                                To_Lower (String (CU.Name)) &
-                                (if CU.Main_Part = S_Spec
-                                 then S_Suffix else B_Suffix);
-                  begin
-                     A_Comp.Initialize (CU);
-
-                     --  In case of Standalone library, we need to reference
-                     --  at bind time the ALI in the object directory (the
-                     --  one straight from the compiler) instead of the one
-                     --  in the Library ali directory (with the SP flag set).
-
-                     Write
-                       (Map_File.FD,
-                        Key & ASCII.LF &
-                          String (A_Comp.Ali_File.Path.Simple_Name) &
-                          ASCII.LF &
-                          Self.Ctxt.Object_Directory.Compose
-                          (A_Comp.Ali_File.Path.Simple_Name).String_Value &
-                          ASCII.LF);
-                  end;
-               end loop;
-            end if;
+            end loop;
 
             GNATCOLL.OS.FS.Close (Map_File.FD);
          end if;
@@ -720,10 +714,12 @@ package body GPR2.Build.Actions.Ada_Bind is
       Switch_Index : Natural;
 
    begin
-      Self.Traces.Trace
-        ("Parsing file '" & Self.Output_Body.Path.String_Value &
-           "' generated by " & Self.UID.Image &
-           " to obtain linker options");
+      if Self.Traces.Is_Active then
+         Self.Traces.Trace
+           ("Parsing file '" & Self.Output_Body.Path.String_Value &
+              "' generated by " & Self.UID.Image &
+              " to obtain linker options");
+      end if;
 
       Open
         (File => Src_File,
