@@ -1,0 +1,6 @@
+description:
+  Test lookup of RTL relative to project's directory
+driver: build_and_run
+project_file: test
+main: main
+fake_ada_runtime: custom
