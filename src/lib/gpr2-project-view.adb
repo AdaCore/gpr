@@ -1699,7 +1699,7 @@ package body GPR2.Project.View is
 
                pragma Assert (CU.Is_Defined);
 
-               Result.Insert (U_Name, CU);
+               Result.Include (U_Name, CU);
             end;
          end loop;
 
@@ -1725,7 +1725,7 @@ package body GPR2.Project.View is
 
                      pragma Assert (CU.Is_Defined);
 
-                     Result.Insert (U.Name, CU);
+                     Result.Include (U.Name, CU);
                   end loop;
                end if;
             end;
