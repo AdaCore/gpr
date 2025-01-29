@@ -80,6 +80,9 @@ package body GPR2.Build.Process_Manager.JSON is
                   Ada.Strings.Fixed.Trim
                     (Proc_Handler.Process_Status'Image, Ada.Strings.Left));
 
+            when Deactivated =>
+               Job_Summary.Set_Field (TEXT_STATUS, "DEACTIVATED");
+
             when Skipped =>
                Job_Summary.Set_Field (TEXT_STATUS, "SKIPPED");
 

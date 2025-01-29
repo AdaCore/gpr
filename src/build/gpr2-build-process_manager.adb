@@ -133,7 +133,7 @@ package body GPR2.Build.Process_Manager is
                end;
             end if;
 
-         when Running =>
+         when Running | Deactivated =>
             null;
       end case;
 
@@ -146,9 +146,12 @@ package body GPR2.Build.Process_Manager is
       if Failed_Status then
          return Abort_Execution;
 
-      else
+      elsif Proc_Handler.Status /= Deactivated
+        or else Job.Valid_Signature
+      then
          if not Job.Post_Command
-           ((if Proc_Handler.Status = Skipped then Skipped else Success))
+           ((if Proc_Handler.Status in Skipped | Deactivated
+             then Skipped else Success))
          then
             return Abort_Execution;
          end if;
@@ -332,13 +335,18 @@ package body GPR2.Build.Process_Manager is
                      pragma Annotate (Xcov, Exempt_Off);
                   end if;
 
-                  if Proc_Handler.Status = Skipped
+                  if Proc_Handler.Status in Skipped | Deactivated
                     and then Act.Valid_Signature
                   then
                      --  Only consider the visit complete for valid skipped
                      --  actions, else this will enable the dependent actions
                      --  that won't have the proper inputs to complete
                      Context.Graph.Complete_Visit (Node);
+                  end if;
+
+                  --  Cleanup the temporary files that are local to the job
+                  if not Options.Keep_Temp_Files then
+                     Act.Cleanup_Temp_Files (Scope => Actions.Local);
                   end if;
 
                   Job_Status :=
@@ -586,7 +594,7 @@ package body GPR2.Build.Process_Manager is
             pragma Annotate (Xcov, Exempt_Off);
          end if;
 
-         Proc_Handler := Process_Handler'(Status => Skipped);
+         Proc_Handler := Process_Handler'(Status => Deactivated);
 
          return;
       end if;
@@ -608,7 +616,19 @@ package body GPR2.Build.Process_Manager is
             return;
       end;
 
-      if Job.Skip or else Job.Is_Deactivated then
+      if Job.Is_Deactivated then
+         if Self.Traces.Is_Active then
+            pragma Annotate (Xcov, Exempt_On, "debug code");
+            Self.Traces.Trace
+              ("job is deactivated: " & Job.UID.Image);
+            pragma Annotate (Xcov, Exempt_Off);
+         end if;
+
+         Proc_Handler := Process_Handler'(Status => Deactivated);
+
+         return;
+
+      elsif Job.Skip then
          if Self.Traces.Is_Active then
             pragma Annotate (Xcov, Exempt_On, "debug code");
             Self.Traces.Trace

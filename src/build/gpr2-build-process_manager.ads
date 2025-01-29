@@ -38,7 +38,7 @@ package GPR2.Build.Process_Manager is
    type Object is tagged limited private;
 
    type Process_Handler_Status is
-     (Skipped, Failed_To_Launch, Running, Finished);
+     (Skipped, Deactivated, Failed_To_Launch, Running, Finished);
 
    type Process_Handler (Status : Process_Handler_Status := Running) is
    record
