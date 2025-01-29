@@ -229,33 +229,55 @@ package body GPR2.Build.Actions_Population is
       return Compilation_Unit.Unit_Location_Vector
    is
       use Compilation_Unit;
+      use type GPR2.Path_Name.Object;
+
       Src     : GPR2.Build.Source.Object;
       Tree_Db : constant GPR2.Build.Tree_Db.Object_Access :=
                   View.Tree.Artifacts_Database;
       Res     : Unit_Location_Vector;
+      SN      : constant Simple_Name :=
+                  Path_Name.Simple_Name (Filename_Type (Basename));
+
    begin
       Error_Reported := False;
 
       if Options.Unique_Compilation
         or else Options.Unique_Compilation_Recursive
       then
-         Src := View.Visible_Source
-           (Path_Name.Simple_Name (Filename_Type (Basename)));
+         Src := View.Visible_Source (SN);
       else
-         Src := View.Source
-           (Path_Name.Simple_Name (Filename_Type (Basename)));
+         Src := View.Source (SN);
       end if;
 
       if not Src.Is_Defined then
          for Lang of View.Language_Ids loop
             Src := View.Visible_Source
-              (View.Suffixed_Simple_Name (Basename, Lang));
+              (View.Suffixed_Simple_Name (String (SN), Lang));
+
             exit when Src.Is_Defined;
          end loop;
       end if;
 
       if not Src.Is_Defined then
          return Compilation_Unit.Empty_Vector;
+      end if;
+
+      if Src.Is_Defined
+        and then Filename_Type (SN) /= Filename_Type (Basename)
+      then
+         --  Input was not a simple_name but a relative path, check that we
+         --  have the right source, otherwise this means the source is not
+         --  visible.
+
+         declare
+            Path : constant Path_Name.Object :=
+                     GPR2.Path_Name.Create_File (Filename_Type (Basename));
+
+         begin
+            if Path /= Src.Path_Name then
+               return Compilation_Unit.Empty_Vector;
+            end if;
+         end;
       end if;
 
       if Src.Owning_View.Is_Library
@@ -795,8 +817,6 @@ package body GPR2.Build.Actions_Population is
          end;
       end if;
 
-      --  Process the mains one by one
-
       declare
          Bind      : Bind_Array (1 .. Natural (Actual_Mains.Length));
          Link      : Link_Array (1 .. Natural (Actual_Mains.Length));
@@ -809,6 +829,8 @@ package body GPR2.Build.Actions_Population is
          Has_Other : Boolean := False;
          Has_SAL   : Boolean := False;
       begin
+         --  First check the dependencies and retrieve the libraries
+
          Closure.Include (View);
 
          if not Populate_Withed_Projects (Tree_Db, Closure, Libs, Has_SAL) then
@@ -827,6 +849,8 @@ package body GPR2.Build.Actions_Population is
                exit Closure_Loop when Has_Ada and then Has_Other;
             end loop;
          end loop Closure_Loop;
+
+         --  Process the mains one by one
 
          for Main of Actual_Mains loop
             Source := Main.View.Source (Main.Source.Simple_Name);
