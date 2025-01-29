@@ -752,8 +752,14 @@ package body GPR2.Build.Actions.Ada_Bind is
 
                --  Skip the "--" comment prefix
                Switch_Index := Switch_Index + 2;
-               Process_Option_Or_Object_Line
-                 (Trim (Line (Switch_Index .. Line'Last), Both));
+               declare
+                  Trimmed_Line : constant String :=
+                    Trim (Line (Switch_Index .. Line'Last), Both);
+               begin
+                  Self.Traces.Trace
+                    ("Processing parsed line '" & Trimmed_Line & "'");
+                  Process_Option_Or_Object_Line (Trimmed_Line);
+               end;
             end if;
          end;
       end loop;
