@@ -1223,3 +1223,18 @@ during the post-compilation phase by the binder drivers.
 
 If switch :samp:`-j{nnn}` is used, with `nnn` other than 1, gprbuild will attempt to link
 simultaneously up to `nnn` executables.
+
+.. _Exit_code:
+
+Exit code
+=========
+
+* **0** : No errors. Although warnings can be raised.
+
+* **1** : General tool error, such as invalid option, missing file...
+
+* **4** : Underlying tool error.
+
+* **5** : Project parsing error.
+
+* **7** : Critical tool error. Defensive code failures and the like.
