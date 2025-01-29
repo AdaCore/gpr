@@ -696,6 +696,27 @@ package body GPR2.Build.Actions_Population is
          end loop;
       end loop;
 
+      --  If the current library depends on other libraries, add a dependency
+      --  on the library output to avoid directly depending on the objects of
+      --  the dependent libraries.
+
+      declare
+         Imported_Lib_Link : Actions.Link.Object;
+      begin
+         for Import of Self.View.Imports loop
+            if Import.Is_Library then
+               Imported_Lib_Link.Initialize_Library (Import);
+
+               if not Tree_Db.Has_Action (Imported_Lib_Link.UID) then
+                  return False;
+               end if;
+
+               Tree_Db.Add_Input
+                 (Self.Link.UID, Imported_Lib_Link.Output, True);
+            end if;
+         end loop;
+      end;
+
       --  Update the Library object in Libs
       Libs.Replace (View, Self);
 

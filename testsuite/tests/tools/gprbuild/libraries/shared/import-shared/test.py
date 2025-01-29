@@ -22,9 +22,6 @@ def run(cmd):
 run(["gpr2build", "-q", "-Pmylib1.gpr", "-p", "--json-summary"])
 with open("jobs.json") as fp:
     cntlib = json.load(fp)
-run(["gpr2build", "-q", "-Papp.gpr", "-p", "--json-summary"])
-with open("jobs.json") as fp:
-    cntbin = json.load(fp)
 
 if os.path.isfile(os.path.join("lib", "libmylib1" + shared_lib_ext)):
     print("mylib1 has been created, good!")
@@ -36,9 +33,29 @@ if os.path.isfile(os.path.join("lib", "libmylib2" + shared_lib_ext)):
 else:
     print("ERROR: cannot find the libmylib2" + shared_lib_ext)
 
+if os.path.isfile(os.path.join("lib", "libmylib3" + shared_lib_ext)):
+    print("mylib3 has been created, good!")
+else:
+    print("ERROR: cannot find the libmylib3" + shared_lib_ext)
+
 found = False
 error = False
 
+for job in cntlib:
+    if job["status"] != "SKIPPED":
+            if "pkg1.o" in job["command"] and "pkg2.o" in job["command"]:
+                print("ERROR: Found both pkg1/2.o in the same command")
+                error = True
+            if "pkg1.o" in job["command"] and "pkg3.o" in job["command"]:
+                print("ERROR: Found both pkg1/3.o in the same command")
+                error = True
+            if "pkg2.o" in job["command"] and "pkg3.o" in job["command"]:
+                print("ERROR: Found both pkg2/3.o in the same command")
+                error = True
+
+run(["gpr2build", "-q", "-Papp.gpr", "-p", "--json-summary"])
+with open("jobs.json") as fp:
+    cntbin = json.load(fp)
 
 for job in cntbin:
     if job["status"] != "SKIPPED":

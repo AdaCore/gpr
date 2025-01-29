@@ -1,9 +1,11 @@
 $ gpr2build -q -Pmylib1.gpr -p --json-summary
-$ gpr2build -q -Papp.gpr -p --json-summary
 mylib1 has been created, good!
 mylib2 has been created, good!
+mylib3 has been created, good!
+$ gpr2build -q -Papp.gpr -p --json-summary
 Ok so far
 $ ./main
 Hello from lib1
+Hello from lib3
 Hello from lib2
 
