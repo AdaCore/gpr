@@ -1,5 +1,5 @@
 #
-#  Copyright (C) 2020-2024, AdaCore
+#  Copyright (C) 2020-2025, AdaCore
 #
 #  SPDX-License-Identifier: Apache-2.0
 #
@@ -16,18 +16,20 @@ import sys
 class LibGPR2:
 
     METHOD_LIST = {
-        "tree_load": 1,
-        "tree_unload": 2,
-        "tree_log_messages": 3,
-        "tree_invalidate_source_list": 4,
-        "tree_update_source_list": 5,
-        "tree_update_source_infos": 6,
-        "view_load": 7,
-        "view_attribute": 8,
-        "view_sources": 9,
-        "view_units": 10,
-        "source_dependencies": 11,
-        "source_update_source_infos": 12,
+        "tree_artifacts_directory": 1,
+        "tree_context": 2,
+        "tree_destructor": 3,
+        "tree_load": 4,
+        "tree_log_messages": 5,
+        "tree_root_project": 6,
+        "tree_runtime_project": 7,
+        "tree_set_context": 8,
+        "tree_target": 9,
+        "tree_update_sources": 10,
+        "view_destructor": 11,
+        "view_executables": 12,
+        "view_object_directory": 13,
+        "view_sources": 14,
     }
 
     # ??? not portable ???

@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2020-2024, AdaCore
+--  Copyright (C) 2020-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -32,18 +32,20 @@ package GPR2.C is
    --  Function to invoke
 
    --  Tree functions
-   TREE_LOAD                   : constant C_Function := 1;
-   TREE_UNLOAD                 : constant C_Function := 2;
-   TREE_LOG_MESSAGES           : constant C_Function := 3;
-   TREE_INVALIDATE_SOURCE_LIST : constant C_Function := 4;
-   TREE_UPDATE_SOURCE_LIST     : constant C_Function := 5;
-   TREE_UPDATE_SOURCE_INFOS    : constant C_Function := 6;
-   VIEW_LOAD                   : constant C_Function := 7;
-   VIEW_ATTRIBUTE              : constant C_Function := 8;
-   VIEW_SOURCES                : constant C_Function := 9;
-   VIEW_UNITS                  : constant C_Function := 10;
-   SOURCE_DEPENDENCIES         : constant C_Function := 11;
-   SOURCE_UPDATE_SOURCE_INFOS  : constant C_Function := 12;
+   TREE_ARTIFACTS_DIRECTORY : constant C_Function := 1;
+   TREE_CONTEXT             : constant C_Function := 2;
+   TREE_DESTRUCTOR          : constant C_Function := 3;
+   TREE_LOAD                : constant C_Function := 4;
+   TREE_LOG_MESSAGES        : constant C_Function := 5;
+   TREE_ROOT_PROJECT        : constant C_Function := 6;
+   TREE_RUNTIME_PROJECT     : constant C_Function := 7;
+   TREE_SET_CONTEXT         : constant C_Function := 8;
+   TREE_TARGET              : constant C_Function := 9;
+   TREE_UPDATE_SOURCES      : constant C_Function := 10;
+   VIEW_DESTRUCTOR          : constant C_Function := 11;
+   VIEW_EXECUTABLES         : constant C_Function := 12;
+   VIEW_OBJECT_DIRECTORY    : constant C_Function := 13;
+   VIEW_SOURCES             : constant C_Function := 14;
 
    type C_Request is new Interfaces.C.Strings.chars_ptr;
    --  Request C null terminated string
@@ -54,12 +56,8 @@ package GPR2.C is
    type C_Status is new Integer;
    --  Integer status
 
-   GPR2_C_Exception : exception;
-
-   OK              : constant C_Status := 0;
    Invalid_Request : constant C_Status := 1;
    Call_Error      : constant C_Status := 2;
-   Unknown_Error   : constant C_Status := 3;
 
    procedure GPR2_Free_Answer (Answer : C_Answer);
    --  Releases the memory held by an answer

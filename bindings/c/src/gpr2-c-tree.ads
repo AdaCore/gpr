@@ -1,37 +1,65 @@
 --
---  Copyright (C) 2020-2024, AdaCore
+--  Copyright (C) 2020-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
 --  C Binding to GPR2 Project Trees API
 
-with GPR2.C.JSON;
+with GPR2.C.JSON.Objects;
 
 package GPR2.C.Tree is
 
+   pragma Elaborate_Body;
+
+   procedure Artifacts_Directory
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object);
+   --  Implements TREE_ARTIFACTS_DIRECTORY
+
+   procedure Context
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object);
+   --  Implements TREE_CONTEXT
+
+   procedure Destructor
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object);
+   --  Implements TREE_DESTRUCTOR
+
    procedure Load
-      (Request : GPR2.C.JSON.JSON_Value; Result : GPR2.C.JSON.JSON_Value);
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object);
    --  Implements TREE_LOAD
 
-   procedure Unload
-      (Request : GPR2.C.JSON.JSON_Value; Result : GPR2.C.JSON.JSON_Value);
-   --  Implements TREE_UNLOAD
-
    procedure Log_Messages
-      (Request : GPR2.C.JSON.JSON_Value; Result : GPR2.C.JSON.JSON_Value);
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object);
    --  Implements TREE_LOG_MESSAGES
 
-   procedure Invalidate_Source_List
-      (Request : GPR2.C.JSON.JSON_Value; Result : GPR2.C.JSON.JSON_Value);
-   --  Implements TREE_INVALIDATE_SOURCE_LIST
+   procedure Root_Project
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object);
+   --  Implements TREE_ROOT_PROJECT
 
-   procedure Update_Source_List
-      (Request : GPR2.C.JSON.JSON_Value; Result : GPR2.C.JSON.JSON_Value);
-   --  Implements TREE_UPDATE_SOURCE_LIST
+   procedure Runtime_Project
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object);
+   --  Implements TREE_RUNTIME_PROJECT
 
-   procedure Update_Source_Infos
-      (Request : GPR2.C.JSON.JSON_Value; Result : GPR2.C.JSON.JSON_Value);
-   --  Implements TREE_UPDATE_SOURCE_INFOS
+   procedure Set_Context
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object);
+   --  Implements TREE_SET_CONTEXT
+
+   procedure Target
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object);
+   --  Implements TREE_TARGET
+
+   procedure Update_Sources
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object);
+   --  Implements TREE_UPDATE_SOURCES
 
 end GPR2.C.Tree;

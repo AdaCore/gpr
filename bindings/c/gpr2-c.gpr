@@ -23,10 +23,8 @@ library project GPR2.C is
    for Library_Kind use "relocatable";
    for Library_Interface use ("gpr2.c",
                               "gpr2.c.json",
-                              "gpr2.c.json.encoders",
-                              "gpr2.c.source",
+                              "gpr2.c.json.codecs",
                               "gpr2.c.tree",
-                              "gpr2.c.utils",
                               "gpr2.c.view");
    for Library_Standalone use "encapsulated";
 

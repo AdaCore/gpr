@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2020-2024, AdaCore
+--  Copyright (C) 2020-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -7,25 +7,26 @@
 with GPR2.C.JSON;
 with GPR2.C.Tree;
 with GPR2.C.View;
-with GPR2.C.Source;
 
 package body GPR2.C is
 
    type Binding_Map is array (C_Function range <>) of GPR2.C.JSON.Bind_Handler;
 
    Binding : constant Binding_Map :=
-      (TREE_LOAD                    => Tree.Load'Access,
-       TREE_UNLOAD                  => Tree.Unload'Access,
-       TREE_LOG_MESSAGES            => Tree.Log_Messages'Access,
-       TREE_INVALIDATE_SOURCE_LIST  => Tree.Invalidate_Source_List'Access,
-       TREE_UPDATE_SOURCE_LIST      => Tree.Update_Source_List'Access,
-       TREE_UPDATE_SOURCE_INFOS     => Tree.Update_Source_Infos'Access,
-       VIEW_LOAD                    => View.Load'Access,
-       VIEW_ATTRIBUTE               => View.Attribute'Access,
-       VIEW_SOURCES                 => View.Sources'Access,
-       VIEW_UNITS                   => View.Units'Access,
-       SOURCE_DEPENDENCIES          => Source.Dependencies'Access,
-       SOURCE_UPDATE_SOURCE_INFOS   => Source.Update_Source_Infos'Access);
+     (TREE_ARTIFACTS_DIRECTORY     => Tree.Artifacts_Directory'Access,
+      TREE_CONTEXT                 => Tree.Context'Access,
+      TREE_DESTRUCTOR              => Tree.Destructor'Access,
+      TREE_LOAD                    => Tree.Load'Access,
+      TREE_LOG_MESSAGES            => Tree.Log_Messages'Access,
+      TREE_ROOT_PROJECT            => Tree.Root_Project'Access,
+      TREE_RUNTIME_PROJECT         => Tree.Runtime_Project'Access,
+      TREE_SET_CONTEXT             => Tree.Set_Context'Access,
+      TREE_TARGET                  => Tree.Target'Access,
+      TREE_UPDATE_SOURCES          => Tree.Update_Sources'Access,
+      VIEW_DESTRUCTOR              => View.Destructor'Access,
+      VIEW_EXECUTABLES             => View.Executables'Access,
+      VIEW_OBJECT_DIRECTORY        => View.Object_Directory'Access,
+      VIEW_SOURCES                 => View.Sources'Access);
 
    ----------------------
    -- GPR2_Free_Answer --
@@ -43,10 +44,11 @@ package body GPR2.C is
    ------------------
 
    function GPR2_Request
-        (Fun : C_Function; Request : C_Request; Answer : out C_Answer)
-        return C_Status
+     (Fun : C_Function; Request : C_Request; Answer : out C_Answer)
+      return C_Status
    is
    begin
       return GPR2.C.JSON.Bind (Request, Answer, Binding (Fun));
    end GPR2_Request;
+
 end GPR2.C;
