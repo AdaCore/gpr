@@ -122,16 +122,22 @@ package body GPR2.Build.Actions.Link is
          declare
             Attr : constant GPR2.Project.Attribute.Object :=
                      Self.View.Attribute (PRA.Archive_Builder);
+            First : Boolean := True;
          begin
             pragma Assert (Attr.Is_Defined, "No archiver is defined");
 
             for Val of Attr.Values loop
+               if First then
+                  --  The driver value
+                  Cmd_Line.Set_Driver (Val.Text);
+                  First := False;
+
                --  [eng/gpr/gpr-issues#446] Hack to speed up and ease the
                --  generation of archives :
                --  instead of using "ar cr" then use ranlib, we generate
                --  directly the symbol table by using "ar csr".
 
-               if Val.Text = "cr" then
+               elsif Val.Text = "cr" then
                   Cmd_Line.Add_Argument ("csr", True);
                else
                   Cmd_Line.Add_Argument (Val.Text, True);
@@ -147,8 +153,16 @@ package body GPR2.Build.Actions.Link is
          end;
 
       else
-         Status := Add_Attr (PRA.Linker.Driver, PAI.Undefined, False, True);
-         pragma Assert (Status, "No linker driver is defined");
+         declare
+            Attr : constant GPR2.Project.Attribute.Object :=
+                     Self.Ctxt.Attribute (PRA.Linker.Driver);
+         begin
+            if not Attr.Is_Defined then
+               return;
+            end if;
+
+            Cmd_Line.Set_Driver (Attr.Value.Text);
+         end;
 
          if Src_Idx.Is_Defined then
             Status :=

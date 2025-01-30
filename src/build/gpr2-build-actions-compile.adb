@@ -553,8 +553,17 @@ package body GPR2.Build.Actions.Compile is
            (Attr.Values.Last_Element.Text & Arg, In_Signature);
       end Add_Options_With_Arg;
 
+      Driver_Attr : constant GPR2.Project.Attribute.Object :=
+                      Self.Ctxt.Attribute (PRA.Compiler.Driver, Lang_Idx);
+
    begin
-      Add_Attr (PRA.Compiler.Driver, Lang_Idx, False, True);
+      if Driver_Attr.Is_Defined then
+         Cmd_Line.Set_Driver
+           (Driver_Attr.Value.Text);
+      else
+         return;
+      end if;
+
       Add_Attr (PRA.Compiler.Leading_Required_Switches, Lang_Idx, True, True);
       --  ??? need to filter out builder switches from command line
       --  Add_Attr (PRA.Builder.Switches, Lang_Idx, True);

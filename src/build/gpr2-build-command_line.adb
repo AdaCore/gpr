@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2024, AdaCore
+--  Copyright (C) 2024-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -23,10 +23,7 @@ package body GPR2.Build.Command_Line is
 
       if In_Signature then
          if Length (Self.Signature) = 0 then
-            --  First argument: the command. Only store the simple name
-            Append
-              (Self.Signature,
-               String (Path_Name.Simple_Name (Filename_Type (Arg))));
+            Append (Self.Signature, Arg);
          else
             Append (Self.Signature, ' ');
             Append (Self.Signature, Arg);
@@ -85,6 +82,45 @@ package body GPR2.Build.Command_Line is
       Self.Finalized := True;
       Self.Checksum := GPR2.Utils.Hash.Hash_Content (-Self.Signature);
    end Finalize;
+
+   ----------------
+   -- Set_Driver --
+   ----------------
+
+   procedure Set_Driver
+     (Self : in out Object;
+      Arg  : String)
+   is
+      SName : constant Simple_Name :=
+                Path_Name.Simple_Name (Filename_Optional (Arg));
+   begin
+      Self.Finalized := False;
+      Self.Cmd_Line.Prepend (Arg);
+
+      if Length (Self.Signature) = 0 then
+         Self.Signature := +SName;
+         Self.Total_Length := Arg'Length;
+      else
+         Self.Signature := +(SName & " ") & Self.Signature;
+         Self.Total_Length := Arg'Length + 1;
+      end if;
+   end Set_Driver;
+
+   procedure Set_Driver
+     (Self : in out Object;
+      Arg  : Path_Name.Object) is
+   begin
+      Self.Finalized := False;
+      Self.Cmd_Line.Prepend (Arg.String_Value);
+
+      if Length (Self.Signature) = 0 then
+         Self.Signature := +Arg.Simple_Name;
+         Self.Total_Length := Arg.String_Value'Length;
+      else
+         Self.Signature := +(Arg.Simple_Name & " ") & Self.Signature;
+         Self.Total_Length := Arg.String_Value'Length + 1;
+      end if;
+   end Set_Driver;
 
    -------------------------------
    -- Set_Response_File_Command --

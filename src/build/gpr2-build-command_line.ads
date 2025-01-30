@@ -16,6 +16,14 @@ package GPR2.Build.Command_Line is
    function Create
      (Working_Dir : Path_Name.Object) return Object;
 
+   procedure Set_Driver
+     (Self : in out Object;
+      Arg   : String);
+
+   procedure Set_Driver
+     (Self : in out Object;
+      Arg  : Path_Name.Object);
+
    procedure Add_Argument
      (Self         : in out Object;
       Arg          : String;
