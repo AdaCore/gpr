@@ -11,5 +11,6 @@ Ok: main.map
 Ok: main2.map
 $ gpr2build -q prj3.gpr --create-map-file=linker_map.map
 error: map file name is specified while there are multiple mains
+gprbuild: processing failed
 $ gpr2build -q prj3.gpr main2.adb --create-map-file=linker_map.map
 Ok: linker_map.map

@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2024, AdaCore
+--  Copyright (C) 2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -360,6 +360,7 @@ package body GPR2.Build.Actions_Population is
       Has_Error   : Boolean;
       Has_SAL     : Boolean := False;
       Closure     : GPR2.Project.View.Set.Object;
+      use type Ada.Containers.Count_Type;
 
    begin
       Tree_Db.Set_Build_Options (Options);
@@ -373,6 +374,52 @@ package body GPR2.Build.Actions_Population is
 
       if Has_Error then
          return False;
+      end if;
+
+      --  Check if we need to generate the mapping file for mains, and perform
+      --  verifications that all parameters are correct in the given context
+
+      if Options.Create_Map_File then
+         declare
+            Attr : constant GPR2.Project.Attribute.Object :=
+                     Tree.Configuration.Corresponding_View.Attribute
+                       (PRA.Linker.Map_File_Option);
+            Multiple_Mains : Boolean := False;
+         begin
+            --  Check if there's support from the linker, and then check that
+            --  we have a main to link
+
+            if not Attr.Is_Defined or else Attr.Values.Is_Empty then
+               pragma Annotate (Xcov, Exempt_On, "defensive code");
+               Tree_Db.Reporter.Report
+                 ("error: selected linker does not allow creating a map file",
+                  To_Stderr => True,
+                  Level     => GPR2.Message.Important);
+               return False;
+               pragma Annotate (Xcov, Exempt_Off);
+
+            elsif Options.Mapping_File_Name /= Null_Unbounded_String then
+               if Mains.Length > 1 then
+                  Multiple_Mains := True;
+               elsif Mains.Length = 0 then
+                  for V of Tree.Namespace_Root_Projects loop
+                     if V.Has_Mains and then V.Mains.Length > 1 then
+                        Multiple_Mains := True;
+                     end if;
+                  end loop;
+               end if;
+
+               if Multiple_Mains then
+                  Tree_Db.Reporter.Report
+                    ("error: map file name is specified while there are " &
+                       "multiple mains",
+                     To_Stderr => True,
+                     Level     => GPR2.Message.Important);
+
+                  return False;
+               end if;
+            end if;
+         end;
       end if;
 
       for V of Tree.Namespace_Root_Projects loop
@@ -442,10 +489,6 @@ package body GPR2.Build.Actions_Population is
                --------------------------
                --  Handle general case --
                --------------------------
-
-               if not Result then
-                  return False;
-               end if;
 
                case V.Kind is
                   when K_Standard =>
@@ -781,40 +824,6 @@ package body GPR2.Build.Actions_Population is
                  "mains.",
                Source_Reference.Create (View.Path_Name.Value, 0, 0)));
          return False;
-      end if;
-
-      --  Check if we need to generate the mapping file for mains, and perform
-      --  verifications that all parameters are correct in the given context
-
-      if Options.Create_Map_File then
-         declare
-            Attr : constant GPR2.Project.Attribute.Object :=
-                     View.Attribute
-                       (PRA.Linker.Map_File_Option);
-         begin
-            --  Check if there's support from the linker, and then check that
-            --  we have a main to link
-
-            if not Attr.Is_Defined then
-               pragma Annotate (Xcov, Exempt_On, "defensive code");
-               Tree_Db.Reporter.Report
-                 ("error: selected linker does not allow creating a map file",
-                  To_Stderr => True,
-                  Level     => GPR2.Message.Important);
-               return False;
-               pragma Annotate (Xcov, Exempt_Off);
-
-            elsif Options.Mapping_File_Name /= Null_Unbounded_String
-              and then Actual_Mains.Length > 1
-            then
-               Tree_Db.Reporter.Report
-                 ("error: map file name is specified while there are " &
-                    "multiple mains",
-                  To_Stderr => True,
-                  Level     => GPR2.Message.Important);
-
-            end if;
-         end;
       end if;
 
       declare
