@@ -372,12 +372,14 @@ package body GPR2.Build.Actions.Link is
          Signature.Add_Artifact (Obj);
       end loop;
 
-      if not Self.Is_Library then
-         --  ??? TODO dynamic libraries also need their library dependencies
-         for Lib of Self.Library_Dependencies loop
-            Signature.Add_Artifact (Object'Class (Self).Output);
-         end loop;
-      end if;
+      for Lib of Self.Library_Dependencies loop
+         declare
+            Link : constant Object'Class :=
+                     Object'Class (Self.Tree.Action (Lib));
+         begin
+            Signature.Add_Artifact (Link.Output);
+         end;
+      end loop;
 
       Signature.Add_Artifact (Self.Output);
    end Compute_Signature;
