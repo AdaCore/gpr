@@ -85,13 +85,30 @@ package body GPR2.Build.Actions.Ada_Bind is
 
          if Is_List then
             for Val of Attr.Values loop
-               if Val.Text'Length > 0
-                 and then not Starts_With (Val.Text, Gnatbind_Path_Equal)
-                 and then not Starts_With (Val.Text, Gnatbind_Prefix_Equal)
-                 and then not Starts_With (Val.Text, Ada_Binder_Equal)
+               if Val.Text'Length = 0
+                 or else Starts_With (Val.Text, Gnatbind_Path_Equal)
+                 or else Starts_With (Val.Text, Gnatbind_Prefix_Equal)
+                 or else Starts_With (Val.Text, Ada_Binder_Equal)
                  --  Ignore -C, as the generated sources are always in Ada
-                 and then Val.Text /= "-C"
+                 or else Val.Text = "-C"
                then
+                  --  Ignore
+                  null;
+
+               elsif Starts_With (Val.Text, "-A=") then
+                  --  Ensure the path is absolute
+                  declare
+                     Path : constant Path_Name.Object :=
+                              Path_Name.Create_File
+                                (Filename_Type
+                                   (Val.Text
+                                      (Val.Text'First + 3 .. Val.Text'Last)),
+                                 Self.Ctxt.Dir_Name.Value);
+                  begin
+                     Cmd_Line.Add_Argument
+                       ("-A=" & Path.String_Value, In_Signature);
+                  end;
+               else
                   Cmd_Line.Add_Argument (Val.Text, In_Signature);
                end if;
             end loop;
