@@ -595,12 +595,22 @@ package body GPR2.Build.Actions.Compile is
       Add_Attr (PRA.Compiler.Trailing_Required_Switches, Lang_Idx, True, True);
 
       declare
+         Attr  : constant Project.Attribute.Object :=
+                   Self.View.Attribute
+                     (PRA.Compiler.Source_File_Switches, Lang_Idx);
          Index : constant Unit_Index := Object'Class (Self).Src_Index;
          Idx   : constant String :=
                    (if Index = No_Index then ""
                     else Index'Image);
       begin
-         Cmd_Line.Add_Argument (Self.Src.Path_Name, True);
+         if Attr.Is_Defined then
+            Add_Options_With_Arg
+              (Attr,
+               Self.Src.Path_Name.String_Value,
+               True);
+         else
+            Cmd_Line.Add_Argument (Self.Src.Path_Name, True);
+         end if;
 
          if Index /= No_Index then
             declare
