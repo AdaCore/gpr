@@ -14,6 +14,7 @@ with GNATCOLL.Refcount;
 
 with GPR2.Containers;
 with GPR2.Log;
+with GPR2.Path_Name;
 with GPR2.Project.View.Set;
 
 with GPR2.Build.Compilation_Unit;
@@ -252,8 +253,13 @@ private package GPR2.Build.View_Tables is
      with Inline;
 
    function Visible_Source
-     (Data     : View_Data_Ref;
-      Basename : Simple_Name) return Build.Source.Object;
+     (Data      : View_Data_Ref;
+      Basename  : Simple_Name;
+      Ambiguous : out Boolean) return Build.Source.Object;
+
+   function Visible_Source
+     (Data : View_Data_Ref;
+      Path : GPR2.Path_Name.Object) return Build.Source.Object;
 
    function Get_Data
      (Db   : access GPR2.Build.Tree_Db.Object;

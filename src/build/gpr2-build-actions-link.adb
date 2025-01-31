@@ -350,7 +350,7 @@ package body GPR2.Build.Actions.Link is
             Status := Add_Attr
               (PRA.Linker.Default_Switches,
                PAI.Create
-                 (Self.View.Source (Self.Main_Src.Path.Simple_Name).Language),
+                 (Self.View.Visible_Source (Self.Main_Src.Path).Language),
                True,
                True);
          end if;

@@ -231,20 +231,28 @@ package body GPR2.Build.Actions_Population is
       use Compilation_Unit;
       use type GPR2.Path_Name.Object;
 
-      Src     : GPR2.Build.Source.Object;
-      Tree_Db : constant GPR2.Build.Tree_Db.Object_Access :=
-                  View.Tree.Artifacts_Database;
-      Res     : Unit_Location_Vector;
-      SN      : constant Simple_Name :=
-                  Path_Name.Simple_Name (Filename_Type (Basename));
+      Src       : GPR2.Build.Source.Object;
+      Tree_Db   : constant GPR2.Build.Tree_Db.Object_Access :=
+                    View.Tree.Artifacts_Database;
+      Res       : Unit_Location_Vector;
+      SN        : constant Simple_Name :=
+                    Path_Name.Simple_Name (Filename_Type (Basename));
+      Full      : Path_Name.Object;
+      Ambiguous : Boolean := False;
 
    begin
       Error_Reported := False;
 
-      if Options.Unique_Compilation
+      if Filename_Optional (SN) /= Filename_Optional (Basename) then
+         --  The parameter is not a simple name, so check for a relative
+         --  path.
+         Full := Path_Name.Create_File (Filename_Type (Basename));
+         Src := View.Visible_Source (Full);
+
+      elsif Options.Unique_Compilation
         or else Options.Unique_Compilation_Recursive
       then
-         Src := View.Visible_Source (SN);
+         Src := View.Visible_Source (SN, Ambiguous);
       else
          Src := View.Source (SN);
       end if;
@@ -252,7 +260,7 @@ package body GPR2.Build.Actions_Population is
       if not Src.Is_Defined then
          for Lang of View.Language_Ids loop
             Src := View.Visible_Source
-              (View.Suffixed_Simple_Name (String (SN), Lang));
+              (View.Suffixed_Simple_Name (String (SN), Lang), Ambiguous);
 
             exit when Src.Is_Defined;
          end loop;
@@ -278,6 +286,18 @@ package body GPR2.Build.Actions_Population is
                return Compilation_Unit.Empty_Vector;
             end if;
          end;
+      end if;
+
+      if Ambiguous then
+         Tree_Db.Reporter.Report
+           (Message.Create
+              (Message.Error,
+               "multiple sources were found for: """ &
+                 Basename & '"',
+               Source_Reference.Create (View.Path_Name.Value, 0, 0)));
+         Error_Reported := True;
+
+         return Compilation_Unit.Empty_Vector;
       end if;
 
       if Src.Owning_View.Is_Library
@@ -453,7 +473,7 @@ package body GPR2.Build.Actions_Population is
                   --  Only compile the given sources
 
                   for M of Mains loop
-                     Src := V.Visible_Source (M.Source.Simple_Name);
+                     Src := V.Visible_Source (M.Source);
 
                      --  Src may not be part of the current subtree
 
@@ -862,11 +882,10 @@ package body GPR2.Build.Actions_Population is
          --  Process the mains one by one
 
          for Main of Actual_Mains loop
-            Source := Main.View.Source (Main.Source.Simple_Name);
+            Source := Main.View.Visible_Source (Main.Source);
 
             Link (Idx).Initialize_Executable
-              (GPR2.Build.Artifacts.Source.Create
-                 (Main.View, Main.Source.Simple_Name, Main.Index),
+              (GPR2.Build.Artifacts.Source.Create (Source, Main.Index),
                Main.View,
                -Options.Output_File);
 

@@ -15,7 +15,6 @@ with GPR2.Build.Unit_Info;
 with GPR2.Project.Attribute;
 with GPR2.Message;
 with GPR2.Source_Reference.Value;
-with GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Tree_Internal;
 with GPR2.View_Internal;
@@ -1336,12 +1335,19 @@ package body GPR2.Build.View_Tables is
    --------------------
 
    function Visible_Source
-     (Data     : View_Data_Ref;
-      Basename : Simple_Name) return Build.Source.Object
+     (Data      : View_Data_Ref;
+      Basename  : Simple_Name;
+      Ambiguous : out Boolean) return Build.Source.Object
    is
-      C   : Basename_Source_Maps.Cursor :=
-              Data.Basenames.Find (Basename);
+      C          : Basename_Source_Maps.Cursor :=
+                     Data.Basenames.Find (Basename);
+      Candidate  : Build.Source.Object;
+
    begin
+      --  First set the out value
+
+      Ambiguous := False;
+
       --  Look for the source in the view's closure (withed or limited withed
       --  views)
 
@@ -1349,7 +1355,7 @@ package body GPR2.Build.View_Tables is
          return Source (Data, C);
       end if;
 
-      for V of Data.View.Closure (False, True, True) loop
+      for V of Data.View.Closure (False, False, True) loop
          if V.Kind in With_View_Db then
             declare
                V_Data : View_Data_Ref renames Get_Data (Data.Tree_Db, V);
@@ -1357,7 +1363,47 @@ package body GPR2.Build.View_Tables is
                C := V_Data.Basenames.Find (Basename);
 
                if Basename_Source_Maps.Has_Element (C) then
-                  return Source (V_Data, C);
+                  if Candidate.Is_Defined then
+                     Ambiguous := True;
+
+                     return Candidate;
+
+                  else
+                     Candidate := Source (V_Data, C);
+                  end if;
+               end if;
+            end;
+         end if;
+      end loop;
+
+      return Candidate;
+   end Visible_Source;
+
+   function Visible_Source
+     (Data : View_Data_Ref;
+      Path : Path_Name.Object) return Build.Source.Object
+   is
+      C      : Filename_Source_Maps.Cursor := Data.Sources.Find (Path.Value);
+      Result : Build.Source.Object;
+   begin
+      if Filename_Source_Maps.Has_Element (C) then
+         return Source (Data, Filename_Source_Maps.Element (C));
+      end if;
+
+      for V of Data.View.Closure (False, False, True) loop
+         if V.Kind in With_View_Db then
+            declare
+               V_Data    : View_Data_Ref renames Get_Data (Data.Tree_Db, V);
+            begin
+               C := V_Data.Sources.Find (Path.Value);
+
+               if Filename_Source_Maps.Has_Element (C) then
+                  --  Ensure it's locally visible
+                  Result := Source (V_Data, Filename_Source_Maps.Element (C));
+
+                  if Result.Is_Visible then
+                     return Result;
+                  end if;
                end if;
             end;
          end if;
@@ -1365,4 +1411,5 @@ package body GPR2.Build.View_Tables is
 
       return Build.Source.Undefined;
    end Visible_Source;
+
 end GPR2.Build.View_Tables;

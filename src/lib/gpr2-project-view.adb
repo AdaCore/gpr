@@ -1041,9 +1041,10 @@ package body GPR2.Project.View is
      (Self     : Object;
       Messages : in out Log.Object)
    is
-      Attr  : Project.Attribute.Object;
-      Src   : GPR2.Build.Source.Object;
-      Found : Boolean;
+      Attr                 : Project.Attribute.Object;
+      Src                  : GPR2.Build.Source.Object;
+      Found                : Boolean;
+      Has_Ambiguous_Result : Boolean := False;
 
    begin
       Attr := Self.Attribute (PRA.Main);
@@ -1057,26 +1058,39 @@ package body GPR2.Project.View is
 
          Lang_Loop : for Lang of Self.Language_Ids loop
             declare
-               Main : constant Simple_Name :=
-                        Suffixed_Simple_Name (Self, Value.Text, Lang);
-               Db   : constant GPR2.Build.View_Db.Object := Self.View_Db;
+               Main      : constant Simple_Name :=
+                             Suffixed_Simple_Name (Self, Value.Text, Lang);
+               Db        : constant GPR2.Build.View_Db.Object := Self.View_Db;
+               Ambiguous : Boolean;
             begin
-               Src := Db.Visible_Source (Main);
+               Src := Db.Visible_Source (Main, Ambiguous);
 
-               if Src.Is_Defined then
+               if Src.Is_Defined and then not Ambiguous then
                   Found := True;
                   exit Lang_Loop;
                end if;
+
+               Has_Ambiguous_Result := Has_Ambiguous_Result or Ambiguous;
             end;
          end loop Lang_Loop;
 
          if not Found then
-            Messages.Append
-              (Message.Create
-                 (Level   => Message.Error,
-                  Message => String (Value.Text) &
-                    " is not a source of project " & String (Self.Name),
-                  Sloc    => Value));
+            if Has_Ambiguous_Result then
+               Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Message => "multiple sources were found for " &
+                       String (Value.Text) &
+                       " from project " & String (Self.Name),
+                     Sloc    => Value));
+            else
+               Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Message => String (Value.Text) &
+                       " is not a source of project " & String (Self.Name),
+                     Sloc    => Value));
+            end if;
          end if;
       end loop;
    end Check_Mains;
@@ -1145,7 +1159,9 @@ package body GPR2.Project.View is
          V := Todo.First_Element;
          Todo.Delete_First;
 
-         Closure_Views.Append (V);
+         if Include_Extended or else not V.Is_Extended then
+            Closure_Views.Append (V);
+         end if;
 
          for Imp of V.Imports loop
             Add (Imp);
@@ -1155,7 +1171,10 @@ package body GPR2.Project.View is
             Add (Imp);
          end loop;
 
-         if Include_Extended and then V.Is_Extending then
+         if V.Is_Extending then
+            --  Even when Included_Extended is set, we need to walk through
+            --  them to retrieve their imports.
+
             for Ext of V.Extended loop
                Add (Ext);
             end loop;
@@ -1387,9 +1406,11 @@ package body GPR2.Project.View is
    ---------------
 
    function Has_Mains (Self : Object) return Boolean is
-      Attr  : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
-      Src   : GPR2.Build.Source.Object;
-      Db    : GPR2.Build.View_Db.Object;
+      Attr      : constant Project.Attribute.Object :=
+                    Self.Attribute (PRA.Main);
+      Src       : GPR2.Build.Source.Object;
+      Db        : GPR2.Build.View_Db.Object;
+      Ambiguous : Boolean := False;
 
    begin
       if Self.Kind in K_Standard
@@ -1406,10 +1427,9 @@ package body GPR2.Project.View is
                        Suffixed_Simple_Name
                          (Self, Value.Text, Lang);
                   begin
-                     Src := Db.Visible_Source (Main);
+                     Src := Db.Visible_Source (Main, Ambiguous);
 
-                     if Src.Is_Defined then
-                        --  At least one valid
+                     if Src.Is_Defined and then not Ambiguous then
                         return True;
                      end if;
                   end;
@@ -1708,7 +1728,7 @@ package body GPR2.Project.View is
                BN     : constant Filename_Type :=
                           Containers.Source_Path_To_Sloc.Key (C);
                Src    : constant GPR2.Build.Source.Object :=
-                          Self.Visible_Source (BN);
+                          Self.Source (BN);
 
             begin
                if Src.Has_Units then
@@ -2082,10 +2102,11 @@ package body GPR2.Project.View is
      (Self       : Object;
       Executable : Simple_Name) return Build.Compilation_Unit.Unit_Location
    is
-      Src    : GPR2.Build.Source.Object;
-      Db     : constant GPR2.Build.View_Db.Object := Self.View_Db;
-      Exc_BN : constant Simple_Name :=
-                 Simple_Name (Remove_Body_Suffix (Self, Executable));
+      Src       : GPR2.Build.Source.Object;
+      Db        : constant GPR2.Build.View_Db.Object := Self.View_Db;
+      Exc_BN    : constant Simple_Name :=
+                    Simple_Name (Remove_Body_Suffix (Self, Executable));
+      Ambiguous : Boolean;
 
    begin
       --  Check executable attribute
@@ -2096,9 +2117,10 @@ package body GPR2.Project.View is
          then
             for Lang of Self.Language_Ids loop
                Src := Db.Visible_Source
-                        (Suffixed_Simple_Name (Self, Attr.Index.Value, Lang));
+                        (Suffixed_Simple_Name (Self, Attr.Index.Value, Lang),
+                         Ambiguous);
 
-               if Src.Is_Defined then
+               if Src.Is_Defined and then not Ambiguous then
                   return
                     (Src.Owning_View,
                      Src.Path_Name,
@@ -2120,9 +2142,9 @@ package body GPR2.Project.View is
             if Exec = Executable or else BN = Executable then
                for Lang of Self.Language_Ids loop
                   Src := Db.Visible_Source
-                           (Suffixed_Simple_Name (Self, Value.Text, Lang));
+                    (Suffixed_Simple_Name (Self, Value.Text, Lang), Ambiguous);
 
-                  if Src.Is_Defined then
+                  if Src.Is_Defined and then not Ambiguous then
                      return (Src.Owning_View,
                              Src.Path_Name,
                              Value.At_Pos);
@@ -2143,9 +2165,11 @@ package body GPR2.Project.View is
      (Self : Object)
       return GPR2.Build.Compilation_Unit.Unit_Location_Vector
    is
-      Attr : constant Project.Attribute.Object := Self.Attribute (PRA.Main);
-      Db   : constant Build.View_Db.Object := Self.View_Db;
-      Src  : GPR2.Build.Source.Object;
+      Attr      : constant Project.Attribute.Object :=
+                    Self.Attribute (PRA.Main);
+      Db        : constant Build.View_Db.Object := Self.View_Db;
+      Src       : GPR2.Build.Source.Object;
+      Ambiguous : Boolean;
 
    begin
       return Set : GPR2.Build.Compilation_Unit.Unit_Location_Vector do
@@ -2154,9 +2178,10 @@ package body GPR2.Project.View is
                Lang_Loop :
                for Lang of Self.Language_Ids loop
                   Src := Db.Visible_Source
-                           (Suffixed_Simple_Name (Self, Value.Text, Lang));
+                    (Suffixed_Simple_Name (Self, Value.Text, Lang),
+                     Ambiguous);
 
-                  if Src.Is_Defined then
+                  if Src.Is_Defined and then not Ambiguous then
                      Set.Append
                        (Build.Compilation_Unit.Unit_Location'
                           (Src.Owning_View,
@@ -2339,19 +2364,21 @@ package body GPR2.Project.View is
    function Remove_Body_Suffix
      (Self : Object; Name : Simple_Name) return Value_Not_Empty
    is
-      Last     : Positive := Name'First;
-      Db       : constant GPR2.Build.View_Db.Object := Self.View_Db;
-      Src      : constant GPR2.Build.Source.Object := Db.Visible_Source (Name);
-      Lang     : constant Language_Id :=
-                   (if Src.Is_Defined
-                    then Src.Language
-                    else No_Language);
-      Suffix   : constant Filename_Optional :=
-                   (if Lang /= No_Language
-                    and then Src.Owning_View.Has_Body_Suffix (Lang)
-                    then Filename_Optional
-                           (Src.Owning_View.Body_Suffix (Lang).Value.Text)
-                    else "");
+      Last      : Positive := Name'First;
+      Db        : constant GPR2.Build.View_Db.Object := Self.View_Db;
+      Ambiguous : Boolean;
+      Src       : constant GPR2.Build.Source.Object :=
+                    Db.Visible_Source (Name, Ambiguous);
+      Lang      : constant Language_Id :=
+                    (if Src.Is_Defined
+                     then Src.Language
+                     else No_Language);
+      Suffix    : constant Filename_Optional :=
+                    (if Lang /= No_Language
+                     and then Src.Owning_View.Has_Body_Suffix (Lang)
+                     then Filename_Optional
+                       (Src.Owning_View.Body_Suffix (Lang).Value.Text)
+                     else "");
    begin
       if Suffix'Length > 0
         and then Name'Length > Suffix'Length
@@ -3125,9 +3152,27 @@ package body GPR2.Project.View is
    --------------------
 
    function Visible_Source
-     (Self : Object; Filename : GPR2.Simple_Name)
+     (Self      : Object;
+      Filename  : GPR2.Simple_Name;
+      Ambiguous : out Boolean)
       return Build.Source.Object
-   is (Self.View_Db.Visible_Source (Filename));
+   is (Self.View_Db.Visible_Source (Filename, Ambiguous));
+
+   function Visible_Source
+     (Self : Object;
+      Path : GPR2.Path_Name.Object)
+      return Build.Source.Object
+   is (Self.View_Db.Visible_Source (Path));
+
+   function Visible_Source
+     (Self      : Object;
+      Filename  : GPR2.Simple_Name)
+      return Build.Source.Object
+   is
+      Ambiguous : Boolean;
+   begin
+      return Self.Visible_Source (Filename, Ambiguous);
+   end Visible_Source;
 
    ---------------------
    -- Visible_Sources --
