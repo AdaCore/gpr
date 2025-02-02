@@ -516,6 +516,13 @@ begin
       end loop;
    end if;
 
+   if Opt.Dash_A_Option then
+      Opt.Console_Reporter.Report
+        ("warning: switch -a is ignored and no additional source is compiled",
+         To_Stderr => True,
+         Level     => GPR2.Message.Important);
+   end if;
+
    if Opt.No_Split_Units then
       declare
          use type GPR2.Project.View.Object;

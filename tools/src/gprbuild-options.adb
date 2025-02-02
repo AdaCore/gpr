@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2022-2024, AdaCore                     --
+--                     Copyright (C) 2022-2025, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -116,6 +116,11 @@ package body GPRbuild.Options is
                  In_Switch_Attr => False,
                  Delimiter      => Equal,
                  Parameter      => "<lang1>,<lang2>,..."));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name   => "-a",
+                 Help   => "Runtime compilation mode",
+                 Hidden => True));
       Parser.Add_Argument
         (Build_Group,
          Create (Name => "-b",
@@ -608,6 +613,12 @@ package body GPRbuild.Options is
          end if;
 
          Add_Ada_Compiler_Option (String (Arg) & Param);
+
+      elsif Arg = "-a" then
+         --  Ignore but tell the customer that this switch doesn't work:
+         --  set the option, it will then be reported by gprbuild-main
+
+         Result.Dash_A_Option := True;
 
       elsif Arg = "-C"
         or else Arg = "-eS"
