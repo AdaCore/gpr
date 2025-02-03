@@ -1011,7 +1011,9 @@ package body GPR2.Build.Actions_Population is
                   CU       : GPR2.Build.Compilation_Unit.Object;
 
                begin
-                  if Attr.Is_Defined then
+                  if Attr.Is_Defined
+                    and then not Attr.Values.Is_Empty
+                  then
                      if not Bind (Idx).Is_Defined then
                         Bind (Idx).Initialize
                           (Source.Path_Name.Base_Filename,
