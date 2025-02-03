@@ -138,9 +138,8 @@ package body GPRbuild.Options is
       --  we keep backwards compatibility here.
       Parser.Add_Argument
         (Build_Group,
-         Create (Name           => "-d",
-                 Help           => "Display compilation progress",
-                 In_Switch_Attr => False));
+         Create (Name => "-d",
+                 Help => "Display compilation progress"));
       Parser.Add_Argument
         (Build_Group,
          Create (Name      => "-eI",
@@ -503,7 +502,7 @@ package body GPRbuild.Options is
          Result.Build_Options.Compile_Phase_Mandated := True;
 
       elsif Arg = "-d" then
-         Result.Display_Progress := True;
+         Result.PM_Options.Show_Progress := True;
 
       elsif Arg = "-eI" then
          begin

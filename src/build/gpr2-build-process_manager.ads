@@ -25,6 +25,7 @@ package GPR2.Build.Process_Manager is
       Force           : Boolean := False;
       Stop_On_Fail    : Boolean := True;
       Keep_Temp_Files : Boolean := False;
+      Show_Progress   : Boolean := False;
    end record;
 
    type Collect_Status is

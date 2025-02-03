@@ -35,7 +35,6 @@ package GPRbuild.Options is
       No_Object_Check          : Boolean := False;
       No_Split_Units           : Boolean := False;
       Restricted_To_Languages  : GPR2.Containers.Language_Set;
-      Display_Progress         : Boolean := False;
 
       Build_If_Switch_Changes  : Boolean := False;
       Create_Missing_Dirs      : Boolean := False;

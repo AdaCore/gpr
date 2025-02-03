@@ -267,6 +267,7 @@ package body GPR2.Build.Process_Manager is
       --  basis if needed.
 
       Stdout, Stderr   : Unbounded_String;
+      Executed         : Natural := 0;
 
    begin
       Self.Tree_Db      := Tree_Db;
@@ -325,6 +326,8 @@ package body GPR2.Build.Process_Manager is
                   end if;
 
                else
+                  Executed := Executed + 1;
+
                   if Proc_Handler.Status = Finished then
                      pragma Annotate (Xcov, Exempt_On, "Defensive code");
                      Self.Traces.Trace
@@ -435,6 +438,25 @@ package body GPR2.Build.Process_Manager is
 
                --  Push back the potentially modified action to the tree_db
                Tree_Db.Action_Id_To_Reference (UID) := Act;
+
+               --  Report the progress if requested
+               Executed := Executed + 1;
+
+               if Options.Show_Progress then
+                  declare
+                     Percent : constant String :=
+                                 Natural'Image
+                                   ((Executed * 100) /
+                                      Natural (Context.Nodes.Length));
+                  begin
+                     Tree_Db.Reporter.Report
+                       ("completed" & Executed'Image & " out of" &
+                          Context.Nodes.Length'Image & " (" &
+                          Percent (Percent'First + 1 .. Percent'Last) & "%)",
+                        Level => GPR2.Message.Important);
+                  end;
+               end if;
+
             end;
 
             if Job_Status = Continue_Execution then
