@@ -138,6 +138,14 @@ package body GPRbuild.Options is
       --  we keep backwards compatibility here.
       Parser.Add_Argument
         (Build_Group,
+         Create (Name   => "--complete-output",
+                 Help   => "for compatibility with older gprbuild",
+                 Hidden => True));
+      --  complete-output (e.g. replaying warnings upon successive compilations
+      --  even when no action is performed) is now the default, so this
+      --  switch is ignored
+      Parser.Add_Argument
+        (Build_Group,
          Create (Name => "-d",
                  Help => "Display compilation progress"));
       Parser.Add_Argument
@@ -628,6 +636,7 @@ package body GPRbuild.Options is
         or else Arg = "-m2"
         or else Arg = "-s"
         or else Arg = "-x"
+        or else Arg = "--complete-output"
       then
          --  Ignore, only there for compatibility reason
          null;
