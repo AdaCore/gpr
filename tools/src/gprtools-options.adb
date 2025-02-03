@@ -373,21 +373,19 @@ package body GPRtools.Options is
    is
 
       Loaded : Boolean := False;
-      Tree   : GPR2.Project.Tree.Object := Opt.Tree;
 
    begin
       if not Restricted_To_Languages.Is_Empty then
-         Tree.Restrict_Autoconf_To_Languages (Restricted_To_Languages);
+         Opt.Tree.Restrict_Autoconf_To_Languages (Restricted_To_Languages);
       end if;
 
-      Loaded := Tree.Load
+      Loaded := Opt.Tree.Load
         (Opt,
          With_Runtime             => True,
          Reporter                 => Opt.Console_Reporter,
          Absent_Dir_Error         => Absent_Dir_Error,
          Allow_Implicit_Project   => Opt.Find_Implicit_Project,
          Check_Shared_Libs_Import => Opt.Check_Shared_Libs);
-      Opt.Tree := Tree;
 
       if Handle_Errors and then not Loaded then
          if Opt.Project_File.Is_Defined then

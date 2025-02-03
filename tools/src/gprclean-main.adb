@@ -73,8 +73,6 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
      (View : GPR2.Project.View.Object; Opts : GPRclean.Options.Object);
    --  Removes the empty obj/lib/exec dirs of View
 
-   Project_Tree  : Project.Tree.Object;
-
    -----------------
    -- Delete_File --
    -----------------
@@ -121,7 +119,7 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
       procedure Remove_Dir (Path : GPR2.Path_Name.Object);
 
       Subdirs  : constant Filename_Optional :=
-                   Project_Tree.Subdirs;
+                   Opts.Tree.Subdirs;
 
       ----------------
       -- Remove_Dir --
@@ -201,17 +199,18 @@ begin
       Handle_Program_Termination (Message => "");
    end if;
 
-   Project_Tree := Opt.Tree;
-
    --  Check gprclean's Switch attribute from loaded project
 
    declare
       Attr : constant GPR2.Project.Attribute.Object :=
-               Project_Tree.Root_Project.Attribute (PRA.Clean.Switches);
+               Opt.Tree.Root_Project.Attribute (PRA.Clean.Switches);
+      Tree : constant GPR2.Project.Tree.Object := Opt.Tree;
    begin
       if Attr.Is_Defined then
          Opt := (GPRtools.Options.Empty_Options
-                     with others => <>);
+                 with others => <>);
+         Opt.Tree := Tree;
+
          GPRclean.Options.Parse_Attribute_Switches
            (Parser, Opt, Attr.Values);
 
@@ -224,51 +223,53 @@ begin
          --  no switch modifying the configuration of the project or the
          --  way we load the project tree is allowed in the Switches
          --  attribute.
+
+         Opt.Tree.Set_Reporter (Opt.Console_Reporter);
       end if;
    end;
 
-   if Project_Tree.Has_Configuration
-     and then Project_Tree.Configuration.Log_Messages.Has_Element
+   if Opt.Tree.Has_Configuration
+     and then Opt.Tree.Configuration.Log_Messages.Has_Element
        (Warning  => True,
         Hint     => False,
         Error    => False)
    then
-      Project_Tree.Log_Messages.Append
+      Opt.Tree.Log_Messages.Append
         (GPR2.Message.Create
            (GPR2.Message.Warning,
             "Cleaning may be incomplete, as there were problems during"
             & " auto-configuration",
             Source_Reference.Create
-              (Project_Tree.Root_Project.Path_Name.Value, 0, 0)));
+              (Opt.Tree.Root_Project.Path_Name.Value, 0, 0)));
    end if;
 
-   if Project_Tree.Has_Configuration then
-      Conf := Project_Tree.Configuration.Corresponding_View;
+   if Opt.Tree.Has_Configuration then
+      Conf := Opt.Tree.Configuration.Corresponding_View;
    end if;
 
-   Project_Tree.Update_Sources;
+   Opt.Tree.Update_Sources;
 
    --  Create actions that will be used to iterate and obtain artifacts
    --  for removal.
 
    if not GPR2.Build.Actions_Population.Populate_Actions
-     (Project_Tree, Opt.Build_Options)
+     (Opt.Tree, Opt.Build_Options)
    then
       return To_Exit_Status (E_Abort);
    end if;
 
    --  Iterate on all actions, and clean their output artifacts
 
-   for Action of Project_Tree.Artifacts_Database.All_Actions loop
+   for Action of Opt.Tree.Artifacts_Database.All_Actions loop
       if not Action.View.Is_Externally_Built
         and then (Opt.All_Projects
-                  or else Action.View = Project_Tree.Root_Project)
+                  or else Action.View = Opt.Tree.Root_Project)
         and then (not Opt.Compil_Only
                   or else Action in GPR2.Build.Actions.Compile.Object'Class
                   or else Action in GPR2.Build.Actions.Post_Bind.Object'Class)
       then
          for Artifact of
-           Project_Tree.Artifacts_Database.Outputs (Action.UID)
+           Opt.Tree.Artifacts_Database.Outputs (Action.UID)
          loop
             if Artifact in GPR2.Build.Artifacts.Files.Object'Class then
                Artifact_Path :=
@@ -335,14 +336,14 @@ begin
 
    if Opt.Remove_Empty_Dirs then
       if Opt.All_Projects then
-         for V of Project_Tree.Ordered_Views loop
+         for V of Opt.Tree.Ordered_Views loop
             if not V.Is_Externally_Built then
-               Remove_Artifacts_Dirs (Project_Tree.Root_Project, Opt);
+               Remove_Artifacts_Dirs (Opt.Tree.Root_Project, Opt);
             end if;
          end loop;
 
       else
-         Remove_Artifacts_Dirs (Project_Tree.Root_Project, Opt);
+         Remove_Artifacts_Dirs (Opt.Tree.Root_Project, Opt);
       end if;
    end if;
 

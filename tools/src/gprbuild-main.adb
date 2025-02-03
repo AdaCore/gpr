@@ -87,8 +87,6 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
       return Command_Line.Exit_Status;
 
    Opt  : Options.Object;
-   Tree : Project.Tree.Object;
-
 
    ------------------------
    -- Ensure_Directories --
@@ -231,7 +229,7 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
      (PM : in out GPR2.Build.Process_Manager.Object'Class)
       return Command_Line.Exit_Status is
    begin
-      if not Tree.Artifacts_Database.Execute
+      if not Opt.Tree.Artifacts_Database.Execute
         (PM, Opt.PM_Options)
       then
          return To_Exit_Status (E_Errors);
@@ -334,9 +332,7 @@ begin
       Handle_Program_Termination (Message => "");
    end if;
 
-   Tree := Opt.Tree;
-
-   if not Tree.Update_Sources (Option => Sources_Units_Artifacts) then
+   if not Opt.Tree.Update_Sources (Option => Sources_Units_Artifacts) then
       Handle_Program_Termination
         (Force_Exit => True,
          Exit_Cause => E_Tool,
@@ -344,7 +340,7 @@ begin
       return To_Exit_Status (E_Fatal);
    end if;
 
-   if not Ensure_Directories (Tree) then
+   if not Ensure_Directories (Opt.Tree) then
       Handle_Program_Termination (Force_Exit => False);
 
       return To_Exit_Status (E_Abort);
@@ -352,8 +348,8 @@ begin
 
    --  Check if we have a Builder'Switches attribute in the root project
 
-   if Tree.Root_Project.Has_Package (PRP.Builder)
-     and then not Tree.Root_Project.Attributes
+   if Opt.Tree.Root_Project.Has_Package (PRP.Builder)
+     and then not Opt.Tree.Root_Project.Attributes
        (PRA.Builder.Switches).Is_Empty
    then
       declare
@@ -361,9 +357,9 @@ begin
          Mains : constant Compilation_Unit.Unit_Location_Vector :=
                    (if not Opt.Build_Options.Mains.Is_Empty
                     then Actions_Population.Resolve_Mains
-                      (Tree, Opt.Build_Options, Has_Error)
-                    elsif Tree.Root_Project.Has_Mains
-                    then Tree.Root_Project.Mains
+                      (Opt.Tree, Opt.Build_Options, Has_Error)
+                    elsif Opt.Tree.Root_Project.Has_Mains
+                    then Opt.Tree.Root_Project.Mains
                     else GPR2.Build.Compilation_Unit.Empty_Vector);
       begin
          if Has_Error then
@@ -382,7 +378,7 @@ begin
                Source_Part : constant Compilation_Unit.Unit_Location :=
                                Mains.First_Element;
             begin
-               Sw_Attr := Tree.Root_Project.Attribute
+               Sw_Attr := Opt.Tree.Root_Project.Attribute
                  (Name   => PRA.Builder.Switches,
                   Index  => Project.Attribute_Index.Create
                     (GPR2.Value_Type (Source_Part.Source.Simple_Name),
@@ -401,7 +397,8 @@ begin
                Src  : GPR2.Build.Source.Object;
             begin
                for Main of Mains loop
-                  Src := Tree.Root_Project.Source (Main.Source.Simple_Name);
+                  Src :=
+                    Opt.Tree.Root_Project.Source (Main.Source.Simple_Name);
 
                   if Src.Is_Defined then
                      if Lang = No_Language then
@@ -421,7 +418,7 @@ begin
                end loop;
 
                if Lang /= No_Language then
-                  Sw_Attr := Tree.Root_Project.Attribute
+                  Sw_Attr := Opt.Tree.Root_Project.Attribute
                     (Name  => PRA.Builder.Switches,
                      Index => Project.Attribute_Index.Create (Lang));
                end if;
@@ -438,10 +435,10 @@ begin
                Driver_Attr : GPR2.Project.Attribute.Object;
                New_Lang    : Language_Id;
             begin
-               for Val of Tree.Root_Project.Languages loop
+               for Val of Opt.Tree.Root_Project.Languages loop
                   New_Lang := +Optional_Name_Type (Val.Text);
 
-                  Driver_Attr := Tree.Root_Project.Attribute
+                  Driver_Attr := Opt.Tree.Root_Project.Attribute
                     (Name  => PRA.Compiler.Driver,
                      Index => Project.Attribute_Index.Create (New_Lang));
 
@@ -456,7 +453,7 @@ begin
                end loop;
 
                if Lang /= No_Language then
-                  Sw_Attr := Tree.Root_Project.Attribute
+                  Sw_Attr := Opt.Tree.Root_Project.Attribute
                     (Name  => PRA.Builder.Switches,
                      Index => Project.Attribute_Index.Create (Lang));
                end if;
@@ -466,7 +463,7 @@ begin
          --  #4 check Switches (others)
 
          if not Sw_Attr.Is_Defined then
-            Sw_Attr := Tree.Root_Project.Attribute
+            Sw_Attr := Opt.Tree.Root_Project.Attribute
               (Name  => PRA.Builder.Switches,
                Index => Project.Attribute_Index.I_Others);
          end if;
@@ -474,7 +471,7 @@ begin
          if not Sw_Attr.Is_Defined
            and then Mains.Length > 1
          then
-            Tree.Reporter.Report
+            Opt.Tree.Reporter.Report
               ("warning: Builder'Switches attribute is ignored as there are" &
                  " several mains");
          end if;
@@ -483,23 +480,33 @@ begin
       --  Finally, if we found a Switches attribute, apply it
 
       if Sw_Attr.Is_Defined then
-         Opt := Options.Object'(GPRtools.Options.Empty_Options
-                                with others => <>);
-         Opt.Tree := Tree;
-         Parser.Get_Opt (From_Pack => PRP.Builder,
-                         Values    => Sw_Attr.Values,
-                         Result    => Opt);
-         Parser.Get_Opt (Opt);
+         declare
+            --  Preserve the Tree object
+            Tree : constant GPR2.Project.Tree.Object := Opt.Tree;
+         begin
+            Opt := Options.Object'(GPRtools.Options.Empty_Options
+                                   with others => <>);
+            Opt.Tree := Tree;
+
+            Parser.Get_Opt (From_Pack => PRP.Builder,
+                            Values    => Sw_Attr.Values,
+                            Result    => Opt);
+            Parser.Get_Opt (Opt);
+
+            --  Manually update the tree reporter in case the verbosity has
+            --  been changed in Opt.
+            Opt.Tree.Set_Reporter (Opt.Console_Reporter);
+         end;
       end if;
    end if;
 
    --  Handle Builder'Global_Compilation_Switches
 
-   if Tree.Root_Project.Has_Package (PRP.Builder)
-     and then not Tree.Root_Project.Attributes
+   if Opt.Tree.Root_Project.Has_Package (PRP.Builder)
+     and then not Opt.Tree.Root_Project.Attributes
        (PRA.Builder.Global_Compilation_Switches).Is_Empty
    then
-      for Attr of Tree.Root_Project.Attributes
+      for Attr of Opt.Tree.Root_Project.Attributes
         (PRA.Builder.Global_Compilation_Switches)
       loop
          declare
@@ -581,7 +588,7 @@ begin
    --  Now populate the Build database's actions
 
    if not GPR2.Build.Actions_Population.Populate_Actions
-     (Tree, Opt.Build_Options)
+     (Opt.Tree, Opt.Build_Options)
    then
       Handle_Program_Termination
         (Force_Exit => True,
@@ -591,7 +598,7 @@ begin
    end if;
 
    if Opt.Json_Summary then
-      Jobs_JSON := Tree.Root_Project.Dir_Name.Compose ("jobs.json");
+      Jobs_JSON := Opt.Tree.Root_Project.Dir_Name.Compose ("jobs.json");
       Process_M_JSON.Set_JSON_File (Jobs_JSON);
 
       return Execute (Process_M_JSON);
