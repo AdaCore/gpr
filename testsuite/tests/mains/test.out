@@ -99,3 +99,9 @@ src/call2.adb
 list of executables:
 ./call2
   src/call2.adb
+Demo18   K_STANDARD
+list of mains:
+src/demo7.adb
+list of executables:
+./demo7
+  src/demo7.adb

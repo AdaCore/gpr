@@ -2885,19 +2885,39 @@ package body GPR2.Project.View is
 
       function Is_An_Exception (Name : String) return Boolean is
       begin
+         for Attr of Self.Attributes (PRA.Naming.Implementation) loop
+            if Attr.Value.Text = Name then
+               return True;
+            end if;
+         end loop;
+
+         for Attr of Self.Attributes (PRA.Naming.Specification) loop
+            if Attr.Value.Text = Name then
+               return True;
+            end if;
+         end loop;
+
          for Lang of Self.Language_Ids loop
             declare
-               Index   : constant Attribute_Index.Object :=
-                           Attribute_Index.Create (Lang);
-               IEs_Def : constant Boolean :=
-                           Self.Attribute
-                             (PRA.Naming.Implementation_Exceptions,
-                              Index).Is_Defined;
+               Index    : constant Attribute_Index.Object :=
+                            Attribute_Index.Create (Lang);
+               IEs_Attr : constant Project.Attribute.Object :=
+                            Self.Attribute
+                              (PRA.Naming.Implementation_Exceptions,
+                               Index);
+               SEs_Attr : constant Project.Attribute.Object :=
+                            Self.Attribute
+                              (PRA.Naming.Specification_Exceptions,
+                               Index);
             begin
-               if IEs_Def then
-                  for Value of Self.Attribute
-                    (PRA.Naming.Implementation_Exceptions, Index).Values
-                  loop
+               if IEs_Attr.Is_Defined then
+                  for Value of IEs_Attr.Values loop
+                     if Name = Value.Text then
+                        return True;
+                     end if;
+                  end loop;
+
+                  for Value of SEs_Attr.Values loop
                      if Name = Value.Text then
                         return True;
                      end if;
