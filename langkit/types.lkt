@@ -1,0 +1,4 @@
+class TypedStringDecl: GprNode {
+    @parse_field type_id: Identifier
+    @parse_field string_literals: ASTList[StringLiteral]
+}

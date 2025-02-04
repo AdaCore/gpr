@@ -1,0 +1,65 @@
+@case_insensitive
+lexer gpr_lexer {
+    val p_string = p"\\\"(\\\"\\\"|[^\\n\\\"])*\\\""
+    val digit = p"[0-9]"
+    val integer = p"({digit}(_?{digit})*)"
+
+    @trivia() Whitespace <- p"[ \\t\\r\\n]+"
+    @with_unparsing_newline @trivia() Comment <- p"--(.?)+"
+
+    @unparsing_spacing(with=alphanumericals)
+    family alphanumericals {
+        Number <- p"{integer}"
+        @symbol() Identifier <- p"[_a-zA-Z][_a-zA-Z0-9]*"
+        @symbol() All <- no_case("all")
+
+        # Ada Keywords
+        @symbol() Abstract <- no_case("abstract")
+        @symbol() At <- no_case("at")
+        @symbol() Case <- no_case("case")
+        @symbol() End <- no_case("end")
+        @symbol() For <- no_case("for")
+        @symbol() Is <- no_case("is")
+        @symbol() Limited <- no_case("limited")
+        @symbol() Null <- no_case("null")
+        @symbol() Others <- no_case("others")
+        @symbol() Package <- no_case("package")
+        @symbol() Pragma <- no_case("pragma")
+        @symbol() Private <- no_case("private")
+        @symbol() Renames <- no_case("renames")
+        @symbol() Type <- no_case("type")
+        @symbol() Use <- no_case("use")
+        @symbol() When <- no_case("when")
+        @symbol() With <- no_case("with")
+    }
+
+    @unparsing_spacing(with=alphanumericals)
+    family alphanumericals {
+        # Gpr Keywords
+        @symbol() Extends <- no_case("extends")
+    }
+
+    # Punctuation
+    @symbol() ParOpen <- "("
+    @symbol() ParClose <- ")"
+    @symbol() Semicolon <- ";"
+    @symbol() Colon <- ":"
+    @symbol() Comma <- ","
+    @symbol() Dot <- "."
+
+    @symbol() Amp <- "&"
+    @symbol() Tick <- "'"
+    @symbol() Pipe <- "|"
+    @symbol() Assign <- ":="
+    @symbol() Arrow <- "=>"
+
+    # Literals
+    String <- p"{p_string}"
+
+    # Hidden framework dependencies???
+    @unparsing_spacing(with=alphanumericals)
+    family alphanumericals {
+        Label
+        @symbol() Char
+    }
+}

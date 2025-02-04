@@ -1,0 +1,55 @@
+@abstract
+class Expr: GprNode {
+}
+
+@abstract
+class SingleTokNode: Expr implements TokenNode {
+}
+
+@repr_name("Id")
+class Identifier: SingleTokNode implements TokenNode {
+}
+
+@repr_name("Str")
+class StringLiteral: SingleTokNode implements TokenNode {
+}
+
+@repr_name("Num")
+class NumLiteral: SingleTokNode implements TokenNode {
+}
+
+class Prefix: Expr {
+    @parse_field prefix: Expr
+    @parse_field suffix: Identifier
+}
+
+class TermList: ASTList[GprNode] {
+}
+
+class Terms: GprNode {
+    @parse_field terms: ASTList[TermList]
+}
+
+class StringLiteralAt: GprNode {
+    @parse_field str_lit: StringLiteral
+    @parse_field @nullable at_lit: NumLiteral
+}
+
+class AttributeReference: GprNode {
+    @parse_field attribute_name: Identifier
+    @parse_field @nullable attribute_index: GprNode
+}
+
+class BuiltinFunctionCall: GprNode {
+    @parse_field function_name: Identifier
+    @parse_field parameters: Terms
+}
+
+class VariableReference: GprNode {
+    @parse_field variable_name: ASTList[Identifier]
+    @parse_field @nullable attribute_ref: AttributeReference
+}
+
+class TypeReference: GprNode {
+    @parse_field var_type_name: ASTList[Identifier]
+}

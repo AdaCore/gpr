@@ -1,0 +1,128 @@
+import tokens
+
+@with_lexer(gpr_lexer)
+@with_unparsers
+grammar gpr_grammar {
+
+    #------#
+    # decl #
+    #------#
+
+    project_qualifier <- or(
+        | ProjectQualifier.Abstract("abstract")
+        | ProjectQualifier.Library(@Identifier("library"))
+        | ProjectQualifier.AggregateLibrary(@Identifier("aggregate")
+        @Identifier("library"))
+        | ProjectQualifier.Aggregate(@Identifier("aggregate"))
+        | ProjectQualifier.Configuration(@Identifier("configuration"))
+        | ProjectQualifier.Standard(@Identifier("standard"))
+    )
+    project_extension <- ProjectExtension("extends"
+    AllQualifier("all") string_literal)
+    project_declaration <- ProjectDeclaration(
+        ?project_qualifier
+        @Identifier("project")
+        static_name
+        ?project_extension
+        "is" declarative_items "end" static_name ";"
+    )
+    project <- Project(context_clauses project_declaration)
+    # ----------------------------------------------- declarative items
+    declarative_items <- list*(declarative_item)
+    declarative_item <- or(
+        | simple_declarative_item
+        | typed_string_decl
+        | package_decl
+    )
+    simple_declarative_items <- list*(simple_declarative_item)
+    simple_declarative_item <- or(
+        | variable_decl
+        | attribute_decl
+        | case_construction
+        | empty_declaration
+    )
+    variable_decl <- VariableDecl(
+        identifier ?pick(":" type_reference) ":=" expression ";"
+    )
+    attribute_decl <- AttributeDecl(
+        "for"
+        identifier
+        ?pick("("
+        associative_array_index ")") "use" expression ";"
+    )
+    associative_array_index <- or(others_designator | string_literal_at)
+    package_decl <- PackageDecl(
+        "package" identifier or(package_renaming | package_spec) ";"
+    )
+    package_renaming <- PackageRenaming("renames" list+(identifier, "."))
+    package_extension <- PackageExtension("extends" list+(identifier, "."))
+    package_spec <- PackageSpec(
+        ?package_extension
+        "is" simple_declarative_items "end" identifier
+    )
+    empty_declaration <- EmptyDecl("null" ";")
+    case_construction <- CaseConstruction(
+        "case"
+        variable_reference "is" list*(case_item) "end" "case" ";"
+    )
+    case_item <- CaseItem(
+        "when"
+        discrete_choice_list
+        "=>"
+        # ??? A.declarative_items
+        simple_declarative_items
+    )
+    others_designator <- OthersDesignator("others")
+    choice <- or(string_literal | others_designator)
+    discrete_choice_list <- Choices+(choice, "|")
+    with_decl <- WithDecl(
+        Limited("limited") "with" list+(string_literal, ",") ";"
+    )
+    context_clauses <- list*(with_decl)
+
+    #-------#
+    # types #
+    #-------#
+
+    typed_string_decl <- TypedStringDecl(
+        "type"
+        identifier "is" "(" list+(string_literal, ",") ")" ";"
+    )
+
+    #-------#
+    # exprs #
+    #-------#
+
+    identifier <- Identifier(@Identifier)
+    string_literal <- StringLiteral(@String)
+    num_literal <- NumLiteral(@Number)
+    static_name <- or(
+        | Prefix(static_name "." identifier)
+        | identifier
+    )
+    # ----------------------------------------------------------------
+    attribute_reference <- AttributeReference(
+        identifier ?pick("(" or(others_designator | string_literal) ")")
+    )
+    variable_reference <- VariableReference(
+        list+(identifier, ".") ?pick("'" attribute_reference)
+    )
+    type_reference <- TypeReference(list+(identifier, "."))
+    builtin_function_call <- BuiltinFunctionCall(identifier expression_list)
+    expression <- TermList+(term, "&")
+    expression_list <- Terms("(" list*(expression, ",") ")")
+    string_literal_at <- StringLiteralAt(string_literal
+    ?pick("at" num_literal))
+    term <- or(
+        | expression_list
+        | string_literal_at
+        | builtin_function_call
+        | variable_reference
+    )
+
+    #--------#
+    # bodies #
+    #--------#
+
+    @main_rule compilation_unit <- CompilationUnit(project)
+}
