@@ -44,7 +44,7 @@ procedure Main is
    Tree : Project.Tree.Object;
 
 begin
-   for J in 1 .. 17 loop
+   for J in 1 .. 18 loop
       declare
          Opt      : Options.Object;
          Num      : constant String := J'Image;

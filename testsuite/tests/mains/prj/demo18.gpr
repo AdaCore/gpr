@@ -1,0 +1,11 @@
+project Demo18 is
+   for Languages use ("Ada");
+   for Source_Dirs use ("src");
+   for Main use ("demo7.adb");
+
+   package Naming is
+      for Spec_Suffix ("Ada") use ".spec.ada";
+      for Body_Suffix ("Ada") use ".body.ada";
+      for Implementation ("Demo7") use "demo7.adb";
+   end Naming;
+end Demo18;
