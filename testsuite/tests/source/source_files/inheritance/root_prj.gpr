@@ -1,0 +1,5 @@
+project Root_Prj is
+   for Source_Dirs use ("src-root");
+   for Object_Dir use "obj-root";
+   for Source_Files use ("pkg2.ads", "pkg3.ads", "pkg4.ads");
+end Root_Prj;

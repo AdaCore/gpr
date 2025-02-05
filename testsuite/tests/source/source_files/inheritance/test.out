@@ -1,0 +1,16 @@
+GPR file ./root_prj.gpr
+Root_Prj
+pkg2.ads: S_SPEC
+pkg3.ads: S_SPEC
+pkg4.ads: S_SPEC
+
+GPR file ./extending_prj.gpr
+extending_prj.gpr:3:08: error: source file "pkg1.ads" not found
+Extending_Prj
+pkg4.ads: S_SPEC
+pkg5.ads: S_SPEC
+Root_Prj
+pkg2.ads: S_SPEC
+pkg3.ads: S_SPEC
+pkg4.ads: S_SPEC
+
