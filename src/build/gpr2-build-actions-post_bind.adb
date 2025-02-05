@@ -157,7 +157,9 @@ package body GPR2.Build.Actions.Post_Bind is
    begin
       for Act of Successors loop
          if Act in Link.Object'Class then
+            Self.Traces.Trace ("Options passed to " & Act.UID.Image & ":");
             for Opt of Binder_Action.Linker_Options loop
+               Self.Traces.Trace ("* '" & String (Opt) & "'");
                Link.Object (Act).Add_Option (Opt);
             end loop;
          end if;
