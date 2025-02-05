@@ -70,6 +70,10 @@ package body GPR2.Build.Actions.Compile.Ada is
       end if;
    end Artifacts_Base_Name;
 
+   ---------------------
+   -- Compute_Command --
+   ---------------------
+
    overriding procedure Compute_Command
      (Self     : in out Object;
       Slot     : Positive;
