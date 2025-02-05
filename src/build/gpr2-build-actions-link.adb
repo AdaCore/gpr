@@ -183,6 +183,8 @@ package body GPR2.Build.Actions.Link is
                  Object'Class (Self.Tree.Action (Lib));
                Lib_Artifact : constant GPR2.Path_Name.Object :=
                  Link.Output.Path;
+               Lib_Dir_Opt : constant Value_Type :=
+                 Self.Tree.Linker_Lib_Dir_Option;
             begin
 
                --  We can not rely on the view to obtain the library
@@ -200,12 +202,8 @@ package body GPR2.Build.Actions.Link is
                else
                   --  Add flags to include the shared library
 
-                  --  ??? -L can be replaced with the value specified with the
-                  --  Linker_Lib_Dir_Option option. Need to investigate
-                  --  to know if this option is required.
-
                   Cmd_Line.Add_Argument
-                    ("-L" & String (Lib_Artifact.Dir_Name));
+                    (Lib_Dir_Opt & String (Lib_Artifact.Dir_Name));
 
                   if not Self.Is_Library then
 
