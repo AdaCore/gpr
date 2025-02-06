@@ -3,7 +3,6 @@ with Ada.Containers;
 
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Artifacts.Files;
-with GPR2.Build.Artifacts.Source;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source;
 
@@ -47,10 +46,7 @@ function Test return Integer is
    begin
       for Root of Tree.Namespace_Root_Projects loop
          for Main of Root.Mains loop
-            Action.Initialize_Executable
-              (Src     => Artifacts.Source.Create
-                            (Main.View, Main.Source.Simple_Name, Main.Index),
-               Context => Root);
+            Action.Initialize_Executable (Src => Main);
             Assert
                (not Tree.Artifacts_Database.Has_Action (Action.UID),
                 "Check that action is not already in the Tree DB");
@@ -165,17 +161,8 @@ begin
    begin
       Args.Append ("gpr2build");
       Args.Append ("-c");
-      Args.Append ("-p");
-      Args.Append ("-q");
-      Args.Append (String (Tree.Root_Project.Path_Name.Simple_Name));
-      Execute_Command (Args, Tree.Root_Project.Dir_Name.String_Value);
-   end;
-
-   declare
-      Args : Argument_List;
-   begin
-      Args.Append ("gpr2build");
       Args.Append ("-b");
+      Args.Append ("-p");
       Args.Append ("-q");
       Args.Append (String (Tree.Root_Project.Path_Name.Simple_Name));
       Execute_Command (Args, Tree.Root_Project.Dir_Name.String_Value);
@@ -201,7 +188,7 @@ begin
       Count := Count + 1;
       Assert
         (Artifacts.Files.Object'Class (Input).Path.Exists,
-         "Check that all input object " & Input.Image & " exists");
+         "Check that all input object " & Input.Serialize & " exists");
    end loop;
 
    Assert (Count = 4);
@@ -211,6 +198,7 @@ begin
       Args : Argument_List;
       Env  : Environment_Dict;
    begin
+      Action.Load_Signature;
       Action.Update_Command_Line (1);
       Execute_Command (Action.Command_Line.Argument_List,
                        Action.Working_Directory.String_Value);

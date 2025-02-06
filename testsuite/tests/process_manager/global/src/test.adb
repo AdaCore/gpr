@@ -190,8 +190,6 @@ begin
          null;
    end case;
 
-   Tree.Artifacts_Database.Load_Signatures;
-
    Process_M.Set_JSON_File (Path_Name.Create_File ("jobs.json"));
 
    Exec_Opts.Jobs := 2;

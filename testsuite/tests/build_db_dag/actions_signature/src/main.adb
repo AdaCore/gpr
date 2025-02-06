@@ -47,24 +47,23 @@ begin
       end loop;
    end loop;
 
-   Tree.Artifacts_Database.Load_Signatures;
-
    Actions := GPR2.Build.Tree_Db.Actions_List
                 (Tree.Artifacts_Database.All_Actions);
 
    for A of Actions loop
+      A.Load_Signature;
       A.Update_Command_Line (1);
 
       if not A.Valid_Signature then
          Ada.Text_IO.Put_Line (A.UID.Image);
          Ada.Text_IO.Put_Line ("  inputs:");
          for Input of Tree.Artifacts_Database.Inputs (A.UID) loop
-            Ada.Text_IO.Put_Line ("  - " & Input.Image);
+            Ada.Text_IO.Put_Line ("  - " & Input.Serialize);
          end loop;
 
          Ada.Text_IO.Put_Line ("  outputs:");
          for Output of Tree.Artifacts_Database.Outputs (A.UID) loop
-            Ada.Text_IO.Put_Line ("  - " & Output.Image);
+            Ada.Text_IO.Put_Line ("  - " & Output.Serialize);
          end loop;
 
          if not A.Write_Signature

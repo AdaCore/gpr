@@ -10,6 +10,7 @@ A:   Externally_Built -> true
 A:   Languages -> ada
 A:   Object_Dir -> <rtsdir>/adalib
 A:   Source_Dirs -> <rtsdir>/adainclude
+V:   Compiler_Version -> <compiler version>
 
  > adainclude/a-calend.adb   Kind: S_BODY   unit: ADA.CALENDAR
  > adainclude/a-calend.ads   Kind: S_SPEC   unit: ADA.CALENDAR

@@ -40,17 +40,22 @@ package body GPR2.Build.Actions.Write_File is
    -----------------------
 
    overriding procedure Compute_Signature
-     (Self      : Object;
-      Signature : in out GPR2.Build.Signature.Object)
+     (Self      : in out Object;
+      Load_Mode : Boolean)
    is
-      use GPR2.Build.Signature;
       Art : Artifacts.Files.Object;
    begin
       for Art of Self.Tree.Inputs (Self.UID) loop
-         Signature.Add_Artifact (Art);
+         if not Self.Signature.Add_Input (Art) and then Load_Mode then
+            return;
+         end if;
       end loop;
 
-      Signature.Add_Artifact (Output_File (Self.Index));
+      if not Self.Signature.Add_Output (Output_File (Self.Index))
+        and then Load_Mode
+      then
+         return;
+      end if;
    end Compute_Signature;
 
    ----------------
