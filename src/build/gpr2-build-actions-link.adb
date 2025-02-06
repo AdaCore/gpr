@@ -488,7 +488,7 @@ package body GPR2.Build.Actions.Link is
          end;
       end if;
 
-      Self.Executable := Artifacts.Files.Create (Exec, Self.Ctxt);
+      Self.Executable := Artifacts.Files.Create (Exec);
    end Initialize_Executable;
 
    -------------------------------
@@ -511,8 +511,7 @@ package body GPR2.Build.Actions.Link is
       Self.Is_Static  := True;
       Self.In_Obj     := True;
       Self.Library    := Artifacts.Library.Create
-        (Context.Object_Directory.Compose (Library_Filename),
-         Context);
+        (Context.Object_Directory.Compose (Library_Filename));
       Self.Traces     := Create ("ACTION_LINK");
    end Initialize_Global_Archive;
 
@@ -527,8 +526,7 @@ package body GPR2.Build.Actions.Link is
       Self.Ctxt       := Context;
       Self.Is_Library := True;
       Self.Is_Static  := Context.Library_Kind in "static" | "static-pic";
-      Self.Library    := Artifacts.Library.Create (Context.Library_Filename,
-                                                   Context);
+      Self.Library    := Artifacts.Library.Create (Context.Library_Filename);
       Self.Traces     := Create ("ACTION_LINK");
    end Initialize_Library;
 

@@ -214,9 +214,11 @@ package body GPR2.Build.Actions is
         GPR2.Build.Command_Line.Create (Self.Working_Directory);
       Self.Compute_Command (Slot, Self.Cmd_Line);
 
-      Ign := Self.Signature.Add_Input
-        (Artifacts.Key_Value.Create
-           (Command_Line_Key, Self.Cmd_Line.Signature, Self.View));
+      if Self.Signature.Was_Saved then
+         Ign := Self.Signature.Add_Input
+           (Artifacts.Key_Value.Create
+              (Command_Line_Key, Self.Cmd_Line.Signature));
+      end if;
    end Update_Command_Line;
 
    -----------------------
@@ -239,7 +241,7 @@ package body GPR2.Build.Actions is
       Self.Compute_Signature (Load_Mode => False);
       Ign := Self.Signature.Add_Input
         (Artifacts.Key_Value.Create
-           (Command_Line_Key, Self.Cmd_Line.Signature, Self.View));
+           (Command_Line_Key, Self.Cmd_Line.Signature));
 
       Self.Signature.Add_Console_Output (Stdout, Stderr);
 

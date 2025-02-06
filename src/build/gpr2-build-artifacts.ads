@@ -22,9 +22,6 @@ package GPR2.Build.Artifacts is
    --  artifacts (so for example source artifacts generate object file
    --  artifacts).
 
-   function View (Self : Object) return GPR2.Project.View.Object is abstract;
-   --  The view responsible for this artifact
-
    function Is_Defined (Self : Object) return Boolean is abstract;
 
    function Protocol (Self : Object) return String is abstract;

@@ -547,12 +547,10 @@ package body GPR2.Build.Actions.Ada_Bind is
       Self.SAL_Closure := SAL_In_Closure;
       Self.Output_Spec :=
         Artifacts.Files.Create
-          (Context.Object_Directory.Compose ("b__" & Basename & ".ads"),
-           Context);
+          (Context.Object_Directory.Compose ("b__" & Basename & ".ads"));
       Self.Output_Body :=
         Artifacts.Files.Create
-          (Context.Object_Directory.Compose ("b__" & Basename & ".adb"),
-           Context);
+          (Context.Object_Directory.Compose ("b__" & Basename & ".adb"));
       Self.Traces := Create ("ACTION_ADA_BIND");
    end Initialize;
 

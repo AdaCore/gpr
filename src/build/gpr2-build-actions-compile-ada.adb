@@ -140,8 +140,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       if Self.Ctxt.Tree.Has_Ada_Compiler_Version then
          Version := Artifacts.Key_Value.Create
            ("compiler_version",
-            Self.Ctxt.Tree.Ada_Compiler_Version,
-            Self.Ctxt);
+            Self.Ctxt.Tree.Ada_Compiler_Version);
 
          if not Self.Signature.Add_Input (Version) and then Load_Mode then
             return;
@@ -177,9 +176,7 @@ package body GPR2.Build.Actions.Compile.Ada is
 
                   elsif not Src.Owning_View.Is_Runtime
                     and then not Self.Signature.Add_Input
-                      (Artifacts.Files.Create
-                         (Src.Path_Name,
-                          Self.Ctxt))
+                      (Artifacts.Files.Create (Src.Path_Name))
                     and then Load_Mode
                   then
                      return;
@@ -187,8 +184,7 @@ package body GPR2.Build.Actions.Compile.Ada is
                end;
 
             else
-               if not Self.Signature.Add_Input
-                 (Artifacts.Files.Create (Dep, Self.Ctxt))
+               if not Self.Signature.Add_Input (Artifacts.Files.Create (Dep))
                  and then Load_Mode
                then
                   return;
@@ -328,10 +324,10 @@ package body GPR2.Build.Actions.Compile.Ada is
          then
             --  Simple case: just use the local .o and .ali
             if not No_Obj then
-               Self.Obj_File := Artifacts.Files.Create (Local_O, Self.Ctxt);
+               Self.Obj_File := Artifacts.Files.Create (Local_O);
             end if;
 
-            Self.Ali_File := Artifacts.Files.Create (Local_Ali, Self.Ctxt);
+            Self.Ali_File := Artifacts.Files.Create (Local_Ali);
 
          else
             --  Lookup if the object file exists in the hierarchy
@@ -368,11 +364,11 @@ package body GPR2.Build.Actions.Compile.Ada is
             --  compilation.
 
             if not Found then
-               Self.Obj_File := Artifacts.Files.Create (Local_O, Self.Ctxt);
-               Self.Ali_File := Artifacts.Files.Create (Local_Ali, Self.Ctxt);
+               Self.Obj_File := Artifacts.Files.Create (Local_O);
+               Self.Ali_File := Artifacts.Files.Create (Local_Ali);
             else
-               Self.Obj_File := Artifacts.Files.Create (Lkup_O, Self.Ctxt);
-               Self.Ali_File := Artifacts.Files.Create (Lkup_Ali, Self.Ctxt);
+               Self.Obj_File := Artifacts.Files.Create (Lkup_O);
+               Self.Ali_File := Artifacts.Files.Create (Lkup_Ali);
             end if;
          end if;
       end;
@@ -444,9 +440,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       for Lib of Self.In_Libraries loop
          Other_Ali := Lib.Library_Ali_Directory.Compose (Ali_BN);
 
-         if not Db.Add_Output (UID,
-                               Artifacts.Files.Create (Other_Ali, Self.Ctxt))
-         then
+         if not Db.Add_Output (UID, Artifacts.Files.Create (Other_Ali)) then
             return False;
          end if;
       end loop;
@@ -658,7 +652,7 @@ package body GPR2.Build.Actions.Compile.Ada is
                                (Ref.Ali_File.Path.Simple_Name);
                            Self.Tree.Add_Input
                              (Bind,
-                              Artifacts.Files.Create (Ali_In_Lib, Ref.View),
+                              Artifacts.Files.Create (Ali_In_Lib),
                               False);
                         else
                            Self.Tree.Add_Input
@@ -721,13 +715,11 @@ package body GPR2.Build.Actions.Compile.Ada is
 
       begin
          Local_O := Artifacts.Files.Create
-           (Self.View.Object_Directory.Compose (BN & O_Suff),
-            Self.Ctxt);
+           (Self.View.Object_Directory.Compose (BN & O_Suff));
 
          if Local_O /= Self.Obj_File then
             Local_Ali := Artifacts.Files.Create
-              (Self.View.Object_Directory.Compose (BN & ".ali"),
-               Self.Ctxt);
+              (Self.View.Object_Directory.Compose (BN & ".ali"));
 
             Self.Tree.Replace_Artifact (Self.Obj_File, Local_O);
             Self.Tree.Replace_Artifact (Self.Ali_File, Local_Ali);

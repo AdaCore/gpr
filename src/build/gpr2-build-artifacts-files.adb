@@ -19,8 +19,7 @@ package body GPR2.Build.Artifacts.Files is
    is
       pragma Unreferenced (Chk);
    begin
-      Val := (Path => Path_Name.Create_File (Filename_Type (Repr)),
-              Ctxt => Ctxt);
+      Val := (Path => Path_Name.Create_File (Filename_Type (Repr)));
    end Unserialize;
 
 end GPR2.Build.Artifacts.Files;

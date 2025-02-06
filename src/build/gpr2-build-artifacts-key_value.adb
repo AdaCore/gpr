@@ -18,8 +18,7 @@ package body GPR2.Build.Artifacts.Key_Value is
    is
    begin
       Val := (Key   => +Repr,
-              Value => +Chk,
-              Ctxt  => Ctxt);
+              Value => +Chk);
    end Unserialize;
 
 end GPR2.Build.Artifacts.Key_Value;

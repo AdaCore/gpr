@@ -121,12 +121,10 @@ package body GPR2.Build.Actions.Post_Bind is
       Self.Input  := Impl;
       Self.Output :=
         Artifacts.Files.Create
-          (View.Object_Directory.Compose (Impl.Path.Base_Filename & O_Suff),
-           View);
+          (View.Object_Directory.Compose (Impl.Path.Base_Filename & O_Suff));
       Self.Ali :=
         Artifacts.Files.Create
-          (View.Object_Directory.Compose (Impl.Path.Base_Filename & ".ali"),
-           View);
+          (View.Object_Directory.Compose (Impl.Path.Base_Filename & ".ali"));
 
       return Self;
    end Create;
@@ -174,7 +172,7 @@ package body GPR2.Build.Actions.Post_Bind is
          if Act in Link.Object'Class then
             Self.Traces.Trace ("Options passed to " & Act.UID.Image & ":");
             for Opt of Binder_Action.Linker_Options loop
-               Self.Traces.Trace ("* '" & String (Opt) & "'");
+               Self.Traces.Trace ("* '" & Opt & "'");
                Link.Object (Act).Add_Option (Opt);
             end loop;
          end if;

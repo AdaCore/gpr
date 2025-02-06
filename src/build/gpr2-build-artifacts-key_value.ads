@@ -16,8 +16,7 @@ package GPR2.Build.Artifacts.Key_Value is
 
    function Create
      (Key   : Value_Type;
-      Value : Value_Type;
-      Ctxt  : GPR2.Project.View.Object) return Object;
+      Value : Value_Type) return Object;
 
    overriding function Serialize (Self : Object) return String;
 
@@ -36,11 +35,7 @@ private
    type Object is new Artifacts.Object with record
       Key   : Unbounded_String;
       Value : Unbounded_String;
-      Ctxt  : GPR2.Project.View.Object;
    end record;
-
-   overriding function View (Self : Object) return GPR2.Project.View.Object is
-     (Self.Ctxt);
 
    overriding function Protocol (Self : Object) return String is
      ("keyvalue");
@@ -57,11 +52,9 @@ private
 
    function Create
      (Key   : Value_Type;
-      Value : Value_Type;
-      Ctxt  : GPR2.Project.View.Object) return Object is
+      Value : Value_Type) return Object is
      (Key   => +Key,
-      Value => +Value,
-      Ctxt  => Ctxt);
+      Value => +Value);
 
    overriding function Checksum (Self : Object) return String is
      (-Self.Value);

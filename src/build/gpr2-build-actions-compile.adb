@@ -693,7 +693,7 @@ package body GPR2.Build.Actions.Compile is
          end if;
       end if;
 
-      Art := Artifacts.Files.Create (Self.Input.Path_Name, Self.Ctxt);
+      Art := Artifacts.Files.Create (Self.Input.Path_Name);
       if not Self.Signature.Add_Input (Art) and then Load_Mode then
          return;
       end if;
@@ -752,7 +752,7 @@ package body GPR2.Build.Actions.Compile is
          if not Self.Input.Is_Inherited
            or else Obj_Path.Exists
          then
-            Self.Obj_File := Artifacts.Files.Create (Obj_Path, Self.Ctxt);
+            Self.Obj_File := Artifacts.Files.Create (Obj_Path);
 
          else
             Candidate := Self.Input.Inherited_From;
@@ -778,9 +778,9 @@ package body GPR2.Build.Actions.Compile is
             --  this action.
 
             if not Found then
-               Self.Obj_File := Artifacts.Files.Create (Obj_Path, Self.Ctxt);
+               Self.Obj_File := Artifacts.Files.Create (Obj_Path);
             else
-               Self.Obj_File := Artifacts.Files.Create (Lkup_Obj, Self.Ctxt);
+               Self.Obj_File := Artifacts.Files.Create (Lkup_Obj);
             end if;
          end if;
 
@@ -810,8 +810,7 @@ package body GPR2.Build.Actions.Compile is
           (UID,
            Artifacts.Files.Create
              (Self.Ctxt.Object_Directory.Compose
-                (Object'Class (Self).Dependency_File),
-              Self.Ctxt))
+                (Object'Class (Self).Dependency_File)))
       then
          return False;
       end if;
