@@ -284,6 +284,8 @@ package body GPR2.Build.Tree_Db is
             begin
                Db_Data.View    := V;
                Db_Data.Tree_Db := Self.Self;
+               Db_Data.Visible_Source_Closure :=
+                 V.Closure (False, False, True);
                Db_Inst := View_Tables.View_Base_For (Db_Data);
                Self.Build_Dbs.Insert (V.Id, Db_Inst);
                --  Db_Inst.Update;
@@ -401,6 +403,8 @@ package body GPR2.Build.Tree_Db is
             begin
                Db_Data.View    := V;
                Db_Data.Tree_Db := Self.Self;
+               Db_Data.Visible_Source_Closure :=
+                 V.Closure (False, False, True);
                Db_Inst := View_Tables.View_Base_For (Db_Data);
                Self.Build_Dbs.Insert (V.Id, Db_Inst);
             end;

@@ -16,6 +16,7 @@ with GPR2.Containers;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.View.Set;
+with GPR2.Project.View.Vector;
 
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source_Base;
@@ -185,6 +186,11 @@ private package GPR2.Build.View_Tables is
 
       Temp_Files      : Temp_File_Maps.Map;
       --  Holds the path of temp files created during build
+
+      Visible_Source_Closure : GPR2.Project.View.Vector.Object;
+      --  The list of views to consider during source lookup: the current view
+      --  and its dependencies recursively, together with the extended
+      --  view's dependencies if any.
 
       case Is_Root is
          when True =>
