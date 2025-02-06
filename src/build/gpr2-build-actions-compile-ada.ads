@@ -126,8 +126,8 @@ private
       (Self.CU.Dependency_File);
 
    overriding procedure Compute_Signature
-     (Self      : Object;
-      Signature : in out GPR2.Build.Signature.Object);
+     (Self      : in out Object;
+      Load_Mode : Boolean);
 
    Undefined : constant Object := (others => <>);
 

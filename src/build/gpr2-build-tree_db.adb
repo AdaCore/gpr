@@ -700,17 +700,6 @@ package body GPR2.Build.Tree_Db is
       return -Self.Linker_Lib_Dir_Opt;
    end Linker_Lib_Dir_Option;
 
-   ---------------------
-   -- Load_Signatures --
-   ---------------------
-
-   procedure Load_Signatures (Self : Object) is
-   begin
-      for A of Self.Self.Actions loop
-         A.Load_Signature;
-      end loop;
-   end Load_Signatures;
-
    ----------
    -- Next --
    ----------

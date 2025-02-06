@@ -480,17 +480,28 @@ package body GPR2.Build.Actions.Ada_Bind is
    -----------------------
 
    overriding procedure Compute_Signature
-     (Self      : Object;
-      Signature : in out GPR2.Build.Signature.Object)
+     (Self      : in out Object;
+      Load_Mode : Boolean)
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      for Pred of Self.Tree.Inputs (UID) loop
-         Signature.Add_Artifact (Pred);
-      end loop;
+      if not Self.Signature.Add_Output (Self.Generated_Spec)
+        and then Load_Mode
+      then
+         return;
+      end if;
 
-      Signature.Add_Artifact (Self.Generated_Spec);
-      Signature.Add_Artifact (Self.Generated_Body);
+      if not Self.Signature.Add_Output (Self.Generated_Body)
+        and then Load_Mode
+      then
+         return;
+      end if;
+
+      for Pred of Self.Tree.Inputs (UID) loop
+         if not Self.Signature.Add_Input (Pred) and then Load_Mode then
+            return;
+         end if;
+      end loop;
    end Compute_Signature;
 
    ----------------

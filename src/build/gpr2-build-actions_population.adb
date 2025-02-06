@@ -560,10 +560,6 @@ package body GPR2.Build.Actions_Population is
          end loop;
       end if;
 
-      if Result then
-         Tree_Db.Load_Signatures;
-      end if;
-
       return Result;
    end Populate_Actions;
 

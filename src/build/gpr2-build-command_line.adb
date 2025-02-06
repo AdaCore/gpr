@@ -17,7 +17,6 @@ package body GPR2.Build.Command_Line is
       Arg          : String;
       In_Signature : Boolean := True) is
    begin
-      Self.Finalized := False;
       Self.Cmd_Line.Append (Arg);
       Self.Total_Length := Self.Total_Length + 1 + Arg'Length;
 
@@ -69,20 +68,6 @@ package body GPR2.Build.Command_Line is
       end return;
    end Create;
 
-   --------------
-   -- Finalize --
-   --------------
-
-   procedure Finalize (Self : in out Object) is
-   begin
-      if Self.Finalized then
-         return;
-      end if;
-
-      Self.Finalized := True;
-      Self.Checksum := GPR2.Utils.Hash.Hash_Content (-Self.Signature);
-   end Finalize;
-
    ----------------
    -- Set_Driver --
    ----------------
@@ -94,7 +79,6 @@ package body GPR2.Build.Command_Line is
       SName : constant Simple_Name :=
                 Path_Name.Simple_Name (Filename_Optional (Arg));
    begin
-      Self.Finalized := False;
       Self.Cmd_Line.Prepend (Arg);
 
       if Length (Self.Signature) = 0 then
@@ -110,7 +94,6 @@ package body GPR2.Build.Command_Line is
      (Self : in out Object;
       Arg  : Path_Name.Object) is
    begin
-      Self.Finalized := False;
       Self.Cmd_Line.Prepend (Arg.String_Value);
 
       if Length (Self.Signature) = 0 then

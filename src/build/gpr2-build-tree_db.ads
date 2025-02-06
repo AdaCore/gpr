@@ -159,9 +159,6 @@ package GPR2.Build.Tree_Db is
    function Propagate_Actions (Self : Object) return Boolean;
    --  Call the On_Tree_Propagation subprogram for each new action of the tree
 
-   procedure Load_Signatures (Self : Object);
-   --  Load the actions signatures
-
    ----------------------------
    -- Iteration on artifacts --
    ----------------------------

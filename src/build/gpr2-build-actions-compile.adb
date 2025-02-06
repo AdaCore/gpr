@@ -670,8 +670,8 @@ package body GPR2.Build.Actions.Compile is
    -----------------------
 
    overriding procedure Compute_Signature
-     (Self      : Object;
-      Signature : in out GPR2.Build.Signature.Object)
+     (Self      : in out Object;
+      Load_Mode : Boolean)
    is
       use GPR2.Build.Signature;
       Art : Artifacts.Files.Object;
@@ -679,15 +679,23 @@ package body GPR2.Build.Actions.Compile is
       if Self.Obj_File.Is_Defined then
          --  ??? Need to process deps units
 
-         Art := Artifacts.Files.Create (Self.Input.Path_Name);
-         Signature.Add_Artifact (Art);
-
          Art := Self.Obj_File;
-         Signature.Add_Artifact (Art);
+         if not Self.Signature.Add_Output (Art) and then Load_Mode then
+            return;
+         end if;
       else
          --  In case we have Object_Generated unset for the language, then
          --  we don't save the signature so that the action is replayed.
-         Signature.Clear;
+         Self.Signature.Clear;
+
+         if Load_Mode then
+            return;
+         end if;
+      end if;
+
+      Art := Artifacts.Files.Create (Self.Input.Path_Name, Self.Ctxt);
+      if not Self.Signature.Add_Input (Art) and then Load_Mode then
+         return;
       end if;
    end Compute_Signature;
 

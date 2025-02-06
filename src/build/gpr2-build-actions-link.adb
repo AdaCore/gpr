@@ -409,12 +409,14 @@ package body GPR2.Build.Actions.Link is
    -----------------------
 
    overriding procedure Compute_Signature
-     (Self      : Object;
-      Signature : in out GPR2.Build.Signature.Object)
+     (Self      : in out Object;
+      Load_Mode : Boolean)
    is
    begin
       for Obj of Self.Embedded_Objects loop
-         Signature.Add_Artifact (Obj);
+         if not Self.Signature.Add_Input (Obj) and then Load_Mode then
+            return;
+         end if;
       end loop;
 
       for Lib of Self.Library_Dependencies loop
@@ -422,11 +424,17 @@ package body GPR2.Build.Actions.Link is
             Link : constant Object'Class :=
                      Object'Class (Self.Tree.Action (Lib));
          begin
-            Signature.Add_Artifact (Link.Output);
+            if not Self.Signature.Add_Input (Link.Output)
+              and then Load_Mode
+            then
+               return;
+            end if;
          end;
       end loop;
 
-      Signature.Add_Artifact (Self.Output);
+      if not Self.Signature.Add_Output (Self.Output) and then Load_Mode then
+         return;
+      end if;
    end Compute_Signature;
 
    ----------------------

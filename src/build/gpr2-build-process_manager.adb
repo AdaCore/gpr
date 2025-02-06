@@ -619,6 +619,24 @@ package body GPR2.Build.Process_Manager is
          Proc_Handler := Process_Handler'(Status => Deactivated);
 
          return;
+
+      elsif Job.Is_Deactivated then
+         if Self.Traces.Is_Active then
+            pragma Annotate (Xcov, Exempt_On, "debug code");
+            Self.Traces.Trace
+              ("job is deactivated: " & Job.UID.Image);
+            pragma Annotate (Xcov, Exempt_Off);
+         end if;
+
+         Proc_Handler := Process_Handler'(Status => Deactivated);
+
+         return;
+      end if;
+
+      --  Load and check the job's signature
+
+      if not Force then
+         Job.Load_Signature;
       end if;
 
       --  We need to compute the command line before checking the signature
@@ -638,19 +656,7 @@ package body GPR2.Build.Process_Manager is
             return;
       end;
 
-      if Job.Is_Deactivated then
-         if Self.Traces.Is_Active then
-            pragma Annotate (Xcov, Exempt_On, "debug code");
-            Self.Traces.Trace
-              ("job is deactivated: " & Job.UID.Image);
-            pragma Annotate (Xcov, Exempt_Off);
-         end if;
-
-         Proc_Handler := Process_Handler'(Status => Deactivated);
-
-         return;
-
-      elsif Job.Skip then
+      if Job.Skip then
          if Self.Traces.Is_Active then
             pragma Annotate (Xcov, Exempt_On, "debug code");
             Self.Traces.Trace

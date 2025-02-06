@@ -75,13 +75,26 @@ package body GPR2.Build.Actions.Post_Bind is
 
    end Compute_Command;
 
+   -----------------------
+   -- Compute_Signature --
+   -----------------------
+
    overriding procedure Compute_Signature
-     (Self      : Object;
-      Signature : in out GPR2.Build.Signature.Object) is
+     (Self      : in out Object;
+      Load_Mode : Boolean)
+   is
    begin
-      Signature.Add_Artifact (Self.Input);
-      Signature.Add_Artifact (Self.Output);
-      Signature.Add_Artifact (Self.Ali);
+      if not Self.Signature.Add_Input (Self.Input) and then Load_Mode then
+         return;
+      end if;
+
+      if not Self.Signature.Add_Input (Self.Ali) and then Load_Mode then
+         return;
+      end if;
+
+      if not Self.Signature.Add_Output (Self.Output) and then Load_Mode then
+         return;
+      end if;
    end Compute_Signature;
 
    ------------
@@ -108,10 +121,12 @@ package body GPR2.Build.Actions.Post_Bind is
       Self.Input  := Impl;
       Self.Output :=
         Artifacts.Files.Create
-          (View.Object_Directory.Compose (Impl.Path.Base_Filename & O_Suff));
+          (View.Object_Directory.Compose (Impl.Path.Base_Filename & O_Suff),
+           View);
       Self.Ali :=
         Artifacts.Files.Create
-          (View.Object_Directory.Compose (Impl.Path.Base_Filename & ".ali"));
+          (View.Object_Directory.Compose (Impl.Path.Base_Filename & ".ali"),
+           View);
 
       return Self;
    end Create;
