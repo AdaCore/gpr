@@ -20,6 +20,7 @@ pragma Warnings (Off, "*is not referenced");
 with GPR2.Project.View.Vector;
 pragma Warnings (On);
 with GPR2.Source_Reference;
+with GPR2.Source_Reference.Value;
 
 package body GPR2.Build.Actions.Link is
 
@@ -49,6 +50,14 @@ package body GPR2.Build.Actions.Link is
          Is_List      : Boolean;
          In_Signature : Boolean;
          Param        : String := "") return Boolean;
+
+      function Is_Partially_Linked
+        (View : GPR2.Project.View.Object) return Boolean;
+      --  Return true if the Library_Partial_Linker is set with a
+      --  non-empty value.
+      --  ??? Because we do not support partial links for now, this function
+      --  always return False. To be updated once the support has been
+      --  implemented.
 
       --------------
       -- Add_Attr --
@@ -92,10 +101,24 @@ package body GPR2.Build.Actions.Link is
          return True;
       end Add_Attr;
 
-      Objects    : Tree_Db.Artifact_Sets.Set;
-      Status     : Boolean;
-      Src_Idx    : constant PAI.Object :=
-                     (if not Self.Is_Library
+      -------------------------
+      -- Is_Partially_Linked --
+      -------------------------
+
+      function Is_Partially_Linked
+        (View : GPR2.Project.View.Object) return Boolean
+      is
+      begin
+         --  ??? We do not support partial linking for now. To be updated
+         --  once this is the case.
+
+         return False;
+      end Is_Partially_Linked;
+
+      Objects   : Tree_Db.Artifact_Sets.Set;
+      Status    : Boolean;
+      Src_Idx   : constant PAI.Object :=
+                    (if not Self.Is_Library
                       then PAI.Create
                         (String (Self.Main_Src.Path.Simple_Name),
                          Case_Sensitive => File_Names_Case_Sensitive,
@@ -189,6 +212,18 @@ package body GPR2.Build.Actions.Link is
          Cmd_Line.Add_Argument
            (Artifacts.Files.Object'Class (Obj).Path, True);
       end loop;
+
+      --  Add options provided by the binder if needed
+
+      if not Self.View.Is_Library
+        or else Self.View.Is_Shared_Library
+        or else (Self.View.Is_Library_Standalone
+                 and then Is_Partially_Linked (Self.View))
+      then
+         for Option of Self.Static_Options loop
+            Cmd_Line.Add_Argument (Option);
+         end loop;
+      end if;
 
       if not Self.Is_Static_Library then
          for Lib of Self.Library_Dependencies loop
@@ -362,10 +397,6 @@ package body GPR2.Build.Actions.Link is
              (External_Options.Linker, GPR2.No_Language)
          loop
             Cmd_Line.Add_Argument (Arg);
-         end loop;
-
-         for Option of Self.Static_Options loop
-               Cmd_Line.Add_Argument (Option);
          end loop;
 
          Status :=
