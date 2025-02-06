@@ -1945,7 +1945,6 @@ package body GPR2.Tree_Internal is
 
          if V.Is_Library then
             Def.Interface_Units.Clear;
-            Def.Interface_Sources.Clear;
 
             if V.Check_Attribute (PRA.Library_Interface, Result => Attr) then
                for Val of Attr.Values loop
@@ -1953,13 +1952,16 @@ package body GPR2.Tree_Internal is
                     (Name_Type (Val.Text), Source_Reference.Object (Val));
                end loop;
             end if;
+         end if;
 
-            if V.Check_Attribute (PRA.Interfaces, Result => Attr) then
-               for Val of Attr.Values loop
-                  Def.Interface_Sources.Insert
-                    (Filename_Type (Val.Text), Source_Reference.Object (Val));
-               end loop;
-            end if;
+         Def.Interface_Sources.Clear;
+
+         if V.Check_Attribute (PRA.Interfaces, Result => Attr) then
+            for Val of Attr.Values loop
+               Def.Interface_Sources.Insert
+                 (Filename_Type (Val.Text),
+                  Source_Reference.Object (Val));
+            end loop;
          end if;
 
          if V.Check_Attribute (PRA.Warning_Message, Result => Attr) then

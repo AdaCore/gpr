@@ -113,4 +113,5 @@ procedure Main is
 begin
     Check ("demo.gpr");
     Check ("demo2.gpr");
+    Check ("demo3.gpr");
 end Main;

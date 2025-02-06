@@ -1,0 +1,3 @@
+$ gpr2build -q -P tree/a.gpr -p
+a.adb: error: unit "A" can not import unit "INTERNAL": it is not part of the interfaces of the project B
+gprbuild: processing failed

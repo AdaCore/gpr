@@ -1,0 +1,2 @@
+description: Test that importing a source that does not belong to the Interfaces attribute fails
+driver: python_script
