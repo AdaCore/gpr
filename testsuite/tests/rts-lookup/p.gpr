@@ -1,0 +1,4 @@
+project P is
+   for Runtime ("Ada") use "custom";
+   for Source_Files use ("p.ads");
+end P;

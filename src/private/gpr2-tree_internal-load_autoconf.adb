@@ -722,6 +722,10 @@ begin
          Conf := Project.Configuration.Load (Default_Cfg);
       end if;
 
+      --  Update absolute path of the project file to be used for runtime
+      --  lookup.
+
+      Project_Path := Self.Root_Project.Path_Name;
    end if;
 
    if not Conf.Is_Defined then
@@ -844,7 +848,8 @@ begin
       Add_Languages (Element (C));
    end loop;
 
-   Post_Conf_Description := To_Holder (Conf_Descriptions (Project_Path));
+   Post_Conf_Description :=
+     To_Holder (Conf_Descriptions (Self.Root.Path_Name));
 
    if not Pre_Conf_Description.Is_Empty then
       Compare_Configurations
