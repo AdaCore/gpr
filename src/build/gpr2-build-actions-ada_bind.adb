@@ -407,7 +407,33 @@ package body GPR2.Build.Actions.Ada_Bind is
       if Self.Ctxt.Is_Library
         and then Self.Ctxt.Is_Library_Standalone
       then
-         Cmd_Line.Add_Argument ("-a");
+         --  Check if we generate auto-initialisation for the standalone
+         --  library.
+
+         declare
+            Auto_Init_Attr : constant GPR2.Project.Attribute.Object :=
+                               Self.Ctxt.Attribute (PRA.Library_Auto_Init);
+            Supported_Attr : constant GPR2.Project.Attribute.Object :=
+                               Self.Ctxt.Attribute
+                                 (PRA.Library_Auto_Init_Supported);
+            Supported      : Boolean;
+            Do_Auto_Init   : Boolean;
+         begin
+            Supported := Boolean'Value (Supported_Attr.Value.Text);
+
+            if not Auto_Init_Attr.Is_Defined
+              or else Auto_Init_Attr.Is_Default
+            then
+               Do_Auto_Init := Supported;
+            else
+               Do_Auto_Init := Supported
+                 and then Boolean'Value (Auto_Init_Attr.Value.Text);
+            end if;
+
+            if Do_Auto_Init then
+               Cmd_Line.Add_Argument ("-a");
+            end if;
+         end;
       end if;
 
       for Ali of Self.Tree.Inputs (Self.UID, Explicit_Only => True) loop
