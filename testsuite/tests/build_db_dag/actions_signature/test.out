@@ -83,14 +83,14 @@ Case 7 - Altered DAG with modified checksums (p2: pkg3 - pkg)
   inputs:
   outputs:
   - /tree/obj/p2/pkg.o
-  - /tree/lib/p2/pkg.ali
   - /tree/obj/p2/pkg.ali
+  - /tree/lib/p2/pkg.ali
 [Ada Compile] pkg3.adb (p2.gpr)
   inputs:
   outputs:
   - /tree/obj/base2/pkg3.o
   - /tree/obj/base2/pkg3.ali
-  - /tree/obj/p2/pkg3.ali
+  - /tree/lib/p2/pkg3.ali
 ================================================================
 Case 8 - Altered DAG with shorter checksum (p1: main)
 [Ada Compile] main.adb (p1.gpr)
@@ -121,20 +121,20 @@ Case 10 - Altered DAG with modified checksums (all)
   inputs:
   outputs:
   - /tree/obj/p2/foo~2.o
-  - /tree/lib/p2/foo~2.ali
   - /tree/obj/p2/foo~2.ali
+  - /tree/lib/p2/foo~2.ali
 [Ada Compile] pkg.adb (p2.gpr)
   inputs:
   outputs:
   - /tree/obj/p2/pkg.o
-  - /tree/lib/p2/pkg.ali
   - /tree/obj/p2/pkg.ali
+  - /tree/lib/p2/pkg.ali
 [Ada Compile] pkg3.adb (p2.gpr)
   inputs:
   outputs:
   - /tree/obj/base2/pkg3.o
   - /tree/obj/base2/pkg3.ali
-  - /tree/obj/p2/pkg3.ali
+  - /tree/lib/p2/pkg3.ali
 [Ada Compile] pkg2.adb (shared.gpr)
   inputs:
   outputs:

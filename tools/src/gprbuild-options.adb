@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2022-2024, AdaCore                     --
+--                     Copyright (C) 2022-2025, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -118,6 +118,11 @@ package body GPRbuild.Options is
                  Parameter      => "<lang1>,<lang2>,..."));
       Parser.Add_Argument
         (Build_Group,
+         Create (Name   => "-a",
+                 Help   => "Runtime compilation mode",
+                 Hidden => True));
+      Parser.Add_Argument
+        (Build_Group,
          Create (Name => "-b",
                  Help => "Bind only"));
       Parser.Add_Argument
@@ -133,9 +138,16 @@ package body GPRbuild.Options is
       --  we keep backwards compatibility here.
       Parser.Add_Argument
         (Build_Group,
-         Create (Name           => "-d",
-                 Help           => "Display compilation progress",
-                 In_Switch_Attr => False));
+         Create (Name   => "--complete-output",
+                 Help   => "for compatibility with older gprbuild",
+                 Hidden => True));
+      --  complete-output (e.g. replaying warnings upon successive compilations
+      --  even when no action is performed) is now the default, so this
+      --  switch is ignored
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name => "-d",
+                 Help => "Display compilation progress"));
       Parser.Add_Argument
         (Build_Group,
          Create (Name      => "-eI",
@@ -498,7 +510,7 @@ package body GPRbuild.Options is
          Result.Build_Options.Compile_Phase_Mandated := True;
 
       elsif Arg = "-d" then
-         Result.Display_Progress := True;
+         Result.PM_Options.Show_Progress := True;
 
       elsif Arg = "-eI" then
          begin
@@ -609,6 +621,12 @@ package body GPRbuild.Options is
 
          Add_Ada_Compiler_Option (String (Arg) & Param);
 
+      elsif Arg = "-a" then
+         --  Ignore but tell the customer that this switch doesn't work:
+         --  set the option, it will then be reported by gprbuild-main
+
+         Result.Dash_A_Option := True;
+
       elsif Arg = "-C"
         or else Arg = "-eS"
         or else Arg = "-jc"
@@ -618,6 +636,7 @@ package body GPRbuild.Options is
         or else Arg = "-m2"
         or else Arg = "-s"
         or else Arg = "-x"
+        or else Arg = "--complete-output"
       then
          --  Ignore, only there for compatibility reason
          null;

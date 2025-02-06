@@ -4,10 +4,13 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Containers.Hashed_Sets;
+
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Containers;
 with GPR2.Path_Name;
+with GPR2.Project.View.Set;
 
 package GPR2.Build.Actions.Compile.Ada is
 
@@ -89,13 +92,16 @@ private
              View     => Src.Owning_View))
        with Index => Src.Main_Part.Index);
 
+   package File_Sets is new Standard.Ada.Containers.Hashed_Sets
+     (Artifacts.Files.Object, Artifacts.Files.Hash,
+      Artifacts.Files."=", Artifacts.Files."=");
+
    type Object is new Compile.Object with record
       Ali_File              : Artifacts.Files.Object;
       --  Unit's ALI file. Can be undefined if not existing on disk
 
-      Ali_In_Lib_Dir        : Boolean := False;
-      --  Whether the reference Ali file is in the library_ali_directory or
-      --  in the object directory.
+      In_Libraries          : GPR2.Project.View.Set.Object;
+      --  List of libraries that will contain the compiled object
 
       Closure               : Action_Id_Sets.Set;
       --  List of all object files that are needed to have Self's symbols

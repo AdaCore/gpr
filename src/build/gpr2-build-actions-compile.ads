@@ -47,7 +47,7 @@ package GPR2.Build.Actions.Compile is
       Slot     : Positive;
       Cmd_Line : in out GPR2.Build.Command_Line.Object);
 
-   overriding function Skip (Self : Object) return Boolean;
+   overriding function Is_Deactivated (Self : Object) return Boolean;
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object;
@@ -131,8 +131,9 @@ private
      (Self : Object) return Path_Name.Object is
      (Self.Ctxt.Object_Directory);
 
-   overriding function Skip (Self : Object) return Boolean is
-     (not Self.View.Attribute
+   overriding function Is_Deactivated (Self : Object) return Boolean is
+     (Actions.Object (Self).Is_Deactivated
+      or else not Self.View.Attribute
         (PRA.Compiler.Driver, PAI.Create (Self.Lang)).Is_Defined
       or else Self.View.Attribute
         (PRA.Compiler.Driver, PAI.Create (Self.Lang)).Value.Text'Length = 0);

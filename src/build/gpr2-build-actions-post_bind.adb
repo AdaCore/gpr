@@ -59,7 +59,7 @@ package body GPR2.Build.Actions.Post_Bind is
 
       --  ??? Replace hard coded values
 
-      Cmd_Line.Add_Argument ("gcc");
+      Cmd_Line.Set_Driver ("gcc");
       Cmd_Line.Add_Argument ("-c");
       Cmd_Line.Add_Argument (String (Self.Input.Path.Simple_Name));
       Cmd_Line.Add_Argument ("-o");

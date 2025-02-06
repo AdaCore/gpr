@@ -553,8 +553,17 @@ package body GPR2.Build.Actions.Compile is
            (Attr.Values.Last_Element.Text & Arg, In_Signature);
       end Add_Options_With_Arg;
 
+      Driver_Attr : constant GPR2.Project.Attribute.Object :=
+                      Self.Ctxt.Attribute (PRA.Compiler.Driver, Lang_Idx);
+
    begin
-      Add_Attr (PRA.Compiler.Driver, Lang_Idx, False, True);
+      if Driver_Attr.Is_Defined then
+         Cmd_Line.Set_Driver
+           (Driver_Attr.Value.Text);
+      else
+         return;
+      end if;
+
       Add_Attr (PRA.Compiler.Leading_Required_Switches, Lang_Idx, True, True);
       --  ??? need to filter out builder switches from command line
       --  Add_Attr (PRA.Builder.Switches, Lang_Idx, True);
@@ -595,12 +604,22 @@ package body GPR2.Build.Actions.Compile is
       Add_Attr (PRA.Compiler.Trailing_Required_Switches, Lang_Idx, True, True);
 
       declare
+         Attr  : constant Project.Attribute.Object :=
+                   Self.View.Attribute
+                     (PRA.Compiler.Source_File_Switches, Lang_Idx);
          Index : constant Unit_Index := Object'Class (Self).Src_Index;
          Idx   : constant String :=
                    (if Index = No_Index then ""
                     else Index'Image);
       begin
-         Cmd_Line.Add_Argument (Self.Src.Path_Name, True);
+         if Attr.Is_Defined then
+            Add_Options_With_Arg
+              (Attr,
+               Self.Src.Path_Name.String_Value,
+               True);
+         else
+            Cmd_Line.Add_Argument (Self.Src.Path_Name, True);
+         end if;
 
          if Index /= No_Index then
             declare

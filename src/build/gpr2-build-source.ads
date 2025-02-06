@@ -19,7 +19,8 @@ package GPR2.Build.Source is
      (Base_Source    : Source_Base.Object;
       Owning_View    : GPR2.Project.View.Object;
       Defining_View  : GPR2.Project.View.Object;
-      Inherited_From : GPR2.Project.View.Object) return Object;
+      Inherited_From : GPR2.Project.View.Object;
+      Is_Visible     : Boolean) return Object;
 
    function Is_Compilable (Self : Object) return Boolean;
    --  Whether the source's language has a defined compiler driver
@@ -39,12 +40,17 @@ package GPR2.Build.Source is
    --  may also have inherited it from another project in case of chained
    --  project extensions.
 
+   function Is_Visible (Self : Object) return Boolean;
+   --  Whether the source is overloaded in the view by another source
+   --  with the same base name.
+
 private
 
    type Object is new GPR2.Build.Source_Base.Object with record
       Owning_View    : GPR2.Project.View.Object;
       Defining_View  : GPR2.Project.View.Object;
       Inherited_From : GPR2.Project.View.Object;
+      Is_Visible     : Boolean := True;
    end record;
 
    Undefined : constant Object := (Source_Base.Undefined with
@@ -57,11 +63,13 @@ private
      (Base_Source    : Source_Base.Object;
       Owning_View    : GPR2.Project.View.Object;
       Defining_View  : GPR2.Project.View.Object;
-      Inherited_From : GPR2.Project.View.Object) return Object is
+      Inherited_From : GPR2.Project.View.Object;
+      Is_Visible     : Boolean) return Object is
      (Base_Source with
       Owning_View    => Owning_View,
       Defining_View  => Defining_View,
-      Inherited_From => Inherited_From);
+      Inherited_From => Inherited_From,
+      Is_Visible     => Is_Visible);
 
    function Is_Compilable (Self : Object) return Boolean is
      (Self.Owning_View.Is_Compilable (Self.Language));
@@ -71,6 +79,9 @@ private
 
    function Is_Inherited (Self : Object) return Boolean is
      (Self.Inherited_From.Is_Defined);
+
+   function Is_Visible (Self : Object) return Boolean is
+     (Self.Is_Visible);
 
    function Inherited_From (Self : Object) return Project.View.Object is
      (Self.Inherited_From);

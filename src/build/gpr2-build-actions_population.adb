@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2024, AdaCore
+--  Copyright (C) 2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -229,32 +229,74 @@ package body GPR2.Build.Actions_Population is
       return Compilation_Unit.Unit_Location_Vector
    is
       use Compilation_Unit;
-      Src     : GPR2.Build.Source.Object;
-      Tree_Db : constant GPR2.Build.Tree_Db.Object_Access :=
-                  View.Tree.Artifacts_Database;
-      Res     : Unit_Location_Vector;
+      use type GPR2.Path_Name.Object;
+
+      Src       : GPR2.Build.Source.Object;
+      Tree_Db   : constant GPR2.Build.Tree_Db.Object_Access :=
+                    View.Tree.Artifacts_Database;
+      Res       : Unit_Location_Vector;
+      SN        : constant Simple_Name :=
+                    Path_Name.Simple_Name (Filename_Type (Basename));
+      Full      : Path_Name.Object;
+      Ambiguous : Boolean := False;
+
    begin
       Error_Reported := False;
 
-      if Options.Unique_Compilation
+      if Filename_Optional (SN) /= Filename_Optional (Basename) then
+         --  The parameter is not a simple name, so check for a relative
+         --  path.
+         Full := Path_Name.Create_File (Filename_Type (Basename));
+         Src := View.Visible_Source (Full);
+
+      elsif Options.Unique_Compilation
         or else Options.Unique_Compilation_Recursive
       then
-         Src := View.Visible_Source
-           (Path_Name.Simple_Name (Filename_Type (Basename)));
+         Src := View.Visible_Source (SN, Ambiguous);
       else
-         Src := View.Source
-           (Path_Name.Simple_Name (Filename_Type (Basename)));
+         Src := View.Source (SN);
       end if;
 
       if not Src.Is_Defined then
          for Lang of View.Language_Ids loop
             Src := View.Visible_Source
-              (View.Suffixed_Simple_Name (Basename, Lang));
+              (View.Suffixed_Simple_Name (String (SN), Lang), Ambiguous);
+
             exit when Src.Is_Defined;
          end loop;
       end if;
 
       if not Src.Is_Defined then
+         return Compilation_Unit.Empty_Vector;
+      end if;
+
+      if Src.Is_Defined
+        and then Filename_Type (SN) /= Filename_Type (Basename)
+      then
+         --  Input was not a simple_name but a relative path, check that we
+         --  have the right source, otherwise this means the source is not
+         --  visible.
+
+         declare
+            Path : constant Path_Name.Object :=
+                     GPR2.Path_Name.Create_File (Filename_Type (Basename));
+
+         begin
+            if Path /= Src.Path_Name then
+               return Compilation_Unit.Empty_Vector;
+            end if;
+         end;
+      end if;
+
+      if Ambiguous then
+         Tree_Db.Reporter.Report
+           (Message.Create
+              (Message.Error,
+               "multiple sources were found for: """ &
+                 Basename & '"',
+               Source_Reference.Create (View.Path_Name.Value, 0, 0)));
+         Error_Reported := True;
+
          return Compilation_Unit.Empty_Vector;
       end if;
 
@@ -338,6 +380,7 @@ package body GPR2.Build.Actions_Population is
       Has_Error   : Boolean;
       Has_SAL     : Boolean := False;
       Closure     : GPR2.Project.View.Set.Object;
+      use type Ada.Containers.Count_Type;
 
    begin
       Tree_Db.Set_Build_Options (Options);
@@ -351,6 +394,52 @@ package body GPR2.Build.Actions_Population is
 
       if Has_Error then
          return False;
+      end if;
+
+      --  Check if we need to generate the mapping file for mains, and perform
+      --  verifications that all parameters are correct in the given context
+
+      if Options.Create_Map_File then
+         declare
+            Attr : constant GPR2.Project.Attribute.Object :=
+                     Tree.Configuration.Corresponding_View.Attribute
+                       (PRA.Linker.Map_File_Option);
+            Multiple_Mains : Boolean := False;
+         begin
+            --  Check if there's support from the linker, and then check that
+            --  we have a main to link
+
+            if not Attr.Is_Defined or else Attr.Values.Is_Empty then
+               pragma Annotate (Xcov, Exempt_On, "defensive code");
+               Tree_Db.Reporter.Report
+                 ("error: selected linker does not allow creating a map file",
+                  To_Stderr => True,
+                  Level     => GPR2.Message.Important);
+               return False;
+               pragma Annotate (Xcov, Exempt_Off);
+
+            elsif Options.Mapping_File_Name /= Null_Unbounded_String then
+               if Mains.Length > 1 then
+                  Multiple_Mains := True;
+               elsif Mains.Length = 0 then
+                  for V of Tree.Namespace_Root_Projects loop
+                     if V.Has_Mains and then V.Mains.Length > 1 then
+                        Multiple_Mains := True;
+                     end if;
+                  end loop;
+               end if;
+
+               if Multiple_Mains then
+                  Tree_Db.Reporter.Report
+                    ("error: map file name is specified while there are " &
+                       "multiple mains",
+                     To_Stderr => True,
+                     Level     => GPR2.Message.Important);
+
+                  return False;
+               end if;
+            end if;
+         end;
       end if;
 
       for V of Tree.Namespace_Root_Projects loop
@@ -384,7 +473,7 @@ package body GPR2.Build.Actions_Population is
                   --  Only compile the given sources
 
                   for M of Mains loop
-                     Src := V.Visible_Source (M.Source.Simple_Name);
+                     Src := V.Visible_Source (M.Source);
 
                      --  Src may not be part of the current subtree
 
@@ -420,10 +509,6 @@ package body GPR2.Build.Actions_Population is
                --------------------------
                --  Handle general case --
                --------------------------
-
-               if not Result then
-                  return False;
-               end if;
 
                case V.Kind is
                   when K_Standard =>
@@ -761,42 +846,6 @@ package body GPR2.Build.Actions_Population is
          return False;
       end if;
 
-      --  Check if we need to generate the mapping file for mains, and perform
-      --  verifications that all parameters are correct in the given context
-
-      if Options.Create_Map_File then
-         declare
-            Attr : constant GPR2.Project.Attribute.Object :=
-                     View.Attribute
-                       (PRA.Linker.Map_File_Option);
-         begin
-            --  Check if there's support from the linker, and then check that
-            --  we have a main to link
-
-            if not Attr.Is_Defined then
-               pragma Annotate (Xcov, Exempt_On, "defensive code");
-               Tree_Db.Reporter.Report
-                 ("error: selected linker does not allow creating a map file",
-                  To_Stderr => True,
-                  Level     => GPR2.Message.Important);
-               return False;
-               pragma Annotate (Xcov, Exempt_Off);
-
-            elsif Options.Mapping_File_Name /= Null_Unbounded_String
-              and then Actual_Mains.Length > 1
-            then
-               Tree_Db.Reporter.Report
-                 ("error: map file name is specified while there are " &
-                    "multiple mains",
-                  To_Stderr => True,
-                  Level     => GPR2.Message.Important);
-
-            end if;
-         end;
-      end if;
-
-      --  Process the mains one by one
-
       declare
          Bind      : Bind_Array (1 .. Natural (Actual_Mains.Length));
          Link      : Link_Array (1 .. Natural (Actual_Mains.Length));
@@ -809,6 +858,8 @@ package body GPR2.Build.Actions_Population is
          Has_Other : Boolean := False;
          Has_SAL   : Boolean := False;
       begin
+         --  First check the dependencies and retrieve the libraries
+
          Closure.Include (View);
 
          if not Populate_Withed_Projects (Tree_Db, Closure, Libs, Has_SAL) then
@@ -828,12 +879,13 @@ package body GPR2.Build.Actions_Population is
             end loop;
          end loop Closure_Loop;
 
+         --  Process the mains one by one
+
          for Main of Actual_Mains loop
-            Source := Main.View.Source (Main.Source.Simple_Name);
+            Source := Main.View.Visible_Source (Main.Source);
 
             Link (Idx).Initialize_Executable
-              (GPR2.Build.Artifacts.Source.Create
-                 (Main.View, Main.Source.Simple_Name, Main.Index),
+              (GPR2.Build.Artifacts.Source.Create (Source, Main.Index),
                Main.View,
                -Options.Output_File);
 
@@ -959,7 +1011,9 @@ package body GPR2.Build.Actions_Population is
                   CU       : GPR2.Build.Compilation_Unit.Object;
 
                begin
-                  if Attr.Is_Defined then
+                  if Attr.Is_Defined
+                    and then not Attr.Values.Is_Empty
+                  then
                      if not Bind (Idx).Is_Defined then
                         Bind (Idx).Initialize
                           (Source.Path_Name.Base_Filename,

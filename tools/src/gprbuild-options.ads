@@ -35,7 +35,6 @@ package GPRbuild.Options is
       No_Object_Check          : Boolean := False;
       No_Split_Units           : Boolean := False;
       Restricted_To_Languages  : GPR2.Containers.Language_Set;
-      Display_Progress         : Boolean := False;
 
       Build_If_Switch_Changes  : Boolean := False;
       Create_Missing_Dirs      : Boolean := False;
@@ -46,6 +45,10 @@ package GPRbuild.Options is
       Extra_Args               : GPR2.Build.External_Options.Object;
       Config_Args              : GPR2.Containers.Value_List;
       PM_Options               : GPR2.Build.Process_Manager.PM_Options;
+
+      Dash_A_Option            : Boolean := False;
+      --  Ignored but reporting has to be done after the options are parsed
+      --  to prevent multiple messages if the switch appears several times.
    end record;
    --  Options for gprls
 

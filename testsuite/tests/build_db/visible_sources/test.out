@@ -31,6 +31,9 @@ sources visible by A
 - src/b/pkg2.ads (spec)
   PKG2 (spec)
 sources visible by Simple
+- src/python/__init__.py (body)
+- src/python/module1/__init__.py (body)
+- src/python/module2/__init__.py (body)
 - src/simple/foo.c (body)
 - src/a/header.h (spec)
 - src/b/header2.h (spec)

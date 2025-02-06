@@ -1,9 +1,7 @@
 regular update:
-prj.gpr:3:08: warning: "__init__.py" is found multiple times for the same source directory
 prj.gpr:3:08: error: "pkg.ads" is found multiple times for the same source directory
   issue correctly detected.
 
 no_error option is now set:
-prj.gpr:3:08: warning: "__init__.py" is found multiple times for the same source directory
 prj.gpr:3:08: warning: "pkg.ads" is found multiple times for the same source directory
   no issue detected.

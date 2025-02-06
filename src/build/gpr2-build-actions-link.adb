@@ -122,16 +122,22 @@ package body GPR2.Build.Actions.Link is
          declare
             Attr : constant GPR2.Project.Attribute.Object :=
                      Self.View.Attribute (PRA.Archive_Builder);
+            First : Boolean := True;
          begin
             pragma Assert (Attr.Is_Defined, "No archiver is defined");
 
             for Val of Attr.Values loop
+               if First then
+                  --  The driver value
+                  Cmd_Line.Set_Driver (Val.Text);
+                  First := False;
+
                --  [eng/gpr/gpr-issues#446] Hack to speed up and ease the
                --  generation of archives :
                --  instead of using "ar cr" then use ranlib, we generate
                --  directly the symbol table by using "ar csr".
 
-               if Val.Text = "cr" then
+               elsif Val.Text = "cr" then
                   Cmd_Line.Add_Argument ("csr", True);
                else
                   Cmd_Line.Add_Argument (Val.Text, True);
@@ -147,8 +153,16 @@ package body GPR2.Build.Actions.Link is
          end;
 
       else
-         Status := Add_Attr (PRA.Linker.Driver, PAI.Undefined, False, True);
-         pragma Assert (Status, "No linker driver is defined");
+         declare
+            Attr : constant GPR2.Project.Attribute.Object :=
+                     Self.Ctxt.Attribute (PRA.Linker.Driver);
+         begin
+            if not Attr.Is_Defined then
+               return;
+            end if;
+
+            Cmd_Line.Set_Driver (Attr.Value.Text);
+         end;
 
          if Src_Idx.Is_Defined then
             Status :=
@@ -336,7 +350,7 @@ package body GPR2.Build.Actions.Link is
             Status := Add_Attr
               (PRA.Linker.Default_Switches,
                PAI.Create
-                 (Self.View.Source (Self.Main_Src.Path.Simple_Name).Language),
+                 (Self.View.Visible_Source (Self.Main_Src.Path).Language),
                True,
                True);
          end if;
@@ -372,12 +386,14 @@ package body GPR2.Build.Actions.Link is
          Signature.Add_Artifact (Obj);
       end loop;
 
-      if not Self.Is_Library then
-         --  ??? TODO dynamic libraries also need their library dependencies
-         for Lib of Self.Library_Dependencies loop
-            Signature.Add_Artifact (Object'Class (Self).Output);
-         end loop;
-      end if;
+      for Lib of Self.Library_Dependencies loop
+         declare
+            Link : constant Object'Class :=
+                     Object'Class (Self.Tree.Action (Lib));
+         begin
+            Signature.Add_Artifact (Link.Output);
+         end;
+      end loop;
 
       Signature.Add_Artifact (Self.Output);
    end Compute_Signature;
@@ -394,6 +410,7 @@ package body GPR2.Build.Actions.Link is
          for Input of Self.Tree.Inputs (Self.UID) loop
             --  Inputs are either objects or libraries. Libraries are
             --  represented by an Artifact.Library class.
+
             if Input not in Artifacts.Library.Object'Class then
                Result.Include (Input);
             end if;
@@ -512,11 +529,14 @@ package body GPR2.Build.Actions.Link is
      (Self   : in out Object;
       Status : Execution_Status) return Boolean
    is
-      Result : Boolean;
+      Result  : Boolean;
+
    begin
-      if Status = Success
-        and then Self.Is_Static_Library
-      then
+      if Status /= Success then
+         return True;
+      end if;
+
+      if Self.Is_Static_Library then
          --  archives are generated as tmp files so that we don't reuse
          --  the library from previous runs, we thus need to unlink and rename
          if Self.Output.Path.Exists then

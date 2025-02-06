@@ -2,8 +2,16 @@ with "a";
 
 project Simple is
 
-   for Source_Dirs use ("src/simple");
+   for Source_Dirs use ("src/simple", "src/python/**");
    for Object_Dir use "obj/simple";
-   for Languages use ("Ada", "C");
+   for Languages use ("Ada", "C", "Python");
+
+   package Compiler is
+      for Driver ("Python") use "";
+   end Compiler;
+
+   package Naming is
+      for Body_Suffix ("Python") use ".py";
+   end Naming;
 
 end Simple;

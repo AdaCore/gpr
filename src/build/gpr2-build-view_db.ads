@@ -9,6 +9,7 @@ with GPR2.Build.Source;
 with GPR2.Build.Source_Base.Vectors;
 with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Log;
+with GPR2.Path_Name;
 with GPR2.Project.View;
 
 limited with GPR2.Build.Source.Sets;
@@ -59,10 +60,19 @@ package GPR2.Build.View_Db is
    --  This contrasts with the "Visible_Source" primitive in this regard.
 
    function Visible_Source
-     (Self     : Object;
-      Basename : Simple_Name) return GPR2.Build.Source.Object
+     (Self      : Object;
+      Basename  : Simple_Name;
+      Ambiguous : out Boolean) return GPR2.Build.Source.Object
      with Pre  => Self.Is_Defined and then Self.Source_Option > No_Source;
    --  Get a source from its simple name, that is visible for a given view's
+   --  sources (so project's own sources and all its withed projects).
+   --  Ambiguous is set when several sources could have matched the basename.
+
+   function Visible_Source
+     (Self : Object;
+      Path : GPR2.Path_Name.Object) return GPR2.Build.Source.Object
+     with Pre  => Self.Is_Defined and then Self.Source_Option > No_Source;
+   --  Get a source from its path name, that is visible for a given view's
    --  sources (so project's own sources and all its withed projects).
 
    function Visible_Sources
@@ -151,7 +161,7 @@ private
    function Has_Source
      (Self     : Object;
       Basename : Simple_Name) return Boolean
-   is (Self.Get.Sources.Contains (Basename));
+   is (Self.Get.Basenames.Contains (Basename));
 
    function Source
      (Self     : Object;
@@ -159,8 +169,14 @@ private
    is (View_Tables.Source (Self.Get, Basename));
 
    function Visible_Source
-     (Self     : Object;
-      Basename : Simple_Name) return GPR2.Build.Source.Object
-   is (View_Tables.Visible_Source (Self.Get, Basename));
+     (Self      : Object;
+      Basename  : Simple_Name;
+      Ambiguous : out Boolean) return GPR2.Build.Source.Object
+   is (View_Tables.Visible_Source (Self.Get, Basename, Ambiguous));
+
+   function Visible_Source
+     (Self : Object;
+      Path : GPR2.Path_Name.Object) return GPR2.Build.Source.Object
+   is (View_Tables.Visible_Source (Self.Get, Path));
 
 end GPR2.Build.View_Db;

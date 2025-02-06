@@ -14,13 +14,13 @@
 --  Also, this allows to have sorted/unsorted iteration while still maintening
 --  the list as a hashed container for efficiency of source loading.
 
-with Ada.Iterator_Interfaces;
+with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Indefinite_Holders;
 with Ada.Finalization;
+with Ada.Iterator_Interfaces;
 
 with GPR2.Build.View_Db;
 
-private with Ada.Containers.Indefinite_Ordered_Maps;
 private with GPR2.Build.View_Tables;
 
 package GPR2.Build.Source.Sets is
@@ -102,11 +102,13 @@ private
 
    use GPR2.Build.View_Tables;
 
+   function Less (P1, P2 : Filename_Type) return Boolean;
+
+   --  Use an ordered path with our custom Less function
    package Path_Source_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Simple_Name,
-      GPR2.Build.View_Tables.Source_Proxy,
-      "<" => GPR2."<",
-      "=" => GPR2.Build.View_Tables."=");
+     (Key_Type     => Filename_Type,
+      Element_Type => Source_Proxy,
+      "<"          => Less);
 
    type Cursor (From_View_Db : Boolean := False) is record
       Db : Build.View_Db.Object;
@@ -114,7 +116,7 @@ private
       case From_View_Db is
          when True =>
             --  we iterate directly the view db's "Sources" list
-            Current_Src   : Basename_Source_Maps.Cursor;
+            Current_Src    : Filename_Source_Maps.Cursor;
          when False =>
             --  we iterate the list in the iterator
             Current_Path  : Path_Source_Maps.Cursor;

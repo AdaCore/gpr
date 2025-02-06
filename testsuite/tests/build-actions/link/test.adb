@@ -159,53 +159,26 @@ begin
       "Update sources");
 
    Obj_Dir := Tree.Root_Project.Object_Directory;
-   if not Obj_Dir.Exists then
-      Assert (FSUtil.Create_Directory (Obj_Dir.String_Value));
-   end if;
 
    declare
       Args : Argument_List;
    begin
-      Args.Append ("gcc");
+      Args.Append ("gpr2build");
       Args.Append ("-c");
-      Args.Append (".." & GNAT.OS_Lib.Directory_Separator & "src" & GNAT.OS_Lib.Directory_Separator & "main.adb");
-      Execute_Command (Args, Obj_Dir.String_Value);
+      Args.Append ("-p");
+      Args.Append ("-q");
+      Args.Append (String (Tree.Root_Project.Path_Name.Simple_Name));
+      Execute_Command (Args, Tree.Root_Project.Dir_Name.String_Value);
    end;
 
    declare
       Args : Argument_List;
    begin
-      Args.Append ("gcc");
-      Args.Append ("-c");
-      Args.Append (".." & GNAT.OS_Lib.Directory_Separator & "src" & GNAT.OS_Lib.Directory_Separator & "pkg.adb");
-      Execute_Command (Args, Obj_Dir.String_Value);
-   end;
-      declare
-      Args : Argument_List;
-   begin
-      Args.Append ("gcc");
-      Args.Append ("-c");
-      Args.Append (".." & GNAT.OS_Lib.Directory_Separator & "src" & GNAT.OS_Lib.Directory_Separator & "dep_two.adb");
-      Execute_Command (Args, Obj_Dir.String_Value);
-   end;
-
-   declare
-      Args : Argument_List;
-   begin
-      Args.Append ("gnatbind");
-      Args.Append ("main.ali");
-      Args.Append ("-o");
-      Args.Append ("b__main.adb");
-      Execute_Command (Args, Obj_Dir.String_Value);
-   end;
-
-   declare
-      Args : Argument_List;
-   begin
-      Args.Append ("gcc");
-      Args.Append ("-c");
-      Args.Append ("b__main.adb");
-      Execute_Command (Args, Obj_Dir.String_Value);
+      Args.Append ("gpr2build");
+      Args.Append ("-b");
+      Args.Append ("-q");
+      Args.Append (String (Tree.Root_Project.Path_Name.Simple_Name));
+      Execute_Command (Args, Tree.Root_Project.Dir_Name.String_Value);
    end;
 
    Init_Action;

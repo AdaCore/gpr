@@ -25,6 +25,7 @@ with GPR2.Build.External_Options;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Project.View.Set;
 pragma Warnings (Off, "*is not referenced");
 with GPR2.Project.View.Vector;
 pragma Warnings (On);
@@ -46,186 +47,99 @@ package body GPR2.Build.Actions.Ada_Bind is
       Slot     : Positive;
       Cmd_Line : in out GPR2.Build.Command_Line.Object)
    is
-      function Add_Attr
+      procedure Add_Attr
         (Id           : Q_Attribute_Id;
          Index        : PAI.Object;
          Is_List      : Boolean;
-         In_Signature : Boolean) return Boolean;
+         In_Signature : Boolean);
 
-      procedure Add_Binder (Id : Q_Attribute_Id; Index : PAI.Object);
+      function Resolve_Binder return String;
+      --  Resolves the path to the binder. Needs to be called after all
+      --  Switches attributes have been analyzed.
 
       procedure Add_Mapping_File;
 
       procedure Create_Response_File;
 
-      Lang_Ada_Idx : constant PAI.Object := PAI.Create (GPR2.Ada_Language);
-      Status       : Boolean;
+      Lang_Ada_Idx      : constant PAI.Object :=
+                            PAI.Create (GPR2.Ada_Language);
+      Binder_From_Attrs : Unbounded_String;
 
       --------------
       -- Add_Attr --
       --------------
 
-      function Add_Attr
+      procedure Add_Attr
         (Id           : Q_Attribute_Id;
          Index        : PAI.Object;
          Is_List      : Boolean;
-         In_Signature : Boolean) return Boolean
+         In_Signature : Boolean)
       is
-         Attr                  : constant Project.Attribute.Object :=
-                                   Self.View.Attribute (Id, Index);
-         Gnatbind_Prefix_Equal : constant String := "gnatbind_prefix=";
-         Gnatbind_Path_Equal   : constant String := "--gnatbind_path=";
-         Ada_Binder_Equal      : constant String := "ada_binder=";
+         Attr                        : constant Project.Attribute.Object :=
+                                         Self.View.Attribute (Id, Index);
+         Gnatbind_Prefix_Equal       : constant String := "gnatbind_prefix=";
+         Gnatbind_Path_Equal         : constant String := "--gnatbind_path=";
+         Ada_Binder_Equal            : constant String := "ada_binder=";
+         Default_Binder_Name         : constant String := "gnatbind";
 
       begin
          if not Attr.Is_Defined then
-            return False;
+            return;
          end if;
 
          if Is_List then
             for Val of Attr.Values loop
-               if Val.Text'Length > 0
-                 and then not Starts_With (Val.Text, Gnatbind_Path_Equal)
-                 and then not Starts_With (Val.Text, Gnatbind_Prefix_Equal)
-                 and then not Starts_With (Val.Text, Ada_Binder_Equal)
-                 --  Ignore -C, as the generated sources are always in Ada
-                 and then Val.Text /= "-C"
+               if Val.Text'Length = 0
+                 or else Val.Text = "-C"
                then
+                  --  Ignore -C, as the generated sources are always in Ada
+                  --  Also ignore empty values
+                  null;
+
+               elsif Starts_With (Val.Text, Gnatbind_Path_Equal) then
+                  Binder_From_Attrs :=
+                    +(Val.Text (Val.Text'First +
+                        Gnatbind_Path_Equal'Length .. Val.Text'Last));
+
+               elsif Starts_With (Val.Text, Gnatbind_Prefix_Equal) then
+                  --  There is always a '-' between <prefix> and
+                  --  "gnatbind". Add one if not already in <prefix>.
+                  if Val.Text'Length = Gnatbind_Prefix_Equal'Length then
+                     Binder_From_Attrs := +Default_Binder_Name;
+                  else
+                     Binder_From_Attrs :=
+                       +(Val.Text (Val.Text'First +
+                           Gnatbind_Prefix_Equal'Length .. Val.Text'Last)
+                         & (if Val.Text (Val.Text'Last) = '-' then "" else "-")
+                         & Default_Binder_Name);
+                  end if;
+
+               elsif Starts_With (Val.Text, Ada_Binder_Equal) then
+                  Binder_From_Attrs :=
+                    +(Val.Text (Val.Text'First +
+                        Ada_Binder_Equal'Length .. Val.Text'Last));
+
+               elsif Starts_With (Val.Text, "-A=") then
+                  --  Ensure the path is absolute
+                  declare
+                     Path : constant Path_Name.Object :=
+                              Path_Name.Create_File
+                                (Filename_Type
+                                   (Val.Text
+                                      (Val.Text'First + 3 .. Val.Text'Last)),
+                                 Self.Ctxt.Dir_Name.Value);
+                  begin
+                     Cmd_Line.Add_Argument
+                       ("-A=" & Path.String_Value, In_Signature);
+                  end;
+               else
                   Cmd_Line.Add_Argument (Val.Text, In_Signature);
                end if;
             end loop;
          else
             Cmd_Line.Add_Argument (Attr.Value.Text, In_Signature);
          end if;
-
-         return True;
       end Add_Attr;
-
-      ----------------
-      -- Add_Binder --
-      ----------------
-
-      procedure Add_Binder (Id : Q_Attribute_Id; Index : PAI.Object) is
-         Attr : constant Project.Attribute.Object :=
-                  Self.View.Attribute (Id, Index);
-
-         Gnatbind_Prefix_Equal       : constant String := "gnatbind_prefix=";
-         Gnatbind_Path_Equal         : constant String := "--gnatbind_path=";
-         Ada_Binder_Equal            : constant String := "ada_binder=";
-         Default_Binder_Name         : constant String := "gnatbind";
-         Tmp_Binder                  : GNAT.OS_Lib.String_Access;
-         Tmp_Binder_Path             : GNAT.OS_Lib.String_Access;
-         True_Binder_Path            : GNAT.OS_Lib.String_Access;
-         Normalized_True_Binder_Path : GNAT.OS_Lib.String_Access;
-
-         use type GNAT.OS_Lib.String_Access;
-      begin
-         if Attr.Is_Defined then
-            --  Retrieve informations about the binder by looking for
-            --  "gnatbind_prefix=", "--gnatbind_path=" or "ada_binder=".
-
-            for Idx in Attr.Values.First_Index .. Attr.Values.Last_Index loop
-               declare
-                  Str : constant String := Attr.Values.Element (Idx).Text;
-               begin
-                  if Starts_With (Str, Gnatbind_Path_Equal)
-                    and then Str'Length > Gnatbind_Path_Equal'Length
-                  then
-                     Tmp_Binder := new String'
-                       (Str (Str'First +
-                            Gnatbind_Path_Equal'Length .. Str'Last));
-                     exit;
-
-                  elsif Starts_With (Str, Gnatbind_Prefix_Equal)
-                    and then Str'Length > Gnatbind_Prefix_Equal'Length
-                  then
-                     --  There is always a '-' between <prefix> and
-                     --  "gnatbind". Add one if not already in <prefix>.
-                     Tmp_Binder := new String'
-                       (Str (Str'First +
-                            Gnatbind_Prefix_Equal'Length .. Str'Last)
-                        & (if Str (Str'Last) = '-' then "" else "-")
-                        & Default_Binder_Name);
-                     exit;
-
-                  elsif Starts_With (Str, Ada_Binder_Equal)
-                    and then Str'Length > Ada_Binder_Equal'Length
-                  then
-                     Tmp_Binder := new String'
-                       (Str (Str'First +
-                            Ada_Binder_Equal'Length .. Str'Last));
-                     exit;
-                  end if;
-               end;
-            end loop;
-         end if;
-
-         --  if "gnatbind_prefix=", "--gnatbind_path=" or "ada_binder=" weren't
-         --  found, default to "gnatbind".
-
-         if Tmp_Binder = null then
-            Tmp_Binder := new String'(Default_Binder_Name);
-         end if;
-
-         --  if we don't have an absolute path to gnatbind at this point, try
-         --  to find it in the same install as the compiler.
-
-         declare
-            Compiler_Driver : constant Project.Attribute.Object :=
-                                Self.View.Attribute
-                                  (PRA.Compiler.Driver, Lang_Ada_Idx);
-         begin
-            if not OS_Lib.Is_Absolute_Path (Tmp_Binder.all)
-              and then Compiler_Driver.Is_Defined
-            then
-               Tmp_Binder_Path := new String'
-                 (Directory_Operations.Dir_Name (Compiler_Driver.Value.Text)
-                  & OS_Lib.Directory_Separator & Tmp_Binder.all);
-            end if;
-         end;
-
-         --  At this point we try to locate either the absolute path to
-         --  gnatbind or the gnatbind in the same install as the compiler.
-
-         True_Binder_Path := new String'
-           (Locate_Exec_On_Path ((
-            if Tmp_Binder_Path /= null
-            then Tmp_Binder_Path.all
-            else Tmp_Binder.all)));
-
-         --  We couldn't locate the absolute path to gnatbind nor the gnatbind
-         --  in the same install as the compiler, try to find a gnatbind in the
-         --  path.
-
-         if True_Binder_Path.all = ""
-           and then Tmp_Binder_Path /= null
-         then
-            OS_Lib.Free (True_Binder_Path);
-            True_Binder_Path := new String'
-              (Locate_Exec_On_Path (Tmp_Binder.all));
-         end if;
-
-         if Tmp_Binder_Path /= null then
-            GNAT.OS_Lib.Free (Tmp_Binder_Path);
-         end if;
-
-         --  Try to Normalize the path, so that gnaampbind does not complain
-         --  about not being in a "bin" directory. But don't resolve symbolic
-         --  links, because in GNAT 5.01a1 and previous releases, gnatbind was
-         --  a symbolic link for .gnat_wrapper.
-         --  If the specified tool does not exist, return the its raw value.
-         Normalized_True_Binder_Path := new String'
-           (if True_Binder_Path.all /= ""
-            then OS_Lib.Normalize_Pathname
-              (True_Binder_Path.all, Resolve_Links => False)
-            else Tmp_Binder.all);
-
-         Cmd_Line.Add_Argument (Normalized_True_Binder_Path.all, True);
-
-         GNAT.OS_Lib.Free (Tmp_Binder);
-         GNAT.OS_Lib.Free (True_Binder_Path);
-         GNAT.OS_Lib.Free (Normalized_True_Binder_Path);
-      end Add_Binder;
 
       ----------------------
       -- Add_Mapping_File --
@@ -245,68 +159,61 @@ package body GPR2.Build.Actions.Ada_Bind is
                           Self.View.Attribute
                             (PRA.Compiler.Mapping_Body_Suffix,
                              PAI.Create (Ada_Language)).Value.Text;
+         Initial_Closure : GPR2.Project.View.Set.Object;
          use Standard.Ada.Characters.Handling;
 
       begin
          if Map_File.FD /= Invalid_FD and then Map_File.FD /= Null_FD then
-            if not Self.Ctxt.Is_Library
-              or else not Self.Ctxt.Has_Any_Interfaces
-            then
-               for V of Self.View.Closure (True, False, False) loop
+            if Self.View.Kind = K_Aggregate_Library then
+               Initial_Closure := Self.View.Aggregated;
+            else
+               Initial_Closure.Include (Self.View);
+            end if;
+
+            for C of Initial_Closure loop
+               for V of C.Closure (True, False, False) loop
                   if not V.Is_Runtime then
                      for CU of V.Own_Units loop
                         declare
-                           A_Comp : Compile.Ada.Object;
-                           Key    : constant String :=
-                                      To_Lower (String (CU.Name)) &
-                                      (if CU.Main_Part = S_Spec
-                                       then S_Suffix else B_Suffix);
+                           A_Comp   : Compile.Ada.Object;
+                           Key      : constant String :=
+                                        To_Lower (String (CU.Name)) &
+                                          (if CU.Main_Part = S_Spec
+                                           then S_Suffix else B_Suffix);
+                           Ignore   : Boolean;
+                           Ali_File : Path_Name.Object;
+
+                           use type GPR2.Project.View.Object;
+
                         begin
                            A_Comp.Initialize (CU);
 
-                           Write
-                             (Map_File.FD,
-                              Key & ASCII.LF &
-                                String (A_Comp.Ali_File.Path.Simple_Name) &
-                                ASCII.LF &
-                                A_Comp.Ali_File.Path.String_Value & ASCII.LF);
+                           Ignore := V /= Self.Ctxt
+                             and then V.Is_Library
+                             and then V.Is_Library_Standalone
+                             and then not V.Interface_Closure.Contains
+                                            (CU.Name);
+
+                           if V.Is_Library and then V /= Self.Ctxt then
+                              Ali_File := V.Library_Ali_Directory.Compose
+                                (A_Comp.Ali_File.Path.Simple_Name);
+                           else
+                              Ali_File := A_Comp.Ali_File.Path;
+                           end if;
+
+                           if not Ignore then
+                              Write
+                                (Map_File.FD,
+                                 Key & ASCII.LF &
+                                   String (Ali_File.Simple_Name) &
+                                   ASCII.LF &
+                                   Ali_File.String_Value & ASCII.LF);
+                           end if;
                         end;
                      end loop;
                   end if;
                end loop;
-
-            else
-               --  For standalone libraries we just use the main part of the
-               --  interface.
-               --  ??? Need to check what gprlib actually does.
-
-               for CU of Self.Ctxt.Interface_Closure loop
-                  --  Find the compile action corresponding to the unit
-                  declare
-                     A_Comp : Compile.Ada.Object;
-                     Key    : constant String :=
-                                To_Lower (String (CU.Name)) &
-                                (if CU.Main_Part = S_Spec
-                                 then S_Suffix else B_Suffix);
-                  begin
-                     A_Comp.Initialize (CU);
-
-                     --  In case of Standalone library, we need to reference
-                     --  at bind time the ALI in the object directory (the
-                     --  one straight from the compiler) instead of the one
-                     --  in the Library ali directory (with the SP flag set).
-
-                     Write
-                       (Map_File.FD,
-                        Key & ASCII.LF &
-                          String (A_Comp.Ali_File.Path.Simple_Name) &
-                          ASCII.LF &
-                          Self.Ctxt.Object_Directory.Compose
-                          (A_Comp.Ali_File.Path.Simple_Name).String_Value &
-                          ASCII.LF);
-                  end;
-               end loop;
-            end if;
+            end loop;
 
             GNATCOLL.OS.FS.Close (Map_File.FD);
          end if;
@@ -384,6 +291,63 @@ package body GPR2.Build.Actions.Ada_Bind is
          Cmd_Line.Set_Response_File_Command (New_Args);
       end Create_Response_File;
 
+      --------------------
+      -- Resolve_Binder --
+      --------------------
+
+      function Resolve_Binder return String
+      is
+         Default_Binder_Name : constant String := "gnatbind";
+         Binder_Path         : Path_Name.Object;
+      begin
+         --  if "gnatbind_prefix=", "--gnatbind_path=" or "ada_binder=" weren't
+         --  found, default to "gnatbind".
+
+         if Length (Binder_From_Attrs) = 0 then
+            Binder_From_Attrs := +Default_Binder_Name;
+         end if;
+
+         if OS_Lib.Is_Absolute_Path (-Binder_From_Attrs) then
+            return Path_Name.Create_File (-Binder_From_Attrs).String_Value;
+         end if;
+
+         --  if we don't have an absolute path to gnatbind at this point, try
+         --  to find it in the same install as the compiler.
+
+         declare
+            Compiler_Driver : constant Project.Attribute.Object :=
+                                Self.View.Attribute
+                                  (PRA.Compiler.Driver, Lang_Ada_Idx);
+         begin
+            if Compiler_Driver.Is_Defined then
+               Binder_Path := Path_Name.Create_File
+                 (-Binder_From_Attrs,
+                  Filename_Type
+                    (Directory_Operations.Dir_Name
+                         (Compiler_Driver.Value.Text)));
+            end if;
+         end;
+
+         if Binder_Path.Exists then
+            return Binder_Path.String_Value;
+         end if;
+
+         --  At this point we try to locate either the absolute path to
+         --  gnatbind or the gnatbind in the same install as the compiler.
+
+         declare
+            Full_Path : constant String :=
+                          Locate_Exec_On_Path (-Binder_From_Attrs);
+         begin
+            if Full_Path'Length > 0 then
+               return Full_Path;
+            else
+               --  Try with the relative path
+               return -Binder_From_Attrs;
+            end if;
+         end;
+      end Resolve_Binder;
+
    begin
       --  [eng/gpr/gpr-issues#446] We should rework how the binder tools is
       --  fetched from the KB.
@@ -392,8 +356,6 @@ package body GPR2.Build.Actions.Ada_Bind is
       --  The binder tool should simply be stored in Binder.Driver
       --  Binder.Prefix can be removed it only serves as renaming the bexch
       --  which does not exist anymore.
-
-      Add_Binder (PRA.Binder.Required_Switches, Lang_Ada_Idx);
 
       if not Self.Has_Main then
          Cmd_Line.Add_Argument ("-n");
@@ -480,14 +442,8 @@ package body GPR2.Build.Actions.Ada_Bind is
       --  This switch is historically added for all GNAT version >= 6.4, it
       --  should be in the knowledge base instead of being hardcoded depending
       --  on the GNAT version.
-      Status :=
-        Add_Attr (PRA.Binder.Required_Switches, Lang_Ada_Idx, True, True);
-      Status := Add_Attr (PRA.Binder.Switches, Lang_Ada_Idx, True, True);
-
-      if not Status then
-         Status :=
-           Add_Attr (PRA.Binder.Default_Switches, Lang_Ada_Idx, True, True);
-      end if;
+      Add_Attr (PRA.Binder.Required_Switches, Lang_Ada_Idx, True, True);
+      Add_Attr (PRA.Binder.Switches, Lang_Ada_Idx, True, True);
 
       --  Add -bargs and -bargs:Ada
 
@@ -510,6 +466,9 @@ package body GPR2.Build.Actions.Ada_Bind is
       end if;
 
       Add_Mapping_File;
+
+      --  Now that all switches have been analyzed, set the driver
+      Cmd_Line.Set_Driver (Resolve_Binder);
 
       if Cmd_Line.Total_Length > Command_Line_Limit then
          Create_Response_File;
@@ -720,10 +679,12 @@ package body GPR2.Build.Actions.Ada_Bind is
       Switch_Index : Natural;
 
    begin
-      Self.Traces.Trace
-        ("Parsing file '" & Self.Output_Body.Path.String_Value &
-           "' generated by " & Self.UID.Image &
-           " to obtain linker options");
+      if Self.Traces.Is_Active then
+         Self.Traces.Trace
+           ("Parsing file '" & Self.Output_Body.Path.String_Value &
+              "' generated by " & Self.UID.Image &
+              " to obtain linker options");
+      end if;
 
       Open
         (File => Src_File,

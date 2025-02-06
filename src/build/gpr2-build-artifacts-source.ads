@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Build.Source;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.View_Ids;
@@ -19,6 +20,10 @@ package GPR2.Build.Artifacts.Source is
    function Create
      (View  : GPR2.Project.View.Object;
       Name  : Simple_Name;
+      Index : Unit_Index := No_Index) return Object;
+
+   function Create
+     (Src   : GPR2.Build.Source.Object;
       Index : Unit_Index := No_Index) return Object;
 
    overriding function Image (Self : Object) return String;
@@ -64,7 +69,9 @@ private
       then L.View.Id < R.View.Id
       elsif L.Name /= R.Name
       then L.Name < R.Name
-      else L.Index < R.Index);
+      elsif L.Index /= R.Index
+      then L.Index < R.Index
+      else L.Name < R.Name);
 
    Undefined : constant Object := (others => <>);
 

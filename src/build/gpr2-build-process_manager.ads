@@ -25,6 +25,7 @@ package GPR2.Build.Process_Manager is
       Force           : Boolean := False;
       Stop_On_Fail    : Boolean := True;
       Keep_Temp_Files : Boolean := False;
+      Show_Progress   : Boolean := False;
    end record;
 
    type Collect_Status is
@@ -38,7 +39,7 @@ package GPR2.Build.Process_Manager is
    type Object is tagged limited private;
 
    type Process_Handler_Status is
-     (Skipped, Failed_To_Launch, Running, Finished);
+     (Skipped, Deactivated, Failed_To_Launch, Running, Finished);
 
    type Process_Handler (Status : Process_Handler_Status := Running) is
    record

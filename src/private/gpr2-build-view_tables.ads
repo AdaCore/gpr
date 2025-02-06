@@ -14,6 +14,7 @@ with GNATCOLL.Refcount;
 
 with GPR2.Containers;
 with GPR2.Log;
+with GPR2.Path_Name;
 with GPR2.Project.View.Set;
 
 with GPR2.Build.Compilation_Unit;
@@ -111,9 +112,13 @@ private package GPR2.Build.View_Tables is
      (Source_Proxy, Hash, "=");
    --  A set of source reference
 
+   package Filename_Source_Maps is new Ada.Containers.Indefinite_Hashed_Maps
+     (Filename_Type, Source_Proxy, Hash, "=");
+   --  Pathname to source reference maps
+
    package Basename_Source_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (Simple_Name, Source_Proxy, Hash, "=");
-   --  Basename to source reference maps
+   --  Basename to pathname maps
 
    package Basename_Source_List_Maps is new
      Ada.Containers.Indefinite_Hashed_Maps
@@ -148,8 +153,10 @@ private package GPR2.Build.View_Tables is
 
       --  Dynamic data
 
-      Sources         : Basename_Source_Maps.Map;
+      Sources         : Filename_Source_Maps.Map;
       --  Sources to take into account for View after visibility is resolved.
+      Basenames       : Basename_Source_Maps.Map;
+      --  Sources by basename
       Overloaded_Srcs : Basename_Source_List_Maps.Map;
       --  Keeps track of source overloading, to reassess source visibility or
       --  erroneous cases when a source is added or removed.
@@ -167,6 +174,9 @@ private package GPR2.Build.View_Tables is
       Excluded_Sources : Containers.Source_Path_To_Sloc.Map;
       --  content of Excluded_Source_Files and Excluded_Source_List_File
       --  attributes.
+      No_Sources        : Boolean := False;
+      --  set to True when Source_Dirs or Source_Files is explicitly set to
+      --  an empty list.
       Actually_Excluded : Basename_Source_Maps.Map;
       --  list of excluded_sources items that matched at least one source
 
@@ -237,9 +247,19 @@ private package GPR2.Build.View_Tables is
      (Data     : View_Data_Ref;
       Basename : Simple_Name) return Build.Source.Object;
 
+   function Source
+     (Data  : View_Data_Ref;
+      Proxy : Source_Proxy) return Build.Source.Object
+     with Inline;
+
    function Visible_Source
-     (Data     : View_Data_Ref;
-      Basename : Simple_Name) return Build.Source.Object;
+     (Data      : View_Data_Ref;
+      Basename  : Simple_Name;
+      Ambiguous : out Boolean) return Build.Source.Object;
+
+   function Visible_Source
+     (Data : View_Data_Ref;
+      Path : GPR2.Path_Name.Object) return Build.Source.Object;
 
    function Get_Data
      (Db   : access GPR2.Build.Tree_Db.Object;

@@ -232,8 +232,9 @@ package body GPR2.Project.Tree is
          end if;
       end Process;
 
-      Source : Build.Source.Object;
-      Unit   : Build.Compilation_Unit.Object;
+      Source    : Build.Source.Object;
+      Unit      : Build.Compilation_Unit.Object;
+      Ambiguous : Boolean;
 
    begin
       if Root_Project_Only
@@ -259,7 +260,8 @@ package body GPR2.Project.Tree is
 
             for Main of Mains loop
                Source := Root.View_Db.Visible_Source
-                 (GPR2.Path_Name.Simple_Name (Main));
+                 (GPR2.Path_Name.Simple_Name (Main),
+                  Ambiguous);
 
                if not Source.Is_Defined then
                   Unit := Root.Unit (Name_Type (Path_Name.Simple_Name (Main)));
@@ -273,6 +275,9 @@ package body GPR2.Project.Tree is
                if not Source.Is_Defined then
                   raise GPR2.Options.Usage_Error with
                     "cannot find """ & String (Main) & '"';
+               elsif Ambiguous then
+                  raise GPR2.Options.Usage_Error with
+                    "several main sources """ & String (Main) & '"';
                end if;
 
                if Source.Has_Units then
