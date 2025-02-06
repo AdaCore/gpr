@@ -848,7 +848,8 @@ begin
       Add_Languages (Element (C));
    end loop;
 
-   Post_Conf_Description := To_Holder (Conf_Descriptions (Project_Path));
+   Post_Conf_Description :=
+     To_Holder (Conf_Descriptions (Self.Root.Path_Name));
 
    if not Pre_Conf_Description.Is_Empty then
       Compare_Configurations
