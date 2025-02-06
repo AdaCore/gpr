@@ -40,4 +40,9 @@ package GPR2.Tree_Internal.View_Builder is
       Index  : Value_Type;
       Values : Containers.Value_List);
 
+   procedure Set_Variable
+     (Self     : in out Object;
+      Var_Name : Name_Type;
+      Value    : Value_Type);
+
 end GPR2.Tree_Internal.View_Builder;
