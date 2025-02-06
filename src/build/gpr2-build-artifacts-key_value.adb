@@ -1,11 +1,10 @@
 --
---  Copyright (C) 2024, AdaCore
+--  Copyright (C) 2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-
-package body GPR2.Build.Artifacts.Files is
+package body GPR2.Build.Artifacts.Key_Value is
 
    -----------------
    -- Unserialize --
@@ -17,10 +16,10 @@ package body GPR2.Build.Artifacts.Files is
       Chk  : String;
       Ctxt : GPR2.Project.View.Object)
    is
-      pragma Unreferenced (Chk);
    begin
-      Val := (Path => Path_Name.Create_File (Filename_Type (Repr)),
-              Ctxt => Ctxt);
+      Val := (Key   => +Repr,
+              Value => +Chk,
+              Ctxt  => Ctxt);
    end Unserialize;
 
-end GPR2.Build.Artifacts.Files;
+end GPR2.Build.Artifacts.Key_Value;

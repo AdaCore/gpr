@@ -110,11 +110,11 @@ private
       CU                    : GPR2.Build.Compilation_Unit.Object;
       --  The Unit to build
 
-      Local_Config_Pragmas  : Artifacts.Files.Object;
+      Local_Config_Pragmas  : Path_Name.Object;
       --  The local config file as specified by the view's
       --  Local_Configuration_Pragmas attribute
 
-      Global_Config_Pragmas : Artifacts.Files.Object;
+      Global_Config_Pragmas : Path_Name.Object;
       --  The global configuration pragma file specified by the root project
       --  Global_Configuration_Pragmas attribute
    end record;

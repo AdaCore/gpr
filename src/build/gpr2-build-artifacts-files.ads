@@ -16,23 +16,22 @@ package GPR2.Build.Artifacts.Files is
 
    overriding function Is_Defined (Self : Object) return Boolean;
 
-   function Create (Path : GPR2.Path_Name.Object) return Object with Inline;
-   function Create (Path : Filename_Type) return Object with Inline;
+   function Create (Path : GPR2.Path_Name.Object;
+                    View : GPR2.Project.View.Object) return Object with Inline;
+   function Create (Path : Filename_Type;
+                    View : GPR2.Project.View.Object) return Object with Inline;
+
+   overriding function Serialize (Self : Object) return String;
 
    overriding procedure Unserialize
-     (Ctxt : GPR2.Project.View.Object;
-      S    : String;
-      Val  : out Object);
-
-   overriding function Image (Self : Object) return String;
+     (Val  : out Object;
+      Repr : String;
+      Chk  : String;
+      Ctxt : GPR2.Project.View.Object);
 
    function Path (Self : Object) return GPR2.Path_Name.Object;
 
-   overriding function SLOC
-     (Self : Object) return Source_Reference.Object'Class;
-
-   overriding function Checksum
-     (Self : Object) return Utils.Hash.Hash_Digest;
+   overriding function Checksum (Self : Object) return String;
 
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type;
 
@@ -42,7 +41,11 @@ private
 
    type Object is new Artifacts.Object with record
       Path : Path_Name.Object;
+      Ctxt : GPR2.Project.View.Object;
    end record;
+
+   overriding function View (Self : Object) return GPR2.Project.View.Object is
+     (Self.Ctxt);
 
    overriding function Protocol (Self : Object) return String is
      ("file");
@@ -50,30 +53,29 @@ private
    overriding function "<" (L, R : Object) return Boolean is
       (L.Path.Value < R.Path.Value);
 
-   Undefined : constant Object := (Path => Path_Name.Undefined);
+   Undefined : constant Object := (others => <>);
 
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
 
-   function Create (Path : GPR2.Path_Name.Object) return Object is
-     (Path => Path);
+   function Create (Path : GPR2.Path_Name.Object;
+                    View : GPR2.Project.View.Object) return Object
+   is (Path => Path,
+       Ctxt => View);
 
-   function Create (Path : Filename_Type) return Object is
-     (Path => Path_Name.Create_File (Path));
+   function Create (Path : Filename_Type;
+                    View : GPR2.Project.View.Object) return Object
+   is (Path => Path_Name.Create_File (Path),
+       Ctxt => View);
 
-   overriding function Checksum
-     (Self : Object) return Utils.Hash.Hash_Digest
+   overriding function Checksum (Self : Object) return String
    is (Utils.Hash.Hash_File (Self.Path.Value));
 
    function Path (Self : Object) return GPR2.Path_Name.Object is
      (Self.Path);
 
-   overriding function Image (Self : Object) return String is
+   overriding function Serialize (Self : Object) return String is
      (Self.Path.String_Value);
-
-   overriding function SLOC
-     (Self : Object) return Source_Reference.Object'Class is
-      (Source_Reference.Create (Self.Path.Value, 0, 0));
 
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type is
      (Hash (Self.Path.Value));

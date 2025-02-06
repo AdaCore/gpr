@@ -744,7 +744,7 @@ package body GPR2.Build.Actions.Compile is
          if not Self.Input.Is_Inherited
            or else Obj_Path.Exists
          then
-            Self.Obj_File := Artifacts.Files.Create (Obj_Path);
+            Self.Obj_File := Artifacts.Files.Create (Obj_Path, Self.Ctxt);
 
          else
             Candidate := Self.Input.Inherited_From;
@@ -770,9 +770,9 @@ package body GPR2.Build.Actions.Compile is
             --  this action.
 
             if not Found then
-               Self.Obj_File := Artifacts.Files.Create (Obj_Path);
+               Self.Obj_File := Artifacts.Files.Create (Obj_Path, Self.Ctxt);
             else
-               Self.Obj_File := Artifacts.Files.Create (Lkup_Obj);
+               Self.Obj_File := Artifacts.Files.Create (Lkup_Obj, Self.Ctxt);
             end if;
          end if;
 
@@ -801,8 +801,9 @@ package body GPR2.Build.Actions.Compile is
         and then not Db.Add_Output
           (UID,
            Artifacts.Files.Create
-             (Self.View.Object_Directory.Compose
-                (Object'Class (Self).Dependency_File)))
+             (Self.Ctxt.Object_Directory.Compose
+                (Object'Class (Self).Dependency_File),
+              Self.Ctxt))
       then
          return False;
       end if;
