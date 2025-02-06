@@ -192,6 +192,16 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined;
    --  Returns whether With_Runtime was set while loading the tree
 
+   function Has_Ada_Compiler_Version (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Whether the ada compiler version could be extracted from the loaded
+   --  runtime.
+
+   function Ada_Compiler_Version (Self : Object) return Value_Type
+     with Pre => Self.Is_Defined;
+   --  The version string, or an empty string if no toolchain version could
+   --  be determined.
+
    function Languages (Self : Object) return Containers.Language_Set
      with Pre => Self.Is_Defined;
    --  Returns the list of all the languages used in the loaded tree
@@ -514,6 +524,12 @@ private
 
    function Runtime_Requested (Self : Object) return Boolean is
      (Self.Tree.With_Runtime);
+
+   function Has_Ada_Compiler_Version (Self : Object) return Boolean is
+     (Self.Tree.Has_Ada_Compiler_Version);
+
+   function Ada_Compiler_Version (Self : Object) return Value_Type is
+     (Self.Tree.Ada_Compiler_Version);
 
    function Target
      (Self : Object; Canonical : Boolean := False) return Name_Type

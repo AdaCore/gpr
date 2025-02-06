@@ -19,10 +19,10 @@ with GNATCOLL.Damerau_Levenshtein_Distance;
 with GNATCOLL.OS.Constants;
 with GNATCOLL.Tribooleans;
 
+with GPR2.Build.ALI_Parser;
 pragma Warnings (Off, ".* is not referenced");
 with GPR2.Build.Source.Sets;
 pragma Warnings (On, ".* is not referenced");
-
 with GPR2.Project_Parser;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
@@ -52,6 +52,10 @@ package body GPR2.Tree_Internal is
    Wildcards       : constant Strings.Maps.Character_Set :=
                        Strings.Maps.To_Set ("?*[]");
    --  Wild chars for filename pattern
+
+   Compiler_Version_Var : constant Name_Type := "Compiler_Version";
+   --  Variable used in the runtime project to store the compiler version
+   --  used to build this runtime.
 
    procedure Error
       (Self : in out Object;
@@ -121,6 +125,15 @@ package body GPR2.Tree_Internal is
 
    procedure Update_Search_Paths (Self : in out Object);
    --  Update Self.Search_Paths after Prepend, Append & Environment changes
+
+   --------------------------
+   -- Ada_Compiler_Version --
+   --------------------------
+
+   function Ada_Compiler_Version (Self : Object) return Value_Type is
+   begin
+      return Self.Runtime.Variable (Compiler_Version_Var).Value.Text;
+   end Ada_Compiler_Version;
 
    --------------------
    -- Append_Message --
@@ -303,6 +316,19 @@ package body GPR2.Tree_Internal is
          RTS_View.Set_Attribute
            (PRA.Object_Dir, RTD.Compose ("adalib", True).String_Value);
 
+         --  Retrieve the compiler version from system.ali
+
+         declare
+            System_Ali : constant Path_Name.Object :=
+                           RTD.Compose ("adalib", True).Compose ("system.ali");
+         begin
+            if System_Ali.Exists then
+               RTS_View.Set_Variable
+                 (Compiler_Version_Var,
+                  GPR2.Build.ALI_Parser.Version (System_Ali));
+            end if;
+         end;
+
          --  The only language supported is Ada
 
          RTS_View.Set_Attribute (PRA.Languages, "ada");
@@ -401,6 +427,16 @@ package body GPR2.Tree_Internal is
          return Project.View.Undefined;
       end if;
    end Get_View;
+
+   ------------------------------
+   -- Has_Ada_Compiler_Version --
+   ------------------------------
+
+   function Has_Ada_Compiler_Version (Self : Object) return Boolean is
+   begin
+      return Self.Runtime.Is_Defined
+        and then Self.Runtime.Has_Variables (Compiler_Version_Var);
+   end Has_Ada_Compiler_Version;
 
    -----------------------
    -- Has_Configuration --
