@@ -717,7 +717,7 @@ package body GPR2.Build.Actions_Population is
                end if;
 
                Tree_Db.Add_Input (Self.Link.UID, Comp.Object_File, False);
-               Tree_Db.Add_Input (Bind.UID, Comp.Ali_File, True);
+               Tree_Db.Add_Input (Bind.UID, Comp.Dependency_File, True);
             end;
          end loop;
 
@@ -936,7 +936,7 @@ package body GPR2.Build.Actions_Population is
                end if;
 
                Bind (Idx).Initialize
-                 (A_Comp.Ali_File.Path.Base_Filename,
+                 (A_Comp.Dependency_File.Path.Base_Filename,
                   Main.View,
                   Has_Main       => True,
                   SAL_In_Closure => Has_SAL);
@@ -945,7 +945,8 @@ package body GPR2.Build.Actions_Population is
                   return False;
                end if;
 
-               Tree_Db.Add_Input (Bind (Idx).UID, A_Comp.Ali_File, True);
+               Tree_Db.Add_Input
+                 (Bind (Idx).UID, A_Comp.Dependency_File, True);
                Tree_Db.Add_Input (Link (Idx).UID, A_Comp.Object_File, True);
                Tree_Db.Add_Input
                  (Link (Idx).UID, Bind (Idx).Post_Bind.Object_File, True);
@@ -983,7 +984,7 @@ package body GPR2.Build.Actions_Population is
                         end if;
 
                         Tree_Db.Add_Input
-                          (Bind (Idx).UID, A_Comp.Ali_File, True);
+                          (Bind (Idx).UID, A_Comp.Dependency_File, True);
                         Tree_Db.Add_Input
                           (Link (Idx).UID, A_Comp.Object_File, True);
                      end loop;
@@ -1010,7 +1011,7 @@ package body GPR2.Build.Actions_Population is
                         Ada_Comp.Initialize (CU);
                         Tree_Db.Add_Input
                           (Bind (Idx).UID,
-                           Ada_Comp.Ali_File,
+                           Ada_Comp.Dependency_File,
                            True);
 
                         if Ada_Comp.Object_File.Is_Defined then

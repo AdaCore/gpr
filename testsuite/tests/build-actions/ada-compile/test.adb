@@ -27,7 +27,7 @@ function Test return Integer is
    Project     : constant String := "tree/main.gpr";
 
 
-   Ada_Comp : GBA.Compile.Ada.Object := GBA.Compile.Ada.Undefined;
+   Ada_Comp : GBA.Compile.Ada.Object;
 
    procedure Init_Action
      (Action : in out GBA.Compile.Ada.Object; Tree : GPR2.Project.Tree.Object);
@@ -119,10 +119,10 @@ begin
                         Obj_Dir.Join ("main.ali").Full_Name;
    begin
       Assert
-        (Ada_Comp.Ali_File.Path.String_Value = String (Expected_Ali),
+        (Ada_Comp.Dependency_File.Path.String_Value = String (Expected_Ali),
          "Check ALI file path");
       Assert
-        (Ada_Comp.Ali_File.Path.Exists,
+        (Ada_Comp.Dependency_File.Path.Exists,
          "Check that ALI file has been correctly created");
    end;
 

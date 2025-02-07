@@ -1,0 +1,2 @@
+description: Check action recompilation on dependencies modification
+driver: python_script
