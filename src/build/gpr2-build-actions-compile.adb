@@ -632,7 +632,6 @@ package body GPR2.Build.Actions.Compile is
                Self.Src.Path_Name.String_Value,
                True);
          else
-            --  We provide the absolute path to the source file
             Cmd_Line.Add_Argument (Self.Src.Path_Name, True);
          end if;
 
