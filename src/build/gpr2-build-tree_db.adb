@@ -4,7 +4,9 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GNATCOLL.Directed_Graph; use GNATCOLL.Directed_Graph;
 with GNATCOLL.OS.FSUtil;
+
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
@@ -16,9 +18,9 @@ with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.View.Vector;
+with GPR2.Source_Reference;
 with GPR2.Tree_Internal;
 with GPR2.View_Ids.Set;
-with GNATCOLL.Directed_Graph; use GNATCOLL.Directed_Graph;
 
 package body GPR2.Build.Tree_Db is
 
@@ -222,7 +224,7 @@ package body GPR2.Build.Tree_Db is
    function Add_Output
      (Self     : in out Object;
       Action   : Actions.Action_Id'Class;
-      Artifact : Artifacts.Object'Class) return Boolean
+      Artifact : Artifacts.Files.Object'Class) return Boolean
    is
       use type Actions.Action_Id;
       Pred     : Artifact_Action_Maps.Cursor;
@@ -238,11 +240,13 @@ package body GPR2.Build.Tree_Db is
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
                  (GPR2.Message.Error,
-                  '"' & Action.Image & """ and """ &
+                 '"' & Action.Image & """ and """ &
                     Self.Predecessor (Artifact).Image &
                     """ produce the same output """ &
-                    Artifact.Image & '"',
-                  Artifact.SLOC));
+                    String (Artifact.Path.Simple_Name) & '"',
+                  GPR2.Source_Reference.Object
+                    (GPR2.Source_Reference.Create
+                       (Artifact.Path.Value, 0, 0))));
             return False;
          end if;
       else
@@ -284,6 +288,8 @@ package body GPR2.Build.Tree_Db is
             begin
                Db_Data.View    := V;
                Db_Data.Tree_Db := Self.Self;
+               Db_Data.Visible_Source_Closure :=
+                 V.Closure (False, False, True);
                Db_Inst := View_Tables.View_Base_For (Db_Data);
                Self.Build_Dbs.Insert (V.Id, Db_Inst);
                --  Db_Inst.Update;
@@ -401,6 +407,8 @@ package body GPR2.Build.Tree_Db is
             begin
                Db_Data.View    := V;
                Db_Data.Tree_Db := Self.Self;
+               Db_Data.Visible_Source_Closure :=
+                 V.Closure (False, False, True);
                Db_Inst := View_Tables.View_Base_For (Db_Data);
                Self.Build_Dbs.Insert (V.Id, Db_Inst);
             end;
@@ -691,17 +699,6 @@ package body GPR2.Build.Tree_Db is
 
       return -Self.Linker_Lib_Dir_Opt;
    end Linker_Lib_Dir_Option;
-
-   ---------------------
-   -- Load_Signatures --
-   ---------------------
-
-   procedure Load_Signatures (Self : Object) is
-   begin
-      for A of Self.Self.Actions loop
-         A.Load_Signature;
-      end loop;
-   end Load_Signatures;
 
    ----------
    -- Next --
@@ -1065,13 +1062,15 @@ package body GPR2.Build.Tree_Db is
       C_Glob := Self.Artifacts.Find (Old);
       pragma Assert
         (Artifact_Sets.Has_Element (C_Glob),
-         "Replace_Artifact: cannot find old artifact '" & Old.Image & "'");
+         "Replace_Artifact: cannot find old artifact '" &
+           Old.Serialize & "'");
       Self.Artifacts.Delete (C_Glob);
 
       Self.Artifacts.Insert (Value, C_Glob, Success);
       pragma Assert
         (Success,
-        "Replace_Artifact: cannot insert new artifact '" & Value.Image & "'");
+         "Replace_Artifact: cannot insert new artifact '" &
+           Value.Serialize & "'");
 
       pragma Assert (Success);
 
@@ -1079,7 +1078,7 @@ package body GPR2.Build.Tree_Db is
       pragma Assert
         (Success,
          "Replace_Artifact: cannot setup list of successors for '" &
-           Value.Image & "'");
+           Value.Serialize & "'");
 
       C_Succ := Self.Successors.Find (Old);
 

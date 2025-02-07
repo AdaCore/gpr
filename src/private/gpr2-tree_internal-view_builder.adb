@@ -12,6 +12,7 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Variable.Set;
 with GPR2.Project_Parser.Create;
 with GPR2.Source_Reference.Attribute;
+with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
 with GPR2.Source_Reference.Pack;
 
@@ -27,9 +28,16 @@ package body GPR2.Tree_Internal.View_Builder is
       Attr : Q_Attribute_Id)
       return Source_Reference.Attribute.Object
    is (GPR2.Source_Reference.Attribute.Object
-       (GPR2.Source_Reference.Attribute.Create
-          (Self.Data.Trees.Project.Path_Name.Value, 0, 0,
-           Attr)));
+         (GPR2.Source_Reference.Attribute.Create
+            (Self.Data.Trees.Project.Path_Name.Value, 0, 0, Attr)));
+
+   function SR_Identifier
+     (Self : Object;
+      Id   : Name_Type)
+      return Source_Reference.Identifier.Object
+   is (GPR2.Source_Reference.Identifier.Object
+         (GPR2.Source_Reference.Identifier.Create
+            (Self.Data.Trees.Project.Path_Name.Value, 0, 0, Id)));
 
    function SR_Index
      (Self  : Object;
@@ -189,6 +197,18 @@ package body GPR2.Tree_Internal.View_Builder is
             SR_Index (Self, Index),
             SR_Values (Self, Values)));
    end Set_Attribute;
+
+   procedure Set_Variable
+     (Self     : in out Object;
+      Var_Name : Name_Type;
+      Value    : Value_Type)
+   is
+      Var : constant GPR2.Project.Variable.Object :=
+              GPR2.Project.Variable.Create
+                (SR_Identifier (Self, Var_Name), SR_Value (Self, Value));
+   begin
+      Self.Data.Vars.Include (Var_Name, Var);
+   end Set_Variable;
 
    ---------------
    -- SR_Values --

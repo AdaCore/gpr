@@ -12,7 +12,7 @@ with GNATCOLL.Directed_Graph;
 with GNATCOLL.OS.FS;
 
 with GPR2.Build.Actions;
-with GPR2.Build.Artifacts;
+with GPR2.Build.Artifacts.Files;
 with GPR2.Build.External_Options;
 with GPR2.Build.Options;
 with GPR2.Build.Process_Manager;
@@ -137,7 +137,7 @@ package GPR2.Build.Tree_Db is
    function Add_Output
      (Self     : in out Object;
       Action   : Actions.Action_Id'Class;
-      Artifact : Artifacts.Object'Class) return Boolean
+      Artifact : Artifacts.Files.Object'Class) return Boolean
      with Pre => Self.Is_Defined
                    and then Self.Has_Action (Action)
                    and then Artifact.Is_Defined;
@@ -158,9 +158,6 @@ package GPR2.Build.Tree_Db is
 
    function Propagate_Actions (Self : Object) return Boolean;
    --  Call the On_Tree_Propagation subprogram for each new action of the tree
-
-   procedure Load_Signatures (Self : Object);
-   --  Load the actions signatures
 
    ----------------------------
    -- Iteration on artifacts --

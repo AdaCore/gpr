@@ -11,11 +11,12 @@ with Ada.Strings.Fixed;
 with GNATCOLL.OS.FS;
 with GNATCOLL.OS.FSUtil;
 
+with GPR2.Build.Artifacts.Key_Value;
 with GPR2.Build.Tree_Db;
-with GPR2.Message;
-with GPR2.Source_Reference;
 
 package body GPR2.Build.Actions is
+
+   Command_Line_Key : constant String := "command_line";
 
    ------------
    -- Attach --
@@ -181,30 +182,18 @@ package body GPR2.Build.Actions is
       Db_File    : constant GPR2.Path_Name.Object :=
                      Self.Tree.Db_Filename_Path
                        (Object'Class (Self).UID, True);
-      Invalidate : Boolean := False;
-
-      use GPR2.Build.Signature.Artifact_Maps;
 
    begin
       if not Db_File.Is_Defined then
-         Invalidate := True;
-
-      else
-         Self.Signature :=
-           Build.Signature.Load (Db_File, Object'Class (Self).View);
-
-         for C in Self.Signature.Artifacts.Iterate loop
-            if not Key (C).Is_Defined then
-               Invalidate := True;
-
-               exit;
-            end if;
-         end loop;
-      end if;
-
-      if Invalidate then
          Self.Signature.Clear;
+
+         return;
       end if;
+
+      Self.Signature :=
+        Build.Signature.Load (Db_File, Object'Class (Self).View);
+
+      Object'Class (Self).Compute_Signature (Load_Mode => True);
 
    exception
       when others =>
@@ -219,14 +208,17 @@ package body GPR2.Build.Actions is
      (Self : in out Object'Class;
       Slot : Positive)
    is
-      Cmd_Line : Build.Command_Line.Object;
+      Ign : Boolean with Unreferenced;
    begin
-      Cmd_Line :=
+      Self.Cmd_Line :=
         GPR2.Build.Command_Line.Create (Self.Working_Directory);
-      Self.Compute_Command (Slot, Cmd_Line);
-      Cmd_Line.Finalize;
-      Self.Signature.Update_Command_Line_Digest (Cmd_Line);
-      Self.Cmd_Line := Cmd_Line;
+      Self.Compute_Command (Slot, Self.Cmd_Line);
+
+      if Self.Signature.Was_Saved then
+         Ign := Self.Signature.Add_Input
+           (Artifacts.Key_Value.Create
+              (Command_Line_Key, Self.Cmd_Line.Signature));
+      end if;
    end Update_Command_Line;
 
    -----------------------
@@ -239,26 +231,19 @@ package body GPR2.Build.Actions is
       Stderr : Unbounded_String) return Boolean
    is
       UID : constant Action_Id'Class := Self.UID;
+      Ign : Boolean with Unreferenced;
    begin
+      --  Ensure the inputs and outputs are up-to-date after the action is
+      --  executed: the list of presumed inputs and outputs may need to be
+      --  refined after the fact.
+
       Self.Signature.Clear;
+      Self.Compute_Signature (Load_Mode => False);
+      Ign := Self.Signature.Add_Input
+        (Artifacts.Key_Value.Create
+           (Command_Line_Key, Self.Cmd_Line.Signature));
 
-      Self.Signature.Add_Output (Stdout, Stderr);
-      Self.Signature.Update_Command_Line_Digest (Self.Cmd_Line);
-
-      Self.Compute_Signature (Self.Signature);
-
-      if Self.Signature.Has_Error then
-         Self.Tree.Reporter.Report
-           (GPR2.Message.Create
-              (GPR2.Message.Error,
-               "this file is missing after execution of """ &
-                 Self.Command_Line.Signature & '"',
-               GPR2.Source_Reference.Create
-                 (Self.Signature.Missing_Artifact.Path.Value, 0, 0)));
-         Self.Signature.Clear;
-
-         return False;
-      end if;
+      Self.Signature.Add_Console_Output (Stdout, Stderr);
 
       Self.Signature.Store (Self.Tree.Db_Filename_Path (UID, False));
 

@@ -69,12 +69,12 @@ begin
       Ada.Text_IO.Put_Line (A.UID.Image);
       Ada.Text_IO.Put_Line ("  inputs:");
       for Input of Tree.Artifacts_Database.Inputs (A.UID) loop
-         Ada.Text_IO.Put_Line ("  - " & Input.Image);
+         Ada.Text_IO.Put_Line ("  - " & Input.Serialize);
       end loop;
 
       Ada.Text_IO.Put_Line ("  outputs:");
       for Output of Tree.Artifacts_Database.Outputs (A.UID) loop
-         Ada.Text_IO.Put_Line ("  - " & Output.Image);
+         Ada.Text_IO.Put_Line ("  - " & Output.Serialize);
       end loop;
    end loop;
 

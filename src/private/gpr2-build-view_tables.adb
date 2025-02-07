@@ -1355,7 +1355,7 @@ package body GPR2.Build.View_Tables is
          return Source (Data, C);
       end if;
 
-      for V of Data.View.Closure (False, False, True) loop
+      for V of Data.Visible_Source_Closure loop
          if V.Kind in With_View_Db then
             declare
                V_Data : View_Data_Ref renames Get_Data (Data.Tree_Db, V);
@@ -1390,7 +1390,7 @@ package body GPR2.Build.View_Tables is
          return Source (Data, Filename_Source_Maps.Element (C));
       end if;
 
-      for V of Data.View.Closure (False, False, True) loop
+      for V of Data.Visible_Source_Closure loop
          if V.Kind in With_View_Db then
             declare
                V_Data    : View_Data_Ref renames Get_Data (Data.Tree_Db, V);

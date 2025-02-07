@@ -23,6 +23,7 @@ def test(cmd):
     output = re.sub(r"(Version *:) .*", r"\1 Pro 1.0 (20000101) (<host>)", output)
     output = re.sub(r"(version.*:) .*", r"\1 Pro 1.0 (20000101) (<host>)", output)
     output = re.sub(r"(.*value.*GNAT ).*", r"\1<version>", output)
+    output = re.sub(r"(.*Compiler_Version[^\n]*\s*- Value : ).*", r"\1<version>", output)
     output = output.replace(os.getcwd(), "<cwd>")
     # json mode uses // as path separator
     output = output.replace(re.sub(r"//", r"/", os.getcwd()), "<cwd>")

@@ -43,5 +43,5 @@
 ------------------------------
 -- clashing_objects/agg.gpr --
 ------------------------------
-main.o: error: "[C Compile] main.c (b.gpr)" and "[Ada Compile] main.adb (a.gpr)" produce the same output "/clashing_objects/main.o"
+main.o: error: "[C Compile] main.c (b.gpr)" and "[Ada Compile] main.adb (a.gpr)" produce the same output "main.o"
 

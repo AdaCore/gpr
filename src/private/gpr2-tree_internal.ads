@@ -208,6 +208,14 @@ private package GPR2.Tree_Internal is
    function Runtime_Project (Self : Object) return View.Object;
    --  Returns the runtime project for the given tree
 
+   function Has_Ada_Compiler_Version (Self : Object) return Boolean;
+   --  Whether the ada compiler version could be extracted from the loaded
+   --  runtime.
+
+   function Ada_Compiler_Version (Self : Object) return Value_Type;
+   --  The version string, or an empty string if no toolchain version could
+   --  be determined.
+
    function Target
      (Self      : Object;
       Canonical : Boolean := False) return Name_Type;

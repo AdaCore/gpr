@@ -1,14 +1,12 @@
 --
---  Copyright (C) 2024, AdaCore
+--  Copyright (C) 2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.Path_Name;
-with GPR2.Utils.Hash;
+private with Ada.Strings.Hash;
 
-
-package GPR2.Build.Artifacts.Files is
+package GPR2.Build.Artifacts.Key_Value is
 
    type Object is new Artifacts.Object with private;
 
@@ -16,8 +14,9 @@ package GPR2.Build.Artifacts.Files is
 
    overriding function Is_Defined (Self : Object) return Boolean;
 
-   function Create (Path : GPR2.Path_Name.Object) return Object with Inline;
-   function Create (Path : Filename_Type) return Object with Inline;
+   function Create
+     (Key   : Value_Type;
+      Value : Value_Type) return Object;
 
    overriding function Serialize (Self : Object) return String;
 
@@ -27,47 +26,43 @@ package GPR2.Build.Artifacts.Files is
       Chk  : String;
       Ctxt : GPR2.Project.View.Object);
 
-   function Path (Self : Object) return GPR2.Path_Name.Object;
-
    overriding function Checksum (Self : Object) return String;
 
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type;
 
 private
 
-   use type GPR2.Path_Name.Object;
-
    type Object is new Artifacts.Object with record
-      Path : Path_Name.Object;
+      Key   : Unbounded_String;
+      Value : Unbounded_String;
    end record;
 
    overriding function Protocol (Self : Object) return String is
-     ("file");
+     ("keyvalue");
 
    overriding function "<" (L, R : Object) return Boolean is
-      (L.Path.Value < R.Path.Value);
+     (if L.Key /= R.Key
+      then L.Key < R.Key
+      else L.Value < R.Value);
 
    Undefined : constant Object := (others => <>);
 
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
 
-   function Create (Path : GPR2.Path_Name.Object) return Object
-   is (Path => Path);
+   function Create
+     (Key   : Value_Type;
+      Value : Value_Type) return Object is
+     (Key   => +Key,
+      Value => +Value);
 
-   function Create (Path : Filename_Type) return Object
-   is (Path => Path_Name.Create_File (Path));
-
-   overriding function Checksum (Self : Object) return String
-   is (Utils.Hash.Hash_File (Self.Path.Value));
-
-   function Path (Self : Object) return GPR2.Path_Name.Object is
-     (Self.Path);
+   overriding function Checksum (Self : Object) return String is
+     (-Self.Value);
 
    overriding function Serialize (Self : Object) return String is
-     (Self.Path.String_Value);
+     (-Self.Key);
 
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type is
-     (Hash (Self.Path.Value));
+     (Ada.Strings.Hash (-Self.Key));
 
-end GPR2.Build.Artifacts.Files;
+end GPR2.Build.Artifacts.Key_Value;

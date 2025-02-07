@@ -458,7 +458,7 @@ package GPR2.Project.View is
       Filename  : GPR2.Simple_Name;
       Ambiguous : out Boolean)
       return Build.Source.Object
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined, Inline;
    --  Similar to Source but the source is looked up in the complete closure
    --  of Self.
 
@@ -466,14 +466,14 @@ package GPR2.Project.View is
      (Self      : Object;
       Filename  : GPR2.Simple_Name)
       return Build.Source.Object
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined, Inline;
    --  Same as above but ignores the Ambiguous status
 
    function Visible_Source
      (Self : Object;
       Path : GPR2.Path_Name.Object)
       return Build.Source.Object
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined, Inline;
    --  Similar to Source but the source is looked up in the complete closure
    --  of Self, using its full path.
    --  The source may not be naturally visible though, since using the full

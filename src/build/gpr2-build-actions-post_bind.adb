@@ -75,13 +75,26 @@ package body GPR2.Build.Actions.Post_Bind is
 
    end Compute_Command;
 
+   -----------------------
+   -- Compute_Signature --
+   -----------------------
+
    overriding procedure Compute_Signature
-     (Self      : Object;
-      Signature : in out GPR2.Build.Signature.Object) is
+     (Self      : in out Object;
+      Load_Mode : Boolean)
+   is
    begin
-      Signature.Add_Artifact (Self.Input);
-      Signature.Add_Artifact (Self.Output);
-      Signature.Add_Artifact (Self.Ali);
+      if not Self.Signature.Add_Input (Self.Input) and then Load_Mode then
+         return;
+      end if;
+
+      if not Self.Signature.Add_Input (Self.Ali) and then Load_Mode then
+         return;
+      end if;
+
+      if not Self.Signature.Add_Output (Self.Output) and then Load_Mode then
+         return;
+      end if;
    end Compute_Signature;
 
    ------------
@@ -159,7 +172,7 @@ package body GPR2.Build.Actions.Post_Bind is
          if Act in Link.Object'Class then
             Self.Traces.Trace ("Options passed to " & Act.UID.Image & ":");
             for Opt of Binder_Action.Linker_Options loop
-               Self.Traces.Trace ("* '" & String (Opt) & "'");
+               Self.Traces.Trace ("* '" & Opt & "'");
                Link.Object (Act).Add_Option (Opt);
             end loop;
          end if;

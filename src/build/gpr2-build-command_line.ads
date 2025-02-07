@@ -7,7 +7,6 @@
 with GNATCOLL.OS.Process;
 
 with GPR2.Path_Name;
-with GPR2.Utils.Hash;
 
 package GPR2.Build.Command_Line is
 
@@ -45,8 +44,6 @@ package GPR2.Build.Command_Line is
    --  Replaces the actual command without changing its signature. Used
    --  in particular to accomodate commands with response file.
 
-   procedure Finalize (Self : in out Object);
-
    function Argument_List
      (Self : Object) return GNATCOLL.OS.Process.Argument_List;
 
@@ -57,11 +54,6 @@ package GPR2.Build.Command_Line is
 
    function Total_Length (Self : Object) return Natural;
 
-   function Is_Finalized (Self : Object) return Boolean;
-
-   function Checksum (Self : Object) return GPR2.Utils.Hash.Hash_Digest
-     with Pre => Self.Is_Finalized;
-
 private
 
    type Object is tagged record
@@ -70,9 +62,6 @@ private
       Total_Length : Natural := 0;
       Signature    : Unbounded_String;
       Cwd          : Path_Name.Object;
-      Checksum     : GPR2.Utils.Hash.Hash_Digest :=
-                       GPR2.Utils.Hash.No_Digest;
-      Finalized    : Boolean := False;
    end record;
 
    function Argument_List
@@ -82,12 +71,6 @@ private
    function Environment_Variables
      (Self : Object) return GNATCOLL.OS.Process.Environment_Dict
    is (Self.Env);
-
-   function Checksum (Self : Object) return GPR2.Utils.Hash.Hash_Digest is
-     (Self.Checksum);
-
-   function Is_Finalized (Self : Object) return Boolean is
-      (Self.Finalized);
 
    function Total_Length (Self : Object) return Natural is
      (Self.Total_Length);

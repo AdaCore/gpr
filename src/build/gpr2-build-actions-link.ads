@@ -6,7 +6,7 @@
 
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.Library;
-with GPR2.Build.Artifacts.Source;
+with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute_Index;
@@ -30,10 +30,9 @@ package GPR2.Build.Actions.Link is
    function Is_Defined (Self : Object) return Boolean;
 
    procedure Initialize_Executable
-     (Self       : in out Object;
-      Src        : Artifacts.Source.Object;
-      Context    : GPR2.Project.View.Object;
-      Output     : Filename_Optional := "");
+     (Self    : in out Object;
+      Src     : Compilation_Unit.Unit_Location;
+      Output  : Filename_Optional := "");
    --  Initialize a link action.
 
    procedure Initialize_Library
@@ -124,7 +123,7 @@ private
       Executable     : Artifacts.Files.Object;
       --  Executable produced by the linker
 
-      Main_Src       : Artifacts.Source.Object;
+      Main_Src       : Compilation_Unit.Unit_Location;
       --  Source of the Main when an executable is produced
 
       Library        : Artifacts.Library.Object;
@@ -139,8 +138,8 @@ private
    end record;
 
    overriding procedure Compute_Signature
-     (Self      : Object;
-      Signature : in out GPR2.Build.Signature.Object);
+     (Self      : in out Object;
+      Load_Mode : Boolean);
 
    overriding function Extended (Self : Object) return Object is
      (raise Internal_Error with "This action is not extending");

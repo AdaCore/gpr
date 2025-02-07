@@ -5,13 +5,12 @@
 --
 
 with GPR2.Project.View;
-with GPR2.Source_Reference;
-with GPR2.Utils.Hash;
 
 private with Ada.Tags;
 
 package GPR2.Build.Artifacts is
-   use GPR2.Utils.Hash;
+
+   Invalid_Checksum : constant String := "";
 
    type Object is interface;
    --  Artifacts are the nodes of the Tree DB graph, and represent the
@@ -25,22 +24,21 @@ package GPR2.Build.Artifacts is
 
    function Is_Defined (Self : Object) return Boolean is abstract;
 
+   function Protocol (Self : Object) return String is abstract;
+   --  Must be constant for a class of artifacts. Is used to
+   --  serialize / unserialize artifacts.
+
+   function Serialize (Self : Object) return String is abstract;
+   --  JSON representaiton of Self
+
    procedure Unserialize
-     (Ctxt : GPR2.Project.View.Object;
-      Uri  : String;
-      Val  : out Object) is abstract;
-   --  Used to deserialize an artifact. The protocol part is removed from the
-   --  uri before Unserialize is called.
+     (Val  : out Object;
+      Repr : String;
+      Chk  : String;
+      Ctxt : GPR2.Project.View.Object) is abstract;
+   --  Translates the JSON representation to an actual instance
 
-   function Image (Self : Object) return String is abstract;
-   --  This value is used when unserializing the artifact (see Create above).
-
-   function SLOC (Self : Object) return GPR2.Source_Reference.Object'Class
-                  is abstract;
-   --  A source reference object, to be used in error reporting to locate the
-   --  artifact.
-
-   function Checksum (Self : Object) return Hash_Digest is abstract;
+   function Checksum (Self : Object) return String is abstract;
    --  The current checksum of the resource
 
    function "<" (L, R : Object) return Boolean is abstract;
@@ -51,26 +49,14 @@ package GPR2.Build.Artifacts is
    --  Class wide comparison, compares object type's external tags if L and R
    --  are not of the same type.
 
-   function Protocol (Self : Object) return String is abstract;
-   --  Must be constant for a class of artifacts. Is used to
-   --  serialize / unserialize artifacts.
-
    procedure Register_Artifact_Class
      (Artifact : Object'Class);
    --  Used to register a new artifact class. The artifacts handled by
    --  libgpr2 are all registered at elaboration time in the body of this
    --  package.
 
-   subtype Uri_Type is String;
-
-   function To_Uri (Artifact : Object'Class) return Uri_Type;
-
-   function From_Uri
-     (Uri  : Uri_Type;
-      Ctxt : GPR2.Project.View.Object) return Object'Class;
-   --  Translates an Uri into object. Raises Constraint_Error if the protocol
-   --  was not registered before.
-
+   function New_Instance (Protocol : String) return Object'Class;
+   --  Used to get a new empty artifact object from a Protocol id
 
 private
 

@@ -14,7 +14,6 @@ with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Actions.Sets;
-with GPR2.Build.Artifacts.Source;
 pragma Warnings (Off);
 with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Source.Sets;
@@ -561,10 +560,6 @@ package body GPR2.Build.Actions_Population is
          end loop;
       end if;
 
-      if Result then
-         Tree_Db.Load_Signatures;
-      end if;
-
       return Result;
    end Populate_Actions;
 
@@ -885,8 +880,7 @@ package body GPR2.Build.Actions_Population is
             Source := Main.View.Visible_Source (Main.Source);
 
             Link (Idx).Initialize_Executable
-              (GPR2.Build.Artifacts.Source.Create (Source, Main.Index),
-               Main.View,
+              (Main,
                -Options.Output_File);
 
             if Options.Create_Map_File then

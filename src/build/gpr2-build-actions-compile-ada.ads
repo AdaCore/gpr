@@ -81,7 +81,9 @@ private
    overriding function Action_Parameter
      (Self : Ada_Compile_Id) return Value_Type
    is (String (Self.Src_Name) &
-       (if Self.Index /= No_Index then "@" & Idx_Image (Self.Index) else ""));
+       (if Self.Index /= No_Index
+        then '@' & Idx_Image (Self.Index)
+        else ""));
 
    function Create
      (Src : GPR2.Build.Compilation_Unit.Object) return Ada_Compile_Id
@@ -110,11 +112,11 @@ private
       CU                    : GPR2.Build.Compilation_Unit.Object;
       --  The Unit to build
 
-      Local_Config_Pragmas  : Artifacts.Files.Object;
+      Local_Config_Pragmas  : Path_Name.Object;
       --  The local config file as specified by the view's
       --  Local_Configuration_Pragmas attribute
 
-      Global_Config_Pragmas : Artifacts.Files.Object;
+      Global_Config_Pragmas : Path_Name.Object;
       --  The global configuration pragma file specified by the root project
       --  Global_Configuration_Pragmas attribute
    end record;
@@ -126,8 +128,8 @@ private
       (Self.CU.Dependency_File);
 
    overriding procedure Compute_Signature
-     (Self      : Object;
-      Signature : in out GPR2.Build.Signature.Object);
+     (Self      : in out Object;
+      Load_Mode : Boolean);
 
    Undefined : constant Object := (others => <>);
 

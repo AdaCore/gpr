@@ -101,8 +101,12 @@ procedure Main is
                   end Output;
 
                begin
-                  for V of Vals loop
-                     Output (V.Text);
+                  for Val of Vals loop
+                     if Key (V) = "Compiler_Version" then
+                        Text_IO.Put ("<compiler version>");
+                     else
+                        Output (Val.Text);
+                     end if;
                   end loop;
                end;
 

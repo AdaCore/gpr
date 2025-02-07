@@ -11,7 +11,7 @@ with GNATCOLL.OS.FSUtil;
 with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.ALI_Parser;
-with GPR2.Build.Artifacts.Source;
+with GPR2.Build.Artifacts.Key_Value;
 with GPR2.Build.Tree_Db;
 with GPR2.Message;
 with GPR2.Project.Attribute;
@@ -98,7 +98,7 @@ package body GPR2.Build.Actions.Compile.Ada is
 
          Cmd_Line.Add_Argument
            (Attr.Values.Last_Element.Text &
-              Self.Global_Config_Pragmas.Path.String_Value,
+              Self.Global_Config_Pragmas.String_Value,
             False);
       end if;
 
@@ -110,7 +110,7 @@ package body GPR2.Build.Actions.Compile.Ada is
 
          Cmd_Line.Add_Argument
            (Attr.Values.Last_Element.Text &
-              Self.Local_Config_Pragmas.Path.String_Value,
+              Self.Local_Config_Pragmas.String_Value,
             False);
       end if;
    end Compute_Command;
@@ -120,53 +120,78 @@ package body GPR2.Build.Actions.Compile.Ada is
    -----------------------
 
    overriding procedure Compute_Signature
-     (Self      : Object;
-      Signature : in out GPR2.Build.Signature.Object)
+     (Self      : in out Object;
+      Load_Mode : Boolean)
    is
-      Art  : Artifacts.Source.Object;
-      F    : Artifacts.Files.Object;
-      Deps : constant GPR2.Containers.Filename_Set := Self.Dependencies;
+      Version : Artifacts.Key_Value.Object;
 
    begin
-      if Deps.Is_Empty then
-         Signature.Clear;
+      if not Self.Signature.Add_Output (Self.Ali_File) and then Load_Mode then
          return;
       end if;
 
-      for Dep of Deps loop
-         --  Configuration pragmas are returned as dependency but are
-         --  not sources of the view, so we need to filter them
+      if Self.Obj_File.Is_Defined
+        and then not Self.Signature.Add_Output (Self.Obj_File)
+        and then Load_Mode
+      then
+         return;
+      end if;
 
-         if (not Self.Global_Config_Pragmas.Is_Defined
-             or else Dep /= Self.Global_Config_Pragmas.Path.Value)
-           and then (not Self.Local_Config_Pragmas.Is_Defined
-                     or else Dep /= Self.Local_Config_Pragmas.Path.Value)
-         then
-            if Dep in Simple_Name then
-               Art := Artifacts.Source.Create (Self.View, Dep);
-            else
-               Art := Artifacts.Source.Undefined;
-            end if;
+      if Self.Ctxt.Tree.Has_Ada_Compiler_Version then
+         Version := Artifacts.Key_Value.Create
+           ("compiler_version",
+            Self.Ctxt.Tree.Ada_Compiler_Version);
 
-            if Art.Is_Defined then
-               Signature.Add_Artifact (Art);
-            else
-               F := Artifacts.Files.Create (Dep);
-               Signature.Add_Artifact (F);
-            end if;
+         if not Self.Signature.Add_Input (Version) and then Load_Mode then
+            return;
          end if;
-      end loop;
-
-      Signature.Add_Artifact (Self.Ali_File);
-      Signature.Add_Artifact (Self.Obj_File);
-
-      if Self.Global_Config_Pragmas.Is_Defined then
-         Signature.Add_Artifact (Self.Global_Config_Pragmas);
       end if;
 
-      if Self.Local_Config_Pragmas.Is_Defined then
-         Signature.Add_Artifact (Self.Local_Config_Pragmas);
-      end if;
+      declare
+         Deps : constant GPR2.Containers.Filename_Set := Self.Dependencies;
+      begin
+         if Deps.Is_Empty then
+            Self.Signature.Invalidate;
+            return;
+         end if;
+
+         for Dep of Deps loop
+            --  Configuration pragmas are returned as dependency but are
+            --  not sources of the view, so we need to filter them
+
+            if Dep in Simple_Name then
+               declare
+                  Src : constant GPR2.Build.Source.Object :=
+                          Self.View.Visible_Source (Dep);
+               begin
+                  if not Src.Is_Defined then
+                     Self.Traces.Trace
+                       ("Compute_Signature: cannot find dependency " &
+                          String (Dep));
+
+                     if Load_Mode then
+                        Self.Signature.Invalidate;
+                        return;
+                     end if;
+
+                  elsif not Src.Owning_View.Is_Runtime
+                    and then not Self.Signature.Add_Input
+                      (Artifacts.Files.Create (Src.Path_Name))
+                    and then Load_Mode
+                  then
+                     return;
+                  end if;
+               end;
+
+            else
+               if not Self.Signature.Add_Input (Artifacts.Files.Create (Dep))
+                 and then Load_Mode
+               then
+                  return;
+               end if;
+            end if;
+         end loop;
+      end;
    end Compute_Signature;
 
    ------------------
@@ -378,14 +403,14 @@ package body GPR2.Build.Actions.Compile.Ada is
          --  views.
 
          Self.Global_Config_Pragmas :=
-           Artifacts.Files.Create (Filename_Type (Attr.Value.Text));
+           Path_Name.Create_File (Filename_Type (Attr.Value.Text));
       end if;
 
       Attr := Self.View.Attribute (PRA.Compiler.Local_Configuration_Pragmas);
 
       if Attr.Is_Defined then
          Self.Local_Config_Pragmas :=
-           Artifacts.Files.Create (Filename_Type (Attr.Value.Text));
+           Path_Name.Create_File (Filename_Type (Attr.Value.Text));
       end if;
    end Initialize;
 
@@ -627,7 +652,8 @@ package body GPR2.Build.Actions.Compile.Ada is
                                (Ref.Ali_File.Path.Simple_Name);
                            Self.Tree.Add_Input
                              (Bind,
-                              Artifacts.Files.Create (Ali_In_Lib), False);
+                              Artifacts.Files.Create (Ali_In_Lib),
+                              False);
                         else
                            Self.Tree.Add_Input
                              (Bind, Ref.Ali_File, False);

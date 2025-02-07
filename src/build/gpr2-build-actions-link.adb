@@ -120,7 +120,7 @@ package body GPR2.Build.Actions.Link is
       Src_Idx   : constant PAI.Object :=
                     (if not Self.Is_Library
                       then PAI.Create
-                        (String (Self.Main_Src.Path.Simple_Name),
+                        (String (Self.Main_Src.Source.Simple_Name),
                          Case_Sensitive => File_Names_Case_Sensitive,
                          At_Pos         => Self.Main_Src.Index)
                       else PAI.Undefined);
@@ -385,7 +385,7 @@ package body GPR2.Build.Actions.Link is
             Status := Add_Attr
               (PRA.Linker.Default_Switches,
                PAI.Create
-                 (Self.View.Visible_Source (Self.Main_Src.Path).Language),
+                 (Self.View.Visible_Source (Self.Main_Src.Source).Language),
                True,
                True);
          end if;
@@ -409,12 +409,14 @@ package body GPR2.Build.Actions.Link is
    -----------------------
 
    overriding procedure Compute_Signature
-     (Self      : Object;
-      Signature : in out GPR2.Build.Signature.Object)
+     (Self      : in out Object;
+      Load_Mode : Boolean)
    is
    begin
       for Obj of Self.Embedded_Objects loop
-         Signature.Add_Artifact (Obj);
+         if not Self.Signature.Add_Input (Obj) and then Load_Mode then
+            return;
+         end if;
       end loop;
 
       for Lib of Self.Library_Dependencies loop
@@ -422,11 +424,17 @@ package body GPR2.Build.Actions.Link is
             Link : constant Object'Class :=
                      Object'Class (Self.Tree.Action (Lib));
          begin
-            Signature.Add_Artifact (Link.Output);
+            if not Self.Signature.Add_Input (Link.Output)
+              and then Load_Mode
+            then
+               return;
+            end if;
          end;
       end loop;
 
-      Signature.Add_Artifact (Self.Output);
+      if not Self.Signature.Add_Output (Self.Output) and then Load_Mode then
+         return;
+      end if;
    end Compute_Signature;
 
    ----------------------
@@ -454,33 +462,33 @@ package body GPR2.Build.Actions.Link is
    ---------------
 
    procedure Initialize_Executable
-     (Self       : in out Object;
-      Src        : Artifacts.Source.Object;
-      Context    : GPR2.Project.View.Object;
-      Output     : Filename_Optional := "")
+     (Self    : in out Object;
+      Src     : Compilation_Unit.Unit_Location;
+      Output  : Filename_Optional := "")
    is
       Exec : GPR2.Path_Name.Object;
    begin
+      Self.Is_Library := False;
+      Self.Main_Src   := Src;
+      Self.Ctxt       := Src.View;
+      Self.Traces     := Create ("ACTION_LINK");
+
       if Output'Length = 0 then
-         Exec := Context.Executable (Src.Path.Simple_Name, Src.Index);
+         Exec := Self.Ctxt.Executable (Src.Source.Simple_Name, Src.Index);
       else
          declare
             Suff : constant Filename_Optional :=
-                     Context.Executable_Suffix;
+                     Self.Ctxt.Executable_Suffix;
          begin
             if Ada.Strings.Fixed.Index (String (Output), ".") = 0 then
-               Exec := Context.Executable_Directory.Compose (Output & Suff);
+               Exec := Self.Ctxt.Executable_Directory.Compose (Output & Suff);
             else
-               Exec := Context.Executable_Directory.Compose (Output);
+               Exec := Self.Ctxt.Executable_Directory.Compose (Output);
             end if;
          end;
       end if;
 
-      Self.Is_Library := False;
-      Self.Main_Src   := Src;
       Self.Executable := Artifacts.Files.Create (Exec);
-      Self.Ctxt       := Context;
-      Self.Traces     := Create ("ACTION_LINK");
    end Initialize_Executable;
 
    -------------------------------

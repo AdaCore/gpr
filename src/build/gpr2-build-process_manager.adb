@@ -621,6 +621,10 @@ package body GPR2.Build.Process_Manager is
          return;
       end if;
 
+      --  Load and check the job's signature
+
+      Job.Load_Signature;
+
       --  We need to compute the command line before checking the signature
       --  since the cmd line is part of the signature. It is important to do
       --  it even for deactivated actions, else the signature is considered
@@ -639,6 +643,11 @@ package body GPR2.Build.Process_Manager is
       end;
 
       if Job.Is_Deactivated then
+         --  Note: we need to check for deactivated jobs *after* the signature
+         --  is computed to understand if the deactivated action has all its
+         --  output correct (so that we can unblock depending non-deactivated
+         --  actions).
+
          if Self.Traces.Is_Active then
             pragma Annotate (Xcov, Exempt_On, "debug code");
             Self.Traces.Trace

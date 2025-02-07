@@ -82,8 +82,8 @@ private
       (Self.View);
 
    overriding procedure Compute_Signature
-     (Self      : Object;
-      Signature : in out GPR2.Build.Signature.Object);
+     (Self      : in out Object;
+      Load_Mode : Boolean);
 
    overriding function Extended (Self : Object) return Object is
      (raise Internal_Error with "This action is not extending");

@@ -60,19 +60,19 @@ def create_json_dict(name, kind, project):
     if kind == "empty":
         pass
     elif kind == "random":
-        data = {"bla": 123, "foo": [{"bar": "foobar"}, {"foo": "barfoo"}]}
+        data = {"inputs": 123, "foo": [{"bar": "foobar"}, {"foo": "barfoo"}]}
     elif kind == "invalid_signature_1":
-        data = {"signature": "foobar"}
+        data = {"inputs": "foobar"}
     elif kind == "invalid_signature_2":
-        data = {"signature": [123, 456]}
+        data = {"inputs": [123, 456]}
     elif kind == "invalid_signature_3":
-        data = {"signature": [{"uri": "not_an_uri"}]}
+        data = {"inputs": [{"class": "not_existing", "key": "", "value": ""}]}
     elif kind == "invalid_signature_4":
-        data = {"signature": [{"uri": "file://foo.txt", "checksum": "bad_checksum"}]}
+        data = {"inputs": [{"class": "file", "key": "foo.txt", "value": "bad_checksum"}]}
     elif kind == "invalid_signature_5":
-        data = {"signature": [{"unexpected": 123}]}
+        data = {"inputs": [{"unexpected": 123}]}
     elif kind == "invalid_signature_6":
-        data = {"signature": [{123: 123}]}
+        data = {"inputs": [{123: 123}]}
 
     fname = get_json_file(name, project)
     if valid_json_fname(fname):
@@ -87,11 +87,12 @@ def overwrite_artifact_element(name, kind, project):
     if valid_json_fname(fname):
         found = False
         data = read_json_file (fname)
+        items = data["inputs"] + data["outputs"]
 
-        for item in data["signature"]:
-            if item["uri"].endswith(name):
-                item["uri"] = "deadcaferand0m"
-                print(f"signature for {item['uri']} replaced")
+        for item in items:
+            if item["key"].endswith(name):
+                item["key"] = "deadcaferand0m"
+                print(f"signature for {item['key']} replaced")
                 found = True
         write_json_file(fname, data)
         if not found:
@@ -112,9 +113,10 @@ def overwrite_checksum(name, ext, checksum, project):
         assert valid_json_fname(fname), f"not a valid json {fname}"
         replaced = False
         data = read_json_file (fname)
-        for item in data["signature"]:
-            if (ext != "" and item["uri"].endswith(ext)) or ext == "":
-                item["checksum"] = checksum
+        items = data["inputs"] + data["outputs"]
+        for item in items:
+            if (ext != "" and item["key"].endswith(ext)) or ext == "":
+                item["value"] = checksum
                 replaced = True
                 break
         assert replaced, f"could not replace '{ext}'"

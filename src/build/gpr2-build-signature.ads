@@ -4,65 +4,80 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Containers.Indefinite_Hashed_Sets;
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Strings.Unbounded;
 
 with GPR2.Build.Artifacts;
-with GPR2.Build.Artifacts.Files;
-with GPR2.Build.Command_Line;
 with GPR2.Path_Name;
 with GPR2.Project.View;
-with GPR2.Utils.Hash;
+
+--  The signature mechanism gather a list of input and output artifacts
+--  and checks them against their expected value.
+--
+--  The format for saving an artifact is:
+--
+--  {"class": "",
+--   "key":   "",
+--   "value": ""}
+--
+--  The class allowing to find a proper instance, then the instance
+--  unserializes itself using key and value.
+--
+--  The value is generic: for a file it will be a checksum but for
+--  key-value it will be the actual value, where all is needed is
+--  a simple string comparison.
+--
+--  When loading the signature, the actions will populate the
+--  expected artifacts manually before run.
+--  Each artifact is checked against the signature, and this process stops as
+--  soon as there is a mismatch. The signature is automatically invalidated
+--  in this case.
+--
+--  On the other hand, when saving the signature, the final list of
+--  artifacts is fully populated and their checksums/values dumped.
 
 package GPR2.Build.Signature is
-   use Ada.Containers;
-   use Utils.Hash;
-
-   package Artifact_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Artifacts.Object'Class, Hash_Digest, Artifacts.Less);
 
    package UB renames Ada.Strings.Unbounded;
 
    type Object is tagged private;
 
-   function Valid (Self : Object) return Boolean;
-   --  Returns whether or not the signature is valid.
-   --  This value is set by the Set_Valid_State which is representative of how
-   --  each owner of a signature considers what a valid signature is.
+   Undefined : constant Object;
 
-   function Has_Error (Self : Object) return Boolean;
-   --  Whether one or several expected artifacts are missing
+   function Was_Saved (Self : Object) return Boolean;
 
-   function Missing_Artifact
-     (Self : Object) return GPR2.Build.Artifacts.Files.Object'Class
-     with Pre => Self.Has_Error;
-   --  In case of erroneous artifacts, this returns the first missing artifact
-
-   procedure Add_Artifact
-     (Self : in out Object;
-      Art  : Artifacts.Object'Class);
-   --  Add or update an artifact in the signature
-
-   function Has_Artifact
+   function Add_Output
      (Self : in out Object;
       Art  : Artifacts.Object'Class) return Boolean;
-   --  Check that the artifact is part of the closure of the signature
+   --  Add a new output artifact to the signature. Returns the current
+   --  valid status of the signature after addition of the artifact.
 
-   procedure Add_Output
+   function Check_Outputs (Self : Object) return Boolean;
+   --  Check that the current outputs exactly match the saved timestamps
+
+   function Add_Input
+     (Self : in out Object;
+      Art  : Artifacts.Object'Class) return Boolean;
+   --  Add a new input artifact to the signature. Returns the current
+   --  valid status of the signature after addition of the artifact.
+
+   function Check_Inputs (Self : Object) return Boolean;
+   --  Check that the current inputs exactly match the saved timestamps
+
+   procedure Add_Console_Output
      (Self   : in out Object;
       Stdout : UB.Unbounded_String;
       Stderr : UB.Unbounded_String);
 
-   procedure Update_Command_Line_Digest
-     (Self : in out Object;
-      Sig  : GPR2.Build.Command_Line.Object);
+   function Stdout (Self : Object) return UB.Unbounded_String;
+   function Stderr (Self : Object) return UB.Unbounded_String;
+
+   procedure Invalidate (Self : in out Object);
+   --  Clear the checksums in Self.
 
    procedure Clear (Self : in out Object);
    --  Clear all the signature artifacts and invalidate it
-
-   procedure Invalidate (Self : in out Object);
-   --  Removes the checcksum from Self, but keeps cmd line representation
-   --  and standard output and error
 
    function Load (Db_File : Path_Name.Object;
                   Ctxt    : GPR2.Project.View.Object) return Object;
@@ -71,42 +86,46 @@ package GPR2.Build.Signature is
    procedure Store (Self : in out Object; Db_File : Path_Name.Object);
    --  Store the signature into the build DB file Db_File
 
-   function Artifacts (Self : Object) return Artifact_Maps.Map with Inline;
-
-   function Stdout (Self : Object) return UB.Unbounded_String;
-   function Stderr (Self : Object) return UB.Unbounded_String;
+   function Valid (Self : Object) return Boolean;
 
 private
 
-   TEXT_SIGNATURE   : constant String := "signature";
-   TEXT_URI         : constant String := "uri";
-   TEXT_CHECKSUM    : constant String := "checksum";
-   TEXT_STDOUT      : constant String := "stdout";
-   TEXT_STDERR      : constant String := "stderr";
-   TEXT_CMDLINE     : constant String := "cmdline";
-   TEXT_CMDLINE_CHK : constant String := "cmdline_checksum";
+   TEXT_INPUTS    : constant String := "inputs";
+   TEXT_OUTPUTS   : constant String := "outputs";
+   TEXT_CLASS     : constant String := "class";
+   TEXT_KEY       : constant String := "key";
+   TEXT_VALUE     : constant String := "value";
+   TEXT_STDOUT    : constant String := "stdout";
+   TEXT_STDERR    : constant String := "stderr";
+
+   package Checksum_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (Artifacts.Object'Class, String, Artifacts.Less);
+
+   function Hash
+     (Item : Artifacts.Object'Class) return Ada.Containers.Hash_Type
+   is (Item.Hash);
+
+   package Artifact_Sets is new Ada.Containers.Indefinite_Hashed_Sets
+     (Artifacts.Object'Class, Hash, Artifacts."=", Artifacts."=");
+
+   type IO_Type is (Input, Output);
+
+   type Checksums_Type is array (IO_Type) of Checksum_Maps.Map;
+   type Artifacts_Type is array (IO_Type) of Artifact_Sets.Set;
+   type Finalized_Type is array (IO_Type) of Boolean;
 
    type Object is tagged record
-      Artifacts         : Artifact_Maps.Map := Artifact_Maps.Empty_Map;
-      Has_Error         : Boolean := False;
-      Cmd_Line_Checksum : GPR2.Utils.Hash.Hash_Digest :=
-                            GPR2.Utils.Hash.No_Digest;
-      Cmd_Line_Repr     : Unbounded_String;
-      Cmd_Line_Match    : Boolean := False;
-      Stdout            : Unbounded_String;
-      Stderr            : Unbounded_String;
+      Checksums : Checksums_Type;
+      Artifacts : Artifacts_Type;
+      Stdout    : Unbounded_String;
+      Stderr    : Unbounded_String;
    end record;
 
-   function Has_Artifact
-     (Self : in out Object;
-      Art  : Build.Artifacts.Object'Class) return Boolean is
-      (Self.Artifacts.Contains (Art));
+   Undefined : constant Object := (others => <>);
 
-   function Has_Error (Self : Object) return Boolean is
-      (Self.Has_Error);
-
-   function Artifacts (Self : Object) return Artifact_Maps.Map is
-     (Self.Artifacts);
+   function Was_Saved (Self : Object) return Boolean is
+     (not Self.Checksums (Input).Is_Empty
+      or else not Self.Checksums (Output).Is_Empty);
 
    function Stdout (Self : Object) return Unbounded_String is
      (Self.Stdout);

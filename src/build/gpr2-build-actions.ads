@@ -103,9 +103,12 @@ package GPR2.Build.Actions is
    --  Return the command line and environment corresponding to the action
 
    procedure Compute_Signature
-     (Self      : Object;
-      Signature : in out GPR2.Build.Signature.Object) is abstract;
-   --  This populates the artifacts that are involved in the action.
+     (Self      : in out Object;
+      Load_Mode : Boolean) is abstract;
+   --  This populates the output artifacts in the signature.
+   --  In load_mode, this should stop as soon as the signature don't match
+   --  the saved timestamps
+   --  Else, the status is ignored: the signature is prepared for saving.
 
    function Valid_Signature (Self : Object) return Boolean;
    --  Returns whether or not the action is inhibited. This means the loaded
