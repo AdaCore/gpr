@@ -1,9 +1,7 @@
 import re
 
 from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS, \
-                                                 GPRINSTALL, GPRCLEAN, GPRCONFIG, \
-                                                 GPRREMOTE
-
+                                                 GPRINSTALL, GPRCLEAN, GPRCONFIG
 bnr = BuilderAndRunner()
 
 
@@ -32,4 +30,3 @@ check('GPRLS', GPRLS)
 check('GPRINSTALL', GPRINSTALL)
 check('GPRCLEAN', GPRCLEAN)
 check('GPRCONFIG', GPRCONFIG)
-check('GPRREMOTE', GPRREMOTE)
