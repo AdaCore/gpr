@@ -5,6 +5,7 @@
 foo.o: C:\titi\tata\tutu\ccc.c C:\titi\tata\tutu\ddd.c C:\titi\tata\tutu\eee.c
 
 
+foo.o: ../titi/tata/tutu\aaa.c
 
 
 

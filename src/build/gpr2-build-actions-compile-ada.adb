@@ -193,19 +193,6 @@ package body GPR2.Build.Actions.Compile.Ada is
       end;
    end Compute_Signature;
 
-   -----------------------
-   -- Dependency_Suffix --
-   -----------------------
-
-   overriding function Dependency_Suffix (Self : Object) return Boolean
-   is
-      Simple_Name     : constant String :=
-                          String (Self.Dep_File.Path.Simple_Name);
-      Expected_Suffix : constant String := ".ali";
-   begin
-      return (GNATCOLL.Utils.Ends_With (Simple_Name, Expected_Suffix));
-   end Dependency_Suffix;
-
    --------------
    -- Extended --
    --------------
@@ -301,7 +288,7 @@ package body GPR2.Build.Actions.Compile.Ada is
                Self.Obj_File := Artifacts.Files.Create (Local_O);
             end if;
 
-            Self.Ali_File := Artifacts.Files.Create (Local_Ali);
+            Self.Dep_File := Artifacts.Files.Create (Local_Ali);
 
          else
             --  Lookup if the object file exists in the hierarchy
@@ -664,8 +651,7 @@ package body GPR2.Build.Actions.Compile.Ada is
    is
       All_Deps : GPR2.Containers.Filename_Set;
    begin
-      if not GPR2.Build.ALI_Parser.Dependencies
-        (Self.Dep_File.Path, All_Deps)
+      if not GPR2.Build.ALI_Parser.Dependencies (Self.Dep_File.Path, All_Deps)
       then
          Trace
            (Self.Traces, "Failed to parse dependencies from the ALI file " &

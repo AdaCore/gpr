@@ -633,7 +633,7 @@ package body GPR2.Build.Actions.Compile is
                True);
          else
             --  We provide the absolute path to the source file
-            Cmd_Line.Add_Argument (Self.Src.Path_Name.String_Value, True);
+            Cmd_Line.Add_Argument (Self.Src.Path_Name, True);
          end if;
 
          if Index /= No_Index then
@@ -712,7 +712,8 @@ package body GPR2.Build.Actions.Compile is
          for Dep of Deps loop
             declare
                Src_Path : constant GPR2.Path_Name.Object :=
-                            GPR2.Path_Name.Create_File (Dep);
+                            GPR2.Path_Name.Create_File
+                              (Dep, Self.View.Object_Directory.Value);
                Src      : constant GPR2.Build.Source.Object :=
                             Self.View.Visible_Source (Src_Path);
             begin
@@ -753,25 +754,12 @@ package body GPR2.Build.Actions.Compile is
          return Containers.Empty_Filename_Set;
       end if;
 
-      for Dep_Src of Parse_Dependencies (Self) loop
+      for Dep_Src of Self.Parse_Dependencies loop
          Result.Include (Dep_Src);
       end loop;
 
       return Result;
    end Dependencies;
-
-   -----------------------
-   -- Dependency_Suffix --
-   -----------------------
-
-   function Dependency_Suffix (Self : Object) return Boolean
-   is
-      Simple_Name     : constant String :=
-                          String (Self.Dep_File.Path.Simple_Name);
-      Expected_Suffix : constant String := ".d";
-   begin
-      return (GNATCOLL.Utils.Ends_With (Simple_Name, Expected_Suffix));
-   end Dependency_Suffix;
 
    --------------
    -- Extended --

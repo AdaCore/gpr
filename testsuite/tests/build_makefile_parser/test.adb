@@ -63,6 +63,8 @@ function Test return Integer is
    DepsA_C         : constant Filename_Optional :=
                        Path_Prefix & "titi" & Path_Separator & "tata"
                        & Path_Separator & "tutu" & Path_Separator & "aaa.c";
+   DepsA_R_C       : constant Filename_Optional :=
+                       "../" & "titi/tata/tutu" & Path_Separator & "aaa.c";
    DepsB_C         : constant Filename_Optional :=
                        Path_Prefix & "titi" & Path_Separator & "tata"
                        & Path_Separator & "tutu" & Path_Separator & "bbb.c";
@@ -134,7 +136,11 @@ begin
 
    Put_Line ("Step 3 - Test relative paths in makefile (single line)");
    All_Deps.Clear;
-   Nb_Dep := 5;
+   if Is_Windows_Host then
+      Nb_Dep := 6;
+   else
+      Nb_Dep := 5;
+   end if;
    Assert
      (GPR2.Build.Makefile_Parser.Dependencies
         (Makefile_Toto_RP, Object_Foo, All_Deps, Strict => True),
@@ -142,6 +148,10 @@ begin
    Assert
      (Integer (All_Deps.Length), Nb_Dep,
       "contains the right number of dependencies :" & Nb_Dep'Img);
+   if Is_Windows_Host then
+      Assert
+        (All_Deps.Contains (DepsA_R_C), "contains " & String (DepsA_R_C));
+   end if;
    Assert
      (All_Deps.Contains (DepsC_C), "contains " & String (DepsC_C));
    Assert

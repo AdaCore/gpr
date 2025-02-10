@@ -39,10 +39,8 @@ package GPR2.Build.Actions.Compile is
 
    function Object_File (Self : Object) return Artifacts.Files.Object;
 
-   function Dependency_Suffix (Self : Object) return Boolean;
-
-   function Dependency_File (Self : Object'Class) return Artifacts.Files.Object
-     with Pre => Dependency_Suffix (Self);
+   function Dependency_File
+     (Self : Object'Class) return Artifacts.Files.Object;
 
    overriding function On_Tree_Insertion
      (Self     : Object;
