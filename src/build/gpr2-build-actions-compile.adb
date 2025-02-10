@@ -689,7 +689,10 @@ package body GPR2.Build.Actions.Compile is
    is
       use GPR2.Build.Signature;
    begin
-      if not Self.Signature.Add_Output (Self.Dep_File) and then Load_Mode then
+      if Self.Obj_File.Is_Defined
+        and then not Self.Signature.Add_Output (Self.Dep_File)
+        and then Load_Mode
+      then
          return;
       end if;
 
@@ -857,6 +860,7 @@ package body GPR2.Build.Actions.Compile is
 
       else
          Self.Obj_File := Artifacts.Files.Undefined;
+         Self.Dep_File := Artifacts.Files.Undefined;
       end if;
    end Initialize;
 

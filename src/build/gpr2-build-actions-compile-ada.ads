@@ -29,8 +29,6 @@ package GPR2.Build.Actions.Compile.Ada is
      (Self : in out Object; Src : GPR2.Build.Compilation_Unit.Object);
    --  Initialize all object fields according to Src
 
-   overriding function Dependency_Suffix (Self : Object) return Boolean;
-
    function Input_Unit
      (Self : Object) return GPR2.Build.Compilation_Unit.Object;
    --  Return the name of the compiled unit
