@@ -213,18 +213,6 @@ package body GPR2.Build.Actions.Link is
            (Artifacts.Files.Object'Class (Obj).Path, True);
       end loop;
 
-      --  Add options provided by the binder if needed
-
-      if not Self.View.Is_Library
-        or else Self.View.Is_Shared_Library
-        or else (Self.View.Is_Library_Standalone
-                 and then Is_Partially_Linked (Self.View))
-      then
-         for Option of Self.Static_Options loop
-            Cmd_Line.Add_Argument (Option);
-         end loop;
-      end if;
-
       if not Self.Is_Static_Library then
          for Lib of Self.Library_Dependencies loop
             declare
@@ -342,6 +330,18 @@ package body GPR2.Build.Actions.Link is
                   end loop;
                end if;
             end;
+         end loop;
+      end if;
+
+   --  Add options provided by the binder if needed
+
+      if not Self.View.Is_Library
+        or else Self.View.Is_Shared_Library
+        or else (Self.View.Is_Library_Standalone
+                 and then Is_Partially_Linked (Self.View))
+      then
+         for Option of Self.Static_Options loop
+            Cmd_Line.Add_Argument (Option);
          end loop;
       end if;
 
