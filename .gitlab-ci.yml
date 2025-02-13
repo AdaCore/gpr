@@ -123,7 +123,6 @@ build_and_test_gpr2_windows:
   script:
     - exec anod build gpr2
     - run_testsuite gpr2 "" test_gpr2
-  when: manual
   artifacts:
     when:
       always
