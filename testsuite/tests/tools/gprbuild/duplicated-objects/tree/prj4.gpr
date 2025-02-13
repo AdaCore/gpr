@@ -1,0 +1,5 @@
+project Prj4 extends "base/base.gpr" is
+   for Languages use ("C");
+   for Source_Files use ("pkg4.c", "pkg4.ads");
+end Prj4;
+

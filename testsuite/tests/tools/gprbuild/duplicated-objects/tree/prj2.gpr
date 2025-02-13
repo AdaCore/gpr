@@ -1,0 +1,6 @@
+project Prj2 is
+   for Languages use ("Ada", "C");
+   for Source_Files use ("pkg.ads", "pkg.adb", "pkg-execute.adb",
+                         "pkg-execute.c");
+end Prj2;
+

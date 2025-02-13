@@ -1,0 +1,5 @@
+project Prj3 is
+   for Source_Files use ("pkg3.ads", "pkg3.c");
+   for Languages use ("Ada", "C");
+end Prj3;
+
