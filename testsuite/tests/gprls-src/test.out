@@ -59,12 +59,6 @@ gprls -d -a0 --debugF -P pa.gpr p0
          OK s-imagei.ads
          OK s-imgint.ads
          OK s-stalib.ads
-         OK s-unstyp.ads
-         OK s-valspe.ads
-         OK s-vaispe.ads
-         OK s-vauspe.ads
-         OK s-vs_int.ads
-         OK s-vs_uns.ads
          OK /p0/p0.adb
          OK /p0/p0_0.ads
 ------------------
