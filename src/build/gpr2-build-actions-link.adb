@@ -12,7 +12,6 @@ with GNATCOLL.OS.FSUtil;
 with GNATCOLL.Utils;
 
 with GPR2.Build.External_Options;
-with GPR2.Build.ALI_Parser;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
@@ -333,7 +332,7 @@ package body GPR2.Build.Actions.Link is
          end loop;
       end if;
 
-   --  Add options provided by the binder if needed
+      --  Add options provided by the binder if needed
 
       if not Self.View.Is_Library
         or else Self.View.Is_Shared_Library
@@ -358,9 +357,7 @@ package body GPR2.Build.Actions.Link is
       then
          declare
             Gnat_Version : constant String :=
-              GPR2.Build.ALI_Parser.Version
-                (Self.View.Tree.Runtime_Project.Object_Directory.Compose
-                   ("system.ali"));
+                             Self.View.Tree.Ada_Compiler_Version;
          begin
             if Gnat_Version /= "" then
                Cmd_Line.Add_Argument ("-lgnat-" & Gnat_Version);
