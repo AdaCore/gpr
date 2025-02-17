@@ -1,0 +1,3 @@
+project Root is
+   for Source_Files use ("p.ads");
+end Root;

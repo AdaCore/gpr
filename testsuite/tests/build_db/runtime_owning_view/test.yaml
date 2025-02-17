@@ -1,0 +1,5 @@
+description:
+    Test runtime owning view
+driver: build_and_run
+project_file: test
+main: main

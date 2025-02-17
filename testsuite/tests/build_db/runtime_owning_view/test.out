@@ -1,0 +1,9 @@
+## Runtime Sources ##
+
+<gcc>/lib/gcc/(host)/(gcc-version)/adainclude/a-assert.adb -> runtime
+<gcc>/lib/gcc/(host)/(gcc-version)/adainclude/a-assert.ads -> runtime
+
+## Root Visible_Sources ##
+
+<gcc>/lib/gcc/(host)/(gcc-version)/adainclude/a-assert.adb -> runtime
+<gcc>/lib/gcc/(host)/(gcc-version)/adainclude/a-assert.ads -> runtime

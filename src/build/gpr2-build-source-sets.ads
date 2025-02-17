@@ -104,10 +104,15 @@ private
 
    function Less (P1, P2 : Filename_Type) return Boolean;
 
+   type Source_Context (Path_Len : Natural) is record
+      Owner : View_Db.Object;
+      Proxy : Source_Proxy (Path_Len);
+   end record;
+
    --  Use an ordered path with our custom Less function
    package Path_Source_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (Key_Type     => Filename_Type,
-      Element_Type => Source_Proxy,
+      Element_Type => Source_Context,
       "<"          => Less);
 
    type Cursor (From_View_Db : Boolean := False) is record

@@ -19,6 +19,8 @@ package body GPR2.Build.Source.Sets is
 
    procedure Ensure_Visible (C : in out Cursor);
 
+   function Fetch_Source_Context (Position : Cursor) return Source_Context;
+
    function "-" (Inst : Build.View_Db.Object) return View_Data_Ref is
      (Get_Ref (Inst));
 
@@ -29,14 +31,13 @@ package body GPR2.Build.Source.Sets is
    function Constant_Reference
      (Self : aliased Object; Position : Cursor) return Source.Object
    is
-      C : constant Source_Proxy :=
-            (if Position.From_View_Db
-             then View_Tables.Filename_Source_Maps.Element
-               (Position.Current_Src)
-             else Path_Source_Maps.Element
-               (Position.Current_Path));
+      Src_Ctxt : constant Source_Context := Fetch_Source_Context (Position);
    begin
-      return View_Tables.Source (-Self.Db, C);
+      if Position.From_View_Db then
+         return View_Tables.Source (-Self.Db, Src_Ctxt.Proxy);
+      else
+         return View_Tables.Source (-Src_Ctxt.Owner, Src_Ctxt.Proxy);
+      end if;
    end Constant_Reference;
 
    ------------
@@ -69,13 +70,9 @@ package body GPR2.Build.Source.Sets is
    -------------
 
    function Element (Position : Cursor) return Source.Object is
-      C : constant Source_Proxy :=
-            (if Position.From_View_Db
-             then View_Tables.Filename_Source_Maps.Element
-               (Position.Current_Src)
-             else Path_Source_Maps.Element (Position.Current_Path));
+      Src_Ctxt : constant Source_Context := Fetch_Source_Context (Position);
    begin
-      return View_Tables.Source (Get_Ref (Position.Db), C);
+      return View_Tables.Source (-Src_Ctxt.Owner, Src_Ctxt.Proxy);
    end Element;
 
    --------------------
@@ -92,6 +89,24 @@ package body GPR2.Build.Source.Sets is
          Filename_Source_Maps.Next (C.Current_Src);
       end loop;
    end Ensure_Visible;
+
+   --------------------------
+   -- Fetch_Source_Context --
+   --------------------------
+
+   function Fetch_Source_Context (Position : Cursor) return Source_Context is
+      Proxy    : constant Source_Proxy :=
+                   (if Position.From_View_Db
+                    then View_Tables.Filename_Source_Maps.Element
+                      (Position.Current_Src)
+                    else No_Proxy);
+      Src_Ctxt : constant Source_Context :=
+                   (if Position.From_View_Db
+                    then (Proxy.Path_Len, Position.Db, Proxy)
+                    else Path_Source_Maps.Element (Position.Current_Path));
+   begin
+      return Src_Ctxt;
+   end Fetch_Source_Context;
 
    --------------
    -- Finalize --
@@ -202,8 +217,12 @@ package body GPR2.Build.Source.Sets is
 
                for C in Get_Ref (Self.Db).Sources.Iterate loop
                   declare
-                     Src : constant Build.Source.Object :=
-                             Self.Element (Element (C));
+                     Proxy    : constant View_Tables.Source_Proxy :=
+                                  Filename_Source_Maps.Element (C);
+                     Src_Ctxt : constant Source_Context :=
+                                  (Proxy.Path_Len, Self.Db, Proxy);
+                     Src      : constant Build.Source.Object :=
+                                  Self.Element (Element (C));
                   begin
                      if Src.Is_Visible
                        and then
@@ -213,7 +232,7 @@ package body GPR2.Build.Source.Sets is
                              Src,
                              Filter_Data_Holders.Element (Self.F_Data)))
                      then
-                        Iter.Paths.Include (Key (C), Element (C));
+                        Iter.Paths.Include (Key (C), Src_Ctxt);
                      end if;
                   end;
                end loop;
@@ -251,10 +270,13 @@ package body GPR2.Build.Source.Sets is
                            declare
                               Proxy    : constant View_Tables.Source_Proxy :=
                                            Filename_Source_Maps.Element (C);
+                              Src_Ctxt : constant Source_Context :=
+                                           (Proxy.Path_Len, V.View_Db, Proxy);
                               C_Db     : constant View_Data_Ref :=
                                            (Get_Ref (V.View_Db));
                               Src      : constant GPR2.Build.Source.Object :=
-                                           View_Tables.Source (C_Db, Proxy);
+                                           View_Tables.Source
+                                             (C_Db, Src_Ctxt.Proxy);
                               C_BN     : Containers.Filename_Type_Set.Cursor;
                               Inserted : Boolean;
 
@@ -280,7 +302,7 @@ package body GPR2.Build.Source.Sets is
                                  if Inserted then
                                     Result.Paths.Include
                                       (Filename_Source_Maps.Key (C),
-                                       Proxy);
+                                       Src_Ctxt);
                                  end if;
                               end if;
                            end;
