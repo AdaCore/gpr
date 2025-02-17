@@ -1368,26 +1368,6 @@ package body GPR2.Tree_Internal is
                            Data.Imports.Insert (Prj.Name, Imported_View);
                         end if;
                      end if;
-
-                     Data.Closure.Include (Prj.Name, Imported_View);
-
-                     for C in
-                       View_Internal.Get_RO (Imported_View).Closure.Iterate
-                     loop
-                        Data.Closure.Include
-                          (View_Internal.Project_View_Store.Key (C),
-                           View_Internal.Project_View_Store.Element (C));
-                     end loop;
-                  end;
-               end loop;
-
-               for Lib of Data.Agg_Libraries loop
-                  declare
-                     V : constant GPR2.Project.View.Object :=
-                           Self.Get_View (Lib);
-                  begin
-                     View_Internal.Get_RW (V).Closure.Include
-                       (View.Name, View);
                   end;
                end loop;
 
@@ -1421,15 +1401,6 @@ package body GPR2.Tree_Internal is
                      if Extended_View.Is_Defined then
                         Data.Extended.Include (Extended_View);
                         Data.Extended_Root := Extended_View;
-
-                        Data.Closure.Include
-                          (Extended_View.Name, Extended_View);
-
-                        for V of View_Internal.Get_RO
-                          (Extended_View).Closure
-                        loop
-                           Data.Closure.Include (V.Name, V);
-                        end loop;
                      end if;
                   end;
                end if;
@@ -3142,8 +3113,7 @@ package body GPR2.Tree_Internal is
                then
                   Data.Limited_Imports.Insert
                     (Self.Runtime.Name, Self.Runtime);
-                  Data.Closure.Insert
-                    (Self.Runtime.Name, Self.Runtime);
+
                   for Root of Data.Root_Views loop
                      View_Internal.Get_RW
                        (Self.Runtime).Root_Views.Include (Root);
