@@ -2987,6 +2987,29 @@ package body GPR2.Tree_Internal is
                               "cannot aggregate externally built project """
                               & String (Agg.Name) & '"',
                               Sloc => View.Attribute (PRA.Project_Files)));
+                     elsif Agg.Kind = K_Abstract then
+                        declare
+                           Non_Empty_Imports : Boolean := False;
+                        begin
+                           for Imp of
+                             Agg.Imports.Union (Agg.Limited_Imports)
+                           loop
+                              if Imp.Kind /= K_Abstract then
+                                 Non_Empty_Imports := True;
+                                 exit;
+                              end if;
+                           end loop;
+
+                           if not Non_Empty_Imports then
+                              Self.Messages.Append
+                                (Message.Create
+                                   (Message.Error,
+                                    "cannot aggregate abstract project """
+                                    & String (Agg.Name) & '"',
+                                    Sloc =>
+                                      View.Attribute (PRA.Project_Files)));
+                           end if;
+                        end;
                      end if;
                   end loop;
 
