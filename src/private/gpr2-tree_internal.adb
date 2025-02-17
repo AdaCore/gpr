@@ -930,7 +930,34 @@ package body GPR2.Tree_Internal is
             View_Internal.Check_Aggregate_Library_Dirs (Self);
             View_Internal.Check_Package_Naming (Self);
             View_Internal.Check_Excluded_Source_Dirs (Self);
+
+            --  Check that we don't have for the same subtree both extended
+            --  and regularly withed views
+            for NS of Self.Namespace_Root_Projects loop
+               declare
+                  Non_Extended : GPR2.Containers.Filename_Set;
+               begin
+                  for V of NS.Closure (True, False, True) loop
+                     Non_Extended.Include (V.Path_Name.Value);
+                  end loop;
+
+                  for V of NS.Closure (True, True, True) loop
+                     if V.Is_Extended
+                       and then V.Kind /= K_Abstract
+                       and then Non_Extended.Contains (V.Path_Name.Value)
+                     then
+                        Self.Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "cannot extend an already imported project file",
+                              Source_Reference.Create
+                                (V.Extending.Path_Name.Value, 0, 0)));
+                     end if;
+                  end loop;
+               end;
+            end loop;
          end if;
+
       end if;
 
       if not Self.Messages.Has_Error then
