@@ -174,8 +174,7 @@ package body GPR2.Build.Actions.Compile.Ada is
                         return;
                      end if;
 
-                  elsif not Src.Owning_View.Is_Runtime
-                    and then not Self.Signature.Add_Input
+                  elsif not Self.Signature.Add_Input
                       (Artifacts.Files.Create (Src.Path_Name))
                     and then Load_Mode
                   then
