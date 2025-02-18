@@ -16,7 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Command_Line;
 with Ada.Containers;
 with Ada.Directories;
 with Ada.Exceptions;
@@ -54,7 +53,7 @@ with GPRbuild.Options;
 -- GPRbuild.Main --
 -------------------
 
-function GPRbuild.Main return Ada.Command_Line.Exit_Status is
+procedure GPRbuild.Main is
 
    use Ada;
    use type Ada.Containers.Count_Type;
@@ -84,7 +83,7 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
 
    function Execute
      (PM : in out GPR2.Build.Process_Manager.Object'Class)
-      return Command_Line.Exit_Status;
+      return Exit_Code_Type;
 
    Opt  : Options.Object;
 
@@ -227,15 +226,16 @@ function GPRbuild.Main return Ada.Command_Line.Exit_Status is
 
    function Execute
      (PM : in out GPR2.Build.Process_Manager.Object'Class)
-      return Command_Line.Exit_Status is
+      return Exit_Code_Type is
    begin
-      if not Opt.Tree.Artifacts_Database.Execute
-        (PM, Opt.PM_Options)
-      then
-         return To_Exit_Status (E_Errors);
-      end if;
-
-      return To_Exit_Status (E_Success);
+      case Opt.Tree.Artifacts_Database.Execute (PM, Opt.PM_Options) is
+         when GPR2.Build.Process_Manager.Success =>
+            return E_Success;
+         when GPR2.Build.Process_Manager.Errors =>
+            return E_Errors;
+         when GPR2.Build.Process_Manager.Failed =>
+            return E_Fatal;
+      end case;
    end Execute;
 
    --------------------------------
@@ -326,24 +326,25 @@ begin
 
    if not GPRtools.Options.Load_Project
      (Opt,
-      Absent_Dir_Error => GPR2.No_Error,
+      Absent_Dir_Error        => GPR2.No_Error,
+      Handle_Errors           => True,
       Restricted_To_Languages => Opt.Restricted_To_Languages)
    then
-      Handle_Program_Termination (Message => "");
+      return;
    end if;
 
    if not Opt.Tree.Update_Sources (Option => Sources_Units_Artifacts) then
       Handle_Program_Termination
         (Force_Exit => True,
+         Exit_Code  => E_Project,
          Exit_Cause => E_Tool,
          Message    => "processing failed");
-      return To_Exit_Status (E_Fatal);
    end if;
 
    if not Ensure_Directories (Opt.Tree) then
-      Handle_Program_Termination (Force_Exit => False);
+      Handle_Program_Termination (Force_Exit => True,
+                                  Exit_Code  => E_Abort);
 
-      return To_Exit_Status (E_Abort);
    end if;
 
    --  Check if we have a Builder'Switches attribute in the root project
@@ -365,9 +366,9 @@ begin
          if Has_Error then
             Handle_Program_Termination
               (Force_Exit => True,
+               Exit_Code  => E_Project,
                Exit_Cause => E_Tool,
                Message    => "processing failed");
-            return To_Exit_Status (E_Fatal);
          end if;
 
          --  #1: If one main is defined, from the Main top-level attribute or
@@ -574,9 +575,9 @@ begin
          if Has_Errors then
             Handle_Program_Termination
               (Force_Exit => True,
+               Exit_Code  => E_Errors,
                Exit_Cause => E_Tool,
                Message    => "processing failed");
-            return To_Exit_Status (E_Errors);
          end if;
       end;
    end if;
@@ -592,35 +593,47 @@ begin
    then
       Handle_Program_Termination
         (Force_Exit => True,
+         Exit_Code  => E_Project,
          Exit_Cause => E_Tool,
          Message    => "processing failed");
-      return To_Exit_Status (E_Fatal);
    end if;
 
-   if Opt.Json_Summary then
-      Jobs_JSON := Opt.Tree.Root_Project.Dir_Name.Compose ("jobs.json");
-      Process_M_JSON.Set_JSON_File (Jobs_JSON);
+   declare
+      Result : Exit_Code_Type;
+   begin
+      if Opt.Json_Summary then
+         Jobs_JSON := Opt.Tree.Root_Project.Dir_Name.Compose ("jobs.json");
+         Process_M_JSON.Set_JSON_File (Jobs_JSON);
 
-      return Execute (Process_M_JSON);
-   else
-      return Execute (Process_M);
-   end if;
+         Result := Execute (Process_M_JSON);
+      else
+         Result := Execute (Process_M);
+      end if;
+
+      if Result /= E_Success then
+         Handle_Program_Termination
+           (Exit_Code => Result,
+            Message   => "");
+      end if;
+   end;
 
 exception
    when E : GPR2.Options.Usage_Error =>
       Handle_Program_Termination
         (Display_Command_Line_Help => True,
          Force_Exit                => False,
+         Exit_Code                 => E_General,
          Message                   => Exception_Message (E));
-      return To_Exit_Status (E_Fatal);
 
    when E_Program_Termination =>
-      return To_Exit_Status (E_Fatal);
+      --  Exit code already positioned and messages are displayed: nothing
+      --  more to do here.
+      null;
 
    when E : others =>
       Handle_Program_Termination
         (Force_Exit => False,
+         Exit_Code  => E_Fatal,
          Exit_Cause => E_Generic,
          Message    => Exception_Information (E));
-      return To_Exit_Status (E_Fatal);
 end GPRbuild.Main;

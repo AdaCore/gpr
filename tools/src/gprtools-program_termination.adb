@@ -73,7 +73,8 @@ package body GPRtools.Program_Termination is
          when E_Warnings   => return 0;
          when E_General    => return 1;
          when E_Errors     => return 4;
-         when E_Fatal      => return 5;
+         when E_Project    => return 5;
+         when E_Fatal      => return 7;
          when E_No_Code    => return 6;
          when E_Abort      => return 16#FF#;
       end case;

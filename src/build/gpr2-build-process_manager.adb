@@ -6,6 +6,7 @@
 
 pragma Warnings (Off);
 with Ada.Strings.Maps;
+with GPR2.Build.Process_Manager;
 with System.Multiprocessors;
 pragma Warnings (On);
 
@@ -69,6 +70,18 @@ package body GPR2.Build.Process_Manager is
       Node            : GDG.Node_Id := GDG.No_Node;
    end record;
    --  Processes do require two listeners.
+
+   -----------
+   -- Clear --
+   -----------
+
+   procedure Clear (Ctxt : in out Process_Execution_Context) is
+   begin
+      Ctxt.Actions.Clear;
+      Ctxt.Graph.Clear;
+      Ctxt.Nodes.Clear;
+      Ctxt.Status := Success;
+   end Clear;
 
    -----------------
    -- Collect_Job --
@@ -364,7 +377,13 @@ package body GPR2.Build.Process_Manager is
                           else Act.Saved_Stderr));
 
                   if Job_Status = Abort_Execution then
-                     Context.Errors := True;
+                     if Proc_Handler.Status in Skipped | Deactivated then
+                        if Context.Status /= Failed then
+                           Context.Status := Errors;
+                        end if;
+                     else
+                        Context.Status := Failed;
+                     end if;
 
                      if Options.Stop_On_Fail then
                         End_Of_Iteration := True;
@@ -463,7 +482,9 @@ package body GPR2.Build.Process_Manager is
                --  Mark as visited only successful executions
                Context.Graph.Complete_Visit (States (Proc_Id).Node);
             else
-               Context.Errors := True;
+               if Context.Status /= Failed then
+                  Context.Status := Errors;
+               end if;
 
                if Options.Stop_On_Fail then
                   --  Adjust execution depending on returned value

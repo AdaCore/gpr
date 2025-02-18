@@ -390,11 +390,15 @@ package body GPRtools.Options is
       if Handle_Errors and then not Loaded then
          if Opt.Project_File.Is_Defined then
             Handle_Program_Termination
-              (Message => '"' & String (Opt.Project_File.Simple_Name)
+              (Force_Exit => True,
+               Exit_Code  => E_Project,
+               Message    => '"' & String (Opt.Project_File.Simple_Name)
                & """ processing failed");
          else
             Handle_Program_Termination
-              (Message => "processing failed");
+              (Force_Exit => True,
+               Exit_Code  => E_Project,
+               Message    => "processing failed");
          end if;
       end if;
 

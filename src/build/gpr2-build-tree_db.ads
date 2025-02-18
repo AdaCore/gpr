@@ -145,7 +145,8 @@ package GPR2.Build.Tree_Db is
    function Execute
      (Self    : in out Object;
       PM      : in out GPR2.Build.Process_Manager.Object'Class;
-      Options : GPR2.Build.Process_Manager.PM_Options) return Boolean;
+      Options : GPR2.Build.Process_Manager.PM_Options)
+      return Process_Manager.Execution_Status;
 
    function Is_Executing (Self : Object) return Boolean;
 
