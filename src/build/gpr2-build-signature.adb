@@ -270,16 +270,15 @@ package body GPR2.Build.Signature is
                                         (Data.Token
                                            (Protocol.First + 1,
                                             Protocol.Last - 1));
+                              Chk : constant String :=
+                                       JSON.Decode_As_String (Value, Data);
                            begin
                               Art.Unserialize
                                 (Data.Token (Uri.First + 1, Uri.Last - 1),
-                                 Data.Token (Value.First + 1, Value.Last - 1),
+                                 Chk,
                                  Ctxt);
 
-                              Signature.Checksums (IO).Include
-                                (Art,
-                                 Data.Token
-                                   (Value.First + 1, Value.Last - 1));
+                              Signature.Checksums (IO).Include (Art, Chk);
                            end;
                         end;
 

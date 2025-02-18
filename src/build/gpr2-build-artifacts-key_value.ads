@@ -41,9 +41,7 @@ private
      ("keyvalue");
 
    overriding function "<" (L, R : Object) return Boolean is
-     (if L.Key /= R.Key
-      then L.Key < R.Key
-      else L.Value < R.Value);
+     (L.Key < R.Key);
 
    Undefined : constant Object := (others => <>);
 
