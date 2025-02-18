@@ -74,12 +74,14 @@ package body GPR2.Build.Actions.Ada_Bind is
          Is_List      : Boolean;
          In_Signature : Boolean)
       is
-         Attr                        : constant Project.Attribute.Object :=
-                                         Self.View.Attribute (Id, Index);
-         Gnatbind_Prefix_Equal       : constant String := "gnatbind_prefix=";
-         Gnatbind_Path_Equal         : constant String := "--gnatbind_path=";
-         Ada_Binder_Equal            : constant String := "ada_binder=";
-         Default_Binder_Name         : constant String := "gnatbind";
+         Attr                  : constant Project.Attribute.Object :=
+                                   Self.View.Attribute (Id, Index);
+         Exe_Ext               : constant String :=
+                                   (if GPR2.On_Windows then ".exe" else "");
+         Gnatbind_Prefix_Equal : constant String := "gnatbind_prefix=";
+         Gnatbind_Path_Equal   : constant String := "--gnatbind_path=";
+         Ada_Binder_Equal      : constant String := "ada_binder=";
+         Default_Binder_Name   : constant String := "gnatbind" & Exe_Ext;
 
       begin
          if not Attr.Is_Defined then
@@ -98,7 +100,8 @@ package body GPR2.Build.Actions.Ada_Bind is
                elsif Starts_With (Val.Text, Gnatbind_Path_Equal) then
                   Binder_From_Attrs :=
                     +(Val.Text (Val.Text'First +
-                        Gnatbind_Path_Equal'Length .. Val.Text'Last));
+                        Gnatbind_Path_Equal'Length .. Val.Text'Last) &
+                      Exe_Ext);
 
                elsif Starts_With (Val.Text, Gnatbind_Prefix_Equal) then
                   --  There is always a '-' between <prefix> and
@@ -116,7 +119,7 @@ package body GPR2.Build.Actions.Ada_Bind is
                elsif Starts_With (Val.Text, Ada_Binder_Equal) then
                   Binder_From_Attrs :=
                     +(Val.Text (Val.Text'First +
-                        Ada_Binder_Equal'Length .. Val.Text'Last));
+                        Ada_Binder_Equal'Length .. Val.Text'Last) & Exe_Ext);
 
                elsif Starts_With (Val.Text, "-A=") then
                   --  Ensure the path is absolute
@@ -296,7 +299,9 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       function Resolve_Binder return String
       is
-         Default_Binder_Name : constant String := "gnatbind";
+         Default_Binder_Name : constant String :=
+                                 "gnatbind" &
+                                 (if GPR2.On_Windows then ".exe" else "");
          Binder_Path         : Path_Name.Object;
       begin
          --  if "gnatbind_prefix=", "--gnatbind_path=" or "ada_binder=" weren't
