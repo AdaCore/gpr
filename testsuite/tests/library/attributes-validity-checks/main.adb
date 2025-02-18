@@ -25,6 +25,7 @@ begin
    Test ("abstractprj1.gpr");
    Test ("libprj1.gpr");
    Test ("libprj1_not_standalone.gpr");
+   Test ("libprj1_standalone_auto_init_not_supported.gpr");
    Test ("aggrprj1.gpr");
    Test ("aggrlibprj1.gpr");
 end main;

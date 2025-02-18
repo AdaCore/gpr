@@ -1,0 +1,8 @@
+with "sal/sal_autoinit_true";
+project Implicit_Elaboration is
+   for Main use ("main_without_elaboration.adb");
+   package Builder is
+      for Executable ("main_without_elaboration.adb") use "main";
+   end Builder;
+end Implicit_Elaboration;
+

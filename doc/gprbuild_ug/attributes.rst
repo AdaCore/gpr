@@ -537,7 +537,9 @@ Project Level Attributes
   * **Library_Auto_Init**: single value, not inherited from extended project
 
     Indicates if a Stand-Alone Library is auto-initialized. Only authorized
-    case-insensitive values are 'true' and 'false'.
+    case-insensitive values are 'true' and 'false'. Default to
+    Library_Auto_Init_Supported value. Can not be set to true if
+    Library_Auto_Init_Supported is false.
 
   .. index:: Attributes - Project Level Attributes; Library_Dir
 

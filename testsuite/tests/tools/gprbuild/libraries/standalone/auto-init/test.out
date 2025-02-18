@@ -1,0 +1,23 @@
+$ gpr2build -q -Pimplicit_elaboration.gpr -p
+$ ./main
+Pkg2.Foo
+I am OK
+
+$ gpr2clean -q -Pimplicit_elaboration.gpr -r
+
+$ gpr2build -q -Pexplicit_elaboration.gpr -p
+$ ./main
+Pkg2.Foo
+I am KO
+Pkg2.Foo
+I am OK
+
+$ gpr2clean -q -Pexplicit_elaboration.gpr -r
+
+$ gpr2build -q -Perror.gpr -p
+$ ./main
+Pkg2.Foo
+I am KO
+
+$ gpr2clean -q -Perror.gpr -r
+

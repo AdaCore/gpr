@@ -675,8 +675,8 @@
             "builtin": false,
             "config_concatenable": false,
             "default": {
-              "default_value_kind": "value",
-              "value": "false"
+              "attr": "Library_Auto_Init_Supported",
+              "default_value_kind": "attribute_reference"
             },
             "empty_value": "ALLOW",
             "has_default_in": {
@@ -707,7 +707,7 @@
             "value_case_sensitive": false,
             "value_is_set": false
           },
-          "attribute_descr": "Indicates if a Stand-Alone Library is auto-initialized. Only authorized case-insensitive values are 'true' and 'false'.",
+          "attribute_descr": "Indicates if a Stand-Alone Library is auto-initialized. Only authorized case-insensitive values are 'true' and 'false'. Default to Library_Auto_Init_Supported value. Can not be set to true if Library_Auto_Init_Supported is false.",
           "attribute_name": "Library_Auto_Init"
         },
         {

@@ -6,10 +6,15 @@ $ library_interface/main
 1+1 =  2
 1-1 =  0
 
-$ gpr2build -Plibrary_interface/invalid_app.gpr -p --json-summary
-"obj/invalid_app/" created
+$ gpr2build -Plibrary_interface/invalid_app_foo.gpr -p --json-summary
+"obj/invalid_app_foo/" created
 main.adb: error: unit "MAIN" can not import unit "FOO": it is not part of the interfaces of the project Demo
 gprbuild: processing failed
+$ gpr2build -Plibrary_interface/invalid_app_mult.gpr -p --json-summary
+"obj/invalid_app_mult/" created
+main.adb: error: unit "MAIN" can not import unit "MULT": it is not part of the interfaces of the project Demo
+gprbuild: processing failed
+
 $ gpr2build -q -Pinterfaces/demo.gpr -p --json-summary
 $ gpr2build -q -Pinterfaces/app.gpr -p --json-summary
 lib [interfaces] has been created
@@ -18,7 +23,12 @@ $ interfaces/main
 1+1 =  2
 1-1 =  0
 
-$ gpr2build -Pinterfaces/invalid_app.gpr -p --json-summary
-"obj/invalid_app/" created
+$ gpr2build -Pinterfaces/invalid_app_foo.gpr -p --json-summary
+"obj/invalid_app_foo/" created
 main.adb: error: unit "MAIN" can not import unit "FOO": it is not part of the interfaces of the project Demo
 gprbuild: processing failed
+$ gpr2build -Pinterfaces/invalid_app_mult.gpr -p --json-summary
+"obj/invalid_app_mult/" created
+main.adb: error: unit "MAIN" can not import unit "MULT": it is not part of the interfaces of the project Demo
+gprbuild: processing failed
+

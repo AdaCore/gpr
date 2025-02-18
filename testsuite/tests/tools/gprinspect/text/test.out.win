@@ -120,8 +120,6 @@
           - Value : "."
        - Externally_Built [ SINGLE ]
           - Value : "false"
-       - Library_Auto_Init [ SINGLE ]
-          - Value : "false"
        - Library_Kind [ SINGLE ]
           - Value : "static"
        - Library_Standalone [ SINGLE ]
@@ -163,8 +161,6 @@
              - "Ada"
        - Library_Ali_Dir [ SINGLE ]
           - Value : "lib"
-       - Library_Auto_Init [ SINGLE ]
-          - Value : "false"
        - Library_Dir [ SINGLE ]
           - Value : "lib"
        - Library_Kind [ SINGLE ]

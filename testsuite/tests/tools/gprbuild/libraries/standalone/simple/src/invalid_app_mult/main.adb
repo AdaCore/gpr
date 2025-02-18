@@ -1,7 +1,5 @@
 with Add;
 with Sub;
-with Foo; --  This should not be allowed, as Foo is not part of the library
-          --  interface.
 with Mult;
 with Ada.Text_IO;
 

@@ -71,13 +71,24 @@ def test(test_dir):
     run([os.path.join(test_dir, "main")])
 
     run(
-    [
-        "gpr2build",
-        "-P" + os.path.join(test_dir,"invalid_app.gpr"),
-        "-p",
-        "--json-summary",
-    ]
-)
+        [
+            "gpr2build",
+            "-P" + os.path.join(test_dir, "invalid_app_foo.gpr"),
+            "-p",
+            "--json-summary",
+        ]
+    )
+
+    run(
+        [
+            "gpr2build",
+            "-P" + os.path.join(test_dir, "invalid_app_mult.gpr"),
+            "-p",
+            "--json-summary",
+        ]
+    )
+    print("")
+
 
 # Basic check that building demo.gpr produces libdemo.a and that building an
 # exe with it only uses libdemo.a and not any of the objects contained in it.
