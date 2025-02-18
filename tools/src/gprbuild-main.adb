@@ -328,7 +328,7 @@ begin
      (Opt,
       Absent_Dir_Error        => GPR2.No_Error,
       Handle_Errors           => True,
-      Restricted_To_Languages => Opt.Restricted_To_Languages)
+      Restricted_To_Languages => Opt.Build_Options.Restricted_To_Languages)
    then
       return;
    end if;

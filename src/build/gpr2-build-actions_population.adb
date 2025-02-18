@@ -554,11 +554,22 @@ package body GPR2.Build.Actions_Population is
                To_Remove.Include (A);
             end if;
          end loop;
+      end if;
 
-         for A of To_Remove loop
-            Tree_Db.Action_Id_To_Reference (A.UID).Deactivate;
+      if not Options.Restricted_To_Languages.Is_Empty then
+         for A of Tree_Db.All_Actions loop
+            if A in Actions.Compile.Object'Class
+              and then not Options.Restricted_To_Languages.Contains
+                (Actions.Compile.Object'Class (A).Language)
+            then
+               To_Remove.Include (A);
+            end if;
          end loop;
       end if;
+
+      for A of To_Remove loop
+         Tree_Db.Action_Id_To_Reference (A.UID).Deactivate;
+      end loop;
 
       return Result;
    end Populate_Actions;

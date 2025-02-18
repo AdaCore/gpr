@@ -214,6 +214,12 @@ package body GPR2.Build.Actions is
         GPR2.Build.Command_Line.Create (Self.Working_Directory);
       Self.Compute_Command (Slot, Self.Cmd_Line);
 
+      if Self.Cmd_Line.Total_Length = 0
+        and then not Self.Deactivated
+      then
+         raise Action_Error;
+      end if;
+
       if Self.Signature.Was_Saved then
          Ign := Self.Signature.Add_Input
            (Artifacts.Key_Value.Create
