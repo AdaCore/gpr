@@ -1,8 +1,7 @@
 aggregate library project AggLib is
 
    for Project_Files use
-     ("base.gpr",
-      "ext.gpr",
+     ("ext.gpr",
       "extall.gpr");
 
    for Library_Name use "agglib";

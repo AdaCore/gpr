@@ -3,9 +3,7 @@ A        K_ABSTRACT
          Object_Dir -> linux-obj
 Demo     K_AGGREGATE
          External -> Linux
-         Project_Files -> a.gpr first.gpr second.gpr
-A        K_ABSTRACT
-         Object_Dir -> linux-obj
+         Project_Files -> first.gpr second.gpr
 second   K_STANDARD
 first    K_LIBRARY
          Library_Dir -> lib
@@ -18,16 +16,13 @@ A        K_ABSTRACT
          Object_Dir -> windows-obj
 Demo     K_AGGREGATE
          External -> Linux
-         Project_Files -> a.gpr first.gpr second.gpr
-A        K_ABSTRACT
-         Object_Dir -> linux-obj
+         Project_Files -> first.gpr second.gpr
 second   K_STANDARD
 first    K_LIBRARY
          Library_Dir -> lib
          Library_Name -> mylib
          Object_Dir -> obj
          Source_Dirs -> libsrc
-A is namespace root
 A is namespace root
 second is namespace root
 first is namespace root

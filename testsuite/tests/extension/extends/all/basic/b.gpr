@@ -1,4 +1,4 @@
-project B is
+abstract project B is
 
    Variable2 := "B.Var2";
 

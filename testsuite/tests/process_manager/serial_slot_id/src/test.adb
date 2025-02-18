@@ -30,6 +30,7 @@ function Test return Integer is
    Exec_Opts : GPR2.Build.Process_Manager.PM_Options;
 
    package GBA renames GPR2.Build.Actions;
+   use type GPR2.Build.Process_Manager.Execution_Status;
 begin
    Opts.Add_Switch (GPR2.Options.P, Project);
 
@@ -85,7 +86,9 @@ begin
 
    Exec_Opts.Jobs := 2;
 
-   if not Tree.Artifacts_Database.Execute (Process_M, Exec_Opts) then
+   if Tree.Artifacts_Database.Execute (Process_M, Exec_Opts) /=
+     GPR2.Build.Process_Manager.Success
+   then
       return 1;
    else
       return 0;
