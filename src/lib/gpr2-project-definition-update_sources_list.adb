@@ -949,7 +949,7 @@ is
                            pragma Assert
                              ((Last_Dot in
                                   Unit_Name'First + 1 .. Unit_Name'Last - 1),
-                              "For separate unit <"
+                              "Dot index not in range for subunit <"
                               & (if Unit_Name = "0"
                                 then "Invalid" else String (Unit_Name))
                               & "> (deduced from : "
