@@ -71,6 +71,30 @@ package body GPR2.Build.Actions.Link is
       is
          Attr : constant Project.Attribute.Object :=
                   Self.View.Attribute (Id, Index);
+
+         procedure Add (Arg : String);
+         --  Check for full path whenever possible
+
+         procedure Add (Arg : String) is
+         begin
+            if Arg (Arg'First) = '-' then
+               Cmd_Line.Add_Argument (Arg, In_Signature);
+            else
+               declare
+                  Full : constant Path_Name.Object :=
+                           Path_Name.Create_File
+                             (Filename_Type (Arg),
+                              Self.Ctxt.Dir_Name.Value);
+               begin
+                  if Full.Exists then
+                     Cmd_Line.Add_Argument (Full, In_Signature);
+                  else
+                     Cmd_Line.Add_Argument (Arg, In_Signature);
+                  end if;
+               end;
+            end if;
+         end Add;
+
       begin
          if not Attr.Is_Defined then
             return False;
@@ -80,21 +104,18 @@ package body GPR2.Build.Actions.Link is
             for Idx in Attr.Values.First_Index .. Attr.Values.Last_Index loop
                if Idx < Attr.Values.Last_Index then
                   if Attr.Values.Element (Idx).Text'Length > 0 then
-                     Cmd_Line.Add_Argument
-                       (Attr.Values.Element (Idx).Text, In_Signature);
+                     Add (Attr.Values.Element (Idx).Text);
                   end if;
 
                elsif Param'Length > 0
                  or else Attr.Values.Element (Idx).Text'Length > 0
                then
-                  Cmd_Line.Add_Argument
-                    (Attr.Values.Element (Idx).Text & Param, In_Signature);
+                  Add (Attr.Values.Element (Idx).Text & Param);
                end if;
             end loop;
 
          elsif Param'Length > 0 or else Attr.Value.Text'Length > 0 then
-            Cmd_Line.Add_Argument
-              (Attr.Value.Text & Param, In_Signature);
+            Add (Attr.Value.Text & Param);
          end if;
 
          return True;

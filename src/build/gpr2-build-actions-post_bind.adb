@@ -72,7 +72,6 @@ package body GPR2.Build.Actions.Post_Bind is
       then
          Add_Attr (PRA.Compiler.Pic_Option, PAI.Create (Ada_Language), True);
       end if;
-
    end Compute_Command;
 
    -----------------------
