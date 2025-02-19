@@ -105,3 +105,9 @@ src/demo7.adb
 list of executables:
 ./demo7
   src/demo7.adb
+Demo19   K_STANDARD
+list of mains:
+src2/main.ads
+list of executables:
+./main
+  src2/main.ads
