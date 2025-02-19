@@ -22,13 +22,14 @@ with Ada.Exceptions;
 with Ada.Text_IO;
 
 with GNAT.OS_Lib;
+with GNATCOLL.OS.Dir;
 
 with GNATCOLL.Traces;
+with GNATCOLL.Utils;
 
 with GPR2.Build.Actions_Population;
-with GPR2.Build.Actions;
 with GPR2.Build.Actions.Compile;
-with GPR2.Build.Actions.Post_Bind;
+with GPR2.Build.Actions.Link;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Log;
 with GPR2.Message;
@@ -39,7 +40,7 @@ with GPR2.Project.Attribute_Index;
 with GPR2.Project.Configuration;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
-with GPR2.Project.View;
+with GPR2.Project.View.Vector;
 with GPR2.Reporter;
 with GPR2.Source_Reference;
 
@@ -69,9 +70,52 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    --  this routine and could be different for different projects because of
    --  Switches attribute in project package Clean.
 
+   procedure Delete_File
+     (Dir     : Path_Name.Object;
+      Pattern : String;
+      Opts    : GPRclean.Options.Object);
+   --  Similar to above, but accepts a file pattern and then looks up the
+   --  matching files in Dir.
+
    procedure Remove_Artifacts_Dirs
      (View : GPR2.Project.View.Object; Opts : GPRclean.Options.Object);
    --  Removes the empty obj/lib/exec dirs of View
+
+   -----------------
+   -- Delete_File --
+   -----------------
+
+   procedure Delete_File
+     (Dir     : Path_Name.Object;
+      Pattern : String;
+      Opts    : GPRclean.Options.Object)
+   is
+      DH : GNATCOLL.OS.Dir.Dir_Handle;
+      DE : GNATCOLL.OS.Dir.Dir_Entry;
+      use GNATCOLL.OS.Dir;
+
+   begin
+      if not Dir.Exists then
+         return;
+      end if;
+
+      DH := GNATCOLL.OS.Dir.Open (Dir.String_Value);
+
+      loop
+         DE := GNATCOLL.OS.Dir.Read (DH);
+
+         exit when GNATCOLL.OS.Dir.End_Of_Iteration (DE);
+
+         if Is_File (DE)
+           and then GNATCOLL.Utils.Match (Name (DE), Pattern)
+         then
+            Delete_File
+              (Dir.Compose (Filename_Type (Name (DE))).String_Value, Opts);
+         end if;
+      end loop;
+
+      GNATCOLL.OS.Dir.Close (DH);
+   end Delete_File;
 
    -----------------
    -- Delete_File --
@@ -129,6 +173,10 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
          use Ada.Directories;
       begin
          if Path = View.Dir_Name then
+            return;
+         end if;
+
+         if not Path.Exists then
             return;
          end if;
 
@@ -219,11 +267,7 @@ begin
 
          GPRclean.Options.Parse_Command_Line (Parser, Opt);
 
-         --  Note that we never need to reload the tree, as we ensured that
-         --  no switch modifying the configuration of the project or the
-         --  way we load the project tree is allowed in the Switches
-         --  attribute.
-
+         --  Set the reporter in case it has changed in the new options
          Opt.Tree.Set_Reporter (Opt.Console_Reporter);
       end if;
    end;
@@ -264,9 +308,9 @@ begin
       if not Action.View.Is_Externally_Built
         and then (Opt.All_Projects
                   or else Action.View = Opt.Tree.Root_Project)
-        and then (not Opt.Compil_Only
-                  or else Action in GPR2.Build.Actions.Compile.Object'Class
-                  or else Action in GPR2.Build.Actions.Post_Bind.Object'Class)
+        and then not
+          (Opt.Compil_Only
+           and then Action in GPR2.Build.Actions.Link.Object'Class)
       then
          for Artifact of
            Opt.Tree.Artifacts_Database.Outputs (Action.UID)
@@ -334,18 +378,60 @@ begin
       Delete_File (Opt.Config_Project.String_Value, Opt);
    end if;
 
-   if Opt.Remove_Empty_Dirs then
-      if Opt.All_Projects then
-         for V of Opt.Tree.Ordered_Views loop
-            if not V.Is_Externally_Built then
-               Remove_Artifacts_Dirs (Opt.Tree.Root_Project, Opt);
-            end if;
-         end loop;
+   declare
+      Views    : GPR2.Project.View.Vector.Object;
+      Obj_Attr : constant GPR2.Project.Attribute.Object :=
+                   Opt.Tree.Root_Project.Attribute
+                     (PRA.Clean.Artifacts_In_Object_Dir);
+      Exe_Attr : constant GPR2.Project.Attribute.Object :=
+                   Opt.Tree.Root_Project.Attribute
+                     (PRA.Clean.Artifacts_In_Exec_Dir);
+   begin
+      --  Cleanup in object/exec dirs
 
+      if Opt.All_Projects then
+         Views := Opt.Tree.Ordered_Views;
       else
-         Remove_Artifacts_Dirs (Opt.Tree.Root_Project, Opt);
+         Views.Append (Opt.Tree.Root_Project);
       end if;
-   end if;
+
+      for V of Views loop
+         if not V.Is_Externally_Built then
+            if Obj_Attr.Is_Defined then
+               if V.Kind in With_Object_Dir_Kind then
+                  for Val of Obj_Attr.Values loop
+                     Delete_File
+                       (V.Object_Directory,
+                        Val.Text,
+                        Opt);
+                  end loop;
+               else
+                  for Val of Obj_Attr.Values loop
+                     Delete_File
+                       (V.Dir_Name,
+                        Val.Text,
+                        Opt);
+                  end loop;
+               end if;
+            end if;
+
+            if Exe_Attr.Is_Defined
+              and then V.Kind = K_Standard
+            then
+               for Val of Exe_Attr.Values loop
+                  Delete_File
+                    (V.Executable_Directory,
+                     Val.Text,
+                     Opt);
+               end loop;
+            end if;
+
+            if Opt.Remove_Empty_Dirs then
+               Remove_Artifacts_Dirs (V, Opt);
+            end if;
+         end if;
+      end loop;
+   end;
 
    return To_Exit_Status (E_Success);
 
