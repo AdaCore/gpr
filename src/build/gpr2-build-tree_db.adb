@@ -895,7 +895,9 @@ package body GPR2.Build.Tree_Db is
                      end loop;
                   end if;
 
-                  if V.Is_Library then
+                  if V.Is_Library
+                    and then not V.Is_Extended
+                  then
                      for C in V.Interface_Units.Iterate loop
                         Found := False;
 
