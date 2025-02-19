@@ -1,0 +1,4 @@
+project Demo19 is
+  for Source_Dirs use ("src2");
+  for Main use ("main.ads");
+end Demo19;

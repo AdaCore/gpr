@@ -573,13 +573,13 @@ package GPR2.Project.View is
    --  returns the list of main bodies
 
    function Suffixed_Simple_Name
-     (Self             : Object;
-      Name             : String;
-      Body_Suffix_Lang : Language_Id := Ada_Language) return Simple_Name;
+     (Self : Object;
+      Name : String;
+      Lang : Language_Id := Ada_Language) return Simple_Name;
    --  If the provided name contains any standard suffix (.ada, .adb, .c)
    --  or any declared convention in the Naming package then it returns the
    --  value as is.
-   --  Otherwise, the suffix for the specified language, "Body_Suffix_Lang",
+   --  Otherwise, the suffix for the specified language, "Lang",
    --  is applied to the name. If no suffixes are defined for this language,
    --  it returns the value as is.
 
