@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.IO_Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings;
 with Ada.Text_IO;
@@ -21,6 +22,7 @@ with GPR2.Build.Source.Sets;
 pragma Warnings (On);
 with GPR2.Build.Tree_Db;
 with GPR2.Build.External_Options;
+with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
@@ -520,7 +522,8 @@ package body GPR2.Build.Actions.Ada_Bind is
       Basename       : Simple_Name;
       Context        : GPR2.Project.View.Object;
       Has_Main       : Boolean;
-      SAL_In_Closure : Boolean) is
+      SAL_In_Closure : Boolean;
+      Skip           : Boolean := False) is
    begin
       Self.Ctxt        := Context;
       Self.Basename    := +Basename;
@@ -533,6 +536,11 @@ package body GPR2.Build.Actions.Ada_Bind is
         Artifacts.Files.Create
           (Context.Object_Directory.Compose ("b__" & Basename & ".adb"));
       Self.Traces := Create ("ACTION_ADA_BIND");
+      Self.Skip := Skip;
+
+      if Skip then
+         Self.Deactivate;
+      end if;
    end Initialize;
 
    -----------------------
@@ -554,7 +562,8 @@ package body GPR2.Build.Actions.Ada_Bind is
       end if;
 
       Post_Bind :=
-        Actions.Post_Bind.Create (Self.Output_Body, Self.View, Self);
+        Actions.Post_Bind.Create
+          (Self.Output_Body, Self.View, Self, Self.Skip);
 
       if not Db.Add_Action (Post_Bind) then
          return False;
@@ -746,6 +755,14 @@ package body GPR2.Build.Actions.Ada_Bind is
       Close (Src_File);
 
       return True;
+   exception
+      when Ada.IO_Exceptions.Name_Error =>
+         Self.Tree.Reporter.Report
+           ("cannot find binder genereated file """ &
+              String (Self.Output_Body.Path.Simple_Name) & '"',
+            To_Stderr => True,
+            Level     => GPR2.Message.Important);
+         return False;
    end Post_Command;
 
    ---------
