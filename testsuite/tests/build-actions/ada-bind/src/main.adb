@@ -110,21 +110,22 @@ begin
       --  end Binder;
       Tree   := Test_Helper.Load_Project ("tree/gnatbind_prefix.gpr");
       Action := Test_Helper.Create_Binder_Action (Tree);
+      Action.Update_Command_Line (1);
 
       declare
-         Args               : Argument_List;
-         Expected_Tool_Path : constant String :=
-                                GNAT.OS_Lib.Normalize_Pathname
-                                  (String (Tree.Root_Project.Path_Name.Dir_Name
-                                   & DS & "bin" & DS & "bla-gnatbind")
-                                   & Test_Helper.Get_Executable_Suffix);
+         Args     : constant Argument_List := Action.Command_Line.Argument_List;
+         Driver   : constant String :=
+           GNAT.OS_Lib.Normalize_Pathname (Args.First_Element);
+         Expected : constant String :=
+           GNAT.OS_Lib.Normalize_Pathname
+             (String (Tree.Root_Project.Path_Name.Dir_Name
+              & DS & "bin" & DS & "bla-gnatbind")
+              & Test_Helper.Get_Executable_Suffix);
       begin
-         Action.Update_Command_Line (1);
-         Args := Action.Command_Line.Argument_List;
          Test_Helper.Assert
-           (GNAT.OS_Lib.Normalize_Pathname(Args.First_Element) = Expected_Tool_Path,
-            "Correctly found binder tool with gnatbind_prefix=bla",
-            Debug => Args.First_Element);
+           (Driver = Expected,
+            "Test binder tool with gnatbind_prefix=bla",
+            Debug => Driver & " /= " & Expected);
          Test_Helper.Assert
            (Test_Helper.Launch_Action (Args) = 0,
             "Successfully launched process");
@@ -137,19 +138,22 @@ begin
       Tree   :=
         Test_Helper.Load_Project ("tree/gnatbind_prefix_with_dash.gpr");
       Action := Test_Helper.Create_Binder_Action (Tree);
+      Action.Update_Command_Line (1);
 
       declare
-         Expected_Tool_Path : constant String :=
-                                GNAT.OS_Lib.Normalize_Pathname
-                                  (String (Tree.Root_Project.Path_Name.Dir_Name
-                                   & DS & "bin" & DS & "bla-gnatbind")
-                                   & Test_Helper.Get_Executable_Suffix);
+         Args     : constant Argument_List := Action.Command_Line.Argument_List;
+         Driver   : constant String :=
+           GNAT.OS_Lib.Normalize_Pathname (Args.First_Element);
+         Expected : constant String :=
+           GNAT.OS_Lib.Normalize_Pathname
+             (String (Tree.Root_Project.Path_Name.Dir_Name
+              & DS & "bin" & DS & "bla-gnatbind")
+              & Test_Helper.Get_Executable_Suffix);
       begin
-         Action.Update_Command_Line (1);
          Test_Helper.Assert
-           (Action.Command_Line.Argument_List.First_Element = Expected_Tool_Path,
-            "Correctly found binder tool with gnatbind_prefix=bla-",
-            Debug => Action.Command_Line.Argument_List.First_Element);
+           (Driver = Expected,
+            "Test binder tool with gnatbind_prefix=bla-",
+            Debug => Driver & " /= " & Expected);
          Test_Helper.Assert
            (Test_Helper.Launch_Action (Action.Command_Line.Argument_List) = 0,
             "Successfully launched process");
@@ -161,21 +165,22 @@ begin
       --  end Binder;
       Tree   := Test_Helper.Load_Project ("tree/ada_binder.gpr");
       Action := Test_Helper.Create_Binder_Action (Tree);
+      Action.Update_Command_Line (1);
 
       declare
-         Args    : Argument_List;
-         Expected_Tool_Path : constant String :=
-                                GNAT.OS_Lib.Normalize_Pathname
-                                  (String (Tree.Root_Project.Path_Name.Dir_Name
-                                   & DS & "bin" & DS & "bla-gnatbind")
-                                   & Test_Helper.Get_Executable_Suffix);
+         Args     : constant Argument_List := Action.Command_Line.Argument_List;
+         Driver   : constant String :=
+           GNAT.OS_Lib.Normalize_Pathname (Args.First_Element);
+         Expected : constant String :=
+           GNAT.OS_Lib.Normalize_Pathname
+             (String (Tree.Root_Project.Path_Name.Dir_Name
+              & DS & "bin" & DS & "bla-gnatbind")
+              & Test_Helper.Get_Executable_Suffix);
       begin
-         Action.Update_Command_Line (1);
-         Args := Action.Command_Line.Argument_List;
          Test_Helper.Assert
-           (Args.First_Element = Expected_Tool_Path,
-            "Correctly found binder tool with ada_binder=bla-gnatbind",
-            Debug => Args.First_Element);
+           (Driver = Expected,
+            "Test binder tool with ada_binder=bla-gnatbind",
+            Debug => Driver & " /= " & Expected);
          Test_Helper.Assert
            (Test_Helper.Launch_Action (Args) = 0,
             "Successfully launched process");
@@ -187,21 +192,22 @@ begin
       --  end Binder;
       Tree   := Test_Helper.Load_Project ("tree/gnatbind_path.gpr");
       Action := Test_Helper.Create_Binder_Action (Tree);
+      Action.Update_Command_Line (1);
 
       declare
-         Args          : Argument_List;
-         Expected_Tool_Path : constant String :=
-                                GNAT.OS_Lib.Normalize_Pathname
-                                  (String (Tree.Root_Project.Path_Name.Dir_Name
-                                   & DS & "bin" & DS & "bla-gnatbind")
-                                   & Test_Helper.Get_Executable_Suffix);
+         Args     : constant Argument_List := Action.Command_Line.Argument_List;
+         Driver   : constant String :=
+           GNAT.OS_Lib.Normalize_Pathname (Args.First_Element);
+         Expected : constant String :=
+           GNAT.OS_Lib.Normalize_Pathname
+             (String (Tree.Root_Project.Path_Name.Dir_Name
+              & DS & "bin" & DS & "bla-gnatbind")
+              & Test_Helper.Get_Executable_Suffix);
       begin
-         Action.Update_Command_Line (1);
-         Args := Action.Command_Line.Argument_List;
          Test_Helper.Assert
-           (Args.First_Element = Expected_Tool_Path,
+           (Driver = Expected,
             "Correctly found binder tool define in gnatbind_path=<path>/bla-gnatbind",
-            Debug => Args.First_Element);
+            Debug => Driver & "/=" & Expected);
          Test_Helper.Assert
            (Test_Helper.Launch_Action (Args) = 0,
             "Successfully launched process");
@@ -242,7 +248,7 @@ begin
 
       declare
          Args               : Argument_List;
-         Expected_Tool_Path : constant String := "fake-gnatbind";
+         Expected_Tool_Path : constant String := "fake-gnatbind" & (if GPR2.On_Windows then ".exe" else "");
          Expected_Error     : constant String :=
                                 "cannot spawn process";
       begin
@@ -273,7 +279,7 @@ begin
       declare
          Args           : Argument_List;
          Expected_Tool  : constant String :=
-                            "fake-gnatbind";
+                            "fake-gnatbind" & (if GPR2.On_Windows then ".exe" else "");
          Expected_Error : constant String :=
                             "cannot spawn process";
       begin
@@ -303,7 +309,7 @@ begin
 
       declare
          Args           : Argument_List;
-         Expected_Tool  : constant String := "fake-gnatbind";
+         Expected_Tool  : constant String := "fake-gnatbind" & (if GPR2.On_Windows then ".exe" else "");
          Expected_Error : constant String := "cannot spawn process";
       begin
          Action.Update_Command_Line (1);

@@ -19,21 +19,21 @@
 [ Setup ] Sources updated
 [ Setup ] New binder action
 [ Setup ] Action inserted in Tree_DB
-[ OK ] Correctly found binder tool with gnatbind_prefix=bla
+[ OK ] Test binder tool with gnatbind_prefix=bla
 [ OK ] Successfully launched process
 [ Test case 3 ] - [ Parse gnatbind_prefix with dash ]
 [ Setup ] tree/gnatbind_prefix_with_dash.gpr Loaded
 [ Setup ] Sources updated
 [ Setup ] New binder action
 [ Setup ] Action inserted in Tree_DB
-[ OK ] Correctly found binder tool with gnatbind_prefix=bla-
+[ OK ] Test binder tool with gnatbind_prefix=bla-
 [ OK ] Successfully launched process
 [ Test case 4 ] - [ Parse ada_binder ]
 [ Setup ] tree/ada_binder.gpr Loaded
 [ Setup ] Sources updated
 [ Setup ] New binder action
 [ Setup ] Action inserted in Tree_DB
-[ OK ] Correctly found binder tool with ada_binder=bla-gnatbind
+[ OK ] Test binder tool with ada_binder=bla-gnatbind
 [ OK ] Successfully launched process
 [ Test case 5 ] - [ Parse gnatbind_path ]
 [ Setup ] tree/gnatbind_path.gpr Loaded
