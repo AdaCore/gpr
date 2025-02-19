@@ -2871,13 +2871,15 @@ package body GPR2.Project.View is
    --------------------------
 
    function Suffixed_Simple_Name
-     (Self             : Object;
-      Name             : String;
-      Body_Suffix_Lang : Language_Id := Ada_Language) return Simple_Name
+     (Self : Object;
+      Name : String;
+      Lang : Language_Id := Ada_Language) return Simple_Name
    is
       use GNATCOLL.Utils;
 
       Default_Ada_MU_BS : constant String := ".ada";
+      Index             : constant Attribute_Index.Object :=
+                            Attribute_Index.Create (Lang);
 
       function Ends_With_One_Language (Name : String) return Boolean;
       --  Check if Name ends with any Self language naming convention suffix
@@ -2891,21 +2893,15 @@ package body GPR2.Project.View is
       ----------------------------
 
       function Ends_With_One_Language (Name : String) return Boolean is
-      begin
-         declare
-            Index  : constant Attribute_Index.Object :=
-                       Attribute_Index.Create (Body_Suffix_Lang);
-            Attr   : constant Project.Attribute.Object :=
+         Body_Attr : constant Project.Attribute.Object :=
                        Self.Attribute (PRA.Naming.Body_Suffix, Index);
-         begin
-            if Attr.Is_Defined
-              and then Ends_With (Name, Attr.Value.Text)
-            then
-               return True;
-            end if;
-         end;
-
-         return False;
+         Spec_Attr : constant Project.Attribute.Object :=
+                       Self.Attribute (PRA.Naming.Spec_Suffix, Index);
+      begin
+         return (Body_Attr.Is_Defined
+                 and then Ends_With (Name, Body_Attr.Value.Text))
+           or else (Spec_Attr.Is_Defined
+                    and then Ends_With (Name, Spec_Attr.Value.Text));
       end Ends_With_One_Language;
 
       ---------------------
@@ -2966,8 +2962,6 @@ package body GPR2.Project.View is
          return Simple_Name (Name);
       else
          declare
-            Index  : constant Attribute_Index.Object :=
-                        Attribute_Index.Create (Body_Suffix_Lang);
             Attr   : constant Project.Attribute.Object :=
                         Self.Attribute (PRA.Naming.Body_Suffix, Index);
          begin
