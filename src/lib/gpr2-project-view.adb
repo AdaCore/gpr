@@ -1730,7 +1730,9 @@ package body GPR2.Project.View is
                BN     : constant Filename_Type :=
                           Containers.Source_Path_To_Sloc.Key (C);
                Src    : constant GPR2.Build.Source.Object :=
-                          Self.Source (BN);
+                          (if Self.Kind = K_Aggregate_Library
+                           then Self.Visible_Source (BN)
+                           else Self.Source (BN));
 
             begin
                if Src.Has_Units then
