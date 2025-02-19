@@ -947,8 +947,21 @@ is
 
                         if Kind = Unit.S_Separate then
                            pragma Assert
-                             (Last_Dot in
-                                Unit_Name'First + 1 .. Unit_Name'Last - 1);
+                             ((Last_Dot in
+                                  Unit_Name'First + 1 .. Unit_Name'Last - 1),
+                              "Dot index not in range for subunit <"
+                              & (if Unit_Name = "0"
+                                then "Invalid" else String (Unit_Name))
+                              & "> (deduced from : "
+                              & String (File.Simple_Name)
+                              & ") - Last_Dot =" & Last_Dot'Img
+                              & " ; Config : Sep_Suffix = <"
+                              & Naming_Schema_Map (Ada_Language).Sep_Suffix
+                              & ">, Body_Suffix = <"
+                              & Naming_Schema_Map (Ada_Language).Body_Suffix
+                              & ">, Spec_Suffix = <"
+                              & Naming_Schema_Map (Ada_Language).Spec_Suffix
+                              & ">, Dot_Replacement = <" & Dot_Repl & ">");
 
                            Append_Unit
                              (Unit_Name (Last_Dot + 1 .. Unit_Name'Last),
