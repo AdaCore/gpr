@@ -9,6 +9,9 @@ with GPR2.Build.Source;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
+with GPR2.Project.Attribute;
+with GPR2.Project.Attribute_Index;
+with GPR2.Project.Registry.Attribute;
 
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -28,6 +31,8 @@ function Test return Integer is
    use type GPR2.Language_Id;
    use type Ada.Containers.Count_Type;
    package GBA renames GPR2.Build.Actions;
+   package PRA renames GPR2.Project.Registry.Attribute;
+   package PAI renames GPR2.Project.Attribute_Index;
 
    Tree        : GPR2.Project.Tree.Object;
    Opts        : GPR2.Options.Object;
@@ -111,7 +116,21 @@ function Test return Integer is
             --  Pass only options to the link action
 
             if Trimed_Line (Trimed_Line'First) = '-' then
-               Action.Add_Option (Trimed_Line);
+               declare
+                  Idx  : constant PAI.Object :=
+                           PAI.Create (Trimed_Line, Case_Sensitive => True);
+                  Attr : constant GPR2.Project.Attribute.Object :=
+                           Tree.Root_Project.Attribute
+                             (PRA.Binder.Bindfile_Option_Substitution, Idx);
+               begin
+                  if Attr.Is_Defined then
+                     for V of Attr.Values loop
+                        Action.Add_Option (V.Text);
+                     end loop;
+                  else
+                     Action.Add_Option (Trimed_Line);
+                  end if;
+               end;
             end if;
 
          end;
