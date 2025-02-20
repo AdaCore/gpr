@@ -534,6 +534,13 @@ begin
         "Value is the name of the archive indexer, followed by the required "
       & "options.");
 
+   --  Archive_Prefix
+   Set_Attribute_Description
+     (Key          => PRA.Archive_Prefix,
+      Description  =>
+        "Value is the prefix of archives. When not declared, the "
+      & "prefix is 'lib'.");
+
    --  Archive_Suffix
    Set_Attribute_Description
      (Key          => PRA.Archive_Suffix,

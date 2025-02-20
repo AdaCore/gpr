@@ -1001,6 +1001,16 @@ begin
       Is_Allowed_In         => Everywhere,
       Inherit_From_Extended => Not_Inherited);
 
+   --  archive_prefix
+   Add
+     (Name                  => Archive_Prefix,
+      Index_Type            => No_Index,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Is_Allowed_In         => Everywhere,
+      Default               => Create ("lib"),
+      Inherit_From_Extended => Not_Inherited);
+
    --  archive_suffix
    Add
      (Name                  => Archive_Suffix,

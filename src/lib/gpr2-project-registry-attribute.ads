@@ -269,6 +269,9 @@ package GPR2.Project.Registry.Attribute is
    Archive_Indexer                  : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"archive_indexer");
+   Archive_Prefix                   : constant Q_Attribute_Id :=
+                                        (Project_Level_Scope,
+                                         +"archive_prefix");
    Archive_Suffix                   : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"archive_suffix");
