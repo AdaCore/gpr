@@ -2561,6 +2561,12 @@ package body GPR2.Tree_Internal is
                Source_Reference.Create (View.Path_Name.Value, 0, 0));
          end if;
 
+         if View.Is_Extended then
+            --  Extended project are not to be checked since their extending
+            --  project may refine its nature and interfaces.
+            return;
+         end if;
+
          --  Check no concrete view is in the closure of an aggregate project
 
          if Self.Root_Project.Kind = K_Aggregate
@@ -2576,6 +2582,13 @@ package body GPR2.Tree_Internal is
          end if;
 
          To_Check := View.Imports.Union (View.Limited_Imports);
+
+         if View.Is_Extending then
+            for V of View.Extended loop
+               To_Check.Union (V.Imports);
+               To_Check.Union (V.Limited_Imports);
+            end loop;
+         end if;
 
          while not To_Check.Is_Empty loop
             Imported := To_Check.First_Element;
