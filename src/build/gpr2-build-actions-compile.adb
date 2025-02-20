@@ -238,7 +238,7 @@ package body GPR2.Build.Actions.Compile is
                   end if;
                end loop;
 
-               Write (FD, Cnt (Last .. Cnt'Last));
+               Write (FD, Cnt (Last .. Cnt'Last) & ASCII.LF);
             end;
          end Write_Exception;
 
