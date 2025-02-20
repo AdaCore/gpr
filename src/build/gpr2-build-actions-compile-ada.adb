@@ -468,6 +468,11 @@ package body GPR2.Build.Actions.Compile.Ada is
       --  Library_Interface attributes. Otherwise, this units is reserved for
       --  internal project implementation.
 
+      procedure Check_Internal_Interface_Closure
+        (CU : GPR2.Build.Compilation_Unit.Object);
+      --  Raise a warning if an interface unit's specification depends on
+      --  another internal unit that is not part of the interface closure.
+
       --------------------------
       -- Can_Unit_Be_Imported --
       --------------------------
@@ -539,7 +544,47 @@ package body GPR2.Build.Actions.Compile.Ada is
          return Allowed;
       end Can_Unit_Be_Imported;
 
+      ---------------------------------------
+      -- Check_Internal_Interface_Closure  --
+      ---------------------------------------
+
+      procedure Check_Internal_Interface_Closure
+        (CU : GPR2.Build.Compilation_Unit.Object)
+      is
+         use GPR2.Project.View;
+      begin
+         if Self.View = CU.Owning_View
+           and then Self.View.Has_Any_Interfaces
+           and then Self.CU.Known_Dependencies (Spec_Only => True).Contains
+                      (CU.Name)
+           and then Self.View.Interface_Closure.Contains (Self.CU.Name)
+           and then not Self.View.Interface_Closure.Contains (CU.Name)
+         then
+
+            --  Here, both units belong to the same view. If an unit is part of
+            --  the interface and imports another internal unit in its spec,
+            --  then we need to ensure that the imported unit is also part
+            --  of the interface.
+
+            Self.Tree.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Warning,
+                  "unit """
+                  & String (CU.Name)
+                  & """ is not part of the interface set of the project "
+                  & """"
+                  & String (Self.View.Name)
+                  & """, but it is "
+                  & "needed by """
+                  & String (Self.CU.Name)
+                  & """",
+                  GPR2.Source_Reference.Create
+                    (Self.Src.Path_Name.Value, 0, 0)));
+         end if;
+      end Check_Internal_Interface_Closure;
+
    begin
+
       for Successor of Self.Tree.Successors (Self.Ali_File) loop
          if Successor in Actions.Ada_Bind.Object'Class then
             Binds.Insert (Successor.UID);
@@ -611,6 +656,8 @@ package body GPR2.Build.Actions.Compile.Ada is
                   if not Self.Tree.Add_Action (Action) then
                      return False;
                   end if;
+
+                  Check_Internal_Interface_Closure (CU);
                end if;
 
                --  For all imported unit, we attach them to successor bind and

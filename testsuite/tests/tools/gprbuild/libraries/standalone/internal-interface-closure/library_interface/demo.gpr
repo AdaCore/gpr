@@ -1,0 +1,8 @@
+library project Demo is
+
+   for Library_Name use "demo";
+   for Library_Dir use "lib_library_interface";
+   for Source_Dirs use ("../src/lib");
+   for Object_Dir use "obj/lib";
+   for Library_Interface use ("foo");
+end Demo;
