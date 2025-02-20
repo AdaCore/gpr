@@ -2,8 +2,8 @@ Demo     K_LIBRARY
 Library_Name : abc
 Library_Directory : lib
                   : lib/
-Library Filename : libabc.so
-                 : lib/libabc.so
+Library Filename : libabc.so.1.2
+                 : lib/libabc.so.1.2
 Library Version Filename : libabc.so.1.2
                          : lib/libabc.so.1.2
 Library Major Version Filename : libabc.so.1
@@ -13,8 +13,8 @@ Demo     K_LIBRARY
 Library_Name : abc
 Library_Directory : lib
                   : lib/
-Library Filename : libabc.so
-                 : lib/libabc.so
+Library Filename : libabc.so.1.4
+                 : lib/libabc.so.1.4
 Library Version Filename : libabc.so.1.4
                          : lib/libabc.so.1.4
 Library Major Version Filename : libabc.so.1
@@ -24,8 +24,8 @@ Demo     K_LIBRARY
 Library_Name : abc
 Library_Directory : release
                   : lib/release/
-Library Filename : libabc.so
-                 : lib/release/libabc.so
+Library Filename : libabc.so.1.4
+                 : lib/release/libabc.so.1.4
 Library Version Filename : libabc.so.1.4
                          : lib/release/libabc.so.1.4
 Library Major Version Filename : libabc.so.1
@@ -35,8 +35,8 @@ Demo     K_LIBRARY
 Library_Name : abc
 Library_Directory : release
                   : lib/release/
-Library Filename : libabc.so
-                 : lib/release/libabc.so
+Library Filename : libabc.so.A.B
+                 : lib/release/libabc.so.A.B
 Library Version Filename : libabc.so.A.B
                          : lib/release/libabc.so.A.B
 Library Major Version Filename : libabc.so.A

@@ -514,7 +514,7 @@ package body GPR2.Build.Actions.Compile.Ada is
                      & String (CU_View.Name),
                      GPR2.Source_Reference.Object
                        (GPR2.Source_Reference.Create
-                          (Self.Src.Path_Name.Value, 0, 0))));
+                          (Self.Ctxt.Path_Name.Value, 0, 0))));
             end if;
 
             if Allowed then
@@ -578,7 +578,7 @@ package body GPR2.Build.Actions.Compile.Ada is
                   & String (Self.CU.Name)
                   & """",
                   GPR2.Source_Reference.Create
-                    (Self.Src.Path_Name.Value, 0, 0)));
+                    (Self.Ctxt.Path_Name.Value, 0, 0)));
          end if;
       end Check_Internal_Interface_Closure;
 

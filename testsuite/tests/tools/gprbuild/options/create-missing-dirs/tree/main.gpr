@@ -2,5 +2,5 @@ with "simple";
 
 project Main is
    for Source_Dirs use ("src");
-   for Object_Dir use "obj";
+   for Object_Dir use Project'Project_Dir & "/obj";
 end Main;

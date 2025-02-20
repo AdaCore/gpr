@@ -40,6 +40,8 @@
     - Aggregated        : 
        - Agg ($<cwd>/agg.gpr)
     - Attributes        : 
+       - Archive_Prefix [ SINGLE ]
+          - Value : "lib"
        - Externally_Built [ SINGLE ]
           - Value : "false"
        - Name [ SINGLE ]
@@ -58,6 +60,8 @@
     - Aggregated        : 
        - Prj ($<cwd>/prj.gpr)
     - Attributes        : 
+       - Archive_Prefix [ SINGLE ]
+          - Value : "lib"
        - Externally_Built [ SINGLE ]
           - Value : "false"
        - Name [ SINGLE ]
@@ -88,6 +92,8 @@
     - Source directory  :
        - <gnat rts>/adainclude
     - Attributes        : 
+       - Archive_Prefix [ SINGLE ]
+          - Value : "lib"
        - Excluded_Source_Files [ LIST ]
           - Values : 
              - "memtrack.adb"
@@ -119,6 +125,8 @@
        - Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr)
        - Base ($<cwd>/base.gpr>$<cwd>/prj.gpr)
     - Attributes        : 
+       - Archive_Prefix [ SINGLE ]
+          - Value : "lib"
        - Exec_Dir [ SINGLE ]
           - Value : "."
        - Externally_Built [ SINGLE ]
@@ -155,6 +163,8 @@
     - Imports           : 
        - Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr)
     - Attributes        : 
+       - Archive_Prefix [ SINGLE ]
+          - Value : "lib"
        - Exec_Dir [ SINGLE ]
           - Value : "."
        - Externally_Built [ SINGLE ]
@@ -195,6 +205,8 @@
        - Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr)
        - Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr)
     - Attributes        : 
+       - Archive_Prefix [ SINGLE ]
+          - Value : "lib"
        - Exec_Dir [ SINGLE ]
           - Value : "obj"
        - Externally_Built [ SINGLE ]
@@ -223,6 +235,8 @@
        - Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr)
        - Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr)
     - Attributes        : 
+       - Archive_Prefix [ SINGLE ]
+          - Value : "lib"
        - Exec_Dir [ SINGLE ]
           - Value : "obj2"
        - Externally_Built [ SINGLE ]
@@ -281,6 +295,11 @@
   "projects": [
     {
       "attributes": [
+        {
+          "kind": "single",
+          "name": "Archive_Prefix",
+          "value": "lib"
+        },
         {
           "kind": "single",
           "name": "Exec_Dir",
@@ -694,6 +713,11 @@
       "attributes": [
         {
           "kind": "single",
+          "name": "Archive_Prefix",
+          "value": "lib"
+        },
+        {
+          "kind": "single",
           "name": "Externally_Built",
           "value": "false"
         },
@@ -788,6 +812,11 @@
         "$<cwd>/agg.gpr"
       ],
       "attributes": [
+        {
+          "kind": "single",
+          "name": "Archive_Prefix",
+          "value": "lib"
+        },
         {
           "kind": "single",
           "name": "Externally_Built",
