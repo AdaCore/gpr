@@ -2245,9 +2245,8 @@ package body GPR2.Tree_Internal is
                return True;
             end if;
 
-            if (View.Is_Extending
-                and then not Is_Implicitly_Abstract (View.Extended_Root))
-              or else View.Is_Externally_Built
+            if View.Is_Extending
+              and then not Is_Implicitly_Abstract (View.Extended_Root)
             then
                --  Project extending non abstract one is not abstract
 
