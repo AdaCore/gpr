@@ -543,7 +543,7 @@ package body GPR2.Build.Actions.Link is
    begin
       Self.Ctxt       := Context;
       Self.Is_Library := True;
-      Self.Is_Static  := Context.Library_Kind in "static" | "static-pic";
+      Self.Is_Static  := Context.Is_Static_Library;
       Self.Library    := Artifacts.Library.Create (Context.Library_Filename);
       Self.Traces     := Create ("ACTION_LINK");
    end Initialize_Library;
@@ -642,10 +642,10 @@ package body GPR2.Build.Actions.Link is
    overriding function UID (Self : Object) return Actions.Action_Id'Class is
       BN     : constant Simple_Name := Self.Output.Path.Simple_Name;
       Result : constant Link_Id :=
-                 (Name_Len  => BN'Length,
-                  Is_Lib    => Self.Is_Library,
-                  View      => Self.Ctxt,
-                  Exec_Name => BN);
+                 (Name_Len      => BN'Length,
+                  Is_Static_Lib => Self.Is_Library and then Self.Is_Static,
+                  View          => Self.Ctxt,
+                  Exec_Name     => BN);
    begin
       return Result;
    end UID;

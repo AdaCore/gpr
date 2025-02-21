@@ -91,16 +91,16 @@ private
 
    type Link_Id (Name_Len : Natural) is new Actions.Action_Id
    with record
-      Is_Lib    : Boolean := False;
-      View      : GPR2.Project.View.Object;
-      Exec_Name : Filename_Type (1 .. Name_Len);
+      Is_Static_Lib : Boolean := False;
+      View          : GPR2.Project.View.Object;
+      Exec_Name     : Filename_Type (1 .. Name_Len);
    end record;
 
    overriding function View (Self : Link_Id) return Project.View.Object is
      (Self.View);
 
    overriding function Action_Class (Self : Link_Id) return Value_Type is
-     (if Self.Is_Lib
+     (if Self.Is_Static_Lib
       then "Archive"
       else "Link");
 
