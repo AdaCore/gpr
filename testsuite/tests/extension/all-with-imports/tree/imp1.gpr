@@ -1,0 +1,5 @@
+project Imp1 is
+   Name := Lower (Project'Name);
+   for Source_Dirs use ("../tree_srcs/" & Name);
+   for Object_Dir use "obj/" & Name;
+end Imp1;

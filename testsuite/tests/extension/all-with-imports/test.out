@@ -1,0 +1,22 @@
+=== Loading tree/master.gpr ===
+imp1_ext.gpr: error: cannot extend an already imported project file
+=== Loading tree2/master_ext.gpr ===
+runtime
+Imp1
+Imp3
+Base
+Imp1_Ext
+Imp3_Ext
+Imp2
+  Imp1_Ext
+Imp2_Ext
+Master
+  Imp2_Ext
+  Imp3_Ext
+Master_Ext
+  Imp1_Ext
+main execution:
+Imp1.Execute extended
+Imp3.Execute extended
+Imp1.Execute extended
+Imp2.Execute extended

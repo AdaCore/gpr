@@ -1,0 +1,8 @@
+with "imp2_ext.gpr";
+with "imp3_ext.gpr";
+with "imp1_ext.gpr";
+project Master extends all "base.gpr" is
+   Name := Lower (Project'Name);
+   for Source_Dirs use ("../tree_srcs/" & Name);
+   for Object_Dir use "obj/" & Name;
+end Master;
