@@ -102,6 +102,7 @@ package body GPR2.Build.Actions_Population is
    function Populate_Library
      (Tree_Db     : GPR2.Build.Tree_Db.Object_Access;
       View        : GPR2.Project.View.Object;
+      Options     : Build.Options.Build_Options;
       Libs        : in out Library_Map.Map;
       SAL_Closure : in out Boolean) return Boolean;
    --  If previous is set, it indicates the previously withed lib for the
@@ -120,7 +121,8 @@ package body GPR2.Build.Actions_Population is
    function Populate_All
      (Tree_Db     : GPR2.Build.Tree_Db.Object_Access;
       View        : GPR2.Project.View.Object;
-      Single_View : Boolean := False) return Boolean;
+      Single_View : Boolean;
+      Options     : Build.Options.Build_Options) return Boolean;
 
    function Populate_Mains
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
@@ -130,6 +132,7 @@ package body GPR2.Build.Actions_Population is
 
    function Populate_Withed_Projects
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      Options : Build.Options.Build_Options;
       Closure : in out GPR2.Project.View.Set.Object;
       Libs    : in out Library_Map.Map;
       Has_SAL : in out Boolean) return Boolean;
@@ -139,6 +142,7 @@ package body GPR2.Build.Actions_Population is
 
    function Populate_Withed_Projects
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      Options : Build.Options.Build_Options;
       Closure : in out GPR2.Project.View.Set.Object;
       Ctxt    : Library_Type;
       Libs    : in out Library_Map.Map;
@@ -146,6 +150,7 @@ package body GPR2.Build.Actions_Population is
 
    function Populate_Withed_Projects_Internal
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      Options : Build.Options.Build_Options;
       Closure : in out GPR2.Project.View.Set.Object;
       Ctxt    : Library_Type;
       Libs    : in out Library_Map.Map;
@@ -455,12 +460,12 @@ package body GPR2.Build.Actions_Population is
                if Mains.Is_Empty then
                   --  compile all sources, recursively in case -U is set
                   if Options.Unique_Compilation then
-                     Result := Populate_All (Tree_Db, V, True);
+                     Result := Populate_All (Tree_Db, V, True, Options);
                   else
                      for C of V.Closure (True, False, True) loop
                         if not C.Is_Externally_Built then
                            Result := Populate_All
-                             (Tree_Db, C, True);
+                             (Tree_Db, C, True, Options);
                            exit when not Result;
                         end if;
                      end loop;
@@ -514,16 +519,17 @@ package body GPR2.Build.Actions_Population is
                      if V.Has_Mains or else not Mains.Is_Empty then
                         Result := Populate_Mains (Tree_Db, V, Mains, Options);
                      else
-                        Result := Populate_All (Tree_Db, V);
+                        Result := Populate_All (Tree_Db, V, False, Options);
                      end if;
 
                   when K_Library | K_Aggregate_Library =>
-                     Result := Populate_Library (Tree_Db, V, Libs, Has_SAL);
+                     Result :=
+                       Populate_Library (Tree_Db, V, Options, Libs, Has_SAL);
 
                   when others =>
                      Closure.Include (V);
                      Result := Populate_Withed_Projects
-                       (Tree_Db, Closure, Libs, Has_SAL);
+                       (Tree_Db, Options, Closure, Libs, Has_SAL);
                end case;
             end if;
          end if;
@@ -554,11 +560,22 @@ package body GPR2.Build.Actions_Population is
                To_Remove.Include (A);
             end if;
          end loop;
+      end if;
 
-         for A of To_Remove loop
-            Tree_Db.Action_Id_To_Reference (A.UID).Deactivate;
+      if not Options.Restricted_To_Languages.Is_Empty then
+         for A of Tree_Db.All_Actions loop
+            if A in Actions.Compile.Object'Class
+              and then not Options.Restricted_To_Languages.Contains
+                (Actions.Compile.Object'Class (A).Language)
+            then
+               To_Remove.Include (A);
+            end if;
          end loop;
       end if;
+
+      for A of To_Remove loop
+         Tree_Db.Action_Id_To_Reference (A.UID).Deactivate;
+      end loop;
 
       return Result;
    end Populate_Actions;
@@ -570,7 +587,8 @@ package body GPR2.Build.Actions_Population is
    function Populate_All
      (Tree_Db     : GPR2.Build.Tree_Db.Object_Access;
       View        : GPR2.Project.View.Object;
-      Single_View : Boolean := False) return Boolean
+      Single_View : Boolean;
+      Options     : Build.Options.Build_Options) return Boolean
    is
       Closure : GPR2.Project.View.Set.Object;
       Libs    : Library_Map.Map;
@@ -584,7 +602,7 @@ package body GPR2.Build.Actions_Population is
 
       if not Single_View
         and then not Populate_Withed_Projects
-                       (Tree_Db, Closure, Libs, Has_SAL)
+                       (Tree_Db, Options, Closure, Libs, Has_SAL)
       then
          return False;
       end if;
@@ -633,6 +651,7 @@ package body GPR2.Build.Actions_Population is
    function Populate_Library
      (Tree_Db     : GPR2.Build.Tree_Db.Object_Access;
       View        : GPR2.Project.View.Object;
+      Options     : Build.Options.Build_Options;
       Libs        : in out Library_Map.Map;
       SAL_Closure : in out Boolean) return Boolean
    is
@@ -670,7 +689,7 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       if not Populate_Withed_Projects
-        (Tree_Db, Closure, Self, Libs, Has_SAL)
+        (Tree_Db, Options, Closure, Self, Libs, Has_SAL)
       then
          return False;
       end if;
@@ -687,10 +706,11 @@ package body GPR2.Build.Actions_Population is
          --  elaborating and finalizing the lib. Used for standalone libraries.
 
          Bind.Initialize
-           (Basename => View.Library_Name,
-            Context  => View,
-            Has_Main => False,
-            SAL_In_Closure => Has_SAL);
+           (Basename       => View.Library_Name,
+            Context        => View,
+            Has_Main       => False,
+            SAL_In_Closure => Has_SAL,
+            Skip           => Options.No_SAL_Binding);
 
          if not Tree_Db.Add_Action (Bind) then
             return False;
@@ -857,7 +877,9 @@ package body GPR2.Build.Actions_Population is
 
          Closure.Include (View);
 
-         if not Populate_Withed_Projects (Tree_Db, Closure, Libs, Has_SAL) then
+         if not Populate_Withed_Projects
+           (Tree_Db, Options, Closure, Libs, Has_SAL)
+         then
             return False;
          end if;
 
@@ -1119,12 +1141,13 @@ package body GPR2.Build.Actions_Population is
 
    function Populate_Withed_Projects
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      Options : Build.Options.Build_Options;
       Closure : in out GPR2.Project.View.Set.Object;
       Libs    : in out Library_Map.Map;
       Has_SAL : in out Boolean) return Boolean is
    begin
       return Populate_Withed_Projects_Internal
-        (Tree_Db, Closure, No_Library, Libs, Has_SAL);
+        (Tree_Db, Options, Closure, No_Library, Libs, Has_SAL);
    end Populate_Withed_Projects;
 
    ------------------------------
@@ -1133,13 +1156,14 @@ package body GPR2.Build.Actions_Population is
 
    function Populate_Withed_Projects
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      Options : Build.Options.Build_Options;
       Closure : in out GPR2.Project.View.Set.Object;
       Ctxt    : Library_Type;
       Libs    : in out Library_Map.Map;
       Has_SAL : in out Boolean) return Boolean is
    begin
       return Populate_Withed_Projects_Internal
-        (Tree_Db, Closure, Ctxt, Libs, Has_SAL);
+        (Tree_Db, Options, Closure, Ctxt, Libs, Has_SAL);
    end Populate_Withed_Projects;
 
    ---------------------------------------
@@ -1148,6 +1172,7 @@ package body GPR2.Build.Actions_Population is
 
    function Populate_Withed_Projects_Internal
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      Options : Build.Options.Build_Options;
       Closure : in out GPR2.Project.View.Set.Object;
       Ctxt    : Library_Type;
       Libs    : in out Library_Map.Map;
@@ -1204,7 +1229,9 @@ package body GPR2.Build.Actions_Population is
                Add_Deps (Current);
 
             when K_Library | K_Aggregate_Library =>
-               if not Populate_Library (Tree_Db, Current, Libs, Has_SAL) then
+               if not Populate_Library
+                 (Tree_Db, Current, Options, Libs, Has_SAL)
+               then
                   return False;
                end if;
 

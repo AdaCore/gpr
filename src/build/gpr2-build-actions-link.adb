@@ -12,7 +12,6 @@ with GNATCOLL.OS.FSUtil;
 with GNATCOLL.Utils;
 
 with GPR2.Build.External_Options;
-with GPR2.Build.ALI_Parser;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
@@ -72,6 +71,30 @@ package body GPR2.Build.Actions.Link is
       is
          Attr : constant Project.Attribute.Object :=
                   Self.View.Attribute (Id, Index);
+
+         procedure Add (Arg : String);
+         --  Check for full path whenever possible
+
+         procedure Add (Arg : String) is
+         begin
+            if Arg (Arg'First) = '-' then
+               Cmd_Line.Add_Argument (Arg, In_Signature);
+            else
+               declare
+                  Full : constant Path_Name.Object :=
+                           Path_Name.Create_File
+                             (Filename_Type (Arg),
+                              Self.Ctxt.Dir_Name.Value);
+               begin
+                  if Full.Exists then
+                     Cmd_Line.Add_Argument (Full, In_Signature);
+                  else
+                     Cmd_Line.Add_Argument (Arg, In_Signature);
+                  end if;
+               end;
+            end if;
+         end Add;
+
       begin
          if not Attr.Is_Defined then
             return False;
@@ -81,21 +104,18 @@ package body GPR2.Build.Actions.Link is
             for Idx in Attr.Values.First_Index .. Attr.Values.Last_Index loop
                if Idx < Attr.Values.Last_Index then
                   if Attr.Values.Element (Idx).Text'Length > 0 then
-                     Cmd_Line.Add_Argument
-                       (Attr.Values.Element (Idx).Text, In_Signature);
+                     Add (Attr.Values.Element (Idx).Text);
                   end if;
 
                elsif Param'Length > 0
                  or else Attr.Values.Element (Idx).Text'Length > 0
                then
-                  Cmd_Line.Add_Argument
-                    (Attr.Values.Element (Idx).Text & Param, In_Signature);
+                  Add (Attr.Values.Element (Idx).Text & Param);
                end if;
             end loop;
 
          elsif Param'Length > 0 or else Attr.Value.Text'Length > 0 then
-            Cmd_Line.Add_Argument
-              (Attr.Value.Text & Param, In_Signature);
+            Add (Attr.Value.Text & Param);
          end if;
 
          return True;
@@ -333,7 +353,7 @@ package body GPR2.Build.Actions.Link is
          end loop;
       end if;
 
-   --  Add options provided by the binder if needed
+      --  Add options provided by the binder if needed
 
       if not Self.View.Is_Library
         or else Self.View.Is_Shared_Library
@@ -358,9 +378,7 @@ package body GPR2.Build.Actions.Link is
       then
          declare
             Gnat_Version : constant String :=
-              GPR2.Build.ALI_Parser.Version
-                (Self.View.Tree.Runtime_Project.Object_Directory.Compose
-                   ("system.ali"));
+                             Self.View.Tree.Ada_Compiler_Version;
          begin
             if Gnat_Version /= "" then
                Cmd_Line.Add_Argument ("-lgnat-" & Gnat_Version);
@@ -525,7 +543,7 @@ package body GPR2.Build.Actions.Link is
    begin
       Self.Ctxt       := Context;
       Self.Is_Library := True;
-      Self.Is_Static  := Context.Library_Kind in "static" | "static-pic";
+      Self.Is_Static  := Context.Is_Static_Library;
       Self.Library    := Artifacts.Library.Create (Context.Library_Filename);
       Self.Traces     := Create ("ACTION_LINK");
    end Initialize_Library;
@@ -624,10 +642,10 @@ package body GPR2.Build.Actions.Link is
    overriding function UID (Self : Object) return Actions.Action_Id'Class is
       BN     : constant Simple_Name := Self.Output.Path.Simple_Name;
       Result : constant Link_Id :=
-                 (Name_Len  => BN'Length,
-                  Is_Lib    => Self.Is_Library,
-                  View      => Self.Ctxt,
-                  Exec_Name => BN);
+                 (Name_Len      => BN'Length,
+                  Is_Static_Lib => Self.Is_Library and then Self.Is_Static,
+                  View          => Self.Ctxt,
+                  Exec_Name     => BN);
    begin
       return Result;
    end UID;

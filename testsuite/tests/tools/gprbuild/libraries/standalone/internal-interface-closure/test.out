@@ -1,8 +1,8 @@
 $ gpr2build -Plibrary_interface/app.gpr -p
-"obj/lib/" created
-"lib_library_interface/" created
-"obj/app-library_interface/" created
-foo.adb: warning: unit "GOO" is not part of the interface set of the project "Demo", but it is needed by "FOO"
+"obj/lib" created
+"lib_library_interface" created
+"obj/app-library_interface" created
+demo.gpr: warning: unit "GOO" is not part of the interface set of the project "Demo", but it is needed by "FOO"
 [Ada Compile]     main.adb
 [Ada Compile]     foo.adb
 [Ada Compile]     goo.adb
@@ -15,11 +15,11 @@ foo.adb: warning: unit "GOO" is not part of the interface set of the project "De
 [Archive]         libdemo.a
 [Link]            main
 $ gpr2build -Pinterfaces/app.gpr -p
-"obj/lib/" created
-"lib_interfaces/" created
-"obj/app-interfaces/" created
-foo.adb: warning: unit "GOO" is not part of the interface set of the project "Demo", but it is needed by "FOO"
-hoo.adb: warning: unit "IOO" is not part of the interface set of the project "Demo", but it is needed by "HOO"
+"obj/lib" created
+"lib_interfaces" created
+"obj/app-interfaces" created
+demo.gpr: warning: unit "GOO" is not part of the interface set of the project "Demo", but it is needed by "FOO"
+demo.gpr: warning: unit "IOO" is not part of the interface set of the project "Demo", but it is needed by "HOO"
 [Ada Compile]     main.adb
 [Ada Compile]     foo.adb
 [Ada Compile]     goo.adb

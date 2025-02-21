@@ -1,5 +1,5 @@
 $ gpr2build -p -Pprj
-"obj/std/" created
+"obj/std" created
 [Ada Bind]        main
 [Ada Compile]     main.adb
 [Ada Compile]     pkg.adb
@@ -7,7 +7,7 @@ $ gpr2build -p -Pprj
 [Ada Post-Bind]   b__main.adb
 [Link]            main
 $ gpr2build -p -Pext
-"obj/ext/" created
+"obj/ext" created
 [Ada Bind]        main
 [Ada Compile]     main.adb
 [Ada Compile]     pkg.adb
@@ -17,7 +17,7 @@ $ ./main
 Hi, I'm from ext
 I'm Pkg2 from std
 $ gpr2build -p -Pext2
-"obj/ext2/" created
+"obj/ext2" created
 [Ada Bind]        main
 [Ada Compile]     main.adb
 [Ada Compile]     pkg.adb

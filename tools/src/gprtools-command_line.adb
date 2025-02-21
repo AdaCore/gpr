@@ -567,7 +567,7 @@ package body GPRtools.Command_Line is
               (Parser, Result'Access,
                Section => -State.Current_Section,
                Index   => -State.Current_Section_Index,
-               Arg     => Switch_Type (Arg));
+               Arg     => Arg);
          end if;
 
       elsif Found then

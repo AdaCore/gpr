@@ -56,6 +56,8 @@ package GPR2.Build.Options is
       --  on the command line, then this compiles the whole tree.
       No_Main_Subprogram           : Boolean := False;
       --  -z option: tell the binder to not generate an actual main subprogram
+      Restricted_To_Languages      : GPR2.Containers.Language_Set;
+      --  Restrict the compile actions to the given set of languages
    end record;
 
 end GPR2.Build.Options;

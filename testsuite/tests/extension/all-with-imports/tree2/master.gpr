@@ -1,0 +1,6 @@
+with "imp2_ext.gpr";
+with "imp3_ext.gpr";
+project Master extends all "base.gpr" is
+   Name := Lower (Project'Name);
+   for Object_Dir use "obj/" & Name;
+end Master;

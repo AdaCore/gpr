@@ -37,7 +37,7 @@ package body GPRbuild.Options is
                   access GPRtools.Command_Line.Command_Line_Result'Class;
       Section : String;
       Index   : String;
-      Arg     : GPRtools.Command_Line.Switch_Type);
+      Arg     : String);
 
    -----------------------------
    -- Build_From_Command_Line --
@@ -385,7 +385,7 @@ package body GPRbuild.Options is
                   access GPRtools.Command_Line.Command_Line_Result'Class;
       Section : String;
       Index   : String;
-      Arg     : GPRtools.Command_Line.Switch_Type)
+      Arg     : String)
    is
       pragma Unreferenced (Parser);
 
@@ -400,23 +400,23 @@ package body GPRbuild.Options is
          Result.Extra_Args.Register
            (GPR2.Build.External_Options.Compiler,
             Lang_Idx,
-            String (Arg));
+            Arg);
 
       elsif Section = "-bargs" then
          Result.Extra_Args.Register
            (GPR2.Build.External_Options.Binder,
             Lang_Idx,
-            String (Arg));
+            Arg);
 
       elsif Section = "-largs" then
          Result.Extra_Args.Register
            (GPR2.Build.External_Options.Linker,
             GPR2.No_Language,
-            String (Arg));
+            Arg);
 
       elsif Section = "-kargs" then
          --  [eng/gpr/gpr-issues#444] TBD
-         Result.Config_Args.Append (String (Arg));
+         Result.Config_Args.Append (Arg);
 
       else
          raise GPR2.Options.Usage_Error with
@@ -475,7 +475,7 @@ package body GPRbuild.Options is
          Result.Build_Options.No_SAL_Binding := True;
 
       elsif Arg = "--restricted-to-languages" then
-         Result.Restricted_To_Languages.Clear;
+         Result.Build_Options.Restricted_To_Languages.Clear;
          declare
             Last : Natural := Param'First;
          begin
@@ -486,7 +486,7 @@ package body GPRbuild.Options is
                               Param (Last .. Idx - 1);
                   begin
                      if Lang'Length > 0 then
-                        Result.Restricted_To_Languages.Include
+                        Result.Build_Options.Restricted_To_Languages.Include
                           (+Optional_Name_Type (Lang));
                      end if;
 
@@ -495,7 +495,7 @@ package body GPRbuild.Options is
                elsif Idx = Param'Last
                  and then Last <= Idx
                then
-                  Result.Restricted_To_Languages.Include
+                  Result.Build_Options.Restricted_To_Languages.Include
                     (+Optional_Name_Type (Param (Last .. Param'Last)));
                end if;
             end loop;

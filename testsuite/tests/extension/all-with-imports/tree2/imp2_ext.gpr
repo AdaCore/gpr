@@ -1,0 +1,5 @@
+project Imp2_Ext extends "imp2.gpr" is
+   Name := Lower (Project'Name);
+   for Source_Dirs use ("../tree_srcs/" & Name);
+   for Object_Dir use "obj/" & Name;
+end Imp2_Ext;

@@ -101,8 +101,6 @@ private package GPR2.View_Internal is
       --  List of imported views
       Limited_Imports   : Project_View_Store.Map;
       --  List of limited imported views
-      Closure           : Project_View_Store.Map;
-      --  The list of views sources from self can see
       Agg_Libraries     : GPR2.View_Ids.Set.Set;
       --  List of aggregate libraries that use this view
       Aggregated        : Project_Vector.Vector;

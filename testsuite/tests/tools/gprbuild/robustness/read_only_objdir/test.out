@@ -1,6 +1,6 @@
 regular run:
 $ gpr2build -Pprj -p
-"obj/prj/" created
+"obj/prj" created
 [Ada Compile]     pkg.ads
 $ gpr2clean -Pprj
 
@@ -17,8 +17,8 @@ $ gpr2build -Pprj -p -q
 $ chmod 0x555 obj/prj
 - with externally built dependency
 $ gpr2build -Plib -XPRJ_RO=True -p
-"obj/lib/" created
-"lib/lib/" created
+"obj/lib" created
+"lib/lib" created
 [Ada Compile]     pkg2.ads
 [Archive]         liblib.a
 - with regular dependency

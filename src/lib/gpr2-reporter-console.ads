@@ -22,6 +22,7 @@ package GPR2.Reporter.Console is
    function User_Verbosity (Self : Object) return User_Verbosity_Level;
 
    function Create (Verbosity           : Verbosity_Level := Regular;
+                    User_Verbosity      : User_Verbosity_Level := Unset;
                     Use_Full_Pathname   : Boolean := False;
                     Level_Report_Format : Level_Format := Long) return Object;
    --  Create a reporter with the specified properties.

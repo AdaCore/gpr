@@ -1,6 +1,6 @@
 ================================================================
 Case 1 - Build from scratch
-"obj/" created
+"obj" created
 [Ada Compile]     dep_two.adb
 [Ada Compile]     main.adb
 main.adb:3:01: (style) subprogram body has no previous spec [-gnatys]

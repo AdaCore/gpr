@@ -13,15 +13,16 @@ package body GPR2.Reporter.Console is
    ------------
 
    function Create (Verbosity           : Verbosity_Level := Regular;
+                    User_Verbosity      : User_Verbosity_Level := Unset;
                     Use_Full_Pathname   : Boolean := False;
-                    Level_Report_Format : Level_Format  := Long) return Object
+                    Level_Report_Format : Level_Format := Long) return Object
    is
    begin
       return
         (Verbosity      => Verbosity,
          Full_Path      => Use_Full_Pathname,
          Level_Fmt      => Level_Report_Format,
-         User_Verbosity => Unset);
+         User_Verbosity => User_Verbosity);
    end Create;
 
    ---------------------

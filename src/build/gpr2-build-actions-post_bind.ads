@@ -24,7 +24,8 @@ package GPR2.Build.Actions.Post_Bind is
    function Create
      (Impl   : Artifacts.Files.Object;
       View   : GPR2.Project.View.Object;
-      Binder : GPR2.Build.Actions.Ada_Bind.Object) return Object;
+      Binder : GPR2.Build.Actions.Ada_Bind.Object;
+      Skip   : Boolean) return Object;
 
    overriding function On_Tree_Insertion
      (Self     : Object;
@@ -43,6 +44,9 @@ private
       Input : Filename_Type (1 .. Name_Len);
       View  : Project.View.Object;
    end record;
+
+   overriding function Valid_Signature (Self : Object) return Boolean is
+     (Self.Skip or else GPR2.Build.Actions.Object (Self).Valid_Signature);
 
    overriding function View (Self : Post_Bind_Id) return Project.View.Object is
      (Self.View);
@@ -66,6 +70,7 @@ private
       --  need to access it via Tree_Db.Actions (Binder.UID) to make sure the
       --  information is up-to-date
       View   : GPR2.Project.View.Object;
+      Skip   : Boolean := False;
    end record;
 
    overriding function UID (Self : Object) return Action_Id'Class;

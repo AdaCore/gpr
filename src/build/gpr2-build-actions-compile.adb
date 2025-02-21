@@ -13,7 +13,9 @@ with GPR2.Build.Source.Sets;
 pragma Warnings (On, ".* is not referenced");
 with GPR2.Build.Tree_Db;
 with GPR2.Build.External_Options;
+with GPR2.Message;
 with GPR2.Project.Attribute;
+with GPR2.Source_Reference;
 
 package body GPR2.Build.Actions.Compile is
 
@@ -236,7 +238,7 @@ package body GPR2.Build.Actions.Compile is
                   end if;
                end loop;
 
-               Write (FD, Cnt (Last .. Cnt'Last));
+               Write (FD, Cnt (Last .. Cnt'Last) & ASCII.LF);
             end;
          end Write_Exception;
 
@@ -561,6 +563,17 @@ package body GPR2.Build.Actions.Compile is
          Cmd_Line.Set_Driver
            (Driver_Attr.Value.Text);
       else
+         if not Self.Deactivated then
+            Self.Tree.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  "no compiler for language """ & Image (Self.Lang) &
+                    """, cannot compile """ &
+                    String (Self.Src.Path_Name.Simple_Name) & '"',
+                  GPR2.Source_Reference.Create
+                    (Self.Ctxt.Path_Name.Value, 0, 0)));
+         end if;
+
          return;
       end if;
 

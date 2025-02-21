@@ -1,0 +1,6 @@
+project Base is
+   Name := Lower (Project'Name);
+   for Source_Dirs use ("../tree_srcs/" & Name);
+   for Object_Dir use "obj/" & Name;
+   for Main use ("main.adb");
+end Base;

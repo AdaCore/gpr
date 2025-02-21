@@ -205,7 +205,7 @@ package GPRtools.Command_Line is
       Result  : not null access Command_Line_Result'Class;
       Section : String;
       Index   : String;
-      Arg     : Switch_Type);
+      Arg     : String);
    --  Callback when an argument for an external section is founc.
    --
    --  Parser: the parser being used to parse the command line

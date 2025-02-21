@@ -1,0 +1,6 @@
+description:
+    Check specific behavior of extends all where gprbuild (1) used to consider
+    simply withed units similarly to extended units.
+driver: build_and_run
+project_file: test
+main: main

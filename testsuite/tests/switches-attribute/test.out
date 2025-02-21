@@ -1,4 +1,5 @@
 Demo     K_STANDARD
+A:   Archive_Prefix ~> lib
 A:   Exec_Dir ~> .
 A:   Externally_Built ~> false
 A:   Languages -> Ada .LANG

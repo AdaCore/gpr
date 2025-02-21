@@ -1,4 +1,4 @@
-project ExtB extends "b" is
+abstract project ExtB extends "b" is
 
    Variable2 := "ExtB.Var2";
 

@@ -30,6 +30,7 @@ package GPRtools.Program_Termination is
       E_No_Code,    -- No code generated
       E_General,    -- General missusage error
       E_Errors,     -- Compiler error messages generated
+      E_Project,    -- Issued when the project could not load
       E_Fatal,      -- Fatal (serious) error, e.g. source file not found
       E_Abort);     -- Internally detected compiler error
 

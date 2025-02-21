@@ -1730,7 +1730,9 @@ package body GPR2.Project.View is
                BN     : constant Filename_Type :=
                           Containers.Source_Path_To_Sloc.Key (C);
                Src    : constant GPR2.Build.Source.Object :=
-                          Self.Source (BN);
+                          (if Self.Kind = K_Aggregate_Library
+                           then Self.Visible_Source (BN)
+                           else Self.Source (BN));
 
             begin
                if Src.Has_Units then
@@ -1947,27 +1949,43 @@ package body GPR2.Project.View is
    ----------------------
 
    function Library_Filename (Self : Object) return GPR2.Path_Name.Object is
-      File_Name : Unbounded_String;
+      File_Name    : Unbounded_String;
+      Attr_Version : GPR2.Project.Attribute.Object;
    begin
-      --  Library prefix
+      --  Library version
+      if not Self.Is_Static_Library then
+         Attr_Version := Self.Attribute (PRA.Library_Version);
+      end if;
 
-      Append (File_Name,
-              Self.Attribute (PRA.Shared_Library_Prefix).Value.Text);
-
-      --  Library name
-
-      Append (File_Name,
-              Self.Attribute (PRA.Library_Name).Value.Text);
-
-      --  Library suffix
-
-      if Self.Is_Static_Library then
-         Append (File_Name, String (Self.Tree_Int.Archive_Suffix));
+      if Attr_Version.Is_Defined then
+         File_Name := +Attr_Version.Value.Text;
 
       else
-         Append
-           (File_Name,
-            String (Self.Attribute (PRA.Shared_Library_Suffix).Value.Text));
+         --  Library prefix
+
+         if not Self.Is_Static_Library then
+            Append (File_Name,
+                    Self.Attribute (PRA.Shared_Library_Prefix).Value.Text);
+         else
+            Append (File_Name,
+                    Self.Attribute (PRA.Archive_Prefix).Value.Text);
+         end if;
+
+         --  Library name
+
+         Append (File_Name,
+                 Self.Attribute (PRA.Library_Name).Value.Text);
+
+         --  Library suffix
+
+         if Self.Is_Static_Library then
+            Append (File_Name, String (Self.Tree_Int.Archive_Suffix));
+
+         else
+            Append
+              (File_Name,
+               String (Self.Attribute (PRA.Shared_Library_Suffix).Value.Text));
+         end if;
       end if;
 
       return GPR2.Path_Name.Create_File

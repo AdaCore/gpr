@@ -701,7 +701,6 @@ package body GPR2.Tree_Internal is
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;
       Check_Shared_Lib : Boolean                   := True;
-      Absent_Dir_Error : Error_Level               := Warning;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
       Resolve_Links    : Boolean                   := False;
@@ -812,7 +811,6 @@ package body GPR2.Tree_Internal is
       Self.Check_Shared_Lib := Check_Shared_Lib;
       Self.Implicit_With    := Implicit_With;
       Self.Resolve_Links    := Resolve_Links;
-      Self.Absent_Dir_Error := Absent_Dir_Error;
       Self.Pre_Conf_Mode    := Pre_Conf_Mode;
 
       if Root_Project.Kind = Project_Definition then
@@ -930,7 +928,34 @@ package body GPR2.Tree_Internal is
             View_Internal.Check_Aggregate_Library_Dirs (Self);
             View_Internal.Check_Package_Naming (Self);
             View_Internal.Check_Excluded_Source_Dirs (Self);
+
+            --  Check that we don't have for the same subtree both extended
+            --  and regularly withed views
+            for NS of Self.Namespace_Root_Projects loop
+               declare
+                  Non_Extended : GPR2.Containers.Filename_Set;
+               begin
+                  for V of NS.Closure (True, False, True) loop
+                     Non_Extended.Include (V.Path_Name.Value);
+                  end loop;
+
+                  for V of NS.Closure (True, True, True) loop
+                     if V.Is_Extended
+                       and then V.Kind /= K_Abstract
+                       and then Non_Extended.Contains (V.Path_Name.Value)
+                     then
+                        Self.Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "cannot extend an already imported project file",
+                              Source_Reference.Create
+                                (V.Extending.Path_Name.Value, 0, 0)));
+                     end if;
+                  end loop;
+               end;
+            end loop;
          end if;
+
       end if;
 
       if not Self.Messages.Has_Error then
@@ -966,7 +991,6 @@ package body GPR2.Tree_Internal is
       Subdirs           : Optional_Name_Type        := No_Name;
       Src_Subdirs       : Optional_Name_Type        := No_Name;
       Check_Shared_Lib  : Boolean                   := True;
-      Absent_Dir_Error  : Error_Level               := Warning;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
       Resolve_Links     : Boolean                   := False;
@@ -1368,26 +1392,6 @@ package body GPR2.Tree_Internal is
                            Data.Imports.Insert (Prj.Name, Imported_View);
                         end if;
                      end if;
-
-                     Data.Closure.Include (Prj.Name, Imported_View);
-
-                     for C in
-                       View_Internal.Get_RO (Imported_View).Closure.Iterate
-                     loop
-                        Data.Closure.Include
-                          (View_Internal.Project_View_Store.Key (C),
-                           View_Internal.Project_View_Store.Element (C));
-                     end loop;
-                  end;
-               end loop;
-
-               for Lib of Data.Agg_Libraries loop
-                  declare
-                     V : constant GPR2.Project.View.Object :=
-                           Self.Get_View (Lib);
-                  begin
-                     View_Internal.Get_RW (V).Closure.Include
-                       (View.Name, View);
                   end;
                end loop;
 
@@ -1421,15 +1425,6 @@ package body GPR2.Tree_Internal is
                      if Extended_View.Is_Defined then
                         Data.Extended.Include (Extended_View);
                         Data.Extended_Root := Extended_View;
-
-                        Data.Closure.Include
-                          (Extended_View.Name, Extended_View);
-
-                        for V of View_Internal.Get_RO
-                          (Extended_View).Closure
-                        loop
-                           Data.Closure.Include (V.Name, V);
-                        end loop;
                      end if;
                   end;
                end if;
@@ -2247,9 +2242,8 @@ package body GPR2.Tree_Internal is
                return True;
             end if;
 
-            if (View.Is_Extending
-                and then not Is_Implicitly_Abstract (View.Extended_Root))
-              or else View.Is_Externally_Built
+            if View.Is_Extending
+              and then not Is_Implicitly_Abstract (View.Extended_Root)
             then
                --  Project extending non abstract one is not abstract
 
@@ -2563,6 +2557,12 @@ package body GPR2.Tree_Internal is
                Source_Reference.Create (View.Path_Name.Value, 0, 0));
          end if;
 
+         if View.Is_Extended then
+            --  Extended project are not to be checked since their extending
+            --  project may refine its nature and interfaces.
+            return;
+         end if;
+
          --  Check no concrete view is in the closure of an aggregate project
 
          if Self.Root_Project.Kind = K_Aggregate
@@ -2578,6 +2578,13 @@ package body GPR2.Tree_Internal is
          end if;
 
          To_Check := View.Imports.Union (View.Limited_Imports);
+
+         if View.Is_Extending then
+            for V of View.Extended loop
+               To_Check.Union (V.Imports);
+               To_Check.Union (V.Limited_Imports);
+            end loop;
+         end if;
 
          while not To_Check.Is_Empty loop
             Imported := To_Check.First_Element;
@@ -2789,15 +2796,12 @@ package body GPR2.Tree_Internal is
                Get_Directory : not null access function
                                  (Self : Project.View.Object)
                                   return Path_Name.Object;
-               Mandatory     : Boolean := False;
-               Must_Exist    : Boolean := True);
-            --  Check is directory exists and warn if there is try to relocate
-            --  absolute path with --relocate-build-tree gpr tool command line
-            --  parameter. Similar check for attributes with directory names.
+               Mandatory     : Boolean := False);
+            --  Check if there is try to relocate absolute path with
+            --  --relocate-build-tree gpr tool command line parameter.
+            --  Similar check for attributes with directory names.
             --
             --  Mandatory: when set, check that the attribute is defined.
-            --  Must_Exist: when set, check that the directory exists on the
-            --    filesystem.
 
             ---------------------
             -- Check_Directory --
@@ -2809,8 +2813,7 @@ package body GPR2.Tree_Internal is
                Get_Directory : not null access function
                                  (Self : Project.View.Object)
                                   return Path_Name.Object;
-               Mandatory     : Boolean := False;
-               Must_Exist    : Boolean := True)
+               Mandatory     : Boolean := False)
             is
                Attr : constant Attribute.Object := View.Attribute (Name);
 
@@ -2835,37 +2838,8 @@ package body GPR2.Tree_Internal is
                declare
                   AV  : Source_Reference.Value.Object renames Attr.Value;
                   PN  : constant Path_Name.Object := Get_Directory (View);
-                  Val : constant String := String (Attr.Value.Text);
-                  Rel : constant String :=
-                          String (PN.Relative_Path (View.Dir_Name));
-
-                  --  If the attribute value is an absolute path, use it
-                  --  as-is in the error message, else use a relative
-                  --  path, ensuring the trailing slash is removed for
-                  --  homogeneity with old gprbuild.
-                  --  ??? Relative path is not really appropriate if the
-                  --  build tree is relocated...
-                  Dir : constant String :=
-                          (if GNAT.OS_Lib.Is_Absolute_Path (Val)
-                           then Val
-                           else Rel (Rel'First .. Rel'Last - 1));
 
                begin
-                  if Must_Exist
-                    and then Self.Absent_Dir_Error /= No_Error
-                    and then not PN.Exists
-                  then
-                     Self.Messages.Append
-                       (Message.Create
-                          ((if Self.Absent_Dir_Error = Error
-                            then Message.Error
-                            else Message.Warning),
-                           (if Human_Name = "" then "D"
-                            else Human_Name & " d") & "irectory """
-                           & Dir & """ not found",
-                           Sloc => AV));
-                  end if;
-
                   if Self.Build_Path.Is_Defined
                     and then not View.Is_Externally_Built
                   then
@@ -2910,8 +2884,7 @@ package body GPR2.Tree_Internal is
                Check_Directory
                  (PRA.Object_Dir,
                   "object",
-                  Project.View.Object_Directory'Access,
-                  Must_Exist => not View.Is_Extended);
+                  Project.View.Object_Directory'Access);
             end if;
 
             if View.Is_Library
@@ -2921,16 +2894,12 @@ package body GPR2.Tree_Internal is
                  (PRA.Library_Dir,
                   "library",
                   Project.View.Library_Directory'Access,
-                  Mandatory  => True,
-                  Must_Exist => not View.Is_Extended
-                    and then not View.Is_Externally_Built);
+                  Mandatory  => True);
 
                Check_Directory
                  (PRA.Library_Ali_Dir,
                   "library ALI",
-                  Project.View.Library_Ali_Directory'Access,
-                  Must_Exist => not View.Is_Extended
-                    and then View.Language_Ids.Contains (Ada_Language));
+                  Project.View.Library_Ali_Directory'Access);
 
                if View.Has_Library_Interface
                  or else View.Has_Attribute (PRA.Interfaces)
@@ -2989,6 +2958,29 @@ package body GPR2.Tree_Internal is
                               "cannot aggregate externally built project """
                               & String (Agg.Name) & '"',
                               Sloc => View.Attribute (PRA.Project_Files)));
+                     elsif Agg.Kind = K_Abstract then
+                        declare
+                           Non_Empty_Imports : Boolean := False;
+                        begin
+                           for Imp of
+                             Agg.Imports.Union (Agg.Limited_Imports)
+                           loop
+                              if Imp.Kind /= K_Abstract then
+                                 Non_Empty_Imports := True;
+                                 exit;
+                              end if;
+                           end loop;
+
+                           if not Non_Empty_Imports then
+                              Self.Messages.Append
+                                (Message.Create
+                                   (Message.Error,
+                                    "cannot aggregate abstract project """
+                                    & String (Agg.Name) & '"',
+                                    Sloc =>
+                                      View.Attribute (PRA.Project_Files)));
+                           end if;
+                        end;
                      end if;
                   end loop;
 
@@ -3142,8 +3134,7 @@ package body GPR2.Tree_Internal is
                then
                   Data.Limited_Imports.Insert
                     (Self.Runtime.Name, Self.Runtime);
-                  Data.Closure.Insert
-                    (Self.Runtime.Name, Self.Runtime);
+
                   for Root of Data.Root_Views loop
                      View_Internal.Get_RW
                        (Self.Runtime).Root_Views.Include (Root);
@@ -3297,7 +3288,6 @@ package body GPR2.Tree_Internal is
       Self.Subdirs          := Undefined.Subdirs;
       Self.Src_Subdirs      := Undefined.Src_Subdirs;
       Self.Check_Shared_Lib := Undefined.Check_Shared_Lib;
-      Self.Absent_Dir_Error := Undefined.Absent_Dir_Error;
       Self.Pre_Conf_Mode    := Undefined.Pre_Conf_Mode;
       Self.Explicit_Target  := Undefined.Explicit_Target;
       Self.File_Reader_Ref  := Undefined.File_Reader_Ref;

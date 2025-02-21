@@ -464,7 +464,8 @@ package body GPR2.Build.Tree_Db is
    function Execute
      (Self    : in out Object;
       PM      : in out GPR2.Build.Process_Manager.Object'Class;
-      Options : GPR2.Build.Process_Manager.PM_Options) return Boolean
+      Options : GPR2.Build.Process_Manager.PM_Options)
+      return Process_Manager.Execution_Status
    is
       Node : GNATCOLL.Directed_Graph.Node_Id;
       Pred : Artifact_Action_Maps.Cursor;
@@ -473,7 +474,7 @@ package body GPR2.Build.Tree_Db is
    begin
       --  Populate the DAG used for the execution
 
-      Self.Exec_Ctxt.Errors := False;
+      Process_Manager.Clear (Self.Exec_Ctxt);
 
       --  First ensure all actions correspond to a node in the DAG
 
@@ -524,7 +525,7 @@ package body GPR2.Build.Tree_Db is
          Self.Exec_Ctxt.Nodes.Clear;
       end if;
 
-      return not Self.Exec_Ctxt.Errors;
+      return Self.Exec_Ctxt.Status;
    end Execute;
 
    -----------
@@ -894,7 +895,9 @@ package body GPR2.Build.Tree_Db is
                      end loop;
                   end if;
 
-                  if V.Is_Library then
+                  if V.Is_Library
+                    and then not V.Is_Extended
+                  then
                      for C in V.Interface_Units.Iterate loop
                         Found := False;
 

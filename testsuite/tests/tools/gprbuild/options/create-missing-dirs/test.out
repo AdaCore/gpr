@@ -1,8 +1,9 @@
 Automatic for simple projects:
-"obj2/" created
+"obj2" created
 [Ada Compile]     pkg.ads
 Without -p:
-gprbuild: "obj/" does not exist
+main.gpr:5:45: error: object directory "obj" not found
+gprbuild: "main.gpr" processing failed
 With -p:
-"obj/" created
+"obj" created
 [Ada Compile]     a.adb

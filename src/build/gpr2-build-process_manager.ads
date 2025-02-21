@@ -36,6 +36,12 @@ package GPR2.Build.Process_Manager is
    --  Continue_Execution: iteration can continue,
    --  Abort_Execution: abort process manager
 
+   type Execution_Status is
+     (Success, --  successfull overall executions
+      Errors,  --  some actions reported errors
+      Failed); --  some actions failed to execute
+
+
    type Object is tagged limited private;
 
    type Process_Handler_Status is
@@ -71,8 +77,10 @@ package GPR2.Build.Process_Manager is
       Graph   : GNATCOLL.Directed_Graph.Directed_Graph;
       Actions : Node_Action_Maps.Map;
       Nodes   : Action_Node_Maps.Map;
-      Errors  : Boolean := False;
+      Status  : Execution_Status := Success;
    end record;
+
+   procedure Clear (Ctxt : in out Process_Execution_Context);
 
    function Collect_Job
      (Self           : in out Object;

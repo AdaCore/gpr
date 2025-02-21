@@ -72,7 +72,6 @@ package body GPR2.Build.Actions.Post_Bind is
       then
          Add_Attr (PRA.Compiler.Pic_Option, PAI.Create (Ada_Language), True);
       end if;
-
    end Compute_Command;
 
    -----------------------
@@ -104,7 +103,8 @@ package body GPR2.Build.Actions.Post_Bind is
    function Create
      (Impl   : Artifacts.Files.Object;
       View   : GPR2.Project.View.Object;
-      Binder : GPR2.Build.Actions.Ada_Bind.Object) return Object
+      Binder : GPR2.Build.Actions.Ada_Bind.Object;
+      Skip   : Boolean) return Object
    is
       Attr : constant GPR2.Project.Attribute.Object :=
                View.Attribute (PRA.Compiler.Object_File_Suffix,
@@ -122,9 +122,14 @@ package body GPR2.Build.Actions.Post_Bind is
       Self.Output :=
         Artifacts.Files.Create
           (View.Object_Directory.Compose (Impl.Path.Base_Filename & O_Suff));
-      Self.Ali :=
+      Self.Ali    :=
         Artifacts.Files.Create
           (View.Object_Directory.Compose (Impl.Path.Base_Filename & ".ali"));
+      Self.Skip   := Skip;
+
+      if Skip then
+         Self.Deactivate;
+      end if;
 
       return Self;
    end Create;

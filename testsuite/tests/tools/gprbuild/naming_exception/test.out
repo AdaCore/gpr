@@ -1,5 +1,5 @@
 $ gpr2build -j1 -Pprj -p
-"obj/" created
+"obj" created
 [Ada Bind]        main~2
 [Ada Compile]     main.ada@2
 [Ada Compile]     pkg+.a

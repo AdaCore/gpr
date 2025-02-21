@@ -1,6 +1,6 @@
 ================================================================
 Case 1 - Build from scratch
-"obj/" created
+"obj" created
 [Ada Compile]     dep_two.adb
 [Ada Compile]     main.adb
 [Ada Compile]     pkg.adb
