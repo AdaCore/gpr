@@ -18,7 +18,6 @@ procedure Load_Autoconf
    Subdirs           : Optional_Name_Type      := No_Name;
    Src_Subdirs       : Optional_Name_Type      := No_Name;
    Check_Shared_Lib  : Boolean                 := True;
-   Absent_Dir_Error  : Error_Level             := Warning;
    Implicit_With     : GPR2.Path_Name.Set.Object :=
                          GPR2.Path_Name.Set.Empty_Set;
    Resolve_Links     : Boolean                 := False;
@@ -596,7 +595,6 @@ begin
       Subdirs          => Subdirs,
       Src_Subdirs      => Src_Subdirs,
       Check_Shared_Lib => Check_Shared_Lib,
-      Absent_Dir_Error => No_Error,
       Implicit_With    => Implicit_With,
       Pre_Conf_Mode    => True,
       Environment      => Environment);
@@ -822,7 +820,6 @@ begin
       Subdirs          => Subdirs,
       Src_Subdirs      => Src_Subdirs,
       Check_Shared_Lib => Check_Shared_Lib,
-      Absent_Dir_Error => Absent_Dir_Error,
       Implicit_With    => Implicit_With,
       Resolve_Links    => Resolve_Links,
       Environment      => Environment);
@@ -894,7 +891,6 @@ begin
       Subdirs          => Subdirs,
       Src_Subdirs      => Src_Subdirs,
       Check_Shared_Lib => Check_Shared_Lib,
-      Absent_Dir_Error => Absent_Dir_Error,
       Implicit_With    => Implicit_With,
       Resolve_Links    => Resolve_Links,
       Environment      => Environment);

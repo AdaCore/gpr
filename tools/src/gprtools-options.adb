@@ -366,6 +366,8 @@ package body GPRtools.Options is
    function Load_Project
      (Opt                      : in out Base_Options'Class;
       Absent_Dir_Error         : GPR2.Error_Level;
+      Create_Missing_Dirs      : GPR2.Project.Tree.Missing_Dir_Behavior :=
+                                   GPR2.Project.Tree.Do_Nothing;
       Handle_Errors            : Boolean := True;
       Restricted_To_Languages  : GPR2.Containers.Language_Set :=
                                    GPR2.Containers.Empty_Language_Set)
@@ -384,6 +386,7 @@ package body GPRtools.Options is
          With_Runtime             => True,
          Reporter                 => Opt.Console_Reporter,
          Absent_Dir_Error         => Absent_Dir_Error,
+         Create_Missing_Dirs      => Create_Missing_Dirs,
          Allow_Implicit_Project   => Opt.Find_Implicit_Project,
          Check_Shared_Libs_Import => Opt.Check_Shared_Libs);
 

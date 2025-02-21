@@ -91,7 +91,6 @@ private package GPR2.Tree_Internal is
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;
       Check_Shared_Lib : Boolean                   := True;
-      Absent_Dir_Error : Error_Level               := Warning;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
       Resolve_Links    : Boolean                   := False;
@@ -115,8 +114,6 @@ private package GPR2.Tree_Internal is
    --  Src_Subdirs: if specified, prepend obj/<project name>_<value> or
    --   obj/<value> to the list of source directories, if they exist.
    --  Check_Shared_Lib: checks for shared library compatibilities
-   --  Absent_Dir_Error: whether a missing directory should be treated as an
-   --   error or a warning.(
    --  Implicit_With: a list of implicitly withed projects.
    --  Pre_Conf_Mode: set in autoconf mode to disable most errors when trying
    --   to load a tree without configuration.
@@ -146,7 +143,6 @@ private package GPR2.Tree_Internal is
       Subdirs           : Optional_Name_Type      := No_Name;
       Src_Subdirs       : Optional_Name_Type      := No_Name;
       Check_Shared_Lib  : Boolean                 := True;
-      Absent_Dir_Error  : Error_Level             := Warning;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
       Resolve_Links     : Boolean                 := False;
@@ -513,7 +509,6 @@ private
       Subdirs           : Unbounded_String;
       Src_Subdirs       : Unbounded_String;
       Check_Shared_Lib  : Boolean := True;
-      Absent_Dir_Error  : Error_Level := Warning;
       Pre_Conf_Mode     : Boolean := True;
       Views_Set         : View.Set.Object;
       --  All projects in registration order

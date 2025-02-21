@@ -701,7 +701,6 @@ package body GPR2.Tree_Internal is
       Subdirs          : Optional_Name_Type        := No_Name;
       Src_Subdirs      : Optional_Name_Type        := No_Name;
       Check_Shared_Lib : Boolean                   := True;
-      Absent_Dir_Error : Error_Level               := Warning;
       Implicit_With    : GPR2.Path_Name.Set.Object :=
                            GPR2.Path_Name.Set.Empty_Set;
       Resolve_Links    : Boolean                   := False;
@@ -812,7 +811,6 @@ package body GPR2.Tree_Internal is
       Self.Check_Shared_Lib := Check_Shared_Lib;
       Self.Implicit_With    := Implicit_With;
       Self.Resolve_Links    := Resolve_Links;
-      Self.Absent_Dir_Error := Absent_Dir_Error;
       Self.Pre_Conf_Mode    := Pre_Conf_Mode;
 
       if Root_Project.Kind = Project_Definition then
@@ -993,7 +991,6 @@ package body GPR2.Tree_Internal is
       Subdirs           : Optional_Name_Type        := No_Name;
       Src_Subdirs       : Optional_Name_Type        := No_Name;
       Check_Shared_Lib  : Boolean                   := True;
-      Absent_Dir_Error  : Error_Level               := Warning;
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
       Resolve_Links     : Boolean                   := False;
@@ -2799,15 +2796,12 @@ package body GPR2.Tree_Internal is
                Get_Directory : not null access function
                                  (Self : Project.View.Object)
                                   return Path_Name.Object;
-               Mandatory     : Boolean := False;
-               Must_Exist    : Boolean := True);
-            --  Check is directory exists and warn if there is try to relocate
-            --  absolute path with --relocate-build-tree gpr tool command line
-            --  parameter. Similar check for attributes with directory names.
+               Mandatory     : Boolean := False);
+            --  Check if there is try to relocate absolute path with
+            --  --relocate-build-tree gpr tool command line parameter.
+            --  Similar check for attributes with directory names.
             --
             --  Mandatory: when set, check that the attribute is defined.
-            --  Must_Exist: when set, check that the directory exists on the
-            --    filesystem.
 
             ---------------------
             -- Check_Directory --
@@ -2819,8 +2813,7 @@ package body GPR2.Tree_Internal is
                Get_Directory : not null access function
                                  (Self : Project.View.Object)
                                   return Path_Name.Object;
-               Mandatory     : Boolean := False;
-               Must_Exist    : Boolean := True)
+               Mandatory     : Boolean := False)
             is
                Attr : constant Attribute.Object := View.Attribute (Name);
 
@@ -2845,37 +2838,8 @@ package body GPR2.Tree_Internal is
                declare
                   AV  : Source_Reference.Value.Object renames Attr.Value;
                   PN  : constant Path_Name.Object := Get_Directory (View);
-                  Val : constant String := String (Attr.Value.Text);
-                  Rel : constant String :=
-                          String (PN.Relative_Path (View.Dir_Name));
-
-                  --  If the attribute value is an absolute path, use it
-                  --  as-is in the error message, else use a relative
-                  --  path, ensuring the trailing slash is removed for
-                  --  homogeneity with old gprbuild.
-                  --  ??? Relative path is not really appropriate if the
-                  --  build tree is relocated...
-                  Dir : constant String :=
-                          (if GNAT.OS_Lib.Is_Absolute_Path (Val)
-                           then Val
-                           else Rel (Rel'First .. Rel'Last - 1));
 
                begin
-                  if Must_Exist
-                    and then Self.Absent_Dir_Error /= No_Error
-                    and then not PN.Exists
-                  then
-                     Self.Messages.Append
-                       (Message.Create
-                          ((if Self.Absent_Dir_Error = Error
-                            then Message.Error
-                            else Message.Warning),
-                           (if Human_Name = "" then "D"
-                            else Human_Name & " d") & "irectory """
-                           & Dir & """ not found",
-                           Sloc => AV));
-                  end if;
-
                   if Self.Build_Path.Is_Defined
                     and then not View.Is_Externally_Built
                   then
@@ -2920,8 +2884,7 @@ package body GPR2.Tree_Internal is
                Check_Directory
                  (PRA.Object_Dir,
                   "object",
-                  Project.View.Object_Directory'Access,
-                  Must_Exist => not View.Is_Extended);
+                  Project.View.Object_Directory'Access);
             end if;
 
             if View.Is_Library
@@ -2931,16 +2894,12 @@ package body GPR2.Tree_Internal is
                  (PRA.Library_Dir,
                   "library",
                   Project.View.Library_Directory'Access,
-                  Mandatory  => True,
-                  Must_Exist => not View.Is_Extended
-                    and then not View.Is_Externally_Built);
+                  Mandatory  => True);
 
                Check_Directory
                  (PRA.Library_Ali_Dir,
                   "library ALI",
-                  Project.View.Library_Ali_Directory'Access,
-                  Must_Exist => not View.Is_Extended
-                    and then View.Language_Ids.Contains (Ada_Language));
+                  Project.View.Library_Ali_Directory'Access);
 
                if View.Has_Library_Interface
                  or else View.Has_Attribute (PRA.Interfaces)
@@ -3329,7 +3288,6 @@ package body GPR2.Tree_Internal is
       Self.Subdirs          := Undefined.Subdirs;
       Self.Src_Subdirs      := Undefined.Src_Subdirs;
       Self.Check_Shared_Lib := Undefined.Check_Shared_Lib;
-      Self.Absent_Dir_Error := Undefined.Absent_Dir_Error;
       Self.Pre_Conf_Mode    := Undefined.Pre_Conf_Mode;
       Self.Explicit_Target  := Undefined.Explicit_Target;
       Self.File_Reader_Ref  := Undefined.File_Reader_Ref;

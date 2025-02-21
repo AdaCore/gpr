@@ -84,6 +84,21 @@ package GPR2.Project.Tree is
      (Self : Object) return GPR2.Reporter.Holders.Reference_Type;
    --  Returns a reference to the reporter
 
+   type Missing_Dir_Behavior is
+     (Do_Nothing,
+      Create_Relative,
+      Create_Always);
+   --  Behavior of the Load function regarding missing obj/lib/exec
+   --  direcctories.
+   --
+   --  @enum Do_Nothing
+   --    do nothing about those
+   --  @enum Create_Relative
+   --    create the missing directories only when they're relative to the
+   --    project view.
+   --  @enum Create_Always
+   --    always create the missing directories
+
    function Load
      (Self                     : in out Object;
       Options                  : GPR2.Options.Object'Class;
@@ -92,6 +107,7 @@ package GPR2.Project.Tree is
                                    GPR2.Reporter.Console.Create;
       Artifacts_Info_Level     : Optional_Source_Info_Option := No_Source;
       Absent_Dir_Error         : GPR2.Error_Level := GPR2.Warning;
+      Create_Missing_Dirs      : Missing_Dir_Behavior := Do_Nothing;
       Allow_Implicit_Project   : Boolean := True;
       Environment              : GPR2.Environment.Object :=
                                    GPR2.Environment.Process_Environment;
@@ -119,6 +135,8 @@ package GPR2.Project.Tree is
    --   the sources.
    --  Absent_Dir_Error: whether a missing directory should be treated as an
    --   error or a warning.
+   --  Create_Missing_Dirs: whether missing directories should be created. If
+   --   they are created, Absent_Dir_Error value is ignored.
    --  Allow_Implicit_Project: if set and no project is specified in the
    --   load options, or the project designates a directory, and then only
    --   one project file is present in current directory (or the designated

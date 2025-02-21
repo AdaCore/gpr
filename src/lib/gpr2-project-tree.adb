@@ -5,6 +5,7 @@
 --
 
 with Ada.Directories;
+with Ada.IO_Exceptions;
 with Ada.Unchecked_Deallocation;
 with GNAT.OS_Lib;
 with GNATCOLL.Atomic;
@@ -20,6 +21,8 @@ with GPR2.Tree_Internal.View_Builder;
 with GPR2.Message; use GPR2.Message;
 
 package body GPR2.Project.Tree is
+
+   package PRA renames GPR2.Project.Registry.Attribute;
 
    procedure Release is new Ada.Unchecked_Deallocation
      (Tree_Internal.Object, Tree_Internal_Access);
@@ -368,6 +371,7 @@ package body GPR2.Project.Tree is
                                    GPR2.Reporter.Console.Create;
       Artifacts_Info_Level     : Optional_Source_Info_Option := No_Source;
       Absent_Dir_Error         : GPR2.Error_Level := GPR2.Warning;
+      Create_Missing_Dirs      : Missing_Dir_Behavior := Do_Nothing;
       Allow_Implicit_Project   : Boolean := True;
       Environment              : GPR2.Environment.Object :=
                                    GPR2.Environment.Process_Environment;
@@ -385,11 +389,264 @@ package body GPR2.Project.Tree is
       Project_File : GPR2.Path_Name.Object := Options.Project_File;
       Root_Data    : GPR2.View_Internal.Data;
       No_Match     : Boolean;
+      Missing_Dirs : Missing_Dir_Behavior := Create_Missing_Dirs;
+
+      procedure Ensure_Directories (Tree : GPR2.Project.Tree.Object);
+      --  Ensure obj/lib/exec dirs exist for the tree
 
       function Prj_Descriptor return Tree_Internal.Project_Descriptor is
         (case Prj_Kind is
             when Project_Path => (Project_Path, Project_File),
             when Project_Definition => (Project_Definition, Root_Data));
+
+      ------------------------
+      -- Ensure_Directories --
+      ------------------------
+
+      procedure Ensure_Directories (Tree : GPR2.Project.Tree.Object) is
+         procedure Ensure
+           (Path       : GPR2.Path_Name.Object;
+            Human_Name : String;
+            AV         : GPR2.Project.Attribute.Object);
+         --  Make sure Path exists and is a directory.
+
+         function Has_Absolute_Artifacts_Dir
+           (View : GPR2.Project.View.Object) return Boolean;
+
+         All_Ok : Boolean := True;
+
+         ------------
+         -- Ensure --
+         ------------
+
+         procedure Ensure
+           (Path       : GPR2.Path_Name.Object;
+            Human_Name : String;
+            AV         : GPR2.Project.Attribute.Object)
+         is
+            function Mkdir_Recursive (Path : Path_Name.Object) return Boolean;
+            function Path_Img return String;
+
+            ---------------------
+            -- Mkdir_Recursive --
+            ---------------------
+
+            function Mkdir_Recursive (Path : Path_Name.Object) return Boolean
+            is
+               Parent : constant GPR2.Path_Name.Object :=
+                          Path.Containing_Directory;
+            begin
+               if not Parent.Exists
+                 and then not Mkdir_Recursive (Parent)
+               then
+                  return False;
+               end if;
+
+               Ada.Directories.Create_Directory (Path.String_Value);
+
+               return True;
+
+            exception
+               when Ada.IO_Exceptions.Use_Error =>
+                  Self.Tree.Log_Messages.Append
+                    (Message.Create
+                       ((if Absent_Dir_Error = Error
+                        then Message.Error
+                        else Message.Warning),
+                        Human_Name & " directory """ & Path_Img &
+                          """ could not be created",
+                        Sloc => AV.Value));
+                  All_Ok := False;
+
+                  return False;
+            end Mkdir_Recursive;
+
+            --------------
+            -- Path_Img --
+            --------------
+
+            function Path_Img return String is
+               Relative : constant Filename_Type :=
+                            Path.Relative_Path (Tree.Root_Project.Dir_Name);
+               Absolute : constant Filename_Type := Path.Value;
+            begin
+               if Relative'Length < Absolute'Length then
+                  --  Remove the trailing slash
+                  return
+                    String (Relative (Relative'First .. Relative'Last - 1));
+               else
+                  return String (Absolute);
+               end if;
+            end Path_Img;
+
+         begin
+            if not Path.Exists then
+               if Missing_Dirs = Create_Always then
+                  if Mkdir_Recursive (Path) then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Message.End_User,
+                           '"' & Path_Img & """ created"));
+                  end if;
+
+               elsif Absent_Dir_Error /= No_Error then
+                  Self.Tree.Log_Messages.Append
+                    (Message.Create
+                       ((if Absent_Dir_Error = Error
+                        then Message.Error
+                        else Message.Warning),
+                        Human_Name & " directory """ & Path_Img &
+                          """ not found",
+                        Sloc => AV.Value));
+
+                  if Absent_Dir_Error = Error then
+                     All_Ok := False;
+                  end if;
+               end if;
+            end if;
+         end Ensure;
+
+         --------------------------------
+         -- Has_Absolute_Artifacts_Dir --
+         --------------------------------
+
+         function Has_Absolute_Artifacts_Dir
+           (View : GPR2.Project.View.Object) return Boolean
+         is
+            function Check_Absolute
+              (Attr : GPR2.Project.Attribute.Object) return Boolean;
+
+            --------------------
+            -- Check_Absolute --
+            --------------------
+
+            function Check_Absolute
+              (Attr : GPR2.Project.Attribute.Object) return Boolean is
+            begin
+               if Attr.Is_Defined
+                 and then GNAT.OS_Lib.Is_Absolute_Path
+                   (Attr.Value.Text)
+               then
+                  return True;
+               else
+                  return False;
+               end if;
+            end Check_Absolute;
+
+         begin
+            if View.Is_Externally_Built then
+               --  Ignore
+               return False;
+            end if;
+
+            if View.Kind in GPR2.With_Object_Dir_Kind then
+               if Check_Absolute (View.Attribute (PRA.Object_Dir)) then
+                  return True;
+               end if;
+
+               if View.Kind = K_Standard
+                 and then View.Is_Namespace_Root
+               then
+                  if Check_Absolute (View.Attribute (PRA.Exec_Dir)) then
+                     return True;
+                  end if;
+               end if;
+            end if;
+
+            if View.Is_Library then
+               if Check_Absolute (View.Attribute (PRA.Library_Dir)) then
+                  return True;
+               end if;
+
+               if View.Language_Ids.Contains (Ada_Language)
+                 and then Check_Absolute (View.Attribute (PRA.Library_Ali_Dir))
+               then
+                  return True;
+               end if;
+
+               if Check_Absolute (View.Attribute (PRA.Library_Src_Dir)) then
+                  return True;
+               end if;
+            end if;
+
+            return False;
+         end Has_Absolute_Artifacts_Dir;
+
+         use type GPR2.Path_Name.Object;
+
+      begin
+         if Missing_Dirs = Create_Relative then
+            --  Assume there's no absolute path first
+            Missing_Dirs := Create_Always;
+
+            --  Check if there are absolute paths to create
+            for V of Tree.Ordered_Views loop
+               if not V.Is_Externally_Built
+                 and then not V.Is_Extended
+               then
+                  if Has_Absolute_Artifacts_Dir (V) then
+                     Missing_Dirs := Do_Nothing;
+                     exit;
+                  end if;
+               end if;
+            end loop;
+         end if;
+
+         if Missing_Dirs = Do_Nothing
+           and then Absent_Dir_Error = No_Error
+         then
+            --  Nothing to check
+            return;
+         end if;
+
+         for V of Tree.Ordered_Views loop
+            if not V.Is_Externally_Built
+              and then not V.Is_Extended
+            then
+               if V.Kind in GPR2.With_Object_Dir_Kind then
+                  Ensure
+                    (V.Object_Directory,
+                     "object",
+                     V.Attribute (PRA.Object_Dir));
+
+                  if V.Kind = K_Standard
+                    and then V.Is_Namespace_Root
+                    and then V.Executable_Directory /= V.Object_Directory
+                  then
+                     Ensure
+                       (V.Executable_Directory,
+                        "exec",
+                        V.Attribute (PRA.Exec_Dir));
+                  end if;
+               end if;
+
+               if V.Is_Library then
+                  Ensure
+                    (V.Library_Directory,
+                     "library",
+                     V.Attribute (PRA.Library_Dir));
+
+                  if V.Language_Ids.Contains (Ada_Language) then
+                     Ensure
+                       (V.Library_Ali_Directory,
+                        "library ALI",
+                        V.Attribute (PRA.Library_Ali_Dir));
+                  end if;
+
+                  if V.Has_Attribute (PRA.Library_Src_Dir) then
+                     Ensure
+                       (V.Library_Src_Directory,
+                        "library src",
+                        V.Attribute (PRA.Library_Src_Dir));
+                  end if;
+               end if;
+            end if;
+         end loop;
+
+         if not All_Ok then
+            raise Project_Error;
+         end if;
+      end Ensure_Directories;
 
    begin
       GPR2.Project_Parser.Clear_Cache;
@@ -514,7 +771,6 @@ package body GPR2.Project.Tree is
             Subdirs          => Options.Subdirs,
             Src_Subdirs      => Options.Src_Subdirs,
             Check_Shared_Lib => Check_Shared_Libs_Import,
-            Absent_Dir_Error => Absent_Dir_Error,
             Implicit_With    => Options.Implicit_With,
             Resolve_Links    => Options.Resolve_Links,
             File_Reader      => File_Reader,
@@ -581,7 +837,6 @@ package body GPR2.Project.Tree is
             Subdirs           => Options.Subdirs,
             Src_Subdirs       => Options.Src_Subdirs,
             Check_Shared_Lib  => Check_Shared_Libs_Import,
-            Absent_Dir_Error  => Absent_Dir_Error,
             Implicit_With     => Options.Implicit_With,
             Resolve_Links     => Options.Resolve_Links,
             Target            => Options.Target,
@@ -592,8 +847,9 @@ package body GPR2.Project.Tree is
             Environment       => Environment);
       end if;
 
-      GPR2.Project_Parser.Clear_Cache;
+      Ensure_Directories (Self);
 
+      GPR2.Project_Parser.Clear_Cache;
       Report_Logs (Self);
 
       if Artifacts_Info_Level > No_Source then
@@ -604,7 +860,6 @@ package body GPR2.Project.Tree is
    exception
       when GPR2.Project_Error =>
          GPR2.Project_Parser.Clear_Cache;
-
          Report_Logs (Self);
 
          return False;
@@ -668,7 +923,6 @@ package body GPR2.Project.Tree is
             Subdirs          => Options.Subdirs,
             Src_Subdirs      => Options.Src_Subdirs,
             Check_Shared_Lib => False,
-            Absent_Dir_Error => Absent_Dir_Error,
             Implicit_With    => Options.Implicit_With,
             Resolve_Links    => Options.Resolve_Links,
             File_Reader      => File_Reader,
@@ -736,7 +990,6 @@ package body GPR2.Project.Tree is
             Subdirs           => Options.Subdirs,
             Src_Subdirs       => Options.Src_Subdirs,
             Check_Shared_Lib  => False,
-            Absent_Dir_Error  => Absent_Dir_Error,
             Implicit_With     => Options.Implicit_With,
             Resolve_Links     => Options.Resolve_Links,
             Target            => Options.Target,

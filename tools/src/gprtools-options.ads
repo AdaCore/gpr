@@ -98,6 +98,8 @@ package GPRtools.Options is
    function Load_Project
      (Opt                      : in out Base_Options'Class;
       Absent_Dir_Error         : GPR2.Error_Level;
+      Create_Missing_Dirs      : GPR2.Project.Tree.Missing_Dir_Behavior :=
+                                   GPR2.Project.Tree.Do_Nothing;
       Handle_Errors            : Boolean := True;
       Restricted_To_Languages  : GPR2.Containers.Language_Set :=
                                    GPR2.Containers.Empty_Language_Set)
