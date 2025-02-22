@@ -722,6 +722,16 @@ package body GPR2.Build.Process_Manager is
          return;
       end if;
 
+      if not Job.Pre_Command then
+         Proc_Handler :=
+           Process_Handler'
+             (Status        => Failed_To_Launch,
+              Error_Message => To_Unbounded_String
+                                 ("pre-command check failed"));
+
+         return;
+      end if;
+
       FS.Open_Pipe (P_Ro, P_Wo);
       FS.Open_Pipe (P_Re, P_We);
 

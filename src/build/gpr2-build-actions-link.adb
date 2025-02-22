@@ -688,6 +688,53 @@ package body GPR2.Build.Actions.Link is
       return True;
    end Post_Command;
 
+   -----------------
+   -- Pre_Command --
+   -----------------
+
+   overriding function Pre_Command (Self : in out Object) return Boolean is
+      CU_Dep : GPR2.Build.Compilation_Unit.Object;
+   begin
+      if Self.Is_Library and then Self.Ctxt.Has_Any_Interfaces then
+         --  Check that the interface is complete: no dependency from specs
+         --  should depend on a spec that is not part of the interface.
+
+         for CU of Self.Ctxt.Interface_Closure loop
+            for Dep of CU.Known_Dependencies (Spec_Only => True) loop
+               if not Self.Ctxt.Interface_Closure.Contains (Dep) then
+                  if Self.Ctxt.Kind = K_Aggregate_Library then
+                     for V of Self.Ctxt.Aggregated loop
+                        CU_Dep := V.Own_Unit (Dep);
+                        exit when CU_Dep.Is_Defined;
+                     end loop;
+                  else
+                     CU_Dep := Self.Ctxt.Own_Unit (Dep);
+                  end if;
+
+                  --  Only warn for internal units, the interface may depend
+                  --  on other units
+
+                  if CU_Dep.Is_Defined then
+                     Self.Tree.Reporter.Report
+                       (GPR2.Message.Create
+                          (GPR2.Message.Warning,
+                           "unit """
+                           & String (Dep)
+                           & """ is not in the interface set, but it is "
+                           & "needed by """
+                           & String (CU.Name)
+                           & """",
+                           GPR2.Source_Reference.Create
+                             (Self.Ctxt.Path_Name.Value, 0, 0)));
+                  end if;
+               end if;
+            end loop;
+         end loop;
+      end if;
+
+      return True;
+   end Pre_Command;
+
    ---------
    -- UID --
    ---------

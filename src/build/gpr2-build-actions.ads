@@ -166,9 +166,16 @@ package GPR2.Build.Actions is
 
    type Execution_Status is (Skipped, Success);
 
+   function Pre_Command
+     (Self : in out Object) return Boolean;
+   --  Pre-processing that should occur before executing the command
+
    function Post_Command
-     (Self   : in out Object; Status : Execution_Status) return Boolean;
-   --  Post-processing that should occur after executing the command
+     (Self : in out Object; Status : Execution_Status) return Boolean;
+   --  Post-processing that should occur after executing the command.
+   --  Called when the command has been executed (even after reporting a
+   --  failure) or when the command is disabled or skipped but the signature
+   --  is valid.
 
    ---------------------------
    -- Temp files management --
@@ -233,8 +240,12 @@ private
      (Self : in out Object) return Boolean is
      (True);
 
+   function Pre_Command
+     (Self : in out Object) return Boolean is
+     (True);
+
    function Post_Command
-     (Self   : in out Object; Status : Execution_Status) return Boolean is
+     (Self : in out Object; Status : Execution_Status) return Boolean is
      (True);
 
    function Is_Deactivated (Self : Object) return Boolean
