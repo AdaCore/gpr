@@ -29,8 +29,10 @@ with GNATCOLL.Utils;
 
 with GPR2.Build.Actions_Population;
 with GPR2.Build.Actions.Compile;
+with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Artifacts.Files;
+with GPR2.Build.Compilation_Unit;
 with GPR2.Log;
 with GPR2.Message;
 with GPR2.Options;
@@ -56,6 +58,7 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    use Ada.Exceptions;
 
    use GPR2;
+   use GPR2.Build;
    use GPRtools;
    use GPRtools.Program_Termination;
    use GPR2.Path_Name;
@@ -353,6 +356,42 @@ begin
 
                      if Src_Exts.Is_Defined then
                         for Val of Src_Exts.Values loop
+                           if Action in Actions.Compile.Ada.Object'Class then
+                              declare
+                                 CU : constant Compilation_Unit.Object :=
+                                        Actions.Compile.Ada.Object'Class
+                                          (Action).Input_Unit;
+                                 procedure For_Part
+                                   (Kind     : Unit_Kind;
+                                    View     : GPR2.Project.View.Object;
+                                    Path     : Path_Name.Object;
+                                    Index    : Unit_Index;
+                                    Sep_Name : Optional_Name_Type);
+
+                                 procedure For_Part
+                                   (Kind     : Unit_Kind;
+                                    View     : GPR2.Project.View.Object;
+                                    Path     : Path_Name.Object;
+                                    Index    : Unit_Index;
+                                    Sep_Name : Optional_Name_Type)
+                                 is
+                                    Candidate : Path_Name.Object;
+                                    pragma Unreferenced
+                                      (Kind, View, Index, Sep_Name);
+                                 begin
+                                    Candidate := Obj_Dir.Compose
+                                      (Path.Simple_Name &
+                                       Filename_Type
+                                         (if Val.Text (Val.Text'First) = '.'
+                                          then Val.Text
+                                          else "." & Val.Text));
+                                    Delete_File (Candidate.String_Value, Opt);
+                                 end For_Part;
+                              begin
+                                 CU.For_All_Part (For_Part'Access);
+                              end;
+                           end if;
+
                            Path := Obj_Dir.Compose
                              (Obj_BN &
                               Filename_Type
