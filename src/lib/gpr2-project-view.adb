@@ -2959,7 +2959,9 @@ package body GPR2.Project.View is
                         return True;
                      end if;
                   end loop;
+               end if;
 
+               if SEs_Attr.Is_Defined then
                   for Value of SEs_Attr.Values loop
                      if Name = Value.Text then
                         return True;
