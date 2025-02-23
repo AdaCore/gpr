@@ -337,6 +337,38 @@ package body GPR2.Build.Actions.Link is
                           String (BN (BN'First + Prefix'Length .. BN'Last)));
                   end;
                end if;
+
+               --  Check Library_Options if any
+               declare
+                  Attr : constant GPR2.Project.Attribute.Object :=
+                           Link.View.Attribute (PRA.Library_Options);
+               begin
+                  if Attr.Is_Defined then
+                     for Val of Attr.Values loop
+                        declare
+                           Path : constant Path_Name.Object :=
+                                    Path_Name.Create_File
+                                      (Filename_Type (Val.Text),
+                                       Link.View.Dir_Name.Value);
+                        begin
+                           if Path.Exists then
+                              Cmd_Line.Add_Argument (Path, True);
+                           else
+                              Self.Tree.Reporter.Report
+                                (GPR2.Message.Create
+                                   (GPR2.Message.Error,
+                                    "unknown object file """ & Val.Text & '"',
+                                    Val));
+                              --  Reset the command line and return
+                              Self.Cmd_Line :=
+                                GPR2.Build.Command_Line.Create
+                                  (Self.Ctxt.Object_Directory);
+                              return;
+                           end if;
+                        end;
+                     end loop;
+                  end if;
+               end;
             end;
          end loop;
 
