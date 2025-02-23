@@ -10,9 +10,14 @@ package body GPR2.Build.External_Options is
    -- Clear --
    -----------
 
-   procedure Clear (Self : in out Object) is
+   procedure Clear (Self : in out Object;
+                    Action : Action_Class := All_Actions) is
    begin
-      Self.Ext_Opt.Clear;
+      if Action = All_Actions then
+         Self.Ext_Opt.Clear;
+      else
+         Self.Ext_Opt (Action).Clear;
+      end if;
    end Clear;
 
    -----------

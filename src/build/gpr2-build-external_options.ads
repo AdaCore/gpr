@@ -17,9 +17,11 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 package GPR2.Build.External_Options is
 
    type Action_Class is new String;
-   Binder   : constant Action_Class := "binder";
-   Compiler : constant Action_Class := "compiler";
-   Linker   : constant Action_Class := "linker";
+
+   Binder      : constant Action_Class := "binder";
+   Compiler    : constant Action_Class := "compiler";
+   Linker      : constant Action_Class := "linker";
+   All_Actions : constant Action_Class := "";
 
    type Object is tagged private;
    --  This object handles all external GPR switches.
@@ -41,8 +43,12 @@ package GPR2.Build.External_Options is
                    Lang   : Language_Id) return GPR2.Containers.Value_List;
    --  Fetch an external option based on the external Name and Lang
 
-   procedure Clear (Self : in out Object);
-   --  Clears the object
+   procedure Clear
+     (Self : in out Object;
+      Action : Action_Class := All_Actions);
+   --  Clears the object.
+   --  All arguments are cleared if Action is All_Action, else only the
+   --  selected action is cleared.
 
 private
 
