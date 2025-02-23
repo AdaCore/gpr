@@ -1,5 +1,3 @@
-with "abstractprj1";
-
 aggregate project AggrPrj1 is
 
    for Object_Dir use "obj";
