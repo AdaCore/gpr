@@ -317,6 +317,21 @@ begin
          Level     => GPR2.Message.Important);
    end if;
 
+   if Opt.Tree.Root_Project.Is_Library
+     and then Opt.Tree.Root_Project.Is_Library_Standalone
+     and then not Opt.Extra_Args.Fetch (GPR2.Build.External_Options.Binder,
+                                        Ada_Language).Is_Empty
+   then
+      Opt.Console_Reporter.Report
+        (GPR2.Message.Create
+           (GPR2.Message.Warning,
+            "binding options on the command line are not taken into account" &
+              " when the main project is a Stand-Alone Library project",
+            GPR2.Source_Reference.Create
+              (Opt.Tree.Root_Project.Path_Name.Value, 0, 0)));
+      Opt.Extra_Args.Clear (GPR2.Build.External_Options.Binder);
+   end if;
+
    if Opt.No_Split_Units then
       declare
          use type GPR2.Project.View.Object;

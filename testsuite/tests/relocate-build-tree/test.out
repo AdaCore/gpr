@@ -13,15 +13,23 @@ $ gprinspect -r --display=json -Pprj/prj --relocate-build-tree=tmp
 lib.obj_dir = tmp/obj-lib
 prj.obj_dir = tmp/obj
 --- 4
+$ gprinspect -r --display=json -Pprj/prj -XLIB_EXTERNALLY_BUILT=True --relocate-build-tree=tmp
+lib.obj_dir = prj/obj-lib
+prj.obj_dir = tmp/obj
+--- 5
 $ gprinspect -r --display=json -Pprj/prj
 lib.obj_dir = prj/obj-lib
 prj.obj_dir = prj/obj
---- 5
+--- 6
 $ gprinspect -r --display=json -Pprj/subdir/prj --relocate-build-tree=tmp
 gprinspect: "prj/subdir/prj.gpr" processing failed
-lib.gpr:3:22: error: "/tmp/../obj-lib/" cannot relocate object directory deeper than relocated build tree,
-lib.gpr:4:23: error: "/tmp/../lib/" cannot relocate library directory deeper than relocated build tree,
---- 6
+lib.gpr:6:22: error: "/tmp/../obj-lib/" cannot relocate object directory deeper than relocated build tree,
+lib.gpr:7:23: error: "/tmp/../lib/" cannot relocate library directory deeper than relocated build tree,
+--- 7
+$ gprinspect -r --display=json -Pprj/subdir/prj -XLIB_EXTERNALLY_BUILT=True --relocate-build-tree=tmp
+lib.obj_dir = prj/obj-lib
+prj.obj_dir = tmp/obj
+--- 8
 $ gprinspect -r --display=json -Pprj/subdir/prj --relocate-build-tree=tmp --root-dir=prj
 lib.obj_dir = tmp/obj-lib
 prj.obj_dir = tmp/subdir/obj

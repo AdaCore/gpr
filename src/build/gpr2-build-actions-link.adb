@@ -135,16 +135,21 @@ package body GPR2.Build.Actions.Link is
          return False;
       end Is_Partially_Linked;
 
-      Objects   : Tree_Db.Artifact_Sets.Set;
-      Status    : Boolean;
-      Src_Idx   : constant PAI.Object :=
-                    (if not Self.Is_Library
-                      then PAI.Create
-                        (String (Self.Main_Src.Source.Simple_Name),
-                         Case_Sensitive => File_Names_Case_Sensitive,
-                         At_Pos         => Self.Main_Src.Index)
-                      else PAI.Undefined);
-      Link_Exec  : constant Boolean := Src_Idx.Is_Defined;
+      Objects      : Tree_Db.Artifact_Sets.Set;
+      Status       : Boolean;
+      Src_Idx      : constant PAI.Object :=
+                       (if not Self.Is_Library
+                        then PAI.Create
+                          (String (Self.Main_Src.Source.Simple_Name),
+                           Case_Sensitive => File_Names_Case_Sensitive,
+                           At_Pos         => Self.Main_Src.Index)
+                        else PAI.Undefined);
+      Link_Exec    : constant Boolean := Src_Idx.Is_Defined;
+      Rpath        : Unbounded_String;
+      Rpath_Origin : constant GPR2.Project.Attribute.Object :=
+                       Self.Ctxt.Attribute (PRA.Run_Path_Origin);
+      Ign          : Boolean with Unreferenced;
+
    begin
       Objects := Self.Embedded_Objects;
 
@@ -234,14 +239,26 @@ package body GPR2.Build.Actions.Link is
       end loop;
 
       if not Self.Is_Static_Library then
+         --  Add the runtime directory to the rpath: it won't be listed in the
+         --  library dependencies.
+
+         if Self.Ctxt.Language_Ids.Contains (Ada_Language)
+           or else (Self.Ctxt.Kind = K_Aggregate_Library
+                    and then (for some V of Self.Ctxt.Aggregated =>
+                                  V.Language_Ids.Contains (Ada_Language)))
+         then
+            Rpath :=
+              +Self.Ctxt.Tree.Runtime_Project.Object_Directory.String_Value;
+         end if;
+
          for Lib of Self.Library_Dependencies loop
             declare
                Link         : constant Object'Class :=
-                 Object'Class (Self.Tree.Action (Lib));
+                                Object'Class (Self.Tree.Action (Lib));
                Lib_Artifact : constant GPR2.Path_Name.Object :=
-                 Link.Output.Path;
+                                Link.Output.Path;
                Lib_Dir_Opt : constant Value_Type :=
-                 Self.Tree.Linker_Lib_Dir_Option;
+                                Self.Tree.Linker_Lib_Dir_Option;
             begin
 
                --  We can not rely on the view to obtain the library
@@ -262,41 +279,109 @@ package body GPR2.Build.Actions.Link is
                   Cmd_Line.Add_Argument
                     (Lib_Dir_Opt & String (Lib_Artifact.Dir_Name));
 
-                  if not Self.Is_Library then
+                  --  Add the library directory to the rpath of the
+                  --  executable, so that LD_LIBRARY_PATH does not need to
+                  --  be set before execution.
 
-                     --  Add the library directory to the runtime path of the
-                     --  executable, so that LD_LIBRARY_PATH does not need to
-                     --  be set before execution.
-
-                     Cmd_Line.Add_Argument
-                       ("-Wl,-rpath," & String (Lib_Artifact.Dir_Name));
+                  if Length (Rpath) /= 0 then
+                     --  ??? hard coded value: ok for now since this is not
+                     --  used on windows, but we may need an attribute for that
+                     --  at some point.
+                     Append (Rpath, ':');
                   end if;
 
-                  pragma Assert
-                    (String (Lib_Artifact.Base_Name)'Length >= 4,
-                     "The library artifact name length should be at " &
-                     "least 4 characters (lib<name>)");
+                  if Rpath_Origin.Is_Defined and then not Self.Is_Library then
+                     --  ??? $ORIGIN refers to the executable, we would need
+                     --  an equivalent attribute for shared libs dependencies
 
-                  pragma Assert
-                    (Lib_Artifact.Base_Name
-                       (Lib_Artifact.Base_Name'First ..
-                            Lib_Artifact.Base_Name'First +
-                            2) =
-                     "lib",
-                     "The library artifact name length " &
-                     "should begin with 'lib'");
+                     --  ??? This processing is unix-oriented with unix path
+                     --  and directory delimiters. This is somewhat expected
+                     --  since this mechanism is not available on windows,
+                     --  but then we still need to properly cross compilation
+                     --  on windows hosts, so may need to "posixify" the
+                     --  paths here.
 
-                  --  ??? -l can be replaced with the value specified with the
-                  --  Linker_Lib_Name_Option option. Need to investigate
-                  --  to know if this option is required.
+                     declare
+                        From : constant Path_Name.Object :=
+                                 Self.Ctxt.Executable_Directory;
+                     begin
+                        Append
+                          (Rpath,
+                           Rpath_Origin.Value.Text & "/" &
+                             String
+                               (Lib_Artifact.Containing_Directory.Relative_Path
+                                  (From)));
+                     end;
+                  else
+                     Append (Rpath, String (Lib_Artifact.Dir_Name));
+                  end if;
 
-                  Cmd_Line.Add_Argument
-                    ("-l" & String (Lib_Artifact.Base_Name
-                       (Lib_Artifact.Base_Name'First + 3 ..
-                            Lib_Artifact.Base_Name'Last)));
+                  declare
+                     Prefix : constant Value_Type :=
+                                Link.View.Attribute
+                                  (PRA.Shared_Library_Prefix).Value.Text;
+                     BN     : constant String :=
+                                String (Lib_Artifact.Base_Name);
+                     use GNATCOLL.Utils;
+                  begin
+                     pragma Assert
+                       (Starts_With (BN, Prefix),
+                        "The library artifact name doesn't start with the" &
+                          "prefix """ & Prefix & '"');
+
+                     --  ??? -l can be replaced with the value specified with
+                     --  the Linker_Lib_Name_Option option. Need to investigate
+                     --  to know if this option is required.
+                     Cmd_Line.Add_Argument
+                       ("-l" &
+                          String (BN (BN'First + Prefix'Length .. BN'Last)));
+                  end;
                end if;
+
+               --  Check Library_Options if any
+               declare
+                  Attr : constant GPR2.Project.Attribute.Object :=
+                           Link.View.Attribute (PRA.Library_Options);
+               begin
+                  if Attr.Is_Defined then
+                     for Val of Attr.Values loop
+                        declare
+                           Path : constant Path_Name.Object :=
+                                    Path_Name.Create_File
+                                      (Filename_Type (Val.Text),
+                                       Link.View.Dir_Name.Value);
+                        begin
+                           if Path.Exists then
+                              Cmd_Line.Add_Argument (Path, True);
+                           else
+                              Self.Tree.Reporter.Report
+                                (GPR2.Message.Create
+                                   (GPR2.Message.Error,
+                                    "unknown object file """ & Val.Text & '"',
+                                    Val));
+                              --  Reset the command line and return
+                              Self.Cmd_Line :=
+                                GPR2.Build.Command_Line.Create
+                                  (Self.Ctxt.Object_Directory);
+                              return;
+                           end if;
+                        end;
+                     end loop;
+                  end if;
+               end;
             end;
          end loop;
+
+         --  Ignore: no presence of Run_Path_Option is expected if
+         --  Run_Path_Option is not available, like with windows dlls.
+
+         Ign := Length (Rpath) > 0
+           and then not Add_Attr
+             (PRA.Run_Path_Option,
+              PAI.Undefined,
+              True,
+              True,
+              -Rpath);
 
          for C of Self.View.Closure (True) loop
             declare
@@ -634,6 +719,53 @@ package body GPR2.Build.Actions.Link is
 
       return True;
    end Post_Command;
+
+   -----------------
+   -- Pre_Command --
+   -----------------
+
+   overriding function Pre_Command (Self : in out Object) return Boolean is
+      CU_Dep : GPR2.Build.Compilation_Unit.Object;
+   begin
+      if Self.Is_Library and then Self.Ctxt.Has_Any_Interfaces then
+         --  Check that the interface is complete: no dependency from specs
+         --  should depend on a spec that is not part of the interface.
+
+         for CU of Self.Ctxt.Interface_Closure loop
+            for Dep of CU.Known_Dependencies (Spec_Only => True) loop
+               if not Self.Ctxt.Interface_Closure.Contains (Dep) then
+                  if Self.Ctxt.Kind = K_Aggregate_Library then
+                     for V of Self.Ctxt.Aggregated loop
+                        CU_Dep := V.Own_Unit (Dep);
+                        exit when CU_Dep.Is_Defined;
+                     end loop;
+                  else
+                     CU_Dep := Self.Ctxt.Own_Unit (Dep);
+                  end if;
+
+                  --  Only warn for internal units, the interface may depend
+                  --  on other units
+
+                  if CU_Dep.Is_Defined then
+                     Self.Tree.Reporter.Report
+                       (GPR2.Message.Create
+                          (GPR2.Message.Warning,
+                           "unit """
+                           & String (Dep)
+                           & """ is not in the interface set, but it is "
+                           & "needed by """
+                           & String (CU.Name)
+                           & """",
+                           GPR2.Source_Reference.Create
+                             (Self.Ctxt.Path_Name.Value, 0, 0)));
+                  end if;
+               end if;
+            end loop;
+         end loop;
+      end if;
+
+      return True;
+   end Pre_Command;
 
    ---------
    -- UID --

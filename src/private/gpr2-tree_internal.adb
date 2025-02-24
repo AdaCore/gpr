@@ -2215,6 +2215,11 @@ package body GPR2.Tree_Internal is
          --  I.e. not inherited from non abstract project and one of
          --  source list defining attributes is empty.
 
+         function Is_Implicitly_Library
+           (View : Project.View.Object) return Boolean;
+         --  Returns true if project can be recognized as a library project:
+         --  so has a lib_name and if not externally build a lib dir
+
          ----------------------------
          -- Is_Implicitly_Abstract --
          ----------------------------
@@ -2257,6 +2262,26 @@ package body GPR2.Tree_Internal is
               or else Is_Defined_Empty (PRA.Source_Files)
               or else Is_Defined_Empty (PRA.Languages);
          end Is_Implicitly_Abstract;
+
+         ---------------------------
+         -- Is_Implicitly_Library --
+         ---------------------------
+
+         function Is_Implicitly_Library
+           (View : Project.View.Object) return Boolean is
+         begin
+            return View.Check_Attribute
+              (PRA.Library_Name, Result => Tmp_Attr)
+              and then (Tmp_Attr.Value.Text /= ""
+                        or else Tmp_Attr.Value.Is_From_Default)
+              and then
+                (View.Is_Externally_Built
+                 or else
+                   (View.Check_Attribute
+                      (PRA.Library_Dir, Result => Tmp_Attr)
+                    and then (Tmp_Attr.Value.Text /= ""
+                              or else Tmp_Attr.Value.Is_From_Default)));
+         end Is_Implicitly_Library;
 
       begin
          GPR2.Project_Parser.Process
@@ -2414,8 +2439,8 @@ package body GPR2.Tree_Internal is
             New_Signature := View.Context.Signature (P_Data.Externals);
          end if;
 
-         if not Has_Error
-           and then P_Data.Kind not in K_Configuration
+         if P_Data.Kind not in K_Configuration
+           and then not View.Is_Runtime
          then
             P_Data.Signature := New_Signature;
 
@@ -2424,6 +2449,21 @@ package body GPR2.Tree_Internal is
             --  library project.
 
             P_Data.Kind := P_Data.Trees.Project.Qualifier;
+
+            if (P_Data.Kind = K_Abstract
+                or else Is_Implicitly_Abstract (View))
+              and then
+                (P_Data.Kind = K_Library
+                 or else Is_Implicitly_Library (View))
+              and then not View.Is_Externally_Built
+            then
+               Self.Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "a project with no sources cannot be a " &
+                       "library project",
+                     Tmp_Attr));
+            end if;
 
             if P_Data.Kind = K_Standard then
                if Is_Implicitly_Abstract (View) then
@@ -2446,18 +2486,7 @@ package body GPR2.Tree_Internal is
                      P_Data.Kind := K_Abstract;
                   end if;
 
-               elsif View.Check_Attribute
-                       (PRA.Library_Name, Result => Tmp_Attr)
-                 and then (Tmp_Attr.Value.Text /= ""
-                           or else Tmp_Attr.Value.Is_From_Default)
-                 and then
-                   (View.Is_Externally_Built
-                    or else
-                      (View.Check_Attribute
-                         (PRA.Library_Dir, Result => Tmp_Attr)
-                       and then (Tmp_Attr.Value.Text /= ""
-                                 or else Tmp_Attr.Value.Is_From_Default)))
-               then
+               elsif Is_Implicitly_Library (View) then
                   --  If Library_Name, Library_Dir are declared, then the
                   --  project is a library project.
                   --  Note: Library_Name may be inherited from an extended
