@@ -63,12 +63,15 @@ gprinspect = [GPRINSPECT, "-r", "--display=json"]
 gpr = ["-Pprj/prj"]
 subgpr = ["-Pprj/subdir/prj"]
 root_dir = ["-XTEST_ROOT_DIR=" + os.getcwd() + "/prj"]
+ext_built = ["-XLIB_EXTERNALLY_BUILT=True"]
 relocate_build_tree = ["--relocate-build-tree=tmp"]
 
 test(gprinspect + gpr + root_dir + relocate_build_tree)
 test(gprinspect + gpr + root_dir)
 test(gprinspect + gpr + relocate_build_tree)
+test(gprinspect + gpr + ext_built + relocate_build_tree)
 test(gprinspect + gpr)
 
 test(gprinspect + subgpr + relocate_build_tree)
+test(gprinspect + subgpr + ext_built + relocate_build_tree)
 test(gprinspect + subgpr + relocate_build_tree + ["--root-dir=prj"])

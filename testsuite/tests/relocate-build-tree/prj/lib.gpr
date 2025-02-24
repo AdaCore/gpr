@@ -1,5 +1,8 @@
 library project lib is
   Root_Dir := external ("TEST_ROOT_DIR",".");
+  Ext_Built := external ("LIB_EXTERNALLY_BUILT", "False");
+
+  for Externally_Built use Ext_Built;
   for Object_Dir use "obj-lib";
   for Library_Dir use "lib";
   for Library_Name use "lib";
