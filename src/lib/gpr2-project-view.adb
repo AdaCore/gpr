@@ -167,7 +167,9 @@ package body GPR2.Project.View is
          if OS_Lib.Is_Absolute_Path (Dir) then
             Result := GPR2.Path_Name.Create_Directory (Dir_Name);
 
-         elsif Self.Tree_Int.Build_Path.Is_Defined then
+         elsif Self.Tree_Int.Build_Path.Is_Defined
+           and then not Self.Is_Externally_Built
+         then
             if Self.Tree_Int.Root_Path.Is_Defined then
                Root := Self.Tree_Int.Root_Path;
             else
@@ -1990,7 +1992,7 @@ package body GPR2.Project.View is
 
       return GPR2.Path_Name.Create_File
         (Filename_Type (To_String (File_Name)),
-         Directory => Filename_Optional (Self.Library_Directory.Dir_Name));
+         Directory => Self.Library_Directory.Value);
    end Library_Filename;
 
    ------------------
