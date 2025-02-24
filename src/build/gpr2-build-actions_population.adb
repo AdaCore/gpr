@@ -304,21 +304,6 @@ package body GPR2.Build.Actions_Population is
          return Compilation_Unit.Empty_Vector;
       end if;
 
-      if Src.Owning_View.Is_Library
-        and then not Options.Unique_Compilation
-        and then not Options.Unique_Compilation_Recursive
-      then
-         Tree_Db.Reporter.Report
-           (Message.Create
-              (Message.Error,
-               "main cannot be a source of a library project: """ &
-                 Basename & '"',
-               Source_Reference.Create (View.Path_Name.Value, 0, 0)));
-         Error_Reported := True;
-
-         return Compilation_Unit.Empty_Vector;
-      end if;
-
       if Index /= No_Index then
          if not Src.Has_Units then
             Tree_Db.Reporter.Report
@@ -848,6 +833,23 @@ package body GPR2.Build.Actions_Population is
       else
          Actual_Mains := Mains;
       end if;
+
+      for Loc of Actual_Mains loop
+         if Loc.View.Is_Library
+           and then not Options.Unique_Compilation
+           and then not Options.Unique_Compilation_Recursive
+           and then (not Options.Restricted_Build_Phase
+                     or else Options.Link_Phase_Mandated)
+         then
+            Tree_Db.Reporter.Report
+              (Message.Create
+                 (Message.Error,
+                  "main cannot be a source of a library project: """ &
+                    String (Loc.Source.Simple_Name) & '"',
+                  Source_Reference.Create (Loc.View.Path_Name.Value, 0, 0)));
+            return False;
+         end if;
+      end loop;
 
       if Actual_Mains.Length > 1
         and then Length (Options.Output_File) > 0
