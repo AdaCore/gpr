@@ -6,7 +6,6 @@
 
 pragma Warnings (Off);
 with Ada.Strings.Maps;
-with GPR2.Build.Process_Manager;
 with System.Multiprocessors;
 pragma Warnings (On);
 
