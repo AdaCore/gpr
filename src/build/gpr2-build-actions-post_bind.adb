@@ -115,7 +115,8 @@ package body GPR2.Build.Actions.Post_Bind is
       Self   : Object;
 
    begin
-      Self.Traces := Create ("ACTION_POST_BIND");
+      Self.Traces := Create ("ACTION_POST_BIND",
+                             GNATCOLL.Traces.Off);
       Self.View   := View;
       Self.Binder := Binder;
       Self.Input  := Impl;

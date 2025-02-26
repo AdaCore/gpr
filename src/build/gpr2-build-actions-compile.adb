@@ -810,7 +810,8 @@ package body GPR2.Build.Actions.Compile is
       Self.Ctxt     := Src.Owning_View;
       Self.Src      := Src;
       Self.Lang     := Src.Language;
-      Self.Traces   := Create ("ACTION_COMPILE");
+      Self.Traces   := Create ("ACTION_COMPILE",
+                               GNATCOLL.Traces.Off);
 
       if not No_Obj then
          Obj_Path  := Self.View.Object_Directory.Compose (BN & O_Suff);

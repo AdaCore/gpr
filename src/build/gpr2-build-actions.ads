@@ -210,7 +210,8 @@ private
       --  Owning Tree
       Signature  : GPR2.Build.Signature.Object;
       --  Stored signature for the action
-      Traces     : Trace_Handle := Create ("TRACE_NAME_TO_OVERRIDE");
+      Traces     : Trace_Handle := Create ("TRACE_NAME_TO_OVERRIDE",
+                                           GNATCOLL.Traces.Off);
       --  Used for debug info
       Tmp_Files  : GPR2.Containers.Filename_Set;
       --  List of tmp files to be cleaned up

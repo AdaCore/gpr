@@ -282,7 +282,8 @@ package body GPR2.Build.Actions.Compile.Ada is
       Self.Src    := Src.Owning_View.Source (Src.Main_Part.Source.Simple_Name);
       Self.Lang   := Ada_Language;
       Self.CU     := Src;
-      Self.Traces := Create ("ACTION_ADA_COMPILE");
+      Self.Traces := Create ("ACTION_ADA_COMPILE",
+                             GNATCOLL.Traces.Off);
 
       --  ??? For Standalone libraries, we should probably not lookup for
       --  previous compilation artifacts, since we need to amend the ali

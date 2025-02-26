@@ -140,7 +140,8 @@ private
       Stats        : Process_Manager_Stats := Empty_Stats;
       Tree_Db      : access GPR2.Build.Tree_Db.Object;
       Traces       : GNATCOLL.Traces.Trace_Handle :=
-                       GNATCOLL.Traces.Create ("PROCESS_MANAGER");
+                       GNATCOLL.Traces.Create ("PROCESS_MANAGER",
+                                               GNATCOLL.Traces.Off);
    end record;
 
 end GPR2.Build.Process_Manager;
