@@ -5,10 +5,10 @@
 --
 
 with Ada.Directories;
-with Ada.IO_Exceptions;
 with Ada.Unchecked_Deallocation;
 with GNAT.OS_Lib;
 with GNATCOLL.Atomic;
+with GNATCOLL.OS.FSUtil;
 
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
@@ -435,6 +435,7 @@ package body GPR2.Project.Tree is
             is
                Parent : constant GPR2.Path_Name.Object :=
                           Path.Containing_Directory;
+               use GNATCOLL.OS;
             begin
                if not Parent.Exists
                  and then not Mkdir_Recursive (Parent)
@@ -442,23 +443,13 @@ package body GPR2.Project.Tree is
                   return False;
                end if;
 
-               Ada.Directories.Create_Directory (Path.String_Value);
-
-               return True;
-
-            exception
-               when Ada.IO_Exceptions.Use_Error =>
-                  Self.Tree.Log_Messages.Append
-                    (Message.Create
-                       ((if Absent_Dir_Error = Error
-                        then Message.Error
-                        else Message.Warning),
-                        Human_Name & " directory """ & Path_Img &
-                          """ could not be created",
-                        Sloc => AV.Value));
-                  All_Ok := False;
-
+               if not FSUtil.Create_Directory (Path.String_Value)
+                 and then not Path.Exists
+               then
                   return False;
+               else
+                  return True;
+               end if;
             end Mkdir_Recursive;
 
             --------------
@@ -487,6 +478,19 @@ package body GPR2.Project.Tree is
                        (Message.Create
                           (Message.End_User,
                            '"' & Path_Img & """ created"));
+                  else
+                     Self.Tree.Log_Messages.Append
+                       (Message.Create
+                          ((if Absent_Dir_Error = Error
+                           then Message.Error
+                           else Message.Warning),
+                           Human_Name & " directory """ & Path.String_Value &
+                             """ could not be created",
+                           Sloc => AV.Value));
+
+                     if Absent_Dir_Error = Error then
+                        All_Ok := False;
+                     end if;
                   end if;
 
                elsif Absent_Dir_Error /= No_Error then
