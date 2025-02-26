@@ -149,6 +149,10 @@ package body GPR2.Build.Actions.Link is
       Rpath_Origin : constant GPR2.Project.Attribute.Object :=
                        Self.Ctxt.Attribute (PRA.Run_Path_Origin);
       Ign          : Boolean with Unreferenced;
+      Dash_l_Opts  : GPR2.Containers.Value_List;
+      --  -l needs to be last in the command line, so we accumulate the -l
+      --  switches in Dash_l_Opts and only actually add the switch at the
+      --  end of the command line computation.
 
    begin
       Objects := Self.Embedded_Objects;
@@ -259,6 +263,8 @@ package body GPR2.Build.Actions.Link is
                                 Link.Output.Path;
                Lib_Dir_Opt : constant Value_Type :=
                                 Self.Tree.Linker_Lib_Dir_Option;
+
+               use GNATCOLL.Utils;
             begin
 
                --  We can not rely on the view to obtain the library
@@ -322,7 +328,6 @@ package body GPR2.Build.Actions.Link is
                                   (PRA.Shared_Library_Prefix).Value.Text;
                      BN     : constant String :=
                                 String (Lib_Artifact.Base_Name);
-                     use GNATCOLL.Utils;
                   begin
                      pragma Assert
                        (Starts_With (BN, Prefix),
@@ -332,7 +337,7 @@ package body GPR2.Build.Actions.Link is
                      --  ??? -l can be replaced with the value specified with
                      --  the Linker_Lib_Name_Option option. Need to investigate
                      --  to know if this option is required.
-                     Cmd_Line.Add_Argument
+                     Dash_l_Opts.Append
                        ("-l" &
                           String (BN (BN'First + Prefix'Length .. BN'Last)));
                   end;
@@ -345,27 +350,23 @@ package body GPR2.Build.Actions.Link is
                begin
                   if Attr.Is_Defined then
                      for Val of Attr.Values loop
-                        declare
-                           Path : constant Path_Name.Object :=
-                                    Path_Name.Create_File
-                                      (Filename_Type (Val.Text),
-                                       Link.View.Dir_Name.Value);
-                        begin
-                           if Path.Exists then
-                              Cmd_Line.Add_Argument (Path, True);
-                           else
-                              Self.Tree.Reporter.Report
-                                (GPR2.Message.Create
-                                   (GPR2.Message.Error,
-                                    "unknown object file """ & Val.Text & '"',
-                                    Val));
-                              --  Reset the command line and return
-                              Self.Cmd_Line :=
-                                GPR2.Build.Command_Line.Create
-                                  (Self.Ctxt.Object_Directory);
-                              return;
-                           end if;
-                        end;
+                        if Starts_With (Val.Text, "-l") then
+                           Dash_l_Opts.Append (Val.Text);
+                        else
+                           declare
+                              Path : constant Path_Name.Object :=
+                                       Path_Name.Create_File
+                                         (Filename_Type (Val.Text),
+                                          Link.View.Dir_Name.Value);
+                           begin
+                              if Path.Exists then
+                                 Cmd_Line.Add_Argument (Path, True);
+                              else
+                                 Cmd_Line.Add_Argument (Val.Text, True);
+                                 return;
+                              end if;
+                           end;
+                        end if;
                      end loop;
                   end if;
                end;
@@ -418,8 +419,11 @@ package body GPR2.Build.Actions.Link is
                            if C /= Self.View then
                               --  For self.View, use non-switch parts of
                               --  the linker option only.
-
-                              Cmd_Line.Add_Argument (Val.Text, True);
+                              if Starts_With (Arg, "-l") then
+                                 Dash_l_Opts.Append (Arg);
+                              else
+                                 Cmd_Line.Add_Argument (Val.Text, True);
+                              end if;
                            end if;
 
                         else
@@ -437,6 +441,10 @@ package body GPR2.Build.Actions.Link is
             end;
          end loop;
       end if;
+
+      for Arg of Dash_l_Opts loop
+         Cmd_Line.Add_Argument (Arg, True);
+      end loop;
 
       --  Add options provided by the binder if needed
 
