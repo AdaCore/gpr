@@ -148,7 +148,9 @@ package body GPR2.Build.Actions.Compile.Ada is
 
          for Dep of Deps loop
             --  Configuration pragmas are returned as dependency but are
-            --  not sources of the view, so we need to filter them
+            --  not sources of the view, so we need to filter them. The
+            --  difference is that sources are reported as simple names while
+            --  the config pragma sources have a full path.
 
             if Dep in Simple_Name then
                declare
@@ -172,16 +174,25 @@ package body GPR2.Build.Actions.Compile.Ada is
                      return;
                   end if;
                end;
-
-            else
-               if not Self.Signature.Add_Input (Artifacts.Files.Create (Dep))
-                 and then Load_Mode
-               then
-                  return;
-               end if;
             end if;
          end loop;
       end;
+
+      if Self.Local_Config_Pragmas.Is_Defined
+        and then not Self.Signature.Add_Input
+                       (Artifacts.Files.Create (Self.Local_Config_Pragmas))
+        and then Load_Mode
+      then
+         return;
+      end if;
+
+      if Self.Global_Config_Pragmas.Is_Defined
+        and then not Self.Signature.Add_Input
+                       (Artifacts.Files.Create (Self.Global_Config_Pragmas))
+        and then Load_Mode
+      then
+         return;
+      end if;
 
       --  Object file checksum is the heaviest to compute since those are
       --  pretty large compared to the other artifacts involved in this
