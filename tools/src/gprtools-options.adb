@@ -17,14 +17,13 @@
 ------------------------------------------------------------------------------
 
 pragma Warnings (Off);
-with GPR2.Message;
-with GPRtools.Options;
 with System.OS_Constants;
 pragma Warnings (On);
 
 with Ada.Containers;
 with GNAT.Directory_Operations;
 
+with GPR2.Message;
 with GPR2.Project.Registry.Pack;
 
 with GPRtools.Program_Termination;
