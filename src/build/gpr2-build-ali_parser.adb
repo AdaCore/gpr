@@ -414,7 +414,7 @@ package body GPR2.Build.ALI_Parser is
                raise Scan_ALI_Error with "missed withed unit name";
             end if;
 
-            if Unit_Name'Length > 3 and then
+            if Unit_Name'Length >= 3 and then
                Unit_Name (Unit_Name'Last) in 's' | 'b' and then
                Unit_Name (Unit_Name'Last - 1) = '%'
             then
