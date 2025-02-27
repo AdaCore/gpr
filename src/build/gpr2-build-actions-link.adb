@@ -350,23 +350,32 @@ package body GPR2.Build.Actions.Link is
                begin
                   if Attr.Is_Defined then
                      for Val of Attr.Values loop
-                        if Starts_With (Val.Text, "-l") then
-                           Dash_l_Opts.Append (Val.Text);
-                        else
-                           declare
-                              Path : constant Path_Name.Object :=
-                                       Path_Name.Create_File
-                                         (Filename_Type (Val.Text),
-                                          Link.View.Dir_Name.Value);
-                           begin
-                              if Path.Exists then
-                                 Cmd_Line.Add_Argument (Path, True);
+                        declare
+                           Path : constant Path_Name.Object :=
+                                    Path_Name.Create_File
+                                      (Filename_Type (Val.Text),
+                                       Link.View.Dir_Name.Value);
+                        begin
+                           if Path.Exists then
+                              Cmd_Line.Add_Argument (Path, True);
+
+                           elsif not Link.Is_Static then
+                              if Starts_With (Val.Text, "-l") then
+                                 Dash_l_Opts.Append (Val.Text);
                               else
                                  Cmd_Line.Add_Argument (Val.Text, True);
-                                 return;
                               end if;
-                           end;
-                        end if;
+
+                           else
+                              Self.Tree.Reporter.Report
+                                (GPR2.Message.Create
+                                   (GPR2.Message.Error,
+                                    "unknown object file """ &
+                                      Val.Text & '"',
+                                    Val));
+                              raise Action_Error;
+                           end if;
+                        end;
                      end loop;
                   end if;
                end;
