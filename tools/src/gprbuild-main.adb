@@ -125,6 +125,37 @@ begin
       return;
    end if;
 
+   --  Check if there's something to do
+
+   if Opt.Build_Options.Mains.Is_Empty then
+      declare
+         Is_Empty : Boolean := True;
+      begin
+         NS_Loop :
+         for NS of Opt.Tree.Namespace_Root_Projects loop
+            if NS.Kind /= K_Abstract then
+               Is_Empty := False;
+               exit NS_Loop;
+            end if;
+
+            for V of NS.Closure (False, False, True) loop
+               if not V.Is_Externally_Built then
+                  Is_Empty := False;
+                  exit NS_Loop;
+               end if;
+            end loop;
+         end loop NS_Loop;
+
+         if Is_Empty then
+            Opt.Tree.Reporter.Report ("gprbuild: no sources to compile");
+
+            return;
+         end if;
+      end;
+   end if;
+
+   --  Load the sources
+
    if not Opt.Tree.Update_Sources (Option => Sources_Units_Artifacts) then
       Handle_Program_Termination
         (Force_Exit => True,
