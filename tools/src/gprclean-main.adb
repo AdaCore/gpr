@@ -236,7 +236,6 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    Parser        : GPRtools.Options.Command_Line_Parser;
    Lang          : GPR2.Language_Id;
    Artifact_Path : Path_Name.Object;
-   Conf          : GPR2.Project.View.Object;
 
    use type GPR2.Project.View.Object;
 
@@ -277,21 +276,18 @@ begin
 
    if Opt.Tree.Has_Configuration
      and then Opt.Tree.Configuration.Log_Messages.Has_Element
-       (Warning  => True,
+       (Error    => True,
+        Warning  => True,
         Hint     => False,
-        Error    => False)
+        End_User => False)
    then
-      Opt.Tree.Log_Messages.Append
+      Opt.Tree.Reporter.Report
         (GPR2.Message.Create
            (GPR2.Message.Warning,
             "Cleaning may be incomplete, as there were problems during"
             & " auto-configuration",
             Source_Reference.Create
               (Opt.Tree.Root_Project.Path_Name.Value, 0, 0)));
-   end if;
-
-   if Opt.Tree.Has_Configuration then
-      Conf := Opt.Tree.Configuration.Corresponding_View;
    end if;
 
    Opt.Tree.Update_Sources;
@@ -329,11 +325,11 @@ begin
                     GPR2.Build.Actions.Compile.Object'Class (Action).Language;
                   declare
                      Src_Exts : constant GPR2.Project.Attribute.Object :=
-                                  Conf.Attribute
+                                  Action.View.Attribute
                                     (PRA.Clean.Source_Artifact_Extensions,
                                      PAI.Create (Lang));
                      Obj_Exts : constant GPR2.Project.Attribute.Object :=
-                                  Conf.Attribute
+                                  Action.View.Attribute
                                     (PRA.Clean.Object_Artifact_Extensions,
                                      PAI.Create (Lang));
                      Obj_BN   : constant Filename_Type :=

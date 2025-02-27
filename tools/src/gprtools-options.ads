@@ -33,6 +33,11 @@ package GPRtools.Options is
    type Command_Line_Parser is
      new Command_Line.Command_Line_Parser with private;
 
+   type Warning_Mode_Type is
+     (Regular, As_Errors, No_Warnings);
+   type Reporting_Mode is
+     (Regular, Quiet, Verbose);
+
    type Base_Options is new GPR2.Options.Object
      and Command_Line.Command_Line_Result
    with record
@@ -48,8 +53,9 @@ package GPRtools.Options is
       --  The project tree once loaded
 
       Console_Reporter      : GPR2.Reporter.Console.Object :=
-                                   GPR2.Reporter.Console.Create;
-      No_Warnings           : Boolean := False;
+                                GPR2.Reporter.Console.Create;
+      Warning_Mode          : Warning_Mode_Type := Regular;
+      Verbosity             : Reporting_Mode    := Regular;
 
       Build_Options         : GPR2.Build.Options.Build_Options;
    end record;

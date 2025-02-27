@@ -109,6 +109,8 @@ package GPR2.Message is
 
    function To_Stderr (Self : Object) return Boolean;
 
+   procedure Treat_Warnings_As_Error (Enabled : Boolean);
+
 private
 
    type Object is tagged record

@@ -17,7 +17,8 @@
 ------------------------------------------------------------------------------
 
 with GPR2.Options;
-with GPR2.Reporter.Console;
+
+with GPRtools.Command_Line;
 
 package body GPRbuild.Options is
 
@@ -336,44 +337,6 @@ package body GPRbuild.Options is
 
       return Parser;
    end Create;
-
-   -------------
-   -- Get_Opt --
-   -------------
-
-   overriding procedure Get_Opt
-     (Parser : GPRbuild_Parser;
-      Result : in out GPRtools.Command_Line.Command_Line_Result'Class)
-   is
-      Options : constant access Object := Object (Result)'Access;
-   begin
-      GPRtools.Options.Command_Line_Parser (Parser).Get_Opt (Result);
-
-      --  Adjust console output verbosity to mimick what gprbuild1 does
-
-      case Options.Console_Reporter.Verbosity is
-         when GPR2.Reporter.Quiet =>
-            if Options.No_Warnings then
-               Options.Console_Reporter.Set_Verbosity
-                 (GPR2.Reporter.No_Warnings);
-            else
-               Options.Console_Reporter.Set_Verbosity
-                 (GPR2.Reporter.Regular);
-            end if;
-
-            Options.Console_Reporter.Set_User_Verbosity
-              (GPR2.Reporter.Important_Only);
-
-         when GPR2.Reporter.No_Warnings | GPR2.Reporter.Regular =>
-            null;
-
-         when GPR2.Reporter.Verbose | GPR2.Reporter.Very_Verbose =>
-            Options.Console_Reporter.Set_User_Verbosity
-              (GPR2.Reporter.Verbose);
-            Options.Console_Reporter.Set_Verbosity
-              (GPR2.Reporter.Regular);
-      end case;
-   end Get_Opt;
 
    -----------------------
    -- On_Section_Switch --
