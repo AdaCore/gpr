@@ -675,7 +675,9 @@ package body GPR2.Build.Actions.Compile is
       when GNATCOLL.OS.OS_Error =>
          Self.Tree.Reporter.Report
            ("Problem accessing the object directory for project """ &
-              String (Self.View.Name) & '"');
+              String (Self.View.Name) & '"',
+            To_Stderr => True,
+            Level     => GPR2.Message.Important);
          raise Action_Error;
    end Compute_Command;
 
