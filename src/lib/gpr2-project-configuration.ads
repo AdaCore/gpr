@@ -38,8 +38,7 @@ package GPR2.Project.Configuration is
    function Has_Error (Self : Object) return Boolean;
    --  Returns whether error messages are present for this configuration
 
-   function Log_Messages (Self : Object) return Log.Object
-     with Post => not Self.Has_Messages or else Log_Messages'Result.Count > 0;
+   function Log_Messages (Self : Object) return Log.Object;
    --  Returns the Logs, this contains information, warning and error messages
    --  found while handling the project.
 
