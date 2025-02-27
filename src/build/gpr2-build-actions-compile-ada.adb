@@ -4,12 +4,12 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.IO_Exceptions;
 with Ada.Text_IO;
 
 with GNATCOLL.OS.FSUtil;
 
 with GPR2.Build.Actions.Ada_Bind;
-with GPR2.Build.Actions.Link;
 with GPR2.Build.ALI_Parser;
 with GPR2.Build.Artifacts.Key_Value;
 with GPR2.Build.Tree_Db;
@@ -18,6 +18,7 @@ with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
+with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
 
 package body GPR2.Build.Actions.Compile.Ada is
@@ -25,15 +26,6 @@ package body GPR2.Build.Actions.Compile.Ada is
    package PRA renames GPR2.Project.Registry.Attribute;
    package PAI renames GPR2.Project.Attribute_Index;
    package Actions renames GPR2.Build.Actions;
-
-   type Reference_Type (Element : not null access Object) is record
-      Ref : Tree_Db.Action_Reference_Type (Element);
-   end record
-     with Implicit_Dereference => Element;
-
-   function Reference
-     (Self : Object;
-      Id   : Action_Id'Class) return Reference_Type;
 
    function Artifacts_Base_Name
      (Unit : GPR2.Build.Compilation_Unit.Object) return Simple_Name;
@@ -126,12 +118,11 @@ package body GPR2.Build.Actions.Compile.Ada is
       Version : Artifacts.Key_Value.Object;
 
    begin
-      if not Self.Signature.Add_Output (Self.Dep_File) and then Load_Mode then
-         return;
-      end if;
+      --  The list of dependencies is only accurate if the Ali file is
+      --  accurate, so check it first: if it changed there's no need to
+      --  go further.
 
-      if Self.Obj_File.Is_Defined
-        and then not Self.Signature.Add_Output (Self.Obj_File)
+      if not Self.Signature.Add_Output (Self.Dep_File)
         and then Load_Mode
       then
          return;
@@ -191,6 +182,18 @@ package body GPR2.Build.Actions.Compile.Ada is
             end if;
          end loop;
       end;
+
+      --  Object file checksum is the heaviest to compute since those are
+      --  pretty large compared to the other artifacts involved in this
+      --  signature. So compute it last so that if there's any other
+      --  artifact that changed we don't compute it.
+
+      if Self.Obj_File.Is_Defined
+        and then not Self.Signature.Add_Output (Self.Obj_File)
+        and then Load_Mode
+      then
+         return;
+      end if;
    end Compute_Signature;
 
    ------------------
@@ -200,9 +203,19 @@ package body GPR2.Build.Actions.Compile.Ada is
    overriding function Dependencies
      (Self : Object) return Containers.Filename_Set
    is
-      All_Deps : GPR2.Containers.Filename_Set;
+      Result   : GPR2.Containers.Filename_Set;
+      UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+
    begin
-      if not GPR2.Build.ALI_Parser.Dependencies (Self.Dep_File.Path, All_Deps)
+      if not Self.Dep_File.Path.Exists then
+         Trace
+           (Self.Traces,
+            "The ALI file for action " & UID.Image & " does not exist");
+
+         return Containers.Empty_Filename_Set;
+      end if;
+
+      if not GPR2.Build.ALI_Parser.Dependencies (Self.Dep_File.Path, Result)
       then
          Trace
            (Self.Traces, "Failed to parse dependencies from the ALI file " &
@@ -211,7 +224,7 @@ package body GPR2.Build.Actions.Compile.Ada is
          return Containers.Empty_Filename_Set;
       end if;
 
-      return All_Deps;
+      return Result;
    end Dependencies;
 
    --------------
@@ -260,8 +273,8 @@ package body GPR2.Build.Actions.Compile.Ada is
       No_Obj  : constant Boolean :=
                   (View.Is_Library and then View.Is_Externally_Built)
                     or else View.Is_Runtime;
-      Attr    : GPR2.Project.Attribute.Object;
-      Closure : GPR2.Project.View.Set.Object;
+      Attr     : GPR2.Project.Attribute.Object;
+      Closure  : GPR2.Project.View.Set.Object;
 
    begin
 
@@ -359,9 +372,7 @@ package body GPR2.Build.Actions.Compile.Ada is
 
       if Self.Ctxt.Is_Aggregated_In_Library then
          Closure := Self.Ctxt.Aggregate_Libraries;
-      end if;
-
-      if Self.Ctxt.Is_Library then
+      elsif Self.Ctxt.Is_Library then
          Closure.Include (Self.Ctxt);
       end if;
 
@@ -369,9 +380,19 @@ package body GPR2.Build.Actions.Compile.Ada is
          if not V.Is_Library_Standalone
            or else V.Interface_Closure.Contains (Self.CU.Name)
          then
-            Self.In_Libraries.Include (V);
+            Self.In_Library := V;
+            exit;
          end if;
       end loop;
+
+      if Self.In_Library.Is_Defined then
+         Self.Lib_Ali_File :=
+           Artifacts.Files.Create
+             (Self.In_Library.Library_Ali_Directory.Compose
+                (Self.Dep_File.Path.Simple_Name));
+      else
+         Self.Lib_Ali_File := Self.Dep_File;
+      end if;
 
       --  Check the configuration pragmas files
 
@@ -404,45 +425,6 @@ package body GPR2.Build.Actions.Compile.Ada is
      (Self : Object;
       Db   : in out GPR2.Build.Tree_Db.Object) return Boolean
    is
-      UID       : constant Actions.Action_Id'Class := Object'Class (Self).UID;
-      Ali_BN    : constant Simple_Name := Self.Dep_File.Path.Simple_Name;
-      Other_Ali : Path_Name.Object;
-
-   begin
-      if Self.Obj_File.Is_Defined then
-         if not Db.Add_Output (UID, Self.Obj_File) then
-            return False;
-         end if;
-      end if;
-
-      if not Db.Add_Output (UID, Self.Dep_File) then
-         return False;
-      end if;
-
-      for Lib of Self.In_Libraries loop
-         Other_Ali := Lib.Library_Ali_Directory.Compose (Ali_BN);
-
-         if not Db.Add_Output (UID, Artifacts.Files.Create (Other_Ali)) then
-            return False;
-         end if;
-      end loop;
-
-      return True;
-   end On_Tree_Insertion;
-
-   -------------------------
-   -- On_Tree_Propagation --
-   -------------------------
-
-   overriding function On_Tree_Propagation
-     (Self : in out Object) return Boolean
-   is
-      Imports  : GPR2.Containers.Name_Set;
-      Binds    : Action_Id_Sets.Set;
-      Links    : Action_Id_Sets.Set;
-      CU       : Build.Compilation_Unit.Object;
-      Continue : Boolean;
-
       function Can_Unit_Be_Imported
         (CU : GPR2.Build.Compilation_Unit.Object) return Boolean;
       --  Ensure that a unit coming from another project can be imported.
@@ -492,7 +474,7 @@ package body GPR2.Build.Actions.Compile.Ada is
                      & String (CU_View.Name),
                      GPR2.Source_Reference.Object
                        (GPR2.Source_Reference.Create
-                          (Self.Ctxt.Path_Name.Value, 0, 0))));
+                            (Self.Ctxt.Path_Name.Value, 0, 0))));
             end if;
 
             if Allowed then
@@ -521,147 +503,37 @@ package body GPR2.Build.Actions.Compile.Ada is
          return Allowed;
       end Can_Unit_Be_Imported;
 
+      CU        : GPR2.Build.Compilation_Unit.Object;
+      UID       : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+      Result    : Boolean := True;
+
    begin
-      for Successor of Self.Tree.Successors (Self.Dep_File) loop
-         if Successor in Actions.Ada_Bind.Object'Class then
-            Binds.Insert (Successor.UID);
-         end if;
-      end loop;
-
       if Self.Obj_File.Is_Defined then
-         for Successor of Self.Tree.Successors (Self.Obj_File) loop
-            if Successor in Actions.Link.Object'Class then
-               Links.Insert (Successor.UID);
-            end if;
-         end loop;
-      end if;
-
-      if Binds.Is_Empty and then Links.Is_Empty then
-         --  No more things to do here
-         return True;
-      end if;
-
-      if Self.Dep_File.Path.Exists then
-         Trace (Self.Traces,
-                "Parse " & String (Self.Dep_File.Path.Simple_Name));
-
-         if not GPR2.Build.ALI_Parser.Imports (Self.Dep_File.Path, Imports)
-         then
-            Imports := Self.CU.Known_Dependencies;
-         end if;
-      else
-         Imports := Self.CU.Known_Dependencies;
-      end if;
-
-      for Imp of Imports loop
-         Trace (Self.Traces, "Found import " & String (Imp));
-
-         --  Lookup the corresponding unit
-
-         CU := Self.View.Namespace_Roots.First_Element.Unit (Imp);
-         Continue := True;
-
-         if not CU.Is_Defined then
-            Trace
-              (Self.Traces,
-               "Did not find a view containing unit " &
-                String (Imp));
-            Continue := False;
-
-         elsif not Can_Unit_Be_Imported (CU) then
-            Self.Signature.Invalidate;
+         if not Db.Add_Output (UID, Self.Obj_File) then
             return False;
          end if;
+      end if;
 
-         if Continue and then CU.Owning_View.Is_Runtime then
-            --  Do not create compile actions for runtime units: they are
-            --  imported via libgnat/libgnarl.
-            Continue := False;
-         end if;
+      if not Db.Add_Output (UID, Self.Dep_File) then
+         return False;
+      end if;
 
-         if Continue then
-            declare
-               Id           : constant Ada_Compile_Id := Create (CU);
-               Ali_In_Lib   : Path_Name.Object;
-               New_Actions  : Action_Id_Sets.Set;
-               Action       : Object;
+      if Self.Lib_Ali_File.Path /= Self.Dep_File.Path
+        and then not Db.Add_Output (UID, Self.Lib_Ali_File)
+      then
+         return False;
+      end if;
 
-            begin
-               if not Self.Tree.Has_Action (Id) then
-                  Action.Initialize (CU);
+      for Unit of Self.CU.Known_Dependencies loop
+         CU := Self.Ctxt.Namespace_Roots.First_Element.Unit (Unit);
 
-                  if not Self.Tree.Add_Action (Action) then
-                     return False;
-                  end if;
-               end if;
-
-               --  For all imported unit, we attach them to successor bind and
-               --  link actions, together with their dependencies if they are
-               --  known.
-
-               --  Get the known dependencies of the imported unit
-               New_Actions := Self.Reference (Id).Closure;
-               --  Add the imported unit itself
-               New_Actions.Include (Id);
-
-               while not New_Actions.Is_Empty loop
-                  declare
-                     Ref : constant Reference_Type :=
-                             Self.Reference (New_Actions.Last_Element);
-                     use type GPR2.Project.View.Object;
-                  begin
-                     New_Actions.Delete_Last;
-                     Self.Closure.Include (Ref.UID);
-
-                     for Bind of Binds loop
-                        --  Need to find out which ali file is seen by the bind
-                        --  action: if the bind occurs in the same context as
-                        --  the compile action, then it will be the ali file
-                        --  in the obj dir, but if it occurs in another action
-                        --  this will be the ali file in the library ali dir
-                        --  if action is part of a library
-
-                        if Bind.View /= Ref.View
-                          and then not Ref.In_Libraries.Is_Empty
-                        then
-                           --  ??? We need to filter on the namespace root view
-                           --  to determine which ali to use: in case the
-                           --  project is used as a simple library in one case
-                           --  and used in aggregated library for another
-                           --  subtree, the ali actually seen will be different
-                           Ali_In_Lib := Ref.In_Libraries.First_Element.
-                             Library_Ali_Directory.Compose
-                               (Ref.Dep_File.Path.Simple_Name);
-                           Self.Tree.Add_Input
-                             (Bind,
-                              Artifacts.Files.Create (Ali_In_Lib),
-                              False);
-                        else
-                           Self.Tree.Add_Input
-                             (Bind, Ref.Dep_File, False);
-                        end if;
-                     end loop;
-
-                     if Ref.Obj_File.Is_Defined then
-                        for Link of Links loop
-                           Self.Tree.Add_Input
-                             (Link, Ref.Obj_File, False);
-                        end loop;
-
-                        --  Add recursively the known dependencies, excluding
-                        --  the ones already analysed.
-
-                        New_Actions.Union
-                          (Ref.Closure.Difference (Self.Closure));
-                     end if;
-                  end;
-               end loop;
-            end;
+         if CU.Is_Defined then
+            Result := Can_Unit_Be_Imported (CU) and then Result;
          end if;
       end loop;
 
-      return True;
-   end On_Tree_Propagation;
+      return Result;
+   end On_Tree_Insertion;
 
    ------------------
    -- Post_Command --
@@ -672,58 +544,35 @@ package body GPR2.Build.Actions.Compile.Ada is
       Status : Execution_Status) return Boolean
    is
       use GPR2.Path_Name;
+      Imports : GPR2.Containers.Name_Set;
+      Binds   : Action_Id_Sets.Set;
 
    begin
-      if Status = Skipped then
-         --  No need to post-process anything if the action was skipped
-         return True;
-      end if;
-
-      --  If the .o and .ali stored in this action were inherited, and we
-      --  finally decided to compile, we need to now redirect to the new .o
-      --  and .ali
-
-      declare
-         BN        : constant Simple_Name := Artifacts_Base_Name (Self.CU);
-         O_Suff    : constant Simple_Name :=
-                       Simple_Name
-                         (Get_Attr
-                            (Self.View, PRA.Compiler.Object_File_Suffix,
-                             Ada_Language,
-                             ".o"));
-         Local_O   : Artifacts.Files.Object;
-         Local_Ali : Artifacts.Files.Object;
-         use type Artifacts.Files.Object;
-
-      begin
-         Local_O := Artifacts.Files.Create
-           (Self.View.Object_Directory.Compose (BN & O_Suff));
-
-         if Local_O /= Self.Obj_File then
-            Local_Ali := Artifacts.Files.Create
-              (Self.View.Object_Directory.Compose (BN & ".ali"));
-
-            Self.Tree.Replace_Artifact (Self.Obj_File, Local_O);
-            Self.Tree.Replace_Artifact (Self.Dep_File, Local_Ali);
-            Self.Obj_File := Local_O;
-            Self.Dep_File := Local_Ali;
-         end if;
-      end;
-
       --  If the object is to be included in a library, copy the ali file in
       --  the library directory
 
-      for Lib of Self.In_Libraries loop
+      if Self.In_Library.Is_Defined
+        and then
+          (Status /= Skipped
+           or else not Self.Lib_Ali_File.Path.Exists)
+      then
          declare
             use Standard.Ada.Text_IO;
-            From      : constant Path_Name.Object := Self.Dep_File.Path;
-            To        : constant Path_Name.Object :=
-                          Lib.Library_Ali_Directory.Compose (From.Simple_Name);
-            Input     : File_Type;
-            Output    : File_Type;
+            From   : constant Path_Name.Object := Self.Dep_File.Path;
+            To     : constant Path_Name.Object :=
+                       Self.In_Library.Library_Ali_Directory.Compose
+                         (From.Simple_Name);
+            Input  : File_Type;
+            Output : File_Type;
 
          begin
-            if Lib.Is_Library_Standalone then
+            if To /= Self.Lib_Ali_File.Path then
+               Self.Tree.Replace_Artifact
+                 (Self.Lib_Ali_File, Artifacts.Files.Create (To));
+               Self.Lib_Ali_File := Artifacts.Files.Create (To);
+            end if;
+
+            if Self.In_Library.Is_Library_Standalone then
                --  Amend the ALI to add the SL (StandAlone) flag to
                --  it to prevent multiple elaboration of the unit.
 
@@ -766,39 +615,208 @@ package body GPR2.Build.Actions.Compile.Ada is
                           " to the library directory",
                         GPR2.Source_Reference.Object
                           (GPR2.Source_Reference.Create
-                               (Lib.Path_Name.Value, 0, 0))));
+                             (Self.In_Library.Path_Name.Value, 0, 0))));
 
                   return False;
                end if;
             end if;
+
+         exception
+            when Standard.Ada.IO_Exceptions.Use_Error =>
+               Self.Tree.Reporter.Report
+                 (GPR2.Message.Create
+                    (GPR2.Message.Error,
+                     "could not copy ali file " &
+                       String (From.Simple_Name) &
+                       " to the library directory",
+                     GPR2.Source_Reference.Object
+                       (GPR2.Source_Reference.Create
+                          (Self.In_Library.Path_Name.Value, 0, 0))));
+
+               return False;
+
+         end;
+      end if;
+
+      if Status = Skipped then
+         --  No need to post-process anything if the action was skipped
+         return True;
+      end if;
+
+      --  If the .o and .ali stored in this action were inherited, and we
+      --  finally decided to compile, we need to now redirect to the new .o
+      --  and .ali
+
+      declare
+         BN        : constant Simple_Name := Artifacts_Base_Name (Self.CU);
+         O_Suff    : constant Simple_Name :=
+                       Simple_Name
+                         (Get_Attr
+                            (Self.View, PRA.Compiler.Object_File_Suffix,
+                             Ada_Language,
+                             ".o"));
+         Local_O   : Artifacts.Files.Object;
+         Local_Ali : Artifacts.Files.Object;
+         use type Artifacts.Files.Object;
+
+      begin
+         Local_O := Artifacts.Files.Create
+           (Self.View.Object_Directory.Compose (BN & O_Suff));
+
+         if Local_O /= Self.Obj_File then
+            Local_Ali := Artifacts.Files.Create
+              (Self.View.Object_Directory.Compose (BN & ".ali"));
+
+            Self.Tree.Replace_Artifact (Self.Obj_File, Local_O);
+            Self.Tree.Replace_Artifact (Self.Dep_File, Local_Ali);
+            Self.Obj_File := Local_O;
+            Self.Dep_File := Local_Ali;
+         end if;
+      end;
+
+      --  If the object is to be included in a library, copy the ali file in
+      --  the library directory
+
+      if Self.In_Library.Is_Defined then
+         declare
+            use Standard.Ada.Text_IO;
+            From      : constant Path_Name.Object := Self.Dep_File.Path;
+            To        : constant Path_Name.Object :=
+                          Self.In_Library.Library_Ali_Directory.Compose
+                            (From.Simple_Name);
+            Input     : File_Type;
+            Output    : File_Type;
+
+         begin
+            if To /= Self.Lib_Ali_File.Path then
+               Self.Tree.Replace_Artifact
+                 (Self.Lib_Ali_File, Artifacts.Files.Create (To));
+               Self.Lib_Ali_File := Artifacts.Files.Create (To);
+            end if;
+
+            if Self.In_Library.Is_Library_Standalone then
+               --  Amend the ALI to add the SL (StandAlone) flag to
+               --  it to prevent multiple elaboration of the unit.
+
+               Open (Input, In_File, From.String_Value);
+               Create (Output, Out_File, To.String_Value);
+
+               while not End_Of_File (Input) loop
+                  declare
+                     Line : constant String := Get_Line (Input);
+                  begin
+                     if Line'Length > 2
+                       and then Line
+                         (Line'First .. Line'First + 1) = "P "
+                     then
+                        Put_Line
+                          (Output,
+                           "P SL" &
+                             Line (Line'First + 1 .. Line'Last));
+                     else
+                        Put_Line (Output, Line);
+                     end if;
+                  end;
+               end loop;
+
+               Close (Input);
+               Close (Output);
+
+            else
+               --  Just copy the ali file for standard libraries: they
+               --  need elaboration by the caller.
+
+               if not GNATCOLL.OS.FSUtil.Copy_File
+                 (From.String_Value, To.String_Value)
+               then
+                  Self.Tree.Reporter.Report
+                    (GPR2.Message.Create
+                       (GPR2.Message.Error,
+                        "could not copy ali file " &
+                          String (From.Simple_Name) &
+                          " to the library directory",
+                        GPR2.Source_Reference.Object
+                          (GPR2.Source_Reference.Create
+                             (Self.In_Library.Path_Name.Value, 0, 0))));
+
+                  return False;
+               end if;
+            end if;
+
+         exception
+            when Standard.Ada.IO_Exceptions.Use_Error =>
+               Self.Tree.Reporter.Report
+                 (GPR2.Message.Create
+                    (GPR2.Message.Error,
+                     "could not copy ali file " &
+                       String (From.Simple_Name) &
+                       " to the library directory",
+                     GPR2.Source_Reference.Object
+                       (GPR2.Source_Reference.Create
+                            (Self.In_Library.Path_Name.Value, 0, 0))));
+
+               return False;
+         end;
+      end if;
+
+      --  Now that we know the ALI file is correct, let the bind action know
+      --  the actual list of imported units from this dependency file.
+
+      if not GPR2.Build.ALI_Parser.Imports (Self.Dep_File.Path, Imports)
+      then
+         Self.Tree.Reporter.Report
+           (GPR2.Message.Create
+              (GPR2.Message.Error,
+               "failure to analyze the produced ali file",
+               GPR2.Source_Reference.Object
+                 (GPR2.Source_Reference.Create
+                      (Self.Dep_File.Path.Value, 0, 0))));
+         return False;
+      end if;
+
+      for Action of Self.Tree.Successors (Self.Dep_File) loop
+         if Action in GPR2.Build.Actions.Ada_Bind.Object'Class then
+            --  Note: do not call On_Ali_Parsed from this loop since we're
+            --  iterating over Self.Tree.Successors so any modification to
+            --  the tree within this loop may raise a Program_Error "attempt
+            --  to tamper with cursors".
+            Binds.Include (Action.UID);
+         end if;
+      end loop;
+
+      for UID of Binds loop
+         declare
+            Bind : constant access Actions.Ada_Bind.Object'Class :=
+                     Actions.Ada_Bind.Object'Class
+                       (Self.Tree.Action_Id_To_Reference
+                          (UID).Element.all)'Access;
+         begin
+            if not Bind.On_Ali_Parsed (Imports) then
+               return False;
+            end if;
          end;
       end loop;
 
-      --  Update the tree with potential new imports from ALI
-
-      return Self.On_Tree_Propagation;
+      return True;
    end Post_Command;
 
-   ---------------
-   -- Reference --
-   ---------------
+   ------------------
+   -- Withed_Units --
+   ------------------
 
-   function Reference
-     (Self : Object;
-      Id   : Action_Id'Class) return Reference_Type
+   function Withed_Units (Self : Object) return GPR2.Containers.Name_Set
    is
-      Ref : constant GPR2.Build.Tree_Db.Action_Reference_Type :=
-              Self.Tree.Action_Id_To_Reference (Id);
+      Result   : GPR2.Containers.Name_Set;
+
    begin
-      return (Element => Object (Ref.Element.all)'Unchecked_Access,
-              Ref     => Ref);
-   end Reference;
+      if not Self.Dep_File.Path.Exists
+        or else not GPR2.Build.ALI_Parser.Imports
+          (Self.Dep_File.Path, Result)
+      then
+         return Self.CU.Known_Dependencies;
+      end if;
 
-   ---------
-   -- UID --
-   ---------
-
-   overriding function UID (Self : Object) return Actions.Action_Id'Class is
-      (Ada.Create (Src => Self.CU));
+      return Result;
+   end Withed_Units;
 
 end GPR2.Build.Actions.Compile.Ada;

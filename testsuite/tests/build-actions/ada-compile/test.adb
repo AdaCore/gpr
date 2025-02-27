@@ -119,10 +119,10 @@ begin
                         Obj_Dir.Join ("main.ali").Full_Name;
    begin
       Assert
-        (Ada_Comp.Dependency_File.Path.String_Value = String (Expected_Ali),
+        (Ada_Comp.Local_Ali_File.Path.String_Value = String (Expected_Ali),
          "Check ALI file path");
       Assert
-        (Ada_Comp.Dependency_File.Path.Exists,
+        (Ada_Comp.Local_Ali_File.Path.Exists,
          "Check that ALI file has been correctly created");
    end;
 

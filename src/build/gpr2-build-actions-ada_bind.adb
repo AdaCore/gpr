@@ -17,6 +17,7 @@ with GNATCOLL.OS.FS;
 
 with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Actions.Post_Bind;
+with GPR2.Build.Compilation_Unit;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
@@ -168,55 +169,33 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       begin
          if Map_File.FD /= Invalid_FD and then Map_File.FD /= Null_FD then
-            if Self.View.Kind = K_Aggregate_Library then
-               Initial_Closure := Self.View.Aggregated;
-            else
-               Initial_Closure.Include (Self.View);
-            end if;
+            for Input of Self.Tree.Inputs (Self.UID) loop
+               if Self.Tree.Has_Predecessor (Input) then
+                  declare
+                     Ali      : constant Path_Name.Object :=
+                                  Artifacts.Files.Object (Input).Path;
+                     Comp     : constant Actions.Compile.Ada.Object :=
+                                  Actions.Compile.Ada.Object
+                                    (Self.Tree.Predecessor (Input));
+                     Key      : constant String :=
+                                  To_Lower (String (Comp.Input_Unit.Name)) &
+                                  (if Comp.Input_Unit.Main_Part = S_Spec
+                                   then S_Suffix else B_Suffix);
 
-            for C of Initial_Closure loop
-               for V of C.Closure (True, False, False) loop
-                  if not V.Is_Runtime then
-                     for CU of V.Own_Units loop
-                        declare
-                           A_Comp   : Compile.Ada.Object;
-                           Key      : constant String :=
-                                        To_Lower (String (CU.Name)) &
-                                          (if CU.Main_Part = S_Spec
-                                           then S_Suffix else B_Suffix);
-                           Ignore   : Boolean;
-                           Ali_File : Path_Name.Object;
-
-                           use type GPR2.Project.View.Object;
-
-                        begin
-                           A_Comp.Initialize (CU);
-
-                           Ignore := V /= Self.Ctxt
-                             and then V.Is_Library
-                             and then V.Is_Library_Standalone
-                             and then not V.Interface_Closure.Contains
-                                            (CU.Name);
-
-                           if V.Is_Library and then V /= Self.Ctxt then
-                              Ali_File := V.Library_Ali_Directory.Compose
-                                (A_Comp.Dependency_File.Path.Simple_Name);
-                           else
-                              Ali_File := A_Comp.Dependency_File.Path;
-                           end if;
-
-                           if not Ignore then
-                              Write
-                                (Map_File.FD,
-                                 Key & ASCII.LF &
-                                   String (Ali_File.Simple_Name) &
-                                   ASCII.LF &
-                                   Ali_File.String_Value & ASCII.LF);
-                           end if;
-                        end;
-                     end loop;
-                  end if;
-               end loop;
+                  begin
+                     if not Comp.View.Is_Runtime
+                       or else (Comp.View.Is_Library
+                                and then Comp.View.Is_Library_Standalone)
+                     then
+                        Write
+                          (Map_File.FD,
+                           Key & ASCII.LF &
+                             String (Ali.Simple_Name) &
+                             ASCII.LF &
+                             Ali.String_Value & ASCII.LF);
+                     end if;
+                  end;
+               end if;
             end loop;
 
             GNATCOLL.OS.FS.Close (Map_File.FD);
@@ -543,6 +522,125 @@ package body GPR2.Build.Actions.Ada_Bind is
       end if;
    end Initialize;
 
+   ----------
+   -- Link --
+   ----------
+
+   function Link (Self : Object) return Actions.Link.Object is
+   begin
+      for Action of Self.Tree.Successors (Self.Post_Bind.Object_File) loop
+         if Action in GPR2.Build.Actions.Link.Object'Class then
+            return GPR2.Build.Actions.Link.Object (Action);
+         end if;
+      end loop;
+
+      return GPR2.Build.Actions.Link.Undefined;
+   end Link;
+
+   -------------------
+   -- On_Ali_Parsed --
+   -------------------
+
+   function On_Ali_Parsed
+     (Self    : in out Object;
+      Imports : GPR2.Containers.Name_Set) return Boolean
+   is
+      Link       : constant GPR2.Build.Actions.Link.Object := Self.Link;
+      To_Analyze : GPR2.Containers.Name_Set;
+
+      function Add_Dependency (Unit : Name_Type) return Boolean;
+
+      --------------------
+      -- Add_Dependency --
+      --------------------
+
+      function Add_Dependency (Unit : Name_Type) return Boolean
+      is
+         CU         : Compilation_Unit.Object;
+         Comp       : Actions.Compile.Ada.Object;
+         Same_Scope : Boolean;
+
+         use type GPR2.Project.View.Object;
+
+      begin
+         CU := Self.Ctxt.Namespace_Roots.First_Element.Unit (Unit);
+
+         if not CU.Is_Defined then
+            return True;
+         end if;
+
+         --  Check if the unit is in the same bind & link scope as the current
+         --  action.
+
+         Same_Scope := CU.Owning_View = Self.Ctxt
+           or else (Self.Ctxt.Kind = K_Aggregate_Library
+                    and then Self.View.Aggregated.Contains (CU.Owning_View));
+
+         if CU.Owning_View.Is_Runtime then
+            --  Runtime is handled specificitly by the binder, no need to
+            --  handle it here.
+            return True;
+         end if;
+
+         declare
+            Comp_Id : constant Actions.Compile.Ada.Ada_Compile_Id :=
+                        Actions.Compile.Ada.Create (CU);
+
+         begin
+            if not Self.Tree.Has_Action (Comp_Id) then
+               Comp.Initialize (CU);
+
+               if not Self.Tree.Add_Action (Comp) then
+                  return False;
+               end if;
+            else
+               Comp := Actions.Compile.Ada.Object
+                 (Self.Tree.Action (Comp_Id));
+            end if;
+         end;
+
+         if Same_Scope or else not Comp.View.Is_Library then
+
+            Self.Tree.Add_Input
+              (Self.UID, Comp.Local_Ali_File, False);
+            Self.Tree.Add_Input
+              (Link.UID, Comp.Object_File, False);
+         else
+            Self.Tree.Add_Input
+              (Self.UID, Comp.Intf_Ali_File, False);
+         end if;
+
+         for Dep of Comp.Withed_Units loop
+            if not Self.Known_Inputs.Contains (Dep) then
+               To_Analyze.Include (Dep);
+            end if;
+         end loop;
+
+         return True;
+      end Add_Dependency;
+
+   begin
+      To_Analyze := Imports;
+
+      while not To_Analyze.Is_Empty loop
+         declare
+            Unit : constant Name_Type := To_Analyze.First_Element;
+         begin
+            To_Analyze.Delete_First;
+
+            if not Self.Known_Inputs.Contains (Unit) then
+               Self.Known_Inputs.Include (Unit);
+
+               if not Add_Dependency (Unit) then
+                  return False;
+               end if;
+            end if;
+         end;
+      end loop;
+
+      return True;
+   end On_Ali_Parsed;
+
    -----------------------
    -- On_Tree_Insertion --
    -----------------------
@@ -573,6 +671,32 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       return True;
    end On_Tree_Insertion;
+
+   -------------------------
+   -- On_Tree_Propagation --
+   -------------------------
+
+   overriding function On_Tree_Propagation
+     (Self : in out Object) return Boolean
+   is
+      To_Analyze : GPR2.Containers.Name_Set;
+
+   begin
+      for Ali of Self.Tree.Inputs (Self.UID, True) loop
+         if Self.Tree.Has_Predecessor (Ali) then
+            declare
+               A_Comp : constant Actions.Compile.Ada.Object :=
+                          Actions.Compile.Ada.Object
+                            (Self.Tree.Predecessor (Ali));
+            begin
+               Self.Known_Inputs.Include (A_Comp.Input_Unit.Name);
+               To_Analyze.Union (A_Comp.Withed_Units);
+            end;
+         end if;
+      end loop;
+
+      return Self.On_Ali_Parsed (To_Analyze);
+   end On_Tree_Propagation;
 
    ---------------
    -- Post_Bind --
