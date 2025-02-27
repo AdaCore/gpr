@@ -61,12 +61,13 @@ package body GPR2.Build.Makefile_Parser is
          C            : Character         := File.Current_Char;
          Start        : Long_Long_Integer := 0;
 
-         Escaped      : Boolean := False;
-         Expected_Dep : Boolean := False;
-         Multi_Line   : Boolean := False;
-         Skipping     : Boolean := False;
-         Splited_Path : Boolean := False;
-         Started      : Boolean := False;
+         EOL_Extra_Offset : Boolean := False;
+         Escaped          : Boolean := False;
+         Expected_Dep     : Boolean := False;
+         Multi_Line       : Boolean := False;
+         Skipping         : Boolean := False;
+         Splited_Path     : Boolean := False;
+         Started          : Boolean := False;
 
          Path         : Unbounded_String;
       begin
@@ -149,7 +150,9 @@ package body GPR2.Build.Makefile_Parser is
                --  Make sure we read every "EOL" available char
                if File.Current_Char in ASCII.CR then
                   if File.Check ("" & ASCII.LF) then
-                     null;
+                     --  if we read an ASCII.CR and ASCII.LF we need to add
+                     --  an extra offset.
+                     EOL_Extra_Offset := True;
                   end if;
                end if;
 
@@ -163,48 +166,53 @@ package body GPR2.Build.Makefile_Parser is
 
                --  We have a multi line indicator and the line is not to be
                --  skipped
-               if Multi_Line and then not Skipping then
-                  if Started then
-                     if Splited_Path then
-                        Append
-                          (Path,
-                           File.Token (Start, File.Current_Position - 1));
-                        return To_String (Path);
+               declare
+                  Offset : constant Long_Long_Integer :=
+                             (if EOL_Extra_Offset then 2 else 1);
+                  Finish : constant Long_Long_Integer :=
+                             File.Current_Position - Offset;
+               begin
+                  if Multi_Line and then not Skipping then
+                     if Started then
+                        if Splited_Path then
+                           Append (Path, File.Token (Start, Finish));
+                           return To_String (Path);
+                        else
+                           return File.Token (Start, Finish);
+                        end if;
                      else
-                        return File.Token (Start, File.Current_Position - 1);
+                        --  Put the flag down
+                        Multi_Line   := False;
+                        --  We are expecting to find a dependency in this line
+                        Expected_Dep := True;
                      end if;
                   else
-                     --  Put the flag down
-                     Multi_Line   := False;
-                     --  We are expecting to find a dependency in this line
-                     Expected_Dep := True;
-                  end if;
-               else
-                  if Started then
-                     --  Return the (expected) dependency
-                     Expected_Dep := False;
+                     if Started then
+                        --  Return the (expected) dependency
+                        Expected_Dep := False;
 
-                     if Splited_Path then
-                        Append
-                          (Path,
-                           File.Token (Start, File.Current_Position - 1));
-                        return To_String (Path);
+                        if Splited_Path then
+                           Append (Path, File.Token (Start, Finish));
+                           return To_String (Path);
+                        else
+                           return File.Token (Start, Finish);
+                        end if;
+
                      else
-                        return File.Token (Start, File.Current_Position - 1);
+                        --  We reached an end of line without finding
+                        --  a dependency.
+                        if Expected_Dep then
+                           --  If we were expecting to found one, this is a
+                           --  parsing error.
+                           raise Scan_Makefile_Error with
+                             "Multi-line separator detected, dependency source"
+                             & " file not found";
+                        end if;
+                        --  Otherwise it probably means we were skipping the
+                        --  line
                      end if;
-
-                  else
-                     --  We reached an end of line without finding dependency.
-                     if Expected_Dep then
-                        --  If we were expecting to found one, this is a
-                        --  parsing error.
-                        raise Scan_Makefile_Error with
-                          "Multi-line separator detected, dependency source "
-                            & "file not found";
-                     end if;
-                     --  Otherwise it probably means we were skipping the line
                   end if;
-               end if;
+               end;
 
             elsif File.Current_Char in ' ' then
                --  Found the dependency separator
