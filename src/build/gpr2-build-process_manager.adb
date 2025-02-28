@@ -184,6 +184,15 @@ package body GPR2.Build.Process_Manager is
       --  procedure as it would prevent actions addition / deletion.
 
       return Continue_Execution;
+
+   exception
+      when E : others =>
+         Self.Tree_Db.Reporter.Report
+           ("!!! Unexpected exception caught" & ASCII.LF &
+              Ada.Exceptions.Exception_Information (E),
+            To_Stderr => True,
+            Level     => GPR2.Message.Important);
+         return Abort_Execution;
    end Collect_Job;
 
    --------------------------
