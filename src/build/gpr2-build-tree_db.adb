@@ -612,6 +612,10 @@ package body GPR2.Build.Tree_Db is
                     Set_Pos => Action_Sets.No_Element);
 
          when Successors =>
+            if not Artifact_Sets.Has_Element (Iter.Artifact) then
+               return No_Action_Element;
+            end if;
+
             declare
                Artifact : constant Artifacts.Object'Class :=
                             Iter.Db.Artifacts.Element (Iter.Artifact);
