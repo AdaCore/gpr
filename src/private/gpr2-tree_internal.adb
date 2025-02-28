@@ -2668,7 +2668,7 @@ package body GPR2.Tree_Internal is
                         & """ that is not a shared library project",
                         Source_Loc (Imported));
 
-                  elsif Imported.Is_Static_Library
+                  elsif Imported.Library_Kind = "static"
                     and then View.Library_Standalone /= Encapsulated
                   then
                      Self.Error
