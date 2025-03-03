@@ -165,8 +165,10 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    is
       procedure Remove_Dir (Path : GPR2.Path_Name.Object);
 
-      Subdirs  : constant Filename_Optional :=
-                   Opts.Tree.Subdirs;
+      Subdirs     : constant Filename_Optional :=
+                      Opts.Tree.Subdirs;
+      Src_Subdirs : constant Filename_Optional :=
+                      Opts.Tree.Src_Subdirs;
 
       ----------------
       -- Remove_Dir --
@@ -213,6 +215,10 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
 
    begin
       if View.Kind in GPR2.With_Object_Dir_Kind then
+         if Src_Subdirs'Length > 0 then
+            Remove_Dir (View.Object_Directory.Compose (Src_Subdirs, True));
+         end if;
+
          Remove_Dir (View.Object_Directory);
 
          if View.Is_Namespace_Root
@@ -414,13 +420,16 @@ begin
    end if;
 
    declare
-      Views    : GPR2.Project.View.Vector.Object;
-      Obj_Attr : constant GPR2.Project.Attribute.Object :=
-                   Opt.Tree.Root_Project.Attribute
-                     (PRA.Clean.Artifacts_In_Object_Dir);
-      Exe_Attr : constant GPR2.Project.Attribute.Object :=
-                   Opt.Tree.Root_Project.Attribute
-                     (PRA.Clean.Artifacts_In_Exec_Dir);
+      Views       : GPR2.Project.View.Vector.Object;
+      Obj_Attr    : constant GPR2.Project.Attribute.Object :=
+                      Opt.Tree.Root_Project.Attribute
+                        (PRA.Clean.Artifacts_In_Object_Dir);
+      Exe_Attr    : constant GPR2.Project.Attribute.Object :=
+                      Opt.Tree.Root_Project.Attribute
+                        (PRA.Clean.Artifacts_In_Exec_Dir);
+      Src_Subdirs : constant GPR2.Filename_Optional := Opt.Tree.Src_Subdirs;
+      Path        : GPR2.Path_Name.Object;
+
    begin
       --  Cleanup in object/exec dirs
 
@@ -459,6 +468,16 @@ begin
                      Val.Text,
                      Opt);
                end loop;
+            end if;
+
+            if Src_Subdirs'Length > 0
+              and then V.Kind in With_Object_Dir_Kind
+            then
+               Path := V.Object_Directory.Compose (Src_Subdirs, True);
+
+               if Path.Exists then
+                  Delete_File (Path, "*", Opt);
+               end if;
             end if;
 
             if Opt.Remove_Empty_Dirs then

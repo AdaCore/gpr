@@ -422,7 +422,7 @@ package GPR2.Project.Tree is
    --  Returns True if the Src_Subdirs has been defined
 
    function Src_Subdirs (Self : Object) return Filename_Optional
-     with Pre => Self.Is_Defined and then Self.Has_Src_Subdirs;
+     with Pre => Self.Is_Defined;
    --  Returns the src_subdirs parameter <sub> of the project tree such that,
    --  for each project, the actual source directories list will be prepended
    --  with {object_dir}/<sub>.
