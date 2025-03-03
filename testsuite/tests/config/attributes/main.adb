@@ -11,6 +11,7 @@ procedure Main is
 
    Project_Tree : Project.Tree.Object;
    Opt          : Options.Object;
+   Ign          : Boolean with Unreferenced;
 
    procedure Check_Messages
      (Name    : Boolean := False;
@@ -55,33 +56,29 @@ procedure Main is
 
 begin
    Opt.Add_Switch (Options.P, "prj.gpr");
-   if Project_Tree.Load (Opt, Reporter => Console.Create (Quiet), Absent_Dir_Error => No_Error) then
-      Check_Messages;
-   end if;
+   Ign := Project_Tree.Load (Opt, Reporter => Console.Create (Quiet), Absent_Dir_Error => No_Error);
+   Check_Messages;
    Project_Tree.Unload;
 
    Opt := Options.Empty_Options;
    Opt.Add_Switch (Options.P, "prj.gpr");
    Opt.Add_Switch (Options.X, "TC_NAME=toto");
-   if Project_Tree.Load (Opt, Reporter => Console.Create (Quiet), Absent_Dir_Error => No_Error) then
-      Check_Messages (Name => True);
-   end if;
+   Ign := Project_Tree.Load (Opt, Reporter => Console.Create (Quiet), Absent_Dir_Error => No_Error);
+   Check_Messages (Name => True);
    Project_Tree.Unload;
 
    Opt := Options.Empty_Options;
    Opt.Add_Switch (Options.P, "prj.gpr");
    Opt.Add_Switch (Options.X, "TC_PATH=toto");
-   if Project_Tree.Load (Opt, Reporter => Console.Create (Quiet), Absent_Dir_Error => No_Error) then
-      Check_Messages (Path => True);
-   end if;
+   Ign := Project_Tree.Load (Opt, Reporter => Console.Create (Quiet), Absent_Dir_Error => No_Error);
+   Check_Messages (Path => True);
    Project_Tree.Unload;
 
    Opt := Options.Empty_Options;
    Opt.Add_Switch (Options.P, "prj.gpr");
    Opt.Add_Switch (Options.X, "TC_VERSION=toto");
-   if Project_Tree.Load (Opt, Reporter => Console.Create (Quiet), Absent_Dir_Error => No_Error) then
-      Check_Messages (Version => True);
-   end if;
+   Ign := Project_Tree.Load (Opt, Reporter => Console.Create (Quiet), Absent_Dir_Error => No_Error);
+   Check_Messages (Version => True);
    Project_Tree.Unload;
 
    Opt := Options.Empty_Options;
@@ -89,9 +86,8 @@ begin
    Opt.Add_Switch (Options.X, "TC_NAME=toto");
    Opt.Add_Switch (Options.X, "TC_PATH=toto");
    Opt.Add_Switch (Options.X, "TC_VERSION=toto");
-   if Project_Tree.Load (Opt, Reporter => Console.Create (Quiet), Absent_Dir_Error => No_Error) then
-      Check_Messages (True, True, True);
-   end if;
+   Ign := Project_Tree.Load (Opt, Reporter => Console.Create (Quiet), Absent_Dir_Error => No_Error);
+   Check_Messages (True, True, True);
    Project_Tree.Unload;
 
 end Main;
