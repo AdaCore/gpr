@@ -4,8 +4,10 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Strings.Maps.Constants;
+with Ada.Strings.UTF_Encoding.Wide_Wide_Strings;
+with Ada.Strings.Wide_Wide_Maps.Wide_Wide_Constants;
 
+with GNAT.UTF_32;
 with GPR2.Message;
 with GPR2.Tree_Internal;
 with GPR2.Build.Tree_Db;
@@ -79,7 +81,8 @@ package body GPR2.Build.Compilation_Unit is
       As_Error : Boolean := False;
       Messages : in out GPR2.Log.Object) return Boolean
    is
-      use Ada.Strings.Maps;
+      use Ada.Strings.Wide_Wide_Maps;
+      package UTF32 renames Ada.Strings.UTF_Encoding.Wide_Wide_Strings;
 
       procedure Error (Message : String);
 
@@ -97,13 +100,16 @@ package body GPR2.Build.Compilation_Unit is
 
       Not_Valid : constant String :=
                     "invalid name for unit '" & String (Name) & "', ";
+      Decoded   : constant Wide_Wide_String :=
+                    UTF32.Decode
+                      (Ada.Strings.UTF_Encoding.UTF_8_String (Name));
 
    begin
       --  Must start with a letter
 
       if not Is_In
-        (Name (Name'First),
-         Constants.Letter_Set or To_Set ("_"))
+        (Decoded (Decoded'First),
+         Wide_Wide_Constants.Letter_Set or To_Set ("_"))
       then
          Error (Not_Valid & "should start with a letter or an underscore");
          return False;
@@ -112,9 +118,11 @@ package body GPR2.Build.Compilation_Unit is
       --  Cannot have dots and underscores one after another and should
       --  contain only alphanumeric characters.
 
-      for K in Name'First + 1 .. Name'Last loop
+      for K in Decoded'First + 1 .. Decoded'Last loop
          declare
-            Two_Chars : constant String := String (Name (K - 1 .. K));
+            Two_Chars : constant Wide_Wide_String := Decoded (K - 1 .. K);
+            W32       : GNAT.UTF_32.Category;
+            use type GNAT.UTF_32.Category;
          begin
             if Two_Chars = "_." then
                Error (Not_Valid & "cannot contain dot after underscore");
@@ -132,16 +140,29 @@ package body GPR2.Build.Compilation_Unit is
                Error (Not_Valid & "two consecutive dots not permitted");
                return False;
 
-            elsif not Characters.Handling.Is_Alphanumeric (Name (K))
-              and then Name (K) not in '.' | '_'
-            then
-               Error (Not_Valid & "should have only alpha numeric characters");
-               return False;
+            elsif Decoded (K) in '.' | '_' then
+               --  Ok
+               null;
+
+            else
+               W32 := GNAT.UTF_32.Get_Category
+                 (Wide_Wide_Character'Pos (Decoded (K)));
+
+               --  Accept letters, digits and letter modifiers
+               if not GNAT.UTF_32.Is_UTF_32_Letter (W32)
+                 and then not GNAT.UTF_32.Is_UTF_32_Digit (W32)
+                 and then W32 /= GNAT.UTF_32.Mn
+               then
+                  Error
+                    (Not_Valid & "should have only alpha numeric characters");
+                  return False;
+               end if;
             end if;
          end;
       end loop;
 
-      return True;
+         return True;
+
    end Check_Name_Validity;
 
    function Check_Name_Validity
