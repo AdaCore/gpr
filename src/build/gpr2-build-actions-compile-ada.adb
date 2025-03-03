@@ -158,13 +158,24 @@ package body GPR2.Build.Actions.Compile.Ada is
                           Self.View.Visible_Source (Dep);
                begin
                   if not Src.Is_Defined then
-                     Self.Traces.Trace
-                       ("Compute_Signature: cannot find dependency " &
-                          String (Dep));
+                     if (Self.Global_Config_Pragmas.Is_Defined
+                         and then Dep = Self.Global_Config_Pragmas.Simple_Name)
+                       or else
+                         (Self.Local_Config_Pragmas.Is_Defined
+                          and then Dep = Self.Local_Config_Pragmas.Simple_Name)
+                     then
+                        Self.Traces.Trace
+                          ("config pragma file reported as dependency, " &
+                             "ignoring : " & String (Dep));
+                     else
+                        Self.Traces.Trace
+                          ("Compute_Signature: cannot find dependency " &
+                             String (Dep));
 
-                     if Load_Mode then
-                        Self.Signature.Invalidate;
-                        return;
+                        if Load_Mode then
+                           Self.Signature.Invalidate;
+                           return;
+                        end if;
                      end if;
 
                   elsif not Self.Signature.Add_Input
