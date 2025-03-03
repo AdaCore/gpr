@@ -1039,6 +1039,24 @@ package body GPR2.Project.Tree is
    begin
       if Self.Has_Configuration then
          Ok := not Self.Configuration.Log_Messages.Has_Error;
+
+         --  In no-warning mode, configuration warning messages should still be
+         --  reported
+
+         if Self.Reporter.Verbosity = No_Warnings then
+            for Pos in Self.Configuration.Log_Messages.Iterate
+              (Error   => False,
+               Warning  => True,
+               End_User => False,
+               Hint     => False,
+               Lint     => False,
+               Read     => False,
+               Unread   => True)
+            loop
+               Self.Reporter.Internal_Report (GPR2.Log.Element (Pos));
+            end loop;
+         end if;
+
          Self.Reporter.Report (Self.Configuration.Log_Messages);
       end if;
 
