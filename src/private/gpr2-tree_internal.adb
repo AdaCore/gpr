@@ -40,6 +40,7 @@ package body GPR2.Tree_Internal is
    use type GPR2.Path_Name.Object;
    use type GNATCOLL.OS.OS_Type;
 
+   package PAI renames Project.Attribute_Index;
    package PRP renames Project.Registry.Pack;
    package IDS renames GPR2.View_Ids;
    function Distance (L, R : String) return Natural renames
@@ -954,8 +955,69 @@ package body GPR2.Tree_Internal is
                   end loop;
                end;
             end loop;
-         end if;
 
+            --  Check that Required_Toolchain_Version is respected
+
+            if Self.Has_Configuration then
+               for L of Self.Root_Project.Language_Ids loop
+                  declare
+                     function Filter_GNAT
+                       (A : GPR2.Project.Attribute.Object) return String;
+
+                     ------------------------
+                     -- Filter_GNAT_Prefix --
+                     ------------------------
+
+                     function Filter_GNAT
+                       (A : GPR2.Project.Attribute.Object) return String
+                     is
+                        Val : constant Value_Type := A.Value.Text;
+                     begin
+                        if GNATCOLL.Utils.Starts_With (Val, "GNAT ") then
+                           return Val (Val'First + 5 .. Val'Last);
+                        else
+                           return Val;
+                        end if;
+                     end Filter_GNAT;
+
+                     Conf : constant GPR2.Project.View.Object :=
+                              Self.Configuration.Corresponding_View;
+                     L_Idx : constant PAI.Object := PAI.Create (L);
+                     Required : constant Project.Attribute.Object :=
+                                  Self.Root_Project.Attribute
+                                    (PRA.Required_Toolchain_Version, L_Idx);
+                     Actual   : constant Project.Attribute.Object :=
+                                  Conf.Attribute
+                                    (PRA.Toolchain_Version, L_Idx);
+                  begin
+
+                     if Required.Is_Defined then
+                        if not Actual.Is_Defined then
+                           Self.Messages.Append
+                             (GPR2.Message.Create
+                                (GPR2.Message.Error,
+                                 "toolchain version for language " & Image (L)
+                                 & " differs from the required one """
+                                 & Filter_GNAT (Required) & '"',
+                                 Required));
+
+                        elsif Filter_GNAT (Actual) /= Filter_GNAT (Required)
+                        then
+                           Self.Messages.Append
+                             (GPR2.Message.Create
+                                (GPR2.Message.Error,
+                                 "toolchain version """
+                                 & Filter_GNAT (Actual)
+                                 & """ for language " & Image (L)
+                                 & " differs from the required one """
+                                 & Filter_GNAT (Required) & '"',
+                                 Required));
+                        end if;
+                     end if;
+                  end;
+               end loop;
+            end if;
+         end if;
       end if;
 
       if not Self.Messages.Has_Error then
