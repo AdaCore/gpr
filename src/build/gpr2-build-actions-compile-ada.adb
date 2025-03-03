@@ -193,6 +193,27 @@ package body GPR2.Build.Actions.Compile.Ada is
       end;
    end Compute_Signature;
 
+   ------------------
+   -- Dependencies --
+   ------------------
+
+   overriding function Dependencies
+     (Self : Object) return Containers.Filename_Set
+   is
+      All_Deps : GPR2.Containers.Filename_Set;
+   begin
+      if not GPR2.Build.ALI_Parser.Dependencies (Self.Dep_File.Path, All_Deps)
+      then
+         Trace
+           (Self.Traces, "Failed to parse dependencies from the ALI file " &
+              Self.Dep_File.Path.String_Value);
+
+         return Containers.Empty_Filename_Set;
+      end if;
+
+      return All_Deps;
+   end Dependencies;
+
    --------------
    -- Extended --
    --------------
@@ -641,27 +662,6 @@ package body GPR2.Build.Actions.Compile.Ada is
 
       return True;
    end On_Tree_Propagation;
-
-   ------------------------
-   -- Parse_Dependencies --
-   ------------------------
-
-   overriding function Parse_Dependencies
-     (Self : Object) return Containers.Filename_Set
-   is
-      All_Deps : GPR2.Containers.Filename_Set;
-   begin
-      if not GPR2.Build.ALI_Parser.Dependencies (Self.Dep_File.Path, All_Deps)
-      then
-         Trace
-           (Self.Traces, "Failed to parse dependencies from the ALI file " &
-              Self.Dep_File.Path.String_Value);
-
-         return Containers.Empty_Filename_Set;
-      end if;
-
-      return All_Deps;
-   end Parse_Dependencies;
 
    ------------------
    -- Post_Command --

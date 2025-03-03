@@ -743,24 +743,22 @@ package body GPR2.Build.Actions.Compile is
    -- Dependencies --
    ------------------
 
-   function Dependencies (Self : Object'Class) return Containers.Filename_Set
+   function Dependencies
+     (Self : Object) return Containers.Filename_Set
    is
-      Result : GPR2.Containers.Filename_Set;
-      UID    : constant Actions.Action_Id'Class := Self.UID;
+      All_Deps : GPR2.Containers.Filename_Set;
    begin
-      if not Self.Dep_File.Path.Exists then
+      if not GPR2.Build.Makefile_Parser.Dependencies
+        (Self.Dep_File.Path, Self.Obj_File.Path, All_Deps)
+      then
          Trace
-           (Self.Traces,
-            "The dependency file for action " & UID.Image & " does not exist");
+           (Self.Traces, "Failed to parse dependencies from the dependency "
+            & "file " & Self.Dep_File.Path.String_Value);
 
          return Containers.Empty_Filename_Set;
       end if;
 
-      for Dep_Src of Self.Parse_Dependencies loop
-         Result.Include (Dep_Src);
-      end loop;
-
-      return Result;
+      return All_Deps;
    end Dependencies;
 
    --------------
@@ -898,21 +896,24 @@ package body GPR2.Build.Actions.Compile is
    ------------------------
 
    function Parse_Dependencies
-     (Self : Object) return Containers.Filename_Set
+     (Self : Object'Class) return Containers.Filename_Set
    is
-      All_Deps : GPR2.Containers.Filename_Set;
+      Result : GPR2.Containers.Filename_Set;
+      UID    : constant Actions.Action_Id'Class := Self.UID;
    begin
-      if not GPR2.Build.Makefile_Parser.Dependencies
-        (Self.Dep_File.Path, Self.Obj_File.Path, All_Deps)
-      then
+      if not Self.Dep_File.Path.Exists then
          Trace
-           (Self.Traces, "Failed to parse dependencies from the dependency "
-            & "file " & Self.Dep_File.Path.String_Value);
+           (Self.Traces,
+            "The dependency file for action " & UID.Image & " does not exist");
 
          return Containers.Empty_Filename_Set;
       end if;
 
-      return All_Deps;
+      for Dep_Src of Self.Dependencies loop
+         Result.Include (Dep_Src);
+      end loop;
+
+      return Result;
    end Parse_Dependencies;
 
    ---------

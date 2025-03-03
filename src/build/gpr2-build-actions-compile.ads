@@ -55,14 +55,14 @@ package GPR2.Build.Actions.Compile is
       Slot     : Positive;
       Cmd_Line : in out GPR2.Build.Command_Line.Object);
 
-   function Dependencies
+   function Parse_Dependencies
      (Self : Object'Class) return GPR2.Containers.Filename_Set
      with Pre => Self.In_Build_Tree;
    --  Return the list of known dependencies for this unit. The action
    --  dependency file must be up-to-date before calling this function, as the
    --  list of dependencies comes from it.
 
-   function Parse_Dependencies
+   function Dependencies
      (Self : Object) return GPR2.Containers.Filename_Set;
    --  Fetch dependencies from a .d dependency file with a makefile parser
 

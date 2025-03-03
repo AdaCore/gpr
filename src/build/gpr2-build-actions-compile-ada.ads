@@ -23,7 +23,11 @@ package GPR2.Build.Actions.Compile.Ada is
    type Object is new Compile.Object with private;
    --  Action responsible for building Ada sources
 
+   Undefined : constant Object;
+
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
+
+   overriding function Is_Defined (Self : Object) return Boolean;
 
    procedure Initialize
      (Self : in out Object; Src : GPR2.Build.Compilation_Unit.Object);
@@ -49,7 +53,7 @@ package GPR2.Build.Actions.Compile.Ada is
      (Self   : in out Object;
       Status : Execution_Status) return Boolean;
 
-   overriding function Parse_Dependencies
+   overriding function Dependencies
      (Self : Object) return GPR2.Containers.Filename_Set;
    --  Fetch dependencies from a .ali dependency file with an ALI parser
 
@@ -113,8 +117,13 @@ private
      (Self      : in out Object;
       Load_Mode : Boolean);
 
+   Undefined : constant Object := (others => <>);
+
    function Input_Unit
      (Self : Object) return GPR2.Build.Compilation_Unit.Object
    is (Self.CU);
+
+   overriding function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
 end GPR2.Build.Actions.Compile.Ada;
