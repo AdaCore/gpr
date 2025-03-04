@@ -522,6 +522,11 @@ package body GPR2.Build.Actions.Link is
          Status :=
            Add_Attr (PRA.Linker.Trailing_Switches, Src_Idx, True, True);
       end if;
+
+      --  Finally remove any duplicated --specs switch as this may cause
+      --  trouble by introducing duplicated symbols in the result.
+
+      Cmd_Line.Filter_Duplicate_Switches ("--specs");
    end Compute_Command;
 
    -----------------------
