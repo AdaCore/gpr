@@ -304,13 +304,9 @@ package body GPR2.Build.Actions.Compile is
                Write_Tmpl (File.FD,
                            PRA.Compiler.Config_Body_File_Name_Pattern);
 
-               Check_Exceptions_For (Self.View, File.FD);
-
-               if Self.View.Is_Extending then
-                  for V of Self.View.Extended loop
-                     Check_Exceptions_For (V, File.FD);
-                  end loop;
-               end if;
+               for V of Self.View.Closure (True, True, True) loop
+                  Check_Exceptions_For (V, File.FD);
+               end loop;
 
                Close (File.FD);
             end if;
