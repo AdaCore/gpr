@@ -27,8 +27,7 @@ package GPR2.Build.Actions.Compile.Ada is
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
 
-   function Is_Defined (Self : Object) return Boolean;
-   function In_Build_Tree (Self : Object) return Boolean;
+   overriding function Is_Defined (Self : Object) return Boolean;
 
    procedure Initialize
      (Self : in out Object; Src : GPR2.Build.Compilation_Unit.Object);
@@ -37,9 +36,6 @@ package GPR2.Build.Actions.Compile.Ada is
    function Input_Unit
      (Self : Object) return GPR2.Build.Compilation_Unit.Object;
    --  Return the name of the compiled unit
-
-   function Ali_File (Self : Object) return Artifacts.Files.Object;
-   --  Return the path of the generated ALI file
 
    overriding procedure Compute_Command
      (Self     : in out Object;
@@ -57,13 +53,9 @@ package GPR2.Build.Actions.Compile.Ada is
      (Self   : in out Object;
       Status : Execution_Status) return Boolean;
 
-   function Dependencies
-     (Self     : Object;
-      With_RTS : Boolean := True) return GPR2.Containers.Filename_Set
-     with Pre => Self.In_Build_Tree;
-   --  Return the list of known dependencies for this unit. The action ALI file
-   --  must be up-to-date before calling this function, as the list of
-   --  dependencies comes from it.
+   overriding function Dependencies
+     (Self : Object) return GPR2.Containers.Filename_Set;
+   --  Fetch dependencies from a .ali dependency file with an ALI parser
 
    overriding function Extended (Self : Object) return Object;
 
@@ -99,9 +91,6 @@ private
       Artifacts.Files."=", Artifacts.Files."=");
 
    type Object is new Compile.Object with record
-      Ali_File              : Artifacts.Files.Object;
-      --  Unit's ALI file. Can be undefined if not existing on disk
-
       In_Libraries          : GPR2.Project.View.Set.Object;
       --  List of libraries that will contain the compiled object
 
@@ -124,9 +113,6 @@ private
    overriding function Src_Index (Self : Object) return Unit_Index is
      (Self.CU.Main_Part.Index);
 
-   overriding function Dependency_File (Self : Object) return Simple_Name is
-      (Self.CU.Dependency_File);
-
    overriding procedure Compute_Signature
      (Self      : in out Object;
       Load_Mode : Boolean);
@@ -137,13 +123,7 @@ private
      (Self : Object) return GPR2.Build.Compilation_Unit.Object
    is (Self.CU);
 
-   function Ali_File (Self : Object) return Artifacts.Files.Object is
-     (Self.Ali_File);
-
-   function Is_Defined (Self : Object) return Boolean is
+   overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
-
-   function In_Build_Tree (Self : Object) return Boolean is
-     (Self.Is_Defined and then Self.Tree /= null);
 
 end GPR2.Build.Actions.Compile.Ada;

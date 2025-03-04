@@ -200,9 +200,9 @@ package body GPR2.Build.Actions.Ada_Bind is
 
                            if V.Is_Library and then V /= Self.Ctxt then
                               Ali_File := V.Library_Ali_Directory.Compose
-                                (A_Comp.Ali_File.Path.Simple_Name);
+                                (A_Comp.Dependency_File.Path.Simple_Name);
                            else
-                              Ali_File := A_Comp.Ali_File.Path;
+                              Ali_File := A_Comp.Dependency_File.Path;
                            end if;
 
                            if not Ignore then

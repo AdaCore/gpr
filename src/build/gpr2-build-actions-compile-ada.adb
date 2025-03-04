@@ -126,7 +126,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       Version : Artifacts.Key_Value.Object;
 
    begin
-      if not Self.Signature.Add_Output (Self.Ali_File) and then Load_Mode then
+      if not Self.Signature.Add_Output (Self.Dep_File) and then Load_Mode then
          return;
       end if;
 
@@ -197,38 +197,21 @@ package body GPR2.Build.Actions.Compile.Ada is
    -- Dependencies --
    ------------------
 
-   function Dependencies
-     (Self     : Object;
-      With_RTS : Boolean := True) return Containers.Filename_Set
+   overriding function Dependencies
+     (Self : Object) return Containers.Filename_Set
    is
       All_Deps : GPR2.Containers.Filename_Set;
-      Result   : GPR2.Containers.Filename_Set;
-      UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
-
    begin
-      if not Self.Ali_File.Path.Exists then
-         Trace
-           (Self.Traces,
-            "The ALI file for action " & UID.Image & " does not exist");
-
-         return Containers.Empty_Filename_Set;
-      end if;
-
-      if not GPR2.Build.ALI_Parser.Dependencies
-        (Self.Ali_File.Path, All_Deps)
+      if not GPR2.Build.ALI_Parser.Dependencies (Self.Dep_File.Path, All_Deps)
       then
          Trace
            (Self.Traces, "Failed to parse dependencies from the ALI file " &
-              Self.Ali_File.Path.String_Value);
+              Self.Dep_File.Path.String_Value);
 
          return Containers.Empty_Filename_Set;
       end if;
 
-      for Dep_Src of All_Deps loop
-         Result.Include (Dep_Src);
-      end loop;
-
-      return Result;
+      return All_Deps;
    end Dependencies;
 
    --------------
@@ -326,7 +309,7 @@ package body GPR2.Build.Actions.Compile.Ada is
                Self.Obj_File := Artifacts.Files.Create (Local_O);
             end if;
 
-            Self.Ali_File := Artifacts.Files.Create (Local_Ali);
+            Self.Dep_File := Artifacts.Files.Create (Local_Ali);
 
          else
             --  Lookup if the object file exists in the hierarchy
@@ -364,10 +347,10 @@ package body GPR2.Build.Actions.Compile.Ada is
 
             if not Found then
                Self.Obj_File := Artifacts.Files.Create (Local_O);
-               Self.Ali_File := Artifacts.Files.Create (Local_Ali);
+               Self.Dep_File := Artifacts.Files.Create (Local_Ali);
             else
                Self.Obj_File := Artifacts.Files.Create (Lkup_O);
-               Self.Ali_File := Artifacts.Files.Create (Lkup_Ali);
+               Self.Dep_File := Artifacts.Files.Create (Lkup_Ali);
             end if;
          end if;
       end;
@@ -422,7 +405,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       Db   : in out GPR2.Build.Tree_Db.Object) return Boolean
    is
       UID       : constant Actions.Action_Id'Class := Object'Class (Self).UID;
-      Ali_BN    : constant Simple_Name := Self.Ali_File.Path.Simple_Name;
+      Ali_BN    : constant Simple_Name := Self.Dep_File.Path.Simple_Name;
       Other_Ali : Path_Name.Object;
 
    begin
@@ -432,7 +415,7 @@ package body GPR2.Build.Actions.Compile.Ada is
          end if;
       end if;
 
-      if not Db.Add_Output (UID, Self.Ali_File) then
+      if not Db.Add_Output (UID, Self.Dep_File) then
          return False;
       end if;
 
@@ -539,8 +522,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       end Can_Unit_Be_Imported;
 
    begin
-
-      for Successor of Self.Tree.Successors (Self.Ali_File) loop
+      for Successor of Self.Tree.Successors (Self.Dep_File) loop
          if Successor in Actions.Ada_Bind.Object'Class then
             Binds.Insert (Successor.UID);
          end if;
@@ -559,11 +541,11 @@ package body GPR2.Build.Actions.Compile.Ada is
          return True;
       end if;
 
-      if Self.Ali_File.Path.Exists then
+      if Self.Dep_File.Path.Exists then
          Trace (Self.Traces,
-                "Parse " & String (Self.Ali_File.Path.Simple_Name));
+                "Parse " & String (Self.Dep_File.Path.Simple_Name));
 
-         if not GPR2.Build.ALI_Parser.Imports (Self.Ali_File.Path, Imports)
+         if not GPR2.Build.ALI_Parser.Imports (Self.Dep_File.Path, Imports)
          then
             Imports := Self.CU.Known_Dependencies;
          end if;
@@ -649,14 +631,14 @@ package body GPR2.Build.Actions.Compile.Ada is
                            --  subtree, the ali actually seen will be different
                            Ali_In_Lib := Ref.In_Libraries.First_Element.
                              Library_Ali_Directory.Compose
-                               (Ref.Ali_File.Path.Simple_Name);
+                               (Ref.Dep_File.Path.Simple_Name);
                            Self.Tree.Add_Input
                              (Bind,
                               Artifacts.Files.Create (Ali_In_Lib),
                               False);
                         else
                            Self.Tree.Add_Input
-                             (Bind, Ref.Ali_File, False);
+                             (Bind, Ref.Dep_File, False);
                         end if;
                      end loop;
 
@@ -722,9 +704,9 @@ package body GPR2.Build.Actions.Compile.Ada is
               (Self.View.Object_Directory.Compose (BN & ".ali"));
 
             Self.Tree.Replace_Artifact (Self.Obj_File, Local_O);
-            Self.Tree.Replace_Artifact (Self.Ali_File, Local_Ali);
+            Self.Tree.Replace_Artifact (Self.Dep_File, Local_Ali);
             Self.Obj_File := Local_O;
-            Self.Ali_File := Local_Ali;
+            Self.Dep_File := Local_Ali;
          end if;
       end;
 
@@ -734,7 +716,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       for Lib of Self.In_Libraries loop
          declare
             use Standard.Ada.Text_IO;
-            From      : constant Path_Name.Object := Self.Ali_File.Path;
+            From      : constant Path_Name.Object := Self.Dep_File.Path;
             To        : constant Path_Name.Object :=
                           Lib.Library_Ali_Directory.Compose (From.Simple_Name);
             Input     : File_Type;

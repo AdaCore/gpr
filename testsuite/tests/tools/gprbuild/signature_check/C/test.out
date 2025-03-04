@@ -1,0 +1,45 @@
+$ gpr2build -Pprj -p --json-summary -q
+[Archive] libprj.a (prj.gpr): 0
+[C Compile] include.c (prj.gpr): 0
+[C Compile] main.c (prj.gpr): 0
+[Link] main (prj.gpr): 0
+$ ./obj/main
+FOO from main : 1
+FOO from include : 1
+
+$ gpr2build -Pprj -p --json-summary -q
+[Archive] libprj.a (prj.gpr): SKIPPED
+[C Compile] include.c (prj.gpr): SKIPPED
+[C Compile] main.c (prj.gpr): SKIPPED
+[Link] main (prj.gpr): SKIPPED
+$ ./obj/main
+FOO from main : 1
+FOO from include : 1
+
+$ gpr2build -Pprj -p --json-summary -q
+[Archive] libprj.a (prj.gpr): SKIPPED
+[C Compile] include.c (prj.gpr): SKIPPED
+[C Compile] main.c (prj.gpr): 0
+[Link] main (prj.gpr): 0
+$ ./obj/main
+FOO from foo : 1
+FOO from include : 1
+
+$ gpr2build -Pprj -p --json-summary -q
+[Archive] libprj.a (prj.gpr): 0
+[C Compile] include.c (prj.gpr): 0
+[C Compile] main.c (prj.gpr): SKIPPED
+[Link] main (prj.gpr): 0
+$ ./obj/main
+FOO from foo : 1
+FOO from bar : 1
+
+$ gpr2build -Pprj -p --json-summary -q
+[Archive] libprj.a (prj.gpr): 0
+[C Compile] include.c (prj.gpr): 0
+[C Compile] main.c (prj.gpr): 0
+[Link] main (prj.gpr): 0
+$ ./obj/main
+FOO from foo : 2
+FOO from bar : 2
+

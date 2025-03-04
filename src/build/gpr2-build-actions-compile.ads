@@ -22,7 +22,12 @@ package GPR2.Build.Actions.Compile is
    type Object is new Actions.Object with private;
    --  Action responsible for building Ada sources
 
+   Undefined : constant Object;
+
    overriding function UID (Self : Object) return Actions.Action_Id'Class;
+
+   function Is_Defined (Self : Object) return Boolean;
+   function In_Build_Tree (Self : Object) return Boolean;
 
    procedure Initialize (Self : in out Object; Src : GPR2.Build.Source.Object);
 
@@ -33,6 +38,9 @@ package GPR2.Build.Actions.Compile is
    function Input (Self : Object) return GPR2.Build.Source.Object;
 
    function Object_File (Self : Object) return Artifacts.Files.Object;
+
+   function Dependency_File
+     (Self : Object'Class) return Artifacts.Files.Object;
 
    overriding function On_Tree_Insertion
      (Self     : Object;
@@ -46,6 +54,17 @@ package GPR2.Build.Actions.Compile is
      (Self     : in out Object;
       Slot     : Positive;
       Cmd_Line : in out GPR2.Build.Command_Line.Object);
+
+   function Parse_Dependencies
+     (Self : Object'Class) return GPR2.Containers.Filename_Set
+     with Pre => Self.In_Build_Tree;
+   --  Return the list of known dependencies for this unit. The action
+   --  dependency file must be up-to-date before calling this function, as the
+   --  list of dependencies comes from it.
+
+   function Dependencies
+     (Self : Object) return GPR2.Containers.Filename_Set;
+   --  Fetch dependencies from a .d dependency file with a makefile parser
 
    overriding function Is_Deactivated (Self : Object) return Boolean;
 
@@ -109,8 +128,10 @@ private
      (No_Index);
    --  Need that for indexed sources, for now only Ada multi-unit sources
 
-   function Dependency_File (Self : Object) return Simple_Name is
-      (Self.Src.Path_Name.Base_Filename & ".d");
+   Undefined : constant Object := (others => <>);
+
+   function Dependency_File
+     (Self : Object'Class) return Artifacts.Files.Object is (Self.Dep_File);
 
    overriding function View (Self : Object) return GPR2.Project.View.Object is
      (Self.Ctxt);
@@ -135,5 +156,11 @@ private
      (Actions.Object (Self).Is_Deactivated
       or else Self.View.Attribute
         (PRA.Compiler.Driver, PAI.Create (Self.Lang)).Value.Text'Length = 0);
+
+   function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
+
+   function In_Build_Tree (Self : Object) return Boolean is
+     (Self.Is_Defined and then Self.Tree /= null);
 
 end GPR2.Build.Actions.Compile;
