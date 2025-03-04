@@ -466,6 +466,7 @@ package body GPR2.Build.Actions.Compile.Ada is
 
          CU_View : constant GPR2.Project.View.Object := CU.Owning_View;
          Allowed : Boolean := True;
+         Src     : GPR2.Build.Source.Object;
 
       begin
          --  There is no restriction of units visibility inside the same view
@@ -481,6 +482,15 @@ package body GPR2.Build.Actions.Compile.Ada is
                --  * The view is not a standalone library: if the unit source
                --    is not listed by the Interfaces attribute, then it can
                --   not be imported.
+
+               --  There's an exception for sources coming from --src-subdirs:
+               --  since this is for instrumented code, we need to loosen the
+               --  rule here and allow any source from this subdir.
+               Src := CU_View.Visible_Source (CU.Main_Part.Source);
+
+               if Src.From_Src_Subdirs then
+                  return True;
+               end if;
 
                Allowed := False;
             end if;

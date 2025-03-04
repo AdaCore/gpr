@@ -41,7 +41,8 @@ package GPR2.Build.Source_Base is
       Timestamp        : Ada.Calendar.Time;
       Tree_Db          : access GPR2.Build.Tree_Db.Object;
       Naming_Exception : Boolean;
-      Source_Dir_Idx   : Natural)
+      Source_Dir_Idx   : Natural;
+      From_Src_Subdirs : Boolean)
       return Object'Class
      with Pre  => Filename.Is_Defined,
           Post => Create'Result.Is_Defined;
@@ -127,6 +128,9 @@ package GPR2.Build.Source_Base is
      with Pre => Self.Is_Defined;
    --  Used to determine internally if a source overrides another.
 
+   function From_Src_Subdirs (Self : Object) return Boolean;
+   --  Whether the source is contained in a src_subdirs directory.
+
 private
 
    type Object is tagged record
@@ -146,6 +150,7 @@ private
       --  Whether a naming exception concerns this source
       Source_Dir_Idx    : Natural := 0;
       --  The value of Source_Dirs responsible for loading this value
+      Src_Subdirs       : Boolean := False;
    end record;
 
    Undefined : constant Object := (others => <>);
@@ -192,4 +197,6 @@ private
      (Self : Object) return Natural is
      (Self.Source_Dir_Idx);
 
+   function From_Src_Subdirs (Self : Object) return Boolean is
+      (Self.Src_Subdirs);
 end GPR2.Build.Source_Base;
