@@ -705,7 +705,7 @@ package body GPR2.Build.Actions.Compile is
          --  if no object is produced, then force the re-generation of the
          --  compilation each time the action is called by clearing the
          --  signature.
-         Self.Signature.Clear;
+         Self.Signature.Invalidate;
       end if;
 
       if Self.Dep_File.Is_Defined then
@@ -719,13 +719,11 @@ package body GPR2.Build.Actions.Compile is
 
             for Dep of Deps loop
                declare
-                  Src_Path : constant GPR2.Path_Name.Object :=
-                               GPR2.Path_Name.Create_File
-                                 (Dep, Self.View.Object_Directory.Value);
-                  Src      : constant GPR2.Build.Source.Object :=
-                               Self.View.Visible_Source (Src_Path);
+                  Src : constant GPR2.Path_Name.Object :=
+                          GPR2.Path_Name.Create_File
+                            (Dep, Self.View.Object_Directory.Value);
                begin
-                  if not Src.Is_Defined then
+                  if not Src.Exists then
                      Self.Traces.Trace
                        ("Compute_Signature: cannot find dependency " &
                           String (Dep));
@@ -734,8 +732,9 @@ package body GPR2.Build.Actions.Compile is
                         Self.Signature.Invalidate;
                         return;
                      end if;
+
                   elsif not Self.Signature.Add_Input
-                    (Artifacts.Files.Create (Src.Path_Name))
+                              (Artifacts.Files.Create (Src))
                     and then Load_Mode
                   then
                      return;
