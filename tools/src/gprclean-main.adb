@@ -243,8 +243,6 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    Lang          : GPR2.Language_Id;
    Artifact_Path : Path_Name.Object;
 
-   use type GPR2.Project.View.Object;
-
 begin
    GNATCOLL.Traces.Parse_Config_File;
    GPRtools.Util.Set_Program_Name ("gprclean");
@@ -311,8 +309,9 @@ begin
 
    for Action of Opt.Tree.Artifacts_Database.All_Actions loop
       if not Action.View.Is_Externally_Built
-        and then (Opt.All_Projects
-                  or else Action.View = Opt.Tree.Root_Project)
+        and then
+          (Opt.All_Projects
+           or else Opt.Tree.Namespace_Root_Projects.Contains (Action.View))
         and then not
           (Opt.Compil_Only
            and then Action in GPR2.Build.Actions.Link.Object'Class)
@@ -436,7 +435,9 @@ begin
       if Opt.All_Projects then
          Views := Opt.Tree.Ordered_Views;
       else
-         Views.Append (Opt.Tree.Root_Project);
+         for V of Opt.Tree.Namespace_Root_Projects loop
+            Views.Append (V);
+         end loop;
       end if;
 
       for V of Views loop
