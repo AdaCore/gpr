@@ -1803,8 +1803,16 @@ package body GPR2.Project.View is
    -----------------
 
    function Is_Extended (Self : Object) return Boolean is
+      Def : constant View_Internal.Const_Ref := View_Internal.Get_RO (Self);
+      use type View_Internal.Const_Ref;
+      use View_Internal;
    begin
-      return View_Internal.Get_RO (Self).Is_Extended;
+      --  Note: need to use the low level values here, else pre-conditions
+      --  lead to infinite recursion.
+      return Def.Is_Extended
+        and then
+          (not Self.Is_Externally_Built
+           or else Get_RO (Strong (Def.Extending)).Extended_Root = Self);
    end Is_Extended;
 
    ------------------

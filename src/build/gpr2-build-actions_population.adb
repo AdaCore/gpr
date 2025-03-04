@@ -646,7 +646,9 @@ package body GPR2.Build.Actions_Population is
       Bind    : GPR2.Build.Actions.Ada_Bind.Object;
 
    begin
-      if Libs.Contains (View) then
+      if View.Is_Extended or else Libs.Contains (View) then
+         --  Extended library projects won't produce any library, so skip
+         --  them. Also skip already analyzed library projects.
          return True;
       end if;
 
