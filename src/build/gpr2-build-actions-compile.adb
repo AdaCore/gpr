@@ -602,7 +602,7 @@ package body GPR2.Build.Actions.Compile is
          if Attr.Is_Defined then
             Add_Options_With_Arg
               (Attr,
-               String (Object'Class (Self).Dependency_File.Path.Simple_Name),
+               String (Object'Class (Self).Dep_File.Path.Simple_Name),
                True);
          end if;
       end;
@@ -687,54 +687,72 @@ package body GPR2.Build.Actions.Compile is
    is
       use GPR2.Build.Signature;
    begin
-      if Self.Obj_File.Is_Defined
-        and then not Self.Signature.Add_Output (Self.Dep_File)
-        and then Load_Mode
-      then
-         return;
-      end if;
-
-      if Self.Obj_File.Is_Defined
-        and then not Self.Signature.Add_Output (Self.Obj_File)
-        and then Load_Mode
-      then
-         return;
-      end if;
-
-      declare
-         Deps : constant GPR2.Containers.Filename_Set := Self.Dependencies;
-      begin
-         if Deps.Is_Empty then
-            Self.Signature.Invalidate;
+      if Self.Obj_File.Is_Defined then
+         if Self.Dep_File.Is_Defined
+           and then not Self.Signature.Add_Output (Self.Dep_File)
+           and then Load_Mode
+         then
             return;
          end if;
 
-         for Dep of Deps loop
-            declare
-               Src_Path : constant GPR2.Path_Name.Object :=
-                            GPR2.Path_Name.Create_File
-                              (Dep, Self.View.Object_Directory.Value);
-               Src      : constant GPR2.Build.Source.Object :=
-                            Self.View.Visible_Source (Src_Path);
-            begin
-               if not Src.Is_Defined then
-                  Self.Traces.Trace
-                    ("Compute_Signature: cannot find dependency " &
-                       String (Dep));
+         if not Self.Signature.Add_Output (Self.Obj_File)
+           and then Load_Mode
+         then
+            return;
+         end if;
 
-                  if Load_Mode then
-                     Self.Signature.Invalidate;
+      else
+         --  if no object is produced, then force the re-generation of the
+         --  compilation each time the action is called by clearing the
+         --  signature.
+         Self.Signature.Clear;
+      end if;
+
+      if Self.Dep_File.Is_Defined then
+         declare
+            Deps : constant GPR2.Containers.Filename_Set := Self.Dependencies;
+         begin
+            if Deps.Is_Empty then
+               Self.Signature.Invalidate;
+               return;
+            end if;
+
+            for Dep of Deps loop
+               declare
+                  Src_Path : constant GPR2.Path_Name.Object :=
+                               GPR2.Path_Name.Create_File
+                                 (Dep, Self.View.Object_Directory.Value);
+                  Src      : constant GPR2.Build.Source.Object :=
+                               Self.View.Visible_Source (Src_Path);
+               begin
+                  if not Src.Is_Defined then
+                     Self.Traces.Trace
+                       ("Compute_Signature: cannot find dependency " &
+                          String (Dep));
+
+                     if Load_Mode then
+                        Self.Signature.Invalidate;
+                        return;
+                     end if;
+                  elsif not Self.Signature.Add_Input
+                    (Artifacts.Files.Create (Src.Path_Name))
+                    and then Load_Mode
+                  then
                      return;
                   end if;
-               elsif not Self.Signature.Add_Input
-                 (Artifacts.Files.Create (Src.Path_Name))
-                 and then Load_Mode
-               then
-                  return;
-               end if;
-            end;
-         end loop;
-      end;
+               end;
+            end loop;
+         end;
+
+      else
+         --  No dependency file, so just add the input source
+         if not Self.Signature.Add_Input
+                  (Artifacts.Files.Create (Self.Src.Path_Name))
+           and then Load_Mode
+         then
+            return;
+         end if;
+      end if;
    end Compute_Signature;
 
    ------------------
@@ -746,6 +764,10 @@ package body GPR2.Build.Actions.Compile is
    is
       All_Deps : GPR2.Containers.Filename_Set;
    begin
+      if not Self.Dep_File.Is_Defined then
+         return Containers.Empty_Filename_Set;
+      end if;
+
       if not GPR2.Build.Makefile_Parser.Dependencies
         (Self.Dep_File.Path, Self.Obj_File.Path, All_Deps)
       then
@@ -801,6 +823,7 @@ package body GPR2.Build.Actions.Compile is
       Lkup_Dep  : GPR2.Path_Name.Object;
       Lkup_Obj  : GPR2.Path_Name.Object;
       Obj_Path  : GPR2.Path_Name.Object;
+      Has_Dep   : Boolean;
 
    begin
       Self.Ctxt     := Src.Owning_View;
@@ -809,16 +832,24 @@ package body GPR2.Build.Actions.Compile is
       Self.Traces   := Create ("ACTION_COMPILE",
                                GNATCOLL.Traces.Off);
 
+      Has_Dep := Self.Ctxt.Has_Attribute
+        (PRA.Compiler.Dependency_Switches, PAI.Create (Self.Lang));
+
+
       if not No_Obj then
          Obj_Path  := Self.View.Object_Directory.Compose (BN & O_Suff);
-         Local_Dep := Self.View.Object_Directory.Compose (BN & ".d");
+
+         if Has_Dep then
+            Local_Dep := Self.View.Object_Directory.Compose (BN & ".d");
+         end if;
 
          if not Self.Input.Is_Inherited
            or else (Obj_Path.Exists and then Local_Dep.Exists)
          then
             Self.Obj_File := Artifacts.Files.Create (Obj_Path);
-            Self.Dep_File := Artifacts.Files.Create (Local_Dep);
-
+            if Has_Dep then
+               Self.Dep_File := Artifacts.Files.Create (Local_Dep);
+            end if;
          else
             Candidate := Self.Input.Inherited_From;
 
@@ -826,9 +857,14 @@ package body GPR2.Build.Actions.Compile is
                Lkup_Obj := Candidate.Object_Directory.Compose (BN & O_Suff);
 
                if Lkup_Obj.Exists then
-                  Lkup_Dep := Candidate.Object_Directory.Compose (BN & ".d");
+                  if Has_Dep then
+                     Lkup_Dep :=
+                       Candidate.Object_Directory.Compose (BN & ".d");
 
-                  if Lkup_Dep.Exists then
+                     if Lkup_Dep.Exists then
+                        Found := True;
+                     end if;
+                  else
                      Found := True;
                   end if;
                else
@@ -848,10 +884,17 @@ package body GPR2.Build.Actions.Compile is
 
             if not Found then
                Self.Obj_File := Artifacts.Files.Create (Obj_Path);
-               Self.Dep_File := Artifacts.Files.Create (Local_Dep);
+
+               if Has_Dep then
+                  Self.Dep_File := Artifacts.Files.Create (Local_Dep);
+               end if;
+
             else
                Self.Obj_File := Artifacts.Files.Create (Lkup_Obj);
-               Self.Dep_File := Artifacts.Files.Create (Lkup_Dep);
+
+               if Has_Dep then
+                  Self.Dep_File := Artifacts.Files.Create (Lkup_Dep);
+               end if;
             end if;
          end if;
 
@@ -877,43 +920,15 @@ package body GPR2.Build.Actions.Compile is
          return False;
       end if;
 
-      if Object'Class (Self).Dependency_File.Path.Simple_Name'Length > 0
+      if Self.Dep_File.Is_Defined
         and then not Db.Add_Output
-          (UID,
-           Artifacts.Files.Create
-             (Self.Ctxt.Object_Directory.Compose
-                (Object'Class (Self).Dependency_File.Path.Simple_Name)))
+          (UID, Self.Dep_File)
       then
          return False;
       end if;
 
       return True;
    end On_Tree_Insertion;
-
-   ------------------------
-   -- Parse_Dependencies --
-   ------------------------
-
-   function Parse_Dependencies
-     (Self : Object'Class) return Containers.Filename_Set
-   is
-      Result : GPR2.Containers.Filename_Set;
-      UID    : constant Actions.Action_Id'Class := Self.UID;
-   begin
-      if not Self.Dep_File.Path.Exists then
-         Trace
-           (Self.Traces,
-            "The dependency file for action " & UID.Image & " does not exist");
-
-         return Containers.Empty_Filename_Set;
-      end if;
-
-      for Dep_Src of Self.Dependencies loop
-         Result.Include (Dep_Src);
-      end loop;
-
-      return Result;
-   end Parse_Dependencies;
 
    ---------
    -- UID --
