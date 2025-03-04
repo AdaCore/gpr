@@ -10,7 +10,6 @@ with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Containers;
 with GPR2.Path_Name;
-with GPR2.Project.View.Set;
 
 package GPR2.Build.Actions.Compile.Ada is
 
@@ -37,6 +36,14 @@ package GPR2.Build.Actions.Compile.Ada is
      (Self : Object) return GPR2.Build.Compilation_Unit.Object;
    --  Return the name of the compiled unit
 
+   function Intf_Ali_File (Self : Object) return Artifacts.Files.Object;
+   --  Return the path of the generated ALI file. If the corresponding view
+   --  is a library, then the ali file from the library directory is returned.
+
+   function Local_Ali_File (Self : Object) return Artifacts.Files.Object;
+   --  Return the path of the generated ALI file. The one located in the
+   --  object directory is always returned here.
+
    overriding procedure Compute_Command
      (Self     : in out Object;
       Slot     : Positive;
@@ -46,9 +53,6 @@ package GPR2.Build.Actions.Compile.Ada is
      (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
-   overriding function On_Tree_Propagation
-     (Self : in out Object) return Boolean;
-
    overriding function Post_Command
      (Self   : in out Object;
       Status : Execution_Status) return Boolean;
@@ -56,6 +60,13 @@ package GPR2.Build.Actions.Compile.Ada is
    overriding function Dependencies
      (Self : Object) return GPR2.Containers.Filename_Set;
    --  Fetch dependencies from a .ali dependency file with an ALI parser
+
+   function Withed_Units
+     (Self : Object) return GPR2.Containers.Name_Set
+     with Pre => Self.In_Build_Tree;
+   --  Return the list of withed units. If the ALI file is present then the
+   --  list is retrieved from it, else it is retrieved via the
+   --  Compilation_Unit's Ada parser.
 
    overriding function Extended (Self : Object) return Object;
 
@@ -68,6 +79,7 @@ private
 
    type Ada_Compile_Id is new Compile_Id with record
       Index : Unit_Index;
+      CU    : GPR2.Build.Compilation_Unit.Object;
    end record;
 
    overriding function Action_Parameter
@@ -84,19 +96,21 @@ private
             (Main_Src => Src.Main_Part.Source.Simple_Name,
              Lang     => Ada_Language,
              View     => Src.Owning_View))
-       with Index => Src.Main_Part.Index);
+       with Index => Src.Main_Part.Index,
+            CU    => Src);
 
    package File_Sets is new Standard.Ada.Containers.Hashed_Sets
      (Artifacts.Files.Object, Artifacts.Files.Hash,
       Artifacts.Files."=", Artifacts.Files."=");
 
    type Object is new Compile.Object with record
-      In_Libraries          : GPR2.Project.View.Set.Object;
-      --  List of libraries that will contain the compiled object
+      Lib_Ali_File          : Artifacts.Files.Object;
+      --  Unit's ALI file. This variant is located in the Library_ALI_Dir in
+      --  case the view is a library, else it is identical to the dependency
+      --  file.
 
-      Closure               : Action_Id_Sets.Set;
-      --  List of all object files that are needed to have Self's symbols
-      --  fully resolved.
+      In_Library            : GPR2.Project.View.Object;
+      --  The library, if any, that will contain the result of the compilation
 
       CU                    : GPR2.Build.Compilation_Unit.Object;
       --  The Unit to build
@@ -125,5 +139,14 @@ private
 
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
+
+   function Intf_Ali_File (Self : Object) return Artifacts.Files.Object is
+     (Self.Lib_Ali_File);
+
+   function Local_Ali_File (Self : Object) return Artifacts.Files.Object is
+     (Self.Dep_File);
+
+   overriding function UID (Self : Object) return Actions.Action_Id'Class is
+      (Create (Src => Self.CU));
 
 end GPR2.Build.Actions.Compile.Ada;

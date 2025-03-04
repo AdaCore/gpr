@@ -4,4 +4,5 @@ library project Lib is
    for Object_Dir use "obj/lib";
    for Library_Dir use "lib/lib";
    for Library_Name use "lib";
+   for Library_Interface use ("pkg2");
 end Lib;

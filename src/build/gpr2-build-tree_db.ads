@@ -253,6 +253,10 @@ package GPR2.Build.Tree_Db is
      (Self     : Object;
       Artifact : Artifacts.Object'Class) return Actions_List'Class;
 
+   function Has_Predecessor
+     (Self : Object;
+      Artifact : Artifacts.Object'Class) return Boolean;
+
    function Predecessor
      (Self     : Object;
       Artifact : Artifacts.Object'Class) return Actions.Object'Class;
@@ -519,6 +523,11 @@ private
          (Kind   => Outputs,
           Db     => Self.Self,
           Action => Self.Actions.Find (Action)));
+
+   function Has_Predecessor
+     (Self : Object;
+      Artifact : Artifacts.Object'Class) return Boolean
+   is (Self.Predecessor.Contains (Artifact));
 
    function Predecessor
      (Self     : Object;

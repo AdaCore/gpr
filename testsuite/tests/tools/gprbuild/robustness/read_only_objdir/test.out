@@ -20,6 +20,8 @@ $ gpr2build -Plib -XPRJ_RO=True -p
 "obj/lib" created
 "lib/lib" created
 [Ada Compile]     pkg2.ads
+[Ada Bind]        lib
+[Ada Post-Bind]   b__lib.adb
 [Archive]         liblib.a
 - with regular dependency
 $ gpr2build -Plib -XPRJ_RO=False -p
