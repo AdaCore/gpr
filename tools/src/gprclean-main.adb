@@ -24,6 +24,8 @@ with Ada.Text_IO;
 with GNAT.OS_Lib;
 with GNATCOLL.OS.Dir;
 
+with GNATCOLL.OS.FSUtil;
+with GNATCOLL.OS.Stat;
 with GNATCOLL.Traces;
 with GNATCOLL.Utils;
 
@@ -127,21 +129,24 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    procedure Delete_File
      (Name : String; Opts : GPRclean.Options.Object)
    is
-      use GNAT.OS_Lib;
+      use GNATCOLL.OS;
       use GPR2.Reporter;
       Success : Boolean := False;
+      Attrs   : GNATCOLL.OS.Stat.File_Attributes;
+
    begin
-      if Is_Regular_File (Name) then
+      Attrs := GNATCOLL.OS.Stat.Stat (Name, Follow_Symlinks => False);
+
+      if Stat.Is_File (Attrs) or else Stat.Is_Symbolic_Link (Attrs) then
          if Opts.Dry_Run then
             Text_IO.Put_Line (Name);
 
          else
-            if GNAT.OS_Lib.Is_Owner_Writable_File (Name) then
-               Delete_File (Name, Success);
+            Success := GNATCOLL.OS.FSUtil.Remove_File (Name);
 
-            elsif Opts.Force_Deletions then
+            if not Success and then Opts.Force_Deletions then
                GNAT.OS_Lib.Set_Writable (Name);
-               Delete_File (Name, Success);
+               Success := GNATCOLL.OS.FSUtil.Remove_File (Name);
             end if;
 
             if Success then

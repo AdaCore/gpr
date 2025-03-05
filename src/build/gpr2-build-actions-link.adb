@@ -6,7 +6,6 @@
 
 with Ada.Characters.Handling;
 with Ada.Strings.Fixed;
-with GNAT.OS_Lib;
 
 with GNATCOLL.OS.FSUtil;
 with GNATCOLL.Utils;
@@ -18,6 +17,7 @@ with GPR2.Project.Tree;
 pragma Warnings (Off, "*is not referenced");
 with GPR2.Project.View.Vector;
 pragma Warnings (On);
+with GPR2.Reporter;
 with GPR2.Source_Reference;
 with GPR2.Source_Reference.Value;
 
@@ -685,7 +685,27 @@ package body GPR2.Build.Actions.Link is
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      return Db.Add_Output (UID, Self.Output);
+      if not Db.Add_Output (UID, Self.Output) then
+         return False;
+      end if;
+
+      if Self.Is_Library and then not Self.Is_Static then
+         --  Shared libraries may need symbolic links, reflect that at the
+         --  tree db level
+
+         for Variant of Self.Ctxt.Library_Filename_Variants loop
+            declare
+               Path : constant GPR2.Path_Name.Object :=
+                        Self.Ctxt.Library_Directory.Compose (Variant);
+            begin
+               if not Db.Add_Output (UID, Artifacts.Files.Create (Path)) then
+                  return False;
+               end if;
+            end;
+         end loop;
+      end if;
+
+      return True;
    end On_Tree_Insertion;
 
    ------------------
@@ -694,13 +714,59 @@ package body GPR2.Build.Actions.Link is
 
    overriding function Post_Command
      (Self   : in out Object;
-      Status : Execution_Status) return Boolean
-   is
-      Result  : Boolean;
-
+      Status : Execution_Status) return Boolean is
    begin
       if Status /= Success then
          return True;
+      end if;
+
+      if Self.Is_Library and then not Self.Is_Static_Library then
+         --  Create symlinks for shared libs when needed
+
+         for Variant of Self.Ctxt.Library_Filename_Variants loop
+            declare
+               S_Link : constant GPR2.Path_Name.Object :=
+                          Self.Ctxt.Library_Directory.Compose (Variant);
+               use type GPR2.Reporter.User_Verbosity_Level;
+            begin
+               if S_Link.Exists
+                 and then not GNATCOLL.OS.FSUtil.Remove_File
+                   (S_Link.String_Value)
+               then
+                  pragma Annotate (Xcov, Exempt_On, "defensive code");
+                  Self.Tree.Reporter.Report
+                    (GPR2.Message.Create
+                       (GPR2.Message.Error,
+                        "cannot replace symbolic link " & String (Variant),
+                        GPR2.Source_Reference.Create
+                          (Self.Ctxt.Path_Name.Value, 0, 0)));
+
+                  return False;
+                  pragma Annotate (Xcov, Exempt_Off);
+               end if;
+
+               if not GNATCOLL.OS.FSUtil.Create_Symbolic_Link
+                 (S_Link.String_Value, String (Self.Output.Path.Simple_Name))
+               then
+                  pragma Annotate (Xcov, Exempt_On, "defensive code");
+                  Self.Tree.Reporter.Report
+                    (GPR2.Message.Create
+                       (GPR2.Message.Error,
+                        "cannot create symbolic link " & String (Variant),
+                        GPR2.Source_Reference.Create
+                          (Self.Ctxt.Path_Name.Value, 0, 0)));
+
+                  return False;
+                  pragma Annotate (Xcov, Exempt_Off);
+
+               elsif Self.Tree.Reporter.User_Verbosity >= Reporter.Verbose then
+                  Self.Tree.Reporter.Report
+                    ("cd " & Self.Ctxt.Library_Directory.String_Value &
+                       " && ln -s " & String (Self.Output.Path.Simple_Name) &
+                       " " & String (Variant));
+               end if;
+            end;
+         end loop;
       end if;
 
       return True;

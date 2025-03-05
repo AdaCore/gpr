@@ -634,19 +634,18 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns whether the optional library version name is defined
 
-   function Library_Major_Version_Filename
-     (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined
-                 and then Self.Is_Library and then not Self.Is_Static_Library
-                 and then Self.Has_Library_Version;
-   --  Returns the library major name if it exists. That is, if the project
-   --  Library_Version exists and is set to libxyz.so.1.2 for example then the
-   --  returned value is libxyz.so.1. If no major version is computable an
-   --  undefined path-name is returned.
-
    function Library_Filename (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns the actual file name for the library
+
+   function Library_Filename_Variants
+     (Self : Object) return GPR2.Containers.Filename_Set
+     with Pre => Self.Is_Defined and then Self.Is_Library;
+   --  Returns the list of symbolic links that will point to Library_Filename
+   --  on non-windows platforms. This is non-empty only when Library_Version is
+   --  specified and will follow the .so schema installation in case
+   --  Library_Version complies with this naming schema.
+   --  Only simple names are returned here.
 
    function Library_Version_Filename
      (Self : Object) return GPR2.Path_Name.Object

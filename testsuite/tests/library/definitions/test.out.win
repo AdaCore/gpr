@@ -1,0 +1,28 @@
+Demo     K_LIBRARY
+Library_Name : abc
+Library_Directory : lib
+                  : lib/
+Library Filename : libabc.dll
+                 : lib/libabc.dll
+Library_Standalone : NO
+Demo     K_LIBRARY
+Library_Name : abc
+Library_Directory : lib
+                  : lib/
+Library Filename : libabc.dll
+                 : lib/libabc.dll
+Library_Standalone : NO
+Demo     K_LIBRARY
+Library_Name : abc
+Library_Directory : release
+                  : lib/release/
+Library Filename : libabc.dll
+                 : lib/release/libabc.dll
+Library_Standalone : NO
+Demo     K_LIBRARY
+Library_Name : abc
+Library_Directory : release
+                  : lib/release/
+Library Filename : libabc.dll
+                 : lib/release/libabc.dll
+Library_Standalone : NO
