@@ -336,8 +336,6 @@ package GPR2.Project.Registry.Attribute is
    Library_Encapsulated_Supported   : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"library_encapsulated_supported");
-   Library_Gcc                      : constant Q_Attribute_Id :=
-                                        (Project_Level_Scope, +"library_gcc");
    Library_Install_Name_Option      : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"library_install_name_option");

@@ -58,7 +58,7 @@
 				{
 					"category_name": "Hidden",
 					"category_to_display": false,
-					"attributes": [{"attribute_name": "Canonical_Target"},{"attribute_name": "Excluded_Source_Dirs"},{"attribute_name": "Library_Ali_Dir"},{"attribute_name": "Library_Gcc"},{"attribute_name": "Object_Lister"},{"attribute_name": "Object_Lister_Matcher"},{"attribute_name": "Origin_Project"},{"attribute_name": "Only_Dirs_With_Sources"},{"attribute_name": "Toolchain_Path"}]
+					"attributes": [{"attribute_name": "Canonical_Target"},{"attribute_name": "Excluded_Source_Dirs"},{"attribute_name": "Library_Ali_Dir"},{"attribute_name": "Object_Lister"},{"attribute_name": "Object_Lister_Matcher"},{"attribute_name": "Origin_Project"},{"attribute_name": "Only_Dirs_With_Sources"},{"attribute_name": "Toolchain_Path"}]
 				}
 			]
 		},
