@@ -2668,6 +2668,24 @@ package body GPR2.Tree_Internal is
                  (Self.Root_Project.Path_Name.Value, 0, 0));
          end if;
 
+         if View.Is_Library then
+            if View.Is_Library_Standalone
+              and then not View.Has_Any_Interfaces
+            then
+               Self.Error
+                 ("Library_Standalone valid only if library has interfaces",
+                  Source_Reference.Create (View.Path_Name.Value, 0, 0));
+
+            elsif not View.Is_Library_Standalone
+              and then View.Has_Library_Interface
+            then
+               Self.Error
+                 ("wrong value for Library_Standalone when " &
+                    "Library_Interface defined",
+                  View.Attribute (PRA.Library_Standalone).Value);
+            end if;
+         end if;
+
          To_Check := View.Imports.Union (View.Limited_Imports);
 
          if View.Is_Extending then
@@ -2683,19 +2701,6 @@ package body GPR2.Tree_Internal is
 
             if not Done.Contains (Imported) then
                Done.Include (Imported);
-
-               --  Check for import of the encapsulated standalone library
-               --  project.
-
-               if Imported.Is_Library
-                 and then Imported.Library_Standalone = Encapsulated
-               then
-                  Self.Warning
-                    ("encapsulated standalone library project """
-                     & String (Imported.Name)
-                     & """ can't be imported",
-                     Source_Loc (Imported));
-               end if;
 
                --  Check for import of aggregate project
                if View.Kind /= K_Aggregate
@@ -2740,14 +2745,14 @@ package body GPR2.Tree_Internal is
                         & String (Imported.Name) & '"',
                      Source_Loc (Imported));
 
-                  elsif not Imported.Is_Shared_Library
+                  elsif Imported.Is_Shared_Library
                     and then View.Library_Standalone = Encapsulated
                   then
                      Self.Error
                        ("encapsulated library project """
                         & String (View.Name)
-                        & """ cannot impomrt shared library project """
-                        & String (Imported.Name),
+                        & """ cannot import shared library project """
+                        & String (Imported.Name) & '"',
                         Source_Loc (Imported));
                   end if;
                end if;
