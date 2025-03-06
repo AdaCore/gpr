@@ -655,7 +655,9 @@ package body GPR2.Build.Actions.Compile.Ada is
             end if;
 
          exception
-            when Standard.Ada.IO_Exceptions.Use_Error =>
+            when Standard.Ada.IO_Exceptions.Use_Error |
+                 Standard.Ada.IO_Exceptions.Name_Error =>
+
                Self.Tree.Reporter.Report
                  (GPR2.Message.Create
                     (GPR2.Message.Error,
