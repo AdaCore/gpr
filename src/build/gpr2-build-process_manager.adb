@@ -731,11 +731,17 @@ package body GPR2.Build.Process_Manager is
       end if;
 
       if not Job.Pre_Command then
+         Self.Tree_Db.Reporter.Report
+           (Message.Create
+              (Message.Warning,
+               Job.UID.Image & " failed",
+               Source_Reference.Create
+                 (Job.View.Path_Name.Value, 0, 0)));
+
          Proc_Handler :=
            Process_Handler'
              (Status        => Failed_To_Launch,
-              Error_Message => To_Unbounded_String
-                                 ("pre-command check failed"));
+              Error_Message => Null_Unbounded_String);
 
          return;
       end if;

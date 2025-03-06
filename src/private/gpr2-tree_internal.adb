@@ -2713,6 +2713,16 @@ package body GPR2.Tree_Internal is
                      Source_Loc (Imported));
                end if;
 
+               if Imported.Is_Library
+                 and then Imported.Library_Standalone = Encapsulated
+                 and then View.Language_Ids.Contains (Ada_Language)
+               then
+                  Self.Warning
+                    ("encapsulated standalone library project """ &
+                       String (Imported.Name) & """ can't be imported",
+                     Source_Loc (Imported));
+               end if;
+
                if Self.Check_Shared_Lib
                  and then View.Is_Library
                  and then View.Is_Shared_Library
