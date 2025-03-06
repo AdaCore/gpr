@@ -53,17 +53,14 @@ package GPR2.Build.Signature is
    --  Add a new output artifact to the signature. Returns the current
    --  valid status of the signature after addition of the artifact.
 
-   function Check_Outputs (Self : Object) return Boolean;
-   --  Check that the current outputs exactly match the saved timestamps
-
    function Add_Input
-     (Self : in out Object;
-      Art  : Artifacts.Object'Class) return Boolean;
+     (Self           : in out Object;
+      Art            : Artifacts.Object'Class;
+      Checksum_Check : Boolean := True) return Boolean;
    --  Add a new input artifact to the signature. Returns the current
    --  valid status of the signature after addition of the artifact.
-
-   function Check_Inputs (Self : Object) return Boolean;
-   --  Check that the current inputs exactly match the saved timestamps
+   --  If CHecksum_Check is not set, then the checksum of the artifact is
+   --  not saved or verified
 
    procedure Add_Console_Output
      (Self   : in out Object;
@@ -112,7 +109,6 @@ private
 
    type Checksums_Type is array (IO_Type) of Checksum_Maps.Map;
    type Artifacts_Type is array (IO_Type) of Artifact_Sets.Set;
-   type Finalized_Type is array (IO_Type) of Boolean;
 
    type Object is tagged record
       Checksums : Checksums_Type;

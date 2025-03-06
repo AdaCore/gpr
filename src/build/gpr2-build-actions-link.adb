@@ -549,7 +549,13 @@ package body GPR2.Build.Actions.Link is
             Link : constant Object'Class :=
                      Object'Class (Self.Tree.Action (Lib));
          begin
-            if not Self.Signature.Add_Input (Link.Output)
+            --  In case of shared libraries, we only need to check the presence
+            --  of the library: a change of the library without modification
+            --  of its specs won't influence the result of the link.
+
+            if not Self.Signature.Add_Input
+              (Link.Output,
+               Checksum_Check => Link.Is_Static)
               and then Load_Mode
             then
                return;

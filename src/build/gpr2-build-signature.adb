@@ -16,13 +16,10 @@ package body GPR2.Build.Signature is
    package Buffer renames GNATCOLL.Buffer;
 
    function Add_Internal
-     (Self : in out Object;
-      Art  : Artifacts.Object'Class;
-      IO   : IO_Type) return Boolean;
-
-   function Check_Internal
-     (Self : Object;
-      IO   : IO_Type) return Boolean;
+     (Self           : in out Object;
+      Art            : Artifacts.Object'Class;
+      IO             : IO_Type;
+      Checksum_Check : Boolean := True) return Boolean;
 
    ------------------------
    -- Add_Console_Output --
@@ -42,10 +39,11 @@ package body GPR2.Build.Signature is
    ---------------
 
    function Add_Input
-     (Self : in out Object;
-      Art  : Artifacts.Object'Class) return Boolean is
+     (Self           : in out Object;
+      Art            : Artifacts.Object'Class;
+      Checksum_Check : Boolean := True) return Boolean is
    begin
-      return Add_Internal (Self, Art, Input);
+      return Add_Internal (Self, Art, Input, Checksum_Check);
    end Add_Input;
 
    ------------------
@@ -53,16 +51,20 @@ package body GPR2.Build.Signature is
    ------------------
 
    function Add_Internal
-     (Self : in out Object;
-      Art  : Artifacts.Object'Class;
-      IO   : IO_Type) return Boolean
+     (Self           : in out Object;
+      Art            : Artifacts.Object'Class;
+      IO             : IO_Type;
+      Checksum_Check : Boolean := True) return Boolean
    is
       Added : Boolean;
       C     : Artifact_Sets.Cursor;
    begin
       Self.Artifacts (IO).Insert (Art, C, Added);
 
-      if not Added then
+      if not Checksum_Check then
+         return True;
+
+      elsif not Added then
          --  Already there, so return False if the signature is already
          --  invalidated.
          return not Self.Checksums (IO).Is_Empty;
@@ -101,44 +103,6 @@ package body GPR2.Build.Signature is
    begin
       return Add_Internal (Self, Art, Output);
    end Add_Output;
-
-   ------------------
-   -- Check_Inputs --
-   ------------------
-
-   function Check_Inputs (Self : Object) return Boolean is
-   begin
-      return Check_Internal (Self, Input);
-   end Check_Inputs;
-
-   --------------------
-   -- Check_Internal --
-   --------------------
-
-   function Check_Internal
-     (Self : Object;
-      IO   : IO_Type) return Boolean
-   is
-      use type Ada.Containers.Count_Type;
-   begin
-      --  At this stage, each time we added a new Input or Output, we've
-      --  checked that the signature has it and the checksum is valid.
-      --
-      --  If not, then the checksums list will be empty already, so all we need
-      --  to do is verify that the lengths match. Else this means that
-      --  the signature contains extra elements that have disappeared.
-
-      return Self.Artifacts (IO).Length = Self.Checksums (IO).Length;
-   end Check_Internal;
-
-   -------------------
-   -- Check_Outputs --
-   -------------------
-
-   function Check_Outputs (Self : Object) return Boolean is
-   begin
-      return Check_Internal (Self, Output);
-   end Check_Outputs;
 
    -----------
    -- Clear --
@@ -333,6 +297,8 @@ package body GPR2.Build.Signature is
       Inputs  : JSON.JSON_Array;
       Outputs : JSON.JSON_Array;
 
+      use type Ada.Containers.Count_Type;
+
       function To_Artifact_Element
         (Position : Checksum_Maps.Cursor) return JSON.JSON_Value;
 
@@ -354,7 +320,7 @@ package body GPR2.Build.Signature is
 
    begin
       for IO in IO_Type'Range loop
-         if not Check_Internal (Self, IO) then
+         if Self.Artifacts (IO).Length /= Self.Checksums (IO).Length then
             Self.Checksums (IO).Clear;
 
             for A of Self.Artifacts (IO) loop
@@ -399,9 +365,12 @@ package body GPR2.Build.Signature is
    -- Valid --
    -----------
 
-   function Valid (Self : Object) return Boolean is
+   function Valid (Self : Object) return Boolean
+   is
+      use type Ada.Containers.Count_Type;
    begin
-      return Self.Check_Outputs and then Self.Check_Inputs
+      return Self.Artifacts (Output).Length = Self.Checksums (Output).Length
+        and then Self.Artifacts (Input).Length = Self.Checksums (Input).Length
         and then (not Self.Artifacts (Input).Is_Empty
                   or else not Self.Artifacts (Output).Is_Empty);
    end Valid;
