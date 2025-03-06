@@ -201,7 +201,7 @@ package body GPR2.Build.Actions.Link is
             --  one in the post-command phase.
 
             Cmd_Line.Add_Argument
-              (String (Self.Output.Path.Simple_Name) & ".tmp");
+              (String (Self.Output.Path.Simple_Name));
          end;
 
       else
@@ -703,45 +703,6 @@ package body GPR2.Build.Actions.Link is
          return True;
       end if;
 
-      if Self.Is_Static_Library then
-         --  archives are generated as tmp files so that we don't reuse
-         --  the library from previous runs, we thus need to unlink and rename
-         if Self.Output.Path.Exists then
-            if not GNATCOLL.OS.FSUtil.Remove_File
-              (Self.Output.Path.String_Value)
-            then
-               pragma Annotate (Xcov, Exempt_On, "defensive code");
-               Self.Tree.Reporter.Report
-                 (GPR2.Message.Create
-                    (GPR2.Message.Error,
-                     "cannot remove this file",
-                     GPR2.Source_Reference.Create
-                       (Self.Output.Path.Value, 0, 0)));
-
-               return False;
-               pragma Annotate (Xcov, Exempt_Off);
-            end if;
-         end if;
-
-         GNAT.OS_Lib.Rename_File
-           (Self.Output.Path.String_Value & ".tmp",
-            Self.Output.Path.String_Value,
-            Result);
-
-         if not Result then
-            pragma Annotate (Xcov, Exempt_On, "defensive code");
-            Self.Tree.Reporter.Report
-              (GPR2.Message.Create
-                 (GPR2.Message.Error,
-                  "cannot rename this file",
-                  GPR2.Source_Reference.Create
-                    (Self.Output.Path.Value, 0, 0)));
-
-            return False;
-            pragma Annotate (Xcov, Exempt_Off);
-         end if;
-      end if;
-
       return True;
    end Post_Command;
 
@@ -750,8 +711,28 @@ package body GPR2.Build.Actions.Link is
    -----------------
 
    overriding function Pre_Command (Self : in out Object) return Boolean is
-      CU_Dep : GPR2.Build.Compilation_Unit.Object;
+      CU       : GPR2.Build.Compilation_Unit.Object;
+      CU_Dep   : GPR2.Build.Compilation_Unit.Object;
+
    begin
+      if Self.Is_Static_Library and then Self.Output.Path.Exists then
+         --  Remove the old .a since otherwise ar will just accumulate the
+         --  objects there
+         if not GNATCOLL.OS.FSUtil.Remove_File
+           (Self.Output.Path.String_Value)
+         then
+            Self.Tree.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  "cannot remove the old archive " &
+                    String (Self.Output.Path.Simple_Name),
+                  GPR2.Source_Reference.Create
+                    (Self.Ctxt.Path_Name.Value, 0, 0)));
+
+            return False;
+         end if;
+      end if;
+
       if Self.Is_Library and then Self.Ctxt.Has_Any_Interfaces then
          --  Check that the interface is complete: no dependency from specs
          --  should depend on a spec that is not part of the interface.
