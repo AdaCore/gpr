@@ -87,6 +87,29 @@ Testing trees/extall.gpr
 Testing trees/agglib.gpr
 =========================================
 * trees/agglib.gpr
+  - Ada:
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/src/base/
+    <runtine dir>/adainclude/
+    trees/inc/src/ext3/
+    trees/inc/src/ext2/
+    trees/src/shared_ada/
+  - C:
+    trees/src/ext/
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext2/
+    trees/src/shared_c/
+  - C++:
+    trees/src/ext/
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext2/
+    trees/inc/src/ext1/
+    trees/src/shared_c/
 * trees/ext.gpr
   - C:
     trees/src/ext/
@@ -140,6 +163,29 @@ Testing trees/withagglib.gpr
     trees/inc/src/ext1/
     trees/src/shared_c/
 * trees/agglib.gpr
+  - Ada:
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/src/base/
+    <runtine dir>/adainclude/
+    trees/inc/src/ext3/
+    trees/inc/src/ext2/
+    trees/src/shared_ada/
+  - C:
+    trees/src/ext/
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext2/
+    trees/src/shared_c/
+  - C++:
+    trees/src/ext/
+    trees/src/extall1/
+    trees/src/extall2/
+    trees/inc/src/ext3/
+    trees/inc/src/ext2/
+    trees/inc/src/ext1/
+    trees/src/shared_c/
 * trees/ext.gpr
   - C:
     trees/src/ext/
