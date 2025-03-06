@@ -1920,6 +1920,12 @@ package body GPR2.Project.View is
                Def.Languages.Include (+Name_Type (Val.Text));
             end loop;
          end if;
+      elsif Def.Kind = K_Aggregate_Library then
+         if Def.Languages.Is_Empty then
+            for V of Self.Aggregated loop
+               Def.Languages.Union (V.Language_Ids);
+            end loop;
+         end if;
       end if;
 
       return Def.Languages;
