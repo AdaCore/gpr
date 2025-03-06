@@ -637,7 +637,7 @@ package body GPR2.Project.Tree is
                         V.Attribute (PRA.Library_Ali_Dir));
                   end if;
 
-                  if V.Has_Attribute (PRA.Library_Src_Dir) then
+                  if V.Has_Library_Src_Directory then
                      Ensure
                        (V.Library_Src_Directory,
                         "library src",

@@ -769,7 +769,6 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => In_Library,
-      Default              => Create (Library_Dir),
       Inherit_From_Extended => Not_Inherited);
 
    --  library_ali_dir

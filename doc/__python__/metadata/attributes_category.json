@@ -48,7 +48,7 @@
 				{
 					"category_name": "Configuration - Archives",
 					"category_to_display": true,
-					"attributes" : [{"attribute_name": "Archive_Builder"},{"attribute_name": "Archive_Builder_Append_Option"},{"attribute_name": "Archive_Indexer"},{"attribute_name": "Archive_Suffix"},{"attribute_name": "Library_Partial_Linker"}]
+					"attributes" : [{"attribute_name": "Archive_Builder"},{"attribute_name": "Archive_Builder_Append_Option"},{"attribute_name": "Archive_Indexer"},{"attribute_name": "Archive_Prefix"},{"attribute_name": "Archive_Suffix"},{"attribute_name": "Library_Partial_Linker"}]
 				},
 				{
 					"category_name": "Configuration - Shared Libraries",

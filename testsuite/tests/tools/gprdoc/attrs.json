@@ -1252,17 +1252,13 @@
           "attribute_def": {
             "builtin": false,
             "config_concatenable": false,
-            "default": {
-              "attr": "Library_Dir",
-              "default_value_kind": "attribute_reference"
-            },
             "empty_value": "ALLOW",
             "has_default_in": {
-              "abstract": true,
+              "abstract": false,
               "aggregate": false,
-              "aggregate_library": true,
+              "aggregate_library": false,
               "configuration": false,
-              "library": true,
+              "library": false,
               "standard": false
             },
             "index_optional": false,
