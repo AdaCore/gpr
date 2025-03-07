@@ -172,13 +172,14 @@ package GPR2.KB is
    --  data.
 
    function Configuration
-     (Self        : in out Object;
-      Settings    : Project.Configuration.Description_Set;
-      Target      : Name_Type;
-      Messages    : in out GPR2.Log.Object;
-      Fallback    : Boolean := False;
-      Environment : GPR2.Environment.Object :=
-                      GPR2.Environment.Process_Environment)
+     (Self                 : in out Object;
+      Settings             : Project.Configuration.Description_Set;
+      Target               : Name_Type;
+      Messages             : in out GPR2.Log.Object;
+      Fallback             : Boolean := False;
+      Environment          : GPR2.Environment.Object :=
+                               GPR2.Environment.Process_Environment;
+      Unknown_Lang_Warning : Boolean := False)
       return Ada.Strings.Unbounded.Unbounded_String
      with Pre  => Self.Is_Defined,
           Post => Configuration'Result /= Null_Unbounded_String
