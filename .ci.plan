@@ -1,7 +1,6 @@
 def build():
     anod_install("gprname")
     anod_build("gpr2", qualifier="legacy")
-    anod_build("gprbuild", qualifier="gpr1")
     anod_build("gprbuild")
 
 def bootstrap():
@@ -10,7 +9,6 @@ def bootstrap():
 def test():
     testgpr2()
     testgprbuild()
-    testgpr2ls()
     anod_test("gpr2-bindings")
 
 def testgpr2():
@@ -18,10 +16,6 @@ def testgpr2():
 
 def testgprbuild():
    anod_test("gprbuild")
-
-def testgpr2ls():
-   anod_build("gprbuild", qualifier="gpr1")
-   anod_test("gprbuild", qualifier="check-gpr2ls")
 
 def cov():
    anod_build("gpr2", qualifier="coverage")
