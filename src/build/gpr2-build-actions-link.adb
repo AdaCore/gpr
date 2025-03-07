@@ -6,7 +6,6 @@
 
 with Ada.Characters.Handling;
 with Ada.Strings.Fixed;
-with GNAT.OS_Lib;
 
 with GNATCOLL.OS.FSUtil;
 with GNATCOLL.Utils;
@@ -18,6 +17,7 @@ with GPR2.Project.Tree;
 pragma Warnings (Off, "*is not referenced");
 with GPR2.Project.View.Vector;
 pragma Warnings (On);
+with GPR2.Reporter;
 with GPR2.Source_Reference;
 with GPR2.Source_Reference.Value;
 
@@ -149,6 +149,10 @@ package body GPR2.Build.Actions.Link is
       Rpath_Origin : constant GPR2.Project.Attribute.Object :=
                        Self.Ctxt.Attribute (PRA.Run_Path_Origin);
       Ign          : Boolean with Unreferenced;
+      Dash_l_Opts  : GPR2.Containers.Value_List;
+      --  -l needs to be last in the command line, so we accumulate the -l
+      --  switches in Dash_l_Opts and only actually add the switch at the
+      --  end of the command line computation.
 
    begin
       Objects := Self.Embedded_Objects;
@@ -197,7 +201,7 @@ package body GPR2.Build.Actions.Link is
             --  one in the post-command phase.
 
             Cmd_Line.Add_Argument
-              (String (Self.Output.Path.Simple_Name) & ".tmp");
+              (String (Self.Output.Path.Simple_Name));
          end;
 
       else
@@ -259,6 +263,8 @@ package body GPR2.Build.Actions.Link is
                                 Link.Output.Path;
                Lib_Dir_Opt : constant Value_Type :=
                                 Self.Tree.Linker_Lib_Dir_Option;
+
+               use GNATCOLL.Utils;
             begin
 
                --  We can not rely on the view to obtain the library
@@ -322,7 +328,6 @@ package body GPR2.Build.Actions.Link is
                                   (PRA.Shared_Library_Prefix).Value.Text;
                      BN     : constant String :=
                                 String (Lib_Artifact.Base_Name);
-                     use GNATCOLL.Utils;
                   begin
                      pragma Assert
                        (Starts_With (BN, Prefix),
@@ -332,7 +337,7 @@ package body GPR2.Build.Actions.Link is
                      --  ??? -l can be replaced with the value specified with
                      --  the Linker_Lib_Name_Option option. Need to investigate
                      --  to know if this option is required.
-                     Cmd_Line.Add_Argument
+                     Dash_l_Opts.Append
                        ("-l" &
                           String (BN (BN'First + Prefix'Length .. BN'Last)));
                   end;
@@ -353,17 +358,22 @@ package body GPR2.Build.Actions.Link is
                         begin
                            if Path.Exists then
                               Cmd_Line.Add_Argument (Path, True);
+
+                           elsif not Link.Is_Static then
+                              if Starts_With (Val.Text, "-l") then
+                                 Dash_l_Opts.Append (Val.Text);
+                              else
+                                 Cmd_Line.Add_Argument (Val.Text, True);
+                              end if;
+
                            else
                               Self.Tree.Reporter.Report
                                 (GPR2.Message.Create
                                    (GPR2.Message.Error,
-                                    "unknown object file """ & Val.Text & '"',
+                                    "unknown object file """ &
+                                      Val.Text & '"',
                                     Val));
-                              --  Reset the command line and return
-                              Self.Cmd_Line :=
-                                GPR2.Build.Command_Line.Create
-                                  (Self.Ctxt.Object_Directory);
-                              return;
+                              raise Action_Error;
                            end if;
                         end;
                      end loop;
@@ -418,8 +428,11 @@ package body GPR2.Build.Actions.Link is
                            if C /= Self.View then
                               --  For self.View, use non-switch parts of
                               --  the linker option only.
-
-                              Cmd_Line.Add_Argument (Val.Text, True);
+                              if Starts_With (Arg, "-l") then
+                                 Dash_l_Opts.Append (Arg);
+                              else
+                                 Cmd_Line.Add_Argument (Val.Text, True);
+                              end if;
                            end if;
 
                         else
@@ -437,6 +450,10 @@ package body GPR2.Build.Actions.Link is
             end;
          end loop;
       end if;
+
+      for Arg of Dash_l_Opts loop
+         Cmd_Line.Add_Argument (Arg, True);
+      end loop;
 
       --  Add options provided by the binder if needed
 
@@ -505,6 +522,11 @@ package body GPR2.Build.Actions.Link is
          Status :=
            Add_Attr (PRA.Linker.Trailing_Switches, Src_Idx, True, True);
       end if;
+
+      --  Finally remove any duplicated --specs switch as this may cause
+      --  trouble by introducing duplicated symbols in the result.
+
+      Cmd_Line.Filter_Duplicate_Switches ("--specs");
    end Compute_Command;
 
    -----------------------
@@ -527,7 +549,13 @@ package body GPR2.Build.Actions.Link is
             Link : constant Object'Class :=
                      Object'Class (Self.Tree.Action (Lib));
          begin
-            if not Self.Signature.Add_Input (Link.Output)
+            --  In case of shared libraries, we only need to check the presence
+            --  of the library: a change of the library without modification
+            --  of its specs won't influence the result of the link.
+
+            if not Self.Signature.Add_Input
+              (Link.Output,
+               Checksum_Check => Link.Is_Static)
               and then Load_Mode
             then
                return;
@@ -574,7 +602,8 @@ package body GPR2.Build.Actions.Link is
       Self.Is_Library := False;
       Self.Main_Src   := Src;
       Self.Ctxt       := Src.View;
-      Self.Traces     := Create ("ACTION_LINK");
+      Self.Traces     := Create ("ACTION_LINK",
+                                 GNATCOLL.Traces.Off);
 
       if Output'Length = 0 then
          Exec := Self.Ctxt.Executable (Src.Source.Simple_Name, Src.Index);
@@ -615,7 +644,8 @@ package body GPR2.Build.Actions.Link is
       Self.In_Obj     := True;
       Self.Library    := Artifacts.Library.Create
         (Context.Object_Directory.Compose (Library_Filename));
-      Self.Traces     := Create ("ACTION_LINK");
+      Self.Traces     := Create ("ACTION_LINK",
+                                 GNATCOLL.Traces.Off);
    end Initialize_Global_Archive;
 
    ------------------------
@@ -630,7 +660,8 @@ package body GPR2.Build.Actions.Link is
       Self.Is_Library := True;
       Self.Is_Static  := Context.Is_Static_Library;
       Self.Library    := Artifacts.Library.Create (Context.Library_Filename);
-      Self.Traces     := Create ("ACTION_LINK");
+      Self.Traces     := Create ("ACTION_LINK",
+                                 GNATCOLL.Traces.Off);
    end Initialize_Library;
 
    --------------------------
@@ -660,7 +691,27 @@ package body GPR2.Build.Actions.Link is
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      return Db.Add_Output (UID, Self.Output);
+      if not Db.Add_Output (UID, Self.Output) then
+         return False;
+      end if;
+
+      if Self.Is_Library and then not Self.Is_Static then
+         --  Shared libraries may need symbolic links, reflect that at the
+         --  tree db level
+
+         for Variant of Self.Ctxt.Library_Filename_Variants loop
+            declare
+               Path : constant GPR2.Path_Name.Object :=
+                        Self.Ctxt.Library_Directory.Compose (Variant);
+            begin
+               if not Db.Add_Output (UID, Artifacts.Files.Create (Path)) then
+                  return False;
+               end if;
+            end;
+         end loop;
+      end if;
+
+      return True;
    end On_Tree_Insertion;
 
    ------------------
@@ -669,52 +720,59 @@ package body GPR2.Build.Actions.Link is
 
    overriding function Post_Command
      (Self   : in out Object;
-      Status : Execution_Status) return Boolean
-   is
-      Result  : Boolean;
-
+      Status : Execution_Status) return Boolean is
    begin
       if Status /= Success then
          return True;
       end if;
 
-      if Self.Is_Static_Library then
-         --  archives are generated as tmp files so that we don't reuse
-         --  the library from previous runs, we thus need to unlink and rename
-         if Self.Output.Path.Exists then
-            if not GNATCOLL.OS.FSUtil.Remove_File
-              (Self.Output.Path.String_Value)
-            then
-               pragma Annotate (Xcov, Exempt_On, "defensive code");
-               Self.Tree.Reporter.Report
-                 (GPR2.Message.Create
-                    (GPR2.Message.Error,
-                     "cannot remove this file",
-                     GPR2.Source_Reference.Create
-                       (Self.Output.Path.Value, 0, 0)));
+      if Self.Is_Library and then not Self.Is_Static_Library then
+         --  Create symlinks for shared libs when needed
 
-               return False;
-               pragma Annotate (Xcov, Exempt_Off);
-            end if;
-         end if;
+         for Variant of Self.Ctxt.Library_Filename_Variants loop
+            declare
+               S_Link : constant GPR2.Path_Name.Object :=
+                          Self.Ctxt.Library_Directory.Compose (Variant);
+               use type GPR2.Reporter.User_Verbosity_Level;
+            begin
+               if S_Link.Exists
+                 and then not GNATCOLL.OS.FSUtil.Remove_File
+                   (S_Link.String_Value)
+               then
+                  pragma Annotate (Xcov, Exempt_On, "defensive code");
+                  Self.Tree.Reporter.Report
+                    (GPR2.Message.Create
+                       (GPR2.Message.Error,
+                        "cannot replace symbolic link " & String (Variant),
+                        GPR2.Source_Reference.Create
+                          (Self.Ctxt.Path_Name.Value, 0, 0)));
 
-         GNAT.OS_Lib.Rename_File
-           (Self.Output.Path.String_Value & ".tmp",
-            Self.Output.Path.String_Value,
-            Result);
+                  return False;
+                  pragma Annotate (Xcov, Exempt_Off);
+               end if;
 
-         if not Result then
-            pragma Annotate (Xcov, Exempt_On, "defensive code");
-            Self.Tree.Reporter.Report
-              (GPR2.Message.Create
-                 (GPR2.Message.Error,
-                  "cannot rename this file",
-                  GPR2.Source_Reference.Create
-                    (Self.Output.Path.Value, 0, 0)));
+               if not GNATCOLL.OS.FSUtil.Create_Symbolic_Link
+                 (S_Link.String_Value, String (Self.Output.Path.Simple_Name))
+               then
+                  pragma Annotate (Xcov, Exempt_On, "defensive code");
+                  Self.Tree.Reporter.Report
+                    (GPR2.Message.Create
+                       (GPR2.Message.Error,
+                        "cannot create symbolic link " & String (Variant),
+                        GPR2.Source_Reference.Create
+                          (Self.Ctxt.Path_Name.Value, 0, 0)));
 
-            return False;
-            pragma Annotate (Xcov, Exempt_Off);
-         end if;
+                  return False;
+                  pragma Annotate (Xcov, Exempt_Off);
+
+               elsif Self.Tree.Reporter.User_Verbosity >= Reporter.Verbose then
+                  Self.Tree.Reporter.Report
+                    ("cd " & Self.Ctxt.Library_Directory.String_Value &
+                       " && ln -s " & String (Self.Output.Path.Simple_Name) &
+                       " " & String (Variant));
+               end if;
+            end;
+         end loop;
       end if;
 
       return True;
@@ -725,8 +783,28 @@ package body GPR2.Build.Actions.Link is
    -----------------
 
    overriding function Pre_Command (Self : in out Object) return Boolean is
-      CU_Dep : GPR2.Build.Compilation_Unit.Object;
+      CU       : GPR2.Build.Compilation_Unit.Object;
+      CU_Dep   : GPR2.Build.Compilation_Unit.Object;
+
    begin
+      if Self.Is_Static_Library and then Self.Output.Path.Exists then
+         --  Remove the old .a since otherwise ar will just accumulate the
+         --  objects there
+         if not GNATCOLL.OS.FSUtil.Remove_File
+           (Self.Output.Path.String_Value)
+         then
+            Self.Tree.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  "cannot remove the old archive " &
+                    String (Self.Output.Path.Simple_Name),
+                  GPR2.Source_Reference.Create
+                    (Self.Ctxt.Path_Name.Value, 0, 0)));
+
+            return False;
+         end if;
+      end if;
+
       if Self.Is_Library and then Self.Ctxt.Has_Any_Interfaces then
          --  Check that the interface is complete: no dependency from specs
          --  should depend on a spec that is not part of the interface.

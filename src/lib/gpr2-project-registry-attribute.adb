@@ -764,12 +764,11 @@ begin
 
    --  library_src_dir
    Add
-     (Name                 => Library_Src_Dir,
-      Index_Type           => No_Index,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => In_Library,
-      Default              => Create (Library_Dir),
+     (Name                  => Library_Src_Dir,
+      Index_Type            => No_Index,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Is_Allowed_In         => In_Library,
       Inherit_From_Extended => Not_Inherited);
 
    --  library_ali_dir
@@ -780,15 +779,6 @@ begin
       Value_Case_Sensitive => True,
       Is_Allowed_In        => In_Library,
       Default              => Create (Library_Dir),
-      Inherit_From_Extended => Not_Inherited);
-
-   --  library_gcc
-   Add
-     (Name                  => Library_Gcc,
-      Index_Type            => No_Index,
-      Value                 => Single,
-      Value_Case_Sensitive  => True,
-      Is_Allowed_In         => Everywhere,
       Inherit_From_Extended => Not_Inherited);
 
    --  library_symbol_file

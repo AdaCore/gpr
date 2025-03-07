@@ -334,13 +334,6 @@ begin
       & "interfaces of a Stand-Alone Library are to be copied. When this "
       & "attribute is not declared, the directory is the library directory.");
 
-   --  Library_gcc
-   Set_Attribute_Description
-     (Key          => PRA.Library_Gcc,
-      Description  =>
-        "Obsolescent attribute. Specify the linker driver used to link a "
-      & "shared library. Use instead attribute Linker'Driver.");
-
    --  Library_Symbol_File
    Set_Attribute_Description
      (Key          => PRA.Library_Symbol_File,

@@ -24,6 +24,8 @@ with Ada.Text_IO;
 with GNAT.OS_Lib;
 with GNATCOLL.OS.Dir;
 
+with GNATCOLL.OS.FSUtil;
+with GNATCOLL.OS.Stat;
 with GNATCOLL.Traces;
 with GNATCOLL.Utils;
 
@@ -127,21 +129,24 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    procedure Delete_File
      (Name : String; Opts : GPRclean.Options.Object)
    is
-      use GNAT.OS_Lib;
+      use GNATCOLL.OS;
       use GPR2.Reporter;
       Success : Boolean := False;
+      Attrs   : GNATCOLL.OS.Stat.File_Attributes;
+
    begin
-      if Is_Regular_File (Name) then
+      Attrs := GNATCOLL.OS.Stat.Stat (Name, Follow_Symlinks => False);
+
+      if Stat.Is_File (Attrs) or else Stat.Is_Symbolic_Link (Attrs) then
          if Opts.Dry_Run then
             Text_IO.Put_Line (Name);
 
          else
-            if GNAT.OS_Lib.Is_Owner_Writable_File (Name) then
-               Delete_File (Name, Success);
+            Success := GNATCOLL.OS.FSUtil.Remove_File (Name);
 
-            elsif Opts.Force_Deletions then
+            if not Success and then Opts.Force_Deletions then
                GNAT.OS_Lib.Set_Writable (Name);
-               Delete_File (Name, Success);
+               Success := GNATCOLL.OS.FSUtil.Remove_File (Name);
             end if;
 
             if Success then
@@ -165,8 +170,10 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    is
       procedure Remove_Dir (Path : GPR2.Path_Name.Object);
 
-      Subdirs  : constant Filename_Optional :=
-                   Opts.Tree.Subdirs;
+      Subdirs     : constant Filename_Optional :=
+                      Opts.Tree.Subdirs;
+      Src_Subdirs : constant Filename_Optional :=
+                      Opts.Tree.Src_Subdirs;
 
       ----------------
       -- Remove_Dir --
@@ -213,6 +220,10 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
 
    begin
       if View.Kind in GPR2.With_Object_Dir_Kind then
+         if Src_Subdirs'Length > 0 then
+            Remove_Dir (View.Object_Directory.Compose (Src_Subdirs, True));
+         end if;
+
          Remove_Dir (View.Object_Directory);
 
          if View.Is_Namespace_Root
@@ -236,9 +247,6 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    Parser        : GPRtools.Options.Command_Line_Parser;
    Lang          : GPR2.Language_Id;
    Artifact_Path : Path_Name.Object;
-   Conf          : GPR2.Project.View.Object;
-
-   use type GPR2.Project.View.Object;
 
 begin
    GNATCOLL.Traces.Parse_Config_File;
@@ -277,21 +285,18 @@ begin
 
    if Opt.Tree.Has_Configuration
      and then Opt.Tree.Configuration.Log_Messages.Has_Element
-       (Warning  => True,
+       (Error    => True,
+        Warning  => True,
         Hint     => False,
-        Error    => False)
+        End_User => False)
    then
-      Opt.Tree.Log_Messages.Append
+      Opt.Tree.Reporter.Report
         (GPR2.Message.Create
            (GPR2.Message.Warning,
             "Cleaning may be incomplete, as there were problems during"
             & " auto-configuration",
             Source_Reference.Create
               (Opt.Tree.Root_Project.Path_Name.Value, 0, 0)));
-   end if;
-
-   if Opt.Tree.Has_Configuration then
-      Conf := Opt.Tree.Configuration.Corresponding_View;
    end if;
 
    Opt.Tree.Update_Sources;
@@ -309,8 +314,9 @@ begin
 
    for Action of Opt.Tree.Artifacts_Database.All_Actions loop
       if not Action.View.Is_Externally_Built
-        and then (Opt.All_Projects
-                  or else Action.View = Opt.Tree.Root_Project)
+        and then
+          (Opt.All_Projects
+           or else Opt.Tree.Namespace_Root_Projects.Contains (Action.View))
         and then not
           (Opt.Compil_Only
            and then Action in GPR2.Build.Actions.Link.Object'Class)
@@ -329,11 +335,11 @@ begin
                     GPR2.Build.Actions.Compile.Object'Class (Action).Language;
                   declare
                      Src_Exts : constant GPR2.Project.Attribute.Object :=
-                                  Conf.Attribute
+                                  Action.View.Attribute
                                     (PRA.Clean.Source_Artifact_Extensions,
                                      PAI.Create (Lang));
                      Obj_Exts : constant GPR2.Project.Attribute.Object :=
-                                  Conf.Attribute
+                                  Action.View.Attribute
                                     (PRA.Clean.Object_Artifact_Extensions,
                                      PAI.Create (Lang));
                      Obj_BN   : constant Filename_Type :=
@@ -418,20 +424,25 @@ begin
    end if;
 
    declare
-      Views    : GPR2.Project.View.Vector.Object;
-      Obj_Attr : constant GPR2.Project.Attribute.Object :=
-                   Opt.Tree.Root_Project.Attribute
-                     (PRA.Clean.Artifacts_In_Object_Dir);
-      Exe_Attr : constant GPR2.Project.Attribute.Object :=
-                   Opt.Tree.Root_Project.Attribute
-                     (PRA.Clean.Artifacts_In_Exec_Dir);
+      Views       : GPR2.Project.View.Vector.Object;
+      Obj_Attr    : constant GPR2.Project.Attribute.Object :=
+                      Opt.Tree.Root_Project.Attribute
+                        (PRA.Clean.Artifacts_In_Object_Dir);
+      Exe_Attr    : constant GPR2.Project.Attribute.Object :=
+                      Opt.Tree.Root_Project.Attribute
+                        (PRA.Clean.Artifacts_In_Exec_Dir);
+      Src_Subdirs : constant GPR2.Filename_Optional := Opt.Tree.Src_Subdirs;
+      Path        : GPR2.Path_Name.Object;
+
    begin
       --  Cleanup in object/exec dirs
 
       if Opt.All_Projects then
          Views := Opt.Tree.Ordered_Views;
       else
-         Views.Append (Opt.Tree.Root_Project);
+         for V of Opt.Tree.Namespace_Root_Projects loop
+            Views.Append (V);
+         end loop;
       end if;
 
       for V of Views loop
@@ -463,6 +474,16 @@ begin
                      Val.Text,
                      Opt);
                end loop;
+            end if;
+
+            if Src_Subdirs'Length > 0
+              and then V.Kind in With_Object_Dir_Kind
+            then
+               Path := V.Object_Directory.Compose (Src_Subdirs, True);
+
+               if Path.Exists then
+                  Delete_File (Path, "*", Opt);
+               end if;
             end if;
 
             if Opt.Remove_Empty_Dirs then

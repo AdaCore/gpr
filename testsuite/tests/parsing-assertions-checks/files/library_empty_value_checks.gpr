@@ -23,7 +23,6 @@ library project Library_Empty_Value_Checks is
    for Library_Builder use "";
    for Library_Dir use "";
    for Library_Encapsulated_Options use ();
-   for Library_Gcc use "";
    for Library_Install_Name_Option use "";
    for Library_Interface use ();
    --for Library_Kind use ""; -- error invalid value for library_kind

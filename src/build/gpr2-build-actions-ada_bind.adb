@@ -514,7 +514,8 @@ package body GPR2.Build.Actions.Ada_Bind is
       Self.Output_Body :=
         Artifacts.Files.Create
           (Context.Object_Directory.Compose ("b__" & Basename & ".adb"));
-      Self.Traces := Create ("ACTION_ADA_BIND");
+      Self.Traces := Create ("ACTION_ADA_BIND",
+                             GNATCOLL.Traces.Off);
       Self.Skip := Skip;
 
       if Skip then

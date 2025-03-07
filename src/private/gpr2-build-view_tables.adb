@@ -209,7 +209,10 @@ package body GPR2.Build.View_Tables is
             CU_Instance.Add
               (Kind, View_Db.View, Path, Index, Sep_Name, Success);
             NS_Db.CUs.Insert (CU, CU_Instance);
-            Add_Unit_Ownership (View_Db, CU, NS_Db);
+
+            if CU_Instance.Owning_View.Is_Defined then
+               Add_Unit_Ownership (View_Db, CU, NS_Db);
+            end if;
          end;
 
       else

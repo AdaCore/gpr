@@ -53,8 +53,10 @@ package body GPR2.Build.View_Db is
                U : Build.Compilation_Unit.Object renames
                      Compilation_Unit_Maps.Element (C);
             begin
-               if With_Externally_Built
-                 or else not U.Owning_View.Is_Externally_Built
+               if U.Owning_View.Is_Defined
+                 and then
+                   (With_Externally_Built
+                    or else not U.Owning_View.Is_Externally_Built)
                then
                   Result.Insert (Compilation_Unit_Maps.Key (C),
                                  Compilation_Unit_Maps.Element (C));

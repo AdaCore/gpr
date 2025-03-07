@@ -8,6 +8,8 @@ with GNAT.Formatted_String;
 
 package body GPR2.Message is
 
+   Warnings_As_Error_Mode : Boolean := False;
+
    ------------------
    -- Change_Level --
    ------------------
@@ -29,10 +31,16 @@ package body GPR2.Message is
       Sloc       : Source_Reference.Object'Class := Source_Reference.Undefined;
       Indent     : Natural := 0;
       To_Stderr  : Boolean := False;
-      User_Level : User_Level_Value := Regular) return Object is
+      User_Level : User_Level_Value := Regular) return Object
+   is
+      Actual_Level : Level_Value := Level;
    begin
+      if Warnings_As_Error_Mode and then Level = Warning then
+         Actual_Level := Error;
+      end if;
+
       return Object'
-        (Level, User_Level, Unread, To_Unbounded_String (Message),
+        (Actual_Level, User_Level, Unread, To_Unbounded_String (Message),
          Source_Reference.Object (Sloc), Indent, To_Stderr);
    end Create;
 
@@ -131,6 +139,15 @@ package body GPR2.Message is
    begin
       return Self.Status;
    end Status;
+
+   -----------------------------
+   -- Treat_Warnings_As_Error --
+   -----------------------------
+
+   procedure Treat_Warnings_As_Error (Enabled : Boolean) is
+   begin
+      Warnings_As_Error_Mode := Enabled;
+   end Treat_Warnings_As_Error;
 
    ----------------
    -- User_Level --

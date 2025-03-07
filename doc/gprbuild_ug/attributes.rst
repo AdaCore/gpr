@@ -219,6 +219,12 @@ Project Level Attributes
 
     Value is the name of the archive indexer, followed by the required options.
 
+  .. index:: Attributes - Project Level Attributes; Archive_Prefix
+
+  * **Archive_Prefix**: single value, not inherited from extended project
+
+    Value is the prefix of archives. When not declared, the prefix is 'lib'.
+
   .. index:: Attributes - Project Level Attributes; Archive_Suffix
 
   * **Archive_Suffix**: single value, not inherited from extended project

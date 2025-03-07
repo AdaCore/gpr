@@ -6,7 +6,6 @@ project Prj1 is
    for Library_Kind use "dynamic";
    for Library_Ali_Dir use project'Library_Dir & ".ali";
    for Library_Version use "lib" & project'Name & ".so.1";
-   for Library_Gcc use "gcc";
    for Library_Options use ("-L.");
    for Leading_Library_Options use ("-Wl,--as-needed");
    for Interfaces use ("pkg1.ads");

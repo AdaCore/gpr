@@ -88,6 +88,11 @@ package body GPR2.Project.View is
    function Has_Language (Self : Object; Name : Name_Type) return Boolean;
    --  Whether Name is a language used by Self
 
+   function Library_Filename_Internal
+     (Self : Object) return Simple_Name;
+   --  The library filename computed from the various library prefixes and
+   --  suffixes. Library_Version is ignored here.
+
    type Source_Filter_Data is new Build.Source.Sets.Filter_Data with record
       View            : Object;
       Interface_Only  : Boolean := False;
@@ -1803,8 +1808,16 @@ package body GPR2.Project.View is
    -----------------
 
    function Is_Extended (Self : Object) return Boolean is
+      Def : constant View_Internal.Const_Ref := View_Internal.Get_RO (Self);
+      use type View_Internal.Const_Ref;
+      use View_Internal;
    begin
-      return View_Internal.Get_RO (Self).Is_Extended;
+      --  Note: need to use the low level values here, else pre-conditions
+      --  lead to infinite recursion.
+      return Def.Is_Extended
+        and then
+          (not Self.Is_Externally_Built
+           or else Get_RO (Strong (Def.Extending)).Extended_Root = Self);
    end Is_Extended;
 
    ------------------
@@ -1907,6 +1920,12 @@ package body GPR2.Project.View is
                Def.Languages.Include (+Name_Type (Val.Text));
             end loop;
          end if;
+      elsif Def.Kind = K_Aggregate_Library then
+         if Def.Languages.Is_Empty then
+            for V of Self.Aggregated loop
+               Def.Languages.Union (V.Language_Ids);
+            end loop;
+         end if;
       end if;
 
       return Def.Languages;
@@ -1951,49 +1970,106 @@ package body GPR2.Project.View is
    ----------------------
 
    function Library_Filename (Self : Object) return GPR2.Path_Name.Object is
-      File_Name    : Unbounded_String;
       Attr_Version : GPR2.Project.Attribute.Object;
    begin
-      --  Library version
-      if not Self.Is_Static_Library then
+      --  Library version: we need to skip it in case the library extension is
+      --  ".dll" (so is targeting windows).
+      --  Note that it is only used for shared libraries, not for the archives
+
+      if not Self.Is_Static_Library
+        and then
+          Self.Attribute (PRA.Shared_Library_Suffix).Value.Text /= ".dll"
+      then
          Attr_Version := Self.Attribute (PRA.Library_Version);
       end if;
 
-      if Attr_Version.Is_Defined then
-         File_Name := +Attr_Version.Value.Text;
+      return Self.Library_Directory.Compose
+        ((if Attr_Version.Is_Defined
+         then Simple_Name (Attr_Version.Value.Text)
+         else Self.Library_Filename_Internal));
+   end Library_Filename;
 
-      else
-         --  Library prefix
+   -------------------------------
+   -- Library_Filename_Internal --
+   -------------------------------
 
-         if not Self.Is_Static_Library then
-            Append (File_Name,
-                    Self.Attribute (PRA.Shared_Library_Prefix).Value.Text);
-         else
-            Append (File_Name,
-                    Self.Attribute (PRA.Archive_Prefix).Value.Text);
-         end if;
+   function Library_Filename_Internal
+     (Self : Object) return Simple_Name
+   is
+      File_Name    : Unbounded_String;
+   begin
+      --  Library prefix
 
-         --  Library name
-
+      if not Self.Is_Static_Library then
          Append (File_Name,
-                 Self.Attribute (PRA.Library_Name).Value.Text);
-
-         --  Library suffix
-
-         if Self.Is_Static_Library then
-            Append (File_Name, String (Self.Tree_Int.Archive_Suffix));
-
-         else
-            Append
-              (File_Name,
-               String (Self.Attribute (PRA.Shared_Library_Suffix).Value.Text));
-         end if;
+                 Self.Attribute (PRA.Shared_Library_Prefix).Value.Text);
+      else
+         Append (File_Name,
+                 Self.Attribute (PRA.Archive_Prefix).Value.Text);
       end if;
 
-      return GPR2.Path_Name.Create_File
-        (Filename_Type (To_String (File_Name)),
-         Directory => Self.Library_Directory.Value);
-   end Library_Filename;
+      --  Library name
+
+      Append (File_Name,
+              Self.Attribute (PRA.Library_Name).Value.Text);
+
+      --  Library suffix
+
+      if Self.Is_Static_Library then
+         Append (File_Name, String (Self.Tree_Int.Archive_Suffix));
+
+      else
+         Append
+           (File_Name,
+            String (Self.Attribute (PRA.Shared_Library_Suffix).Value.Text));
+      end if;
+
+      return Simple_Name (To_String (File_Name));
+   end Library_Filename_Internal;
+
+   -------------------------------
+   -- Library_Filename_Variants --
+   -------------------------------
+
+   function Library_Filename_Variants
+     (Self : Object) return GPR2.Containers.Filename_Set
+   is
+      Result : Containers.Filename_Set;
+      Attr_Version : GPR2.Project.Attribute.Object;
+   begin
+      --  Library version
+      if not Self.Is_Static_Library
+        and then not GPR2.On_Windows
+      then
+         Attr_Version := Self.Attribute (PRA.Library_Version);
+      end if;
+
+      if not Attr_Version.Is_Defined then
+         return Containers.Filename_Type_Set.Empty_Set;
+      end if;
+
+      declare
+         Version : constant Simple_Name :=
+                     Simple_Name (Attr_Version.Value.Text);
+         Base    : constant Simple_Name :=
+                     Self.Library_Filename_Internal;
+         use GNATCOLL.Utils;
+      begin
+         if Base = Version
+           or else not Starts_With (String (Version), String (Base) & ".")
+         then
+            return Containers.Filename_Type_Set.Empty_Set;
+         end if;
+
+         for K in reverse Version'First + Base'Length .. Version'Last loop
+            if Version (K) = '.' then
+               Result.Include (Version (Version'First .. K - 1));
+            end if;
+         end loop;
+      end;
+
+      return Result;
+   end Library_Filename_Variants;
 
    ------------------
    -- Library_Kind --
@@ -2005,47 +2081,6 @@ package body GPR2.Project.View is
    begin
       return Name_Type (Attr.Value.Text);
    end Library_Kind;
-
-   --------------------------------
-   -- Library_Major_Version_Name --
-   --------------------------------
-
-   function Library_Major_Version_Filename
-     (Self : Object) return GPR2.Path_Name.Object
-   is
-
-      function Major_Version_Name
-        (Lib_Version : Filename_Type) return Filename_Type;
-      --  Returns the major version name
-
-      ------------------------
-      -- Major_Version_Name --
-      ------------------------
-
-      function Major_Version_Name
-        (Lib_Version : Filename_Type) return Filename_Type is
-      begin
-         for J in reverse Lib_Version'Range loop
-            if Lib_Version (J) = '.' then
-               return Lib_Version (Lib_Version'First .. J - 1);
-            end if;
-         end loop;
-
-         --  Impossible if project view was validated just after parse
-
-         pragma Annotate (Xcov, Exempt_On, "unreachable code");
-         raise Internal_Error with "cannot get major version";
-         pragma Annotate (Xcov, Exempt_Off);
-      end Major_Version_Name;
-
-      LV : constant Project.Attribute.Object :=
-             Self.Attribute (PRA.Library_Version);
-
-   begin
-      return GPR2.Path_Name.Create_File
-        (Major_Version_Name (Filename_Type (LV.Value.Text)),
-         Directory => Filename_Optional (Self.Library_Filename.Dir_Name));
-   end Library_Major_Version_Filename;
 
    ---------------------------
    -- Library_Src_Directory --
@@ -2077,9 +2112,10 @@ package body GPR2.Project.View is
    function Library_Version_Filename
      (Self : Object) return GPR2.Path_Name.Object is
    begin
-      return GPR2.Path_Name.Create_File
-        (Filename_Type (Self.Attribute (PRA.Library_Version).Value.Text),
-         Directory => Filename_Optional (Self.Library_Directory.Dir_Name));
+      return Self.Library_Directory.Compose
+        ((if On_Windows
+         then Self.Library_Filename_Internal
+         else Simple_Name (Self.Attribute (PRA.Library_Version).Value.Text)));
    end Library_Version_Filename;
 
    ---------------------

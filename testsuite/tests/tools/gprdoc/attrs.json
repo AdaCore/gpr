@@ -943,38 +943,6 @@
             "value_case_sensitive": true,
             "value_is_set": false
           },
-          "attribute_descr": "Obsolescent attribute. Specify the linker driver used to link a shared library. Use instead attribute Linker'Driver.",
-          "attribute_name": "Library_Gcc"
-        },
-        {
-          "attribute_def": {
-            "builtin": false,
-            "config_concatenable": false,
-            "empty_value": "ALLOW",
-            "has_default_in": {
-              "abstract": false,
-              "aggregate": false,
-              "aggregate_library": false,
-              "configuration": false,
-              "library": false,
-              "standard": false
-            },
-            "index_optional": false,
-            "index_type": "NO_INDEX",
-            "inherit_from_extended": "NOT_INHERITED",
-            "is_allowed_in": {
-              "abstract": true,
-              "aggregate": true,
-              "aggregate_library": true,
-              "configuration": true,
-              "library": true,
-              "standard": true
-            },
-            "is_toolchain_config": false,
-            "value": "SINGLE",
-            "value_case_sensitive": true,
-            "value_is_set": false
-          },
           "attribute_descr": "Value is the name of the option that needs to be used, concatenated with the path name of the library file, when linking a shared library.",
           "attribute_name": "Library_Install_Name_Option"
         },
@@ -1252,17 +1220,13 @@
           "attribute_def": {
             "builtin": false,
             "config_concatenable": false,
-            "default": {
-              "attr": "Library_Dir",
-              "default_value_kind": "attribute_reference"
-            },
             "empty_value": "ALLOW",
             "has_default_in": {
-              "abstract": true,
+              "abstract": false,
               "aggregate": false,
-              "aggregate_library": true,
+              "aggregate_library": false,
               "configuration": false,
-              "library": true,
+              "library": false,
               "standard": false
             },
             "index_optional": false,

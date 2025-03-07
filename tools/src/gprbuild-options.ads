@@ -24,7 +24,6 @@ with GPR2.Build.External_Options;
 with GPR2.Containers;
 with GPR2.Path_Name;
 
-with GPRtools.Command_Line;
 with GPRtools.Options;
 
 package GPRbuild.Options is
@@ -55,9 +54,5 @@ package GPRbuild.Options is
      new GPRtools.Options.Command_Line_Parser with null record;
 
    function Create return GPRbuild_Parser;
-
-   overriding procedure Get_Opt
-     (Parser : GPRbuild_Parser;
-      Result : in out GPRtools.Command_Line.Command_Line_Result'Class);
 
 end GPRbuild.Options;

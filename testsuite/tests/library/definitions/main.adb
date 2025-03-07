@@ -13,8 +13,6 @@ procedure Main is
 
    procedure Display (Prj : Project.View.Object);
 
-   function Filter_Dll_Ext (Path : Filename_Type) return String;
-
    Prj : Project.Tree.Object;
    Opt : Options.Object;
    Ctx : Context.Object;
@@ -25,6 +23,7 @@ procedure Main is
    -------------
 
    procedure Display (Prj : Project.View.Object) is
+      First : Boolean;
    begin
       Text_IO.Put (String (Prj.Name) & " ");
       Text_IO.Set_Col (10);
@@ -38,38 +37,23 @@ procedure Main is
            String (Prj.Library_Directory.Relative_Path (CWD)));
       Text_IO.Put_Line
         ("Library Filename : " &
-           Filter_Dll_Ext (Prj.Library_Filename.Name));
+           String (Prj.Library_Filename.Simple_Name));
       Text_IO.Put_Line
         ("                 : " &
-           Filter_Dll_Ext (Prj.Library_Filename.Relative_Path (CWD)));
-      Text_IO.Put_Line
-        ("Library Version Filename : "
-         & String (Prj.Library_Version_Filename.Name));
-      Text_IO.Put_Line
-        ("                         : "
-         & String (Prj.Library_Version_Filename.Relative_Path (CWD)));
-       Text_IO.Put_Line
-        ("Library Major Version Filename : "
-         & String (Prj.Library_Major_Version_Filename.Name));
-       Text_IO.Put_Line
-        ("                               : "
-         & String (Prj.Library_Major_Version_Filename.Relative_Path (CWD)));
+           String (Prj.Library_Filename.Relative_Path (CWD)));
+      First := True;
+      for Var of Prj.Library_Filename_Variants loop
+         if First then
+            Text_IO.Put ("Library Variants : ");
+            First := False;
+         else
+            Text_IO.Put ("                   ");
+         end if;
+         Text_IO.Put_Line (String (Var));
+      end loop;
       Text_IO.Put_Line
         ("Library_Standalone : " & Prj.Library_Standalone'Img);
    end Display;
-
-   --------------------
-   -- Filter_Dll_Ext --
-   --------------------
-
-   function Filter_Dll_Ext (Path : Filename_Type) return String is
-   begin
-      if Path (Path'Last - 3 .. Path'Last) = ".dll" then
-         return String (Path (Path'First .. Path'Last - 3)) & "so";
-      else
-         return String (Path);
-      end if;
-   end Filter_Dll_Ext;
 
 begin
    Opt.Add_Switch (Options.P, "demo.gpr");

@@ -23,6 +23,7 @@ pragma Warnings (On);
 with Ada.Containers;
 with GNAT.Directory_Operations;
 
+with GPR2.Message;
 with GPR2.Project.Registry.Pack;
 
 with GPRtools.Program_Termination;
@@ -284,6 +285,11 @@ package body GPRtools.Options is
 
       Parser.Add_Argument
         (Verbosity_Group,
+         Create (Name   =>  "-we",
+                 Help   => "Treat warnings as errors"));
+
+      Parser.Add_Argument
+        (Verbosity_Group,
          Create (Name   =>  "-ws",
                  Help   => "Suppress all warnings"));
 
@@ -322,8 +328,50 @@ package body GPRtools.Options is
       use type Ada.Containers.Count_Type;
       use GPR2;
 
+      procedure Adjust_Console_Verbosity (Opt : in out Base_Options'Class);
+
       procedure Mains_Check (Opt : Base_Options'Class);
       --  Sanity check mains given on the command line:
+
+      ------------------------------
+      -- Adjust_Console_Verbosity --
+      ------------------------------
+
+      procedure Adjust_Console_Verbosity (Opt : in out Base_Options'Class) is
+      begin
+         if Opt.Warning_Mode = As_Errors then
+            GPR2.Message.Treat_Warnings_As_Error (True);
+         end if;
+
+         case Opt.Verbosity is
+            when Quiet =>
+               --  The GPR tools in general don't comply with the Quiet mode:
+               --  1- Warnings and errors are displayed
+               --  2- tool messages display the important ones
+
+               if Opt.Warning_Mode = No_Warnings then
+                  Opt.Console_Reporter.Set_Verbosity
+                    (GPR2.Reporter.No_Warnings);
+               end if;
+
+               Opt.Console_Reporter.Set_User_Verbosity
+                 (GPR2.Reporter.Important_Only);
+
+            when Regular =>
+               if Opt.Warning_Mode = No_Warnings then
+                  Opt.Console_Reporter.Set_Verbosity
+                    (GPR2.Reporter.No_Warnings);
+               end if;
+
+            when Verbose =>
+               Opt.Console_Reporter.Set_User_Verbosity
+                 (GPR2.Reporter.Verbose);
+         end case;
+      end Adjust_Console_Verbosity;
+
+      -----------------
+      -- Mains_Check --
+      -----------------
 
       procedure Mains_Check (Opt : Base_Options'Class) is
       begin
@@ -353,6 +401,10 @@ package body GPRtools.Options is
       end if;
 
       GPRtools.Command_Line.Command_Line_Parser (Parser).Get_Opt (Result);
+
+      --  Handle verbosity options
+      Adjust_Console_Verbosity (Base_Options'Class (Result));
+
       Base_Options (Result).Find_Implicit_Project :=
         Parser.Find_Implicit_Project;
 
@@ -528,24 +580,19 @@ package body GPRtools.Options is
          Result.Console_Reporter.Set_Full_Pathname (True);
 
       elsif Arg = "-q" then
-         Result.Console_Reporter.Set_Verbosity (Quiet);
+         Result.Verbosity := Quiet;
 
       elsif Arg = "-v" then
-         Result.Console_Reporter.Set_Verbosity (Verbose);
+         Result.Verbosity := Verbose;
+
+      elsif Arg = "-we" then
+         Result.Warning_Mode := As_Errors;
 
       elsif Arg = "-ws" then
-         if Result.Console_Reporter.Verbosity > Quiet then
-            Result.Console_Reporter.Set_Verbosity (No_Warnings);
-         end if;
-
-         Result.No_Warnings := True;
+         Result.Warning_Mode := No_Warnings;
 
       elsif Arg = "-wn" then
-         if Result.Console_Reporter.Verbosity = No_Warnings then
-            Result.Console_Reporter.Set_Verbosity (Regular);
-         end if;
-
-         Result.No_Warnings := False;
+         Result.Warning_Mode := Regular;
 
       elsif Arg = "--debug" then
          for C of Param loop

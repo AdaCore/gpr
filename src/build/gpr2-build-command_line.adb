@@ -4,6 +4,10 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GNATCOLL.Utils;
+
+with GPR2.Containers;
+
 package body GPR2.Build.Command_Line is
 
    use GPR2.Path_Name;
@@ -19,15 +23,7 @@ package body GPR2.Build.Command_Line is
    begin
       Self.Cmd_Line.Append (Arg);
       Self.Total_Length := Self.Total_Length + 1 + Arg'Length;
-
-      if In_Signature then
-         if Length (Self.Signature) = 0 then
-            Append (Self.Signature, Arg);
-         else
-            Append (Self.Signature, ' ');
-            Append (Self.Signature, Arg);
-         end if;
-      end if;
+      Self.In_Signature.Append (In_Signature);
    end Add_Argument;
 
    procedure Add_Argument
@@ -68,6 +64,33 @@ package body GPR2.Build.Command_Line is
       end return;
    end Create;
 
+   -------------------------------
+   -- Filter_Duplicate_Switches --
+   -------------------------------
+
+   procedure Filter_Duplicate_Switches
+     (Self   : in out Object;
+      Prefix : String)
+   is
+      Seen     : GPR2.Containers.Value_Set;
+      Inserted : Boolean;
+      Pos      : GPR2.Containers.Value_Type_Set.Cursor;
+   begin
+      for J in reverse Self.Cmd_Line.First_Index ..
+        Self.Cmd_Line.Last_Index
+      loop
+         if GNATCOLL.Utils.Starts_With (Self.Cmd_Line (J), Prefix) then
+            Seen.Insert (Self.Cmd_Line (J), Pos, Inserted);
+
+            if not Inserted then
+               --  Remove the duplicated value
+               Self.Cmd_Line.Delete (J);
+               Self.In_Signature.Delete (J);
+            end if;
+         end if;
+      end loop;
+   end Filter_Duplicate_Switches;
+
    ----------------
    -- Set_Driver --
    ----------------
@@ -76,33 +99,22 @@ package body GPR2.Build.Command_Line is
      (Self : in out Object;
       Arg  : String)
    is
-      SName : constant Simple_Name :=
-                Path_Name.Simple_Name (Filename_Optional (Arg));
    begin
-      Self.Cmd_Line.Prepend (Arg);
-
-      if Length (Self.Signature) = 0 then
-         Self.Signature := +SName;
+      if Self.Cmd_Line.Is_Empty then
          Self.Total_Length := Arg'Length;
       else
-         Self.Signature := +(SName & " ") & Self.Signature;
-         Self.Total_Length := Arg'Length + 1;
+         Self.Total_Length := Self.Total_Length + Arg'Length + 1;
       end if;
+
+      Self.Cmd_Line.Prepend (Arg);
+      Self.In_Signature.Prepend (True);
    end Set_Driver;
 
    procedure Set_Driver
      (Self : in out Object;
       Arg  : Path_Name.Object) is
    begin
-      Self.Cmd_Line.Prepend (Arg.String_Value);
-
-      if Length (Self.Signature) = 0 then
-         Self.Signature := +Arg.Simple_Name;
-         Self.Total_Length := Arg.String_Value'Length;
-      else
-         Self.Signature := +(Arg.Simple_Name & " ") & Self.Signature;
-         Self.Total_Length := Arg.String_Value'Length + 1;
-      end if;
+      Self.Set_Driver (Arg.String_Value);
    end Set_Driver;
 
    -------------------------------
@@ -115,5 +127,57 @@ package body GPR2.Build.Command_Line is
    begin
       Self.Cmd_Line := Args;
    end Set_Response_File_Command;
+
+   ---------------
+   -- Signature --
+   ---------------
+
+   function Signature (Self : Object) return String
+   is
+      procedure Append (Arg : String);
+
+      Result : String (1 .. Self.Total_Length) := (others => ' ');
+      Idx    : Natural := Result'First;
+
+      ------------
+      -- Append --
+      ------------
+
+      procedure Append (Arg : String) is
+      begin
+         if Idx > Result'First then
+            --  add a space
+            Idx := Idx + 1;
+         end if;
+
+         Result (Idx .. Idx + Arg'Length - 1) := Arg;
+         Idx := Idx + Arg'Length;
+      end Append;
+
+   begin
+      for J in Self.Cmd_Line.First_Index .. Self.Cmd_Line.Last_Index loop
+         if Self.In_Signature (J) then
+            --  First argument is treated specially: we don't want to save
+            --  the full path of the driver to allow relocation of the saved
+            --  signature.
+
+            if J = Self.Cmd_Line.First_Index then
+               declare
+                  Arg    : String renames Self.Cmd_Line (J);
+                  Simple : constant Simple_Name :=
+                             Path_Name.Simple_Name
+                               (Filename_Optional (Arg));
+               begin
+                  Append (String (Simple));
+               end;
+
+            else
+               Append (Self.Cmd_Line (J));
+            end if;
+         end if;
+      end loop;
+
+      return Result (Result'First .. Idx - 1);
+   end Signature;
 
 end GPR2.Build.Command_Line;

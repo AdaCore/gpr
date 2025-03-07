@@ -39,6 +39,5 @@ $ chmod 0x777 lib/lib
 $ gpr2build -Plib -q
 $ chmod 0x555 lib/lib
 $ gpr2build -Plib -f -l
-[Archive]         liblib.a
-ar: liblib.a.tmp: Permission denied
-lib.gpr: warning: [Archive] liblib.a (lib.gpr) failed with status 1
+lib.gpr: error: cannot remove the old archive liblib.a
+lib.gpr: warning: [Archive] liblib.a (lib.gpr) failed

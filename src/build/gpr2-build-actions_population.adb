@@ -327,6 +327,22 @@ package body GPR2.Build.Actions_Population is
          end if;
       end if;
 
+      if Src.Owning_View.Is_Library
+        and then not Options.Unique_Compilation
+        and then not Options.Unique_Compilation_Recursive
+      then
+         Tree_Db.Reporter.Report
+           (Message.Create
+              (Message.Error,
+               "main cannot be a source of a library project: """ &
+                 Basename & '"',
+               Source_Reference.Create
+                 (Src.Owning_View.Path_Name.Value, 0, 0)));
+         Error_Reported := True;
+
+         return Compilation_Unit.Empty_Vector;
+      end if;
+
       if Src.Has_Units
         and then not Src.Has_Single_Unit
         and then Index = No_Index
@@ -646,7 +662,9 @@ package body GPR2.Build.Actions_Population is
       Bind    : GPR2.Build.Actions.Ada_Bind.Object;
 
    begin
-      if Libs.Contains (View) then
+      if View.Is_Extended or else Libs.Contains (View) then
+         --  Extended library projects won't produce any library, so skip
+         --  them. Also skip already analyzed library projects.
          return True;
       end if;
 

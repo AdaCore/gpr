@@ -597,6 +597,10 @@ package body Update_Sources_List is
       Current_Src_Dir_Idx   : Natural := 0;
       --  Identifies the Source_Dirs value being processed
 
+      Current_Is_Src_Subdirs : Boolean := False;
+      --  Identifies if the analyzed sources are part of Src_Subdirs. In this
+      --  case we need to adjust some checks and attributes.
+
       Dot_Repl : constant String :=
                    Data.View.Attribute (PRA.Naming.Dot_Replacement).Value.Text;
       --  Get Dot_Replacement value
@@ -715,11 +719,27 @@ package body Update_Sources_List is
          Exc_Attr         : Source_Reference.Object;
 
       begin
+         if Data.No_Sources then
+            return False;
+         end if;
+
+         if File.Dir_Idx /= Current_Src_Dir_Idx then
+            Current_Src_Dir_Idx := File.Dir_Idx;
+            Source_Name_Set.Clear;
+
+            Current_Is_Src_Subdirs :=
+              Tree.Has_Src_Subdirs
+              and then
+                Path_Name.Create_File (File.Path).Containing_Directory =
+                  Data.View.Source_Subdirectory;
+         end if;
+
          --  Stop here if it's one of the excluded sources, or it's not in the
          --  included sources if those are given explicitely.
 
-         if Data.No_Sources then
-            return False;
+         if Current_Is_Src_Subdirs then
+            --  consider everything from src_subdirs
+            null;
 
          elsif Data.Excluded_Sources.Contains (Basename) then
             Data.Actually_Excluded.Include (Basename, No_Proxy);
@@ -730,11 +750,6 @@ package body Update_Sources_List is
            and then not Data.Listed_Sources.Contains (Basename)
          then
             return False;
-         end if;
-
-         if File.Dir_Idx /= Current_Src_Dir_Idx then
-            Current_Src_Dir_Idx := File.Dir_Idx;
-            Source_Name_Set.Clear;
          end if;
 
          for Language of Data.View.Language_Ids loop
@@ -881,7 +896,8 @@ package body Update_Sources_List is
                      Timestamp        => File.Stamp,
                      Tree_Db          => Data.Tree_Db,
                      Naming_Exception => Match = Naming_Exception,
-                     Source_Dir_Idx   => File.Dir_Idx));
+                     Source_Dir_Idx   => File.Dir_Idx,
+                     From_Src_Subdirs => Current_Is_Src_Subdirs));
 
                --  If we know the units in the source (from naming exception),
                --  then add them now.

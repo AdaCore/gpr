@@ -148,7 +148,9 @@ package body GPR2.Build.Actions.Compile.Ada is
 
          for Dep of Deps loop
             --  Configuration pragmas are returned as dependency but are
-            --  not sources of the view, so we need to filter them
+            --  not sources of the view, so we need to filter them. The
+            --  difference is that sources are reported as simple names while
+            --  the config pragma sources have a full path.
 
             if Dep in Simple_Name then
                declare
@@ -156,13 +158,24 @@ package body GPR2.Build.Actions.Compile.Ada is
                           Self.View.Visible_Source (Dep);
                begin
                   if not Src.Is_Defined then
-                     Self.Traces.Trace
-                       ("Compute_Signature: cannot find dependency " &
-                          String (Dep));
+                     if (Self.Global_Config_Pragmas.Is_Defined
+                         and then Dep = Self.Global_Config_Pragmas.Simple_Name)
+                       or else
+                         (Self.Local_Config_Pragmas.Is_Defined
+                          and then Dep = Self.Local_Config_Pragmas.Simple_Name)
+                     then
+                        Self.Traces.Trace
+                          ("config pragma file reported as dependency, " &
+                             "ignoring : " & String (Dep));
+                     else
+                        Self.Traces.Trace
+                          ("Compute_Signature: cannot find dependency " &
+                             String (Dep));
 
-                     if Load_Mode then
-                        Self.Signature.Invalidate;
-                        return;
+                        if Load_Mode then
+                           Self.Signature.Invalidate;
+                           return;
+                        end if;
                      end if;
 
                   elsif not Self.Signature.Add_Input
@@ -172,16 +185,25 @@ package body GPR2.Build.Actions.Compile.Ada is
                      return;
                   end if;
                end;
-
-            else
-               if not Self.Signature.Add_Input (Artifacts.Files.Create (Dep))
-                 and then Load_Mode
-               then
-                  return;
-               end if;
             end if;
          end loop;
       end;
+
+      if Self.Local_Config_Pragmas.Is_Defined
+        and then not Self.Signature.Add_Input
+                       (Artifacts.Files.Create (Self.Local_Config_Pragmas))
+        and then Load_Mode
+      then
+         return;
+      end if;
+
+      if Self.Global_Config_Pragmas.Is_Defined
+        and then not Self.Signature.Add_Input
+                       (Artifacts.Files.Create (Self.Global_Config_Pragmas))
+        and then Load_Mode
+      then
+         return;
+      end if;
 
       --  Object file checksum is the heaviest to compute since those are
       --  pretty large compared to the other artifacts involved in this
@@ -282,7 +304,8 @@ package body GPR2.Build.Actions.Compile.Ada is
       Self.Src    := Src.Owning_View.Source (Src.Main_Part.Source.Simple_Name);
       Self.Lang   := Ada_Language;
       Self.CU     := Src;
-      Self.Traces := Create ("ACTION_ADA_COMPILE");
+      Self.Traces := Create ("ACTION_ADA_COMPILE",
+                             GNATCOLL.Traces.Off);
 
       --  ??? For Standalone libraries, we should probably not lookup for
       --  previous compilation artifacts, since we need to amend the ali
@@ -443,6 +466,7 @@ package body GPR2.Build.Actions.Compile.Ada is
 
          CU_View : constant GPR2.Project.View.Object := CU.Owning_View;
          Allowed : Boolean := True;
+         Src     : GPR2.Build.Source.Object;
 
       begin
          --  There is no restriction of units visibility inside the same view
@@ -458,6 +482,15 @@ package body GPR2.Build.Actions.Compile.Ada is
                --  * The view is not a standalone library: if the unit source
                --    is not listed by the Interfaces attribute, then it can
                --   not be imported.
+
+               --  There's an exception for sources coming from --src-subdirs:
+               --  since this is for instrumented code, we need to loosen the
+               --  rule here and allow any source from this subdir.
+               Src := CU_View.Visible_Source (CU.Main_Part.Source);
+
+               if Src.From_Src_Subdirs then
+                  return True;
+               end if;
 
                Allowed := False;
             end if;
@@ -622,7 +655,9 @@ package body GPR2.Build.Actions.Compile.Ada is
             end if;
 
          exception
-            when Standard.Ada.IO_Exceptions.Use_Error =>
+            when Standard.Ada.IO_Exceptions.Use_Error |
+                 Standard.Ada.IO_Exceptions.Name_Error =>
+
                Self.Tree.Reporter.Report
                  (GPR2.Message.Create
                     (GPR2.Message.Error,

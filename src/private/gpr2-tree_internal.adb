@@ -40,6 +40,7 @@ package body GPR2.Tree_Internal is
    use type GPR2.Path_Name.Object;
    use type GNATCOLL.OS.OS_Type;
 
+   package PAI renames Project.Attribute_Index;
    package PRP renames Project.Registry.Pack;
    package IDS renames GPR2.View_Ids;
    function Distance (L, R : String) return Natural renames
@@ -954,8 +955,69 @@ package body GPR2.Tree_Internal is
                   end loop;
                end;
             end loop;
-         end if;
 
+            --  Check that Required_Toolchain_Version is respected
+
+            if Self.Has_Configuration then
+               for L of Self.Root_Project.Language_Ids loop
+                  declare
+                     function Filter_GNAT
+                       (A : GPR2.Project.Attribute.Object) return String;
+
+                     ------------------------
+                     -- Filter_GNAT_Prefix --
+                     ------------------------
+
+                     function Filter_GNAT
+                       (A : GPR2.Project.Attribute.Object) return String
+                     is
+                        Val : constant Value_Type := A.Value.Text;
+                     begin
+                        if GNATCOLL.Utils.Starts_With (Val, "GNAT ") then
+                           return Val (Val'First + 5 .. Val'Last);
+                        else
+                           return Val;
+                        end if;
+                     end Filter_GNAT;
+
+                     Conf : constant GPR2.Project.View.Object :=
+                              Self.Configuration.Corresponding_View;
+                     L_Idx : constant PAI.Object := PAI.Create (L);
+                     Required : constant Project.Attribute.Object :=
+                                  Self.Root_Project.Attribute
+                                    (PRA.Required_Toolchain_Version, L_Idx);
+                     Actual   : constant Project.Attribute.Object :=
+                                  Conf.Attribute
+                                    (PRA.Toolchain_Version, L_Idx);
+                  begin
+
+                     if Required.Is_Defined then
+                        if not Actual.Is_Defined then
+                           Self.Messages.Append
+                             (GPR2.Message.Create
+                                (GPR2.Message.Error,
+                                 "toolchain version for language " & Image (L)
+                                 & " differs from the required one """
+                                 & Filter_GNAT (Required) & '"',
+                                 Required));
+
+                        elsif Filter_GNAT (Actual) /= Filter_GNAT (Required)
+                        then
+                           Self.Messages.Append
+                             (GPR2.Message.Create
+                                (GPR2.Message.Error,
+                                 "toolchain version """
+                                 & Filter_GNAT (Actual)
+                                 & """ for language " & Image (L)
+                                 & " differs from the required one """
+                                 & Filter_GNAT (Required) & '"',
+                                 Required));
+                        end if;
+                     end if;
+                  end;
+               end loop;
+            end if;
+         end if;
       end if;
 
       if not Self.Messages.Has_Error then
@@ -2606,6 +2668,24 @@ package body GPR2.Tree_Internal is
                  (Self.Root_Project.Path_Name.Value, 0, 0));
          end if;
 
+         if View.Is_Library then
+            if View.Is_Library_Standalone
+              and then not View.Has_Any_Interfaces
+            then
+               Self.Error
+                 ("Library_Standalone valid only if library has interfaces",
+                  Source_Reference.Create (View.Path_Name.Value, 0, 0));
+
+            elsif not View.Is_Library_Standalone
+              and then View.Has_Library_Interface
+            then
+               Self.Error
+                 ("wrong value for Library_Standalone when " &
+                    "Library_Interface defined",
+                  View.Attribute (PRA.Library_Standalone).Value);
+            end if;
+         end if;
+
          To_Check := View.Imports.Union (View.Limited_Imports);
 
          if View.Is_Extending then
@@ -2622,19 +2702,6 @@ package body GPR2.Tree_Internal is
             if not Done.Contains (Imported) then
                Done.Include (Imported);
 
-               --  Check for import of the encapsulated standalone library
-               --  project.
-
-               if Imported.Is_Library
-                 and then Imported.Library_Standalone = Encapsulated
-               then
-                  Self.Warning
-                    ("encapsulated standalone library project """
-                     & String (Imported.Name)
-                     & """ can't be imported",
-                     Source_Loc (Imported));
-               end if;
-
                --  Check for import of aggregate project
                if View.Kind /= K_Aggregate
                  and then Imported.Kind = K_Aggregate
@@ -2643,6 +2710,16 @@ package body GPR2.Tree_Internal is
                     ("aggregate project """
                      & String (Imported.Name)
                      & """ can only be imported by an aggregate project",
+                     Source_Loc (Imported));
+               end if;
+
+               if Imported.Is_Library
+                 and then Imported.Library_Standalone = Encapsulated
+                 and then View.Language_Ids.Contains (Ada_Language)
+               then
+                  Self.Warning
+                    ("encapsulated standalone library project """ &
+                       String (Imported.Name) & """ can't be imported",
                      Source_Loc (Imported));
                end if;
 
@@ -2668,7 +2745,7 @@ package body GPR2.Tree_Internal is
                         & """ that is not a shared library project",
                         Source_Loc (Imported));
 
-                  elsif Imported.Is_Static_Library
+                  elsif Imported.Library_Kind = "static"
                     and then View.Library_Standalone /= Encapsulated
                   then
                      Self.Error
@@ -2678,14 +2755,14 @@ package body GPR2.Tree_Internal is
                         & String (Imported.Name) & '"',
                      Source_Loc (Imported));
 
-                  elsif not Imported.Is_Shared_Library
+                  elsif Imported.Is_Shared_Library
                     and then View.Library_Standalone = Encapsulated
                   then
                      Self.Error
                        ("encapsulated library project """
                         & String (View.Name)
-                        & """ cannot impomrt shared library project """
-                        & String (Imported.Name),
+                        & """ cannot import shared library project """
+                        & String (Imported.Name) & '"',
                         Source_Loc (Imported));
                   end if;
                end if;

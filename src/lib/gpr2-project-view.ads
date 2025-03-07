@@ -634,19 +634,18 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns whether the optional library version name is defined
 
-   function Library_Major_Version_Filename
-     (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined
-                 and then Self.Is_Library and then not Self.Is_Static_Library
-                 and then Self.Has_Library_Version;
-   --  Returns the library major name if it exists. That is, if the project
-   --  Library_Version exists and is set to libxyz.so.1.2 for example then the
-   --  returned value is libxyz.so.1. If no major version is computable an
-   --  undefined path-name is returned.
-
    function Library_Filename (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns the actual file name for the library
+
+   function Library_Filename_Variants
+     (Self : Object) return GPR2.Containers.Filename_Set
+     with Pre => Self.Is_Defined and then Self.Is_Library;
+   --  Returns the list of symbolic links that will point to Library_Filename
+   --  on non-windows platforms. This is non-empty only when Library_Version is
+   --  specified and will follow the .so schema installation in case
+   --  Library_Version complies with this naming schema.
+   --  Only simple names are returned here.
 
    function Library_Version_Filename
      (Self : Object) return GPR2.Path_Name.Object
@@ -667,8 +666,12 @@ package GPR2.Project.View is
    --  getting the Library_Ali_Dir attribute value as the result here is always
    --  a path-name with proper resolution for relative directory specification.
 
+   function Has_Library_Src_Directory (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Whether a Library_Src_Dir attribute is defined for Self
+
    function Library_Src_Directory (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined and then Self.Is_Library;
+     with Pre => Self.Is_Defined and then Self.Has_Library_Src_Directory;
    --  Defines the location (absolute or relative to the project directory)
    --  where the sources of the interface units are copied at installation
    --  time.
@@ -875,7 +878,8 @@ private
      (Self.Has_Attribute (PRA.Library_Version));
 
    function Has_Library_Interface (Self : Object) return Boolean is
-     (Self.Has_Attribute (PRA.Library_Interface));
+     (Self.Has_Attribute (PRA.Library_Interface)
+      and then not Self.Attribute (PRA.Library_Interface).Values.Is_Empty);
 
    function Has_Interfaces (Self : Object) return Boolean is
      (Self.Has_Attribute (PRA.Interfaces)
@@ -961,5 +965,10 @@ private
      (Self : Object;
       Pack : Package_Id) return Project.Attribute.Set.Object
    is (Self.Pack (Pack).Attrs);
+
+   function Has_Library_Src_Directory (Self : Object) return Boolean is
+     (Self.Is_Library
+      and then Self.Is_Library_Standalone
+      and then Self.Has_Attribute (PRA.Library_Src_Dir));
 
 end GPR2.Project.View;
