@@ -179,25 +179,6 @@ test_gprconfig:
     reports:
       junit: testgprconfig_result.xml
 
-######################
-## GPR2LS TESTSUITE ##
-######################
-
-test_gpr2ls:
-  extends: .gpr2_test_template
-  variables:
-    JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
-  script:
-    - install_cache gnatall
-    - run_testsuite gprbuild "-Qcheck-gpr2ls" test_gpr2ls
-  artifacts:
-    when:
-      always
-    paths:
-      - testgpr2ls_result.xml
-    reports:
-      junit: testgpr2ls_result.xml
-
 ####################
 ## POSTPROCESSING ##
 ####################
