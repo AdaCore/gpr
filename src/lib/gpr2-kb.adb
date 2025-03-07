@@ -896,13 +896,14 @@ package body GPR2.KB is
    -------------------
 
    function Configuration
-     (Self        : in out Object;
-      Settings    : Project.Configuration.Description_Set;
-      Target      : Name_Type;
-      Messages    : in out GPR2.Log.Object;
-      Fallback    : Boolean := False;
-      Environment : GPR2.Environment.Object :=
-                      GPR2.Environment.Process_Environment)
+     (Self                 : in out Object;
+      Settings             : Project.Configuration.Description_Set;
+      Target               : Name_Type;
+      Messages             : in out GPR2.Log.Object;
+      Fallback             : Boolean := False;
+      Environment          : GPR2.Environment.Object :=
+                               GPR2.Environment.Process_Environment;
+      Unknown_Lang_Warning : Boolean := False)
       return Ada.Strings.Unbounded.Unbounded_String
    is
       use Project.Configuration;
@@ -923,7 +924,9 @@ package body GPR2.KB is
          elsif not Self.Languages_Known.Contains (Language (Setting)) then
             Messages.Append
               (Message.Create
-                 (Message.Hint,
+                 ((if Unknown_Lang_Warning
+                  then Message.Warning
+                  else Message.Hint),
                   "unknown language '"
                   & Image (Language (Setting)) & "'",
                   Source_Reference.Create ("embedded_kb/kb", 0, 0)));

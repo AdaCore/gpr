@@ -884,13 +884,24 @@ begin
       Output_File := To_Unbounded_String (Opt_O.all);
    end if;
 
+   if Knowledge_Base.Has_Error then
+      Console_Reporter.Report (Knowledge_Base.Log_Messages);
+
+      Text_IO.Put_Line
+        (Text_IO.Standard_Error,
+         "Invalid setup of the gprconfig knowledge base");
+      GNAT.OS_Lib.OS_Exit (1);
+   end if;
+
+
    if Opt_Batch then
       Config_Contents := Configuration
-        (Self     => Knowledge_Base,
-         Settings => Get_Settings (Description_Map),
-         Target   => Name_Type (To_String (Selected_Target)),
-         Messages => Config_Log,
-         Fallback => Opt_Fallback);
+        (Self                 => Knowledge_Base,
+         Settings             => Get_Settings (Description_Map),
+         Target               => Name_Type (To_String (Selected_Target)),
+         Messages             => Config_Log,
+         Fallback             => Opt_Fallback,
+         Unknown_Lang_Warning => True);
 
    else
       if Opt_Show_Targets then
@@ -906,21 +917,14 @@ begin
 
          Set_Of_Targets : GPR2.Containers.Name_Set;
       begin
-         if Knowledge_Base.Has_Error then
-            Console_Reporter.Report (Knowledge_Base.Log_Messages);
-
-            Text_IO.Put_Line
-              (Text_IO.Standard_Error,
-               "Invalid setup of the gprconfig knowledge base");
-            GNAT.OS_Lib.OS_Exit (1);
-         end if;
-
          if Opt_Show_Targets or else Console_Reporter.Verbosity >= Verbose then
             Text_IO.Put_Line ("List of targets supported by a compiler:");
 
             for Comp of Compilers loop
-               Set_Of_Targets.Include
-                 (Knowledge_Base.Normalized_Target (Target (Comp)));
+               if Requires_Compiler (Comp) then
+                  Set_Of_Targets.Include
+                    (Knowledge_Base.Normalized_Target (Target (Comp)));
+               end if;
             end loop;
 
             for Tgt of Set_Of_Targets loop
@@ -973,23 +977,13 @@ begin
    end if;
 
    if Config_Log.Has_Error then
-      Console_Reporter.Report (Config_Log);
+      Console_Reporter.Report (Config_Log, Warn_If_Errors => True);
 
       Text_IO.Put_Line
         (Text_IO.Standard_Error,
          "Generation of configuration files failed");
 
       GNAT.OS_Lib.OS_Exit (1);
-
-   elsif Knowledge_Base.Has_Error then
-      Console_Reporter.Report (Knowledge_Base.Log_Messages);
-
-      Text_IO.Put_Line
-        (Text_IO.Standard_Error,
-         "Invalid setup of the gprconfig knowledge base");
-
-      GNAT.OS_Lib.OS_Exit (1);
-
    else
       Console_Reporter.Report (Config_Log);
    end if;
