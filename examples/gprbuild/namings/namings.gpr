@@ -1,0 +1,54 @@
+project Namings is
+   for Languages use ("Ada", "C");
+   for main use ("main.adb");
+
+
+   type Choice is ("case1", "case2", "case3");
+   C1 : Choice := External ("C1", "case1");
+
+   for Exec_Dir use ".";
+
+   -- Construct object dir and main executable names based on scenario
+
+   for Object_Dir use "obj-" & C1;
+
+   package Builder is
+      for Executable ("main.adb") use "main-" & C1;
+   end Builder;
+
+   --  Change Source dir so that in case 3, we look for main
+   --  in an alternate source dir:
+
+   case C1 is
+      when "case1" => for Source_Dirs use (".");
+      when "case2" => for Source_Dirs use (".");
+      when "case3" => for Source_Dirs use ("src1", ".");
+   end case;
+
+   --  We want to build with
+   --  case1 : main.adb, util-case1.adb, my_routine.c1
+   --  case2 : main.adb, util-case2.adb, my_routine2.c1, _print2.adb
+   --  case3 : src1/main.adb, util-case2.adb, my_routine2.c1, _print3.adb
+
+
+   package Naming is
+
+      -- alternate name built without a case
+
+      for Body ("Util") use "util-" & C1 & ".ada";
+
+      --  alternate names built in a case
+
+      case C1 is
+         when "case1" =>
+            for Implementation_Exceptions ("C") use ("my_routine.c1");
+         when "case2" =>
+            for Implementation_Exceptions ("C") use ("my_routine2.c1");
+            for Body ("Util.Print2") use "_print2.ada";
+         when "case3" =>
+            for Implementation_Exceptions ("C") use ("my_routine2.c1");
+            for Body ("Util") use "util-case2.ada";
+            for Body ("Util.Print2") use "_print3.adb";
+      end case;
+   end Naming;
+end Namings;

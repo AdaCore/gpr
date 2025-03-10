@@ -1,0 +1,24 @@
+library project General_Lib is
+   type Lib_Kind is ("static", "dynamic", "extern");
+   Kind : Lib_Kind := external ("LIB", "static");
+   Prefix := "../libraries/";
+   for Languages    use ("Ada", "C");
+   for Source_Dirs  use (Prefix & "lib_src");
+   case Kind is 
+      when "static" =>
+         for Object_Dir   use  Prefix & "obj";
+         for Library_Dir  use  Prefix & "lib";
+         for Library_Kind use  "static";
+         for Library_Name use "l1";
+      when "dynamic" =>
+         for Object_Dir   use  Prefix & "obj2";
+         for Library_Dir  use  Prefix & "lib2";
+         for Library_Kind use  "dynamic";
+         for Library_Name use "l2";
+      when "extern" =>
+         for Library_Dir  use  Prefix & "lib2";
+         for Library_Kind use "dynamic";
+         for Library_Name use "l2";
+         for Externally_Built use "true";
+   end case;
+end General_Lib;

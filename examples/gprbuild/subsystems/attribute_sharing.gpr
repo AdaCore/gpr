@@ -1,0 +1,7 @@
+abstract project Attribute_Sharing is
+   for Source_Files use ();
+   package Compiler is
+      for Default_Switches ("C")   use ("-pedantic");
+      for Default_Switches ("Ada") use ("-gnaty");
+   end Compiler;
+end Attribute_Sharing;

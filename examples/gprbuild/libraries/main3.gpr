@@ -1,0 +1,8 @@
+with "sa_lib.gpr";
+project Main3 is
+   for Languages    use ("C", "Ada");
+   for Main         use ("c_main.c");
+   package Builder is
+      for Executable ("c_main.c") use "main3";
+   end Builder;
+ end Main3;

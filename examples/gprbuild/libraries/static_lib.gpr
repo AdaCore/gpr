@@ -1,0 +1,8 @@
+library project Static_Lib is
+   for Languages    use ("Ada", "C");
+   for Source_Dirs  use ("lib_src");
+   for Object_Dir   use "obj";
+   for Library_Dir  use "lib";
+   for Library_Kind use "static";
+   for Library_Name use "l1";
+end Static_Lib;

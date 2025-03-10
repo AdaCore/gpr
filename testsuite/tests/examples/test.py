@@ -15,7 +15,7 @@ bnr = BuilderAndRunner()
 
 # copy GPR2 examples here
 found = False
-for examples_dir in '../examples', 'examples':
+for examples_dir in '../examples/libgpr2', 'examples/libgpr2':
     fulldir = os.path.join(os.environ["root_dir"], examples_dir)
     if os.path.exists(fulldir):
         cp(os.path.join(fulldir, "*"), ".", recursive=True)

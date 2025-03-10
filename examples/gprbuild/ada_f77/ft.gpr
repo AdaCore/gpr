@@ -1,0 +1,8 @@
+with "fm";
+project ft is
+   for Languages use ("Fortran");
+   for Main use ("ess.f");
+   for Object_Dir use "fobj";
+   for Roots ("ess.f") use ("*");
+end ft;
+

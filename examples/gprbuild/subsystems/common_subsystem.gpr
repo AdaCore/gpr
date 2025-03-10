@@ -1,0 +1,7 @@
+with "attribute_sharing.gpr";
+project Common_Subsystem is
+   for Languages    use ("Ada", "C");
+   for Source_Dirs  use ("util_src");
+   for Object_Dir   use  "obj_util";
+   package Compiler renames Attribute_Sharing.Compiler;
+end Common_Subsystem;

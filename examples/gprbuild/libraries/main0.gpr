@@ -1,0 +1,8 @@
+with "static_lib.gpr";
+project Main0 is
+   for Languages          use ("Ada");
+   for Main               use ("ada_main.adb");
+   package Builder is
+      for Executable ("ada_main.adb") use "main0";
+   end Builder;
+end Main0;
