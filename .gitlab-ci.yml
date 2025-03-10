@@ -160,25 +160,6 @@ test_gprbuild:
     reports:
       junit: testgprbuild_result.xml
 
-#########################
-## GPRCONFIG TESTSUITE ##
-#########################
-
-test_gprconfig:
-  extends: .gpr2_test_template
-  variables:
-    JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
-  script:
-    - install_cache
-    - run_testsuite gprconfig "" test_gprconfig
-  artifacts:
-    when:
-      always
-    paths:
-      - testgprconfig_result.xml
-    reports:
-      junit: testgprconfig_result.xml
-
 ####################
 ## POSTPROCESSING ##
 ####################

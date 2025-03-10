@@ -30,9 +30,6 @@ project GPR2.Tools extends "../shared.gpr" is
    for Exec_Dir use Shared.Build_Root & "/" & Shared.Build;
    for Main use
      ("gprclean-main.adb",
-      "gprconfig.adb",
-      "gprdoc-main.adb",
-      "gprinspect-main.adb",
       "gprinstall-main.adb",
       "gprls-main.adb");
 
@@ -56,7 +53,7 @@ project GPR2.Tools extends "../shared.gpr" is
    package Install is
       case Target is
          when "Windows_NT" =>
-            for Artifacts ("bin") use ("src/tools/gpr2install.exe.manifest");
+            for Artifacts ("bin") use ("src/gprinstall.exe.manifest");
          when "UNIX" =>
             null;
       end case;
