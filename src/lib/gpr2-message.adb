@@ -63,16 +63,20 @@ package body GPR2.Message is
                (case Self.Level is
                    when Error    => "E",
                    when Warning  => "W",
-                   when Hint     => "I",
+                   when Hint     => "H",
                    when Lint     => "L",
-                   when End_User => ""),
+                   when End_User => (if Self.Sloc.Is_Defined
+                                     then "I"
+                                     else "")),
            when Long =>
                (case Self.Level is
                    when Error    => "error",
                    when Warning  => "warning",
                    when Hint     => "hint",
                    when Lint     => "lint",
-                   when End_User => ""));
+                   when End_User => (if Self.Sloc.Is_Defined
+                                     then "info"
+                                     else "")));
 
       Indent   : constant String := (1 .. Self.Indent * 2 => ' ');
 
@@ -83,8 +87,7 @@ package body GPR2.Message is
                    & To_String (Self.Message);
 
    begin
-
-      if Self.Level = End_User or else not Self.Sloc.Is_Defined then
+      if not Self.Sloc.Is_Defined then
          return Indented;
       else
          declare
