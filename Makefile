@@ -99,7 +99,7 @@ BUILD_TYPES       := debug release release_checks gnatcov
 
 # Location of the project files
 GPR2              := ${SOURCE_DIR}/gpr2.gpr
-GPR2TOOLS         := ${SOURCE_DIR}/tools/gpr2-tools.gpr
+GPR2TOOLS         := ${SOURCE_DIR}/tools/gpr2_tools.gpr
 GPR2KB            := ${SOURCE_DIR}/kb/collect_kb.gpr
 
 # adapt build dirs to out-of-tree builds
@@ -187,7 +187,7 @@ ifneq (${GPR2_BUILD},gnatcov)
 	${BUILDER} -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		${GPR2}
 else
-	echo "gpr2 library built from gpr2-tools in gnatcov mode"
+	echo "gpr2 library built from gpr2_tools in gnatcov mode"
 endif
 
 # Gpr2 tools
@@ -216,7 +216,7 @@ ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2))
 endif
 
 uninstall-tools:
-ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2-tools))
+ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2_tools))
 	${UNINSTALLER} $(notdir ${GPR2TOOLS})
 endif
 

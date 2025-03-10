@@ -1,0 +1,11 @@
+with "gpr2";
+with "gpr2tools-common";
+
+project GPR2tools.GPRConfig extends "gpr2tools.gpr" is
+
+   for Source_Dirs use ("../src/gprconfig");
+   for Main use ("gprconfig.adb");
+   for Object_Dir use GPR2tools.Base_Object_Dir & "/gprconfig";
+   for Exec_Dir use GPR2tools.Base_Exec_Dir;
+
+end GPR2tools.GPRConfig;

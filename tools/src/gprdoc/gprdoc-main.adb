@@ -20,7 +20,6 @@ with Ada;
 with Ada.Command_Line;
 with Ada.Exceptions;
 
-with GPR2.Interrupt_Handler;
 with GPR2.Options;
 with GPR2.Reporter;
 
@@ -28,6 +27,7 @@ with GPRdoc.Process;
 
 with GPRtools;
 with GPRtools.Command_Line;
+with GPRtools.Interrupt_Handler;
 with GPRtools.Options;
 with GPRtools.Program_Termination;
 with GPRtools.Sigint;
@@ -127,7 +127,7 @@ function GPRdoc.Main return Ada.Command_Line.Exit_Status is
 begin
    --  Install the Ctrl-C handler
 
-   GPR2.Interrupt_Handler.Install_Sigint (GPRtools.Sigint.Handler'Access);
+   GPRtools.Interrupt_Handler.Install_Sigint (GPRtools.Sigint.Handler'Access);
 
    --  Set program name
 

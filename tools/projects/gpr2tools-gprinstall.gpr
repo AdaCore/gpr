@@ -1,0 +1,28 @@
+with "gpr2";
+with "gpr2tools-common";
+
+project GPR2tools.GPRInstall extends "gpr2tools.gpr" is
+
+   for Source_Dirs use ("../src/gprinstall");
+   for Main use ("gprinstall-main.adb");
+   for Object_Dir use GPR2tools.Base_Object_Dir & "/gprinstall";
+   for Exec_Dir use GPR2tools.Base_Exec_Dir;
+
+   package Builder extends GPR2tools.Builder is
+      for Executable ("gprinstall-main.adb") use "gprinstall";
+   end Builder;
+
+   -------------
+   -- Install --
+   -------------
+
+   package Install is
+      case Target is
+         when "Windows_NT" =>
+            for Artifacts ("bin") use ("../src/gprinstall/gprinstall.exe.manifest");
+         when "UNIX" =>
+            null;
+      end case;
+   end Install;
+
+end GPR2tools.GPRInstall;
