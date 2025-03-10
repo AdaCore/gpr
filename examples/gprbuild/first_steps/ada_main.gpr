@@ -1,0 +1,8 @@
+project Ada_Main is
+   for Languages    use ("Ada", "C");
+   for Source_Dirs  use ("ada_src", "util_src");
+   for Object_Dir   use  "obj";
+   for Exec_Dir     use ".";
+   for Source_Files use ("ada_main.adb", "c_lib.ads", "lib.h", "lib.c");
+   for Main         use ("ada_main.adb");
+end Ada_Main;

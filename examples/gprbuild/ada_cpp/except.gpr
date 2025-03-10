@@ -1,0 +1,9 @@
+project Except is
+   for Languages use ("Ada", "C++");
+   for Source_Dirs use ("src1");
+   for Main use ("ada_main.adb", "cpp_main.cpp");
+   package Naming is
+      for Specification_Suffix ("C++") use ".h";
+      for Implementation_Suffix ("C++") use ".cpp";
+   end Naming;
+end Except;

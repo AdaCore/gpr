@@ -149,4 +149,8 @@ library project GPR2 extends "shared.gpr" is
       for Excluded_Units use ("gpr_parser*");
    end Coverage;
 
+   package Install is
+      for Artifacts ("share/examples/gpr2") use ("examples/libgpr2/*");
+   end Install;
+
 end GPR2;

@@ -1,0 +1,8 @@
+library project Extern_Lib is
+   for Languages    use ("Ada", "C");
+   for Source_Dirs  use ("lib_src");
+   for Library_Dir  use "lib2";
+   for Library_Kind use "dynamic";
+   for Library_Name use "l2";
+   for Externally_Built use "true";
+end Extern_Lib;

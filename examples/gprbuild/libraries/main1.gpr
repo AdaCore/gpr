@@ -1,0 +1,9 @@
+with "static_lib.gpr";
+project Main1 is
+   for Languages          use ("C");
+   for Main               use ("c_main.c");
+   for Roots ("c_main.c") use ("ada_lib");
+   package Builder is
+      for Executable ("c_main.c") use "main1";
+   end Builder;
+end Main1;

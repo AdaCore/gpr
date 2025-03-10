@@ -1,0 +1,16 @@
+project Animals is
+
+   for Source_Dirs use ("src2");
+   for Languages use ("Ada", "C++");
+   for Main use ("main.adb");
+
+   package Compiler is  
+      for Default_Switches ("Ada") use ("-g", "-gnat05", "-gnatwA");
+   end Compiler;
+
+   package Naming is
+      for Specification_Suffix ("C++") use ".h";
+      for Implementation_Suffix ("C++") use ".cc";
+   end Naming;
+
+end Animals;

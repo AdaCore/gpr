@@ -1,0 +1,4 @@
+project New_Common_Subsystem extends "../subsystems/common_subsystem.gpr" is
+   for Source_Dirs  use ("new_util_src");
+   for Object_Dir   use  "new_obj_util";
+end New_Common_Subsystem;

@@ -1,0 +1,12 @@
+project C_Main is
+   for Languages    use ("Ada", "C");
+   for Source_Dirs  use ("c_src", "util_src");
+   for Object_Dir   use  "obj1";
+   for Main         use ("c_main.c");
+   package Compiler is
+      C_Switches := ("-pedantic");
+      for Default_Switches ("C")   use C_Switches;
+      for Default_Switches ("Ada") use ("-gnaty");
+      for Switches ("c_main.c")    use C_Switches & ("-g");
+   end Compiler;
+end C_Main;

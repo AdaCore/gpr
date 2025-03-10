@@ -12,4 +12,8 @@ project GPR2tools.GPRBuild extends "gpr2tools.gpr" is
       for Executable ("gprbuild-main.adb") use GPR2tools.Tools_Prefix & "build";
    end Builder;
 
+   package Install is
+      for Artifacts ("share/examples/gprbuild") use ("../../examples/gprbuild/*");
+   end Install;
+
 end GPR2tools.GPRBuild;

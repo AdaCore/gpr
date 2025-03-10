@@ -1,0 +1,16 @@
+with "attribute_sharing.gpr";
+with "common_subsystem.gpr";
+project C_Main is
+   for Languages    use ("C");
+   for Source_Dirs  use ("c_src");
+   for Object_Dir   use  "obj1";
+   for Main         use ("c_main.c");
+   for Roots ("c_main.c") use ("*");
+   for Exec_Dir     use ".";
+   package Compiler is
+      for Default_Switches ("C")    use
+        Attribute_Sharing.Compiler'Default_Switches ("C");
+      for Switches ("c_main.c")    use 
+        Compiler'Default_Switches ("C") & ("-g");
+   end Compiler;
+end C_Main;

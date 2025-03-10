@@ -1,0 +1,8 @@
+project Sa_Lib is
+   for Languages    use ("Ada", "C");
+   for Source_Dirs use ("lib_src");
+   for Library_Dir  use "lib3";
+   for Library_Kind use "dynamic";
+   for Library_Interface use ("ada_lib");
+   for Library_Name use "ada";
+end Sa_Lib;
