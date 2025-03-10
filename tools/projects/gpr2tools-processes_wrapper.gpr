@@ -1,0 +1,18 @@
+with "gpr2tools-common";
+
+project GPR2tools.Processes_Wrapper extends "gpr2tools.gpr" is
+
+   for Source_Dirs use ("../src/processes_wrapper");
+   for Main use ("processes_wrapper-main.adb");
+   for Object_Dir use GPR2tools.Base_Object_Dir & "/processes_wrapper";
+   for Exec_Dir use GPR2tools.Base_Exec_Dir;
+
+   package Builder extends Shared.Builder is
+      for Executable ("processes_wrapper-main.adb") use "processes_wrapper";
+   end Builder;
+
+   package Install is
+      for Exec_Subdir use GPR2tools.Libexec_Install_Dir;
+   end Install;
+
+end GPR2tools.Processes_Wrapper;

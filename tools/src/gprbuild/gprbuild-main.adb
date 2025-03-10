@@ -27,7 +27,6 @@ with GPR2.Build.Compilation_Unit;
 with GPR2.Build.External_Options;
 with GPR2.Build.Process_Manager.JSON;
 with GPR2.Build.Source;
-with GPR2.Interrupt_Handler;
 with GPR2.Message;
 with GPR2.Options;
 with GPR2.Path_Name;
@@ -39,6 +38,7 @@ with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source_Reference;
 
+with GPRtools.Interrupt_Handler;
 with GPRtools.Options;
 with GPRtools.Program_Termination;
 with GPRtools.Sigint;
@@ -101,7 +101,7 @@ begin
 
    --  Install the Ctrl-C handler
 
-   GPR2.Interrupt_Handler.Install_Sigint (GPRtools.Sigint.Handler'Access);
+   GPRtools.Interrupt_Handler.Install_Sigint (GPRtools.Sigint.Handler'Access);
 
    --  Set program name
 
