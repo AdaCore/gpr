@@ -1,17 +1,23 @@
 import json
+import os
 from e3.env import Env
+from e3.os.fs import which
 from testsuite_support.builder_and_runner import BuilderAndRunner
-from testsuite_support.tools import GPRDOC
+from testsuite_support.tools import GPRDOC, GPRCONFIG
 
 
 bnr = BuilderAndRunner()
-
-p = bnr.run([GPRDOC])
 
 if 'windows' in Env().host.platform:
     is_win = True
 else:
     is_win = False
+
+# locate gprdoc
+exe = ".exe" if is_win else ""
+install_dir = os.path.dirname(os.path.dirname(which(GPRCONFIG + exe)))
+gprdoc = os.path.join(install_dir, 'libexec', 'gprbuild', GPRDOC)
+p = bnr.run([gprdoc])
 
 
 def read(json_struct):
