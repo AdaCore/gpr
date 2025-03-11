@@ -986,17 +986,7 @@ begin
 
       GNAT.OS_Lib.OS_Exit (1);
    else
-      declare
-         --  ??? Always display warnings even in quiet mode
-         Verbosity : constant Verbosity_Level := Console_Reporter.Verbosity;
-      begin
-         if Verbosity = Quiet then
-            Console_Reporter.Set_Verbosity (Regular);
-         end if;
-
-         Console_Reporter.Report (Config_Log);
-         Console_Reporter.Set_Verbosity (Verbosity);
-      end;
+      Console_Reporter.Report (Config_Log);
    end if;
 
    if Config_Contents /= Null_Unbounded_String then
