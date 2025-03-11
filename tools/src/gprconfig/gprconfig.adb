@@ -75,7 +75,8 @@ procedure GPRconfig is
    Opt_Fallback     : aliased Boolean;
    Console_Reporter : GPR2.Reporter.Console.Object :=
                         GPR2.Reporter.Console.Create
-                          (Verbosity => GPR2.Reporter.Regular);
+                          (Verbosity      => GPR2.Reporter.Regular,
+                           User_Verbosity => Regular);
 
    KB_Flags         : Parsing_Flags := Default_Flags;
 
@@ -985,7 +986,17 @@ begin
 
       GNAT.OS_Lib.OS_Exit (1);
    else
-      Console_Reporter.Report (Config_Log);
+      declare
+         --  ??? Always display warnings even in quiet mode
+         Verbosity : constant Verbosity_Level := Console_Reporter.Verbosity;
+      begin
+         if Verbosity = Quiet then
+            Console_Reporter.Set_Verbosity (Regular);
+         end if;
+
+         Console_Reporter.Report (Config_Log);
+         Console_Reporter.Set_Verbosity (Verbosity);
+      end;
    end if;
 
    if Config_Contents /= Null_Unbounded_String then

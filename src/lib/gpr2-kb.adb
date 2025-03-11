@@ -824,7 +824,7 @@ package body GPR2.KB is
             begin
                Errors.Append
                  (Message.Create
-                    (Message.Warning,
+                    (Message.End_User,
                      "can't find a toolchain "
                      & "for the following configuration: language '"
                      & Image (Comp.Language) & "', target '"

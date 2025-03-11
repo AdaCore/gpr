@@ -101,6 +101,7 @@ BUILD_TYPES       := debug release release_checks gnatcov
 GPR2              := ${SOURCE_DIR}/gpr2.gpr
 GPR2TOOLS         := ${SOURCE_DIR}/tools/gpr2_tools.gpr
 GPR2KB            := ${SOURCE_DIR}/kb/collect_kb.gpr
+ALL_GPR2TOOLS     := $(wildcard ${SOURCE_DIR}/tools/projects/gpr2tools-*.gpr)
 
 # adapt build dirs to out-of-tree builds
 ifeq (${SOURCE_DIR},.)
@@ -201,9 +202,11 @@ ifeq (${GPR2_BUILD},gnatcov)
 # Remove artifacts from previous instrumentations, so that stale units
 # that are not overriden by new ones don't get in our way.
 	rm -rf "${BUILD_ROOT}/${GPR2_BUILD}/obj-*/*gnatcov-instr"
+	rm -rf "${BUILD_ROOT}/${GPR2_BUILD}/obj-*/*/*gnatcov-instr"
 	mkdir -p "${BUILD_ROOT}/${GPR2_BUILD}"
-
-	${COVERAGE_INSTR} -P ${GPR2TOOLS}
+	for gpr in ${ALL_GPR2TOOLS}; do \
+		${COVERAGE_INSTR} -P $$gpr; \
+	done
 endif
 
 ###########
