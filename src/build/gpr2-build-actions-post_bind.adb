@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2024, AdaCore
+--  Copyright (C) 2024-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -55,23 +55,32 @@ package body GPR2.Build.Actions.Post_Bind is
             Cmd_Line.Add_Argument (Attr.Value.Text);
          end if;
       end Add_Attr;
+
+      Ada_Lang    : constant PAI.Object := PAI.Create (Ada_Language);
+      Driver_Attr : constant GPR2.Project.Attribute.Object :=
+        Self.View.Attribute (PRA.Compiler.Driver, Ada_Lang);
    begin
-
-      --  ??? Replace hard coded values
-
-      Cmd_Line.Set_Driver ("gcc");
-      Cmd_Line.Add_Argument ("-c");
-      Cmd_Line.Add_Argument (String (Self.Input.Path.Simple_Name));
-      Cmd_Line.Add_Argument ("-o");
-      Cmd_Line.Add_Argument (String (Self.Output.Path.Simple_Name));
-
-      --  ??? We probably need to add other compilation options.
-
-      if Self.View.Is_Library
-        and then Self.View.Library_Kind /= "static"
-      then
-         Add_Attr (PRA.Compiler.Pic_Option, PAI.Create (Ada_Language), True);
+      if Driver_Attr.Is_Defined then
+         Cmd_Line.Set_Driver (Driver_Attr.Value.Text);
+      else
+         return;
       end if;
+
+      Add_Attr (PRA.Compiler.Leading_Required_Switches, Ada_Lang, True);
+      Cmd_Line.Add_Argument ("-c");
+      Cmd_Line.Add_Argument ("-gnatA");
+      Cmd_Line.Add_Argument ("-gnatiw");
+      Cmd_Line.Add_Argument ("-gnatws");
+      Cmd_Line.Add_Argument ("-gnatWb");
+      Cmd_Line.Add_Argument (Self.Input.Path);
+      Cmd_Line.Add_Argument ("-o");
+      Cmd_Line.Add_Argument (Self.Output.Path);
+
+      if Self.View.Is_Library and then Self.View.Library_Kind /= "static" then
+         Add_Attr (PRA.Compiler.Pic_Option, Ada_Lang, True);
+      end if;
+
+      Add_Attr (PRA.Compiler.Trailing_Required_Switches, Ada_Lang, True);
    end Compute_Command;
 
    -----------------------
