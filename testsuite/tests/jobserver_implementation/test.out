@@ -1,0 +1,93 @@
+Testcase - Makeflags = "--jobserver-auth=1,2"
+[ JM_SIMPLE_PIPE ]
+   - Dry_Run    : FALSE
+   - Active     : TRUE
+
+Testcase - Makeflags = "--jobserver-auth=1,2 "
+[ JM_SIMPLE_PIPE ]
+   - Dry_Run    : FALSE
+   - Active     : TRUE
+
+Testcase - Makeflags = "--jobserver-auth=-1,2"
+
+raised GPR2.BUILD.JOBSERVER.JS_INITIALIZE_ERROR : Invalid file descriptor to perform a connection to the jobserver. Make sure you prefixed your gprbuild command with a "+" in your makefile.
+
+Testcase - Makeflags = "--jobserver-auth=1,-2"
+
+raised GPR2.BUILD.JOBSERVER.JS_INITIALIZE_ERROR : Invalid file descriptor to perform a connection to the jobserver. Make sure you prefixed your gprbuild command with a "+" in your makefile.
+
+Testcase - Makeflags = "--jobserver-auth=-1,-2"
+
+raised GPR2.BUILD.JOBSERVER.JS_INITIALIZE_ERROR : Invalid file descriptor to perform a connection to the jobserver. Make sure you prefixed your gprbuild command with a "+" in your makefile.
+
+Testcase - Makeflags = "--jobserver-auth=fifo:prj.gpr"
+[ JM_NAMED_PIPE ]
+   - Dry_Run    : FALSE
+   - Active     : TRUE
+
+Testcase - Makeflags = "--jobserver-auth=fifo:prj.gpr "
+[ JM_NAMED_PIPE ]
+   - Dry_Run    : FALSE
+   - Active     : TRUE
+
+Testcase - Makeflags = "--jobserver-auth=fifo:unknown"
+
+raised GPR2.BUILD.JOBSERVER.JS_INITIALIZE_ERROR : Invalid named pipe descriptor to perform a connection to the jobserver. Make sure you prefixed your gprbuild command with a "+" in your makefile.
+
+Testcase - Makeflags = "--jobserver-auth=bla"
+[ JM_UNDEFINED ]
+   - Dry_Run    : FALSE
+   - Active     : FALSE
+   - Register   : FALSE
+   - Release    : FALSE
+   - Integrous  : TRUE
+
+Testcase - Makeflags = "--jobserver-auth=bla "
+[ JM_UNDEFINED ]
+   - Dry_Run    : FALSE
+   - Active     : FALSE
+   - Register   : FALSE
+   - Release    : FALSE
+   - Integrous  : TRUE
+
+Testcase - Makeflags = "n --jobserver-auth=1,2"
+[ JM_UNDEFINED ]
+   - Dry_Run    : TRUE
+   - Active     : FALSE
+   - Register   : FALSE
+   - Release    : FALSE
+   - Integrous  : TRUE
+
+Testcase - Makeflags = UNSET
+[ JM_UNDEFINED ]
+   - Dry_Run    : FALSE
+   - Active     : FALSE
+   - Register   : FALSE
+   - Release    : FALSE
+   - Integrous  : TRUE
+
+Testcase - Makeflags = ""
+[ JM_UNDEFINED ]
+   - Dry_Run    : FALSE
+   - Active     : FALSE
+   - Register   : FALSE
+   - Release    : FALSE
+   - Integrous  : TRUE
+
+Testcase - Makeflags = "--foo-bar=1,2"
+
+raised GPR2.BUILD.JOBSERVER.JS_INITIALIZE_ERROR : warning: GNU make jobserver MAKEFLAGS detected but no --jobserver-auth switch to determine how to  connect. Make sure you are using GNU make 4.2 or later.
+
+Testcase - Makeflags = "--jobserver-auth=1,2 --jobserver-auth=fifo:prj.gpr"
+[ JM_NAMED_PIPE ]
+   - Dry_Run    : FALSE
+   - Active     : TRUE
+
+Testcase - Makeflags = "--jobserver-auth=1,2 --jobserver-auth=prj.gpr"
+[ JM_UNDEFINED ]
+   - Dry_Run    : FALSE
+   - Active     : FALSE
+   - Register   : FALSE
+   - Release    : FALSE
+   - Integrous  : TRUE
+

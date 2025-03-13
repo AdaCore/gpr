@@ -88,6 +88,10 @@ package body GPR2.Build.Process_Manager.JSON is
 
             when Failed_To_Launch =>
                Job_Summary.Set_Field (TEXT_STATUS, "FAILED_TO_LAUNCH");
+
+            when Pending =>
+               --  This case should not happen
+               null;
          end case;
 
          Job_Summary.Set_Field (TEXT_STDOUT, Stdout);

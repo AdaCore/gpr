@@ -277,6 +277,11 @@ package body GPRbuild.Options is
         (Build_Group,
          Create (Name => "--keep-temp-files",
                  Help => "Do not delete temporary files"));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name => "--autodetect-jobserver",
+                 Help => "Autodetect GNU make jobserver and attempt to share "
+                 & "job slots"));
 
 
       Parser.Add_Section_Argument
@@ -546,6 +551,11 @@ package body GPRbuild.Options is
 
       elsif Arg = "--keep-temp-files" then
          Result.PM_Options.Keep_Temp_Files := True;
+
+      elsif Arg = "--autodetect-jobserver" then
+         --  ??? : Emit a warning to inform the user this switch is no longer
+         --  mandatory to detect and connect to a jobserver ?
+         null;
 
       elsif Arg = "-nostdinc" then
          Add_Ada_Compiler_Option (String (Arg));
