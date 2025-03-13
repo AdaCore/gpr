@@ -18,9 +18,10 @@ package body GPR2.Build.Actions.Write_File is
    -------------
 
    overriding procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object)
+     (Self           : in out Object;
+      Slot           : Positive;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean)
    is
       pragma Unreferenced (Self);
    begin

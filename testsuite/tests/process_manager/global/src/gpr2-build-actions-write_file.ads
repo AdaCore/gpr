@@ -50,9 +50,10 @@ package GPR2.Build.Actions.Write_File is
       Load_Mode : Boolean);
 
    overriding procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object);
+     (Self           : in out Object;
+      Slot           : Positive;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean);
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object;
