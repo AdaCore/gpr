@@ -37,9 +37,10 @@ package body GPR2.Build.Actions.Link is
    ---------------------
 
    overriding procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object)
+     (Self           : in out Object;
+      Slot           : Positive;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean)
    is
       pragma Unreferenced (Slot);
 
@@ -196,12 +197,8 @@ package body GPR2.Build.Actions.Link is
                end if;
             end loop;
 
-            --  We use a temp file for the archive so that we don't re-use
-            --  an old archive. This tmp file will replace the original
-            --  one in the post-command phase.
-
             Cmd_Line.Add_Argument
-              (String (Self.Output.Path.Simple_Name));
+              (String (Self.Output.Path.Simple_Name), True);
          end;
 
       else

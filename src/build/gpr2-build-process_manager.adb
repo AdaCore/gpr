@@ -5,12 +5,12 @@
 --
 
 pragma Warnings (Off);
-with Ada.Strings.Maps;
 with System.Multiprocessors;
 pragma Warnings (On);
 
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
+with Ada.Strings.Maps;
 with Ada.Unchecked_Deallocation;
 
 with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
@@ -620,6 +620,10 @@ package body GPR2.Build.Process_Manager is
    -- Launch_Job --
    ----------------
 
+   ----------------
+   -- Launch_Job --
+   ----------------
+
    procedure Launch_Job
      (Self           : in out Object;
       JS             : in out Build.Jobserver.Object'Class;
@@ -705,7 +709,7 @@ package body GPR2.Build.Process_Manager is
       P_Re : FS.File_Descriptor;
 
    begin
-      if not (Proc_Handler.Status = Pending) then
+      if Proc_Handler.Status /= Pending then
          if Job.View.Is_Externally_Built then
             if Self.Traces.Is_Active then
                pragma Annotate (Xcov, Exempt_On, "debug code");
@@ -719,99 +723,99 @@ package body GPR2.Build.Process_Manager is
             return;
          end if;
 
-         --  Load and check the job's signature
-
-         Job.Load_Signature;
-
-         --  We need to compute the command line before checking the signature
-         --  since the cmd line is part of the signature. It is important to do
-         --  it even for deactivated actions, else the signature is considered
-         --  invalid and the following actions are not executed.
-
          begin
+            --  Load and check the job's signature
+
+            Job.Load_Signature;
+
+            if Job.Is_Deactivated then
+               --  Note: we need to check for deactivated jobs *after* the
+               --  signature is computed to understand if the deactivated
+               --  action has all its output correct (so that we can unblock
+               --  depending non-deactivated actions).
+
+               if Self.Traces.Is_Active then
+                  pragma Annotate (Xcov, Exempt_On, "debug code");
+                  Self.Traces.Trace
+                    ("job is deactivated: " & Job.UID.Image);
+                  pragma Annotate (Xcov, Exempt_Off);
+               end if;
+
+               Proc_Handler := Process_Handler'(Status => Deactivated);
+
+               return;
+
+            elsif Job.Skip then
+               if Self.Traces.Is_Active then
+                  pragma Annotate (Xcov, Exempt_On, "debug code");
+                  Self.Traces.Trace
+                    ("job asked to be skipped: " & Job.UID.Image);
+                  pragma Annotate (Xcov, Exempt_Off);
+               end if;
+
+               Proc_Handler := Process_Handler'(Status => Skipped);
+
+               return;
+            end if;
+
+            if not Force and then Job.Valid_Signature then
+               if Self.Traces.Is_Active then
+                  pragma Annotate (Xcov, Exempt_On, "debug code");
+                  Self.Traces.Trace
+                    ("Signature is valid, do not execute the job '" &
+                       Job.UID.Image & "'");
+                  pragma Annotate (Xcov, Exempt_Off);
+               end if;
+
+               Proc_Handler := Process_Handler'(Status => Skipped);
+
+               return;
+            end if;
+
             Job.Update_Command_Line (Slot_Id);
+
+            if Job.Command_Line.Argument_List.Is_Empty then
+               if Self.Traces.Is_Active then
+                  pragma Annotate (Xcov, Exempt_On, "debug code");
+                  Self.Traces.Trace
+                    ("job arguments is empty, skipping '"  & Job.UID.Image &
+                       "'");
+                  pragma Annotate (Xcov, Exempt_Off);
+               end if;
+
+               Proc_Handler := Process_Handler'(Status => Skipped);
+
+               return;
+            end if;
+
+            if not Job.Pre_Command then
+               raise Action_Error;
+            end if;
+
          exception
             when Action_Error =>
                Proc_Handler :=
-                 (Status        => Failed_To_Launch,
-                  Error_Message => To_Unbounded_String
-                    ("Command '" & Image (Job.UID) &
-                       "' failed."));
+                 Process_Handler'
+                   (Status        => Failed_To_Launch,
+                    Error_Message => To_Unbounded_String
+                      ("Command '" & Image (Job.UID) & "' failed."));
+
+               return;
+
+            when E : others =>
+               Self.Tree_Db.Reporter.Report
+                 ("Unexpected exception:",
+                  To_Stderr => True);
+               Self.Tree_Db.Reporter.Report
+                 (Ada.Exceptions.Exception_Information (E),
+                  To_Stderr => True);
+               Proc_Handler :=
+                 Process_Handler'
+                   (Status        => Failed_To_Launch,
+                    Error_Message => Null_Unbounded_String);
+
                return;
          end;
-
-         if Job.Is_Deactivated then
-            --  Note: we need to check for deactivated jobs *after* the
-            --  signature is computed to understand if the deactivated action
-            --  has all its output correct (so that we can unblock depending
-            --  non-deactivated actions).
-
-            if Self.Traces.Is_Active then
-               pragma Annotate (Xcov, Exempt_On, "debug code");
-               Self.Traces.Trace
-                 ("job is deactivated: " & Job.UID.Image);
-               pragma Annotate (Xcov, Exempt_Off);
-            end if;
-
-            Proc_Handler := Process_Handler'(Status => Deactivated);
-
-            return;
-
-         elsif Job.Skip then
-            if Self.Traces.Is_Active then
-               pragma Annotate (Xcov, Exempt_On, "debug code");
-               Self.Traces.Trace
-                 ("job asked to be skipped: " & Job.UID.Image);
-               pragma Annotate (Xcov, Exempt_Off);
-            end if;
-
-            Proc_Handler := Process_Handler'(Status => Skipped);
-
-            return;
-         end if;
-
-         if not Force and then Job.Valid_Signature then
-            if Self.Traces.Is_Active then
-               pragma Annotate (Xcov, Exempt_On, "debug code");
-               Self.Traces.Trace
-                 ("Signature is valid, do not execute the job '" &
-                    Job.UID.Image & "'");
-               pragma Annotate (Xcov, Exempt_Off);
-            end if;
-
-            Proc_Handler := Process_Handler'(Status => Skipped);
-
-            return;
-         end if;
-
-         if Job.Command_Line.Argument_List.Is_Empty then
-            if Self.Traces.Is_Active then
-               pragma Annotate (Xcov, Exempt_On, "debug code");
-               Self.Traces.Trace
-                 ("job arguments is empty, skipping '"  & Job.UID.Image & "'");
-               pragma Annotate (Xcov, Exempt_Off);
-            end if;
-
-            Proc_Handler := Process_Handler'(Status => Skipped);
-
-            return;
-         end if;
-
-         if not Job.Pre_Command then
-            Self.Tree_Db.Reporter.Report
-              (Message.Create
-                 (Message.Warning,
-                  Job.UID.Image & " failed",
-                  Source_Reference.Create
-                    (Job.View.Path_Name.Value, 0, 0)));
-
-            Proc_Handler :=
-              Process_Handler'
-                (Status        => Failed_To_Launch,
-                 Error_Message => Null_Unbounded_String);
-
-            return;
-         end if;
       end if;
 
       if not JS.Active or else JS.Preorder_Token then

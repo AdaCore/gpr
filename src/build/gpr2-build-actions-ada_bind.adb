@@ -45,9 +45,10 @@ package body GPR2.Build.Actions.Ada_Bind is
    ---------------------
 
    overriding procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object)
+     (Self           : in out Object;
+      Slot           : Positive;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean)
    is
       procedure Add_Attr
         (Id           : Q_Attribute_Id;
@@ -453,12 +454,16 @@ package body GPR2.Build.Actions.Ada_Bind is
          Cmd_Line.Add_Argument ("-x");
       end if;
 
-      Add_Mapping_File;
+      if not Signature_Only then
+         Add_Mapping_File;
+      end if;
 
       --  Now that all switches have been analyzed, set the driver
       Cmd_Line.Set_Driver (Resolve_Binder);
 
-      if Cmd_Line.Total_Length > Command_Line_Limit then
+      if not Signature_Only
+        and then Cmd_Line.Total_Length > Command_Line_Limit
+      then
          Create_Response_File;
       end if;
    end Compute_Command;

@@ -51,9 +51,10 @@ package GPR2.Build.Actions.Compile is
       Load_Mode : Boolean);
 
    overriding procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object);
+     (Self           : in out Object;
+      Slot           : Positive;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean);
 
    function Dependencies
      (Self : Object) return GPR2.Containers.Filename_Set;

@@ -67,13 +67,18 @@ package body GPR2.Build.Actions.Compile.Ada is
    ---------------------
 
    overriding procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object)
+     (Self           : in out Object;
+      Slot           : Positive;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean)
    is
       Attr : GPR2.Project.Attribute.Object;
    begin
-      Compile.Object (Self).Compute_Command (Slot, Cmd_Line);
+      Compile.Object (Self).Compute_Command (Slot, Cmd_Line, Signature_Only);
+
+      if Signature_Only then
+         return;
+      end if;
 
       if Self.Global_Config_Pragmas.Is_Defined
         or else Self.Local_Config_Pragmas.Is_Defined

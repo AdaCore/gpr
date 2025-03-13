@@ -28,9 +28,10 @@ package body GPR2.Build.Actions.Compile is
    ---------------------
 
    overriding procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object)
+     (Self           : in out Object;
+      Slot           : Positive;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean)
    is
       procedure Add_Attr
         (Id           : Q_Attribute_Id;
@@ -438,7 +439,7 @@ package body GPR2.Build.Actions.Compile is
          if Attr.Is_Defined then
             for Path of Self.View.Include_Path (Self.Lang) loop
                Add_Options_With_Arg
-                 (Attr, Path.String_Value, True);
+                 (Attr, Path.String_Value, False);
             end loop;
          end if;
       end Add_Include_Path;
@@ -607,9 +608,11 @@ package body GPR2.Build.Actions.Compile is
          end if;
       end;
 
-      Add_Include_Path;
-      Add_Mapping_File;
-      Add_Config_File;
+      if not Signature_Only then
+         Add_Include_Path;
+         Add_Mapping_File;
+         Add_Config_File;
+      end if;
 
       Add_Attr (PRA.Compiler.Trailing_Required_Switches, Lang_Idx, True, True);
 

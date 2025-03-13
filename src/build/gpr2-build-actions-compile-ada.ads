@@ -45,9 +45,10 @@ package GPR2.Build.Actions.Compile.Ada is
    --  object directory is always returned here.
 
    overriding procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object);
+     (Self           : in out Object;
+      Slot           : Positive;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean);
 
    overriding function On_Tree_Insertion
      (Self     : Object;

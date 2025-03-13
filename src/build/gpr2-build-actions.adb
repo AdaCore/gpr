@@ -22,7 +22,7 @@ package body GPR2.Build.Actions is
    -- Attach --
    ------------
 
-   procedure Attach (Self : in out Object;
+   procedure Attach (Self : in out Object'Class;
                      Db   : in out GPR2.Build.Tree_Db.Object)
    is
    begin
@@ -177,11 +177,12 @@ package body GPR2.Build.Actions is
    -- Load_Signature --
    --------------------
 
-   procedure Load_Signature (Self : in out Object)
+   procedure Load_Signature (Self : in out Object'Class)
    is
-      Db_File    : constant GPR2.Path_Name.Object :=
-                     Self.Tree.Db_Filename_Path
-                       (Object'Class (Self).UID, True);
+      Db_File  : constant GPR2.Path_Name.Object :=
+                     Self.Tree.Db_Filename_Path (Self.UID, True);
+      Cmd_Line : GPR2.Build.Command_Line.Object;
+      Ign      : Boolean with Unreferenced;
 
    begin
       if not Db_File.Is_Defined then
@@ -190,10 +191,21 @@ package body GPR2.Build.Actions is
          return;
       end if;
 
-      Self.Signature :=
-        Build.Signature.Load (Db_File, Object'Class (Self).View);
+      Self.Signature := Build.Signature.Load (Db_File, Self.View);
 
-      Object'Class (Self).Compute_Signature (Load_Mode => True);
+      Self.Compute_Signature (Load_Mode => True);
+
+      if Self.Signature.Was_Saved then
+         --  The signature hasn't been invalidated for now, so the last
+         --  element to check is its command line
+         Cmd_Line :=
+           GPR2.Build.Command_Line.Create (Self.Working_Directory);
+         Self.Compute_Command (1, Cmd_Line, Signature_Only => True);
+
+         Ign := Self.Signature.Add_Input
+           (Artifacts.Key_Value.Create
+              (Command_Line_Key, Cmd_Line.Signature));
+      end if;
 
    exception
       when others =>
@@ -212,18 +224,12 @@ package body GPR2.Build.Actions is
    begin
       Self.Cmd_Line :=
         GPR2.Build.Command_Line.Create (Self.Working_Directory);
-      Self.Compute_Command (Slot, Self.Cmd_Line);
+      Self.Compute_Command (Slot, Self.Cmd_Line, False);
 
       if Self.Cmd_Line.Total_Length = 0
         and then not Self.Deactivated
       then
          raise Action_Error;
-      end if;
-
-      if Self.Signature.Was_Saved then
-         Ign := Self.Signature.Add_Input
-           (Artifacts.Key_Value.Create
-              (Command_Line_Key, Self.Cmd_Line.Signature));
       end if;
    end Update_Command_Line;
 
