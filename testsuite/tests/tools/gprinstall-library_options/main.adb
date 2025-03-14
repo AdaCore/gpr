@@ -2,24 +2,26 @@ with Ada.Text_IO;
 
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
+with GPR2.Reporter.Console;
 
 procedure Main is
    use Ada;
    use GPR2;
 
-   Tree    : GPR2.Project.Tree.Object;
-   Context : GPR2.Context.Object;
+   Tree : GPR2.Project.Tree.Object;
+   Opts : GPR2.Options.Object;
 
 begin
-   Tree.Load_Autoconf
-     (Filename => GPR2.Path_Name.Create_File
-        (GPR2.Project.Ensure_Extension ("inst/share/gpr/lib1"),
-         GPR2.Path_Name.No_Resolution),
-      Context  => Context);
+   Opts.Add_Switch (Options.P, "inst/share/gpr/lib1");
+   Tree.Set_Reporter (GPR2.Reporter.Console.Create (GPR2.Reporter.Quiet));
+   if not Tree.Load (Opts) then
+      Text_IO.Put_Line ("could not load the project");
+   end if;
 
    if not Tree.Root_Project.Has_Attribute
      (Name => GPR2.Project.Registry.Attribute.Linker.Linker_Options)

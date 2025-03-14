@@ -1,5 +1,3 @@
 description:
     check gprinstall with multiple mains in sub-projects some aggregate
 driver: python_script
-control:
-    - ["SKIP", "True", "gprinstall not yet built from gpr2-next"]

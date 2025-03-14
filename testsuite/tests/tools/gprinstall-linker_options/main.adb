@@ -1,7 +1,6 @@
 with Ada.Text_IO;
 with GPR2.Containers;
-with GPR2.Context;
-with GPR2.Log;
+with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute.Set;
@@ -9,13 +8,14 @@ with GPR2.Project.Registry;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
+with GPR2.Reporter.Console;
 with GPR2.Source_Reference;
 with GPR2.Source_Reference.Value;
 
 procedure Main is
-   Tree1        : GPR2.Project.Tree.Object;
-   Tree2        : GPR2.Project.Tree.Object;
-   Context      : GPR2.Context.Object;
+   Tree1 : GPR2.Project.Tree.Object;
+   Tree2 : GPR2.Project.Tree.Object;
+   Opts  : GPR2.Options.Object;
    use GPR2;
 
    Library_Options : GPR2.Containers.Source_Value_List;
@@ -77,20 +77,23 @@ procedure Main is
 
 begin
    --  Check Library_Option present in original project
-   Tree1.Load_Autoconf
-     (Filename => GPR2.Path_Name.Create_File
-        (GPR2.Project.Ensure_Extension ("prj/lib2"),
-         GPR2.Path_Name.No_Resolution),
-      Context  => Context);
+   Opts.Add_Switch (Options.P, "prj/lib2");
+   Tree1.Set_Reporter (GPR2.Reporter.Console.Create (GPR2.Reporter.Quiet));
+   if not Tree1.Load (Opts) then
+      Ada.Text_IO.Put_Line ("Could not load Tree1");
+      return;
+   end if;
    Library_Options := Tree1.Root_Project.Attribute
      (Name => GPR2.Project.Registry.Attribute.Library_Options).Values;
 
    --  Check Linker_Option is not present in generated project
-   Tree2.Load_Autoconf
-     (Filename => GPR2.Path_Name.Create_File
-        (GPR2.Project.Ensure_Extension ("inst/share/gpr/lib2"),
-         GPR2.Path_Name.No_Resolution),
-      Context  => Context);
+   Opts := Options.Empty_Options;
+   Opts.Add_Switch (Options.P, "inst/share/gpr/lib2");
+   Tree2.Set_Reporter (GPR2.Reporter.Console.Create (GPR2.Reporter.Quiet));
+   if not Tree2.Load (Opts) then
+      Ada.Text_IO.Put_Line ("Could not load Tree2");
+      return;
+   end if;
 
    if Tree2.Root_Project.Has_Attribute
      (Name => GPR2.Project.Registry.Attribute.Linker.Linker_Options)

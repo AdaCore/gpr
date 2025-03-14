@@ -1,4 +1,2 @@
 description: Check tools behaviour on a syntactically invalid project
 driver: python_script
-control:
-- ["SKIP", "True", "gprls not transitioned to next"]

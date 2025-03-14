@@ -1,4 +1,2 @@
 description: test gpr2clean source file & recursive switch
 driver: python_script
-control:
-    - ["SKIP", "True", "gprclean not yet built from gpr2-next"]

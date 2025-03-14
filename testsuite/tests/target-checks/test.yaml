@@ -1,4 +1,2 @@
 description: Test target discrepancies detection
 driver: python_script
-control:
-- [XFAIL, "True", "libgpr2-next: gprls not ported yet"]
