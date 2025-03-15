@@ -369,8 +369,9 @@ package body GPR2.Build.Actions_Population is
    ----------------------
 
    function Populate_Actions
-     (Tree    : GPR2.Project.Tree.Object;
-      Options : Build.Options.Build_Options) return Boolean
+     (Tree           : GPR2.Project.Tree.Object;
+      Options        : Build.Options.Build_Options;
+      Static_Actions : Boolean) return Boolean
    is
       Tree_Db     : GPR2.Build.Tree_Db.Object_Access renames
                       Tree.Artifacts_Database;
@@ -577,6 +578,24 @@ package body GPR2.Build.Actions_Population is
       for A of To_Remove loop
          Tree_Db.Action_Id_To_Reference (A.UID).Deactivate;
       end loop;
+
+      if Static_Actions then
+         declare
+            List : Build.Tree_Db.Actions_List'Class :=
+                     Tree_Db.All_Actions;
+         begin
+            for C in List.Action_Iterate loop
+               declare
+                  Action : constant Build.Tree_Db.Action_Reference_Type :=
+                             List.Action_Reference (C);
+               begin
+                  if not Action.On_Ready_State then
+                     return False;
+                  end if;
+               end;
+            end loop;
+         end;
+      end if;
 
       return Result;
    end Populate_Actions;

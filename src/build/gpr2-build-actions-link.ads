@@ -6,7 +6,7 @@
 
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.Library;
-with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute_Index;
@@ -67,8 +67,11 @@ package GPR2.Build.Actions.Link is
    --  List of libraries this action uses
 
    overriding function On_Tree_Insertion
-     (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
+     (Self : Object;
+      Db   : in out GPR2.Build.Tree_Db.Object) return Boolean;
+
+   overriding function On_Ready_State
+     (Self : in out Object) return Boolean;
 
    overriding procedure Compute_Command
      (Self           : in out Object;
@@ -139,6 +142,9 @@ private
       Static_Options : Containers.Value_List :=
                          Containers.Empty_Value_List;
       --  Command line options added manually with the Add_Option procedure
+
+      Extra_Intf      : GPR2.Build.Compilation_Unit.Maps.Map;
+      --  Extra units needed to have a complete interface
    end record;
 
    overriding procedure Compute_Signature

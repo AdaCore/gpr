@@ -53,7 +53,8 @@ procedure Main is
 
       if not GPR2.Build.Actions_Population.Populate_Actions
         (Tree,
-         Build_Opts)
+         Build_Opts,
+	 True)
       then
          return;
       end if;

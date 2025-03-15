@@ -23,6 +23,8 @@ with GPR2.Source_Reference.Value;
 
 package body GPR2.Build.Actions.Link is
 
+   procedure Check_Interface (Self : in out Object);
+
    ----------------
    -- Add_Option --
    ----------------
@@ -31,6 +33,73 @@ package body GPR2.Build.Actions.Link is
    begin
       Self.Static_Options.Append (Option);
    end Add_Option;
+
+   ---------------------
+   -- Check_Interface --
+   ---------------------
+
+   procedure Check_Interface (Self : in out Object) is
+      CU       : GPR2.Build.Compilation_Unit.Object;
+      CU_Dep   : GPR2.Build.Compilation_Unit.Object;
+      Analyzed : GPR2.Containers.Name_Set;
+      Todo     : GPR2.Build.Compilation_Unit.Maps.Map;
+   begin
+      if Self.Ctxt.Is_Library
+        and then Self.Ctxt.Has_Any_Interfaces
+        and then Self.Ctxt.Is_Library_Standalone
+      then
+         --  Check that the interface is complete: no dependency from specs
+         --  should depend on a spec that is not part of the interface.
+
+         Todo := Self.Ctxt.Interface_Closure;
+
+         while not Todo.Is_Empty loop
+            CU := Todo.First_Element;
+            Todo.Delete_First;
+            Analyzed.Insert (CU.Name);
+
+            --  ??? TODO Need to know if CU requires the body (generics or
+            --  inlined subprograms), and use Spec_Only parameter accordingly.
+
+            for Dep of CU.Known_Dependencies (Spec_Only => True) loop
+               if not Self.Ctxt.Interface_Closure.Contains (Dep)
+                 and then not Analyzed.Contains (Dep)
+               then
+                  if Self.Ctxt.Kind = K_Aggregate_Library then
+                     for V of Self.Ctxt.Aggregated loop
+                        CU_Dep := V.Own_Unit (Dep);
+                        exit when CU_Dep.Is_Defined;
+                     end loop;
+                  else
+                     CU_Dep := Self.Ctxt.Own_Unit (Dep);
+                  end if;
+
+                  --  Only warn for internal units, the interface may depend
+                  --  on other units
+
+                  if CU_Dep.Is_Defined
+                    and then not Analyzed.Contains (CU_Dep.Name)
+                  then
+                     Self.Tree.Reporter.Report
+                       (GPR2.Message.Create
+                          (GPR2.Message.Warning,
+                           "unit """
+                           & String (Dep)
+                           & """ is not in the interface set, but it is "
+                           & "needed by """
+                           & String (CU.Name)
+                           & """",
+                           GPR2.Source_Reference.Create
+                             (Self.Ctxt.Path_Name.Value, 0, 0)));
+
+                     Self.Extra_Intf.Insert (CU_Dep.Name, CU_Dep);
+                     Todo.Include (CU_Dep.Name, CU_Dep);
+                  end if;
+               end if;
+            end loop;
+         end loop;
+      end if;
+   end Check_Interface;
 
    ---------------------
    -- Compute_Command --
@@ -151,9 +220,8 @@ package body GPR2.Build.Actions.Link is
                        Self.Ctxt.Attribute (PRA.Run_Path_Origin);
       Ign          : Boolean with Unreferenced;
       Dash_l_Opts  : GPR2.Containers.Value_List;
-      --  -l needs to be last in the command line, so we accumulate the -l
-      --  switches in Dash_l_Opts and only actually add the switch at the
-      --  end of the command line computation.
+      --  -l needs to be last in the command line, so we add them here and
+      --  then append to the command line in the end
 
    begin
       Objects := Self.Embedded_Objects;
@@ -362,7 +430,6 @@ package body GPR2.Build.Actions.Link is
                               else
                                  Cmd_Line.Add_Argument (Val.Text, True);
                               end if;
-
                            else
                               Self.Tree.Reporter.Report
                                 (GPR2.Message.Create
@@ -546,13 +613,8 @@ package body GPR2.Build.Actions.Link is
             Link : constant Object'Class :=
                      Object'Class (Self.Tree.Action (Lib));
          begin
-            --  In case of shared libraries, we only need to check the presence
-            --  of the library: a change of the library without modification
-            --  of its specs won't influence the result of the link.
-
-            if not Self.Signature.Add_Input
-              (Link.Output,
-               Checksum_Check => Link.Is_Static)
+            if Link.Is_Static
+              and then not Self.Signature.Add_Input (Link.Output)
               and then Load_Mode
             then
                return;
@@ -678,6 +740,72 @@ package body GPR2.Build.Actions.Link is
       end return;
    end Library_Dependencies;
 
+   --------------------
+   -- On_Ready_State --
+   --------------------
+
+   overriding function On_Ready_State
+     (Self : in out Object) return Boolean
+   is
+      Units     : Compilation_Unit.Maps.Map :=
+                    Self.Ctxt.Interface_Closure;
+      Has_Error : Boolean := False;
+
+   begin
+      Check_Interface (Self);
+
+      if Self.Ctxt.Has_Library_Src_Directory then
+         declare
+            Src_Dir : constant Path_Name.Object :=
+                        Self.Ctxt.Library_Src_Directory;
+         begin
+            for CU of Self.Extra_Intf loop
+               Units.Include (CU.Name, CU);
+            end loop;
+
+            for CU of Units loop
+               declare
+                  procedure On_Unit_Part
+                    (Kind     : Unit_Kind;
+                     View     : GPR2.Project.View.Object;
+                     Path     : Path_Name.Object;
+                     Index    : Unit_Index;
+                     Sep_Name : Optional_Name_Type);
+
+                  ------------------
+                  -- On_Unit_Part --
+                  ------------------
+
+                  procedure On_Unit_Part
+                    (Kind     : Unit_Kind;
+                     View     : GPR2.Project.View.Object;
+                     Path     : Path_Name.Object;
+                     Index    : Unit_Index;
+                     Sep_Name : Optional_Name_Type)
+                  is
+                     Dest : constant Path_Name.Object :=
+                              Src_Dir.Compose (Path.Simple_Name);
+                  begin
+                     if not Self.Tree.Add_Output
+                       (Self.UID,
+                        GPR2.Build.Artifacts.Files.Create (Dest))
+                     then
+                        Has_Error := True;
+                     end if;
+                  end On_Unit_Part;
+
+               begin
+                  CU.For_All_Part (On_Unit_Part'Access);
+
+                  exit when Has_Error;
+               end;
+            end loop;
+         end;
+      end if;
+
+      return not Has_Error;
+   end On_Ready_State;
+
    -----------------------
    -- On_Tree_Insertion --
    -----------------------
@@ -717,7 +845,8 @@ package body GPR2.Build.Actions.Link is
 
    overriding function Post_Command
      (Self   : in out Object;
-      Status : Execution_Status) return Boolean is
+      Status : Execution_Status) return Boolean
+   is
    begin
       if Status /= Success then
          return True;
@@ -772,6 +901,80 @@ package body GPR2.Build.Actions.Link is
          end loop;
       end if;
 
+      --  Copy the interface sources in Library_Src_Dir
+
+      if Self.Ctxt.Is_Library
+        and then Self.Ctxt.Is_Library_Standalone
+        and then Self.Ctxt.Has_Attribute (PRA.Library_Src_Dir)
+      then
+         declare
+            Src_Dir : constant Path_Name.Object :=
+                        Self.Ctxt.Library_Src_Directory;
+            Units   : Compilation_Unit.Maps.Map :=
+                        Self.Ctxt.Interface_Closure;
+         begin
+            for CU of Self.Extra_Intf loop
+               Units.Include (CU.Name, CU);
+            end loop;
+
+            for CU of Units loop
+               declare
+                  procedure On_Unit_Part
+                    (Kind     : Unit_Kind;
+                     View     : GPR2.Project.View.Object;
+                     Path     : Path_Name.Object;
+                     Index    : Unit_Index;
+                     Sep_Name : Optional_Name_Type);
+
+                  Has_Error : Boolean := False;
+
+                  ------------------
+                  -- On_Unit_Part --
+                  ------------------
+
+                  procedure On_Unit_Part
+                    (Kind     : Unit_Kind;
+                     View     : GPR2.Project.View.Object;
+                     Path     : Path_Name.Object;
+                     Index    : Unit_Index;
+                     Sep_Name : Optional_Name_Type)
+                  is
+                     Dest : constant Path_Name.Object :=
+                              Src_Dir.Compose (Path.Simple_Name);
+                  begin
+                     if not Dest.Exists then
+                        if not GNATCOLL.OS.FSUtil.Copy_File
+                          (Path.String_Value, Dest.String_Value)
+                        then
+                           Self.Tree.Reporter.Report
+                             (Message.Create
+                                (Message.Error,
+                                 "Cannot copy """ & String (Path.Simple_Name) &
+                                   """ to the Library_Src_Dir """ &
+                                   Src_Dir.String_Value & '"',
+                                 Self.Ctxt.Attribute
+                                   (PRA.Library_Src_Dir).Value));
+                           Has_Error := True;
+
+                           if not Self.Tree.Add_Output
+                             (Self.UID,
+                              GPR2.Build.Artifacts.Files.Create (Dest))
+                           then
+                              Has_Error := True;
+                           end if;
+                        end if;
+                     end if;
+                  end On_Unit_Part;
+
+               begin
+                  CU.For_All_Part (On_Unit_Part'Access);
+
+                  exit when Has_Error;
+               end;
+            end loop;
+         end;
+      end if;
+
       return True;
    end Post_Command;
 
@@ -782,6 +985,8 @@ package body GPR2.Build.Actions.Link is
    overriding function Pre_Command (Self : in out Object) return Boolean is
       CU       : GPR2.Build.Compilation_Unit.Object;
       CU_Dep   : GPR2.Build.Compilation_Unit.Object;
+      Analyzed : GPR2.Containers.Name_Set;
+      Todo     : GPR2.Build.Compilation_Unit.Maps.Map;
 
    begin
       if Self.Is_Static_Library and then Self.Output.Path.Exists then
@@ -802,42 +1007,9 @@ package body GPR2.Build.Actions.Link is
          end if;
       end if;
 
-      if Self.Is_Library and then Self.Ctxt.Has_Any_Interfaces then
-         --  Check that the interface is complete: no dependency from specs
-         --  should depend on a spec that is not part of the interface.
+      --  Check the library interface if needed
 
-         for CU of Self.Ctxt.Interface_Closure loop
-            for Dep of CU.Known_Dependencies (Spec_Only => True) loop
-               if not Self.Ctxt.Interface_Closure.Contains (Dep) then
-                  if Self.Ctxt.Kind = K_Aggregate_Library then
-                     for V of Self.Ctxt.Aggregated loop
-                        CU_Dep := V.Own_Unit (Dep);
-                        exit when CU_Dep.Is_Defined;
-                     end loop;
-                  else
-                     CU_Dep := Self.Ctxt.Own_Unit (Dep);
-                  end if;
-
-                  --  Only warn for internal units, the interface may depend
-                  --  on other units
-
-                  if CU_Dep.Is_Defined then
-                     Self.Tree.Reporter.Report
-                       (GPR2.Message.Create
-                          (GPR2.Message.Warning,
-                           "unit """
-                           & String (Dep)
-                           & """ is not in the interface set, but it is "
-                           & "needed by """
-                           & String (CU.Name)
-                           & """",
-                           GPR2.Source_Reference.Create
-                             (Self.Ctxt.Path_Name.Value, 0, 0)));
-                  end if;
-               end if;
-            end loop;
-         end loop;
-      end if;
+      Check_Interface (Self);
 
       return True;
    end Pre_Command;
