@@ -1023,13 +1023,7 @@ package body GPR2.Tree_Internal is
       if not Self.Messages.Has_Error then
          --  Tree is now fully loaded, we can create the artifacts database
          --  object.
-         if not Self.Tree_Db.Is_Defined then
-            Init_Tree_Database (Self.Tree_Db, Self);
-         else
-            --  Tree has been reloaded: update the database in case views
-            --  have changed.
-            Self.Tree_Db.Check_Tree;
-         end if;
+         Init_Tree_Database (Self.Tree_Db, Self);
 
       elsif not Self.Pre_Conf_Mode then
          raise Project_Error
