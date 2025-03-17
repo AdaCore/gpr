@@ -148,7 +148,28 @@ package body GPR2.Build.Actions.Link is
          procedure Add (Arg : String) is
          begin
             if Arg (Arg'First) = '-' then
-               Cmd_Line.Add_Argument (Arg, In_Signature);
+               if GNATCOLL.Utils.Starts_With
+                 (Arg, Self.Tree.Linker_Lib_Dir_Option)
+               then
+                  declare
+                     Sub : constant Value_Type :=
+                             Arg
+                               (Arg'First +
+                                  Self.Tree.Linker_Lib_Dir_Option'Length
+                                    .. Arg'Last);
+                     Path : constant Path_Name.Object :=
+                              Path_Name.Create_Directory
+                                (Filename_Type (Sub),
+                                 Self.Ctxt.Dir_Name.Value);
+                  begin
+                     Cmd_Line.Add_Argument
+                       (Self.Tree.Linker_Lib_Dir_Option &
+                          String
+                            (Path.Relative_Path (Self.Working_Directory)));
+                  end;
+               else
+                  Cmd_Line.Add_Argument (Arg, In_Signature);
+               end if;
             else
                declare
                   Full : constant Path_Name.Object :=
@@ -326,7 +347,7 @@ package body GPR2.Build.Actions.Link is
                                 Object'Class (Self.Tree.Action (Lib));
                Lib_Artifact : constant GPR2.Path_Name.Object :=
                                 Link.Output.Path;
-               Lib_Dir_Opt : constant Value_Type :=
+               Lib_Dir_Opt  : constant Value_Type :=
                                 Self.Tree.Linker_Lib_Dir_Option;
 
                use GNATCOLL.Utils;
