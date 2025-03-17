@@ -148,8 +148,12 @@ private
 
    overriding function Is_Deactivated (Self : Object) return Boolean is
      (Actions.Object (Self).Is_Deactivated
-      or else Self.View.Attribute
-        (PRA.Compiler.Driver, PAI.Create (Self.Lang)).Value.Text'Length = 0);
+      or else
+        (Self.View.Has_Attribute
+           (PRA.Compiler.Driver, PAI.Create (Self.Lang))
+         and then Self.View.Attribute
+           (PRA.Compiler.Driver,
+            PAI.Create (Self.Lang)).Value.Text'Length = 0));
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
