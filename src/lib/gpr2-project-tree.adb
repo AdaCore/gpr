@@ -1130,6 +1130,10 @@ package body GPR2.Project.Tree is
      (Self : in out Object; Reporter : GPR2.Reporter.Object'Class)
    is
    begin
+      if not Self.Is_Defined then
+         Self.Create;
+      end if;
+
       Self.Tree.Set_Reporter (Reporter);
    end Set_Reporter;
 
