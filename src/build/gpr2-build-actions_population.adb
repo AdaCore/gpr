@@ -330,6 +330,9 @@ package body GPR2.Build.Actions_Population is
       if Src.Owning_View.Is_Library
         and then not Options.Unique_Compilation
         and then not Options.Unique_Compilation_Recursive
+        and then (not Options.Restricted_Build_Phase
+                  or else Options.Bind_Phase_Mandated
+                  or else Options.Link_Phase_Mandated)
       then
          Tree_Db.Reporter.Report
            (Message.Create
