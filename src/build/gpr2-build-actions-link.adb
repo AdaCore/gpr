@@ -458,12 +458,15 @@ package body GPR2.Build.Actions.Link is
                                  Cmd_Line.Add_Argument (Val.Text, True);
                               end if;
                            else
-                              Self.Tree.Reporter.Report
-                                (GPR2.Message.Create
-                                   (GPR2.Message.Error,
-                                    "unknown object file """ &
-                                      Val.Text & '"',
-                                    Val));
+                              if not Signature_Only then
+                                 Self.Tree.Reporter.Report
+                                   (GPR2.Message.Create
+                                      (GPR2.Message.Error,
+                                       "unknown object file """ &
+                                         Val.Text & '"',
+                                       Val));
+                              end if;
+
                               raise Action_Error;
                            end if;
                         end;
