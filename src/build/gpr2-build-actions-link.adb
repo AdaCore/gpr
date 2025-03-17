@@ -375,37 +375,42 @@ package body GPR2.Build.Actions.Link is
                   --  executable, so that LD_LIBRARY_PATH does not need to
                   --  be set before execution.
 
-                  if Length (Rpath) /= 0 then
+                  if not Self.No_Rpath and then Length (Rpath) /= 0 then
                      --  ??? hard coded value: ok for now since this is not
                      --  used on windows, but we may need an attribute for that
                      --  at some point.
                      Append (Rpath, ':');
                   end if;
 
-                  if Rpath_Origin.Is_Defined and then not Self.Is_Library then
-                     --  ??? $ORIGIN refers to the executable, we would need
-                     --  an equivalent attribute for shared libs dependencies
+                  if not Self.No_Rpath then
+                     if Rpath_Origin.Is_Defined
+                       and then not Self.Is_Library
+                     then
+                        --  ??? $ORIGIN refers to the executable, we would
+                        --  need an equivalent attribute for shared libs
+                        --  dependencies.
 
-                     --  ??? This processing is unix-oriented with unix path
-                     --  and directory delimiters. This is somewhat expected
-                     --  since this mechanism is not available on windows,
-                     --  but then we still need to properly cross compilation
-                     --  on windows hosts, so may need to "posixify" the
-                     --  paths here.
+                        --  ??? This processing is unix-oriented with unix
+                        --  path and directory delimiters. This is somewhat
+                        --  expected since this mechanism is not available on
+                        --  windows, but then we still need to properly cross
+                        --  compilation on windows hosts, so may need to
+                        --  "posixify" the paths here.
 
-                     declare
-                        From : constant Path_Name.Object :=
-                                 Self.Ctxt.Executable_Directory;
-                     begin
-                        Append
-                          (Rpath,
-                           Rpath_Origin.Value.Text & "/" &
-                             String
-                               (Lib_Artifact.Containing_Directory.Relative_Path
-                                  (From)));
-                     end;
-                  else
-                     Append (Rpath, String (Lib_Artifact.Dir_Name));
+                        declare
+                           From : constant Path_Name.Object :=
+                                    Self.Ctxt.Executable_Directory;
+                        begin
+                           Append
+                             (Rpath,
+                              Rpath_Origin.Value.Text & "/" &
+                              String
+                                (Lib_Artifact.Containing_Directory.
+                                     Relative_Path (From)));
+                        end;
+                     else
+                        Append (Rpath, String (Lib_Artifact.Dir_Name));
+                     end if;
                   end if;
 
                   declare
@@ -470,13 +475,14 @@ package body GPR2.Build.Actions.Link is
          --  Ignore: no presence of Run_Path_Option is expected if
          --  Run_Path_Option is not available, like with windows dlls.
 
-         Ign := Length (Rpath) > 0
-           and then not Add_Attr
-             (PRA.Run_Path_Option,
-              PAI.Undefined,
-              True,
-              True,
-              -Rpath);
+         if not Self.No_Rpath and then Length (Rpath) > 0 then
+            Ign := Add_Attr
+              (PRA.Run_Path_Option,
+               PAI.Undefined,
+               True,
+               True,
+               -Rpath);
+         end if;
 
          for C of Self.View.Closure (True) loop
             declare
@@ -673,9 +679,10 @@ package body GPR2.Build.Actions.Link is
    ---------------
 
    procedure Initialize_Executable
-     (Self    : in out Object;
-      Src     : Compilation_Unit.Unit_Location;
-      Output  : Filename_Optional := "")
+     (Self     : in out Object;
+      Src      : Compilation_Unit.Unit_Location;
+      No_Rpath : Boolean;
+      Output   : Filename_Optional := "")
    is
       Exec : GPR2.Path_Name.Object;
    begin
@@ -684,6 +691,7 @@ package body GPR2.Build.Actions.Link is
       Self.Ctxt       := Src.View;
       Self.Traces     := Create ("ACTION_LINK",
                                  GNATCOLL.Traces.Off);
+      Self.No_Rpath   := No_Rpath;
 
       if Output'Length = 0 then
          Exec := Self.Ctxt.Executable (Src.Source.Simple_Name, Src.Index);
@@ -733,13 +741,15 @@ package body GPR2.Build.Actions.Link is
    ------------------------
 
    procedure Initialize_Library
-     (Self    : in out Object;
-      Context : GPR2.Project.View.Object) is
+     (Self     : in out Object;
+      Context  : GPR2.Project.View.Object;
+      No_Rpath : Boolean) is
    begin
       Self.Ctxt       := Context;
       Self.Is_Library := True;
       Self.Is_Static  := Context.Is_Static_Library;
       Self.Library    := Artifacts.Library.Create (Context.Library_Filename);
+      Self.No_Rpath   := No_Rpath;
       Self.Traces     := Create ("ACTION_LINK",
                                  GNATCOLL.Traces.Off);
    end Initialize_Library;

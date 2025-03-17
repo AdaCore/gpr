@@ -688,7 +688,7 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       Self.View := View;
-      Self.Link.Initialize_Library (View);
+      Self.Link.Initialize_Library (View, Options.No_Run_Path);
 
       if not Tree_Db.Add_Action (Self.Link) then
          return False;
@@ -827,7 +827,8 @@ package body GPR2.Build.Actions_Population is
       begin
          for Import of Self.View.Imports loop
             if Import.Is_Library then
-               Imported_Lib_Link.Initialize_Library (Import);
+               Imported_Lib_Link.Initialize_Library
+                 (Import, Options.No_Run_Path);
 
                if not Tree_Db.Has_Action (Imported_Lib_Link.UID) then
                   return False;
@@ -942,6 +943,7 @@ package body GPR2.Build.Actions_Population is
 
             Link (Idx).Initialize_Executable
               (Main,
+               Options.No_Run_Path,
                -Options.Output_File);
 
             if Options.Create_Map_File then
