@@ -1,5 +1,3 @@
 description: Test gprls uses Ada source parser
 driver: python_script
 timeout: 800
-control:
-    - ["SKIP", "True", "gprls not yet built from gpr2-next"]

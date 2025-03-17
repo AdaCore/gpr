@@ -1,4 +1,2 @@
 description: let a long relative path be imported from a 255 chars absolute path
 driver: python_script
-control:
-- [SKIP, "True", "uses gprls that is not built from gpr2-next"]

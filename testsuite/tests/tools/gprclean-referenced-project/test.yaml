@@ -1,4 +1,2 @@
 description: gprclean on extended project
 driver: python_script
-control:
-    - ["SKIP", "True", "gprclean not yet built from gpr2-next"]

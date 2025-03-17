@@ -16,3 +16,4 @@ GPRCONFIG =  os.environ[GPRCONFIG_NAME] if GPRCONFIG_NAME in os.environ else "gp
 GPRDOC =  os.environ[GPRDOC_NAME] if GPRDOC_NAME in os.environ else "gprdoc"
 GPRINSPECT =  os.environ[GPRINSPECT_NAME] if GPRINSPECT_NAME in os.environ else "gprinspect"
 GPRBUILD = os.environ[GPRBUILD_NAME] if GPRBUILD_NAME in os.environ else "gprbuild"
+GPR2BUILD = os.environ[GPRBUILD_NAME] if GPRBUILD_NAME in os.environ else "gpr2build"
