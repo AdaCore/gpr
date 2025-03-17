@@ -614,6 +614,12 @@ package body GPR2.Build.Actions.Link is
            Add_Attr (PRA.Linker.Trailing_Switches, Src_Idx, True, True);
       end if;
 
+      if Self.View.Is_Library
+        and then not Self.Is_Static
+      then
+         Ign := Add_Attr (PRA.Library_Options, PAI.Undefined, True, True);
+      end if;
+
       --  Finally remove any duplicated --specs switch as this may cause
       --  trouble by introducing duplicated symbols in the result.
 
