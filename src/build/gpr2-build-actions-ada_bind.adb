@@ -334,6 +334,8 @@ package body GPR2.Build.Actions.Ada_Bind is
          end;
       end Resolve_Binder;
 
+      use type GPR2.Project.Standalone_Library_Kind;
+
    begin
       --  [eng/gpr/gpr-issues#446] We should rework how the binder tools is
       --  fetched from the KB.
@@ -356,7 +358,9 @@ package body GPR2.Build.Actions.Ada_Bind is
         (String (Self.Output_Body.Path.Simple_Name), True);
 
       if Self.Ctxt.Is_Library then
-         if Self.Ctxt.Is_Shared_Library then
+         if Self.Ctxt.Is_Shared_Library
+           and then Self.Ctxt.Library_Standalone /= GPR2.Project.Encapsulated
+         then
 
             --  Link against a shared GNAT run time
 
@@ -752,6 +756,9 @@ package body GPR2.Build.Actions.Ada_Bind is
          Attr             : constant GPR2.Project.Attribute.Object :=
                               Self.View.Attribute
                                 (PRA.Binder.Bindfile_Option_Substitution, Idx);
+
+         use type GPR2.Project.Standalone_Library_Kind;
+
       begin
          if not Add_Remaining and then Line (Line'First) = '-' then
             --  We skip the list of objects, not reliable, the Tree_Db
@@ -809,16 +816,32 @@ package body GPR2.Build.Actions.Ada_Bind is
 
          elsif Line = "-lgnat" then
             if Static_Libs then
-               Self.Linker_Opts.Append
-                 (Adalib_Dir.Compose ("libgnat.a").String_Value);
+               if Self.Ctxt.Is_Library
+                 and then Self.Ctxt.Library_Standalone =
+                   GPR2.Project.Encapsulated
+               then
+                  Self.Linker_Opts.Append
+                    (Adalib_Dir.Compose ("libgnat_pic.a").String_Value);
+               else
+                  Self.Linker_Opts.Append
+                    (Adalib_Dir.Compose ("libgnat.a").String_Value);
+               end if;
             else
                Self.Linker_Opts.Append (Line);
             end if;
 
          elsif Line = "-lgnarl" then
             if Static_Libs then
-               Self.Linker_Opts.Append
-                 (Adalib_Dir.Compose ("libgnarl.a").String_Value);
+               if Self.Ctxt.Is_Library
+                 and then Self.Ctxt.Library_Standalone =
+                   GPR2.Project.Encapsulated
+               then
+                  Self.Linker_Opts.Append
+                    (Adalib_Dir.Compose ("libgnarl_pic.a").String_Value);
+               else
+                  Self.Linker_Opts.Append
+                    (Adalib_Dir.Compose ("libgnarl.a").String_Value);
+               end if;
             else
                Self.Linker_Opts.Append (Line);
             end if;
