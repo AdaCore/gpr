@@ -418,7 +418,8 @@ package body GPR2.Build.Actions.Link is
                                 Link.View.Attribute
                                   (PRA.Shared_Library_Prefix).Value.Text;
                      BN     : constant String :=
-                                String (Lib_Artifact.Base_Name);
+                                String (Link.View.Library_Filename
+                                         (Without_Version => True).Base_Name);
                   begin
                      pragma Assert
                        (Starts_With (BN, Prefix),
@@ -542,10 +543,6 @@ package body GPR2.Build.Actions.Link is
          end loop;
       end if;
 
-      for Arg of Dash_l_Opts loop
-         Cmd_Line.Add_Argument (Arg, True);
-      end loop;
-
       --  Add options provided by the binder if needed
 
       if not Self.View.Is_Library
@@ -557,6 +554,10 @@ package body GPR2.Build.Actions.Link is
             Cmd_Line.Add_Argument (Option);
          end loop;
       end if;
+
+      for Arg of Dash_l_Opts loop
+         Cmd_Line.Add_Argument (Arg, True);
+      end loop;
 
       --  Runtime flags usually come from the binder. However, there is no
       --  binding phase when creating a non-standalone library. Therefore,

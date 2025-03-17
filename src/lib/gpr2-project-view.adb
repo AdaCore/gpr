@@ -1969,7 +1969,10 @@ package body GPR2.Project.View is
    -- Library_Filename --
    ----------------------
 
-   function Library_Filename (Self : Object) return GPR2.Path_Name.Object is
+   function Library_Filename
+     (Self            : Object;
+      Without_Version : Boolean := False) return GPR2.Path_Name.Object
+   is
       Attr_Version : GPR2.Project.Attribute.Object;
    begin
       --  Library version: we need to skip it in case the library extension is
@@ -1977,6 +1980,7 @@ package body GPR2.Project.View is
       --  Note that it is only used for shared libraries, not for the archives
 
       if not Self.Is_Static_Library
+        and then not Without_Version
         and then
           Self.Attribute (PRA.Shared_Library_Suffix).Value.Text /= ".dll"
       then
