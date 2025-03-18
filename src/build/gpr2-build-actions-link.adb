@@ -23,7 +23,9 @@ with GPR2.Source_Reference.Value;
 
 package body GPR2.Build.Actions.Link is
 
-   procedure Check_Interface (Self : in out Object);
+   procedure Check_Interface
+     (Self        : in out Object;
+      No_Warnings : Boolean);
 
    ----------------
    -- Add_Option --
@@ -38,11 +40,17 @@ package body GPR2.Build.Actions.Link is
    -- Check_Interface --
    ---------------------
 
-   procedure Check_Interface (Self : in out Object) is
+   procedure Check_Interface
+     (Self        : in out Object;
+      No_Warnings : Boolean)
+   is
       CU       : GPR2.Build.Compilation_Unit.Object;
       CU_Dep   : GPR2.Build.Compilation_Unit.Object;
       Analyzed : GPR2.Containers.Name_Set;
       Todo     : GPR2.Build.Compilation_Unit.Maps.Map;
+      Pos      : GPR2.Build.Compilation_Unit.Maps.Cursor;
+      Inserted : Boolean;
+
    begin
       if Self.Ctxt.Is_Library
         and then Self.Ctxt.Has_Any_Interfaces
@@ -80,20 +88,25 @@ package body GPR2.Build.Actions.Link is
                   if CU_Dep.Is_Defined
                     and then not Analyzed.Contains (CU_Dep.Name)
                   then
-                     Self.Tree.Reporter.Report
-                       (GPR2.Message.Create
-                          (GPR2.Message.Warning,
-                           "unit """
-                           & String (Dep)
-                           & """ is not in the interface set, but it is "
-                           & "needed by """
-                           & String (CU.Name)
-                           & """",
-                           GPR2.Source_Reference.Create
-                             (Self.Ctxt.Path_Name.Value, 0, 0)));
+                     if not No_Warnings then
+                        Self.Tree.Reporter.Report
+                          (GPR2.Message.Create
+                             (GPR2.Message.Warning,
+                              "unit """
+                              & String (Dep)
+                              & """ is not in the interface set, but it is "
+                              & "needed by """
+                              & String (CU.Name)
+                              & """",
+                              GPR2.Source_Reference.Create
+                                (Self.Ctxt.Path_Name.Value, 0, 0)));
+                     end if;
 
-                     Self.Extra_Intf.Insert (CU_Dep.Name, CU_Dep);
-                     Todo.Include (CU_Dep.Name, CU_Dep);
+                     Self.Extra_Intf.Insert
+                       (CU_Dep.Name, CU_Dep, Pos, Inserted);
+                     if Inserted then
+                        Todo.Include (CU_Dep.Name, CU_Dep);
+                     end if;
                   end if;
                end if;
             end loop;
@@ -793,7 +806,7 @@ package body GPR2.Build.Actions.Link is
       Has_Error : Boolean := False;
 
    begin
-      Check_Interface (Self);
+      Check_Interface (Self, No_Warnings => True);
 
       if Self.Ctxt.Has_Library_Src_Directory then
          declare
@@ -1050,7 +1063,7 @@ package body GPR2.Build.Actions.Link is
 
       --  Check the library interface if needed
 
-      Check_Interface (Self);
+      Check_Interface (Self, No_Warnings => False);
 
       return True;
    end Pre_Command;
