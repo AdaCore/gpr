@@ -22,7 +22,6 @@ with GPR2.Project.View;
 with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
 with GNATCOLL.Utils;      use GNATCOLL.Utils;
 with GNATCOLL.VFS;        use GNATCOLL.VFS;
-with Gpr_Parser_Support.Generic_API.Analysis;
 
 use GPR2, GPR2.Build;
 
