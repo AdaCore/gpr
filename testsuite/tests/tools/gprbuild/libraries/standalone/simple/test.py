@@ -23,6 +23,7 @@ def test(test_dir):
             "-P" + os.path.join(test_dir, "demo.gpr"),
             "-p",
             "--json-summary",
+            "-j1"
         ]
     )
     with open(os.path.join(test_dir, "jobs.json")) as fp:
@@ -35,6 +36,7 @@ def test(test_dir):
             "-P" + os.path.join(test_dir, "app.gpr"),
             "-p",
             "--json-summary",
+            "-j1"
         ]
     )
 
@@ -76,6 +78,7 @@ def test(test_dir):
             "-P" + os.path.join(test_dir, "invalid_app_foo.gpr"),
             "-p",
             "--json-summary",
+            "-j1"
         ]
     )
 
@@ -84,7 +87,8 @@ def test(test_dir):
             "gpr2build",
             "-P" + os.path.join(test_dir, "invalid_app_mult.gpr"),
             "-p",
-            "--json-summary",
+            "--json-summary", 
+            "-j1"
         ]
     )
     print("")

@@ -31,32 +31,32 @@ $ gpr2build -Pmulti src.ada -eI3 -o main -q
 $ multi/main
 I'm third unit
 
-$ gpr2build hello.c -eI1
+$ gpr2build hello.c -eI1 -j1
 using project file /c/default.gpr
 hello.c: error: unit index specified with a non unit-based source
 gprbuild: processing failed
-$ gpr2build main.adb -eI1
+$ gpr2build main.adb -eI1 -j1
 use implicit project in /ada
 main.adb: error:  no unit for the index 1
 gprbuild: processing failed
-$ gpr2build non_existing.adb
+$ gpr2build non_existing.adb -j1
 use implicit project in /ada
 default.gpr: error: "non_existing.adb" was not found in the project
 gprbuild: processing failed
-$ gpr2build main.adb hello.c -eI1
+$ gpr2build main.adb hello.c -eI1 -j1
 gprbuild: only one source can be specified with multi-unit index specified with '-eI'
 try "gpr2build --help" for more information.
-$ gpr2build non_existing.adb
+$ gpr2build non_existing.adb -j1
 use implicit project in /ada
 default.gpr: error: "non_existing.adb" was not found in the project
 gprbuild: processing failed
-$ gpr2build -Pmulti src.ada -eI4 -o main
+$ gpr2build -Pmulti src.ada -eI4 -o main -j1
 src.ada: error:  no unit for the index 4
 gprbuild: processing failed
-$ gpr2build -Pmulti src.ada -o p4
+$ gpr2build -Pmulti src.ada -o p4 -j1
 multi.gpr: error: cannot specify an output filename when there are several mains.
 gprbuild: processing failed
-$ gpr2build -Plib main.adb
+$ gpr2build -Plib main.adb -j1
 "obj" created
 "lib" created
 lib.gpr: error: main cannot be a source of a library project: "main.adb"

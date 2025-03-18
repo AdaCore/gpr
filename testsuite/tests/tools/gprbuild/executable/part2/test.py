@@ -14,7 +14,7 @@ def test(header):
     global test_number
     print("================================================================")
     print("Case " + str(test_number) + " - " + header)
-    proc = bnr.call(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p", "--json-summary"])
+    proc = bnr.call(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p", "--json-summary", "-j1"])
 
     if proc.status:
         print("Test return value: " + str(proc.status))
@@ -61,7 +61,7 @@ def testsuite(file_path):
             file.write(file_content)
 
     # Restore state of the project after a correct compilation
-    Run(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p"])
+    Run(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p", "-j1"])
 
     with open(file_path, "a") as file:
         file.write("--  Comment that will not prevent a compilation for Ada files")
@@ -69,7 +69,7 @@ def testsuite(file_path):
     test("Modified " + os.path.basename(file_path) + " (comments only)")
 
     # Restore state of the project after a correct compilation
-    Run(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p"])
+    Run(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p", "-j1"])
 
 
 test("Build from scratch")

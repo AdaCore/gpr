@@ -16,10 +16,10 @@ def run(cmd):
 # Basic check that building mylib.gpr produces mylib.so/dll and that building an
 # exe with it only uses mylib.so/dll and not any of the objects contained in it.
 
-run(["gpr2build", "-q", "-Pmylib.gpr", "-p", "--json-summary"])
+run(["gpr2build", "-q", "-Pmylib.gpr", "-p", "--json-summary", "-j1"])
 with open("jobs.json") as fp:
     cntlib = json.load(fp)
-run(["gpr2build", "-q", "-Papp.gpr", "-p", "--json-summary"])
+run(["gpr2build", "-q", "-Papp.gpr", "-p", "--json-summary", "-j1"])
 with open("jobs.json") as fp:
     cntbin = json.load(fp)
 

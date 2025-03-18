@@ -29,15 +29,15 @@ def check(root, pattern, switch, filter_out=None):
             print(f"{uid}: {' '.join(opts)}")
 
 print("Step 1 - Check -cargs")
-run(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p", "-q", "--json-summary", "-cargs", "-O2", "-cargs:Ada", "-O1", "-cargs:C", "-O0"])
+run(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p", "-q", "--json-summary", "-j1", "-cargs", "-O2", "-cargs:Ada", "-O1", "-cargs:C", "-O0"])
 check("tree", "Compile", "-O")
 print("")
 
 print("Step 2 - Check -bargs")
-run(["gpr2build", "-P", os.path.join("tree_2", "main.gpr"), "-p", "-q", "--json-summary", "-bargs", "-O=3.bind", "-bargs:Ada", "-O=5.bind", "-bargs", "-O=4.bind", "-bargs:Ada", "-O=6.bind"])
+run(["gpr2build", "-P", os.path.join("tree_2", "main.gpr"), "-p", "-q", "--json-summary", "-j1", "-bargs", "-O=3.bind", "-bargs:Ada", "-O=5.bind", "-bargs", "-O=4.bind", "-bargs:Ada", "-O=6.bind"])
 check("tree_2", "Ada Bind", "-O")
 print("")
 
 print("Step 3 - Check -largs")
-run(["gpr2build", "-P", os.path.join("tree_3", "main.gpr"), "-p", "-q", "--json-summary", "-largs", "-Wl,--gc-sections"])
+run(["gpr2build", "-P", os.path.join("tree_3", "main.gpr"), "-p", "-q", "--json-summary", "-j1", "-largs", "-Wl,--gc-sections"])
 check("tree_3", "Link", "-Wl,--", "--stack=")

@@ -19,7 +19,7 @@ def run(cmd):
 # exe with it only uses mylib1.so/dll and not any of the objects contained in it.
 
 
-run(["gpr2build", "-q", "-Pmylib1.gpr", "-p", "--json-summary"])
+run(["gpr2build", "-q", "-Pmylib1.gpr", "-p", "--json-summary", "-j1"])
 with open("jobs.json") as fp:
     cntlib = json.load(fp)
 
@@ -53,7 +53,7 @@ for job in cntlib:
                 print("ERROR: Found both pkg2/3.o in the same command")
                 error = True
 
-run(["gpr2build", "-q", "-Papp.gpr", "-p", "--json-summary"])
+run(["gpr2build", "-q", "-Papp.gpr", "-p", "--json-summary", "-j1"])
 with open("jobs.json") as fp:
     cntbin = json.load(fp)
 
