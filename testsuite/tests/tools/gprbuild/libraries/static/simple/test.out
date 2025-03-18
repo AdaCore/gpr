@@ -1,5 +1,5 @@
-$ gpr2build -q -Pdemo.gpr -p --json-summary
-$ gpr2build -q -Papp.gpr -p --json-summary
+$ gpr2build -q -Pdemo.gpr -p --json-summary -j1
+$ gpr2build -q -Papp.gpr -p --json-summary -j1
 lib:
 uid: '[Ada Compile] pkg.adb (demo.gpr)', status : '0'
 uid: '[Archive] libdemo.a (demo.gpr)', status : '0'

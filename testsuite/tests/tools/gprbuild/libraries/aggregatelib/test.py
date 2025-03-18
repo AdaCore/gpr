@@ -15,14 +15,14 @@ def run(cmd):
 # Basic check that building demo.gpr produces libdemo.a and that building an
 # exe with it only uses libdemo.a and not any of the objects contained in it.
 
-run(["gpr2build", "-q", "-Pagglib.gpr", "-p", "--json-summary"])
+run(["gpr2build", "-q", "-Pagglib.gpr", "-p", "--json-summary", "-j1"])
 with open("jobs.json") as fp:
     cnt = json.load(fp)
 uids = [job["uid"] for job in cnt]
 for uid in sorted(uids):
     print(uid)
 
-run(["gpr2build", "-q", "-Pdemo.gpr", "-p", "--json-summary"])
+run(["gpr2build", "-q", "-Pdemo.gpr", "-p", "--json-summary", "-j1"])
 with open("jobs.json") as fp:
     cnt = json.load(fp)
 for job in cnt:

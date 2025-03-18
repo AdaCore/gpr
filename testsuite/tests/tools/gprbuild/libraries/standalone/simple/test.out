@@ -1,33 +1,33 @@
-$ gpr2build -q -Plibrary_interface/demo.gpr -p --json-summary
-$ gpr2build -q -Plibrary_interface/app.gpr -p --json-summary
+$ gpr2build -q -Plibrary_interface/demo.gpr -p --json-summary -j1
+$ gpr2build -q -Plibrary_interface/app.gpr -p --json-summary -j1
 lib [library_interface] has been created
 Ok so far
 $ library_interface/main
 1+1 =  2
 1-1 =  0
 
-$ gpr2build -Plibrary_interface/invalid_app_foo.gpr -p --json-summary
+$ gpr2build -Plibrary_interface/invalid_app_foo.gpr -p --json-summary -j1
 "obj/invalid_app_foo" created
 invalid_app_foo.gpr: error: unit "MAIN" can not import unit "FOO": it is not part of the interfaces of the project Demo
 gprbuild: processing failed
-$ gpr2build -Plibrary_interface/invalid_app_mult.gpr -p --json-summary
+$ gpr2build -Plibrary_interface/invalid_app_mult.gpr -p --json-summary -j1
 "obj/invalid_app_mult" created
 invalid_app_mult.gpr: error: unit "MAIN" can not import unit "MULT": it is not part of the interfaces of the project Demo
 gprbuild: processing failed
 
-$ gpr2build -q -Pinterfaces/demo.gpr -p --json-summary
-$ gpr2build -q -Pinterfaces/app.gpr -p --json-summary
+$ gpr2build -q -Pinterfaces/demo.gpr -p --json-summary -j1
+$ gpr2build -q -Pinterfaces/app.gpr -p --json-summary -j1
 lib [interfaces] has been created
 Ok so far
 $ interfaces/main
 1+1 =  2
 1-1 =  0
 
-$ gpr2build -Pinterfaces/invalid_app_foo.gpr -p --json-summary
+$ gpr2build -Pinterfaces/invalid_app_foo.gpr -p --json-summary -j1
 "obj/invalid_app_foo" created
 invalid_app_foo.gpr: error: unit "MAIN" can not import unit "FOO": it is not part of the interfaces of the project Demo
 gprbuild: processing failed
-$ gpr2build -Pinterfaces/invalid_app_mult.gpr -p --json-summary
+$ gpr2build -Pinterfaces/invalid_app_mult.gpr -p --json-summary -j1
 "obj/invalid_app_mult" created
 invalid_app_mult.gpr: error: unit "MAIN" can not import unit "MULT": it is not part of the interfaces of the project Demo
 gprbuild: processing failed

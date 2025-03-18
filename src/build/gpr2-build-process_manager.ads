@@ -21,7 +21,7 @@ package GPR2.Build.Process_Manager is
    Process_Manager_Error : exception;
 
    type PM_Options is record
-      Jobs            : Natural := 1;
+      Jobs            : Natural := 0;
       Force           : Boolean := False;
       Stop_On_Fail    : Boolean := True;
       Keep_Temp_Files : Boolean := False;

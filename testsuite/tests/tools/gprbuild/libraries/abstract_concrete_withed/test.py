@@ -15,7 +15,7 @@ def run(cmd):
 # calling gprbuild on an abstract project that withes libraries should still
 # build the libraries
 
-run(["gpr2build", "-q", "-Pdemo.gpr", "-p", "--json-summary"])
+run(["gpr2build", "-q", "-Pdemo.gpr", "-p", "--json-summary", "-j1"])
 with open("jobs.json") as fp:
     cnt = json.load(fp)
 

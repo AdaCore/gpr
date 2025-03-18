@@ -11,10 +11,10 @@ def run(cmd):
     else:
         print(bnr.simple_run([cmd], catch_error=True).out)
 
-run(["gpr2build", "-q", "-Pmylib1.gpr", "-p", "--json-summary"])
+run(["gpr2build", "-q", "-Pmylib1.gpr", "-p", "--json-summary", "-j1"])
 with open("jobs.json") as fp:
     cntlib = json.load(fp)
-run(["gpr2build", "-q", "-Papp.gpr", "-p", "--json-summary"])
+run(["gpr2build", "-q", "-Papp.gpr", "-p", "--json-summary", "-j1"])
 with open("jobs.json") as fp:
     cntbin = json.load(fp)
 

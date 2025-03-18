@@ -1,4 +1,4 @@
-$ gpr2build -Pprj -p -XVARIANT=1 --json-summary -q
+$ gpr2build -Pprj -p -XVARIANT=1 --json-summary -q -j1
 [Ada Bind] main (prj.gpr): 0
 [Ada Compile] main.adb (prj.gpr): 0
 [Ada Compile] pkg1.adb (prj.gpr): 0
@@ -7,7 +7,7 @@ $ gpr2build -Pprj -p -XVARIANT=1 --json-summary -q
 $ ./main
 I'm package 1
 
-$ gpr2build -Pprj -p -XVARIANT=1 --json-summary -q
+$ gpr2build -Pprj -p -XVARIANT=1 --json-summary -q -j1
 [Ada Bind] main (prj.gpr): SKIPPED
 [Ada Compile] main.adb (prj.gpr): SKIPPED
 [Ada Compile] pkg1.adb (prj.gpr): SKIPPED
@@ -16,7 +16,7 @@ $ gpr2build -Pprj -p -XVARIANT=1 --json-summary -q
 $ ./main
 I'm package 1
 
-$ gpr2build -Pprj -p -XVARIANT=2 --json-summary -q
+$ gpr2build -Pprj -p -XVARIANT=2 --json-summary -q -j1
 [Ada Bind] main (prj.gpr): 0
 [Ada Compile] main.adb (prj.gpr): 0
 [Ada Compile] pkg2.adb (prj.gpr): 0
@@ -25,7 +25,7 @@ $ gpr2build -Pprj -p -XVARIANT=2 --json-summary -q
 $ ./main
 I'm package 2
 
-$ gpr2build -Pprj -p -XVARIANT=2 --json-summary -q
+$ gpr2build -Pprj -p -XVARIANT=2 --json-summary -q -j1
 [Ada Bind] main (prj.gpr): SKIPPED
 [Ada Compile] main.adb (prj.gpr): SKIPPED
 [Ada Compile] pkg2.adb (prj.gpr): SKIPPED
@@ -34,7 +34,7 @@ $ gpr2build -Pprj -p -XVARIANT=2 --json-summary -q
 $ ./main
 I'm package 2
 
-$ gpr2build -Pprj -p -XVARIANT=1 --json-summary -q
+$ gpr2build -Pprj -p -XVARIANT=1 --json-summary -q -j1
 [Ada Bind] main (prj.gpr): 0
 [Ada Compile] main.adb (prj.gpr): 0
 [Ada Compile] pkg1.adb (prj.gpr): SKIPPED

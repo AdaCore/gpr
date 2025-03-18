@@ -21,10 +21,12 @@ run(
         "gpr2build",
         "-P" + os.path.join("library_interface", "app.gpr"),
         "-p",
+        "-j1"
     ])
 run(
     [
         "gpr2build",
         "-P" + os.path.join("interfaces", "app.gpr"),
         "-p",
+        "-j1"
     ])

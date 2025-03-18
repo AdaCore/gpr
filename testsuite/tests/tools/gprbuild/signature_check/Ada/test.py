@@ -11,7 +11,7 @@ def run(cmd):
         print(bnr.simple_run([cmd], catch_error=True).out)
 
 def test(variant):
-    run(["gpr2build", "-Pprj", "-p", f"-XVARIANT={variant}", "--json-summary", "-q"])
+    run(["gpr2build", "-Pprj", "-p", f"-XVARIANT={variant}", "--json-summary", "-q", "-j1"])
     with open(os.path.join("jobs.json")) as fp:
         cnt = json.load(fp)
 

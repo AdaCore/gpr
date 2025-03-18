@@ -1,4 +1,4 @@
-$ gpr2build -Plibrary_interface/app.gpr -p
+$ gpr2build -Plibrary_interface/app.gpr -p -j1
 "obj/lib" created
 "lib_library_interface" created
 "obj/app-library_interface" created
@@ -14,7 +14,7 @@ $ gpr2build -Plibrary_interface/app.gpr -p
 demo.gpr: warning: unit "Goo" is not in the interface set, but it is needed by "FOO"
 [Archive]         libdemo.a
 [Link]            main
-$ gpr2build -Pinterfaces/app.gpr -p
+$ gpr2build -Pinterfaces/app.gpr -p -j1
 "obj/lib" created
 "lib_interfaces" created
 "obj/app-interfaces" created

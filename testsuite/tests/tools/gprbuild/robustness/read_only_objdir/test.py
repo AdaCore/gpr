@@ -26,13 +26,13 @@ def run(cmd):
 
 print("regular run:")
 
-run("gpr2build -Pprj -p")
+run("gpr2build -Pprj -p -j1")
 run("gpr2clean -Pprj")
 
 print("\nread only obj dir:")
 
 chro("obj/prj")
-run("gpr2build -Pprj -p")
+run("gpr2build -Pprj -p -j1")
 run("gpr2clean -Pprj -v")
 
 print("\nread only obj dir with built project")
@@ -42,17 +42,17 @@ run("gpr2build -Pprj -p -q")
 chro("obj/prj")
 
 print("- with externally built dependency")
-run("gpr2build -Plib -XPRJ_RO=True -p")
+run("gpr2build -Plib -XPRJ_RO=True -p -j1")
 
 print("- with regular dependency")
-run("gpr2build -Plib -XPRJ_RO=False -p")
+run("gpr2build -Plib -XPRJ_RO=False -p -j1")
 chrw("obj/prj")
 
 print("\nread only lib dir")
 run("gpr2clean -Plib -r -q")
 chro("lib/lib")
-run("gpr2build -Plib")
+run("gpr2build -Plib -j1")
 chrw("lib/lib")
 run("gpr2build -Plib -q")
 chro("lib/lib")
-run("gpr2build -Plib -f -l")
+run("gpr2build -Plib -f -l -j1")

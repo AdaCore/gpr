@@ -10,8 +10,8 @@ def run(cmd):
         out = bnr.simple_run([cmd], catch_error=True).out
     print('\n'.join(sorted(out.splitlines())))
 
-run(["gpr2build", "-p", "-Pprj"])
-run(["gpr2build", "-p", "-Pext"])
+run(["gpr2build", "-p", "-Pprj", "-j1"])
+run(["gpr2build", "-p", "-Pext", "-j1"])
 run(["./main"])
-run(["gpr2build", "-p", "-Pext2"])
+run(["gpr2build", "-p", "-Pext2", "-j1"])
 run(["./main"])
