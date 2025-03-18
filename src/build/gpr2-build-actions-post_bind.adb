@@ -5,6 +5,7 @@
 --
 
 with GPR2.Build.Actions.Link;
+with GPR2.Build.External_Options;
 with GPR2.Build.Tree_Db;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
@@ -73,6 +74,14 @@ package body GPR2.Build.Actions.Post_Bind is
       Cmd_Line.Add_Argument ("-gnatiw");
       Cmd_Line.Add_Argument ("-gnatws");
       Cmd_Line.Add_Argument ("-gnatWb");
+
+      --  Add -cargs and -cargs:<lang>
+      for Arg of Self.Tree.External_Options.Fetch
+                   (External_Options.Compiler, Ada_Language)
+      loop
+         Cmd_Line.Add_Argument (Arg, True);
+      end loop;
+
       Cmd_Line.Add_Argument (Self.Input.Path);
       Cmd_Line.Add_Argument ("-o");
       Cmd_Line.Add_Argument (Self.Output.Path);
