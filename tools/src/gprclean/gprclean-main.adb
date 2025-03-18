@@ -288,7 +288,7 @@ begin
        (Error    => True,
         Warning  => True,
         Hint     => False,
-        End_User => False)
+        End_User => True)
    then
       Opt.Tree.Reporter.Report
         (GPR2.Message.Create
