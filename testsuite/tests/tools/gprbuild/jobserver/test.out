@@ -1,0 +1,33 @@
+Step 1 - Build a single project
+- Generate "src1", 10 files
+   - Creating "src1"
+- Generate makefile
+   - Creating "Makefile"
+- Build
+- Rebuild
+- Clean
+Step 2 - Build two projects
+- Generate "src2", 10 files
+   - Creating "src2"
+- Generate makefile
+   - Creating "Makefile"
+- Build
+- Rebuild
+- Clear sources
+   - Clearing "src1"
+   - Clearing "src2"
+Step 3 - Build a bigger single project
+- Generate "src1", 3000 files
+   - Creating "src1"
+- Generate makefile
+   - Creating "Makefile"
+- Build
+- Rebuild
+Step 4 - Build bigger projects
+- Generate "src2", 3000 files
+   - Creating "src2"
+- Generate makefile
+   - Creating "Makefile"
+- Build
+- Rebuild
+- Clean

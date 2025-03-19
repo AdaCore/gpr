@@ -12,6 +12,7 @@ with GNATCOLL.OS.FS; use GNATCOLL.OS.FS;
 with GNATCOLL.OS.Process;
 
 with GPR2.Build.Actions;
+with GPR2.Build.Jobserver;
 limited with GPR2.Build.Tree_Db;
 
 private with GNATCOLL.Traces;
@@ -45,7 +46,7 @@ package GPR2.Build.Process_Manager is
    type Object is tagged limited private;
 
    type Process_Handler_Status is
-     (Skipped, Deactivated, Failed_To_Launch, Running, Finished);
+     (Skipped, Deactivated, Failed_To_Launch, Running, Finished, Pending);
 
    type Process_Handler (Status : Process_Handler_Status := Running) is
    record
@@ -91,10 +92,11 @@ package GPR2.Build.Process_Manager is
 
    procedure Launch_Job
      (Self           : in out Object;
+      JS             : in out Build.Jobserver.Object'Class;
       Job            : in out Actions.Object'Class;
       Slot_Id        :        Positive;
       Force          :        Boolean;
-      Proc_Handler   :    out Process_Handler;
+      Proc_Handler   : in out Process_Handler;
       Capture_Stdout :    out File_Descriptor;
       Capture_Stderr :    out File_Descriptor);
    --  Execute the Action "Job", possibly using a response file if the
@@ -137,11 +139,11 @@ private
                     Total_Jobs      => 0);
 
    type Object is tagged limited record
-      Stats        : Process_Manager_Stats := Empty_Stats;
-      Tree_Db      : access GPR2.Build.Tree_Db.Object;
-      Traces       : GNATCOLL.Traces.Trace_Handle :=
-                       GNATCOLL.Traces.Create ("PROCESS_MANAGER",
-                                               GNATCOLL.Traces.Off);
+      Stats   : Process_Manager_Stats := Empty_Stats;
+      Tree_Db : access GPR2.Build.Tree_Db.Object;
+      Traces  : GNATCOLL.Traces.Trace_Handle :=
+                  GNATCOLL.Traces.Create ("PROCESS_MANAGER",
+                                          GNATCOLL.Traces.Off);
    end record;
 
 end GPR2.Build.Process_Manager;

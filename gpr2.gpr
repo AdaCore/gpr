@@ -153,4 +153,18 @@ library project GPR2 extends "shared.gpr" is
       for Artifacts ("share/examples/gpr2") use ("examples/libgpr2/*");
    end Install;
 
+   ------------
+   -- Naming --
+   ------------
+
+   package Naming is
+      case Target is
+         when "Windows_NT" =>
+            for Body ("GPR2.Build.Jobserver.Semaphore") use
+              "gpr2-build-jobserver-semaphore__win.adb";
+         when "UNIX" =>
+            null;
+      end case;
+   end Naming;
+
 end GPR2;

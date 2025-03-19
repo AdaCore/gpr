@@ -1,0 +1,4 @@
+description: Test the implementation of the jobserver
+driver: python_script
+output:
+- ["test.out.win", "'windows' in env.host.platform"]
