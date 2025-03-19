@@ -71,8 +71,7 @@ procedure Main is
    is
       Rel : constant Filename_Type := Filename.Relative_Path (Base_Dir);
    begin
-      --  Remove the starting "./"
-      Text_IO.Put (" > " & String (Rel (3 .. Rel'Last)));
+      Text_IO.Put (" > " & String (Rel));
    end Output_Filename;
 
 begin

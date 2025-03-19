@@ -25,7 +25,7 @@ package body GPR2.Build.Actions.Write_File is
    is
       pragma Unreferenced (Self);
    begin
-      Cmd_Line.Add_Argument ("Does-Not-Work!", True);
+      Cmd_Line.Add_Argument ("Does-Not-Work!");
    end Compute_Command;
 
    -----------------------

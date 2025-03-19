@@ -185,26 +185,26 @@ Testing trees/multi/prj.gpr
      - Prj
 * Sources:
  - sources of Prj
-   - ./sources.ada
+   - sources.ada
      @ 1 PKG (spec)
      @ 2 PKG (body)
      @ 3 MAIN (body)
-   - ./src2.ada
+   - src2.ada
      @ 1 PKG2 (spec)
      @ 2 PKG2 (body)
      @ 3 MAIN2 (body)
 * Compilation units:
  - units of Prj
    - MAIN
-     body: ./sources.ada @ 3 (from view Prj)
+     body: sources.ada @ 3 (from view Prj)
    - MAIN2
-     body: ./src2.ada @ 3 (from view Prj)
+     body: src2.ada @ 3 (from view Prj)
    - PKG
-     spec: ./sources.ada @ 1 (from view Prj)
-     body: ./sources.ada @ 2 (from view Prj)
+     spec: sources.ada @ 1 (from view Prj)
+     body: sources.ada @ 2 (from view Prj)
    - PKG2
-     spec: ./src2.ada @ 1 (from view Prj)
-     body: ./src2.ada @ 2 (from view Prj)
+     spec: src2.ada @ 1 (from view Prj)
+     body: src2.ada @ 2 (from view Prj)
 =========================================
 Testing trees/errors/prj.gpr
 =========================================
@@ -253,35 +253,35 @@ Testing trees/separates/lib.gpr
 * Sources:
  - sources of Lib
  - sources of Prj
-   - ./pkg-child.adb (body)
+   - pkg-child.adb (body)
      PKG.CHILD (body)
-   - ./pkg-child.ads (spec)
+   - pkg-child.ads (spec)
      PKG.CHILD (spec)
-   - ./pkg-p.adb (sep.)
+   - pkg-p.adb (sep.)
      PKG.P (sep.from PKG)
-   - ./pkg-pack-sub.adb (sep.)
+   - pkg-pack-sub.adb (sep.)
      PKG.PACK.SUB (sep.from PKG)
-   - ./pkg-pack.adb (sep.)
+   - pkg-pack.adb (sep.)
      PKG.PACK (sep.from PKG)
-   - ./pkg-proc.adb (body)
+   - pkg-proc.adb (body)
      PKG.PROC (body)
-   - ./pkg.adb (body)
+   - pkg.adb (body)
      PKG (body)
-   - ./pkg.ads (spec)
+   - pkg.ads (spec)
      PKG (spec)
 * Compilation units:
  - units of Lib
    - PKG
-     spec: ./pkg.ads (from view Prj)
-     body: ./pkg.adb (from view Prj)
-     sep. P: ./pkg-p.adb (from view Prj)
-     sep. PACK: ./pkg-pack.adb (from view Prj)
-     sep. PACK.SUB: ./pkg-pack-sub.adb (from view Prj)
+     spec: pkg.ads (from view Prj)
+     body: pkg.adb (from view Prj)
+     sep. P: pkg-p.adb (from view Prj)
+     sep. PACK: pkg-pack.adb (from view Prj)
+     sep. PACK.SUB: pkg-pack-sub.adb (from view Prj)
    - PKG.CHILD
-     spec: ./pkg-child.ads (from view Prj)
-     body: ./pkg-child.adb (from view Prj)
+     spec: pkg-child.ads (from view Prj)
+     body: pkg-child.adb (from view Prj)
    - PKG.PROC
-     body: ./pkg-proc.adb (from view Prj)
+     body: pkg-proc.adb (from view Prj)
 =========================================
 Testing trees/separates/prj.gpr
 =========================================
@@ -291,35 +291,35 @@ Testing trees/separates/prj.gpr
      - Prj
 * Sources:
  - sources of Prj
-   - ./pkg-child.adb (body)
+   - pkg-child.adb (body)
      PKG.CHILD (body)
-   - ./pkg-child.ads (spec)
+   - pkg-child.ads (spec)
      PKG.CHILD (spec)
-   - ./pkg-p.adb (sep.)
+   - pkg-p.adb (sep.)
      PKG.P (sep.from PKG)
-   - ./pkg-pack-sub.adb (sep.)
+   - pkg-pack-sub.adb (sep.)
      PKG.PACK.SUB (sep.from PKG)
-   - ./pkg-pack.adb (sep.)
+   - pkg-pack.adb (sep.)
      PKG.PACK (sep.from PKG)
-   - ./pkg-proc.adb (body)
+   - pkg-proc.adb (body)
      PKG.PROC (body)
-   - ./pkg.adb (body)
+   - pkg.adb (body)
      PKG (body)
-   - ./pkg.ads (spec)
+   - pkg.ads (spec)
      PKG (spec)
 * Compilation units:
  - units of Prj
    - PKG
-     spec: ./pkg.ads (from view Prj)
-     body: ./pkg.adb (from view Prj)
-     sep. P: ./pkg-p.adb (from view Prj)
-     sep. PACK: ./pkg-pack.adb (from view Prj)
-     sep. PACK.SUB: ./pkg-pack-sub.adb (from view Prj)
+     spec: pkg.ads (from view Prj)
+     body: pkg.adb (from view Prj)
+     sep. P: pkg-p.adb (from view Prj)
+     sep. PACK: pkg-pack.adb (from view Prj)
+     sep. PACK.SUB: pkg-pack-sub.adb (from view Prj)
    - PKG.CHILD
-     spec: ./pkg-child.ads (from view Prj)
-     body: ./pkg-child.adb (from view Prj)
+     spec: pkg-child.ads (from view Prj)
+     body: pkg-child.adb (from view Prj)
    - PKG.PROC
-     body: ./pkg-proc.adb (from view Prj)
+     body: pkg-proc.adb (from view Prj)
 =========================================
 Testing trees/non_ada/prj.gpr
 =========================================
