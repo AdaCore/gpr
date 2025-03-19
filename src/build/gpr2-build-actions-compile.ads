@@ -116,7 +116,14 @@ private
 
       Ctxt     : GPR2.Project.View.Object;
       --  View owning the source
+
+      Inh_From : GPR2.Project.View.Object;
+      --  Set when the action is inherited from another view.
    end record;
+
+   overriding function Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status) return Boolean;
 
    function Src_Index (Self : Object) return Unit_Index is
      (No_Index);
@@ -137,7 +144,7 @@ private
      (Self.Src);
 
    overriding function Is_Extending (Self : Object) return Boolean is
-     (Self.Input.Is_Inherited);
+     (Self.Inh_From.Is_Defined);
 
    function Object_File (Self : Object) return Artifacts.Files.Object is
      (Self.Obj_File);

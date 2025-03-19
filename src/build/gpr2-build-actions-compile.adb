@@ -669,7 +669,11 @@ package body GPR2.Build.Actions.Compile is
             if Sw.Is_Defined then
                Add_Options_With_Arg
                  (Sw, String (Self.Obj_File.Path.Simple_Name), True);
-            elsif Self.Lang = Ada_Language then
+            elsif Self.Lang = Ada_Language
+              and then Object'Class (Self).Src_Index /= No_Index
+            then
+               --  For multi-unit sources, we need to specify the output object
+
                --  [eng/gpr/gpr-issues#446] TODO modify the KB to have a proper
                --  default here.
                Cmd_Line.Add_Argument ("-o");
@@ -731,11 +735,25 @@ package body GPR2.Build.Actions.Compile is
 
             for Dep of Deps loop
                declare
-                  Src : constant GPR2.Path_Name.Object :=
-                          GPR2.Path_Name.Create_File
-                            (Dep, Self.View.Object_Directory.Value);
+                  Ambiguous : Boolean;
+                  Src       : constant GPR2.Build.Source.Object :=
+                                Self.Ctxt.Visible_Source
+                                  (Path_Name.Simple_Name (Dep),
+                                   Ambiguous);
+                  Path      : GPR2.Path_Name.Object;
                begin
-                  if not Src.Exists then
+                  if not Ambiguous and then Src.Is_Defined then
+                     Path := Src.Path_Name;
+                  else
+                     Path :=
+                       GPR2.Path_Name.Create_File
+                         (Dep,
+                          (if Self.Inh_From.Is_Defined
+                           then Self.Inh_From.Object_Directory.Value
+                           else Self.View.Object_Directory.Value));
+                  end if;
+
+                  if not Path.Exists then
                      Self.Traces.Trace
                        ("Compute_Signature: cannot find dependency " &
                           String (Dep));
@@ -746,7 +764,7 @@ package body GPR2.Build.Actions.Compile is
                      end if;
 
                   elsif not Self.Signature.Add_Input
-                              (Artifacts.Files.Create (Src))
+                              (Artifacts.Files.Create (Path))
                     and then Load_Mode
                   then
                      return;
@@ -801,7 +819,7 @@ package body GPR2.Build.Actions.Compile is
    begin
       return Result : Object do
          Result.Initialize
-           (Self.Src.Inherited_From.Source (Self.Src.Path_Name.Simple_Name));
+           (Self.Inh_From.Source (Self.Src.Path_Name.Simple_Name));
       end return;
    end Extended;
 
@@ -902,6 +920,7 @@ package body GPR2.Build.Actions.Compile is
 
             else
                Self.Obj_File := Artifacts.Files.Create (Lkup_Obj);
+               Self.Inh_From := Candidate;
 
                if Has_Dep then
                   Self.Dep_File := Artifacts.Files.Create (Lkup_Dep);
@@ -940,6 +959,50 @@ package body GPR2.Build.Actions.Compile is
 
       return True;
    end On_Tree_Insertion;
+
+   ------------------
+   -- Post_Command --
+   ------------------
+
+   overriding function Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status) return Boolean is
+   begin
+      if Status = Skipped or else not Self.Inh_From.Is_Defined then
+         --  No need to post-process anything if the action was skipped
+         --  or is not overloading an inherited action
+         return True;
+      end if;
+
+      --  If the .o and .d stored in this action were inherited, and we
+      --  finally decided to compile, we need to now redirect to the new .o
+
+      declare
+         BN        : constant Simple_Name := Self.Src.Path_Name.Base_Filename;
+         O_Suff    : constant Simple_Name :=
+                       Simple_Name
+                         (Self.Ctxt.Attribute
+                            (PRA.Compiler.Object_File_Suffix,
+                             PAI.Create (Self.Lang)).Value.Text);
+         Local_O   : Artifacts.Files.Object;
+         Local_Dep : Artifacts.Files.Object;
+
+      begin
+         Local_O := Artifacts.Files.Create
+           (Self.View.Object_Directory.Compose (BN & O_Suff));
+
+         Local_Dep := Artifacts.Files.Create
+           (Self.View.Object_Directory.Compose (BN & ".d"));
+
+         Self.Tree.Replace_Artifact (Self.Obj_File, Local_O);
+         Self.Tree.Replace_Artifact (Self.Dep_File, Local_Dep);
+         Self.Obj_File := Local_O;
+         Self.Dep_File := Local_Dep;
+         Self.Inh_From := GPR2.Project.View.Undefined;
+      end;
+
+      return True;
+   end Post_Command;
 
    ---------
    -- UID --
