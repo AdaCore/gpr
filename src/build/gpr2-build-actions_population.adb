@@ -726,7 +726,15 @@ package body GPR2.Build.Actions_Population is
          return True;
       end if;
 
-      if View.Is_Library_Standalone then
+      if View.Is_Library_Standalone
+        and then
+          (View.Language_Ids.Contains (Ada_Language)
+           or else
+             (View.Kind = K_Aggregate_Library
+              and then
+                (for some Agg of View.Aggregated =>
+                     Agg.Language_Ids.Contains (Ada_Language))))
+      then
          --  Create the binder action that will create the file in charge of
          --  elaborating and finalizing the lib. Used for standalone libraries.
 
