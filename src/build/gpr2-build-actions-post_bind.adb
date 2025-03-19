@@ -79,7 +79,7 @@ package body GPR2.Build.Actions.Post_Bind is
       for Arg of Self.Tree.External_Options.Fetch
                    (External_Options.Compiler, Ada_Language)
       loop
-         Cmd_Line.Add_Argument (Arg, True);
+         Cmd_Line.Add_Argument (Arg);
       end loop;
 
       Cmd_Line.Add_Argument (Self.Input.Path);

@@ -77,6 +77,8 @@ package body GPR2.Build.Actions.Compile.Ada is
       Compile.Object (Self).Compute_Command (Slot, Cmd_Line, Signature_Only);
 
       if Signature_Only then
+         --  Ignore the config pragmas commands since they're already part
+         --  of the signature
          return;
       end if;
 
@@ -90,25 +92,25 @@ package body GPR2.Build.Actions.Compile.Ada is
       if Self.Global_Config_Pragmas.Is_Defined then
          for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
             Cmd_Line.Add_Argument
-              (Attr.Values.Element (J).Text, False);
+              (Attr.Values.Element (J).Text, Build.Command_Line.Ignore);
          end loop;
 
          Cmd_Line.Add_Argument
            (Attr.Values.Last_Element.Text &
               Self.Global_Config_Pragmas.String_Value,
-            False);
+            Build.Command_Line.Ignore);
       end if;
 
       if Self.Local_Config_Pragmas.Is_Defined then
          for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
             Cmd_Line.Add_Argument
-              (Attr.Values.Element (J).Text, False);
+              (Attr.Values.Element (J).Text, Build.Command_Line.Ignore);
          end loop;
 
          Cmd_Line.Add_Argument
            (Attr.Values.Last_Element.Text &
               Self.Local_Config_Pragmas.String_Value,
-            False);
+            Build.Command_Line.Ignore);
       end if;
    end Compute_Command;
 

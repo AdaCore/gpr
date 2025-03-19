@@ -154,6 +154,10 @@ package body GPR2.Build.Actions.Link is
       is
          Attr : constant Project.Attribute.Object :=
                   Self.View.Attribute (Id, Index);
+         Mode : constant Build.Command_Line.Signature_Mode :=
+                  (if In_Signature
+                   then Build.Command_Line.In_Signature
+                   else Build.Command_Line.Ignore);
 
          procedure Add (Arg : String);
          --  Check for full path whenever possible
@@ -181,7 +185,7 @@ package body GPR2.Build.Actions.Link is
                             (Path.Relative_Path (Self.Working_Directory)));
                   end;
                else
-                  Cmd_Line.Add_Argument (Arg, In_Signature);
+                  Cmd_Line.Add_Argument (Arg, Mode);
                end if;
             else
                declare
@@ -191,9 +195,9 @@ package body GPR2.Build.Actions.Link is
                               Self.Ctxt.Dir_Name.Value);
                begin
                   if Full.Exists then
-                     Cmd_Line.Add_Argument (Full, In_Signature);
+                     Cmd_Line.Add_Argument (Full, Mode);
                   else
-                     Cmd_Line.Add_Argument (Arg, In_Signature);
+                     Cmd_Line.Add_Argument (Arg, Mode);
                   end if;
                end;
             end if;
@@ -293,14 +297,13 @@ package body GPR2.Build.Actions.Link is
                --  directly the symbol table by using "ar csr".
 
                elsif Val.Text = "cr" then
-                  Cmd_Line.Add_Argument ("csr", True);
+                  Cmd_Line.Add_Argument ("csr");
                else
-                  Cmd_Line.Add_Argument (Val.Text, True);
+                  Cmd_Line.Add_Argument (Val.Text);
                end if;
             end loop;
 
-            Cmd_Line.Add_Argument
-              (String (Self.Output.Path.Simple_Name), True);
+            Cmd_Line.Add_Argument (Self.Output.Path);
          end;
 
       else
@@ -331,14 +334,14 @@ package body GPR2.Build.Actions.Link is
          end if;
 
          --  ??? This shouldn't be hardcoded
-         Cmd_Line.Add_Argument ("-o", True);
-         Cmd_Line.Add_Argument
-           (String (Self.Output.Path.Simple_Name), True);
+         Cmd_Line.Add_Argument ("-o");
+         Cmd_Line.Add_Argument (Self.Output.Path);
       end if;
 
       for Obj of Objects loop
          Cmd_Line.Add_Argument
-           (Artifacts.Files.Object'Class (Obj).Path, True);
+           (Artifacts.Files.Object'Class (Obj).Path,
+            Build.Command_Line.Simple);
       end loop;
 
       if not Self.Is_Static_Library then
@@ -462,13 +465,13 @@ package body GPR2.Build.Actions.Link is
                                        Link.View.Dir_Name.Value);
                         begin
                            if Path.Exists then
-                              Cmd_Line.Add_Argument (Path, True);
+                              Cmd_Line.Add_Argument (Path);
 
                            elsif not Link.Is_Static then
                               if Starts_With (Val.Text, "-l") then
                                  Dash_l_Opts.Append (Val.Text);
                               else
-                                 Cmd_Line.Add_Argument (Val.Text, True);
+                                 Cmd_Line.Add_Argument (Val.Text);
                               end if;
                            else
                               if not Signature_Only then
@@ -539,7 +542,7 @@ package body GPR2.Build.Actions.Link is
                               if Starts_With (Arg, "-l") then
                                  Dash_l_Opts.Append (Arg);
                               else
-                                 Cmd_Line.Add_Argument (Val.Text, True);
+                                 Cmd_Line.Add_Argument (Val.Text);
                               end if;
                            end if;
 
@@ -550,7 +553,7 @@ package body GPR2.Build.Actions.Link is
                            Cmd_Line.Add_Argument
                              (Path_Name.Create_File
                                 (Filename_Type (Val.Text),
-                                 C.Dir_Name.Value).String_Value, True);
+                                 C.Dir_Name.Value));
                         end if;
                      end;
                   end loop;
@@ -572,7 +575,7 @@ package body GPR2.Build.Actions.Link is
       end if;
 
       for Arg of Dash_l_Opts loop
-         Cmd_Line.Add_Argument (Arg, True);
+         Cmd_Line.Add_Argument (Arg);
       end loop;
 
       --  Runtime flags usually come from the binder. However, there is no

@@ -67,6 +67,10 @@ package body GPR2.Build.Actions.Compile is
          Is_List      : Boolean;
          In_Signature : Boolean)
       is
+         Mode : constant Build.Command_Line.Signature_Mode :=
+                  (if In_Signature
+                   then GPR2.Build.Command_Line.In_Signature
+                   else GPR2.Build.Command_Line.Ignore);
          Attr : constant GPR2.Project.Attribute.Object :=
                   Self.View.Attribute (Id, Idx);
       begin
@@ -77,11 +81,11 @@ package body GPR2.Build.Actions.Compile is
          if Is_List then
             for Val of Attr.Values loop
                if Val.Text'Length > 0 then
-                  Cmd_Line.Add_Argument (Val.Text, In_Signature);
+                  Cmd_Line.Add_Argument (Val.Text, Mode);
                end if;
             end loop;
          else
-            Cmd_Line.Add_Argument (Attr.Value.Text, In_Signature);
+            Cmd_Line.Add_Argument (Attr.Value.Text, Mode);
          end if;
       end Add_Attr;
 
@@ -428,7 +432,7 @@ package body GPR2.Build.Actions.Compile is
 
                Cmd_Line.Add_Argument
                  ("-specs=" & String (Path_Name.Simple_Name (Spec_File.Path)),
-                  False);
+                  Build.Command_Line.Ignore);
             end;
 
             return;
@@ -539,6 +543,10 @@ package body GPR2.Build.Actions.Compile is
          Arg          : String;
          In_Signature : Boolean)
       is
+         Mode : constant Build.Command_Line.Signature_Mode :=
+                  (if In_Signature
+                   then GPR2.Build.Command_Line.In_Signature
+                   else GPR2.Build.Command_Line.Ignore);
       begin
          if not Attr.Is_Defined or else Attr.Values.Is_Empty then
             return;
@@ -546,11 +554,11 @@ package body GPR2.Build.Actions.Compile is
 
          for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
             Cmd_Line.Add_Argument
-              (Attr.Values.Element (J).Text, In_Signature);
+              (Attr.Values.Element (J).Text, Mode);
          end loop;
 
          Cmd_Line.Add_Argument
-           (Attr.Values.Last_Element.Text & Arg, In_Signature);
+           (Attr.Values.Last_Element.Text & Arg, Mode);
       end Add_Options_With_Arg;
 
       Driver_Attr : constant GPR2.Project.Attribute.Object :=
@@ -586,7 +594,7 @@ package body GPR2.Build.Actions.Compile is
       for Arg of Self.Tree.External_Options.Fetch
                    (External_Options.Compiler, Self.Lang)
       loop
-         Cmd_Line.Add_Argument (Arg, True);
+         Cmd_Line.Add_Argument (Arg);
       end loop;
 
       if Self.View.Is_Library
@@ -631,7 +639,8 @@ package body GPR2.Build.Actions.Compile is
                Self.Src.Path_Name.String_Value,
                True);
          else
-            Cmd_Line.Add_Argument (Self.Src.Path_Name, True);
+            Cmd_Line.Add_Argument
+              (Self.Src.Path_Name, Build.Command_Line.Simple);
          end if;
 
          if Index /= No_Index then

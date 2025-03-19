@@ -86,6 +86,10 @@ package body GPR2.Build.Actions.Ada_Bind is
          Gnatbind_Path_Equal   : constant String := "--gnatbind_path=";
          Ada_Binder_Equal      : constant String := "ada_binder=";
          Default_Binder_Name   : constant String := "gnatbind" & Exe_Ext;
+         Mode                  : constant Build.Command_Line.Signature_Mode :=
+                                   (if In_Signature
+                                    then Build.Command_Line.In_Signature
+                                    else Build.Command_Line.Ignore);
 
       begin
          if not Attr.Is_Defined then
@@ -136,14 +140,16 @@ package body GPR2.Build.Actions.Ada_Bind is
                                  Self.Ctxt.Dir_Name.Value);
                   begin
                      Cmd_Line.Add_Argument
-                       ("-A=" & Path.String_Value, In_Signature);
+                       ("-A=" &
+                          String (Path.Relative_Path (Self.Working_Directory)),
+                        Mode);
                   end;
                else
-                  Cmd_Line.Add_Argument (Val.Text, In_Signature);
+                  Cmd_Line.Add_Argument (Val.Text, Mode);
                end if;
             end loop;
          else
-            Cmd_Line.Add_Argument (Attr.Value.Text, In_Signature);
+            Cmd_Line.Add_Argument (Attr.Value.Text, Mode);
          end if;
       end Add_Attr;
 
@@ -202,7 +208,8 @@ package body GPR2.Build.Actions.Ada_Bind is
             GNATCOLL.OS.FS.Close (Map_File.FD);
          end if;
 
-         Cmd_Line.Add_Argument ("-F=" & String (Map_File.Path), False);
+         Cmd_Line.Add_Argument
+           ("-F=" & String (Map_File.Path), Build.Command_Line.Ignore);
       end Add_Mapping_File;
 
       --------------------------
@@ -353,9 +360,8 @@ package body GPR2.Build.Actions.Ada_Bind is
          Cmd_Line.Add_Argument ("-F");
       end if;
 
-      Cmd_Line.Add_Argument ("-o", True);
-      Cmd_Line.Add_Argument
-        (String (Self.Output_Body.Path.Simple_Name), True);
+      Cmd_Line.Add_Argument ("-o");
+      Cmd_Line.Add_Argument (Self.Output_Body.Path);
 
       if Self.Ctxt.Is_Library then
          if Self.Ctxt.Is_Shared_Library
@@ -364,7 +370,7 @@ package body GPR2.Build.Actions.Ada_Bind is
 
             --  Link against a shared GNAT run time
 
-            Cmd_Line.Add_Argument ("-shared", True);
+            Cmd_Line.Add_Argument ("-shared");
          end if;
 
          if Self.Ctxt.Is_Library_Standalone then
@@ -372,10 +378,10 @@ package body GPR2.Build.Actions.Ada_Bind is
             --  Make sure that the init procedure is never "adainit".
 
             if Self.Ctxt.Library_Name = "ada" then
-               Cmd_Line.Add_Argument ("-Lada_", True);
+               Cmd_Line.Add_Argument ("-Lada_");
             else
                Cmd_Line.Add_Argument
-                 ("-L" & String (Self.Ctxt.Library_Name), True);
+                 ("-L" & String (Self.Ctxt.Library_Name));
             end if;
          end if;
 
@@ -388,7 +394,7 @@ package body GPR2.Build.Actions.Ada_Bind is
             if Imported_View.Is_Library
               and then Imported_View.Is_Shared_Library
             then
-               Cmd_Line.Add_Argument ("-shared", True);
+               Cmd_Line.Add_Argument ("-shared");
                exit;
             end if;
          end loop;
@@ -405,7 +411,8 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       for Ali of Self.Tree.Inputs (Self.UID, Explicit_Only => True) loop
          Cmd_Line.Add_Argument
-           (GPR2.Build.Artifacts.Files.Object (Ali).Path, True);
+           (GPR2.Build.Artifacts.Files.Object (Ali).Path,
+            GPR2.Build.Command_Line.Simple);
       end loop;
 
       for View of Self.Ctxt.Closure (True, True, True) loop
@@ -413,7 +420,7 @@ package body GPR2.Build.Actions.Ada_Bind is
          if View.Language_Ids.Contains (Ada_Language) then
             if View.Is_Library then
                Cmd_Line.Add_Argument
-                 ("-I" & View.Library_Ali_Directory.String_Value, True);
+                 ("-I" & View.Library_Ali_Directory.String_Value);
 
                if View.Id = Self.Ctxt.Id
                  and then Self.Ctxt.Is_Library_Standalone
@@ -421,12 +428,12 @@ package body GPR2.Build.Actions.Ada_Bind is
                   --  Need visibility on non-interface units
 
                   Cmd_Line.Add_Argument
-                    ("-I" & View.Object_Directory.String_Value, True);
+                    ("-I" & View.Object_Directory.String_Value);
                end if;
 
             elsif View.Kind in With_Object_Dir_Kind then
                Cmd_Line.Add_Argument
-                 ("-I" & View.Object_Directory.String_Value, True);
+                 ("-I" & View.Object_Directory.String_Value);
             end if;
          end if;
       end loop;
