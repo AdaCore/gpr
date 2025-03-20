@@ -47,6 +47,7 @@ library project GPR2 extends "shared.gpr" is
             "GPR2.Build.Compilation_Unit",
             "GPR2.Build.Compilation_Unit.Maps",
             "GPR2.Build.External_Options",
+            "GPR2.Build.Jobserver.Semaphore",
             "GPR2.Build.Options",
             "GPR2.Build.Process_Manager",
             "GPR2.Build.Process_Manager.JSON",
@@ -163,7 +164,8 @@ library project GPR2 extends "shared.gpr" is
             for Body ("GPR2.Build.Jobserver.Semaphore") use
               "gpr2-build-jobserver-semaphore__win.adb";
          when "UNIX" =>
-            null;
+            for Body ("GPR2.Build.Jobserver.Semaphore") use
+              "gpr2-build-jobserver-semaphore.adb";
       end case;
    end Naming;
 
