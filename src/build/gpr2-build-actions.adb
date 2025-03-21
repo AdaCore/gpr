@@ -10,11 +10,17 @@ with Ada.Strings.Fixed;
 
 with GNATCOLL.OS.FS;
 with GNATCOLL.OS.FSUtil;
+with GNATCOLL.Traces;
 
 with GPR2.Build.Artifacts.Key_Value;
 with GPR2.Build.Tree_Db;
 
 package body GPR2.Build.Actions is
+
+   Traces : constant GNATCOLL.Traces.Trace_Handle :=
+              GNATCOLL.Traces.Create
+                ("GPR.BUILD.ACTIONS",
+                 GNATCOLL.Traces.Off);
 
    Command_Line_Key : constant String := "command_line";
 
@@ -46,7 +52,7 @@ package body GPR2.Build.Actions is
             if not Remove_File
               (Self.View.Object_Directory.Compose (F).String_Value)
             then
-               Self.Traces.Trace
+               Traces.Trace
                  ("error: could not remove temp file " & String (F) & " in " &
                     Self.View.Object_Directory.String_Value);
             end if;
