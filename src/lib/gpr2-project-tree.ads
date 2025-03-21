@@ -19,13 +19,14 @@ with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Configuration;
-limited with GPR2.Project.Tree.View_Builder;
 with GPR2.Project.View.Set;
 with GPR2.Project.View.Vector;
 with GPR2.View_Ids;
 with GPR2.Reporter;
 with GPR2.Reporter.Console;
 with GPR2.Reporter.Holders;
+
+limited with GPR2.Project.Tree.View_Builder;
 
 private with GNATCOLL.Refcount;
 private with GPR2.Tree_Internal;
@@ -183,7 +184,7 @@ package GPR2.Project.Tree is
 
    function Root_Project (Self : Object) return View.Object
      with Pre  => Self.Is_Defined;
-   --  Returns the root project for the given tree.
+   --  Returns the root project for the given tree
 
    function Namespace_Root_Projects (Self : Object) return View.Set.Object
      with Pre  => Self.Is_Defined;
@@ -356,7 +357,7 @@ package GPR2.Project.Tree is
 
    procedure Clear_Sources (Self : Object)
      with Pre  => Self.Is_Defined;
-   --  Invalidates the sources for all views in the tree.
+   --  Invalidates the sources for all views in the tree
 
    procedure Update_Sources
      (Self     : Object;
@@ -377,11 +378,11 @@ package GPR2.Project.Tree is
       Option   : Source_Info_Option := Sources_Units;
       No_Error : Boolean := False) return Boolean
      with Pre => Self.Is_Defined;
-   --  Same as above, and returns False upon error detected.
+   --  Same as above, and returns False upon error detected
 
    procedure For_Each_Ada_Closure
      (Self              : Object;
-      Action            : access procedure
+      Action            : not null access procedure
                             (Unit : Build.Compilation_Unit.Object);
       Mains             : Containers.Filename_Set :=
                             Containers.Empty_Filename_Set;
@@ -391,7 +392,7 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Units;
    --  Call action for each source of the closure of the loaded tree (Mains
    --  or library interfaces and their dependencies).
-   --.
+   --
    --  Mains:
    --    used to limit the entry points of the closure to the sources or
    --    units specified in this parameter

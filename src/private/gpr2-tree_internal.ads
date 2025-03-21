@@ -447,7 +447,7 @@ private package GPR2.Tree_Internal is
      (Self : Object) return GPR2.File_Readers.File_Reader_Reference;
 
    function Environment (Self : Object) return GPR2.Environment.Object;
-   --  Returns used environment.
+   --  Returns used environment
 
    function Get_View
       (Self : Object;

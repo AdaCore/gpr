@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2024, AdaCore
+--  Copyright (C) 2024-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -153,7 +153,7 @@ package body GPR2.Project.Tree is
 
    procedure For_Each_Ada_Closure
      (Self              : Object;
-      Action            : access procedure
+      Action            : not null access procedure
                             (Unit : Build.Compilation_Unit.Object);
       Mains             : Containers.Filename_Set :=
                             Containers.Empty_Filename_Set;
@@ -217,7 +217,6 @@ package body GPR2.Project.Tree is
          then
             return;
          end if;
-
 
          if Unit.Is_Defined
            and then (not Root_Project_Only
@@ -408,7 +407,7 @@ package body GPR2.Project.Tree is
            (Path       : GPR2.Path_Name.Object;
             Human_Name : String;
             AV         : GPR2.Project.Attribute.Object);
-         --  Make sure Path exists and is a directory.
+         --  Make sure Path exists and is a directory
 
          function Has_Absolute_Artifacts_Dir
            (View : GPR2.Project.View.Object) return Boolean;

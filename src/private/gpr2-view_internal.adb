@@ -712,6 +712,10 @@ package body GPR2.View_Internal is
       Free (States);
    end Foreach;
 
+   -----------------
+   -- Get_Context --
+   -----------------
+
    function Get_Context
      (View : Project.View.Object) return Context.Object
    is (Get_RO (View).Tree.Contexts (View.Context));

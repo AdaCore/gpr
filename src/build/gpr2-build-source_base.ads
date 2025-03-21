@@ -73,7 +73,7 @@ package GPR2.Build.Source_Base is
    procedure Update_Modification_Time
      (Self : in out Object;
       Time : Ada.Calendar.Time);
-   --  Update the source modification time field.
+   --  Update the source modification time field
 
    function Language (Self : Object) return Language_Id
      with Pre => Self.Is_Defined;
@@ -117,7 +117,7 @@ package GPR2.Build.Source_Base is
    function Units (Self : Object) return Unit_Info.List.Object
      with Inline,
           Pre  => Self.Is_Defined and then Self.Has_Units;
-   --  Returns all compilation units for self.
+   --  Returns all compilation units for self
 
    function Has_Naming_Exception (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -126,10 +126,10 @@ package GPR2.Build.Source_Base is
    function Source_Dir_Value_Index
      (Self : Object) return Natural
      with Pre => Self.Is_Defined;
-   --  Used to determine internally if a source overrides another.
+   --  Used to determine internally if a source overrides another
 
    function From_Src_Subdirs (Self : Object) return Boolean;
-   --  Whether the source is contained in a src_subdirs directory.
+   --  Whether the source is contained in a src_subdirs directory
 
 private
 

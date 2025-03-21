@@ -101,7 +101,7 @@ package GPR2.Project.View is
    --  recursively.
    --  If Include_Self is set, then Self will be part of the
    --  returned set.
-   --  If Include_Agglibs is set, then the projects aggregated by any
+   --  If Include_Aggregated is set, then the projects aggregated by any
    --  aggregate library in the closure will also be part of this closure.
 
    function Imports
@@ -691,7 +691,7 @@ package GPR2.Project.View is
    function Include_Path
      (Self : Object; Language : Language_Id) return GPR2.Path_Name.Set.Object
      with Pre => Self.Is_Defined;
-   --  Returns the list of source paths visible for Self for a given language.
+   --  Returns the list of source paths visible for Self for a given language
 
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre =>

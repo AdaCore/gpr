@@ -43,7 +43,7 @@ package GPR2.Build.View_Db is
      (Self     : Object;
       Basename : Simple_Name) return Boolean
      with Pre => Self.Is_Defined and then Self.Source_Option > No_Source;
-   --  Check if Basename is a source for the view.
+   --  Check if Basename is a source for the view
 
    function Source
      (Self     : Object;
@@ -99,7 +99,7 @@ package GPR2.Build.View_Db is
      (Self : Object;
       Name : Name_Type) return Build.Compilation_Unit.Object
      with Pre => Self.Has_Compilation_Unit (Name);
-   --  Return the compilation unit named "Name".
+   --  Return the compilation unit named "Name"
 
    function Compilation_Units
      (Self                  : Object;

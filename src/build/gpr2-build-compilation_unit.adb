@@ -58,7 +58,7 @@ package body GPR2.Build.Compilation_Unit is
          when S_Separate =>
             declare
                Up : constant String :=
-                      Ada.Characters.Handling.To_Upper (String (Sep_Name));
+                      Characters.Handling.To_Upper (String (Sep_Name));
                C  : Separate_Maps.Cursor;
             begin
                Self.Separates.Insert (Name_Type (Up), UL, C, Success);
@@ -86,8 +86,11 @@ package body GPR2.Build.Compilation_Unit is
 
       procedure Error (Message : String);
 
-      procedure Error (Message : String)
-      is
+      -----------
+      -- Error --
+      -----------
+
+      procedure Error (Message : String) is
       begin
          if Messages.Is_Defined then
             Messages.Append
@@ -161,8 +164,7 @@ package body GPR2.Build.Compilation_Unit is
          end;
       end loop;
 
-         return True;
-
+      return True;
    end Check_Name_Validity;
 
    function Check_Name_Validity
@@ -196,7 +198,7 @@ package body GPR2.Build.Compilation_Unit is
       end if;
 
       Dead := Check_Name_Validity
-        (Name => Name (Self),
+        (Name     => Name (Self),
          Sloc     => SR,
          As_Error => True,
          Messages => Messages);
@@ -208,12 +210,11 @@ package body GPR2.Build.Compilation_Unit is
 
    function Create
      (Name    : Name_Type;
-      Context : GPR2.Project.View.Object) return Object
-   is
+      Context : GPR2.Project.View.Object) return Object is
    begin
       return
         (Name      => To_Unbounded_String
-                        (Ada.Characters.Handling.To_Upper (String (Name))),
+                        (Characters.Handling.To_Upper (String (Name))),
          Root_View => Context,
          others    => <>);
    end Create;
@@ -222,8 +223,7 @@ package body GPR2.Build.Compilation_Unit is
    -- Dependency_File --
    ---------------------
 
-   function Dependency_File (Self : Object) return Simple_Name
-   is
+   function Dependency_File (Self : Object) return Simple_Name is
       Tree : constant access GPR2.Tree_Internal.Object :=
                View_Internal.Get_RO (Self.Root_View).Tree;
       Main : constant Unit_Location := Self.Main_Part;
@@ -231,13 +231,14 @@ package body GPR2.Build.Compilation_Unit is
    begin
       if Main.Index = No_Index then
          return BN & Tree.Dependency_Suffix (Ada_Language);
+
       else
          declare
             Idx_Img : constant String := Main.Index'Image;
          begin
-            return BN & "~" &
-              Simple_Name (Idx_Img (Idx_Img'First + 1 .. Idx_Img'Last)) &
-              Tree.Dependency_Suffix (Ada_Language);
+            return BN & "~"
+              & Simple_Name (Idx_Img (Idx_Img'First + 1 .. Idx_Img'Last))
+              & Tree.Dependency_Suffix (Ada_Language);
          end;
       end if;
    end Dependency_File;
@@ -249,11 +250,11 @@ package body GPR2.Build.Compilation_Unit is
    procedure For_All_Part
      (Self : Object;
       Action : access procedure
-        (Kind     : Unit_Kind;
-         View     : Project.View.Object;
-         Path     : Path_Name.Object;
-         Index    : Unit_Index;
-         Sep_Name : Optional_Name_Type)) is
+                 (Kind     : Unit_Kind;
+                  View     : Project.View.Object;
+                  Path     : Path_Name.Object;
+                  Index    : Unit_Index;
+                  Sep_Name : Optional_Name_Type)) is
    begin
       if Self.Has_Part (S_Spec) then
          Action
@@ -297,8 +298,7 @@ package body GPR2.Build.Compilation_Unit is
    function Get
      (Self     : Object;
       Kind     : Valid_Unit_Kind;
-      Sep_Name : Optional_Name_Type := "") return Unit_Location
-   is
+      Sep_Name : Optional_Name_Type := "") return Unit_Location is
    begin
       case Kind is
          when S_Spec =>
@@ -325,6 +325,10 @@ package body GPR2.Build.Compilation_Unit is
       Tree_Db : constant Build.Tree_Db.Object_Access :=
                   View_Internal.Get_RO
                     (Self.Root_View).Tree.Artifacts_Database;
+
+      --------------
+      -- Add_Deps --
+      --------------
 
       procedure Add_Deps (Part : Unit_Location) is
          Db : constant Build.View_Db.Object :=
@@ -355,8 +359,7 @@ package body GPR2.Build.Compilation_Unit is
    -- Object_File --
    -----------------
 
-   function Object_File (Self : Object) return Simple_Name
-   is
+   function Object_File (Self : Object) return Simple_Name is
       Tree : constant access GPR2.Tree_Internal.Object :=
                View_Internal.Get_RO (Self.Root_View).Tree;
       Main : constant Unit_Location := Self.Main_Part;
@@ -364,13 +367,14 @@ package body GPR2.Build.Compilation_Unit is
    begin
       if Main.Index = No_Index then
          return BN & Tree.Object_Suffix (Ada_Language);
+
       else
          declare
             Idx_Img : constant String := Main.Index'Image;
          begin
-            return BN & "~" &
-              Simple_Name (Idx_Img (Idx_Img'First + 1 .. Idx_Img'Last)) &
-              Tree.Object_Suffix (Ada_Language);
+            return BN & "~"
+              & Simple_Name (Idx_Img (Idx_Img'First + 1 .. Idx_Img'Last))
+              & Tree.Object_Suffix (Ada_Language);
          end;
       end if;
    end Object_File;

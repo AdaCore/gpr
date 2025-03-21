@@ -20,7 +20,7 @@ package GPR2.Build.Compilation_Unit is
       Source : Path_Name.Object;
       Index  : Unit_Index := No_Index;
    end record;
-   --  Identifies the location of a Unit (spec/body or separate).
+   --  Identifies the location of a Unit (spec/body or separate)
 
    No_Unit : constant Unit_Location := (others => <>);
 
@@ -42,8 +42,9 @@ package GPR2.Build.Compilation_Unit is
 
    Undefined : constant Object;
 
-   function Create (Name    : Name_Type;
-                    Context : GPR2.Project.View.Object) return Object
+   function Create
+     (Name    : Name_Type;
+      Context : GPR2.Project.View.Object) return Object
      with Pre => Context.Is_Namespace_Root;
    --  Create a new compilation unit object with name Name
 
@@ -51,7 +52,7 @@ package GPR2.Build.Compilation_Unit is
      (Self     : Object;
       Messages : in out GPR2.Log.Object)
      with Pre => Self.Is_Defined and then not Self.Is_Empty;
-   --  Check that the unit name is valid.
+   --  Check that the unit name is valid
 
    function Check_Name_Validity
      (Name : Name_Type) return Boolean;
@@ -131,7 +132,7 @@ package GPR2.Build.Compilation_Unit is
    function Main_Body (Self : Object) return Unit_Location
      with Pre => Self.Is_Defined and then Self.Has_Part (S_Body);
    --  Returns the body for the compilation unit. Note: body being a keyword
-   --  we can't name the function "Body"
+   --  we can't name the function "Body".
 
    function Separates (Self : Object) return Separate_Maps.Map
      with Pre => Self.Is_Defined;
@@ -169,10 +170,10 @@ package GPR2.Build.Compilation_Unit is
    --  returned.
 
    function Object_File (Self : Object) return Simple_Name;
-   --  Returns the .o's simple name for Self.
+   --  Returns the .o's simple name for Self
 
    function Dependency_File (Self : Object) return Simple_Name;
-   --  Returns the .ali's simple name for Self.
+   --  Returns the .ali's simple name for Self
 
 private
 
