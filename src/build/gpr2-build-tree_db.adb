@@ -20,7 +20,6 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.View.Vector;
 with GPR2.Source_Reference;
 with GPR2.Tree_Internal;
-with GPR2.View_Ids.Set;
 
 package body GPR2.Build.Tree_Db is
 
@@ -267,52 +266,6 @@ package body GPR2.Build.Tree_Db is
 
       return True;
    end Add_Output;
-
-   ----------------
-   -- Check_Tree --
-   ----------------
-
-   procedure Check_Tree (Self : in out Object) is
-      To_Remove : GPR2.View_Ids.Set.Set;
-   begin
-      --  Check for new views
-
-      for V of Self.Tree.Ordered_Views loop
-         if not Self.Build_Dbs.Contains (V.Id)
-           and then V.Kind in GPR2.Build.View_Tables.With_View_Db
-         then
-            declare
-               Db_Data : View_Tables.View_Data
-                           (Is_Root => V.Is_Namespace_Root);
-               Db_Inst : View_Db.Object;
-            begin
-               Db_Data.View    := V;
-               Db_Data.Tree_Db := Self.Self;
-               Db_Data.Visible_Source_Closure :=
-                 V.Closure (False, False, True);
-               Db_Inst := View_Tables.View_Base_For (Db_Data);
-               Self.Build_Dbs.Insert (V.Id, Db_Inst);
-               --  Db_Inst.Update;
-            end;
-         end if;
-      end loop;
-
-      --  Check for deleted views
-
-      for C in Self.Build_Dbs.Iterate loop
-         declare
-            Id : constant View_Ids.View_Id := Build_DB_Maps.Key (C);
-         begin
-            if not Self.Tree.Get_View (Id).Is_Defined then
-               To_Remove.Include (Id);
-            end if;
-         end;
-      end loop;
-
-      for Id of To_Remove loop
-         Self.Build_Dbs.Delete (Id);
-      end loop;
-   end Check_Tree;
 
    ----------------------
    -- Clear_Temp_Files --
@@ -955,93 +908,6 @@ package body GPR2.Build.Tree_Db is
          end loop;
       end if;
    end Refresh;
-
-   -------------------
-   -- Remove_Action --
-   -------------------
-
-   procedure Remove_Action
-     (Self : in out Object;
-      Id   : Actions.Action_Id'Class)
-   is
-      C : Action_Sets.Cursor;
-   begin
-      Self.Actions.Delete (Id);
-
-      for Input of Self.Inputs (Id) loop
-         Self.Successors (Input).Delete (Id);
-      end loop;
-
-      for Input of Self.Implicit_Inputs (Id) loop
-         Self.Successors (Input).Delete (Id);
-      end loop;
-
-      for Output of Self.Outputs (Id) loop
-         Self.Predecessor.Delete (Output);
-      end loop;
-
-      Self.Implicit_Inputs.Delete (Id);
-      Self.Inputs.Delete (Id);
-      Self.Outputs.Delete (Id);
-
-      C := Self.New_Actions.Find (Id);
-      if Action_Sets.Has_Element (C) then
-         Self.New_Actions.Delete (C);
-      end if;
-   end Remove_Action;
-
-   ---------------------
-   -- Remove_Artifact --
-   ---------------------
-
-   procedure Remove_Artifact
-     (Self     : in out Object;
-      Artifact : Artifacts.Object'Class)
-   is
-      C_Glob : Artifact_Sets.Cursor;
-      C      : Artifact_Vectors.Cursor;
-      C_Succ : Artifact_Actions_Maps.Cursor;
-      C_Pred : Artifact_Action_Maps.Cursor;
-
-   begin
-      C_Glob := Self.Artifacts.Find (Artifact);
-
-      if not Artifact_Sets.Has_Element (C_Glob) then
-         return;
-      end if;
-
-      Self.Artifacts.Delete (C_Glob);
-
-      C_Succ := Self.Successors.Find (Artifact);
-
-      for Succ of Self.Successors (C_Succ) loop
-         C := Self.Inputs (Succ).Find (Artifact);
-
-         if Artifact_Vectors.Has_Element (C) then
-            Self.Inputs (Succ).Delete (C);
-         end if;
-
-         C := Self.Implicit_Inputs (Succ).Find (Artifact);
-
-         if Artifact_Vectors.Has_Element (C) then
-            Self.Implicit_Inputs (Succ).Delete (C);
-         end if;
-      end loop;
-
-      Self.Successors.Delete (C_Succ);
-      C_Pred := Self.Predecessor.Find (Artifact);
-
-      if Artifact_Action_Maps.Has_Element (C_Pred) then
-         C := Self.Outputs
-           (Artifact_Action_Maps.Element (C_Pred)).Find (Artifact);
-
-         if Artifact_Vectors.Has_Element (C) then
-            Self.Outputs (Artifact_Action_Maps.Element (C_Pred)).Delete (C);
-         end if;
-
-         Self.Predecessor.Delete (C_Pred);
-      end if;
-   end Remove_Artifact;
 
    ----------------------
    -- Replace_Artifact --

@@ -17,26 +17,26 @@ package body GPR2.Build.Command_Line is
 ------------------
 
    procedure Add_Argument
-     (Self         : in out Object;
-      Arg          : String;
-      In_Signature : Boolean := True) is
+     (Self : in out Object;
+      Arg  : String;
+      Mode : Signature_Mode := In_Signature) is
    begin
       Self.Cmd_Line.Append (Arg);
       Self.Total_Length := Self.Total_Length + 1 + Arg'Length;
-      Self.In_Signature.Append (In_Signature);
+      Self.In_Signature.Append (Mode);
    end Add_Argument;
 
    procedure Add_Argument
-     (Self         : in out Object;
-      Arg          : Path_Name.Object;
-      In_Signature : Boolean := True)
+     (Self : in out Object;
+      Arg  : Path_Name.Object;
+      Mode : Signature_Mode := In_Signature)
    is
       Rel : constant Filename_Type := Arg.Relative_Path (Self.Cwd);
    begin
       if Rel'Length < Arg.Value'Length then
-         Self.Add_Argument (String (Rel), In_Signature);
+         Self.Add_Argument (String (Rel), Mode);
       else
-         Self.Add_Argument (Arg.String_Value, In_Signature);
+         Self.Add_Argument (Arg.String_Value, Mode);
       end if;
    end Add_Argument;
 
@@ -107,7 +107,7 @@ package body GPR2.Build.Command_Line is
       end if;
 
       Self.Cmd_Line.Prepend (Arg);
-      Self.In_Signature.Prepend (True);
+      Self.In_Signature.Prepend (Simple);
    end Set_Driver;
 
    procedure Set_Driver
@@ -156,12 +156,8 @@ package body GPR2.Build.Command_Line is
 
    begin
       for J in Self.Cmd_Line.First_Index .. Self.Cmd_Line.Last_Index loop
-         if Self.In_Signature (J) then
-            --  First argument is treated specially: we don't want to save
-            --  the full path of the driver to allow relocation of the saved
-            --  signature.
-
-            if J = Self.Cmd_Line.First_Index then
+         case Self.In_Signature (J) is
+            when Simple =>
                declare
                   Arg    : String renames Self.Cmd_Line (J);
                   Simple : constant Simple_Name :=
@@ -171,10 +167,12 @@ package body GPR2.Build.Command_Line is
                   Append (String (Simple));
                end;
 
-            else
+            when In_Signature =>
                Append (Self.Cmd_Line (J));
-            end if;
-         end if;
+
+            when Ignore =>
+               null;
+         end case;
       end loop;
 
       return Result (Result'First .. Idx - 1);

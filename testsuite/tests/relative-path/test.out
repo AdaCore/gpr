@@ -3,11 +3,11 @@
 3: dir3/toto
 4: ../../toto
 5: dirb/dirc/
-6: ./toto
+6: toto
 7: ./
 8: subdir/one.gpr
 9: ../project.gpr
-A: ./file
+A: file
 B: subdir/one
 C: subdir/one
 D: subdir/one.a

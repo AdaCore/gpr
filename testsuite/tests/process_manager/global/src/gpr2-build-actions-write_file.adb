@@ -21,9 +21,10 @@ package body GPR2.Build.Actions.Write_File is
    -------------
 
    overriding procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object) is
+     (Self           : in out Object;
+      Slot           : Positive;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean) is
    begin
       Cmd_Line.Add_Argument (Self.Executable.String_Value);
       Cmd_Line.Add_Argument (Ada.Strings.Fixed.Trim (Self.Ret_Code'Img, Both));

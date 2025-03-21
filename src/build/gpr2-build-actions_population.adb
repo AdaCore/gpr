@@ -330,6 +330,9 @@ package body GPR2.Build.Actions_Population is
       if Src.Owning_View.Is_Library
         and then not Options.Unique_Compilation
         and then not Options.Unique_Compilation_Recursive
+        and then (not Options.Restricted_Build_Phase
+                  or else Options.Bind_Phase_Mandated
+                  or else Options.Link_Phase_Mandated)
       then
          Tree_Db.Reporter.Report
            (Message.Create
@@ -369,8 +372,9 @@ package body GPR2.Build.Actions_Population is
    ----------------------
 
    function Populate_Actions
-     (Tree    : GPR2.Project.Tree.Object;
-      Options : Build.Options.Build_Options) return Boolean
+     (Tree           : GPR2.Project.Tree.Object;
+      Options        : Build.Options.Build_Options;
+      Static_Actions : Boolean) return Boolean
    is
       Tree_Db     : GPR2.Build.Tree_Db.Object_Access renames
                       Tree.Artifacts_Database;
@@ -578,6 +582,24 @@ package body GPR2.Build.Actions_Population is
          Tree_Db.Action_Id_To_Reference (A.UID).Deactivate;
       end loop;
 
+      if Static_Actions then
+         declare
+            List : Build.Tree_Db.Actions_List'Class :=
+                     Tree_Db.All_Actions;
+         begin
+            for C in List.Action_Iterate loop
+               declare
+                  Action : constant Build.Tree_Db.Action_Reference_Type :=
+                             List.Action_Reference (C);
+               begin
+                  if not Action.On_Ready_State then
+                     return False;
+                  end if;
+               end;
+            end loop;
+         end;
+      end if;
+
       return Result;
    end Populate_Actions;
 
@@ -669,7 +691,7 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       Self.View := View;
-      Self.Link.Initialize_Library (View);
+      Self.Link.Initialize_Library (View, Options.No_Run_Path);
 
       if not Tree_Db.Add_Action (Self.Link) then
          return False;
@@ -704,7 +726,15 @@ package body GPR2.Build.Actions_Population is
          return True;
       end if;
 
-      if View.Is_Library_Standalone then
+      if View.Is_Library_Standalone
+        and then
+          (View.Language_Ids.Contains (Ada_Language)
+           or else
+             (View.Kind = K_Aggregate_Library
+              and then
+                (for some Agg of View.Aggregated =>
+                     Agg.Language_Ids.Contains (Ada_Language))))
+      then
          --  Create the binder action that will create the file in charge of
          --  elaborating and finalizing the lib. Used for standalone libraries.
 
@@ -808,7 +838,8 @@ package body GPR2.Build.Actions_Population is
       begin
          for Import of Self.View.Imports loop
             if Import.Is_Library then
-               Imported_Lib_Link.Initialize_Library (Import);
+               Imported_Lib_Link.Initialize_Library
+                 (Import, Options.No_Run_Path);
 
                if not Tree_Db.Has_Action (Imported_Lib_Link.UID) then
                   return False;
@@ -923,6 +954,7 @@ package body GPR2.Build.Actions_Population is
 
             Link (Idx).Initialize_Executable
               (Main,
+               Options.No_Run_Path,
                -Options.Output_File);
 
             if Options.Create_Map_File then

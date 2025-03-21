@@ -307,9 +307,9 @@ package body GPR2.Build.Jobserver is
       --  another switch was used. We are only compatible with
       --  "--jobserver-auth=".
       if Idx = 0 then
-         raise JS_Initialize_Error with "warning: GNU make jobserver MAKEFLAGS"
-           & " detected but no --jobserver-auth switch to determine how to "
-           & " connect. Make sure you are using GNU make 4.2 or later.";
+         Traces.Trace
+           ("MAKEFLAGS defined but no make job server found. Disabling.");
+         return JS_No_Method.Create;
       end if;
 
       --  Try all jobserver methods

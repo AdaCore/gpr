@@ -45,9 +45,10 @@ package body GPR2.Build.Actions.Ada_Bind is
    ---------------------
 
    overriding procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object)
+     (Self           : in out Object;
+      Slot           : Positive;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean)
    is
       procedure Add_Attr
         (Id           : Q_Attribute_Id;
@@ -85,6 +86,10 @@ package body GPR2.Build.Actions.Ada_Bind is
          Gnatbind_Path_Equal   : constant String := "--gnatbind_path=";
          Ada_Binder_Equal      : constant String := "ada_binder=";
          Default_Binder_Name   : constant String := "gnatbind" & Exe_Ext;
+         Mode                  : constant Build.Command_Line.Signature_Mode :=
+                                   (if In_Signature
+                                    then Build.Command_Line.In_Signature
+                                    else Build.Command_Line.Ignore);
 
       begin
          if not Attr.Is_Defined then
@@ -135,14 +140,16 @@ package body GPR2.Build.Actions.Ada_Bind is
                                  Self.Ctxt.Dir_Name.Value);
                   begin
                      Cmd_Line.Add_Argument
-                       ("-A=" & Path.String_Value, In_Signature);
+                       ("-A=" &
+                          String (Path.Relative_Path (Self.Working_Directory)),
+                        Mode);
                   end;
                else
-                  Cmd_Line.Add_Argument (Val.Text, In_Signature);
+                  Cmd_Line.Add_Argument (Val.Text, Mode);
                end if;
             end loop;
          else
-            Cmd_Line.Add_Argument (Attr.Value.Text, In_Signature);
+            Cmd_Line.Add_Argument (Attr.Value.Text, Mode);
          end if;
       end Add_Attr;
 
@@ -201,7 +208,8 @@ package body GPR2.Build.Actions.Ada_Bind is
             GNATCOLL.OS.FS.Close (Map_File.FD);
          end if;
 
-         Cmd_Line.Add_Argument ("-F=" & String (Map_File.Path), False);
+         Cmd_Line.Add_Argument
+           ("-F=" & String (Map_File.Path), Build.Command_Line.Ignore);
       end Add_Mapping_File;
 
       --------------------------
@@ -333,6 +341,8 @@ package body GPR2.Build.Actions.Ada_Bind is
          end;
       end Resolve_Binder;
 
+      use type GPR2.Project.Standalone_Library_Kind;
+
    begin
       --  [eng/gpr/gpr-issues#446] We should rework how the binder tools is
       --  fetched from the KB.
@@ -350,16 +360,17 @@ package body GPR2.Build.Actions.Ada_Bind is
          Cmd_Line.Add_Argument ("-F");
       end if;
 
-      Cmd_Line.Add_Argument ("-o", True);
-      Cmd_Line.Add_Argument
-        (String (Self.Output_Body.Path.Simple_Name), True);
+      Cmd_Line.Add_Argument ("-o");
+      Cmd_Line.Add_Argument (Self.Output_Body.Path);
 
       if Self.Ctxt.Is_Library then
-         if Self.Ctxt.Is_Shared_Library then
+         if Self.Ctxt.Is_Shared_Library
+           and then Self.Ctxt.Library_Standalone /= GPR2.Project.Encapsulated
+         then
 
             --  Link against a shared GNAT run time
 
-            Cmd_Line.Add_Argument ("-shared", True);
+            Cmd_Line.Add_Argument ("-shared");
          end if;
 
          if Self.Ctxt.Is_Library_Standalone then
@@ -367,10 +378,10 @@ package body GPR2.Build.Actions.Ada_Bind is
             --  Make sure that the init procedure is never "adainit".
 
             if Self.Ctxt.Library_Name = "ada" then
-               Cmd_Line.Add_Argument ("-Lada_", True);
+               Cmd_Line.Add_Argument ("-Lada_");
             else
                Cmd_Line.Add_Argument
-                 ("-L" & String (Self.Ctxt.Library_Name), True);
+                 ("-L" & String (Self.Ctxt.Library_Name));
             end if;
          end if;
 
@@ -383,7 +394,7 @@ package body GPR2.Build.Actions.Ada_Bind is
             if Imported_View.Is_Library
               and then Imported_View.Is_Shared_Library
             then
-               Cmd_Line.Add_Argument ("-shared", True);
+               Cmd_Line.Add_Argument ("-shared");
                exit;
             end if;
          end loop;
@@ -400,7 +411,8 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       for Ali of Self.Tree.Inputs (Self.UID, Explicit_Only => True) loop
          Cmd_Line.Add_Argument
-           (GPR2.Build.Artifacts.Files.Object (Ali).Path, True);
+           (GPR2.Build.Artifacts.Files.Object (Ali).Path,
+            GPR2.Build.Command_Line.Simple);
       end loop;
 
       for View of Self.Ctxt.Closure (True, True, True) loop
@@ -408,7 +420,7 @@ package body GPR2.Build.Actions.Ada_Bind is
          if View.Language_Ids.Contains (Ada_Language) then
             if View.Is_Library then
                Cmd_Line.Add_Argument
-                 ("-I" & View.Library_Ali_Directory.String_Value, True);
+                 ("-I" & View.Library_Ali_Directory.String_Value);
 
                if View.Id = Self.Ctxt.Id
                  and then Self.Ctxt.Is_Library_Standalone
@@ -416,12 +428,12 @@ package body GPR2.Build.Actions.Ada_Bind is
                   --  Need visibility on non-interface units
 
                   Cmd_Line.Add_Argument
-                    ("-I" & View.Object_Directory.String_Value, True);
+                    ("-I" & View.Object_Directory.String_Value);
                end if;
 
             elsif View.Kind in With_Object_Dir_Kind then
                Cmd_Line.Add_Argument
-                 ("-I" & View.Object_Directory.String_Value, True);
+                 ("-I" & View.Object_Directory.String_Value);
             end if;
          end if;
       end loop;
@@ -453,12 +465,16 @@ package body GPR2.Build.Actions.Ada_Bind is
          Cmd_Line.Add_Argument ("-x");
       end if;
 
-      Add_Mapping_File;
+      if not Signature_Only then
+         Add_Mapping_File;
+      end if;
 
       --  Now that all switches have been analyzed, set the driver
       Cmd_Line.Set_Driver (Resolve_Binder);
 
-      if Cmd_Line.Total_Length > Command_Line_Limit then
+      if not Signature_Only
+        and then Cmd_Line.Total_Length > Command_Line_Limit
+      then
          Create_Response_File;
       end if;
    end Compute_Command;
@@ -747,6 +763,9 @@ package body GPR2.Build.Actions.Ada_Bind is
          Attr             : constant GPR2.Project.Attribute.Object :=
                               Self.View.Attribute
                                 (PRA.Binder.Bindfile_Option_Substitution, Idx);
+
+         use type GPR2.Project.Standalone_Library_Kind;
+
       begin
          if not Add_Remaining and then Line (Line'First) = '-' then
             --  We skip the list of objects, not reliable, the Tree_Db
@@ -804,16 +823,32 @@ package body GPR2.Build.Actions.Ada_Bind is
 
          elsif Line = "-lgnat" then
             if Static_Libs then
-               Self.Linker_Opts.Append
-                 (Adalib_Dir.Compose ("libgnat.a").String_Value);
+               if Self.Ctxt.Is_Library
+                 and then Self.Ctxt.Library_Standalone =
+                   GPR2.Project.Encapsulated
+               then
+                  Self.Linker_Opts.Append
+                    (Adalib_Dir.Compose ("libgnat_pic.a").String_Value);
+               else
+                  Self.Linker_Opts.Append
+                    (Adalib_Dir.Compose ("libgnat.a").String_Value);
+               end if;
             else
                Self.Linker_Opts.Append (Line);
             end if;
 
          elsif Line = "-lgnarl" then
             if Static_Libs then
-               Self.Linker_Opts.Append
-                 (Adalib_Dir.Compose ("libgnarl.a").String_Value);
+               if Self.Ctxt.Is_Library
+                 and then Self.Ctxt.Library_Standalone =
+                   GPR2.Project.Encapsulated
+               then
+                  Self.Linker_Opts.Append
+                    (Adalib_Dir.Compose ("libgnarl_pic.a").String_Value);
+               else
+                  Self.Linker_Opts.Append
+                    (Adalib_Dir.Compose ("libgnarl.a").String_Value);
+               end if;
             else
                Self.Linker_Opts.Append (Line);
             end if;

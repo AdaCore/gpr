@@ -2,13 +2,13 @@ Demo1    K_STANDARD
 list of mains:
 src/call1.adb
 list of executables:
-./call_me
+call_me
   src/call1.adb
 Demo2    K_STANDARD
 list of mains:
 src/call2.adb
 list of executables:
-./call2
+call2
   src/call2.adb
 demo3.gpr:3:20: warning: exec directory "exec" not found
 Demo3    K_STANDARD
@@ -29,85 +29,85 @@ Demo5    K_STANDARD
 list of mains:
 demo/call.adb
 list of executables:
-./call
+call
   demo/call.adb
 Demo6    K_STANDARD
 demo6.gpr:4:18: error: not_found.adb is not a source of project Demo6
 list of mains:
 list of executables:
-./not_found
+not_found
 Demo7    K_STANDARD
 list of mains:
 src/demo7.adb
 list of executables:
-./demo7
+demo7
   src/demo7.adb
 Demo8    K_STANDARD
 demo8.gpr:3:26: error: demo8 is not a source of project Demo8
 list of mains:
 list of executables:
-./demo8
+demo8
 Demo9    K_STANDARD
 list of mains:
 src/demo9.1.ada
 list of executables:
-./demo9
+demo9
   src/demo9.1.ada
 Demo10   K_STANDARD
 demo10.gpr:4:26: error: demo10 is not a source of project Demo10
 list of mains:
 list of executables:
-./demo10
+demo10
 Demo11   K_STANDARD
 list of mains:
 src/demo11.1.ada
 list of executables:
-./demo11
+demo11
   src/demo11.1.ada
 Demo12   K_STANDARD
 demo12.gpr:4:33: error: demo12_not_found.1.ada is not a source of project Demo12
 list of mains:
 list of executables:
-./demo12_not_found
+demo12_not_found
 Demo13   K_STANDARD
 list of mains:
 src/demo13.c
 list of executables:
-./demo13
+demo13
   src/demo13.c
 Demo14   K_STANDARD
 list of mains:
 src/demo14.myc
 list of executables:
-./demo14
+demo14
   src/demo14.myc
 Demo15   K_STANDARD
 list of mains:
 src/demo15.c
 list of executables:
-./demo15
+demo15
   src/demo15.c
 Demo16   K_STANDARD
 list of mains:
 src/call1.adb
 list of executables:
-./call_me
+call_me
   src/call1.adb
 Demo17   K_STANDARD
 list of mains:
 src/call2.adb
 list of executables:
-./call2
+call2
   src/call2.adb
 Demo18   K_STANDARD
 list of mains:
 src/demo7.adb
 list of executables:
-./demo7
+demo7
   src/demo7.adb
 Demo19   K_STANDARD
 list of mains:
 src2/main.ads
 list of executables:
-./main
+main
   src2/main.ads

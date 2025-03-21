@@ -51,7 +51,7 @@ function Test return Integer is
    begin
       for Root of Tree.Namespace_Root_Projects loop
          for Main of Root.Mains loop
-            Action.Initialize_Executable (Src => Main);
+            Action.Initialize_Executable (Src => Main, No_Rpath => False);
             Assert
                (not Tree.Artifacts_Database.Has_Action (Action.UID),
                 "Check that action is not already in the Tree DB");

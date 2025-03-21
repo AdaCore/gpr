@@ -28,9 +28,10 @@ package body GPR2.Build.Actions.Compile is
    ---------------------
 
    overriding procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object)
+     (Self           : in out Object;
+      Slot           : Positive;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean)
    is
       procedure Add_Attr
         (Id           : Q_Attribute_Id;
@@ -66,6 +67,10 @@ package body GPR2.Build.Actions.Compile is
          Is_List      : Boolean;
          In_Signature : Boolean)
       is
+         Mode : constant Build.Command_Line.Signature_Mode :=
+                  (if In_Signature
+                   then GPR2.Build.Command_Line.In_Signature
+                   else GPR2.Build.Command_Line.Ignore);
          Attr : constant GPR2.Project.Attribute.Object :=
                   Self.View.Attribute (Id, Idx);
       begin
@@ -76,11 +81,11 @@ package body GPR2.Build.Actions.Compile is
          if Is_List then
             for Val of Attr.Values loop
                if Val.Text'Length > 0 then
-                  Cmd_Line.Add_Argument (Val.Text, In_Signature);
+                  Cmd_Line.Add_Argument (Val.Text, Mode);
                end if;
             end loop;
          else
-            Cmd_Line.Add_Argument (Attr.Value.Text, In_Signature);
+            Cmd_Line.Add_Argument (Attr.Value.Text, Mode);
          end if;
       end Add_Attr;
 
@@ -427,7 +432,7 @@ package body GPR2.Build.Actions.Compile is
 
                Cmd_Line.Add_Argument
                  ("-specs=" & String (Path_Name.Simple_Name (Spec_File.Path)),
-                  False);
+                  Build.Command_Line.Ignore);
             end;
 
             return;
@@ -438,7 +443,7 @@ package body GPR2.Build.Actions.Compile is
          if Attr.Is_Defined then
             for Path of Self.View.Include_Path (Self.Lang) loop
                Add_Options_With_Arg
-                 (Attr, Path.String_Value, True);
+                 (Attr, Path.String_Value, False);
             end loop;
          end if;
       end Add_Include_Path;
@@ -538,6 +543,10 @@ package body GPR2.Build.Actions.Compile is
          Arg          : String;
          In_Signature : Boolean)
       is
+         Mode : constant Build.Command_Line.Signature_Mode :=
+                  (if In_Signature
+                   then GPR2.Build.Command_Line.In_Signature
+                   else GPR2.Build.Command_Line.Ignore);
       begin
          if not Attr.Is_Defined or else Attr.Values.Is_Empty then
             return;
@@ -545,11 +554,11 @@ package body GPR2.Build.Actions.Compile is
 
          for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
             Cmd_Line.Add_Argument
-              (Attr.Values.Element (J).Text, In_Signature);
+              (Attr.Values.Element (J).Text, Mode);
          end loop;
 
          Cmd_Line.Add_Argument
-           (Attr.Values.Last_Element.Text & Arg, In_Signature);
+           (Attr.Values.Last_Element.Text & Arg, Mode);
       end Add_Options_With_Arg;
 
       Driver_Attr : constant GPR2.Project.Attribute.Object :=
@@ -585,7 +594,7 @@ package body GPR2.Build.Actions.Compile is
       for Arg of Self.Tree.External_Options.Fetch
                    (External_Options.Compiler, Self.Lang)
       loop
-         Cmd_Line.Add_Argument (Arg, True);
+         Cmd_Line.Add_Argument (Arg);
       end loop;
 
       if Self.View.Is_Library
@@ -607,9 +616,11 @@ package body GPR2.Build.Actions.Compile is
          end if;
       end;
 
-      Add_Include_Path;
-      Add_Mapping_File;
-      Add_Config_File;
+      if not Signature_Only then
+         Add_Include_Path;
+         Add_Mapping_File;
+         Add_Config_File;
+      end if;
 
       Add_Attr (PRA.Compiler.Trailing_Required_Switches, Lang_Idx, True, True);
 
@@ -628,7 +639,8 @@ package body GPR2.Build.Actions.Compile is
                Self.Src.Path_Name.String_Value,
                True);
          else
-            Cmd_Line.Add_Argument (Self.Src.Path_Name, True);
+            Cmd_Line.Add_Argument
+              (Self.Src.Path_Name, Build.Command_Line.Simple);
          end if;
 
          if Index /= No_Index then
@@ -657,7 +669,11 @@ package body GPR2.Build.Actions.Compile is
             if Sw.Is_Defined then
                Add_Options_With_Arg
                  (Sw, String (Self.Obj_File.Path.Simple_Name), True);
-            elsif Self.Lang = Ada_Language then
+            elsif Self.Lang = Ada_Language
+              and then Object'Class (Self).Src_Index /= No_Index
+            then
+               --  For multi-unit sources, we need to specify the output object
+
                --  [eng/gpr/gpr-issues#446] TODO modify the KB to have a proper
                --  default here.
                Cmd_Line.Add_Argument ("-o");
@@ -719,11 +735,25 @@ package body GPR2.Build.Actions.Compile is
 
             for Dep of Deps loop
                declare
-                  Src : constant GPR2.Path_Name.Object :=
-                          GPR2.Path_Name.Create_File
-                            (Dep, Self.View.Object_Directory.Value);
+                  Ambiguous : Boolean;
+                  Src       : constant GPR2.Build.Source.Object :=
+                                Self.Ctxt.Visible_Source
+                                  (Path_Name.Simple_Name (Dep),
+                                   Ambiguous);
+                  Path      : GPR2.Path_Name.Object;
                begin
-                  if not Src.Exists then
+                  if not Ambiguous and then Src.Is_Defined then
+                     Path := Src.Path_Name;
+                  else
+                     Path :=
+                       GPR2.Path_Name.Create_File
+                         (Dep,
+                          (if Self.Inh_From.Is_Defined
+                           then Self.Inh_From.Object_Directory.Value
+                           else Self.View.Object_Directory.Value));
+                  end if;
+
+                  if not Path.Exists then
                      Self.Traces.Trace
                        ("Compute_Signature: cannot find dependency " &
                           String (Dep));
@@ -734,7 +764,7 @@ package body GPR2.Build.Actions.Compile is
                      end if;
 
                   elsif not Self.Signature.Add_Input
-                              (Artifacts.Files.Create (Src))
+                              (Artifacts.Files.Create (Path))
                     and then Load_Mode
                   then
                      return;
@@ -789,7 +819,7 @@ package body GPR2.Build.Actions.Compile is
    begin
       return Result : Object do
          Result.Initialize
-           (Self.Src.Inherited_From.Source (Self.Src.Path_Name.Simple_Name));
+           (Self.Inh_From.Source (Self.Src.Path_Name.Simple_Name));
       end return;
    end Extended;
 
@@ -890,6 +920,7 @@ package body GPR2.Build.Actions.Compile is
 
             else
                Self.Obj_File := Artifacts.Files.Create (Lkup_Obj);
+               Self.Inh_From := Candidate;
 
                if Has_Dep then
                   Self.Dep_File := Artifacts.Files.Create (Lkup_Dep);
@@ -928,6 +959,50 @@ package body GPR2.Build.Actions.Compile is
 
       return True;
    end On_Tree_Insertion;
+
+   ------------------
+   -- Post_Command --
+   ------------------
+
+   overriding function Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status) return Boolean is
+   begin
+      if Status = Skipped or else not Self.Inh_From.Is_Defined then
+         --  No need to post-process anything if the action was skipped
+         --  or is not overloading an inherited action
+         return True;
+      end if;
+
+      --  If the .o and .d stored in this action were inherited, and we
+      --  finally decided to compile, we need to now redirect to the new .o
+
+      declare
+         BN        : constant Simple_Name := Self.Src.Path_Name.Base_Filename;
+         O_Suff    : constant Simple_Name :=
+                       Simple_Name
+                         (Self.Ctxt.Attribute
+                            (PRA.Compiler.Object_File_Suffix,
+                             PAI.Create (Self.Lang)).Value.Text);
+         Local_O   : Artifacts.Files.Object;
+         Local_Dep : Artifacts.Files.Object;
+
+      begin
+         Local_O := Artifacts.Files.Create
+           (Self.View.Object_Directory.Compose (BN & O_Suff));
+
+         Local_Dep := Artifacts.Files.Create
+           (Self.View.Object_Directory.Compose (BN & ".d"));
+
+         Self.Tree.Replace_Artifact (Self.Obj_File, Local_O);
+         Self.Tree.Replace_Artifact (Self.Dep_File, Local_Dep);
+         Self.Obj_File := Local_O;
+         Self.Dep_File := Local_Dep;
+         Self.Inh_From := GPR2.Project.View.Undefined;
+      end;
+
+      return True;
+   end Post_Command;
 
    ---------
    -- UID --

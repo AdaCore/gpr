@@ -823,7 +823,7 @@ package body GPR2.KB is
 
             begin
                Errors.Append
-                 (Message.Create
+                 (GPR2.Message.Create
                     (Message.End_User,
                      "can't find a toolchain "
                      & "for the following configuration: language '"
@@ -841,7 +841,8 @@ package body GPR2.KB is
                      & (if Comp.Name /= Null_Unbounded_String then
                             ", name '" & To_String (Comp.Name) & "'"
                         else ""),
-                     Source_Reference.Create ("embedded_kb/kb", 0, 0)));
+                     Source_Reference.Create ("embedded_kb/kb", 0, 0),
+                     User_Level => GPR2.Message.Important));
             end;
 
             Found_All := False;

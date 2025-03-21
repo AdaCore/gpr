@@ -25,15 +25,24 @@ package GPR2.Build.Command_Line is
      (Self : in out Object;
       Arg  : Path_Name.Object);
 
-   procedure Add_Argument
-     (Self         : in out Object;
-      Arg          : String;
-      In_Signature : Boolean := True);
+   type Signature_Mode is
+     (In_Signature,
+      Ignore,
+      Simple);
+   --  The way the argument is handled in the signature:
+   --  In_Signature: included as is
+   --  Ignore: argument is not used to compute the signature
+   --  Simple: used for files, only the simple name is used
 
    procedure Add_Argument
-     (Self         : in out Object;
-      Arg          : Path_Name.Object;
-      In_Signature : Boolean := True);
+     (Self : in out Object;
+      Arg  : String;
+      Mode : Signature_Mode := In_Signature);
+
+   procedure Add_Argument
+     (Self : in out Object;
+      Arg  : Path_Name.Object;
+      Mode : Signature_Mode := In_Signature);
 
    procedure Add_Env_Variable
      (Self  : in out Object;
@@ -64,13 +73,13 @@ package GPR2.Build.Command_Line is
 
 private
 
-   package Bool_Vectors is new Ada.Containers.Vectors
-     (Natural, Boolean);
+   package Mode_Vectors is new Ada.Containers.Vectors
+     (Natural, Signature_Mode);
 
    type Object is tagged record
       Cmd_Line     : GNATCOLL.OS.Process.Argument_List;
       Env          : GNATCOLL.OS.Process.Environment_Dict;
-      In_Signature : Bool_Vectors.Vector;
+      In_Signature : Mode_Vectors.Vector;
       Total_Length : Natural := 0;
       Cwd          : Path_Name.Object;
    end record;

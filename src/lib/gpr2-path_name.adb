@@ -693,11 +693,11 @@ package body GPR2.Path_Name is
 
       N := Strings.Fixed.Count (T (Pi + 1 .. T'Last), Dir_Seps);
 
-      return Filename_Type
-        (String'(N * "../")
+      return Filename_Optional
+        (String'(N * (".." & GNAT.OS_Lib.Directory_Separator)
          & (if Pi = P'Last and then N = 0
-           then "./"
-           else P (Pi + 1 .. P'Last)))
+            then (if Self.Is_Dir then "./" else "")
+            else P (Pi + 1 .. P'Last))))
          & (if Self.Is_Dir then "" else Filename_Type (Self.Simple_Name));
    end Relative_Path;
 

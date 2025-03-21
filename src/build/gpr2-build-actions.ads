@@ -89,6 +89,31 @@ package GPR2.Build.Actions is
      (Self : Object) return Path_Name.Object is abstract;
    --  The working directory used in the context of the action's execution
 
+   ------------------------
+   --  Action life cycle --
+   ------------------------
+
+   --  The following hooks allow proper population and execution of the Actions
+   --  directed graph:
+   --  - On_Tree_Insertion: allows the action to create and insert in the
+   --    DAG its expected output, or follow-up actions as needed. For example
+   --    compile actions will create there output object file and dependency
+   --    file, a Bind action will create its generated unit together with
+   --    the post bind action that builds this unit.
+   --  - On_Tree_Propagation: allows an action to amend the DAG with its
+   --    dependencies. Used by the Bind action to analyze the known
+   --    dependencies of its inputs and add them until the closure of the
+   --    Ada program is complete in order to compute the elaboration.
+   --  - Compute_Command: this computes the command line. This is called just
+   --    before actually executing the action. The command line is also part
+   --    of the signature, so this is called even when the process manager
+   --    finally decides that the signature is valid so the action can be
+   --    skipped.
+   --  - Pre_Command: called just before the process is actually executed. This
+   --    is thus not called if the signature is valid and the action skipped.
+   --  - Post_Command: called after the process is finished or the action is
+   --    skipped or an error occurred.
+
    function On_Tree_Insertion
      (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object) return Boolean is abstract;
@@ -96,16 +121,43 @@ package GPR2.Build.Actions is
    --  action to add its input and output artifacts and dependencies.
    --  Returns True on success.
 
+   function On_Tree_Propagation
+     (Self : in out Object) return Boolean;
+   --  Called after an initial population of the Build database has been done.
+   --  This allows to propagate dependencies among the actions.
+
+   function On_Ready_State
+     (Self : in out Object) return Boolean;
+   --  Called when all predecessor actions have a valid signature. Used when
+   --  an action has specific activities to perform such as completeness
+   --  checks.
+
    procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object) is abstract;
+     (Self           : in out Object;
+      Slot           : Positive;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean) is abstract;
    --  Return the command line and environment corresponding to the action
+   --  If Signature_Only is set, then no temp file should be generated, and
+   --  only the arguments that are part of the signature are to be computed.
+
+   function Pre_Command
+     (Self : in out Object) return Boolean;
+   --  Pre-processing that should occur before executing the command
+
+   type Execution_Status is (Skipped, Success);
+
+   function Post_Command
+     (Self : in out Object; Status : Execution_Status) return Boolean;
+   --  Post-processing that should occur after executing the command.
+   --  Called when the command has been executed (even after reporting a
+   --  failure) or when the command is disabled or skipped but the signature
+   --  is valid.
 
    procedure Compute_Signature
      (Self      : in out Object;
       Load_Mode : Boolean) is abstract;
-   --  This populates the output artifacts in the signature.
+   --  This populates the artifacts in the signature.
    --  In load_mode, this should stop as soon as the signature don't match
    --  the saved timestamps
    --  Else, the status is ignored: the signature is prepared for saving.
@@ -113,11 +165,6 @@ package GPR2.Build.Actions is
    function Valid_Signature (Self : Object) return Boolean;
    --  Returns whether or not the action is inhibited. This means the loaded
    --  signature match the current action signature.
-
-   function On_Tree_Propagation
-     (Self : in out Object) return Boolean;
-   --  Called after an initial population of the Build database has been done.
-   --  This allows to propagate dependencies among the actions.
 
    function Is_Extending (Self : Object) return Boolean is (False);
    --  Whether the action is extending an action from an extended project of
@@ -145,7 +192,7 @@ package GPR2.Build.Actions is
    --  Used to store the signature of the action after it has been executed.
    --  Returns false in case an expected artifact is missing.
 
-   procedure Load_Signature (Self : in out Object);
+   procedure Load_Signature (Self : in out Object'Class);
    --  Compare the current action signature to the loaded signature
 
    function Saved_Stdout (Self : Object'Class) return Unbounded_String;
@@ -154,7 +201,7 @@ package GPR2.Build.Actions is
    function "<" (L, R : Object'Class) return Boolean;
 
    procedure Attach
-     (Self : in out Object;
+     (Self : in out Object'Class;
       Db   : in out GPR2.Build.Tree_Db.Object);
 
    procedure Update_Command_Line
@@ -163,19 +210,6 @@ package GPR2.Build.Actions is
    --  Updates the command line and update the signature accordingly
 
    function Command_Line (Self : Object) return GPR2.Build.Command_Line.Object;
-
-   type Execution_Status is (Skipped, Success);
-
-   function Pre_Command
-     (Self : in out Object) return Boolean;
-   --  Pre-processing that should occur before executing the command
-
-   function Post_Command
-     (Self : in out Object; Status : Execution_Status) return Boolean;
-   --  Post-processing that should occur after executing the command.
-   --  Called when the command has been executed (even after reporting a
-   --  failure) or when the command is disabled or skipped but the signature
-   --  is valid.
 
    ---------------------------
    -- Temp files management --
@@ -238,6 +272,10 @@ private
       or else Self.Signature.Valid);
 
    function On_Tree_Propagation
+     (Self : in out Object) return Boolean is
+     (True);
+
+   function On_Ready_State
      (Self : in out Object) return Boolean is
      (True);
 

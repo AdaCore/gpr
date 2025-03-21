@@ -25,8 +25,6 @@ $ gpr2build -Plib -XPRJ_RO=True -p -j1
 [Archive]         liblib.a
 - with regular dependency
 $ gpr2build -Plib -XPRJ_RO=False -p -j1
-Problem accessing the object directory for project "Prj"
-Command '[Ada Compile] pkg.ads (prj.gpr)' failed.
 $ chmod 0x777 obj/prj
 
 read only lib dir
@@ -40,4 +38,4 @@ $ gpr2build -Plib -q
 $ chmod 0x555 lib/lib
 $ gpr2build -Plib -f -l -j1
 lib.gpr: error: cannot remove the old archive liblib.a
-lib.gpr: warning: [Archive] liblib.a (lib.gpr) failed
+Command '[Archive] liblib.a (lib.gpr)' failed.

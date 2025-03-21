@@ -6,7 +6,7 @@
 
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.Library;
-with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute_Index;
@@ -30,14 +30,16 @@ package GPR2.Build.Actions.Link is
    function Is_Defined (Self : Object) return Boolean;
 
    procedure Initialize_Executable
-     (Self    : in out Object;
-      Src     : Compilation_Unit.Unit_Location;
-      Output  : Filename_Optional := "");
+     (Self     : in out Object;
+      Src      : Compilation_Unit.Unit_Location;
+      No_Rpath : Boolean;
+      Output   : Filename_Optional := "");
    --  Initialize a link action.
 
    procedure Initialize_Library
-     (Self    : in out Object;
-      Context : GPR2.Project.View.Object);
+     (Self     : in out Object;
+      Context  : GPR2.Project.View.Object;
+      No_Rpath : Boolean);
    --  Initialize a link action to link a library
 
    procedure Initialize_Global_Archive
@@ -67,13 +69,17 @@ package GPR2.Build.Actions.Link is
    --  List of libraries this action uses
 
    overriding function On_Tree_Insertion
-     (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
+     (Self : Object;
+      Db   : in out GPR2.Build.Tree_Db.Object) return Boolean;
+
+   overriding function On_Ready_State
+     (Self : in out Object) return Boolean;
 
    overriding procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object);
+     (Self           : in out Object;
+      Slot           : Positive;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean);
 
    overriding function Pre_Command
      (Self : in out Object) return Boolean;
@@ -138,6 +144,12 @@ private
       Static_Options : Containers.Value_List :=
                          Containers.Empty_Value_List;
       --  Command line options added manually with the Add_Option procedure
+
+      Extra_Intf      : GPR2.Build.Compilation_Unit.Maps.Map;
+      --  Extra units needed to have a complete interface
+
+      No_Rpath        : Boolean := False;
+      --  When set, the RPATH will not be set for shared libraries resolution
    end record;
 
    overriding procedure Compute_Signature

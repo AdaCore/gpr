@@ -288,7 +288,7 @@ begin
        (Error    => True,
         Warning  => True,
         Hint     => False,
-        End_User => False)
+        End_User => True)
    then
       Opt.Tree.Reporter.Report
         (GPR2.Message.Create
@@ -305,7 +305,7 @@ begin
    --  for removal.
 
    if not GPR2.Build.Actions_Population.Populate_Actions
-     (Opt.Tree, Opt.Build_Options)
+     (Opt.Tree, Opt.Build_Options, Static_Actions => True)
    then
       return To_Exit_Status (E_Abort);
    end if;

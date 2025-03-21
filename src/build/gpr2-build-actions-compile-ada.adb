@@ -67,13 +67,20 @@ package body GPR2.Build.Actions.Compile.Ada is
    ---------------------
 
    overriding procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object)
+     (Self           : in out Object;
+      Slot           : Positive;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean)
    is
       Attr : GPR2.Project.Attribute.Object;
    begin
-      Compile.Object (Self).Compute_Command (Slot, Cmd_Line);
+      Compile.Object (Self).Compute_Command (Slot, Cmd_Line, Signature_Only);
+
+      if Signature_Only then
+         --  Ignore the config pragmas commands since they're already part
+         --  of the signature
+         return;
+      end if;
 
       if Self.Global_Config_Pragmas.Is_Defined
         or else Self.Local_Config_Pragmas.Is_Defined
@@ -85,25 +92,25 @@ package body GPR2.Build.Actions.Compile.Ada is
       if Self.Global_Config_Pragmas.Is_Defined then
          for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
             Cmd_Line.Add_Argument
-              (Attr.Values.Element (J).Text, False);
+              (Attr.Values.Element (J).Text, Build.Command_Line.Ignore);
          end loop;
 
          Cmd_Line.Add_Argument
            (Attr.Values.Last_Element.Text &
               Self.Global_Config_Pragmas.String_Value,
-            False);
+            Build.Command_Line.Ignore);
       end if;
 
       if Self.Local_Config_Pragmas.Is_Defined then
          for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
             Cmd_Line.Add_Argument
-              (Attr.Values.Element (J).Text, False);
+              (Attr.Values.Element (J).Text, Build.Command_Line.Ignore);
          end loop;
 
          Cmd_Line.Add_Argument
            (Attr.Values.Last_Element.Text &
               Self.Local_Config_Pragmas.String_Value,
-            False);
+            Build.Command_Line.Ignore);
       end if;
    end Compute_Command;
 
@@ -257,9 +264,10 @@ package body GPR2.Build.Actions.Compile.Ada is
    begin
       return Result : Object := Self do
          Result.Ctxt :=
-           Self.Input.Inherited_From;
+           Self.Inh_From;
          Result.Src  :=
-           Self.Input.Inherited_From.Source (Self.Input.Path_Name.Simple_Name);
+           Self.Inh_From.Source (Self.Input.Path_Name.Simple_Name);
+         Result.Inh_From := GPR2.Project.View.Undefined;
       end return;
    end Extended;
 
@@ -387,6 +395,7 @@ package body GPR2.Build.Actions.Compile.Ada is
             else
                Self.Obj_File := Artifacts.Files.Create (Lkup_O);
                Self.Dep_File := Artifacts.Files.Create (Lkup_Ali);
+               Self.Inh_From := Candidate;
             end if;
          end if;
       end;
@@ -706,6 +715,7 @@ package body GPR2.Build.Actions.Compile.Ada is
             Self.Tree.Replace_Artifact (Self.Dep_File, Local_Ali);
             Self.Obj_File := Local_O;
             Self.Dep_File := Local_Ali;
+            Self.Inh_From := GPR2.Project.View.Undefined;
          end if;
       end;
 

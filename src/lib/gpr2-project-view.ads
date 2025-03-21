@@ -634,9 +634,13 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns whether the optional library version name is defined
 
-   function Library_Filename (Self : Object) return GPR2.Path_Name.Object
+   function Library_Filename
+     (Self            : Object;
+      Without_Version : Boolean := False) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined and then Self.Is_Library;
-   --  Returns the actual file name for the library
+   --  Returns the actual file name for the library.
+   --  If Without_Version is set, then the attribute Library_Version attribute
+   --  is ignored.
 
    function Library_Filename_Variants
      (Self : Object) return GPR2.Containers.Filename_Set

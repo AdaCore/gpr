@@ -26,6 +26,7 @@ stages:
     - disk:100
   stage: test
   allow_failure: true
+  interruptible: true
 
 ###########
 ## BUILD ##
@@ -136,11 +137,13 @@ build_and_test_gpr2_windows:
 ###################
 
 # Test the gpr1 testsuite with gpr2build.
-# Should be run only if gpr2build is available
 test_gpr1_testsuite:
   extends: .gpr2_test_template
+  variables:
+    JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
   script:
     - install_cache
+    - anod build gpr2 -Qgpr2build
     - run_testsuite gprbuild "-Qgpr2build" test_gpr1_testsuite
   when: manual
   artifacts:

@@ -59,8 +59,12 @@ Testcase - Makeflags = ""
    - Integrous  : TRUE
 
 Testcase - Makeflags = "--foo-bar=1,2"
-
-raised GPR2.BUILD.JOBSERVER.JS_INITIALIZE_ERROR : warning: GNU make jobserver MAKEFLAGS detected but no --jobserver-auth switch to determine how to  connect. Make sure you are using GNU make 4.2 or later.
+[ JM_UNDEFINED ]
+   - Dry_Run    : FALSE
+   - Active     : FALSE
+   - Register   : FALSE
+   - Release    : FALSE
+   - Integrous  : TRUE
 
 Testcase - Makeflags = "--jobserver-auth=1,2 --jobserver-auth=fifo:prj.gpr"
 [ JM_NAMED_PIPE ]

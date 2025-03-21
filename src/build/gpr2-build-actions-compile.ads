@@ -51,9 +51,10 @@ package GPR2.Build.Actions.Compile is
       Load_Mode : Boolean);
 
    overriding procedure Compute_Command
-     (Self     : in out Object;
-      Slot     : Positive;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object);
+     (Self           : in out Object;
+      Slot           : Positive;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean);
 
    function Dependencies
      (Self : Object) return GPR2.Containers.Filename_Set;
@@ -115,7 +116,14 @@ private
 
       Ctxt     : GPR2.Project.View.Object;
       --  View owning the source
+
+      Inh_From : GPR2.Project.View.Object;
+      --  Set when the action is inherited from another view.
    end record;
+
+   overriding function Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status) return Boolean;
 
    function Src_Index (Self : Object) return Unit_Index is
      (No_Index);
@@ -136,7 +144,7 @@ private
      (Self.Src);
 
    overriding function Is_Extending (Self : Object) return Boolean is
-     (Self.Input.Is_Inherited);
+     (Self.Inh_From.Is_Defined);
 
    function Object_File (Self : Object) return Artifacts.Files.Object is
      (Self.Obj_File);
@@ -147,8 +155,12 @@ private
 
    overriding function Is_Deactivated (Self : Object) return Boolean is
      (Actions.Object (Self).Is_Deactivated
-      or else Self.View.Attribute
-        (PRA.Compiler.Driver, PAI.Create (Self.Lang)).Value.Text'Length = 0);
+      or else
+        (Self.View.Has_Attribute
+           (PRA.Compiler.Driver, PAI.Create (Self.Lang))
+         and then Self.View.Attribute
+           (PRA.Compiler.Driver,
+            PAI.Create (Self.Lang)).Value.Text'Length = 0));
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);

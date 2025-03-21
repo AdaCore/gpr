@@ -95,11 +95,23 @@ package body GPR2.Options is
 
          when P =>
             if not Self.Project_File.Is_Defined or else Override then
-               Self.Project_File :=
-                 GPR2.Path_Name.Create_File
-                   (GPR2.Project.Ensure_Extension
-                      (GPR2.Filename_Type (Param)),
-                    GPR2.Path_Name.No_Resolution);
+               declare
+                  Path : constant Filename_Type :=
+                           GPR2.Project.Ensure_Extension
+                             (Filename_Type (Param));
+               begin
+                  if GNAT.OS_Lib.Is_Absolute_Path (String (Path)) then
+                     Self.Project_File :=
+                       GPR2.Path_Name.Create_File
+                         (Filename_Type
+                            (GNAT.OS_Lib.Normalize_Pathname (String (Path))));
+                  else
+                     Self.Project_File :=
+                       GPR2.Path_Name.Create_File
+                         (Path,
+                          GPR2.Path_Name.No_Resolution);
+                  end if;
+               end;
             else
                if Self.Prj_Got_On_Extra_Arg then
                   raise GPR2.Options.Usage_Error with

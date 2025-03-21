@@ -42,12 +42,6 @@ package GPR2.Build.Tree_Db is
 
    --  CREATING/UNLOADING/REFRESHING THE TREE DATABASE:
 
-   procedure Check_Tree (Self : in out Object)
-     with Pre => Self.Is_Defined;
-   --  Called when the project tree is updated to check that internal
-   --  database structure is updated accordingly (proper view databases
-   --  added or removed when appropriate).
-
    procedure Unload (Self : in out Object; Complete : Boolean := True)
      with Post => (if Complete then not Self.Is_Defined);
 
@@ -85,12 +79,6 @@ package GPR2.Build.Tree_Db is
       Action   : in out Actions.Object'Class) return Boolean
      with Pre => Self.Is_Defined;
 
-   procedure Remove_Action
-     (Self : in out Object;
-      Id   : Actions.Action_Id'Class)
-     with Pre => Self.Has_Action (Id)
-       and then not Self.Is_Executing;
-
    function Has_Action
      (Self : Object;
       Id   : Actions.Action_Id'Class) return Boolean
@@ -106,10 +94,6 @@ package GPR2.Build.Tree_Db is
      (Self     : in out Object;
       Artifact : Artifacts.Object'Class)
      with Pre => Self.Is_Defined;
-
-   procedure Remove_Artifact
-     (Self     : in out Object;
-      Artifact : Artifacts.Object'Class);
 
    procedure Replace_Artifact
      (Self  : in out Object;
