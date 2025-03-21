@@ -1,0 +1,24 @@
+project Prj is
+   for Object_Dir use "obj";
+   for Source_Dirs use ("src");
+   for Exec_Dir use ".";
+   for Main use ("main.adb");
+
+   package Naming is
+      for Body ("Main") use "main.adb";
+      for Spec ("U") use "u.adb" at 1;
+      for Body ("Pkg") use "pkg.adb";
+      for Spec ("Pkg") use "pkg.ads";
+      for Body ("U") use "u.adb" at 2;
+      for Body ("U.V") use "sep.adb" at 1;
+      for Body ("U.W") use "sep.adb" at 2;
+
+      for Body_Suffix ("Ada") use ".1.ada";
+      for Spec_Suffix ("Ada") use ".2.ada";
+      for Separate_Suffix use ".3.ada";
+      for Dot_Replacement use "~";
+
+      for Body ("Foo.Replace") use "this_is_a_naming_exception.adb";
+      for Spec ("Foo.Replace") use "this_is_a_naming_exception.ads";
+   end Naming;
+end Prj;

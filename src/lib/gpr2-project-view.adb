@@ -8,6 +8,7 @@ with Ada.Directories;
 with Ada.Strings.Fixed;
 
 with GNAT.OS_Lib;
+with GNAT.String_Split;
 with GNATCOLL.Utils;
 
 with GPR2.Build.Compilation_Unit;
@@ -1335,6 +1336,101 @@ package body GPR2.Project.View is
    begin
       return View_Internal.Strong (View_Internal.Get_RO (Self).Extending);
    end Extending;
+
+   -----------------------
+   -- Filename_For_Unit --
+   -----------------------
+
+   function Filename_For_Unit
+     (Self      : Object;
+      Unit_Name : Name_Type;
+      Kind      : Valid_Unit_Kind) return Simple_Name
+   is
+      package ACH renames Ada.Characters.Handling;
+
+      SN : Ada.Strings.Unbounded.Unbounded_String;
+   begin
+      pragma Assert
+        (Build.Compilation_Unit.Check_Name_Validity
+           (Unit_Name,
+            Source_Reference.Undefined,
+            True,
+            Self.Tree.Log_Messages.all),
+         "invalid name for unit '" & String (Unit_Name) & "'");
+
+      Naming_Exception : declare
+         Unit_Value : constant Value_Type := Value_Type (Unit_Name);
+         Has_NE     : constant Boolean :=
+                        (if Kind = S_Spec
+                         then Self.Has_Specification (Unit_Value)
+                         else Self.Has_Implementation (Unit_Value));
+      begin
+         if Has_NE then
+            declare
+               NE : constant String :=
+                      (if Kind = S_Spec
+                       then Self.Specification (Unit_Value).Value.Text
+                       else Self.Implementation (Unit_Value).Value.Text);
+            begin
+               return Simple_Name (NE);
+            end;
+         end if;
+      end Naming_Exception;
+
+      Append_Filename : declare
+         Sub_Units : String_Split.Slice_Set;
+         First     : Boolean := True;
+
+         Dot_Repl  : constant String :=
+                       Self.Attribute
+                         (PRA.Naming.Dot_Replacement).Value.Text;
+
+         Casing    : constant String :=
+                       ACH.To_Lower (Self.Casing.Value.Text);
+      begin
+         Sub_Units := String_Split.Create
+           (String (Unit_Name),
+            (1 => '.'),
+            String_Split.Multiple);
+
+         for Unit of Sub_Units loop
+            if not First then
+               Append (SN, Dot_Repl);
+            end if;
+
+            declare
+               Part_Name : constant String := (if Casing = "uppercase"
+                                               then ACH.To_Upper (Unit)
+                                               elsif Casing = "mixedcase"
+                                               then To_Mixed (Unit)
+                                               else ACH.To_Lower (Unit));
+            begin
+               Append (SN, Part_Name);
+            end;
+
+            First := False;
+         end loop;
+      end Append_Filename;
+
+      Append_Suffix : declare
+         Suffix : constant String :=
+                    (if Kind = S_Body
+                     then (if Self.Has_Body_Suffix (Ada_Language)
+                       then Self.Body_Suffix (Ada_Language).Value.Text
+                       else ".adb")
+                     elsif Kind = S_Spec
+                     then (if Self.Has_Spec_Suffix (Ada_Language)
+                       then Self.Spec_Suffix (Ada_Language).Value.Text
+                       else ".ads")
+                     else (if Self.Has_Separate_Suffix
+                       then Self.Separate_Suffix.Value.Text
+                       else ".adb"));
+      begin
+         Append (SN, Suffix);
+      end Append_Suffix;
+
+      return -SN;
+   end Filename_For_Unit;
 
    ---------------------------
    -- Has_Aggregate_Context --
