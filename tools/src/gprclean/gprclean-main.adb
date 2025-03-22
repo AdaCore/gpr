@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2024, AdaCore                     --
+--                     Copyright (C) 2019-2025, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -201,7 +201,6 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
 
             Delete_Directory (Path.Containing_Directory.String_Value);
          end if;
-
       exception
          when Use_Error =>
             declare
@@ -216,7 +215,6 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
                     else "") & '.');
             end;
       end Remove_Dir;
-
 
    begin
       if View.Kind in GPR2.With_Object_Dir_Kind then
@@ -266,8 +264,7 @@ begin
       Tree : constant GPR2.Project.Tree.Object := Opt.Tree;
    begin
       if Attr.Is_Defined then
-         Opt := (GPRtools.Options.Empty_Options
-                 with others => <>);
+         Opt := (GPRtools.Options.Empty_Options with others => <>);
          Opt.Tree := Tree;
 
          GPRclean.Options.Parse_Attribute_Switches
@@ -333,6 +330,7 @@ begin
                if Action in GPR2.Build.Actions.Compile.Object'Class then
                   Lang :=
                     GPR2.Build.Actions.Compile.Object'Class (Action).Language;
+
                   declare
                      Src_Exts : constant GPR2.Project.Attribute.Object :=
                                   Action.View.Attribute
@@ -367,12 +365,17 @@ begin
                                  CU : constant Compilation_Unit.Object :=
                                         Actions.Compile.Ada.Object'Class
                                           (Action).Input_Unit;
+
                                  procedure For_Part
                                    (Kind     : Unit_Kind;
                                     View     : GPR2.Project.View.Object;
                                     Path     : Path_Name.Object;
                                     Index    : Unit_Index;
                                     Sep_Name : Optional_Name_Type);
+
+                                 --------------
+                                 -- For_Part --
+                                 --------------
 
                                  procedure For_Part
                                    (Kind     : Unit_Kind;
@@ -381,9 +384,9 @@ begin
                                     Index    : Unit_Index;
                                     Sep_Name : Optional_Name_Type)
                                  is
-                                    Candidate : Path_Name.Object;
                                     pragma Unreferenced
                                       (Kind, View, Index, Sep_Name);
+                                    Candidate : Path_Name.Object;
                                  begin
                                     Candidate := Obj_Dir.Compose
                                       (Path.Simple_Name &
@@ -393,6 +396,7 @@ begin
                                           else "." & Val.Text));
                                     Delete_File (Candidate.String_Value, Opt);
                                  end For_Part;
+
                               begin
                                  CU.For_All_Part (For_Part'Access);
                               end;
@@ -404,6 +408,7 @@ begin
                                 (if Val.Text (Val.Text'First) = '.'
                                  then Val.Text
                                  else "." & Val.Text));
+
                            Delete_File (Path.String_Value, Opt);
                         end loop;
                      end if;
@@ -455,6 +460,7 @@ begin
                         Val.Text,
                         Opt);
                   end loop;
+
                else
                   for Val of Obj_Attr.Values loop
                      Delete_File
@@ -504,11 +510,11 @@ exception
       return To_Exit_Status (E_Fatal);
 
    when Project_Error  =>
-   Handle_Program_Termination
-     (Force_Exit => False,
-      Message    =>
-        '"' & String (Opt.Project_File.Simple_Name) &
-        """ processing failed");
+      Handle_Program_Termination
+        (Force_Exit => False,
+         Message    =>
+         '"' & String (Opt.Project_File.Simple_Name) &
+           """ processing failed");
       return To_Exit_Status (E_Fatal);
 
    when E_Program_Termination =>

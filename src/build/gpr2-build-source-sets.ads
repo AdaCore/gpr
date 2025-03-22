@@ -159,9 +159,11 @@ private
    end record;
 
    overriding function First (Self : Source_Iterator) return Cursor;
+
    overriding function Next
      (Self     : Source_Iterator;
       Position : Cursor) return Cursor;
+
    overriding procedure Finalize (Self : in out Source_Iterator);
 
 end GPR2.Build.Source.Sets;

@@ -158,9 +158,9 @@ package body GPR2.Build.Actions_Population is
 
    package body Library_Map is
 
-   -------------------
-   -- Add_Successor --
-   -------------------
+      -------------------
+      -- Add_Successor --
+      -------------------
 
       procedure Add_Successor
         (Self      : in out Map;
@@ -376,25 +376,25 @@ package body GPR2.Build.Actions_Population is
       Options        : Build.Options.Build_Options;
       Static_Actions : Boolean) return Boolean
    is
-      Tree_Db     : GPR2.Build.Tree_Db.Object_Access renames
-                      Tree.Artifacts_Database;
-      Result      : Boolean := True;
-      Visited     : View_Ids.Set.Set;
-      Pos         : View_Ids.Set.Cursor;
-      Inserted    : Boolean;
-      Libs        : Library_Map.Map;
-      Src         : GPR2.Build.Source.Object;
-      Mains       : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
-      To_Remove   : Actions.Sets.Set;
-      Has_Error   : Boolean;
-      Has_SAL     : Boolean := False;
-      Closure     : GPR2.Project.View.Set.Object;
+      Tree_Db   : GPR2.Build.Tree_Db.Object_Access renames
+                    Tree.Artifacts_Database;
+      Result    : Boolean := True;
+      Visited   : View_Ids.Set.Set;
+      Pos       : View_Ids.Set.Cursor;
+      Inserted  : Boolean;
+      Libs      : Library_Map.Map;
+      Src       : GPR2.Build.Source.Object;
+      Mains     : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
+      To_Remove : Actions.Sets.Set;
+      Has_Error : Boolean;
+      Has_SAL   : Boolean := False;
+      Closure   : GPR2.Project.View.Set.Object;
       use type Ada.Containers.Count_Type;
 
    begin
       Tree_Db.Set_Build_Options (Options);
 
-      --  Lookup the source(s) given explicitly on the command line, if any.
+      --  Lookup the source(s) given explicitly on the command line, if any
 
       Inserted := False;
 
@@ -410,9 +410,9 @@ package body GPR2.Build.Actions_Population is
 
       if Options.Create_Map_File then
          declare
-            Attr : constant GPR2.Project.Attribute.Object :=
-                     Tree.Configuration.Corresponding_View.Attribute
-                       (PRA.Linker.Map_File_Option);
+            Attr           : constant GPR2.Project.Attribute.Object :=
+                               Tree.Configuration.Corresponding_View.Attribute
+                                 (PRA.Linker.Map_File_Option);
             Multiple_Mains : Boolean := False;
          begin
             --  Check if there's support from the linker, and then check that
@@ -430,6 +430,7 @@ package body GPR2.Build.Actions_Population is
             elsif Options.Mapping_File_Name /= Null_Unbounded_String then
                if Mains.Length > 1 then
                   Multiple_Mains := True;
+
                elsif Mains.Length = 0 then
                   for V of Tree.Namespace_Root_Projects loop
                      if V.Has_Mains and then V.Mains.Length > 1 then
@@ -466,6 +467,7 @@ package body GPR2.Build.Actions_Population is
                   --  compile all sources, recursively in case -U is set
                   if Options.Unique_Compilation then
                      Result := Populate_All (Tree_Db, V, True, Options);
+
                   else
                      for C of V.Closure (True, False, True) loop
                         if not C.Is_Externally_Built then
@@ -771,6 +773,7 @@ package body GPR2.Build.Actions_Population is
 
       else
          --  Non standalone libraries: add all Ada units
+
          if View.Kind = K_Aggregate_Library then
             for Agg of View.Aggregated loop
                for CU of Agg.Own_Units loop
@@ -788,6 +791,7 @@ package body GPR2.Build.Actions_Population is
                   end;
                end loop;
             end loop;
+
          else
             for CU of View.Own_Units loop
                declare
@@ -852,6 +856,7 @@ package body GPR2.Build.Actions_Population is
       end;
 
       --  Update the Library object in Libs
+
       Libs.Replace (View, Self);
 
       return True;
@@ -867,14 +872,14 @@ package body GPR2.Build.Actions_Population is
       Mains   : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
       Options : Build.Options.Build_Options) return Boolean
    is
-      A_Comp     : Actions.Compile.Ada.Object;
-      Comp       : Actions.Compile.Object;
-      Source     : GPR2.Build.Source.Object;
-      Archive    : Actions.Link.Object;
-      Actual_Mains : Compilation_Unit.Unit_Location_Vector;
-
       use type GPR2.Path_Name.Object;
       use type Ada.Containers.Count_Type;
+
+      A_Comp       : Actions.Compile.Ada.Object;
+      Comp         : Actions.Compile.Object;
+      Source       : GPR2.Build.Source.Object;
+      Archive      : Actions.Link.Object;
+      Actual_Mains : Compilation_Unit.Unit_Location_Vector;
 
    begin
       if Mains.Is_Empty then
@@ -1046,6 +1051,7 @@ package body GPR2.Build.Actions_Population is
                end if;
 
                --  Hendle roots if any
+
                declare
                   procedure Add_CU (CU : Build.Compilation_Unit.Object);
 
@@ -1072,11 +1078,11 @@ package body GPR2.Build.Actions_Population is
                      end if;
                   end Add_CU;
 
-                  Attr     : constant GPR2.Project.Attribute.Object :=
-                               View.Attribute
-                                 (PRA.Roots,
-                                  PAI.Create_Source (Main.Source.Simple_Name));
-                  CU       : GPR2.Build.Compilation_Unit.Object;
+                  Attr : constant GPR2.Project.Attribute.Object :=
+                           View.Attribute
+                             (PRA.Roots,
+                              PAI.Create_Source (Main.Source.Simple_Name));
+                  CU   : GPR2.Build.Compilation_Unit.Object;
 
                begin
                   if Attr.Is_Defined
@@ -1108,6 +1114,7 @@ package body GPR2.Build.Actions_Population is
                                  Add_CU (CU);
                               end if;
                            end loop;
+
                         else
                            CU := View.Unit (Name_Type (Val.Text));
                            Add_CU (CU);
@@ -1133,6 +1140,7 @@ package body GPR2.Build.Actions_Population is
 
          for V of Closure loop
             --  Add the non-Ada objects as dependencies
+
             for Src of V.Sources loop
                Skip := False;
 
@@ -1232,8 +1240,8 @@ package body GPR2.Build.Actions_Population is
    is
       procedure Add_Deps (V  : GPR2.Project.View.Object);
 
-      Todo         : GPR2.Project.View.Vector.Object;
-      Seen         : GPR2.Project.View.Set.Object;
+      Todo : GPR2.Project.View.Vector.Object;
+      Seen : GPR2.Project.View.Set.Object;
 
       --------------
       -- Add_Deps --

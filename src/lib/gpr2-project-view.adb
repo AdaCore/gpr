@@ -2603,7 +2603,7 @@ package body GPR2.Project.View is
                  (String (GPR2.Path_Name.Simple_Name (Directory)),
                   Ignored_Sub_Dir)
                then
-                  --  Ignore this matching sub dir tree.
+                  --  Ignore this matching sub dir tree
                   Do_Dir_Visit    := False;
                   Do_Subdir_Visit := False;
 
@@ -2700,7 +2700,7 @@ package body GPR2.Project.View is
          --  optional).
          if not (Self.Has_Source_Subdirectory
                  and then S.Text = Self.Source_Subdirectory.String_Value
-                 and then not Ada.Directories.Exists (S.Text))
+                 and then not Directories.Exists (S.Text))
          then
             View_Internal.Foreach
               (Base_Dir          => Self.Dir_Name,

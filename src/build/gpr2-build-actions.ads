@@ -115,8 +115,8 @@ package GPR2.Build.Actions is
    --    skipped or an error occurred.
 
    function On_Tree_Insertion
-     (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean is abstract;
+     (Self : Object;
+      Db   : in out GPR2.Build.Tree_Db.Object) return Boolean is abstract;
    --  Function called when Self is added to the tree's database. Allows the
    --  action to add its input and output artifacts and dependencies.
    --  Returns True on success.
@@ -177,7 +177,7 @@ package GPR2.Build.Actions is
    --  the overridden action.
 
    procedure Deactivate (Self : in out Object);
-   --  Deactivates the action, can be useful to mark the action as skipped.
+   --  Deactivates the action, can be useful to mark the action as skipped
 
    function Skip (Self : Object) return Boolean;
    --  Indicates whether the action should be skipped. By default this returns
@@ -252,7 +252,7 @@ private
       Deactivated : Boolean := False;
       --  Set when the action is deactivated
       Cmd_Line    : GPR2.Build.Command_Line.Object;
-      --  Command line used to run the action. Used also in the signature.
+      --  Command line used to run the action. Used also in the signature
    end record;
 
    function "<" (L, R : Action_Id'Class) return Boolean is

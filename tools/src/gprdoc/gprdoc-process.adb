@@ -26,6 +26,10 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
 
    function Everything return GPR2.Containers.Package_Id_List;
 
+   ----------------
+   -- Everything --
+   ----------------
+
    function Everything return GPR2.Containers.Package_Id_List is
       All_Registry : GPR2.Containers.Package_Id_List :=
                        GPR2.Project.Registry.Pack.All_Packages;
@@ -36,7 +40,6 @@ procedure GPRdoc.Process (Options : GPRdoc.GPRdoc_Options) is
    end Everything;
 
 begin
-
    case Options.Kind_Of_Display is
       when GPRtools.K_JSON_Compact =>
          GPR2.Project.Registry.Exchange.Export

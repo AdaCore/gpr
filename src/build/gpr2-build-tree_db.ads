@@ -75,8 +75,8 @@ package GPR2.Build.Tree_Db is
    --  BUILD GRAPH SUPPORT
 
    function Add_Action
-     (Self     : in out Object;
-      Action   : in out Actions.Object'Class) return Boolean
+     (Self   : in out Object;
+      Action : in out Actions.Object'Class) return Boolean
      with Pre => Self.Is_Defined;
 
    function Has_Action
@@ -286,7 +286,7 @@ package GPR2.Build.Tree_Db is
      (Self : Object) return GPR2.Build.Options.Build_Options;
 
    procedure Set_Build_Options
-     (Self : in out Object;
+     (Self    : in out Object;
       Options : GPR2.Build.Options.Build_Options);
 
    --------------------------------------
@@ -350,7 +350,7 @@ private
       Inputs           : Action_Artifacts_Maps.Map;
       --  Explicit input(s) in the command line
       Implicit_Inputs  : Action_Artifacts_Maps.Map;
-      --  Implicit input(s): included by the explicit ones.
+      --  Implicit input(s): included by the explicit ones
       Outputs          : Action_Artifacts_Maps.Map;
       --  Artifacts produced by a given action
 
@@ -427,7 +427,7 @@ private
       --  Cursor to the action->artifacts map element that contains Pos
       Current : Artifact_List_Kind := Artifact_List_Kind'First;
       --  If Kind is Inputs, this field is used to know if we're currently on
-      --  the explicit or implicit list
+      --  the explicit or implicit list.
    end record;
 
    No_Artifact_Element : constant Artifact_Cursor := (others => <>);

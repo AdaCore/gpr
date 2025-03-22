@@ -16,9 +16,10 @@ package GPR2.Build.Actions.Link is
 
    type Link_Id (<>) is new Actions.Action_Id with private;
 
-   function Create (View       : GPR2.Project.View.Object;
-                    Output     : Simple_Name;
-                    Is_Library : Boolean) return Link_Id;
+   function Create
+     (View       : GPR2.Project.View.Object;
+      Output     : Simple_Name;
+      Is_Library : Boolean) return Link_Id;
 
    type Object is new Actions.Object with private;
    --  Action responsible for linking Ada sources
@@ -34,7 +35,7 @@ package GPR2.Build.Actions.Link is
       Src      : Compilation_Unit.Unit_Location;
       No_Rpath : Boolean;
       Output   : Filename_Optional := "");
-   --  Initialize a link action.
+   --  Initialize a link action
 
    procedure Initialize_Library
      (Self     : in out Object;
@@ -61,8 +62,8 @@ package GPR2.Build.Actions.Link is
 
    function Embedded_Objects
      (Self : Object) return Build.Tree_Db.Artifact_Sets.Set;
-   --  List of objects embedded in this library or executable
-   --  This includes the objects coming from embedded libraries
+   --  List of objects embedded in this library or executable.
+   --  This includes the objects coming from embedded libraries.
 
    function Library_Dependencies
      (Self : Object) return Actions.Action_Id_Vectors.Vector;

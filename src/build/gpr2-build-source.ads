@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2024, AdaCore
+--  Copyright (C) 2024-225, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -28,10 +28,10 @@ package GPR2.Build.Source is
    function Owning_View (Self : Object) return Project.View.Object
      with Pre  => Self.Is_Defined,
           Post => Owning_View'Result.Is_Defined;
-   --  The view that owns the source.
+   --  The view that owns the source
 
    function Is_Inherited (Self : Object) return Boolean;
-   --  Whether this source was inherited via a project extension.
+   --  Whether this source was inherited via a project extension
 
    function Inherited_From (Self : Object) return Project.View.Object
      with Post => (if Self.Is_Inherited then Inherited_From'Result.Is_Defined

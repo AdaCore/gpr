@@ -27,7 +27,7 @@ package GPR2.Build.Unit_Info is
 
    function Index (Self : Object) return Unit_Index
      with Pre => Self.Is_Defined;
-      --  In case of multi-unit source, the index of the unit, else No_Index
+   --  In case of multi-unit source, the index of the unit, else No_Index
 
    function Is_Parsed (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
