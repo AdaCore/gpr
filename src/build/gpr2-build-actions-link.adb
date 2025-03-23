@@ -348,11 +348,7 @@ package body GPR2.Build.Actions.Link is
          --  Add the runtime directory to the rpath: it won't be listed in the
          --  library dependencies.
 
-         if Self.Ctxt.Language_Ids.Contains (Ada_Language)
-           or else (Self.Ctxt.Kind = K_Aggregate_Library
-                    and then (for some V of Self.Ctxt.Aggregated =>
-                                  V.Language_Ids.Contains (Ada_Language)))
-         then
+         if Self.Ctxt.Tree.Has_Runtime_Project then
             Rpath :=
               +Self.Ctxt.Tree.Runtime_Project.Object_Directory.String_Value;
          end if;
@@ -391,42 +387,40 @@ package body GPR2.Build.Actions.Link is
                   --  executable, so that LD_LIBRARY_PATH does not need to
                   --  be set before execution.
 
-                  if not Self.No_Rpath and then Length (Rpath) /= 0 then
+                  if Length (Rpath) /= 0 then
                      --  ??? hard coded value: ok for now since this is not
                      --  used on windows, but we may need an attribute for that
                      --  at some point.
                      Append (Rpath, ':');
                   end if;
 
-                  if not Self.No_Rpath then
-                     if Rpath_Origin.Is_Defined
-                       and then not Self.Is_Library
-                     then
-                        --  ??? $ORIGIN refers to the executable, we would
-                        --  need an equivalent attribute for shared libs
-                        --  dependencies.
+                  if Rpath_Origin.Is_Defined
+                    and then not Self.Is_Library
+                  then
+                     --  ??? $ORIGIN refers to the executable, we would
+                     --  need an equivalent attribute for shared libs
+                     --  dependencies.
 
-                        --  ??? This processing is unix-oriented with unix
-                        --  path and directory delimiters. This is somewhat
-                        --  expected since this mechanism is not available on
-                        --  windows, but then we still need to properly cross
-                        --  compilation on windows hosts, so may need to
-                        --  "posixify" the paths here.
+                     --  ??? This processing is unix-oriented with unix
+                     --  path and directory delimiters. This is somewhat
+                     --  expected since this mechanism is not available on
+                     --  windows, but then we still need to properly cross
+                     --  compilation on windows hosts, so may need to
+                     --  "posixify" the paths here.
 
-                        declare
-                           From : constant Path_Name.Object :=
-                                    Self.Ctxt.Executable_Directory;
-                        begin
-                           Append
-                             (Rpath,
-                              Rpath_Origin.Value.Text & "/" &
-                              String
-                                (Lib_Artifact.Containing_Directory.
-                                     Relative_Path (From)));
-                        end;
-                     else
-                        Append (Rpath, String (Lib_Artifact.Dir_Name));
-                     end if;
+                     declare
+                        From : constant Path_Name.Object :=
+                                 Self.Ctxt.Executable_Directory;
+                     begin
+                        Append
+                          (Rpath,
+                           Rpath_Origin.Value.Text & "/" &
+                             String
+                             (Lib_Artifact.Containing_Directory.
+                                  Relative_Path (From)));
+                     end;
+                  else
+                     Append (Rpath, String (Lib_Artifact.Dir_Name));
                   end if;
 
                   declare
