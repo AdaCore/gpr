@@ -781,6 +781,28 @@ package body GPR2.Build.Actions.Link is
       Self.No_Rpath   := No_Rpath;
    end Initialize_Library;
 
+   ---------------------
+   -- Interface_Units --
+   ---------------------
+
+   function Interface_Units (Self : Object) return Compilation_Unit.Maps.Map
+   is
+      Units     : Compilation_Unit.Maps.Map;
+   begin
+      if Self.Ctxt.Is_Library_Standalone then
+         Units := Self.Ctxt.Interface_Closure;
+
+         for CU of Self.Extra_Intf loop
+               Units.Include (CU.Name, CU);
+         end loop;
+
+      else
+         Units := Self.Ctxt.Own_Units;
+      end if;
+
+      return Units;
+   end Interface_Units;
+
    --------------------------
    -- Library_Dependencies --
    --------------------------
@@ -814,21 +836,9 @@ package body GPR2.Build.Actions.Link is
          return True;
       end if;
 
-      --  Gather all the Ada units that are part of this library
+      Check_Interface (Self, No_Warnings => True);
 
-      if Self.Ctxt.Is_Library_Standalone then
-         Units := Self.Ctxt.Interface_Closure;
-
-         --  Check if we need to add extra packages to the interface
-
-         Check_Interface (Self, No_Warnings => True);
-
-         for CU of Self.Extra_Intf loop
-               Units.Include (CU.Name, CU);
-         end loop;
-      else
-         Units := Self.Ctxt.Own_Units;
-      end if;
+      Units := Self.Interface_Units;
 
       --  For each unit, add the corresponding Ali  file as an output
 
@@ -844,11 +854,10 @@ package body GPR2.Build.Actions.Link is
                          (From.Simple_Name);
 
          begin
-            if not Self.Tree.Add_Output
-              (C_Id, Artifacts.Files.Create (To))
-            then
-               return False;
-            end if;
+            GPR2.Build.Actions.Compile.Ada.Object
+              (Self.Tree.Action_Id_To_Reference
+                 (C_Id).Element.all).Change_Intf_Ali_File
+                   (To);
          end;
       end loop;
 
@@ -1041,34 +1050,30 @@ package body GPR2.Build.Actions.Link is
          end if;
       end if;
 
-      --  Copy the ali files to the library dir
-
-      --  Two cases: standalone libraries where only the interface is to
-      --  be copied, and regular libraries where all units need to be taken
-      --  into account.
+      if not Self.Ctxt.Is_Library then
+         --  Below is specific to libraries, so just exit now
+         return True;
+      end if;
 
       declare
-         Units : Compilation_Unit.Maps.Map;
+         Units : constant Compilation_Unit.Maps.Map := Self.Interface_Units;
 
       begin
-         if Self.Ctxt.Is_Library then
-            if Self.Ctxt.Is_Library_Standalone then
-               Units := Self.Ctxt.Interface_Closure;
+         --  Copy the ali files to the library dir
 
-               for U of Self.Extra_Intf loop
-                  Units.Include (U.Name, U);
-               end loop;
-
-            else
-               Units := Self.Ctxt.Own_Units;
-            end if;
-         end if;
+         --  Two cases: standalone libraries where only the interface is to
+         --  be copied, and regular libraries where all units need to be taken
+         --  into account.
 
          for U of Units loop
             declare
                use Ada.Text_IO;
                C_Id : constant Actions.Compile.Ada.Ada_Compile_Id :=
                         Actions.Compile.Ada.Create (U);
+               pragma Assert
+                 (Self.Tree.Has_Action (C_Id),
+                  "interface unit '" & String (U.Name) &
+                    "' doesn't have an associated compile action");
                From : constant Path_Name.Object :=
                         Actions.Compile.Object
                           (Self.Tree.Action (C_Id)).Dependency_File.Path;
@@ -1150,81 +1155,77 @@ package body GPR2.Build.Actions.Link is
                   return False;
             end;
          end loop;
-      end;
 
-      --  Copy the interface sources in Library_Src_Dir
+         --  Copy the interface sources in Library_Src_Dir
 
-      if Self.Ctxt.Is_Library
-        and then Self.Ctxt.Is_Library_Standalone
-        and then Self.Ctxt.Has_Attribute (PRA.Library_Src_Dir)
-      then
-         declare
-            Src_Dir : constant Path_Name.Object :=
-                        Self.Ctxt.Library_Src_Directory;
-            Units   : Compilation_Unit.Maps.Map :=
-                        Self.Ctxt.Interface_Closure;
-         begin
-            for CU of Self.Extra_Intf loop
-               Units.Include (CU.Name, CU);
-            end loop;
+         if Self.Ctxt.Is_Library_Standalone
+           and then Self.Ctxt.Has_Attribute (PRA.Library_Src_Dir)
+         then
+            declare
+               Src_Dir : constant Path_Name.Object :=
+                           Self.Ctxt.Library_Src_Directory;
+            begin
+               for CU of Units loop
+                  declare
+                     procedure On_Unit_Part
+                       (Kind     : Unit_Kind;
+                        View     : GPR2.Project.View.Object;
+                        Path     : Path_Name.Object;
+                        Index    : Unit_Index;
+                        Sep_Name : Optional_Name_Type);
 
-            for CU of Units loop
-               declare
-                  procedure On_Unit_Part
-                    (Kind     : Unit_Kind;
-                     View     : GPR2.Project.View.Object;
-                     Path     : Path_Name.Object;
-                     Index    : Unit_Index;
-                     Sep_Name : Optional_Name_Type);
+                     Has_Error : Boolean := False;
 
-                  Has_Error : Boolean := False;
+                     ------------------
+                     -- On_Unit_Part --
+                     ------------------
 
-                  ------------------
-                  -- On_Unit_Part --
-                  ------------------
-
-                  procedure On_Unit_Part
-                    (Kind     : Unit_Kind;
-                     View     : GPR2.Project.View.Object;
-                     Path     : Path_Name.Object;
-                     Index    : Unit_Index;
-                     Sep_Name : Optional_Name_Type)
-                  is
-                     Dest : constant Path_Name.Object :=
-                              Src_Dir.Compose (Path.Simple_Name);
-                  begin
-                     if not Dest.Exists then
-                        if not GNATCOLL.OS.FSUtil.Copy_File
-                          (Path.String_Value, Dest.String_Value)
-                        then
-                           Self.Tree.Reporter.Report
-                             (Message.Create
-                                (Message.Error,
-                                 "Cannot copy """ & String (Path.Simple_Name) &
-                                   """ to the Library_Src_Dir """ &
-                                   Src_Dir.String_Value & '"',
-                                 Self.Ctxt.Attribute
-                                   (PRA.Library_Src_Dir).Value));
-                           Has_Error := True;
-
-                           if not Self.Tree.Add_Output
-                             (Self.UID,
-                              GPR2.Build.Artifacts.Files.Create (Dest))
+                     procedure On_Unit_Part
+                       (Kind     : Unit_Kind;
+                        View     : GPR2.Project.View.Object;
+                        Path     : Path_Name.Object;
+                        Index    : Unit_Index;
+                        Sep_Name : Optional_Name_Type)
+                     is
+                        Dest : constant Path_Name.Object :=
+                                 Src_Dir.Compose (Path.Simple_Name);
+                     begin
+                        if not Dest.Exists then
+                           if not GNATCOLL.OS.FSUtil.Copy_File
+                             (Path.String_Value, Dest.String_Value)
                            then
+                              Self.Tree.Reporter.Report
+                                (Message.Create
+                                   (Message.Error,
+                                    "Cannot copy """ &
+                                      String (Path.Simple_Name) &
+                                      """ to the Library_Src_Dir """ &
+                                      Src_Dir.String_Value & '"',
+                                    Self.Ctxt.Attribute
+                                      (PRA.Library_Src_Dir).Value));
                               Has_Error := True;
+
+                              if not Self.Tree.Add_Output
+                                (Self.UID,
+                                 GPR2.Build.Artifacts.Files.Create (Dest))
+                              then
+                                 Has_Error := True;
+                              end if;
                            end if;
                         end if;
+                     end On_Unit_Part;
+
+                  begin
+                     CU.For_All_Part (On_Unit_Part'Access);
+
+                     if Has_Error then
+                        return False;
                      end if;
-                  end On_Unit_Part;
-
-               begin
-                  CU.For_All_Part (On_Unit_Part'Access);
-
-                  exit when Has_Error;
-               end;
-            end loop;
-         end;
-      end if;
+                  end;
+               end loop;
+            end;
+         end if;
+      end;
 
       return True;
    end Pre_Command;
