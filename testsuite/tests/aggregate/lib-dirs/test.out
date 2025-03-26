@@ -1,9 +1,9 @@
 testing sa_lib3.gpr
-sa_lib3.gpr: error: aggregate library ALI directory cannot be shared with object directory of aggregated project "sa_lib2"
-sa_lib3.gpr: error: aggregate library ALI directory cannot be shared with object directory of aggregated project "sa_lib"
+sa_lib3.gpr: error: aggregate library directory cannot be shared with object directory of aggregated project "sa_lib2"
+sa_lib3.gpr: error: aggregate library directory cannot be shared with object directory of aggregated project "sa_lib"
 Cannot load project
 testing sa_lib4.gpr
-sa_lib4.gpr: error: aggregate library ALI directory cannot be shared with library directory of aggregated project "sa_lib2"
+sa_lib4.gpr: error: aggregate library directory cannot be shared with object directory of aggregated project "sa_lib2"
 sa_lib4.gpr: error: aggregate library directory cannot be shared with object directory of aggregated project "slib"
 sa_lib4.gpr: error: aggregate library directory cannot be shared with object directory of aggregated project "sa_lib"
 Cannot load project

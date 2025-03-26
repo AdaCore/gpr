@@ -40,9 +40,6 @@ libprj1.gpr:7:50: warning: library ALI directory "libprj1.lib.ali" not found
 libprj1.gpr:15:50: warning: library src directory "libprj1.lib.src" not found
 aggrlibprj1.gpr
 libprj1.gpr:3:23: warning: object directory "obj" not found
-libprj1.gpr:5:39: warning: library directory "libprj1.lib" not found
-libprj1.gpr:7:50: warning: library ALI directory "libprj1.lib.ali" not found
-libprj1.gpr:15:50: warning: library src directory "libprj1.lib.src" not found
 aggrlibprj1.gpr:3:23: warning: object directory "obj" not found
 aggrlibprj1.gpr:6:39: warning: library directory "aggrlibprj1.lib" not found
 aggrlibprj1.gpr:8:50: warning: library ALI directory "aggrlibprj1.lib.ali" not found
