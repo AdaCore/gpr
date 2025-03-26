@@ -6,6 +6,7 @@
 
 with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.Artifacts.Files;
+with GPR2.Build.Artifacts.Object_File;
 with GPR2.Project.Registry.Attribute;
 
 package GPR2.Build.Actions.Post_Bind is
@@ -37,7 +38,7 @@ package GPR2.Build.Actions.Post_Bind is
       Cmd_Line       : in out GPR2.Build.Command_Line.Object;
       Signature_Only : Boolean);
 
-   function Object_File (Self : Object) return Artifacts.Files.Object;
+   function Object_File (Self : Object) return Artifacts.Object_File.Object;
 
 private
 
@@ -63,7 +64,7 @@ private
 
    type Object is new Actions.Object with record
       Input  : Artifacts.Files.Object;
-      Output : Artifacts.Files.Object;
+      Output : Artifacts.Object_File.Object;
       Ali    : Artifacts.Files.Object;
       Binder : Ada_Bind.Object;
       --  ??? Ideally we store Ada_Bind_Id here, but it's unconstrained so
@@ -99,7 +100,7 @@ private
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
 
-   function Object_File (Self : Object) return Artifacts.Files.Object is
+   function Object_File (Self : Object) return Artifacts.Object_File.Object is
      (Self.Output);
 
 end GPR2.Build.Actions.Post_Bind;

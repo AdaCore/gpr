@@ -145,7 +145,7 @@ package body GPR2.Build.Actions.Post_Bind is
       Self.Binder := Binder;
       Self.Input  := Impl;
       Self.Output :=
-        Artifacts.Files.Create
+        Artifacts.Object_File.Create
           (View.Object_Directory.Compose (Impl.Path.Base_Filename & O_Suff));
       Self.Ali    :=
         Artifacts.Files.Create

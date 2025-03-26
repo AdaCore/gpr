@@ -322,7 +322,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       --  file from the library directory.
       declare
          BN        : constant Simple_Name := Artifacts_Base_Name (Src);
-         Ali_BN    : constant Simple_Name := BN & ".ali";
+         Ali_BN    : constant Simple_Name := BN & Self.Dep_File_Suffix;
          O_Suff    : constant Simple_Name :=
                        Simple_Name
                          (Get_Attr
@@ -341,7 +341,7 @@ package body GPR2.Build.Actions.Compile.Ada is
          if not No_Obj then
             Local_O := Self.View.Object_Directory.Compose (BN & O_Suff);
          else
-            Self.Obj_File := Artifacts.Files.Undefined;
+            Self.Obj_File := Artifacts.Object_File.Undefined;
          end if;
 
          Local_Ali := Self.View.Object_Directory.Compose (Ali_BN);
@@ -352,7 +352,7 @@ package body GPR2.Build.Actions.Compile.Ada is
          then
             --  Simple case: just use the local .o and .ali
             if not No_Obj then
-               Self.Obj_File := Artifacts.Files.Create (Local_O);
+               Self.Obj_File := Artifacts.Object_File.Create (Local_O);
             end if;
 
             Self.Dep_File := Artifacts.Files.Create (Local_Ali);
@@ -392,10 +392,10 @@ package body GPR2.Build.Actions.Compile.Ada is
             --  compilation.
 
             if not Found then
-               Self.Obj_File := Artifacts.Files.Create (Local_O);
+               Self.Obj_File := Artifacts.Object_File.Create (Local_O);
                Self.Dep_File := Artifacts.Files.Create (Local_Ali);
             else
-               Self.Obj_File := Artifacts.Files.Create (Lkup_O);
+               Self.Obj_File := Artifacts.Object_File.Create (Lkup_O);
                Self.Dep_File := Artifacts.Files.Create (Lkup_Ali);
                Self.Inh_From := Candidate;
             end if;
@@ -701,17 +701,18 @@ package body GPR2.Build.Actions.Compile.Ada is
                             (Self.View, PRA.Compiler.Object_File_Suffix,
                              Ada_Language,
                              ".o"));
-         Local_O   : Artifacts.Files.Object;
+         Ali_Suff  : constant Simple_Name := Self.Dep_File_Suffix;
+         Local_O   : Artifacts.Object_File.Object;
          Local_Ali : Artifacts.Files.Object;
-         use type Artifacts.Files.Object;
+         use type Artifacts.Object_File.Object;
 
       begin
-         Local_O := Artifacts.Files.Create
+         Local_O := Artifacts.Object_File.Create
            (Self.View.Object_Directory.Compose (BN & O_Suff));
 
          if Local_O /= Self.Obj_File then
             Local_Ali := Artifacts.Files.Create
-              (Self.View.Object_Directory.Compose (BN & ".ali"));
+              (Self.View.Object_Directory.Compose (BN & Ali_Suff));
 
             Self.Tree.Replace_Artifact (Self.Obj_File, Local_O);
             Self.Tree.Replace_Artifact (Self.Dep_File, Local_Ali);
