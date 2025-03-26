@@ -77,6 +77,10 @@ package GPR2 is
    subtype Aggregate_Kind
      is Project_Kind range K_Aggregate .. K_Aggregate_Library;
 
+   subtype Library_Kind is Project_Kind
+     with Static_Predicate =>
+       Library_Kind in K_Library | K_Aggregate_Library;
+
    subtype With_Source_Dirs_Kind is Project_Kind range
      K_Standard .. K_Library;
 

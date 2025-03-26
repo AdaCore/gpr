@@ -598,12 +598,12 @@ package GPR2.Project.View is
    --  Returns the mains's binary full pathname
 
    function Library_Name (Self : Object) return Simple_Name
-     with Pre => Self.Is_Defined and then Self.Is_Library;
+     with Pre => Self.Is_Defined and then Self.Kind in GPR2.Library_Kind;
    --  Returns the library name
 
    function Library_Kind (Self : Object) return Name_Type
      with Pre  => Self.Is_Defined
-                  and then Self.Is_Library,
+                  and then Self.Kind in GPR2.Library_Kind,
           Post => Self.Has_Attribute (PRA.Library_Kind)
                   or else Library_Kind'Result = "static";
    --  Returns the library kind, "static" if the corresponding attribute is not
@@ -614,16 +614,16 @@ package GPR2.Project.View is
    --  Returns True if the project is library
 
    function Is_Static_Library (Self : Object) return Boolean
-     with Pre => Self.Is_Defined and then Self.Is_Library;
+     with Pre => Self.Is_Defined and then Self.Kind in GPR2.Library_Kind;
    --  Returns True if the library is a static one, so either static or
    --  static-pic.
 
    function Is_Shared_Library (Self : Object) return Boolean
-     with Pre => Self.Is_Defined and then Self.Is_Library;
+     with Pre => Self.Is_Defined and then Self.Kind in GPR2.Library_Kind;
    --  Returns True if the library is a shared one
 
    function Has_Library_Interface (Self : Object) return Boolean
-     with Pre => Self.Is_Defined and then Self.Is_Library;
+     with Pre => Self.Is_Defined and then Self.Kind in GPR2.Library_Kind;
    --  Returns whether the optional library interface attribute is defined
 
    function Has_Interfaces (Self : Object) return Boolean
@@ -635,25 +635,26 @@ package GPR2.Project.View is
      Pre  => Self.Is_Defined,
      Post =>
        Has_Any_Interfaces'Result = Self.Has_Interfaces
-       or else (Self.Is_Library and then Self.Has_Library_Interface);
+         or else (Self.Kind in GPR2.Library_Kind
+                  and then Self.Has_Library_Interface);
    --  Returns whether any interface is defined either using the
    --  Library_Interface or Interfaces attribute.
 
    function Has_Library_Version (Self : Object) return Boolean
-     with Pre => Self.Is_Defined and then Self.Is_Library;
+     with Pre => Self.Is_Defined and then Self.Kind in GPR2.Library_Kind;
    --  Returns whether the optional library version name is defined
 
    function Library_Filename
      (Self            : Object;
       Without_Version : Boolean := False) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined and then Self.Is_Library;
+     with Pre => Self.Is_Defined and then Self.Kind in GPR2.Library_Kind;
    --  Returns the actual file name for the library.
    --  If Without_Version is set, then the attribute Library_Version attribute
    --  is ignored.
 
    function Library_Filename_Variants
      (Self : Object) return GPR2.Containers.Filename_Set
-     with Pre => Self.Is_Defined and then Self.Is_Library;
+     with Pre => Self.Is_Defined and then Self.Kind in GPR2.Library_Kind;
    --  Returns the list of symbolic links that will point to Library_Filename
    --  on non-windows platforms. This is non-empty only when Library_Version is
    --  specified and will follow the .so schema installation in case
@@ -663,18 +664,18 @@ package GPR2.Project.View is
    function Library_Version_Filename
      (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined
-                 and then Self.Is_Library
+                 and then Self.Kind in GPR2.Library_Kind
                  and then Self.Has_Library_Version;
    --  Returns the library version filename
 
    function Library_Directory (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined and then Self.Is_Library;
+     with Pre => Self.Is_Defined and then Self.Kind in GPR2.Library_Kind;
    --  Returns the library directory, note that this may be different than
    --  getting the Library_Dir attribute value as the result here is always
    --  a path-name with proper resolution for relative directory specification.
 
    function Library_Ali_Directory (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined and then Self.Is_Library;
+     with Pre => Self.Is_Defined and then Self.Kind in GPR2.Library_Kind;
    --  Returns the library directory, note that this may be different than
    --  getting the Library_Ali_Dir attribute value as the result here is always
    --  a path-name with proper resolution for relative directory specification.
@@ -690,11 +691,11 @@ package GPR2.Project.View is
    --  time.
 
    function Library_Standalone (Self : Object) return Standalone_Library_Kind
-     with Pre => Self.Is_Defined and then Self.Is_Library;
+     with Pre => Self.Is_Defined and then Self.Kind in GPR2.Library_Kind;
    --  Returns the kind for the standalone library
 
    function Is_Library_Standalone (Self : Object) return Boolean
-     with Pre => Self.Is_Defined and then Self.Is_Library;
+     with Pre => Self.Is_Defined and then Self.Kind in GPR2.Library_Kind;
    --  Returns whether the library is standalone
 
    function Include_Path
@@ -886,7 +887,8 @@ private
      (Left.Get.Id < Right.Get.Id);
 
    function Is_Library (Self : Object) return Boolean is
-     (Self.Kind in K_Library | K_Aggregate_Library);
+     (Self.Kind in GPR2.Library_Kind
+      and then not Self.Is_Aggregated_In_Library);
 
    function Library_Name (Self : Object) return Simple_Name is
      (Simple_Name (Self.Attribute (PRA.Library_Name).Value.Text));
