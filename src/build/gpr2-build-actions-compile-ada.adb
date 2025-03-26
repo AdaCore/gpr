@@ -4,10 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.IO_Exceptions;
-with Ada.Text_IO;
-
-with GNATCOLL.OS.FSUtil;
 with GNATCOLL.Traces;
 
 with GPR2.Build.Actions.Ada_Bind;
@@ -66,6 +62,24 @@ package body GPR2.Build.Actions.Compile.Ada is
          end;
       end if;
    end Artifacts_Base_Name;
+
+   --------------------------
+   -- Change_Intf_Ali_File --
+   --------------------------
+
+   procedure Change_Intf_Ali_File
+     (Self : in out Object;
+      Path : Path_Name.Object)
+   is
+      From   : constant Artifacts.Files.Object := Self.Lib_Ali_File;
+   begin
+      if From.Path = Path then
+         return;
+      end if;
+
+      Self.Lib_Ali_File := Artifacts.Files.Create (Path);
+      Self.Tree.Replace_Artifact (From, Self.Lib_Ali_File);
+   end Change_Intf_Ali_File;
 
    ---------------------
    -- Compute_Command --
@@ -592,98 +606,6 @@ package body GPR2.Build.Actions.Compile.Ada is
       Binds   : Action_Id_Sets.Set;
 
    begin
-      --  If the object is to be included in a library, copy the ali file in
-      --  the library directory
-
-      if Self.In_Library.Is_Defined
-        and then
-          (Status /= Skipped
-           or else not Self.Lib_Ali_File.Path.Exists)
-      then
-         declare
-            use Standard.Ada.Text_IO;
-            From   : constant Path_Name.Object := Self.Dep_File.Path;
-            To     : constant Path_Name.Object :=
-                       Self.In_Library.Library_Ali_Directory.Compose
-                         (From.Simple_Name);
-            Input  : File_Type;
-            Output : File_Type;
-
-         begin
-            if To /= Self.Lib_Ali_File.Path then
-               Self.Tree.Replace_Artifact
-                 (Self.Lib_Ali_File, Artifacts.Files.Create (To));
-               Self.Lib_Ali_File := Artifacts.Files.Create (To);
-            end if;
-
-            if Self.In_Library.Is_Library_Standalone then
-               --  Amend the ALI to add the SL (StandAlone) flag to
-               --  it to prevent multiple elaboration of the unit.
-
-               Open (Input, In_File, From.String_Value);
-               Create (Output, Out_File, To.String_Value);
-
-               while not End_Of_File (Input) loop
-                  declare
-                     Line : constant String := Get_Line (Input);
-                  begin
-                     if Line'Length > 2
-                       and then Line
-                         (Line'First .. Line'First + 1) = "P "
-                     then
-                        Put_Line
-                          (Output,
-                           "P SL" &
-                             Line (Line'First + 1 .. Line'Last));
-                     else
-                        Put_Line (Output, Line);
-                     end if;
-                  end;
-               end loop;
-
-               Close (Input);
-               Close (Output);
-
-            else
-               --  Just copy the ali file for standard libraries: they
-               --  need elaboration by the caller.
-
-               if not GNATCOLL.OS.FSUtil.Copy_File
-                 (From.String_Value, To.String_Value)
-               then
-                  Self.Tree.Reporter.Report
-                    (GPR2.Message.Create
-                       (GPR2.Message.Error,
-                        "could not copy ali file " &
-                          String (From.Simple_Name) &
-                          " to the library directory",
-                        GPR2.Source_Reference.Object
-                          (GPR2.Source_Reference.Create
-                             (Self.In_Library.Path_Name.Value, 0, 0))));
-
-                  return False;
-               end if;
-            end if;
-
-         exception
-            when Standard.Ada.IO_Exceptions.Use_Error |
-                 Standard.Ada.IO_Exceptions.Name_Error =>
-
-               Self.Tree.Reporter.Report
-                 (GPR2.Message.Create
-                    (GPR2.Message.Error,
-                     "could not copy ali file " &
-                       String (From.Simple_Name) &
-                       " to the library directory",
-                     GPR2.Source_Reference.Object
-                       (GPR2.Source_Reference.Create
-                          (Self.In_Library.Path_Name.Value, 0, 0))));
-
-               return False;
-
-         end;
-      end if;
-
       if Status = Skipped then
          --  No need to post-process anything if the action was skipped
          return True;
@@ -721,91 +643,6 @@ package body GPR2.Build.Actions.Compile.Ada is
             Self.Inh_From := GPR2.Project.View.Undefined;
          end if;
       end;
-
-      --  If the object is to be included in a library, copy the ali file in
-      --  the library directory
-
-      if Self.In_Library.Is_Defined then
-         declare
-            use Standard.Ada.Text_IO;
-            From      : constant Path_Name.Object := Self.Dep_File.Path;
-            To        : constant Path_Name.Object :=
-                          Self.In_Library.Library_Ali_Directory.Compose
-                            (From.Simple_Name);
-            Input     : File_Type;
-            Output    : File_Type;
-
-         begin
-            if To /= Self.Lib_Ali_File.Path then
-               Self.Tree.Replace_Artifact
-                 (Self.Lib_Ali_File, Artifacts.Files.Create (To));
-               Self.Lib_Ali_File := Artifacts.Files.Create (To);
-            end if;
-
-            if Self.In_Library.Is_Library_Standalone then
-               --  Amend the ALI to add the SL (StandAlone) flag to
-               --  it to prevent multiple elaboration of the unit.
-
-               Open (Input, In_File, From.String_Value);
-               Create (Output, Out_File, To.String_Value);
-
-               while not End_Of_File (Input) loop
-                  declare
-                     Line : constant String := Get_Line (Input);
-                  begin
-                     if Line'Length > 2
-                       and then Line
-                         (Line'First .. Line'First + 1) = "P "
-                     then
-                        Put_Line
-                          (Output,
-                           "P SL" &
-                             Line (Line'First + 1 .. Line'Last));
-                     else
-                        Put_Line (Output, Line);
-                     end if;
-                  end;
-               end loop;
-
-               Close (Input);
-               Close (Output);
-
-            else
-               --  Just copy the ali file for standard libraries: they
-               --  need elaboration by the caller.
-
-               if not GNATCOLL.OS.FSUtil.Copy_File
-                 (From.String_Value, To.String_Value)
-               then
-                  Self.Tree.Reporter.Report
-                    (GPR2.Message.Create
-                       (GPR2.Message.Error,
-                        "could not copy ali file " &
-                          String (From.Simple_Name) &
-                          " to the library directory",
-                        GPR2.Source_Reference.Object
-                          (GPR2.Source_Reference.Create
-                             (Self.In_Library.Path_Name.Value, 0, 0))));
-
-                  return False;
-               end if;
-            end if;
-
-         exception
-            when Standard.Ada.IO_Exceptions.Use_Error =>
-               Self.Tree.Reporter.Report
-                 (GPR2.Message.Create
-                    (GPR2.Message.Error,
-                     "could not copy ali file " &
-                       String (From.Simple_Name) &
-                       " to the library directory",
-                     GPR2.Source_Reference.Object
-                       (GPR2.Source_Reference.Create
-                            (Self.In_Library.Path_Name.Value, 0, 0))));
-
-               return False;
-         end;
-      end if;
 
       --  Now that we know the ALI file is correct, let the bind action know
       --  the actual list of imported units from this dependency file.

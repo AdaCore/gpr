@@ -8,6 +8,7 @@ with Ada.Containers.Vectors;
 with Ada.Strings.Fixed;
 
 with GNATCOLL.Directed_Graph;
+with GNATCOLL.Traces;
 
 with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.Actions.Compile.Ada;
@@ -31,6 +32,10 @@ with GPR2.View_Ids.Set;
 
 package body GPR2.Build.Actions_Population is
 
+   Traces : constant GNATCOLL.Traces.Trace_Handle :=
+              GNATCOLL.Traces.Create ("GPR.BUILD.ACTIONS_POPULATION",
+                                      GNATCOLL.Traces.Off);
+
    --  Some notes on the initial DAG population:
    --  First step, population of libraries for the tree:
    --  - the output artifacts is created and added to the tree
@@ -50,25 +55,30 @@ package body GPR2.Build.Actions_Population is
    type Library_Type is record
       View : GPR2.Project.View.Object;
       Link : GPR2.Build.Actions.Link.Object;
+      Bind : GPR2.Build.Actions.Ada_Bind.Object;
    end record;
+
+   package View_Node_Map is new Ada.Containers.Ordered_Maps
+     (Key_Type     => View_Ids.View_Id,
+      Element_Type => GNATCOLL.Directed_Graph.Node_Id,
+      "<"          => View_Ids."<",
+      "="          => GNATCOLL.Directed_Graph."=");
+   package Node_View_Map is new Ada.Containers.Ordered_Maps
+     (Key_Type     => GNATCOLL.Directed_Graph.Node_Id,
+      Element_Type => View_Ids.View_Id,
+      "<"          => GNATCOLL.Directed_Graph."<",
+      "="          => View_Ids."=");
+   package View_Id_Library_Map is new Ada.Containers.Ordered_Maps
+     (Key_Type     => View_Ids.View_Id,
+      Element_Type => Library_Type,
+      "<"          => View_Ids."<");
+   package Library_Vector is new Ada.Containers.Vectors
+     (Positive, Library_Type);
 
    No_Library : constant Library_Type := (others => <>);
 
    package Library_Map is
       use GNATCOLL.Directed_Graph;
-      use GPR2.View_Ids;
-
-      package View_Node_Map is new Ada.Containers.Ordered_Maps
-        (Key_Type     => View_Id,
-         Element_Type => Node_Id);
-      package Node_View_Map is new Ada.Containers.Ordered_Maps
-        (Key_Type     => Node_Id,
-         Element_Type => GPR2.View_Ids.View_Id);
-      package View_Id_Library_Map is new Ada.Containers.Ordered_Maps
-        (Key_Type     => View_Id,
-         Element_Type => Library_Type);
-      package Library_Vector is new Ada.Containers.Vectors
-        (Positive, Library_Type);
 
       type Map is tagged limited record
          DAG     : Directed_Graph;
@@ -683,7 +693,6 @@ package body GPR2.Build.Actions_Population is
       Self    : Library_Type;
       Closure : GPR2.Project.View.Set.Object;
       Has_SAL : Boolean := False;
-      Bind    : GPR2.Build.Actions.Ada_Bind.Object;
 
    begin
       if View.Is_Extended or else Libs.Contains (View) then
@@ -740,19 +749,19 @@ package body GPR2.Build.Actions_Population is
          --  Create the binder action that will create the file in charge of
          --  elaborating and finalizing the lib. Used for standalone libraries.
 
-         Bind.Initialize
+         Self.Bind.Initialize
            (Basename       => View.Library_Name,
             Context        => View,
             Has_Main       => False,
             SAL_In_Closure => Has_SAL,
             Skip           => Options.No_SAL_Binding);
 
-         if not Tree_Db.Add_Action (Bind) then
+         if not Tree_Db.Add_Action (Self.Bind) then
             return False;
          end if;
 
          Tree_Db.Add_Input
-           (Self.Link.UID, Bind.Post_Bind.Object_File, True);
+           (Self.Link.UID, Self.Bind.Post_Bind.Object_File, True);
 
          --  Now gather the list of units that compose the interface
 
@@ -767,7 +776,7 @@ package body GPR2.Build.Actions_Population is
                end if;
 
                Tree_Db.Add_Input (Self.Link.UID, Comp.Object_File, False);
-               Tree_Db.Add_Input (Bind.UID, Comp.Local_Ali_File, True);
+               Tree_Db.Add_Input (Self.Bind.UID, Comp.Local_Ali_File, True);
             end;
          end loop;
 
@@ -834,23 +843,40 @@ package body GPR2.Build.Actions_Population is
       end loop;
 
       --  If the current library depends on other libraries, add a dependency
-      --  on the library output to avoid directly depending on the objects of
-      --  the dependent libraries.
+      --  on the link to make sure the other library is build first, but also
+      --  on the eventual corresponding binding action so that all ali files
+      --  are present in the Library_Ali_Dir at the moment we bind
 
       declare
-         Imported_Lib_Link : Actions.Link.Object;
+         C : View_Id_Library_Map.Cursor;
       begin
          for Import of Self.View.Imports loop
             if Import.Is_Library then
-               Imported_Lib_Link.Initialize_Library
-                 (Import, Options.No_Run_Path);
+               C := Libs.Values.Find (Import.Id);
 
-               if not Tree_Db.Has_Action (Imported_Lib_Link.UID) then
+               if not View_Id_Library_Map.Has_Element (C) then
+                  Traces.Trace ("Error: could not find " & String (Import.Name)
+                                & "in the list of library dependencies");
                   return False;
                end if;
 
-               Tree_Db.Add_Input
-                 (Self.Link.UID, Imported_Lib_Link.Output, True);
+               declare
+                  Lib : constant Library_Type :=
+                          View_Id_Library_Map.Element (C);
+               begin
+                  Tree_Db.Add_Input
+                    (Self.Link.UID,
+                     Lib.Link.Output, True);
+
+                  if Self.Bind.Is_Defined then
+                     --  Make sure the libraries dependencies are bounded
+                     --  before the binder is called, as it's the bind action
+                     --  that copies the ali files to the library directory.
+
+                     Tree_Db.Add_Input
+                       (Self.Bind.UID, Lib.Link.Output, False);
+                  end if;
+               end;
             end if;
          end loop;
       end;
@@ -1128,6 +1154,14 @@ package body GPR2.Build.Actions_Population is
 
             for Lib of Libs.Serialize loop
                Tree_Db.Add_Input (Link (Idx).UID, Lib.Link.Output, True);
+
+               --  Make sure the bind action is executed after the libraries
+               --  are linked, to have access to the ALI files in the lib
+               --  directory.
+               if Bind (Idx).Is_Defined then
+                  Tree_Db.Add_Input
+                    (Bind (Idx).UID, Lib.Link.Output, False);
+               end if;
             end loop;
 
             Idx := Idx + 1;
@@ -1172,8 +1206,6 @@ package body GPR2.Build.Actions_Population is
                      end if;
 
                      for J in Link'Range loop
-                        --  Add the archive only when the main is in Ada
-
                         Tree_Db.Add_Input (Link (J).UID, Archive.Output, True);
                      end loop;
                   end if;
@@ -1278,30 +1310,26 @@ package body GPR2.Build.Actions_Population is
          Todo.Delete_First;
          Seen.Include (Current);
 
-         case Current.Kind is
-            when K_Standard =>
-               if not Current.Is_Runtime then
-                  Closure.Include (Current);
-                  Add_Deps (Current);
-               end if;
+         if Current.Is_Library then
+            if not Populate_Library
+              (Tree_Db, Current, Options, Libs, Has_SAL)
+            then
+               return False;
+            end if;
 
-            when K_Abstract =>
+            if Ctxt /= No_Library then
+               Libs.Add_Successor (Ctxt.View, Current);
+            end if;
+
+         elsif Current.Kind = K_Abstract then
                Add_Deps (Current);
 
-            when K_Library | K_Aggregate_Library =>
-               if not Populate_Library
-                 (Tree_Db, Current, Options, Libs, Has_SAL)
-               then
-                  return False;
-               end if;
-
-               if Ctxt /= No_Library then
-                  Libs.Add_Successor (Ctxt.View, Current);
-               end if;
-
-            when others =>
-               null;
-         end case;
+         elsif Current.Kind /= K_Configuration
+           and then not Current.Is_Runtime
+         then
+            Closure.Include (Current);
+            Add_Deps (Current);
+         end if;
       end loop;
 
       return True;

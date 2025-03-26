@@ -18,6 +18,7 @@ with GNATCOLL.Utils; use GNATCOLL.Utils;
 
 with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Actions.Post_Bind;
+with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Compilation_Unit;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
@@ -182,7 +183,9 @@ package body GPR2.Build.Actions.Ada_Bind is
       begin
          if Map_File.FD /= Invalid_FD and then Map_File.FD /= Null_FD then
             for Input of Self.Tree.Inputs (Self.UID) loop
-               if Self.Tree.Has_Predecessor (Input) then
+               if Input not in Artifacts.Library.Object'Class
+                 and then Self.Tree.Has_Predecessor (Input)
+               then
                   declare
                      Ali      : constant Path_Name.Object :=
                                   Artifacts.Files.Object (Input).Path;
@@ -589,18 +592,18 @@ package body GPR2.Build.Actions.Ada_Bind is
             return True;
          end if;
 
+         if CU.Owning_View.Is_Runtime then
+            --  Runtime is handled specificitly by the binder, no need to
+            --  handle it here.
+            return True;
+         end if;
+
          --  Check if the unit is in the same bind & link scope as the current
          --  action.
 
          Same_Scope := CU.Owning_View = Self.Ctxt
            or else (Self.Ctxt.Kind = K_Aggregate_Library
                     and then Self.View.Aggregated.Contains (CU.Owning_View));
-
-         if CU.Owning_View.Is_Runtime then
-            --  Runtime is handled specificitly by the binder, no need to
-            --  handle it here.
-            return True;
-         end if;
 
          declare
             Comp_Id : constant Actions.Compile.Ada.Ada_Compile_Id :=
@@ -620,12 +623,17 @@ package body GPR2.Build.Actions.Ada_Bind is
          end;
 
          if Same_Scope or else not Comp.View.Is_Library then
+            --  If same scope or a regular project, just add the dependencies
+            --  on the output of the compile action.
 
             Self.Tree.Add_Input
               (Self.UID, Comp.Local_Ali_File, False);
             Self.Tree.Add_Input
               (Link.UID, Comp.Object_File, False);
          else
+            --  Use the .ali that's in the library dir instead of the object
+            --  directory.
+
             Self.Tree.Add_Input
               (Self.UID, Comp.Intf_Ali_File, False);
          end if;

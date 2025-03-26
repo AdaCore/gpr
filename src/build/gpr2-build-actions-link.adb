@@ -6,10 +6,13 @@
 
 with Ada.Characters.Handling;
 with Ada.Strings.Fixed;
+with Ada.IO_Exceptions;
+with Ada.Text_IO;
 
 with GNATCOLL.OS.FSUtil;
 with GNATCOLL.Utils;
 
+with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.External_Options;
 with GPR2.Message;
 with GPR2.Project.Attribute;
@@ -104,7 +107,17 @@ package body GPR2.Build.Actions.Link is
 
                      Self.Extra_Intf.Insert
                        (CU_Dep.Name, CU_Dep, Pos, Inserted);
+
                      if Inserted then
+                        declare
+                           Ada_Comp : Actions.Compile.Ada.Object;
+                        begin
+                           Ada_Comp.Initialize (CU_Dep);
+
+                           Self.Tree.Add_Input
+                             (Self.UID, Ada_Comp.Local_Ali_File, True);
+                        end;
+
                         Todo.Include (CU_Dep.Name, CU_Dep);
                      end if;
                   end if;
@@ -792,22 +805,60 @@ package body GPR2.Build.Actions.Link is
    overriding function On_Ready_State
      (Self : in out Object) return Boolean
    is
-      Units     : Compilation_Unit.Maps.Map :=
-                    Self.Ctxt.Interface_Closure;
+      Units     : Compilation_Unit.Maps.Map;
       Has_Error : Boolean := False;
-
    begin
-      Check_Interface (Self, No_Warnings => True);
+      if not Self.Ctxt.Is_Library
+        or else Self.Ctxt.Is_Externally_Built
+      then
+         return True;
+      end if;
+
+      --  Gather all the Ada units that are part of this library
+
+      if Self.Ctxt.Is_Library_Standalone then
+         Units := Self.Ctxt.Interface_Closure;
+
+         --  Check if we need to add extra packages to the interface
+
+         Check_Interface (Self, No_Warnings => True);
+
+         for CU of Self.Extra_Intf loop
+               Units.Include (CU.Name, CU);
+         end loop;
+      else
+         Units := Self.Ctxt.Own_Units;
+      end if;
+
+      --  For each unit, add the corresponding Ali  file as an output
+
+      for U of Units loop
+         declare
+            C_Id   : constant Actions.Compile.Ada.Ada_Compile_Id :=
+                       Actions.Compile.Ada.Create (U);
+            From   : constant Path_Name.Object :=
+                       Actions.Compile.Object
+                         (Self.Tree.Action (C_Id)).Dependency_File.Path;
+            To     : constant Path_Name.Object :=
+                       Self.Ctxt.Library_Ali_Directory.Compose
+                         (From.Simple_Name);
+
+         begin
+            if not Self.Tree.Add_Output
+              (C_Id, Artifacts.Files.Create (To))
+            then
+               return False;
+            end if;
+         end;
+      end loop;
+
+      --  Also add the artifacts for Libarary_Src_Directory if any
 
       if Self.Ctxt.Has_Library_Src_Directory then
          declare
             Src_Dir : constant Path_Name.Object :=
                         Self.Ctxt.Library_Src_Directory;
          begin
-            for CU of Self.Extra_Intf loop
-               Units.Include (CU.Name, CU);
-            end loop;
-
             for CU of Units loop
                declare
                   procedure On_Unit_Part
@@ -897,8 +948,15 @@ package body GPR2.Build.Actions.Link is
          return True;
       end if;
 
-      if Self.Is_Library and then not Self.Is_Static_Library then
-         --  Create symlinks for shared libs when needed
+      --  No need for post-processing in case we didn't link a library
+
+      if not Self.Ctxt.Is_Library then
+         return True;
+      end if;
+
+      --  Create symlinks for shared libs when needed
+
+      if not Self.Ctxt.Is_Static_Library then
 
          for Variant of Self.Ctxt.Library_Filename_Variants loop
             declare
@@ -923,7 +981,8 @@ package body GPR2.Build.Actions.Link is
                end if;
 
                if not GNATCOLL.OS.FSUtil.Create_Symbolic_Link
-                 (S_Link.String_Value, String (Self.Output.Path.Simple_Name))
+                 (S_Link.String_Value,
+                  String (Self.Output.Path.Simple_Name))
                then
                   pragma Annotate (Xcov, Exempt_On, "defensive code");
                   Self.Tree.Reporter.Report
@@ -945,6 +1004,153 @@ package body GPR2.Build.Actions.Link is
             end;
          end loop;
       end if;
+
+      return True;
+   end Post_Command;
+
+   -----------------
+   -- Pre_Command --
+   -----------------
+
+   overriding function Pre_Command (Self : in out Object) return Boolean is
+      CU       : GPR2.Build.Compilation_Unit.Object;
+      CU_Dep   : GPR2.Build.Compilation_Unit.Object;
+      Analyzed : GPR2.Containers.Name_Set;
+      Todo     : GPR2.Build.Compilation_Unit.Maps.Map;
+
+   begin
+      --  Check the library interface if needed
+
+      Check_Interface (Self, No_Warnings => False);
+
+      if Self.Is_Static_Library and then Self.Output.Path.Exists then
+         --  Remove the old .a since otherwise ar will just accumulate the
+         --  objects there
+         if not GNATCOLL.OS.FSUtil.Remove_File
+           (Self.Output.Path.String_Value)
+         then
+            Self.Tree.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  "cannot remove the old archive " &
+                    String (Self.Output.Path.Simple_Name),
+                  GPR2.Source_Reference.Create
+                    (Self.Ctxt.Path_Name.Value, 0, 0)));
+
+            return False;
+         end if;
+      end if;
+
+      --  Copy the ali files to the library dir
+
+      --  Two cases: standalone libraries where only the interface is to
+      --  be copied, and regular libraries where all units need to be taken
+      --  into account.
+
+      declare
+         Units : Compilation_Unit.Maps.Map;
+
+      begin
+         if Self.Ctxt.Is_Library then
+            if Self.Ctxt.Is_Library_Standalone then
+               Units := Self.Ctxt.Interface_Closure;
+
+               for U of Self.Extra_Intf loop
+                  Units.Include (U.Name, U);
+               end loop;
+
+            else
+               Units := Self.Ctxt.Own_Units;
+            end if;
+         end if;
+
+         for U of Units loop
+            declare
+               use Ada.Text_IO;
+               C_Id : constant Actions.Compile.Ada.Ada_Compile_Id :=
+                        Actions.Compile.Ada.Create (U);
+               From : constant Path_Name.Object :=
+                        Actions.Compile.Object
+                          (Self.Tree.Action (C_Id)).Dependency_File.Path;
+               To   : constant Path_Name.Object :=
+                        Self.Ctxt.Library_Ali_Directory.Compose
+                          (From.Simple_Name);
+               Input  : File_Type;
+               Output : File_Type;
+
+            begin
+               GPR2.Build.Actions.Compile.Ada.Object
+                 (Self.Tree.Action_Id_To_Reference
+                    (C_Id).Element.all).Change_Intf_Ali_File
+                      (To);
+
+               if not Self.Ctxt.Is_Library_Standalone then
+                  --  Just copy the ali file for standard libraries: they
+                  --  need elaboration by the caller.
+
+                  if not GNATCOLL.OS.FSUtil.Copy_File
+                    (From.String_Value, To.String_Value)
+                  then
+                     Self.Tree.Reporter.Report
+                       (GPR2.Message.Create
+                          (GPR2.Message.Error,
+                           "could not copy ali file " &
+                             String (From.Simple_Name) &
+                             " to the library directory",
+                           GPR2.Source_Reference.Object
+                             (GPR2.Source_Reference.Create
+                                  (Self.Ctxt.Path_Name.Value, 0, 0))));
+
+                     return False;
+                  end if;
+
+               else
+                  --  Amend the ALI to add the SL (StandAlone) flag to
+                  --  it to prevent multiple elaboration of the unit.
+
+                  Open (Input, In_File, From.String_Value);
+                  Create (Output, Out_File, To.String_Value);
+
+                  while not End_Of_File (Input) loop
+                     declare
+                        Line : constant String := Get_Line (Input);
+                     begin
+                        if Line'Length > 2
+                          and then Line
+                            (Line'First .. Line'First + 1) = "P "
+                        then
+                           Put_Line
+                             (Output,
+                              "P SL" &
+                                Line (Line'First + 1 .. Line'Last));
+                        else
+                           Put_Line (Output, Line);
+                        end if;
+                     end;
+                  end loop;
+
+                  Close (Input);
+                  Close (Output);
+               end if;
+
+            exception
+               when Ada.IO_Exceptions.Use_Error |
+                    Ada.IO_Exceptions.Name_Error =>
+
+                  Self.Tree.Reporter.Report
+                    (GPR2.Message.Create
+                       (GPR2.Message.Error,
+                        "could not copy ali file " &
+                          String (From.Simple_Name) &
+                          " to the library directory",
+                        GPR2.Source_Reference.Object
+                          (GPR2.Source_Reference.Create
+                               (Self.Ctxt.Path_Name.Value, 0, 0))));
+
+                  return False;
+            end;
+         end loop;
+      end;
 
       --  Copy the interface sources in Library_Src_Dir
 
@@ -1019,42 +1225,6 @@ package body GPR2.Build.Actions.Link is
             end loop;
          end;
       end if;
-
-      return True;
-   end Post_Command;
-
-   -----------------
-   -- Pre_Command --
-   -----------------
-
-   overriding function Pre_Command (Self : in out Object) return Boolean is
-      CU       : GPR2.Build.Compilation_Unit.Object;
-      CU_Dep   : GPR2.Build.Compilation_Unit.Object;
-      Analyzed : GPR2.Containers.Name_Set;
-      Todo     : GPR2.Build.Compilation_Unit.Maps.Map;
-
-   begin
-      if Self.Is_Static_Library and then Self.Output.Path.Exists then
-         --  Remove the old .a since otherwise ar will just accumulate the
-         --  objects there
-         if not GNATCOLL.OS.FSUtil.Remove_File
-           (Self.Output.Path.String_Value)
-         then
-            Self.Tree.Reporter.Report
-              (GPR2.Message.Create
-                 (GPR2.Message.Error,
-                  "cannot remove the old archive " &
-                    String (Self.Output.Path.Simple_Name),
-                  GPR2.Source_Reference.Create
-                    (Self.Ctxt.Path_Name.Value, 0, 0)));
-
-            return False;
-         end if;
-      end if;
-
-      --  Check the library interface if needed
-
-      Check_Interface (Self, No_Warnings => False);
 
       return True;
    end Pre_Command;
