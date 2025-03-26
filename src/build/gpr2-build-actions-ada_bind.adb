@@ -929,7 +929,7 @@ package body GPR2.Build.Actions.Ada_Bind is
    exception
       when Ada.IO_Exceptions.Name_Error =>
          Self.Tree.Reporter.Report
-           ("cannot find binder genereated file """ &
+           ("cannot find binder generated file """ &
               String (Self.Output_Body.Path.Simple_Name) & '"',
             To_Stderr => True,
             Level     => GPR2.Message.Important);
