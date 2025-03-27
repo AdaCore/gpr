@@ -10,6 +10,8 @@ with Ada.Strings.Maps.Constants;
 with Ada.Text_IO;
 with GNAT.OS_Lib;
 
+with GNATCOLL.Traces;
+
 with GPR2.Build.Tree_Db;
 with GPR2.Build.Unit_Info;
 with GPR2.Project.Attribute;
@@ -20,6 +22,10 @@ with GPR2.Tree_Internal;
 with GPR2.View_Internal;
 
 package body GPR2.Build.View_Tables is
+
+   Traces : constant GNATCOLL.Traces.Trace_Handle :=
+              GNATCOLL.Traces.Create
+                ("GPR.BUILD.SOURCES_DB", GNATCOLL.Traces.Off);
 
    procedure Add_Unit_Part
      (NS_Db    : View_Data_Ref;
@@ -198,9 +204,25 @@ package body GPR2.Build.View_Tables is
       Success : Boolean := True;
 
    begin
+      if Traces.Is_Active then
+         Traces.Trace
+           ("Add unit part:" & ASCII.LF &
+              "CU: " & String (CU) & ASCII.LF &
+              "Kind: " & Kind'Image & ASCII.LF &
+              (if Kind = S_Separate
+               then "Separate: " & String (Sep_Name) & ASCII.LF
+               else "") &
+              "View: " & String (View_Db.View.Name) & ASCII.LF &
+              "Path: " & Path.String_Value);
+      end if;
+
       Cursor := NS_Db.CUs.Find (CU);
 
       if not Compilation_Unit_Maps.Has_Element (Cursor) then
+         if Traces.Is_Active then
+            Traces.Trace ("new compilation unit, create it");
+         end if;
+
          --  Compilation unit name is not known: new unit, so simply add it
          declare
             CU_Instance : Compilation_Unit.Object :=
@@ -229,6 +251,10 @@ package body GPR2.Build.View_Tables is
               (Kind, View_Db.View, Path, Index, Sep_Name, Success);
 
             if not Success and then not View_Db.View.Is_Runtime then
+               if Traces.Is_Active then
+                  Traces.Trace ("!! clashing unit part");
+               end if;
+
                --  Check for duplicated units
 
                --  Note: the runtime *has* duplicated unit to support
@@ -241,6 +267,9 @@ package body GPR2.Build.View_Tables is
                if Other.View.Is_Runtime then
                   --  Special case for the runtime, where we allow some
                   --  runtime units to be overriden by project sources.
+                  if Traces.Is_Active then
+                     Traces.Trace ("... replacing a runtime unit");
+                  end if;
 
                   CU_Instance.Remove
                     (Kind, Other.View, Other.Source, Other.Index, Sep_Name);
@@ -285,6 +314,13 @@ package body GPR2.Build.View_Tables is
                         then
                            --  both sources are directly defined for the view,
                            --  so we raise an error about duplicated units.
+
+                           if Traces.Is_Active then
+                              Traces.Trace
+                                ("... error: both units are defined in the" &
+                                   " current view");
+                           end if;
+
                            Error_Case := True;
 
                         elsif Src.Inh_From.Is_Defined
@@ -293,6 +329,11 @@ package body GPR2.Build.View_Tables is
                            --  new source is inherited. previously analyzed
                            --  one is not, don't do anything apart of cleaning
                            --  up Src.
+
+                           if Traces.Is_Active then
+                              Traces.Trace
+                                ("... new source is inherited, remove it");
+                           end if;
 
                            Remove_Src := True;
 
@@ -303,6 +344,12 @@ package body GPR2.Build.View_Tables is
                            --  the new one is not: replace by the new source
                            --  in the unit.
 
+                           if Traces.Is_Active then
+                              Traces.Trace
+                                ("... new source overloads old unit, " &
+                                   "replace it");
+                           end if;
+
                            Replace := True;
 
                         elsif Src.View.Is_Extending (Other_Loc.View) then
@@ -310,17 +357,33 @@ package body GPR2.Build.View_Tables is
                            --  extending the defining view for the old source:
                            --  replace the old one.
 
+                           if Traces.Is_Active then
+                              Traces.Trace
+                                ("... new source overloads old unit, " &
+                                   "replace it");
+                           end if;
+
                            Replace := True;
 
                         elsif Other_Loc.View.Is_Extending (Src.View) then
                            --  new source was overloaded by the old source, so
                            --  just remove its unit
 
+                           if Traces.Is_Active then
+                              Traces.Trace
+                                ("... new source is inherited, remove it");
+                           end if;
+
                            Remove_Src := True;
 
                         else
                            --  Both have been inherited but from different
                            --  unrelated views: there's a clash.
+                           if Traces.Is_Active then
+                              Traces.Trace
+                                ("... units come from unrelated inherited" &
+                                   " views, error");
+                           end if;
 
                            Error_Case := True;
                         end if;
@@ -328,12 +391,23 @@ package body GPR2.Build.View_Tables is
                      elsif View_Db.View.Is_Extending (Other.View) then
                         --  Replace the unit in the compilation unit
 
+                        if Traces.Is_Active then
+                           Traces.Trace
+                             ("... new source overloads old unit, " &
+                                "replace it");
+                        end if;
+
                         Replace := True;
 
                      elsif Other.View.Is_Extending (View_Db.View) then
 
                         Remove_Src := True;
                      else
+                        if Traces.Is_Active then
+                           Traces.Trace
+                             ("??? we should never end up here !");
+                        end if;
+
                         Error_Case := True;
                      end if;
 
@@ -430,6 +504,12 @@ package body GPR2.Build.View_Tables is
                if Old_Owner /= CU_Instance.Owning_View then
                   --  Owning view changed, let's apply this change
                   if Old_Owner.Is_Defined then
+                     if Traces.Is_Active then
+                        Traces.Trace ("changing unit ownership from " &
+                                        String (Old_Owner.Name) & " to " &
+                                        String (View_Db.View.Name));
+                     end if;
+
                      declare
                         Old_Db : constant View_Data_Ref :=
                                    Get_Data (NS_Db.Tree_Db, Old_Owner);
@@ -785,21 +865,35 @@ package body GPR2.Build.View_Tables is
                      Owner_Db.Src_Infos.Constant_Reference (Path);
 
    begin
-      Data.Sources.Delete (Proxy.Path_Name);
+      if Data.Sources.Contains (Proxy.Path_Name) then
+         Data.Sources.Delete (Proxy.Path_Name);
 
-      C_Overload := Data.Overloaded_Srcs.Find (Basename);
-      Data.Overloaded_Srcs.Reference (C_Overload).Delete (Proxy);
+         C_Overload := Data.Overloaded_Srcs.Find (Basename);
 
-      declare
-         Val : constant Sources_By_Langs_Maps.Reference_Type :=
-                 Data.Langs_Usage.Reference (Src_Info.Language);
-      begin
-         pragma Assert (Val > 0);
-         Val.Element.all := Val - 1;
-      end;
+         if Basename_Source_List_Maps.Has_Element (C_Overload)
+           and then Data.Overloaded_Srcs.Reference (C_Overload).Contains
+                       (Proxy)
+         then
+            Data.Overloaded_Srcs.Reference (C_Overload).Delete (Proxy);
+         end if;
 
-      if Resolve_Visibility then
-         View_Tables.Resolve_Visibility (Data, C_Overload, Messages);
+         declare
+            Val : constant Sources_By_Langs_Maps.Reference_Type :=
+                    Data.Langs_Usage.Reference (Src_Info.Language);
+         begin
+            pragma Assert (Val > 0);
+            Val.Element.all := Val - 1;
+         end;
+
+         if Resolve_Visibility then
+            View_Tables.Resolve_Visibility (Data, C_Overload, Messages);
+         end if;
+      else
+         Traces.Trace
+           ("!!! Attempt to remove """ &
+              String (Proxy.Path_Name) &
+              """ while key is not in the Sources map for project """ &
+              String (Data.View.Name));
       end if;
    end Remove_Source;
 
@@ -921,13 +1015,18 @@ package body GPR2.Build.View_Tables is
                Name     : constant Simple_Name :=
                             GPR2.Path_Name.Simple_Name (Src.Path_Name);
             begin
+               if Traces.Is_Active then
+                  Traces.Trace
+                    ("visible source added propagation: extended project '"
+                     & String (Data.View.Name)
+                     & "' for source " & String (Name));
+               end if;
 
                --  Check if the extending project excludes the source
                if Ext_Data.Excluded_Sources.Contains (Name)
                  or else (not Ext_Data.Listed_Sources.Is_Empty
                           and then not Ext_Data.Listed_Sources.Contains (Name))
                then
-
                   --  If the sources is excluded then, no further propagation,
                   --  do not use the source as unit part and just return.
 
@@ -939,9 +1038,24 @@ package body GPR2.Build.View_Tables is
                   --  mapping file. In that case,do not propagate as the source
                   --  has been explicitly not added by the extending project.
 
+                  if Traces.Is_Active then
+                     Traces.Trace ("visible source propagation: '" &
+                                     String (Name) &
+                                     "' is explicitly excluded, stop here");
+                  end if;
+
                   Ext_Data.Actually_Excluded.Include (Name, Src);
 
                   return;
+               end if;
+
+               if Traces.Is_Active then
+                  Traces.Trace
+                    ("visible source propagation: add '" &
+                       String (Name) &
+                       "' to extending view '" &
+                       String (Ext_Data.View.Name) &
+                       "' and resolve visibility");
                end if;
 
                Add_Source
@@ -958,6 +1072,13 @@ package body GPR2.Build.View_Tables is
             --  views only, so not if the view is extended or aggregated in
             --  a library, since that's the extending or aggregating lib
             --  that will have the full picture on what is visible or not.
+
+            if Traces.Is_Active then
+               Traces.Trace
+                 ("visible source propagation: aggregating the units in the" &
+                    " view db");
+            end if;
+
 
             for U of Src_Info.Units loop
                for Root of Src.View.Namespace_Roots loop
@@ -997,6 +1118,13 @@ package body GPR2.Build.View_Tables is
                Name     : constant Simple_Name :=
                             GPR2.Path_Name.Simple_Name (Src.Path_Name);
             begin
+               if Traces.Is_Active then
+                  Traces.Trace
+                    ("visible source removed propagation: extended project '"
+                     & String (Data.View.Name)
+                     & "' for source " & String (Name));
+               end if;
+
                --  Check if the extending project excludes the source
                if Ext_Data.Excluded_Sources.Contains (Name)
                  or else (not Ext_Data.Listed_Sources.Is_Empty
@@ -1015,10 +1143,25 @@ package body GPR2.Build.View_Tables is
                   --  added by the extending project, so we do not need to
                   --  remove it.
 
+                  if Traces.Is_Active then
+                     Traces.Trace ("visible source propagation: '" &
+                                     String (Name) &
+                                     "' is explicitly excluded, stop here");
+                  end if;
+
                   Ext_Data.Actually_Excluded.Delete (Name);
 
                   return;
                else
+                  if Traces.Is_Active then
+                     Traces.Trace
+                       ("visible source propagation: remove '" &
+                          String (Name) &
+                          "' from extending view '" &
+                          String (Ext_Data.View.Name) &
+                          "' and resolve visibility");
+                  end if;
+
                   Remove_Source
                     (Ext_Data,
                      Src.View,
@@ -1030,6 +1173,12 @@ package body GPR2.Build.View_Tables is
             end;
 
          elsif Src_Info.Has_Units then
+            if Traces.Is_Active then
+               Traces.Trace
+                 ("visible source propagation: removing the units from the" &
+                    " view db");
+            end if;
+
             for U of Src_Info.Units loop
                for Root of Src.View.Namespace_Roots loop
                   if Root.Kind in With_View_Db then
@@ -1062,19 +1211,30 @@ package body GPR2.Build.View_Tables is
       Clashes   : Natural_Sets.Set;
 
    begin
+      if Traces.Is_Active then
+         Traces.Trace
+           ("=== Resolve visibility for '" & String (Basename) & "' ===");
+      end if;
+
       if Set.Is_Empty then
          --  no source for the specified basenamne
+
+         Traces.Trace ("no source for basename");
 
          Candidate := null;
 
       elsif Set.Length = 1 then
          --  Only one source in the set: just use it
 
+         Traces.Trace ("1 source for basename");
+
          Candidate := Set.Constant_Reference (Set.First).Element;
 
       else
          --  project extension case, or the same basename is found in
          --  different source dirs
+
+         Traces.Trace ("several sources for basename");
 
          for Curs in Set.Iterate loop
             declare
@@ -1089,6 +1249,18 @@ package body GPR2.Build.View_Tables is
                   if Candidate.View = Data.View then
                      --  Own source, get Src_Info cursor
                      C_Info := Data.Src_Infos.Find (Candidate.Path_Name);
+
+                     if Traces.Is_Active then
+                        Traces.Trace
+                          ("found first candidate owned by the view: " &
+                             String (Candidate.Path_Name));
+                     end if;
+                  else
+                     if Traces.Is_Active then
+                        Traces.Trace
+                          ("found first candidate not owned by the view: " &
+                             String (Candidate.Path_Name));
+                     end if;
                   end if;
 
                elsif C.View = Data.View
@@ -1098,18 +1270,37 @@ package body GPR2.Build.View_Tables is
                   Candidate := C.Element;
                   C_Info    := Data.Src_Infos.Find (Candidate.Path_Name);
 
+                  if Traces.Is_Active then
+                     Traces.Trace
+                       ("found new candidate owned by the view, overloading " &
+                          "old candidate: " &
+                          String (Candidate.Path_Name));
+                  end if;
+
                elsif Candidate.View = Data.View
                  and then C.View /= Data.View
                then
                   --  Candidate is owned by current view, so ignore inherited
                   --  source
-                  null;
+                  if Traces.Is_Active then
+                     Traces.Trace
+                       ("ignoring " & String (C.Path_Name) & ", overloaded " &
+                          "by current candidate: " &
+                          String (Candidate.Path_Name));
+                  end if;
 
                elsif C.View = Data.View then
                   --  Both candidates are owned by the view, check
                   --  Source_Reference: the declaration order of the source
                   --  directory in the Source_Dirs attribute gives the
                   --  visibility priority
+
+                  if Traces.Is_Active then
+                     Traces.Trace
+                       ("checking sources both owned by the view " &
+                          String (C.Path_Name) & " and " &
+                          String (Candidate.Path_Name));
+                  end if;
 
                   C_Info2 := Data.Src_Infos.Find (C.Path_Name);
 
@@ -1119,12 +1310,22 @@ package body GPR2.Build.View_Tables is
                     Src_Info_Maps.Element (C_Info2).Source_Dir_Value_Index;
 
                   if SR1 = SR2 then
+                     if Traces.Is_Active then
+                        Traces.Trace
+                          ("the sources come from the same Source_Dir value");
+                     end if;
+
                      Clashes.Include (SR1);
 
                   elsif SR2 < SR1 then
                      --  Source_Ref of C2 is declared before the one of
                      --  Candidate, so takes precedence (and clears any
                      --  clashing situation).
+
+                     if Traces.Is_Active then
+                        Traces.Trace
+                          ("priority for source_dir " & String (C.Path_Name));
+                     end if;
 
                      Candidate := C.Element;
                      C_Info := C_Info2;
@@ -1196,7 +1397,7 @@ package body GPR2.Build.View_Tables is
          end loop;
 
          if not Clashes.Is_Empty
-         and then Candidate.View.Is_Compilable
+           and then Candidate.View.Is_Compilable
              (Src_Info_Maps.Element (C_Info).Language)
          then
             for SR of Clashes loop
@@ -1225,6 +1426,12 @@ package body GPR2.Build.View_Tables is
       if Current /= Candidate then
          --  Remove current visible source
          if Current /= null then
+            if Traces.Is_Active then
+               Traces.Trace
+                 ("candidate replaces old source " &
+                    String (Current.Path_Name));
+            end if;
+
             Propagate_Visible_Source_Removal (Current.all);
 
             if Candidate = null then
@@ -1237,6 +1444,12 @@ package body GPR2.Build.View_Tables is
                Data.Basenames.Insert (Basename, Candidate.all);
             else
                Data.Basenames.Replace_Element (C_Path, Candidate.all);
+            end if;
+
+            if Traces.Is_Active then
+               Traces.Trace
+                 ("declare visible " &
+                    String (Candidate.Path_Name));
             end if;
 
             Propagate_Visible_Source_Added (Candidate.all);
