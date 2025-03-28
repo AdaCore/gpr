@@ -1284,7 +1284,8 @@ package body GPR2.Build.View_Tables is
                   --  source
                   if Traces.Is_Active then
                      Traces.Trace
-                       ("ignoring " & String (C.Path_Name) & ", overloaded " &
+                       ("ignoring " &
+                          String (C.Element.Path_Name) & ", overloaded " &
                           "by current candidate: " &
                           String (Candidate.Path_Name));
                   end if;
@@ -1298,11 +1299,11 @@ package body GPR2.Build.View_Tables is
                   if Traces.Is_Active then
                      Traces.Trace
                        ("checking sources both owned by the view " &
-                          String (C.Path_Name) & " and " &
+                          String (C.Element.Path_Name) & " and " &
                           String (Candidate.Path_Name));
                   end if;
 
-                  C_Info2 := Data.Src_Infos.Find (C.Path_Name);
+                  C_Info2 := Data.Src_Infos.Find (C.Element.Path_Name);
 
                   SR1 :=
                     Src_Info_Maps.Element (C_Info).Source_Dir_Value_Index;
@@ -1324,7 +1325,8 @@ package body GPR2.Build.View_Tables is
 
                      if Traces.Is_Active then
                         Traces.Trace
-                          ("priority for source_dir " & String (C.Path_Name));
+                          ("priority for source_dir " &
+                             String (C.Element.Path_Name));
                      end if;
 
                      Candidate := C.Element;
