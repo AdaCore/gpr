@@ -574,29 +574,15 @@ package body GPR2.Build.Actions.Link is
          end loop;
       end if;
 
-      --  Add options provided by the binder if needed
-
-      if not Self.View.Is_Library
-        or else Self.View.Is_Shared_Library
-        or else (Self.View.Is_Library_Standalone
-                 and then Is_Partially_Linked (Self.View))
-      then
-         for Option of Self.Static_Options loop
-            Cmd_Line.Add_Argument (Option);
-         end loop;
-      end if;
-
-      for Arg of Dash_l_Opts loop
-         Cmd_Line.Add_Argument (Arg);
-      end loop;
-
       --  Runtime flags usually come from the binder. However, there is no
       --  binding phase when creating a non-standalone library. Therefore,
       --  we need to add the runtime flags manually in this case. Note that
       --  static libraries do not require any runtime flags, so we are
-      --  processing only the shared libraries here.
+      --  processing only the shared libraries here, and moreover this is only
+      --  needed on Windows.
 
       if Self.View.Tree.Has_Runtime_Project
+        and then Self.View.Tree.Is_Windows_Target
         and then Self.View.Is_Library
         and then not Self.View.Is_Library_Standalone
         and then Self.View.Is_Shared_Library
@@ -615,6 +601,22 @@ package body GPR2.Build.Actions.Link is
          Cmd_Line.Add_Argument
            (Self.Tree.Linker_Lib_Dir_Option
             & Self.View.Tree.Runtime_Project.Object_Directory.String_Value);
+      end if;
+
+      for Arg of Dash_l_Opts loop
+         Cmd_Line.Add_Argument (Arg);
+      end loop;
+
+      --  Add options provided by the binder if needed
+
+      if not Self.View.Is_Library
+        or else Self.View.Is_Shared_Library
+        or else (Self.View.Is_Library_Standalone
+                 and then Is_Partially_Linked (Self.View))
+      then
+         for Option of Self.Static_Options loop
+            Cmd_Line.Add_Argument (Option);
+         end loop;
       end if;
 
       if Link_Exec then
