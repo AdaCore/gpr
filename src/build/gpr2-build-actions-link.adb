@@ -10,6 +10,7 @@ with Ada.IO_Exceptions;
 with Ada.Text_IO;
 
 with GNATCOLL.OS.FSUtil;
+with GNATCOLL.Traces;
 with GNATCOLL.Utils;
 
 with GPR2.Build.Actions.Compile.Ada;
@@ -25,6 +26,10 @@ with GPR2.Source_Reference;
 with GPR2.Source_Reference.Value;
 
 package body GPR2.Build.Actions.Link is
+
+   Traces : constant GNATCOLL.Traces.Trace_Handle :=
+              GNATCOLL.Traces.Create
+                ("GPR.BUILD.ACTIONS.LINK", GNATCOLL.Traces.Off);
 
    procedure Check_Interface
      (Self        : in out Object;
@@ -1093,6 +1098,10 @@ package body GPR2.Build.Actions.Link is
                   --  Just copy the ali file for standard libraries: they
                   --  need elaboration by the caller.
 
+                  Traces.Trace
+                    ("Copying """ & From.String_Value & """ to """ &
+                       To.Containing_Directory.String_Value & '"');
+
                   if not GNATCOLL.OS.FSUtil.Copy_File
                     (From.String_Value, To.String_Value)
                   then
@@ -1115,6 +1124,12 @@ package body GPR2.Build.Actions.Link is
 
                   Open (Input, In_File, From.String_Value);
                   Create (Output, Out_File, To.String_Value);
+
+                  Traces.Trace
+                    ("Installing """ & From.String_Value & """ to """ &
+                       To.Containing_Directory.String_Value &
+                       """ as library interface for " &
+                       String (Self.Ctxt.Name));
 
                   while not End_Of_File (Input) loop
                      declare
