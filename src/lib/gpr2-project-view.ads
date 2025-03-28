@@ -512,6 +512,15 @@ package GPR2.Project.View is
 
    --  Units
 
+   function Filename_For_Unit
+     (Self      : Object;
+      Unit_Name : Name_Type;
+      Kind      : Valid_Unit_Kind) return Simple_Name
+     with Pre => Self.Is_Defined and then Self.Kind in With_Source_Dirs_Kind;
+   --  Given an Unit_Name and a Kind for this unit returns the Simple_Name of
+   --  an existing compilation unit from Self or the Theorical Simple_Name of
+   --  the unit if it does not exist.
+
    function Units
      (Self                  : Object;
       With_Externally_Built : Boolean := False)
@@ -821,6 +830,10 @@ package GPR2.Project.View is
        Post => Implementation'Result.Is_Defined;
    --  Handles Body, Implementation, this is only defined for the Ada language
 
+   function Casing (Self : Object) return Project.Attribute.Object
+     with Pre  => Self.Is_Defined,
+          Post => Casing'Result.Is_Defined;
+
    function Raw_Attributes
      (Self : Object;
       Pack : Package_Id) return Project.Attribute.Set.Object
@@ -964,6 +977,10 @@ private
      (Self : Object;
       Unit : Value_Type) return Project.Attribute.Object
    is (Self.Attribute (PRA.Naming.Spec, PAI.Create (Unit)));
+
+   function Casing
+     (Self : Object) return Project.Attribute.Object
+   is (Self.Attribute (PRA.Naming.Casing));
 
    function Raw_Attributes
      (Self : Object;
