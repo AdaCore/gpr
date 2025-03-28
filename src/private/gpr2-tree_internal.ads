@@ -73,10 +73,6 @@ private package GPR2.Tree_Internal is
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
 
-   function Is_Windows_Target (Tree : Object) return Boolean
-     with Pre => Tree.Is_Defined;
-   --  Returns true if tree's target is window
-
    function "=" (Left, Right : Object) return Boolean;
    --  Returns True if Left and Right are the same tree
 
@@ -563,17 +559,6 @@ private
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
-
-   function Is_Windows_Target (Tree : Object) return Boolean is
-     (Tree.Has_Configuration
-        and then
-      Tree.Configuration.Corresponding_View.Has_Attribute
-        (PRA.Shared_Library_Suffix)
-        and then
-      Tree.Configuration.Corresponding_View.Attribute
-        (PRA.Shared_Library_Suffix).Value_Equal (".dll"));
-      --  ??? We may also check that the Tree target name contains mingw or
-      --  windows.
 
    function Contexts (Self : Object) return Two_Contexts is
      (Self.Context);

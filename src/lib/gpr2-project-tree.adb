@@ -343,6 +343,21 @@ package body GPR2.Project.Tree is
       end loop;
    end For_Each_Ada_Closure;
 
+   -----------------------
+   -- Is_Windows_Target --
+   -----------------------
+
+   function Is_Windows_Target (Tree : Object) return Boolean is
+     (Tree.Has_Configuration
+        and then
+      Tree.Configuration.Corresponding_View.Has_Attribute
+        (PRA.Shared_Library_Suffix)
+        and then
+      Tree.Configuration.Corresponding_View.Attribute
+        (PRA.Shared_Library_Suffix).Value_Equal (".dll"));
+   --  ??? We may also check that the Tree target name contains mingw or
+   --  windows.
+
    ---------------
    -- Languages --
    ---------------

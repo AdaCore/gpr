@@ -453,6 +453,10 @@ package GPR2.Project.Tree is
    function Get_KB (Self : Object) return GPR2.KB.Object
      with Pre => Self.Is_Defined;
 
+   function Is_Windows_Target (Tree : Object) return Boolean
+     with Pre => Tree.Is_Defined;
+   --  Returns true if tree's target is window
+
 private
 
    Get_View_Data : access
