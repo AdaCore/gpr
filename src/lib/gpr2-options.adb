@@ -100,17 +100,10 @@ package body GPR2.Options is
                            GPR2.Project.Ensure_Extension
                              (Filename_Type (Param));
                begin
-                  if GNAT.OS_Lib.Is_Absolute_Path (String (Path)) then
-                     Self.Project_File :=
-                       GPR2.Path_Name.Create_File
-                         (Filename_Type
-                            (GNAT.OS_Lib.Normalize_Pathname (String (Path))));
-                  else
-                     Self.Project_File :=
-                       GPR2.Path_Name.Create_File
-                         (Path,
-                          GPR2.Path_Name.No_Resolution);
-                  end if;
+                  Self.Project_File :=
+                    GPR2.Path_Name.Create_File
+                      (Path,
+                       GPR2.Path_Name.No_Resolution);
                end;
             else
                if Self.Prj_Got_On_Extra_Arg then
