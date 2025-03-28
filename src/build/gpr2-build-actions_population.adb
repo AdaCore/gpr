@@ -564,18 +564,55 @@ package body GPR2.Build.Actions_Population is
 
       if Options.Restricted_Build_Phase then
          for A of Tree_Db.All_Actions loop
-            if not (Options.Compile_Phase_Mandated
-                    and then A in Actions.Compile.Object'Class)
-              and then not
-                (Options.Bind_Phase_Mandated
+            declare
+               Compile_Phase_En : Boolean;
+               Bind_Phase_En    : Boolean;
+               Link_Phase_En    : Boolean;
+            begin
+               --  Handling of -c -b and -l is a bit tricky for gpr2 since you
+               --  need to remember how gpr1 was structured. Binding of mains
+               --  was done by gprbind while links were done for libs by
+               --  gprlib, while the (optional) binding phase for libs is
+               --  thus just hidden so do not apply to those switches, and link
+               --  actually done by gprbuild was only for mains..
+               --
+               --  So basically -c is pretty well respected, because the old
+               --  gprbuild had full control over this phase.
+               --
+               --  -b only used to control calls to gprbind, so is only valid
+               --  if the action is a bind action for an executable, but not
+               --  for a library.
+               --
+               --  -l is only applicable to executables, so not for linking
+               --  libs.
+               --
+               --  ??? for testsuite reasons we try to keep here the same
+               --  reasoning, but this set of switches don't really make sense
+               --  here anymore and could be simplified to simply filter the
+               --  actions according to their classes.
+
+               Compile_Phase_En := Options.Compile_Phase_Mandated
+                 and then A in Actions.Compile.Object'Class;
+
+               Bind_Phase_En := Options.Bind_Phase_Mandated
                  and then
                    (A in Actions.Ada_Bind.Object'Class
-                    or else A in Actions.Post_Bind.Object'Class))
-              and then not (Options.Link_Phase_Mandated
-                            and then A in Actions.Link.Object'Class)
-            then
-               To_Remove.Include (A);
-            end if;
+                    or else A in Actions.Post_Bind.Object'Class
+                    or else (A in Actions.Link.Object'Class
+                             and then Actions.Link.Object (A).Is_Library));
+
+               Link_Phase_En := Options.Link_Phase_Mandated
+                 and then A in Actions.Link.Object'Class
+                 and then not Actions.Link.Object (A).Is_Library;
+
+               if not
+                 (Compile_Phase_En
+                  or else Bind_Phase_En
+                  or else Link_Phase_En)
+               then
+                  To_Remove.Include (A);
+               end if;
+            end;
          end loop;
       end if;
 
