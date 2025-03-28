@@ -8,6 +8,7 @@ with Ada.IO_Exceptions;
 with Ada.Text_IO;
 
 with GNATCOLL.OS.FSUtil;
+with GNATCOLL.Traces;
 
 with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.ALI_Parser;
@@ -22,6 +23,10 @@ with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
 
 package body GPR2.Build.Actions.Compile.Ada is
+
+   Traces : constant GNATCOLL.Traces.Trace_Handle :=
+              GNATCOLL.Traces.Create
+                ("GPR.BUILD.ACTIONS.COMPILE.ADA", GNATCOLL.Traces.Off);
 
    package PRA renames GPR2.Project.Registry.Attribute;
    package PAI renames GPR2.Project.Attribute_Index;
@@ -171,11 +176,11 @@ package body GPR2.Build.Actions.Compile.Ada is
                          (Self.Local_Config_Pragmas.Is_Defined
                           and then Dep = Self.Local_Config_Pragmas.Simple_Name)
                      then
-                        Self.Traces.Trace
+                        Traces.Trace
                           ("config pragma file reported as dependency, " &
                              "ignoring : " & String (Dep));
                      else
-                        Self.Traces.Trace
+                        Traces.Trace
                           ("Compute_Signature: cannot find dependency " &
                              String (Dep));
 
@@ -237,17 +242,16 @@ package body GPR2.Build.Actions.Compile.Ada is
 
    begin
       if not Self.Dep_File.Path.Exists then
-         Trace
-           (Self.Traces,
-            "The ALI file for action " & UID.Image & " does not exist");
+         Traces.Trace
+           ("The ALI file for action " & UID.Image & " does not exist");
 
          return Containers.Empty_Filename_Set;
       end if;
 
       if not GPR2.Build.ALI_Parser.Dependencies (Self.Dep_File.Path, Result)
       then
-         Trace
-           (Self.Traces, "Failed to parse dependencies from the ALI file " &
+         Traces.Trace
+           ("Failed to parse dependencies from the ALI file " &
               Self.Dep_File.Path.String_Value);
 
          return Containers.Empty_Filename_Set;
@@ -312,8 +316,6 @@ package body GPR2.Build.Actions.Compile.Ada is
       Self.Src    := Src.Owning_View.Source (Src.Main_Part.Source.Simple_Name);
       Self.Lang   := Ada_Language;
       Self.CU     := Src;
-      Self.Traces := Create ("ACTION_ADA_COMPILE",
-                             GNATCOLL.Traces.Off);
 
       --  ??? For Standalone libraries, we should probably not lookup for
       --  previous compilation artifacts, since we need to amend the ali

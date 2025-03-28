@@ -715,8 +715,6 @@ package body GPR2.Build.Actions.Link is
       Self.Is_Library := False;
       Self.Main_Src   := Src;
       Self.Ctxt       := Src.View;
-      Self.Traces     := Create ("ACTION_LINK",
-                                 GNATCOLL.Traces.Off);
       Self.No_Rpath   := No_Rpath;
 
       if Output'Length = 0 then
@@ -758,8 +756,6 @@ package body GPR2.Build.Actions.Link is
       Self.In_Obj     := True;
       Self.Library    := Artifacts.Library.Create
         (Context.Object_Directory.Compose (Library_Filename));
-      Self.Traces     := Create ("ACTION_LINK",
-                                 GNATCOLL.Traces.Off);
    end Initialize_Global_Archive;
 
    ------------------------
@@ -776,8 +772,6 @@ package body GPR2.Build.Actions.Link is
       Self.Is_Static  := Context.Is_Static_Library;
       Self.Library    := Artifacts.Library.Create (Context.Library_Filename);
       Self.No_Rpath   := No_Rpath;
-      Self.Traces     := Create ("ACTION_LINK",
-                                 GNATCOLL.Traces.Off);
    end Initialize_Library;
 
    --------------------------

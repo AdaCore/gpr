@@ -17,8 +17,8 @@ package body GPR2.Build.ALI_Parser is
    package GB renames GNATCOLL.Buffer;
    package GT renames GNATCOLL.Traces;
 
-   Traces : constant GT.Trace_Handle := GT.Create ("PARSER.ALI",
-                                                   GNATCOLL.Traces.Off);
+   Traces : constant GT.Trace_Handle :=
+              GT.Create ("GPR.BUILD.ALI_PARSER", GNATCOLL.Traces.Off);
 
    package IO is
 

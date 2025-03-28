@@ -7,6 +7,7 @@
 with Ada.Characters.Handling;
 
 with GNATCOLL.OS.FS;
+with GNATCOLL.Traces;
 
 with GPR2.Build.Makefile_Parser;
 pragma Warnings (Off, ".* is not referenced");
@@ -19,6 +20,12 @@ with GPR2.Project.Attribute;
 with GPR2.Source_Reference;
 
 package body GPR2.Build.Actions.Compile is
+
+   Traces : constant GNATCOLL.Traces.Trace_Handle :=
+              GNATCOLL.Traces.Create
+                ("GPR.BUILD.ACTIONS.COMPILE",
+                 GNATCOLL.Traces.Off);
+
 
    function Lang_Img (Lang : Language_Id) return Filename_Type is
       (Filename_Type (Ada.Characters.Handling.To_Lower (GPR2.Image (Lang))));
@@ -754,7 +761,7 @@ package body GPR2.Build.Actions.Compile is
                   end if;
 
                   if not Path.Exists then
-                     Self.Traces.Trace
+                     Traces.Trace
                        ("Compute_Signature: cannot find dependency " &
                           String (Dep));
 
@@ -800,8 +807,8 @@ package body GPR2.Build.Actions.Compile is
       if not GPR2.Build.Makefile_Parser.Dependencies
         (Self.Dep_File.Path, Self.Obj_File.Path, All_Deps)
       then
-         Trace
-           (Self.Traces, "Failed to parse dependencies from the dependency "
+         Traces.Trace
+           ("Failed to parse dependencies from the dependency "
             & "file " & Self.Dep_File.Path.String_Value);
 
          return Containers.Empty_Filename_Set;
@@ -858,8 +865,6 @@ package body GPR2.Build.Actions.Compile is
       Self.Ctxt     := Src.Owning_View;
       Self.Src      := Src;
       Self.Lang     := Src.Language;
-      Self.Traces   := Create ("ACTION_COMPILE",
-                               GNATCOLL.Traces.Off);
 
       Has_Dep := Self.Ctxt.Has_Attribute
         (PRA.Compiler.Dependency_Switches, PAI.Create (Self.Lang));

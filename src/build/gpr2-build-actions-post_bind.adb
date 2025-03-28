@@ -4,6 +4,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GNATCOLL.Traces;
+
 with GPR2.Build.Actions.Link;
 with GPR2.Build.External_Options;
 with GPR2.Build.Tree_Db;
@@ -13,6 +15,11 @@ with GPR2.Project.Tree;
 with GPR2.Project.View;
 
 package body GPR2.Build.Actions.Post_Bind is
+
+   Traces : constant GNATCOLL.Traces.Trace_Handle :=
+              GNATCOLL.Traces.Create
+                ("GPR.BUILD.ACTIONS.POST_BIND",
+                 GNATCOLL.Traces.Off);
 
    package PAI renames GPR2.Project.Attribute_Index;
 
@@ -134,8 +141,6 @@ package body GPR2.Build.Actions.Post_Bind is
       Self   : Object;
 
    begin
-      Self.Traces := Create ("ACTION_POST_BIND",
-                             GNATCOLL.Traces.Off);
       Self.View   := View;
       Self.Binder := Binder;
       Self.Input  := Impl;
@@ -195,9 +200,9 @@ package body GPR2.Build.Actions.Post_Bind is
    begin
       for Act of Successors loop
          if Act in Link.Object'Class then
-            Self.Traces.Trace ("Options passed to " & Act.UID.Image & ":");
+            Traces.Trace ("Options passed to " & Act.UID.Image & ":");
             for Opt of Binder_Action.Linker_Options loop
-               Self.Traces.Trace ("* '" & Opt & "'");
+               Traces.Trace ("* '" & Opt & "'");
                Link.Object (Act).Add_Option (Opt);
             end loop;
          end if;

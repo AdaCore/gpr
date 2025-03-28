@@ -16,6 +16,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GNATCOLL.Traces;
+
 with GPR2.Options;
 
 with GPRtools.Command_Line;
@@ -56,8 +58,8 @@ package body GPRbuild.Options is
                        " [-kargs opts] [-gargs opts]",
                      Allow_Autoconf    => True,
                      Check_Shared_Libs => True) with null record);
-      Build_Group    : GPRtools.Command_Line.Argument_Group;
-      Compiler_Group : GPRtools.Command_Line.Argument_Group;
+      Build_Group     : GPRtools.Command_Line.Argument_Group;
+      Compiler_Group  : GPRtools.Command_Line.Argument_Group;
 
    begin
       GPRtools.Options.Setup (GPRtools.Build);
@@ -282,6 +284,11 @@ package body GPRbuild.Options is
          Create (Name => "--autodetect-jobserver",
                  Help => "Autodetect GNU make jobserver and attempt to share "
                  & "job slots"));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name   => "-vh",
+                 Help   => "Very high verbosity level",
+                 Hidden => True));
 
 
       Parser.Add_Section_Argument
@@ -528,6 +535,11 @@ package body GPRbuild.Options is
 
       elsif Arg = "-U" then
          Result.Build_Options.Unique_Compilation_Recursive := True;
+
+      elsif Arg = "-vh" then
+         Result.Verbosity := GPRtools.Options.Verbose;
+         GNATCOLL.Traces.Parse_Config (">&2");
+         GNATCOLL.Traces.Parse_Config ("GPR.*=yes");
 
       elsif Arg = "-z" then
          Result.Build_Options.No_Main_Subprogram := True;

@@ -79,7 +79,6 @@ package body GPR2.Build.Actions.Write_File is
       Self.With_Deps  := With_Deps;
       Self.Executable := Executable;
       Self.With_Wait  := With_Wait;
-      Self.Traces     := Create ("ACTION_WRITE_FILE");
    end Initialize;
 
    -----------------------

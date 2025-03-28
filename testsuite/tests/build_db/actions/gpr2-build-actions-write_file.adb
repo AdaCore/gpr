@@ -63,7 +63,6 @@ package body GPR2.Build.Actions.Write_File is
    begin
       Self.Ctxt       := Ctxt;
       Self.Index      := Index;
-      Self.Traces     := Create ("ACTION_WRITE_FILE");
    end Initialize;
 
    -----------------------

@@ -17,8 +17,6 @@ with GPR2.View_Ids;
 
 limited with GPR2.Build.Tree_Db;
 
-private with GNATCOLL.Traces;
-
 package GPR2.Build.Actions is
 
    Command_Line_Limit : constant := 8191;
@@ -236,7 +234,6 @@ package GPR2.Build.Actions is
 
 private
 
-   use GNATCOLL.Traces;
    use type GPR2.View_Ids.View_Id;
 
    type Object is abstract tagged record
@@ -244,9 +241,6 @@ private
       --  Owning Tree
       Signature  : GPR2.Build.Signature.Object;
       --  Stored signature for the action
-      Traces     : Trace_Handle := Create ("TRACE_NAME_TO_OVERRIDE",
-                                           GNATCOLL.Traces.Off);
-      --  Used for debug info
       Tmp_Files  : GPR2.Containers.Filename_Set;
       --  List of tmp files to be cleaned up
       Deactivated : Boolean := False;

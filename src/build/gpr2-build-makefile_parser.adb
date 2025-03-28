@@ -6,17 +6,18 @@
 
 with Ada.Exceptions;
 with GNATCOLL.Buffer;
-with GNATCOLL.Traces;
 with GNATCOLL.OS.Constants;
+with GNATCOLL.Traces;
 
 package body GPR2.Build.Makefile_Parser is
 
    Scan_Makefile_Error : exception;
 
    package GB renames GNATCOLL.Buffer;
-   package GT renames GNATCOLL.Traces;
 
-   Traces : constant GT.Trace_Handle := GT.Create ("PARSER.MAKEFILE");
+   Traces : constant GNATCOLL.Traces.Trace_Handle :=
+              GNATCOLL.Traces.Create
+                ("GPR.BUILD.MAKEFILE_PARSER", GNATCOLL.Traces.Off);
 
    package IO is
 
