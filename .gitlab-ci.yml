@@ -121,6 +121,8 @@ test_gpr2_with_gpr2build:
 build_and_test_gpr2_windows:
   extends: .windows-test_template
   needs: []
+  variables:
+    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
   script:
     - exec anod build gpr2
     - run_testsuite gpr2 "" test_gpr2
@@ -137,7 +139,7 @@ build_and_test_gpr2_windows:
 ###################
 
 # Test the gpr1 testsuite with gpr2build.
-test_gpr1_testsuite:
+test_gprbuild_internal:
   extends: .gpr2_test_template
   variables:
     JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
@@ -145,7 +147,6 @@ test_gpr1_testsuite:
     - install_cache
     - anod build gpr2 -Qgpr2build
     - run_testsuite gprbuild "-Qgpr2build" test_gpr1_testsuite
-  when: manual
   artifacts:
     when:
       always
