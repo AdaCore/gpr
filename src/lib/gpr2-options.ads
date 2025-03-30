@@ -129,13 +129,14 @@ package GPR2.Options is
    -----------------------------------------------------
 
    function Project_File (Self : Object) return GPR2.Path_Name.Object;
-   --  Returns the project file found in the arguments.
+   --  Returns the project file found in the arguments
 
    function No_Project (Self : Object) return Boolean;
    --  Whether --no-project has been specified
 
-   function Base (Self        : Object;
-                  Environment : GPR2.Environment.Object) return GPR2.KB.Object;
+   function Base
+     (Self        : Object;
+      Environment : GPR2.Environment.Object) return GPR2.KB.Object;
    --  Loads the KB according to --db and --db- switches and returns it.
 
    function Resolve_Links (Self : Object) return Boolean;

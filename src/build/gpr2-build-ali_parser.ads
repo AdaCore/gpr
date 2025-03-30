@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-
 with GPR2.Containers;
 with GPR2.Path_Name;
 

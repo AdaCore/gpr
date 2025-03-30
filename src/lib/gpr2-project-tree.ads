@@ -39,7 +39,7 @@ package GPR2.Project.Tree is
    type Object is tagged private
      with Constant_Indexing => Constant_Reference,
           Default_Iterator  => Iterate,
-     Iterator_Element  => View.Object;
+          Iterator_Element  => View.Object;
    --  Note: the project tree object is actually a Refcounted object.
    --  This object is null by default, only a call to Load,
    --  Register_Project_Search_Path or Restrict_Autoconf_To_Languages will
@@ -448,9 +448,9 @@ package GPR2.Project.Tree is
    --  Native host target
 
    function Get_View
-      (Self : Object;
-       Id   : GPR2.View_Ids.View_Id)
-       return Project.View.Object;
+     (Self : Object;
+      Id   : GPR2.View_Ids.View_Id)
+      return Project.View.Object;
    --  Given a View_Id Id returns the associated view if it exists. Returns
    --  Project.View.Undefined otherwise.
 

@@ -69,7 +69,7 @@ package GPR2.Build.Actions.Link is
    --  For regular libraries this will be the list of units owned by the view
    --  or the aggregated views (aggregate library case).
    --  For standalone libraries this will be the list of units listed by the
-   --  Library_Interface or Interfaces attributes complimented by their
+   --  Library_Interface or Interfaces attributes complemented by their
    --  dependencies.
 
    function Output (Self : Object) return Artifacts.Files.Object'Class;
@@ -158,7 +158,7 @@ private
                          Containers.Empty_Value_List;
       --  Command line options added manually with the Add_Option procedure
 
-      Extra_Intf      : GPR2.Build.Compilation_Unit.Maps.Map;
+      Extra_Intf     : GPR2.Build.Compilation_Unit.Maps.Map;
       --  Extra units needed to have a complete interface
 
       Bind            : Actions.Ada_Bind.Object;

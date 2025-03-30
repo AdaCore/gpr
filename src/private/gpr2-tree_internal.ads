@@ -450,9 +450,9 @@ private package GPR2.Tree_Internal is
    --  Returns used environment
 
    function Get_View
-      (Self : Object;
-       Id   : View_Ids.View_Id)
-       return Project.View.Object;
+     (Self : Object;
+      Id   : View_Ids.View_Id)
+      return Project.View.Object;
    --  Given a View_Id Id returns the associated view if it exists. Returns
    --  Project.View.Undefined otherwise.
 

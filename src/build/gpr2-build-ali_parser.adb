@@ -50,7 +50,6 @@ package body GPR2.Build.ALI_Parser is
         (File : in out GB.Reader;
          EOL  :    out Boolean) return String
       is
-
          subtype End_Of_Line is Character
            with Static_Predicate =>
              End_Of_Line in ASCII.CR | ASCII.LF | ASCII.EOT;
@@ -69,11 +68,11 @@ package body GPR2.Build.ALI_Parser is
          ---------------------
 
          function Get_Quoted_Word return String is
-            C  : Character := ASCII.NUL;
+            C     : Character := ASCII.NUL;
             First : Long_Long_Integer := GB.Current_Position (File);
             Last  : Long_Long_Integer := First;
 
-            QN : Natural   := 1;
+            QN    : Natural   := 1;
             --  Number of quotes seen
          begin
             --  Skip the first double quote
@@ -108,18 +107,16 @@ package body GPR2.Build.ALI_Parser is
                      EOL := C in End_Of_Line;
 
                      declare
-                        Token  : constant String :=
-                                   GB.Token (File, First, Last);
-                        Result : String := Token;
+                        Token               : constant String :=
+                                                GB.Token (File, First, Last);
+                        Result              : String := Token;
                         Tok_Idx, Result_Idx : Natural := Token'First;
                      begin
                         while Tok_Idx <= Token'Last loop
                            Result (Result_Idx) := Token (Tok_Idx);
 
                            if Token (Tok_Idx) = '"' then
-
                               --  Skip the second double quote
-
                               Tok_Idx := Tok_Idx + 1;
                            end if;
 
@@ -129,19 +126,20 @@ package body GPR2.Build.ALI_Parser is
 
                         return Result (Result'First .. Result_Idx - 1);
                      end;
-                  else
 
+                  else
                      --  Had an ending quote followed by regular characters:
                      --  error !
 
-                     raise Scan_ALI_Error with
-                       "wrong quoted format of '"
-                       & GB.Token (File, First, Last) & ''';
+                     raise Scan_ALI_Error
+                       with "wrong quoted format of '"
+                          & GB.Token (File, First, Last) & ''';
                   end if;
+
                elsif C in ASCII.LF then
-                  raise Scan_ALI_Error with
-                    "wrong quoted format of '"
-                    & GB.Token (File, First, Last) & ''';
+                  raise Scan_ALI_Error
+                    with "wrong quoted format of '"
+                       & GB.Token (File, First, Last) & ''';
                else
                   Last := Last + 1;
                end if;
@@ -153,9 +151,10 @@ package body GPR2.Build.ALI_Parser is
          --------------
 
          function Get_Word return String is
-            C     : Character       := ASCII.NUL;
-            First : constant Long_Long_Integer := GB.Current_Position (File);
-            Last  : Long_Long_Integer         := First;
+            C                       : Character := ASCII.NUL;
+            First                   : constant Long_Long_Integer :=
+                                        GB.Current_Position (File);
+            Last                    : Long_Long_Integer := First;
             Previous_Token_Is_Space : Boolean := False;
          begin
             loop
@@ -172,6 +171,7 @@ package body GPR2.Build.ALI_Parser is
                   else
                      Previous_Token_Is_Space := True;
                   end if;
+
                else
                   Previous_Token_Is_Space := False;
                end if;
@@ -180,7 +180,6 @@ package body GPR2.Build.ALI_Parser is
                   EOL := C in End_Of_Line;
                   exit;
                end if;
-
 
                Last := Last + 1;
             end loop;
@@ -194,7 +193,6 @@ package body GPR2.Build.ALI_Parser is
          EOL := False;
 
          Read_Token : loop
-
             if not GB.Next (File, C) then
                return "";
             end if;
@@ -217,13 +215,10 @@ package body GPR2.Build.ALI_Parser is
       -- Next_Line --
       ---------------
 
-      procedure Next_Line (File : in out GB.Reader; Header : out Character)
-      is
+      procedure Next_Line (File : in out GB.Reader; Header : out Character) is
       begin
-
          if File.Is_End_Of_Data then
             Header := ASCII.NUL;
-
             return;
          end if;
 
@@ -233,9 +228,9 @@ package body GPR2.Build.ALI_Parser is
 
             if not GB.Next (File, Header) then
                Header := ASCII.NUL;
-
                return;
             end if;
+
          else
             Header := File.Current_Char;
 
@@ -244,7 +239,6 @@ package body GPR2.Build.ALI_Parser is
 
                if not GB.Next (File, Header) then
                   Header := ASCII.NUL;
-
                   return;
                end if;
             end loop;
@@ -253,13 +247,13 @@ package body GPR2.Build.ALI_Parser is
          loop
             if not GB.Next (File, Header) then
                Header := ASCII.NUL;
-
                return;
             end if;
 
             exit when Header not in ASCII.CR | ASCII.LF;
          end loop;
       end Next_Line;
+
    end IO;
 
    ------------------
@@ -330,59 +324,55 @@ package body GPR2.Build.ALI_Parser is
       end Parse_With;
 
       Reader : GB.Reader :=  GB.Open (String (ALI_File.Value));
+      Word   : Character := ASCII.NUL;
    begin
-      declare
-         Word : Character := ASCII.NUL;
-      begin
+      --  Only the dependencies lines "D" are of interest, as they contain
+      --  dependencies source names.
 
-         --  Only the dependencies lines "D" are of interest, as they contain
-         --  dependencies source names.
+      loop
+         if not EOL then
+            IO.Next_Line (Reader, Word);
+         elsif not GB.Next (Reader, Word) then
+            return True;
+         end if;
 
-         loop
-            if not EOL then
-               IO.Next_Line (Reader, Word);
-            elsif not GB.Next (Reader, Word) then
-               return True;
-            end if;
+         EOL := False;
 
-            EOL := False;
+         case Word is
+            when ASCII.NUL   =>
+               exit;
 
-            case Word is
-               when ASCII.NUL   =>
-                  exit;
+            when 'D' =>
+               Parse_Dep (Reader);
 
-               when 'D' =>
-                  Parse_Dep (Reader);
-
-               when 'W' | 'Y' =>
+            when 'W' | 'Y' =>
                   Parse_With (Reader);
 
-               when 'X' =>
-                  exit;
+            when 'X' =>
+               exit;
 
-               when others =>
-                  null;
-            end case;
-         end loop;
+            when others =>
+               null;
+         end case;
+      end loop;
 
+      GB.Finalize (Reader);
+
+      return True;
+
+   exception
+      when E : others =>
+         GNATCOLL.Traces.Trace
+           (Traces,
+            "ALI parser error: " & Ada.Exceptions.Exception_Message (E));
          GB.Finalize (Reader);
 
-         return True;
-
-      exception
-         when E : others =>
-            GNATCOLL.Traces.Trace
-              (Traces,
-               "ALI parser error: " & Ada.Exceptions.Exception_Message (E));
-            GB.Finalize (Reader);
-
-            return False;
-      end;
+         return False;
    end Dependencies;
 
-   ------------------
+   -------------
    -- Imports --
-   ------------------
+   -------------
 
    function Imports
      (ALI_File : GPR2.Path_Name.Object;
@@ -401,8 +391,9 @@ package body GPR2.Build.ALI_Parser is
       procedure Parse_With (Reader : in out GB.Reader) is
       begin
          if not GB.Check (Reader, " ") then
-            raise Scan_ALI_Error with "space expected after the 'W'"
-              & " withed unit character";
+            raise Scan_ALI_Error
+              with "space expected after the 'W'"
+                 & " withed unit character";
          end if;
 
          --  ??? Not backward compatible with ali files produced by
@@ -415,9 +406,9 @@ package body GPR2.Build.ALI_Parser is
                raise Scan_ALI_Error with "missed withed unit name";
             end if;
 
-            if Unit_Name'Length >= 3 and then
-               Unit_Name (Unit_Name'Last) in 's' | 'b' and then
-               Unit_Name (Unit_Name'Last - 1) = '%'
+            if Unit_Name'Length >= 3
+              and then Unit_Name (Unit_Name'Last) in 's' | 'b'
+              and then Unit_Name (Unit_Name'Last - 1) = '%'
             then
                Imports.Include
                  (Name_Type
@@ -449,11 +440,11 @@ package body GPR2.Build.ALI_Parser is
             when ASCII.NUL =>
                exit;
 
-               when 'D' =>
+            when 'D' =>
                exit;
                --  ??? Add other cases that are after the withed units
 
-               when 'W' | 'Y' =>
+            when 'W' | 'Y' =>
                Parse_With (Reader);
 
             when others =>
@@ -528,9 +519,9 @@ package body GPR2.Build.ALI_Parser is
    function Version (ALI_File : GPR2.Path_Name.Object) return String is
       use Ada.Text_IO;
 
-      File : File_Type;
-      Line : String (1 .. 1_000);
-      Last : Natural;
+      File  : File_Type;
+      Line  : String (1 .. 1_000);
+      Last  : Natural;
       Start : Natural;
    begin
       if not ALI_File.Exists then
