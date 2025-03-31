@@ -5,6 +5,7 @@
 --
 
 with GPR2.Build.Artifacts.Files;
+with GPR2.Build.Artifacts.Object_File;
 with GPR2.Build.Source;
 with GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
@@ -37,7 +38,7 @@ package GPR2.Build.Actions.Compile is
 
    function Input (Self : Object) return GPR2.Build.Source.Object;
 
-   function Object_File (Self : Object) return Artifacts.Files.Object;
+   function Object_File (Self : Object) return Artifacts.Object_File.Object;
 
    function Dependency_File
      (Self : Object'Class) return Artifacts.Files.Object;
@@ -102,7 +103,7 @@ private
                    Src_Name => Main_Src));
 
    type Object is new Actions.Object with record
-      Obj_File : Artifacts.Files.Object;
+      Obj_File : Artifacts.Object_File.Object;
       --  Compiled object file, can be undefined if not compiled yet
 
       Dep_File : Artifacts.Files.Object;
@@ -125,6 +126,9 @@ private
      (Self   : in out Object;
       Status : Execution_Status) return Boolean;
 
+   function Dep_File_Suffix (Self : Object) return Filename_Optional;
+   --  Retrieve the dependency file suffix for self's language
+
    function Src_Index (Self : Object) return Unit_Index is
      (No_Index);
    --  Need that for indexed sources, for now only Ada multi-unit sources
@@ -146,7 +150,7 @@ private
    overriding function Is_Extending (Self : Object) return Boolean is
      (Self.Inh_From.Is_Defined);
 
-   function Object_File (Self : Object) return Artifacts.Files.Object is
+   function Object_File (Self : Object) return Artifacts.Object_File.Object is
      (Self.Obj_File);
 
    overriding function Working_Directory

@@ -7,12 +7,12 @@ $ gpr2build -Plibrary_interface/app.gpr -p -j1
 [Ada Compile]     goo.adb
 [Ada Compile]     hoo.adb
 [Ada Compile]     ioo.adb
-[Ada Bind]        main
-[Ada Post-Bind]   b__main.adb
 [Ada Bind]        demo
 [Ada Post-Bind]   b__demo.adb
 demo.gpr: warning: unit "Goo" is not in the interface set, but it is needed by "FOO"
 [Archive]         libdemo.a
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
 [Link]            main
 $ gpr2build -Pinterfaces/app.gpr -p -j1
 "obj/lib" created
@@ -23,11 +23,11 @@ $ gpr2build -Pinterfaces/app.gpr -p -j1
 [Ada Compile]     goo.adb
 [Ada Compile]     hoo.adb
 [Ada Compile]     ioo.adb
-[Ada Bind]        main
-[Ada Post-Bind]   b__main.adb
 [Ada Bind]        demo
 [Ada Post-Bind]   b__demo.adb
 demo.gpr: warning: unit "Goo" is not in the interface set, but it is needed by "FOO"
 demo.gpr: warning: unit "Ioo" is not in the interface set, but it is needed by "HOO"
 [Archive]         libdemo.a
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
 [Link]            main

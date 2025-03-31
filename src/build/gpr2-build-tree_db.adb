@@ -945,8 +945,6 @@ package body GPR2.Build.Tree_Db is
          "Replace_Artifact: cannot insert new artifact '" &
            Value.Serialize & "'");
 
-      pragma Assert (Success);
-
       Self.Successors.Insert (Value, Action_Sets.Empty_Set, C_New, Success);
       pragma Assert
         (Success,

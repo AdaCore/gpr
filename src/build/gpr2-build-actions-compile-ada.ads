@@ -40,6 +40,12 @@ package GPR2.Build.Actions.Compile.Ada is
    --  Return the path of the generated ALI file. If the corresponding view
    --  is a library, then the ali file from the library directory is returned.
 
+   procedure Change_Intf_Ali_File
+     (Self : in out Object;
+      Path : Path_Name.Object);
+   --  Ensures that after copying the ALI file to the library directory all
+   --  references are updated.
+
    function Local_Ali_File (Self : Object) return Artifacts.Files.Object;
    --  Return the path of the generated ALI file. The one located in the
    --  object directory is always returned here.

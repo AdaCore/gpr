@@ -37,38 +37,6 @@ package body GPR2.View_Internal is
          if V.Is_Aggregated_In_Library then
             for View of V.Aggregate_Libraries loop
                if V.Kind in With_Object_Dir_Kind
-                 and then View.Library_Ali_Directory = V.Object_Directory
-               then
-                  Tree.Log_Messages.Append
-                    (Message.Create
-                       (Level   => Message.Error,
-                        Sloc    => SR.Value.Create
-                          (Filename => View.Path_Name.Value,
-                           Line     => 0,
-                           Column   => 0,
-                           Text     => ""),
-                        Message =>
-                          "aggregate library ALI directory cannot be shared "
-                        & "with object directory of aggregated project """
-                        & String (V.Path_Name.Base_Name) & """"));
-
-               elsif V.Is_Library
-                 and then View.Library_Ali_Directory = V.Library_Directory
-               then
-                  Tree.Log_Messages.Append
-                    (Message.Create
-                       (Level   => Message.Error,
-                        Sloc    => SR.Value.Create
-                          (Filename => View.Path_Name.Value,
-                           Line     => 0,
-                           Column   => 0,
-                           Text     => ""),
-                        Message =>
-                          "aggregate library ALI directory cannot be shared "
-                        & "with library directory of aggregated project """
-                        & String (V.Path_Name.Base_Name) & """"));
-
-               elsif V.Kind in With_Object_Dir_Kind
                  and then View.Library_Directory = V.Object_Directory
                then
                   Tree.Log_Messages.Append
@@ -84,8 +52,8 @@ package body GPR2.View_Internal is
                         & "with object directory of aggregated project """
                         & String (V.Path_Name.Base_Name) & """"));
 
-               elsif V.Is_Library
-                 and then View.Library_Directory = V.Library_Directory
+               elsif V.Kind in With_Object_Dir_Kind
+                 and then View.Library_Ali_Directory = V.Object_Directory
                then
                   Tree.Log_Messages.Append
                     (Message.Create
@@ -96,8 +64,8 @@ package body GPR2.View_Internal is
                            Column   => 0,
                            Text     => ""),
                         Message =>
-                          "aggregate library directory cannot be shared "
-                        & "with library directory of aggregated project """
+                          "aggregate library ALI directory cannot be shared "
+                        & "with object directory of aggregated project """
                         & String (V.Path_Name.Base_Name) & """"));
                end if;
             end loop;

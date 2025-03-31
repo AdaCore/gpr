@@ -32,10 +32,18 @@ $ gpr2clean -Plib -r -q
 $ chmod 0x555 lib/lib
 $ gpr2build -Plib -j1
 [Ada Compile]     pkg2.ads
+[Ada Compile]     pkg.ads
+[Ada Bind]        lib
+[Ada Post-Bind]   b__lib.adb
 lib.gpr: error: could not copy ali file pkg2.ali to the library directory
+Command '[Archive] liblib.a (lib.gpr)' failed.
 $ chmod 0x777 lib/lib
 $ gpr2build -Plib -q
 $ chmod 0x555 lib/lib
-$ gpr2build -Plib -f -l -j1
+$ gpr2build -Plib -f -j1
+[Ada Compile]     pkg2.ads
+[Ada Compile]     pkg.ads
+[Ada Bind]        lib
+[Ada Post-Bind]   b__lib.adb
 lib.gpr: error: cannot remove the old archive liblib.a
 Command '[Archive] liblib.a (lib.gpr)' failed.
