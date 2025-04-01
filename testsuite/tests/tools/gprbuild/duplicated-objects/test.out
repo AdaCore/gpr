@@ -1,0 +1,13 @@
+$ gpr2build -p -Ptree/prj
+main.o: error: "[C Compile] main.c (prj.gpr)" and "[Ada Compile] main.adb (prj.gpr)" produce the same output "main.o"
+gprbuild: processing failed
+$ gpr2build -p -Ptree/prj2
+[Ada Compile]     pkg.adb
+[C Compile]       pkg-execute.c
+$ gpr2build -p -Ptree/prj3
+pkg3.ads: warning: unit name "PKG2" does not match source name
+pkg3.o: error: "[C Compile] pkg3.c (prj3.gpr)" and "[Ada Compile] pkg3.ads (prj3.gpr)" produce the same output "pkg3.o"
+gprbuild: processing failed
+$ gpr2build -p -Ptree/prj4
+pkg4.o: error: "[C Compile] pkg4.c (prj4.gpr)" and "[Ada Compile] pkg4.ads (prj4.gpr)" produce the same output "pkg4.o"
+gprbuild: processing failed
