@@ -626,9 +626,6 @@ package body GPRtools.Options is
          when Install =>
             PRP.Check_Attributes (PRP.Install);
 
-         when Remote =>
-            PRP.Check_Attributes (PRP.Remote);
-
          when Ls | Inspect =>
             null;
       end case;

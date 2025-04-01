@@ -1,6 +1,6 @@
 project No_Package2 is
 
-   Var := Remote'Root_Dir;
+   Var := Builder'Global_Configuration_Pragmas;
    --  Defined but does not exist here
 
 end No_Package2;

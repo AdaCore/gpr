@@ -18,7 +18,7 @@
 
 package GPRtools is
 
-   type Which is (Build, Clean, Ls, Install, Remote, Inspect);
+   type Which is (Build, Clean, Ls, Install, Inspect);
    --  Names of the supported tools
 
    type Display_Kind is (K_JSON_Compact, K_JSON, K_Textual_IO);

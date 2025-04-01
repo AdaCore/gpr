@@ -1775,7 +1775,8 @@ package body GPR2.Project_Parser is
 
             if not Attr.Is_Defined then
                if Pack /= Project_Level_Scope
-                 and then not Project_View.Has_Package (Pack)
+                 and then not Project_View.Has_Package
+                   (Pack, True, False, False)
                then
                   Tree.Log_Messages.Append
                     (Message.Create

@@ -59,10 +59,9 @@ begin
    Print_Variable (Tree.Root_Project.Variable (Name => "V2"));
    Print_Variable (Tree.Root_Project.Variable (Name => "V3"));
    Print_Variable (Tree.Root_Project.Variable (Name => "V4"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "V5"));
    declare
       Typ : GPR2.Project.Typ.Object :=
-              Tree.Root_Project.Variable (Name => "V6").Typ;
+              Tree.Root_Project.Variable (Name => "V5").Typ;
    begin
       Ada.Text_IO.Put_Line (String (Typ.Values.First_Element.Text));
    end;

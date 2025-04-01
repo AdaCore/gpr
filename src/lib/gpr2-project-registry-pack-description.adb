@@ -97,10 +97,4 @@ begin
       & "automatically find all source files in the source directories, or "
       & "given a file name to find out its language for proper processing.");
 
-   --  Remote
-   Set_Package_Description
-     (Remote,
-      "This package is used by GPRbuild to describe how distributed "
-      & "compilation should be done.");
-
 end GPR2.Project.Registry.Pack.Description;

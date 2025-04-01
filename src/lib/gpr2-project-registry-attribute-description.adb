@@ -1331,35 +1331,4 @@ begin
         "Index is a unit name. Value is the file name of"
       & " the body of the unit.");
 
-   --  Remote.Included_Patterns
-   Set_Attribute_Description
-     (Key          => PRA.Remote.Included_Patterns,
-      Description  =>
-        "If this attribute is defined it sets the patterns to synchronized "
-      & "from the master to the slaves. It is incompatible with "
-      & "Excluded_Patterns, that is it is an error to define both.");
-
-   --  Remote.Included_Artifact_Patterns
-   Set_Attribute_Description
-     (Key          => PRA.Remote.Included_Artifact_Patterns,
-      Description  =>
-        "If this attribute is defined it sets the patterns of compilation "
-      & "artifacts to synchronized from the slaves to the build master. This"
-      & " attribute replace the default hard-coded patterns.");
-
-   --  Remote.Excluded_Patterns
-   Set_Attribute_Description
-     (Key          => PRA.Remote.Excluded_Patterns,
-      Description  =>
-        "Set of patterns to ignore when synchronizing sources from the build"
-      & " master to the slaves. A set of predefined patterns are supported "
-      & "(e.g. *.o, *.ali, *.exe, etc.), this attribute makes it possible"
-      & " to add some more patterns.");
-
-   --  Remote.Root_Dir
-   Set_Attribute_Description
-     (Key          => PRA.Remote.Root_Dir,
-      Description  =>
-        "Value is the root directory used by the slave machines.");
-
 end GPR2.Project.Registry.Attribute.Description;

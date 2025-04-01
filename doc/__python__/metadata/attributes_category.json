@@ -335,17 +335,6 @@
 			]
 		},
 		{
-			"package_name": "Remote",
-			"package_to_display": true,
-			"categories": [
-				{
-					"category_name": "Default",
-					"category_to_display": true,
-					"attributes": [{"attribute_name": "Included_Patterns"},{"attribute_name": "Included_Artifact_Patterns"},{"attribute_name": "Excluded_Patterns"},{"attribute_name": "Root_Dir"}]
-				}
-			]
-		},
-		{
 			"package_name": "Stack",
 			"package_to_display": true,
 			"categories": [
