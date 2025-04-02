@@ -355,6 +355,7 @@ agglib.gpr: warning: duplicated spec for unit "FOO" in /scenario/src1/foo.ads an
      spec: src2/bar.ads (from view Prj2)
      body: src2/bar.adb (from view Prj2)
    - FOO
+     spec: src1/foo.ads (from view Prj1)
      body: src1/foo.adb (from view Prj1)
 -----------------------------------
 --- create body src2/foo.adb
@@ -370,14 +371,12 @@ prj1.gpr: warning: there are no sources of language "Ada" in this project
    - src2/bar.adb (body)
    - src2/bar.ads (spec)
    - src2/foo.adb (body)
-   - src2/foo.ads (spec)
 * Compilation units:
  - units of AggLib
    - BAR
      spec: src2/bar.ads (from view Prj2)
      body: src2/bar.adb (from view Prj2)
    - FOO
-     spec: src2/foo.ads (from view Prj2)
      body: src2/foo.adb (from view Prj2)
 -----------------------------------
 --- Unloading project
@@ -429,6 +428,7 @@ prj3.gpr:5:23: warning: there are no sources of language "Ada" in this project
 -----------------------------------
 * Sources:
  - sources of Prj1
+   (no sources)
  - sources of Prj3
    (no sources)
 * Compilation units:
