@@ -27,6 +27,8 @@ package body GPR2.Build.View_Tables is
               GNATCOLL.Traces.Create
                 ("GPR.BUILD.SOURCES_DB", GNATCOLL.Traces.Off);
 
+   package Natural_Sets is new Ada.Containers.Ordered_Sets (Natural);
+
    procedure Add_Unit_Part
      (NS_Db    : View_Data_Ref;
       CU       : Name_Type;
@@ -1185,8 +1187,6 @@ package body GPR2.Build.View_Tables is
             end loop;
          end if;
       end Propagate_Visible_Source_Removal;
-
-      package Natural_Sets is new Ada.Containers.Ordered_Sets (Natural);
 
       Basename  : constant Simple_Name :=
                     Basename_Source_List_Maps.Key (Cursor);
