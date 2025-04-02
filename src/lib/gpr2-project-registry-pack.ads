@@ -60,6 +60,5 @@ package GPR2.Project.Registry.Pack is
    Install  : constant Package_Id := +"install";
    Linker   : constant Package_Id := +"linker";
    Naming   : constant Package_Id := +"naming";
-   Remote   : constant Package_Id := +"remote";
 
 end GPR2.Project.Registry.Pack;

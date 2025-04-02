@@ -12,6 +12,5 @@ project Prj is
    V3 := Prj'Name;
    --  check prj.pack'attribute
    V4 := Prj.Install'Install_Name;
-   V5 := Prj.Remote'Root_Dir;
-   V6 : Build.Settings.T := "BST2";
+   V5 : Build.Settings.T := "BST2";
 end Prj;

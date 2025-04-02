@@ -116,7 +116,6 @@ begin
    Add (Clean,           Everywhere);
    Add (Builder,         Everywhere);
    Add (Install,         (K_Aggregate => False, others => True));
-   Add (Remote,          Everywhere);
    Add (Gnatls,          Everywhere);
 
    Predefined := GPR2.Project.Registry.Pack.All_Packages;

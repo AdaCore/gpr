@@ -7,7 +7,7 @@ Compiler.Switches(C++)=()
 check2a.gpr
 check2a.gpr:4:33: error: undefined attribute "Runtime"
 check2b.gpr
-check2b.gpr:5:45: error: undefined attribute "Compiler'Switches"
+check2b.gpr:5:45: error: package "Compiler" not declared in project "Options_Empty"
 check2c.gpr
 check2c.gpr:5:54: error: undefined attribute "Compiler'Switches"
 check3a.gpr

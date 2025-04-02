@@ -302,12 +302,6 @@ The following packages are currently always recognized in project files
   or given a file name to find out its language for proper processing.
   See :ref:`Naming_Schemes`.
 
-.. index:: Package; Remote
-
-*Remote*
-  This package is used by *GPRbuild* to describe how distributed
-  compilation should be done.
-
 Other tool-specific packages may be defined by different project-aware tools.
 Refer to the tool's documentation for the list of supported attributes and other
 specifics.

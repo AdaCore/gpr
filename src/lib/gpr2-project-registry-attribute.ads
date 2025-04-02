@@ -753,20 +753,6 @@ package GPR2.Project.Registry.Attribute is
                                       (Pack.Naming, +"specification_suffix");
    end Naming;
 
-   --  Remote attribute qualified names
-
-   package Remote is
-      Excluded_Patterns          : constant Q_Attribute_Id :=
-                                     (Pack.Remote, +"excluded_patterns");
-      Included_Patterns          : constant Q_Attribute_Id :=
-                                     (Pack.Remote, +"included_patterns");
-      Included_Artifact_Patterns : constant Q_Attribute_Id :=
-                                     (Pack.Remote,
-                                      +"included_artifact_patterns");
-      Root_Dir                   : constant Q_Attribute_Id :=
-                                     (Pack.Remote, +"root_dir");
-   end Remote;
-
 private
 
    package Attribute_Definitions is new Ada.Containers.Ordered_Maps

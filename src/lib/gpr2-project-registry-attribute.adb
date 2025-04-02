@@ -1977,38 +1977,6 @@ begin
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
 
-   --  remote.root_dir
-   Add
-     (Name                 => Remote.Root_Dir,
-      Index_Type           => No_Index,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere);
-
-   --  remote.excluded_patterns
-   Add
-     (Name                 => Remote.Excluded_Patterns,
-      Index_Type           => No_Index,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere);
-
-   --  remote.included_patterns
-   Add
-     (Name                 => Remote.Included_Patterns,
-      Index_Type           => No_Index,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere);
-
-   --  remote.included_artifact_patterns
-   Add
-     (Name                 => Remote.Included_Artifact_Patterns,
-      Index_Type           => No_Index,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere);
-
    --  origin_project
    Add
      (Name                 => Origin_Project,

@@ -3,7 +3,6 @@ V1:SINGLE=-1-build.settings-2-
 V2:SINGLE=-1-build.settings-2--3--4--5--6-
 V3:SINGLE=prj
 V4:SINGLE=-1-build.settings-2--3-
-V5:SINGLE=-root-dir-
 BST1
 testing bad1.gpr
 bad1.gpr:4:20: error: project_name.package_name reference is required
@@ -29,8 +28,7 @@ project Prj is
    V2 := Build.Settings.Remote.BS5;
    V3 := Prj'Name;
    V4 := Prj.Install'Install_Name;
-   V5 := Prj.Remote'Root_Dir;
-   V6 : Build.Settings.T := "BST2";
+   V5 : Build.Settings.T := "BST2";
 
 end Prj;
 
