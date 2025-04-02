@@ -395,7 +395,31 @@ package body GPR2.Build.View_Tables is
                      end if;
 
 
+                     if Error_Case then
+                        --  Two sources in the closure declare the same unit
+                        --  part, so issue a warning.
+
+                        Messages.Append
+                          (Message.Create
+                             (Level   => Message.Warning,
+                              Message => "duplicated " &
+                                Image (Kind) & " for unit """ & String (CU) &
+                                """ in " & Other.Source.String_Value &
+                                " and " & Path.String_Value,
+                              Sloc    =>
+                                Source_Reference.Create
+                                  (NS_Db.View.Path_Name.Value, 0, 0)));
+
+                        --  Ignore the clashing sources
+                        Remove_Src   := True;
+                        Remove_Other := True;
+                        Replace      := False;
+                     else
+                        Success := True;
+                     end if;
+
                      if Replace then
+
                         CU_Instance.Remove
                           (Kind, Other.View, Other.Source, Other.Index,
                            Sep_Name);
@@ -426,16 +450,9 @@ package body GPR2.Build.View_Tables is
                            Remove_Other := True;
                         end if;
 
-                        if Remove_Other then
-                           Remove_Source (View_Db,
-                                          Other_Loc.View,
-                                          Other_Loc.Path_Name,
-                                          Other_Loc.Inh_From,
-                                          True,
-                                          Messages);
-                        end if;
-
                      elsif Remove_Src then
+                        Remove_Src := False;
+
                         if Index /= No_Index then
                            declare
                               use Src_Info_Maps;
@@ -448,14 +465,20 @@ package body GPR2.Build.View_Tables is
                                               (Path.Value);
                            begin
                               Ref.Remove_Unit (Index);
-                              Remove_Other := Ref.Units.Is_Empty;
+                              Remove_Src := Ref.Units.Is_Empty;
                            end;
 
                         else
-                           Remove_Other := True;
+                           Remove_Src := True;
                         end if;
 
-                        if Remove_Other then
+                        if Remove_Src then
+                           if Traces.Is_Active then
+                              Traces.Trace
+                                ("ignoring source '" &
+                                   String (Src.Path_Name));
+                           end if;
+
                            Remove_Source (View_Db,
                                           Src.View,
                                           Src.Path_Name,
@@ -464,20 +487,22 @@ package body GPR2.Build.View_Tables is
                                           Messages);
                         end if;
 
-                     elsif Error_Case then
-                        --  Two sources in the closure declare the same unit
-                        --  part, so issue a warning.
+                     end if;
 
-                        Messages.Append
-                          (Message.Create
-                             (Level   => Message.Warning,
-                              Message => "duplicated " &
-                                Image (Kind) & " for unit """ & String (CU) &
-                                """ in " & Other.Source.String_Value &
-                                " and " & Path.String_Value,
-                              Sloc    =>
-                                Source_Reference.Create
-                                  (NS_Db.View.Path_Name.Value, 0, 0)));
+                     if Remove_Other then
+                        if Traces.Is_Active then
+                           Traces.Trace
+                             ("ignoring source '" &
+                                String (Other_Loc.Path_Name) &
+                                "' as it is not used anymore");
+                        end if;
+
+                        Remove_Source (View_Db,
+                                       Other_Loc.View,
+                                       Other_Loc.Path_Name,
+                                       Other_Loc.Inh_From,
+                                       True,
+                                       Messages);
                      end if;
                   end;
                end if;
@@ -1433,7 +1458,7 @@ package body GPR2.Build.View_Tables is
             if Traces.Is_Active then
                pragma Annotate (Xcov, Exempt_On);
                Traces.Trace
-                 ("candidate replaces old source " &
+                 ("removing source " &
                     String (Current.Path_Name));
                pragma Annotate (Xcov, Exempt_Off);
             end if;
