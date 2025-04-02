@@ -1004,8 +1004,11 @@ package body Update_Sources_List is
                                 (Message.Warning,
                                  "unit name """ &
                                    String (Source.Unit.Name) &
-                                   """ does not match source name",
+                                   """ does not match source name. " &
+                                   "The source will be ignored.",
                                  SR.Create (File.Path, 0, 0)));
+
+                           return False;
                         end if;
                      end if;
 
@@ -1200,6 +1203,7 @@ package body Update_Sources_List is
       end loop;
 
       GPR2.Build.Source_Base.Ada_Parser.Close (Parser_State);
+
       --  All source changes have been processed: now resolve potential
       --  visibility issues
 
@@ -1208,10 +1212,7 @@ package body Update_Sources_List is
             C_Overload : Basename_Source_List_Maps.Cursor;
          begin
             C_Overload := Data.Overloaded_Srcs.Find (Base_Name);
-
-            if Basename_Source_List_Maps.Has_Element (C_Overload) then
-               Resolve_Visibility (Data, C_Overload, Messages);
-            end if;
+            Resolve_Visibility (Data, C_Overload, Messages);
          end;
       end loop;
 
