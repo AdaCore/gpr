@@ -213,7 +213,7 @@ foo--bar.ads: hint: invalid name for unit 'foo..bar', two consecutive dots not p
 foo-_bar.ads: hint: invalid name for unit 'foo._bar', cannot contain underscore after dot
 foo..bar.ads:1:01: hint: invalid file name, contains dot
 foo._bar.ads:1:01: hint: invalid file name, contains dot
-foo.ads: warning: unit name "BAR" does not match source name
+foo.ads: warning: unit name "BAR" does not match source name. The source will be ignored.
 foo_.bor.ads:1:01: hint: invalid file name, contains dot
 foo__bar.ads: hint: invalid name for unit 'foo__bar', two consecutive underscores not permitted
 * Views:
@@ -226,12 +226,8 @@ foo__bar.ads: hint: invalid name for unit 'foo__bar', two consecutive underscore
      FOO.0BAR (spec)
    - src/Foo-Bar.ads (spec)
      FOO.BAR (spec)
-   - src/foo.ads (spec)
-     BAR (spec)
 * Compilation units:
  - units of Prj
-   - BAR
-     spec: src/foo.ads (from view Prj)
    - FOO.0BAR
      spec: src/foo-0bar.ads (from view Prj)
    - FOO.BAR

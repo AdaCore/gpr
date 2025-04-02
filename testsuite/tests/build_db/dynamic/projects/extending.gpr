@@ -4,6 +4,5 @@ project Extending extends "base.gpr" is
 
    for Source_Dirs use ("ext");
    for Object_Dir use "obj_ext";
-   for Excluded_Source_Files use ("pkg2.ads");
 
 end Extending;

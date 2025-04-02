@@ -64,11 +64,6 @@ package body GPR2.Build.Compilation_Unit is
                Self.Separates.Insert (Name_Type (Up), UL, C, Success);
             end;
       end case;
-
-      if not Success then
-         Self.Duplicates.Append
-           (Clashing_Unit'(Sep_Name'Length, UL, Kind, Sep_Name));
-      end if;
    end Add;
 
    -------------------------
@@ -391,13 +386,11 @@ package body GPR2.Build.Compilation_Unit is
       Index    : Unit_Index := No_Index;
       Sep_Name : Optional_Name_Type := "")
    is
-      UL    : constant Unit_Location :=
-                (View   => View,
-                 Source => Path,
-                 Index  => Index);
-      C     : Separate_Maps.Cursor;
-      CD    : Duplicates_List.Cursor;
-      Found : Boolean := False;
+      UL : constant Unit_Location :=
+             (View   => View,
+              Source => Path,
+              Index  => Index);
+      C  : Separate_Maps.Cursor;
 
    begin
       case Kind is
@@ -408,8 +401,6 @@ package body GPR2.Build.Compilation_Unit is
                if not Self.Has_Part (S_Body) then
                   Self.Owner := Project.View.Undefined;
                end if;
-
-               Found := True;
             end if;
 
          when S_Body =>
@@ -421,8 +412,6 @@ package body GPR2.Build.Compilation_Unit is
                else
                   Self.Owner := Self.Spec.View;
                end if;
-
-               Found := True;
             end if;
 
          when S_Separate =>
@@ -434,64 +423,8 @@ package body GPR2.Build.Compilation_Unit is
 
             if Separate_Maps.Element (C) = UL then
                Self.Separates.Delete (C);
-
-               Found := True;
             end if;
       end case;
-
-      if not Found then
-         --  no matching unit part: check the list of duplicates
-         CD := Self.Duplicates.First;
-
-         while Duplicates_List.Has_Element (CD) loop
-            declare
-               Elem : constant Duplicates_List.Constant_Reference_Type :=
-                        Self.Duplicates.Constant_Reference (CD);
-            begin
-               if Elem.Kind = Kind
-                 and then Elem.Loc = UL
-               then
-                  Found := True;
-               end if;
-            end;
-
-            if Found then
-               Self.Duplicates.Delete (CD);
-               exit;
-            else
-               Duplicates_List.Next (CD);
-            end if;
-         end loop;
-
-      elsif not Self.Duplicates.Is_Empty then
-         --  We removed a unit part, but then we have somewhere else
-         --  another source that contains a part of this compilation unit.
-         --  Let's check if this part replaces the removed part
-
-         Found := False;
-         CD := Self.Duplicates.First;
-
-         while Duplicates_List.Has_Element (CD) loop
-            declare
-               Elem : constant Clashing_Unit :=
-                        Duplicates_List.Element (CD);
-            begin
-               if Elem.Kind = Kind then
-                  Self.Duplicates.Delete (CD);
-                  Self.Add (Elem.Kind,
-                            Elem.Loc.View,
-                            Elem.Loc.Source,
-                            Elem.Loc.Index,
-                            Elem.Sep_Name,
-                            Found);
-
-                  exit;
-               else
-                  Duplicates_List.Next (CD);
-               end if;
-            end;
-         end loop;
-      end if;
    end Remove;
 
 end GPR2.Build.Compilation_Unit;

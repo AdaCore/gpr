@@ -1,1 +1,2 @@
 demo.gpr: warning: duplicated spec for unit "SRC" in /src-a/src.ads and /src-b/src.ads
+b.gpr: warning: there are no sources of language "Ada" in this project

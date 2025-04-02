@@ -177,15 +177,6 @@ package GPR2.Build.Compilation_Unit is
 
 private
 
-   type Clashing_Unit (Sep_Name_Len : Natural) is record
-      Loc      : Unit_Location;
-      Kind     : Unit_Kind;
-      Sep_Name : Optional_Name_Type (1 .. Sep_Name_Len);
-   end record;
-
-   package Duplicates_List is new Ada.Containers.Indefinite_Vectors
-     (Positive, Clashing_Unit);
-
    type Object is tagged record
       Name       : Unbounded_String;
       Owner      : GPR2.Project.View.Object;
@@ -193,7 +184,6 @@ private
       Spec       : Unit_Location;
       Implem     : Unit_Location;
       Separates  : Separate_Maps.Map;
-      Duplicates : Duplicates_List.Vector;
    end record;
 
    Undefined : constant Object := (others => <>);
