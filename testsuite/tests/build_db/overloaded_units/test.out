@@ -1,0 +1,57 @@
+=========================================
+Testing projects/base.gpr
+=========================================
+* Views:
+ - Base (K_STANDARD) **
+   - Root project(s):
+     - Base
+* Sources:
+ - sources of Base
+   - src_base/pkg.adb (body)
+     PKG (body)
+* Compilation units:
+ - units of Base
+   - PKG
+     body: src_base/pkg.adb (from view Base)
+=========================================
+Testing projects/ext.gpr
+=========================================
+* Views:
+ - Base (K_STANDARD) **
+   - Root project(s):
+     - Ext
+ - Ext (K_STANDARD) **
+   - Root project(s):
+     - Ext
+   - Extends Base
+* Sources:
+ - sources of Ext extendes Base
+   - src_ext/pkg_2.adb (body)
+     PKG (body)
+* Compilation units:
+ - units of Ext
+   - PKG
+     body: src_ext/pkg_2.adb (from view Ext)
+=========================================
+Testing projects/extext.gpr
+=========================================
+* Views:
+ - Base (K_STANDARD) **
+   - Root project(s):
+     - ExtExt
+ - Ext (K_STANDARD) **
+   - Root project(s):
+     - ExtExt
+   - Extends Base
+ - ExtExt (K_STANDARD) **
+   - Root project(s):
+     - ExtExt
+   - Extends Ext
+* Sources:
+ - sources of ExtExt extendes Ext
+   - src_extext/pkg.adb (body)
+     PKG (body)
+* Compilation units:
+ - units of ExtExt
+   - PKG
+     body: src_extext/pkg.adb (from view ExtExt)
