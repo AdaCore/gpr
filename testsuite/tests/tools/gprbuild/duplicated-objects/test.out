@@ -5,7 +5,6 @@ $ gpr2build -p -Ptree/prj2
 [Ada Compile]     pkg.adb
 [C Compile]       pkg-execute.c
 $ gpr2build -p -Ptree/prj3
-pkg3.ads: warning: unit name "PKG2" does not match source name
 pkg3.o: error: "[C Compile] pkg3.c (prj3.gpr)" and "[Ada Compile] pkg3.ads (prj3.gpr)" produce the same output "pkg3.o"
 gprbuild: processing failed
 $ gpr2build -p -Ptree/prj4

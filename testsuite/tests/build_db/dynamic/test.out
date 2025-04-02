@@ -126,7 +126,6 @@ Executing scenario/extending.txt
 --- cp ../projects/base.gpr .
 --- cp ../projects/extending.gpr .
 --- Loading project extending.gpr
-extending.gpr:7:35: error: unknown file "pkg2.ads"
 base.gpr: warning: there are no sources of language "Ada" in this project
 extending.gpr:3:23: warning: there are no sources of language "Ada" in this project
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
@@ -144,7 +143,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 --- create spec src/pkg2.ads
 --- create separate src/pkg-sub.adb
 --- Refresh list of sources
-pkg2.ads: warning: unit name "PKG" does not match source name
+pkg2.ads: warning: unit name "PKG" does not match source name. The source will be ignored.
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
@@ -152,7 +151,6 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
    - src/pkg-sub.adb (sep.)
    - src/pkg.adb (body)
    - src/pkg.ads (spec)
-   - src/pkg2.ads (spec)
  - sources of Extending
    - src/pkg-sub.adb (sep.)
    - src/pkg.adb (body)
@@ -173,7 +171,6 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
    - src/pkg-sub.adb (sep.)
    - src/pkg.adb (body)
    - src/pkg.ads (spec)
-   - src/pkg2.ads (spec)
  - sources of Extending
    - ext/pkg-sub.adb (sep.)
    - src/pkg.adb (body)
@@ -194,7 +191,6 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
    - src/pkg-sub.adb (sep.)
    - src/pkg.adb (body)
    - src/pkg.ads (spec)
-   - src/pkg2.ads (spec)
  - sources of Extending
    - src/pkg-sub.adb (sep.)
    - src/pkg.adb (body)
@@ -214,7 +210,6 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
  - sources of Base extended by Extending
    - src/pkg.adb (body)
    - src/pkg.ads (spec)
-   - src/pkg2.ads (spec)
  - sources of Extending
    - src/pkg.adb (body)
    - src/pkg.ads (spec)
@@ -227,7 +222,6 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 --- rm src/pkg.adb
 --- rm src/pkg2.ads
 --- Refresh list of sources
-extending.gpr:7:35: error: unknown file "pkg2.ads"
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
@@ -242,7 +236,6 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 -----------------------------------
 --- create body ext/pkg.adb
 --- Refresh list of sources
-extending.gpr:7:35: error: unknown file "pkg2.ads"
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
@@ -356,7 +349,6 @@ agglib.gpr: warning: duplicated spec for unit "FOO" in /scenario/src1/foo.ads an
  - sources of Prj2
    - src2/bar.adb (body)
    - src2/bar.ads (spec)
-   - src2/foo.ads (spec)
 * Compilation units:
  - units of AggLib
    - BAR
@@ -379,14 +371,12 @@ prj1.gpr: warning: there are no sources of language "Ada" in this project
    - src2/bar.adb (body)
    - src2/bar.ads (spec)
    - src2/foo.adb (body)
-   - src2/foo.ads (spec)
 * Compilation units:
  - units of AggLib
    - BAR
      spec: src2/bar.ads (from view Prj2)
      body: src2/bar.adb (from view Prj2)
    - FOO
-     spec: src2/foo.ads (from view Prj2)
      body: src2/foo.adb (from view Prj2)
 -----------------------------------
 --- Unloading project
@@ -433,18 +423,15 @@ agglib_multi.gpr: warning: duplicated spec for unit "FOO" in /scenario/src3/sour
 prj3.gpr:3:08: error: source file "source.ada" not found
 prj3.gpr:8:28: warning: source file "source.ada" for unit "Foo" not found
 prj3.gpr:9:28: warning: source file "source.ada" for unit "Foo" not found
+prj1.gpr: warning: there are no sources of language "Ada" in this project
 prj3.gpr:5:23: warning: there are no sources of language "Ada" in this project
 -----------------------------------
 * Sources:
  - sources of Prj1
-   - src1/foo.adb (body)
-   - src1/foo.ads (spec)
+   (no sources)
  - sources of Prj3
    (no sources)
 * Compilation units:
  - units of AggLib_Multi
-   - FOO
-     spec: src1/foo.ads (from view Prj1)
-     body: src1/foo.adb (from view Prj1)
 -----------------------------------
 

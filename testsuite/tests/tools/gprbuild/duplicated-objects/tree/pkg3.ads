@@ -1,2 +1,2 @@
-package Pkg2 is
-end Pkg2;
+package Pkg3 is
+end Pkg3;
