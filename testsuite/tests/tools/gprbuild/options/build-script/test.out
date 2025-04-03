@@ -1,0 +1,19 @@
+$ gpr2build tree/main.gpr -q -f --build-script=script.sh
+$ tree/main
+Hello there
+
+$ gpr2clean tree/main.gpr -r
+
+$ cat tree/obj/.ada_bind_main-mapping.tmp
+main%b
+main.ali
+/tree/obj/main.ali
+pkg%s
+pkg.ali
+/tree/obj/pkg.ali
+
+$ /bin/bash ./script.sh
+
+$ tree/main
+Hello there
+
