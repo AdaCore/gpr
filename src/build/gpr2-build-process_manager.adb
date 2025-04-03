@@ -5,6 +5,7 @@
 --
 
 pragma Warnings (Off);
+with GPR2.Build.Options;
 with System.Multiprocessors;
 pragma Warnings (On);
 
@@ -19,7 +20,6 @@ with GNATCOLL.Directed_Graph; use GNATCOLL.Directed_Graph;
 with GPR2.Build.Actions; use GPR2.Build.Actions;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Tree_Db;
-with GPR2.Path_Name;
 with GPR2.Reporter;
 with GPR2.Source_Reference;
 with GPR2.Message;
@@ -33,6 +33,9 @@ package body GPR2.Build.Process_Manager is
 
    function Effective_Job_Number (N : Natural) return Natural;
    --  If N = 0 return the number of CPUs otherwise return N.
+
+   function Image (Command : Argument_List) return String;
+   --  Return the representation of the command
 
    --------------
    -- Listener --
@@ -304,9 +307,29 @@ package body GPR2.Build.Process_Manager is
       Stdout, Stderr   : Unbounded_String;
       Executed         : Natural := 0;
 
+      Script_FD        : GNATCOLL.OS.FS.File_Descriptor := Null_FD;
+      Script_Dir       : Path_Name.Object;
+
    begin
       Self.Tree_Db      := Tree_Db;
       Self.Stats        := Empty_Stats;
+
+      if Options.Script_File.Is_Defined then
+         Script_FD := GNATCOLL.OS.FS.Open
+           (Options.Script_File.String_Value,
+            GNATCOLL.OS.FS.Write_Mode);
+
+         if Script_FD = Invalid_FD then
+            Tree_Db.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  "could not create the script file '" &
+                    Options.Script_File.String_Value & '"',
+                  Source_Reference.Create
+                    (Options.Script_File.Value, 0, 0)));
+            Script_FD := Null_FD;
+         end if;
+      end if;
 
       Context.Graph.Start_Iterator (Enable_Visiting_State => True);
 
@@ -336,6 +359,8 @@ package body GPR2.Build.Process_Manager is
                Act : constant Build.Tree_Db.Action_Reference_Type :=
                        Tree_Db.Action_Id_To_Reference
                          (Context.Actions (Node));
+               Cd_Args : GNATCOLL.OS.Process.Argument_List;
+               use type Path_Name.Object;
             begin
                for J in Serialized_Slot'Range loop
                   if not Serialized_Slot (J) then
@@ -354,6 +379,40 @@ package body GPR2.Build.Process_Manager is
                end if;
 
                if Proc_Handler_L.Status = Running then
+
+                  --  Add the executing command to the script:
+
+                  if Script_FD /= Null_FD then
+                     --  Update the working directory
+                     if not Script_Dir.Is_Defined
+                       or else Script_Dir /= Act.Working_Directory
+                     then
+                        Cd_Args.Append ("cd");
+                        Cd_Args.Append (Act.Working_Directory.String_Value);
+                        GNATCOLL.OS.FS.Write
+                          (Script_FD,
+                           Image (Cd_Args) & ASCII.LF);
+                        Script_Dir := Act.Working_Directory;
+                     end if;
+
+                     --  Setup env variables for the run:
+
+                     for C in
+                       Act.Command_Line.Environment_Variables.Iterate
+                     loop
+                        GNATCOLL.OS.FS.Write
+                          (Script_FD,
+                           Env_Dicts.Key (C) & "=""" &
+                             Env_Dicts.Element (C) & """ ");
+                     end loop;
+
+                     --  and execute the action:
+
+                     GNATCOLL.OS.FS.Write
+                       (Script_FD,
+                        Image (Act.Command_Line.Argument_List) & ASCII.LF);
+                  end if;
+
                   --  If we have a Jobserver, associate the pre-ordered token
                   --  to the process id.
                   if JS.Active
@@ -595,6 +654,11 @@ package body GPR2.Build.Process_Manager is
          JS.Finalize;
       end if;
 
+      --  Close the script file if needed
+      if Script_FD /= Null_FD then
+         GNATCOLL.OS.FS.Close (Script_FD);
+      end if;
+
       --  Cleanup the temporary files with global scope
       if not Options.Keep_Temp_Files then
          Tree_Db.Clear_Temp_Files;
@@ -616,9 +680,29 @@ package body GPR2.Build.Process_Manager is
       Execution_Post_Process (Object'Class (Self));
    end Execute;
 
-   ----------------
-   -- Launch_Job --
-   ----------------
+   -----------
+   -- Image --
+   -----------
+
+   function Image (Command : Argument_List) return String is
+      Result : Unbounded_String;
+   begin
+      for Arg of Command loop
+         if Length (Result) > 0 then
+            Append (Result, " ");
+         end if;
+
+         if Ada.Strings.Fixed.Index (Arg, " ") > 0 then
+            Append (Result, '"');
+            Append (Result, Arg);
+            Append (Result, '"');
+         else
+            Append (Result, Arg);
+         end if;
+      end loop;
+
+      return -Result;
+   end Image;
 
    ----------------
    -- Launch_Job --
@@ -639,7 +723,6 @@ package body GPR2.Build.Process_Manager is
 
       procedure Display (Action : Action_Id'Class);
       procedure Display (Command : Argument_List);
-      function Image (Command : Argument_List) return String;
 
       -------------
       -- Display --
@@ -678,30 +761,6 @@ package body GPR2.Build.Process_Manager is
       begin
          Self.Tree_Db.Reporter.Report (Image (Command));
       end Display;
-
-      -----------
-      -- Image --
-      -----------
-
-      function Image (Command : Argument_List) return String is
-         Result : Unbounded_String;
-      begin
-         for Arg of Command loop
-            if Length (Result) > 0 then
-               Append (Result, " ");
-            end if;
-
-            if Ada.Strings.Fixed.Index (Arg, " ") > 0 then
-               Append (Result, '"');
-               Append (Result, Arg);
-               Append (Result, '"');
-            else
-               Append (Result, Arg);
-            end if;
-         end loop;
-
-         return -Result;
-      end Image;
 
       P_Wo : FS.File_Descriptor;
       P_Ro : FS.File_Descriptor;

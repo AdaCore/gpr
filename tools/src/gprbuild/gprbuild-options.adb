@@ -19,6 +19,7 @@
 with GNATCOLL.Traces;
 
 with GPR2.Options;
+with GPR2.Path_Name;
 
 with GPRtools.Command_Line;
 
@@ -134,21 +135,6 @@ package body GPRbuild.Options is
                  Help => "Compile only"));
       Parser.Add_Argument
         (Build_Group,
-         Create (Name   => "-C",
-                 Help   => "for compatibility with older gprbuild",
-                 Hidden => True));
-      --  ???-C seems to be historical. There's still a test that checks it so
-      --  we keep backwards compatibility here.
-      Parser.Add_Argument
-        (Build_Group,
-         Create (Name   => "--complete-output",
-                 Help   => "for compatibility with older gprbuild",
-                 Hidden => True));
-      --  complete-output (e.g. replaying warnings upon successive compilations
-      --  even when no action is performed) is now the default, so this
-      --  switch is ignored
-      Parser.Add_Argument
-        (Build_Group,
          Create (Name => "-d",
                  Help => "Display compilation progress"));
       Parser.Add_Argument
@@ -157,11 +143,6 @@ package body GPRbuild.Options is
                  Help      => "Index of main unit in multi-unit source file",
                  Delimiter => None,
                  Parameter => "<nn>"));
-      Parser.Add_Argument
-        (Build_Group,
-         Create (Name   => "-eS",
-                 Help   => "For compatibility with gnatmake only",
-                 Hidden => True));
       Parser.Add_Argument
         (Build_Group,
          Create (Name => "-f",
@@ -175,51 +156,12 @@ package body GPRbuild.Options is
                  Parameter => "<nn>"));
       Parser.Add_Argument
         (Build_Group,
-         Create (Name      => "-jc",
-                 Help      => "Use <nn> processes to compile." &
-                              " If 0, use the number of CPUs on the host.",
-                 Delimiter => None,
-                 Parameter => "<nn>",
-                 Hidden    => True));
-      --  Cannot be implemented in gpr2: the dag doesn't differentiate actions
-      --  so paralellism cannot be specialized to spedific phases. This remard
-      --  is also valid for below -jb and -jl
-      Parser.Add_Argument
-        (Build_Group,
-         Create (Name      => "-jb",
-                 Help      => "Use <nn> processes to bind." &
-                              " If 0, use the number of CPUs on the host.",
-                 Delimiter => None,
-                 Parameter => "<nn>",
-                 Hidden    => True));
-      Parser.Add_Argument
-        (Build_Group,
-         Create (Name      => "-jl",
-                 Help      => "Use <nn> processes to link." &
-                              " If 0, use the number of CPUs on the host.",
-                 Delimiter => None,
-                 Parameter => "<nn>",
-                 Hidden    => True));
-      Parser.Add_Argument
-        (Build_Group,
          Create (Name => "-k",
                  Help => "Keep going after compilation errors"));
       Parser.Add_Argument
         (Build_Group,
          Create (Name => "-l",
                  Help => "Link only"));
-      Parser.Add_Argument
-        (Build_Group,
-         Create (Name   => "-m",
-                 Help   => "Minimum Ada recompilation",
-                 Hidden => True));
-      --  -m* involves checking checksum of files which is now the default in
-      --  gpr2. This is kept for compatibility reasons but won't have effects.
-      Parser.Add_Argument
-        (Build_Group,
-         Create (Name   => "-m2",
-                 Help   => "Checksum based Ada recompilation",
-                 Hidden => True));
       Parser.Add_Argument
         (Build_Group,
          Create (Name           => "-o",
@@ -240,11 +182,6 @@ package body GPRbuild.Options is
         (Build_Group,
          Create (Name => "-R",
                  Help => "Do not use run path option"));
-      Parser.Add_Argument
-        (Build_Group,
-         Create (Name   => "-s",
-                 Help   => "Recompile if compiler switches have changed",
-                 Hidden => True));
       Parser.Add_Argument
         (Build_Group,
          Create (Name           => "-u",
@@ -347,6 +284,79 @@ package body GPRbuild.Options is
             Delimiter => None,
             Parameter => "<level>"));
 
+      --  Switches there only for compatibility reason but without any
+      --  effect
+
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name   => "-C",
+                 Help   => "for compatibility with older gprbuild",
+                 Hidden => True));
+      --  ???-C seems to be historical. There's still a test that checks it so
+      --  we keep backwards compatibility here.
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name   => "--complete-output",
+                 Help   => "for compatibility with older gprbuild",
+                 Hidden => True));
+      --  complete-output (e.g. replaying warnings upon successive compilations
+      --  even when no action is performed) is now the default, so this
+      --  switch is ignored
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name   => "-eS",
+                 Help   => "For compatibility with gnatmake only",
+                 Hidden => True));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name      => "-jc",
+                 Help      => "Use <nn> processes to compile." &
+                              " If 0, use the number of CPUs on the host.",
+                 Delimiter => None,
+                 Parameter => "<nn>",
+                 Hidden    => True));
+      --  Cannot be implemented in gpr2: the dag doesn't differentiate actions
+      --  so paralellism cannot be specialized to spedific phases. This remard
+      --  is also valid for below -jb and -jl
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name      => "-jb",
+                 Help      => "Use <nn> processes to bind." &
+                              " If 0, use the number of CPUs on the host.",
+                 Delimiter => None,
+                 Parameter => "<nn>",
+                 Hidden    => True));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name      => "-jl",
+                 Help      => "Use <nn> processes to link." &
+                              " If 0, use the number of CPUs on the host.",
+                 Delimiter => None,
+                 Parameter => "<nn>",
+                 Hidden    => True));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name   => "-m",
+                 Help   => "Minimum Ada recompilation",
+                 Hidden => True));
+      --  -m* involves checking checksum of files which is now the default in
+      --  gpr2. This is kept for compatibility reasons but won't have effects.
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name   => "-m2",
+                 Help   => "Checksum based Ada recompilation",
+                 Hidden => True));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name   => "-s",
+                 Help   => "Recompile if compiler switches have changed",
+                 Hidden => True));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name   => "-dn",
+                 Help   => "for compatibility with older gprbuild",
+                 Hidden => True));
+
       return Parser;
    end Create;
 
@@ -431,8 +441,9 @@ package body GPRbuild.Options is
          Result.Single_Build_Per_Obj_Dir := True;
 
       elsif Arg = "--build-script" then
-         Result.Build_Script :=
+         Result.PM_Options.Script_File :=
            GPR2.Path_Name.Create_File (Filename_Type (Param));
+         Result.PM_Options.Keep_Temp_Files := True;
 
       elsif Arg = "--no-indirect-imports" then
          Result.Build_Options.No_Indirect_Imports := True;
@@ -613,6 +624,7 @@ package body GPRbuild.Options is
          Result.Dash_A_Option := True;
 
       elsif Arg = "-C"
+        or else Arg = "-dn"
         or else Arg = "-eS"
         or else Arg = "-jc"
         or else Arg = "-jb"
