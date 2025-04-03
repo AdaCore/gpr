@@ -1,0 +1,39 @@
+name = "libgpr2"
+version = "26.0.0"
+description = "Parser for GPR Project File"
+authors = ["AdaCore"]
+licenses = "Apache-2.0 WITH LLVM-exception"
+maintainers = ["chouteau@adacore.com"]
+maintainers-logins = ["Fabien-Chouteau"]
+project-files = ["gpr2.gpr"]
+
+[configuration]
+disabled = true
+
+[gpr-externals]
+GPR2_BUILD = ["debug", "release", "release_checks", "gnatcov"]
+LIBRARY_TYPE = ["static", "relocatable", "static-pic"]
+
+[gpr-set-externals]
+GPR2_BUILD = "release"
+
+[[depends-on]]
+gnatcoll = "*"
+gnatcoll_iconv = "*"
+gnatcoll_gmp = "*"
+gnat = "*"
+
+[environment]
+GPRCONFIGDIR.set = "${CRATE_ROOT}/subprojects/gprconfig_kb"
+GPR2KBDIR.set = "${CRATE_ROOT}/subprojects/gprconfig_kb/db"
+
+[[actions]]
+type = "pre-build"
+command = ["sh", "-c", "if [ -e $GPRCONFIGDIR ]; then git -C $GPRCONFIGDIR pull; else git clone https://github.com/AdaCore/gprconfig_kb.git $GPRCONFIGDIR; fi"]
+
+[[actions]]
+type = "pre-build"
+command = ["make", ".build/kb/collect_kb", ".build/kb/gpr2-kb-embedded.ads", ".build/kb/gpr2-kb-embedded.adb"]
+
+[[pins]]
+gnatcoll = { url='https://github.com/AdaCore/gnatcoll-core.git' }
