@@ -4,8 +4,9 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GNATCOLL.Strings;      use GNATCOLL.Strings;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with GNATCOLL.Strings;                use GNATCOLL.Strings;
+with GNATCOLL.Opt_Parse.Misc_Parsers; use GNATCOLL.Opt_Parse.Misc_Parsers;
+with Ada.Strings.Unbounded;           use Ada.Strings.Unbounded;
 
 package body GPR2.Options.Opt_Parse is
 
@@ -121,10 +122,17 @@ package body GPR2.Options.Opt_Parse is
            Allow_Empty => False,
            Long        => "--RTS",
            Arg_Type    => Unbounded_String,
-           Help        =>
-             " --RTS=<runtime> Use runtime <runtime> for language Ada; "
-             & "--RTS:<lang>=<runtime> Use runtime"
-             & " <runtime> for language <lang>");
+           Help        => "Use --RTS=<runtime> to specify the Ada runtime");
+
+      package RTS_Index is new
+        Parse_Indexed_Option_List
+          (Parser   => Parser,
+           Name     => "rts-index",
+           Flag     => "--RTS",
+           Arg_Type => Unbounded_String,
+           Help     =>
+             "Use --RTS:<lang>=<runtime> to specify the runtime"
+             & " for language <lang>");
 
       package Src_Subdirs is new
         Parse_Option
@@ -168,13 +176,10 @@ package body GPR2.Options.Opt_Parse is
       -- Parse_GPR2_Options --
       ------------------------
 
-      function Parse_GPR2_Options
-        (Arguments : in out GNATCOLL.Opt_Parse.XString_Vector;
-         Options   : out GPR2.Options.Object) return Boolean
-
-      is
+      function Parsed_GPR2_Options return GPR2.Options.Object is
          Ignored : GPR2.Options.Option := GPR2.Options.Option'First;
          Unb     : Unbounded_String;
+         Options : GPR2.Options.Object;
       begin
          case Ignored is
             --  This case statement is here to provide maintainability. If you
@@ -275,20 +280,32 @@ package body GPR2.Options.Opt_Parse is
             Options.Add_Switch (GPR2.Options.RTS, To_String (RTS));
          end loop;
 
-         --  Special handling for the "--RTS:x" way of parsing switches
+         --  "--RTS:<index>"
          declare
-            New_Args : GNATCOLL.Opt_Parse.XString_Vector;
+            Result : constant RTS_Index.Result_Map_Access :=
+              Args.RTS_Index.Get;
+            use RTS_Index.Result_Maps;
+            use type RTS_Index.Result_Map_Access;
+            C      : RTS_Index.Result_Maps.Cursor;
          begin
-            for X of Arguments loop
-               if X.Starts_With ("--RTS:") then
-                  Options.Add_Switch
-                     (GPR2.Options.RTS,
-                     To_String (X.Slice (7, Length (X))));
-               else
-                  New_Args.Append (X);
-               end if;
-            end loop;
-            Arguments := New_Args;
+            if Result /= null and then not Result.Is_Empty then
+               C := Result.First;
+               while Has_Element (C) loop
+                  declare
+                     El : constant RTS_Index.Result_Vector.Vector :=
+                       Element (C);
+                     K  : constant String := Key (C);
+                  begin
+                     for Val of El loop
+                        Options.Add_Switch
+                          (GPR2.Options.RTS,
+                           Param => To_String (Val),
+                           Index => K);
+                     end loop;
+                  end;
+                  C := Next (C);
+               end loop;
+            end if;
          end;
 
          --  Src_Subdirs
@@ -314,8 +331,8 @@ package body GPR2.Options.Opt_Parse is
             Options.Add_Switch (GPR2.Options.X, To_String (X));
          end loop;
 
-         return True;
-      end Parse_GPR2_Options;
+         return Options;
+      end Parsed_GPR2_Options;
    end Args;
 
 end GPR2.Options.Opt_Parse;
