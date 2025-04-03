@@ -7,7 +7,6 @@
 with Ada.Containers.Vectors;
 with Ada.Strings.Fixed;
 
-with GNATCOLL.Directed_Graph;
 with GNATCOLL.Traces;
 
 with GPR2.Build.Actions.Ada_Bind;
@@ -58,16 +57,6 @@ package body GPR2.Build.Actions_Population is
       Bind : GPR2.Build.Actions.Ada_Bind.Object;
    end record;
 
-   package View_Node_Map is new Ada.Containers.Ordered_Maps
-     (Key_Type     => View_Ids.View_Id,
-      Element_Type => GNATCOLL.Directed_Graph.Node_Id,
-      "<"          => View_Ids."<",
-      "="          => GNATCOLL.Directed_Graph."=");
-   package Node_View_Map is new Ada.Containers.Ordered_Maps
-     (Key_Type     => GNATCOLL.Directed_Graph.Node_Id,
-      Element_Type => View_Ids.View_Id,
-      "<"          => GNATCOLL.Directed_Graph."<",
-      "="          => View_Ids."=");
    package View_Id_Library_Map is new Ada.Containers.Ordered_Maps
      (Key_Type     => View_Ids.View_Id,
       Element_Type => Library_Type,
@@ -75,16 +64,10 @@ package body GPR2.Build.Actions_Population is
    package Library_Vector is new Ada.Containers.Vectors
      (Positive, Library_Type);
 
-   No_Library : constant Library_Type := (others => <>);
-
    package Library_Map is
-      use GNATCOLL.Directed_Graph;
-
       type Map is tagged limited record
-         DAG     : Directed_Graph;
-         To_Node : View_Node_Map.Map;
-         To_View : Node_View_Map.Map;
          Values  : View_Id_Library_Map.Map;
+         Vector  : Library_Vector.Vector;
       end record;
 
       function Contains
@@ -93,20 +76,11 @@ package body GPR2.Build.Actions_Population is
 
       procedure Include
         (Self    : in out Map;
-         Key     : GPR2.Project.View.Object;
          Element : Library_Type);
 
-      procedure Add_Successor
-        (Self      : in out Map;
-         Key       : GPR2.Project.View.Object;
-         Successor : GPR2.Project.View.Object);
-
-      procedure Replace
+      procedure Update
         (Self    : in out Map;
-         Key     : GPR2.Project.View.Object;
          Element : Library_Type);
-
-      function Serialize (Self : in out Map) return Library_Vector.Vector;
    end Library_Map;
 
    function Populate_Library
@@ -150,38 +124,7 @@ package body GPR2.Build.Actions_Population is
    --  Closure will contain the list of withed standard views
    --  Libs is the list of withed libraries
 
-   function Populate_Withed_Projects
-     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      Options : Build.Options.Build_Options;
-      Closure : in out GPR2.Project.View.Set.Object;
-      Ctxt    : Library_Type;
-      Libs    : in out Library_Map.Map;
-      Has_SAL : in out Boolean) return Boolean;
-
-   function Populate_Withed_Projects_Internal
-     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      Options : Build.Options.Build_Options;
-      Closure : in out GPR2.Project.View.Set.Object;
-      Ctxt    : Library_Type;
-      Libs    : in out Library_Map.Map;
-      Has_SAL : in out Boolean) return Boolean;
-
    package body Library_Map is
-
-      -------------------
-      -- Add_Successor --
-      -------------------
-
-      procedure Add_Successor
-        (Self      : in out Map;
-         Key       : GPR2.Project.View.Object;
-         Successor : GPR2.Project.View.Object)
-      is
-         From : constant Node_Id := Self.To_Node.Element (Key.Id);
-         Succ : constant Node_Id := Self.To_Node.Element (Successor.Id);
-      begin
-         Self.DAG.Add_Predecessor (Succ, From);
-      end Add_Successor;
 
       -------------
       -- Include --
@@ -189,44 +132,29 @@ package body GPR2.Build.Actions_Population is
 
       procedure Include
         (Self    : in out Map;
-         Key     : GPR2.Project.View.Object;
          Element : Library_Type)
       is
-         New_Node : constant Node_Id := Self.DAG.Add_Node;
       begin
-         Self.To_Node.Insert (Key.Id, New_Node);
-         Self.To_View.Insert (New_Node, Key.Id);
-         Self.Values.Insert (Key.Id, Element);
+         Self.Values.Include (Element.View.Id, Element);
+         Self.Vector.Append (Element);
       end Include;
 
-      -------------
-      -- Replace --
-      -------------
+      ------------
+      -- Update --
+      ------------
 
-      procedure Replace
+      procedure Update
         (Self    : in out Map;
-         Key     : GPR2.Project.View.Object;
-         Element : Library_Type) is
-      begin
-         Self.Values.Replace (Key.Id, Element);
-      end Replace;
-
-      ---------------
-      -- Serialize --
-      ---------------
-
-      function Serialize (Self : in out Map) return Library_Vector.Vector
+         Element : Library_Type)
       is
-         Node : Node_Id;
+         Old : constant View_Id_Library_Map.Cursor :=
+                 Self.Values.Find (Element.View.Id);
+         Idx : constant Positive :=
+                 Self.Vector.Find_Index (View_Id_Library_Map.Element (Old));
       begin
-         return Result : Library_Vector.Vector do
-            Self.DAG.Start_Iterator;
-
-            while Self.DAG.Next (Node) loop
-               Result.Append (Self.Values (Self.To_View (Node)));
-            end loop;
-         end return;
-      end Serialize;
+         Self.Values.Replace_Element (Old, Element);
+         Self.Vector.Replace_Element (Idx, Element);
+      end Update;
 
    end Library_Map;
 
@@ -748,7 +676,7 @@ package body GPR2.Build.Actions_Population is
       --  Add the lib now to prevent infinite recursion in case of
       --  circular dependencies (e.g. A withes B that limited_withes A)
 
-      Libs.Include (View, Self);
+      Libs.Include (Self);
 
       --  Gather the list of standard view deps and ensure the libs are
       --  populated.
@@ -762,7 +690,7 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       if not Populate_Withed_Projects
-        (Tree_Db, Options, Closure, Self, Libs, Has_SAL)
+        (Tree_Db, Options, Closure, Libs, Has_SAL)
       then
          return False;
       end if;
@@ -920,7 +848,7 @@ package body GPR2.Build.Actions_Population is
 
       --  Update the Library object in Libs
 
-      Libs.Replace (View, Self);
+      Libs.Update (Self);
 
       return True;
    end Populate_Library;
@@ -1189,7 +1117,7 @@ package body GPR2.Build.Actions_Population is
 
             --  Add libraries
 
-            for Lib of Libs.Serialize loop
+            for Lib of Libs.Vector loop
                Tree_Db.Add_Input (Link (Idx).UID, Lib.Link.Output, True);
 
                --  Make sure the bind action is executed after the libraries
@@ -1273,38 +1201,6 @@ package body GPR2.Build.Actions_Population is
       Options : Build.Options.Build_Options;
       Closure : in out GPR2.Project.View.Set.Object;
       Libs    : in out Library_Map.Map;
-      Has_SAL : in out Boolean) return Boolean is
-   begin
-      return Populate_Withed_Projects_Internal
-        (Tree_Db, Options, Closure, No_Library, Libs, Has_SAL);
-   end Populate_Withed_Projects;
-
-   ------------------------------
-   -- Populate_Withed_Projects --
-   ------------------------------
-
-   function Populate_Withed_Projects
-     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      Options : Build.Options.Build_Options;
-      Closure : in out GPR2.Project.View.Set.Object;
-      Ctxt    : Library_Type;
-      Libs    : in out Library_Map.Map;
-      Has_SAL : in out Boolean) return Boolean is
-   begin
-      return Populate_Withed_Projects_Internal
-        (Tree_Db, Options, Closure, Ctxt, Libs, Has_SAL);
-   end Populate_Withed_Projects;
-
-   ---------------------------------------
-   -- Populate_Withed_Projects_Internal --
-   ---------------------------------------
-
-   function Populate_Withed_Projects_Internal
-     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      Options : Build.Options.Build_Options;
-      Closure : in out GPR2.Project.View.Set.Object;
-      Ctxt    : Library_Type;
-      Libs    : in out Library_Map.Map;
       Has_SAL : in out Boolean) return Boolean
    is
       procedure Add_Deps (V  : GPR2.Project.View.Object);
@@ -1354,10 +1250,6 @@ package body GPR2.Build.Actions_Population is
                return False;
             end if;
 
-            if Ctxt /= No_Library then
-               Libs.Add_Successor (Ctxt.View, Current);
-            end if;
-
          elsif Current.Kind = K_Abstract then
                Add_Deps (Current);
 
@@ -1370,7 +1262,7 @@ package body GPR2.Build.Actions_Population is
       end loop;
 
       return True;
-   end Populate_Withed_Projects_Internal;
+   end Populate_Withed_Projects;
 
    -------------------
    -- Resolve_Mains --
