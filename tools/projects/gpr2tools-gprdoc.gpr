@@ -7,7 +7,7 @@ project GPR2tools.GPRDoc extends "gpr2tools.gpr" is
    for Object_Dir use GPR2tools.Base_Object_Dir & "/gprdoc";
    for Exec_Dir use GPR2tools.Base_Exec_Dir;
 
-   package Builder extends Shared.Builder is
+   package Builder extends GPR2_Shared.Builder is
       for Executable ("gprdoc-main.adb") use "gprdoc";
    end Builder;
 

@@ -1,10 +1,10 @@
 --
---  Copyright (C) 2019-2024, AdaCore
+--  Copyright (C) 2019-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0
 --
 
-abstract project Shared is
+abstract project GPR2_Shared is
 
    type Build_Type is ("debug", "release", "release_checks", "gnatcov");
    Build : Build_Type := external ("GPR2_BUILD", "debug");
@@ -110,4 +110,4 @@ abstract project Shared is
       for Excluded_Units use ("gpr_parser*");
    end Coverage;
 
-end Shared;
+end GPR2_Shared;

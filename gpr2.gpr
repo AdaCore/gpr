@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2024, AdaCore
+--  Copyright (C) 2019-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0
 --
@@ -9,7 +9,7 @@ with "gnatcoll_iconv";
 with "gnatcoll_gmp";
 with "xmlada";
 
-library project GPR2 extends "shared.gpr" is
+library project GPR2 extends "gpr2_shared.gpr" is
 
    type Bool is ("true", "false");
    Is_Externally_Built : Bool := external ("EXTERNALLY_BUILT", "false");
@@ -119,7 +119,7 @@ library project GPR2 extends "shared.gpr" is
 
    Langkit_Parser_Options := ("-g");
 
-   package Compiler extends Shared.Compiler is
+   package Compiler extends GPR2_Shared.Compiler is
       case Build is
          when "debug" | "gnatcov" =>
             Langkit_Parser_Options := Langkit_Parser_Options & ("-O0");
