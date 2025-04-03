@@ -10,7 +10,7 @@ abstract project GPR2_Shared is
    Build : Build_Type := external ("GPR2_BUILD", "debug");
 
    type Target_type is ("Windows_NT", "UNIX");
-   Target : Target_Type := external ("OS", "UNIX");
+   Target : Target_Type := external ("GPR2_OS", external ("OS", "UNIX"));
 
    type Profiler_Flag is ("yes", "no");
    Profiler : Profiler_Flag := external ("PROFILER", "no");
