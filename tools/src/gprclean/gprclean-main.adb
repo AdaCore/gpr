@@ -238,6 +238,12 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
          if View.Library_Ali_Directory /= View.Library_Directory then
             Remove_Dir (View.Library_Ali_Directory);
          end if;
+
+         if View.Is_Library_Standalone
+           and then View.Has_Library_Src_Directory
+         then
+            Remove_Dir (View.Library_Src_Directory);
+         end if;
       end if;
    end Remove_Artifacts_Dirs;
 
