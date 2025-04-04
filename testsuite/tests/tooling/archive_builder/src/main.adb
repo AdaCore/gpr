@@ -1,1 +1,4 @@
-procedure main is null;
+procedure main is 
+begin
+   null;
+end main;

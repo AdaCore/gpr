@@ -2,12 +2,13 @@ import json
 import os
 from e3.fs import mv
 from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPR2BUILD
 
 bnr = BuilderAndRunner()
 
 def run(cmd):
     print("$ " + " ".join(cmd));
-    if cmd[0] == "gpr2build":
+    if cmd[0] == GPR2BUILD:
         bnr.call(cmd)
     else:
         print(bnr.simple_run([cmd], catch_error=True).out)
@@ -15,14 +16,14 @@ def run(cmd):
 # Basic check that building demo.gpr produces libdemo.a and that building an
 # exe with it only uses libdemo.a and not any of the objects contained in it.
 
-run(["gpr2build", "-q", "-Pagglib.gpr", "-p", "--json-summary", "-j1"])
+run([GPR2BUILD, "-q", "-Pagglib.gpr", "-p", "--json-summary", "-j1"])
 with open("jobs.json") as fp:
     cnt = json.load(fp)
 uids = [job["uid"] for job in cnt]
 for uid in sorted(uids):
     print(uid)
 
-run(["gpr2build", "-q", "-Pdemo.gpr", "-p", "--json-summary", "-j1"])
+run([GPR2BUILD, "-q", "-Pdemo.gpr", "-p", "--json-summary", "-j1"])
 with open("jobs.json") as fp:
     cnt = json.load(fp)
 for job in cnt:

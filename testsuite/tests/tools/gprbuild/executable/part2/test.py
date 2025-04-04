@@ -3,8 +3,8 @@ import os.path
 from e3.env import Env
 from e3.os.process import Run
 
-
 from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPR2BUILD
 
 bnr = BuilderAndRunner()
 test_number = 1
@@ -14,7 +14,7 @@ def test(header):
     global test_number
     print("================================================================")
     print("Case " + str(test_number) + " - " + header)
-    proc = bnr.call(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p", "--json-summary", "-j1"])
+    proc = bnr.call([GPR2BUILD, "-P", os.path.join("tree", "main.gpr"), "-p", "--json-summary", "-j1"])
 
     if proc.status:
         print("Test return value: " + str(proc.status))
@@ -61,7 +61,7 @@ def testsuite(file_path):
             file.write(file_content)
 
     # Restore state of the project after a correct compilation
-    Run(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p", "-j1"])
+    Run([GPR2BUILD, "-P", os.path.join("tree", "main.gpr"), "-p", "-j1"])
 
     with open(file_path, "a") as file:
         file.write("--  Comment that will not prevent a compilation for Ada files")
@@ -69,7 +69,7 @@ def testsuite(file_path):
     test("Modified " + os.path.basename(file_path) + " (comments only)")
 
     # Restore state of the project after a correct compilation
-    Run(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p", "-j1"])
+    Run([GPR2BUILD, "-P", os.path.join("tree", "main.gpr"), "-p", "-j1"])
 
 
 test("Build from scratch")
@@ -125,7 +125,7 @@ test("Modified pkg.adb without dep_two dependency")
 # Restore state of the project after a correct compilation
 with open(file_path, "w") as file:
     file.write(file_save)
-Run(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p"])
+Run([GPR2BUILD, "-P", os.path.join("tree", "main.gpr"), "-p"])
 
 file_path = os.path.join("tree", "src", "dep_two.adb")
 with open(file_path, "r") as file:
@@ -150,4 +150,4 @@ test("Modified dep_two.adb (new output)")
 # Restore state of the project after a correct compilation
 with open(file_path, "w") as file:
     file.write(file_save)
-Run(["gpr2build", "-P", os.path.join("tree", "main.gpr"), "-p"])
+Run([GPR2BUILD, "-P", os.path.join("tree", "main.gpr"), "-p"])

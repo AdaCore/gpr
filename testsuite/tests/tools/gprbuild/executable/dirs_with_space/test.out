@@ -1,4 +1,4 @@
-$ gpr2build -q -P tree/demo.gpr -p
+$ gprbuild -q -P tree/demo.gpr -p
 $ ./tree/main
 Hi from C
 

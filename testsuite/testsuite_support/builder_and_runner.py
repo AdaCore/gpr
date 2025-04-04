@@ -2,7 +2,7 @@ import os
 from e3.os.process import PIPE, Run, STDOUT
 from random import getrandbits
 from e3.testsuite.driver.classic import TestAbortWithFailure
-from testsuite_support.tools import GPRBUILD, GPRBUILD_NAME, GPRINSTALL, GPRLS
+from testsuite_support.tools import GPRBUILD, GPR2BUILD_NAME, GPR2CLEAN_NAME, GPRINSTALL, GPRLS
 
 # environment variables definition
 
@@ -99,12 +99,6 @@ class BuilderAndRunner(object):
     def build(self, project, vars=[], args=[], env=None, output=PIPE):
         """ gprbuild wrapper for normal & coverage modes """
 
-        gprbuild=""
-        if self.use_gpr2build:
-            gprbuild="gpr2build"
-        else:
-            gprbuild = GPRBUILD
-
         # If code coverage is requested, leave a chance to gnatcov to decorate
         # the execution of the subprogram in order to make it contribute to
         # code coverage.
@@ -128,14 +122,14 @@ class BuilderAndRunner(object):
             # the installed one from libgpr2. This means we need to ensure
             # that some scenario variables are properly set.
             gprbuild_cmd = (
-                [gprbuild, "-P", project,
+                [GPRBUILD, "-P", project,
                  "-XGPR2_BUILD=gnatcov", "-XXMLADA_BUILD=static"]
                 + vars
                 + ["--src-subdirs=gnatcov-instr", "--implicit-with=gnatcov_rts"]
                 + args
             )
         else:
-            gprbuild_cmd = [gprbuild, "-P", project] + vars + args
+            gprbuild_cmd = [GPRBUILD, "-P", project] + vars + args
 
         return self.simple_run(gprbuild_cmd, env=env, output=output)
 
@@ -188,7 +182,9 @@ class BuilderAndRunner(object):
         if self.valgrind:
             env[USE_VALGRIND] = "true"
         if self.use_gpr2build:
-            env[GPRBUILD_NAME] = "gpr2build"
+            # the tested gpr2 package considers gpr2build as "gprbuild"
+            env[GPR2BUILD_NAME] = "gprbuild"
+            env[GPR2CLEAN_NAME] = "gprclean"
         if self.gnatcov:
             env[USE_GNATCOV] = "true"
             env[COV_TRACES_DIR] = self.traces_dir

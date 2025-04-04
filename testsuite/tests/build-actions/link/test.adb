@@ -1,5 +1,6 @@
 with Ada.Directories;
 with Ada.Containers;
+with Ada.Environment_Variables;
 
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Artifacts.Files;
@@ -176,9 +177,12 @@ begin
    Obj_Dir := Tree.Root_Project.Object_Directory;
 
    declare
-      Args : Argument_List;
+      Args      : Argument_List;
+      Gpr2build : constant String :=
+                    Ada.Environment_Variables.Value
+                      ("GPR2BUILD_NAME", "gpr2build");
    begin
-      Args.Append ("gpr2build");
+      Args.Append (Gpr2build);
       Args.Append ("-c");
       Args.Append ("-b");
       Args.Append ("-p");

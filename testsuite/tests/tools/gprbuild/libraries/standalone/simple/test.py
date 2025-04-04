@@ -2,6 +2,7 @@ import json
 import os
 import distutils.ccompiler
 from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPR2BUILD
 
 bnr = BuilderAndRunner()
 shared_lib_ext = distutils.ccompiler.new_compiler().shared_lib_extension
@@ -9,7 +10,7 @@ shared_lib_ext = distutils.ccompiler.new_compiler().shared_lib_extension
 
 def run(cmd):
     print("$ " + " ".join(cmd))
-    if cmd[0] == "gpr2build":
+    if cmd[0] == GPR2BUILD:
         bnr.call(cmd)
     else:
         print(bnr.simple_run([cmd], catch_error=True).out)
@@ -18,7 +19,7 @@ def run(cmd):
 def test(test_dir):
     run(
         [
-            "gpr2build",
+            GPR2BUILD,
             "-q",
             "-P" + os.path.join(test_dir, "demo.gpr"),
             "-p",
@@ -31,7 +32,7 @@ def test(test_dir):
 
     run(
         [
-            "gpr2build",
+            GPR2BUILD,
             "-q",
             "-P" + os.path.join(test_dir, "app.gpr"),
             "-p",
@@ -74,7 +75,7 @@ def test(test_dir):
 
     run(
         [
-            "gpr2build",
+            GPR2BUILD,
             "-P" + os.path.join(test_dir, "invalid_app_foo.gpr"),
             "-p",
             "--json-summary",
@@ -84,10 +85,10 @@ def test(test_dir):
 
     run(
         [
-            "gpr2build",
+            GPR2BUILD,
             "-P" + os.path.join(test_dir, "invalid_app_mult.gpr"),
             "-p",
-            "--json-summary", 
+            "--json-summary",
             "-j1"
         ]
     )

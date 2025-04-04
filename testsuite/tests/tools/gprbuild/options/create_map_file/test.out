@@ -1,16 +1,16 @@
-$ gpr2build -q prj.gpr --create-map-file
+$ gprbuild -q prj.gpr --create-map-file
 Ok: main.map
-$ gpr2build -q prj.gpr --create-map-file=linker_map.map
+$ gprbuild -q prj.gpr --create-map-file=linker_map.map
 Ok: linker_map.map
-$ gpr2build -q prj1.gpr
+$ gprbuild -q prj1.gpr
 Ok: main.map
-$ gpr2build -q prj2.gpr
+$ gprbuild -q prj2.gpr
 Ok: linker_map.map
-$ gpr2build -q prj3.gpr --create-map-file
+$ gprbuild -q prj3.gpr --create-map-file
 Ok: main.map
 Ok: main2.map
-$ gpr2build -q prj3.gpr --create-map-file=linker_map.map
+$ gprbuild -q prj3.gpr --create-map-file=linker_map.map
 error: map file name is specified while there are multiple mains
 gprbuild: processing failed
-$ gpr2build -q prj3.gpr main2.adb --create-map-file=linker_map.map
+$ gprbuild -q prj3.gpr main2.adb --create-map-file=linker_map.map
 Ok: linker_map.map
