@@ -5,6 +5,7 @@ import os.path
 import re
 
 from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPR2BUILD
 
 bnr = BuilderAndRunner()
 
@@ -125,11 +126,11 @@ def overwrite_checksum(name, ext, checksum, project):
 
 # ensure .ali and .o files are there for the trees used to test, together
 # with gpr2's signatures
-bnr.simple_run(["gpr2build", "-Ptree/p1.gpr", "-p", "-q"])
+bnr.simple_run([GPR2BUILD, "-Ptree/p1.gpr", "-p", "-q"])
 # base1 is extended by p2: ensure it has ali and object files on its own to
 # demonstrate that they're inherited
-bnr.simple_run(["gpr2build", "-Ptree/base1.gpr", "-p", "-q"])
-bnr.simple_run(["gpr2build", "-Ptree/p2.gpr", "-p", "-q"])
+bnr.simple_run([GPR2BUILD, "-Ptree/base1.gpr", "-p", "-q"])
+bnr.simple_run([GPR2BUILD, "-Ptree/p2.gpr", "-p", "-q"])
 
 # now build and run the test (using bnr.build and bnr.run to have proper
 # coverage when requested).

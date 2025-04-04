@@ -238,6 +238,8 @@ class BaseDriver(DiffTestDriver):
             Substitute("x86-linux", replacement="(host)"),
             Substitute("x86_64-windows", replacement="(host)"),
             Substitute("x86-windows", replacement="(host)"),
+            Substitute("gpr2build", replacement="gprbuild"),
+            Substitute("gpr2clean", replacement="gprclean"),
         ]
 
     # Convenience path builders

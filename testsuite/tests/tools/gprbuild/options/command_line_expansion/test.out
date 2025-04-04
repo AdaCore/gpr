@@ -1,12 +1,12 @@
 Step 1 - Check -cargs
-$ gpr2build -P tree/main.gpr -p -q --json-summary -j1 -cargs -O2 -cargs:Ada -O1 -cargs:C -O0
+$ gprbuild -P tree/main.gpr -p -q --json-summary -j1 -cargs -O2 -cargs:Ada -O1 -cargs:C -O0
 [Ada Compile] tata.ads (main.gpr): -O2 -O1
 [C Compile] toto.c (main.gpr): -O2 -O0
 
 Step 2 - Check -bargs
-$ gpr2build -P tree_2/main.gpr -p -q --json-summary -j1 -bargs -O=3.bind -bargs:Ada -O=5.bind -bargs -O=4.bind -bargs:Ada -O=6.bind
+$ gprbuild -P tree_2/main.gpr -p -q --json-summary -j1 -bargs -O=3.bind -bargs:Ada -O=5.bind -bargs -O=4.bind -bargs:Ada -O=6.bind
 [Ada Bind] main (main.gpr): -O=1.bind -O=2.bind -O=3.bind -O=4.bind -O=5.bind -O=6.bind
 
 Step 3 - Check -largs
-$ gpr2build -P tree_3/main.gpr -p -q --json-summary -j1 -largs -Wl,--gc-sections
+$ gprbuild -P tree_3/main.gpr -p -q --json-summary -j1 -largs -Wl,--gc-sections
 [Link] main (main.gpr): -Wl,--no-gc-sections -Wl,--gc-sections

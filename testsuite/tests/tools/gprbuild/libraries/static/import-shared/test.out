@@ -1,5 +1,5 @@
-$ gpr2build -q -Pmylib1.gpr -p --json-summary -j1
-$ gpr2build -q -Papp.gpr -p --json-summary -j1
+$ gprbuild -q -Pmylib1.gpr -p --json-summary -j1
+$ gprbuild -q -Papp.gpr -p --json-summary -j1
 mylib1 has been created, good!
 mylib2 has been created, good!
 bin:

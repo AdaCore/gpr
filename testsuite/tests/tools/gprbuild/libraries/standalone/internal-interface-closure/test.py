@@ -1,12 +1,13 @@
 import os
 from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPR2BUILD
 
 bnr = BuilderAndRunner()
 
 
 def run(cmd):
     print("$ " + " ".join(cmd))
-    if cmd[0] == "gpr2build":
+    if cmd[0] == GPR2BUILD:
         bnr.call(cmd)
     else:
         print(bnr.simple_run([cmd], catch_error=True).out)
@@ -18,14 +19,14 @@ def run(cmd):
 
 run(
     [
-        "gpr2build",
+        GPR2BUILD,
         "-P" + os.path.join("library_interface", "app.gpr"),
         "-p",
         "-j1"
     ])
 run(
     [
-        "gpr2build",
+        GPR2BUILD,
         "-P" + os.path.join("interfaces", "app.gpr"),
         "-p",
         "-j1"
