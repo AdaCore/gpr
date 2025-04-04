@@ -205,6 +205,18 @@ package body GPR2.Build.Actions_Population is
               (View.Suffixed_Simple_Name (String (SN), Lang), Ambiguous);
 
             exit when Src.Is_Defined;
+
+            --  Ada also accepts specs as main
+            if Lang = Ada_Language then
+               Src := View.Visible_Source
+                 (SN & Simple_Name
+                    (View.Attribute
+                         (PRA.Naming.Spec_Suffix,
+                          PAI.Create (Ada_Language)).Value.Text),
+                  Ambiguous);
+            end if;
+
+            exit when Src.Is_Defined;
          end loop;
       end if;
 
