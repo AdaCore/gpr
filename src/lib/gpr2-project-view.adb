@@ -2069,24 +2069,41 @@ package body GPR2.Project.View is
      (Self            : Object;
       Without_Version : Boolean := False) return GPR2.Path_Name.Object
    is
-      Attr_Version : GPR2.Project.Attribute.Object;
+      function Get_Simple_Name return Simple_Name;
+
+      function Get_Simple_Name return Simple_Name is
+         Attr_Version : GPR2.Project.Attribute.Object;
+      begin
+         --  Attribute library_version is only available on unix for shared
+         --  libraries
+
+         if not Self.Is_Static_Library
+           and then
+             Self.Attribute (PRA.Shared_Library_Suffix).Value.Text /= ".dll"
+         then
+            Attr_Version := Self.Attribute (PRA.Library_Version);
+
+            if Attr_Version.Is_Defined then
+               if Without_Version then
+                  --  Remove the version part
+                  for J in Attr_Version.Value.Text'Range loop
+                     if Attr_Version.Value.Text (J) = '.' then
+                        return Simple_Name
+                          (Attr_Version.Value.Text
+                             (Attr_Version.Value.Text'First .. J - 1));
+                     end if;
+                  end loop;
+               end if;
+
+               return Simple_Name (Attr_Version.Value.Text);
+            end if;
+         end if;
+
+         return Self.Library_Filename_Internal;
+      end Get_Simple_Name;
+
    begin
-      --  Library version: we need to skip it in case the library extension is
-      --  ".dll" (so is targeting windows).
-      --  Note that it is only used for shared libraries, not for the archives
-
-      if not Self.Is_Static_Library
-        and then not Without_Version
-        and then
-          Self.Attribute (PRA.Shared_Library_Suffix).Value.Text /= ".dll"
-      then
-         Attr_Version := Self.Attribute (PRA.Library_Version);
-      end if;
-
-      return Self.Library_Directory.Compose
-        ((if Attr_Version.Is_Defined
-         then Simple_Name (Attr_Version.Value.Text)
-         else Self.Library_Filename_Internal));
+      return Self.Library_Directory.Compose (Get_Simple_Name);
    end Library_Filename;
 
    -------------------------------
@@ -2151,19 +2168,16 @@ package body GPR2.Project.View is
       declare
          Version : constant Simple_Name :=
                      Simple_Name (Attr_Version.Value.Text);
-         Base    : constant Simple_Name :=
-                     Self.Library_Filename_Internal;
-         use GNATCOLL.Utils;
+         Last    : Natural := Version'Last;
       begin
-         if Base = Version
-           or else not Starts_With (String (Version), String (Base) & ".")
-         then
-            return Containers.Filename_Type_Set.Empty_Set;
-         end if;
-
-         for K in reverse Version'First + Base'Length .. Version'Last loop
+         for K in reverse Version'First .. Version'Last loop
             if Version (K) = '.' then
+               exit when
+                 Version (K .. Last) =
+                   Simple_Name
+                     (Self.Attribute (PRA.Shared_Library_Suffix).Value.Text);
                Result.Include (Version (Version'First .. K - 1));
+               Last := K - 1;
             end if;
          end loop;
       end;
