@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2024, AdaCore                     --
+--                     Copyright (C) 2019-2025, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -849,7 +849,7 @@ begin
 
       if not Opt.Files.Is_Empty then
          --  Fill the various caches to get the sources from simple filenames
-         --  and artefacts.
+         --  and artifacts.
 
          for CV in
            Tree.Iterate ((Project.I_Extended => False, others => True))
@@ -967,7 +967,7 @@ begin
          end loop;
 
          --
-         --  All along, we will exclude non-ada sources.
+         --  All along, we will exclude non-Ada sources.
          --
 
          --  Fill the Sources set with the files given on the CL.
@@ -977,6 +977,9 @@ begin
 
          for F of Remains loop
             Text_IO.Put_Line ("Can't find source for " & F);
+            Handle_Program_Termination
+               (Opt     => Opt,
+                Force_Exit => False, Exit_Code => E_Errors);
          end loop;
 
       elsif Opt.Closure_Mode then
