@@ -946,13 +946,32 @@ is
                         end if;
 
                         if Kind = Unit.S_Separate then
-                           pragma Assert
-                             (Last_Dot in
-                                Unit_Name'First + 1 .. Unit_Name'Last - 1);
+                           if Last_Dot in
+                             Unit_Name'First + 1 .. Unit_Name'Last - 1
+                           then
+                              Append_Unit
+                                (Unit_Name (Last_Dot + 1 .. Unit_Name'Last),
+                                 Unit_Name (Unit_Name'First .. Last_Dot - 1));
 
-                           Append_Unit
-                             (Unit_Name (Last_Dot + 1 .. Unit_Name'Last),
-                              Unit_Name (Unit_Name'First .. Last_Dot - 1));
+                           else
+                              Tree.Append_Message
+                                (Message.Create
+                                   (Message.Error,
+                                    "filename does not contain dot "
+                                    & "replacement """ & Dot_Repl
+                                    & """ cannot determine sub-unit name",
+                                    SR.Create (File.Value, 0, 0)));
+                              Tree.Append_Message
+                                (Message.Create
+                                   (Message.Error,
+                                    "you may want to rename this file to "
+                                    & "match the naming scheme or add a "
+                                    & "naming exception : for Body ("""
+                                    & String (Unit_Name) & """) use """
+                                    & String (File.Simple_Name) & """;",
+                                    SR.Create (File.Value, 0, 0)));
+                              raise Project_Error;
+                           end if;
                         else
                            Append_Unit (Unit_Name, No_Name);
                         end if;
