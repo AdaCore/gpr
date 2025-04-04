@@ -3,7 +3,6 @@ $ tree/main
 Hello there
 
 $ gpr2clean tree/main.gpr -r
-
 $ cat tree/obj/.ada_bind_main-mapping.tmp
 main%b
 main.ali
