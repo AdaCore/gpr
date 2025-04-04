@@ -21,15 +21,10 @@ GPR2_BUILD = "release"
 gnatcoll = "*"
 gnatcoll_iconv = "*"
 gnatcoll_gmp = "*"
-gnat = "*"
+gprconfig_kb = "*"
 
 [environment]
-GPRCONFIGDIR.set = "${CRATE_ROOT}/subprojects/gprconfig_kb"
-GPR2KBDIR.set = "${CRATE_ROOT}/subprojects/gprconfig_kb/db"
-
-[[actions]]
-type = "pre-build"
-command = ["sh", "-c", "if [ -e $GPRCONFIGDIR ]; then git -C $GPRCONFIGDIR pull; else git clone https://github.com/AdaCore/gprconfig_kb.git $GPRCONFIGDIR; fi"]
+GPR2KBDIR.set = "$$GPRCONFIG_KB_ALIRE_PREFIX/db"
 
 [[actions]]
 type = "pre-build"
@@ -37,3 +32,4 @@ command = ["make", ".build/kb/collect_kb", ".build/kb/gpr2-kb-embedded.ads", ".b
 
 [[pins]]
 gnatcoll = { url='https://github.com/AdaCore/gnatcoll-core.git' }
+gprconfig_kb = { url='https://github.com/AdaCore/gprconfig_kb.git' }
