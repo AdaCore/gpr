@@ -93,15 +93,15 @@ test_gpr2_with_gpr2build:
   extends: .gpr2_test_template
   script:
     - install_cache
-    - run_testsuite gpr2 "-Quse_gpr2build" test_gpr2build
+    - run_testsuite gpr2 -Qgpr2build test_gpr2build
   when: manual
   artifacts:
     when:
       always
     paths:
-      - testgpr2build_result.xml
+      - test_gpr2build_result.xml
     reports:
-      junit: testgpr2build_result.xml
+      junit: test_gpr2build_result.xml
 
 ############################
 ## GPR2 WINDOWS TESTSUITE ##
@@ -142,15 +142,14 @@ test_gprbuild_internal:
     JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
   script:
     - install_cache
-    - anod build gpr2 -Qgpr2build
-    - run_testsuite gprbuild "-Qgpr2build" test_gpr1_testsuite
+    - run_testsuite gprbuild -Qgpr2build test_gpr1_testsuite
   artifacts:
     when:
       always
     paths:
-      - testgpr1testsuite_result.xml
+      - test_gpr1_testsuite_result.xml
     reports:
-      junit: testgpr1testsuite_result.xml
+      junit: test_gpr1_testsuite_result.xml
 
 ##################
 ## MEMORY LEAKS ##
