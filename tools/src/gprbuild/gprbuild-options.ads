@@ -22,7 +22,6 @@ with GPR2;
 with GPR2.Build.Process_Manager;
 with GPR2.Build.External_Options;
 with GPR2.Containers;
-with GPR2.Path_Name;
 
 with GPRtools.Options;
 
@@ -30,7 +29,6 @@ package GPRbuild.Options is
 
    type Object is new GPRtools.Options.Base_Options with record
       Single_Build_Per_Obj_Dir : Boolean := False;
-      Build_Script             : GPR2.Path_Name.Object;
       No_Object_Check          : Boolean := False;
       No_Split_Units           : Boolean := False;
 

@@ -14,6 +14,7 @@ with GNATCOLL.OS.Process;
 with GPR2.Build.Actions;
 with GPR2.Build.Jobserver;
 limited with GPR2.Build.Tree_Db;
+with GPR2.Path_Name;
 
 private with GNATCOLL.Traces;
 
@@ -23,10 +24,26 @@ package GPR2.Build.Process_Manager is
 
    type PM_Options is record
       Jobs            : Natural := 0;
+      --  Number of jobs to execute in parallel. 0 will autodetect the
+      --  number of CPUs available and use that value.
+
       Force           : Boolean := False;
+      --  When set, this forces the (re-)execution of the actions.
+
       Stop_On_Fail    : Boolean := True;
+      --  If unset, the process manager will try to continue executing the
+      --  actions after a failure.
+
       Keep_Temp_Files : Boolean := False;
+      --  When set, the temporary files are not deleted after execution
+
+      Script_File     : Path_Name.Object;
+      --  When defined, it indicates a file where we will store the commands
+      --  that have been executed during the run.
+
       Show_Progress   : Boolean := False;
+      --  Displays extra information on the number of executed action and
+      --  the total number of actions.
    end record;
 
    type Collect_Status is
@@ -108,6 +125,8 @@ package GPR2.Build.Process_Manager is
    --    the job was skipped, is launched, or if an error occurred.
    --  Capture_Stdout/err are file descriptors used to capture the spawned
    --    process standard output and error.
+   --  Script_FD, if not null, is used to print out the executed commands, to
+   --    generate a replay of the executed commands.
 
    procedure Execute
      (Self            : in out Object;
