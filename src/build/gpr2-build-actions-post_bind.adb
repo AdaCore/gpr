@@ -7,6 +7,7 @@
 with GNATCOLL.Traces;
 
 with GPR2.Build.Actions.Link;
+with GPR2.Build.ALI_Parser;
 with GPR2.Build.External_Options;
 with GPR2.Build.Tree_Db;
 with GPR2.Project.Attribute;
@@ -88,6 +89,29 @@ package body GPR2.Build.Actions.Post_Bind is
       loop
          Cmd_Line.Add_Argument (Arg);
       end loop;
+
+      --  Get the command line used for the first ALI given as input and
+      --  add some of its switches
+
+      declare
+         Ali : GPR2.Build.Artifacts.Files.Object;
+      begin
+         for Input of Self.Tree.Inputs (Self.Binder.UID) loop
+            Ali := Artifacts.Files.Object (Input);
+            exit;
+         end loop;
+
+         if Ali.Is_Defined and then Ali.Path.Exists then
+            for Sw of ALI_Parser.Switches (Ali.Path) loop
+               if not GNATCOLL.Utils.Starts_With (Sw, "-I")
+                 and then not GNATCOLL.Utils.Starts_With (Sw, "-gnat")
+                 and then not GNATCOLL.Utils.Starts_With (Sw, "--RTS=")
+               then
+                  Cmd_Line.Add_Argument (Sw);
+               end if;
+            end loop;
+         end if;
+      end;
 
       Cmd_Line.Add_Argument (Self.Input.Path);
       Cmd_Line.Add_Argument ("-o");

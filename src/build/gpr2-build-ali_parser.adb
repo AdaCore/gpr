@@ -430,52 +430,96 @@ package body GPR2.Build.ALI_Parser is
       end Parse_With;
 
       Reader : GB.Reader :=  GB.Open (String (ALI_File.Value));
+      Word   : Character := ASCII.NUL;
+
    begin
-      declare
-         Word : Character := ASCII.NUL;
-      begin
+      --  Only the dependencies lines "D" are of interest, as they contain
+      --  dependencies source names.
 
-         --  Only the dependencies lines "D" are of interest, as they contain
-         --  dependencies source names.
+      loop
+         if not EOL then
+            IO.Next_Line (Reader, Word);
+         elsif not GB.Next (Reader, Word) then
+            return True;
+         end if;
 
-         loop
-            if not EOL then
-               IO.Next_Line (Reader, Word);
-            elsif not GB.Next (Reader, Word) then
-               return True;
-            end if;
+         EOL := False;
 
-            EOL := False;
-
-            case Word is
-               when ASCII.NUL =>
-                  exit;
+         case Word is
+            when ASCII.NUL =>
+               exit;
 
                when 'D' =>
-                  exit;
+               exit;
                --  ??? Add other cases that are after the withed units
 
                when 'W' =>
-                  Parse_With (Reader);
+               Parse_With (Reader);
 
-               when others =>
-                  null;
-            end case;
-         end loop;
+            when others =>
+               null;
+         end case;
+      end loop;
 
+      GB.Finalize (Reader);
+
+      return True;
+   exception
+      when E : others =>
+         GNATCOLL.Traces.Trace
+           (Traces,
+            "ALI parser error: " & Ada.Exceptions.Exception_Message (E));
          GB.Finalize (Reader);
 
-         return True;
-      exception
-         when E : others =>
-            GNATCOLL.Traces.Trace
-              (Traces,
-               "ALI parser error: " & Ada.Exceptions.Exception_Message (E));
-            GB.Finalize (Reader);
-
-            return False;
-      end;
+         return False;
    end Imports;
+
+   --------------
+   -- Switches --
+   --------------
+
+   function Switches
+     (ALI_File : GPR2.Path_Name.Object) return GPR2.Containers.Value_List
+   is
+      Result      : GPR2.Containers.Value_List;
+      Reader      : GB.Reader :=  GB.Open (ALI_File.String_Value);
+      Word        : Character := ASCII.NUL;
+      In_Switches : Boolean := False;
+      EOL         : Boolean := False;
+   begin
+      loop
+         if not EOL then
+            IO.Next_Line (Reader, Word);
+         elsif not GB.Next (Reader, Word) then
+            return Result;
+         end if;
+
+         EOL := False;
+
+         if not In_Switches and then Word = 'A' then
+            In_Switches := True;
+         elsif In_Switches and then Word /= 'A' then
+            exit;
+         end if;
+
+         if In_Switches then
+            Result.Append (IO.Get_Token (Reader, EOL));
+         end if;
+      end loop;
+
+      GB.Finalize (Reader);
+
+      return Result;
+
+   exception
+      when E : others =>
+         GNATCOLL.Traces.Trace
+           (Traces,
+            "ALI parser error: " & Ada.Exceptions.Exception_Message (E));
+         GB.Finalize (Reader);
+
+         return Result;
+   end Switches;
 
    -------------
    -- Version --

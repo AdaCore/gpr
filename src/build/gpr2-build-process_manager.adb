@@ -593,7 +593,8 @@ package body GPR2.Build.Process_Manager is
                      Tree_Db.Reporter.Report
                        ("completed" & Executed'Image & " out of" &
                           Context.Nodes.Length'Image & " (" &
-                          Percent (Percent'First + 1 .. Percent'Last) & "%)",
+                          Percent (Percent'First + 1 .. Percent'Last) &
+                          "%)...",
                         Level => GPR2.Message.Important);
                   end;
                end if;
