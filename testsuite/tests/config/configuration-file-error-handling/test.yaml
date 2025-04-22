@@ -1,2 +1,4 @@
 description: test configuration file error reporting
 driver: python_script
+output:
+- ["test.out.gpr2build", "env.use_gpr2build"]
