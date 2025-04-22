@@ -1,3 +1,4 @@
+import os
 import e3.testsuite
 
 from .build_and_run import BuildAndRunDriver
@@ -53,6 +54,9 @@ class Testsuite(e3.testsuite.Testsuite):
         self.env.valgrind = self.main.args.valgrind
         self.env.from_gnat = self.main.args.from_gnat
         self.env.use_gpr2build = self.main.args.use_gpr2build
+
+        os.environ["VALGRIND_TEST"] = "YES" if self.env.valgrind else "NO"
+        os.environ["GPR2BUILD_TEST"] = "YES" if self.env.use_gpr2build else "NO"
 
         # If code coverage is requested, initialize our helper and build
         # instrumented programs.
