@@ -574,6 +574,39 @@ package body GPR2.Build.Actions.Link is
          end loop;
       end if;
 
+      for Arg of Dash_l_Opts loop
+         Cmd_Line.Add_Argument (Arg);
+      end loop;
+
+      if Link_Exec then
+         --  Add switches for linking an executable
+         Status :=
+           Add_Attr (PRA.Linker.Required_Switches, PAI.Undefined, True, True);
+
+         Status := Add_Attr (PRA.Linker.Switches, Src_Idx, True, True);
+
+         if not Status then
+            Status := Add_Attr
+              (PRA.Linker.Default_Switches,
+               PAI.Create
+                 (Self.View.Visible_Source (Self.Main_Src.Source).Language),
+               True,
+               True);
+         end if;
+
+         Status :=
+           Add_Attr (PRA.Linker.Trailing_Switches, Src_Idx, True, True);
+
+         --  Add -largs
+
+         for Arg
+           of Self.Tree.External_Options.Fetch
+             (External_Options.Linker, GPR2.No_Language)
+         loop
+            Cmd_Line.Add_Argument (Arg);
+         end loop;
+      end if;
+
       --  Runtime flags usually come from the binder. However, there is no
       --  binding phase when creating a non-standalone library. Therefore,
       --  we need to add the runtime flags manually in this case. Note that
@@ -603,10 +636,6 @@ package body GPR2.Build.Actions.Link is
             & Self.View.Tree.Runtime_Project.Object_Directory.String_Value);
       end if;
 
-      for Arg of Dash_l_Opts loop
-         Cmd_Line.Add_Argument (Arg);
-      end loop;
-
       --  Add options provided by the binder if needed
 
       if not Self.View.Is_Library
@@ -618,36 +647,6 @@ package body GPR2.Build.Actions.Link is
             Cmd_Line.Add_Argument (Option);
          end loop;
       end if;
-
-      if Link_Exec then
-         --  Add switches for linking an executable
-         Status :=
-           Add_Attr (PRA.Linker.Required_Switches, PAI.Undefined, True, True);
-
-         Status := Add_Attr (PRA.Linker.Switches, Src_Idx, True, True);
-
-         if not Status then
-            Status := Add_Attr
-              (PRA.Linker.Default_Switches,
-               PAI.Create
-                 (Self.View.Visible_Source (Self.Main_Src.Source).Language),
-               True,
-               True);
-         end if;
-
-         --  Add -largs
-
-         for Arg
-           of Self.Tree.External_Options.Fetch
-             (External_Options.Linker, GPR2.No_Language)
-         loop
-            Cmd_Line.Add_Argument (Arg);
-         end loop;
-
-         Status :=
-           Add_Attr (PRA.Linker.Trailing_Switches, Src_Idx, True, True);
-      end if;
-
       if Self.View.Is_Library
         and then not Self.Is_Static
       then
