@@ -25,7 +25,7 @@ involved situations --- such as cross compilation, or
 environments with several compilers for the same language ---
 you may need to control more precisely the generation of
 the desired configuration of toolsets. A tool, GPRconfig, described in
-:ref:`Configuring_with_GPRconfig`), offers this capability. In this
+this section, offers this capability. In this
 chapter most of the examples can use auto-configuration.
 
 GPRbuild will start its build process by trying to locate a configuration
@@ -171,7 +171,7 @@ GPRconfig supports the following command line switches:
 
   .. -- @TIPHTML{Use :samp:`--config` to automatically select the first matching compiler}
 
-  The intent of this switch is to preselect one or more compilers directly
+  The intent of this switch is to pre-select one or more compilers directly
   from the command line. This switch takes several optional arguments, which
   you can omit simply by passing the empty string. When omitted, the arguments
   will be computed automatically by GPRconfig.
@@ -268,7 +268,7 @@ since that simplifies the setup.
 
 GPRconfig then displays the list of all the compilers
 it has found, along with the language they can compile, the run-time
-they use (when applicable),.... It then waits for you to select
+they use (when applicable), and so on. It then waits for you to select
 one of the compilers.  This list is sorted by language, then by order
 in the :samp:`PATH` environment variable (so that compilers that you
 are more likely to use appear first), then by run-time names and
@@ -309,21 +309,18 @@ generate the configuration file.
 The GPRconfig knowledge base
 ----------------------------
 
-GPRconfig itself has no hard-coded knowledge of compilers. Thus there
-is no need to recompile a new version of GPRconfig when a new compiler
-is distributed.
-
 .. note::
 
    The role and format of the knowledge base are irrelevant for most users
    of GPRconfig, and are only needed when you need to add support for new
-   compilers. You can skip this section if you only want to learn how to use
-   GPRconfig.
+   compilers or tweak support for existing ones. You can skip this section
+   if you only want to learn how to use GPRconfig.
 
-All knowledge of compilers is embedded in a set of XML files called the
-*knowledge base*.
-Users can easily contribute to this general knowledge base, and have
-GPRconfig immediately take advantage of any new data.
+All knowledge of compilers is recorded in a set of XML files called the
+*knowledge base*. GPRconfig itself has no hard-coded knowledge of compilers,
+although it does contain a default instance of the knowledge base, which
+users can override or complement using the switches ``--db-``/``--db {dir}``
+described above.
 
 The knowledge base contains various kinds of information:
 
@@ -925,7 +922,7 @@ the two chunks above should be written as:
     chunk2:
       package Language_Processing is
         for Attr1 use Language_Processing'Attr1 & ("bar");
-    end Language_Processing;
+      end Language_Processing;
 
 The chunks are described in a ``<configuration>`` XML node. The most
 important child of such a node is ``<config>``, which contains the
@@ -1045,6 +1042,32 @@ be any of:
   If the `negate` attribute is 'true', then the meaning of this filter
   is inverted, and it will match when none of its children matches.
 
+In addition to the configuration fragments computed by evaluating the main
+knowledge base, the root directory of the detected runtime is searched for
+additional XML files and those are added to configuration to provide the
+runtime-specific customization (the convention is to have a single extra file
+called ``runtime.xml``, although this is not enforced). These XML files are only
+expected to contain ``<configuration><config>`` XML node and should additionally
+contain ``CDATA`` reference to ensure the additional configuration is
+properly integrated. For example, a soft-float runtime may add this:
+
+.. code-block:: xml
+
+  <?xml version="1.0" ?>
+  
+  <gprconfig>
+    <configuration>
+      <config><![CDATA[
+     package Compiler is
+        for Leading_Required_Switches ("Ada") use
+           Compiler'Leading_Required_Switches ("Ada") & ("-msoft-float");
+     end Compiler;
+  ]]>
+     </config>
+    </configuration>
+  </gprconfig>
+
+
 .. _Configuration_File_Reference:
 
 Configuration File Reference
@@ -1150,7 +1173,7 @@ General Attributes
 
   Specifies as a single string a description of a toolchain. This attribute is
   not directly used by GPRbuild or its auxiliary tools (GPRbind and GPRlib) but
-  may be used by other tools, for example GPS. Example:
+  may be used by other tools, like an IDE. Example:
 
   .. code-block:: gpr
 
@@ -1850,16 +1873,6 @@ The switches for GPRclean are:
   project file in :file:`{<prefix>}/share/gpr` is to be used.
 
   It is usually used with one or several mains specified on the command line.
-
-* :samp:`--distributed`
-
-  Also clean-up the sources on build slaves,
-  see :ref:`Distributed_compilation`.
-
-* :samp:`--slave-env={name}`
-
-  Use `name` as the slave's environment directory instead of the default one.
-  This options is only used in distributed mode.
 
 * :samp:`--config={config project file name}`
 

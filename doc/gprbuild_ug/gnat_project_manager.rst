@@ -501,8 +501,8 @@ a list of file names (no directories). If a file name is specified without
 extension, it is completed using the naming convention defined in the package
 Naming. If a project defines this
 attribute, it is not necessary to identify main files on the
-command line when invoking a builder, and editors like
-*GPS* will be able to create extra menus to spawn or debug the
+command line when invoking a builder, and IDEs
+will be able to create extra menus to spawn or debug the
 corresponding executables.
 
   .. code-block:: gpr
@@ -988,8 +988,7 @@ The following attributes can be defined in package `Naming`:
   the suffix as ``Makefile.in``, a file called :file:`Makefile.in` will be part
   of the project. This capability is usually not of interest when building.
   However, it might become useful when a project is also used to
-  find the list of source files in an editor, like the GNAT Programming System
-  (GPS).
+  find the list of source files in IDEs, such as GNATstudio.
 
   .. note::
 
