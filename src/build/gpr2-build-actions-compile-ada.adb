@@ -189,6 +189,12 @@ package body GPR2.Build.Actions.Compile.Ada is
                        or else
                          (Self.Local_Config_Pragmas.Is_Defined
                           and then Dep = Self.Local_Config_Pragmas.Simple_Name)
+                       or else
+                         (Self.Global_Config_File.Is_Defined
+                          and then Dep = Self.Global_Config_File.Simple_Name)
+                       or else
+                         (Self.Local_Config_File.Is_Defined
+                          and then Dep = Self.Local_Config_File.Simple_Name)
                      then
                         Traces.Trace
                           ("config pragma file reported as dependency, " &
@@ -226,6 +232,22 @@ package body GPR2.Build.Actions.Compile.Ada is
       if Self.Global_Config_Pragmas.Is_Defined
         and then not Self.Signature.Add_Input
                        (Artifacts.Files.Create (Self.Global_Config_Pragmas))
+        and then Load_Mode
+      then
+         return;
+      end if;
+
+      if Self.Local_Config_File.Is_Defined
+        and then not Self.Signature.Add_Input
+                       (Artifacts.Files.Create (Self.Local_Config_File))
+        and then Load_Mode
+      then
+         return;
+      end if;
+
+      if Self.Global_Config_File.Is_Defined
+        and then not Self.Signature.Add_Input
+                       (Artifacts.Files.Create (Self.Global_Config_File))
         and then Load_Mode
       then
          return;
@@ -454,14 +476,41 @@ package body GPR2.Build.Actions.Compile.Ada is
          --  views.
 
          Self.Global_Config_Pragmas :=
-           Path_Name.Create_File (Filename_Type (Attr.Value.Text));
+           Path_Name.Create_File (Filename_Type (Attr.Value.Text),
+                                  Self.View.Tree.Root_Project.Dir_Name.Value);
       end if;
 
       Attr := Self.View.Attribute (PRA.Compiler.Local_Configuration_Pragmas);
 
       if Attr.Is_Defined then
          Self.Local_Config_Pragmas :=
-           Path_Name.Create_File (Filename_Type (Attr.Value.Text));
+           Path_Name.Create_File (Filename_Type (Attr.Value.Text),
+                                  Self.View.Dir_Name.Value);
+      end if;
+
+      Attr := Self.View.Tree.Root_Project.Attribute
+        (PRA.Builder.Global_Config_File,
+         PAI.Create (Ada_Language));
+
+      if Attr.Is_Defined then
+         --  Note: the Global/Local configuration pragmas attribute are
+         --  expanded by the GPR parser to full names, so that they still
+         --  reference the initial project dir when copied/renamed accross
+         --  views.
+
+         Self.Global_Config_File :=
+           Path_Name.Create_File (Filename_Type (Attr.Value.Text),
+                                  Self.View.Tree.Root_Project.Dir_Name.Value);
+      end if;
+
+      Attr := Self.View.Attribute
+        (PRA.Compiler.Local_Config_File,
+         PAI.Create (Ada_Language));
+
+      if Attr.Is_Defined then
+         Self.Local_Config_File :=
+           Path_Name.Create_File (Filename_Type (Attr.Value.Text),
+                                  Self.View.Dir_Name.Value);
       end if;
    end Initialize;
 

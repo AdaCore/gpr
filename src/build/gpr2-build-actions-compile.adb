@@ -17,6 +17,7 @@ with GPR2.Build.Tree_Db;
 with GPR2.Build.External_Options;
 with GPR2.Message;
 with GPR2.Project.Attribute;
+with GPR2.Project.Tree;
 with GPR2.Source_Reference;
 with GPR2.Tree_Internal;
 with GPR2.View_Internal;
@@ -692,6 +693,27 @@ package body GPR2.Build.Actions.Compile is
          end;
       end if;
 
+      if Self.Global_Config_File.Is_Defined
+        or else Self.Local_Config_File.Is_Defined
+      then
+         declare
+            Sw : constant GPR2.Project.Attribute.Object :=
+                   Self.View.Attribute
+                     (PRA.Compiler.Config_File_Switches, Lang_Idx);
+         begin
+
+            if Self.Global_Config_File.Is_Defined then
+               Add_Options_With_Arg
+                 (Sw, Self.Global_Config_File.String_Value, False);
+            end if;
+
+            if Self.Local_Config_File.Is_Defined then
+               Add_Options_With_Arg
+                 (Sw, Self.Local_Config_File.String_Value, False);
+            end if;
+         end;
+      end if;
+
    exception
       when GNATCOLL.OS.OS_Error =>
          Self.Tree.Reporter.Report
@@ -753,6 +775,15 @@ package body GPR2.Build.Actions.Compile is
                begin
                   if not Ambiguous and then Src.Is_Defined then
                      Path := Src.Path_Name;
+                  elsif (Self.Global_Config_File.Is_Defined
+                         and then Dep = Self.Global_Config_File.Simple_Name)
+                    or else
+                      (Self.Local_Config_File.Is_Defined
+                       and then Dep = Self.Local_Config_File.Simple_Name)
+                  then
+                     Traces.Trace
+                       ("config file reported as dependency, " &
+                          "ignoring : " & String (Dep));
                   else
                      Path :=
                        GPR2.Path_Name.Create_File
@@ -790,6 +821,22 @@ package body GPR2.Build.Actions.Compile is
          then
             return;
          end if;
+      end if;
+
+      if Self.Global_Config_File.Is_Defined
+        and then not Self.Signature.Add_Input
+                       (Artifacts.Files.Create (Self.Global_Config_File))
+        and then Load_Mode
+      then
+         return;
+      end if;
+
+      if Self.Local_Config_File.Is_Defined
+        and then not Self.Signature.Add_Input
+                       (Artifacts.Files.Create (Self.Local_Config_File))
+        and then Load_Mode
+      then
+         return;
       end if;
    end Compute_Signature;
 
@@ -858,9 +905,11 @@ package body GPR2.Build.Actions.Compile is
                       (Src.Owning_View.Attribute
                          (PRA.Compiler.Object_File_Suffix,
                           PAI.Create (Src.Language)).Value.Text);
+      Lang_Idx  : constant GPR2.Project.Attribute_Index.Object :=
+                    PAI.Create (Src.Language);
       Attr      : constant GPR2.Project.Attribute.Object :=
-                    View.Attribute (PRA.Object_Generated,
-                                    PAI.Create (Src.Language));
+                    View.Attribute (PRA.Object_Generated, Lang_Idx);
+      Cfg_Attr  : GPR2.Project.Attribute.Object;
       No_Obj    : constant Boolean :=
                     (View.Is_Library and then View.Is_Externally_Built)
                       or else (Attr.Is_Defined
@@ -880,7 +929,7 @@ package body GPR2.Build.Actions.Compile is
       Self.Lang     := Src.Language;
 
       Has_Dep := Self.Ctxt.Has_Attribute
-        (PRA.Compiler.Dependency_Switches, PAI.Create (Self.Lang));
+        (PRA.Compiler.Dependency_Switches, Lang_Idx);
 
       declare
          --  We need Self.View and Self.Lang set before calling Dep_File_Suffix
@@ -954,6 +1003,32 @@ package body GPR2.Build.Actions.Compile is
             Self.Dep_File := Artifacts.Files.Undefined;
          end if;
       end;
+
+      --  Check the configuration files
+
+      Cfg_Attr := Self.View.Tree.Root_Project.Attribute
+        (PRA.Builder.Global_Config_File, Lang_Idx);
+
+      if Cfg_Attr.Is_Defined then
+         --  Note: the Global/Local configuration pragmas attribute are
+         --  expanded by the GPR parser to full names, so that they still
+         --  reference the initial project dir when copied/renamed accross
+         --  views.
+
+         Self.Global_Config_File :=
+           Path_Name.Create_File
+             (Filename_Type (Cfg_Attr.Value.Text),
+              Self.View.Tree.Root_Project.Dir_Name.Value);
+      end if;
+
+      Cfg_Attr := Self.View.Attribute
+        (PRA.Compiler.Local_Config_File, Lang_Idx);
+
+      if Cfg_Attr.Is_Defined then
+         Self.Local_Config_File :=
+           Path_Name.Create_File (Filename_Type (Cfg_Attr.Value.Text),
+                                  Self.View.Dir_Name.Value);
+      end if;
    end Initialize;
 
    -----------------------
