@@ -29,6 +29,7 @@ with GNATCOLL.OS.Stat;
 with GNATCOLL.Traces;
 with GNATCOLL.Utils;
 
+with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Actions_Population;
 with GPR2.Build.Actions.Compile;
 with GPR2.Build.Actions.Compile.Ada;
@@ -333,9 +334,16 @@ begin
 
                Delete_File (Artifact_Path.String_Value, Opt);
 
-               if Action in GPR2.Build.Actions.Compile.Object'Class then
-                  Lang :=
-                    GPR2.Build.Actions.Compile.Object'Class (Action).Language;
+               if Action in GPR2.Build.Actions.Compile.Object'Class
+                 or else Action in GPR2.Build.Actions.Post_Bind.Object'Class
+               then
+                  if Action in GPR2.Build.Actions.Compile.Object'Class then
+                     Lang :=
+                       GPR2.Build.Actions.Compile.Object'Class
+                         (Action).Language;
+                  else
+                     Lang := Ada_Language;
+                  end if;
 
                   declare
                      Src_Exts : constant GPR2.Project.Attribute.Object :=
