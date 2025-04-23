@@ -143,11 +143,18 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
             Text_IO.Put_Line (Name);
 
          else
-            Success := GNATCOLL.OS.FSUtil.Remove_File (Name);
-
-            if not Success and then Opts.Force_Deletions then
-               GNAT.OS_Lib.Set_Writable (Name);
+            if Opts.Force_Deletions
+              or else GNAT.OS_Lib.Is_Owner_Writable_File (Name)
+              or else GNAT.OS_Lib.Is_Symbolic_Link (Name)
+            then
                Success := GNATCOLL.OS.FSUtil.Remove_File (Name);
+
+               if not Success then
+                  GNAT.OS_Lib.Set_Writable (Name);
+                  Success := GNATCOLL.OS.FSUtil.Remove_File (Name);
+               end if;
+            else
+               Success := False;
             end if;
 
             if Success then
