@@ -32,4 +32,4 @@ print("*** Recursive GPRClean on extended project ***")
 # Check if extended project is cleaned in recurse mode
 bnr.check_output([GPRBUILD, '-p', '-q', '-Pprj2.gpr'])
 bnr.check_output([GPRCLEAN, '-p', '-q', '-Pprj2.gpr', '-r'])
-check_paths_deleted(['obj1', 'obj2'])
+check_paths_deleted(['obj1/pck2.o', 'obj1/pck2.ali', 'obj2'])
