@@ -1,0 +1,2 @@
+prj.gpr:6:13: warning: in "a-bla-b.adb", actual unit name "A.BLA.A" differs from the one declared in the project : "BLA.A"
+prj.gpr: warning: duplicated separate for unit "A.BLA" in /prj/src/a-bla-a.adb and /prj/src/a-bla-b.adb

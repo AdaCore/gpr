@@ -202,8 +202,14 @@ package body GPR2.Build.View_Tables is
       Index    : Unit_Index;
       Messages : in out GPR2.Log.Object)
    is
-      Cursor  : Compilation_Unit_Maps.Cursor;
-      Success : Boolean := True;
+      Cursor       : Compilation_Unit_Maps.Cursor;
+      Success      : Boolean := True;
+      Remove_Src   : Boolean := False;
+      Remove_Other : Boolean := False;
+      Replace      : Boolean := False;
+      Error_Case   : Boolean := False;
+      Other        : Compilation_Unit.Unit_Location;
+      Old_Owner    : GPR2.Project.View.Object;
 
    begin
       if Traces.Is_Active then
@@ -241,296 +247,307 @@ package body GPR2.Build.View_Tables is
             end if;
          end;
 
-      else
-         declare
-            CU_Instance : constant Compilation_Unit_Maps.Reference_Type :=
-                            NS_Db.CUs.Reference (Cursor);
-            Old_Owner   : constant Project.View.Object :=
-                            CU_Instance.Owning_View;
-            Other       : Compilation_Unit.Unit_Location;
-            use type GPR2.Project.View.Object;
+         return;
+      end if;
 
-         begin
-            CU_Instance.Add
-              (Kind, View_Db.View, Path, Index, Sep_Name, Success);
+      declare
+         CU_Instance : constant Compilation_Unit_Maps.Reference_Type :=
+                         NS_Db.CUs.Reference (Cursor);
 
-            if not Success and then not View_Db.View.Is_Runtime then
-               Traces.Trace ("!! clashing unit part");
+      begin
+         Old_Owner := CU_Instance.Owning_View;
 
-               --  Check for duplicated units
+         CU_Instance.Add
+           (Kind, View_Db.View, Path, Index, Sep_Name, Success);
 
-               --  Note: the runtime *has* duplicated unit to support
-               --  system.memory, now our generated project to add it to the
-               --  tree is a bit simple minded, so just kill the warning for
-               --  the runtime view.
+         if not Success and then not View_Db.View.Is_Runtime then
+            Traces.Trace ("!! clashing unit part");
 
-               Other := CU_Instance.Get (Kind, Sep_Name);
+            --  Check for duplicated units
 
-               if Other.View.Is_Runtime then
-                  --  Special case for the runtime, where we allow some
-                  --  runtime units to be overriden by project sources.
-                  Traces.Trace ("... replacing a runtime unit");
+            --  Note: the runtime *has* duplicated unit to support
+            --  system.memory, now our generated project to add it to the
+            --  tree is a bit simple minded, so just kill the warning for
+            --  the runtime view.
 
-                  CU_Instance.Remove
-                    (Kind, Other.View, Other.Source, Other.Index, Sep_Name);
-                  CU_Instance.Add
-                    (Kind, View_Db.View, Path, Index, Sep_Name, Success);
+            Other := CU_Instance.Get (Kind, Sep_Name);
 
-               elsif Other.Source.Value = Path.Value then
-                  --  Same source found by multiple projects
-                  Messages.Append
-                    (Message.Create
-                       (Level => Message.Error,
-                        Message => "source file """ &
-                          String (Path.Simple_Name) &
-                          """ already part of project " &
-                          String (CU_Instance.Get (Kind, Sep_Name).View.Name),
-                        Sloc    => Source_Reference.Create
-                          (View_Db.View.Path_Name.Value, 0, 0)));
+            if Other.View.Is_Runtime then
+               --  Special case for the runtime, where we allow some
+               --  runtime units to be overriden by project sources.
+               Traces.Trace ("... replacing a runtime unit");
 
-               else
-                  --  Clashing unit case: we need to check if project extension
-                  --  is involved to hide the extended unit.
+               CU_Instance.Remove
+                 (Kind, Other.View, Other.Source, Other.Index, Sep_Name);
+               CU_Instance.Add
+                 (Kind, View_Db.View, Path, Index, Sep_Name, Success);
 
-                  declare
-                     Other_Db     : constant View_Data_Ref :=
-                                      Get_Data (NS_Db.Tree_Db, Other.View);
-                     Other_Loc    : constant Source_Proxy :=
-                                      Other_Db.Sources
-                                        (Other.Source.Value);
-                     Remove_Src   : Boolean := False;
-                     Remove_Other : Boolean := False;
-                     Replace      : Boolean := False;
-                     Error_Case   : Boolean := False;
+            elsif Other.Source.Value = Path.Value then
+               --  Same source found by multiple projects
+               Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Message => "source file """ &
+                       String (Path.Simple_Name) &
+                       """ already part of project " &
+                       String (CU_Instance.Get (Kind, Sep_Name).View.Name),
+                     Sloc    => Source_Reference.Create
+                       (View_Db.View.Path_Name.Value, 0, 0)));
+               Success := False;
 
-                  begin
-                     if View_Db.View = Other.View then
-                        --  Both sources are reported for the same view, let's
-                        --  see if one is inherited. This may happen if the
-                        --  extending view has a naming exception for the unit.
+            else
+               --  Clashing unit case: we need to check if project extension
+               --  is involved to hide the extended unit.
 
-                        if not Src.Inh_From.Is_Defined
-                          and then not Other_Loc.Inh_From.Is_Defined
-                        then
-                           --  both sources are directly defined for the view,
-                           --  so we raise an error about duplicated units.
+               declare
+                  Other_Loc : constant Source_Proxy :=
+                                Get_Data (NS_Db.Tree_Db, Other.View).Sources
+                                (Other.Source.Value);
+                  use type GPR2.Project.View.Object;
 
-                           Traces.Trace
-                             ("... error: both units are defined in the" &
-                                " current view");
+               begin
+                  if View_Db.View = Other.View then
+                     --  Both sources are reported for the same view, let's
+                     --  see if one is inherited. This may happen if the
+                     --  extending view has a naming exception for the unit.
 
-                           Error_Case := True;
-
-                        elsif Src.Inh_From.Is_Defined
-                          and then not Other_Loc.Inh_From.Is_Defined
-                        then
-                           --  new source is inherited. previously analyzed
-                           --  one is not, don't do anything apart of cleaning
-                           --  up Src.
-
-                           Traces.Trace
-                             ("... new source is inherited, remove it");
-
-                           Remove_Src := True;
-
-                        elsif not Src.Inh_From.Is_Defined
-                          and then Other_Loc.Inh_From.Is_Defined
-                        then
-                           --  previously analyzed source was inherited while
-                           --  the new one is not: replace by the new source
-                           --  in the unit.
-
-                           Traces.Trace
-                             ("... new source overloads old unit, replace it");
-
-                           Replace := True;
-
-                        elsif Src.View.Is_Extending (Other_Loc.View) then
-                           --  the defining view for the new source is
-                           --  extending the defining view for the old source:
-                           --  replace the old one.
-
-                           Traces.Trace
-                             ("... new source overloads old unit, replace it");
-
-                           Replace := True;
-
-                        elsif Other_Loc.View.Is_Extending (Src.View) then
-                           --  new source was overloaded by the old source, so
-                           --  just remove its unit
-
-                           Traces.Trace
-                             ("... new source is inherited, remove it");
-
-                           Remove_Src := True;
-
-                        else
-                           --  Both have been inherited but from different
-                           --  unrelated views: there's a clash.
-
-                           Traces.Trace
-                             ("... units come from unrelated inherited" &
-                                " views, error");
-
-                           Error_Case := True;
-                        end if;
-
-                     elsif View_Db.View.Is_Extending (Other.View) then
-                        --  Replace the unit in the compilation unit
+                     if not Src.Inh_From.Is_Defined
+                       and then not Other_Loc.Inh_From.Is_Defined
+                     then
+                        --  both sources are directly defined for the view,
+                        --  so we raise an error about duplicated units.
 
                         Traces.Trace
-                          ("... new source overloads old unit, " &
-                             "replace it");
+                          ("... error: both units are defined in the" &
+                             " current view");
+
+                        Error_Case := True;
+
+                     elsif Src.Inh_From.Is_Defined
+                       and then not Other_Loc.Inh_From.Is_Defined
+                     then
+                        --  new source is inherited. previously analyzed
+                        --  one is not, don't do anything apart of cleaning
+                           --  up Src.
+
+                        Traces.Trace
+                          ("... new source is inherited, remove it");
+
+                        Remove_Src := True;
+
+                     elsif not Src.Inh_From.Is_Defined
+                       and then Other_Loc.Inh_From.Is_Defined
+                     then
+                        --  previously analyzed source was inherited while
+                        --  the new one is not: replace by the new source
+                        --  in the unit.
+
+                        Traces.Trace
+                          ("... new source overloads old unit, replace it");
 
                         Replace := True;
 
-                     elsif Other.View.Is_Extending (View_Db.View) then
+                     elsif Src.View.Is_Extending (Other_Loc.View) then
+                        --  the defining view for the new source is
+                        --  extending the defining view for the old source:
+                        --  replace the old one.
+
+                        Traces.Trace
+                          ("... new source overloads old unit, replace it");
+
+                        Replace := True;
+
+                     elsif Other_Loc.View.Is_Extending (Src.View) then
+                        --  new source was overloaded by the old source, so
+                        --  just remove its unit
+
+                        Traces.Trace
+                          ("... new source is inherited, remove it");
 
                         Remove_Src := True;
+
                      else
+                        --  Both have been inherited but from different
+                        --  unrelated views: there's a clash.
+
                         Traces.Trace
-                          ("??? we should never end up here !");
+                          ("... units come from unrelated inherited" &
+                             " views, error");
 
                         Error_Case := True;
                      end if;
 
+                  elsif View_Db.View.Is_Extending (Other.View) then
+                     --  Replace the unit in the compilation unit
 
-                     if Error_Case then
-                        --  Two sources in the closure declare the same unit
-                        --  part, so issue a warning.
+                     Traces.Trace
+                       ("... new source overloads old unit, " &
+                          "replace it");
 
-                        Messages.Append
-                          (Message.Create
-                             (Level   => Message.Warning,
-                              Message => "duplicated " &
-                                Image (Kind) & " for unit """ & String (CU) &
-                                """ in " & Other.Source.String_Value &
-                                " and " & Path.String_Value,
-                              Sloc    =>
-                                Source_Reference.Create
-                                  (NS_Db.View.Path_Name.Value, 0, 0)));
+                     Replace := True;
 
-                        --  Ignore the clashing sources
-                        Remove_Src   := True;
-                        Remove_Other := True;
-                        Replace      := False;
+                  elsif Other.View.Is_Extending (View_Db.View) then
+                     Remove_Src := True;
+
+                  else
+                     Traces.Trace
+                       ("??? we should never end up here !");
+
+                     Error_Case := True;
+                  end if;
+
+
+                  if Error_Case then
+                     --  Two sources in the closure declare the same unit
+                     --  part, so issue a warning.
+
+                     Messages.Append
+                       (Message.Create
+                          (Level   => Message.Warning,
+                           Message => "duplicated " &
+                             Image (Kind) & " for unit """ & String (CU) &
+                             """ in " & Other.Source.String_Value &
+                             " and " & Path.String_Value,
+                           Sloc    =>
+                             Source_Reference.Create
+                               (NS_Db.View.Path_Name.Value, 0, 0)));
+
+                     --  Ignore the clashing sources
+                     Remove_Src   := True;
+                     Remove_Other := True;
+                     Replace      := False;
+                  else
+                     Success := True;
+                  end if;
+
+                  if Replace then
+
+                     CU_Instance.Remove
+                       (Kind, Other.View, Other.Source, Other.Index,
+                        Sep_Name);
+
+                     CU_Instance.Add
+                       (Kind, View_Db.View, Path, Index, Sep_Name, Success);
+
+                     --  If the source is multi-unit, remove this unit from
+                     --  it, else completely remove the source.
+
+                     if Other.Index /= No_Index then
+                        declare
+                           use Src_Info_Maps;
+
+                           Owning_Db : constant View_Data_Ref :=
+                                         Get_Data (NS_Db.Tree_Db,
+                                                   Other_Loc.View);
+                           Other_Src : constant Reference_Type :=
+                                         Owning_Db.Src_Infos.Reference
+                                           (Other.Source.Value);
+                        begin
+                           Other_Src.Remove_Unit (Other.Index);
+
+                           Remove_Other := Other_Src.Units.Is_Empty;
+                        end;
+
                      else
-                        Success := True;
+                        Remove_Other := True;
                      end if;
 
-                     if Replace then
+                  elsif Remove_Src then
+                     Remove_Src := False;
 
-                        CU_Instance.Remove
-                          (Kind, Other.View, Other.Source, Other.Index,
-                           Sep_Name);
+                     if Index /= No_Index then
+                        declare
+                           use Src_Info_Maps;
 
-                        CU_Instance.Add
-                          (Kind, View_Db.View, Path, Index, Sep_Name, Success);
+                           Owning_Db : constant View_Data_Ref :=
+                                         Get_Data (NS_Db.Tree_Db, Src.View);
+                           Ref       : constant Reference_Type :=
+                                         Owning_Db.Src_Infos.Reference
+                                           (Path.Value);
+                        begin
+                           Ref.Remove_Unit (Index);
+                           Remove_Src := Ref.Units.Is_Empty;
+                        end;
 
-                        --  If the source is multi-unit, remove this unit from
-                        --  it, else completely remove the source.
-
-                        if Other.Index /= No_Index then
-                           declare
-                              use Src_Info_Maps;
-
-                              Owning_Db : constant View_Data_Ref :=
-                                            Get_Data (NS_Db.Tree_Db,
-                                                      Other_Loc.View);
-                              Other_Src : constant Reference_Type :=
-                                            Owning_Db.Src_Infos.Reference
-                                              (Other.Source.Value);
-                           begin
-                              Other_Src.Remove_Unit (Other.Index);
-
-                              Remove_Other := Other_Src.Units.Is_Empty;
-                           end;
-
-                        else
-                           Remove_Other := True;
-                        end if;
-
-                     elsif Remove_Src then
-                        Remove_Src := False;
-
-                        if Index /= No_Index then
-                           declare
-                              use Src_Info_Maps;
-
-                              Owning_Db : constant View_Data_Ref :=
-                                            Get_Data (NS_Db.Tree_Db,
-                                                      Src.View);
-                              Ref       : constant Reference_Type :=
-                                            Owning_Db.Src_Infos.Reference
-                                              (Path.Value);
-                           begin
-                              Ref.Remove_Unit (Index);
-                              Remove_Src := Ref.Units.Is_Empty;
-                           end;
-
-                        else
-                           Remove_Src := True;
-                        end if;
-
-                        if Remove_Src then
-                           if Traces.Is_Active then
-                              Traces.Trace
-                                ("ignoring source '" &
-                                   String (Src.Path_Name));
-                           end if;
-
-                           Remove_Source (View_Db,
-                                          Src.View,
-                                          Src.Path_Name,
-                                          Src.Inh_From,
-                                          True,
-                                          Messages);
-                        end if;
-
+                     else
+                        Remove_Src := True;
                      end if;
+                  end if;
+               end;
+            end if;
+         end if;
+      end;
 
-                     if Remove_Other then
-                        if Traces.Is_Active then
-                           Traces.Trace
-                             ("ignoring source '" &
-                                String (Other_Loc.Path_Name) &
-                                "' as it is not used anymore");
-                        end if;
+      --  Note: we need to make sure we don't hold a reference on the
+      --  compilation unit before actually removing sources, since this
+      --  operation may need to modify the CU map and thus lead to a program
+      --  error exception.
 
-                        Remove_Source (View_Db,
-                                       Other_Loc.View,
-                                       Other_Loc.Path_Name,
-                                       Other_Loc.Inh_From,
-                                       True,
-                                       Messages);
-                     end if;
-                  end;
-               end if;
+      if Remove_Src then
+         if Traces.Is_Active then
+            Traces.Trace
+              ("ignoring source '" &
+                 String (Src.Path_Name));
+         end if;
+
+         Remove_Source (View_Db,
+                        Src.View,
+                        Src.Path_Name,
+                        Src.Inh_From,
+                        False,
+                        Messages);
+      end if;
+
+
+      if Remove_Other then
+         declare
+            Other_Loc : constant Source_Proxy :=
+                          Get_Data (NS_Db.Tree_Db, Other.View).Sources
+                          (Other.Source.Value);
+         begin
+            if Traces.Is_Active then
+               Traces.Trace
+                 ("ignoring source '" &
+                    String (Other_Loc.Path_Name) &
+                    "' as it is not used anymore");
             end if;
 
-            if Success then
-               if Old_Owner /= CU_Instance.Owning_View then
-                  --  Owning view changed, let's apply this change
-                  if Old_Owner.Is_Defined then
-                     if Traces.Is_Active then
-                        pragma Annotate (Xcov, Exempt_On);
-                        Traces.Trace ("changing unit ownership from " &
-                                        String (Old_Owner.Name) & " to " &
-                                        String (View_Db.View.Name));
-                        pragma Annotate (Xcov, Exempt_Off);
-                     end if;
+            Remove_Source (View_Db,
+                           Other_Loc.View,
+                           Other_Loc.Path_Name,
+                           Other_Loc.Inh_From,
+                           False,
+                           Messages);
+         end;
+      end if;
 
-                     declare
-                        Old_Db : constant View_Data_Ref :=
-                                   Get_Data (NS_Db.Tree_Db, Old_Owner);
-                     begin
-                        Remove_Unit_Ownership (Old_Db, CU, NS_Db);
-                     end;
+      if Success then
+         declare
+            CU_Instance : constant Compilation_Unit.Object :=
+                            Compilation_Unit_Maps.Element (Cursor);
+            use type GPR2.Project.View.Object;
+         begin
+            if Old_Owner /= CU_Instance.Owning_View then
+               --  Owning view changed, let's apply this change
+               if Old_Owner.Is_Defined then
+                  if Traces.Is_Active then
+                     pragma Annotate (Xcov, Exempt_On);
+                     Traces.Trace ("changing unit ownership from " &
+                                     String (Old_Owner.Name) & " to " &
+                                     String (View_Db.View.Name));
+                     pragma Annotate (Xcov, Exempt_Off);
                   end if;
 
-                  if CU_Instance.Owning_View.Is_Defined then
-                     Add_Unit_Ownership (View_Db, CU, NS_Db);
-                  end if;
+                  declare
+                     Old_Db : constant View_Data_Ref :=
+                                Get_Data (NS_Db.Tree_Db, Old_Owner);
+                  begin
+                     Remove_Unit_Ownership (Old_Db, CU, NS_Db);
+                  end;
+               end if;
+
+               if CU_Instance.Owning_View.Is_Defined then
+                  Add_Unit_Ownership (View_Db, CU, NS_Db);
                end if;
             end if;
          end;
@@ -984,8 +1001,12 @@ package body GPR2.Build.View_Tables is
          declare
             Full_Name : constant Name_Type :=
                           GPR2."&" (GPR2."&" (CU, "."), Sep_Name);
+            C         : Name_Maps.Cursor :=
+                          NS_Db.Separates.Find (Full_Name);
          begin
-            NS_Db.Separates.Delete (Full_Name);
+            if Name_Maps.Has_Element (C) then
+               NS_Db.Separates.Delete (C);
+            end if;
          end;
       end if;
    end Remove_Unit_Part;

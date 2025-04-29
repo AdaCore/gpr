@@ -1,0 +1,5 @@
+description:
+    test regression on cursor tempering when deleting compilation units
+driver: build_and_run
+project_file: prj
+main: main

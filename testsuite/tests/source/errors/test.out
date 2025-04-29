@@ -1,9 +1,9 @@
 Project: Demo1
-demo1.gpr:7:11: warning: actual unit name "PCK" differs from the one declared in the project : "1PCK"
+demo1.gpr:7:11: warning: in "1pck.adb", actual unit name "PCK" differs from the one declared in the project : "1PCK"
  > src1/1pck.adb
                   language: Ada    Kind: S_BODY   unit: PCK
 Project: Demo2
-demo2.gpr:9:11: warning: actual unit name "WRONG" differs from the one declared in the project : "PCK._B"
+demo2.gpr:9:11: warning: in "pck___b.ads", actual unit name "WRONG" differs from the one declared in the project : "PCK._B"
  > src2/pck___b.ads
                   language: Ada    Kind: S_BODY   unit: WRONG
  > src2/pck__a.adb
