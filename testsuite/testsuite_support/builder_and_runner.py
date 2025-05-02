@@ -2,7 +2,7 @@ import os
 from e3.os.process import PIPE, Run, STDOUT
 from random import getrandbits
 from e3.testsuite.driver.classic import TestAbortWithFailure
-from testsuite_support.tools import GPRBUILD, GPR2BUILD_NAME, GPR2CLEAN_NAME, GPRINSTALL, GPRLS
+from testsuite_support.tools import GPRBUILD, GPR2BUILD, GPR2BUILD_NAME, GPR2CLEAN_NAME, GPRINSTALL, GPRLS
 
 # environment variables definition
 
@@ -96,8 +96,10 @@ class BuilderAndRunner(object):
             else:
                 return p
 
-    def build(self, project, vars=[], args=[], env=None, output=PIPE):
+    def build(self, project, vars=[], args=[], env=None, output=PIPE, use_gpr2build=False):
         """ gprbuild wrapper for normal & coverage modes """
+
+        gprbuild = GPR2BUILD if use_gpr2build else GPRBUILD
 
         # If code coverage is requested, leave a chance to gnatcov to decorate
         # the execution of the subprogram in order to make it contribute to
@@ -122,14 +124,14 @@ class BuilderAndRunner(object):
             # the installed one from libgpr2. This means we need to ensure
             # that some scenario variables are properly set.
             gprbuild_cmd = (
-                [GPRBUILD, "-P", project,
+                [gprbuild, "-P", project,
                  "-XGPR2_BUILD=gnatcov", "-XXMLADA_BUILD=static"]
                 + vars
                 + ["--src-subdirs=gnatcov-instr", "--implicit-with=gnatcov_rts"]
                 + args
             )
         else:
-            gprbuild_cmd = [GPRBUILD, "-P", project] + vars + args
+            gprbuild_cmd = [gprbuild, "-P", project] + vars + args
 
         return self.simple_run(gprbuild_cmd, env=env, output=output)
 
@@ -182,7 +184,7 @@ class BuilderAndRunner(object):
         if self.valgrind:
             env[USE_VALGRIND] = "true"
         if self.use_gpr2build:
-            # the tested gpr2 package considers gpr2build as "gprbuild"
+            # the tested gpr2 package creates gpr2build as "gprbuild"
             env[GPR2BUILD_NAME] = "gprbuild"
             env[GPR2CLEAN_NAME] = "gprclean"
         if self.gnatcov:
