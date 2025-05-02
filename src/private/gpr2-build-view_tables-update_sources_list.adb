@@ -1071,7 +1071,8 @@ package body Update_Sources_List is
                   Messages.Append
                     (Message.Create
                        (Message.Warning,
-                        "actual unit name """ &
+                        "in """ & String (Source.Path_Name.Simple_Name) &
+                          """, actual unit name """ &
                           String
                           (Source.Unit.Full_Name) &
                           """ differs from the one declared in the " &
