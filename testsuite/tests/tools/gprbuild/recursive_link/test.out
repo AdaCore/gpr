@@ -1,0 +1,6 @@
+$ gprbuild -q prj.gpr
+prj.gpr: warning: circular library dependency detected
+lib1.gpr: warning: liblib1.a depends on liblib2.a
+lib2.gpr: warning: liblib2.a depends on liblib1.a
+$ ./main
+in bar.c

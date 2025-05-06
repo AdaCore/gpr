@@ -1,0 +1,3 @@
+description:
+    Test that link is Ok when two static libraries depend on each others.
+driver: python_script

@@ -1,0 +1,12 @@
+limited with "lib1";
+
+library project Lib2 is
+   for Languages use ("C");
+
+   for Library_Name use "lib2";
+
+   for Source_Dirs use ("src/" & Project'Library_Name);
+   for Object_Dir use "obj/" & Project'Library_Name;
+   for Library_Dir use "lib/" & Project'Library_Name;
+
+end Lib2;
