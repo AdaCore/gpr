@@ -371,6 +371,10 @@ package body GPR2.Build.Actions.Link is
               +Self.Ctxt.Tree.Runtime_Project.Object_Directory.String_Value;
          end if;
 
+         if Self.Lib_Dep_Circle then
+            Cmd_Line.Add_Argument ("-Wl,--start-group");
+         end if;
+
          for Lib of Self.Library_Dependencies loop
             declare
                Link         : constant Object'Class :=
@@ -577,6 +581,10 @@ package body GPR2.Build.Actions.Link is
       for Arg of Dash_l_Opts loop
          Cmd_Line.Add_Argument (Arg);
       end loop;
+
+         if Self.Lib_Dep_Circle then
+            Cmd_Line.Add_Argument ("-Wl,--end-group");
+         end if;
 
       if Link_Exec then
          --  Add switches for linking an executable
@@ -1245,6 +1253,17 @@ package body GPR2.Build.Actions.Link is
 
       return True;
    end Pre_Command;
+
+   ---------------------------------------
+   -- Set_Has_Library_Dependency_Circle --
+   ---------------------------------------
+
+   procedure Set_Has_Library_Dependency_Circle
+     (Self  : in out Object;
+      State : Boolean) is
+   begin
+      Self.Lib_Dep_Circle := State;
+   end Set_Has_Library_Dependency_Circle;
 
    ---------
    -- UID --

@@ -53,6 +53,12 @@ package GPR2.Build.Actions.Link is
    procedure Add_Option (Self : in out Object; Option : String);
    --  Add an option to the linking command line
 
+   procedure Set_Has_Library_Dependency_Circle
+     (Self  : in out Object;
+      State : Boolean);
+   --  Mark the action as having a library dependency circle requiring the use
+   --  of --start-group --end-group as linker option
+
    function Is_Library (Self : Object) return Boolean;
 
    function Is_Static_Library (Self : Object) return Boolean;
@@ -161,6 +167,9 @@ private
 
       No_Rpath        : Boolean := False;
       --  When set, the RPATH will not be set for shared libraries resolution
+
+      Lib_Dep_Circle  : Boolean := False;
+      --  Whether the libraries are inter-dependent
    end record;
 
    overriding procedure Compute_Signature
