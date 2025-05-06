@@ -1840,6 +1840,24 @@ begin
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
 
+   --  linker.group_end_switch
+   Add
+     (Name => Linker.Group_End_Switch,
+      Index_Type           => No_Index,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Is_Allowed_In        => Everywhere,
+      Default              => Create ("-Wl,--end-group"));
+
+   --  linker.group_start_switch
+   Add
+     (Name => Linker.Group_Start_Switch,
+      Index_Type           => No_Index,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Is_Allowed_In        => Everywhere,
+      Default              => Create ("-Wl,--start-group"));
+
    --  clean.switches
    Add
      (Name                 => Clean.Switches,

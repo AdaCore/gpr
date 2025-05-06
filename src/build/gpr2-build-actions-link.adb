@@ -372,7 +372,8 @@ package body GPR2.Build.Actions.Link is
          end if;
 
          if Self.Lib_Dep_Circle then
-            Cmd_Line.Add_Argument ("-Wl,--start-group");
+            Cmd_Line.Add_Argument
+              (Self.Ctxt.Attribute (PRA.Linker.Group_Start_Switch).Value.Text);
          end if;
 
          for Lib of Self.Library_Dependencies loop
@@ -576,15 +577,16 @@ package body GPR2.Build.Actions.Link is
                end if;
             end;
          end loop;
-      end if;
 
-      for Arg of Dash_l_Opts loop
-         Cmd_Line.Add_Argument (Arg);
-      end loop;
+         for Arg of Dash_l_Opts loop
+            Cmd_Line.Add_Argument (Arg);
+         end loop;
 
          if Self.Lib_Dep_Circle then
-            Cmd_Line.Add_Argument ("-Wl,--end-group");
+            Cmd_Line.Add_Argument
+              (Self.Ctxt.Attribute (PRA.Linker.Group_End_Switch).Value.Text);
          end if;
+      end if;
 
       if Link_Exec then
          --  Add switches for linking an executable

@@ -700,6 +700,10 @@ package GPR2.Project.Registry.Attribute is
                                   (Pack.Linker, +"export_file_format");
       Export_File_Switch      : constant Q_Attribute_Id :=
                                   (Pack.Linker, +"export_file_switch");
+      Group_End_Switch        : constant Q_Attribute_Id :=
+                                  (Pack.Linker, +"group_end_switch");
+      Group_Start_Switch      : constant Q_Attribute_Id :=
+                                  (Pack.Linker, +"group_start_switch");
       Leading_Switches        : constant Q_Attribute_Id :=
                                   (Pack.Linker, +"leading_switches");
       Linker_Options          : constant Q_Attribute_Id :=
