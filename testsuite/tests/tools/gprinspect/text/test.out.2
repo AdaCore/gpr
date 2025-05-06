@@ -251,6 +251,10 @@
        - Source_Dirs [ LIST ]
           - Values : 
              - "src2"
+       - Linker'Group_End_Switch [ SINGLE ]
+          - Value : "-Wl,--end-group"
+       - Linker'Group_Start_Switch [ SINGLE ]
+          - Value : "-Wl,--start-group"
        - Naming'Body_Suffix [ SINGLE ]
           - Index value : "ada"
           - Value : ".adb"
@@ -618,6 +622,16 @@
         },
         {
           "attributes": [
+            {
+              "kind": "single",
+              "name": "Group_End_Switch",
+              "value": "-Wl,--end-group"
+            },
+            {
+              "kind": "single",
+              "name": "Group_Start_Switch",
+              "value": "-Wl,--start-group"
+            }
           ],
           "name": "Linker"
         },
