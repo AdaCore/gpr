@@ -17,17 +17,6 @@ stages:
       paths:
         - cache
 
-.windows-test_template:
-  services:
-    - image:e3-windows-2022
-    - platform:x86_64-windows-2022
-    - cpu:2
-    - mem:8 # 8 is required for tests with high memory usage
-    - disk:100
-  stage: test
-  allow_failure: true
-  interruptible: true
-
 ###########
 ## BUILD ##
 ###########
@@ -119,7 +108,15 @@ test_gpr2_with_gpr2build:
 ############################
 
 build_and_test_gpr2_windows:
-  extends: .windows-test_template
+  services:
+    - image:e3-windows-2022
+    - platform:x86_64-windows-2022
+    - cpu:8
+    - mem:8 # 8 is required for tests with high memory usage
+    - disk:100
+  stage: test
+  allow_failure: true
+  interruptible: true
   needs: []
   variables:
     JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
@@ -231,12 +228,8 @@ test_gpr2_cov:
 # CHECK WE CAN BOOTSTRAP GNAT #
 ###############################
 
-test_bootstrap:
-  services:
-     - image:e3
-     - cpu:16
+.gnat_bootstrap:
   extends: .gpr2_test_template
-  allow_failure: false
   variables:
     JOB_SUBPROJECTS: eng/gpr/gprconfig_kb eng/gpr/gprname
   cache:
@@ -249,6 +242,13 @@ test_bootstrap:
         - bootstrap-main
       paths:
         - bootstrap_cache
+
+test_bootstrap:
+  services:
+     - image:e3
+     - cpu:16
+  extends: .gnat_bootstrap
+  allow_failure: false
   script:
     - install_cache full
     - if [[ $CI_PIPELINE_SOURCE != "schedule" && -d $CI_PROJECT_DIR/bootstrap_cache ]]; then
@@ -286,6 +286,29 @@ test_bootstrap:
         rsync -a $SANDBOX/$HOST/$pkg $CI_PROJECT_DIR/bootstrap_cache/ ;
       done
     - exit $result
+
+##########################################
+# CHECK WE CAN BOOTSTRAP GNAT ON WINDOWS #
+##########################################
+
+test_windows_bootstrap:
+  services:
+    - image:e3-windows-2022
+    - platform:x86_64-windows-2022
+    - cpu:8
+    - mem:16
+    - disk:100
+  extends: .gnat_bootstrap
+  allow_failure: true
+  script:
+    - install_cache full
+    - anod tune --plan $CI_PROJECT_DIR/.ci.plan
+    - result=0
+    - anod install gprbuild -Qstable
+    # and run the gnat bootstrap
+    - anod build gnat || result=$?
+    - exit $result
+  when: manual
 
 ###################################################
 ## CHECK USERS OF THE LIBGPR2 LIBRARY (optional) ##
