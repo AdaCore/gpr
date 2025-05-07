@@ -70,5 +70,6 @@ begin
    Test ("Pkg2.Child");
    Test ("Pkg3");
    Test ("PkgUnk");
+   Test ("P1.P");
 
 end Main;
