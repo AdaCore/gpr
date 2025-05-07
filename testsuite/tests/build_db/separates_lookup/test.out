@@ -19,3 +19,8 @@ Lookup compilation unit for Pkg3
     no body for PKG3
 Lookup compilation unit for PkgUnk
 ... not found
+Lookup compilation unit for P1.P
+... found CU: P1
+    spec: p1.ads
+    body: p1.adb
+    sep.: p1-p.adb
