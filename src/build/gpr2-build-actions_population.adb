@@ -7,6 +7,7 @@
 with Ada.Containers.Vectors;
 with Ada.Strings.Fixed;
 
+with GNATCOLL.Directed_Graph;
 with GNATCOLL.Traces;
 
 with GPR2.Build.Actions.Ada_Bind;
@@ -28,6 +29,7 @@ with GPR2.Project.View.Set;
 with GPR2.Project.View.Vector;
 with GPR2.Source_Reference;
 with GPR2.View_Ids.Set;
+with GPR2.View_Ids.Vector;
 
 package body GPR2.Build.Actions_Population is
 
@@ -65,9 +67,24 @@ package body GPR2.Build.Actions_Population is
      (Positive, Library_Type);
 
    package Library_Map is
+      use GNATCOLL.Directed_Graph;
+
+      package View_Node_Map is new Ada.Containers.Ordered_Maps
+        (Key_Type     => View_Ids.View_Id,
+         Element_Type => GNATCOLL.Directed_Graph.Node_Id,
+         "<"          => View_Ids."<",
+         "="          => GNATCOLL.Directed_Graph."=");
+      package Node_View_Map is new Ada.Containers.Ordered_Maps
+        (Key_Type     => GNATCOLL.Directed_Graph.Node_Id,
+         Element_Type => View_Ids.View_Id,
+         "<"          => GNATCOLL.Directed_Graph."<",
+         "="          => View_Ids."=");
+
       type Map is tagged limited record
+         DAG     : Directed_Graph;
+         To_Node : View_Node_Map.Map;
+         To_View : Node_View_Map.Map;
          Values  : View_Id_Library_Map.Map;
-         Vector  : Library_Vector.Vector;
       end record;
 
       function Contains
@@ -78,9 +95,19 @@ package body GPR2.Build.Actions_Population is
         (Self    : in out Map;
          Element : Library_Type);
 
-      procedure Update
+      procedure Add_Successor
+        (Self      : in out Map;
+         Key       : GPR2.Project.View.Object;
+         Successor : GPR2.Project.View.Object);
+
+      procedure Replace
         (Self    : in out Map;
          Element : Library_Type);
+
+      function Serialize (Self : in out Map) return Library_Vector.Vector;
+
+      function Shortest_Circle
+        (Self : in out Map) return GPR2.View_Ids.Vector.Vector;
    end Library_Map;
 
    function Populate_Library
@@ -117,6 +144,7 @@ package body GPR2.Build.Actions_Population is
    function Populate_Withed_Projects
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       Options : Build.Options.Build_Options;
+      View    : GPR2.Project.View.Object;
       Closure : in out GPR2.Project.View.Set.Object;
       Libs    : in out Library_Map.Map;
       Has_SAL : in out Boolean) return Boolean;
@@ -126,6 +154,21 @@ package body GPR2.Build.Actions_Population is
 
    package body Library_Map is
 
+      -------------------
+      -- Add_Successor --
+      -------------------
+
+      procedure Add_Successor
+        (Self      : in out Map;
+         Key       : GPR2.Project.View.Object;
+         Successor : GPR2.Project.View.Object)
+      is
+         From : constant Node_Id := Self.To_Node.Element (Key.Id);
+         Succ : constant Node_Id := Self.To_Node.Element (Successor.Id);
+      begin
+         Self.DAG.Add_Predecessor (Succ, From);
+      end Add_Successor;
+
       -------------
       -- Include --
       -------------
@@ -134,28 +177,54 @@ package body GPR2.Build.Actions_Population is
         (Self    : in out Map;
          Element : Library_Type)
       is
+         New_Node : constant Node_Id := Self.DAG.Add_Node;
       begin
-         Self.Values.Include (Element.View.Id, Element);
-         Self.Vector.Append (Element);
+         Self.To_Node.Insert (Element.View.Id, New_Node);
+         Self.To_View.Insert (New_Node, Element.View.Id);
+         Self.Values.Insert (Element.View.Id, Element);
       end Include;
 
-      ------------
-      -- Update --
-      ------------
+      -------------
+      -- Replace --
+      -------------
 
-      procedure Update
+      procedure Replace
         (Self    : in out Map;
-         Element : Library_Type)
-      is
-         Old : constant View_Id_Library_Map.Cursor :=
-                 Self.Values.Find (Element.View.Id);
-         Idx : constant Positive :=
-                 Self.Vector.Find_Index (View_Id_Library_Map.Element (Old));
+         Element : Library_Type) is
       begin
-         Self.Values.Replace_Element (Old, Element);
-         Self.Vector.Replace_Element (Idx, Element);
-      end Update;
+         Self.Values.Replace (Element.View.Id, Element);
+      end Replace;
 
+      ---------------
+      -- Serialize --
+      ---------------
+
+      function Serialize (Self : in out Map) return Library_Vector.Vector
+      is
+         Node : Node_Id;
+      begin
+         return Result : Library_Vector.Vector do
+            Self.DAG.Start_Iterator;
+
+            while Self.DAG.Next (Node) loop
+               Result.Append (Self.Values (Self.To_View (Node)));
+            end loop;
+         end return;
+      end Serialize;
+
+      ---------------------
+      -- Shortest_Circle --
+      ---------------------
+
+      function Shortest_Circle
+        (Self : in out Map) return GPR2.View_Ids.Vector.Vector is
+      begin
+         return Result : GPR2.View_Ids.Vector.Vector do
+            for Node of Self.DAG.Shortest_Cycle loop
+               Result.Append (Self.To_View (Node));
+            end loop;
+         end return;
+      end Shortest_Circle;
    end Library_Map;
 
    ----------------------
@@ -203,6 +272,18 @@ package body GPR2.Build.Actions_Population is
          for Lang of View.Language_Ids loop
             Src := View.Visible_Source
               (View.Suffixed_Simple_Name (String (SN), Lang), Ambiguous);
+
+            exit when Src.Is_Defined;
+
+            --  Ada also accepts specs as main
+            if Lang = Ada_Language then
+               Src := View.Visible_Source
+                 (SN & Simple_Name
+                    (View.Attribute
+                         (PRA.Naming.Spec_Suffix,
+                          PAI.Create (Ada_Language)).Value.Text),
+                  Ambiguous);
+            end if;
 
             exit when Src.Is_Defined;
          end loop;
@@ -474,7 +555,7 @@ package body GPR2.Build.Actions_Population is
                   when others =>
                      Closure.Include (V);
                      Result := Populate_Withed_Projects
-                       (Tree_Db, Options, Closure, Libs, Has_SAL);
+                       (Tree_Db, Options, V, Closure, Libs, Has_SAL);
                end case;
             end if;
          end if;
@@ -602,7 +683,7 @@ package body GPR2.Build.Actions_Population is
 
       if not Single_View
         and then not Populate_Withed_Projects
-                       (Tree_Db, Options, Closure, Libs, Has_SAL)
+                       (Tree_Db, Options, View, Closure, Libs, Has_SAL)
       then
          return False;
       end if;
@@ -690,7 +771,7 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       if not Populate_Withed_Projects
-        (Tree_Db, Options, Closure, Libs, Has_SAL)
+        (Tree_Db, Options, View, Closure, Libs, Has_SAL)
       then
          return False;
       end if;
@@ -848,7 +929,7 @@ package body GPR2.Build.Actions_Population is
 
       --  Update the Library object in Libs
 
-      Libs.Update (Self);
+      Libs.Replace (Self);
 
       return True;
    end Populate_Library;
@@ -925,7 +1006,7 @@ package body GPR2.Build.Actions_Population is
          Closure.Include (View);
 
          if not Populate_Withed_Projects
-           (Tree_Db, Options, Closure, Libs, Has_SAL)
+           (Tree_Db, Options, View, Closure, Libs, Has_SAL)
          then
             return False;
          end if;
@@ -1115,19 +1196,93 @@ package body GPR2.Build.Actions_Population is
                end;
             end if;
 
-            --  Add libraries
+            --  Add library dependencies: we need a proper ordering in
+            --  particular when linking with archives, so that if libA.a
+            --  depends on symbols from libB.a then we have -lA -lB in this
+            --  order on the link command line, so that the linker knows about
+            --  libA's undefined symbols before looking into libB.
 
-            for Lib of Libs.Vector loop
-               Tree_Db.Add_Input (Link (Idx).UID, Lib.Link.Output, True);
+            begin
+               --  ??? We need a similar mechanism for shared libs on windows
+               --  that need complete scope during the link phase. So we need
+               --  this processing to be shared between the two and able to
+               --  work on subtrees as this shared lib build may not be the
+               --  root project. In this case we don't necessarily need a
+               --  proper DAG serialisation though.
 
-               --  Make sure the bind action is executed after the libraries
-               --  are linked, to have access to the ALI files in the lib
-               --  directory.
-               if Bind (Idx).Is_Defined then
-                  Tree_Db.Add_Input
-                    (Bind (Idx).UID, Lib.Link.Output, False);
-               end if;
-            end loop;
+               for Lib of Libs.Serialize loop
+                  Tree_Db.Add_Input (Link (Idx).UID, Lib.Link.Output, True);
+
+                  --  Make sure the bind action is executed after the libraries
+                  --  are linked, to have access to the ALI files in the lib
+                  --  directory.
+                  if Bind (Idx).Is_Defined then
+                     Tree_Db.Add_Input
+                       (Bind (Idx).UID, Lib.Link.Output, False);
+                  end if;
+               end loop;
+
+            exception
+               when GNATCOLL.Directed_Graph.DG_Error =>
+                  declare
+                     Msg   : Unbounded_String;
+                     Lib   : Library_Type;
+                     Prev  : Library_Type;
+                     First : Boolean := True;
+                  begin
+                     Tree_Db.Reporter.Report
+                       (GPR2.Message.Create
+                          (GPR2.Message.Warning,
+                           "circular library dependency detected",
+                           GPR2.Source_Reference.Create
+                             (View.Path_Name.Value, 0, 0)));
+
+                     for V_Id of Libs.Shortest_Circle loop
+                        Lib := Libs.Values.Element (V_Id);
+
+                        if First then
+                           First := False;
+                        else
+                           Msg := +Prev.View.Library_Filename.Simple_Name;
+                           Append (Msg, " depends on ");
+                           Append
+                             (Msg,
+                              String (Lib.View.Library_Filename.Simple_Name));
+
+                           Tree_Db.Reporter.Report
+                             (GPR2.Message.Create
+                                (GPR2.Message.Warning,
+                                 -Msg,
+                                 GPR2.Source_Reference.Create
+                                   (Prev.View.Path_Name.Value, 0, 0)));
+                        end if;
+
+                        Prev := Lib;
+                     end loop;
+                  end;
+
+                  --  Make the linker action generate --start-group --end-group
+                  --  to resolve recursively the symbols in the libraries.
+
+                  Actions.Link.Set_Has_Library_Dependency_Circle
+                    (Actions.Link.Object'Class
+                       (Tree_Db.Action_Id_To_Reference
+                            (Link (Idx).UID).Element.all),
+                     True);
+
+                  for Lib of Libs.Values loop
+                     Tree_Db.Add_Input (Link (Idx).UID, Lib.Link.Output, True);
+
+                     --  Make sure the bind action is executed after the
+                     --  libraries are linked, to have access to the ALI
+                     --  files in the lib directory.
+
+                     if Bind (Idx).Is_Defined then
+                        Tree_Db.Add_Input
+                          (Bind (Idx).UID, Lib.Link.Output, False);
+                     end if;
+                  end loop;
+            end;
 
             Idx := Idx + 1;
          end loop;
@@ -1199,11 +1354,14 @@ package body GPR2.Build.Actions_Population is
    function Populate_Withed_Projects
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       Options : Build.Options.Build_Options;
+      View    : GPR2.Project.View.Object;
       Closure : in out GPR2.Project.View.Set.Object;
       Libs    : in out Library_Map.Map;
       Has_SAL : in out Boolean) return Boolean
    is
       procedure Add_Deps (V  : GPR2.Project.View.Object);
+
+      use type GPR2.Project.View.Object;
 
       Todo : GPR2.Project.View.Vector.Object;
       Seen : GPR2.Project.View.Set.Object;
@@ -1248,6 +1406,12 @@ package body GPR2.Build.Actions_Population is
               (Tree_Db, Current, Options, Libs, Has_SAL)
             then
                return False;
+            end if;
+
+            if View.Is_Library
+              and then View /= Current
+            then
+               Libs.Add_Successor (View, Current);
             end if;
 
          elsif Current.Kind = K_Abstract then

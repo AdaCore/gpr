@@ -223,6 +223,8 @@ class BaseDriver(DiffTestDriver):
         # separators, no drive letter).
         return super().output_refiners + [
             ReplacePath(self.working_dir(), replacement=""),
+            Substitute("gpr2build", replacement="gprbuild"),
+            Substitute("gpr2clean", replacement="gprclean"),
             Substitute(gcc_install, replacement="<gcc>"),
             Substitute(gcc_version, "(gcc-version)"),
             Substitute("\\", "/"),
@@ -238,8 +240,6 @@ class BaseDriver(DiffTestDriver):
             Substitute("x86-linux", replacement="(host)"),
             Substitute("x86_64-windows", replacement="(host)"),
             Substitute("x86-windows", replacement="(host)"),
-            Substitute("gpr2build", replacement="gprbuild"),
-            Substitute("gpr2clean", replacement="gprclean"),
         ]
 
     # Convenience path builders

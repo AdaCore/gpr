@@ -26,4 +26,7 @@ package GPR2.Build.ALI_Parser is
    --  Parse the ALI file to obtain the version, and return the
    --  "vXX.XXXXXXX".
 
+   function Switches
+     (ALI_File : GPR2.Path_Name.Object) return GPR2.Containers.Value_List;
+
 end GPR2.Build.ALI_Parser;

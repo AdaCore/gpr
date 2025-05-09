@@ -1302,6 +1302,20 @@ Package Linker Attributes
     to be used when invoking the linker to build an executable for the source or
     for its language.
 
+  .. index:: Attributes - Package Linker Attributes; Group_End_Switch
+
+  * **Group_End_Switch**: single value
+
+    Value is the switch to use to end a link group, a group of libraries to be
+    linked with recursively
+
+  .. index:: Attributes - Package Linker Attributes; Group_Start_Switch
+
+  * **Group_Start_Switch**: single value
+
+    Value is the switch to use to start a link group, a group of libraries to be
+    linked with recursively
+
   .. index:: Attributes - Package Linker Attributes; Leading_Switches
 
   * **Leading_Switches**: list value, indexed by a source glob or language, "others" index allowed, configuration concatenable

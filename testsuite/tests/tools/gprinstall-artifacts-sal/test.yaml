@@ -1,3 +1,5 @@
 description:
     check for GPRinstall artifact for a SAL library
 driver: python_script
+control:
+- [XFAIL, "True", "gpr2build: missing partial link for static SAL"]

@@ -1240,6 +1240,20 @@ begin
         "Value is the list of switches to specify a response file to the "
       & "linker.");
 
+   --  Linker.Group_Start_Switch
+   Set_Attribute_Description
+     (Key         => PRA.Linker.Group_Start_Switch,
+      Description =>
+        "Value is the switch to use to start a link group, a group of "
+      & "libraries to be linked with recursively");
+
+   --  Linker.Group_End_Switch
+   Set_Attribute_Description
+     (Key         => PRA.Linker.Group_End_Switch,
+      Description =>
+        "Value is the switch to use to end a link group, a group of "
+      & "libraries to be linked with recursively");
+
    --  Naming.Specification_Suffix
    Set_Attribute_Description
      (Key          => PRA.Naming.Specification_Suffix,

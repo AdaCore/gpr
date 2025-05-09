@@ -2,6 +2,7 @@ def build():
     anod_build("libgpr2", qualifier={"bare": True})
     anod_build("libgpr2")
     anod_build("gpr2")
+    anod_build("gpr2", qualifier={"gpr2build": True})
 
 def debug_build():
     anod_build("libgpr2", qualifier={"bare": True, "dbg": True})

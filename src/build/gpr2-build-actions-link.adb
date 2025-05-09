@@ -371,6 +371,11 @@ package body GPR2.Build.Actions.Link is
               +Self.Ctxt.Tree.Runtime_Project.Object_Directory.String_Value;
          end if;
 
+         if Self.Lib_Dep_Circle then
+            Cmd_Line.Add_Argument
+              (Self.Ctxt.Attribute (PRA.Linker.Group_Start_Switch).Value.Text);
+         end if;
+
          for Lib of Self.Library_Dependencies loop
             declare
                Link         : constant Object'Class :=
@@ -572,6 +577,44 @@ package body GPR2.Build.Actions.Link is
                end if;
             end;
          end loop;
+
+         for Arg of Dash_l_Opts loop
+            Cmd_Line.Add_Argument (Arg);
+         end loop;
+
+         if Self.Lib_Dep_Circle then
+            Cmd_Line.Add_Argument
+              (Self.Ctxt.Attribute (PRA.Linker.Group_End_Switch).Value.Text);
+         end if;
+      end if;
+
+      if Link_Exec then
+         --  Add switches for linking an executable
+         Status :=
+           Add_Attr (PRA.Linker.Required_Switches, PAI.Undefined, True, True);
+
+         Status := Add_Attr (PRA.Linker.Switches, Src_Idx, True, True);
+
+         if not Status then
+            Status := Add_Attr
+              (PRA.Linker.Default_Switches,
+               PAI.Create
+                 (Self.View.Visible_Source (Self.Main_Src.Source).Language),
+               True,
+               True);
+         end if;
+
+         Status :=
+           Add_Attr (PRA.Linker.Trailing_Switches, Src_Idx, True, True);
+
+         --  Add -largs
+
+         for Arg
+           of Self.Tree.External_Options.Fetch
+             (External_Options.Linker, GPR2.No_Language)
+         loop
+            Cmd_Line.Add_Argument (Arg);
+         end loop;
       end if;
 
       --  Runtime flags usually come from the binder. However, there is no
@@ -603,10 +646,6 @@ package body GPR2.Build.Actions.Link is
             & Self.View.Tree.Runtime_Project.Object_Directory.String_Value);
       end if;
 
-      for Arg of Dash_l_Opts loop
-         Cmd_Line.Add_Argument (Arg);
-      end loop;
-
       --  Add options provided by the binder if needed
 
       if not Self.View.Is_Library
@@ -618,36 +657,6 @@ package body GPR2.Build.Actions.Link is
             Cmd_Line.Add_Argument (Option);
          end loop;
       end if;
-
-      if Link_Exec then
-         --  Add switches for linking an executable
-         Status :=
-           Add_Attr (PRA.Linker.Required_Switches, PAI.Undefined, True, True);
-
-         Status := Add_Attr (PRA.Linker.Switches, Src_Idx, True, True);
-
-         if not Status then
-            Status := Add_Attr
-              (PRA.Linker.Default_Switches,
-               PAI.Create
-                 (Self.View.Visible_Source (Self.Main_Src.Source).Language),
-               True,
-               True);
-         end if;
-
-         --  Add -largs
-
-         for Arg
-           of Self.Tree.External_Options.Fetch
-             (External_Options.Linker, GPR2.No_Language)
-         loop
-            Cmd_Line.Add_Argument (Arg);
-         end loop;
-
-         Status :=
-           Add_Attr (PRA.Linker.Trailing_Switches, Src_Idx, True, True);
-      end if;
-
       if Self.View.Is_Library
         and then not Self.Is_Static
       then
@@ -1246,6 +1255,17 @@ package body GPR2.Build.Actions.Link is
 
       return True;
    end Pre_Command;
+
+   ---------------------------------------
+   -- Set_Has_Library_Dependency_Circle --
+   ---------------------------------------
+
+   procedure Set_Has_Library_Dependency_Circle
+     (Self  : in out Object;
+      State : Boolean) is
+   begin
+      Self.Lib_Dep_Circle := State;
+   end Set_Has_Library_Dependency_Circle;
 
    ---------
    -- UID --

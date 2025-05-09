@@ -29,6 +29,7 @@ with GNATCOLL.OS.Stat;
 with GNATCOLL.Traces;
 with GNATCOLL.Utils;
 
+with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Actions_Population;
 with GPR2.Build.Actions.Compile;
 with GPR2.Build.Actions.Compile.Ada;
@@ -142,11 +143,18 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
             Text_IO.Put_Line (Name);
 
          else
-            Success := GNATCOLL.OS.FSUtil.Remove_File (Name);
-
-            if not Success and then Opts.Force_Deletions then
-               GNAT.OS_Lib.Set_Writable (Name);
+            if Opts.Force_Deletions
+              or else GNAT.OS_Lib.Is_Owner_Writable_File (Name)
+              or else GNAT.OS_Lib.Is_Symbolic_Link (Name)
+            then
                Success := GNATCOLL.OS.FSUtil.Remove_File (Name);
+
+               if not Success then
+                  GNAT.OS_Lib.Set_Writable (Name);
+                  Success := GNATCOLL.OS.FSUtil.Remove_File (Name);
+               end if;
+            else
+               Success := False;
             end if;
 
             if Success then
@@ -238,6 +246,12 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
          if View.Library_Ali_Directory /= View.Library_Directory then
             Remove_Dir (View.Library_Ali_Directory);
          end if;
+
+         if View.Is_Library_Standalone
+           and then View.Has_Library_Src_Directory
+         then
+            Remove_Dir (View.Library_Src_Directory);
+         end if;
       end if;
    end Remove_Artifacts_Dirs;
 
@@ -327,9 +341,16 @@ begin
 
                Delete_File (Artifact_Path.String_Value, Opt);
 
-               if Action in GPR2.Build.Actions.Compile.Object'Class then
-                  Lang :=
-                    GPR2.Build.Actions.Compile.Object'Class (Action).Language;
+               if Action in GPR2.Build.Actions.Compile.Object'Class
+                 or else Action in GPR2.Build.Actions.Post_Bind.Object'Class
+               then
+                  if Action in GPR2.Build.Actions.Compile.Object'Class then
+                     Lang :=
+                       GPR2.Build.Actions.Compile.Object'Class
+                         (Action).Language;
+                  else
+                     Lang := Ada_Language;
+                  end if;
 
                   declare
                      Src_Exts : constant GPR2.Project.Attribute.Object :=

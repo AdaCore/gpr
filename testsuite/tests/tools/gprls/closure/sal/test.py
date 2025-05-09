@@ -1,8 +1,8 @@
 from testsuite_support.builder_and_runner import BuilderAndRunner
-from testsuite_support.tools import GPRLS, GPRCLEAN, GPRBUILD
+from testsuite_support.tools import GPRLS, GPR2CLEAN, GPR2BUILD
 
 bnr = BuilderAndRunner()
 
-bnr.run([GPRBUILD, "-p", "-q", "-Pgauges"])
+bnr.run([GPR2BUILD, "-p", "-q", "-Pgauges"])
 bnr.call([GPRLS, "-P", "gauges", "--closure", "gauge"])
-bnr.call([GPRCLEAN, "-p", "-r", "-P", "gauges"])
+bnr.call([GPR2CLEAN, "-p", "-r", "-P", "gauges"])

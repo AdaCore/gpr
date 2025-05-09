@@ -1318,6 +1318,7 @@ package body GPR2.Project_Parser is
       for PN of Implicit_With loop
          if PN /= Filename
            and then not Project.Imports.Contains (PN)
+           and then Project.Qualifier /= K_Aggregate
          then
             Project.Imports.Insert
               (GPR2.Project.Import.Create
