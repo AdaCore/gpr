@@ -90,11 +90,7 @@ private
    end record;
 
    overriding function Action_Parameter
-     (Self : Ada_Compile_Id) return Value_Type
-   is (String (Self.Src_Name) &
-       (if Self.Index /= No_Index
-        then '@' & Idx_Image (Self.Index)
-        else ""));
+     (Self : Ada_Compile_Id) return Value_Type;
 
    function Create
      (Src : GPR2.Build.Compilation_Unit.Object) return Ada_Compile_Id

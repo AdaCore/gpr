@@ -37,6 +37,20 @@ package body GPR2.Build.Actions.Compile.Ada is
       Idx     : Language_Id;
       Default : Value_Type) return Value_Type;
 
+   ----------------------
+   -- Action_Parameter --
+   ----------------------
+
+   overriding function Action_Parameter
+     (Self : Ada_Compile_Id) return Value_Type is
+   begin
+      if Self.Index = No_Index then
+         return String (Self.Src_Name);
+      else
+         return String (Self.Src_Name) & "@" & Idx_Image (Self.Index);
+      end if;
+   end Action_Parameter;
+
    -------------------------
    -- Artifacts_Base_Name --
    -------------------------
