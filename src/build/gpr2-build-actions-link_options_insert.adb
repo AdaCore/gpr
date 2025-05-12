@@ -5,9 +5,15 @@
 --
 
 with GNATCOLL.OS.FS;
+with GNATCOLL.Traces;
 with GPR2.Message;
+with GPR2.Build.Actions.Link;
 
 package body GPR2.Build.Actions.Link_Options_Insert is
+
+   Traces : constant GNATCOLL.Traces.Trace_Handle :=
+     GNATCOLL.Traces.Create
+       ("GPR.BUILD.ACTIONS.LINK_OPTIONS_INSERT", GNATCOLL.Traces.Off);
 
    ----------------
    -- Add_Option --
@@ -140,6 +146,33 @@ package body GPR2.Build.Actions.Link_Options_Insert is
 
       return True;
    end On_Tree_Insertion;
+
+   ------------------
+   -- Post_Command --
+   ------------------
+
+   overriding
+   function Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status;
+      Stdout : Unbounded_String := Null_Unbounded_String;
+      Stderr : Unbounded_String := Null_Unbounded_String) return Boolean
+   is
+      Successors : Tree_Db.Actions_List'Class :=
+        Self.Tree.Successors (Self.Output_Object_File);
+   begin
+      for Act of Successors loop
+         if Act in Link.Object'Class then
+            for Opt of Self.Options loop
+               Traces.Trace
+                 ("Adding option """ & Opt & """ to " & Act.UID.Image);
+               Link.Object'Class (Act).Add_Option (Opt);
+            end loop;
+         end if;
+      end loop;
+
+      return True;
+   end Post_Command;
 
    ---------
    -- UID --

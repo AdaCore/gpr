@@ -144,7 +144,8 @@ package body GPR2.Build.Command_Line is
      (Self : in out Object;
       Args : GNATCOLL.OS.Process.Argument_List) is
    begin
-      Self.Cmd_Line := Args;
+      Self.Raw_Cmd_Line := Self.Cmd_Line;
+      Self.Cmd_Line     := Args;
    end Set_Response_File_Command;
 
    ---------------
@@ -173,12 +174,19 @@ package body GPR2.Build.Command_Line is
          Idx := Idx + Arg'Length;
       end Append;
 
+      use type GNATCOLL.OS.Process.Argument_List;
+
+      Internal_Cmd : constant GNATCOLL.OS.Process.Argument_List :=
+                       (if not Self.Raw_Cmd_Line.Is_Empty
+                        and then Self.Cmd_Line /= Self.Raw_Cmd_Line
+                        then Self.Raw_Cmd_Line
+                        else Self.Cmd_Line);
    begin
-      for J in Self.Cmd_Line.First_Index .. Self.Cmd_Line.Last_Index loop
+      for J in Internal_Cmd.First_Index .. Internal_Cmd.Last_Index loop
          case Self.In_Signature (J) is
             when Simple =>
                declare
-                  Arg    : String renames Self.Cmd_Line (J);
+                  Arg    : String renames Internal_Cmd (J);
                   Simple : constant Simple_Name :=
                              Path_Name.Simple_Name
                                (Filename_Optional (Arg));
@@ -187,7 +195,7 @@ package body GPR2.Build.Command_Line is
                end;
 
             when In_Signature =>
-               Append (Self.Cmd_Line (J));
+               Append (Internal_Cmd (J));
 
             when Ignore =>
                null;

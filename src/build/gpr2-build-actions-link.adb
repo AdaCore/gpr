@@ -52,6 +52,38 @@ package body GPR2.Build.Actions.Link is
    -- Add_Option --
    ----------------
 
+   procedure Add_Objects_From_Attribute
+     (Self : Object;
+      Id   : Q_Attribute_Id)
+   is
+      Attr : constant GPR2.Project.Attribute.Object :=
+               Self.View.Attribute (Id);
+   begin
+      if Self.View.Is_Library then
+         if Attr.Is_Defined then
+            for Val of Attr.Values loop
+               declare
+                  Path : constant Path_Name.Object :=
+                           Path_Name.Create_File
+                             (Filename_Type (Val.Text),
+                              Self.View.Object_Directory.Value);
+               begin
+                  if Path.Exists then
+                     Self.Tree.Add_Input
+                       (Self.UID,
+                        Artifacts.Files.Create (Path),
+                        False);
+                  end if;
+               end;
+            end loop;
+         end if;
+      end if;
+   end Add_Objects_From_Attribute;
+
+   ----------------
+   -- Add_Option --
+   ----------------
+
    procedure Add_Option (Self : in out Object; Option : String) is
    begin
       Self.Static_Options.Append (Option);
@@ -369,6 +401,10 @@ package body GPR2.Build.Actions.Link is
               and then Link.View.Is_Library_Standalone
             then
                for Opt of Link.Options loop
+                  Traces.Trace
+                    ("Adding the link option """ & Opt & """ to " &
+                     Self.UID.Image & " coming from the static standalone " &
+                     " library " & String (Link.View.Library_Name));
                   Self.Add_Option (Opt);
                end loop;
             end if;
@@ -562,26 +598,25 @@ package body GPR2.Build.Actions.Link is
                                       (Filename_Type (Val.Text),
                                        Link.View.Dir_Name.Value);
                         begin
-                           if Path.Exists then
-                              Cmd_Line.Add_Argument (Path);
-
-                           elsif not Link.Is_Static then
-                              if Starts_With (Val.Text, "-l") then
-                                 Dash_l_Opts.Append (Val.Text);
+                           if not Path.Exists then
+                              if not Link.Is_Static then
+                                 if Starts_With (Val.Text, "-l") then
+                                    Dash_l_Opts.Append (Val.Text);
+                                 else
+                                    Cmd_Line.Add_Argument (Val.Text);
+                                 end if;
                               else
-                                 Cmd_Line.Add_Argument (Val.Text);
-                              end if;
-                           else
-                              if not Signature_Only then
-                                 Self.Tree.Reporter.Report
-                                   (GPR2.Message.Create
-                                      (GPR2.Message.Error,
-                                       "unknown object file """ &
-                                         Val.Text & '"',
-                                       Val));
-                              end if;
+                                 if not Signature_Only then
+                                    Self.Tree.Reporter.Report
+                                      (GPR2.Message.Create
+                                         (GPR2.Message.Error,
+                                          "unknown object file """ &
+                                            Val.Text & '"',
+                                          Val));
+                                 end if;
 
-                              raise Action_Error;
+                                 raise Action_Error;
+                              end if;
                            end if;
                         end;
                      end loop;
@@ -742,8 +777,6 @@ package body GPR2.Build.Actions.Link is
 
       if not Self.View.Is_Library
         or else Self.View.Is_Shared_Library
-        or else (Self.View.Is_Library_Standalone
-                 and then Is_Partially_Linked (Self.View))
       then
          for Option of Self.Static_Options loop
             --  ??? Weird bug on windows happening when a backslash is ending
@@ -878,12 +911,85 @@ package body GPR2.Build.Actions.Link is
       end if;
    end Compute_Signature;
 
+   --------------------------
+   -- Create_Response_File --
+   --------------------------
+
+   procedure Create_Response_File
+     (Self      : in out Object;
+      Delimiter : String := "")
+   is
+      use GNATCOLL.OS.FS;
+      use GNATCOLL.Utils;
+
+      Resp_File : constant Tree_Db.Temp_File :=
+                    Self.Get_Or_Create_Temp_File ("response_file", Local);
+      New_Args  : GNATCOLL.OS.Process.Argument_List;
+
+      function Format (Arg : String) return String;
+
+      ------------
+      -- Format --
+      ------------
+
+      function Format (Arg : String) return String
+      is
+         Char    : Character;
+         Tmp_Arg : String (1 .. Arg'Length) := Arg (Arg'First .. Arg'Last);
+         New_Arg : String (1 .. Arg'Length * 2);
+         Offset  : Integer := 0;
+      begin
+         for Index in Tmp_Arg'Range loop
+            Char := Tmp_Arg (Index);
+
+            if Char = ' '
+              or else Char = ASCII.HT
+              or else Char = '"'
+              or else Char = '\'
+            then
+               New_Arg (Index + Offset) := '\';
+               Offset := Offset + 1;
+               New_Arg (Index + Offset) := Char;
+            else
+               New_Arg (Index + Offset) := Char;
+            end if;
+         end loop;
+
+         return New_Arg (1 .. Arg'Length + Offset);
+      end Format;
+
+      To_Response_File   : Boolean := False;
+      Response_File_Used : Boolean := False;
+   begin
+      if Resp_File.FD /= Null_FD then
+         for Arg of Self.Cmd_Line.Argument_List loop
+            if To_Response_File then
+               Write (Resp_File.FD, Format (Arg) & ASCII.LF);
+               Response_File_Used := True;
+
+            else
+               New_Args.Append (Arg);
+
+               if Ends_With (Arg, Delimiter)
+               then
+                  To_Response_File := True;
+               end if;
+            end if;
+         end loop;
+
+         if Response_File_Used then
+            New_Args.Append ("@" & String (Resp_File.Path));
+            Self.Cmd_Line.Set_Response_File_Command (New_Args);
+         end if;
+      end if;
+   end Create_Response_File;
+
    ----------------------
    -- Embedded_Objects --
    ----------------------
 
    function Embedded_Objects
-     (Self : Object) return Build.Tree_Db.Artifact_Sets.Set
+     (Self : Object'Class) return Build.Tree_Db.Artifact_Sets.Set
    is
    begin
       return Result : Tree_Db.Artifact_Sets.Set do
@@ -1165,97 +1271,79 @@ package body GPR2.Build.Actions.Link is
 
    ----------------
    -- Initialize --
-   ---------------
+   ----------------
 
-   procedure Initialize_Executable
+   procedure Initialize
      (Self     : in out Object;
-      Src      : Compilation_Unit.Unit_Location;
-      No_Rpath : Boolean;
-      Output   : Filename_Optional := "")
-   is
-      Exec : GPR2.Path_Name.Object;
+      Kind     : Link_Kind;
+      Context  : GPR2.Project.View.Object       := GPR2.Project.View.Undefined;
+      Src      : Compilation_Unit.Unit_Location := Compilation_Unit.No_Unit;
+      No_Rpath : Boolean                        := True;
+      Output   : Filename_Optional              := "") is
    begin
-      Self.Is_Library := False;
-      Self.Main_Src   := Src;
-      Self.Ctxt       := Src.View;
-      Self.No_Rpath   := No_Rpath;
+      case Kind is
+         when Executable =>
+            declare
+               Exec : GPR2.Path_Name.Object;
+            begin
+               Self.Is_Library := False;
+               Self.Main_Src   := Src;
+               Self.Ctxt       := Src.View;
+               Self.No_Rpath   := No_Rpath;
 
-      if Output'Length = 0 then
-         Exec := Self.Ctxt.Executable (Src.Source.Simple_Name, Src.Index);
-      else
-         declare
-            Suff : constant Filename_Optional :=
-                     Self.Ctxt.Executable_Suffix;
-         begin
-            if Ada.Strings.Fixed.Index (String (Output), ".") = 0 then
-               Exec := Self.Ctxt.Executable_Directory.Compose (Output & Suff);
-            else
-               Exec := Self.Ctxt.Executable_Directory.Compose (Output);
-            end if;
-         end;
-      end if;
+               if Output'Length = 0 then
+                  Exec :=
+                    Self.Ctxt.Executable (Src.Source.Simple_Name, Src.Index);
+               else
+                  declare
+                     Suff : constant Filename_Optional :=
+                              Self.Ctxt.Executable_Suffix;
+                  begin
+                     if Ada.Strings.Fixed.Index (String (Output), ".") = 0 then
+                        Exec :=
+                          Self.Ctxt.Executable_Directory.Compose
+                            (Output & Suff);
+                     else
+                        Exec :=
+                          Self.Ctxt.Executable_Directory.Compose (Output);
+                     end if;
+                  end;
+               end if;
 
-      Self.Executable := Artifacts.Files.Create (Exec);
-   end Initialize_Executable;
-
-   -------------------------------
-   -- Initialize_Global_Archive --
-   -------------------------------
-
-   procedure Initialize_Global_Archive
-     (Self    : in out Object;
-      Context : GPR2.Project.View.Object)
-   is
-      Project_Name_Low : constant String :=
-                           Ada.Characters.Handling.To_Lower
-                             (String (Context.Name));
-      Library_Filename : constant Simple_Name :=
-                           "lib" & Filename_Type (Project_Name_Low) &
-                           Context.Tree.Configuration.Archive_Suffix;
-   begin
-      Self.Ctxt       := Context;
-      Self.Is_Library := True;
-      Self.Is_Static  := True;
-      Self.In_Obj     := True;
-      Self.Library    := Artifacts.Library.Create
-        (Context.Object_Directory.Compose (Library_Filename));
-   end Initialize_Global_Archive;
-
-   ------------------------
-   -- Initialize_Library --
-   ------------------------
-
-   procedure Initialize_Library
-     (Self     : in out Object;
-      Context  : GPR2.Project.View.Object;
-      No_Rpath : Boolean) is
-   begin
-      Self.Ctxt       := Context;
-      Self.Is_Library := True;
-      Self.Is_Static  := Context.Is_Static_Library;
-      Self.Library    := Artifacts.Library.Create (Context.Library_Filename);
-      Self.No_Rpath   := No_Rpath;
-
-      if not Self.Is_Static then
-         declare
-            Attr : constant Project.Attribute.Object :=
-                     Context.Attribute (PRA.Library_Symbol_File);
-         begin
-            if Attr.Is_Defined then
-               Self.Lib_Symbol_File := Artifacts.Files.Create
-                 (Path_Name.Create_File
-                    (Filename_Type (Attr.Value.Text),
-                     Context.Path_Name.Dir_Name));
-            end if;
-         end;
-      end if;
-   end Initialize_Library;
+               Self.Executable := Artifacts.Files.Create (Exec);
+            end;
+         when Global_Archive =>
+            declare
+               Project_Name_Low : constant String :=
+                                    Ada.Characters.Handling.To_Lower
+                                      (String (Context.Name));
+               Library_Filename : constant Simple_Name :=
+                                    "lib" & Filename_Type (Project_Name_Low) &
+                                  Context.Tree.Configuration.Archive_Suffix;
+            begin
+               Self.Ctxt       := Context;
+               Self.Is_Library := True;
+               Self.Is_Static  := True;
+               Self.In_Obj     := True;
+               Self.Library    := Artifacts.Library.Create
+                 (Context.Object_Directory.Compose (Library_Filename));
+            end;
+         when Library =>
+            Self.Ctxt       := Context;
+            Self.Is_Library := True;
+            Self.Is_Static  := Context.Is_Static_Library;
+            Self.Library    :=
+              Artifacts.Library.Create (Context.Library_Filename);
+            Self.No_Rpath   := No_Rpath;
+      end case;
+   end Initialize;
 
    ---------------------
    -- Interface_Units --
    ---------------------
 
-   function Interface_Units (Self : Object) return Compilation_Unit.Maps.Map
+   function Interface_Units
+     (Self : Object'Class) return Compilation_Unit.Maps.Map
    is
       Units     : Compilation_Unit.Maps.Map;
    begin
@@ -1278,7 +1366,7 @@ package body GPR2.Build.Actions.Link is
    --------------------------
 
    function Library_Dependencies
-     (Self : Object) return Actions.Action_Id_Vectors.Vector
+     (Self : Object'Class) return Actions.Action_Id_Vectors.Vector
    is
    begin
       return Result : Action_Id_Vectors.Vector do
@@ -1310,7 +1398,7 @@ package body GPR2.Build.Actions.Link is
 
       Units := Self.Interface_Units;
 
-      --  For each unit, add the corresponding Ali  file as an output
+      --  For each unit, add the corresponding Ali file as an output
 
       for U of Units loop
          declare
@@ -1391,6 +1479,10 @@ package body GPR2.Build.Actions.Link is
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
+      --  Add all object files contained in Library_Options attribute if they
+      --  actually exist.
+      Self.Add_Objects_From_Attribute (PRA.Library_Options);
+
       if not Db.Add_Output (UID, Self.Output) then
          return False;
       end if;
@@ -1418,8 +1510,7 @@ package body GPR2.Build.Actions.Link is
    -- Post_Command --
    ------------------
 
-   overriding
-   function Post_Command
+   overriding function Post_Command
      (Self   : in out Object;
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;

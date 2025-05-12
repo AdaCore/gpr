@@ -9,7 +9,8 @@ $ gprbuild -Plibrary_interface/app.gpr -p -j1
 [Ada Compile]     ioo.adb
 [Ada Bind]        demo
 [Ada Post-Bind]   b__demo.adb
-[Link-Options-Insert] b__demo.o
+[Partial Link]    p__demo.o
+[Link-Options-Insert] p__demo.o
 demo.gpr: warning: unit "Goo" is not in the interface set, but it is needed by "FOO"
 [Archive]         libdemo.a
 [Ada Bind]        main
@@ -26,7 +27,8 @@ $ gprbuild -Pinterfaces/app.gpr -p -j1
 [Ada Compile]     ioo.adb
 [Ada Bind]        demo
 [Ada Post-Bind]   b__demo.adb
-[Link-Options-Insert] b__demo.o
+[Partial Link]    p__demo.o
+[Link-Options-Insert] p__demo.o
 demo.gpr: warning: unit "Goo" is not in the interface set, but it is needed by "FOO"
 demo.gpr: warning: unit "Ioo" is not in the interface set, but it is needed by "HOO"
 [Archive]         libdemo.a

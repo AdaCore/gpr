@@ -48,7 +48,7 @@ package body GPR2.Build.Actions.Ada_Bind is
    package PRA renames GPR2.Project.Registry.Attribute;
    package PAI renames GPR2.Project.Attribute_Index;
 
-   function Link (Self : Object) return Actions.Link.Object;
+   function Link (Self : Object) return Actions.Link.Object'Class;
    --  Return the link action that is a transitive successor of this
    --  action, if one exists. Return Undefined if no such action is found.
 
@@ -561,41 +561,29 @@ package body GPR2.Build.Actions.Ada_Bind is
    -- Link --
    ----------
 
-   function Link (Self : Object) return Actions.Link.Object is
-   begin
+   function Link (Self : Object) return Actions.Link.Object'Class is
 
-      --  When the current project view is a static standalone library, linker
-      --  options must be embedded within the final archive in a new section
-      --  named .GPR.linker_options. This requires a Link_Options_Insert phase
-      --  prior to the final link.
+      function Internal_Link
+        (Current_Artifact : Artifacts.Object'Class)
+         return Actions.Link.Object'Class;
 
-      if Self.Ctxt.Is_Library
-        and then Self.Ctxt.Is_Static_Library
-        and then Self.Ctxt.Is_Library_Standalone
-      then
-         for Action of Self.Tree.Successors (Self.Generated_Body) loop
-            if Action in GPR2.Build.Actions.Link_Options_Insert.Object'Class
-            then
-               for Succ_Action of
-                 Self.Tree.Successors
-                   (Actions.Link_Options_Insert.Object (Action)
-                      .Output_Object_File)
-               loop
-                  if Succ_Action in GPR2.Build.Actions.Link.Object'Class then
-                     return GPR2.Build.Actions.Link.Object (Succ_Action);
-                  end if;
-               end loop;
-            end if;
-         end loop;
-      else
-         for Action of Self.Tree.Successors (Self.Post_Bind.Object_File) loop
+      function Internal_Link
+        (Current_Artifact : Artifacts.Object'Class)
+         return Actions.Link.Object'Class
+      is
+      begin
+         for Action of Self.Tree.Successors (Current_Artifact) loop
             if Action in GPR2.Build.Actions.Link.Object'Class then
-               return GPR2.Build.Actions.Link.Object (Action);
+               --  Return the first partial link or link action that has this
+               --  object as an input
+               return Actions.Link.Object'Class (Action);
             end if;
          end loop;
-      end if;
 
-      return GPR2.Build.Actions.Link.Undefined;
+         return GPR2.Build.Actions.Link.Undefined;
+      end Internal_Link;
+   begin
+      return Internal_Link (Self.Post_Bind.Object_File);
    end Link;
 
    -------------------------
@@ -622,7 +610,7 @@ package body GPR2.Build.Actions.Ada_Bind is
      (Self    : in out Object;
       Imports : GPR2.Containers.Name_Set) return Boolean
    is
-      Link       : constant GPR2.Build.Actions.Link.Object := Self.Link;
+      Link       : constant GPR2.Build.Actions.Link.Object'Class := Self.Link;
       To_Analyze : GPR2.Containers.Name_Set;
 
       function Add_Dependency (Unit : Name_Type) return Boolean;
@@ -936,7 +924,7 @@ package body GPR2.Build.Actions.Ada_Bind is
       End_Marker   : constant String := "--  END Object file/option list";
       Switch_Index : Natural;
 
-      Link            : constant Actions.Link.Object := Self.Link;
+      Link            : constant Actions.Link.Object'Class := Self.Link;
       Link_Opt_Insert : constant Actions.Link_Options_Insert.Object :=
         Self.Link_Opt_Insert;
 
@@ -993,10 +981,15 @@ package body GPR2.Build.Actions.Ada_Bind is
             & Self.UID.Image
             & " has been found.");
       else
+         --  Add the binder option to either the partial link object or the
+         --  link object.
+         --  If we have a partial link, no other object should further be added
+         --  so we won't have any missed symbol resolution at the final link
+         --  stage.
          Traces.Trace ("Options passed to " & Link.UID.Image & ":");
          for Opt of Self.Linker_Opts loop
             Traces.Trace ("* '" & Opt & "'");
-            GPR2.Build.Actions.Link.Object
+            GPR2.Build.Actions.Link.Object'Class
               (Self.Tree.Action_Id_To_Reference (Link.UID).Element.all)
               .Add_Option (Opt);
          end loop;
