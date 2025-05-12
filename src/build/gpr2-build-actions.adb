@@ -261,9 +261,9 @@ package body GPR2.Build.Actions is
       end if;
    end Update_Command_Line;
 
-   -----------------------
-   -- Compute_Signature --
-   -----------------------
+   ---------------------
+   -- Write_Signature --
+   ---------------------
 
    function Write_Signature
      (Self   : in out Object'Class;
