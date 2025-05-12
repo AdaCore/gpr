@@ -12,7 +12,6 @@ with GNATCOLL.OS.FS;
 with GNATCOLL.OS.FSUtil;
 with GNATCOLL.Traces;
 
-with GPR2.Build.Artifacts.Key_Value;
 with GPR2.Build.Tree_Db;
 
 package body GPR2.Build.Actions is
@@ -217,6 +216,29 @@ package body GPR2.Build.Actions is
       when others =>
          Self.Signature.Clear;
    end Load_Signature;
+
+   ---------------
+   -- Serialize --
+   ---------------
+
+   function Serialize (Self : Action_Id'Class) return String is
+         Res : Unbounded_String;
+   begin
+      Append (Res, GPR2.View_Ids.Image (Self.View.Id));
+
+      if Self.Language /= No_Language then
+         Append (Res, ":");
+         Append (Res, Image (Self.Language));
+         Append (Res, ":");
+      end if;
+
+      Append (Res, ":");
+      Append (Res, Self.Action_Class);
+      Append (Res, ":");
+      Append (Res, Self.Action_Parameter);
+
+      return -Res;
+   end Serialize;
 
    -------------------------
    -- Update_Command_Line --

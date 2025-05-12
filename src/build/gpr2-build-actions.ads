@@ -8,6 +8,7 @@ with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
+with GPR2.Build.Artifacts.Key_Value;
 with GPR2.Build.Command_Line;
 with GPR2.Build.Signature;
 with GPR2.Containers;
@@ -53,6 +54,9 @@ package GPR2.Build.Actions is
    --  for actions of the involved view.
    --  If basename is set, then the returned value won't have the extension.
 
+   function Serialize (Self : Action_Id'Class) return String;
+   --  Return a unique string representation of the action ID.
+
    function "<" (L, R : Action_Id'Class) return Boolean;
    --  Class-wide comparison
 
@@ -86,6 +90,13 @@ package GPR2.Build.Actions is
    function Working_Directory
      (Self : Object) return Path_Name.Object is abstract;
    --  The working directory used in the context of the action's execution
+
+   function UID_Artifact (Self : Object'Class)
+     return GPR2.Build.Artifacts.Key_Value.Object;
+   --  The artifact associated with the action UID. It is unique to each action
+   --  and serves to establish dependencies between actions that do not produce
+   --  other artifacts. This can be particularly useful when an action's stdout
+   --  contains information required by another action.
 
    ------------------------
    --  Action life cycle --
@@ -300,5 +311,10 @@ private
      (Self.Signature.Stdout);
    function Saved_Stderr (Self : Object'Class) return Unbounded_String is
      (Self.Signature.Stderr);
+
+   function UID_Artifact (Self : Object'Class)
+     return GPR2.Build.Artifacts.Key_Value.Object is
+       (GPR2.Build.Artifacts.Key_Value.Create
+         (Key => "UID_Artifact", Value => Self.UID.Serialize));
 
 end GPR2.Build.Actions;

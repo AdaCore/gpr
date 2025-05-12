@@ -865,10 +865,15 @@ package body GPR2.Build.Actions.Link is
    begin
       return Result : Tree_Db.Artifact_Sets.Set do
          for Input of Self.Tree.Inputs (Self.UID) loop
-            --  Inputs are either objects or libraries. Libraries are
-            --  represented by an Artifact.Library class.
+            --  Action inputs can be of various types, but objects at least
+            --  inherit from Artifacts.Files.Object.
+            --  Libraries are represented by the Artifact.Library class, which
+            --  we ignore since we are only interested in the objects contained
+            --  within the libraries.
 
-            if Input not in Artifacts.Library.Object'Class then
+            if Input in Artifacts.Files.Object'Class and then
+               Input not in Artifacts.Library.Object'Class
+            then
                Result.Include (Input);
             end if;
          end loop;

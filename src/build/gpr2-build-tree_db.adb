@@ -8,6 +8,7 @@ with GNATCOLL.Directed_Graph; use GNATCOLL.Directed_Graph;
 with GNATCOLL.OS.FSUtil;
 
 pragma Warnings (Off);
+with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
 
@@ -129,19 +130,32 @@ package body GPR2.Build.Tree_Db is
       Self.Inputs.Insert (Action.UID, Artifact_Vectors.Empty_Vector);
       Self.Outputs.Insert (Action.UID, Artifact_Vectors.Empty_Vector);
 
-      if not Action.On_Tree_Insertion (Self) then
-         return False;
-      end if;
-
-      Action := Self.Actions.Reference (Curs);
-
       if Self.Executing then
          --  Adding a new action while executing the graph: we need to
-         --  amend the Execution context
+         --  amend the Execution context.
+         --  This needs to be done before adding calling Add_Input or
+         --  Add_Output for this action, because these functions rely on
+         --  Self.Exec_Ctxt.Nodes.
+
          Node := Self.Exec_Ctxt.Graph.Add_Node;
          Self.Exec_Ctxt.Actions.Insert (Node, Action.UID);
          Self.Exec_Ctxt.Nodes.Insert (Action.UID, Node);
       end if;
+
+      if not Action.On_Tree_Insertion (Self) then
+         return False;
+      end if;
+
+      --  Some actions produce no artifacts but only output their result to the
+      --  standard output. To enable reusing this output in other actions,
+      --  a fake unique artifact is created per action, simplifying the
+      --  insertion of DAG dependencies in such cases.
+
+      if not Self.Add_Output (Action.UID, Action.UID_Artifact) then
+         return False;
+      end if;
+
+      Action := Self.Actions.Reference (Curs);
 
       return True;
    end Add_Action;
@@ -223,7 +237,7 @@ package body GPR2.Build.Tree_Db is
    function Add_Output
      (Self     : in out Object;
       Action   : Actions.Action_Id'Class;
-      Artifact : Artifacts.Files.Object'Class) return Boolean
+      Artifact : Artifacts.Object'Class) return Boolean
    is
       use type Actions.Action_Id;
       Pred     : Artifact_Action_Maps.Cursor;
@@ -236,16 +250,40 @@ package body GPR2.Build.Tree_Db is
       if Artifact_Action_Maps.Has_Element (Pred) then
          if Self.Predecessor (Pred) /= Action then
             --  Two actions produce the same output, raise an error
-            Self.Tree.Reporter.Report
-              (GPR2.Message.Create
-                 (GPR2.Message.Error,
-                 '"' & Action.Image & """ and """ &
-                    Self.Predecessor (Artifact).Image &
-                    """ produce the same output """ &
-                    String (Artifact.Path.Simple_Name) & '"',
-                  GPR2.Source_Reference.Object
-                    (GPR2.Source_Reference.Create
-                       (Artifact.Path.Value, 0, 0))));
+            if Artifact in GPR2.Build.Artifacts.Files.Object'Class then
+               Self.Tree.Reporter.Report
+                 (GPR2.Message.Create
+                    (GPR2.Message.Error,
+                     '"'
+                     & Action.Image
+                     & """ and """
+                     & Self.Predecessor (Artifact).Image
+                     & """ produce the same output """
+                     & String
+                         (GPR2.Build.Artifacts.Files.Object'Class (Artifact)
+                            .Path
+                            .Simple_Name)
+                     & '"',
+                     GPR2.Source_Reference.Object
+                       (GPR2.Source_Reference.Create
+                          (GPR2.Build.Artifacts.Files.Object'Class (Artifact)
+                             .Path
+                             .Value,
+                           0,
+                           0))));
+            else
+               Self.Tree.Reporter.Report
+                 (GPR2.Message.Create
+                    (GPR2.Message.Error,
+                     '"'
+                     & Action.Image
+                     & """ and """
+                     & Self.Predecessor (Artifact).Image
+                     & """ produce the same output """
+                     & Artifact.Image
+                     & '"'));
+            end if;
+
             return False;
          end if;
       else
