@@ -59,7 +59,7 @@ package GPR2.Build.Signature is
       Checksum_Check : Boolean := True) return Boolean;
    --  Add a new input artifact to the signature. Returns the current
    --  valid status of the signature after addition of the artifact.
-   --  If CHecksum_Check is not set, then the checksum of the artifact is
+   --  If Checksum_Check is not set, then the checksum of the artifact is
    --  not saved or verified
 
    procedure Add_Console_Output
