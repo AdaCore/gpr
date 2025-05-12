@@ -77,12 +77,6 @@ private
 
    overriding function UID (Self : Object) return Action_Id'Class;
 
-   overriding function Post_Command
-     (Self   : in out Object;
-      Status : Execution_Status;
-      Stdout : Unbounded_String := Null_Unbounded_String;
-      Stderr : Unbounded_String := Null_Unbounded_String) return Boolean;
-
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object
    is (Self.View.Object_Directory);

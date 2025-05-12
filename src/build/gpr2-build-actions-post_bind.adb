@@ -4,23 +4,14 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GNATCOLL.Traces;
-
-with GPR2.Build.Actions.Link;
 with GPR2.Build.ALI_Parser;
 with GPR2.Build.External_Options;
 with GPR2.Build.Tree_Db;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
-with GPR2.Project.Tree;
 with GPR2.Project.View;
 
 package body GPR2.Build.Actions.Post_Bind is
-
-   Traces : constant GNATCOLL.Traces.Trace_Handle :=
-              GNATCOLL.Traces.Create
-                ("GPR.BUILD.ACTIONS.POST_BIND",
-                 GNATCOLL.Traces.Off);
 
    package PAI renames GPR2.Project.Attribute_Index;
 
@@ -205,38 +196,6 @@ package body GPR2.Build.Actions.Post_Bind is
 
       return True;
    end On_Tree_Insertion;
-
-   ------------------
-   -- Post_Command --
-   ------------------
-
-   overriding
-   function Post_Command
-     (Self   : in out Object;
-      Status : Execution_Status;
-      Stdout : Unbounded_String := Null_Unbounded_String;
-      Stderr : Unbounded_String := Null_Unbounded_String) return Boolean
-   is
-      Binder_Action   : constant Ada_Bind.Object :=
-                          Ada_Bind.Object
-                            (Self.View.Tree.Artifacts_Database.Action
-                               (Self.Binder.UID));
-      Successors      : Tree_Db.Actions_List'Class :=
-                          Self.Tree.Successors (Self.Output);
-
-   begin
-      for Act of Successors loop
-         if Act in Link.Object'Class then
-            Traces.Trace ("Options passed to " & Act.UID.Image & ":");
-            for Opt of Binder_Action.Linker_Options loop
-               Traces.Trace ("* '" & Opt & "'");
-               Link.Object (Act).Add_Option (Opt);
-            end loop;
-         end if;
-      end loop;
-
-      return True;
-   end Post_Command;
 
    ---------
    -- UID --

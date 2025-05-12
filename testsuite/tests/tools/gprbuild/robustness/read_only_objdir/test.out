@@ -22,6 +22,7 @@ $ gprbuild -Plib -XPRJ_RO=True -p -j1
 [Ada Compile]     pkg2.ads
 [Ada Bind]        lib
 [Ada Post-Bind]   b__lib.adb
+[Link-Options-Insert] b__lib.o
 [Archive]         liblib.a
 - with regular dependency
 $ gprbuild -Plib -XPRJ_RO=False -p -j1
@@ -35,6 +36,7 @@ $ gprbuild -Plib -j1
 [Ada Compile]     pkg.ads
 [Ada Bind]        lib
 [Ada Post-Bind]   b__lib.adb
+[Link-Options-Insert] b__lib.o
 lib.gpr: error: could not copy ali file pkg2.ali to the library directory
 Command '[Archive] liblib.a (lib.gpr)' failed.
 $ chmod 0x777 lib/lib
@@ -45,5 +47,6 @@ $ gprbuild -Plib -f -j1
 [Ada Compile]     pkg.ads
 [Ada Bind]        lib
 [Ada Post-Bind]   b__lib.adb
+[Link-Options-Insert] b__lib.o
 lib.gpr: error: cannot remove the old archive liblib.a
 Command '[Archive] liblib.a (lib.gpr)' failed.

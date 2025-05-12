@@ -24,7 +24,7 @@ def test(test_dir):
             "-P" + os.path.join(test_dir, "demo.gpr"),
             "-p",
             "--json-summary",
-            "-j1"
+            "-j1",
         ]
     )
     with open(os.path.join(test_dir, "jobs.json")) as fp:
@@ -37,7 +37,7 @@ def test(test_dir):
             "-P" + os.path.join(test_dir, "app.gpr"),
             "-p",
             "--json-summary",
-            "-j1"
+            "-j1",
         ]
     )
 
@@ -45,6 +45,31 @@ def test(test_dir):
         print("lib [" + test_dir + "] has been created")
     else:
         print("ERROR: cannot find the lib")
+
+    # Check that the linker options and the binder object file content are
+    # merged in a second object file, called
+    # <binder_object_file_name>-with-linker-options.o.
+    binder_obj_with_linker_options = os.path.join(
+        test_dir, "obj", "lib", "b__demo-with-linker-options.o"
+    )
+    if os.path.isfile(binder_obj_with_linker_options):
+        objdump_cmd = [
+            "objdump",
+            "-s",
+            "--section=.GPR.linker_options",
+            binder_obj_with_linker_options,
+        ]
+        if (
+            not "Contents of section .GPR.linker_options:"
+            in bnr.simple_run(objdump_cmd, catch_error=True).out
+        ):
+            print(
+                "ERROR: "
+                + binder_obj_with_linker_options
+                + " does not contain the '.GPR.linker_options' section"
+            )
+    else:
+        print("ERROR: " + binder_obj_with_linker_options + " is missing")
 
     found = False
     for job in cntlib:
@@ -67,6 +92,16 @@ def test(test_dir):
                         "ERROR: foo.ali should not be in gnatbind command as it is not part of the interface"
                     )
                     print(job["command"])
+            elif "ar csr" in job["command"]:
+                if "b__demo.o" in job["command"]:
+                    print(
+                        "ERROR: b__demo-with-linker-options.o should be used instead of b__demo.o"
+                    )
+                elif "b__demo-with-linker-options.o" not in job["command"]:
+                    print(
+                        "ERROR: b__demo-with-linker-options.o is missing from the ar csr command"
+                    )
+
     if not found:
         print("ERROR: cannot find gnatbind in any command issued to build the app")
     else:
@@ -79,7 +114,7 @@ def test(test_dir):
             "-P" + os.path.join(test_dir, "invalid_app_foo.gpr"),
             "-p",
             "--json-summary",
-            "-j1"
+            "-j1",
         ]
     )
 
@@ -89,7 +124,7 @@ def test(test_dir):
             "-P" + os.path.join(test_dir, "invalid_app_mult.gpr"),
             "-p",
             "--json-summary",
-            "-j1"
+            "-j1",
         ]
     )
     print("")
