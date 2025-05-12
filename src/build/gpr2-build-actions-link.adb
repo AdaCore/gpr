@@ -606,7 +606,9 @@ package body GPR2.Build.Actions.Link is
 
          Status :=
            Add_Attr (PRA.Linker.Trailing_Switches, Src_Idx, True, True);
+      end if;
 
+      if not Self.Is_Static_Library then
          --  Add -largs
 
          for Arg
