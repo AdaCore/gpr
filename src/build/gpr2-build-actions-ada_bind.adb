@@ -746,8 +746,12 @@ package body GPR2.Build.Actions.Ada_Bind is
    -- Post_Command --
    ------------------
 
-   overriding function Post_Command
-     (Self : in out Object; Status : Execution_Status) return Boolean
+   overriding
+   function Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status;
+      Stdout : Unbounded_String := Null_Unbounded_String;
+      Stderr : Unbounded_String := Null_Unbounded_String) return Boolean
    is
       use Ada.Text_IO;
       use Ada.Strings;

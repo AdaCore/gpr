@@ -146,7 +146,10 @@ package GPR2.Build.Actions is
    type Execution_Status is (Skipped, Success);
 
    function Post_Command
-     (Self : in out Object; Status : Execution_Status) return Boolean;
+     (Self   : in out Object;
+      Status : Execution_Status;
+      Stdout : Unbounded_String := Null_Unbounded_String;
+      Stderr : Unbounded_String := Null_Unbounded_String) return Boolean;
    --  Post-processing that should occur after executing the command.
    --  Called when the command has been executed (even after reporting a
    --  failure) or when the command is disabled or skipped but the signature
@@ -278,7 +281,10 @@ private
      (True);
 
    function Post_Command
-     (Self : in out Object; Status : Execution_Status) return Boolean is
+     (Self   : in out Object;
+      Status : Execution_Status;
+      Stdout : Unbounded_String := Null_Unbounded_String;
+      Stderr : Unbounded_String := Null_Unbounded_String) return Boolean is
      (True);
 
    function Is_Deactivated (Self : Object) return Boolean
