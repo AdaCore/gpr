@@ -195,6 +195,14 @@ package GPR2.Build.Actions is
    --  Indicates whether the action should be skipped. By default this returns
    --  False.
 
+   function Display_Output (Action : Object) return Boolean;
+   --  Indicates whether the action output needs to be displayed by the
+   --  process manager. By default, this returns True, meaning the output
+   --  of the action will be shown to the user. This can be overridden in
+   --  derived types to suppress output for specific actions, such as those
+   --  that produce intermediate results or are part of a batch process
+   --  where individual outputs are not relevant to the user.
+
    function Is_Deactivated (Self : Object) return Boolean;
 
    function Write_Signature
@@ -303,6 +311,9 @@ private
 
    function Skip (Self : Object) return Boolean
    is (False);
+
+   function Display_Output (Action : Object) return Boolean
+   is (True);
 
    function Command_Line (Self : Object) return GPR2.Build.Command_Line.Object
    is (Self.Cmd_Line);

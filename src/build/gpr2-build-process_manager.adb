@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2024, AdaCore
+--  Copyright (C) 2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -105,7 +105,7 @@ package body GPR2.Build.Process_Manager is
          "The process linked to the action '" & Job.UID.Image &
            "' is still running. Cannot collect the job before it finishes");
 
-      if Length (Stdout) > 0 then
+      if Length (Stdout) > 0 and then Job.Display_Output then
          Self.Tree_Db.Reporter.Report
            (-Stdout, Level => GPR2.Message.Important);
       end if;
@@ -168,7 +168,7 @@ package body GPR2.Build.Process_Manager is
       then
          if not Job.Post_Command
            ((if Proc_Handler.Status in Skipped | Deactivated
-             then Skipped else Success))
+             then Skipped else Success), Stdout, Stderr)
          then
             return Abort_Execution;
          end if;
