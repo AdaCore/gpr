@@ -99,9 +99,9 @@ test_gpr2_with_gpr2build:
     when:
       always
     paths:
-      - test_gpr2build_result.xml
+      - testgpr2build_result.xml
     reports:
-      junit: test_gpr2build_result.xml
+      junit: testgpr2build_result.xml
 
 ############################
 ## GPR2 WINDOWS TESTSUITE ##
@@ -122,7 +122,7 @@ build_and_test_gpr2_windows:
     JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
   script:
     - exec anod build gpr2
-    - run_testsuite gpr2 "" test_gpr2
+    - run_testsuite gpr2 "" test_gpr2_windows
   artifacts:
     when:
       always
@@ -147,9 +147,9 @@ test_gprbuild_internal:
     when:
       always
     paths:
-      - test_gpr1_testsuite_result.xml
+      - testgpr1testsuite_result.xml
     reports:
-      junit: test_gpr1_testsuite_result.xml
+      junit: testgpr1testsuite_result.xml
 
 ##################
 ## MEMORY LEAKS ##

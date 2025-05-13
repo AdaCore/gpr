@@ -54,9 +54,10 @@ package body GPR2.Build.Actions_Population is
      array (Positive range <>) of GPR2.Build.Actions.Ada_Bind.Object;
 
    type Library_Type is record
-      View : GPR2.Project.View.Object;
-      Link : GPR2.Build.Actions.Link.Object;
-      Bind : GPR2.Build.Actions.Ada_Bind.Object;
+      View     : GPR2.Project.View.Object;
+      Link     : GPR2.Build.Actions.Link.Object;
+      Bind     : GPR2.Build.Actions.Ada_Bind.Object;
+      Lib_Deps : GPR2.View_Ids.Set.Set;
    end record;
 
    package View_Id_Library_Map is new Ada.Containers.Ordered_Maps
@@ -140,6 +141,18 @@ package body GPR2.Build.Actions_Population is
       View    : GPR2.Project.View.Object;
       Mains   : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
       Options : Build.Options.Build_Options) return Boolean;
+
+   function Populate_Withed_Projects
+     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      Options : Build.Options.Build_Options;
+      View    : GPR2.Project.View.Object;
+      Closure : in out GPR2.Project.View.Set.Object;
+      Libs    : in out Library_Map.Map;
+      Sublibs :    out GPR2.View_Ids.Set.Set;
+      Has_SAL : in out Boolean) return Boolean;
+   --  Handle the population of withed projects
+   --  Closure will contain the list of withed standard views
+   --  Libs is the list of withed libraries
 
    function Populate_Withed_Projects
      (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
@@ -750,6 +763,7 @@ package body GPR2.Build.Actions_Population is
       Self.View := View;
       Self.Link.Initialize_Library (View, Options.No_Run_Path);
 
+      --  Should not add the action is the view is externally built???
       if not Tree_Db.Add_Action (Self.Link) then
          return False;
       end if;
@@ -771,7 +785,7 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       if not Populate_Withed_Projects
-        (Tree_Db, Options, View, Closure, Libs, Has_SAL)
+        (Tree_Db, Options, View, Closure, Libs, Self.Lib_Deps, Has_SAL)
       then
          return False;
       end if;
@@ -780,7 +794,28 @@ package body GPR2.Build.Actions_Population is
         SAL_Closure or else Has_SAL or else View.Is_Library_Standalone;
 
       if View.Is_Externally_Built then
+         --  Update the Library object in Libs
+
+         Libs.Replace (Self);
+
          return True;
+      end if;
+
+      if Self.View.Is_Shared_Library then
+         for Id of Self.Lib_Deps loop
+            declare
+               Sublib : constant Library_Type := Libs.Values.Element (Id);
+            begin
+               --  In a shared lib context, the library dependencies are used
+               --  to pre-check the link, and this part is necessary on windows
+               --  (and optional on linux). We need thus those to be built
+               --  before the current link is performed. This will also
+               --  populate the proper -l switches in the link command.
+
+               Tree_Db.Add_Input
+                 (Self.Link.UID, Sublib.Link.Output, False);
+            end;
+         end loop;
       end if;
 
       if View.Is_Library_Standalone
@@ -1359,6 +1394,21 @@ package body GPR2.Build.Actions_Population is
       Libs    : in out Library_Map.Map;
       Has_SAL : in out Boolean) return Boolean
    is
+      Ign : GPR2.View_Ids.Set.Set;
+   begin
+      return Populate_Withed_Projects
+        (Tree_Db, Options, View, Closure, Libs, Ign, Has_SAL);
+   end Populate_Withed_Projects;
+
+   function Populate_Withed_Projects
+     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      Options : Build.Options.Build_Options;
+      View    : GPR2.Project.View.Object;
+      Closure : in out GPR2.Project.View.Set.Object;
+      Libs    : in out Library_Map.Map;
+      Sublibs :    out GPR2.View_Ids.Set.Set;
+      Has_SAL : in out Boolean) return Boolean
+   is
       procedure Add_Deps (V  : GPR2.Project.View.Object);
 
       use type GPR2.Project.View.Object;
@@ -1373,7 +1423,7 @@ package body GPR2.Build.Actions_Population is
       procedure Add_Deps (V : GPR2.Project.View.Object) is
       begin
          for Imp of V.Imports.Union (V.Limited_Imports) loop
-            if not Seen.Contains (Imp) then
+            if not Seen.Contains (Imp) and then not Imp.Is_Extended then
                Todo.Append (Imp);
             end if;
          end loop;
@@ -1381,7 +1431,7 @@ package body GPR2.Build.Actions_Population is
          if V.Is_Extending then
             for Ext of V.Extended loop
                for Imp of Ext.Imports.Union (Ext.Limited_Imports) loop
-                  if not Seen.Contains (Imp) then
+                  if not Seen.Contains (Imp) and then not Imp.Is_Extended then
                      Todo.Append (Imp);
                   end if;
                end loop;
@@ -1407,6 +1457,9 @@ package body GPR2.Build.Actions_Population is
             then
                return False;
             end if;
+
+            Sublibs.Union (Libs.Values (Current.Id).Lib_Deps);
+            Sublibs.Include (Current.Id);
 
             if View.Is_Library
               and then View /= Current

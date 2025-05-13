@@ -2158,7 +2158,9 @@ package body GPR2.Project.View is
       if not Self.Is_Static_Library
         and then not GPR2.On_Windows
       then
+         pragma Warnings (Off, "this code can never be executed*");
          Attr_Version := Self.Attribute (PRA.Library_Version);
+         pragma Warnings (On, "this code can never be executed*");
       end if;
 
       if not Attr_Version.Is_Defined then

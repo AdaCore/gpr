@@ -6,7 +6,6 @@
 
 with Ada.Exceptions;
 with GNATCOLL.Buffer;
-with GNATCOLL.OS.Constants;
 with GNATCOLL.Traces;
 
 package body GPR2.Build.Makefile_Parser is
@@ -47,12 +46,6 @@ package body GPR2.Build.Makefile_Parser is
 
    package body IO is
 
-      use type GNATCOLL.OS.OS_Type;
-
-      Is_Windows_Host : constant Boolean :=
-                          GNATCOLL.OS.Constants.OS = GNATCOLL.OS.Windows
-                            with Warnings => Off;
-
       ----------------------
       -- Fetch_Dependency --
       ----------------------
@@ -87,7 +80,15 @@ package body GPR2.Build.Makefile_Parser is
                   --  We have a '\' not at the end of the line, this means it's
                   --  either an escape character to take into account, or a
                   --  path separator for windows.
-                  if Is_Windows_Host then
+
+                  --  Note, since GPR2.On_Windows is evaluated statically
+                  --  depending on the actual host, the if statement below is
+                  --  optimized by the toolchain leading to a warning "this
+                  --  code can never be executed". We thus need to kill the
+                  --  warning.
+
+                  pragma Warnings (Off, "this code can never be executed*");
+                  if GPR2.On_Windows then
                      --  On Windows, a '\' is part of the path name,
                      --  except when it is followed by another '\' or ' '.
                      --  Although "\\" at the beginning of a path is valid.
@@ -138,6 +139,7 @@ package body GPR2.Build.Makefile_Parser is
                         Escaped := True;
                      end if;
                   end if;
+                  pragma Warnings (On, "this code can never be executed*");
                end if;
             end if;
 
