@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GNAT.OS_Lib;
 with GNATCOLL.Utils;
 
 with GPR2.Containers;
@@ -99,15 +100,33 @@ package body GPR2.Build.Command_Line is
      (Self : in out Object;
       Arg  : String)
    is
-   begin
-      if Self.Cmd_Line.Is_Empty then
-         Self.Total_Length := Arg'Length;
-      else
-         Self.Total_Length := Self.Total_Length + Arg'Length + 1;
-      end if;
+      procedure Internal (Driver : String);
 
-      Self.Cmd_Line.Prepend (Arg);
-      Self.In_Signature.Prepend (Simple);
+      procedure Internal (Driver : String) is
+      begin
+         if Self.Cmd_Line.Is_Empty then
+            Self.Total_Length := Driver'Length;
+         else
+            Self.Total_Length := Self.Total_Length + Driver'Length + 1;
+         end if;
+
+         Self.Cmd_Line.Prepend (Driver);
+         Self.In_Signature.Prepend (Simple);
+      end Internal;
+   begin
+      if GNAT.OS_Lib.Is_Absolute_Path (Arg) then
+         Internal (Arg);
+      else
+         declare
+            Full : constant String := GPR2.Locate_Exec_On_Path (Arg);
+         begin
+            if Full'Length > 0 then
+               Internal (Full);
+            else
+               Internal (Arg);
+            end if;
+         end;
+      end if;
    end Set_Driver;
 
    procedure Set_Driver
