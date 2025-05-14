@@ -170,6 +170,9 @@ private
 
       Lib_Dep_Circle  : Boolean := False;
       --  Whether the libraries are inter-dependent
+
+      Lib_Symbol_File : Artifacts.Files.Object;
+      --  User-defined list of exported symbols
    end record;
 
    overriding procedure Compute_Signature

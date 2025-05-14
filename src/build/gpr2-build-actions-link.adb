@@ -659,10 +659,62 @@ package body GPR2.Build.Actions.Link is
             Cmd_Line.Add_Argument (Option);
          end loop;
       end if;
+
       if Self.View.Is_Library
         and then not Self.Is_Static
       then
          Ign := Add_Attr (PRA.Library_Options, PAI.Undefined, True, True);
+      end if;
+
+      --  For shared libs, use an export symbol file when possible
+
+      if Self.Is_Library and then not Self.Is_Static then
+         declare
+            Object_Lister      : constant Project.Attribute.Object :=
+                                   Self.View.Attribute (PRA.Object_Lister);
+            Export_File_Switch : constant Project.Attribute.Object :=
+                                   Self.View.Attribute
+                                     (PRA.Linker.Export_File_Switch);
+            Symbol_File        : Path_Name.Object;
+            use GPR2.Project;
+         begin
+            if Self.View.Library_Standalone /= No then
+               if Export_File_Switch.Is_Defined then
+                  if Self.Lib_Symbol_File.Is_Defined then
+                     Symbol_File := Self.Lib_Symbol_File.Path;
+                  elsif Object_Lister.Is_Defined then
+                     --  ??? TODO: extract the list of symbols and generate the
+                     --  export file.
+                     null;
+                  end if;
+
+                  if Symbol_File.Is_Defined then
+                     Cmd_Line.Add_Argument
+                       (Export_File_Switch.Value.Text &
+                          String (Symbol_File.Relative_Path
+                                    (Self.Working_Directory)));
+                  end if;
+               end if;
+            end if;
+
+            --  On Windows, if we are building a standard library or a library
+            --  with unrestricted symbol-policy make sure all symbols are
+            --  exported.
+
+            if Self.View.Tree.Is_Windows_Target
+              and then (Self.View.Library_Standalone = No
+                        or else not Export_File_Switch.Is_Defined)
+            then
+               --  This is needed if an object contains a declspec(dllexport)
+               --  as in this case only the specified symbols will be exported.
+               --  That is the linker change from export-all to export only the
+               --  symbols specified as dllexport.
+
+               --  ??? Create a proper Linker attribute for that
+
+               Cmd_Line.Add_Argument ("-Wl,--export-all-symbols");
+            end if;
+         end;
       end if;
 
       --  Finally remove any duplicated --specs switch as this may cause
@@ -797,6 +849,20 @@ package body GPR2.Build.Actions.Link is
       Self.Is_Static  := Context.Is_Static_Library;
       Self.Library    := Artifacts.Library.Create (Context.Library_Filename);
       Self.No_Rpath   := No_Rpath;
+
+      if not Self.Is_Static then
+         declare
+            Attr : constant Project.Attribute.Object :=
+                     Context.Attribute (PRA.Library_Symbol_File);
+         begin
+            if Attr.Is_Defined then
+               Self.Lib_Symbol_File := Artifacts.Files.Create
+                 (Path_Name.Create_File
+                    (Filename_Type (Attr.Value.Text),
+                     Context.Path_Name.Dir_Name));
+            end if;
+         end;
+      end if;
    end Initialize_Library;
 
    ---------------------
@@ -944,6 +1010,10 @@ package body GPR2.Build.Actions.Link is
       end if;
 
       if Self.Is_Library and then not Self.Is_Static then
+         if Self.Lib_Symbol_File.Is_Defined then
+            Db.Add_Input (UID, Self.Lib_Symbol_File, False);
+         end if;
+
          --  Shared libraries may need symbolic links, reflect that at the
          --  tree db level
 
