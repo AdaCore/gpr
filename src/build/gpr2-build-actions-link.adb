@@ -14,6 +14,7 @@ with GNATCOLL.Traces;
 with GNATCOLL.Utils;
 
 with GPR2.Build.Actions.Compile.Ada;
+with GPR2.Build.ALI_Parser;
 with GPR2.Build.External_Options;
 with GPR2.Message;
 with GPR2.Project.Attribute;
@@ -151,6 +152,13 @@ package body GPR2.Build.Actions.Link is
          In_Signature : Boolean;
          Param        : String := "") return Boolean;
 
+      procedure Check_Ada_Runtime_Needed
+        (Libgnat : out Boolean;
+         Libgnarl : out Boolean);
+      --  When a shared library is linked without a binding phase, we need to
+      --  detect if libgnat/libgnarl is needed or not. This uses the ali files
+      --  for this end.
+
       function Is_Partially_Linked
         (View : GPR2.Project.View.Object) return Boolean;
       --  Return true if the Library_Partial_Linker is set with a
@@ -158,6 +166,8 @@ package body GPR2.Build.Actions.Link is
       --  ??? Because we do not support partial links for now, this function
       --  always return False. To be updated once the support has been
       --  implemented.
+
+      Objects : Tree_Db.Artifact_Sets.Set;
 
       --------------
       -- Add_Attr --
@@ -247,6 +257,42 @@ package body GPR2.Build.Actions.Link is
          return True;
       end Add_Attr;
 
+      ------------------------------
+      -- Check_Ada_Runtime_Needed --
+      ------------------------------
+
+      procedure Check_Ada_Runtime_Needed
+        (Libgnat : out Boolean;
+         Libgnarl : out Boolean) is
+      begin
+         Libgnat  := False;
+         Libgnarl := False;
+
+         for Obj of Objects loop
+            if Self.Tree.Has_Predecessor (Obj)
+              and then
+                Self.Tree.Predecessor (Obj) in Actions.Compile.Ada.Object'Class
+            then
+               Libgnat := True;
+
+               declare
+                  Comp : constant Actions.Compile.Ada.Object'Class :=
+                           Actions.Compile.Ada.Object'Class
+                             (Self.Tree.Predecessor (Obj));
+                  Deps : Containers.Filename_Set;
+               begin
+                  if ALI_Parser.Dependencies (Comp.Local_Ali_File.Path, Deps)
+                    and then Deps.Contains ("s-osinte.ads")
+                  then
+                     Libgnarl := True;
+
+                     exit;
+                  end if;
+               end;
+            end if;
+         end loop;
+      end Check_Ada_Runtime_Needed;
+
       -------------------------
       -- Is_Partially_Linked --
       -------------------------
@@ -261,7 +307,6 @@ package body GPR2.Build.Actions.Link is
          return False;
       end Is_Partially_Linked;
 
-      Objects      : Tree_Db.Artifact_Sets.Set;
       Status       : Boolean;
       Src_Idx      : constant PAI.Object :=
                        (if not Self.Is_Library
@@ -633,19 +678,28 @@ package body GPR2.Build.Actions.Link is
         and then Self.View.Is_Shared_Library
       then
          declare
-            Gnat_Version : constant String :=
-                             Self.View.Tree.Ada_Compiler_Version;
+            Gnat_Version   : constant String :=
+                               Self.View.Tree.Ada_Compiler_Version;
+            Needs_Libgnat  : Boolean;
+            Needs_Libgnarl : Boolean;
          begin
             if Gnat_Version /= "" then
-               Cmd_Line.Add_Argument ("-lgnat-" & Gnat_Version);
+               Check_Ada_Runtime_Needed (Needs_Libgnat, Needs_Libgnarl);
+
+               if Needs_Libgnat then
+                  if Needs_Libgnarl then
+                     Cmd_Line.Add_Argument ("-lgnarl-" & Gnat_Version);
+                  end if;
+
+                  Cmd_Line.Add_Argument ("-lgnat-" & Gnat_Version);
+               end if;
+
+               Cmd_Line.Add_Argument
+                 (Self.Tree.Linker_Lib_Dir_Option &
+                    Self.View.Tree.Runtime_Project.Object_Directory.
+                      String_Value);
             end if;
          end;
-
-         --  ??? We also need to add the lgnarl-XXX flag if required
-
-         Cmd_Line.Add_Argument
-           (Self.Tree.Linker_Lib_Dir_Option
-            & Self.View.Tree.Runtime_Project.Object_Directory.String_Value);
       end if;
 
       --  Add options provided by the binder if needed
