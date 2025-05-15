@@ -1858,6 +1858,17 @@ begin
       Is_Allowed_In        => Everywhere,
       Default              => Create ("-Wl,--start-group"));
 
+   --  linker.unconditional_linking
+   Add
+     (Name => Linker.Unconditional_Linking,
+      Index_Type            => Language_Index,
+      Value                 => Single,
+      Value_Case_Sensitive  => False,
+      Is_Allowed_In         => Everywhere,
+      Default               => Create ("false"),
+      Has_Default_In        => Everywhere,
+      Type_Def              => Boolean_Type_Def);
+
    --  clean.switches
    Add
      (Name                 => Clean.Switches,

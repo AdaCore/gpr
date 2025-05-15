@@ -1254,6 +1254,11 @@ begin
         "Value is the switch to use to end a link group, a group of "
       & "libraries to be linked with recursively");
 
+   Set_Attribute_Description
+     (Key         => PRA.Linker.Unconditional_Linking,
+      Description => "When set for a language, this instructs the link phase "
+      & "to always explicitly link with the produced objects");
+
    --  Naming.Specification_Suffix
    Set_Attribute_Description
      (Key          => PRA.Naming.Specification_Suffix,

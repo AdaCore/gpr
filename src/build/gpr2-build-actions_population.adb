@@ -757,6 +757,7 @@ package body GPR2.Build.Actions_Population is
       if View.Is_Extended or else Libs.Contains (View) then
          --  Extended library projects won't produce any library, so skip
          --  them. Also skip already analyzed library projects.
+
          return True;
       end if;
 
@@ -1025,16 +1026,17 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       declare
-         Bind      : Bind_Array (1 .. Natural (Actual_Mains.Length));
-         Link      : Link_Array (1 .. Natural (Actual_Mains.Length));
-         Attr      : GPR2.Project.Attribute.Object;
-         Closure   : GPR2.Project.View.Set.Object;
-         Libs      : Library_Map.Map;
-         Idx       : Natural := 1;
-         Skip      : Boolean := False;
-         Has_Ada   : Boolean := False;
-         Has_Other : Boolean := False;
-         Has_SAL   : Boolean := False;
+         Bind          : Bind_Array (1 .. Natural (Actual_Mains.Length));
+         Link          : Link_Array (1 .. Natural (Actual_Mains.Length));
+         Attr          : GPR2.Project.Attribute.Object;
+         Closure       : GPR2.Project.View.Set.Object;
+         Libs          : Library_Map.Map;
+         Idx           : Natural := 1;
+         Skip          : Boolean := False;
+         Direct_Import : Boolean := False;
+         Has_Ada       : Boolean := False;
+         Has_Other     : Boolean := False;
+         Has_SAL       : Boolean := False;
       begin
          --  First check the dependencies and retrieve the libraries
 
@@ -1332,6 +1334,7 @@ package body GPR2.Build.Actions_Population is
 
             for Src of V.Sources loop
                Skip := False;
+               Direct_Import := False;
 
                if Src.Has_Units
                  or else not Src.Is_Compilable
@@ -1348,7 +1351,18 @@ package body GPR2.Build.Actions_Population is
                end loop;
 
                if not Skip then
-                  if not Archive.Is_Defined then
+                  declare
+                     Attr : constant Project.Attribute.Object :=
+                              Src.Owning_View.Attribute
+                                (PRA.Linker.Unconditional_Linking,
+                                 PAI.Create (Src.Language));
+                  begin
+                     Direct_Import := Name_Type (Attr.Value.Text) = "True";
+                  end;
+               end if;
+
+               if not Skip then
+                  if not Direct_Import and then not Archive.Is_Defined then
                      --  Need to create an intermediate library so that
                      --  foreign objects can be ignored by the linker
                      --  if no symbol is used from them. Else the linker
@@ -1372,7 +1386,15 @@ package body GPR2.Build.Actions_Population is
                   end if;
 
                   if Comp.Object_File.Is_Defined then
-                     Tree_Db.Add_Input (Archive.UID, Comp.Object_File, True);
+                     if Direct_Import then
+                        for J in Link'Range loop
+                           Tree_Db.Add_Input
+                             (Link (J).UID, Comp.Object_File, True);
+                        end loop;
+                     else
+                        Tree_Db.Add_Input
+                          (Archive.UID, Comp.Object_File, True);
+                     end if;
                   end if;
                end if;
             end loop;
