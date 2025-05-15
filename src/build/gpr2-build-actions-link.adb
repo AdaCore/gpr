@@ -449,7 +449,7 @@ package body GPR2.Build.Actions.Link is
                   --  Add flags to include the shared library
 
                   Cmd_Line.Add_Argument
-                    (Lib_Dir_Opt & String (Lib_Artifact.Dir_Name));
+                    (Lib_Dir_Opt & Link.View.Library_Directory.String_Value);
 
                   --  Add the library directory to the rpath of the
                   --  executable, so that LD_LIBRARY_PATH does not need to
@@ -483,9 +483,9 @@ package body GPR2.Build.Actions.Link is
                         Append
                           (Rpath,
                            Rpath_Origin.Value.Text & "/" &
-                             String
-                             (Lib_Artifact.Containing_Directory.
-                                  Relative_Path (From)));
+                           String
+                             (Link.View.Library_Directory.Relative_Path
+                                  (From)));
                      end;
                   else
                      Append (Rpath, String (Lib_Artifact.Dir_Name));
@@ -710,7 +710,18 @@ package body GPR2.Build.Actions.Link is
                  and then Is_Partially_Linked (Self.View))
       then
          for Option of Self.Static_Options loop
-            Cmd_Line.Add_Argument (Option);
+            --  ??? Weird bug on windows happening when a backslash is ending
+            --  the argument, and the arg contains a space, then ld reacts just
+            --  as if there was some hidden \" ending the argument and thus
+            --  escapes the rest of the command line. Skip any trailing
+            --  backslash...
+
+            if Option (Option'Last) = '\' then
+               Cmd_Line.Add_Argument
+                 (Option (Option'First .. Option'Last - 1));
+            else
+               Cmd_Line.Add_Argument (Option);
+            end if;
          end loop;
       end if;
 
