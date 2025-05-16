@@ -1,0 +1,4 @@
+description: A test for Has_Explicit_Target tree function
+driver: python_script
+fake_ada_target:
+- [ 'linux-fake-target' ]

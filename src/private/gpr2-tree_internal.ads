@@ -213,6 +213,10 @@ private package GPR2.Tree_Internal is
       Canonical : Boolean := False) return Name_Type;
    --  Returns the target for the project tree
 
+   function Has_Explicit_Target (Self : Object) return Boolean;
+   --  Returns True if the target was explicitly set, either on the command
+   --  line, in the project file, or in a provided configuration file.
+
    function Runtime
      (Self : Object; Language : Language_Id) return Optional_Name_Type;
    --  Returns the runtime selected for the given language or the empty string
@@ -523,6 +527,7 @@ private
       Reporter_Holder   : GPR2.Reporter.Holders.Holder :=
                             GPR2.Reporter.Holders.To_Holder
                               (GPR2.Reporter.Console.Create);
+      Has_Explicit_Target : Boolean := True;
    end record;
 
    function "=" (Left, Right : Object) return Boolean is
@@ -637,5 +642,8 @@ private
 
    function Resolve_Links (Self : Object) return Boolean is
      (Self.Resolve_Links);
+
+   function Has_Explicit_Target (Self : Object) return Boolean is
+     (Self.Has_Explicit_Target);
 
 end GPR2.Tree_Internal;
