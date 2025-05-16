@@ -734,33 +734,21 @@ package body GPR2.Build.Actions.Compile is
    is
       use GPR2.Build.Signature;
    begin
-      if Self.Obj_File.Is_Defined then
-         if Self.Dep_File.Is_Defined
-           and then not Self.Signature.Add_Output (Self.Dep_File)
-           and then Load_Mode
-         then
-            return;
-         end if;
-
-         if not Self.Signature.Add_Output (Self.Obj_File)
-           and then Load_Mode
-         then
-            return;
-         end if;
-
-      else
-         --  if no object is produced, then force the re-generation of the
-         --  compilation each time the action is called by clearing the
-         --  signature.
-         Self.Signature.Invalidate;
-      end if;
-
       if Self.Dep_File.Is_Defined then
          declare
             Deps : constant GPR2.Containers.Filename_Set := Self.Dependencies;
          begin
-            if Deps.Is_Empty then
-               Self.Signature.Invalidate;
+            if Deps.Is_Empty and then not Load_Mode then
+               --  An expected dependency file is missing after compilation, or
+               --  is badly formatted: we clear the signature here so that the
+               --  action will report an error and won't save the signature.
+
+               Self.Tree.Reporter.Report
+                 ("file """ & Self.Dep_File.Path.String_Value &
+                    """ is missing or is wrongly formatted",
+                  To_Stderr => True,
+                  Level     => GPR2.Message.Important);
+               Self.Signature.Clear;
                return;
             end if;
 
@@ -799,7 +787,7 @@ package body GPR2.Build.Actions.Compile is
                           String (Dep));
 
                      if Load_Mode then
-                        Self.Signature.Invalidate;
+                        Self.Signature.Clear;
                         return;
                      end if;
 
@@ -821,6 +809,29 @@ package body GPR2.Build.Actions.Compile is
          then
             return;
          end if;
+      end if;
+
+      if Self.Obj_File.Is_Defined then
+         if Self.Dep_File.Is_Defined
+           and then not Self.Signature.Add_Output (Self.Dep_File)
+           and then Load_Mode
+         then
+            return;
+         end if;
+
+         if not Self.Signature.Add_Output (Self.Obj_File)
+           and then Load_Mode
+         then
+            return;
+         end if;
+
+      elsif Load_Mode then
+         --  if no object is produced, then force the re-generation of the
+         --  compilation each time the action is called by clearing the
+         --  checksums of the signature.
+         Self.Signature.Invalidate;
+
+         return;
       end if;
 
       if Self.Global_Config_File.Is_Defined

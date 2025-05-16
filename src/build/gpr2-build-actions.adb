@@ -257,6 +257,11 @@ package body GPR2.Build.Actions is
 
       Self.Signature.Clear;
       Self.Compute_Signature (Load_Mode => False);
+
+      if Self.Signature.Is_Empty then
+         return False;
+      end if;
+
       Ign := Self.Signature.Add_Input
         (Artifacts.Key_Value.Create
            (Command_Line_Key, Self.Cmd_Line.Signature));
