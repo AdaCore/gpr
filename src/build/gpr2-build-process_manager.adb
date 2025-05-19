@@ -34,7 +34,9 @@ package body GPR2.Build.Process_Manager is
    function Effective_Job_Number (N : Natural) return Natural;
    --  If N = 0 return the number of CPUs otherwise return N.
 
-   function Image (Command : Argument_List) return String;
+   function Image
+     (Command    : Argument_List;
+      For_Script : Boolean := False) return String;
    --  Return the representation of the command
 
    --------------
@@ -391,7 +393,7 @@ package body GPR2.Build.Process_Manager is
                         Cd_Args.Append (Act.Working_Directory.String_Value);
                         GNATCOLL.OS.FS.Write
                           (Script_FD,
-                           Image (Cd_Args) & ASCII.LF);
+                           Image (Cd_Args, True) & ASCII.LF);
                         Script_Dir := Act.Working_Directory;
                      end if;
 
@@ -410,7 +412,8 @@ package body GPR2.Build.Process_Manager is
 
                      GNATCOLL.OS.FS.Write
                        (Script_FD,
-                        Image (Act.Command_Line.Argument_List) & ASCII.LF);
+                        Image (Act.Command_Line.Argument_List, True) &
+                          ASCII.LF);
                   end if;
 
                   --  If we have a Jobserver, associate the pre-ordered token
@@ -610,7 +613,6 @@ package body GPR2.Build.Process_Manager is
                end if;
 
                if Options.Stop_On_Fail then
-                  --  Adjust execution depending on returned value
                   End_Of_Iteration := True;
                end if;
             end if;
@@ -685,18 +687,24 @@ package body GPR2.Build.Process_Manager is
    -- Image --
    -----------
 
-   function Image (Command : Argument_List) return String is
+   function Image
+     (Command    : Argument_List;
+      For_Script : Boolean := False) return String
+   is
       Result : Unbounded_String;
+      Quote  : constant Character := (if For_Script then ''' else '"');
    begin
       for Arg of Command loop
          if Length (Result) > 0 then
             Append (Result, " ");
          end if;
 
-         if Ada.Strings.Fixed.Index (Arg, " ") > 0 then
-            Append (Result, '"');
+         if Ada.Strings.Fixed.Index (Arg, " ") > 0
+           or else (For_Script and then Ada.Strings.Fixed.Index (Arg, "\") > 0)
+         then
+            Append (Result, Quote);
             Append (Result, Arg);
-            Append (Result, '"');
+            Append (Result, Quote);
          else
             Append (Result, Arg);
          end if;
