@@ -1573,6 +1573,17 @@ package body GPR2.Project.View is
             end;
          end loop;
 
+         Naming_Exceptions : declare
+            Attrs : constant Project.Attribute.Set.Object :=
+                      Self.Attributes (PRA.Naming.Body_N);
+         begin
+            for NE of Attrs loop
+               if Main = NE.Value.Text then
+                  return True;
+               end if;
+            end loop;
+         end Naming_Exceptions;
+
          return False;
       end Is_An_Exception;
 
