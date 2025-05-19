@@ -17,6 +17,7 @@ with GNATCOLL.Traces;
 with GNATCOLL.Utils; use GNATCOLL.Utils;
 
 with GPR2.Build.Actions.Compile.Ada;
+with GPR2.Build.Actions.Link;
 with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Compilation_Unit;
@@ -45,6 +46,8 @@ package body GPR2.Build.Actions.Ada_Bind is
 
    package PRA renames GPR2.Project.Registry.Attribute;
    package PAI renames GPR2.Project.Attribute_Index;
+
+   function Link (Self : Object) return Actions.Link.Object;
 
    ---------------------
    -- Compute_Command --

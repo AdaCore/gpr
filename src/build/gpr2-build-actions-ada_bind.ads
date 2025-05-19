@@ -5,7 +5,6 @@
 --
 
 limited with GPR2.Build.Actions.Post_Bind;
-with GPR2.Build.Actions.Link;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Path_Name; use GPR2.Path_Name;
 
@@ -64,7 +63,6 @@ package GPR2.Build.Actions.Ada_Bind is
    function Generated_Spec (Self : Object) return Artifacts.Files.Object;
    function Generated_Body (Self : Object) return Artifacts.Files.Object;
    function Post_Bind (Self : Object) return Actions.Post_Bind.Object;
-   function Link (Self : Object) return Actions.Link.Object;
 
    overriding function On_Tree_Propagation
      (Self : in out Object) return Boolean;
