@@ -57,6 +57,10 @@ package GPR2.Build.View_Db is
    --  aggregate library are returned, but not the sources visible via simple
    --  withed or limited withed projects.
    --
+   --  Additionally, aggregate projects cannot own any sources. Therefore, it
+   --  is necessary to iterate over the aggregated projects before invoking
+   --  this function.
+   --
    --  This contrasts with the "Visible_Source" primitive in this regard.
 
    function Visible_Source
@@ -67,6 +71,10 @@ package GPR2.Build.View_Db is
    --  Get a source from its simple name, that is visible for a given view's
    --  sources (so project's own sources and all its withed projects).
    --  Ambiguous is set when several sources could have matched the basename.
+   --
+   --  Note that aggregate projects cannot own any sources. Therefore, it is
+   --  necessary to iterate over the aggregated projects before invoking this
+   --  function.
 
    function Visible_Source
      (Self : Object;
