@@ -247,9 +247,14 @@ package body GPR2.Build.Process_Manager is
       States          : array (1 .. Max_Jobs) of Proc_State;
       --  State associated with each active processes
 
+      Previous_Progress : Natural := 0;
+      Executed          : Natural := 0;
+
       procedure Allocate_Listeners
         (Proc_Id : Natural; Stdout_FD, Stderr_FD : FS.File_Descriptor);
       --  Allocate listeners
+
+      procedure Report_Progress;
 
       ------------------------
       -- Allocate_Listeners --
@@ -281,6 +286,29 @@ package body GPR2.Build.Process_Manager is
          States (Proc_Id).Stderr_Listener.Listen (Stderr_FD);
       end Allocate_Listeners;
 
+      procedure Report_Progress is
+      begin
+         if Options.Show_Progress
+           and then Executed /= Previous_Progress
+         then
+            Previous_Progress := Executed;
+
+            declare
+               Percent : constant String :=
+                           Natural'Image
+                             ((Executed * 100) /
+                                Natural (Context.Nodes.Length));
+            begin
+               Tree_Db.Reporter.Report
+                 ("completed" & Executed'Image & " out of" &
+                    Context.Nodes.Length'Image & " (" &
+                    Percent (Percent'First + 1 .. Percent'Last) &
+                    "%)...",
+                  Level => GPR2.Message.Important);
+            end;
+         end if;
+      end Report_Progress;
+
       Active_Jobs : Natural := 0;
       --  Current number of active jobs
 
@@ -307,7 +335,6 @@ package body GPR2.Build.Process_Manager is
       --  basis if needed.
 
       Stdout, Stderr   : Unbounded_String;
-      Executed         : Natural := 0;
 
       Script_FD        : GNATCOLL.OS.FS.File_Descriptor := Null_FD;
       Script_Dir       : Path_Name.Object;
@@ -376,8 +403,10 @@ package body GPR2.Build.Process_Manager is
                  (JS, Act, Available_Slot, Options.Force, Proc_Handler_L,
                   P_Stdout, P_Stderr);
 
-               if not (Proc_Handler_L.Status = Pending) then
+               if Proc_Handler_L.Status /= Pending then
                   Self.Stats.Total_Jobs := Self.Stats.Total_Jobs + 1;
+                  --  Update progress report if requested
+                  Report_Progress;
                end if;
 
                if Proc_Handler_L.Status = Running then
@@ -585,22 +614,7 @@ package body GPR2.Build.Process_Manager is
 
                --  Report the progress if requested
                Executed := Executed + 1;
-
-               if Options.Show_Progress then
-                  declare
-                     Percent : constant String :=
-                                 Natural'Image
-                                   ((Executed * 100) /
-                                      Natural (Context.Nodes.Length));
-                  begin
-                     Tree_Db.Reporter.Report
-                       ("completed" & Executed'Image & " out of" &
-                          Context.Nodes.Length'Image & " (" &
-                          Percent (Percent'First + 1 .. Percent'Last) &
-                          "%)...",
-                        Level => GPR2.Message.Important);
-                  end;
-               end if;
+               Report_Progress;
 
             end;
 
