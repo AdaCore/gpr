@@ -512,6 +512,216 @@ package body GPR2.Build.ALI_Parser is
          return Result;
    end Switches;
 
+   ----------------
+   -- Unit_Flags --
+   ----------------
+
+   function Unit_Flags
+     (ALI_File : GPR2.Path_Name.Object) return Units_Flags_Set
+   is
+
+      procedure Parse_Flags (Reader : in out GB.Reader);
+      --  Parse the source file name of the current dependency line
+
+      R   : Units_Flags_Set := (others => (others => False));
+      EOL : Boolean := False;
+
+      -----------------
+      -- Parse_Flase --
+      -----------------
+
+      procedure Parse_Flags (Reader : in out GB.Reader) is
+         pragma Warnings (Off);
+      begin
+         if not GB.Check (Reader, " ") then
+            raise Scan_ALI_Error
+              with "space expected after the 'U'"
+                 & " withed unit character";
+         end if;
+
+         declare
+            Unit_Name : constant String := IO.Get_Token (Reader, EOL);
+         begin
+            if Unit_Name = "" then
+               raise Scan_ALI_Error with "missed unit name";
+            end if;
+
+            if Unit_Name'Length >= 3
+              and then Unit_Name (Unit_Name'Last) in 's' | 'b'
+              and then Unit_Name (Unit_Name'Last - 1) = '%'
+            then
+               --  Read the flags at end of line
+               declare
+                  SB : constant Spec_Body :=
+                         (if Unit_Name (Unit_Name'Last) = 's'
+                          then U_Spec
+                          else U_Body);
+                  S  : constant String := IO.Get_Token (Reader, EOL)
+                    with Unreferenced;
+                  --  Source
+                  F  : constant String := IO.Get_Token (Reader, EOL)
+                    with Unreferenced;
+                  --  Checksum & flags
+                  I  : Positive := F'First;
+               begin
+                  --  Skip checksum
+
+                  while F (I) not in ' ' | ASCII.HT | ASCII.LF loop
+                     I := I + 1;
+                  end loop;
+
+                  I := I + 1;
+
+                  --  Read flags
+
+                  while I < F'Last loop
+                     case F (I) is
+                        when 'B' =>
+                           case F (I + 1) is
+                              when 'N' =>
+                                 R (SB) (Body_Needed_For_SAL) := True;
+                              when 'D' =>
+                                 R (SB) (Elaborate_Body_Desirable) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'D' =>
+                           case F (I + 1) is
+                              when 'E' =>
+                                 R (SB) (Dynamic_Elab) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'E' =>
+                           case F (I + 1) is
+                              when 'B' =>
+                                 R (SB) (Elaborate_Body) := True;
+                              when 'E' =>
+                                 R (SB) (Set_Elab_Entity) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'G' =>
+                           case F (I + 1) is
+                              when 'E' =>
+                                 R (SB) (Is_Generic) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'I' =>
+                           case F (I + 1) is
+                              when 'S' =>
+                                 R (SB) (Init_Scalars) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'N' =>
+                           case F (I + 1) is
+                              when 'E' =>
+                                 R (SB) (No_Elab) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'P' =>
+                           case F (I + 1) is
+                              when 'F' =>
+                                 R (SB) (Has_Finalizer) := True;
+                              when 'R' =>
+                                 R (SB) (Preelab) := True;
+                              when 'U' =>
+                                 R (SB) (Pure) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'R' =>
+                           case F (I + 1) is
+                              when 'A' =>
+                                 R (SB) (Has_RACW) := True;
+                              when 'C' =>
+                                 R (SB) (RCI) := True;
+                              when 'T' =>
+                                 R (SB) (Remote_Types) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'S' =>
+                           case F (I + 1) is
+                              when 'E' =>
+                                 R (SB) (Serious_Errors) := True;
+                              when 'P' =>
+                                 R (SB) (Shared_Passive) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when others =>
+                           null;
+                     end case;
+
+                     I := I + 2;
+                  end loop;
+               end;
+
+            else
+               raise Scan_ALI_Error with
+                 "withed unit name does not end with '%s'";
+            end if;
+         end;
+      end Parse_Flags;
+
+      Reader : GB.Reader := GB.Open (String (ALI_File.Value));
+      Word   : Character := ASCII.NUL;
+
+   begin
+      --  Only the units lines "U" are of interest, as they contain
+      --  flags for source spec/body.
+
+      loop
+         if not EOL then
+            IO.Next_Line (Reader, Word);
+         elsif not GB.Next (Reader, Word) then
+            return R;
+         end if;
+
+         EOL := False;
+
+         case Word is
+            when ASCII.NUL =>
+               exit;
+
+            when 'D' =>
+               exit;
+               --  Units are before dependencies
+
+            when 'U' =>
+               Parse_Flags (Reader);
+
+            when others =>
+               null;
+         end case;
+      end loop;
+
+      GB.Finalize (Reader);
+
+      return R;
+   exception
+      when E : others =>
+         GNATCOLL.Traces.Trace
+           (Traces,
+            "ALI parser error: " & Ada.Exceptions.Exception_Message (E));
+         GB.Finalize (Reader);
+
+         return R;
+   end Unit_Flags;
+
    -------------
    -- Version --
    -------------

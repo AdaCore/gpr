@@ -9,6 +9,29 @@ with GPR2.Path_Name;
 
 package GPR2.Build.ALI_Parser is
 
+   type Unit_Flags_Kind is
+     (Elaborate_Body_Desirable, --  BD
+      Body_Needed_For_SAL,      --  BN
+      Dynamic_Elab,             --  DE
+      Elaborate_Body,           --  EB
+      Set_Elab_Entity,          --  EE
+      Is_Generic,               --  GE
+      Init_Scalars,             --  IS
+      No_Elab,                  --  NE
+      Has_Finalizer,            --  PF
+      Preelab,                  --  PR
+      Pure,                     --  PU
+      RCI,                      --  RC
+      Remote_Types,             --  RT
+      Has_RACW,                 --  RA
+      Serious_Errors,           --  SE
+      Shared_Passive);          --  SP
+
+   type Spec_Body is (U_Spec, U_Body);
+
+   type Unit_Flags_Set is array (Unit_Flags_Kind) of Boolean;
+   type Units_Flags_Set is array (Spec_Body) of Unit_Flags_Set;
+
    function Dependencies
      (ALI_File  : GPR2.Path_Name.Object;
       Dep_Names : in out GPR2.Containers.Filename_Set) return Boolean;
@@ -27,5 +50,9 @@ package GPR2.Build.ALI_Parser is
 
    function Switches
      (ALI_File : GPR2.Path_Name.Object) return GPR2.Containers.Value_List;
+
+   function Unit_Flags
+     (ALI_File : GPR2.Path_Name.Object) return Units_Flags_Set;
+   --  The flags for the spec/body of the given unit
 
 end GPR2.Build.ALI_Parser;
