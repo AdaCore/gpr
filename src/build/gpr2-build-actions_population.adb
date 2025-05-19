@@ -842,6 +842,10 @@ package body GPR2.Build.Actions_Population is
             return False;
          end if;
 
+         Actions.Link.Object'Class
+           (Tree_Db.Action_Id_To_Reference
+              (Self.Link.UID).Element.all).Set_Bind_Action (Self.Bind);
+
          Tree_Db.Add_Input
            (Self.Link.UID, Self.Bind.Post_Bind.Object_File, True);
 

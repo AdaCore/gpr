@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Compilation_Unit.Maps;
@@ -52,6 +53,10 @@ package GPR2.Build.Actions.Link is
 
    procedure Add_Option (Self : in out Object; Option : String);
    --  Add an option to the linking command line
+
+   procedure Set_Bind_Action
+     (Self : in out Object;
+      Bind : Actions.Ada_Bind.Object);
 
    procedure Set_Has_Library_Dependency_Circle
      (Self  : in out Object;
@@ -164,6 +169,9 @@ private
 
       Extra_Intf      : GPR2.Build.Compilation_Unit.Maps.Map;
       --  Extra units needed to have a complete interface
+
+      Bind            : Actions.Ada_Bind.Object;
+      --  The bind action generating the initialisation of the linked library
 
       No_Rpath        : Boolean := False;
       --  When set, the RPATH will not be set for shared libraries resolution
