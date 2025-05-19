@@ -151,6 +151,11 @@ package GPR2.Build.Compilation_Unit is
    function Main_Part (Self : Object) return Unit_Kind
      with Pre => Self.Is_Defined and then Self.Has_Main_Part;
 
+   function Is_Body_Needed_For_SAL (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns whether the body of this unit is needed for SAL. This is the
+   --  case for spec being generic, having some generic routines or inlining.
+
    procedure For_All_Part
      (Self : Object;
       Action : access procedure
