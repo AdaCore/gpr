@@ -5617,6 +5617,46 @@
           },
           "attribute_descr": "Index is a source file name or a language name. Value is the list of switches to be used at the end of the command line when invoking the linker to build an executable for the source or for its language. These switches may override the Required_Switches.",
           "attribute_name": "Trailing_Switches"
+        },
+        {
+          "attribute_def": {
+            "builtin": false,
+            "config_concatenable": false,
+            "default": {
+              "\u0000": "false",
+              "default_value_kind": "value"
+            },
+            "empty_value": "ALLOW",
+            "has_default_in": {
+              "abstract": true,
+              "aggregate": true,
+              "aggregate_library": true,
+              "configuration": true,
+              "library": true,
+              "standard": true
+            },
+            "index_optional": false,
+            "index_type": "LANGUAGE_INDEX",
+            "inherit_from_extended": "NOT_INHERITED",
+            "is_allowed_in": {
+              "abstract": true,
+              "aggregate": true,
+              "aggregate_library": true,
+              "configuration": true,
+              "library": true,
+              "standard": true
+            },
+            "is_toolchain_config": false,
+            "type_def": [
+              "false",
+              "true"
+            ],
+            "value": "SINGLE",
+            "value_case_sensitive": false,
+            "value_is_set": false
+          },
+          "attribute_descr": "When set for a language, this instructs the link phase to always explicitly link with the produced objects",
+          "attribute_name": "Unconditional_Linking"
         }
       ],
       "package_descr": "This package specifies the options used by the linker.",

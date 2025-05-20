@@ -432,37 +432,44 @@ package body GPR2.Build.Tree_Db is
       --  First ensure all actions correspond to a node in the DAG
 
       for Action of Self.Actions loop
-         Node := Self.Exec_Ctxt.Graph.Add_Node;
-         Self.Exec_Ctxt.Actions.Insert (Node, Action.UID);
-         Self.Exec_Ctxt.Nodes.Insert (Action.UID, Node);
+         if not Action.View.Is_Externally_Built then
+            Node := Self.Exec_Ctxt.Graph.Add_Node;
+            Self.Exec_Ctxt.Actions.Insert (Node, Action.UID);
+            Self.Exec_Ctxt.Nodes.Insert (Action.UID, Node);
+         end if;
       end loop;
 
       --  Now propagate the dependencies
 
       for Action of Self.Actions loop
-         Inputs := Self.Inputs (Action.UID);
-         Inputs.Append (Self.Implicit_Inputs (Action.UID));
+         if not Action.View.Is_Externally_Built then
+            Inputs := Self.Inputs (Action.UID);
+            Inputs.Append (Self.Implicit_Inputs (Action.UID));
 
-         for Input of Inputs loop
-            --  Find the action that generated this input
-            Pred := Self.Predecessor.Find (Input);
+            for Input of Inputs loop
+               --  Find the action that generated this input
+               Pred := Self.Predecessor.Find (Input);
 
-            if Artifact_Action_Maps.Has_Element (Pred) then
-               Self.Exec_Ctxt.Graph.Add_Predecessor
-                 (Node        => Self.Exec_Ctxt.Nodes (Action.UID),
-                  Predecessor =>
-                    Self.Exec_Ctxt.Nodes
-                      (Artifact_Action_Maps.Element (Pred)));
-            end if;
-         end loop;
-
-         for Output of Self.Outputs (Action.UID) loop
-            for Suc of Self.Successors (Output) loop
-               Self.Exec_Ctxt.Graph.Add_Predecessor
-                 (Node        => Self.Exec_Ctxt.Nodes (Suc),
-                  Predecessor => Self.Exec_Ctxt.Nodes (Action.UID));
+               if Artifact_Action_Maps.Has_Element (Pred)
+                 and then not Artifact_Action_Maps.Element
+                   (Pred).View.Is_Externally_Built
+               then
+                  Self.Exec_Ctxt.Graph.Add_Predecessor
+                    (Node        => Self.Exec_Ctxt.Nodes (Action.UID),
+                     Predecessor =>
+                       Self.Exec_Ctxt.Nodes
+                         (Artifact_Action_Maps.Element (Pred)));
+               end if;
             end loop;
-         end loop;
+
+            for Output of Self.Outputs (Action.UID) loop
+               for Suc of Self.Successors (Output) loop
+                  Self.Exec_Ctxt.Graph.Add_Predecessor
+                    (Node        => Self.Exec_Ctxt.Nodes (Suc),
+                     Predecessor => Self.Exec_Ctxt.Nodes (Action.UID));
+               end loop;
+            end loop;
+         end if;
       end loop;
 
       if not Self.Actions.Is_Empty then

@@ -145,10 +145,10 @@ package GPR2 is
    overriding function "=" (Left, Right : External_Name_Type) return Boolean;
    overriding function "<" (Left, Right : External_Name_Type) return Boolean;
 
-   function Is_Simple_Name (Path : Filename_Type) return Boolean
+   function Is_Simple_Name (Path : Filename_Optional) return Boolean
      is (for all C of Path => C not in '/' | '\');
 
-   subtype Simple_Name is Filename_Type
+   subtype Simple_Name is Filename_Optional
      with Dynamic_Predicate =>
        (Is_Simple_Name (Simple_Name));
    --  A simple name, non empty and without some characters not allowed in

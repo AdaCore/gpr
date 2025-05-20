@@ -722,6 +722,8 @@ package GPR2.Project.Registry.Attribute is
                                   (Pack.Linker, +"switches");
       Trailing_Switches       : constant Q_Attribute_Id :=
                                   (Pack.Linker, +"trailing_switches");
+      Unconditional_Linking   : constant Q_Attribute_Id :=
+                                  (Pack.Linker, +"unconditional_linking");
    end Linker;
 
    --  Naming attribute qualified names

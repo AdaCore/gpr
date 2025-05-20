@@ -9,12 +9,18 @@ with Ada.Strings.Fixed;
 with Ada.IO_Exceptions;
 with Ada.Text_IO;
 
+with GNAT.Regpat;
+with GNATCOLL.OS.FS;
 with GNATCOLL.OS.FSUtil;
+with GNATCOLL.OS.Process;
 with GNATCOLL.Traces;
 with GNATCOLL.Utils;
 
+with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Actions.Compile.Ada;
+with GPR2.Build.ALI_Parser;
 with GPR2.Build.External_Options;
+with GPR2.Build.Source;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
@@ -34,6 +40,13 @@ package body GPR2.Build.Actions.Link is
    procedure Check_Interface
      (Self        : in out Object;
       No_Warnings : Boolean);
+
+   function Generate_Export_File
+     (Self : in out Object;
+      From : Path_Name.Object) return Filename_Optional;
+   --  Generates the export file that lists the symbols to be exported
+   --  by the shared library.
+   --  If not supported or an issue occured, Filename_Optional will be empty.
 
    ----------------
    -- Add_Option --
@@ -63,6 +76,7 @@ package body GPR2.Build.Actions.Link is
       if Self.Ctxt.Is_Library
         and then Self.Ctxt.Has_Any_Interfaces
         and then Self.Ctxt.Is_Library_Standalone
+        and then Self.Extra_Intf.Is_Empty
       then
          --  Check that the interface is complete: no dependency from specs
          --  should depend on a spec that is not part of the interface.
@@ -151,6 +165,13 @@ package body GPR2.Build.Actions.Link is
          In_Signature : Boolean;
          Param        : String := "") return Boolean;
 
+      procedure Check_Ada_Runtime_Needed
+        (Libgnat : out Boolean;
+         Libgnarl : out Boolean);
+      --  When a shared library is linked without a binding phase, we need to
+      --  detect if libgnat/libgnarl is needed or not. This uses the ali files
+      --  for this end.
+
       function Is_Partially_Linked
         (View : GPR2.Project.View.Object) return Boolean;
       --  Return true if the Library_Partial_Linker is set with a
@@ -158,6 +179,8 @@ package body GPR2.Build.Actions.Link is
       --  ??? Because we do not support partial links for now, this function
       --  always return False. To be updated once the support has been
       --  implemented.
+
+      Objects : Tree_Db.Artifact_Sets.Set;
 
       --------------
       -- Add_Attr --
@@ -247,6 +270,42 @@ package body GPR2.Build.Actions.Link is
          return True;
       end Add_Attr;
 
+      ------------------------------
+      -- Check_Ada_Runtime_Needed --
+      ------------------------------
+
+      procedure Check_Ada_Runtime_Needed
+        (Libgnat : out Boolean;
+         Libgnarl : out Boolean) is
+      begin
+         Libgnat  := False;
+         Libgnarl := False;
+
+         for Obj of Objects loop
+            if Self.Tree.Has_Predecessor (Obj)
+              and then
+                Self.Tree.Predecessor (Obj) in Actions.Compile.Ada.Object'Class
+            then
+               Libgnat := True;
+
+               declare
+                  Comp : constant Actions.Compile.Ada.Object'Class :=
+                           Actions.Compile.Ada.Object'Class
+                             (Self.Tree.Predecessor (Obj));
+                  Deps : Containers.Filename_Set;
+               begin
+                  if ALI_Parser.Dependencies (Comp.Local_Ali_File.Path, Deps)
+                    and then Deps.Contains ("s-osinte.ads")
+                  then
+                     Libgnarl := True;
+
+                     exit;
+                  end if;
+               end;
+            end if;
+         end loop;
+      end Check_Ada_Runtime_Needed;
+
       -------------------------
       -- Is_Partially_Linked --
       -------------------------
@@ -261,7 +320,6 @@ package body GPR2.Build.Actions.Link is
          return False;
       end Is_Partially_Linked;
 
-      Objects      : Tree_Db.Artifact_Sets.Set;
       Status       : Boolean;
       Src_Idx      : constant PAI.Object :=
                        (if not Self.Is_Library
@@ -404,7 +462,7 @@ package body GPR2.Build.Actions.Link is
                   --  Add flags to include the shared library
 
                   Cmd_Line.Add_Argument
-                    (Lib_Dir_Opt & String (Lib_Artifact.Dir_Name));
+                    (Lib_Dir_Opt & Link.View.Library_Directory.String_Value);
 
                   --  Add the library directory to the rpath of the
                   --  executable, so that LD_LIBRARY_PATH does not need to
@@ -438,9 +496,9 @@ package body GPR2.Build.Actions.Link is
                         Append
                           (Rpath,
                            Rpath_Origin.Value.Text & "/" &
-                             String
-                             (Lib_Artifact.Containing_Directory.
-                                  Relative_Path (From)));
+                           String
+                             (Link.View.Library_Directory.Relative_Path
+                                  (From)));
                      end;
                   else
                      Append (Rpath, String (Lib_Artifact.Dir_Name));
@@ -633,19 +691,28 @@ package body GPR2.Build.Actions.Link is
         and then Self.View.Is_Shared_Library
       then
          declare
-            Gnat_Version : constant String :=
-                             Self.View.Tree.Ada_Compiler_Version;
+            Gnat_Version   : constant String :=
+                               Self.View.Tree.Ada_Compiler_Version;
+            Needs_Libgnat  : Boolean;
+            Needs_Libgnarl : Boolean;
          begin
             if Gnat_Version /= "" then
-               Cmd_Line.Add_Argument ("-lgnat-" & Gnat_Version);
+               Check_Ada_Runtime_Needed (Needs_Libgnat, Needs_Libgnarl);
+
+               if Needs_Libgnat then
+                  if Needs_Libgnarl then
+                     Cmd_Line.Add_Argument ("-lgnarl-" & Gnat_Version);
+                  end if;
+
+                  Cmd_Line.Add_Argument ("-lgnat-" & Gnat_Version);
+               end if;
+
+               Cmd_Line.Add_Argument
+                 (Self.Tree.Linker_Lib_Dir_Option &
+                    Self.View.Tree.Runtime_Project.Object_Directory.
+                      String_Value);
             end if;
          end;
-
-         --  ??? We also need to add the lgnarl-XXX flag if required
-
-         Cmd_Line.Add_Argument
-           (Self.Tree.Linker_Lib_Dir_Option
-            & Self.View.Tree.Runtime_Project.Object_Directory.String_Value);
       end if;
 
       --  Add options provided by the binder if needed
@@ -656,13 +723,88 @@ package body GPR2.Build.Actions.Link is
                  and then Is_Partially_Linked (Self.View))
       then
          for Option of Self.Static_Options loop
-            Cmd_Line.Add_Argument (Option);
+            --  ??? Weird bug on windows happening when a backslash is ending
+            --  the argument, and the arg contains a space, then ld reacts just
+            --  as if there was some hidden \" ending the argument and thus
+            --  escapes the rest of the command line. Skip any trailing
+            --  backslash...
+
+            if Option (Option'Last) = '\' then
+               Cmd_Line.Add_Argument
+                 (Option (Option'First .. Option'Last - 1));
+            else
+               Cmd_Line.Add_Argument (Option);
+            end if;
          end loop;
       end if;
+
       if Self.View.Is_Library
         and then not Self.Is_Static
       then
          Ign := Add_Attr (PRA.Library_Options, PAI.Undefined, True, True);
+      end if;
+
+      --  For shared libs, use an export symbol file when possible
+
+      if Self.Is_Library and then not Self.Is_Static then
+         declare
+            Object_Lister      : constant Project.Attribute.Object :=
+                                   Self.View.Attribute (PRA.Object_Lister);
+            Export_File_Switch : constant Project.Attribute.Object :=
+                                   Self.View.Attribute
+                                     (PRA.Linker.Export_File_Switch);
+            Symbol_File        : Path_Name.Object;
+            use GPR2.Project;
+         begin
+            if Self.View.Library_Standalone /= No
+              and then not Signature_Only
+            then
+               if Export_File_Switch.Is_Defined then
+                  if not Self.Lib_Symbol_File.Is_Defined then
+                     --  We will need to generate the exported symbols from the
+                     --  library interface: we thus need it to be up-to-date.
+
+                     Self.Check_Interface (No_Warnings => False);
+                  end if;
+
+                  declare
+                     Tmp_File : constant Filename_Optional :=
+                                  Self.Generate_Export_File
+                                    (Self.Lib_Symbol_File.Path);
+                  begin
+                     if Tmp_File'Length > 0 then
+                        Symbol_File := Path_Name.Create_File (Tmp_File);
+                     end if;
+                  end;
+
+                  if Symbol_File.Is_Defined then
+                     Cmd_Line.Add_Argument
+                       (Export_File_Switch.Value.Text &
+                          String (Symbol_File.Relative_Path
+                            (Self.Working_Directory)),
+                        Build.Command_Line.Ignore);
+                  end if;
+               end if;
+            end if;
+
+            --  On Windows, if we are building a standard library or a library
+            --  with unrestricted symbol-policy make sure all symbols are
+            --  exported.
+
+            if Self.View.Tree.Is_Windows_Target
+              and then (Self.View.Library_Standalone = No
+                        or else not Export_File_Switch.Is_Defined)
+            then
+               --  This is needed if an object contains a declspec(dllexport)
+               --  as in this case only the specified symbols will be exported.
+               --  That is the linker change from export-all to export only the
+               --  symbols specified as dllexport.
+
+               --  ??? Create a proper Linker attribute for that
+
+               Cmd_Line.Add_Argument ("-Wl,--export-all-symbols");
+            end if;
+         end;
       end if;
 
       --  Finally remove any duplicated --specs switch as this may cause
@@ -700,6 +842,14 @@ package body GPR2.Build.Actions.Link is
          end;
       end loop;
 
+      if Self.Lib_Symbol_File.Is_Defined then
+         if not Self.Signature.Add_Input (Self.Lib_Symbol_File)
+           and then Load_Mode
+         then
+            return;
+         end if;
+      end if;
+
       if not Self.Signature.Add_Output (Self.Output) and then Load_Mode then
          return;
       end if;
@@ -724,6 +874,266 @@ package body GPR2.Build.Actions.Link is
          end loop;
       end return;
    end Embedded_Objects;
+
+   --------------------------
+   -- Generate_Export_File --
+   --------------------------
+
+   function Generate_Export_File
+     (Self : in out Object;
+      From : Path_Name.Object) return Filename_Optional
+   is
+      procedure Extract_Symbols (Obj : Path_Name.Object);
+
+      Syms    : GPR2.Containers.Value_Set;
+      Obj     : Path_Name.Object;
+      Nm      : constant Project.Attribute.Object :=
+                  Self.View.Attribute (PRA.Object_Lister);
+      Nm_Cmd  : GNATCOLL.OS.Process.Argument_List;
+      Matcher : constant GNAT.Regpat.Pattern_Matcher :=
+                  GNAT.Regpat.Compile
+                    (Self.View.Attribute
+                       (PRA.Object_Lister_Matcher).Value.Text);
+
+      ---------------------
+      -- Extract_Symbols --
+      ---------------------
+
+      procedure Extract_Symbols (Obj : Path_Name.Object)
+      is
+         use GNATCOLL.OS;
+         use GPR2.Reporter;
+         Args   : Process.Argument_List := Nm_Cmd;
+         Status : Integer;
+         Output : Unbounded_String;
+      begin
+         Args.Append (String (Obj.Relative_Path (Self.Working_Directory)));
+
+         if Self.Tree.Reporter.User_Verbosity >= Verbose
+           or else (Self.Tree.Reporter.User_Verbosity = Unset
+                    and then Self.Tree.Reporter.Verbosity >= Verbose)
+         then
+            declare
+               Img   : Unbounded_String;
+               First : Boolean := True;
+            begin
+               for A of Args loop
+                  if First then
+                     First := False;
+                  else
+                     Append (Img, " ");
+                  end if;
+
+                  Append (Img, A);
+               end loop;
+
+               Self.Tree.Reporter.Report (-Img);
+            end;
+         end if;
+
+         begin
+            Output := Process.Run
+              (Args,
+               Cwd    => Self.Working_Directory.String_Value,
+               Stderr => FS.Standout,
+               Status => Status);
+
+         exception
+            when Ex : GNATCOLL.OS.OS_Error =>
+               Status := -1;
+         end;
+
+         declare
+            use GNAT.Regpat;
+
+            Outp    : constant String := -Output;
+            Idx     : Natural := Outp'First;
+            Matches : Match_Array (1 .. Paren_Count (Matcher));
+         begin
+            loop
+               GNAT.Regpat.Match
+                 (Self       => Matcher,
+                  Data       => Outp,
+                  Matches    => Matches,
+                  Data_First => Idx);
+
+               exit when Matches (1).First = 0;
+
+               if Outp (Matches (1).Last) = ASCII.CR then
+                  Matches (1).Last := Matches (1).Last - 1;
+               end if;
+
+               Syms.Include (Outp (Matches (1).First .. Matches (1).Last));
+               Idx := Matches (1).Last + 1;
+               exit when Idx > Outp'Last;
+            end loop;
+         end;
+      end Extract_Symbols;
+
+   begin
+      if not From.Is_Defined then
+         --  Add symbold from the Ada interface:
+         for V of Nm.Values loop
+            Nm_Cmd.Append (V.Text);
+         end loop;
+
+         for CU of Self.Interface_Units loop
+            declare
+               --  Only Ada sources considered here
+               UID  : constant Actions.Compile.Ada.Ada_Compile_Id :=
+                        Actions.Compile.Ada.Create (CU);
+               Comp : constant Actions.Compile.Ada.Object :=
+                        Actions.Compile.Ada.Object (Self.Tree.Action (UID));
+            begin
+               Extract_Symbols (Comp.Object_File.Path);
+            end;
+         end loop;
+
+         --  Now add symbols from the non-Ada interfaces
+         for C in Self.Ctxt.Interface_Sources.Iterate loop
+            declare
+               Path : constant Filename_Type :=
+                        Containers.Source_Path_To_Sloc.Key (C);
+               Src  : constant Build.Source.Object :=
+                        Self.Ctxt.Visible_Source (Path);
+            begin
+               if not Src.Has_Units then
+                  if Src.Kind = S_Body then
+                     --  Found a non-Ada body as part of the interface, add its
+                     --  corresponding object file
+                     declare
+                        Comp_Id : constant Actions.Compile.Compile_Id'Class :=
+                                    Actions.Compile.Create
+                                      (Src.Path_Name.Simple_Name,
+                                       Src.Language,
+                                       Src.Owning_View);
+                        Comp    : constant GPR2.Build.Actions.Compile.Object :=
+                                    Actions.Compile.Object
+                                      (Self.Tree.Action (Comp_Id));
+                     begin
+                        Extract_Symbols (Comp.Object_File.Path);
+                     end;
+
+                  else
+                     --  ??? A spec is declared as Interfaces, old tool used
+                     --  to consider basename.o as a candidate which looks
+                     --  sematically wrong. However considering the history,
+                     --  let's lookup for an equivalent .c file and use it if
+                     --  it exists.
+
+                     --  ??? Ideally we should build the spec with the current
+                     --  view's attributes, and extract the undefined symbols
+                     --  (which are the symbols the spec wants to include).
+
+                     declare
+                        Attr    : constant Project.Attribute.Object :=
+                                    Self.Ctxt.Attribute
+                                      (PRA.Naming.Body_Suffix,
+                                       PAI.Create (Src.Language));
+                        pragma Assert (Attr.Is_Defined,
+                                       "Source spec found in interfaces " &
+                                         "without proper implementation " &
+                                         "definition");
+                        Suffix  : constant Simple_Name :=
+                                    Simple_Name (Attr.Value.Text);
+                        Eq_Body : constant Simple_Name :=
+                                    Src.Path_Name.Base_Filename & Suffix;
+                        Src_B   : constant Build.Source.Object :=
+                                    Self.Ctxt.Visible_Source (Eq_Body);
+                     begin
+                        if Src_B.Is_Defined then
+                           declare
+                              Comp_Id : constant Compile.Compile_Id'Class :=
+                                          Actions.Compile.Create
+                                            (Src_B.Path_Name.Simple_Name,
+                                             Src_B.Language,
+                                             Src.Owning_View);
+                              Comp    : constant Compile.Object :=
+                                          Actions.Compile.Object
+                                            (Self.Tree.Action (Comp_Id));
+                           begin
+                              Extract_Symbols (Comp.Object_File.Path);
+                           end;
+
+                           --  ??? if Src_B is undefined we should probably
+                           --  issue a warning that the spec in the interface
+                           --  is unused.
+                        end if;
+                     end;
+                  end if;
+               end if;
+            end;
+         end loop;
+
+         --  Finally don't forget the binder-generated object if any
+
+         if Self.Bind.Is_Defined then
+            declare
+               --  Make sure we retrieve an up-to-date bind object
+               Bind : constant Ada_Bind.Object :=
+                        Ada_Bind.Object (Self.Tree.Action (Self.Bind.UID));
+            begin
+               Obj := Bind.Post_Bind.Object_File.Path;
+            end;
+
+            Extract_Symbols (Obj);
+         end if;
+
+      else
+         --  Read the symbols from the specified file
+         declare
+            FD : Ada.Text_IO.File_Type;
+         begin
+            Ada.Text_IO.Open (FD, Ada.Text_IO.In_File, From.String_Value);
+
+            while not Ada.Text_IO.End_Of_File (FD) loop
+               declare
+                  Line : constant String :=
+                           Ada.Strings.Fixed.Trim
+                             (Ada.Text_IO.Get_Line (FD),
+                              Ada.Strings.Both);
+               begin
+                  if Line'Length > 0 then
+                     Syms.Include (Line);
+                  end if;
+               end;
+            end loop;
+
+            Ada.Text_IO.Close (FD);
+         end;
+      end if;
+
+      if not Syms.Is_Empty then
+         declare
+            Tmp : Tree_Db.Temp_File :=
+                    Actions.Get_Or_Create_Temp_File
+                      (Self,
+                       "syms_export",
+                       Local);
+         begin
+            GNATCOLL.OS.FS.Write
+              (Tmp.FD,
+               "SYMS {" & ASCII.LF &
+                 "   global:" & ASCII.LF);
+
+            for S of Syms loop
+               GNATCOLL.OS.FS.Write
+                 (Tmp.FD, S & ";" & ASCII.LF);
+            end loop;
+
+            GNATCOLL.OS.FS.Write
+              (Tmp.FD,
+               "   local: *;" & ASCII.LF &
+                 "};" & ASCII.LF);
+
+            GNATCOLL.OS.FS.Close (Tmp.FD);
+
+            return Tmp.Path;
+         end;
+      else
+         return "";
+      end if;
+   end Generate_Export_File;
 
    ----------------
    -- Initialize --
@@ -797,6 +1207,20 @@ package body GPR2.Build.Actions.Link is
       Self.Is_Static  := Context.Is_Static_Library;
       Self.Library    := Artifacts.Library.Create (Context.Library_Filename);
       Self.No_Rpath   := No_Rpath;
+
+      if not Self.Is_Static then
+         declare
+            Attr : constant Project.Attribute.Object :=
+                     Context.Attribute (PRA.Library_Symbol_File);
+         begin
+            if Attr.Is_Defined then
+               Self.Lib_Symbol_File := Artifacts.Files.Create
+                 (Path_Name.Create_File
+                    (Filename_Type (Attr.Value.Text),
+                     Context.Path_Name.Dir_Name));
+            end if;
+         end;
+      end if;
    end Initialize_Library;
 
    ---------------------
@@ -811,7 +1235,7 @@ package body GPR2.Build.Actions.Link is
          Units := Self.Ctxt.Interface_Closure;
 
          for CU of Self.Extra_Intf loop
-               Units.Include (CU.Name, CU);
+            Units.Include (CU.Name, CU);
          end loop;
 
       else
@@ -1257,6 +1681,17 @@ package body GPR2.Build.Actions.Link is
 
       return True;
    end Pre_Command;
+
+   ---------------------
+   -- Set_Bind_Action --
+   ---------------------
+
+   procedure Set_Bind_Action
+     (Self : in out Object;
+      Bind : Actions.Ada_Bind.Object) is
+   begin
+      Self.Bind := Bind;
+   end Set_Bind_Action;
 
    ---------------------------------------
    -- Set_Has_Library_Dependency_Circle --

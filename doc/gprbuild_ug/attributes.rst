@@ -1346,6 +1346,13 @@ Package Linker Attributes
     executable for the source or for its language. These switches may override the
     Required_Switches.
 
+  .. index:: Attributes - Package Linker Attributes; Unconditional_Linking
+
+  * **Unconditional_Linking**: single value, indexed by a language
+
+    When set for a language, this instructs the link phase to always explicitly
+    link with the produced objects
+
 * **Configuration - Linking**
 
   .. index:: Attributes - Package Linker Attributes; Driver

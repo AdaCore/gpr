@@ -226,13 +226,24 @@ package body GPR2.Build.Makefile_Parser is
                   --  If a dependency started, then return it.
                   --  Otherwise we may have extra ' ' before reaching the
                   --  actual interesting data.
-                  if Splited_Path then
-                     Append
-                       (Path, File.Token (Start, File.Current_Position - 1));
-                     return To_String (Path);
-                  else
-                     return File.Token (Start, File.Current_Position - 1);
-                  end if;
+
+                  --  Skip the extra space characters before that
+                  declare
+                     Last : constant Long_Long_Integer :=
+                              File.Current_Position - 1;
+                  begin
+                     loop
+                        exit when not GB.Next (File, C);
+                        exit when C /= ' ';
+                     end loop;
+
+                     if Splited_Path then
+                        Append (Path, File.Token (Start, Last));
+                        return To_String (Path);
+                     else
+                        return File.Token (Start, Last);
+                     end if;
+                  end;
                end if;
 
             else
@@ -479,7 +490,19 @@ package body GPR2.Build.Makefile_Parser is
                      Token : constant String := IO.Fetch_Dependency (Reader);
                   begin
                      if not Is_Time_Stamp (Token) then
-                        Dep_Names.Include (Filename_Type (Token));
+                        declare
+                           --  Check the dependency has a valid simple name.
+                           SN : constant Simple_Name :=
+                                  Path_Name.Simple_Name
+                                    (Filename_Type (Token));
+                        begin
+                           if SN'Length = 0 then
+                              raise Scan_Makefile_Error with
+                                "invalid dependency file '" & Token & ''';
+                           else
+                              Dep_Names.Include (Filename_Type (Token));
+                           end if;
+                        end;
                      end if;
                   end;
                end loop Fetch_All_Dependencies;

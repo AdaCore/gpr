@@ -282,7 +282,7 @@
 				{
 					"category_name": "General",
 					"category_to_display": true,
-				  "attributes": [{"attribute_name": "Required_Switches"},{"attribute_name": "Default_Switches"},{"attribute_name": "Leading_Switches"},{"attribute_name": "Switches"},{"attribute_name": "Trailing_Switches"},{"attribute_name": "Linker_Options"},{"attribute_name": " Map_File_Option"},{"attribute_name": "Unconditionally_Linked"},{"attribute_name": "Group_Start_Switch"},{"attribute_name": "Group_End_Switch"}]
+				  "attributes": [{"attribute_name": "Required_Switches"},{"attribute_name": "Default_Switches"},{"attribute_name": "Leading_Switches"},{"attribute_name": "Switches"},{"attribute_name": "Trailing_Switches"},{"attribute_name": "Linker_Options"},{"attribute_name": " Map_File_Option"},{"attribute_name": "Unconditionally_Linked"},{"attribute_name": "Group_Start_Switch"},{"attribute_name": "Group_End_Switch"},{"attribute_name": "Unconditional_Linking"}]
 				},
 				{
 					"category_name": "Configuration - Linking",

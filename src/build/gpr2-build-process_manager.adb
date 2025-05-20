@@ -34,7 +34,9 @@ package body GPR2.Build.Process_Manager is
    function Effective_Job_Number (N : Natural) return Natural;
    --  If N = 0 return the number of CPUs otherwise return N.
 
-   function Image (Command : Argument_List) return String;
+   function Image
+     (Command    : Argument_List;
+      For_Script : Boolean := False) return String;
    --  Return the representation of the command
 
    --------------
@@ -245,9 +247,14 @@ package body GPR2.Build.Process_Manager is
       States          : array (1 .. Max_Jobs) of Proc_State;
       --  State associated with each active processes
 
+      Previous_Progress : Natural := 0;
+      Executed          : Natural := 0;
+
       procedure Allocate_Listeners
         (Proc_Id : Natural; Stdout_FD, Stderr_FD : FS.File_Descriptor);
       --  Allocate listeners
+
+      procedure Report_Progress;
 
       ------------------------
       -- Allocate_Listeners --
@@ -279,6 +286,29 @@ package body GPR2.Build.Process_Manager is
          States (Proc_Id).Stderr_Listener.Listen (Stderr_FD);
       end Allocate_Listeners;
 
+      procedure Report_Progress is
+      begin
+         if Options.Show_Progress
+           and then Executed /= Previous_Progress
+         then
+            Previous_Progress := Executed;
+
+            declare
+               Percent : constant String :=
+                           Natural'Image
+                             ((Executed * 100) /
+                                Natural (Context.Nodes.Length));
+            begin
+               Tree_Db.Reporter.Report
+                 ("completed" & Executed'Image & " out of" &
+                    Context.Nodes.Length'Image & " (" &
+                    Percent (Percent'First + 1 .. Percent'Last) &
+                    "%)...",
+                  Level => GPR2.Message.Important);
+            end;
+         end if;
+      end Report_Progress;
+
       Active_Jobs : Natural := 0;
       --  Current number of active jobs
 
@@ -305,7 +335,6 @@ package body GPR2.Build.Process_Manager is
       --  basis if needed.
 
       Stdout, Stderr   : Unbounded_String;
-      Executed         : Natural := 0;
 
       Script_FD        : GNATCOLL.OS.FS.File_Descriptor := Null_FD;
       Script_Dir       : Path_Name.Object;
@@ -374,8 +403,10 @@ package body GPR2.Build.Process_Manager is
                  (JS, Act, Available_Slot, Options.Force, Proc_Handler_L,
                   P_Stdout, P_Stderr);
 
-               if not (Proc_Handler_L.Status = Pending) then
+               if Proc_Handler_L.Status /= Pending then
                   Self.Stats.Total_Jobs := Self.Stats.Total_Jobs + 1;
+                  --  Update progress report if requested
+                  Report_Progress;
                end if;
 
                if Proc_Handler_L.Status = Running then
@@ -391,7 +422,7 @@ package body GPR2.Build.Process_Manager is
                         Cd_Args.Append (Act.Working_Directory.String_Value);
                         GNATCOLL.OS.FS.Write
                           (Script_FD,
-                           Image (Cd_Args) & ASCII.LF);
+                           Image (Cd_Args, True) & ASCII.LF);
                         Script_Dir := Act.Working_Directory;
                      end if;
 
@@ -410,7 +441,8 @@ package body GPR2.Build.Process_Manager is
 
                      GNATCOLL.OS.FS.Write
                        (Script_FD,
-                        Image (Act.Command_Line.Argument_List) & ASCII.LF);
+                        Image (Act.Command_Line.Argument_List, True) &
+                          ASCII.LF);
                   end if;
 
                   --  If we have a Jobserver, associate the pre-ordered token
@@ -582,22 +614,7 @@ package body GPR2.Build.Process_Manager is
 
                --  Report the progress if requested
                Executed := Executed + 1;
-
-               if Options.Show_Progress then
-                  declare
-                     Percent : constant String :=
-                                 Natural'Image
-                                   ((Executed * 100) /
-                                      Natural (Context.Nodes.Length));
-                  begin
-                     Tree_Db.Reporter.Report
-                       ("completed" & Executed'Image & " out of" &
-                          Context.Nodes.Length'Image & " (" &
-                          Percent (Percent'First + 1 .. Percent'Last) &
-                          "%)...",
-                        Level => GPR2.Message.Important);
-                  end;
-               end if;
+               Report_Progress;
 
             end;
 
@@ -610,7 +627,6 @@ package body GPR2.Build.Process_Manager is
                end if;
 
                if Options.Stop_On_Fail then
-                  --  Adjust execution depending on returned value
                   End_Of_Iteration := True;
                end if;
             end if;
@@ -685,18 +701,24 @@ package body GPR2.Build.Process_Manager is
    -- Image --
    -----------
 
-   function Image (Command : Argument_List) return String is
+   function Image
+     (Command    : Argument_List;
+      For_Script : Boolean := False) return String
+   is
       Result : Unbounded_String;
+      Quote  : constant Character := (if For_Script then ''' else '"');
    begin
       for Arg of Command loop
          if Length (Result) > 0 then
             Append (Result, " ");
          end if;
 
-         if Ada.Strings.Fixed.Index (Arg, " ") > 0 then
-            Append (Result, '"');
+         if Ada.Strings.Fixed.Index (Arg, " ") > 0
+           or else (For_Script and then Ada.Strings.Fixed.Index (Arg, "\") > 0)
+         then
+            Append (Result, Quote);
             Append (Result, Arg);
-            Append (Result, '"');
+            Append (Result, Quote);
          else
             Append (Result, Arg);
          end if;

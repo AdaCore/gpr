@@ -85,6 +85,9 @@ package GPR2.Build.Signature is
 
    function Valid (Self : Object) return Boolean;
 
+   function Is_Empty (Self : Object) return Boolean;
+   --  True if no input or output is in the signature
+
 private
 
    TEXT_INPUTS    : constant String := "inputs";
@@ -129,4 +132,7 @@ private
    function Stderr (Self : Object) return Unbounded_String is
      (Self.Stderr);
 
+   function Is_Empty (Self : Object) return Boolean is
+     (Self.Artifacts (Input).Is_Empty
+      and then Self.Artifacts (Output).Is_Empty);
 end GPR2.Build.Signature;
