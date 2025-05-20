@@ -2,8 +2,11 @@ with "demo";
 
 project App is
 
-   for Source_Dirs use ("../src/app");
-   for Object_Dir use "obj/app-library_interface";
+   Src_Dir := external ("SRC_DIR", "app");
+
+   for Source_Dirs use ("../src/" & Src_Dir);
+   for Object_Dir use "obj/app";
+   for Exec_Dir use "..";
    for Main use ("main.adb");
 
 end App;
