@@ -29,7 +29,7 @@ symbol policy: restricted
 $ gprbuild -Plibrary_interface/app.gpr -XSRC_DIR=app2 -XSYM_POLICY=restricted -f -q
 demo.gpr: warning: unit "Goo" is not in the interface set, but it is needed by "FOO"
 <gcc>/bin/../lib/gcc/(host)/(gcc-version)/../../../../(host)/bin/ld: library_interface/obj/app/main.o: in function `_ada_main':
-main.adb:(.text+0xc): undefined reference to `ioo'
+main.adb: undefined reference to `ioo'
 collect2: error: ld returned 1 exit status
 app.gpr: warning: [Link] main (app.gpr) failed with status 1
 ========================

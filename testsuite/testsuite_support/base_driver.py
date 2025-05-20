@@ -8,7 +8,7 @@ from typing import NoReturn
 from e3.env import Env
 from e3.fs import mkdir
 from e3.testsuite.driver.classic import TestAbortWithError
-from e3.testsuite.driver.diff import DiffTestDriver, ReplacePath, Substitute
+from e3.testsuite.driver.diff import DiffTestDriver, ReplacePath, Substitute, PatternSubstitute
 
 
 # create_fake_ada_compiler routine copied from gprbuild-internal testsuite
@@ -240,6 +240,7 @@ class BaseDriver(DiffTestDriver):
             Substitute("x86-linux", replacement="(host)"),
             Substitute("x86_64-windows", replacement="(host)"),
             Substitute("x86-windows", replacement="(host)"),
+            PatternSubstitute(r":\(\.text\+0x[0-9a-f]*\)"), # host-dependent ld error
         ]
 
     # Convenience path builders
