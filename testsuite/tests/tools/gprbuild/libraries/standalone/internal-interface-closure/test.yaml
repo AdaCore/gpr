@@ -1,2 +1,4 @@
 description: Check that a warning is raised when internal interface closure is not complete
 driver: python_script
+output:
+  - ["test.out.win", "'windows' in env.host.platform"]

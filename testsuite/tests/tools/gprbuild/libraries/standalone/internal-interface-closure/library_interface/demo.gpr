@@ -3,7 +3,7 @@ library project Demo is
    Policy := external("SYM_POLICY", "restricted");
 
    for Library_Name use "demo";
-   for Library_Dir use "lib_library_interface";
+   for Library_Dir use "../lib";
    for Library_Symbol_Policy use Policy;
    for Library_Kind use "relocatable";
    for Source_Dirs use ("../src/lib");
