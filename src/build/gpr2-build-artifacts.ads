@@ -58,6 +58,9 @@ package GPR2.Build.Artifacts is
    function New_Instance (Protocol : String) return Object'Class;
    --  Used to get a new empty artifact object from a Protocol id
 
+   function Image (Self : Object) return String is abstract;
+   --  Returns a string representation of the artifact
+
 private
 
    use type Ada.Tags.Tag;

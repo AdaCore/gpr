@@ -33,6 +33,8 @@ package GPR2.Build.Artifacts.Files is
 
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type;
 
+   overriding function Image (Self : Object) return String;
+
 private
 
    use type GPR2.Path_Name.Object;
@@ -69,5 +71,8 @@ private
 
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type is
      (Hash (Self.Path.Value));
+
+   overriding function Image (Self : Object) return String is
+      (String (Self.Path.Simple_Name));
 
 end GPR2.Build.Artifacts.Files;

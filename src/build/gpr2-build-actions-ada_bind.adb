@@ -18,6 +18,7 @@ with GNATCOLL.Utils; use GNATCOLL.Utils;
 
 with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Actions.Link;
+with GPR2.Build.Actions.Link_Options_Insert;
 with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Compilation_Unit;
@@ -48,6 +49,14 @@ package body GPR2.Build.Actions.Ada_Bind is
    package PAI renames GPR2.Project.Attribute_Index;
 
    function Link (Self : Object) return Actions.Link.Object;
+   --  Return the link action that is a transitive successor of this
+   --  action, if one exists. Return Undefined if no such action is found.
+
+   function Link_Opt_Insert
+     (Self : Object) return Actions.Link_Options_Insert.Object;
+   --  Returns the Link_Options_Insert action that is a transitive
+   --  successor of the current action, if one exists. Returns Undefined
+   --  if no such action is found.
 
    ---------------------
    -- Compute_Command --
@@ -554,14 +563,56 @@ package body GPR2.Build.Actions.Ada_Bind is
 
    function Link (Self : Object) return Actions.Link.Object is
    begin
-      for Action of Self.Tree.Successors (Self.Post_Bind.Object_File) loop
-         if Action in GPR2.Build.Actions.Link.Object'Class then
-            return GPR2.Build.Actions.Link.Object (Action);
-         end if;
-      end loop;
+
+      --  When the current project view is a static standalone library, linker
+      --  options must be embedded within the final archive in a new section
+      --  named .GPR.linker_options. This requires a Link_Options_Insert phase
+      --  prior to the final link.
+
+      if Self.Ctxt.Is_Library
+        and then Self.Ctxt.Is_Static_Library
+        and then Self.Ctxt.Is_Library_Standalone
+      then
+         for Action of Self.Tree.Successors (Self.Generated_Body) loop
+            if Action in GPR2.Build.Actions.Link_Options_Insert.Object'Class
+            then
+               for Succ_Action of
+                 Self.Tree.Successors
+                   (Actions.Link_Options_Insert.Object (Action)
+                      .Output_Object_File)
+               loop
+                  if Succ_Action in GPR2.Build.Actions.Link.Object'Class then
+                     return GPR2.Build.Actions.Link.Object (Succ_Action);
+                  end if;
+               end loop;
+            end if;
+         end loop;
+      else
+         for Action of Self.Tree.Successors (Self.Post_Bind.Object_File) loop
+            if Action in GPR2.Build.Actions.Link.Object'Class then
+               return GPR2.Build.Actions.Link.Object (Action);
+            end if;
+         end loop;
+      end if;
 
       return GPR2.Build.Actions.Link.Undefined;
    end Link;
+
+   -------------------------
+   -- Link_Opt_Insert --
+   -------------------------
+
+   function Link_Opt_Insert
+     (Self : Object) return Actions.Link_Options_Insert.Object is
+   begin
+      for Action of Self.Tree.Successors (Self.Generated_Body) loop
+         if Action in GPR2.Build.Actions.Link_Options_Insert.Object'Class then
+            return GPR2.Build.Actions.Link_Options_Insert.Object (Action);
+         end if;
+      end loop;
+
+      return GPR2.Build.Actions.Link_Options_Insert.Undefined;
+   end Link_Opt_Insert;
 
    -------------------
    -- On_Ali_Parsed --
@@ -736,7 +787,9 @@ package body GPR2.Build.Actions.Ada_Bind is
    function Post_Bind (Self : Object) return Actions.Post_Bind.Object is
    begin
       for Succ of Self.Tree.Successors (Self.Output_Body) loop
-         return Actions.Post_Bind.Object (Succ);
+         if Succ in Actions.Post_Bind.Object'Class then
+            return Actions.Post_Bind.Object (Succ);
+         end if;
       end loop;
 
       return Actions.Post_Bind.Undefined;
@@ -746,8 +799,12 @@ package body GPR2.Build.Actions.Ada_Bind is
    -- Post_Command --
    ------------------
 
-   overriding function Post_Command
-     (Self : in out Object; Status : Execution_Status) return Boolean
+   overriding
+   function Post_Command
+     (Self   : in out Object;
+      Status : Execution_Status;
+      Stdout : Unbounded_String := Null_Unbounded_String;
+      Stderr : Unbounded_String := Null_Unbounded_String) return Boolean
    is
       use Ada.Text_IO;
       use Ada.Strings;
@@ -879,6 +936,10 @@ package body GPR2.Build.Actions.Ada_Bind is
       End_Marker   : constant String := "--  END Object file/option list";
       Switch_Index : Natural;
 
+      Link            : constant Actions.Link.Object := Self.Link;
+      Link_Opt_Insert : constant Actions.Link_Options_Insert.Object :=
+        Self.Link_Opt_Insert;
+
    begin
       if Traces.Is_Active then
          Traces.Trace
@@ -925,6 +986,33 @@ package body GPR2.Build.Actions.Ada_Bind is
             end if;
          end;
       end loop;
+
+      if not Link.Is_Defined then
+         Traces.Trace
+           ("No linker action related to "
+            & Self.UID.Image
+            & " has been found.");
+      else
+         Traces.Trace ("Options passed to " & Link.UID.Image & ":");
+         for Opt of Self.Linker_Opts loop
+            Traces.Trace ("* '" & Opt & "'");
+            GPR2.Build.Actions.Link.Object
+              (Self.Tree.Action_Id_To_Reference (Link.UID).Element.all)
+              .Add_Option (Opt);
+         end loop;
+
+         if Link_Opt_Insert.Is_Defined then
+            Traces.Trace
+              ("Options passed to " & Link_Opt_Insert.UID.Image & ":");
+            for Opt of Self.Linker_Opts loop
+               Traces.Trace ("* '" & Opt & "'");
+               Actions.Link_Options_Insert.Object
+                 (Self.Tree.Action_Id_To_Reference (Link_Opt_Insert.UID)
+                    .Element.all)
+                 .Add_Option (Opt);
+            end loop;
+         end if;
+      end if;
 
       Close (Src_File);
 

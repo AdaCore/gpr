@@ -64,6 +64,9 @@ package GPR2.Build.Actions.Link is
    --  Mark the action as having a library dependency circle requiring the use
    --  of --start-group --end-group as linker option
 
+   function Options (Self : Object) return Containers.Value_List;
+   --  Return the options added with the Add_Option procedure
+
    function Is_Library (Self : Object) return Boolean;
 
    function Is_Static_Library (Self : Object) return Boolean;
@@ -108,7 +111,9 @@ package GPR2.Build.Actions.Link is
 
    overriding function Post_Command
      (Self   : in out Object;
-      Status : Execution_Status) return Boolean;
+      Status : Execution_Status;
+      Stdout : Unbounded_String := Null_Unbounded_String;
+      Stderr : Unbounded_String := Null_Unbounded_String) return Boolean;
 
    overriding function Skip (Self : Object) return Boolean;
 
@@ -204,6 +209,9 @@ private
 
    function Output (Self : Object) return Artifacts.Files.Object'Class is
      (if Self.Is_Library then Self.Library else Self.Executable);
+
+   function Options (Self : Object) return Containers.Value_List is
+     (Self.Static_Options);
 
    overriding function View (Self : Object) return GPR2.Project.View.Object is
      (Self.Ctxt);

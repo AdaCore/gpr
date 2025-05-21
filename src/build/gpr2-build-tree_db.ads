@@ -12,7 +12,7 @@ with GNATCOLL.Directed_Graph;
 with GNATCOLL.OS.FS;
 
 with GPR2.Build.Actions;
-with GPR2.Build.Artifacts.Files;
+with GPR2.Build.Artifacts;
 with GPR2.Build.External_Options;
 with GPR2.Build.Options;
 with GPR2.Build.Process_Manager;
@@ -88,7 +88,7 @@ package GPR2.Build.Tree_Db is
      (Self : Object;
       Id   : Actions.Action_Id'Class) return Actions.Object'Class
      with Pre => Self.Is_Defined;
-   --  ???
+   --  Return the action object corresponding to the given action id
 
    procedure Add_Artifact
      (Self     : in out Object;
@@ -121,7 +121,7 @@ package GPR2.Build.Tree_Db is
    function Add_Output
      (Self     : in out Object;
       Action   : Actions.Action_Id'Class;
-      Artifact : Artifacts.Files.Object'Class) return Boolean
+      Artifact : Artifacts.Object'Class) return Boolean
      with Pre => Self.Is_Defined
                    and then Self.Has_Action (Action)
                    and then Artifact.Is_Defined;
@@ -176,7 +176,7 @@ package GPR2.Build.Tree_Db is
 
    package Artifact_Sets is new Ada.Containers.Indefinite_Ordered_Sets
      (GPR2.Build.Artifacts.Object'Class,
-      GPR2.Build.Artifacts."<", GPR2.Build.Artifacts."=");
+      GPR2.Build.Artifacts.Less, GPR2.Build.Artifacts."=");
 
    package Artifact_Vectors is new Ada.Containers.Indefinite_Vectors
      (Positive, GPR2.Build.Artifacts.Object'Class, GPR2.Build.Artifacts."=");

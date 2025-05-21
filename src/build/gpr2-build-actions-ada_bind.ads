@@ -129,7 +129,9 @@ private
 
    overriding function Post_Command
      (Self   : in out Object;
-      Status : Execution_Status) return Boolean;
+      Status : Execution_Status;
+      Stdout : Unbounded_String := Null_Unbounded_String;
+      Stderr : Unbounded_String := Null_Unbounded_String) return Boolean;
 
    overriding function View (Self : Object) return GPR2.Project.View.Object is
      (Self.Ctxt);

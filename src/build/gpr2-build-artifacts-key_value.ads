@@ -30,6 +30,8 @@ package GPR2.Build.Artifacts.Key_Value is
 
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type;
 
+   overriding function Image (Self : Object) return String;
+
 private
 
    type Object is new Artifacts.Object with record
@@ -41,7 +43,7 @@ private
      ("keyvalue");
 
    overriding function "<" (L, R : Object) return Boolean is
-     (L.Key < R.Key);
+     (if L.Key /= R.Key then L.Key < R.Key else L.Value < R.Value);
 
    Undefined : constant Object := (others => <>);
 
@@ -62,5 +64,9 @@ private
 
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type is
      (Ada.Strings.Hash (-Self.Key));
+
+   overriding function Image (Self : Object) return String is
+      (Self.Protocol & "(" & To_String (Self.Key) & ", "
+       & To_String (Self.Value));
 
 end GPR2.Build.Artifacts.Key_Value;

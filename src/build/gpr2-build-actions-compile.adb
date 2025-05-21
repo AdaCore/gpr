@@ -1072,9 +1072,13 @@ package body GPR2.Build.Actions.Compile is
    -- Post_Command --
    ------------------
 
-   overriding function Post_Command
+   overriding
+   function Post_Command
      (Self   : in out Object;
-      Status : Execution_Status) return Boolean is
+      Status : Execution_Status;
+      Stdout : Unbounded_String := Null_Unbounded_String;
+      Stderr : Unbounded_String := Null_Unbounded_String) return Boolean
+   is
    begin
       if Status = Skipped or else not Self.Inh_From.Is_Defined then
          --  No need to post-process anything if the action was skipped

@@ -7,6 +7,7 @@ Case 2 - Altered DAG with empty JSON dictionnary (p1: main)
   outputs:
   - /tree/obj/p1/main.o
   - /tree/obj/p1/main.ali
+  - UID_Artifact
 ================================================================
 Case 3 - Altered DAG with empty JSON file (p1: main)
 [Ada Compile] main.adb (p1.gpr)
@@ -14,6 +15,7 @@ Case 3 - Altered DAG with empty JSON file (p1: main)
   outputs:
   - /tree/obj/p1/main.o
   - /tree/obj/p1/main.ali
+  - UID_Artifact
 ================================================================
 Case 4a - Altered DAG with random JSON dictionnary (p1: main)
 [Ada Compile] main.adb (p1.gpr)
@@ -21,6 +23,7 @@ Case 4a - Altered DAG with random JSON dictionnary (p1: main)
   outputs:
   - /tree/obj/p1/main.o
   - /tree/obj/p1/main.ali
+  - UID_Artifact
 ================================================================
 Case 4b - Altered DAG with corrupted signature (1) (p1: main)
 [Ada Compile] main.adb (p1.gpr)
@@ -28,6 +31,7 @@ Case 4b - Altered DAG with corrupted signature (1) (p1: main)
   outputs:
   - /tree/obj/p1/main.o
   - /tree/obj/p1/main.ali
+  - UID_Artifact
 ================================================================
 Case 4c - Altered DAG with corrupted signature (2) (p1: main)
 [Ada Compile] main.adb (p1.gpr)
@@ -35,6 +39,7 @@ Case 4c - Altered DAG with corrupted signature (2) (p1: main)
   outputs:
   - /tree/obj/p1/main.o
   - /tree/obj/p1/main.ali
+  - UID_Artifact
 ================================================================
 Case 4d - Altered DAG with corrupted signature (3) (p1: main)
 [Ada Compile] main.adb (p1.gpr)
@@ -42,6 +47,7 @@ Case 4d - Altered DAG with corrupted signature (3) (p1: main)
   outputs:
   - /tree/obj/p1/main.o
   - /tree/obj/p1/main.ali
+  - UID_Artifact
 ================================================================
 Case 4e - Altered DAG with corrupted signature (4) (p1: main)
 [Ada Compile] main.adb (p1.gpr)
@@ -49,6 +55,7 @@ Case 4e - Altered DAG with corrupted signature (4) (p1: main)
   outputs:
   - /tree/obj/p1/main.o
   - /tree/obj/p1/main.ali
+  - UID_Artifact
 ================================================================
 Case 4f - Altered DAG with corrupted signature (5) (p1: main)
 [Ada Compile] main.adb (p1.gpr)
@@ -56,6 +63,7 @@ Case 4f - Altered DAG with corrupted signature (5) (p1: main)
   outputs:
   - /tree/obj/p1/main.o
   - /tree/obj/p1/main.ali
+  - UID_Artifact
 ================================================================
 Case 4g - Altered DAG with corrupted signature (6) (p1: main)
 [Ada Compile] main.adb (p1.gpr)
@@ -63,6 +71,7 @@ Case 4g - Altered DAG with corrupted signature (6) (p1: main)
   outputs:
   - /tree/obj/p1/main.o
   - /tree/obj/p1/main.ali
+  - UID_Artifact
 ================================================================
 Case 5 - Altered DAG with modified checksums (p1: main)
 [Ada Compile] main.adb (p1.gpr)
@@ -70,6 +79,7 @@ Case 5 - Altered DAG with modified checksums (p1: main)
   outputs:
   - /tree/obj/p1/main.o
   - /tree/obj/p1/main.ali
+  - UID_Artifact
 ================================================================
 Case 6 - Altered DAG with single modified checksum (p1: main)
 [Ada Compile] main.adb (p1.gpr)
@@ -77,6 +87,7 @@ Case 6 - Altered DAG with single modified checksum (p1: main)
   outputs:
   - /tree/obj/p1/main.o
   - /tree/obj/p1/main.ali
+  - UID_Artifact
 ================================================================
 Case 7 - Altered DAG with modified checksums (p2: pkg3 - pkg)
 [Ada Compile] pkg.adb (p2.gpr)
@@ -85,12 +96,14 @@ Case 7 - Altered DAG with modified checksums (p2: pkg3 - pkg)
   - /tree/obj/p2/pkg.o
   - /tree/obj/p2/pkg.ali
   - /tree/lib/p2/pkg.ali
+  - UID_Artifact
 [Ada Compile] pkg3.adb (p2.gpr)
   inputs:
   outputs:
   - /tree/obj/base2/pkg3.o
   - /tree/obj/base2/pkg3.ali
   - /tree/lib/p2/pkg3.ali
+  - UID_Artifact
 ================================================================
 Case 8 - Altered DAG with shorter checksum (p1: main)
 [Ada Compile] main.adb (p1.gpr)
@@ -98,6 +111,7 @@ Case 8 - Altered DAG with shorter checksum (p1: main)
   outputs:
   - /tree/obj/p1/main.o
   - /tree/obj/p1/main.ali
+  - UID_Artifact
 ================================================================
 Case 9 - Altered DAG with longer checksum (p1: main)
 [Ada Compile] main.adb (p1.gpr)
@@ -105,6 +119,7 @@ Case 9 - Altered DAG with longer checksum (p1: main)
   outputs:
   - /tree/obj/p1/main.o
   - /tree/obj/p1/main.ali
+  - UID_Artifact
 ================================================================
 Case 10 - Altered DAG with modified checksums (all)
 [Ada Compile] main.adb (p1.gpr)
@@ -112,34 +127,40 @@ Case 10 - Altered DAG with modified checksums (all)
   outputs:
   - /tree/obj/p1/main.o
   - /tree/obj/p1/main.ali
+  - UID_Artifact
 [Ada Compile] pkg.adb (p1.gpr)
   inputs:
   outputs:
   - /tree/obj/p1/pkg.o
   - /tree/obj/p1/pkg.ali
+  - UID_Artifact
 [Ada Compile] foo.ada@2 (p2.gpr)
   inputs:
   outputs:
   - /tree/obj/p2/foo~2.o
   - /tree/obj/p2/foo~2.ali
   - /tree/lib/p2/foo~2.ali
+  - UID_Artifact
 [Ada Compile] pkg.adb (p2.gpr)
   inputs:
   outputs:
   - /tree/obj/p2/pkg.o
   - /tree/obj/p2/pkg.ali
   - /tree/lib/p2/pkg.ali
+  - UID_Artifact
 [Ada Compile] pkg3.adb (p2.gpr)
   inputs:
   outputs:
   - /tree/obj/base2/pkg3.o
   - /tree/obj/base2/pkg3.ali
   - /tree/lib/p2/pkg3.ali
+  - UID_Artifact
 [Ada Compile] pkg2.adb (shared.gpr)
   inputs:
   outputs:
   - /tree/obj/shared/pkg2.o
   - /tree/obj/shared/pkg2.ali
+  - UID_Artifact
 ================================================================
 Case 11 - random artifact element (p1: main)
 cannot find artifact 'compile_main.adb.*'
