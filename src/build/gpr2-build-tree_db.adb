@@ -221,7 +221,10 @@ package body GPR2.Build.Tree_Db is
          --  need to amend the execution context dependencies
          Pred := Self.Predecessor.Find (Artifact);
 
-         if Artifact_Action_Maps.Has_Element (Pred) then
+         if Artifact_Action_Maps.Has_Element (Pred)
+           and then Self.Exec_Ctxt.Nodes.Contains
+                      (Artifact_Action_Maps.Element (Pred))
+         then
             Self.Exec_Ctxt.Graph.Add_Predecessor
               (Node        => Self.Exec_Ctxt.Nodes (Action),
                Predecessor =>
