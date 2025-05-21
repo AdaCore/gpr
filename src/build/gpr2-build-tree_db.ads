@@ -88,7 +88,7 @@ package GPR2.Build.Tree_Db is
      (Self : Object;
       Id   : Actions.Action_Id'Class) return Actions.Object'Class
      with Pre => Self.Is_Defined;
-   --  ???
+   --  Return the action object corresponding to the given action id
 
    procedure Add_Artifact
      (Self     : in out Object;
