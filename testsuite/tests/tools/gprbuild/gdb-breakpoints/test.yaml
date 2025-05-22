@@ -1,0 +1,2 @@
+description: Test GDB breakpoint on Ada source compiled with gpr2build
+driver: python_script

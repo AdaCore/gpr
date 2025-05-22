@@ -650,7 +650,7 @@ package body GPR2.Build.Actions.Compile is
                True);
          else
             Cmd_Line.Add_Argument
-              (Self.Src.Path_Name, Build.Command_Line.Simple);
+              (Self.Src.Path_Name.String_Value, Build.Command_Line.Simple);
          end if;
 
          if Index /= No_Index then
