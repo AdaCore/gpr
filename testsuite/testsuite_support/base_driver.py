@@ -168,8 +168,44 @@ def create_fake_ada_runtime(path):
 class BaseDriver(DiffTestDriver):
     """Base class to provide common test driver helpers."""
 
+    def create_fake_ada_compilers(self, env={}):
+        if isinstance(self.fake_ada_target, list):
+            targets = self.fake_ada_target
+        else:
+            targets = [self.fake_ada_target]
+        paths = []
+        for tgt_rts in targets:
+            tgt = tgt_rts[0]
+            rts = tgt_rts[1:]
+            fake_dir = self.working_dir("fake-ada-%s" % tgt)
+            paths.append(os.path.join(fake_dir, "bin"))
+
+            if "linux" in tgt or "windows" in tgt:
+                is_cross = False
+            elif tgt == "native":
+                is_cross = False
+                tgt = Env().host.triplet
+            else:
+                is_cross = True
+            if not is_cross:
+                rts = ["native", "sjlj", "light"]
+
+            create_fake_ada_compiler(
+                self,
+                comp_dir=fake_dir,
+                comp_target=tgt,
+                gnat_version="21.0w",
+                gcc_version="8.4.3",
+                runtimes=rts,
+                comp_is_cross=is_cross,
+            )
+
+        paths.append(os.environ.get("PATH"))
+        env["PATH"] = os.pathsep.join(paths)
+
     def set_up(self):
         super(BaseDriver, self).set_up()
+        self.fake_ada_target = self.test_env.get("fake_ada_target")
 
         description = self.test_env.get("description", None)
         if description is None:

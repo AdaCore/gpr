@@ -75,8 +75,8 @@ class BuilderAndRunner(object):
     ):
         """ generic TestDriver.shell or e3.os.process.Run runner"""
         if self.driver is not None:
+            effective_env = dict(os.environ)
             if env is not None:
-                effective_env = dict(os.environ)
                 effective_env.update(env)
             return self.driver.shell(
                 cmd,
